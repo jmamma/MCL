@@ -20,11 +20,13 @@ public:
   bool reset_on_release = false;
   bool update_params_queue;
   bool prepare = false;
+
   uint8_t pitch_param;
   uint16_t ignore_release;
   uint16_t update_params_clock;
   uint8_t last_param_id;
   uint8_t last_rec_event;
+  PageIndex last_page = NULL_PAGE;
   SeqStepMidiEvents midi_events;
   SeqStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)

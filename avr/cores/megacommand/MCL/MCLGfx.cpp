@@ -1,4 +1,5 @@
 #include "MCL_impl.h"
+#include "ResourceManager.h"
 
 void MCLGfx::init_oled() {
   oled_display.begin();
@@ -27,19 +28,16 @@ void MCLGfx::draw_evil(unsigned char* evil) {
   oled_display.setCursor(x - 60, 20);
   oled_display.println("MACHINE IS O.K.");
 
-  oled_display.drawBitmap(x, 0, evil, 45, 32, BLACK);
+  oled_display.drawBitmap(x, 1, evil, 33, 31, BLACK);
   oled_display.display();
 }
-  delay(1000);
+  delay(2000);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(oldfont);
 }
 
 void MCLGfx::splashscreen(unsigned char* bitmap) {
   oled_display.setFont();
-  oled_display.setTextSize(2);
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setCursor(40, 0);
 
   oled_display.drawBitmap(35, 8, bitmap, BITMAP_MCL_LOGO_W,
                           BITMAP_MCL_LOGO_H, WHITE);
@@ -49,7 +47,7 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
    */
   oled_display.setCursor(90, 8);
   oled_display.setTextSize(1);
-  oled_display.print("V");
+  oled_display.print(F("V"));
   oled_display.print(VERSION_STR);
   /*  for (float length = 0; length < 32; length += 0.7) {
 

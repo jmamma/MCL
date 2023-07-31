@@ -28,42 +28,6 @@ uint8_t opt_import_count = 16;
 
 void new_proj_handler() { proj.new_project_prompt(); }
 
-const Page *const menu_target_pages[] PROGMEM = {
-    nullptr,
-
-    // 1 - load_proj_page
-    (Page *)&load_proj_page,
-    (Page *)nullptr,
-    //(Page *)&convert_proj_page,
-    (Page *)&midi_config_page,
-    (Page *)&md_config_page,
-    (Page *)&chain_config_page,
-    (Page *)&aux_config_page,
-
-    // 7
-    (Page *)&mcl_config_page,
-
-    // 8 - ram_config_page
-    (Page *)&ram_config_page,
-
-    // 9
-    (Page *)&poly_page,
-    // 10
-    (Page *)&arp_page,
-    // 11
-    (Page *)&md_import_page,
-    // 12
-    (Page *)&midiport_menu_page,
-    // 13
-    (Page *)&midiprogram_menu_page,
-    // 14
-    (Page *)&midiclock_menu_page,
-    // 15
-    (Page *)&midiroute_menu_page,
-    // 16
-    (Page *)&midimachinedrum_menu_page
-};
-
 const uint8_t *const menu_target_param[] PROGMEM = {
     nullptr,
 
@@ -90,7 +54,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &opt_copy, &opt_clear, &opt_paste, &opt_shift, &opt_reverse,
 
     // 30
-    &opt_clear_step,
+    &mcl_cfg.rec_automation,
 
     // 31
     &grid_page.grid_select_apply, &mcl_cfg.load_mode, &slot.link.loops,
@@ -116,7 +80,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 49
     &mcl_cfg.uart2_prg_mode,
     // 50
-    &grid_page.insert_rows,
+    &mcl_cfg.seq_dev,
     // 51
     &mcl_cfg.midi_forward_2,
     // 52
@@ -130,7 +94,11 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 56
     &mcl_cfg.midi_ctrl_port,
     // 57
-    &mcl_cfg.md_trig_channel
+    &mcl_cfg.md_trig_channel,
+    // 58
+    &perf_page.page_mode,
+    // 59
+    &perf_page.perf_id,
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -154,12 +122,12 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     // 14
     seq_menu_handler,
     // 15
-    opt_clear_step_locks_handler,
-    opt_copy_step_handler_cb,
-    opt_paste_step_handler,
-    opt_mute_step_handler,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
     // 19
-    step_menu_handler,
+    nullptr,
     // 20
     rename_row,
     // 21
@@ -187,26 +155,27 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     usb_disk_mode,
     // 29
     mcl_setup,
+    // 30
+    rename_perf,
 };
+MenuPage<aux_config_page_N> aux_config_page(&config_param1, &config_param6);
 
-MenuPage<1> aux_config_page(&config_param1, &config_param6);
+MenuPage<boot_menu_page_N> boot_menu_page(&options_param1, &options_param2);
+MenuPage<start_menu_page_N> start_menu_page(&options_param1, &options_param2);
+MenuPage<system_menu_page_N> system_page(&options_param1, &options_param2);
+MenuPage<midi_config_page_N> midi_config_page(&config_param1, &config_param3);
 
-MenuPage<4> boot_menu_page(&options_param1, &options_param2);
-MenuPage<2> start_menu_page(&options_param1, &options_param2);
-MenuPage<6> system_page(&options_param1, &options_param2);
-MenuPage<5> midi_config_page(&config_param1, &config_param3);
+MenuPage<md_config_page_N> md_config_page(&config_param1, &config_param4);
+MenuPage<chain_config_page_N> chain_config_page(&config_param1, &config_param6);
+MenuPage<mcl_config_page_N> mcl_config_page(&config_param1, &config_param5);
+MenuPage<ram_config_page_N> ram_config_page(&config_param1, &config_param7);
+MenuPage<md_import_page_N> md_import_page(&config_param1, &config_param8);
 
-MenuPage<3> md_config_page(&config_param1, &config_param4);
-MenuPage<3> chain_config_page(&config_param1, &config_param6);
-MenuPage<1> mcl_config_page(&config_param1, &config_param5);
-MenuPage<1> ram_config_page(&config_param1, &config_param7);
-MenuPage<4> md_import_page(&config_param1, &config_param8);
-
-MenuPage<5> midiport_menu_page(&config_param1, &config_param9);
-MenuPage<3> midiprogram_menu_page(&config_param1, &config_param10);
-MenuPage<4> midiclock_menu_page(&config_param1, &config_param11);
-MenuPage<4> midiroute_menu_page(&config_param1, &config_param12);
-MenuPage<3> midimachinedrum_menu_page(&config_param1, &config_param13);
+MenuPage<midiport_menu_page_N> midiport_menu_page(&config_param1, &config_param9);
+MenuPage<midiprogram_menu_page_N> midiprogram_menu_page(&config_param1, &config_param10);
+MenuPage<midiclock_menu_page_N> midiclock_menu_page(&config_param1, &config_param11);
+MenuPage<midiroute_menu_page_N> midiroute_menu_page(&config_param1, &config_param12);
+MenuPage<midimachinedrum_menu_page_N> midimachinedrum_menu_page(&config_param1, &config_param13);
 
 MCLEncoder input_encoder1(0, 127, ENCODER_RES_SYS);
 MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);
@@ -214,15 +183,12 @@ MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);
 TextInputPage text_input_page(&input_encoder1, &input_encoder2);
 
 MCLEncoder file_menu_encoder(0, 4, ENCODER_RES_PAT);
-MenuPage<7> file_menu_page(&config_param1, &file_menu_encoder);
+MenuPage<file_menu_page_N> file_menu_page(&config_param1, &file_menu_encoder);
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<20> seq_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
-
-MCLEncoder step_menu_value_encoder(0, 16, ENCODER_RES_PAT);
-MCLEncoder step_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
-MenuPage<4> step_menu_page(&step_menu_value_encoder, &step_menu_entry_encoder);
+MenuPage<seq_menu_page_N> seq_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
+MenuPage<perf_menu_page_N> perf_menu_page(&seq_menu_value_encoder, &seq_menu_entry_encoder);
 
 MCLEncoder grid_slot_param1(0, 7, ENCODER_RES_PAT);
 MCLEncoder grid_slot_param2(0, 16, ENCODER_RES_PAT);
@@ -230,4 +196,6 @@ MenuPage<grid_slot_page_N> grid_slot_page(&grid_slot_param1, &grid_slot_param2);
 
 MCLEncoder wavdesign_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder wavdesign_menu_entry_encoder(0, 4, ENCODER_RES_PAT);
-MenuPage<3> wavdesign_menu_page(&wavdesign_menu_value_encoder, &wavdesign_menu_entry_encoder);
+MenuPage<wavdesign_menu_page_N> wavdesign_menu_page(&wavdesign_menu_value_encoder, &wavdesign_menu_entry_encoder);
+
+

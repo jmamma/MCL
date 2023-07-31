@@ -12,15 +12,16 @@
 class MNMClass : public ElektronDevice {
 public:
   MNMClass();
-  MidiUartClass *midiuart;
   MNMGlobal global;
 
   MNMKit kit;
   // MNMPattern pattern;
 
   virtual bool probe();
-  virtual void init_grid_devices();
+  virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
+  virtual MCLGIF* gif();
+  virtual uint8_t* gif_data();
 
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool getWorkSpaceKit() {
@@ -110,12 +111,13 @@ public:
   uint8_t setMachine(uint8_t idx) { return setMachine(currentTrack, idx); }
   uint8_t setMachine(uint8_t track, uint8_t idx, bool send = true);
 
-  void setMute(bool mute) { setMute(currentTrack, mute); }
-  void setMute(uint8_t track, bool mute);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
+  /*
   void muteTrack() { muteTrack(currentTrack); }
   void muteTrack(uint8_t track) { setMute(track, true); }
   void unmuteTrack() { unmuteTrack(currentTrack); }
   void unmuteTrack(uint8_t track) { setMute(track, false); }
+  */
   void setAutoMute(bool mute);
   void muteAutoTrack() { setAutoMute(true); }
   void unmuteAutoTrack() { setAutoMute(false); }

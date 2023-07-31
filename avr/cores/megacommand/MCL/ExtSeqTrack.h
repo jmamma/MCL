@@ -6,7 +6,7 @@
 #include "MidiUartParent.h"
 //#include "MidiUart.h"
 #include "CommonTools/NibbleArray.h"
-#include "MCL.h"
+#include "mcl.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
 
@@ -94,7 +94,8 @@ struct ext_event_t {
 
 class NoteVector {
 public:
-  uint16_t x;
+  uint8_t step;
+  int8_t utiming;
   uint8_t value;
   uint8_t velocity;
 };
@@ -150,8 +151,11 @@ public:
   uint64_t note_buffer[2] = {
       0}; // 2 x 64 bit masks to store state of 128 notes.
   uint64_t oneshot_mask[2];
+  uint64_t mute_mask[2];
   uint64_t ignore_notes[2];
+  bool pgm_oneshot;
 
+  static uint8_t epoch;
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
 
@@ -160,9 +164,10 @@ public:
   ExtSeqTrack() : SeqSlideTrack() { active = EXT_TRACK_TYPE; }
 
   ALWAYS_INLINE() void reset() {
-    SeqTrack::reset();
+    SeqSlideTrack::reset();
     memset(oneshot_mask,0,sizeof(oneshot_mask));
     memset(ignore_notes,0, sizeof(ignore_notes));
+    pgm_oneshot = 0;
   }
 
   void seq(MidiUartParent *uart_);
@@ -204,12 +209,16 @@ public:
   // clear_track_locks: if value != 255, delete specific lock event of value.
   // otherwise delete all locks matching track_param of any value
   bool del_track_locks(int16_t cur_x, uint8_t lock_idx, uint8_t value);
+  void clear_mute();
+  void clear_mutes();
+  void clear_track_locks();
   void clear_track_locks(uint8_t idx);
   bool clear_track_locks(uint8_t step, uint8_t track_param,
                          uint8_t value = 255);
   bool clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value = 255);
   void clear_track();
-  void set_length(uint8_t len);
+  void store_mute_state();
+  void set_length(uint8_t len, bool expand = false);
   void re_sync();
   void reset_params();
   void handle_event(uint16_t index, uint8_t step);
@@ -217,7 +226,7 @@ public:
   uint16_t add_event(uint8_t step, ext_event_t *e);
 
   void init_notes_on();
-  void add_notes_on(uint16_t x, uint8_t value, uint8_t velocity);
+  void add_notes_on(uint8_t step, int8_t utiming, uint8_t value, uint8_t velocity);
   uint8_t find_notes_on(uint8_t value);
   void remove_notes_on(uint8_t value);
 
@@ -247,6 +256,7 @@ public:
 
     ev_end += ev_idx;
   }
+  void toggle_mute();
 
   void buffer_notesoff() {
     init_notes_on();
@@ -273,31 +283,14 @@ public:
     }
   }
   void buffer_notesoff8(uint8_t *buf, uint8_t offset) {
-    if (IS_BIT_SET(*buf, 0)) {
-      uart->sendNoteOff(channel, offset, 0);
+    uint8_t count = 0;
+    while (*buf) {
+      if (*buf & 1) {
+         uart->sendNoteOff(channel, offset + count);
+      }
+      count++;
+      *buf >>= 1;
     }
-    if (IS_BIT_SET(*buf, 1)) {
-      uart->sendNoteOff(channel, offset + 1, 0);
-    }
-    if (IS_BIT_SET(*buf, 2)) {
-      uart->sendNoteOff(channel, offset + 2, 0);
-    }
-    if (IS_BIT_SET(*buf, 3)) {
-      uart->sendNoteOff(channel, offset + 3, 0);
-    }
-    if (IS_BIT_SET(*buf, 4)) {
-      uart->sendNoteOff(channel, offset + 4, 0);
-    }
-    if (IS_BIT_SET(*buf, 5)) {
-      uart->sendNoteOff(channel, offset + 5, 0);
-    }
-    if (IS_BIT_SET(*buf, 6)) {
-      uart->sendNoteOff(channel, offset + 6, 0);
-    }
-    if (IS_BIT_SET(*buf, 7)) {
-      uart->sendNoteOff(channel, offset + 7, 0);
-    }
-    *buf = 0;
   }
 
   void rotate_left() { modify_track(DIR_LEFT); }
@@ -306,7 +299,7 @@ public:
 
   void modify_track(uint8_t dir);
 
-  void set_speed(uint8_t _speed);
+  void set_speed(uint8_t new_speed, uint8_t old_speed = 255, bool timing_adjust = true);
 };
 
 #endif /* EXTSEQTRACK_H__ */

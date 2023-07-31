@@ -61,9 +61,10 @@ public:
 
   virtual bool probe();
   virtual void setup();
-  virtual void init_grid_devices();
+  virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
-
+  virtual MCLGIF *gif();
+  virtual uint8_t* gif_data();
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool canReadKit() { return true; }
@@ -139,6 +140,7 @@ public:
    **/
 
   // Send multiple values simultaneously (single sysex message);
+  uint8_t assignFXParamsBulk(uint8_t *values, bool send = true);
   uint8_t sendFXParamsBulk(uint8_t *values, bool send = true);
   uint8_t sendFXParams(uint8_t *values, uint8_t type, bool send = true);
 
@@ -264,7 +266,7 @@ public:
      return sendMachine(track + 16, machine, send_level, send);
   }
 
-  void loadMachinesCache(uint16_t track_mask);
+  void loadMachinesCache(uint32_t track_mask, MidiUartParent *uart_ = nullptr);
 
   /**
    * Inserts a machine in to the MDKit object
@@ -276,7 +278,7 @@ public:
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
    **/
-  void muteTrack(uint8_t track, bool mute = true);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
   /** Unmute the given track. **/
   void unmuteTrack(uint8_t track) { muteTrack(track, false); }
 

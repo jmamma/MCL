@@ -26,8 +26,12 @@ public:
   void setup_callbacks();
   void remove_callbacks();
 
+  void note_on(uint8_t *msg, uint8_t channel_event);
+  void note_off(uint8_t *msg, uint8_t channel_event);
+
   void onNoteOnCallback_Midi2(uint8_t *msg);
   void onNoteOffCallback_Midi2(uint8_t *msg);
+
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
 
@@ -50,6 +54,9 @@ public:
 
   bool scale_padding;
   bool cc_link_enable;
+
+  uint8_t octs[NUM_DEVS];
+  uint8_t fine_tunes[NUM_DEVS];
 
   uint8_t find_arp_track(uint8_t channel_event);
 
@@ -74,12 +81,14 @@ public:
                     uint8_t track_number = 255,
                     MidiUartParent *uart_ = nullptr);
 
+  void buffer_notesoff_ext(uint8_t track_number);
+
   void clear_trig_fromext(uint8_t note_num);
 
   uint8_t get_note_from_machine_pitch(uint8_t pitch);
 
   uint8_t is_md_midi(uint8_t channel);
-  void config_encoders();
+  virtual void config_encoders();
   void init_poly();
 
   void render_arp(bool recalc_notemask_, MidiDevice *midi_dev, uint8_t track);

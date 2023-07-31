@@ -17,7 +17,7 @@ struct PageCategory {
 
 struct PageSelectEntry {
   char Name[16];
-  LightPage *Page;
+  PageIndex Page;
   uint8_t PageNumber; // same as trig id
   uint8_t CategoryId;
   uint8_t IconWidth;

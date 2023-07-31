@@ -7,7 +7,7 @@ void OscMixerPage::setup() {}
 void OscMixerPage::init() {
   WavDesignerPage::init();
   trig_interface.off();
-  wd.last_page = this;
+  wd.last_page = mcl.currentPage();
   wavdesign_menu_page.menu.enable_entry(1, false);
   wavdesign_menu_page.menu.enable_entry(2, true);
 }
@@ -37,7 +37,7 @@ void OscMixerPage::display() {
     oled_display.setCursor(0, 0);
     oled_display.fillRect(0, 0, 64, 32, BLACK);
 
-    oled_display.print("OSC MIXER");
+    oled_display.print(F("OSC MIXER"));
     draw_levels();
     scanline_width = 4;
     draw_wav();
@@ -167,7 +167,7 @@ void OscMixerPage::draw_wav() {
 void OscMixerPage::draw_levels() {
   uint8_t scaled_level;
   char str[17] = "                ";
-  for (int i = 0; i < 3; i++) {
+  for (uint8_t i = 0; i < 3; i++) {
 
     scaled_level = (uint8_t)(((float)encoders[i]->cur / (float)127) * 15);
     oled_display.fillRect(0 + i * 6, 12 + (15 - scaled_level), 4,

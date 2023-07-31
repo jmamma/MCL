@@ -33,7 +33,7 @@ class GenericMidiDevice : public MidiDevice {
 public:
   GenericMidiDevice();
   virtual bool probe() { return true; }
-  void init_grid_devices();
+  void init_grid_devices(uint8_t device_idx);
 };
 
 class NullMidiDevice : public MidiDevice {

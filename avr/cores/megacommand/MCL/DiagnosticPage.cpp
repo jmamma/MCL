@@ -15,7 +15,7 @@ void DiagnosticPage::draw_perfcounter() {
   auto clock = read_slowclock();
 
   oled_display.setCursor(64, 7);
-  oled_display.print("GUI loop");
+  oled_display.print(F("GUI loop"));
   oled_display.setCursor(97, 7);
   oled_display.print(clock_diff(last_clock, clock));
 
@@ -93,7 +93,7 @@ bool DiagnosticPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {

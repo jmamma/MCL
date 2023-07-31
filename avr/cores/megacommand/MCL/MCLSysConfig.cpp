@@ -134,14 +134,14 @@ bool MCLSysConfig::cfg_init() {
   midi_forward_2 = 0;
   midi_forward_usb = 0;
 
-  auto_save = 1;
+  rec_automation = 1;
   auto_normalize = 1;
   load_mode = LOAD_MANUAL;
   chain_queue_length = 1;
   chain_load_quant = 16;
   ram_page_mode = 0;
   track_select = 1;
-  track_type_select = 0b00000101;
+  track_type_select = 0b00000011;
   uart2_device = 0;
   uart_cc_loopback = 0;
   uart2_prg_mode = 0;
@@ -150,6 +150,7 @@ bool MCLSysConfig::cfg_init() {
   midi_transport_send = 0;
   midi_ctrl_port = 1;
   md_trig_channel = 0;
+  seq_dev = 0;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

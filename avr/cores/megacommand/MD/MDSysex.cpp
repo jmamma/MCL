@@ -61,7 +61,7 @@ void MDSysexListenerClass::end() {
     value = sysex->getByte(offset++);
     fx_type = msgType - MD_SET_RHYTHM_ECHO_PARAM_ID;
 
-    if (param > 8) { return; }
+    if (param > 7) { return; }
 
     switch (msgType) {
       case MD_SET_RHYTHM_ECHO_PARAM_ID:
@@ -78,9 +78,10 @@ void MDSysexListenerClass::end() {
       break;
     }
 
-    for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(17 + fx_type, param, value);
-    }
+    perf_page.learn_param(fx_type + 16, param, value);
+    lfo_page.learn_param(fx_type + 16, param, value);
+    if (GUI.currentPage() == &fx_page_a) { fx_page_a.update_encoders(); }
+    if (GUI.currentPage() == &fx_page_b) { fx_page_b.update_encoders(); }
 
     break;
 
@@ -98,11 +99,7 @@ void MDSysexListenerClass::end() {
 
     //LFOS, LFOD, LFOM
     if (4 < param && param < 8) {
-      mcl_seq.md_tracks[track].update_param(param + 16, value);
       MD.kit.params[track][param + 16] = value;
-      for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-        mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, param + 16, value);
-      }
     }
 
     break;

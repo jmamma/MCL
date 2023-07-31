@@ -45,53 +45,40 @@ void ResourceManager::Restore(uint8_t *buf, size_t sz) {
 
 void ResourceManager::restore_page_entry_deps() {
   // calibrate references
-  R.page_entries->Entries[0].Page = &grid_page;
   R.page_entries->Entries[0].IconData = R.icons_page->icon_grid;
-  R.page_entries->Entries[1].Page = &mixer_page;
   R.page_entries->Entries[1].IconData = R.icons_page->icon_mixer;
-  R.page_entries->Entries[2].Page = &route_page;
-  R.page_entries->Entries[2].IconData = R.icons_page->icon_route;
-  R.page_entries->Entries[3].Page = &lfo_page;
-  R.page_entries->Entries[3].IconData = R.icons_page->icon_lfo;
+  R.page_entries->Entries[2].IconData = R.icons_page->icon_perf;
+  R.page_entries->Entries[3].IconData = R.icons_page->icon_route;
 
-  R.page_entries->Entries[4].Page = &seq_step_page;
+
   R.page_entries->Entries[4].IconData = R.icons_page->icon_step;
+  R.page_entries->Entries[5].IconData = R.icons_page->icon_lfo;
+  R.page_entries->Entries[6].IconData = R.icons_page->icon_pianoroll;
+  R.page_entries->Entries[7].IconData = R.icons_page->icon_chroma;
 
-  R.page_entries->Entries[5].Page = &seq_extstep_page;
-  R.page_entries->Entries[5].IconData = R.icons_page->icon_pianoroll;
-  R.page_entries->Entries[6].Page = &seq_ptc_page;
-  R.page_entries->Entries[6].IconData = R.icons_page->icon_chroma;
 
-  uint8_t idx = 7;
+  uint8_t idx = 8;
 #ifdef SOUND_PAGE
-  R.page_entries->Entries[idx].Page = &sound_browser;
-  R.page_entries->Entries[idx].IconData = R.icons_page->icon_sound;
+  R.page_entries->Entries[idx].IconData = R.icons_page->icon_sample;
   ++idx;
 #endif
 #ifdef WAV_DESIGNER
-  R.page_entries->Entries[idx].Page = &wd.pages[0];
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_wavd;
   ++idx;
 #endif
 #ifdef LOUDNESS_PAGE
-  R.page_entries->Entries[idx].Page = &loudness_page;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_loudness;
   ++idx;
 #endif
 
-  R.page_entries->Entries[idx].Page = &fx_page_a;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_rhytmecho;
   ++idx;
-  R.page_entries->Entries[idx].Page = &fx_page_b;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_gatebox;
   ++idx;
-  R.page_entries->Entries[idx].Page = &ram_page_a;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram1;
   ++idx;
-  R.page_entries->Entries[idx].Page = &ram_page_b;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram2;
   // calibration complete
-
 }
 
 size_t ResourceManager::Size() {
@@ -107,7 +94,6 @@ void ResourceManager::restore_menu_layout_deps() {
 	ram_config_page.set_layout(R.menu_layouts->rampage1_menu_layout);
 	file_menu_page.set_layout(R.menu_layouts->file_menu_layout);
 	seq_menu_page.set_layout(R.menu_layouts->seq_menu_layout);
-	step_menu_page.set_layout(R.menu_layouts->step_menu_layout);
 	grid_slot_page.set_layout(R.menu_layouts->slot_menu_layout);
 	wavdesign_menu_page.set_layout(R.menu_layouts->wavdesign_menu_layout);
     md_import_page.set_layout(R.menu_layouts->mdimport_menu_layout);
@@ -118,6 +104,7 @@ void ResourceManager::restore_menu_layout_deps() {
     midiclock_menu_page.set_layout(R.menu_layouts->midiclock_menu_layout);
     midiroute_menu_page.set_layout(R.menu_layouts->midiroute_menu_layout);
     midimachinedrum_menu_page.set_layout(R.menu_layouts->midimachinedrum_menu_layout);
+    perf_menu_page.set_layout(R.menu_layouts->perf_menu_layout);
 }
 
 ResourceManager R;

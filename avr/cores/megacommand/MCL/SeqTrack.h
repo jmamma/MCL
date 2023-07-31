@@ -4,7 +4,7 @@
 #define SEQTRACK_H__
 
 #include "MCLMemory.h"
-#include "MidiActivePeering.h"
+//#include "MidiActivePeering.h"
 #include "MidiUartParent.h"
 #include "WProgram.h"
 
@@ -20,6 +20,7 @@
 #define SEQ_SPEED_1_2X 4
 #define SEQ_SPEED_1_4X 5
 #define SEQ_SPEED_1_8X 6
+#define SEQ_SPEED_4X 7
 
 #define MASK_PATTERN 0
 #define MASK_LOCK 1
@@ -28,6 +29,17 @@
 #define MASK_LOCKS_ON_STEP 4
 
 #define NUM_LOCKS 8
+
+#define TRIG_FALSE 0
+#define TRIG_TRUE 1
+#define TRIG_ONESHOT 3
+
+#define UART1_PORT 1
+
+// Sequencer editing constants
+#define DIR_LEFT 0
+#define DIR_RIGHT 1
+#define DIR_REVERSE 2
 
 class SeqTrack_270 {};
 
@@ -59,6 +71,8 @@ public:
   MidiUartParent *uart = &MidiUart;
   uint8_t mute_state = SEQ_MUTE_OFF;
 
+  bool record_mutes;
+
   uint8_t length;
   uint8_t speed;
   uint8_t track_number;
@@ -66,7 +80,9 @@ public:
   uint8_t step_count;
   uint8_t mod12_counter;
 
-  SeqTrackBase() { active = EMPTY_TRACK_TYPE; }
+  uint8_t count_down;
+
+  SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
   ALWAYS_INLINE() void step_count_inc() {
     if (step_count == length - 1) {
@@ -77,10 +93,30 @@ public:
     }
   }
 
+  ALWAYS_INLINE() void seq() {
+    uint8_t timing_mid = get_timing_mid();
+    mod12_counter++;
+    if (count_down) {
+      count_down--;
+      if (count_down == 0) {
+        reset();
+        mod12_counter = 0;
+      }
+    }
+    if (mod12_counter == timing_mid) {
+      count_down = 0;
+      mod12_counter = 0;
+      step_count_inc();
+    }
+  }
+
+
   ALWAYS_INLINE() void reset() {
     mod12_counter = -1;
     step_count = 0;
   }
+
+  void toggle_mute() { mute_state = !mute_state; }
 
   uint8_t get_timing_mid(uint8_t speed_) {
     uint8_t timing_mid;
@@ -91,6 +127,9 @@ public:
       break;
     case SEQ_SPEED_2X:
       timing_mid = 6;
+      break;
+    case SEQ_SPEED_4X:
+      timing_mid = 3;
       break;
     case SEQ_SPEED_3_4X:
       timing_mid = 16; // 12 * (4.0/3.0);
@@ -123,6 +162,9 @@ public:
     case SEQ_SPEED_2X:
       timing_mid = 6;
       break;
+    case SEQ_SPEED_4X:
+      timing_mid = 3;
+      break;
     case SEQ_SPEED_3_4X:
       timing_mid = 16; // 12 * (4.0/3.0);
       break;
@@ -144,6 +186,46 @@ public:
 
   float get_speed_multiplier() { return get_speed_multiplier(speed); }
 
+  void get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d) {
+    n = 1;
+    d = 1;
+    switch (speed_) {
+    default:
+    case SEQ_SPEED_1X:
+      //n = 1;
+      //d = 1;
+      break;
+    case SEQ_SPEED_2X:
+      //n = 1;
+      d = 2;
+      break;
+    case SEQ_SPEED_4X:
+      //n = 1;
+      d = 4;
+      break;
+    case SEQ_SPEED_3_4X:
+      n = 4;
+      d = 3;
+      break;
+    case SEQ_SPEED_3_2X:
+      n = 2;
+      d = 3;
+      break;
+    case SEQ_SPEED_1_2X:
+      n = 2;
+      //d = 1;
+      break;
+    case SEQ_SPEED_1_4X:
+      n = 4;
+      //d = 1;
+      break;
+    case SEQ_SPEED_1_8X:
+      n = 8;
+      //d = 1;
+      break;
+    }
+  }
+
   float get_speed_multiplier(uint8_t speed_) {
     float multi;
     switch (speed_) {
@@ -153,6 +235,9 @@ public:
       break;
     case SEQ_SPEED_2X:
       multi = 0.5;
+      break;
+    case SEQ_SPEED_4X:
+      multi = 0.25;
       break;
     case SEQ_SPEED_3_4X:
       multi = (4.0 / 3.0);
@@ -172,6 +257,12 @@ public:
     }
     return multi;
   }
+
+  uint8_t get_quantized_step() {
+    uint8_t u = 0;
+    return get_quantized_step(u);
+  }
+  uint8_t get_quantized_step(uint8_t &utiming, uint8_t quant = 255);
 };
 
 class SeqTrack : public SeqTrackBase {
@@ -182,8 +273,6 @@ public:
   uint8_t iterations_6;
   uint8_t iterations_7;
   uint8_t iterations_8;
-
-  uint8_t count_down;
 
   uint16_t cur_event_idx;
 
@@ -245,6 +334,7 @@ public:
       step_count++;
     }
   }
+  bool conditional(uint8_t condition);
 };
 
 class SeqSlideTrack : public SeqTrack {
@@ -254,6 +344,14 @@ public:
   uint8_t locks_slide_next_lock_step[NUM_LOCKS];
   uint8_t locks_slides_recalc = 255;
   uint16_t locks_slides_idx = 0;
+
+  ALWAYS_INLINE() void reset() {
+    for (uint8_t n = 0; n < NUM_LOCKS; n++) {
+      locks_slide_data[n].init();
+    }
+    SeqTrack::reset();
+  }
+
 
   void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0,
                      int8_t y1);

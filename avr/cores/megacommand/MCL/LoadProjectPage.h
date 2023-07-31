@@ -19,7 +19,7 @@ public:
   virtual void on_delete(const char *entry);
   virtual void on_rename(const char *from, const char *to);
   virtual void setup();
-  void init();
+  virtual void init();
 };
 
 #endif /* LOADPROJECTPAGE_H__ */

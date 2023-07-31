@@ -37,16 +37,15 @@ class LCDParentClass {
 	 * \addtogroup lcd_parent
 	 * @{
 	 **/
-	
 protected:
 	/** Toggle the enable line (left to child). **/
-  virtual void enable() { }
+  virtual void enable() = 0;
 	/** Send a nibble to the display (left to child). **/
-  virtual void putnibble(uint8_t nibble) { }
+  virtual void putnibble(uint8_t nibble) = 0;
 	/** Send a command byte to the display (left to child). **/
-  virtual void putcommand(uint8_t command) { }
+  virtual void putcommand(uint8_t command) = 0;
 	/** Send a data byte to the display (left to child). **/
-  virtual void putdata(uint8_t data) { }
+  virtual void putdata(uint8_t data) = 0;
 
   public:
 #ifdef HOST_MIDIDUINO

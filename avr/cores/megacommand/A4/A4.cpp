@@ -1,4 +1,4 @@
-#include "MCL_impl.h"
+#include "A4.h"
 #include "ResourceManager.h"
 
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
@@ -40,17 +40,18 @@ const ElektronSysexProtocol a4_protocol = {
 A4Class::A4Class()
     : ElektronDevice(&Midi2, "A4", DEVICE_A4, a4_protocol) {}
 
-void A4Class::init_grid_devices() {
+void A4Class::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 1;
 
+  GridDeviceTrack gdt;
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
     uint8_t track_type = EXT_TRACK_TYPE;
 
     if (i < NUM_A4_SOUND_TRACKS) {
       track_type = A4_TRACK_TYPE;
     }
-
-    add_track_to_grid(grid_idx, i, &(mcl_seq.ext_tracks[i]), track_type);
+    gdt.init(track_type, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
+    add_track_to_grid(grid_idx, i, &gdt);
   }
 }
 
@@ -110,6 +111,13 @@ bool A4Class::probe() {
 }
 
 // Caller is responsible to make sure icons_device is loaded in RM
+MCLGIF* A4Class::gif() {
+  return R.icons_logo->analog_gif;
+}
+uint8_t* A4Class::gif_data() {
+  return R.icons_logo->analog_gif_data; ;
+}
+
 uint8_t* A4Class::icon() {
   return R.icons_device->icon_a4;
 }
@@ -220,9 +228,9 @@ bool A4Class::getBlockingSettingsX(uint8_t settings, uint16_t timeout) {
 
   return connected;
 }
-
-void A4Class::muteTrack(uint8_t track, bool mute) {
-  MidiUart2.sendCC(track, 94, mute ? 1 : 0);
+void A4Class::muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {
+  if (uart_ == nullptr) { uart_ = uart; }
+  uart->sendCC(track, 94, mute ? 1 : 0);
 }
 
 void A4Class::setLevel(uint8_t track, uint8_t value) {

@@ -34,8 +34,8 @@ class Adafruit_GFX : public Print {
   // optimized code.  Otherwise 'generic' versions are used.
   virtual void setRotation(uint8_t r);
   virtual void invertDisplay(boolean i);
-  virtual void draw_textbox(char *text, char *text2);
-
+  void draw_textbox(char *text, char *text2);
+  void draw_textbox(const char *text1, const char *text2);
   // BASIC DRAW API
   // These MAY be overridden by the subclass to provide device-specific
   // optimized code.  Otherwise 'generic' versions are used.
@@ -72,9 +72,9 @@ class Adafruit_GFX : public Print {
     drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
       int16_t w, int16_t h, uint16_t color, uint16_t bg, bool flip_vert = false, bool flip_horiz = false),
     drawBitmap(int16_t x, int16_t y, uint8_t *bitmap,
-      int16_t w, int16_t h, uint16_t color),
+      int16_t w, int16_t h, uint16_t color, bool flip_vert = false, bool flip_horiz = false),
     drawBitmap(int16_t x, int16_t y, uint8_t *bitmap,
-      int16_t w, int16_t h, uint16_t color, uint16_t bg),
+      int16_t w, int16_t h, uint16_t color, uint16_t bg, bool flip_vert = false, bool flip_horiz = false),
     drawXBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
       int16_t w, int16_t h, uint16_t color),
     drawGrayscaleBitmap(int16_t x, int16_t y, const uint8_t bitmap[],

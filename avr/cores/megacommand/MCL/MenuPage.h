@@ -32,6 +32,7 @@ public:
   void select_item(uint8_t item = 0) {
   cur_row = 0;
   encoders[1]->cur = 0;
+  encoders[1]->old = 0;
   }
   void loop();
   void display();
@@ -39,6 +40,7 @@ public:
   void init();
   bool enter();
   bool exit();
+  void gen_menu_device_names();
   void gen_menu_row_names();
   virtual bool handleEvent(gui_event_t *event);
 

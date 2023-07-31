@@ -116,7 +116,7 @@ void CRingBuffer<C, N, T>::get_h_isr(C *dst, T n) volatile {
   #ifdef CHECKING
   if (isFull() && check) {
     overflow++;
-    return false;
+    return;
   }
   #endif
 
@@ -151,7 +151,7 @@ void CRingBuffer<C, N, T>::put_h_isr(C *src, T n) volatile {
   #ifdef CHECKING
   if (isFull() && check) {
     overflow++;
-    return false;
+    return;
   }
   #endif
 
@@ -185,7 +185,7 @@ void CRingBuffer<C, N, T>::put_h_isr(C c) volatile {
   #ifdef CHECKING
   if (isFull() && check) {
     overflow++;
-    return false;
+    return;
   }
   #endif
 
@@ -235,8 +235,10 @@ void CRingBuffer<C, N, T>::putp(C *c) volatile {
 
 template <class C, int N, class T> C CRingBuffer<C, N, T>::get_h_isr() volatile {
   C ret;
+  #ifdef CHECKING
   if (isEmpty_isr())
-    return ret;
+    return;
+  #endif
 
   if constexpr (N == 0) {
     ret = get_bank1(ptr + rd);

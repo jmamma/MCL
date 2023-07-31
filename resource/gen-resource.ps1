@@ -36,7 +36,7 @@ function compile($f) {
     -D__AVR_ATmega2560__ `
     -DAVR `
     -std=gnu++1z `
-    -Os $f -c -o "$n.o"
+    -Os --short-enums $f -c -o "$n.o"
   avr-objcopy -O binary -j .data "$n.o" "$n.hex"
   ../compress/bin/Release/netcoreapp3.1/compress.exe "$n.hex" "$n.ez"
   Remove-Item -ErrorAction Ignore patterns.txt

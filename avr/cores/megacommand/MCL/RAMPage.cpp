@@ -46,6 +46,8 @@ void RAMPage::init() {
       }
     }
   }
+  R.Clear();
+  R.use_icons_knob();
 }
 
 void RAMPage::cleanup() { oled_display.clearDisplay(); }
@@ -83,9 +85,8 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   MDTrack md_track;
   MDSeqTrack md_seq_track;
   bool clear_locks = true;
-  bool send_params = false;
 
-  md_seq_track.clear_track(clear_locks, send_params);
+  md_seq_track.clear_track(clear_locks);
 
   md_track.machine.init();
 
@@ -194,11 +195,10 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   uint8_t track_length = encoders[3]->cur * 4;
   uint8_t step_inc = track_length / slices;
   bool clear_locks = true;
-  bool send_params = false;
 
   auto &trk = mcl_seq.md_tracks[track];
   auto &ln_trk = mcl_seq.md_tracks[linked_track];
-  trk.clear_track(clear_locks, send_params);
+  trk.clear_track(clear_locks);
 
   trk.locks_params[0] = ROM_STRT + 1;
   trk.locks_params[1] = ROM_END + 1;
@@ -235,7 +235,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
       }
       case 6: {
         uint8_t t;
-        t = random(0, slices);
+        t = get_random(slices);
         trk.set_track_locks_i(n, 0, sample_inc * (t) + 0);
         uint8_t val = (sample_inc) * (t + 1) + 0;
         trk.set_track_locks_i(n, 1, val);
@@ -284,12 +284,10 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   MDSeqTrack md_seq_track;
 
   bool clear_locks = true;
-  bool send_params = false;
 
-  md_seq_track.clear_track(clear_locks, send_params);
+  md_seq_track.clear_track(clear_locks);
 
-  mcl_seq.md_tracks[track].clear_track(
-      clear_locks, send_params); // make sure current track does not retrigger
+  mcl_seq.md_tracks[track].clear_track(clear_locks); // make sure current track does not retrigger
 
   md_track.machine.init();
 
@@ -455,26 +453,26 @@ void RAMPage::display() {
   oled_display.setCursor(28, 24);
   switch (RAMPage::rec_states[page_id]) {
   case STATE_QUEUE:
-    oled_display.print(" [Queue]");
+    oled_display.print(F(" [Queue]"));
     break;
   case STATE_RECORD:
-    oled_display.print(" [Record]");
+    oled_display.print(F(" [Record]"));
     break;
   case STATE_PLAY:
-    oled_display.print(" [Play]");
+    oled_display.print(F(" [Play]"));
     break;
   }
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 32);
 
-  oled_display.print("RAM ");
+  oled_display.print(F("RAM "));
   oled_display.print(page_id + 1);
 
   oled_display.setCursor(105, 32);
   if (mcl_cfg.ram_page_mode == 0) {
-    oled_display.print("MONO");
+    oled_display.print(F("MONO"));
   } else {
-    oled_display.print("LINK");
+    oled_display.print(F("LINK"));
   }
   oled_display.setFont();
   oled_display.setCursor(0, 24);
@@ -520,9 +518,9 @@ void RAMPage::display() {
   }
   /*
     oled_display.print(encoders[1]->cur);
-    oled_display.print(" S:");
+    oled_display.print(F(" S:"));
     oled_display.print(1 << encoders[2]->cur);
-    oled_display.print(" L:");
+    oled_display.print(F(" L:"));
     oled_display.print(encoders[3]->cur * 4);
   */
   mcl_gui.draw_knob_frame();
@@ -567,32 +565,35 @@ void RAMPage::display() {
     oled_display.fillRect(progress_x + 1, progress_y, width, 4, WHITE);
   }
 
+  bool flip_hor = false, flip_vert = false;
+  uint8_t *icon = R.icons_knob->wheel_top;
   switch (wheel_spin) {
   case 0:
-    oled_display.drawBitmap(w_x, w_y, wheel_top, 19, 19, WHITE);
     break;
   case 1:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE);
+    icon = R.icons_knob->wheel_angle;
     break;
   case 2:
-    oled_display.drawBitmap(w_x, w_y, wheel_side, 19, 19, WHITE);
+    icon = R.icons_knob->wheel_side;
     break;
   case 3:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, false, true);
+    icon = R.icons_knob->wheel_angle; flip_hor = false; flip_vert = true;
     break;
   case 4:
-    oled_display.drawBitmap(w_x, w_y, wheel_top, 19, 19, WHITE, false, true);
+    icon = R.icons_knob->wheel_top; flip_hor = false; flip_vert = true;
     break;
   case 5:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, true, true);
+    icon = R.icons_knob->wheel_angle; flip_hor = true; flip_vert = true;
     break;
   case 6:
-    oled_display.drawBitmap(w_x, w_y, wheel_side, 19, 19, WHITE, true, false);
+    icon = R.icons_knob->wheel_side; flip_hor = true; flip_vert = false;
     break;
   case 7:
-    oled_display.drawBitmap(w_x, w_y, wheel_angle, 19, 19, WHITE, true, false);
+    icon = R.icons_knob->wheel_angle; flip_hor = true; flip_vert = false;
     break;
   }
+  oled_display.drawBitmap(w_x, w_y, icon, 19, 19, WHITE, flip_hor, flip_vert);
+
   if ((wheel_spin_last_clock != MidiClock.div16th_counter) &&
       ((RAMPage::rec_states[page_id] == STATE_RECORD) ||
        (RAMPage::rec_states[page_id] == STATE_PLAY))) {
@@ -659,9 +660,6 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
         }
         */
       } else {
-        if (track_param < 24) {
-          mcl_seq.md_tracks[n].update_param(track_param, value);
-        }
         MD.setTrackParam(n, track_param, value, nullptr, true);
       }
     }
@@ -714,7 +712,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.ENCODER2) ||
       EVENT_PRESSED(event, Buttons.ENCODER3) ||
       EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
   yes:
@@ -770,7 +768,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
 

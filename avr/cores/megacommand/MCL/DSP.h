@@ -3,7 +3,7 @@
 #ifndef DSP_H__
 #define DSP_H__
 
-#include "MCL.h"
+#include "mcl.h"
 #include "math.h"
 
 #define FULL_SCALE 0xFFFF

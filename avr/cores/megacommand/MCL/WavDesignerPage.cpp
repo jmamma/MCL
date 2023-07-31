@@ -19,9 +19,9 @@ void wavdesign_menu_handler() {
   }
   WavDesignerPage::last_mode = WavDesignerPage::opt_mode;
   if (WavDesignerPage::opt_mode == 3) {
-    GUI.setPage(&wd.mixer);
+    mcl.setPage(WD_MIXER_PAGE);
   } else {
-    GUI.setPage(&wd.pages[WavDesignerPage::opt_mode]);
+    mcl.setPage(WD_PAGE_0 + WavDesignerPage::opt_mode);
   }
 }
 
@@ -49,16 +49,10 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
       uint8_t inc = 1;
     //  if (show_menu) {
         switch (key) {
-        case MDX_KEY_YES:
-          //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
-          return true;
-        case MDX_KEY_NO:
-          //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
-          return true;
-        case MDX_KEY_UP:
+        case MDX_KEY_DOWN:
           encoders[1]->cur -= inc;
           break;
-        case MDX_KEY_DOWN:
+        case MDX_KEY_UP:
           encoders[1]->cur += inc;
           break;
         case MDX_KEY_LEFT:
@@ -103,7 +97,7 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
   return false;

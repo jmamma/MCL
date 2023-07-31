@@ -3,7 +3,6 @@
 #ifndef GRID_H__
 #define GRID_H__
 
-#include "A4Track.h"
 #include "GridRowHeader.h"
 #include "MCLSd.h"
 #include "SdFat.h"
@@ -41,19 +40,19 @@ public:
 
   bool close_file() { return file.close(); }
 
-  uint8_t get_slot_model(int column, int row, bool load);
+  uint8_t get_slot_model(uint8_t column, uint16_t row, bool load);
 
-  uint32_t get_slot_offset(int16_t column, int16_t row) {
-    uint32_t offset = (int32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
-                      (int32_t)((column + 1) + (row * (GRID_WIDTH + 1))) *
-                          (int32_t)GRID_SLOT_BYTES;
+  uint32_t get_slot_offset(uint8_t column, int16_t row) {
+    uint32_t offset = (uint32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
+                      (uint32_t)((column + 1) + (row * (GRID_WIDTH + 1))) *
+                          (uint32_t)GRID_SLOT_BYTES;
     return offset;
   }
 
   uint32_t get_row_header_offset(int16_t row) {
     uint32_t offset =
-        (int32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
-        (int32_t)(0 + (row * (GRID_WIDTH + 1))) * (int32_t)GRID_SLOT_BYTES;
+        (uint32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
+        (uint32_t)(0 + (row * (GRID_WIDTH + 1))) * (uint32_t)GRID_SLOT_BYTES;
     return offset;
   }
 
@@ -65,11 +64,11 @@ public:
     return mcl_sd.seek(get_row_header_offset(row), &file);
   }
 
-  bool copy_slot(int16_t s_col, int16_t s_row, int16_t d_col, int16_t d_row,
+  bool copy_slot(uint8_t s_col, uint16_t s_row, uint8_t d_col, uint16_t d_row,
                  bool destination_same);
-  bool clear_slot(int16_t column, int16_t row, bool update_header = true);
-  bool clear_row(int16_t row);
-  bool clear_model(int16_t column, uint16_t row);
+  bool clear_slot(uint8_t column, uint16_t row, bool update_header = true);
+  bool clear_row(uint16_t row);
+  bool clear_model(uint8_t column, uint16_t row);
 
   bool read(void *data, size_t len) {
     return mcl_sd.read_data((uint8_t *)(data), len, &file);

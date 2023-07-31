@@ -4,12 +4,12 @@
 #define PROJECT_H__
 
 #include "Grid.h"
+#include "MidiDeviceGrid.h"
 #include "MCLMemory.h"
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
 
 #define PROJ_VERSION 3000
-#define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"
 
 class ProjectHeader {
@@ -25,7 +25,7 @@ public:
   File file;
   uint8_t grid_select;
 
-  Grid grids[NUM_GRIDS];
+  MidiDeviceGrid grids[NUM_GRIDS];
 
   void chdir_projects();
   bool project_loaded = false;

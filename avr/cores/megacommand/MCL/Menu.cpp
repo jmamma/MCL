@@ -15,11 +15,12 @@ void MenuBase::enable_entry(uint8_t entry_index, bool en) {
 bool MenuBase::is_entry_enable(uint8_t entry_index) {
   auto midx = entry_index / 8;
   auto bit = entry_index % 8;
-  return bit_is_set(entry_mask[midx], bit);
+  return IS_BIT_SET(entry_mask[midx], bit);
 }
 
 menu_function_t MenuBase::get_row_function(uint8_t item_n) {
   const menu_item_t *item = get_item(item_n);
+  if (item == nullptr) { return nullptr; }
   return (menu_function_t)pgm_read_word(menu_target_functions + item->row_function_id);
 }
 
@@ -38,7 +39,7 @@ const menu_item_t *MenuBase::get_item(uint8_t item_n) {
   for(uint8_t idx = 0; idx < entry_cnt; ++idx) {
     if(is_entry_enable(idx)) {
       if (item_n == 0) {
-        return get_entry_address(idx);
+         return get_entry_address(idx);
       }else {
         --item_n;
       }
@@ -58,9 +59,12 @@ const char* MenuBase::get_item_name(uint8_t item_n) {
   return item->name;
 }
 
-LightPage *MenuBase::get_page_callback(uint8_t item_n) {
+PageIndex MenuBase::get_page_callback(uint8_t item_n) {
+  DEBUG_PRINTLN("get page callback");
   auto *item = get_item(item_n);
-  return (LightPage*)pgm_read_word(menu_target_pages + item->page_callback_id);
+  DEBUG_PRINTLN(item->page_callback_id);
+  if (item == nullptr) { return NULL_PAGE; }
+  return (PageIndex) item->page_callback_id;
 }
 
 uint8_t *MenuBase::get_dest_variable(uint8_t item_n) {

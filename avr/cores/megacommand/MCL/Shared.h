@@ -3,7 +3,7 @@
 #ifndef SHARED_H__
 #define SHARED_H__
 
-#include "MCL.h"
+#include "mcl.h"
 #include "math.h"
 
 struct MusicalNotes {

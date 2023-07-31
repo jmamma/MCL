@@ -7,7 +7,7 @@ inline char _getchar(uint8_t i) {
   if (i >= sz_allowedchar)
     i = sz_allowedchar - 1;
   return i
-      ["abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_&@-=! "];
+      ["abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_&@-=!"];
 }
 
 // chr -> idx
@@ -26,7 +26,10 @@ uint8_t _findchar(char chr) {
 
 void TextInputPage::setup() {}
 
-void TextInputPage::init() { oled_display.setTextColor(WHITE, BLACK); }
+void TextInputPage::init() {
+  oled_display.setTextColor(WHITE, BLACK);
+  mcl_gui.draw_popup(title,false,24);
+}
 
 void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   textp = text_;
@@ -34,6 +37,11 @@ void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   length = len;
   max_length = len;
   strncpy(text, text_, len);
+  //Replace null characeters with space, it will be added back in upon exit.
+  for (uint8_t n = 0; n < len; n++) {
+    if (text[n] == '\0') { text[n] = ' '; }
+  }
+  text[sizeof(text) - 1] = '\0';
   cursor_position = 0;
   config_normal();
 }
@@ -58,7 +66,6 @@ void TextInputPage::config_normal() {
   update_char();
 #ifdef OLED_DISPLAY
   // redraw popup body
-  mcl_gui.draw_popup(title);
 #endif
   // update clock
   last_clock = slowclock;
@@ -83,7 +90,20 @@ static void calc_charpane_coord(uint8_t &x, uint8_t &y) {
 }
 
 void TextInputPage::loop() {
-  if (normal_mode == false) {
+  if (normal_mode) {
+  if (encoders[0]->hasChanged()) {
+    update_char();
+    last_clock = slowclock;
+  }
+
+  if (encoders[1]->hasChanged()) {
+    last_clock = slowclock;
+    encoders[1]->old = encoders[1]->cur;
+    text[cursor_position] = _getchar(encoders[1]->getValue());
+  }
+
+  }
+  else {
     if (encoders[1]->cur == ((MCLEncoder *)encoders[1])->max) {
       ((MCLEncoder *)encoders[0])->max = charpane_w - 4;
     }
@@ -97,7 +117,6 @@ void TextInputPage::loop() {
 // E0 -> x axis [0..17]
 // E1 -> y axis [0..3]
 void TextInputPage::config_charpane() {
-#ifdef OLED_DISPLAY
   // char pane not supported on 1602 displays
 
   ((MCLEncoder *)encoders[0])->max = charpane_w - 1;
@@ -111,26 +130,6 @@ void TextInputPage::config_charpane() {
   encoders[1]->cur = chridx / charpane_w;
   encoders[1]->old = encoders[1]->cur;
 
-  oled_display.setFont(&TomThumb);
-  oled_display.clearDisplay();
-  oled_display.drawRect(0, 0, 128, 32, WHITE);
-  uint8_t chidx = 0;
-  for (uint8_t y = 0; y < charpane_h; ++y) {
-    for (uint8_t x = 0; x < charpane_w; ++x) {
-      auto sx = x, sy = y;
-      calc_charpane_coord(sx, sy);
-      oled_display.setCursor(sx + charpane_padx, sy + charpane_pady);
-      oled_display.print(_getchar(chidx));
-      ++chidx;
-    }
-  }
-
-  // initial highlight of selected char
-  uint8_t sx = encoders[0]->cur, sy = encoders[1]->cur;
-  calc_charpane_coord(sx, sy);
-  oled_display.fillRect(sx, sy, 5, 7, INVERT);
-  oled_display.display();
-#endif
 }
 
 void TextInputPage::display_normal() {
@@ -142,16 +141,6 @@ void TextInputPage::display_normal() {
 
   // Check to see that the character chosen is in the list of allowed
   // characters
-  if (encoders[0]->hasChanged()) {
-    update_char();
-    last_clock = slowclock;
-  }
-
-  if (encoders[1]->hasChanged()) {
-    last_clock = slowclock;
-    encoders[1]->old = encoders[1]->cur;
-    text[cursor_position] = _getchar(encoders[1]->getValue());
-  }
   auto time = clock_diff(last_clock, slowclock);
 
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
@@ -173,32 +162,33 @@ void TextInputPage::display_normal() {
     last_clock = slowclock;
   }
   oled_display.setFont(oldfont);
-  oled_display.display();
 }
 
 void TextInputPage::display_charpane() {
-#ifdef OLED_DISPLAY
-  if (encoders[0]->hasChanged() || encoders[1]->hasChanged()) {
-    // clear old highlight
-    uint8_t sx = encoders[0]->old, sy = encoders[1]->old;
-    calc_charpane_coord(sx, sy);
-    oled_display.fillRect(sx, sy, 5, 7, INVERT);
+  oled_display.setFont(&TomThumb);
+  oled_display.clearDisplay();
+  oled_display.drawRect(0, 0, 128, 32, WHITE);
+  uint8_t chidx = 0;
+  for (uint8_t y = 0; y < charpane_h; ++y) {
+    for (uint8_t x = 0; x < charpane_w; ++x) {
+      auto sx = x, sy = y;
+      calc_charpane_coord(sx, sy);
+      oled_display.setCursor(sx + charpane_padx, sy + charpane_pady);
+      oled_display.print(_getchar(chidx));
+      ++chidx;
+    }
+  }
+
     // draw new highlight
-    sx = encoders[0]->cur;
-    sy = encoders[1]->cur;
+    uint8_t sx = encoders[0]->cur;
+    uint8_t sy = encoders[1]->cur;
     calc_charpane_coord(sx, sy);
     oled_display.fillRect(sx, sy, 5, 7, INVERT);
     // update text. in charpane mode, cursor_position remains constant
     uint8_t chridx = encoders[0]->cur + encoders[1]->cur * charpane_w;
     text[cursor_position] = _getchar(chridx);
-    // mark encoders as unchanged
-    encoders[0]->old = encoders[0]->cur;
-    encoders[1]->old = encoders[1]->cur;
-  }
 
   last_clock = slowclock;
-  oled_display.display();
-#endif
 }
 
 void TextInputPage::display() {
@@ -206,6 +196,8 @@ void TextInputPage::display() {
     display_normal();
   else
     display_charpane();
+
+  oled_display.display();
 }
 
 bool TextInputPage::handleEvent(gui_event_t *event) {
@@ -224,10 +216,10 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
         //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
-        encoders[1]->cur -= inc;
+        encoders[1]->cur += normal_mode ? inc : -1 * inc;
         break;
       case MDX_KEY_DOWN:
-        encoders[1]->cur += inc;
+        encoders[1]->cur += normal_mode ? -1 * inc : inc;
         break;
       case MDX_KEY_LEFT:
         encoders[0]->cur -= inc;
@@ -263,6 +255,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
         cursor_position = length - 1;
       }
       // then, config normal input line
+      init();
       config_normal();
       return true;
     }
@@ -274,7 +267,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     DEBUG_PRINTLN("pop a");
     return_state = false;
     GUI.ignoreNextEvent(event->source);
-    GUI.popPage();
+    mcl.popPage();
     return true;
   }
 
@@ -314,7 +307,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     strncpy(textp, text, cpy_len);
     textp[cpy_len] = '\0';
     GUI.ignoreNextEvent(event->source);
-    GUI.popPage();
+    mcl.popPage();
     return true;
   }
 

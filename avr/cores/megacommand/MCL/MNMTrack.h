@@ -21,6 +21,7 @@ public:
   bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
 
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
   void get_machine_from_kit(uint8_t tracknumber);
   virtual bool store_in_grid(uint8_t column, uint16_t row,
                              SeqTrack *seq_track = nullptr, uint8_t merge = 0,

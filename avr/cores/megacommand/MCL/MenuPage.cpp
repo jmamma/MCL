@@ -10,12 +10,14 @@ void MenuPageBase::init() {
   DEBUG_PRINT("R.Size() = ");
   DEBUG_PRINTLN(R.Size());
   R.restore_menu_layout_deps();
-  gen_menu_row_names();
 
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
+
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
+    cur_row = 0;
   }
+
   ((MCLEncoder *)encoders[0])->max =
       get_menu()->get_option_range(encoders[1]->cur) - 1;
   ((MCLEncoder *)encoders[0])->min =
@@ -27,6 +29,19 @@ void MenuPageBase::init() {
   }
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
+}
+
+void MenuPageBase::gen_menu_device_names() {
+  MenuBase *m = get_menu();
+  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
+  m->set_custom_options(p);
+
+  for (uint8_t n = 0; n < NUM_DEVS; n++) {
+    p->pos = n + 1;
+    strcpy(p->name,midi_active_peering.get_device(n + 1)->name);
+    p++;
+  }
+
 }
 
 void MenuPageBase::gen_menu_row_names() {
@@ -105,7 +120,7 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
   uint8_t number_of_options = get_menu()->get_number_of_options(item_n);
   if (get_menu()->get_option_range(item_n) > 0) {
 
-    oled_display.print(" ");
+    oled_display.print(F(" "));
     uint8_t *pdest = get_menu()->get_dest_variable(item_n);
     const char *option_name = get_menu()->get_option_name(item_n, *pdest);
     if (option_name == NULL) {
@@ -166,31 +181,28 @@ void MenuPageBase::display() {
 bool MenuPageBase::enter() {
   DEBUG_PRINT_FN();
   void (*row_func)() = get_menu()->get_row_function(encoders[1]->cur);
-  LightPage *page_callback = get_menu()->get_page_callback(encoders[1]->cur);
-  if (page_callback != NULL) {
-    DEBUG_PRINTLN("pushing page");
+  PageIndex page_callback = get_menu()->get_page_callback(encoders[1]->cur);
+  if (page_callback != NULL_PAGE) {
+    DEBUG_PRINTLN("menu pushing page");
     DEBUG_PRINTLN((uint16_t)page_callback);
-    GUI.pushPage(page_callback);
+    mcl.pushPage(page_callback);
     return true;
   }
   if (row_func != NULL) {
     DEBUG_PRINTLN(F("calling callback func"));
     (*row_func)();
-    return false;
+    return true;
   }
+  return false;
 }
 
 bool MenuPageBase::exit() {
-  // Page *exit_page_callback = get_menu()->get_exit_page_callback();
-  DEBUG_PRINTLN("calling exit func");
+  if (GUI.currentPage() != this) { return; }
   void (*exit_func)() = get_menu()->get_exit_function();
   if (exit_func != NULL) {
-    (*exit_func)();
-    //
+     (*exit_func)();
   }
-  // if (exit_page_callback != NULL) {
-  GUI.popPage();
-  //}
+  mcl.popPage();
 }
 
 bool MenuPageBase::handleEvent(gui_event_t *event) {
@@ -230,6 +242,7 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
   YES:
+    DEBUG_PRINTLN("YES");
     enter();
     return true;
   }

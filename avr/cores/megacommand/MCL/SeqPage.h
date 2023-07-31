@@ -36,7 +36,6 @@ extern uint8_t opt_channel;
 extern uint8_t opt_undo;
 extern uint8_t opt_undo_track;
 
-extern MidiDevice *opt_midi_device_capture;
 extern uint16_t trigled_mask;
 extern uint16_t locks_on_step_mask;
 
@@ -64,7 +63,6 @@ extern void opt_paste_page_handler();
 extern void opt_clear_step_handler();
 
 extern void seq_menu_handler();
-extern void step_menu_handler();
 
 
 class MidiDevice;
@@ -92,7 +90,6 @@ public:
   static MidiDevice* midi_device;
 
   static bool show_seq_menu;
-  static bool show_step_menu;
   static bool toggle_device;
 
   static uint8_t last_midi_state;
@@ -102,7 +99,8 @@ public:
   static uint32_t last_md_model;
 
   static bool recording;
-  static uint16_t ext_mute_mask;
+
+  static uint16_t mute_mask;
 
   bool display_page_index = true;
   char info1[8] = { '\0' };
@@ -148,8 +146,9 @@ public:
   void toggle_ext_mask(uint8_t track);
 
   void params_reset();
+  void length_handler(uint8_t length, bool multi = false);
 
-  void display_ext_mute_mask();
+  bool display_mute_mask(MidiDevice *device, uint8_t offset = 0);
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void loop();
@@ -157,7 +156,7 @@ public:
   virtual void setup();
   virtual void init();
   virtual void cleanup();
-
+  virtual void config_encoders() = 0;
   static constexpr uint8_t pidx_x0 = 0;
   static constexpr uint8_t pidx_y = 15;
   static constexpr uint8_t pidx_w = 6;

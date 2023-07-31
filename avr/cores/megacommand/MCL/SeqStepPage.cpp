@@ -6,16 +6,15 @@
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
-  seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
-  seq_param3.old = seq_param3.cur;
+
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
-  seq_param4.cur = 0;
-  seq_param4.old = 0;
   if (tuning) {
     seq_param4.max = tuning->len - 1 + tuning->base;
   } else {
     seq_param4.max = 1;
   }
+  seq_param4.cur = 0;
+  seq_param4.old = 0;
   // config info labels
   const char *str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
   const char *str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
@@ -37,6 +36,9 @@ void SeqStepPage::config() {
 }
 
 void SeqStepPage::config_encoders() {
+  if (show_seq_menu) {
+    return;
+  }
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
   seq_param3.cur = mcl_seq.md_tracks[last_md_track].length;
   seq_param3.old = seq_param3.cur;
@@ -49,10 +51,12 @@ void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("init seqstep"));
   SeqPage::init();
-  opt_midi_device_capture = &MD;
 
   pitch_param = 255;
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
+
   SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
 
   midi_events.setup_callbacks();
@@ -101,6 +105,9 @@ void SeqStepPage::cleanup() {
   params_reset();
   MD.set_rec_mode(0);
   MD.popup_text(127, 2); // clear persistent trig mode popup
+  if (MD.encoder_interface) {
+    MD.deactivate_encoder_interface();
+  }
 }
 
 void SeqStepPage::display() {
@@ -145,7 +152,7 @@ void SeqStepPage::display() {
 
   if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-      (!show_step_menu) && (tuning != NULL) && !(recording)) {
+      (tuning != NULL) && !(recording)) {
     uint64_t note_mask[2] = {};
     uint8_t note = seq_param4.cur; // + tuning->base;
     SET_BIT64(note_mask, note);
@@ -165,7 +172,7 @@ void SeqStepPage::display() {
     SeqPage::display();
     if (mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-        (!show_step_menu) && (!recording)) {
+        (!recording)) {
 
       mcl_gui.draw_microtiming(mcl_seq.md_tracks[last_md_track].speed,
                                seq_param2.cur);
@@ -181,7 +188,7 @@ void SeqStepPage::display() {
 
 void SeqStepPage::loop() {
   if (MD.global.extendedMode != 2) {
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
     return;
   }
   SeqPage::loop();
@@ -263,7 +270,7 @@ void SeqStepPage::loop() {
   }
 
   if (note_interface.notes_all_off_md() && !grid_page.bank_popup) {
-    mcl_gui.init_encoders_used_clock();
+    init_encoders_used_clock();
     // active_track.reset_params();
     MD.deactivate_encoder_interface();
 
@@ -271,10 +278,6 @@ void SeqStepPage::loop() {
     update_params_clock = slowclock;
 
     note_interface.init_notes();
-    if (reset_on_release) {
-      active_track.reset_params();
-      reset_on_release = false;
-    }
   }
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
@@ -312,7 +315,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (device != &MD) {
       return true;
     }
-
+    if (show_seq_menu) {
+      opt_trackid = track + 1;
+      note_interface.ignoreNextEvent(track);
+      select_track(device, track);
+      seq_menu_page.select_item(0);
+      return true;
+    }
     uint8_t step = track + (page_select * 16);
 
     step_select = track;
@@ -361,7 +370,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
       uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
       if (pitch > 127) {
-         pitch = MD.kit.params[last_md_track][0];
+        pitch = MD.kit.params[last_md_track][0];
       }
       /*
       if (pitch == 255) {
@@ -386,12 +395,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param2.cur = utiming;
       seq_param2.old = utiming;
       if (!active_track.get_step(step, mask_type)) {
+        reset_undo();
         bool cond_plock;
         active_track.steps[step].cond_id =
             translate_to_step_conditional(condition, &cond_plock);
         active_track.steps[step].cond_plock = cond_plock;
         active_track.timing[step] = utiming;
-        CLEAR_BIT64(active_track.oneshot_mask, step);
+        CLEAR_BIT64(active_track.mute_mask, step);
         active_track.set_step(step, mask_type, true);
         SET_BIT16(ignore_release, track);
       }
@@ -413,6 +423,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
         if (clock_diff(note_interface.note_hold[port], slowclock) <
             TRIG_HOLD_TIME) {
+          reset_undo();
           active_track.set_step(step, mask_type, false);
           if (mask_type == MASK_PATTERN) {
             active_track.steps[step].cond_id = 0;
@@ -529,19 +540,18 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
         break;
       }
-      case MDX_KEY_YES: {
-        if (step == 255) {
-          return true;
-        }
-        active_track.send_parameter_locks(step, true);
-        reset_on_release = true;
-        MD.triggerTrack(last_md_track, 127);
-        break;
-      }
       case MDX_KEY_NO: {
         if (mask_type != MASK_PATTERN) {
           mask_type = MASK_PATTERN;
           config_mask_info(false);
+        }
+        else {
+          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+            if (note_interface.is_note_on(n)) {
+              uint8_t s = n + (page_select * 16);
+              TOGGLE_BIT64(active_track.mute_mask,s);
+            }
+          }
         }
         break;
       }
@@ -579,35 +589,33 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
         break;
       }
-      case MDX_KEY_UP: {
-        if (step == 255) {
-          return;
-        }
-        seq_param1.cur += 1;
-        return true;
       }
-      case MDX_KEY_DOWN: {
-        if (step == 255) {
-          return;
+      if (step != 255) {
+        switch (key) {
+        case MDX_KEY_YES: {
+          active_track.send_parameter_locks(step, true);
+          reset_on_release = true;
+          MD.triggerTrack(last_md_track, 127);
+          break;
         }
-        seq_param1.cur -= 1;
 
-        return;
-      }
-      case MDX_KEY_LEFT: {
-        if (step == 255) {
-          return;
+        case MDX_KEY_UP: {
+          seq_param1.cur += 1;
+          break;
         }
-        seq_param2.cur -= 1;
-        return true;
-      }
-      case MDX_KEY_RIGHT: {
-        if (step == 255) {
-          return;
+        case MDX_KEY_DOWN: {
+          seq_param1.cur -= 1;
+          break;
         }
-        seq_param2.cur += 1;
-        return true;
-      }
+        case MDX_KEY_LEFT: {
+          seq_param2.cur -= 1;
+          break;
+        }
+        case MDX_KEY_RIGHT: {
+          seq_param2.cur += 1;
+          break;
+        }
+        }
       }
       return true;
     }
@@ -687,15 +695,12 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     }
     seq_step_page.config_encoders();
 
-    mcl_seq.md_tracks[track].update_param(track_param, value);
-
-    MD.kit.params[track][track_param] = value;
     mcl_seq.md_tracks[track].record_track_locks(track_param, value);
     return;
   }
 
   uint8_t store_lock = 255;
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if ((note_interface.is_note_on(i))) {
       step = i + (SeqPage::page_select * 16);
       if (step < active_track.length) {

@@ -13,6 +13,8 @@ extern "C" {
 #include <util/delay.h>
 }
 
+#include "MCLSeq.h"
+
 #define OLED_CLK 52
 #define OLED_MOSI 51
 
@@ -177,7 +179,14 @@ ISR(TIMER1_COMPA_vect) {
         MidiClock.increment192Counter();
         MidiClock.div192th_countdown = 0;
         MidiClock.div192th_counter_last = MidiClock.div192th_counter;
-        MidiClock.callCallbacks();
+        if (MidiClock.inCallback) { return; }
+        MidiClock.inCallback = true;
+        uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+        MidiUartParent::handle_midi_lock = 1;
+        sei();
+        mcl_seq.seq();
+        MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+        MidiClock.inCallback = false;
       }
     }
   }
@@ -202,9 +211,9 @@ ALWAYS_INLINE() void gui_poll() {
   static bool inGui = false;
   if (inGui) {
     return;
-  } else {
-    inGui = true;
   }
+
+  inGui = true;
 
   uint16_t sr = SR165.read16();
   if (sr != oldsr) {

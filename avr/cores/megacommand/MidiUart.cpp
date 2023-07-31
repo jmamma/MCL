@@ -1,4 +1,4 @@
-#define IS_ISR_ROUTINE
+//#define IS_ISR_ROUTINE
 
 #include "WProgram.h"
 
@@ -12,6 +12,8 @@
 
 #include <MidiClock.h>
 #include <avr/io.h>
+
+#include "MCLSeq.h"
 
 MidiUartClass::MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf,
                              uint16_t rx_buf_size, volatile uint8_t *tx_buf,
@@ -87,7 +89,14 @@ void MidiUartClass::realtime_isr(uint8_t c) {
   if (c == MIDI_CLOCK) {
     if (MidiClock.uart_clock_recv == this) {
       MidiClock.handleClock();
-      MidiClock.callCallbacks(true);
+      if (MidiClock.state != 2 || MidiClock.inCallback) { return; }
+      MidiClock.inCallback = true;
+      uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+      MidiUartParent::handle_midi_lock = 1;
+      sei();
+      mcl_seq.seq();
+      MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+      MidiClock.inCallback = false;
     }
   } else if (MidiClock.uart_transport_recv1 == this ||
              MidiClock.uart_transport_recv2 == this) {

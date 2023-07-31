@@ -44,11 +44,15 @@ public:
   void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track);
   bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr,
                                 uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
+  void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                              uint8_t slotnumber);
+  bool transition_cache(uint8_t tracknumber, uint8_t slotnumber);
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(MDFXTrack); }
-  virtual uint32_t get_region() { return BANK1_MDFX_TRACK_START; }
+  virtual uint16_t get_region() { return BANK1_MDFX_TRACK_START; }
 
   virtual uint8_t get_model() { return MDFX_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDFX_TRACK_TYPE; }

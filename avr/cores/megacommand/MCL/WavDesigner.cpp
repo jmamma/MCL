@@ -8,23 +8,21 @@ void WavDesigner::prompt_send() {
   oled_display.textbox("Render", "");
   oled_display.display();
   //Order of statements important for directory switching.
-  GUI.pushPage(&sound_browser);
-  sound_browser.show_samplemgr = true;
-  sound_browser.pending_action = PA_SELECT;
-  sound_browser.filetype_idx = FT_WAV;
-  sound_browser.setup();
-  sound_browser.show_samplemgr = true;
+  mcl.pushPage(SAMPLE_BROWSER);
+  sample_browser.show_samplemgr = true;
+  sample_browser.pending_action = PA_SELECT;
+  sample_browser.setup();
   wd.render();
-  sound_browser.init();
-  if (sound_browser.file.open(WAV_NAME, O_READ)) {
-    while (GUI.currentPage() == &sound_browser &&
-           sound_browser.pending_action == PA_SELECT && sound_browser.show_samplemgr) {
+  sample_browser.init(true);
+  if (sample_browser.file.open(WAV_NAME, O_READ)) {
+    while (mcl.currentPage() == SAMPLE_BROWSER &&
+           sample_browser.pending_action == PA_SELECT && sample_browser.show_samplemgr) {
       GUI.loop();
     }
   }
   DEBUG_PRINTLN("cleaning up");
-  sound_browser.file.close();
-  GUI.setPage(&wd.mixer);
+  sample_browser.file.close();
+  mcl.setPage(WD_MIXER_PAGE);
   // oled_display.textbox("Sending..","");
   //
   // oled_display.display();

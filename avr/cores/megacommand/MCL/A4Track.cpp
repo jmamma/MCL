@@ -1,5 +1,4 @@
 #include "MCL_impl.h"
-//#include "MCLSd.h"
 
 #define A4_SOUND_LENGTH 0x19F
 
@@ -70,6 +69,8 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 // !! Note do not rely on editor code lint errors -- these are for 32bit/64bit x86 sizes!
 // Do compile with avr-gcc and observe the error messages
 
+//__SIZE_PROBE<BANK1_MDTEMPO_TRACK_START + 2094 * NUM_EXT_TRACKS> size;
+//__SIZE_PROBE<sizeof(PerfTrack)> perftrackdata;
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__SIZE_PROBE<sizeof(MDSeqTrackData)> mdseqtrackdata;
 //__SIZE_PROBE<sizeof(a4sound_t)> sza4t;
@@ -95,6 +96,6 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 //__SIZE_PROBE<BANK1_MD_TRACKS_START> addr_md;
 //__SIZE_PROBE<BANK1_AUX_TRACKS_START> addr_aux;
 //__SIZE_PROBE<BANK1_A4_TRACKS_START> addr_a4;
-//__SIZE_PROBE<BANK1_FILE_ENTRIES_START> addr_file_start;
-//__SIZE_PROBE<BANK1_FILE_ENTRIES_END> addr_end;
+//__SIZE_PROBE<BANK3_FILE_ENTRIES_START> addr_file_start;
+//__SIZE_PROBE<BANK3_FILE_ENTRIES_END> addr_end;
 //__SIZE_PROBE<COMMSG_SLOTS_END> addr_end;

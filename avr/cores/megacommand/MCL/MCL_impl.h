@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MCL.h"
+#include "mcl.h"
 #include "new.h"
 
 #include "A4.h"
@@ -35,6 +35,7 @@
 
 #ifdef SOUND_PAGE
 #include "SoundBrowserPage.h"
+#include "SampleBrowserPage.h"
 #endif
 
 #ifdef LOUDNESS_PAGE
@@ -57,7 +58,6 @@
 #include "AuxPages.h"
 #include "GridPages.h"
 
-#include "GridEncoder.h"
 #include "MCLEncoder.h"
 
 #include "Grid.h"
@@ -77,6 +77,7 @@
 #include "MDRouteTrack.h"
 #include "MDTempoTrack.h"
 #include "GridChainTrack.h"
+#include "PerfTrack.h"
 
 #include "ArpSeqTrack.h"
 #include "EmptyTrack.h"

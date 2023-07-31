@@ -2,66 +2,21 @@
 #include <avr/pgmspace.h>
 #include "MCL.h"
 #include "MCL_impl.h"
-extern const unsigned char __R_font_default[] PROGMEM;
-struct __T_font_default {
-  union {
-    unsigned char font[0];
-    char zz__font[1280];
-  };
-  static constexpr size_t countof_font = 1280 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_font = 1280;
-  static constexpr size_t __total_size = 1280;
-};
-
-extern const unsigned char __R_font_elektrothic[] PROGMEM;
-struct __T_font_elektrothic {
-  union {
-    GFXglyph ElektrothicGlyphs[0];
-    char zz__ElektrothicGlyphs[665];
-  };
-  static constexpr size_t countof_ElektrothicGlyphs = 665 / sizeof(GFXglyph);
-  static constexpr size_t sizeofof_ElektrothicGlyphs = 665;
-  union {
-    unsigned char ElektrothicBitmaps[0];
-    char zz__ElektrothicBitmaps[593];
-  };
-  static constexpr size_t countof_ElektrothicBitmaps = 593 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_ElektrothicBitmaps = 593;
-  static constexpr size_t __total_size = 1258;
-};
-
-extern const unsigned char __R_font_tomthumb[] PROGMEM;
-struct __T_font_tomthumb {
-  union {
-    GFXglyph TomThumbGlyphs[0];
-    char zz__TomThumbGlyphs[665];
-  };
-  static constexpr size_t countof_TomThumbGlyphs = 665 / sizeof(GFXglyph);
-  static constexpr size_t sizeofof_TomThumbGlyphs = 665;
-  union {
-    unsigned char TomThumbBitmaps[0];
-    char zz__TomThumbBitmaps[418];
-  };
-  static constexpr size_t countof_TomThumbBitmaps = 418 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_TomThumbBitmaps = 418;
-  static constexpr size_t __total_size = 1083;
-};
-
 extern const unsigned char __R_icons_boot[] PROGMEM;
 struct __T_icons_boot {
   union {
     unsigned char evilknievel_bitmap[0];
-    char zz__evilknievel_bitmap[192];
+    char zz__evilknievel_bitmap[155];
   };
-  static constexpr size_t countof_evilknievel_bitmap = 192 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_evilknievel_bitmap = 192;
+  static constexpr size_t countof_evilknievel_bitmap = 155 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_evilknievel_bitmap = 155;
   union {
     unsigned char mcl_logo_bitmap[0];
     char zz__mcl_logo_bitmap[152];
   };
   static constexpr size_t countof_mcl_logo_bitmap = 152 / sizeof(unsigned char);
   static constexpr size_t sizeofof_mcl_logo_bitmap = 152;
-  static constexpr size_t __total_size = 344;
+  static constexpr size_t __total_size = 307;
 };
 
 extern const unsigned char __R_icons_device[] PROGMEM;
@@ -152,8 +107,103 @@ struct __T_icons_knob {
   static constexpr size_t __total_size = 325;
 };
 
+extern const unsigned char __R_icons_logo[] PROGMEM;
+struct __T_icons_logo {
+  union {
+    unsigned char metronome_gif_data[0];
+    char zz__metronome_gif_data[360];
+  };
+  static constexpr size_t countof_metronome_gif_data = 360 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_metronome_gif_data = 360;
+  union {
+    unsigned char monomachine_gif_data[0];
+    char zz__monomachine_gif_data[270];
+  };
+  static constexpr size_t countof_monomachine_gif_data = 270 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_monomachine_gif_data = 270;
+  union {
+    unsigned char midi_gif_data[0];
+    char zz__midi_gif_data[216];
+  };
+  static constexpr size_t countof_midi_gif_data = 216 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_midi_gif_data = 216;
+  union {
+    unsigned char machinedrum_gif_data[0];
+    char zz__machinedrum_gif_data[216];
+  };
+  static constexpr size_t countof_machinedrum_gif_data = 216 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_machinedrum_gif_data = 216;
+  union {
+    unsigned char analog_gif_data[0];
+    char zz__analog_gif_data[189];
+  };
+  static constexpr size_t countof_analog_gif_data = 189 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_analog_gif_data = 189;
+  union {
+    unsigned char route_gif_data[0];
+    char zz__route_gif_data[100];
+  };
+  static constexpr size_t countof_route_gif_data = 100 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_route_gif_data = 100;
+  union {
+    unsigned char perf_gif_data[0];
+    char zz__perf_gif_data[189];
+  };
+  static constexpr size_t countof_perf_gif_data = 189 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_perf_gif_data = 189;
+  union {
+    MCLGIF midi_gif[0];
+    char zz__midi_gif[13];
+  };
+  static constexpr size_t countof_midi_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_midi_gif = 13;
+  union {
+    MCLGIF machinedrum_gif[0];
+    char zz__machinedrum_gif[13];
+  };
+  static constexpr size_t countof_machinedrum_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_machinedrum_gif = 13;
+  union {
+    MCLGIF monomachine_gif[0];
+    char zz__monomachine_gif[13];
+  };
+  static constexpr size_t countof_monomachine_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_monomachine_gif = 13;
+  union {
+    MCLGIF analog_gif[0];
+    char zz__analog_gif[13];
+  };
+  static constexpr size_t countof_analog_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_analog_gif = 13;
+  union {
+    MCLGIF route_gif[0];
+    char zz__route_gif[13];
+  };
+  static constexpr size_t countof_route_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_route_gif = 13;
+  union {
+    MCLGIF perf_gif[0];
+    char zz__perf_gif[13];
+  };
+  static constexpr size_t countof_perf_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_perf_gif = 13;
+  union {
+    MCLGIF metronome_gif[0];
+    char zz__metronome_gif[13];
+  };
+  static constexpr size_t countof_metronome_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_metronome_gif = 13;
+  static constexpr size_t __total_size = 1631;
+};
+
 extern const unsigned char __R_icons_page[] PROGMEM;
 struct __T_icons_page {
+  union {
+    unsigned char icon_perf[0];
+    char zz__icon_perf[54];
+  };
+  static constexpr size_t countof_icon_perf = 54 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_perf = 54;
   union {
     unsigned char icon_chroma[0];
     char zz__icon_chroma[75];
@@ -179,17 +229,17 @@ struct __T_icons_page {
   static constexpr size_t countof_icon_ram2 = 75 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_ram2 = 75;
   union {
-    unsigned char icon_sound[0];
-    char zz__icon_sound[57];
+    unsigned char icon_sample[0];
+    char zz__icon_sample[75];
   };
-  static constexpr size_t countof_icon_sound = 57 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_sound = 57;
+  static constexpr size_t countof_icon_sample = 75 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_sample = 75;
   union {
     unsigned char icon_route[0];
-    char zz__icon_route[48];
+    char zz__icon_route[42];
   };
-  static constexpr size_t countof_icon_route = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_route = 48;
+  static constexpr size_t countof_icon_route = 42 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_route = 42;
   union {
     unsigned char icon_rhytmecho[0];
     char zz__icon_rhytmecho[75];
@@ -210,22 +260,16 @@ struct __T_icons_page {
   static constexpr size_t sizeofof_icon_mixer = 48;
   union {
     unsigned char icon_step[0];
-    char zz__icon_step[75];
+    char zz__icon_step[63];
   };
-  static constexpr size_t countof_icon_step = 75 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_step = 75;
+  static constexpr size_t countof_icon_step = 63 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_step = 63;
   union {
     unsigned char icon_wavd[0];
     char zz__icon_wavd[57];
   };
   static constexpr size_t countof_icon_wavd = 57 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_wavd = 57;
-  union {
-    unsigned char icon_loudness[0];
-    char zz__icon_loudness[48];
-  };
-  static constexpr size_t countof_icon_loudness = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_loudness = 48;
   union {
     unsigned char icon_lfo[0];
     char zz__icon_lfo[72];
@@ -238,7 +282,7 @@ struct __T_icons_page {
   };
   static constexpr size_t countof_icon_grid = 45 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_grid = 45;
-  static constexpr size_t __total_size = 900;
+  static constexpr size_t __total_size = 906;
 };
 
 extern const unsigned char __R_machine_names_long[] PROGMEM;
@@ -295,278 +339,141 @@ struct __T_machine_param_names {
 extern const unsigned char __R_menu_layouts[] PROGMEM;
 struct __T_menu_layouts {
   union {
-    menu_t<3> wavdesign_menu_layout[0];
-    char zz__wavdesign_menu_layout[75];
+    menu_t<perf_menu_page_N> perf_menu_layout[0];
+    char zz__perf_menu_layout[53];
   };
-  static constexpr size_t countof_wavdesign_menu_layout = 75 / sizeof(menu_t<3>);
-  static constexpr size_t sizeofof_wavdesign_menu_layout = 75;
+  static constexpr size_t countof_perf_menu_layout = 53 / sizeof(menu_t<perf_menu_page_N>);
+  static constexpr size_t sizeofof_perf_menu_layout = 53;
+  union {
+    menu_t<wavdesign_menu_page_N> wavdesign_menu_layout[0];
+    char zz__wavdesign_menu_layout[74];
+  };
+  static constexpr size_t countof_wavdesign_menu_layout = 74 / sizeof(menu_t<wavdesign_menu_page_N>);
+  static constexpr size_t sizeofof_wavdesign_menu_layout = 74;
   union {
     menu_t<grid_slot_page_N> slot_menu_layout[0];
-    char zz__slot_menu_layout[243];
+    char zz__slot_menu_layout[200];
   };
-  static constexpr size_t countof_slot_menu_layout = 243 / sizeof(menu_t<grid_slot_page_N>);
-  static constexpr size_t sizeofof_slot_menu_layout = 243;
+  static constexpr size_t countof_slot_menu_layout = 200 / sizeof(menu_t<grid_slot_page_N>);
+  static constexpr size_t sizeofof_slot_menu_layout = 200;
   union {
-    menu_t<4> step_menu_layout[0];
-    char zz__step_menu_layout[96];
+    menu_t<seq_menu_page_N> seq_menu_layout[0];
+    char zz__seq_menu_layout[515];
   };
-  static constexpr size_t countof_step_menu_layout = 96 / sizeof(menu_t<4>);
-  static constexpr size_t sizeofof_step_menu_layout = 96;
+  static constexpr size_t countof_seq_menu_layout = 515 / sizeof(menu_t<seq_menu_page_N>);
+  static constexpr size_t sizeofof_seq_menu_layout = 515;
   union {
-    menu_t<20> seq_menu_layout[0];
-    char zz__seq_menu_layout[432];
+    menu_t<file_menu_page_N> file_menu_layout[0];
+    char zz__file_menu_layout[158];
   };
-  static constexpr size_t countof_seq_menu_layout = 432 / sizeof(menu_t<20>);
-  static constexpr size_t sizeofof_seq_menu_layout = 432;
+  static constexpr size_t countof_file_menu_layout = 158 / sizeof(menu_t<file_menu_page_N>);
+  static constexpr size_t sizeofof_file_menu_layout = 158;
   union {
-    menu_t<7> file_menu_layout[0];
-    char zz__file_menu_layout[159];
+    menu_t<mcl_config_page_N> mclconfig_menu_layout[0];
+    char zz__mclconfig_menu_layout[32];
   };
-  static constexpr size_t countof_file_menu_layout = 159 / sizeof(menu_t<7>);
-  static constexpr size_t sizeofof_file_menu_layout = 159;
+  static constexpr size_t countof_mclconfig_menu_layout = 32 / sizeof(menu_t<mcl_config_page_N>);
+  static constexpr size_t sizeofof_mclconfig_menu_layout = 32;
   union {
-    menu_t<1> mclconfig_menu_layout[0];
-    char zz__mclconfig_menu_layout[33];
+    menu_t<md_import_page_N> mdimport_menu_layout[0];
+    char zz__mdimport_menu_layout[95];
   };
-  static constexpr size_t countof_mclconfig_menu_layout = 33 / sizeof(menu_t<1>);
-  static constexpr size_t sizeofof_mclconfig_menu_layout = 33;
+  static constexpr size_t countof_mdimport_menu_layout = 95 / sizeof(menu_t<md_import_page_N>);
+  static constexpr size_t sizeofof_mdimport_menu_layout = 95;
   union {
-    menu_t<4> mdimport_menu_layout[0];
-    char zz__mdimport_menu_layout[96];
+    menu_t<md_config_page_N> mdconfig_menu_layout[0];
+    char zz__mdconfig_menu_layout[53];
   };
-  static constexpr size_t countof_mdimport_menu_layout = 96 / sizeof(menu_t<4>);
-  static constexpr size_t sizeofof_mdimport_menu_layout = 96;
+  static constexpr size_t countof_mdconfig_menu_layout = 53 / sizeof(menu_t<md_config_page_N>);
+  static constexpr size_t sizeofof_mdconfig_menu_layout = 53;
   union {
-    menu_t<3> mdconfig_menu_layout[0];
-    char zz__mdconfig_menu_layout[75];
+    menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout[0];
+    char zz__midimachinedrum_menu_layout[74];
   };
-  static constexpr size_t countof_mdconfig_menu_layout = 75 / sizeof(menu_t<3>);
-  static constexpr size_t sizeofof_mdconfig_menu_layout = 75;
+  static constexpr size_t countof_midimachinedrum_menu_layout = 74 / sizeof(menu_t<midimachinedrum_menu_page_N>);
+  static constexpr size_t sizeofof_midimachinedrum_menu_layout = 74;
   union {
-    menu_t<3> midimachinedrum_menu_layout[0];
-    char zz__midimachinedrum_menu_layout[75];
+    menu_t<midiroute_menu_page_N> midiroute_menu_layout[0];
+    char zz__midiroute_menu_layout[95];
   };
-  static constexpr size_t countof_midimachinedrum_menu_layout = 75 / sizeof(menu_t<3>);
-  static constexpr size_t sizeofof_midimachinedrum_menu_layout = 75;
+  static constexpr size_t countof_midiroute_menu_layout = 95 / sizeof(menu_t<midiroute_menu_page_N>);
+  static constexpr size_t sizeofof_midiroute_menu_layout = 95;
   union {
-    menu_t<4> midiroute_menu_layout[0];
-    char zz__midiroute_menu_layout[96];
+    menu_t<midiclock_menu_page_N> midiclock_menu_layout[0];
+    char zz__midiclock_menu_layout[95];
   };
-  static constexpr size_t countof_midiroute_menu_layout = 96 / sizeof(menu_t<4>);
-  static constexpr size_t sizeofof_midiroute_menu_layout = 96;
+  static constexpr size_t countof_midiclock_menu_layout = 95 / sizeof(menu_t<midiclock_menu_page_N>);
+  static constexpr size_t sizeofof_midiclock_menu_layout = 95;
   union {
-    menu_t<4> midiclock_menu_layout[0];
-    char zz__midiclock_menu_layout[96];
+    menu_t<midiprogram_menu_page_N> midiprogram_menu_layout[0];
+    char zz__midiprogram_menu_layout[74];
   };
-  static constexpr size_t countof_midiclock_menu_layout = 96 / sizeof(menu_t<4>);
-  static constexpr size_t sizeofof_midiclock_menu_layout = 96;
+  static constexpr size_t countof_midiprogram_menu_layout = 74 / sizeof(menu_t<midiprogram_menu_page_N>);
+  static constexpr size_t sizeofof_midiprogram_menu_layout = 74;
   union {
-    menu_t<3> midiprogram_menu_layout[0];
-    char zz__midiprogram_menu_layout[75];
+    menu_t<midiport_menu_page_N> midiport_menu_layout[0];
+    char zz__midiport_menu_layout[116];
   };
-  static constexpr size_t countof_midiprogram_menu_layout = 75 / sizeof(menu_t<3>);
-  static constexpr size_t sizeofof_midiprogram_menu_layout = 75;
+  static constexpr size_t countof_midiport_menu_layout = 116 / sizeof(menu_t<midiport_menu_page_N>);
+  static constexpr size_t sizeofof_midiport_menu_layout = 116;
   union {
-    menu_t<5> midiport_menu_layout[0];
-    char zz__midiport_menu_layout[117];
+    menu_t<midi_config_page_N> midiconfig_menu_layout[0];
+    char zz__midiconfig_menu_layout[116];
   };
-  static constexpr size_t countof_midiport_menu_layout = 117 / sizeof(menu_t<5>);
-  static constexpr size_t sizeofof_midiport_menu_layout = 117;
+  static constexpr size_t countof_midiconfig_menu_layout = 116 / sizeof(menu_t<midi_config_page_N>);
+  static constexpr size_t sizeofof_midiconfig_menu_layout = 116;
   union {
-    menu_t<5> midiconfig_menu_layout[0];
-    char zz__midiconfig_menu_layout[117];
+    menu_t<ram_config_page_N> rampage1_menu_layout[0];
+    char zz__rampage1_menu_layout[32];
   };
-  static constexpr size_t countof_midiconfig_menu_layout = 117 / sizeof(menu_t<5>);
-  static constexpr size_t sizeofof_midiconfig_menu_layout = 117;
+  static constexpr size_t countof_rampage1_menu_layout = 32 / sizeof(menu_t<ram_config_page_N>);
+  static constexpr size_t sizeofof_rampage1_menu_layout = 32;
   union {
-    menu_t<1> rampage1_menu_layout[0];
-    char zz__rampage1_menu_layout[33];
+    menu_t<aux_config_page_N> auxconfig_menu_layout[0];
+    char zz__auxconfig_menu_layout[32];
   };
-  static constexpr size_t countof_rampage1_menu_layout = 33 / sizeof(menu_t<1>);
-  static constexpr size_t sizeofof_rampage1_menu_layout = 33;
+  static constexpr size_t countof_auxconfig_menu_layout = 32 / sizeof(menu_t<aux_config_page_N>);
+  static constexpr size_t sizeofof_auxconfig_menu_layout = 32;
   union {
-    menu_t<1> auxconfig_menu_layout[0];
-    char zz__auxconfig_menu_layout[33];
+    menu_t<system_menu_page_N> system_menu_layout[0];
+    char zz__system_menu_layout[137];
   };
-  static constexpr size_t countof_auxconfig_menu_layout = 33 / sizeof(menu_t<1>);
-  static constexpr size_t sizeofof_auxconfig_menu_layout = 33;
+  static constexpr size_t countof_system_menu_layout = 137 / sizeof(menu_t<system_menu_page_N>);
+  static constexpr size_t sizeofof_system_menu_layout = 137;
   union {
-    menu_t<6> system_menu_layout[0];
-    char zz__system_menu_layout[138];
+    menu_t<start_menu_page_N> start_menu_layout[0];
+    char zz__start_menu_layout[53];
   };
-  static constexpr size_t countof_system_menu_layout = 138 / sizeof(menu_t<6>);
-  static constexpr size_t sizeofof_system_menu_layout = 138;
+  static constexpr size_t countof_start_menu_layout = 53 / sizeof(menu_t<start_menu_page_N>);
+  static constexpr size_t sizeofof_start_menu_layout = 53;
   union {
-    menu_t<2> start_menu_layout[0];
-    char zz__start_menu_layout[54];
+    menu_t<boot_menu_page_N> boot_menu_layout[0];
+    char zz__boot_menu_layout[95];
   };
-  static constexpr size_t countof_start_menu_layout = 54 / sizeof(menu_t<2>);
-  static constexpr size_t sizeofof_start_menu_layout = 54;
-  union {
-    menu_t<4> boot_menu_layout[0];
-    char zz__boot_menu_layout[96];
-  };
-  static constexpr size_t countof_boot_menu_layout = 96 / sizeof(menu_t<4>);
-  static constexpr size_t sizeofof_boot_menu_layout = 96;
-  static constexpr size_t __total_size = 2139;
+  static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
+  static constexpr size_t sizeofof_boot_menu_layout = 95;
+  static constexpr size_t __total_size = 2099;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;
 struct __T_menu_options {
   union {
     menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[936];
+    char zz__MENU_OPTIONS[1089];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 936 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 936;
-  static constexpr size_t __total_size = 936;
+  static constexpr size_t countof_MENU_OPTIONS = 1089 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 1089;
+  static constexpr size_t __total_size = 1089;
 };
 
 extern const unsigned char __R_page_entries[] PROGMEM;
 struct __T_page_entries {
   union {
     PageSelectEntry Entries[0];
-    char zz__Entries[312];
+    char zz__Entries[322];
   };
-  static constexpr size_t countof_Entries = 312 / sizeof(PageSelectEntry);
-  static constexpr size_t sizeofof_Entries = 312;
-  static constexpr size_t __total_size = 312;
-};
-
-extern const unsigned char __R_tuning[] PROGMEM;
-struct __T_tuning {
-  union {
-    unsigned char tonal_tuning[0];
-    char zz__tonal_tuning[64];
-  };
-  static constexpr size_t countof_tonal_tuning = 64 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_tonal_tuning = 64;
-  union {
-    unsigned char e12_lt_tuning[0];
-    char zz__e12_lt_tuning[40];
-  };
-  static constexpr size_t countof_e12_lt_tuning = 40 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_e12_lt_tuning = 40;
-  union {
-    unsigned char e12_cb_tuning[0];
-    char zz__e12_cb_tuning[48];
-  };
-  static constexpr size_t countof_e12_cb_tuning = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_e12_cb_tuning = 48;
-  union {
-    unsigned char e12_bc_tuning[0];
-    char zz__e12_bc_tuning[48];
-  };
-  static constexpr size_t countof_e12_bc_tuning = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_e12_bc_tuning = 48;
-  union {
-    unsigned char efm_cy_tuning[0];
-    char zz__efm_cy_tuning[30];
-  };
-  static constexpr size_t countof_efm_cy_tuning = 30 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_efm_cy_tuning = 30;
-  union {
-    unsigned char efm_cb_tuning[0];
-    char zz__efm_cb_tuning[30];
-  };
-  static constexpr size_t countof_efm_cb_tuning = 30 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_efm_cb_tuning = 30;
-  union {
-    unsigned char trx_rs_tuning[0];
-    char zz__trx_rs_tuning[12];
-  };
-  static constexpr size_t countof_trx_rs_tuning = 12 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_trx_rs_tuning = 12;
-  union {
-    unsigned char trx_b2_tuning[0];
-    char zz__trx_b2_tuning[24];
-  };
-  static constexpr size_t countof_trx_b2_tuning = 24 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_trx_b2_tuning = 24;
-  union {
-    unsigned char gnd_sn_tuning[0];
-    char zz__gnd_sn_tuning[96];
-  };
-  static constexpr size_t countof_gnd_sn_tuning = 96 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_gnd_sn_tuning = 96;
-  union {
-    unsigned char rom_tuning[0];
-    char zz__rom_tuning[48];
-  };
-  static constexpr size_t countof_rom_tuning = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_rom_tuning = 48;
-  union {
-    unsigned char trx_s2_tuning[0];
-    char zz__trx_s2_tuning[19];
-  };
-  static constexpr size_t countof_trx_s2_tuning = 19 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_trx_s2_tuning = 19;
-  union {
-    unsigned char trx_bd_tuning[0];
-    char zz__trx_bd_tuning[24];
-  };
-  static constexpr size_t countof_trx_bd_tuning = 24 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_trx_bd_tuning = 24;
-  union {
-    unsigned char trx_xt_tuning[0];
-    char zz__trx_xt_tuning[24];
-  };
-  static constexpr size_t countof_trx_xt_tuning = 24 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_trx_xt_tuning = 24;
-  union {
-    unsigned char trx_xc_tuning[0];
-    char zz__trx_xc_tuning[24];
-  };
-  static constexpr size_t countof_trx_xc_tuning = 24 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_trx_xc_tuning = 24;
-  union {
-    unsigned char trx_sd_tuning[0];
-    char zz__trx_sd_tuning[12];
-  };
-  static constexpr size_t countof_trx_sd_tuning = 12 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_trx_sd_tuning = 12;
-  union {
-    unsigned char trx_cl_tuning[0];
-    char zz__trx_cl_tuning[21];
-  };
-  static constexpr size_t countof_trx_cl_tuning = 21 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_trx_cl_tuning = 21;
-  union {
-    unsigned char efm_bd_tuning[0];
-    char zz__efm_bd_tuning[48];
-  };
-  static constexpr size_t countof_efm_bd_tuning = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_efm_bd_tuning = 48;
-  union {
-    unsigned char efm_xt_tuning[0];
-    char zz__efm_xt_tuning[24];
-  };
-  static constexpr size_t countof_efm_xt_tuning = 24 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_efm_xt_tuning = 24;
-  union {
-    unsigned char efm_sd_tuning[0];
-    char zz__efm_sd_tuning[30];
-  };
-  static constexpr size_t countof_efm_sd_tuning = 30 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_efm_sd_tuning = 30;
-  union {
-    unsigned char efm_cp_tuning[0];
-    char zz__efm_cp_tuning[66];
-  };
-  static constexpr size_t countof_efm_cp_tuning = 66 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_efm_cp_tuning = 66;
-  union {
-    unsigned char efm_hh_tuning[0];
-    char zz__efm_hh_tuning[30];
-  };
-  static constexpr size_t countof_efm_hh_tuning = 30 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_efm_hh_tuning = 30;
-  union {
-    unsigned char efm_rs_tuning[0];
-    char zz__efm_rs_tuning[48];
-  };
-  static constexpr size_t countof_efm_rs_tuning = 48 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_efm_rs_tuning = 48;
-  static constexpr size_t __total_size = 810;
+  static constexpr size_t countof_Entries = 322 / sizeof(PageSelectEntry);
+  static constexpr size_t sizeofof_Entries = 322;
+  static constexpr size_t __total_size = 322;
 };
 

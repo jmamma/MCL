@@ -1,6 +1,20 @@
 #include "Elektron.h"
+#include "Project.h"
+#include "ResourceManager.h"
 
 #define SYSEX_RETRIES 1
+
+void MidiDevice::add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, GridDeviceTrack *gdt) {
+  proj.grids[grid_idx].add_track(track_idx, gdt);
+}
+
+void MidiDevice::cleanup(uint8_t device_idx) {
+  for (uint8_t n = 0; n < NUM_GRIDS; n++) {
+    proj.grids[n].cleanup(device_idx);
+  }
+}
+uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
+MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartParent *uart_) {
   if (uart_ == nullptr) { uart_ = uart; }
@@ -96,6 +110,7 @@ bool ElektronDevice::get_fw_caps() {
 }
 
 void ElektronDevice::activate_encoder_interface(uint8_t *params) {
+  encoder_interface = true;
   uint8_t data[3 + 4 + 24] = {0x70, 0x36, 0x01};
 
   uint8_t mod7 = 0;
@@ -119,6 +134,7 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
 void ElektronDevice::deactivate_encoder_interface() {
   uint8_t data[3] = {0x70, 0x36, 0x00};
   sendRequest(data, sizeof(data));
+  encoder_interface = false;
   //waitBlocking();
 }
 
@@ -158,7 +174,7 @@ void ElektronDevice::set_rec_mode(uint8_t mode) {
 }
 
 void ElektronDevice::set_key_repeat(uint8_t mode) {
-  uint8_t data[3] = {0x70, 0x4D, mode};
+  uint8_t data[3] = {0x70, 0x4E, mode};
   sendRequest(data, sizeof(data));
   // waitBlocking();
 }
@@ -172,7 +188,7 @@ void ElektronDevice::popup_text(uint8_t action_string, uint8_t persistent) {
 void ElektronDevice::popup_text(char *str, uint8_t persistent) {
   uint8_t data[67] = {0x70, 0x3B, persistent};
   uint8_t len = strlen(str);
-  strcpy(data + 3, str);
+  strcpy((char*) (data + 3), str);
   sendRequest(data, 3 + len + 1);
   // waitBlocking();
 }
@@ -190,7 +206,9 @@ void ElektronDevice::draw_close_bank() {
 
 
 void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
-  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, timing >> 7, timing & 0x7F};
+  uint8_t a = timing >> 7;
+  uint8_t b = timing & 0x7F;
+  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, a, b};
   sendRequest(data, 6);
   // waitBlocking();
 }
@@ -232,10 +250,14 @@ void ElektronDevice::deactivate_track_select() {
 }
 
 void ElektronDevice::undokit_sync() {
-  uint8_t data[2] = {0x70, 0x42};
+  uint8_t data[2] = { 0x70, 0x42 };
   sendRequest(data, sizeof(data));
 }
 
+void ElektronDevice::reset_dsp_params() {
+  uint8_t data[2] = { 0x70, 0x43 };
+  sendRequest(data, sizeof(data));
+}
 
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
@@ -433,7 +455,7 @@ void ElektronDevice::setKitName(const char *name, MidiUartParent *uart_) {
 }
 
 uint8_t ElektronDevice::setTempo(float tempo, bool send) {
-  uint16_t qtempo = round(tempo * 24.0);
+  uint16_t qtempo = round(tempo * 24.0f);
   uint8_t data[3] = {sysex_protocol.tempo_set_id, (uint8_t)(qtempo >> 7),
                      (uint8_t)(qtempo & 0x7F)};
   return sendRequest(data, countof(data), send);
@@ -471,4 +493,5 @@ const char *getMachineNameShort(uint8_t machine, uint8_t type,
       }
     }
   }
+  return nullptr;
 }

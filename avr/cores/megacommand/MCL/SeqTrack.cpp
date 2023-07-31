@@ -127,3 +127,105 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
     }
   }
 }
+
+uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
+  if (quant == 255) { quant = mcl_cfg.rec_quant; }
+
+  uint8_t timing_mid = get_timing_mid();
+
+  int8_t mod12 = mod12_counter - 1;
+
+
+  uint8_t step = step_count;
+/*
+  if ((step == 0) && (mod12 < 0)) {
+    mod12 += timing_mid;
+    step = length - 1;
+  }
+*/
+  utiming = mod12 + timing_mid;
+
+  if (quant) {
+    if (mod12 > timing_mid / 2) {
+      step++;
+      if (step == length) {
+        step = 0;
+      }
+    }
+    utiming = timing_mid;
+  }
+  return step;
+}
+
+bool SeqTrack::conditional(uint8_t condition) {
+  bool send_note = false;
+  uint8_t random_byte = 0;
+  if (condition >= 9) { random_byte = get_random_byte(); }
+
+  switch (condition) {
+  case 0:
+  case 1:
+    send_note = true;
+    break;
+  case 2:
+    if (!IS_BIT_SET(iterations_8, 0)) {
+      send_note = true;
+    }
+    break;
+  case 3:
+    if ((iterations_6 == 3) || (iterations_6 == 6)) {
+      send_note = true;
+    }
+    break;
+  case 6:
+    if (iterations_6 == 6) {
+      send_note = true;
+    }
+    break;
+  case 4:
+    if ((iterations_8 == 4) || (iterations_8 == 8)) {
+      send_note = true;
+    }
+    break;
+  case 8:
+    if (iterations_8 == 8) {
+      send_note = true;
+    }
+  case 5:
+    if (iterations_5 == 5) {
+      send_note = true;
+    }
+    break;
+  case 7:
+    if (iterations_7 == 7) {
+      send_note = true;
+    }
+    break;
+  case 9:
+    if (random_byte <= 26) {
+      send_note = true;
+    }
+    break;
+  case 10:
+    if (random_byte <= 64) {
+      send_note = true;
+    }
+    break;
+  case 11:
+    if (random_byte <= 128) {
+      send_note = true;
+    }
+    break;
+  case 12:
+    if (random_byte <= 192) {
+      send_note = true;
+    }
+    break;
+  case 13:
+    if (random_byte <= 230) {
+      send_note = true;
+    }
+    break;
+  }
+  return send_note;
+}

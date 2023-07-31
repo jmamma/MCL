@@ -15,6 +15,7 @@
 #define MDX_KEY_REC 0x20
 #define MDX_KEY_GLOBAL 0x21
 #define MDX_KEY_PATSONGKIT 0x22
+#define MDX_KEY_KIT 0x23
 #define MDX_KEY_FUNC 0x25
 #define MDX_KEY_LEFT 0x26
 #define MDX_KEY_RIGHT 0x27
@@ -23,6 +24,7 @@
 #define MDX_KEY_SCALE 0x2A
 #define MDX_KEY_MUTE 0x2B
 #define MDX_KEY_SONG 0x2C
+#define MDX_KEY_EXTENDED 0x2D
 #define MDX_KEY_UP 0x30
 #define MDX_KEY_DOWN 0x31
 #define MDX_KEY_STOP 0x32
@@ -65,6 +67,8 @@ public:
   bool state = false;
   uint64_t cmd_key_state;
   uint64_t ignore_next_mask;
+  uint16_t last_clock;
+  bool throttle;
 
   TrigInterface() : MidiSysexListenerClass() {
     ids[0] = 0x7F;
@@ -79,9 +83,9 @@ public:
   bool on(bool clear_states = true);
   bool off();
 
+  bool check_key_throttle();
   void enable_listener();
   void disable_listener();
-
   virtual void start();
   virtual void end();
   bool is_key_down(uint8_t key) { return IS_BIT_SET64(cmd_key_state, key); }

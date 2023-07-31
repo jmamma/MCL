@@ -19,7 +19,6 @@ void ArpSeqTrack::set_length(uint8_t length_) {
   }
 }
 
-
 void ArpSeqTrack::seq(MidiUartParent *uart_) {
   MidiUartParent *uart_old = uart;
   uart = uart_;
@@ -39,13 +38,14 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   if (mod12_counter == 0 && enabled && mute_state == SEQ_MUTE_OFF) {
    if (step_count == 0) {
       if (len > 0) {
+        uint8_t note = notes[idx] + oct * 12;
         switch (active) {
           case MD_ARP_TRACK_TYPE:
-            seq_ptc_page.trig_md(notes[idx] + oct * 12, track_number, fine_tune, uart);
+            seq_ptc_page.trig_md(note, track_number, fine_tune, uart);
             break;
           case EXT_ARP_TRACK_TYPE:
-            seq_ptc_page.note_on_ext(notes[idx] + oct * 12, 127, track_number, uart);
-            last_note_on = notes[idx] + oct * 12;
+            seq_ptc_page.note_on_ext(note, 127, track_number, uart);
+            last_note_on = note;
             break;
         }
         idx++;
@@ -72,6 +72,8 @@ uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
 
 void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_) {
   DEBUG_PRINT_FN();
+  uint8_t mute_state_old = mute_state;
+  mute_state = SEQ_MUTE_ON;
 
   fine_tune = fine_tune_;
   range = range_;
@@ -82,9 +84,13 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   if (!enabled) {
     return;
   }
+  switch (active) {
+    case EXT_ARP_TRACK_TYPE:
+      seq_ptc_page.buffer_notesoff_ext(track_number);
+      break;
+  }
 
   memcpy(note_mask, note_mask_, sizeof(note_mask));
-  
   uint8_t num_of_notes = 0;
   uint8_t note = 0;
   uint8_t b = 0;
@@ -120,7 +126,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   for (uint8_t i = 0; i < num_of_notes; i++) {
     switch (mode) {
     case ARP_RND:
-      note = sort_up[random(0, num_of_notes)] + 12 * random(0,range);
+      note = sort_up[get_random(num_of_notes)] + 12 * random(range);
       break;
     case ARP_UP2:
     case ARP_UPP:
@@ -277,7 +283,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   if (idx >= len) {
     idx = len - 1;
   }
-
+  mute_state = mute_state_old;
 }
 
 

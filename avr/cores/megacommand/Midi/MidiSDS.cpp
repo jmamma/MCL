@@ -114,13 +114,13 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
   uint32_t fsize;
   int show_progress = 0;
   uint8_t n_retry = 0;
-
+  uint16_t latency_ms = 0;
   if (state != SDS_READY || !file.open(filename, O_READ)) {
     return false;
   }
 
-  file.seekEnd();
-  fsize = file.position();
+  MidiSDSSysexListener.setup(&Midi);
+  fsize = file.size();
   file.seek(0);
 
   // 1st packet: sysex request.
@@ -131,8 +131,8 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
   }
   buf[4] = sample_number & 0x7F;
   buf[5] = (sample_number >> 7) & 0x7F;
-  MidiUart.sendRaw(buf, szbuf);
   state = SDS_SEND;
+  MidiUart.sendRaw(buf, szbuf);
   reply = waitForHandshake();
   if (reply == MIDI_SDS_CANCEL) {
     ret = false;
@@ -141,7 +141,7 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
 
   oled_display.clearDisplay();
 
-  uint16_t latency_ms = (float) (1000 * sizeof(buf) / ( (float) MidiUart.speed * 0.1f)) + 20;
+  latency_ms = (float) (1000 * sizeof(buf) / ( (float) MidiUart.speed * 0.1f)) + 20;
   DEBUG_PRINTLN("latency");
   DEBUG_PRINTLN(latency_ms);
 
@@ -194,10 +194,10 @@ retry:
     } // otherwise, don't expect ACK reply (maybe MD-specific name-setting command)
   }
   // later packets
-
 cleanup:
   file.close();
   state = SDS_READY;
+  MidiSDSSysexListener.cleanup(&Midi);
   return ret;
 }
 
@@ -215,8 +215,7 @@ bool MidiSDSClass::sendWav(const char *filename, const char *samplename, uint16_
   samplesSoFar = 0;
   sampleNumber = sample_number;
   setSampleRate(wav_file.header.fmt.sampleRate);
-  sampleLength = (wav_file.header.data.chunk_size / wav_file.header.fmt.numChannels) /
-                 (wav_file.header.fmt.bitRate / 8);
+  sampleLength =  wav_file.header.get_length();
   sampleFormat = wav_file.header.fmt.bitRate;
 
   if (wav_file.header.smpl.is_active()) {

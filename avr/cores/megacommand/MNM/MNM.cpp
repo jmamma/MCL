@@ -31,13 +31,16 @@ const ElektronSysexProtocol mnm_protocol = {
 MNMClass::MNMClass()
     : ElektronDevice(&Midi2, "MM", DEVICE_MNM, mnm_protocol) {
   global.baseChannel = 0;
-  midiuart = &MidiUart2;
+  uart = &MidiUart2;
 }
 
-void MNMClass::init_grid_devices() {
+void MNMClass::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 1;
+  GridDeviceTrack gdt;
+
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    add_track_to_grid(grid_idx, i, &(mcl_seq.ext_tracks[i]), MNM_TRACK_TYPE);
+    gdt.init(MNM_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
+    add_track_to_grid(grid_idx, i, &gdt);
   }
 
 }
@@ -108,6 +111,8 @@ uint8_t* MNMClass::icon() {
   return R.icons_device->icon_mnm;
 }
 
+uint8_t *MNMClass::gif_data() { return R.icons_logo->monomachine_gif_data; ; }
+MCLGIF *MNMClass::gif() { return R.icons_logo->monomachine_gif;; }
 
 void MNMClass::requestKit(uint8_t kit) {
   uint8_t workspace = 0;
@@ -124,48 +129,49 @@ void MNMClass::requestKit(uint8_t kit) {
 
 
 void MNMClass::triggerTrack(uint8_t track, bool amp, bool lfo, bool filter) {
-  midiuart->sendNRPN(global.baseChannel, (uint16_t)(0x7F << 7),
+  uart->sendNRPN(global.baseChannel, (uint16_t)(0x7F << 7),
                      (uint8_t)((track << 3) | (amp ? 4 : 0) | (lfo ? 2 : 0) |
                                (filter ? 1 : 0)));
 }
 
 void MNMClass::setMultiEnvParam(uint8_t param, uint8_t value) {
-  midiuart->sendNRPN(global.baseChannel, 0x40 + param, value);
+  uart->sendNRPN(global.baseChannel, 0x40 + param, value);
 }
 
-void MNMClass::setMute(uint8_t track, bool mute) {
-  midiuart->sendCC(track + global.baseChannel, 3, mute ? 0 : 1);
+void MNMClass::muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {
+  if (uart_ == nullptr) { uart_ = uart; }
+  uart->sendCC(track + global.baseChannel, 3, mute ? 0 : 1);
 }
 
 void MNMClass::setAutoMute(bool mute) {
-  midiuart->sendCC(global.autotrackChannel, 3, mute ? 0 : 1);
+  uart->sendCC(global.autotrackChannel, 3, mute ? 0 : 1);
 }
 
 void MNMClass::setMidiParam(uint8_t track, uint8_t param, uint8_t value) {
-  midiuart->sendNRPN(global.baseChannel, (track << 7) | (0x38 + param), value);
+  uart->sendNRPN(global.baseChannel, (track << 7) | (0x38 + param), value);
 }
 
 void MNMClass::setTrackPitch(uint8_t track, uint8_t pitch) {
-  midiuart->sendNRPN(global.baseChannel, (112 + track) << 7, pitch);
+  uart->sendNRPN(global.baseChannel, (112 + track) << 7, pitch);
 }
 
 uint8_t MNMClass::setTrackLevel(uint8_t track, uint8_t level, bool send) {
   if (send) {
-    midiuart->sendCC(global.baseChannel + track, 7, level);
+    uart->sendCC(global.baseChannel + track, 7, level);
   }
   return 3;
 }
 
 void MNMClass::setAutoParam(uint8_t param, uint8_t value) {
   if (param < 0x30) {
-    midiuart->sendCC(global.autotrackChannel, param + 0x30, value);
+    uart->sendCC(global.autotrackChannel, param + 0x30, value);
   } else {
-    midiuart->sendCC(global.autotrackChannel, param + 0x38, value);
+    uart->sendCC(global.autotrackChannel, param + 0x38, value);
   }
 }
 
 void MNMClass::setAutoLevel(uint8_t level) {
-  midiuart->sendCC(global.autotrackChannel, 7, level);
+  uart->sendCC(global.autotrackChannel, 7, level);
 }
 
 uint8_t MNMClass::setParam(uint8_t track, uint8_t param, uint8_t value, bool send) {
@@ -182,7 +188,7 @@ uint8_t MNMClass::setParam(uint8_t track, uint8_t param, uint8_t value, bool sen
     cc = param + 0x40;
   }
   if (send) {
-  midiuart->sendCC(global.baseChannel + track, cc, value);
+  uart->sendCC(global.baseChannel + track, cc, value);
   }
   return 3;
 }

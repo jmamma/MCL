@@ -8,6 +8,7 @@
 #include "A4Messages.h"
 #include "A4Params.h"
 #include "A4Sysex.h"
+#include "A4Track.h"
 
 /**
  * \addtogroup a4_a4
@@ -36,8 +37,10 @@ public:
   A4Class();
 
   virtual bool probe();
-  virtual void init_grid_devices();
+  virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
+  virtual MCLGIF* gif();
+  virtual uint8_t* gif_data();
 
   virtual uint16_t sendKitParams(uint8_t* masks);
 
@@ -89,7 +92,7 @@ public:
   bool getBlockingSoundX(uint8_t pattern, uint16_t timeout = 3000);
   bool getBlockingSettingsX(uint8_t global, uint16_t timeout = 3000);
 
-  void muteTrack(uint8_t track, bool mute = true);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
   void unmuteTrack(uint8_t track) { muteTrack(track, false); }
   void setLevel(uint8_t track, uint8_t value);
 

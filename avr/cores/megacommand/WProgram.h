@@ -29,12 +29,12 @@
 #define DEBUG_PRINTLN(x)  MidiUartUSB.println(x)
 #define DEBUG_DUMP(x)  { \
 }
-// __PRETTY_FUNCTION__ is a gcc extension
-// #define DEBUG_PRINT_FN(x) { \
-//   DEBUG_PRINT(F("func_call: ")); \
-//   Serial.println(__PRETTY_FUNCTION__); \
-// }
-//
+/* __PRETTY_FUNCTION__ is a gcc extension
+ #define DEBUG_PRINT_FN(x) { \
+   DEBUG_PRINT(F("func_call: ")); \
+   Serial.println(__PRETTY_FUNCTION__); \
+ }
+*/
 #define DEBUG_CHECK_STACK() { if ((int) SP < 0x200 || (int)SP > 0x2200) { cli(); setLed2(); setLed(); while (1); } }
 #define DEBUG_PRINT_FN(x)
 

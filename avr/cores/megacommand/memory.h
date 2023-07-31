@@ -150,25 +150,25 @@ FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
 
 FORCED_INLINE() extern inline void get_bank2(volatile void *dst, volatile const void *src, uint16_t len) {
   ram_access_fringe();
-  memcpy((void*)dst, (void*)src + 0x4000, len);
+  memcpy((void*)dst, (uint8_t*)src + 0x4000, len);
 }
 
 FORCED_INLINE() extern inline void get_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
   ram_access_fringe();
   select_bank(1);
-  memcpy((void*)dst, (void*)src + 0x4000, len);
+  memcpy((void*)dst, (uint8_t*)src + 0x4000, len);
 }
 
 
 FORCED_INLINE() extern inline void put_bank2(volatile void *dst, volatile const void *src, uint16_t len) {
   ram_access_fringe();
-  memcpy((void*)dst + 0x4000, (void*)src, len);
+  memcpy((uint8_t*)dst + 0x4000, (uint8_t*)src, len);
 }
 
 FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
   ram_access_fringe();
   select_bank(1);
-  memcpy((void*)dst + 0x4000, (void*)src, len);
+  memcpy((uint8_t*)dst + 0x4000, (uint8_t*)src, len);
 }
 
 
@@ -176,8 +176,10 @@ FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const 
 extern volatile uint8_t *rand_ptr;
 
 FORCED_INLINE() extern inline uint8_t get_random_byte() {
-    return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ slowclock) & 0x7F;
+    return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ slowclock);
 }
+
+extern inline uint8_t get_random(uint8_t range) { return get_random_byte() % range; }
 
 #endif// __cplusplus
 

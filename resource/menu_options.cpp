@@ -15,7 +15,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 16: MD NORMALIZE
   {0, "OFF"},{1, "AUTO"},
   // 18: MD CTRL CHAN
-  {0, "INT"},{17, "OMNI"},
+  {0, "--"},{17, "OMNI"},
   // 20: MD CHAIN/Slot CHAIN
   {1, "AUT"},{2,"MAN"},{3,"QUE"},
   // 23: SYSTEM DISPLAY
@@ -62,5 +62,11 @@ menu_option_t MENU_OPTIONS[] = {
   {0, "OFF"}, {1, "1"}, {2, "2"}, {3, "1 + 2"},
   // 100: MIDI CLK SEND
   {0, "OFF"}, {1, "2"}, {2, "USB"}, {3, "2 + USB"},
+  // 104: NOTES
+  {0, "A"}, {1, "A#"}, {2, "B"}, {3, "C"}, {4, "C#"}, {5, "D"}, {6, "D#"}, {7, "E"}, {8, "F"}, {9, "F#"}, {10, "G"}, {11, "G#"},
+  // 116
+  {0, "CTRL"},
+  // 117
+  {0, "A"}, {1, "B"}, {2, "C"}, {3, "D"}
 };
 

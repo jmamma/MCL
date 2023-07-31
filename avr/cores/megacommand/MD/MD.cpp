@@ -143,21 +143,31 @@ void MDClass::setExternalSync() {
   sendRequest(data, sizeof(data));
 }
 
-void MDClass::init_grid_devices() {
+void MDClass::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 0;
 
+  GridDeviceTrack gdt;
   for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-    add_track_to_grid(grid_idx, i, &(mcl_seq.md_tracks[i]), MD_TRACK_TYPE);
+    gdt.init(MD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.md_tracks[i]));
+    add_track_to_grid(grid_idx, i, &gdt);
   }
   grid_idx = 1;
-  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &(mcl_seq.aux_tracks[0]),
-                    MDFX_TRACK_TYPE, GROUP_AUX, 0);
-  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &(mcl_seq.aux_tracks[1]),
-                    MDROUTE_TRACK_TYPE, GROUP_AUX, 0);
-  add_track_to_grid(grid_idx, MDLFO_TRACK_NUM, &(mcl_seq.aux_tracks[2]),
-                    MDLFO_TRACK_TYPE, GROUP_AUX, 0);
-  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &(mcl_seq.aux_tracks[3]),
-                    MDTEMPO_TRACK_TYPE, GROUP_TEMPO, 0);
+
+  gdt.init(MDFX_TRACK_TYPE, GROUP_DEV, device_idx, (SeqTrack*) &(mcl_seq.mdfx_track), 0);
+  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &gdt);
+
+  gdt.init(MDLFO_TRACK_TYPE, GROUP_PERF, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[0]), 0);
+  add_track_to_grid(grid_idx, MDLFO_TRACK_NUM, &gdt);
+
+  gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[1]), 0);
+  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &gdt);
+
+  gdt.init(MDTEMPO_TRACK_TYPE, GROUP_TEMPO, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[2]), 0);
+  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &gdt);
+
+  gdt.init(PERF_TRACK_TYPE, GROUP_PERF, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[3]), 0);
+  add_track_to_grid(grid_idx, PERF_TRACK_NUM, &gdt);
+
 }
 
 void MDClass::get_mutes() {
@@ -192,7 +202,8 @@ bool MDClass::probe() {
     uint16_t fw_caps_mask =
         ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
          (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL |
-         (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI) | (uint16_t)FW_CAP_MACHINE_CACHE;
+         (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI) |
+         (uint16_t)FW_CAP_MACHINE_CACHE | (uint16_t)FW_CAP_UNDO_CACHE;
 
     while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) &&
            count) {
@@ -233,6 +244,7 @@ bool MDClass::probe() {
     md_track_select.on();
     activate_enhanced_gui();
     activate_enhanced_midi();
+    MD.set_key_repeat(1);
     MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
     MD.global.extendedMode = 2;
     seq_ptc_page.setup();
@@ -250,6 +262,8 @@ bool MDClass::probe() {
 
 // Caller is responsible to make sure icons_device is loaded in RM
 uint8_t *MDClass::icon() { return R.icons_device->icon_md; }
+MCLGIF *MDClass::gif() { return R.icons_logo->machinedrum_gif; }
+uint8_t *MDClass::gif_data() { return R.icons_logo->machinedrum_gif_data; }
 
 uint8_t MDClass::noteToTrack(uint8_t pitch) {
   uint8_t i;
@@ -348,20 +362,11 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
 
 void MDClass::restore_kit_params() {
   memcpy(kit.params, kit.params_orig, sizeof(kit.params));
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].update_params();
-  }
-  for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-    mcl_seq.lfo_tracks[n].update_params_offset();
-  }
 }
 
 void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
   if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
     MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr, true);
-    for (uint8_t n = 0; n < mcl_seq.num_lfo_tracks; n++) {
-      mcl_seq.lfo_tracks[n].check_and_update_params_offset(track + 1, param, MD.kit.params_orig[track][param]);
-    }
   }
 }
 
@@ -395,7 +400,12 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
   } else {
     return;
   }
+  if (update_kit) {
   uart_->sendCC(channel + global.baseChannel, cc, value);
+  }
+  else {
+  uart_->sendPolyKeyPressure(channel + global.baseChannel, cc, value);
+  }
 }
 
 void MDClass::setSampleName(uint8_t slot, char *name) {
@@ -407,6 +417,12 @@ void MDClass::setSampleName(uint8_t slot, char *name) {
   data[4] = 0x7F & name[2];
   data[5] = 0x7F & name[3];
   sendRequest(data, 6);
+}
+
+uint8_t MDClass::assignFXParamsBulk(uint8_t *values, bool send) {
+  uint8_t data[2 + 8 * 4] = {0x70, 0x5a};
+  memcpy(&data[2], values, 8 * 4);
+  return sendRequest(data, sizeof(data), send);
 }
 
 uint8_t MDClass::sendFXParamsBulk(uint8_t *values, bool send) {
@@ -689,23 +705,21 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   }
   data[i++] = machine->trigGroup;
   data[i++] = machine->muteGroup;
-  bool set_level = false;
   if (level != 255) {
     data[i++] = level;
-    set_level = true;
   }
 
 end:
   return sendRequest(data, i, send);
 }
 
-void MDClass::loadMachinesCache(uint16_t track_mask) {
+void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartParent *uart_) {
   DEBUG_PRINTLN("load machine cache");
   uint8_t a = track_mask & 0x7F;
   uint8_t b = (track_mask >> 7) & 0x7F;
   uint8_t c = (track_mask >> 14) & 0x7F;
   uint8_t data[5] = { 0x70, 0x62, a, b, c };
-  sendRequest(data, countof(data));
+  sendRequest(data, countof(data), uart_);
 }
 
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
@@ -772,14 +786,16 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   return bytes;
 }
 
-void MDClass::muteTrack(uint8_t track, bool mute) {
+void MDClass::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
   if (global.baseChannel == 127)
     return;
-
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 12 + b;
-  uart->sendCC(channel + global.baseChannel, cc, mute ? 1 : 0);
+  uart_->sendCC(channel + global.baseChannel, cc, (uint8_t) mute);
 }
 
 void MDClass::setGlobal(uint8_t id) {
@@ -1145,9 +1161,6 @@ void MDClass::updateKitParams() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
     mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
-    mcl_seq.md_tracks[n].update_kit_params();
-    //Perform silent reset, to prevent MDkit copying running parameter locks in to undo kit
-    mcl_seq.md_tracks[n].reset_params();
   }
   undokit_sync();
 

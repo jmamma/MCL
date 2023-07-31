@@ -14,7 +14,7 @@ typedef struct fx_param_t {
 
 //params_ 2 dimensional array, consisting of [MD_FX_TYPE][MD_FX_PARAM_NUMBER]
 //
-class FXPage : public LightPage, MidiCallback {
+class FXPage : public LightPage {
 public:
   FXPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
           Encoder *e3 = NULL, Encoder *e4 = NULL, fx_param_t *params_ = NULL, uint8_t num_of_params_ = 0, const char* title = NULL, uint8_t page_id_ = 0)
@@ -26,6 +26,8 @@ public:
         strcpy(fx_page_title, title);
       }
   }
+
+  static PageIndex last_page;
 
   bool handleEvent(gui_event_t *event);
   bool midi_state = false;
@@ -45,10 +47,6 @@ public:
 
   void update_encoders();
 
-  void setup_callbacks();
-  void remove_callbacks();
-
-  void onControlChangeCallback_Midi(uint8_t *msg);
 };
 
 extern MCLEncoder fx_page_param1;

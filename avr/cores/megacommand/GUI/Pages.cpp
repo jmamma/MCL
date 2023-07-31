@@ -4,7 +4,7 @@
 #include "Pages.h"
 #include "WProgram.h"
 #include "DiagnosticPage.h"
-
+#include "Encoders.h"
 /**
  * \addtogroup GUI
  *
@@ -17,6 +17,8 @@
  * \file
  * GUI Pages
  **/
+
+uint16_t LightPage::encoders_used_clock[4];
 
 void Page::update() {}
 
@@ -34,21 +36,13 @@ void PageContainer::pushPage(LightPage* page) {
   }
 
   pageStack.push(page);
-
   page->init();
-  page->redisplayPage();
   page->show();
 #ifdef ENABLE_DIAG_LOGGING
   // deactivate diagnostic page on pushPage
   diag_page.deactivate();
 #endif
 }
-
-void PageParent::redisplayPage() {
-  redisplay = true;
-}
-
-uint16_t LightPage::encoders_used_clock[GUI_NUM_ENCODERS];
 
 void LightPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
@@ -69,9 +63,16 @@ void LightPage::update() {
         clock_minutes = 0;
         minuteclock = 0;
         encoders_used_clock[i] = slowclock;
-        redisplay = true;
       }
     }
+  }
+}
+
+void LightPage::init_encoders_used_clock(uint16_t timeout) {
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+      encoders[i]->old = encoders[i]->cur;
+      ((LightPage *)this)->encoders_used_clock[i] =
+          slowclock + timeout + 1;
   }
 }
 

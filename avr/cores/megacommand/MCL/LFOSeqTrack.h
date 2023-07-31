@@ -28,11 +28,6 @@ public:
   uint8_t depth;
   uint8_t offset;
 
-  uint8_t get_param_offset(uint8_t dest, uint8_t param);
-  void reset_param(uint8_t dest, uint8_t param, uint8_t value);
-  void reset_param_offset();
-  void update_offset();
-  void update_kit();
 };
 
 class LFOSeqTrackData {
@@ -40,14 +35,15 @@ public:
   LFOSeqParam params[NUM_LFO_PARAMS];
 
   uint8_t wav_type;
-  uint8_t wav_table[NUM_LFO_PARAMS][WAV_LENGTH];
-  bool wav_table_state[NUM_LFO_PARAMS];
+  uint8_t wav_table[NUM_LFO_PARAMS][WAV_LENGTH];// <--- remove
+  bool wav_table_state[NUM_LFO_PARAMS]; // <---- remove
+
   uint8_t last_wav_value[NUM_LFO_PARAMS];
-  uint8_t sample_hold;
+  uint8_t sample_hold; //<--- shouldnt be stored here;
 
   uint8_t speed;
   uint8_t mode;
-  uint8_t offset_behaviour;
+  uint8_t offset_behaviour; //<--- no longer needed
   uint64_t pattern_mask;
   bool enable;
   uint8_t length;
@@ -60,10 +56,11 @@ public:
     length = 16;
     for (uint8_t a = 0; a < NUM_LFO_PARAMS; a++) {
       last_wav_value[a] = 255;
-      params[a].dest = 255;
+      params[a].dest = 0;
     }
   }
 };
+
 
 class LFOSeqTrack : public LFOSeqTrackData {
 public:
@@ -72,32 +69,26 @@ public:
   uint8_t step_count;
   uint8_t sample_count;
 
+  static uint8_t wav_tables[4][WAV_LENGTH];
+
   LFOSeqTrack() { init(); };
-  ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t param);
-  void update_kit_params();
-  void update_params_offset();
-  void reset_params_offset();
 
-  bool wav_table_up_to_date(uint8_t n) { return wav_table_state[n]; }
+  int16_t get_sample(uint8_t n);
 
-  void check_and_update_params_offset(uint8_t dest, uint8_t param,
-                                      uint8_t value);
+  void load_tables();
+
+  uint8_t get_param_offset(uint8_t dest, uint8_t param);
+  ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t dest, uint8_t param);
+
   void set_wav_type(uint8_t _wav_type) {
-    if (wav_type != _wav_type) {
       wav_type = _wav_type;
-      wav_table_state[0] = false;
-      wav_table_state[1] = false;
-    }
   }
   void set_speed(uint8_t _speed) { speed = _speed; }
   void set_depth(uint8_t param, uint8_t depth) {
-    if (params[param].depth != depth) {
       params[param].depth = depth;
-      wav_table_state[param] = false;
-    }
   }
   void load_wav_table(uint8_t table);
-  ALWAYS_INLINE() void seq(MidiUartParent *uart_);
+  ALWAYS_INLINE() void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
 };
 
 #endif /* LFOSEQTRACK_H__ */

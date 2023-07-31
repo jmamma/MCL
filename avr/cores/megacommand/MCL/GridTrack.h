@@ -22,6 +22,8 @@
 #define EXT_ARP_TRACK_TYPE 14
 
 #define GRIDCHAIN_TRACK_TYPE 15
+#define PERF_TRACK_TYPE 16
+
 #define NULL_TRACK_TYPE 128
 #define EMPTY_TRACK_TYPE 0
 
@@ -78,13 +80,17 @@ public:
  void init() {
     link.length = 16;
     link.speed = SEQ_SPEED_1X;
-  }
+    link.loops = 0;
+ }
 
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
   void load_link_data(SeqTrack *seq_track);
 
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {}
+
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
+  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) { load_immediate(tracknumber, seq_track); }
+
   virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
   virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
@@ -96,7 +102,7 @@ public:
 
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }
   virtual uint16_t get_region_size() { return get_track_size(); }
-  virtual uint32_t get_region() { return BANK1_MD_TRACKS_START; }
+  virtual uint16_t get_region() { return BANK1_MD_TRACKS_START; }
   bool is_external() { return get_region() != BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same) { }

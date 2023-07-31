@@ -1,3 +1,4 @@
+#include "mcl.h"
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
@@ -33,6 +34,54 @@ void sdcard_bench() {
 
 void mcl_setup() { mcl.setup(); }
 
+static LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
+      &grid_page,           // Index: 0
+      &page_select_page,    // Index: 1
+      &system_page,         // Index: 2
+      &mixer_page,          // Index: 3
+      &grid_save_page,      // Index: 4
+      &grid_load_page,      // Index: 5
+#ifdef WAV_DESIGNER
+      &wd.mixer,       // Index: 6
+#endif
+      &seq_step_page,       // Index: 7
+      &seq_extstep_page,    // Index: 8
+      &seq_ptc_page,        // Index: 9
+      &text_input_page,     // Index: 10
+      &poly_page,           // Index: 11
+      &sample_browser,       // Index: 12
+      &questiondialog_page, // Index: 13
+      &start_menu_page,     // Index: 14
+      &boot_menu_page,      // Index: 15
+      &fx_page_a,           // Index: 16
+      &fx_page_b,           // Index: 17
+#ifdef WAV_DESIGNER
+      &wd.pages[0], // Index: 18
+      &wd.pages[1], // Index: 19
+      &wd.pages[2], // Index: 20
+#endif
+      &route_page,               // Index: 21
+      &lfo_page,                 // Index: 22
+      &ram_page_a,               // Index: 23
+      &ram_page_b,               // Index: 24
+      &load_proj_page,           // Index: 25
+      &midi_config_page,         // Index: 26
+      &md_config_page,           // Index: 27
+      &chain_config_page,        // Index: 28
+      &aux_config_page,          // Index: 29
+      &mcl_config_page,          // Index: 30
+      &ram_config_page,          // Index: 31
+      &arp_page,                 // Index: 32
+      &md_import_page,           // Index: 33
+      &midiport_menu_page,       // Index: 34
+      &midiprogram_menu_page,    // Index: 35
+      &midiclock_menu_page,      // Index: 36
+      &midiroute_menu_page,      // Index: 37
+      &midimachinedrum_menu_page,// Index: 38
+      &sound_browser,            // Index: 39
+      &perf_page                 // Index: 40
+};
+
 void MCL::setup() {
 
   DEBUG_PRINTLN(F("Welcome to MegaCommand Live"));
@@ -50,7 +99,7 @@ void MCL::setup() {
   DEBUG_DUMP(sizeof(GridChainTrack));
 
   DEBUG_PRINTLN("bank1 end: ");
-  DEBUG_PRINTLN(BANK1_FILE_ENTRIES_END);
+  DEBUG_PRINTLN(BANK3_FILE_ENTRIES_END);
   bool ret = false;
 
   delay(100);
@@ -62,15 +111,15 @@ void MCL::setup() {
 
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
     // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
-    GUI.setPage(&boot_menu_page);
-    while (GUI.currentPage() == &boot_menu_page) {
+    mcl.setPage(BOOT_MENU_PAGE);
+    while (mcl.currentPage() == BOOT_MENU_PAGE) {
       GUI.loop();
     }
     return;
   }
 
   if (!ret) {
-    oled_display.print("SD CARD ERROR :-(");
+    oled_display.print(F("SD CARD ERROR :-("));
     oled_display.display();
     delay(2000);
     return;
@@ -82,7 +131,7 @@ void MCL::setup() {
 
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
   if (ret) {
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
   }
 
   DEBUG_PRINTLN(F("tempo:"));
@@ -107,6 +156,7 @@ void MCL::setup() {
   A4SysexListener.setup(&Midi2);
   MNMSysexListener.setup(&Midi2);
 #endif
+  perf_page.setup();
 
   grid_task.init();
 
@@ -163,18 +213,18 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
-        if (GUI.currentPage() == &grid_load_page ||
-            GUI.currentPage() == &grid_save_page ||
-            (GUI.currentPage() == &grid_page && grid_page.show_slot_menu)) {
+        if (mcl.currentPage() == GRID_LOAD_PAGE ||
+            mcl.currentPage() == GRID_SAVE_PAGE ||
+            (mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu)) {
           return false;
         }
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
           return false;
         }
-        if (grid_page.last_page == nullptr) {
-          grid_page.last_page = GUI.currentPage();
+        if (grid_page.last_page == 255) {
+          grid_page.last_page = mcl.currentPage();
         }
-        GUI.setPage(&grid_page);
+        mcl.setPage(GRID_PAGE);
         grid_page.bank_popup = 1;
         grid_page.bank_popup_loadmask = 0;
         bool clear_states = false;
@@ -190,30 +240,34 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_BANKGROUP: {
-        if (GUI.currentPage() != &text_input_page &&
-            GUI.currentPage() != &grid_save_page &&
-            GUI.currentPage() != &grid_load_page &&
+        if (mcl.currentPage() != TEXT_INPUT_PAGE &&
+            mcl.currentPage() != GRID_SAVE_PAGE &&
+            mcl.currentPage() != GRID_LOAD_PAGE &&
             !trig_interface.is_key_down(MDX_KEY_PATSONG)) {
-          GUI.setPage(&page_select_page);
+          mcl.setPage(PAGE_SELECT_PAGE);
           return true;
         }
         return false;
       }
       case MDX_KEY_REC: {
-        if (GUI.currentPage() != &seq_step_page &&
-            GUI.currentPage() != &seq_ptc_page &&
-            GUI.currentPage() != &seq_extstep_page) {
+       if (mcl.currentPage() != SEQ_STEP_PAGE &&
+          mcl.currentPage() != SEQ_PTC_PAGE &&
+          mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
           seq_step_page.prepare = true;
-          GUI.setPage(&seq_step_page);
+          if (mcl.currentPage() != SOUND_BROWSER && mcl.currentPage() != ARP_PAGE && mcl.currentPage() != POLY_PAGE) {
+            seq_step_page.last_page = mcl.currentPage();
+          }
+          mcl.setPage(SEQ_STEP_PAGE);
         } else {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
-            MD.set_rec_mode(GUI.currentPage() == &seq_step_page);
+            MD.set_rec_mode(mcl.currentPage() == SEQ_STEP_PAGE);
             clearLed2();
             trig_interface.ignoreNextEvent(MDX_KEY_REC);
           } else {
-            if (GUI.currentPage() == &seq_step_page) {
-              GUI.setPage(&grid_page);
+            if (mcl.currentPage() == SEQ_STEP_PAGE) {
+              trig_interface.ignoreNextEvent(MDX_KEY_REC);
+              mcl.setPage(seq_step_page.last_page);
             }
           }
         }
@@ -224,34 +278,34 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_COPY: {
-        if (GUI.currentPage() == &seq_step_page)
+        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
-        if (GUI.currentPage() != &seq_ptc_page &&
+        if (mcl.currentPage() != SEQ_PTC_PAGE &&
             (trig_interface.is_key_down(MDX_KEY_SCALE) ||
              trig_interface.is_key_down(MDX_KEY_NO))) {
           // Ignore scale + copy if page != seq_step_page
           break;
         }
         opt_copy = 2;
-        if (GUI.currentPage() == &seq_ptc_page ||
-            GUI.currentPage() == &seq_extstep_page) {
+        if (mcl.currentPage() == SEQ_PTC_PAGE ||
+            mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_copy = SeqPage::recording ? 2 : 1;
         }
         opt_copy_track_handler_cb();
         break;
       }
       case MDX_KEY_PASTE: {
-        if (GUI.currentPage() == &seq_step_page)
+        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
-        if (GUI.currentPage() != &seq_ptc_page &&
+        if (mcl.currentPage() != SEQ_PTC_PAGE &&
             (trig_interface.is_key_down(MDX_KEY_SCALE) ||
              trig_interface.is_key_down(MDX_KEY_NO))) {
           // Ignore scale + copy if page != seq_step_page
           break;
         }
         opt_paste = 2;
-        if (GUI.currentPage() == &seq_ptc_page ||
-            GUI.currentPage() == &seq_extstep_page) {
+        if (mcl.currentPage() == SEQ_PTC_PAGE ||
+            mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_paste = SeqPage::recording ? 2 : 1;
         }
         reset_undo();
@@ -259,7 +313,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_CLEAR: {
-        if (GUI.currentPage() == &seq_step_page)
+        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
         if ((note_interface.notes_count_on() > 0) ||
             (trig_interface.is_key_down(MDX_KEY_SCALE) ||
@@ -267,13 +321,10 @@ bool mcl_handleEvent(gui_event_t *event) {
           break;
         opt_clear = 2;
         //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
-        if (GUI.currentPage() == &seq_ptc_page ||
-            GUI.currentPage() == &seq_extstep_page) {
-          //  if (SeqPage::midi_device == dev) {
+        if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
+        if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;
-          //  } else {
-          //    opt_clear = SeqPage::recording ? 2 : 1;
-          //  }
+          if (seq_extstep_page.pianoroll_mode > 0) { opt_clear_locks_handler(); break; }
         }
         opt_clear_track_handler();
         break;
@@ -293,11 +344,12 @@ bool mcl_handleEvent(gui_event_t *event) {
       switch (key) {
 
       case MDX_KEY_REC: {
-        if (!SeqPage::recording && (GUI.currentPage() == &seq_ptc_page ||
-                                    GUI.currentPage() == &seq_extstep_page)) {
-          if (GUI.currentPage() != &seq_step_page) {
+        if (!SeqPage::recording && (mcl.currentPage() == SEQ_PTC_PAGE ||
+                                    mcl.currentPage() == SEQ_EXTSTEP_PAGE)) {
+          if (mcl.currentPage() != SEQ_STEP_PAGE) {
             seq_step_page.prepare = true;
-            GUI.setPage(&seq_step_page);
+            seq_step_page.last_page = mcl.currentPage();
+            mcl.setPage(SEQ_STEP_PAGE);
           }
           return true;
         }

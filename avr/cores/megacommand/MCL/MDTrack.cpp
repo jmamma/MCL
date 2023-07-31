@@ -78,6 +78,11 @@ void MDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_seq_data(seq_track);
 }
 
+void MDTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
+  DEBUG_PRINTLN("load immediate");
+  load_seq_data(seq_track);
+}
+
 void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
   //  trackName[0] = '\0';
   memcpy(machine.params, MD.kit.params[tracknumber], 24);
@@ -113,9 +118,8 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
 
   memcpy(md_seq_track->data(), seq_data.data(), sizeof(seq_data));
   load_link_data(seq_track);
-  md_seq_track->oneshot_mask = 0;
+  md_seq_track->clear_mutes();
   md_seq_track->set_length(md_seq_track->length);
-  md_seq_track->update_params();
 }
 
 void MDTrack::scale_seq_vol(float scale) {
@@ -158,6 +162,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   uint32_t len;
 
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
+  md_seq_track->store_mute_state();
 
   if (column != 255 && online == true) {
     get_machine_from_kit(column);

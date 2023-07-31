@@ -2,7 +2,7 @@
 
 #include "LFO.h"
 #include "math.h"
-#define DIV_1_127 (1.00 / 127.0)
+#define DIV_1_127 (1.00f / 127.0f)
 // Exponential Rise Formua:
 // y = M * (1-e^(-x/a));
 // M = Maximum
@@ -34,9 +34,9 @@ uint8_t ExpLFO::get_sample(uint8_t sample_number) {
 
 
 uint8_t IExpLFO::get_sample(uint8_t sample_number) {
-  uint8_t y = amplitude - (uint8_t)((float)amplitude *
-                                    powf(M_E, (float)-1 * (float)sample_number *
-                                                  (float)time_constant));
+  ExpLFO e;
+  e.amplitude = amplitude;
+  uint8_t y = amplitude - e.get_sample(sample_number);
   return y;
 }
 
@@ -48,7 +48,9 @@ uint8_t RampLFO::get_sample(uint8_t sample_number) {
 }
 
 uint8_t IRampLFO::get_sample(uint8_t sample_number) {
-  uint8_t y = amplitude - ((float)amplitude / (float)(LFO_LENGTH)) * (sample_number);
+  RampLFO r;
+  r.amplitude = amplitude;
+  uint8_t y = amplitude - r.get_sample(sample_number);
 
   return y;
 }
@@ -65,11 +67,11 @@ uint8_t TriLFO::get_sample(uint8_t sample_number) {
 }
 
 uint8_t SinLFO::get_sample(uint8_t sample_number) {
-  float sample_duration = (float)1.0 / (float)LFO_LENGTH;
+  float sample_duration = (float)1.0f / (float)LFO_LENGTH;
 
-  uint8_t y = (float)(amplitude / 2.0) *
-             sin(2.0 * PI * (float) sample_number * sample_duration - (0.5 * PI)) +
-         (float)(amplitude / 2.0);
+  uint8_t y = (float)(amplitude / 2.0f) *
+             (float) sin(2.0f * (float)M_PI * (float) sample_number * sample_duration - (0.5f * (float)M_PI)) +
+         (float)(amplitude / 2.0f);
   return y;
 
 }

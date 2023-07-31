@@ -58,11 +58,11 @@ public:
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
-  void config_encoders();
+  virtual void config_encoders();
 
   void draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
                        uint8_t color = WHITE);
-  void draw_note(uint8_t note_val, uint16_t note_start, uint16_t note_end);
+  void draw_note(uint8_t x, uint8_t y, uint8_t w);
   void draw_pianoroll();
   void draw_lockeditor();
   void draw_viewport_minimap();
@@ -73,15 +73,13 @@ public:
   void pos_cur_y(int16_t diff);
   void pos_cur_w(int16_t diff);
 
-  void display_mute_mask();
-
-  bool is_within_fov(uint16_t x) {
+  bool is_within_fov(int16_t x) {
     if ((x >= fov_offset) && (x < fov_offset + fov_length)) {
       return true;
     }
     return false;
   }
-  bool is_within_fov(uint16_t start_x, uint16_t end_x) {
+  bool is_within_fov(int16_t start_x, int16_t end_x) {
     if (is_within_fov(start_x) || is_within_fov(end_x) ||
         ((start_x < fov_offset) && (end_x >= fov_offset + fov_length)) ||
         (end_x < start_x &&
@@ -92,6 +90,7 @@ public:
   }
   void param_select_update();
   void enter_notes();
+  void config_menu_entries();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   virtual void loop();

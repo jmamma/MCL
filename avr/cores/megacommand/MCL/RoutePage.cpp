@@ -27,7 +27,7 @@ void RoutePage::draw_routes() {
 
   /*Display 16 track routes on screen,
    For 16 tracks check to see if there is a route*/
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     if (mcl_cfg.routing[i] != 6) {
       cur = (char)'A' + mcl_cfg.routing[i];
@@ -99,7 +99,7 @@ void RoutePage::display() {
 
   auto *oldfont = oled_display.getFont();
   oled_display.clearDisplay();
-  oled_display.drawBitmap(0, 0, R.icons_page->icon_route, 24, 16, WHITE);
+  oled_display.drawBitmap(0, 0, R.icons_page->icon_route, 24, 14, WHITE);
 
   mcl_gui.draw_knob_frame();
 
@@ -160,11 +160,11 @@ bool RoutePage::handleEvent(gui_event_t *event) {
   // update_globals();
   // md_exploit.off();
   // md_exploit.on();
-  // GUI.setPage(&mixer_page);
+  // mcl.setPage(MIXER_PAGE);
   // return true;
   //}
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    GUI.setPage(&page_select_page);
+    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
   /*
@@ -173,7 +173,7 @@ bool RoutePage::handleEvent(gui_event_t *event) {
         EVENT_PRESSED(event, Buttons.ENCODER3) ||
         EVENT_PRESSED(event, Buttons.ENCODER1)) {
       update_globals();
-      GUI.setPage(&grid_page);
+      mcl.setPage(GRID_PAGE);
 
       return true;
     }

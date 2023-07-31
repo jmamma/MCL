@@ -561,20 +561,38 @@ void Adafruit_GFX::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
 // Draw a RAM-resident 1-bit image at the specified (x,y) position,
 // using the specified foreground color (unset bits are transparent).
 void Adafruit_GFX::drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w,
-                              int16_t h, uint16_t color) {
+                              int16_t h, uint16_t color, bool flip_vert, bool flip_horiz) {
 
   int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
   uint8_t byte = 0;
 
   startWrite();
-  for (int16_t j = 0; j < h; j++, y++) {
+  for (int16_t j = 0; j < h; j++) {
     for (int16_t i = 0; i < w; i++) {
       if (i & 7)
         byte <<= 1;
       else
         byte = bitmap[j * byteWidth + i / 8];
+      uint8_t x_r, y_r;
+      if (flip_vert) {
+        x_r = x + w - i - 1;
+      }
+
+      else {
+        x_r = x + i;
+      }
+
+      if (flip_horiz) {
+        y_r = y + h - j - 1;
+      }
+
+      else {
+        y_r = y + j;
+      }
+
+
       if (byte & 0x80)
-        writePixel(x + i, y, color);
+        writePixel(x_r, y_r, color);
     }
   }
   endWrite();
@@ -584,19 +602,36 @@ void Adafruit_GFX::drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w,
 // using the specified foreground (for set bits) and background (unset
 // bits) colors.
 void Adafruit_GFX::drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w,
-                              int16_t h, uint16_t color, uint16_t bg) {
+                              int16_t h, uint16_t color, uint16_t bg, bool flip_vert, bool flip_horiz) {
 
   int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
   uint8_t byte = 0;
 
   startWrite();
-  for (int16_t j = 0; j < h; j++, y++) {
+  for (int16_t j = 0; j < h; j++) {
     for (int16_t i = 0; i < w; i++) {
       if (i & 7)
         byte <<= 1;
       else
         byte = bitmap[j * byteWidth + i / 8];
-      writePixel(x + i, y, (byte & 0x80) ? color : bg);
+      uint8_t x_r, y_r;
+      if (flip_vert) {
+        x_r = x + w - i - 1;
+      }
+
+      else {
+        x_r = x + i;
+      }
+
+      if (flip_horiz) {
+        y_r = y + h - j - 1;
+      }
+
+      else {
+        y_r = y + j;
+      }
+
+      writePixel(x_r, y_r, (byte & 0x80) ? color : bg);
     }
   }
   endWrite();
@@ -961,6 +996,14 @@ void Adafruit_GFX::setRotation(uint8_t x) {
     _height = WIDTH;
     break;
   }
+}
+
+void Adafruit_GFX::draw_textbox(const char *text1, const char *text2) {
+  char str1[16];
+  char str2[16];
+  strcpy_P(str1, text1);
+  strcpy_P(str1, text2);
+  draw_textbox(str1, str2);
 }
 
 void Adafruit_GFX::draw_textbox(char *text, char *text2) {

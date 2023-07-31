@@ -1,7 +1,7 @@
 #ifndef GRID_TASK_H__
 #define GRID_TASK_H__
 
-#include "MCL.h"
+#include "mcl.h"
 #include "Task.h"
 #include "Elektron.h"
 #include "GridChain.h"
@@ -12,22 +12,30 @@ class LoadQueue {
   uint8_t modes[NUM_LINKS];
   uint8_t rd;
   uint8_t wr;
+  bool full;
 
   void init() {
     rd = 0;
     wr = 0;
+    bool full = false;
   }
 
   void put(uint8_t mode, uint8_t *row_select) {
+    if (full) { return; }
     memcpy(row_selects[wr],row_select,NUM_SLOTS);
     modes[wr++] = mode;
     if (wr == NUM_LINKS) {
        wr = 0;
     }
+    if (wr == rd) {
+        full = true;
+    }
   }
 
 
   void put(uint8_t mode, uint8_t row, uint8_t *track_select_array) {
+    if (full) { return; }
+
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
        row_selects[wr][n] = 255;
        if (track_select_array[n]) { row_selects[wr][n] = row; }
@@ -35,6 +43,9 @@ class LoadQueue {
     modes[wr++] = mode;
     if (wr == NUM_LINKS) {
        wr = 0;
+    }
+    if (wr == rd) {
+      full = true;
     }
   }
 
@@ -44,11 +55,11 @@ class LoadQueue {
     if (rd == NUM_LINKS) {
        rd = 0;
     }
+    full = false;
   }
 
   bool is_empty() {
-    bool ret = (rd == wr);
-    return ret;
+    return !full && (rd == wr);
   }
 
 };
@@ -82,7 +93,6 @@ public:
 
   virtual void run();
   virtual void destroy();
-  void sync_cursor();
   void init() {
      reset_midi_states();
      load_queue.init();
@@ -95,12 +105,13 @@ public:
     //midi_row_select = 255;
     midi_load = false;
   }
-
+  void row_update();
   void gui_update();
+  void update_transition_details();
   void transition_handler();
 
   bool link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed, uint8_t *track_select_array, GridDeviceTrack *gdt);
-  bool transition_load(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
+  bool transition_load(uint8_t n, uint8_t track_idx, GridDeviceTrack *gdt);
   bool transition_send(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
 
   /* @} */

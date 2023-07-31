@@ -18,6 +18,8 @@ class MDRouteTrack;
 class MDTempoTrack;
 class MDLFOTrack;
 class MNMTrack;
+class PerfTrack;
+class GridChainTrack;
 
 #define __IMPL_DYNAMIK_KAST(klass, pred, aktive)                               \
   void _dynamik_kast_impl(DeviceTrack *p, klass **pp) {                        \
@@ -50,6 +52,8 @@ private:
   __IMPL_DYNAMIK_KAST(MDTempoTrack, MDTEMPO_TRACK_TYPE, MDTEMPO_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MNMTrack, MNM_TRACK_TYPE, MNM_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDLFOTrack, MDLFO_TRACK_TYPE, MDLFO_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(PerfTrack, PERF_TRACK_TYPE, PERF_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(GridChainTrack, GRIDCHAIN_TRACK_TYPE, GRIDCHAIN_TRACK_TYPE)
 
 public:
   //  bool get_track_from_sysex(int tracknumber, uint8_t column);
@@ -103,7 +107,7 @@ public:
   }
 
   int memcmp_sound(uint8_t column) {
-    uint32_t pos = get_region() + get_track_size() * (uint32_t)(column) + ((uint32_t) get_sound_data_ptr() - (uint32_t) this);
+    uint16_t pos = get_region() + get_track_size() * (uint16_t)(column) + ((uint16_t) get_sound_data_ptr() - (uint16_t) this);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     return memcmp_bank1(get_sound_data_ptr(), ptr, get_track_size());
   }
@@ -142,7 +146,7 @@ class DeviceTrackChunk : public DeviceTrack {
   virtual uint16_t get_seq_data_size() = 0;
   virtual uint8_t get_model() = 0;
   virtual uint16_t get_track_size() = 0;
-  virtual uint32_t get_region() = 0;
+  virtual uint16_t get_region() = 0;
   virtual uint8_t get_device_type() = 0;
 
   virtual void *get_sound_data_ptr() = 0;

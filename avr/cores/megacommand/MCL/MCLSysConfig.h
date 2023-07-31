@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 4006
+#define CONFIG_VERSION 4007
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -48,7 +48,7 @@ public:
   uint8_t midi_forward_2;
   uint8_t midi_forward_usb;
 
-  uint8_t auto_save;
+  uint8_t rec_automation;
   uint8_t load_mode;
   uint8_t chain_queue_length;
   uint8_t chain_load_quant;
@@ -64,6 +64,7 @@ public:
   uint8_t midi_transport_send;
   uint8_t midi_ctrl_port;
   uint8_t md_trig_channel;
+  uint8_t seq_dev;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

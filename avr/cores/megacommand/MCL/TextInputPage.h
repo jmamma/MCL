@@ -22,6 +22,7 @@ public:
                  Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
   virtual bool handleEvent(gui_event_t *event);
+
   void config_normal();
   void config_charpane();
   void display();

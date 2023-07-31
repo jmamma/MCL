@@ -15,13 +15,13 @@ static uint8_t get_pageidx(uint8_t page_number) {
   uint8_t i = 0;
   for (; i < R.page_entries->countof_Entries; ++i) {
     if (page_number == R.page_entries->Entries[i].PageNumber) {
-      break;
+      return i;
     }
   }
-  return i;
+  return 255;
 }
 
-static LightPage *get_page(uint8_t pageidx, char *str) {
+static PageIndex get_page(uint8_t pageidx, char *str) {
   if (pageidx < R.page_entries->countof_Entries) {
     if (str) {
       strcpy(str, R.page_entries->Entries[pageidx].Name);
@@ -29,9 +29,9 @@ static LightPage *get_page(uint8_t pageidx, char *str) {
     return R.page_entries->Entries[pageidx].Page;
   } else {
     if (str) {
-      strncpy(str, "----", 5);
+      strcpy(str, "----");
     }
-    return NULL;
+    return 255;
   }
 }
 
@@ -69,7 +69,7 @@ static void get_category_name(uint8_t page_number, char *str) {
 
 get_category_name_fail:
   if (str) {
-    strncpy(str, "----", 5);
+    strcpy(str, "----");
   }
   return;
 }
@@ -88,7 +88,7 @@ void PageSelectPage::init() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print("PAGE SELECT");
+  oled_display.print(F("PAGE SELECT"));
   oled_display.setTextColor(WHITE);
 
   loop_init = true;
@@ -126,7 +126,7 @@ void PageSelectPage::cleanup() {
 
 uint8_t PageSelectPage::get_nextpage_down() {
   for (int8_t i = page_select - 1; i >= 0; i--) {
-    if (get_page(get_pageidx(i), nullptr)) {
+    if (get_page(get_pageidx(i), nullptr) != 255) {
       return i;
     }
   }
@@ -135,7 +135,7 @@ uint8_t PageSelectPage::get_nextpage_down() {
 
 uint8_t PageSelectPage::get_nextpage_up() {
   for (uint8_t i = page_select + 1; i < 16; i++) {
-    if (get_page(get_pageidx(i), nullptr)) {
+    if (get_page(get_pageidx(i), nullptr) != 255) {
       return i;
     }
   }
@@ -225,7 +225,7 @@ void PageSelectPage::display() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print("PAGE SELECT");
+  oled_display.print(F("PAGE SELECT"));
   oled_display.setTextColor(WHITE);
   uint8_t label_pos[4] = {30, 57, 81, 104};
   for (uint8_t i = 0; i < 4; ++i) {
@@ -354,14 +354,14 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
   release:
-    LightPage *p;
+    PageIndex p;
     p = get_page(get_pageidx(page_select), nullptr);
-    if (BUTTON_DOWN(Buttons.BUTTON1) || (!p)) {
+    if (BUTTON_DOWN(Buttons.BUTTON1) || (p == 255)) {
       GUI.ignoreNextEvent(Buttons.BUTTON1);
       //  md_exploit.off();
-      GUI.setPage(&grid_page);
+      mcl.setPage(GRID_PAGE);
     } else {
-      GUI.setPage(p);
+      mcl.setPage(p);
     }
     return true;
   }
@@ -369,13 +369,13 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
   load_grid:
     GUI.ignoreNextEvent(event->source);
-    GUI.setPage(&grid_page);
+    mcl.setPage(GRID_PAGE);
     return true;
   }
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     //PAT SONG
-    GUI.setPage(&grid_page);
-    GUI.pushPage(&system_page);
+    mcl.setPage(GRID_PAGE);
+    mcl.pushPage(SYSTEM_PAGE);
     return true;
   }
 

@@ -6,10 +6,25 @@
 #include "QuestionDialogPage.h"
 #include "TextInputPage.h"
 
-#define SHOW_VALUE_TIMEOUT 2000
-
+//class MCLGUI : public Print {
 class MCLGUI {
 public:
+
+  /*
+   * Print child implementation:
+   *
+  char str_print[30];
+  bool str_offset = 0;
+  size_t write(uint8_t c) { };
+  size_t write(const uint8_t *buffer, size_t size) {
+    uint8_t s =  min(sizeof(str_print),size);
+    strncpy(str_print, buffer + str_offset, s);
+    str_offset += s;
+  }
+
+  void print_str() { oled_display.print(str_print); str_offset = 0; }
+  */
+
   uint8_t s_progress_cookie = 0b00110011;
   uint8_t s_progress_count = 0;
 
@@ -50,10 +65,10 @@ public:
   void clear_leftpane();
   void clear_rightpane();
 
-  void draw_encoder(uint8_t x, uint8_t y, uint8_t value);
+  void draw_encoder(uint8_t x, uint8_t y, uint8_t value, bool highlight = false);
   void draw_encoder(uint8_t x, uint8_t y, Encoder *encoder);
 
-  bool show_encoder_value(Encoder *encoder);
+  bool show_encoder_value(Encoder *encoder, int timeout = SHOW_VALUE_TIMEOUT);
 
   void draw_text_encoder(uint8_t x, uint8_t y, const char *name,
                          const char *value);
@@ -62,9 +77,9 @@ public:
   void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,
                        bool show_value);
   void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder,
-                          const char *name);
-  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,
-                          bool show_value);
+                          const char *name, bool highlight = false);
+  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool highlight = false,
+                          bool show_value = false);
   void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                      uint8_t note_height, uint8_t num_of_notes,
                      uint64_t *note_mask);
@@ -73,7 +88,7 @@ public:
   void draw_leds(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &lock_mask,
                  uint8_t step_count, uint8_t length, bool show_current_step);
 
-  void draw_track_type_select(uint8_t x, uint8_t y, uint8_t track_type_select);
+  void draw_track_type_select(uint8_t track_type_select);
 
   void draw_panel_toggle(const char *s1, const char *s2, bool s1_active);
   void draw_panel_labels(const char *info1, const char *info2);
@@ -82,23 +97,16 @@ public:
 
   void draw_knob_frame();
   void draw_knob(uint8_t i, const char *title, const char *text);
-  void draw_knob(uint8_t i, Encoder *enc, const char *name);
+  void draw_knob(uint8_t i, Encoder *enc, const char *name, bool highlight = false);
 
-  void init_encoders_used_clock() {
-
-    for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-      ((LightPage *)GUI.currentPage())->encoders_used_clock[n] =
-          slowclock - SHOW_VALUE_TIMEOUT - 1;
-    }
-  }
   static constexpr uint8_t seq_w = 5;
   static constexpr uint8_t led_h = 3;
   static constexpr uint8_t trig_h = 5;
 
   static constexpr uint8_t s_menu_w = 104;
-  static constexpr uint8_t s_menu_h = 24;
+  static constexpr uint8_t s_menu_h = 27;
   static constexpr uint8_t s_menu_x = (128 - s_menu_w) / 2;
-  static constexpr uint8_t s_menu_y = (32 - s_menu_h) / 2;
+  static constexpr uint8_t s_menu_y = 0;
   static constexpr uint8_t s_title_x = 31;
   static constexpr uint8_t s_title_w = 64;
 

@@ -13,6 +13,10 @@ uint16_t MDTempoTrack::send_tempo(bool send) {
   return MD.setTempo(tempo, send);
 }
 
+void MDTempoTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
+  load_link_data(seq_track);
+}
+
 void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);
   send_tempo();
@@ -23,7 +27,7 @@ void MDTempoTrack::get_tempo() {
   if (MidiClock.uart_clock_recv == &MidiUart) {
     uint16_t tp;
     if (MD.get_tempo(tp)) {
-      tempo = (float)tp / 24.0;
+      tempo = (float)tp * 0.0416667;
       return;
     }
   }

@@ -19,9 +19,9 @@ void TrigInterfaceTask::run() {
     key = MDX_KEY_DOWN;
   }
 
-  if (key == 255) { 
-    GUI.removeTask(&trig_interface_task);     
-    return; 
+  if (key == 255) {
+    GUI.removeTask(&trig_interface_task);
+    return;
   }
 
   gui_event_t event;
@@ -29,7 +29,7 @@ void TrigInterfaceTask::run() {
   event.mask = EVENT_BUTTON_PRESSED;
   event.port = UART1_PORT;
   EventRB.putp(&event);
- 
+
 }
 */
 
@@ -54,7 +54,9 @@ void TrigInterface::disable_listener() { sysex->removeSysexListener(this); }
 
 bool TrigInterface::on(bool clear_states) {
   note_interface.init_notes();
-  if (clear_states) { cmd_key_state = 0; }
+  if (clear_states) {
+    cmd_key_state = 0;
+  }
   note_interface.note_proceed = true;
   if (state) {
     return false;
@@ -82,6 +84,15 @@ bool TrigInterface::off() {
   return true;
 }
 
+bool TrigInterface::check_key_throttle() {
+  if (clock_diff(last_clock, slowclock) < 30) {
+    return true;
+  } else {
+    throttle = false;
+  }
+  return false;
+}
+
 void TrigInterface::end() {
 
   // if (!state) {
@@ -101,6 +112,19 @@ void TrigInterface::end() {
     key_release = true;
     key -= 0x40;
   }
+
+  if (key == MDX_KEY_YES) {
+    if (!key_release && throttle) {
+      if (check_key_throttle()) {
+        return;
+      }
+    }
+    if (!throttle) {
+      throttle = true;
+      last_clock = slowclock;
+    }
+  }
+
   if (key_release) {
     CLEAR_BIT64(cmd_key_state, key);
   } else {
@@ -124,8 +148,7 @@ void TrigInterface::end() {
 
   if (key == MDX_KEY_PATSONG) {
     event.source = Buttons.BUTTON3;
-  }
-  else {
+  } else {
     event.source = key + 64; // EVENT_CMD
   }
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;

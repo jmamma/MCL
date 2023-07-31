@@ -508,7 +508,7 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
   }
 
   else {
-    uint32_t num_of_samples =
+    num_of_samples =
         (header.data.chunk_size / header.fmt.numChannels) / sample_size;
   }
 

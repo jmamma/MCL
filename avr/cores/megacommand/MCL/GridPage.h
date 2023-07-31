@@ -4,7 +4,6 @@
 #define GRIDPAGE_H__
 
 #include "GUI.h"
-#include "GridEncoder.h"
 #include "GridRowHeader.h"
 
 #define MAX_VISIBLE_ROWS 4
@@ -25,6 +24,7 @@ public:
   uint8_t row = 0;
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
+  uint8_t old_col = 0;
   uint8_t display_name = 0;
   uint8_t bank = 0;
 
@@ -52,7 +52,7 @@ public:
   uint8_t row_scan = 0;
   uint64_t row_states[2];
 
-  LightPage *last_page = nullptr;
+  PageIndex last_page = NULL_PAGE;
 
   uint8_t bank_popup = 0;
   uint16_t bank_popup_lastclock;
@@ -86,9 +86,9 @@ public:
   void cleanup();
   void init();
   void prepare();
-  void swap_grids();
+  bool swap_grids();
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
-
+  void load_old_col();
   void close_bank_popup();
 
   void loop();

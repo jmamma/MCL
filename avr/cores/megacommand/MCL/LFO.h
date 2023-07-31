@@ -3,7 +3,7 @@
 #ifndef LFOOSC_H__
 #define LFOOSC_H__
 
-#include "MCL.h"
+#include "mcl.h"
 #include "math.h"
 
 #define EXP_LFO 1
@@ -19,7 +19,7 @@ class ExpLFO : public LFO {
 
   float time_constant;
 public:
-  ExpLFO(float time_constant_ = 40) { time_constant = 1.00 / time_constant_; }
+  ExpLFO(float time_constant_ = 40) { time_constant = 1.00f / time_constant_; }
   uint8_t get_sample(uint8_t sample_number);
 };
 
@@ -28,7 +28,7 @@ class IExpLFO : public LFO {
 
   float time_constant;
 public:
-  IExpLFO(float time_constant_ = 40) { time_constant = 1.00 / time_constant_; }
+  IExpLFO(float time_constant_ = 40) { time_constant = 1.00f / time_constant_; }
   uint8_t get_sample(uint8_t sample_number);
 };
 
