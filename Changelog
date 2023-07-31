@@ -56,8 +56,8 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   Each Mute Set also includes Performance Controller Locks.
 
-  To set a Performance Controller lock, hold down an Arrow Key and rotate the
-  respective encoder.
+  To set a Performance Controller lock, hold down an [Arrow] key followed by [Exit/No] and
+  rotate the respective encoder.
 
 - Chromatic Page:
 
@@ -132,12 +132,14 @@ Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
   Added a throttle to the [YES] key to prevent accidental double tap.
 
+  Empty tracks can now have customizable Length and Loop values adjustable via slot menu.
+
 - Sound Browser
 
   The functionality to Save and Load MD Sounds is now separated from Sample
   Management.
 
-  The dedicated Sound Browser is accessible from the Sequencer Track Menu.
+  The dedicated Sound Browser is accessible from the Step Sequencer Track Menu.
 
 - Sample Browser
 
