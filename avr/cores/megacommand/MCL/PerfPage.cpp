@@ -611,6 +611,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    if (show_menu) {
     void (*row_func)() =
         perf_menu_page.menu.get_row_function(perf_menu_page.encoders[1]->cur);
     if (row_func != NULL) {
@@ -618,6 +619,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       (*row_func)();
     }
     init();
+    }
     return true;
   }
 
