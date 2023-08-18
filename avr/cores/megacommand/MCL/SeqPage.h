@@ -20,7 +20,7 @@ public:
   void onMidiStartCallback();
 };
 
-
+extern MidiDevice *opt_midi_device_capture;
 extern void pattern_len_handler(EncoderParent *enc);
 
 extern uint8_t opt_trackid;

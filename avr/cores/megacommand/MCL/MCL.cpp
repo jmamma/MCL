@@ -291,6 +291,9 @@ bool mcl_handleEvent(gui_event_t *event) {
             mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_copy = SeqPage::recording ? 2 : 1;
         }
+        else {
+          opt_midi_device_capture = &MD;
+        }
         opt_copy_track_handler_cb();
         break;
       }
@@ -308,6 +311,9 @@ bool mcl_handleEvent(gui_event_t *event) {
             mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_paste = SeqPage::recording ? 2 : 1;
         }
+        else {
+          opt_midi_device_capture = &MD;
+        }
         reset_undo();
         opt_paste_track_handler();
         break;
@@ -322,9 +328,12 @@ bool mcl_handleEvent(gui_event_t *event) {
         opt_clear = 2;
         //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
         if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
-        if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
+        else if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;
           if (seq_extstep_page.pianoroll_mode > 0) { opt_clear_locks_handler(); break; }
+        }
+        else {
+          opt_midi_device_capture = &MD;
         }
         opt_clear_track_handler();
         break;
