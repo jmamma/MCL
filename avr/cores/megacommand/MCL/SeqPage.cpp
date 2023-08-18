@@ -903,7 +903,7 @@ void opt_paste_track_handler() {
       if (is_poly) {
         for (uint8_t c = 0; c < 16; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
-            mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track, c);
+            mcl_clipboard.paste_sequencer_track(c, c);
           }
         }
       }
