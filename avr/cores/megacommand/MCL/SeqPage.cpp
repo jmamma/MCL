@@ -56,6 +56,8 @@ uint8_t SeqPage::last_step = 255;
 static MCLEncoder *opt_param1_capture = nullptr;
 static MCLEncoder *opt_param2_capture = nullptr;
 
+uint8_t copy_mask = 0;
+
 void SeqPage::setup() {}
 
 void SeqPage::check_and_set_page_select() {
@@ -819,6 +821,9 @@ void opt_copy_track_handler(uint8_t op) {
     opt_undo = op;
     silent = true;
   }
+  else {
+    SET_BIT(copy_mask, (uint8_t) (opt_midi_device_capture == &MD) * 4 + opt_copy);
+  }
   DEBUG_PRINTLN("copying");
   DEBUG_PRINTLN(opt_copy);
   DEBUG_PRINTLN(op);
@@ -867,6 +872,9 @@ void opt_paste_track_handler() {
   bool undo = false;
   if (opt_undo != 255) {
     undo = true;
+  }
+  else if (!IS_BIT_SET(copy_mask, (uint8_t) (opt_midi_device_capture == &MD) * 4 + opt_paste)) {
+    return;
   }
   if (opt_paste == 2) {
 

@@ -63,7 +63,7 @@ extern void opt_paste_page_handler();
 extern void opt_clear_step_handler();
 
 extern void seq_menu_handler();
-
+extern uint8_t copy_mask;
 
 class MidiDevice;
 
