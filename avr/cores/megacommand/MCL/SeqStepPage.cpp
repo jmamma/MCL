@@ -170,7 +170,7 @@ void SeqStepPage::display() {
     MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 
     SeqPage::display();
-    if (mcl_gui.show_encoder_value(&seq_param2) &&
+    if (md_micro && mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!recording)) {
 
@@ -252,8 +252,7 @@ void SeqStepPage::loop() {
 
             if (machine_pitch != MD.kit.params[last_md_track][0]) {
               active_track.set_track_pitch(step, machine_pitch);
-              seq_step_page.encoders_used_clock[3] =
-                  slowclock; // indicate that encoder has changed.
+              seq_step_page.encoders_used_clock[3] = slowclock; // indicate that encoder has changed.
             }
           }
         }
@@ -407,12 +406,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
       disable_md_micro();
+      show_pitch = false;
       if (IS_BIT_SET16(ignore_release, track)) {
         CLEAR_BIT16(ignore_release, track);
         return;
-      }
-      if (last_md_track < 15) {
-        show_pitch = false;
       }
       if (step >= active_track.length) {
         return true;
