@@ -703,7 +703,7 @@ void opt_clear_track_handler() {
     if (opt_clear == 2) {
 
       MD.popup_text(2);
-      oled_display.textbox("CLEAR MD ", "TRACKS");
+      oled_display.textbox("CLEAR MD ", "TRACKS", 1200);
       uint8_t old_mutes[16];
       for (uint8_t n = 0; n < 16; n++) {
         old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
@@ -722,7 +722,7 @@ void opt_clear_track_handler() {
       if (is_poly) {
         str = "CLEAR POLY TRACKS";
       }
-      oled_display.textbox(str, "");
+      oled_display.textbox(str, "", 1200);
       MD.popup_text((char*) str);
       if (copy) {
         opt_copy_track_handler(opt_clear);
@@ -827,7 +827,7 @@ void opt_copy_track_handler(uint8_t op) {
 
     if (opt_midi_device_capture == &MD) {
       if (!silent) {
-        oled_display.textbox("COPY MD ", "TRACKS");
+        oled_display.textbox("COPY MD ", "TRACKS", 1200);
         MD.popup_text(1);
       }
       mcl_clipboard.copy_sequencer();
@@ -835,7 +835,7 @@ void opt_copy_track_handler(uint8_t op) {
 #ifdef EXT_TRACKS
     else {
       if (!silent) {
-        oled_display.textbox("COPY EXT ", "TRACKS");
+        oled_display.textbox("COPY EXT ", "TRACKS", 1200);
       }
       mcl_clipboard.copy_sequencer(NUM_MD_TRACKS);
     }
@@ -872,10 +872,10 @@ void opt_paste_track_handler() {
 
     if (opt_midi_device_capture == &MD) {
       if (!undo) {
-        oled_display.textbox("PASTE MD ", "TRACKS");
+        oled_display.textbox("PASTE MD ", "TRACKS", 1200);
         MD.popup_text(3);
       } else {
-        oled_display.textbox("UNDO ", "TRACKS");
+        oled_display.textbox("UNDO ", "TRACKS", 1200);
         MD.popup_text(22);
       }
       mcl_clipboard.paste_sequencer();
@@ -884,7 +884,7 @@ void opt_paste_track_handler() {
       if (!undo) {
         str = "PASTE EXT TRACKS";
       }
-      oled_display.textbox(str, "");
+      oled_display.textbox(str, "", 1200);
       MD.popup_text((char*)str);
       mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
     }
