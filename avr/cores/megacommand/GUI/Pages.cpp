@@ -38,6 +38,7 @@ void PageContainer::pushPage(LightPage* page) {
   pageStack.push(page);
   page->init();
   page->show();
+  page->init_encoders_used_clock();
 #ifdef ENABLE_DIAG_LOGGING
   // deactivate diagnostic page on pushPage
   diag_page.deactivate();
