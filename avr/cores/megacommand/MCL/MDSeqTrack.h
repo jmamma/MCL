@@ -49,6 +49,7 @@ public:
   uint8_t trig_conditional(uint8_t condition);
   void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
   void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
+  void reset_params();
   void get_step_locks(uint8_t step, uint8_t *params, bool ignore_locks_disabled = false);
 
   void recalc_slides();

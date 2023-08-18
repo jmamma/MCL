@@ -376,22 +376,46 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     bool lock_present = steps[step].is_lock(c);
     bool send = false;
     uint8_t send_param;
+    uint8_t p = locks_params[c] - 1;
     if (locks_params[c]) {
       if (lock_present) {
         send_param = locks[lock_idx];
         send = true;
       } else if (trig) {
-        send_param = MD.kit.params[track_number][locks_params[c] - 1];
+        send_param = MD.kit.params[track_number][p];
         send = true;
       }
     }
     lock_idx += lock_bit;
     if (send) {
-      uint8_t p = locks_params[c] - 1;
       bool update_kit = false;
       MD.setTrackParam_inline(track_number, p, send_param, uart, update_kit);
-      }
+    }
   }
+}
+
+void MDSeqTrack::reset_params() {
+  bool re_assign = false;
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    if (locks_params[c] > 0) {
+      MDTrack md_track;
+      md_track.get_machine_from_kit(track_number);
+      MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
+      return;
+    }
+  }
+/*
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    bool send = false;
+    uint8_t send_param;
+    if (locks_params[c]) {
+      uint8_t p = locks_params[c] - 1;
+      uint8_t send_param = MD.kit.params[track_number][p];
+      bool update_kit = false;
+      MD.setTrackParam_inline(track_number, p, send_param, uart, update_kit);
+    }
+  }
+  */
 }
 
 void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
