@@ -862,7 +862,9 @@ void opt_copy_track_handler(uint8_t op) {
 #ifdef EXT_TRACKS
     else {
       if (!silent) {
-        oled_display.textbox("COPY EXT ", "TRACK");
+        const char *str = "COPY EXT TRACK";
+        MD.popup_text((char*)str);
+        oled_display.textbox(str,"");
       }
       mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
       mcl_clipboard.copy_sequencer_track(last_ext_track + NUM_MD_TRACKS);
