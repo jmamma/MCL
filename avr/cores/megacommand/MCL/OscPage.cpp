@@ -21,15 +21,14 @@ float OscPage::get_freq() {
   return fout;
 }
 void OscPage::init() {
-  if (wd.last_page != 255 && wd.last_page != WD_PAGE_0 + id) { mcl.setPage(wd.last_page); wd.last_page = 255; return; }
+  if (wd.last_page != NULL_PAGE && wd.last_page != WD_PAGE_0 + id) { mcl.setPage(wd.last_page); wd.last_page = NULL_PAGE; return; }
   WavDesignerPage::init();
-  wd.last_page = mcl.currentPage();
   wavdesign_menu_page.menu.enable_entry(1, true);
   wavdesign_menu_page.menu.enable_entry(2, false);
   oled_display.clearDisplay();
 }
 
-void OscPage::cleanup() { DEBUG_PRINT_FN(); }
+void OscPage::cleanup() { wd.last_page = mcl.currentPage(); DEBUG_PRINT_FN(); }
 bool OscPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
     return true;

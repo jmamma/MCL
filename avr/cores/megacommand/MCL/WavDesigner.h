@@ -24,7 +24,7 @@ public:
     mixer.id = MIXER_ID;
     pages[0].osc_waveform = 1;
     mixer.enc4.cur = 0;
-    last_page = WD_PAGE_0;
+    last_page = NULL_PAGE;
   }
   void prompt_send();
   bool render();
