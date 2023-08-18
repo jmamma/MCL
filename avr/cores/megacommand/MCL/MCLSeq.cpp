@@ -153,6 +153,10 @@ void MCLSeq::onMidiStopCallback() {
     }
   }
 #ifdef LFO_TRACKS
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].reset_params();
+  }
+
 #endif
 }
 

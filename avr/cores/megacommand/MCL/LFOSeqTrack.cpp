@@ -9,7 +9,6 @@ void LFOSeqTrack::load_tables() {
   IExpLFO iexp_lfo;
   LFO *lfo;
 
-
   for (uint8_t n = 0; n < 4; n++) {
     switch (n) {
     case SIN_WAV:
@@ -36,39 +35,44 @@ int16_t LFOSeqTrack::get_sample(uint8_t n) {
 
   int16_t out = 0;
   switch (wav_type) {
-    case IRAMP_WAV:
-    case EXP_WAV:
+  case IRAMP_WAV:
+  case EXP_WAV:
     out = 128 - wav_tables[wav_type - 2][n];
     break;
-    default:
+  default:
     out = wav_tables[wav_type][n];
     break;
   }
 
   switch (wav_type) {
-    //OFFSET CENTRE
-    case SIN_WAV:
-    case TRI_WAV:
-       out -= 64;
-       break;
-    //OFFSET MAX
-    default:
-       out -= 128;
-       break;
+  // OFFSET CENTRE
+  case SIN_WAV:
+  case TRI_WAV:
+    out -= 64;
+    break;
+  // OFFSET MAX
+  default:
+    out -= 128;
+    break;
   }
   return out;
 }
 
-uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t dest, uint8_t param) {
+uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t dest,
+                                   uint8_t param) {
   int8_t offset = get_param_offset(dest, params[param].param);
   int16_t depth = params[param].depth;
 
-  int16_t sample = ((get_sample(sample_count) * depth) /  128) + offset;
+  int16_t sample = ((get_sample(sample_count) * depth) / 128) + offset;
 
-  if (sample > 127) { return 127; }
-  if (sample < 0) { return 0; }
+  if (sample > 127) {
+    return 127;
+  }
+  if (sample < 0) {
+    return 0;
+  }
 
-  return (uint8_t) sample;
+  return (uint8_t)sample;
 }
 
 void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
@@ -76,12 +80,14 @@ void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
   uart = uart_;
 
   if ((MidiClock.mod12_counter == 0) && (mode != LFO_MODE_FREE) &&
-       IS_BIT_SET64(pattern_mask, step_count)) {
-      sample_count = 0;
-   }
+      IS_BIT_SET64(pattern_mask, step_count)) {
+    sample_count = 0;
+  }
   if (enable) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
-      if (params[i].dest == 0) { continue; }
+      if (params[i].dest == 0) {
+        continue;
+      }
       uint8_t dest = params[i].dest - 1;
       uint8_t wav_value = get_wav_value(sample_count, dest, i);
       if (last_wav_value[i] != wav_value) {
@@ -111,17 +117,17 @@ void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
     }
   }
 
- /*
-  if (speed < 8) {
-    sample_count += 8 - speed;
-  } else {
-    sample_hold += 1;
-    if (sample_hold >= (speed - 8)) {
-      sample_hold = 0;
-      sample_count += 1;
-    }
-  }
-  */
+  /*
+   if (speed < 8) {
+     sample_count += 8 - speed;
+   } else {
+     sample_hold += 1;
+     if (sample_hold >= (speed - 8)) {
+       sample_hold = 0;
+       sample_count += 1;
+     }
+   }
+   */
   if (sample_count >= LFO_LENGTH) {
     // Free running LFO should reset, oneshot should hold at last value.
     if (mode == LFO_MODE_ONE) {
@@ -139,6 +145,28 @@ void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
     }
   }
   uart = uart_old;
+}
+
+void LFOSeqTrack::reset_params() {
+  uint16_t mod12_counter = MidiClock.mod12_counter;
+//  while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {}; 
+
+  for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
+    if (params[i].dest == 0) {
+      continue;
+    }
+    uint8_t dest = params[i].dest - 1;
+    uint8_t param = params[i].param;
+    uint8_t wav_value = get_param_offset(dest, param);
+    if (dest >= NUM_MD_TRACKS + 4) {
+      uint8_t channel = dest - (NUM_MD_TRACKS + 4);
+      MidiUart2.sendCC(channel, param, wav_value);
+    } else if (dest >= NUM_MD_TRACKS) {
+      MD.sendFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS, &MidiUart);
+    } else {
+      MD.setTrackParam(dest, param, wav_value, &MidiUart);
+    }
+  }
 }
 
 uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
@@ -159,9 +187,8 @@ uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
       return MD.kit.eq[param];
       break;
     }
-  }
-  else {
-    //MIDI
+  } else {
+    // MIDI
     return param;
   }
   return 255;

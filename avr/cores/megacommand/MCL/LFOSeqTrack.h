@@ -78,6 +78,8 @@ public:
   void load_tables();
 
   uint8_t get_param_offset(uint8_t dest, uint8_t param);
+  void reset_params();
+
   ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t dest, uint8_t param);
 
   void set_wav_type(uint8_t _wav_type) {
