@@ -492,6 +492,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           disable_md_micro();
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_copy_page_handler_cb();
+          page_copy = 1;
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
@@ -508,6 +509,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           disable_md_micro();
           send_locks(step);
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          if (!page_copy || (opt_undo != 255)) { break; }
           opt_paste_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
@@ -528,6 +530,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           disable_md_micro();
           last_step = step;
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          page_copy = 1;
           opt_clear_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {

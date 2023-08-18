@@ -20,6 +20,7 @@ public:
   bool reset_on_release = false;
   bool update_params_queue;
   bool prepare = false;
+  bool page_copy = 0;
 
   uint8_t pitch_param;
   uint16_t ignore_release;
