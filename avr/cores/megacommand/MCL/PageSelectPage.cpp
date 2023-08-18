@@ -104,10 +104,8 @@ void PageSelectPage::init() {
 void PageSelectPage::draw_popup() {
   char str[16];
   uint8_t pageidx = get_pageidx(page_select);
-  if (pageidx < 16) {
-    get_page(pageidx, str);
-    MD.popup_text(str, true);
-  }
+  get_page(pageidx, str);
+  MD.popup_text(str, true);
 }
 
 void PageSelectPage::md_prepare() {
