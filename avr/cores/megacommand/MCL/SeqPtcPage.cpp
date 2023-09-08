@@ -45,6 +45,7 @@ void SeqPtcPage::setup() {
   memset(dev_note_masks, 0, sizeof(dev_note_masks));
   memset(dev_note_channels, 17, sizeof(dev_note_channels));
   memset(note_mask, 0, sizeof(note_mask));
+  config_encoders();
   isSetup = true;
 }
 void SeqPtcPage::cleanup() {
