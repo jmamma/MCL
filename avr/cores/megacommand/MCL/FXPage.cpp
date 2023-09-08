@@ -65,21 +65,7 @@ void FXPage::loop() {
       uint8_t fx_type = params[n].type;
 
       uint8_t val;
-      MD.sendFXParam(fx_param, encoders[i]->cur, fx_type);
-      switch (fx_type) {
-      case MD_FX_ECHO:
-        MD.kit.delay[fx_param] = encoders[i]->cur;
-        break;
-      case MD_FX_DYN:
-        MD.kit.dynamics[fx_param] = encoders[i]->cur;
-        break;
-      case MD_FX_REV:
-        MD.kit.reverb[fx_param] = encoders[i]->cur;
-        break;
-      case MD_FX_EQ:
-        MD.kit.eq[fx_param] = encoders[i]->cur;
-        break;
-      }
+      MD.setFXParam(fx_param, encoders[i]->cur, fx_type, true);
     }
   }
 }

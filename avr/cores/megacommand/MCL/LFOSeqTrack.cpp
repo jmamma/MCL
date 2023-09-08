@@ -97,7 +97,7 @@ void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
           uint8_t channel = dest - (NUM_MD_TRACKS + 4);
           uart2_->sendCC(channel, param, wav_value);
         } else if (dest >= NUM_MD_TRACKS) {
-          MD.sendFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS,
+          MD.setFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS, false,
                          uart);
         } else {
           MD.setTrackParam(dest, param, wav_value, uart);
@@ -162,7 +162,7 @@ void LFOSeqTrack::reset_params() {
       uint8_t channel = dest - (NUM_MD_TRACKS + 4);
       MidiUart2.sendCC(channel, param, wav_value);
     } else if (dest >= NUM_MD_TRACKS) {
-      MD.sendFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS, &MidiUart);
+      MD.setFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS, false, &MidiUart);
     } else {
       MD.setTrackParam(dest, param, wav_value, &MidiUart);
     }

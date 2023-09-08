@@ -178,26 +178,12 @@ void encoder_level_handle(EncoderParent *enc) {
 
 void send_fx(uint8_t param, EncoderParent *enc, uint8_t type) {
   //  for (int val = enc->old; val > enc->cur; val--) {
-  MD.sendFXParam(param, enc->cur, type);
+  MD.setFXParam(param, enc->cur, type, true);
   //  }
   //  for (int val = enc->old; val > enc->cur; val++) {
   //  MD.sendFXParam(param, val, type);
   //  }
   PGM_P param_name = NULL;
-  switch (type) {
-  case MD_FX_ECHO:
-    MD.kit.delay[param] = enc->cur;
-    break;
-  case MD_FX_DYN:
-    MD.kit.dynamics[param] = enc->cur;
-    break;
-  case MD_FX_REV:
-    MD.kit.reverb[param] = enc->cur;
-    break;
-  case MD_FX_EQ:
-    MD.kit.eq[param] = enc->cur;
-    break;
-  }
   char str[4];
   char str2[] = "--  ";
 
