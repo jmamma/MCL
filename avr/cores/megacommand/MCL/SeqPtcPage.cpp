@@ -537,7 +537,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
       channel_event = is_poly ? POLY_EVENT : CTRL_EVENT;
     } else {
-      note += MIDI_NOTE_C1;
+//      note += MIDI_NOTE_C1;
     }
     uint8_t msg[] = {MIDI_NOTE_ON | (is_md ? last_md_track : last_ext_track),
                      note, 127};
