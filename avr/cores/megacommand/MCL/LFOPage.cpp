@@ -266,7 +266,7 @@ void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
     lfo_track->params[1].offset = value;
     reconfig = true;
   }
-  if (reconfig) { config_encoders(); }
+  if (mcl.currentPage() == LFO_PAGE && reconfig) { config_encoders(); }
 }
 
 
