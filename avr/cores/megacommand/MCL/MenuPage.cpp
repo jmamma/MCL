@@ -10,6 +10,7 @@ void MenuPageBase::init() {
   DEBUG_PRINT("R.Size() = ");
   DEBUG_PRINTLN(R.Size());
   R.restore_menu_layout_deps();
+  gen_menu_row_names();
 
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
 
