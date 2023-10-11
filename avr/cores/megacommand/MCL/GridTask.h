@@ -108,6 +108,7 @@ public:
   void row_update();
   void gui_update();
   void update_transition_details();
+  void load_queue_handler();
   void transition_handler();
 
   bool link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed, uint8_t *track_select_array, GridDeviceTrack *gdt);

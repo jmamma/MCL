@@ -25,25 +25,7 @@ void GridTask::gui_update() {
     MDSeqTrack::gui_update = 0;
   }
 }
-
-void GridTask::run() {
-  //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
-  //  A4Track *a4_track = (A4Track *)&temp_track;
-  //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
-  // MD GUI update.
-
-  perf_page.encoder_check();
-  trig_interface.check_key_throttle();
-
-  if (stop_hard_callback) {
-    mcl_actions_callbacks.StopHardCallback();
-    stop_hard_callback = false;
-    load_queue.init();
-    return;
-  }
-
-  gui_update();
-
+void GridTask::load_queue_handler() {
   if (!load_queue.is_empty()) {
     uint8_t mode;
     uint8_t row_select_array[NUM_SLOTS];
@@ -64,6 +46,26 @@ void GridTask::run() {
     mcl_actions.write_original = 1;
     mcl_actions.load_tracks(255, track_select, row_select_array, mode);
   }
+}
+
+void GridTask::run() {
+  //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
+  //  A4Track *a4_track = (A4Track *)&temp_track;
+  //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
+  // MD GUI update.
+
+  perf_page.encoder_check();
+  trig_interface.check_key_throttle();
+
+  if (stop_hard_callback) {
+    mcl_actions_callbacks.StopHardCallback();
+    stop_hard_callback = false;
+    load_queue.init();
+    return;
+  }
+
+  gui_update();
+  load_queue_handler();
   GridTask::transition_handler();
 }
 

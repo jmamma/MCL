@@ -2,8 +2,6 @@
 
 void GridLoadPage::init() {
   GridIOPage::init();
-  MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-  // MD.requestKit(MD.currentKit);
   note_interface.init_notes();
   trig_interface.send_md_leds(TRIGLED_OVERLAY);
   trig_interface.on();
@@ -276,7 +274,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     trig_interface.off();
 
     group_load(grid_page.getRow());
-
+    grid_task.load_queue_handler();
     mcl.setPage(GRID_PAGE);
     return true;
   }
