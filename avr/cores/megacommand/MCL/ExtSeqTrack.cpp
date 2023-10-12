@@ -656,16 +656,15 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
 
   if (count_down) {
     count_down--;
-    if (is_generic_midi) {
-      if (count_down == (track_number + 5)) {
-        load_cache();
-        goto end;
-      }
-    }
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
-    } else if (is_generic_midi && count_down < track_number + 5) {
+    }
+    else if (is_generic_midi && count_down <= (track_number + 5)) {
+      if (!cache_loaded) {
+        load_cache();
+        cache_loaded = true;
+      }
       goto end;
     }
   }

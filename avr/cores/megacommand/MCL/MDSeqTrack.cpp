@@ -112,16 +112,16 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
   }
   if (count_down) {
     count_down--;
-    if (count_down == track_number / 4 + 1) {
-      load_cache();
-      goto end;
-    }
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
       SET_BIT16(gui_update,track_number);
     }
-    else if (count_down < track_number / 4 + 1) {
+    else if (count_down <= track_number / 4 + 1) {
+      if (!cache_loaded) {
+        load_cache();
+        cache_loaded = true;
+      }
       goto end;
     }
   }
