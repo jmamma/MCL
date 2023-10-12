@@ -46,6 +46,8 @@ public:
 
   bool draw_encoders;
 
+  PageIndex last_page = NULL_PAGE;
+
   uint8_t current_mute_set = 255;
   uint8_t preview_mute_set = 255;
   void send_fx(uint8_t param, Encoder *enc, uint8_t type);

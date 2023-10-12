@@ -208,7 +208,15 @@ bool mcl_handleEvent(gui_event_t *event) {
                 return false;
               }
         */
-
+      case MDX_KEY_EXTENDED: {
+        if (MidiClock.state == 2 && mcl.currentPage() != MIXER_PAGE) {
+          mixer_page.last_page = mcl.currentPage();
+          mcl.setPage(MIXER_PAGE);
+          trig_interface.ignoreNextEvent(key);;
+          return true;
+        }
+        break;
+      }
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
@@ -351,8 +359,7 @@ bool mcl_handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-
-      case MDX_KEY_REC: {
+       case MDX_KEY_REC: {
         if (!SeqPage::recording && (mcl.currentPage() == SEQ_PTC_PAGE ||
                                     mcl.currentPage() == SEQ_EXTSTEP_PAGE)) {
           if (mcl.currentPage() != SEQ_STEP_PAGE) {

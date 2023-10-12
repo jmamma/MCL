@@ -51,6 +51,7 @@ encoders[3]->handler = encoder_filtq_handle;
 }
 
 void MixerPage::init() {
+  DEBUG_PRINTLN("mixer init");
   level_pressmode = 0;
   /*
   for (uint8_t i = 0; i < 4; i++) {
@@ -587,6 +588,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_EXTENDED: {
+        DEBUG_PRINTLN("key extended");
+        if ((note_interface.notes_on == 0) && (last_page != NULL_PAGE)) { mcl.setPage(last_page); last_page = NULL_PAGE; return true; }
         if (midi_device == &MD) {
           for (uint8_t i = 0; i < 16; i++) {
             if (note_interface.is_note_on(i)) {
@@ -677,6 +680,10 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_GLOBAL:
       case MDX_KEY_YES: {
         goto global_release;
+      }
+      case MDX_KEY_EXTENDED: {
+        DEBUG_PRINTLN("key extended");
+        break;
       }
       case MDX_KEY_LEFT:
       case MDX_KEY_UP:
