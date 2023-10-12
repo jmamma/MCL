@@ -2,7 +2,7 @@
 #include "ResourceManager.h"
 
 #define FADER_LEN 18
-#define FADE_RATE 16
+#define FADE_RATE 8
 
 void MixerPage::set_display_mode(uint8_t param) {
   if (display_mode != param) {
@@ -290,7 +290,7 @@ void MixerPage::display() {
     uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
     uint8_t *levels = is_md_device ? disp_levels : ext_disp_levels;
 
-    uint8_t dec = (uint16_t)MidiClock.get_tempo() / FADE_RATE;
+    uint8_t dec = FADE_RATE;
 
     for (int i = 0; i < len; i++) {
 
