@@ -254,4 +254,5 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
     exit();
     return true;
   }
+  return false;
 }

@@ -1050,6 +1050,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   if (SeqPage::handleEvent(event)) {
     return true;
   }
+  return false;
 }
 
 void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {

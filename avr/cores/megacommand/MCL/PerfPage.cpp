@@ -578,7 +578,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
       }
     }
-    return true;
+    return false;
   }
 
   if (EVENT_RELEASED(event, Buttons.ENCODER4)) {

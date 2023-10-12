@@ -479,7 +479,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
       }
       send_locks(step);
-      break;
+      return true;
     }
     }
 
@@ -499,7 +499,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_copy = recording ? 2 : 1;
           opt_copy_track_handler_cb();
         }
-        break;
+        return true;
       }
       case MDX_KEY_PASTE: {
         // Note paste
@@ -517,7 +517,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_paste = recording ? 2 : 1;
           opt_paste_track_handler();
         }
-        break;
+        return true;
       }
       case MDX_KEY_CLEAR: {
         // Note clear
@@ -538,7 +538,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_clear = recording ? 2 : 1;
           opt_clear_track_handler();
         }
-        break;
+        return true;
       }
       case MDX_KEY_NO: {
         if (mask_type != MASK_PATTERN) {
@@ -553,7 +553,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             }
           }
         }
-        break;
+        return true;
       }
       case MDX_KEY_BANKB: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -564,7 +564,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           config_mask_info(false);
         }
-        break;
+        return true;
       }
       case MDX_KEY_BANKC: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -575,7 +575,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           config_mask_info(false);
         }
-        break;
+        return true;
       }
 
       case MDX_KEY_BANKD: {
@@ -587,7 +587,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           }
           config_mask_info(false);
         }
-        break;
+        return true;
       }
       }
       if (step != 255) {
@@ -596,28 +596,27 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           active_track.send_parameter_locks(step, true);
           reset_on_release = true;
           MD.triggerTrack(last_md_track, 127);
-          break;
+          return true;
         }
 
         case MDX_KEY_UP: {
           seq_param1.cur += 1;
-          break;
+          return true;
         }
         case MDX_KEY_DOWN: {
           seq_param1.cur -= 1;
-          break;
+          return true;
         }
         case MDX_KEY_LEFT: {
           seq_param2.cur -= 1;
-          break;
+          return true;
         }
         case MDX_KEY_RIGHT: {
           seq_param2.cur += 1;
-          break;
+          return true;
         }
         }
       }
-      return true;
     }
   }
   /*

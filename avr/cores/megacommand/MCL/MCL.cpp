@@ -362,11 +362,9 @@ bool mcl_handleEvent(gui_event_t *event) {
        case MDX_KEY_REC: {
         if (!SeqPage::recording && (mcl.currentPage() == SEQ_PTC_PAGE ||
                                     mcl.currentPage() == SEQ_EXTSTEP_PAGE)) {
-          if (mcl.currentPage() != SEQ_STEP_PAGE) {
             seq_step_page.prepare = true;
             seq_step_page.last_page = mcl.currentPage();
             mcl.setPage(SEQ_STEP_PAGE);
-          }
           return true;
         }
       }

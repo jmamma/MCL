@@ -278,4 +278,5 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     mcl.setPage(GRID_PAGE);
     return true;
   }
+  return false;
 }
