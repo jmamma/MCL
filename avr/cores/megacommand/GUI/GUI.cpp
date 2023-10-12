@@ -62,20 +62,21 @@ void GuiClass::loop() {
     oled_display.screen_saver = false;
     gui_event_t event;
     EventRB.getp(&event);
-    for (int i = 0; i < eventHandlers.size; i++) {
-      if (eventHandlers.arr[i] != NULL) {
-        bool ret = eventHandlers.arr[i](&event);
-        if (ret) {
-          continue;
-        }
-      }
-    }
-
+    bool ret = false;
     if (sketch != NULL) {
-      bool ret = sketch->handleTopEvent(&event);
+      ret = sketch->handleTopEvent(&event);
       if (ret)
         continue;
     }
+
+    for (int i = 0; i < eventHandlers.size; i++) {
+      if (eventHandlers.arr[i] != NULL) {
+        ret = eventHandlers.arr[i](&event);
+        if (ret)
+          continue;
+      }
+    }
+
   }
 
   for (int i = 0; i < tasks.size; i++) {
