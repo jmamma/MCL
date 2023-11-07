@@ -404,7 +404,8 @@ void MDSeqTrack::reset_params() {
       return;
     }
   }
-/*
+
+  /*
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     bool send = false;
     uint8_t send_param;
@@ -415,7 +416,7 @@ void MDSeqTrack::reset_params() {
       MD.setTrackParam_inline(track_number, p, send_param, uart, update_kit);
     }
   }
-  */
+*/
 }
 
 void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
