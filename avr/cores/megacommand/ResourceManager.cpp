@@ -75,6 +75,10 @@ void ResourceManager::restore_page_entry_deps() {
   ++idx;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_gatebox;
   ++idx;
+  R.page_entries->Entries[idx].IconData = R.icons_page->icon_rhytmecho;
+  ++idx;
+  R.page_entries->Entries[idx].IconData = R.icons_page->icon_gatebox;
+  ++idx;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram1;
   ++idx;
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram2;
