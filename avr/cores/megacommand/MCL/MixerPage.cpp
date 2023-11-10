@@ -103,51 +103,45 @@ void MixerPage::load_perf_locks(uint8_t state) {
     }
   }
 }
-
 void MixerPage::loop() {
   constexpr int timeout = 1500;
   perf_page.func_enc_check();
   bool old_draw_encoders = draw_encoders;
 
-
-  if (draw_encoders && trig_interface.is_key_down(MDX_KEY_FUNC)) {
-    draw_encoders = true;
-  } else {
-    draw_encoders = false;
-  }
-
-    for (uint8_t n = 0; n < 4; n++) {
-
-      PerfEncoder *enc = (PerfEncoder*) &encoders[n];
-
-      if ((trig_interface.is_key_down(MDX_KEY_NO))&& preview_mute_set != 255 &&
+  if ((trig_interface.is_key_down(MDX_KEY_NO))&& preview_mute_set != 255 &&
       note_interface.notes_on == 0) {
-      if (enc->hasChanged()) {
+    for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
+      if (encoders[n]->hasChanged()) {
         if (BUTTON_DOWN(Buttons.ENCODER1 + n)) {
           GUI.ignoreNextEvent(Buttons.ENCODER1 + n);
         }
-        perf_locks[preview_mute_set][n] = enc->cur;
-        enc->old = enc->cur;
-      }
-     }
-
-    if (!draw_encoders) {  
-    uint64_t mask =
-          ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
-          ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN) |
-          ((uint64_t)1 << MDX_KEY_YES);
-      bool check = (trig_interface.cmd_key_state & mask);
-
-      if (note_interface.notes_on || check) {
-        encoders_used_clock[n] = slowclock + timeout + 1;
-      }
-      if (mcl_gui.show_encoder_value((MCLEncoder*)enc, timeout)) {
-        draw_encoders = true;
+        perf_locks[preview_mute_set][n] = encoders[n]->cur;
+        encoders[n]->old = encoders[n]->cur;
       }
     }
   }
 
   perf_page.encoder_send();
+
+  if (draw_encoders && trig_interface.is_key_down(MDX_KEY_FUNC)) {
+    draw_encoders = true;
+  } else {
+    draw_encoders = false;
+      uint64_t mask =
+          ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
+          ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN) |
+          ((uint64_t)1 << MDX_KEY_YES);
+    for (uint8_t n = 0; n < 4; n++) {
+     bool check = (trig_interface.cmd_key_state & mask);
+
+      if (note_interface.notes_on || check) {
+        encoders_used_clock[n] = slowclock + timeout + 1;
+      }
+      if (mcl_gui.show_encoder_value(encoders[n], timeout)) {
+        draw_encoders = true;
+      }
+    }
+  }
   if (draw_encoders != old_draw_encoders) {
     if (!draw_encoders) {
       redraw();
@@ -158,7 +152,6 @@ void MixerPage::loop() {
     init_encoders_used_clock(timeout);
   }
 }
-
 void MixerPage::draw_levels() {}
 
 void encoder_level_handle(EncoderParent *enc) {
