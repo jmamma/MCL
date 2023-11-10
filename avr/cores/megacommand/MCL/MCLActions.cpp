@@ -950,9 +950,9 @@ void MCLActions::calc_latency() {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed * 0.1f;
       float latency_in_seconds = (float)dev_latency[a].latency /
-                                 bytes_per_second_uart1; // 25ms minimum.
+                                 bytes_per_second_uart1;
       if (num_devices == 1) {
-        latency_in_seconds += .12;
+        latency_in_seconds += .12; //12ms minimum latency
       } else if (a == 1) {
         latency_in_seconds += .20;
       }
