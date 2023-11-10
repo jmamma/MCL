@@ -318,29 +318,19 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t key = event->source - 64;
-    uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
-    if (note_interface.get_first_md_note() == 255) {
-      step = 255;
-    }
+    uint8_t first_note = note_interface.get_first_md_note();
+    if (first_note != 255) { return false; }
+
     if (event->mask == EVENT_BUTTON_PRESSED &&
         trig_interface.is_key_down(MDX_KEY_FUNC)) {
       switch (key) {
       case MDX_KEY_LEFT:
-        if (step != 255) {
-          return false;
-        }
-        mcl_seq.md_tracks[last_md_track].rotate_left();
+       mcl_seq.md_tracks[last_md_track].rotate_left();
         return true;
       case MDX_KEY_RIGHT:
-        if (step != 255) {
-          return false;
-        }
         mcl_seq.md_tracks[last_md_track].rotate_right();
         return true;
       case MDX_KEY_UP:
-        if (step != 255) {
-          return false;
-        }
         mcl_seq.md_tracks[last_md_track].reverse();
         return true;
       }
