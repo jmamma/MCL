@@ -24,26 +24,27 @@ void FXPage::init() {
 void FXPage::update_encoders() {
 
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-    ((MCLEncoder *)encoders[n])->max = 127;
+    MCLEncoder *enc = (MCLEncoder*) &encoders[n];
+    enc->max = 127;
 
     uint8_t a = ((uint8_t)page_mode * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[a].param;
 
     switch (params[a].type) {
     case MD_FX_ECHO:
-      encoders[n]->cur = MD.kit.delay[fx_param];
+      enc->cur = MD.kit.delay[fx_param];
       break;
     case MD_FX_REV:
-      encoders[n]->cur = MD.kit.reverb[fx_param];
+      enc->cur = MD.kit.reverb[fx_param];
       break;
     case MD_FX_EQ:
-      encoders[n]->cur = MD.kit.eq[fx_param];
+      enc->cur = MD.kit.eq[fx_param];
       break;
     case MD_FX_DYN:
-      encoders[n]->cur = MD.kit.dynamics[fx_param];
+      enc->cur = MD.kit.dynamics[fx_param];
       break;
     }
-    encoders[n]->old = encoders[n]->cur;
+    enc->old = enc->cur;
   }
 
   init_encoders_used_clock();
@@ -59,13 +60,13 @@ void FXPage::loop() {
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     uint8_t n = i + (page_mode * GUI_NUM_ENCODERS);
-
-    if (encoders[i]->hasChanged()) {
+    MCLEncoder *enc = (MCLEncoder*) &encoders[i];
+    if (enc->hasChanged()) {
       uint8_t fx_param = params[n].param;
       uint8_t fx_type = params[n].type;
 
       uint8_t val;
-      MD.setFXParam(fx_param, encoders[i]->cur, fx_type, true);
+      MD.setFXParam(fx_param, enc->cur, fx_type, true);
     }
   }
 }
