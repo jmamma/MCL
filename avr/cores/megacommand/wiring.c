@@ -23,6 +23,7 @@
 #include "wiring_private.h"
 #include "memorybank.h"
 
+#include "helpers.h"
 // the prescaler is set so that timer0 ticks every 64 clock cycles, and the
 // the overflow handler is called every 256 ticks.
 #define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
@@ -109,16 +110,11 @@ unsigned long micros() {
 	return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
 }
 
-void delay(unsigned long ms)
+void delay(uint16_t ms)
 {
-	uint32_t start = micros();
-
-	while (ms > 0) {
+	uint16_t start = slowclock;
+	while (clock_diff(start,slowclock) < ms) {
 		yield();
-		while ( ms > 0 && (micros() - start) >= 1000) {
-			ms--;
-			start += 1000;
-		}
 	}
 }
 
