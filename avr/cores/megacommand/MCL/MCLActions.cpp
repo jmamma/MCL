@@ -364,7 +364,8 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       if (device_track->get_parent_model() == gdt->track_type && device_track->allow_cast_to_parent()) {
         device_track->init_track_type(device_track->get_parent_model());
       }
-      send_machine[n] = device_track->transition_cache(track_idx, n);
+      device_track->transition_cache(track_idx, n);
+      send_machine[n] = 0;
       dev_sync_slot[gdt->device_idx] = n;
     }
     if (device_track) {
@@ -389,7 +390,7 @@ void MCLActions::manual_transition(uint8_t *slot_select_array,
   bool increase_loops = 0;
 
   bool recalc_latency = true;
-  uint8_t headroom = 3;
+  uint8_t headroom = 1;
   //uint8_t headroom = ceil(MidiClock.get_tempo()* 0.133333333333f * 0.200f);
   ////DEBUG_PRINTLN("manual trans");
 again:
@@ -913,6 +914,7 @@ void MCLActions::calc_latency() {
       if (gdt == nullptr) {
         continue;
       }
+
       uint8_t device_idx = gdt->device_idx;
       if (send_machine[n] == 0) {
         // Optimised, assume we dont need to read the entire object to calculate
@@ -949,21 +951,27 @@ void MCLActions::calc_latency() {
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       float bytes_per_second_uart1 = devs[a]->uart->speed * 0.1f;
-      float latency_in_seconds = (float)dev_latency[a].latency /
+      float latency_in_seconds = (float)dev_latency[a].latency/
                                  bytes_per_second_uart1;
-      if (num_devices == 1) {
-        latency_in_seconds += .12; //12ms minimum latency
-      } else if (a == 1) {
-        latency_in_seconds += .20;
-      }
+     // latency_in_seconds = max(.010,latency_in_seconds);
 
+      DEBUG_PRINT("Bytes: ");
+      DEBUG_PRINTLN(dev_latency[a].latency);
+      DEBUG_PRINT("Lat: ");
+      DEBUG_PRINTLN(latency_in_seconds);
+
+      //latency_in_seconds += 0.020; //16ms additional latency per device
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
-      dev_latency[a].div32th_latency =
-          ceil(div32th_per_second * latency_in_seconds);
-      dev_latency[a].div192th_latency =
-          ceil(div192th_per_second * latency_in_seconds);
+      dev_latency[a].div32th_latency = ceil(div32th_per_second * latency_in_seconds);
+      dev_latency[a].div192th_latency = ceil(div192th_per_second * latency_in_seconds);
 
+      //We need at least 6 sequencer ticks of latency to account for seq_track load_cache() functions
+      //which are splayed over count_down duration
+      //if (a == 0) {
+           dev_latency[a].div32th_latency = max(1, dev_latency[a].div32th_latency);
+           dev_latency[a].div192th_latency = max(6, dev_latency[a].div192th_latency);
+     // }
       // Program change minimum delay = 1 x 16th.
       if (mcl_cfg.uart2_prg_out > 0 && a == 1) {
         if (dev_latency[a].div32th_latency < 2) {

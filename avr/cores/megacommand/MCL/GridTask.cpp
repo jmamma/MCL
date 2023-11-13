@@ -210,13 +210,15 @@ void GridTask::transition_handler() {
                        MidiClock.div192th_counter, go_step)) != 0) &&
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
-            MidiUartParent::handle_midi_lock = 1;
-            handleIncomingMidi();
-            MidiUartParent::handle_midi_lock = 0;
-            if ((float)diff > (tempo * 0.8f) * 0.08) {
-              GUI.loop();
-            }
+                  setLed2();
+//            MidiUartParent::handle_midi_lock = 1;
+//            handleIncomingMidi();
+//            MidiUartParent::handle_midi_lock = 0;
+//            if ((float)diff > (tempo * 0.8f) * 0.08) {
+ //             GUI.loop();
+ //           }
           }
+          clearLed2();
         }
         wait = false;
         if (transition_load(n, track_idx, gdt)) {
