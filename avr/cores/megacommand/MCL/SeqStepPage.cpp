@@ -564,8 +564,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             mask_type = MASK_LOCK;
           }
           config_mask_info(false);
-        }
         return true;
+        }
       }
       case MDX_KEY_BANKC: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -575,8 +575,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             mask_type = MASK_MUTE;
           }
           config_mask_info(false);
-        }
         return true;
+        }
       }
 
       case MDX_KEY_BANKD: {
@@ -587,8 +587,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             mask_type = MASK_SLIDE;
           }
           config_mask_info(false);
-        }
         return true;
+        }
       }
       }
       if (step != 255) {
