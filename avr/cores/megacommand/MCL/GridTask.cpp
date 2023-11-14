@@ -180,7 +180,7 @@ void GridTask::transition_handler() {
     // float div192th_per_second = tempo * 0.8f;
     // float div192th_time = 1.0 / div192th_per_second;
     float div192th_time = 1.0 / (tempo * 0.8f);
-    // diff * div19th_time > 0.8ms equivalent to diff > (0.8/1.25) * tempo
+    // diff * div19th_time > 0.08 equivalent to diff > (0.8 * 0.08) * tempo
     for (int8_t c = NUM_DEVS - 1; c >= 0; c--) {
       wait = true;
 
@@ -210,12 +210,12 @@ void GridTask::transition_handler() {
                        MidiClock.div192th_counter, go_step)) != 0) &&
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
-//            MidiUartParent::handle_midi_lock = 1;
-//            handleIncomingMidi();
-//            MidiUartParent::handle_midi_lock = 0;
-//            if ((float)diff > (tempo * 0.8f) * 0.08) {
- //             GUI.loop();
- //           }
+              MidiUartParent::handle_midi_lock = 1;
+              handleIncomingMidi();
+              MidiUartParent::handle_midi_lock = 0;
+             // if ((float)diff > (tempo * 0.8f) * 0.08) {
+             //  GUI.loop();
+            //}
           }
         }
         wait = false;
