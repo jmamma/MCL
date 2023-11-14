@@ -212,7 +212,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (MidiClock.state == 2 && mcl.currentPage() != MIXER_PAGE) {
           mixer_page.last_page = mcl.currentPage();
           mcl.setPage(MIXER_PAGE);
-          trig_interface.ignoreNextEvent(key);;
+          mixer_page.ext_key_down = 1;
           return true;
         }
         break;

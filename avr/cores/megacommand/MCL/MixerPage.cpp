@@ -84,6 +84,7 @@ void MixerPage::cleanup() {
   MD.set_key_repeat(1);
   disable_record_mutes();
   trig_interface.off();
+  ext_key_down = 0;
 }
 
 void MixerPage::set_level(int curtrack, int value) {
@@ -508,13 +509,13 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       return false;
     }
     if (!show_mixer_menu && preview_mute_set == 255) {
-      trig_interface.send_md_leds(TRIGLED_OVERLAY);
+      trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
     }
 
     uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
     if (event->mask == EVENT_BUTTON_PRESSED && track < len) {
       if (note_interface.is_note(track)) {
-        if (show_mixer_menu || preview_mute_set != 255) {
+        if (show_mixer_menu || preview_mute_set != 255 || ext_key_down) {
 
           SeqTrack *seq_track = is_md_device
                                     ? (SeqTrack *)&mcl_seq.md_tracks[track]
@@ -547,6 +548,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           first_track = track;
           MD.setStatus(0x22, track);
         }
+        oled_draw_mutes();
       }
       return true;
     }
@@ -588,7 +590,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_EXTENDED: {
         DEBUG_PRINTLN("key extended");
-        if ((note_interface.notes_on == 0) && (last_page != NULL_PAGE)) { mcl.setPage(last_page); last_page = NULL_PAGE; return true; }
+        if (note_interface.notes_on == 0) {
+            if (last_page != NULL_PAGE) { mcl.setPage(last_page); last_page = NULL_PAGE; } 
+            else { mcl.setPage(GRID_PAGE); }
+            return true;
+        }
         if (midi_device == &MD) {
           for (uint8_t i = 0; i < 16; i++) {
             if (note_interface.is_note_on(i)) {
@@ -681,8 +687,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         goto global_release;
       }
       case MDX_KEY_EXTENDED: {
-        DEBUG_PRINTLN("key extended");
-        break;
+        ext_key_down = 0;
+        return true;
       }
       case MDX_KEY_LEFT:
       case MDX_KEY_UP:
@@ -692,7 +698,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
             ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
             ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN) | ((uint64_t)1 << MDX_KEY_YES);
         if ((trig_interface.cmd_key_state & mask) == 0) {
-          trig_interface.send_md_leds(TRIGLED_OVERLAY);
+          trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
           preview_mute_set = 255;
           redraw();
           for (uint8_t n = 0; n < 4; n++) {
@@ -724,7 +730,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       preview_mute_set = 255;
       show_mixer_menu = false;
       disable_record_mutes();
-      MD.set_trigleds(0, TRIGLED_OVERLAY);
+      MD.set_trigleds(0, TRIGLED_EXCLUSIVE);
       redraw();
     return true;
   }

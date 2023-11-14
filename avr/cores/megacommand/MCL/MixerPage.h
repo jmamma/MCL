@@ -36,6 +36,7 @@ public:
   int8_t disp_levels[16];
   int8_t ext_disp_levels[6];
 
+  uint8_t ext_key_down;
   MidiDevice* midi_device;
 
   uint8_t display_mode;
