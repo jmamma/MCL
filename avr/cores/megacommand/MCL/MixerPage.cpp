@@ -97,7 +97,7 @@ void MixerPage::set_level(int curtrack, int value) {
 
 void MixerPage::load_perf_locks(uint8_t state) {
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-    PerfEncoder *enc = (PerfEncoder*) &encoders[n];
+    PerfEncoder *enc = (PerfEncoder*) encoders[n];
     uint8_t val = perf_locks[state][n];
     if (val < 128) {
       enc->cur = val;
@@ -114,12 +114,13 @@ void MixerPage::loop() {
   if ((trig_interface.is_key_down(MDX_KEY_NO))&& preview_mute_set != 255 &&
       note_interface.notes_on == 0) {
     for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-      if (encoders[n]->hasChanged()) {
+      PerfEncoder *enc = (PerfEncoder*) encoders[n];
+      if (enc->hasChanged()) {
         if (BUTTON_DOWN(Buttons.ENCODER1 + n)) {
           GUI.ignoreNextEvent(Buttons.ENCODER1 + n);
         }
-        perf_locks[preview_mute_set][n] = encoders[n]->cur;
-        encoders[n]->old = encoders[n]->cur;
+        perf_locks[preview_mute_set][n] = enc->cur;
+        enc->old = enc->cur;
       }
     }
   }
