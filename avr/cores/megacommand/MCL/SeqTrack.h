@@ -81,7 +81,8 @@ public:
   uint8_t mod12_counter;
 
   uint8_t count_down;
-  bool    cache_loaded;
+  bool    cache_loaded : 4;
+  bool    load_sound : 4;
 
   SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
@@ -117,6 +118,7 @@ public:
     step_count = 0;
     count_down = 0;
     cache_loaded = 0;
+    load_sound = 0;
   }
 
   void toggle_mute() { mute_state = !mute_state; }

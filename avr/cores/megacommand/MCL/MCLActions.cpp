@@ -359,13 +359,13 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       if (device_track) {
         device_track->init(track_idx, gdt->seq_track);
       }
-      send_machine[n] = 1;
+      send_machine[n] = 0;
     } else {
       if (device_track->get_parent_model() == gdt->track_type && device_track->allow_cast_to_parent()) {
         device_track->init_track_type(device_track->get_parent_model());
       }
       device_track->transition_cache(track_idx, n);
-      send_machine[n] = 0;
+      send_machine[n] = 1;
       dev_sync_slot[gdt->device_idx] = n;
     }
     if (device_track) {
@@ -750,7 +750,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     EmptyTrack empty_track;
 
     auto *ptrack = empty_track.load_from_grid_512(track_idx, links[n].row);
-    send_machine[n] = 1;
+    send_machine[n] = 0;
 
     if (ptrack == nullptr || ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type) {
       // EMPTY_TRACK_TYPE
@@ -764,9 +764,11 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         ptrack->init_track_type(ptrack->get_parent_model());
       }
       if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
+        DEBUG_PRINTLN("comparing sound");
         if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
+          DEBUG_PRINTLN("no match");
           ptrack->transition_cache(track_idx, n);
-          send_machine[n] = 0;
+          send_machine[n] = 1;
           dev_sync_slot[gdt->device_idx] = n;
         }
       }
@@ -916,7 +918,7 @@ void MCLActions::calc_latency() {
       }
 
       uint8_t device_idx = gdt->device_idx;
-      if (send_machine[n] == 0) {
+      if (send_machine[n] == 1) {
         // Optimised, assume we dont need to read the entire object to calculate
         // latency.
         auto *ptrack = empty_track.load_from_mem(

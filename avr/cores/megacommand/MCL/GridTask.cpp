@@ -303,7 +303,8 @@ bool GridTask::transition_load(uint8_t n, uint8_t track_idx,
   }
 
   gdt->seq_track->count_down = -1;
-  if (mcl_actions.send_machine[n] == 0) {
+  gdt->seq_track->load_sound = mcl_actions.send_machine[n];
+  if (mcl_actions.send_machine[n] == 1) {
     pmem_track->transition_send(track_idx, n);
   }
 
