@@ -975,12 +975,14 @@ void MCLActions::calc_latency() {
            dev_latency[a].div192th_latency = max(6, dev_latency[a].div192th_latency);
      // }
       // Program change minimum delay = 1 x 16th.
+      /*
       if (mcl_cfg.uart2_prg_out > 0 && a == 1) {
         if (dev_latency[a].div32th_latency < 2) {
           dev_latency[a].div32th_latency = 2;
           dev_latency[a].div192th_latency = 12;
         }
       }
+      */
 
       div32th_total_latency += dev_latency[a].div32th_latency;
       div192th_total_latency += dev_latency[a].div192th_latency;
