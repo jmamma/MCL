@@ -151,6 +151,7 @@ class DeviceTrackChunk : public DeviceTrack {
 
   virtual void *get_sound_data_ptr() = 0;
   virtual size_t get_sound_data_size() = 0;
+  virtual size_t get_sound_cmp_size() { return get_sound_data_size(); }
 };
 
 #endif /* DEVICETRACK_H__ */

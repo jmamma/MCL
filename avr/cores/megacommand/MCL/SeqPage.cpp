@@ -277,7 +277,7 @@ bool SeqPage::display_mute_mask(MidiDevice* device, uint8_t offset) {
     }
   }
   if (last_mute_mask != mute_mask) {
-    MD.set_trigleds(mute_mask, TRIGLED_EXCLUSIVE);
+    MD.set_trigleds(mute_mask, is_md_device ? TRIGLED_XOR : TRIGLED_EXCLUSIVE);
     return true;
   }
   return false;
