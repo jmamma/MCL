@@ -109,7 +109,7 @@ public:
   int memcmp_sound(uint8_t column) {
     uint16_t pos = get_region() + get_track_size() * (uint16_t)(column) + ((uint16_t) get_sound_data_ptr() - (uint16_t) this);
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    return memcmp_bank1(get_sound_data_ptr(), ptr, get_track_size());
+    return memcmp_bank1(get_sound_data_ptr(), ptr, get_sound_data_size());
   }
 
   template <class T> T *load_from_mem(uint8_t col) {
