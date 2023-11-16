@@ -154,6 +154,7 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
     if (pos >= fsize) {
       break;
     }
+    if (BUTTON_DOWN(Buttons.BUTTON1)) { goto cleanup; }
     if (++show_progress > 10) {
       show_progress = 0;
       mcl_gui.draw_progress("Sending sample", pos * 80 / fsize ,80);
@@ -286,7 +287,7 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
 
   for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength;
        samplesSoFar += num_of_samples) {
-
+    if (BUTTON_DOWN(Buttons.BUTTON1)) { return false; }
     ++show_progress_i;
 
     if (show_progress && show_progress_i == 10) {
@@ -419,6 +420,7 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
   goto recv_fail;
   }
   while(true) {
+    if (BUTTON_DOWN(Buttons.BUTTON1)) { goto recv_fail; }
     uint8_t msg = waitForMsg(2000);
     if (msg == 255 || msg == MIDI_SDS_CANCEL)  {
       DEBUG_PRINTLN("sds recv abort");

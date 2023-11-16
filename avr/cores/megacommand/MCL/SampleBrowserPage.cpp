@@ -266,7 +266,7 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
@@ -335,7 +335,7 @@ bool SampleBrowserPage::_handle_filemenu() {
     }
    DEBUG_PRINTLN("Recv samples");
     DEBUG_PRINTLN(numEntries);
-    for (uint8_t n = 0; n < numEntries; n++) {
+    for (uint8_t n = 0; n < numEntries && !BUTTON_DOWN(Buttons.BUTTON1); n++) {
       DEBUG_PRINTLN("Recv wav");
       char wav_name[FILE_ENTRY_SIZE] = "";
       get_entry(n, wav_name);
@@ -353,7 +353,7 @@ bool SampleBrowserPage::_handle_filemenu() {
       return;
     }
     char wav_name[FILE_ENTRY_SIZE] = "";
-    for (uint8_t n = 0; n < numEntries; n++) {
+    for (uint8_t n = 0; n < numEntries && !BUTTON_DOWN(Buttons.BUTTON1); n++) {
       get_entry(n, wav_name);
       DEBUG_PRINTLN(wav_name);
       if (!isdigit(wav_name[0]) || !isdigit(wav_name[1]))
