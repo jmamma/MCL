@@ -275,6 +275,7 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
 }
 
 void SampleBrowserPage::query_sample_slots() {
+  DEBUG_PRINTLN("query sample slots");
   encoders[1]->cur = 0;
   encoders[1]->old = 0;
   old_cur_row = cur_row;
@@ -323,16 +324,16 @@ bool SampleBrowserPage::_handle_filemenu() {
   }
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
   case FM_RECVALL:
+    if (!mcl_gui.wait_for_confirm("Receive all", "Overwrite?")) {
+      goto end;
+    }
     show_ram_slots = true;
     init(true);
     if (numEntries == 0) {
       gfx.alert("NON", "UW");
       goto end;
     }
-    if (!mcl_gui.wait_for_confirm("Receive all", "Overwrite?")) {
-      goto end;
-    }
-    DEBUG_PRINTLN("Recv samples");
+   DEBUG_PRINTLN("Recv samples");
     DEBUG_PRINTLN(numEntries);
     for (uint8_t n = 0; n < numEntries; n++) {
       DEBUG_PRINTLN("Recv wav");
