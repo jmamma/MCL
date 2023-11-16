@@ -213,9 +213,9 @@ void GridTask::transition_handler() {
               MidiUartParent::handle_midi_lock = 1;
               handleIncomingMidi();
               MidiUartParent::handle_midi_lock = 0;
-              if ((float)diff > tempo * 0.128f) { //0.8 * 0.160 = 0.128f
-                 GUI.loop();
-              }
+//              if ((float)diff > tempo * 0.128f) { //0.8 * 0.160 = 0.128f
+//                 GUI.loop();
+//              }
           }
         }
         wait = false;
