@@ -36,7 +36,6 @@ void MCLActions::setup() {
     send_machine[i] = 0;
     transition_level[i] = 0;
   }
-  memset(dev_sync_slot, 255, NUM_DEVS);
 }
 
 void MCLActions::init_chains() {
@@ -332,7 +331,6 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
                                 uint8_t *row_array) {
 
   uint8_t old_grid = proj.get_grid();
-  memset(dev_sync_slot, 255, NUM_DEVS);
 
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
 
@@ -366,7 +364,6 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       }
       device_track->transition_cache(track_idx, n);
       send_machine[n] = 1;
-      dev_sync_slot[gdt->device_idx] = n;
     }
     if (device_track) {
       device_track->store_in_mem(gdt->mem_slot_idx);
@@ -390,7 +387,7 @@ void MCLActions::manual_transition(uint8_t *slot_select_array,
   bool increase_loops = 0;
 
   bool recalc_latency = true;
-  uint8_t headroom = 1;
+  uint8_t headroom = 0;
   //uint8_t headroom = ceil(MidiClock.get_tempo()* 0.133333333333f * 0.200f);
   ////DEBUG_PRINTLN("manual trans");
 again:
@@ -479,8 +476,8 @@ again:
     }
     uint32_t next_32th = next_16th * 2;
 
-    if (next_32th - (div192th_total_latency / 6) - headroom <
-        (uint32_t)MidiClock.div16th_counter * 2) {
+    if (next_32th - (div192th_total_latency / 6) - headroom <=
+        (uint32_t)MidiClock.div32th_counter) {
 
       if (q == 255) {
         increase_loops = 1;
@@ -683,8 +680,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   uint8_t old_grid = proj.get_grid();
 
-  memset(dev_sync_slot, 255, sizeof(dev_sync_slot));
-
   const uint8_t div32th_margin = 1;
   uint32_t diff = 0;
 
@@ -769,7 +764,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
           DEBUG_PRINTLN("no match");
           ptrack->transition_cache(track_idx, n);
           send_machine[n] = 1;
-          dev_sync_slot[gdt->device_idx] = n;
         }
       }
     }
@@ -894,11 +888,6 @@ void MCLActions::calc_latency() {
     dev_latency[a].latency = 0;
     dev_latency[a].div32th_latency = 0;
     dev_latency[a].div192th_latency = 0;
-
-    if (dev_sync_slot[a] != 255) {
-      dev_latency[a].latency += 2 + 7;
-    }
-    //  dev_latency[a].load_latency = 0;
   }
 
   bool send_dev[NUM_DEVS] = {0};
@@ -965,9 +954,12 @@ void MCLActions::calc_latency() {
       //latency_in_seconds += 0.020; //16ms additional latency per device
       // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
 
+      //Transimission Latency
+      //
       dev_latency[a].div32th_latency = ceil(div32th_per_second * latency_in_seconds);
       dev_latency[a].div192th_latency = ceil(div192th_per_second * latency_in_seconds);
 
+      //Load Latency
       //We need at least 6 sequencer ticks of latency to account for seq_track load_cache() functions
       //which are splayed over count_down duration
       //if (a == 0) {
