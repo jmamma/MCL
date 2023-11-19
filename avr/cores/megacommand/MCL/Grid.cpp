@@ -74,7 +74,6 @@ bool Grid::new_grid(const char *gridname) {
   if (!write_header()) {
     goto end;
   }
-
   DEBUG_PRINTLN(F("Initializing grid.. please wait"));
 #ifdef OLED_DISPLAY
   oled_display.drawRect(15, 23, 98, 6, WHITE);
@@ -154,7 +153,7 @@ bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
   temp_track.active = EMPTY_TRACK_TYPE;
   temp_track.link.init(row);
 
-  int32_t offset = get_slot_offset(column, row);
+  uint32_t offset = get_slot_offset(column, row);
 
   ret = file.seekSet(offset);
 
@@ -167,7 +166,6 @@ bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
   }
   // DEBUG_PRINTLN("Writing");
   // DEBUG_DUMP(sizeof(temptrack.active));
-
   ret = mcl_sd.write_data((uint8_t *)&(temp_track), sizeof(temp_track), &file);
   if (!ret) {
     DEBUG_PRINTLN(F("Write failed"));
@@ -180,7 +178,7 @@ bool Grid::clear_row(uint16_t row) {
   GridRowHeader row_header;
   row_header.init();
   for (uint8_t x = 0; x < GRID_WIDTH; x++) {
-    clear_slot(x, row, false);
+    if (!clear_slot(x, row, false)) { return false; }
   }
   return write_row_header(&row_header, row);
 }
