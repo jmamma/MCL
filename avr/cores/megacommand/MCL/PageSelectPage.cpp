@@ -97,7 +97,6 @@ void PageSelectPage::init() {
   trigled_mask = 0;
   draw_popup();
   md_prepare();
-  display();
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
