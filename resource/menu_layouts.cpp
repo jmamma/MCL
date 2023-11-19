@@ -154,7 +154,7 @@ menu_t<md_import_page_N> mdimport_menu_layout = {
         //         m  r       n  d  p  f  o
         {"SRC: ",  0, 128, 128, 43, NULL_PAGE, 0, 128},
         {"DEST: ", 0, 128, 128, 44, NULL_PAGE, 0, 128},
-        {"COUNT:", 1, 128,  0,  45, NULL_PAGE, 0, 0},
+        {"COUNT:", 1, 129,  0,  45, NULL_PAGE, 0, 0},
         {"RUN",    0,   0,  0,   0, NULL_PAGE, 25, 0},
     },
     0
