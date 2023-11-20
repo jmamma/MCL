@@ -707,6 +707,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     if (gdt == nullptr)
       continue;
 
+    //Assumes next transisiton is only 4 steps away
+    //
     uint32_t diff = MidiClock.clock_diff_div192(
         MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 4 * 12);
 
