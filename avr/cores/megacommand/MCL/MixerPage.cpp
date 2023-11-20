@@ -256,7 +256,7 @@ void MixerPage::display() {
 
   uint8_t mute_set = preview_mute_set;
 
-  if ((ext_key_down || show_mixer_menu) && seq_step_page.display_mute_mask(midi_device)) {
+  if (((ext_key_down && mute_set == 255) || show_mixer_menu) && seq_step_page.display_mute_mask(midi_device)) {
     oled_draw_mutes();
   } else if (mute_set != 255 && mute_sets[!is_md_device].mutes[mute_set] !=
                                     seq_step_page.mute_mask) {
