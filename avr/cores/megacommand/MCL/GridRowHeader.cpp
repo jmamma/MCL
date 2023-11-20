@@ -18,7 +18,7 @@ bool GridRowHeader::is_empty() {
 }
 
 void GridRowHeader::init() {
-  memset(this, 0, sizeof(GridRowHeader));
+  memset(&active, 0, GRID_ROW_HEADER_LENGTH);
   /*
   active = false;
   for (uint8_t x = 0; x < GRID_WIDTH; x++) {
