@@ -92,8 +92,9 @@ void SoundBrowserPage::on_new() {
 }
 
 void SoundBrowserPage::on_cancel() {
-  if (strcmp(lwd, "/") == 0) { mcl.popPage(); return; }
-  _cd_up();
+  //if (strcmp(lwd, "/") == 0) { mcl.popPage(); return; }
+  //_cd_up();
+   mcl.popPage();
 }
 
 void SoundBrowserPage::on_select(const char *__) {
