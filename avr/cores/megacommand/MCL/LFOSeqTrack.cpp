@@ -59,9 +59,9 @@ int16_t LFOSeqTrack::get_sample(uint8_t n) {
 }
 
 uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t dest,
-                                   uint8_t param) {
-  int8_t offset = get_param_offset(dest, params[param].param);
-  int16_t depth = params[param].depth;
+                                   uint8_t param_id) {
+  int8_t offset = get_param_offset(dest, param_id);
+  int16_t depth = params[param_id].depth;
 
   int16_t sample = ((get_sample(sample_count) * depth) / 128) + offset;
 
@@ -157,7 +157,7 @@ void LFOSeqTrack::reset_params() {
     }
     uint8_t dest = params[i].dest - 1;
     uint8_t param = params[i].param;
-    uint8_t wav_value = get_param_offset(dest, param);
+    uint8_t wav_value = get_param_offset(dest, i);
     if (dest >= NUM_MD_TRACKS + 4) {
       uint8_t channel = dest - (NUM_MD_TRACKS + 4);
       MidiUart2.sendCC(channel, param, wav_value);
@@ -169,7 +169,8 @@ void LFOSeqTrack::reset_params() {
   }
 }
 
-uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
+uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param_id) {
+  uint8_t param = params[param_id].param;
   if (dest < NUM_MD_TRACKS) {
     return MD.kit.params[dest][param];
   } else if (dest < NUM_MD_TRACKS + 4) {
@@ -189,7 +190,7 @@ uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param) {
     }
   } else {
     // MIDI
-    return param;
+    return params[param_id].offset;
   }
   return 255;
 }
