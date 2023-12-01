@@ -80,7 +80,7 @@ public:
   uint8_t get_param_offset(uint8_t dest, uint8_t param_id);
   void reset_params();
 
-  ALWAYS_INLINE() uint8_t get_wav_value(uint8_t sample_count, uint8_t dest, uint8_t param_id);
+  uint8_t get_wav_value(uint8_t sample_count, uint8_t dest, uint8_t param_id);
 
   void set_wav_type(uint8_t _wav_type) {
       wav_type = _wav_type;
