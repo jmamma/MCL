@@ -1,3 +1,60 @@
+MCL 4.51 01/12/2023
+
+Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
+
+- Changes:
+
+  [ Classic/Extended] button must now be held down for 1.5 seconds to switch
+  between Enhanced and Classic/Extended modes when the sequencer is stopped.
+
+  When the sequencer is running the Mixer page can be opened and closed by
+  pressing [ Classic/Extended ].
+
+  Holding [ Classic/Extended ] + [ Trig ] for fast for mute toggles.
+
+- Improvements:
+
+  Minimum transition load latency reduced from approximately two 16th notes, to exactly half a 16th note per device.
+
+  More reliable transitions, and better slot loading responsiveness.
+
+  Sample transfers between MCL and MD can be cancelled by pressing MCL button < SAVE/NO >
+
+  Microtiming is no longer cleared when unsetting a trig with locks in Step Edit.
+
+- Bug Fixes:
+
+  New Project creation could fail.
+
+  Microtiming window would unexpectedly display when setting PTC
+
+  Wav Designer page switching was broken.
+
+  Wav Designer oscillator tuning rounding error and cents adjustment fix.
+
+  Fix sequencer LED cursor sync in certain circumstances.
+
+  MD IMPORT patterns menu, row names were broken and the range was too small.
+
+  PerfPage parameter learning was broken if dest the same as LFO dest
+
+  LFO offset for MIDI destinations was broken.
+
+  At low tempos, MIDI tracks would not always load.
+
+  Bulk sample receive was broken.
+
+  When AUTO Loading, comparison of MD sounds could be incorrect causing sound retransmission.
+
+  Don't cd up in SoundBrowser when pressing [ NO ], instead revert back to Step Edit page.
+
+  PerfEncoder scene assignment was not distributed correctly when loading a
+  blank PF slot.
+
+  Parameter lock parameters should be reverted correctly on sequencer stop.
+
+  Sequencer: Don't allow paste before copy.
+
 MCL 4.50 24/07/2023
 
 Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
