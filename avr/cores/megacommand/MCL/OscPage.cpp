@@ -17,7 +17,7 @@ float OscPage::get_freq() {
   float a = pow(2.00, 1.00 / 12.00);
   float n = enc1.cur - 64;
   float fn = fzero * pow(a, n);
-  float fout = fn * pow(2, (float)(enc2.cur - 100) / (float)1200);
+  float fout = fn * pow(2, (float)(100 - enc2.cur) / (float)1200);
   return fout;
 }
 void OscPage::init() {
@@ -187,12 +187,10 @@ void OscPage::display() {
     uint8_t note = s - (floor(s / 12) * 12);
     oled_display.print(number_to_note.notes_upper[note]);
     oled_display.print((uint8_t)floor(s / 12));
-    if (enc3.cur < 0) {
-      oled_display.print(F("-"));
-    } else {
+    if (enc2.cur < 0) {
       oled_display.print(F("+"));
     }
-    oled_display.print(enc2.cur);
+    oled_display.print(-1 * enc2.cur);
   }
   //  GUI.put_string_at(0, my_str);
   WavDesignerPage::display();
