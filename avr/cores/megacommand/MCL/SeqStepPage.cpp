@@ -422,12 +422,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             TRIG_HOLD_TIME) {
           reset_undo();
           active_track.set_step(step, mask_type, false);
-/*          if (mask_type == MASK_PATTERN) {
+          if (mask_type == MASK_PATTERN && !active_track.steps[step].locks) {
             active_track.steps[step].cond_id = 0;
             active_track.steps[step].cond_plock = false;
             active_track.timing[step] = active_track.get_timing_mid();
           }
-*/
         }
       }
       return true;
