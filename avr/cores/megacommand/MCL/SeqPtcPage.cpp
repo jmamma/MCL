@@ -1021,6 +1021,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
             (track_param < 8 && MD.kit.models[n] == MD.kit.models[track])) {
           MD.setTrackParam(n, track_param, value, nullptr, true);
           display_polylink = 1;
+          if (mcl.currentPage() == MIXER_PAGE) { SET_BIT16(mixer_page.redraw_mask, n); }
         }
       }
       // in_sysex = 0;
