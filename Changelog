@@ -22,6 +22,10 @@ Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
 
   Microtiming is no longer cleared when unsetting a trig with locks in Step Edit.
 
+  Added arrow key parameter selection to Arp Page.
+
+  Mixer Page trig LEDs now flash when MD tracks are triggered.
+
 - Bug Fixes:
 
   New Project creation could fail.
@@ -48,12 +52,16 @@ Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
 
   Don't cd up in SoundBrowser when pressing [ NO ], instead revert back to Step Edit page.
 
-  PerfEncoder scene assignment was not distributed correctly when loading a
-  blank PF slot.
+  PerfEncoder scene assignment was not distributed correctly when loading a blank PF slot.
 
   Parameter lock parameters should be reverted correctly on sequencer stop.
 
   Sequencer: Don't allow paste before copy.
+
+  MixerPage poly-link fader display bug.
+
+  Arpeggiator behaviour in poly mode could be unpredictable.
+
 
 MCL 4.50 24/07/2023
 
