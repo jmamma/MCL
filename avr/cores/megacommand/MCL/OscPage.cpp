@@ -292,7 +292,7 @@ void OscPage::draw_levels() {
   uint8_t w = 128 - x;
   UsrOsc usr_osc(w);
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     scaled_level = (uint8_t)(((float)sine_levels[i] / (float)127) * 15);
     if (note_interface.is_note_on(i)) {
