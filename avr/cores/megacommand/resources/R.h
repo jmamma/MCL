@@ -22,11 +22,11 @@ struct __T_icons_boot {
 extern const unsigned char __R_icons_device[] PROGMEM;
 struct __T_icons_device {
   union {
-    unsigned char icon_midi[0];
-    char zz__icon_midi[120];
+    unsigned char icon_turbo[0];
+    char zz__icon_turbo[120];
   };
-  static constexpr size_t countof_icon_midi = 120 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_midi = 120;
+  static constexpr size_t countof_icon_turbo = 120 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_turbo = 120;
   union {
     unsigned char icon_mnm[0];
     char zz__icon_mnm[120];

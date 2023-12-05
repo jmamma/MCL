@@ -1,11 +1,11 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
-uint8_t *GenericMidiDevice::icon() { return R.icons_device->icon_midi; }
+uint8_t *GenericMidiDevice::icon() { return R.icons_device->icon_turbo; }
 
 bool GenericMidiDevice::probe() {
   if (mcl_cfg.uart2_turbo_speed) {
-    mcl_gui.delay_progress(600);
+    mcl_gui.delay_progress(1200);
     connected = true;
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed),
                           uart);
