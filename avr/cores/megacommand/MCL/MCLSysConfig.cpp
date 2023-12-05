@@ -155,7 +155,6 @@ bool MCLSysConfig::cfg_init() {
   //seq_dev = 0;
   uart2_cc_mute = 128;
   uart2_cc_level = 128;
-  //uart2_turbo = 0;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

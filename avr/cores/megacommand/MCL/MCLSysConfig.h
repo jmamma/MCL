@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 4009
+#define CONFIG_VERSION 4010
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -67,7 +67,6 @@ public:
   uint8_t seq_dev;
   uint8_t uart2_cc_mute;
   uint8_t uart2_cc_level;
-  uint8_t uart2_turbo;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

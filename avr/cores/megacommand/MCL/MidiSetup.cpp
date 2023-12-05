@@ -138,7 +138,7 @@ void MidiSetup::cfg_ports(bool boot) {
   }
   if (mcl_cfg.uart2_device == 0) {
     midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);
-    if (mcl_cfg.uart2_turbo) {
+    if (mcl_cfg.uart2_turbo_speed) {
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed),
                             Midi2.uart);
     }

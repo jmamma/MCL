@@ -4,7 +4,7 @@
 uint8_t *GenericMidiDevice::icon() { return R.icons_device->icon_midi; }
 
 bool GenericMidiDevice::probe() {
-  if (mcl_cfg.uart2_turbo) {
+  if (mcl_cfg.uart2_turbo_speed) {
     mcl_gui.delay_progress(600);
     connected = true;
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed),

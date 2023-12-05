@@ -102,8 +102,6 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &perf_page.perf_id,
     // 60
     &mcl_cfg.uart2_cc_mute,
-    // 61
-    &mcl_cfg.uart2_turbo
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
