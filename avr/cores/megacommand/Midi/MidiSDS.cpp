@@ -515,13 +515,13 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
   uint8_t data[127] = {0xF0, 0x7E, deviceID, 0x02, packetNumber};
   uint8_t checksum = 0;
   uint8_t n = 5;
-  for (int i = 1; i < 5; i++)
+  for (uint8_t i = 1; i < 5; i++)
     checksum ^= data[i];
-  for (int i = 0; i < len; i++) {
+  for (uint8_t i = 0; i < len; i++) {
     data[n++] = buf[i];
     checksum ^= buf[i];
   }
-  for (int i = len; i < 120; i++)
+  for (uint8_t i = len; i < 120; i++)
     data[n++] = 0x00;
   data[n++] = checksum & 0x7F;
   data[n] = 0xF7;
