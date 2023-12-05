@@ -30,6 +30,7 @@ extern MCLEncoder config_param10;
 extern MCLEncoder config_param11;
 extern MCLEncoder config_param12;
 extern MCLEncoder config_param13;
+extern MCLEncoder config_param14;
 
 extern void new_proj_handler();
 
@@ -42,7 +43,7 @@ extern MenuPage<start_menu_page_N> start_menu_page;
 constexpr size_t system_menu_page_N = 6;
 extern MenuPage<system_menu_page_N> system_page;
 
-constexpr size_t midi_config_page_N = 5;
+constexpr size_t midi_config_page_N = 6;
 extern MenuPage<midi_config_page_N> midi_config_page;
 
 constexpr size_t md_config_page_N = 2;
@@ -77,6 +78,9 @@ extern MenuPage<midiroute_menu_page_N> midiroute_menu_page;
 
 constexpr size_t midimachinedrum_menu_page_N = 3;
 extern MenuPage<midimachinedrum_menu_page_N> midimachinedrum_menu_page;
+
+constexpr size_t midigeneric_menu_page_N = 1;
+extern MenuPage<midigeneric_menu_page_N> midigeneric_menu_page;
 
 extern MCLEncoder input_encoder1;
 extern MCLEncoder input_encoder2;

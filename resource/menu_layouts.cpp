@@ -75,6 +75,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
         {"ROUTING", 0, 0, 0, 0, MIDIROUTE_MENU_PAGE, 0, 0},
         {"PROGRAM", 0, 0, 0, 0, MIDIPROGRAM_MENU_PAGE, 0, 0},
         {"MD MIDI", 0, 0, 0, 0, MIDIMACHINEDRUM_MENU_PAGE, 0 ,0},
+        {"GENRAL MIDI", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
     },
     0
 };
@@ -137,6 +138,16 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
     },
     24
 };
+
+menu_t<midigeneric_menu_page_N> midigeneric_menu_layout = {
+    "GEN MIDI",
+    {
+        //              m  r   n  d  p  f  o
+        {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 121},
+    },
+    24
+};
+
 
 menu_t<md_config_page_N> mdconfig_menu_layout = {
     "MD",

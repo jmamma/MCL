@@ -332,7 +332,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
 
   if (param == midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
-    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
       if (mcl_seq.ext_tracks[n].channel != channel) {
         continue;
       }
@@ -349,6 +349,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
             mixer_page.mute_sets[1].mutes[mixer_page.current_mute_set], n);
       }
     }
+    mixer_page.redraw_mutes = true;
     return;
   }
 

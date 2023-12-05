@@ -6,6 +6,8 @@
 #include "Elektron.h"
 #include "MidiID.h"
 #include "Task.h"
+#include "MCLSysConfig.h"
+#include "MCLSeq.h"
 
 #define UART1_PORT 1
 #define UART2_PORT 2
@@ -34,6 +36,21 @@ public:
   GenericMidiDevice();
   virtual bool probe() { return true; }
   void init_grid_devices(uint8_t device_idx);
+  virtual uint8_t get_mute_cc() { return mcl_cfg.uart2_cc_mute > 127 ? 255 : mcl_cfg.uart2_cc_mute ; }
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {
+    if (track >= NUM_EXT_TRACKS || mcl_cfg.uart2_cc_mute > 127) { return; }
+    if (uart_ == nullptr) {
+      uart_ = uart;
+    }
+    uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_mute, (uint8_t)mute);
+  };
+  virtual void setLevel(uint8_t track, uint8_t value, MidiUartParent *uart_ = nullptr) {
+    if (track >= NUM_EXT_TRACKS || mcl_cfg.uart2_cc_level > 127) { return; }
+    if (uart_ == nullptr) {
+      uart_ = uart;
+    }
+    uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_level, value);
+  }
 };
 
 class NullMidiDevice : public MidiDevice {

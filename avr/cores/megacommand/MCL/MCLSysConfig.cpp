@@ -107,7 +107,7 @@ bool MCLSysConfig::cfg_init() {
 
   char my_string[16] = "/project000.mcl";
 
-  memset(this, 0, sizeof(MCLSysConfigData)); //<---- flush zero to config
+  memset((uint8_t *)&version, 0, sizeof(MCLSysConfigData)); //<---- flush zero to config
 
   version = CONFIG_VERSION;
   //number_projects = 0;
@@ -153,6 +153,8 @@ bool MCLSysConfig::cfg_init() {
   midi_ctrl_port = 1;
   //md_trig_channel = 0;
   //seq_dev = 0;
+  uart2_cc_mute = 128;
+  uart2_cc_level = 128;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

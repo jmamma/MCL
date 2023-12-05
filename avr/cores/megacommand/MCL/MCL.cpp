@@ -78,8 +78,9 @@ static LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
       &midiclock_menu_page,      // Index: 36
       &midiroute_menu_page,      // Index: 37
       &midimachinedrum_menu_page,// Index: 38
-      &sound_browser,            // Index: 39
-      &perf_page                 // Index: 40
+      &midigeneric_menu_page,    // Index: 39
+      &sound_browser,            // Index: 40
+      &perf_page                 // Index: 41
 };
 
 void MCL::setup() {

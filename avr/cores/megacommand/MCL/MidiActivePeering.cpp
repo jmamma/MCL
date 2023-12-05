@@ -13,26 +13,26 @@ void GenericMidiDevice::init_grid_devices(uint8_t device_idx) {
 
 /// It is the caller's responsibility to check for null MidiUart device
 static MidiUartParent *_getMidiUart(uint8_t port) {
+  MidiUartParent *ret = nullptr;
   if (port == UART1_PORT)
-    return &MidiUart;
+    ret = &MidiUart;
 #ifdef EXT_TRACKS
   else if (port == UART2_PORT)
-    return &MidiUart2;
+    ret = &MidiUart2;
 #endif
-  else
-    return nullptr;
+  return ret;
 }
 
 /// It is the caller's responsibility to check for null MidiClass device
 static MidiClass *_getMidiClass(uint8_t port) {
+   MidiClass *ret = nullptr;
   if (port == UART1_PORT)
-    return &Midi;
+    ret = &Midi;
 #ifdef EXT_TRACKS
   else if (port == UART2_PORT)
-    return &Midi2;
+    ret = &Midi2;
 #endif
-  else
-    return nullptr;
+  return ret;
 }
 
 static bool resource_loaded = false;

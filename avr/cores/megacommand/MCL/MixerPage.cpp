@@ -226,7 +226,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
   int dir = enc->getValue() - enc->old;
   int newval;
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
       newval = min(max(MD.kit.params[i][param] + dir, 0), 127);
       MD.setTrackParam(i, param, newval, nullptr, true);
@@ -295,7 +295,7 @@ void MixerPage::display() {
 
     uint8_t dec = FADE_RATE;
 
-    for (int i = 0; i < len; i++) {
+    for (uint8_t i = 0; i < len; i++) {
 
       if (is_md_device) {
         if (display_mode == MODEL_LEVEL) {
@@ -465,7 +465,7 @@ void MixerPage::redraw() {
 void MixerPage::toggle_or_solo(bool solo) {
   uint8_t is_md_device = (midi_device == &MD);
   uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
-  for (int i = 0; i < len; i++) {
+  for (uint8_t i = 0; i < len; i++) {
     bool note_on = note_interface.is_note_on(i);
     bool mute_state = false;
 
@@ -826,7 +826,7 @@ void MixerPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
     return;
   }
   SET_BIT16(mixer_page.redraw_mask, track);
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i) && (i != track)) {
       MD.setTrackParam(i, track_param, value, nullptr, true);
       SET_BIT16(mixer_page.redraw_mask, i);
