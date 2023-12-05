@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 4008
+#define CONFIG_VERSION 4009
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -22,9 +22,9 @@ public:
   uint32_t version;
   char project[16];
   uint8_t number_projects;
-  uint8_t uart1_turbo;
-  uint8_t uart2_turbo;
-  uint8_t usb_turbo;
+  uint8_t uart1_turbo_speed;
+  uint8_t uart2_turbo_speed;
+  uint8_t usb_turbo_speed;
   uint8_t clock_send;
   uint8_t clock_rec;
   uint8_t drumRouting[16];
@@ -67,6 +67,7 @@ public:
   uint8_t seq_dev;
   uint8_t uart2_cc_mute;
   uint8_t uart2_cc_level;
+  uint8_t uart2_turbo;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

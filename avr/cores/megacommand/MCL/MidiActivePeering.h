@@ -14,11 +14,10 @@
 
 class MidiActivePeering : public Task {
 public:
-  MidiActivePeering(uint16_t _interval = 0) : Task(_interval) {
+  MidiActivePeering(uint16_t _interval = 250) : Task(_interval) {
     setup(_interval);
   }
-
-  virtual void setup(uint16_t _interval = 0) { interval = _interval; }
+  virtual void setup(uint16_t _interval = 250) { interval = _interval; }
   virtual void disconnect(uint8_t port);
   virtual void force_connect(uint8_t port, MidiDevice *driver);
   virtual void run();
@@ -34,23 +33,15 @@ public:
 class GenericMidiDevice : public MidiDevice {
 public:
   GenericMidiDevice();
-  virtual bool probe() { return true; }
+
+  virtual uint8_t* icon();
+
+  virtual bool probe();
+
   void init_grid_devices(uint8_t device_idx);
-  virtual uint8_t get_mute_cc() { return mcl_cfg.uart2_cc_mute > 127 ? 255 : mcl_cfg.uart2_cc_mute ; }
-  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {
-    if (track >= NUM_EXT_TRACKS || mcl_cfg.uart2_cc_mute > 127) { return; }
-    if (uart_ == nullptr) {
-      uart_ = uart;
-    }
-    uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_mute, (uint8_t)mute);
-  };
-  virtual void setLevel(uint8_t track, uint8_t value, MidiUartParent *uart_ = nullptr) {
-    if (track >= NUM_EXT_TRACKS || mcl_cfg.uart2_cc_level > 127) { return; }
-    if (uart_ == nullptr) {
-      uart_ = uart;
-    }
-    uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_level, value);
-  }
+  virtual uint8_t get_mute_cc();
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
+  virtual void setLevel(uint8_t track, uint8_t value, MidiUartParent *uart_ = nullptr);
 };
 
 class NullMidiDevice : public MidiDevice {

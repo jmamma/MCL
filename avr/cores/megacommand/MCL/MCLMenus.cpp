@@ -36,7 +36,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &mcl_cfg.ram_page_mode,
 
     // 2
-    &mcl_cfg.uart1_turbo, &mcl_cfg.uart2_turbo, &mcl_cfg.uart2_device,
+    &mcl_cfg.uart1_turbo_speed, &mcl_cfg.uart2_turbo_speed, &mcl_cfg.uart2_device,
     &mcl_cfg.clock_rec, &mcl_cfg.clock_send, &mcl_cfg.midi_forward_1,
 
     // 8
@@ -91,7 +91,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 54
     &mcl_cfg.midi_transport_send,
     // 55
-    &mcl_cfg.usb_turbo,
+    &mcl_cfg.usb_turbo_speed,
     // 56
     &mcl_cfg.midi_ctrl_port,
     // 57
@@ -101,7 +101,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 59
     &perf_page.perf_id,
     // 60
-    &mcl_cfg.uart2_cc_mute
+    &mcl_cfg.uart2_cc_mute,
+    // 61
+    &mcl_cfg.uart2_turbo
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {

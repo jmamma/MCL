@@ -79,7 +79,7 @@ extern MenuPage<midiroute_menu_page_N> midiroute_menu_page;
 constexpr size_t midimachinedrum_menu_page_N = 3;
 extern MenuPage<midimachinedrum_menu_page_N> midimachinedrum_menu_page;
 
-constexpr size_t midigeneric_menu_page_N = 1;
+constexpr size_t midigeneric_menu_page_N = 2;
 extern MenuPage<midigeneric_menu_page_N> midigeneric_menu_page;
 
 extern MCLEncoder input_encoder1;

@@ -105,7 +105,7 @@ bool A4Class::probe() {
   if (getBlockingSettings(0)) {
     connected = true;
     DEBUG_DUMP(connected);
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), uart);
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed), uart);
   }
   return connected;
 }

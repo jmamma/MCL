@@ -114,9 +114,9 @@ bool MCLSysConfig::cfg_init() {
   strncpy(project, my_string, 16);
   //clock_send = 0;
   //clock_rec = 0;
-  uart1_turbo = 3;
-  uart2_turbo = 3;
-  usb_turbo = 3;
+  uart1_turbo_speed = 3;
+  uart2_turbo_speed = 3;
+  usb_turbo_speed = 3;
   //col = 0;
   //row = 0;
   //cur_row = 0;
@@ -155,6 +155,7 @@ bool MCLSysConfig::cfg_init() {
   //seq_dev = 0;
   uart2_cc_mute = 128;
   uart2_cc_level = 128;
+  //uart2_turbo = 0;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

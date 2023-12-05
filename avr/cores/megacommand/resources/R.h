@@ -22,6 +22,12 @@ struct __T_icons_boot {
 extern const unsigned char __R_icons_device[] PROGMEM;
 struct __T_icons_device {
   union {
+    unsigned char icon_midi[0];
+    char zz__icon_midi[120];
+  };
+  static constexpr size_t countof_icon_midi = 120 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_midi = 120;
+  union {
     unsigned char icon_mnm[0];
     char zz__icon_mnm[120];
   };
@@ -39,7 +45,7 @@ struct __T_icons_device {
   };
   static constexpr size_t countof_icon_md = 120 / sizeof(unsigned char);
   static constexpr size_t sizeofof_icon_md = 120;
-  static constexpr size_t __total_size = 360;
+  static constexpr size_t __total_size = 480;
 };
 
 extern const unsigned char __R_icons_knob[] PROGMEM;
@@ -388,10 +394,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_mdconfig_menu_layout = 53;
   union {
     menu_t<midigeneric_menu_page_N> midigeneric_menu_layout[0];
-    char zz__midigeneric_menu_layout[32];
+    char zz__midigeneric_menu_layout[53];
   };
-  static constexpr size_t countof_midigeneric_menu_layout = 32 / sizeof(menu_t<midigeneric_menu_page_N>);
-  static constexpr size_t sizeofof_midigeneric_menu_layout = 32;
+  static constexpr size_t countof_midigeneric_menu_layout = 53 / sizeof(menu_t<midigeneric_menu_page_N>);
+  static constexpr size_t sizeofof_midigeneric_menu_layout = 53;
   union {
     menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout[0];
     char zz__midimachinedrum_menu_layout[74];
@@ -458,7 +464,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 95;
-  static constexpr size_t __total_size = 2152;
+  static constexpr size_t __total_size = 2173;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;
