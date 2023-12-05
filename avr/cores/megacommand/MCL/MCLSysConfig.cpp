@@ -115,7 +115,7 @@ bool MCLSysConfig::cfg_init() {
   //clock_send = 0;
   //clock_rec = 0;
   uart1_turbo_speed = 3;
-  uart2_turbo_speed = 3;
+  //uart2_turbo_speed = 0;
   usb_turbo_speed = 3;
   //col = 0;
   //row = 0;
