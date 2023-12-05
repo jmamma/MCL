@@ -7,12 +7,11 @@ Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
   [ Classic/Extended] button must now be held down for 1.5 seconds to switch
   between Enhanced and Classic/Extended modes when the sequencer is stopped.
 
-  When the sequencer is running the Mixer page can be opened and closed by
-  pressing [ Classic/Extended ].
+- Improvements:
+
+  When the sequencer is running the Mixer page can be opened and closed by pressing [ Classic/Extended ].
 
   Holding [ Classic/Extended ] + [ Trig ] for fast for mute toggles.
-
-- Improvements:
 
   Minimum transition load latency reduced from approximately two 16th notes, to exactly half a 16th note per device.
 
@@ -25,6 +24,12 @@ Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
   Added arrow key parameter selection to Arp Page.
 
   Mixer Page trig LEDs now flash when MD tracks are triggered.
+
+  New General MIDI menu added to configure the Generic MIDI driver. Assign
+  custom mute CC paramater which can be received/transmitted via the MixerPage's ext device, mute toggle.
+
+  Added TURBO option to General MIDI menu. Enables TURBO MIDI speeds for
+  compatible machines that we haven't implemented a specific driver for.
 
 - Bug Fixes:
 
@@ -62,6 +67,7 @@ Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
 
   Arpeggiator behaviour in poly mode could be unpredictable.
 
+  MIDI Active peering would use the Elektron driver, even when Generic was selected.
 
 MCL 4.50 24/07/2023
 
