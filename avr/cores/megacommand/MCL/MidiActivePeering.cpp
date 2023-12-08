@@ -26,7 +26,7 @@ void GenericMidiDevice::muteTrack(uint8_t track, bool mute = true,
     uart_ = uart;
   }
   uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_mute,
-                (uint8_t)mute);
+                mute ? 127 : 0);
 };
 
 void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
