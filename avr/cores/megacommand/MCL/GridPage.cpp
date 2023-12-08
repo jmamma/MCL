@@ -439,7 +439,9 @@ void GridPage::display_grid() {
       switch (track_type) {
       case MD_TRACK_TYPE: {
         auto tmp = getMDMachineNameShort(model, 2);
-        copyMachineNameShort(tmp, str);
+        if (tmp) {
+          copyMachineNameShort(tmp, str);
+        }
         break;
       }
       case A4_TRACK_TYPE:

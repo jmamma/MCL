@@ -544,8 +544,6 @@ public:
 };
 
 extern const char* getMachineNameShort(uint8_t machine, uint8_t type, const short_machine_name_t* table, size_t size);
-#define copyMachineNameShort(src, dst) \
-  (dst)[0] = (src)[0]; \
-  (dst)[1] = (src)[1];
+#define copyMachineNameShort(src, dst) memcpy(dst,src,2);
 
 #endif /* ELEKTRON_H__ */
