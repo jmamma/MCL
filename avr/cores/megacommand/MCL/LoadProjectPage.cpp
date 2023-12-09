@@ -55,7 +55,7 @@ void LoadProjectPage::on_delete(const char *entry) {
     rm_dir(entry);
   }
 }
-char *myptr;
+
 void LoadProjectPage::on_rename(const char *from_, const char *to_) {
 
   char to[f_len] = {0};
@@ -143,5 +143,4 @@ void LoadProjectPage::on_rename(const char *from_, const char *to_) {
 error:
   DEBUG_PRINTLN("error");
   gfx.alert("ERROR", "Not renamed.");
-  init();
 }
