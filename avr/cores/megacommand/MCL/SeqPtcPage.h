@@ -59,6 +59,7 @@ public:
   uint8_t fine_tunes[NUM_DEVS];
 
   uint8_t find_arp_track(uint8_t channel_event);
+  MidiDevice *last_midi_device = nullptr;
 
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

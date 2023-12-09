@@ -50,6 +50,7 @@ void SeqPtcPage::setup() {
 }
 void SeqPtcPage::cleanup() {
   SeqPage::cleanup();
+  last_midi_device = midi_device;
   params_reset();
 }
 void SeqPtcPage::config_encoders() {
@@ -86,6 +87,7 @@ void SeqPtcPage::init_poly() {
 
 void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
+  if (last_midi_device != nullptr) { midi_device = last_midi_device; }
   SeqPage::init();
   seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
@@ -163,6 +165,7 @@ void SeqPtcPage::loop() {
 }
 uint8_t SeqPtcPage::find_arp_track(uint8_t channel_event) {
   uint8_t track = last_md_track;
+  if (IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track)) { channel_event = POLY_EVENT; }
   if (channel_event == POLY_EVENT) {
     uint16_t mask = mcl_cfg.poly_mask;
     uint8_t n = 0;
