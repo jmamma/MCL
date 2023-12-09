@@ -27,9 +27,8 @@
 #define FM_NEW_FOLDER 1
 #define FM_DELETE 2
 #define FM_RENAME 3
-#define FM_OVERWRITE 4
-#define FM_RECVALL 5
-#define FM_SENDALL 6
+#define FM_RECVALL 4
+#define FM_SENDALL 5
 
 class FileBrowserFileTypes {
   constexpr static uint8_t size = 2;

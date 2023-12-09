@@ -89,7 +89,7 @@ extern TextInputPage text_input_page;
 
 extern MCLEncoder file_menu_encoder;
 
-constexpr size_t file_menu_page_N = 7;
+constexpr size_t file_menu_page_N = 6;
 extern MenuPage<file_menu_page_N> file_menu_page;
 
 extern MCLEncoder seq_menu_value_encoder;

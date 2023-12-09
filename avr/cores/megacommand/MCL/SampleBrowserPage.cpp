@@ -177,7 +177,8 @@ void SampleBrowserPage::send_sample(int slot, char *newname, bool silent) {
 }
 
 void SampleBrowserPage::recv_wav(int slot, bool silent) {
-  char wav_name[FILE_ENTRY_SIZE] = "";
+  //limit len to 16 char.
+  char wav_name[16] = "";
   // should be of form "ID - NAME..."
   //                      ^--~~~~~~~
   //                         memmove
@@ -260,7 +261,6 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
     file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
     file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
     file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-    file_menu_page.menu.enable_entry(FM_OVERWRITE, !state);
     file_menu_page.menu.enable_entry(FM_RECVALL, state);
     file_menu_page.menu.enable_entry(FM_SENDALL, state);
     return true;
