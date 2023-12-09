@@ -318,7 +318,7 @@ bool FileBrowserPage::_cd(const char *child) {
   DEBUG_PRINTLN(lwd);
 
   file.close();
-  char *ptr = child;
+  const char *ptr = child;
 
   if (child[0] == '/' && child[1] != '\0') {
     SD.chdir("/");

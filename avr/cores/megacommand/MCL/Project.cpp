@@ -9,11 +9,10 @@ bool Project::new_project(const char *newprj) {
   // Create parent project directory
   //
   chdir_projects();
-
+  DEBUG_PRINTLN(newprj);
+  DEBUG_PRINTLN(strlen(newprj));
   // Create project directory
-  SD.mkdir(newprj, true);
-
-  if (!SD.chdir(newprj)) {
+  if (!SD.mkdir(newprj, true) || !SD.chdir(newprj)) {
     gfx.alert("ERROR", "DIR");
     return false;
   }
