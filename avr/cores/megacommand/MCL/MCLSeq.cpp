@@ -302,6 +302,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (mcl.currentPage() == MIXER_PAGE) {
     mixer_page.onControlChangeCallback_Midi(track, track_param, value);
   }
+  ram_page_a.onControlChangeCallback_Midi(track, track_param, value);
 
   if (track_param == 32) { // Mute
     mcl_seq.md_tracks[track].mute_state = value > 0;
