@@ -69,7 +69,7 @@ void GuiClass::loop() {
         continue;
     }
 
-    for (int i = 0; i < eventHandlers.size; i++) {
+    for (uint8_t i = 0; i < eventHandlers.size; i++) {
       if (eventHandlers.arr[i] != NULL) {
         ret = eventHandlers.arr[i](&event);
         if (ret)
@@ -79,7 +79,7 @@ void GuiClass::loop() {
 
   }
 
-  for (int i = 0; i < tasks.size; i++) {
+  for (uint8_t i = 0; i < tasks.size; i++) {
     if (tasks.arr[i] != NULL) {
       tasks.arr[i]->checkTask();
     }
