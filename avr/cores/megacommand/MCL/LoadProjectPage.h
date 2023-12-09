@@ -18,7 +18,7 @@ public:
       : FileBrowserPage(e1, e2, e3, e4) {}
   virtual void on_select(const char *entry);
   virtual void on_delete(const char *entry);
-  virtual void on_rename( const char *from_, const char *to_);
+  virtual void on_rename( const char *from, const char *to);
   virtual void setup();
   virtual void init();
 };

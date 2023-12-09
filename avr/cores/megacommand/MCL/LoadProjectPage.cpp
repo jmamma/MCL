@@ -56,12 +56,13 @@ void LoadProjectPage::on_delete(const char *entry) {
   }
 }
 
-void LoadProjectPage::on_rename(const char *from_, const char *to_) {
-
+void LoadProjectPage::on_rename(const char *from, const char *to) {
+  /*
   char to[f_len] = {0};
   strncpy(to,to_,f_len);
   char from[f_len] = {0};
   strncpy(from,from_,f_len);
+*/
   DEBUG_PRINTLN("on rename");
   file.open(from, O_READ);
   bool dir = file.isDirectory();
@@ -71,7 +72,7 @@ void LoadProjectPage::on_rename(const char *from_, const char *to_) {
     return;
   }
 
-  if (!_cd(from)) {
+  if (!SD.chdir(from)) {
     goto error;
   }
 
@@ -129,7 +130,7 @@ void LoadProjectPage::on_rename(const char *from_, const char *to_) {
   if (!SD.rename(proj_filename, to_proj_filename)) {
     goto error;
   }
-  _cd_up();
+  SD.chdir(lwd);
   DEBUG_PRINTLN("rename from to");
   DEBUG_PRINTLN(from);
   DEBUG_PRINTLN(to);
