@@ -209,7 +209,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   case ARP_PINKUP:
   case ARP_THUMBUP:
     if (num_of_notes == 1) {
-      note = mode == ARP_PINKUP ? sort_down[0] : sort_up[0];
+      note = mode == ARP_PINKUP ? sort_up[0] : sort_down[0];
       notes[len++] = note;
     }
     for (uint8_t i = 0; i < num_of_notes - 1; i++) {
