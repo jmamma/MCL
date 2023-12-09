@@ -207,8 +207,9 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   next2:
   switch (mode) {
   case ARP_PINKUP:
+  case ARP_THUMBUP:
     if (num_of_notes == 1) {
-      note = sort_up[0];
+      note = mode == ARP_PINKUP ? sort_down[0] : sort_up[0];
       notes[len++] = note;
     }
     for (uint8_t i = 0; i < num_of_notes - 1; i++) {
@@ -221,33 +222,11 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
     break;
 
   case ARP_PINKDOWN:
-    for (uint8_t i = 1; i < num_of_notes; i++) {
-      note = sort_down[i];
-      notes[len++] = note;
-      note = sort_up[0];
-      notes[len++] = note;
-    }
-    break;
-
-  case ARP_THUMBUP:
-    if (num_of_notes == 1) {
-      note = sort_down[0];
-      notes[len++] = note;
-    }
-    for (uint8_t i = 0; i < num_of_notes - 1; i++) {
-      note = sort_up[i];
-      notes[len++] = note;
-      note = sort_down[0];
-      notes[len++] = note;
-    }
-
-    break;
-
   case ARP_THUMBDOWN:
     for (uint8_t i = 1; i < num_of_notes; i++) {
       note = sort_down[i];
       notes[len++] = note;
-      note = sort_down[0];
+      note = mode == ARP_PINKDOWN ? sort_up[0] : sort_down[0];
       notes[len++] = note;
     }
     break;
