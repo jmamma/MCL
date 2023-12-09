@@ -13,7 +13,7 @@ void GridPage::init() {
     return;
   }
   trig_interface.off();
-  load_slot_models();
+  //load_slot_models();
   oled_display.clearDisplay();
   R.Clear();
   R.use_machine_names_short();
