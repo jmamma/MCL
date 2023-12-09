@@ -235,13 +235,13 @@ uint16_t MDKit::toSysex() {
 }
 
 uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
-  if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
-    encoder->throttle = true;
+  //if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
+    //encoder->throttle = true;
     // float swing = (float) MD->swing_last / 16385->0;
     // encoder->throttle_mod12 = floor((swing) * 12);
     // DEBUG_PRINTLN(F("swing"));
     // DEBUG_DUMP(encoder->throttle_mod12);
-  }
+  //}
   encoder->stop7Bit();
   encoder->begin();
   encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));

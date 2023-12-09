@@ -52,21 +52,7 @@ void ElektronDataToSysexEncoder::startChecksum() {
 }
 
 void ElektronDataToSysexEncoder::uart_send(uint8_t c) {
-  if (throttle) {
-    /* bool do_throttle = false;
-    uint8_t v = 0;
-    if (MidiClock.mod6_counter == 0) {
-      do_throttle = true;
-    }
-    if (MidiClock.mod12_counter == throttle_mod12) {
-      do_throttle = true;
-    }
-    if (do_throttle) { */
-    delayMicroseconds(THROTTLE_US);
-    uart->m_putc_immediate(c);
-  } else {
-    uart->m_putc(c);
-  }
+  uart->m_putc(c);
 }
 void ElektronDataToSysexEncoder::finishChecksum() {
   uint16_t len = retLen - 5;

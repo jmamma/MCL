@@ -176,9 +176,9 @@ bool MNMKit::fromSysex(MidiClass *midi) {
 }
 
 uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
-  if ((MidiClock.state == 2) && (MNM.midi->uart->speed > 62500)) {
-    encoder->throttle = true;
-  }
+  //if ((MidiClock.state == 2) && (MNM.midi->uart->speed > 62500)) {
+    //encoder->throttle = true;
+  //}
   encoder->stop7Bit();
   encoder->begin();
   encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));

@@ -39,19 +39,13 @@ protected:
   uint16_t checksum;
   bool inChecksum;
 public:
-  bool throttle;
-  uint8_t throttle_mod12;
 
   ElektronDataToSysexEncoder(uint8_t *_sysex = nullptr) {
     init(_sysex);
-    throttle = false;
-    throttle_mod12 = 255;
   }
 
   ElektronDataToSysexEncoder(MidiUartParent *_uart) {
     init(0, _uart);
-    throttle = false;
-    throttle_mod12 = 255;
   }
 
   void uart_send(uint8_t c);
