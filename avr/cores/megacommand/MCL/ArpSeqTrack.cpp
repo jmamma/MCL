@@ -41,7 +41,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
         uint8_t note = notes[idx] + oct * 12;
         switch (active) {
           case MD_ARP_TRACK_TYPE:
-            seq_ptc_page.trig_md(note, track_number, fine_tune, uart);
+            seq_ptc_page.trig_md(note, track_number, CTRL_EVENT, fine_tune, uart);
             break;
           case EXT_ARP_TRACK_TYPE:
             seq_ptc_page.note_on_ext(note, 127, track_number, uart);

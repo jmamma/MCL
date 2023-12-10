@@ -409,40 +409,21 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num,
   return min(machine_pitch, 127);
 }
 
-void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number,
-                         uint8_t fine_tune, MidiUartParent *uart_) {
+void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel_event,  uint8_t fine_tune, MidiUartParent *uart_) {
   if (track_number == 255) {
     track_number = last_md_track;
   }
 
-  uint8_t next_track = get_next_voice(note_num, track_number, CTRL_EVENT);
+  uint8_t next_track = get_next_voice(note_num, track_number, channel_event);
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num, fine_tune);
   if (machine_pitch == 255) {
     return;
   }
+
   MD.setTrackParam(next_track, 0, machine_pitch, uart_);
   MD.triggerTrack(next_track, 127, uart_);
   mixer_page.trig(next_track);
 
-  if ((recording) && (MidiClock.state == 2)) {
-    reset_undo();
-    mcl_seq.md_tracks[next_track].record_track(127);
-    mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
-  }
-}
-
-void SeqPtcPage::trig_md_fromext(uint8_t note_num, uint8_t channel_event) {
-  uint8_t next_track = get_next_voice(note_num, last_md_track, channel_event);
-  uint8_t machine_pitch = get_machine_pitch(next_track, note_num);
-  if (machine_pitch == 255) {
-    return;
-  }
-  if (mcl.currentPage() == SEQ_STEP_PAGE && channel_event == CTRL_EVENT) {
-    seq_step_page.pitch_param = note_num;
-    // get_note_from_machine_pitch(machine_pitch);
-  }
-  MD.setTrackParam(next_track, 0, machine_pitch);
-  MD.triggerTrack(next_track, 127);
   if ((recording) && (MidiClock.state == 2)) {
     reset_undo();
     mcl_seq.md_tracks[next_track].record_track(127);
@@ -786,7 +767,11 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[n];
 
     if (!arp_track->enabled || (MidiClock.state != 2)) {
-      seq_ptc_page.trig_md_fromext(pitch, channel_event);
+      seq_ptc_page.trig_md(pitch, n, channel_event);
+      if (mcl.currentPage() == SEQ_STEP_PAGE && channel_event == CTRL_EVENT) {
+        seq_step_page.pitch_param = pitch;
+      }
+
     }
 
     return;
