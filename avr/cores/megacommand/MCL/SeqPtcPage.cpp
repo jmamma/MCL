@@ -775,8 +775,6 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
 
     pitch = seq_ptc_page.process_ext_event(note_num, note_on, channel);
     uint8_t n = seq_ptc_page.find_arp_track(channel_event);
-    //set last_md_track to first poly track
-    last_md_track = n;
     arp_page.track_update(n);
 
     seq_ptc_page.render_arp(false, SeqPage::midi_device, n);

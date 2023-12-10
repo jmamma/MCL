@@ -29,6 +29,8 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
     arp_track = &mcl_seq.ext_arp_tracks[n];
   }
 
+  current_track = n;
+
   arp_rate.cur = arp_track->length;
   arp_rate.old = arp_rate.cur;
 
@@ -58,10 +60,7 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
 void ArpPage::cleanup() { oled_display.clearDisplay(); }
 
 void ArpPage::loop() {
-  uint8_t n = last_ext_track;
-  if (seq_ptc_page.midi_device == &MD) {
-    n = last_md_track;
-  }
+  uint8_t n = current_track;
 
   if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
@@ -100,7 +99,7 @@ void ArpPage::display() {
   oled_display.print(F("ARPEGGIATOR: T"));
 
   if (seq_ptc_page.midi_device == &MD) {
-    oled_display.print(last_md_track + 1);
+    oled_display.print(current_track + 1);
   } else {
     oled_display.print(last_ext_track + 1);
   }
