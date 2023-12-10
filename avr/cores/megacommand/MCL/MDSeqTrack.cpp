@@ -441,11 +441,7 @@ void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
 void MDSeqTrack::send_trig() { send_trig_inline(); }
 
 void MDSeqTrack::send_trig_inline() {
-  mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-  if (MD.kit.trigGroups[track_number] < 16) {
-    mixer_page.disp_levels[MD.kit.trigGroups[track_number]] =
-        MD.kit.levels[MD.kit.trigGroups[track_number]];
-  }
+  mixer_page.trig(track_number);
   //  MD.triggerTrack(track_number, 127, uart);
   SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
 }

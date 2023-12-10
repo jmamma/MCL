@@ -422,6 +422,8 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number,
   }
   MD.setTrackParam(next_track, 0, machine_pitch, uart_);
   MD.triggerTrack(next_track, 127, uart_);
+  mixer_page.trig(next_track);
+
   if ((recording) && (MidiClock.state == 2)) {
     reset_undo();
     mcl_seq.md_tracks[next_track].record_track(127);
