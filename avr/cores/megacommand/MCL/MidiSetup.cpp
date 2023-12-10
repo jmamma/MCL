@@ -150,6 +150,8 @@ void MidiSetup::cfg_ports(bool boot) {
     midi_active_peering.force_connect(UART2_PORT, &null_midi_device);
   }
 
-  seq_ptc_page.midi_events.remove_callbacks();
-  seq_ptc_page.midi_events.setup_callbacks();
+  if (MD.connected) {
+    seq_ptc_page.midi_events.remove_callbacks();
+    seq_ptc_page.midi_events.setup_callbacks();
+  }
 }
