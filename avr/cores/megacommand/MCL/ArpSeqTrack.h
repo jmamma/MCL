@@ -67,7 +67,7 @@ public:
 
   void init() {
     speed = SEQ_SPEED_2X;
-    length = 1;
+    length = 2;
     enabled = false;
     range = 0;
     oct = 1;
