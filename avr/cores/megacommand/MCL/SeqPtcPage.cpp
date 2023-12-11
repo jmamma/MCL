@@ -476,7 +476,7 @@ void SeqPtcPage::recalc_notemask() {
 
 void SeqPtcPage::draw_popup_transpose() {
   char str[] = "KEY:   ";
-  mcl_gui.put_value_at(transpose, str + 5);
+  strcpy(str + 5, number_to_note.notes_upper[transpose]);
   MD.popup_text(str);
 }
 

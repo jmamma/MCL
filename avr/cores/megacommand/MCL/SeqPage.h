@@ -6,6 +6,7 @@
 #include "GUI.h"
 #include "midi-common.h"
 #include "Elektron.h"
+#include "shared.h"
 
 #define REC_EVENT_TRIG 0
 #define REC_EVENT_CC 1
@@ -65,6 +66,8 @@ extern void opt_clear_step_handler();
 extern void seq_menu_handler();
 extern uint8_t copy_mask;
 
+extern MusicalNotes number_to_note;
+
 class MidiDevice;
 
 extern inline void reset_undo() {
@@ -99,7 +102,6 @@ public:
   static uint32_t last_md_model;
 
   static bool recording;
-
   static uint16_t mute_mask;
 
   bool display_page_index = true;

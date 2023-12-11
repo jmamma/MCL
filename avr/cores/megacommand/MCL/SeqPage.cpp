@@ -56,6 +56,8 @@ uint8_t SeqPage::last_step = 255;
 static MCLEncoder *opt_param1_capture = nullptr;
 static MCLEncoder *opt_param2_capture = nullptr;
 
+MusicalNotes number_to_note;
+
 uint8_t copy_mask = 0;
 
 void SeqPage::setup() {}

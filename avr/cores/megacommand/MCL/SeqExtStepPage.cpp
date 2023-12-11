@@ -759,7 +759,6 @@ void SeqExtStepPage::display() {
   mcl_gui.put_value_at(cur_x/timing_mid + 1,info1);
   epoch = active_track.epoch;
   if (pianoroll_mode == 0) {
-    MusicalNotes number_to_note;
     uint8_t oct = cur_y / 12;
     uint8_t note = cur_y - 12 * (cur_y / 12);
     char str[4] = " ";

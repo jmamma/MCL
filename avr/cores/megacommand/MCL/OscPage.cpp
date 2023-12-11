@@ -126,8 +126,6 @@ void OscPage::display() {
   // oled_display.clearDisplay();
   oled_display.fillRect(0, 0, 64, 32, BLACK);
 
-  MusicalNotes number_to_note;
-
   scanline_width = 64;
 
   uint8_t c = 1;
