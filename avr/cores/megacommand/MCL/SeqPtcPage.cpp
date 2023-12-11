@@ -478,6 +478,7 @@ void SeqPtcPage::draw_popup_transpose() {
   char str[] = "KEY:   ";
   strcpy(str + 5, number_to_note.notes_upper[transpose]);
   MD.popup_text(str);
+  oled_display.textbox(str, "");
 }
 
 void SeqPtcPage::draw_popup_octave() {
