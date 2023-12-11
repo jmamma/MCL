@@ -25,6 +25,7 @@
 #define ARP_UP2 15
 #define ARP_DOWN2 16
 #define ARP_RND 17
+#define ARP_RND2 18
 
 #define ARP_ON 1
 #define ARP_LATCH 2

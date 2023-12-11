@@ -1,7 +1,7 @@
 #include "MCL_impl.h"
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
-MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
+MCLEncoder arp_mode(0, 18, ENCODER_RES_SEQ);
 MCLEncoder arp_rate(1, 16, ENCODER_RES_SEQ);
 MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
 
@@ -83,6 +83,7 @@ typedef char arp_name_t[4];
 const arp_name_t arp_names[] PROGMEM = {
     "UP", "DWN", "UD", "DU", "UND", "DNU", "CNV", "DIV", "CND",
     "PU", "PD",  "TU", "TD", "UPP", "DP",  "U2",  "D2",  "RND",
+    "RN2",
 };
 
 void ArpPage::display() {
