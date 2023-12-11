@@ -23,6 +23,8 @@ Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
 
   Added arrow key parameter selection to Arp Page.
 
+  Arpeggiator gets a true random mode "RN2"
+
   Mixer Page trig LEDs now flash when MD tracks are triggered.
 
   New General MIDI menu added to configure the Generic MIDI driver. Assign
