@@ -6,10 +6,16 @@
 #include "Elektron.h"
 #include "GridChain.h"
 
+class LoadQueueModes {
+  public:
+  uint8_t mode : 4;
+  uint8_t offset : 4;
+};
+
 class LoadQueue {
   public:
   uint8_t row_selects[NUM_LINKS][NUM_SLOTS];
-  uint8_t modes[NUM_LINKS];
+  LoadQueueModes modes[NUM_LINKS];
   uint8_t rd;
   uint8_t wr;
   bool full;
@@ -20,10 +26,11 @@ class LoadQueue {
     bool full = false;
   }
 
-  void put(uint8_t mode, uint8_t *row_select) {
+  void put(uint8_t mode, uint8_t *row_select, uint8_t offset) {
     if (full) { return; }
     memcpy(row_selects[wr],row_select,NUM_SLOTS);
-    modes[wr++] = mode;
+    modes[wr].mode = mode;
+    modes[wr++].offset = offset;
     if (wr == NUM_LINKS) {
        wr = 0;
     }
@@ -40,7 +47,8 @@ class LoadQueue {
        row_selects[wr][n] = 255;
        if (track_select_array[n]) { row_selects[wr][n] = row; }
     }
-    modes[wr++] = mode;
+    modes[wr].mode = mode;
+    modes[wr++].offset = 255;
     if (wr == NUM_LINKS) {
        wr = 0;
     }
@@ -49,9 +57,10 @@ class LoadQueue {
     }
   }
 
-  void get(uint8_t *mode, uint8_t *row_select) {
+  void get(uint8_t &mode, uint8_t &offset, uint8_t *row_select) {
     memcpy(row_select,row_selects[rd],NUM_SLOTS);
-    *mode = modes[rd++];
+    mode = modes[rd].mode;
+    offset = modes[rd++].offset;
     if (rd == NUM_LINKS) {
        rd = 0;
     }

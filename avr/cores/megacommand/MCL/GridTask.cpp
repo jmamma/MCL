@@ -28,9 +28,10 @@ void GridTask::gui_update() {
 void GridTask::load_queue_handler() {
   if (!load_queue.is_empty()) {
     uint8_t mode;
+    uint8_t offset;
     uint8_t row_select_array[NUM_SLOTS];
     uint8_t track_select[NUM_SLOTS] = {0};
-    load_queue.get(&mode, row_select_array);
+    load_queue.get(mode, offset, row_select_array);
     DEBUG_PRINTLN("load queue get");
     DEBUG_PRINTLN(mode);
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -44,7 +45,8 @@ void GridTask::load_queue_handler() {
       DEBUG_PRINTLN(row_select_array[n]);
     }
     mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(255, track_select, row_select_array, mode);
+    offset = 4;
+    mcl_actions.load_tracks(255, track_select, row_select_array, mode, offset);
   }
 }
 
