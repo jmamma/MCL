@@ -297,19 +297,19 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
     }
 
     if (load_mode == LOAD_QUEUE) {
-      chains[dst].add(row_array[dst], get_chain_length());
+      chains[n].add(row_array[n], get_chain_length());
       DEBUG_PRINTLN("adding link");
-      if (chains[dst].num_of_links > 1) {
-        slot_select_array[dst] = 0;
-        if (chains[dst].num_of_links == 2) {
-          cache_track_array[dst] = 1;
+      if (chains[n].num_of_links > 1) {
+        slot_select_array[n] = 0;
+        if (chains[n].num_of_links == 2) {
+          cache_track_array[n] = 1;
           recache = true;
         }
       }
     } else {
-      chains[dst].init();
+      chains[n].init();
     }
-    chains[dst].mode = load_mode;
+    chains[n].mode = load_mode;
   }
 
   if (MidiClock.state == 2) {
@@ -745,7 +745,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     uint32_t diff = MidiClock.clock_diff_div192(
         MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 4 * 12);
 
-    while ((gdt->seq_track->count_down && (MidiClock.state == 2))) {
+    while ((gdt_dst->seq_track->count_down && (MidiClock.state == 2))) {
       proj.select_grid(old_grid);
       handleIncomingMidi();
       if (((float)diff > 0.064 * tempo) && gui_update) {
@@ -755,18 +755,18 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     proj.select_grid(grid_idx);
 
-    if (chains[dst].is_mode_queue()) {
-      if (chains[dst].get_length() == QUANT_LEN) {
+    if (chains[n].is_mode_queue()) {
+      if (chains[n].get_length() == QUANT_LEN) {
         if (links[dst].loops == 0) {
           links[dst].loops = 1;
         }
-      } else if (chains[dst].get_length() != QUANT_LEN) {
+      } else if (chains[n].get_length() != QUANT_LEN) {
         links[dst].loops = 1;
-        links[dst].length = (float)chains[dst].get_length() /
-                          (float)gdt->seq_track->get_speed_multiplier();
+        links[dst].length = (float)chains[n].get_length() /
+                          (float)gdt_dst->seq_track->get_speed_multiplier();
       }
-      chains[dst].inc();
-      links[dst].row = chains[dst].get_row();
+      chains[n].inc();
+      links[dst].row = chains[n].get_row();
       if (links[dst].row == 255) {
         setLed2();
       }
@@ -779,7 +779,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     EmptyTrack empty_track;
 
-    auto *ptrack = empty_track.load_from_grid_512(track_idx, links[n].row);
+    auto *ptrack = empty_track.load_from_grid_512(track_idx, links[dst].row);
     send_machine[dst] = 0;
 
     if (ptrack == nullptr || ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type) {
