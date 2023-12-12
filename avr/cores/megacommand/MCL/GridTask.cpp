@@ -230,11 +230,12 @@ void GridTask::transition_handler() {
     DEBUG_PRINTLN((int)SP);
 
     bool update_gui = true;
+    uint8_t load_offset = 0;
 
     DEBUG_PRINTLN("cache next");
 
     volatile uint32_t clk = slowclock;
-    mcl_actions.cache_next_tracks(track_select_array, update_gui);
+    mcl_actions.cache_next_tracks(track_select_array,0, update_gui);
 
     uint32_t t = clock_diff(clk, slowclock);
     DEBUG_PRINTLN("time");

@@ -26,7 +26,7 @@ class LoadQueue {
     bool full = false;
   }
 
-  void put(uint8_t mode, uint8_t *row_select, uint8_t offset) {
+  void put(uint8_t mode, uint8_t *row_select, uint8_t offset = 255) {
     if (full) { return; }
     memcpy(row_selects[wr],row_select,NUM_SLOTS);
     modes[wr].mode = mode;

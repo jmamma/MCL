@@ -280,12 +280,17 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
   bool recache = false;
   DEBUG_PRINTLN("load tracks");
   DEBUG_PRINTLN(load_mode);
+  uint8_t first_slot = 255;
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
     GridDeviceTrack *gdt = get_grid_dev_track(n);
     //    DEBUG_PRINTLN(slot_select_array[n]);
     if ((slot_select_array[n] == 0) || gdt == nullptr) {
       continue;
     }
+    if (first_slot == 255) { first_slot = n; }
+
+    uint8_t dst = load_offset == 255 ? n : (n - first_slot) + load_offset;
+
     if (_row_array == nullptr) {
       row_array[n] = row;
     } else {
@@ -293,19 +298,19 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
     }
 
     if (load_mode == LOAD_QUEUE) {
-      chains[n].add(row_array[n], get_chain_length());
+      chains[dst].add(row_array[dst], get_chain_length());
       DEBUG_PRINTLN("adding link");
-      if (chains[n].num_of_links > 1) {
-        slot_select_array[n] = 0;
-        if (chains[n].num_of_links == 2) {
-          cache_track_array[n] = 1;
+      if (chains[dst].num_of_links > 1) {
+        slot_select_array[dst] = 0;
+        if (chains[dst].num_of_links == 2) {
+          cache_track_array[dst] = 1;
           recache = true;
         }
       }
     } else {
-      chains[n].init();
+      chains[dst].init();
     }
-    chains[n].mode = load_mode;
+    chains[dst].mode = load_mode;
   }
 
   if (MidiClock.state == 2) {
@@ -321,9 +326,9 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
   }
   if (recache) {
     bool gui_update = false;
-    cache_next_tracks(cache_track_array, gui_update);
+    cache_next_tracks(cache_track_array, load_offset, gui_update);
   } else {
-    send_tracks_to_devices(slot_select_array, row_array);
+    send_tracks_to_devices(slot_select_array, row_array, load_offset);
   }
 }
 
@@ -349,7 +354,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
 
     proj.select_grid(grid_idx);
 
-    if ((gdt == nullptr || gdt_dst == nullptr || (grid_idx_dst != grid_idx)) {
+    if (gdt == nullptr || gdt_dst == nullptr || (grid_idx_dst != grid_idx)) {
       // Ignore slots that are not device supported.
       slot_select_array[n] = 0;
       continue;
@@ -417,7 +422,7 @@ again:
 
         GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
 
-        if (gdt != nullptr) {
+        if (gdt_dst != nullptr) {
           transition_level[dst] = 0;
           if (increase_loops) {
             if (next_transitions[dst] == next_transition) {
@@ -505,8 +510,9 @@ again:
   }
 }
 
-bool MCLActions::load_track_immediate(uint8_t row, uint8_t pos,
-                            GridDeviceTrack *gdt, uint8_t *send_masks) {
+bool MCLActions::load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
+                            GridDeviceTrack *gdt, GridDeviceTrack *gdt_dst, uint8_t *send_masks) {
+  uint8_t track_idx = get_track_idx(i);
   EmptyTrack empty_track;
   auto *ptrack = empty_track.load_from_grid_512(track_idx, row);
 
@@ -515,32 +521,32 @@ bool MCLActions::load_track_immediate(uint8_t row, uint8_t pos,
     return false;
   } // read failure
 
-  ptrack->link.store_in_mem(pos, &(links[0]));
+  ptrack->link.store_in_mem(dst, &(links[0]));
 
   if (ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type) {
     empty_track.clear();
     if (ptrack->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
     ptrack->init_track_type(gdt->track_type);
-    ptrack->init(track_idx, gdt->seq_track);
-    ptrack->load_immediate_cleared(track_idx, gdt->seq_track);
+    ptrack->init(track_idx, gdt_dst->seq_track);
+    ptrack->load_immediate_cleared(track_idx, gdt_dst->seq_track);
   } else {
     if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
       ptrack->init_track_type(ptrack->get_parent_model());
     }
     if (ptrack != nullptr) {
-      send_masks[pos] = 1;
-      ptrack->load_immediate(gdt->track_idx, gdt->seq_track);
+      send_masks[dst] = 1;
+      ptrack->load_immediate(track_idx, gdt_dst->seq_track);
     }
   }
   if (ptrack != nullptr) {
-      ptrack->store_in_mem(gdt->mem_slot_idx);
+      ptrack->store_in_mem(gdt_dst->mem_slot_idx);
    }
 
   return true;
 }
 
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
-                                        uint8_t *row_array) {
+                                        uint8_t *row_array, uint8_t load_offset) {
   // DEBUG_PRINT_FN();
   DEBUG_PRINTLN("send tracks to devices");
 
@@ -573,7 +579,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     GridDeviceTrack *gdt = get_grid_dev_track(i);
     uint8_t grid_idx = get_grid_idx(i);
 
-
     uint8_t dst = load_offset == 255 ? i : (i - first_slot) + load_offset;
     GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
     uint8_t grid_idx_dst = get_grid_idx(dst);
@@ -596,7 +601,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     // DEBUG_DUMP("here");
     // DEBUG_DUMP(row);
 
-    if (!load_track_immediate(row, dst, gdt, send_masks)) {
+    if (!load_track_immediate(row, i, dst, gdt, gdt_dst, send_masks)) {
       select_array[i] = 0;
     }
   }
@@ -661,21 +666,21 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   // Cache
   // DEBUG_CHECK_STACK();
   bool gui_update = false;
-  cache_next_tracks(select_array, gui_update);
+  cache_next_tracks(select_array, load_offset, gui_update);
 
   // in_sysex = 0;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((select_array[n] > 0) && (grid_page.active_slots[n] != SLOT_DISABLED)) {
-      GridDeviceTrack *gdt = get_grid_dev_track(n);
-      if (gdt != nullptr) {
-        transition_level[n] = 0;
-        next_transitions[n] = MidiClock.div16th_counter -
-                              (gdt->seq_track->step_count *
-                               gdt->seq_track->get_speed_multiplier());
-        calc_next_slot_transition(n);
+    if ((select_array[n] == 0) || (grid_page.active_slots[n] == SLOT_DISABLED)) { continue; }
+      uint8_t dst = load_offset == 255 ? n : (n - first_slot) + load_offset;
+      GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
+      if (gdt_dst != nullptr) {
+        transition_level[dst] = 0;
+        next_transitions[dst] = MidiClock.div16th_counter -
+                              (gdt_dst->seq_track->step_count *
+                               gdt_dst->seq_track->get_speed_multiplier());
+        calc_next_slot_transition(dst);
       }
-    }
   }
   grid_task.last_active_row = row;
   grid_task.next_active_row = row;
@@ -694,7 +699,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
 
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
-                                   bool gui_update) {
+                                   uint8_t load_offset, bool gui_update) {
 
   uint8_t old_grid = proj.get_grid();
 
@@ -748,26 +753,26 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     proj.select_grid(grid_idx);
 
-    if (chains[n].is_mode_queue()) {
-      if (chains[n].get_length() == QUANT_LEN) {
-        if (links[n].loops == 0) {
-          links[n].loops = 1;
+    if (chains[dst].is_mode_queue()) {
+      if (chains[dst].get_length() == QUANT_LEN) {
+        if (links[dst].loops == 0) {
+          links[dst].loops = 1;
         }
-      } else if (chains[n].get_length() != QUANT_LEN) {
-        links[n].loops = 1;
-        links[n].length = (float)chains[n].get_length() /
+      } else if (chains[dst].get_length() != QUANT_LEN) {
+        links[dst].loops = 1;
+        links[dst].length = (float)chains[dst].get_length() /
                           (float)gdt->seq_track->get_speed_multiplier();
       }
-      chains[n].inc();
-      links[n].row = chains[n].get_row();
-      if (links[n].row == 255) {
+      chains[dst].inc();
+      links[dst].row = chains[dst].get_row();
+      if (links[dst].row == 255) {
         setLed2();
       }
     }
 
     // if (links[n].row >= GRID_LENGTH)
-    if (links[n].row >= GRID_LENGTH ||
-        links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
+    if (links[dst].row >= GRID_LENGTH ||
+        links[dst].row == grid_page.active_slots[dst] || links[dst].loops == 0)
       continue;
 
     EmptyTrack empty_track;
