@@ -67,9 +67,10 @@ void MCLActions::kit_reload(uint8_t pattern) {
 
 
 GridDeviceTrack *MCLActions::get_grid_dev_track(uint8_t slot_number) {
-
+  if (slot_number >= GRID_WIDTH * 2) { return nullptr; }
   uint8_t grid_idx = 0;
   if (slot_number >= GRID_WIDTH) { slot_number -= GRID_WIDTH; grid_idx = 1; }
+
   // Find first device that is hosting this slot_number.
 
   GridDeviceTrack *gdt = &proj.grids[grid_idx].tracks[slot_number];
@@ -282,15 +283,13 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
   DEBUG_PRINTLN(load_mode);
   uint8_t first_slot = 255;
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
-    GridDeviceTrack *gdt = get_grid_dev_track(n);
-    //    DEBUG_PRINTLN(slot_select_array[n]);
-    if ((slot_select_array[n] == 0) || gdt == nullptr) {
-      continue;
-    }
+    if ((slot_select_array[n] == 0)) { continue; }
     if (first_slot == 255) { first_slot = n; }
 
     uint8_t dst = load_offset == 255 ? n : (n - first_slot) + load_offset;
+    GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
 
+    if (gdt_dst == nullptr) { continue; }
     if (_row_array == nullptr) {
       row_array[n] = row;
     } else {
@@ -354,7 +353,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
 
     proj.select_grid(grid_idx);
 
-    if (gdt == nullptr || gdt_dst == nullptr || (grid_idx_dst != grid_idx)) {
+    if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) {
       // Ignore slots that are not device supported.
       slot_select_array[n] = 0;
       continue;
@@ -376,6 +375,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       if (device_track->get_parent_model() == gdt->track_type && device_track->allow_cast_to_parent()) {
         device_track->init_track_type(device_track->get_parent_model());
       }
+      if (load_offset != 255) { device_track->on_copy(track_idx, track_idx_dst, false); }
       device_track->transition_cache(track_idx_dst, dst);
       send_machine[dst] = 1;
     }
@@ -513,6 +513,7 @@ again:
 bool MCLActions::load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
                             GridDeviceTrack *gdt, GridDeviceTrack *gdt_dst, uint8_t *send_masks) {
   uint8_t track_idx = get_track_idx(i);
+  uint8_t track_idx_dst = get_track_idx(dst);
   EmptyTrack empty_track;
   auto *ptrack = empty_track.load_from_grid_512(track_idx, row);
 
@@ -527,15 +528,16 @@ bool MCLActions::load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
     empty_track.clear();
     if (ptrack->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
     ptrack->init_track_type(gdt->track_type);
-    ptrack->init(track_idx, gdt_dst->seq_track);
-    ptrack->load_immediate_cleared(track_idx, gdt_dst->seq_track);
+    ptrack->init(track_idx_dst, gdt_dst->seq_track);
+    ptrack->load_immediate_cleared(dst, gdt_dst->seq_track);
   } else {
     if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
       ptrack->init_track_type(ptrack->get_parent_model());
     }
     if (ptrack != nullptr) {
       send_masks[dst] = 1;
-      ptrack->load_immediate(track_idx, gdt_dst->seq_track);
+      if (i != dst) { ptrack->on_copy(track_idx, track_idx_dst, false); }
+      ptrack->load_immediate(track_idx_dst, gdt_dst->seq_track);
     }
   }
   if (ptrack != nullptr) {
@@ -583,7 +585,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
     uint8_t grid_idx_dst = get_grid_idx(dst);
 
-    if (gdt == nullptr || gdt_dst == nullptr || grid_idx_dst != grid_idx) { select_array[i] = 0; continue; }
+    if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { select_array[i] = 0; continue; }
 
     proj.select_grid(grid_idx);
 
@@ -735,7 +737,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     uint8_t grid_idx_dst = get_grid_idx(dst);
     uint8_t track_idx_dst = get_track_idx(dst);
 
-    if (gdt == nullptr || gdt_dst == nullptr || grid_idx != grid_idx_dst)
+    if (gdt == nullptr || gdt_dst == nullptr || gdt->track_type != gdt_dst->track_type)
       continue;
 
     //Assumes next transisiton is only 4 steps away
@@ -791,6 +793,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
         ptrack->init_track_type(ptrack->get_parent_model());
       }
+      if (load_offset != 255) { ptrack->on_copy(track_idx, track_idx_dst, false); }
       if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
         DEBUG_PRINTLN("comparing sound");
         if (ptrack->memcmp_sound(gdt_dst->mem_slot_idx) != 0) {
