@@ -45,7 +45,6 @@ void GridTask::load_queue_handler() {
       DEBUG_PRINTLN(row_select_array[n]);
     }
     mcl_actions.write_original = 1;
-    offset = 4;
     mcl_actions.load_tracks(255, track_select, row_select_array, mode, offset);
   }
 }
@@ -222,7 +221,9 @@ void GridTask::transition_handler() {
         }
         wait = false;
         if (transition_load(n, track_idx, gdt)) {
-          grid_page.active_slots[n] = slots_changed[n];
+          if (grid_page.active_slots[n] != SLOT_OFFSET_LOAD) {
+            grid_page.active_slots[n] = slots_changed[n];
+          }
         }
       }
     }
@@ -230,12 +231,11 @@ void GridTask::transition_handler() {
     DEBUG_PRINTLN((int)SP);
 
     bool update_gui = true;
-    uint8_t load_offset = 0;
 
     DEBUG_PRINTLN("cache next");
 
     volatile uint32_t clk = slowclock;
-    mcl_actions.cache_next_tracks(track_select_array,0, update_gui);
+    mcl_actions.cache_next_tracks(track_select_array, update_gui);
 
     uint32_t t = clock_diff(clk, slowclock);
     DEBUG_PRINTLN("time");

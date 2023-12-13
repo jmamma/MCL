@@ -44,8 +44,8 @@ void GridLoadPage::draw_popup() {
   strcpy(str, "GROUP LOAD");
 
   if (!show_track_type) {
-    strcpy(str, "LOAD FROM  ");
-    str[10] = 'X' + proj.get_grid();
+    strcpy(str, "LOAD TRACKS");
+    //str[10] = 'X' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true);
 }
@@ -112,8 +112,23 @@ void GridLoadPage::display() {
 
   if (show_track_type) {
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
-  } else {
-    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4 + 20, note_interface.notes_off | note_interface.notes_on );
+  }
+  else {
+    uint16_t trig_mask = note_interface.notes_off | note_interface.notes_on;
+    //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
+    //                              "STEP", K);
+    if (show_offset) {
+      oled_display.setFont();
+      oled_display.setCursor(MCLGUI::s_menu_x + 18, 12);
+      oled_display.print("DESTINATION");
+      trig_mask = 0;
+      SET_BIT16(trig_mask,offset);
+      //if (offset < 16) {
+       //  oled_display.setCursor(MCLGUI::s_menu_x + 4 + offset * MCLGUI::seq_w + 1, 16);
+        // oled_display.print(">");
+     // }
+    }
+    else {
 
 
     oled_display.setFont(&Elektrothic);
@@ -123,8 +138,6 @@ void GridLoadPage::display() {
     oled_display.setFont(&TomThumb);
     char K[4] = {'\0'};
 
-    //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
-    //                              "STEP", K);
 
     char modestr[7];
     get_modestr(modestr);
@@ -151,8 +164,9 @@ void GridLoadPage::display() {
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
                               MCLGUI::s_menu_y + 7, "QUANT", K);
 
-    oled_display.setFont(&TomThumb);
     // draw step count
+    }
+    oled_display.setFont(&TomThumb);
     uint8_t step_count =
         (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
         (64 *
@@ -161,6 +175,8 @@ void GridLoadPage::display() {
                            MCLGUI::s_menu_y + 4 + 17);
     oled_display.print(step_count);
 
+
+    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4 + 20, trig_mask );
     // draw data flow in the center
     /*
     oled_display.setCursor(48, MCLGUI::s_menu_y + 4 + 12);
@@ -181,10 +197,6 @@ void GridLoadPage::display() {
   oled_display.setFont(oldfont);
 }
 void GridLoadPage::load() {
-  //display_load();
-//  oled_display.display();
-  /// !Note, note_off_event has reentry issues, so we have to first set
-  /// the page to avoid driving this code path again.
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
@@ -202,7 +214,7 @@ void GridLoadPage::load() {
   mcl.setPage(GRID_PAGE);
   trig_interface.off();
 
-  grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(), track_select_array);
+  grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(), track_select_array, offset);
 }
 
 void GridLoadPage::group_select() {
@@ -212,7 +224,7 @@ void GridLoadPage::group_select() {
   MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 
-void GridLoadPage::group_load(uint8_t row) {
+void GridLoadPage::group_load(uint8_t row, uint8_t offset_) {
 
   if (row >= GRID_LENGTH) { return; }
   uint8_t track_select_array[NUM_SLOTS] = {0};
@@ -224,7 +236,7 @@ void GridLoadPage::group_load(uint8_t row) {
   //oled_display.display();
 
   mcl_actions.write_original = 1;
-  grid_task.load_queue.put(mcl_cfg.load_mode, row, track_select_array);
+  grid_task.load_queue.put(mcl_cfg.load_mode, row, track_select_array, offset);
 }
 
 bool GridLoadPage::handleEvent(gui_event_t *event) {
@@ -240,6 +252,14 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
       default: {
         mcl.setPage(GRID_PAGE);
         return false;
+      }
+      case MDX_KEY_FUNC: {
+        if (mcl_cfg.load_mode == LOAD_MANUAL) {
+          show_offset = !show_offset;
+          note_interface.init_notes();
+          if (show_offset) { offset = 255; }
+        }
+        return true;
       }
       case MDX_KEY_YES: {
         group_select();
@@ -273,7 +293,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
   load_groups:
     trig_interface.off();
 
-    group_load(grid_page.getRow());
+    group_load(grid_page.getRow(), offset);
     grid_task.load_queue_handler();
     grid_task.transition_handler();
     mcl.setPage(GRID_PAGE);

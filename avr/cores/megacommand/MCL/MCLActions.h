@@ -112,7 +112,7 @@ public:
                               uint8_t *row_array = nullptr, uint8_t load_offset = 0);
   void manual_transition(uint8_t *slot_select_array, uint8_t *row_array, uint8_t load_offset);
 
-  void cache_next_tracks(uint8_t *slot_select_array, uint8_t load_offset, bool gui_update = false);
+  void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
   void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false,
                                  bool ignore_overflow = false);
   void calc_next_transition();

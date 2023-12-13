@@ -11,8 +11,9 @@
 
 #define SLOT_DISABLED 255
 #define SLOT_PENDING 254
-#define SLOT_RAM_RECORD 253
-#define SLOT_RAM_PLAY 252
+#define SLOT_OFFSET_LOAD 253
+#define SLOT_RAM_RECORD 252
+#define SLOT_RAM_PLAY 251
 
 class GridPage : public LightPage {
 public:

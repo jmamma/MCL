@@ -8,8 +8,8 @@
 
 class LoadQueueModes {
   public:
-  uint8_t mode : 4;
-  uint8_t offset : 4;
+  uint8_t mode;
+  uint8_t offset;
 };
 
 class LoadQueue {
@@ -40,7 +40,7 @@ class LoadQueue {
   }
 
 
-  void put(uint8_t mode, uint8_t row, uint8_t *track_select_array) {
+  void put(uint8_t mode, uint8_t row, uint8_t *track_select_array, uint8_t offset = 255) {
     if (full) { return; }
 
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -48,7 +48,7 @@ class LoadQueue {
        if (track_select_array[n]) { row_selects[wr][n] = row; }
     }
     modes[wr].mode = mode;
-    modes[wr++].offset = 255;
+    modes[wr++].offset = offset;
     if (wr == NUM_LINKS) {
        wr = 0;
     }
