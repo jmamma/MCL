@@ -178,15 +178,16 @@ void SampleBrowserPage::send_sample(int slot, char *newname, bool silent) {
 
 void SampleBrowserPage::recv_wav(int slot, bool silent) {
   //limit len to 16 char.
-  char wav_name[16] = "";
+  const uint8_t len = 16;
+  char wav_name[len] = "";
   // should be of form "ID - NAME..."
   //                      ^--~~~~~~~
   //                         memmove
   get_entry(slot, wav_name);
-  memmove(wav_name + 2, wav_name + 5, FILE_ENTRY_SIZE - 5);
-  wav_name[FILE_ENTRY_SIZE - 3] = '\0';
-  wav_name[FILE_ENTRY_SIZE - 2] = '\0';
-  wav_name[FILE_ENTRY_SIZE - 1] = '\0';
+  memmove(wav_name + 2, wav_name + 5, len - 5);
+  wav_name[len - 3] = '\0';
+  wav_name[len - 2] = '\0';
+  wav_name[len - 1] = '\0';
 
   if (!silent) {
     if (!mcl_gui.wait_for_input(wav_name, "Sample Name",
