@@ -1,6 +1,6 @@
 MCL 4.51 01/12/2023
 
-Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
+Please upgrade to Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
 
 - Changes:
 
@@ -16,6 +16,8 @@ Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
   Minimum transition load latency reduced from approximately two 16th notes, to exactly half a 16th note per device.
 
   More reliable transitions, and better slot loading responsiveness.
+
+  Load Page - Press [ Function ] to select the destination track offset for next load.
 
   Sample transfers between MCL and MD can be cancelled by pressing MCL button < SAVE/NO >
 
@@ -77,7 +79,7 @@ Please install Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
 
 MCL 4.50 24/07/2023
 
-Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
+Please upgrade to Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
 - Performance Page + Performance Controllers
   A new Performance Page has been added featuring 8 Scenes (1->8) that are shared
@@ -297,7 +299,7 @@ MCL 4.41 10/03/2023
 
 MCL 4.40 25/02/2023
 
-Please install Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.40.
+Please upgrade to Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.40.
 Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
 
 - Improvements:
@@ -324,7 +326,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
 MCL 4.30 12/01/2023
 
-Please install Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.30.
+Please upgrade to Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.30.
 Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
 
 - Fixes:
@@ -342,7 +344,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
 MCL 4.20 14/07/2022
 
-Please install Machinedrum OS X.07 & Monomachine OS X.01 before using MCL 4.20.
+Please upgrade to Machinedrum OS X.07 & Monomachine OS X.01 before using MCL 4.20.
 Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
 
 - Fixes:
@@ -420,7 +422,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
 MCL 4.11 30/03/2022
 
-Please install Machinedrum OS X.06 before using MCL 4.11
+Please upgrade to Machinedrum OS X.06 before using MCL 4.11
 
 - Bug Fixes:
 
@@ -453,7 +455,7 @@ Please install Machinedrum OS X.06 before using MCL 4.11
 
 MCL 4.10 19/03/2022
 
-Please install Machinedrum OS X.06 before using MCL 4.10
+Please upgrade to Machinedrum OS X.06 before using MCL 4.10
 
 - Key Binding Changes:
 
