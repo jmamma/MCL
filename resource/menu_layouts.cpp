@@ -185,7 +185,7 @@ menu_t<file_menu_page_N> file_menu_layout = {
     {
         //            m  r  n  d  p  f  o
         {"CANCEL",    0, 0, 0, 0, NULL_PAGE, 0, 0},
-        {"NEW DIR.",  0, 0, 0, 0, NULL_PAGE, 0, 0},
+        {"NEW DIR",   0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"DELETE",    0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"RENAME",    0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"RECV ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},

@@ -163,8 +163,8 @@ void FileBrowserPage::init() {
 }
 
 void FileBrowserPage::draw_menu() {
-  oled_display.fillRect(0, 3, 45, 28, BLACK);
-  oled_display.drawRect(1, 4, 43, 26, WHITE);
+  oled_display.fillRect(0, 3, 45, 29, BLACK);
+  oled_display.drawRect(1, 4, 43, 27, WHITE);
   file_menu_page.draw_menu(6, 12, 39);
   oled_display.display();
 }
