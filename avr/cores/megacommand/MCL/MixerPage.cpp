@@ -87,6 +87,7 @@ void MixerPage::cleanup() {
   disable_record_mutes();
   trig_interface.off();
   ext_key_down = 0;
+  mute_toggle = 0;
 }
 
 void MixerPage::set_level(int curtrack, int value) {
@@ -519,7 +520,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED && track < len) {
       if (note_interface.is_note(track)) {
         if (show_mixer_menu || preview_mute_set != 255 || ext_key_down) {
-
+          if (ext_key_down) { mute_toggle = 1; }
           SeqTrack *seq_track = is_md_device
                                     ? (SeqTrack *)&mcl_seq.md_tracks[track]
                                     : (SeqTrack *)&mcl_seq.ext_tracks[track];
@@ -593,11 +594,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_EXTENDED: {
         DEBUG_PRINTLN("key extended");
-        if (note_interface.notes_on == 0) {
-            if (last_page != NULL_PAGE) { mcl.setPage(last_page); last_page = NULL_PAGE; } 
-            else { mcl.setPage(GRID_PAGE); }
-            return true;
-        }
+        ext_key_down = 1;
+        redraw();
         if (midi_device == &MD) {
           for (uint8_t i = 0; i < 16; i++) {
             if (note_interface.is_note_on(i)) {
@@ -693,7 +691,14 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         goto global_release;
       }
       case MDX_KEY_EXTENDED: {
+
         ext_key_down = 0;
+        if (note_interface.notes_on == 0 && !mute_toggle) {
+            if (last_page != NULL_PAGE) { mcl.setPage(last_page); last_page = NULL_PAGE; } 
+            else { mcl.setPage(GRID_PAGE); }
+            return true;
+        }
+        mute_toggle = 0;
         if (!show_mixer_menu && preview_mute_set == 255) {
          trig_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
         }

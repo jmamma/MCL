@@ -214,6 +214,7 @@ bool mcl_handleEvent(gui_event_t *event) {
           mixer_page.last_page = mcl.currentPage();
           mcl.setPage(MIXER_PAGE);
           mixer_page.ext_key_down = 1;
+          mixer_page.mute_toggle = 1;
           return true;
         }
         break;
