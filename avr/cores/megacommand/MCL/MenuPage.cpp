@@ -69,6 +69,11 @@ void MenuPageBase::gen_menu_row_names() {
 
 void MenuPageBase::setup() {}
 
+void MenuPageBase::cleanup() {
+  trig_interface.ignoreNextEventClear(MDX_KEY_YES);
+  trig_interface.ignoreNextEventClear(MDX_KEY_NO);
+}
+
 void MenuPageBase::loop() {
 
   if (encoders[1]->hasChanged()) {
@@ -220,10 +225,10 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_YES:
-      //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        trig_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES;
       case MDX_KEY_NO:
-      //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        trig_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
           encoders[1]->cur -= inc;
