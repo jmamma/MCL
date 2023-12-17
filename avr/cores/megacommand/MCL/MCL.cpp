@@ -353,6 +353,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_FUNCEXTENDED: {
+        trig_interface.ignoreNextEvent(MDX_KEY_EXTENDED);
         MD.restore_kit_params();
         break;
       }
@@ -373,9 +374,14 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_REALTIME: {
         return true;
       }
+      case MDX_KEY_FUNCEXTENDED: {
+        trig_interface.ignoreNextEventClear(MDX_KEY_EXTENDED);
+        return true;
+      }
       }
     }
   }
+  return false;
 }
 
 MCL mcl;
