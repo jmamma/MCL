@@ -188,7 +188,9 @@ void OscPage::display() {
     if (enc2.cur < 0) {
       oled_display.print(F("+"));
     }
-    oled_display.print(-1 * enc2.cur);
+    if (enc2.cur != 0) {
+      oled_display.print(-1 * enc2.cur);
+    }
   }
   //  GUI.put_string_at(0, my_str);
   WavDesignerPage::display();
