@@ -35,6 +35,8 @@ Please upgrade to Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.5
   TURBO MIDI speeds will now be enabled on MIDI port 2, when Generic Driver is
   selected. This activates TURBO MIDI for compatible machines that we haven't implemented a specific driver for.
 
+  PianoRoll, added step delete [ Trig ] + [ Clear ]
+
 - Bug Fixes:
 
   New Project creation could fail.

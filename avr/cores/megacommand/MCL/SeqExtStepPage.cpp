@@ -74,6 +74,7 @@ void SeqExtStepPage::init() {
   midi_device = midi_active_peering.get_device(UART2_PORT);
 
   SeqPage::init();
+  MD.set_rec_mode(3);
   param_select = PARAM_OFF;
   trig_interface.on();
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
@@ -87,6 +88,7 @@ void SeqExtStepPage::init() {
 
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
+  MD.set_rec_mode(0);
 //  midi_events.remove_callbacks();
 }
 
@@ -942,6 +944,12 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             w = timing_mid / 2;
           }
           pos_cur_w(w);
+          return true;
+        }
+        case MDX_KEY_CLEAR: {
+          for (uint8_t n = 0; n < 127; n++) {
+            active_track.del_note(cur_x, w - 1, n);
+          }
           return true;
         }
         }
