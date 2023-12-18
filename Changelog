@@ -11,7 +11,7 @@ Please upgrade to Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.5
 
   When the sequencer is running the Mixer page can be opened and closed by pressing [ Classic/Extended ].
 
-  Holding [ Classic/Extended ] + [ Trig ] for fast for mute toggles.
+  Hold down [ Classic/Extended ] + [ Trig ] for fast for mute toggles.
 
   Minimum transition load latency reduced from approximately two 16th notes, to exactly half a 16th note per device.
 
@@ -68,6 +68,8 @@ Please upgrade to Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.5
   PerfEncoder scene assignment was not distributed correctly when loading a blank PF slot.
 
   Parameter lock parameters should be reverted correctly on sequencer stop.
+
+  Tracks triggered manually would not use the unlocked parameter values.
 
   Sequencer: Don't allow paste before copy.
 
