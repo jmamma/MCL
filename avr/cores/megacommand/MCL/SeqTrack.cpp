@@ -191,6 +191,7 @@ bool SeqTrack::conditional(uint8_t condition) {
     if (iterations_8 == 8) {
       send_note = true;
     }
+    break;
   case 5:
     if (iterations_5 == 5) {
       send_note = true;

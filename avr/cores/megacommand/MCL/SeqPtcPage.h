@@ -59,6 +59,7 @@ public:
   uint8_t fine_tunes[NUM_DEVS];
 
   uint8_t find_arp_track(uint8_t channel_event);
+  MidiDevice *last_midi_device = nullptr;
 
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
@@ -71,9 +72,8 @@ public:
   uint8_t get_next_voice(uint8_t pitch, uint8_t track_number, uint8_t channel_event);
   uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
 
-  void trig_md(uint8_t note_num, uint8_t track_number = 255,
+  void trig_md(uint8_t note_num, uint8_t track_number = 255, uint8_t channel_event = CTRL_EVENT,
                uint8_t fine_tune = 255, MidiUartParent *uart_ = nullptr);
-  void trig_md_fromext(uint8_t note_num, uint8_t channel_event);
 
   void note_on_ext(uint8_t note_num, uint8_t velocity,
                    uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);

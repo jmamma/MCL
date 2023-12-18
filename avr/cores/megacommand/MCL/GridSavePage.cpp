@@ -18,8 +18,7 @@ void GridSavePage::draw_popup() {
   char str[16] = "GROUP SAVE";
 
   if (!show_track_type) {
-    strcpy(str, "SAVE TO  ");
-    str[8] = 'X' + proj.get_grid();
+    strcpy(str, "SAVE TRACKS");
   }
   mcl_gui.draw_popup(str, true);
 }
@@ -79,7 +78,7 @@ void GridSavePage::display() {
 }
 
 void GridSavePage::save() {
-  oled_display.textbox("SAVE SLOTS", "");
+  oled_display.textbox("SAVE TRACKS", "");
   oled_display.display();
 
   uint8_t save_mode = SAVE_SEQ;
@@ -127,6 +126,9 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         group_select();
         return true;
       }
+      case MDX_KEY_EXTENDED: {
+        return false;
+      }
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {
@@ -165,4 +167,5 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     mcl.setPage(GRID_PAGE);
     return true;
   }
+  return false;
 }

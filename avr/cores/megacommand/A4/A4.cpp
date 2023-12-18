@@ -105,7 +105,7 @@ bool A4Class::probe() {
   if (getBlockingSettings(0)) {
     connected = true;
     DEBUG_DUMP(connected);
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo), uart);
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed), uart);
   }
   return connected;
 }
@@ -230,7 +230,7 @@ bool A4Class::getBlockingSettingsX(uint8_t settings, uint16_t timeout) {
 }
 void A4Class::muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {
   if (uart_ == nullptr) { uart_ = uart; }
-  uart->sendCC(track, 94, mute ? 1 : 0);
+  uart->sendCC(track, 94, mute);
 }
 
 void A4Class::setLevel(uint8_t track, uint8_t value) {

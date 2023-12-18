@@ -83,6 +83,7 @@ uint8_t MCLSeq::find_ext_track(uint8_t channel) {
 void MCLSeq::onMidiContinueCallback() {
   update_params();
   seq_rec_play();
+  SET_BIT16(MDSeqTrack::gui_update, last_md_track); //force cursor resync
 }
 
 void MCLSeq::onMidiStartImmediateCallback() {
@@ -146,12 +147,17 @@ void MCLSeq::onMidiStopCallback() {
   MD.reset_dsp_params();
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].reset_params();
     md_tracks[i].locks_slides_recalc = 255;
     for (uint8_t c = 0; c < NUM_LOCKS; c++) {
       md_tracks[i].locks_slide_data[c].init();
     }
   }
 #ifdef LFO_TRACKS
+  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].reset_params();
+  }
+
 #endif
 }
 
@@ -296,6 +302,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (mcl.currentPage() == MIXER_PAGE) {
     mixer_page.onControlChangeCallback_Midi(track, track_param, value);
   }
+  ram_page_a.onControlChangeCallback_Midi(track, track_param, value);
 
   if (track_param == 32) { // Mute
     mcl_seq.md_tracks[track].mute_state = value > 0;
@@ -326,7 +333,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
 
   if (param == midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
-    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
       if (mcl_seq.ext_tracks[n].channel != channel) {
         continue;
       }
@@ -343,6 +350,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
             mixer_page.mute_sets[1].mutes[mixer_page.current_mute_set], n);
       }
     }
+    mixer_page.redraw_mutes = true;
     return;
   }
 

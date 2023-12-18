@@ -268,7 +268,7 @@ void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
   // trigleds[7..13]
   data[3] = (bitmask >> 7) & 0x7F;
   // trigleds[14..15]
-  data[4] = (bitmask >> 14) | (mode << 2) | (blink << 4);
+  data[4] = (bitmask >> 14) | (mode << 2) | (blink << 5);
   sendRequest(data, sizeof(data));
   // waitBlocking();
 }

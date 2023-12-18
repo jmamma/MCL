@@ -107,50 +107,54 @@ bool MCLSysConfig::cfg_init() {
 
   char my_string[16] = "/project000.mcl";
 
+  memset((uint8_t *)&version, 0, sizeof(MCLSysConfigData)); //<---- flush zero to config
+
   version = CONFIG_VERSION;
-  number_projects = 0;
+  //number_projects = 0;
   strncpy(project, my_string, 16);
-  clock_send = 0;
-  clock_rec = 0;
-  uart1_turbo = 3;
-  uart2_turbo = 3;
-  usb_turbo = 3;
-  col = 0;
-  row = 0;
-  cur_row = 0;
-  cur_col = 0;
+  //clock_send = 0;
+  //clock_rec = 0;
+  uart1_turbo_speed = 3;
+  //uart2_turbo_speed = 0;
+  usb_turbo_speed = 3;
+  //col = 0;
+  //row = 0;
+  //cur_row = 0;
+  //cur_col = 0;
   memset(&routing, 6, sizeof(routing));
-  poly_mask = 0;
+  //poly_mask = 0;
   uart2_ctrl_chan = MIDI_LOCAL_MODE;
   uart2_poly_chan = MIDI_LOCAL_MODE;
   uart2_prg_in = MIDI_LOCAL_MODE;
   uart2_prg_out = MIDI_LOCAL_MODE;
-  mutes = 0;
-  display_mirror = 0;
-  rec_quant = 0;
+  //mutes = 0;
+  //display_mirror = 0;
+  //rec_quant = 0;
   tempo = 125;
 
-  midi_forward_1 = 0;
-  midi_forward_2 = 0;
-  midi_forward_usb = 0;
+  //midi_forward_1 = 0;
+  //midi_forward_2 = 0;
+  //midi_forward_usb = 0;
 
   rec_automation = 1;
   auto_normalize = 1;
   load_mode = LOAD_MANUAL;
   chain_queue_length = 1;
   chain_load_quant = 16;
-  ram_page_mode = 0;
+  //ram_page_mode = 0;
   track_select = 1;
   track_type_select = 0b00000011;
-  uart2_device = 0;
-  uart_cc_loopback = 0;
-  uart2_prg_mode = 0;
+  //uart2_device = 0;
+  //uart_cc_loopback = 0;
+  //uart2_prg_mode = 0;
   usb_mode = USB_SERIAL;
-  midi_transport_rec = 0;
-  midi_transport_send = 0;
+  //midi_transport_rec = 0;
+  //midi_transport_send = 0;
   midi_ctrl_port = 1;
-  md_trig_channel = 0;
-  seq_dev = 0;
+  //md_trig_channel = 0;
+  //seq_dev = 0;
+  uart2_cc_mute = 128;
+  uart2_cc_level = 128;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

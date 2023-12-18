@@ -74,6 +74,7 @@ void SeqExtStepPage::init() {
   midi_device = midi_active_peering.get_device(UART2_PORT);
 
   SeqPage::init();
+  MD.set_rec_mode(3);
   param_select = PARAM_OFF;
   trig_interface.on();
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
@@ -87,6 +88,7 @@ void SeqExtStepPage::init() {
 
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
+  MD.set_rec_mode(0);
 //  midi_events.remove_callbacks();
 }
 
@@ -759,7 +761,6 @@ void SeqExtStepPage::display() {
   mcl_gui.put_value_at(cur_x/timing_mid + 1,info1);
   epoch = active_track.epoch;
   if (pianoroll_mode == 0) {
-    MusicalNotes number_to_note;
     uint8_t oct = cur_y / 12;
     uint8_t note = cur_y - 12 * (cur_y / 12);
     char str[4] = " ";
@@ -945,6 +946,12 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           pos_cur_w(w);
           return true;
         }
+        case MDX_KEY_CLEAR: {
+          for (uint8_t n = 0; n < 127; n++) {
+            active_track.del_note(cur_x, w - 1, n);
+          }
+          return true;
+        }
         }
       } else {
         switch (key) {
@@ -1050,6 +1057,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   if (SeqPage::handleEvent(event)) {
     return true;
   }
+  return false;
 }
 
 void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {

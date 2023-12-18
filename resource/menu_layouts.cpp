@@ -75,6 +75,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
         {"ROUTING", 0, 0, 0, 0, MIDIROUTE_MENU_PAGE, 0, 0},
         {"PROGRAM", 0, 0, 0, 0, MIDIPROGRAM_MENU_PAGE, 0, 0},
         {"MD MIDI", 0, 0, 0, 0, MIDIMACHINEDRUM_MENU_PAGE, 0 ,0},
+        {"GENRAL MIDI", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
     },
     0
 };
@@ -138,6 +139,16 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
     24
 };
 
+menu_t<midigeneric_menu_page_N> midigeneric_menu_layout = {
+    "GEN MIDI",
+    {
+        //              m  r   n  d  p  f  o
+        {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 121},
+    },
+    24
+};
+
+
 menu_t<md_config_page_N> mdconfig_menu_layout = {
     "MD",
     {
@@ -154,7 +165,7 @@ menu_t<md_import_page_N> mdimport_menu_layout = {
         //         m  r       n  d  p  f  o
         {"SRC: ",  0, 128, 128, 43, NULL_PAGE, 0, 128},
         {"DEST: ", 0, 128, 128, 44, NULL_PAGE, 0, 128},
-        {"COUNT:", 1, 128,  0,  45, NULL_PAGE, 0, 0},
+        {"COUNT:", 1, 129,  0,  45, NULL_PAGE, 0, 0},
         {"RUN",    0,   0,  0,   0, NULL_PAGE, 25, 0},
     },
     0
@@ -174,10 +185,9 @@ menu_t<file_menu_page_N> file_menu_layout = {
     {
         //            m  r  n  d  p  f  o
         {"CANCEL",    0, 0, 0, 0, NULL_PAGE, 0, 0},
-        {"NEW DIR.",  0, 0, 0, 0, NULL_PAGE, 0, 0},
+        {"NEW DIR",   0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"DELETE",    0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"RENAME",    0, 0, 0, 0, NULL_PAGE, 0, 0},
-        {"OVERWRITE", 0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"RECV ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"SEND ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},
     },

@@ -50,10 +50,10 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
     //  if (show_menu) {
         switch (key) {
         case MDX_KEY_DOWN:
-          encoders[1]->cur -= inc;
+          encoders[1]->cur += inc;
           break;
         case MDX_KEY_UP:
-          encoders[1]->cur += inc;
+          encoders[1]->cur -= inc;
           break;
         case MDX_KEY_LEFT:
           encoders[0]->cur -= inc;

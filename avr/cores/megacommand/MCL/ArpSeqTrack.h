@@ -25,6 +25,7 @@
 #define ARP_UP2 15
 #define ARP_DOWN2 16
 #define ARP_RND 17
+#define ARP_RND2 18
 
 #define ARP_ON 1
 #define ARP_LATCH 2
@@ -39,8 +40,8 @@ class ArpSeqData {
 
   uint8_t enabled : 4;
   uint8_t range : 4;
-  uint8_t oct : 4;
-  uint8_t mode : 4;
+  uint8_t oct;
+  uint8_t mode;
 
   uint8_t fine_tune;
   uint64_t note_mask[2]; //input notes
@@ -67,7 +68,7 @@ public:
 
   void init() {
     speed = SEQ_SPEED_2X;
-    length = 1;
+    length = 2;
     enabled = false;
     range = 0;
     oct = 1;

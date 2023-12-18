@@ -15,7 +15,7 @@ class GridLoadPage : public GridIOPage {
  void get_modestr(char *modestr);
  void load();
  void group_select();
- void group_load(uint8_t row);
+ void group_load(uint8_t row, uint8_t offset_ = 255);
  bool handleEvent(gui_event_t *event);
  void get_mode_str(char *str, uint8_t mode);
  void display_load();

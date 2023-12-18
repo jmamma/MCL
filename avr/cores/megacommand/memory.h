@@ -179,7 +179,10 @@ FORCED_INLINE() extern inline uint8_t get_random_byte() {
     return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ slowclock);
 }
 
-extern inline uint8_t get_random(uint8_t range) { return get_random_byte() % range; }
+extern inline uint8_t get_random(uint8_t range) {
+    uint8_t randomValue = get_random_byte();
+    return (uint8_t)((uint16_t)randomValue * range / 256);
+}
 
 #endif// __cplusplus
 

@@ -38,8 +38,9 @@ void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   max_length = len;
   strncpy(text, text_, len);
   //Replace null characeters with space, it will be added back in upon exit.
+  bool after = false;
   for (uint8_t n = 0; n < len; n++) {
-    if (text[n] == '\0') { text[n] = ' '; }
+    if (text[n] == '\0' || after) { text[n] = ' '; after = true; }
   }
   text[sizeof(text) - 1] = '\0';
   cursor_position = 0;

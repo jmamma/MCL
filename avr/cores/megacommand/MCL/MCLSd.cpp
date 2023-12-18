@@ -94,91 +94,69 @@ bool MCLSd::load_init() {
 }
 
 bool MCLSd::seek(uint32_t pos, File *filep) {
-  bool pass = false;
   bool ret;
-  for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
-    DEBUG_CHECK_STACK();
-    if (!filep) { DEBUG_PRINTLN(F("huh")); }
-    ret = filep->seekSet(pos);
-    if (!ret) {
-      //SD.cardBegin(SD_CS, SPI_FULL_SPEED);
-      //oled_display.textbox("SEEK RETRY", "");
-      //oled_display.display();
-      DEBUG_PRINTLN("seek retry");
-      DEBUG_PRINTLN(pos);
-      delay(20);
-      continue;
-    }
-    pass = true;
-    break;
+  uint8_t n = 0;
+  if (!filep) {
+    DEBUG_PRINTLN(F("huh"));
+    return false;
   }
-  return pass;
+
+  do {
+    DEBUG_CHECK_STACK();
+    ret = filep->seekSet(pos);
+    if (ret) {
+      return true;
+    }
+    DEBUG_PRINTLN("seek retry");
+    DEBUG_PRINTLN(pos);
+    delay(20);
+    n++;
+  } while (n < SD_MAX_RETRIES);
+
+  return false;
 }
 
 bool MCLSd::write_data(void *data, size_t len, File *filep) {
-
-  size_t b;
-  bool pass = false;
   bool ret;
   uint32_t pos = filep->curPosition();
+  uint8_t n = 0;
 
-  for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
-    if (n > 0) {
-      DEBUG_PRINTLN("write retry");
-      //SD.cardBegin(SD_CS, SPI_FULL_SPEED);
-      //oled_display.textbox("WRITE RETRY", "");
-      //oled_display.display();
-      delay(20);
+  do {
+    size_t b = filep->write((uint8_t *)data, len);
+    if (b == len) {
+      return true;
     }
-    if (pos != filep->curPosition()) {
-      ret = filep->seekSet(pos);
-      if (!ret)
-        continue;
-    }
-    b = filep->write((uint8_t *)data, len);
-    if (b != len) {
-      write_fail++;
-      continue;
-    }
-    pass = true;
-    break;
-  }
+    DEBUG_PRINTLN("write retry");
+    delay(20);
+    write_fail++;
+    ret = filep->seekSet(pos);
+    n++;
+  } while (n < SD_MAX_RETRIES);
 
-  return pass;
+  return false;
 }
+
 /*
    Function for reading from the project file
 */
 bool MCLSd::read_data(void *data, size_t len, File *filep) {
-
-  size_t b;
   bool ret;
   uint32_t pos = filep->curPosition();
+  uint8_t n = 0;
 
-  bool pass = false;
-  for (uint8_t n = 0; n < SD_MAX_RETRIES; n++) {
-    if (n > 0) {
-      DEBUG_PRINTLN("read retry");
-      //SD.cardBegin(SD_CS, SPI_FULL_SPEED);
-      //oled_display.textbox("READ RETRY", "");
-      //oled_display.display();
-      delay(20);
+  do {
+    size_t b = filep->read((uint8_t *)data, len);
+    if (b == len) {
+      return true;
     }
-    if (pos != filep->curPosition()) {
-      ret = filep->seekSet(pos);
-      if (!ret)
-        continue;
-    }
-    b = filep->read((uint8_t *)data, len);
-    if (b != len) {
-      read_fail++;
-      continue;
-    }
-    pass = true;
-    break;
-  }
+    DEBUG_PRINTLN("read retry");
+    delay(20);
+    read_fail++;
+    ret = filep->seekSet(pos);
+    n++;
+  } while (n < SD_MAX_RETRIES);
 
-  return pass;
+  return false;
 }
 
 MCLSd mcl_sd;

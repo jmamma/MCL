@@ -1,6 +1,46 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
+uint8_t *GenericMidiDevice::icon() { return R.icons_device->icon_turbo; }
+
+bool GenericMidiDevice::probe() {
+  if (mcl_cfg.uart2_turbo_speed) {
+    mcl_gui.delay_progress(1200);
+    connected = true;
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed),
+                          uart);
+  }
+  return true;
+}
+
+uint8_t GenericMidiDevice::get_mute_cc() {
+  return mcl_cfg.uart2_cc_mute > 127 ? 255 : mcl_cfg.uart2_cc_mute;
+}
+
+void GenericMidiDevice::muteTrack(uint8_t track, bool mute = true,
+                                  MidiUartParent *uart_ = nullptr) {
+  if (track >= NUM_EXT_TRACKS || mcl_cfg.uart2_cc_mute > 127) {
+    return;
+  }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
+  uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_mute,
+                mute ? 127 : 0);
+};
+
+void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
+                                         MidiUartParent *uart_ = nullptr) {
+  if (track >= NUM_EXT_TRACKS || mcl_cfg.uart2_cc_level > 127) {
+    return;
+  }
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
+  uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_level,
+                value);
+}
+
 void GenericMidiDevice::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 1;
   GridDeviceTrack gdt;
@@ -13,31 +53,31 @@ void GenericMidiDevice::init_grid_devices(uint8_t device_idx) {
 
 /// It is the caller's responsibility to check for null MidiUart device
 static MidiUartParent *_getMidiUart(uint8_t port) {
+  MidiUartParent *ret = nullptr;
   if (port == UART1_PORT)
-    return &MidiUart;
+    ret = &MidiUart;
 #ifdef EXT_TRACKS
   else if (port == UART2_PORT)
-    return &MidiUart2;
+    ret = &MidiUart2;
 #endif
-  else
-    return nullptr;
+  return ret;
 }
 
 /// It is the caller's responsibility to check for null MidiClass device
 static MidiClass *_getMidiClass(uint8_t port) {
+  MidiClass *ret = nullptr;
   if (port == UART1_PORT)
-    return &Midi;
+    ret = &Midi;
 #ifdef EXT_TRACKS
   else if (port == UART2_PORT)
-    return &Midi2;
+    ret = &Midi2;
 #endif
-  else
-    return nullptr;
+  return ret;
 }
 
 static bool resource_loaded = false;
 static size_t resource_size = 0;
-static void prepare_display(uint8_t* buf) {
+static void prepare_display(uint8_t *buf) {
   oled_display.clearDisplay();
   oled_display.setFont();
   oled_display.setCursor(60, 10);
@@ -60,14 +100,20 @@ static MidiDevice *port2_drivers[] = {
     &generic_midi_device,
 };
 
+static MidiDevice *generic_drivers[] = {
+    &generic_midi_device,
+};
+
 static MidiDevice *connected_midi_devices[2] = {&null_midi_device,
                                                 &null_midi_device};
 
 void MidiActivePeering::disconnect(uint8_t port) {
-        DEBUG_PRINTLN("disconnect");
-        DEBUG_PRINTLN(port);
+  DEBUG_PRINTLN("disconnect");
+  DEBUG_PRINTLN(port);
   MidiUartClass *pmidi = _getMidiUart(port);
-  if (!pmidi) { return; }
+  if (!pmidi) {
+    return;
+  }
   MidiDevice **drivers;
   uint8_t nr_drivers = 1;
   if (port == UART1_PORT) {
@@ -79,7 +125,7 @@ void MidiActivePeering::disconnect(uint8_t port) {
   for (size_t i = 0; i < nr_drivers; ++i) {
     if (drivers[i]->connected) {
       if (midi_active_peering.get_device(port)->asElektronDevice()) {
-         turbo_light.set_speed(0, pmidi);
+        turbo_light.set_speed(0, pmidi);
       }
       drivers[i]->disconnect(port - 1);
     }
@@ -104,7 +150,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
 }
 
 static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
-                      MidiDevice **active_device, uint8_t* resource_buf) {
+                      MidiDevice **active_device, uint8_t *resource_buf) {
   MidiUartClass *pmidi = _getMidiUart(port);
   auto *pmidi_class = _getMidiClass(port);
   if (!pmidi || !pmidi_class)
@@ -114,9 +160,9 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
   if (id != DEVICE_NULL && pmidi->recvActiveSenseTimer > 300 &&
       pmidi->speed > 31250) {
 
-
-    if ((port == UART1_PORT && MidiClock.uart_clock_recv == pmidi) || (port == UART2_PORT && MidiClock.uart_clock_recv == pmidi)) {
-      //Disable MidiClock/Transport on disconnected port.
+    if ((port == UART1_PORT && MidiClock.uart_clock_recv == pmidi) ||
+        (port == UART2_PORT && MidiClock.uart_clock_recv == pmidi)) {
+      // Disable MidiClock/Transport on disconnected port.
       MidiClock.uart_clock_recv = nullptr;
       MidiClock.init();
     }
@@ -126,7 +172,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       if (drivers[i]->connected)
         drivers[i]->disconnect(port - 1);
     }
-   // reset MidiID to none
+    // reset MidiID to none
     pmidi->device.init();
     // reset connected device to /dev/null
     *active_device = &null_midi_device;
@@ -138,7 +184,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
 
       auto oldfont = oled_display.getFont();
       prepare_display(resource_buf);
-      uint8_t* icon = drivers[i]->icon();
+      uint8_t *icon = drivers[i]->icon();
       if (icon) {
         oled_display.drawBitmap(14, 8, icon, 34, 42, WHITE);
       }
@@ -157,7 +203,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
         pmidi->device.set_name(drivers[i]->name);
         drivers[i]->init_grid_devices(port - 1);
         *active_device = drivers[i];
-        //Re-enable MidiClock/Transport recv
+        // Re-enable MidiClock/Transport recv
         midi_setup.cfg_clock_recv();
         break;
       }
@@ -186,22 +232,31 @@ void MidiActivePeering::run() {
   byte resource_buf[RM_BUFSIZE];
   resource_loaded = false;
 
-  //Setting USB turbo speed too early can cause OS upload to fail
+  // Setting USB turbo speed too early can cause OS upload to fail
 #ifndef DEBUGMODE
-  if (turbo_light.tmSpeeds[turbo_light.lookup_speed(mcl_cfg.usb_turbo)] != MidiUartUSB.speed && slowclock > 4000 && usb_set_speed) {
-     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo), MidiUSB.uart);
-     usb_set_speed = false;
+  if (turbo_light.tmSpeeds[turbo_light.lookup_speed(mcl_cfg.usb_turbo_speed)] !=
+          MidiUartUSB.speed &&
+      slowclock > 4000 && usb_set_speed) {
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo_speed),
+                          MidiUSB.uart);
+    usb_set_speed = false;
   }
 #endif
 
   probePort(UART1_PORT, port1_drivers, countof(port1_drivers),
             &connected_midi_devices[0], resource_buf);
 #ifdef EXT_TRACKS
-  probePort(UART2_PORT, port2_drivers, countof(port2_drivers),
-            &connected_midi_devices[1], resource_buf);
+  uint8_t nr_drivers = countof(port2_drivers);
+  MidiDevice **drivers = port2_drivers;
+  if (!mcl_cfg.uart2_device) {
+    nr_drivers = 1;
+    drivers = generic_drivers;
+  }
+  probePort(UART2_PORT, drivers, nr_drivers, &connected_midi_devices[1],
+            resource_buf);
   if (resource_loaded) {
     // XXX doesn't work yet
-    //R.Restore(resource_buf, resource_size);
+    // R.Restore(resource_buf, resource_size);
     GUI.currentPage()->init();
     resource_loaded = false;
   }

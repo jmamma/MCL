@@ -10,6 +10,7 @@ void MenuPageBase::init() {
   DEBUG_PRINT("R.Size() = ");
   DEBUG_PRINTLN(R.Size());
   R.restore_menu_layout_deps();
+  gen_menu_row_names();
 
   ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
 
@@ -67,6 +68,11 @@ void MenuPageBase::gen_menu_row_names() {
 }
 
 void MenuPageBase::setup() {}
+
+void MenuPageBase::cleanup() {
+  trig_interface.ignoreNextEventClear(MDX_KEY_YES);
+  trig_interface.ignoreNextEventClear(MDX_KEY_NO);
+}
 
 void MenuPageBase::loop() {
 
@@ -219,10 +225,10 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_YES:
-      //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        trig_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES;
       case MDX_KEY_NO:
-      //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        trig_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
           encoders[1]->cur -= inc;
@@ -253,4 +259,5 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
     exit();
     return true;
   }
+  return false;
 }

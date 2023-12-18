@@ -3,6 +3,9 @@
 
 uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
+bool GridIOPage::show_offset = false;
+uint8_t GridIOPage::offset = 0;
+
 uint8_t GridIOPage::old_grid = 0;
 
 void GridIOPage::cleanup() {
@@ -15,6 +18,8 @@ void GridIOPage::init() {
   old_grid = proj.get_grid();
   show_track_type = false;
   track_select = 0;
+  show_offset = 0;
+  offset = 255;
   R.Clear();
   R.use_icons_logo();
 }
@@ -57,13 +62,24 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
           MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
+        if (show_offset) {
+          offset = track;
+        }
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
       }
     } else {
       if (!show_track_type) {
         trig_interface.send_md_leds(TRIGLED_OVERLAY);
+
         if (note_interface.notes_all_off()) {
-          if (BUTTON_DOWN(Buttons.BUTTON2)) {
+          if (show_offset) {
+            show_offset = !show_offset;
+            note_interface.init_notes();
+            if (show_offset) {
+              offset = 255;
+            }
+          }
+          else if (BUTTON_DOWN(Buttons.BUTTON2)) {
             return true;
           } else {
             action();
@@ -78,6 +94,9 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
+      case MDX_KEY_BANKD: {
+        return true;
+      }
       case MDX_KEY_NO: {
         goto close;
       }

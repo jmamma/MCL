@@ -360,7 +360,7 @@ bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
 }
 
 void MCLGUI::draw_text_encoder(uint8_t x, uint8_t y, const char *name,
-                               const char *value) {
+                               const char *value, bool highlight) {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
   oled_display.setCursor(x + 4, y + 6);
@@ -369,6 +369,8 @@ void MCLGUI::draw_text_encoder(uint8_t x, uint8_t y, const char *name,
   oled_display.setFont();
   oled_display.setCursor(x + 4, y + 8);
   oled_display.print(value);
+
+  if (highlight) { oled_display.fillRect(x,y,23,16, INVERT); }
 }
 
 void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder,
@@ -455,7 +457,7 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
   y += 2;
 
   draw_encoder(x, y, value);
-  if (highlight) { oled_display.fillRect(x - 2, 0, 15,20,INVERT); }
+  if (highlight) { oled_display.fillRect(x - 2, 0, 16,20,INVERT); }
 
   oled_display.setFont(oldfont);
 }

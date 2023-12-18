@@ -9,11 +9,17 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   MD.parseCC(channel, param, &track, &track_param);
-  if (track == 255) { return; }
+  if (track == 255) {
+    return;
+  }
 
   if (param >= 16) {
-    if (track > 15) { return; }
-    if (track_param > 23) { return; }
+    if (track > 15) {
+      return;
+    }
+    if (track_param > 23) {
+      return;
+    }
     MD.kit.params[track][track_param] = value;
     last_md_param = track_param;
   } else {
@@ -22,13 +28,11 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       MD.kit.levels[track] = value;
     }
   }
-
 }
 
 void MDMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {}
 
-void MDMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-}
+void MDMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {}
 
 void MDMidiEvents::enable_live_kit_update() {
   if (kitupdate_state) {
@@ -153,21 +157,25 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
   }
   grid_idx = 1;
 
-  gdt.init(MDFX_TRACK_TYPE, GROUP_DEV, device_idx, (SeqTrack*) &(mcl_seq.mdfx_track), 0);
+  gdt.init(MDFX_TRACK_TYPE, GROUP_DEV, device_idx,
+           (SeqTrack *)&(mcl_seq.mdfx_track), 0);
   add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &gdt);
 
-  gdt.init(MDLFO_TRACK_TYPE, GROUP_PERF, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[0]), 0);
+  gdt.init(MDLFO_TRACK_TYPE, GROUP_PERF, device_idx,
+           (SeqTrack *)&(mcl_seq.aux_tracks[0]), 0);
   add_track_to_grid(grid_idx, MDLFO_TRACK_NUM, &gdt);
 
-  gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[1]), 0);
+  gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, device_idx,
+           (SeqTrack *)&(mcl_seq.aux_tracks[1]), 0);
   add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &gdt);
 
-  gdt.init(MDTEMPO_TRACK_TYPE, GROUP_TEMPO, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[2]), 0);
+  gdt.init(MDTEMPO_TRACK_TYPE, GROUP_TEMPO, device_idx,
+           (SeqTrack *)&(mcl_seq.aux_tracks[2]), 0);
   add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &gdt);
 
-  gdt.init(PERF_TRACK_TYPE, GROUP_PERF, device_idx, (SeqTrack*) &(mcl_seq.aux_tracks[3]), 0);
+  gdt.init(PERF_TRACK_TYPE, GROUP_PERF, device_idx,
+           (SeqTrack *)&(mcl_seq.aux_tracks[3]), 0);
   add_track_to_grid(grid_idx, PERF_TRACK_NUM, &gdt);
-
 }
 
 void MDClass::get_mutes() {
@@ -203,7 +211,7 @@ bool MDClass::probe() {
         ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
          (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL |
          (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI) |
-         (uint16_t)FW_CAP_MACHINE_CACHE | (uint16_t)FW_CAP_UNDO_CACHE;
+        (uint16_t)FW_CAP_MACHINE_CACHE | (uint16_t)FW_CAP_UNDO_CACHE;
 
     while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) &&
            count) {
@@ -218,12 +226,12 @@ bool MDClass::probe() {
       return false;
     }
 
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo), uart);
+    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo_speed), uart);
     mcl_gui.delay_progress(100);
 
- //   if (mcl_cfg.clock_rec == 0) {
- //     MidiClock.uart_clock_recv = uart;
- //   }
+    //   if (mcl_cfg.clock_rec == 0) {
+    //     MidiClock.uart_clock_recv = uart;
+    //   }
     mcl_gui.delay_progress(300);
     getCurrentTrack(CALLBACK_TIMEOUT);
     getBlockingKit(0x7F);
@@ -366,7 +374,8 @@ void MDClass::restore_kit_params() {
 
 void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
   if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
-    MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr, true);
+    MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr,
+                     true);
   }
 }
 
@@ -391,20 +400,23 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     } else {
       cc += 24 + b * 24;
     }
-    if (update_kit) { kit.params[track][param] = value; }
+    if (update_kit) {
+      kit.params[track][param] = value;
+    }
   } else if (param == 32) { // MUTE
     cc = 12 + b;
   } else if (param == 33) { // LEV
-    if (update_kit) { kit.levels[track] = value; }
+    if (update_kit) {
+      kit.levels[track] = value;
+    }
     cc = 8 + b;
   } else {
     return;
   }
   if (update_kit) {
-  uart_->sendCC(channel + global.baseChannel, cc, value);
-  }
-  else {
-  uart_->sendPolyKeyPressure(channel + global.baseChannel, cc, value);
+    uart_->sendCC(channel + global.baseChannel, cc, value);
+  } else {
+    uart_->sendPolyKeyPressure(channel + global.baseChannel, cc, value);
   }
 }
 
@@ -450,26 +462,48 @@ uint8_t MDClass::setCompressorParams(uint8_t *values, bool send) {
   return sendFXParams(values, MD_SET_DYNAMIX_PARAM_ID, send);
 }
 
-uint8_t MDClass::sendFXParam(uint8_t param, uint8_t value, uint8_t type,
-                             bool send) {
-  uint8_t data[3] = {type, param, value};
-  return sendRequest(data, 3, send);
+void MDClass::setFXParam(uint8_t param, uint8_t value, uint8_t type,
+                         bool update_kit, MidiUartParent *uart_) {
+
+  if (uart_ == nullptr) {
+    uart_ = uart;
+  }
+  uint8_t len = 4;
+  if (update_kit) {
+    switch (type) {
+    case MD_FX_ECHO:
+      MD.kit.delay[param] = value;
+      break;
+    case MD_FX_DYN:
+      MD.kit.dynamics[param] = value;
+      break;
+    case MD_FX_REV:
+      MD.kit.reverb[param] = value;
+      break;
+    case MD_FX_EQ:
+      MD.kit.eq[param] = value;
+      break;
+    }
+    len = 3;
+  }
+  uint8_t data[4] = {type, param, value, 0x7F};
+  sendRequest(data, len);
 }
 
-uint8_t MDClass::setEchoParam(uint8_t param, uint8_t value, bool send) {
-  return sendFXParam(param, value, MD_SET_RHYTHM_ECHO_PARAM_ID, send);
+void MDClass::setEchoParam(uint8_t param, uint8_t value) {
+  return setFXParam(param, value, MD_SET_RHYTHM_ECHO_PARAM_ID);
 }
 
-uint8_t MDClass::setReverbParam(uint8_t param, uint8_t value, bool send) {
-  return sendFXParam(param, value, MD_SET_GATE_BOX_PARAM_ID, send);
+void MDClass::setReverbParam(uint8_t param, uint8_t value) {
+  return setFXParam(param, value, MD_SET_GATE_BOX_PARAM_ID);
 }
 
-uint8_t MDClass::setEQParam(uint8_t param, uint8_t value, bool send) {
-  return sendFXParam(param, value, MD_SET_EQ_PARAM_ID, send);
+void MDClass::setEQParam(uint8_t param, uint8_t value) {
+  return setFXParam(param, value, MD_SET_EQ_PARAM_ID);
 }
 
-uint8_t MDClass::setCompressorParam(uint8_t param, uint8_t value, bool send) {
-  return sendFXParam(param, value, MD_SET_DYNAMIX_PARAM_ID, send);
+void MDClass::setCompressorParam(uint8_t param, uint8_t value) {
+  return setFXParam(param, value, MD_SET_DYNAMIX_PARAM_ID);
 }
 
 /*** tunings ***/
@@ -668,7 +702,8 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
 uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
                                    uint8_t level, uint8_t mode, bool send) {
 
-  DEBUG_PRINT("assign machine bulk: "); DEBUG_PRINTLN(track);
+  DEBUG_PRINT("assign machine bulk: ");
+  DEBUG_PRINTLN(track);
   uint8_t data[43] = {0x70, 0x5b};
   uint8_t i = 2;
   data[i++] = track;
@@ -718,7 +753,7 @@ void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartParent *uart_) {
   uint8_t a = track_mask & 0x7F;
   uint8_t b = (track_mask >> 7) & 0x7F;
   uint8_t c = (track_mask >> 14) & 0x7F;
-  uint8_t data[5] = { 0x70, 0x62, a, b, c };
+  uint8_t data[5] = {0x70, 0x62, a, b, c};
   sendRequest(data, countof(data), uart_);
 }
 
@@ -730,7 +765,8 @@ void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
                                  bool set_level) {
 
-  DEBUG_PRINT("insert machine in kit "); DEBUG_PRINTLN(track);
+  DEBUG_PRINT("insert machine in kit ");
+  DEBUG_PRINTLN(track);
 
   MDKit *kit_ = &kit;
 
@@ -775,13 +811,15 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   uint8_t level = 255;
 
   uint8_t track_ = track;
-  if (track_ > 15) { track_ -= 16; }
+  if (track_ > 15) {
+    track_ -= 16;
+  }
 
   if ((send_level) && (kit_->levels[track_] != machine->level)) {
     level = machine->level;
   }
 
-  MD.assignMachineBulk(track, machine, level, 255, send);
+  bytes = MD.assignMachineBulk(track, machine, level, 255, send);
 
   return bytes;
 }
@@ -795,7 +833,7 @@ void MDClass::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 12 + b;
-  uart_->sendCC(channel + global.baseChannel, cc, (uint8_t) mute);
+  uart_->sendCC(channel + global.baseChannel, cc, (uint8_t)mute);
 }
 
 void MDClass::setGlobal(uint8_t id) {
@@ -1167,14 +1205,13 @@ void MDClass::updateKitParams() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     mcl_seq.md_tracks[n].mute_state = old_mutes[n];
   }
-
 }
 
 uint16_t MDClass::sendKitParams(uint8_t *masks) {
   /// Ignores masks and scratchpad, and send the whole kit.
   MD.kit.origPosition = 0x7F;
   MD.kit.toSysex();
-  activate_track_select(); //<-- includes waitBlocking, we need to wait for the
+  get_fw_caps();           //<-- includes waitBlocking, we need to wait for the
                            // sysex message to be received before unmuting seq
   return 0;
 }

@@ -266,7 +266,7 @@ void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
     lfo_track->params[1].offset = value;
     reconfig = true;
   }
-  if (reconfig) { config_encoders(); }
+  if (mcl.currentPage() == LFO_PAGE && reconfig) { config_encoders(); }
 }
 
 
@@ -303,8 +303,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES: {
-        lfo_track->enable = !(lfo_track->enable);
-        break;
+        goto lfo_enable;
       }
       case MDX_KEY_UP: {
         if (page_mode < LFO_OFFSET) {
@@ -344,7 +343,9 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    lfo_enable:
     lfo_track->enable = !(lfo_track->enable);
+    if (!lfo_track->enable) { lfo_track->reset_params(); }
   }
   return false;
 }

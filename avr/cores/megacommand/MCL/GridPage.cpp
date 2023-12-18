@@ -13,7 +13,7 @@ void GridPage::init() {
     return;
   }
   trig_interface.off();
-  load_slot_models();
+  //load_slot_models();
   oled_display.clearDisplay();
   R.Clear();
   R.use_machine_names_short();
@@ -439,7 +439,9 @@ void GridPage::display_grid() {
       switch (track_type) {
       case MD_TRACK_TYPE: {
         auto tmp = getMDMachineNameShort(model, 2);
-        copyMachineNameShort(tmp, str);
+        if (tmp) {
+          copyMachineNameShort(tmp, str);
+        }
         break;
       }
       case A4_TRACK_TYPE:
@@ -886,6 +888,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           case MDX_KEY_BANKA:
           case MDX_KEY_BANKB:
           case MDX_KEY_BANKC: {
+            loadmode:
             mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
             bool persistent = false;
             grid_load_page.draw_popup_title(mcl_cfg.load_mode, persistent);
@@ -972,8 +975,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_BANKB:
         case MDX_KEY_BANKC: {
           if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
-            mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
-            return true;
+            goto loadmode;
           }
         }
        }
@@ -1097,7 +1099,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
     show_slot_menu = true;
     grid_slot_page.init();
-    grid_slot_page.gen_menu_row_names();
     return true;
   }
 

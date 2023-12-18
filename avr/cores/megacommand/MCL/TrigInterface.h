@@ -80,6 +80,9 @@ public:
   void ignoreNextEvent(uint8_t i) {
     SET_BIT64(ignore_next_mask, i);
   }
+  void ignoreNextEventClear(uint8_t i) {
+    CLEAR_BIT64(ignore_next_mask, i);
+  }
   bool on(bool clear_states = true);
   bool off();
 

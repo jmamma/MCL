@@ -71,7 +71,7 @@ public:
   bool show_encoder_value(Encoder *encoder, int timeout = SHOW_VALUE_TIMEOUT);
 
   void draw_text_encoder(uint8_t x, uint8_t y, const char *name,
-                         const char *value);
+                         const char *value, bool highlight = false);
   void draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder,
                        const char *name);
   void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,

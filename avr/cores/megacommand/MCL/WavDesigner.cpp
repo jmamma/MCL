@@ -52,8 +52,9 @@ bool WavDesigner::render() {
 
   // Recalculate sample rate using base frequency, for sample alignment.
 
-  uint32_t n_cycle = ((floor(sample_rate / fund_freq)));
-
+  uint32_t n_cycle = ((round(sample_rate / fund_freq)));
+  DEBUG_PRINTLN("n_cycle 1");
+  DEBUG_PRINTLN(n_cycle);
   sample_rate = n_cycle * fund_freq;
 
   SineOsc sine_osc(sample_rate);

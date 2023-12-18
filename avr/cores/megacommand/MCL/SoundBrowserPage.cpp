@@ -38,13 +38,16 @@ void SoundBrowserPage::init() {
 void SoundBrowserPage::save_sound() {
 
   MDSound sound;
-  char sound_name[9] = "        ";
-
   grid_page.prepare();
-  memcpy(sound_name, MD.kit.name, 4);
+  char sound_name[8];
+  uint8_t l = min(strlen(MD.kit.name),4);
+  memcpy(sound_name, MD.kit.name, l);
   const char *tmp = getMDMachineNameShort(MD.kit.get_model(MD.currentTrack), 2);
-  copyMachineNameShort(tmp, sound_name + 4);
-  sound_name[6] = '\0';
+  if (tmp) {
+    copyMachineNameShort(tmp, sound_name + l + 1);
+  }
+  sound_name[l+3] = '\0';
+  sound_name[l] = '_';
 
   if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
     char temp_entry[FILE_ENTRY_SIZE];
@@ -92,8 +95,9 @@ void SoundBrowserPage::on_new() {
 }
 
 void SoundBrowserPage::on_cancel() {
-  if (strcmp(lwd, "/") == 0) { mcl.popPage(); return; }
-  _cd_up();
+  //if (strcmp(lwd, "/") == 0) { mcl.popPage(); return; }
+  //_cd_up();
+   mcl.popPage();
 }
 
 void SoundBrowserPage::on_select(const char *__) {
@@ -107,7 +111,6 @@ bool SoundBrowserPage::handleEvent(gui_event_t *event) {
     file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
     file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
     file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-    file_menu_page.menu.enable_entry(FM_OVERWRITE, !state);
     file_menu_page.menu.enable_entry(FM_RECVALL, state);
     file_menu_page.menu.enable_entry(FM_SENDALL, state);
     return true;

@@ -97,17 +97,14 @@ void PageSelectPage::init() {
   trigled_mask = 0;
   draw_popup();
   md_prepare();
-  display();
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
 void PageSelectPage::draw_popup() {
   char str[16];
   uint8_t pageidx = get_pageidx(page_select);
-  if (pageidx < 16) {
-    get_page(pageidx, str);
-    MD.popup_text(str, true);
-  }
+  get_page(pageidx, str);
+  MD.popup_text(str, true);
 }
 
 void PageSelectPage::md_prepare() {

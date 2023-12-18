@@ -85,7 +85,6 @@ void FileBrowserPage::query_filesystem() {
   file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
   file_menu_page.menu.enable_entry(FM_DELETE, true); // delete
   file_menu_page.menu.enable_entry(FM_RENAME, true); // rename
-  file_menu_page.menu.enable_entry(FM_OVERWRITE, false); //show_overwrite);
   file_menu_page.menu.enable_entry(FM_CANCEL, true); // cancel
   file_menu_page.menu.enable_entry(FM_RECVALL, false);
   file_menu_page.menu.enable_entry(FM_SENDALL, false);
@@ -164,8 +163,8 @@ void FileBrowserPage::init() {
 }
 
 void FileBrowserPage::draw_menu() {
-  oled_display.fillRect(0, 3, 45, 28, BLACK);
-  oled_display.drawRect(1, 4, 43, 26, WHITE);
+  oled_display.fillRect(0, 3, 45, 29, BLACK);
+  oled_display.drawRect(1, 4, 43, 27, WHITE);
   file_menu_page.draw_menu(6, 12, 39);
   oled_display.display();
 }
@@ -319,7 +318,7 @@ bool FileBrowserPage::_cd(const char *child) {
   DEBUG_PRINTLN(lwd);
 
   file.close();
-  char *ptr = child;
+  const char *ptr = child;
 
   if (child[0] == '/' && child[1] != '\0') {
     SD.chdir("/");
@@ -398,18 +397,6 @@ bool FileBrowserPage::_handle_filemenu() {
       on_rename(buf1, buf2);
     }
     return true;
-  case FM_OVERWRITE: // overwrite
-    /*
-    strcpy(buf2, "Overwrite ");
-    strcat(buf2, buf1);
-    strcat(buf2, "?");
-    if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
-      // the derived class may expect the file to be open
-      // when on_select is called.
-      file.open(buf1, O_READ);
-      on_select(buf1);
-    }*/
-    break;
   }
   return false;
 }

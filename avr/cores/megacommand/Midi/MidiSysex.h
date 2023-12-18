@@ -111,8 +111,8 @@ public:
     Rb.check = false;
 #endif
   }
-  ALWAYS_INLINE() uint16_t get_recordLen() { return ledger[rd_cur].recordLen; }
-  ALWAYS_INLINE() volatile uint8_t *get_ptr() { return ledger[rd_cur].ptr; }
+   uint16_t get_recordLen() { return ledger[rd_cur].recordLen; }
+   volatile uint8_t *get_ptr() { return ledger[rd_cur].ptr; }
 
   bool avail() {
     return ((msg_wr != msg_rd) && ledger[msg_rd].state == SYSEX_STATE_FIN &&
@@ -134,14 +134,14 @@ public:
     }
   }
 
-  ALWAYS_INLINE() void startRecord() {
+   void startRecord() {
     recording = true;
     ledger[msg_wr].recordLen = 0;
     ledger[msg_wr].ptr = (Rb.ptr + Rb.wr);
     ledger[msg_wr].state = SYSEX_STATE_REC;
   }
 
-  ALWAYS_INLINE() void stopRecord() {
+   void stopRecord() {
     recording = false;
     ledger[msg_wr].state = SYSEX_STATE_FIN;
     if (is_full()) {
@@ -156,7 +156,7 @@ public:
     }
   }
 
-  ALWAYS_INLINE() void putByte(uint16_t n, uint8_t c) {
+   void putByte(uint16_t n, uint8_t c) {
     uint16_t r = (uint16_t) ledger[rd_cur].ptr - (uint16_t) Rb.ptr;
     if (r + n > Rb.len - 1) {
       n = n - Rb.len;
@@ -164,9 +164,9 @@ public:
     volatile uint8_t *dst = ledger[rd_cur].ptr + n;
     put_bank1(dst, c);
   }
-  ALWAYS_INLINE() void putByte(uint8_t c) { Rb.put_h_isr(c); }
+   void putByte(uint8_t c) { Rb.put_h_isr(c); }
 
-  ALWAYS_INLINE() uint8_t getByte(uint16_t n) {
+   uint8_t getByte(uint16_t n) {
     uint16_t r = (uint16_t) ledger[rd_cur].ptr - (uint16_t) Rb.ptr;
     if (r + n > Rb.len - 1) {
       n = n - Rb.len;
@@ -175,37 +175,36 @@ public:
     return get_bank1(src);
   }
 
-  ALWAYS_INLINE() void recordByte(uint8_t c) {
+   void recordByte(uint8_t c) {
     putByte(c);
     ledger[msg_wr].recordLen++;
   }
 
   void initSysexListeners() {
-    for (int i = 0; i < NUM_SYSEX_SLAVES; i++)
+    for (uint8_t i = 0; i < NUM_SYSEX_SLAVES; i++)
       listeners[i] = NULL;
   }
   bool addSysexListener(MidiSysexListenerClass *listener) {
-    for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
+    for (uint8_t i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (listeners[i] == listener) {
         return true;
       }
-    }
-    for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (listeners[i] == NULL) {
         listeners[i] = listener;
         listener->sysex = this;
         return true;
       }
+
     }
     return false;
   }
   void removeSysexListener(MidiSysexListenerClass *listener) {
-    for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
+    for (uint8_t i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (listeners[i] == listener)
         listeners[i] = NULL;
     }
   }
-  ALWAYS_INLINE() bool isListenerActive(MidiSysexListenerClass *listener) {
+   bool isListenerActive(MidiSysexListenerClass *listener) {
     if (listener == NULL)
       return false;
     /* catch all */
@@ -222,12 +221,12 @@ public:
     return false;
   }
 
-  ALWAYS_INLINE() void abort() {
+   void abort() {
     recording = false;
     memset(&ledger[msg_wr], 0, sizeof(MidiSysexLedger));
   }
 
-  ALWAYS_INLINE() void reset() { startRecord(); }
+   void reset() { startRecord(); }
 
   // Handled by main loop
   void end() {
@@ -238,7 +237,7 @@ public:
       recvIds[1] = getByte(1);
       recvIds[2] = getByte(2);
     }
-    for (int i = 0; i < NUM_SYSEX_SLAVES; i++) {
+    for (uint8_t i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (isListenerActive(listeners[i])) {
         listeners[i]->msg_rd = rd_cur;
         listeners[i]->end();
@@ -247,11 +246,11 @@ public:
   }
 
   // Handled by interrupts
-  ALWAYS_INLINE() void end_immediate() {
+   void end_immediate() {
     stopRecord();
   }
 
-  ALWAYS_INLINE() void handleByte(uint8_t byte) {
+   void handleByte(uint8_t byte) {
     if (recording) {
       //if (ledger[msg_rd].state == SYSEX_STATE_FIN && ledger[msg_rd].ptr == Rb.ptr + Rb.wr) { abort(); return; }
       //memset(&ledger[msg_rd],0,sizeof(MidiSysexLedger));

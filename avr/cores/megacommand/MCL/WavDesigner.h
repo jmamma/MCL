@@ -16,7 +16,6 @@ public:
   OscMixerPage mixer;
   uint32_t loop_start;
   uint32_t loop_end;
-  PageIndex last_page;
   WavDesigner() {
     for (uint8_t i = 0; i < 3; i++) {
       pages[i].id = i;
@@ -24,7 +23,6 @@ public:
     mixer.id = MIXER_ID;
     pages[0].osc_waveform = 1;
     mixer.enc4.cur = 0;
-    last_page = WD_PAGE_0;
   }
   void prompt_send();
   bool render();

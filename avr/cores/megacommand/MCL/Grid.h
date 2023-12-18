@@ -49,7 +49,7 @@ public:
     return offset;
   }
 
-  uint32_t get_row_header_offset(int16_t row) {
+  uint32_t get_row_header_offset(uint16_t row) {
     uint32_t offset =
         (uint32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
         (uint32_t)(0 + (row * (GRID_WIDTH + 1))) * (uint32_t)GRID_SLOT_BYTES;

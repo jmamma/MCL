@@ -15,10 +15,11 @@ public:
   uint8_t active_scene_b;
 
   uint8_t cur;
-  void init() {
+  void init(uint8_t n) {
     src = param = min = 0;
-    active_scene_a = 0;
-    active_scene_b = 1;
+    uint8_t c = n * 2;
+    active_scene_a = 0 + c;
+    active_scene_b = 1 + c;
     const char *str = "CONTROL";
     strcpy(name, str);
   }
@@ -50,7 +51,7 @@ public:
   void init() {
     for (uint8_t n = 0; n < NUM_SCENES; n++) {
       if (n < 4) {
-        encs[n].init();
+        encs[n].init(n);
       }
       scenes[n].init();
     }

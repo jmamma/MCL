@@ -17,19 +17,17 @@ float OscPage::get_freq() {
   float a = pow(2.00, 1.00 / 12.00);
   float n = enc1.cur - 64;
   float fn = fzero * pow(a, n);
-  float fout = fn * pow(2, (float)(enc2.cur - 100) / (float)1200);
+  float fout = fn * pow(2, (float)(100 - enc2.cur) / (float)1200);
   return fout;
 }
 void OscPage::init() {
-  if (wd.last_page != 255 && wd.last_page != WD_PAGE_0 + id) { mcl.setPage(wd.last_page); wd.last_page = 255; return; }
   WavDesignerPage::init();
-  wd.last_page = mcl.currentPage();
   wavdesign_menu_page.menu.enable_entry(1, true);
   wavdesign_menu_page.menu.enable_entry(2, false);
   oled_display.clearDisplay();
 }
 
-void OscPage::cleanup() { DEBUG_PRINT_FN(); }
+void OscPage::cleanup() { }
 bool OscPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
     return true;
@@ -128,8 +126,6 @@ void OscPage::display() {
   // oled_display.clearDisplay();
   oled_display.fillRect(0, 0, 64, 32, BLACK);
 
-  MusicalNotes number_to_note;
-
   scanline_width = 64;
 
   uint8_t c = 1;
@@ -189,12 +185,12 @@ void OscPage::display() {
     uint8_t note = s - (floor(s / 12) * 12);
     oled_display.print(number_to_note.notes_upper[note]);
     oled_display.print((uint8_t)floor(s / 12));
-    if (enc3.cur < 0) {
-      oled_display.print(F("-"));
-    } else {
+    if (enc2.cur < 0) {
       oled_display.print(F("+"));
     }
-    oled_display.print(enc2.cur);
+    if (enc2.cur != 0) {
+      oled_display.print(-1 * enc2.cur);
+    }
   }
   //  GUI.put_string_at(0, my_str);
   WavDesignerPage::display();
@@ -296,7 +292,7 @@ void OscPage::draw_levels() {
   uint8_t w = 128 - x;
   UsrOsc usr_osc(w);
 
-  for (int i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < 16; i++) {
 
     scaled_level = (uint8_t)(((float)sine_levels[i] / (float)127) * 15);
     if (note_interface.is_note_on(i)) {

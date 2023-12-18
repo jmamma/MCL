@@ -1,6 +1,89 @@
+MCL 4.51 01/12/2023
+
+Please upgrade to Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
+
+- Changes:
+
+  [ Classic/Extended] button must now be held down for 1.5 seconds to switch
+  between Enhanced and Classic/Extended modes when the sequencer is stopped.
+
+- Improvements:
+
+  When the sequencer is running the Mixer page can be opened and closed by pressing [ Classic/Extended ].
+
+  Hold down [ Classic/Extended ] + [ Trig ] for fast for mute toggles.
+
+  Minimum transition load latency reduced from approximately two 16th notes, to exactly half a 16th note per device.
+
+  More reliable transitions, and better slot loading responsiveness.
+
+  Load Page - Press [ Function ] to select the destination track offset for next load.
+
+  Sample transfers between MCL and MD can be cancelled by pressing MCL button < SAVE/NO >
+
+  Microtiming is no longer cleared when unsetting a trig with locks in Step Edit.
+
+  Added arrow key parameter selection to Arp Page.
+
+  Arpeggiator gets a true random mode "RN2"
+
+  Mixer Page trig LEDs now flash when MD tracks are triggered.
+
+  New General MIDI menu added to configure the Generic MIDI driver. Assign
+  custom mute CC paramater which can be received/transmitted via the MixerPage's ext device, mute toggle.
+
+  TURBO MIDI speeds will now be enabled on MIDI port 2, when Generic Driver is
+  selected. This activates TURBO MIDI for compatible machines that we haven't implemented a specific driver for.
+
+  PianoRoll, added step delete [ Trig ] + [ Clear ]
+
+- Bug Fixes:
+
+  New Project creation could fail.
+
+  Project rename could fail.
+
+  Microtiming window would unexpectedly display when setting PTC
+
+  Wav Designer page switching was broken.
+
+  Wav Designer oscillator tuning rounding error and cents adjustment fix.
+
+  Fix sequencer LED cursor sync in certain circumstances.
+
+  MD IMPORT patterns menu, row names were broken and the range was too small.
+
+  PerfPage parameter learning was broken if dest the same as LFO dest
+
+  LFO offset for MIDI destinations was broken.
+
+  At low tempos, MIDI tracks would not always load.
+
+  Bulk sample receive was broken.
+
+  When AUTO Loading, comparison of MD sounds could be incorrect causing sound retransmission.
+
+  Don't cd up in SoundBrowser when pressing [ NO ], instead revert back to Step Edit page.
+
+  PerfEncoder scene assignment was not distributed correctly when loading a blank PF slot.
+
+  Parameter lock parameters should be reverted correctly on sequencer stop.
+
+  Tracks triggered manually would not use the unlocked parameter values.
+
+  Sequencer: Don't allow paste before copy.
+
+  MixerPage poly-link fader display bug.
+
+  Arpeggiator behaviour in poly mode could be unpredictable.
+
+  Arpeggiator D2 and RND modes could not be selected.
+
+  MIDI active-peering would use the Elektron driver, even when Generic was selected.
+
 MCL 4.50 24/07/2023
 
-Please install Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
+Please upgrade to Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
 
 - Performance Page + Performance Controllers
   A new Performance Page has been added featuring 8 Scenes (1->8) that are shared
@@ -220,7 +303,7 @@ MCL 4.41 10/03/2023
 
 MCL 4.40 25/02/2023
 
-Please install Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.40.
+Please upgrade to Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.40.
 Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
 
 - Improvements:
@@ -247,7 +330,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
 MCL 4.30 12/01/2023
 
-Please install Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.30.
+Please upgrade to Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.30.
 Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
 
 - Fixes:
@@ -265,7 +348,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
 MCL 4.20 14/07/2022
 
-Please install Machinedrum OS X.07 & Monomachine OS X.01 before using MCL 4.20.
+Please upgrade to Machinedrum OS X.07 & Monomachine OS X.01 before using MCL 4.20.
 Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
 
 - Fixes:
@@ -343,7 +426,7 @@ Perform the USB DFU firmware procedure to upgrade the USB microcontroller for cl
 
 MCL 4.11 30/03/2022
 
-Please install Machinedrum OS X.06 before using MCL 4.11
+Please upgrade to Machinedrum OS X.06 before using MCL 4.11
 
 - Bug Fixes:
 
@@ -376,7 +459,7 @@ Please install Machinedrum OS X.06 before using MCL 4.11
 
 MCL 4.10 19/03/2022
 
-Please install Machinedrum OS X.06 before using MCL 4.10
+Please upgrade to Machinedrum OS X.06 before using MCL 4.10
 
 - Key Binding Changes:
 

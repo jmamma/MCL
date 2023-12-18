@@ -149,16 +149,15 @@ public:
   uint8_t setEQParams(uint8_t *values, bool send = true);
   uint8_t setCompressorParams(uint8_t *values, bool send = true);
 
-  uint8_t sendFXParam(uint8_t param, uint8_t value, uint8_t type,
-                      bool send = true);
+  void setFXParam(uint8_t param, uint8_t value, uint8_t type, bool update_kit = false, MidiUartParent *uart_ = nullptr);
   /** Set the value of an ECHO FX parameter. **/
-  uint8_t setEchoParam(uint8_t param, uint8_t value, bool send = true);
+  void setEchoParam(uint8_t param, uint8_t value);
   /** Set the value of a REVERB FX parameter. **/
-  uint8_t setReverbParam(uint8_t param, uint8_t value, bool send = true);
+  void setReverbParam(uint8_t param, uint8_t value);
   /** Set the value of an EQ FX parameter. **/
-  uint8_t setEQParam(uint8_t param, uint8_t value, bool send = true);
+  void setEQParam(uint8_t param, uint8_t value);
   /** Set the value of a COMPRESSOR FX parameter. **/
-  uint8_t setCompressorParam(uint8_t param, uint8_t value, bool send = true);
+  void setCompressorParam(uint8_t param, uint8_t value);
   /**
    * Get the actual PITCH value for the MIDI pitch for the given
    * track. If the track is melodic, this will lookup the actual PITCH

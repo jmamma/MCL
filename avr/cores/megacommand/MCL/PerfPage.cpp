@@ -321,7 +321,8 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   // Intercept controller param.
 
   for (uint8_t i = 0; i < 4; i++) {
-    PerfData *d = &perf_encoders[i]->perf_data;
+    PerfEncoder *e = perf_encoders[i];
+    PerfData *d = &e->perf_data;
     if (dest + 1 == d->src && param == d->param) {
       // Controller param, start value;
       uint8_t min = d->min;
@@ -330,7 +331,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
         int16_t cur = value - min;
         int16_t range = max - min;
         uint8_t val = (cur * (int16_t)127) / range;
-        perf_encoders[i]->cur = val;
+        e->cur = val;
         //perf_encoders[i]->send();
         if (mcl.currentPage() == PERF_PAGE_0) {
           update_params();
@@ -578,7 +579,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
       }
     }
-    return true;
+    return false;
   }
 
   if (EVENT_RELEASED(event, Buttons.ENCODER4)) {

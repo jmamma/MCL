@@ -6,17 +6,18 @@
 #include "Elektron.h"
 #include "MidiID.h"
 #include "Task.h"
+#include "MCLSysConfig.h"
+#include "MCLSeq.h"
 
 #define UART1_PORT 1
 #define UART2_PORT 2
 
 class MidiActivePeering : public Task {
 public:
-  MidiActivePeering(uint16_t _interval = 0) : Task(_interval) {
+  MidiActivePeering(uint16_t _interval = 250) : Task(_interval) {
     setup(_interval);
   }
-
-  virtual void setup(uint16_t _interval = 0) { interval = _interval; }
+  virtual void setup(uint16_t _interval = 250) { interval = _interval; }
   virtual void disconnect(uint8_t port);
   virtual void force_connect(uint8_t port, MidiDevice *driver);
   virtual void run();
@@ -32,8 +33,15 @@ public:
 class GenericMidiDevice : public MidiDevice {
 public:
   GenericMidiDevice();
-  virtual bool probe() { return true; }
+
+  virtual uint8_t* icon();
+
+  virtual bool probe();
+
   void init_grid_devices(uint8_t device_idx);
+  virtual uint8_t get_mute_cc();
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
+  virtual void setLevel(uint8_t track, uint8_t value, MidiUartParent *uart_ = nullptr);
 };
 
 class NullMidiDevice : public MidiDevice {

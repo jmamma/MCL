@@ -137,6 +137,7 @@ public:
 
   virtual void *get_sound_data_ptr() { return &machine; }
   virtual size_t get_sound_data_size() { return sizeof(MDMachine); }
+  virtual size_t get_sound_cmp_size() { return 27; } //params,track,level,model
 };
 
 class MDTrackChunk : public DeviceTrackChunk {

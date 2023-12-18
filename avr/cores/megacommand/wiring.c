@@ -23,6 +23,7 @@
 #include "wiring_private.h"
 #include "memorybank.h"
 
+#include "helpers.h"
 // the prescaler is set so that timer0 ticks every 64 clock cycles, and the
 // the overflow handler is called every 256 ticks.
 #define MICROSECONDS_PER_TIMER0_OVERFLOW (clockCyclesToMicroseconds(64 * 256))
@@ -38,8 +39,9 @@
 
 volatile unsigned long timer0_overflow_count = 0;
 volatile unsigned long timer0_millis = 0;
-static unsigned char timer0_fract = 0;
 
+static unsigned char timer0_fract = 0;
+/*
 #if defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny84__)
 ISR(TIM0_OVF_vect)
 #else
@@ -67,7 +69,7 @@ ISR(TIMER0_OVF_vect)
 
   switch_ram_bank(old_bank);
 }
-
+*/
 unsigned long millis()
 {
 	unsigned long m;
@@ -76,7 +78,8 @@ unsigned long millis()
 	// disable interrupts while we read timer0_millis or we might get an
 	// inconsistent value (e.g. in the middle of a write to timer0_millis)
 	cli();
-	m = timer0_millis;
+	//m = timer0_millis;
+	m = slowclock;
 	SREG = oldSREG;
 
 	return m;
@@ -109,16 +112,11 @@ unsigned long micros() {
 	return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
 }
 
-void delay(unsigned long ms)
+void delay(uint16_t ms)
 {
-	uint32_t start = micros();
-
-	while (ms > 0) {
+	uint16_t start = slowclock;
+	while (clock_diff(start,slowclock) < ms) {
 		yield();
-		while ( ms > 0 && (micros() - start) >= 1000) {
-			ms--;
-			start += 1000;
-		}
 	}
 }
 

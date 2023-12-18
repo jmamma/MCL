@@ -81,6 +81,8 @@ public:
   uint8_t mod12_counter;
 
   uint8_t count_down;
+  bool    cache_loaded : 4;
+  bool    load_sound : 4;
 
   SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
@@ -114,6 +116,9 @@ public:
   ALWAYS_INLINE() void reset() {
     mod12_counter = -1;
     step_count = 0;
+    count_down = 0;
+    cache_loaded = 0;
+    load_sound = 0;
   }
 
   void toggle_mute() { mute_state = !mute_state; }
@@ -281,7 +286,6 @@ public:
   SeqTrack() { reset(); }
 
   ALWAYS_INLINE() void reset() {
-    count_down = 0;
     cur_event_idx = 0;
     iterations_5 = 1;
     iterations_6 = 1;

@@ -14,15 +14,38 @@ void GridTask::row_update() {
 void GridTask::gui_update() {
   if (MDSeqTrack::gui_update) {
     if (MidiClock.state == 2) {
+      if (mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_md_track)) {
+        auto active_track = mcl_seq.md_tracks[last_md_track];
+        MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
+      }
       if (last_active_row < GRID_LENGTH) {
-       if (mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_md_track)) {
-           auto active_track = mcl_seq.md_tracks[last_md_track];
-           MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1);
-       }
-       row_update();
+        row_update();
       }
     }
     MDSeqTrack::gui_update = 0;
+  }
+}
+void GridTask::load_queue_handler() {
+  if (!load_queue.is_empty()) {
+    uint8_t mode;
+    uint8_t offset;
+    uint8_t row_select_array[NUM_SLOTS];
+    uint8_t track_select[NUM_SLOTS] = {0};
+    load_queue.get(mode, offset, row_select_array);
+    DEBUG_PRINTLN("load queue get");
+    DEBUG_PRINTLN(mode);
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      if (row_select_array[n] < 128) {
+        track_select[n] = 1;
+      }
+      DEBUG_PRINT(n);
+      DEBUG_PRINT(" ");
+      DEBUG_PRINT(track_select[n]);
+      DEBUG_PRINT(" ");
+      DEBUG_PRINTLN(row_select_array[n]);
+    }
+    mcl_actions.write_original = 1;
+    mcl_actions.load_tracks(255, track_select, row_select_array, mode, offset);
   }
 }
 
@@ -43,27 +66,7 @@ void GridTask::run() {
   }
 
   gui_update();
-
-  if (!load_queue.is_empty()) {
-    uint8_t mode;
-    uint8_t row_select_array[NUM_SLOTS];
-    uint8_t track_select[NUM_SLOTS] = {0};
-    load_queue.get(&mode, row_select_array);
-    DEBUG_PRINTLN("load queue get");
-    DEBUG_PRINTLN(mode);
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      if (row_select_array[n] < 128) {
-        track_select[n] = 1;
-      }
-      DEBUG_PRINT(n);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINT(track_select[n]);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINTLN(row_select_array[n]);
-    }
-    mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(255, track_select, row_select_array, mode);
-  }
+  load_queue_handler();
   GridTask::transition_handler();
 }
 
@@ -177,8 +180,8 @@ void GridTask::transition_handler() {
     float tempo = MidiClock.get_tempo();
     // float div192th_per_second = tempo * 0.8f;
     // float div192th_time = 1.0 / div192th_per_second;
-    float div192th_time = 1.0 / (tempo * 0.8f);
-    // diff * div19th_time > 0.8ms equivalent to diff > (0.8/1.25) * tempo
+    // float div192th_time = 1.0 / (tempo * 0.8f);
+    // diff * div19th_time > 0.08 equivalent to diff > (0.8 * 0.08) * tempo
     for (int8_t c = NUM_DEVS - 1; c >= 0; c--) {
       wait = true;
 
@@ -208,17 +211,19 @@ void GridTask::transition_handler() {
                        MidiClock.div192th_counter, go_step)) != 0) &&
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
-            MidiUartParent::handle_midi_lock = 1;
-            handleIncomingMidi();
-            MidiUartParent::handle_midi_lock = 0;
-            if ((float)diff > (tempo * 0.8f) * 0.08) {
-              GUI.loop();
-            }
+                MidiUartParent::handle_midi_lock = 1;
+                handleIncomingMidi();
+                MidiUartParent::handle_midi_lock = 0;
+                if ((float)diff > tempo * 0.064f) { //0.8 * 0.08 = 0.128f
+                   GUI.loop();
+               }
           }
         }
         wait = false;
         if (transition_load(n, track_idx, gdt)) {
-          grid_page.active_slots[n] = slots_changed[n];
+          if (grid_page.active_slots[n] != SLOT_OFFSET_LOAD) {
+            grid_page.active_slots[n] = slots_changed[n];
+          }
         }
       }
     }
@@ -301,7 +306,8 @@ bool GridTask::transition_load(uint8_t n, uint8_t track_idx,
   }
 
   gdt->seq_track->count_down = -1;
-  if (mcl_actions.send_machine[n] == 0) {
+  gdt->seq_track->load_sound = mcl_actions.send_machine[n];
+  if (mcl_actions.send_machine[n] == 1) {
     pmem_track->transition_send(track_idx, n);
   }
 

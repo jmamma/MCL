@@ -107,10 +107,10 @@ public:
                    uint8_t readpattern = 255);
 
   void load_tracks(int row, uint8_t *slot_select_array,
-                   uint8_t *_row_array = nullptr, uint8_t load_mode = 255);
+                   uint8_t *_row_array = nullptr, uint8_t load_mode = 255, uint8_t load_offset = 255);
   void send_tracks_to_devices(uint8_t *slot_select_array,
-                              uint8_t *row_array = nullptr);
-  void manual_transition(uint8_t *slot_select_array, uint8_t *row_array);
+                              uint8_t *row_array = nullptr, uint8_t load_offset = 0);
+  void manual_transition(uint8_t *slot_select_array, uint8_t *row_array, uint8_t load_offset);
 
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
   void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false,
@@ -119,11 +119,11 @@ public:
   void calc_latency();
 
 private:
-  void collect_tracks(uint8_t *slot_select_array, uint8_t *row_array);
+  void collect_tracks(uint8_t *slot_select_array, uint8_t *row_array, uint8_t load_offset);
   void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
                    GridDeviceTrack *gdt);
-  bool load_track(uint8_t track_idx, uint8_t row, uint8_t pos,
-                  GridDeviceTrack *gdt, uint8_t *send_masks);
+  bool load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
+                  GridDeviceTrack *gdt, GridDeviceTrack *gdt_dst, uint8_t *send_masks);
 };
 
 extern void md_import();

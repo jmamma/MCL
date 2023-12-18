@@ -177,15 +177,17 @@ void SampleBrowserPage::send_sample(int slot, char *newname, bool silent) {
 }
 
 void SampleBrowserPage::recv_wav(int slot, bool silent) {
-  char wav_name[FILE_ENTRY_SIZE] = "";
+  //limit len to 16 char.
+  const uint8_t len = 16;
+  char wav_name[len] = "";
   // should be of form "ID - NAME..."
   //                      ^--~~~~~~~
   //                         memmove
   get_entry(slot, wav_name);
-  memmove(wav_name + 2, wav_name + 5, FILE_ENTRY_SIZE - 5);
-  wav_name[FILE_ENTRY_SIZE - 3] = '\0';
-  wav_name[FILE_ENTRY_SIZE - 2] = '\0';
-  wav_name[FILE_ENTRY_SIZE - 1] = '\0';
+  memmove(wav_name + 2, wav_name + 5, len - 5);
+  wav_name[len - 3] = '\0';
+  wav_name[len - 2] = '\0';
+  wav_name[len - 1] = '\0';
 
   if (!silent) {
     if (!mcl_gui.wait_for_input(wav_name, "Sample Name",
@@ -260,13 +262,12 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
     file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
     file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
     file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-    file_menu_page.menu.enable_entry(FM_OVERWRITE, !state);
     file_menu_page.menu.enable_entry(FM_RECVALL, state);
     file_menu_page.menu.enable_entry(FM_SENDALL, state);
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
@@ -275,6 +276,7 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
 }
 
 void SampleBrowserPage::query_sample_slots() {
+  DEBUG_PRINTLN("query sample slots");
   encoders[1]->cur = 0;
   encoders[1]->old = 0;
   old_cur_row = cur_row;
@@ -323,18 +325,18 @@ bool SampleBrowserPage::_handle_filemenu() {
   }
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
   case FM_RECVALL:
+    if (!mcl_gui.wait_for_confirm("Receive all", "Overwrite?")) {
+      goto end;
+    }
     show_ram_slots = true;
     init(true);
     if (numEntries == 0) {
       gfx.alert("NON", "UW");
       goto end;
     }
-    if (!mcl_gui.wait_for_confirm("Receive all", "Overwrite?")) {
-      goto end;
-    }
-    DEBUG_PRINTLN("Recv samples");
+   DEBUG_PRINTLN("Recv samples");
     DEBUG_PRINTLN(numEntries);
-    for (uint8_t n = 0; n < numEntries; n++) {
+    for (uint8_t n = 0; n < numEntries && !trig_interface.is_key_down(MDX_KEY_NO); n++) {
       DEBUG_PRINTLN("Recv wav");
       char wav_name[FILE_ENTRY_SIZE] = "";
       get_entry(n, wav_name);
@@ -352,7 +354,7 @@ bool SampleBrowserPage::_handle_filemenu() {
       return;
     }
     char wav_name[FILE_ENTRY_SIZE] = "";
-    for (uint8_t n = 0; n < numEntries; n++) {
+    for (uint8_t n = 0; n < numEntries && !trig_interface.is_key_down(MDX_KEY_NO); n++) {
       get_entry(n, wav_name);
       DEBUG_PRINTLN(wav_name);
       if (!isdigit(wav_name[0]) || !isdigit(wav_name[1]))

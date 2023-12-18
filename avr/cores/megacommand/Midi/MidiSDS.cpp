@@ -154,6 +154,7 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
     if (pos >= fsize) {
       break;
     }
+    if (trig_interface.is_key_down(MDX_KEY_NO)) { goto cleanup; }
     if (++show_progress > 10) {
       show_progress = 0;
       mcl_gui.draw_progress("Sending sample", pos * 80 / fsize ,80);
@@ -286,7 +287,7 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
 
   for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength;
        samplesSoFar += num_of_samples) {
-
+    if (trig_interface.is_key_down(MDX_KEY_NO)) { return false; }
     ++show_progress_i;
 
     if (show_progress && show_progress_i == 10) {
@@ -419,6 +420,7 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
   goto recv_fail;
   }
   while(true) {
+    if (trig_interface.is_key_down(MDX_KEY_NO)) { goto recv_fail; }
     uint8_t msg = waitForMsg(2000);
     if (msg == 255 || msg == MIDI_SDS_CANCEL)  {
       DEBUG_PRINTLN("sds recv abort");
@@ -513,13 +515,13 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
   uint8_t data[127] = {0xF0, 0x7E, deviceID, 0x02, packetNumber};
   uint8_t checksum = 0;
   uint8_t n = 5;
-  for (int i = 1; i < 5; i++)
+  for (uint8_t i = 1; i < 5; i++)
     checksum ^= data[i];
-  for (int i = 0; i < len; i++) {
+  for (uint8_t i = 0; i < len; i++) {
     data[n++] = buf[i];
     checksum ^= buf[i];
   }
-  for (int i = len; i < 120; i++)
+  for (uint8_t i = len; i < 120; i++)
     data[n++] = 0x00;
   data[n++] = checksum & 0x7F;
   data[n] = 0xF7;

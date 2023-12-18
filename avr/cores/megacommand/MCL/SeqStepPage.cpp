@@ -137,7 +137,6 @@ void SeqStepPage::display() {
         // uint8_t base = tuning->base;
         uint8_t note_num = seq_param4.cur;
         // + base;
-        MusicalNotes number_to_note;
 
         uint8_t note = note_num - (note_num / 12) * 12;
         uint8_t oct = note_num / 12;
@@ -170,7 +169,7 @@ void SeqStepPage::display() {
     MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 
     SeqPage::display();
-    if (mcl_gui.show_encoder_value(&seq_param2) &&
+    if (md_micro && mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!recording)) {
 
@@ -252,8 +251,7 @@ void SeqStepPage::loop() {
 
             if (machine_pitch != MD.kit.params[last_md_track][0]) {
               active_track.set_track_pitch(step, machine_pitch);
-              seq_step_page.encoders_used_clock[3] =
-                  slowclock; // indicate that encoder has changed.
+              seq_step_page.encoders_used_clock[3] = slowclock; // indicate that encoder has changed.
             }
           }
         }
@@ -407,12 +405,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
       disable_md_micro();
+      show_pitch = false;
       if (IS_BIT_SET16(ignore_release, track)) {
         CLEAR_BIT16(ignore_release, track);
         return;
-      }
-      if (last_md_track < 15) {
-        show_pitch = false;
       }
       if (step >= active_track.length) {
         return true;
@@ -425,11 +421,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             TRIG_HOLD_TIME) {
           reset_undo();
           active_track.set_step(step, mask_type, false);
-          if (mask_type == MASK_PATTERN) {
+          //if (mask_type == MASK_PATTERN && !active_track.steps[step].locks) {
             active_track.steps[step].cond_id = 0;
             active_track.steps[step].cond_plock = false;
             active_track.timing[step] = active_track.get_timing_mid();
-          }
+          //}
         }
       }
       return true;
@@ -482,7 +478,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
       }
       send_locks(step);
-      break;
+      return true;
     }
     }
 
@@ -495,13 +491,14 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           disable_md_micro();
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
           opt_copy_page_handler_cb();
+          page_copy = 1;
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
           // Track copy
           opt_copy = recording ? 2 : 1;
           opt_copy_track_handler_cb();
         }
-        break;
+        return true;
       }
       case MDX_KEY_PASTE: {
         // Note paste
@@ -511,6 +508,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           disable_md_micro();
           send_locks(step);
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          if (!page_copy || (opt_undo != 255)) { break; }
           opt_paste_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
@@ -518,7 +516,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_paste = recording ? 2 : 1;
           opt_paste_track_handler();
         }
-        break;
+        return true;
       }
       case MDX_KEY_CLEAR: {
         // Note clear
@@ -531,6 +529,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           disable_md_micro();
           last_step = step;
         } else if (trig_interface.is_key_down(MDX_KEY_SCALE)) {
+          page_copy = 1;
           opt_clear_page_handler();
           trig_interface.ignoreNextEvent(MDX_KEY_SCALE);
         } else {
@@ -538,7 +537,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           opt_clear = recording ? 2 : 1;
           opt_clear_track_handler();
         }
-        break;
+        return true;
       }
       case MDX_KEY_NO: {
         if (mask_type != MASK_PATTERN) {
@@ -553,7 +552,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             }
           }
         }
-        break;
+        return true;
       }
       case MDX_KEY_BANKB: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -563,8 +562,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             mask_type = MASK_LOCK;
           }
           config_mask_info(false);
+        return true;
         }
-        break;
       }
       case MDX_KEY_BANKC: {
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -574,8 +573,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             mask_type = MASK_MUTE;
           }
           config_mask_info(false);
+        return true;
         }
-        break;
       }
 
       case MDX_KEY_BANKD: {
@@ -586,8 +585,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             mask_type = MASK_SLIDE;
           }
           config_mask_info(false);
+        return true;
         }
-        break;
       }
       }
       if (step != 255) {
@@ -596,28 +595,27 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           active_track.send_parameter_locks(step, true);
           reset_on_release = true;
           MD.triggerTrack(last_md_track, 127);
-          break;
+          return true;
         }
 
         case MDX_KEY_UP: {
           seq_param1.cur += 1;
-          break;
+          return true;
         }
         case MDX_KEY_DOWN: {
           seq_param1.cur -= 1;
-          break;
+          return true;
         }
         case MDX_KEY_LEFT: {
           seq_param2.cur -= 1;
-          break;
+          return true;
         }
         case MDX_KEY_RIGHT: {
           seq_param2.cur += 1;
-          break;
+          return true;
         }
         }
       }
-      return true;
     }
   }
   /*

@@ -88,10 +88,12 @@ void MDSeqTrack::load_cache() {
 
   MDTrack t;
   t.load_from_mem(track_number, MD_TRACK_TYPE);
-  MD.insertMachineInKit(track_number, &(t.machine),false);
   t.load_seq_data((SeqTrack *)this);
-
-  SET_BIT32(load_machine_cache, track_number);
+  if (load_sound) {
+    MD.insertMachineInKit(track_number, &(t.machine),false);
+    SET_BIT32(load_machine_cache, track_number);
+    load_sound = 0;
+  }
 }
 
 void MDSeqTrack::seq(MidiUartParent *uart_) {
@@ -112,16 +114,16 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
   }
   if (count_down) {
     count_down--;
-    if (count_down == track_number / 4 + 1) {
-      load_cache();
-      goto end;
-    }
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
       SET_BIT16(gui_update,track_number);
     }
-    else if (count_down < track_number / 4 + 1) {
+    else if (count_down <= track_number / 4 + 1) {
+      if (!cache_loaded) {
+        load_cache();
+        cache_loaded = true;
+      }
       goto end;
     }
   }
@@ -376,22 +378,47 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     bool lock_present = steps[step].is_lock(c);
     bool send = false;
     uint8_t send_param;
+    uint8_t p = locks_params[c] - 1;
     if (locks_params[c]) {
       if (lock_present) {
         send_param = locks[lock_idx];
         send = true;
       } else if (trig) {
-        send_param = MD.kit.params[track_number][locks_params[c] - 1];
+        send_param = MD.kit.params[track_number][p];
         send = true;
       }
     }
     lock_idx += lock_bit;
     if (send) {
-      uint8_t p = locks_params[c] - 1;
       bool update_kit = false;
       MD.setTrackParam_inline(track_number, p, send_param, uart, update_kit);
-      }
+    }
   }
+}
+
+void MDSeqTrack::reset_params() {
+  bool re_assign = false;
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    if (locks_params[c] > 0) {
+      MDTrack md_track;
+      md_track.get_machine_from_kit(track_number);
+      MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
+      return;
+    }
+  }
+
+  /*
+  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+    bool send = false;
+    uint8_t send_param;
+    if (locks_params[c]) {
+      uint8_t p = locks_params[c] - 1;
+      uint8_t send_param = MD.kit.params[track_number][p];
+      bool update_kit = false;
+      MD.setTrackParam_inline(track_number, p, send_param, uart, update_kit);
+    }
+  }
+*/
 }
 
 void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
@@ -414,11 +441,7 @@ void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
 void MDSeqTrack::send_trig() { send_trig_inline(); }
 
 void MDSeqTrack::send_trig_inline() {
-  mixer_page.disp_levels[track_number] = MD.kit.levels[track_number];
-  if (MD.kit.trigGroups[track_number] < 16) {
-    mixer_page.disp_levels[MD.kit.trigGroups[track_number]] =
-        MD.kit.levels[MD.kit.trigGroups[track_number]];
-  }
+  mixer_page.trig(track_number);
   //  MD.triggerTrack(track_number, 127, uart);
   SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
 }

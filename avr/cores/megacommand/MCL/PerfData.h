@@ -54,9 +54,10 @@ public:
   void init() {
     count = 0;
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      params[a].dest = 0;
-      params[a].param = 0;
-      params[a].val = 255;
+      PerfParam *p = &params[a];
+      p->dest = 0;
+      p->param = 0;
+      p->val = 255;
     }
   }
 
@@ -108,10 +109,11 @@ public:
     if (count == 0) { return; }
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
       // Find match
-      if (params[a].dest == dest + 1 && params[a].param == param) {
-         params[a].val = 255;
-         params[a].dest = 0;
-         params[a].param = 0;
+      PerfParam *p = &params[a];
+      if (p->dest == dest + 1 && p->param == param) {
+         p->val = 255;
+         p->dest = 0;
+         p->param = 0;
          count--;
       }
     }
@@ -131,7 +133,8 @@ public:
   uint8_t find_match(uint8_t dest_, uint8_t param_) {
 
     for (uint8_t a = 0; a < NUM_PERF_PARAMS; a++) {
-      if (params[a].dest == dest_ + 1 && params[a].param == param_ && params[a].val != 255) {
+      PerfParam *p = &params[a];
+      if (p->dest == dest_ + 1 && p->param == param_ && p->val != 255) {
           return a;
       }
     }

@@ -8,7 +8,7 @@ volatile CRingBuffer<gui_event_t, MAX_EVENTS> EventRB;
 volatile uint8_t event_ignore_next_mask;
 
 void pollEventGUI() {
-  for (int i = 0; i < MAX_BUTTONS; i++) {
+  for (uint8_t i = 0; i < MAX_BUTTONS; i++) {
     gui_event_t event;
     event.source = i;
     if (BUTTON_PRESSED(i)) {

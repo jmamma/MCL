@@ -13,6 +13,8 @@ class GridRowHeader_270 {
   uint8_t model[22];
 };
 
+#define GRID_ROW_HEADER_LENGTH (1 + 17 + GRID_WIDTH + GRID_WIDTH)
+
 class GridRowHeader {
  public:
   bool active;

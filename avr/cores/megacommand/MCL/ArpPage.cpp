@@ -1,11 +1,12 @@
 #include "MCL_impl.h"
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
-MCLEncoder arp_mode(0, 17, ENCODER_RES_SEQ);
+MCLEncoder arp_mode(0, 18, ENCODER_RES_SEQ);
 MCLEncoder arp_rate(1, 16, ENCODER_RES_SEQ);
 MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
 
 void ArpPage::setup() {
+  param_select = 255;
 }
 
 void ArpPage::init() {
@@ -27,6 +28,8 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
     n = last_ext_track;
     arp_track = &mcl_seq.ext_arp_tracks[n];
   }
+
+  current_track = n;
 
   arp_rate.cur = arp_track->length;
   arp_rate.old = arp_rate.cur;
@@ -57,10 +60,7 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
 void ArpPage::cleanup() { oled_display.clearDisplay(); }
 
 void ArpPage::loop() {
-  uint8_t n = last_ext_track;
-  if (seq_ptc_page.midi_device == &MD) {
-    n = last_md_track;
-  }
+  uint8_t n = current_track;
 
   if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
@@ -83,6 +83,7 @@ typedef char arp_name_t[4];
 const arp_name_t arp_names[] PROGMEM = {
     "UP", "DWN", "UD", "DU", "UND", "DNU", "CNV", "DIV", "CND",
     "PU", "PD",  "TU", "TD", "UPP", "DP",  "U2",  "D2",  "RND",
+    "RN2",
 };
 
 void ArpPage::display() {
@@ -99,7 +100,7 @@ void ArpPage::display() {
   oled_display.print(F("ARPEGGIATOR: T"));
 
   if (seq_ptc_page.midi_device == &MD) {
-    oled_display.print(last_md_track + 1);
+    oled_display.print(current_track + 1);
   } else {
     oled_display.print(last_ext_track + 1);
   }
@@ -119,17 +120,18 @@ void ArpPage::display() {
     strcpy(str, "LAT");
     break;
   }
-  mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str);
+
+  mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str, param_select == 0);
 
   strncpy_P(str, arp_names[encoders[1]->cur], 4);
 
-  mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str);
+  mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str, param_select == 1);
 
   mcl_gui.put_value_at(encoders[2]->cur, str);
-  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "RATE", str);
+  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "RATE", str, param_select == 2);
 
   mcl_gui.put_value_at(encoders[3]->cur, str);
-  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "RANGE", str);
+  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "RANGE", str, param_select == 3);
 
   oled_display.display();
   oled_display.setFont(oldfont);
@@ -139,10 +141,34 @@ bool ArpPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
+
       switch (key) {
       case MDX_KEY_YES:
       case MDX_KEY_NO:
         goto exit;
+      }
+      if (param_select == 255) { param_select = 0; return true; }
+      switch (key) {
+       case MDX_KEY_LEFT: {
+        if (param_select > 0) {
+          param_select--;
+        }
+        return true;
+      }
+      case MDX_KEY_RIGHT: {
+        if (param_select < 3) {
+          param_select++;
+        }
+        return true;
+      }
+      case MDX_KEY_UP: {
+        encoders[param_select]->cur++;
+        return true;
+      }
+      case MDX_KEY_DOWN: {
+        encoders[param_select]->cur--;
+        return true;
+      }
       }
     }
   }

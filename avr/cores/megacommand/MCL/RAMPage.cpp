@@ -34,9 +34,9 @@ void RAMPage::init() {
   } else {
     ((MCLEncoder *)encoders[0])->max = 1;
   }
-  if (page_id == 0) {
-    setup_callbacks();
-  }
+//  if (page_id == 0) {
+//    setup_callbacks();
+//  }
   if (mcl_cfg.ram_page_mode == LINK) {
     for (uint8_t n = 0; n < 4; n++) {
       if (page_id == 0) {
@@ -67,7 +67,7 @@ void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row,
   mcl_actions.links[track].row = row;
   mcl_actions.links[track].loops = 1;
 
-  mcl_actions.send_machine[track] = 0;
+  mcl_actions.send_machine[track] = 1;
   uint16_t next_step = (MidiClock.div16th_counter / steps) * steps + steps;
   grid_page.active_slots[track] = SLOT_PENDING;
   mcl_actions.transition_level[track] = transition;
@@ -615,31 +615,16 @@ void RAMPage::display() {
   oled_display.setFont(oldfont);
 }
 
-void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t param = msg[1];
-  uint8_t value = msg[2];
-  uint8_t track;
-  uint8_t track_param;
-  // If external keyboard controlling MD pitch, send parameter updates
-  // to all polyphonic tracks
+void RAMPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param, uint8_t value) {
   uint8_t param_true = 0;
 
-  if ((mcl_cfg.ram_page_mode == MONO) || (!cc_link_enable)) {
+  if ((mcl_cfg.ram_page_mode == MONO) || (!cc_link_enable) || grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return;
   }
 
-  MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) {
-    return;
-  }
   if (track_param == 32) {
     return;
   } // ignore mute
-
-  if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
-    return;
-  }
 
   for (uint8_t n = 0; n < 16; n++) {
 
@@ -666,7 +651,7 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t *msg) {
     // in_sysex = 0;
   }
 }
-
+/*
 void RAMPage::setup_callbacks() {
   if (midi_state) {
     return;
@@ -686,7 +671,7 @@ void RAMPage::remove_callbacks() {
 
   midi_state = false;
 }
-
+*/
 bool RAMPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;

@@ -215,7 +215,7 @@ bool MCLClipBoard::copy(uint8_t col, uint16_t row, uint8_t w, uint16_t h) {
     if (h > 4) {
       mcl_gui.draw_progress("", y, h);
     }
-    for (int x = 0; x < w; x++) {
+    for (uint8_t x = 0; x < w; x++) {
       uint8_t s_col = x + col;
       if (x + col >= 16) { s_col -= 16; grid = 1; }
       proj.select_grid(grid);
@@ -273,7 +273,7 @@ bool MCLClipBoard::paste(uint8_t col, uint16_t row) {
     if (t_h > 8) {
       mcl_gui.draw_progress("", y, t_h);
     }
-    for (int x = 0; x < t_w && x + col < GRID_WIDTH * 2; x++) {
+    for (uint8_t x = 0; x < t_w && x + col < GRID_WIDTH * 2; x++) {
 
       uint8_t s_col = x + t_col;
       uint8_t d_col = x + col;

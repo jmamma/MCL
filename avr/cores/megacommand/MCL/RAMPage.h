@@ -9,7 +9,7 @@
 
 #define NUM_RAM_PAGES 2
 
-class RAMPage : public LightPage, MidiCallback {
+class RAMPage : public LightPage {
 public:
   RAMPage(uint8_t _page_id, Encoder *e1 = NULL, Encoder *e2 = NULL,
           Encoder *e3 = NULL, Encoder *e4 = NULL)
@@ -60,10 +60,10 @@ public:
   void setup_sequencer(uint8_t track);
 
 
-  void setup_callbacks();
-  void remove_callbacks();
+  //void setup_callbacks();
+  //void remove_callbacks();
 
-  void onControlChangeCallback_Midi(uint8_t *msg);
+  void onControlChangeCallback_Midi(uint8_t track, uint8_t track_param, uint8_t value);
 };
 
 extern MCLEncoder ram_a_param1;
