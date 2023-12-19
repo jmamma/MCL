@@ -947,8 +947,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_CLEAR: {
-          for (uint8_t n = 0; n < 127; n++) {
-            active_track.del_note(cur_x, w - 1, n);
+          if (pianoroll_mode == 0) {
+            for (uint8_t n = 0; n < 127; n++) {
+              active_track.del_note(cur_x, w - 1, n);
+            }
           }
           return true;
         }

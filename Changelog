@@ -1,3 +1,7 @@
+MCL 4.51a 20/12/2023
+
+  Fixed [ Func ] + [ Clear ] regression in PianoRoll.
+
 MCL 4.51 01/12/2023
 
 Please upgrade to Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
