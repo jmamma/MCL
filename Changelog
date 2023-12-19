@@ -19,7 +19,7 @@ Please upgrade to Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.5
 
   Load Page - Press [ Function ] to select the destination track offset for next load.
 
-  Sample transfers between MCL and MD can be cancelled by pressing MCL button < SAVE/NO >
+  Sample transfers between MCL and MD can be cancelled by pressing the MD's [ No ] key repeatedly.
 
   Microtiming is no longer cleared when unsetting a trig with locks in Step Edit.
 
