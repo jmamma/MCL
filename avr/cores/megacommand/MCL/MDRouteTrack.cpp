@@ -5,9 +5,11 @@ void MDRouteTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                               uint8_t slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  load_routes();
-  //Send routes regardless
-  send_routes();
+   if (mcl_actions.send_machine[slotnumber]) {
+    load_routes();
+    //Send routes regardless
+    send_routes();
+  }
 }
 
 uint16_t MDRouteTrack::calc_latency(uint8_t tracknumber) {

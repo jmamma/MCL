@@ -8,7 +8,9 @@ void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                   uint8_t slotnumber) {
   DEBUG_PRINTLN("transition send");
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  load_perf();
+  if (mcl_actions.send_machine[slotnumber]) {
+    load_perf();
+  }
 }
 
 uint16_t PerfTrack::calc_latency(uint8_t tracknumber) {
