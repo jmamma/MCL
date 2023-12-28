@@ -102,6 +102,7 @@ public:
   }
 
   virtual void clearPattern();
+  /*
   virtual void clearTrack(uint8_t track);
 
   virtual void setTrig(uint8_t track, uint8_t trig) {
@@ -116,9 +117,8 @@ public:
   virtual void setLockIdx(uint8_t track, uint8_t param, int8_t value) {
     paramLocks[track][param] = value;
   }
-
+  */
   virtual void recalculateLockPatterns();
-
   /** ElektronSysexObject implementation */
   virtual bool fromSysex(MidiClass *midi);
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder);
