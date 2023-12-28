@@ -11,18 +11,16 @@ void MCLGUI::put_value_at(uint8_t value, char *str) {
     str[0] = value + '0';
     str[1] = '\0';
   } else if (value < 100) {
-    str[0] = (value % 100) / 10 + '0';
-    str[1] = (value % 10) + '0';
+    str[0] = value / 10 + '0';
+    str[1] = value % 10 + '0';
     str[2] = '\0';
-
   } else if (value < 1000) {
-    str[0] = (value % 1000) / 100 + '0';
-    str[1] = (value % 100) / 10 + '0';
-    str[2] = (value % 10) + '0';
+    str[0] = value / 100 + '0';
+    str[1] = (value / 10) % 10 + '0';
+    str[2] = value % 10 + '0';
     str[3] = '\0';
   }
 }
-
 
 void MCLGUI::draw_textbox(const char *text, const char *text2) {
   auto oldfont = oled_display.getFont();
