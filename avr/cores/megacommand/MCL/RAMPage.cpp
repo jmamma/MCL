@@ -539,7 +539,8 @@ void RAMPage::display() {
 
   uint8_t w_x = 0, w_y = 2;
   oled_display.drawPixel(w_x + 24, w_y + 0, WHITE);
-  oled_display.drawCircle(w_x + 24, w_y + 0, 2, WHITE);
+  //oled_display.drawCircle(w_x + 24, w_y + 0, 2, WHITE);
+  oled_display.drawRoundRect(w_x + 22, w_y - 2, 5, 5, 1, WHITE);
   oled_display.drawLine(w_x + 12, w_y - 1, w_x + 24, w_y - 3, WHITE);
   oled_display.drawLine(w_x + 17, w_y + 15, w_x + 26, w_y + 2, WHITE);
 
