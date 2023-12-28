@@ -760,7 +760,11 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         links[n].loops = 1;
         links[n].length = (float)chains[n].get_length() /
                           (float)gdt->seq_track->get_speed_multiplier();
+        while (links[n].loops * links[n].length < 8) {
+          links[n].loops++;
+        }
       }
+      //if (links[n].length == 0) { links[n].length = 16; }
       chains[n].inc();
       links[n].row = chains[n].get_row();
       if (links[n].row == 255) {
