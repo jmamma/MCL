@@ -127,7 +127,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   for (uint8_t i = 0; i < num_of_notes; i++) {
     switch (mode) {
     case ARP_RND:
-      note = sort_up[get_random(num_of_notes)] + 12 * random(range);
+      note = sort_up[get_random(num_of_notes)] + 12 * get_random(range);
       break;
     case ARP_UP2:
     case ARP_UPP:
