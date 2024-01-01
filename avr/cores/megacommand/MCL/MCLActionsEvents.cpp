@@ -89,6 +89,12 @@ void MCLActionsCallbacks::StopHardCallback() {
   bool proceed = false;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    GridDeviceTrack *gdt =
+        mcl_actions.get_grid_dev_track(n);
+
+    if (gdt == nullptr)
+      continue;
+
     if (mcl_actions.chains[n].is_mode_queue()) {
       slot_select_array[n] = 1;
       row_array[n] = mcl_actions.chains[n].rows[0];
@@ -134,6 +140,12 @@ void MCLActionsCallbacks::onMidiStartCallback() {
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    GridDeviceTrack *gdt =
+        mcl_actions.get_grid_dev_track(n);
+
+    if (gdt == nullptr)
+      continue;
+
     if (grid_page.active_slots[n] != SLOT_DISABLED) {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
