@@ -96,9 +96,8 @@ void GridSavePage::save() {
     }
   }
 
-  mcl.setPage(GRID_PAGE);
-  trig_interface.off();
   mcl_actions.save_tracks(grid_page.getRow(), track_select_array, save_mode);
+  mcl.setPage(GRID_PAGE);
 }
 
 void GridSavePage::group_select() {

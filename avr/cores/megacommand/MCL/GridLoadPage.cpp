@@ -211,10 +211,8 @@ void GridLoadPage::load() {
       track_select_array[n] = 1;
     }
   }
-  mcl.setPage(GRID_PAGE);
-  trig_interface.off();
-
   grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(), track_select_array, offset);
+  mcl.setPage(GRID_PAGE);
 }
 
 void GridLoadPage::group_select() {
