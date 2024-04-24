@@ -128,8 +128,9 @@ clean:
 
 upload: main.hex
 	echo "DEVICE is $(AVR_DEVICE)"; \
-  echo "RAM USAGE: `$(AVRSIZE) main.elf | grep main | awk '{ print $$2 + $$3}'`"; \
-  ${AVRDUDE} -C${AVRDUDE_CFG} -v -V -patmega2560 -cwiring -P${AVR_DEVICE} -b115200 -D -Uflash:w:./main.hex
+    echo "RAM USAGE: `$(AVRSIZE) main.elf | grep main | awk '{ print $$2 + $$3}'`"; \
+    ./checksum.py main.hex; \
+    ${AVRDUDE} -C${AVRDUDE_CFG} -v -V -patmega2560 -cwiring -P${AVR_DEVICE} -b115200 -D -Uflash:w:./main.hex
 
 debug: CXXFLAGS += -DDEBUGMODE=1
 debug: CFLAGS += -DDEBUGMODE=1

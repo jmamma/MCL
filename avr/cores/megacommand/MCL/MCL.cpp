@@ -2,6 +2,49 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
+
+uint32_t read_bytes_progmem(uint32_t address, uint8_t n) {
+    uint32_t value = 0;
+    for (uint8_t i = 0; i < n; i++) {
+        uint8_t byte = pgm_read_byte_far(address + i); // Read a byte from program memory
+        value |= (uint32_t)byte << (8 * i); // Combine bytes into a 32-bit value
+    }
+    return value;
+}
+
+
+bool health_check() {
+   uint32_t memoryAddress = 256 * 1024 - 16 * 1024 - 6;
+   uint32_t length = read_bytes_progmem(memoryAddress, 4);
+   uint16_t checksum = (uint16_t) read_bytes_progmem(memoryAddress + 4, 2);
+   DEBUG_PRINTLN(length);
+   DEBUG_PRINTLN(checksum);
+
+   uint16_t calc_checksum = 0;
+   uint32_t n = 0;
+   uint8_t byte = 0;
+
+   for (uint32_t n = 0; n < length; n++) {
+     uint8_t last_byte = byte;
+     byte = pgm_read_byte_far(n);
+     if (n % 2 == 0) {
+       calc_checksum ^= (byte << 8) | last_byte;
+     }
+   }
+
+   DEBUG_PRINTLN(calc_checksum);
+
+#ifdef DEBUGMODE
+   if (calc_checksum != checksum) {
+      DEBUG_PRINTLN("checksum error");
+   }
+#endif
+
+   return calc_checksum == checksum;
+
+}
+
+
 void sdcard_bench() {
 
   EmptyTrack empty_track;
@@ -103,10 +146,17 @@ void MCL::setup() {
   DEBUG_PRINTLN(BANK3_FILE_ENTRIES_END);
   bool ret = false;
 
-  delay(100);
-
+  delay(50);
+  bool health = health_check();
   ret = mcl_sd.sd_init();
   gfx.init_oled();
+
+  if (!health) {
+    oled_display.textbox("CHECKSUM ", "ERROR");
+    oled_display.display();
+    while (1);
+  }
+
   R.Clear();
   R.use_icons_boot();
 

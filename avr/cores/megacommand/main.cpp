@@ -44,8 +44,56 @@ void my_init_ram(void) {
   PORTB &= ~(_BV(PB0));
 #endif
   XMCRA |= _BV(SRE);
-}
 
+  //Leds
+
+  DDRE |= _BV(PE4) | _BV(PE5);
+  //SRAM tests
+
+  switch_ram_bank(1);
+  volatile uint8_t *ptr;
+  uint8_t linear = 0;
+  uint8_t read_bank0, read_bank1 = 0;
+
+  for (ptr = reinterpret_cast<uint8_t *> (0x2200); ptr < reinterpret_cast<uint8_t *> (0xFFFF); ptr++) {
+   switch_ram_bank(0);
+   uint8_t random_number = pgm_read_byte(rand_ptr++) || 1;
+   //Store a random number in bank 0
+   *ptr = random_number;
+   //Read value back from bank 0
+   read_bank0 = *ptr;
+   switch_ram_bank(1);
+   //Store same random number in bank 1
+   *ptr = read_bank0;
+   //Read bank1
+   read_bank1 = *ptr;
+   if ((read_bank0 == 0) || (read_bank1 == 0) || (read_bank0 != random_number) || (read_bank1 != random_number))  {
+     goto fail;
+   }
+   //Store lineearly increases values in bank 1, for linear read later. (loop compaction)
+   *ptr = linear++;
+  }
+
+  //Linear read.
+  linear = 0;
+  for (ptr = reinterpret_cast<uint8_t *> (0x2200); ptr < reinterpret_cast<uint8_t *> (0xFFFF); ptr++) {
+    read_bank0 = *ptr;
+    if (read_bank0 != linear) {
+      goto fail;
+    }
+    linear++;
+  }
+
+  switch_ram_bank(0);
+
+  return;
+
+  fail:
+  while (1) {
+     setLed();
+     setLed2();
+  }
+}
 uint8_t tcnt2;
 
 void timer_init(void) {
@@ -112,7 +160,6 @@ void init(void) {
   SET_BIT(DDRD, PD4);
   SET_BIT(PORTD, PD4);
 
-  DDRE |= _BV(PE4) | _BV(PE5);
 
   //For MC SMD. Level shifter 1 + 2 enable.
   //PL4 == MEGA2560 level shifter enable
