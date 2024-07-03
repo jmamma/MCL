@@ -63,11 +63,14 @@ See https://github.com/jmamma/MCL/releases for pre-compiled firmware binaries
 
 Compresssed assets for the graphics and menu structures must be generated first by running 
 one of the following scripts using Powershell.
-  resource/gen-resource-linux.ps1 (MAC/Linux)
-  resource/gen-resource.ps1 (Windows)
-  
-The MCL firmeware can then be compiled using the provided Makefile avr/cores/megacommand/Makefile
-
+```
+  MCL/resource/gen-resource-linux.ps1 (MAC/Linux)
+  MCL/resource/gen-resource.ps1 (Windows)
+```
+The MCL firmeware can then be compiled using the provided Makefile
+```
+  MCL/avr/cores/megacommand/Makefile
+```
 Only avr-gcc 7.30 should be used (included with the legacy IDE). 
 Newer versions of avr-gcc result in a much larger binary and stability problems.
 
