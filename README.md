@@ -57,19 +57,18 @@ https://www.arduino.cc/en/software/OldSoftwareReleases
 
 ### Compiling MegaCommandLive Firmware
 
-All the source code for MegaCommand Live is contained within this repository.
+* Pre-compiled binaries are provided in the download sections *
 
-To compile the MegaCommandLive firmware do the following:
+It's no longer possible to compile the MCL firmware from within the Arduino IDE.
 
-1) Create a new Arduino Sketch
+Compresssed assets for the graphics and menu structures must be generated first by running 
+one of the following scripts using Powershell.
+  resource/gen-resource-linux.ps1 (MAC/Linux)
+  resource/gen-resource.ps1 (Windows)
+  
+The MCL firmeware can then be compiled using the provided Makefile avr/cores/megacommand/Makefile
 
-2) Insert the following code
+Only avr-gcc 7.30 should be used (included with the legacy IDE). 
+Newer versions of avr-gcc result in a much larger binary and stability problems.
 
-```
-#include "MCL.h"
-
-void setup() {
-  mcl.setup();
-}
-```
-3) Compile sketch and upload to your MegaCommand
+  
