@@ -57,9 +57,9 @@ https://www.arduino.cc/en/software/OldSoftwareReleases
 
 ### Compiling MegaCommandLive Firmware
 
-* Pre-compiled binaries are provided in the download sections *
+See https://github.com/jmamma/MCL/releases for pre-compiled firmware binaries
 
-It's no longer possible to compile the MCL firmware from within the Arduino IDE.
+*It's no longer possible to compile the MCL firmware from within the Arduino IDE.
 
 Compresssed assets for the graphics and menu structures must be generated first by running 
 one of the following scripts using Powershell.
