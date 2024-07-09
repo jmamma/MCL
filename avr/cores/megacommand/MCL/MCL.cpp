@@ -147,15 +147,19 @@ void MCL::setup() {
   bool ret = false;
 
   delay(50);
+#ifdef CHECKSUM
   bool health = health_check();
+#endif
   ret = mcl_sd.sd_init();
   gfx.init_oled();
 
+#ifdef CHECKSUM
   if (!health) {
     oled_display.textbox("CHECKSUM ", "ERROR");
     oled_display.display();
     while (1);
   }
+#endif
 
   R.Clear();
   R.use_icons_boot();
