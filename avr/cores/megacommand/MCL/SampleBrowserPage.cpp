@@ -71,7 +71,7 @@ void SampleBrowserPage::display() {
       oled_display.print(F(":"));
       oled_display.print(ms);
       */
-        uint32_t size = wav_file.file.size();
+        size = wav_file.file.size();
         wav_file.close();
       }
       else if (is_syx) {
