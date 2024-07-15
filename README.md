@@ -61,17 +61,17 @@ See https://github.com/jmamma/MCL/releases for pre-compiled firmware binaries
 
 *It's no longer possible to compile the MCL firmware from within the Arduino IDE.*
 
-Compresssed assets for the graphics and menu structures must be generated first by running 
+Compressed assets for the graphics and menu structures must be generated first by running 
 one of the following scripts using Powershell.
 ```
   MCL/resource/gen-resource-linux.ps1 (MAC/Linux)
   MCL/resource/gen-resource.ps1 (Windows)
 ```
-The MCL firmeware can then be compiled using the provided Makefile
+The MCL firmware can then be compiled using the provided Makefile
 ```
   MCL/avr/cores/megacommand/Makefile
 ```
 Only avr-gcc 7.30 should be used (included with the legacy IDE). 
 Newer versions of avr-gcc result in a much larger binary and stability problems.
 
-  
+Example steps to compile the firmware on Mac: [README-BUILD-MAC.md](README-BUILD-MAC.md)
