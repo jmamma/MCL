@@ -69,6 +69,7 @@ public:
 
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
+  MidiUartParent *uart2 = &MidiUart2;
   uint8_t mute_state = SEQ_MUTE_OFF;
 
   bool record_mutes;

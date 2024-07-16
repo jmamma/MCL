@@ -230,10 +230,11 @@ void MCLSeq::seq() {
   //  Stopwatch sw;
   MDSeqTrack::md_trig_mask = 0;
   MDSeqTrack::load_machine_cache = 0;
+  MidiUartParent *uart_;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].seq(uart);
+    md_tracks[i].seq(uart,uart2);
     md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
-    md_arp_tracks[i].seq(uart);
+    md_arp_tracks[i].seq(uart_);
   }
 
   if (MDSeqTrack::md_trig_mask > 0) {
