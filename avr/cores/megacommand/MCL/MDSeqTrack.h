@@ -122,7 +122,7 @@ public:
   void load_cache();
 
   void init_notes() {
-    // Copy 4 notes and notes.vel from kit to this structure;
+    // Copy 3 notes, len and vel from kit to notes structure;
     memcpy(&notes.note1, MD.kit.params[track_number], 5);
     notes.count_down = 0;
   }

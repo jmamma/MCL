@@ -136,10 +136,10 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
   }
 
   if (notes.count_down) {
-      notes.count_down--;
-      if (notes.count_down == 0) {
-        send_notes_off();
-      }
+    notes.count_down--;
+    if (notes.count_down == 0) {
+      send_notes_off();
+    }
   }
 
   if (record_mutes) {
@@ -176,9 +176,11 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
       }
       auto &step = steps[current_step];
       uint8_t send_trig = trig_conditional(step.cond_id);
+      bool is_midi_machine =
+          (MD.kit.models[track_number] & 0xF0 == MID_01_MODEL);
       if (send_trig == TRIG_TRUE ||
           (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
-        if (MD.kit.models[track_number] & 0xF0 == MID_01_MODEL) {
+        if (is_midi_machine) {
           send_notes_off();
           init_notes();
         }
@@ -188,8 +190,12 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
           locks_slides_idx = lock_idx;
         }
         if (send_trig == TRIG_TRUE && step.trig) {
-          notes.count_down = (notes.len * timing_mid);
-          send_trig_inline();
+          if (is_midi_machine) {
+            notes.count_down = (notes.len * timing_mid);
+            send_notes_on();
+          } else {
+            send_trig_inline();
+          }
         }
       }
     }
@@ -445,9 +451,9 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
           uart2->sendProgramChange(channel, val);
           break;
         default:
-            bool t = p & 1;
-            uint8_t d = (p - 8) / 2;
-            ccs[d][t] = val;
+          bool t = p & 1;
+          uint8_t d = (p - 8) / 2;
+          ccs[d][t] = val;
           break;
         }
 
@@ -455,10 +461,12 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
           for (uint8_t n = 0; n < number_midi_cc; n++) {
             uint8_t a = ccs[n];
             if (a) {
-              //0 = off
-              //1 = bank (0)
-              //2 = 2
-              if (a == 1) { a = 0; };
+              // 0 = off
+              // 1 = bank (0)
+              // 2 = 2
+              if (a == 1) {
+                a = 0;
+              };
               uart2->sendCC(channel, a, val);
             }
           }
@@ -519,14 +527,9 @@ void MDSeqTrack::send_trig() { send_trig_inline(); }
 
 void MDSeqTrack::send_trig_inline() {
   mixer_page.trig(track_number);
-  if ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL) {
-    uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
-    send_notes_on();
-     } else {
-    // MD.triggerTrack(track_number, 127, uart);
-    // Parallel trig:
-    SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
-  }
+  // MD.triggerTrack(track_number, 127, uart);
+  // Parallel trig:
+  SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
 }
 
 uint8_t MDSeqTrack::trig_conditional(uint8_t condition) {
