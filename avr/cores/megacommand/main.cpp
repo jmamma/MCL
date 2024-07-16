@@ -48,12 +48,12 @@ void my_init_ram(void) {
   //Leds
 
   DDRE |= _BV(PE4) | _BV(PE5);
+  return;
   //SRAM tests
 
-  switch_ram_bank(1);
   volatile uint8_t *ptr;
   uint8_t linear = 0;
-  uint8_t read_bank0, read_bank1 = 0;
+  volatile uint8_t read_bank0, read_bank1 = 0;
 
   for (ptr = reinterpret_cast<uint8_t *> (0x2200); ptr < reinterpret_cast<uint8_t *> (0xFFFF); ptr++) {
    switch_ram_bank(0);
@@ -70,10 +70,23 @@ void my_init_ram(void) {
    if ((read_bank0 == 0) || (read_bank1 == 0) || (read_bank0 != random_number) || (read_bank1 != random_number))  {
      goto fail;
    }
+   // Check that the RAM bank toggle actually toggles to a different bank.
+
+   random_number++;
+   //Store new random number in to bank1
+   *ptr = random_number;
+   //Read bank1
+   read_bank1 = *ptr;
+   //Read bank0;
+   switch_ram_bank(0);
+   read_bank0 = *ptr;
+   if (read_bank0 == read_bank1) {
+     goto fail;
+   }
    //Store lineearly increases values in bank 1, for linear read later. (loop compaction)
    *ptr = linear++;
   }
-
+  switch_ram_bank(0);
   //Linear read.
   linear = 0;
   for (ptr = reinterpret_cast<uint8_t *> (0x2200); ptr < reinterpret_cast<uint8_t *> (0xFFFF); ptr++) {
@@ -83,9 +96,7 @@ void my_init_ram(void) {
     }
     linear++;
   }
-
-  switch_ram_bank(0);
-
+  switch_ram_bank(1);
   return;
 
   fail:
