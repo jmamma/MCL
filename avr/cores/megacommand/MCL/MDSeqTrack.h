@@ -23,7 +23,7 @@ public:
   uint8_t note3;
   uint8_t len;
   uint8_t vel;
-  uint8_t count_down;
+  uint16_t count_down;
 };
 
 class MDSeqTrack : public MDSeqTrackData, public SeqSlideTrack {
