@@ -82,7 +82,6 @@ public:
   void load_perf_locks(uint8_t state);
   void toggle_or_solo(bool solo = false);
   // Handled in MCLSeq
-  void onNoteOnCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
                                     uint8_t value);
 

@@ -840,22 +840,3 @@ void MixerPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
   mixer_page.set_display_mode(track_param);
 }
 
-uint8_t MixerPage::note_to_trig(uint8_t note_num) {
-  uint8_t trig_num = 0;
-  for (uint8_t i = 0; i < sizeof(MD.global.drumMapping); i++) {
-    if (note_num == MD.global.drumMapping[i]) {
-      trig_num = i;
-    }
-  }
-  return trig_num;
-}
-
-void MixerPage::onNoteOnCallback_Midi(uint8_t *msg) {
-  uint8_t note_num = msg[1];
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-
-  uint8_t n = note_to_trig(msg[1]);
-  if (msg[0] != 153) {
-    mixer_page.disp_levels[n] = MD.kit.levels[n];
-  }
-}

@@ -282,7 +282,20 @@ void MCLSeq::seq() {
 }
 
 void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  mixer_page.onNoteOnCallback_Midi(msg);
+  uint8_t note_num = msg[1];
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+
+  uint8_t n = MD.noteToTrack(msg[1]);
+  if (n < 16) {
+    bool is_midi_machine = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);
+    if (is_midi_machine) {
+      mcl_seq.md_tracks[n].send_notes();
+    }
+    if (msg[0] != 153) {
+      mixer_page.disp_levels[n] = MD.kit.levels[n];
+    }
+
+  }
 }
 
 void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}

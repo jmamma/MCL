@@ -177,7 +177,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
       auto &step = steps[current_step];
       uint8_t send_trig = trig_conditional(step.cond_id);
       bool is_midi_machine =
-          (MD.kit.models[track_number] & 0xF0 == MID_01_MODEL);
+          ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
       if (send_trig == TRIG_TRUE ||
           (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
         if (is_midi_machine) {
@@ -399,10 +399,60 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
   send_parameter_locks_inline(step, trig, idx);
 }
 
+void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t ccs[][2], bool send_ccs) {
+        uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+
+        switch (param) {
+        case 0:
+        case 1:
+        case 2:
+          ((uint8_t *)&notes)[param] = val;
+          break;
+        case 3:
+          notes.len = val;
+          break;
+        case 4:
+          notes.vel = val;
+          break;
+        case 5:
+          uart2->sendPitchBend(channel, val);
+          break;
+        case 6:
+          uart2->sendCC(channel, 0x1, val);
+          break;
+        case 7:
+          uart2->sendChannelPressure(channel, val);
+          break;
+        case 20:
+          uart2->sendProgramChange(channel, val);
+          break;
+        default:
+          bool t = param & 1;
+          uint8_t d = (param - 8) / 2;
+          ccs[d][t] = val;
+          break;
+        }
+
+        if (send_ccs) {
+          for (uint8_t n = 0; n < number_midi_cc; n++) {
+            uint8_t a = ccs[n][1];
+            if (a) {
+              // 0 = off
+              // 1 = bank (0)
+              // 2 = 2
+              if (a == 1) {
+                a = 0;
+              };
+              uart2->sendCC(channel, a, val);
+            }
+          }
+        }
+
+}
+
 void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
                                              uint16_t lock_idx) {
 
-  const uint8_t number_midi_cc = 6;
   uint8_t ccs[number_midi_cc][2];
   memset(ccs, 0, sizeof(ccs));
 
@@ -424,53 +474,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     lock_idx += lock_bit;
     if (send) {
       if ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL && p < 21) {
-        uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
-
-        switch (p) {
-        case 0:
-        case 1:
-        case 2:
-          ((uint8_t *)&notes)[p] = val;
-          break;
-        case 3:
-          notes.len = val;
-          break;
-        case 4:
-          notes.vel = val;
-          break;
-        case 5:
-          uart2->sendPitchBend(channel, val);
-          break;
-        case 6:
-          uart2->sendCC(channel, 0x1, val);
-          break;
-        case 7:
-          uart2->sendChannelPressure(channel, val);
-          break;
-        case 20:
-          uart2->sendProgramChange(channel, val);
-          break;
-        default:
-          bool t = p & 1;
-          uint8_t d = (p - 8) / 2;
-          ccs[d][t] = val;
-          break;
-        }
-
-        if (c == NUM_LOCKS - 1) {
-          for (uint8_t n = 0; n < number_midi_cc; n++) {
-            uint8_t a = ccs[n];
-            if (a) {
-              // 0 = off
-              // 1 = bank (0)
-              // 2 = 2
-              if (a == 1) {
-                a = 0;
-              };
-              uart2->sendCC(channel, a, val);
-            }
-          }
-        }
+         process_note_locks(p, val, ccs, (c == (NUM_LOCKS - 1)));
       }
 
       else {
@@ -483,11 +487,21 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
 
 void MDSeqTrack::reset_params() {
   bool re_assign = false;
+  bool is_midi_machine = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  uint8_t ccs[number_midi_cc][2];
+  memset(ccs, 0, sizeof(ccs));
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if (locks_params[c] > 0) {
-      MDTrack md_track;
-      md_track.get_machine_from_kit(track_number);
-      MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
+      if (is_midi_machine) {
+        uint8_t p = locks_params[c] - 1;
+        uint8_t val = MD.kit.params[track_number][p];
+        process_note_locks(p, val, ccs, (c == (NUM_LOCKS - 1)));
+      }
+      else {
+        MDTrack md_track;
+        md_track.get_machine_from_kit(track_number);
+        MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
+      }
       return;
     }
   }
