@@ -180,7 +180,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
           ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
       if (send_trig == TRIG_TRUE ||
           (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
-        if (is_midi_machine) {
+        if (is_midi_machine && send_trig == TRIG_TRUE && step.trig) {
           send_notes_off();
           init_notes();
         }
@@ -399,55 +399,55 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
   send_parameter_locks_inline(step, trig, idx);
 }
 
-void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t ccs[][2], bool send_ccs) {
-        uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val,
+                                    uint8_t ccs[][2], bool send_ccs) {
+  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
 
-        switch (param) {
-        case 0:
-        case 1:
-        case 2:
-          ((uint8_t *)&notes)[param] = val;
-          break;
-        case 3:
-          notes.len = val;
-          break;
-        case 4:
-          notes.vel = val;
-          break;
-        case 5:
-          uart2->sendPitchBend(channel, val);
-          break;
-        case 6:
-          uart2->sendCC(channel, 0x1, val);
-          break;
-        case 7:
-          uart2->sendChannelPressure(channel, val);
-          break;
-        case 20:
-          uart2->sendProgramChange(channel, val);
-          break;
-        default:
-          bool t = param & 1;
-          uint8_t d = (param - 8) / 2;
-          ccs[d][t] = val;
-          break;
-        }
+  switch (param) {
+  case 0:
+  case 1:
+  case 2:
+    ((uint8_t *)&notes)[param] = val;
+    break;
+  case 3:
+    notes.len = val;
+    break;
+  case 4:
+    notes.vel = val;
+    break;
+  case 5:
+    uart2->sendPitchBend(channel, val);
+    break;
+  case 6:
+    uart2->sendCC(channel, 0x1, val);
+    break;
+  case 7:
+    uart2->sendChannelPressure(channel, val);
+    break;
+  case 20:
+    uart2->sendProgramChange(channel, val);
+    break;
+  default:
+    bool t = param & 1;
+    uint8_t d = (param - 8) / 2;
+    ccs[d][t] = val;
+    break;
+  }
 
-        if (send_ccs) {
-          for (uint8_t n = 0; n < number_midi_cc; n++) {
-            uint8_t a = ccs[n][1];
-            if (a) {
-              // 0 = off
-              // 1 = bank (0)
-              // 2 = 2
-              if (a == 1) {
-                a = 0;
-              };
-              uart2->sendCC(channel, a, val);
-            }
-          }
-        }
-
+  if (send_ccs) {
+    for (uint8_t n = 0; n < number_midi_cc; n++) {
+      uint8_t a = ccs[n][1];
+      if (a) {
+        // 0 = off
+        // 1 = bank (0)
+        // 2 = 2
+        if (a == 1) {
+          a = 0;
+        };
+        uart2->sendCC(channel, a, val);
+      }
+    }
+  }
 }
 
 void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
@@ -474,7 +474,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     lock_idx += lock_bit;
     if (send) {
       if ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL && p < 21) {
-         process_note_locks(p, val, ccs, (c == (NUM_LOCKS - 1)));
+        process_note_locks(p, val, ccs, (c == (NUM_LOCKS - 1)));
       }
 
       else {
@@ -496,8 +496,7 @@ void MDSeqTrack::reset_params() {
         uint8_t p = locks_params[c] - 1;
         uint8_t val = MD.kit.params[track_number][p];
         process_note_locks(p, val, ccs, (c == (NUM_LOCKS - 1)));
-      }
-      else {
+      } else {
         MDTrack md_track;
         md_track.get_machine_from_kit(track_number);
         MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
@@ -535,6 +534,48 @@ void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
     }
     lock_idx += lock_bit;
   }
+}
+
+void MDSeqTrack::send_notes() {
+  if (notes.count_down) {
+    send_notes_off();
+  }
+  init_notes();
+  reset_params();
+  send_notes_on();
+}
+
+void MDSeqTrack::send_notes_on() {
+  TrigNotes *n = &notes;
+  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+
+  if (n->note1 != 255) {
+    mixer_page.trig(track_number);
+    uart2->sendNoteOn(channel, n->note1, n->vel);
+    if (n->note2 != 64) {
+      uart2->sendNoteOn(channel, n->note1 + n->note2 - 64, n->vel);
+    }
+    if (n->note3 != 64) {
+      uart2->sendNoteOn(channel, n->note1 + n->note3 - 64, n->vel);
+    }
+  }
+}
+
+void MDSeqTrack::send_notes_off() {
+  TrigNotes *n = &notes;
+  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+
+  if (n->note1 != 255) {
+    uart2->sendNoteOff(channel, n->note1);
+    if (n->note2 != 64) {
+      uart2->sendNoteOff(channel, n->note1 + n->note2 - 64);
+    }
+    if (n->note3 != 64) {
+      uart2->sendNoteOff(channel, n->note1 + n->note3 - 64);
+    }
+    n->note1 = 255;
+  }
+  n->count_down = 0;
 }
 
 void MDSeqTrack::send_trig() { send_trig_inline(); }

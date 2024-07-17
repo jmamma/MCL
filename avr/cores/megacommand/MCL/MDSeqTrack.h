@@ -129,43 +129,10 @@ public:
     notes.count_down = 0;
   }
   void process_note_locks(uint8_t param, uint8_t val, uint8_t ccs[][2], bool send_ccs);
-  void send_notes() {
-    if (notes.count_down) { send_notes_off(); }
-    init_notes();
-    reset_params();
-    send_notes_on();
-  }
-  void send_notes_on() {
-    TrigNotes *n = &notes;
-    uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
 
-    if (n->note1 != 255) {
-      uart2->sendNoteOn(channel, n->note1, n->vel);
-      if (n->note2 != 63) {
-        uart2->sendNoteOn(channel, n->note1 + n->note2 - 63, n->vel);
-      }
-      if (n->note3 != 63) {
-        uart2->sendNoteOn(channel, n->note1 + n->note3 - 63, n->vel);
-      }
-    }
-  }
-
-  void send_notes_off() {
-    TrigNotes *n = &notes;
-    uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
-
-    if (n->note1 != 255) {
-      uart2->sendNoteOff(channel, n->note1);
-      if (n->note2 != 63) {
-        uart2->sendNoteOff(channel, n->note1 + n->note2 - 63);
-      }
-      if (n->note3 != 63) {
-        uart2->sendNoteOff(channel, n->note1 + n->note3 - 63);
-      }
-      n->note1 = 255;
-    }
-    n->count_down = 0;
-  }
+  void send_notes();
+  void send_notes_on();
+  void send_notes_off();
 
 };
 
