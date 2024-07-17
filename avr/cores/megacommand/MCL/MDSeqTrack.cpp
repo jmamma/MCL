@@ -600,7 +600,7 @@ void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
   // memset(ccs, 0, sizeof(ccs));
   // Ignore notes, len and vel (those will be obtained from kit upon init_notes
   if (track_param > 4 && track_param < 21) {
-    if (!(track_param & 1) && track_param > 7) {
+    if (!(track_param & 1) && track_param > 7 && track_param < 20) {
       return;
     } // ignore cc destination
     memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
