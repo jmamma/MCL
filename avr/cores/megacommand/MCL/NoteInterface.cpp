@@ -124,7 +124,7 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
-  // MD input is handled by the NoteInterface object
+  // MD input is handled by the TrigInterface object
   if (midi_active_peering.get_device(UART1_PORT) == &MD) {
     return;
   }
@@ -150,12 +150,14 @@ void NoteInterfaceMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
+/*
   Midi.addOnNoteOnCallback(
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
   Midi.addOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
+*/
   Midi2.addOnNoteOnCallback(
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
@@ -170,12 +172,14 @@ void NoteInterfaceMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
+/*
   Midi.removeOnNoteOnCallback(
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
   Midi.removeOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
+*/
   Midi2.removeOnNoteOnCallback(
       this,
       (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
