@@ -313,6 +313,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
+  mcl_seq.md_tracks[track].onControlChangeCallback_Midi(track_param, value);
+
   if (mcl.currentPage() == MIXER_PAGE) {
     mixer_page.onControlChangeCallback_Midi(track, track_param, value);
   }
