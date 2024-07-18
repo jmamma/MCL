@@ -540,7 +540,7 @@ void MDSeqTrack::reset_params() {
         uint8_t p = locks_params[c] - 1;
         uint8_t val = MD.kit.params[track_number][p];
         process_note_locks(p, val, ccs);
-        send_ccs = p & 1 && p > 8;
+        send_ccs |= p & 1 && p > 8;
       } else {
         MDTrack md_track;
         md_track.get_machine_from_kit(track_number);
