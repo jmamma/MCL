@@ -193,9 +193,9 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
           if (is_midi_model) {
             notes.count_down = (notes.len * timing_mid / 2);
             send_notes_on();
-          } else {
-            send_trig_inline();
           }
+          send_trig_inline();
+
         }
       }
     }
