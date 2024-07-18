@@ -530,7 +530,7 @@ void SeqPage::draw_knob_conditional(uint8_t cond) {
   conditional_str(K, cond);
   draw_knob(0, "COND", K);
 }
-
+/*
 void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
   if (cond == 0) {
     strcpy(str, "L1");
@@ -557,6 +557,32 @@ void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
       }
     }
   }
+}
+*/
+void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
+    if (str == nullptr) return;
+
+    if (cond == 0) {
+        str[0] = 'L'; str[1] = '1'; str[2] = '\0';
+    } else {
+        if (cond > NUM_TRIG_CONDITIONS) {
+            cond -= NUM_TRIG_CONDITIONS;
+        }
+
+        if (cond <= 8) {
+            str[0] = 'L'; str[1] = cond + '0'; str[2] = '\0';
+        } else if (cond <= 13) {
+            static const uint8_t prob[5] = {1, 2, 5, 7, 9};
+            str[0] = 'P'; str[1] = prob[cond - 9] + '0'; str[2] = '\0';
+        } else if (cond == 14) {
+            str[0] = '1'; str[1] = 'S'; str[2] = '\0';
+        }
+
+        if (seq_param1.getValue() > NUM_TRIG_CONDITIONS) {
+            str[2] = is_md ? '+' : '^';
+            str[3] = '\0';
+        }
+    }
 }
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
