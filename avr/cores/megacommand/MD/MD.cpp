@@ -274,16 +274,11 @@ MCLGIF *MDClass::gif() { return R.icons_logo->machinedrum_gif; }
 uint8_t *MDClass::gif_data() { return R.icons_logo->machinedrum_gif_data; }
 
 uint8_t MDClass::noteToTrack(uint8_t pitch) {
-  uint8_t i;
-  if (MD.loadedGlobal) {
-    for (i = 0; i < sizeof(MD.global.drumMapping); i++) {
-      if (pitch == MD.global.drumMapping[i])
+ for (uint8_t i = 0; i < sizeof(MD.global.drumMapping); i++) {
+   if (pitch == MD.global.drumMapping[i])
         return i;
     }
-    return 128;
-  } else {
-    return 128;
-  }
+ return 128;
 }
 
 void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
@@ -858,11 +853,7 @@ void MDClass::getPatternName(uint8_t pattern, char str[5]) {
 }
 
 bool MDClass::checkParamSettings() {
-  if (loadedGlobal) {
-    return (MD.global.baseChannel <= 12);
-  } else {
-    return false;
-  }
+  return (MD.global.baseChannel <= 12);
 }
 
 bool MDClass::checkTriggerSettings() { return false; }

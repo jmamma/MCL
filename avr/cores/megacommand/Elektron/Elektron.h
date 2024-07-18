@@ -335,10 +335,7 @@ public:
   uint8_t currentBank;
   /** Stores the current pattern of the MD, usually set by the MDTask. **/
   uint8_t currentPattern;
-  /** Set to true if the kit was loaded (usually set by MDTask). **/
-  bool loadedKit;
   /** Set to true if the global was loaded (usually set by MDTask). **/
-  bool loadedGlobal;
   bool encoder_interface;
   ElektronDevice(
       MidiClass* _midi, const char* _name, const uint8_t _id,
@@ -348,9 +345,6 @@ public:
       currentGlobal = -1;
       currentKit = -1;
       currentPattern = -1;
-
-      loadedKit = false;
-      loadedGlobal = false;
 
       encoder_interface = false;
     }

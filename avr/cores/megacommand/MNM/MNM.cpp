@@ -238,9 +238,7 @@ void MNMClass::setMidiTrack(uint8_t track) { setStatus(0x23, track); }
 
 void MNMClass::revertToCurrentKit(bool reloadKit) {
   if (!reloadKit) {
-    if (loadedKit) {
       MNM.loadKit(MNM.currentKit);
-    }
   } else {
     uint8_t kit = getCurrentKit(500);
     if (kit != 255) {
@@ -251,9 +249,7 @@ void MNMClass::revertToCurrentKit(bool reloadKit) {
 
 void MNMClass::revertToTrack(uint8_t track, bool reloadKit) {
   if (!reloadKit) {
-    if (loadedKit) {
       setMachine(track, track);
-    }
   }
 }
 
