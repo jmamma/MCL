@@ -195,7 +195,6 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
             send_notes_on();
           }
           send_trig_inline();
-
         }
       }
     }
@@ -403,16 +402,43 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
   if (send_ccs) {
     for (uint8_t n = 0; n < number_midi_cc; n++) {
-      uint8_t a = ccs[n * 2];
-      if (a) {
-        uint8_t v = ccs[n * 2 + 1];
-        // 0 = off
-        // 1 = bank (0)
-        // 2 = 2
-        if (a == 1) {
-          a = 0;
-        };
-        uart2->sendCC(channel, a, v);
+      switch (n) {
+      case 0:
+        if (ccs[0] != 255) {
+          uart2->sendPitchBend(channel, ccs[0] << 7);
+        }
+        break;
+      case 1:
+        if (ccs[1] != 255) {
+          uart2->sendCC(channel, 0x1, ccs[1]);
+        }
+        break;
+      case 2:
+        if (ccs[2] != 255) {
+          uart2->sendChannelPressure(channel, ccs[2]);
+        }
+        break;
+      case 15:
+        if (ccs[15] != 255) {
+          notes.prog = ccs[15];
+          uart2->sendProgramChange(channel, ccs[15]);
+        }
+        break;
+      default:
+        if (!(n & 1)) continue;
+        uint8_t a = ccs[n - 1];
+        if (a > 0 && a != 255) {
+          uint8_t v = ccs[n];
+          if (v == 255) continue;
+          // 0 = off
+          // 1 = bank (0)
+          // 2 = 2
+          if (a == 1) {
+            a = 0;
+          };
+          uart2->sendCC(channel, a, v);
+          break;
+        }
       }
     }
   }
@@ -421,52 +447,39 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
 void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs,
                                     bool is_lock) {
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
-
+  uint8_t i = param - 5;
   switch (param) {
   case 0:
   case 1:
   case 2:
-    ((uint8_t *)&notes)[param] = val;
-    break;
   case 3:
-    notes.len = val;
-    break;
   case 4:
-    notes.vel = val;
+    //note values are set via init_notes initially.
+    ((uint8_t *)&notes)[param] = val;
+    //ccs[param] = val; not required.
     break;
   case 5:
-    if (notes.pb != val) {
-      uart2->sendPitchBend(channel, val << 7);
-      notes.pb = val;
-    }
-    break;
   case 6:
-    if (notes.mw != val) {
-      uart2->sendCC(channel, 0x1, val);
-      notes.mw = val;
-    }
-    break;
   case 7:
-    if (notes.at != val) {
-      uart2->sendChannelPressure(channel, val);
-      notes.at = val;
-    }
+    ccs[i] = val;
     break;
   case 20:
     if (notes.prog != val || is_lock) {
-      uart2->sendProgramChange(channel, val);
-      notes.prog = val;
+      ccs[i] = val;
+    }
+    else {
+      ccs[i] = 255;
     }
     break;
   default:
     if (param < 20) {
-      uint8_t d = (param - 8);
       // If the parameter is CC value and the CC dest is not yet set, use the
       // kit value for CC dest
-      if ((d & 1) && ccs[d - 1] == 0) {
-        ccs[d - 1] = MD.kit.params[track_number][param - 1];
+      uint8_t j = i - 1;
+      if ((param & 1) && ccs[j] == 255) {
+        ccs[j] = MD.kit.params[track_number][param - 1];
       }
-      ccs[d] = val;
+      ccs[i] = val;
     }
     break;
   }
@@ -475,16 +488,17 @@ void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs,
 void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
                                              uint16_t lock_idx) {
 
-  uint8_t ccs[number_midi_cc * 2];
-  uint8_t send_mask[20];
+  uint8_t ccs[midi_cc_array_size];
   bool send_ccs = false;
   if (notes.first_trig) {
     // first note, we want to send all CCs regardless if they dont have locks.
-    memset(send_mask, 0, sizeof(send_mask));
-    memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
+    memcpy(ccs, &MD.kit.params[track_number][5], sizeof(ccs));
+    //prevent re-transmission of program change.
+    process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_ccs = true;
+    notes.first_trig = false;
   } else {
-    memset(ccs, 0, sizeof(ccs));
+    memset(ccs, 255, sizeof(ccs));
   }
   bool is_midi_model = (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
@@ -506,8 +520,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     if (send) {
       if (is_midi_model && p < 21) {
         process_note_locks(p, val, ccs, lock_present);
-        send_mask[p] = 1;
-        send_ccs |= (p > 8) && (p & 1);
+        send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
       }
 
       else {
@@ -517,15 +530,6 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     }
   }
   if (is_midi_model) {
-    if (notes.first_trig) {
-      const uint8_t params_to_check[] = {20, 5, 6, 7};
-      for (uint8_t param : params_to_check) {
-        if (!send_mask[param]) {
-          process_note_locks(param, MD.kit.params[track_number][param], ccs);
-        }
-      }
-      notes.first_trig = false;
-    }
     send_notes_ccs(ccs, send_ccs);
   }
 }
@@ -534,9 +538,11 @@ void MDSeqTrack::reset_params() {
   bool re_assign = false;
   bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
   if (is_midi_model) {
-    uint8_t ccs[number_midi_cc * 2];
+    uint8_t ccs[midi_cc_array_size];
     bool send_ccs = true;
-    memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
+    memcpy(ccs, &MD.kit.params[track_number][5], sizeof(ccs));
+    ccs[15] = 255; //disable program change
+    //process_note_locks(20 - 5, MD.kit.params[track_number][20],ccs);
     send_notes_ccs(ccs, send_ccs);
   } else {
     MDTrack md_track;
@@ -623,7 +629,7 @@ void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
   if (!is_midi_model || MD.encoder_interface) {
     return;
   }
-  uint8_t ccs[number_midi_cc * 2];
+  uint8_t ccs[midi_cc_array_size];
   // memset(ccs, 0, sizeof(ccs));
   // Ignore notes, len and vel (those will be obtained from kit upon init_notes
   if (track_param > 4 && track_param < 21) {
@@ -631,7 +637,7 @@ void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
       return;
     } // ignore cc destination
     // memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
-    memset(ccs, 0, sizeof(ccs));
+    memset(ccs, 255, sizeof(ccs));
     process_note_locks(track_param, value, ccs);
     send_notes_ccs(ccs, true);
   }

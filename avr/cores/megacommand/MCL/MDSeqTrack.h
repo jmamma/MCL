@@ -23,10 +23,6 @@ public:
   uint8_t note3;
   uint8_t len;
   uint8_t vel;
-
-  uint8_t pb = 255;
-  uint8_t mw = 255;
-  uint8_t at = 255;
   uint8_t prog = 255;
 
   uint16_t count_down;
@@ -45,7 +41,8 @@ public:
 
   TrigNotes notes;
 
-  const uint8_t number_midi_cc = 6;
+  const uint8_t number_midi_cc = 6 * 2 + 4;
+  const uint8_t midi_cc_array_size = 6 * 2 + 4;
 
   MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
   ALWAYS_INLINE() void reset() {
