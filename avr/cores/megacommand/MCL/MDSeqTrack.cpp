@@ -475,15 +475,16 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
 
   uint8_t ccs[number_midi_cc * 2];
   uint8_t send_mask[20];
+  bool send_ccs = false;
   if (notes.first_trig) {
     //first note, we want to send all CCs regardless if they dont have locks.
     memset(send_mask,0,sizeof(send_mask));
     memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
+    send_ccs = true;
   }
   else {
     memset(ccs,0,sizeof(ccs));
   }
-  bool send_ccs = false;
   bool is_midi_model = (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     bool lock_bit = steps[step].is_lock_bit(c);
@@ -927,6 +928,7 @@ void MDSeqTrack::clear_locks() {
 
   memset(locks, 0, sizeof(locks));
   cur_event_idx = 0;
+  notes.first_trig = true;
 }
 
 void MDSeqTrack::clear_track(bool locks) {
@@ -936,6 +938,7 @@ void MDSeqTrack::clear_track(bool locks) {
     clear_locks();
   }
   memset(steps, 0, sizeof(steps));
+  notes.first_trig = true;
 }
 
 void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
