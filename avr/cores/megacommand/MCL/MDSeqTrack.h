@@ -23,7 +23,14 @@ public:
   uint8_t note3;
   uint8_t len;
   uint8_t vel;
+
+  uint8_t pb = 255;
+  uint8_t mw = 255;
+  uint8_t at = 255;
+  uint8_t prog = 255;
+
   uint16_t count_down;
+  bool first_trig;
 };
 
 class MDSeqTrack : public MDSeqTrackData, public SeqSlideTrack {
@@ -45,6 +52,7 @@ public:
     SeqSlideTrack::reset();
     oneshot_mask = 0;
     record_mutes = false;
+    notes.first_trig = true;
     send_notes_off();
   }
 
