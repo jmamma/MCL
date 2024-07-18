@@ -603,7 +603,9 @@ void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
     if (!(track_param & 1) && track_param > 7 && track_param < 20) {
       return;
     } // ignore cc destination
-    memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
+    //memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
+    memset(ccs, 0, sizeof(ccs));
+    if (track_param > 7) { ccs[track_param - 8 - 1] = MD.kit.params[track_number][track_param - 1]; }
     process_note_locks(track_param, value, ccs);
     send_notes_ccs(ccs, true);
   }
