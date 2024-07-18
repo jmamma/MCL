@@ -419,7 +419,7 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
 }
 
 void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val,
-                                    uint8_t *ccs) {
+                                    uint8_t *ccs, bool is_lock) {
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
 
   switch (param) {
@@ -453,7 +453,7 @@ void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val,
     }
     break;
   case 20:
-    if (notes.prog != val) {
+    if (notes.prog != val || is_lock) {
     uart2->sendProgramChange(channel, val);
     notes.prog = val;
     }
@@ -503,7 +503,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     lock_idx += lock_bit;
     if (send) {
       if (is_midi_model && p < 21) {
-        process_note_locks(p, val, ccs);
+        process_note_locks(p, val, ccs, lock_present);
         send_mask[p] = 1;
         send_ccs |= (p > 8) && (p & 1);
       }
