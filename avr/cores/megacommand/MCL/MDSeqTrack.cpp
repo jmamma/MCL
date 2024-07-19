@@ -269,7 +269,43 @@ void MDSeqTrack::recalc_slides() {
 end:
   locks_slides_recalc = 255;
 }
+void MDSeqTrack::find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask) {
+    uint8_t next_step = step + 1;
+    uint8_t max_len = length;
+    curidx += popcount(steps[step].locks);  // Using original popcount lookup
 
+    for (;;) {
+        if (next_step >= max_len) {
+            next_step = 0;
+            curidx = 0;
+            max_len = step;
+        }
+
+        uint8_t lcks = get_step_locks(next_step);
+        uint8_t combined = mask & (lcks | (steps[next_step].trig ? 0xFF : 0));
+
+        while (combined) {
+            uint8_t cur_mask = combined & -combined;  // Get lowest set bit
+            uint8_t i = popcount(cur_mask - 1);  // Use popcount to get index
+
+            if (lcks & cur_mask) {
+                locks_slide_next_lock_val[i] = locks[curidx];
+                curidx++;
+            } else {
+                locks_slide_next_lock_val[i] = MD.kit.params[track_number][locks_params[i] - 1];
+            }
+            locks_slide_next_lock_step[i] = next_step;
+
+            mask &= ~cur_mask;
+            combined &= ~cur_mask;
+
+            if (!mask) return;  // All targets hit
+        }
+
+        next_step++;
+    }
+}
+/*
 void MDSeqTrack::find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask) {
   DEBUG_PRINT_FN();
   DEBUG_DUMP(step);
@@ -313,7 +349,7 @@ again:
     goto again;
   }
 }
-
+*/
 void MDSeqTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
   *_pmask = 0;
   for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
