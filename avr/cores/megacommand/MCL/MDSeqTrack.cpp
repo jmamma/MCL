@@ -402,34 +402,26 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
   if (send_ccs) {
     for (uint8_t n = 0; n < number_midi_cc; n++) {
-      switch (n) {
+    if (ccs[n] == 255) continue;
+    switch (n) {
       case 0:
-        if (ccs[0] != 255) {
           uart2->sendPitchBend(channel, ccs[0] << 7);
-        }
         break;
       case 1:
-        if (ccs[1] != 255) {
           uart2->sendCC(channel, 0x1, ccs[1]);
-        }
         break;
       case 2:
-        if (ccs[2] != 255) {
           uart2->sendChannelPressure(channel, ccs[2]);
-        }
         break;
       case 15:
-        if (ccs[15] != 255) {
           notes.prog = ccs[15];
           uart2->sendProgramChange(channel, ccs[15]);
-        }
         break;
       default:
         if (!(n & 1)) continue;
         uint8_t a = ccs[n - 1];
         if (a > 0 && a != 255) {
           uint8_t v = ccs[n];
-          if (v == 255) continue;
           // 0 = off
           // 1 = bank (0)
           // 2 = 2
