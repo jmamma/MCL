@@ -33,7 +33,8 @@ public:
   void remove_callbacks();
 
   uint8_t note_to_trig(uint8_t);
-  void onNoteOnCallback_Midi(uint8_t *msg);
+  void onNoteCallback_Midi(uint8_t *msg);
+
   void onNoteOffCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
