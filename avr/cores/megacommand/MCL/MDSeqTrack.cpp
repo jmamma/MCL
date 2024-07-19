@@ -494,9 +494,8 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     // first note, we want to send all CCs regardless if they dont have locks.
     memcpy(ccs, &MD.kit.params[track_number][5], sizeof(ccs));
     //prevent re-transmission of program change.
-    process_note_locks(20, MD.kit.params[track_number][20],ccs);
+    //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_ccs = true;
-    notes.first_trig = false;
   } else {
     memset(ccs, 255, sizeof(ccs));
   }
@@ -519,7 +518,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     lock_idx += lock_bit;
     if (send) {
       if (is_midi_model && p < 21) {
-        process_note_locks(p, val, ccs, lock_present);
+        process_note_locks(p, val, ccs, true);
         send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
       }
 
@@ -542,7 +541,8 @@ void MDSeqTrack::reset_params() {
     bool send_ccs = true;
     memcpy(ccs, &MD.kit.params[track_number][5], sizeof(ccs));
     ccs[15] = 255; //disable program change
-    //process_note_locks(20 - 5, MD.kit.params[track_number][20],ccs);
+    //notes.prog = MD.kit.params[track_number][20];
+    //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_notes_ccs(ccs, send_ccs);
   } else {
     MDTrack md_track;

@@ -26,7 +26,7 @@ public:
   uint8_t prog = 255;
 
   uint16_t count_down;
-  bool first_trig;
+  bool first_trig = false;
 };
 
 class MDSeqTrack : public MDSeqTrackData, public SeqSlideTrack {
@@ -49,7 +49,6 @@ public:
     SeqSlideTrack::reset();
     oneshot_mask = 0;
     record_mutes = false;
-    notes.first_trig = true;
     send_notes_off();
   }
 
