@@ -6,11 +6,15 @@
 
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
+  bool is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
 
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   if (tuning) {
     seq_param4.max = tuning->len - 1 + tuning->base;
-  } else {
+  } else if (is_midi_model) {
+    seq_param4.max = 127;
+  }
+  else {
     seq_param4.max = 1;
   }
   seq_param4.cur = 0;
@@ -130,8 +134,9 @@ void SeqStepPage::display() {
     draw_knob(2, "LEN", K);
   }
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
+  bool is_ptc = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL) || tuning != NULL;
   if (show_pitch) {
-    if (tuning != NULL) {
+    if (is_ptc) {
       strcpy(K, "--");
       if (seq_param4.cur != 0) {
         // uint8_t base = tuning->base;
@@ -151,7 +156,7 @@ void SeqStepPage::display() {
 
   if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
-      (tuning != NULL) && !(recording)) {
+      (is_ptc) && !(recording)) {
     uint64_t note_mask[2] = {};
     uint8_t note = seq_param4.cur; // + tuning->base;
     SET_BIT64(note_mask, note);
@@ -243,12 +248,12 @@ void SeqStepPage::loop() {
             break;
           }
           if (seq_param4.hasChanged() && (seq_param4.cur > 0) &&
-              (last_md_track < NUM_MD_TRACKS) && (tuning != NULL)) {
+              (last_md_track < NUM_MD_TRACKS) && (tuning != NULL || is_midi_model)) {
             uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
             uint8_t machine_pitch =
                 seq_ptc_page.get_machine_pitch(last_md_track, note_num);
-
+            if (is_midi_model) { machine_pitch = note_num; }
             if (machine_pitch != MD.kit.params[last_md_track][0]) {
               active_track.set_track_pitch(step, machine_pitch);
               seq_step_page.encoders_used_clock[3] = slowclock; // indicate that encoder has changed.
@@ -376,8 +381,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         pitch_param = 255;
       } else if (tuning) {
       */
-      if (tuning) {
+      if (tuning || is_midi_model) {
         uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(pitch);
+        if (is_midi_model) {
+          note_num = pitch;
+        }
         if (note_num == 255) {
           seq_param4.cur = 0;
         } else {

@@ -573,11 +573,12 @@ void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
   }
 }
 
-void MDSeqTrack::send_notes() {
+void MDSeqTrack::send_notes(uint8_t note1) {
   if (notes.count_down) {
     send_notes_off();
   }
   init_notes();
+  if (note1 != 255) { notes.note1 = note1; }
   reset_params();
   send_notes_on();
 }

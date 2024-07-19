@@ -415,7 +415,16 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel
   }
 
   uint8_t next_track = get_next_voice(note_num, track_number, channel_event);
+  if (next_track > 15) { return; }
+
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num, fine_tune);
+  bool is_midi_model_ = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  if (is_midi_model_) {
+    machine_pitch = note_num;
+    mcl_seq.md_tracks[track_number].send_notes_off();
+    mcl_seq.md_tracks[track_number].send_notes(machine_pitch);
+    goto record;
+  }
   if (machine_pitch == 255) {
     return;
   }
@@ -423,7 +432,7 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel
   MD.setTrackParam(next_track, 0, machine_pitch, uart_);
   MD.triggerTrack(next_track, 127, uart_);
   mixer_page.trig(next_track);
-
+  record:
   if ((recording) && (MidiClock.state == 2)) {
     reset_undo();
     mcl_seq.md_tracks[next_track].record_track(127);
@@ -814,7 +823,14 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
     pitch = seq_ptc_page.process_ext_event(note_num, false, channel);
     uint8_t n = seq_ptc_page.find_arp_track(channel_event);
     seq_ptc_page.render_arp(false, SeqPage::midi_device, n);
-
+    if (pitch == 255) { return; }
+    ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[n];
+    bool is_midi_model_ = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);;
+    if (is_midi_model_) {
+      if (!arp_track->enabled || (MidiClock.state != 2)) {
+      mcl_seq.md_tracks[n].send_notes_off();
+      }
+    }
     return;
   }
 

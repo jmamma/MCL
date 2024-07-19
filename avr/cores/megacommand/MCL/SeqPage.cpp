@@ -30,6 +30,8 @@ uint16_t SeqPage::mute_mask = 0;
 
 uint8_t SeqPage::step_select = 255;
 
+bool SeqPage::is_midi_model = false;
+
 uint32_t SeqPage::last_md_model = 255;
 
 uint8_t opt_speed = 1;
@@ -232,6 +234,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     DEBUG_PRINTLN(track);
     if (track >= NUM_MD_TRACKS) { return; }
     last_md_track = track;
+    is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
