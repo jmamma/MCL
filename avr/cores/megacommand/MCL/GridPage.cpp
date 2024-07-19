@@ -83,7 +83,7 @@ void GridPage::close_bank_popup() {
     DEBUG_PRINTLN("setting page");
     mcl.setPage(last_page);
   }
-  last_page = 255;
+  last_page = NULL_PAGE;
   bank_popup = 0;
   note_interface.init_notes();
   // Clear blink leds
@@ -611,8 +611,9 @@ bool GridPage::swap_grids() {
     proj.grid_select = grid_select_apply;
     ((MCLEncoder *)encoders[0])->max = getWidth() - 1;
     //load_slot_models();
-    return;
+    return true;
   }
+  return false;
 }
 
 void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
@@ -621,6 +622,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   uint8_t _col = getCol();;
 
+    bool activate_header = false;
   //old_col != 255 indicates that the grid selection spans grids x and y.
   if (old_col != 255) {
     _col = old_col;
@@ -630,8 +632,13 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   GridTrack temp_slot;
   temp_slot.load_from_grid(_col, getRow());
 
+  uint8_t track_select_array[NUM_SLOTS] = {0};
+  SeqTrack seq_track;
+  uint16_t target_length = slot.link.length * seq_track.get_speed_multiplier(slot.link.speed) * slot.link.loops;
+
+
   if (old_col == 255) {
-    if (swap_grids()) { return; }
+    if (!swap_grids()) { return; }
   }
 
   uint8_t load_mode_old = mcl_cfg.load_mode;
@@ -722,15 +729,11 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     oled_display.display();
 
 
-    bool activate_header = false;
 
-    uint8_t track_select_array[NUM_SLOTS] = {0};
     GridRowHeader header;
 
-    SeqTrack seq_track;
-    uint16_t target_length = slot.link.length * seq_track.get_speed_multiplier(slot.link.speed) * slot.link.loops;
-
     again:
+
 
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       uint8_t ypos = y + getRow();

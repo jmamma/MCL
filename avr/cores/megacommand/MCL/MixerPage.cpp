@@ -535,7 +535,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
               mcl_seq.ext_tracks[track].toggle_mute();
             }
             midi_device->muteTrack(track, seq_track->mute_state);
-            return;
+            return true;
           }
 
           // Toggle preview mutes

@@ -47,12 +47,12 @@ void FileBrowserPage::setup() {
   encoders[2]->cur = 1;
 }
 
-void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
+void FileBrowserPage::get_entry(uint16_t n, char *entry) {
   uint8_t discard_type;
   get_entry(n, entry, discard_type);
 }
 
-void FileBrowserPage::get_entry(uint16_t n, const char *entry, uint8_t &type) {
+void FileBrowserPage::get_entry(uint16_t n, char *entry, uint8_t &type) {
   volatile uint8_t *ptr =
       (uint8_t *)BANK3_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
   char buf[FILE_ENTRY_SIZE];

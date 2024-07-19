@@ -416,7 +416,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       show_pitch = false;
       if (IS_BIT_SET16(ignore_release, track)) {
         CLEAR_BIT16(ignore_release, track);
-        return;
+        return true;
       }
       if (step >= active_track.length) {
         return true;

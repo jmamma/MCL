@@ -51,7 +51,7 @@ ARCH_FLAGS    = -mmcu=atmega2560 -DF_CPU=16000000L -DARDUINO=10803 -DARDUINO_AVR
 
 CFLAGS        = -std=gnu11 $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
 CXXFLAGS      = -std=gnu++1z $(COMPILE_FLAGS) $(FEATURE_FLAGS) $(LINK_FLAGS) $(ARCH_FLAGS)
-CXXFLAGS     += -fpermissive -fno-exceptions -fno-threadsafe-statics -fno-rtti
+CXXFLAGS     += -fno-exceptions -fno-threadsafe-statics -fno-rtti
 
 LDFLAGS = $(OPTIM_FLAGS) $(WARN_FLAGS) -flto -fuse-linker-plugin -mrelax $(LINK_FLAGS) $(ARCH_FLAGS)
 

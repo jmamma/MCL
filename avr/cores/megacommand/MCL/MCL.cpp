@@ -77,7 +77,7 @@ void sdcard_bench() {
 
 void mcl_setup() { mcl.setup(); }
 
-static LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
+LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
       &grid_page,           // Index: 0
       &page_select_page,    // Index: 1
       &system_page,         // Index: 2

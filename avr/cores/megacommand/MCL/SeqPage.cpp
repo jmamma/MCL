@@ -209,12 +209,12 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
   if (track > 6) {
     track -= 8;
     if (track >= mcl_seq.num_ext_tracks) {
-      return true;
+      return;
     }
     mcl_seq.ext_tracks[track].toggle_mute();
   } else {
     if (track >= mcl_seq.num_ext_tracks) {
-      return true;
+      return;
     }
     MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
     midi_device = dev;

@@ -15,6 +15,8 @@
 #define SLOT_RAM_RECORD 252
 #define SLOT_RAM_PLAY 251
 
+class GridTrack;
+
 class GridPage : public LightPage {
 public:
   GridRowHeader row_headers[MAX_VISIBLE_ROWS];
@@ -89,6 +91,7 @@ public:
   void prepare();
   bool swap_grids();
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
+
   void load_old_col();
   void close_bank_popup();
 

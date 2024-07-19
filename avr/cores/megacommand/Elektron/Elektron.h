@@ -141,7 +141,7 @@ class MidiDevice {
 public:
   bool connected;
   MidiClass* midi;
-  MidiUartParent* uart;
+  MidiUartClass* uart;
   const char* const name;
   const uint8_t id; // Device identifier
   const bool isElektronDevice;

@@ -65,7 +65,7 @@ bool Grid::new_file(const char *gridname) {
 bool Grid::new_grid(const char *gridname) {
 
   bool ret = false;
-
+  uint8_t ledstatus = 0;
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Creating new grid"));
   if (!new_file(gridname)) {
@@ -79,7 +79,6 @@ bool Grid::new_grid(const char *gridname) {
   oled_display.drawRect(15, 23, 98, 6, WHITE);
 #endif
   // Initialise the project file by filling the grid with blank data.
-  uint8_t ledstatus = 0;
   for (uint16_t i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY

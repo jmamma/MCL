@@ -126,7 +126,7 @@ bool DeviceTrackChunk::load_chunk(volatile void *ptr, uint8_t chunk) {
   if (chunk == get_chunk_count() - 1) {
     chunk_size = get_seq_data_size() - sizeof(seq_data_chunk) * chunk;
   }
-  memcpy(ptr + sizeof(seq_data_chunk) * chunk, seq_data_chunk, chunk_size);
+  memcpy((uint8_t*) ptr + sizeof(seq_data_chunk) * chunk, seq_data_chunk, chunk_size);
   return true;
 }
 

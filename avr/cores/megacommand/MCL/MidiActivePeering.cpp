@@ -17,8 +17,8 @@ uint8_t GenericMidiDevice::get_mute_cc() {
   return mcl_cfg.uart2_cc_mute > 127 ? 255 : mcl_cfg.uart2_cc_mute;
 }
 
-void GenericMidiDevice::muteTrack(uint8_t track, bool mute = true,
-                                  MidiUartParent *uart_ = nullptr) {
+void GenericMidiDevice::muteTrack(uint8_t track, bool mute,
+                                  MidiUartClass *uart_) {
   if (track >= NUM_EXT_TRACKS || mcl_cfg.uart2_cc_mute > 127) {
     return;
   }
@@ -30,7 +30,7 @@ void GenericMidiDevice::muteTrack(uint8_t track, bool mute = true,
 };
 
 void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
-                                         MidiUartParent *uart_ = nullptr) {
+                                         MidiUartClass *uart_) {
   if (track >= NUM_EXT_TRACKS || mcl_cfg.uart2_cc_level > 127) {
     return;
   }
@@ -52,8 +52,8 @@ void GenericMidiDevice::init_grid_devices(uint8_t device_idx) {
 }
 
 /// It is the caller's responsibility to check for null MidiUart device
-static MidiUartParent *_getMidiUart(uint8_t port) {
-  MidiUartParent *ret = nullptr;
+static MidiUartClass *_getMidiUart(uint8_t port) {
+  MidiUartClass *ret = nullptr;
   if (port == UART1_PORT)
     ret = &MidiUart;
 #ifdef EXT_TRACKS

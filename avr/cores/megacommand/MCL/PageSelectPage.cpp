@@ -18,7 +18,7 @@ static uint8_t get_pageidx(uint8_t page_number) {
       return i;
     }
   }
-  return 255;
+  return NULL_PAGE;
 }
 
 static PageIndex get_page(uint8_t pageidx, char *str) {
@@ -31,7 +31,7 @@ static PageIndex get_page(uint8_t pageidx, char *str) {
     if (str) {
       strcpy(str, "----");
     }
-    return 255;
+    return NULL_PAGE;
   }
 }
 
@@ -123,7 +123,7 @@ void PageSelectPage::cleanup() {
 
 uint8_t PageSelectPage::get_nextpage_down() {
   for (int8_t i = page_select - 1; i >= 0; i--) {
-    if (get_page(get_pageidx(i), nullptr) != 255) {
+    if (get_page(get_pageidx(i), nullptr) != NULL_PAGE) {
       return i;
     }
   }
@@ -132,7 +132,7 @@ uint8_t PageSelectPage::get_nextpage_down() {
 
 uint8_t PageSelectPage::get_nextpage_up() {
   for (uint8_t i = page_select + 1; i < 16; i++) {
-    if (get_page(get_pageidx(i), nullptr) != 255) {
+    if (get_page(get_pageidx(i), nullptr) != NULL_PAGE) {
       return i;
     }
   }
@@ -353,7 +353,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   release:
     PageIndex p;
     p = get_page(get_pageidx(page_select), nullptr);
-    if (BUTTON_DOWN(Buttons.BUTTON1) || (p == 255)) {
+    if (BUTTON_DOWN(Buttons.BUTTON1) || (p == NULL_PAGE)) {
       GUI.ignoreNextEvent(Buttons.BUTTON1);
       //  md_exploit.off();
       mcl.setPage(GRID_PAGE);

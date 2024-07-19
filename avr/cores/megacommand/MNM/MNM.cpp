@@ -138,7 +138,7 @@ void MNMClass::setMultiEnvParam(uint8_t param, uint8_t value) {
   uart->sendNRPN(global.baseChannel, 0x40 + param, value);
 }
 
-void MNMClass::muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {
+void MNMClass::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
   if (uart_ == nullptr) { uart_ = uart; }
   uart->sendCC(track + global.baseChannel, 3, mute ? 0 : 1);
 }

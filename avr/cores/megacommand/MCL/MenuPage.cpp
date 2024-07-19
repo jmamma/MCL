@@ -205,7 +205,7 @@ bool MenuPageBase::enter() {
   return false;
 }
 
-bool MenuPageBase::exit() {
+void MenuPageBase::exit() {
   if (GUI.currentPage() != this) {
     return;
   }

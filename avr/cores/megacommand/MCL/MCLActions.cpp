@@ -170,7 +170,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
             save_dev_tracks[i] = false;
             continue;
           }
-          ElektronPattern *p = elektron_devs[i]->getPattern();
+          ElektronPattern *p = (ElektronPattern*) elektron_devs[i]->getPattern();
           if (p->isEmpty()) {
             save_dev_tracks[i] = false;
             continue;

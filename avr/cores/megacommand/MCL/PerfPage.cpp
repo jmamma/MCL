@@ -232,8 +232,8 @@ void PerfPage::display() {
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   mcl_gui.draw_knob_frame();
 
-  const char *info1 = "";
-  const char *info2 = "PARAMETER";
+  char *info1 = "";
+  char *info2 = "PARAMETER";
 
   uint8_t scene = learn - 1;
 
@@ -513,7 +513,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_PASTE: {
           if (undo < NUM_SCENES) {
-            return;
+            return true;
           }
           if (mcl_clipboard.paste_scene(
                   &perf_encoders[perf_id]->perf_data.scenes[t])) {
@@ -526,6 +526,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_CLEAR: {
+          char str[] = "CLEAR SCENE";
           if (t == undo) {
             if (mcl_clipboard.paste_scene(
                     &perf_encoders[perf_id]->perf_data.scenes[undo])) {
@@ -542,7 +543,6 @@ bool PerfPage::handleEvent(gui_event_t *event) {
             mcl_clipboard.copy_scene(
                 &perf_encoders[perf_id]->perf_data.scenes[t]);
           }
-          char str[] = "CLEAR SCENE";
           oled_display.textbox(str, "");
           MD.popup_text(str);
           perf_encoders[perf_id]->perf_data.clear_scene(t);

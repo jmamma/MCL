@@ -351,7 +351,7 @@ bool SampleBrowserPage::_handle_filemenu() {
     return true;
   case FM_SENDALL:
     if (!mcl_gui.wait_for_confirm("Send all", "Overwrite?")) {
-      return;
+      return true;
     }
     char wav_name[FILE_ENTRY_SIZE] = "";
     for (uint8_t n = 0; n < numEntries && !trig_interface.is_key_down(MDX_KEY_NO); n++) {
