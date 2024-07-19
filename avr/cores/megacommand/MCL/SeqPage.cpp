@@ -392,9 +392,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (show_seq_menu) {
       row_func =
           seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
-      MidiDevice* old_dev = opt_midi_device_capture;
-      opt_midi_device_capture = midi_active_peering.get_device(mcl_cfg.seq_dev);
-      if (old_dev == opt_midi_device_capture) {
+      MidiDevice* old_dev = midi_device;
+      midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
+      if (old_dev == midi_device) {
         opt_speed_handler();
         opt_length_handler();
         opt_channel_handler();
