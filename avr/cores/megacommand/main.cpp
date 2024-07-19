@@ -48,7 +48,7 @@ void my_init_ram(void) {
   //Leds
 
   DDRE |= _BV(PE4) | _BV(PE5);
-  return;
+  #if CHECKSUM
   //SRAM tests
 
   volatile uint8_t *ptr;
@@ -104,6 +104,7 @@ void my_init_ram(void) {
      setLed();
      setLed2();
   }
+  #endif
 }
 uint8_t tcnt2;
 
