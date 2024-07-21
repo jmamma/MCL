@@ -53,20 +53,17 @@ static uint8_t buffer[SSD1305_LCDHEIGHT * SSD1305_LCDWIDTH / 8] = {};
 
 // the most basic function, set a single pixel
 void Adafruit_SSD1305::drawPixel(uint8_t x, uint8_t y, uint8_t color) {
-  if ((x >= width()) || (y >= height()))
-   return;
-
+  if (x >= width() || y >= height())
+    return;
   uint16_t index = x + (y / 8) * SSD1305_LCDWIDTH;
-  draw_pixel:
-  // x is which column
+  uint8_t bit = _BV(y & 7);
+
   if (color == WHITE)
-    SET_BIT(buffer[index],y % 8);
-  else if (color == INVERT) {
-    color =
-        (IS_BIT_SET(buffer[index],y % 8)) ? BLACK : WHITE;
-    goto draw_pixel;
-  } else // BLACK
-    CLEAR_BIT(buffer[index],(y % 8));
+    buffer[index] |= bit;
+  else if (color == BLACK)
+    buffer[index] &= ~bit;
+  else // INVERT
+    buffer[index] ^= bit;
 }
 
 void Adafruit_SSD1305::drawFastVLine(uint8_t x, uint8_t y, uint8_t h,
