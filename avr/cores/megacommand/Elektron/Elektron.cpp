@@ -17,6 +17,29 @@ uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
 MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartParent *uart_) {
+   if (!send) {
+        return len + sysex_protocol.header_size + 2;
+    }
+
+    uart_ = uart_ ? uart_ : uart;
+
+    uint8_t buf[256];
+    uint8_t i = 0;
+
+    buf[i++] = 0xF0;
+    memcpy(buf + i, sysex_protocol.header, sysex_protocol.header_size);
+    i += sysex_protocol.header_size;
+
+    for (uint8_t n = 0; n < len; n++) {
+        buf[i++] = data[n] & 0x7F;
+    }
+    buf[i++] = 0xF7;
+
+    uart_->m_putc(buf, i);
+
+    return i;
+}
+/*
   if (uart_ == nullptr) { uart_ = uart; }
 
   uint8_t buf[256];
@@ -37,7 +60,7 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, Midi
   }
   return len + sysex_protocol.header_size + 2;
 }
-
+*/
 uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
   uint8_t data[] = {type, param};
   return sendRequest(data, 2, send);
@@ -318,78 +341,80 @@ uint8_t ElektronDevice::getBlockingStatus(uint8_t type, uint16_t timeout) {
   return connected ? cb.value : 255;
 }
 
-bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
-  SysexCallback cb;
-  uint8_t count = SYSEX_RETRIES;
-  auto listener = getSysexListener();
-  bool ret;
-  while ((MidiClock.state == 2) &&
-         ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-    ;
-  while (count) {
-    listener->addOnKitMessageCallback(
-        &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-    requestKit(kit);
-    DEBUG_PRINTLN("get blocking kit");
-    ret = cb.waitBlocking(timeout);
-    listener->removeOnKitMessageCallback(&cb);
-    if (ret) {
-      midi->midiSysex.rd_cur = listener->msg_rd;
-      auto kit = getKit();
-      if (kit != nullptr && kit->fromSysex(midi)) {
-         DEBUG_PRINTLN("finished");
-         return true;
-      }
+bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t timeout) {
+    SysexCallback cb;
+    uint8_t count = (type == DataType::Global) ? 1 : SYSEX_RETRIES;
+    auto listener = getSysexListener();
+    bool ret = false;
+
+    while ((MidiClock.state == 2) &&
+           ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
+        ;
+
+    while (count--) {
+        switch (type) {
+            case DataType::Kit:
+                listener->addOnKitMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+                requestKit(index);
+                break;
+            case DataType::Pattern:
+                listener->addOnPatternMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+                requestPattern(index);
+                break;
+            case DataType::Global:
+                listener->addOnGlobalMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+                requestGlobal(index);
+                break;
+        }
+
+        ret = cb.waitBlocking(timeout);
+
+        switch (type) {
+            case DataType::Kit:
+                listener->removeOnKitMessageCallback(&cb);
+                break;
+            case DataType::Pattern:
+                listener->removeOnPatternMessageCallback(&cb);
+                break;
+            case DataType::Global:
+                listener->removeOnGlobalMessageCallback(&cb);
+                break;
+        }
+
+        if (ret) {
+            midi->midiSysex.rd_cur = listener->msg_rd;
+            void* data = nullptr;
+            switch (type) {
+                case DataType::Kit:
+                    data = getKit();
+                    break;
+                case DataType::Pattern:
+                    data = getPattern();
+                    break;
+                case DataType::Global:
+                    data = getGlobal();
+                    break;
+            }
+            if (data != nullptr && ((ElektronSysexObject*)data)->fromSysex(midi)) {
+                if (type == DataType::Global) connected = true;
+                return true;
+            }
+        }
     }
-    count--;
-  }
-  return false;
+    return false;
+}
+
+
+bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
+  return getBlockingData(DataType::Kit, kit, timeout);;
 }
 
 bool ElektronDevice::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
-  SysexCallback cb;
-  uint8_t count = SYSEX_RETRIES;
-  auto listener = getSysexListener();
-  bool ret;
-  while ((MidiClock.state == 2) &&
-         ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-    ;
-  while (count) {
-    listener->addOnPatternMessageCallback(
-        &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-    requestPattern(pattern);
-    ret = cb.waitBlocking(timeout);
-    listener->removeOnPatternMessageCallback(&cb);
-
-    if (ret) {
-      midi->midiSysex.rd_cur = listener->msg_rd;
-      auto pattern = getPattern();
-      if (pattern != nullptr && pattern->fromSysex(midi)) {
-        return true;
-      }
-    }
-
-    count--;
-  }
-  return false;
+  return getBlockingData(DataType::Pattern, pattern, timeout);;
 }
 
 bool ElektronDevice::getBlockingGlobal(uint8_t global, uint16_t timeout) {
-  SysexCallback cb;
-  auto listener = getSysexListener();
-  listener->addOnGlobalMessageCallback(
-      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  requestGlobal(global);
-  connected = cb.waitBlocking(timeout);
-  listener->removeOnGlobalMessageCallback(&cb);
-  if (connected) {
-    auto global = getGlobal();
-    midi->midiSysex.rd_cur = listener->msg_rd;
-    if (global != nullptr && global->fromSysex(midi)) {
-      return true;
-    }
-  }
-  return connected;
+   return getBlockingData(DataType::Global, global, timeout);
 }
 
 uint8_t ElektronDevice::getCurrentTrack(uint16_t timeout) {

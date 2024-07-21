@@ -41,6 +41,8 @@ typedef struct short_machine_name_s {
   uint8_t id;
 } short_machine_name_t;
 
+enum class DataType { Kit, Pattern, Global };
+
 /**
  * Class grouping various helper functions to convert elektron sysex
  * data. These are deprecated and should be replaced by the elektron
@@ -465,6 +467,7 @@ public:
    **/
   void requestGlobal(uint8_t global);
 
+  bool getBlockingData(DataType type, uint8_t index, uint16_t timeout);
   /**
    * Get the status answer from the device, blocking until either
    * a message is received or the timeout has run out.
