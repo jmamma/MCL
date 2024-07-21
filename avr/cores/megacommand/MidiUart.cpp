@@ -119,31 +119,31 @@ void MidiUartClass::realtime_isr(uint8_t c) {
 }
 
 ISR(USART0_RX_vect) {
-  select_bank(0);
+  select_bank(BANK0);
   MidiUartUSB.rx_isr();
 }
 
 ISR(USART0_UDRE_vect) {
-  select_bank(0);
+  select_bank(BANK0);
   MidiUartUSB.tx_isr();
 }
 
 ISR(USART1_RX_vect) {
-  select_bank(0);
+  select_bank(BANK0);
   MidiUart.rx_isr();
 }
 
 ISR(USART1_UDRE_vect) {
-  select_bank(0);
+  select_bank(BANK0);
   MidiUart.tx_isr();
 }
 
 ISR(USART2_RX_vect) {
-  select_bank(0);
+  select_bank(BANK0);
   MidiUart2.rx_isr();
 }
 
 ISR(USART2_UDRE_vect) {
-  select_bank(0);
+  select_bank(BANK0);
   MidiUart2.tx_isr();
 }

@@ -191,7 +191,7 @@ void loop();
 
 ISR(TIMER1_COMPA_vect) {
 
-  select_bank(0);
+  select_bank(BANK0);
 
   clock++;
   MidiClock.div192th_countdown++;
@@ -251,7 +251,7 @@ ALWAYS_INLINE() void gui_poll() {
 
 ISR(TIMER3_COMPA_vect) {
 
-  select_bank(0);
+  select_bank(BANK0);
 
   slowclock++;
   minuteclock++;

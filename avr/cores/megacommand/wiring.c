@@ -51,7 +51,7 @@ ISR(TIMER0_OVF_vect)
 	// copy these to local variables so they can be stored in registers
 	// (volatile variables must be read from memory on every access)
 
-    uint8_t old_bank = switch_ram_bank(0);
+    uint8_t old_bank = switch_ram_bank(BANK0);
 
     unsigned long m = timer0_millis;
 	unsigned char f = timer0_fract;
