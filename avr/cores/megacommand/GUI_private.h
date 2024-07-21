@@ -39,11 +39,7 @@ class EncodersClass {
   ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }
 
   ALWAYS_INLINE() int8_t limitValue(int8_t value, int8_t min, int8_t max) {
-    if (value > max)
-      return max;
-    if (value < min)
-      return min;
-    return value;
+    return (value > max) ? max : (value < min ? min : value);
   }
 };
 
