@@ -449,8 +449,8 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
       case 2:
           uart2->sendChannelPressure(channel, ccs[2]);
         break;
-      case 15:
-          notes.prog = ccs[15];
+      case 3:
+          notes.prog = ccs[3];
           uart2->sendProgramChange(channel, ccs[15]);
         break;
       default:
@@ -475,6 +475,7 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
 void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs,
                                     bool is_lock) {
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+
   uint8_t i = param - 5;
   switch (param) {
   case 0:
@@ -493,13 +494,14 @@ void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs,
     break;
   case 20:
     if (notes.prog != val || is_lock) {
-      ccs[i] = val;
+      ccs[3] = val;
     }
     else {
-      ccs[i] = 255;
+      ccs[3] = 255;
     }
     break;
   default:
+    i = param - 8 + 4;
     if (param < 20) {
       // If the parameter is CC value and the CC dest is not yet set, use the
       // kit value for CC dest
