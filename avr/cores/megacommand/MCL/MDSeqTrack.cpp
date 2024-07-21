@@ -526,6 +526,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     //prevent re-transmission of program change.
     //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_ccs = true;
+    notes.first_trig = false;
   } else {
     memset(ccs, 255, sizeof(ccs));
   }
@@ -570,7 +571,7 @@ void MDSeqTrack::reset_params() {
     uint8_t ccs[midi_cc_array_size];
     bool send_ccs = true;
     memcpy(ccs, &MD.kit.params[track_number][5], sizeof(ccs));
-    ccs[15] = 255; //disable program change
+    ccs[4] = 255; //disable program change
     //notes.prog = MD.kit.params[track_number][20];
     //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_notes_ccs(ccs, send_ccs);
@@ -617,7 +618,7 @@ void MDSeqTrack::send_notes(uint8_t note1) {
   }
   init_notes();
   if (note1 != 255) { notes.note1 = note1; }
-  reset_params();
+  if (notes.first_trig) { reset_params(); notes.first_trig = false; }
   send_notes_on();
 }
 
