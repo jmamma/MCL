@@ -158,7 +158,6 @@ public:
   }
   */
 
-  ALWAYS_INLINE()
   void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
 #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128) || (velocity >= 128))
@@ -170,7 +169,6 @@ public:
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  ALWAYS_INLINE()
   void sendNoteOff(uint8_t channel, uint8_t note) {
 #ifdef MIDI_VALIDATE
     if ((channel >= 16) || (note >= 128))
@@ -258,8 +256,8 @@ public:
     m_putc(data, cnt);
     sendCommandByte(0xF7);
   }
-  ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
-  ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
+  void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
+  void sendRaw(uint8_t byte) { m_putc(byte); }
 
   void sendString(const char *data) { sendString(data, strlen(data)); }
   void sendString(const char *data, uint16_t cnt);
