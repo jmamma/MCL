@@ -421,9 +421,10 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel
   bool is_midi_model_ = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
   if (is_midi_model_) {
     machine_pitch = note_num;
-    mcl_seq.md_tracks[track_number].send_notes_off();
-    mcl_seq.md_tracks[track_number].send_notes(machine_pitch);
-    goto record;
+    next_track = track_number;
+    mcl_seq.md_tracks[next_track].send_notes_off();
+    mcl_seq.md_tracks[next_track].send_notes(machine_pitch);
+    goto rec;
   }
   if (machine_pitch == 255) {
     return;
@@ -432,14 +433,18 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel
   MD.setTrackParam(next_track, 0, machine_pitch, uart_);
   MD.triggerTrack(next_track, 127, uart_);
   mixer_page.trig(next_track);
-  record:
-  if ((recording) && (MidiClock.state == 2)) {
-    reset_undo();
-    mcl_seq.md_tracks[next_track].record_track(127);
-    mcl_seq.md_tracks[next_track].record_track_pitch(machine_pitch);
-  }
+  rec:
+  record(next_track,machine_pitch);
 }
 
+void SeqPtcPage::record(uint8_t pitch, uint8_t track) {
+  if ((recording) && (MidiClock.state == 2)) {
+    reset_undo();
+    mcl_seq.md_tracks[track].record_track(127);
+    mcl_seq.md_tracks[track].record_track_pitch(pitch);
+  }
+
+}
 void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
                              uint8_t track_number, MidiUartParent *uart_) {
   if (track_number == 255) {

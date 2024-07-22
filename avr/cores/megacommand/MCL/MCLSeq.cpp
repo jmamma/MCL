@@ -234,7 +234,7 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart,uart2);
     md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
-    md_arp_tracks[i].seq(uart);
+    md_arp_tracks[i].seq(uart,uart2);
   }
 
   if (MDSeqTrack::md_trig_mask > 0) {
@@ -263,7 +263,7 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq(uart2);
     ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
-    ext_arp_tracks[i].seq(uart2);
+    ext_arp_tracks[i].seq(uart,uart2);
   }
 #endif
 
@@ -289,7 +289,7 @@ void MCLSeqMidiEvents::onNoteCallback_Midi(uint8_t *msg) {
   if (n < 16) {
     bool is_midi_machine = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);
     if (is_midi_machine) {
-      if (msg[2]) {mcl_seq.md_tracks[n].send_notes(); }
+      if (msg[2]) {mcl_seq.md_tracks[n].send_notes(255,false); }
       //velocity 0 == NoteOff
       else { mcl_seq.md_tracks[n].send_notes_off(); }
 

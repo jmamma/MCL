@@ -612,43 +612,47 @@ void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
   }
 }
 
-void MDSeqTrack::send_notes(uint8_t note1) {
+void MDSeqTrack::send_notes(uint8_t note1, bool is_seq, MidiUartParent *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
   if (notes.count_down) {
-    send_notes_off();
+    send_notes_off(uart2_);
   }
   init_notes();
   if (note1 != 255) { notes.note1 = note1; }
   if (notes.first_trig) { reset_params(); notes.first_trig = false; }
-  send_notes_on();
+  if (is_seq) { uint8_t timing_mid = get_timing_mid(); notes.count_down = (notes.len * timing_mid / 2); }
+  send_notes_on(uart2_);
 }
 
-void MDSeqTrack::send_notes_on() {
+void MDSeqTrack::send_notes_on(MidiUartParent *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
   TrigNotes *n = &notes;
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
 
   if (n->note1 != 255) {
     mixer_page.trig(track_number);
-    uart2->sendNoteOn(channel, n->note1, n->vel);
+    uart2_->sendNoteOn(channel, n->note1, n->vel);
     if (n->note2 != 64) {
-      uart2->sendNoteOn(channel, n->note1 + n->note2 - 64, n->vel);
+      uart2_->sendNoteOn(channel, n->note1 + n->note2 - 64, n->vel);
     }
     if (n->note3 != 64) {
-      uart2->sendNoteOn(channel, n->note1 + n->note3 - 64, n->vel);
+      uart2_->sendNoteOn(channel, n->note1 + n->note3 - 64, n->vel);
     }
   }
 }
 
-void MDSeqTrack::send_notes_off() {
+void MDSeqTrack::send_notes_off(MidiUartParent *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
   TrigNotes *n = &notes;
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
 
   if (n->note1 != 255) {
-    uart2->sendNoteOff(channel, n->note1);
+    uart2_->sendNoteOff(channel, n->note1);
     if (n->note2 != 64) {
-      uart2->sendNoteOff(channel, n->note1 + n->note2 - 64);
+      uart2_->sendNoteOff(channel, n->note1 + n->note2 - 64);
     }
     if (n->note3 != 64) {
-      uart2->sendNoteOff(channel, n->note1 + n->note3 - 64);
+      uart2_->sendNoteOff(channel, n->note1 + n->note3 - 64);
     }
     n->note1 = 255;
   }
