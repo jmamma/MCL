@@ -37,7 +37,7 @@ public:
   }
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
-  bool virtual convert(ExtTrack_270 *old) {
+  bool convert(ExtTrack_270 *old) {
     link.row = old->link.row;
     link.loops = old->link.loops;
     if (link.row >= GRID_LENGTH) {
