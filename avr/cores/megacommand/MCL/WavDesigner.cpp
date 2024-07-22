@@ -238,7 +238,7 @@ bool WavDesigner::render() {
 }
 
 bool WavDesigner::send() {
-  return midi_sds.sendWav(WAV_NAME, mixer.enc4.cur, false);
+  return midi_sds.sendWav(WAV_NAME, WAV_NAME, mixer.enc4.cur, false);
 }
 
 WavDesigner wd;
