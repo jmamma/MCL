@@ -191,7 +191,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
         }
         if (send_trig == TRIG_TRUE && step.trig) {
           if (is_midi_model) {
-            notes.count_down = (notes.len * timing_mid / 2);
+            notes.count_down = notes.len == 0 ? timing_mid / 4 : (notes.len * timing_mid / 2);
             send_notes_on();
           }
           send_trig_inline();
@@ -584,7 +584,7 @@ void MDSeqTrack::send_notes(uint8_t note1, bool is_seq, MidiUartParent *uart2_) 
   init_notes();
   if (note1 != 255) { notes.note1 = note1; }
   if (notes.first_trig) { reset_params(); notes.first_trig = false; }
-  if (is_seq) { uint8_t timing_mid = get_timing_mid(); notes.count_down = (notes.len * timing_mid / 2); }
+  if (is_seq) { uint8_t timing_mid = get_timing_mid(); notes.count_down = notes.len == 0 ? timing_mid / 4 : (notes.len * timing_mid / 2);; }
   send_notes_on(uart2_);
 }
 
