@@ -289,9 +289,10 @@ void MCLSeqMidiEvents::onNoteCallback_Midi(uint8_t *msg) {
   if (n < 16) {
     bool is_midi_machine = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);
     if (is_midi_machine) {
-      if (msg[2]) {mcl_seq.md_tracks[n].send_notes(255,false); }
+      if (msg[2]) {mcl_seq.md_tracks[n].send_notes(255); }
       //velocity 0 == NoteOff
-      else { mcl_seq.md_tracks[n].send_notes_off(); }
+      //Only send note off if the sequener is not running, otherwise defer to note length
+      else if (MidiClock.state != 2) { mcl_seq.md_tracks[n].send_notes_off(); }
 
     }
     if (msg[0] != 153 && msg[2]) {

@@ -134,7 +134,7 @@ public:
   }
   void process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs, bool is_lock = false);
   void send_notes_ccs(uint8_t *ccs, bool send_ccs);
-  void send_notes(uint8_t first_note = 255, bool is_seq = true, MidiUartParent *uart2_ = nullptr);
+  void send_notes(uint8_t first_note = 255, MidiUartParent *uart2_ = nullptr);
   void send_notes_on(MidiUartParent *uart2_ = nullptr);
   void send_notes_off(MidiUartParent *uart2_ = nullptr);
 

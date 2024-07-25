@@ -108,7 +108,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
   uart = uart_;
   uart2 = uart2_;
 
-  uint8_t timing_mid = get_timing_mid_inline();
+  uint8_t timing_mid = get_timing_mid();
 
   mod12_counter++;
 
@@ -223,7 +223,7 @@ void MDSeqTrack::recalc_slides() {
   int16_t x0, x1;
   int8_t y0, y1;
   uint8_t step = locks_slides_recalc;
-  uint8_t timing_mid = get_timing_mid_inline();
+  uint8_t timing_mid = get_timing_mid();
 
   uint8_t find_mask = 0;
   uint8_t cur_mask = 1;
@@ -535,7 +535,7 @@ void MDSeqTrack::reset_params() {
     uint8_t ccs[midi_cc_array_size];
     bool send_ccs = true;
     memcpy(ccs, &MD.kit.params[track_number][5], sizeof(ccs));
-    ccs[4] = 255; //disable program change
+    ccs[3] = 255; //disable program change
     //notes.prog = MD.kit.params[track_number][20];
     //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_notes_ccs(ccs, send_ccs);
@@ -576,7 +576,7 @@ void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
   }
 }
 
-void MDSeqTrack::send_notes(uint8_t note1, bool is_seq, MidiUartParent *uart2_) {
+void MDSeqTrack::send_notes(uint8_t note1, MidiUartParent *uart2_) {
   if (!uart2_) { uart2_ = uart2; }
   if (notes.count_down) {
     send_notes_off(uart2_);
@@ -584,7 +584,8 @@ void MDSeqTrack::send_notes(uint8_t note1, bool is_seq, MidiUartParent *uart2_) 
   init_notes();
   if (note1 != 255) { notes.note1 = note1; }
   if (notes.first_trig) { reset_params(); notes.first_trig = false; }
-  if (is_seq) { uint8_t timing_mid = get_timing_mid(); notes.count_down = notes.len == 0 ? timing_mid / 4 : (notes.len * timing_mid / 2);; }
+  uint8_t timing_mid = get_timing_mid();
+  notes.count_down = notes.len == 0 ? timing_mid / 4 : (notes.len * timing_mid / 2);
   send_notes_on(uart2_);
 }
 
