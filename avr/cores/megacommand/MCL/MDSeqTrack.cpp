@@ -404,18 +404,18 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
     for (uint8_t n = 0; n < number_midi_cc; n++) {
     if (ccs[n] == 255) continue;
     switch (n) {
-      case 0:
-          uart2->sendPitchBend(channel, ccs[0] << 7);
-        break;
       case 1:
-          uart2->sendCC(channel, 0x1, ccs[1]);
+          uart2->sendPitchBend(channel, ccs[1] << 7);
         break;
       case 2:
-          uart2->sendChannelPressure(channel, ccs[2]);
+          uart2->sendCC(channel, 0x1, ccs[2]);
         break;
       case 3:
-          notes.prog = ccs[3];
-          uart2->sendProgramChange(channel, ccs[15]);
+          uart2->sendChannelPressure(channel, ccs[3]);
+        break;
+      case 0:
+          notes.prog = ccs[0];
+          uart2->sendProgramChange(channel, ccs[0]);
         break;
       default:
         if (!(n & 1)) continue;
@@ -454,14 +454,14 @@ void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs,
   case 5:
   case 6:
   case 7:
-    ccs[i] = val;
+    ccs[i + 1] = val;
     break;
   case 20:
     if (notes.prog != val || is_lock) {
-      ccs[3] = val;
+      ccs[0] = val;
     }
     else {
-      ccs[3] = 255;
+      ccs[0] = 255;
     }
     break;
   default:
@@ -486,7 +486,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
   bool send_ccs = false;
   if (notes.first_trig) {
     // first note, we want to send all CCs regardless if they dont have locks.
-    memcpy(ccs, &MD.kit.params[track_number][5], sizeof(ccs));
+    memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
     //prevent re-transmission of program change.
     //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_ccs = true;
@@ -534,8 +534,8 @@ void MDSeqTrack::reset_params() {
   if (is_midi_model) {
     uint8_t ccs[midi_cc_array_size];
     bool send_ccs = true;
-    memcpy(ccs, &MD.kit.params[track_number][5], sizeof(ccs));
-    ccs[3] = 255; //disable program change
+    memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
+    ccs[0] = 255; //disable program change
     //notes.prog = MD.kit.params[track_number][20];
     //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_notes_ccs(ccs, send_ccs);
