@@ -161,17 +161,11 @@ public:
   uint8_t mix;
 
   void init(uint8_t track) {
-  destinationTrack = track;
-  destinationParam = 0;
-  shape1 = 0;
-  shape2 = 0;
-  type = 0;
-  for (uint8_t i = 0; i < 31; i++) {
-  state[i] = i;
-  }
-  speed = 64;
-  depth = 0;
-  mix = 0;
+    memset(&destinationTrack,0,sizeof(this));
+    destinationTrack = track;
+    speed = 64;
+    uint16_t *lfo_states2 = (uint16_t *) &state[5 + 18];
+    lfo_states2[1] = 0x29a; //666
   }
   /* @} */
 };
