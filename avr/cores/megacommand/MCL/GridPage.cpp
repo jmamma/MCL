@@ -638,7 +638,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
 
   if (old_col == 255) {
-    if (!swap_grids()) { return; }
+    if (swap_grids()) { return; }
   }
 
   uint8_t load_mode_old = mcl_cfg.load_mode;
