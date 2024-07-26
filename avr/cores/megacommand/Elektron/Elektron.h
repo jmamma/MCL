@@ -185,17 +185,8 @@ class ElektronSysexListenerClass : public MidiSysexListenerClass {
 public:
   /** Vector storing the onGlobalMessage callbacks (called when a global message
    * is received). **/
-  CallbackVector<SysexCallback, 1> onGlobalMessageCallbacks;
+  CallbackVector<SysexCallback, 1> onMessageCallbacks;
   /** Vector storing the onKitMessage callbacks (called when a kit message is
-   * received). **/
-  CallbackVector<SysexCallback, 1> onKitMessageCallbacks;
-  /** Vector storing the onSongMessage callbacks (called when a song messages is
-   * received). **/
-  CallbackVector<SysexCallback, 1> onSongMessageCallbacks;
-  /** Vector storing the onPatternMessage callbacks (called when a pattern
-   * message is received). **/
-  CallbackVector<SysexCallback, 1> onPatternMessageCallbacks;
-  /** Vector storing the onStatusResponse callbacks (when a status response is
    * received). **/
   CallbackVector2<SysexCallback, 1, uint8_t, uint8_t> onStatusResponseCallbacks;
 
@@ -211,44 +202,14 @@ public:
     onStatusResponseCallbacks.remove(obj);
   }
 
-  void addOnGlobalMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onGlobalMessageCallbacks.add(obj, func);
+  void addOnMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
+    onMessageCallbacks.add(obj, func);
   }
-  void removeOnGlobalMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onGlobalMessageCallbacks.remove(obj, func);
+  void removeOnMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
+    onMessageCallbacks.remove(obj, func);
   }
-  void removeOnGlobalMessageCallback(SysexCallback *obj) {
-    onGlobalMessageCallbacks.remove(obj);
-  }
-
-  void addOnKitMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onKitMessageCallbacks.add(obj, func);
-  }
-  void removeOnKitMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onKitMessageCallbacks.remove(obj, func);
-  }
-  void removeOnKitMessageCallback(SysexCallback *obj) {
-    onKitMessageCallbacks.remove(obj);
-  }
-
-  void addOnPatternMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onPatternMessageCallbacks.add(obj, func);
-  }
-  void removeOnPatternMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onPatternMessageCallbacks.remove(obj, func);
-  }
-  void removeOnPatternMessageCallback(SysexCallback *obj) {
-    onPatternMessageCallbacks.remove(obj);
-  }
-
-  void addOnSongMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSongMessageCallbacks.add(obj, func);
-  }
-  void removeOnSongMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSongMessageCallbacks.remove(obj, func);
-  }
-  void removeOnSongMessageCallback(SysexCallback *obj) {
-    onSongMessageCallbacks.remove(obj);
+  void removeOnMessageCallback(SysexCallback *obj) {
+    onMessageCallbacks.remove(obj);
   }
 
 };
@@ -262,7 +223,7 @@ enum TrigLEDMode {
 };
 
 enum class ElektronCommand {
-  DeactivateEncoderInterface,
+  ActivateEncoderInterface,
   ActivateEnhancedMidi,
   DeactivateEnhancedMidi,
   ActivateEnhancedGui,

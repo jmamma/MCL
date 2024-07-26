@@ -135,7 +135,6 @@ bool ElektronDevice::get_fw_caps() {
 void ElektronDevice::activate_encoder_interface(uint8_t *params) {
   encoder_interface = true;
   uint8_t data[3 + 4 + 24] = {0x70, 0x36, 0x01};
-
   uint8_t mod7 = 0;
   uint8_t cnt = 0;
 
@@ -154,31 +153,24 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
   //waitBlocking();
 }
 
+void ElektronDevice::deactivate_encoder_interface() { sendCommand(ElektronCommand::ActivateEncoderInterface, 0); }
+
 void ElektronDevice::sendCommand(ElektronCommand command, uint8_t param) {
   uint8_t data[3] = {0x70, 0x00, 0x00};
   bool needsWait = false;
   uint8_t l = 3;
   switch (command) {
-    case ElektronCommand::DeactivateEncoderInterface:
+    case ElektronCommand::ActivateEncoderInterface:
       data[1] = 0x36;
-      data[2] = 0x00;
-      encoder_interface = false;
-      break;
+      data[2] = param;;
+      encoder_interface = param;
     case ElektronCommand::ActivateEnhancedMidi:
       data[1] = 0x3E;
-      data[2] = 0x01;
-      break;
-    case ElektronCommand::DeactivateEnhancedMidi:
-      data[1] = 0x3E;
-      data[2] = 0x00;
+      data[2] = param;
       break;
     case ElektronCommand::ActivateEnhancedGui:
       data[1] = 0x37;
-      data[2] = 0x01;
-      break;
-    case ElektronCommand::DeactivateEnhancedGui:
-      data[1] = 0x37;
-      data[2] = 0x00;
+      data[2] = param;
       break;
     case ElektronCommand::SetSeqPage:
       data[1] = 0x38;
@@ -194,20 +186,11 @@ void ElektronDevice::sendCommand(ElektronCommand command, uint8_t param) {
       break;
     case ElektronCommand::ActivateTrigInterface:
       data[1] = 0x31;
-      data[2] = 0x01;
-      break;
-    case ElektronCommand::DeactivateTrigInterface:
-      data[1] = 0x31;
-      data[2] = 0x00;
+      data[2] = param;
       break;
     case ElektronCommand::ActivateTrackSelect:
       data[1] = 0x32;
-      data[2] = 0x01;
-      needsWait = true;
-      break;
-    case ElektronCommand::DeactivateTrackSelect:
-      data[1] = 0x32;
-      data[2] = 0x00;
+      data[2] = param;
       needsWait = true;
       break;
     case ElektronCommand::UndokitSync:
@@ -273,18 +256,17 @@ void ElektronDevice::draw_bank(uint8_t bank) {
 }
 
 // Implement the individual functions using the central sendCommand function
-void ElektronDevice::deactivate_encoder_interface() { sendCommand(ElektronCommand::DeactivateEncoderInterface, 0); }
-void ElektronDevice::activate_enhanced_midi() { sendCommand(ElektronCommand::ActivateEnhancedMidi, 0); }
-void ElektronDevice::deactivate_enhanced_midi() { sendCommand(ElektronCommand::DeactivateEnhancedMidi, 0); }
-void ElektronDevice::activate_enhanced_gui() { sendCommand(ElektronCommand::ActivateEnhancedGui, 0); }
-void ElektronDevice::deactivate_enhanced_gui() { sendCommand(ElektronCommand::DeactivateEnhancedGui, 0); }
+void ElektronDevice::activate_enhanced_midi() { sendCommand(ElektronCommand::ActivateEnhancedMidi, 1); }
+void ElektronDevice::deactivate_enhanced_midi() { sendCommand(ElektronCommand::ActivateEnhancedMidi, 0); }
+void ElektronDevice::activate_enhanced_gui() { sendCommand(ElektronCommand::ActivateEnhancedGui, 1); }
+void ElektronDevice::deactivate_enhanced_gui() { sendCommand(ElektronCommand::ActivateEnhancedGui, 0); }
 void ElektronDevice::set_seq_page(uint8_t page) { sendCommand(ElektronCommand::SetSeqPage, page); }
 void ElektronDevice::set_rec_mode(uint8_t mode) { sendCommand(ElektronCommand::SetRecMode, mode); }
 void ElektronDevice::set_key_repeat(uint8_t mode) { sendCommand(ElektronCommand::SetKeyRepeat, mode); }
-void ElektronDevice::activate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 0); }
+void ElektronDevice::activate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 1); }
 void ElektronDevice::deactivate_trig_interface() { sendCommand(ElektronCommand::DeactivateTrigInterface, 0); }
-void ElektronDevice::activate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 0); }
-void ElektronDevice::deactivate_track_select() { sendCommand(ElektronCommand::DeactivateTrackSelect, 0); }
+void ElektronDevice::activate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 1); }
+void ElektronDevice::deactivate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 0); }
 void ElektronDevice::undokit_sync() { sendCommand(ElektronCommand::UndokitSync, 0); }
 void ElektronDevice::reset_dsp_params() { sendCommand(ElektronCommand::ResetDspParams, 0); }
 void ElektronDevice::draw_close_bank() { sendCommand(ElektronCommand::DrawCloseBank, 0); }
@@ -360,34 +342,23 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
         ;
 
     while (count--) {
+
+        listener->addOnMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
         switch (type) {
             case DataType::Kit:
-                listener->addOnKitMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
                 requestKit(index);
                 break;
             case DataType::Pattern:
-                listener->addOnPatternMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
                 requestPattern(index);
                 break;
             case DataType::Global:
-                listener->addOnGlobalMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
                 requestGlobal(index);
                 break;
         }
 
         ret = cb.waitBlocking(timeout);
 
-        switch (type) {
-            case DataType::Kit:
-                listener->removeOnKitMessageCallback(&cb);
-                break;
-            case DataType::Pattern:
-                listener->removeOnPatternMessageCallback(&cb);
-                break;
-            case DataType::Global:
-                listener->removeOnGlobalMessageCallback(&cb);
-                break;
-        }
+        listener->removeOnMessageCallback(&cb);
 
         if (ret) {
             midi->midiSysex.rd_cur = listener->msg_rd;

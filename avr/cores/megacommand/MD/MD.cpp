@@ -237,11 +237,12 @@ bool MDClass::probe() {
     getBlockingKit(0x7F);
     setup();
 
-    for (uint8_t x = 0; x < 2; x++) {
-      for (uint8_t y = 0; y < 16; y++) {
-        mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
-        setStatus(0x22, y);
-      }
+    uint8_t y = 0;
+    for (uint8_t i = 0; i < 32; i++) {
+      mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
+      setStatus(0x22, y);
+      y++;
+      if (y == 16) y = 0;
     }
     setStatus(0x22, currentTrack);
 

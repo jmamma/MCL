@@ -84,7 +84,7 @@ public:
   }
 
   virtual uint8_t get_mute_cc() { return 0x5E; }
-
+  bool getBlockingGeneric(uint16_t timeout);
   /*X denotes get from RAM/unsaved  */
   bool getBlockingKitX(uint8_t kit, uint16_t timeout = 3000);
   bool getBlockingPatternX(uint8_t pattern, uint16_t timeout = 3000);

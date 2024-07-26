@@ -17,10 +17,6 @@ class A4SysexListenerClass : public ElektronSysexListenerClass {
    **/
 
 public:
-  CallbackVector<SysexCallback, 8> onSoundMessageCallbacks;
-
-  CallbackVector<SysexCallback, 8> onSettingsMessageCallbacks;
-
   /** Stores if the currently received message is a MachineDrum sysex message.
    * **/
   bool isA4Message;
@@ -40,28 +36,6 @@ public:
    * automatically by the A4Task subsystem though).
    **/
   void setup(MidiClass *_midi);
-
-  void addOnSoundMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSoundMessageCallbacks.add(obj, func);
-  }
-  void removeOnSoundMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSoundMessageCallbacks.remove(obj, func);
-  }
-  void removeOnSoundMessageCallback(SysexCallback *obj) {
-    onSoundMessageCallbacks.remove(obj);
-  }
-
-  void addOnSettingsMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSettingsMessageCallbacks.add(obj, func);
-  }
-  void removeOnSettingsMessageCallback(SysexCallback *obj,
-                                       sysex_callback_ptr_t func) {
-    onSettingsMessageCallbacks.remove(obj, func);
-  }
-  void removeOnSettingsMessageCallback(SysexCallback *obj) {
-    onSettingsMessageCallbacks.remove(obj);
-  }
-
   /* @} */
 };
 

@@ -28,19 +28,10 @@ void MNMSysexListenerClass::end() {
     break;
 
   case MNM_GLOBAL_MESSAGE_ID:
-    onGlobalMessageCallbacks.call();
-    break;
-
   case MNM_KIT_MESSAGE_ID:
-    onKitMessageCallbacks.call();
-    break;
-
   case MNM_PATTERN_MESSAGE_ID:
-    onPatternMessageCallbacks.call();
-    break;
-
   case MNM_SONG_MESSAGE_ID:
-    onSongMessageCallbacks.call();
+    onMessageCallbacks.call();
     break;
   }
 }

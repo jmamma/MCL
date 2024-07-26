@@ -34,7 +34,7 @@ public:
       mcl_seq.update_kit_params();
     }
     auto listener = MD.getSysexListener();
-    listener->removeOnKitMessageCallback(this);
+    listener->removeOnMessageCallback(this);
     state = false;
   }
 };

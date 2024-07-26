@@ -110,7 +110,7 @@ void PageSelectPage::draw_popup() {
 void PageSelectPage::md_prepare() {
   kit_cb.init();
   auto listener = MD.getSysexListener();
-  listener->addOnKitMessageCallback(
+  listener->addOnMessageCallback(
       &kit_cb, (sysex_callback_ptr_t)&MDCallback::onReceived);
   MD.requestKit(0x7F);
 }
