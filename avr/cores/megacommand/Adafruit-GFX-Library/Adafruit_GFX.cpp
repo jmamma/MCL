@@ -830,8 +830,11 @@ void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
         ((y + 8 * size - 1) < 0))   // Clip top
       return;
 
-    if (!_cp437 && (c >= 176))
-      c++; // Handle 'classic' charset behavior
+
+    c -= 0x20; //Classic font is reduced in lengthand shifted.
+    if (c > 126) { c = 0; }
+    //if (!_cp437 && (c >= 176))
+    //  c++; // Handle 'classic' charset behavior
 
     startWrite();
     for (int8_t i = 0; i < 5; i++) { // Char bitmap = 5 columns
