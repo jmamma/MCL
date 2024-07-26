@@ -164,6 +164,7 @@ void ElektronDevice::sendCommand(ElektronCommand command, uint8_t param) {
       data[1] = 0x36;
       data[2] = param;;
       encoder_interface = param;
+      break;
     case ElektronCommand::ActivateEnhancedMidi:
       data[1] = 0x3E;
       data[2] = param;
@@ -264,7 +265,7 @@ void ElektronDevice::set_seq_page(uint8_t page) { sendCommand(ElektronCommand::S
 void ElektronDevice::set_rec_mode(uint8_t mode) { sendCommand(ElektronCommand::SetRecMode, mode); }
 void ElektronDevice::set_key_repeat(uint8_t mode) { sendCommand(ElektronCommand::SetKeyRepeat, mode); }
 void ElektronDevice::activate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 1); }
-void ElektronDevice::deactivate_trig_interface() { sendCommand(ElektronCommand::DeactivateTrigInterface, 0); }
+void ElektronDevice::deactivate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 0); }
 void ElektronDevice::activate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 1); }
 void ElektronDevice::deactivate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 0); }
 void ElektronDevice::undokit_sync() { sendCommand(ElektronCommand::UndokitSync, 0); }
