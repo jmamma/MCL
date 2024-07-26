@@ -261,6 +261,25 @@ enum TrigLEDMode {
   TRIGLED_MUTE = 4
 };
 
+enum class ElektronCommand {
+  DeactivateEncoderInterface,
+  ActivateEnhancedMidi,
+  DeactivateEnhancedMidi,
+  ActivateEnhancedGui,
+  DeactivateEnhancedGui,
+  SetSeqPage,
+  SetRecMode,
+  SetKeyRepeat,
+  ActivateTrigInterface,
+  DeactivateTrigInterface,
+  ActivateTrackSelect,
+  DeactivateTrackSelect,
+  UndokitSync,
+  ResetDspParams,
+  DrawCloseBank,
+  DrawCloseMicrotiming
+};
+
 /// sysex constants for constructing data frames
 class ElektronSysexProtocol {
 public:
@@ -434,6 +453,7 @@ public:
    * are wrapped in appropriate methods like requestKit,
    * requestPattern, etc...
    **/
+  void sendCommand(ElektronCommand command, uint8_t param);
   virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartParent *uart_ = nullptr);
   virtual uint16_t sendRequest(uint8_t type, uint8_t param, bool send = true);
   /**

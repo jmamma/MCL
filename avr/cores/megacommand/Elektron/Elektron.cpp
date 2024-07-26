@@ -154,53 +154,103 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
   //waitBlocking();
 }
 
-void ElektronDevice::deactivate_encoder_interface() {
-  uint8_t data[3] = {0x70, 0x36, 0x00};
-  sendRequest(data, sizeof(data));
-  encoder_interface = false;
-  //waitBlocking();
+void ElektronDevice::sendCommand(ElektronCommand command, uint8_t param) {
+  uint8_t data[3] = {0x70, 0x00, 0x00};
+  bool needsWait = false;
+  uint8_t l = 3;
+  switch (command) {
+    case ElektronCommand::DeactivateEncoderInterface:
+      data[1] = 0x36;
+      data[2] = 0x00;
+      encoder_interface = false;
+      break;
+    case ElektronCommand::ActivateEnhancedMidi:
+      data[1] = 0x3E;
+      data[2] = 0x01;
+      break;
+    case ElektronCommand::DeactivateEnhancedMidi:
+      data[1] = 0x3E;
+      data[2] = 0x00;
+      break;
+    case ElektronCommand::ActivateEnhancedGui:
+      data[1] = 0x37;
+      data[2] = 0x01;
+      break;
+    case ElektronCommand::DeactivateEnhancedGui:
+      data[1] = 0x37;
+      data[2] = 0x00;
+      break;
+    case ElektronCommand::SetSeqPage:
+      data[1] = 0x38;
+      data[2] = param;
+      break;
+    case ElektronCommand::SetRecMode:
+      data[1] = 0x3A;
+      data[2] = param;
+      break;
+    case ElektronCommand::SetKeyRepeat:
+      data[1] = 0x4E;
+      data[2] = param;
+      break;
+    case ElektronCommand::ActivateTrigInterface:
+      data[1] = 0x31;
+      data[2] = 0x01;
+      break;
+    case ElektronCommand::DeactivateTrigInterface:
+      data[1] = 0x31;
+      data[2] = 0x00;
+      break;
+    case ElektronCommand::ActivateTrackSelect:
+      data[1] = 0x32;
+      data[2] = 0x01;
+      needsWait = true;
+      break;
+    case ElektronCommand::DeactivateTrackSelect:
+      data[1] = 0x32;
+      data[2] = 0x00;
+      needsWait = true;
+      break;
+    case ElektronCommand::UndokitSync:
+      data[1] = 0x42;
+      l = 2;
+      break;
+    case ElektronCommand::ResetDspParams:
+      data[1] = 0x43;
+      l = 2;
+      break;
+    case ElektronCommand::DrawCloseBank:
+      data[1] = 0x3C;
+      data[2] = 0x23;
+      break;
+    case ElektronCommand::DrawCloseMicrotiming:
+      data[1] = 0x3C;
+      data[2] = 0x21;
+      break;
+    default:
+      return; // Invalid command
+  }
+
+  sendRequest(data, l);
+  if (needsWait) {
+    waitBlocking();
+  }
 }
 
-void ElektronDevice::activate_enhanced_midi() {
-  uint8_t data[3] = {0x70, 0x3E, 0x01};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-void ElektronDevice::deactivate_enhanced_midi() {
-  uint8_t data[3] = {0x70, 0x3E, 0x00};
-  sendRequest(data, sizeof(data));
+
+void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
+  uint8_t a = timing >> 7;
+  uint8_t b = timing & 0x7F;
+  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, a, b};
+  sendRequest(data, 6);
   // waitBlocking();
 }
 
-void ElektronDevice::activate_enhanced_gui() {
-  uint8_t data[3] = {0x70, 0x37, 0x01};
-  sendRequest(data, sizeof(data));
+void ElektronDevice::draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask) {
+  uint8_t data[6] = {0x70, 0x3C, 0x24, idx, idx_other, chain_mask };
+  sendRequest(data, 6);
   // waitBlocking();
 }
 
-void ElektronDevice::deactivate_enhanced_gui() {
-  uint8_t data[3] = {0x70, 0x37, 0x00};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::set_seq_page(uint8_t page) {
-  uint8_t data[3] = {0x70, 0x38, page};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::set_rec_mode(uint8_t mode) {
-  uint8_t data[3] = {0x70, 0x3A, mode};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::set_key_repeat(uint8_t mode) {
-  uint8_t data[3] = {0x70, 0x4E, mode};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
 
 void ElektronDevice::popup_text(uint8_t action_string, uint8_t persistent) {
   uint8_t data[4] = {0x70, 0x3B, persistent, action_string};
@@ -221,66 +271,24 @@ void ElektronDevice::draw_bank(uint8_t bank) {
   sendRequest(data, 5);
   // waitBlocking();
 }
-void ElektronDevice::draw_close_bank() {
-  uint8_t data[3] = {0x70, 0x3C, 0x23};
-  sendRequest(data, 3);
-  // waitBlocking();
-}
 
-
-void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
-  uint8_t a = timing >> 7;
-  uint8_t b = timing & 0x7F;
-  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, a, b};
-  sendRequest(data, 6);
-  // waitBlocking();
-}
-void ElektronDevice::draw_close_microtiming() {
-  uint8_t data[3] = {0x70, 0x3C, 0x21};
-  sendRequest(data, 3);
-  // waitBlocking();
-}
-
-void ElektronDevice::draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask) {
-  uint8_t data[6] = {0x70, 0x3C, 0x24, idx, idx_other, chain_mask };
-  sendRequest(data, 6);
-  // waitBlocking();
-}
-
-
-void ElektronDevice::activate_trig_interface() {
-  uint8_t data[3] = {0x70, 0x31, 0x01};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::deactivate_trig_interface() {
-  uint8_t data[3] = {0x70, 0x31, 0x00};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::activate_track_select() {
-  uint8_t data[3] = {0x70, 0x32, 0x01};
-  sendRequest(data, sizeof(data));
-  waitBlocking();
-}
-
-void ElektronDevice::deactivate_track_select() {
-  uint8_t data[3] = {0x70, 0x32, 0x00};
-  sendRequest(data, sizeof(data));
-  waitBlocking();
-}
-
-void ElektronDevice::undokit_sync() {
-  uint8_t data[2] = { 0x70, 0x42 };
-  sendRequest(data, sizeof(data));
-}
-
-void ElektronDevice::reset_dsp_params() {
-  uint8_t data[2] = { 0x70, 0x43 };
-  sendRequest(data, sizeof(data));
-}
+// Implement the individual functions using the central sendCommand function
+void ElektronDevice::deactivate_encoder_interface() { sendCommand(ElektronCommand::DeactivateEncoderInterface, 0); }
+void ElektronDevice::activate_enhanced_midi() { sendCommand(ElektronCommand::ActivateEnhancedMidi, 0); }
+void ElektronDevice::deactivate_enhanced_midi() { sendCommand(ElektronCommand::DeactivateEnhancedMidi, 0); }
+void ElektronDevice::activate_enhanced_gui() { sendCommand(ElektronCommand::ActivateEnhancedGui, 0); }
+void ElektronDevice::deactivate_enhanced_gui() { sendCommand(ElektronCommand::DeactivateEnhancedGui, 0); }
+void ElektronDevice::set_seq_page(uint8_t page) { sendCommand(ElektronCommand::SetSeqPage, page); }
+void ElektronDevice::set_rec_mode(uint8_t mode) { sendCommand(ElektronCommand::SetRecMode, mode); }
+void ElektronDevice::set_key_repeat(uint8_t mode) { sendCommand(ElektronCommand::SetKeyRepeat, mode); }
+void ElektronDevice::activate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 0); }
+void ElektronDevice::deactivate_trig_interface() { sendCommand(ElektronCommand::DeactivateTrigInterface, 0); }
+void ElektronDevice::activate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 0); }
+void ElektronDevice::deactivate_track_select() { sendCommand(ElektronCommand::DeactivateTrackSelect, 0); }
+void ElektronDevice::undokit_sync() { sendCommand(ElektronCommand::UndokitSync, 0); }
+void ElektronDevice::reset_dsp_params() { sendCommand(ElektronCommand::ResetDspParams, 0); }
+void ElektronDevice::draw_close_bank() { sendCommand(ElektronCommand::DrawCloseBank, 0); }
+void ElektronDevice::draw_close_microtiming() { sendCommand(ElektronCommand::DrawCloseMicrotiming, 0); }
 
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
