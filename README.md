@@ -20,41 +20,6 @@ The updated repository contains numerous enhancements and fixes.
 
 See https://github.com/jmamma/MCL/releases for firmware binaries, user documentation and upload instructions.
 
-### Installing the MCL core.
-
-*The documentation below is for advanced users*
-
-MacOS / Linux: 
-
-1) Download the Arduino Legacy IDE [https://www.arduino.cc/en/Main/Software](https://www.arduino.cc/en/software/OldSoftwareReleases) (1.8.5 tested)
-
-2) Copy Arduino.app to your /Applications folder and launch it.
-   (Must be opened first before performing step below)
-
-2) Get the MIDICtrl library and MegaCommand Core (same repo) and copy it to /Applications/Arduino.app/Contents/Java/hardware/ :
-```
-   cd /Applications/Arduino.app/Contents/Java/hardware/
-   git clone https://github.com/jmamma/MCL
-```
-Windows:
-
-The Arduino compiler (avr-gcc) does not like spaces within the full path name when compiling the custom core.
-
-1) Download the Windows ZIP file for non-admin install
-https://www.arduino.cc/en/software/OldSoftwareReleases
-
-2) Extract zip file to desktop.
-
-3) Download MIDICtrl20_MegaCommand and extract to the `arduino-1.8.5\hardware\` folder. 
-
-4) If you have an admin-installed Arduino IDE, extract MCL to the arduino user directory `%USERPROFILE%\Documents\Arduino\hardware\` (e.g. `C:\Users\your_name\Documents\Arduino\hardware\`)
-
-### Selecting the Core
-
-1) Open the Arduino IDE Application
-
-2) Select: Tools -> Board -> MegaCommand
-
 ### Compiling MegaCommandLive Firmware
 
 See https://github.com/jmamma/MCL/releases for pre-compiled firmware binaries
