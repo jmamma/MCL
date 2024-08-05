@@ -77,11 +77,8 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
   char proj_filename[f_len] = {'\0'};
 
   char to_proj_filename[f_len] = {'\0'};
-  uint8_t l = strlen(grid_filename);
-  uint8_t l2 = strlen(to_grid_filename);
-
   bool reload_current = false;
-
+  uint8_t l, l2 = 0;
   if (!SD.chdir(from)) {
     goto error;
   }
@@ -98,6 +95,9 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
 
   strncpy(to_grid_filename, to, f_len);
   strncpy(grid_filename, from, f_len);
+  l = strlen(grid_filename);
+  l2 = strlen(to_grid_filename);
+
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     grid_filename[l] = '.';
     grid_filename[l + 1] = i + '0';
