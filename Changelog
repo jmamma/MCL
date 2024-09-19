@@ -1,3 +1,22 @@
+MCL 4.60 21/09/2024
+
+- Changes:
+
+  Support for Machinedrum MIDI machines has been added.
+
+  Sequencing of external MIDI can now be performed using the Machinedrum's
+  inbuilt MIDI machines. The MIDI data is sent out on the MegaCommand's MIDI Port 2.
+
+  It is now possible to change the Port 1 MIDI driver to Generic.
+
+  Performance optimizations and improvements.
+
+Bug Fixes:
+  Fixed device selection in Chromatic Page
+  Route and Perf track types would not load correctly during transitions
+  WavDesigner sample transfer was broken.
+  GUI fixes for SampleBrowser and text input related pages.
+
 MCL 4.51a 20/12/2023
 
   Fixed [ Func ] + [ Clear ] regression in PianoRoll.
