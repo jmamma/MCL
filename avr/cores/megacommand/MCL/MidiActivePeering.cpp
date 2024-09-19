@@ -92,7 +92,7 @@ static void prepare_display(uint8_t *buf) {
 // the general probe accept whatever devices.
 static bool midi_device_setup(uint8_t port) { return true; }
 
-static MidiDevice *port1_drivers[] = {&MD};
+static MidiDevice *port1_drivers[] = { &MD };
 
 static MidiDevice *port2_drivers[] = {
     &MNM,
@@ -243,17 +243,21 @@ void MidiActivePeering::run() {
   }
 #endif
 
-  probePort(UART1_PORT, port1_drivers, countof(port1_drivers),
-            &connected_midi_devices[0], resource_buf);
+  MidiDevice **drivers = port1_drivers;
+  uint8_t nr_drivers = countof(port1_drivers);
+  if (!mcl_cfg.uart1_device) {
+    nr_drivers = 1;
+    drivers = generic_drivers;
+  }
+  probePort(UART1_PORT, drivers, nr_drivers, &connected_midi_devices[0], resource_buf);
 #ifdef EXT_TRACKS
-  uint8_t nr_drivers = countof(port2_drivers);
-  MidiDevice **drivers = port2_drivers;
+  nr_drivers = countof(port2_drivers);
+
   if (!mcl_cfg.uart2_device) {
     nr_drivers = 1;
     drivers = generic_drivers;
   }
-  probePort(UART2_PORT, drivers, nr_drivers, &connected_midi_devices[1],
-            resource_buf);
+  probePort(UART2_PORT, drivers, nr_drivers, &connected_midi_devices[1], resource_buf);
   if (resource_loaded) {
     // XXX doesn't work yet
     // R.Restore(resource_buf, resource_size);

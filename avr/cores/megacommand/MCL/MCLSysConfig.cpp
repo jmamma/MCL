@@ -144,6 +144,7 @@ bool MCLSysConfig::cfg_init() {
   //ram_page_mode = 0;
   track_select = 1;
   track_type_select = 0b00000011;
+  uart1_device = 1;
   //uart2_device = 0;
   //uart_cc_loopback = 0;
   //uart2_prg_mode = 0;
