@@ -36,6 +36,7 @@ void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   title = title_;
   length = len;
   max_length = len;
+  memset(text,0,sizeof(text));
   strncpy(text, text_, len);
   //Replace null characeters with space, it will be added back in upon exit.
   bool after = false;
