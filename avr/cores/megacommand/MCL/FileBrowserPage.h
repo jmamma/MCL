@@ -30,6 +30,8 @@
 #define FM_RECVALL 4
 #define FM_SENDALL 5
 
+#define NAME_LENGTH 14
+
 class FileBrowserFileTypes {
   constexpr static uint8_t size = 2;
   char types[size][5];
