@@ -33,6 +33,47 @@ __attribute__((section(".init3")));
 
 void(* hardwareReset) (void) = 0;
 
+bool test_sram_banks() {
+    volatile uint8_t* const start = reinterpret_cast<uint8_t*>(0x2200);
+    volatile uint8_t* const end = reinterpret_cast<uint8_t*>(0xFFFF);
+
+    // Data line and bank switching test
+    uint8_t pattern = 0x55;
+    for (volatile uint8_t* ptr = start; ptr < end; ++ptr) {
+        switch_ram_bank_noret(0);
+        *ptr = pattern;
+        if (*ptr != pattern) return false;
+        switch_ram_bank_noret(1);
+        *ptr = ~pattern;
+        if (*ptr != ~pattern) return false;
+       // *ptr = 0x00; // initialise for later
+        switch_ram_bank_noret(0);
+        if (*ptr != pattern) return false;
+       // *ptr = 0x00; // initialise for later
+        pattern = (pattern << 1) | (pattern >> 7);
+    }
+
+/*
+    // Address line test, assumes initialised SRAM
+    for (uint16_t bit = 1; bit != 0 && (start + bit) < end; bit <<= 1) {
+        volatile uint8_t* const test_addr = start + bit;
+        // Write to test address
+        *test_addr = 0xAA;
+        // Check that only the test address changed
+        for (volatile uint8_t* ptr = start; ptr < end; ptr++) {
+            if (ptr == test_addr) {
+                if (*ptr != 0xAA) return false; // Test address didn't hold the value
+            } else {
+                if (*ptr != 0x00) return false; // Another address was affected
+            }
+        }
+        // Reset test address
+        *test_addr = 0x00;
+    }
+*/
+    return true;
+}
+
 void my_init_ram(void) {
 // Set PL6 as output
 
@@ -43,68 +84,21 @@ void my_init_ram(void) {
   DDRB |= _BV(PB0);
   PORTB &= ~(_BV(PB0));
 #endif
+
+  //External SRAM Hardware Enable
   XMCRA |= _BV(SRE);
 
   //Leds
 
   DDRE |= _BV(PE4) | _BV(PE5);
-  #if CHECKSUM
   //SRAM tests
 
-  volatile uint8_t *ptr;
-  uint8_t linear = 0;
-  volatile uint8_t read_bank0, read_bank1 = 0;
-
-  for (ptr = reinterpret_cast<uint8_t *> (0x2200); ptr < reinterpret_cast<uint8_t *> (0xFFFF); ptr++) {
-   switch_ram_bank(0);
-   uint8_t random_number = pgm_read_byte(rand_ptr++) || 1;
-   //Store a random number in bank 0
-   *ptr = random_number;
-   //Read value back from bank 0
-   read_bank0 = *ptr;
-   switch_ram_bank(1);
-   //Store same random number in bank 1
-   *ptr = read_bank0;
-   //Read bank1
-   read_bank1 = *ptr;
-   if ((read_bank0 == 0) || (read_bank1 == 0) || (read_bank0 != random_number) || (read_bank1 != random_number))  {
-     goto fail;
-   }
-   // Check that the RAM bank toggle actually toggles to a different bank.
-
-   random_number++;
-   //Store new random number in to bank1
-   *ptr = random_number;
-   //Read bank1
-   read_bank1 = *ptr;
-   //Read bank0;
-   switch_ram_bank(0);
-   read_bank0 = *ptr;
-   if (read_bank0 == read_bank1) {
-     goto fail;
-   }
-   //Store lineearly increases values in bank 1, for linear read later. (loop compaction)
-   *ptr = linear++;
-  }
-  switch_ram_bank(0);
-  //Linear read.
-  linear = 0;
-  for (ptr = reinterpret_cast<uint8_t *> (0x2200); ptr < reinterpret_cast<uint8_t *> (0xFFFF); ptr++) {
-    read_bank0 = *ptr;
-    if (read_bank0 != linear) {
-      goto fail;
-    }
-    linear++;
-  }
-  switch_ram_bank(1);
-  return;
-
-  fail:
-  while (1) {
+  /* Still not working?
+  while (!test_sram_banks()) {
      setLed();
      setLed2();
   }
-  #endif
+  */
 }
 uint8_t tcnt2;
 
@@ -164,8 +158,6 @@ void init(void) {
 
   /* move interrupts to bootloader section */
   MCUCR = _BV(IVCE);
-
-  // Enable External SRAM
   MCUCR = _BV(SRE);
 
   // activate lever converter
