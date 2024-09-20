@@ -1,8 +1,8 @@
 MCL 4.60 21/09/2024
 
-- Changes:
+Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.60.
 
-  Support for Machinedrum MIDI machines has been added.
+- Changes:
 
   Sequencing of external MIDI can now be performed using the Machinedrum's
   inbuilt MIDI machines. The MIDI data is sent out on the MegaCommand's MIDI Port 2.
@@ -13,8 +13,11 @@ MCL 4.60 21/09/2024
 
 Bug Fixes:
   Fixed device selection in Chromatic Page
+
   Route and Perf track types would not load correctly during transitions
+
   WavDesigner sample transfer was broken.
+
   GUI fixes for SampleBrowser and text input related pages.
 
 MCL 4.51a 20/12/2023
