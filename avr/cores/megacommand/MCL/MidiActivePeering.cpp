@@ -251,8 +251,8 @@ void MidiActivePeering::run() {
   }
   probePort(UART1_PORT, drivers, nr_drivers, &connected_midi_devices[0], resource_buf);
 #ifdef EXT_TRACKS
+  drivers = port2_drivers;
   nr_drivers = countof(port2_drivers);
-
   if (!mcl_cfg.uart2_device) {
     nr_drivers = 1;
     drivers = generic_drivers;
