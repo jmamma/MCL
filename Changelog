@@ -4,8 +4,8 @@ Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.6
 
 - Changes:
 
-  Sequencing of external MIDI can now be performed using the Machinedrum's
-  inbuilt MIDI machines. The MIDI data is sent out on the MegaCommand's MIDI Port 2.
+  MD's in-built MIDI machines are now supported via the MCL sequencer.
+  The MIDI data is transmitted on the MegaCommand's MIDI Port 2.
 
   It is now possible to change the Port 1 MIDI driver to Generic.
 
@@ -19,6 +19,8 @@ Bug Fixes:
   WavDesigner sample transfer was broken.
 
   GUI fixes for SampleBrowser and text input related pages.
+
+  MD's random LFO shape was broken when loading with MCL.
 
 MCL 4.51a 20/12/2023
 
