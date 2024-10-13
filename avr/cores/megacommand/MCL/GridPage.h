@@ -85,6 +85,7 @@ public:
   void display_counters();
   void display_grid_info();
   void display_grid();
+  void display_row_info();
   void display();
   void display_oled();
   void setup();

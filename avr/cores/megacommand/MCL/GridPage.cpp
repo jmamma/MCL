@@ -566,6 +566,24 @@ void GridPage::display_slot_menu() {
   // grid_slot_page.draw_scrollbar(36);
 }
 
+void GridPage::display_row_info() {
+  uint8_t row_shift = 0;
+  if ((cur_row + param4.cur > MAX_VISIBLE_ROWS - 1)) {
+    row_shift = cur_row + param4.cur - MAX_VISIBLE_ROWS;
+  }
+  char val[4];
+  val[2] = '\0';
+
+  for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
+    uint8_t row = getRow() - cur_row + n + row_shift;
+    if (row >= GRID_LENGTH) { return; }
+    uint8_t b = row / 16;
+    oled_display.setCursor(27, (n + 1) * 8);
+    oled_display.print((char)('A' + b));
+    mcl_gui.put_value_at2(row - b * 16 + 1, val);
+    oled_display.print(val);
+  }
+}
 #ifdef FPS
 int frames;
 int frameclock;
@@ -586,7 +604,12 @@ void GridPage::display() {
   if (!show_slot_menu) {
     display_grid_info();
   } else {
-    display_slot_menu();
+    if (param4.cur > 1) {
+     display_row_info();
+    }
+    else{
+     display_slot_menu();
+    }
   }
   display_grid();
   if (draw_encoders && clock_diff(draw_encoders_lastclock, slowclock) < 750) {
@@ -1129,6 +1152,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
     DEBUG_DUMP(slot.link.row);
     encoders[0] = &grid_slot_param1;
     encoders[1] = &grid_slot_param2;
+    encoders[2] = &param3;
+    encoders[3] = &param4;
     param3.cur = 1;
     param4.cur = 1;
     slot_apply = 0;
