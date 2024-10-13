@@ -2,8 +2,11 @@
 
 
 int MCLEncoder::update(encoder_t *enc) {
-  int inc = update_rotations(enc);
-  inc = inc + (fastmode ? 4 * enc->button : enc->button);
+  int inc = 0;
+  if (enc) {
+    inc = update_rotations(enc);
+    inc = inc + (fastmode ? 4 * enc->button : enc->button);
+  }
   cur = limit_value(cur, inc, min, max);
   return cur;
 }

@@ -12,6 +12,8 @@ void MixerPage::set_display_mode(uint8_t param) {
 }
 
 void MixerPage::oled_draw_mutes() {
+  if (encoder_entry_page != NULL_PAGE) { return; }
+
   bool is_md_device = (midi_device == &MD);
 
   uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
@@ -88,6 +90,7 @@ void MixerPage::cleanup() {
   trig_interface.off();
   ext_key_down = 0;
   mute_toggle = 0;
+  encoder_entry_page = NULL_PAGE;
 }
 
 void MixerPage::set_level(int curtrack, int value) {
@@ -108,7 +111,7 @@ void MixerPage::load_perf_locks(uint8_t state) {
   }
 }
 void MixerPage::loop() {
-  constexpr int timeout = 1500;
+  constexpr int timeout = 750;
   perf_page.func_enc_check();
   bool old_draw_encoders = draw_encoders;
 
@@ -149,6 +152,10 @@ void MixerPage::loop() {
   }
   if (draw_encoders != old_draw_encoders) {
     if (!draw_encoders) {
+      if (encoder_entry_page != NULL_PAGE) {
+        mcl.setPage(encoder_entry_page);
+        return;
+      }
       redraw();
     }
   }
@@ -216,6 +223,23 @@ void encoder_lastparam_handle(EncoderParent *enc) {
 }
 */
 
+void MixerPage::draw_encs() {
+  constexpr uint8_t fader_y = 11;
+  oled_display.fillRect(0, fader_y, 128, 21, BLACK);
+  for (uint8_t n = 0; n < 4; n++) {
+    char str1[] = "A";
+    str1[0] = 'A' + n;
+    uint8_t pos = n * 24;
+    bool highlight =
+          (preview_mute_set != 255) && (perf_locks[preview_mute_set][n] != 255); // && (trig_interface.is_key_down(MDX_KEY_NO));
+    uint8_t val =
+          highlight ? perf_locks[preview_mute_set][n] : encoders[n]->cur;
+    mcl_gui.draw_encoder(24 + pos, fader_y + 4, val, highlight);
+    oled_display.setCursor(16 + pos, fader_y + 6);
+    oled_display.print(str1);
+  }
+}
+
 void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
   if (midi_device != &MD) {
@@ -271,19 +295,7 @@ void MixerPage::display() {
   }
   if (draw_encoders || preview_mute_set != 255) {
     // oled_display.clearDisplay();
-    oled_display.fillRect(0, fader_y, 128, 21, BLACK);
-    for (uint8_t n = 0; n < 4; n++) {
-      char str1[] = "A";
-      str1[0] = 'A' + n;
-      uint8_t pos = n * 24;
-      bool highlight =
-          (preview_mute_set != 255) && (perf_locks[preview_mute_set][n] != 255); // && (trig_interface.is_key_down(MDX_KEY_NO));
-      uint8_t val =
-          highlight ? perf_locks[preview_mute_set][n] : encoders[n]->cur;
-      mcl_gui.draw_encoder(24 + pos, fader_y + 4, val, highlight);
-      oled_display.setCursor(16 + pos, fader_y + 6);
-      oled_display.print(str1);
-    }
+    draw_encs();
     oled_display.display();
   } else {
 

@@ -43,26 +43,19 @@ menu_t<system_menu_page_N> system_menu_layout = {
         {"NEW PROJECT",  0, 0, 0, 0, NULL_PAGE, 2, 0},
         {"MIDI",         0, 0, 0, 0, MIDI_CONFIG_PAGE, 0, 0},
         {"MACHINEDRUM",  0, 0, 0, 0, MD_CONFIG_PAGE, 0, 0},
-        {"AUX PAGES",    0, 0, 0, 0, AUX_CONFIG_PAGE, 0, 0},
+        {"PAGE SETUP",   0, 0, 0, 0, AUX_CONFIG_PAGE, 0, 0},
         {"SYSTEM",       0, 0, 0, 0, MCL_CONFIG_PAGE, 0, 0},
     },
     0
 };
 
 menu_t<aux_config_page_N> auxconfig_menu_layout = {
-    "AUX PAGES",
+    "PAGE",
     {
         //           m  r  n  d  p  f  o
-        {"RAM Page" ,0, 0, 0, 0, RAM_CONFIG_PAGE, 0, 0},
-    },
-    0
-};
 
-menu_t<ram_config_page_N> rampage1_menu_layout = {
-    "RAM PAGE",
-    {
-        //        m  r  n  d  p  f  o
-        {"LINK:", 0, 2, 2, 1, NULL_PAGE, 0, 0},
+        {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 122},
+        {"RAM LINK:", 0, 2, 2, 1, NULL_PAGE, 0, 0},
     },
     0
 };

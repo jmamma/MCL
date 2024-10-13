@@ -46,6 +46,7 @@ public:
   bool draw_encoders;
 
   PageIndex last_page = NULL_PAGE;
+  PageIndex encoder_entry_page = NULL_PAGE;
 
   uint8_t current_mute_set = 255;
   uint8_t preview_mute_set = 255;
@@ -69,6 +70,7 @@ public:
   }
   void adjust_param(EncoderParent *enc, uint8_t param);
   void draw_levels();
+  void draw_encs();
   void redraw();
   void set_level(int curtrack, int value);
   void set_display_mode(uint8_t param);

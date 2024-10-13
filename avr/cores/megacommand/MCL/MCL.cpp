@@ -113,17 +113,16 @@ LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
       &chain_config_page,        // Index: 28
       &aux_config_page,          // Index: 29
       &mcl_config_page,          // Index: 30
-      &ram_config_page,          // Index: 31
-      &arp_page,                 // Index: 32
-      &md_import_page,           // Index: 33
-      &midiport_menu_page,       // Index: 34
-      &midiprogram_menu_page,    // Index: 35
-      &midiclock_menu_page,      // Index: 36
-      &midiroute_menu_page,      // Index: 37
-      &midimachinedrum_menu_page,// Index: 38
-      &midigeneric_menu_page,    // Index: 39
-      &sound_browser,            // Index: 40
-      &perf_page                 // Index: 41
+      &arp_page,                 // Index: 31
+      &md_import_page,           // Index: 32
+      &midiport_menu_page,       // Index: 33
+      &midiprogram_menu_page,    // Index: 34
+      &midiclock_menu_page,      // Index: 35
+      &midiroute_menu_page,      // Index: 36
+      &midimachinedrum_menu_page,// Index: 37
+      &midigeneric_menu_page,    // Index: 38
+      &sound_browser,            // Index: 39
+      &perf_page                 // Index: 40
 };
 
 void MCL::setup() {

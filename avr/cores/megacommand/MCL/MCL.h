@@ -17,7 +17,7 @@
 #include "Fonts/TomThumb.h"
 
 #define VERSION 4060
-#define VERSION_STR "A4.60"
+#define VERSION_STR "C4.60"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
@@ -63,17 +63,16 @@ enum PageIndex {
     CHAIN_CONFIG_PAGE,        // Index: 28
     AUX_CONFIG_PAGE,          // Index: 29
     MCL_CONFIG_PAGE,          // Index: 30
-    RAM_CONFIG_PAGE,          // Index: 31
-    ARP_PAGE,                 // Index: 32
-    MD_IMPORT_PAGE,           // Index: 33
-    MIDIPORT_MENU_PAGE,       // Index: 34
-    MIDIPROGRAM_MENU_PAGE,    // Index: 35
-    MIDICLOCK_MENU_PAGE,      // Index: 36
-    MIDIROUTE_MENU_PAGE,      // Index: 37
-    MIDIMACHINEDRUM_MENU_PAGE,// Index: 38
-    MIDIGENERIC_MENU_PAGE,    // Index: 39
-    SOUND_BROWSER,            // Index: 40
-    PERF_PAGE_0,             // Index: 41
+    ARP_PAGE,                 // Index: 31
+    MD_IMPORT_PAGE,           // Index: 32
+    MIDIPORT_MENU_PAGE,       // Index: 33
+    MIDIPROGRAM_MENU_PAGE,    // Index: 34
+    MIDICLOCK_MENU_PAGE,      // Index: 35
+    MIDIROUTE_MENU_PAGE,      // Index: 36
+    MIDIMACHINEDRUM_MENU_PAGE,// Index: 37
+    MIDIGENERIC_MENU_PAGE,    // Index: 38
+    SOUND_BROWSER,            // Index: 39
+    PERF_PAGE_0,             // Index: 40
     NULL_PAGE = 255
 };
 

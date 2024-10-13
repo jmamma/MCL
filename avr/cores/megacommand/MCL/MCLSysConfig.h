@@ -68,6 +68,7 @@ public:
   uint8_t uart2_cc_mute;
   uint8_t uart2_cc_level;
   uint8_t uart1_device;
+  uint8_t grid_page_mode;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

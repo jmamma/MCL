@@ -61,6 +61,8 @@ public:
   uint16_t bank_popup_lastclock;
   uint16_t bank_popup_loadmask;
 
+  bool draw_encoders;
+  uint16_t draw_encoders_lastclock;
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
