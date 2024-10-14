@@ -4,10 +4,19 @@ Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.6
 
 - Changes:
 
-  MD's in-built MIDI machines are now supported via the MCL sequencer.
-  The MIDI data is transmitted on the MegaCommand's MIDI Port 2.
+  The MD's in-built MIDI machines are now supported via the MCL sequencer.
+  MIDI data is transmitted on MegaCommand's MIDI Port 2.
 
-  It is now possible to change the Port 1 MIDI driver to Generic.
+  It's now possible to reconfigure the MCL Encoders to act as the four
+  Performance Controllers when using the GridPage. Via option: Config -> Page -> Grid Encod
+
+  From the Mixer Page, mute sets can now be loaded for a single device.
+    - To load a Mute Set for active device, hold down an [ Arrow ] Key and press [ YES ]
+    - To load a Mute Set for both devices simultaneously (MD + External MIDI), hold down [ YES ] and then press an [ Arrow ].
+
+  When selecting multiple rows for copy/clear/paste operations the corresponding Bank/Pattern id is displayed on the left.
+
+  The Port 1 MIDI driver can now be optionally changed to Generic.
 
   Performance optimizations and improvements.
 

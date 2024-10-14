@@ -416,16 +416,22 @@ void MixerPage::populate_mute_set() {
   }
 }
 
-void MixerPage::switch_mute_set(uint8_t state) {
+void MixerPage::switch_mute_set(uint8_t state, bool all_devices) {
 
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
   };
 
+  uint8_t focus_device = (midi_device == &MD);
+
+
   for (uint8_t dev = 0; dev < 2; dev++) {
 
     bool is_md_device = dev == 0;
+
+    if (!all_devices && focus_device != dev) continue;
+
     uint8_t len =
         (is_md_device) ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
 
@@ -668,7 +674,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_DOWN: {
         uint8_t set = get_mute_set(key);
         if (trig_interface.is_key_down(MDX_KEY_YES)) {
-          switch_mute_set(set);
+          switch_mute_set(set,false);
         } else {
           preview_mute_set = set;
           for (uint8_t n = 0; n < 4; n++) {
