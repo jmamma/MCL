@@ -60,6 +60,7 @@ void MDFXTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track)
 void MDFXTrack::place_fx_in_kit() {
   DEBUG_PRINTLN("place");
   memcpy(MD.kit.reverb, reverb, sizeof(reverb) * 4);
+  memcpy(MD.kit.fx_orig, reverb, sizeof(reverb) * 4);
   /*
   if (enable_reverb) {
     memcpy(&MD.kit.reverb, &reverb, sizeof(reverb));

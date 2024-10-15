@@ -626,6 +626,27 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_NO: {
+        if (BUTTON_DOWN(Buttons.ENCODER1)) {
+           perf_param1.perf_data.init_params_verbose();
+           redraw_mask = -1;
+           return true;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER2)) {
+           perf_param2.perf_data.init_params_verbose();
+           redraw_mask = -1;
+           return true;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER3)) {
+           perf_param3.perf_data.init_params_verbose();
+           redraw_mask = -1;
+           return true;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER4)) {
+           perf_param4.perf_data.init_params_verbose();
+           redraw_mask = -1;
+           return true;
+        }
+
         uint64_t mask =
             ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
             ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN);
@@ -639,7 +660,27 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_YES: {
-        if (preview_mute_set == 255 &&
+        if (BUTTON_DOWN(Buttons.ENCODER1)) {
+           perf_param1.perf_data.quick_scene_populate();
+           redraw_mask = -1;
+           return true;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER2)) {
+           perf_param2.perf_data.quick_scene_populate();
+           redraw_mask = -1;
+           return true;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER3)) {
+           perf_param3.perf_data.quick_scene_populate();
+           redraw_mask = -1;
+           return true;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER4)) {
+           perf_param4.perf_data.quick_scene_populate();
+           redraw_mask = -1;
+           return true;
+        }
+       if (preview_mute_set == 255 &&
             trig_interface.is_key_down(MDX_KEY_FUNC) &&
             note_interface.notes_on == 0) {
           switch_mute_set(4); //---> Flip mutes

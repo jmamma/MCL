@@ -239,7 +239,6 @@ public:
   uint32_t models[16];
   /** The LFO settings for each track. **/
   MDLFO lfos[16];
-
   /** The settings of the reverb effect. **/
   uint8_t reverb[8];
   /** The settings of the delay effect. **/
@@ -248,7 +247,8 @@ public:
   uint8_t eq[8];
   /** The settings of the compressor effect. **/
   uint8_t dynamics[8];
-
+  /** Duplicate fx params not included in the origin MD structure */
+  uint8_t fx_orig[4][9];
   /** The trig group selected for each track (255: OFF). **/
   uint8_t trigGroups[16];
   /** The mute group selected for each track (255: OFF). **/

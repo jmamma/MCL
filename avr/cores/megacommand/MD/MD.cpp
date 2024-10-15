@@ -235,6 +235,7 @@ bool MDClass::probe() {
     mcl_gui.delay_progress(300);
     getCurrentTrack(CALLBACK_TIMEOUT);
     getBlockingKit(0x7F);
+    MD.save_kit_params();
     setup();
 
     uint8_t y = 0;
@@ -364,8 +365,15 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
   }
 }
 
+void MDClass::save_kit_params() {
+  memcpy(kit.params_orig, kit.params, sizeof(kit.params));
+  memcpy(kit.fx_orig, kit.reverb, sizeof(kit.reverb) * 4);
+}
+
+
 void MDClass::restore_kit_params() {
   memcpy(kit.params, kit.params_orig, sizeof(kit.params));
+  memcpy(kit.reverb, kit.fx_orig, sizeof(kit.reverb) * 4);
 }
 
 void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
