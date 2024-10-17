@@ -39,6 +39,9 @@ void MCLSeq::setup() {
   mdfx_track.length = 16;
   mdfx_track.speed = SEQ_SPEED_1X;
 
+  perf_track.length = 16;
+  perf_track.speed = SEQ_SPEED_1X;
+
   enable();
 
   MidiClock.addOnMidiStopCallback(
@@ -108,7 +111,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
     aux_tracks[i].reset();
   }
   mdfx_track.reset();
-
+  perf_track.reset();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].sample_hold = 0;
@@ -242,7 +245,6 @@ void MCLSeq::seq() {
   }
 
   mdfx_track.seq();
-
   if (MDSeqTrack::load_machine_cache) {
     MD.setKitName(grid_task.kit_names[0], uart);
     MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart);
@@ -251,8 +253,7 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].seq();
   }
-  // Arp
-
+  perf_track.seq();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].seq(uart, uart2);

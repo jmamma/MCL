@@ -82,6 +82,7 @@
 #include "ArpSeqTrack.h"
 #include "EmptyTrack.h"
 #include "LFOSeqTrack.h"
+#include "PerfSeqTrack.h"
 #include "MNMTrack.h"
 
 #include "MCLActions.h"

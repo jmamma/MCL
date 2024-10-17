@@ -11,6 +11,7 @@
 #include "ArpSeqTrack.h"
 #include "ExtSeqTrack.h"
 #include "MDFXseqTrack.h"
+#include "PerfSeqTrack.h"
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -63,6 +64,7 @@ public:
 
   SeqTrackBase aux_tracks[NUM_AUX_TRACKS];
 
+  PerfSeqTrack perf_track;
   MDFXSeqTrack mdfx_track;
 
   MCLSeqMidiEvents midi_events;

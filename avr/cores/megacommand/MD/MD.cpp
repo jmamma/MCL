@@ -174,7 +174,7 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
   add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &gdt);
 
   gdt.init(PERF_TRACK_TYPE, GROUP_PERF, device_idx,
-           (SeqTrack *)&(mcl_seq.aux_tracks[3]), 0);
+           (SeqTrack *)&(mcl_seq.perf_track), 0);
   add_track_to_grid(grid_idx, PERF_TRACK_NUM, &gdt);
 }
 

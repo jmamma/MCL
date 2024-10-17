@@ -223,7 +223,12 @@ public:
          if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
            scene = MD.kit.params[track][param] >= MD.kit.params_orig[track][param];
            if (add_param(track,param,scene,MD.kit.params[track][param]) != 255) {
-             MD.kit.params[track][param] = MD.kit.params_orig[track][param];
+             //Kit encoders go back to normal, for save.
+             uint8_t val = MD.kit.params[track][param];
+             MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr,
+                     true);
+             MD.setTrackParam(track, param, val, nullptr,
+                     false);
            }
          }
 
@@ -240,7 +245,9 @@ public:
        if (fxs[n] != fxs_orig[n]) {
          scene = fxs[n] >= fxs_orig[n];
         if (add_param(fx + NUM_MD_TRACKS,param,scene,fxs[n]) != 255) {
-           fxs[n] = fxs_orig[n];
+           uint8_t val = fxs[n];
+           MD.setFXParam(param, fxs_orig[n], fx + MD_FX_ECHO, true);
+           MD.setFXParam(param, val, fx + MD_FX_ECHO, false);
          }
        }
      }

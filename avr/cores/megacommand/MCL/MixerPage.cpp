@@ -265,6 +265,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 void MixerPage::display() {
 
   auto oldfont = oled_display.getFont();
+  //oled_display.setFont();
   if (oled_display.textbox_enabled) {
     oled_display.clearDisplay();
     oled_draw_mutes();
@@ -296,6 +297,12 @@ void MixerPage::display() {
   if (draw_encoders || preview_mute_set != 255) {
     // oled_display.clearDisplay();
     draw_encs();
+    if (load_mute_set != 255 && load_mute_set == preview_mute_set) {
+      oled_display.setFont(&TomThumb);
+      oled_display.setCursor(111, 31);
+      oled_display.print("LOAD");
+      oled_display.setFont();
+    }
     oled_display.display();
   } else {
 
@@ -708,7 +715,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         }
         break;
       }
-
+      case MDX_KEY_FUNC: {
+        if (load_mute_set == preview_mute_set) { load_mute_set = 255; }
+        else { load_mute_set = preview_mute_set; }
+        break;
+      }
       case MDX_KEY_LEFT:
       case MDX_KEY_UP:
       case MDX_KEY_RIGHT:

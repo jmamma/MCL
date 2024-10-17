@@ -50,6 +50,7 @@ public:
 
   uint8_t current_mute_set = 255;
   uint8_t preview_mute_set = 255;
+  uint8_t load_mute_set = 255;
   void send_fx(uint8_t param, Encoder *enc, uint8_t type);
 
   // Don't change order
