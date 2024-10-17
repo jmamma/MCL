@@ -9,7 +9,7 @@ void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
   DEBUG_PRINTLN("transition send");
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   if (mcl_actions.send_machine[slotnumber]) {
-    load_perf(seq_track);
+    load_perf(false, seq_track);
   }
 }
 
@@ -41,7 +41,7 @@ void PerfTrack::get_perf() {
 }
 
 
-void PerfTrack::load_perf(SeqTrack *seq_track) {
+void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load perf");
   DEBUG_PRINTLN( sizeof(scenes));
   for (uint8_t n = 0; n < 4; n++) {
@@ -67,16 +67,18 @@ void PerfTrack::load_perf(SeqTrack *seq_track) {
  }
  memcpy(mixer_page.mute_sets, mute_sets, sizeof(mute_sets) + sizeof(perf_locks));
  if (mixer_page.load_mute_set < 4) {
-   mixer_page.switch_mute_set(mixer_page.load_mute_set); //Mute change is applied outside of sequencer runtime.
-   PerfSeqTrack *p = (PerfSeqTrack*) seq_track;
-   memcpy(p->perf_locks, &perf_locks[mixer_page.load_mute_set],4); //Perf change is pre-empted at sequencer runtime.
+   mixer_page.switch_mute_set(mixer_page.load_mute_set, true, immediate); //Mute change is applied outside of sequencer runtime.
+   if (!immediate) {
+     PerfSeqTrack *p = (PerfSeqTrack*) seq_track;
+     memcpy(p->perf_locks, &perf_locks[mixer_page.load_mute_set],4); //Perf change is pre-empted at sequencer runtime.
+   }
  }
 }
 
 void PerfTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate");
   load_link_data(seq_track);
-  load_perf(seq_track);
+  load_perf(true, seq_track);
 }
 
 bool PerfTrack::store_in_grid(uint8_t column, uint16_t row,

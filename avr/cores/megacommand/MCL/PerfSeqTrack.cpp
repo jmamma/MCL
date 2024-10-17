@@ -9,16 +9,20 @@ void PerfSeqTrack::seq() {
   }
   if (count_down) {
     count_down--;
-    if (count_down == 0) {
+    if (count_down <= 1) {
       if (load_sound) {
         for (uint8_t n = 0; n < 4; n++) {
           if (perf_locks[n] != 255) {
-            mixer_page.encoders[n]->cur = perf_locks[n];
-            mixer_page.encoders[n]->old = perf_locks[n] + 1;
+            perf_page.perf_encoders[n]->cur = perf_locks[n];
+            perf_page.perf_encoders[n]->old = perf_locks[n];
+            perf_page.perf_encoders[n]->resend = true;
           }
           perf_locks[n] = 255;
         }
+        load_sound = 0;
       }
+    }
+    if (count_down == 0) {
       reset();
       mod12_counter = 0;
     }

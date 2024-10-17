@@ -53,6 +53,7 @@ void PerfEncoder::send() {
     PerfScene *s1 = active_scene_a == 255 ? nullptr :  &perf_data.scenes[active_scene_a];
     PerfScene *s2 = active_scene_b == 255 ? nullptr :  &perf_data.scenes[active_scene_b];
     send_params(cur, s1, s2);
+    resend = false;
 }
 
 int PerfEncoder::update(encoder_t *enc) {

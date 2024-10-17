@@ -22,6 +22,8 @@ class PerfEncoder : public MCLEncoder {
   uint8_t active_scene_a = 0;
   uint8_t active_scene_b = 1;
 
+  bool resend = false;
+
   void init() { perf_data.init(); }
   void send();
   void send_param(uint8_t dest, uint8_t param, uint8_t val);

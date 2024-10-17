@@ -423,7 +423,7 @@ void MixerPage::populate_mute_set() {
   }
 }
 
-void MixerPage::switch_mute_set(uint8_t state, bool all_devices) {
+void MixerPage::switch_mute_set(uint8_t state, bool all_devices, bool load_perf) {
 
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
@@ -463,7 +463,7 @@ void MixerPage::switch_mute_set(uint8_t state, bool all_devices) {
       }
     }
   }
-  if (state < 4) {
+  if (state < 4 && load_perf) {
     load_perf_locks(state);
   }
   oled_draw_mutes();

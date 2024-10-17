@@ -313,7 +313,7 @@ void PerfPage::encoder_check() {
 
 void PerfPage::encoder_send() {
   for (uint8_t i = 0; i < 4; i++) {
-    if (perf_encoders[i]->hasChanged()) { perf_encoders[i]->send(); }
+    if (perf_encoders[i]->hasChanged() || perf_encoders[i]->resend) { perf_encoders[i]->send(); }
   }
 }
 

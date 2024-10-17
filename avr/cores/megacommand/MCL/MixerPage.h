@@ -79,7 +79,7 @@ public:
   void record_mutes_set(bool state);
   void disable_record_mutes(bool clear = false);
   void oled_draw_mutes();
-  void switch_mute_set(uint8_t state, bool all_devices = true);
+  void switch_mute_set(uint8_t state, bool all_devices = true, bool load_perf = false);
   void populate_mute_set();
 
   void load_perf_locks(uint8_t state);

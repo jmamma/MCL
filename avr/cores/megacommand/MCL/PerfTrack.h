@@ -59,7 +59,7 @@ public:
     memset(perf_locks, 255, sizeof(perf_locks));
   }
 
-  void load_perf(SeqTrack *seq_track);
+  void load_perf(bool immediate, SeqTrack *seq_track);
   void get_perf();
 
   uint16_t calc_latency(uint8_t tracknumber);
