@@ -1220,6 +1220,5 @@ void ExtSeqTrack::toggle_mute() {
     mute_state = SEQ_MUTE_OFF;
   } else {
     mute_state_pending = true;
-    buffer_notesoff();
   }
 }
