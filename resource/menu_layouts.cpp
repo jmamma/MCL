@@ -57,7 +57,7 @@ menu_t<aux_config_page_N> auxconfig_menu_layout = {
         {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 122},
         {"RAM LINK:", 0, 2, 2, 1, NULL_PAGE, 0, 0},
     },
-    0
+    1
 };
 
 menu_t<midi_config_page_N> midiconfig_menu_layout = {
@@ -150,7 +150,7 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
         {"IMPORT",      0, 0,  0, 0, MD_IMPORT_PAGE, 0, 0},
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
     },
-    0
+    1
 };
 
 menu_t<md_import_page_N> mdimport_menu_layout = {

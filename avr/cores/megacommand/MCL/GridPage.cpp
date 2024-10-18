@@ -120,6 +120,7 @@ void GridPage::loop() {
   if (mcl_cfg.grid_page_mode == PERF_ENC) {
      //need to limit range of the alternate encoders
      encoder_t *enc = nullptr;
+     perf_page.func_enc_check();
      param1.update(enc);
      param2.update(enc);
      param3.update(enc);
@@ -604,7 +605,7 @@ void GridPage::display() {
   if (!show_slot_menu) {
     display_grid_info();
   } else {
-    if (param4.cur > 1) {
+    if (param4.cur > 4) {
      display_row_info();
     }
     else{
@@ -973,7 +974,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
     next:
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      draw_encoders = false;
+      if (key != MDX_KEY_FUNC) { draw_encoders = false; }
       uint8_t inc = 1;
       if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 4;
