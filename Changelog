@@ -2,25 +2,42 @@ MCL 4.60 21/09/2024
 
 Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.60.
 
-- Changes:
+-  Sequencer:
 
-  The MD's in-built MIDI machines are now supported via the MCL sequencer.
-  MIDI data is transmitted on MegaCommand's MIDI Port 2.
+   The MD's in-built MIDI machines are now supported via the MCL sequencer.
+   MIDI data is transmitted on MegaCommand's MIDI Port 2.
 
-  It's now possible to reconfigure the MCL Encoders to act as the four
-  Performance Controllers when using the GridPage. Via option: Config -> Page -> Grid Encod
+-  Grid Page:
 
-  From the Mixer Page, mute sets can now be loaded for a single device.
-    - To load a Mute Set for active device, hold down an [ Arrow ] Key and press [ YES ]
-    - To load a Mute Set for both devices simultaneously (MD + External MIDI), hold down [ YES ] and then press an [ Arrow ].
+   It's now possible to reconfigure the Grid Page Encoders to act as the four
+   Performance Controllers. Via option: Config -> Page -> Grid Encod
 
-  When selecting multiple rows for copy/clear/paste operations the corresponding Bank/Pattern id is displayed on the left.
+   When selecting multiple rows for copy/clear/paste operations the corresponding Bank/Pattern id is now displayed on the left.
+
+-  Mixer Page:
+
+   Mute Sets can now be loaded for a single device:
+   - Press [ Scale ] to toggle the Mixer Page's active device (MD or External MIDI)
+   - To load a Mute Set for the Mixer Page's active device, hold down an [ Arrow ] Key and press [ YES ]
+   - To load a Mute Set for both devices simultaneously (MD + External MIDI), hold down [ YES ] and then press an [ Arrow ].
+
+   A chosen mute set can now be made to auto-load when the Perf Slot in Grid Y is loaded:
+   - From the Mixer Page, Hold an [ Arrow ] key to visually preview the mute set and then press [ FUNC ] to enable auto "LOAD".
+   - Then save the Perf Slot, in Grid Y.
+
+   A Perf Controller's assigned left and right scenes can be auto-filled with modified Kit parameters by holding down the MCL < Encoder Button >
+   and pressing [ YES ].
+
+   A Perf Controller's assigned left and right scenes can be auto-cleared with by holding down the MCL <Encoder Button> and pressing [ NO ].
+
+- Misc:
 
   The Port 1 MIDI driver can now be optionally changed to Generic.
 
   Performance optimizations and improvements.
 
-Bug Fixes:
+- Bug Fixes:
+
   Fixed device selection in Chromatic Page
 
   Route and Perf track types would not load correctly during transitions
