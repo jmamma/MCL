@@ -634,22 +634,22 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_NO: {
         if (BUTTON_DOWN(Buttons.ENCODER1)) {
-           perf_param1.perf_data.init_params_verbose();
+           perf_param1.clear_scenes();
            redraw_mask = -1;
            return true;
         }
         if (BUTTON_DOWN(Buttons.ENCODER2)) {
-           perf_param2.perf_data.init_params_verbose();
+           perf_param2.clear_scenes();
            redraw_mask = -1;
            return true;
         }
         if (BUTTON_DOWN(Buttons.ENCODER3)) {
-           perf_param3.perf_data.init_params_verbose();
+           perf_param3.clear_scenes();
            redraw_mask = -1;
            return true;
         }
         if (BUTTON_DOWN(Buttons.ENCODER4)) {
-           perf_param4.perf_data.init_params_verbose();
+           perf_param4.clear_scenes();
            redraw_mask = -1;
            return true;
         }
@@ -668,22 +668,22 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_YES: {
         if (BUTTON_DOWN(Buttons.ENCODER1)) {
-           perf_param1.perf_data.quick_scene_populate();
+           perf_param1.quick_scene_populate();
            redraw_mask = -1;
            return true;
         }
         if (BUTTON_DOWN(Buttons.ENCODER2)) {
-           perf_param2.perf_data.quick_scene_populate();
+           perf_param2.quick_scene_populate();
            redraw_mask = -1;
            return true;
         }
         if (BUTTON_DOWN(Buttons.ENCODER3)) {
-           perf_param3.perf_data.quick_scene_populate();
+           perf_param3.quick_scene_populate();
            redraw_mask = -1;
            return true;
         }
         if (BUTTON_DOWN(Buttons.ENCODER4)) {
-           perf_param4.perf_data.quick_scene_populate();
+           perf_param4.quick_scene_populate();
            redraw_mask = -1;
            return true;
         }

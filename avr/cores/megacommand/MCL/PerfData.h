@@ -197,8 +197,10 @@ public:
   }
 
   void clear_scene(uint8_t scene) {
-    PerfScene *s = &scenes[scene];
-    s->init();
+    if (scene < NUM_SCENES) {
+      PerfScene *s = &scenes[scene];
+      s->init();
+    }
   }
 
   void init_params() {
@@ -207,12 +209,7 @@ public:
     }
   }
 
-  void init_params_verbose() {
-    oled_display.textbox("CLEAR SCENES", "");
-    init_params();
-  }
-
-  void quick_scene_populate() {
+  void quick_scene_populate(uint8_t scene_a, uint8_t scene_b) {
      oled_display.textbox("FILL SCENES", "");
      uint8_t scene = 0;
      uint8_t *params = (uint8_t *) &MD.kit.params;
@@ -221,8 +218,8 @@ public:
      for (uint8_t track = 0; track < 16; track++) {
        for (uint8_t param = 0; param < 24; param++) {
          if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
-           scene = MD.kit.params[track][param] >= MD.kit.params_orig[track][param];
-           if (add_param(track,param,scene,MD.kit.params[track][param]) != 255) {
+           scene = MD.kit.params[track][param] >= MD.kit.params_orig[track][param] ? scene_b : scene_a;
+           if (scene < NUM_SCENES && add_param(track,param,scene,MD.kit.params[track][param]) != 255) {
              //Kit encoders go back to normal, for save.
              uint8_t val = MD.kit.params[track][param];
              MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr,
@@ -243,8 +240,8 @@ public:
        uint8_t *fxs = (uint8_t *) &MD.kit.reverb;
        uint8_t *fxs_orig = (uint8_t *) &MD.kit.fx_orig;
        if (fxs[n] != fxs_orig[n]) {
-         scene = fxs[n] >= fxs_orig[n];
-        if (add_param(fx + NUM_MD_TRACKS,param,scene,fxs[n]) != 255) {
+         scene = fxs[n] >= fxs_orig[n] ? scene_b : scene_a;
+         if (scene < NUM_SCENES && add_param(fx + NUM_MD_TRACKS,param,scene,fxs[n]) != 255) {
            uint8_t val = fxs[n];
            MD.setFXParam(param, fxs_orig[n], fx + MD_FX_ECHO, true);
            MD.setFXParam(param, val, fx + MD_FX_ECHO, false);

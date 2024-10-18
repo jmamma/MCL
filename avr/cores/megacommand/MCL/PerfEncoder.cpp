@@ -61,9 +61,14 @@ int PerfEncoder::update(encoder_t *enc) {
   // Update all params
   return cur;
 }
-
 void PerfEncoder::quick_scene_populate() {
-  perf_data.quick_scene_populate();
+  perf_data.quick_scene_populate(active_scene_a,active_scene_b);
   cur = 127;
   old = 127;
+}
+
+void PerfEncoder::clear_scenes() {
+  oled_display.textbox("CLEAR SCENES", "");
+  perf_data.clear_scene(active_scene_a);
+  perf_data.clear_scene(active_scene_b);
 }
