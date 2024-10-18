@@ -5,6 +5,7 @@ void MenuPageBase::init() {
   DEBUG_PRINTLN("MenuPageBase::init");
   R.Clear();
   R.use_machine_names_short(); // for grid page
+  R.use_icons_knob(); // for grid page
   R.use_menu_options();
   R.use_menu_layouts();
   DEBUG_PRINT("R.Size() = ");
