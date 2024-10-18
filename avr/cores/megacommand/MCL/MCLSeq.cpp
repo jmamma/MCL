@@ -253,7 +253,7 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].seq();
   }
-  perf_track.seq();
+  perf_track.seq(uart, uart2);
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].seq(uart, uart2);

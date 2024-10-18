@@ -105,8 +105,7 @@ void MixerPage::load_perf_locks(uint8_t state) {
     uint8_t val = perf_locks[state][n];
     if (val < 128) {
       enc->cur = val;
-      enc->old = val;
-      enc->send();
+      enc->resend = true;
     }
   }
 }
@@ -297,12 +296,16 @@ void MixerPage::display() {
   if (draw_encoders || preview_mute_set != 255) {
     // oled_display.clearDisplay();
     draw_encs();
+    oled_display.setFont(&TomThumb);
+    if (preview_mute_set != 255) {
+      oled_display.setCursor(0, 31);
+      oled_display.print(preview_mute_set + 1);
+    }
     if (load_mute_set != 255 && load_mute_set == preview_mute_set) {
-      oled_display.setFont(&TomThumb);
       oled_display.setCursor(111, 31);
       oled_display.print("LOAD");
-      oled_display.setFont();
     }
+    oled_display.setFont();
     oled_display.display();
   } else {
 
@@ -694,16 +697,16 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           break;
         }
         if (trig_interface.is_key_down(MDX_KEY_LEFT)) {
-          switch_mute_set(1);
+          switch_mute_set(1,true,true);
           break;
         } else if (trig_interface.is_key_down(MDX_KEY_UP)) {
-          switch_mute_set(2);
+          switch_mute_set(2,true,true);
           break;
         } else if (trig_interface.is_key_down(MDX_KEY_RIGHT)) {
-          switch_mute_set(3);
+          switch_mute_set(3,true,true);
           break;
         } else if (trig_interface.is_key_down(MDX_KEY_DOWN)) {
-          switch_mute_set(0);
+          switch_mute_set(0,true,true);
           break;
         } else {
           if (!note_interface.notes_on) {
@@ -726,7 +729,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_DOWN: {
         uint8_t set = get_mute_set(key);
         if (trig_interface.is_key_down(MDX_KEY_YES)) {
-          switch_mute_set(set,false);
+          switch_mute_set(set,false,true);
         } else {
           preview_mute_set = set;
           for (uint8_t n = 0; n < 4; n++) {

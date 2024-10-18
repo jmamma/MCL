@@ -23,6 +23,6 @@ public:
     SeqTrackBase::reset();
   }
 
-  void seq();
+  void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
 
 };

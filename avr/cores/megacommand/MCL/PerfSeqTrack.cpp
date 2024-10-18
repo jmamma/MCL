@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-void PerfSeqTrack::seq() {
+void PerfSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
   uint8_t timing_mid = get_timing_mid();
   mod12_counter++;
   if (mod12_counter == timing_mid) {
@@ -15,7 +15,8 @@ void PerfSeqTrack::seq() {
           if (perf_locks[n] != 255) {
             perf_page.perf_encoders[n]->cur = perf_locks[n];
             perf_page.perf_encoders[n]->old = perf_locks[n];
-            perf_page.perf_encoders[n]->resend = true;
+            perf_page.perf_encoders[n]->send(uart_,uart2_);
+            //perf_page.perf_encoders[n]->resend = true;
           }
           perf_locks[n] = 255;
         }
