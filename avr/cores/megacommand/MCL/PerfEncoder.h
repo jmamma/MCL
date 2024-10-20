@@ -28,7 +28,7 @@ class PerfEncoder : public MCLEncoder {
   void send(MidiUartParent *uart_ = nullptr,MidiUartParent *uart2_ = nullptr);
   void send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartParent *uart_ = nullptr, MidiUartParent *uart2_ = nullptr);
   void send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUartParent *uart_ = nullptr,MidiUartParent *uart2_ = nullptr);
-  void quick_scene_populate();
+  void scene_autofill();
   void clear_scenes();
   /**
        Create a new range-limited encoder with max and min value, short

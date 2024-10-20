@@ -64,8 +64,8 @@ int PerfEncoder::update(encoder_t *enc) {
   // Update all params
   return cur;
 }
-void PerfEncoder::quick_scene_populate() {
-  perf_data.quick_scene_populate(active_scene_a,active_scene_b);
+void PerfEncoder::scene_autofill() {
+  perf_data.scene_autofill(active_scene_b);
   cur = 127;
   old = 127;
 }

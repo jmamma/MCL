@@ -303,10 +303,6 @@ void MixerPage::display() {
     // oled_display.clearDisplay();
     draw_encs();
     oled_display.setFont(&TomThumb);
-    if (preview_mute_set != 255) {
-      oled_display.setCursor(0, 31);
-      oled_display.print(preview_mute_set + 1);
-    }
     if (load_mute_set != 255 && load_mute_set == preview_mute_set) {
       oled_display.setCursor(111, 31);
       oled_display.print("LOAD");
@@ -645,24 +641,23 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (BUTTON_DOWN(Buttons.ENCODER1)) {
            perf_param1.clear_scenes();
            redraw_mask = -1;
-           return true;
+           break;
         }
         if (BUTTON_DOWN(Buttons.ENCODER2)) {
            perf_param2.clear_scenes();
            redraw_mask = -1;
-           return true;
+           break;
         }
         if (BUTTON_DOWN(Buttons.ENCODER3)) {
            perf_param3.clear_scenes();
            redraw_mask = -1;
-           return true;
+           break;
         }
         if (BUTTON_DOWN(Buttons.ENCODER4)) {
            perf_param4.clear_scenes();
            redraw_mask = -1;
-           return true;
+           break;
         }
-
         uint64_t mask =
             ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
             ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN);
@@ -673,37 +668,47 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           }
           toggle_or_solo(true);
         }
-        else {
-          if (preview_mute_set != 255) {
-            load_types[preview_mute_set] = !load_types[preview_mute_set];
-            if (load_types[preview_mute_set] == 0) { seq_step_page.mute_mask = 0; }
-            redraw_mutes = true;
-            break;
-          }
+        break;
+      }
+      case MDX_KEY_BANKA: {
+        if (preview_mute_set != 255) {
+          load_types[preview_mute_set] = !load_types[preview_mute_set];
+          if (load_types[preview_mute_set] == 0) { seq_step_page.mute_mask = 0; }
+          redraw_mutes = true;
+          return true;
+        }
+        break;
+      }
+      case MDX_KEY_BANKB: {
+        if (preview_mute_set != 255) {
+          if (load_mute_set == preview_mute_set) { load_mute_set = 255; }
+          else { load_mute_set = preview_mute_set; }
+          return true;
         }
         break;
       }
       case MDX_KEY_YES: {
         if (BUTTON_DOWN(Buttons.ENCODER1)) {
-           perf_param1.quick_scene_populate();
+           perf_param1.scene_autofill();
            redraw_mask = -1;
-           return true;
+           break;
         }
         if (BUTTON_DOWN(Buttons.ENCODER2)) {
-           perf_param2.quick_scene_populate();
+           perf_param2.scene_autofill();
            redraw_mask = -1;
-           return true;
+           break;
         }
         if (BUTTON_DOWN(Buttons.ENCODER3)) {
-           perf_param3.quick_scene_populate();
+           perf_param3.scene_autofill();
            redraw_mask = -1;
-           return true;
+           break;
         }
         if (BUTTON_DOWN(Buttons.ENCODER4)) {
-           perf_param4.quick_scene_populate();
+           perf_param4.scene_autofill();
            redraw_mask = -1;
-           return true;
+           break;
         }
+
        if (preview_mute_set == 255 &&
             trig_interface.is_key_down(MDX_KEY_FUNC) &&
             note_interface.notes_on == 0) {
@@ -729,13 +734,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           } else {
             toggle_or_solo();
           }
-        }
-        break;
-      }
-      case MDX_KEY_FUNC: {
-        if (preview_mute_set != 255) {
-          if (load_mute_set == preview_mute_set) { load_mute_set = 255; }
-          else { load_mute_set = preview_mute_set; }
         }
         break;
       }

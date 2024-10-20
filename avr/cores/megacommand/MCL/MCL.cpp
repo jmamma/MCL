@@ -278,7 +278,8 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKD: {
         if (mcl.currentPage() == GRID_LOAD_PAGE ||
             mcl.currentPage() == GRID_SAVE_PAGE ||
-            (mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu)) {
+            (mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu)) { // ||
+//            (mcl.currentPage() == MIXER_PAGE && mixer_page.preview_mute_set != 255)) {
           return false;
         }
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
