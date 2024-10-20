@@ -19,6 +19,8 @@ void MixerPage::oled_draw_mutes() {
   uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
   uint8_t fader_x = 0;
 
+  bool draw = true;
+  if (preview_mute_set != 255 && load_types[preview_mute_set] == 0) { draw = false; }
   for (uint8_t i = 0; i < len; ++i) {
     // draw routing
     SeqTrack *seq_track = is_md_device ? (SeqTrack *)&mcl_seq.md_tracks[i]
@@ -34,10 +36,12 @@ void MixerPage::oled_draw_mutes() {
     // } else if (mute_state) {
     // No Mute (SEQ_MUTE_OFF)
     oled_display.fillRect(fader_x, 2, 6, 6, BLACK);
-    if (mute_state) {
-      oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
-    } else {
-      oled_display.drawLine(fader_x, 5, 5 + (i * 8), 5, WHITE);
+    if (draw) {
+      if (mute_state) {
+        oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
+      } else {
+        oled_display.drawLine(fader_x, 5, 5 + (i * 8), 5, WHITE);
+      }
     }
     fader_x += 8;
   }
@@ -285,7 +289,9 @@ void MixerPage::display() {
     oled_draw_mutes();
   } else if (mute_set != 255 && mute_sets[!is_md_device].mutes[mute_set] !=
                                     seq_step_page.mute_mask) {
+
     uint16_t mask = mute_sets[!is_md_device].mutes[mute_set];
+    if (load_types[mute_set] == 0) { mask = 0; }
     if (!is_md_device) {
       mask &= 0b111111;
     }
@@ -426,7 +432,7 @@ void MixerPage::populate_mute_set() {
   }
 }
 
-void MixerPage::switch_mute_set(uint8_t state, bool all_devices, bool load_perf) {
+void MixerPage::switch_mute_set(uint8_t state, bool all_devices, bool load_perf, bool load_mutes) {
 
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
@@ -435,33 +441,33 @@ void MixerPage::switch_mute_set(uint8_t state, bool all_devices, bool load_perf)
 
   uint8_t focus_device = (midi_device == &MD);
 
+  if (load_mutes) {
+    for (uint8_t dev = 0; dev < 2; dev++) {
+      bool is_md_device = dev == 0;
 
-  for (uint8_t dev = 0; dev < 2; dev++) {
+      if (!all_devices && focus_device != dev) continue;
 
-    bool is_md_device = dev == 0;
-
-    if (!all_devices && focus_device != dev) continue;
-
-    uint8_t len =
+      uint8_t len =
         (is_md_device) ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
 
-    for (uint8_t n = 0; n < len; n++) {
-      SeqTrack *seq_track = (is_md_device) ? (SeqTrack *)&mcl_seq.md_tracks[n]
+      for (uint8_t n = 0; n < len; n++) {
+        SeqTrack *seq_track = (is_md_device) ? (SeqTrack *)&mcl_seq.md_tracks[n]
                                            : (SeqTrack *)&mcl_seq.ext_tracks[n];
 
-      uint8_t mute_set = state;
-      bool mute_state = IS_BIT_CLEAR16(mute_sets[dev].mutes[state], n);
-      // Flip
-      if (state == 4 && devs[dev] == midi_device) {
-        mute_state = !seq_track->mute_state;
-      }
-      // Switch
-      if (mute_state != seq_track->mute_state) {
-        devs[dev]->muteTrack(n, mute_state);
-        if (is_md_device) {
-          mcl_seq.md_tracks[n].toggle_mute();
-        } else {
-          mcl_seq.ext_tracks[n].toggle_mute();
+        uint8_t mute_set = state;
+        bool mute_state = IS_BIT_CLEAR16(mute_sets[dev].mutes[state], n);
+        // Flip
+        if (state == 4 && devs[dev] == midi_device) {
+          mute_state = !seq_track->mute_state;
+        }
+        // Switch
+        if (mute_state != seq_track->mute_state) {
+          devs[dev]->muteTrack(n, mute_state);
+          if (is_md_device) {
+            mcl_seq.md_tracks[n].toggle_mute();
+          } else {
+            mcl_seq.ext_tracks[n].toggle_mute();
+          }
         }
       }
     }
@@ -547,7 +553,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
     if (event->mask == EVENT_BUTTON_PRESSED && track < len) {
       if (note_interface.is_note(track)) {
-        if (show_mixer_menu || preview_mute_set != 255 || ext_key_down) {
+        if (show_mixer_menu || preview_mute_set != 255 && load_types[preview_mute_set] || ext_key_down) {
           if (ext_key_down) { mute_toggle = 1; }
           SeqTrack *seq_track = is_md_device
                                     ? (SeqTrack *)&mcl_seq.md_tracks[track]
@@ -667,6 +673,14 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           }
           toggle_or_solo(true);
         }
+        else {
+          if (preview_mute_set != 255) {
+            load_types[preview_mute_set] = !load_types[preview_mute_set];
+            if (load_types[preview_mute_set] == 0) { seq_step_page.mute_mask = 0; }
+            redraw_mutes = true;
+            break;
+          }
+        }
         break;
       }
       case MDX_KEY_YES: {
@@ -697,16 +711,16 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           break;
         }
         if (trig_interface.is_key_down(MDX_KEY_LEFT)) {
-          switch_mute_set(1,true,true);
+          switch_mute_set(1,true,true,load_types[1]);
           break;
         } else if (trig_interface.is_key_down(MDX_KEY_UP)) {
-          switch_mute_set(2,true,true);
+          switch_mute_set(2,true,true,load_types[2]);
           break;
         } else if (trig_interface.is_key_down(MDX_KEY_RIGHT)) {
-          switch_mute_set(3,true,true);
+          switch_mute_set(3,true,true,load_types[3]);
           break;
         } else if (trig_interface.is_key_down(MDX_KEY_DOWN)) {
-          switch_mute_set(0,true,true);
+          switch_mute_set(0,true,true,load_types[0]);
           break;
         } else {
           if (!note_interface.notes_on) {
@@ -719,8 +733,10 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_FUNC: {
-        if (load_mute_set == preview_mute_set) { load_mute_set = 255; }
-        else { load_mute_set = preview_mute_set; }
+        if (preview_mute_set != 255) {
+          if (load_mute_set == preview_mute_set) { load_mute_set = 255; }
+          else { load_mute_set = preview_mute_set; }
+        }
         break;
       }
       case MDX_KEY_LEFT:
@@ -729,7 +745,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_DOWN: {
         uint8_t set = get_mute_set(key);
         if (trig_interface.is_key_down(MDX_KEY_YES)) {
-          switch_mute_set(set,false,true);
+          switch_mute_set(set,false,true,load_types[set]);
         } else {
           preview_mute_set = set;
           for (uint8_t n = 0; n < 4; n++) {

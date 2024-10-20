@@ -51,11 +51,13 @@ public:
   uint8_t current_mute_set = 255;
   uint8_t preview_mute_set = 255;
   uint8_t load_mute_set = 255;
+
   void send_fx(uint8_t param, Encoder *enc, uint8_t type);
 
   // Don't change order
   MuteSet mute_sets[2];
   uint8_t perf_locks[4][4];
+  bool load_types[4];
   //
 
   uint8_t perf_locks_temp[4];
@@ -68,6 +70,7 @@ public:
     midi_device = &MD;
     memset(mute_sets, 0xFF, sizeof(mute_sets));
     memset(perf_locks, 0xFF, sizeof(perf_locks));
+    memset(load_types, 1, sizeof(load_types));
   }
   void adjust_param(EncoderParent *enc, uint8_t param);
   void draw_levels();
@@ -79,7 +82,7 @@ public:
   void record_mutes_set(bool state);
   void disable_record_mutes(bool clear = false);
   void oled_draw_mutes();
-  void switch_mute_set(uint8_t state, bool all_devices = true, bool load_perf = false);
+  void switch_mute_set(uint8_t state, bool all_devices = true, bool load_perf = false, bool load_mutes = true);
   void populate_mute_set();
 
   void load_perf_locks(uint8_t state);
