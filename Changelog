@@ -16,19 +16,29 @@ Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.6
 
 -  Mixer Page:
 
-   Mute Sets can now be loaded for a single device:
+   Performance States (formely Mute Sets):
+
+   As previously, there are 4 Performance State, each mapped to an individual [Arrow Key].
+   Each Performance State contains Mutes for each device, and 4 Performance Controller Locks
+
+   Performance States Manual Load (for a single device):
    - Press [ Scale ] to toggle the Mixer Page's active device (MD or External MIDI)
-   - To load a Mute Set for the Mixer Page's active device, hold down an [ Arrow ] Key and press [ YES ]
-   - To load a Mute Set for both devices simultaneously (MD + External MIDI), hold down [ YES ] and then press an [ Arrow ].
+   - To load a Performance State for the Mixer Page's active device, hold down an [ Arrow ] Key and press [ YES ]
+   - To load a Performance State for both devices simultaneously (MD + External MIDI), hold down [ YES ] and then press an [ Arrow ].
 
-   A chosen mute set can now be made to auto-load when the Perf Slot in Grid Y is loaded:
-   - From the Mixer Page, Hold an [ Arrow ] key to visually preview the mute set and then press [ FUNC ] to enable auto "LOAD".
-   - Then save the Perf Slot, in Grid Y.
+   Performance State Autoload:
+     A chosen Performance State can now be made to auto-load when the Perf Slot in Grid Y is loaded:
+       - From the Mixer Page, Hold an [ Arrow ] key to visually preview the Performance State and then press [ Swing / BANKB ] to enable auto "LOAD".
+       - Then save the Perf Slot, in Grid Y.
 
-   A Perf Controller's assigned left and right scenes can be auto-filled with modified Kit parameters by holding down the MCL < Encoder Button >
-   and pressing [ YES ].
+   The Mutes, in a Performance State can be permanantly disabled for the active device by holding an [ Arrow ] key and pressing [ Mute / BankA ]
 
-   A Perf Controller's assigned left and right scenes can be auto-cleared with by holding down the MCL <Encoder Button> and pressing [ NO ].
+   Performance Controller AutoFill:
+
+    - A Perf Controller's assigned right scenes can be auto-filled with modified Kit parameters by holding down the MCL < Encoder Button >
+      and pressing the MC's < Yes / Load > button.
+
+    - A Perf Controller's assigned right scenes can be auto-cleared with by holding down the MCL <Encoder Button> and pressing the MC's < Shift > button.
 
 - Misc:
 
