@@ -484,17 +484,20 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
 
   uint8_t ccs[midi_cc_array_size];
   bool send_ccs = false;
-  if (notes.first_trig) {
-    // first note, we want to send all CCs regardless if they dont have locks.
-    memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
-    //prevent re-transmission of program change.
-    //process_note_locks(20, MD.kit.params[track_number][20],ccs);
-    send_ccs = true;
-    notes.first_trig = false;
-  } else {
-    memset(ccs, 255, sizeof(ccs));
-  }
   bool is_midi_model = (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
+
+  if (is_midi_model) {
+    if (notes.first_trig) {
+      // first note, we want to send all CCs regardless if they dont have locks.
+      memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
+      //prevent re-transmission of program change.
+      //process_note_locks(20, MD.kit.params[track_number][20],ccs);
+      send_ccs = true;
+      notes.first_trig = false;
+    } else {
+      memset(ccs, 255, sizeof(ccs));
+    }
+  }
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     bool lock_bit = steps[step].is_lock_bit(c);
     bool lock_present = steps[step].is_lock(c);
