@@ -638,26 +638,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_NO: {
-        if (BUTTON_DOWN(Buttons.ENCODER1)) {
-           perf_param1.clear_scenes();
-           redraw_mask = -1;
-           break;
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER2)) {
-           perf_param2.clear_scenes();
-           redraw_mask = -1;
-           break;
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER3)) {
-           perf_param3.clear_scenes();
-           redraw_mask = -1;
-           break;
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER4)) {
-           perf_param4.clear_scenes();
-           redraw_mask = -1;
-           break;
-        }
         uint64_t mask =
             ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
             ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN);
@@ -688,27 +668,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_YES: {
-        if (BUTTON_DOWN(Buttons.ENCODER1)) {
-           perf_param1.scene_autofill();
-           redraw_mask = -1;
-           break;
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER2)) {
-           perf_param2.scene_autofill();
-           redraw_mask = -1;
-           break;
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER3)) {
-           perf_param3.scene_autofill();
-           redraw_mask = -1;
-           break;
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER4)) {
-           perf_param4.scene_autofill();
-           redraw_mask = -1;
-           break;
-        }
-
        if (preview_mute_set == 255 &&
             trig_interface.is_key_down(MDX_KEY_FUNC) &&
             note_interface.notes_on == 0) {
@@ -775,7 +734,12 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_GLOBAL:
       case MDX_KEY_YES: {
-        goto global_release;
+        preview_mute_set = 255;
+        show_mixer_menu = false;
+        disable_record_mutes();
+        MD.set_trigleds(0, is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
+        redraw();
+        return true;
       }
       case MDX_KEY_EXTENDED: {
 
@@ -816,25 +780,46 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && !BUTTON_DOWN(Buttons.BUTTON4)) {
-    // show_mixer_menu = true;
-    if (note_interface.notes_on) {
-      setLed2();
-      record_mutes_set(true);
-    }
-    return true;
+  if (BUTTON_DOWN(Buttons.BUTTON3)) {
+        if (BUTTON_DOWN(Buttons.ENCODER1)) {
+           perf_param1.clear_scenes();
+           redraw_mask = -1;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER2)) {
+           perf_param2.clear_scenes();
+           redraw_mask = -1;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER3)) {
+           perf_param3.clear_scenes();
+           redraw_mask = -1;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER4)) {
+           perf_param4.clear_scenes();
+           redraw_mask = -1;
+        }
+          return true;
   }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-
-    global_release:
-      preview_mute_set = 255;
-      show_mixer_menu = false;
-      disable_record_mutes();
-      MD.set_trigleds(0, is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
-      redraw();
-    return true;
+  if (BUTTON_DOWN(Buttons.BUTTON4)) {
+        if (BUTTON_DOWN(Buttons.ENCODER1)) {
+           perf_param1.scene_autofill();
+           redraw_mask = -1;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER2)) {
+           perf_param2.scene_autofill();
+           redraw_mask = -1;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER3)) {
+           perf_param3.scene_autofill();
+           redraw_mask = -1;
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER4)) {
+           perf_param4.scene_autofill();
+           redraw_mask = -1;
+        }
+          return true;
   }
+
 
   if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     mcl.setPage(PAGE_SELECT_PAGE);
