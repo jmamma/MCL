@@ -628,17 +628,6 @@ void GridPage::display() {
   oled_display.display();
 }
 
-void GridPage::prepare() {
-  if (MD.connected) {
-    MD.getCurrentTrack(CALLBACK_TIMEOUT);
-    MD.currentKit = MD.getCurrentKit(CALLBACK_TIMEOUT);
-    MD.getBlockingKit(0x7F);
-    if (MidiClock.state == 2) {
-      mcl_seq.update_kit_params();
-    }
-  }
-}
-
 void rename_row() {
   const char *my_title = "Row Name:";
   uint8_t old_grid = proj.get_grid();

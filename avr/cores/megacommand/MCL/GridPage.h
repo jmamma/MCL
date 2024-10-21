@@ -91,7 +91,6 @@ public:
   void setup();
   void cleanup();
   void init();
-  void prepare();
   bool swap_grids();
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
