@@ -31,9 +31,13 @@ void PerfTrack::get_perf() {
     encs[n].cur = e->cur;
     memcpy(encs[n].name,e->name, PERF_NAME_LENGTH);
 
-    if (!mixer_page.load_types[n]) {
+    if (!mixer_page.load_types[0][n]) {
+      CLEAR_BIT16(mute_sets[1].mutes[n],13);
+    }
+    if (!mixer_page.load_types[1][n]) {
       CLEAR_BIT16(mute_sets[1].mutes[n],14);
     }
+
   }
   DEBUG_PRINTLN("get perf");
   DEBUG_PRINTLN(sizeof(scenes));
@@ -64,8 +68,9 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
     if ((mute_sets[1].mutes[n] & 0b1000000000000000) == 0) {
       mixer_page.load_mute_set = n;
     }
-    mixer_page.load_types[n] = mute_sets[1].mutes[n] & 0b0100000000000000;
-    mute_sets[1].mutes[n] |= 0b1100000000000000;
+    mixer_page.load_types[0][n] = mute_sets[1].mutes[n] & 0b0010000000000000;
+    mixer_page.load_types[1][n] = mute_sets[1].mutes[n] & 0b0100000000000000;
+    mute_sets[1].mutes[n] |= 0b1110000000000000;
 
   }
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);

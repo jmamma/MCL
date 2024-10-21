@@ -57,7 +57,7 @@ public:
   // Don't change order
   MuteSet mute_sets[2];
   uint8_t perf_locks[4][4];
-  bool load_types[4];
+  bool load_types[2][4];
   //
 
   uint8_t perf_locks_temp[4];
