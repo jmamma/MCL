@@ -163,10 +163,6 @@ bool RoutePage::handleEvent(gui_event_t *event) {
   // mcl.setPage(MIXER_PAGE);
   // return true;
   //}
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
   /*
     if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
         EVENT_PRESSED(event, Buttons.ENCODER2) ||

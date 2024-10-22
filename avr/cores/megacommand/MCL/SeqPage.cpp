@@ -356,10 +356,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-  }
-
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
     if (!show_seq_menu) {

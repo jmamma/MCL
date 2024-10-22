@@ -267,11 +267,6 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
-
   return FileBrowserPage::handleEvent(event);
 }
 

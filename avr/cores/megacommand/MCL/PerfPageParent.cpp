@@ -94,10 +94,5 @@ bool PerfPageParent::handleEvent(gui_event_t *event) {
       }
     }
   */
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
-
   return false;
 }

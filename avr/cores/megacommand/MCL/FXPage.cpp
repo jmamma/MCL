@@ -164,15 +164,5 @@ bool FXPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
-
   return false;
 }

@@ -824,12 +824,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           return true;
   }
 
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
-
   if (preview_mute_set != 255 && (trig_interface.is_key_down(MDX_KEY_NO))) {
     if (event->source >= Buttons.ENCODER1 &&
         event->source <= Buttons.ENCODER4) {
