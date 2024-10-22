@@ -268,11 +268,9 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 void MixerPage::display() {
 
   auto oldfont = oled_display.getFont();
-  //oled_display.setFont();
+  oled_display.setFont();
   if (oled_display.textbox_enabled) {
-    oled_display.clearDisplay();
-    oled_draw_mutes();
-    redraw_mask = -1;
+    redraw();
   }
 
   if (redraw_mutes) {
@@ -308,7 +306,6 @@ void MixerPage::display() {
       oled_display.print("LOAD");
     }
     oled_display.setFont();
-    oled_display.display();
   } else {
 
     uint8_t fader_level;
@@ -365,11 +362,7 @@ void MixerPage::display() {
     }
   }
 
-  if (!redraw_mask) {
-    oled_display.display();
-  } else {
-    redraw_mask = -1;
-  }
+  redraw_mask = -1;
   oled_display.setFont(oldfont);
 }
 
