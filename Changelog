@@ -28,7 +28,7 @@ Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.6
 
    Performance State Autoload:
      A chosen Performance State can now be made to auto-load when the Perf Slot in Grid Y is loaded:
-       - From the Mixer Page, Hold an [ Arrow ] key to visually preview the Performance State and then press [ Swing / BANKB ] to enable auto "LOAD".
+       - From the Mixer Page, Hold an [ Arrow ] key to visually preview the Performance State and then press [ Accent / BANKB ] to enable auto "LOAD".
        - Then save the Perf Slot, in Grid Y.
 
    The Mutes, in a Performance State can be permanantly disabled for the active device by holding an [ Arrow ] key and pressing [ Mute / BankA ]

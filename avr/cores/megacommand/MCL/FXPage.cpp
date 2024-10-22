@@ -29,21 +29,7 @@ void FXPage::update_encoders() {
 
     uint8_t a = ((uint8_t)page_mode * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[a].param;
-
-    switch (params[a].type) {
-    case MD_FX_ECHO:
-      enc->cur = MD.kit.delay[fx_param];
-      break;
-    case MD_FX_REV:
-      enc->cur = MD.kit.reverb[fx_param];
-      break;
-    case MD_FX_EQ:
-      enc->cur = MD.kit.eq[fx_param];
-      break;
-    case MD_FX_DYN:
-      enc->cur = MD.kit.dynamics[fx_param];
-      break;
-    }
+    enc->cur = MD.kit.get_fx_param(params[a].type, fx_param);
     enc->old = enc->cur;
   }
 

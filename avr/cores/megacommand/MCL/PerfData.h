@@ -12,7 +12,7 @@ static uint8_t get_param_device(uint8_t dest, uint8_t param) {
   if (dest <= NUM_MD_TRACKS) {
     return MD.kit.params[dest - 1][param];
   } else {
-    return MD.kit.get_fx_param(dest - NUM_MD_TRACKS - 1, param);
+    return MD.kit.get_fx_param(dest - NUM_MD_TRACKS - 1 + MD_FX_ECHO, param);
   }
   return 255;
 }

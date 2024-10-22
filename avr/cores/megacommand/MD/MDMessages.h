@@ -273,7 +273,23 @@ public:
 
   uint8_t get_model(uint8_t track);
   bool get_tonal(uint8_t track);
-
+  uint8_t get_fx_param(uint8_t fx, uint8_t param) {
+    uint8_t ret = 255;
+    switch (fx) {
+    case MD_FX_ECHO:
+      ret = delay[param];
+      break;
+    case MD_FX_DYN:
+      ret = dynamics[param];
+      break;
+    case MD_FX_REV:
+      ret = reverb[param];
+      break;
+    case MD_FX_EQ:
+      ret = eq[param];
+    }
+    return ret;
+  }
   /* @} */
 };
 
