@@ -14,7 +14,15 @@ void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 
 uint16_t PerfTrack::calc_latency(uint8_t tracknumber) {
-  return 0;
+  uint8_t load_mute_set = 255;
+
+  for (uint8_t n = 0; n < 4; n++) {
+    if ((mute_sets[1].mutes[n] & 0b1000000000000000) == 0) {
+      load_mute_set = n;
+    }
+  }
+
+  return load_mute_set == 255 ? 0 : 32 * 3 * 4; // Worst case estimate, 32 parameters, 3 bytes each, 4 perf controllers.
 }
 
 void PerfTrack::get_perf() {
