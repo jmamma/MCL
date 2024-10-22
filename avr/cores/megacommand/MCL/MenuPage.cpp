@@ -185,7 +185,6 @@ void MenuPageBase::display() {
   if (number_of_items > visible_rows) {
     draw_scrollbar(120);
   }
-  oled_display.display();
 }
 
 bool MenuPageBase::enter() {

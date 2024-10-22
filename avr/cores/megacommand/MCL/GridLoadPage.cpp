@@ -193,7 +193,6 @@ void GridLoadPage::display() {
     oled_display.print(F("SEQ"));
     */
   }
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 void GridLoadPage::load() {

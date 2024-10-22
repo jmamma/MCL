@@ -226,7 +226,6 @@ void FileBrowserPage::display() {
   }
   draw_sidebar();
   draw_filebrowser();
-  oled_display.display();
   return;
 }
 

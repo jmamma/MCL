@@ -19,7 +19,6 @@ void QuestionDialogPage::init(const char* title_, const char* text_) {
   oled_display.drawRect(MCLGUI::dlg_info_x2 - 57, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);
 
   oled_display.setFont(oldfont);
-  oled_display.display();
 }
 
 void QuestionDialogPage::display() {

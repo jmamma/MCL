@@ -199,7 +199,6 @@ void TextInputPage::display() {
   else
     display_charpane();
 
-  oled_display.display();
 }
 
 bool TextInputPage::handleEvent(gui_event_t *event) {

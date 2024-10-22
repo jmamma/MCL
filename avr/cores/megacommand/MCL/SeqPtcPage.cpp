@@ -274,7 +274,6 @@ void SeqPtcPage::display() {
   if (show_seq_menu) {
     display_mute_mask(midi_active_peering.get_device(UART2_PORT), 8);
   }
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 

@@ -804,7 +804,6 @@ void SeqExtStepPage::display() {
   }
   // oled_display.fillRect(draw_x, 0, 1 , fov_h, WHITE);
 
-  oled_display.display();
 #endif
 }
 

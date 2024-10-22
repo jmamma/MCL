@@ -238,7 +238,6 @@ void LFOPage::display() {
 
   mcl_gui.draw_panel_labels(info1, info2);
 
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 

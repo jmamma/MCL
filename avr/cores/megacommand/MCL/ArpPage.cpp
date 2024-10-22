@@ -133,7 +133,6 @@ void ArpPage::display() {
   mcl_gui.put_value_at(encoders[3]->cur, str);
   mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "RANGE", str, param_select == 3);
 
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 

@@ -73,7 +73,6 @@ void GridSavePage::display() {
     oled_display.setCursor(data_x + 24 + 9, MCLGUI::s_menu_y + 18);
     oled_display.print(F("GRID"));
   }
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 

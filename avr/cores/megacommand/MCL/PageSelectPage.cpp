@@ -279,7 +279,6 @@ void PageSelectPage::display() {
                             WHITE);
   }
 
-  oled_display.display();
   uint16_t led_mask = 1 << page_select;
   if (trigled_mask != led_mask) {
     trigled_mask = led_mask;

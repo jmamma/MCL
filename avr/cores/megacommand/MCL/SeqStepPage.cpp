@@ -186,7 +186,6 @@ void SeqStepPage::display() {
     page_select_page.md_prepare();
     prepare = false;
   }
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 

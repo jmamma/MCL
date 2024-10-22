@@ -302,7 +302,6 @@ void PerfPage::display() {
   oled_display.writeFastHLine(109, MCLGUI::pane_info2_y + 1, 5, WHITE);
   oled_display.writeFastVLine(109 + ((e->cur * 5) / 128), MCLGUI::pane_info2_y,
                               3, WHITE);
-  oled_display.display();
 }
 
 

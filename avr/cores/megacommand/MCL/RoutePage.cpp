@@ -127,7 +127,6 @@ void RoutePage::display() {
   mcl_gui.draw_panel_labels("ROUTE", info_line2);
 
   draw_routes();
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 

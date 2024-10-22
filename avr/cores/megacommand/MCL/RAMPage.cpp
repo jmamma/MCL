@@ -612,7 +612,6 @@ void RAMPage::display() {
     }
     wheel_spin_last_clock = MidiClock.div16th_counter;
   }
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 

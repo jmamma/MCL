@@ -42,7 +42,6 @@ void OscMixerPage::display() {
     scanline_width = 4;
     draw_wav();
   }
-  oled_display.display();
   oled_display.setFont(oldfont);
 }
 

@@ -625,7 +625,6 @@ void GridPage::display() {
     mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 9, 7, false);
   }
   */
-  oled_display.display();
 }
 
 void rename_row() {

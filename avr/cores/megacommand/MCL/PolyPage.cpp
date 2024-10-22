@@ -64,7 +64,6 @@ void PolyPage::display() {
   }
 
   oled_display.setFont(oldfont);
-  oled_display.display();
 }
 
 bool PolyPage::handleEvent(gui_event_t *event) {

@@ -95,7 +95,6 @@ void SampleBrowserPage::display() {
   FileBrowserPage::selection_change = false;
 end:
   draw_filebrowser();
-  oled_display.display();
 }
 
 void SampleBrowserPage::init(uint8_t show_samplemgr_) {
