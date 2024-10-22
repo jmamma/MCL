@@ -332,8 +332,8 @@ void MixerPage::display() {
         fader_level = 127;
       }
 
-      fader_level = ((fader_level * 0.00787) * FADER_LEN) + 0;
-      meter_level = ((levels[i] * 0.00787) * FADER_LEN) + 0;
+      fader_level = (((uint16_t) fader_level * FADER_LEN) / 127) + 0;
+      meter_level = (((uint16_t) levels[i] * FADER_LEN) / 127) + 0;
       meter_level = min(fader_level, meter_level);
 
       if (IS_BIT_SET16(redraw_mask, i)) {
@@ -734,12 +734,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_GLOBAL:
       case MDX_KEY_YES: {
-        preview_mute_set = 255;
-        show_mixer_menu = false;
-        disable_record_mutes();
-        MD.set_trigleds(0, is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
-        redraw();
-        return true;
+        goto global_release;
       }
       case MDX_KEY_EXTENDED: {
 
@@ -780,43 +775,52 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-  if (BUTTON_DOWN(Buttons.BUTTON3)) {
+  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    global_release:
+      preview_mute_set = 255;
+      show_mixer_menu = false;
+      disable_record_mutes();
+      MD.set_trigleds(0, is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
+      redraw();
+    return true;
+  }
+  if (EVENT_PRESSED(event,Buttons.BUTTON3)) {
+     // show_mixer_menu = true;
+        if (note_interface.notes_on) {
+          setLed2();
+          record_mutes_set(true);
+          return true;
+        }
         if (BUTTON_DOWN(Buttons.ENCODER1)) {
            perf_param1.clear_scenes();
-           redraw_mask = -1;
         }
         if (BUTTON_DOWN(Buttons.ENCODER2)) {
            perf_param2.clear_scenes();
-           redraw_mask = -1;
         }
         if (BUTTON_DOWN(Buttons.ENCODER3)) {
            perf_param3.clear_scenes();
-           redraw_mask = -1;
         }
         if (BUTTON_DOWN(Buttons.ENCODER4)) {
            perf_param4.clear_scenes();
-           redraw_mask = -1;
         }
+           redraw_mask = -1;
           return true;
   }
 
-  if (BUTTON_DOWN(Buttons.BUTTON4)) {
+  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
         if (BUTTON_DOWN(Buttons.ENCODER1)) {
            perf_param1.scene_autofill();
-           redraw_mask = -1;
         }
         if (BUTTON_DOWN(Buttons.ENCODER2)) {
            perf_param2.scene_autofill();
-           redraw_mask = -1;
         }
         if (BUTTON_DOWN(Buttons.ENCODER3)) {
            perf_param3.scene_autofill();
-           redraw_mask = -1;
         }
         if (BUTTON_DOWN(Buttons.ENCODER4)) {
            perf_param4.scene_autofill();
-           redraw_mask = -1;
         }
+          redraw_mask = -1;
           return true;
   }
 
