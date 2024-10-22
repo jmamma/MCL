@@ -68,8 +68,8 @@ public:
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
     midi_device = &MD;
-    memset(mute_sets, 0xFF, sizeof(mute_sets));
-    memset(perf_locks, 0xFF, sizeof(perf_locks));
+    memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
+    //memset(perf_locks, 0xFF, sizeof(perf_locks));
     memset(load_types, 1, sizeof(load_types));
   }
   void adjust_param(EncoderParent *enc, uint8_t param);

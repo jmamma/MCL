@@ -12,26 +12,10 @@ static uint8_t get_param_device(uint8_t dest, uint8_t param) {
   if (dest <= NUM_MD_TRACKS) {
     return MD.kit.params[dest - 1][param];
   } else {
-    switch (dest - NUM_MD_TRACKS - 1) {
-    case MD_FX_ECHO - MD_FX_ECHO:
-      return MD.kit.delay[param];
-      break;
-    case MD_FX_DYN - MD_FX_ECHO:
-      return MD.kit.dynamics[param];
-      break;
-
-    case MD_FX_REV - MD_FX_ECHO:
-      return MD.kit.reverb[param];
-      break;
-    case MD_FX_EQ - MD_FX_ECHO:
-      return MD.kit.eq[param];
-      break;
-    }
+    return MD.kit.get_fx_param(dest - NUM_MD_TRACKS - 1, param);
   }
   return 255;
 }
-
-
 
 class PerfParam {
 public:

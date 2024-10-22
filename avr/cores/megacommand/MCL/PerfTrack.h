@@ -55,8 +55,9 @@ public:
       }
       scenes[n].init();
     }
-    memset(mute_sets, 0xFF, sizeof(mute_sets));
-    memset(perf_locks, 255, sizeof(perf_locks));
+    //memset(mute_sets, 0xFF, sizeof(mute_sets));
+    //memset(perf_locks, 255, sizeof(perf_locks));
+    memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
   }
 
   void load_perf(bool immediate, SeqTrack *seq_track);
