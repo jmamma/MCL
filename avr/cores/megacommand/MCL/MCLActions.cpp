@@ -30,12 +30,6 @@ void MCLActions::setup() {
   // DEBUG_PRINTLN(F("mcl actions setup"));
   mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
-  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
-    next_transitions[i] = 0;
-    transition_offsets[i] = 0;
-    send_machine[i] = 0;
-    transition_level[i] = 0;
-  }
 }
 
 void MCLActions::init_chains() {
