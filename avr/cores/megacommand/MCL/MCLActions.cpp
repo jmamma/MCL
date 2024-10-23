@@ -919,11 +919,7 @@ void MCLActions::calc_latency() {
       midi_active_peering.get_device(UART2_PORT),
   };
 
-  for (uint8_t a = 0; a < NUM_DEVS; a++) {
-    dev_latency[a].latency = 0;
-    dev_latency[a].div32th_latency = 0;
-    dev_latency[a].div192th_latency = 0;
-  }
+  memset(dev_latency,0,sizeof(dev_latency));
 
   bool send_dev[NUM_DEVS] = {0};
 
