@@ -213,6 +213,7 @@ void PerfPage::loop() {
 }
 
 void PerfPage::display() {
+  oled_display.setFont(&TomThumb);
   if (show_menu) {
     constexpr uint8_t width = 52;
     oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
