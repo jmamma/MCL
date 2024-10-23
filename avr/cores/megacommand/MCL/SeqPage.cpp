@@ -289,33 +289,6 @@ bool SeqPage::display_mute_mask(MidiDevice* device, uint8_t offset) {
 
 bool SeqPage::handleEvent(gui_event_t *event) {
 
-  if (note_interface.is_event(event)) {
-    uint8_t port = event->port;
-    MidiDevice *device = midi_active_peering.get_device(port);
-
-    uint8_t track = event->source - 128;
-
-    //Removing this block causes progmem to balloon by 1K ??
-    if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      //  calculate the intended seq length.
-      uint8_t step = track;
-      step += 1 + page_select * 16;
-      encoders[2]->cur = step;
-      note_interface.ignoreNextEvent(track);
-      if (event->mask == EVENT_BUTTON_RELEASED) {
-        note_interface.clear_note(track);
-      }
-      GUI.ignoreNextEvent(Buttons.BUTTON4);
-      if (BUTTON_DOWN(Buttons.BUTTON3)) {
-        GUI.ignoreNextEvent(Buttons.BUTTON3);
-      }
-
-      return true;
-    }
-    // notify derived class about unhandled TI event
-    return false;
-  } // end TI events
-
   if (EVENT_CMD(event)) {
     if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
