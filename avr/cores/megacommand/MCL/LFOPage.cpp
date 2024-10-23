@@ -31,7 +31,6 @@ void LFOPage::init() {
 void LFOPage::cleanup() {
   PerfPageParent::cleanup();
   trig_interface.off();
-  oled_display.clearDisplay();
 }
 
 void LFOPage::config_encoder_range(uint8_t i) {

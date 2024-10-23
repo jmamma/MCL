@@ -88,7 +88,6 @@ void MixerPage::init() {
 
 void MixerPage::cleanup() {
   //  md_exploit.off();
-  oled_display.clearDisplay();
   MD.set_key_repeat(1);
   disable_record_mutes();
   trig_interface.off();

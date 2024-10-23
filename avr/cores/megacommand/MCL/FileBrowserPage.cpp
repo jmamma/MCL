@@ -172,7 +172,6 @@ void FileBrowserPage::draw_menu() {
 void FileBrowserPage::draw_sidebar() {
   constexpr uint8_t x_offset = 43;
   oled_display.clearDisplay();
-  oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.println(title);
@@ -220,6 +219,7 @@ void FileBrowserPage::draw_filebrowser() {
 }
 
 void FileBrowserPage::display() {
+  oled_display.setFont(&TomThumb);
   if (filemenu_active) {
     draw_menu();
     return;

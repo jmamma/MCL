@@ -48,7 +48,7 @@ void RAMPage::init() {
   R.use_icons_knob();
 }
 
-void RAMPage::cleanup() { oled_display.clearDisplay(); }
+void RAMPage::cleanup() { }
 void RAMPage::setup_sequencer(uint8_t track) {
 
   USE_LOCK();

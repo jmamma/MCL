@@ -20,6 +20,7 @@ void SampleBrowserPage::setup() {
 }
 
 void SampleBrowserPage::display() {
+  oled_display.setFont(&TomThumb);
   if (filemenu_active) {
     draw_menu();
     return;
