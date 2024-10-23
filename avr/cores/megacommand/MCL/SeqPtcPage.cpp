@@ -208,8 +208,6 @@ void SeqPtcPage::render_arp(bool recalc_notemask_, MidiDevice *midi_dev,
 void SeqPtcPage::display() {
 
   oled_display.clearDisplay();
-  auto *oldfont = oled_display.getFont();
-
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   draw_knob_frame();
   char buf1[4];
@@ -274,7 +272,6 @@ void SeqPtcPage::display() {
   if (show_seq_menu) {
     display_mute_mask(midi_active_peering.get_device(UART2_PORT), 8);
   }
-  oled_display.setFont(oldfont);
 }
 
 uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {

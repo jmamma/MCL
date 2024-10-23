@@ -267,8 +267,6 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
 void MixerPage::display() {
 
-  auto oldfont = oled_display.getFont();
-  oled_display.setFont();
   if (oled_display.textbox_enabled) {
     redraw();
   }
@@ -363,7 +361,6 @@ void MixerPage::display() {
   }
 
   redraw_mask = -1;
-  oled_display.setFont(oldfont);
 }
 
 void MixerPage::record_mutes_set(bool state) {

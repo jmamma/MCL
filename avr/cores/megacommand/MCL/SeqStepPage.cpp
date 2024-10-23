@@ -117,7 +117,6 @@ void SeqStepPage::cleanup() {
 void SeqStepPage::display() {
 
   oled_display.clearDisplay();
-  auto *oldfont = oled_display.getFont();
   draw_knob_frame();
 
   uint8_t timing_mid = mcl_seq.md_tracks[last_md_track].get_timing_mid();
@@ -186,7 +185,6 @@ void SeqStepPage::display() {
     page_select_page.md_prepare();
     prepare = false;
   }
-  oled_display.setFont(oldfont);
 }
 
 void SeqStepPage::loop() {

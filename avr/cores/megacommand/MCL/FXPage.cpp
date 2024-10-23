@@ -10,8 +10,6 @@ void FXPage::setup() { DEBUG_PRINT_FN(); }
 
 void FXPage::init() {
   DEBUG_PRINT_FN();
-  oled_display.clearDisplay();
-  oled_display.setFont();
   trig_interface.off();
   update_encoders();
   MD.set_key_repeat(0);
@@ -39,7 +37,6 @@ void FXPage::update_encoders() {
 void FXPage::cleanup() {
   //  md_exploit.off();
   MD.set_key_repeat(1);
-  oled_display.clearDisplay();
 }
 
 void FXPage::loop() {
@@ -61,7 +58,6 @@ void FXPage::display() {
   char str[4];
   PGM_P param_name = NULL;
   oled_display.clearDisplay();
-  auto oldfont = oled_display.getFont();
 
   uint8_t *icon = R.icons_page->icon_rhytmecho;
   if (page_id == 1) {
@@ -92,7 +88,6 @@ void FXPage::display() {
   }
   info2 = &fx_page_title[0];
   mcl_gui.draw_panel_labels(info1, info2);
-  oled_display.setFont(oldfont);
 }
 
 bool FXPage::handleEvent(gui_event_t *event) {

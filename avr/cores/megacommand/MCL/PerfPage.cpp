@@ -222,8 +222,6 @@ void PerfPage::display() {
 
   oled_display.clearDisplay();
 
-  auto oldfont = oled_display.getFont();
-
   uint8_t x = mcl_gui.knob_x0 + 5;
   uint8_t y = 8;
   uint8_t lfo_height = 7;
@@ -285,7 +283,6 @@ void PerfPage::display() {
     mcl_gui.draw_panel_number(scene + 1);
   }
   oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setFont(oldfont);
   mcl_gui.draw_panel_labels(info1, info2);
 
   if (trig_interface.is_key_down(MDX_KEY_LEFT) ||

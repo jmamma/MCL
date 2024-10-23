@@ -133,8 +133,6 @@ void OscPage::display() {
 
   uint8_t c = 1;
   uint8_t i = 0;
-  auto oldfont = oled_display.getFont();
-  oled_display.setFont();
   oled_display.setCursor(0, 0);
 
   switch (osc_waveform) {
@@ -177,7 +175,6 @@ void OscPage::display() {
   }
   //  GUI.put_string_at(0, my_str);
   WavDesignerPage::display();
-  oled_display.setFont(oldfont);
 }
 void OscPage::draw_wav(uint8_t wav_type) {
   uint8_t x = 64;

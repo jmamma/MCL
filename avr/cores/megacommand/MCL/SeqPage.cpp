@@ -110,8 +110,6 @@ void SeqPage::init() {
   config_encoders();
   seqpage_midi_events.setup_callbacks();
 
-  oled_display.clearDisplay();
-
   toggle_device = true;
   DEBUG_PRINTLN("seq page init");
 

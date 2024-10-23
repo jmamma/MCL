@@ -146,9 +146,7 @@ void TextInputPage::display_normal() {
   auto time = clock_diff(last_clock, slowclock);
 
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
-  auto oldfont = oled_display.getFont();
   oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
-  oled_display.setFont();
   oled_display.setCursor(s_text_x, s_text_y);
   oled_display.println(text);
   if (time < FLASH_SPEED) {
@@ -163,7 +161,6 @@ void TextInputPage::display_normal() {
   if (time > FLASH_SPEED * 2) {
     last_clock = slowclock;
   }
-  oled_display.setFont(oldfont);
 }
 
 void TextInputPage::display_charpane() {
