@@ -187,7 +187,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
   SawOsc saw_osc(w, osc_width);
   SineOsc sine_osc(w);
   UsrOsc usr_osc(w);
-  float sample;
+  float sample = 0;
   float max_sine_gain = 0.0004921259843f; // (float)1 / (float)16 / 127;
   uint8_t n = sample_number;
   // for (uint8_t n = 0; n < 128 - x; n++) {
