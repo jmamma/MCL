@@ -39,10 +39,10 @@ void PerfTrack::get_perf() {
     encs[n].cur = e->cur;
     memcpy(encs[n].name,e->name, PERF_NAME_LENGTH);
 
-    if (!mixer_page.load_types[0][n]) {
+    if (!mixer_page.load_types[n][0]) {
       CLEAR_BIT16(mute_sets[1].mutes[n],13);
     }
-    if (!mixer_page.load_types[1][n]) {
+    if (!mixer_page.load_types[n][1]) {
       CLEAR_BIT16(mute_sets[1].mutes[n],14);
     }
 
@@ -76,8 +76,8 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
     if ((mute_sets[1].mutes[n] & 0b1000000000000000) == 0) {
       mixer_page.load_mute_set = n;
     }
-    mixer_page.load_types[0][n] = mute_sets[1].mutes[n] & 0b0010000000000000;
-    mixer_page.load_types[1][n] = mute_sets[1].mutes[n] & 0b0100000000000000;
+    mixer_page.load_types[n][0] = mute_sets[1].mutes[n] & 0b0010000000000000;
+    mixer_page.load_types[n][1] = mute_sets[1].mutes[n] & 0b0100000000000000;
     mute_sets[1].mutes[n] |= 0b1110000000000000;
 
   }
@@ -85,7 +85,7 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
 
  memcpy(mixer_page.mute_sets, mute_sets, sizeof(mute_sets) + sizeof(perf_locks));
  if (mixer_page.load_mute_set < 4) {
-   mixer_page.switch_mute_set(mixer_page.load_mute_set, true, immediate, mixer_page.load_types[mixer_page.load_mute_set]); //Mute change is applied outside of sequencer runtime.
+   mixer_page.switch_mute_set(mixer_page.load_mute_set, immediate, mixer_page.load_types[mixer_page.load_mute_set]); //Mute change is applied outside of sequencer runtime.
    if (!immediate) {
      PerfSeqTrack *p = (PerfSeqTrack*) seq_track;
      memcpy(p->perf_locks, &perf_locks[mixer_page.load_mute_set],4); //Perf change is pre-empted at sequencer runtime.

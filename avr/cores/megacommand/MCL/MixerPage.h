@@ -57,7 +57,7 @@ public:
   // Don't change order
   MuteSet mute_sets[2];
   uint8_t perf_locks[4][4];
-  bool load_types[2][4];
+  bool load_types[4][2];
   //
 
   uint8_t perf_locks_temp[4];
@@ -82,7 +82,7 @@ public:
   void record_mutes_set(bool state);
   void disable_record_mutes(bool clear = false);
   void oled_draw_mutes();
-  void switch_mute_set(uint8_t state, bool all_devices = true, bool load_perf = false, bool load_mutes = true);
+  void switch_mute_set(uint8_t state, bool load_perf = false, bool *load_types = nullptr);
   void populate_mute_set();
 
   void load_perf_locks(uint8_t state);
