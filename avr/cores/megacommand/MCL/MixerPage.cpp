@@ -657,7 +657,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
        if (preview_mute_set == 255 &&
             trig_interface.is_key_down(MDX_KEY_FUNC) &&
             note_interface.notes_on == 0) {
-          switch_mute_set(4); //---> Flip mutes
+            bool load_t[2] = { 0, 0 };
+            load_t[!is_md_device] = 1;
+            switch_mute_set(4,false,load_t); //---> Flip mutes
           break;
         }
         uint8_t set = 255;
@@ -676,7 +678,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           //load_t[0] = load_types[key][0];
           //load_t[1] = load_types[key][1];
           //load_t[is_md_device] = 0;
-          switch_mute_set(1,true,load_types[set]);
+          switch_mute_set(set,true,load_types[set]);
         }
         else {
           if (!note_interface.notes_on) {
