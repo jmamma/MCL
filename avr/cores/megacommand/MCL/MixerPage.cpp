@@ -12,7 +12,6 @@ void MixerPage::set_display_mode(uint8_t param) {
 }
 
 void MixerPage::oled_draw_mutes() {
-  if (encoder_entry_page != NULL_PAGE) { return; }
 
   bool is_md_device = (midi_device == &MD);
 
@@ -77,7 +76,6 @@ void MixerPage::init() {
   redraw_mask = -1;
   seq_step_page.mute_mask++;
   show_mixer_menu = 0;
-  memset(perf_locks_temp, 255, sizeof(perf_locks_temp));
   // populate_mute_set();
   draw_encoders = false;
   redraw_mutes = true;
@@ -93,7 +91,6 @@ void MixerPage::cleanup() {
   trig_interface.off();
   ext_key_down = 0;
   mute_toggle = 0;
-  encoder_entry_page = NULL_PAGE;
 }
 
 void MixerPage::set_level(int curtrack, int value) {
@@ -154,10 +151,6 @@ void MixerPage::loop() {
   }
   if (draw_encoders != old_draw_encoders) {
     if (!draw_encoders) {
-      if (encoder_entry_page != NULL_PAGE) {
-        mcl.setPage(encoder_entry_page);
-        return;
-      }
       redraw();
     }
   }
@@ -694,17 +687,12 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_UP:
       case MDX_KEY_RIGHT:
       case MDX_KEY_DOWN: {
+        if (trig_interface.is_key_down(MDX_KEY_NO)) { return true; }
         uint8_t set = get_mute_set(key);
         if (trig_interface.is_key_down(MDX_KEY_YES)) {
           switch_mute_set(set,true,load_types[set]);
         } else {
-          preview_mute_set = set;
-          for (uint8_t n = 0; n < 4; n++) {
-            if (perf_locks_temp[n] == 255 && (trig_interface.is_key_down(MDX_KEY_NO))) {
-              perf_locks_temp[n] = encoders[n]->cur;
-              encoders[n]->old = encoders[n]->cur;
-            }
-          }
+            preview_mute_set = set;
           // force redraw in display()
           seq_step_page.mute_mask++;
         }
@@ -755,14 +743,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           trig_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
           preview_mute_set = 255;
           redraw();
-          for (uint8_t n = 0; n < 4; n++) {
-            MCLEncoder *enc = (MCLEncoder*) &encoders[n];
-            if (perf_locks_temp[n] != 255 && (trig_interface.is_key_down(MDX_KEY_NO))) {
-              enc->cur = perf_locks_temp[n];
-              enc->old = enc->cur;
-            }
-            perf_locks_temp[n] = 255;
-          }
         }
         break;
       }

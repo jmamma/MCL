@@ -159,7 +159,6 @@ void GridPage::loop() {
   } else {
     if (mcl_cfg.grid_page_mode == PERF_ENC) {
       if (encoders[0]->hasChanged() || encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
-      //   mixer_page.encoder_entry_page = GRID_PAGE;
          //mcl.setPage(MIXER_PAGE);
          draw_encoders_lastclock = slowclock;
          draw_encoders = true;

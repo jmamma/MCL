@@ -46,7 +46,6 @@ public:
   bool draw_encoders;
 
   PageIndex last_page = NULL_PAGE;
-  PageIndex encoder_entry_page = NULL_PAGE;
 
   uint8_t current_mute_set = 255;
   uint8_t preview_mute_set = 255;
@@ -59,8 +58,6 @@ public:
   uint8_t perf_locks[4][4];
   bool load_types[4][2];
   //
-
-  uint8_t perf_locks_temp[4];
 
   uint8_t get_mute_set(uint8_t key);
 
