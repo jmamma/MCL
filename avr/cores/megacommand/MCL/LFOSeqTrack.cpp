@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-static uint8_t LFOSeqTrack::wav_tables[4][WAV_LENGTH];
+uint8_t LFOSeqTrack::wav_tables[4][WAV_LENGTH];
 
 void LFOSeqTrack::load_tables() {
   SinLFO sin_lfo;
