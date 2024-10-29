@@ -79,7 +79,7 @@ enum PageIndex {
 
 class MCL {
 public:
-  static constexpr uint8_t NUM_PAGES = 42;
+  static constexpr uint8_t NUM_PAGES = static_cast<uint8_t>(PageIndex::PERF_PAGE_0) + 1;
 
   static LightPage *const pages_table[NUM_PAGES] PROGMEM;
 
