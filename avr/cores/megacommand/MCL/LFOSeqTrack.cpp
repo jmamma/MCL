@@ -1,6 +1,6 @@
 #include "MCL_impl.h"
 
-uint8_t LFOSeqTrack::wav_tables[4][WAV_LENGTH];
+static uint8_t LFOSeqTrack::wav_tables[4][WAV_LENGTH];
 
 void LFOSeqTrack::load_tables() {
   SinLFO sin_lfo;
@@ -174,7 +174,20 @@ uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param_id) {
   if (dest < NUM_MD_TRACKS) {
     return MD.kit.params[dest][param];
   } else if (dest < NUM_MD_TRACKS + 4) {
-    return MD.kit.get_fx_param(dest - NUM_MD_TRACKS, param);
+    switch (dest - NUM_MD_TRACKS) {
+    case MD_FX_ECHO - MD_FX_ECHO:
+      return MD.kit.delay[param];
+      break;
+    case MD_FX_DYN - MD_FX_ECHO:
+      return MD.kit.dynamics[param];
+      break;
+    case MD_FX_REV - MD_FX_ECHO:
+      return MD.kit.reverb[param];
+      break;
+    case MD_FX_EQ - MD_FX_ECHO:
+      return MD.kit.eq[param];
+      break;
+    }
   } else {
     // MIDI
     return params[param_id].offset;
