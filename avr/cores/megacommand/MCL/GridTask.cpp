@@ -118,7 +118,7 @@ void GridTask::transition_handler() {
   //                = 0.032 * MidiClock.get_tempo()
   //
   while (MidiClock.clock_less_than(
-             MidiClock.div32th_counter + 0.032 * MidiClock.get_tempo(),
+             MidiClock.div32th_counter + 0.032 * max(60.0,MidiClock.get_tempo()),
              (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
     float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
