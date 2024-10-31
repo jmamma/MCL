@@ -2,39 +2,38 @@ MCL 4.60 21/09/2024
 
 Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.60.
 
--  Sequencer:
+- Sequencer:
 
-   The MD's in-built MIDI machines are now supported via the MCL sequencer.
-   MIDI data is transmitted on MegaCommand's MIDI Port 2.
+  The MD's in-built MIDI machines are now supported via the MCL sequencer.
+  MIDI data is transmitted on MegaCommand's MIDI Port 2.
 
--  Grid Page:
+- Grid Page:
 
-   It's now possible to reconfigure the Grid Page Encoders to act as the four
-   Performance Controllers. Via option: Config -> Page Setup -> Grid Encod
+  It's now possible to reconfigure the Grid Page Encoders to act as the four
+  Performance Controllers. Via option: Config -> Page Setup -> Grid Encod
 
-   When selecting multiple rows for copy/clear/paste operations the corresponding Bank/Pattern id is now displayed on the left.
+  When selecting multiple rows for copy/clear/paste operations the corresponding Bank/Pattern id is now displayed on the left.
 
--  Mixer Page:
+- Mixer Page:
 
-   Performance States (formerly Mute Sets):
+  Performance States (formerly Mute Sets):
 
-   As previously, there are 4 Performance States, each mapped to an individual [Arrow Key].
-   Each Performance State contains Mute settings for the MD and External MIDI tracks, and 4 Performance Controller Locks.
+  As previously, there are 4 Performance States, each mapped to an individual [Arrow Key].
+  Each Performance State contains Mute settings for the MD and External MIDI tracks, and 4 Performance Controller Locks.
 
-   Press [Scale] to toggle the Mixer's active device between MD and External MIDI.
+  Press [Scale] to toggle the Mixer's active device between MD and External MIDI.
 
-   The Mutes in a Performance State can be deactivated for the active device by holding an [Up/Down/Left/Right] key and pressing [Mute/BankA]
+  The Mutes in a Performance State can be deactivated for the active device by holding an [Up/Down/Left/Right] key and pressing [Mute/BankA]
 
-   Performance States Manual Load:
-   - To load a Performance State hold down an [Up/Down/Left/Right] Key and press [YES]
+  Performance States Manual Load:
+    - To load a Performance State hold down an [Up/Down/Left/Right] Key and press [YES]
 
-   Performance State Autoload:
-     A chosen Performance State can now be made to auto-load when the Perf Slot in Grid Y is loaded:
+  Performance State Autoload:
+    A chosen Performance State can now be made to auto-load when the Perf Slot in Grid Y is loaded:
        - From the Mixer Page, Hold an [ Arrow ] key to visually preview the Performance State and then press [Accent/BANKB] to enable auto "LOAD".
        - Then save the Perf Slot, in Grid Y.
 
-   Performance Controller AutoFill:
-
+   Performance Controller AutoFill ( Kit Morph ):
     - A Perf Controller's assigned right scenes can be auto-filled with modified Kit parameters by holding down the MCL <Encoder Button>
       and pressing the MC's <Yes / Load> button.
 
@@ -57,6 +56,10 @@ Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.6
   GUI fixes for SampleBrowser and text input related pages.
 
   MD's random LFO shape was broken when loading with MCL.
+
+  MCL LFO could transmit bogus MIDI data.
+
+  MCL would crash when loading tracks at very slow tempo 30BPM.
 
 MCL 4.51a 20/12/2023
 
