@@ -9,7 +9,7 @@ void PerfSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
   }
   if (count_down) {
     count_down--;
-    if (count_down <= 1) {
+    if (count_down == 0) {
       if (load_sound) {
         for (uint8_t n = 0; n < 4; n++) {
           if (perf_locks[n] != 255) {
@@ -22,8 +22,6 @@ void PerfSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
         }
         load_sound = 0;
       }
-    }
-    if (count_down == 0) {
       reset();
       mod12_counter = 0;
     }

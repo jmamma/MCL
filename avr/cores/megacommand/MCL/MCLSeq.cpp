@@ -240,11 +240,8 @@ void MCLSeq::seq() {
     md_arp_tracks[i].seq(uart,uart2);
   }
 
-  if (MDSeqTrack::md_trig_mask > 0) {
-    MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
-  }
-
   mdfx_track.seq();
+
   if (MDSeqTrack::load_machine_cache) {
     MD.setKitName(grid_task.kit_names[0], uart);
     MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart);
@@ -254,11 +251,16 @@ void MCLSeq::seq() {
     aux_tracks[i].seq();
   }
   perf_track.seq(uart, uart2);
+
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].seq(uart, uart2);
   }
 #endif
+
+  if (MDSeqTrack::md_trig_mask > 0) {
+    MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+  }
 
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
