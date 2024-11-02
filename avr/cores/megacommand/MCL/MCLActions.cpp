@@ -557,7 +557,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       midi_active_peering.get_device(UART2_PORT),
   };
 
-  uint8_t mute_states[NUM_SLOTS];
   uint8_t send_masks[NUM_SLOTS] = {0};
   uint8_t row = 0;
   uint8_t old_grid = proj.get_grid();
@@ -584,9 +583,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { select_array[i] = 0; continue; }
 
     proj.select_grid(grid_idx);
-
-    mute_states[dst] = gdt_dst->seq_track->mute_state;
-    gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
 
       row = grid_page.getRow();
     if (row_array) {
@@ -637,7 +633,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     }
   }
 
-  // switch back to old grid before driving the GUI loop
   // note, do not re-enter grid_task -- stackoverflow
 
   GUI.removeTask(&grid_task);
@@ -645,14 +640,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     //  GUI.loop();
   }
   GUI.addTask(&grid_task);
-  for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
-    if (select_array[i] == 0) { continue; }
-    uint8_t dst = load_offset == 255 ? i : (i - first_slot) + load_offset;
-    GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
-    if (gdt_dst != nullptr) {
-      gdt_dst->seq_track->mute_state = mute_states[dst];
-    }
-  }
+
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
 
