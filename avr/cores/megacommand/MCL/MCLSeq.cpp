@@ -250,13 +250,14 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].seq();
   }
-  perf_track.seq(uart, uart2);
 
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].seq(uart, uart2);
   }
 #endif
+
+  perf_track.seq(uart, uart2);
 
   if (MDSeqTrack::md_trig_mask > 0) {
     MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);

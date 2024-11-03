@@ -416,12 +416,11 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
   };
-  if (load_type != nullptr) {
+  if (load_type != nullptr && state < 255) {
     for (uint8_t dev = 0; dev < 2; dev++) {
       bool is_md_device = dev == 0;
 
       if (!load_type[dev]) continue;
-
       uint8_t len =
         (is_md_device) ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
 
@@ -429,7 +428,6 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
         SeqTrack *seq_track = (is_md_device) ? (SeqTrack *)&mcl_seq.md_tracks[n]
                                            : (SeqTrack *)&mcl_seq.ext_tracks[n];
 
-        uint8_t mute_set = state;
         bool mute_state = IS_BIT_CLEAR16(mute_sets[dev].mutes[state], n);
         // Flip
         if (state == 4 && devs[dev] == midi_device) {
