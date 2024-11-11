@@ -18,15 +18,15 @@ Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.6
 
   Performance States (formerly Mute Sets):
 
-  As previously, there are 4 Performance States, each mapped to an individual [Arrow Key].
+  As previously, there are 4 Performance States, each mapped to an individual [Up/Down/Left/Right] key.
   Each Performance State contains Mute settings for the MD and External MIDI tracks, and 4 Performance Controller Locks.
 
   Press [Scale] to toggle the Mixer's active device between MD and External MIDI.
 
   The Mutes in a Performance State can be deactivated for the active device by holding an [Up/Down/Left/Right] key and pressing [Mute/BankA]
 
-  Performance States Manual Load:
-    - To load a Performance State hold down an [Up/Down/Left/Right] Key and press [YES]
+  Apply Performance States:
+    - To apply a Performance State during a performance, hold down an [Up/Down/Left/Right] Key and press [YES]
 
   Performance State Autoload:
     A chosen Performance State can now be made to auto-load when the Perf Slot in Grid Y is loaded:
@@ -34,10 +34,9 @@ Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.6
        - Then save the Perf Slot, in Grid Y.
 
    Performance Controller AutoFill ( Kit Morph ):
-    - A Perf Controller's assigned right scenes can be auto-filled with modified Kit parameters by holding down the MCL <Encoder Button>
+    - A Perf Controller's assigned left + right scenes can be cleared of paramater locks by holding down the MCL <Encoder Button> and pressing the MC's < Shift > button.
+    - A Perf Controller's assigned right scenes can be auto-filled altered Kit parameters by holding down the MCL <Encoder Button>
       and pressing the MC's <Yes / Load> button.
-
-    - A Perf Controller's assigned right scenes can be cleared of paramater locks by holding down the MCL <Encoder Button> and pressing the MC's < Shift > button.
 
 - Misc:
 
