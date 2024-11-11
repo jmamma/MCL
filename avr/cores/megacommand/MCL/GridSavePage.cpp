@@ -28,8 +28,6 @@ void GridSavePage::display() {
 
   draw_popup();
 
-  auto oldfont = oled_display.getFont();
-
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
   if (show_track_type) {
@@ -73,8 +71,6 @@ void GridSavePage::display() {
     oled_display.setCursor(data_x + 24 + 9, MCLGUI::s_menu_y + 18);
     oled_display.print(F("GRID"));
   }
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 
 void GridSavePage::save() {
@@ -96,9 +92,8 @@ void GridSavePage::save() {
     }
   }
 
-  mcl.setPage(GRID_PAGE);
-  trig_interface.off();
   mcl_actions.save_tracks(grid_page.getRow(), track_select_array, save_mode);
+  mcl.setPage(GRID_PAGE);
 }
 
 void GridSavePage::group_select() {

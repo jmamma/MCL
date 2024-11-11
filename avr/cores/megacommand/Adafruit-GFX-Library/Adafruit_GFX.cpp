@@ -169,14 +169,15 @@ void Adafruit_GFX::endWrite() {
 
 // (x,y) is topmost point; if unsure, calling function
 // should sort endpoints or call drawLine() instead
-void Adafruit_GFX::drawFastVLine(int16_t x, int16_t y, int16_t h,
-                                 uint16_t color) {
+/*
+void Adafruit_GFX::drawFastVLine(uint8_t x, uint8_t y, uint8_t h,
+                                 uint8_t color) {
   // Update in subclasses if desired!
   startWrite();
   writeLine(x, y, x, y + h - 1, color);
   endWrite();
 }
-
+*/
 // (x,y) is leftmost point; if unsure, calling function
 // should sort endpoints or call drawLine() instead
 void Adafruit_GFX::drawFastHLine(int16_t x, int16_t y, int16_t w,
@@ -187,8 +188,8 @@ void Adafruit_GFX::drawFastHLine(int16_t x, int16_t y, int16_t w,
   endWrite();
 }
 
-void Adafruit_GFX::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
-                            uint16_t color) {
+void Adafruit_GFX::fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                            uint8_t color) {
   // Update in subclasses if desired!
   startWrite();
   for (int16_t i = x; i < x + w; i++) {
@@ -829,8 +830,11 @@ void Adafruit_GFX::drawChar(int16_t x, int16_t y, unsigned char c,
         ((y + 8 * size - 1) < 0))   // Clip top
       return;
 
-    if (!_cp437 && (c >= 176))
-      c++; // Handle 'classic' charset behavior
+
+    c -= 0x20; //Classic font is reduced in lengthand shifted.
+    if (c > 126) { c = 0; }
+    //if (!_cp437 && (c >= 176))
+    //  c++; // Handle 'classic' charset behavior
 
     startWrite();
     for (int8_t i = 0; i < 5; i++) { // Char bitmap = 5 columns

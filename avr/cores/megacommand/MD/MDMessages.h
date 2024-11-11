@@ -161,17 +161,11 @@ public:
   uint8_t mix;
 
   void init(uint8_t track) {
-  destinationTrack = track;
-  destinationParam = 0;
-  shape1 = 0;
-  shape2 = 0;
-  type = 0;
-  for (uint8_t i = 0; i < 31; i++) {
-  state[i] = i;
-  }
-  speed = 64;
-  depth = 0;
-  mix = 0;
+    memset(&destinationTrack,0,sizeof(this));
+    destinationTrack = track;
+    speed = 64;
+    uint16_t *lfo_states2 = (uint16_t *) &state[5 + 18];
+    lfo_states2[1] = 0x29a; //666
   }
   /* @} */
 };
@@ -245,7 +239,6 @@ public:
   uint32_t models[16];
   /** The LFO settings for each track. **/
   MDLFO lfos[16];
-
   /** The settings of the reverb effect. **/
   uint8_t reverb[8];
   /** The settings of the delay effect. **/
@@ -254,7 +247,8 @@ public:
   uint8_t eq[8];
   /** The settings of the compressor effect. **/
   uint8_t dynamics[8];
-
+  /** Duplicate fx params not included in the origin MD structure */
+  uint8_t fx_orig[4][9];
   /** The trig group selected for each track (255: OFF). **/
   uint8_t trigGroups[16];
   /** The mute group selected for each track (255: OFF). **/
@@ -279,7 +273,23 @@ public:
 
   uint8_t get_model(uint8_t track);
   bool get_tonal(uint8_t track);
-
+  uint8_t get_fx_param(uint8_t fx, uint8_t param) {
+    uint8_t ret = 255;
+    switch (fx) {
+    case MD_FX_ECHO:
+      ret = delay[param];
+      break;
+    case MD_FX_DYN:
+      ret = dynamics[param];
+      break;
+    case MD_FX_REV:
+      ret = reverb[param];
+      break;
+    case MD_FX_EQ:
+      ret = eq[param];
+    }
+    return ret;
+  }
   /* @} */
 };
 

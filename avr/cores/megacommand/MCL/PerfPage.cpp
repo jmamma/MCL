@@ -213,6 +213,7 @@ void PerfPage::loop() {
 }
 
 void PerfPage::display() {
+  oled_display.setFont(&TomThumb);
   if (show_menu) {
     constexpr uint8_t width = 52;
     oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
@@ -222,8 +223,6 @@ void PerfPage::display() {
 
   oled_display.clearDisplay();
 
-  auto oldfont = oled_display.getFont();
-
   uint8_t x = mcl_gui.knob_x0 + 5;
   uint8_t y = 8;
   uint8_t lfo_height = 7;
@@ -232,8 +231,8 @@ void PerfPage::display() {
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   mcl_gui.draw_knob_frame();
 
-  const char *info1 = "";
-  const char *info2 = "PARAMETER";
+  char *info1 = "";
+  char *info2 = "PARAMETER";
 
   uint8_t scene = learn - 1;
 
@@ -285,7 +284,6 @@ void PerfPage::display() {
     mcl_gui.draw_panel_number(scene + 1);
   }
   oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setFont(oldfont);
   mcl_gui.draw_panel_labels(info1, info2);
 
   if (trig_interface.is_key_down(MDX_KEY_LEFT) ||
@@ -302,7 +300,6 @@ void PerfPage::display() {
   oled_display.writeFastHLine(109, MCLGUI::pane_info2_y + 1, 5, WHITE);
   oled_display.writeFastVLine(109 + ((e->cur * 5) / 128), MCLGUI::pane_info2_y,
                               3, WHITE);
-  oled_display.display();
 }
 
 
@@ -313,7 +310,7 @@ void PerfPage::encoder_check() {
 
 void PerfPage::encoder_send() {
   for (uint8_t i = 0; i < 4; i++) {
-    if (perf_encoders[i]->hasChanged()) { perf_encoders[i]->send(); }
+    if (perf_encoders[i]->hasChanged() || perf_encoders[i]->resend) { perf_encoders[i]->send(); }
   }
 }
 
@@ -513,7 +510,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_PASTE: {
           if (undo < NUM_SCENES) {
-            return;
+            return true;
           }
           if (mcl_clipboard.paste_scene(
                   &perf_encoders[perf_id]->perf_data.scenes[t])) {
@@ -526,6 +523,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_CLEAR: {
+          char str[] = "CLEAR SCENE";
           if (t == undo) {
             if (mcl_clipboard.paste_scene(
                     &perf_encoders[perf_id]->perf_data.scenes[undo])) {
@@ -542,7 +540,6 @@ bool PerfPage::handleEvent(gui_event_t *event) {
             mcl_clipboard.copy_scene(
                 &perf_encoders[perf_id]->perf_data.scenes[t]);
           }
-          char str[] = "CLEAR SCENE";
           oled_display.textbox(str, "");
           MD.popup_text(str);
           perf_encoders[perf_id]->perf_data.clear_scene(t);

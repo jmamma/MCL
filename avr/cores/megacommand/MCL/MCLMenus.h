@@ -55,16 +55,13 @@ extern MenuPage<mcl_config_page_N> mcl_config_page;
 constexpr size_t chain_config_page_N = 3;
 extern MenuPage<chain_config_page_N> chain_config_page;
 
-constexpr size_t aux_config_page_N = 1;
+constexpr size_t aux_config_page_N = 2;
 extern MenuPage<aux_config_page_N> aux_config_page;
-
-constexpr size_t ram_config_page_N = 1;
-extern MenuPage<ram_config_page_N> ram_config_page;
 
 constexpr size_t md_import_page_N = 4;
 extern MenuPage<md_import_page_N> md_import_page;
 
-constexpr size_t midiport_menu_page_N = 5;
+constexpr size_t midiport_menu_page_N = 6;
 extern MenuPage<midiport_menu_page_N> midiport_menu_page;
 
 constexpr size_t midiprogram_menu_page_N = 3;

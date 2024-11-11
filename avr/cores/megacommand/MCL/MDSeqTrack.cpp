@@ -34,20 +34,25 @@ void MDSeqTrack::set_length(uint8_t len, bool expand) {
         return;
       }
     }
-      MDSeqStep empty_step;
-      memset(&empty_step, 0, sizeof(empty_step));
-      uint8_t a = 0;
-      for (uint8_t n = old_length; n < 64; n++) {
-        copy_step(a++, &empty_step);
-        paste_step(n, &empty_step);
-        if (a == old_length) { a = 0; }
+    MDSeqStep empty_step;
+    memset(&empty_step, 0, sizeof(empty_step));
+    uint8_t a = 0;
+    for (uint8_t n = old_length; n < 64; n++) {
+      copy_step(a++, &empty_step);
+      paste_step(n, &empty_step);
+      if (a == old_length) {
+        a = 0;
       }
+    }
   }
 }
 
 void MDSeqTrack::store_mute_state() {
   for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
-    if (IS_BIT_SET64(mute_mask, n)) { set_step(n,MASK_PATTERN, 0); set_step(n,MASK_LOCK, 0); }
+    if (IS_BIT_SET64(mute_mask, n)) {
+      set_step(n, MASK_PATTERN, 0);
+      set_step(n, MASK_LOCK, 0);
+    }
   }
   clear_mutes();
 }
@@ -79,28 +84,31 @@ void MDSeqTrack::re_sync() {
 }
 
 void MDSeqTrack::load_cache() {
-/*  MDTrackChunk t;
-  DEBUG_PRINTLN("lc");
-  for (uint8_t n = 0; n < t.get_chunk_count(); n++) {
-    t.load_from_mem_chunk(track_number, n);
-    t.load_chunk(data(), n);
-  }*/
+  /*  MDTrackChunk t;
+    DEBUG_PRINTLN("lc");
+    for (uint8_t n = 0; n < t.get_chunk_count(); n++) {
+      t.load_from_mem_chunk(track_number, n);
+      t.load_chunk(data(), n);
+    }*/
 
   MDTrack t;
   t.load_from_mem(track_number, MD_TRACK_TYPE);
   t.load_seq_data((SeqTrack *)this);
   if (load_sound) {
-    MD.insertMachineInKit(track_number, &(t.machine),false);
+    MD.insertMachineInKit(track_number, &(t.machine), false);
     SET_BIT32(load_machine_cache, track_number);
     load_sound = 0;
   }
 }
 
-void MDSeqTrack::seq(MidiUartParent *uart_) {
+void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
   MidiUartParent *uart_old = uart;
-  uart = uart_;
+  MidiUartParent *uart2_old = uart2;
 
-  uint8_t timing_mid = get_timing_mid_inline();
+  uart = uart_;
+  uart2 = uart2_;
+
+  uint8_t timing_mid = get_timing_mid();
 
   mod12_counter++;
 
@@ -117,14 +125,20 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
-      SET_BIT16(gui_update,track_number);
-    }
-    else if (count_down <= track_number / 4 + 1) {
+      SET_BIT16(gui_update, track_number);
+    } else if (count_down <= track_number / 4 + 1) {
       if (!cache_loaded) {
         load_cache();
         cache_loaded = true;
       }
       goto end;
+    }
+  }
+
+  if (notes.count_down) {
+    notes.count_down--;
+    if (notes.count_down == 0) {
+      send_notes_off();
     }
   }
 
@@ -135,8 +149,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
     SET_BIT64(mute_mask, s);
   }
 
-  if ((mute_state == SEQ_MUTE_OFF) &&
-      (ignore_step != step_count)) {
+  if ((mute_state == SEQ_MUTE_OFF) && (ignore_step != step_count)) {
 
     uint8_t next_step = 0;
     if (step_count == (length - 1)) {
@@ -161,16 +174,26 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
           lock_idx += popcount(steps[step_count].locks);
         }
       }
-
       auto &step = steps[current_step];
       uint8_t send_trig = trig_conditional(step.cond_id);
-      if (send_trig == TRIG_TRUE || (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
+      bool is_midi_model =
+          ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+      if (send_trig == TRIG_TRUE ||
+          (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
+        if (is_midi_model && send_trig == TRIG_TRUE && step.trig) {
+          send_notes_off();
+          init_notes();
+        }
         send_parameter_locks_inline(current_step, step.trig, lock_idx);
         if (step.slide) {
           locks_slides_recalc = current_step;
           locks_slides_idx = lock_idx;
         }
         if (send_trig == TRIG_TRUE && step.trig) {
+          if (is_midi_model) {
+            notes.count_down = notes.len == 0 ? timing_mid / 4 : (notes.len * timing_mid / 2);
+            send_notes_on();
+          }
           send_trig_inline();
         }
       }
@@ -178,6 +201,7 @@ void MDSeqTrack::seq(MidiUartParent *uart_) {
   }
 end:
   uart = uart_old;
+  uart2 = uart2_old;
 }
 
 bool MDSeqTrack::is_param(uint8_t param_id) {
@@ -199,7 +223,7 @@ void MDSeqTrack::recalc_slides() {
   int16_t x0, x1;
   int8_t y0, y1;
   uint8_t step = locks_slides_recalc;
-  uint8_t timing_mid = get_timing_mid_inline();
+  uint8_t timing_mid = get_timing_mid();
 
   uint8_t find_mask = 0;
   uint8_t cur_mask = 1;
@@ -211,7 +235,9 @@ void MDSeqTrack::recalc_slides() {
   }
 
   auto lockidx = locks_slides_idx;
-  if (find_mask == 0) { goto end; }
+  if (find_mask == 0) {
+    goto end;
+  }
   find_next_locks(lockidx, step, find_mask);
 
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
@@ -240,7 +266,7 @@ void MDSeqTrack::recalc_slides() {
     y1 = locks_slide_next_lock_val[c];
     prepare_slide(c, x0, x1, y0, y1);
   }
-  end:
+end:
   locks_slides_recalc = 255;
 }
 
@@ -265,7 +291,8 @@ again:
           mask &= ~cur_mask;
           // all targets hit?
         } else if (steps[next_step].trig) {
-          locks_slide_next_lock_val[i] = MD.kit.params[track_number][locks_params[i] - 1];
+          locks_slide_next_lock_val[i] =
+              MD.kit.params[track_number][locks_params[i] - 1];
           locks_slide_next_lock_step[i] = next_step;
           mask &= ~cur_mask;
         }
@@ -371,40 +398,154 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
   send_parameter_locks_inline(step, trig, idx);
 }
 
+void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
+  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+  if (send_ccs) {
+    for (uint8_t n = 0; n < number_midi_cc; n++) {
+    if (ccs[n] == 255) continue;
+    switch (n) {
+      case 1:
+          uart2->sendPitchBend(channel, ccs[1] << 7);
+        break;
+      case 2:
+          uart2->sendCC(channel, 0x1, ccs[2]);
+        break;
+      case 3:
+          uart2->sendChannelPressure(channel, ccs[3]);
+        break;
+      case 0:
+          notes.prog = ccs[0];
+          uart2->sendProgramChange(channel, ccs[0]);
+        break;
+      default:
+        if (!(n & 1)) continue;
+        uint8_t a = ccs[n - 1];
+        if (a > 0 && a != 255) {
+          uint8_t v = ccs[n];
+          // 0 = off
+          // 1 = bank (0)
+          // 2 = 2
+          if (a == 1) {
+            a = 0;
+          };
+          uart2->sendCC(channel, a, v);
+          break;
+        }
+      }
+    }
+  }
+}
+
+void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs,
+                                    bool is_lock) {
+  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+
+  uint8_t i = param - 5;
+  switch (param) {
+  case 0:
+  case 1:
+  case 2:
+  case 3:
+  case 4:
+    //note values are set via init_notes initially.
+    ((uint8_t *)&notes)[param] = val;
+    //ccs[param] = val; not required.
+    break;
+  case 5:
+  case 6:
+  case 7:
+    ccs[i + 1] = val;
+    break;
+  case 20:
+    if (notes.prog != val || is_lock) {
+      ccs[0] = val;
+    }
+    else {
+      ccs[0] = 255;
+    }
+    break;
+  default:
+    i = param - 8 + 4;
+    if (param < 20) {
+      // If the parameter is CC value and the CC dest is not yet set, use the
+      // kit value for CC dest
+      uint8_t j = i - 1;
+      if ((param & 1) && ccs[j] == 255) {
+        ccs[j] = MD.kit.params[track_number][param - 1];
+      }
+      ccs[i] = val;
+    }
+    break;
+  }
+}
+
 void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
                                              uint16_t lock_idx) {
+
+  uint8_t ccs[midi_cc_array_size];
+  bool send_ccs = false;
+  bool is_midi_model = (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
+
+  if (is_midi_model) {
+    if (notes.first_trig) {
+      // first note, we want to send all CCs regardless if they dont have locks.
+      memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
+      //prevent re-transmission of program change.
+      //process_note_locks(20, MD.kit.params[track_number][20],ccs);
+      send_ccs = true;
+      notes.first_trig = false;
+    } else {
+      memset(ccs, 255, sizeof(ccs));
+    }
+  }
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     bool lock_bit = steps[step].is_lock_bit(c);
     bool lock_present = steps[step].is_lock(c);
     bool send = false;
-    uint8_t send_param;
+    uint8_t val;
     uint8_t p = locks_params[c] - 1;
     if (locks_params[c]) {
       if (lock_present) {
-        send_param = locks[lock_idx];
+        val = locks[lock_idx];
         send = true;
       } else if (trig) {
-        send_param = MD.kit.params[track_number][p];
+        val = MD.kit.params[track_number][p];
         send = true;
       }
     }
     lock_idx += lock_bit;
     if (send) {
-      bool update_kit = false;
-      MD.setTrackParam_inline(track_number, p, send_param, uart, update_kit);
+      if (is_midi_model && p < 21) {
+        process_note_locks(p, val, ccs, true);
+        send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
+      }
+
+      else {
+        bool update_kit = false;
+        MD.setTrackParam_inline(track_number, p, val, uart, update_kit);
+      }
     }
+  }
+  if (is_midi_model) {
+    send_notes_ccs(ccs, send_ccs);
   }
 }
 
 void MDSeqTrack::reset_params() {
   bool re_assign = false;
-  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    if (locks_params[c] > 0) {
-      MDTrack md_track;
-      md_track.get_machine_from_kit(track_number);
-      MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
-      return;
-    }
+  bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  if (is_midi_model) {
+    uint8_t ccs[midi_cc_array_size];
+    bool send_ccs = true;
+    memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
+    ccs[0] = 255; //disable program change
+    //notes.prog = MD.kit.params[track_number][20];
+    //process_note_locks(20, MD.kit.params[track_number][20],ccs);
+    send_notes_ccs(ccs, send_ccs);
+  } else {
+    MDTrack md_track;
+    md_track.get_machine_from_kit(track_number);
+    MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
   }
 
   /*
@@ -438,18 +579,88 @@ void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
   }
 }
 
+void MDSeqTrack::send_notes(uint8_t note1, MidiUartParent *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
+  if (notes.count_down) {
+    send_notes_off(uart2_);
+  }
+  init_notes();
+  if (note1 != 255) { notes.note1 = note1; }
+  if (notes.first_trig) { reset_params(); notes.first_trig = false; }
+  uint8_t timing_mid = get_timing_mid();
+  notes.count_down = notes.len == 0 ? timing_mid / 4 : (notes.len * timing_mid / 2);
+  send_notes_on(uart2_);
+}
+
+void MDSeqTrack::send_notes_on(MidiUartParent *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
+  TrigNotes *n = &notes;
+  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+
+  if (n->note1 != 255) {
+    mixer_page.trig(track_number);
+    uart2_->sendNoteOn(channel, n->note1, n->vel);
+    if (n->note2 != 64) {
+      uart2_->sendNoteOn(channel, n->note1 + n->note2 - 64, n->vel);
+    }
+    if (n->note3 != 64) {
+      uart2_->sendNoteOn(channel, n->note1 + n->note3 - 64, n->vel);
+    }
+  }
+}
+
+void MDSeqTrack::send_notes_off(MidiUartParent *uart2_) {
+  if (!uart2_) { uart2_ = uart2; }
+  TrigNotes *n = &notes;
+  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+
+  if (n->note1 != 255) {
+    uart2_->sendNoteOff(channel, n->note1);
+    if (n->note2 != 64) {
+      uart2_->sendNoteOff(channel, n->note1 + n->note2 - 64);
+    }
+    if (n->note3 != 64) {
+      uart2_->sendNoteOff(channel, n->note1 + n->note3 - 64);
+    }
+    n->note1 = 255;
+  }
+  n->count_down = 0;
+}
+
+void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
+                                              uint8_t value) {
+  bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  if (!is_midi_model || MD.encoder_interface) {
+    return;
+  }
+  uint8_t ccs[midi_cc_array_size];
+  // memset(ccs, 0, sizeof(ccs));
+  // Ignore notes, len and vel (those will be obtained from kit upon init_notes
+  if (track_param > 4 && track_param < 21) {
+    if (!(track_param & 1) && track_param > 7 && track_param < 20) {
+      return;
+    } // ignore cc destination
+    // memcpy(ccs, &MD.kit.params[track_number][8], sizeof(ccs));
+    memset(ccs, 255, sizeof(ccs));
+    process_note_locks(track_param, value, ccs);
+    send_notes_ccs(ccs, true);
+  }
+}
+
 void MDSeqTrack::send_trig() { send_trig_inline(); }
 
 void MDSeqTrack::send_trig_inline() {
   mixer_page.trig(track_number);
-  //  MD.triggerTrack(track_number, 127, uart);
+  // MD.triggerTrack(track_number, 127, uart);
+  // Parallel trig:
   SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
 }
 
 uint8_t MDSeqTrack::trig_conditional(uint8_t condition) {
 
   bool send_trig = TRIG_FALSE;
-  if (IS_BIT_SET64(oneshot_mask, step_count) || IS_BIT_SET64(mute_mask, step_count)) {
+  if (IS_BIT_SET64(oneshot_mask, step_count) ||
+      IS_BIT_SET64(mute_mask, step_count)) {
     return TRIG_ONESHOT;
   }
   if (condition == 14) {
@@ -457,11 +668,10 @@ uint8_t MDSeqTrack::trig_conditional(uint8_t condition) {
       SET_BIT64(oneshot_mask, step_count);
       send_trig = TRIG_TRUE;
     }
-  }
-  else {
+  } else {
     send_trig = SeqTrack::conditional(condition);
   }
-   return send_trig;
+  return send_trig;
 }
 
 uint8_t MDSeqTrack::get_track_lock_implicit(uint8_t step, uint8_t param) {
@@ -665,9 +875,9 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
     }
   }
 
-  MD.setTrackParam(track_number, param_id, MD.kit.params[track_number][locks_params[match] - 1]);
+  MD.setTrackParam(track_number, param_id,
+                   MD.kit.params[track_number][locks_params[match] - 1]);
 }
-
 
 void MDSeqTrack::clear_step_locks(uint8_t step) {
   uint8_t idx = get_lockidx(step);
@@ -680,7 +890,6 @@ void MDSeqTrack::clear_step_locks(uint8_t step) {
   }
   steps[step].locks = 0;
   steps[step].locks_enabled = false;
-
 }
 
 void MDSeqTrack::disable_step_locks(uint8_t step) {
@@ -695,9 +904,7 @@ uint8_t MDSeqTrack::get_step_locks(uint8_t step) {
   return steps[step].locks_enabled ? steps[step].locks : 0;
 }
 
-void MDSeqTrack::clear_mute() {
-  mute_mask = 0;
-}
+void MDSeqTrack::clear_mute() { mute_mask = 0; }
 
 void MDSeqTrack::clear_mutes() {
   oneshot_mask = 0;
@@ -724,6 +931,7 @@ void MDSeqTrack::clear_locks() {
 
   memset(locks, 0, sizeof(locks));
   cur_event_idx = 0;
+  notes.first_trig = true;
 }
 
 void MDSeqTrack::clear_track(bool locks) {
@@ -733,6 +941,7 @@ void MDSeqTrack::clear_track(bool locks) {
     clear_locks();
   }
   memset(steps, 0, sizeof(steps));
+  notes.first_trig = true;
 }
 
 void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
@@ -836,15 +1045,15 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     memmove(timing + 1, timing, length - 1);
     steps[0] = step_buf;
     timing[0] = timing_buf;
-    ROTATE_RIGHT(mute_mask,length);
+    ROTATE_RIGHT(mute_mask, length);
     break;
   }
   case DIR_REVERSE: {
     uint8_t rev_locks[NUM_MD_LOCK_SLOTS];
     memcpy(rev_locks, locks, sizeof(locks));
     uint16_t l = 0, r = 0;
-    //mute_mask = 0; //unimplemented
-    // reverse steps & locks
+    // mute_mask = 0; //unimplemented
+    //  reverse steps & locks
     for (uint8_t i = 0; i <= length / 2; ++i) {
       int j = length - i - 1;
       if (j < i) {
@@ -864,10 +1073,16 @@ void MDSeqTrack::modify_track(uint8_t dir) {
       timing[j] = timing_buf;
       bool a = IS_BIT_SET64(mute_mask, i);
       bool b = IS_BIT_SET64(mute_mask, j);
-      if (a) { SET_BIT64(mute_mask, j); }
-      else { CLEAR_BIT64(mute_mask,j); }
-      if (b) { SET_BIT64(mute_mask, i); }
-      else { CLEAR_BIT64(mute_mask,i); }
+      if (a) {
+        SET_BIT64(mute_mask, j);
+      } else {
+        CLEAR_BIT64(mute_mask, j);
+      }
+      if (b) {
+        SET_BIT64(mute_mask, i);
+      } else {
+        CLEAR_BIT64(mute_mask, i);
+      }
     }
     break;
   }

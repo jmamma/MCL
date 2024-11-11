@@ -25,8 +25,6 @@ void RAMPage::setup() {
 
 void RAMPage::init() {
   DEBUG_PRINT_FN();
-  oled_display.clearDisplay();
-  oled_display.setFont();
   trig_interface.off();
   cc_link_enable = true;
   if (mcl_cfg.ram_page_mode == MONO) {
@@ -50,7 +48,7 @@ void RAMPage::init() {
   R.use_icons_knob();
 }
 
-void RAMPage::cleanup() { oled_display.clearDisplay(); }
+void RAMPage::cleanup() { }
 void RAMPage::setup_sequencer(uint8_t track) {
 
   USE_LOCK();
@@ -448,8 +446,6 @@ void RAMPage::display() {
 
   oled_display.clearDisplay();
   float remain;
-  auto oldfont = oled_display.getFont();
-  oled_display.setFont();
   oled_display.setCursor(28, 24);
   switch (RAMPage::rec_states[page_id]) {
   case STATE_QUEUE:
@@ -539,7 +535,8 @@ void RAMPage::display() {
 
   uint8_t w_x = 0, w_y = 2;
   oled_display.drawPixel(w_x + 24, w_y + 0, WHITE);
-  oled_display.drawCircle(w_x + 24, w_y + 0, 2, WHITE);
+  //oled_display.drawCircle(w_x + 24, w_y + 0, 2, WHITE);
+  oled_display.drawRoundRect(w_x + 22, w_y - 2, 5, 5, 1, WHITE);
   oled_display.drawLine(w_x + 12, w_y - 1, w_x + 24, w_y - 3, WHITE);
   oled_display.drawLine(w_x + 17, w_y + 15, w_x + 26, w_y + 2, WHITE);
 
@@ -611,8 +608,6 @@ void RAMPage::display() {
     }
     wheel_spin_last_clock = MidiClock.div16th_counter;
   }
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 
 void RAMPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param, uint8_t value) {
@@ -750,11 +745,6 @@ bool RAMPage::handleEvent(gui_event_t *event) {
         setup_ram_play_stereo(14);
       }
     }
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
   }
 
   return false;

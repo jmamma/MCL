@@ -174,7 +174,7 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
   add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &gdt);
 
   gdt.init(PERF_TRACK_TYPE, GROUP_PERF, device_idx,
-           (SeqTrack *)&(mcl_seq.aux_tracks[3]), 0);
+           (SeqTrack *)&(mcl_seq.perf_track), 0);
   add_track_to_grid(grid_idx, PERF_TRACK_NUM, &gdt);
 }
 
@@ -211,7 +211,7 @@ bool MDClass::probe() {
         ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
          (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL |
          (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI) |
-        (uint16_t)FW_CAP_MACHINE_CACHE | (uint16_t)FW_CAP_UNDO_CACHE;
+        (uint16_t)FW_CAP_MACHINE_CACHE | (uint16_t)FW_CAP_UNDO_CACHE | (uint16_t)FW_CAP_MID_MACHINE;
 
     while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) &&
            count) {
@@ -235,13 +235,15 @@ bool MDClass::probe() {
     mcl_gui.delay_progress(300);
     getCurrentTrack(CALLBACK_TIMEOUT);
     getBlockingKit(0x7F);
+    MD.save_kit_params();
     setup();
 
-    for (uint8_t x = 0; x < 2; x++) {
-      for (uint8_t y = 0; y < 16; y++) {
-        mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
-        setStatus(0x22, y);
-      }
+    uint8_t y = 0;
+    for (uint8_t i = 0; i < 32; i++) {
+      mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
+      setStatus(0x22, y);
+      y++;
+      if (y == 16) y = 0;
     }
     setStatus(0x22, currentTrack);
 
@@ -274,16 +276,11 @@ MCLGIF *MDClass::gif() { return R.icons_logo->machinedrum_gif; }
 uint8_t *MDClass::gif_data() { return R.icons_logo->machinedrum_gif_data; }
 
 uint8_t MDClass::noteToTrack(uint8_t pitch) {
-  uint8_t i;
-  if (MD.loadedGlobal) {
-    for (i = 0; i < sizeof(MD.global.drumMapping); i++) {
-      if (pitch == MD.global.drumMapping[i])
+ for (uint8_t i = 0; i < sizeof(MD.global.drumMapping); i++) {
+   if (pitch == MD.global.drumMapping[i])
         return i;
     }
-    return 128;
-  } else {
-    return 128;
-  }
+ return 128;
 }
 
 void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
@@ -368,8 +365,15 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
   }
 }
 
+void MDClass::save_kit_params() {
+  memcpy(kit.params_orig, kit.params, sizeof(kit.params));
+  memcpy(kit.fx_orig, kit.reverb, sizeof(kit.reverb) * 4);
+}
+
+
 void MDClass::restore_kit_params() {
   memcpy(kit.params, kit.params_orig, sizeof(kit.params));
+  memcpy(kit.reverb, kit.fx_orig, sizeof(kit.reverb) * 4);
 }
 
 void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
@@ -858,11 +862,7 @@ void MDClass::getPatternName(uint8_t pattern, char str[5]) {
 }
 
 bool MDClass::checkParamSettings() {
-  if (loadedGlobal) {
-    return (MD.global.baseChannel <= 12);
-  } else {
-    return false;
-  }
+  return (MD.global.baseChannel <= 12);
 }
 
 bool MDClass::checkTriggerSettings() { return false; }

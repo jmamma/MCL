@@ -8,14 +8,11 @@ void PolyPage::init() {
   DEBUG_PRINT_FN();
   trig_interface.on();
   note_interface.init_notes();
-  oled_display.clearDisplay();
-  oled_display.setFont();
   MD.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
 }
 
 void PolyPage::cleanup() {
   seq_ptc_page.init_poly();
-  oled_display.clearDisplay();
   trig_interface.off();
 }
 
@@ -47,11 +44,7 @@ void PolyPage::toggle_mask(uint8_t i) {
 }
 
 void PolyPage::display() {
-  auto oldfont = oled_display.getFont();
-
   oled_display.clearDisplay();
-
-  oled_display.setFont();
 
   oled_display.setCursor(0, 15);
   oled_display.println("VOICE SELECT ");
@@ -63,8 +56,6 @@ void PolyPage::display() {
     MD.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
   }
 
-  oled_display.setFont(oldfont);
-  oled_display.display();
 }
 
 bool PolyPage::handleEvent(gui_event_t *event) {

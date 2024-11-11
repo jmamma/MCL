@@ -4,8 +4,6 @@ void QuestionDialogPage::init(const char* title_, const char* text_) {
   mcl_gui.draw_infobox(title_, text_, -1);
   oled_display.drawFastHLine(MCLGUI::dlg_info_x1 + 1, MCLGUI::dlg_info_y2, MCLGUI::dlg_info_w - 2, BLACK);
 
-  auto oldfont = oled_display.getFont();
-
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
 
@@ -18,8 +16,6 @@ void QuestionDialogPage::init(const char* title_, const char* text_) {
   oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);
   oled_display.drawRect(MCLGUI::dlg_info_x2 - 57, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);
 
-  oled_display.setFont(oldfont);
-  oled_display.display();
 }
 
 void QuestionDialogPage::display() {

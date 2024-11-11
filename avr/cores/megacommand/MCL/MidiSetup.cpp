@@ -130,22 +130,31 @@ void MidiSetup::cfg_ports(bool boot) {
                             MidiUSB.uart);
   }
 
-  if (elektron_devs[0]) {
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo_speed),
+  if (mcl_cfg.uart1_device == 0) {
+     midi_active_peering.disconnect(UART1_PORT);
+          midi_active_peering.force_connect(UART1_PORT, &generic_midi_device);
+      turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo_speed),
+                            Midi.uart);
+  } else if (elektron_devs[0]) {
+      turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo_speed),
                           Midi.uart);
-    delay(100);
-    elektron_devs[0]->setup();
+      delay(100);
+      elektron_devs[0]->setup();
+  } else {
+      midi_active_peering.force_connect(UART1_PORT, &null_midi_device);
   }
+
   if (mcl_cfg.uart2_device == 0) {
-    midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);
-    if (mcl_cfg.uart2_turbo_speed) {
+      midi_active_peering.disconnect(UART2_PORT);
+      midi_active_peering.force_connect(UART2_PORT, &generic_midi_device);
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed),
                             Midi2.uart);
-    }
   } else if (elektron_devs[1]) {
-    elektron_devs[1]->setup();
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed),
-                          Midi2.uart);
+                           Midi2.uart);
+    delay(100);
+    elektron_devs[1]->setup();
+
   } else {
     midi_active_peering.force_connect(UART2_PORT, &null_midi_device);
   }

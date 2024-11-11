@@ -42,5 +42,5 @@ public:
   virtual uint8_t get_device_type() { return MDROUTE_TRACK_TYPE; }
 
   virtual void *get_sound_data_ptr() { return &routing; }
-  virtual size_t get_sound_data_size() { return sizeof(routing); }
+  virtual size_t get_sound_data_size() { return sizeof(RouteData); }
 };

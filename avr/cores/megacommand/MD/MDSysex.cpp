@@ -33,23 +33,10 @@ void MDSysexListenerClass::end() {
     break;
 
   case MD_GLOBAL_MESSAGE_ID:
-    onGlobalMessageCallbacks.call();
-    break;
-
   case MD_KIT_MESSAGE_ID:
-    onKitMessageCallbacks.call();
-    break;
-
   case MD_PATTERN_MESSAGE_ID:
-    onPatternMessageCallbacks.call();
-    break;
-
   case MD_SONG_MESSAGE_ID:
-    onSongMessageCallbacks.call();
-    break;
-
-  case MD_SAMPLE_NAME_ID:
-    onSampleNameCallbacks.call();
+    onMessageCallbacks.call();
     break;
 
   case MD_SET_RHYTHM_ECHO_PARAM_ID:

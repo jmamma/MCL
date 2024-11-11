@@ -12,6 +12,7 @@ void GridIOPage::cleanup() {
   trig_interface.send_md_leds();
   MD.popup_text(127, 2);
   proj.select_grid(old_grid);
+  offset = 255;
 }
 
 void GridIOPage::init() {

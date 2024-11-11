@@ -19,7 +19,7 @@ const midi_parse_t midi_parse[] = {{MIDI_NOTE_OFF, midi_wait_byte_2},
                                    {MIDI_TUNE_REQUEST, midi_wait_status},
                                    {0, midi_ignore_message}};
 
-MidiClass::MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen,
+MidiClass::MidiClass(MidiUartClass *_uart, uint16_t _sysexBufLen,
                      volatile uint8_t *ptr)
     : midiSysex(_uart, _sysexBufLen, ptr) {
   midiActive = true;

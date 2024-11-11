@@ -138,7 +138,7 @@ void MNMClass::setMultiEnvParam(uint8_t param, uint8_t value) {
   uart->sendNRPN(global.baseChannel, 0x40 + param, value);
 }
 
-void MNMClass::muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {
+void MNMClass::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
   if (uart_ == nullptr) { uart_ = uart; }
   uart->sendCC(track + global.baseChannel, 3, mute ? 0 : 1);
 }
@@ -238,9 +238,7 @@ void MNMClass::setMidiTrack(uint8_t track) { setStatus(0x23, track); }
 
 void MNMClass::revertToCurrentKit(bool reloadKit) {
   if (!reloadKit) {
-    if (loadedKit) {
       MNM.loadKit(MNM.currentKit);
-    }
   } else {
     uint8_t kit = getCurrentKit(500);
     if (kit != 255) {
@@ -251,9 +249,7 @@ void MNMClass::revertToCurrentKit(bool reloadKit) {
 
 void MNMClass::revertToTrack(uint8_t track, bool reloadKit) {
   if (!reloadKit) {
-    if (loadedKit) {
       setMachine(track, track);
-    }
   }
 }
 

@@ -73,21 +73,20 @@ public:
   void pos_cur_y(int16_t diff);
   void pos_cur_w(int16_t diff);
 
-  bool is_within_fov(int16_t x) {
-    if ((x >= fov_offset) && (x < fov_offset + fov_length)) {
-      return true;
-    }
-    return false;
+  inline bool is_within_fov(int16_t x) {
+    return (x - fov_offset) < fov_length;
   }
+
   bool is_within_fov(int16_t start_x, int16_t end_x) {
-    if (is_within_fov(start_x) || is_within_fov(end_x) ||
-        ((start_x < fov_offset) && (end_x >= fov_offset + fov_length)) ||
-        (end_x < start_x &&
-         !((start_x > fov_offset + fov_length) && end_x < fov_offset))) {
-      return true;
+    int16_t fov_end = fov_offset + fov_length;
+    // Handle wrap-around case
+    if (end_x < start_x) {
+        return (start_x < fov_end) || (end_x >= fov_offset);
     }
-    return false;
+    // Normal case
+    return (start_x < fov_end) && (end_x >= fov_offset);
   }
+
   void param_select_update();
   void enter_notes();
   void config_menu_entries();

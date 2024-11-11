@@ -38,7 +38,6 @@ void SoundBrowserPage::init() {
 void SoundBrowserPage::save_sound() {
 
   MDSound sound;
-  grid_page.prepare();
   char sound_name[8];
   uint8_t l = min(strlen(MD.kit.name),4);
   memcpy(sound_name, MD.kit.name, l);
@@ -63,7 +62,6 @@ void SoundBrowserPage::save_sound() {
 
 void SoundBrowserPage::load_sound() {
 
-  grid_page.prepare();
   if (file.isOpen()) {
     char temp_entry[FILE_ENTRY_SIZE];
     MDSound sound;

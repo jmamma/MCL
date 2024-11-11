@@ -4,7 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "SdFat.h"
-#define CONFIG_VERSION 4010
+#define CONFIG_VERSION 4011
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -67,6 +67,8 @@ public:
   uint8_t seq_dev;
   uint8_t uart2_cc_mute;
   uint8_t uart2_cc_level;
+  uint8_t uart1_device;
+  uint8_t grid_page_mode;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

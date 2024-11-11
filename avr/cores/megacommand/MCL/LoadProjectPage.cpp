@@ -72,38 +72,31 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     return;
   }
 
-  if (!SD.chdir(from)) {
-    goto error;
-  }
-
-  bool reload_current = false;
-  if (strcmp(mcl_cfg.project, from) == 0) {
-    DEBUG_PRINTLN("reload current");
-    reload_current = true;
-  }
   char grid_filename[f_len] = {'\0'};
   char to_grid_filename[f_len] = {'\0'};
   char proj_filename[f_len] = {'\0'};
 
+  char to_proj_filename[f_len] = {'\0'};
+  bool reload_current = false;
+  uint8_t l, l2 = 0;
+  if (!SD.chdir(from)) {
+    goto error;
+  }
+
+  if (strcmp(mcl_cfg.project, from) == 0) {
+    DEBUG_PRINTLN("reload current");
+    reload_current = true;
+  }
   strncpy(proj_filename, from, f_len);
   strcat(proj_filename, ".mcl");
 
-  char to_proj_filename[f_len] = {'\0'};
   strncpy(to_proj_filename, to, f_len);
   strcat(to_proj_filename, ".mcl");
 
   strncpy(to_grid_filename, to, f_len);
   strncpy(grid_filename, from, f_len);
-  uint8_t l = strlen(grid_filename);
-  uint8_t l2 = strlen(to_grid_filename);
-
-  DEBUG_PRINTLN("check");
-  DEBUG_PRINTLN(from);
-  DEBUG_PRINTLN(to);
-  DEBUG_PRINTLN(grid_filename);
-  DEBUG_PRINTLN(to_grid_filename);
-  DEBUG_PRINTLN(proj_filename);
-  DEBUG_PRINTLN(to_proj_filename);
+  l = strlen(grid_filename);
+  l2 = strlen(to_grid_filename);
 
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     grid_filename[l] = '.';
@@ -114,32 +107,22 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     to_grid_filename[l2 + 1] = i + '0';
     to_grid_filename[l2 + 2] = '\0';
 
-    DEBUG_PRINTLN("from to grid filenames");
-    DEBUG_PRINTLN(grid_filename);
-    DEBUG_PRINTLN(to_grid_filename);
     if (!SD.rename(grid_filename, to_grid_filename)) {
       DEBUG_PRINTLN("Rename failed");
       goto error;
     }
   }
 
-  DEBUG_PRINTLN("from to project filename");
-  DEBUG_PRINTLN(proj_filename);
-  DEBUG_PRINTLN(to_proj_filename);
-
   if (!SD.rename(proj_filename, to_proj_filename)) {
     goto error;
   }
   SD.chdir(lwd);
-  DEBUG_PRINTLN("rename from to");
-  DEBUG_PRINTLN(from);
-  DEBUG_PRINTLN(to);
   if (SD.rename(from, to)) {
     if (reload_current) {
       proj.load_project(to);
     }
     gfx.alert("SUCCESS", "Project renamed.");
-    return true;
+    return;
   }
 error:
   DEBUG_PRINTLN("error");

@@ -31,8 +31,8 @@ void encoder_lastparam_handle(EncoderParent *enc);
 class MixerPage : public LightPage {
 public:
   uint8_t level_pressmode = 0;
-  int8_t disp_levels[16];
-  int8_t ext_disp_levels[6];
+  uint8_t disp_levels[16];
+  uint8_t ext_disp_levels[6];
   bool mute_toggle = 0;
   uint8_t ext_key_down;
   MidiDevice *midi_device;
@@ -49,14 +49,15 @@ public:
 
   uint8_t current_mute_set = 255;
   uint8_t preview_mute_set = 255;
+  uint8_t load_mute_set = 255;
+
   void send_fx(uint8_t param, Encoder *enc, uint8_t type);
 
   // Don't change order
   MuteSet mute_sets[2];
   uint8_t perf_locks[4][4];
+  bool load_types[4][2];
   //
-
-  uint8_t perf_locks_temp[4];
 
   uint8_t get_mute_set(uint8_t key);
 
@@ -64,11 +65,13 @@ public:
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
     midi_device = &MD;
-    memset(mute_sets, 0xFF, sizeof(mute_sets));
-    memset(perf_locks, 0xFF, sizeof(perf_locks));
+    memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
+    //memset(perf_locks, 0xFF, sizeof(perf_locks));
+    memset(load_types, 1, sizeof(load_types));
   }
   void adjust_param(EncoderParent *enc, uint8_t param);
   void draw_levels();
+  void draw_encs();
   void redraw();
   void set_level(int curtrack, int value);
   void set_display_mode(uint8_t param);
@@ -76,13 +79,12 @@ public:
   void record_mutes_set(bool state);
   void disable_record_mutes(bool clear = false);
   void oled_draw_mutes();
-  void switch_mute_set(uint8_t state);
+  void switch_mute_set(uint8_t state, bool load_perf = false, bool *load_types = nullptr);
   void populate_mute_set();
 
   void load_perf_locks(uint8_t state);
   void toggle_or_solo(bool solo = false);
   // Handled in MCLSeq
-  void onNoteOnCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
                                     uint8_t value);
 

@@ -1,7 +1,7 @@
 #include "MCL_impl.h"
 
 
-bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid = nullptr) {
+bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid) {
   if (grid == nullptr) {
     return proj.write_grid((uint8_t *)(this), len, column, row);
   }

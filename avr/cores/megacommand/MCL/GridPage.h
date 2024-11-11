@@ -15,6 +15,8 @@
 #define SLOT_RAM_RECORD 252
 #define SLOT_RAM_PLAY 251
 
+class GridTrack;
+
 class GridPage : public LightPage {
 public:
   GridRowHeader row_headers[MAX_VISIBLE_ROWS];
@@ -59,6 +61,8 @@ public:
   uint16_t bank_popup_lastclock;
   uint16_t bank_popup_loadmask;
 
+  bool draw_encoders;
+  uint16_t draw_encoders_lastclock;
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
@@ -81,14 +85,15 @@ public:
   void display_counters();
   void display_grid_info();
   void display_grid();
+  void display_row_info();
   void display();
   void display_oled();
   void setup();
   void cleanup();
   void init();
-  void prepare();
   bool swap_grids();
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
+
   void load_old_col();
   void close_bank_popup();
 

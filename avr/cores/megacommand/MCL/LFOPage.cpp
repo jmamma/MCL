@@ -31,7 +31,6 @@ void LFOPage::init() {
 void LFOPage::cleanup() {
   PerfPageParent::cleanup();
   trig_interface.off();
-  oled_display.clearDisplay();
 }
 
 void LFOPage::config_encoder_range(uint8_t i) {
@@ -150,7 +149,6 @@ void LFOPage::loop() {
 
 void LFOPage::display() {
   oled_display.clearDisplay();
-  auto oldfont = oled_display.getFont();
   uint8_t lfo_track_num = lfo_track->track_number;
   mcl_gui.draw_panel_number(lfo_track_num);
   mcl_gui.draw_panel_toggle("ON", "OFF", lfo_track->enable);
@@ -238,8 +236,6 @@ void LFOPage::display() {
 
   mcl_gui.draw_panel_labels(info1, info2);
 
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 
 void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {

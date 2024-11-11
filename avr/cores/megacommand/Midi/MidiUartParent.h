@@ -158,25 +158,17 @@ public:
   }
   */
 
-  ALWAYS_INLINE()
   void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
-#ifdef MIDI_VALIDATE
-    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
+    if (channel >= 16)
       return;
-#endif
-
     uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_ON | channel), note, velocity};
     // noteOnCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
-  ALWAYS_INLINE()
   void sendNoteOff(uint8_t channel, uint8_t note) {
-#ifdef MIDI_VALIDATE
-    if ((channel >= 16) || (note >= 128))
+    if (channel >= 16)
       return;
-#endif
-
     //uint8_t msg[3] = {(uint8_t)(MIDI_NOTE_OFF | channel), note, velocity};
     //Send Note On VEL = 0, to leverage running status
     //
@@ -186,55 +178,48 @@ public:
   }
 
   void sendCC(uint8_t channel, uint8_t cc, uint8_t value) {
-#ifdef MIDI_VALIDATE
-    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
+    if (channel >= 16)
       return;
-#endif
-
     uint8_t msg[3] = {(uint8_t)(MIDI_CONTROL_CHANGE | channel), cc, value};
     // ccCallbacks.call(msg);
     sendMessage(msg[0], msg[1], msg[2]);
   }
 
   ALWAYS_INLINE() void sendProgramChange(uint8_t channel, uint8_t program) {
-#ifdef MIDI_VALIDATE
-    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
+    if (channel >= 16)
       return;
-#endif
-
     sendMessage((uint8_t)(MIDI_PROGRAM_CHANGE | channel), program);
   }
 
   void sendPolyKeyPressure(uint8_t channel, uint8_t note, uint8_t pressure) {
-#ifdef MIDI_VALIDATE
-    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
+    if (channel >= 16)
       return;
-#endif
-
     sendMessage((uint8_t)(MIDI_AFTER_TOUCH | channel), note, pressure);
   }
 
   void sendChannelPressure(uint8_t channel, uint8_t pressure) {
-#ifdef MIDI_VALIDATE
-    if ((channel >= 16) || (note >= 128) || (velocity >= 128))
+    if (channel >= 16)
       return;
-#endif
-
     sendMessage((uint8_t)(MIDI_CHANNEL_PRESSURE | channel), pressure);
   }
 
   void sendPitchBend(uint8_t channel, int16_t pitchbend) {
-    //pitchbend += 8192;
+    if (channel >= 16)
+      return;
     sendMessage((uint8_t)(MIDI_PITCH_WHEEL | channel), pitchbend,
                 (pitchbend >> 7));
   }
 
   void sendNRPN(uint8_t channel, uint16_t parameter, uint8_t value) {
+    if (channel >= 16)
+      return;
     sendCC(channel, 99, (parameter >> 7));
     sendCC(channel, 98, (parameter));
     sendCC(channel, 6, value);
   }
   void sendNRPN(uint8_t channel, uint16_t parameter, uint16_t value) {
+    if (channel >= 16)
+      return;
     sendCC(channel, 99, (parameter >> 7));
     sendCC(channel, 98, (parameter));
     sendCC(channel, 6, (value >> 7));
@@ -242,11 +227,15 @@ public:
   }
 
   void sendRPN(uint8_t channel, uint16_t parameter, uint8_t value) {
+    if (channel >= 16)
+      return;
     sendCC(channel, 101, (parameter >> 7));
     sendCC(channel, 100, (parameter));
     sendCC(channel, 6, value);
   }
   void sendRPN(uint8_t channel, uint16_t parameter, uint16_t value) {
+     if (channel >= 16)
+      return;
     sendCC(channel, 101, (parameter >> 7));
     sendCC(channel, 100, (parameter));
     sendCC(channel, 6, (value >> 7));
@@ -258,8 +247,8 @@ public:
     m_putc(data, cnt);
     sendCommandByte(0xF7);
   }
-  ALWAYS_INLINE() void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
-  ALWAYS_INLINE() void sendRaw(uint8_t byte) { m_putc(byte); }
+  void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
+  void sendRaw(uint8_t byte) { m_putc(byte); }
 
   void sendString(const char *data) { sendString(data, strlen(data)); }
   void sendString(const char *data, uint16_t cnt);

@@ -20,6 +20,7 @@ void SampleBrowserPage::setup() {
 }
 
 void SampleBrowserPage::display() {
+  oled_display.setFont(&TomThumb);
   if (filemenu_active) {
     draw_menu();
     return;
@@ -71,7 +72,7 @@ void SampleBrowserPage::display() {
       oled_display.print(F(":"));
       oled_display.print(ms);
       */
-        uint32_t size = wav_file.file.size();
+        size = wav_file.file.size();
         wav_file.close();
       }
       else if (is_syx) {
@@ -95,7 +96,6 @@ void SampleBrowserPage::display() {
   FileBrowserPage::selection_change = false;
 end:
   draw_filebrowser();
-  oled_display.display();
 }
 
 void SampleBrowserPage::init(uint8_t show_samplemgr_) {
@@ -267,11 +267,6 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
-
   return FileBrowserPage::handleEvent(event);
 }
 
@@ -351,7 +346,7 @@ bool SampleBrowserPage::_handle_filemenu() {
     return true;
   case FM_SENDALL:
     if (!mcl_gui.wait_for_confirm("Send all", "Overwrite?")) {
-      return;
+      return true;
     }
     char wav_name[FILE_ENTRY_SIZE] = "";
     for (uint8_t n = 0; n < numEntries && !trig_interface.is_key_down(MDX_KEY_NO); n++) {

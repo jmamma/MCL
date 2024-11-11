@@ -52,51 +52,18 @@ void A4SysexListenerClass::end() {
     //  break;
 
   case A4_GLOBAL_MESSAGE_ID:
-    onGlobalMessageCallbacks.call();
-    break;
-
   case A4_GLOBALX_MESSAGE_ID:
-    onGlobalMessageCallbacks.call();
-    break;
-
   case A4_KIT_MESSAGE_ID:
-    onKitMessageCallbacks.call();
-    break;
-
   case A4_KITX_MESSAGE_ID:
-    onKitMessageCallbacks.call();
-    break;
-
   case A4_SOUND_MESSAGE_ID:
-    onSoundMessageCallbacks.call();
-    break;
-
   case A4_SOUNDX_MESSAGE_ID:
-    onSoundMessageCallbacks.call();
-    break;
-
   case A4_PATTERN_MESSAGE_ID:
-    onPatternMessageCallbacks.call();
-    break;
-
   case A4_PATTERNX_MESSAGE_ID:
-    onPatternMessageCallbacks.call();
-    break;
-
   case A4_SONG_MESSAGE_ID:
-    onSongMessageCallbacks.call();
-    break;
-
   case A4_SONGX_MESSAGE_ID:
-    onSongMessageCallbacks.call();
-    break;
-
   case A4_SETTINGS_MESSAGE_ID:
-    onSettingsMessageCallbacks.call();
-    break;
-
   case A4_SETTINGSX_MESSAGE_ID:
-    onSettingsMessageCallbacks.call();
+    onMessageCallbacks.call();
     break;
   }
 

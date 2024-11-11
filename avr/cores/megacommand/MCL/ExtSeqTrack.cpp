@@ -678,6 +678,12 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     SET_BIT128_P(mute_mask, s);
   }
 
+  if (mute_state_pending) {
+     mute_state = SEQ_MUTE_ON;
+     mute_state_pending = false;
+     buffer_notesoff();
+  }
+
   if ((is_generic_midi || (!is_generic_midi && count_down == 0)) &&
       (mute_state == SEQ_MUTE_OFF)) {
     // SEQ_MUTE_OFF)) {
@@ -1213,10 +1219,6 @@ void ExtSeqTrack::toggle_mute() {
   if (mute_state == SEQ_MUTE_ON) {
     mute_state = SEQ_MUTE_OFF;
   } else {
-    mute_state = SEQ_MUTE_ON;
-    uint8_t mod12_counter_ = MidiClock.mod12_counter;
-    while (MidiClock.state == 2 && mod12_counter_ == MidiClock.mod12_counter) {
-    };
-    buffer_notesoff();
+    mute_state_pending = true;
   }
 }

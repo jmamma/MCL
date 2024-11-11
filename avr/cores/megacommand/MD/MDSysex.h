@@ -51,7 +51,6 @@ class MDSysexListenerClass : public ElektronSysexListenerClass {
    **/
 
 public:
-  CallbackVector<SysexCallback, 1> onSampleNameCallbacks;
   /** Stores if the currently received message is a MachineDrum sysex message.
    * **/
   bool isMDMessage;
@@ -73,17 +72,7 @@ public:
    **/
   void setup(MidiClass *_midi);
 
-  void addOnSampleNameCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSampleNameCallbacks.add(obj, func);
-  }
-  void removeOnSampleNameCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSampleNameCallbacks.remove(obj, func);
-  }
-  void removeOnSampleNameCallback(SysexCallback *obj) {
-    onSampleNameCallbacks.remove(obj);
-  }
-
-  /* @} */
+    /* @} */
 };
 
 #include "MDMessages.h"

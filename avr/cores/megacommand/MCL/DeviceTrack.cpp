@@ -31,9 +31,9 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   case MNM_TRACK_TYPE:
     ::new (this) MNMTrack;
     break;
-   case GRIDCHAIN_TRACK_TYPE:
-    ::new (this) GridChainTrack;
-    break;
+//  case GRIDCHAIN_TRACK_TYPE:
+//    ::new (this) GridChainTrack;
+//    break;
    case PERF_TRACK_TYPE:
     ::new (this) PerfTrack;
     break;
@@ -126,7 +126,7 @@ bool DeviceTrackChunk::load_chunk(volatile void *ptr, uint8_t chunk) {
   if (chunk == get_chunk_count() - 1) {
     chunk_size = get_seq_data_size() - sizeof(seq_data_chunk) * chunk;
   }
-  memcpy(ptr + sizeof(seq_data_chunk) * chunk, seq_data_chunk, chunk_size);
+  memcpy((uint8_t*) ptr + sizeof(seq_data_chunk) * chunk, seq_data_chunk, chunk_size);
   return true;
 }
 

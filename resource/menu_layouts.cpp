@@ -43,28 +43,21 @@ menu_t<system_menu_page_N> system_menu_layout = {
         {"NEW PROJECT",  0, 0, 0, 0, NULL_PAGE, 2, 0},
         {"MIDI",         0, 0, 0, 0, MIDI_CONFIG_PAGE, 0, 0},
         {"MACHINEDRUM",  0, 0, 0, 0, MD_CONFIG_PAGE, 0, 0},
-        {"AUX PAGES",    0, 0, 0, 0, AUX_CONFIG_PAGE, 0, 0},
+        {"PAGE SETUP",   0, 0, 0, 0, AUX_CONFIG_PAGE, 0, 0},
         {"SYSTEM",       0, 0, 0, 0, MCL_CONFIG_PAGE, 0, 0},
     },
     0
 };
 
 menu_t<aux_config_page_N> auxconfig_menu_layout = {
-    "AUX PAGES",
+    "PAGE",
     {
         //           m  r  n  d  p  f  o
-        {"RAM Page" ,0, 0, 0, 0, RAM_CONFIG_PAGE, 0, 0},
-    },
-    0
-};
 
-menu_t<ram_config_page_N> rampage1_menu_layout = {
-    "RAM PAGE",
-    {
-        //        m  r  n  d  p  f  o
-        {"LINK:", 0, 2, 2, 1, NULL_PAGE, 0, 0},
+        {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 122},
+        {"RAM LINK:", 0, 2, 2, 1, NULL_PAGE, 0, 0},
     },
-    0
+    1
 };
 
 menu_t<midi_config_page_N> midiconfig_menu_layout = {
@@ -86,6 +79,7 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
         {"TURBO 1:",  0, 4, 4, 2, NULL_PAGE, 0, 2},
         {"TURBO 2:",  0, 4, 4, 3, NULL_PAGE, 0, 2},
         {"TURBO USB:", 0, 4, 4, 55, NULL_PAGE , 0, 2},
+        {"DRIVER 1:", 0, 2, 2, 61, 0, NULL_PAGE, 124},
         {"DRIVER 2:", 0, 2, 2, 4, 0, NULL_PAGE, 84},
         {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 100},
     },
@@ -156,7 +150,7 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
         {"IMPORT",      0, 0,  0, 0, MD_IMPORT_PAGE, 0, 0},
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
     },
-    0
+    1
 };
 
 menu_t<md_import_page_N> mdimport_menu_layout = {

@@ -100,6 +100,7 @@ public:
   static uint8_t last_rec_event;
   static uint8_t last_step;
   static uint32_t last_md_model;
+  static bool is_midi_model;
 
   static bool recording;
   static uint16_t mute_mask;

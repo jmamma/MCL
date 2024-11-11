@@ -9,8 +9,6 @@
 
 #define MDX_KIT_VERSION 64
 
-uint8_t lfo_statestore[31];
-
 void MDMachine::scale_vol(float scale) {
   params[MODEL_VOL] = (uint8_t)((float)params[MODEL_VOL] * scale);
   if (params[MODEL_VOL] > 127) {
@@ -206,8 +204,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.start7Bit();
 
   for (uint8_t i = 0; i < 16; i++) {
-    decoder.get((uint8_t *)&lfos[i], 5);
-    decoder.get((uint8_t *)&lfo_statestore, 31);
+    decoder.get((uint8_t *)&lfos[i], 5 + 31);
   }
 
   decoder.stop7Bit();
@@ -264,9 +261,9 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->start7Bit();
   for (uint8_t i = 0; i < 16; i++) {
     //        encoder->pack((uint8_t *)&lfos[i], 36);
-
-    encoder->pack((uint8_t *)&lfos[i], 5);
-    encoder->pack((uint8_t *)&lfo_statestore[i], 31);
+    uint16_t *lfo_states2 = (uint16_t *) &lfos[i].state[5 + 18];
+    if (!lfo_states2[0] && !lfo_states2[1]) { lfo_states2[1] = 0x29a; } //666
+    encoder->pack((uint8_t *)&lfos[i], 5 + 31);
   }
   encoder->stop7Bit();
 

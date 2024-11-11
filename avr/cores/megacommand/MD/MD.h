@@ -115,6 +115,7 @@ public:
 
   /* Restore modified kit params, with the original values. */
   void restore_kit_params();
+  void save_kit_params();
   /* Restore a single kit param, and transmit the param to the MD */
   void restore_kit_param(uint8_t track, uint8_t param);
 

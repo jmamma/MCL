@@ -47,12 +47,12 @@ void FileBrowserPage::setup() {
   encoders[2]->cur = 1;
 }
 
-void FileBrowserPage::get_entry(uint16_t n, const char *entry) {
+void FileBrowserPage::get_entry(uint16_t n, char *entry) {
   uint8_t discard_type;
   get_entry(n, entry, discard_type);
 }
 
-void FileBrowserPage::get_entry(uint16_t n, const char *entry, uint8_t &type) {
+void FileBrowserPage::get_entry(uint16_t n, char *entry, uint8_t &type) {
   volatile uint8_t *ptr =
       (uint8_t *)BANK3_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
   char buf[FILE_ENTRY_SIZE];
@@ -172,7 +172,6 @@ void FileBrowserPage::draw_menu() {
 void FileBrowserPage::draw_sidebar() {
   constexpr uint8_t x_offset = 43;
   oled_display.clearDisplay();
-  oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.println(title);
@@ -220,13 +219,13 @@ void FileBrowserPage::draw_filebrowser() {
 }
 
 void FileBrowserPage::display() {
+  oled_display.setFont(&TomThumb);
   if (filemenu_active) {
     draw_menu();
     return;
   }
   draw_sidebar();
   draw_filebrowser();
-  oled_display.display();
   return;
 }
 
@@ -260,7 +259,7 @@ void FileBrowserPage::loop() {
 
 bool FileBrowserPage::create_folder() {
   char new_dir[17] = "new_folder      ";
-  if (mcl_gui.wait_for_input(new_dir, "Create Folder", 8)) {
+  if (mcl_gui.wait_for_input(new_dir, "Create Folder", NAME_LENGTH)) {
     SD.mkdir(new_dir);
     init();
   }
@@ -366,7 +365,7 @@ bool FileBrowserPage::_handle_filemenu() {
   for (uint8_t n = 1; n < 32; n++) {
     buf2[n] = ' ';
   }
-  uint8_t name_length = 8;
+  uint8_t name_length = NAME_LENGTH;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
   case FM_NEW_FOLDER: // new folder
@@ -386,8 +385,8 @@ bool FileBrowserPage::_handle_filemenu() {
     if (suffix_pos != nullptr) {
       buf2[suffix_pos - buf1] = '\0';
     }
-    // default max length = 8, can extend if buf2 without suffix
-    // is longer than 8.
+    // default max length = NAME_LENGTH, can extend if buf2 without suffix
+    // is longer than NAME_LENGTH.
     name_length = max(name_length, strlen(buf2));
     if (mcl_gui.wait_for_input(buf2, "RENAME TO:", name_length)) {
       if (suffix_pos != nullptr) {

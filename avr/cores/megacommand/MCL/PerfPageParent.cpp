@@ -8,8 +8,6 @@ void PerfPageParent::setup() { DEBUG_PRINT_FN(); }
 void PerfPageParent::init() {
   DEBUG_PRINT_FN();
   MD.set_key_repeat(0);
-  oled_display.clearDisplay();
-  oled_display.setFont();
   config_encoders();
   R.Clear();
   R.use_machine_param_names();
@@ -94,10 +92,5 @@ bool PerfPageParent::handleEvent(gui_event_t *event) {
       }
     }
   */
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
-
   return false;
 }

@@ -30,12 +30,6 @@ void MCLActions::setup() {
   // DEBUG_PRINTLN(F("mcl actions setup"));
   mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
-  for (uint8_t i = 0; i < NUM_SLOTS; i++) {
-    next_transitions[i] = 0;
-    transition_offsets[i] = 0;
-    send_machine[i] = 0;
-    transition_level[i] = 0;
-  }
 }
 
 void MCLActions::init_chains() {
@@ -170,7 +164,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
             save_dev_tracks[i] = false;
             continue;
           }
-          ElektronPattern *p = elektron_devs[i]->getPattern();
+          ElektronPattern *p = (ElektronPattern*) elektron_devs[i]->getPattern();
           if (p->isEmpty()) {
             save_dev_tracks[i] = false;
             continue;
@@ -563,7 +557,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       midi_active_peering.get_device(UART2_PORT),
   };
 
-  uint8_t mute_states[NUM_SLOTS];
   uint8_t send_masks[NUM_SLOTS] = {0};
   uint8_t row = 0;
   uint8_t old_grid = proj.get_grid();
@@ -590,9 +583,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { select_array[i] = 0; continue; }
 
     proj.select_grid(grid_idx);
-
-    mute_states[dst] = gdt_dst->seq_track->mute_state;
-    gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
 
       row = grid_page.getRow();
     if (row_array) {
@@ -643,7 +633,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     }
   }
 
-  // switch back to old grid before driving the GUI loop
   // note, do not re-enter grid_task -- stackoverflow
 
   GUI.removeTask(&grid_task);
@@ -651,14 +640,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     //  GUI.loop();
   }
   GUI.addTask(&grid_task);
-  for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
-    if (select_array[i] == 0) { continue; }
-    uint8_t dst = load_offset == 255 ? i : (i - first_slot) + load_offset;
-    GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
-    if (gdt_dst != nullptr) {
-      gdt_dst->seq_track->mute_state = mute_states[dst];
-    }
-  }
+
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
 
@@ -760,7 +742,11 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         links[n].loops = 1;
         links[n].length = (float)chains[n].get_length() /
                           (float)gdt->seq_track->get_speed_multiplier();
+        while (links[n].loops * links[n].length < 8) {
+          links[n].loops++;
+        }
       }
+      //if (links[n].length == 0) { links[n].length = 16; }
       chains[n].inc();
       links[n].row = chains[n].get_row();
       if (links[n].row == 255) {
@@ -915,11 +901,7 @@ void MCLActions::calc_latency() {
       midi_active_peering.get_device(UART2_PORT),
   };
 
-  for (uint8_t a = 0; a < NUM_DEVS; a++) {
-    dev_latency[a].latency = 0;
-    dev_latency[a].div32th_latency = 0;
-    dev_latency[a].div192th_latency = 0;
-  }
+  memset(dev_latency,0,sizeof(dev_latency));
 
   bool send_dev[NUM_DEVS] = {0};
 

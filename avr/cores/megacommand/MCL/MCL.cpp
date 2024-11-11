@@ -2,6 +2,49 @@
 #include "MCL_impl.h"
 #include "ResourceManager.h"
 
+
+uint32_t read_bytes_progmem(uint32_t address, uint8_t n) {
+    uint32_t value = 0;
+    for (uint8_t i = 0; i < n; i++) {
+        uint8_t byte = pgm_read_byte_far(address + i); // Read a byte from program memory
+        value |= (uint32_t)byte << (8 * i); // Combine bytes into a 32-bit value
+    }
+    return value;
+}
+
+
+bool health_check() {
+   uint32_t memoryAddress = 256 * 1024 - 16 * 1024 - 6;
+   uint32_t length = read_bytes_progmem(memoryAddress, 4);
+   uint16_t checksum = (uint16_t) read_bytes_progmem(memoryAddress + 4, 2);
+   DEBUG_PRINTLN(length);
+   DEBUG_PRINTLN(checksum);
+
+   uint16_t calc_checksum = 0;
+   uint32_t n = 0;
+   uint8_t byte = 0;
+
+   for (uint32_t n = 0; n < length; n++) {
+     uint8_t last_byte = byte;
+     byte = pgm_read_byte_far(n);
+     if (n % 2 == 0) {
+       calc_checksum ^= (byte << 8) | last_byte;
+     }
+   }
+
+   DEBUG_PRINTLN(calc_checksum);
+
+#ifdef DEBUGMODE
+   if (calc_checksum != checksum) {
+      DEBUG_PRINTLN("checksum error");
+   }
+#endif
+
+   return calc_checksum == checksum;
+
+}
+
+
 void sdcard_bench() {
 
   EmptyTrack empty_track;
@@ -34,7 +77,7 @@ void sdcard_bench() {
 
 void mcl_setup() { mcl.setup(); }
 
-static LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
+LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
       &grid_page,           // Index: 0
       &page_select_page,    // Index: 1
       &system_page,         // Index: 2
@@ -70,17 +113,16 @@ static LightPage *const MCL::pages_table[NUM_PAGES] PROGMEM = {
       &chain_config_page,        // Index: 28
       &aux_config_page,          // Index: 29
       &mcl_config_page,          // Index: 30
-      &ram_config_page,          // Index: 31
-      &arp_page,                 // Index: 32
-      &md_import_page,           // Index: 33
-      &midiport_menu_page,       // Index: 34
-      &midiprogram_menu_page,    // Index: 35
-      &midiclock_menu_page,      // Index: 36
-      &midiroute_menu_page,      // Index: 37
-      &midimachinedrum_menu_page,// Index: 38
-      &midigeneric_menu_page,    // Index: 39
-      &sound_browser,            // Index: 40
-      &perf_page                 // Index: 41
+      &arp_page,                 // Index: 31
+      &md_import_page,           // Index: 32
+      &midiport_menu_page,       // Index: 33
+      &midiprogram_menu_page,    // Index: 34
+      &midiclock_menu_page,      // Index: 35
+      &midiroute_menu_page,      // Index: 36
+      &midimachinedrum_menu_page,// Index: 37
+      &midigeneric_menu_page,    // Index: 38
+      &sound_browser,            // Index: 39
+      &perf_page                 // Index: 40
 };
 
 void MCL::setup() {
@@ -103,10 +145,21 @@ void MCL::setup() {
   DEBUG_PRINTLN(BANK3_FILE_ENTRIES_END);
   bool ret = false;
 
-  delay(100);
-
+  delay(50);
+#ifdef CHECKSUM
+  bool health = health_check();
+#endif
   ret = mcl_sd.sd_init();
   gfx.init_oled();
+
+#ifdef CHECKSUM
+  if (!health) {
+    oled_display.textbox("CHECKSUM ", "ERROR");
+    oled_display.display();
+    while (1);
+  }
+#endif
+
   R.Clear();
   R.use_icons_boot();
 
@@ -225,7 +278,8 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKD: {
         if (mcl.currentPage() == GRID_LOAD_PAGE ||
             mcl.currentPage() == GRID_SAVE_PAGE ||
-            (mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu)) {
+            (mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu)) { // ||
+//            (mcl.currentPage() == MIXER_PAGE && mixer_page.preview_mute_set != 255)) {
           return false;
         }
         if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -381,6 +435,12 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
     }
   }
+
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    mcl.setPage(PAGE_SELECT_PAGE);
+    return true;
+  }
+
   return false;
 }
 

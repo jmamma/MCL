@@ -33,6 +33,47 @@ __attribute__((section(".init3")));
 
 void(* hardwareReset) (void) = 0;
 
+bool test_sram_banks() {
+    volatile uint8_t* const start = reinterpret_cast<uint8_t*>(0x2200);
+    volatile uint8_t* const end = reinterpret_cast<uint8_t*>(0xFFFF);
+
+    // Data line and bank switching test
+    uint8_t pattern = 0x55;
+    for (volatile uint8_t* ptr = start; ptr < end; ++ptr) {
+        switch_ram_bank_noret(0);
+        *ptr = pattern;
+        if (*ptr != pattern) return false;
+        switch_ram_bank_noret(1);
+        *ptr = ~pattern;
+        if (*ptr != ~pattern) return false;
+       // *ptr = 0x00; // initialise for later
+        switch_ram_bank_noret(0);
+        if (*ptr != pattern) return false;
+       // *ptr = 0x00; // initialise for later
+        pattern = (pattern << 1) | (pattern >> 7);
+    }
+
+/*
+    // Address line test, assumes initialised SRAM
+    for (uint16_t bit = 1; bit != 0 && (start + bit) < end; bit <<= 1) {
+        volatile uint8_t* const test_addr = start + bit;
+        // Write to test address
+        *test_addr = 0xAA;
+        // Check that only the test address changed
+        for (volatile uint8_t* ptr = start; ptr < end; ptr++) {
+            if (ptr == test_addr) {
+                if (*ptr != 0xAA) return false; // Test address didn't hold the value
+            } else {
+                if (*ptr != 0x00) return false; // Another address was affected
+            }
+        }
+        // Reset test address
+        *test_addr = 0x00;
+    }
+*/
+    return true;
+}
+
 void my_init_ram(void) {
 // Set PL6 as output
 
@@ -43,9 +84,22 @@ void my_init_ram(void) {
   DDRB |= _BV(PB0);
   PORTB &= ~(_BV(PB0));
 #endif
-  XMCRA |= _BV(SRE);
-}
 
+  //External SRAM Hardware Enable
+  XMCRA |= _BV(SRE);
+
+  //Leds
+
+  DDRE |= _BV(PE4) | _BV(PE5);
+  //SRAM tests
+
+  /* Still not working?
+  while (!test_sram_banks()) {
+     setLed();
+     setLed2();
+  }
+  */
+}
 uint8_t tcnt2;
 
 void timer_init(void) {
@@ -104,15 +158,12 @@ void init(void) {
 
   /* move interrupts to bootloader section */
   MCUCR = _BV(IVCE);
-
-  // Enable External SRAM
   MCUCR = _BV(SRE);
 
   // activate lever converter
   SET_BIT(DDRD, PD4);
   SET_BIT(PORTD, PD4);
 
-  DDRE |= _BV(PE4) | _BV(PE5);
 
   //For MC SMD. Level shifter 1 + 2 enable.
   //PL4 == MEGA2560 level shifter enable
@@ -132,7 +183,7 @@ void loop();
 
 ISR(TIMER1_COMPA_vect) {
 
-  select_bank(0);
+  select_bank(BANK0);
 
   clock++;
   MidiClock.div192th_countdown++;
@@ -192,7 +243,7 @@ ALWAYS_INLINE() void gui_poll() {
 
 ISR(TIMER3_COMPA_vect) {
 
-  select_bank(0);
+  select_bank(BANK0);
 
   slowclock++;
   minuteclock++;

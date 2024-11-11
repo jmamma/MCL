@@ -68,7 +68,7 @@ public:
   uint8_t in_msg_len;
   uint8_t msg[3];
 
-  MidiUartParent *uart;
+  MidiUartClass *uart;
 
   MidiUartClass *uart_forward[NUM_FORWARD_PORTS];
 
@@ -83,7 +83,7 @@ public:
   MidiSysexClass midiSysex;
   uint8_t receiveChannel;
 
-  MidiClass(MidiUartParent *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr);
+  MidiClass(MidiUartClass *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr);
 
   void init();
 
@@ -95,8 +95,8 @@ public:
   }
 
   void processMidi() {
-    while (uart->avail()) {
-      handleByte(uart->m_getc());
+    while (((MidiUartParent*)uart)->avail()) {
+      handleByte(((MidiUartParent*)uart)->m_getc());
     }
   }
 

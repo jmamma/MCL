@@ -91,7 +91,7 @@ class RamBankSelector {
   uint8_t m_oldbank;
   public:
   FORCED_INLINE() RamBankSelector(uint8_t bank) { m_oldbank = switch_ram_bank(bank); }
-  FORCED_INLINE() ~RamBankSelector() { switch_ram_bank(m_oldbank); }
+  FORCED_INLINE() ~RamBankSelector() { switch_ram_bank_noret(m_oldbank); }
 };
 
 class RamAccessFringe {
@@ -116,33 +116,33 @@ class RamAccessFringe {
 
 template<typename T>
 FORCED_INLINE() extern inline T get_bank1(volatile T *dst) {
-  select_bank(1);
+  select_bank(BANK1);
   return *dst;
 }
 
 template<typename T>
 FORCED_INLINE() extern inline void put_bank1(volatile T *dst, T data) {
-  select_bank(1);
+  select_bank(BANK1);
   *dst = data;
 }
 
 FORCED_INLINE() extern inline int memcmp_bank1(volatile void *dst, volatile const void *src, uint16_t len) {
-  select_bank(1);
+  select_bank(BANK1);
   return memcmp((void*)dst, (void*)src, len);
 }
 
 FORCED_INLINE() extern inline void memcpy_bank1(volatile void *dst, volatile const void *src, uint16_t len) {
-  select_bank(1);
+  select_bank(BANK1);
   memcpy((void*)dst, (void*)src, len);
 }
 
 FORCED_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {
-  select_bank(1);
+  select_bank(BANK1);
   *dst = byte;
 }
 
 FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
-  select_bank(1);
+  select_bank(BANK1);
   uint8_t c = *dst;
   return c;
 }
@@ -155,7 +155,7 @@ FORCED_INLINE() extern inline void get_bank2(volatile void *dst, volatile const 
 
 FORCED_INLINE() extern inline void get_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
   ram_access_fringe();
-  select_bank(1);
+  select_bank(BANK1);
   memcpy((void*)dst, (uint8_t*)src + 0x4000, len);
 }
 
@@ -167,7 +167,7 @@ FORCED_INLINE() extern inline void put_bank2(volatile void *dst, volatile const 
 
 FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
   ram_access_fringe();
-  select_bank(1);
+  select_bank(BANK1);
   memcpy((uint8_t*)dst + 0x4000, (uint8_t*)src, len);
 }
 

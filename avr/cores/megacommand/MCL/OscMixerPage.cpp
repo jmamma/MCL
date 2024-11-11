@@ -28,8 +28,6 @@ bool OscMixerPage::handleEvent(gui_event_t *event) {
 
 void OscMixerPage::loop() { WavDesignerPage::loop(); }
 void OscMixerPage::display() {
-  // oled_display.clearDisplay();
-  auto oldfont = oled_display.getFont();
   if (show_menu) {
     WavDesignerPage::display();
   } else {
@@ -42,8 +40,6 @@ void OscMixerPage::display() {
     scanline_width = 4;
     draw_wav();
   }
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 
 float OscMixerPage::get_max_gain() {

@@ -41,6 +41,8 @@ typedef struct short_machine_name_s {
   uint8_t id;
 } short_machine_name_t;
 
+enum class DataType { Kit, Pattern, Global };
+
 /**
  * Class grouping various helper functions to convert elektron sysex
  * data. These are deprecated and should be replaced by the elektron
@@ -141,7 +143,7 @@ class MidiDevice {
 public:
   bool connected;
   MidiClass* midi;
-  MidiUartParent* uart;
+  MidiUartClass* uart;
   const char* const name;
   const uint8_t id; // Device identifier
   const bool isElektronDevice;
@@ -183,17 +185,8 @@ class ElektronSysexListenerClass : public MidiSysexListenerClass {
 public:
   /** Vector storing the onGlobalMessage callbacks (called when a global message
    * is received). **/
-  CallbackVector<SysexCallback, 1> onGlobalMessageCallbacks;
+  CallbackVector<SysexCallback, 1> onMessageCallbacks;
   /** Vector storing the onKitMessage callbacks (called when a kit message is
-   * received). **/
-  CallbackVector<SysexCallback, 1> onKitMessageCallbacks;
-  /** Vector storing the onSongMessage callbacks (called when a song messages is
-   * received). **/
-  CallbackVector<SysexCallback, 1> onSongMessageCallbacks;
-  /** Vector storing the onPatternMessage callbacks (called when a pattern
-   * message is received). **/
-  CallbackVector<SysexCallback, 1> onPatternMessageCallbacks;
-  /** Vector storing the onStatusResponse callbacks (when a status response is
    * received). **/
   CallbackVector2<SysexCallback, 1, uint8_t, uint8_t> onStatusResponseCallbacks;
 
@@ -209,44 +202,14 @@ public:
     onStatusResponseCallbacks.remove(obj);
   }
 
-  void addOnGlobalMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onGlobalMessageCallbacks.add(obj, func);
+  void addOnMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
+    onMessageCallbacks.add(obj, func);
   }
-  void removeOnGlobalMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onGlobalMessageCallbacks.remove(obj, func);
+  void removeOnMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
+    onMessageCallbacks.remove(obj, func);
   }
-  void removeOnGlobalMessageCallback(SysexCallback *obj) {
-    onGlobalMessageCallbacks.remove(obj);
-  }
-
-  void addOnKitMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onKitMessageCallbacks.add(obj, func);
-  }
-  void removeOnKitMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onKitMessageCallbacks.remove(obj, func);
-  }
-  void removeOnKitMessageCallback(SysexCallback *obj) {
-    onKitMessageCallbacks.remove(obj);
-  }
-
-  void addOnPatternMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onPatternMessageCallbacks.add(obj, func);
-  }
-  void removeOnPatternMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onPatternMessageCallbacks.remove(obj, func);
-  }
-  void removeOnPatternMessageCallback(SysexCallback *obj) {
-    onPatternMessageCallbacks.remove(obj);
-  }
-
-  void addOnSongMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSongMessageCallbacks.add(obj, func);
-  }
-  void removeOnSongMessageCallback(SysexCallback *obj, sysex_callback_ptr_t func) {
-    onSongMessageCallbacks.remove(obj, func);
-  }
-  void removeOnSongMessageCallback(SysexCallback *obj) {
-    onSongMessageCallbacks.remove(obj);
+  void removeOnMessageCallback(SysexCallback *obj) {
+    onMessageCallbacks.remove(obj);
   }
 
 };
@@ -257,6 +220,21 @@ enum TrigLEDMode {
   TRIGLED_EXCLUSIVE = 2,
   TRIGLED_EXCLUSIVENDYNAMIC = 3,
   TRIGLED_MUTE = 4
+};
+
+enum class ElektronCommand {
+  ActivateEncoderInterface,
+  ActivateEnhancedMidi,
+  ActivateEnhancedGui,
+  SetSeqPage,
+  SetRecMode,
+  SetKeyRepeat,
+  ActivateTrigInterface,
+  ActivateTrackSelect,
+  UndokitSync,
+  ResetDspParams,
+  DrawCloseBank,
+  DrawCloseMicrotiming
 };
 
 /// sysex constants for constructing data frames
@@ -316,7 +294,7 @@ public:
 #define FW_CAP_ENHANCED_MIDI FW_CAP_HIGH(3)
 #define FW_CAP_MACHINE_CACHE FW_CAP_HIGH(4)
 #define FW_CAP_UNDO_CACHE    FW_CAP_HIGH(5)
-
+#define FW_CAP_MID_MACHINE   FW_CAP_HIGH(6)
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
 public:
@@ -335,10 +313,7 @@ public:
   uint8_t currentBank;
   /** Stores the current pattern of the MD, usually set by the MDTask. **/
   uint8_t currentPattern;
-  /** Set to true if the kit was loaded (usually set by MDTask). **/
-  bool loadedKit;
   /** Set to true if the global was loaded (usually set by MDTask). **/
-  bool loadedGlobal;
   bool encoder_interface;
   ElektronDevice(
       MidiClass* _midi, const char* _name, const uint8_t _id,
@@ -348,9 +323,6 @@ public:
       currentGlobal = -1;
       currentKit = -1;
       currentPattern = -1;
-
-      loadedKit = false;
-      loadedGlobal = false;
 
       encoder_interface = false;
     }
@@ -438,6 +410,7 @@ public:
    * are wrapped in appropriate methods like requestKit,
    * requestPattern, etc...
    **/
+  void sendCommand(ElektronCommand command, uint8_t param);
   virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartParent *uart_ = nullptr);
   virtual uint16_t sendRequest(uint8_t type, uint8_t param, bool send = true);
   /**
@@ -471,6 +444,7 @@ public:
    **/
   void requestGlobal(uint8_t global);
 
+  bool getBlockingData(DataType type, uint8_t index, uint16_t timeout);
   /**
    * Get the status answer from the device, blocking until either
    * a message is received or the timeout has run out.

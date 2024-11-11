@@ -11,7 +11,6 @@ void ArpPage::setup() {
 
 void ArpPage::init() {
   DEBUG_PRINT_FN();
-  oled_display.setFont();
 //  seq_ptc_page.display();
   track_update();
   trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
@@ -57,7 +56,7 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
   last_arp_track = arp_track;
 }
 
-void ArpPage::cleanup() { oled_display.clearDisplay(); }
+void ArpPage::cleanup() {}
 
 void ArpPage::loop() {
   uint8_t n = current_track;
@@ -88,7 +87,6 @@ const arp_name_t arp_names[] PROGMEM = {
 
 void ArpPage::display() {
 
-  auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
   oled_display.fillRect(8, 2, 128 - 16, 32 - 2, BLACK);
@@ -133,8 +131,6 @@ void ArpPage::display() {
   mcl_gui.put_value_at(encoders[3]->cur, str);
   mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "RANGE", str, param_select == 3);
 
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 
 bool ArpPage::handleEvent(gui_event_t *event) {

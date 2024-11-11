@@ -102,6 +102,10 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &perf_page.perf_id,
     // 60
     &mcl_cfg.uart2_cc_mute,
+    // 61
+    &mcl_cfg.uart1_device,
+    // 62
+    &mcl_cfg.grid_page_mode,
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -171,7 +175,6 @@ MenuPage<midi_config_page_N> midi_config_page(&config_param1, &config_param3);
 MenuPage<md_config_page_N> md_config_page(&config_param1, &config_param4);
 MenuPage<chain_config_page_N> chain_config_page(&config_param1, &config_param6);
 MenuPage<mcl_config_page_N> mcl_config_page(&config_param1, &config_param5);
-MenuPage<ram_config_page_N> ram_config_page(&config_param1, &config_param7);
 MenuPage<md_import_page_N> md_import_page(&config_param1, &config_param8);
 
 MenuPage<midiport_menu_page_N> midiport_menu_page(&config_param1, &config_param9);

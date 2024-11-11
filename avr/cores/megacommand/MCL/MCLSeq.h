@@ -11,6 +11,7 @@
 #include "ArpSeqTrack.h"
 #include "ExtSeqTrack.h"
 #include "MDFXseqTrack.h"
+#include "PerfSeqTrack.h"
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -33,7 +34,8 @@ public:
   void remove_callbacks();
 
   uint8_t note_to_trig(uint8_t);
-  void onNoteOnCallback_Midi(uint8_t *msg);
+  void onNoteCallback_Midi(uint8_t *msg);
+
   void onNoteOffCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
@@ -62,6 +64,7 @@ public:
 
   SeqTrackBase aux_tracks[NUM_AUX_TRACKS];
 
+  PerfSeqTrack perf_track;
   MDFXSeqTrack mdfx_track;
 
   MCLSeqMidiEvents midi_events;

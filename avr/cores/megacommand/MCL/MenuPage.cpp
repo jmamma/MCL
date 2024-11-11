@@ -5,6 +5,7 @@ void MenuPageBase::init() {
   DEBUG_PRINTLN("MenuPageBase::init");
   R.Clear();
   R.use_machine_names_short(); // for grid page
+  R.use_icons_knob(); // for grid page
   R.use_menu_options();
   R.use_menu_layouts();
   DEBUG_PRINT("R.Size() = ");
@@ -34,36 +35,38 @@ void MenuPageBase::init() {
 
 void MenuPageBase::gen_menu_device_names() {
   MenuBase *m = get_menu();
-  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
+  menu_option_t *p =
+      (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
   m->set_custom_options(p);
 
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
     p->pos = n + 1;
-    strcpy(p->name,midi_active_peering.get_device(n + 1)->name);
+    strcpy(p->name, midi_active_peering.get_device(n + 1)->name);
     p++;
   }
-
 }
 
 void MenuPageBase::gen_menu_row_names() {
   MenuBase *m = get_menu();
   menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * 128);
   m->set_custom_options(p);
-  uint8_t row_id = 0;
-  for (char bank = 'A'; bank <= 'H'; ++bank) {
-    for (uint8_t i = 1; i <= 16; ++i) {
-      p->pos = row_id++;
-      p->name[0] = bank;
-      if (i < 10) {
-        p->name[1] = '0';
-        p->name[2] = '0' + i;
-      } else {
-        p->name[1] = '1';
-        p->name[2] = '0' + i - 10;
-      }
-      p->name[3] = '\0';
-      ++p;
+  for (uint8_t row_id = 0; row_id < 128; ++row_id) {
+    char bank = 'A' + row_id / 16;
+    uint8_t i = row_id % 16 + 1;
+
+    p->pos = row_id;
+    p->name[0] = bank;
+
+    if (i < 10) {
+      p->name[1] = '0';
+      p->name[2] = '0' + i;
+    } else {
+      p->name[1] = '1';
+      p->name[2] = '0' + i - 10;
     }
+
+    p->name[3] = '\0';
+    ++p;
   }
 }
 
@@ -152,8 +155,9 @@ void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
     oled_display.setCursor(x_offset, y_offset + 8 * n);
     if (n == cur_row) {
       oled_display.setTextColor(BLACK, WHITE);
-      oled_display.fillRect(max(0,oled_display.getCursorX() - 3),
-                            max(0,oled_display.getCursorY() - 6), width, 7, WHITE);
+      oled_display.fillRect(max(0, oled_display.getCursorX() - 3),
+                            max(0, oled_display.getCursorY() - 6), width, 7,
+                            WHITE);
     } else {
       oled_display.setTextColor(WHITE, BLACK);
     }
@@ -181,7 +185,6 @@ void MenuPageBase::display() {
   if (number_of_items > visible_rows) {
     draw_scrollbar(120);
   }
-  oled_display.display();
 }
 
 bool MenuPageBase::enter() {
@@ -202,11 +205,13 @@ bool MenuPageBase::enter() {
   return false;
 }
 
-bool MenuPageBase::exit() {
-  if (GUI.currentPage() != this) { return; }
+void MenuPageBase::exit() {
+  if (GUI.currentPage() != this) {
+    return;
+  }
   void (*exit_func)() = get_menu()->get_exit_function();
   if (exit_func != NULL) {
-     (*exit_func)();
+    (*exit_func)();
   }
   mcl.popPage();
 }
@@ -231,16 +236,16 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
         trig_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
-          encoders[1]->cur -= inc;
+        encoders[1]->cur -= inc;
         break;
       case MDX_KEY_DOWN:
-          encoders[1]->cur += inc;
+        encoders[1]->cur += inc;
         break;
       case MDX_KEY_LEFT:
-          encoders[0]->cur -= inc;
+        encoders[0]->cur -= inc;
         break;
       case MDX_KEY_RIGHT:
-          encoders[0]->cur += inc;
+        encoders[0]->cur += inc;
         break;
       }
     }

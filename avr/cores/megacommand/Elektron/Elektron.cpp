@@ -17,6 +17,29 @@ uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
 MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartParent *uart_) {
+   if (!send) {
+        return len + sysex_protocol.header_size + 2;
+    }
+
+    uart_ = uart_ ? uart_ : uart;
+
+    uint8_t buf[256];
+    uint8_t i = 0;
+
+    buf[i++] = 0xF0;
+    memcpy(buf + i, sysex_protocol.header, sysex_protocol.header_size);
+    i += sysex_protocol.header_size;
+
+    for (uint8_t n = 0; n < len; n++) {
+        buf[i++] = data[n] & 0x7F;
+    }
+    buf[i++] = 0xF7;
+
+    uart_->m_putc(buf, i);
+
+    return i;
+}
+/*
   if (uart_ == nullptr) { uart_ = uart; }
 
   uint8_t buf[256];
@@ -37,7 +60,7 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, Midi
   }
   return len + sysex_protocol.header_size + 2;
 }
-
+*/
 uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
   uint8_t data[] = {type, param};
   return sendRequest(data, 2, send);
@@ -112,7 +135,6 @@ bool ElektronDevice::get_fw_caps() {
 void ElektronDevice::activate_encoder_interface(uint8_t *params) {
   encoder_interface = true;
   uint8_t data[3 + 4 + 24] = {0x70, 0x36, 0x01};
-
   uint8_t mod7 = 0;
   uint8_t cnt = 0;
 
@@ -131,53 +153,88 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
   //waitBlocking();
 }
 
-void ElektronDevice::deactivate_encoder_interface() {
-  uint8_t data[3] = {0x70, 0x36, 0x00};
-  sendRequest(data, sizeof(data));
-  encoder_interface = false;
-  //waitBlocking();
+void ElektronDevice::deactivate_encoder_interface() { sendCommand(ElektronCommand::ActivateEncoderInterface, 0); }
+
+void ElektronDevice::sendCommand(ElektronCommand command, uint8_t param) {
+  uint8_t data[3] = {0x70, 0x00, 0x00};
+  bool needsWait = false;
+  uint8_t l = 3;
+  switch (command) {
+    case ElektronCommand::ActivateEncoderInterface:
+      data[1] = 0x36;
+      data[2] = param;;
+      encoder_interface = param;
+      break;
+    case ElektronCommand::ActivateEnhancedMidi:
+      data[1] = 0x3E;
+      data[2] = param;
+      break;
+    case ElektronCommand::ActivateEnhancedGui:
+      data[1] = 0x37;
+      data[2] = param;
+      break;
+    case ElektronCommand::SetSeqPage:
+      data[1] = 0x38;
+      data[2] = param;
+      break;
+    case ElektronCommand::SetRecMode:
+      data[1] = 0x3A;
+      data[2] = param;
+      break;
+    case ElektronCommand::SetKeyRepeat:
+      data[1] = 0x4E;
+      data[2] = param;
+      break;
+    case ElektronCommand::ActivateTrigInterface:
+      data[1] = 0x31;
+      data[2] = param;
+      break;
+    case ElektronCommand::ActivateTrackSelect:
+      data[1] = 0x32;
+      data[2] = param;
+      needsWait = true;
+      break;
+    case ElektronCommand::UndokitSync:
+      data[1] = 0x42;
+      l = 2;
+      break;
+    case ElektronCommand::ResetDspParams:
+      data[1] = 0x43;
+      l = 2;
+      break;
+    case ElektronCommand::DrawCloseBank:
+      data[1] = 0x3C;
+      data[2] = 0x23;
+      break;
+    case ElektronCommand::DrawCloseMicrotiming:
+      data[1] = 0x3C;
+      data[2] = 0x21;
+      break;
+    default:
+      return; // Invalid command
+  }
+
+  sendRequest(data, l);
+  if (needsWait) {
+    waitBlocking();
+  }
 }
 
-void ElektronDevice::activate_enhanced_midi() {
-  uint8_t data[3] = {0x70, 0x3E, 0x01};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-void ElektronDevice::deactivate_enhanced_midi() {
-  uint8_t data[3] = {0x70, 0x3E, 0x00};
-  sendRequest(data, sizeof(data));
+
+void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
+  uint8_t a = timing >> 7;
+  uint8_t b = timing & 0x7F;
+  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, a, b};
+  sendRequest(data, 6);
   // waitBlocking();
 }
 
-void ElektronDevice::activate_enhanced_gui() {
-  uint8_t data[3] = {0x70, 0x37, 0x01};
-  sendRequest(data, sizeof(data));
+void ElektronDevice::draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask) {
+  uint8_t data[6] = {0x70, 0x3C, 0x24, idx, idx_other, chain_mask };
+  sendRequest(data, 6);
   // waitBlocking();
 }
 
-void ElektronDevice::deactivate_enhanced_gui() {
-  uint8_t data[3] = {0x70, 0x37, 0x00};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::set_seq_page(uint8_t page) {
-  uint8_t data[3] = {0x70, 0x38, page};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::set_rec_mode(uint8_t mode) {
-  uint8_t data[3] = {0x70, 0x3A, mode};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::set_key_repeat(uint8_t mode) {
-  uint8_t data[3] = {0x70, 0x4E, mode};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
 
 void ElektronDevice::popup_text(uint8_t action_string, uint8_t persistent) {
   uint8_t data[4] = {0x70, 0x3B, persistent, action_string};
@@ -198,66 +255,23 @@ void ElektronDevice::draw_bank(uint8_t bank) {
   sendRequest(data, 5);
   // waitBlocking();
 }
-void ElektronDevice::draw_close_bank() {
-  uint8_t data[3] = {0x70, 0x3C, 0x23};
-  sendRequest(data, 3);
-  // waitBlocking();
-}
 
-
-void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
-  uint8_t a = timing >> 7;
-  uint8_t b = timing & 0x7F;
-  uint8_t data[6] = {0x70, 0x3C, 0x20, speed, a, b};
-  sendRequest(data, 6);
-  // waitBlocking();
-}
-void ElektronDevice::draw_close_microtiming() {
-  uint8_t data[3] = {0x70, 0x3C, 0x21};
-  sendRequest(data, 3);
-  // waitBlocking();
-}
-
-void ElektronDevice::draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask) {
-  uint8_t data[6] = {0x70, 0x3C, 0x24, idx, idx_other, chain_mask };
-  sendRequest(data, 6);
-  // waitBlocking();
-}
-
-
-void ElektronDevice::activate_trig_interface() {
-  uint8_t data[3] = {0x70, 0x31, 0x01};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::deactivate_trig_interface() {
-  uint8_t data[3] = {0x70, 0x31, 0x00};
-  sendRequest(data, sizeof(data));
-  // waitBlocking();
-}
-
-void ElektronDevice::activate_track_select() {
-  uint8_t data[3] = {0x70, 0x32, 0x01};
-  sendRequest(data, sizeof(data));
-  waitBlocking();
-}
-
-void ElektronDevice::deactivate_track_select() {
-  uint8_t data[3] = {0x70, 0x32, 0x00};
-  sendRequest(data, sizeof(data));
-  waitBlocking();
-}
-
-void ElektronDevice::undokit_sync() {
-  uint8_t data[2] = { 0x70, 0x42 };
-  sendRequest(data, sizeof(data));
-}
-
-void ElektronDevice::reset_dsp_params() {
-  uint8_t data[2] = { 0x70, 0x43 };
-  sendRequest(data, sizeof(data));
-}
+// Implement the individual functions using the central sendCommand function
+void ElektronDevice::activate_enhanced_midi() { sendCommand(ElektronCommand::ActivateEnhancedMidi, 1); }
+void ElektronDevice::deactivate_enhanced_midi() { sendCommand(ElektronCommand::ActivateEnhancedMidi, 0); }
+void ElektronDevice::activate_enhanced_gui() { sendCommand(ElektronCommand::ActivateEnhancedGui, 1); }
+void ElektronDevice::deactivate_enhanced_gui() { sendCommand(ElektronCommand::ActivateEnhancedGui, 0); }
+void ElektronDevice::set_seq_page(uint8_t page) { sendCommand(ElektronCommand::SetSeqPage, page); }
+void ElektronDevice::set_rec_mode(uint8_t mode) { sendCommand(ElektronCommand::SetRecMode, mode); }
+void ElektronDevice::set_key_repeat(uint8_t mode) { sendCommand(ElektronCommand::SetKeyRepeat, mode); }
+void ElektronDevice::activate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 1); }
+void ElektronDevice::deactivate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 0); }
+void ElektronDevice::activate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 1); }
+void ElektronDevice::deactivate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 0); }
+void ElektronDevice::undokit_sync() { sendCommand(ElektronCommand::UndokitSync, 0); }
+void ElektronDevice::reset_dsp_params() { sendCommand(ElektronCommand::ResetDspParams, 0); }
+void ElektronDevice::draw_close_bank() { sendCommand(ElektronCommand::DrawCloseBank, 0); }
+void ElektronDevice::draw_close_microtiming() { sendCommand(ElektronCommand::DrawCloseMicrotiming, 0); }
 
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
@@ -318,78 +332,69 @@ uint8_t ElektronDevice::getBlockingStatus(uint8_t type, uint16_t timeout) {
   return connected ? cb.value : 255;
 }
 
-bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
-  SysexCallback cb;
-  uint8_t count = SYSEX_RETRIES;
-  auto listener = getSysexListener();
-  bool ret;
-  while ((MidiClock.state == 2) &&
-         ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-    ;
-  while (count) {
-    listener->addOnKitMessageCallback(
-        &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-    requestKit(kit);
-    DEBUG_PRINTLN("get blocking kit");
-    ret = cb.waitBlocking(timeout);
-    listener->removeOnKitMessageCallback(&cb);
-    if (ret) {
-      midi->midiSysex.rd_cur = listener->msg_rd;
-      auto kit = getKit();
-      if (kit != nullptr && kit->fromSysex(midi)) {
-         DEBUG_PRINTLN("finished");
-         return true;
-      }
+bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t timeout) {
+    SysexCallback cb;
+    uint8_t count = (type == DataType::Global) ? 1 : SYSEX_RETRIES;
+    auto listener = getSysexListener();
+    bool ret = false;
+
+    while ((MidiClock.state == 2) &&
+           ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
+        ;
+
+    while (count--) {
+
+        listener->addOnMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+        switch (type) {
+            case DataType::Kit:
+                requestKit(index);
+                break;
+            case DataType::Pattern:
+                requestPattern(index);
+                break;
+            case DataType::Global:
+                requestGlobal(index);
+                break;
+        }
+
+        ret = cb.waitBlocking(timeout);
+
+        listener->removeOnMessageCallback(&cb);
+
+        if (ret) {
+            midi->midiSysex.rd_cur = listener->msg_rd;
+            void* data = nullptr;
+            switch (type) {
+                case DataType::Kit:
+                    data = getKit();
+                    break;
+                case DataType::Pattern:
+                    data = getPattern();
+                    break;
+                case DataType::Global:
+                    data = getGlobal();
+                    break;
+            }
+            if (data != nullptr && ((ElektronSysexObject*)data)->fromSysex(midi)) {
+                if (type == DataType::Global) connected = true;
+                return true;
+            }
+        }
     }
-    count--;
-  }
-  return false;
+    return false;
+}
+
+
+bool ElektronDevice::getBlockingKit(uint8_t kit, uint16_t timeout) {
+  return getBlockingData(DataType::Kit, kit, timeout);;
 }
 
 bool ElektronDevice::getBlockingPattern(uint8_t pattern, uint16_t timeout) {
-  SysexCallback cb;
-  uint8_t count = SYSEX_RETRIES;
-  auto listener = getSysexListener();
-  bool ret;
-  while ((MidiClock.state == 2) &&
-         ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-    ;
-  while (count) {
-    listener->addOnPatternMessageCallback(
-        &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-    requestPattern(pattern);
-    ret = cb.waitBlocking(timeout);
-    listener->removeOnPatternMessageCallback(&cb);
-
-    if (ret) {
-      midi->midiSysex.rd_cur = listener->msg_rd;
-      auto pattern = getPattern();
-      if (pattern != nullptr && pattern->fromSysex(midi)) {
-        return true;
-      }
-    }
-
-    count--;
-  }
-  return false;
+  return getBlockingData(DataType::Pattern, pattern, timeout);;
 }
 
 bool ElektronDevice::getBlockingGlobal(uint8_t global, uint16_t timeout) {
-  SysexCallback cb;
-  auto listener = getSysexListener();
-  listener->addOnGlobalMessageCallback(
-      &cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
-  requestGlobal(global);
-  connected = cb.waitBlocking(timeout);
-  listener->removeOnGlobalMessageCallback(&cb);
-  if (connected) {
-    auto global = getGlobal();
-    midi->midiSysex.rd_cur = listener->msg_rd;
-    if (global != nullptr && global->fromSysex(midi)) {
-      return true;
-    }
-  }
-  return connected;
+   return getBlockingData(DataType::Global, global, timeout);
 }
 
 uint8_t ElektronDevice::getCurrentTrack(uint16_t timeout) {

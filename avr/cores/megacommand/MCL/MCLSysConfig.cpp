@@ -1,58 +1,55 @@
 #include "MCL_impl.h"
-
-void usb_wait() {
+// Consolidated display function to reduce code duplication
+static void show_message(const char* line1) {
   oled_display.clearDisplay();
-  oled_display.textbox("PLEASE WAIT", "");
+  oled_display.textbox(line1, "");
   oled_display.display();
+}
+
+// Common wait routine
+static inline void usb_wait() {
+  show_message("PLEASE WAIT");
   delay(4000);
 }
 
-bool megacmd_check() {
+// Simplified megacmd check
+static inline bool megacmd_check() {
   if (!IS_MEGACMD()) {
-    oled_display.textbox("MODE ", "N/A");
-    oled_display.display();
+    show_message("MODE N/A");
     return false;
   }
   return true;
 }
 
-void usb_os_update() {
+// Combined USB mode change function
+static void enter_usb_mode(uint8_t mode, const char* line1) {
   usb_wait();
-  change_usb_mode(USB_SERIAL);
-  oled_display.clearDisplay();
-  oled_display.textbox("OS UPDATE", "");
-  oled_display.display();
-  while (1)
-    ;
+  show_message(line1);
+
+  if (mode == USB_STORAGE) {
+    LOCAL_SPI_DISABLE();
+    EXTERNAL_SPI_ENABLE();
+  }
+
+  change_usb_mode(mode);
+  while (1); // Infinite loop
+}
+
+// Optimized public functions
+void usb_os_update() {
+  enter_usb_mode(USB_SERIAL, "OS UPDATE");
 }
 
 void usb_dfu_mode() {
-  usb_wait();
-  oled_display.clearDisplay();
-  oled_display.textbox("DFU ", "MODE");
-  oled_display.display();
-  //DFU mode is activated via datalines between CPUs
-  SET_USB_MODE(USB_DFU);
-  while (1)
-    ;
+  enter_usb_mode(USB_DFU, "DFU MODE");
 }
 
 void usb_disk_mode() {
-  if (!megacmd_check()) {
-    return;
+  if (megacmd_check()) {
+    enter_usb_mode(USB_STORAGE, "USB DISK");
   }
-  usb_wait();
-  oled_display.clearDisplay();
-
-  oled_display.textbox("USB ", "DISK");
-  oled_display.display();
-
-  LOCAL_SPI_DISABLE();
-  EXTERNAL_SPI_ENABLE();
-  change_usb_mode(USB_STORAGE);
-  while (1)
-    ;
 }
+
 
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();
@@ -144,6 +141,7 @@ bool MCLSysConfig::cfg_init() {
   //ram_page_mode = 0;
   track_select = 1;
   track_type_select = 0b00000011;
+  uart1_device = 1;
   //uart2_device = 0;
   //uart_cc_loopback = 0;
   //uart2_prg_mode = 0;
@@ -155,6 +153,7 @@ bool MCLSysConfig::cfg_init() {
   //seq_dev = 0;
   uart2_cc_mute = 128;
   uart2_cc_level = 128;
+  //grid_page_mode = 0;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

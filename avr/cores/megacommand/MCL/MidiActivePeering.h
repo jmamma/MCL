@@ -40,8 +40,8 @@ public:
 
   void init_grid_devices(uint8_t device_idx);
   virtual uint8_t get_mute_cc();
-  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
-  virtual void setLevel(uint8_t track, uint8_t value, MidiUartParent *uart_ = nullptr);
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr);
+  virtual void setLevel(uint8_t track, uint8_t value, MidiUartClass *uart_ = nullptr);
 };
 
 class NullMidiDevice : public MidiDevice {

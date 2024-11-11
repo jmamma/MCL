@@ -39,6 +39,9 @@ void MCLSeq::setup() {
   mdfx_track.length = 16;
   mdfx_track.speed = SEQ_SPEED_1X;
 
+  perf_track.length = 16;
+  perf_track.speed = SEQ_SPEED_1X;
+
   enable();
 
   MidiClock.addOnMidiStopCallback(
@@ -108,7 +111,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
     aux_tracks[i].reset();
   }
   mdfx_track.reset();
-
+  perf_track.reset();
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].sample_hold = 0;
@@ -148,6 +151,7 @@ void MCLSeq::onMidiStopCallback() {
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].reset_params();
+    md_tracks[i].send_notes_off();
     md_tracks[i].locks_slides_recalc = 255;
     for (uint8_t c = 0; c < NUM_LOCKS; c++) {
       md_tracks[i].locks_slide_data[c].init();
@@ -231,13 +235,9 @@ void MCLSeq::seq() {
   MDSeqTrack::md_trig_mask = 0;
   MDSeqTrack::load_machine_cache = 0;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].seq(uart);
+    md_tracks[i].seq(uart,uart2);
     md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
-    md_arp_tracks[i].seq(uart);
-  }
-
-  if (MDSeqTrack::md_trig_mask > 0) {
-    MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+    md_arp_tracks[i].seq(uart,uart2);
   }
 
   mdfx_track.seq();
@@ -250,7 +250,6 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].seq();
   }
-  // Arp
 
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
@@ -258,11 +257,17 @@ void MCLSeq::seq() {
   }
 #endif
 
+  perf_track.seq(uart, uart2);
+
+  if (MDSeqTrack::md_trig_mask > 0) {
+    MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+  }
+
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq(uart2);
     ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
-    ext_arp_tracks[i].seq(uart2);
+    ext_arp_tracks[i].seq(uart,uart2);
   }
 #endif
 
@@ -281,12 +286,25 @@ void MCLSeq::seq() {
   }
 }
 
-void MCLSeqMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  mixer_page.onNoteOnCallback_Midi(msg);
+void MCLSeqMidiEvents::onNoteCallback_Midi(uint8_t *msg) {
+  uint8_t note_num = msg[1];
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t n = MD.noteToTrack(msg[1]);
+  if (n < 16) {
+    bool is_midi_machine = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);
+    if (is_midi_machine) {
+      if (msg[2]) {mcl_seq.md_tracks[n].send_notes(255); }
+      //velocity 0 == NoteOff
+      //Only send note off if the sequener is not running, otherwise defer to note length
+      else if (MidiClock.state != 2) { mcl_seq.md_tracks[n].send_notes_off(); }
+
+    }
+    if (msg[0] != 153 && msg[2]) {
+      mixer_page.disp_levels[n] = MD.kit.levels[n];
+    }
+
+  }
 }
-
-void MCLSeqMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {}
-
 void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -298,6 +316,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track > 15) {
     return;
   }
+
+  mcl_seq.md_tracks[track].onControlChangeCallback_Midi(track_param, value);
 
   if (mcl.currentPage() == MIXER_PAGE) {
     mixer_page.onControlChangeCallback_Midi(track, track_param, value);
@@ -365,11 +385,10 @@ void MCLSeqMidiEvents::setup_callbacks() {
   }
 
   Midi.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
-  /*
-   Midi.addOnNoteOffCallback(
-       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
-   */
+      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
+  Midi.addOnNoteOffCallback(
+       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
+
   update_params = true;
   Midi.addOnControlChangeCallback(
       this,
@@ -389,11 +408,9 @@ void MCLSeqMidiEvents::remove_callbacks() {
   }
 
   Midi.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOnCallback_Midi);
-  /*
+      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
   Midi.removeOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteOffCallback_Midi);
-  */
+      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
   Midi.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);

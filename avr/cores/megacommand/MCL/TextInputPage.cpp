@@ -36,6 +36,7 @@ void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
   title = title_;
   length = len;
   max_length = len;
+  memset(text,0,sizeof(text));
   strncpy(text, text_, len);
   //Replace null characeters with space, it will be added back in upon exit.
   bool after = false;
@@ -145,9 +146,7 @@ void TextInputPage::display_normal() {
   auto time = clock_diff(last_clock, slowclock);
 
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
-  auto oldfont = oled_display.getFont();
   oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
-  oled_display.setFont();
   oled_display.setCursor(s_text_x, s_text_y);
   oled_display.println(text);
   if (time < FLASH_SPEED) {
@@ -162,7 +161,6 @@ void TextInputPage::display_normal() {
   if (time > FLASH_SPEED * 2) {
     last_clock = slowclock;
   }
-  oled_display.setFont(oldfont);
 }
 
 void TextInputPage::display_charpane() {
@@ -198,7 +196,6 @@ void TextInputPage::display() {
   else
     display_charpane();
 
-  oled_display.display();
 }
 
 bool TextInputPage::handleEvent(gui_event_t *event) {

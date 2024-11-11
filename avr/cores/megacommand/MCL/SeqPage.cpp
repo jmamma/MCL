@@ -30,6 +30,8 @@ uint16_t SeqPage::mute_mask = 0;
 
 uint8_t SeqPage::step_select = 255;
 
+bool SeqPage::is_midi_model = false;
+
 uint32_t SeqPage::last_md_model = 255;
 
 uint8_t opt_speed = 1;
@@ -107,8 +109,6 @@ void SeqPage::init() {
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   config_encoders();
   seqpage_midi_events.setup_callbacks();
-
-  oled_display.clearDisplay();
 
   toggle_device = true;
   DEBUG_PRINTLN("seq page init");
@@ -207,12 +207,12 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
   if (track > 6) {
     track -= 8;
     if (track >= mcl_seq.num_ext_tracks) {
-      return true;
+      return;
     }
     mcl_seq.ext_tracks[track].toggle_mute();
   } else {
     if (track >= mcl_seq.num_ext_tracks) {
-      return true;
+      return;
     }
     MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
     midi_device = dev;
@@ -232,6 +232,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     DEBUG_PRINTLN(track);
     if (track >= NUM_MD_TRACKS) { return; }
     last_md_track = track;
+    is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
@@ -288,33 +289,6 @@ bool SeqPage::display_mute_mask(MidiDevice* device, uint8_t offset) {
 
 bool SeqPage::handleEvent(gui_event_t *event) {
 
-  if (note_interface.is_event(event)) {
-    uint8_t port = event->port;
-    MidiDevice *device = midi_active_peering.get_device(port);
-
-    uint8_t track = event->source - 128;
-
-    //Removing this block causes progmem to balloon by 1K ??
-    if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      //  calculate the intended seq length.
-      uint8_t step = track;
-      step += 1 + page_select * 16;
-      encoders[2]->cur = step;
-      note_interface.ignoreNextEvent(track);
-      if (event->mask == EVENT_BUTTON_RELEASED) {
-        note_interface.clear_note(track);
-      }
-      GUI.ignoreNextEvent(Buttons.BUTTON4);
-      if (BUTTON_DOWN(Buttons.BUTTON3)) {
-        GUI.ignoreNextEvent(Buttons.BUTTON3);
-      }
-
-      return true;
-    }
-    // notify derived class about unhandled TI event
-    return false;
-  } // end TI events
-
   if (EVENT_CMD(event)) {
     if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
@@ -353,10 +327,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-  }
-
   if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     // If MD trig is held and BUTTON3 is pressed, launch note menu
     if (!show_seq_menu) {
@@ -392,9 +362,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (show_seq_menu) {
       row_func =
           seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
-      MidiDevice* old_dev = opt_midi_device_capture;
-      opt_midi_device_capture = midi_active_peering.get_device(mcl_cfg.seq_dev);
-      if (old_dev == opt_midi_device_capture) {
+      MidiDevice* old_dev = midi_device;
+      midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
+      if (old_dev == midi_device) {
         opt_speed_handler();
         opt_length_handler();
         opt_channel_handler();
@@ -530,7 +500,7 @@ void SeqPage::draw_knob_conditional(uint8_t cond) {
   conditional_str(K, cond);
   draw_knob(0, "COND", K);
 }
-
+/*
 void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
   if (cond == 0) {
     strcpy(str, "L1");
@@ -557,6 +527,32 @@ void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
       }
     }
   }
+}
+*/
+void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
+    if (str == nullptr) return;
+
+    if (cond == 0) {
+        str[0] = 'L'; str[1] = '1'; str[2] = '\0';
+    } else {
+        if (cond > NUM_TRIG_CONDITIONS) {
+            cond -= NUM_TRIG_CONDITIONS;
+        }
+
+        if (cond <= 8) {
+            str[0] = 'L'; str[1] = cond + '0'; str[2] = '\0';
+        } else if (cond <= 13) {
+            static const uint8_t prob[5] = {1, 2, 5, 7, 9};
+            str[0] = 'P'; str[1] = prob[cond - 9] + '0'; str[2] = '\0';
+        } else if (cond == 14) {
+            str[0] = '1'; str[1] = 'S'; str[2] = '\0';
+        }
+
+        if (seq_param1.getValue() > NUM_TRIG_CONDITIONS) {
+            str[2] = is_md ? '+' : '^';
+            str[3] = '\0';
+        }
+    }
 }
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {

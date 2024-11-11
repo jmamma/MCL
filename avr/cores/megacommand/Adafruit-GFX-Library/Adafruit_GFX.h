@@ -22,9 +22,9 @@ class Adafruit_GFX : public Print {
   // These MAY be overridden by the subclass to provide device-specific
   // optimized code.  Otherwise 'generic' versions are used.
   virtual void startWrite(void);
-  virtual void writePixel(int16_t x, int16_t y, uint16_t color);
-  virtual void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-  virtual void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+  void writePixel(int16_t x, int16_t y, uint16_t color);
+  void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+  void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
   virtual void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
   virtual void writeLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
   virtual void endWrite(void);
@@ -39,15 +39,15 @@ class Adafruit_GFX : public Print {
   // BASIC DRAW API
   // These MAY be overridden by the subclass to provide device-specific
   // optimized code.  Otherwise 'generic' versions are used.
-  virtual void
-    // It's good to implement those, even if using transaction API
-    drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color),
-    drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color),
-    fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color),
-    fillScreen(uint16_t color),
+
+  void fillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color);
+  void fillScreen(uint16_t color);
+  virtual void drawFastVLine(uint8_t x, uint8_t y, uint8_t h, uint8_t color) = 0;
+  void drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
+
+  void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
     // Optional and probably not necessary to change
-    drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color),
-    drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+  void drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
 
   // These exist only with Adafruit_GFX (no subclass overrides)
   void

@@ -158,6 +158,7 @@ public:
   static uint8_t epoch;
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
+  bool mute_state_pending;
 
   uint8_t locks_slide_next_lock_utiming[NUM_LOCKS];
 
@@ -168,6 +169,7 @@ public:
     memset(oneshot_mask,0,sizeof(oneshot_mask));
     memset(ignore_notes,0, sizeof(ignore_notes));
     pgm_oneshot = 0;
+    mute_state_pending = false;
   }
 
   void seq(MidiUartParent *uart_);

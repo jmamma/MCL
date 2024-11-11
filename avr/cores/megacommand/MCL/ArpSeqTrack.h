@@ -80,7 +80,7 @@ public:
     SeqTrackBase::reset();
   }
 
-  ALWAYS_INLINE() void seq(MidiUartParent *uart_);
+  ALWAYS_INLINE() void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
   void clear_track();
   void re_sync();
   void set_speed(uint8_t speed_);

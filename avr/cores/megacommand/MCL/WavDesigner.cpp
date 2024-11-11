@@ -84,7 +84,7 @@ bool WavDesigner::render() {
   uint32_t pos = 0;
   bool write_header = false;
 
-  float max_sine_gain = (float)1 / (float)16;
+  float max_sine_gain = 0.0004921259843f; ; //(float)1 / (float)16) / 127;
 
   // Zero crossing detection vars
   bool zero_crossing_found = false;
@@ -110,8 +110,7 @@ bool WavDesigner::render() {
           // pages[i].get_freq() * (float) h, 0);
           if (pages[i].sine_levels[h - 1] != 0) {
             float sine_gain =
-                ((float)pages[i].sine_levels[h - 1] / (float)127) *
-                max_sine_gain;
+                ((float)pages[i].sine_levels[h - 1]) * max_sine_gain;
 
             osc_sample +=
                 sine_osc.get_sample(n, pages[i].get_freq() * (float)h) *
@@ -239,7 +238,7 @@ bool WavDesigner::render() {
 }
 
 bool WavDesigner::send() {
-  return midi_sds.sendWav(WAV_NAME, mixer.enc4.cur, false);
+  return midi_sds.sendWav(WAV_NAME, WAV_NAME, mixer.enc4.cur, false);
 }
 
 WavDesigner wd;

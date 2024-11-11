@@ -120,6 +120,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   load_link_data(seq_track);
   md_seq_track->clear_mutes();
   md_seq_track->set_length(md_seq_track->length);
+  md_seq_track->notes.first_trig = true;
 }
 
 void MDTrack::scale_seq_vol(float scale) {

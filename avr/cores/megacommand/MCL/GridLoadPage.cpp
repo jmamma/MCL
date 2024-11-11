@@ -108,8 +108,6 @@ void GridLoadPage::display() {
 
   const uint64_t mute_mask = 0, slide_mask = 0;
 
-  auto oldfont = oled_display.getFont();
-
   if (show_track_type) {
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
   }
@@ -118,7 +116,6 @@ void GridLoadPage::display() {
     //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
     //                              "STEP", K);
     if (show_offset) {
-      oled_display.setFont();
       oled_display.setCursor(MCLGUI::s_menu_x + 18, 12);
       oled_display.print("DESTINATION");
       trig_mask = 0;
@@ -193,8 +190,6 @@ void GridLoadPage::display() {
     oled_display.print(F("SEQ"));
     */
   }
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 void GridLoadPage::load() {
 
@@ -211,10 +206,8 @@ void GridLoadPage::load() {
       track_select_array[n] = 1;
     }
   }
-  mcl.setPage(GRID_PAGE);
-  trig_interface.off();
-
   grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(), track_select_array, offset);
+  mcl.setPage(GRID_PAGE);
 }
 
 void GridLoadPage::group_select() {

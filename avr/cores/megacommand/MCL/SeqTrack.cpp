@@ -73,6 +73,12 @@ void SeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8
 }
 
 void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
+  uint8_t ccs[midi_cc_array_size];
+  bool send_ccs = false;
+  bool is_midi_model = (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
+  if (is_midi_model) {
+    memset(ccs, 255, sizeof(ccs));
+  }
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
 
@@ -110,7 +116,14 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
       uint8_t param = locks_params[c] - 1;
       switch (active) {
       case MD_TRACK_TYPE:
-        MD.setTrackParam_inline(track_number, param, val);
+        if (is_midi_model) {
+          uint8_t p = param;
+          send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
+          mcl_seq.md_tracks[track_number].process_note_locks(p, val, ccs, true);
+        }
+        else {
+          MD.setTrackParam_inline(track_number, param, val);
+        }
         break;
       default:
         if (param == PARAM_PB) {
@@ -125,6 +138,9 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
         break;
       }
     }
+  }
+  if (is_midi_model) {
+    mcl_seq.md_tracks[track_number].send_notes_ccs(ccs, send_ccs);
   }
 }
 
@@ -230,3 +246,4 @@ bool SeqTrack::conditional(uint8_t condition) {
   }
   return send_note;
 }
+

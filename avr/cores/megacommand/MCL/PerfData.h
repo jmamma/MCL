@@ -12,26 +12,10 @@ static uint8_t get_param_device(uint8_t dest, uint8_t param) {
   if (dest <= NUM_MD_TRACKS) {
     return MD.kit.params[dest - 1][param];
   } else {
-    switch (dest - NUM_MD_TRACKS - 1) {
-    case MD_FX_ECHO - MD_FX_ECHO:
-      return MD.kit.delay[param];
-      break;
-    case MD_FX_DYN - MD_FX_ECHO:
-      return MD.kit.dynamics[param];
-      break;
-
-    case MD_FX_REV - MD_FX_ECHO:
-      return MD.kit.reverb[param];
-      break;
-    case MD_FX_EQ - MD_FX_ECHO:
-      return MD.kit.eq[param];
-      break;
-    }
+    return MD.kit.get_fx_param(dest - NUM_MD_TRACKS - 1 + MD_FX_ECHO, param);
   }
   return 255;
 }
-
-
 
 class PerfParam {
 public:
@@ -197,8 +181,10 @@ public:
   }
 
   void clear_scene(uint8_t scene) {
-    PerfScene *s = &scenes[scene];
-    s->init();
+    if (scene < NUM_SCENES) {
+      PerfScene *s = &scenes[scene];
+      s->init();
+    }
   }
 
   void init_params() {
@@ -207,6 +193,45 @@ public:
     }
   }
 
+  void scene_autofill(uint8_t scene) {
+     oled_display.textbox("FILL SCENES", "");
+     if (scene >= NUM_SCENES) { return; }
+
+     uint8_t *params = (uint8_t *) &MD.kit.params;
+     uint8_t *params_orig = (uint8_t *) &MD.kit.params_orig;
+
+     for (uint8_t track = 0; track < 16; track++) {
+       for (uint8_t param = 0; param < 24; param++) {
+         if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
+           if (add_param(track,param,scene,MD.kit.params[track][param]) != 255) {
+             //Kit encoders go back to normal, for save.
+             uint8_t val = MD.kit.params[track][param];
+             MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr,
+                     true);
+             MD.setTrackParam(track, param, val, nullptr,
+                     false);
+           }
+         }
+
+       }
+     }
+     for (uint8_t n = 0; n < 8 * 4; n++) {
+       uint8_t fx = n / 8;
+       uint8_t param = n - fx * 8;
+       //delay and reverb are flipped in memory
+       if (fx == 0) { fx = 1; }
+       else if (fx == 1) { fx = 0; }
+       uint8_t *fxs = (uint8_t *) &MD.kit.reverb;
+       uint8_t *fxs_orig = (uint8_t *) &MD.kit.fx_orig;
+       if (fxs[n] != fxs_orig[n]) {
+         if (add_param(fx + NUM_MD_TRACKS,param,scene,fxs[n]) != 255) {
+           uint8_t val = fxs[n];
+           MD.setFXParam(param, fxs_orig[n], fx + MD_FX_ECHO, true);
+           MD.setFXParam(param, val, fx + MD_FX_ECHO, false);
+         }
+       }
+     }
+  }
 
 };
 

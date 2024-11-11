@@ -10,8 +10,6 @@ void FXPage::setup() { DEBUG_PRINT_FN(); }
 
 void FXPage::init() {
   DEBUG_PRINT_FN();
-  oled_display.clearDisplay();
-  oled_display.setFont();
   trig_interface.off();
   update_encoders();
   MD.set_key_repeat(0);
@@ -24,26 +22,12 @@ void FXPage::init() {
 void FXPage::update_encoders() {
 
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-    MCLEncoder * enc = encoders[n];
+    MCLEncoder *enc = (MCLEncoder*) encoders[n];
     enc->max = 127;
 
     uint8_t a = ((uint8_t)page_mode * GUI_NUM_ENCODERS) + n;
     uint8_t fx_param = params[a].param;
-
-    switch (params[a].type) {
-    case MD_FX_ECHO:
-      enc->cur = MD.kit.delay[fx_param];
-      break;
-    case MD_FX_REV:
-      enc->cur = MD.kit.reverb[fx_param];
-      break;
-    case MD_FX_EQ:
-      enc->cur = MD.kit.eq[fx_param];
-      break;
-    case MD_FX_DYN:
-      enc->cur = MD.kit.dynamics[fx_param];
-      break;
-    }
+    enc->cur = MD.kit.get_fx_param(params[a].type, fx_param);
     enc->old = enc->cur;
   }
 
@@ -53,14 +37,13 @@ void FXPage::update_encoders() {
 void FXPage::cleanup() {
   //  md_exploit.off();
   MD.set_key_repeat(1);
-  oled_display.clearDisplay();
 }
 
 void FXPage::loop() {
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     uint8_t n = i + (page_mode * GUI_NUM_ENCODERS);
-    MCLEncoder *enc = encoders[i];
+    MCLEncoder *enc = (MCLEncoder *) encoders[i];
     if (enc->hasChanged()) {
       uint8_t fx_param = params[n].param;
       uint8_t fx_type = params[n].type;
@@ -75,7 +58,6 @@ void FXPage::display() {
   char str[4];
   PGM_P param_name = NULL;
   oled_display.clearDisplay();
-  auto oldfont = oled_display.getFont();
 
   uint8_t *icon = R.icons_page->icon_rhytmecho;
   if (page_id == 1) {
@@ -106,8 +88,6 @@ void FXPage::display() {
   }
   info2 = &fx_page_title[0];
   mcl_gui.draw_panel_labels(info1, info2);
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 
 bool FXPage::handleEvent(gui_event_t *event) {
@@ -161,16 +141,6 @@ bool FXPage::handleEvent(gui_event_t *event) {
     toggle_mode:
     page_mode = !(page_mode);
     update_encoders();
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
 

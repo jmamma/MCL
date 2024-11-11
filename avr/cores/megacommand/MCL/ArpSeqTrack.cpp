@@ -19,9 +19,11 @@ void ArpSeqTrack::set_length(uint8_t length_) {
   }
 }
 
-void ArpSeqTrack::seq(MidiUartParent *uart_) {
+void ArpSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
   MidiUartParent *uart_old = uart;
+  MidiUartParent *uart2_old = uart2;
   uart = uart_;
+  uart2 = uart2_;
 
   uint8_t timing_mid = get_timing_mid_inline();
 
@@ -29,12 +31,13 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
   if (mod12_counter == timing_mid) {
     step_count_inc();
     if (active == EXT_ARP_TRACK_TYPE && last_note_on != 255 && step_count == length / 2) {
-        seq_ptc_page.note_off_ext(last_note_on, 0, track_number, uart);
+        seq_ptc_page.note_off_ext(last_note_on, 0, track_number, uart2_);
         last_note_on = 255;
     }
     mod12_counter = 0;
   }
-
+      bool is_midi_model =
+          ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
   if (mod12_counter == 0 && enabled && mute_state == SEQ_MUTE_OFF) {
    if (step_count == 0) {
       if (len > 0) {
@@ -42,10 +45,15 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
         note += oct*12;
         switch (active) {
           case MD_ARP_TRACK_TYPE:
-            seq_ptc_page.trig_md(note, track_number, CTRL_EVENT, fine_tune, uart);
+            if (is_midi_model) {
+              mcl_seq.md_tracks[track_number].send_notes(note, uart2_);
+              seq_ptc_page.record(note, track_number);
+            } else {
+            seq_ptc_page.trig_md(note, track_number, CTRL_EVENT, fine_tune, uart_);
+            }
             break;
           case EXT_ARP_TRACK_TYPE:
-            seq_ptc_page.note_on_ext(note, 127, track_number, uart);
+            seq_ptc_page.note_on_ext(note, 127, track_number, uart2_);
             last_note_on = note;
             break;
         }
@@ -57,6 +65,7 @@ void ArpSeqTrack::seq(MidiUartParent *uart_) {
     }
   }
   uart = uart_old;
+  uart2 = uart2_old;
 }
 
 #define NOTE_RANGE 128
@@ -127,7 +136,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   for (uint8_t i = 0; i < num_of_notes; i++) {
     switch (mode) {
     case ARP_RND:
-      note = sort_up[get_random(num_of_notes)] + 12 * random(range);
+      note = sort_up[get_random(num_of_notes)] + 12 * get_random(range);
       break;
     case ARP_UP2:
     case ARP_UPP:

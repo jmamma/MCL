@@ -61,10 +61,10 @@ bool OscPage::handleEvent(gui_event_t *event) {
 }
 
 void OscPage::calc_largest_sine_peak() {
-  float max_sine_gain = ((float)1 / (float)16);
+  float max_sine_gain = 0.0004921259843f; // ((float)1 / (float)16) / 127;
   largest_sine_peak = 0;
   for (uint8_t f = 0; f < 16; f++) {
-    largest_sine_peak += max_sine_gain * ((float)sine_levels[f] / (float)127);
+    largest_sine_peak += max_sine_gain * (float)sine_levels[f];
   }
 }
 
@@ -122,6 +122,9 @@ void OscPage::loop() {
     trig_interface.off();
   }
 }
+
+const char wave_names[][4] PROGMEM = {"--", "SIN", "TRI", "PUL", "SAW", "USR"};
+
 void OscPage::display() {
   // oled_display.clearDisplay();
   oled_display.fillRect(0, 0, 64, 32, BLACK);
@@ -130,17 +133,13 @@ void OscPage::display() {
 
   uint8_t c = 1;
   uint8_t i = 0;
-  auto oldfont = oled_display.getFont();
-  oled_display.setFont();
   oled_display.setCursor(0, 0);
 
   switch (osc_waveform) {
-  case 0:
-    draw_wav(0);
-    oled_display.print(F("--"));
+  default:
+    sample_number = 0;
     break;
   case SIN_OSC:
-    oled_display.print(F("SIN"));
     draw_levels();
     for (i = 0; i < 16; i++) {
       if (sine_levels[i] > 0) {
@@ -148,30 +147,12 @@ void OscPage::display() {
       }
     }
     scanline_width = 64 / c;
-    draw_wav(SIN_OSC);
-    break;
-  case TRI_OSC:
-    oled_display.print(F("TRI"));
-    sample_number = 0;
-    draw_wav(TRI_OSC);
-    break;
-  case PUL_OSC:
-    oled_display.print(F("PUL"));
-    sample_number = 0;
-    draw_wav(PUL_OSC);
-    break;
-  case SAW_OSC:
-    oled_display.print(F("SAW"));
-    sample_number = 0;
-    draw_wav(SAW_OSC);
-    break;
-  case USR_OSC:
-    oled_display.print(F("USR"));
-    draw_wav(USR_OSC);
-    sample_number = 0;
-    draw_usr();
     break;
   }
+  char buf1[4];
+  draw_wav(osc_waveform);
+  strncpy_P(buf1, wave_names[osc_waveform], 4);
+  oled_display.print(buf1);
   oled_display.print(F(" "));
 
   char str[] = "    ";
@@ -194,8 +175,6 @@ void OscPage::display() {
   }
   //  GUI.put_string_at(0, my_str);
   WavDesignerPage::display();
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 void OscPage::draw_wav(uint8_t wav_type) {
   uint8_t x = 64;
@@ -208,8 +187,8 @@ void OscPage::draw_wav(uint8_t wav_type) {
   SawOsc saw_osc(w, osc_width);
   SineOsc sine_osc(w);
   UsrOsc usr_osc(w);
-  float sample;
-  float max_sine_gain = (float)1 / (float)16;
+  float sample = 0;
+  float max_sine_gain = 0.0004921259843f; // (float)1 / (float)16 / 127;
   uint8_t n = sample_number;
   // for (uint8_t n = 0; n < 128 - x; n++) {
 
@@ -223,9 +202,8 @@ void OscPage::draw_wav(uint8_t wav_type) {
       sample = 0;
       for (uint8_t f = 1; f <= 16; f++) {
         if (sine_levels[f - 1] != 0) {
-          float sine_gain = ((float)sine_levels[f - 1] / (float)127);
-          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f) * sine_gain *
-                    max_sine_gain;
+          float sine_gain = (float)sine_levels[f - 1] * max_sine_gain;
+          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f) * sine_gain;
         }
       }
       if (largest_sine_peak == 0) {
@@ -264,6 +242,10 @@ void OscPage::draw_wav(uint8_t wav_type) {
   if (sample_number > 127 - x) {
     sample_number = 0;
   }
+  if (wav_type == USR_OSC) {
+    draw_usr();
+  }
+
 }
 
 void OscPage::draw_usr() {

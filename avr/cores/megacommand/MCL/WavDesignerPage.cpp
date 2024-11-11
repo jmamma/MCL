@@ -21,7 +21,7 @@ void wavdesign_menu_handler() {
   if (WavDesignerPage::opt_mode == 3) {
     mcl.setPage(WD_MIXER_PAGE);
   } else {
-    mcl.setPage(WD_PAGE_0 + WavDesignerPage::opt_mode);
+    mcl.setPage((PageIndex) (WD_PAGE_0 + WavDesignerPage::opt_mode));
   }
 }
 
@@ -94,10 +94,6 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
         wavdesign_menu_handler();
       }
     }
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
     return true;
   }
   return false;

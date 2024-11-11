@@ -12,7 +12,6 @@
 #endif
 
 // #include "GUI.h"
-
 void MDPattern::clearPattern() {
   numRows = 0;
 
@@ -21,9 +20,8 @@ void MDPattern::clearPattern() {
   memset(&accentPatterns, 0, 8 * 3 * 16 + 1);
 
   memset(paramLocks, -1, sizeof(paramLocks));
-  memset(lockTracks, -1, sizeof(lockTracks));
-  memset(lockParams, -1, sizeof(lockParams));
-  memset(locks, -1, sizeof(locks));
+
+  memset(locks, -1, sizeof(locks) + sizeof(lockTracks) + sizeof(lockParams));
 
   //	accentPattern = 0;
   //	slidePattern = 0;
@@ -40,7 +38,7 @@ void MDPattern::clearPattern() {
   //	kit = 0;
   //	scale = 0;
 }
-
+/*
 void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
   for (uint8_t p = 0; p < 24; p++) {
     int8_t idxn = getLockIdx(track, p);
@@ -49,7 +47,7 @@ void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
     }
   }
 }
-
+*/
 bool MDPattern::fromSysex(MidiClass *midi) {
 
   init();
@@ -281,7 +279,6 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   return 0;
 #endif
 }
-
 void MDPattern::recalculateLockPatterns() {
   for (uint8_t track = 0; track < 16; track++) {
     lockPatterns[track] = 0;
@@ -298,11 +295,10 @@ void MDPattern::recalculateLockPatterns() {
  * Pattern edit functions
  *
  ***************************************************************************/
-
 bool MDPattern::isTrackEmpty(uint8_t track) {
   return ((trigPatterns[track] == 0) && (lockPatterns[track] == 0));
 }
-
+/*
 void MDPattern::clearTrack(uint8_t track) {
   if (track >= 16)
     return;
@@ -325,7 +321,7 @@ void MDPattern::setNote(uint8_t track, uint8_t step, uint8_t pitch) {
   addLock(track, step, 0, pitch);
   setTrig(track, step);
 }
-
+*/
 /***************************************************************************
  *
  * Pattern manipulation functions

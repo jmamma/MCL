@@ -69,6 +69,7 @@ public:
 
   uint8_t port = UART1_PORT;
   MidiUartParent *uart = &MidiUart;
+  MidiUartParent *uart2 = &MidiUart2;
   uint8_t mute_state = SEQ_MUTE_OFF;
 
   bool record_mutes;
@@ -349,6 +350,9 @@ public:
   uint8_t locks_slides_recalc = 255;
   uint16_t locks_slides_idx = 0;
 
+  const uint8_t number_midi_cc = 6 * 2 + 4;
+  const uint8_t midi_cc_array_size = 6 * 2 + 4;
+
   ALWAYS_INLINE() void reset() {
     for (uint8_t n = 0; n < NUM_LOCKS; n++) {
       locks_slide_data[n].init();
@@ -360,6 +364,7 @@ public:
   void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0,
                      int8_t y1);
   void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
+
 };
 
 #endif /* SEQTRACK_H__ */

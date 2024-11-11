@@ -30,12 +30,14 @@
 #define FM_RECVALL 4
 #define FM_SENDALL 5
 
+#define NAME_LENGTH 14
+
 class FileBrowserFileTypes {
   constexpr static uint8_t size = 2;
   char types[size][5];
   uint8_t count = 0;
   public:
-  void add(char *str) {
+  void add(const char *str) {
     if (count < size) {
       strcpy(types[count], str);
       count++;
@@ -140,8 +142,8 @@ public:
   static constexpr uint8_t DIR_TYPE = 1;
 
   bool add_entry(const char *entry, uint8_t type = FILE_TYPE);
-  void get_entry(uint16_t n, const char *entry);
-  void get_entry(uint16_t n, const char *entry, uint8_t &type);
+  void get_entry(uint16_t n, char *entry);
+  void get_entry(uint16_t n, char *entry, uint8_t &type);
 
   void draw_scrollbar(uint8_t x_offset);
   bool create_folder();

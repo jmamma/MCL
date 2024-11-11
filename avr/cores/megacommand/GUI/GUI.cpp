@@ -120,6 +120,7 @@ void GuiClass::display() {
   if (sketch != NULL) {
     page = sketch->currentPage();
     if (page != NULL) {
+      oled_display.setFont();
       page->display();
     }
   }

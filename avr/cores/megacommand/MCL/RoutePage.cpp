@@ -97,7 +97,6 @@ void RoutePage::toggle_routes_batch(bool solo) {
 void RoutePage::display() {
   uint8_t x;
 
-  auto *oldfont = oled_display.getFont();
   oled_display.clearDisplay();
   oled_display.drawBitmap(0, 0, R.icons_page->icon_route, 24, 14, WHITE);
 
@@ -127,8 +126,6 @@ void RoutePage::display() {
   mcl_gui.draw_panel_labels("ROUTE", info_line2);
 
   draw_routes();
-  oled_display.display();
-  oled_display.setFont(oldfont);
 }
 
 bool RoutePage::handleEvent(gui_event_t *event) {
@@ -163,10 +160,6 @@ bool RoutePage::handleEvent(gui_event_t *event) {
   // mcl.setPage(MIXER_PAGE);
   // return true;
   //}
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
-  }
   /*
     if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
         EVENT_PRESSED(event, Buttons.ENCODER2) ||
