@@ -34,7 +34,8 @@ Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.6
        - Then save the Perf Slot, in Grid Y.
 
    Performance Controller AutoFill ( Kit Morph ):
-    - A Perf Controller's assigned left + right scenes can be cleared of paramater locks by holding down the MCL <Encoder Button> and pressing the MC's < Shift > button.
+    - A Perf Controller's assigned left + right scenes can be cleared of paramater locks by holding down the MCL <Encoder Button> and pressing
+      the MC's < Shift > button.
     - A Perf Controller's assigned right scenes can be auto-filled altered Kit parameters by holding down the MCL <Encoder Button>
       and pressing the MC's <Yes / Load> button.
 
