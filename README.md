@@ -20,7 +20,7 @@ The updated repository contains numerous enhancements and fixes.
 
 See https://github.com/jmamma/MCL/releases for firmware binaries, user documentation and upload instructions.
 
-### Compiling MegaCommandLive Firmware
+### Compiling MCL Firmware
 
 See https://github.com/jmamma/MCL/releases for pre-compiled firmware binaries
 
