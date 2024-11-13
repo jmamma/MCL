@@ -1219,6 +1219,12 @@ void ExtSeqTrack::toggle_mute() {
   if (mute_state == SEQ_MUTE_ON) {
     mute_state = SEQ_MUTE_OFF;
   } else {
-    mute_state_pending = true;
+    if (MidiClock.state == 2) {
+      mute_state_pending = true;
+    }
+    else {
+      mute_state = SEQ_MUTE_ON;
+      buffer_notesoff();
+    }
   }
 }
