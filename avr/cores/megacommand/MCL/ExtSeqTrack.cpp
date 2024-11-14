@@ -1216,19 +1216,26 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   mute_state = old_mute_state;
 }
 
+void ExtSeqTrack::mute_on() {
+  if (MidiClock.state == 2) {
+    mute_state_pending = true;
+  } else {
+    mute_state = SEQ_MUTE_ON;
+    buffer_notesoff();
+  }
+}
+
 void ExtSeqTrack::toggle_mute() {
   if (mute_state == SEQ_MUTE_ON) {
     mute_state = SEQ_MUTE_OFF;
   } else {
-    if (MidiClock.state == 2) {
-      mute_state_pending = true;
-    } else {
-      mute_state = SEQ_MUTE_ON;
-      buffer_notesoff();
-    }
+    mute_on();
   }
 }
+
 void ExtSeqTrack::transpose(int8_t offset) {
+    uint8_t old_mute_state = mute_state;
+    mute_on();
     for (int ev_idx = 0; ev_idx < event_count; ++ev_idx) {
       auto &ev = events[ev_idx];
       if (!ev.is_lock) {
@@ -1237,4 +1244,5 @@ void ExtSeqTrack::transpose(int8_t offset) {
         ev.event_value = new_note;
       }
     }
+    mute_state = old_mute_state;
 }
