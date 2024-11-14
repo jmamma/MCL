@@ -158,7 +158,7 @@ public:
   static uint8_t epoch;
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
-  bool mute_state_pending;
+  volatile bool mute_state_pending;
 
   uint8_t locks_slide_next_lock_utiming[NUM_LOCKS];
 

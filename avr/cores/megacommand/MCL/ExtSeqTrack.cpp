@@ -1236,6 +1236,7 @@ void ExtSeqTrack::toggle_mute() {
 void ExtSeqTrack::transpose(int8_t offset) {
     uint8_t old_mute_state = mute_state;
     mute_on();
+    while (mute_state_pending && MidiClock.state == 2);
     for (int ev_idx = 0; ev_idx < event_count; ++ev_idx) {
       auto &ev = events[ev_idx];
       if (!ev.is_lock) {
