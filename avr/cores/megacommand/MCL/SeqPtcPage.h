@@ -85,7 +85,7 @@ public:
 
   void clear_trig_fromext(uint8_t note_num);
 
-  uint8_t get_note_from_machine_pitch(uint8_t pitch);
+  uint8_t get_note_from_machine_pitch(uint8_t track_number, uint8_t pitch);
 
   uint8_t is_md_midi(uint8_t channel);
   virtual void config_encoders();

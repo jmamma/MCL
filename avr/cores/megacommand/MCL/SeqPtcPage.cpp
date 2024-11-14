@@ -92,7 +92,7 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_KEY, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, true);
   if (midi_device == &MD) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
@@ -363,9 +363,12 @@ end:
   return voice;
 }
 
-uint8_t SeqPtcPage::get_note_from_machine_pitch(uint8_t pitch) {
+uint8_t SeqPtcPage::get_note_from_machine_pitch(uint8_t track_number, uint8_t pitch) {
   uint8_t note_num = 255;
-  tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
+  bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  if (is_midi_model) { return pitch; }
+
+  tuning_t const *tuning = MD.getKitModelTuning(track_number);
   pitch -= ptc_param_fine_tune.getValue() - 32;
   if (pitch != 255 && tuning) {
     for (uint8_t i = 0; i < tuning->len; i++) {
@@ -378,6 +381,7 @@ uint8_t SeqPtcPage::get_note_from_machine_pitch(uint8_t pitch) {
     uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
     return note_num + note_offset;
   }
+  return 255;
 }
 
 uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num,

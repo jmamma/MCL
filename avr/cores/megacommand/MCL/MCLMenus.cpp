@@ -106,6 +106,8 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &mcl_cfg.uart1_device,
     // 62
     &mcl_cfg.grid_page_mode,
+    // 63,
+    &opt_transpose,
 };
 
 const menu_function_t menu_target_functions[] PROGMEM = {
@@ -164,6 +166,8 @@ const menu_function_t menu_target_functions[] PROGMEM = {
     mcl_setup,
     // 30
     rename_perf,
+    // 31
+    opt_transpose_track_handler,
 };
 MenuPage<aux_config_page_N> aux_config_page(&config_param1, &config_param6);
 

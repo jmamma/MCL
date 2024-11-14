@@ -138,6 +138,8 @@ public:
   void send_notes_on(MidiUartParent *uart2_ = nullptr);
   void send_notes_off(MidiUartParent *uart2_ = nullptr);
 
+  uint8_t transpose_pitch(uint8_t pitch, int8_t offset);
+  void transpose(int8_t offset);
   void onControlChangeCallback_Midi(uint8_t track_param,uint8_t value);
 };
 

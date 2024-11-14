@@ -37,7 +37,7 @@ void MenuPageBase::gen_menu_device_names() {
   MenuBase *m = get_menu();
   menu_option_t *p =
       (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
-  m->set_custom_options(p);
+  m->set_custom_options(p,0);
 
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
     p->pos = n + 1;
@@ -46,10 +46,43 @@ void MenuPageBase::gen_menu_device_names() {
   }
 }
 
+void MenuPageBase::gen_menu_transpose_names() {
+  MenuBase *m = get_menu();
+  menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * 50);
+  m->set_custom_options(p,1);
+
+  for (int8_t i = -12; i <= 12; ++i) {
+    // Generate both regular and ALL entries in same loop
+    for (uint8_t all = 0; all < 2; ++all) {
+      p->pos = i + (all ? 37 : 12); // 0 transpose at index 12
+
+      uint8_t idx = 0;
+      if (all) {
+        p->name[idx++] = 'A';
+        p->name[idx++] = 'L';
+        p->name[idx++] = 'L';
+        p->name[idx++] = ' ';
+      }
+
+      p->name[idx++] = (i < 0) ? '-' : '+';
+      uint8_t num = abs(i);
+      if (num >= 10) {
+        p->name[idx++] = '1';
+        num -= 10;
+      }
+      p->name[idx++] = '0' + num;
+      p->name[idx] = '\0';
+
+      ++p;
+    }
+  }
+
+}
+
 void MenuPageBase::gen_menu_row_names() {
   MenuBase *m = get_menu();
   menu_option_t *p = (menu_option_t *)R.Allocate(sizeof(menu_option_t) * 128);
-  m->set_custom_options(p);
+  m->set_custom_options(p,0);
   for (uint8_t row_id = 0; row_id < 128; ++row_id) {
     char bank = 'A' + row_id / 16;
     uint8_t i = row_id % 16 + 1;

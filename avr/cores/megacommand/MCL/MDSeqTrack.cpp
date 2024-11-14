@@ -1121,3 +1121,25 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
   }
   memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
 }
+
+uint8_t MDSeqTrack::transpose_pitch(uint8_t pitch, int8_t offset) {
+ uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(track_number,pitch);
+ if (note_num == 255) { return pitch; }
+ int16_t new_note = note_num + offset;
+ new_note = max(0,min(127,new_note));
+ uint8_t new_pitch = seq_ptc_page.get_machine_pitch(track_number, new_note);
+ if (new_pitch == 255) { new_pitch = pitch; }
+ return new_pitch;
+}
+
+void MDSeqTrack::transpose(int8_t offset) {
+ bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+ tuning_t const *tuning = MD.getKitModelTuning(track_number);
+ if (!tuning && !is_midi_model) { return; }
+ for (uint8_t n = 0; n < 64; n++) {
+   uint8_t pitch = get_track_lock_implicit(n, 0);
+   if (pitch == 255) { continue; }
+   set_track_pitch(n, transpose_pitch(pitch, offset));
+ }
+ MD.setTrackParam(track_number,0,transpose_pitch(MD.kit.params[track_number][0], offset), nullptr, true);
+}

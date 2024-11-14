@@ -659,8 +659,7 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
-    }
-    else if (is_generic_midi && count_down <= (track_number + 5)) {
+    } else if (is_generic_midi && count_down <= (track_number + 5)) {
       if (!cache_loaded) {
         load_cache();
         cache_loaded = true;
@@ -679,9 +678,9 @@ void ExtSeqTrack::seq(MidiUartParent *uart_) {
   }
 
   if (mute_state_pending) {
-     mute_state = SEQ_MUTE_ON;
-     mute_state_pending = false;
-     buffer_notesoff();
+    mute_state = SEQ_MUTE_ON;
+    mute_state_pending = false;
+    buffer_notesoff();
   }
 
   if ((is_generic_midi || (!is_generic_midi && count_down == 0)) &&
@@ -1080,7 +1079,9 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
       u = 0;
       start_x = s * timing_mid + u;
       end_x = start_x + w;
-      if (end_x > roll_length) { del_note(0, end_x - roll_length, note_num); }
+      if (end_x > roll_length) {
+        del_note(0, end_x - roll_length, note_num);
+      }
     } else {
       if (end_x < start_x) {
         del_note(0, end_x, note_num);
@@ -1221,10 +1222,19 @@ void ExtSeqTrack::toggle_mute() {
   } else {
     if (MidiClock.state == 2) {
       mute_state_pending = true;
-    }
-    else {
+    } else {
       mute_state = SEQ_MUTE_ON;
       buffer_notesoff();
     }
   }
+}
+void ExtSeqTrack::transpose(int8_t offset) {
+    for (int ev_idx = 0; ev_idx < event_count; ++ev_idx) {
+      auto &ev = events[ev_idx];
+      if (!ev.is_lock) {
+        int16_t note = ev.event_value + offset;
+        uint8_t new_note = min(max(0,note),127);
+        ev.event_value = new_note;
+      }
+    }
 }

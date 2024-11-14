@@ -379,7 +379,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       } else if (tuning) {
       */
       if (tuning || is_midi_model) {
-        uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(pitch);
+        uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(last_md_track,pitch);
         if (is_midi_model) {
           note_num = pitch;
         }

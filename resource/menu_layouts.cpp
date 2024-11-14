@@ -212,6 +212,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"PASTE:",      0, 3,                   3,                   27, NULL_PAGE,  11, 27},
         {"SHIFT:",      0, 5,                   5,                   28, NULL_PAGE,  12, 35},
         {"REVERSE:",    0, 3,                   3,                   29, NULL_PAGE,  13, 27},
+        {"TRAN:",       0, 50,                  51,                  63, NULL_PAGE,  31, 129},
         {"POLYPHONY",   0, 0,                   0,                   0,  POLY_PAGE,  0,  0},
         {"QUANT:",      0, 2,                   2,                   42, NULL_PAGE,  0,  25},
         {"CC REC:",     0, 2,                   2,                   30, NULL_PAGE,  0,  25},

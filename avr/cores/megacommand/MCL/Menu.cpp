@@ -98,7 +98,8 @@ const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
   uint8_t options_offset = get_options_offset(item_n);
   menu_option_t* base = R.menu_options->MENU_OPTIONS;
   if (options_offset >= 128) {
-    base = custom_options;
+    base = custom_options[options_offset - 128];
+    if (base == nullptr) { return nullptr; }
     options_offset = 0;
   }
   for (uint8_t a = 0; a < num_of_options; a++) {

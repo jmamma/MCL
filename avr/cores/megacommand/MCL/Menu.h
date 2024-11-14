@@ -34,18 +34,18 @@ class MenuBase {
 private:
 public:
   uint8_t entry_mask[4];
-  menu_option_t* custom_options;
+  menu_option_t* custom_options[2];
 
   MenuBase() {
     memset(entry_mask, 0xFF, sizeof(entry_mask));
-    custom_options = nullptr;
+    memset(custom_options,0,sizeof(custom_options));
   }
 
   /// use a custom options name lookup table.
   /// the table can be dynamically generated, so it is not limited
   /// to PROGMEM content.
-  void set_custom_options(menu_option_t* p) {
-    custom_options = p;
+  void set_custom_options(menu_option_t* p, uint8_t num) {
+    custom_options[num] = p;
   }
 
   void enable_entry(uint8_t entry_index, bool en);
