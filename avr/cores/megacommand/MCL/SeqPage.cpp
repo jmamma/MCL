@@ -1213,7 +1213,7 @@ void opt_transpose_track_handler() {
     }
   }
 #endif
-  opt_transpose = 12;
+ // opt_transpose = 12;
 }
 
 
