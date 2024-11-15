@@ -558,6 +558,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   };
 
   uint8_t send_masks[NUM_SLOTS] = {0};
+  uint8_t mute_states[NUM_SLOTS];
+  memset(mute_states, 255, sizeof(mute_states));
+
   uint8_t row = 0;
   uint8_t old_grid = proj.get_grid();
 
@@ -583,6 +586,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { select_array[i] = 0; continue; }
 
     proj.select_grid(grid_idx);
+    mute_states[dst] = gdt_dst->seq_track->mute_state;
+    gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
 
       row = grid_page.getRow();
     if (row_array) {
@@ -641,6 +646,13 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   }
   GUI.addTask(&grid_task);
 
+  for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
+    if (mute_states[i] == 255) { continue; }
+    GridDeviceTrack *gdt_dst = get_grid_dev_track(i);
+    if (gdt_dst != nullptr) {
+       gdt_dst->seq_track->mute_state = mute_states[i];
+    }
+  }
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
 
