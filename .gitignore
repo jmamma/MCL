@@ -1,0 +1,44 @@
+# Build directory and artifacts
+*.o
+*.d
+*.elf
+*.hex
+*.bin
+*.uf2
+*.map
+*.a
+
+# Arduino & Pico specific
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Debug files
+*.log
+*.dSYM/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Local configuration files
+*.local
+*.private
+*.env

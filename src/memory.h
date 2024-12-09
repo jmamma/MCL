@@ -1,0 +1,7 @@
+#pragma once
+
+#define RX_BUF_SIZE 0x80UL
+#define TX_BUF_SIZE 0x0C00UL
+#define TX_SEQBUF_SIZE 0x200UL
+
+#define UART1_TX_BUFFER_LEN TX_BUF_SIZE
