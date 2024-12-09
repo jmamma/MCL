@@ -18,7 +18,6 @@ void MidiIDSysexListenerClass::handleByte(uint8_t byte) {}
 void MidiIDSysexListenerClass::end() {
   // MidiUartParent *uart = sysex->uart;
   MidiID *dev = &(sysex->uart->device);
-  uint16_t p = (uint16_t)dev;
   uint8_t i = 4;
 
   DEBUG_PRINTLN(F("MidiID message detected"));
@@ -45,7 +44,7 @@ void MidiIDSysexListenerClass::end() {
 }
 
 void MidiIDSysexListenerClass::setup(MidiClass *_midi) {
-  sysex = &(_midi->midiSysex);
+  sysex = _midi->midiSysex;
   // MidiSysex.addSysexListener(this);
   //  MidiSysex2.addSysexListener(this);
 }

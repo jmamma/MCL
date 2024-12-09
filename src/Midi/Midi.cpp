@@ -5,6 +5,17 @@
 #include "Midi.h"
 #include "MidiClock.h"
 
+void handleIncomingMidi() {
+
+  Midi.processSysex();
+  Midi2.processSysex();
+  MidiUSB.processSysex();
+  Midi.processMidi();
+  Midi2.processMidi();
+  MidiUSB.processMidi();
+
+}
+
 const midi_parse_t midi_parse[] = {{MIDI_NOTE_OFF, midi_wait_byte_2},
                                    {MIDI_NOTE_ON, midi_wait_byte_2},
                                    {MIDI_AFTER_TOUCH, midi_wait_byte_2},
@@ -18,12 +29,11 @@ const midi_parse_t midi_parse[] = {{MIDI_NOTE_OFF, midi_wait_byte_2},
                                    {MIDI_SONG_SELECT, midi_wait_byte_1},
                                    {MIDI_TUNE_REQUEST, midi_wait_status},
                                    {0, midi_ignore_message}};
-
-MidiClass::MidiClass(MidiUartClass *_uart, uint16_t _sysexBufLen,
-                     volatile uint8_t *ptr)
-    : midiSysex(_uart, _sysexBufLen, ptr) {
+MidiClass::MidiClass(MidiUartClass *_uart, MidiSysexClass *_sysex) {
   midiActive = true;
   uart = _uart;
+  midiSysex = _sysex;
+  midiSysex->uart = uart;
   receiveChannel = 0xFF;
   init();
   uart->midi = this;
@@ -35,32 +45,21 @@ void MidiClass::init() {
   in_state = midi_wait_status;
   live_state = midi_wait_status;
 }
-
 void MidiClass::sysexEnd(uint8_t msg_rd) {
-  midiSysex.rd_cur = msg_rd;
-  uint16_t len = midiSysex.get_recordLen();
-  /*
-  DEBUG_CHECK_STACK();
-  DEBUG_PRINTLN("processing");
-  DEBUG_PRINTLN(SP);
-  DEBUG_PRINTLN(msg_rd);
-  DEBUG_PRINTLN(midiSysex.msg_wr);
-  */
-  // DEBUG_PRINTLN(uart_forward->txRb.len - uart_forward->txRb.size());
-  // if (len == 0 || midiSysex.get_ptr() == nullptr) {
-  // DEBUG_PRINTLN("returning"); return; }
+  midiSysex->rd_cur = msg_rd;
+  uint16_t len = midiSysex->get_recordLen();
 
   for (uint8_t n = 0; n < NUM_FORWARD_PORTS; n++) {
-
     MidiUartClass *fwd_uart = uart_forward[n];
     if (fwd_uart &&
-        ((len + 2) < (fwd_uart->txRb.len - fwd_uart->txRb.size()))) {
+        ((len + 2) < (fwd_uart->txRb->len - fwd_uart->txRb->size()))) {
       const uint16_t size = 256;
       uint8_t buf[size];
       uint16_t n = 0;
-      midiSysex.Rb.rd =
-          (uint16_t)midiSysex.get_ptr() - (uint16_t)midiSysex.Rb.ptr;
-      fwd_uart->txRb.put_h_isr(0xF0);
+      volatile uint8_t* sysex_ptr = midiSysex->get_ptr();
+      volatile uint8_t* rb_base = midiSysex->rb->buf;
+      midiSysex->rb->rd = (uint16_t)(sysex_ptr - rb_base);
+      fwd_uart->txRb->put_h_isr(0xF0);
       while (len) {
         if (len > size) {
           n = size;
@@ -69,15 +68,13 @@ void MidiClass::sysexEnd(uint8_t msg_rd) {
           n = len;
           len = 0;
         }
-        midiSysex.Rb.get_h_isr(buf,
-                               n); // we don't worry about the Rb.rd increase,
-                                   // as it wont be used anywhere else
-        fwd_uart->txRb.put_h_isr(buf, n);
+        midiSysex->rb->get_h_isr(buf, n);
+        fwd_uart->txRb->put_h_isr(buf, n);
       }
       fwd_uart->m_putc(0xF7);
     }
   }
-  midiSysex.end();
+  midiSysex->end();
 }
 
 void MidiClass::handleByte(uint8_t byte) {

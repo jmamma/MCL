@@ -1,33 +1,30 @@
 //#include "MCLSeq.h"
 
+#include "Arduino.h"
 #include "MidiClock.h"
 #include "MidiUart.h"
 #include "pico.h"
 
-MidiUartClass::MidiUartClass(uart_inst_t *uart_hw, volatile uint8_t *rx_buf,
-                             uint16_t rx_buf_size, volatile uint8_t *tx_buf,
-                             uint16_t tx_buf_size)
+MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<0> *_rxRb , RingBuffer<0> *_txRb)
     : MidiUartParent() {
-  uart = uart_hw;
+  uart_hw = uart_hw;
   mode = UART_MIDI;
-  rxRb.ptr = rx_buf;
-  rxRb.len = rx_buf_size;
-  txRb.ptr = tx_buf;
-  txRb.len = tx_buf_size;
+  rxRb = _rxRb;
+  txRb = _txRb;
   txRb_sidechannel = nullptr;
   initSerial();
 }
 
 void MidiUartClass::initSerial() {
   // Initialize UART for MIDI
-  uart_init(uart, UART_BAUDRATE);
+  uart_init(uart_hw, UART_BAUDRATE);
 
   // 8 bits, 1 stop bit, no parity - standard MIDI format
-  uart_set_format(uart, 8, 1, UART_PARITY_NONE);
+  uart_set_format(uart_hw, 8, 1, UART_PARITY_NONE);
 
   // Set up and enable RX interrupt
-  irq_set_enabled(uart == uart0 ? UART0_IRQ : UART1_IRQ, true);
-  uart_set_irq_enables(uart, true, false);
+  irq_set_enabled(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ, true);
+  uart_set_irq_enables(uart_hw, true, false);
 
 #ifdef RUNNING_STATUS_OUT
   running_status_enabled = true;
@@ -37,12 +34,12 @@ void MidiUartClass::initSerial() {
 
 void MidiUartClass::set_speed(uint32_t speed_) {
   // Wait for TX buffer to empty before changing speed
-  while (!txRb.isEmpty())
+  while (!txRb->isEmpty())
     ;
   while (!check_empty_tx())
     ;
 
-  uart_set_baudrate(uart, speed_);
+  uart_set_baudrate(uart_hw, speed_);
   speed = speed_;
 }
 
@@ -50,14 +47,16 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
   uint32_t save = save_and_disable_interrupts();
 
   while (!check_empty_tx()) {
+/*
     if (TIMER_CHECK_INT(0)) { // Assuming timer 0 for clock
-      clock++;
+      g_fast_ticks++;
       TIMER_CLEAR_INT(0);
     }
     if (TIMER_CHECK_INT(1)) { // Assuming timer 1 for slowclock
-      slowclock++;
+      g_ms_ticks++;
       TIMER_CLEAR_INT(1);
     }
+*/
   }
 
   sendActiveSenseTimer = sendActiveSenseTimeout;
@@ -92,7 +91,7 @@ void MidiUartClass::realtime_isr(uint8_t c) {
       MidiClock.handleImmediateMidiContinue();
       break;
     }
-    rxRb.put_h_isr(c);
+    rxRb->put_h_isr(c);
   }
 }
 
@@ -118,9 +117,3 @@ extern "C" void uart1_irq_handler() {
     MidiUart2.tx_isr();
   }
 }
-
-// Global instances
-MidiUartClass MidiUart(uart0, midi_rx_buf, RX_BUF_SIZE, midi_tx_buf,
-                       TX_BUF_SIZE);
-MidiUartClass MidiUart2(uart1, midi2_rx_buf, RX_BUF_SIZE, midi2_tx_buf,
-                        TX_BUF_SIZE);

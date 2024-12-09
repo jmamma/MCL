@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "pico.h"
 #include "MCL/MCL.h"
+#include "platform.h"
 
 void setup() {
     // Setup UART0 interrupt

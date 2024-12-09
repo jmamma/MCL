@@ -7,6 +7,8 @@
 
 #include "MidiID.h"
 #include <midi-common.h>
+#include "string.h"
+
 //#define MIDI_VALIDATE
 //#define MIDI_RUNNING_STATUS
 
@@ -195,15 +197,6 @@ public:
 
   void sendString(const char *data) { sendString(data, strlen(data)); }
   void sendString(const char *data, uint16_t cnt);
-
-  void printfString(char *fmt, ...) {
-    va_list lp;
-    va_start(lp, fmt);
-    char buf[128];
-    uint16_t len = vsnprintf(buf, sizeof(buf), fmt, lp);
-    va_end(lp);
-    sendString(buf, len);
-  }
 
 #ifdef HOST_MIDIDUINO
   virtual ~MidiUartParent() {}

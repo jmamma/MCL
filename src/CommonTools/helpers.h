@@ -135,11 +135,19 @@ uint8_t popcount32(const uint32_t bits);
  **/
 
 /** Get the minimum of x and y. **/
+#ifndef MIN
 #define MIN(x, y) ((x) > (y) ? (y) : (x))
+#endif
+
 /** Get the maximum of x and y. **/
+#ifndef MAX
 #define MAX(x, y) ((x) > (y) ? (x) : (y))
+#endif
+
 /** Get the absolute value of x. **/
+#ifndef ABS
 #define ABS(x) ((x) < 0 ? -(x) : (x))
+#endif
 
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #ifndef HOST_MIDIDUINO
@@ -228,9 +236,9 @@ uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 
 #ifdef HOST_MIDIDUINO
 #else
-extern volatile uint16_t clock;
-extern volatile uint16_t slowclock;
-extern volatile uint16_t clock_minutes;
+extern volatile uint16_t g_fast_ticks;
+extern volatile uint16_t g_ms_ticks;
+extern volatile uint16_t g_minutes;
 #endif
 
 
