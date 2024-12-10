@@ -6,6 +6,7 @@
 #include "MidiClock.h"
 #include "pico.h"
 #include "global.h"
+#include "hardware/uart.h"
 
 MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer *_rxRb , RingBuffer *_txRb)
     : MidiUartParent() {
@@ -17,19 +18,41 @@ MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer *_rxRb , RingBuff
 }
 
 void MidiUartClass::initSerial() {
-  // Initialize UART for MIDI
-  uart_init(uart_hw, UART_BAUDRATE);
+  // Initialize GPIO pins for UART
+    DEBUG_FUNC();
 
-  // 8 bits, 1 stop bit, no parity - standard MIDI format
-  uart_set_format(uart_hw, 8, 1, UART_PARITY_NONE);
+    if (uart_hw == uart0) {
+        gpio_set_function(0, GPIO_FUNC_UART); // UART0 TX is GP0
+        gpio_set_function(1, GPIO_FUNC_UART); // UART0 RX is GP1
+    } else {
+        gpio_set_function(4, GPIO_FUNC_UART); // UART1 TX is GP4
+        gpio_set_function(5, GPIO_FUNC_UART); // UART1 RX is GP5
+    }
 
-  // Set up and enable RX interrupt
-  irq_set_enabled(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ, true);
-  uart_set_irq_enables(uart_hw, true, false);
+    // Initialize UART for MIDI
+    uart_init(uart_hw, UART_BAUDRATE);
+
+    // 8 bits, 1 stop bit, no parity - standard MIDI format
+    uart_set_format(uart_hw, 8, 1, UART_PARITY_NONE);
+
+    // Enable FIFOs
+    uart_set_fifo_enabled(uart_hw, true);
+
+    // Clear any pending interrupts
+    //uart_clear_irq_status(uart_hw, UART_UARTRXINTR | UART_UARTTXINTR);
+
+    // Set high priority for UART interrupt
+    irq_set_priority(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ, 0x40);
+
+    // Enable RX interrupt only (TX enabled when needed)
+    uart_set_irq_enables(uart_hw, true, false);
+
+    // Enable UART interrupt globally
+    irq_set_enabled(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ, true);
 
 #ifdef RUNNING_STATUS_OUT
-  running_status_enabled = true;
-  running_status = 0;
+    running_status_enabled = true;
+    running_status = 0;
 #endif
 }
 
@@ -211,6 +234,7 @@ void MidiUartClass::tx_isr() {
   }
 // Interrupt handlers - these need to be set up in main()
 extern "C" void uart0_irq_handler() {
+  DEBUG_FUNC();
   // Handle RX
   if (uart_is_readable(uart0)) {
     MidiUart.rx_isr();
@@ -223,6 +247,7 @@ extern "C" void uart0_irq_handler() {
 }
 
 extern "C" void uart1_irq_handler() {
+  DEBUG_FUNC();
   if (uart_is_readable(uart1)) {
     MidiUart2.rx_isr();
   }

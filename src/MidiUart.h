@@ -4,6 +4,7 @@
 #include "memory.h"
 #include "RingBuffer.h"
 #include <MidiUartParent.h>
+#include "platform.h"
 
 // RP2040 has 2 UARTs
 #define UART_MIDI 0
@@ -83,6 +84,7 @@ public:
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
+    DEBUG_FUNC();
     txRb->put_h_isr(src, size);
     enable_tx_irq();
   }
