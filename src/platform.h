@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+#define DEBUGMODE
+
 #define USE_LOCK()
 #define SET_LOCK() noInterrupts();
 #define CLEAR_LOCK() interrupts();
