@@ -9,8 +9,9 @@
 #include <util/delay.h>
 #endif
 
+#include "platform.h"
 #include "helpers.h"
-
+#include <string.h>
 /**
  * \addtogroup CommonTools
  *
@@ -69,38 +70,6 @@ static char tohex(uint8_t i) {
   } else {
     return i - 10 + 'a';
   }
-}
-
-/** Copy cnt bytes from src to dst, and fill up with spaces. **/
-void m_strncpy_fill(void *dst, const char *src, uint16_t cnt) {
-  while (cnt && *src) {
-    *((uint8_t *)dst++) = *((uint8_t *)src++);
-    cnt--;
-  }
-  while (cnt > 1) {
-    cnt--;
-    *((uint8_t *)dst++) = ' ';
-  }
-  if (cnt > 0)
-    *((uint8_t *)dst++) = 0;
-}
-
-/** Copy cnt bytes from program space src to dst, and fill up with spaces. **/
-void m_strncpy_p_fill(void *dst, PGM_P src, uint16_t cnt) {
-  while (cnt) {
-    char byte = pgm_read_byte(src);
-    if (byte == 0)
-      break;
-    *((uint8_t *)dst++) = byte;
-    src++;
-    cnt--;
-  }
-  while (cnt > 1) {
-    *((uint8_t *)dst++) = ' ';
-    cnt--;
-  }
-  if (cnt > 0)
-    *((uint8_t *)dst++) = 0;
 }
 
 /** Convert the string to UPPERCASE. **/
@@ -177,15 +146,15 @@ uint16_t read_slowclock(void) {
 }
 
 #else
-volatile uint16_t slowclock = 0;
-volatile uint16_t clock = 0;
+volatile uint16_t g_fast_ticks = 0;
+volatile uint16_t g_ms_ticks = 0;
 volatile uint16_t clock_minutes = 0;
 
 /** Embedded version of read_clock, return the fast clock counter. **/
 uint16_t read_clock(void) {
   USE_LOCK();
   SET_LOCK();
-  uint16_t ret = clock;
+  uint16_t ret = g_fast_ticks;
   CLEAR_LOCK();
   return ret;
 }
@@ -194,7 +163,7 @@ uint16_t read_clock(void) {
 uint16_t read_slowclock(void) {
   USE_LOCK();
   SET_LOCK();
-  uint16_t ret = slowclock;
+  uint16_t ret = g_ms_ticks;
   CLEAR_LOCK();
   return ret;
 }

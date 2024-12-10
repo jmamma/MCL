@@ -3,32 +3,26 @@
 //#include "WProgram.h"
 
 #include "Midi.h"
+#include "MidiUart.h"
+#include "MidiSysex.h"
 #include "MidiClock.h"
 
-void handleIncomingMidi() {
+const midi_parse_t midi_parse[] = {
+    {MIDI_NOTE_OFF, midi_wait_byte_2},
+    {MIDI_NOTE_ON, midi_wait_byte_2},
+    {MIDI_AFTER_TOUCH, midi_wait_byte_2},
+    {MIDI_CONTROL_CHANGE, midi_wait_byte_2},
+    {MIDI_PROGRAM_CHANGE, midi_wait_byte_1},
+    {MIDI_CHANNEL_PRESSURE, midi_wait_byte_1},
+    {MIDI_PITCH_WHEEL, midi_wait_byte_2},
+    /* special handling for SYSEX */
+    {MIDI_MTC_QUARTER_FRAME, midi_wait_byte_1},
+    {MIDI_SONG_POSITION_PTR, midi_wait_byte_2},
+    {MIDI_SONG_SELECT, midi_wait_byte_1},
+    {MIDI_TUNE_REQUEST, midi_wait_status},
+    {0, midi_ignore_message}
+};
 
-  Midi.processSysex();
-  Midi2.processSysex();
-  MidiUSB.processSysex();
-  Midi.processMidi();
-  Midi2.processMidi();
-  MidiUSB.processMidi();
-
-}
-
-const midi_parse_t midi_parse[] = {{MIDI_NOTE_OFF, midi_wait_byte_2},
-                                   {MIDI_NOTE_ON, midi_wait_byte_2},
-                                   {MIDI_AFTER_TOUCH, midi_wait_byte_2},
-                                   {MIDI_CONTROL_CHANGE, midi_wait_byte_2},
-                                   {MIDI_PROGRAM_CHANGE, midi_wait_byte_1},
-                                   {MIDI_CHANNEL_PRESSURE, midi_wait_byte_1},
-                                   {MIDI_PITCH_WHEEL, midi_wait_byte_2},
-                                   /* special handling for SYSEX */
-                                   {MIDI_MTC_QUARTER_FRAME, midi_wait_byte_1},
-                                   {MIDI_SONG_POSITION_PTR, midi_wait_byte_2},
-                                   {MIDI_SONG_SELECT, midi_wait_byte_1},
-                                   {MIDI_TUNE_REQUEST, midi_wait_status},
-                                   {0, midi_ignore_message}};
 MidiClass::MidiClass(MidiUartClass *_uart, MidiSysexClass *_sysex) {
   midiActive = true;
   uart = _uart;
@@ -45,6 +39,20 @@ void MidiClass::init() {
   in_state = midi_wait_status;
   live_state = midi_wait_status;
 }
+
+void MidiClass::processSysex() {
+    while (midiSysex->avail()) {
+        sysexEnd(midiSysex->msg_rd);
+        midiSysex->get_next_msg();
+    }
+}
+
+void MidiClass::processMidi() {
+    while (((MidiUartParent*)uart)->avail()) {
+        handleByte(((MidiUartParent*)uart)->m_getc());
+    }
+}
+
 void MidiClass::sysexEnd(uint8_t msg_rd) {
   midiSysex->rd_cur = msg_rd;
   uint16_t len = midiSysex->get_recordLen();
@@ -80,13 +88,7 @@ void MidiClass::sysexEnd(uint8_t msg_rd) {
 void MidiClass::handleByte(uint8_t byte) {
 again:
   if (MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
-
-    //    if (MidiClock.mode == MidiClock.EXTERNAL_MIDI) {
     switch (byte) {
-      //  case MIDI_CLOCK:
-      //			MidiClock.handleClock();
-      //			break;
-
     case MIDI_START:
       MidiClock.handleMidiStart();
       break;
@@ -114,6 +116,7 @@ again:
       /* ignore */
     }
     break;
+
   case midi_wait_status: {
     if (MIDI_IS_STATUS_BYTE(byte)) {
       last_status = byte;
@@ -156,8 +159,7 @@ again:
 
     msg[in_msg_len++] = byte;
     if (midi_parse[callback].midi_status == MIDI_NOTE_ON && msg[2] == 0) {
-      callback =
-          0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
+      callback = 0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
     }
 
     uint8_t buf[3];
@@ -175,16 +177,6 @@ again:
 
     if (callback < 7) {
       midiCallbacks[callback].call(msg);
-#if 0
-			Vector<midi_callback_func_t, 4> *vec = midiCallbackFunctions + callback;
-			for (int i = 0; i < vec->size; i++) {
-				MidiUart.printfString("callback %b, vec %b", callback, i);
-				if (vec->arr[i] != NULL) {
-					MidiUart.printfString("not empty");
-					(vec->arr[i])(msg);
-				}
-			}
-#endif
     } else if (last_status == MIDI_SONG_POSITION_PTR) {
 #ifndef HOST_MIDIDUINO
       MidiClock.handleSongPositionPtr(msg);

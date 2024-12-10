@@ -1,11 +1,13 @@
 //#include "MCLSeq.h"
 
 #include "Arduino.h"
-#include "MidiClock.h"
 #include "MidiUart.h"
+#include "Midi.h"
+#include "MidiClock.h"
 #include "pico.h"
+#include "global.h"
 
-MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<0> *_rxRb , RingBuffer<0> *_txRb)
+MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer *_rxRb , RingBuffer *_txRb)
     : MidiUartParent() {
   uart_hw = uart_hw;
   mode = UART_MIDI;
@@ -94,6 +96,7 @@ void MidiUartClass::realtime_isr(uint8_t c) {
     rxRb->put_h_isr(c);
   }
 }
+
 
 // Interrupt handlers - these need to be set up in main()
 extern "C" void uart0_irq_handler() {

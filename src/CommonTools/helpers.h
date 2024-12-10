@@ -4,6 +4,7 @@
 
 #include <inttypes.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 
@@ -181,21 +182,12 @@ uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
 	/** Clear the "lock" by restoring the interrupt status. **/
 #define CLEAR_LOCK() SREG = _irqlock_tmp
 #else
-
-	/** On the host, use empty routines to store interrupt status. **/
-#define USE_LOCK()   
-#define SET_LOCK()   
-#define CLEAR_LOCK()
-	
 #endif
 
 #ifdef AVR
 #include <avr/pgmspace.h>
-#else
-	/** Host-side empty definitions for access to program space. **/
-#define PGM_P const char *
-#define pgm_read_byte(a) (uint8_t)((*a))
 #endif
+	/** Host-side empty definitions for access to program space. **/
 
 	/** @} **/
 
@@ -218,8 +210,6 @@ uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
  * @{
  **/
 	
-void m_strncpy_fill(void *dst, const char *src, uint16_t cnt);
-void m_strncpy_p_fill(void *dst, PGM_P src, uint16_t cnt);
 void m_toupper(char* str);
 void m_trim_space(char* str);
 
@@ -234,12 +224,9 @@ extern uint16_t read_clock(void);
 extern uint16_t read_slowclock(void);
 uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 
-#ifdef HOST_MIDIDUINO
-#else
 extern volatile uint16_t g_fast_ticks;
 extern volatile uint16_t g_ms_ticks;
 extern volatile uint16_t g_minutes;
-#endif
 
 
 /** @} **/

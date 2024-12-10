@@ -1,10 +1,10 @@
 /*c Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef MIDISYSEX_H__
-#define MIDISYSEX_H__
+#pragma once
 
-#include "MidiUart.h"
 #include <inttypes.h>
+#include "RingBuffer.h"
+#include "memory.h"
 
 class MidiSysexClass;
 
@@ -21,28 +21,21 @@ class MidiSysexClass;
  **/
 
 class MidiSysexListenerClass {
-  /**
-   * \addtogroup midi_sysex
-   *
-   * @{
-   **/
-
 public:
   uint8_t ids[3];
-  MidiSysexClass *sysex;
+  MidiSysexClass* sysex;
   uint8_t msgType;
   uint8_t msg_rd;
 
-  MidiSysexListenerClass(MidiSysexClass *_sysex = NULL) {
+  MidiSysexListenerClass(MidiSysexClass* _sysex = NULL) {
     sysex = _sysex;
     ids[0] = 0;
     ids[1] = 0;
     ids[2] = 0;
     msgType = 255;
     msg_rd = 255;
-  };
-  /* Point MidiSysexClass to the last sysex message matching this listener's
-   * message ids */
+  }
+
   virtual void start() {}
   virtual void end() {}
   virtual void end_immediate() {}
@@ -50,19 +43,16 @@ public:
 #ifdef HOST_MIDIDUINO
   virtual ~MidiSysexListenerClass() {}
 #endif
-
-  /* @} */
 };
 
 #define NUM_SYSEX_SLAVES 5
-
 #define NUM_SYSEX_MSGS 24
 
 class MidiSysexLedger {
 public:
   uint8_t state : 2;
   uint16_t recordLen : 14; // 16383 max record length
-  volatile unsigned char *ptr;
+  volatile uint8_t* ptr;
 };
 
 #define SYSEX_STATE_NULL 0
@@ -70,12 +60,6 @@ public:
 #define SYSEX_STATE_FIN 2
 
 class MidiSysexClass {
-  /**
-   * \addtogroup midi_sysex
-   *
-   * @{
-   **/
-
 protected:
   bool recording;
   uint8_t recvIds[3];
@@ -85,18 +69,18 @@ public:
   volatile uint8_t msg_wr;
   volatile uint8_t msg_rd;
 
-  volatile RingBuffer<0> *rb;
+  RingBuffer* rb;
 
-  volatile uint8_t *sysex_highmem_buf;
+  volatile uint8_t* sysex_highmem_buf;
   uint16_t sysex_bufsize;
-  MidiUartParent *uart;
+  MidiUartParent* uart;
 
   MidiSysexLedger ledger[NUM_SYSEX_MSGS];
   volatile uint8_t rd_cur;
 
-  MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
+  MidiSysexListenerClass* listeners[NUM_SYSEX_SLAVES];
 
-  MidiSysexClass(MidiUartParent *_uart, RingBuffer<0> *_rb) {
+  MidiSysexClass(MidiUartParent* _uart, RingBuffer* _rb) {
     uart = _uart;
     recording = false;
     sysexLongId = false;
@@ -106,11 +90,13 @@ public:
     msg_rd = 0;
     rb = _rb;
   }
+
   uint16_t get_recordLen() { return ledger[rd_cur].recordLen; }
-  volatile uint8_t *get_ptr() { return ledger[rd_cur].ptr; }
+  volatile uint8_t* get_ptr() { return ledger[rd_cur].ptr; }
 
   bool avail() {
-    return ((msg_wr != msg_rd) && ledger[msg_rd].state == SYSEX_STATE_FIN &&
+    return ((msg_wr != msg_rd) && 
+            ledger[msg_rd].state == SYSEX_STATE_FIN && 
             ledger[msg_rd].recordLen != 0);
   }
 
@@ -132,42 +118,36 @@ public:
   void startRecord() {
     recording = true;
     ledger[msg_wr].recordLen = 0;
-    ledger[msg_wr].ptr = (rb->buf + rb->wr);
+    ledger[msg_wr].ptr = rb->buf + rb->wr;
     ledger[msg_wr].state = SYSEX_STATE_REC;
   }
 
   void stopRecord() {
     recording = false;
     ledger[msg_wr].state = SYSEX_STATE_FIN;
-    if (is_full()) {
-      // DEBUG_PRINTLN("WRITE FULL!!!!");
-    }
-    // DEBUG_PRINTLN("record fin");
-    // DEBUG_PRINTLN(ledger[msg_wr].recordLen);
     msg_wr++;
-
     if (msg_wr == NUM_SYSEX_MSGS) {
       msg_wr = 0;
     }
   }
 
   void putByte(uint16_t n, uint8_t c) {
-    uint16_t r = (uint16_t)((uint8_t *)ledger[rd_cur].ptr - rb->buf);
-
+    uint16_t r = (uint16_t)((uint8_t*)ledger[rd_cur].ptr - rb->buf);
     if (r + n > rb->len - 1) {
       n = n - rb->len;
     }
-    volatile uint8_t *dst = ledger[rd_cur].ptr + n;
+    volatile uint8_t* dst = ledger[rd_cur].ptr + n;
     put_bank1(dst, c);
   }
+
   void putByte(uint8_t c) { rb->put_h_isr(c); }
 
   uint8_t getByte(uint16_t n) {
-    uint16_t r = (uint16_t)((uint8_t *)ledger[rd_cur].ptr - rb->buf);
+    uint16_t r = (uint16_t)((uint8_t*)ledger[rd_cur].ptr - rb->buf);
     if (r + n > rb->len - 1) {
       n = n - rb->len;
     }
-    volatile uint8_t *src = ledger[rd_cur].ptr + n;
+    volatile uint8_t* src = ledger[rd_cur].ptr + n;
     return get_bank1(src);
   }
 
@@ -180,7 +160,8 @@ public:
     for (uint8_t i = 0; i < NUM_SYSEX_SLAVES; i++)
       listeners[i] = NULL;
   }
-  bool addSysexListener(MidiSysexListenerClass *listener) {
+
+  bool addSysexListener(MidiSysexListenerClass* listener) {
     for (uint8_t i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (listeners[i] == listener) {
         return true;
@@ -193,20 +174,23 @@ public:
     }
     return false;
   }
-  void removeSysexListener(MidiSysexListenerClass *listener) {
+
+  void removeSysexListener(MidiSysexListenerClass* listener) {
     for (uint8_t i = 0; i < NUM_SYSEX_SLAVES; i++) {
       if (listeners[i] == listener)
         listeners[i] = NULL;
     }
   }
-  bool isListenerActive(MidiSysexListenerClass *listener) {
+
+  bool isListenerActive(MidiSysexListenerClass* listener) {
     if (listener == NULL)
       return false;
     /* catch all */
     if (listener->ids[0] == 0xFF)
       return true;
     if (sysexLongId) {
-      if (recvIds[0] == listener->ids[0] && recvIds[1] == listener->ids[1] &&
+      if (recvIds[0] == listener->ids[0] && 
+          recvIds[1] == listener->ids[1] && 
           recvIds[2] == listener->ids[2])
         return true;
     } else {
@@ -245,20 +229,7 @@ public:
 
   void handleByte(uint8_t byte) {
     if (recording) {
-      // if (ledger[msg_rd].state == SYSEX_STATE_FIN && ledger[msg_rd].ptr ==
-      // rb->ptr + rb->wr) { abort(); return; }
-      // memset(&ledger[msg_rd],0,sizeof(MidiSysexLedger));
-      // get_next_msg();
       recordByte(byte);
     }
   }
-
-  /* @} */
 };
-
-extern MidiSysexClass MidiSysex;
-extern MidiSysexClass MidiSysex2;
-
-/* @} @} */
-
-#endif /* MIDISYSEX_H__ */

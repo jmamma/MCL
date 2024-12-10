@@ -4,7 +4,7 @@
 
 #include <inttypes.h>
 #include "helpers.h"
-
+#include "platform.h"
 /**
  * Templated class that holds an array of N pointers to callback
  * objects of class C, with a callback function of type M.

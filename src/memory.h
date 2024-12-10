@@ -1,12 +1,20 @@
 #pragma once
 #include "core.h"
 #include "string.h"
+#include "platform.h"
 
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
 #define TX_SEQBUF_SIZE 0x200UL
 
+#define UART1_RX_BUFFER_LEN RX_BUF_SIZE
 #define UART1_TX_BUFFER_LEN TX_BUF_SIZE
+
+#define UART2_RX_BUFFER_LEN RX_BUF_SIZE
+#define UART2_TX_BUFFER_LEN TX_BUF_SIZE
+
+#define SYSEX1_DATA_LEN 0x1830UL //6KB
+#define SYSEX2_DATA_LEN 0x1830UL //6KB
 
 #define NUM_CLOCK_CALLBACKS 4
 

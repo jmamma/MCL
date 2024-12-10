@@ -37,7 +37,7 @@ void MidiClockClass::init() {
   div96th_counter = 0;
   div32th_counter = 0;
   div16th_counter = 0;
-  clock_last_time = clock;
+  clock_last_time = g_fast_ticks;
   mod12_counter = 0;
   mod6_counter = inmod6_counter = 0;
   bar_counter = 1;

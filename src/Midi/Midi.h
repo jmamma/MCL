@@ -3,13 +3,11 @@
 #pragma once
 
 #include <stdlib.h>
-
 #include <inttypes.h>
-
-// #include "MidiSDS.h"
 #include "Callback.h"
 #include "Vector.h"
 
+// Forward declarations
 class MidiUartParent;
 class MidiUartClass;
 class MidiSysexClass;
@@ -84,18 +82,8 @@ public:
 
   void init();
 
-  void processSysex() {
-    while (midiSysex->avail()) {
-      sysexEnd(midiSysex->msg_rd);
-      midiSysex->get_next_msg();
-    }
-  }
-
-  void processMidi() {
-    while (((MidiUartParent*)uart)->avail()) {
-      handleByte(((MidiUartParent*)uart)->m_getc());
-    }
-  }
+  void processSysex();
+  void processMidi();
 
   void sysexEnd(uint8_t msg_rd);
   void handleByte(uint8_t c);
@@ -205,10 +193,3 @@ public:
 };
 
 extern void handleIncomingMidi();
-
-extern MidiClass Midi;
-extern MidiClass Midi2;
-extern MidiClass MidiUSB;
-
-
-
