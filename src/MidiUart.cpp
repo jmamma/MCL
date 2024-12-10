@@ -14,7 +14,6 @@ MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer *_rxRb , RingBuff
   rxRb = _rxRb;
   txRb = _txRb;
   txRb_sidechannel = nullptr;
-  initSerial();
 }
 
 void MidiUartClass::initSerial() {

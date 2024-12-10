@@ -11,6 +11,9 @@ void setup() {
     irq_set_exclusive_handler(UART0_IRQ, uart0_irq_handler);
     // Setup UART1 interrupt
     irq_set_exclusive_handler(UART1_IRQ, uart1_irq_handler);
+
+    MidiUart.initSerial();
+    MidiUart2.initSerial();
 }
 
 void loop() {
