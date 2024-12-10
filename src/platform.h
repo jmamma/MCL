@@ -17,12 +17,16 @@
 #define pgm_read_byte_near(x) (*(x))
 #endif
 
+#define SERIAL_SPEED 115200
+
 #ifdef DEBUGMODE
   // For ARM, we can use Serial for debug output
+  #define DEBUG_INIT() Serial.begin(SERIAL_SPEED);
   #define DEBUG_PRINT(x) Serial.print(x)
   #define DEBUG_PRINTLN(x) Serial.println(x)
 #else
   // If debug mode is off, these become no-ops
+  #define DEBUG_INIT()
   #define DEBUG_PRINT(x)
   #define DEBUG_PRINTLN(x)
 #endif
