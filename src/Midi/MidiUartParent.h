@@ -8,7 +8,7 @@
 #include "MidiID.h"
 #include <midi-common.h>
 #include "string.h"
-
+#include "Midi.h"
 //#define MIDI_VALIDATE
 //#define MIDI_RUNNING_STATUS
 
@@ -24,7 +24,6 @@
  * @{
  **/
 
-class MidiClass;
 
 class MidiUartParent {
   /**

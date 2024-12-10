@@ -53,6 +53,12 @@ MidiClass Midi2(&MidiUart2, &MidiSysex2);
 
 MidiIDSysexListenerClass MidiIDSysexListener;
 
+volatile uint8_t MidiUartParent::handle_midi_lock = 0;
+
+volatile uint16_t g_fast_ticks = 0;
+volatile uint16_t g_ms_ticks = 0;
+volatile uint16_t clock_minutes = 0;
+
 void handleIncomingMidi() {
   Midi.processSysex();
   Midi2.processSysex();

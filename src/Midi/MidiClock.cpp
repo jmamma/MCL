@@ -5,6 +5,7 @@
 #include "MidiUartParent.h"
 #include "helpers.h"
 #include "midi-common.h"
+#include "global.h"
 
 // #include "MidiUart.h"
 

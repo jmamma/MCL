@@ -4,7 +4,6 @@
 #include "memory.h"
 #include "RingBuffer.h"
 #include <MidiUartParent.h>
-#include "Midi.h"  // Now safe to include
 
 // RP2040 has 2 UARTs
 #define UART_MIDI 0
@@ -64,120 +63,10 @@ public:
 
   MidiUartClass(uart_inst_t *uart_hw, RingBuffer *_rxRb = nullptr,
                 RingBuffer *_txRb = nullptr);
-  ALWAYS_INLINE() void rx_isr() {
-    while (uart_is_readable(uart_hw)) {
-      uint8_t c = read_char();
-      if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-        realtime_isr(c);
-        continue;
-      }
 
-      switch (midi->live_state) {
-      case midi_wait_sysex:
-        if (MIDI_IS_STATUS_BYTE(c)) {
-          if (c != MIDI_SYSEX_END) {
-            midi->midiSysex->abort();
-            rxRb->put_h_isr(c);
-          } else {
-            midi->midiSysex->end_immediate();
-          }
-          midi->live_state = midi_wait_status;
-        } else {
-          midi->midiSysex->handleByte(c);
-        }
-        break;
-
-      case midi_wait_status:
-        if (c == MIDI_SYSEX_START) {
-          midi->live_state = midi_wait_sysex;
-          midi->midiSysex->reset();
-          break;
-        }
-        [[fallthrough]];
-      default:
-        rxRb->put_h_isr(c);
-        break;
-      }
-    }
-  }
-
-  ALWAYS_INLINE() void tx_isr() {
-#ifdef RUNNING_STATUS_OUT
-    bool rs = 1;
-  again:
-#endif
-    if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
-      if (!txRb_sidechannel->isEmpty()) {
-        uint8_t c = txRb_sidechannel->get();
-#ifdef RUNNING_STATUS_OUT
-        rs = write_char(c);
-#else
-        write_char(c);
-#endif
-      }
-      if (txRb_sidechannel->isEmpty()) {
-        txRb_sidechannel = nullptr;
-      }
-    } else if (!txRb->isEmpty()) {
-      uint8_t c = txRb->get();
-#ifdef RUNNING_STATUS_OUT
-      rs = write_char(c);
-#else
-      write_char(c);
-#endif
-
-      if ((in_message_tx > 0) && (c < 128)) {
-        in_message_tx--;
-      }
-      if (c < 0xF0) {
-        switch (c & 0xF0) {
-        case MIDI_CHANNEL_PRESSURE:
-        case MIDI_PROGRAM_CHANGE:
-        case MIDI_MTC_QUARTER_FRAME:
-        case MIDI_SONG_SELECT:
-#ifdef RUNNING_STATUS_OUT
-          running_status = 0;
-#endif
-          in_message_tx = 1;
-          break;
-        case MIDI_NOTE_OFF:
-        case MIDI_NOTE_ON:
-        case MIDI_AFTER_TOUCH:
-        case MIDI_CONTROL_CHANGE:
-        case MIDI_PITCH_WHEEL:
-        case MIDI_SONG_POSITION_PTR:
-          in_message_tx = 2;
-          break;
-        }
-      } else {
-        switch (c) {
-        case MIDI_SYSEX_START:
-          in_message_tx = -1;
-#ifdef RUNNING_STATUS_OUT
-          running_status = 0;
-#endif
-          break;
-        case MIDI_SYSEX_END:
-          in_message_tx = 0;
-#ifdef RUNNING_STATUS_OUT
-          running_status = 0;
-#endif
-          break;
-        }
-      }
-    } else {
-      disable_tx_irq();
-    }
-#ifdef RUNNING_STATUS_OUT
-    if (!rs) {
-      goto again;
-    }
-#endif
-    if (txRb->isEmpty() && (txRb_sidechannel == nullptr)) {
-      disable_tx_irq();
-    }
-  }
-
+  ALWAYS_INLINE() void realtime_isr(uint8_t c);
+  ALWAYS_INLINE() void rx_isr();
+  ALWAYS_INLINE() void tx_isr();
 
   // Basic MIDI UART operations
   ALWAYS_INLINE() bool avail() { return !rxRb->isEmpty(); }
@@ -187,7 +76,6 @@ public:
   void m_putc_immediate(uint8_t c);
 
   // Interrupt handlers
-  ALWAYS_INLINE() void realtime_isr(uint8_t c);
 
   // MIDI message handling
   ALWAYS_INLINE() void m_recv(uint8_t *src, uint16_t size) {

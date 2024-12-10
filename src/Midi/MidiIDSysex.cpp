@@ -2,6 +2,10 @@
 
 #include "MidiIDSysex.h"
 #include "helpers.h"
+#include "global.h"
+#include "MidiID.h"
+#include "Midi.h"
+#include "MidiUartParent.h"
 
 void MidiIDSysexListenerClass::start() {
 

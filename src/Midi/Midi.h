@@ -192,4 +192,3 @@ public:
   /* @} */
 };
 
-extern void handleIncomingMidi();

@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include "RingBuffer.h"
 #include "memory.h"
-
+class MidiUartParent;
 class MidiSysexClass;
 
 /**

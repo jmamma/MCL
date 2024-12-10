@@ -146,9 +146,6 @@ uint16_t read_slowclock(void) {
 }
 
 #else
-volatile uint16_t g_fast_ticks = 0;
-volatile uint16_t g_ms_ticks = 0;
-volatile uint16_t clock_minutes = 0;
 
 /** Embedded version of read_clock, return the fast clock counter. **/
 uint16_t read_clock(void) {

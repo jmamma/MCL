@@ -4,6 +4,7 @@
 #include "MCL/MCL.h"
 #include "platform.h"
 #include "global.h"
+#include "MidiUart.h"
 
 void setup() {
     // Setup UART0 interrupt
