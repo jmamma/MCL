@@ -25,9 +25,8 @@
   // For ARM, we can use Serial for debug output
   #define DEBUG_INIT() Serial.begin(SERIAL_SPEED);
   #define DEBUG_PRINT(x) Serial.print(x)
-  #define DEBUG_PRINTLN(x) Serial.println(x)
-  #define DEBUG_FUNC(fmt) do { Serial.print(__func__); Serial.print(": "); Serial.println(fmt); } while(0)
-
+  #define DEBUG_PRINTLN(x) do { Serial.println(x); Serial.flush(); } while(0)
+  #define DEBUG_FUNC(fmt) do { Serial.print(__func__); Serial.print(": "); Serial.println(fmt); Serial.flush(); } while(0)
 #else
   // If debug mode is off, these become no-ops
   #define DEBUG_INIT()

@@ -23,6 +23,19 @@ void MIDITest::setup() {
   DEBUG_PRINTLN("Test counters reset");
 }
 
+void MIDITest::cleanup() {
+  Midi2.removeOnNoteOnCallback(midi_callback,
+                            (midi_callback_ptr_t)&TestCallback::onNoteOn);
+  Midi2.removeOnControlChangeCallback(midi_callback,
+                                   (midi_callback_ptr_t)&TestCallback::onCC);
+  MidiSysex2.removeSysexListener(sysex_listener);
+  DEBUG_PRINTLN("MIDI callbacks registered");
+
+  reset_counters();
+  DEBUG_PRINTLN("Test counters reset");
+}
+
+
 void MIDITest::run_tests() {
   log_test_start(get_name());
 
@@ -65,7 +78,6 @@ bool MIDITest::run_note_test() {
   sleep_ms(10);
 
   DEBUG_PRINTLN("Processing received messages...");
-  handleIncomingMidi();
 
   bool success = messages_received == messages_sent;
   DEBUG_PRINTLN("Messages sent: " + String(messages_sent));
@@ -111,7 +123,7 @@ bool MIDITest::run_sysex_test() {
   messages_sent++;
 
   DEBUG_PRINTLN("Waiting for processing...");
-  sleep_ms(20);
+  delay(100);
 
   DEBUG_PRINTLN("Processing received messages...");
   handleIncomingMidi();

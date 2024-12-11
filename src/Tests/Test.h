@@ -15,6 +15,7 @@ public:
 
   // Core test interface
   virtual void setup() = 0;
+  virtual void cleanup() = 0;
   virtual void run_tests() = 0;
 
   // Utility methods

@@ -13,6 +13,9 @@ const uint FAST_TIMER_SLICE = 5;
 const uint32_t FAST_TIMER_HZ = 5000; // 5kHz
 const uint32_t SLOW_TIMER_HZ = 1000; // 1kHz (1ms)
 
+
+uint16_t minuteclock = 0;
+
 // Shared ISR that handles both timers
 void __not_in_flash_func(pwm_wrap_handler)() {
   // Check which slice triggered the interrupt
@@ -21,6 +24,15 @@ void __not_in_flash_func(pwm_wrap_handler)() {
   if (mask & (1u << SLOW_TIMER_SLICE)) {
     pwm_clear_irq(SLOW_TIMER_SLICE);
     g_ms_ticks++;
+    minuteclock++;
+
+    if (minuteclock == 60000) {
+      minuteclock = 0;
+      g_clock_minutes++;
+    }
+
+    MidiUart.tickActiveSense();
+    MidiUart2.tickActiveSense();
   }
 
   if (mask & (1u << FAST_TIMER_SLICE)) {

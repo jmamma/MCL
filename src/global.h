@@ -19,4 +19,5 @@ extern MidiUartClass seq_tx2;
 extern MidiUartClass seq_tx3;
 extern MidiUartClass seq_tx4;
 
+extern uint16_t g_clock_minutes;
 extern void handleIncomingMidi();

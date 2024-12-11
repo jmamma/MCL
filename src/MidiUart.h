@@ -6,9 +6,6 @@
 #include <MidiUartParent.h>
 #include "platform.h"
 
-// RP2040 has 2 UARTs
-#define UART_MIDI 0
-#define UART_SERIAL 1
 #define UART_BAUDRATE 31250
 
 // Timer check macros for RP2040
@@ -24,25 +21,23 @@ private:
   ALWAYS_INLINE() bool write_char(uint8_t c) {
 #ifdef RUNNING_STATUS_OUT
     if (!running_status_enabled) {
-      uart_write_blocking(uart_hw, &c, 1);
+      uart_get_hw(uart_hw)->dr = c;
       return true;
     }
     if (MIDI_IS_STATUS_BYTE(c) && MIDI_IS_VOICE_STATUS_BYTE(c)) {
       if (c != running_status) {
         running_status = c;
-        uart_write_blocking(uart_hw, &c, 1);
+        uart_get_hw(uart_hw)->dr = c;
         return true;
       }
       return false;
     }
 #endif
-    uart_write_blocking(uart_hw, &c, 1);
+    uart_get_hw(uart_hw)->dr = c;
     return true;
   }
 
-  ALWAYS_INLINE() uint8_t read_char() { return uart_getc(uart_hw); }
-
-  ALWAYS_INLINE() bool check_empty_tx() { return uart_is_writable(uart_hw); }
+  ALWAYS_INLINE() uint8_t read_char() { return uart_get_hw(uart_hw)->dr; }
 
   ALWAYS_INLINE() void enable_tx_irq() {
     uart_set_irq_enables(uart_hw, true, true);
@@ -65,9 +60,9 @@ public:
   MidiUartClass(uart_inst_t *uart_hw, RingBuffer *_rxRb = nullptr,
                 RingBuffer *_txRb = nullptr);
 
-  ALWAYS_INLINE() void realtime_isr(uint8_t c);
-  ALWAYS_INLINE() void rx_isr();
-  ALWAYS_INLINE() void tx_isr();
+  void realtime_isr(uint8_t c);
+  void rx_isr();
+  void tx_isr();
 
   // Basic MIDI UART operations
   ALWAYS_INLINE() bool avail() { return !rxRb->isEmpty(); }
@@ -84,14 +79,22 @@ public:
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    DEBUG_FUNC();
+    uint32_t fr = uart_get_hw(uart_hw)->fr;
     txRb->put_h_isr(src, size);
-    enable_tx_irq();
+    //If uart is writeable, write the first byte.
+    //tx_isr will enable the interrupts if there is more to be sent.
+    if (uart_is_writable(uart_hw)) {
+       uart_get_hw(uart_hw)->icr = UART_UARTICR_TXIC_BITS;
+       tx_isr();
+    }
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
     txRb->put_h_isr(c);
-    enable_tx_irq();
+    if  (uart_is_writable(uart_hw)) {
+      uart_get_hw(uart_hw)->icr = UART_UARTICR_TXIC_BITS;
+      tx_isr();
+    }
   }
 };
 

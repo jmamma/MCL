@@ -10,7 +10,7 @@
 
 MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer *_rxRb , RingBuffer *_txRb)
     : MidiUartParent() {
-  uart_hw = uart_hw;
+  uart_hw = uart_hw_;
   mode = UART_MIDI;
   rxRb = _rxRb;
   txRb = _txRb;
@@ -21,35 +21,31 @@ void MidiUartClass::initSerial() {
   // Initialize GPIO pins for UART
     DEBUG_FUNC();
 
+
     if (uart_hw == uart0) {
         gpio_set_function(0, GPIO_FUNC_UART); // UART0 TX is GP0
         gpio_set_function(1, GPIO_FUNC_UART); // UART0 RX is GP1
+        irq_set_exclusive_handler(UART0_IRQ, uart0_irq_handler);
     } else {
         gpio_set_function(4, GPIO_FUNC_UART); // UART1 TX is GP4
         gpio_set_function(5, GPIO_FUNC_UART); // UART1 RX is GP5
+        irq_set_exclusive_handler(UART1_IRQ, uart1_irq_handler);
     }
-
     // Initialize UART for MIDI
     uart_init(uart_hw, UART_BAUDRATE);
-
     // 8 bits, 1 stop bit, no parity - standard MIDI format
     uart_set_format(uart_hw, 8, 1, UART_PARITY_NONE);
-
-    // Enable FIFOs
-    uart_set_fifo_enabled(uart_hw, true);
-
-    // Clear any pending interrupts
-    //uart_clear_irq_status(uart_hw, UART_UARTRXINTR | UART_UARTTXINTR);
-
+    // Disable FIFOs (realtime messages are 1 byte)
+    uart_set_fifo_enabled(uart_hw, false);
+    // Trigger interrupt clear for RX and TXs
+    uart_get_hw(uart_hw)->icr = UART_UARTICR_RXIC_BITS | UART_UARTICR_TXIC_BITS;
     // Set high priority for UART interrupt
     irq_set_priority(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ, 0x40);
-
-    // Enable RX interrupt only (TX enabled when needed)
-    uart_set_irq_enables(uart_hw, true, false);
-
     // Enable UART interrupt globally
     irq_set_enabled(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ, true);
-
+    // Enable RX interrupt only (TX enabled when needed)
+    uart_set_irq_enables(uart_hw, true, false);
+  // Give it some time to transmit
 #ifdef RUNNING_STATUS_OUT
     running_status_enabled = true;
     running_status = 0;
@@ -60,7 +56,7 @@ void MidiUartClass::set_speed(uint32_t speed_) {
   // Wait for TX buffer to empty before changing speed
   while (!txRb->isEmpty())
     ;
-  while (!check_empty_tx())
+  while (!uart_is_writable(uart_hw))
     ;
 
   uart_set_baudrate(uart_hw, speed_);
@@ -70,8 +66,8 @@ void MidiUartClass::set_speed(uint32_t speed_) {
 void MidiUartClass::m_putc_immediate(uint8_t c) {
   uint32_t save = save_and_disable_interrupts();
 
-  while (!check_empty_tx()) {
-/*
+  while (!uart_is_writable(uart_hw)) {
+  /*
     if (TIMER_CHECK_INT(0)) { // Assuming timer 0 for clock
       g_fast_ticks++;
       TIMER_CLEAR_INT(0);
@@ -120,11 +116,11 @@ void MidiUartClass::realtime_isr(uint8_t c) {
 }
 
 void MidiUartClass::rx_isr() {
-    while (uart_is_readable(uart_hw)) {
-      uint8_t c = read_char();
+     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+    uint8_t c = read_char();
       if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
         realtime_isr(c);
-        continue;
+        return;
       }
 
       switch (midi->live_state) {
@@ -153,9 +149,7 @@ void MidiUartClass::rx_isr() {
         rxRb->put_h_isr(c);
         break;
       }
-    }
   }
-
 void MidiUartClass::tx_isr() {
 #ifdef RUNNING_STATUS_OUT
     bool rs = 1;
@@ -231,28 +225,23 @@ void MidiUartClass::tx_isr() {
     if (txRb->isEmpty() && (txRb_sidechannel == nullptr)) {
       disable_tx_irq();
     }
-  }
-// Interrupt handlers - these need to be set up in main()
+}
 extern "C" void uart0_irq_handler() {
-  DEBUG_FUNC();
-  // Handle RX
-  if (uart_is_readable(uart0)) {
-    MidiUart.rx_isr();
-  }
-
-  // Handle TX
-  if (uart_is_writable(uart0)) {
-    MidiUart.tx_isr();
-  }
+    uint32_t status = uart_get_hw(uart0)->mis;  // Reading MIS clears the interrupts
+    if (status & UART_UARTMIS_RXMIS_BITS) {
+        MidiUart.rx_isr();
+    }
+    if (status & UART_UARTMIS_TXMIS_BITS) {
+        MidiUart.tx_isr();
+    }
 }
 
 extern "C" void uart1_irq_handler() {
-  DEBUG_FUNC();
-  if (uart_is_readable(uart1)) {
-    MidiUart2.rx_isr();
-  }
-
-  if (uart_is_writable(uart1)) {
-    MidiUart2.tx_isr();
-  }
+    uint32_t status = uart_get_hw(uart1)->mis;  // Reading MIS clears the interrupts
+    if (status & UART_UARTMIS_RXMIS_BITS) {
+        MidiUart2.rx_isr();
+    }
+    if (status & UART_UARTMIS_TXMIS_BITS) {
+        MidiUart2.tx_isr();
+    }
 }

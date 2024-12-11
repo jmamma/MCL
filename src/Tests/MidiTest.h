@@ -93,6 +93,7 @@ public:
   ~MIDITest();
 
   void setup() override;
+  void cleanup() override;
   void run_tests() override;
   void increment_received();
 
