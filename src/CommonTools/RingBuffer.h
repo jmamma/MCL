@@ -2,21 +2,23 @@
 
 #include "WProgram.h"
 #include <inttypes.h>
+#include "memory.h"
 
 #ifdef DEBUGMODE
 #define CHECKING
 #endif
 
+
 class RingBuffer {
 public:
     volatile uint16_t rd;
     volatile uint16_t wr;
-    volatile uint16_t len;
-    volatile uint8_t* buf;
-    #ifdef CHECKING
+    uint16_t len;
+    uint8_t* buf;
+#ifdef CHECKING
     volatile uint8_t overflow;
     bool check = true;
-    #endif
+#endif
 
     RingBuffer(uint8_t* buffer, uint16_t size) {
         buf = buffer;
@@ -25,33 +27,33 @@ public:
     }
 
     ALWAYS_INLINE() void init() volatile {
-        noInterrupts();
+        LOCK();
         rd = 0;
         wr = 0;
-        #ifdef CHECKING
+#ifdef CHECKING
         overflow = 0;
-        #endif
-        interrupts();
+#endif
+        CLEAR_LOCK();
     }
 
     /** copy n elements from src buffer to ring buffer **/
-    ALWAYS_INLINE() void put_h_isr(uint8_t* src, uint16_t n) volatile {
-        #ifdef CHECKING
+    ALWAYS_INLINE() void put_h_isr(const uint8_t* src, uint16_t n) volatile {
+#ifdef CHECKING
         if (isFull_isr() && check) {
             overflow++;
             return;
         }
-        #endif
+#endif
 
         uint16_t s = n;
         if (wr + n > len) {
             s = len - wr;
         }
-        memcpy((void*)(buf + wr), src, s);
+        memcpy_bank1((void*)(buf + wr), src, s);
         wr += s;
         n -= s;
         if (n) {
-            memcpy((void*)buf, src + s, n);
+            memcpy_bank1((void*)buf, src + s, n);
             wr = n;
         }
         if (wr == len) {
@@ -61,14 +63,13 @@ public:
 
     /** put_h but when running from within isr that is already blocking **/
     ALWAYS_INLINE() void put_h_isr(uint8_t c) volatile {
-        #ifdef CHECKING
+#ifdef CHECKING
         if (isFull_isr() && check) {
             overflow++;
             return;
         }
-        #endif
-
-        buf[wr] = c;
+#endif
+        put_bank1(buf + wr, c);
         wr++;
         if (wr == len) {
             wr = 0;
@@ -81,11 +82,11 @@ public:
         if (rd + n > len) {
             s = len - rd;
         }
-        memcpy(dst, (void*)(buf + rd), s);
+        memcpy_bank1(dst, (void*)(buf + rd), s);
         rd += s;
         n -= s;
         if (n) {
-            memcpy(dst + s, (void*)buf, n);
+            memcpy_bank1(dst + s, (void*)buf, n);
             rd = n;
         }
         if (rd == len) {
@@ -95,27 +96,26 @@ public:
 
     /** Add a new element c to the ring buffer **/
     ALWAYS_INLINE() void put(uint8_t c) volatile {
-        noInterrupts();
+        LOCK();
         put_h_isr(c);
-        interrupts();
+        CLEAR_LOCK();
     }
 
     /** Copy n elements from src buffer to ring buffer **/
-    ALWAYS_INLINE() void put(uint8_t* src, uint16_t n) volatile {
-        noInterrupts();
+    ALWAYS_INLINE() void put(const uint8_t* src, uint16_t n) volatile {
+        LOCK();
         put_h_isr(src, n);
-        interrupts();
+        CLEAR_LOCK();
     }
 
     /** Return the next element in the ring buffer **/
     ALWAYS_INLINE() uint8_t get_h_isr() volatile {
         uint8_t ret;
-        #ifdef CHECKING
+#ifdef CHECKING
         if (isEmpty_isr())
             return 0;
-        #endif
-
-        ret = buf[rd];
+#endif
+        ret =  get_bank1(buf + rd);
         rd++;
         if (rd == len) {
             rd = 0;
@@ -124,39 +124,44 @@ public:
     }
 
     ALWAYS_INLINE() uint8_t get() volatile {
-        noInterrupts();
+        LOCK();
         uint8_t ret = get_h_isr();
-        interrupts();
+        CLEAR_LOCK();
         return ret;
     }
 
     /** Copy a new element pointed to by c to the ring buffer **/
-    ALWAYS_INLINE() void putp(uint8_t* c) volatile {
-        noInterrupts();
+    ALWAYS_INLINE() void putp(const uint8_t* c) volatile {
+        LOCK();
         put_h_isr(c, 1);
-        interrupts();
+        CLEAR_LOCK();
     }
 
     /** Copy the next element into dst **/
     ALWAYS_INLINE() void getp(uint8_t* dst) volatile {
-        noInterrupts();
+        LOCK();
         uint8_t v = get_h_isr();
-        interrupts();
+        CLEAR_LOCK();
         *dst = v;
     }
 
     /** Get the next element without removing it from the ring buffer **/
     ALWAYS_INLINE() uint8_t peek() volatile {
-        if (isEmpty())
+        LOCK();
+        if (isEmpty_isr()) {
+            CLEAR_LOCK();
             return 0;
-        return buf[rd];
+        }
+        uint8_t ret =  get_bank1(buf + rd);;
+        CLEAR_LOCK();
+        return ret;
     }
 
     /** Returns true if the ring buffer is empty **/
     ALWAYS_INLINE() bool isEmpty() volatile {
-        noInterrupts();
+        LOCK();
         bool ret = (rd == wr);
-        interrupts();
+        CLEAR_LOCK();
         return ret;
     }
 
@@ -167,13 +172,13 @@ public:
 
     /** Returns true if the ring buffer is full **/
     ALWAYS_INLINE() bool isFull() volatile {
-        noInterrupts();
+        LOCK();
         uint16_t a = wr + 1;
         if (a == len) {
             a = 0;
         }
         bool ret = (a == rd);
-        interrupts();
+        CLEAR_LOCK();
         return ret;
     }
 
@@ -187,11 +192,15 @@ public:
     }
 
     /** Returns the number of elements in the ring buffer **/
-    uint16_t size() volatile {
+    ALWAYS_INLINE() uint16_t size() volatile {
+        LOCK();
+        uint16_t sz;
         if (wr >= rd) {
-            return wr - rd;
+            sz = wr - rd;
         } else {
-            return len - rd + wr;
+            sz = len - rd + wr;
         }
+        CLEAR_LOCK();
+        return sz;
     }
 };
