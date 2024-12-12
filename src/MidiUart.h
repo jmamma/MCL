@@ -11,6 +11,8 @@
 // Timer check macros for RP2040
 #define TIMER_CHECK_INT(timer_num) ((timer_hw->intr & (1u << timer_num)) != 0)
 #define TIMER_CLEAR_INT(timer_num) timer_hw->intr = (1u << timer_num)
+#define UART_MIDI 0
+#define UART_SERIAL 1
 
 class MidiUartClass : public MidiUartParent {
 private:
@@ -79,13 +81,11 @@ public:
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    uint32_t fr = uart_get_hw(uart_hw)->fr;
     txRb->put_h_isr(src, size);
-    //If uart is writeable, write the first byte.
-    //tx_isr will enable the interrupts if there is more to be sent.
     if (uart_is_writable(uart_hw)) {
-       uart_get_hw(uart_hw)->icr = UART_UARTICR_TXIC_BITS;
-       tx_isr();
+        uart_get_hw(uart_hw)->icr = UART_UARTICR_TXIC_BITS;
+        tx_isr();
+    } else {
     }
   }
 

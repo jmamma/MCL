@@ -12,7 +12,7 @@ MIDITest midi_test;
 
 void setup() {
     DEBUG_INIT();
-    delay(2000);
+    sleep_ms(2000);
     DEBUG_PRINTLN("debug mode online");
 
     MidiUart.initSerial();
@@ -20,11 +20,11 @@ void setup() {
     DEBUG_PRINTLN("here");
    setup_timers();
    pinMode(LED_BUILTIN, OUTPUT);
-//   digitalWrite(LED_BUILTIN, HIGH);
+   digitalWrite(LED_BUILTIN, HIGH);
 }
 
 void loop() {
-    delay(200);
+    sleep_ms(200);
     midi_test.setup();
     midi_test.run_tests();
     if (midi_test.is_successful()) {

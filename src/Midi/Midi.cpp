@@ -87,8 +87,6 @@ void MidiClass::sysexEnd(uint8_t msg_rd) {
 
 void MidiClass::handleByte(uint8_t byte) {
 again:
-  DEBUG_FUNC();
-  DEBUG_PRINTLN(byte);
   if (MIDI_IS_REALTIME_STATUS_BYTE(byte)) {
     switch (byte) {
     case MIDI_START:

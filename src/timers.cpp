@@ -1,6 +1,3 @@
-#include "hardware/clocks.h"
-#include "hardware/irq.h"
-#include "hardware/pwm.h"
 #include "helpers.h"
 #include "platform.h"
 #include "MidiClock.h"
@@ -21,6 +18,7 @@ void __not_in_flash_func(pwm_wrap_handler)() {
   // Check which slice triggered the interrupt
   uint32_t mask = pwm_get_irq_status_mask();
 
+  LOCK();
   if (mask & (1u << SLOW_TIMER_SLICE)) {
     pwm_clear_irq(SLOW_TIMER_SLICE);
     g_ms_ticks++;
@@ -47,24 +45,30 @@ void __not_in_flash_func(pwm_wrap_handler)() {
           MidiClock.div192th_countdown = 0;
           MidiClock.div192th_counter_last = MidiClock.div192th_counter;
           if (MidiClock.inCallback) {
+            CLEAR_LOCK();
             return;
           }
           MidiClock.inCallback = true;
           uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
           MidiUartParent::handle_midi_lock = 1;
+          CLEAR_LOCK();
           //mcl_seq.seq(); ... to do
           MidiUartParent::handle_midi_lock = _midi_lock_tmp;
           MidiClock.inCallback = false;
+          return;
         }
       }
     }
 
     if (!MidiUartParent::handle_midi_lock) {
       MidiUartParent::handle_midi_lock = 1;
+      CLEAR_LOCK();
       handleIncomingMidi();
       MidiUartParent::handle_midi_lock = 0;
+      return;
     }
   }
+  CLEAR_LOCK();
 }
 
 void setup_timers() {
@@ -90,6 +94,7 @@ void setup_timers() {
   pwm_config_set_wrap(&cfg_fast, 199);       // Count from 0-199 = 200 steps
   pwm_init(FAST_TIMER_SLICE, &cfg_fast, true);
 
+  irq_set_priority(PWM_IRQ_WRAP, 0x80);
   // Set up single shared interrupt handler for both PWM slices
   irq_set_exclusive_handler(PWM_IRQ_WRAP, pwm_wrap_handler);
   irq_set_enabled(PWM_IRQ_WRAP, true);

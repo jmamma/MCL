@@ -101,7 +101,6 @@ bool MIDITest::run_cc_test() {
   sleep_ms(10);
 
   DEBUG_PRINTLN("Processing received messages...");
-  handleIncomingMidi();
 
   bool success = messages_received == messages_sent;
   DEBUG_PRINTLN("Messages sent: " + String(messages_sent));
@@ -123,10 +122,9 @@ bool MIDITest::run_sysex_test() {
   messages_sent++;
 
   DEBUG_PRINTLN("Waiting for processing...");
-  delay(100);
+  sleep_ms(100);
 
   DEBUG_PRINTLN("Processing received messages...");
-  handleIncomingMidi();
 
   bool success = messages_received == messages_sent;
   DEBUG_PRINTLN("Messages sent: " + String(messages_sent));
