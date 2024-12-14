@@ -12,7 +12,8 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
  - For realtime hardware debugging
 
 - [X] Implementation of low level ISRs for UART + timers, as per MCL
-
+  - The atmega2560 does not support nested interrupts. I've re-implemented ISR locking as per MCL, with the ability to unlock when entering Sequencer and MIDI processing routines.
+  - Eventually this will be re-architectured to leverage the 2nd core.
 - [X] MIDI stack
  - Low level MIDI stack responsible for initialising the UARTs
  - Processing rx/tx of MIDI data
@@ -35,4 +36,6 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
 - [ ] MIDI Device Drivers
 - [ ] Sequencer
 - [ ] Compressed Assets
+- [ ] Stack Size. Currently limited to 4KB per core. Could we use all 8KB for a single core?
+      MCL in current implementation requires a stack size of 8KB.
 - [ ] ... and more
