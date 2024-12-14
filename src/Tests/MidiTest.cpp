@@ -37,6 +37,7 @@ void MIDITest::cleanup() {
 
 
 void MIDITest::run_tests() {
+  reset_counters();
   log_test_start(get_name());
 
   bool note_test = run_note_test();
@@ -76,7 +77,7 @@ bool MIDITest::run_note_test() {
 
   DEBUG_PRINTLN("Waiting for processing...");
   sleep_ms(10);
-
+  //handleIncomingMidi();
   DEBUG_PRINTLN("Processing received messages...");
 
   bool success = messages_received == messages_sent;
@@ -99,7 +100,7 @@ bool MIDITest::run_cc_test() {
 
   DEBUG_PRINTLN("Waiting for processing...");
   sleep_ms(10);
-
+  //handleIncomingMidi();
   DEBUG_PRINTLN("Processing received messages...");
 
   bool success = messages_received == messages_sent;
@@ -123,7 +124,7 @@ bool MIDITest::run_sysex_test() {
 
   DEBUG_PRINTLN("Waiting for processing...");
   sleep_ms(100);
-
+  //handleIncomingMidi();
   DEBUG_PRINTLN("Processing received messages...");
 
   bool success = messages_received == messages_sent;
