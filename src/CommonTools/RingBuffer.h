@@ -39,8 +39,9 @@ public:
     /** copy n elements from src buffer to ring buffer **/
     ALWAYS_INLINE() void put_h_isr(const uint8_t* src, uint16_t n) volatile {
 #ifdef CHECKING
-        if (isFull_isr() && check) {
+        if (isFull_isr(n) && check) {
             overflow++;
+            DEBUG_PRINTLN("overflow");
             return;
         }
 #endif
@@ -66,6 +67,7 @@ public:
 #ifdef CHECKING
         if (isFull_isr() && check) {
             overflow++;
+            DEBUG_PRINTLN("overflow");
             return;
         }
 #endif
@@ -112,8 +114,10 @@ public:
     ALWAYS_INLINE() uint8_t get_h_isr() volatile {
         uint8_t ret;
 #ifdef CHECKING
-        if (isEmpty_isr())
+        if (isEmpty_isr()) {
+            DEBUG_PRINTLN("buffer empty");
             return 0;
+        }
 #endif
         ret =  get_bank1(buf + rd);
         rd++;
@@ -171,26 +175,22 @@ public:
     }
 
     /** Returns true if the ring buffer is full **/
-    ALWAYS_INLINE() bool isFull() volatile {
+    ALWAYS_INLINE() bool isFull(uint16_t n = 1) volatile {
         LOCK();
-        uint16_t a = wr + 1;
-        if (a == len) {
-            a = 0;
-        }
-        bool ret = (a == rd);
+        bool ret = isFull_isr(n);
         CLEAR_LOCK();
         return ret;
     }
 
     /** Returns true if the ring buffer is full. Use in isr **/
-    ALWAYS_INLINE() bool isFull_isr() volatile {
-        uint16_t a = wr + 1;
-        if (a == len) {
-            a = 0;
+    ALWAYS_INLINE() bool isFull_isr(uint16_t n = 1) volatile {
+        uint16_t next_wr = wr + n;
+        if (next_wr >= len) {
+          next_wr -= len;
         }
-        return (a == rd);
-    }
-
+        // Buffer is full if next write position would equal read position
+        return (next_wr == rd);
+}
     /** Returns the number of elements in the ring buffer **/
     ALWAYS_INLINE() uint16_t size() volatile {
         LOCK();
