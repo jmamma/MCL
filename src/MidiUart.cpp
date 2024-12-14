@@ -121,19 +121,16 @@ void MidiUartClass::realtime_isr(uint8_t c) {
 }
 
 void MidiUartClass::rx_isr() {
-  LOCK();
   uint32_t dr = uart_get_hw(uart_hw)->dr;
   uint8_t c = dr & 0xff; // Get the actual data byte
 
   const uint32_t ERROR_MASK = 0xf00; // Bits 8-11 are error flags
   bool has_errors = (dr & ERROR_MASK) != 0;
   if (has_errors) {
-    CLEAR_LOCK();
     return;
   }
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
     realtime_isr(c);
-    CLEAR_LOCK();
     return;
   }
 
@@ -163,10 +160,8 @@ void MidiUartClass::rx_isr() {
     rxRb->put_h_isr(c);
     break;
   }
-  CLEAR_LOCK();
 }
-void MidiUartClass::tx_isr() {
-  LOCK();
+__attribute__((used, noinline)) void MidiUartClass::tx_isr() {
 #ifdef RUNNING_STATUS_OUT
   bool rs = 1;
 again:
@@ -238,15 +233,15 @@ again:
     goto again;
   }
 #endif
-  CLEAR_LOCK();
   if (txRb->isEmpty() && (txRb_sidechannel == nullptr)) {
     disable_tx_irq();
   } else {
-    uart_set_irq_enables(uart_hw, true, true);
+    enable_tx_irq();
   }
 }
 
 extern "C" void uart0_irq_handler() {
+  LOCK();
   uint32_t status =
       uart_get_hw(uart0)->mis; // Reading MIS clears the interrupts
   if (status & UART_UARTMIS_RXMIS_BITS) {
@@ -255,9 +250,11 @@ extern "C" void uart0_irq_handler() {
   if (status & UART_UARTMIS_TXMIS_BITS) {
     MidiUart.tx_isr();
   }
+  CLEAR_LOCK();
 }
 
 extern "C" void uart1_irq_handler() {
+  LOCK();
   uint32_t status =
       uart_get_hw(uart1)->mis; // Reading MIS clears the interrupts
   if (status & UART_UARTMIS_RXMIS_BITS) {
@@ -266,4 +263,5 @@ extern "C" void uart1_irq_handler() {
   if (status & UART_UARTMIS_TXMIS_BITS) {
     MidiUart2.tx_isr();
   }
+  CLEAR_LOCK();
 }

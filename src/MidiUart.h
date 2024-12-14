@@ -81,20 +81,27 @@ public:
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
+    LOCK();
     txRb->put_h_isr(src, size);
+
     if (uart_is_writable(uart_hw)) {
-        uart_get_hw(uart_hw)->icr = UART_UARTICR_TXIC_BITS;
         tx_isr();
     } else {
+      enable_tx_irq();
     }
+    CLEAR_LOCK();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
+    LOCK();
     txRb->put_h_isr(c);
     if  (uart_is_writable(uart_hw)) {
-      uart_get_hw(uart_hw)->icr = UART_UARTICR_TXIC_BITS;
-      tx_isr();
+       tx_isr();
     }
+    else {
+      enable_tx_irq();
+    }
+    CLEAR_LOCK();
   }
 };
 
