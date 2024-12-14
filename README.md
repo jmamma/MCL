@@ -5,18 +5,18 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
 ## Current Progress
 
 - [X] Platform.txt -> Makefile translation
- - Code can be compiled independently of the Arduino IDE
- - Correct linking of arduino-pico, pico-sdk and related libraries
+  - Code can be compiled independently of the Arduino IDE
+  - Correct linking of arduino-pico, pico-sdk and related libraries
 
 - [X] VSCode + gdb + openocd SW debugger integration
- - For realtime hardware debugging
+  - For realtime hardware debugging
 
 - [X] Implementation of low level ISRs for UART + timers, as per MCL
   - The atmega2560 does not support nested interrupts. I've re-implemented ISR locking as per MCL, with the ability to unlock when entering Sequencer and MIDI processing routines.
   - Eventually this will be re-architectured to leverage the 2nd core.
 - [X] MIDI stack
- - Low level MIDI stack responsible for initialising the UARTs
- - Processing rx/tx of MIDI data
+  - Low level MIDI stack responsible for initialising the UARTs
+  - Processing rx/tx of MIDI data
 
 - [X] Validate MIDI stack at various turbo speeds (1x, 2x, 4x, 8x, 10x)
  - [X] Sysex Tx/Rx
