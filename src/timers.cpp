@@ -3,6 +3,8 @@
 #include "MidiClock.h"
 #include "global.h"
 
+#include "tusb.h"  // Add at top of file if not already there
+
 // We'll use PWM slice 4 for 1ms timer and slice 5 for 5kHz timer
 const uint SLOW_TIMER_SLICE = 4;
 const uint FAST_TIMER_SLICE = 5;
@@ -10,17 +12,10 @@ const uint FAST_TIMER_SLICE = 5;
 const uint32_t FAST_TIMER_HZ = 5000; // 5kHz
 const uint32_t SLOW_TIMER_HZ = 1000; // 1kHz (1ms)
 
-
 uint16_t minuteclock = 0;
 
-// Shared ISR that handles both timers
-void __not_in_flash_func(pwm_wrap_handler)() {
-  // Check which slice triggered the interrupt
-  uint32_t mask = pwm_get_irq_status_mask();
-
-  LOCK();
-  if (mask & (1u << SLOW_TIMER_SLICE)) {
-    pwm_clear_irq(SLOW_TIMER_SLICE);
+void __not_in_flash_func(timer1_handler)() {
+    LOCK();
     g_ms_ticks++;
     minuteclock++;
 
@@ -31,10 +26,11 @@ void __not_in_flash_func(pwm_wrap_handler)() {
 
     MidiUart.tickActiveSense();
     MidiUart2.tickActiveSense();
-  }
+    CLEAR_LOCK();
 
-  if (mask & (1u << FAST_TIMER_SLICE)) {
-    pwm_clear_irq(FAST_TIMER_SLICE);
+}
+void __not_in_flash_func(timer2_handler)() {
+    LOCK();
     g_fast_ticks++;
 
     MidiClock.div192th_countdown++;
@@ -67,8 +63,25 @@ void __not_in_flash_func(pwm_wrap_handler)() {
       MidiUartParent::handle_midi_lock = 0;
       return;
     }
+    CLEAR_LOCK();
+
+}
+
+// Shared ISR that handles both timers
+void __not_in_flash_func(pwm_wrap_handler)() {
+  // Check which slice triggered the interrupt
+  uint32_t mask = pwm_get_irq_status_mask();
+
+  if (mask & (1u << SLOW_TIMER_SLICE)) {
+    pwm_clear_irq(SLOW_TIMER_SLICE);
+    timer1_handler();
   }
-  CLEAR_LOCK();
+
+  if (mask & (1u << FAST_TIMER_SLICE)) {
+    pwm_clear_irq(FAST_TIMER_SLICE);
+    timer2_handler();
+  }
+
 }
 
 void setup_timers() {
@@ -102,4 +115,5 @@ void setup_timers() {
   // Enable interrupts for both slices
   pwm_set_irq_enabled(SLOW_TIMER_SLICE, true);
   pwm_set_irq_enabled(FAST_TIMER_SLICE, true);
+
 }
