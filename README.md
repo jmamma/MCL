@@ -1,6 +1,6 @@
 # MCL Migration: ATmega2560 to RP2040
 
-This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2560 to the RP2040. Given MCL was a modified Arduino core, the port will initially be based around arduino-pico, enabling us to leverage the SdFat and Adafruit graphics libraries that are core components of MCL.
+This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2560 to the RP2040. Given MCL became a modified Arduino core, the port will initially be based around arduino-pico, enabling us to leverage the SdFat and Adafruit graphics libraries that are core components of MCL.
 
 ## Current Progress
 
