@@ -33,7 +33,6 @@ void setup() {
     31250 * 4,  // 4x
     31250 * 8,  // 8x
     31250 * 10, // 10x
-    //31250 * 32, //32x is 1M, it is too fast for some serial converter. you can add more, but do test
   };
   midi_test.setup();
 
