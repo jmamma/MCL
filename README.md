@@ -19,9 +19,9 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
   - Processing rx/tx of MIDI data
 
 - [X] Validate MIDI stack at various turbo speeds (1x, 2x, 4x, 8x, 10x)
- - [X] Sysex Tx/Rx
- - [X] Midi Note Tx/Rx
- - [X] MIDI CC Tx/Rx
+  - [X] Sysex Tx/Rx
+  - [X] Midi Note Tx/Rx
+  - [X] MIDI CC Tx/Rx
 
 - [X] Verify SDFat is functional with the arduino-pico core
 
