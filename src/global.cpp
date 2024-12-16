@@ -97,7 +97,6 @@ void init_oled() {
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(0, 0);
   oled_display.setTextWrap(false);
-  oled_display.fillRect(0,0,128,32, WHITE);
   oled_display.display();
 
 }
