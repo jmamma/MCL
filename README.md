@@ -25,9 +25,10 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
 
 - [X] Verify SDFat is functional with the arduino-pico core
 
+- [X] Oled SSD1305 display + Adafruit GFX
+
 ## Todo
 
-- [ ] Oled display + Adafruit GFX
 - [ ] Page system
 - [ ] GUI
 - [ ] Menus
