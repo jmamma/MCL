@@ -10,6 +10,8 @@
 #include "StackMonitor.h"
 #include "MidiTest.h"
 
+#include "oled.h"
+
 MIDITest midi_test;
 
 
@@ -17,16 +19,19 @@ void setup() {
   DEBUG_INIT();
   sleep_ms(2000);
   DEBUG_PRINTLN("debug mode online");
-
   StackMonitor::print_stack_info();
 
   MidiUart.initSerial();
   MidiUart2.initSerial();
 
   setup_timers();
+
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
 
+  init_oled();
+
+  /*
   std::vector<uint32_t> baud_rates = {
     31250,      // Standard MIDI baud rate
     31250 * 2,  // 2x
@@ -58,7 +63,7 @@ void setup() {
     DEBUG_PRINTLN(""); // Add a separator for clarity
     debugBuffer.flush();
   }
-
+*/
 }
 
 void loop() {

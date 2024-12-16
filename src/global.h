@@ -21,3 +21,4 @@ extern MidiUartClass seq_tx4;
 
 extern uint16_t g_clock_minutes;
 extern void handleIncomingMidi();
+extern void init_oled();

@@ -3,6 +3,7 @@
 #include "MidiIDSysex.h"
 #include "Midi.h"
 #include "memory.h"
+#include "oled.h"
 
 // Buffer array definitions
 uint8_t seq_tx1_buf[TX_SEQBUF_SIZE];
@@ -53,13 +54,56 @@ MidiClass Midi2(&MidiUart2, &MidiSysex2);
 
 MidiIDSysexListenerClass MidiIDSysexListener;
 
-volatile uint8_t MidiUartParent::handle_midi_lock = 0;
+// Global Variables
 
+volatile uint8_t MidiUartParent::handle_midi_lock = 0;
 volatile uint16_t g_fast_ticks = 0;
 volatile uint16_t g_ms_ticks = 0;
 volatile uint16_t g_clock_minutes = 0;
 
+//Oled Display
+
+//Adafruit_SSD1305 oled_display(OLED_WIDTH, OLED_HEIGHT, OLED_MOSI, OLED_SCLK, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
+Adafruit_SSD1305 oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
+
+void init_oled() {
+  DEBUG_FUNC();
+  SPI1.setTX(OLED_MOSI);
+  SPI1.setSCK(OLED_SCLK);
+
+  // Configure control pins
+  pinMode(OLED_CS, OUTPUT);
+  pinMode(OLED_RST, OUTPUT);
+  pinMode(OLED_DC, OUTPUT);
+
+  // Reset the display
+//  digitalWrite(OLED_RST, LOW);
+//  delay(10);
+//  digitalWrite(OLED_RST, HIGH);
+//  delay(100);
+
+  // Initialize display
+  if (!oled_display.begin()) {
+    DEBUG_PRINTLN("OLED initialization failed");
+    while (1);
+  }
+
+  oled_display.display(); // show splashscreen
+  delay(1000);
+  oled_display.clearDisplay();
+  oled_display.invertDisplay(0);
+  oled_display.setRotation(2);
+  oled_display.setTextSize(1);
+  oled_display.setTextColor(WHITE, BLACK);
+  oled_display.setCursor(0, 0);
+  oled_display.setTextWrap(false);
+  oled_display.fillRect(0,0,128,32, WHITE);
+  oled_display.display();
+
+}
+
 void handleIncomingMidi() {
+  DEBUG_FUNC();
   Midi.processSysex();
   Midi2.processSysex();
   Midi.processMidi();
