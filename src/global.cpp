@@ -102,7 +102,6 @@ void init_oled() {
 }
 
 void handleIncomingMidi() {
-  DEBUG_FUNC();
   Midi.processSysex();
   Midi2.processSysex();
   Midi.processMidi();
