@@ -1,5 +1,10 @@
 #pragma once
 
+typedef struct encoder_s {
+  int8_t normal;
+  int8_t button;
+} encoder_t;
+
 inline void toggleLed(void) {
 }
 inline void setLed(void) {

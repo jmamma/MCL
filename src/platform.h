@@ -23,6 +23,10 @@
 #define pgm_read_byte_near(x) (*(x))
 #endif
 
+#ifndef _BV
+#define _BV(bit) (1UL << (bit))
+#endif
+
 // Interrupt locking mechanisms
 extern volatile uint32_t interrupt_lock_count;
 

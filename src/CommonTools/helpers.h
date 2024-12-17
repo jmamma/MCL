@@ -219,15 +219,12 @@ void m_trim_space(char* str);
  * \addtogroup helpers_clock Timing functions
  * @{
  **/
-			
+extern volatile uint16_t g_clock_fast;
+extern volatile uint16_t g_clock_ms;
+
 extern uint16_t read_clock(void);
 extern uint16_t read_slowclock(void);
 uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
-
-extern volatile uint16_t g_fast_ticks;
-extern volatile uint16_t g_ms_ticks;
-extern volatile uint16_t g_minutes;
-
 
 /** @} **/
 

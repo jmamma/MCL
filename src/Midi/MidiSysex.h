@@ -69,7 +69,7 @@ public:
   volatile uint8_t msg_wr;
   volatile uint8_t msg_rd;
 
-  RingBuffer* rb;
+  RingBuffer<>* rb;
 
   volatile uint8_t* sysex_highmem_buf;
   uint16_t sysex_bufsize;
@@ -80,7 +80,7 @@ public:
 
   MidiSysexListenerClass* listeners[NUM_SYSEX_SLAVES];
 
-  MidiSysexClass(MidiUartParent* _uart, RingBuffer* _rb) {
+  MidiSysexClass(MidiUartParent* _uart, RingBuffer<>* _rb) {
     uart = _uart;
     recording = false;
     sysexLongId = false;
@@ -95,8 +95,8 @@ public:
   volatile uint8_t* get_ptr() { return ledger[rd_cur].ptr; }
 
   bool avail() {
-    return ((msg_wr != msg_rd) && 
-            ledger[msg_rd].state == SYSEX_STATE_FIN && 
+    return ((msg_wr != msg_rd) &&
+            ledger[msg_rd].state == SYSEX_STATE_FIN &&
             ledger[msg_rd].recordLen != 0);
   }
 
@@ -189,8 +189,8 @@ public:
     if (listener->ids[0] == 0xFF)
       return true;
     if (sysexLongId) {
-      if (recvIds[0] == listener->ids[0] && 
-          recvIds[1] == listener->ids[1] && 
+      if (recvIds[0] == listener->ids[0] &&
+          recvIds[1] == listener->ids[1] &&
           recvIds[2] == listener->ids[2])
         return true;
     } else {

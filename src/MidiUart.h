@@ -21,6 +21,7 @@ private:
   uint8_t mode;
 
   ALWAYS_INLINE() bool write_char(uint8_t c) {
+    if (!uart_hw) { return false; }
 #ifdef RUNNING_STATUS_OUT
     if (!running_status_enabled) {
       uart_get_hw(uart_hw)->dr = c;
@@ -50,17 +51,17 @@ private:
   }
 public:
   // Ring buffers with compile-time sizes
-  volatile RingBuffer *rxRb;
-  volatile RingBuffer *txRb;
-  volatile RingBuffer *txRb_sidechannel;
+  volatile RingBuffer<> *rxRb;
+  volatile RingBuffer<> *txRb;
+  volatile RingBuffer<> *txRb_sidechannel;
 
 #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
   bool running_status_enabled;
 #endif
 
-  MidiUartClass(uart_inst_t *uart_hw, RingBuffer *_rxRb = nullptr,
-                RingBuffer *_txRb = nullptr);
+  MidiUartClass(uart_inst_t *uart_hw, RingBuffer<> *_rxRb = nullptr,
+                RingBuffer<> *_txRb = nullptr);
 
   void realtime_isr(uint8_t c);
   void rx_isr();
@@ -84,7 +85,7 @@ public:
     LOCK();
     txRb->put_h_isr(src, size);
 
-    if (uart_is_writable(uart_hw)) {
+    if (uart_hw && uart_is_writable(uart_hw)) {
         tx_isr();
     } else {
       enable_tx_irq();
@@ -95,7 +96,7 @@ public:
   ALWAYS_INLINE() void m_putc(uint8_t c) {
     LOCK();
     txRb->put_h_isr(c);
-    if  (uart_is_writable(uart_hw)) {
+    if  (uart_hw && uart_is_writable(uart_hw)) {
        tx_isr();
     }
     else {

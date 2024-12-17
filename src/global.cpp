@@ -4,6 +4,7 @@
 #include "Midi.h"
 #include "memory.h"
 #include "oled.h"
+#include "GUI.h"
 
 // Buffer array definitions
 uint8_t seq_tx1_buf[TX_SEQBUF_SIZE];
@@ -13,11 +14,15 @@ uint8_t seq_tx4_buf[TX_SEQBUF_SIZE];
 
 uint8_t uart1_rx_buf[UART1_RX_BUFFER_LEN];
 uint8_t uart1_tx_buf[UART1_TX_BUFFER_LEN];
+uint8_t uart1_sysex_buf[SYSEX1_DATA_LEN];
+
 uint8_t uart2_rx_buf[UART2_RX_BUFFER_LEN];
 uint8_t uart2_tx_buf[UART2_TX_BUFFER_LEN];
-
-uint8_t uart1_sysex_buf[SYSEX1_DATA_LEN];
 uint8_t uart2_sysex_buf[SYSEX2_DATA_LEN];
+
+uint8_t uartusb_rx_buf[UARTUSB_RX_BUFFER_LEN];
+uint8_t uartusb_tx_buf[UARTUSB_TX_BUFFER_LEN];
+uint8_t uartusb_sysex_buf[SYSEXUSB_DATA_LEN];
 
 // Sequencer ring buffers
 RingBuffer seq_tx1_rb(seq_tx1_buf, TX_SEQBUF_SIZE);
@@ -28,12 +33,15 @@ RingBuffer seq_tx4_rb(seq_tx4_buf, TX_SEQBUF_SIZE);
 // UART ring buffers
 RingBuffer uart1_rx_rb(uart1_rx_buf, UART1_RX_BUFFER_LEN);
 RingBuffer uart1_tx_rb(uart1_tx_buf, UART1_TX_BUFFER_LEN);
+RingBuffer uart1_sysex_rb(uart1_sysex_buf, SYSEX1_DATA_LEN);
+
 RingBuffer uart2_rx_rb(uart2_rx_buf, UART2_RX_BUFFER_LEN);
 RingBuffer uart2_tx_rb(uart2_tx_buf, UART2_TX_BUFFER_LEN);
-
-// Sysex ring buffers
-RingBuffer uart1_sysex_rb(uart1_sysex_buf, SYSEX1_DATA_LEN);
 RingBuffer uart2_sysex_rb(uart2_sysex_buf, SYSEX2_DATA_LEN);
+
+RingBuffer uartusb_rx_rb(uartusb_rx_buf, UARTUSB_RX_BUFFER_LEN);
+RingBuffer uartusb_tx_rb(uartusb_tx_buf, UARTUSB_TX_BUFFER_LEN);
+RingBuffer uartusb_sysex_rb(uartusb_sysex_buf, SYSEXUSB_DATA_LEN);
 
 // MIDI UART instances
 MidiUartClass seq_tx1(uart0, nullptr, &seq_tx1_rb);
@@ -43,10 +51,12 @@ MidiUartClass seq_tx4(uart1, nullptr, &seq_tx4_rb);
 
 MidiUartClass MidiUart(uart0, &uart1_rx_rb, &uart1_tx_rb);
 MidiUartClass MidiUart2(uart1, &uart2_rx_rb, &uart2_tx_rb);
+MidiUartClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb);
 
 // Sysex instances
 MidiSysexClass MidiSysex(&MidiUart, &uart1_sysex_rb);
 MidiSysexClass MidiSysex2(&MidiUart2, &uart2_sysex_rb);
+MidiSysexClass MidiSysexUSB(&MidiUartUSB, &uartusb_sysex_rb);
 
 // MIDI class instances
 MidiClass Midi(&MidiUart, &MidiSysex);
@@ -57,9 +67,17 @@ MidiIDSysexListenerClass MidiIDSysexListener;
 // Global Variables
 
 volatile uint8_t MidiUartParent::handle_midi_lock = 0;
-volatile uint16_t g_fast_ticks = 0;
-volatile uint16_t g_ms_ticks = 0;
+volatile uint16_t g_clock_fast = 0;
+volatile uint16_t g_clock_ms = 0;
 volatile uint16_t g_clock_minutes = 0;
+
+volatile uint16_t g_clock_fps = 0;
+volatile uint16_t g_fps = 0;
+
+
+// GUI object
+
+GuiClass GUI;
 
 //Oled Display
 

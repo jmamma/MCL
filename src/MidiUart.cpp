@@ -8,8 +8,8 @@
 #include "global.h"
 #include "hardware/uart.h"
 
-MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer *_rxRb,
-                             RingBuffer *_txRb)
+MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<> *_rxRb,
+                             RingBuffer<> *_txRb)
     : MidiUartParent() {
   uart_hw = uart_hw_;
   mode = UART_MIDI;
@@ -74,11 +74,11 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
   while (!uart_is_writable(uart_hw)) {
     /*
       if (TIMER_CHECK_INT(0)) { // Assuming timer 0 for clock
-        g_fast_ticks++;
+        g_clock_fast++;
         TIMER_CLEAR_INT(0);
       }
       if (TIMER_CHECK_INT(1)) { // Assuming timer 1 for slowclock
-        g_ms_ticks++;
+        g_clock_ms++;
         TIMER_CLEAR_INT(1);
       }
   */

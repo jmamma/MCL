@@ -16,7 +16,7 @@ uint16_t minuteclock = 0;
 
 void __not_in_flash_func(timer1_handler)() {
     LOCK();
-    g_ms_ticks++;
+    g_clock_ms++;
     minuteclock++;
 
     if (minuteclock == 60000) {
@@ -31,7 +31,7 @@ void __not_in_flash_func(timer1_handler)() {
 }
 void __not_in_flash_func(timer2_handler)() {
     LOCK();
-    g_fast_ticks++;
+    g_clock_fast++;
 
     MidiClock.div192th_countdown++;
     if (MidiClock.state == MidiClockClass::STARTED) {

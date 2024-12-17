@@ -152,7 +152,7 @@ uint16_t read_slowclock(void) {
 uint16_t read_clock(void) {
   USE_LOCK();
   SET_LOCK();
-  uint16_t ret = g_fast_ticks;
+  uint16_t ret = g_clock_fast;
   CLEAR_LOCK();
   return ret;
 }
@@ -161,7 +161,7 @@ uint16_t read_clock(void) {
 uint16_t read_slowclock(void) {
   USE_LOCK();
   SET_LOCK();
-  uint16_t ret = g_ms_ticks;
+  uint16_t ret = g_clock_ms;
   CLEAR_LOCK();
   return ret;
 }
