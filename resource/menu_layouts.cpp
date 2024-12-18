@@ -1,6 +1,5 @@
 #include "MCLMenus.h"
-#include "Project.h"
-#include "MCL_impl.h"
+#include "MCLMemory.h"
 
 /****
   Menu Format:
@@ -79,8 +78,8 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
         {"TURBO 1:",  0, 4, 4, 2, NULL_PAGE, 0, 2},
         {"TURBO 2:",  0, 4, 4, 3, NULL_PAGE, 0, 2},
         {"TURBO USB:", 0, 4, 4, 55, NULL_PAGE , 0, 2},
-        {"DRIVER 1:", 0, 2, 2, 61, 0, NULL_PAGE, 124},
-        {"DRIVER 2:", 0, 2, 2, 4, 0, NULL_PAGE, 84},
+        {"DRIVER 1:", 0, 2, 2, 61, NULL_PAGE, 0, 124},
+        {"DRIVER 2:", 0, 2, 2, 4, NULL_PAGE, 0, 84},
         {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 100},
     },
     24
@@ -102,7 +101,7 @@ menu_t<midiclock_menu_page_N> midiclock_menu_layout = {
     {
         {"CLOCK RECV:",  0, 3, 3, 5, NULL_PAGE, 0, 7},
         {"TRANS RECV:",  0, 3, 3, 53, NULL_PAGE, 0, 7},
-        {"CLOCK SEND:", 0, 4, 4, 6, 0, NULL_PAGE, 100},
+        {"CLOCK SEND:", 0, 4, 4, 6, NULL_PAGE, 0, 100},
         {"TRANS SEND:",  0, 4, 4, 54, NULL_PAGE, 0, 100},
     },
     24
@@ -233,9 +232,6 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
         {"LOOP: ",  0, 64,  0, 33, NULL_PAGE, 0,  0},
         // o=128, generate the table on-demand
         {"JUMP: ", 0, 128, 128, 34, NULL_PAGE, 0, 128},
-   #ifndef OLED_DISPLAY
-        {"APPLY:",  1, 21,  1, 35, NULL_PAGE, 0,  40},
-   #endif
         {"CLEAR:",  0, 2,   2, 36, NULL_PAGE, 0,  33},
         {"COPY:  ", 0, 2,   2, 37, NULL_PAGE, 0,  33},
         {"PASTE:",  0, 2,   2, 38, NULL_PAGE, 0,  33},

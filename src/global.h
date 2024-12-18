@@ -29,3 +29,7 @@ extern volatile uint16_t g_clock_minutes;
 
 extern void handleIncomingMidi();
 extern void init_oled();
+
+#include "GUI.h"
+
+extern GuiClass GUI;

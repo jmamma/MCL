@@ -8,6 +8,8 @@
 *.map
 *.a
 
+src/resources/
+
 # Arduino & Pico specific
 .pio/
 .pioenvs/
