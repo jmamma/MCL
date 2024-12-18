@@ -81,8 +81,7 @@ GuiClass GUI;
 
 //Oled Display
 
-//Adafruit_SSD1305 oled_display(OLED_WIDTH, OLED_HEIGHT, OLED_MOSI, OLED_SCLK, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
-Adafruit_SSD1305 oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
+Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
 
 void init_oled() {
   DEBUG_FUNC();
