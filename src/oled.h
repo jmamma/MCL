@@ -20,6 +20,7 @@
 #define OLED_SCLK 10
 #define OLED_MOSI 11
 
+#define INVERT 2
 
 class Oled : public Adafruit_SSD1305 {
 public:
@@ -38,7 +39,31 @@ public:
   Oled(uint16_t w, uint16_t h, SPIClass *spi, int8_t dc_pin,
                              int8_t rst_pin, int8_t cs_pin, uint32_t bitrate = 8000000UL)
       : Adafruit_SSD1305(w, h, spi, dc_pin, rst_pin, cs_pin, bitrate) {}
+  uint16_t textbox_delay;
+  uint16_t textbox_clock;
+  char textbox_str[17];
+  char textbox_str2[17];
+  bool textbox_enabled = false;
 
+  virtual void textbox(const char *text, const char *text2, uint16_t delay = 800);
+
+  void display();
+
+  void fillTriangle_3px(int16_t x0, int16_t y0, uint16_t color);
+  void drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
+      int16_t w, int16_t h, uint16_t color, bool flip_vert = false, bool flip_horiz = false);
+  void drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
+      int16_t w, int16_t h, uint16_t color, uint16_t bg, bool flip_vert = false, bool flip_horiz = false);
+  void drawBitmap(int16_t x, int16_t y, uint8_t *bitmap,
+      int16_t w, int16_t h, uint16_t color, bool flip_vert = false, bool flip_horiz = false);
+  void drawBitmap(int16_t x, int16_t y, uint8_t *bitmap,
+      int16_t w, int16_t h, uint16_t color, uint16_t bg, bool flip_vert = false, bool flip_horiz = false);
+
+  virtual void drawPixel(uint16_t x, uint16_t y, uint16_t color);
+  virtual void drawFastVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color);
+  virtual void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+  virtual void fillScreen(uint16_t color);
+  virtual void clearDisplay();
   // Method to get the current font
   const GFXfont* getFont() const {
     return this->gfxFont; // Access the font pointer from the base class
