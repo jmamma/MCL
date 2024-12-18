@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include "RingBuffer.h"
 #include "memory.h"
-class MidiUartParent;
+class MidiUartClass;
 class MidiSysexClass;
 
 /**
@@ -73,14 +73,14 @@ public:
 
   volatile uint8_t* sysex_highmem_buf;
   uint16_t sysex_bufsize;
-  MidiUartParent* uart;
+  MidiUartClass* uart;
 
   MidiSysexLedger ledger[NUM_SYSEX_MSGS];
   volatile uint8_t rd_cur;
 
   MidiSysexListenerClass* listeners[NUM_SYSEX_SLAVES];
 
-  MidiSysexClass(MidiUartParent* _uart, RingBuffer<>* _rb) {
+  MidiSysexClass(MidiUartClass* _uart, RingBuffer<>* _rb) {
     uart = _uart;
     recording = false;
     sysexLongId = false;

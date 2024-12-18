@@ -9,11 +9,11 @@
 
 void MidiID::send_id_request(uint8_t id, uint8_t port) {
   uint8_t data[6] = {0xF0, 0x7E, id, 0x06, 0x01, 0xF7};
-  MidiUartParent *uart;
+  MidiUartClass *uart;
   if (port == UART1_PORT) {
-    uart = (MidiUartParent*) &MidiUart;
+    uart = &MidiUart;
   } else {
-    uart = (MidiUartParent*) &MidiUart2;
+    uart = &MidiUart2;
   }
   uart->sendRaw(data, sizeof(data));
 }
