@@ -87,7 +87,7 @@ inline bool isInInterrupt() {
     } while(0)
 
     // Print function name with format string
-    #define DEBUG_FUNC(fmt, ...) do { \
+    #define DEBUG_PRINT_FN(fmt, ...) do { \
         if (isInInterrupt()) { \
             char buf[64]; \
             snprintf(buf, sizeof(buf), "%s: " fmt "\n", __func__, ##__VA_ARGS__); \
@@ -99,12 +99,14 @@ inline bool isInInterrupt() {
             Serial.flush(); \
         } \
     } while(0)
-
+    #define DEBUG_DUMP(x)  { \
+    }
 #else // DEBUGMODE not defined
     #define DEBUG_INIT()
     #define DEBUG_PRINT(x)
     #define DEBUG_PRINTLN(x)
-    #define DEBUG_FUNC(fmt)
+    #define DEBUG_PRINT_FN(fmt)
+    #define DEBUG_DUMP()
 #endif // DEBUGMODE
 
 #else // __cplusplus not defined
@@ -113,6 +115,6 @@ inline bool isInInterrupt() {
 #define DEBUG_INIT()
 #define DEBUG_PRINT(x)
 #define DEBUG_PRINTLN(x)
-#define DEBUG_FUNC(fmt)
+#define DEBUG_PRINT_FN(fmt)
 
 #endif // __cplusplus

@@ -6,6 +6,7 @@
 #include "MCLEncoder.h"
 #include "MCLSysConfig.h"
 #include "MenuPage.h"
+#include "TextInputPage.h"
 
 //#include "ProjectPages.h"
 //#include "PolyPage.h"
@@ -109,6 +110,8 @@ extern MenuPage<wavdesign_menu_page_N> wavdesign_menu_page;
 
 constexpr size_t perf_menu_page_N = 2;
 extern MenuPage<perf_menu_page_N> perf_menu_page;
+
+extern TextInputPage text_input_page;
 
 extern uint8_t opt_import_src;
 extern uint8_t opt_import_dest;

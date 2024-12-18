@@ -84,7 +84,7 @@ GuiClass GUI;
 Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
 
 void init_oled() {
-  DEBUG_FUNC();
+  DEBUG_PRINT_FN();
   SPI1.setTX(OLED_MOSI);
   SPI1.setSCK(OLED_SCLK);
 

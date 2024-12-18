@@ -5,6 +5,7 @@
 
 #include "GUI.h"
 #include "Menu.h"
+#include "MCLGfx.h"
 
 #ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4

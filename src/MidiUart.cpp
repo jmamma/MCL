@@ -20,7 +20,7 @@ MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<> *_rxRb,
 
 void MidiUartClass::initSerial() {
   // Initialize GPIO pins for UART
-  DEBUG_FUNC();
+  DEBUG_PRINT_FN();
 
   if (uart_hw == uart0) {
     gpio_set_function(0, GPIO_FUNC_UART); // UART0 TX is GP0

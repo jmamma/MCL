@@ -5,6 +5,7 @@
 #include "Fonts/TomThumb.h"
 #include "Fonts/Elektrothic.h"
 #include "helpers.h"
+#include "oled.h"
 
 enum MCLGIFDir {
   DIR_FWD,

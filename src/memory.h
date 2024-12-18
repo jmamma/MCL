@@ -3,6 +3,8 @@
 #include "string.h"
 #include "platform.h"
 
+#define NUM_DEVS 2
+
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
 #define TX_SEQBUF_SIZE 0x200UL
@@ -22,6 +24,7 @@
 
 #define NUM_CLOCK_CALLBACKS 4
 
+//BANK1
 template<typename T>
 FORCED_INLINE() extern inline T get_bank1(volatile T *dst) {
   return *dst;
@@ -45,6 +48,42 @@ FORCED_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t
 }
 
 FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
+  uint8_t c = *dst;
+  return c;
+}
+
+//BANK3
+template<typename T>
+FORCED_INLINE() extern inline T get_bank3(volatile T *dst) {
+  return *dst;
+}
+
+FORCED_INLINE() extern inline void get_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
+  memcpy((void*)dst, (uint8_t*)src, len);
+}
+
+FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
+  memcpy((void*)src, (uint8_t*)dst, len);
+}
+
+template<typename T>
+FORCED_INLINE() extern inline void put_bank3(volatile T *dst, T data) {
+  *dst = data;
+}
+
+FORCED_INLINE() extern inline int memcmp_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
+  return memcmp((void*)dst, (void*)src, len);
+}
+
+FORCED_INLINE() extern inline void memcpy_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
+  memcpy((void*)dst, (void*)src, len);
+}
+
+FORCED_INLINE() extern inline void put_byte_bank3(volatile uint8_t *dst, uint8_t byte) {
+  *dst = byte;
+}
+
+FORCED_INLINE() extern inline uint8_t get_byte_bank3(volatile uint8_t *dst) {
   uint8_t c = *dst;
   return c;
 }

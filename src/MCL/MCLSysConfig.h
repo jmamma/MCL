@@ -3,7 +3,7 @@
 #ifndef MCLSYSCONFIG_H__
 #define MCLSYSCONFIG_H__
 
-#include "MCLSd.h"
+#include "SdFat.h"
 #define CONFIG_VERSION 4011
 
 #define MIDI_OMNI_MODE 17
