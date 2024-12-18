@@ -1,4 +1,5 @@
 #include "ArpSeqTrack.h"
+#include "SeqPages.h"
 
 //length will determine retrig speed.
 //arp position (idx) is independent of length
@@ -19,9 +20,9 @@ void ArpSeqTrack::set_length(uint8_t length_) {
   }
 }
 
-void ArpSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
-  MidiUartParent *uart_old = uart;
-  MidiUartParent *uart2_old = uart2;
+void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
+  MidiUartClass *uart_old = uart;
+  MidiUartClass *uart2_old = uart2;
   uart = uart_;
   uart2 = uart2_;
 

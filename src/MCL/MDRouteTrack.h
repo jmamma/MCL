@@ -36,7 +36,7 @@ public:
   void load_routes();
 
   virtual uint16_t get_track_size() { return sizeof(MDRouteTrack); }
-  virtual uint16_t get_region() { return BANK1_MDROUTE_TRACK_START; }
+  virtual uint8_t *get_region() { return BANK1_MDROUTE_TRACK_START; }
 
   virtual uint8_t get_model() { return MDROUTE_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDROUTE_TRACK_TYPE; }

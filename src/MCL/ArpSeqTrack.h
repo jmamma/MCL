@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "MidiUartParent.h"
+#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
 #include "GridTrack.h"
@@ -80,7 +80,7 @@ public:
     SeqTrackBase::reset();
   }
 
-  ALWAYS_INLINE() void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
+  ALWAYS_INLINE() void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
   void clear_track();
   void re_sync();
   void set_speed(uint8_t speed_);

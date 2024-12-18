@@ -1,5 +1,6 @@
-#include "MCL_impl.h"
-
+#include "GridChainTrack.h"
+#include "MCLActions.h"
+#include "Project.h"
 
 void GridChainTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);

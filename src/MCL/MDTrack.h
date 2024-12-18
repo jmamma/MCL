@@ -130,7 +130,7 @@ public:
   }
 
   virtual uint16_t get_track_size() { return sizeof(MDTrack); }
-  virtual uint16_t get_region() { return BANK1_MD_TRACKS_START; }
+  virtual uint8_t *get_region() { return BANK1_MD_TRACKS_START; }
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
   virtual uint8_t get_model() { return machine.get_model(); }
   virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
@@ -146,7 +146,7 @@ public:
   virtual uint16_t get_seq_data_size() { return sizeof(MDSeqTrackData); }
   virtual uint8_t get_model() { return MD_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return GRID1_TRACK_LEN; }
-  virtual uint16_t get_region() { return BANK1_MD_TRACKS_START; }
+  virtual uint8_t *get_region() { return BANK1_MD_TRACKS_START; }
   virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
 
   virtual void *get_sound_data_ptr() { return nullptr; }

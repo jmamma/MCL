@@ -2,6 +2,7 @@
 #include "core.h"
 #include "string.h"
 #include "platform.h"
+#include "helpers.h"
 
 #define NUM_DEVS 2
 
@@ -86,6 +87,19 @@ FORCED_INLINE() extern inline void put_byte_bank3(volatile uint8_t *dst, uint8_t
 FORCED_INLINE() extern inline uint8_t get_byte_bank3(volatile uint8_t *dst) {
   uint8_t c = *dst;
   return c;
+}
+
+extern volatile uint8_t *rand_ptr;
+
+FORCED_INLINE() extern inline uint8_t get_random_byte() {
+    // Explicit cast to satisfy pgm_read_byte's const requirement
+    const uint8_t* ptr = const_cast<const uint8_t*>(rand_ptr++);
+    return (pgm_read_byte(ptr) ^ get_byte_bank1(rand_ptr) ^ g_clock_ms);
+}
+
+extern uint8_t get_random(uint8_t range) {
+    uint8_t randomValue = get_random_byte();
+    return (uint8_t)((uint16_t)randomValue * range / 256);
 }
 
 

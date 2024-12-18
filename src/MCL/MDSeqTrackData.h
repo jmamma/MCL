@@ -65,7 +65,7 @@ public:
   // get the pointer to the data chunk.
   // useful to skip the vtable
 
-  void *data() const { return (void *)&locks; }
+  uint8_t *data() const { return (uint8_t *)&locks; }
 
   void clean_params() {
     uint8_t _locks = 0;

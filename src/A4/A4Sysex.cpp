@@ -69,4 +69,4 @@ void A4SysexListenerClass::end() {
 
 }
 
-void A4SysexListenerClass::setup(MidiClass *_midi) { sysex = &(_midi->midiSysex); sysex->addSysexListener(this); }
+void A4SysexListenerClass::setup(MidiClass *_midi) { sysex = _midi->midiSysex; sysex->addSysexListener(this); }

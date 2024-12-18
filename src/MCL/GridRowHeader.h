@@ -1,7 +1,6 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef GRIDROW_H__
-#define GRIDROW_H__
+#pragma once
 
 #include "MCLMemory.h"
 
@@ -28,4 +27,3 @@ class GridRowHeader {
 
 };
 
-#endif /* GRIDROW_H__ */

@@ -3,8 +3,8 @@
 #ifndef EXTSEQTRACK_H__
 #define EXTSEQTRACK_H__
 
-#include "MidiUartParent.h"
-//#include "MidiUart.h"
+//#include "MidiUartClass.h"
+#include "MidiUart.h"
 #include "CommonTools/NibbleArray.h"
 #include "mcl.h"
 #include "SeqTrack.h"
@@ -110,7 +110,7 @@ public:
   uint8_t locks_params_orig[NUM_LOCKS];
   uint8_t channel;
   void set_channel(uint8_t channel_) { channel = channel_; }
-  void *data() const { return (void *)&timing_buckets; }
+  uint8_t *data() const { return (uint8_t *)&timing_buckets; }
   void clear() {
     event_count = 0;
     timing_buckets.clear();
@@ -172,15 +172,15 @@ public:
     mute_state_pending = false;
   }
 
-  void seq(MidiUartParent *uart_);
+  void seq(MidiUartClass *uart_);
   ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-  ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100, MidiUartParent *uart_ = nullptr);
-  ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100, MidiUartParent *uart_ = nullptr);
+  ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
+  ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
   void load_cache();
-  void pitch_bend(uint16_t value, MidiUartParent *uart_ = nullptr);
-  void after_touch(uint8_t note, uint8_t pressure, MidiUartParent *uart_ = nullptr);
-  void send_cc(uint8_t cc, uint8_t value, MidiUartParent *uart_ = nullptr);
-  void channel_pressure(uint8_t pressure, MidiUartParent *uart_ = nullptr);
+  void pitch_bend(uint16_t value, MidiUartClass *uart_ = nullptr);
+  void after_touch(uint8_t note, uint8_t pressure, MidiUartClass *uart_ = nullptr);
+  void send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_ = nullptr);
+  void channel_pressure(uint8_t pressure, MidiUartClass *uart_ = nullptr);
   ALWAYS_INLINE() void noteon_conditional(uint8_t condition, uint8_t note,
                           uint8_t velocity = 100);
   void find_next_locks(uint16_t curidx, uint8_t step, uint8_t *find_array);

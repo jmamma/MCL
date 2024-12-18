@@ -3,6 +3,7 @@
 #pragma once
 
 #include "AUXTrack.h"
+#include "GridCHain.h"
 
 class GridChainTrack : public AUXTrack {
 public:
@@ -24,7 +25,7 @@ public:
   void place_chains();
 
   virtual uint16_t get_track_size() { return sizeof(GridChainTrack); }
-  virtual uint16_t get_region() { return BANK1_GRIDCHAIN_TRACK_START; }
+  virtual uint8_t *get_region() { return BANK1_GRIDCHAIN_TRACK_START; }
 
   virtual uint8_t get_model() { return GRIDCHAIN_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return GRIDCHAIN_TRACK_TYPE; }

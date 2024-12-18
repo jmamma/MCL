@@ -7,6 +7,7 @@
 //#include "MidiActivePeering.h"
 #include "MidiUartParent.h"
 #include "WProgram.h"
+#include "Global.h"
 
 #define EMPTY_TRACK_TYPE 0
 

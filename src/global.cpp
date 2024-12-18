@@ -74,6 +74,7 @@ volatile uint16_t g_clock_minutes = 0;
 volatile uint16_t g_clock_fps = 0;
 volatile uint16_t g_fps = 0;
 
+volatile uint8_t *rand_ptr = nullptr;
 
 // GUI object
 

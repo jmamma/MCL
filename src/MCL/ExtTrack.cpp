@@ -1,4 +1,5 @@
-#include "MCL_impl.h"
+#include "ExtTrack.h"
+#include "Global.h"
 
 void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
   DEBUG_DUMP(F("transition_load_ext"));
@@ -29,8 +30,8 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
 
   seq_track->mute_state = SEQ_MUTE_ON;
 
-  seq_tx3.txRb.init();
-  seq_tx4.txRb.init();
+  seq_tx3.txRb->init();
+  seq_tx4.txRb->init();
 
   ext_track->buffer_notesoff();
 

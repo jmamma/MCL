@@ -1,4 +1,6 @@
-#include "MCL_impl.h"
+#include "ExtTrack.h"
+#include "AuxPages.h"
+
 uint8_t ExtSeqTrack::epoch = 0;
 
 void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
@@ -636,8 +638,8 @@ void ExtSeqTrack::load_cache() {
   t.load_link_data((SeqTrack *)this);
 }
 
-void ExtSeqTrack::seq(MidiUartParent *uart_) {
-  MidiUartParent *uart_old = uart;
+void ExtSeqTrack::seq(MidiUartClass *uart_) {
+  MidiUartClass *uart_old = uart;
   uart = uart_;
 
   uint8_t timing_mid = get_timing_mid_inline();
@@ -728,7 +730,7 @@ end:
 }
 
 void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
-                          MidiUartParent *uart_) {
+                          MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }
@@ -738,7 +740,7 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
 }
 
 void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity,
-                           MidiUartParent *uart_) {
+                           MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }
@@ -771,14 +773,14 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   }
 }
 
-void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartParent *uart_) {
+void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }
   uart_->sendPitchBend(channel, value);
 }
 
-void ExtSeqTrack::channel_pressure(uint8_t pressure, MidiUartParent *uart_) {
+void ExtSeqTrack::channel_pressure(uint8_t pressure, MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }
@@ -786,14 +788,14 @@ void ExtSeqTrack::channel_pressure(uint8_t pressure, MidiUartParent *uart_) {
 }
 
 void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure,
-                              MidiUartParent *uart_) {
+                              MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }
   uart_->sendPolyKeyPressure(channel, note, pressure);
 }
 
-void ExtSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartParent *uart_) {
+void ExtSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }

@@ -16,7 +16,7 @@ public:
   virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false) {
     // should not reach here
     DEBUG_PRINT_FN();
-    GridTrack::store_in_grid(column, row);
+    return GridTrack::store_in_grid(column, row);
   }
 
   virtual void* get_sound_data_ptr() { return nullptr; }

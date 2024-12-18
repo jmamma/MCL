@@ -1,8 +1,9 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
-
 #pragma once
 
 #include "AUXTrack.h"
+#include "PerfEncoder.h"
+#include "MixerPage.h"
 
 class PerfTrackEncoderData {
 public:
@@ -74,7 +75,7 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(PerfTrack); }
-  virtual uint16_t get_region() { return BANK1_PERF_TRACK_START; }
+  virtual uint8_t *get_region() { return BANK1_PERF_TRACK_START; }
 
   virtual uint8_t get_model() { return PERF_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return PERF_TRACK_TYPE; }
