@@ -139,9 +139,12 @@ void SeqPtcPage::config() {
     str_second[1] = last_ext_track + '1';
   }
 #endif
-  strncpy(info1, str_first, len1);
-  strncat(info1, ">", len1);
-  strncat(info1, str_second, len1);
+  // Initialize info1 as empty string
+  info1[0] = '\0';
+  // Use strncat but leave room for subsequent concatenations
+  strncpy(info1, str_first, len1 - 3);  // -3 for ">" and str_second and null
+  strncat(info1, ">", len1 - 2);        // -2 for str_second and null  
+  strncat(info1, str_second, len1 - 1); // -1 for null terminator
 
   strcpy(info2, "CHROMAT");
   display_page_index = false;
@@ -545,7 +548,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     } else {
 //      note += MIDI_NOTE_C1;
     }
-    uint8_t msg[] = {MIDI_NOTE_ON | (is_md ? last_md_track : last_ext_track),
+    uint8_t msg[] = {static_cast<uint8_t>(MIDI_NOTE_ON | (is_md ? last_md_track : last_ext_track)),
                      note, 127};
 
     if (mask == EVENT_BUTTON_PRESSED) {

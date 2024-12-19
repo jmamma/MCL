@@ -25,18 +25,25 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
 
 - [X] Verify SDFat is functional with the arduino-pico core
 
+- [X] Compressed Asset generation via 'make assets'
+
 - [X] Oled SSD1305 display + Adafruit GFX
+
+- [X] Migrate all MCL source code
+
+- [X] Fix compliation errors
+
+- [X] Fix linking
 
 ## Todo
 
-- [ ] Page system
-- [ ] GUI
-- [ ] Menus
+- [ ] Verify user GUI (buttons + encoders)
+- [ ] Verify Page System
+- [ ] Verify Menus
 - [ ] MCL project/grid initialisation
 - [ ] Object serialisation to/from SD Card
 - [ ] MIDI Device Drivers
 - [ ] Sequencer
-- [ ] Compressed Assets
 - [ ] Stack Size. Currently limited to 4KB per core. Could we use all 8KB for a single core?
       MCL in current implementation requires a stack size of 8KB.
 - [ ] ... and more

@@ -173,9 +173,10 @@ public:
   }
 
   void seq(MidiUartClass *uart_);
+
   ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
-  ALWAYS_INLINE() void note_on(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
-  ALWAYS_INLINE() void note_off(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
+  void note_on(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
+  void note_off(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
   void load_cache();
   void pitch_bend(uint16_t value, MidiUartClass *uart_ = nullptr);
   void after_touch(uint8_t note, uint8_t pressure, MidiUartClass *uart_ = nullptr);
