@@ -1,5 +1,14 @@
-#include "MCL_impl.h"
+#include "MidiActivePeering.h"
+#include "MCLGUI.h"
+#include "MidiID.h"
+#include "MidiIDSysex.h"
+#include "MidiUart.h"
+#include "MidiSetup.h"
+#include "TurboLight.h"
 #include "ResourceManager.h"
+#include "MD.h"
+#include "A4.h"
+#include "MNM.h"
 
 uint8_t *GenericMidiDevice::icon() { return R.icons_device->icon_turbo; }
 

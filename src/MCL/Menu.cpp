@@ -1,4 +1,4 @@
-#include "MCL_impl.h"
+#include "Menu.h"
 #include "ResourceManager.h"
 
 void MenuBase::enable_entry(uint8_t entry_index, bool en) {
@@ -19,10 +19,21 @@ bool MenuBase::is_entry_enable(uint8_t entry_index) {
 }
 
 menu_function_t MenuBase::get_row_function(uint8_t item_n) {
-  const menu_item_t *item = get_item(item_n);
-  if (item == nullptr) { return nullptr; }
-  return (menu_function_t)pgm_read_word(menu_target_functions + item->row_function_id);
+    const menu_item_t *item = get_item(item_n);
+    if (item == nullptr) { return nullptr; }
+
+    menu_function_ptr_t fn;
+    #if defined(__AVR__)
+        // On AVR, single 16-bit read
+        fn.word = pgm_read_word(&menu_target_functions[item->row_function_id].word);
+    #else
+        // On 32-bit architectures, read both words
+        fn.words.low = pgm_read_word(&menu_target_functions[item->row_function_id].words.low);
+        fn.words.high = pgm_read_word(&menu_target_functions[item->row_function_id].words.high);
+    #endif
+    return fn.fn;
 }
+
 
 uint8_t MenuBase::get_number_of_items() {
   uint8_t entry_cnt = get_entry_count();
@@ -68,8 +79,17 @@ PageIndex MenuBase::get_page_callback(uint8_t item_n) {
 }
 
 uint8_t *MenuBase::get_dest_variable(uint8_t item_n) {
-  auto *item = get_item(item_n);
-  return (uint8_t*)pgm_read_word(menu_target_param + item->destination_var_id);
+    const menu_item_t *item = get_item(item_n);
+    if (item == nullptr) { return nullptr; }
+
+    uint8_ptr_t p;
+    #if defined(__AVR__)
+        p.word = pgm_read_word(&menu_target_param[item->destination_var_id]);
+    #else
+        p.words.low = pgm_read_word(&menu_target_param[item->destination_var_id]);
+        p.words.high = pgm_read_word(((uint16_t*)&menu_target_param[item->destination_var_id]) + 1);
+    #endif
+    return p.ptr;
 }
 
 uint8_t MenuBase::get_option_range(uint8_t item_n) {

@@ -729,7 +729,7 @@ end:
   uart = uart_old;
 }
 
-void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
+ALWAYS_INLINE() void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
                           MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
@@ -739,7 +739,7 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
   SET_BIT128_P(note_buffer, note);
 }
 
-void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity,
+ALWAYS_INLINE() void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity,
                            MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;

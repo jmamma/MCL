@@ -62,13 +62,13 @@ void MNMPattern::clearPattern() {
 
 bool MNMPattern::fromSysex(MidiClass *midi) {
     uint16_t offset = 0;
-    uint16_t len = midi->midiSysex.get_recordLen();
+    uint16_t len = midi->midiSysex->get_recordLen();
 
 	if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
     return false;
   }
 
-  origPosition = midi->midiSysex.getByte(3);
+  origPosition = midi->midiSysex->getByte(3);
 	MNMSysexDecoder decoder(midi, offset + 4);
 
 	decoder.get64(ampTrigs, 6 * 13);

@@ -111,7 +111,7 @@ public:
   uint8_t setMachine(uint8_t idx) { return setMachine(currentTrack, idx); }
   uint8_t setMachine(uint8_t track, uint8_t idx, bool send = true);
 
-  void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr);
   /*
   void muteTrack() { muteTrack(currentTrack); }
   void muteTrack(uint8_t track) { setMute(track, true); }

@@ -4,10 +4,10 @@
 #ifndef NOTEINTERFACE_H__
 #define NOTEINTERFACE_H__
 
-#include "MidiID.h"
 #include "GUI.h"
 #include "MCLMemory.h"
 #include "midi-common.h"
+#include "MidiID.h"
 
 #define TRIG_HOLD_TIME 450
 

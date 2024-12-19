@@ -75,6 +75,10 @@ public:
     return eventBuffer.isEmpty();
   }
 
+  void putEvent(gui_event_t* event) {
+    eventBuffer.putp(event);
+  }
+
   void getEvent(gui_event_t* event) {
     eventBuffer.getp(event);
     return;

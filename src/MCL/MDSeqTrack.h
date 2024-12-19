@@ -57,7 +57,7 @@ public:
   bool get_step(uint8_t step, uint8_t mask_type) const;
   void set_step(uint8_t step, uint8_t mask_type, bool val);
 
-  void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
+  void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
@@ -134,9 +134,9 @@ public:
   }
   void process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs, bool is_lock = false);
   void send_notes_ccs(uint8_t *ccs, bool send_ccs);
-  void send_notes(uint8_t first_note = 255, MidiUartParent *uart2_ = nullptr);
-  void send_notes_on(MidiUartParent *uart2_ = nullptr);
-  void send_notes_off(MidiUartParent *uart2_ = nullptr);
+  void send_notes(uint8_t first_note = 255, MidiUartClass *uart2_ = nullptr);
+  void send_notes_on(MidiUartClass *uart2_ = nullptr);
+  void send_notes_off(MidiUartClass *uart2_ = nullptr);
 
   uint8_t transpose_pitch(uint8_t pitch, int8_t offset);
   void transpose(int8_t offset);

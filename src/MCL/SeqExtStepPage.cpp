@@ -1,4 +1,7 @@
-#include "MCL_impl.h"
+#include "SeqExtStepPage.h"
+#include "MCLGUI.h"
+#include "MidiActivePeering.h"
+#include "SeqPages.h"
 
 void SeqExtStepPage::setup() {
   SeqPage::setup();

@@ -111,7 +111,7 @@ public:
    *
    * track goes from 0 to 15, velocity from 0 to 127.
    **/
-  void triggerTrack(uint8_t track, uint8_t velocity, MidiUartParent *uart_ = nullptr);
+  void triggerTrack(uint8_t track, uint8_t velocity, MidiUartClass *uart_ = nullptr);
 
   /* Restore modified kit params, with the original values. */
   void restore_kit_params();
@@ -126,8 +126,8 @@ public:
    * Uses the channel settings out of the global settings.
    **/
 
-  ALWAYS_INLINE() void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_ = nullptr, bool update_kit = false);
-  void setTrackParam(uint8_t track, uint8_t param, uint8_t value, MidiUartParent *uart_ = nullptr, bool update_kit = false);
+  ALWAYS_INLINE() void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value, MidiUartClass *uart_ = nullptr, bool update_kit = false);
+  void setTrackParam(uint8_t track, uint8_t param, uint8_t value, MidiUartClass *uart_ = nullptr, bool update_kit = false);
 
   void setSampleName(uint8_t slot, char *name);
 
@@ -150,7 +150,7 @@ public:
   uint8_t setEQParams(uint8_t *values, bool send = true);
   uint8_t setCompressorParams(uint8_t *values, bool send = true);
 
-  void setFXParam(uint8_t param, uint8_t value, uint8_t type, bool update_kit = false, MidiUartParent *uart_ = nullptr);
+  void setFXParam(uint8_t param, uint8_t value, uint8_t type, bool update_kit = false, MidiUartClass *uart_ = nullptr);
   /** Set the value of an ECHO FX parameter. **/
   void setEchoParam(uint8_t param, uint8_t value);
   /** Set the value of a REVERB FX parameter. **/
@@ -195,8 +195,8 @@ public:
    * the global variable.
    **/
   void sendNoteOn(uint8_t track, uint8_t pitch, uint8_t velocity);
-  void parallelTrig(uint16_t mask, MidiUartParent *uart_ = nullptr);
-  void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartParent *uart_ = nullptr);
+  void parallelTrig(uint16_t mask, MidiUartClass *uart_ = nullptr);
+  void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartClass *uart_ = nullptr);
   /**
    * Slice the track (assuming it's a ROM or RAM-P machine) on the
    * given 32th, assuming that the loaded sample is 2 bars long.
@@ -266,7 +266,7 @@ public:
      return sendMachine(track + 16, machine, send_level, send);
   }
 
-  void loadMachinesCache(uint32_t track_mask, MidiUartParent *uart_ = nullptr);
+  void loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_ = nullptr);
 
   /**
    * Inserts a machine in to the MDKit object
@@ -278,7 +278,7 @@ public:
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
    **/
-  void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr);
   /** Unmute the given track. **/
   void unmuteTrack(uint8_t track) { muteTrack(track, false); }
 

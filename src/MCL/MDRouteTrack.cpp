@@ -1,4 +1,9 @@
-#include "MCL_impl.h"
+#include "MDRouteTrack.h"
+#include "MCLSysConfig.h"
+#include "MDTrack.h"
+#include "MD.h"
+#include "MCLActions.h"
+
 void MDRouteTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 }
 

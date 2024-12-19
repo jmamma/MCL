@@ -6,6 +6,7 @@
 #include "MCLActionsEvents.h"
 #include "MidiDeviceGrid.h"
 #include "MCLSysConfig.h"
+#include "GridLink.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254

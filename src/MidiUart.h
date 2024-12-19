@@ -42,13 +42,6 @@ private:
 
   ALWAYS_INLINE() uint8_t read_char() { return uart_get_hw(uart_hw)->dr; }
 
-  ALWAYS_INLINE() void enable_tx_irq() {
-    uart_set_irq_enables(uart_hw, true, true);
-  }
-
-  ALWAYS_INLINE() void disable_tx_irq() {
-    uart_set_irq_enables(uart_hw, true, false);
-  }
 public:
   // Ring buffers with compile-time sizes
   volatile RingBuffer<> *rxRb;
@@ -66,6 +59,13 @@ public:
   void realtime_isr(uint8_t c);
   void rx_isr();
   void tx_isr();
+  ALWAYS_INLINE() void enable_tx_irq() {
+    uart_set_irq_enables(uart_hw, true, true);
+  }
+
+  ALWAYS_INLINE() void disable_tx_irq() {
+    uart_set_irq_enables(uart_hw, true, false);
+  }
 
   // Basic MIDI UART operations
   ALWAYS_INLINE() bool avail() { return !rxRb->isEmpty(); }
@@ -73,7 +73,7 @@ public:
   void initSerial();
   void set_speed(uint32_t speed);
   void m_putc_immediate(uint8_t c);
-
+  ALWAYS_INLINE() bool check_empty_tx() { return uart_hw && uart_is_writable(uart_hw); }
   // Interrupt handlers
 
   // MIDI message handling

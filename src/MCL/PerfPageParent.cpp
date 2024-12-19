@@ -1,7 +1,8 @@
 #include "MCLEncoder.h"
-#include "MCL_impl.h"
 #include "PerfPageParent.h"
 #include "ResourceManager.h"
+#include "MD.h"
+#include "MCLGUI.h"
 
 void PerfPageParent::setup() { DEBUG_PRINT_FN(); }
 

@@ -1,5 +1,10 @@
-#include "MCL_impl.h"
+#include "RoutePage.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "MidiActivePeering.h"
+#include "MidiClock.h"
+#include "MCLActions.h"
 
 void RoutePage::setup() {}
 void RoutePage::init() {

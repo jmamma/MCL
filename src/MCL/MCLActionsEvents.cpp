@@ -1,5 +1,11 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "MCL_impl.h"
+#include "MCLActionsEvents.h"
+#include "MCLSysConfig.h"
+#include "MCLMemory.h"
+#include "GridPages.h"
+#include "GridTask.h"
+#include "StackMonitor.h"
+#include "MCLActions.h"
 
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
@@ -124,7 +130,7 @@ void MCLActionsCallbacks::StopHardCallback() {
    }
    */
   DEBUG_PRINTLN("StopHard");
-  DEBUG_PRINTLN((int)SP);
+  StackMonitor::print_stack_info();
   mcl_actions.send_tracks_to_devices(slot_select_array, row_array);
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 end:
@@ -136,7 +142,7 @@ end:
 
 void MCLActionsCallbacks::onMidiStartCallback() {
   DEBUG_PRINTLN("BEGIN on midi start");
-  DEBUG_PRINTLN(SP);
+  StackMonitor::print_stack_info();
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {

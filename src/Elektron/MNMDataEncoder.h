@@ -40,7 +40,7 @@ public:
     mnm_encoder_init();
   }
 
-  MNMDataToSysexEncoder(MidiUartParent *_uart) 
+  MNMDataToSysexEncoder(MidiUartClass *_uart) 
   : ElektronDataToSysexEncoder(_uart) {
     mnm_encoder_init();
   }

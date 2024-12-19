@@ -1,6 +1,7 @@
-#include "MCL_impl.h"
+#include "PerfSeqTrack.h"
+#include "AuxPages.h"
 
-void PerfSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
+void PerfSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   uint8_t timing_mid = get_timing_mid();
   mod12_counter++;
   if (mod12_counter == timing_mid) {

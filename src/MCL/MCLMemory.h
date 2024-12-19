@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Arduino.h"
+
 #define EXT_TRACKS
 #define LFO_TRACKS
 

@@ -44,6 +44,10 @@ public:
   bool handleTopEvent(gui_event_t *event);
 
   // Event and task management
+  void putEvent(gui_event_t* event) {
+    events.putEvent(event);
+  }
+
   void addEventHandler(event_handler_t handler) { eventHandlers.add(handler); }
   void removeEventHandler(event_handler_t handler) { eventHandlers.remove(handler); }
   void ignoreNextEvent(uint8_t i) { events.setIgnoreMask(i); }

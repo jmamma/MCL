@@ -3,7 +3,7 @@
 #include "MidiIDSysex.h"
 #include "helpers.h"
 #include "global.h"
-#include "MidiUartParent.h"
+#include "MidiUart.h"
 #define UART1_PORT 1
 #define UART2_PORT 2
 

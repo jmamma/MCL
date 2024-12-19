@@ -5,7 +5,6 @@
 
 #include "GUI.h"
 #include "MCLSeq.h"
-#include "Menus.h"
 
 extern MCLEncoder page_select_param1;
 extern MCLEncoder page_select_param2;

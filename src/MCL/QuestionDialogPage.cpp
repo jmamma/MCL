@@ -1,4 +1,5 @@
-#include "MCL_impl.h"
+#include "QuestionDialogPage.h"
+#include "MCLGUI.h"
 
 void QuestionDialogPage::init(const char* title_, const char* text_) {
   mcl_gui.draw_infobox(title_, text_, -1);

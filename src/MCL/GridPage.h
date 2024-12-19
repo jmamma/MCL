@@ -3,6 +3,8 @@
 #pragma once
 
 #include "GridRowHeader.h"
+#include "GUI.h"
+#include "MCL.h"
 
 #define MAX_VISIBLE_ROWS 4
 #define MAX_VISIBLE_COLS 8

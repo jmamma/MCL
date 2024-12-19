@@ -1,5 +1,9 @@
-#include "MCL_impl.h"
+#include "MixerPage.h"
+#include "AuxPages.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "MCLSeq.h"
+#include "SeqPages.h"
 
 #define FADER_LEN 18
 #define FADE_RATE 8
@@ -142,7 +146,7 @@ void MixerPage::loop() {
      bool check = (trig_interface.cmd_key_state & mask);
 
       if (note_interface.notes_on || check) {
-        encoders_used_clock[n] = slowclock + timeout + 1;
+        encoders_used_clock[n] = g_clock_ms + timeout + 1;
       }
       if (mcl_gui.show_encoder_value(encoders[n], timeout)) {
         draw_encoders = true;

@@ -1,5 +1,7 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "MCL_impl.h"
+#include "MidiActivePeering.h"
+#include "NoteInterface.h"
+#include "global.h"
 
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
 
@@ -27,7 +29,7 @@ void NoteInterface::add_note_event(uint8_t note_num, uint8_t event_mask, uint8_t
   event.source = note_num + 128;
   event.mask = event_mask;
   event.port = port;
-  EventRB.putp(&event);
+  GUI.putEvent(&event);
 }
 
 void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
@@ -45,7 +47,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
   CLEAR_BIT32(notes_off, note_num);
 
   if (note_num < GRID_WIDTH) {
-    note_hold[port] = slowclock;
+    note_hold[port] = g_clock_ms;
   }
   add_note_event(note_num, EVENT_BUTTON_PRESSED, port);
 }

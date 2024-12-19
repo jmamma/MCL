@@ -1,5 +1,8 @@
-#include "MCL_impl.h"
-
+#include "PolyPage.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "SeqPages.h"
+#include "MidiActivePeering.h"
 void PolyPage::setup() {}
 
 void PolyPage::init() {

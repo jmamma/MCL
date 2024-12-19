@@ -37,7 +37,7 @@ float MDMachine::normalize_level() {
 }
 
 bool MDGlobal::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex.get_recordLen() - 5;
+  uint16_t len = midi->midiSysex->get_recordLen() - 5;
   uint16_t offset = 5;
 
   if (len != 0xC4 - 6) {
@@ -51,7 +51,7 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  origPosition = midi->midiSysex.getByte(offset + 3);
+  origPosition = midi->midiSysex->getByte(offset + 3);
   ElektronSysexDecoder decoder(midi, offset + 4);
   decoder.stop7Bit();
   decoder.get(drumRouting, 16);
@@ -174,7 +174,7 @@ bool MDKit::get_tonal(uint8_t track) {
 }
 
 bool MDKit::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex.get_recordLen() - 5;
+  uint16_t len = midi->midiSysex->get_recordLen() - 5;
   uint16_t offset = 5;
   if (len != (0x4d1 - 7)) {
     DEBUG_PRINTLN(F("kit wrong length"));
@@ -187,8 +187,8 @@ bool MDKit::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  uint8_t version = midi->midiSysex.getByte(1 + offset);
-  origPosition = midi->midiSysex.getByte(3 + offset);
+  uint8_t version = midi->midiSysex->getByte(1 + offset);
+  origPosition = midi->midiSysex->getByte(3 + offset);
   ElektronSysexDecoder decoder(midi, offset + 4);
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);
@@ -342,7 +342,7 @@ void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
 }
 
 bool MDSong::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex.get_recordLen() - 5;
+  uint16_t len = midi->midiSysex->get_recordLen() - 5;
   uint16_t offset = 5;
 
   if (len < 0x1a - 7)
@@ -354,7 +354,7 @@ bool MDSong::fromSysex(MidiClass *midi) {
 
   numRows = (len - (0x1A - 7)) / 12;
 
-  origPosition = midi->midiSysex.getByte(offset + 3);
+  origPosition = midi->midiSysex->getByte(offset + 3);
   ElektronSysexDecoder decoder(midi, offset + 4);
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);

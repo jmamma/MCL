@@ -2,12 +2,13 @@
 #include "MCLMemory.h"
 #include "MD.h"
 #include "PerfData.h"
+#include "MidiUart.h"
 
 #define DIV_1_127 (1.00f / 127.0f)
 
 PerfScene PerfData::scenes[NUM_SCENES];
 
-void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartParent *uart_,MidiUartParent *uart2_) {
+void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_,MidiUartClass *uart2_) {
   if (uart_ == nullptr) { uart_ = &MidiUart; }
   if (uart2_ == nullptr) { uart2_ = &MidiUart2; }
 
@@ -23,7 +24,7 @@ void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartP
   }
 }
 
-void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUartParent *uart_,MidiUartParent *uart2_) {
+void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUartClass *uart_,MidiUartClass *uart2_) {
   PerfMorph morph;
 
   morph.populate(s1, s2);
@@ -52,7 +53,7 @@ void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUa
     send_param(f->dest - 1, f->param, val, uart_, uart2_);
   }
 }
-void PerfEncoder::send(MidiUartParent *uart_,MidiUartParent *uart2_) {
+void PerfEncoder::send(MidiUartClass *uart_,MidiUartClass *uart2_) {
     PerfScene *s1 = active_scene_a == 255 ? nullptr :  &perf_data.scenes[active_scene_a];
     PerfScene *s2 = active_scene_b == 255 ? nullptr :  &perf_data.scenes[active_scene_b];
     send_params(cur, s1, s2, uart_, uart2_);

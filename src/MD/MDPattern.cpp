@@ -51,7 +51,7 @@ void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
 bool MDPattern::fromSysex(MidiClass *midi) {
 
   init();
-  uint16_t len = midi->midiSysex.get_recordLen() - 5;
+  uint16_t len = midi->midiSysex->get_recordLen() - 5;
   uint16_t offset = 5;
 
   if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {
@@ -67,7 +67,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  origPosition = midi->midiSysex.getByte(3);
+  origPosition = midi->midiSysex->getByte(3);
   ElektronSysexDecoder decoder(midi, offset + 0xA - 6);
   decoder.get32(trigPatterns, 16);
 

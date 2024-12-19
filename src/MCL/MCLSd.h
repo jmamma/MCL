@@ -3,9 +3,29 @@
 #pragma once
 
 #include "SdFat.h"
+#include "hardware.h"
 typedef FsFile File;
 
 #define SD_MAX_RETRIES 10
+
+class SdFat_ : public SdFat {
+public:
+    // Constructor
+    SdFat_() : SdFat() {}
+
+    // Method to access the card directly
+    SdCard* getCard() {
+        // Access the protected member through the base class method
+        return card();
+    }
+
+    // Method to toggle dedicated SPI
+    void setDedicatedSpi(bool dedicated) {
+        if (getCard()) {
+            getCard()->setDedicatedSpi(dedicated);
+        }
+    }
+};
 
 class MCLSd {
   public:
@@ -20,4 +40,4 @@ class MCLSd {
 };
 
 extern MCLSd mcl_sd;
-extern SdFat SD;
+extern SdFat_ SD;

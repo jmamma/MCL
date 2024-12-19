@@ -1,4 +1,3 @@
-#include "MCL_impl.h"
 #include "ResourceManager.h"
 
 ResourceManager::ResourceManager() { }

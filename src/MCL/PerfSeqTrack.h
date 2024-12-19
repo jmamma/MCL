@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "MidiUartParent.h"
+#include "MidiUart.h"
 #include "SeqTrack.h"
 #include "WProgram.h"
 #include "GridTrack.h"
@@ -23,6 +23,6 @@ public:
     SeqTrackBase::reset();
   }
 
-  void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
+  void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 
 };

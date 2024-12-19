@@ -1,4 +1,8 @@
-#include "MCL_impl.h"
+#include "MDTrack.h"
+#include "MD.h"
+#include "MCLActions.h"
+#include "Shared.h"
+#include "MCLSeq.h"
 
 void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
                           SeqTrack *seq_track) {

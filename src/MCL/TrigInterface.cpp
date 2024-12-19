@@ -1,5 +1,7 @@
-#include "MCL_impl.h"
-
+#include "TrigInterface.h"
+#include "MD.h"
+#include "Midi.h"
+#include "MidiActivePeering.h"
 /*
 TrigInterfaceTask trig_interface_task;
 
@@ -32,6 +34,10 @@ void TrigInterfaceTask::run() {
 
 }
 */
+
+void TrigInterface::setup(MidiClass *_midi) {
+    sysex = _midi->midiSysex;
+}
 
 void TrigInterface::start() {}
 
@@ -85,7 +91,7 @@ bool TrigInterface::off() {
 }
 
 bool TrigInterface::check_key_throttle() {
-  if (clock_diff(last_clock, slowclock) < 30) {
+  if (clock_diff(last_clock, g_clock_ms) < 30) {
     return true;
   } else {
     throttle = false;
@@ -121,7 +127,7 @@ void TrigInterface::end() {
     }
     if (!throttle) {
       throttle = true;
-      last_clock = slowclock;
+      last_clock = g_clock_ms;
     }
   }
 
@@ -153,7 +159,7 @@ void TrigInterface::end() {
   }
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
   event.port = UART1_PORT;
-  EventRB.putp(&event);
+  GUI.putEvent(&event);
 
   return;
 }

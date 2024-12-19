@@ -1,7 +1,8 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
 #pragma once
-
+#include "MDFXTrack.h"
+#include "MDTrack.h"
 #include "AUXTrack.h"
 
 class MDFXData {

@@ -5,7 +5,32 @@
 #define MAX_MENU_ITEMS 16
 typedef void (*menu_function_t)();
 
-extern const menu_function_t menu_target_functions[] PROGMEM;
+// Union to safely handle function pointers in PROGMEM
+union menu_function_ptr_t {
+    menu_function_t fn;
+    #if defined(__AVR__)
+        uint16_t word;  // AVR uses 16-bit function pointers
+    #else
+        struct {
+            uint16_t low;
+            uint16_t high;
+        } words;        // 32-bit architectures
+    #endif
+};
+
+union uint8_ptr_t {
+    uint8_t* ptr;
+    #if defined(__AVR__)
+        uint16_t word;  // AVR uses 16-bit pointers
+    #else
+        struct {
+            uint16_t low;
+            uint16_t high;
+        } words;        // 32-bit architectures
+    #endif
+};
+
+extern const menu_function_ptr_t menu_target_functions[] PROGMEM;
 extern const uint8_t* const menu_target_param[] PROGMEM;
 
 struct menu_option_t {
@@ -83,8 +108,18 @@ public:
     this->layout = layout;
   }
   virtual const char* get_name() { return layout->name; }
-  virtual menu_function_t get_exit_function() {
-    return (menu_function_t)pgm_read_word(menu_target_functions + layout->exit_function_id);
+  virtual menu_function_t get_exit_function() override {
+        if (layout == nullptr) return nullptr;
+        menu_function_ptr_t fn;
+        #if defined(__AVR__)
+            // On AVR, single 16-bit read
+            fn.word = pgm_read_word(&menu_target_functions[layout->exit_function_id].word);
+        #else
+            // On 32-bit architectures, read both words
+            fn.words.low = pgm_read_word(&menu_target_functions[layout->exit_function_id].words.low);
+            fn.words.high = pgm_read_word(&menu_target_functions[layout->exit_function_id].words.high);
+        #endif
+        return fn.fn;
   }
   virtual const menu_item_t *get_entry_address(uint8_t i) { return layout->items + i; }
   virtual uint8_t get_entry_count() { return N; };

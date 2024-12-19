@@ -1,4 +1,9 @@
-#include "MCL_impl.h"
+#include "SeqPtcPage.h"
+#include "SeqPages.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "MidiActivePeering.h"
+#include "AuxPages.h"
 
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24
@@ -409,7 +414,7 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num,
   return min(machine_pitch, 127);
 }
 
-void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel_event,  uint8_t fine_tune, MidiUartParent *uart_) {
+void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel_event,  uint8_t fine_tune, MidiUartClass *uart_) {
   if (track_number == 255) {
     track_number = last_md_track;
   }
@@ -446,7 +451,7 @@ void SeqPtcPage::record(uint8_t pitch, uint8_t track) {
 
 }
 void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
-                             uint8_t track_number, MidiUartParent *uart_) {
+                             uint8_t track_number, MidiUartClass *uart_) {
   if (track_number == 255) {
     track_number = last_ext_track;
   }
@@ -458,7 +463,7 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
 }
 
 void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
-                              uint8_t track_number, MidiUartParent *uart_) {
+                              uint8_t track_number, MidiUartClass *uart_) {
   if (track_number == 255) {
     track_number = last_ext_track;
   }

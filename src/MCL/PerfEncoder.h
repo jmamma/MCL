@@ -25,9 +25,9 @@ class PerfEncoder : public MCLEncoder {
   bool resend = false;
 
   void init() { perf_data.init(); }
-  void send(MidiUartParent *uart_ = nullptr,MidiUartParent *uart2_ = nullptr);
-  void send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartParent *uart_ = nullptr, MidiUartParent *uart2_ = nullptr);
-  void send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUartParent *uart_ = nullptr,MidiUartParent *uart2_ = nullptr);
+  void send(MidiUartClass *uart_ = nullptr,MidiUartClass *uart2_ = nullptr);
+  void send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_ = nullptr, MidiUartClass *uart2_ = nullptr);
+  void send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUartClass *uart_ = nullptr,MidiUartClass *uart2_ = nullptr);
   void scene_autofill();
   void clear_scenes();
   /**

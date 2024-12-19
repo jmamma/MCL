@@ -1,6 +1,7 @@
 #include "oled.h"
 #include "MCLGfx.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
 
 void MCLGfx::init_oled() {
   oled_display.begin();

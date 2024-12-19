@@ -6,7 +6,6 @@
 #include "MidiActivePeering.h"
 #include "Scales.h"
 #include "SeqPage.h"
-#include "SeqPages.h"
 
 #define MAX_POLY_NOTES 16
 
@@ -73,13 +72,13 @@ public:
   uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
   void record(uint8_t pitch, uint8_t tracknumber);
   void trig_md(uint8_t note_num, uint8_t track_number = 255, uint8_t channel_event = CTRL_EVENT,
-               uint8_t fine_tune = 255, MidiUartParent *uart_ = nullptr);
+               uint8_t fine_tune = 255, MidiUartClass *uart_ = nullptr);
 
   void note_on_ext(uint8_t note_num, uint8_t velocity,
-                   uint8_t track_number = 255, MidiUartParent *uart_ = nullptr);
+                   uint8_t track_number = 255, MidiUartClass *uart_ = nullptr);
   void note_off_ext(uint8_t note_num, uint8_t velocity,
                     uint8_t track_number = 255,
-                    MidiUartParent *uart_ = nullptr);
+                    MidiUartClass *uart_ = nullptr);
 
   void buffer_notesoff_ext(uint8_t track_number);
 

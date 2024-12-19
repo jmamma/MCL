@@ -16,9 +16,9 @@
 #include "Elektron.h"
 #include "ElektronDataEncoder.h"
 #include "Midi.h"
-
+#include "MidiUart.h"
 void ElektronDataToSysexEncoder::init(uint8_t *_sysex,
-                                      MidiUartParent *_uart) {
+                                      MidiUartClass *_uart) {
   DataEncoder::init(_sysex);
   uart = _uart;
   if (uart != NULL) {

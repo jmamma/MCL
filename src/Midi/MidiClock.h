@@ -211,7 +211,7 @@ public:
   }
   void removeOn16Callback(ClockCallback *obj) { on16Callbacks.remove(obj); }
 */
-  ALWAYS_INLINE() void init();
+  void init();
 
   volatile bool inCallback = false;
 

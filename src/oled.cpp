@@ -1,14 +1,14 @@
 #include "Oled.h"
 #include "Adafruit_GFX.h"
-#include "Adafruit_SSD1305.h"
 #include "DiagnosticPage.h"
 #include "MCLSd.h"
+#include "MCLGUI.h"
 
 // the most basic function, set a single pixel
-void Oled::drawPixel(uint8_t 16, uint8_t 16, uint16_t color) {
+void Oled::drawPixel(uint16_t x, uint16_t y, uint16_t color) {
   if (x >= width() || y >= height())
     return;
-  uint16_t index = x + (y / 8) * SSD1305_LCDWIDTH;
+  uint16_t index = x + (y / 8) * OLED_WIDTH;
   uint8_t bit = _BV(y & 7);
 
   if (color == WHITE)
@@ -24,11 +24,11 @@ void Oled::drawFastVLine(uint16_t x, uint16_t y, uint16_t h,
   if ((x >= width()) || (y >= height()))
    return;
 
-  if (y + h > SSD1305_LCDHEIGHT) {
-    h = SSD1305_LCDHEIGHT - y;
+  if (y + h > OLED_HEIGHT) {
+    h = OLED_HEIGHT - y;
   }
  // initial pointer position
-  uint8_t *p = buffer + x + (y / 8) * SSD1305_LCDWIDTH;
+  uint8_t *p = buffer + x + (y / 8) * OLED_WIDTH;
 
   // 1. upper part
   uint16_t h_ = 8 - (y & 0x07);
@@ -49,7 +49,7 @@ void Oled::drawFastVLine(uint16_t x, uint16_t y, uint16_t h,
     } else { // INVERT
       *p ^= mask;
     }
-    p += SSD1305_LCDWIDTH;
+    p += OLED_WIDTH;
     h -= h_;
   }
 
@@ -63,7 +63,7 @@ void Oled::drawFastVLine(uint16_t x, uint16_t y, uint16_t h,
       *p = ~*p;
     }
     h -= 8;
-    p += SSD1305_LCDWIDTH;
+    p += OLED_WIDTH;
   }
 
   // 3. lower part
@@ -88,15 +88,15 @@ void Oled::fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
   // drawFastVLine(x, y, h, color);
   //}
   // return;
-  if (y + h > SSD1305_LCDHEIGHT) {
-    h = SSD1305_LCDHEIGHT - y;
+  if (y + h > OLED_HEIGHT) {
+    h = OLED_HEIGHT - y;
   }
 
-  if (x + w > SSD1305_LCDWIDTH) {
-    w = SSD1305_LCDWIDTH - x;
+  if (x + w > OLED_WIDTH) {
+    w = OLED_WIDTH - x;
   }
    // initial pointer position
-  uint8_t *p = buffer + x + (y / 8) * SSD1305_LCDWIDTH;
+  uint8_t *p = buffer + x + (y / 8) * OLED_WIDTH;
   const int16_t xend = x + w;
 
   // 1. upper part
@@ -121,7 +121,7 @@ void Oled::fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
       }
       ++px;
     }
-    p += SSD1305_LCDWIDTH;
+    p += OLED_WIDTH;
     h -= h_;
   }
 
@@ -139,7 +139,7 @@ void Oled::fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
       ++px;
     }
     h -= 8;
-    p += SSD1305_LCDWIDTH;
+    p += OLED_WIDTH;
   }
 
   // 3. lower part
@@ -166,7 +166,7 @@ void Oled::fillTriangle_3px(int16_t x0, int16_t y0, uint16_t color) {
   drawPixel(x0+2,y0+2, color);
 }
 
-oid Oled::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
+void Oled::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
                               int16_t w, int16_t h, uint16_t color, bool flip_vert, bool flip_horiz) {
 
   int16_t byteWidth = (w + 7) / 8; // Bitmap scanline pad = whole byte
@@ -330,10 +330,10 @@ void Oled::fillScreen(uint16_t color) {
   if (color == BLACK) {
     clearDisplay();
   } else if (color == WHITE) {
-    memset(buffer, 0xFF, (SSD1305_LCDWIDTH * SSD1305_LCDHEIGHT / 8));
+    memset(buffer, 0xFF, (OLED_WIDTH * OLED_HEIGHT / 8));
   } else { // INVERT
     for (uint8_t *p = buffer,
-                 *e = buffer + (SSD1305_LCDWIDTH * SSD1305_LCDHEIGHT / 8);
+                 *e = buffer + (OLED_WIDTH * OLED_HEIGHT / 8);
          p != e; ++p) {
       *p = ~*p;
     }
@@ -341,7 +341,7 @@ void Oled::fillScreen(uint16_t color) {
 }
 
 void Oled::textbox(const char *text, const char *text2, uint16_t delay) {
-  textbox_clock = slowclock;
+  textbox_clock = g_clock_ms;
   strncpy(textbox_str, text, sizeof(textbox_str));
   strncpy(textbox_str2, text2, sizeof(textbox_str2));
   textbox_delay = delay;
@@ -355,7 +355,7 @@ void Oled::display(void) {
 
   display_lock = true;
   if (textbox_enabled) {
-    if (clock_diff(textbox_clock, slowclock) < textbox_delay) {
+    if (clock_diff(textbox_clock, g_clock_ms) < textbox_delay) {
       draw_textbox(textbox_str, textbox_str2);
     } else {
       textbox_enabled = false;
@@ -367,15 +367,38 @@ void Oled::display(void) {
   }
 */
  //For dedicated SPI we do this.
-  SD.m_card->setDedicatedSpi(false);
+  SD.setDedicatedSpi(false);
   Oled::display();
-  SD.m_card->setDedicatedSpi(true);
+  SD.setDedicatedSpi(true);
   display_lock = false;
+}
+
+void Oled::draw_textbox(const char *text1, const char *text2) {
+  char str1[16];
+  char str2[16];
+  strcpy_P(str1, text1);
+  strcpy_P(str1, text2);
+  draw_textbox(str1, str2);
+}
+
+void Oled::draw_textbox(char *text, char *text2) {
+  auto oldfont = getFont();
+  setFont();
+  uint8_t font_width = 6;
+  uint8_t w = ((strlen(text) + strlen(text2) + 2) * font_width);
+  uint8_t x = 64 - w / 2;
+  uint8_t y = 8;
+  fillRect(x - 1, y - 1, w + 2, 8 * 2 + 2, 0);
+  drawRect(x, y, w, 8 * 2, 1);
+  setCursor(x + font_width, y + 4);
+  print(text);
+  print(text2);
+  setFont(oldfont);
 }
 
 // clear everything
 void Oled::clearDisplay(void) {
-  memset(buffer, 0, (SSD1305_LCDWIDTH * SSD1305_LCDHEIGHT / 8));
+  memset(buffer, 0, (OLED_WIDTH * OLED_HEIGHT / 8));
 }
 
 

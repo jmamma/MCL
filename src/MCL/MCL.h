@@ -20,6 +20,18 @@
 
 extern void mcl_setup();
 
+union lightpage_ptr_t {
+    LightPage* ptr;
+    #if defined(__AVR__)
+        uint16_t word;  // AVR uses 16-bit pointers
+    #else
+        struct {
+            uint16_t low;
+            uint16_t high;
+        } words;        // 32-bit architectures
+    #endif
+};
+
 enum PageIndex {
     GRID_PAGE,           // Index: 0
     PAGE_SELECT_PAGE,    // Index: 1
@@ -67,21 +79,30 @@ enum PageIndex {
     MIDIGENERIC_MENU_PAGE,    // Index: 38
     SOUND_BROWSER,            // Index: 39
     PERF_PAGE_0,             // Index: 40
-    NULL_PAGE = 255
+    NULL_PAGE = 255 
 };
-
 
 class MCL {
 public:
   static constexpr uint8_t NUM_PAGES = static_cast<uint8_t>(PageIndex::PERF_PAGE_0) + 1;
 
-  static LightPage *const pages_table[NUM_PAGES] PROGMEM;
+  static const lightpage_ptr_t pages_table[NUM_PAGES] PROGMEM;
 
   PageIndex current_page = GRID_PAGE;
 
   LightPage *getPage(PageIndex page) {
-    return reinterpret_cast<LightPage*>(pgm_read_ptr(&pages_table[page]));
+    if (page >= NUM_PAGES) return nullptr;
+
+    lightpage_ptr_t p;
+#if defined(__AVR__)
+    p.word = pgm_read_word(&pages_table[page].word);
+#else
+    p.words.low = pgm_read_word(&pages_table[page].words.low);
+    p.words.high = pgm_read_word(&pages_table[page].words.high);
+    #endif
+    return p.ptr;
   }
+
 
   void setPage(PageIndex page) {
     if (page >= NUM_PAGES) {

@@ -1,4 +1,10 @@
-#include "MCL_impl.h"
+#include "MCLSysConfig.h"
+#include "MCLGUI.h"
+#include "hardware.h"
+#include "MidiSetup.h"
+#include "GridChain.h"
+#include "MCLSd.h"
+
 // Consolidated display function to reduce code duplication
 static void show_message(const char* line1) {
   oled_display.clearDisplay();
@@ -81,7 +87,7 @@ bool MCLSysConfig::write_cfg() {
   }
   DEBUG_PRINTLN(F("Write cfg okay"));
   cfgfile.close();
-  cfg_save_lastclock = slowclock;
+  cfg_save_lastclock = g_clock_ms;
   return true;
 }
 
@@ -94,14 +100,22 @@ bool MCLSysConfig::cfg_init() {
 
   // DEBUG_PRINTLN(F("conf ext"));
   cfgfile.remove();
-  ret = cfgfile.createContiguous("/config.mcls", (uint32_t)GRID_SLOT_BYTES);
+  // First open the file
+  ret = cfgfile.open("/config.mcls", O_RDWR | O_CREAT);
+  if (!ret) {
+    DEBUG_PRINTLN(F("Failed to open cfgfile"));
+    return false;
+  }
+
+  // Then preallocate space
+  ret = cfgfile.preAllocate(GRID_SLOT_BYTES);
   if (ret) {
     DEBUG_PRINTLN(F("Created new cfgfile"));
   } else {
     DEBUG_PRINTLN(F("Failed to create new cfgfile"));
+    cfgfile.close();  // Clean up if allocation fails
     return false;
   }
-
   char my_string[16] = "/project000.mcl";
 
   memset((uint8_t *)&version, 0, sizeof(MCLSysConfigData)); //<---- flush zero to config

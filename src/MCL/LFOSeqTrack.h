@@ -3,6 +3,7 @@
 #ifndef LFOSEQTRACK_H__
 #define LFOSEQTRACK_H__
 #include "WProgram.h"
+#include "MidiUart.h"
 
 #define NUM_LFO_PARAMS 2
 
@@ -64,7 +65,7 @@ public:
 
 class LFOSeqTrack : public LFOSeqTrackData {
 public:
-  MidiUartParent *uart;
+  MidiUartClass *uart;
   uint8_t track_number;
   uint8_t step_count;
   uint8_t sample_count;
@@ -90,7 +91,7 @@ public:
       params[param].depth = depth;
   }
   void load_wav_table(uint8_t table);
-  void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
+  void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 };
 
 #endif /* LFOSEQTRACK_H__ */

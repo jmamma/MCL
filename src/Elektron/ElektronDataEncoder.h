@@ -34,7 +34,7 @@ protected:
   uint16_t retLen;
   uint16_t cnt7;
   bool in7Bit;
-  MidiUartParent *uart;
+  MidiUartClass *uart;
   uint8_t buf[8];
   uint16_t checksum;
   bool inChecksum;
@@ -44,7 +44,7 @@ public:
     init(_sysex);
   }
 
-  ElektronDataToSysexEncoder(MidiUartParent *_uart) {
+  ElektronDataToSysexEncoder(MidiUartClass *_uart) {
     init(0, _uart);
   }
 
@@ -73,7 +73,7 @@ public:
   /** Finish the current conversion and flush remaining data. **/
   virtual uint16_t finish();
 
-  virtual void init(uint8_t *_sysex = nullptr, MidiUartParent *_uart = nullptr);
+  virtual void init(uint8_t *_sysex = nullptr, MidiUartClass *_uart = nullptr);
   DATA_ENCODER_RETURN_TYPE encode7Bit(uint8_t inb);
 
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);

@@ -1,5 +1,14 @@
 //* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "MCL_impl.h"
+#include "MCLActions.h"
+#include "Project.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "GridPages.h"
+#include "MidiActivePeering.h"
+#include "Elektron.h"
+#include "EmptyTrack.h"
+#include "MDTrack.h"
+#include "GridTask.h"
 
 #define MD_KIT_LENGTH 0x4D0
 
@@ -605,7 +614,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     }
   }
   /*Send the encoded kit to the devices via sysex*/
-  uint16_t myclock = slowclock;
+  uint16_t myclock = g_clock_ms;
   uint16_t latency_ms = 0;
 
   GridRowHeader row_header;
@@ -641,7 +650,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   // note, do not re-enter grid_task -- stackoverflow
 
   GUI.removeTask(&grid_task);
-  while (clock_diff(myclock, slowclock) < latency_ms) {
+  while (clock_diff(myclock, g_clock_ms) < latency_ms) {
     //  GUI.loop();
   }
   GUI.addTask(&grid_task);

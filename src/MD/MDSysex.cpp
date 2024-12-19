@@ -4,8 +4,7 @@
 #include "MDMessages.h"
 #include "MDSysex.h"
 #include "helpers.h"
-
-#include "MCL_impl.h"
+#include "AuxPages.h"
 
 void MDSysexListenerClass::start() {
   msgType = 255;
@@ -94,6 +93,6 @@ void MDSysexListenerClass::end() {
 }
 
 void MDSysexListenerClass::setup(MidiClass *_midi) {
-  sysex = &(_midi->midiSysex);
+  sysex = _midi->midiSysex;
   sysex->addSysexListener(this);
 }

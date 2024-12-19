@@ -1,5 +1,10 @@
 #include "DiagnosticPage.h"
-#include "MCL_impl.h"
+#include "MCLSeq.h"
+#include "MCLGUI.h"
+#include "SeqPages.h"
+#include "MCL.h"
+#include "AuxPages.h"
+#include "GridTask.h"
 
 void MCLSeq::setup() {
 
@@ -91,10 +96,10 @@ void MCLSeq::onMidiContinueCallback() {
 
 void MCLSeq::onMidiStartImmediateCallback() {
   realtime = true;
-  seq_tx1.txRb.init();
-  seq_tx2.txRb.init();
-  seq_tx3.txRb.init();
-  seq_tx4.txRb.init();
+  seq_tx1.txRb->init();
+  seq_tx2.txRb->init();
+  seq_tx3.txRb->init();
+  seq_tx4.txRb->init();
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].reset();
@@ -168,8 +173,8 @@ void MCLSeq::onMidiStopCallback() {
 void MCLSeq::seq() {
   if (!state) { return; }
 
-  MidiUartParent *uart;
-  MidiUartParent *uart2;
+  MidiUartClass *uart;
+  MidiUartClass *uart2;
   bool engage_sidechannel = true;
 
   // If realtime, we render the first tick in realtime, subsequent ticks are
@@ -177,8 +182,14 @@ void MCLSeq::seq() {
 
   if (!realtime) {
   again:
+
+#if defined(__AVR__)
     UART_CLEAR_ISR_TX_BIT();
     UART2_CLEAR_ISR_TX_BIT();
+#else
+    MidiUart.disable_tx_irq();
+    MidiUart2.disable_tx_irq();
+#endif
     if (uart_sidechannel) {
       uart = &seq_tx2;
       uart2 = &seq_tx4;
@@ -196,12 +207,12 @@ void MCLSeq::seq() {
                   seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
                 }
         */
-        MidiUart.txRb_sidechannel = &(seq_tx1.txRb);
-        MidiUart2.txRb_sidechannel = &(seq_tx3.txRb);
+        MidiUart.txRb_sidechannel = seq_tx1.txRb;
+        MidiUart2.txRb_sidechannel = seq_tx3.txRb;
       } else {
         // Purge stale buffers (from MIDI CONTINUE).
-        seq_tx2.txRb.init();
-        seq_tx4.txRb.init();
+        seq_tx2.txRb->init();
+        seq_tx4.txRb->init();
       }
     } else {
       uart = &seq_tx1;
@@ -215,16 +226,22 @@ void MCLSeq::seq() {
                   seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
                 }
         */
-        MidiUart.txRb_sidechannel = &(seq_tx2.txRb);
-        MidiUart2.txRb_sidechannel = &(seq_tx4.txRb);
+        MidiUart.txRb_sidechannel = seq_tx2.txRb;
+        MidiUart2.txRb_sidechannel = seq_tx4.txRb;
       } else {
-        seq_tx1.txRb.init();
-        seq_tx3.txRb.init();
+        seq_tx1.txRb->init();
+        seq_tx3.txRb->init();
       }
     }
     // clearLed2();
+#if defined(__AVR__)
     UART_SET_ISR_TX_BIT();
-    UART2_SET_ISR_TX_BIT();
+    UART2_SET_ISR_TX_BIT()
+#else
+    //Have to flush the first byte to re-trigger the uart tx isr.
+    MidiUart.tx_isr();
+    MidiUart2.tx_isr();
+#endif
     // Flip uart / side_channel buffer for next run
     uart_sidechannel = !uart_sidechannel;
   } else {

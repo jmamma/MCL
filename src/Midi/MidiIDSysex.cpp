@@ -5,7 +5,7 @@
 #include "global.h"
 #include "MidiID.h"
 #include "Midi.h"
-#include "MidiUartParent.h"
+#include "MidiUart.h"
 
 void MidiIDSysexListenerClass::start() {
 
@@ -20,7 +20,7 @@ void MidiIDSysexListenerClass::handleByte(uint8_t byte) {}
 #define MD_ID_NAME 0x73
 
 void MidiIDSysexListenerClass::end() {
-  // MidiUartParent *uart = sysex->uart;
+  // MidiUartClass *uart = sysex->uart;
   MidiID *dev = &(sysex->uart->device);
   uint8_t i = 4;
 

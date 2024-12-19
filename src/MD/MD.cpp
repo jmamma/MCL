@@ -1,5 +1,11 @@
-#include "MCL_impl.h"
+#include "MD.h"
+#include "GridTrack.h"
 #include "ResourceManager.h"
+#include "MCLSeq.h"
+#include "TurboLight.h"
+#include "MCLGUI.h"
+#include "MDTrackSelect.h"
+#include "SeqPages.h"
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -327,7 +333,7 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
 }
 
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
-                           MidiUartParent *uart_) {
+                           MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }
@@ -338,7 +344,7 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
 }
 
 void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
-                            MidiUartParent *uart_) {
+                            MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }
@@ -346,7 +352,7 @@ void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
   sendRequest(data, sizeof(data), uart_);
 }
 
-void MDClass::parallelTrig(uint16_t mask, MidiUartParent *uart_) {
+void MDClass::parallelTrig(uint16_t mask, MidiUartClass *uart_) {
   if (uart_ == nullptr) {
     uart_ = uart;
   }
@@ -384,12 +390,12 @@ void MDClass::restore_kit_param(uint8_t track, uint8_t param) {
 }
 
 void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value,
-                            MidiUartParent *uart_, bool update_kit) {
+                            MidiUartClass *uart_, bool update_kit) {
   setTrackParam_inline(track, param, value, uart_, update_kit);
 }
 
 void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
-                                   MidiUartParent *uart_, bool update_kit) {
+                                   MidiUartClass *uart_, bool update_kit) {
 
   if (uart_ == nullptr) {
     uart_ = uart;
@@ -467,7 +473,7 @@ uint8_t MDClass::setCompressorParams(uint8_t *values, bool send) {
 }
 
 void MDClass::setFXParam(uint8_t param, uint8_t value, uint8_t type,
-                         bool update_kit, MidiUartParent *uart_) {
+                         bool update_kit, MidiUartClass *uart_) {
 
   if (uart_ == nullptr) {
     uart_ = uart;
@@ -752,7 +758,7 @@ end:
   return sendRequest(data, i, send);
 }
 
-void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartParent *uart_) {
+void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_) {
   DEBUG_PRINTLN("load machine cache");
   uint8_t a = track_mask & 0x7F;
   uint8_t b = (track_mask >> 7) & 0x7F;
@@ -828,7 +834,7 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   return bytes;
 }
 
-void MDClass::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
+void MDClass::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
   if (global.baseChannel == 127)
     return;
   if (uart_ == nullptr) {

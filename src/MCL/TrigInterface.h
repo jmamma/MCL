@@ -3,6 +3,8 @@
 
 #include "NoteInterface.h"
 #include "WProgram.h"
+#include "MidiSysex.h"
+#include "Elektron.h"
 
 #define MDX_KEY_TRIG1 0x00
 #define MDX_KEY_ENCBUTTON1 0x10
@@ -60,6 +62,7 @@ public:
 
 extern TrigInterfaceTask trig_interface_task;
 */
+class MidiClass;
 
 class TrigInterface : public MidiSysexListenerClass {
 
@@ -74,9 +77,7 @@ public:
     ids[0] = 0x7F;
     ids[1] = 0x0D;
   }
-  void setup(MidiClass *_midi) {
-    sysex = _midi->midiSysex;
-  }
+  void setup(MidiClass *_midi);
   void ignoreNextEvent(uint8_t i) {
     SET_BIT64(ignore_next_mask, i);
   }

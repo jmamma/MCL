@@ -5,6 +5,7 @@
 
 #include "GUI.h"
 #include "MCLEncoder.h"
+#include "midi-common.h"
 
 class PerfPageParent : public MidiCallback {
 public:

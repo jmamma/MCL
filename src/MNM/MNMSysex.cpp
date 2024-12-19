@@ -37,6 +37,6 @@ void MNMSysexListenerClass::end() {
 }
 
 void MNMSysexListenerClass::setup(MidiClass *_midi) {
-  sysex = &(_midi->midiSysex);
+  sysex = _midi->midiSysex;
   sysex->addSysexListener(this);
 }

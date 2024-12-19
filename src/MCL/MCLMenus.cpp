@@ -1,7 +1,12 @@
 #include "MCLMenus.h"
-#include "MCL_impl.h"
 #include "Project.h"
 #include "ResourceManager.h"
+#include "SeqPages.h"
+#include "MCLSysConfig.h"
+#include "MCLGUI.h"
+#include "GridPages.h"
+#include "AuxPages.h"
+#include "MCLActions.h"
 
 MCLEncoder options_param1(0, 11, ENCODER_RES_SYS);
 MCLEncoder options_param2(0, 17, ENCODER_RES_SYS);
@@ -110,64 +115,64 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &opt_transpose,
 };
 
-const menu_function_t menu_target_functions[] PROGMEM = {
-    nullptr,
+const menu_function_ptr_t menu_target_functions[] PROGMEM = {
+    { .fn = nullptr },
     // 1 - mclsys_apply_config
-    mclsys_apply_config,
+    { .fn = mclsys_apply_config },
     // 2 - new_proj_handler
-    new_proj_handler,
+    { .fn = new_proj_handler },
     // 3
-    opt_trackid_handler,
-    opt_mask_handler,
-    opt_speed_handler,
-    opt_length_handler,
-    opt_channel_handler,
-    opt_copy_track_handler_cb,
-    opt_clear_track_handler,
-    opt_clear_locks_handler,
-    opt_paste_track_handler,
-    opt_shift_track_handler,
-    opt_reverse_track_handler,
+    { .fn = opt_trackid_handler },
+    { .fn = opt_mask_handler },
+    { .fn = opt_speed_handler },
+    { .fn = opt_length_handler },
+    { .fn = opt_channel_handler },
+    { .fn = opt_copy_track_handler_cb },
+    { .fn = opt_clear_track_handler },
+    { .fn = opt_clear_locks_handler },
+    { .fn = opt_paste_track_handler },
+    { .fn = opt_shift_track_handler },
+    { .fn = opt_reverse_track_handler },
     // 14
-    seq_menu_handler,
+    { .fn = seq_menu_handler },
     // 15
-    nullptr,
-    nullptr,
-    nullptr,
-    nullptr,
+    { .fn = nullptr },
+    { .fn = nullptr },
+    { .fn = nullptr },
+    { .fn = nullptr },
     // 19
-    nullptr,
+    { .fn = nullptr },
     // 20
-    rename_row,
+    { .fn = rename_row },
     // 21
-    apply_slot_changes_cb,
+    { .fn = apply_slot_changes_cb },
 #ifdef WAV_DESIGNER
     // 22
-    wav_render,
+    { .fn = wav_render },
     // 23
-    wavdesign_menu_handler,
+    { .fn = wavdesign_menu_handler },
 #else
     // 22
-    nullptr,
+    { .fn = nullptr },
     // 23
-    nullptr,
+    { .fn = nullptr },
 #endif
     // 24
-    mclsys_apply_config_midi,
+    { .fn = mclsys_apply_config_midi },
     // 25
-    md_import,
+    { .fn = md_import },
     // 26
-    usb_dfu_mode,
+    { .fn = usb_dfu_mode },
     // 27
-    usb_os_update,
+    { .fn = usb_os_update },
     // 28
-    usb_disk_mode,
+    { .fn = usb_disk_mode },
     // 29
-    mcl_setup,
+    { .fn = mcl_setup },
     // 30
-    rename_perf,
+    { .fn = rename_perf },
     // 31
-    opt_transpose_track_handler,
+    { .fn = opt_transpose_track_handler },
 };
 MenuPage<aux_config_page_N> aux_config_page(&config_param1, &config_param6);
 

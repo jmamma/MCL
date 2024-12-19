@@ -1,4 +1,11 @@
-#include "MCL_impl.h"
+#include "SeqStepPage.h"
+#include "SeqPages.h"
+#include "MD.h"
+#include "MidiActivePeering.h"
+#include "MCLGUI.h"
+#include "AuxPages.h"
+#include "GridPages.h"
+#include "PageSelectPage.h"
 
 #define MIDI_OMNI_MODE 17
 #define NUM_KEYS 24
@@ -253,7 +260,7 @@ void SeqStepPage::loop() {
             if (is_midi_model) { machine_pitch = note_num; }
             if (machine_pitch != MD.kit.params[last_md_track][0]) {
               active_track.set_track_pitch(step, machine_pitch);
-              seq_step_page.encoders_used_clock[3] = slowclock; // indicate that encoder has changed.
+              seq_step_page.encoders_used_clock[3] = g_clock_ms; // indicate that encoder has changed.
             }
           }
         }
@@ -264,7 +271,7 @@ void SeqStepPage::loop() {
     seq_param4.old = seq_param4.cur;
   }
 
-  if (update_params_queue && clock_diff(update_params_clock, slowclock) > 400) {
+  if (update_params_queue && clock_diff(update_params_clock, g_clock_ms) > 400) {
     enable_paramupdate_events();
     update_params_queue = false;
   }
@@ -275,7 +282,7 @@ void SeqStepPage::loop() {
     MD.deactivate_encoder_interface();
 
     update_params_queue = true;
-    update_params_clock = slowclock;
+    update_params_clock = g_clock_ms;
 
     note_interface.init_notes();
   }
@@ -422,7 +429,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (active_track.get_step(step, mask_type)) {
         DEBUG_PRINTLN(F("clear step"));
 
-        if (clock_diff(note_interface.note_hold[port], slowclock) <
+        if (clock_diff(note_interface.note_hold[port], g_clock_ms) <
             TRIG_HOLD_TIME) {
           reset_undo();
           active_track.set_step(step, mask_type, false);

@@ -1,4 +1,7 @@
-#include "MCL_impl.h"
+#include "LFOSeqTrack.h"
+#include "LFO.h"
+#include "MidiClock.h"
+#include "MD.h"
 
 uint8_t LFOSeqTrack::wav_tables[4][WAV_LENGTH];
 
@@ -75,8 +78,8 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t sample_count, uint8_t dest,
   return (uint8_t)sample;
 }
 
-void LFOSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
-  MidiUartParent *uart_old = uart;
+void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
+  MidiUartClass *uart_old = uart;
   uart = uart_;
 
   if ((MidiClock.mod12_counter == 0) && (mode != LFO_MODE_FREE) &&

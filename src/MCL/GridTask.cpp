@@ -1,8 +1,15 @@
 #include "GridTask.h"
+#include "EmptyTrack.h"
 #include "GridPage.h"
+#include "GridPages.h"
 #include "MD.h"
 #include "MCLActions.h"
 #include "MDSeqTrack.h"
+#include "SeqPages.h"
+#include "AuxPages.h"
+#include "MCLGUI.h"
+#include "Project.h"
+#include "StackMonitor.h"
 
 #define DIV16_MARGIN 8
 
@@ -135,7 +142,7 @@ void GridTask::transition_handler() {
     DEBUG_PRINTLN(MidiClock.div16th_counter);
     DEBUG_PRINTLN(mcl_actions.next_transition);
 
-    DEBUG_PRINTLN((int)SP);
+    StackMonitor::print_stack_info();
 
     uint8_t row = 255;
     uint8_t last_slot = 255;
@@ -232,16 +239,16 @@ void GridTask::transition_handler() {
       }
     }
     DEBUG_PRINTLN(F("SP pre cache"));
-    DEBUG_PRINTLN((int)SP);
+    StackMonitor::print_stack_info();
 
     bool update_gui = true;
 
     DEBUG_PRINTLN("cache next");
 
-    volatile uint32_t clk = slowclock;
+    volatile uint32_t clk = g_clock_ms;
     mcl_actions.cache_next_tracks(track_select_array, update_gui);
 
-    uint32_t t = clock_diff(clk, slowclock);
+    uint32_t t = clock_diff(clk, g_clock_ms);
     DEBUG_PRINTLN("time");
     DEBUG_PRINTLN(t);
 

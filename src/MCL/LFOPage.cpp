@@ -1,5 +1,10 @@
-#include "MCL_impl.h"
+#include "LFOPage.h"
+#include "LFO.h"
+#include "MD.h"
+#include "MCLGUI.h"
 #include "ResourceManager.h"
+#include "MidiActivePeering.h"
+#include "A4.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1
@@ -287,7 +292,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
         SET_BIT64(lfo_track->pattern_mask, step);
       } else {
         DEBUG_PRINTLN(F("Trying to clear"));
-        if (clock_diff(note_interface.note_hold[port], slowclock) <
+        if (clock_diff(note_interface.note_hold[port], g_clock_ms) <
             TRIG_HOLD_TIME) {
           CLEAR_BIT64(lfo_track->pattern_mask, step);
         }

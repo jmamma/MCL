@@ -1,5 +1,10 @@
-#include "MCL_impl.h"
+#include "PerfPage.h"
+#include "AuxPages.h"
 #include "MCLMemory.h"
+#include "MCLGUI.h"
+#include "MCLClipBoard.h"
+#include "MCLSeq.h"
+#include "SeqPages.h"
 
 #define LEARN_MIN 1
 #define LEARN_MAX 2
@@ -231,8 +236,8 @@ void PerfPage::display() {
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   mcl_gui.draw_knob_frame();
 
-  char *info1 = "";
-  char *info2 = "PARAMETER";
+  char info1[8] = ""; // Use an appropriate size for your needs
+  char info2[12] = "PARAMETER";
 
   uint8_t scene = learn - 1;
 
@@ -245,8 +250,7 @@ void PerfPage::display() {
   if (learn) {
     draw_dest(1, encoders[1]->cur);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
-
-    info1 = "LCK>  ";
+    strcpy(info1, "LCK>  ");
     mcl_gui.put_value_at(page_mode, info1 + 4);
 
     const char *str1 = "LCK";
