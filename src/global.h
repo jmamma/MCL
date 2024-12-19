@@ -26,6 +26,7 @@ extern volatile uint16_t g_fps;
 extern volatile uint16_t g_clock_fps;
 
 extern volatile uint16_t g_clock_minutes;
+extern volatile uint16_t g_clock_ticks;
 
 extern void handleIncomingMidi();
 extern void init_oled();

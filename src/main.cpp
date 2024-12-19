@@ -24,6 +24,7 @@ void setup() {
   MidiUart.initSerial();
   MidiUart2.initSerial();
 
+
   setup_timers();
 
   pinMode(LED_BUILTIN, OUTPUT);
@@ -31,6 +32,7 @@ void setup() {
 
   init_oled();
 
+  mcl.setup();
   /*
   std::vector<uint32_t> baud_rates = {
     31250,      // Standard MIDI baud rate

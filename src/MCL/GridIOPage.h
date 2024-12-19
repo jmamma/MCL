@@ -20,8 +20,8 @@ class GridIOPage : public LightPage {
  void track_select_array_from_type_select(uint8_t *track_select_array);
  virtual void init();
  virtual void cleanup();
- virtual void draw_popup();
- virtual void group_select();
+ virtual void draw_popup() = 0;
+ virtual void group_select() = 0;
  virtual void action() = 0;
  virtual bool handleEvent(gui_event_t *event);
 };

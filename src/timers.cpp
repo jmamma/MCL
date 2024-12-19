@@ -12,15 +12,13 @@ const uint FAST_TIMER_SLICE = 5;
 const uint32_t FAST_TIMER_HZ = 5000; // 5kHz
 const uint32_t SLOW_TIMER_HZ = 1000; // 1kHz (1ms)
 
-uint16_t minuteclock = 0;
-
 void __not_in_flash_func(timer1_handler)() {
     LOCK();
     g_clock_ms++;
-    minuteclock++;
+    g_clock_ticks++;
 
-    if (minuteclock == 60000) {
-      minuteclock = 0;
+    if (g_clock_ticks == 60000) {
+      g_clock_ticks = 0;
       g_clock_minutes++;
     }
 

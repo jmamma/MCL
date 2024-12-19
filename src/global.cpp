@@ -2,9 +2,15 @@
 #include "MidiSysex.h"
 #include "MidiIDSysex.h"
 #include "Midi.h"
+#include "MidiSetup.h"
 #include "memory.h"
 #include "oled.h"
 #include "GUI.h"
+#include "MD.h"
+#include "MNM.h"
+#include "A4.h"
+#include "Elektron.h"
+#include "MidiIDSysex.h"
 
 // Buffer array definitions
 uint8_t seq_tx1_buf[TX_SEQBUF_SIZE];
@@ -61,6 +67,7 @@ MidiSysexClass MidiSysexUSB(&MidiUartUSB, &uartusb_sysex_rb);
 // MIDI class instances
 MidiClass Midi(&MidiUart, &MidiSysex);
 MidiClass Midi2(&MidiUart2, &MidiSysex2);
+MidiClass MidiUSB(&MidiUartUSB, &MidiSysexUSB);
 
 MidiIDSysexListenerClass MidiIDSysexListener;
 
@@ -69,6 +76,7 @@ MidiIDSysexListenerClass MidiIDSysexListener;
 volatile uint8_t MidiUartParent::handle_midi_lock = 0;
 volatile uint16_t g_clock_fast = 0;
 volatile uint16_t g_clock_ms = 0;
+volatile uint16_t g_clock_ticks = 0;
 volatile uint16_t g_clock_minutes = 0;
 
 volatile uint16_t g_clock_fps = 0;
@@ -80,6 +88,21 @@ volatile uint8_t *rand_ptr = nullptr;
 
 GuiClass GUI;
 
+// -- Sysex listeners
+MDSysexListenerClass MDSysexListener;
+MNMSysexListenerClass MNMSysexListener;
+A4SysexListenerClass A4SysexListener;
+
+// -- Device drivers
+MDClass MD;
+MNMClass MNM;
+A4Class Analog4;
+GenericMidiDevice generic_midi_device;
+NullMidiDevice null_midi_device;
+
+// -- Device manager
+MidiActivePeering midi_active_peering;
+MidiSetup midi_setup;
 //Oled Display
 
 Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);

@@ -1,3 +1,4 @@
+#include "TomThumb.h"
 #include <Adafruit_GFX.h>
 
 const uint8_t TomThumbBitmaps[] PROGMEM = {

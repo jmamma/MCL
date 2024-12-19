@@ -16,7 +16,7 @@ public:
 
   PerfSeqTrack() : SeqTrackBase() {
     active = PERF_TRACK_TYPE;
-    init();
+ //   init();
   }
   void reset() {
     memset(perf_locks,255,sizeof(perf_locks));
