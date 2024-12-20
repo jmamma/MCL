@@ -5,10 +5,8 @@
 #include "Arduino.h"
 #include "global.h"
 
-#ifdef MEGACOMMAND
 #define WAV_DESIGNER
 #define SOUND_PAGE
-#endif
 
 #define VERSION 4060
 #define VERSION_STR "B4.61"
@@ -31,60 +29,68 @@ union lightpage_ptr_t {
         } words;        // 32-bit architectures
     #endif
 };
-
 enum PageIndex {
-    GRID_PAGE,           // Index: 0
-    PAGE_SELECT_PAGE,    // Index: 1
-    SYSTEM_PAGE,         // Index: 2
-    MIXER_PAGE,          // Index: 3
-    GRID_SAVE_PAGE,      // Index: 4
-    GRID_LOAD_PAGE,      // Index: 5
+    // Core pages
+    GRID_PAGE = 0,
+    PAGE_SELECT_PAGE,
+    SYSTEM_PAGE,
+    MIXER_PAGE,
+    GRID_SAVE_PAGE,
+    GRID_LOAD_PAGE,
+    // Main sequence pages
+    SEQ_STEP_PAGE,
+    SEQ_EXTSTEP_PAGE,
+    SEQ_PTC_PAGE,
+    // UI pages
+    TEXT_INPUT_PAGE,
+    POLY_PAGE,
+    SAMPLE_BROWSER,
+    QUESTIONDIALOG_PAGE,
+    START_MENU_PAGE,
+    BOOT_MENU_PAGE,
+    // Effect pages
+    FX_PAGE_A,
+    FX_PAGE_B,
+    ROUTE_PAGE,
+    LFO_PAGE,
+    // Memory pages
+    RAM_PAGE_A,
+    RAM_PAGE_B,
+    // Configuration pages
+    LOAD_PROJ_PAGE,
+    MIDI_CONFIG_PAGE,
+    MD_CONFIG_PAGE,
+    CHAIN_CONFIG_PAGE,
+    AUX_CONFIG_PAGE,
+    MCL_CONFIG_PAGE,
+    // Additional feature pages
+    ARP_PAGE,
+    MD_IMPORT_PAGE,
+    // MIDI menu pages
+    MIDIPORT_MENU_PAGE,
+    MIDIPROGRAM_MENU_PAGE,
+    MIDICLOCK_MENU_PAGE,
+    MIDIROUTE_MENU_PAGE,
+    MIDIMACHINEDRUM_MENU_PAGE,
+    MIDIGENERIC_MENU_PAGE,
+    // Browser pages
+    SOUND_BROWSER,
+    // Performance page
+    PERF_PAGE_0,
 #ifdef WAV_DESIGNER
-    WD_MIXER_PAGE,       // Index: 6
+    // WAV Designer pages - grouped together at the end
+    WD_MIXER_PAGE,
+    WD_PAGE_0,
+    WD_PAGE_1,
+    WD_PAGE_2,
 #endif
-    SEQ_STEP_PAGE,       // Index: 7
-    SEQ_EXTSTEP_PAGE,    // Index: 8
-    SEQ_PTC_PAGE,        // Index: 9
-    TEXT_INPUT_PAGE,     // Index: 10
-    POLY_PAGE,           // Index: 11
-    SAMPLE_BROWSER,       // Index: 12
-    QUESTIONDIALOG_PAGE, // Index: 13
-    START_MENU_PAGE,     // Index: 14
-    BOOT_MENU_PAGE,      // Index: 15
-    FX_PAGE_A,           // Index: 16
-    FX_PAGE_B,           // Index: 17
-#ifdef WAV_DESIGNER
-    WD_PAGE_0, // Index: 18
-    WD_PAGE_1, // Index: 19
-    WD_PAGE_2, // Index: 20
-#endif
-    ROUTE_PAGE, // Index: 21
-    LFO_PAGE,   // Index: 22
-    RAM_PAGE_A, // Index: 23
-    RAM_PAGE_B, // Index: 24
-
-    LOAD_PROJ_PAGE,           // Index: 25
-    MIDI_CONFIG_PAGE,         // Index: 26
-    MD_CONFIG_PAGE,           // Index: 27
-    CHAIN_CONFIG_PAGE,        // Index: 28
-    AUX_CONFIG_PAGE,          // Index: 29
-    MCL_CONFIG_PAGE,          // Index: 30
-    ARP_PAGE,                 // Index: 31
-    MD_IMPORT_PAGE,           // Index: 32
-    MIDIPORT_MENU_PAGE,       // Index: 33
-    MIDIPROGRAM_MENU_PAGE,    // Index: 34
-    MIDICLOCK_MENU_PAGE,      // Index: 35
-    MIDIROUTE_MENU_PAGE,      // Index: 36
-    MIDIMACHINEDRUM_MENU_PAGE,// Index: 37
-    MIDIGENERIC_MENU_PAGE,    // Index: 38
-    SOUND_BROWSER,            // Index: 39
-    PERF_PAGE_0,             // Index: 40
-    NULL_PAGE = 255 
+    // Special values
+    NUM_PAGES,  // Automatically tracks total number of pages
+    NULL_PAGE = 255
 };
 
 class MCL {
 public:
-  static constexpr uint8_t NUM_PAGES = static_cast<uint8_t>(PageIndex::PERF_PAGE_0) + 1;
 
   static const lightpage_ptr_t pages_table[NUM_PAGES] PROGMEM;
 

@@ -28,6 +28,7 @@
 #ifdef WAV_DESIGNER
 #include "OscMixerPage.h"
 #include "WavDesignerPage.h"
+#include "WavDesigner.h"
 #endif
 
 #include "TextInputPage.h"
@@ -41,52 +42,72 @@
 #include "SoundBrowserPage.h"
 #include "PerfPage.h"
 
-const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = { 
-    { .ptr = &grid_page },           // Index: 0
-    { .ptr = &page_select_page },    // Index: 1
-    { .ptr = &system_page },         // Index: 2
-    { .ptr = &mixer_page },          // Index: 3
-    { .ptr = &grid_save_page },      // Index: 4
-    { .ptr = &grid_load_page },      // Index: 5
+// In MCL.cpp:
+const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
+    // Core pages
+    { .ptr = &grid_page },
+    { .ptr = &page_select_page },
+    { .ptr = &system_page },
+    { .ptr = &mixer_page },
+    { .ptr = &grid_save_page },
+    { .ptr = &grid_load_page },
+
+    // Main sequence pages
+    { .ptr = &seq_step_page },
+    { .ptr = &seq_extstep_page },
+    { .ptr = &seq_ptc_page },
+
+    // UI pages
+    { .ptr = &text_input_page },
+    { .ptr = &poly_page },
+    { .ptr = &sample_browser },
+    { .ptr = &questiondialog_page },
+    { .ptr = &start_menu_page },
+    { .ptr = &boot_menu_page },
+
+    // Effect pages
+    { .ptr = &fx_page_a },
+    { .ptr = &fx_page_b },
+    { .ptr = &route_page },
+    { .ptr = &lfo_page },
+
+    // Memory pages
+    { .ptr = &ram_page_a },
+    { .ptr = &ram_page_b },
+
+    // Configuration pages
+    { .ptr = &load_proj_page },
+    { .ptr = &midi_config_page },
+    { .ptr = &md_config_page },
+    { .ptr = &chain_config_page },
+    { .ptr = &aux_config_page },
+    { .ptr = &mcl_config_page },
+
+    // Additional feature pages
+    { .ptr = &arp_page },
+    { .ptr = &md_import_page },
+
+    // MIDI menu pages
+    { .ptr = &midiport_menu_page },
+    { .ptr = &midiprogram_menu_page },
+    { .ptr = &midiclock_menu_page },
+    { .ptr = &midiroute_menu_page },
+    { .ptr = &midimachinedrum_menu_page },
+    { .ptr = &midigeneric_menu_page },
+
+    // Browser pages
+    { .ptr = &sound_browser },
+
+    // Performance page
+    { .ptr = &perf_page },
+
 #ifdef WAV_DESIGNER
-    { .ptr = &wd.mixer },            // Index: 6
+    // WAV Designer pages
+    { .ptr = &wd.mixer },
+    { .ptr = &wd.pages[0] },
+    { .ptr = &wd.pages[1] },
+    { .ptr = &wd.pages[2] },
 #endif
-    { .ptr = &seq_step_page },       // Index: 7
-    { .ptr = &seq_extstep_page },    // Index: 8
-    { .ptr = &seq_ptc_page },        // Index: 9
-    { .ptr = &text_input_page },     // Index: 10
-    { .ptr = &poly_page },           // Index: 11
-    { .ptr = &sample_browser },      // Index: 12
-    { .ptr = &questiondialog_page }, // Index: 13
-    { .ptr = &start_menu_page },     // Index: 14
-    { .ptr = &boot_menu_page },      // Index: 15
-    { .ptr = &fx_page_a },           // Index: 16
-    { .ptr = &fx_page_b },           // Index: 17
-#ifdef WAV_DESIGNER
-    { .ptr = &wd.pages[0] },         // Index: 18
-    { .ptr = &wd.pages[1] },         // Index: 19
-    { .ptr = &wd.pages[2] },         // Index: 20
-#endif
-    { .ptr = &route_page },          // Index: 21
-    { .ptr = &lfo_page },            // Index: 22
-    { .ptr = &ram_page_a },          // Index: 23
-    { .ptr = &ram_page_b },          // Index: 24
-    { .ptr = &load_proj_page },      // Index: 25
-    { .ptr = &midi_config_page },    // Index: 26
-    { .ptr = &md_config_page },      // Index: 27
-    { .ptr = &chain_config_page },   // Index: 28
-    { .ptr = &aux_config_page },     // Index: 29
-    { .ptr = &mcl_config_page },     // Index: 30
-    { .ptr = &arp_page },            // Index: 31
-    { .ptr = &md_import_page },      // Index: 32
-    { .ptr = &midiport_menu_page },  // Index: 33
-    { .ptr = &midiprogram_menu_page }, // Index: 34
-    { .ptr = &midiclock_menu_page }, // Index: 35
-    { .ptr = &midiroute_menu_page }, // Index: 36
-    { .ptr = &midimachinedrum_menu_page }, // Index: 37
-    { .ptr = &midigeneric_menu_page }, // Index: 38
-    { .ptr = &sound_browser },       // Index: 39
-    { .ptr = &perf_page }           // Index: 40
 };
 
 void mcl_setup() { mcl.setup(); }
@@ -116,7 +137,7 @@ void MCL::setup() {
   bool health = health_check();
 #endif
   ret = mcl_sd.sd_init();
-  gfx.init_oled();
+  oled_display.init_display();
 
 #ifdef CHECKSUM
   if (!health) {
@@ -128,7 +149,6 @@ void MCL::setup() {
 
   R.Clear();
   R.use_icons_boot();
-
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
     // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     mcl.setPage(BOOT_MENU_PAGE);
@@ -137,7 +157,6 @@ void MCL::setup() {
     }
     return;
   }
-
   if (!ret) {
     oled_display.print(F("SD CARD ERROR :-("));
     oled_display.display();
