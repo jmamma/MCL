@@ -97,9 +97,9 @@ bool MCLSysConfig::cfg_init() {
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Initialising cfgfile"));
-
-  // DEBUG_PRINTLN(F("conf ext"));
-  cfgfile.remove();
+  if (!SD.remove("/config.mcls")) {
+    DEBUG_PRINTLN(F("Failed to remove old config file"));
+  }
   // First open the file
   ret = cfgfile.open("/config.mcls", O_RDWR | O_CREAT);
   if (!ret) {
