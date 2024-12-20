@@ -31,8 +31,9 @@ public:
     }
     show_menu = false;
   }
-  virtual void loop();
-  virtual void display();
+  virtual void cleanup() = 0;
+  virtual void loop() = 0;
+  virtual void display() = 0;
   virtual bool handleEvent(gui_event_t *event);
 };
 

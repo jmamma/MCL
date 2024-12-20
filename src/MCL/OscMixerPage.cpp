@@ -1,6 +1,8 @@
 #include "OscMixerPage.h"
 #include "WavDesigner.h"
 #include "MCLGUI.h"
+#include "Osc.h"
+#include "DSP.h"
 
 #ifdef WAV_DESIGNER
 

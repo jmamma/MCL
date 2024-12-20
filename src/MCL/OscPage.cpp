@@ -1,4 +1,7 @@
 #include "OscPage.h"
+#include "Osc.h"
+#include "DSP.h"
+#include "WavDesigner.h"
 
 #ifdef WAV_DESIGNER
 
