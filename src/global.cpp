@@ -107,41 +107,6 @@ MidiSetup midi_setup;
 
 Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
 
-void init_oled() {
-  DEBUG_PRINT_FN();
-  SPI1.setTX(OLED_MOSI);
-  SPI1.setSCK(OLED_SCLK);
-
-  // Configure control pins
-  pinMode(OLED_CS, OUTPUT);
-  pinMode(OLED_RST, OUTPUT);
-  pinMode(OLED_DC, OUTPUT);
-
-  // Reset the display
-//  digitalWrite(OLED_RST, LOW);
-//  delay(10);
-//  digitalWrite(OLED_RST, HIGH);
-//  delay(100);
-
-  // Initialize display
-  if (!oled_display.begin()) {
-    DEBUG_PRINTLN("OLED initialization failed");
-    while (1);
-  }
-
-  oled_display.display(); // show splashscreen
-  delay(1000);
-  oled_display.clearDisplay();
-  oled_display.invertDisplay(0);
-  oled_display.setRotation(2);
-  oled_display.setTextSize(1);
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setCursor(0, 0);
-  oled_display.setTextWrap(false);
-  oled_display.display();
-
-}
-
 void handleIncomingMidi() {
   Midi.processSysex();
   Midi2.processSysex();

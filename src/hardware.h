@@ -1,9 +1,9 @@
 #pragma once
 
-const int SDCARD_MISO_PIN = 8;
-const int SDCARD_MOSI_PIN = 11;
-const int SDCARD_SCK_PIN = 10;
-const int SDCARD_SS_PIN = 9;
+const int SPI1_MISO_PIN = 8;
+const int SPI1_MOSI_PIN = 11;
+const int SPI1_SCK_PIN = 10;
+const int SPI1_SS_PIN = 9;
 
 #define USB_SERIAL  3
 #define USB_MIDI    2

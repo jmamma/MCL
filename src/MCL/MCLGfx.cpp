@@ -3,19 +3,6 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 
-void MCLGfx::init_oled() {
-  oled_display.begin();
-
-  oled_display.clearDisplay();
-  oled_display.invertDisplay(0);
-  oled_display.setRotation(2);
-  oled_display.setTextSize(1);
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setCursor(0, 0);
-  oled_display.setTextWrap(false);
-  oled_display.display();
-}
-
 #define BITMAP_MCL_LOGO_W 58
 #define BITMAP_MCL_LOGO_H 19
 

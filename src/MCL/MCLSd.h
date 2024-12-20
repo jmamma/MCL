@@ -25,6 +25,13 @@ public:
             getCard()->setDedicatedSpi(dedicated);
         }
     }
+    void lock_spi() {
+      setDedicatedSpi(false);         // Consider refactor, this is to disable the SD card
+      digitalWrite(SPI1_SS_PIN, HIGH);   // SDCard enable is active low
+    }
+    void unlock_spi() {
+      setDedicatedSpi(true);
+    }
 };
 
 class MCLSd {

@@ -4,6 +4,39 @@
 #include "MCLSd.h"
 #include "MCLGUI.h"
 
+void Oled::init_display() {
+  DEBUG_PRINT_FN();
+
+  SD.lock_spi();
+
+  // Configure control pins
+  pinMode(OLED_CS, OUTPUT);
+  pinMode(OLED_RST, OUTPUT);
+  pinMode(OLED_DC, OUTPUT);
+
+  // Reset the display
+//  digitalWrite(OLED_RST, LOW);
+//  delay(10);
+//  digitalWrite(OLED_RST, HIGH);
+//  delay(100);
+
+  // Initialize display
+  if (!oled_display.begin()) {
+    DEBUG_PRINTLN("OLED initialization failed");
+    while (1);
+  }
+
+  oled_display.clearDisplay();
+  oled_display.invertDisplay(0);
+  oled_display.setRotation(2);
+  oled_display.setTextSize(1);
+  oled_display.setTextColor(WHITE, BLACK);
+  oled_display.setCursor(0, 0); 
+  oled_display.setTextWrap(false);
+  oled_display.display();
+
+  SD.unlock_spi();
+}
 // the most basic function, set a single pixel
 void Oled::drawPixel(uint16_t x, uint16_t y, uint16_t color) {
   if (x >= width() || y >= height())
@@ -367,9 +400,9 @@ void Oled::display(void) {
   }
 */
  //For dedicated SPI we do this.
-  SD.setDedicatedSpi(false);
-  Oled::display();
-  SD.setDedicatedSpi(true);
+  SD.lock_spi();
+  Adafruit_SSD1305::display();
+  SD.unlock_spi();
   display_lock = false;
 }
 
@@ -377,7 +410,7 @@ void Oled::draw_textbox(const char *text1, const char *text2) {
   char str1[16];
   char str2[16];
   strcpy_P(str1, text1);
-  strcpy_P(str1, text2);
+  strcpy_P(str2, text2);
   draw_textbox(str1, str2);
 }
 

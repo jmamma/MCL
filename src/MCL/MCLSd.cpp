@@ -20,10 +20,9 @@ bool MCLSd::sd_init() {
   // File file("/test.mcl",O_WRITE);
   /*Configuration file used to store settings when Minicommand is turned off*/
   for (uint8_t n = 0; n < SD_MAX_RETRIES && ret == false; n++) {
-    SPI1.setRX(SDCARD_MISO_PIN);
-    SPI1.setTX(SDCARD_MOSI_PIN);
-    SPI1.setSCK(SDCARD_SCK_PIN);
-    ret = SD.begin(SdSpiConfig(SDCARD_SS_PIN, DEDICATED_SPI, SD_SCK_MHZ(25), &SPI1));
+
+
+    ret = SD.begin(SdSpiConfig(SPI1_SS_PIN, DEDICATED_SPI, SD_SCK_MHZ(8), &SPI1));
     //ret = SD.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(50)));
     if (!ret) {
       delay(50);

@@ -11,14 +11,13 @@
 #define OLED_SPEED 7000000UL
 
 // Dedicated GPIO
-
 #define OLED_RST 13
 #define OLED_DC 14
 #define OLED_CS 15
-// SPI1
 
-#define OLED_SCLK 10
-#define OLED_MOSI 11
+// Use shared SPI1 pins
+#define OLED_SCLK SPI1_SCK_PIN    // 10
+#define OLED_MOSI SPI1_MOSI_PIN   // 11
 
 #define INVERT 2
 
@@ -47,6 +46,7 @@ public:
 
   virtual void textbox(const char *text, const char *text2, uint16_t delay = 800);
 
+  void init_display();
   void display();
 
   void fillTriangle_3px(int16_t x0, int16_t y0, uint16_t color);
