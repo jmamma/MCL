@@ -8,7 +8,11 @@ void ResourceManager::Clear() {
 }
 
 byte* ResourceManager::__use_resource(const void* pgm) {
-	byte* pos = m_buffer + m_bufsize;
+#ifndef __AVR__
+    // Align the buffer position to 4 bytes for ARM
+    m_bufsize = (m_bufsize + 3) & ~3;  // Round up to next 4-byte boundary
+#endif
+    byte* pos = m_buffer + m_bufsize;
 	uint16_t sz = unpack((byte*)pgm, pos);
 	m_bufsize += sz;
     DEBUG_PRINTLN("resource buf size");
@@ -42,6 +46,39 @@ void ResourceManager::Restore(uint8_t *buf, size_t sz) {
 	m_bufsize = sz;
 }
 
+void ResourceManager::restore_page_entry_deps() {
+    DEBUG_PRINTLN("icons_page address:");
+    DEBUG_PRINTLN((uint32_t)icons_page);
+    DEBUG_PRINTLN("page_entries address:");
+    DEBUG_PRINTLN((uint32_t)page_entries);
+
+    // Check icon_grid offset and address
+    DEBUG_PRINTLN("icon_grid offset:");
+    DEBUG_PRINTLN((uint32_t)offsetof(__T_icons_page, icon_grid));
+    DEBUG_PRINTLN("icon_grid address:");
+    DEBUG_PRINTLN((uint32_t)&(icons_page->icon_grid));
+
+    // Check first entry's fields
+    DEBUG_PRINTLN("First entry name:");
+    for(int i = 0; i < 16 && page_entries->Entries[0].Name[i]; i++) {
+        DEBUG_PRINT(page_entries->Entries[0].Name[i]);
+    }
+
+    DEBUG_PRINTLN("First entry IconWidth:");
+    DEBUG_PRINTLN(page_entries->Entries[0].IconWidth);
+    DEBUG_PRINTLN("Icon offsets:");
+    DEBUG_PRINTLN("icon_perf offset: " + String((uint32_t)icons_page->icon_perf - (uint32_t)icons_page));
+    DEBUG_PRINTLN("icon_chroma offset: " + String((uint32_t)icons_page->icon_chroma - (uint32_t)icons_page));
+    // ... print more offsets ...
+    DEBUG_PRINTLN("icon_grid offset: " + String((uint32_t)icons_page->icon_grid - (uint32_t)icons_page));
+    
+    // Then try the assignment
+    uint8_t* grid_ptr = icons_page->icon_grid;
+    DEBUG_PRINTLN("grid_ptr value: " + String((uint32_t)grid_ptr, HEX));
+    // Now try the assignment
+    page_entries->Entries[0].IconData = icons_page->icon_grid;
+}
+/*
 void ResourceManager::restore_page_entry_deps() {
   // calibrate references
   R.page_entries->Entries[0].IconData = R.icons_page->icon_grid;
@@ -79,7 +116,7 @@ void ResourceManager::restore_page_entry_deps() {
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram2;
   // calibration complete
 }
-
+*/
 size_t ResourceManager::Size() {
   return m_bufsize;
 }
