@@ -85,7 +85,6 @@ volatile uint16_t g_fps = 0;
 volatile uint8_t *rand_ptr = nullptr;
 
 // GUI object
-
 GuiClass GUI;
 
 // -- Sysex listeners

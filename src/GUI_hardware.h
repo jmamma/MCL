@@ -133,6 +133,20 @@ class ButtonsClass {
   ALWAYS_INLINE() void poll(uint8_t sr);
 };
 
+class GUIHardware {
+private:
+    bool inGui;
+    uint16_t oldsr;
+public:
+    ButtonsClass Buttons;  // Made public for macro access
+
+    GUIHardware() : inGui(false), oldsr(0) {}
+    void init();
+    void poll();
+
+    friend class GuiClass;
+};
+extern GUIHardware GUI_hardware;
 extern SR165Class SR165;
 extern EncodersClass Encoders;
 extern ButtonsClass Buttons;

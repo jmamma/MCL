@@ -25,8 +25,9 @@ void __not_in_flash_func(timer1_handler)() {
     MidiUart.tickActiveSense();
     MidiUart2.tickActiveSense();
     CLEAR_LOCK();
-
+    GUI_hardware.poll();
 }
+
 void __not_in_flash_func(timer2_handler)() {
     LOCK();
     g_clock_fast++;
