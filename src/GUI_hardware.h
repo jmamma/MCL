@@ -27,8 +27,8 @@ class EncodersClass {
 
   EncodersClass();
 
-  ALWAYS_INLINE() void poll(uint16_t sr);
-  ALWAYS_INLINE() void clearEncoders();
+  void poll(uint16_t sr);
+  void clearEncoders();
 
   ALWAYS_INLINE() int8_t getNormal(uint8_t i) { return encoders[i].normal; }
   ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }

@@ -126,7 +126,7 @@ public:
    * Uses the channel settings out of the global settings.
    **/
 
-  ALWAYS_INLINE() void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value, MidiUartClass *uart_ = nullptr, bool update_kit = false);
+  void setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value, MidiUartClass *uart_ = nullptr, bool update_kit = false);
   void setTrackParam(uint8_t track, uint8_t param, uint8_t value, MidiUartClass *uart_ = nullptr, bool update_kit = false);
 
   void setSampleName(uint8_t slot, char *name);
