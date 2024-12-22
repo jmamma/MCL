@@ -22,7 +22,7 @@ bool MCLSd::sd_init() {
   for (uint8_t n = 0; n < SD_MAX_RETRIES && ret == false; n++) {
 
 
-    ret = SD.begin(SdSpiConfig(SPI1_SS_PIN, DEDICATED_SPI, SD_SCK_MHZ(8), &SPI1));
+    ret = SD.begin(SdSpiConfig(SPI1_SS_PIN, DEDICATED_SPI, SD_SCK_MHZ(12), &SPI1));
     //ret = SD.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(50)));
     if (!ret) {
       delay(50);
