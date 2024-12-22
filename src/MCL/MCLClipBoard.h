@@ -3,7 +3,6 @@
 #ifndef MCLCLIPBOARD_H__
 #define MCLCLIPBOARD_H__
 #include "Grid.h"
-#include "SdFat.h"
 #include "Shared.h"
 #include "MDSeqTrackData.h"
 #include "PerfData.h"
