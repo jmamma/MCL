@@ -89,6 +89,9 @@ public:
     msg_wr = 0;
     msg_rd = 0;
     rb = _rb;
+    #ifdef DEBUGMODE
+    rb->check = false; //Ring buffer is expected to overflow. The rd pointer is not advanced.
+    #endif
   }
 
   uint16_t get_recordLen() { return ledger[rd_cur].recordLen; }
