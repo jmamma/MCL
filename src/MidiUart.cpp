@@ -69,24 +69,7 @@ void MidiUartClass::set_speed(uint32_t speed_) {
 }
 
 void MidiUartClass::m_putc_immediate(uint8_t c) {
-  uint32_t save = save_and_disable_interrupts();
-
-  while (!uart_is_writable(uart_hw)) {
-    /*
-      if (TIMER_CHECK_INT(0)) { // Assuming timer 0 for clock
-        g_clock_fast++;
-        TIMER_CLEAR_INT(0);
-      }
-      if (TIMER_CHECK_INT(1)) { // Assuming timer 1 for slowclock
-        g_clock_ms++;
-        TIMER_CLEAR_INT(1);
-      }
-  */
-  }
-
-  sendActiveSenseTimer = sendActiveSenseTimeout;
-  write_char(c);
-  restore_interrupts(save);
+  uart_putc_raw(uart_hw, c);
 }
 
 void MidiUartClass::realtime_isr(uint8_t c) {
@@ -123,12 +106,12 @@ void MidiUartClass::realtime_isr(uint8_t c) {
 void MidiUartClass::rx_isr() {
   uint32_t dr = uart_get_hw(uart_hw)->dr;
   uint8_t c = dr & 0xff; // Get the actual data byte
-
   const uint32_t ERROR_MASK = 0xf00; // Bits 8-11 are error flags
   bool has_errors = (dr & ERROR_MASK) != 0;
   if (has_errors) {
     return;
   }
+  recvActiveSenseTimer = 0;
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
     realtime_isr(c);
     return;
