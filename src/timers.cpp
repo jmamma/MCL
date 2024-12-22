@@ -2,7 +2,7 @@
 #include "platform.h"
 #include "MidiClock.h"
 #include "global.h"
-
+#include "MCLSeq.h"
 #include "tusb.h"  // Add at top of file if not already there
 
 // We'll use PWM slice 4 for 1ms timer and slice 5 for 5kHz timer
@@ -47,7 +47,7 @@ void __not_in_flash_func(timer2_handler)() {
           uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
           MidiUartParent::handle_midi_lock = 1;
           CLEAR_LOCK();
-          //mcl_seq.seq(); ... to do
+          mcl_seq.seq();
           MidiUartParent::handle_midi_lock = _midi_lock_tmp;
           MidiClock.inCallback = false;
           return;
