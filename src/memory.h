@@ -54,22 +54,26 @@ FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
 }
 
 //BANK3
+// Get single value
 template<typename T>
-FORCED_INLINE() extern inline T get_bank3(volatile T *dst) {
-  return *dst;
+FORCED_INLINE() extern inline T get_bank3(volatile T *src) {
+    return *src;
 }
 
-FORCED_INLINE() extern inline void get_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
-  memcpy((void*)dst, (uint8_t*)src, len);
+// Get memory block
+FORCED_INLINE() extern inline void get_bank3(void *dst, volatile const void *src, uint16_t len) {
+    memcpy(dst, (const void*)src, len);
 }
 
-FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const void *src, uint16_t len) {
-  memcpy((void*)src, (uint8_t*)dst, len);
+// Put memory block
+FORCED_INLINE() extern inline void put_bank3(volatile void *dst, const void *src, uint16_t len) {
+    memcpy((void*)dst, src, len);
 }
 
+// Put single value
 template<typename T>
 FORCED_INLINE() extern inline void put_bank3(volatile T *dst, T data) {
-  *dst = data;
+    *dst = data;
 }
 
 FORCED_INLINE() extern inline int memcmp_bank3(volatile void *dst, volatile const void *src, uint16_t len) {

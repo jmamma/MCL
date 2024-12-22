@@ -117,11 +117,12 @@ constexpr size_t AUX_CACHE_LEN = GRIDCHAIN_TRACK_LEN +
 
 // Total size of A4 tracks cache
 constexpr size_t EXT_CACHE_LEN = GRID2_TRACK_LEN * NUM_EXT_TRACKS;
+constexpr size_t FILEBROWSER_CACHE_LEN = 0x2000;
 
 extern uint8_t md_cache[MD_CACHE_LEN];
 extern uint8_t aux_cache[AUX_CACHE_LEN];
 extern uint8_t ext_cache[EXT_CACHE_LEN];
-
+extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
 // 16x MD tracks
 // GRID1 tracks start at 0x6B60
 constexpr uint8_t* BANK1_MD_TRACKS_START = md_cache;
@@ -141,7 +142,8 @@ constexpr uint8_t* BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRA
 // 512x file entries (16 bytes each), stored in Bank3
 constexpr size_t NUM_FILE_ENTRIES = 256;
 constexpr size_t FILE_ENTRY_SIZE = 32;
-constexpr size_t BANK3_FILE_ENTRIES_START = 0x0000;
-constexpr size_t BANK3_FILE_ENTRIES_END = 0x2000;
+
+constexpr uint8_t* BANK3_FILE_ENTRIES_START = filebrowser_cache;
+constexpr uint8_t* BANK3_FILE_ENTRIES_END = filebrowser_cache + FILEBROWSER_CACHE_LEN;
 
 // At 0xCAF4
