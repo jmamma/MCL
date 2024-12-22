@@ -5,6 +5,7 @@
 
 #define OLED_DISPLAY
 
+#define SSD1305_128_32
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 32
 
@@ -61,11 +62,12 @@ public:
 
   void draw_textbox(char *text, char *text2);
   void draw_textbox(const char *text1, const char *text2);
-
-  virtual void drawPixel(uint16_t x, uint16_t y, uint16_t color);
-  virtual void drawFastVLine(uint16_t x, uint16_t y, uint16_t h, uint16_t color);
-  virtual void fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+  /*
+  virtual void drawPixel(int16_t x, int16_t y, uint16_t color);
+  virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+  virtual void fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
   virtual void fillScreen(uint16_t color);
+  */
   virtual void clearDisplay();
   // Method to get the current font
   const GFXfont* getFont() const {

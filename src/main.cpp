@@ -19,6 +19,7 @@ void setup() {
   DEBUG_PRINTLN("debug mode online");
   StackMonitor::print_stack_info();
 
+  GUI_hardware.init();
   MidiUart.initSerial();
   MidiUart2.initSerial();
 
@@ -49,5 +50,6 @@ void setup() {
 
 void loop() {
    debugBuffer.flush();
+
    GUI.loop();
 }

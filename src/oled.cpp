@@ -4,6 +4,8 @@
 #include "MCLSd.h"
 #include "MCLGUI.h"
 
+
+
 void Oled::init_display() {
   DEBUG_PRINT_FN();
 
@@ -37,12 +39,14 @@ void Oled::init_display() {
 
   SD.unlock_spi();
 }
-// the most basic function, set a single pixel
-void Oled::drawPixel(uint16_t x, uint16_t y, uint16_t color) {
+
+/*
+void Oled::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if (x >= width() || y >= height())
-    return;
-  uint16_t index = x + (y / 8) * OLED_WIDTH;
-  uint8_t bit = _BV(y & 7);
+   return;
+
+   uint16_t index = x + (y / 8) * OLED_WIDTH;
+  uint8_t bit = _BV((uint8_t)y & 7);
 
   if (color == WHITE)
     buffer[index] |= bit;
@@ -52,7 +56,7 @@ void Oled::drawPixel(uint16_t x, uint16_t y, uint16_t color) {
     buffer[index] ^= bit;
 }
 
-void Oled::drawFastVLine(uint16_t x, uint16_t y, uint16_t h,
+void Oled::drawFastVLine(int16_t x, int16_t y, int16_t h,
                                      uint16_t color) {
   if ((x >= width()) || (y >= height()))
    return;
@@ -112,7 +116,7 @@ void Oled::drawFastVLine(uint16_t x, uint16_t y, uint16_t h,
   }
 }
 
-void Oled::fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
+void Oled::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
                                 uint16_t color) {
   if ((x >= width()) || (y >= height()))
    return;
@@ -191,7 +195,7 @@ void Oled::fillRect(uint16_t x, uint16_t y, uint16_t w, uint16_t h,
     }
   }
 }
-
+*/
 // MCL-specific 3px triangle fill
 void Oled::fillTriangle_3px(int16_t x0, int16_t y0, uint16_t color) {
   drawFastVLine(x0, y0, 5, color);
@@ -358,7 +362,7 @@ void Oled::drawBitmap(int16_t x, int16_t y, uint8_t *bitmap, int16_t w,
   endWrite();
 }
 
-
+/*
 void Oled::fillScreen(uint16_t color) {
   if (color == BLACK) {
     clearDisplay();
@@ -372,7 +376,7 @@ void Oled::fillScreen(uint16_t color) {
     }
   }
 }
-
+*/
 void Oled::textbox(const char *text, const char *text2, uint16_t delay) {
   textbox_clock = g_clock_ms;
   strncpy(textbox_str, text, sizeof(textbox_str));
@@ -401,6 +405,14 @@ void Oled::display(void) {
 */
  //For dedicated SPI we do this.
   SD.lock_spi();
+
+  //Mark all windows as dirty.
+  /*
+  window_x1 = 0;
+  window_y1 = 0;
+  window_x2 = WIDTH - 1;
+  window_y2 = HEIGHT - 1;
+  */
   Adafruit_SSD1305::display();
   SD.unlock_spi();
   display_lock = false;

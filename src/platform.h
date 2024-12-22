@@ -24,7 +24,7 @@
 #endif
 
 #ifndef _BV
-#define _BV(bit) (1UL << (bit))
+#define _BV(bit) (1u << (bit))
 #endif
 
 // Interrupt locking mechanisms
