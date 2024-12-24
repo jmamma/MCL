@@ -2,7 +2,11 @@
 #pragma once
 #include "platform.h"
 #include "hardware/structs/psm.h"
+#if PICO_RP2350
+#include "hardware/regs/m33.h"
+#else
 #include "hardware/regs/m0plus.h"
+#endif
 #include <Arduino.h>
 
 class StackMonitor {
