@@ -35,15 +35,21 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
 
 - [X] Fix linking
 
+- [X] Sequencer
+
+- [X] Verify user GUI (buttons + encoders)
+
+- [X] Verify Page System
+
+- [X] Verify Menus
+
+- [X] Validate UART and timer IRQ timings.
+
 ## Todo
 
-- [ ] Verify user GUI (buttons + encoders)
-- [ ] Verify Page System
-- [ ] Verify Menus
 - [ ] MCL project/grid initialisation
 - [ ] Object serialisation to/from SD Card
 - [ ] MIDI Device Drivers
-- [ ] Sequencer
 - [ ] Stack Size. Currently limited to 4KB per core. Could we use all 8KB for a single core?
       MCL in current implementation requires a stack size of 8KB.
 - [ ] ... and more
