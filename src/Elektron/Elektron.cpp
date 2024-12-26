@@ -295,7 +295,9 @@ uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
   listener->start();
   do {
     current_clock = read_slowclock();
+    MidiUartParent::handle_midi_lock = 1;
     handleIncomingMidi();
+    MidiUartParent::handle_midi_lock = 0;
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (listener->msgType == 255));
   DEBUG_PRINTLN(listener->msgType);

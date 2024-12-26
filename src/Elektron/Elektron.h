@@ -12,6 +12,7 @@
 #include "MCLGfx.h"
 #include "global.h"
 #include "Midi.h"
+#include "MidiUartParent.h"
 
 /** Store the name of a monomachine machine. **/
 typedef struct mnm_machine_name_s {
@@ -89,7 +90,7 @@ class SysexCallback {
 public:
   uint8_t type;
   uint8_t value;
-  bool received;
+  volatile bool received;
 
   SysexCallback(uint8_t _type = 0) { type = _type; received = false; }
 
@@ -113,7 +114,10 @@ public:
       //         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
       //     MidiClock.updateClockInterval();
       //   }
-      //    GUI.display();
+      //    GUI.display()
+      MidiUartParent::handle_midi_lock = 1;
+      handleIncomingMidi();
+      MidiUartParent::handle_midi_lock = 0;
       current_clock = read_slowclock();
     } while(clock_diff(start_clock, current_clock) < timeout && !received);
     return received;
