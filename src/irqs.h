@@ -1,2 +1,2 @@
 #pragma once
-void setup_timers();
+void setup_irqs();
