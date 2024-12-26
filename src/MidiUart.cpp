@@ -1,12 +1,13 @@
 // #include "MCLSeq.h"
-
 #include "Arduino.h"
-#include "MidiUart.h"
+#include "ISRTiming.h"
+#include "MCLSeq.h"
 #include "Midi.h"
 #include "MidiClock.h"
-#include "pico.h"
+#include "MidiUart.h"
 #include "global.h"
 #include "hardware/uart.h"
+#include "pico.h"
 
 MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<> *_rxRb,
                              RingBuffer<> *_txRb)
@@ -35,17 +36,17 @@ void MidiUartClass::initSerial() {
   uart_init(uart_hw, UART_BAUDRATE);
   // 8 bits, 1 stop bit, no parity - standard MIDI format
   uart_set_format(uart_hw, 8, 1, UART_PARITY_NONE);
-  // Disable FIFOs (realtime messages are 1 byte)
+  // Disable CR/LF conversion
+  uart_set_translate_crlf(uart_hw, false);
+  // Disable hardware flow
+  uart_set_hw_flow(uart_hw, false, false);
+  // Disable both FIFOs first (required)
   uart_set_fifo_enabled(uart_hw, false);
-  // Trigger interrupt clear for RX and TXs
+  // Trigger interrupt clear for RX and TX
   uart_get_hw(uart_hw)->icr = UART_UARTICR_RXIC_BITS | UART_UARTICR_TXIC_BITS;
   // Set high priority for UART interrupt
   irq_set_priority(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ,
-                   uart_hw == uart0 ? 0x40 : 0x40);
-  // Set high priority for UART interrupt, uart0 has higher priority (as per
-  // atmega2560)
-  // irq_set_priority(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ, uart_hw == uart0
-  // ? 0x20 : 0x30);
+                   uart_hw == uart0 ? 0x20 : 0x20);
   // Enable UART interrupt globally
   irq_set_enabled(uart_hw == uart0 ? UART0_IRQ : UART1_IRQ, true);
   // Enable RX interrupt only (TX enabled when needed)
@@ -68,55 +69,68 @@ void MidiUartClass::set_speed(uint32_t speed_) {
   speed = speed_;
 }
 
-void MidiUartClass::m_putc_immediate(uint8_t c) {
-  uart_putc_raw(uart_hw, c);
-}
+void MidiUartClass::m_putc_immediate(uint8_t c) { uart_putc_raw(uart_hw, c); }
 
-void MidiUartClass::realtime_isr(uint8_t c) {
-  if (c == MIDI_CLOCK) {
-    if (MidiClock.uart_clock_recv == this) {
-      MidiClock.handleClock();
-      if (MidiClock.state != 2 || MidiClock.inCallback) {
-        return;
-      }
-      MidiClock.inCallback = true;
-      uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
-      MidiUartParent::handle_midi_lock = 1;
-      //    mcl_seq.seq(); todo
-      MidiUartParent::handle_midi_lock = _midi_lock_tmp;
-      MidiClock.inCallback = false;
-    }
-  } else if (MidiClock.uart_transport_recv1 == this ||
-             MidiClock.uart_transport_recv2 == this) {
-    switch (c) {
-    case MIDI_START:
-      MidiClock.handleImmediateMidiStart();
-      break;
-    case MIDI_STOP:
-      MidiClock.handleImmediateMidiStop();
-      break;
-    case MIDI_CONTINUE:
-      MidiClock.handleImmediateMidiContinue();
-      break;
-    }
-    rxRb->put_h_isr(c);
-  }
-}
-
-void MidiUartClass::rx_isr() {
+void __not_in_flash_func(MidiUartClass::rx_isr)() {
   uint32_t dr = uart_get_hw(uart_hw)->dr;
   uint8_t c = dr & 0xff; // Get the actual data byte
+
   const uint32_t ERROR_MASK = 0xf00; // Bits 8-11 are error flags
   bool has_errors = (dr & ERROR_MASK) != 0;
   if (has_errors) {
+    // More detailed error checking
+#ifdef DEBUGMODE
+    if (dr & UART_UARTDR_OE_BITS) {
+      DEBUG_PRINTLN("RX_ISR: OVERRUN");
+    }
+    if (dr & UART_UARTDR_BE_BITS) {
+      DEBUG_PRINTLN("RX_ISR: BREAK ERROR");
+    }
+    if (dr & UART_UARTDR_PE_BITS) {
+      DEBUG_PRINTLN("RX_ISR: PARITY ERROR");
+    }
+    if (dr & UART_UARTDR_FE_BITS) {
+      DEBUG_PRINTLN("RX_ISR: FRAME ERROR");
+    }
+#endif
     return;
   }
   recvActiveSenseTimer = 0;
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-    realtime_isr(c);
+    if (c == MIDI_CLOCK) {
+      if (MidiClock.uart_clock_recv == this) {
+        MidiClock.handleClock();
+        if (MidiClock.state != 2 || MidiClock.inCallback) {
+          return;
+        }
+        MidiClock.inCallback = true;
+        uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+        MidiUartParent::handle_midi_lock = 1;
+
+        TRIGGER_SW_IRQ1();  //Trigger sequencer
+
+        MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+        MidiClock.inCallback = false;
+        return;
+      }
+    } else if (MidiClock.uart_transport_recv1 == this ||
+               MidiClock.uart_transport_recv2 == this) {
+      switch (c) {
+      case MIDI_START:
+        MidiClock.handleImmediateMidiStart();
+        break;
+      case MIDI_STOP:
+        MidiClock.handleImmediateMidiStop();
+        break;
+      case MIDI_CONTINUE:
+        MidiClock.handleImmediateMidiContinue();
+        break;
+      }
+      rxRb->put_h_isr(c);
+    }
+
     return;
   }
-
   switch (midi->live_state) {
   case midi_wait_sysex:
     if (MIDI_IS_STATUS_BYTE(c)) {
@@ -144,7 +158,7 @@ void MidiUartClass::rx_isr() {
     break;
   }
 }
-__attribute__((used, noinline)) void MidiUartClass::tx_isr() {
+void __not_in_flash_func(MidiUartClass::tx_isr)() {
 #ifdef RUNNING_STATUS_OUT
   bool rs = 1;
 again:
@@ -223,28 +237,34 @@ again:
   }
 }
 
-extern "C" void uart0_irq_handler() {
-  LOCK();
+extern "C" void __not_in_flash_func(uart0_irq_handler)() {
+
   uint32_t status =
       uart_get_hw(uart0)->mis; // Reading MIS clears the interrupts
+  // Process all pending RX data
   if (status & UART_UARTMIS_RXMIS_BITS) {
+    LOCK();
     MidiUart.rx_isr();
+    CLEAR_LOCK();
   }
   if (status & UART_UARTMIS_TXMIS_BITS) {
+    LOCK();
     MidiUart.tx_isr();
+    CLEAR_LOCK();
   }
-  CLEAR_LOCK();
 }
 
-extern "C" void uart1_irq_handler() {
-  LOCK();
+extern "C" void __not_in_flash_func(uart1_irq_handler)() {
   uint32_t status =
       uart_get_hw(uart1)->mis; // Reading MIS clears the interrupts
   if (status & UART_UARTMIS_RXMIS_BITS) {
+    LOCK();
     MidiUart2.rx_isr();
+    CLEAR_LOCK();
   }
   if (status & UART_UARTMIS_TXMIS_BITS) {
+    LOCK();
     MidiUart2.tx_isr();
+    CLEAR_LOCK();
   }
-  CLEAR_LOCK();
 }

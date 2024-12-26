@@ -75,8 +75,6 @@ public:
   void m_putc_immediate(uint8_t c);
   ALWAYS_INLINE() bool check_empty_tx() { return uart_hw && uart_is_writable(uart_hw); }
   // Interrupt handlers
-
-  // MIDI message handling
   ALWAYS_INLINE() void m_recv(uint8_t *src, uint16_t size) {
     rxRb->put_h_isr(src, size);
   }

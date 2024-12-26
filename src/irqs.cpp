@@ -33,14 +33,11 @@ void __not_in_flash_func(softirq2_handler)() {
 void __not_in_flash_func(softirq3_handler)() {
   CLEAR_SW_IRQ3();
 
-  digitalWrite(3, 1);
   GUI_hardware.poll();
 
-  digitalWrite(3, 0);
 }
 
 void __not_in_flash_func(timer1_handler)() {
-  //    digitalWrite(4, HIGH);
   LOCK();
   g_clock_ms++;
   g_clock_ticks++;
@@ -79,7 +76,6 @@ void __not_in_flash_func(timer2_handler)() {
     TRIGGER_SW_IRQ2();
     MidiUartParent::handle_midi_lock = 0;
   }
-  digitalWrite(3, 0);
   CLEAR_LOCK();
 }
 
