@@ -5,11 +5,13 @@
 #include "pico/stdlib.h"
 #include "hardware/clocks.h"
 #include "hardware/irq.h"
+#include "hardware/structs/pio.h"
 #include "hardware/pwm.h"
 #include "hardware/sync.h"
 #include <stdio.h>
 
 // Debug configuration
+
 #define DEBUGMODE
 #define DEBUG_PIN 2
 #define SERIAL_SPEED 115200
@@ -43,9 +45,25 @@ extern volatile uint32_t interrupt_lock_count;
     #define ALWAYS_INLINE()
     #define FORCED_INLINE() __attribute__((always_inline))
 #else
-    #define ALWAYS_INLINE() inline
+    #define ALWAYS_INLINE() __attribute__((always_inline))
     #define FORCED_INLINE() __attribute__((always_inline))
 #endif
+
+#ifdef PICO_RP2350
+    #define SW_IRQ1    SPARE_IRQ_0      // IRQ 46
+    #define SW_IRQ2    SPARE_IRQ_1      // IRQ 47
+    #define SW_IRQ3    SPARE_IRQ_2      // IRQ 48
+#else
+    #define SW_IRQ1    (RTC_IRQ + 1)     // IRQ 26
+    #define SW_IRQ2    (RTC_IRQ + 2)     // IRQ 27
+    #define SW_IRQ3    (RTC_IRQ + 3)     // IRQ 28
+#endif
+    #define TRIGGER_SW_IRQ1()  (nvic_hw->ispr[SW_IRQ1/32] = 1u << (SW_IRQ1 % 32))
+    #define TRIGGER_SW_IRQ2()  (nvic_hw->ispr[SW_IRQ2/32] = 1u << (SW_IRQ2 % 32))
+    #define TRIGGER_SW_IRQ3()  (nvic_hw->ispr[SW_IRQ3/32] = 1u << (SW_IRQ3 % 32))
+    #define CLEAR_SW_IRQ1()    (nvic_hw->icpr[SW_IRQ1/32] = 1u << (SW_IRQ1 % 32))
+    #define CLEAR_SW_IRQ2()    (nvic_hw->icpr[SW_IRQ2/32] = 1u << (SW_IRQ2 % 32))
+    #define CLEAR_SW_IRQ3()    (nvic_hw->icpr[SW_IRQ3/32] = 1u << (SW_IRQ3 % 32))
 
 // C++ specific functionality
 #ifdef __cplusplus
@@ -106,7 +124,7 @@ inline bool isInInterrupt() {
     #define DEBUG_PRINT(x)
     #define DEBUG_PRINTLN(x)
     #define DEBUG_PRINT_FN(fmt)
-    #define DEBUG_DUMP()
+    #define DEBUG_DUMP(x)
 #endif // DEBUGMODE
 
 #else // __cplusplus not defined
