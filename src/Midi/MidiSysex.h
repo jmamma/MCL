@@ -22,10 +22,10 @@ class MidiSysexClass;
 
 class MidiSysexListenerClass {
 public:
-  uint8_t ids[3];
+  volatile uint8_t ids[3];
   MidiSysexClass *sysex;
-  uint8_t msgType;
-  uint8_t msg_rd;
+  volatile uint8_t msgType;
+  volatile uint8_t msg_rd;
 
   MidiSysexListenerClass(MidiSysexClass *_sysex = NULL) {
     sysex = _sysex;
