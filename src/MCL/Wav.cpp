@@ -18,7 +18,7 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
                uint32_t sampleRate, uint8_t bitRate, bool loop) {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(filename);
-  uint8_t file_mode = write ? (O_WRITE | O_CREAT) : (O_READ);
+  uint16_t file_mode = write ? (O_RDWR | O_CREAT) : O_RDWR;
   strncpy(filename, file_name, 16);
   headerRead = false;
 
