@@ -115,9 +115,7 @@ public:
       //     MidiClock.updateClockInterval();
       //   }
       //    GUI.display()
-      MidiUartParent::handle_midi_lock = 1;
       handleIncomingMidi();
-      MidiUartParent::handle_midi_lock = 0;
       current_clock = read_slowclock();
     } while(clock_diff(start_clock, current_clock) < timeout && !received);
     return received;

@@ -107,8 +107,11 @@ MidiSetup midi_setup;
 Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
 
 void handleIncomingMidi() {
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+  MidiUartParent::handle_midi_lock = 1;
   Midi.processSysex();
   Midi2.processSysex();
   Midi.processMidi();
   Midi2.processMidi();
+  MidiUartParent::handle_midi_lock = 0;
 }

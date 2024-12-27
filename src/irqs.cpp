@@ -18,15 +18,12 @@ void __not_in_flash_func(softirq1_handler)() {
   MidiClock.inCallback = true;
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
-
   mcl_seq.seq();
-
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   MidiClock.inCallback = false;
 }
 void __not_in_flash_func(softirq2_handler)() {
   CLEAR_SW_IRQ2();
-
   handleIncomingMidi();
 }
 
@@ -72,9 +69,7 @@ void __not_in_flash_func(timer2_handler)() {
     }
   }
   if (!MidiUartParent::handle_midi_lock) {
-    MidiUartParent::handle_midi_lock = 1;
     TRIGGER_SW_IRQ2();
-    MidiUartParent::handle_midi_lock = 0;
   }
   CLEAR_LOCK();
 }

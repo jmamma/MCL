@@ -292,7 +292,7 @@ void SampleBrowserPage::query_sample_slots() {
   auto time_start = g_clock_ms;
   auto time_now = time_start;
   do {
-    //handleIncomingMidi();
+    handleIncomingMidi();
     time_now = g_clock_ms;
   } while (!s_query_returned && clock_diff(time_start, time_now) < 1000);
 
