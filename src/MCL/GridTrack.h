@@ -114,7 +114,7 @@ public:
 
   virtual uint16_t get_track_size() { return sizeof(GridTrack); }
   virtual uint16_t get_region_size() { return get_track_size(); }
-  uint8_t *get_region() { return BANK1_MD_TRACKS_START; }
+  virtual uint8_t *get_region() { return BANK1_MD_TRACKS_START; }
   bool is_external() { return get_region() != BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same) {}
