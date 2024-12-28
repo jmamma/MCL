@@ -50,10 +50,10 @@ RingBuffer uartusb_tx_rb(uartusb_tx_buf, UARTUSB_TX_BUFFER_LEN);
 RingBuffer uartusb_sysex_rb(uartusb_sysex_buf, SYSEXUSB_DATA_LEN);
 
 // MIDI UART instances
-MidiUartClass seq_tx1(uart0, nullptr, &seq_tx1_rb);
-MidiUartClass seq_tx2(uart0, nullptr, &seq_tx2_rb);
-MidiUartClass seq_tx3(uart1, nullptr, &seq_tx3_rb);
-MidiUartClass seq_tx4(uart1, nullptr, &seq_tx4_rb);
+MidiUartClass seq_tx1(nullptr, nullptr, &seq_tx1_rb);
+MidiUartClass seq_tx2(nullptr, nullptr, &seq_tx2_rb);
+MidiUartClass seq_tx3(nullptr, nullptr, &seq_tx3_rb);
+MidiUartClass seq_tx4(nullptr, nullptr, &seq_tx4_rb);
 
 MidiUartClass MidiUart(uart0, &uart1_rx_rb, &uart1_tx_rb);
 MidiUartClass MidiUart2(uart1, &uart2_rx_rb, &uart2_tx_rb);

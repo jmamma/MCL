@@ -78,28 +78,26 @@ public:
   ALWAYS_INLINE() void m_recv(uint8_t *src, uint16_t size) {
     rxRb->put_h_isr(src, size);
   }
-
+  ALWAYS_INLINE() void tx_flush() {
+    if (uart_hw) { //Important, don't allow flush for non-hw uarts.
+      if (uart_is_writable(uart_hw)) {
+        tx_isr();
+      } else {
+        enable_tx_irq();
+      }
+    }
+  }
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
     LOCK();
     txRb->put_h_isr(src, size);
-
-    if (uart_hw && uart_is_writable(uart_hw)) {
-        tx_isr();
-    } else {
-      enable_tx_irq();
-    }
+    tx_flush();
     CLEAR_LOCK();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
     LOCK();
     txRb->put_h_isr(c);
-    if  (uart_hw && uart_is_writable(uart_hw)) {
-       tx_isr();
-    }
-    else {
-      enable_tx_irq();
-    }
+    tx_flush();
     CLEAR_LOCK();
   }
 };
