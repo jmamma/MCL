@@ -129,10 +129,12 @@ void MidiSetup::cfg_ports(bool boot) {
     ;
   }
 
+  #if defined(__AVR__) && !defined(DEBUGMODE)
   if (!boot) {
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo_speed),
+          turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo_speed),
                             MidiUSB.uart);
   }
+  #endif
 
   if (mcl_cfg.uart1_device == 0) {
      midi_active_peering.disconnect(UART1_PORT);

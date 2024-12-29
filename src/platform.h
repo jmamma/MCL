@@ -12,7 +12,7 @@
 
 // Debug configuration
 
-#define DEBUGMODE
+//#define DEBUGMODE
 #define DEBUG_PIN 2
 #define SERIAL_SPEED 115200
 

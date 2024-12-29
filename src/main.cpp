@@ -19,6 +19,11 @@ MIDITest midi_test;
 void setup() {
   DEBUG_INIT();
   DEBUG_PRINTLN("debug mode online");
+
+#ifndef DEBUGMODE
+  MidiUartUSB.init();
+#endif
+
 //  StackMonitor::print_stack_info();
   ISRTiming::init();
 
@@ -37,6 +42,19 @@ void setup() {
   digitalWrite(OLED_CS,HIGH);
   digitalWrite(OLED_RST,HIGH);
 
+  /*
+  pinMode(2, OUTPUT);
+  digitalWrite(2, LOW);
+
+  pinMode(3, OUTPUT);
+  digitalWrite(3, LOW);
+
+  pinMode(4, OUTPUT);
+  digitalWrite(4, LOW);
+
+  pinMode(5, OUTPUT);
+  digitalWrite(5, LOW);
+  `*/
   pinMode(SPI1_MISO_PIN, INPUT);
   pinMode(SPI1_MOSI_PIN, OUTPUT);
   pinMode(SPI1_SCK_PIN, OUTPUT);

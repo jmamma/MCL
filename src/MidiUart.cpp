@@ -71,6 +71,38 @@ void MidiUartClass::set_speed(uint32_t speed_) {
 
 void MidiUartClass::m_putc_immediate(uint8_t c) { uart_putc_raw(uart_hw, c); }
 
+void __not_in_flash_func(MidiUartClass::handle_realtime_message)(uint8_t c) {
+  if (c == MIDI_CLOCK) {
+    if (MidiClock.uart_clock_recv == this) {
+      MidiClock.handleClock();
+      if (MidiClock.state != 2 || MidiClock.inCallback) {
+        return;
+      }
+      MidiClock.inCallback = true;
+      uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
+      MidiUartParent::handle_midi_lock = 1;
+
+      TRIGGER_SW_IRQ1(); // Trigger sequencer
+
+      MidiUartParent::handle_midi_lock = _midi_lock_tmp;
+      MidiClock.inCallback = false;
+    }
+  } else if (MidiClock.uart_transport_recv1 == this ||
+             MidiClock.uart_transport_recv2 == this) {
+    switch (c) {
+    case MIDI_START:
+      MidiClock.handleImmediateMidiStart();
+      break;
+    case MIDI_STOP:
+      MidiClock.handleImmediateMidiStop();
+      break;
+    case MIDI_CONTINUE:
+      MidiClock.handleImmediateMidiContinue();
+      break;
+    }
+  }
+}
+
 void __not_in_flash_func(MidiUartClass::rx_isr)() {
   uint32_t dr = uart_get_hw(uart_hw)->dr;
   uint8_t c = dr & 0xff; // Get the actual data byte
@@ -97,38 +129,7 @@ void __not_in_flash_func(MidiUartClass::rx_isr)() {
   }
   recvActiveSenseTimer = 0;
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-    if (c == MIDI_CLOCK) {
-      if (MidiClock.uart_clock_recv == this) {
-        MidiClock.handleClock();
-        if (MidiClock.state != 2 || MidiClock.inCallback) {
-          return;
-        }
-        MidiClock.inCallback = true;
-        uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
-        MidiUartParent::handle_midi_lock = 1;
-
-        TRIGGER_SW_IRQ1();  //Trigger sequencer
-
-        MidiUartParent::handle_midi_lock = _midi_lock_tmp;
-        MidiClock.inCallback = false;
-        return;
-      }
-    } else if (MidiClock.uart_transport_recv1 == this ||
-               MidiClock.uart_transport_recv2 == this) {
-      switch (c) {
-      case MIDI_START:
-        MidiClock.handleImmediateMidiStart();
-        break;
-      case MIDI_STOP:
-        MidiClock.handleImmediateMidiStop();
-        break;
-      case MIDI_CONTINUE:
-        MidiClock.handleImmediateMidiContinue();
-        break;
-      }
-      rxRb->put_h_isr(c);
-    }
-
+    handle_realtime_message(c);
     return;
   }
   switch (midi->live_state) {

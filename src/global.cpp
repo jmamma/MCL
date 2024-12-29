@@ -57,7 +57,7 @@ MidiUartClass seq_tx4(nullptr, nullptr, &seq_tx4_rb);
 
 MidiUartClass MidiUart(uart0, &uart1_rx_rb, &uart1_tx_rb);
 MidiUartClass MidiUart2(uart1, &uart2_rx_rb, &uart2_tx_rb);
-MidiUartClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb);
+MidiUartUSBClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb);
 
 // Sysex instances
 MidiSysexClass MidiSysex(&MidiUart, &uart1_sysex_rb);
@@ -109,9 +109,16 @@ Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OL
 void handleIncomingMidi() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
+
   Midi.processSysex();
   Midi2.processSysex();
+
   Midi.processMidi();
   Midi2.processMidi();
+
+  MidiUartUSB.poll();
+  MidiUSB.processSysex();
+  MidiUSB.processMidi();
+
   MidiUartParent::handle_midi_lock = 0;
 }
