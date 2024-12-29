@@ -3,8 +3,6 @@
 #pragma once
 
 #define SD_MAX_RETRIES 10
-#define USE_SPI_ARRAY_TRANSFER 1
-#define DISABLE_FS_H_WARNING 1
 
 #include "SdFat.h"
 #include "hardware.h"
