@@ -167,12 +167,10 @@ void GuiClass::display() {
     g_clock_fps = g_clock_ms;
   }
 #endif
-#ifdef UART_USB
 #ifndef DEBUGMODE
   if (display_mirror) {
     mirror();
   }
-#endif
 #endif
   oled_display.display();
 }
