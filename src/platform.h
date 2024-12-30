@@ -49,21 +49,17 @@ extern volatile uint32_t interrupt_lock_count;
     #define FORCED_INLINE() __attribute__((always_inline))
 #endif
 
-#ifdef PICO_RP2350
-    #define SW_IRQ1    SPARE_IRQ_0      // IRQ 46
-    #define SW_IRQ2    SPARE_IRQ_1      // IRQ 47
-    #define SW_IRQ3    SPARE_IRQ_2      // IRQ 48
-#else
-    #define SW_IRQ1    (RTC_IRQ + 1)     // IRQ 26
-    #define SW_IRQ2    (RTC_IRQ + 2)     // IRQ 27
-    #define SW_IRQ3    (RTC_IRQ + 3)     // IRQ 28
-#endif
-    #define TRIGGER_SW_IRQ1()  (nvic_hw->ispr[SW_IRQ1/32] = 1u << (SW_IRQ1 % 32))
-    #define TRIGGER_SW_IRQ2()  (nvic_hw->ispr[SW_IRQ2/32] = 1u << (SW_IRQ2 % 32))
-    #define TRIGGER_SW_IRQ3()  (nvic_hw->ispr[SW_IRQ3/32] = 1u << (SW_IRQ3 % 32))
-    #define CLEAR_SW_IRQ1()    (nvic_hw->icpr[SW_IRQ1/32] = 1u << (SW_IRQ1 % 32))
-    #define CLEAR_SW_IRQ2()    (nvic_hw->icpr[SW_IRQ2/32] = 1u << (SW_IRQ2 % 32))
-    #define CLEAR_SW_IRQ3()    (nvic_hw->icpr[SW_IRQ3/32] = 1u << (SW_IRQ3 % 32))
+extern uint8_t SW_IRQ1;
+extern uint8_t SW_IRQ2;
+extern uint8_t SW_IRQ3;
+
+#define TRIGGER_SW_IRQ1()  irq_set_pending(SW_IRQ1)
+#define TRIGGER_SW_IRQ2()  irq_set_pending(SW_IRQ2)
+#define TRIGGER_SW_IRQ3()  irq_set_pending(SW_IRQ3)
+
+#define CLEAR_SW_IRQ1()    irq_clear(SW_IRQ1)
+#define CLEAR_SW_IRQ2()    irq_clear(SW_IRQ2)
+#define CLEAR_SW_IRQ3()    irq_clear(SW_IRQ3)
 
 // C++ specific functionality
 #ifdef __cplusplus

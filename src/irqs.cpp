@@ -127,6 +127,11 @@ void setup_timers() {
 }
 
 void setup_software_interrupts() {
+  // Claim three consecutive user IRQs
+  SW_IRQ1 = user_irq_claim_unused(true);
+  SW_IRQ2 = user_irq_claim_unused(true);
+  SW_IRQ3 = user_irq_claim_unused(true);
+
   // Priority hierarchy:
   // PWM   (0x10) - Highest
   // UART  (0x20) - Middle
@@ -149,3 +154,7 @@ void setup_irqs() {
   setup_timers();
   setup_software_interrupts();
 }
+
+uint8_t SW_IRQ1;
+uint8_t SW_IRQ2;
+uint8_t SW_IRQ3;
