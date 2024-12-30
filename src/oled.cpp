@@ -440,11 +440,3 @@ void Oled::draw_textbox(char *text, char *text2) {
   print(text2);
   setFont(oldfont);
 }
-
-// clear everything
-void Oled::clearDisplay(void) {
-  memset(buffer, 0, (OLED_WIDTH * OLED_HEIGHT / 8));
-}
-
-
-
