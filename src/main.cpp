@@ -19,18 +19,13 @@ MIDITest midi_test;
 void setup() {
   DEBUG_INIT();
   DEBUG_PRINTLN("debug mode online");
-
+  delay(100);
 #ifndef DEBUGMODE
   MidiUartUSB.init();
 #endif
-
-//  StackMonitor::print_stack_info();
-  ISRTiming::init();
-
-  GUI_hardware.init();
   MidiUart.initSerial();
   MidiUart2.initSerial();
-
+  GUI_hardware.init();
   setup_irqs();
 
   pinMode(LED_BUILTIN, OUTPUT);

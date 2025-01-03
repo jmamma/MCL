@@ -60,6 +60,9 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
     oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 31, 32 - a,
                           BLACK);
     oled_display.display();
+#ifndef __AVR__
+    delay(10);
+#endif
   }
 
 }

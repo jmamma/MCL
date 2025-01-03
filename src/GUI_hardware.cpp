@@ -36,38 +36,32 @@ SR165Class::SR165Class() {
 ALWAYS_INLINE() uint8_t SR165Class::read() {
     rst();
     uint8_t res = 0;
-    
     for (uint8_t i = 0; i < 8; i++) {
         res <<= 1;
         res |= ((sio_hw->gpio_in & SR165_OUT_MASK) ? 1 : 0); // Direct read
         clk();
     }
-    
     return res;
 }
 
 ALWAYS_INLINE() uint8_t SR165Class::read_norst() {
     uint8_t res = 0;
-    
     for (uint8_t i = 0; i < 8; i++) {
         res <<= 1;
         res |= ((sio_hw->gpio_in & SR165_OUT_MASK) ? 1 : 0); // Direct read
         clk();
     }
-    
     return res;
 }
 
 ALWAYS_INLINE() uint16_t SR165Class::read16() {
     rst();
     uint16_t res = 0;
-    
     for (uint8_t i = 0; i < 16; i++) {
         res <<= 1;
         res |= ((sio_hw->gpio_in & SR165_OUT_MASK) ? 1 : 0); // Direct read
         clk();
     }
-    
     return res;
 }
 
@@ -159,14 +153,12 @@ void GUIHardware::init() {
     gpio_init(SR165_OUT);
     gpio_init(SR165_SHLOAD);
     gpio_init(SR165_CLK);
-    
     gpio_set_dir(SR165_OUT, GPIO_IN);
     gpio_set_dir(SR165_SHLOAD, GPIO_OUT);
     gpio_set_dir(SR165_CLK, GPIO_OUT);
-    
     // Set initial states using SIO for fastest operation
     sio_hw->gpio_set = SR165_CLK_MASK | SR165_SHLOAD_MASK;
-
+    delay(10);
     uint16_t sr = SR165.read16();
     Buttons.clear();
     Buttons.poll(sr >> 8);
