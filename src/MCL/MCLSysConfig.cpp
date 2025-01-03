@@ -4,6 +4,7 @@
 #include "MidiSetup.h"
 #include "GridChain.h"
 #include "MCLSd.h"
+#include "hardware.h"
 
 // Consolidated display function to reduce code duplication
 static void show_message(const char* line1) {

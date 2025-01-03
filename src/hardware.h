@@ -19,8 +19,6 @@ const int SPI1_SS_PIN = 9;
 #define EXTERNAL_SPI_ENABLE() { }
 #define EXTERNAL_SPI_DISABLE() { }
 
-#define change_usb_mode(mode) { }
-
 typedef struct encoder_s {
   int8_t normal;
   int8_t button;
@@ -39,3 +37,4 @@ inline void clearLed2(void) {
 inline void toggleLed2(void) {
 }
 
+extern void change_usb_mode(uint8_t mode);
