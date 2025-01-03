@@ -4,6 +4,8 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
 
 ## Current Progress
 
+Port is now complete.
+
 - [X] Platform.txt -> Makefile translation
   - Code can be compiled independently of the Arduino IDE
   - Correct linking of arduino-pico, pico-sdk and related libraries
@@ -45,11 +47,10 @@ This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2
 
 - [X] Validate UART and timer IRQ timings.
 
-## Todo
+- [X] MCL project/grid initialisation
 
-- [ ] MCL project/grid initialisation
-- [ ] Object serialisation to/from SD Card
-- [ ] MIDI Device Drivers
-- [ ] Stack Size. Currently limited to 4KB per core. Could we use all 8KB for a single core?
-      MCL in current implementation requires a stack size of 8KB.
-- [ ] ... and more
+- [X] Object serialisation to/from SD Card
+
+#Todo
+
+- [ ] Backport refactor to main MCL github repo.
