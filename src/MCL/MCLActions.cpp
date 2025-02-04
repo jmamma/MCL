@@ -552,6 +552,21 @@ bool MCLActions::load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
   return true;
 }
 
+void MCLActions::handle_mute_states(uint8_t *mute_states, bool restore) {
+  for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
+    if (mute_states[i] == 255) { continue; }
+    GridDeviceTrack *gdt_dst = get_grid_dev_track(i);
+    if (gdt_dst != nullptr) {
+      if (restore) {
+        gdt_dst->seq_track->mute_state = mute_states[i];
+      } else {
+        mute_states[i] = gdt_dst->seq_track->mute_state;
+        gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
+      }
+    }
+  }
+}
+
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
                                         uint8_t *row_array, uint8_t load_offset) {
   // DEBUG_PRINT_FN();
@@ -596,7 +611,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
     proj.select_grid(grid_idx);
     mute_states[dst] = gdt_dst->seq_track->mute_state;
-    gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
 
       row = grid_page.getRow();
     if (row_array) {
@@ -613,6 +627,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       select_array[i] = 0;
     }
   }
+  handle_mute_states(mute_states,false);
+
   /*Send the encoded kit to the devices via sysex*/
   uint16_t myclock = g_clock_ms;
   uint16_t latency_ms = 0;
@@ -655,13 +671,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   }
   GUI.addTask(&grid_task);
 
-  for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
-    if (mute_states[i] == 255) { continue; }
-    GridDeviceTrack *gdt_dst = get_grid_dev_track(i);
-    if (gdt_dst != nullptr) {
-       gdt_dst->seq_track->mute_state = mute_states[i];
-    }
-  }
+  handle_mute_states(mute_states,true);
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
 
