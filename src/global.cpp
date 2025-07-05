@@ -11,6 +11,7 @@
 #include "A4.h"
 #include "Elektron.h"
 #include "MidiIDSysex.h"
+#include "SoftwareSPI.h"
 
 // Buffer array definitions
 uint8_t seq_tx1_buf[TX_SEQBUF_SIZE];
@@ -104,7 +105,12 @@ MidiActivePeering midi_active_peering;
 MidiSetup midi_setup;
 //Oled Display
 
-Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
+#ifdef PLATFORM == TBD
+  SoftwareSPI softSpi(OLED_SCLK, OLED_DC, OLED_MOSI);
+  Oled oled_display(OLED_WIDTH, OLED_HEIGHT, softSpi, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
+#else
+  Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
+#endif
 
 void handleIncomingMidi() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;

@@ -38,10 +38,10 @@ extern volatile uint32_t interrupt_lock_count;
 #define LOCK() USE_LOCK(); SET_LOCK()
 
 // Function inlining configuration
-#if defined(MEGACOMMAND) && defined(IS_ISR_ROUTINE)
+#if PLATFORM == MEGACOMMAND && defined(IS_ISR_ROUTINE)
     #define ALWAYS_INLINE() __attribute__((always_inline))
     #define FORCED_INLINE() __attribute__((always_inline))
-#elif defined(MEGACOMMAND)
+#elif PLATFORM == MEGACOMMAND
     #define ALWAYS_INLINE()
     #define FORCED_INLINE() __attribute__((always_inline))
 #else

@@ -4,8 +4,6 @@
 #include "MCLSd.h"
 #include "MCLGUI.h"
 
-
-
 void Oled::init_display() {
   DEBUG_PRINT_FN();
 
@@ -413,7 +411,7 @@ void Oled::display(void) {
   window_x2 = WIDTH - 1;
   window_y2 = HEIGHT - 1;
   */
-  Adafruit_SSD1305::display();
+  DISPLAY_TYPE::display();
   SD.unlock_spi();
   display_lock = false;
 }
