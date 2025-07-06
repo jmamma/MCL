@@ -107,7 +107,7 @@ MidiSetup midi_setup;
 
 #ifdef PLATFORM == TBD
   SoftwareSPI softSpi(OLED_SCLK, OLED_DC, OLED_MOSI);
-  Oled oled_display(OLED_WIDTH, OLED_HEIGHT, softSpi, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
+  Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &softSpi, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
 #else
   Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &SPI1, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
 #endif
