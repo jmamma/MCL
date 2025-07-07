@@ -12,9 +12,9 @@
 
 // Debug configuration
 
-//#define DEBUGMODE
+#define DEBUGMODE
 #define DEBUG_PIN 2
-#define SERIAL_SPEED 115200
+#define SERIAL_SPEED 9600
 
 // Platform compatibility defines
 #ifndef PROGMEM
@@ -38,10 +38,10 @@ extern volatile uint32_t interrupt_lock_count;
 #define LOCK() USE_LOCK(); SET_LOCK()
 
 // Function inlining configuration
-#if PLATFORM == MEGACOMMAND && defined(IS_ISR_ROUTINE)
+#if defined(PLATFORM_MEGACOMMAND) && defined(IS_ISR_ROUTINE)
     #define ALWAYS_INLINE() __attribute__((always_inline))
     #define FORCED_INLINE() __attribute__((always_inline))
-#elif PLATFORM == MEGACOMMAND
+#elif defined(PLATFORM_MEGACOMMAND)
     #define ALWAYS_INLINE()
     #define FORCED_INLINE() __attribute__((always_inline))
 #else

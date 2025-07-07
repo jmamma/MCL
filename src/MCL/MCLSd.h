@@ -4,6 +4,21 @@
 
 #define SD_MAX_RETRIES 10
 
+#if defined(PLATFORM_TBD)
+
+#define ARDUINO_ARCH_RP2040
+
+#define RP_CLK_GPIO 2 // Set to CLK GPIO
+#define RP_CMD_GPIO 3 // Set to CMD GPIO
+#define RP_DAT0_GPIO 4
+#define SD_CONFIG SdioConfig(RP_CLK_GPIO, RP_CMD_GPIO, RP_DAT0_GPIO)
+
+#else
+
+#define SD_CONFIG SdSpiConfig(SPI1_SS_PIN, DEDICATED_SPI, SD_SCK_MHZ(12), &SPI1)
+
+#endif
+
 #include "SdFat.h"
 #include "hardware.h"
 typedef FsFile File;
