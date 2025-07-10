@@ -10,6 +10,10 @@ const int SPI1_SS_PIN = 9;
 #define USB_STORAGE 1
 #define USB_DFU     0
 
+#define RP_CLK_GPIO 2 // Set to CLK GPIO
+#define RP_CMD_GPIO 3 // Set to CMD GPIO
+#define RP_DAT0_GPIO 4
+
 #define IS_MEGACMD() (true)
 #define SET_USB_MODE(x) { }
 

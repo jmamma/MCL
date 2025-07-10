@@ -12,6 +12,7 @@
 #include "Elektron.h"
 #include "MidiIDSysex.h"
 #include "SoftwareSPI.h"
+#include "Ui.h"
 
 // Buffer array definitions
 uint8_t seq_tx1_buf[TX_SEQBUF_SIZE];
@@ -105,7 +106,8 @@ MidiActivePeering midi_active_peering;
 MidiSetup midi_setup;
 //Oled Display
 
-#ifdef PLATFORM == TBD
+#if defined(PLATFORM_TBD)
+  Ui tbd_ui;
   SoftwareSPI softSpi(OLED_SCLK, OLED_DC, OLED_MOSI);
   Oled oled_display(OLED_WIDTH, OLED_HEIGHT, &softSpi, OLED_DC, OLED_RST, OLED_CS, OLED_SPEED);
 #else

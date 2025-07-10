@@ -16,6 +16,27 @@
 MIDITest midi_test;
 
 
+void picow_init() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  // Explicitly set pins to default state
+  pinMode(OLED_CS, OUTPUT);
+  pinMode(OLED_RST, OUTPUT);
+  digitalWrite(OLED_CS,HIGH);
+  digitalWrite(OLED_RST,HIGH);
+
+  pinMode(SPI1_MISO_PIN, INPUT);
+  pinMode(SPI1_MOSI_PIN, OUTPUT);
+  pinMode(SPI1_SCK_PIN, OUTPUT);
+  pinMode(SPI1_SS_PIN, OUTPUT);
+
+  // Now reinitialize SPI
+  SPI1.setRX(SPI1_MISO_PIN);
+  SPI1.setTX(SPI1_MOSI_PIN);
+  SPI1.setSCK(SPI1_SCK_PIN);
+}
+
 void setup() {
   DEBUG_INIT();
   DEBUG_PRINTLN("debug mode online");
@@ -28,37 +49,9 @@ void setup() {
   GUI_hardware.init();
   setup_irqs();
 
-  pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);
-
-  // Explicitly set pins to default state
-  pinMode(OLED_CS, OUTPUT);
-  pinMode(OLED_RST, OUTPUT);
-  digitalWrite(OLED_CS,HIGH);
-  digitalWrite(OLED_RST,HIGH);
-
-  /*
-  pinMode(2, OUTPUT);
-  digitalWrite(2, LOW);
-
-  pinMode(3, OUTPUT);
-  digitalWrite(3, LOW);
-
-  pinMode(4, OUTPUT);
-  digitalWrite(4, LOW);
-
-  pinMode(5, OUTPUT);
-  digitalWrite(5, LOW);
-  `*/
-  pinMode(SPI1_MISO_PIN, INPUT);
-  pinMode(SPI1_MOSI_PIN, OUTPUT);
-  pinMode(SPI1_SCK_PIN, OUTPUT);
-  pinMode(SPI1_SS_PIN, OUTPUT);
-
-  // Now reinitialize SPI
-  SPI1.setRX(SPI1_MISO_PIN);
-  SPI1.setTX(SPI1_MOSI_PIN);
-  SPI1.setSCK(SPI1_SCK_PIN);
+#ifndef PLATFORM_TBD
+  picow_init();
+#endif
 
   mcl.setup();
 }

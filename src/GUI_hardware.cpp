@@ -6,6 +6,10 @@
 #include "hardware/gpio.h"
 #include "hardware/structs/sio.h"
 
+#ifdef PLATFORM_TBD
+#include "Ui.h"
+#endif
+
 // Pin definitions - keeping original pins
 #define SR165_OUT    12
 #define SR165_SHLOAD 6
@@ -86,9 +90,9 @@ void EncodersClass::poll(uint16_t sr) {
     for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
         if ((sr & 3) != (sr_old & 3)) {
             volatile int8_t *val = &(ENCODER_NORMAL(i));
-            if (BUTTON_DOWN(i)) {
-                val = &(ENCODER_BUTTON(i));
-            }
+            //if (BUTTON_DOWN(i)) {
+            //    val = &(ENCODER_BUTTON(i));
+            //}
 
             if (((sr_old2s[i] & 3) == 0 && (sr_old & 3) == 1 && (sr & 3) == 3) ||
                 (((sr_old2s[i] & 3) == 3) && (sr_old & 3) == 2 && (sr & 3) == 0)) {
@@ -107,6 +111,16 @@ void EncodersClass::poll(uint16_t sr) {
 
     sr_old = sr_tmp;
 }
+
+void EncodersClass::pollTBD(const ui_data_t& ui_data) {
+   for (uint8_t i = 0; i < GUI_NUM_ENCODERS && i < 4; i++) {
+        uint16_t current_pos = ui_data.pot_positions[i];
+        uint16_t old_pos = pot_old_positions[i];
+        ENCODER_NORMAL(i) = (current_pos * 127) / 1023;
+        pot_old_positions[i] = current_pos;
+   }
+}
+
 
 /**********************************************/
 
@@ -130,6 +144,24 @@ void ButtonsClass::poll(uint8_t but) {
         but_tmp >>= 1;
     }
 }
+void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
+  for(int i=0;i<4;i++){
+    bool state = ui_data.f_btns & (1 << i);
+    STORE_B_CURRENT(i, state);
+  }
+  for(int i=0;i<13;i++){
+    if (i < 4) {
+      bool state = ui_data.mcl_btns & (1 << i);
+      STORE_B_CURRENT(i + 4, state);
+    }
+    else {
+    }
+  }
+  for(int i=0;i<16;i++){
+     bool state = ui_data.d_btns & (1 << i);
+  }
+
+}
 
 void GUIHardware::poll() {
     if (inGui) {
@@ -137,6 +169,7 @@ void GUIHardware::poll() {
     }
 
     inGui = true;
+#ifndef PLATFORM_TBD
     uint16_t sr = SR165.read16();
     if (sr != oldsr) {
         Buttons.clear();
@@ -145,11 +178,23 @@ void GUIHardware::poll() {
         oldsr = sr;
         GUI.events.pollEvents();
     }
+#else
+    //tbd_ui.Poll();
+    ui_data_t ui_data_current = tbd_ui.CopyUiData();
+    if (ui_data_current.systicks != last_ui_systicks) {
+        Buttons.clear();
+        Buttons.pollTBD(ui_data_current);
+        Encoders.pollTBD(ui_data_current);
+        last_ui_systicks = ui_data_current.systicks;
+        GUI.events.pollEvents();
+    }
+#endif
     inGui = false;
 }
 
 void GUIHardware::init() {
     // Initialize GPIO pins
+#ifndef PLATFORM_TBD
     gpio_init(SR165_OUT);
     gpio_init(SR165_SHLOAD);
     gpio_init(SR165_CLK);
@@ -164,6 +209,10 @@ void GUIHardware::init() {
     Buttons.poll(sr >> 8);
     Encoders.poll(sr);
     oldsr = sr;
+#else
+    last_ui_systicks = 0;
+    tbd_ui.InitHardware();
+#endif
 }
 
 GUIHardware GUI_hardware;

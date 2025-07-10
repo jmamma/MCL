@@ -1,14 +1,14 @@
 #pragma once
 
 #include <Adafruit_GFX.h>
-#include <DaDa_SSD1309_MCL.h>
+#include <DaDa_SSD1309.h>
 #include <Adafruit_SSD1305.h>
 
 #define OLED_DISPLAY
 
-#if PLATFORM == TBD
+#if defined(PLATFORM_TBD)
 
-#define DISPLAY_TYPE DaDa_SSD1309_MCL
+#define DISPLAY_TYPE DaDa_SSD1309
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
 #define OLED_SPEED 10000000UL

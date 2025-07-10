@@ -5,6 +5,11 @@
 #include "platform.h"
 #include "hardware.h"
 
+#ifdef PLATFORM_TBD
+#include "Ui.h"
+extern class Ui tbd_ui;
+#endif
+
 class SR165Class {
   inline void rst();
   inline void clk();
@@ -21,7 +26,9 @@ class SR165Class {
 class EncodersClass {
   uint16_t sr_old;
   uint8_t sr_old2s[GUI_NUM_ENCODERS];
-
+#ifdef PLATFORM_TBD
+  uint16_t pot_old_positions[GUI_NUM_ENCODERS];
+#endif
  public:
   encoder_t encoders[GUI_NUM_ENCODERS];
 
@@ -30,8 +37,12 @@ class EncodersClass {
   void poll(uint16_t sr);
   void clearEncoders();
 
+#ifdef PLATFORM_TBD
+  void pollTBD(const ui_data_t& ui_data);
+#endif
+
   ALWAYS_INLINE() int8_t getNormal(uint8_t i) { return encoders[i].normal; }
-  ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }
+  //ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }
 
   ALWAYS_INLINE() int8_t limitValue(int8_t value, int8_t min, int8_t max) {
     return (value > max) ? max : (value < min ? min : value);
@@ -131,6 +142,10 @@ class ButtonsClass {
   ButtonsClass();
   ALWAYS_INLINE() void clear();
   ALWAYS_INLINE() void poll(uint8_t sr);
+#ifdef PLATFORM_TBD
+  void pollTBD(const ui_data_t& ui_data);
+#endif
+
 };
 
 class GUIHardware {
@@ -139,6 +154,9 @@ private:
     uint16_t oldsr;
 public:
     ButtonsClass Buttons;  // Made public for macro access
+#ifdef PLATFORM_TBD
+    uint32_t last_ui_systicks;
+#endif
 
     GUIHardware() : inGui(false), oldsr(0) {}
     void init();

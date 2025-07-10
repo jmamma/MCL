@@ -22,6 +22,7 @@ void __not_in_flash_func(softirq1_handler)() {
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   MidiClock.inCallback = false;
 }
+
 void __not_in_flash_func(softirq2_handler)() {
   CLEAR_SW_IRQ2();
   handleIncomingMidi();
@@ -29,9 +30,7 @@ void __not_in_flash_func(softirq2_handler)() {
 
 void __not_in_flash_func(softirq3_handler)() {
   CLEAR_SW_IRQ3();
-
   GUI_hardware.poll();
-
 }
 
 void __not_in_flash_func(timer1_handler)() {
