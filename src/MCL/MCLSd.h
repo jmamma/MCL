@@ -6,8 +6,6 @@
 
 #if defined(PLATFORM_TBD)
 
-#define ARDUINO_ARCH_RP2040
-
 #define SD_CONFIG SdioConfig(RP_CLK_GPIO, RP_CMD_GPIO, RP_DAT0_GPIO)
 
 #else
