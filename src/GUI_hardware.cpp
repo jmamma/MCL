@@ -153,23 +153,23 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   //MCL Buttons
   for(int i=0;i<4;i++){
     bool state = ui_data.f_btns & (1 << i);
-    STORE_B_CURRENT(i + BUTTON1, state);
+    STORE_B_CURRENT(i + BUTTON1, !state);
   }
   for(int i=0;i<13;i++){
     bool state = ui_data.mcl_btns & (1 << i);
     //9 Function Buttons
     if (i < 9) {
-      STORE_B_CURRENT(i + FUNC_BUTTON1, state);
+      STORE_B_CURRENT(i + FUNC_BUTTON1, !state);
     }
     //4 Encoder Buttons
     else {
-      STORE_B_CURRENT(i - 9 + ENCODER1, state);
+      STORE_B_CURRENT(i - 9 + ENCODER1, !state);
     }
   }
   //Sequencer Buttons
   for(int i=0;i<16;i++){
      bool state = ui_data.d_btns & (1 << i);
-     STORE_B_CURRENT(i + TRIG_BUTTON1, state);
+     STORE_B_CURRENT(i + TRIG_BUTTON1, !state);
   }
 
 }
