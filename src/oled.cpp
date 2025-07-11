@@ -28,7 +28,11 @@ void Oled::init_display() {
 
   oled_display.clearDisplay();
   oled_display.invertDisplay(0);
+#ifdef PLATFORM_TBD
+  oled_display.setRotation(0);
+#else
   oled_display.setRotation(2);
+#endif
   oled_display.setTextSize(1);
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setCursor(0, 0); 

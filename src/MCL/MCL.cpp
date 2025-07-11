@@ -151,6 +151,7 @@ void MCL::setup() {
     // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     mcl.setPage(BOOT_MENU_PAGE);
     while (mcl.currentPage() == BOOT_MENU_PAGE) {
+      debugBuffer.flush();
       GUI.loop();
     }
     return;
