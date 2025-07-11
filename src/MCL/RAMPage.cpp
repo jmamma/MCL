@@ -32,7 +32,7 @@ void RAMPage::setup() {
 
 void RAMPage::init() {
   DEBUG_PRINT_FN();
-  trig_interface.off();
+  key_interface.off();
   cc_link_enable = true;
   if (mcl_cfg.ram_page_mode == MONO) {
     ((MCLEncoder *)encoders[0])->max = 2;

@@ -187,8 +187,8 @@ void MCL::setup() {
 
   MDSysexListener.setup(&Midi);
 
-  trig_interface.setup(&Midi);
-  trig_interface.enable_listener();
+  key_interface.setup(&Midi);
+  key_interface.enable_listener();
 
   md_track_select.setup(&Midi);
 
@@ -259,7 +259,7 @@ bool tbd_handleEvent(gui_event_t *event) {
             }
         }
         if (key != 255) {
-            trig_interface.key_event(key, event->mask & 1);
+            key_interface.key_event(key, event->mask & 1);
             return true;
         }
     }
@@ -292,8 +292,8 @@ bool mcl_handleEvent(gui_event_t *event) {
               case MDX_KEY_DOWN:
               case MDX_KEY_LEFT:
               case MDX_KEY_RIGHT: {
-                trig_interface_task.setup();
-                GUI.addTask(&trig_interface_task);
+                key_interface_task.setup();
+                GUI.addTask(&key_interface_task);
                 //return false to allow other gui handler to pick up.
                 return false;
               }
@@ -318,7 +318,7 @@ bool mcl_handleEvent(gui_event_t *event) {
 //            (mcl.currentPage() == MIXER_PAGE && mixer_page.preview_mute_set != 255)) {
           return false;
         }
-        if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
           return false;
         }
         if (grid_page.last_page == 255) {
@@ -328,7 +328,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         grid_page.bank_popup = 1;
         grid_page.bank_popup_loadmask = 0;
         bool clear_states = false;
-        trig_interface.on(clear_states);
+        key_interface.on(clear_states);
         grid_page.bank = key - MDX_KEY_BANKA + MD.currentBank * 4;
         uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
         MD.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
@@ -343,7 +343,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (mcl.currentPage() != TEXT_INPUT_PAGE &&
             mcl.currentPage() != GRID_SAVE_PAGE &&
             mcl.currentPage() != GRID_LOAD_PAGE &&
-            !trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+            !key_interface.is_key_down(MDX_KEY_PATSONG)) {
           mcl.setPage(PAGE_SELECT_PAGE);
           return true;
         }
@@ -363,10 +363,10 @@ bool mcl_handleEvent(gui_event_t *event) {
             seq_step_page.recording = 0;
             MD.set_rec_mode(mcl.currentPage() == SEQ_STEP_PAGE);
             clearLed2();
-            trig_interface.ignoreNextEvent(MDX_KEY_REC);
+            key_interface.ignoreNextEvent(MDX_KEY_REC);
           } else {
             if (mcl.currentPage() == SEQ_STEP_PAGE) {
-              trig_interface.ignoreNextEvent(MDX_KEY_REC);
+              key_interface.ignoreNextEvent(MDX_KEY_REC);
               mcl.setPage(seq_step_page.last_page);
             }
           }
@@ -381,8 +381,8 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
         if (mcl.currentPage() != SEQ_PTC_PAGE &&
-            (trig_interface.is_key_down(MDX_KEY_SCALE) ||
-             trig_interface.is_key_down(MDX_KEY_NO))) {
+            (key_interface.is_key_down(MDX_KEY_SCALE) ||
+             key_interface.is_key_down(MDX_KEY_NO))) {
           // Ignore scale + copy if page != seq_step_page
           break;
         }
@@ -401,8 +401,8 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
         if (mcl.currentPage() != SEQ_PTC_PAGE &&
-            (trig_interface.is_key_down(MDX_KEY_SCALE) ||
-             trig_interface.is_key_down(MDX_KEY_NO))) {
+            (key_interface.is_key_down(MDX_KEY_SCALE) ||
+             key_interface.is_key_down(MDX_KEY_NO))) {
           // Ignore scale + copy if page != seq_step_page
           break;
         }
@@ -422,8 +422,8 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
           break;
         if ((note_interface.notes_count_on() > 0) ||
-            (trig_interface.is_key_down(MDX_KEY_SCALE) ||
-             trig_interface.is_key_down(MDX_KEY_NO)))
+            (key_interface.is_key_down(MDX_KEY_SCALE) ||
+             key_interface.is_key_down(MDX_KEY_NO)))
           break;
         opt_clear = 2;
         //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
@@ -443,7 +443,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_FUNCEXTENDED: {
-        trig_interface.ignoreNextEvent(MDX_KEY_EXTENDED);
+        key_interface.ignoreNextEvent(MDX_KEY_EXTENDED);
         MD.restore_kit_params();
         break;
       }
@@ -465,7 +465,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_FUNCEXTENDED: {
-        trig_interface.ignoreNextEventClear(MDX_KEY_EXTENDED);
+        key_interface.ignoreNextEventClear(MDX_KEY_EXTENDED);
         return true;
       }
       }

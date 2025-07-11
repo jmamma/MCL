@@ -9,14 +9,14 @@ void PolyPage::init() {
 
   poly_mask = &mcl_cfg.poly_mask;
   DEBUG_PRINT_FN();
-  trig_interface.on();
+  key_interface.on();
   note_interface.init_notes();
   MD.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
 }
 
 void PolyPage::cleanup() {
   seq_ptc_page.init_poly();
-  trig_interface.off();
+  key_interface.off();
 }
 
 void PolyPage::draw_mask() {

@@ -5,7 +5,7 @@
 
 #include "QuestionDialogPage.h"
 #include "TextInputPage.h"
-#include "TrigInterface.h"
+#include "KeyInterface.h"
 #include "NoteInterface.h"
 #include "MCLMenus.h"
 

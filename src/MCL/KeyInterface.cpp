@@ -1,28 +1,28 @@
-#include "TrigInterface.h"
+#include "KeyInterface.h"
 #include "MD.h"
 #include "Midi.h"
 #include "MidiActivePeering.h"
 /*
-TrigInterfaceTask trig_interface_task;
+KeyInterfaceTask key_interface_task;
 
-void TrigInterfaceTask::run() {
+void KeyInterfaceTask::run() {
   uint8_t key = 255;
 
-  if (trig_interface.is_key_down(MDX_KEY_LEFT)) {
+  if (key_interface.is_key_down(MDX_KEY_LEFT)) {
     key = MDX_KEY_LEFT;
   }
-  if (trig_interface.is_key_down(MDX_KEY_RIGHT)) {
+  if (key_interface.is_key_down(MDX_KEY_RIGHT)) {
     key = MDX_KEY_RIGHT;
   }
-  if (trig_interface.is_key_down(MDX_KEY_UP)) {
+  if (key_interface.is_key_down(MDX_KEY_UP)) {
     key = MDX_KEY_UP;
   }
-  if (trig_interface.is_key_down(MDX_KEY_DOWN)) {
+  if (key_interface.is_key_down(MDX_KEY_DOWN)) {
     key = MDX_KEY_DOWN;
   }
 
   if (key == 255) {
-    GUI.removeTask(&trig_interface_task);
+    GUI.removeTask(&key_interface_task);
     return;
   }
 
@@ -35,13 +35,13 @@ void TrigInterfaceTask::run() {
 }
 */
 
-void TrigInterface::setup(MidiClass *_midi) {
+void KeyInterface::setup(MidiClass *_midi) {
     sysex = _midi->midiSysex;
 }
 
-void TrigInterface::start() {}
+void KeyInterface::start() {}
 
-void TrigInterface::send_md_leds(TrigLEDMode mode) {
+void KeyInterface::send_md_leds(TrigLEDMode mode) {
   uint16_t led_mask = 0;
   for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
@@ -51,14 +51,14 @@ void TrigInterface::send_md_leds(TrigLEDMode mode) {
   MD.set_trigleds(led_mask, mode);
 }
 
-void TrigInterface::enable_listener() {
+void KeyInterface::enable_listener() {
   cmd_key_state = 0;
   sysex->addSysexListener(this);
 }
 
-void TrigInterface::disable_listener() { sysex->removeSysexListener(this); }
+void KeyInterface::disable_listener() { sysex->removeSysexListener(this); }
 
-bool TrigInterface::on(bool clear_states) {
+bool KeyInterface::on(bool clear_states) {
   note_interface.init_notes();
   if (clear_states) {
     cmd_key_state = 0;
@@ -72,11 +72,11 @@ bool TrigInterface::on(bool clear_states) {
   }
   state = true;
   DEBUG_PRINTLN(F("activating trig interface"));
-  MD.activate_trig_interface();
+  MD.activate_key_interface();
   return true;
 }
 
-bool TrigInterface::off() {
+bool KeyInterface::off() {
   note_interface.note_proceed = false;
   DEBUG_PRINTLN(F("deactiviating trig interface"));
   if (!state) {
@@ -86,11 +86,11 @@ bool TrigInterface::off() {
   if (!MD.connected) {
     return false;
   }
-  MD.deactivate_trig_interface();
+  MD.deactivate_key_interface();
   return true;
 }
 
-bool TrigInterface::check_key_throttle() {
+bool KeyInterface::check_key_throttle() {
   if (clock_diff(last_clock, g_clock_ms) < 30) {
     return true;
   } else {
@@ -99,7 +99,7 @@ bool TrigInterface::check_key_throttle() {
   return false;
 }
 
-void TrigInterface::key_event(uint8_t key, bool key_release) {
+void KeyInterface::key_event(uint8_t key, bool key_release) {
    if (key_release) {
     CLEAR_BIT64(cmd_key_state, key);
   } else {
@@ -131,7 +131,7 @@ void TrigInterface::key_event(uint8_t key, bool key_release) {
   GUI.putEvent(&event);
 }
 
-void TrigInterface::end() {
+void KeyInterface::end() {
 
   // if (!state) {
   //  return;
@@ -168,4 +168,4 @@ void TrigInterface::end() {
   return;
 }
 
-TrigInterface trig_interface;
+KeyInterface key_interface;

@@ -27,7 +27,7 @@ void LFOPage::init() {
   MD.sync_seqtrack(lfo_track->length, lfo_track->speed,
                      lfo_track->step_count);
   if (lfo_track->mode != LFO_MODE_FREE) {
-    trig_interface.on();
+    key_interface.on();
   }
 
 
@@ -35,7 +35,7 @@ void LFOPage::init() {
 
 void LFOPage::cleanup() {
   PerfPageParent::cleanup();
-  trig_interface.off();
+  key_interface.off();
 }
 
 void LFOPage::config_encoder_range(uint8_t i) {
@@ -337,9 +337,9 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       lfo_track->mode += 1;
     }
     if (lfo_track->mode == LFO_MODE_FREE) {
-      trig_interface.off();
+      key_interface.off();
     } else {
-      trig_interface.on();
+      key_interface.on();
     }
   }
 

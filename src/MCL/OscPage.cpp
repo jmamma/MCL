@@ -44,14 +44,14 @@ bool OscPage::handleEvent(gui_event_t *event) {
     if (device != &MD) {
       return true;
     }
-    trig_interface.send_md_leds(TRIGLED_OVERLAY);
+    key_interface.send_md_leds(TRIGLED_OVERLAY);
   }
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
         switch (key) {
         case MDX_KEY_NO:
-          //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+          //  key_interface.ignoreNextEvent(MDX_KEY_NO);
             show_freq = !show_freq;
           return true;
         }
@@ -116,13 +116,13 @@ void OscPage::loop() {
   enc_->cur = 64 + diff;
   enc_->old = 64;
   if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
-    if (!trig_interface.state) {
-      trig_interface.on();
+    if (!key_interface.state) {
+      key_interface.on();
     }
   }
 
   else {
-    trig_interface.off();
+    key_interface.off();
   }
 }
 

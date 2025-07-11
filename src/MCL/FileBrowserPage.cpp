@@ -467,15 +467,15 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source - 64;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
-      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 8;
       }
       switch (key) {
       case MDX_KEY_YES:
-        trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        key_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES;
       case MDX_KEY_NO:
-        trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
         encoders[1]->cur -= inc;

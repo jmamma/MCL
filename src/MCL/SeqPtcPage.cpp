@@ -111,8 +111,8 @@ void SeqPtcPage::init() {
   ptc_param_len.handler = pattern_len_handler;
   DEBUG_PRINTLN(F("control mode:"));
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_chan);
-  trig_interface.on();
-  trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+  key_interface.on();
+  key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
   config();
   re_init = false;
 }
@@ -558,7 +558,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       midi_events.note_off(msg, channel_event);
     }
 
-    trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+    key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
     // deferred trigger redraw to update TI keyboard feedback.
 
     return true;
@@ -566,11 +566,11 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+    if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
     }
     if (event->mask == EVENT_BUTTON_PRESSED &&
-        !trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        !key_interface.is_key_down(MDX_KEY_FUNC)) {
       switch (key) {
       case MDX_KEY_LEFT: {
         if (transpose > 0) {

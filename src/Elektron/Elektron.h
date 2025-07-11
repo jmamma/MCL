@@ -232,7 +232,7 @@ enum class ElektronCommand {
   SetSeqPage,
   SetRecMode,
   SetKeyRepeat,
-  ActivateTrigInterface,
+  ActivateKeyInterface,
   ActivateTrackSelect,
   UndokitSync,
   ResetDspParams,
@@ -398,8 +398,8 @@ public:
   void draw_close_microtiming();
   void draw_microtiming(uint8_t speed, uint8_t timing);
   void draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask);
-  void activate_trig_interface();
-  void deactivate_trig_interface();
+  void activate_key_interface();
+  void deactivate_key_interface();
 
   void activate_track_select();
   void deactivate_track_select();

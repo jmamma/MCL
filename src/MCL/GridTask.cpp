@@ -67,7 +67,7 @@ void GridTask::run() {
   // MD GUI update.
 
   perf_page.encoder_check();
-  trig_interface.check_key_throttle();
+  key_interface.check_key_throttle();
 
   if (stop_hard_callback) {
     mcl_actions_callbacks.StopHardCallback();

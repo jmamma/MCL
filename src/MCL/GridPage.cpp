@@ -34,7 +34,7 @@ void GridPage::init() {
   if (mcl.currentPage() != GRID_PAGE) {
     return;
   }
-  trig_interface.off();
+  key_interface.off();
   //load_slot_models();
   R.Clear();
   R.use_machine_names_short();
@@ -100,7 +100,7 @@ void GridPage::close_bank_popup() {
   if (bank_popup == 2) {
     MD.draw_close_bank();
   }
-  trig_interface.off();
+  key_interface.off();
   if (last_page != 255) {
     DEBUG_PRINTLN("setting page");
     mcl.setPage(last_page);
@@ -927,10 +927,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
         grid_page.load_row(track, row);
 
-        if (!trig_interface.is_key_down(MDX_KEY_BANKA) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKB) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKC) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKD)) {
+        if (!key_interface.is_key_down(MDX_KEY_BANKA) &&
+            !key_interface.is_key_down(MDX_KEY_BANKB) &&
+            !key_interface.is_key_down(MDX_KEY_BANKC) &&
+            !key_interface.is_key_down(MDX_KEY_BANKD)) {
           grid_page.close_bank_popup();
         }
         mcl_cfg.load_mode = load_mode_old;
@@ -941,7 +941,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
 
     uint8_t key = event->source - 64;
-    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+    if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
             if (show_slot_menu) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
           switch (key) {
@@ -970,7 +970,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC) { draw_encoders = false; }
       uint8_t inc = 1;
-      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 4;
       }
       if (show_slot_menu) {
@@ -986,7 +986,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_copy = 1;
           apply_slot_changes(false, true);
           init();
-          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (key_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
@@ -995,7 +995,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_clear = 1;
           apply_slot_changes(false, true);
           init();
-          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (key_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
@@ -1004,7 +1004,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_paste = 1;
           apply_slot_changes(false, true);
           init();
-          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (key_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
@@ -1035,7 +1035,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_BANKA:
         case MDX_KEY_BANKB:
         case MDX_KEY_BANKC: {
-          if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
             goto loadmode;
           }
         }
@@ -1079,8 +1079,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_YES: {
-        trig_interface.ignoreNextEvent(MDX_KEY_YES);
-        if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        key_interface.ignoreNextEvent(MDX_KEY_YES);
+        if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
           goto load;
         }
         goto save;
@@ -1112,7 +1112,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_NO: {
-        if (!trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+        if (!key_interface.is_key_down(MDX_KEY_PATSONG)) {
           goto slot_menu_off;
         }
         return true;
@@ -1167,7 +1167,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
   slot_menu_off:
-    if (show_slot_menu && !trig_interface.is_key_down(MDX_KEY_NO)) {
+    if (show_slot_menu && !key_interface.is_key_down(MDX_KEY_NO)) {
       uint8_t old_undo = slot_undo;
       bool restore_undo = false;
       // Prevent undo from occuring when re-entering shift menu. Want to keep

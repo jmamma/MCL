@@ -17,7 +17,7 @@ public:
   }
   void setup(MidiClass *_midi);
 
-  bool is_trig_interface();
+  bool is_key_interface();
   bool on();
   bool off();
 

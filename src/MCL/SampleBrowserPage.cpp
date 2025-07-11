@@ -110,7 +110,7 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
   file_types.add(c_syx_suffix);
   strcpy(str_save, "[ RECV ]");
 
-  trig_interface.off();
+  key_interface.off();
   filemenu_active = false;
   select_dirs = false;
   show_overwrite = false;
@@ -336,7 +336,7 @@ bool SampleBrowserPage::_handle_filemenu() {
     }
    DEBUG_PRINTLN("Recv samples");
     DEBUG_PRINTLN(numEntries);
-    for (uint8_t n = 0; n < numEntries && !trig_interface.is_key_down(MDX_KEY_NO); n++) {
+    for (uint8_t n = 0; n < numEntries && !key_interface.is_key_down(MDX_KEY_NO); n++) {
       DEBUG_PRINTLN("Recv wav");
       char wav_name[FILE_ENTRY_SIZE] = "";
       get_entry(n, wav_name);
@@ -354,7 +354,7 @@ bool SampleBrowserPage::_handle_filemenu() {
       return true;
     }
     char wav_name[FILE_ENTRY_SIZE] = "";
-    for (uint8_t n = 0; n < numEntries && !trig_interface.is_key_down(MDX_KEY_NO); n++) {
+    for (uint8_t n = 0; n < numEntries && !key_interface.is_key_down(MDX_KEY_NO); n++) {
       get_entry(n, wav_name);
       DEBUG_PRINTLN(wav_name);
       if (!isdigit(wav_name[0]) || !isdigit(wav_name[1]))

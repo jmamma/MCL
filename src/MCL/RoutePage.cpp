@@ -11,7 +11,7 @@ void RoutePage::init() {
   hasChanged = false;
   R.Clear();
   R.use_icons_page();
-  trig_interface.on();
+  key_interface.on();
 }
 void RoutePage::cleanup() { }
 void RoutePage::set_level(int curtrack, int value) {
@@ -139,7 +139,7 @@ bool RoutePage::handleEvent(gui_event_t *event) {
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
-    trig_interface.send_md_leds(TRIGLED_OVERLAY);
+    key_interface.send_md_leds(TRIGLED_OVERLAY);
 
     /*    if (event->mask == EVENT_BUTTON_PRESSED) {
 

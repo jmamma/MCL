@@ -10,7 +10,7 @@ void OscMixerPage::setup() {}
 
 void OscMixerPage::init() {
   WavDesignerPage::init();
-  trig_interface.off();
+  key_interface.off();
   wavdesign_menu_page.menu.enable_entry(1, false);
   wavdesign_menu_page.menu.enable_entry(2, true);
 }

@@ -1,7 +1,7 @@
 #include "ResourceManager.h"
 #include "FXPage.h"
 #include "MD.h"
-#include "TrigInterface.h"
+#include "KeyInterface.h"
 #include "MCLGUI.h"
 #include "MidiActivePeering.h"
 
@@ -14,7 +14,7 @@ void FXPage::setup() { DEBUG_PRINT_FN(); }
 
 void FXPage::init() {
   DEBUG_PRINT_FN();
-  trig_interface.off();
+  key_interface.off();
   update_encoders();
   MD.set_key_repeat(0);
   R.Clear();

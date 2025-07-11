@@ -43,11 +43,11 @@
 /*
 #define KEY_REPEAT_INTERVAL 80
 
-class TrigInterfaceTask : public Task {
+class KeyInterfaceTask : public Task {
 
 public:
 
-  TrigInterfaceTask() : Task(KEY_REPEAT_INTERVAL) { 
+  KeyInterfaceTask() : Task(KEY_REPEAT_INTERVAL) { 
   }
 
   void setup() {
@@ -61,11 +61,11 @@ public:
 
 };
 
-extern TrigInterfaceTask trig_interface_task;
+extern KeyInterfaceTask key_interface_task;
 */
 class MidiClass;
 
-class TrigInterface : public MidiSysexListenerClass {
+class KeyInterface : public MidiSysexListenerClass {
 
 public:
   bool state = false;
@@ -74,7 +74,7 @@ public:
   uint16_t last_clock;
   bool throttle;
 
-  TrigInterface() : MidiSysexListenerClass() {
+  KeyInterface() : MidiSysexListenerClass() {
     ids[0] = 0x7F;
     ids[1] = 0x0D;
   }
@@ -101,6 +101,6 @@ public:
   /* @} */
 };
 
-extern TrigInterface trig_interface;
+extern KeyInterface key_interface;
 
 #endif /* TRIGINTERFACE_H__ */

@@ -159,7 +159,7 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
     if (pos >= fsize) {
       break;
     }
-    if (trig_interface.is_key_down(MDX_KEY_NO)) { goto cleanup; }
+    if (key_interface.is_key_down(MDX_KEY_NO)) { goto cleanup; }
     if (++show_progress > 10) {
       show_progress = 0;
       mcl_gui.draw_progress("Sending sample", pos * 80 / fsize ,80);
@@ -292,7 +292,7 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
 
   for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength;
        samplesSoFar += num_of_samples) {
-    if (trig_interface.is_key_down(MDX_KEY_NO)) { return false; }
+    if (key_interface.is_key_down(MDX_KEY_NO)) { return false; }
     ++show_progress_i;
 
     if (show_progress && show_progress_i == 10) {
@@ -425,7 +425,7 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
   goto recv_fail;
   }
   while(true) {
-    if (trig_interface.is_key_down(MDX_KEY_NO)) { goto recv_fail; }
+    if (key_interface.is_key_down(MDX_KEY_NO)) { goto recv_fail; }
     uint8_t msg = waitForMsg(2000);
     if (msg == 255 || msg == MIDI_SDS_CANCEL)  {
       DEBUG_PRINTLN("sds recv abort");

@@ -181,7 +181,7 @@ void SeqPage::bootstrap_record() {
       mcl.currentPage() != SEQ_PTC_PAGE) {
     mcl.setPage(SEQ_STEP_PAGE);
   }
-  trig_interface.send_md_leds(TRIGLED_OVERLAY);
+  key_interface.send_md_leds(TRIGLED_OVERLAY);
   enable_record();
 }
 
@@ -300,7 +300,7 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
 bool SeqPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
-    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+    if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t key = event->source - 64;
@@ -310,7 +310,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     }
 
     if (event->mask == EVENT_BUTTON_PRESSED &&
-        trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        key_interface.is_key_down(MDX_KEY_FUNC)) {
       switch (key) {
       case MDX_KEY_LEFT:
         mcl_seq.md_tracks[last_md_track].rotate_left();

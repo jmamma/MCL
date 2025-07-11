@@ -200,11 +200,11 @@ bool MDClass::probe() {
   DEBUG_PRINT_FN();
 
   bool ts = md_track_select.state;
-  bool ti = trig_interface.state;
+  bool ti = key_interface.state;
 
   md_track_select.off();
   if (ti) {
-    trig_interface.off();
+    key_interface.off();
   }
   DEBUG_PRINTLN("md probe");
   connected = false;

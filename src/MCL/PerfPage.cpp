@@ -36,7 +36,7 @@ void PerfPage::setup() {
 void PerfPage::init() {
   DEBUG_PRINT_FN();
   PerfPageParent::init();
-  trig_interface.on();
+  key_interface.on();
   last_mask = last_blink_mask = 0;
   show_menu = false;
   last_page_mode = 255;
@@ -83,11 +83,11 @@ void PerfPage::set_led_mask() {
 
 void PerfPage::cleanup() {
   PerfPageParent::cleanup();
-  trig_interface.off();
+  key_interface.off();
   MD.set_rec_mode(0);
 }
 void PerfPage::func_enc_check() {
-  if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+  if (key_interface.is_key_down(MDX_KEY_FUNC)) {
     for (uint8_t n = 0; n < 4; n++) {
       PerfEncoder *e = perf_encoders[n];
       if (e->hasChanged()) {
@@ -290,8 +290,8 @@ void PerfPage::display() {
   oled_display.setTextColor(WHITE, BLACK);
   mcl_gui.draw_panel_labels(info1, info2);
 
-  if (trig_interface.is_key_down(MDX_KEY_LEFT) ||
-      trig_interface.is_key_down(MDX_KEY_RIGHT)) {
+  if (key_interface.is_key_down(MDX_KEY_LEFT) ||
+      key_interface.is_key_down(MDX_KEY_RIGHT)) {
     oled_display.setCursor(54, MCLGUI::pane_info2_y + 4);
     oled_display.print(F("SELECT"));
   }
@@ -351,7 +351,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       uint8_t n = d->add_param(dest, param, scene, value);
       if (n < 255) {
         if (dest + 1 <= NUM_MD_TRACKS) {
-          trig_interface.ignoreNextEvent(param - MD.currentSynthPage * 8 + 16);
+          key_interface.ignoreNextEvent(param - MD.currentSynthPage * 8 + 16);
         }
         page_mode = n + 1;
         undo = 255;
@@ -428,11 +428,11 @@ bool PerfPage::handleEvent(gui_event_t *event) {
 
       PerfEncoder *e = perf_encoders[perf_id];
 
-      if (trig_interface.is_key_down(MDX_KEY_LEFT)) {
+      if (key_interface.is_key_down(MDX_KEY_LEFT)) {
         e->active_scene_a = e->active_scene_a == track ? 255 : track;
         return true;
       }
-      if (trig_interface.is_key_down(MDX_KEY_RIGHT)) {
+      if (key_interface.is_key_down(MDX_KEY_RIGHT)) {
         e->active_scene_b = e->active_scene_b == track ? 255 : track;
         return true;
       }
@@ -462,7 +462,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source - 64;
-    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+    if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return perf_menu_page.handleEvent(event);
     }
     switch (key) {
@@ -488,7 +488,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
       if (event->mask == EVENT_BUTTON_PRESSED) {
         if (d->find_match(last_md_track, param, scene) == 255) {
-          trig_interface.ignoreNextEvent(key);
+          key_interface.ignoreNextEvent(key);
           d->add_param(last_md_track, param, scene,
                        MD.kit.params[last_md_track][param]);
         }

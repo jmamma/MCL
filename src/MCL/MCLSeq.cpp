@@ -72,8 +72,8 @@ void MCLSeq::update_params() {
 }
 
 void seq_rec_play() {
-  if (trig_interface.is_key_down(MDX_KEY_REC)) {
-    // trig_interface.ignoreNextEvent(MDX_KEY_REC);
+  if (key_interface.is_key_down(MDX_KEY_REC)) {
+    // key_interface.ignoreNextEvent(MDX_KEY_REC);
     seq_step_page.bootstrap_record();
     reset_undo();
   }

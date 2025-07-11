@@ -15,7 +15,7 @@ void ArpPage::init() {
   DEBUG_PRINT_FN();
 //  seq_ptc_page.display();
   track_update();
-  trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+  key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 }
 
 void ArpPage::track_update(uint8_t n, bool re_render) {
@@ -185,7 +185,7 @@ bool ArpPage::handleEvent(gui_event_t *event) {
   }
   /*  if (note_interface.is_event(event) &&
     midi_active_peering.get_device(event->port) == &MD) {
-        trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+        key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
         return true;
 
     } */

@@ -78,7 +78,7 @@ get_category_name_fail:
 void PageSelectPage::setup() {}
 void PageSelectPage::init() {
   DEBUG_PRINTLN("page select init");
-  trig_interface.on();
+  key_interface.on();
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 0;
   R.Clear();
@@ -176,7 +176,7 @@ void PageSelectPage::loop() {
   /*  if (loop_init) {
       bool switch_tracks = false;
       // md_exploit.off(switch_tracks);
-      trig_interface.on();
+      key_interface.on();
       md_prepare();
       // md_exploit.on(switch_tracks);
       loop_init = false;
@@ -324,15 +324,15 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       }
     } else {
       uint8_t inc = 1;
-      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 8;
       }
       switch (key) {
       case MDX_KEY_YES:
-        //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        //  key_interface.ignoreNextEvent(MDX_KEY_YES);
         break;
       case MDX_KEY_NO:
-        //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        //  key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto load_grid;
       case MDX_KEY_UP:
         encoders[1]->cur -= inc;

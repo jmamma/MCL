@@ -126,7 +126,7 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
-  // MD input is handled by the TrigInterface object
+  // MD input is handled by the KeyInterface object
   if (midi_active_peering.get_device(UART1_PORT) == &MD) {
     return;
   }

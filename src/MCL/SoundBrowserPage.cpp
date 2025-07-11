@@ -21,7 +21,7 @@ void SoundBrowserPage::init() {
   file_types.reset();
   file_types.add(c_snd_suffix);
 
-  trig_interface.off();
+  key_interface.off();
 
   strcpy(title, "SOUND");
   show_dirs = true;

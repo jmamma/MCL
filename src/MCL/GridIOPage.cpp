@@ -13,7 +13,7 @@ uint8_t GridIOPage::offset = 0;
 uint8_t GridIOPage::old_grid = 0;
 
 void GridIOPage::cleanup() {
-  trig_interface.send_md_leds();
+  key_interface.send_md_leds();
   MD.popup_text(127, 2);
   proj.select_grid(old_grid);
   offset = 255;
@@ -70,11 +70,11 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
         if (show_offset) {
           offset = track;
         }
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
+        key_interface.send_md_leds(TRIGLED_OVERLAY);
       }
     } else {
       if (!show_track_type) {
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
+        key_interface.send_md_leds(TRIGLED_OVERLAY);
 
         if (note_interface.notes_all_off()) {
           if (show_offset) {
@@ -127,7 +127,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       }
     }
     proj.toggle_grid();
-    trig_interface.send_md_leds();
+    key_interface.send_md_leds();
     return true;
   }
 

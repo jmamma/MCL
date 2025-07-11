@@ -12,8 +12,8 @@
 void GridLoadPage::init() {
   GridIOPage::init();
   note_interface.init_notes();
-  trig_interface.send_md_leds(TRIGLED_OVERLAY);
-  trig_interface.on();
+  key_interface.send_md_leds(TRIGLED_OVERLAY);
+  key_interface.on();
   // GUI.display();
   encoders[0]->cur = mcl_cfg.load_mode;
   encoders[1]->cur = mcl_cfg.chain_queue_length;
@@ -273,7 +273,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {
-        if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
         encoders[0]->cur = key - MDX_KEY_BANKA + 1;
         return true;
         }
@@ -296,7 +296,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
   //  write the whole row
   load_groups:
-    trig_interface.off();
+    key_interface.off();
 
     group_load(grid_page.getRow(), offset);
     grid_task.load_queue_handler();
