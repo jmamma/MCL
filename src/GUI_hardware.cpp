@@ -115,8 +115,13 @@ void EncodersClass::poll(uint16_t sr) {
 void EncodersClass::pollTBD(const ui_data_t& ui_data) {
    for (uint8_t i = 0; i < GUI_NUM_ENCODERS && i < 4; i++) {
         uint16_t current_pos = ui_data.pot_positions[i];
-        uint16_t old_pos = pot_old_positions[i];
-        ENCODER_NORMAL(i) = (current_pos * 127) / 1023;
+        volatile int8_t *val = &(ENCODER_NORMAL(i));
+        if (current_pos > pot_old_positions[i]) {
+          (*val)++;
+        }
+        if (current_pos < pot_old_positions[i]) {
+          (*val)--;
+        }
         pot_old_positions[i] = current_pos;
    }
 }
@@ -145,19 +150,20 @@ void ButtonsClass::poll(uint8_t but) {
     }
 }
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
-  //Encoder Buttons
+  //MCL Buttons
   for(int i=0;i<4;i++){
     bool state = ui_data.f_btns & (1 << i);
-    STORE_B_CURRENT(i, state);
+    STORE_B_CURRENT(i + BUTTON1, state);
   }
   for(int i=0;i<13;i++){
     bool state = ui_data.mcl_btns & (1 << i);
-    STORE_B_CURRENT(i + BUTTON1, state);
-    //4 MCL Buttons
-    if (i < 4) {
-    }
     //9 Function Buttons
+    if (i < 9) {
+      STORE_B_CURRENT(i + FUNC_BUTTON1, state);
+    }
+    //4 Encoder Buttons
     else {
+      STORE_B_CURRENT(i - 9 + ENCODER1, state);
     }
   }
   //Sequencer Buttons
@@ -185,6 +191,7 @@ void GUIHardware::poll() {
     }
 #else
     //tbd_ui.Poll();
+    tbd_ui.UpdateUIInputs();
     ui_data_t ui_data_current = tbd_ui.CopyUiData();
     if (ui_data_current.systicks != last_ui_systicks) {
         Buttons.clear();
