@@ -20,8 +20,13 @@ class SR165Class {
   ALWAYS_INLINE() uint8_t read_norst();
 };
 
+#ifdef PLATFORM_TBD
+#define GUI_NUM_ENCODERS 4
+#define GUI_NUM_BUTTONS  4 + 5 + 13 + 16
+#else
 #define GUI_NUM_ENCODERS 4
 #define GUI_NUM_BUTTONS  8
+#endif
 
 class EncodersClass {
   uint16_t sr_old;
@@ -113,22 +118,32 @@ class EncodersClass {
 
 typedef struct button_s {
   uint8_t  status;
-  uint16_t press_time;
-  uint16_t last_press_time;
+  //uint16_t press_time;
+  //uint16_t last_press_time;
 } button_t;
 
 class ButtonsClass {
  public:
   button_t buttons[GUI_NUM_BUTTONS];
 
-  static const uint8_t BUTTON1 = 4;
-  static const uint8_t BUTTON2 = 5;
-  static const uint8_t BUTTON3 = 6;
-  static const uint8_t BUTTON4 = 7;
   static const uint8_t ENCODER1 = 0;
   static const uint8_t ENCODER2 = 1;
   static const uint8_t ENCODER3 = 2;
   static const uint8_t ENCODER4 = 3;
+  static const uint8_t BUTTON1 = 4;
+  static const uint8_t BUTTON2 = 5;
+  static const uint8_t BUTTON3 = 6;
+  static const uint8_t BUTTON4 = 7;
+  static const uint8_t FUNC_BUTTON1 = 8;
+  static const uint8_t FUNC_BUTTON2 = 9;
+  static const uint8_t FUNC_BUTTON3 = 10;
+  static const uint8_t FUNC_BUTTON4 = 11;
+  static const uint8_t FUNC_BUTTON5 = 12;
+  static const uint8_t FUNC_BUTTON6 = 13;
+  static const uint8_t FUNC_BUTTON7 = 14;
+  static const uint8_t FUNC_BUTTON8 = 15;
+  static const uint8_t FUNC_BUTTON9 = 16;
+  static const uint8_t TRIG_BUTTON1 = 17;
 
   static const uint16_t ENCODER1_MASK = _BV(ENCODER1);
   static const uint16_t ENCODER2_MASK = _BV(ENCODER2);

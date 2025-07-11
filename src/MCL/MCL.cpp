@@ -165,8 +165,11 @@ void MCL::setup() {
   gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
 
   ret = mcl_sd.load_init();
-
+#ifdef PLATFORM_TBD
+  GUI.addEventHandler((event_handler_t)&tbd_handleEvent);
+#endif
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
+
   if (ret) {
     mcl.setPage(GRID_PAGE);
   }
@@ -211,6 +214,56 @@ void MCL::setup() {
 #endif
   }
   param4.cur = 4;
+}
+
+bool tbd_handleEvent(gui_event_t *event) {
+    // If button press is greater than 4, then we need to remap these as CMD
+    if (!EVENT_CMD(event) && event->source > ButtonsClass::BUTTON4) {
+        uint8_t key = 255;
+        // Handle trigger buttons with range check
+        if (event->source >= ButtonsClass::TRIG_BUTTON1) {
+            key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
+        }
+        else {
+            // Handle function buttons with switch statement
+            switch (event->source) {
+                case ButtonsClass::FUNC_BUTTON1:
+                    key = MDX_KEY_REC;
+                    break;
+                case ButtonsClass::FUNC_BUTTON2:
+                    key = MDX_KEY_PLAY;
+                    break;
+                case ButtonsClass::FUNC_BUTTON3:
+                    key = MDX_KEY_STOP;
+                    break;
+                case ButtonsClass::FUNC_BUTTON4:
+                    key = MDX_KEY_YES;
+                    break;
+                case ButtonsClass::FUNC_BUTTON5:
+                    key = MDX_KEY_NO;
+                    break;
+                case ButtonsClass::FUNC_BUTTON6:
+                    key = MDX_KEY_LEFT;
+                    break;
+                case ButtonsClass::FUNC_BUTTON7:
+                    key = MDX_KEY_UP;
+                    break;
+                case ButtonsClass::FUNC_BUTTON8:
+                    key = MDX_KEY_DOWN;
+                    break;
+                case ButtonsClass::FUNC_BUTTON9:
+                    key = MDX_KEY_RIGHT;
+                    break;
+                default:
+                    break;
+            }
+        }
+        if (key != 255) {
+            trig_interface.key_event(key, event->mask & 1);
+            return true;
+        }
+    }
+    return false;
 }
 
 bool mcl_handleEvent(gui_event_t *event) {

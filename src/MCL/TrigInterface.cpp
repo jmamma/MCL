@@ -99,6 +99,38 @@ bool TrigInterface::check_key_throttle() {
   return false;
 }
 
+void TrigInterface::key_event(uint8_t key, bool key_release) {
+   if (key_release) {
+    CLEAR_BIT64(cmd_key_state, key);
+  } else {
+    SET_BIT64(cmd_key_state, key);
+  }
+
+  if (IS_BIT_SET64(ignore_next_mask, key)) {
+    CLEAR_BIT64(ignore_next_mask, key);
+    return;
+  }
+
+  if (key < 16) {
+    if (key_release) {
+      note_interface.note_off_event(key, UART1_PORT);
+    } else {
+      note_interface.note_on_event(key, UART1_PORT);
+    }
+    return;
+  }
+  gui_event_t event;
+
+  if (key == MDX_KEY_PATSONG) {
+    event.source = Buttons.BUTTON3;
+  } else {
+    event.source = key + 64; // EVENT_CMD
+  }
+  event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
+  event.port = UART1_PORT;
+  GUI.putEvent(&event);
+}
+
 void TrigInterface::end() {
 
   // if (!state) {
@@ -131,35 +163,7 @@ void TrigInterface::end() {
     }
   }
 
-  if (key_release) {
-    CLEAR_BIT64(cmd_key_state, key);
-  } else {
-    SET_BIT64(cmd_key_state, key);
-  }
-
-  if (IS_BIT_SET64(ignore_next_mask, key)) {
-    CLEAR_BIT64(ignore_next_mask, key);
-    return;
-  }
-
-  if (key < 16) {
-    if (key_release) {
-      note_interface.note_off_event(key, UART1_PORT);
-    } else {
-      note_interface.note_on_event(key, UART1_PORT);
-    }
-    return;
-  }
-  gui_event_t event;
-
-  if (key == MDX_KEY_PATSONG) {
-    event.source = Buttons.BUTTON3;
-  } else {
-    event.source = key + 64; // EVENT_CMD
-  }
-  event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
-  event.port = UART1_PORT;
-  GUI.putEvent(&event);
+  key_event(key, key_release);
 
   return;
 }

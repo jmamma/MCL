@@ -148,5 +148,9 @@ public:
 
 extern MCL mcl;
 
+#ifdef PLATFORM_TBD
+bool tbd_handleEvent(gui_event_t *event);
+#endif
+
 bool mcl_handleEvent(gui_event_t *event);
 

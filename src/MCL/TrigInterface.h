@@ -30,6 +30,7 @@
 #define MDX_KEY_UP 0x30
 #define MDX_KEY_DOWN 0x31
 #define MDX_KEY_STOP 0x32
+#define MDX_KEY_PLAY 0x33
 #define MDX_KEY_COPY 0x34
 #define MDX_KEY_CLEAR 0x35
 #define MDX_KEY_PASTE 0x36
@@ -84,6 +85,8 @@ public:
   void ignoreNextEventClear(uint8_t i) {
     CLEAR_BIT64(ignore_next_mask, i);
   }
+  void key_event(uint8_t key, bool key_release);
+
   bool on(bool clear_states = true);
   bool off();
 
