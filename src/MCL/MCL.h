@@ -5,9 +5,7 @@
 #include "Arduino.h"
 #include "global.h"
 #include "PageIndex.h"
-
-#define WAV_DESIGNER
-#define SOUND_PAGE
+#include "MCLDefines.h"
 
 #define VERSION 4060
 #define VERSION_STR "B4.61"

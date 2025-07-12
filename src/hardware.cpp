@@ -1,4 +1,5 @@
 #include "Adafruit_TinyUSB.h"
+#include <arduino/msc/Adafruit_USBD_MSC.h>
 #include "MCLSD.h"
 #include "Project.h"
 #include "hardware.h"

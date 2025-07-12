@@ -1,13 +1,12 @@
 #pragma once
 
 #include <Adafruit_GFX.h>
-#include <DaDa_SSD1309.h>
-#include <Adafruit_SSD1305.h>
 
 #define OLED_DISPLAY
 
 #if defined(PLATFORM_TBD)
 
+#include <DaDa_SSD1309.h>
 #define DISPLAY_TYPE DaDa_SSD1309
 #define OLED_WIDTH 128
 #define OLED_HEIGHT 64
@@ -22,6 +21,7 @@
 
 #else
 
+#include <Adafruit_SSD1305.h>
 #define DISPLAY_TYPE Adafruit_SSD1305
 #define SSD1305_128_32
 #define OLED_WIDTH 128

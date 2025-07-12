@@ -1,12 +1,12 @@
 #pragma once
 
-#include "Adafruit_TinyUSB.h"
 #include "RingBuffer.h"
 #include "memory.h"
 #include "pico.h"
 #include "platform.h"
 #include <MidiUartParent.h>
 #include "RP2040USB.h"
+#include <arduino/midi/Adafruit_USBD_MIDI.h>
 
 #define UART_BAUDRATE 31250
 

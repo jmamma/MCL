@@ -1,4 +1,5 @@
 #pragma once
+#include "MCLDefines.h"
 
 enum PageIndex {
     // Core pages
@@ -57,6 +58,6 @@ enum PageIndex {
 #endif
     // Special values
     NUM_PAGES,  // Automatically tracks total number of pages
-    NULL_PAGE = 255 
+    NULL_PAGE = 255
 };
 

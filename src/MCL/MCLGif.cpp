@@ -1,7 +1,7 @@
-#include "MCLGif.h"
+#include "MCLGIF.h"
 #include "global.h"
 
-uint8_t *MCLGif::get_next_frame() {
+uint8_t *MCLGIF::get_next_frame() {
   uint8_t *bmp = get_frame(cur_frame);
   if (clock_diff(last_frame_clock, g_clock_ms) < 80 || loop_count == loops) {
     return bmp;

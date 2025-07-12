@@ -1,4 +1,5 @@
 #include "ResourceManager.h"
+#include "MCLMenus.h"
 
 ResourceManager::ResourceManager() { }
 
