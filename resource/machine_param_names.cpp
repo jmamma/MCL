@@ -1,4 +1,4 @@
-#include "Elektron.h"
+#include "ElektronModelTypes.h"
 
 model_param_name_t md_model_param_names[] = {
     // 0 - gnd_sn_model_names

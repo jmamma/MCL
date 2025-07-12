@@ -1,5 +1,5 @@
-#include "MCL.h"
-#include "Menu.h"
+#include "MenuTypes.h"
+#include "PageIndex.h"
 
 PageSelectEntry Entries[] = {
     {"GRID", GRID_PAGE, 0, 0, 24, 15, nullptr},

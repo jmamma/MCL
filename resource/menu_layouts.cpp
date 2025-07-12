@@ -1,4 +1,5 @@
-#include "MCLMenus.h"
+#include "MenuTypes.h"
+#include "MCLMenuDefines.h"
 #include "MCLMemory.h"
 
 /****
