@@ -517,7 +517,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     auto device = midi_active_peering.get_device(port);
-    uint8_t note = event->source - 128;
+    uint8_t note = event->source;
     // do not route EXT TI events to MD.
     if (device != &MD) {
       return false;
@@ -565,7 +565,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   } // TI events
 
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
     }

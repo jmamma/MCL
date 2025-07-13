@@ -122,9 +122,11 @@ void KeyInterface::key_event(uint8_t key, bool key_release) {
   gui_event_t event;
 
   if (key == MDX_KEY_PATSONG) {
+    event.type = BUTTON;
     event.source = Buttons.BUTTON3;
   } else {
-    event.source = key + 64; // EVENT_CMD
+    event.type = CMD;
+    event.source = key; // EVENT_CMD
   }
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
   event.port = UART1_PORT;

@@ -40,14 +40,14 @@ bool OscPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     MidiDevice *device = midi_active_peering.get_device(port);
 
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     if (device != &MD) {
       return true;
     }
     key_interface.send_md_leds(TRIGLED_OVERLAY);
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
         switch (key) {
         case MDX_KEY_NO:

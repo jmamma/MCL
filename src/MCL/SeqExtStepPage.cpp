@@ -846,7 +846,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port)->id;
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
 
     if (device != DEVICE_MD) {
       return true;
@@ -878,7 +878,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   bool ignore_clear = false;
 
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
     }

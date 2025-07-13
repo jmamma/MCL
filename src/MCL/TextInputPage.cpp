@@ -204,7 +204,7 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
       switch (key) {

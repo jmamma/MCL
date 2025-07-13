@@ -86,7 +86,7 @@ bool PerfPageParent::handleEvent(gui_event_t *event) {
       uint8_t port = event->port;
       auto device = midi_active_peering.get_device(port);
 
-      uint8_t track = event->source - 128;
+      uint8_t track = event->source;
       uint8_t page_select = 0;
       uint8_t step = track + (page_select * 16);
       if (event->mask == EVENT_BUTTON_PRESSED) {

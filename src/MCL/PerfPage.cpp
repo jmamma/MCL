@@ -412,7 +412,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     auto device = midi_active_peering.get_device(port);
 
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (track >= NUM_SCENES) {
@@ -461,7 +461,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return perf_menu_page.handleEvent(event);
     }

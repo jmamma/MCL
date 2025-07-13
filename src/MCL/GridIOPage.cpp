@@ -59,7 +59,7 @@ void GridIOPage::track_select_array_from_type_select(
 
 bool GridIOPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (show_track_type) {
         if (track < 5) {
@@ -96,7 +96,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_BANKD: {

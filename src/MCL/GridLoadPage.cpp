@@ -248,7 +248,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
   }
   DEBUG_DUMP(event->source);
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       default: {

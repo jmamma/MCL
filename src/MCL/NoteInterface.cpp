@@ -26,9 +26,10 @@ void NoteInterface::clear_note(uint8_t note_num) {
 
 void NoteInterface::add_note_event(uint8_t note_num, uint8_t event_mask, uint8_t port) {
   gui_event_t event;
-  event.source = note_num + 128;
+  event.source = note_num;
   event.mask = event_mask;
   event.port = port;
+  event.type = NOTE;
   GUI.putEvent(&event);
 }
 

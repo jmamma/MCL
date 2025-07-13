@@ -303,7 +303,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
     }
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     uint8_t first_note = note_interface.get_first_md_note();
     if (first_note != 255) {
       return false;

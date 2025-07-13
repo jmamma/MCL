@@ -16,12 +16,19 @@
 
 #define EVENT_PRESSED(event, button) ((event)->mask & EVENT_BUTTON_PRESSED && (event)->source == button)
 #define EVENT_RELEASED(event, button) ((event)->mask & EVENT_BUTTON_RELEASED && (event)->source == button)
-#define EVENT_CMD(event) ((event->source >= 64) && (event->source < 128))
+#define EVENT_CMD(event) ((event->type == CMD))
+
+enum EventType {
+  BUTTON,
+  CMD,
+  NOTE,
+};
 
 typedef struct gui_event_s {
   uint8_t mask;
   uint8_t source;
   uint8_t port;
+  EventType type;
 } gui_event_t;
 
 class EventManager {
@@ -55,6 +62,7 @@ public:
     for (uint8_t i = 0; i < MAX_BUTTONS; i++) {
       gui_event_t event;
       event.source = i;
+      event.type = BUTTON;
       if (BUTTON_PRESSED(i)) {
         if (!isIgnored(i)) {
           event.mask = EVENT_BUTTON_PRESSED;

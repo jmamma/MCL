@@ -464,7 +464,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   //bool dir_only = false;
 
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
       if (key_interface.is_key_down(MDX_KEY_FUNC)) {
