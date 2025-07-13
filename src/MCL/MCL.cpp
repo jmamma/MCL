@@ -243,10 +243,10 @@ bool tbd_handleEvent(gui_event_t *event) {
                     key = MDX_KEY_NO;
                     break;
                 case ButtonsClass::FUNC_BUTTON6:
-                    key = MDX_KEY_LEFT;
+                    key = MDX_KEY_UP;
                     break;
                 case ButtonsClass::FUNC_BUTTON7:
-                    key = MDX_KEY_UP;
+                    key = MDX_KEY_LEFT;
                     break;
                 case ButtonsClass::FUNC_BUTTON8:
                     key = MDX_KEY_DOWN;
@@ -259,7 +259,7 @@ bool tbd_handleEvent(gui_event_t *event) {
             }
         }
         if (key != 255) {
-            key_interface.key_event(key, event->mask & 1);
+            key_interface.key_event(key, !(event->mask & 1));
             return true;
         }
     }
