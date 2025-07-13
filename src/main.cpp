@@ -40,20 +40,20 @@ void picow_init() {
 void setup() {
   DEBUG_INIT();
   DEBUG_PRINTLN("debug mode online");
-  delay(100);
+  GUI_hardware.init();
+  delay(2000);
 #ifndef DEBUGMODE
   MidiUartUSB.init();
 #endif
   MidiUart.initSerial();
   MidiUart2.initSerial();
-  GUI_hardware.init();
   setup_irqs();
 
 #ifndef PLATFORM_TBD
   picow_init();
 #endif
-
   mcl.setup();
+  GUI.init();
 }
 
 void loop() {

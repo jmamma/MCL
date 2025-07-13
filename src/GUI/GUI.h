@@ -57,7 +57,9 @@ public:
   virtual void loop();
   void mirror();
   void display();
-
+  void init() {
+    events.init();
+  }
   // Methods previously in Sketch that might be needed
   virtual void show() {}
   virtual void hide() {}

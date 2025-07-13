@@ -151,10 +151,24 @@ void ButtonsClass::poll(uint8_t but) {
 }
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   //MCL Buttons
-  for(int i=0;i<4;i++){
+
+  for (uint8_t i = 0; i < 4; i++) {
     bool state = ui_data.f_btns & (1 << i);
-    STORE_B_CURRENT(i + BUTTON1, !state);
+    uint8_t button_id = BUTTON1 + i;
+    switch (button_id) {
+      case BUTTON1:
+      case BUTTON2:
+        break;
+      case BUTTON3:
+        button_id = BUTTON4;
+        break;
+      case BUTTON4:
+        button_id = BUTTON3;
+        break;
+    }
+    STORE_B_CURRENT(button_id, !state);
   }
+
   for(int i=0;i<13;i++){
     bool state = ui_data.mcl_btns & (1 << i);
     //9 Function Buttons
@@ -191,14 +205,15 @@ void GUIHardware::poll() {
     }
 #else
     //tbd_ui.Poll();
-    tbd_ui.UpdateUIInputs();
-    ui_data_t ui_data_current = tbd_ui.CopyUiData();
-    if (ui_data_current.systicks != last_ui_systicks) {
+    if (tbd_ui.UpdateUIInputs()) {
+      ui_data_t ui_data_current = tbd_ui.CopyUiData();
+      if (ui_data_current.systicks != last_ui_systicks) {
         Buttons.clear();
         Buttons.pollTBD(ui_data_current);
         Encoders.pollTBD(ui_data_current);
         last_ui_systicks = ui_data_current.systicks;
         GUI.events.pollEvents();
+      }
     }
 #endif
     inGui = false;
@@ -225,6 +240,11 @@ void GUIHardware::init() {
     last_ui_systicks = 0;
     tbd_ui.InitHardware();
 #endif
+}
+
+void GUIHardware::clear() {
+   Buttons.clear();
+   Encoders.clearEncoders();
 }
 
 GUIHardware GUI_hardware;

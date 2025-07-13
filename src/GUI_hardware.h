@@ -176,6 +176,7 @@ public:
     GUIHardware() : inGui(false), oldsr(0) {}
     void init();
     void poll();
+    void clear();
 
     friend class GuiClass;
 };

@@ -32,6 +32,9 @@ private:
 public:
   EventManager() : ignoreMask(0) {}
 
+  void init() {
+    eventBuffer.init();
+  }
   void setIgnoreMask(uint8_t button) {
     if (button < MAX_BUTTONS) {
       ignoreMask |= _BV(button);
