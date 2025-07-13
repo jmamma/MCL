@@ -171,9 +171,20 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
 
   for(int i=0;i<13;i++){
     bool state = ui_data.mcl_btns & (1 << i);
+    bool long_press = ui_data.mcl_btns_long_press & (1 << i);
     //9 Function Buttons
     if (i < 9) {
-      STORE_B_CURRENT(i + FUNC_BUTTON1, !state);
+      //Arrow Key
+      uint8_t button_id = i + FUNC_BUTTON1;
+      if (button_id >= FUNC_BUTTON6) {
+          STORE_B_CURRENT(button_id, !state);
+        if (long_press) {
+          SET_B_LONG_CLICK(button_id);
+        }
+      }
+      else {
+        STORE_B_CURRENT(button_id, !state);
+      }
     }
     //4 Encoder Buttons
     else {

@@ -11,12 +11,16 @@
 // Event type definitions
 #define EVENT_BUTTON_PRESSED  _BV(0)
 #define EVENT_BUTTON_RELEASED _BV(1)
+#define EVENT_BUTTON_LONG_PRESS _BV(2)
+
 #define MAX_BUTTONS GUI_NUM_BUTTONS
 #define MAX_EVENTS 32
 
 #define EVENT_PRESSED(event, button) ((event)->mask & EVENT_BUTTON_PRESSED && (event)->source == button)
 #define EVENT_RELEASED(event, button) ((event)->mask & EVENT_BUTTON_RELEASED && (event)->source == button)
 #define EVENT_CMD(event) ((event->type == CMD))
+
+#define LONG_PRESS_REPEAT_TIME 40 // 40ms
 
 enum EventType {
   BUTTON,
@@ -35,9 +39,11 @@ class EventManager {
 private:
   volatile uint8_t ignoreMask;
   volatile CRingBuffer<gui_event_t, MAX_EVENTS> eventBuffer;
+  uint16_t last_repeat_clock; // Added for long press repeat
 
 public:
   EventManager() : ignoreMask(0) {}
+
 
   void init() {
     eventBuffer.init();
@@ -79,8 +85,16 @@ public:
           clearIgnoreMask(i);
         }
       }
+      if (BUTTON_LONG_CLICKED(i)) { // Check for long press
+        if (clock_diff(last_repeat_clock, g_clock_ms) > LONG_PRESS_REPEAT_TIME) {
+          event.mask = EVENT_BUTTON_PRESSED;
+          eventBuffer.putp(&event);
+          last_repeat_clock = g_clock_ms;
+        }
+      }
     }
   }
+
 
   bool isEmpty() {
     return eventBuffer.isEmpty();

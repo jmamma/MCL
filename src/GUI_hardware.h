@@ -155,6 +155,7 @@ class ButtonsClass {
   static const uint16_t BUTTON4_MASK = _BV(BUTTON4);
 
   ButtonsClass();
+
   ALWAYS_INLINE() void clear();
   ALWAYS_INLINE() void poll(uint8_t sr);
 #ifdef PLATFORM_TBD
