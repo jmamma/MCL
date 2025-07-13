@@ -99,6 +99,17 @@ def build_assets(env):
 
     all_obj_files = []
 
+    proceed = False
+    for cpp_file in resource_cpps:
+        base_name = os.path.splitext(cpp_file)[0]
+        source_path = os.path.join(resource_dir, cpp_file)
+        ez_path = os.path.join(resource_build_dir, f"{base_name}.ez")
+        if not os.path.isfile(ez_path):
+           proceed = True
+    if not proceed:
+      print("Detected compressed assets, skipping compile/compression of resources.")
+      return
+
     for cpp_file in resource_cpps:
         base_name = os.path.splitext(cpp_file)[0]
         source_path = os.path.join(resource_dir, cpp_file)
@@ -106,7 +117,6 @@ def build_assets(env):
         bin_path = os.path.join(resource_build_dir, f"{base_name}.bin")
         ez_path = os.path.join(resource_build_dir, f"{base_name}.ez")
         gen_cpp_path = os.path.join(resource_build_dir, f"R_{base_name}.cpp")
-        
         all_obj_files.append(obj_path)
         # Find all directories under src/ that contain headers
         src_includes = find_include_dirs("src")
@@ -172,7 +182,6 @@ def build_assets(env):
             base_name = os.path.splitext(os.path.basename(obj_path))[0]
             f_h.write(f"extern const unsigned char __R_{base_name}[] PROGMEM;\n")
             f_h.write(f"struct __T_{base_name} {{\n")
-            
             dump_cmd = [objdump, "-t", obj_path]
             result = run_command(dump_cmd)
             # Find global data symbols
@@ -184,7 +193,6 @@ def build_assets(env):
                 size_dec = int(size_hex, 16)
                 size_aligned = (size_dec + 3) // 4 * 4
                 total_size += size_aligned
-                
                 # Try to find the original type definition from the source .cpp
                 cpp_path = os.path.join(resource_dir, f"{base_name}.cpp")
                 var_type = "unsigned char" # Default
@@ -192,17 +200,14 @@ def build_assets(env):
                     match = re.search(r'^\s*((?:unsigned\s+)?\S+(?:\s*<[^>]*>)?)\s+' + re.escape(name), f_cpp_in.read(), re.MULTILINE)
                     if match:
                         var_type = match.group(1).strip()
-                
                 f_h.write(f"  union {{\n")
                 f_h.write(f"    {var_type} {name}[0];\n")
                 f_h.write(f"    char zz__{name}[{size_aligned}];\n")
                 f_h.write(f"  }};\n")
                 f_h.write(f"  static constexpr size_t countof_{name} = {size_aligned} / sizeof({var_type});\n")
                 f_h.write(f"  static constexpr size_t sizeofof_{name} = {size_aligned};\n\n")
-            
             f_h.write(f"  static constexpr size_t __total_size = {total_size};\n")
             f_h.write(f"}};\n\n")
-    
     # 6. Generate ResMan.h header
     print("--- Generating ResMan.h ---")
     resman_header_path = os.path.join(generated_src_dir, "ResMan.h")
