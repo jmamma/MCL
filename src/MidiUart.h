@@ -7,6 +7,7 @@
 #include <MidiUartParent.h>
 #include "RP2040USB.h"
 #include <arduino/midi/Adafruit_USBD_MIDI.h>
+#include "hardware.h"
 
 #define UART_BAUDRATE 31250
 

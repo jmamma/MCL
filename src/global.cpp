@@ -57,8 +57,9 @@ MidiUartClass seq_tx2(nullptr, nullptr, &seq_tx2_rb);
 MidiUartClass seq_tx3(nullptr, nullptr, &seq_tx3_rb);
 MidiUartClass seq_tx4(nullptr, nullptr, &seq_tx4_rb);
 
-MidiUartClass MidiUart(uart0, &uart1_rx_rb, &uart1_tx_rb);
-MidiUartClass MidiUart2(uart1, &uart2_rx_rb, &uart2_tx_rb);
+MidiUartClass MidiUart(uart1, &uart1_rx_rb, &uart1_tx_rb);
+MidiUartClass MidiUart2(uart0, &uart2_rx_rb, &uart2_tx_rb);
+
 MidiUartUSBClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb);
 
 // Sysex instances

@@ -51,7 +51,7 @@ def get_tool_path(env, tool_name):
 
 def run_command(cmd, **kwargs):
     """Helper to run a command and check for errors."""
-    print(f"Executing: {' '.join(cmd)}")
+    #print(f"Executing: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
     if result.returncode != 0:
         print(f"Error running command: {' '.join(cmd)}")
@@ -138,8 +138,7 @@ def build_assets(env):
 
         compress_script_path = os.path.join(tools_dir, "compress.py")
         compress_cmd = ["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)]
-        print(f"\n--- Compression")
-        print(compress_cmd)
+        print(f"--- Compressing: " + os.path.abspath(bin_path) + " ->  " + os.path.abspath(ez_path))
         run_command(compress_cmd)
 
         # 4. Generate R_*.cpp from .ez file

@@ -24,12 +24,12 @@ void MidiUartClass::initSerial() {
   DEBUG_PRINT_FN();
 
   if (uart_hw == uart0) {
-    gpio_set_function(0, GPIO_FUNC_UART); // UART0 TX is GP0
-    gpio_set_function(1, GPIO_FUNC_UART); // UART0 RX is GP1
+    gpio_set_function(RP_UART0_RX, GPIO_FUNC_UART); // UART0 TX is GP0
+    gpio_set_function(RP_UART0_TX, GPIO_FUNC_UART); // UART0 RX is GP1
     irq_set_exclusive_handler(UART0_IRQ, uart0_irq_handler);
   } else {
-    gpio_set_function(4, GPIO_FUNC_UART); // UART1 TX is GP4
-    gpio_set_function(5, GPIO_FUNC_UART); // UART1 RX is GP5
+    gpio_set_function(RP_UART1_RX, GPIO_FUNC_UART); // UART1 TX is GP4
+    gpio_set_function(RP_UART1_TX, GPIO_FUNC_UART); // UART1 RX is GP5
     irq_set_exclusive_handler(UART1_IRQ, uart1_irq_handler);
   }
   // Initialize UART for MIDI
@@ -245,12 +245,12 @@ extern "C" void __not_in_flash_func(uart0_irq_handler)() {
   // Process all pending RX data
   if (status & UART_UARTMIS_RXMIS_BITS) {
     LOCK();
-    MidiUart.rx_isr();
+    MidiUart2.rx_isr();
     CLEAR_LOCK();
   }
   if (status & UART_UARTMIS_TXMIS_BITS) {
     LOCK();
-    MidiUart.tx_isr();
+    MidiUart2.tx_isr();
     CLEAR_LOCK();
   }
 }
@@ -260,12 +260,12 @@ extern "C" void __not_in_flash_func(uart1_irq_handler)() {
       uart_get_hw(uart1)->mis; // Reading MIS clears the interrupts
   if (status & UART_UARTMIS_RXMIS_BITS) {
     LOCK();
-    MidiUart2.rx_isr();
+    MidiUart.rx_isr();
     CLEAR_LOCK();
   }
   if (status & UART_UARTMIS_TXMIS_BITS) {
     LOCK();
-    MidiUart2.tx_isr();
+    MidiUart.tx_isr();
     CLEAR_LOCK();
   }
 }
