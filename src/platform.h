@@ -77,7 +77,7 @@ inline bool isInInterrupt() {
 // Debug macros - only active when DEBUGMODE is defined
 #ifdef DEBUGMODE
     // Initialize debug serial port
-    #define DEBUG_INIT() Serial.begin(SERIAL_SPEED)
+    #define DEBUG_INIT() do { Serial.begin(SERIAL_SPEED); delay(1000); } while(0)
 
     // Print line with context awareness
     #define DEBUG_PRINTLN(x) do { \
