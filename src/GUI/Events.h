@@ -20,7 +20,7 @@
 #define EVENT_RELEASED(event, button) ((event)->mask & EVENT_BUTTON_RELEASED && (event)->source == button)
 #define EVENT_CMD(event) ((event->type == CMD))
 
-#define LONG_PRESS_REPEAT_TIME 40 // 40ms
+#define LONG_PRESS_REPEAT_TIME 80 // 40ms
 
 enum EventType {
   BUTTON,
@@ -39,15 +39,19 @@ class EventManager {
 private:
   volatile uint8_t ignoreMask;
   volatile CRingBuffer<gui_event_t, MAX_EVENTS> eventBuffer;
-  uint16_t last_repeat_clock; // Added for long press repeat
+
+  // State variables for timer-based long press
+  int8_t   long_press_candidate;
+  uint16_t last_repeat_clock;
 
 public:
-  EventManager() : ignoreMask(0) {}
-
+  EventManager() : ignoreMask(0), long_press_candidate(-1) {}
 
   void init() {
     eventBuffer.init();
+    long_press_candidate = -1;
   }
+
   void setIgnoreMask(uint8_t button) {
     if (button < MAX_BUTTONS) {
       ignoreMask |= _BV(button);
@@ -66,35 +70,59 @@ public:
 
   void pollEvents() {
     for (uint8_t i = 0; i < MAX_BUTTONS; i++) {
-      gui_event_t event;
-      event.source = i;
-      event.type = BUTTON;
       if (BUTTON_PRESSED(i)) {
         if (!isIgnored(i)) {
+          gui_event_t event;
+          event.source = i;
+          event.type = BUTTON;
           event.mask = EVENT_BUTTON_PRESSED;
           eventBuffer.putp(&event);
+
+          //Assumes arrow keys.
+          if (event.source >= Buttons.FUNC_BUTTON6 && event.source < Buttons.TRIG_BUTTON1) {
+          // Set this button as the new candidate for repeating
+            long_press_candidate = i;
+            last_repeat_clock = g_clock_ms; // Initialize repeat clock
+          }
         } else {
           clearIgnoreMask(i);
         }
       }
+
       if (BUTTON_RELEASED(i)) {
         if (!isIgnored(i)) {
+          gui_event_t event;
+          event.source = i;
+          event.type = BUTTON;
           event.mask = EVENT_BUTTON_RELEASED;
           eventBuffer.putp(&event);
         } else {
           clearIgnoreMask(i);
         }
-      }
-      if (BUTTON_LONG_CLICKED(i)) { // Check for long press
-        if (clock_diff(last_repeat_clock, g_clock_ms) > LONG_PRESS_REPEAT_TIME) {
-          event.mask = EVENT_BUTTON_PRESSED;
-          eventBuffer.putp(&event);
-          last_repeat_clock = g_clock_ms;
+
+        // If the released button was our candidate, stop repeating
+        if (long_press_candidate == i) {
+          long_press_candidate = -1;
         }
       }
     }
-  }
 
+    if (long_press_candidate != -1) {
+      if (BUTTON_DOWN(long_press_candidate)) {
+        if (clock_diff(last_repeat_clock, g_clock_ms) > LONG_PRESS_REPEAT_TIME) {
+          gui_event_t event;
+          event.source = (uint8_t)long_press_candidate;
+          event.type = BUTTON;
+          event.mask = EVENT_BUTTON_PRESSED; // Send a standard PRESS event
+          eventBuffer.putp(&event);
+          last_repeat_clock = g_clock_ms; // Update the timer for the next repeat
+        }
+      } else {
+        // Button was released, clear the candidate just in case the RELEASED event was missed
+        long_press_candidate = -1;
+      }
+    }
+  }
 
   bool isEmpty() {
     return eventBuffer.isEmpty();
@@ -108,5 +136,4 @@ public:
     eventBuffer.getp(event);
     return;
   }
-
 };
