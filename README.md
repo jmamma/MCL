@@ -51,6 +51,10 @@ Port is now complete.
 
 - [X] Object serialisation to/from SD Card
 
+- [X] Port to platformio
+
+- [X] Integrate with TBD hardware libraries
+
 #Todo
 
 - [ ] Backport refactor to main MCL github repo.
