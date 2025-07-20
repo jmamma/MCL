@@ -5,7 +5,7 @@
 
 //#include "MidiUartClass.h"
 #include "MidiUart.h"
-#include "CommonTools/NibbleArray.h"
+#include "NibbleArray.h"
 #include "mcl.h"
 #include "SeqTrack.h"
 #include "WProgram.h"

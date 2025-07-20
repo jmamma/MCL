@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Callback.h"
-#include "Core.h"
+#include "platform.h"
 
 #include "MidiID.h"
 #include <midi-common.h>

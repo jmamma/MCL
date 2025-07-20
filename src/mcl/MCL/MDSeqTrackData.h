@@ -3,7 +3,7 @@
 #ifndef MDSEQTRACKDATA_H__
 #define MDSEQTRACKDATA_H__
 
-#include "CommonTools/helpers.h"
+#include "helpers.h"
 
 #define NUM_LOCKS_270 4
 #define NUM_MD_STEPS_270 64

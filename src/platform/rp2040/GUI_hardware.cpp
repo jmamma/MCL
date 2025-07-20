@@ -1,5 +1,4 @@
 #include "GUI_hardware.h"
-#include "Core.h"
 #include "helpers.h"
 #include "platform.h"
 #include "global.h"

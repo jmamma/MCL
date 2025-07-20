@@ -1,7 +1,6 @@
 #include "Arduino.h"
-#include "MCL/MCL.h"
+#include "MCL.h"
 #include "MidiUart.h"
-#include "core.h"
 #include "global.h"
 #include "pico.h"
 #include "platform.h"

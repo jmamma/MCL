@@ -8,11 +8,13 @@
 #include "hardware/structs/pio.h"
 #include "hardware/pwm.h"
 #include "hardware/sync.h"
+#include "hardware/uart.h"
+#include "hardware/timer.h"
+#include "hardware/gpio.h"
 #include <stdio.h>
 
 // Debug configuration
 
-//#define DEBUGMODE
 #define DEBUG_PIN 2
 #define SERIAL_SPEED 9600
 

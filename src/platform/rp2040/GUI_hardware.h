@@ -1,7 +1,6 @@
 #pragma once
 
 #include <inttypes.h>
-#include "Core.h"
 #include "platform.h"
 #include "hardware.h"
 

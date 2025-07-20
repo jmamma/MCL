@@ -6,8 +6,8 @@
 #include "oled.h"
 #include "MCLGif.h"
 
-#include "Fonts/TomThumb.h"
-#include "Fonts/Elektrothic.h"
+#include "TomThumb.h"
+#include "Elektrothic.h"
 
 class MCLGfx {
 public:
