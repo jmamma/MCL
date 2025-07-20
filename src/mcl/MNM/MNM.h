@@ -7,7 +7,7 @@
 #include "MNMParams.h"
 #include "MNMPattern.h"
 #include "MNMSysex.h"
-#include "WProgram.h"
+#include "platform.h"
 
 class MNMClass : public ElektronDevice {
 public:

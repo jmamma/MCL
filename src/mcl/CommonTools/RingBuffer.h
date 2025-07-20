@@ -1,6 +1,6 @@
 #pragma once
 
-#include "WProgram.h"
+#include "platform.h"
 #include <inttypes.h>
 #include "memory.h"
 

@@ -2,7 +2,7 @@
 
 #ifndef LFOSEQTRACK_H__
 #define LFOSEQTRACK_H__
-#include "WProgram.h"
+#include "platform.h"
 #include "MidiUart.h"
 
 #define NUM_LFO_PARAMS 2

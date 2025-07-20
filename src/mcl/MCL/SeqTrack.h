@@ -6,7 +6,7 @@
 #include "MCLMemory.h"
 //#include "MidiActivePeering.h"
 #include "MidiUartParent.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "Global.h"
 #include "SeqDefines.h"
 

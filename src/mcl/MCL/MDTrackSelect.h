@@ -2,7 +2,7 @@
 #define MDTRACKSELECT_H__
 
 #include "NoteInterface.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "MidiSysex.h"
 class MidiClass;
 

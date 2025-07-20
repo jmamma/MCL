@@ -1,6 +1,6 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-//#include "WProgram.h"
+//#include "platform.h"
 
 #include "Midi.h"
 #include "MidiUart.h"

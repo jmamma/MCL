@@ -3,7 +3,7 @@
 #ifndef MIDITOOLS_H__
 #define MIDITOOLS_H__
 
-#include "WProgram.h"
+#include "platform.h"
 
 /**
  * \addtogroup Midi

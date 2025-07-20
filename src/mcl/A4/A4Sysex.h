@@ -7,7 +7,7 @@
 #include "Midi.h"
 #include "MidiSysex.h"
 #include "Vector.h"
-#include "WProgram.h"
+#include "platform.h"
 
 class A4SysexListenerClass : public ElektronSysexListenerClass {
   /**

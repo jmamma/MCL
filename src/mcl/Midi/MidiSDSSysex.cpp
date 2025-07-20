@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include "platform.h"
 
 #include "MCLSd.h"
 #include "MidiSDSMessages.h"

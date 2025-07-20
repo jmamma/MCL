@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include "platform.h"
 
 #include "A4.h"
 #include "A4Messages.h"

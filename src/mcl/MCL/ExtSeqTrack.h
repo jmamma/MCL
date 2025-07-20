@@ -8,7 +8,7 @@
 #include "NibbleArray.h"
 #include "mcl.h"
 #include "SeqTrack.h"
-#include "WProgram.h"
+#include "platform.h"
 
 #define NUM_EXT_STEPS 128
 #define NUM_EXT_EVENTS 512

@@ -1,7 +1,12 @@
 #pragma once
 
 // Standard includes
-#include <Arduino.h>
+#include "Arduino.h"
+#include "hardware.h"
+#include "helpers.h"
+#include <stdio.h>
+
+// Platform specific includes
 #include "pico/stdlib.h"
 #include "hardware/clocks.h"
 #include "hardware/irq.h"
@@ -11,7 +16,6 @@
 #include "hardware/uart.h"
 #include "hardware/timer.h"
 #include "hardware/gpio.h"
-#include <stdio.h>
 
 // Debug configuration
 

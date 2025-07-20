@@ -8,7 +8,7 @@
 #include "Midi.h"
 #include "MidiSysex.h"
 #include "Vector.h"
-#include "WProgram.h"
+#include "platform.h"
 
 /**
  * \addtogroup MD Elektron MachineDrum

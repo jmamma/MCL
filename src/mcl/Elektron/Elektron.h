@@ -3,7 +3,7 @@
 #ifndef ELEKTRON_H__
 #define ELEKTRON_H__
 
-#include "WProgram.h"
+#include "platform.h"
 #include <inttypes.h>
 #include "MidiID.h"
 #include "MidiSysex.h"

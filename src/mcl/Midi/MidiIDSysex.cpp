@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include "platform.h"
 
 #include "MidiIDSysex.h"
 #include "helpers.h"

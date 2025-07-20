@@ -2,7 +2,7 @@
 
 #include "GUI.h"
 #include "Pages.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "DiagnosticPage.h"
 #include "Encoders.h"
 #include "global.h"

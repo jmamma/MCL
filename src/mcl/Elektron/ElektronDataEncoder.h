@@ -5,7 +5,7 @@
 
 #include "DataEncoder.h"
 #include "Midi.h"
-#include "WProgram.h"
+#include "platform.h"
 
 #define THROTTLE_US 140
 

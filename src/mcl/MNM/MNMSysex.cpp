@@ -1,7 +1,7 @@
 #include "MNMMessages.h"
 #include "MNMParams.h"
 #include "MNMSysex.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "helpers.h"
 
 void MNMSysexListenerClass::start() {

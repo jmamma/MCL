@@ -1,5 +1,5 @@
 #include "MidiID.h"
-//#include "WProgram.h"
+//#include "platform.h"
 #include "MidiIDSysex.h"
 #include "helpers.h"
 #include "global.h"

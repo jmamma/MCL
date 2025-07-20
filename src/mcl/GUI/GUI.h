@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include "Task.h"
 #include "Vector.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "Stack.h"
 
 #include "Encoders.h"

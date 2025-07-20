@@ -6,7 +6,7 @@
 #include "MidiSDSMessages.h"
 #include "MidiSDS.h"
 #include "MidiSysex.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "Wav.h"
 
 class MidiSDSSysexListenerClass : public MidiSysexListenerClass {

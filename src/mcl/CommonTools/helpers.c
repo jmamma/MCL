@@ -3,7 +3,7 @@
 #include <stdarg.h>
 
 #ifdef AVR
-#include "WProgram.h"
+#include "platform.h"
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>

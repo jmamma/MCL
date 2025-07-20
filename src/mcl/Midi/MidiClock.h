@@ -6,7 +6,7 @@
 
 #include "Callback.h"
 #include "Vector.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "midi-common.h"
 #include <inttypes.h>
 #include "global.h"

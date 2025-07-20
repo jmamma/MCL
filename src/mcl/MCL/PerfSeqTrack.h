@@ -4,7 +4,7 @@
 
 #include "MidiUart.h"
 #include "SeqTrack.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "GridTrack.h"
 
 //Ephemeral
