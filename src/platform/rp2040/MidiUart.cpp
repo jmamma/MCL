@@ -19,7 +19,7 @@ MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<> *_rxRb,
   txRb_sidechannel = nullptr;
 }
 
-void MidiUartClass::initSerial() {
+void MidiUartClass::init() {
   // Initialize GPIO pins for UART
   DEBUG_PRINT_FN();
 

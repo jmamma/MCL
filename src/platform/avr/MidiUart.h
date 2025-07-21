@@ -111,7 +111,6 @@ class MidiUartClass : public MidiUartParent {
 #endif
 
 private:
-  uint8_t mode;
 #ifdef RUNNING_STATUS_OUT
   ALWAYS_INLINE() bool write_char(uint8_t c) {
     if (!running_status_enabled) {
@@ -156,7 +155,7 @@ private:
   volatile uint8_t *ucsra() { return udr - 6; }
 
 public:
-
+  uint8_t mode;
   // Ring buffers with compile-time sizes
   int8_t in_message_tx;
   volatile RingBuffer<> *rxRb;
@@ -177,7 +176,7 @@ public:
 
   void set_speed(uint32_t speed);
 
-  void initSerial();
+  void init();
 
   void m_putc_immediate(uint8_t c);
   size_t write(uint8_t c) {
@@ -200,22 +199,22 @@ public:
 
       if (MIDI_IS_STATUS_BYTE(c)) {
         if (c != MIDI_SYSEX_END) {
-          midi->midiSysex.abort();
+          midi->midiSysex->abort();
           rxRb->put_h_isr(c);
         } else {
-          midi->midiSysex.end_immediate();
+          midi->midiSysex->end_immediate();
         }
         midi->live_state = midi_wait_status;
       } else {
         // record
-        midi->midiSysex.handleByte(c);
+        midi->midiSysex->handleByte(c);
       }
       break;
 
     case midi_wait_status:
       if (c == MIDI_SYSEX_START) {
         midi->live_state = midi_wait_sysex;
-        midi->midiSysex.reset();
+        midi->midiSysex->reset();
         break;
       }
     default:
@@ -228,12 +227,12 @@ public:
     bool rs = 1;
   again:
 #endif
-    if ((txRb->sidechannel != nullptr) && (in_message_tx == 0)) {
+    if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
       // sidechannel mounted, and no active messages in normal channel
       // ==> flush the sidechannel now
-      if (!txRb->sidechannel->isEmpty_isr()) {
+      if (!txRb_sidechannel->isEmpty_isr()) {
         sendActiveSenseTimer = sendActiveSenseTimeout;
-        uint8_t c = txRb->sidechannel->get_h_isr();
+        uint8_t c = txRb_sidechannel->get_h_isr();
 #ifdef RUNNING_STATUS_OUT
         rs = write_char(c);
 #else
@@ -241,8 +240,8 @@ public:
 #endif
       }
       // unmount sidechannel if drained
-      if (txRb->sidechannel->isEmpty_isr()) {
-        txRb->sidechannel = nullptr;
+      if (txRb_sidechannel->isEmpty_isr()) {
+        txRb_sidechannel = nullptr;
       }
     } else if (!txRb->isEmpty_isr()) {
       // 1. either sidechannel is unmounted, or an active message is in normal
@@ -308,7 +307,7 @@ public:
       goto again;
     }
 #endif
-    if (txRb->isEmpty_isr() && (txRb->sidechannel == nullptr)) {
+    if (txRb->isEmpty_isr() && (txRb_sidechannel == nullptr)) {
       clear_tx();
     }
   }

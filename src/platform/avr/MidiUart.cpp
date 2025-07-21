@@ -1,6 +1,6 @@
 //#define IS_ISR_ROUTINE
 
-#include "WProgram.h"
+#include "platform.h"
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -16,8 +16,7 @@
 #include "MCLSeq.h"
 
 MidiUartClass::MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb,
-                             RingBuffer<> *_txRb) {
-    : MidiUartParent() {
+                             RingBuffer<> *_txRb) : MidiUartParent() {
   udr = udr_;
   mode = UART_MIDI;
   rxRb = _rxRb;
@@ -25,7 +24,7 @@ MidiUartClass::MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb,
   txRb_sidechannel = nullptr;
 }
 
-void MidiUartClass::initSerial() {
+void MidiUartClass::init() {
   set_speed(31250);
   volatile uint8_t *src = ucsrc();
   volatile uint8_t *srb = ucsrb();
@@ -64,16 +63,6 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
   USE_LOCK();
   SET_LOCK();
   while (!check_empty_tx()) {
-    if (TIMER1_CHECK_INT()) {
-      TCNT1 = 0;
-      clock++;
-      TIMER1_CLEAR_INT()
-    }
-    if (TIMER3_CHECK_INT()) {
-      TCNT2 = 0;
-      slowclock++;
-      TIMER3_CLEAR_INT()
-    }
   }
   sendActiveSenseTimer = sendActiveSenseTimeout;
   write_char(c);

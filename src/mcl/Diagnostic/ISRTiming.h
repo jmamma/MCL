@@ -1,6 +1,4 @@
 #pragma once
-#include "hardware/gpio.h"
-#include "hardware/timer.h"
 #include "platform.h"
 #include "global.h"
 

@@ -6,17 +6,6 @@
 #include "helpers.h"
 #include <stdio.h>
 
-// Platform specific includes
-#include "pico/stdlib.h"
-#include "hardware/clocks.h"
-#include "hardware/irq.h"
-#include "hardware/structs/pio.h"
-#include "hardware/pwm.h"
-#include "hardware/sync.h"
-#include "hardware/uart.h"
-#include "hardware/timer.h"
-#include "hardware/gpio.h"
-
 #define IS_MEGACMD() IS_BIT_CLEAR(PINK,PK2)
 #define SET_USB_MODE(x) { PORTK = ((x)); }
 
@@ -42,9 +31,12 @@ extern volatile uint32_t interrupt_lock_count;
 #define USE_LOCK()   uint8_t _irqlock_tmp
 #define SET_LOCK()   _irqlock_tmp = SREG; cli()
 #define CLEAR_LOCK() SREG = _irqlock_tmp
+#define LOCK() USE_LOCK(); SET_LOCK()
 
 #include <avr/pgmspace.h>
 
+#define time_us_32() g_clock_fast
+#define sleep_ms(x) delay(x)
 
 // Function inlining configuration
 #if defined(PLATFORM_MEGACOMMAND) && defined(IS_ISR_ROUTINE)

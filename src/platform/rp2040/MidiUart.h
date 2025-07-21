@@ -75,7 +75,7 @@ public:
   // Basic MIDI UART operations
   ALWAYS_INLINE() bool avail() { return !rxRb->isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb->get(); }
-  void initSerial();
+  void init();
   void set_speed(uint32_t speed);
   void m_putc_immediate(uint8_t c);
   ALWAYS_INLINE() bool check_empty_tx() {

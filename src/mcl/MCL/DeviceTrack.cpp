@@ -1,6 +1,7 @@
 #include "DeviceTrack.h"
 #include "Track.h"
 #include "Project.h"
+#include "new.h"
 
 DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   active = track_type;

@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 // Platform specific includes
+#include "pico.h"
 #include "pico/stdlib.h"
 #include "hardware/clocks.h"
 #include "hardware/irq.h"
@@ -16,6 +17,8 @@
 #include "hardware/uart.h"
 #include "hardware/timer.h"
 #include "hardware/gpio.h"
+
+#include "int24.h"
 
 // Debug configuration
 

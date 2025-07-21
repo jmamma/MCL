@@ -9,7 +9,6 @@
 #include <util/delay.h>
 #endif
 
-#include "hardware/irq.h"
 #include "platform.h"
 #include "helpers.h"
 #include <string.h>

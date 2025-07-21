@@ -150,7 +150,6 @@ uint8_t popcount32(const uint32_t bits);
 #define ABS(x) ((x) < 0 ? -(x) : (x))
 #endif
 
-#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #ifndef HOST_MIDIDUINO
 //#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
 #endif

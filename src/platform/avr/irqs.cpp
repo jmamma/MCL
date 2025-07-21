@@ -3,12 +3,13 @@
 #include "global.h"
 #include "helpers.h"
 #include "platform.h"
+#include "helpers.h"
 
 ISR(TIMER1_COMPA_vect) {
 
   select_bank(BANK0);
 
-  clock++;
+  g_clock_fast++;
   MidiClock.div192th_countdown++;
   if (MidiClock.state == 2) {
     if (MidiClock.div192th_countdown >= MidiClock.div192_time) {
@@ -42,17 +43,13 @@ ISR(TIMER3_COMPA_vect) {
 
   select_bank(BANK0);
 
-  slowclock++;
+  g_clock_ms++;
   MidiUart.tickActiveSense();
   MidiUart2.tickActiveSense();
   MidiUartUSB.tickActiveSense();
 
   sei();
   GUI_hardware.poll();
-}
-
-void setup_irqs() {
-  setup_timers();
 }
 
 void setup_timers() {
@@ -99,3 +96,9 @@ void setup_timers() {
   ETIMSK |= (1 << OCIE3A);
 #endif
 }
+
+void setup_irqs() {
+  setup_timers();
+}
+
+

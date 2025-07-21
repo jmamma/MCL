@@ -21,7 +21,11 @@ public:
     }
 
     static int32_t get_free_stack() {
+        #ifdef AVR
+            return 0; //todo
+        #else
         uint32_t sp = rp2040.getStackPointer();
+
         uint32_t bottom, top;
 
         extern bool core1_separate_stack;
@@ -49,15 +53,17 @@ public:
         if (sp < bottom) {
             return -(bottom - sp);  // Stack underflow
         }
-        
+
         return sp - bottom;  // Available space
+        #endif
     }
 
     static void print_stack_info() {
+        #ifdef AVR
+        #else
         int32_t free_space = get_free_stack();
         uint32_t core = rp2040.cpuid();
         uint32_t sp = rp2040.getStackPointer();
-        
         char buf[128];
         if (free_space < 0) {
             snprintf(buf, sizeof(buf), 
@@ -72,5 +78,6 @@ public:
                     core, sp, free_space, (free_space * 100) / stack_size);
         }
         DEBUG_PRINTLN(buf);
+       #endif
     }
 };

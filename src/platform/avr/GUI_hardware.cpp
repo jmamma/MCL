@@ -3,8 +3,8 @@
 #include <util/delay.h>
 #include "GUI_hardware.h"
 //#include "helpers.h"
-#include "Core.h"
-#include "LCD.h"
+#include "platform.h"
+#include "global.h"
 
 #ifdef MEGACOMMAND
   #define SR165_OUT    PL0
@@ -111,20 +111,9 @@ void EncodersClass::clearEncoders() {
 
 void EncodersClass::poll(uint16_t sr) {
   uint16_t sr_tmp = sr;
-  /*
-  if (sr != sr_old) {
-    LCD.line1();
-    LCD.putnumber(sr & 0x3);
-    LCD.puts(" ");
-    LCD.putnumber(sr_old & 0x3);
-  }
-  */
-  
-  
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if ((sr & 3) != (sr_old & 3)) {
       volatile int8_t *val = &(ENCODER_NORMAL(i));
-      
       if (BUTTON_DOWN(i)) {
 	  val = &(ENCODER_BUTTON(i));
       }
@@ -223,19 +212,17 @@ void GUIHardware::poll() {
     Buttons.poll(sr >> 8);
     Encoders.poll(sr);
     oldsr = sr;
-    pollEventGUI();
+    GUI.events.pollEvents();
   }
   inGui = false;
-}
-
 }
 
 void GUIHardware::init() {
   uint16_t sr = SR165.read16();
   Buttons.clear();
-  Buttons.poll(sr >> 8); 
+  Buttons.poll(sr >> 8);
   Encoders.poll(sr);
-  oldsr = sr; 
+  oldsr = sr;
 }
 
 void GUIHardware::clear() {

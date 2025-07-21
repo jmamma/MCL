@@ -6,6 +6,16 @@ const int SPI1_MOSI_PIN = 11;
 const int SPI1_SCK_PIN = 10;
 const int SPI1_SS_PIN = 9;
 
+#if defined(PLATFORM_TBD)
+
+#define SD_CONFIG SdioConfig(RP_CLK_GPIO, RP_CMD_GPIO, RP_DAT0_GPIO)
+
+#else
+
+#define SD_CONFIG SdSpiConfig(SPI1_SS_PIN, DEDICATED_SPI, SD_SCK_MHZ(12), &SPI1)
+
+#endif
+
 #define USB_SERIAL  3
 #define USB_MIDI    2
 #define USB_STORAGE 1
@@ -61,3 +71,5 @@ inline void toggleLed2(void) {
 }
 
 extern void change_usb_mode(uint8_t mode);
+
+extern void picow_init();

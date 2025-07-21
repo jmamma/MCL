@@ -236,7 +236,7 @@ void MCLSeq::seq() {
     // clearLed2();
 #if defined(__AVR__)
     UART_SET_ISR_TX_BIT();
-    UART2_SET_ISR_TX_BIT()
+    UART2_SET_ISR_TX_BIT();
 #else
     //Have to flush the first byte to re-trigger the uart tx isr.
     MidiUart.tx_isr();

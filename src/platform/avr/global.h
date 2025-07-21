@@ -3,12 +3,11 @@
 
 class MidiClass;
 class MidiUartClass;
-class MidiUartUSBClass;
 class MidiSysexClass;
 
 extern MidiUartClass MidiUart;
 extern MidiUartClass MidiUart2;
-extern MidiUartUSBClass MidiUartUSB;
+extern MidiUartClass MidiUartUSB;
 
 extern MidiClass Midi;
 extern MidiClass Midi2;

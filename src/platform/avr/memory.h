@@ -1,6 +1,8 @@
 #ifndef MEMORY_H__
 #define MEMORY_H__
 
+#include "platform.h"
+
 #define NUM_DEVS 2
 
 #define NUM_CLOCK_CALLBACKS 4
@@ -176,7 +178,7 @@ FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const 
 extern volatile uint8_t *rand_ptr;
 
 FORCED_INLINE() extern inline uint8_t get_random_byte() {
-    return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ slowclock);
+    return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ g_clock_ms);
 }
 
 extern inline uint8_t get_random(uint8_t range) {
