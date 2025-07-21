@@ -630,7 +630,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   handle_mute_states(mute_states,false);
 
   /*Send the encoded kit to the devices via sysex*/
-  uint16_t myclock = g_clock_ms;
+  uint16_t myclock = read_clock_ms();
   uint16_t latency_ms = 0;
 
   GridRowHeader row_header;
@@ -666,7 +666,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   // note, do not re-enter grid_task -- stackoverflow
 
   GUI.removeTask(&grid_task);
-  while (clock_diff(myclock, g_clock_ms) < latency_ms) {
+  while (clock_diff(myclock, read_clock_ms()) < latency_ms) {
     //  GUI.loop();
   }
   GUI.addTask(&grid_task);

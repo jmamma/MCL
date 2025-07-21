@@ -88,7 +88,7 @@ bool MCLSysConfig::write_cfg() {
   }
   DEBUG_PRINTLN(F("Write cfg okay"));
   cfgfile.close();
-  cfg_save_lastclock = g_clock_ms;
+  cfg_save_lastclock = read_clock_ms();
   return true;
 }
 

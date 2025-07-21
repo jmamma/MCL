@@ -91,7 +91,7 @@ bool KeyInterface::off() {
 }
 
 bool KeyInterface::check_key_throttle() {
-  if (clock_diff(last_clock, g_clock_ms) < 30) {
+  if (clock_diff(last_clock, read_clock_ms()) < 30) {
     return true;
   } else {
     throttle = false;
@@ -161,7 +161,7 @@ void KeyInterface::end() {
     }
     if (!throttle) {
       throttle = true;
-      last_clock = g_clock_ms;
+      last_clock = read_clock_ms();
     }
   }
 

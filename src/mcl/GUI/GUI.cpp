@@ -157,14 +157,14 @@ void GuiClass::display() {
 
 #ifdef DEBUGMODE
   if (g_fps == 0 && g_clock_fps == 0) {
-    g_clock_fps = g_clock_ms;
+    g_clock_fps = read_clock_ms();
   }
   g_fps++;
-  if (clock_diff(g_clock_fps, g_clock_ms) > 1000) {
+  if (clock_diff(g_clock_fps, read_clock_ms()) > 1000) {
     DEBUG_PRINT("FPS: ");
     DEBUG_PRINTLN(g_fps);
     g_fps = 0;
-    g_clock_fps = g_clock_ms;
+    g_clock_fps = read_clock_ms();
   }
 #endif
 #ifndef DEBUGMODE

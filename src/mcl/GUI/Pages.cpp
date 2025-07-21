@@ -41,7 +41,7 @@ void LightPage::update() {
 #endif
         g_clock_minutes = 0;
         g_clock_ticks = 0;
-        encoders_used_clock[i] = g_clock_ms;
+        encoders_used_clock[i] = read_clock_ms();
       }
     }
   }
@@ -51,7 +51,7 @@ void LightPage::init_encoders_used_clock(uint16_t timeout) {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
       encoders[i]->old = encoders[i]->cur;
       ((LightPage *)this)->encoders_used_clock[i] =
-          g_clock_ms + timeout + 1;
+          read_clock_ms() + timeout + 1;
   }
 }
 

@@ -257,7 +257,7 @@ public:
     //   DEBUG_PRINTLN( (clock - clock_last_time) / 2);
 
     // }
-    clock_last_time = g_clock_fast;
+    clock_last_time = read_clock();
     div192th_countdown = 0;
 
     if (uart_clock_forward1) { uart_clock_forward1->sendRaw(0xF8); }
@@ -347,12 +347,12 @@ public:
     mod8_free_counter++;
     if (reset_clock_phase) {
       mod8_free_counter = 0;
-      last_clock8 = g_clock_fast;
+      last_clock8 = read_clock();
       reset_clock_phase = false;
     }
     if (mod8_free_counter == 8) {
-      diff_clock8 = midi_clock_diff(last_clock8, g_clock_fast);
-      last_clock8 = g_clock_fast;
+      diff_clock8 = midi_clock_diff(last_clock8, read_clock());
+      last_clock8 = read_clock();
       div192_time = diff_clock8 / 16;
       mod8_free_counter = 0;
     }

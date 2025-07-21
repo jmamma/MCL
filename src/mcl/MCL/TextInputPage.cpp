@@ -71,7 +71,7 @@ void TextInputPage::config_normal() {
   // redraw popup body
 #endif
   // update clock
-  last_clock = g_clock_ms;
+  last_clock = read_clock_ms();
 }
 
 // charpane layout:
@@ -96,11 +96,11 @@ void TextInputPage::loop() {
   if (normal_mode) {
   if (encoders[0]->hasChanged()) {
     update_char();
-    last_clock = g_clock_ms;
+    last_clock = read_clock_ms();
   }
 
   if (encoders[1]->hasChanged()) {
-    last_clock = g_clock_ms;
+    last_clock = read_clock_ms();
     encoders[1]->old = encoders[1]->cur;
     text[cursor_position] = _getchar(encoders[1]->getValue());
   }
@@ -144,7 +144,7 @@ void TextInputPage::display_normal() {
 
   // Check to see that the character chosen is in the list of allowed
   // characters
-  auto time = clock_diff(last_clock, g_clock_ms);
+  auto time = clock_diff(last_clock, read_clock_ms());
 
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
   oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
@@ -160,7 +160,7 @@ void TextInputPage::display_normal() {
     oled_display.setTextColor(WHITE);
   }
   if (time > FLASH_SPEED * 2) {
-    last_clock = g_clock_ms;
+    last_clock = read_clock_ms();
   }
 }
 
@@ -188,7 +188,7 @@ void TextInputPage::display_charpane() {
     uint8_t chridx = encoders[0]->cur + encoders[1]->cur * charpane_w;
     text[cursor_position] = _getchar(chridx);
 
-  last_clock = g_clock_ms;
+  last_clock = read_clock_ms();
 }
 
 void TextInputPage::display() {

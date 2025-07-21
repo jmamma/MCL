@@ -95,76 +95,7 @@ void m_trim_space(char *str) {
     }
   }
 }
-/** @} **/
 
-/**
- * \addtogroup helpers_clock
- * Timing functions
- *
- * @{
- **/
-
-#ifdef HOST_MIDIDUINO
-#include <math.h>
-#include <stdio.h>
-#include <sys/time.h>
-
-static double startClock;
-static uint8_t clockStarted = 0;
-
-/** Return the current clock counter value, using the POSIX gettimeofday
- * function. **/
-uint16_t read_clock(void) {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  double clock = (double)(tv.tv_sec + (double)tv.tv_usec / 1000000.0);
-  if (!clockStarted) {
-    startClock = clock;
-    clockStarted = 1;
-  }
-  clock -= startClock;
-  clock *= 61250;
-  clock = fmod(clock, 65536);
-
-  return clock;
-}
-
-/** Return the current slow clock counter value, using the POSIX gettimeofday
- * function. **/
-uint16_t read_slowclock(void) {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  double clock = (double)(tv.tv_sec + (double)tv.tv_usec / 1000000.0);
-  if (!clockStarted) {
-    startClock = clock;
-    clockStarted = 1;
-  }
-  clock -= startClock;
-  clock *= 976;
-  clock = fmod(clock, 65536);
-  return clock;
-}
-
-#else
-
-/** Embedded version of read_clock, return the fast clock counter. **/
-uint16_t read_clock(void) {
-  USE_LOCK();
-  SET_LOCK();
-  uint16_t ret = g_clock_fast;
-  CLEAR_LOCK();
-  return ret;
-}
-
-/** Embedded version of read_slowclock, return the slow clock counter. **/
-uint16_t read_slowclock(void) {
-  USE_LOCK();
-  SET_LOCK();
-  uint16_t ret = g_clock_ms;
-  CLEAR_LOCK();
-  return ret;
-}
-#endif
 
 /**
  * Return the difference between old_clock and new_clock, taking into

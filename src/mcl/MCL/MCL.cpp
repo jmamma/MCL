@@ -201,7 +201,7 @@ void MCL::setup() {
   grid_task.init();
 
   GUI.addTask(&grid_task);
-  g_clock_ms = 0;
+  read_clock_ms() = 0;
   GUI.addTask(&midi_active_peering);
 
   uint8_t boot = true;
@@ -528,7 +528,7 @@ void sdcard_bench() {
   EmptyTrack empty_track;
   DeviceTrack *ptrack;
   while (1) {
-    uint16_t cl = g_clock_ms;
+    uint16_t cl = read_clock_ms();
     proj.select_grid(0);
     for (uint8_t n = 0; n < 16; n++) {
       auto *ptrack = empty_track.load_from_grid_512(n, 0);
@@ -547,7 +547,7 @@ void sdcard_bench() {
       if (ptrack) ptrack->store_in_mem(0);
       CLEAR_LOCK();
     }
-    uint16_t diff = clock_diff(cl, g_clock_ms);
+    uint16_t diff = clock_diff(cl, read_clock_ms());
     DEBUG_PRINT("Clock :");
     DEBUG_PRINTLN(diff);
   }

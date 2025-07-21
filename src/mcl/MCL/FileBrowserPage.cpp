@@ -247,7 +247,7 @@ void FileBrowserPage::loop() {
 
   if (encoders[1]->hasChanged()) {
     selection_change = true;
-    selection_change_clock = g_clock_ms;
+    selection_change_clock = read_clock_ms();
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
 

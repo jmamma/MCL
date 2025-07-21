@@ -48,7 +48,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
   CLEAR_BIT32(notes_off, note_num);
 
   if (note_num < GRID_WIDTH) {
-    note_hold[port] = g_clock_ms;
+    note_hold[port] = read_clock_ms();
   }
   add_note_event(note_num, EVENT_BUTTON_PRESSED, port);
 }

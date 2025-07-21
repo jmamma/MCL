@@ -146,7 +146,7 @@ void MixerPage::loop() {
      bool check = (key_interface.cmd_key_state & mask);
 
       if (note_interface.notes_on || check) {
-        encoders_used_clock[n] = g_clock_ms + timeout + 1;
+        encoders_used_clock[n] = read_clock_ms() + timeout + 1;
       }
       if (mcl_gui.show_encoder_value(encoders[n], timeout)) {
         draw_encoders = true;

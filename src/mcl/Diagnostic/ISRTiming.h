@@ -20,8 +20,8 @@ public:
         last_duration = 0;
         total_duration = 0;
         isr_count = 0;
-        last_print_time = g_clock_ms;
-        last_reset_time = g_clock_ms;
+        last_print_time = read_clock_ms();
+        last_reset_time = read_clock_ms();
     }
 
     static inline void enter_isr() {
@@ -48,7 +48,7 @@ public:
             return;
         }
 
-        uint16_t current_time = g_clock_ms;
+        uint16_t current_time = read_clock_ms();
         
         // Auto clear stats after 10 seconds
         if (clock_diff(last_reset_time, current_time) >= 10000) {

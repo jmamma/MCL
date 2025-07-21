@@ -78,7 +78,7 @@ void GridPage::jump_to_row(uint8_t row) {
   param2.old = y;
   cur_row = r;
   reload_slot_models = false;
-  grid_lastclock = g_clock_ms;
+  grid_lastclock = read_clock_ms();
   write_cfg = true;
 }
 
@@ -168,7 +168,7 @@ void GridPage::loop() {
     if (mcl_cfg.grid_page_mode == PERF_ENC) {
       if (encoders[0]->hasChanged() || encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
          //mcl.setPage(MIXER_PAGE);
-         draw_encoders_lastclock = g_clock_ms;
+         draw_encoders_lastclock = read_clock_ms();
          draw_encoders = true;
          //return;
          perf_page.encoder_send();
@@ -206,7 +206,7 @@ void GridPage::loop() {
       load_slot_models();
     }
     reload_slot_models = true;
-    grid_lastclock = g_clock_ms;
+    grid_lastclock = read_clock_ms();
 
     volatile uint8_t *ptr;
     write_cfg = true;
@@ -220,13 +220,13 @@ void GridPage::loop() {
     reload_slot_models = true;
   }
 
-  if (g_clock_ms < grid_lastclock) {
-    grid_lastclock = g_clock_ms + GUI_NAME_TIMEOUT;
+  if (read_clock_ms() < grid_lastclock) {
+    grid_lastclock = read_clock_ms() + GUI_NAME_TIMEOUT;
   }
 
-  if (clock_diff(grid_lastclock, g_clock_ms) > GUI_NAME_TIMEOUT) {
+  if (clock_diff(grid_lastclock, read_clock_ms()) > GUI_NAME_TIMEOUT) {
     ///   DEBUG_DUMP(grid_lastclock);
-    //   DEBUG_DUMP(g_clock_ms);
+    //   DEBUG_DUMP(read_clock_ms());
     //   display_name = 1;
     if ((write_cfg) && (MidiClock.state != 2)) {
       mcl_cfg.cur_col = cur_col;
@@ -238,7 +238,7 @@ void GridPage::loop() {
       mcl_cfg.tempo = MidiClock.get_tempo();
       DEBUG_PRINTLN(F("write cfg"));
       if (MidiClock.state != 2) { mcl_cfg.write_cfg(); }
-      grid_lastclock = g_clock_ms;
+      grid_lastclock = read_clock_ms();
       write_cfg = false;
       // }
     }
@@ -253,7 +253,7 @@ void GridPage::loop() {
      param4.checkHandle();
   }
 
-  if (bank_popup == 2 && clock_diff(bank_popup_lastclock, g_clock_ms) > 800) {
+  if (bank_popup == 2 && clock_diff(bank_popup_lastclock, read_clock_ms()) > 800) {
     close_bank_popup();
     return;
   }
@@ -598,10 +598,10 @@ int frameclock;
 void GridPage::display() {
 
   #ifdef FPS
-  if (clock_diff(frameclock, g_clock_ms) >= 1000) {
+  if (clock_diff(frameclock, read_clock_ms()) >= 1000) {
   DEBUG_PRINT("FPS: "); DEBUG_PRINTLN(frames);
   frames = 0;
-  frameclock = g_clock_ms;
+  frameclock = read_clock_ms();
   }
   frames++;
   #endif
@@ -619,7 +619,7 @@ void GridPage::display() {
     }
   }
   display_grid();
-  if (draw_encoders && clock_diff(draw_encoders_lastclock, g_clock_ms) < 750) {
+  if (draw_encoders && clock_diff(draw_encoders_lastclock, read_clock_ms()) < 750) {
     oled_display.setFont();
     mixer_page.draw_encs();
   }
@@ -1103,7 +1103,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           uint8_t bank = key - MDX_KEY_BANKA;
           if (bank_popup == 1) {
             bank_popup = 2;
-            bank_popup_lastclock = g_clock_ms;
+            bank_popup_lastclock = read_clock_ms();
             MD.draw_bank(bank);
           }
           return true;

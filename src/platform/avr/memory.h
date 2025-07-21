@@ -178,7 +178,7 @@ FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const 
 extern volatile uint8_t *rand_ptr;
 
 FORCED_INLINE() extern inline uint8_t get_random_byte() {
-    return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ g_clock_ms);
+    return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ read_clock_ms());
 }
 
 extern inline uint8_t get_random(uint8_t range) {

@@ -64,11 +64,11 @@ wait:
 
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
-  volatile uint16_t start_clock = g_clock_ms;
+  volatile uint16_t start_clock = read_clock_ms();
   MidiSDSSysexListener.msgType = 255;
   do {
      handleIncomingMidi();
-  } while ((clock_diff(start_clock, g_clock_ms) < timeout) &&
+  } while ((clock_diff(start_clock, read_clock_ms()) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
   return MidiSDSSysexListener.msgType;
 }
@@ -173,8 +173,8 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
 retry:
     MidiUart.sendRaw(buf, szbuf);
     if (!hand_shake_state) {
-      uint16_t myclock = g_clock_ms;
-      while (clock_diff(myclock, g_clock_ms) < latency_ms);
+      uint16_t myclock = read_clock_ms();
+      while (clock_diff(myclock, read_clock_ms()) < latency_ms);
 
     } else if (buf[1] == 0x7E && buf[3] == 0x02) {
       reply = waitForMsg(2000);
@@ -357,8 +357,8 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
     }
 
     if (!hand_shake_state) {
-      uint16_t myclock = g_clock_ms;
-      while (clock_diff(myclock, g_clock_ms) < latency_ms) {};
+      uint16_t myclock = read_clock_ms();
+      while (clock_diff(myclock, read_clock_ms()) < latency_ms) {};
       sendData(data, n);
     } else {
       uint8_t count = 0;

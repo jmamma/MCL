@@ -3,10 +3,10 @@
 
 uint8_t *MCLGIF::get_next_frame() {
   uint8_t *bmp = get_frame(cur_frame);
-  if (clock_diff(last_frame_clock, g_clock_ms) < 80 || loop_count == loops) {
+  if (clock_diff(last_frame_clock, read_clock_ms()) < 80 || loop_count == loops) {
     return bmp;
   }
-  last_frame_clock = g_clock_ms;
+  last_frame_clock = read_clock_ms();
   cur_frame += inc;
 
   if (cur_frame < 0) {

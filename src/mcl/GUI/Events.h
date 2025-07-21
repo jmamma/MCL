@@ -82,7 +82,7 @@ public:
           if (event.source >= Buttons.FUNC_BUTTON6 && event.source < Buttons.TRIG_BUTTON1) {
           // Set this button as the new candidate for repeating
             long_press_candidate = i;
-            last_repeat_clock = g_clock_ms; // Initialize repeat clock
+            last_repeat_clock = read_clock_ms(); // Initialize repeat clock
           }
         } else {
           clearIgnoreMask(i);
@@ -109,13 +109,13 @@ public:
 
     if (long_press_candidate != -1) {
       if (BUTTON_DOWN(long_press_candidate)) {
-        if (clock_diff(last_repeat_clock, g_clock_ms) > LONG_PRESS_REPEAT_TIME) {
+        if (clock_diff(last_repeat_clock, read_clock_ms()) > LONG_PRESS_REPEAT_TIME) {
           gui_event_t event;
           event.source = (uint8_t)long_press_candidate;
           event.type = BUTTON;
           event.mask = EVENT_BUTTON_PRESSED; // Send a standard PRESS event
           eventBuffer.putp(&event);
-          last_repeat_clock = g_clock_ms; // Update the timer for the next repeat
+          last_repeat_clock = read_clock_ms(); // Update the timer for the next repeat
         }
       } else {
         // Button was released, clear the candidate just in case the RELEASED event was missed

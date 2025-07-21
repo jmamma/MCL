@@ -32,7 +32,7 @@ void SampleBrowserPage::display() {
   }
   if (FileBrowserPage::selection_change) {
     draw_sidebar();
-    if (clock_diff(FileBrowserPage::selection_change_clock, g_clock_ms) < 200) {
+    if (clock_diff(FileBrowserPage::selection_change_clock, read_clock_ms()) < 200) {
       goto end;
     }
     FileBrowserPage::selection_change = false;
@@ -289,11 +289,11 @@ void SampleBrowserPage::query_sample_slots() {
 
   sysex->addSysexListener(this);
   MD.sendRequest(data, 2);
-  auto time_start = g_clock_ms;
+  auto time_start = read_clock_ms();
   auto time_now = time_start;
   do {
     handleIncomingMidi();
-    time_now = g_clock_ms;
+    time_now = read_clock_ms();
   } while (!s_query_returned && clock_diff(time_start, time_now) < 1000);
 
   if (!s_query_returned) {

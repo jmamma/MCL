@@ -10,8 +10,7 @@
 #include "oled.h"
 #include "SdFat.h"
 #include "PageSelectPage.h"
-
-MIDITest midi_test;
+#include "SdFat.h"
 
 void setup() {
   DEBUG_INIT();

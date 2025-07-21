@@ -245,7 +245,7 @@ void MidiActivePeering::run() {
 #if defined(__AVR__) && !defined(DEBUGMODE)
   if (turbo_light.tmSpeeds[turbo_light.lookup_speed(mcl_cfg.usb_turbo_speed)] !=
           MidiUartUSB.speed &&
-      g_clock_ms > 4000 && usb_set_speed) {
+      read_clock_ms() > 4000 && usb_set_speed) {
     turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.usb_turbo_speed),
                           MidiUSB.uart);
     usb_set_speed = false;

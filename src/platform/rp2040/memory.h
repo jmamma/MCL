@@ -97,7 +97,7 @@ extern volatile uint8_t *rand_ptr;
 FORCED_INLINE() extern inline uint8_t get_random_byte() {
     // Explicit cast to satisfy pgm_read_byte's const requirement
     const uint8_t* ptr = const_cast<const uint8_t*>(rand_ptr++);
-    return (pgm_read_byte(ptr) ^ get_byte_bank1(rand_ptr) ^ g_clock_ms);
+    return (pgm_read_byte(ptr) ^ get_byte_bank1(rand_ptr) ^ read_clock_ms());
 }
 
 extern inline uint8_t get_random(uint8_t range) {

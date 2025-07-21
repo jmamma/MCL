@@ -212,34 +212,16 @@ uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
 void m_toupper(char* str);
 void m_trim_space(char* str);
 
-/** @} */
-
-/**
- * \addtogroup helpers_clock Timing functions
- * @{
- **/
-extern volatile uint16_t g_clock_fast;
 extern volatile uint16_t g_clock_ms;
+extern volatile uint16_t g_clock_fast;
 
-extern uint16_t read_clock(void);
-extern uint16_t read_slowclock(void);
+#define read_clock() (g_clock_fast)
+#define read_slowclock() (g_clock_ms)
+#define read_clock_ms() (g_clock_ms)
+
 uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 
-/** @} **/
 
-/**
- * \addtogroup helpers_debug Debugging functions
- * @{
- **/
-			
-#ifdef HOST_MIDIDUINO
-	void hexdump(uint8_t *data, uint16_t len);
-#endif
-
-/**
- * @}
- */
-	
 #ifdef __cplusplus
 }
 

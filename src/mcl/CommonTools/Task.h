@@ -35,16 +35,9 @@ public:
   }
 
 	/** Check if the task needs to be executed. **/
-  void checkTask() {
-    uint16_t clock = read_slowclock();
-    if (clock_diff(lastExecution, clock) > interval || starting) {
-      run();
-      lastExecution = clock;
-      starting = false;
-    }
-  }
+  void checkTask();
 
-	/** Remove the task, calling its cleanup code (empty for now). **/
+  /** Remove the task, calling its cleanup code (empty for now). **/
   virtual void destroy() {
   }
 
