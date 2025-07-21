@@ -7,6 +7,42 @@ import shutil
 import re
 Import("env")
 
+def get_platform_subdir(env):
+    """
+    Determine the platform-specific subdirectory based on PlatformIO environment name.
+    Returns the appropriate subdirectory name extracted from the environment name.
+    """
+    # Get the environment name from PlatformIO (e.g., 'pi2350', 'avr_uno', etc.)
+    env_name = env.subst("$PIOENV")
+
+    # Map environment names (or prefixes) to your directory structure
+    env_mapping = {
+        "pi2350": "rp2040",
+        "pico": "rp2040",
+        "rp2040": "rp2040",
+        "rp2350": "rp2040",
+        "avr": "avr",
+        "uno": "avr",
+        "nano": "avr",
+        "mega": "avr",
+        "esp32": "esp32",
+        "esp8266": "esp8266",
+        # Add more mappings as needed for your environments
+    }
+    
+    # Check for exact match first
+    if env_name in env_mapping:
+        return env_mapping[env_name]
+    
+    # Check for partial matches (environment name contains the key)
+    for key, value in env_mapping.items():
+        if key in env_name.lower():
+            return value
+    
+    # Default fallback - you might want to customize this
+    print(f"Warning: No mapping found for environment '{env_name}', using 'generic' as subdirectory")
+    return "generic"
+
 def find_include_dirs(base_dir):
     """Find all directories that contain header files"""
     include_dirs = []
@@ -78,9 +114,14 @@ def build_assets(env):
         print("No 'resource' directory found. Skipping asset build.")
         return
 
+    # Get platform-specific subdirectory
+    platform_subdir = get_platform_subdir(env)
+    print(f"Detected environment: {env.subst('$PIOENV')} -> Using subdirectory: {platform_subdir}")
+    
     # Paths for generated files
     resource_build_dir = os.path.join(build_dir, "resource_assets")
-    generated_src_dir = os.path.join(project_dir, "src", "resources")
+    generated_src_dir = os.path.join(project_dir, "src", "resources", platform_subdir)
+
     os.makedirs(resource_build_dir, exist_ok=True)
     os.makedirs(generated_src_dir, exist_ok=True)
 
@@ -159,7 +200,7 @@ def build_assets(env):
             result = run_command(["hexdump", "-v", "-e", '1/1 "%3u,\\n"', ez_path])
             f_cpp.write(result.stdout)
             f_cpp.write('};\n')
-        # Copy to src/resources so the main build can find it
+        # Copy to src/resources/platform so the main build can find it
         shutil.copy(gen_cpp_path, os.path.join(generated_src_dir, os.path.basename(gen_cpp_path)))
 
     # 5. Generate R.h header

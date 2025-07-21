@@ -43,7 +43,9 @@ void setup() {
   delay(2000);
 #ifndef DEBUGMODE
   MidiUartUSB.init();
-  MidiUartUSB.running_status_enabled = false;
+  #ifdef RUNNING_STATUS_OUT
+  MidiUartUSB.running_status_out = 0;
+  #endif
 #endif
   MidiUart.initSerial();
   MidiUart2.initSerial();

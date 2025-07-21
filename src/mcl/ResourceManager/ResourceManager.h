@@ -1,6 +1,6 @@
 #pragma once
 #include "unpack.h"
-#include "resources/R.h"
+#include "R.h"
 
 #define RM_BUFSIZE 6500
 
@@ -23,7 +23,7 @@ public:
 	void restore_page_entry_deps();
 	size_t Size();
 
-#include "resources/ResMan.h"
+#include "ResMan.h"
 };
 
 extern ResourceManager R;
