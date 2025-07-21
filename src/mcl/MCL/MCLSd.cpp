@@ -7,12 +7,6 @@
    Function for initialising the SD Card
 */
 
-#ifdef __AVR__
-SdFat_ SD __attribute__((section(".sdcard")));
-#else
-SdFat_ SD;
-#endif
-
 bool MCLSd::sd_init() {
   bool ret = false;
   DEBUG_PRINT_FN();
