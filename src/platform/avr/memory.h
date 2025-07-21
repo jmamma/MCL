@@ -50,6 +50,9 @@
 #define BANK1_SYSEX3_DATA_START (BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN)
 #define SYSEX3_DATA_LEN 0x1830UL //6KB
 
+#define BANK3_START 0x0000
+#define BANK3_END 0x2000
+
 /* definition to expand macro then apply to pragma message */
 #define VALUE_TO_STRING(x) #x
 #define VALUE(x) VALUE_TO_STRING(x)

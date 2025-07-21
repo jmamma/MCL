@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Arduino.h"
+#include "memory.h"
 
 #define EXT_TRACKS
 #define LFO_TRACKS
@@ -119,31 +120,39 @@ constexpr size_t AUX_CACHE_LEN = GRIDCHAIN_TRACK_LEN +
 constexpr size_t EXT_CACHE_LEN = GRID2_TRACK_LEN * NUM_EXT_TRACKS;
 constexpr size_t FILEBROWSER_CACHE_LEN = 0x2000;
 
+constexpr size_t NUM_FILE_ENTRIES = 256;
+constexpr size_t FILE_ENTRY_SIZE = 32;
+
+#ifdef MCL_MEMORY_USE_ARRAYS
 extern uint8_t md_cache[MD_CACHE_LEN];
 extern uint8_t aux_cache[AUX_CACHE_LEN];
 extern uint8_t ext_cache[EXT_CACHE_LEN];
 extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
-// 16x MD tracks
-// GRID1 tracks start at 0x6B60
-constexpr uint8_t* BANK1_MD_TRACKS_START = md_cache;
-// AUX tracks start at 0x8CC0
-constexpr uint8_t* BANK1_AUX_TRACKS_START = aux_cache;
-// GRID2 tracks start at 0x8D16// 6x A4 tracks
-constexpr uint8_t* BANK1_EXT_TRACKS_START = ext_cache;
 
-constexpr uint8_t* BANK1_GRIDCHAIN_TRACK_START = BANK1_AUX_TRACKS_START;
+inline uint8_t* const BANK1_MD_TRACKS_START = md_cache;
+inline uint8_t* const BANK1_AUX_TRACKS_START = aux_cache;
+inline uint8_t* const BANK1_EXT_TRACKS_START = ext_cache;
 
-constexpr uint8_t* BANK1_PERF_TRACK_START = BANK1_GRIDCHAIN_TRACK_START + GRIDCHAIN_TRACK_LEN;
-constexpr uint8_t* BANK1_MDLFO_TRACK_START = BANK1_PERF_TRACK_START + PERF_TRACK_LEN;
-constexpr uint8_t* BANK1_MDROUTE_TRACK_START = BANK1_MDLFO_TRACK_START + MDLFO_TRACK_LEN;
-constexpr uint8_t* BANK1_MDFX_TRACK_START = BANK1_MDROUTE_TRACK_START + MDROUTE_TRACK_LEN;
-constexpr uint8_t* BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK_LEN;
+#else
 
+inline uint8_t* const BANK1_MD_TRACKS_START = reinterpret_cast<uint8_t*>(BANK1_SYSEX3_DATA_START + SYSEX3_DATA_LEN);
+inline uint8_t* const BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LEN * NUM_MD_TRACKS;
+#endif
+
+inline uint8_t* const BANK1_GRIDCHAIN_TRACK_START = BANK1_AUX_TRACKS_START;
+
+inline uint8_t* const BANK1_PERF_TRACK_START = BANK1_GRIDCHAIN_TRACK_START + GRIDCHAIN_TRACK_LEN;
+inline uint8_t* const BANK1_MDLFO_TRACK_START = BANK1_PERF_TRACK_START + PERF_TRACK_LEN;
+inline uint8_t* const BANK1_MDROUTE_TRACK_START = BANK1_MDLFO_TRACK_START + MDLFO_TRACK_LEN;
+inline uint8_t* const BANK1_MDFX_TRACK_START = BANK1_MDROUTE_TRACK_START + MDROUTE_TRACK_LEN;
+inline uint8_t* const BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK_LEN;
+
+#ifdef MCL_MEMORY_USE_ARRAYS
+inline uint8_t* const BANK3_FILE_ENTRIES_START = filebrowser_cache;
+inline uint8_t* const BANK3_FILE_ENTRIES_END = filebrowser_cache + FILEBROWSER_CACHE_LEN;
+#else
+inline uint8_t* const BANK1_EXT_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;;
 // 512x file entries (16 bytes each), stored in Bank3
-constexpr size_t NUM_FILE_ENTRIES = 256;
-constexpr size_t FILE_ENTRY_SIZE = 32;
-
-constexpr uint8_t* BANK3_FILE_ENTRIES_START = filebrowser_cache;
-constexpr uint8_t* BANK3_FILE_ENTRIES_END = filebrowser_cache + FILEBROWSER_CACHE_LEN;
-
-// At 0xCAF4
+inline uint8_t* const BANK3_FILE_ENTRIES_START = reinterpret_cast<uint8_t*>(BANK3_START);
+inline uint8_t* const BANK3_FILE_ENTRIES_END = reinterpret_cast<uint8_t*>(BANK3_END);
+#endif

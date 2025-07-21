@@ -20,6 +20,8 @@
 
 #include "int24.h"
 
+#define MCL_CACHE_USE_ARRAYS 1
+
 // Debug configuration
 
 #define DEBUG_PIN 2
