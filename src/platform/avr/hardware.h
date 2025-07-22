@@ -8,9 +8,9 @@
 
 
 #ifdef MEGACOMMAND
-  const int SPI1_SS_PIN = 53; //PB0
+#define SPI1_SS_PIN 53 //PB0
 #else
-  const int SPI1_SS_PIN = 9;  //PE7
+#define SPI1_SS_PIN 9  //PE7
 #endif
 
 #define SD_CONFIG SdSpiConfig(SPI1_SS_PIN, DEDICATED_SPI, SD_SCK_MHZ(12), &SPI)

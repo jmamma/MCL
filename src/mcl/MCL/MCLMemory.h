@@ -70,22 +70,19 @@ constexpr size_t NUM_LOCKS = 8;
 
 // So we manually allocate the following BANK1 memory regions, with a little bit of headroom:
 
-constexpr size_t DEVICE_TRACK_LEN = 7;
-
 //constexpr size_t GRID1_TRACK_LEN = 534;
 //constexpr size_t GRID2_TRACK_LEN = 2094;
 
-constexpr size_t GRID1_TRACK_LEN = 576;
-constexpr size_t GRID2_TRACK_LEN = 2432;
+constexpr size_t DEVICE_TRACK_LEN = 7;
+constexpr size_t GRID1_TRACK_LEN = 534;
+constexpr size_t GRID2_TRACK_LEN = 2094;
 
-
-constexpr size_t MDLFO_TRACK_LEN = 256;
-constexpr size_t MDROUTE_TRACK_LEN = 48;
-constexpr size_t MDFX_TRACK_LEN = 64;
-constexpr size_t MDTEMPO_TRACK_LEN = 32;
-constexpr size_t PERF_TRACK_LEN = 512;
-constexpr size_t GRIDCHAIN_TRACK_LEN = 576;
-
+constexpr size_t MDLFO_TRACK_LEN = 226;
+constexpr size_t MDROUTE_TRACK_LEN = 25;
+constexpr size_t MDFX_TRACK_LEN = 43;
+constexpr size_t MDTEMPO_TRACK_LEN = 11;
+constexpr size_t PERF_TRACK_LEN = 491;
+constexpr size_t GRIDCHAIN_TRACK_LEN = 551;
 /*
 constexpr size_t MDLFO_TRACK_LEN = 226;
 constexpr size_t MDROUTE_TRACK_LEN = 25;

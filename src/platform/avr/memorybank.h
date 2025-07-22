@@ -1,5 +1,7 @@
 #define BANK0 0
 
+#include "platform.h"
+
 #ifdef MEGACOMMAND
   #define BANK_PORT PORTL
   #define BANK_MASK (1 << PL6)
