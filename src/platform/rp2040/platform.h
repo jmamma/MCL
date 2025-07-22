@@ -18,7 +18,9 @@
 #include "hardware/timer.h"
 #include "hardware/gpio.h"
 
+#ifdef __cplusplus
 #include "int24.h"
+#endif
 
 #define MCL_CACHE_USE_ARRAYS 1
 

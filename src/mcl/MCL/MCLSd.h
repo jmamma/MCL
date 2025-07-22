@@ -6,7 +6,10 @@
 
 #include "SdFat.h"
 #include "hardware.h"
+
+#if SDFAT_FILE_TYPE > 1
 typedef FsFile File;
+#endif
 
 class SdFat_ : public SdFat {
 public:
