@@ -40,16 +40,20 @@ private:
   volatile uint8_t ignoreMask;
   volatile CRingBuffer<gui_event_t, MAX_EVENTS> eventBuffer;
 
+#if defined(PLATFORM_TBD)
   // State variables for timer-based long press
   int8_t   long_press_candidate;
   uint16_t last_repeat_clock;
+#endif
 
 public:
-  EventManager() : ignoreMask(0), long_press_candidate(-1) {}
+  EventManager() : ignoreMask(0) {}
 
   void init() {
     eventBuffer.init();
+    #if defined(PLATFORM_TBD)
     long_press_candidate = -1;
+    #endif
   }
 
   void setIgnoreMask(uint8_t button) {
@@ -78,12 +82,14 @@ public:
           event.mask = EVENT_BUTTON_PRESSED;
           eventBuffer.putp(&event);
 
+          #if defined(PLATFORM_TBD)
           //Assumes arrow keys.
           if (event.source >= Buttons.FUNC_BUTTON6 && event.source < Buttons.TRIG_BUTTON1) {
           // Set this button as the new candidate for repeating
             long_press_candidate = i;
             last_repeat_clock = read_clock_ms(); // Initialize repeat clock
           }
+          #endif
         } else {
           clearIgnoreMask(i);
         }
@@ -100,13 +106,15 @@ public:
           clearIgnoreMask(i);
         }
 
+        #if defined(PLATFORM_TBD)
         // If the released button was our candidate, stop repeating
         if (long_press_candidate == i) {
           long_press_candidate = -1;
         }
+        #endif
       }
     }
-
+    #if defined(PLATFORM_TBD)
     if (long_press_candidate != -1) {
       if (BUTTON_DOWN(long_press_candidate)) {
         if (clock_diff(last_repeat_clock, read_clock_ms()) > LONG_PRESS_REPEAT_TIME) {
@@ -122,6 +130,7 @@ public:
         long_press_candidate = -1;
       }
     }
+    #endif
   }
 
   bool isEmpty() {
