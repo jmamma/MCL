@@ -53,6 +53,7 @@ extern volatile uint32_t interrupt_lock_count;
 // C++ specific functionality
 #ifdef __cplusplus
 
+#include "new.h"
 #include "DebugBuffer.h"
 extern DebugBuffer debugBuffer;
 
