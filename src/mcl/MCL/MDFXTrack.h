@@ -1,9 +1,11 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
 #pragma once
+
+#include "AUXTrack.h"
 #include "MDFXTrack.h"
 #include "MDTrack.h"
-#include "AUXTrack.h"
+
 
 class MDFXData {
 public:
@@ -53,7 +55,7 @@ public:
   void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return sizeof(MDFXTrack); }
-  virtual uint8_t *get_region() { return BANK1_MDFX_TRACK_START; }
+  virtual uint16_t get_region() { return BANK1_MDFX_TRACK_START; }
 
   virtual uint8_t get_model() { return MDFX_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return MDFX_TRACK_TYPE; }

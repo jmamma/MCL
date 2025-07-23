@@ -1,10 +1,10 @@
 Import("env")
 
 # Add custom linker script
-env.Append(LINKFLAGS=["-T", "custom.ld"])
+#env.Append(LINKFLAGS=["-T", "custom.ld"])
 
 # Or replace the default linker script
-env.Replace(LDSCRIPT_PATH="custom.ld")
+#env.Replace(LDSCRIPT_PATH="custom.ld")
 
 import os
 
