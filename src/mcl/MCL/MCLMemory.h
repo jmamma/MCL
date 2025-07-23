@@ -72,17 +72,29 @@ constexpr size_t NUM_LOCKS = 8;
 
 //constexpr size_t GRID1_TRACK_LEN = 534;
 //constexpr size_t GRID2_TRACK_LEN = 2094;
-
 constexpr size_t DEVICE_TRACK_LEN = 7;
-constexpr size_t GRID1_TRACK_LEN = 534;
-constexpr size_t GRID2_TRACK_LEN = 2094;
+constexpr size_t GRID1_TRACK_LEN = 576;
+constexpr size_t GRID2_TRACK_LEN = 2432;
 
-constexpr size_t MDLFO_TRACK_LEN = 226;
-constexpr size_t MDROUTE_TRACK_LEN = 25;
-constexpr size_t MDFX_TRACK_LEN = 43;
-constexpr size_t MDTEMPO_TRACK_LEN = 11;
-constexpr size_t PERF_TRACK_LEN = 491;
-constexpr size_t GRIDCHAIN_TRACK_LEN = 551;
+
+constexpr size_t MDLFO_TRACK_LEN = 256;
+constexpr size_t MDROUTE_TRACK_LEN = 48;
+constexpr size_t MDFX_TRACK_LEN = 64;
+constexpr size_t MDTEMPO_TRACK_LEN = 32;
+constexpr size_t PERF_TRACK_LEN = 512;
+constexpr size_t GRIDCHAIN_TRACK_LEN = 576;
+
+
+//constexpr size_t DEVICE_TRACK_LEN = 7;
+//constexpr size_t GRID1_TRACK_LEN = 534;
+//constexpr size_t GRID2_TRACK_LEN = 2094;
+
+//constexpr size_t MDLFO_TRACK_LEN = 226;
+//constexpr size_t MDROUTE_TRACK_LEN = 25;
+//constexpr size_t MDFX_TRACK_LEN = 43;
+//constexpr size_t MDTEMPO_TRACK_LEN = 11;
+//constexpr size_t PERF_TRACK_LEN = 491;
+//constexpr size_t GRIDCHAIN_TRACK_LEN = 551;
 /*
 constexpr size_t MDLFO_TRACK_LEN = 226;
 constexpr size_t MDROUTE_TRACK_LEN = 25;
@@ -121,35 +133,50 @@ constexpr size_t NUM_FILE_ENTRIES = 256;
 constexpr size_t FILE_ENTRY_SIZE = 32;
 
 #ifdef MCL_MEMORY_USE_ARRAYS
+/******************************************************************
+ * MEMORY LAYOUT: Using array buffers
+ ******************************************************************/
+// Declare the cache buffers that will be defined in a .cpp file.
 extern uint8_t md_cache[MD_CACHE_LEN];
 extern uint8_t aux_cache[AUX_CACHE_LEN];
 extern uint8_t ext_cache[EXT_CACHE_LEN];
 extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
 
-constexpr size_t BANK1_MD_TRACKS_START = md_cache;
-constexpr size_t BANK1_AUX_TRACKS_START = aux_cache;
-constexpr size_t BANK1_EXT_TRACKS_START = ext_cache;
+// Declare the start addresses as external constants. They are not `constexpr` because their
+// values (the array addresses) are resolved at link-time. We use `uintptr_t` as it is
+// the correct integer type for holding pointer values.
+extern const uintptr_t BANK1_MD_TRACKS_START;
+extern const uintptr_t BANK1_AUX_TRACKS_START;
+extern const uintptr_t BANK1_EXT_TRACKS_START;
+
+extern const uintptr_t BANK1_GRIDCHAIN_TRACK_START;
+extern const uintptr_t BANK1_PERF_TRACK_START;
+extern const uintptr_t BANK1_MDLFO_TRACK_START;
+extern const uintptr_t BANK1_MDROUTE_TRACK_START;
+extern const uintptr_t BANK1_MDFX_TRACK_START;
+extern const uintptr_t BANK1_MDTEMPO_TRACK_START;
+
+extern const uintptr_t BANK3_FILE_ENTRIES_START;
+extern const uintptr_t BANK3_FILE_ENTRIES_END;
 
 #else
-
+/******************************************************************
+ * MEMORY LAYOUT: Using fixed hardware addresses
+ ******************************************************************/
+// When using fixed addresses, they are known at compile time and can be `constexpr`.
 constexpr size_t BANK1_MD_TRACKS_START = (BANK1_SYSEX3_DATA_START + SYSEX3_DATA_LEN);
-constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + GRID1_TRACK_LEN * NUM_MD_TRACKS;
-#endif
+constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + MD_CACHE_LEN;
+constexpr size_t BANK1_EXT_TRACKS_START = BANK1_AUX_TRACKS_START + AUX_CACHE_LEN;
 
+// Define track starts as offsets within the contiguous auxiliary region.
 constexpr size_t BANK1_GRIDCHAIN_TRACK_START = BANK1_AUX_TRACKS_START;
-
 constexpr size_t BANK1_PERF_TRACK_START = BANK1_GRIDCHAIN_TRACK_START + GRIDCHAIN_TRACK_LEN;
 constexpr size_t BANK1_MDLFO_TRACK_START = BANK1_PERF_TRACK_START + PERF_TRACK_LEN;
 constexpr size_t BANK1_MDROUTE_TRACK_START = BANK1_MDLFO_TRACK_START + MDLFO_TRACK_LEN;
 constexpr size_t BANK1_MDFX_TRACK_START = BANK1_MDROUTE_TRACK_START + MDROUTE_TRACK_LEN;
 constexpr size_t BANK1_MDTEMPO_TRACK_START = BANK1_MDFX_TRACK_START + MDFX_TRACK_LEN;
 
-#ifdef MCL_MEMORY_USE_ARRAYS
-constexpr size_t BANK3_FILE_ENTRIES_START = filebrowser_cache;
-constexpr size_t BANK3_FILE_ENTRIES_END = filebrowser_cache + FILEBROWSER_CACHE_LEN;
-#else
-constexpr size_t BANK1_EXT_TRACKS_START = BANK1_MDTEMPO_TRACK_START + MDTEMPO_TRACK_LEN;;
-// 512x file entries (16 bytes each), stored in Bank3
+// Bank 3 definitions for file entries.
 constexpr size_t BANK3_FILE_ENTRIES_START = (BANK3_START);
 constexpr size_t BANK3_FILE_ENTRIES_END = (BANK3_END);
 #endif
