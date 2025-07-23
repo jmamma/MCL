@@ -50,17 +50,8 @@ extern volatile uint32_t interrupt_lock_count;
 #define CLEAR_LOCK() restore_interrupts_from_disabled(state)
 #define LOCK() USE_LOCK(); SET_LOCK()
 
-// Function inlining configuration
-#if defined(PLATFORM_MEGACOMMAND) && defined(IS_ISR_ROUTINE)
-    #define ALWAYS_INLINE() __attribute__((always_inline))
-    #define FORCED_INLINE() __attribute__((always_inline))
-#elif defined(PLATFORM_MEGACOMMAND)
-    #define ALWAYS_INLINE()
-    #define FORCED_INLINE() __attribute__((always_inline))
-#else
-    #define ALWAYS_INLINE() __attribute__((always_inline))
-    #define FORCED_INLINE() __attribute__((always_inline))
-#endif
+#define ALWAYS_INLINE() __attribute__((always_inline))
+#define FORCED_INLINE() __attribute__((always_inline))
 
 extern uint8_t SW_IRQ1;
 extern uint8_t SW_IRQ2;
