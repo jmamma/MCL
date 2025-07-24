@@ -86,12 +86,11 @@ def build_assets_for_platform(env, platform, resource_dir, build_dir, gen_dir):
         ]
         include_flags = env.subst("$_CPPINCFLAGS").split()
         compiler_flags = custom_flags + include_flags
-    
+
     elif platform == "rp2040":
         compiler_flags = env.subst("$CCFLAGS $CXXFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS").split()
         # RP2040/ARM requires 4-byte alignment for data sections
         align_size = 4
-    
     else:
         print(f"Warning: No specific build configuration for platform '{platform}'. Using defaults.")
         compiler_flags = env.subst("$CCFLAGS $CXXFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS").split()
@@ -101,15 +100,31 @@ def build_assets_for_platform(env, platform, resource_dir, build_dir, gen_dir):
     print("\n--- Scanning resource files for includes ---")
     all_includes = set()
     resource_cpp_files = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
-    
+
+    if not resource_cpp_files:
+        print("No .cpp files in 'resource' directory. Skipping asset build.")
+        return
+
+    all_obj_files = []
+
+    proceed = False
+    for cpp_file in resource_cpp_files:
+        base_name = os.path.splitext(cpp_file)[0]
+        source_path = os.path.join(resource_dir, cpp_file)
+        fin_path = os.path.join(gen_dir, f"R_{base_name}.cpp")
+        print(fin_path)
+        if not os.path.isfile(fin_path):
+           proceed = True
+    if not proceed:
+      print("Detected compressed assets, skipping compile/compression of resources.")
+      return
+
     for cpp_file in resource_cpp_files:
         with open(os.path.join(resource_dir, cpp_file), 'r', encoding='utf-8') as f_in:
             all_includes.update(line.strip() for line in f_in if line.strip().startswith("#include"))
-                    
     h_content = ['#pragma once', '']
     h_content.extend(sorted(list(all_includes)))
     h_content.append('')
-    
     resman_content = []
     symbol_regex = re.compile(r"^\S+\s+.*\s+(\.data\S*)\s+([0-9a-f]{8})\s+(\S+)")
 
@@ -128,7 +143,6 @@ def build_assets_for_platform(env, platform, resource_dir, build_dir, gen_dir):
 
         dump_result = run_command([objdump, "-h", obj_path])
         data_sections = re.findall(r'^\s*\d+\s+(\.data\S*)', dump_result.stdout, re.MULTILINE)
-        
         if not data_sections:
             open(bin_path, 'wb').close()
         else:
@@ -154,7 +168,6 @@ def build_assets_for_platform(env, platform, resource_dir, build_dir, gen_dir):
             f.write('\n};\n')
 
         h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
-        
         symbols = []
         result = run_command([objdump, "-t", obj_path])
         for line in result.stdout.splitlines():
@@ -163,7 +176,6 @@ def build_assets_for_platform(env, platform, resource_dir, build_dir, gen_dir):
                 symbol_name = match.group(3)
                 if not symbol_name.startswith('.'):
                     symbols.append({"Size": int(match.group(2), 16), "Name": symbol_name})
-        
         types = {}
         with open(source_path, "r", encoding='utf-8') as f_src:
             for line in f_src:
@@ -183,17 +195,14 @@ def build_assets_for_platform(env, platform, resource_dir, build_dir, gen_dir):
             if not type_str:
                 print(f"Warning: Could not find type for symbol '{name}' in '{cpp_file}'. Skipping.")
                 continue
-            
             # Apply platform-specific alignment to size
             size_aligned = (size + align_size - 1) // align_size * align_size
-            
             h_content.extend([
                 f"  union {{", f"    {type_str} {name}[0];", f"    char zz__{name}[{size_aligned}];", f"  }};",
                 f"  static constexpr size_t countof_{name} = {size_aligned} / sizeof({type_str});",
                 f"  static constexpr size_t sizeofof_{name} = {size_aligned};"
             ])
             total_sz += size_aligned
-        
         h_content.extend([f"  static constexpr size_t __total_size = {total_sz};", f"}};\n"])
         resman_content.extend([f"  __T_{base_name} *{base_name};", f"  void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}"])
 
