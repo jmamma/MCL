@@ -1,304 +1,340 @@
 #!/usr/bin/env python3
-
+#
 # extra_script.py
+#
+# Unified, platform-aware script to build and process resource assets.
+# This version uses robust parsing logic for both AVR and RP2040 platforms
+# to generate correct, self-updating header files.
+#
+
 import os
 import subprocess
 import shutil
 import re
 Import("env")
 
+# =============================================================================
+# Helper Functions
+# =============================================================================
+
 def get_platform_subdir(env):
     """
     Determine the platform-specific subdirectory based on PlatformIO environment name.
-    Returns the appropriate subdirectory name extracted from the environment name.
     """
-    # Get the environment name from PlatformIO (e.g., 'pi2350', 'avr_uno', etc.)
     env_name = env.subst("$PIOENV")
-
-    # Map environment names (or prefixes) to your directory structure
     env_mapping = {
-        "pi2350": "rp2040",
-        "pico": "rp2040",
-        "rp2040": "rp2040",
-        "rp2350": "rp2040",
-        "avr": "avr",
-        "uno": "avr",
-        "nano": "avr",
-        "mega": "avr",
-        "esp32": "esp32",
-        "esp8266": "esp8266",
-        # Add more mappings as needed for your environments
+        "rp2040": "rp2040", "rp2350": "rp2040", "pico": "rp2040",
+        "avr": "avr", "mega": "avr", "uno": "avr", "nano": "avr",
     }
-    
-    # Check for exact match first
-    if env_name in env_mapping:
-        return env_mapping[env_name]
-    
-    # Check for partial matches (environment name contains the key)
     for key, value in env_mapping.items():
         if key in env_name.lower():
             return value
-    
-    # Default fallback - you might want to customize this
-    print(f"Warning: No mapping found for environment '{env_name}', using 'generic' as subdirectory")
+    print(f"Warning: No mapping for environment '{env_name}'. Defaulting to 'generic'.")
     return "generic"
 
-def find_include_dirs(base_dir):
-    """Find all directories that contain header files"""
-    include_dirs = []
-
-    if not os.path.exists(base_dir):
-        return include_dirs
-
-    for root, dirs, files in os.walk(base_dir):
-        # Check if directory contains header files
-        has_headers = any(f.endswith(('.h', '.hpp', '.hxx', '.H')) for f in files)
-        if has_headers:
-            include_dirs.append("-I" + root)
-
-    return include_dirs
-
-
-# This is the PlatformIO entry point
-#env = DefaultEnvironment()
-def print_all_env_vars(env):
-    """
-    A helper function to print all available keys and their
-    expanded values from an SCons build environment.
-    """
-    print("====================== SCons Environment Variables ======================")
-    keys = sorted(env.Dictionary().keys())
-    max_len = max(len(key) for key in keys)
-    for key in keys:
-        value = env.subst(f'${key}')
-        print(f"{key.ljust(max_len)} : {value}")
-    print("======")
-print_all_env_vars(env)
-
 def get_tool_path(env, tool_name):
-    """Derives a tool path like objdump from the CXX compiler path."""
-    # e.g., /path/to/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-g++
-    cxx_path = env.subst("$CXX")
-    # -> /path/to/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-objdump
-    bin_path = os.path.dirname(cxx_path)
-    tool_prefix = os.path.basename(cxx_path).replace("g++", "")
-    tool = os.path.join(bin_path, f"{tool_prefix}{tool_name}")
-    return tool
+    """
+    Finds the full path to a toolchain executable by searching the system PATH.
+    """
+    cc_base = os.path.basename(env.subst("$CC"))
+    prefix = cc_base.replace("gcc", "").replace("clang", "")
+    prefixed_tool = f"{prefix}{tool_name}"
+    full_path = shutil.which(prefixed_tool)
+    if full_path:
+        return full_path
+    print(f"Error: Could not find tool '{prefixed_tool}' in your system's PATH.")
+    env.Exit(1)
 
 def run_command(cmd, **kwargs):
-    """Helper to run a command and check for errors."""
-    #print(f"Executing: {' '.join(cmd)}")
-    result = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
+    """Helper to run a command, print its output, and check for errors."""
+    # print(f"Executing: {' '.join(cmd)}") # Uncomment for extreme verbosity
+    result = subprocess.run(
+        cmd, capture_output=True, text=True, encoding='utf-8', errors='ignore', **kwargs
+    )
     if result.returncode != 0:
         print(f"Error running command: {' '.join(cmd)}")
-        print("STDOUT:")
-        print(result.stdout)
-        print("STDERR:")
-        print(result.stderr)
+        print("STDOUT:", result.stdout, sep='\n')
+        print("STDERR:", result.stderr, sep='\n')
         env.Exit(1)
     return result
 
-def build_assets(env):
+# =============================================================================
+# AVR Platform Asset Builder
+# =============================================================================
+
+def build_assets_avr(env, resource_dir, build_dir, gen_dir):
     """
-    This function replicates the 'assets' target from the Makefile.
-    It compiles, extracts, compresses, and generates source files from resources.
+    Asset pipeline for the AVR platform, using custom flags and robust parsing.
     """
-    print("--- Running Custom Asset Build Script ---")
+    print("\n--- Running AVR Asset Build Pipeline ---")
 
-    project_dir = env.subst("$PROJECT_DIR")
-    build_dir = env.subst("$BUILD_DIR")
-    resource_dir = os.path.join(project_dir, "resource")
-    tools_dir = os.path.join(project_dir, "tools")
-
-    if not os.path.isdir(resource_dir):
-        print("No 'resource' directory found. Skipping asset build.")
-        return
-
-    # Get platform-specific subdirectory
-    platform_subdir = get_platform_subdir(env)
-    print(f"Detected environment: {env.subst('$PIOENV')} -> Using subdirectory: {platform_subdir}")
-    
-    # Paths for generated files
-    resource_build_dir = os.path.join(build_dir, "resource_assets")
-    generated_src_dir = os.path.join(project_dir, "src", "resources", platform_subdir)
-
-    os.makedirs(resource_build_dir, exist_ok=True)
-    os.makedirs(generated_src_dir, exist_ok=True)
-
-    # Tool paths
-    cxx = env.subst("$CXX")
+    cxx = get_tool_path(env, "g++")
     objcopy = get_tool_path(env, "objcopy")
     objdump = get_tool_path(env, "objdump")
 
-    # Get CXX flags from the environment, and add the specific ones from the makefile
+    custom_flags = [
+        "-DF_CPU=16000000L", "-DARDUINO=10803", "-DARDUINO_AVR_MEGA2560",
+        "-DARDUINO_ARCH_AVR", "-D__AVR_ATmega2560__", "-DAVR", "-std=gnu++1z",
+        "-Os", "--short-enums", "-fpermissive", "-fshort-enums",
+        "-fdata-sections"
+    ]
+    include_flags = env.subst("$_CPPINCFLAGS").split()
+    compiler_flags = custom_flags + include_flags
+    
+    print("\n--- Scanning resource files for includes ---")
+    all_includes = set()
+    resource_cpp_files = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
+    
+    for cpp_file in resource_cpp_files:
+        with open(os.path.join(resource_dir, cpp_file), 'r', encoding='utf-8') as f_in:
+            all_includes.update(line.strip() for line in f_in if line.strip().startswith("#include"))
+                    
+    h_content = ['#pragma once', '']
+    h_content.extend(sorted(list(all_includes)))
+    h_content.append('')
+    
+    resman_content = []
+
+    symbol_regex = re.compile(r"^\S+\s+.*\s+(\.data\S*)\s+([0-9a-f]{8})\s+(\S+)")
+
+    for cpp_file in resource_cpp_files:
+        base_name = os.path.splitext(cpp_file)[0]
+        source_path = os.path.join(resource_dir, cpp_file)
+        obj_path = os.path.join(build_dir, f"{base_name}.o")
+        bin_path = os.path.join(build_dir, f"{base_name}.bin")
+        ez_path = os.path.join(build_dir, f"{base_name}.ez")
+        gen_cpp_path = os.path.join(gen_dir, f"R_{base_name}.cpp")
+
+        print(f"\n--- Processing resource: {cpp_file} ---")
+        run_command([cxx] + compiler_flags + ["-c", source_path, "-o", obj_path])
+
+        dump_result = run_command([objdump, "-h", obj_path])
+        data_sections = re.findall(r'^\s*\d+\s+(\.data\S*)', dump_result.stdout, re.MULTILINE)
+        
+        if not data_sections:
+            open(bin_path, 'wb').close()
+        else:
+            with open(bin_path, "wb") as f_bin:
+                for section in data_sections:
+                    tmp_path = os.path.join(build_dir, f"{base_name}{section}.tmp")
+                    run_command([objcopy, "-O", "binary", "-j", section, obj_path, tmp_path])
+                    with open(tmp_path, "rb") as f_tmp:
+                        f_bin.write(f_tmp.read())
+                    os.remove(tmp_path)
+
+        compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "compress.py")
+        run_command(["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)])
+
+        with open(gen_cpp_path, "w", encoding="utf-8") as f:
+            f.write(f'#include "R.h"\n\nconst unsigned char __R_{base_name}[] PROGMEM = {{\n')
+            with open(ez_path, "rb") as f_ez:
+                f.write(",\n".join(f"  {b}" for b in f_ez.read()))
+            f.write('\n};\n')
+
+        h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
+        
+        symbols = []
+        result = run_command([objdump, "-t", obj_path])
+        for line in result.stdout.splitlines():
+            match = symbol_regex.search(line)
+            if match:
+                symbol_name = match.group(3)
+                if not symbol_name.startswith('.'):
+                    symbols.append({"Size": int(match.group(2), 16), "Name": symbol_name})
+        
+        types = {}
+        with open(source_path, "r", encoding='utf-8') as f_src:
+            for line in f_src:
+                if "=" in line and not line.strip().startswith("//"):
+                    declaration = line.split('=')[0].strip()
+                    type_and_name = declaration.split('[')[0].strip()
+                    parts = type_and_name.split()
+                    if len(parts) >= 2:
+                        var_name = parts[-1]
+                        var_type = " ".join(parts[:-1])
+                        types[var_name] = var_type
+
+        h_content.append(f"struct __T_{base_name} {{")
+        total_sz = 0
+        for sym in sorted(symbols, key=lambda s: s['Name']):
+            name, size, type_str = sym["Name"], sym["Size"], types.get(sym["Name"])
+            if not type_str:
+                print(f"Warning: Could not find type for symbol '{name}' in '{cpp_file}'. Skipping.")
+                continue
+            
+            h_content.extend([
+                f"  union {{", f"    {type_str} {name}[0];", f"    char zz__{name}[{size}];", f"  }};",
+                f"  static constexpr size_t countof_{name} = {size} / sizeof({type_str});",
+                f"  static constexpr size_t sizeofof_{name} = {size};"
+            ])
+            total_sz += size
+        
+        h_content.extend([f"  static constexpr size_t __total_size = {total_sz};", f"}};\n"])
+        resman_content.extend([f"  __T_{base_name} *{base_name};", f"  void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}"])
+
+    print("\n--- Writing final header files for AVR ---")
+    with open(os.path.join(gen_dir, "R.h"), "w") as f: f.write("\n".join(h_content))
+    with open(os.path.join(gen_dir, "ResMan.h"), "w") as f: f.write("\n".join(resman_content))
+
+
+def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
+    """
+    Asset pipeline for the RP2040 / RP2350 platform, now with robust parsing.
+    """
+    print("\n--- Running RP2040 Asset Build Pipeline ---")
+    cxx = get_tool_path(env, "g++")
+    objcopy = get_tool_path(env, "objcopy")
+    objdump = get_tool_path(env, "objdump")
     cxx_flags = env.subst("$CCFLAGS $CXXFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS").split()
-
-    resource_cpps = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
-    if not resource_cpps:
-        print("No .cpp files in 'resource' directory. Skipping asset build.")
-        return
-
     all_obj_files = []
+    
+    print("\n--- Scanning resource files for includes ---")
+    all_includes = set()
+    resource_cpp_files = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
 
-    proceed = False
-    for cpp_file in resource_cpps:
+    for cpp_file in resource_cpp_files:
+        with open(os.path.join(resource_dir, cpp_file), "r") as f_cpp_in:
+            all_includes.update(line.strip() for line in f_cpp_in if line.strip().startswith("#include"))
+
+    h_content = ['#pragma once', '']
+    h_content.extend(sorted(list(all_includes)))
+    h_content.append('')
+    resman_content = []
+
+    symbol_regex = re.compile(r"^\S+\s+.*\s+(\.data\S*)\s+([0-9a-f]{8})\s+(\S+)")
+
+    for cpp_file in resource_cpp_files:
         base_name = os.path.splitext(cpp_file)[0]
         source_path = os.path.join(resource_dir, cpp_file)
-        ez_path = os.path.join(resource_build_dir, f"{base_name}.ez")
-        if not os.path.isfile(ez_path):
-           proceed = True
-    if not proceed:
-      print("Detected compressed assets, skipping compile/compression of resources.")
-      return
-
-    for cpp_file in resource_cpps:
-        base_name = os.path.splitext(cpp_file)[0]
-        source_path = os.path.join(resource_dir, cpp_file)
-        obj_path = os.path.join(resource_build_dir, f"{base_name}.o")
-        bin_path = os.path.join(resource_build_dir, f"{base_name}.bin")
-        ez_path = os.path.join(resource_build_dir, f"{base_name}.ez")
-        gen_cpp_path = os.path.join(resource_build_dir, f"R_{base_name}.cpp")
+        obj_path = os.path.join(build_dir, f"{base_name}.o")
+        bin_path = os.path.join(build_dir, f"{base_name}.bin")
+        ez_path = os.path.join(build_dir, f"{base_name}.ez")
+        gen_cpp_path = os.path.join(gen_dir, f"R_{base_name}.cpp")
         all_obj_files.append(obj_path)
-        # Find all directories under src/ that contain headers
-        src_includes = find_include_dirs("src")
-        # 1. Compile resource cpp to object file
-        print(f"\n--- Compiling resource: {cpp_file} ---")
-        compile_cmd = [cxx] + cxx_flags + src_includes + ["-c", source_path, "-o", obj_path]
-        run_command(compile_cmd)
-
-        # 2. Extract .data sections into a .bin file
-        print(f"--- Extracting data from {base_name}.o ---")
-        # Get list of .data sections
-        dump_cmd = [objdump, "-h", obj_path]
-        result = run_command(dump_cmd)
-        data_sections = re.findall(r'^\s*\d+\s+(\.data\.\S+)', result.stdout, re.MULTILINE)
-        data_sections.reverse() # Match 'tail -r' from makefile
+        
+        print(f"\n--- Processing resource: {cpp_file} ---")
+        run_command([cxx] + cxx_flags + ["-c", source_path, "-o", obj_path])
+        
+        result = run_command([objdump, "-h", obj_path])
+        data_sections = re.findall(r'^\s*\d+\s+(\.data\S*)', result.stdout, re.MULTILINE)
+        data_sections.reverse()
 
         with open(bin_path, "wb") as f_bin:
             for section in data_sections:
-                tmp_path = os.path.join(resource_build_dir, f"{section}.tmp")
-                extract_cmd = [objcopy, "-O", "binary", "--only-section=" + section, obj_path, tmp_path]
-                run_command(extract_cmd)
+                tmp_path = os.path.join(build_dir, f"{section}.tmp")
+                run_command([objcopy, "-O", "binary", "--only-section=" + section, obj_path, tmp_path])
                 with open(tmp_path, "rb") as f_tmp:
                     data = f_tmp.read()
-                    # 4-byte padding
-                    padding_needed = (4 - len(data) % 4) % 4
-                    data += b'\0' * padding_needed
-                    f_bin.write(data)
+                    f_bin.write(data + (b'\0' * ((4 - len(data) % 4) % 4)))
                 os.remove(tmp_path)
+        
+        compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "compress.py")
+        run_command(["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)])
 
-        compress_script_path = os.path.join(tools_dir, "compress.py")
-        compress_cmd = ["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)]
-        print(f"--- Compressing: " + os.path.abspath(bin_path) + " ->  " + os.path.abspath(ez_path))
-        run_command(compress_cmd)
-
-        # 4. Generate R_*.cpp from .ez file
-        print(f"--- Generating R_{base_name}.cpp ---")
         with open(gen_cpp_path, "w") as f_cpp:
             f_cpp.write('#include "R.h"\n\n')
             f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
             result = run_command(["hexdump", "-v", "-e", '1/1 "%3u,\\n"', ez_path])
             f_cpp.write(result.stdout)
             f_cpp.write('};\n')
-        # Copy to src/resources/platform so the main build can find it
-        shutil.copy(gen_cpp_path, os.path.join(generated_src_dir, os.path.basename(gen_cpp_path)))
+        
+        h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
+        
+        symbols = []
+        result = run_command([objdump, "-t", obj_path])
+        for line in result.stdout.splitlines():
+            match = symbol_regex.search(line)
+            if match:
+                symbol_name = match.group(3)
+                if not symbol_name.startswith('.'):
+                    symbols.append({"Size": int(match.group(2), 16), "Name": symbol_name})
+        
+        types = {}
+        with open(source_path, "r", encoding='utf-8') as f_src:
+            for line in f_src:
+                if "=" in line and not line.strip().startswith("//"):
+                    declaration = line.split('=')[0].strip()
+                    type_and_name = declaration.split('[')[0].strip()
+                    parts = type_and_name.split()
+                    if len(parts) >= 2:
+                        var_name = parts[-1]
+                        var_type = " ".join(parts[:-1])
+                        types[var_name] = var_type
+        
+        h_content.append(f"struct __T_{base_name} {{\n")
+        total_sz = 0
+        for sym in sorted(symbols, key=lambda s: s['Name']):
+            name, size, type_str = sym["Name"], sym["Size"], types.get(sym["Name"])
+            if not type_str:
+                print(f"Warning: Could not find type for symbol '{name}' in '{cpp_file}'. Skipping.")
+                continue
+            
+            size_aligned = (size + 3) & ~3 # 4-byte alignment for ARM
+            h_content.extend([
+                f"  union {{", f"    {type_str} {name}[0];", f"    char zz__{name}[{size_aligned}];", f"  }};",
+                f"  static constexpr size_t countof_{name} = {size_aligned} / sizeof({type_str});",
+                f"  static constexpr size_t sizeofof_{name} = {size_aligned};"
+            ])
+            total_sz += size_aligned
+        
+        h_content.extend([f"  static constexpr size_t __total_size = {total_sz};", f"}};\n"])
+        resman_content.extend([f"  __T_{base_name} *{base_name};", f"  void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}\n"])
 
-    # 5. Generate R.h header
-    print("\n--- Generating R.h ---")
-    r_header_path = os.path.join(generated_src_dir, "R.h")
-    with open(r_header_path, "w") as f_h:
-        f_h.write("#pragma once\n\n")
-        # Add includes from resource files
-        includes = set()
-        for cpp_file in resource_cpps:
-            with open(os.path.join(resource_dir, cpp_file), "r") as f_cpp_in:
-                for line in f_cpp_in:
-                    if line.strip().startswith("#include"):
-                        includes.add(line.strip())
-        for inc in sorted(list(includes)):
-            f_h.write(f"{inc}\n")
-        f_h.write("\n")
+    print("\n--- Writing final header files for RP2040 ---")
+    with open(os.path.join(gen_dir, "R.h"), "w") as f_h: f_h.write("\n".join(h_content))
+    with open(os.path.join(gen_dir, "ResMan.h"), "w") as f_rm: f_rm.write("\n".join(resman_content))
 
-        for obj_path in all_obj_files:
-            base_name = os.path.splitext(os.path.basename(obj_path))[0]
-            f_h.write(f"extern const unsigned char __R_{base_name}[] PROGMEM;\n")
-            f_h.write(f"struct __T_{base_name} {{\n")
-            dump_cmd = [objdump, "-t", obj_path]
-            result = run_command(dump_cmd)
-            # Find global data symbols
-            symbols_raw = re.findall(r'^[0-9a-f]+\s+g\s+O\s+\.data\.\S+\s+([0-9a-f]+)\s+(\S+)', result.stdout, re.MULTILINE)
-            symbols_raw.reverse()
 
-            total_size = 0
-            for size_hex, name in symbols_raw:
-                size_dec = int(size_hex, 16)
-                size_aligned = (size_dec + 3) // 4 * 4
-                total_size += size_aligned
-                # Try to find the original type definition from the source .cpp
-                cpp_path = os.path.join(resource_dir, f"{base_name}.cpp")
-                var_type = "unsigned char" # Default
-                with open(cpp_path, "r") as f_cpp_in:
-                    match = re.search(r'^\s*((?:unsigned\s+)?\S+(?:\s*<[^>]*>)?)\s+' + re.escape(name), f_cpp_in.read(), re.MULTILINE)
-                    if match:
-                        var_type = match.group(1).strip()
-                f_h.write(f"  union {{\n")
-                f_h.write(f"    {var_type} {name}[0];\n")
-                f_h.write(f"    char zz__{name}[{size_aligned}];\n")
-                f_h.write(f"  }};\n")
-                f_h.write(f"  static constexpr size_t countof_{name} = {size_aligned} / sizeof({var_type});\n")
-                f_h.write(f"  static constexpr size_t sizeofof_{name} = {size_aligned};\n\n")
-            f_h.write(f"  static constexpr size_t __total_size = {total_size};\n")
-            f_h.write(f"}};\n\n")
-    # 6. Generate ResMan.h header
-    print("--- Generating ResMan.h ---")
-    resman_header_path = os.path.join(generated_src_dir, "ResMan.h")
-    with open(resman_header_path, "w") as f_rm:
-        f_rm.write("#pragma once\n\n")
-        for obj_path in all_obj_files:
-            base_name = os.path.splitext(os.path.basename(obj_path))[0]
-            f_rm.write(f"__T_{base_name} *{base_name};\n")
-            f_rm.write(f"void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}\n\n")
+# =============================================================================
+# Main Dispatcher & Entry Point
+# =============================================================================
+
+def build_assets(env):
+    """Main dispatcher for the asset build process."""
+    print("--- Running Custom Asset Build Script ---")
+    resource_dir = os.path.join(env.subst("$PROJECT_DIR"), "resource")
+    if not os.path.isdir(resource_dir) or not os.listdir(resource_dir):
+        return
+
+    platform_subdir = get_platform_subdir(env)
+    print(f"Detected environment: {env.subst('$PIOENV')} -> Using platform: {platform_subdir}")
+
+    resource_build_dir = os.path.join(env.subst("$BUILD_DIR"), "resource_assets")
+    generated_src_dir = os.path.join(env.subst("$PROJECT_DIR"), "src", "resources", platform_subdir)
+    os.makedirs(resource_build_dir, exist_ok=True)
+    os.makedirs(generated_src_dir, exist_ok=True)
+
+    if platform_subdir == "avr":
+        build_assets_avr(env, resource_dir, resource_build_dir, generated_src_dir)
+    elif platform_subdir == "rp2040":
+        build_assets_rp2040(env, resource_dir, resource_build_dir, generated_src_dir)
+    else:
+        print(f"Warning: No asset build pipeline defined for platform '{platform_subdir}'.")
 
     print("--- Custom Asset Build Script Finished ---\n")
 
 def sign_firmware(source, target, env):
-    """
-    This function replicates the signing step from the Makefile.
-    It runs after the .bin file has been created.
-    """
+    """Runs a signing script on the final binary."""
+    if not env.subst("$CUSTOM_PRIVATE_KEY"):
+        return
     private_key = env.subst("$PROJECT_DIR/$CUSTOM_PRIVATE_KEY")
     if not os.path.exists(private_key):
-        print(f"Warning: Private key not found at {private_key}. Skipping signing.")
         return
 
-    # Path to the python script for signing, assuming it's in a 'tools' dir
-    # This path might need to be adjusted based on your project structure.
     signing_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "signing.py")
     if not os.path.exists(signing_script_path):
-        print(f"Warning: Signing script not found at {signing_script_path}. Skipping signing.")
         return
 
     bin_file = str(target[0])
     signed_bin_file = f"{bin_file}.signed"
-
-    print(f"\n--- Signing firmware: {bin_file} ---")
-
-    cmd = [
-        "python3",
-        signing_script_path,
-        "--mode", "sign",
-        "--privatekey", private_key,
-        "--bin", bin_file,
-        "--out", signed_bin_file
-    ]
+    print(f"\n--- Signing firmware: {os.path.basename(bin_file)} ---")
+    cmd = ["python3", signing_script_path, "--mode", "sign", "--privatekey", private_key, "--bin", bin_file, "--out", signed_bin_file]
     run_command(cmd)
-    print(f"--- Successfully created signed firmware: {signed_bin_file} ---")
+    print(f"--- Successfully created signed firmware: {os.path.basename(signed_bin_file)} ---")
 
-print(f"Extra scripts\n");
 
+print("--- extra_script.py loaded ---")
 build_assets(env)
-# Register the signing function to run after the .bin is built
-# Note: PlatformIO calls the target .elf, but it produces a .bin as well.
-# We target the ELF so this runs after linking.
+
 if env.subst("$CUSTOM_PRIVATE_KEY"):
     env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", sign_firmware)
