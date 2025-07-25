@@ -36,7 +36,9 @@ ALWAYS_INLINE() inline void SR165Class::rst() {
   SET_BIT8(SR165_DATA_PORT, SR165_SHLOAD);
 }
 
-SR165Class::SR165Class() {
+SR165Class::SR165Class() {}
+
+void SR165Class::init() {
   SR165_DDR_PORT |= _BV(SR165_SHLOAD) | _BV(SR165_CLK);
   CLEAR_BIT8(SR165_DDR_PORT, SR165_OUT);
   CLEAR_BIT8(SR165_DATA_PORT, SR165_OUT);
@@ -203,7 +205,6 @@ void GUIHardware::poll() {
   if (inGui) {
     return;
   }
-
   inGui = true;
 
   uint16_t sr = SR165.read16();
@@ -218,6 +219,7 @@ void GUIHardware::poll() {
 }
 
 void GUIHardware::init() {
+  SR165.init();
   uint16_t sr = SR165.read16();
   Buttons.clear();
   Buttons.poll(sr >> 8);

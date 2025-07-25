@@ -9,6 +9,7 @@ class SR165Class {
   inline void clk();
  public:
   SR165Class();
+  ALWAYS_INLINE() void init();
   ALWAYS_INLINE() uint8_t read();
   ALWAYS_INLINE() uint16_t read16();
   ALWAYS_INLINE() uint8_t read_norst();
