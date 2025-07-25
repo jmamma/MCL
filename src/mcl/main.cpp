@@ -36,7 +36,7 @@ void setup() {
 
 void loop() {
 #if defined(DEBUGMODE) && !defined(__AVR__)
-   debugBuffer.flush();
+   debugBuffer.transmit();
    ISRTiming::print_stats();
 #endif
    GUI.loop();
