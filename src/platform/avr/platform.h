@@ -17,7 +17,7 @@
 
 // Debug configuration
 
-#define SERIAL_SPEED 9600
+#define SERIAL_SPEED 250000
 
 #ifndef _BV
 #define _BV(bit) (1u << (bit))
@@ -68,7 +68,7 @@ inline bool isInInterrupt() {
     #define DEBUG_CHECK_STACK() { if ((int) SP < 0x200 || (int)SP > 0x2200) { cli(); setLed2(); setLed(); while (1); } }
     // Initialize debug serial port
 
-    #define DEBUG_INIT() do { change_usb_mode(0x03);  MidiUartUSB.mode = UART_SERIAL; MidiUartUSB.set_speed(SERIAL_SPEED);  } while(0)
+    #define DEBUG_INIT() do { change_usb_mode(0x03);  MidiUartUSB.mode = UART_SERIAL;  MidiUartUSB.init(); MidiUartUSB.set_speed(SERIAL_SPEED); } while(0)
 
     // Print line with context awareness
     #define DEBUG_PRINTLN(x) do { debugBuffer.println(x); } while(0)
@@ -80,7 +80,7 @@ inline bool isInInterrupt() {
             debugBuffer.put("\n"); \
         } else { \
             debugBuffer.println(x); \
-            debugBuffer.flush(); \
+            debugBuffer.transmit(); \
         } \
     } while(0)
 
@@ -90,7 +90,7 @@ inline bool isInInterrupt() {
             debugBuffer.put(x); \
         } else { \
             debugBuffer.print(x); \
-            debugBuffer.flush(); \
+            debugBuffer.transmit(); \
         } \
     } while(0)
 
@@ -104,7 +104,7 @@ inline bool isInInterrupt() {
             debugBuffer.print(__func__); \
             debugBuffer.print(": "); \
             debugBuffer.println(fmt); \
-            debugBuffer.flush(); \
+            debugBuffer.transmit(); \
             } \
     } while(0)
 */

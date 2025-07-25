@@ -1,12 +1,6 @@
 #include "DebugBuffer.h"
 #include "platform.h"
 
-// Constructors
-DebugBuffer::DebugBuffer(Stream *stream)
-    : output_stream(stream), head(0), tail(0) {}
-
-DebugBuffer::DebugBuffer() : output_stream(nullptr), head(0), tail(0) {}
-
 // Private methods
 uint32_t DebugBuffer::atomic_increment(volatile uint32_t &val) {
   uint32_t result;
@@ -90,12 +84,11 @@ bool DebugBuffer::put(const __FlashStringHelper *fstr) {
   return true;
 }
 
-void DebugBuffer::flush() {
+void DebugBuffer::transmit() {
   char out_buf[64];
   while (get(out_buf, sizeof(out_buf))) {
     output_stream->write(out_buf, strlen(out_buf));
   }
-  output_stream->flush();
 }
 
 // Stream interface implementation

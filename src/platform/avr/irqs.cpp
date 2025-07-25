@@ -6,7 +6,6 @@
 #include "helpers.h"
 
 ISR(TIMER1_COMPA_vect) {
-
   select_bank(BANK0);
 
   g_clock_fast++;
@@ -40,7 +39,6 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 ISR(TIMER3_COMPA_vect) {
-
   select_bank(BANK0);
 
   g_clock_ms++;
@@ -98,7 +96,6 @@ void setup_timers() {
 }
 
 void setup_irqs() {
-  setup_timers();
 }
 
 

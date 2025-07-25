@@ -59,25 +59,21 @@ void init(void) {
   DDRC = 0xFF;
   PORTC = 0x00;
 
-  /* move interrupts to bootloader section */
-  MCUCR = _BV(IVCE);
-  MCUCR = _BV(SRE);
+  // Activate level shfiter.
 
-  // activate lever converter
   SET_BIT(DDRD, PD4);
   SET_BIT(PORTD, PD4);
 
-
   //For MC SMD. Level shifter 1 + 2 enable.
   //PL4 == MEGA2560 level shifter enable
-  //PL3 == Atmega16/34 level shifter enable
+  //PL3 == Atmega16/32 level shifter enable
   //Only one should be active at any time.
 
   DDRL |= _BV(PL4) | _BV(PL3);
 
   LOCAL_SPI_ENABLE();
 
-  setup_irqs();
+  setup_timers();
 
 }
 
@@ -95,12 +91,10 @@ int main(void) {
   DDRK = 0x00;
   DDRK |= _BV(PK1) | _BV(PK0); //set output
 
-
-  //Screen + SD card may need some time to 'charge' before interfacing.
-  delay(100);
   init();
 
   sei();
+  delay(100);
 
 // Set SD card select HIGH before initialising OLED.
 #ifdef MEGACOMMAND

@@ -90,7 +90,7 @@ inline bool isInInterrupt() {
             debugBuffer.put("\n"); \
         } else { \
             debugBuffer.println(x); \
-            debugBuffer.flush(); \
+            debugBuffer.transmit(); \
         } \
     } while(0)
 
@@ -100,7 +100,7 @@ inline bool isInInterrupt() {
             debugBuffer.put(x); \
         } else { \
             debugBuffer.print(x); \
-            debugBuffer.flush(); \
+            debugBuffer.transmit(); \
         } \
     } while(0)
 
@@ -114,7 +114,7 @@ inline bool isInInterrupt() {
             debugBuffer.print(__func__); \
             debugBuffer.print(": "); \
             debugBuffer.println(fmt); \
-            debugBuffer.flush(); \
+            debugBuffer.transmit(); \
         } \
     } while(0)
     #define DEBUG_DUMP(x)  { \
