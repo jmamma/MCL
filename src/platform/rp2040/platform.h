@@ -89,8 +89,8 @@ inline bool isInInterrupt() {
             debugBuffer.put(x); \
             debugBuffer.put("\n"); \
         } else { \
-            Serial.println(x); \
-            Serial.flush(); \
+            debugBuffer.println(x); \
+            debugBuffer.flush(); \
         } \
     } while(0)
 
@@ -99,8 +99,8 @@ inline bool isInInterrupt() {
         if (isInInterrupt()) { \
             debugBuffer.put(x); \
         } else { \
-            Serial.print(x); \
-            Serial.flush(); \
+            debugBuffer.print(x); \
+            debugBuffer.flush(); \
         } \
     } while(0)
 
@@ -111,10 +111,10 @@ inline bool isInInterrupt() {
             snprintf(buf, sizeof(buf), "%s: " fmt "\n", __func__, ##__VA_ARGS__); \
             debugBuffer.put(buf); \
         } else { \
-            Serial.print(__func__); \
-            Serial.print(": "); \
-            Serial.println(fmt); \
-            Serial.flush(); \
+            debugBuffer.print(__func__); \
+            debugBuffer.print(": "); \
+            debugBuffer.println(fmt); \
+            debugBuffer.flush(); \
         } \
     } while(0)
     #define DEBUG_DUMP(x)  { \

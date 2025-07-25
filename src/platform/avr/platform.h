@@ -71,13 +71,16 @@ inline bool isInInterrupt() {
     #define DEBUG_INIT() do { change_usb_mode(0x03);  MidiUartUSB.mode = UART_SERIAL; MidiUartUSB.set_speed(SERIAL_SPEED);  } while(0)
 
     // Print line with context awareness
+    #define DEBUG_PRINTLN(x) do { debugBuffer.println(x); } while(0)
+    #define DEBUG_PRINT(x) do { debugBuffer.print(x); } while(0)
+    /*
     #define DEBUG_PRINTLN(x) do { \
         if (isInInterrupt()) { \
             debugBuffer.put(x); \
             debugBuffer.put("\n"); \
         } else { \
-            MidiUartUSB.println(x); \
-            MidiUartUSB.flush(); \
+            debugBuffer.println(x); \
+            debugBuffer.flush(); \
         } \
     } while(0)
 
@@ -86,8 +89,8 @@ inline bool isInInterrupt() {
         if (isInInterrupt()) { \
             debugBuffer.put(x); \
         } else { \
-            MidiUartUSB.print(x); \
-            MidiUartUSB.flush(); \
+            debugBuffer.print(x); \
+            debugBuffer.flush(); \
         } \
     } while(0)
 
@@ -98,13 +101,15 @@ inline bool isInInterrupt() {
             snprintf(buf, sizeof(buf), "%s: " fmt "\n", __func__, ##__VA_ARGS__); \
             debugBuffer.put(buf); \
         } else { \
-            MidiUartUSB.print(__func__); \
-            MidiUartUSB.print(": "); \
-            MidiUartUSB.println(fmt); \
-            MidiUartUS.flush(); \
-        } \
+            debugBuffer.print(__func__); \
+            debugBuffer.print(": "); \
+            debugBuffer.println(fmt); \
+            debugBuffer.flush(); \
+            } \
     } while(0)
-    #define DEBUG_DUMP(x)  { \
+*/
+   #define DEBUG_PRINT_FN(fmt)
+   #define DEBUG_DUMP(x)  { \
     }
 #else // DEBUGMODE not defined
     #define DEBUG_INIT()
