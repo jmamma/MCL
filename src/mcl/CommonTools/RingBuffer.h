@@ -40,7 +40,7 @@ public:
 #ifdef CHECKING
         if (isFull_isr(n) && check) {
             overflow++;
-            DEBUG_PRINTLN("overflow");
+            setLed();
             return;
         }
 #endif
@@ -65,11 +65,11 @@ public:
 #ifdef CHECKING
         if (isFull_isr() && check) {
             overflow++;
-            DEBUG_PRINTLN("overflow");
+            setLed2();
             return;
         }
 #endif
-        buf[wr] = c;
+        put_bank1(&buf[wr], c);
         wr++;
         if (wr == len) {
             wr = 0;
@@ -109,11 +109,13 @@ public:
         T ret;
 #ifdef CHECKING
         if (isEmpty_isr()) {
-            DEBUG_PRINTLN("buffer empty");
-            return T();
+          setLed2();
+          return T();
         }
 #endif
-        ret = buf[rd];
+        //ret = get_bank1(&buf[rd]);
+        memcpy_bank1(&ret, (void*)(buf + rd), sizeof(T));
+
         rd++;
         if (rd == len) {
             rd = 0;
@@ -146,7 +148,7 @@ public:
             CLEAR_LOCK();
             return T();
         }
-        T ret = buf[rd];
+        T ret = get_bank1(&buf[rd]);
         CLEAR_LOCK();
         return ret;
     }
@@ -197,4 +199,4 @@ private:
     T buffer[SIZE];
 public:
     CRingBuffer() : RingBuffer<T>(buffer, SIZE) {}
-};
+};;
