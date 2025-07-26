@@ -1,5 +1,4 @@
 #pragma once
-#include <avr/pgmspace.h>
 
 #include "ElektronModelTypes.h"
 #include "MCLGif.h"
@@ -8,52 +7,6 @@
 #include "MenuTypes.h"
 #include "PageIndex.h"
 #include "SeqDefines.h"
-
-extern const unsigned char __R_icons_boot[] PROGMEM;
-struct __T_icons_boot {
-  union {
-    unsigned char evilknievel_bitmap[0];
-    char zz__evilknievel_bitmap[155];
-  };
-  static constexpr size_t countof_evilknievel_bitmap = 155 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_evilknievel_bitmap = 155;
-  union {
-    unsigned char mcl_logo_bitmap[0];
-    char zz__mcl_logo_bitmap[152];
-  };
-  static constexpr size_t countof_mcl_logo_bitmap = 152 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_mcl_logo_bitmap = 152;
-  static constexpr size_t __total_size = 307;
-};
-
-extern const unsigned char __R_icons_device[] PROGMEM;
-struct __T_icons_device {
-  union {
-    unsigned char icon_turbo[0];
-    char zz__icon_turbo[120];
-  };
-  static constexpr size_t countof_icon_turbo = 120 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_turbo = 120;
-  union {
-    unsigned char icon_mnm[0];
-    char zz__icon_mnm[120];
-  };
-  static constexpr size_t countof_icon_mnm = 120 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_mnm = 120;
-  union {
-    unsigned char icon_a4[0];
-    char zz__icon_a4[120];
-  };
-  static constexpr size_t countof_icon_a4 = 120 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_a4 = 120;
-  union {
-    unsigned char icon_md[0];
-    char zz__icon_md[120];
-  };
-  static constexpr size_t countof_icon_md = 120 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_icon_md = 120;
-  static constexpr size_t __total_size = 480;
-};
 
 extern const unsigned char __R_icons_knob[] PROGMEM;
 struct __T_icons_knob {
@@ -120,93 +73,78 @@ struct __T_icons_knob {
   static constexpr size_t __total_size = 325;
 };
 
-extern const unsigned char __R_icons_logo[] PROGMEM;
-struct __T_icons_logo {
+extern const unsigned char __R_icons_device[] PROGMEM;
+struct __T_icons_device {
   union {
-    unsigned char metronome_gif_data[0];
-    char zz__metronome_gif_data[360];
+    unsigned char icon_turbo[0];
+    char zz__icon_turbo[120];
   };
-  static constexpr size_t countof_metronome_gif_data = 360 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_metronome_gif_data = 360;
+  static constexpr size_t countof_icon_turbo = 120 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_turbo = 120;
   union {
-    unsigned char monomachine_gif_data[0];
-    char zz__monomachine_gif_data[270];
+    unsigned char icon_mnm[0];
+    char zz__icon_mnm[120];
   };
-  static constexpr size_t countof_monomachine_gif_data = 270 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_monomachine_gif_data = 270;
+  static constexpr size_t countof_icon_mnm = 120 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_mnm = 120;
   union {
-    unsigned char midi_gif_data[0];
-    char zz__midi_gif_data[216];
+    unsigned char icon_a4[0];
+    char zz__icon_a4[120];
   };
-  static constexpr size_t countof_midi_gif_data = 216 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_midi_gif_data = 216;
+  static constexpr size_t countof_icon_a4 = 120 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_a4 = 120;
   union {
-    unsigned char machinedrum_gif_data[0];
-    char zz__machinedrum_gif_data[216];
+    unsigned char icon_md[0];
+    char zz__icon_md[120];
   };
-  static constexpr size_t countof_machinedrum_gif_data = 216 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_machinedrum_gif_data = 216;
+  static constexpr size_t countof_icon_md = 120 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_icon_md = 120;
+  static constexpr size_t __total_size = 480;
+};
+
+extern const unsigned char __R_machine_param_names[] PROGMEM;
+struct __T_machine_param_names {
   union {
-    unsigned char analog_gif_data[0];
-    char zz__analog_gif_data[189];
+    model_param_name_t mnm_model_param_names[0];
+    char zz__mnm_model_param_names[955];
   };
-  static constexpr size_t countof_analog_gif_data = 189 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_analog_gif_data = 189;
+  static constexpr size_t countof_mnm_model_param_names = 955 / sizeof(model_param_name_t);
+  static constexpr size_t sizeofof_mnm_model_param_names = 955;
   union {
-    unsigned char route_gif_data[0];
-    char zz__route_gif_data[100];
+    model_param_name_t md_model_param_names[0];
+    char zz__md_model_param_names[3090];
   };
-  static constexpr size_t countof_route_gif_data = 100 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_route_gif_data = 100;
+  static constexpr size_t countof_md_model_param_names = 3090 / sizeof(model_param_name_t);
+  static constexpr size_t sizeofof_md_model_param_names = 3090;
+  static constexpr size_t __total_size = 4045;
+};
+
+extern const unsigned char __R_machine_names_short[] PROGMEM;
+struct __T_machine_names_short {
   union {
-    unsigned char perf_gif_data[0];
-    char zz__perf_gif_data[189];
+    short_machine_name_t mnm_machine_names_short[0];
+    char zz__mnm_machine_names_short[140];
   };
-  static constexpr size_t countof_perf_gif_data = 189 / sizeof(unsigned char);
-  static constexpr size_t sizeofof_perf_gif_data = 189;
+  static constexpr size_t countof_mnm_machine_names_short = 140 / sizeof(short_machine_name_t);
+  static constexpr size_t sizeofof_mnm_machine_names_short = 140;
   union {
-    MCLGIF midi_gif[0];
-    char zz__midi_gif[13];
+    short_machine_name_t md_machine_names_short[0];
+    char zz__md_machine_names_short[994];
   };
-  static constexpr size_t countof_midi_gif = 13 / sizeof(MCLGIF);
-  static constexpr size_t sizeofof_midi_gif = 13;
+  static constexpr size_t countof_md_machine_names_short = 994 / sizeof(short_machine_name_t);
+  static constexpr size_t sizeofof_md_machine_names_short = 994;
+  static constexpr size_t __total_size = 1134;
+};
+
+extern const unsigned char __R_page_entries[] PROGMEM;
+struct __T_page_entries {
   union {
-    MCLGIF machinedrum_gif[0];
-    char zz__machinedrum_gif[13];
+    PageSelectEntry Entries[0];
+    char zz__Entries[322];
   };
-  static constexpr size_t countof_machinedrum_gif = 13 / sizeof(MCLGIF);
-  static constexpr size_t sizeofof_machinedrum_gif = 13;
-  union {
-    MCLGIF monomachine_gif[0];
-    char zz__monomachine_gif[13];
-  };
-  static constexpr size_t countof_monomachine_gif = 13 / sizeof(MCLGIF);
-  static constexpr size_t sizeofof_monomachine_gif = 13;
-  union {
-    MCLGIF analog_gif[0];
-    char zz__analog_gif[13];
-  };
-  static constexpr size_t countof_analog_gif = 13 / sizeof(MCLGIF);
-  static constexpr size_t sizeofof_analog_gif = 13;
-  union {
-    MCLGIF route_gif[0];
-    char zz__route_gif[13];
-  };
-  static constexpr size_t countof_route_gif = 13 / sizeof(MCLGIF);
-  static constexpr size_t sizeofof_route_gif = 13;
-  union {
-    MCLGIF perf_gif[0];
-    char zz__perf_gif[13];
-  };
-  static constexpr size_t countof_perf_gif = 13 / sizeof(MCLGIF);
-  static constexpr size_t sizeofof_perf_gif = 13;
-  union {
-    MCLGIF metronome_gif[0];
-    char zz__metronome_gif[13];
-  };
-  static constexpr size_t countof_metronome_gif = 13 / sizeof(MCLGIF);
-  static constexpr size_t sizeofof_metronome_gif = 13;
-  static constexpr size_t __total_size = 1631;
+  static constexpr size_t countof_Entries = 322 / sizeof(PageSelectEntry);
+  static constexpr size_t sizeofof_Entries = 322;
+  static constexpr size_t __total_size = 322;
 };
 
 extern const unsigned char __R_icons_page[] PROGMEM;
@@ -298,6 +236,23 @@ struct __T_icons_page {
   static constexpr size_t __total_size = 906;
 };
 
+extern const unsigned char __R_icons_boot[] PROGMEM;
+struct __T_icons_boot {
+  union {
+    unsigned char evilknievel_bitmap[0];
+    char zz__evilknievel_bitmap[155];
+  };
+  static constexpr size_t countof_evilknievel_bitmap = 155 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_evilknievel_bitmap = 155;
+  union {
+    unsigned char mcl_logo_bitmap[0];
+    char zz__mcl_logo_bitmap[152];
+  };
+  static constexpr size_t countof_mcl_logo_bitmap = 152 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_mcl_logo_bitmap = 152;
+  static constexpr size_t __total_size = 307;
+};
+
 extern const unsigned char __R_machine_names_long[] PROGMEM;
 struct __T_machine_names_long {
   union {
@@ -315,38 +270,15 @@ struct __T_machine_names_long {
   static constexpr size_t __total_size = 1376;
 };
 
-extern const unsigned char __R_machine_names_short[] PROGMEM;
-struct __T_machine_names_short {
+extern const unsigned char __R_menu_options[] PROGMEM;
+struct __T_menu_options {
   union {
-    short_machine_name_t mnm_machine_names_short[0];
-    char zz__mnm_machine_names_short[140];
+    menu_option_t MENU_OPTIONS[0];
+    char zz__MENU_OPTIONS[1134];
   };
-  static constexpr size_t countof_mnm_machine_names_short = 140 / sizeof(short_machine_name_t);
-  static constexpr size_t sizeofof_mnm_machine_names_short = 140;
-  union {
-    short_machine_name_t md_machine_names_short[0];
-    char zz__md_machine_names_short[994];
-  };
-  static constexpr size_t countof_md_machine_names_short = 994 / sizeof(short_machine_name_t);
-  static constexpr size_t sizeofof_md_machine_names_short = 994;
+  static constexpr size_t countof_MENU_OPTIONS = 1134 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 1134;
   static constexpr size_t __total_size = 1134;
-};
-
-extern const unsigned char __R_machine_param_names[] PROGMEM;
-struct __T_machine_param_names {
-  union {
-    model_param_name_t mnm_model_param_names[0];
-    char zz__mnm_model_param_names[955];
-  };
-  static constexpr size_t countof_mnm_model_param_names = 955 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_mnm_model_param_names = 955;
-  union {
-    model_param_name_t md_model_param_names[0];
-    char zz__md_model_param_names[3090];
-  };
-  static constexpr size_t countof_md_model_param_names = 3090 / sizeof(model_param_name_t);
-  static constexpr size_t sizeofof_md_model_param_names = 3090;
-  static constexpr size_t __total_size = 4045;
 };
 
 extern const unsigned char __R_menu_layouts[] PROGMEM;
@@ -371,10 +303,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_slot_menu_layout = 200;
   union {
     menu_t<seq_menu_page_N> seq_menu_layout[0];
-    char zz__seq_menu_layout[515];
+    char zz__seq_menu_layout[536];
   };
-  static constexpr size_t countof_seq_menu_layout = 515 / sizeof(menu_t<seq_menu_page_N>);
-  static constexpr size_t sizeofof_seq_menu_layout = 515;
+  static constexpr size_t countof_seq_menu_layout = 536 / sizeof(menu_t<seq_menu_page_N>);
+  static constexpr size_t sizeofof_seq_menu_layout = 536;
   union {
     menu_t<file_menu_page_N> file_menu_layout[0];
     char zz__file_menu_layout[137];
@@ -465,28 +397,94 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 95;
-  static constexpr size_t __total_size = 2141;
+  static constexpr size_t __total_size = 2162;
 };
 
-extern const unsigned char __R_menu_options[] PROGMEM;
-struct __T_menu_options {
+extern const unsigned char __R_icons_logo[] PROGMEM;
+struct __T_icons_logo {
   union {
-    menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[1134];
+    unsigned char metronome_gif_data[0];
+    char zz__metronome_gif_data[360];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 1134 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 1134;
-  static constexpr size_t __total_size = 1134;
-};
-
-extern const unsigned char __R_page_entries[] PROGMEM;
-struct __T_page_entries {
+  static constexpr size_t countof_metronome_gif_data = 360 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_metronome_gif_data = 360;
   union {
-    PageSelectEntry Entries[0];
-    char zz__Entries[322];
+    unsigned char monomachine_gif_data[0];
+    char zz__monomachine_gif_data[270];
   };
-  static constexpr size_t countof_Entries = 322 / sizeof(PageSelectEntry);
-  static constexpr size_t sizeofof_Entries = 322;
-  static constexpr size_t __total_size = 322;
+  static constexpr size_t countof_monomachine_gif_data = 270 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_monomachine_gif_data = 270;
+  union {
+    unsigned char midi_gif_data[0];
+    char zz__midi_gif_data[216];
+  };
+  static constexpr size_t countof_midi_gif_data = 216 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_midi_gif_data = 216;
+  union {
+    unsigned char machinedrum_gif_data[0];
+    char zz__machinedrum_gif_data[216];
+  };
+  static constexpr size_t countof_machinedrum_gif_data = 216 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_machinedrum_gif_data = 216;
+  union {
+    unsigned char analog_gif_data[0];
+    char zz__analog_gif_data[189];
+  };
+  static constexpr size_t countof_analog_gif_data = 189 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_analog_gif_data = 189;
+  union {
+    unsigned char route_gif_data[0];
+    char zz__route_gif_data[100];
+  };
+  static constexpr size_t countof_route_gif_data = 100 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_route_gif_data = 100;
+  union {
+    unsigned char perf_gif_data[0];
+    char zz__perf_gif_data[189];
+  };
+  static constexpr size_t countof_perf_gif_data = 189 / sizeof(unsigned char);
+  static constexpr size_t sizeofof_perf_gif_data = 189;
+  union {
+    MCLGIF midi_gif[0];
+    char zz__midi_gif[13];
+  };
+  static constexpr size_t countof_midi_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_midi_gif = 13;
+  union {
+    MCLGIF machinedrum_gif[0];
+    char zz__machinedrum_gif[13];
+  };
+  static constexpr size_t countof_machinedrum_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_machinedrum_gif = 13;
+  union {
+    MCLGIF monomachine_gif[0];
+    char zz__monomachine_gif[13];
+  };
+  static constexpr size_t countof_monomachine_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_monomachine_gif = 13;
+  union {
+    MCLGIF analog_gif[0];
+    char zz__analog_gif[13];
+  };
+  static constexpr size_t countof_analog_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_analog_gif = 13;
+  union {
+    MCLGIF route_gif[0];
+    char zz__route_gif[13];
+  };
+  static constexpr size_t countof_route_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_route_gif = 13;
+  union {
+    MCLGIF perf_gif[0];
+    char zz__perf_gif[13];
+  };
+  static constexpr size_t countof_perf_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_perf_gif = 13;
+  union {
+    MCLGIF metronome_gif[0];
+    char zz__metronome_gif[13];
+  };
+  static constexpr size_t countof_metronome_gif = 13 / sizeof(MCLGIF);
+  static constexpr size_t sizeofof_metronome_gif = 13;
+  static constexpr size_t __total_size = 1631;
 };
-
