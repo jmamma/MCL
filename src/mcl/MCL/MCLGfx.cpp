@@ -1,18 +1,7 @@
-#include "MCL_impl.h"
+#include "oled.h"
+#include "MCLGfx.h"
 #include "ResourceManager.h"
-
-void MCLGfx::init_oled() {
-  oled_display.begin();
-
-  oled_display.clearDisplay();
-  oled_display.invertDisplay(0);
-  oled_display.setRotation(2);
-  oled_display.setTextSize(1);
-  oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setCursor(0, 0);
-  oled_display.setTextWrap(false);
-  oled_display.display();
-}
+#include "MCLGUI.h"
 
 #define BITMAP_MCL_LOGO_W 58
 #define BITMAP_MCL_LOGO_H 19
@@ -71,6 +60,9 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
     oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 31, 32 - a,
                           BLACK);
     oled_display.display();
+#ifndef __AVR__
+    delay(10);
+#endif
   }
 
 }

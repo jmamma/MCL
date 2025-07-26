@@ -5,6 +5,7 @@
 #include "MidiUartParent.h"
 #include "helpers.h"
 #include "midi-common.h"
+#include "global.h"
 
 // #include "MidiUart.h"
 
@@ -37,7 +38,7 @@ void MidiClockClass::init() {
   div96th_counter = 0;
   div32th_counter = 0;
   div16th_counter = 0;
-  clock_last_time = clock;
+  clock_last_time = read_clock();
   mod12_counter = 0;
   mod6_counter = inmod6_counter = 0;
   bar_counter = 1;

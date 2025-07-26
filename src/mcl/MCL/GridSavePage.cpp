@@ -1,11 +1,20 @@
-#include "MCL_impl.h"
+#include "GridSavePage.h"
+#include "GridIOPage.h"
+#include "MCLGUI.h"
+#include "Project.h"
+#include "MidiClock.h"
+#include "GridPages.h"
+#include "MCLActions.h"
+#include "MD.h"
+#include "MDTrack.h"
+
 #define S_PAGE 3
 
 void GridSavePage::init() {
   GridIOPage::init();
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
-  trig_interface.send_md_leds(TRIGLED_OVERLAY);
-  trig_interface.on();
+  key_interface.send_md_leds(TRIGLED_OVERLAY);
+  key_interface.on();
   grid_page.reload_slot_models = false;
   char str[] = "SAVE SLOTS";
   MD.popup_text(str, true);
@@ -109,7 +118,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
@@ -146,7 +155,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
   save_groups:
-    trig_interface.off();
+    key_interface.off();
     uint8_t offset = proj.get_grid() * 16;
 
     uint8_t track_select_array[NUM_SLOTS] = {0};

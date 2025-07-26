@@ -1,4 +1,8 @@
-#include "MCL_impl.h"
+#include "PerfTrack.h"
+#include "PerfSeqTrack.h"
+#include "AuxPages.h"
+#include "MCLActions.h"
+#include "MDTrack.h"
 
 void PerfTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   DEBUG_PRINTLN("transition send");

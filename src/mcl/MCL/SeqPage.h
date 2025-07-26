@@ -7,6 +7,8 @@
 #include "midi-common.h"
 #include "Elektron.h"
 #include "shared.h"
+#include "MidiClock.h"
+#include "Midi.h"
 
 #define REC_EVENT_TRIG 0
 #define REC_EVENT_CC 1
@@ -31,6 +33,7 @@ extern uint8_t opt_paste;
 extern uint8_t opt_clear;
 extern uint8_t opt_shift;
 extern uint8_t opt_reverse;
+extern uint8_t opt_transpose;
 extern uint8_t opt_clear_step;
 extern uint8_t opt_length;
 extern uint8_t opt_channel;
@@ -49,6 +52,7 @@ extern void opt_copy_track_handler(uint8_t op = 255);
 extern void opt_paste_track_handler();
 extern void opt_shift_track_handler();
 extern void opt_reverse_track_handler();
+extern void opt_transpose_track_handler();
 extern void opt_paste_step_handler();
 extern void opt_copy_step_handler_cb();
 extern void opt_copy_step_handler(uint8_t op = 255);

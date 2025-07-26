@@ -1,4 +1,9 @@
-#include "MCL_impl.h"
+#include "SampleBrowserPage.h"
+#include "MCLSd.h"
+#include "MCLGUI.h"
+#include "Wav.h"
+#include "MidiSDS.h"
+#include "MD.h"
 
 const char *c_wav_root = "/Samples/WAV";
 const char *c_syx_root = "/Samples/SYX";
@@ -13,7 +18,7 @@ static bool s_query_returned = false;
 void SampleBrowserPage::setup() {
   SD.mkdir(c_wav_root, true);
   SD.mkdir(c_syx_root, true);
-  sysex = &(Midi.midiSysex);
+  sysex = Midi.midiSysex;
   FileBrowserPage::setup();
   _cd(c_wav_root);
   position.reset();
@@ -27,7 +32,7 @@ void SampleBrowserPage::display() {
   }
   if (FileBrowserPage::selection_change) {
     draw_sidebar();
-    if (clock_diff(FileBrowserPage::selection_change_clock, slowclock) < 200) {
+    if (clock_diff(FileBrowserPage::selection_change_clock, read_clock_ms()) < 200) {
       goto end;
     }
     FileBrowserPage::selection_change = false;
@@ -105,7 +110,7 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
   file_types.add(c_syx_suffix);
   strcpy(str_save, "[ RECV ]");
 
-  trig_interface.off();
+  key_interface.off();
   filemenu_active = false;
   select_dirs = false;
   show_overwrite = false;
@@ -284,11 +289,11 @@ void SampleBrowserPage::query_sample_slots() {
 
   sysex->addSysexListener(this);
   MD.sendRequest(data, 2);
-  auto time_start = read_slowclock();
+  auto time_start = read_clock_ms();
   auto time_now = time_start;
   do {
     handleIncomingMidi();
-    time_now = read_slowclock();
+    time_now = read_clock_ms();
   } while (!s_query_returned && clock_diff(time_start, time_now) < 1000);
 
   if (!s_query_returned) {
@@ -331,7 +336,7 @@ bool SampleBrowserPage::_handle_filemenu() {
     }
    DEBUG_PRINTLN("Recv samples");
     DEBUG_PRINTLN(numEntries);
-    for (uint8_t n = 0; n < numEntries && !trig_interface.is_key_down(MDX_KEY_NO); n++) {
+    for (uint8_t n = 0; n < numEntries && !key_interface.is_key_down(MDX_KEY_NO); n++) {
       DEBUG_PRINTLN("Recv wav");
       char wav_name[FILE_ENTRY_SIZE] = "";
       get_entry(n, wav_name);
@@ -349,7 +354,7 @@ bool SampleBrowserPage::_handle_filemenu() {
       return true;
     }
     char wav_name[FILE_ENTRY_SIZE] = "";
-    for (uint8_t n = 0; n < numEntries && !trig_interface.is_key_down(MDX_KEY_NO); n++) {
+    for (uint8_t n = 0; n < numEntries && !key_interface.is_key_down(MDX_KEY_NO); n++) {
       get_entry(n, wav_name);
       DEBUG_PRINTLN(wav_name);
       if (!isdigit(wav_name[0]) || !isdigit(wav_name[1]))
@@ -369,6 +374,7 @@ bool SampleBrowserPage::_handle_filemenu() {
     }
     break;
   }
+  return true;
 }
 void SampleBrowserPage::start() {}
 

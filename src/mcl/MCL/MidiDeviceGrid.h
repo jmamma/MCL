@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Grid.h"
+#include "platform.h"
 
 #define EMPTY_TRACK_TYPE 0
 

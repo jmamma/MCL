@@ -3,43 +3,17 @@
 #ifndef ELEKTRON_H__
 #define ELEKTRON_H__
 
-#include "WProgram.h"
+#include "platform.h"
 #include <inttypes.h>
 #include "MidiID.h"
 #include "MidiSysex.h"
 #include "MCLMemory.h"
 #include "MidiDeviceGrid.h"
 #include "MCLGfx.h"
-
-/** Store the name of a monomachine machine. **/
-typedef struct mnm_machine_name_s {
-  char name[11];
-  uint8_t id;
-} mnm_machine_name_t;
-
-/** Store the name of a machinedrum machine. **/
-typedef struct md_machine_name_s {
-  char name[7];
-  uint8_t id;
-} md_machine_name_t;
-
-/** Store the name of a parameter for a machine model. **/
-typedef struct model_param_name_s {
-  char name[4];
-  uint8_t id;
-} model_param_name_t;
-
-/** Data structure holding the parameter names for a machine model. **/
-typedef struct model_to_param_names_s {
-  uint8_t model;
-  uint16_t offset; // offset of the first param in the lookup table
-} model_to_param_names_t;
-
-typedef struct short_machine_name_s {
-  char name1[3];
-  char name2[3];
-  uint8_t id;
-} short_machine_name_t;
+#include "global.h"
+#include "Midi.h"
+#include "MidiUartParent.h"
+#include "ElektronModelTypes.h"
 
 enum class DataType { Kit, Pattern, Global };
 
@@ -87,7 +61,7 @@ class SysexCallback {
 public:
   uint8_t type;
   uint8_t value;
-  bool received;
+  volatile bool received;
 
   SysexCallback(uint8_t _type = 0) { type = _type; received = false; }
 
@@ -111,9 +85,9 @@ public:
       //         MidiClock.mode == MidiClock.EXTERNAL_UART2)) {
       //     MidiClock.updateClockInterval();
       //   }
-      //    GUI.display();
-      current_clock = read_slowclock();
+      //    GUI.display()
       handleIncomingMidi();
+      current_clock = read_slowclock();
     } while(clock_diff(start_clock, current_clock) < timeout && !received);
     return received;
   }
@@ -229,7 +203,7 @@ enum class ElektronCommand {
   SetSeqPage,
   SetRecMode,
   SetKeyRepeat,
-  ActivateTrigInterface,
+  ActivateKeyInterface,
   ActivateTrackSelect,
   UndokitSync,
   ResetDspParams,
@@ -395,8 +369,8 @@ public:
   void draw_close_microtiming();
   void draw_microtiming(uint8_t speed, uint8_t timing);
   void draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask);
-  void activate_trig_interface();
-  void deactivate_trig_interface();
+  void activate_key_interface();
+  void deactivate_key_interface();
 
   void activate_track_select();
   void deactivate_track_select();

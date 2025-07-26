@@ -3,6 +3,8 @@
 #ifndef DATA_ENCODER_CHECKING_H__
 #define DATA_ENCODER_CHECKING_H__
 
+#include "Midi.h"
+
 /**
  * \addtogroup CommonTools
  *

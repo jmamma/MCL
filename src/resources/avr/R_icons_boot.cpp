@@ -1,4 +1,5 @@
 #include "R.h"
+
 const unsigned char __R_icons_boot[] PROGMEM = {
   242,
   0,
@@ -201,5 +202,5 @@ const unsigned char __R_icons_boot[] PROGMEM = {
   0,
   4,
   255,
-  255,
+  255
 };

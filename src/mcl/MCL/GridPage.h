@@ -1,10 +1,10 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef GRIDPAGE_H__
-#define GRIDPAGE_H__
+#pragma once
 
-#include "GUI.h"
 #include "GridRowHeader.h"
+#include "GUI.h"
+#include "MCL.h"
 
 #define MAX_VISIBLE_ROWS 4
 #define MAX_VISIBLE_COLS 8
@@ -104,5 +104,3 @@ public:
 extern void apply_slot_changes_cb();
 extern void rename_row();
 extern void gen_menu_row_names();
-
-#endif /* GRIDPAGE_H__ */

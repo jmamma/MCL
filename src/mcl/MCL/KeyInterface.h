@@ -2,7 +2,9 @@
 #define TRIGINTERFACE_H__
 
 #include "NoteInterface.h"
-#include "WProgram.h"
+#include "platform.h"
+#include "MidiSysex.h"
+#include "Elektron.h"
 
 #define MDX_KEY_TRIG1 0x00
 #define MDX_KEY_ENCBUTTON1 0x10
@@ -28,6 +30,7 @@
 #define MDX_KEY_UP 0x30
 #define MDX_KEY_DOWN 0x31
 #define MDX_KEY_STOP 0x32
+#define MDX_KEY_PLAY 0x33
 #define MDX_KEY_COPY 0x34
 #define MDX_KEY_CLEAR 0x35
 #define MDX_KEY_PASTE 0x36
@@ -40,11 +43,11 @@
 /*
 #define KEY_REPEAT_INTERVAL 80
 
-class TrigInterfaceTask : public Task {
+class KeyInterfaceTask : public Task {
 
 public:
 
-  TrigInterfaceTask() : Task(KEY_REPEAT_INTERVAL) { 
+  KeyInterfaceTask() : Task(KEY_REPEAT_INTERVAL) { 
   }
 
   void setup() {
@@ -58,10 +61,11 @@ public:
 
 };
 
-extern TrigInterfaceTask trig_interface_task;
+extern KeyInterfaceTask key_interface_task;
 */
+class MidiClass;
 
-class TrigInterface : public MidiSysexListenerClass {
+class KeyInterface : public MidiSysexListenerClass {
 
 public:
   bool state = false;
@@ -70,19 +74,19 @@ public:
   uint16_t last_clock;
   bool throttle;
 
-  TrigInterface() : MidiSysexListenerClass() {
+  KeyInterface() : MidiSysexListenerClass() {
     ids[0] = 0x7F;
     ids[1] = 0x0D;
   }
-  void setup(MidiClass *_midi) {
-    sysex = &(_midi->midiSysex);
-  }
+  void setup(MidiClass *_midi);
   void ignoreNextEvent(uint8_t i) {
     SET_BIT64(ignore_next_mask, i);
   }
   void ignoreNextEventClear(uint8_t i) {
     CLEAR_BIT64(ignore_next_mask, i);
   }
+  void key_event(uint8_t key, bool key_release);
+
   bool on(bool clear_states = true);
   bool off();
 
@@ -97,6 +101,6 @@ public:
   /* @} */
 };
 
-extern TrigInterface trig_interface;
+extern KeyInterface key_interface;
 
 #endif /* TRIGINTERFACE_H__ */

@@ -33,11 +33,11 @@ public:
     }
   }
   virtual bool handleEvent(gui_event_t *event);
-  void display();
-  void setup();
-  void init();
-  void loop();
-  void cleanup();
+  virtual void display();
+  virtual void setup();
+  virtual void init();
+  virtual void loop();
+  virtual void cleanup();
   float get_max_gain();
   float get_gain(uint8_t channel);
   void draw_levels();

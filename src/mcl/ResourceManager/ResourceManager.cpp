@@ -1,5 +1,5 @@
-#include "MCL_impl.h"
 #include "ResourceManager.h"
+#include "MCLMenus.h"
 
 ResourceManager::ResourceManager() { }
 
@@ -9,7 +9,7 @@ void ResourceManager::Clear() {
 }
 
 byte* ResourceManager::__use_resource(const void* pgm) {
-	byte* pos = m_buffer + m_bufsize;
+    byte* pos = m_buffer + m_bufsize;
 	uint16_t sz = unpack((byte*)pgm, pos);
 	m_bufsize += sz;
     DEBUG_PRINTLN("resource buf size");
@@ -80,7 +80,6 @@ void ResourceManager::restore_page_entry_deps() {
   R.page_entries->Entries[idx].IconData = R.icons_page->icon_ram2;
   // calibration complete
 }
-
 size_t ResourceManager::Size() {
   return m_bufsize;
 }

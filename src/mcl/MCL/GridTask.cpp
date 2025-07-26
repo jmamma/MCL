@@ -1,4 +1,15 @@
-#include "MCL_impl.h"
+#include "GridTask.h"
+#include "EmptyTrack.h"
+#include "GridPage.h"
+#include "GridPages.h"
+#include "MD.h"
+#include "MCLActions.h"
+#include "MDSeqTrack.h"
+#include "SeqPages.h"
+#include "AuxPages.h"
+#include "MCLGUI.h"
+#include "Project.h"
+#include "StackMonitor.h"
 
 #define DIV16_MARGIN 8
 
@@ -56,7 +67,7 @@ void GridTask::run() {
   // MD GUI update.
 
   perf_page.encoder_check();
-  trig_interface.check_key_throttle();
+  key_interface.check_key_throttle();
 
   if (stop_hard_callback) {
     mcl_actions_callbacks.StopHardCallback();
@@ -131,7 +142,7 @@ void GridTask::transition_handler() {
     DEBUG_PRINTLN(MidiClock.div16th_counter);
     DEBUG_PRINTLN(mcl_actions.next_transition);
 
-    DEBUG_PRINTLN((int)SP);
+    StackMonitor::print_stack_info();
 
     uint8_t row = 255;
     uint8_t last_slot = 255;
@@ -211,9 +222,7 @@ void GridTask::transition_handler() {
                        MidiClock.div192th_counter, go_step)) != 0) &&
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
-                MidiUartParent::handle_midi_lock = 1;
                 handleIncomingMidi();
-                MidiUartParent::handle_midi_lock = 0;
                 if ((float)diff > tempo * 0.064f) { //0.8 * 0.08 = 0.128f
                    GUI.loop();
                }
@@ -228,16 +237,16 @@ void GridTask::transition_handler() {
       }
     }
     DEBUG_PRINTLN(F("SP pre cache"));
-    DEBUG_PRINTLN((int)SP);
+    StackMonitor::print_stack_info();
 
     bool update_gui = true;
 
     DEBUG_PRINTLN("cache next");
 
-    volatile uint32_t clk = slowclock;
+    volatile uint32_t clk = read_clock_ms();
     mcl_actions.cache_next_tracks(track_select_array, update_gui);
 
-    uint32_t t = clock_diff(clk, slowclock);
+    uint32_t t = clock_diff(clk, read_clock_ms());
     DEBUG_PRINTLN("time");
     DEBUG_PRINTLN(t);
 

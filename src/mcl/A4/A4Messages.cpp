@@ -1,4 +1,6 @@
-#include "MCL_impl.h"
+#include "A4.h"
+#include "A4Messages.h"
+#include "MCLGUI.h"
 
 uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
   encoder.stop7Bit();
@@ -60,6 +62,7 @@ bool A4Sound::fromSysex_impl(ElektronSysexDecoder *decoder) {
   DEBUG_PRINTLN("A4Sound fromSysex_impl");
   DEBUG_DUMP(name);
   DEBUG_DUMP(origPosition);
+  return true;
 }
 
 // caller guarantees: 1. in checksum; 2. not in 7bit enc.
@@ -77,7 +80,7 @@ void A4Sound::toSysex_impl(ElektronDataToSysexEncoder *encoder)
 }
 
 bool A4Sound::fromSysex(MidiClass *midi) {
-  const auto &reclen = midi->midiSysex.get_recordLen();
+  const auto &reclen = midi->midiSysex->get_recordLen();
 
   // len / offset: checksum'ed part
   uint16_t len = reclen - a4sound_checksum_startidx;
@@ -91,7 +94,7 @@ bool A4Sound::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  origPosition = midi->midiSysex.getByte(a4sound_origpos_idx);
+  origPosition = midi->midiSysex->getByte(a4sound_origpos_idx);
   ElektronSysexDecoder decoder(midi, a4sound_encoding_startidx);
 
   return fromSysex_impl(&decoder);

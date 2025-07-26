@@ -1,7 +1,5 @@
 #include "TomThumb.h"
-#include <avr/pgmspace.h>
-#include "gfxfont.h"
-
+#include <Adafruit_GFX.h>
 
 const uint8_t TomThumbBitmaps[] PROGMEM = {
   0x00, 0xE8, 0xB4, 0xBE, 0xFA, 0x79, 0xE4, 0x85, 0x42, 0xDB, 0xD6, 0xC0, 

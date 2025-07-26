@@ -1,4 +1,5 @@
-#include "MCL_impl.h"
+#include "QuestionDialogPage.h"
+#include "MCLGUI.h"
 
 void QuestionDialogPage::init(const char* title_, const char* text_) {
   mcl_gui.draw_infobox(title_, text_, -1);
@@ -27,24 +28,24 @@ bool QuestionDialogPage::handleEvent(gui_event_t *event) {
   }
 
     if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES:
-      //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+      //  key_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES;
       case MDX_KEY_NO:
-      //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+      //  key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_YES:
-      //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+      //  key_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES_released;
       case MDX_KEY_NO:
-      //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+      //  key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO_released;
       }
     }

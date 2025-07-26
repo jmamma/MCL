@@ -20,7 +20,7 @@
 #define SEQ_MENU_PARAMSELECT 4
 #define SEQ_MENU_SLIDE 5
 #define SEQ_MENU_ARP 6
-#define SEQ_MENU_TRANSPOSE 7
+#define SEQ_MENU_KEY 7
 #define SEQ_MENU_VEL 8
 #define SEQ_MENU_PROB 9
 #define SEQ_MENU_SPEED 10
@@ -33,10 +33,11 @@
 #define SEQ_MENU_PASTE 17
 #define SEQ_MENU_SHIFT 18
 #define SEQ_MENU_REVERSE 19
-#define SEQ_MENU_POLY 20
-#define SEQ_MENU_QUANT 21
-#define SEQ_MENU_AUTOMATION 22
-#define SEQ_MENU_SOUND 23
+#define SEQ_MENU_TRANSPOSE 20
+#define SEQ_MENU_POLY 21
+#define SEQ_MENU_QUANT 22
+#define SEQ_MENU_AUTOMATION 23
+#define SEQ_MENU_SOUND 24
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;

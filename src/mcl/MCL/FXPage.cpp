@@ -1,5 +1,9 @@
-#include "MCL_impl.h"
 #include "ResourceManager.h"
+#include "FXPage.h"
+#include "MD.h"
+#include "KeyInterface.h"
+#include "MCLGUI.h"
+#include "MidiActivePeering.h"
 
 #define FX_TYPE 0
 #define FX_PARAM 1
@@ -10,7 +14,7 @@ void FXPage::setup() { DEBUG_PRINT_FN(); }
 
 void FXPage::init() {
   DEBUG_PRINT_FN();
-  trig_interface.off();
+  key_interface.off();
   update_encoders();
   MD.set_key_repeat(0);
   R.Clear();
@@ -92,13 +96,13 @@ void FXPage::display() {
 
 bool FXPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
         case MDX_KEY_NO:

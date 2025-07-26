@@ -1,26 +1,10 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef STACK_H__
-#define STACK_H__
+#pragma once
 
-#include <WProgram.h>
+#include <platform.h>
 #include <inttypes.h>
 #include "helpers.h"
-
-/**
- * \addtogroup CommonTools
- *
- * @{
- *
- * \file
- * Stack class
- **/
-
-/**
- * \addtogroup helpers_stack Stack class
- *
- * @{
- **/
 
 /** Stack with N elements of class T. **/
 template <class T, int N>
@@ -29,11 +13,9 @@ class Stack {
 	 * \addtogroup helpers_stack
 	 * @{
 	 **/
-	
  public:
   volatile uint8_t wr, start;
   T buf[N];
-  
   Stack();
 	/** Push a new element pointed to by t. **/
   bool push(T *t);
@@ -81,7 +63,6 @@ template <class T, int N>
 bool Stack<T,N>::push(T *t) {
   //  uint8_t tmp = SREG;
   //  cli();
-  
   if (isFull()) {
     start = STACK_INC(start);
   }
@@ -102,14 +83,12 @@ template <class T, int N>
 bool Stack<T,N>::pop(T *t) {
   //  uint8_t tmp = SREG;
   //  cli();
-  
   bool ret = peek(t);
   if (ret) {
     wr = STACK_DEC(wr);
   }
 
   // SREG = tmp;
-  
   return ret;
 }
 
@@ -117,10 +96,8 @@ template <class T, int N>
 bool Stack<T,N>::peek(T *t) {
   //  uint8_t tmp = SREG;
   //  cli();
-  
   if (isEmpty()) {
     //    SREG = tmp;
-    
     return false;
   }
   if (t != NULL) {
@@ -177,14 +154,8 @@ template <class T, int N>
 bool Stack<T,N>::isFull() {
   //  uint8_t tmp = SREG;
   //  cli();
-  
   bool ret = (size() == (N - 1));
 
   // SREG = tmp;
-  
   return ret;
 }
-
-/* @} @} */
-
-#endif /* STACK_H__ */

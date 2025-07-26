@@ -185,7 +185,7 @@ void ElektronDevice::sendCommand(ElektronCommand command, uint8_t param) {
       data[1] = 0x4E;
       data[2] = param;
       break;
-    case ElektronCommand::ActivateTrigInterface:
+    case ElektronCommand::ActivateKeyInterface:
       data[1] = 0x31;
       data[2] = param;
       break;
@@ -264,8 +264,8 @@ void ElektronDevice::deactivate_enhanced_gui() { sendCommand(ElektronCommand::Ac
 void ElektronDevice::set_seq_page(uint8_t page) { sendCommand(ElektronCommand::SetSeqPage, page); }
 void ElektronDevice::set_rec_mode(uint8_t mode) { sendCommand(ElektronCommand::SetRecMode, mode); }
 void ElektronDevice::set_key_repeat(uint8_t mode) { sendCommand(ElektronCommand::SetKeyRepeat, mode); }
-void ElektronDevice::activate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 1); }
-void ElektronDevice::deactivate_trig_interface() { sendCommand(ElektronCommand::ActivateTrigInterface, 0); }
+void ElektronDevice::activate_key_interface() { sendCommand(ElektronCommand::ActivateKeyInterface, 1); }
+void ElektronDevice::deactivate_key_interface() { sendCommand(ElektronCommand::ActivateKeyInterface, 0); }
 void ElektronDevice::activate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 1); }
 void ElektronDevice::deactivate_track_select() { sendCommand(ElektronCommand::ActivateTrackSelect, 0); }
 void ElektronDevice::undokit_sync() { sendCommand(ElektronCommand::UndokitSync, 0); }
@@ -362,7 +362,7 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
         listener->removeOnMessageCallback(&cb);
 
         if (ret) {
-            midi->midiSysex.rd_cur = listener->msg_rd;
+            midi->midiSysex->rd_cur = listener->msg_rd;
             void* data = nullptr;
             switch (type) {
                 case DataType::Kit:

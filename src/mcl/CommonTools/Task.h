@@ -1,24 +1,9 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef TASK_H__
-#define TASK_H__
+#pragma once
 
 #include <inttypes.h>
 #include <helpers.h>
-/**
- * \addtogroup CommonTools
- *
- * @{
- *
- * \file
- * Task class
- **/
-
-/**
- * \addtogroup helpers_task Task class
- *
- * @{
- **/
 
 /** Represents a task that is executed at a regular interval. **/
 class Task {
@@ -26,7 +11,7 @@ class Task {
 	 * \addtogroup helpers_task
 	 * @{
 	 **/
-	
+
 public:
   uint16_t interval;
   uint16_t lastExecution;
@@ -50,16 +35,9 @@ public:
   }
 
 	/** Check if the task needs to be executed. **/
-  void checkTask() {
-    uint16_t clock = read_slowclock();
-    if (clock_diff(lastExecution, clock) > interval || starting) {
-      run();
-      lastExecution = clock;
-      starting = false;
-    }
-  }
+  void checkTask();
 
-	/** Remove the task, calling its cleanup code (empty for now). **/
+  /** Remove the task, calling its cleanup code (empty for now). **/
   virtual void destroy() {
   }
 
@@ -71,6 +49,3 @@ public:
 	/* @} */
 };
 
-/* @} @} */
-
-#endif /* TASK_H__ */

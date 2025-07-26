@@ -1,4 +1,5 @@
 #include "R.h"
+
 const unsigned char __R_machine_names_long[] PROGMEM = {
   247,
   71,
@@ -859,5 +860,5 @@ const unsigned char __R_machine_names_long[] PROGMEM = {
   0,
   1,
   63,
-  255,
+  255
 };

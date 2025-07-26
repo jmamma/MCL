@@ -2,9 +2,9 @@
 
 #pragma once
 
-#include "MidiUartParent.h"
+#include "MidiUart.h"
 #include "SeqTrack.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "GridTrack.h"
 
 //Ephemeral
@@ -16,13 +16,13 @@ public:
 
   PerfSeqTrack() : SeqTrackBase() {
     active = PERF_TRACK_TYPE;
-    init();
+ //   init();
   }
   void reset() {
     memset(perf_locks,255,sizeof(perf_locks));
     SeqTrackBase::reset();
   }
 
-  void seq(MidiUartParent *uart_, MidiUartParent *uart2_);
+  void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 
 };

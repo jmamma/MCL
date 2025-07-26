@@ -3,8 +3,9 @@
 #ifndef DATA_ENCODER_H__
 #define DATA_ENCODER_H__
 
-#include "WProgram.h"
+#include "platform.h"
 #include "Midi.h"
+#include "MidiUartParent.h"
 
 #ifdef HOST_MIDIDUINO
 #include "DataEncoderUnchecking.h"

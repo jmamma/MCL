@@ -1,4 +1,5 @@
 #include "R.h"
+
 const unsigned char __R_menu_options[] PROGMEM = {
   252,
   0,
@@ -489,5 +490,5 @@ const unsigned char __R_menu_options[] PROGMEM = {
   0,
   0,
   159,
-  255,
+  255
 };

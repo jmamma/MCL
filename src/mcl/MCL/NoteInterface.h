@@ -6,6 +6,8 @@
 
 #include "GUI.h"
 #include "MCLMemory.h"
+#include "midi-common.h"
+#include "MidiID.h"
 
 #define TRIG_HOLD_TIME 450
 
@@ -42,7 +44,7 @@ public:
   void add_note_event(uint8_t note_num, uint8_t event_mask, uint8_t port);
   void note_on_event(uint8_t note_num, uint8_t port);
   void note_off_event(uint8_t note_num, uint8_t port);
-  bool is_event(gui_event_t *event) { return event->source >= 128; }
+  bool is_event(gui_event_t *event) { return event->type == NOTE; }
   bool notes_all_off() { return ((notes_on == 0) && (notes_off > 0)); }
   bool notes_all_off_md() { return (((uint16_t) notes_on == 0) && ((uint16_t)notes_off > 0)); }
   uint8_t notes_count_on();

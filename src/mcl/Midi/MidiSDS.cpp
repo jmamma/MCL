@@ -1,6 +1,11 @@
-#include "MCL_impl.h"
+#include "MidiSDS.h"
+#include "MidiIDSysex.h"
+#include "MidiSDSMessages.h"
+#include "MidiSDSSysex.h"
 #include "MidiSysexFile.h"
-
+#include "MidiUart.h"
+#include "MCLGUI.h"
+#include "MD.h"
 void MidiSDSClass::sendGeneralMessage(uint8_t type) {
   uint8_t data[6] = {0xF0, 0x7E, 0x00, 0x00, 0x00, 0xF7};
   data[2] = deviceID;
@@ -59,11 +64,11 @@ wait:
 
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
 
-  volatile uint16_t start_clock = slowclock;
+  volatile uint16_t start_clock = read_clock_ms();
   MidiSDSSysexListener.msgType = 255;
   do {
      handleIncomingMidi();
-  } while ((clock_diff(start_clock, slowclock) < timeout) &&
+  } while ((clock_diff(start_clock, read_clock_ms()) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));
   return MidiSDSSysexListener.msgType;
 }
@@ -154,7 +159,7 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
     if (pos >= fsize) {
       break;
     }
-    if (trig_interface.is_key_down(MDX_KEY_NO)) { goto cleanup; }
+    if (key_interface.is_key_down(MDX_KEY_NO)) { goto cleanup; }
     if (++show_progress > 10) {
       show_progress = 0;
       mcl_gui.draw_progress("Sending sample", pos * 80 / fsize ,80);
@@ -168,8 +173,8 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
 retry:
     MidiUart.sendRaw(buf, szbuf);
     if (!hand_shake_state) {
-      uint16_t myclock = slowclock;
-      while (clock_diff(myclock, slowclock) < latency_ms);
+      uint16_t myclock = read_clock_ms();
+      while (clock_diff(myclock, read_clock_ms()) < latency_ms);
 
     } else if (buf[1] == 0x7E && buf[3] == 0x02) {
       reply = waitForMsg(2000);
@@ -287,7 +292,7 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
 
   for (samplesSoFar = 0; samplesSoFar < midi_sds.sampleLength;
        samplesSoFar += num_of_samples) {
-    if (trig_interface.is_key_down(MDX_KEY_NO)) { return false; }
+    if (key_interface.is_key_down(MDX_KEY_NO)) { return false; }
     ++show_progress_i;
 
     if (show_progress && show_progress_i == 10) {
@@ -352,8 +357,8 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
     }
 
     if (!hand_shake_state) {
-      uint16_t myclock = slowclock;
-      while (clock_diff(myclock, slowclock) < latency_ms) {};
+      uint16_t myclock = read_clock_ms();
+      while (clock_diff(myclock, read_clock_ms()) < latency_ms) {};
       sendData(data, n);
     } else {
       uint8_t count = 0;
@@ -420,7 +425,7 @@ bool MidiSDSClass::recvWav(const char* filename, uint16_t sample_number) {
   goto recv_fail;
   }
   while(true) {
-    if (trig_interface.is_key_down(MDX_KEY_NO)) { goto recv_fail; }
+    if (key_interface.is_key_down(MDX_KEY_NO)) { goto recv_fail; }
     uint8_t msg = waitForMsg(2000);
     if (msg == 255 || msg == MIDI_SDS_CANCEL)  {
       DEBUG_PRINTLN("sds recv abort");

@@ -1,5 +1,9 @@
-#include "MCL_impl.h"
+#include "MNM.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "TurboLight.h"
+#include "MidiActivePeering.h"
+#include "GridTrack.h"
 
 const ElektronSysexProtocol mnm_protocol = {
     monomachine_sysex_hdr,
@@ -138,7 +142,7 @@ void MNMClass::setMultiEnvParam(uint8_t param, uint8_t value) {
   uart->sendNRPN(global.baseChannel, 0x40 + param, value);
 }
 
-void MNMClass::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
+void MNMClass::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
   if (uart_ == nullptr) { uart_ = uart; }
   uart->sendCC(track + global.baseChannel, 3, mute ? 0 : 1);
 }

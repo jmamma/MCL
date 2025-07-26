@@ -9,22 +9,6 @@
 extern MCLEncoder page_select_param1;
 extern MCLEncoder page_select_param2;
 
-struct PageCategory {
-  char Name[8];
-  uint8_t PageCount;
-  uint8_t FirstPage;
-};
-
-struct PageSelectEntry {
-  char Name[16];
-  PageIndex Page;
-  uint8_t PageNumber; // same as trig id
-  uint8_t CategoryId;
-  uint8_t IconWidth;
-  uint8_t IconHeight;
-  uint8_t *IconData;
-};
-
 class MDCallback : public SysexCallback {
 public:
   bool state = false;

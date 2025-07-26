@@ -14,8 +14,9 @@
 #ifndef _SPI_H_INCLUDED
 #define _SPI_H_INCLUDED
 
+#define MEGACOMMAND_SPI_LIBRARY 1
+
 #include <Arduino.h>
-#include "mididuino_private.h"
 #define nop asm volatile ("nop\n\t")
 
 // SPI_HAS_TRANSACTION means SPI has beginTransaction(), endTransaction(),

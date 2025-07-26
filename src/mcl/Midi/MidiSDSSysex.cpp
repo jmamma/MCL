@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include "platform.h"
 
 #include "MCLSd.h"
 #include "MidiSDSMessages.h"
@@ -147,8 +147,10 @@ void MidiSDSSysexListenerClass::dump_header() {
   my_string[2] = (midi_sds.sampleNumber % 10) + '0';
 
   bool overwrite = true;
-  if ((midi_sds.sampleFormat != 8) && (midi_sds.sampleFormat != 16) &&
-      (midi_sds.sampleFormat != 24) || (!midi_sds.wav_file.open(my_string, overwrite, 1, sampleRate,
+  bool validFormat = (midi_sds.sampleFormat == 8) ||
+                  (midi_sds.sampleFormat == 16) ||
+                  (midi_sds.sampleFormat == 24);
+  if ((!validFormat) || (!midi_sds.wav_file.open(my_string, overwrite, 1, sampleRate,
                               midi_sds.sampleFormat, midi_sds.loopType != 0x7F))) {
     midi_sds.sendCancelMessage();
     midi_sds.cancel();
@@ -295,10 +297,10 @@ void MidiSDSSysexListenerClass::data_packet() {
 }
 
 void MidiSDSSysexListenerClass::setup(MidiClass *_midi) {
-  sysex = &(_midi->midiSysex);
+  sysex = _midi->midiSysex;
   sysex->addSysexListener(this);
 }
 void MidiSDSSysexListenerClass::cleanup(MidiClass *_midi) {
-  sysex = &(_midi->midiSysex);
+  sysex = _midi->midiSysex;
   sysex->removeSysexListener(this);
 }

@@ -6,27 +6,14 @@
 #include "MCLMemory.h"
 //#include "MidiActivePeering.h"
 #include "MidiUartParent.h"
-#include "WProgram.h"
+#include "platform.h"
+#include "Global.h"
+#include "SeqDefines.h"
 
 #define EMPTY_TRACK_TYPE 0
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
-
-#define SEQ_SPEED_1X 0
-#define SEQ_SPEED_2X 1
-#define SEQ_SPEED_3_4X 2
-#define SEQ_SPEED_3_2X 3
-#define SEQ_SPEED_1_2X 4
-#define SEQ_SPEED_1_4X 5
-#define SEQ_SPEED_1_8X 6
-#define SEQ_SPEED_4X 7
-
-#define MASK_PATTERN 0
-#define MASK_LOCK 1
-#define MASK_SLIDE 2
-#define MASK_MUTE 3
-#define MASK_LOCKS_ON_STEP 4
 
 #define NUM_LOCKS 8
 
@@ -68,8 +55,8 @@ public:
   uint8_t active;
 
   uint8_t port = UART1_PORT;
-  MidiUartParent *uart = &MidiUart;
-  MidiUartParent *uart2 = &MidiUart2;
+  MidiUartClass *uart = &MidiUart;
+  MidiUartClass *uart2 = &MidiUart2;
   uint8_t mute_state = SEQ_MUTE_OFF;
 
   bool record_mutes;

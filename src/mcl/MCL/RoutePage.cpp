@@ -1,12 +1,17 @@
-#include "MCL_impl.h"
+#include "RoutePage.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "MidiActivePeering.h"
+#include "MidiClock.h"
+#include "MCLActions.h"
 
 void RoutePage::setup() {}
 void RoutePage::init() {
   hasChanged = false;
   R.Clear();
   R.use_icons_page();
-  trig_interface.on();
+  key_interface.on();
 }
 void RoutePage::cleanup() { }
 void RoutePage::set_level(int curtrack, int value) {
@@ -130,11 +135,11 @@ void RoutePage::display() {
 
 bool RoutePage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }
-    trig_interface.send_md_leds(TRIGLED_OVERLAY);
+    key_interface.send_md_leds(TRIGLED_OVERLAY);
 
     /*    if (event->mask == EVENT_BUTTON_PRESSED) {
 

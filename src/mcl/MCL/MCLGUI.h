@@ -5,6 +5,9 @@
 
 #include "QuestionDialogPage.h"
 #include "TextInputPage.h"
+#include "KeyInterface.h"
+#include "NoteInterface.h"
+#include "MCLMenus.h"
 
 //class MCLGUI : public Print {
 class MCLGUI {

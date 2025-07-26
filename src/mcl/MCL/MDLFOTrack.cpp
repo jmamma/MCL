@@ -1,4 +1,6 @@
-#include "MCL_impl.h"
+#include "MDLFOTrack.h"
+#include "MCLSeq.h"
+
 void MDLFOTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
 
 void MDLFOTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,

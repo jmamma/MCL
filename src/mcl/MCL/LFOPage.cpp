@@ -1,5 +1,10 @@
-#include "MCL_impl.h"
+#include "LFOPage.h"
+#include "LFO.h"
+#include "MD.h"
+#include "MCLGUI.h"
 #include "ResourceManager.h"
+#include "MidiActivePeering.h"
+#include "A4.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1
@@ -22,7 +27,7 @@ void LFOPage::init() {
   MD.sync_seqtrack(lfo_track->length, lfo_track->speed,
                      lfo_track->step_count);
   if (lfo_track->mode != LFO_MODE_FREE) {
-    trig_interface.on();
+    key_interface.on();
   }
 
 
@@ -30,7 +35,7 @@ void LFOPage::init() {
 
 void LFOPage::cleanup() {
   PerfPageParent::cleanup();
-  trig_interface.off();
+  key_interface.off();
 }
 
 void LFOPage::config_encoder_range(uint8_t i) {
@@ -274,7 +279,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     auto device = midi_active_peering.get_device(port);
 
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     uint8_t page_select = 0;
     uint8_t step = track + (page_select * 16);
     if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -287,7 +292,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
         SET_BIT64(lfo_track->pattern_mask, step);
       } else {
         DEBUG_PRINTLN(F("Trying to clear"));
-        if (clock_diff(note_interface.note_hold[port], slowclock) <
+        if (clock_diff(note_interface.note_hold[port], read_clock_ms()) <
             TRIG_HOLD_TIME) {
           CLEAR_BIT64(lfo_track->pattern_mask, step);
         }
@@ -295,7 +300,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES: {
@@ -332,9 +337,9 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       lfo_track->mode += 1;
     }
     if (lfo_track->mode == LFO_MODE_FREE) {
-      trig_interface.off();
+      key_interface.off();
     } else {
-      trig_interface.on();
+      key_interface.on();
     }
   }
 

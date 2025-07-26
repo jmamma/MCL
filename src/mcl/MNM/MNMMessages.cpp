@@ -1,11 +1,12 @@
-#include "MCL_impl.h"
+#include "MNMMessages.h"
+
 #ifdef HOST_MIDIDUINO
 #include <stdio.h>
 #endif
 
 bool MNMGlobal::fromSysex(MidiClass *midi) {
   uint16_t offset = 5;
-  uint16_t len = midi->midiSysex.get_recordLen() - 5;
+  uint16_t len = midi->midiSysex->get_recordLen() - 5;
 
   //DEBUG_PRINT_FN();
 
@@ -14,11 +15,11 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   }
 
   //DEBUG_PRINT_FN();
-  //for(int i=0;i<midi->midiSysex.get_recordLen(); ++i) {
-    //DEBUG_PRINTLN(midi->midiSysex.getByte(i));
+  //for(int i=0;i<midi->midiSysex->get_recordLen(); ++i) {
+    //DEBUG_PRINTLN(midi->midiSysex->getByte(i));
   //}
 
-  origPosition = midi->midiSysex.getByte(offset+3);
+  origPosition = midi->midiSysex->getByte(offset+3);
   MNMSysexDecoder decoder(midi, offset + 4);
 
   decoder.get(&autotrackChannel, 5);
@@ -120,8 +121,8 @@ bool MNMKit::fromSysex(MidiClass *midi) {
 
   uint16_t decode_offset = 0;
 
-  int version = midi->midiSysex.getByte(6);
-  origPosition = midi->midiSysex.getByte(8);
+  int version = midi->midiSysex->getByte(6);
+  origPosition = midi->midiSysex->getByte(8);
 
   DEBUG_PRINTLN("MNM kit");
   if (version == 64) {
@@ -129,7 +130,7 @@ bool MNMKit::fromSysex(MidiClass *midi) {
      decode_offset++;
   }
 
-  uint16_t len = midi->midiSysex.get_recordLen() - 5;
+  uint16_t len = midi->midiSysex->get_recordLen() - 5;
 
   if (!ElektronHelper::checkSysexChecksum(midi, 5, len)) {
     DEBUG_PRINTLN("wrong checksum");
@@ -235,7 +236,7 @@ uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
 
 bool MNMSong::fromSysex(MidiClass *midi) {
   uint16_t offset = 0;
-  uint16_t len = midi->midiSysex.get_recordLen();
+  uint16_t len = midi->midiSysex->get_recordLen();
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
     return false;

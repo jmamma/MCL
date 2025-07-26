@@ -15,9 +15,10 @@
 
 #include "Elektron.h"
 #include "ElektronDataEncoder.h"
-
+#include "Midi.h"
+#include "MidiUart.h"
 void ElektronDataToSysexEncoder::init(uint8_t *_sysex,
-                                      MidiUartParent *_uart) {
+                                      MidiUartClass *_uart) {
   DataEncoder::init(_sysex);
   uart = _uart;
   if (uart != NULL) {
@@ -189,7 +190,7 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexToDataEncoder::unpack8Bit() {
       *(ptr++) = tmpData[i];
     } else {
       DEBUG_PRINTLN("ElektronSysexToDataEncoder");
-      midi->midiSysex.putByte(n++, tmpData[i]);
+      midi->midiSysex->putByte(n++, tmpData[i]);
     }
     retLen++;
   }
@@ -226,7 +227,7 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
       if (data) {
         bits = *(ptr++);
       } else {
-        bits = midi->midiSysex.getByte(n++);
+        bits = midi->midiSysex->getByte(n++);
       }
       cnt7++;
     }
@@ -234,14 +235,14 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
     if (data) {
       *c = *(ptr++) | (bits & 0x80);
     } else {
-      *c = midi->midiSysex.getByte(n++) | (bits & 0x80);
+      *c = midi->midiSysex->getByte(n++) | (bits & 0x80);
     }
     cnt7++;
   } else {
     if (data) {
       *c = *(ptr++);
     } else {
-      *c = midi->midiSysex.getByte(n++);
+      *c = midi->midiSysex->getByte(n++);
     }
   }
 

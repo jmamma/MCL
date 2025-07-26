@@ -11,9 +11,7 @@
 // Encoder 3: Phase
 // Encoder 4: Mod (Width, Skew, Paramter Level etc)
 
-void osc_mod_handler(EncoderParent *enc);
-
-
+extern void osc_mod_handler(EncoderParent *enc);
 
 class OscPage : public WavDesignerPage {
 public:
@@ -47,11 +45,11 @@ public:
     enc3.cur = 64;
   }
   virtual bool handleEvent(gui_event_t *event);
-  void display();
+  virtual void display();
   void setup();
-  void init();
-  void loop();
-  void cleanup();
+  virtual void init();
+  virtual void loop();
+  virtual void cleanup();
   void draw_levels();
   void draw_usr();
   void draw_tri();

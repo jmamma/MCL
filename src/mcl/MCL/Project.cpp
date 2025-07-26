@@ -1,4 +1,13 @@
-#include "MCL_impl.h"
+#include "Project.h"
+#include "MCLSd.h"
+#include "MCLGUI.h"
+#include "GridPages.h"
+
+#include "MDTrack.h"
+#include "ExtTrack.h"
+#include "A4Track.h"
+#include "MNMTrack.h"
+#include "MDFXTrack.h"
 
 #define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"
@@ -382,7 +391,14 @@ bool Project::new_project_master_file(const char *projectname) {
 
   DEBUG_PRINTLN(F("Attempting to extend project file"));
   DEBUG_PRINTLN(projectname);
-  ret = file.createContiguous(projectname, (uint32_t)GRID_SLOT_BYTES);
+
+  ret = file.open(projectname, O_RDWR | O_CREAT);
+  if (!ret) {
+    DEBUG_PRINTLN(F("Could not open file"));
+    return false;
+  }
+
+  ret = file.preAllocate(GRID_SLOT_BYTES);
   if (!ret) {
     file.close();
     DEBUG_PRINTLN(F("Could not extend file"));

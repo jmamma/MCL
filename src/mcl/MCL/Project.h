@@ -120,6 +120,20 @@ public:
 
   bool sync_grid(uint8_t grid) { return grids[grid].sync(); }
   bool sync_grid() { return sync_grid(grid_select); }
+  bool close_project() {
+    bool ret = true;
+    // Close main file
+    if (!file.close()) {
+        ret = false;
+    }
+    // Close all grid files
+    for (uint8_t i = 0; i < NUM_GRIDS; i++) {
+        if (!grids[i].close_file()) {
+            ret = false;
+        }
+    }
+    return ret;
+  }
 };
 
 extern Project proj;

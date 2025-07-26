@@ -1,5 +1,8 @@
-#include "MCL_impl.h"
+#include "SoundBrowserPage.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "MDSound.h"
 
 const char *c_snd_root = "/Sounds";
 const char *c_snd_suffix = ".snd";
@@ -18,7 +21,7 @@ void SoundBrowserPage::init() {
   file_types.reset();
   file_types.add(c_snd_suffix);
 
-  trig_interface.off();
+  key_interface.off();
 
   strcpy(title, "SOUND");
   show_dirs = true;

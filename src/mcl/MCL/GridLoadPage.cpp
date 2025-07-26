@@ -1,10 +1,19 @@
-#include "MCL_impl.h"
+#include "GridLoadPage.h"
+#include "GridTask.h"
+#include "GridPages.h"
+#include "MCLActions.h"
+#include "MCLGUI.h"
+#include "MCLSysConfig.h"
+#include "GridChain.h"
+#include "MD.h"
+#include "Project.h"
+#include "MidiClock.h"
 
 void GridLoadPage::init() {
   GridIOPage::init();
   note_interface.init_notes();
-  trig_interface.send_md_leds(TRIGLED_OVERLAY);
-  trig_interface.on();
+  key_interface.send_md_leds(TRIGLED_OVERLAY);
+  key_interface.on();
   // GUI.display();
   encoders[0]->cur = mcl_cfg.load_mode;
   encoders[1]->cur = mcl_cfg.chain_queue_length;
@@ -116,7 +125,7 @@ void GridLoadPage::display() {
     //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
     //                              "STEP", K);
     if (show_offset) {
-      oled_display.setCursor(MCLGUI::s_menu_x + 18, 12);
+      oled_display.setCursor(MCLGUI::s_menu_x + 26, 14);
       oled_display.print("DESTINATION");
       trig_mask = 0;
       SET_BIT16(trig_mask,offset);
@@ -239,7 +248,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
   }
   DEBUG_DUMP(event->source);
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       default: {
@@ -264,7 +273,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {
-        if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
         encoders[0]->cur = key - MDX_KEY_BANKA + 1;
         return true;
         }
@@ -287,7 +296,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
   //  write the whole row
   load_groups:
-    trig_interface.off();
+    key_interface.off();
 
     group_load(grid_page.getRow(), offset);
     grid_task.load_queue_handler();

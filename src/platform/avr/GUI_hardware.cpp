@@ -1,10 +1,10 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <util/delay.h>
-#include "GUI_private.h"
+#include "GUI_hardware.h"
 //#include "helpers.h"
-#include "Core.h"
-#include "LCD.h"
+#include "platform.h"
+#include "global.h"
 
 #ifdef MEGACOMMAND
   #define SR165_OUT    PL0
@@ -36,7 +36,9 @@ ALWAYS_INLINE() inline void SR165Class::rst() {
   SET_BIT8(SR165_DATA_PORT, SR165_SHLOAD);
 }
 
-SR165Class::SR165Class() {
+SR165Class::SR165Class() {}
+
+void SR165Class::init() {
   SR165_DDR_PORT |= _BV(SR165_SHLOAD) | _BV(SR165_CLK);
   CLEAR_BIT8(SR165_DDR_PORT, SR165_OUT);
   CLEAR_BIT8(SR165_DATA_PORT, SR165_OUT);
@@ -111,20 +113,9 @@ void EncodersClass::clearEncoders() {
 
 void EncodersClass::poll(uint16_t sr) {
   uint16_t sr_tmp = sr;
-  /*
-  if (sr != sr_old) {
-    LCD.line1();
-    LCD.putnumber(sr & 0x3);
-    LCD.puts(" ");
-    LCD.putnumber(sr_old & 0x3);
-  }
-  */
-  
-  
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if ((sr & 3) != (sr_old & 3)) {
       volatile int8_t *val = &(ENCODER_NORMAL(i));
-      
       if (BUTTON_DOWN(i)) {
 	  val = &(ENCODER_BUTTON(i));
       }
@@ -209,6 +200,40 @@ void ButtonsClass::poll(uint8_t but) {
   }
 }
 
+void GUIHardware::poll() {
+  static bool inGui = false;
+  if (inGui) {
+    return;
+  }
+  inGui = true;
+
+  uint16_t sr = SR165.read16();
+  if (sr != oldsr) {
+    Buttons.clear();
+    Buttons.poll(sr >> 8);
+    Encoders.poll(sr);
+    oldsr = sr;
+    GUI.events.pollEvents();
+  }
+  inGui = false;
+}
+
+void GUIHardware::init() {
+  SR165.init();
+  uint16_t sr = SR165.read16();
+  Buttons.clear();
+  Buttons.poll(sr >> 8);
+  Encoders.poll(sr);
+  oldsr = sr;
+}
+
+void GUIHardware::clear() {
+   Buttons.clear();
+   Encoders.clearEncoders();
+}
+
+GUIHardware GUI_hardware;
 SR165Class SR165;
 EncodersClass Encoders;
 ButtonsClass Buttons;
+

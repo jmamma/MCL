@@ -4,6 +4,9 @@
 
 #include "GridChain.h"
 #include "MCLActionsEvents.h"
+#include "MidiDeviceGrid.h"
+#include "MCLSysConfig.h"
+#include "GridLink.h"
 
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254
@@ -124,6 +127,7 @@ private:
                    GridDeviceTrack *gdt);
   bool load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
                   GridDeviceTrack *gdt, GridDeviceTrack *gdt_dst, uint8_t *send_masks);
+  void handle_mute_states(uint8_t *mute_states, bool restore);
 };
 
 extern void md_import();

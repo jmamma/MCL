@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include "platform.h"
 #include "ElektronPattern.h"
 
 bool ElektronPattern::isParamLocked(uint8_t track, uint8_t param) {

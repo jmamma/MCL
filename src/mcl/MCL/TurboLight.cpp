@@ -1,7 +1,8 @@
-#include "MCL_impl.h"
+#include "TurboLight.h"
 
 uint8_t TurboLight::lookup_speed(uint8_t speed) {
   switch (speed) {
+    default:
     case 0:
       return 1;
 
@@ -36,7 +37,7 @@ void TurboLight::set_speed(uint8_t speed, MidiUartClass *uart) {
 
   uart->m_putc_immediate(0xF7);
 
-  while (!uart->check_empty_tx());
+ // while (!uart->check_empty_tx());
 
   for (uint8_t n = 0; n < 16; n++) {
     uart->m_putc_immediate(0x00);

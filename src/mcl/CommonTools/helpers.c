@@ -3,14 +3,15 @@
 #include <stdarg.h>
 
 #ifdef AVR
-#include "WProgram.h"
+#include "platform.h"
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <util/delay.h>
 #endif
 
+#include "platform.h"
 #include "helpers.h"
-
+#include <string.h>
 /**
  * \addtogroup CommonTools
  *
@@ -71,38 +72,6 @@ static char tohex(uint8_t i) {
   }
 }
 
-/** Copy cnt bytes from src to dst, and fill up with spaces. **/
-void m_strncpy_fill(void *dst, const char *src, uint16_t cnt) {
-  while (cnt && *src) {
-    *((uint8_t *)dst++) = *((uint8_t *)src++);
-    cnt--;
-  }
-  while (cnt > 1) {
-    cnt--;
-    *((uint8_t *)dst++) = ' ';
-  }
-  if (cnt > 0)
-    *((uint8_t *)dst++) = 0;
-}
-
-/** Copy cnt bytes from program space src to dst, and fill up with spaces. **/
-void m_strncpy_p_fill(void *dst, PGM_P src, uint16_t cnt) {
-  while (cnt) {
-    char byte = pgm_read_byte(src);
-    if (byte == 0)
-      break;
-    *((uint8_t *)dst++) = byte;
-    src++;
-    cnt--;
-  }
-  while (cnt > 1) {
-    *((uint8_t *)dst++) = ' ';
-    cnt--;
-  }
-  if (cnt > 0)
-    *((uint8_t *)dst++) = 0;
-}
-
 /** Convert the string to UPPERCASE. **/
 void m_toupper(char *str) {
   char chr;
@@ -126,78 +95,7 @@ void m_trim_space(char *str) {
     }
   }
 }
-/** @} **/
 
-/**
- * \addtogroup helpers_clock
- * Timing functions
- *
- * @{
- **/
-
-#ifdef HOST_MIDIDUINO
-#include <math.h>
-#include <stdio.h>
-#include <sys/time.h>
-
-static double startClock;
-static uint8_t clockStarted = 0;
-
-/** Return the current clock counter value, using the POSIX gettimeofday
- * function. **/
-uint16_t read_clock(void) {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  double clock = (double)(tv.tv_sec + (double)tv.tv_usec / 1000000.0);
-  if (!clockStarted) {
-    startClock = clock;
-    clockStarted = 1;
-  }
-  clock -= startClock;
-  clock *= 61250;
-  clock = fmod(clock, 65536);
-
-  return clock;
-}
-
-/** Return the current slow clock counter value, using the POSIX gettimeofday
- * function. **/
-uint16_t read_slowclock(void) {
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  double clock = (double)(tv.tv_sec + (double)tv.tv_usec / 1000000.0);
-  if (!clockStarted) {
-    startClock = clock;
-    clockStarted = 1;
-  }
-  clock -= startClock;
-  clock *= 976;
-  clock = fmod(clock, 65536);
-  return clock;
-}
-
-#else
-volatile uint16_t slowclock = 0;
-volatile uint16_t clock = 0;
-volatile uint16_t clock_minutes = 0;
-/** Embedded version of read_clock, return the fast clock counter. **/
-uint16_t read_clock(void) {
-  USE_LOCK();
-  SET_LOCK();
-  uint16_t ret = clock;
-  CLEAR_LOCK();
-  return ret;
-}
-
-/** Embedded version of read_slowclock, return the slow clock counter. **/
-uint16_t read_slowclock(void) {
-  USE_LOCK();
-  SET_LOCK();
-  uint16_t ret = slowclock;
-  CLEAR_LOCK();
-  return ret;
-}
-#endif
 
 /**
  * Return the difference between old_clock and new_clock, taking into

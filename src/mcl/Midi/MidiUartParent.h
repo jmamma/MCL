@@ -1,13 +1,14 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef MIDIUARTPARENT_H__
-#define MIDIUARTPARENT_H__
+#pragma once
 
 #include "Callback.h"
-#include "Core.h"
+#include "platform.h"
+
 #include "MidiID.h"
-#include "Vector.h"
 #include <midi-common.h>
+#include "string.h"
+#include "Midi.h"
 //#define MIDI_VALIDATE
 //#define MIDI_RUNNING_STATUS
 
@@ -23,7 +24,6 @@
  * @{
  **/
 
-class MidiClass;
 
 class MidiUartParent {
   /**
@@ -77,7 +77,7 @@ public:
       }
     }
   }
-  virtual void initSerial() { }
+  virtual void init() { }
 
   virtual uint8_t m_getc() = 0;
   virtual void m_putc(uint8_t *src, uint16_t size) = 0;
@@ -102,62 +102,6 @@ public:
   ALWAYS_INLINE() void sendCommandByte(uint8_t byte) {
     m_putc(byte);
   }
-  /*
-  CallbackVector1<MidiCallback, 8, uint8_t *> noteOnCallbacks;
-  CallbackVector1<MidiCallback, 8, uint8_t *> noteOffCallbacks;
-  CallbackVector1<MidiCallback, 8, uint8_t *> ccCallbacks;
-  CallbackVector1<MidiCallback, 8, uint8_t *> recvActiveSenseCallbacks;
-
-  void addOnRecvActiveSenseCallback(MidiCallback *obj,
-                                    void (MidiCallback::*func)(uint8_t *msg)) {
-    recvActiveSenseCallbacks.add(obj, func);
-  }
-  void
-  removeOnRecvActiveSenseCallback(MidiCallback *obj,
-                                  void (MidiCallback::*func)(uint8_t *msg)) {
-    recvActiveSenseCallbacks.remove(obj, func);
-  }
-  void removeOnRecvActiveSenseCallback(MidiCallback *obj) {
-    recvActiveSenseCallbacks.remove(obj);
-  }
-
-  void addOnNoteOnCallback(MidiCallback *obj,
-                           void (MidiCallback::*func)(uint8_t *msg)) {
-    noteOnCallbacks.add(obj, func);
-  }
-  void removeOnNoteOnCallback(MidiCallback *obj,
-                              void (MidiCallback::*func)(uint8_t *msg)) {
-    noteOnCallbacks.remove(obj, func);
-  }
-  void removeOnNoteOnCallback(MidiCallback *obj) {
-    noteOnCallbacks.remove(obj);
-  }
-
-  void addOnNoteOffCallback(MidiCallback *obj,
-                            void (MidiCallback::*func)(uint8_t *msg)) {
-    noteOffCallbacks.add(obj, func);
-  }
-  void removeOnNoteOffCallback(MidiCallback *obj,
-                               void (MidiCallback::*func)(uint8_t *msg)) {
-    noteOffCallbacks.remove(obj, func);
-  }
-  void removeOnNoteOffCallback(MidiCallback *obj) {
-    noteOffCallbacks.remove(obj);
-  }
-
-  void addOnControlChangeCallback(MidiCallback *obj,
-                                  void (MidiCallback::*func)(uint8_t *msg)) {
-    ccCallbacks.add(obj, func);
-  }
-  void removeOnControlChangeCallback(MidiCallback *obj,
-                                     void (MidiCallback::*func)(uint8_t *msg)) {
-    ccCallbacks.remove(obj, func);
-  }
-  void removeOnControlChangeCallback(MidiCallback *obj) {
-    ccCallbacks.remove(obj);
-  }
-  */
-
   void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity) {
     if (channel >= 16)
       return;
@@ -253,15 +197,6 @@ public:
   void sendString(const char *data) { sendString(data, strlen(data)); }
   void sendString(const char *data, uint16_t cnt);
 
-  void printfString(char *fmt, ...) {
-    va_list lp;
-    va_start(lp, fmt);
-    char buf[128];
-    uint16_t len = vsnprintf(buf, sizeof(buf), fmt, lp);
-    va_end(lp);
-    sendString(buf, len);
-  }
-
 #ifdef HOST_MIDIDUINO
   virtual ~MidiUartParent() {}
 #endif
@@ -269,4 +204,3 @@ public:
   /* @} */
 };
 
-#endif /* MIDIUARTPARENT_H__ */

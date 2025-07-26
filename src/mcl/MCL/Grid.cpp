@@ -1,4 +1,8 @@
-#include "MCL_impl.h"
+#include "Grid.h"
+#include "MCLGUI.h"
+#include "MCLSD.h"
+#include "GridTrack.h"
+#include "EmptyTrack.h"
 
 void Grid::setup() {}
 
@@ -39,10 +43,13 @@ bool Grid::new_file(const char *gridname) {
   // GRID_WIDTH + 1 (because first slot is header)
   // GRID_LENGTH + 2 (first row reserved for header information
   //                 (last row is reserved for tmp space, used by clipboard);
-  ret = file.createContiguous(gridname, (uint32_t)GRID_SLOT_BYTES *
+  ret = file.open(gridname, O_RDWR | O_CREAT | O_TRUNC);
+  if (ret) {
+    // Pre-allocate the file size
+    ret = file.preAllocate((uint32_t)GRID_SLOT_BYTES *
                                             (uint32_t)(GRID_LENGTH + 2) *
                                             (uint32_t)(GRID_WIDTH + 1));
-
+  }
   if (!ret) {
     file.close();
     DEBUG_PRINTLN(F("Could not extend file"));
@@ -127,7 +134,7 @@ bool Grid::copy_slot(uint8_t s_col, uint16_t s_row, uint8_t d_col, uint16_t d_ro
   auto *track = empty_track.load_from_grid(s_col, s_row);
   // at this point, the vtable of ptrack should be repaired
   track->on_copy(s_col, d_col, destination_same);
-  track->store_in_grid(d_col, d_row);
+  return track->store_in_grid(d_col, d_row);
 }
 
 uint8_t Grid::get_slot_model(uint8_t column, uint16_t row, bool load) {

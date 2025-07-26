@@ -1,5 +1,5 @@
-#include <avr/pgmspace.h>
-#include "../gfxfont.h"
+#include "Elektrothic.h"
+#include <Adafruit_GFX.h>
 
 const uint8_t ElektrothicBitmaps[] PROGMEM = {
   0x7B, 0xFC, 0xF3, 0xCF, 0x3F, 0xDE, 0xFD, 0xB6, 0xDB, 0xFB, 0xF0, 0xCF,

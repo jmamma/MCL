@@ -1,5 +1,5 @@
-#include "MCL_impl.h"
-
+#include "Wav.h"
+#include "MidiSDS.h"
 bool Wav::close(bool write) {
   DEBUG_PRINT_FN();
   bool ret;
@@ -18,7 +18,7 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
                uint32_t sampleRate, uint8_t bitRate, bool loop) {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(filename);
-  uint8_t file_mode = write ? (O_WRITE | O_CREAT) : (O_READ);
+  uint16_t file_mode = write ? (O_RDWR | O_CREAT) : O_RDWR;
   strncpy(filename, file_name, 16);
   headerRead = false;
 
@@ -32,7 +32,7 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
     goto failed;
   }
 
-  DEBUG_PRINTLN(file.fileSize());
+  DEBUG_PRINTLN((uint32_t)file.fileSize());
   if (write) {
     DEBUG_PRINTLN(F("truncating"));
     if (!file.truncate(0)) {
@@ -185,7 +185,7 @@ bool Wav::write_data(void *data, uint32_t size, uint32_t position) {
   if (!ret) {
     DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
-    DEBUG_PRINTLN(file.fileSize());
+    DEBUG_PRINTLN((uint32_t)file.fileSize());
     return false;
   }
 
@@ -204,7 +204,7 @@ bool Wav::read_data(void *data, uint32_t size, uint32_t position) {
   if (!ret) {
     DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
-    DEBUG_PRINTLN(file.fileSize());
+    DEBUG_PRINTLN((uint32_t)file.fileSize());
     return false;
   }
   if (!file.isOpen()) {
@@ -570,7 +570,7 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
           //24bit
           sample_val24 = ((__int24 *)&buffer)[buf_index];
           sample_val24 = (__int24)((float)sample_val24 * (float)gain);
-          is_signed = (sample_val24 < 0);
+          is_signed = ((int32_t)sample_val24 < 0);
           if (abs(sample_val24) > sample_max) {
             sample_val24 = sample_max;
             if (is_signed) {
@@ -596,6 +596,8 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
     }
     // loop
 
-    return true;
   }
+
+    return true;
 }
+

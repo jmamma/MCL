@@ -9,6 +9,13 @@
 #define EXP_LFO 1
 #define LFO_LENGTH 96
 
+#define SIN_WAV 0
+#define TRI_WAV 1
+#define RAMP_WAV 2
+#define IEXP_WAV 3
+#define IRAMP_WAV 4
+#define EXP_WAV 5
+
 class LFO {
 public:
   uint8_t amplitude;

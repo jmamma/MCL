@@ -1,5 +1,5 @@
-#include "MCL_impl.h"
-
+#include "MCLEncoder.h"
+#include "helpers.h"
 
 int MCLEncoder::update(encoder_t *enc) {
   int inc = 0;
@@ -21,7 +21,7 @@ int MCLExpEncoder::update(encoder_t *enc) {
     }
     if (inc > 0) { r += 1; }
     if (inc < 0) { r -= 1; }
-    r = max(0,r);
+    r = MAX(0, r);
     cur = 1 << r;
     inc = 0;
   }

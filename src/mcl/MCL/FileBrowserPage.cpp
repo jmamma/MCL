@@ -1,6 +1,11 @@
-#include "MCL_impl.h"
 #include "memory.h"
-
+#include "NoteInterface.h"
+#include "helpers.h"
+#include "FileBrowserPage.h"
+#include "MCLSD.h"
+#include "MCLGFX.h"
+#include "MCLMenus.h"
+#include "MCLGUI.h"
 File FileBrowserPage::file;
 int FileBrowserPage::numEntries;
 
@@ -242,7 +247,7 @@ void FileBrowserPage::loop() {
 
   if (encoders[1]->hasChanged()) {
     selection_change = true;
-    selection_change_clock = slowclock;
+    selection_change_clock = read_clock_ms();
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
 
@@ -422,6 +427,7 @@ bool FileBrowserPage::rm_dir(const char *dir) {
     _cd_up();
     return SD.rmdir(dir);
   }
+  return false;
 }
 
 void FileBrowserPage::on_delete(const char *entry) {
@@ -458,18 +464,18 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   //bool dir_only = false;
 
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
-      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 8;
       }
       switch (key) {
       case MDX_KEY_YES:
-        trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        key_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES;
       case MDX_KEY_NO:
-        trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
         encoders[1]->cur -= inc;

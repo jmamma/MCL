@@ -4,6 +4,7 @@
 #define GRIDCHAINPAGE_H__
 
 #include "GridIOPage.h"
+#include "MCLMemory.h"
 
 class GridLoadPage : public GridIOPage {
  public:

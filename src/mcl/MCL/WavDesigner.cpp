@@ -1,4 +1,11 @@
-#include "MCL_impl.h"
+#include "WavDesigner.h"
+#include "Wav.h"
+#include "MCL.h"
+#include "Osc.h"
+#include "SampleBrowserPage.h"
+#include "GUI.h"
+#include "MIDISds.h"
+#include "DSP.h"
 
 #ifdef WAV_DESIGNER
 #define WAV_NAME "WAVE.wav"
@@ -23,11 +30,9 @@ void WavDesigner::prompt_send() {
   DEBUG_PRINTLN("cleaning up");
   sample_browser.file.close();
   mcl.setPage(WD_MIXER_PAGE);
-  // oled_display.textbox("Sending..","");
-  //
-  // oled_display.display();
-  // wd.send();
-  // }
+  oled_display.textbox("Sending..","");
+  oled_display.display();
+  wd.send();
 }
 
 bool WavDesigner::render() {
@@ -234,7 +239,9 @@ bool WavDesigner::render() {
   write_header = true;
   if (!wav_file.close(write_header)) {
     DEBUG_PRINTLN(F("could not close"));
+    return false;
   }
+  return true;
 }
 
 bool WavDesigner::send() {

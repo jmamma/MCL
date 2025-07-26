@@ -1,7 +1,6 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef MIDI_COMMON_H__
-#define MIDI_COMMON_H__
+#pragma once
 
 #include <inttypes.h>
 #include "MidiNotes.h"
@@ -101,5 +100,4 @@ typedef enum {
 
 /* @} */
 
-#endif /* MIDI_COMMON_H__ */
 

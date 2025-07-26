@@ -1,5 +1,9 @@
-#include "MCL_impl.h"
+#include "GridIOPage.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "Project.h"
+#include "MCLActions.h"
 
 uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
@@ -9,7 +13,7 @@ uint8_t GridIOPage::offset = 0;
 uint8_t GridIOPage::old_grid = 0;
 
 void GridIOPage::cleanup() {
-  trig_interface.send_md_leds();
+  key_interface.send_md_leds();
   MD.popup_text(127, 2);
   proj.select_grid(old_grid);
   offset = 255;
@@ -55,7 +59,7 @@ void GridIOPage::track_select_array_from_type_select(
 
 bool GridIOPage::handleEvent(gui_event_t *event) {
   if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (show_track_type) {
         if (track < 5) {
@@ -66,11 +70,11 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
         if (show_offset) {
           offset = track;
         }
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
+        key_interface.send_md_leds(TRIGLED_OVERLAY);
       }
     } else {
       if (!show_track_type) {
-        trig_interface.send_md_leds(TRIGLED_OVERLAY);
+        key_interface.send_md_leds(TRIGLED_OVERLAY);
 
         if (note_interface.notes_all_off()) {
           if (show_offset) {
@@ -92,7 +96,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_BANKD: {
@@ -123,7 +127,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       }
     }
     proj.toggle_grid();
-    trig_interface.send_md_leds();
+    key_interface.send_md_leds();
     return true;
   }
 

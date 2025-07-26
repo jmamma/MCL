@@ -1,4 +1,7 @@
-#include "MCL_impl.h"
+#include "SeqExtStepPage.h"
+#include "MCLGUI.h"
+#include "MidiActivePeering.h"
+#include "SeqPages.h"
 
 void SeqExtStepPage::setup() {
   SeqPage::setup();
@@ -76,8 +79,8 @@ void SeqExtStepPage::init() {
   SeqPage::init();
   MD.set_rec_mode(3);
   param_select = PARAM_OFF;
-  trig_interface.on();
-  trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+  key_interface.on();
+  key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
   last_cur_x = -1;
   config_menu_entries();
@@ -843,7 +846,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port)->id;
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
 
     if (device != DEVICE_MD) {
       return true;
@@ -856,7 +859,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+    key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
     if (mask == EVENT_BUTTON_PRESSED) {
       // cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
@@ -875,13 +878,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   bool ignore_clear = false;
 
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
-    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+    uint8_t key = event->source;
+    if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t inc = 1;
     int w = timing_mid;
-    if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+    if (key_interface.is_key_down(MDX_KEY_FUNC)) {
       inc = 4;
       w = w * 2;
     }
@@ -889,7 +892,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (pianoroll_mode > 0) {
       inc = 1;
       w = seq_extparam4.cur / 2;
-      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
          w *= 2;
          inc = 12;
       }
@@ -917,11 +920,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
     }
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (trig_interface.is_key_down(MDX_KEY_YES)) {
+      if (key_interface.is_key_down(MDX_KEY_YES)) {
         w = 1;
       }
 
-      if (trig_interface.is_key_down(MDX_KEY_NO) || note_interface.notes_count_on()) {
+      if (key_interface.is_key_down(MDX_KEY_NO) || note_interface.notes_count_on()) {
         switch (key) {
         case MDX_KEY_UP: {
           seq_extparam4.cur -= 2;
@@ -958,25 +961,25 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         switch (key) {
 
         case MDX_KEY_LEFT: {
-        //  if (trig_interface.is_key_down(MDX_KEY_FUNC) &&
+        //  if (key_interface.is_key_down(MDX_KEY_FUNC) &&
         //      (pianoroll_mode == 0)) {
         //    mcl_seq.ext_tracks[last_ext_track].rotate_left();
         //  } else {
             pos_cur_x(-1 * w);
-            if (trig_interface.is_key_down(MDX_KEY_YES)) {
-              trig_interface.ignoreNextEvent(MDX_KEY_YES);
+            if (key_interface.is_key_down(MDX_KEY_YES)) {
+              key_interface.ignoreNextEvent(MDX_KEY_YES);
             }
         //  }
           return true;
         }
         case MDX_KEY_RIGHT: {
-        //  if (trig_interface.is_key_down(MDX_KEY_FUNC) &&
+        //  if (key_interface.is_key_down(MDX_KEY_FUNC) &&
        //       (pianoroll_mode == 0)) {
        //     mcl_seq.ext_tracks[last_ext_track].rotate_right();
        //   } else {
             pos_cur_x(w);
-            if (trig_interface.is_key_down(MDX_KEY_YES)) {
-              trig_interface.ignoreNextEvent(MDX_KEY_YES);
+            if (key_interface.is_key_down(MDX_KEY_YES)) {
+              key_interface.ignoreNextEvent(MDX_KEY_YES);
             }
        //   }
           return true;

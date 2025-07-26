@@ -1,13 +1,15 @@
 #include "MidiID.h"
-#include "WProgram.h"
+//#include "platform.h"
 #include "MidiIDSysex.h"
 #include "helpers.h"
+#include "global.h"
+#include "MidiUart.h"
 #define UART1_PORT 1
 #define UART2_PORT 2
 
 void MidiID::send_id_request(uint8_t id, uint8_t port) {
   uint8_t data[6] = {0xF0, 0x7E, id, 0x06, 0x01, 0xF7};
-  MidiUartParent *uart;
+  MidiUartClass *uart;
   if (port == UART1_PORT) {
     uart = &MidiUart;
   } else {

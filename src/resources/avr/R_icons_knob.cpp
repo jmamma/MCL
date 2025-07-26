@@ -1,4 +1,5 @@
 #include "R.h"
+
 const unsigned char __R_icons_knob[] PROGMEM = {
   255,
   3,
@@ -175,5 +176,5 @@ const unsigned char __R_icons_knob[] PROGMEM = {
   0,
   0,
   19,
-  255,
+  255
 };

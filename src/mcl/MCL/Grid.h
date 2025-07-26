@@ -1,11 +1,9 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef GRID_H__
-#define GRID_H__
+#pragma once
 
 #include "GridRowHeader.h"
 #include "MCLSd.h"
-#include "SdFat.h"
 
 #define GRID_VERSION 3000
 
@@ -115,4 +113,3 @@ public:
   bool sync() { return file.sync(); }
 };
 
-#endif /* GRID_H__ */

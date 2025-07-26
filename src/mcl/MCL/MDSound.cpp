@@ -1,4 +1,6 @@
-#include "MCL_impl.h"
+#include "MDSound.h"
+#include "MD.h"
+#include "MCLSd.h"
 
 bool MDSound::write_sound() {
   DEBUG_PRINT_FN();
@@ -59,6 +61,7 @@ bool MDSound::fetch_sound(uint8_t track) {
     machine2.track = 1;
     machine2.normalize_level();
   }
+  return true;
 }
 
 bool MDSound::load_sound(uint8_t track) {
@@ -103,6 +106,7 @@ bool MDSound::load_sound(uint8_t track) {
   }
 
   MD.sendMachine(track, &machine1, send_level, send);
+  return true;
 }
 
 bool MDSound::read_data(void *data, uint32_t size, uint32_t position) {
@@ -116,7 +120,7 @@ bool MDSound::read_data(void *data, uint32_t size, uint32_t position) {
   if (!ret) {
     DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
-    DEBUG_PRINTLN(file.fileSize());
+    DEBUG_PRINTLN((uint32_t)file.fileSize());
     return false;
   }
   if (!file.isOpen()) {
@@ -139,7 +143,7 @@ bool MDSound::write_data(void *data, uint32_t size, uint32_t position) {
   if (!ret) {
     DEBUG_PRINTLN(F("could not seek"));
     DEBUG_PRINTLN(position);
-    DEBUG_PRINTLN(file.fileSize());
+    DEBUG_PRINTLN((uint32_t)file.fileSize());
     return false;
   }
 

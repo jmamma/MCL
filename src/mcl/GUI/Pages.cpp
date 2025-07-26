@@ -2,9 +2,10 @@
 
 #include "GUI.h"
 #include "Pages.h"
-#include "WProgram.h"
+#include "platform.h"
 #include "DiagnosticPage.h"
 #include "Encoders.h"
+#include "global.h"
 /**
  * \addtogroup GUI
  *
@@ -22,29 +23,6 @@ uint16_t LightPage::encoders_used_clock[4];
 
 void Page::update() {}
 
-void PageContainer::pushPage(LightPage* page) {
-  if (currentPage() == page) {
-    DEBUG_PRINTLN(F("can't push twice"));
-    // can't push the same page twice in a row
-    return;
-  }
-  DEBUG_PRINTLN(F("Pushing page"));
-  page->parent = this;
-  if (!page->isSetup) {
-    page->setup();
-    page->isSetup = true;
-  }
-
-  pageStack.push(page);
-  page->init();
-  page->show();
-  page->init_encoders_used_clock();
-#ifdef ENABLE_DIAG_LOGGING
-  // deactivate diagnostic page on pushPage
-  diag_page.deactivate();
-#endif
-}
-
 void LightPage::update() {
   encoder_t _encoders[GUI_NUM_ENCODERS];
 
@@ -61,9 +39,9 @@ void LightPage::update() {
 #ifdef OLED_DISPLAY
         oled_display.screen_saver = false;
 #endif
-        clock_minutes = 0;
-        minuteclock = 0;
-        encoders_used_clock[i] = slowclock;
+        g_clock_minutes = 0;
+        g_clock_ticks = 0;
+        encoders_used_clock[i] = read_clock_ms();
       }
     }
   }
@@ -73,7 +51,7 @@ void LightPage::init_encoders_used_clock(uint16_t timeout) {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
       encoders[i]->old = encoders[i]->cur;
       ((LightPage *)this)->encoders_used_clock[i] =
-          slowclock + timeout + 1;
+          read_clock_ms() + timeout + 1;
   }
 }
 

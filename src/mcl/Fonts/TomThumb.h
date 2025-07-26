@@ -1,3 +1,7 @@
+#pragma once
+
+#include <Adafruit_GFX.h>
+
 /**
 ** The original 3x5 font is licensed under the 3-clause BSD license:
 **
@@ -48,10 +52,6 @@
 ** July 4, 2022: Compressed like upstream to reduce space.
 */
 
-#pragma once
-
-#include <stdio.h>
-#include "gfxfont.h"
 #define TOMTHUMB_USE_EXTENDED 0
 
 extern const uint8_t TomThumbBitmaps[];

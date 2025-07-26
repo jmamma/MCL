@@ -1,22 +1,6 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef VECTOR_H__
-#define VECTOR_H__
-
-/**
- * \addtogroup CommonTools
- *
- * @{
- *
- * \file
- * Vector (Set) class
- **/
-
-/**
- * \addtogroup helpers_vector Vector (Set) class
- *
- * @{
- **/
+#pragma once
 
 /** Represents an array of N elements of class T. This is slightly misnamed and should be called Set. **/
 template <class T, int N>
@@ -25,7 +9,6 @@ class Vector {
 	 * \addtogroup helpers_vector
 	 * @{
 	 **/
-	
 public:
   T arr[N];
   int size;
@@ -45,7 +28,6 @@ public:
 		 return true;
       }
     }
- 
     for (int i = 0; i < N; i++) {
       if (arr[i] == (T)0) {
 		 arr[i] = t;
@@ -79,6 +61,4 @@ public:
 	/* @} */
 };
 
-/* @} @} */
 
-#endif /* VECTOR_H__ */

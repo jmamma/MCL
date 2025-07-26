@@ -1,19 +1,16 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef MIDI_H__
-#define MIDI_H__
+#pragma once
 
 #include <stdlib.h>
-
 #include <inttypes.h>
-
-// #include "MidiSDS.h"
 #include "Callback.h"
-#include "ListPool.h"
 #include "Vector.h"
 
+// Forward declarations
 class MidiUartParent;
 class MidiUartClass;
+class MidiSysexClass;
 
 extern "C" {
 #include "midi-common.h"
@@ -43,8 +40,6 @@ typedef struct {
   uint8_t midi_status;
   midi_state_t next_state;
 } midi_parse_t;
-
-class MidiSysexClass;
 
 typedef void (MidiCallback::*midi_callback_ptr_t)(uint8_t *msg);
 typedef void (MidiCallback::*midi_callback_ptr2_t)(uint8_t *msg, uint8_t len);
@@ -80,25 +75,15 @@ public:
 #endif
 
   bool midiActive;
-  MidiSysexClass midiSysex;
+  MidiSysexClass *midiSysex;
   uint8_t receiveChannel;
 
-  MidiClass(MidiUartClass *_uart, uint16_t _sysexBufLen, volatile uint8_t *ptr);
+  MidiClass(MidiUartClass *_uart, MidiSysexClass *_sysex);
 
   void init();
 
-  void processSysex() {
-    while (midiSysex.avail()) {
-      sysexEnd(midiSysex.msg_rd);
-      midiSysex.get_next_msg();
-    }
-  }
-
-  void processMidi() {
-    while (((MidiUartParent*)uart)->avail()) {
-      handleByte(((MidiUartParent*)uart)->m_getc());
-    }
-  }
+  void processSysex();
+  void processMidi();
 
   void sysexEnd(uint8_t msg_rd);
   void handleByte(uint8_t c);
@@ -207,12 +192,3 @@ public:
   /* @} */
 };
 
-extern MidiClass Midi;
-extern MidiClass Midi2;
-extern MidiClass MidiUSB;
-
-/* @} @} */
-
-#include <MidiUartParent.h>
-
-#endif /* MIDI_H__ */

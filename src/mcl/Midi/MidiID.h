@@ -1,8 +1,6 @@
-#ifndef MIDIID_H__
-#define MIDIID_H__
+#pragma once
 
 #include <inttypes.h>
-//#include "MidiIDSysex.h"
 
 #define DEVICE_MD 0x02
 #define DEVICE_MNM 0x03
@@ -27,5 +25,3 @@ public:
   char *get_name(char *str);
   void set_name(const char* str);
 };
-
-#endif /* MIDIID_H__ */

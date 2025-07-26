@@ -2,7 +2,7 @@
 
 #ifndef PERFDATATRACK_H__
 #define PERFDATATRACK_H__
-#include "WProgram.h"
+#include "platform.h"
 #include "MCLMemory.h"
 #include "MD.h"
 

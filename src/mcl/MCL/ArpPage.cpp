@@ -1,4 +1,6 @@
-#include "MCL_impl.h"
+#include "ArpPage.h"
+#include "SeqPages.h"
+#include "MCLGUI.h"
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 18, ENCODER_RES_SEQ);
@@ -13,7 +15,7 @@ void ArpPage::init() {
   DEBUG_PRINT_FN();
 //  seq_ptc_page.display();
   track_update();
-  trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+  key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 }
 
 void ArpPage::track_update(uint8_t n, bool re_render) {
@@ -135,7 +137,7 @@ void ArpPage::display() {
 
 bool ArpPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
 
       switch (key) {
@@ -183,7 +185,7 @@ bool ArpPage::handleEvent(gui_event_t *event) {
   }
   /*  if (note_interface.is_event(event) &&
     midi_active_peering.get_device(event->port) == &MD) {
-        trig_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+        key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
         return true;
 
     } */

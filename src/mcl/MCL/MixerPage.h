@@ -5,6 +5,8 @@
 
 // #include "Pages.h"
 #include "GUI.h"
+#include "MCL.h"
+#include "MD.h"
 
 class MuteSet {
 public:

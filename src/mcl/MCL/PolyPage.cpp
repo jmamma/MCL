@@ -1,19 +1,22 @@
-#include "MCL_impl.h"
-
+#include "PolyPage.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "SeqPages.h"
+#include "MidiActivePeering.h"
 void PolyPage::setup() {}
 
 void PolyPage::init() {
 
   poly_mask = &mcl_cfg.poly_mask;
   DEBUG_PRINT_FN();
-  trig_interface.on();
+  key_interface.on();
   note_interface.init_notes();
   MD.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
 }
 
 void PolyPage::cleanup() {
   seq_ptc_page.init_poly();
-  trig_interface.off();
+  key_interface.off();
 }
 
 void PolyPage::draw_mask() {
@@ -60,7 +63,7 @@ void PolyPage::display() {
 
 bool PolyPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES:
@@ -71,7 +74,7 @@ bool PolyPage::handleEvent(gui_event_t *event) {
   }
 
   if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }

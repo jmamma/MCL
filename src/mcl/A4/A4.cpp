@@ -1,5 +1,8 @@
 #include "A4.h"
+#include "EmptyTrack.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "TurboLight.h"
 
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
 
@@ -195,7 +198,7 @@ bool A4Class::getBlockingSettingsX(uint8_t settings, uint16_t timeout) {
     return getBlockingGeneric(timeout);
 }
 
-void A4Class::muteTrack(uint8_t track, bool mute, MidiUartParent *uart_) {
+void A4Class::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
   if (uart_ == nullptr) { uart_ = uart; }
   uart->sendCC(track, 94, mute);
 }

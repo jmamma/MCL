@@ -1,5 +1,7 @@
-#include "MCL_impl.h"
 #include "SeqTrack.h"
+#include "MCLSeq.h"
+#include "memory.h"
+#include "MCLSysConfig.h"
 
 #define _swap_int16_t(a, b)                                                    \
   {                                                                            \

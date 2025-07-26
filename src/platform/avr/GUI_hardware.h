@@ -1,15 +1,15 @@
-#ifndef GUI_PRIVATE_H__
-#define GUI_PRIVATE_H__
+#pragma once
 
-#include <avr/pgmspace.h>
 #include <inttypes.h>
-#include "Core.h"
+#include "platform.h"
+#include "hardware.h"
 
 class SR165Class {
   inline void rst();
   inline void clk();
  public:
   SR165Class();
+  ALWAYS_INLINE() void init();
   ALWAYS_INLINE() uint8_t read();
   ALWAYS_INLINE() uint16_t read16();
   ALWAYS_INLINE() uint8_t read_norst();
@@ -18,30 +18,28 @@ class SR165Class {
 #define GUI_NUM_ENCODERS 4
 #define GUI_NUM_BUTTONS  8
 
-typedef struct encoder_s {
-  int8_t normal;
-  int8_t button;
-} encoder_t;
-
 class EncodersClass {
   uint16_t sr_old;
   uint8_t sr_old2s[GUI_NUM_ENCODERS];
-
  public:
   encoder_t encoders[GUI_NUM_ENCODERS];
 
   EncodersClass();
 
-  ALWAYS_INLINE() void poll(uint16_t sr);
-  ALWAYS_INLINE() void clearEncoders();
+  void poll(uint16_t sr);
+  void clearEncoders();
 
   ALWAYS_INLINE() int8_t getNormal(uint8_t i) { return encoders[i].normal; }
-  ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }
+  //ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }
 
   ALWAYS_INLINE() int8_t limitValue(int8_t value, int8_t min, int8_t max) {
     return (value > max) ? max : (value < min ? min : value);
   }
 };
+#define ENCODER_NORMAL(i) (encoders[(i)].normal)
+#define ENCODER_SHIFT(i)  (encoders[(i)].shift)
+#define ENCODER_BUTTON(i) (encoders[(i)].button)
+#define ENCODER_BUTTON_SHIFT(i) (encoders[(i)].button_shift)
 
 #define B_BIT_CURRENT        0
 #define B_BIT_OLD            1
@@ -103,22 +101,32 @@ class EncodersClass {
 
 typedef struct button_s {
   uint8_t  status;
-  uint16_t press_time;
-  uint16_t last_press_time;
+  //uint16_t press_time;
+  //uint16_t last_press_time;
 } button_t;
 
 class ButtonsClass {
  public:
   button_t buttons[GUI_NUM_BUTTONS];
 
-  static const uint8_t BUTTON1 = 4;
-  static const uint8_t BUTTON2 = 5;
-  static const uint8_t BUTTON3 = 6;
-  static const uint8_t BUTTON4 = 7;
   static const uint8_t ENCODER1 = 0;
   static const uint8_t ENCODER2 = 1;
   static const uint8_t ENCODER3 = 2;
   static const uint8_t ENCODER4 = 3;
+  static const uint8_t BUTTON1 = 4;
+  static const uint8_t BUTTON2 = 5;
+  static const uint8_t BUTTON3 = 6;
+  static const uint8_t BUTTON4 = 7;
+  static const uint8_t FUNC_BUTTON1 = 8;
+  static const uint8_t FUNC_BUTTON2 = 9;
+  static const uint8_t FUNC_BUTTON3 = 10;
+  static const uint8_t FUNC_BUTTON4 = 11;
+  static const uint8_t FUNC_BUTTON5 = 12;
+  static const uint8_t FUNC_BUTTON6 = 13;
+  static const uint8_t FUNC_BUTTON7 = 14;
+  static const uint8_t FUNC_BUTTON8 = 15;
+  static const uint8_t FUNC_BUTTON9 = 16;
+  static const uint8_t TRIG_BUTTON1 = 17;
 
   static const uint16_t ENCODER1_MASK = _BV(ENCODER1);
   static const uint16_t ENCODER2_MASK = _BV(ENCODER2);
@@ -128,15 +136,30 @@ class ButtonsClass {
   static const uint16_t BUTTON2_MASK = _BV(BUTTON2);
   static const uint16_t BUTTON3_MASK = _BV(BUTTON3);
   static const uint16_t BUTTON4_MASK = _BV(BUTTON4);
-  
+
   ButtonsClass();
+
   ALWAYS_INLINE() void clear();
   ALWAYS_INLINE() void poll(uint8_t sr);
+
 };
 
+class GUIHardware {
+private:
+    bool inGui;
+    uint16_t oldsr;
+public:
+    ButtonsClass Buttons;  // Made public for macro access
+
+    GUIHardware() : inGui(false), oldsr(0) {}
+    void init();
+    void poll();
+    void clear();
+
+    friend class GuiClass;
+};
+extern GUIHardware GUI_hardware;
 extern SR165Class SR165;
 extern EncodersClass Encoders;
 extern ButtonsClass Buttons;
-
-#endif /* GUI_PRIVATE_H__ */
 

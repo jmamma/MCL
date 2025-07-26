@@ -1,9 +1,11 @@
-#include "MCL_impl.h"
+#include "MCLSD.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "StackMonitor.h"
+#include "Project.h"
 /*
    Function for initialising the SD Card
 */
-SdFat SD __attribute__((section(".sdcard")));
 
 bool MCLSd::sd_init() {
   bool ret = false;
@@ -12,7 +14,9 @@ bool MCLSd::sd_init() {
   // File file("/test.mcl",O_WRITE);
   /*Configuration file used to store settings when Minicommand is turned off*/
   for (uint8_t n = 0; n < SD_MAX_RETRIES && ret == false; n++) {
-    ret = SD.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(50)));
+
+    ret = SD.begin(SD_CONFIG);
+    //ret = SD.begin(SdSpiConfig(SD_CS, DEDICATED_SPI, SD_SCK_MHZ(50)));
     if (!ret) {
       delay(50);
     }
@@ -102,7 +106,6 @@ bool MCLSd::seek(uint32_t pos, File *filep) {
   }
 
   do {
-    DEBUG_CHECK_STACK();
     ret = filep->seekSet(pos);
     if (ret) {
       return true;

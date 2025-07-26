@@ -1,34 +1,10 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-/**
- * \addtogroup CommonTools
- *
- * @{
- *
- * \file
- * Collection of C helper functions and macros.
- *
- * Notes on the do....while(false) pattern:
- * It forces the macro to be used as a statement, rather than an expression.
- * For example:
- * 
- * #define FOO(x) do { ... x; } while (false)
- *
- * ...
- *
- * void bar() {
- *   FOO(0);        // valid
- *   return FOO(1); // not valid
- * }
- *
- **/
-
-#ifndef HELPERS_H__
-#define HELPERS_H__
+#pragma once
 
 #include <inttypes.h>
-#include <Core.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 
@@ -160,13 +136,20 @@ uint8_t popcount32(const uint32_t bits);
  **/
 
 /** Get the minimum of x and y. **/
+#ifndef MIN
 #define MIN(x, y) ((x) > (y) ? (y) : (x))
-/** Get the maximum of x and y. **/
-#define MAX(x, y) ((x) > (y) ? (x) : (y))
-/** Get the absolute value of x. **/
-#define ABS(x) ((x) < 0 ? -(x) : (x))
+#endif
 
-#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
+/** Get the maximum of x and y. **/
+#ifndef MAX
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#endif
+
+/** Get the absolute value of x. **/
+#ifndef ABS
+#define ABS(x) ((x) < 0 ? -(x) : (x))
+#endif
+
 #ifndef HOST_MIDIDUINO
 //#define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
 #endif
@@ -198,21 +181,12 @@ uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
 	/** Clear the "lock" by restoring the interrupt status. **/
 #define CLEAR_LOCK() SREG = _irqlock_tmp
 #else
-
-	/** On the host, use empty routines to store interrupt status. **/
-#define USE_LOCK()   
-#define SET_LOCK()   
-#define CLEAR_LOCK()
-	
 #endif
 
 #ifdef AVR
 #include <avr/pgmspace.h>
-#else
-	/** Host-side empty definitions for access to program space. **/
-#define PGM_P const char *
-#define pgm_read_byte(a) (uint8_t)((*a))
 #endif
+	/** Host-side empty definitions for access to program space. **/
 
 	/** @} **/
 
@@ -235,49 +209,22 @@ uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
  * @{
  **/
 	
-void m_strncpy_fill(void *dst, const char *src, uint16_t cnt);
-void m_strncpy_p_fill(void *dst, PGM_P src, uint16_t cnt);
 void m_toupper(char* str);
 void m_trim_space(char* str);
 
-/** @} */
+extern volatile uint16_t g_clock_ms;
+extern volatile uint16_t g_clock_fast;
 
-/**
- * \addtogroup helpers_clock Timing functions
- * @{
- **/
-			
-extern uint16_t read_clock(void);
-extern uint16_t read_slowclock(void);
-ALWAYS_INLINE() uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
+#define read_clock() (g_clock_fast)
+#define read_slowclock() (g_clock_ms)
+#define read_clock_ms() (g_clock_ms)
 
-#ifdef HOST_MIDIDUINO
-#else
-extern volatile uint16_t clock;
-extern volatile uint16_t slowclock;
-extern volatile uint16_t clock_minutes;
-#endif
+uint16_t clock_diff(uint16_t old_clock, uint16_t new_clock);
 
 
-/** @} **/
-
-/**
- * \addtogroup helpers_debug Debugging functions
- * @{
- **/
-			
-#ifdef HOST_MIDIDUINO
-	void hexdump(uint8_t *data, uint16_t len);
-#endif
-
-/**
- * @}
- */
-	
 #ifdef __cplusplus
 }
 
 #include "Task.h"
 #endif
 
-#endif /* HELPERS_H__ */

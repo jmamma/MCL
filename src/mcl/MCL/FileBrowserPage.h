@@ -7,8 +7,8 @@
 #include "MCLEncoder.h"
 #include "Menu.h"
 #include "MenuPage.h"
-#include "SdFat.h"
 #include "SeqPage.h"
+#include "MCLSd.h"
 
 #define MAX_ENTRIES 1024
 

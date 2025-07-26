@@ -1,5 +1,12 @@
-#include "MCL_impl.h"
+#include "RAMPage.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "MCLActions.h"
+#include "MDTrack.h"
+#include "MCLSeq.h"
+#include "GridPages.h"
+#include "AuxPages.h"
+#include "MidiActivePeering.h"
 
 #define STATE_NOSTATE 0
 #define STATE_QUEUE 1
@@ -25,7 +32,7 @@ void RAMPage::setup() {
 
 void RAMPage::init() {
   DEBUG_PRINT_FN();
-  trig_interface.off();
+  key_interface.off();
   cc_link_enable = true;
   if (mcl_cfg.ram_page_mode == MONO) {
     ((MCLEncoder *)encoders[0])->max = 2;
@@ -669,7 +676,7 @@ void RAMPage::remove_callbacks() {
 */
 bool RAMPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES:
@@ -680,7 +687,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     }
   }
   if (note_interface.is_event(event)) {
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }

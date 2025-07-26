@@ -1,4 +1,4 @@
-#include "WProgram.h"
+#include "platform.h"
 
 #include "A4.h"
 #include "A4Messages.h"
@@ -69,4 +69,4 @@ void A4SysexListenerClass::end() {
 
 }
 
-void A4SysexListenerClass::setup(MidiClass *_midi) { sysex = &(_midi->midiSysex); sysex->addSysexListener(this); }
+void A4SysexListenerClass::setup(MidiClass *_midi) { sysex = _midi->midiSysex; sysex->addSysexListener(this); }

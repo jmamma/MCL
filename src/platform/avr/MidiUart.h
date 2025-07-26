@@ -110,28 +110,7 @@ class MidiUartClass : public MidiUartParent, public Stream {
 class MidiUartClass : public MidiUartParent {
 #endif
 
-public:
-  MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf,
-                uint16_t rx_buf_size, volatile uint8_t *tx_buf,
-                uint16_t tx_buf_size);
-
-  ALWAYS_INLINE() bool avail() { return !rxRb.isEmpty(); }
-  ALWAYS_INLINE() uint8_t m_getc() { return rxRb.get(); }
-
-  int8_t in_message_tx;
-
-#ifdef RUNNING_STATUS_OUT
-  uint8_t running_status;
-  bool running_status_enabled;
-#endif
-
-  volatile uint8_t *udr;
-  volatile uint8_t *ubrrh() { return udr - 1; }
-  volatile uint8_t *ubrrl() { return udr - 2; }
-  volatile uint8_t *ucsrc() { return udr - 4; }
-  volatile uint8_t *ucsrb() { return udr - 5; }
-  volatile uint8_t *ucsra() { return udr - 6; }
-
+private:
 #ifdef RUNNING_STATUS_OUT
   ALWAYS_INLINE() bool write_char(uint8_t c) {
     if (!running_status_enabled) {
@@ -159,7 +138,6 @@ public:
     volatile uint8_t *ptr = ucsra();
     return *ptr & (1 << UDRE0);
   }
-
   void set_tx() {
     volatile uint8_t *ptr = ucsrb();
     *ptr |= (1 << UDRIE0);
@@ -169,9 +147,36 @@ public:
     *ptr &= ~(1 << UDRIE0);
   }
 
+  volatile uint8_t *udr;
+  volatile uint8_t *ubrrh() { return udr - 1; }
+  volatile uint8_t *ubrrl() { return udr - 2; }
+  volatile uint8_t *ucsrc() { return udr - 4; }
+  volatile uint8_t *ucsrb() { return udr - 5; }
+  volatile uint8_t *ucsra() { return udr - 6; }
+
+public:
+  uint8_t mode;
+  // Ring buffers with compile-time sizes
+  int8_t in_message_tx;
+  volatile RingBuffer<> *rxRb;
+  volatile RingBuffer<> *txRb;
+  volatile RingBuffer<> *txRb_sidechannel;
+
+#ifdef RUNNING_STATUS_OUT
+  uint8_t running_status;
+  bool running_status_enabled;
+#endif
+
+  MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb = nullptr,
+                RingBuffer<> *_txRb = nullptr);
+
+  ALWAYS_INLINE() bool avail() { return !rxRb->isEmpty(); }
+  ALWAYS_INLINE() uint8_t m_getc() { return rxRb->get(); }
+
+
   void set_speed(uint32_t speed);
 
-  void initSerial();
+  void init();
 
   void m_putc_immediate(uint8_t c);
   size_t write(uint8_t c) {
@@ -194,26 +199,26 @@ public:
 
       if (MIDI_IS_STATUS_BYTE(c)) {
         if (c != MIDI_SYSEX_END) {
-          midi->midiSysex.abort();
-          rxRb.put_h_isr(c);
+          midi->midiSysex->abort();
+          rxRb->put_h_isr(c);
         } else {
-          midi->midiSysex.end_immediate();
+          midi->midiSysex->end_immediate();
         }
         midi->live_state = midi_wait_status;
       } else {
         // record
-        midi->midiSysex.handleByte(c);
+        midi->midiSysex->handleByte(c);
       }
       break;
 
     case midi_wait_status:
       if (c == MIDI_SYSEX_START) {
         midi->live_state = midi_wait_sysex;
-        midi->midiSysex.reset();
+        midi->midiSysex->reset();
         break;
       }
     default:
-      rxRb.put_h_isr(c);
+      rxRb->put_h_isr(c);
       break;
     }
   }
@@ -238,13 +243,13 @@ public:
       if (txRb_sidechannel->isEmpty_isr()) {
         txRb_sidechannel = nullptr;
       }
-    } else if (!txRb.isEmpty_isr()) {
+    } else if (!txRb->isEmpty_isr()) {
       // 1. either sidechannel is unmounted, or an active message is in normal
       // channel
       // 2. -and- a normal channel byte is queued
       // ==> flush the normal channel now
       sendActiveSenseTimer = sendActiveSenseTimeout;
-      uint8_t c = txRb.get_h_isr();
+      uint8_t c = txRb->get_h_isr();
 #ifdef RUNNING_STATUS_OUT
       rs = write_char(c);
 #else
@@ -302,22 +307,22 @@ public:
       goto again;
     }
 #endif
-    if (txRb.isEmpty_isr() && (txRb_sidechannel == nullptr)) {
+    if (txRb->isEmpty_isr() && (txRb_sidechannel == nullptr)) {
       clear_tx();
     }
   }
 
   ALWAYS_INLINE() void m_recv(uint8_t *src, uint16_t size) {
-    rxRb.put_h_isr(src, size);
+    rxRb->put_h_isr(src, size);
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
-    txRb.put_h_isr(src, size);
+    txRb->put_h_isr(src, size);
     set_tx();
   }
 
   ALWAYS_INLINE() void m_putc(uint8_t c) {
-    txRb.put_h_isr(c);
+    txRb->put_h_isr(c);
     set_tx();
   }
 
@@ -329,17 +334,6 @@ public:
   void flush() { return; }
 #endif
 
-  volatile RingBuffer<0, RX_BUF_TYPE> rxRb;
-  volatile RingBuffer<0, TX_BUF_TYPE> txRb;
-  volatile RingBuffer<0, TX_BUF_TYPE> *txRb_sidechannel;
 };
-
-extern MidiUartClass seq_tx1;
-extern MidiUartClass seq_tx2;
-extern MidiUartClass seq_tx3;
-extern MidiUartClass seq_tx4;
-
-extern MidiUartClass MidiUart;
-extern MidiUartClass MidiUart2;
-extern MidiUartClass MidiUartUSB;
+;
 #endif /* MIDI_UART_H__ */

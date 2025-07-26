@@ -8,6 +8,8 @@
 #define SOUND_ID 0xFFFA
 #define SOUND_VERSION 2000
 
+#include "MD.h"
+
 class MDSoundData {
 public:
   uint32_t id = SOUND_ID;

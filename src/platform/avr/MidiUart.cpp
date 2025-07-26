@@ -1,6 +1,6 @@
 //#define IS_ISR_ROUTINE
 
-#include "WProgram.h"
+#include "platform.h"
 
 #include <avr/interrupt.h>
 #include <avr/io.h>
@@ -15,22 +15,16 @@
 
 #include "MCLSeq.h"
 
-MidiUartClass::MidiUartClass(volatile uint8_t *udr_, volatile uint8_t *rx_buf,
-                             uint16_t rx_buf_size, volatile uint8_t *tx_buf,
-                             uint16_t tx_buf_size)
-    : MidiUartParent() {
+MidiUartClass::MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb,
+                             RingBuffer<> *_txRb) : MidiUartParent() {
   udr = udr_;
   mode = UART_MIDI;
-  rxRb.ptr = rx_buf;
-  rxRb.len = rx_buf_size;
-  txRb.ptr = tx_buf;
-  txRb.len = tx_buf_size;
-  // ignore side channel;
+  rxRb = _rxRb;
+  txRb = _txRb;
   txRb_sidechannel = nullptr;
-  initSerial();
 }
 
-void MidiUartClass::initSerial() {
+void MidiUartClass::init() {
   set_speed(31250);
   volatile uint8_t *src = ucsrc();
   volatile uint8_t *srb = ucsrb();
@@ -48,7 +42,7 @@ void MidiUartClass::set_speed(uint32_t speed_) {
   // empty TX buffer before switching speed
   // UBRR1H = ((cpu >> 8) & 0xFF);
   // UBRR1L = (cpu & 0xFF);
-  while (!txRb.isEmpty())
+  while (!txRb->isEmpty())
     ;
   while (!(check_empty_tx()));
 
@@ -69,16 +63,6 @@ void MidiUartClass::m_putc_immediate(uint8_t c) {
   USE_LOCK();
   SET_LOCK();
   while (!check_empty_tx()) {
-    if (TIMER1_CHECK_INT()) {
-      TCNT1 = 0;
-      clock++;
-      TIMER1_CLEAR_INT()
-    }
-    if (TIMER3_CHECK_INT()) {
-      TCNT2 = 0;
-      slowclock++;
-      TIMER3_CLEAR_INT()
-    }
   }
   sendActiveSenseTimer = sendActiveSenseTimeout;
   write_char(c);
@@ -113,7 +97,7 @@ void MidiUartClass::realtime_isr(uint8_t c) {
       MidiClock.handleImmediateMidiContinue();
       break;
     }
-    rxRb.put_h_isr(c);
+    rxRb->put_h_isr(c);
   }
   return;
 }

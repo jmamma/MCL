@@ -23,7 +23,7 @@ class MCLEncoder : public Encoder {
        will be called with the constructor arguments.
      **/
     MCLEncoder(int _max = 127, int _min = 0, int res = 1) : Encoder() {
-      initMCLEncoder(_max, _min, (int) 0, res, (encoder_handle_t) NULL);
+      initMCLEncoder(_max, _min, (int) 0, res, (encoder_handle_t) nullptr);
     }
 
 
@@ -36,7 +36,7 @@ class MCLEncoder : public Encoder {
 
        The initial value is called without calling the handling function.
      **/
-    void initMCLEncoder(int _max = 128, int _min = 0, int init = 0, int res = 1, encoder_handle_t _handler = NULL) {
+    void initMCLEncoder(int _max = 128, int _min = 0, int init = 0, int res = 1, encoder_handle_t _handler = nullptr) {
       rot_res = res;
       //		setName(_name);
       handler = _handler;

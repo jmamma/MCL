@@ -1,5 +1,7 @@
-#include "MCL_impl.h"
-
+#include "GridTrack.h"
+#include "Project.h"
+#include "MCLActions.h"
+#include "platform.h"
 
 bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid) {
   if (grid == nullptr) {

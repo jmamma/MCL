@@ -1,31 +1,10 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
-#ifndef CALLBACK_H__
-#define CALLBACK_H__
-
-/**
- * \addtogroup CommonTools
- *
- * @{
- *
- * \addtogroup helpers_callback Callback classes
- *
- * @{
- *
- * \file
- * Callback classes.
- **/
-
-/**
- * \addtogroup callbackvector Callback vector
- *
- * @{
- */
-
+#pragma once
 
 #include <inttypes.h>
 #include "helpers.h"
-
+#include "platform.h"
 /**
  * Templated class that holds an array of N pointers to callback
  * objects of class C, with a callback function of type M.
@@ -154,6 +133,3 @@ public:
   }
 };
 
-/* @} @} @} */
-
-#endif /* CALLBACK_H__ */

@@ -4,7 +4,7 @@
 #define WAV_H__
 
 #include "MCLSd.h"
-
+#include "platform.h"
 // ref: http://www.piclist.com/techref/io/serial/midi/wave.html
 
 typedef char chunkid_t[4];

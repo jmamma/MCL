@@ -107,8 +107,15 @@ public:
   }
 
   int memcmp_sound(uint8_t column) {
-    uint16_t pos = get_region() + get_track_size() * (uint16_t)(column) + ((uint16_t) get_sound_data_ptr() - (uint16_t) this);
-    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
+    // 1. Get the base address. It doesn't matter if it's from the constexpr or linker world.
+    //    It's now safely inside a uintptr_t.
+    uintptr_t region_base = get_region();
+
+    // 2. Calculate offsets using safe, portable uintptr_t arithmetic.
+    uintptr_t sound_data_offset = (reinterpret_cast<uintptr_t>(get_sound_data_ptr()) - reinterpret_cast<uintptr_t>(this));
+    uintptr_t pos = region_base + (static_cast<uintptr_t>(get_track_size()) * column) + sound_data_offset;
+    // 3. Convert the final calculated address back to a pointer.
+    volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
     return memcmp_bank1(get_sound_data_ptr(), ptr, get_sound_data_size());
   }
 
@@ -139,14 +146,14 @@ class DeviceTrackChunk : public DeviceTrack {
   bool load_link_from_mem(uint8_t column);
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                     bool online = false) {};
+                     bool online = false) { return false; };
 
   uint8_t get_chunk_count() { return (get_seq_data_size() / sizeof(seq_data_chunk)) + 1; }
 
   virtual uint16_t get_seq_data_size() = 0;
   virtual uint8_t get_model() = 0;
   virtual uint16_t get_track_size() = 0;
-  virtual uint16_t get_region() = 0;
+  virtual uintptr_t get_region() = 0;
   virtual uint8_t get_device_type() = 0;
 
   virtual void *get_sound_data_ptr() = 0;

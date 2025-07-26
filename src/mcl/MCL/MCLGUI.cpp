@@ -1,5 +1,8 @@
-#include "MCL_impl.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "Oled.h"
+#include "Project.h"
+#include "MidiActivePeering.h"
 
 void MCLGUI::put_value_at2(uint8_t value, char *str) {
    str[0] = (value % 100) / 10 + '0';
@@ -191,8 +194,8 @@ void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
 }
 
 void MCLGUI::delay_progress(uint16_t clock_) {
-  uint16_t myclock = slowclock;
-  while (clock_diff(myclock, slowclock) < clock_) {
+  uint16_t myclock = read_clock_ms();
+  while (clock_diff(myclock, read_clock_ms()) < clock_) {
     mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
   }
 }
@@ -346,11 +349,11 @@ bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
 
   if (match != 255) {
     if (clock_diff(((LightPage *)GUI.currentPage())->encoders_used_clock[match],
-                   slowclock) < timeout || BUTTON_DOWN(Buttons.ENCODER1 + match)) {
+                   read_clock_ms()) < timeout || BUTTON_DOWN(Buttons.ENCODER1 + match)) {
       return true;
     } else {
       ((LightPage *)GUI.currentPage())->encoders_used_clock[match] =
-          slowclock + timeout + 1;
+          read_clock_ms() + timeout + 1;
     }
   }
 

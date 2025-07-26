@@ -1,4 +1,5 @@
-#include "MCL_impl.h"
+#include "TextInputPage.h"
+#include "MCLGUI.h"
 
 constexpr auto sz_allowedchar = 69;
 
@@ -70,7 +71,7 @@ void TextInputPage::config_normal() {
   // redraw popup body
 #endif
   // update clock
-  last_clock = slowclock;
+  last_clock = read_clock_ms();
 }
 
 // charpane layout:
@@ -95,11 +96,11 @@ void TextInputPage::loop() {
   if (normal_mode) {
   if (encoders[0]->hasChanged()) {
     update_char();
-    last_clock = slowclock;
+    last_clock = read_clock_ms();
   }
 
   if (encoders[1]->hasChanged()) {
-    last_clock = slowclock;
+    last_clock = read_clock_ms();
     encoders[1]->old = encoders[1]->cur;
     text[cursor_position] = _getchar(encoders[1]->getValue());
   }
@@ -143,7 +144,7 @@ void TextInputPage::display_normal() {
 
   // Check to see that the character chosen is in the list of allowed
   // characters
-  auto time = clock_diff(last_clock, slowclock);
+  auto time = clock_diff(last_clock, read_clock_ms());
 
   // mcl_gui.clear_popup(); <-- E_TOOSLOW
   oled_display.fillRect(s_text_x, s_text_y, 6 * length, 8, BLACK);
@@ -159,7 +160,7 @@ void TextInputPage::display_normal() {
     oled_display.setTextColor(WHITE);
   }
   if (time > FLASH_SPEED * 2) {
-    last_clock = slowclock;
+    last_clock = read_clock_ms();
   }
 }
 
@@ -187,7 +188,7 @@ void TextInputPage::display_charpane() {
     uint8_t chridx = encoders[0]->cur + encoders[1]->cur * charpane_w;
     text[cursor_position] = _getchar(chridx);
 
-  last_clock = slowclock;
+  last_clock = read_clock_ms();
 }
 
 void TextInputPage::display() {
@@ -203,15 +204,15 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_CMD(event)) {
-    uint8_t key = event->source - 64;
+    uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
       switch (key) {
       case MDX_KEY_YES:
-        //  trig_interface.ignoreNextEvent(MDX_KEY_YES);
+        //  key_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES;
       case MDX_KEY_NO:
-        //  trig_interface.ignoreNextEvent(MDX_KEY_NO);
+        //  key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
         encoders[1]->cur += normal_mode ? inc : -1 * inc;

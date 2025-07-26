@@ -1,8 +1,11 @@
-#include "MCL_impl.h"
+#include "LoadProjectPage.h"
+#include "MCLGFX.h"
+#include "MCLSysConfig.h"
+#include "Project.h"
 
 void LoadProjectPage::init() {
 
-  DEBUG_PRINTLN("load project page init")
+  DEBUG_PRINTLN("load project page init");
   DEBUG_PRINT_FN();
   show_dirs = true;
   select_dirs = true;

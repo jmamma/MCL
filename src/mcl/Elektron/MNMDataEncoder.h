@@ -5,7 +5,7 @@
 
 #include "DataEncoder.h"
 #include "ElektronDataEncoder.h"
-#include "WProgram.h"
+#include "platform.h"
 
 /**
  * \addtogroup Elektron
@@ -40,7 +40,7 @@ public:
     mnm_encoder_init();
   }
 
-  MNMDataToSysexEncoder(MidiUartParent *_uart) 
+  MNMDataToSysexEncoder(MidiUartClass *_uart) 
   : ElektronDataToSysexEncoder(_uart) {
     mnm_encoder_init();
   }

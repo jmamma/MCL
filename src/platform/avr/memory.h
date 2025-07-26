@@ -1,6 +1,8 @@
 #ifndef MEMORY_H__
 #define MEMORY_H__
 
+#include "platform.h"
+
 #define NUM_DEVS 2
 
 #define NUM_CLOCK_CALLBACKS 4
@@ -47,6 +49,9 @@
 
 #define BANK1_SYSEX3_DATA_START (BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN)
 #define SYSEX3_DATA_LEN 0x1830UL //6KB
+
+#define BANK3_START 0x0000
+#define BANK3_END 0x2000
 
 /* definition to expand macro then apply to pragma message */
 #define VALUE_TO_STRING(x) #x
@@ -176,7 +181,7 @@ FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const 
 extern volatile uint8_t *rand_ptr;
 
 FORCED_INLINE() extern inline uint8_t get_random_byte() {
-    return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ slowclock);
+    return (pgm_read_byte(rand_ptr++) ^ get_byte_bank1(rand_ptr) ^ read_clock_ms());
 }
 
 extern inline uint8_t get_random(uint8_t range) {

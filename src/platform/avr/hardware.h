@@ -1,11 +1,22 @@
-#ifndef MIDIDUINO_PRIVATE_H__
-#define MIDIDUINO_PRIVATE_H__
+#pragma once
+#define USB_SERIAL  3
+#define USB_MIDI    2
+#define USB_STORAGE 1
+#define USB_DFU     0
 
-#include "CommonTools/helpers.h"
+#include "helpers.h"
 
-void init(void);
 
 #ifdef MEGACOMMAND
+#define SPI1_SS_PIN 53 //PB0
+#else
+#define SPI1_SS_PIN 9  //PE7
+#endif
+
+#define SD_CONFIG SdSpiConfig(SPI1_SS_PIN, DEDICATED_SPI, SD_SCK_MHZ(12), &SPI)
+
+#ifdef MEGACOMMAND
+
 inline void toggleLed(void) {
   TOGGLE_BIT(PORTE, PE5);
 }
@@ -50,14 +61,10 @@ inline void toggleLed2(void) {
 }
 #endif
 
-#define FIRMWARE_LENGTH_ADDR ((uint16_t *)0x00)
-#define FIRMWARE_CHECKSUM_ADDR ((uint16_t *)0x02)
-#define START_MAIN_APP_ADDR ((uint16_t *)0x04)
+typedef struct encoder_s {
+  int8_t normal;
+  int8_t button;
+} encoder_t;
 
-#define BOARD_ID 0x41
-
-void start_bootloader(void);
-
-void handleIncomingMidi();
-
-#endif /* MIDIDUIDNO_PRIVATE_H__ */
+extern void change_usb_mode(uint8_t mode);
+extern void(* hardwareReset) (void);

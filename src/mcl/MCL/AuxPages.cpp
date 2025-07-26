@@ -1,4 +1,11 @@
-#include "MCL_impl.h"
+#include "MCLEncoder.h"
+#include "PerfEncoder.h"
+#include "RoutePage.h"
+#include "MixerPage.h"
+#include "FXPage.h"
+#include "LFOPage.h"
+#include "PerfPage.h"
+#include "MCLSeq.h"
 
 MCLEncoder mixer_param1;
 MCLEncoder mixer_param2;

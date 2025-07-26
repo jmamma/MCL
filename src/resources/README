@@ -1,0 +1,2 @@
+Files in these subdirectories are generated dynamically by generate_resources.py
+They are compressed data structures which uncompressed at runtime.

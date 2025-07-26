@@ -1,7 +1,6 @@
 /* Copyright Justin Mammarella jmamma@gmail.com 2018 */
 
-#ifndef DSP_H__
-#define DSP_H__
+#pragma once
 
 #include "mcl.h"
 #include "math.h"
@@ -17,4 +16,3 @@ public:
 
 extern DSP dsp;
 
-#endif /* DSP_H__ */

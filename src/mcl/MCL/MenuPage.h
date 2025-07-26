@@ -5,6 +5,7 @@
 
 #include "GUI.h"
 #include "Menu.h"
+#include "MCLGfx.h"
 
 #ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
@@ -43,6 +44,7 @@ public:
   void cleanup();
   void gen_menu_device_names();
   void gen_menu_row_names();
+  void gen_menu_transpose_names();
   virtual bool handleEvent(gui_event_t *event);
 
 protected:

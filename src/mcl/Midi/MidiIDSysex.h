@@ -2,9 +2,8 @@
 #ifndef MIDIIDSYSEX_H__
 #define MIDIIDSYSEX_H__
 
-#include "Midi.h"
 #include "MidiSysex.h"
-#include "WProgram.h"
+class MidiClass;
 
 class MidiIDSysexListenerClass : public MidiSysexListenerClass {
   /**

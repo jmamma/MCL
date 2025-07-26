@@ -1,5 +1,14 @@
 //* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "MCL_impl.h"
+#include "MCLActions.h"
+#include "Project.h"
+#include "MCLGUI.h"
+#include "MD.h"
+#include "GridPages.h"
+#include "MidiActivePeering.h"
+#include "Elektron.h"
+#include "EmptyTrack.h"
+#include "MDTrack.h"
+#include "GridTask.h"
 
 #define MD_KIT_LENGTH 0x4D0
 
@@ -543,6 +552,21 @@ bool MCLActions::load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
   return true;
 }
 
+void MCLActions::handle_mute_states(uint8_t *mute_states, bool restore) {
+  for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
+    if (mute_states[i] == 255) { continue; }
+    GridDeviceTrack *gdt_dst = get_grid_dev_track(i);
+    if (gdt_dst != nullptr) {
+      if (restore) {
+        gdt_dst->seq_track->mute_state = mute_states[i];
+      } else {
+        mute_states[i] = gdt_dst->seq_track->mute_state;
+        gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
+      }
+    }
+  }
+}
+
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
                                         uint8_t *row_array, uint8_t load_offset) {
   // DEBUG_PRINT_FN();
@@ -558,6 +582,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   };
 
   uint8_t send_masks[NUM_SLOTS] = {0};
+  uint8_t mute_states[NUM_SLOTS];
+  memset(mute_states, 255, sizeof(mute_states));
+
   uint8_t row = 0;
   uint8_t old_grid = proj.get_grid();
 
@@ -583,6 +610,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { select_array[i] = 0; continue; }
 
     proj.select_grid(grid_idx);
+    mute_states[dst] = gdt_dst->seq_track->mute_state;
 
       row = grid_page.getRow();
     if (row_array) {
@@ -599,8 +627,10 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       select_array[i] = 0;
     }
   }
+  handle_mute_states(mute_states,false);
+
   /*Send the encoded kit to the devices via sysex*/
-  uint16_t myclock = slowclock;
+  uint16_t myclock = read_clock_ms();
   uint16_t latency_ms = 0;
 
   GridRowHeader row_header;
@@ -636,11 +666,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   // note, do not re-enter grid_task -- stackoverflow
 
   GUI.removeTask(&grid_task);
-  while (clock_diff(myclock, slowclock) < latency_ms) {
+  while (clock_diff(myclock, read_clock_ms()) < latency_ms) {
     //  GUI.loop();
   }
   GUI.addTask(&grid_task);
 
+  handle_mute_states(mute_states,true);
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
 

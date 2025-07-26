@@ -1,5 +1,11 @@
-#include "MCL_impl.h"
+#include "MDTrackSelect.h"
+#include "MD.h"
 #include "SeqPtcPage.h"
+#include "SeqPages.h"
+
+void MDTrackSelect::setup(MidiClass *_midi) {
+  sysex = _midi->midiSysex;
+}
 
 void MDTrackSelect::start() {}
 

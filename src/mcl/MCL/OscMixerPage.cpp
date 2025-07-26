@@ -1,4 +1,8 @@
-#include "MCL_impl.h"
+#include "OscMixerPage.h"
+#include "WavDesigner.h"
+#include "MCLGUI.h"
+#include "Osc.h"
+#include "DSP.h"
 
 #ifdef WAV_DESIGNER
 
@@ -6,7 +10,7 @@ void OscMixerPage::setup() {}
 
 void OscMixerPage::init() {
   WavDesignerPage::init();
-  trig_interface.off();
+  key_interface.off();
   wavdesign_menu_page.menu.enable_entry(1, false);
   wavdesign_menu_page.menu.enable_entry(2, true);
 }

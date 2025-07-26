@@ -4,7 +4,7 @@
 #define DIAGNOSTICPAGE_H__
 #include "GUI.h"
 #include "MCLEncoder.h"
-#include "CommonTools/Stopwatch.h"
+#include "Stopwatch.h"
 
 #ifdef ENABLE_DIAG_LOGGING
 

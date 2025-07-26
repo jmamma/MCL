@@ -1,4 +1,10 @@
-#include "MCL_impl.h"
+#include "MDSeqTrack.h"
+#include "MD.h"
+#include "MDTrack.h"
+#include "MidiUart.h"
+#include "MidiClock.h"
+#include "AuxPages.h"
+#include "SeqPages.h"
 
 uint16_t MDSeqTrack::gui_update = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
@@ -101,9 +107,9 @@ void MDSeqTrack::load_cache() {
   }
 }
 
-void MDSeqTrack::seq(MidiUartParent *uart_, MidiUartParent *uart2_) {
-  MidiUartParent *uart_old = uart;
-  MidiUartParent *uart2_old = uart2;
+void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
+  MidiUartClass *uart_old = uart;
+  MidiUartClass *uart2_old = uart2;
 
   uart = uart_;
   uart2 = uart2_;
@@ -579,7 +585,7 @@ void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
   }
 }
 
-void MDSeqTrack::send_notes(uint8_t note1, MidiUartParent *uart2_) {
+void MDSeqTrack::send_notes(uint8_t note1, MidiUartClass *uart2_) {
   if (!uart2_) { uart2_ = uart2; }
   if (notes.count_down) {
     send_notes_off(uart2_);
@@ -592,7 +598,7 @@ void MDSeqTrack::send_notes(uint8_t note1, MidiUartParent *uart2_) {
   send_notes_on(uart2_);
 }
 
-void MDSeqTrack::send_notes_on(MidiUartParent *uart2_) {
+void MDSeqTrack::send_notes_on(MidiUartClass *uart2_) {
   if (!uart2_) { uart2_ = uart2; }
   TrigNotes *n = &notes;
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
@@ -609,7 +615,7 @@ void MDSeqTrack::send_notes_on(MidiUartParent *uart2_) {
   }
 }
 
-void MDSeqTrack::send_notes_off(MidiUartParent *uart2_) {
+void MDSeqTrack::send_notes_off(MidiUartClass *uart2_) {
   if (!uart2_) { uart2_ = uart2; }
   TrigNotes *n = &notes;
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
@@ -1120,4 +1126,26 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
     }
   }
   memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
+}
+
+uint8_t MDSeqTrack::transpose_pitch(uint8_t pitch, int8_t offset) {
+ uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(track_number,pitch);
+ if (note_num == 255) { return pitch; }
+ int16_t new_note = note_num + offset;
+ new_note = max(0,min(127,new_note));
+ uint8_t new_pitch = seq_ptc_page.get_machine_pitch(track_number, new_note);
+ if (new_pitch == 255) { new_pitch = pitch; }
+ return new_pitch;
+}
+
+void MDSeqTrack::transpose(int8_t offset) {
+ bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+ tuning_t const *tuning = MD.getKitModelTuning(track_number);
+ if (!tuning && !is_midi_model) { return; }
+ for (uint8_t n = 0; n < 64; n++) {
+   uint8_t pitch = get_track_lock_implicit(n, 0);
+   if (pitch == 255) { continue; }
+   set_track_pitch(n, transpose_pitch(pitch, offset));
+ }
+ MD.setTrackParam(track_number,0,transpose_pitch(MD.kit.params[track_number][0], offset), nullptr, true);
 }

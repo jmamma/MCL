@@ -1,4 +1,5 @@
 #include "R.h"
+
 const unsigned char __R_icons_logo[] PROGMEM = {
   230,
   0,
@@ -709,5 +710,5 @@ const unsigned char __R_icons_logo[] PROGMEM = {
   0,
   1,
   63,
-  255,
+  255
 };

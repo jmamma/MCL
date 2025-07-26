@@ -1,5 +1,13 @@
-#include "MCL_impl.h"
+#include "GridPage.h"
+#include "AuxPages.h"
+#include "GridPages.h"
 #include "ResourceManager.h"
+#include "MCLGUI.h"
+#include "GridTask.h"
+#include "Project.h"
+#include "MidiActivePeering.h"
+#include "MCLClipBoard.h"
+#include "MNMParams.h"
 
 #define PERF_ENC 1
 #define GRID_ENC 0
@@ -26,7 +34,7 @@ void GridPage::init() {
   if (mcl.currentPage() != GRID_PAGE) {
     return;
   }
-  trig_interface.off();
+  key_interface.off();
   //load_slot_models();
   R.Clear();
   R.use_machine_names_short();
@@ -70,7 +78,7 @@ void GridPage::jump_to_row(uint8_t row) {
   param2.old = y;
   cur_row = r;
   reload_slot_models = false;
-  grid_lastclock = slowclock;
+  grid_lastclock = read_clock_ms();
   write_cfg = true;
 }
 
@@ -92,7 +100,7 @@ void GridPage::close_bank_popup() {
   if (bank_popup == 2) {
     MD.draw_close_bank();
   }
-  trig_interface.off();
+  key_interface.off();
   if (last_page != 255) {
     DEBUG_PRINTLN("setting page");
     mcl.setPage(last_page);
@@ -160,7 +168,7 @@ void GridPage::loop() {
     if (mcl_cfg.grid_page_mode == PERF_ENC) {
       if (encoders[0]->hasChanged() || encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
          //mcl.setPage(MIXER_PAGE);
-         draw_encoders_lastclock = slowclock;
+         draw_encoders_lastclock = read_clock_ms();
          draw_encoders = true;
          //return;
          perf_page.encoder_send();
@@ -198,7 +206,7 @@ void GridPage::loop() {
       load_slot_models();
     }
     reload_slot_models = true;
-    grid_lastclock = slowclock;
+    grid_lastclock = read_clock_ms();
 
     volatile uint8_t *ptr;
     write_cfg = true;
@@ -212,13 +220,13 @@ void GridPage::loop() {
     reload_slot_models = true;
   }
 
-  if (slowclock < grid_lastclock) {
-    grid_lastclock = slowclock + GUI_NAME_TIMEOUT;
+  if (read_clock_ms() < grid_lastclock) {
+    grid_lastclock = read_clock_ms() + GUI_NAME_TIMEOUT;
   }
 
-  if (clock_diff(grid_lastclock, slowclock) > GUI_NAME_TIMEOUT) {
+  if (clock_diff(grid_lastclock, read_clock_ms()) > GUI_NAME_TIMEOUT) {
     ///   DEBUG_DUMP(grid_lastclock);
-    //   DEBUG_DUMP(slowclock);
+    //   DEBUG_DUMP(read_clock_ms());
     //   display_name = 1;
     if ((write_cfg) && (MidiClock.state != 2)) {
       mcl_cfg.cur_col = cur_col;
@@ -230,7 +238,7 @@ void GridPage::loop() {
       mcl_cfg.tempo = MidiClock.get_tempo();
       DEBUG_PRINTLN(F("write cfg"));
       if (MidiClock.state != 2) { mcl_cfg.write_cfg(); }
-      grid_lastclock = slowclock;
+      grid_lastclock = read_clock_ms();
       write_cfg = false;
       // }
     }
@@ -245,7 +253,7 @@ void GridPage::loop() {
      param4.checkHandle();
   }
 
-  if (bank_popup == 2 && clock_diff(bank_popup_lastclock, slowclock) > 800) {
+  if (bank_popup == 2 && clock_diff(bank_popup_lastclock, read_clock_ms()) > 800) {
     close_bank_popup();
     return;
   }
@@ -348,7 +356,7 @@ void GridPage::display_grid_info() {
 
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(0, 10);
-  oled_display.print(round(MidiClock.get_tempo()));
+  oled_display.print((uint16_t)round(MidiClock.get_tempo()));
 
   display_counters();
   oled_display.setFont(&TomThumb);
@@ -590,10 +598,10 @@ int frameclock;
 void GridPage::display() {
 
   #ifdef FPS
-  if (clock_diff(frameclock, slowclock) >= 1000) {
+  if (clock_diff(frameclock, read_clock_ms()) >= 1000) {
   DEBUG_PRINT("FPS: "); DEBUG_PRINTLN(frames);
   frames = 0;
-  frameclock = slowclock;
+  frameclock = read_clock_ms();
   }
   frames++;
   #endif
@@ -611,7 +619,7 @@ void GridPage::display() {
     }
   }
   display_grid();
-  if (draw_encoders && clock_diff(draw_encoders_lastclock, slowclock) < 750) {
+  if (draw_encoders && clock_diff(draw_encoders_lastclock, read_clock_ms()) < 750) {
     oled_display.setFont();
     mixer_page.draw_encs();
   }
@@ -870,7 +878,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     MidiDevice *device = midi_active_peering.get_device(port);
 
-    uint8_t track = event->source - 128;
+    uint8_t track = event->source;
     if (device != &MD) {
       return true;
     }
@@ -919,10 +927,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
         grid_page.load_row(track, row);
 
-        if (!trig_interface.is_key_down(MDX_KEY_BANKA) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKB) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKC) &&
-            !trig_interface.is_key_down(MDX_KEY_BANKD)) {
+        if (!key_interface.is_key_down(MDX_KEY_BANKA) &&
+            !key_interface.is_key_down(MDX_KEY_BANKB) &&
+            !key_interface.is_key_down(MDX_KEY_BANKC) &&
+            !key_interface.is_key_down(MDX_KEY_BANKD)) {
           grid_page.close_bank_popup();
         }
         mcl_cfg.load_mode = load_mode_old;
@@ -932,8 +940,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_CMD(event)) {
 
-    uint8_t key = event->source - 64;
-    if (trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+    uint8_t key = event->source;
+    if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
             if (show_slot_menu) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
           switch (key) {
@@ -962,7 +970,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC) { draw_encoders = false; }
       uint8_t inc = 1;
-      if (trig_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 4;
       }
       if (show_slot_menu) {
@@ -978,7 +986,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_copy = 1;
           apply_slot_changes(false, true);
           init();
-          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (key_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
@@ -987,7 +995,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_clear = 1;
           apply_slot_changes(false, true);
           init();
-          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (key_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
@@ -996,7 +1004,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           slot_paste = 1;
           apply_slot_changes(false, true);
           init();
-          // if (trig_interface.is_key_down(MDX_KEY_NO)) {
+          // if (key_interface.is_key_down(MDX_KEY_NO)) {
           //  goto slot_menu_on;
           //}
           return true;
@@ -1027,7 +1035,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_BANKA:
         case MDX_KEY_BANKB:
         case MDX_KEY_BANKC: {
-          if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
             goto loadmode;
           }
         }
@@ -1071,8 +1079,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_YES: {
-        trig_interface.ignoreNextEvent(MDX_KEY_YES);
-        if (!trig_interface.is_key_down(MDX_KEY_FUNC)) {
+        key_interface.ignoreNextEvent(MDX_KEY_YES);
+        if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
           goto load;
         }
         goto save;
@@ -1095,7 +1103,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           uint8_t bank = key - MDX_KEY_BANKA;
           if (bank_popup == 1) {
             bank_popup = 2;
-            bank_popup_lastclock = slowclock;
+            bank_popup_lastclock = read_clock_ms();
             MD.draw_bank(bank);
           }
           return true;
@@ -1104,7 +1112,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_NO: {
-        if (!trig_interface.is_key_down(MDX_KEY_PATSONG)) {
+        if (!key_interface.is_key_down(MDX_KEY_PATSONG)) {
           goto slot_menu_off;
         }
         return true;
@@ -1159,7 +1167,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
   slot_menu_off:
-    if (show_slot_menu && !trig_interface.is_key_down(MDX_KEY_NO)) {
+    if (show_slot_menu && !key_interface.is_key_down(MDX_KEY_NO)) {
       uint8_t old_undo = slot_undo;
       bool restore_undo = false;
       // Prevent undo from occuring when re-entering shift menu. Want to keep

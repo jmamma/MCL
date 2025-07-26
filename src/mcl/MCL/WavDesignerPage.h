@@ -4,6 +4,8 @@
 #define WAVDESIGNERPAGE_H__
 
 #include "mcl.h"
+#include "MCLGUI.h"
+#include "SeqPages.h"
 
 extern void wavdesign_menu_handler();
 extern void wav_render();
@@ -29,8 +31,9 @@ public:
     }
     show_menu = false;
   }
-  virtual void loop();
-  virtual void display();
+  virtual void cleanup() = 0;
+  virtual void loop() = 0;
+  virtual void display() = 0;
   virtual bool handleEvent(gui_event_t *event);
 };
 

@@ -1,8 +1,15 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 
-#include "MCL_impl.h"
-
-#define FILENAME_CLIPBOARD "clipb.tmp"
+#include "MCLClipBoard.h"
+#include "MCLSd.h"
+#include "Project.h"
+#include "EmptyTrack.h"
+#include "DeviceTrack.h"
+#include "MDTrack.h"
+#include "MCLGUI.h"
+#include "MCLActions.h"
+#include "MidiActivePeering.h"
+#include "SeqPages.h"
 
 // Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.
 
@@ -232,6 +239,7 @@ bool MCLClipBoard::copy(uint8_t col, uint16_t row, uint8_t w, uint16_t h) {
   }
   close();
   proj.select_grid(old_grid);
+  return true;
 }
 bool MCLClipBoard::paste(uint8_t col, uint16_t row) {
   DEBUG_PRINT_FN();
@@ -324,6 +332,7 @@ bool MCLClipBoard::paste(uint8_t col, uint16_t row) {
   }
   close();
   proj.select_grid(old_grid);
+  return true;
 }
 
 MCLClipBoard mcl_clipboard;
