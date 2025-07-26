@@ -77,7 +77,7 @@ public:
       }
     }
   }
-  virtual void initSerial() { }
+  virtual void init() { }
 
   virtual uint8_t m_getc() = 0;
   virtual void m_putc(uint8_t *src, uint16_t size) = 0;
