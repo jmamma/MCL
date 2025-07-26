@@ -80,19 +80,26 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
     ]
     include_flags = env.subst("$_CPPINCFLAGS").split()
     compiler_flags = custom_flags + include_flags
-    
     print("\n--- Scanning resource files for includes ---")
     all_includes = set()
     resource_cpp_files = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
-    
     for cpp_file in resource_cpp_files:
         with open(os.path.join(resource_dir, cpp_file), 'r', encoding='utf-8') as f_in:
             all_includes.update(line.strip() for line in f_in if line.strip().startswith("#include"))
-                    
+
+    proceed = False
+    for cpp_file in resource_cpp_files:
+        base_name = os.path.splitext(cpp_file)[0]
+        fin_path = os.path.join(gen_dir, f"R_{base_name}.cpp")
+        if not os.path.isfile(fin_path):
+           proceed = True
+    if not proceed:
+      print("Detected compressed assets, skipping compile/compression of resources.")
+      return
+
     h_content = ['#pragma once', '']
     h_content.extend(sorted(list(all_includes)))
     h_content.append('')
-    
     resman_content = []
 
     symbol_regex = re.compile(r"^\S+\s+.*\s+(\.data\S*)\s+([0-9a-f]{8})\s+(\S+)")
@@ -110,7 +117,6 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
 
         dump_result = run_command([objdump, "-h", obj_path])
         data_sections = re.findall(r'^\s*\d+\s+(\.data\S*)', dump_result.stdout, re.MULTILINE)
-        
         if not data_sections:
             open(bin_path, 'wb').close()
         else:
@@ -132,7 +138,6 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
             f.write('\n};\n')
 
         h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
-        
         symbols = []
         result = run_command([objdump, "-t", obj_path])
         for line in result.stdout.splitlines():
@@ -141,7 +146,6 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
                 symbol_name = match.group(3)
                 if not symbol_name.startswith('.'):
                     symbols.append({"Size": int(match.group(2), 16), "Name": symbol_name})
-        
         types = {}
         with open(source_path, "r", encoding='utf-8') as f_src:
             for line in f_src:
@@ -161,14 +165,12 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
             if not type_str:
                 print(f"Warning: Could not find type for symbol '{name}' in '{cpp_file}'. Skipping.")
                 continue
-            
             h_content.extend([
                 f"  union {{", f"    {type_str} {name}[0];", f"    char zz__{name}[{size}];", f"  }};",
                 f"  static constexpr size_t countof_{name} = {size} / sizeof({type_str});",
                 f"  static constexpr size_t sizeofof_{name} = {size};"
             ])
             total_sz += size
-        
         h_content.extend([f"  static constexpr size_t __total_size = {total_sz};", f"}};\n"])
         resman_content.extend([f"  __T_{base_name} *{base_name};", f"  void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}"])
 
@@ -187,7 +189,6 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
     objdump = get_tool_path(env, "objdump")
     cxx_flags = env.subst("$CCFLAGS $CXXFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS").split()
     all_obj_files = []
-    
     print("\n--- Scanning resource files for includes ---")
     all_includes = set()
     resource_cpp_files = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
@@ -211,10 +212,8 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
         ez_path = os.path.join(build_dir, f"{base_name}.ez")
         gen_cpp_path = os.path.join(gen_dir, f"R_{base_name}.cpp")
         all_obj_files.append(obj_path)
-        
         print(f"\n--- Processing resource: {cpp_file} ---")
         run_command([cxx] + cxx_flags + ["-c", source_path, "-o", obj_path])
-        
         result = run_command([objdump, "-h", obj_path])
         data_sections = re.findall(r'^\s*\d+\s+(\.data\S*)', result.stdout, re.MULTILINE)
         data_sections.reverse()
@@ -227,7 +226,6 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
                     data = f_tmp.read()
                     f_bin.write(data + (b'\0' * ((4 - len(data) % 4) % 4)))
                 os.remove(tmp_path)
-        
         compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "compress.py")
         run_command(["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)])
 
@@ -241,7 +239,6 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
         with open(gen_cpp_path, "w") as f_cpp:
             f_cpp.write('#include "R.h"\n\n')
             f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
-            
             # Read the binary file and convert bytes to the same format as hexdump
             with open(ez_path, "rb") as f_bin:
                 while True:
@@ -249,11 +246,9 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
                     if not byte:
                         break
                     f_cpp.write(f'{byte[0]:3d},\n')
-            
             f_cpp.write('};\n')
 
         h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
-        
         symbols = []
         result = run_command([objdump, "-t", obj_path])
         for line in result.stdout.splitlines():
@@ -262,7 +257,6 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
                 symbol_name = match.group(3)
                 if not symbol_name.startswith('.'):
                     symbols.append({"Size": int(match.group(2), 16), "Name": symbol_name})
-        
         types = {}
         with open(source_path, "r", encoding='utf-8') as f_src:
             for line in f_src:
@@ -274,7 +268,6 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
                         var_name = parts[-1]
                         var_type = " ".join(parts[:-1])
                         types[var_name] = var_type
-        
         h_content.append(f"struct __T_{base_name} {{\n")
         total_sz = 0
         for sym in sorted(symbols, key=lambda s: s['Name']):
@@ -282,7 +275,6 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
             if not type_str:
                 print(f"Warning: Could not find type for symbol '{name}' in '{cpp_file}'. Skipping.")
                 continue
-            
             size_aligned = (size + 3) & ~3 # 4-byte alignment for ARM
             h_content.extend([
                 f"  union {{", f"    {type_str} {name}[0];", f"    char zz__{name}[{size_aligned}];", f"  }};",
@@ -290,7 +282,6 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
                 f"  static constexpr size_t sizeofof_{name} = {size_aligned};"
             ])
             total_sz += size_aligned
-        
         h_content.extend([f"  static constexpr size_t __total_size = {total_sz};", f"}};\n"])
         resman_content.extend([f"  __T_{base_name} *{base_name};", f"  void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}\n"])
 
