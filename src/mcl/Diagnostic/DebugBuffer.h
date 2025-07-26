@@ -15,7 +15,7 @@ private:
 
 public:
   DebugBuffer(Stream *stream)
-    : output_stream(stream), head(0), tail(0) {}
+    : head(0), tail(0), output_stream(stream) {}
 
   // Buffer operations
   bool put(const char *str);
