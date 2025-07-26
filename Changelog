@@ -1,0 +1,1931 @@
+MCL 4.60 21/09/2024
+
+Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.60.
+
+- Sequencer:
+
+  The MD's in-built MIDI machines are now supported via the MCL sequencer.
+  MIDI data is transmitted on MegaCommand's MIDI Port 2.
+
+- Grid Page:
+
+  It's now possible to reconfigure the Grid Page Encoders to act as the four
+  Performance Controllers. Via option: Config -> Page Setup -> Grid Encod
+
+  When selecting multiple rows for copy/clear/paste operations the corresponding Bank/Pattern id is now displayed on the left.
+
+- Mixer Page:
+
+  Performance States (formerly Mute Sets):
+
+  As previously, there are 4 Performance States, each mapped to an individual [Up/Down/Left/Right] key.
+  Each Performance State contains Mute settings for the MD and External MIDI tracks, and 4 Performance Controller Locks.
+
+  Press [Scale] to toggle the Mixer's active device between MD and External MIDI.
+
+  The Mutes in a Performance State can be deactivated for the active device by holding an [Up/Down/Left/Right] key and pressing [Mute/BankA]
+
+  Apply Performance States:
+    - To apply a Performance State during a performance, hold down an [Up/Down/Left/Right] Key and press [YES]
+
+  Performance State Autoload:
+    A chosen Performance State can now be made to auto-load when the Perf Slot in Grid Y is loaded:
+       - From the Mixer Page, Hold an [ Arrow ] key to visually preview the Performance State and then press [Accent/BANKB] to enable auto "LOAD".
+       - Then save the Perf Slot, in Grid Y.
+
+   Performance Controller AutoFill ( Kit Morph ):
+    - A Perf Controller's assigned left + right scenes can be cleared of paramater locks by holding down the MCL <Encoder Button> and pressing
+      the MC's < Shift > button.
+    - A Perf Controller's assigned right scenes can be auto-filled altered Kit parameters by holding down the MCL <Encoder Button>
+      and pressing the MC's <Yes / Load> button.
+
+- Misc:
+
+  The Port 1 MIDI driver can now be optionally changed to Generic.
+
+  Performance optimizations and improvements.
+
+- Bug Fixes:
+
+  Fixed device selection in Chromatic Page
+
+  Route and Perf track types would not load correctly during transitions
+
+  WavDesigner sample transfer was broken.
+
+  GUI fixes for SampleBrowser and text input related pages.
+
+  MD's random LFO shape was broken when loading with MCL.
+
+  MCL LFO could transmit bogus MIDI data.
+
+  MCL would crash when loading tracks at very slow tempo 30BPM.
+
+MCL 4.51a 20/12/2023
+
+  Fixed [ Func ] + [ Clear ] regression in PianoRoll.
+
+MCL 4.51 01/12/2023
+
+Please upgrade to Machinedrum OS X.10 & Monomachine OS X.01 before using MCL 4.51.
+
+- Changes:
+
+  [ Classic/Extended] button must now be held down for 1.5 seconds to switch
+  between Enhanced and Classic/Extended modes when the sequencer is stopped.
+
+- Improvements:
+
+  When the sequencer is running the Mixer page can be opened and closed by pressing [ Classic/Extended ].
+
+  Hold down [ Classic/Extended ] + [ Trig ] for fast for mute toggles.
+
+  Minimum transition load latency reduced from approximately two 16th notes, to exactly half a 16th note per device.
+
+  More reliable transitions, and better slot loading responsiveness.
+
+  Load Page - Press [ Function ] to select the destination track offset for next load.
+
+  Sample transfers between MCL and MD can be cancelled by pressing the MD's [ No ] key repeatedly.
+
+  Microtiming is no longer cleared when unsetting a trig with locks in Step Edit.
+
+  Added arrow key parameter selection to Arp Page.
+
+  Arpeggiator gets a true random mode "RN2"
+
+  Mixer Page trig LEDs now flash when MD tracks are triggered.
+
+  New General MIDI menu added to configure the Generic MIDI driver. Assign
+  custom mute CC paramater which can be received/transmitted via the MixerPage's ext device, mute toggle.
+
+  TURBO MIDI speeds will now be enabled on MIDI port 2, when Generic Driver is
+  selected. This activates TURBO MIDI for compatible machines that we haven't implemented a specific driver for.
+
+  PianoRoll, added step delete [ Trig ] + [ Clear ]
+
+- Bug Fixes:
+
+  New Project creation could fail.
+
+  Project rename could fail.
+
+  Microtiming window would unexpectedly display when setting PTC
+
+  Wav Designer page switching was broken.
+
+  Wav Designer oscillator tuning rounding error and cents adjustment fix.
+
+  Fix sequencer LED cursor sync in certain circumstances.
+
+  MD IMPORT patterns menu, row names were broken and the range was too small.
+
+  PerfPage parameter learning was broken if dest the same as LFO dest
+
+  LFO offset for MIDI destinations was broken.
+
+  At low tempos, MIDI tracks would not always load.
+
+  Bulk sample receive was broken.
+
+  When AUTO Loading, comparison of MD sounds could be incorrect causing sound retransmission.
+
+  Don't cd up in SoundBrowser when pressing [ NO ], instead revert back to Step Edit page.
+
+  PerfEncoder scene assignment was not distributed correctly when loading a blank PF slot.
+
+  Parameter lock parameters should be reverted correctly on sequencer stop.
+
+  Tracks triggered manually would not use the unlocked parameter values.
+
+  Sequencer: Don't allow paste before copy.
+
+  MixerPage poly-link fader display bug.
+
+  Arpeggiator behaviour in poly mode could be unpredictable.
+
+  Arpeggiator D2 and RND modes could not be selected.
+
+  MIDI active-peering would use the Elektron driver, even when Generic was selected.
+
+MCL 4.50 24/07/2023
+
+Please upgrade to Machinedrum OS X.09 & Monomachine OS X.01 before using MCL 4.50.
+
+- Performance Page + Performance Controllers
+  A new Performance Page has been added featuring 8 Scenes (1->8) that are shared
+  between 4 user programmable Performance Controllers (A,B,C,D).
+
+  Each Controller can be assigned two scenes. Press either [LEFT] or [RIGHT] and then
+  a corresponding Scene Trig to assign the left-most and right-most Scenes to the Controller.
+
+  Rotating a Performance Controller will morph between values across the assigned scenes.
+  [ Func ] + Rotate for Controller hard pan.
+
+  Each scene can have up to 16 "Scene Locks".
+
+  A Scene lock can be any MD parameter, or any external MIDI CC parameter.
+
+  To assign a lock to a scene, hold the corresponding Scene Trig and rotate the desired
+  parameter on the MD or external MIDI.
+
+  Controllers A,B,C,D can be controlled externally by any MD parameter, or any MIDI CC.
+
+  A parameter "LEARN" feature can be enable by setting Dest to "--" and Para to "LER".
+
+  Performance Controller Names can be customized from the Performance Page's "Shift" menu.
+
+  A new slot "PF", has been added to the Grid Y, slot 12.
+
+  Performance Controllers and their shared Scene data can be saved or loaded to this slot.
+
+  Mixer Page, Mute Sets and Performance Controller Locks are also stored in the PF.
+
+- Mixer Page:
+
+  The [Scale] button can be used to toggle between the MD or Ext MIDI tracks.
+
+  [Trig] + [Classic/Extended] is now Track Parameter Reset.
+
+  [Trig] + [YES] or [YES] + [Trig] to toggle mutes.
+
+  [Trig] + [NO] to solo tracks.
+
+  [Func] + [YES] to flip mutes.
+
+  [Trig] + [Global] record sequencer mutes.
+  [Trig] + [Kit] clear track's sequencer mutes.
+  [Global + Kit] clear all track's sequencer mutes.
+
+  The 4 Encoders of the Mixer Page are now Performance Controllers (A,B,C,D).
+
+  The Mixer Page now features 4 "Mute Sets" assigned to the MD's Arrow Keys.
+
+  To load a Mute Set, hold down an Arrow Key and press [YES]
+  To edit a Mute Set, hold down an Arrow Key and toggle Trig Keys.
+
+  Each Mute Set also includes Performance Controller Locks.
+
+  To set a Performance Controller lock, hold down an [Arrow] key followed by [Exit/No] and
+  rotate the respective encoder.
+
+- Chromatic Page:
+
+  [Scale] button can be used to toggle between devices.
+
+  When the MIDI device is active, the MD's [Trig] keys can now be used to play External MIDI.
+
+  Sequencer menu option, TRANSPOSE renamed to KEY. Now show's note A,A#,B,B#,C etc..
+
+  Oct and Fine Tune values are now device independent.
+
+- Sequencer:
+
+  The MD's kit parameters are no longer updated when parameter locks or
+  LFO data is sent from MCL.
+
+  Improved track expansion. When a Track's length is increased, the existing
+  pattern  will be copied and filled across the new length.
+
+  Step menu has been deprecated.
+
+  Step mutes are now shown when editing the Pattern Mask.
+
+  [ Trig ] + [ No ] to toggle step mutes
+
+  Exiting Step Edit by pressing [ Record ] will now take you back to the last MCL Page.
+
+- Piano Roll
+
+  A number of bug fixes related to missing notes, or unpredictable note
+  length.
+
+  Quantization record could lead to incorrect note length.
+
+  Zoom is now cursor relative.
+
+  Added "CC REC" option to enable/disable recording of automation data.
+
+  The MD's scale menu can be used to set the speed and length of Ext MIDI tracks (up to 64 steps).
+
+  Program Change automation is now oneshot, and only a single change is permitted per parameter.
+
+  Various GUI improvements.
+
+- Arpeggiator
+
+  Improved ARP Latch mode, Latch is reset upon next note when all keys are
+  released.
+
+  More ARP Speeds are available.
+
+  Arpeggiator can play on beat, or freely depending on "QUANT" Sequencer Menu option.
+
+- LFO
+
+  The LFO performance has been improved.
+
+  The assignable Destinations now include External MIDI CCs.
+
+  Parameter Learn is supported: set Dest to "--" and Param to "LEARN".
+
+  An additional LFO sub page has been added to modify the LFO Offset for MIDI CC parameters.
+
+- Grid Page
+
+  [ Scale ] button to toggle between Grids X and Y.
+
+  Slots selection can now extend across both Grids allowing Clear/Copy/Paste commands to apply to
+  both Grids simultaneously. This also includes slot parameter updates.
+
+  Insert Rows option has been deprecated.
+
+  Added a throttle to the [YES] key to prevent accidental double tap.
+
+  Empty tracks can now have customizable Length and Loop values adjustable via slot menu.
+
+- Sound Browser
+
+  The functionality to Save and Load MD Sounds is now separated from Sample
+  Management.
+
+  The dedicated Sound Browser is accessible from the Step Sequencer Track Menu.
+
+- Sample Browser
+
+  GUI has been improved significantly to allow ease of navigation.
+
+  .WAV and .SYX formats are detected automatically.
+
+  File names increased to 32 characters. 256 files can be listed per directory.
+
+- Save:
+
+  Sequencer mutes are stored with MD tracks. Saving MD track will cause the mute state to be applied
+  to the active sequence and stored. where a mute is present, the trig and lock mask will be removed.
+
+- Group Select
+
+  The Group Select menu has been updated.
+
+  Accessible by entering Load/Save page and holding [YES]
+
+  The Selectable Groups are now:
+    - MD, MIDI, PERFORMANCE, ROUTE, TEMPO.
+
+  The MD FX slot is now always loaded with MD group.
+
+  LFO and Performance Slots (PF) are loaded with the PERFORMANCE group.
+
+- Transitions + Slot Loading:
+
+  MDFX data is now cached ahead of time and loaded immediately on transition.
+
+- Func + Ext
+
+  The MD's undokit is now synced per track. Previously all tracks were synced to the undokit
+  leading to unexpected behaviour when performing [ Func + Ext ].
+
+  The MD's LEV values are no longer reset by [ Func + Ext ]
+
+- Page Select
+
+  Page Select layout has changed to accommodate the Performance Page.
+
+MCL 4.43 13/04/2023
+
+- Fixes
+
+  Midi SDS Sample upload was unreliable for large files.
+
+MCL 4.42 01/04/2023
+
+- Improvements
+
+  External MIDI tracks can now be universally loaded across different port 2 drivers.
+
+- Fixes
+
+  MNM and A4 track transitions were broken, as of 4.30.
+
+  When loading slots, a second transition could occur unexpectedly causing
+  tracks to play out of sync.
+
+  MCL would crash when switching port2 device driver between Elektron and Generic.
+
+  Prevent MIDI Clock/Transport loop on port2 when Elektron driver in use.
+
+MCL 4.41 10/03/2023
+
+- Fixes
+
+  Regression in 4.40, External Sequencer tracks in Grid Y could not be saved.
+
+  Auto load could cause some tracks to unecessarily reload and play out of sync.
+
+  Manual transitions could be missed or cause disruption to queue/auto loading.
+
+  When outside the Pianoroll, playing MIDI notes on input 2, and holding down MD trig buttons could
+  record notes to the Ext Sequencer tracks.
+
+MCL 4.40 25/02/2023
+
+Please upgrade to Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.40.
+Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
+
+- Improvements:
+
+  Increased GUI responsiveness and framerate.
+    Grid page rendering speed increased from 14FPS -> 21FPS
+
+  Increased SDCard read speed:
+	SdCard slot read performance increased by 30%
+
+  Automated Slot Loading, and Queueing has been overhauled for
+  robust, predictable behaviour.
+
+- Fixes
+
+  Grid Page: Allow length adjustment across multiple slots when slot speeds are the
+  same.
+
+  Program Change Advanced mode did not work over USB MIDI
+
+  Copy/Paste pattern will now copy/paste MD Master FX.
+
+  Bugs related to parameter locks when pasting MD Tracks.
+
+MCL 4.30 12/01/2023
+
+Please upgrade to Machinedrum OS X.08 & Monomachine OS X.01 before using MCL 4.30.
+Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
+
+- Fixes:
+  The Microtiming Menu would not display correctly when the track speed was set to 1/8.
+  GUI input from MD's trig keys would sometimes be unreliable.
+
+- Changes:
+  Improved overall framerate and responsiveness of MCL particularly on the Grid Page.
+
+  Overhauled the method in which MD tracks are loaded such that there are no dropped notes during transitions.
+
+  MCL now responds to Program Change messages incoming via USB MIDI.
+
+  GUI improvements to Save and Load pages.
+
+MCL 4.20 14/07/2022
+
+Please upgrade to Machinedrum OS X.07 & Monomachine OS X.01 before using MCL 4.20.
+Perform the USB DFU firmware procedure to upgrade the USB microcontroller for class compliant USB MIDI.
+
+- Fixes:
+  MNM driver was still broken.
+  WAV files with unusual data layouts could not be read by the FileBrowser.
+  Manual slot loading could be miss-timed causing tracks to go out of sync.
+  MCL would crash if there was a problem reading the SD card during slot loading.
+
+- Changes:
+
+  Boot Menu: Hold <Page> button on power on to open the boot menu.
+
+  GridPage: Column indicator now starts at 1 instead of 0.
+            MD key combination, [ PatSong ] + [ Kit ] now toggles between Grids X and Y.
+
+  LoadPage: Length and Quantization encoders can be toggled between incremental and exponential modes by holding down the
+            pushbutton during rotation. Minimum transition time during a manual load is 2 steps.
+
+- Improvements:
+
+  Slot Menu: Made it easier to set the same playback length across multiple slots with different lengths and speeds.
+             When highlighting multiple slots and adjusting either the Length or Loop settings, the loop count for each slot will be
+			 automatically adjusted to match the total length of the first slot.
+
+  External MIDI Sequencer Tracks now default to 1x playback speed.
+
+  Loop points are now stored in saved .wav file(s) when receiving looped SDS samples.
+
+  MCL Sequencer now supports triggering and recording from a dedicated MIDI channel via an external drum pad. See MD MIDI -> TRIG CHAN.
+
+- USB MIDI:
+
+  Added class compliant USB MIDI. Requires that the USB Microcontroller firmware also be upgraded. ( See DFU firmware upgrade instructions ).
+
+  MIDI menu configuration options have changed:
+
+    Config -> MIDI -> PORT CONFIG
+                      SYNC
+       		          ROUTING
+                      PROGRAM
+		              MD MIDI
+
+    --------------------------------------------
+
+    PORT CONFIG -> TURBO 1    PORT 1 turbo speed
+                   TURBO 2:   PORT 2 turbo speed
+		           TURBO USB: USB port turbo speed
+		           DRIVER 2:  PORT 2 driver. Elektron or General MIDI.
+		           CTRL PORT: Which MIDI port provides control input (Note + CC) for Sequencer + Chromatic pages.
+
+    SYNC ->        CLOCK RECV: Receive MIDI Clock from port.
+                   TRANS RECV: Receive MIDI Transport from port.
+	               CLOCK SEND: Forward MIDI Clock to selected ports
+	               TRANS SEND: Forward MIDI Transport to selected ports.
+
+    ROUTING ->     MIDI1 FWD: Forward all non-realtime MIDI data from PORT1 to selected ports.
+                   MIDI2 FWD: Forward all non-realtime MIDI data from PORT2 to selected ports.
+	               USB FWD: Forward all non-realtime MIDI data from USB-MIDI to selected ports.
+	               CC LOOP: Loopback MIDI CC messages on same port.
+
+    PROGRAM ->     PROG MODE: Basic or Advanced. (See user manual).
+                   PRG IN: Program change receive channel.
+	               PRG OUT: Program change transmit channel.
+
+    MD MIDI ->     CHRO CHAN: The CHRO CHAN setting is used to control which input channel the MD should receive note data from when in Chromatic mode.
+                              For this setting to work correctly, CTRL PORT in PORT CONFIG must also be set to the desired port.
+                   POLY CHAN: Dedicated MIDI Channel for playing designated Polyphonic tracks chromatically.
+     	           TRIG CHAN: Dedicated MIDI channel for triggering MD tracks via Note On message. Useful for triggering sounds using a MIDI drum pad.
+	                          Track Mapping starts from note C2.
+
+- USB Mass Storage:
+
+  For MegaCMD hardware only. The internal SD card can be mounted on your computer via USB for file transfer.
+  Accessible via the Boot Menu and requires performing the USB DFU firmware upgrade.
+
+MCL 4.11 30/03/2022
+
+Please upgrade to Machinedrum OS X.06 before using MCL 4.11
+
+- Bug Fixes:
+
+  Project rename was broken in 4.10
+
+  Kit and sequencer params weren't updated during a parameter change on linked/poly tracks.
+  This could cause incorrect value reset on sequencer stop.
+
+  Piano Roll track menu would incorrectly show "clear track message" in certain circumstances.
+
+  When muting ext tracks from the Piano Roll, notes could become stuck.
+
+  Slide calculation would sometimes waste cpu cycles. could result in sequencer slowdown.
+
+- Improvements:
+
+  Better pitch input on step edit page by setting <Encoder 4> to track PTC value.
+
+  Piano Roll GUI: Trig buttons no longer change cursor width and now move in step increments offset by the current page.
+                  Cursor width change via arrow keys is now linear.
+		     	  Func + Left/Right is no longer track shift, and instead is fast travel for cursor.
+
+  Wav Loop Points now correctly adhere to .wav format.
+
+  When receiving samples via MIDI SDS, loop points are now saved within the .wav.
+
+  Sending a single sample starting with 2 digits no longer includes those digits in the sample name.
+
+  MIDI SDS Receive improved.
+
+MCL 4.10 19/03/2022
+
+Please upgrade to Machinedrum OS X.06 before using MCL 4.10
+
+- Key Binding Changes:
+
+ When in Enhanced mode, holding the MD's [ Bank Group ] key now opens the MCL Page Select Page.
+ Press [ Function ] + [ Bank Group ] to toggle the active bank group, as before.
+
+ [ Global ] key now behaves like MCL's <Shift> button.
+ [ Up/Down/Lift/Right ] [ Yes ] [ No ] can be used to control all MCL menus, including text input and some page functions.
+
+ [ Bank Group ] + [ Global ] = MCL Config page.
+ From Grid, [ Global ] + [ BankGroup ] = Toggle Grid X/Y
+
+ Toggling between Enhanced + Classic/Extended can now only be performed when the sequencer is stopped.
+
+- Save/Import Changes:
+
+ Grid Save modes IMPORT and MERGE are now deprecated and replaced via a "BULK IMPORT" page, located in Config -> Machinedrum -> Import.
+ Multiple patterns can be imported from the MD to the MCL grid in a single operation.
+
+- Program Change IN and OUT:
+
+ Added Config -> Midi -> PRG MODE option, with two Program Change receive Modes, BASIC and ADVANCED
+
+ Basic: Program Change Receive will "Group Load" an entire row according to Load Page mode and Group Select settings.
+
+ Advanced: Program change receive will set the row for slots to be loaded from.
+           MIDI notes C3 and upwards on port 2 can be used to select slots to be loaded.
+
+ In this way, you can load any slot (or multiple slots) using a combination of Program Change + MIDI note.
+
+ If Program Change is not received before MIDI note on/off, MCL will load from the current selected GUI row.
+
+ Slot loading occurs when all MIDI notes are released. MCL cannot load instantaneously, there is a minimum 1 bar delay.
+
+ Config -> Midi -> PRG IN sets the receive channel for Program Change and Note messages.
+ Config -> Midi -> PRG OUT sets the send channel for Program Change messages, which are sent when loading slots or rows.
+
+- Improvements:
+
+ Config -> MD -> POLY CHAN option added. Poly chan can be used to exclusively trigger the designated MD poly voices from a
+ chosen MIDI channel on port2.
+
+ Copy/Paste now shows a progress bar if the operation is expected to take a while.
+
+ Added INSERT row option to the Grid Page's slot menu. Will insert N blank rows in both Grid X and Y by shifting rows beneath.
+ Note: the Grid length is never increased and the last N rows at end of the Grid will be deleted.
+
+ MCL will now give users the option of loading an existing project if the boot process can't detect the last open project.
+
+- Sample Management:
+
+ WavDesigner now leverages the SampleBrowser ROM slot selection page.
+ Bulk sample receive and send. Highlight, SoundBrowser -> Wav -> [ RECV ], then press <Shift> to access the Send All / Recv All functions.
+
+ When receiving samples, sample are saved to the current directory. Sample names are prefixed with a 2 digit slot number.
+ This 2 digit number is used to preserve sample order when re-uploading. Sample names that do not start with a slot number will
+ be excluded from the bulk upload.
+
+- Bug Fixes:
+
+ Machinedrum no longer changes the internal Kit when toggling between Enhanced/Classic.
+
+ MonoMachine driver was broken, would not load sequencer data from slots.
+
+ External sequencer tracks would not respond above channel 6. Fixed.
+
+ External sequencer tracks would have stuck notes when transitioning/loading other slots. Fixed
+
+ Empty slots were not copied/pasted correctly on the Grid.
+
+ Filebrowser actions were not always reliable.
+
+ WavDesigner: Sample transfer and loop points were broken. Fixed
+
+ Fixed glitches in text input pages.
+
+ Auxiliary tracks (Route, LFO) that were empty were not initialised correctly.
+
+ Route page GUI would become unresponsive in certain circumstances.
+
+ RAM Page recording/playback would sometimes not work due to the sequencer track being stealth-muted.
+
+ Numerous GUI fixes.
+
+ Fixed a crash when opening the Bank menu.
+
+ Fixed a crash when changing MD tracks after entering the PianoRoll.
+
+MCL 4.04 18/10/2021
+
+Fixes:
+
+- Improve sequencer synchronization to external MIDI clock.
+
+MCL 4.03 03/10/2021
+
+Fixes:
+
+- Tracks could drift out of sync when loaded.
+- Fix track model changing on stop.
+- Parameter changes in the MD's LFO and FX menus are now detected by MCL.
+- Update LFO offsets when restoring kit parameters.
+- Fix WavDesigner crash.
+- Align mod wheel and pitch bend behaviour across MIDI settings.
+
+MCL 4.02 18/09/2021
+
+Fixes:
+
+- WavDesigner Trig keys would not respond when editing waveforms.
+- Poly-page GUI fixes.
+- Row name loading did not work when sequencer stopped.
+- Allow CC loopback when forwarding or MD external control is enabled.
+- Fix unstable behaviour when saving under certain circumstances.
+- Fix double trigger when resuming play quickly after stop.
+
+MCL 4.01 01/09/2021
+
+Fixes:
+
+- MCL would crash when Saving sounds from the Sound Manager.
+- Microtiming window could remain stuck on the MD when clearing or copying
+  steps.
+
+It is recommended that you also update your Machinedrum to X.05B. X.05B fixes
+an issue in Enhanced mode whereby GUI keys would become stuck after a period
+of time.
+
+MCL 4.00 21/08/2021
+
+MCL 4.00 is an significant achieviement. It builds upon the foundations of the 3.XX firmware,
+whilst improving stability, performance and workflow across several key areas.
+The Machinedrum and MCL integration is now closer than ever.
+In short, MCL 4.0 achieves the original vision of the project, a seamless
+enhancement of the Elektron Machinedrum.
+
+It is recommended that you read the updated user documentation in which
+many of the changes listed below, are explained in greater detail.
+
+- Enhanced GUI / Machinedrum GUI convergence.
+ Version X.05 of the MD firmware introduces a third editing mode beyond Classic and Extended
+ entitled Enhanced Mode.
+
+ Enhanced mode is activated automatically when the MD is connected to the MegaCommand.
+
+ When in Enhanced mode, both Classic and Extended LEDs will be lit. The three modes can be
+ toggled using the Classic/Extended button.
+
+ Enhanced mode enables the Machinedrum's GUI to be fully integrated in to the MCL workflow
+ All MD sequencer editing commands now apply to the MCL sequencer.
+
+ See the MCL 4.0 user documentation for a summary of commands.
+
+- Changes:
+ Chain Mode renamed to Load Mode.
+ Grids A/B are now relabeled to X/Y.
+ Grid rows are no longer labeled numerically and instead represented by the corresponding
+
+ Bank + Pattern.
+
+ For example:
+
+    Row 0   = A01
+    Row 1   = A02
+    Row 2   = A03
+    ...
+    Row 15  = A16
+    Row 16  = B01
+    Row 17  = B02
+    ...
+    Row 127 = H16
+
+ Slot Menu:
+
+ Added Len parameter for adjusting a slot's length without loading.
+ Row parameter has been named to Jump. In Load Auto mode, the Jump parameter corresponds to the
+ destination of next slot transition.
+
+ Save Page:
+ Save mode names changes:
+   - SEQ renamed SAVE
+   - MD renamed IMPORT
+   - MERGE unchanged.
+
+- Load Mode Enhancements:
+
+ Each column in the grid now has its own dedicated load setting. It can be either Manual, Auto or Queue.
+
+ Chain Queue is a new mode that has been added for realtime looping.
+
+ Each column of the Grid can have up to 8 slots queued at any time. Queued slots are played in order
+ and then the sequence is repeated indefinitely.
+
+ When Queue mode is selected from the Load page, each loaded slot will be added to the corresponding column's
+ queue.
+
+ A column's queue can be cleared by switching chain mode to either Manual or Auto and then loading a slot in
+ that column.
+
+ As each column has an independent load setting, it is possible to have some slots chaining automatically
+ (Auto) according to their Loop/Jump setting, other slots can be looping in an improvised queue (Queue),
+ and then the remaining slots could be left static via manual chain (Manual).
+
+- Load Page:
+
+ [ Encoder 1 ] of the load page is used to select the applied Chain Mode when loading.
+ Manual/Auto/Queue are selectable.
+
+ When Queue mode is selected [ Encoder 2 ] becomes accessible and can be used to override the length of
+ queued tracks.
+
+- Sequencer Improvements:
+
+ The sequencer is now pre-rendered: Each frame of the sequencer is generated one clock tick in advance.
+ This means the MIDI payload is sent immediately on each clock pulse eliminating sequencer jitter.
+
+ MD drum sounds are now triggered in parallel using a modification of the MIDI note-on specification.
+ This eliminates phase distortion that could previously be heard on drum sounds playing on the same step.
+
+ Each sequencer track now has its own dedicated Arpeggiator. Adjustments made to Arpeggiator menu settings
+ will be applied to the current track's Arp.
+ Note: Arpeggiator data is not currently saved with the track data.
+
+- Sample Uploading/Downloading
+
+ Samples can be transferred between the MDUW and the MC's SD Card via the
+ SoundBrowser Page.
+
+ Both .wav or .syx (SDS) file format's are supported.
+
+- Other Changes + Fixes:
+
+ Received MIDI messages are now processed immediately.
+ MIDI latency will be the same across all MCL pages and the display refresh no longer needs to be locked during live record.
+ If you are triggering chromatic mode from external MIDI keyboard/sequencer,
+ you can expect note latency/jitter to be consistent no matter which page/mode you are in.
+
+ MIDI Forwarding has been re-implemented and will no longer result in corrupted message streams.
+
+ Added "CC LOOP" option for forwarding MIDI CC from Port 2 IN to Port 2 OUT.
+
+ Pitch bend, mod wheel and channel after touch support added for Ext MIDI Tracks. All recordable.
+
+ SD Card data access has been made robust to transient read errors. For best SD Card performance,
+ ensure the card is formatted FAT32 via the SD Card Foundations formatting utility.
+
+ MCL no longer requires a dedicated MD global and will only modify settings as
+ needed.
+
+ MCL will automatically detect kit model changes eliminating the need to
+ re-enter pages to refresh the kit state.
+
+ RAM page transitions now occur immediately, instead of delaying an additional
+ cycle.
+
+ Parameter locks are not transmitted when a track is muted.
+
+ Parameter locks would not always reach their target, resulting in a loop. Fixed.
+
+ When assigning a Machine to the MD, parameters of the current sound will not be altered.
+ This greatly improves the smoothness of slot loading.
+
+ Mixer Page's parameter recall state is synced with the MD's UNDO kit.
+ Individual track parameter recall has been re-enabled. Press [ Trig ] + [ No ]
+
+ Poly mode voice algorithm improved.
+
+ When using an external MIDI keyboard, scales are now padded across 12 notes for more enjoyable playing.
+
+ Support for NFX machines.
+
+ Numerous bug fixes and stability improvements across all aspects of the
+ firmware, which will not be documented here.
+
+Deprecated Features:
+
+- Chain RAND has been deprecated.
+- Parameter Lock page has been deprecated.
+- SD Card drive (MD backup tool) has been deprecated.
+- Convert Project deprecated. *Project format is the same between 3.X and 4.0
+
+MCL 3.10d 09/03/2021
+
+  - RAM Page record/playback was broken, fixed.
+  - Fixed RAM record/play synchronization bug introduced in 3.00
+  - Added some precautions to sysex data and kit model transmission.
+  - Fixed arpeggiator regression when using external MIDI keyboard.
+
+MCL 3.10c 08/03/2021
+
+  - Tonal tuning tables for EFM and TRX machines were disabled. fixed.
+  - Fix display glitch on WavDesigner page.
+  - WavDesigner OscMixer page's sample preview shortcut [ Write ] was broken.
+  - Limit detune range on Chromatic Page to within 0 and 127.
+
+MCL 3.10b 06/03/2021
+
+  - Fix regression on Mixer Page: MD mutes would cause unrequested behaviour.
+  - Fix trig preview.
+
+MCL 3.10 05/03/2021
+
+  MCL 3.10 requires that your Machinedrum is upgraded to firmware version X.04
+
+ Machinedrum:
+  - Added support for the new MD machines: GND-SNPRO, GND-PUL, GND-SW
+
+ Chromatic:
+  - Added support for MD tonal tuning. For compatible machines, the tuning setting
+  is automatically saved with the slot's sound data.
+  - If the machine's tuning setting is TONAL then the new quater tone, equal temperament
+  tuning table will be used.
+  - If the machine's tuning setting is DEFAULT the legacy microtonal tuning table is used.
+  - Increased display refresh latency in favour of much lower MIDI note latency.
+
+  Piano Roll:
+  - Fixed external MIDI key note mapping offset.
+  - FYI: Chromatic settings [ scale ] + [ octave ] are applied to incoming MIDI notes from port 2.
+
+  Sequencer Step Edit:
+  - Added Trig Preview: hold trigger button and press enter on the MD.
+  - Rotate sequencer by holding Function and pressing Left or Right on the MD.
+  - Toggle between sequencer pages by pressing SCALE on the MD
+
+  Chain Mode:
+  - Fixed transition timing issues which could result in tracks going out of
+  sync when chaining slots.
+  - Fixed sending a garbled Kit Name when chaining an empty row.
+
+  MIDI:
+  - Optimized lower level MIDI code and reduced payload sizes for faster data
+  transfer: means tighter chain transitions.
+  - MIDI clock synchronisation now correctly handles phase resets from non MD devices.
+
+  Project Conversion:
+  - Fixed a bug when converting projects from 2.X -> 3.0 that would cause
+  ghost tracks to appear in the new project. If you noticed that project
+  conversion was not satisfactory, then it is advised that you re-convert the
+  old 2.X project using firmware 3.10
+
+
+MCL 3.01a 09/01/2021
+
+Hotfixes:
+
+- PianoRoll automation record was broken.
+- PianoRoll length parameter was limited to 127, should have been 128 steps.
+- When loading empty Ext MIDI tracks, preserve MIDI channel setting.
+
+MCL 3.01 02/01/2021
+
+  MCL 3.01 will prompt you to create a new project on startup, this is a
+  formality as the system config file that stores Global Settings will be re-initialised.
+
+  MIDI Active Peering:
+
+    Added a new option for configuring the MIDI port 2 device.
+
+    Global Settings -> MIDI -> DEVICE 2
+
+    Set to either: [ General MIDI (Gener) ] or [ Elektron (Elekt) ]
+
+    This option sets the default MIDI driver for port 2. Supported Elektron devices have
+    more advanced features such as retaining kit/sound data when saving/loading slots,
+    The general MIDI driver will only save/load MIDI sequencer data.
+
+    If you are intending to pair your Megacommand with an Elektron device
+    (MNM, A4) set this to Elektron.
+
+    For all other MIDI devices, set this to General MIDI (new default setting).
+
+  PianoRoll:
+
+    Added MIDI Program Change as a CC destination.
+    (Slides are disabled for Program Change).
+
+  GridPage:
+
+	Rename row now applies to grids A + B simultaneously.
+
+  Fixes:
+
+    - Ext MIDI tracks would not save or load correctly due to lack of
+	connectivity. (See MIDI active peering above to set driver type).
+    - A4 sound data would not load correctly in a variety of circumstances.
+    - Improvement to chain mode transition behaviour.
+
+MCL 3.00x 26/12/2020
+
+Hotfixes A -> D
+
+- MCL would freeze if Ext MIDI channel was greater than 6
+- Ext MIDI tracks would not save correctly for generic devices.
+- Ext MIDI tracks would cause MCL to crash on chain.
+- Project Rename was broken in 3.0
+- Polypage incorrect LED mode.
+- Illuminate LED2 when REC mode is activated.
+
+MCL 3.00 20/12/2020
+
+  MCL 3.00 requires that your Machinedrum is upgraded to firmware version X.03
+
+  Projects:
+
+    Version 3.00 features a new project format. Projects created in earlier
+    versions of MCL must be converted to the new format.
+
+    Historically, projects have been stored in the root directory of the SD Card i.e
+    "/my_project.mcl"
+
+    In 3.0 new and converted projects are now stored in the /Projects/ directory.
+
+    Each project has its own folder, inside the project folder there are 3 files:
+
+      \Projects\new_project_000\
+                                |- new_project_000.mcl   <- Project master file
+                                |- new_project_000.0     <- Grid A data
+                                |- new_project_000.1     <- Grid B data
+
+  Project Conversion:
+
+    Version 2.X projects can be converted to the 3.0 format using the "CONVERT PROJECT"
+    menu option in Global Settings. Project conversion is non-destructive, your original 2.X
+    files will remain in the root directory of the SD Card.
+
+    When initiated, project conversion will create a new project subdirectory
+    under \Projects\, create the necessary project files and then migrate the 2.X data across.
+
+    Projects created in version 3.0 are not compatible with earlier version of MCL.
+
+  Grid A + B:
+
+    There are now 2 grids per project. Grid A and Grid B.
+    Grid A is used to store 16 MD tracks.
+    Grid B is used to store 6 External MIDI tracks + 4 AUX tracks.
+
+    From the Grid Page, use the chain menu (accessible by holding [ shift 2 ])
+    to switch between Grids A and B.
+
+  New AUX (Auxiliary) Track Types:
+
+    MDFXTrack   (FX): Store and recall MDFX (MachinDrum MasterFX: Delay, Reverb, EQ, Dynamics)
+    LFOTrack    (LF): Store and recall LFO page data.
+    RouteTrack  (RT): Store and recall MD Track Routing and Chromatic Mode's Poly settings.
+    TempoTrack  (TP): Store and recall Tempo.
+
+    AUX Tracks are positioned on Grid B and occupy slots 12 to 15.
+    AUX Tracks can be saved/loaded/chained like regular tracks, so that you can automate
+    loading of LFOs, TrackRouting, MDFX and tempo.
+
+ MIDI Devices + Grid:
+
+    MCL Firmware has been rewritten to dynamically support various MIDI devices.
+
+    When connected, each device is allocated to a collection of pre-defined slots
+	on Grid A and/or B.
+
+    For example. The MD (Machinedrum) device has slots 0 to 15 reserved on Grid A.
+	Slot 14 on Grid B is allocated to the MDFX track type.
+
+    The Analog 4 or MNM will reserve slots  0 to 6 on Grid B.
+
+    Similarly, a generic MIDI device will use slots 0 to 6 on Grid B.
+
+  ClipBoard:
+
+    Copy and paste of Grid Slots will adhere to the slot allocation rules described in the
+	previous section.
+
+  Save Page + Load Page (Formerly Write Page):
+
+    By popular request, the Write page has been renamed to Load.
+
+    Saving and Loading actions apply to the current Grid.
+
+    When in the Save or Load Page, the [ Shift 1 ] button can be used to
+    toggle between Grid A or Grid B.
+
+    Slots from both grids can be selected before releasing all MD trigs to Save/Write.
+
+  Group Select:
+
+	When in the Save or Load Page, holding the [ Shift 2 ] button now opens a Group Select menu,
+	allowing you to load or save all tracks corresponding to a group.
+
+    There are four groups:
+
+      1) MIDI Device 1 (MD)
+	  2) MIDI Device 2 (A4/MNM/Generic)
+	  3) FX (MDFX + LFOTrack + RouteTrack)
+	  4) TP (Tempo)
+
+    The groups can be enabled/disabled using the MD's trigger interface.
+
+    Releasing [ Shift 2 ] will save/load tracks corresponding to the active groups.
+
+  MD Sequencer:
+
+    The MD sequencer has been re-designed. Each track supports 8 parameter lock destinations.
+    There are a maximum of 256 locks per track, shared between each of the 8 parameters.
+
+    Slide editing is now functional across the full 64 steps of the sequencer.
+
+  Ext MIDI Sequencer:
+
+    The External (Ext) Midi Sequencer has been re-designed.
+
+    There are 6 x Ext MIDI Sequencer Tracks. These are stored in Grid B, slots 0 to 5.
+
+    Each Ext MIDI track can be used to sequence an attached MIDI device on port 2.
+    This could be an Elektron Analog 4, Elektron Monomachine or a generic MIDI device
+    such as a synth module.
+
+    Features of the new Ext MIDI Sequencer:
+      - 6 x Tracks
+      - 128 steps per track
+	  - 512 events per track.
+      - A maximum of 16 events per step, (i.e 16 note polyphony)
+	  - Each event could be an automation parameter or note_on/note_off message.
+      - Microtiming per event
+      - Conditional trig per event
+      - Velocity per step
+      - Each track includes 8 MIDI Control Channel automation parameters with
+      optional slide (linear interpolation).
+
+  PianoRoll + Automation Editor:
+
+    To accompany the new Ext MIDI Sequencer tracks we have created a PianoRoll
+    editor which can be used to edit the sequences for Ext MIDI Tracks 1 to 6.
+
+    The editor features an interactive cursor, controllable using [ Encoder 1 ]
+    and [ Encoder 2 ].
+
+    [ Encoder 1 ] cursor horizontal position
+	[ Encoder 2 ] cursor vertical position
+    [ Encoder 3 ] cursor width.
+    [ Encoder 4 ] increase/decrease zoom.
+
+    [ Write ] add note
+	[ Write ] delete note ( deletes all notes overlapped by cursor )
+
+    [ Shift 2 ] pianoroll menu.
+
+    - PianoRoll Menu:
+
+      Holding [ Shift 2 ] opens the PianoRoll menu. From here you can change
+	  the current Track and the selected Edit Mode. For each track you can adjust the
+      MIDI Channel, track length and playback speed. Cursor editing options are also included
+	  here including note velocity and note conditional settings.
+
+    - MD Trigger Interface Cursor Control:
+
+	  The cursor can be positioned horizontally by pressing MD trigger buttons.
+	  The cursor can be positioned vertically by playing notes on the attached MIDI device.
+
+	  Note width can also be adjusted by holding one MD Trigger button and then
+	  pressing another.
+
+	  An attached MIDI Keyboard can be used to enter notes into the sequence.
+	  Notes can be added by holding MD trigger buttons in conjunction with
+      pressing notes or chords on an attached MIDI device.
+
+    - Automation Editing:
+
+	  The piano roll editor allows for automation editing.
+
+      From the PianoRoll Menu's "Edit" parameter, you can select to Edit Automation Parameters
+	  1 to 8.
+
+      Slide enables/disable interpolation between automation events.
+
+      The CC option allows a specific MIDI Control Channel number to be chosen
+      per parameter, Alternatively you can select LEARN, to Automatically learn the next
+	  received CC.
+
+  Record Page: (Deprecated)
+
+    The record page has been removed.
+
+    Track recording can now be engaged from the StepEdit page or the PianoRoll editor by
+	pressing [ Save ].
+
+    Both automation (parameter locks) and note data can be recorded simultaneously in this
+	mode.
+
+    Pressing [ Write ] during a recording will clear the sequence for the current track.
+
+  WavDesigner GUI:
+
+    WavDesigner button assignment has changed.
+
+    Shift 2 now opens a menu for selecting Oscillators 1 to 3, or the Oscillator Mixer sub
+	pages.
+
+    The oscillator's WaveForm is selectable from the shift-menu.
+
+    The rendered waveform can be transferred to a MD sample slot using the
+    shift menu's "TRANSFER" option accessible from the Oscillator Mixer
+    sub page.
+
+    [ Save ] can be used to toggle between oscillator pitch / frequency
+    [ Write ] conveniently opens the MD's sample slot menu.
+
+  MD Trigger Interface:
+
+    The integration with the MD trigger interface has been improved. When editing a sequence
+	on the MC the MD's LEDs will illuminate according to the pattern sequence on the MC.
+
+    The MD's cursor (indicating current sequence position) will also be
+	illuminated during playback. The cursor is synced to the MD's current pattern speed + length.
+
+    When using the Trig Interface to select tracks, the LEDs will illuminate appropriately.
+
+    The trig interface will now automatically exit recording/mute menus when activated.
+
+  Misc:
+
+    MixerPage - [ Shift 2 ]: Undo functionality deprecated.
+
+    Machinedrum - [ Function ] + [ Extended ] will now restore kit parameters
+    to the state of the last chain/load from MCL.
+
+  Other:
+
+    Numerous bug fixes, refactors and optimizations have been performed during this
+    release. If you encounter bugs, please try and reliably replicate the problem
+    and submit a new "issue" on github.
+
+MCL 2.70 21/06/2020
+
+Changes:
+  - Sequencer:
+    * Added sequencer support for track speeds 1x, 2x, 3/4x, 3/2x, 1/2x, 1/4x, 1/8x
+    * Added sequencer support for parameter slides. (Slide data is only retained for first 32 steps)
+    * StepEdit page can now be toggled to edit either Trigs, Locks, Slides or Mutes.
+      The "Edit" parameter controlling the edit mode is accessible from the StepEdit page's Track Menu.
+    * Added ^ trig conditions (L1^, L2^, L3^.. etc).
+      When chosen the step's parameter locks or slides must also obey the trig condition.
+    * Sequencer step glyphs have been improved for each of the edit modes.
+    * Added visual feedback when setting parameter slides using MD encoders.
+    * uTiming window is now improved and supports various track speeds.
+    * MD pattern speed + slides now imported to sequencer tracks when saving from the MD.
+
+  - Chromatic/Arpeggiator:
+
+    * The focused chromatic voice is now selected when notes are played in the chromatic page.
+      This prevents the chromatic voice changing unintentionally when switching tracks on the MD.
+      Similarly when playing from Ext Keyboard, you can only change the focused chromatic voice(s)
+      from within the Chromatic Page.
+    * Arpeggiator now runs in either standard or triplet time depending on track
+      speed.
+    * Arpeggiator max speed is now doubled. Use 2x track speed to record at this rate.
+
+  - Chain mode:
+    * Transitions now support all new track speeds.
+    * Grid copy/paste of slots now translates chain ROW positions such
+      that new ROW position is offset relative to the paste position.
+    * A slot's Chain ROW and LOOP settings are retained when saving a slot in SavePage.
+
+  - Main:
+    * Allow simultaneously send & receive of MIDI_CLOCK on port 2. (Previously silently disabled to prevent feedback loop).
+
+Bug Fixes:
+
+  - Write/Save Pages
+    * Entering write page would incorrectly change SavePage mode.
+    * Swing would be applied to wrong trigs when saving from MD.
+
+  - Sequencer:
+    * Trig Conditions L3, L5, L6, L7 were all broken. Fixed.
+    * Fixed an SRAM issue causing sequencer corruption on track 9.
+    * Improved sequencer editing
+
+  - Chain Mode:
+    * In some circumstances chaining an empty track would result in unpredictable behaviour.
+    * Updating chain ROW/LOOP settings could resurrect a previously cleared slot.
+    * Oneshot masks are now cleared on chain transition
+    * When chaining slots, only send machine parameters if track's sound is not equal to current track.
+      (This was previously broken in some scenarios, resulting in no sound transition)
+
+  - LFOs:
+    * LFOs would incorrectly wrap around to 0 when they exceeded 127 in amplitude. Fixed.
+
+  - Chromatic/Arpeggiator:
+
+    * When connecting device to MIDI port 2, active "Peering" notification would appear frozen on chromatic page.
+
+MCL 2.62 08/05/2020
+
+Changes:
+
+  - Add transpose parameter to Chromatic Page. Accessible from the Track Menu.
+
+Bug Fixes:
+
+  - Chromatic Page
+    * Note to PTC mapping was incorrect. (Wrong note displayed on keyboard,
+	machine base pitch not taken into consideration)
+    * Arpeggiator and Scales broken when using EXT MIDI. Fixed.
+    * Ext MIDI now responds from NOTE C2 and upwards. Scales are mapped across each note of keyboard and root is at C2.
+    * Poly config saved when exiting poly select page.
+    * Notes out of machine range, now result in silence, as opposed to playing highest note.
+    * Some tweaks to behaviour of the arpeggiator GUI.
+    * Clearing or adjusting length of poly tracks was broken.
+
+MCL 2.61 16/03/2020
+
+Changes:
+
+  - Arpeggiator added to Chromatic Page. Accessible from the Track Menu.
+  - MIDI CC can be used to control MD Parms across poly tracks.
+    CC 16 to 40 controls MD Params 1 to 24.
+  - Added many more scales to Chromatic Page
+  - Chromatic Page now indicates when in POLY mode.
+  - Added support for TRX-S2
+
+Bug Fixes:
+
+  - Peering was broken in certain pages. Fixed
+  - Fixed PolyPage selection bugs.
+
+
+MCL 2.60 15/02/2019
+
+Note: MCL update 2.60, requires that you upgrade your Machinedrum to OS version 1.70.
+
+Changes:
+
+  - The Trigger Interface is now supported natively, removing all limitations associated
+    with the original exploit.
+
+    You can now freely manipulate the MD GUI and parameters when using pages
+	that use the trigger interface.
+
+	Tracks will no longer switch when the TI mode is enabled.
+
+  - Track Select: Track selection is now synced with the MD.
+
+    To change tracks in the sequencer pages, simply change track on the MD.
+    A new Global->Machinedrum menu item "Track Select" has been added.
+	Default is Auto. "Man" will disable the track synchronization between the MD and MCL.
+
+  - Auto save option is now deprecated.
+
+    MCL will no longer save/overwrite your kit data.
+
+    MCL no longer auto-saves the current kit to get the active kit data.
+    Similarly, writing/chaining tracks to the MD will no longer auto-save the
+    kit and instead will only modify the loaded kit data.
+
+- Step Edit
+
+  Parameter locks can now be added from the Step page by holding a trig and
+  rotating a MD parameter.
+
+- Mixer Page:
+
+    CTRL All. Select multiple tracks in the Mixer Page, adjusting any MD parameter
+    will change the same parameter across the selected tracks.
+
+- Wav Designer.
+
+    The MD's buttons and encoders will no longer become unresponsive after transmitting samples.
+
+MCL 2.51 05/01/2019
+
+Bug fix release:
+
+   - Poly mode would not work unless MD was restarted, fixed.
+
+   - Poly voice select is now accessible from Chromatic Page by pressing [
+   Save + Write|Chain ]
+
+   - Chromatic Page: Changes to voice selection.
+
+       If current track is a poly track, then select voices from the poly
+       tracks. Otherwise if current track is not a poly track use the current track
+       as a monophonic voice.
+
+       When MD is set to be controlled by external midi, only the poly voices
+       will be playable.
+
+   - Check parameter lock destinations more carefully before sending.
+
+   - Prevent MCL from sending bogus LFO destination track which could cause MD
+     lockup.
+
+   - Sequencer notes would occasionally drop out when using page_select page.
+   fixed.
+
+   - Chaining an entire row, and then immediately pressing play on the MD
+     could cause corrupt sysex data to be sent to the MD, causing loud noises
+	 and an abrupt pattern change. fixed.
+
+MCL 2.50 01/12/2019
+
+Complete GUI overhaul:
+
+Button assignment has been improved to provide consistency across all pages.
+
+    [ Save ] button: Cancel/Exit/No
+    [ Write ] button: Confirm/Enter/Yes
+    [ Shift1 ] button now opens PageSelect menu in all sub-pages.
+    [ Shift2 ] button opens an options menu on sequencer pages.
+
+    Encoder buttons no are no longer used for navigating the GUI and instead
+    work as fast rotate mode, as per the Elektron devices.
+
+    PageSelect layout has been improved:
+	   [ Encoder 1] to scroll through all available pages
+	   [ Encoder 2] to scroll through page categories
+	   [ Save ] to exit back to grid
+
+Enahanced Graphics:
+    New graphics for Sequencer Pages.
+	Visual Chromatic Keyboard + Visual uTIMING.
+	Graphical icons for PageSelect.
+    Trimetric Spites.
+	GUI popups.
+	Loading screens.
+	Graphical Encoders.
+    User action feedback textboxes for almost all user actions.
+
+Improved Project and File navigation.
+    Abiltiy to rename/delete files/projects
+
+Improved Text Input:
+    Text input page now features a Char Select Pane.
+
+Sequencer Track Menu and Trig Menu.
+    Track menu accessible by holding shift 2.
+	   Allows for changing current tracks.
+       Copying/pasting/deleting/shifting/reversing tracks.
+
+
+    Trig menu accessible by pressing a trig and then holding shift 2. Allows
+	copying/pasting of trigs, adding/remove trig mutes clearing locks.
+
+Save/Chain Pages:
+    3 Save modes now: SEQ, MD, MERGE. (MD and MERGE only available when
+	sequencer is stopped and are used for copying MD pattern data)
+
+	New GUI popup menu.
+
+Grid Page:
+  Slot menu, provides copy + paste options. Encoders 3 and 4 are used to
+  select a rectangular region of tracks/slots to be copied.
+  They can be pasted between projects.
+
+SD Drive:
+  Poor man's plus drive. Backup/restore MD's entire memory including pattern +
+  kits + globals. All stored on the SD Card for retrieval.
+
+RAM Pages:
+  Two RAM pages are provided Page Select pages 15 + 16.
+  These machines take the hastle out of RAM record + playback by automating RAM machine sampling of the MD output or external input.
+  Recordings can be sliced, and maniputated using a variety of effects.
+
+FX Pages:
+  Two FX pages used to control Delay or Reverb.
+
+LFO Page:
+  A single global LFO (Lower frequency oscillator) page is provided which can
+  be used to manipulate any MD parameter, either a Track Param or Global FX.
+  Two destinations are selectable and a variatey of wave shapes available.
+  The LFO can be triggered by a dedicated 16 step sequencer track, or be set
+  to run freely.
+
+Firmware Performance & MIDI Timing :
+  Improvements to the low level MIDI interrupt code means reduced latency and
+  tighter sequencer performance.
+  Faster GUI routines, means higher framerate and snappier performance.
+  Improved latency coompensation for realtime recording on Chromatic and
+  Record pages.
+  Device peering now works from any page.
+  Numerous bug and workflow fixes.
+
+MCL 2.40 25/06/2019
+
+Important:
+
+Write mode has been removed completely. MCL will no longer transmit
+pattern data to the MD.
+
+You must now use Chain Mode and the internal sequencer.
+
+When saving tracks from the MD you can merge sequencer data in to the
+internal sequencer using the MERGE option, in the SavePage.
+
+Fixes + Enhancements:
+
+CuePage is now RoutePage:
+
+    CuePage has been replaced with a generalised Audio Routing page, and
+    now works correctly with chain mode.
+
+MutePage has been deprecated:
+    Sequencer mutes are replaced with audio mutes.
+    Audio mutes are now controlled through the MixerPage and RoutePage.
+
+Parameter lock behaviour now follows the MD Sequencer implementation more
+closely.
+
+SeqParam/Rlck Page changes:
+    Pressing [ Chain | Write ] button will clear lock params in reverse
+    order until none are present.
+
+    Don't allow parameter locking of LEV
+
+Sequencer Pages:
+
+    Added SeqPage GUI for length and current track;
+
+    [ Shift 2 ] + [ Trigger ] = Quick Track Select. Works with A4 as well.
+
+    [ Shift 1 ] + [ Trigger ] = Set Track Length to selected step. (Offset by current
+    page)
+
+    [ Shift 1 ] + [ Shift 2 ] + [ Trigger ] = Set All Tracks (of same device type) to
+    selected step
+
+    Added one-shot trigs to conditional trig options.
+
+MixerPage:
+    [ Shift 2 ]  now reverts FLTF FLTW FLTQ settings for selected tracks.
+    Values are cached when entering MixerPage.
+    This is useful for creating filter sweeps then 'drops'.
+
+    Mutes are now audio mutes, not MD sequencer mutes.
+	Save button now allows solo-ing of selected tracks.
+
+Loudness Page fixes:
+
+    Analyzer was broken-ish. Record track would not trigger correctly.
+
+    Boosting loudness whilst sequencer was running could send corrupt
+    pattern data to the MD.
+
+General:
+
+- Convert lowercase to uppercase when transmit kitname
+- Fix: filebrowser would not allow access to parent dir
+- Low level ISR code re-written for faster execution.
+- Low level Memory code improved for faster execution.
+- Data structure for MIDI are now stored in second memory bank.
+- Lowlevel MIDI code improved for faster execution
+- Sequencer code re-written for faster execution
+- Code base has been made compatible with original Minicommand hardware.
+- Fix: midi tempo calculation, during midi continue.
+- Fix: various bugsa and edge cases in Chain mode, manual and automatic.
+- Fix: SeqExtPage bad character glitch
+- Fix: SeqParam page showing param values offset by 1.
+- Fix: SeqParam page not allowing selection of all 24 params
+- Fix: resolution bug causing glitched track length for A4/Ext tracks
+- Fix: Grid copy + paste was broken. Would not copy sequencer data correctly.
+- Diversion track for MDExploit no longer fixed to track 16, will be
+calculated dynamically
+- Improved PageSelect page naming.
+- Kit autosave now occurs before entering all pages ensuring kit data
+is up-to-date.
+- AUTO merge is now default behaviour, the option is removed from chain menu
+and is instead accessible from Save Page.
+
+MCL 2.31 16/04/2019
+
+Fixes:
+
+Mixer Page:
+
+- Faster encoder rotation is now supported, by pressing the encoder button
+and rotating. (When tracks are selected using trigger interface)
+
+- Encoder 2 now adjusts FILTF for selected tracks.
+- Encoder 3 now adjusts FILTW for selected tracks.
+- Encoder 4 now adjusts FILTQ for selected tracks.
+
+Chain Mode/Grid:
+
+- Clear row now works correctly. Was incorrectly leaving slots active and
+showing them as deleted. This messed up some chain mode behaviours.
+
+- When a row is cleared completely, the row name is now initialised.
+
+Internal Sequencer:
+
+- Reduced sequencer muting/skipping when entering pages.
+
+Write Mode:
+
+- Fix write mode reliability
+
+It was discovered that due to improvements in MIDI performance
+in the MCL firmware, write mode became unreliable when sequencer was running. The
+MD is unable to receive pattern/kit dumps at 4x or above turbo when
+sequencer triggers are being executed. To circumvent this problem
+we've added throttle to Write Mode, to limit data transfer rate when the
+sequencer is live. The throttle is only activated during pattern/kit sends.
+
+- Improve handling of empty slots: Writing an empty slot will now transmit GND
+machine to MD.
+
+- P+/P- modes were broken when chain mode was added (fixed)
+
+- Pattern selection encoder on Write Page was incorrectly limited to 8 instead of 16.
+
+MIDICtrl Core:
+
+- New Memory layout.
+
+Sysex code refactored to use HIGH memory bank. This frees up a signifcant
+amount of RAM in the heap.
+
+This change was made in preparation for handling larger sysex dumps from
+newer elektron machines.
+
+MCL 2.30 20/03/2019
+
+Features and Fixes:
+
+- Chain Mode Improvements: Chain mode no longer saves and requests the
+current kit when sequencer is running. This fixes some complications with
+parameter locks, and also improves chain page responsiveness.
+
+Track muteGroups and trigGroups are now properly removed.
+
+- MIDI SDS Receive is fixed and working.
+
+- Added Loudness Page, and loudness features
+
+  Auto Normalize: When activated,  all saved track have their LEV boosted to
+  127, and parameters controlling VOL (including parameter locks) are lowered
+  to compensate. VOL parameter locks and LFOs with destination VOL are
+  adjusted too.
+
+  The resulting track loudness remains the same, but the Track LEV parameter
+  is no longer set arbitrarily. LEV == 127 will always be the loudest volume
+  for a track.
+
+  Gain Boost: The ability to boost / reduce the VOL of all tracks in the
+  current kit by a percentage amount.
+
+  Peak Analyser: The MD is instructed to record 1 Bar of the current pattern.
+  The recording is transferred to the MegaCommand and the WAV file is decoded
+  and analysed. The peak value in the recording is found and this is used to
+  determine an appropriate gain boost to increase pattern/kit loudness using
+  the Boost function above.
+
+- Added Sound Page, to Page Select Menu.
+  It's now possible to save and recall sounds from the MD. A sound consists of
+  1 or more tracks (2 maximum).
+
+  To save a sound enter the Sound Page. Select the desired track on the MD,
+  and then choose save. If the selected track triggers another machine, both
+  track machines will saved as part of the sound.
+
+  To load a sound enter the Sound Page. Select the desired track on the MD,
+  select the sound to be loaded from the browser, and press an encoder
+  buttton.
+
+- fixed unreliable button response in WavDesigner
+
+- New file browser page, with memory improvements. 1024 files visble per
+directory.
+
+- Added the ability to rename rows.
+
+- Added the ability to copy and paste slots within the grid
+
+- Graphically depict slot selection when modifying slot_apply
+
+- Fix for chromatic mode, tuning map was not available for ROM machines greater than 31
+
+MCL 2.20 09/11/2018
+
+###### IMPORTANT ######
+   Projects created on older versions will not be compatible with MCL 2.20
+
+Changes:
+
+Stable support for 8x Turbo.
+-  Significant improvments to the MIDI code now makes 8x Turbo
+   the most stable speed setting.
+
+   Choose this speed on both ports for lowest sequencer jitter and
+   fastest transmission times.
+
+GUI overhaul:
+-  Both the HD44780 and OLED display get significant updates to the GUI
+   to accomadate Chain mode. This includes a complete redesign of the
+   menu system.
+
+   The GridPage has been completely redisgned for both displays.
+
+   Screensaver added for OLED display (5 minutes delay)
+
+Slot menu:
+
+-  To access the Slot menu:
+
+    OLED_DISPLAY:
+
+       Shift2 button will open the Slot menu for the selected slot.
+
+    HD44780 LCD:
+
+       Hold Shift 2 button + Encoder Button [ 1 - 4] will open the Slot menu
+       for visible slots [ 1 - 4 ].
+
+-  Slot Menu has following options and selectable values:
+    Chain: [ --, auto, manual, random ]
+    Loops:  (0, 64)
+    Row:    (0,127)
+    Seq: [ --, merge ]
+    Clear: [ --, YES ]
+    Apply: (0,20)
+
+    Chain (global setting):
+     - auto: enables chain auto mode global setting
+     - manual: enables chain manual mode global setting
+     - random: enables chain random mode global setting
+
+    Loops: specify how many times to loop track/slot
+
+    Row: specify which row to load/jump to after n loops.
+
+    Seq: merge slot's MD sequencer data in to the internal sequencer
+
+    Clear: clear the select slot.
+
+    Apply: apply the above changes to the next N slots upon exit of SlotMenu.
+
+Chain Mode:
+
+  Chain Mode is enabled through the SlotMenu, or Global Settings->Chain Mode
+  menus.
+
+  Chain Mode is an enhancement of the default MCL write mode. It works
+  like an old school music tracker. Tracks from different rows can be chained
+  together and made to load automatically.
+
+  Previously, when 'writing tracks' the MD pattern data would be transmited to
+  the MD, and the corresponding internal sequencer data would be loaded along side it.
+
+  When chain mode is enabled, only the MegaCommand internal sequencer data is 
+  loaded and used to sequencer the Machindrum. By performing all the MD sequencing 
+  from the MegaCommand we can load tracks instantaneoulsy without any audible delay.
+  In addition, individual tracks can be chained together to form complex sequences or
+  songs.
+
+  To use chain mode, you must first "merge" your MD pattern data in to the
+  internal sequencer. To do this, you can enable the "auto-merge"
+  setting in the MachineDrum global settings page. If auto-mege is enabled,
+  any time you save a track to the MegaCommand, the MD sequencer data will be
+  merged in to the internal sequencer track for that slot.
+
+  The SlotMenu can also be used to merge sequencer data on specific slots or
+  entire rows. (see slot menu above)
+
+  Chain mode resembles an old school music tracker. From the slot menu
+  you can set the duration for which a track should play by setting the number
+  of loops. The row value specifies which row of the Grid the track should
+  load next after it has completed.
+
+  Chain mode can be configured in 1 of 4 ways [ --, auto, manual, random ]
+  If Chain mode is disabled then the write page performs as per pervious
+  versions.
+
+  If Auto mode is selected. Tracks written through the WritePage,
+  will automatically load other tracks based on their Loop and Row settings.
+
+  If Manual mode is selected, tracks will only be loaded through the Write
+  page. (Useful if you want to pause the chaining functionality)
+
+  If Random mode is chosen, tracks will automatically load based on random
+  loop and row settings limited by parameter range in Global->ChainMode menu.
+
+  When Chain mode is activated, the Write Page now displays "Chain".
+  The quantization options behave slightly differently in Chain mode.
+  In Chain mode, tracks will start playing from step 0 based on the
+  step quanitzation.
+
+GridPage Changes:
+
+  The current active slot will blink.
+
+  On the OLED display, the current Bar:Beat is shown.
+  The next transition Bar:Beat is displayed below this.
+
+Poly Config
+
+  Voice selection is now achieved through the MD triger interface.
+  Enter Global -> Machinedrum -> Poly Config.
+  Selected tracks will be used as polyphonic voices for chromatic modes.
+  If no tracks are selected, the current MD track is played monophonically.
+
+BugFixes:
+
+Numerous bug fixes and enhancements. See the git log
+
+MCL 2.16a 10/08/2018
+
+Hotfix:
+
+Write original would be broken in some scenarios.
+
+MCL 2.16 08/08/2018
+
+Changes:
+
+Improvements to the behaviour of Parameter Locks.
+
+- Track parameters with paramter locks now have their correct default
+  values detected. The default value is restored when the sequencer is
+  stopped, or on next trig without a lock.
+
+  Previously, saving the current kit or writing track to the current
+  pattern would incorrectly cause the 'default' parameter value to change
+  to the last parameter lock value sent.
+
+SeqStepPage:
+
+- TrigLocks are now cleared when a trig is set, not when a trig is deleted.
+
+Bug fixes:
+
+- MDExploit track switching improved.
+
+MCL 2.15 01/08/2018
+
+##### Important #######
+
+OLED Display is now the default display type.
+- See Readme on how to enable HD44780 LCD
+
+- Grid Write and Save Pages GUI changes:
+  Precision mode is now enabled by holding shift1 button in either page.
+  Shift2 button will "write/save" original, which means all tracks and master
+  settings.
+  Encoder buttons no longer save or write tracks.
+
+Kit auto-save enabled by default.
+
+- If auto-save is enabled and the sequencer is stopped, the current kit will be
+  saved when entering sub pages. This is necessary to detect kit changes
+  such as machine change, or masterfx changes.
+
+- Current kit is saved when storing track from the MD when autosave is
+  enabled.
+- Current kit is always saved when writing tracks to the MD regardless of
+  autosave setting.
+
+- SystemConfig updated requiring new Project Creation on startup.
+
+Stability:
+
+- Minimum sequencer jitter and best overall firmware performance is acheived
+  when Turbo Midi is set to 4x. 8x turbo may not provide any performance
+  benefit.
+
+MD SDS Bug:
+
+- If MD sysex data is requested at a time proceeding a sample request,
+  the MD encoders and trigs lock up indefinately after the sample is received.
+  The only current workaround is to power cycle the MD after receiving a sample.
+
+##### Features Added #####
+
+Quick PageSelect:
+
+- Holding Shift Button 1 now accesses a page quick select menu.
+
+- When inside the page select menu:
+  MD trigger buttons 1 -> 16 can be used to select various pages quickly.
+  Rotary encoder 1 can be used to scroll through available pages.
+  Releasing Shift Button 1 enters the selected page.
+
+- Currently (Mute, Mixer, Cue and Wav Designer) pages are accessible through
+  this menu.
+
+Wav Designer.
+
+- Accessible from QuickPageselect menu above.
+
+- 3 Oscillator Additive Synthesiser. Generates single cycle waveforms and sends
+  them to a MD sample slot.
+
+- There are 4 pages to the WavDesigner.
+  Encoder buttons[1-3] select the indivdual oscillators.
+  Oscillator Pages:
+    - Oscillator wavform can be changed by pressing top left button repeteadly.
+    Oscillator WAV Forms:
+	  - SIN: Sine wav with adjustable overtones (each overtone is an octave above
+        fundamental)
+      - TRI
+      - PULSE
+      - SAW
+      - USR: User defined waveform, 16 points with linear interpolation.
+
+    - The MD trigger interface together with encoder 4 can be used to
+      manipulate the SIN and USR waveforms.
+    - Encoder 1 pitch adjusts frequency by semitone.
+    - Encoder 2 is fine tune +-100 Cents
+    - Encoder 3 is pulse width.
+
+  Oscillator Mixer Page:
+    - The wav designer mixer page has volume levels for each of the oscillators.
+
+	- From the mixer page, top right button can be used to render and transmit the waveform.
+      (Some of the  MD GUI will lock up when receiving samples, see bug description
+	  above)
+	- Encoders 1-3 adjust oscillator volume
+	- Encoder 4 adjusts MSD destination sample slot.
+
+Mute Page:
+
+- A replacement for the MD mute menu. This features quantisation modes.
+  Also LVL function sets the track(s) volume to 0 before unmuting, mixer
+  page can then be used to fade in the track(s) gently.
+- MCL will attempt to detect the current mute state. (No way of receiving it
+from the MD)
+
+Mixer Page:
+
+-  For OLED users this will depict both mutes and levels.
+-  Track triggering is displayed visually.
+-  Holding Write Button when pressing MD trigs will toggle mutes according
+   to settings in the Mute Page.
+
+Chromatic mode:
+
+- Chromatic mode will be functional from pages outside of PTC page.
+
+- MD POLYSTART parameter added. When a POLYSTART value is chosen, Tracks
+  from (POLYSTART to POLYSTART + POLYMAX) will be locked in as chromatic
+  tracks. Playable from most pages if an external keyboard is attached.
+
+- When modifying paramters from a chromatic track, the corresponding parameter
+  on remaing poly tracks are updated simultanously.
+
+Display Mirror:
+
+- When enabled, the MC will transmit a 7bit encoded dump of the display over
+  usb-serial which can be viewed using the mc_display_mirror.py script.
+
+Midi Forward:
+
+- Ability to forward all MIDI messages (except clock/realtime) to alternate
+  port. Useful if you want to use the MD with the MC and an attached controller.
+
+Enhancements Bug Fixes + Changes:
+
+- Sample Support.
+  MidiSDS sample format send/rec supported. Used for Wav designer.
+  WAV file library has been added. should support 8->24bit samples multi
+  channel.
+
+- OLED SPI frequency doubled. Noticed that the default SPI speed for the OLED
+  library was only 4Mhz. Increased to 8MHz. Might provide a small improvement
+  to refresh rate.
+
+- Re-drawing of display is disabled in Live Record mode when sequencer running.
+  To improve MIDI input latency the OLED display is only updated when changing
+  paramter values. This greatly reduces MIDI latency during live record mode.
+
+- Mixer page encoder behaviour improved. large jumps in encoder values are
+  supported and midi CC messages are interpolated between to give smooth
+  value change.
+
+- Chromatic mode extended to the Seq Step page. Encoder 4 is used to
+  select Note of current step (uses one parameter lock track)
+  External MIDI keyboard on port 2 can also be used to set note value.
+
+- Improvement of Sequencer GUI. Parameter changes are now applied immediately
+  upon encoder change.
+
+- ExtSeqPage had some GUI problems. Fixed.
+
+- Improvement to Project page GUI. Can now exit load and new project
+pages. New project page shows a blinking cursor for the current character
+select.
+
+- GridWrite Page P+/P- modes were broken.
+
+- GridWrite Page: When writing: If MD track length is shorter than the current pattern
+  length, the selected tracks will automatically loop until they fill up the remaining
+  pattern steps.
+
+- Sequencer stability improvement, no more missing notes.
+
+- Sequencer Track Length adjustment fixes.
+
+- Improvements to sequencer parameter locks and pitch handling.
+
+- Macros to control MD GUI.
+  Discovered undocumented sysex commands that allow for controlling of MD GUI.
+  Used to exit menus and record mode in the MD before enabling Trigger Exploit.
+
+- Various improvements to the Trigger Exploit.
+
+- Changes to ActivePeering for better connectivty and device identificaiton.
+
+- Various other improvements I can't remember. See GitLog.
