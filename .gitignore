@@ -1,18 +1,44 @@
-.vscode
-bin
-obj
-.ionide
-.vs
-.ccls-cache
-sketch/*.elf
-sketch/*.hex
-sketch/sym*
-sketch/sym*
-sketch/build
-.vim
-avr/cores/megacommand/**/*.o
-avr/cores/megacommand/**/*.d
-avr/cores/megacommand/**/*.hex
-avr/cores/megacommand/**/*.elf
-avr/cores/megacommand/**/*.a
-sym_*.txt
+# Build directory and artifacts
+*.o
+*.d
+*.elf
+*.hex
+*.bin
+*.uf2
+*.map
+*.a
+
+# Arduino & Pico specific
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Debug files
+*.log
+*.dSYM/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+
+# Local configuration files
+*.local
+*.private
+*.env

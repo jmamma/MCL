@@ -1,5 +1,4 @@
-#include "MCL_impl.h"
-#include "MCLGfx.h"
+#include "MCLGif.h"
 
 /*
 // 'midi_logo_medium', 18x9px

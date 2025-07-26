@@ -1,42 +1,60 @@
-## MegaCommand Live (MCL)
+# MCL Migration: ATmega2560 to RP2040
 
-The following repository contains a functional Arduino Mega 2560 core and the MegaCommand Live firmware.
+This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2560 to the RP2040. Given MCL became a modified Arduino core, the port will initially be based around arduino-pico, enabling us to leverage the SdFat and Adafruit graphics libraries that are core components of MCL.
 
-It is compatibile with the MegaCommand Arduino Shield and the Arduino IDE framework.
+## Current Progress
 
-Parts of this project are built upon the work of:
-   - Manuel Odendahl's MIDICtrl Framework: https://github.com/wesen/mididuino
-   - Bill Greiman's SdFat library: https://github.com/greiman/SdFat
-   - Adafruit's GFX Library: https://github.com/adafruit/Adafruit-GFX-Library
- 
-The updated repository contains numerous enhancements and fixes.
+Port is now complete.
 
-- In 2016 the core was adapted to compile with the ArduinoIDE and MegaCommand hardware design.
-- In 2017 the core was modified to work alongside standard Arduino Code and Libraries.
-- In 2018 the MegaCommandLive firmware was refactored in to c++ libraries.
-- In 2021 the repository was renamed to MCL, to coincide with the MCL 4.0 release.
+- [X] Platform.txt -> Makefile translation
+  - Code can be compiled independently of the Arduino IDE
+  - Correct linking of arduino-pico, pico-sdk and related libraries
 
-### Firmware Download.
+- [X] VSCode + gdb + openocd SW debugger integration
+  - For realtime hardware debugging
 
-See https://github.com/jmamma/MCL/releases for firmware binaries, user documentation and upload instructions.
+- [X] Implementation of low level ISRs for UART + timers, as per MCL
+  - The atmega2560 does not support nested interrupts. I've re-implemented ISR locking as per MCL, with the ability to unlock when entering Sequencer and MIDI processing routines.
+  - Eventually this will be re-architectured to leverage the 2nd core.
+- [X] MIDI stack
+  - Low level MIDI stack responsible for initialising the UARTs
+  - Processing rx/tx of MIDI data
 
-### Compiling MCL Firmware
+- [X] Validate MIDI stack at various turbo speeds (1x, 2x, 4x, 8x, 10x)
+  - [X] Sysex Tx/Rx
+  - [X] Midi Note Tx/Rx
+  - [X] MIDI CC Tx/Rx
 
-See https://github.com/jmamma/MCL/releases for pre-compiled firmware binaries
+- [X] Verify SDFat is functional with the arduino-pico core
 
-*It's no longer possible to compile the MCL firmware from within the Arduino IDE.*
+- [X] Compressed Asset generation via 'make assets'
 
-Compressed assets for the graphics and menu structures must be generated first by running 
-one of the following scripts using Powershell.
-```
-  MCL/resource/gen-resource-linux.ps1 (MAC/Linux)
-  MCL/resource/gen-resource.ps1 (Windows)
-```
-The MCL firmware can then be compiled using the provided Makefile
-```
-  MCL/avr/cores/megacommand/Makefile
-```
-Only avr-gcc 7.30 should be used (included with the legacy IDE). 
-Newer versions of avr-gcc result in a much larger binary and stability problems.
+- [X] Oled SSD1305 display + Adafruit GFX
 
-Example steps to compile the firmware on Mac: [README-BUILD-MAC.md](README-BUILD-MAC.md)
+- [X] Migrate all MCL source code
+
+- [X] Fix compliation errors
+
+- [X] Fix linking
+
+- [X] Sequencer
+
+- [X] Verify user GUI (buttons + encoders)
+
+- [X] Verify Page System
+
+- [X] Verify Menus
+
+- [X] Validate UART and timer IRQ timings.
+
+- [X] MCL project/grid initialisation
+
+- [X] Object serialisation to/from SD Card
+
+- [X] Port to platformio
+
+- [X] Integrate with TBD hardware libraries
+
+#Todo
+
+- [ ] Backport refactor to main MCL github repo.

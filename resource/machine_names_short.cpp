@@ -1,4 +1,4 @@
-#include "Elektron.h"
+#include "ElektronModelTypes.h"
 
 short_machine_name_t md_machine_names_short[142] = {
     {"GN", "--", 0},   {"GN", "SN", 1},   {"GN", "NS", 2},   {"GN", "IM", 3},
