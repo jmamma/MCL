@@ -229,24 +229,38 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
         compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "compress.py")
         run_command(["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)])
 
-#        with open(gen_cpp_path, "w") as f_cpp:
-#            f_cpp.write('#include "R.h"\n\n')
-##            f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
-#            result = run_command(["hexdump", "-v", "-e", '1/1 "%3u,\\n"', ez_path])
-#            f_cpp.write(result.stdout)
-#            f_cpp.write('};\n')
-
+        #with open(gen_cpp_path, "w") as f_cpp:
+        #    f_cpp.write('#include "R.h"\n\n')
+        #    f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
+        #    result = run_command(["hexdump", "-v", "-e", '1/1 "%3u,\\n"', ez_path])
+        #    f_cpp.write(result.stdout)
+        #    f_cpp.write('};\n')
         with open(gen_cpp_path, "w") as f_cpp:
             f_cpp.write('#include "R.h"\n\n')
             f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
             # Read the binary file and convert bytes to the same format as hexdump
             with open(ez_path, "rb") as f_bin:
-                while True:
-                    byte = f_bin.read(1)
-                    if not byte:
-                        break
-                    f_cpp.write(f'{byte[0]:3d},\n')
+                bytes_data = f_bin.read()
+            # Write bytes with proper formatting (3-digit width, comma after each except last)
+            for i, byte_val in enumerate(bytes_data):
+                if i == len(bytes_data) - 1:
+                    # Last byte - no trailing comma
+                    f_cpp.write(f'{byte_val:3d}\n')
+                else:
+                    f_cpp.write(f'{byte_val:3d},\n')
             f_cpp.write('};\n')
+
+#        with open(gen_cpp_path, "w") as f_cpp:
+#            f_cpp.write('#include "R.h"\n\n')
+#            f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
+#            # Read the binary file and convert bytes to the same format as hexdump
+#            with open(ez_path, "rb") as f_bin:
+#                while True:
+#                    byte = f_bin.read(1)
+#                    if not byte:
+#                        break
+#                    f_cpp.write(f'{byte[0]:3d},\n')
+#            f_cpp.write('};\n')
 
         h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
         symbols = []
@@ -270,7 +284,8 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
                         types[var_name] = var_type
         h_content.append(f"struct __T_{base_name} {{\n")
         total_sz = 0
-        for sym in sorted(symbols, key=lambda s: s['Name']):
+        symbols.reverse()
+        for sym in symbols:
             name, size, type_str = sym["Name"], sym["Size"], types.get(sym["Name"])
             if not type_str:
                 print(f"Warning: Could not find type for symbol '{name}' in '{cpp_file}'. Skipping.")
