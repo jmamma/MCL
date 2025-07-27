@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
-#
-# extra_script.py
-#
-# Unified, platform-aware script to build and process resource assets.
-# This version uses robust parsing logic for both AVR and RP2040 platforms
-# to generate correct, self-updating header files.
-#
+# Build MCL compressed assets for AVR and RP2040 platforms.
 
 import os
 import subprocess
@@ -59,27 +53,35 @@ def run_command(cmd, **kwargs):
     return result
 
 # =============================================================================
-# AVR Platform Asset Builder
+# Consolidated Asset Builder for All Platforms
 # =============================================================================
 
-def build_assets_avr(env, resource_dir, build_dir, gen_dir):
+def build_assets_platform(env, resource_dir, build_dir, gen_dir, platform):
     """
-    Asset pipeline for the AVR platform, using custom flags and robust parsing.
+    Consolidated asset pipeline for both AVR and RP2040 platforms.
     """
-    print("\n--- Running AVR Asset Build Pipeline ---")
+    print(f"\n--- Running Unified Asset Build Pipeline for {platform.upper()} ---")
 
+    # --- Platform-Specific Configuration ---
+    if platform == "avr":
+        compiler_flags = [
+            "-DF_CPU=16000000L", "-DARDUINO=10803", "-DARDUINO_AVR_MEGA2560",
+            "-DARDUINO_ARCH_AVR", "-D__AVR_ATmega2560__", "-DAVR", "-std=gnu++1z",
+            "-Os", "--short-enums", "-fpermissive", "-fshort-enums",
+            "-fdata-sections"
+        ] + env.subst("$_CPPINCFLAGS").split()
+    elif platform == "rp2040":
+        compiler_flags = env.subst("$CCFLAGS $CXXFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS").split()
+    else:
+        print(f"Error: Unknown platform '{platform}' in build_assets_platform.")
+        env.Exit(1)
+
+    # --- Toolchain Setup ---
     cxx = get_tool_path(env, "g++")
     objcopy = get_tool_path(env, "objcopy")
     objdump = get_tool_path(env, "objdump")
 
-    custom_flags = [
-        "-DF_CPU=16000000L", "-DARDUINO=10803", "-DARDUINO_AVR_MEGA2560",
-        "-DARDUINO_ARCH_AVR", "-D__AVR_ATmega2560__", "-DAVR", "-std=gnu++1z",
-        "-Os", "--short-enums", "-fpermissive", "-fshort-enums",
-        "-fdata-sections"
-    ]
-    include_flags = env.subst("$_CPPINCFLAGS").split()
-    compiler_flags = custom_flags + include_flags
+    # --- Initial Scan and Setup ---
     print("\n--- Scanning resource files for includes ---")
     all_includes = set()
     resource_cpp_files = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
@@ -87,16 +89,7 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
         with open(os.path.join(resource_dir, cpp_file), 'r', encoding='utf-8') as f_in:
             all_includes.update(line.strip() for line in f_in if line.strip().startswith("#include"))
 
-    proceed = False
-    for cpp_file in resource_cpp_files:
-        base_name = os.path.splitext(cpp_file)[0]
-        fin_path = os.path.join(gen_dir, f"R_{base_name}.cpp")
-        if not os.path.isfile(fin_path):
-           proceed = True
-    if not proceed:
-      print("Detected compressed assets, skipping compile/compression of resources.")
-      return
-
+    # --- Header and ResourceManager Content Initialization ---
     h_content = ['#pragma once', '']
     h_content.extend(sorted(list(all_includes)))
     h_content.append('')
@@ -104,6 +97,7 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
 
     symbol_regex = re.compile(r"^\S+\s+.*\s+(\.data\S*)\s+([0-9a-f]{8})\s+(\S+)")
 
+    # --- Main Processing Loop for Each Resource File ---
     for cpp_file in resource_cpp_files:
         base_name = os.path.splitext(cpp_file)[0]
         source_path = os.path.join(resource_dir, cpp_file)
@@ -113,10 +107,16 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
         gen_cpp_path = os.path.join(gen_dir, f"R_{base_name}.cpp")
 
         print(f"\n--- Processing resource: {cpp_file} ---")
+
+        # 1. Compile source to object file
         run_command([cxx] + compiler_flags + ["-c", source_path, "-o", obj_path])
 
+        # 2. Extract .data sections
         dump_result = run_command([objdump, "-h", obj_path])
         data_sections = re.findall(r'^\s*\d+\s+(\.data\S*)', dump_result.stdout, re.MULTILINE)
+        if platform == "rp2040":
+            data_sections.reverse() # RP2040 requires reverse order for correct layout
+
         if not data_sections:
             open(bin_path, 'wb').close()
         else:
@@ -125,18 +125,26 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
                     tmp_path = os.path.join(build_dir, f"{base_name}{section}.tmp")
                     run_command([objcopy, "-O", "binary", "-j", section, obj_path, tmp_path])
                     with open(tmp_path, "rb") as f_tmp:
-                        f_bin.write(f_tmp.read())
+                        data = f_tmp.read()
+                        f_bin.write(data)
+                        if platform == "rp2040":
+                            # Add padding for 4-byte alignment on RP2040
+                            f_bin.write(b'\0' * ((4 - len(data) % 4) % 4))
                     os.remove(tmp_path)
 
+        # 3. Compress the binary data
         compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "compress.py")
         run_command(["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)])
 
+        # 4. Generate C++ source from compressed data
         with open(gen_cpp_path, "w", encoding="utf-8") as f:
             f.write(f'#include "R.h"\n\nconst unsigned char __R_{base_name}[] PROGMEM = {{\n')
             with open(ez_path, "rb") as f_ez:
-                f.write(",\n".join(f"  {b}" for b in f_ez.read()))
+                byte_data = f_ez.read()
+                f.write(",\n".join(f"  {b}" for b in byte_data))
             f.write('\n};\n')
 
+        # 5. Parse symbols and types for header generation
         h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
         symbols = []
         result = run_command([objdump, "-t", obj_path])
@@ -146,6 +154,9 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
                 symbol_name = match.group(3)
                 if not symbol_name.startswith('.'):
                     symbols.append({"Size": int(match.group(2), 16), "Name": symbol_name})
+        if platform == "rp2040":
+            symbols.reverse() # Match the reversed section order
+
         types = {}
         with open(source_path, "r", encoding='utf-8') as f_src:
             for line in f_src:
@@ -158,6 +169,7 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
                         var_type = " ".join(parts[:-1])
                         types[var_name] = var_type
 
+        # 6. Generate struct definitions in R.h
         h_content.append(f"struct __T_{base_name} {{")
         total_sz = 0
         for sym in symbols:
@@ -165,132 +177,13 @@ def build_assets_avr(env, resource_dir, build_dir, gen_dir):
             if not type_str:
                 print(f"Warning: Could not find type for symbol '{name}' in '{cpp_file}'. Skipping.")
                 continue
-            h_content.extend([
-                f"  union {{", f"    {type_str} {name}[0];", f"    char zz__{name}[{size}];", f"  }};",
-                f"  static constexpr size_t countof_{name} = {size} / sizeof({type_str});",
-                f"  static constexpr size_t sizeofof_{name} = {size};"
-            ])
-            total_sz += size
-        h_content.extend([f"  static constexpr size_t __total_size = {total_sz};", f"}};\n"])
-        resman_content.extend([f"  __T_{base_name} *{base_name};", f"  void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}"])
 
-    print("\n--- Writing final header files for AVR ---")
-    with open(os.path.join(gen_dir, "R.h"), "w") as f: f.write("\n".join(h_content))
-    with open(os.path.join(gen_dir, "ResMan.h"), "w") as f: f.write("\n".join(resman_content))
+            # Platform-specific alignment
+            if platform == "rp2040":
+                size_aligned = (size + 3) & ~3  # 4-byte alignment for ARM
+            else: # avr
+                size_aligned = size
 
-
-def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
-    """
-    Asset pipeline for the RP2040 / RP2350 platform, now with robust parsing.
-    """
-    print("\n--- Running RP2040 Asset Build Pipeline ---")
-    cxx = get_tool_path(env, "g++")
-    objcopy = get_tool_path(env, "objcopy")
-    objdump = get_tool_path(env, "objdump")
-    cxx_flags = env.subst("$CCFLAGS $CXXFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS").split()
-    all_obj_files = []
-    print("\n--- Scanning resource files for includes ---")
-    all_includes = set()
-    resource_cpp_files = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
-
-    for cpp_file in resource_cpp_files:
-        with open(os.path.join(resource_dir, cpp_file), "r") as f_cpp_in:
-            all_includes.update(line.strip() for line in f_cpp_in if line.strip().startswith("#include"))
-
-    h_content = ['#pragma once', '']
-    h_content.extend(sorted(list(all_includes)))
-    h_content.append('')
-    resman_content = []
-
-    symbol_regex = re.compile(r"^\S+\s+.*\s+(\.data\S*)\s+([0-9a-f]{8})\s+(\S+)")
-
-    for cpp_file in resource_cpp_files:
-        base_name = os.path.splitext(cpp_file)[0]
-        source_path = os.path.join(resource_dir, cpp_file)
-        obj_path = os.path.join(build_dir, f"{base_name}.o")
-        bin_path = os.path.join(build_dir, f"{base_name}.bin")
-        ez_path = os.path.join(build_dir, f"{base_name}.ez")
-        gen_cpp_path = os.path.join(gen_dir, f"R_{base_name}.cpp")
-        all_obj_files.append(obj_path)
-        print(f"\n--- Processing resource: {cpp_file} ---")
-        run_command([cxx] + cxx_flags + ["-c", source_path, "-o", obj_path])
-        result = run_command([objdump, "-h", obj_path])
-        data_sections = re.findall(r'^\s*\d+\s+(\.data\S*)', result.stdout, re.MULTILINE)
-        data_sections.reverse()
-
-        with open(bin_path, "wb") as f_bin:
-            for section in data_sections:
-                tmp_path = os.path.join(build_dir, f"{section}.tmp")
-                run_command([objcopy, "-O", "binary", "--only-section=" + section, obj_path, tmp_path])
-                with open(tmp_path, "rb") as f_tmp:
-                    data = f_tmp.read()
-                    f_bin.write(data + (b'\0' * ((4 - len(data) % 4) % 4)))
-                os.remove(tmp_path)
-        compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "compress.py")
-        run_command(["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)])
-
-        #with open(gen_cpp_path, "w") as f_cpp:
-        #    f_cpp.write('#include "R.h"\n\n')
-        #    f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
-        #    result = run_command(["hexdump", "-v", "-e", '1/1 "%3u,\\n"', ez_path])
-        #    f_cpp.write(result.stdout)
-        #    f_cpp.write('};\n')
-        with open(gen_cpp_path, "w") as f_cpp:
-            f_cpp.write('#include "R.h"\n\n')
-            f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
-            # Read the binary file and convert bytes to the same format as hexdump
-            with open(ez_path, "rb") as f_bin:
-                bytes_data = f_bin.read()
-            # Write bytes with proper formatting (3-digit width, comma after each except last)
-            for i, byte_val in enumerate(bytes_data):
-                if i == len(bytes_data) - 1:
-                    # Last byte - no trailing comma
-                    f_cpp.write(f'{byte_val:3d}\n')
-                else:
-                    f_cpp.write(f'{byte_val:3d},\n')
-            f_cpp.write('};\n')
-
-#        with open(gen_cpp_path, "w") as f_cpp:
-#            f_cpp.write('#include "R.h"\n\n')
-#            f_cpp.write(f'const unsigned char __R_{base_name}[] PROGMEM = {{\n')
-#            # Read the binary file and convert bytes to the same format as hexdump
-#            with open(ez_path, "rb") as f_bin:
-#                while True:
-#                    byte = f_bin.read(1)
-#                    if not byte:
-#                        break
-#                    f_cpp.write(f'{byte[0]:3d},\n')
-#            f_cpp.write('};\n')
-
-        h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
-        symbols = []
-        result = run_command([objdump, "-t", obj_path])
-        for line in result.stdout.splitlines():
-            match = symbol_regex.search(line)
-            if match:
-                symbol_name = match.group(3)
-                if not symbol_name.startswith('.'):
-                    symbols.append({"Size": int(match.group(2), 16), "Name": symbol_name})
-        types = {}
-        with open(source_path, "r", encoding='utf-8') as f_src:
-            for line in f_src:
-                if "=" in line and not line.strip().startswith("//"):
-                    declaration = line.split('=')[0].strip()
-                    type_and_name = declaration.split('[')[0].strip()
-                    parts = type_and_name.split()
-                    if len(parts) >= 2:
-                        var_name = parts[-1]
-                        var_type = " ".join(parts[:-1])
-                        types[var_name] = var_type
-        h_content.append(f"struct __T_{base_name} {{\n")
-        total_sz = 0
-        symbols.reverse()
-        for sym in symbols:
-            name, size, type_str = sym["Name"], sym["Size"], types.get(sym["Name"])
-            if not type_str:
-                print(f"Warning: Could not find type for symbol '{name}' in '{cpp_file}'. Skipping.")
-                continue
-            size_aligned = (size + 3) & ~3 # 4-byte alignment for ARM
             h_content.extend([
                 f"  union {{", f"    {type_str} {name}[0];", f"    char zz__{name}[{size_aligned}];", f"  }};",
                 f"  static constexpr size_t countof_{name} = {size_aligned} / sizeof({type_str});",
@@ -298,12 +191,13 @@ def build_assets_rp2040(env, resource_dir, build_dir, gen_dir):
             ])
             total_sz += size_aligned
         h_content.extend([f"  static constexpr size_t __total_size = {total_sz};", f"}};\n"])
-        resman_content.extend([f"  __T_{base_name} *{base_name};", f"  void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}\n"])
+        # 7. Generate content for ResMan.h
+        resman_content.extend([f"  __T_{base_name} *{base_name};", f"  void use_{base_name}() {{ {base_name} = (__T_{base_name}*) __use_resource(__R_{base_name}); }}"])
 
-    print("\n--- Writing final header files for RP2040 ---")
-    with open(os.path.join(gen_dir, "R.h"), "w") as f_h: f_h.write("\n".join(h_content))
-    with open(os.path.join(gen_dir, "ResMan.h"), "w") as f_rm: f_rm.write("\n".join(resman_content))
-
+    # --- Finalize and Write Header Files ---
+    print(f"\n--- Writing final header files for {platform.upper()} ---")
+    with open(os.path.join(gen_dir, "R.h"), "w") as f: f.write("\n".join(h_content))
+    with open(os.path.join(gen_dir, "ResMan.h"), "w") as f: f.write("\n".join(resman_content))
 
 # =============================================================================
 # Main Dispatcher & Entry Point
@@ -324,10 +218,8 @@ def build_assets(env):
     os.makedirs(resource_build_dir, exist_ok=True)
     os.makedirs(generated_src_dir, exist_ok=True)
 
-    if platform_subdir == "avr":
-        build_assets_avr(env, resource_dir, resource_build_dir, generated_src_dir)
-    elif platform_subdir == "rp2040":
-        build_assets_rp2040(env, resource_dir, resource_build_dir, generated_src_dir)
+    if platform_subdir in ["avr", "rp2040"]:
+        build_assets_platform(env, resource_dir, resource_build_dir, generated_src_dir, platform_subdir)
     else:
         print(f"Warning: No asset build pipeline defined for platform '{platform_subdir}'.")
 
