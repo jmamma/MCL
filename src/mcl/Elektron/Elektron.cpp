@@ -16,7 +16,7 @@ void MidiDevice::cleanup(uint8_t device_idx) {
 uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
 MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
 
-uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartParent *uart_) {
+uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartClass *uart_) {
    if (!send) {
         return len + sysex_protocol.header_size + 2;
     }
@@ -446,7 +446,7 @@ void ElektronDevice::setStatus(uint8_t id, uint8_t value) {
   sendRequest(data, countof(data));
 }
 
-void ElektronDevice::setKitName(const char *name, MidiUartParent *uart_) {
+void ElektronDevice::setKitName(const char *name, MidiUartClass *uart_) {
   uint8_t data[64];
   uint8_t i = 0;
 

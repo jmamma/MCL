@@ -147,7 +147,7 @@ public:
   virtual void disconnect(uint8_t device_idx) { cleanup(device_idx); connected = false; }
   virtual bool probe() = 0;
   virtual uint8_t get_mute_cc() { return 255; }
-  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {};
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr) {};
   // 34x42 bitmap icon of the device
   virtual uint8_t *icon() { return nullptr; }
   virtual MCLGIF *gif();
@@ -341,7 +341,7 @@ public:
    **/
   virtual const char* getMachineName(uint8_t machine) { return nullptr; }
 
-  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartParent *uart_ = nullptr) {};
+  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr) {};
 
   bool get_tempo(uint16_t &tempo);
   bool get_mute_state(uint16_t &mute_state);
@@ -385,7 +385,7 @@ public:
    * requestPattern, etc...
    **/
   void sendCommand(ElektronCommand command, uint8_t param);
-  virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartParent *uart_ = nullptr);
+  virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartClass *uart_ = nullptr);
   virtual uint16_t sendRequest(uint8_t type, uint8_t param, bool send = true);
   /**
    * Wait for a blocking answer to a status request. Timeout is in clock ticks.
@@ -467,7 +467,7 @@ public:
    * use this method directly.
    **/
   virtual void setStatus(uint8_t id, uint8_t value);
-  virtual void setKitName(const char* name, MidiUartParent *uart_ = nullptr);
+  virtual void setKitName(const char* name, MidiUartClass *uart_ = nullptr);
   /**
    * Set the tempo.
    **/
