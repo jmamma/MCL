@@ -38,24 +38,8 @@
 #define NUM_LOCKS_270 4
 #define NUM_EXT_STEPS_270 128
 
-class ExtSeqTrackData_270 {
-public:
-  uint8_t length; // Resolution = 2 / ExtPatternResolution
-  uint8_t speed;
-  uint8_t reserved[NUM_EXT_NOTES_270];
-  int8_t notes[NUM_EXT_NOTES_270]
-              [NUM_EXT_STEPS_270]; // 128 steps, up to 4 notes per step
-  uint8_t locks[NUM_LOCKS_270][NUM_EXT_STEPS_270];
-  uint8_t locks_params[NUM_LOCKS_270];
-
-  uint64_t lock_masks[NUM_LOCKS_270];
-
-  uint8_t conditional[NUM_EXT_STEPS_270];
-  uint8_t timing[NUM_EXT_STEPS_270];
-};
-
 /// 24-bit ext track event descriptor
-struct ext_event_t {
+struct ATTR_PACKED() ext_event_t {
   /// true for lock, false for Midi note
   bool is_lock : 1;
   /// effective when is_lock is true
@@ -100,7 +84,7 @@ public:
   uint8_t velocity;
 };
 
-class ExtSeqTrackData {
+class ATTR_PACKED() ExtSeqTrackData {
 public:
   NibbleArray<NUM_EXT_STEPS> timing_buckets;
   ext_event_t events[NUM_EXT_EVENTS];
@@ -114,33 +98,6 @@ public:
   void clear() {
     event_count = 0;
     timing_buckets.clear();
-  }
-  bool convert(ExtSeqTrackData_270 *old) {
-    clear();
-    memset(locks_params, 0, NUM_LOCKS_270);
-    for (uint8_t n = 0; n < old->length; n++) {
-      for (uint8_t a = 0; a < NUM_EXT_NOTES_270; a++) {
-        if (old->notes[a][n] == 0)
-          continue;
-        bool note_on = (old->notes[a][n] > 0);
-        ext_event_t e;
-
-        e.is_lock = false;
-        e.cond_id = old->conditional[n];
-        e.event_value = abs(old->notes[a][n]) - 1;
-        e.event_on = note_on;
-        e.micro_timing = old->timing[n];
-        velocities[n] = 100;
-        if (event_count < NUM_EXT_EVENTS) {
-          uint8_t bucket = timing_buckets.get(n);
-          if (bucket < 16) {
-            timing_buckets.set(n, bucket + 1);
-            events[event_count++] = e;
-          }
-        }
-      }
-    }
-    return true;
   }
 };
 

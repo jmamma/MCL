@@ -5,7 +5,7 @@
 #include "ExtTrack.h"
 #include "MNM.h"
 
-class MNMTrack : public ExtTrack {
+class ATTR_PACKED() MNMTrack : public ExtTrack {
 public:
   MNMMachine machine;
   MNMTrack() {

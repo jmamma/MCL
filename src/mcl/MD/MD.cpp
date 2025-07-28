@@ -751,9 +751,12 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   data[i++] = machine->trigGroup;
   data[i++] = machine->muteGroup;
   if (level != 255) {
+    DEBUG_PRINT("level ");
+    DEBUG_PRINTLN(level);
     data[i++] = level;
   }
-
+  DEBUG_PRINT("i : ");
+  DEBUG_PRINTLN(i);
 end:
   return sendRequest(data, i, send);
 }
@@ -826,6 +829,8 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
   }
 
   if ((send_level) && (kit_->levels[track_] != machine->level)) {
+    DEBUG_PRINTLN("level changing");
+    DEBUG_PRINTLN(machine->level);
     level = machine->level;
   }
 

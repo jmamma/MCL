@@ -79,7 +79,7 @@ public:
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
 };
 
-class MNMTrackModifier {
+class ATTR_PACKED() MNMTrackModifier {
 public:
   static const uint8_t DEST_POS_PITCH_BEND = 0;
   static const uint8_t DEST_NEG_PITCH_BEND = 1;
@@ -100,7 +100,7 @@ public:
   }
 };
 
-class MNMTrig {
+class ATTR_PACKED() MNMTrig {
 public:
   void init(uint8_t track_) {
     portamento = 0;
@@ -116,7 +116,7 @@ public:
   bool legatoLFO;
 };
 
-class MNMMachine {
+class ATTR_PACKED() MNMMachine {
 public:
   uint8_t params[72];
   uint8_t level;

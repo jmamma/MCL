@@ -33,14 +33,7 @@
 
 class Grid;
 
-class GridTrack_270 {
-public:
-  uint8_t active = EMPTY_TRACK_TYPE;
-  char trackName[17];
-  GridLink_270 link;
-};
-
-class GridTrack {
+class ATTR_PACKED() GridTrack {
 public:
   uint8_t active = EMPTY_TRACK_TYPE;
   GridLink link;

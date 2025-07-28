@@ -4,7 +4,7 @@
 
 #include "DeviceTrack.h"
 
-class AUXTrack : public DeviceTrack {
+class ATTR_PACKED() AUXTrack : public DeviceTrack {
 public:
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
   load_link_data(seq_track);

@@ -6,7 +6,7 @@
 #include "PerfEncoder.h"
 #include "MixerPage.h"
 
-class PerfTrackEncoderData {
+class ATTR_PACKED() PerfTrackEncoderData {
 public:
   char name[PERF_NAME_LENGTH];
   uint8_t src;
@@ -28,7 +28,7 @@ public:
 
 };
 
-class PerfTrackData {
+class ATTR_PACKED() PerfTrackData {
 public:
   PerfTrackEncoderData encs[4];
   PerfScene scenes[NUM_SCENES];
@@ -38,7 +38,7 @@ public:
   //
 };
 
-class PerfTrack : public AUXTrack, public PerfTrackData {
+class ATTR_PACKED() PerfTrack : public AUXTrack, public PerfTrackData {
 public:
 
   PerfTrack() {

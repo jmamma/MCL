@@ -132,7 +132,7 @@ public:
 /**
  * This class stores the LFO settings for a track, inside the Kit object.
  **/
-class MDLFO {
+class ATTR_PACKED() MDLFO {
   /**
    * \addtogroup md_sysex_kit
    * @{
@@ -173,7 +173,7 @@ public:
 /**
  * This class stores the complete settings for a track inside the Kit object.
  **/
-class MDMachine {
+class ATTR_PACKED() MDMachine {
   /**
    * \addtogroup md_sysex_kit
    * @{

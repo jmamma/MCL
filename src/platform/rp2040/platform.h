@@ -50,6 +50,8 @@ extern volatile uint32_t interrupt_lock_count;
 #define CLEAR_LOCK() restore_interrupts_from_disabled(state)
 #define LOCK() USE_LOCK(); SET_LOCK()
 
+#define ATTR_PACKED() __attribute__((packed))
+
 #define ALWAYS_INLINE() __attribute__((always_inline))
 #define FORCED_INLINE() __attribute__((always_inline))
 

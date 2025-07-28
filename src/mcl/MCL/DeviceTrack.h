@@ -33,7 +33,7 @@ class GridChainTrack;
     *p = (klass *)init_track_type(aktive);                                     \
   }
 
-class DeviceTrack : public GridTrack {
+class ATTR_PACKED() DeviceTrack : public GridTrack {
 
 private:
   template <class T> T *_dynamik_kast(DeviceTrack *p) {

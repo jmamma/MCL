@@ -22,7 +22,7 @@
 
 #define WAV_LENGTH 96
 
-class LFOSeqParam {
+class ATTR_PACKED() LFOSeqParam {
 public:
   uint8_t dest;
   uint8_t param;
@@ -31,7 +31,7 @@ public:
 
 };
 
-class LFOSeqTrackData {
+class ATTR_PACKED() LFOSeqTrackData {
 public:
   LFOSeqParam params[NUM_LFO_PARAMS];
 

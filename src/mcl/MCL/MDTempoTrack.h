@@ -4,12 +4,12 @@
 
 #include "AUXTrack.h"
 
-class TempoData {
+class ATTR_PACKED() TempoData {
 public:
   float tempo;
 };
 
-class MDTempoTrack : public AUXTrack, public TempoData {
+class ATTR_PACKED() MDTempoTrack : public AUXTrack, public TempoData {
 public:
   MDTempoTrack() {
     active = MDTEMPO_TRACK_TYPE;

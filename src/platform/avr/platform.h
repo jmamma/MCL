@@ -38,6 +38,8 @@ extern volatile uint32_t interrupt_lock_count;
 #define time_us_32() g_clock_fast
 #define sleep_ms(x) delay(x)
 
+#define ATTR_PACKED() //avr structs/classes should already be packed
+
 // Function inlining configuration
 #if defined(MEGACOMMAND) && defined(IS_ISR_ROUTINE)
     #define ALWAYS_INLINE() __attribute__((always_inline))

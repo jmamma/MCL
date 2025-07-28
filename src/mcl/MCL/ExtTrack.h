@@ -9,12 +9,7 @@
 
 #define EMPTY_TRACK_TYPE 0
 
-class ExtTrack_270 : public GridTrack_270 {
-public:
-  ExtSeqTrackData_270 seq_data;
-};
-
-class ExtTrack : public DeviceTrack {
+class ATTR_PACKED() ExtTrack : public DeviceTrack {
 public:
   ExtSeqTrackData seq_data;
   ExtTrack() {
@@ -36,38 +31,6 @@ public:
     link.speed = SEQ_SPEED_1X;
   }
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
-
-  bool convert(ExtTrack_270 *old) {
-    link.row = old->link.row;
-    link.loops = old->link.loops;
-    if (link.row >= GRID_LENGTH) {
-      link.row = GRID_LENGTH - 1;
-    }
-
-    if (old->active == EXT_TRACK_TYPE_270) {
-      if (old->seq_data.speed == 0) {
-        link.speed = SEQ_SPEED_2X;
-      } else {
-        link.speed = old->seq_data.speed - 1;
-        if (link.speed == 0) {
-          link.speed = SEQ_SPEED_2X;
-        } else if (link.speed == 1) {
-          link.speed = SEQ_SPEED_1X;
-        }
-      }
-      link.length = old->seq_data.length;
-      if (link.length == 0) {
-        link.length = 16;
-      }
-      seq_data.convert(&(old->seq_data));
-      active = EXT_TRACK_TYPE;
-    } else {
-      link.speed = SEQ_SPEED_1X;
-      link.length = 16;
-      active = EMPTY_TRACK_TYPE;
-    }
-    return true;
-  }
 
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return sizeof(ExtTrack); }

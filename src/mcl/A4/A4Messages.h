@@ -360,24 +360,6 @@ a4sound_t {
   a4mod_t          mod_breadth;
 };
 
-class A4Sound_270 {
-  /**
-   * \addtogroup md_sysex_kit
-   * @{
-   **/
-
-public:
-  bool workSpace; // When transferring sounds, we must decide if we are going to
-                  // send them to the RAM workspace, or permanent memory.
-  uint8_t origPosition;
-  // old a4 sound patch layout: uint8_t[415 - 10 - 2 - 4 - 1], 398 bytes
-  // -10 : prologue and 0x78 0x3E, part of a4 sound header.
-  // -2: sysex frame
-  // -4: len & checksum
-  // -1: origposition
-  uint8_t payload[415 - 10 - 2 - 4 - 1];
-};
-
 class 
 __attribute__((packed))
 A4Sound {
@@ -402,8 +384,6 @@ public:
   // sizeof(a4sound_t) is 318, which encodes 363 bytes in 7-bit enc, + 42 bytes header metadata + 8B prologue + 2B SYSEX frame = 415B
   a4sound_t        sound;
   // === End new a4 sound patch layout, 338B
-
-  void convert(A4Sound_270* old);
 
   bool fromSysex_impl(ElektronSysexDecoder *decoder);
   /** Convert the sound object into a sysex buffer to be sent to the

@@ -6,19 +6,7 @@
 
 #include "SeqTrack.h"
 
-class GridLink_270 {
-
-public:
-  uint8_t row;
-  uint8_t loops;
-
-  GridLink_270(uint8_t active_ = 0, uint8_t row_ = 0, uint8_t col_ = 0,
-            uint8_t loops_ = 0) {}
-
-};
-
-
-class GridLink {
+class ATTR_PACKED() GridLink {
 
 public:
   uint8_t row;

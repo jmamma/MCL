@@ -3,7 +3,7 @@
 
 #include "DeviceTrack.h"
 
-class EmptyTrack : public DeviceTrack {
+class ATTR_PACKED() EmptyTrack : public DeviceTrack {
 public:
   //Assume A4Track consume most data size out
   //of all the tracktypes

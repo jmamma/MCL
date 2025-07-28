@@ -46,29 +46,7 @@ public:
   uint32_t swingEditAll;
 };
 
-class MDTrackLight_270 : public GridTrack_270 {
-public:
-  MDSeqTrackData_270 seq_data;
-  MDMachine machine;
-};
-
-class MDTrack_270 : public MDTrackLight_270 {
-public:
-  uint8_t origPosition;
-  uint8_t patternOrigPosition;
-  uint8_t length;
-  uint64_t trigPattern;
-  uint64_t accentPattern;
-  uint64_t slidePattern;
-  uint64_t swingPattern;
-
-  KitExtra kitextra;
-
-  int arraysize;
-  ParameterLock locks[LOCK_AMOUNT];
-};
-
-class MDTrack : public DeviceTrack {
+class ATTR_PACKED() MDTrack : public DeviceTrack {
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
@@ -103,31 +81,6 @@ public:
 
   // normalize track level
   void normalize();
-
-  bool convert(MDTrack_270 *old) {
-    link.row = old->link.row;
-    link.loops = old->link.loops;
-    if (link.row >= GRID_LENGTH) {
-      link.row = GRID_LENGTH - 1;
-    }
-    if (old->active == MD_TRACK_TYPE_270) {
-      memcpy(&machine, &old->machine, sizeof(MDMachine));
-      if (old->seq_data.speed < 64) {
-        link.speed = SEQ_SPEED_1X;
-      } else {
-        link.speed = old->seq_data.speed - 64;
-      }
-      link.length = old->seq_data.length;
-
-      seq_data.convert(&(old->seq_data));
-      active = MD_TRACK_TYPE;
-    } else {
-      link.speed = SEQ_SPEED_1X;
-      link.length = 16;
-      active = EMPTY_TRACK_TYPE;
-    }
-    return true;
-  }
 
   virtual uint16_t get_track_size() { return sizeof(MDTrack); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }

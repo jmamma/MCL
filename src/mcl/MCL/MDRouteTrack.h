@@ -4,13 +4,13 @@
 
 #include "AUXTrack.h"
 
-class RouteData {
+class ATTR_PACKED() RouteData {
 public:
   uint8_t routing[16];
   uint16_t poly_mask;
 };
 
-class MDRouteTrack : public AUXTrack, public RouteData {
+class ATTR_PACKED() MDRouteTrack : public AUXTrack, public RouteData {
 public:
   MDRouteTrack() {
     active = MDROUTE_TRACK_TYPE;

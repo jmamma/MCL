@@ -5,7 +5,7 @@
 #include "AUXTrack.h"
 #include "LFOSeqTrack.h"
 
-class MDLFOTrack : public AUXTrack {
+class ATTR_PACKED() MDLFOTrack : public AUXTrack {
 public:
   LFOSeqTrackData lfo_data;
   MDLFOTrack() {

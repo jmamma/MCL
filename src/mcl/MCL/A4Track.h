@@ -8,13 +8,7 @@
 
 // Use a more specific name to avoid conflict with Arduino's Print class
 
-class A4Track_270 : public GridTrack_270 {
-public:
-  ExtSeqTrackData_270 seq_data;
-  A4Sound_270 sound;
-};
-
-class A4Track : public ExtTrack {
+class ATTR_PACKED() A4Track : public ExtTrack {
 public:
   A4Sound sound;
   A4Track() {
@@ -33,42 +27,6 @@ public:
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
-  bool convert(A4Track_270 *old) {
-    link.row = old->link.row;
-    link.loops = old->link.loops;
-    if (link.row >= GRID_LENGTH) {
-      link.row = GRID_LENGTH - 1;
-    }
-
-    if (old->active == A4_TRACK_TYPE_270) {
-      link.speed = old->seq_data.speed;
-      if (old->seq_data.speed == 0) {
-        link.speed = SEQ_SPEED_2X;
-      } else {
-        link.speed = old->seq_data.speed - 1;
-        if (link.speed == 0) {
-          link.speed = SEQ_SPEED_2X;
-        } else if (link.speed == 1) {
-          link.speed = SEQ_SPEED_1X;
-        }
-      }
-
-      link.length = old->seq_data.length;
-      if (link.length == 0) {
-        link.length = 16;
-      }
-
-      sound.convert(&old->sound);
-      seq_data.convert(&old->seq_data);
-      active = A4_TRACK_TYPE;
-    } else {
-      link.speed = SEQ_SPEED_1X;
-      link.length = 16;
-      active = EMPTY_TRACK_TYPE;
-    }
-
-    return true;
-  }
   virtual uint16_t get_track_size() { return sizeof(A4Track); }
   virtual uint8_t get_model() { return A4_TRACK_TYPE; } // TODO
   virtual uint8_t get_device_type() { return A4_TRACK_TYPE; }

@@ -7,7 +7,7 @@
 #include "MDTrack.h"
 
 
-class MDFXData {
+class ATTR_PACKED() MDFXData {
 public:
   bool enable_reverb;
   bool enable_delay;
@@ -23,7 +23,7 @@ public:
   uint8_t dynamics[8];
 };
 
-class MDFXTrack : public AUXTrack, public MDFXData {
+class ATTR_PACKED() MDFXTrack : public AUXTrack, public MDFXData {
 public:
   MDFXTrack() {
     active = MDFX_TRACK_TYPE;

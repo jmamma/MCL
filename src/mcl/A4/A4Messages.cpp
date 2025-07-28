@@ -36,18 +36,6 @@ static constexpr size_t a4sound_origpos_idx = sizeof(a4sound_prologue);
 static constexpr size_t a4sound_checksum_startidx = a4sound_origpos_idx + 1;
 static constexpr size_t a4sound_encoding_startidx = a4sound_checksum_startidx + sizeof(a4sound_header);
 
-void A4Sound::convert(A4Sound_270* old) {
-  this->soundpool = old->workSpace;
-  this->origPosition = old->origPosition;
-  // legacy payload len = 398
-  uint8_t* payload = old->payload;
-  // skip the partial header 
-  payload += 6;
-  // getting data from old payload.
-  ElektronSysexDecoder decoder(payload);
-  fromSysex_impl(&decoder);
-}
-
 // caller guarantees: 1. in checksum; 2. not in 7bit enc.
 // when this routine exits, condition 1) and 2) hold.
 bool A4Sound::fromSysex_impl(ElektronSysexDecoder *decoder) {
