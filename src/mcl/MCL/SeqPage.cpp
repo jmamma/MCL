@@ -298,6 +298,7 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
 }
 
 bool SeqPage::handleEvent(gui_event_t *event) {
+  if (note_interface.is_event(event)) { return false; }
 
   if (EVENT_CMD(event)) {
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
