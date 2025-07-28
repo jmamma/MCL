@@ -181,12 +181,12 @@ bool ArpPage::handleEvent(gui_event_t *event) {
       mcl.popPage();
       return true;
     }
-    if (note_interface.is_event(event)) {
+    if (EVENT_NOTE(event)) {
       seq_ptc_page.handleEvent(event);
       return true;
     }
   }
-  /*  if (note_interface.is_event(event) &&
+  /*  if (EVENT_NOTE(event) &&
     midi_active_peering.get_device(event->port) == &MD) {
         key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
         return true;

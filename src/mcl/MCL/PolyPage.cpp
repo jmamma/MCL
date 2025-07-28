@@ -73,7 +73,7 @@ bool PolyPage::handleEvent(gui_event_t *event) {
     }
   }
 
-  if (note_interface.is_event(event)) {
+  if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;

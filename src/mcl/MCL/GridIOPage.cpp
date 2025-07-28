@@ -58,7 +58,7 @@ void GridIOPage::track_select_array_from_type_select(
 }
 
 bool GridIOPage::handleEvent(gui_event_t *event) {
-  if (note_interface.is_event(event)) {
+  if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (show_track_type) {

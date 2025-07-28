@@ -267,7 +267,7 @@ bool tbd_handleEvent(gui_event_t *event) {
 
 bool mcl_handleEvent(gui_event_t *event) {
   /*
-  if (note_interface.is_event(event)) {
+  if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     MidiDevice *device = midi_active_peering.get_device(port);

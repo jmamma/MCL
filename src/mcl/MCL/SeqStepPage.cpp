@@ -313,7 +313,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
-  if (note_interface.is_event(event) && !grid_page.bank_popup) {
+  if (EVENT_NOTE(event) && !grid_page.bank_popup) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     MidiDevice *device = midi_active_peering.get_device(port);

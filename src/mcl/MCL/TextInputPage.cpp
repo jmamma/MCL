@@ -200,7 +200,7 @@ void TextInputPage::display() {
 }
 
 bool TextInputPage::handleEvent(gui_event_t *event) {
-  if (note_interface.is_event(event)) {
+  if (EVENT_NOTE(event)) {
     return true;
   }
   if (EVENT_CMD(event)) {

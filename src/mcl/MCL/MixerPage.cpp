@@ -512,7 +512,7 @@ void MixerPage::toggle_or_solo(bool solo) {
 bool MixerPage::handleEvent(gui_event_t *event) {
 
   uint8_t is_md_device = (midi_device == &MD);
-  if (note_interface.is_event(event)) {
+  if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port)->id;

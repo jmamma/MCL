@@ -842,7 +842,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
   uint8_t timing_mid = active_track.get_timing_mid();
 
-  if (note_interface.is_event(event)) {
+  if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
     uint8_t device = midi_active_peering.get_device(port)->id;

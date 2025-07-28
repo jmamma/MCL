@@ -298,7 +298,7 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
 }
 
 bool SeqPage::handleEvent(gui_event_t *event) {
-  if (note_interface.is_event(event)) {
+  if (EVENT_NOTE(event)) {
     return false;
   }
 
