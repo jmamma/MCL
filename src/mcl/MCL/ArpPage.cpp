@@ -170,18 +170,21 @@ bool ArpPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
-      EVENT_PRESSED(event, Buttons.BUTTON3) ||
-      EVENT_PRESSED(event, Buttons.BUTTON2) ||
-      EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    GUI.ignoreNextEvent(event->source);
-  exit:
-    mcl.popPage();
-    return true;
-  }
-  if (note_interface.is_event(event)) {
-    seq_ptc_page.handleEvent(event);
-    return true;
+
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
+        EVENT_PRESSED(event, Buttons.BUTTON3) ||
+        EVENT_PRESSED(event, Buttons.BUTTON2) ||
+        EVENT_PRESSED(event, Buttons.BUTTON4)) {
+        GUI.ignoreNextEvent(event->source);
+    exit:
+      mcl.popPage();
+      return true;
+    }
+    if (note_interface.is_event(event)) {
+      seq_ptc_page.handleEvent(event);
+      return true;
+    }
   }
   /*  if (note_interface.is_event(event) &&
     midi_active_peering.get_device(event->port) == &MD) {

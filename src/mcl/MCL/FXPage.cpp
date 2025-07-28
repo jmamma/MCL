@@ -1,7 +1,8 @@
 #include "ResourceManager.h"
-#include "FXPage.h"
 #include "MD.h"
+#include "FXPage.h"
 #include "KeyInterface.h"
+#include "PageIndex.h"
 #include "MCLGUI.h"
 #include "MidiActivePeering.h"
 
@@ -26,7 +27,7 @@ void FXPage::init() {
 void FXPage::update_encoders() {
 
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-    MCLEncoder *enc = (MCLEncoder*) encoders[n];
+    MCLEncoder *enc = (MCLEncoder *)encoders[n];
     enc->max = 127;
 
     uint8_t a = ((uint8_t)page_mode * GUI_NUM_ENCODERS) + n;
@@ -47,7 +48,7 @@ void FXPage::loop() {
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     uint8_t n = i + (page_mode * GUI_NUM_ENCODERS);
-    MCLEncoder *enc = (MCLEncoder *) encoders[i];
+    MCLEncoder *enc = (MCLEncoder *)encoders[i];
     if (enc->hasChanged()) {
       uint8_t fx_param = params[n].param;
       uint8_t fx_type = params[n].type;
@@ -83,12 +84,13 @@ void FXPage::display() {
     //  mcl_gui.draw_light_encoder(30 + 20 * i, 18, encoders[i], str);
   }
   oled_display.setFont(&TomThumb);
-  const char *info1;;
+  const char *info1;
+  ;
   const char *info2;
   if (page_mode) {
     info1 = "FX A";
-   } else {
-     info1 = "FX B";
+  } else {
+    info1 = "FX B";
   }
   info2 = &fx_page_title[0];
   mcl_gui.draw_panel_labels(info1, info2);
@@ -105,48 +107,47 @@ bool FXPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-        case MDX_KEY_NO:
+      case MDX_KEY_NO:
         mcl.setPage(MIXER_PAGE);
         break;
       }
     }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-        case MDX_KEY_SCALE:
-        case MDX_KEY_DOWN:
+      case MDX_KEY_SCALE:
+      case MDX_KEY_DOWN:
         if (mcl.currentPage() == FX_PAGE_B) {
           goto toggle_mode;
-        }
-        else {
+        } else {
           mcl.setPage(FX_PAGE_B);
         }
         break;
-        case MDX_KEY_LEFT:
+      case MDX_KEY_LEFT:
         if (mcl.currentPage() == FX_PAGE_A) {
           goto toggle_mode;
-        }
-        else {
+        } else {
           mcl.setPage(FX_PAGE_A);
         }
         break;
       }
     }
   }
-  if (event->mask == EVENT_BUTTON_RELEASED) {
-    return true;
+  if (EVENT_BUTTON(event)) {
+      if (event->mask == EVENT_BUTTON_RELEASED) {
+        return true;
+      }
+      if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+          EVENT_PRESSED(event, Buttons.ENCODER2) ||
+          EVENT_PRESSED(event, Buttons.ENCODER3) ||
+          EVENT_PRESSED(event, Buttons.ENCODER4)) {
+        // mcl.setPage(GRID_PAGE);
+      }
+      if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+      toggle_mode:
+        page_mode = !(page_mode);
+        update_encoders();
+        return true;
+      }
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
-      //mcl.setPage(GRID_PAGE);
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    toggle_mode:
-    page_mode = !(page_mode);
-    update_encoders();
-    return true;
-  }
-
   return false;
 }

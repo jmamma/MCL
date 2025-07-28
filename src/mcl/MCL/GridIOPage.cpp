@@ -1,9 +1,9 @@
 #include "GridIOPage.h"
-#include "ResourceManager.h"
+#include "MCLActions.h"
 #include "MCLGUI.h"
 #include "MD.h"
 #include "Project.h"
-#include "MCLActions.h"
+#include "ResourceManager.h"
 
 uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
@@ -83,8 +83,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
             if (show_offset) {
               offset = 255;
             }
-          }
-          else if (BUTTON_DOWN(Buttons.BUTTON2)) {
+          } else if (BUTTON_DOWN(Buttons.BUTTON2)) {
             return true;
           } else {
             action();
@@ -115,39 +114,41 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-  toggle_grid:
-    for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-      if (note_interface.is_note(n)) {
-        TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
-        if (note_interface.is_note_on(n)) {
-          note_interface.ignoreNextEvent(n);
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    toggle_grid:
+      for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+        if (note_interface.is_note(n)) {
+          TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
+          if (note_interface.is_note_on(n)) {
+            note_interface.ignoreNextEvent(n);
+          }
+          note_interface.clear_note(n);
         }
-        note_interface.clear_note(n);
       }
+      proj.toggle_grid();
+      key_interface.send_md_leds();
+      return true;
     }
-    proj.toggle_grid();
-    key_interface.send_md_leds();
-    return true;
-  }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    group_select();
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    //   encoders[3]->pressmode = !encoders[3]->pressmode;
-  }
-  // if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-  //    EVENT_PRESSED(event, Buttons.ENCODER2) ||
-  //    EVENT_PRESSED(event, Buttons.ENCODER3) ||
-  //    EVENT_PRESSED(event, Buttons.ENCODER4)) {
-  // }
-  if (EVENT_RELEASED(event, Buttons.BUTTON1) ||
-      EVENT_RELEASED(event, Buttons.BUTTON4)) {
-  close:
-    mcl.setPage(GRID_PAGE);
-    return true;
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      group_select();
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+      //   encoders[3]->pressmode = !encoders[3]->pressmode;
+    }
+    // if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+    //    EVENT_PRESSED(event, Buttons.ENCODER2) ||
+    //    EVENT_PRESSED(event, Buttons.ENCODER3) ||
+    //    EVENT_PRESSED(event, Buttons.ENCODER4)) {
+    // }
+    if (EVENT_RELEASED(event, Buttons.BUTTON1) ||
+        EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    close:
+      mcl.setPage(GRID_PAGE);
+      return true;
+    }
   }
   return false;
 }

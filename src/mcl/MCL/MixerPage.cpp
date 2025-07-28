@@ -519,19 +519,24 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
     uint8_t track = event->source;
 
-
     if (track > 16) {
       return false;
     }
     if (!ext_key_down && !show_mixer_menu && preview_mute_set == 255) {
-      key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
+      key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY
+                                              : TRIGLED_EXCLUSIVE);
     }
 
     uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
     if (event->mask == EVENT_BUTTON_PRESSED && track < len) {
       if (note_interface.is_note(track)) {
-        if (show_mixer_menu || preview_mute_set != 255 && load_types[preview_mute_set][!is_md_device] || ext_key_down) {
-          if (ext_key_down) { mute_toggle = 1; }
+        if (show_mixer_menu ||
+            preview_mute_set != 255 &&
+                load_types[preview_mute_set][!is_md_device] ||
+            ext_key_down) {
+          if (ext_key_down) {
+            mute_toggle = 1;
+          }
           SeqTrack *seq_track = is_md_device
                                     ? (SeqTrack *)&mcl_seq.md_tracks[track]
                                     : (SeqTrack *)&mcl_seq.ext_tracks[track];
@@ -633,8 +638,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_BANKA: {
         if (preview_mute_set != 255) {
-          load_types[preview_mute_set][!is_md_device] = !load_types[preview_mute_set][!is_md_device];
-          if (load_types[preview_mute_set][!is_md_device] == 0) { seq_step_page.mute_mask = 0; }
+          load_types[preview_mute_set][!is_md_device] =
+              !load_types[preview_mute_set][!is_md_device];
+          if (load_types[preview_mute_set][!is_md_device] == 0) {
+            seq_step_page.mute_mask = 0;
+          }
           redraw_mutes = true;
           return true;
         }
@@ -642,19 +650,22 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_BANKB: {
         if (preview_mute_set != 255) {
-          if (load_mute_set == preview_mute_set) { load_mute_set = 255; }
-          else { load_mute_set = preview_mute_set; }
+          if (load_mute_set == preview_mute_set) {
+            load_mute_set = 255;
+          } else {
+            load_mute_set = preview_mute_set;
+          }
           return true;
         }
         break;
       }
       case MDX_KEY_YES: {
-       if (preview_mute_set == 255 &&
+        if (preview_mute_set == 255 &&
             key_interface.is_key_down(MDX_KEY_FUNC) &&
             note_interface.notes_on == 0) {
-            bool load_t[2] = { 0, 0 };
-            load_t[!is_md_device] = 1;
-            switch_mute_set(4,false,load_t); //---> Flip mutes
+          bool load_t[2] = {0, 0};
+          load_t[!is_md_device] = 1;
+          switch_mute_set(4, false, load_t); //---> Flip mutes
           break;
         }
         uint8_t set = 255;
@@ -669,13 +680,12 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           set = 0;
         }
         if (set != 255) {
-          //bool load_t[2];
-          //load_t[0] = load_types[key][0];
-          //load_t[1] = load_types[key][1];
-          //load_t[is_md_device] = 0;
-          switch_mute_set(set,true,load_types[set]);
-        }
-        else {
+          // bool load_t[2];
+          // load_t[0] = load_types[key][0];
+          // load_t[1] = load_types[key][1];
+          // load_t[is_md_device] = 0;
+          switch_mute_set(set, true, load_types[set]);
+        } else {
           if (!note_interface.notes_on) {
             seq_step_page.mute_mask = 0;
             show_mixer_menu = true;
@@ -689,12 +699,14 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_UP:
       case MDX_KEY_RIGHT:
       case MDX_KEY_DOWN: {
-        if (key_interface.is_key_down(MDX_KEY_NO)) { return true; }
+        if (key_interface.is_key_down(MDX_KEY_NO)) {
+          return true;
+        }
         uint8_t set = get_mute_set(key);
         if (key_interface.is_key_down(MDX_KEY_YES)) {
-          switch_mute_set(set,true,load_types[set]);
+          switch_mute_set(set, true, load_types[set]);
         } else {
-            preview_mute_set = set;
+          preview_mute_set = set;
           // force redraw in display()
           seq_step_page.mute_mask++;
         }
@@ -708,7 +720,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           midi_device = midi_active_peering.get_device(UART2_PORT);
         }
         is_md_device = (midi_device == &MD);
-        key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
+        key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY
+                                                : TRIGLED_EXCLUSIVE);
         redraw();
         break;
       }
@@ -724,13 +737,18 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
         ext_key_down = 0;
         if (note_interface.notes_on == 0 && !mute_toggle) {
-            if (last_page != NULL_PAGE) { mcl.setPage(last_page); last_page = NULL_PAGE; } 
-            else { mcl.setPage(GRID_PAGE); }
-            return true;
+          if (last_page != NULL_PAGE) {
+            mcl.setPage(last_page);
+            last_page = NULL_PAGE;
+          } else {
+            mcl.setPage(GRID_PAGE);
+          }
+          return true;
         }
         mute_toggle = 0;
         if (!show_mixer_menu && preview_mute_set == 255) {
-         key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
+          key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY
+                                                  : TRIGLED_EXCLUSIVE);
         }
         return true;
       }
@@ -740,9 +758,11 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_DOWN: {
         uint64_t mask =
             ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
-            ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN) | ((uint64_t)1 << MDX_KEY_YES);
+            ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN) |
+            ((uint64_t)1 << MDX_KEY_YES);
         if ((key_interface.cmd_key_state & mask) == 0) {
-          key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
+          key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY
+                                                  : TRIGLED_EXCLUSIVE);
           preview_mute_set = 255;
           redraw();
         }
@@ -751,75 +771,74 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     global_release:
       preview_mute_set = 255;
       show_mixer_menu = false;
       disable_record_mutes();
       MD.set_trigleds(0, is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE);
       redraw();
-    return true;
-  }
-  if (EVENT_PRESSED(event,Buttons.BUTTON3)) {
-     // show_mixer_menu = true;
-        if (note_interface.notes_on) {
-          setLed2();
-          record_mutes_set(true);
-          return true;
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER1)) {
-           perf_param1.clear_scenes();
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER2)) {
-           perf_param2.clear_scenes();
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER3)) {
-           perf_param3.clear_scenes();
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER4)) {
-           perf_param4.clear_scenes();
-        }
-           redraw_mask = -1;
-          return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-        if (BUTTON_DOWN(Buttons.ENCODER1)) {
-           perf_param1.scene_autofill();
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER2)) {
-           perf_param2.scene_autofill();
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER3)) {
-           perf_param3.scene_autofill();
-        }
-        if (BUTTON_DOWN(Buttons.ENCODER4)) {
-           perf_param4.scene_autofill();
-        }
-          redraw_mask = -1;
-          return true;
-  }
-
-  if (preview_mute_set != 255 && (key_interface.is_key_down(MDX_KEY_NO))) {
-    if (event->source >= Buttons.ENCODER1 &&
-        event->source <= Buttons.ENCODER4) {
-      uint8_t b = event->source - Buttons.ENCODER1;
-      if ((event)->mask & EVENT_BUTTON_RELEASED) {
-        perf_locks[preview_mute_set][b] = 255;
-      }
-      if ((event)->mask & EVENT_BUTTON_PRESSED) {
-        if (perf_locks[preview_mute_set][b] == 255) {
-          GUI.ignoreNextEvent(event->source);
-          perf_locks[preview_mute_set][b] = encoders[b]->cur;
-        }
-      }
       return true;
     }
-  }
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      // show_mixer_menu = true;
+      if (note_interface.notes_on) {
+        setLed2();
+        record_mutes_set(true);
+        return true;
+      }
+      if (BUTTON_DOWN(Buttons.ENCODER1)) {
+        perf_param1.clear_scenes();
+      }
+      if (BUTTON_DOWN(Buttons.ENCODER2)) {
+        perf_param2.clear_scenes();
+      }
+      if (BUTTON_DOWN(Buttons.ENCODER3)) {
+        perf_param3.clear_scenes();
+      }
+      if (BUTTON_DOWN(Buttons.ENCODER4)) {
+        perf_param4.clear_scenes();
+      }
+      redraw_mask = -1;
+      return true;
+    }
 
+    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+      if (BUTTON_DOWN(Buttons.ENCODER1)) {
+        perf_param1.scene_autofill();
+      }
+      if (BUTTON_DOWN(Buttons.ENCODER2)) {
+        perf_param2.scene_autofill();
+      }
+      if (BUTTON_DOWN(Buttons.ENCODER3)) {
+        perf_param3.scene_autofill();
+      }
+      if (BUTTON_DOWN(Buttons.ENCODER4)) {
+        perf_param4.scene_autofill();
+      }
+      redraw_mask = -1;
+      return true;
+    }
+    if (preview_mute_set != 255 && (key_interface.is_key_down(MDX_KEY_NO))) {
+      if (event->source >= Buttons.ENCODER1 &&
+          event->source <= Buttons.ENCODER4) {
+        uint8_t b = event->source - Buttons.ENCODER1;
+        if ((event)->mask & EVENT_BUTTON_RELEASED) {
+          perf_locks[preview_mute_set][b] = 255;
+        }
+        if ((event)->mask & EVENT_BUTTON_PRESSED) {
+          if (perf_locks[preview_mute_set][b] == 255) {
+            GUI.ignoreNextEvent(event->source);
+            perf_locks[preview_mute_set][b] = encoders[b]->cur;
+          }
+        }
+        return true;
+      }
+    }
+  }
   return false;
 }
-
 /*
 void MixerMidiEvents::setup_callbacks() {
   if (state) {

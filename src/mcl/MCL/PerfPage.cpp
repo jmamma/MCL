@@ -582,47 +582,48 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     }
     return false;
   }
-
-  if (EVENT_RELEASED(event, Buttons.ENCODER4)) {
-  //if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    if (learn) {
-      PerfData *d = &perf_encoders[perf_id]->perf_data;
-      uint8_t scene = learn - 1;
-      if (encoders[1]->cur != 0 && encoders[2]->cur != 255) {
-        d->clear_param_scene(encoders[1]->cur - 1 , encoders[2]->cur, scene);
-        config_encoders();
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_RELEASED(event, Buttons.ENCODER4)) {
+      // if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+      if (learn) {
+        PerfData *d = &perf_encoders[perf_id]->perf_data;
+        uint8_t scene = learn - 1;
+        if (encoders[1]->cur != 0 && encoders[2]->cur != 255) {
+          d->clear_param_scene(encoders[1]->cur - 1, encoders[2]->cur, scene);
+          config_encoders();
+        }
       }
     }
-  }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-  page_mode_up:
-    page_mode++;
-    if (page_mode > NUM_PERF_PARAMS) {
-      page_mode = 0;
+    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    page_mode_up:
+      page_mode++;
+      if (page_mode > NUM_PERF_PARAMS) {
+        page_mode = 0;
+      }
+      config_encoders();
+      return true;
     }
-    config_encoders();
-    return true;
-  }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    show_menu = true;
-    encoders[0] = &seq_menu_value_encoder;
-    encoders[1] = &seq_menu_entry_encoder;
-    perf_menu_page.init();
-    return true;
-  }
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    if (show_menu) {
-    void (*row_func)() =
-        perf_menu_page.menu.get_row_function(perf_menu_page.encoders[1]->cur);
-    if (row_func != NULL) {
-      DEBUG_PRINTLN("calling menu func");
-      (*row_func)();
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      show_menu = true;
+      encoders[0] = &seq_menu_value_encoder;
+      encoders[1] = &seq_menu_entry_encoder;
+      perf_menu_page.init();
+      return true;
     }
-    init();
+    if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+      if (show_menu) {
+        void (*row_func)() = perf_menu_page.menu.get_row_function(
+            perf_menu_page.encoders[1]->cur);
+        if (row_func != NULL) {
+          DEBUG_PRINTLN("calling menu func");
+          (*row_func)();
+        }
+        init();
+      }
+      return true;
     }
-    return true;
   }
 
   return false;

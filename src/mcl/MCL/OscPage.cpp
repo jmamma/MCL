@@ -31,6 +31,7 @@ void OscPage::init() {
 }
 
 void OscPage::cleanup() { }
+
 bool OscPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
     return true;
@@ -49,16 +50,18 @@ bool OscPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
-        switch (key) {
-        case MDX_KEY_NO:
-          //  key_interface.ignoreNextEvent(MDX_KEY_NO);
-            show_freq = !show_freq;
-          return true;
-        }
+      switch (key) {
+      case MDX_KEY_NO:
+        //  key_interface.ignoreNextEvent(MDX_KEY_NO);
+        show_freq = !show_freq;
+        return true;
+      }
     }
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    show_freq = !show_freq;
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+      show_freq = !show_freq;
+    }
   }
   return false;
 }

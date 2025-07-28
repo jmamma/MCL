@@ -1,13 +1,13 @@
+#include "GridChain.h"
 #include "GridLoadPage.h"
-#include "GridTask.h"
 #include "GridPages.h"
+#include "GridTask.h"
 #include "MCLActions.h"
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
-#include "GridChain.h"
 #include "MD.h"
-#include "Project.h"
 #include "MidiClock.h"
+#include "Project.h"
 
 void GridLoadPage::init() {
   GridIOPage::init();
@@ -54,7 +54,7 @@ void GridLoadPage::draw_popup() {
 
   if (!show_track_type) {
     strcpy(str, "LOAD TRACKS");
-    //str[10] = 'X' + proj.get_grid();
+    // str[10] = 'X' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true);
 }
@@ -66,8 +66,8 @@ void GridLoadPage::display_load() {
     str1 = "QUEUE";
   }
   char str3[16] = "";
-  strcat(str3,str1);
-  strcat(str3,str2);
+  strcat(str3, str1);
+  strcat(str3, str2);
   MD.popup_text(str3);
   oled_display.textbox(str1, str2);
 }
@@ -86,10 +86,8 @@ void GridLoadPage::loop() {
     }
   }
   if (encoders[3]->hasChanged()) {
-      mcl_cfg.chain_load_quant = encoders[3]->cur;
+    mcl_cfg.chain_load_quant = encoders[3]->cur;
   }
-
-
 }
 
 void GridLoadPage::get_modestr(char *modestr) {
@@ -119,8 +117,7 @@ void GridLoadPage::display() {
 
   if (show_track_type) {
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
-  }
-  else {
+  } else {
     uint16_t trig_mask = note_interface.notes_off | note_interface.notes_on;
     //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
     //                              "STEP", K);
@@ -128,49 +125,46 @@ void GridLoadPage::display() {
       oled_display.setCursor(MCLGUI::s_menu_x + 26, 14);
       oled_display.print("DESTINATION");
       trig_mask = 0;
-      SET_BIT16(trig_mask,offset);
-      //if (offset < 16) {
-       //  oled_display.setCursor(MCLGUI::s_menu_x + 4 + offset * MCLGUI::seq_w + 1, 16);
-        // oled_display.print(">");
-     // }
-    }
-    else {
+      SET_BIT16(trig_mask, offset);
+      // if (offset < 16) {
+      //   oled_display.setCursor(MCLGUI::s_menu_x + 4 + offset * MCLGUI::seq_w
+      //   + 1, 16);
+      //  oled_display.print(">");
+      // }
+    } else {
 
+      oled_display.setFont(&Elektrothic);
+      oled_display.setCursor(MCLGUI::s_menu_x + 4, 21);
+      oled_display.print((char)(0x3A + proj.get_grid()));
 
-    oled_display.setFont(&Elektrothic);
-    oled_display.setCursor(MCLGUI::s_menu_x + 4, 21);
-    oled_display.print((char) (0x3A +  proj.get_grid()));
+      oled_display.setFont(&TomThumb);
+      char K[4] = {'\0'};
 
-    oled_display.setFont(&TomThumb);
-    char K[4] = {'\0'};
+      char modestr[7];
+      get_modestr(modestr);
 
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7,
+                                "MODE", modestr);
 
-    char modestr[7];
-    get_modestr(modestr);
-
-    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7,
-                              "MODE", modestr);
-
-
-    if (encoders[0]->getValue() == LOAD_QUEUE) {
-      if (encoders[1]->getValue() == 1) {
+      if (encoders[0]->getValue() == LOAD_QUEUE) {
+        if (encoders[1]->getValue() == 1) {
+          strcpy(K, "--");
+        } else {
+          mcl_gui.put_value_at(encoders[1]->cur, K);
+        }
+        mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9,
+                                  MCLGUI::s_menu_y + 7, "LEN", K);
+      }
+      // draw quantize
+      if (mcl_cfg.chain_load_quant == 1) {
         strcpy(K, "--");
       } else {
-        mcl_gui.put_value_at(encoders[1]->cur, K);
+        mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
       }
-      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, MCLGUI::s_menu_y + 7,
-                                "LEN", K);
-    }
-    // draw quantize
-    if (mcl_cfg.chain_load_quant == 1) {
-      strcpy(K, "--");
-    } else {
-      mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
-    }
-    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
-                              MCLGUI::s_menu_y + 7, "QUANT", K);
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
+                                MCLGUI::s_menu_y + 7, "QUANT", K);
 
-    // draw step count
+      // draw step count
     }
     oled_display.setFont(&TomThumb);
     uint8_t step_count =
@@ -181,8 +175,8 @@ void GridLoadPage::display() {
                            MCLGUI::s_menu_y + 4 + 17);
     oled_display.print(step_count);
 
-
-    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4 + 20, trig_mask );
+    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4 + 20,
+                       trig_mask);
     // draw data flow in the center
     /*
     oled_display.setCursor(48, MCLGUI::s_menu_y + 4 + 12);
@@ -215,7 +209,8 @@ void GridLoadPage::load() {
       track_select_array[n] = 1;
     }
   }
-  grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(), track_select_array, offset);
+  grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(),
+                           track_select_array, offset);
   mcl.setPage(GRID_PAGE);
 }
 
@@ -228,14 +223,16 @@ void GridLoadPage::group_select() {
 
 void GridLoadPage::group_load(uint8_t row, uint8_t offset_) {
 
-  if (row >= GRID_LENGTH) { return; }
+  if (row >= GRID_LENGTH) {
+    return;
+  }
   uint8_t track_select_array[NUM_SLOTS] = {0};
   track_select_array_from_type_select(track_select_array);
   //   load_tracks_to_md(-1);
- // if (!silent) {
- //   oled_display.textbox("LOAD GROUPS", "");
- // }
-  //oled_display.display();
+  // if (!silent) {
+  //   oled_display.textbox("LOAD GROUPS", "");
+  // }
+  // oled_display.display();
 
   mcl_actions.write_original = 1;
   grid_task.load_queue.put(mcl_cfg.load_mode, row, track_select_array, offset);
@@ -259,7 +256,9 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
         if (mcl_cfg.load_mode == LOAD_MANUAL) {
           show_offset = !show_offset;
           note_interface.init_notes();
-          if (show_offset) { offset = 255; }
+          if (show_offset) {
+            offset = 255;
+          }
         }
         return true;
       }
@@ -274,8 +273,8 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {
         if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
-        encoders[0]->cur = key - MDX_KEY_BANKA + 1;
-        return true;
+          encoders[0]->cur = key - MDX_KEY_BANKA + 1;
+          return true;
         }
       }
       }
@@ -285,24 +284,25 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_YES:
         if (show_track_type) {
-        goto load_groups;
+          goto load_groups;
         }
         return true;
       }
     }
     return false;
   }
+  if (EVENT_CMD(event)) {
+    if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    //  write the whole row
+    load_groups:
+      key_interface.off();
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-  //  write the whole row
-  load_groups:
-    key_interface.off();
-
-    group_load(grid_page.getRow(), offset);
-    grid_task.load_queue_handler();
-    grid_task.transition_handler();
-    mcl.setPage(GRID_PAGE);
-    return true;
+      group_load(grid_page.getRow(), offset);
+      grid_task.load_queue_handler();
+      grid_task.transition_handler();
+      mcl.setPage(GRID_PAGE);
+      return true;
+    }
   }
   return false;
 }

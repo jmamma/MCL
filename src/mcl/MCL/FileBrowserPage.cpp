@@ -6,6 +6,7 @@
 #include "MCLGFX.h"
 #include "MCLMenus.h"
 #include "MCLGUI.h"
+
 File FileBrowserPage::file;
 int FileBrowserPage::numEntries;
 
@@ -37,7 +38,7 @@ uint16_t FileBrowserPage::selection_change_clock = 0;
 
 void FileBrowserPage::cleanup() {
   // always call setup() when entering this page.
-//  this->isSetup = false;
+  //  this->isSetup = false;
 }
 
 void FileBrowserPage::setup() {
@@ -137,7 +138,7 @@ void FileBrowserPage::query_filesystem() {
     }
     if (is_match_file && (strlen(temp_entry) > 0)) {
       DEBUG_PRINTLN(F("file matched"));
-      if (add_entry(temp_entry,is_dir)) {
+      if (add_entry(temp_entry, is_dir)) {
         if (strlen(focus_match) > 0 && strcmp(temp_entry, focus_match) == 0) {
           DEBUG_DUMP(temp_entry);
           DEBUG_DUMP(mcl_cfg.project);
@@ -187,7 +188,7 @@ void FileBrowserPage::draw_filebrowser() {
 
   constexpr uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
   oled_display.setCursor(x_offset, 8);
-  uint8_t max_items = min(MAX_VISIBLE_ROWS,numEntries);
+  uint8_t max_items = min(MAX_VISIBLE_ROWS, numEntries);
 
   char temp_entry[FILE_ENTRY_SIZE];
 
@@ -458,11 +459,6 @@ void FileBrowserPage::on_rename(const char *from, const char *to) {
 }
 
 bool FileBrowserPage::handleEvent(gui_event_t *event) {
-  if (note_interface.is_event(event)) {
-    return false;
-  }
-  //bool dir_only = false;
-
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -483,52 +479,52 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_DOWN:
         encoders[1]->cur += inc;
         break;
-      /*
-      case MDX_KEY_LEFT:
-        _cd_up();
-        break;
-      case MDX_KEY_RIGHT:
-        dir_only = true;
-        goto YES;
-      */
+        /*
+        case MDX_KEY_LEFT:
+          _cd_up();
+          break;
+        case MDX_KEY_RIGHT:
+          dir_only = true;
+          goto YES;
+        */
       }
     }
   }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
-    filemenu_active = true;
-    file_menu_encoder.cur = file_menu_encoder.old = 0;
-    file_menu_page.cur_row = 0;
-    encoders[0] = &config_param1;
-    encoders[1] = &file_menu_encoder;
-    file_menu_page.init();
-    return true;
-  }
-  if (EVENT_RELEASED(event, Buttons.BUTTON3) && filemenu_active) {
-    encoders[0] = param1;
-    encoders[1] = param2;
-
-    filemenu_active = false;
-    if (_handle_filemenu()) {
-      init();
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
+      filemenu_active = true;
+      file_menu_encoder.cur = file_menu_encoder.old = 0;
+      file_menu_page.cur_row = 0;
+      encoders[0] = &config_param1;
+      encoders[1] = &file_menu_encoder;
+      file_menu_page.init();
       return true;
     }
-    selection_change = true;
-    return true;
-  }
+    if (EVENT_RELEASED(event, Buttons.BUTTON3) && filemenu_active) {
+      encoders[0] = param1;
+      encoders[1] = param2;
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-  GUI.ignoreNextEvent(event->source);
-  YES:
-    int i_save;
-    _calcindices(i_save);
+      filemenu_active = false;
+      if (_handle_filemenu()) {
+        init();
+        return true;
+      }
+      selection_change = true;
+      return true;
+    }
 
-    char temp_entry[FILE_ENTRY_SIZE];
-    get_entry(encoders[1]->getValue(), temp_entry);
+    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+      GUI.ignoreNextEvent(event->source);
+    YES:
+      int i_save;
+      _calcindices(i_save);
 
-    if (!show_samplemgr) {
-      file.open(temp_entry, O_READ);
-  //    if (!dir_only) {
+      char temp_entry[FILE_ENTRY_SIZE];
+      get_entry(encoders[1]->getValue(), temp_entry);
+
+      if (!show_samplemgr) {
+        file.open(temp_entry, O_READ);
+        //    if (!dir_only) {
 
         if (encoders[1]->getValue() == i_save) {
           on_new();
@@ -540,28 +536,28 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
           _cd_up();
           goto fin;
         }
-    //  }
-      // chdir to child
-      if (!select_dirs && file.isDirectory()) {
-        _cd(temp_entry);
-        goto fin;
+        //  }
+        // chdir to child
+        if (!select_dirs && file.isDirectory()) {
+          _cd(temp_entry);
+          goto fin;
+        }
       }
-    }
 
       GUI.ignoreNextEvent(event->source);
       on_select(temp_entry);
     fin:
-    //file.close();
-    return true;
-  }
+      // file.close();
+      return true;
+    }
 
-  // cancel
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-  GUI.ignoreNextEvent(event->source);
-  NO:
-    on_cancel();
-    return true;
+    // cancel
+    if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+      GUI.ignoreNextEvent(event->source);
+    NO:
+      on_cancel();
+      return true;
+    }
   }
-
   return false;
 }

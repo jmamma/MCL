@@ -298,7 +298,9 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
 }
 
 bool SeqPage::handleEvent(gui_event_t *event) {
-  if (note_interface.is_event(event)) { return false; }
+  if (note_interface.is_event(event)) {
+    return false;
+  }
 
   if (EVENT_CMD(event)) {
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
@@ -331,77 +333,77 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-
-  // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-  scale_press:
-    page_select += 1;
-    check_and_set_page_select();
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    // If MD trig is held and BUTTON3 is pressed, launch note menu
-    if (!show_seq_menu) {
-      show_seq_menu = true;
-      if (opt_midi_device_capture == &MD) {
-        auto &active_track = mcl_seq.md_tracks[last_md_track];
-        opt_trackid = last_md_track + 1;
-        opt_speed = active_track.speed;
-        opt_length = active_track.length;
-      } else {
-        opt_trackid = last_ext_track + 1;
-        opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
-        opt_length = mcl_seq.ext_tracks[last_ext_track].length;
-        opt_channel = mcl_seq.ext_tracks[last_ext_track].channel + 1;
-      }
-
-      opt_param1_capture = (MCLEncoder *)encoders[0];
-      opt_param2_capture = (MCLEncoder *)encoders[1];
-      encoders[0] = &seq_menu_value_encoder;
-      encoders[1] = &seq_menu_entry_encoder;
-      seq_menu_page.init();
-      seq_menu_page.gen_menu_device_names();
-      seq_menu_page.gen_menu_transpose_names();
-      mcl_cfg.seq_dev =
-          opt_midi_device_capture == &MD ? UART1_PORT : UART2_PORT;
+  if (EVENT_BUTTON(event)) {
+    // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
+    if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    scale_press:
+      page_select += 1;
+      check_and_set_page_select();
       return true;
     }
-  }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-    encoders[0] = opt_param1_capture;
-    encoders[1] = opt_param2_capture;
-    // oled_display.clearDisplay();
-    void (*row_func)();
-    if (show_seq_menu) {
-      row_func =
-          seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
-      MidiDevice *old_dev = midi_device;
-      midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
-      if (old_dev == midi_device) {
-        opt_speed_handler();
-        opt_length_handler();
-        opt_channel_handler();
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      // If MD trig is held and BUTTON3 is pressed, launch note menu
+      if (!show_seq_menu) {
+        show_seq_menu = true;
+        if (opt_midi_device_capture == &MD) {
+          auto &active_track = mcl_seq.md_tracks[last_md_track];
+          opt_trackid = last_md_track + 1;
+          opt_speed = active_track.speed;
+          opt_length = active_track.length;
+        } else {
+          opt_trackid = last_ext_track + 1;
+          opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
+          opt_length = mcl_seq.ext_tracks[last_ext_track].length;
+          opt_channel = mcl_seq.ext_tracks[last_ext_track].channel + 1;
+        }
+
+        opt_param1_capture = (MCLEncoder *)encoders[0];
+        opt_param2_capture = (MCLEncoder *)encoders[1];
+        encoders[0] = &seq_menu_value_encoder;
+        encoders[1] = &seq_menu_entry_encoder;
+        seq_menu_page.init();
+        seq_menu_page.gen_menu_device_names();
+        seq_menu_page.gen_menu_transpose_names();
+        mcl_cfg.seq_dev =
+            opt_midi_device_capture == &MD ? UART1_PORT : UART2_PORT;
+        return true;
       }
     }
-    if (row_func != NULL) {
-      row_func();
+
+    if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+      encoders[0] = opt_param1_capture;
+      encoders[1] = opt_param2_capture;
+      // oled_display.clearDisplay();
+      void (*row_func)();
+      if (show_seq_menu) {
+        row_func =
+            seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
+        MidiDevice *old_dev = midi_device;
+        midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
+        if (old_dev == midi_device) {
+          opt_speed_handler();
+          opt_length_handler();
+          opt_channel_handler();
+        }
+      }
+      if (row_func != NULL) {
+        row_func();
+        show_seq_menu = false;
+        init();
+        return true;
+      }
+      if (show_seq_menu && seq_menu_page.enter()) {
+        show_seq_menu = false;
+        return true;
+      }
+
       show_seq_menu = false;
+      init_encoders_used_clock();
       init();
       return true;
     }
-    if (show_seq_menu && seq_menu_page.enter()) {
-      show_seq_menu = false;
-      return true;
-    }
-
-    show_seq_menu = false;
-    init_encoders_used_clock();
-    init();
-    return true;
   }
-
   return false;
 }
 

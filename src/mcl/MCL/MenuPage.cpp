@@ -285,19 +285,21 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
       }
     }
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    GUI.ignoreNextEvent(event->source);
-  YES:
-    DEBUG_PRINTLN("YES");
-    enter();
-    return true;
-  }
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+      GUI.ignoreNextEvent(event->source);
+    YES:
+      DEBUG_PRINTLN("YES");
+      enter();
+      return true;
+    }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    GUI.ignoreNextEvent(event->source);
-  NO:
-    exit();
-    return true;
+    if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+      GUI.ignoreNextEvent(event->source);
+    NO:
+      exit();
+      return true;
+    }
   }
   return false;
 }

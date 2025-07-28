@@ -18,7 +18,9 @@
 
 #define EVENT_PRESSED(event, button) ((event)->mask & EVENT_BUTTON_PRESSED && (event)->source == button)
 #define EVENT_RELEASED(event, button) ((event)->mask & EVENT_BUTTON_RELEASED && (event)->source == button)
+#define EVENT_BUTTON(event) ((event->type == BUTTON))
 #define EVENT_CMD(event) ((event->type == CMD))
+#define EVENT_NOTE(event) ((event->type == NOTE))
 
 #define LONG_PRESS_REPEAT_TIME 80 // 40ms
 

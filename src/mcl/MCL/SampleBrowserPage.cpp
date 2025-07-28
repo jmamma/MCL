@@ -261,17 +261,18 @@ void SampleBrowserPage::on_select(const char *__) {
 }
 
 bool SampleBrowserPage::handleEvent(gui_event_t *event) {
-  if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
-    FileBrowserPage::handleEvent(event);
-    bool state = (param2->cur == 0);
-    file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
-    file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
-    file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-    file_menu_page.menu.enable_entry(FM_RECVALL, state);
-    file_menu_page.menu.enable_entry(FM_SENDALL, state);
-    return true;
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
+      FileBrowserPage::handleEvent(event);
+      bool state = (param2->cur == 0);
+      file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
+      file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
+      file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
+      file_menu_page.menu.enable_entry(FM_RECVALL, state);
+      file_menu_page.menu.enable_entry(FM_SENDALL, state);
+      return true;
+    }
   }
-
   return FileBrowserPage::handleEvent(event);
 }
 

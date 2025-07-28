@@ -692,68 +692,69 @@ bool RAMPage::handleEvent(gui_event_t *event) {
       return true;
     }
   }
-  if (event->mask == EVENT_BUTTON_RELEASED) {
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
-      EVENT_PRESSED(event, Buttons.ENCODER2) ||
-      EVENT_PRESSED(event, Buttons.ENCODER3) ||
-      EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    mcl.setPage(GRID_PAGE);
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-  yes:
-    if (mcl_cfg.ram_page_mode == MONO) {
-      uint8_t lev = 64;
-      if (encoders[0]->cur == SOURCE_MAIN) {
-        lev = 64;
-      }
-      if (page_id == 0) {
-        setup_ram_rec_mono(14, lev, encoders[0]->cur, 4 * encoders[3]->cur - 1,
-                           128);
+  if (EVENT_BUTTON(event)) {
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER1) ||
+        EVENT_PRESSED(event, Buttons.ENCODER2) ||
+        EVENT_PRESSED(event, Buttons.ENCODER3) ||
+        EVENT_PRESSED(event, Buttons.ENCODER4)) {
+      mcl.setPage(GRID_PAGE);
+    }
+    if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    yes:
+      if (mcl_cfg.ram_page_mode == MONO) {
+        uint8_t lev = 64;
+        if (encoders[0]->cur == SOURCE_MAIN) {
+          lev = 64;
+        }
+        if (page_id == 0) {
+          setup_ram_rec_mono(14, lev, encoders[0]->cur,
+                             4 * encoders[3]->cur - 1, 128);
+        } else {
+          setup_ram_rec_mono(15, lev, encoders[0]->cur,
+                             4 * encoders[3]->cur - 1, 128);
+        }
       } else {
-        setup_ram_rec_mono(15, lev, encoders[0]->cur, 4 * encoders[3]->cur - 1,
-                           128);
+        if (encoders[0]->cur == SOURCE_MAIN) {
+          setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
+                               4 * encoders[3]->cur - 1, 128);
+        }
+        if (encoders[0]->cur == SOURCE_INP) {
+          setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
+                               4 * encoders[3]->cur - 1, 128);
+        }
       }
-    } else {
-      if (encoders[0]->cur == SOURCE_MAIN) {
-        setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
-                             4 * encoders[3]->cur - 1, 128);
+    }
+
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      oled_display.textbox("DICE", "");
+      RAMPage::slice_modes[page_id] = 1;
+      if (mcl_cfg.ram_page_mode == MONO) {
+        slice(14 + page_id, 255);
+      } else {
+        slice(14, 15);
+        slice(15, 14);
       }
-      if (encoders[0]->cur == SOURCE_INP) {
-        setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
-                             4 * encoders[3]->cur - 1, 128);
+    }
+
+    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    no:
+      RAMPage::slice_modes[page_id] = 0;
+      oled_display.textbox("SLICE", "");
+      if (mcl_cfg.ram_page_mode == MONO) {
+        if (!slice(14 + page_id, 255)) {
+          setup_ram_play_mono(14 + page_id);
+        }
+      } else {
+        slice(14, 15);
+        if (!slice(15, 14)) {
+          setup_ram_play_stereo(14);
+        }
       }
     }
   }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    oled_display.textbox("DICE", "");
-    RAMPage::slice_modes[page_id] = 1;
-    if (mcl_cfg.ram_page_mode == MONO) {
-      slice(14 + page_id, 255);
-    } else {
-      slice(14, 15);
-      slice(15, 14);
-    }
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-  no:
-    RAMPage::slice_modes[page_id] = 0;
-    oled_display.textbox("SLICE", "");
-    if (mcl_cfg.ram_page_mode == MONO) {
-      if (!slice(14 + page_id, 255)) {
-        setup_ram_play_mono(14 + page_id);
-      }
-    } else {
-      slice(14, 15);
-      if (!slice(15, 14)) {
-        setup_ram_play_stereo(14);
-      }
-    }
-  }
-
   return false;
 }
 

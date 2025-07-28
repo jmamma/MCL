@@ -323,30 +323,31 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    page_mode++;
-    if (page_mode > LFO_OFFSET) { page_mode = 0; }
-    config_encoders();
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    if (lfo_track->mode >= LFO_MODE_ONE) {
-      lfo_track->mode = 0;
-    } else {
-      lfo_track->mode += 1;
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+      page_mode++;
+      if (page_mode > LFO_OFFSET) { page_mode = 0; }
+      config_encoders();
     }
-    if (lfo_track->mode == LFO_MODE_FREE) {
-      key_interface.off();
-    } else {
-      key_interface.on();
-    }
-  }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-    lfo_enable:
-    lfo_track->enable = !(lfo_track->enable);
-    if (!lfo_track->enable) { lfo_track->reset_params(); }
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      if (lfo_track->mode >= LFO_MODE_ONE) {
+        lfo_track->mode = 0;
+      } else {
+        lfo_track->mode += 1;
+      }
+      if (lfo_track->mode == LFO_MODE_FREE) {
+        key_interface.off();
+      } else {
+        key_interface.on();
+      }
+    }
+
+    if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+      lfo_enable:
+      lfo_track->enable = !(lfo_track->enable);
+      if (!lfo_track->enable) { lfo_track->reset_params(); }
+    }
   }
   return false;
 }

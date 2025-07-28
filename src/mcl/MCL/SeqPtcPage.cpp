@@ -546,10 +546,12 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
       channel_event = is_poly ? POLY_EVENT : CTRL_EVENT;
     } else {
-//      note += MIDI_NOTE_C1;
+      //      note += MIDI_NOTE_C1;
     }
-    uint8_t msg[] = {static_cast<uint8_t>(MIDI_NOTE_ON | (is_md ? last_md_track : last_ext_track)),
-                     note, 127};
+    uint8_t msg[] = {
+        static_cast<uint8_t>(MIDI_NOTE_ON |
+                             (is_md ? last_md_track : last_ext_track)),
+        note, 127};
 
     if (mask == EVENT_BUTTON_PRESSED) {
       midi_events.note_on(msg, channel_event);
@@ -610,37 +612,37 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      re_init = true;
-      mcl.pushPage(POLY_PAGE);
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+      if (BUTTON_DOWN(Buttons.BUTTON4)) {
+        re_init = true;
+        mcl.pushPage(POLY_PAGE);
+        return true;
+      }
+      mcl_seq.ext_tracks[last_ext_track].init_notes_on();
+      toggle_record();
       return true;
     }
-    mcl_seq.ext_tracks[last_ext_track].init_notes_on();
-    toggle_record();
-    return true;
-  }
-  /*
-    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-      mcl.setPage(GRID_PAGE);
+    /*
+      if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+        mcl.setPage(GRID_PAGE);
+        return true;
+      }
+    */
+    if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+      if (BUTTON_DOWN(Buttons.BUTTON1)) {
+        re_init = true;
+        mcl.pushPage(POLY_PAGE);
+        return true;
+      }
+    }
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      mute_mask = 128;
+    }
+    if (SeqPage::handleEvent(event)) {
       return true;
     }
-  */
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    if (BUTTON_DOWN(Buttons.BUTTON1)) {
-      re_init = true;
-      mcl.pushPage(POLY_PAGE);
-      return true;
-    }
   }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    mute_mask = 128;
-  }
-  if (SeqPage::handleEvent(event)) {
-    return true;
-  }
-
   return false;
 }
 

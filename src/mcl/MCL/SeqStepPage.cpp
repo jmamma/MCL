@@ -630,6 +630,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
     }
   }
+  if (EVENT_BUTTON(event)) {
   /*
       if (recording) {
         if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
@@ -664,11 +665,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
     */
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    toggle_record();
-    return true;
+    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+      toggle_record();
+      return true;
+    }
   }
-
   return false;
 }
 

@@ -27,61 +27,63 @@ bool QuestionDialogPage::handleEvent(gui_event_t *event) {
     return false;
   }
 
-    if (EVENT_CMD(event)) {
+  if (EVENT_CMD(event)) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_YES:
-      //  key_interface.ignoreNextEvent(MDX_KEY_YES);
+        //  key_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES;
       case MDX_KEY_NO:
-      //  key_interface.ignoreNextEvent(MDX_KEY_NO);
+        //  key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_YES:
-      //  key_interface.ignoreNextEvent(MDX_KEY_YES);
+        //  key_interface.ignoreNextEvent(MDX_KEY_YES);
         goto YES_released;
       case MDX_KEY_NO:
-      //  key_interface.ignoreNextEvent(MDX_KEY_NO);
+        //  key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO_released;
       }
     }
-
-    }
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+  }
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     NO:
-    oled_display.fillRect(MCLGUI::dlg_info_x2 - 87, MCLGUI::dlg_info_y1 + 17, 16, 7, INVERT);
-    oled_display.display();
-    return true;
-  }
+      oled_display.fillRect(MCLGUI::dlg_info_x2 - 87, MCLGUI::dlg_info_y1 + 17,
+                            16, 7, INVERT);
+      oled_display.display();
+      return true;
+    }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON4) && (!BUTTON_DOWN(Buttons.BUTTON1))) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON4) &&
+        (!BUTTON_DOWN(Buttons.BUTTON1))) {
     YES:
-    oled_display.fillRect(MCLGUI::dlg_info_x2 - 56, MCLGUI::dlg_info_y1 + 17, 16, 7, INVERT);
-    oled_display.display();
-    return true;
-  }
+      oled_display.fillRect(MCLGUI::dlg_info_x2 - 56, MCLGUI::dlg_info_y1 + 17,
+                            16, 7, INVERT);
+      oled_display.display();
+      return true;
+    }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     YES_released:
-    return_state = true;
-    mcl.popPage();
-    return true;
-  }
+      return_state = true;
+      mcl.popPage();
+      return true;
+    }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     NO_released:
-    return_state = false;
-    mcl.popPage();
-    return true;
+      return_state = false;
+      mcl.popPage();
+      return true;
+    }
+
+    // mcl.popPage();
   }
-
-  //mcl.popPage();
-
   return false;
 }
-
 QuestionDialogPage questiondialog_page;

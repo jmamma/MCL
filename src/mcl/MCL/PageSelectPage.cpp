@@ -349,50 +349,51 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
-  release:
-    PageIndex p;
-    p = get_page(get_pageidx(page_select), nullptr);
-    if (BUTTON_DOWN(Buttons.BUTTON1) || (p == NULL_PAGE)) {
-      GUI.ignoreNextEvent(Buttons.BUTTON1);
-      //  md_exploit.off();
-      mcl.setPage(GRID_PAGE);
-    } else {
-      mcl.setPage(p);
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+    release:
+      PageIndex p;
+      p = get_page(get_pageidx(page_select), nullptr);
+      if (BUTTON_DOWN(Buttons.BUTTON1) || (p == NULL_PAGE)) {
+        GUI.ignoreNextEvent(Buttons.BUTTON1);
+        //  md_exploit.off();
+        mcl.setPage(GRID_PAGE);
+      } else {
+        mcl.setPage(p);
+      }
+      return true;
     }
-    return true;
-  }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
-  load_grid:
-    GUI.ignoreNextEvent(event->source);
-    mcl.setPage(GRID_PAGE);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    //PAT SONG
-    mcl.setPage(GRID_PAGE);
-    mcl.pushPage(SYSTEM_PAGE);
-    return true;
-  }
+    if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
+    load_grid:
+      GUI.ignoreNextEvent(event->source);
+      mcl.setPage(GRID_PAGE);
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      // PAT SONG
+      mcl.setPage(GRID_PAGE);
+      mcl.pushPage(SYSTEM_PAGE);
+      return true;
+    }
 
-  if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-    page_select = get_category_page(0);
-    return true;
+    if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
+      page_select = get_category_page(0);
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
+      page_select = get_category_page(1);
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
+      page_select = get_category_page(2);
+      return true;
+    }
+    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+      page_select = get_category_page(3);
+      return true;
+    }
   }
-  if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-    page_select = get_category_page(1);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-    page_select = get_category_page(2);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-    page_select = get_category_page(3);
-    return true;
-  }
-
   return false;
 }
 

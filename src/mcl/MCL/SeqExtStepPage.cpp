@@ -893,30 +893,32 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       inc = 1;
       w = seq_extparam4.cur / 2;
       if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-         w *= 2;
-         inc = 12;
+        w *= 2;
+        inc = 12;
       }
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-        case MDX_KEY_SCALE: {
-       //   seq_extparam4.cur = 16;
-          //
-          //int a = fov_length
-          int a = timing_mid * 16;// / active_track.get_speed_multiplier();
-          cur_x += a;
-          if (cur_x > fov_offset + fov_length) { fov_offset += a; }
-          if (cur_x >= roll_length) {
-            cur_x = cur_x - (cur_x / a ) * a;
-            fov_offset = 0;
-          }
-          pos_cur_x(0);
-          /*  if (fov_offset + fov_length > roll_length) {
-              cur_x = cur_x - fov_offset;
-              fov_offset = 0;
-            } */
-          return true;
+      case MDX_KEY_SCALE: {
+        //   seq_extparam4.cur = 16;
+        //
+        // int a = fov_length
+        int a = timing_mid * 16; // / active_track.get_speed_multiplier();
+        cur_x += a;
+        if (cur_x > fov_offset + fov_length) {
+          fov_offset += a;
         }
+        if (cur_x >= roll_length) {
+          cur_x = cur_x - (cur_x / a) * a;
+          fov_offset = 0;
+        }
+        pos_cur_x(0);
+        /*  if (fov_offset + fov_length > roll_length) {
+            cur_x = cur_x - fov_offset;
+            fov_offset = 0;
+          } */
+        return true;
+      }
       }
     }
     if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -924,7 +926,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         w = 1;
       }
 
-      if (key_interface.is_key_down(MDX_KEY_NO) || note_interface.notes_count_on()) {
+      if (key_interface.is_key_down(MDX_KEY_NO) ||
+          note_interface.notes_count_on()) {
         switch (key) {
         case MDX_KEY_UP: {
           seq_extparam4.cur -= 2;
@@ -961,27 +964,27 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         switch (key) {
 
         case MDX_KEY_LEFT: {
-        //  if (key_interface.is_key_down(MDX_KEY_FUNC) &&
-        //      (pianoroll_mode == 0)) {
-        //    mcl_seq.ext_tracks[last_ext_track].rotate_left();
-        //  } else {
-            pos_cur_x(-1 * w);
-            if (key_interface.is_key_down(MDX_KEY_YES)) {
-              key_interface.ignoreNextEvent(MDX_KEY_YES);
-            }
-        //  }
+          //  if (key_interface.is_key_down(MDX_KEY_FUNC) &&
+          //      (pianoroll_mode == 0)) {
+          //    mcl_seq.ext_tracks[last_ext_track].rotate_left();
+          //  } else {
+          pos_cur_x(-1 * w);
+          if (key_interface.is_key_down(MDX_KEY_YES)) {
+            key_interface.ignoreNextEvent(MDX_KEY_YES);
+          }
+          //  }
           return true;
         }
         case MDX_KEY_RIGHT: {
-        //  if (key_interface.is_key_down(MDX_KEY_FUNC) &&
-       //       (pianoroll_mode == 0)) {
-       //     mcl_seq.ext_tracks[last_ext_track].rotate_right();
-       //   } else {
-            pos_cur_x(w);
-            if (key_interface.is_key_down(MDX_KEY_YES)) {
-              key_interface.ignoreNextEvent(MDX_KEY_YES);
-            }
-       //   }
+          //  if (key_interface.is_key_down(MDX_KEY_FUNC) &&
+          //       (pianoroll_mode == 0)) {
+          //     mcl_seq.ext_tracks[last_ext_track].rotate_right();
+          //   } else {
+          pos_cur_x(w);
+          if (key_interface.is_key_down(MDX_KEY_YES)) {
+            key_interface.ignoreNextEvent(MDX_KEY_YES);
+          }
+          //   }
           return true;
         }
         case MDX_KEY_UP: {
@@ -992,7 +995,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           pos_cur_y(-1 * inc);
           return true;
         }
-         // case MDX_KEY_YES: {
+          // case MDX_KEY_YES: {
           //   ignore_clear = true;
           //   goto YES;
           // }
@@ -1007,56 +1010,60 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
     }
   }
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+    YES:
+      if (pianoroll_mode >= 1) {
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-  YES:
-    if (pianoroll_mode >= 1) {
+        uint8_t step = (cur_x / timing_mid);
+        uint8_t utiming = timing_mid + cur_x - (step * timing_mid);
+        /*
+        if (BUTTON_DOWN(Buttons.BUTTON3) ||
+        !active_track.clear_track_locks(step,
+        active_track.locks_params[pianoroll_mode - 1] - 1, 255)) {
+        active_track.set_track_locks(
+            step, utiming, active_track.locks_params[pianoroll_mode - 1] - 1,
+            lock_cur_y);
+        }*/
+        uint8_t lock_idx = pianoroll_mode - 1;
 
-      uint8_t step = (cur_x / timing_mid);
-      uint8_t utiming = timing_mid + cur_x - (step * timing_mid);
-      /*
-      if (BUTTON_DOWN(Buttons.BUTTON3) || !active_track.clear_track_locks(step,
-      active_track.locks_params[pianoroll_mode - 1] - 1, 255)) {
-      active_track.set_track_locks(
-          step, utiming, active_track.locks_params[pianoroll_mode - 1] - 1,
-          lock_cur_y);
-      }*/
-      uint8_t lock_idx = pianoroll_mode - 1;
-
-      bool clear = false;
-      clear = active_track.del_track_locks(cur_x, lock_idx, lock_cur_y);
-      if (!clear && active_track.locks_params[lock_idx] - 1 > 0) {
-        active_track.set_track_locks(step, utiming,
-                                     active_track.locks_params[lock_idx] - 1,
-                                     lock_cur_y, slide, lock_idx);
-      }
-      DEBUG_DUMP(active_track.count_lock_event(step, lock_idx));
-      return true;
-    } else {
-      DEBUG_PRINTLN("here");
-      DEBUG_PRINTLN(active_track.notes_on_count);
-      if (active_track.notes_on_count > 0) {
-        enter_notes();
-      } else {
-        uint16_t w = cur_w;
-        if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
-
-        if (!active_track.del_note(cur_x, w - 1, cur_y)) {
-          active_track.add_note(cur_x, w, cur_y, velocity, cond);
+        bool clear = false;
+        clear = active_track.del_track_locks(cur_x, lock_idx, lock_cur_y);
+        if (!clear && active_track.locks_params[lock_idx] - 1 > 0) {
+          active_track.set_track_locks(step, utiming,
+                                       active_track.locks_params[lock_idx] - 1,
+                                       lock_cur_y, slide, lock_idx);
         }
+        DEBUG_DUMP(active_track.count_lock_event(step, lock_idx));
+        return true;
+      } else {
+        DEBUG_PRINTLN("here");
+        DEBUG_PRINTLN(active_track.notes_on_count);
+        if (active_track.notes_on_count > 0) {
+          enter_notes();
+        } else {
+          uint16_t w = cur_w;
+          if (cur_x + w >= roll_length) {
+            w = roll_length - cur_x - 1;
+          }
+
+          if (!active_track.del_note(cur_x, w - 1, cur_y)) {
+            active_track.add_note(cur_x, w, cur_y, velocity, cond);
+          }
+        }
+        return true;
       }
+    }
+
+    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+      toggle_record();
       return true;
     }
-  }
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    toggle_record();
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    mute_mask = 128;
-    param_select_update();
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      mute_mask = 128;
+      param_select_update();
+    }
   }
   if (SeqPage::handleEvent(event)) {
     return true;

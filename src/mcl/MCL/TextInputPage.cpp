@@ -239,98 +239,98 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
       }
     }
   }
-
+  if (EVENT_BUTTON(event)) {
 #ifdef OLED_DISPLAY
-  // in char-pane mode, do not handle any events
-  // except shift-release event.
-  if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
+    // in char-pane mode, do not handle any events
+    // except shift-release event.
+    if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
 
-    if (!normal_mode) {
-    shift_release:
-      oled_display.clearDisplay();
-      // before exiting charpane, advance current cursor to the next.
-      ++cursor_position;
-      if (cursor_position >= length) {
-        cursor_position = length - 1;
+      if (!normal_mode) {
+      shift_release:
+        oled_display.clearDisplay();
+        // before exiting charpane, advance current cursor to the next.
+        ++cursor_position;
+        if (cursor_position >= length) {
+          cursor_position = length - 1;
+        }
+        // then, config normal input line
+        init();
+        config_normal();
+        return true;
       }
-      // then, config normal input line
-      init();
+      return false;
+    }
+#endif
+    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+    NO:
+      DEBUG_PRINTLN("pop a");
+      return_state = false;
+      GUI.ignoreNextEvent(event->source);
+      mcl.popPage();
+      return true;
+    }
+
+    if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    shift:
+      config_charpane();
+      return true;
+    }
+
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      if (cursor_position == length - 1 && !isspace(text[cursor_position])) {
+        // delete last
+        text[cursor_position] = ' ';
+      } else {
+        if (cursor_position == 0) {
+          // move the cursor, and delete first
+          cursor_position = 1;
+        }
+        // backspace
+        for (uint8_t i = cursor_position - 1; i < length - 1; ++i) {
+          text[i] = text[i + 1];
+        }
+        text[length - 1] = ' ';
+        --cursor_position;
+      }
       config_normal();
       return true;
     }
-    return false;
-  }
-#endif
-  if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-  NO:
-    DEBUG_PRINTLN("pop a");
-    return_state = false;
-    GUI.ignoreNextEvent(event->source);
-    mcl.popPage();
-    return true;
-  }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-  shift:
-    config_charpane();
-    return true;
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    if (cursor_position == length - 1 && !isspace(text[cursor_position])) {
-      // delete last
-      text[cursor_position] = ' ';
-    } else {
-      if (cursor_position == 0) {
-        // move the cursor, and delete first
-        cursor_position = 1;
+    if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    YES:
+      return_state = true;
+      uint8_t cpy_len = length;
+      for (uint8_t n = length - 1; n > 0 && text[n] == ' '; n--) {
+        cpy_len -= 1;
       }
-      // backspace
-      for (uint8_t i = cursor_position - 1; i < length - 1; ++i) {
-        text[i] = text[i + 1];
-      }
-      text[length - 1] = ' ';
-      --cursor_position;
+      strncpy(textp, text, cpy_len);
+      textp[cpy_len] = '\0';
+      GUI.ignoreNextEvent(event->source);
+      mcl.popPage();
+      return true;
     }
-    config_normal();
-    return true;
+
+    // if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    // Toggle upper + lower case
+    // if (encoders[1]->cur <= 25) {
+    // encoders[1]->cur += 26;
+    //} else if (encoders[1]->cur <= 51) {
+    // encoders[1]->cur -= 26;
+    //}
+    // return true;
+    //}
+
+    // if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
+    // Clear text
+    // for (uint8_t n = 1; n < length; n++) {
+    // text[n] = ' ';
+    //}
+    // text[0] = 'a';
+    // encoders[0]->cur = 0;
+    // DEBUG_PRINTLN(text);
+    // update_char();
+    // return true;
+    //}
   }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-  YES:
-    return_state = true;
-    uint8_t cpy_len = length;
-    for (uint8_t n = length - 1; n > 0 && text[n] == ' '; n--) {
-      cpy_len -= 1;
-    }
-    strncpy(textp, text, cpy_len);
-    textp[cpy_len] = '\0';
-    GUI.ignoreNextEvent(event->source);
-    mcl.popPage();
-    return true;
-  }
-
-  // if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-  // Toggle upper + lower case
-  // if (encoders[1]->cur <= 25) {
-  // encoders[1]->cur += 26;
-  //} else if (encoders[1]->cur <= 51) {
-  // encoders[1]->cur -= 26;
-  //}
-  // return true;
-  //}
-
-  // if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-  // Clear text
-  // for (uint8_t n = 1; n < length; n++) {
-  // text[n] = ' ';
-  //}
-  // text[0] = 'a';
-  // encoders[0]->cur = 0;
-  // DEBUG_PRINTLN(text);
-  // update_char();
-  // return true;
-  //}
-
   return false;
 }

@@ -1136,65 +1136,66 @@ bool GridPage::handleEvent(gui_event_t *event) {
       return true;
     }
   }
+  if (EVENT_BUTTON(event)) {
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-  slot_menu_on:
-    DEBUG_DUMP(getCol());
-    DEBUG_DUMP(getRow());
-    slot.load_from_grid(getCol(), getRow());
-    DEBUG_PRINTLN(F("what's in the slot"));
-    DEBUG_DUMP(slot.link.loops);
-    DEBUG_DUMP(slot.link.row);
-    encoders[0] = &grid_slot_param1;
-    encoders[1] = &grid_slot_param2;
-    encoders[2] = &param3;
-    encoders[3] = &param4;
-    param3.cur = 1;
-    param4.cur = 1;
-    slot_apply = 0;
-    old_col = 255;
-    if (!slot.is_ext_track()) {
-      grid_slot_page.menu.enable_entry(1, true);
-      grid_slot_page.menu.enable_entry(2, false);
-    } else {
-      grid_slot_page.menu.enable_entry(1, false);
-      grid_slot_page.menu.enable_entry(2, true);
-    }
-    show_slot_menu = true;
-    grid_slot_page.init();
-    return true;
-  }
-
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-  slot_menu_off:
-    if (show_slot_menu && !key_interface.is_key_down(MDX_KEY_NO)) {
-      uint8_t old_undo = slot_undo;
-      bool restore_undo = false;
-      // Prevent undo from occuring when re-entering shift menu. Want to keep
-      // undo flag in case user decides to undo with MD GUI.
-      if (slot_copy + slot_paste + slot_clear + slot_load == 0) {
-        slot_undo = 0;
-        restore_undo = true;
+    if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    slot_menu_on:
+      DEBUG_DUMP(getCol());
+      DEBUG_DUMP(getRow());
+      slot.load_from_grid(getCol(), getRow());
+      DEBUG_PRINTLN(F("what's in the slot"));
+      DEBUG_DUMP(slot.link.loops);
+      DEBUG_DUMP(slot.link.row);
+      encoders[0] = &grid_slot_param1;
+      encoders[1] = &grid_slot_param2;
+      encoders[2] = &param3;
+      encoders[3] = &param4;
+      param3.cur = 1;
+      param4.cur = 1;
+      slot_apply = 0;
+      old_col = 255;
+      if (!slot.is_ext_track()) {
+        grid_slot_page.menu.enable_entry(1, true);
+        grid_slot_page.menu.enable_entry(2, false);
+      } else {
+        grid_slot_page.menu.enable_entry(1, false);
+        grid_slot_page.menu.enable_entry(2, true);
       }
-
-      apply_slot_changes();
-
-      if (restore_undo) {
-        slot_undo = old_undo;
-      }
-
-      DEBUG_PRINTLN("here");
-      init();
+      show_slot_menu = true;
+      grid_slot_page.init();
+      return true;
     }
-    return true;
-  }
-  if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-      (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
-  system:
-    system_page.isSetup = false;
-    mcl.pushPage(SYSTEM_PAGE);
-    return true;
-  }
 
+    if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    slot_menu_off:
+      if (show_slot_menu && !key_interface.is_key_down(MDX_KEY_NO)) {
+        uint8_t old_undo = slot_undo;
+        bool restore_undo = false;
+        // Prevent undo from occuring when re-entering shift menu. Want to keep
+        // undo flag in case user decides to undo with MD GUI.
+        if (slot_copy + slot_paste + slot_clear + slot_load == 0) {
+          slot_undo = 0;
+          restore_undo = true;
+        }
+
+        apply_slot_changes();
+
+        if (restore_undo) {
+          slot_undo = old_undo;
+        }
+
+        DEBUG_PRINTLN("here");
+        init();
+      }
+      return true;
+    }
+    if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
+        (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
+    system:
+      system_page.isSetup = false;
+      mcl.pushPage(SYSTEM_PAGE);
+      return true;
+    }
+  }
   return false;
 }

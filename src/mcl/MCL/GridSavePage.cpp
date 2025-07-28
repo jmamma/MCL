@@ -152,24 +152,25 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       }
     }
   }
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
+    save_groups:
+      key_interface.off();
+      uint8_t offset = proj.get_grid() * 16;
 
-  if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
-  save_groups:
-    key_interface.off();
-    uint8_t offset = proj.get_grid() * 16;
+      uint8_t track_select_array[NUM_SLOTS] = {0};
 
-    uint8_t track_select_array[NUM_SLOTS] = {0};
+      track_select_array_from_type_select(track_select_array);
 
-    track_select_array_from_type_select(track_select_array);
+      oled_display.textbox("SAVE GROUPS", "");
+      //oled_display.display();
 
-    oled_display.textbox("SAVE GROUPS", "");
-    //oled_display.display();
+      uint8_t save_mode = SAVE_SEQ;
 
-    uint8_t save_mode = SAVE_SEQ;
-
-    mcl_actions.save_tracks(grid_page.getRow(), track_select_array, save_mode);
-    mcl.setPage(GRID_PAGE);
-    return true;
+      mcl_actions.save_tracks(grid_page.getRow(), track_select_array, save_mode);
+      mcl.setPage(GRID_PAGE);
+      return true;
+    }
   }
   return false;
 }
