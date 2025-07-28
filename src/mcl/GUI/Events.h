@@ -1,5 +1,3 @@
-/* Copyright (c) 2009 - http://ruinwesen.com/ */
-
 #pragma once
 
 #include <inttypes.h>
@@ -22,7 +20,11 @@
 #define EVENT_CMD(event) ((event->type == CMD))
 #define EVENT_NOTE(event) ((event->type == NOTE))
 
-#define LONG_PRESS_REPEAT_TIME 80 // 40ms
+/* --- Key Repeat Definitions --- */
+#define ARROW_KEY_START_ID         Buttons.FUNC_BUTTON6
+#define NUM_ARROW_KEYS             4
+#define LONG_PRESS_INITIAL_DELAY_MS 160
+#define LONG_PRESS_REPEAT_RATE_MS   60
 
 enum EventType {
   BUTTON,
@@ -42,20 +44,126 @@ private:
   volatile uint8_t ignoreMask;
   volatile CRingBuffer<gui_event_t, MAX_EVENTS> eventBuffer;
 
-#if defined(PLATFORM_TBD)
-  // State variables for timer-based long press
-  int8_t   long_press_candidate;
-  uint16_t last_repeat_clock;
-#endif
+  // --- Generic/default implementation ---
+  void pollEvents_() {
+    for (uint8_t i = 0; i < MAX_BUTTONS; i++) {
+      if (BUTTON_PRESSED(i)) {
+        if (!isIgnored(i)) {
+          gui_event_t event;
+          event.source = i;
+          event.type = BUTTON;
+          event.mask = EVENT_BUTTON_PRESSED;
+          eventBuffer.putp(&event);
+        } else {
+          clearIgnoreMask(i);
+        }
+      }
 
+      if (BUTTON_RELEASED(i)) {
+        if (!isIgnored(i)) {
+          gui_event_t event;
+          event.source = i;
+          event.type = BUTTON;
+          event.mask = EVENT_BUTTON_RELEASED;
+          eventBuffer.putp(&event);
+        } else {
+          clearIgnoreMask(i);
+        }
+      }
+    }
+  }
+
+#if defined(PLATFORM_TBD)
+  // --- State variables needed only for the TBD platform ---
+  uint16_t long_press_start_time[NUM_ARROW_KEYS];
+  uint16_t last_repeat_clock[NUM_ARROW_KEYS];
+  bool     is_repeating[NUM_ARROW_KEYS];
+  
+  // --- Platform-specific implementation for TBD with key repeats ---
+  void pollEventsTBD() {
+    // Poll for standard button presses and releases
+    for (uint8_t i = 0; i < MAX_BUTTONS; i++) {
+      if (BUTTON_PRESSED(i)) {
+        if (!isIgnored(i)) {
+          gui_event_t event;
+          event.source = i;
+          event.type = BUTTON;
+          event.mask = EVENT_BUTTON_PRESSED;
+          eventBuffer.putp(&event);
+
+          // If it's an arrow key, start tracking it for repeats.
+          if (i >= ARROW_KEY_START_ID && i < (ARROW_KEY_START_ID + NUM_ARROW_KEYS)) {
+            uint8_t arrow_key_index = i - ARROW_KEY_START_ID;
+            long_press_start_time[arrow_key_index] = read_clock_ms();
+            is_repeating[arrow_key_index] = false;
+          }
+        } else {
+          clearIgnoreMask(i);
+        }
+      }
+
+      if (BUTTON_RELEASED(i)) {
+        if (!isIgnored(i)) {
+          gui_event_t event;
+          event.source = i;
+          event.type = BUTTON;
+          event.mask = EVENT_BUTTON_RELEASED;
+          eventBuffer.putp(&event);
+        } else {
+          clearIgnoreMask(i);
+        }
+
+        // If it was an arrow key, stop tracking it for repeats.
+        if (i >= ARROW_KEY_START_ID && i < (ARROW_KEY_START_ID + NUM_ARROW_KEYS)) {
+          uint8_t arrow_key_index = i - ARROW_KEY_START_ID;
+          long_press_start_time[arrow_key_index] = 0;
+          is_repeating[arrow_key_index] = false;
+        }
+      }
+    }
+    
+    // --- Key repeat generation logic ---
+    uint16_t current_time = read_clock_ms();
+    for (uint8_t i = 0; i < NUM_ARROW_KEYS; i++) {
+      if (long_press_start_time[i] == 0) continue; 
+
+      uint8_t button_id = ARROW_KEY_START_ID + i;
+      if (BUTTON_DOWN(button_id)) {
+        if (is_repeating[i]) {
+          if (clock_diff(last_repeat_clock[i], current_time) > LONG_PRESS_REPEAT_RATE_MS) {
+            gui_event_t event;
+            event.source = button_id; event.type = BUTTON; event.mask = EVENT_BUTTON_PRESSED;
+            eventBuffer.putp(&event);
+            last_repeat_clock[i] = current_time;
+          }
+        } else {
+          if (clock_diff(long_press_start_time[i], current_time) > LONG_PRESS_INITIAL_DELAY_MS) {
+            gui_event_t event;
+            event.source = button_id; event.type = BUTTON; event.mask = EVENT_BUTTON_PRESSED;
+            eventBuffer.putp(&event);
+            is_repeating[i] = true;
+            last_repeat_clock[i] = current_time;
+          }
+        }
+      } else {
+        long_press_start_time[i] = 0;
+        is_repeating[i] = false;
+      }
+    }
+  }
+#endif
 public:
   EventManager() : ignoreMask(0) {}
 
   void init() {
     eventBuffer.init();
-    #if defined(PLATFORM_TBD)
-    long_press_candidate = -1;
-    #endif
+#if defined(PLATFORM_TBD)
+    for (int i = 0; i < NUM_ARROW_KEYS; i++) {
+      long_press_start_time[i] = 0;
+      is_repeating[i] = false;
+      last_repeat_clock[i] = 0;
+    }
+#endif
   }
 
   void setIgnoreMask(uint8_t button) {
@@ -74,65 +182,14 @@ public:
     return (button < MAX_BUTTONS) && (ignoreMask & _BV(button));
   }
 
+  // --- Public dispatcher function ---
+  // Calls the correct underlying implementation at compile time.
   void pollEvents() {
-    for (uint8_t i = 0; i < MAX_BUTTONS; i++) {
-      if (BUTTON_PRESSED(i)) {
-        if (!isIgnored(i)) {
-          gui_event_t event;
-          event.source = i;
-          event.type = BUTTON;
-          event.mask = EVENT_BUTTON_PRESSED;
-          eventBuffer.putp(&event);
-
-          #if defined(PLATFORM_TBD)
-          //Assumes arrow keys.
-          if (event.source >= Buttons.FUNC_BUTTON6 && event.source < Buttons.TRIG_BUTTON1) {
-          // Set this button as the new candidate for repeating
-            long_press_candidate = i;
-            last_repeat_clock = read_clock_ms(); // Initialize repeat clock
-          }
-          #endif
-        } else {
-          clearIgnoreMask(i);
-        }
-      }
-
-      if (BUTTON_RELEASED(i)) {
-        if (!isIgnored(i)) {
-          gui_event_t event;
-          event.source = i;
-          event.type = BUTTON;
-          event.mask = EVENT_BUTTON_RELEASED;
-          eventBuffer.putp(&event);
-        } else {
-          clearIgnoreMask(i);
-        }
-
-        #if defined(PLATFORM_TBD)
-        // If the released button was our candidate, stop repeating
-        if (long_press_candidate == i) {
-          long_press_candidate = -1;
-        }
-        #endif
-      }
-    }
-    #if defined(PLATFORM_TBD)
-    if (long_press_candidate != -1) {
-      if (BUTTON_DOWN(long_press_candidate)) {
-        if (clock_diff(last_repeat_clock, read_clock_ms()) > LONG_PRESS_REPEAT_TIME) {
-          gui_event_t event;
-          event.source = (uint8_t)long_press_candidate;
-          event.type = BUTTON;
-          event.mask = EVENT_BUTTON_PRESSED; // Send a standard PRESS event
-          eventBuffer.putp(&event);
-          last_repeat_clock = read_clock_ms(); // Update the timer for the next repeat
-        }
-      } else {
-        // Button was released, clear the candidate just in case the RELEASED event was missed
-        long_press_candidate = -1;
-      }
-    }
-    #endif
+#if defined(PLATFORM_TBD)
+    pollEventsTBD();
+#else
+    pollEvents_();
+#endif
   }
 
   bool isEmpty() {
