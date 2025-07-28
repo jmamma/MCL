@@ -160,6 +160,7 @@ void __not_in_flash_func(MidiUartClass::rx_isr)() {
   }
 }
 void __not_in_flash_func(MidiUartClass::tx_isr)() {
+  if (!uart_is_writable(uart_hw)) { return; } //race condition
 #ifdef RUNNING_STATUS_OUT
   bool rs = 1;
 again:
