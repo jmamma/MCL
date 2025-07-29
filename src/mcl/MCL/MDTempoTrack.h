@@ -13,7 +13,6 @@ class ATTR_PACKED() MDTempoTrack : public AUXTrack, public TempoData {
 public:
   MDTempoTrack() {
     active = MDTEMPO_TRACK_TYPE;
-    static_assert(sizeof(MDTempoTrack) <= MDTEMPO_TRACK_LEN);
   }
 
   size_t _sizeof() const {

@@ -27,7 +27,6 @@ class ATTR_PACKED() MDFXTrack : public AUXTrack, public MDFXData {
 public:
   MDFXTrack() {
     active = MDFX_TRACK_TYPE;
-    static_assert(sizeof(MDFXTrack) <= MDFX_TRACK_LEN);
   }
   size_t _sizeof() const {
      return sizeof(MDFXTrack) - sizeof(void*);

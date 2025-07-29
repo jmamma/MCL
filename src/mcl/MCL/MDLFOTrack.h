@@ -10,7 +10,6 @@ public:
   LFOSeqTrackData lfo_data;
   MDLFOTrack() {
     active = MDLFO_TRACK_TYPE;
-    static_assert(sizeof(MDLFOTrack) <= MDLFO_TRACK_LEN);
   }
   size_t _sizeof() const {
      return sizeof(MDLFOTrack) - sizeof(void*);

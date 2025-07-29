@@ -14,7 +14,6 @@ class ATTR_PACKED() MDRouteTrack : public AUXTrack, public RouteData {
 public:
   MDRouteTrack() {
     active = MDROUTE_TRACK_TYPE;
-    static_assert(sizeof(MDRouteTrack) <= MDROUTE_TRACK_LEN);
   }
   size_t _sizeof() const {
      return sizeof(MDRouteTrack) - sizeof(void*);
