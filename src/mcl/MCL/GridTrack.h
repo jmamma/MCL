@@ -68,7 +68,7 @@ public:
   ///  downloads from BANK1 to the runtime object
   bool load_from_mem(uint8_t column, size_t size = 0) {
     uint16_t bytes = size ? size : get_track_size();
-    uint32_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * (uint32_t)(column));
+    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * (uint32_t)(column));
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(_this(), ptr, bytes);
     return true;
