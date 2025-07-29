@@ -208,10 +208,8 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
     MD.setOrigParams(column, &machine);
   }
   // Write data to sd
-  len = sizeof(MDTrack);
-  DEBUG_PRINTLN(len);
 
-  ret = write_grid((uint8_t *)(this), len, column, row, grid);
+  ret = write_grid(_this(), _sizeof(), column, row, grid);
 
   if (!ret) {
     DEBUG_PRINTLN(F("write failed"));

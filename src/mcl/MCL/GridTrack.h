@@ -35,10 +35,14 @@ class Grid;
 
 class ATTR_PACKED() GridTrack {
 public:
+  uint8_t version[2]; //Padding
   uint8_t active = EMPTY_TRACK_TYPE;
   GridLink link;
-  //  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  //  void place_track_in_sysex(int tracknumber, uint8_t column);
+
+  size_t _sizeof() const {
+        return sizeof(GridTrack) - sizeof(void*);
+  }
+  void* _this() { return &version; }
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
   bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE); }
@@ -56,7 +60,7 @@ public:
   bool store_in_mem(uint8_t column) {
     uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * (uint32_t)(column));
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(ptr, this, get_track_size());
+    memcpy_bank1(ptr, _this(), get_track_size());
     return true;
   }
 
@@ -66,7 +70,7 @@ public:
     uint16_t bytes = size ? size : get_track_size();
     uint32_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * (uint32_t)(column));
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(this, ptr, bytes);
+    memcpy_bank1(_this(), ptr, bytes);
     return true;
   }
 
@@ -93,7 +97,7 @@ public:
      load_immediate(dest_track, seq_track);
   }
 
-  virtual uint16_t get_track_size() { return sizeof(GridTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uint16_t get_region_size() { return get_track_size(); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   bool is_external() { return get_region() != BANK1_MD_TRACKS_START; }

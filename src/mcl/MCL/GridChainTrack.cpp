@@ -28,10 +28,7 @@ bool GridChainTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_t
     get_chains();
   }
 
-  len = sizeof(GridChainTrack);
-  DEBUG_PRINTLN(len);
-
-  ret = proj.write_grid((uint8_t *)(this), len, column, row);
+  ret = proj.write_grid(_this(), _sizeof(), column, row);
 
   if (!ret) {
     DEBUG_PRINTLN(F("write failed"));

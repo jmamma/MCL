@@ -56,10 +56,7 @@ private:
   __IMPL_DYNAMIK_KAST(GridChainTrack, GRIDCHAIN_TRACK_TYPE, GRIDCHAIN_TRACK_TYPE)
 
 public:
-  //  bool get_track_from_sysex(int tracknumber, uint8_t column);
-  //  void place_track_in_sysex(int tracknumber, uint8_t column);
 
-//  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr) = 0;
   virtual uint16_t get_track_size() = 0;
   virtual void* get_sound_data_ptr() = 0;
   virtual size_t get_sound_data_size() = 0;

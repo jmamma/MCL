@@ -40,10 +40,12 @@ public:
 
 class ATTR_PACKED() PerfTrack : public AUXTrack, public PerfTrackData {
 public:
+  size_t _sizeof() const {
+     return sizeof(PerfTrack) - sizeof(void*);
+  }
 
   PerfTrack() {
     active = PERF_TRACK_TYPE;
-    static_assert(sizeof(PerfTrack) <= PERF_TRACK_LEN);
   }
 
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -75,7 +77,7 @@ public:
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
-  virtual uint16_t get_track_size() { return sizeof(PerfTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_PERF_TRACK_START; }
 
   virtual uint8_t get_model() { return PERF_TRACK_TYPE; }

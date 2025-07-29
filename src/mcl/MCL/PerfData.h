@@ -17,7 +17,7 @@ static uint8_t get_param_device(uint8_t dest, uint8_t param) {
   return 255;
 }
 
-class PerfParam {
+class ATTR_PACKED() PerfParam {
 public:
   uint8_t dest;
   uint8_t param;
@@ -27,7 +27,7 @@ public:
 
 #define LEARN_MIN 1
 
-class PerfScene {
+class ATTR_PACKED() PerfScene {
 public:
   PerfParam params[NUM_PERF_PARAMS];
   uint8_t count;
@@ -128,7 +128,7 @@ public:
 
 };
 
-class PerfData {
+class ATTR_PACKED() PerfData {
 public:
   static PerfScene scenes[NUM_SCENES];
 

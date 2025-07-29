@@ -29,7 +29,9 @@ public:
     active = MDFX_TRACK_TYPE;
     static_assert(sizeof(MDFXTrack) <= MDFX_TRACK_LEN);
   }
-
+  size_t _sizeof() const {
+     return sizeof(MDFXTrack) - sizeof(void*);
+  }
   void init() {
      enable_reverb = false;
      enable_delay = false;
@@ -54,7 +56,7 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
 
-  virtual uint16_t get_track_size() { return sizeof(MDFXTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_MDFX_TRACK_START; }
 
   virtual uint8_t get_model() { return MDFX_TRACK_TYPE; }

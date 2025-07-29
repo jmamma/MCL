@@ -3,9 +3,9 @@
 #include "Track.h"
 #include "platform.h"
 
-/*
- * Uncomment to show class sizes at compile time
+// Uncomment to show class sizes at compile time
 template<int N> struct ShowSize;
+/*
 ShowSize<sizeof(EmptyTrack)> show_empty_size;
 ShowSize<sizeof(MDTrack)> show_md_size;
 ShowSize<sizeof(A4Track)> show_a4_size;
@@ -16,6 +16,7 @@ ShowSize<sizeof(MDRouteTrack)> show_mdroute_size;
 ShowSize<sizeof(MDLFOTrack)> show_mdlfo_size;
 ShowSize<sizeof(MNMTrack)> show_mnm_size;
 ShowSize<sizeof(PerfTrack)> show_perf_size;
+ShowSize<sizeof(GridRowHeader)> show_perf_size;
 */
 
 DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
@@ -84,12 +85,12 @@ DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row,
     }
     size_t len = ptrack->get_track_size() - 512;
     if (grid) {
-      if (!grid->read((uint8_t *)this + 512, len)) {
+      if (!grid->read((uint8_t*)_this() + 512, len)) {
         DEBUG_PRINTLN(F("read failed"));
         return nullptr;
       }
     } else {
-      if (!proj.read_grid((uint8_t *)this + 512, len)) {
+      if (!proj.read_grid((uint8_t*)_this() + 512, len)) {
         DEBUG_PRINTLN(F("read failed"));
         return nullptr;
       }
@@ -135,10 +136,8 @@ bool DeviceTrackChunk::load_from_mem_chunk(uint8_t column, uint8_t chunk) {
   size_t chunk_size = sizeof(seq_data_chunk);
 
   // 1. Safely calculate the byte offset of the seq_data_chunk member.
-  //uintptr_t offset = reinterpret_cast<uintptr_t>(&seq_data_chunk[0]) -
-  //                   reinterpret_cast<uintptr_t>(this);
-
-  size_t offset = offsetof(DeviceTrackChunk, seq_data_chunk);
+  uintptr_t offset = reinterpret_cast<uintptr_t>(&seq_data_chunk[0]) -
+                     reinterpret_cast<uintptr_t>(this);
 
   // 2. Calculate the final address using uintptr_t for the variable and all
   // parts of the calculation.
@@ -162,15 +161,13 @@ bool DeviceTrackChunk::load_chunk(volatile void *ptr, uint8_t chunk) {
 
 bool DeviceTrackChunk::load_link_from_mem(uint8_t column) {
   // 1. Safely calculate the byte offset of the 'link' member.
-  //uintptr_t offset = reinterpret_cast<uintptr_t>(&this->link) -
-  //                   reinterpret_cast<uintptr_t>(this);
-  size_t offset = offsetof(DeviceTrackChunk, link);
-
+  uintptr_t offset = reinterpret_cast<uintptr_t>(&this->link) -
+                     reinterpret_cast<uintptr_t>(this);
   // 2. Calculate the final address using uintptr_t.
   uintptr_t pos = get_region() +
                   (static_cast<uintptr_t>(get_track_size()) * column) + offset;
   // 3. Convert the final integer address back to a pointer.
   volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
-  memcpy_bank1(&this->link, ptr, sizeof(GridTrack));
+  memcpy_bank1(&this->link, ptr, sizeof(GridLink));
   return true;
 }

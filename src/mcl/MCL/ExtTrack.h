@@ -16,6 +16,9 @@ public:
     active = EXT_TRACK_TYPE;
     static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
   }
+  size_t _sizeof() const {
+     return sizeof(ExtTrack) - sizeof(void*);
+  }
   virtual void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                uint8_t slotnumber);
   virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return true; }
@@ -33,7 +36,7 @@ public:
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
-  virtual uint16_t get_track_size() { return sizeof(ExtTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }

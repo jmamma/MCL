@@ -9,9 +9,16 @@ public:
   //of all the tracktypes
 
   uint8_t data[EMPTY_TRACK_LEN];
+
+  size_t _sizeof() const {
+        return sizeof(EmptyTrack) - sizeof(void*);
+  }
+
+
   EmptyTrack() {
   active = EMPTY_TRACK_TYPE;
   }
+
   virtual uint16_t get_track_size() { return sizeof(EmptyTrack); }
   virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false) {
     // should not reach here

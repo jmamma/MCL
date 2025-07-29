@@ -5,10 +5,10 @@
 
 bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid) {
   if (grid == nullptr) {
-    return proj.write_grid((uint8_t *)(this), len, column, row);
+    return proj.write_grid(_this(), len, column, row);
   }
   else {
-    return grid->write((uint8_t *)(this), len, column, row);
+    return grid->write(_this(), len, column, row);
   }
 }
 
@@ -30,13 +30,13 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 bool GridTrack::load_from_grid_512(uint8_t column, uint16_t row, Grid *grid) {
 
   if (grid) {
-    if (!grid->read(this, 512, column, row)) {
+    if (!grid->read(_this(), 512, column, row)) {
       DEBUG_PRINTLN(F("read failed"));
       return false;
     }
   }
   else {
-    if (!proj.read_grid(this, 512, column, row)) {
+    if (!proj.read_grid(_this(), 512, column, row)) {
       DEBUG_PRINTLN(F("read failed"));
       return false;
     }
@@ -54,7 +54,7 @@ bool GridTrack::load_from_grid_512(uint8_t column, uint16_t row, Grid *grid) {
 
 bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 
-  if (!proj.read_grid(this, sizeof(GridTrack), column, row)) {
+  if (!proj.read_grid(_this(), _sizeof(), column, row)) {
     DEBUG_PRINTLN(F("read failed"));
     return false;
   }
@@ -76,7 +76,7 @@ bool GridTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
 
   DEBUG_PRINT_FN();
 
-  if (!write_grid(this, sizeof(GridTrack), column, row, grid)) {
+  if (!write_grid(_this(), _sizeof(), column, row, grid)) {
     DEBUG_PRINTLN(F("write failed"));
     return false;
   }

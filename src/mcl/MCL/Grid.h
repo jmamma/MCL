@@ -7,17 +7,7 @@
 
 #define GRID_VERSION 3000
 
-#define GRID_LENGTH_270 128
-#define GRID_WIDTH_270 20
-#define GRID_SLOT_BYTES_270 4096
-
-class Grid_270 {
-  public:
-  int32_t get_slot_offset(int16_t column, int16_t row);
-  int32_t get_row_header_offset(int16_t row);
-};
-
-class GridHeader {
+class ATTR_PACKED() GridHeader {
 public:
   uint32_t version;
   uint8_t id;
@@ -69,7 +59,7 @@ public:
   bool clear_model(uint8_t column, uint16_t row);
 
   bool read(void *data, size_t len) {
-    return mcl_sd.read_data((uint8_t *)(data), len, &file);
+    return mcl_sd.read_data(data, len, &file);
   }
 
   bool read(void *data, size_t len, uint8_t col, uint16_t row) {
@@ -81,13 +71,13 @@ public:
   }
 
   bool write(void *data, size_t len) {
-    return mcl_sd.write_data((uint8_t *)(data), len, &file);
+    return mcl_sd.write_data((void *)(data), len, &file);
   }
 
   bool write(void *data, size_t len, uint8_t col, uint16_t row) {
     bool ret = seek(col, row);
     if (ret) {
-      ret = write((uint8_t *)(data), len);
+      ret = write(data, len);
     }
     return ret;
   }
@@ -95,7 +85,7 @@ public:
   bool write_row_header(GridRowHeader *row_header, uint16_t row) {
     bool ret = seek_row_header(row);
     if (ret) {
-      ret = mcl_sd.write_data((uint8_t *)(row_header), sizeof(GridRowHeader),
+      ret = mcl_sd.write_data(row_header->_this(), sizeof(GridRowHeader),
                               &file);
     }
     return ret;
@@ -104,7 +94,7 @@ public:
   bool read_row_header(GridRowHeader *row_header, uint16_t row) {
     bool ret = seek_row_header(row);
     if (ret) {
-      ret = mcl_sd.read_data((uint8_t *)(row_header), sizeof(GridRowHeader),
+      ret = mcl_sd.read_data(row_header->_this(), sizeof(GridRowHeader),
                              &file);
     }
     return ret;

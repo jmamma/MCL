@@ -5,9 +5,13 @@
 #include "AUXTrack.h"
 #include "GridCHain.h"
 
-class GridChainTrack : public AUXTrack {
+class ATTR_PACKED() GridChainTrack : public AUXTrack {
 public:
   GridChain chains;
+
+  size_t _sizeof() const {
+    return sizeof(GridChain) - sizeof(void*);
+  }
 
   GridChainTrack() {
     active = GRIDCHAIN_TRACK_TYPE;
@@ -24,7 +28,7 @@ public:
   void get_chains();
   void place_chains();
 
-  virtual uint16_t get_track_size() { return sizeof(GridChainTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_GRIDCHAIN_TRACK_START; }
 
   virtual uint8_t get_model() { return GRIDCHAIN_TRACK_TYPE; }

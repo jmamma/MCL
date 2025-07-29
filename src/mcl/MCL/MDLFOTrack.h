@@ -12,7 +12,9 @@ public:
     active = MDLFO_TRACK_TYPE;
     static_assert(sizeof(MDLFOTrack) <= MDLFO_TRACK_LEN);
   }
-
+  size_t _sizeof() const {
+     return sizeof(MDLFOTrack) - sizeof(void*);
+  }
   void init() {};
 
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -30,7 +32,7 @@ public:
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
-  virtual uint16_t get_track_size() { return sizeof(MDLFOTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_MDLFO_TRACK_START; }
 
   virtual uint8_t get_model() { return MDLFO_TRACK_TYPE; }

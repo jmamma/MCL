@@ -13,7 +13,9 @@ public:
   A4Sound sound;
   A4Track() {
     active = A4_TRACK_TYPE;
-    static_assert(sizeof(A4Track) <= GRID2_TRACK_LEN);
+  }
+  size_t _sizeof() const {
+    return sizeof(A4Track) - sizeof(void*);
   }
   uint16_t calc_latency(uint8_t tracknumber);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
@@ -27,7 +29,7 @@ public:
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
-  virtual uint16_t get_track_size() { return sizeof(A4Track); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uint8_t get_model() { return A4_TRACK_TYPE; } // TODO
   virtual uint8_t get_device_type() { return A4_TRACK_TYPE; }
   virtual uint8_t get_parent_model() { return EXT_TRACK_TYPE; }

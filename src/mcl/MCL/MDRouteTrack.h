@@ -16,7 +16,9 @@ public:
     active = MDROUTE_TRACK_TYPE;
     static_assert(sizeof(MDRouteTrack) <= MDROUTE_TRACK_LEN);
   }
-
+  size_t _sizeof() const {
+     return sizeof(MDRouteTrack) - sizeof(void*);
+  }
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
     memset(routing, 6, sizeof(routing));
     poly_mask = 0;
@@ -35,7 +37,7 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   void load_routes();
 
-  virtual uint16_t get_track_size() { return sizeof(MDRouteTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_MDROUTE_TRACK_START; }
 
   virtual uint8_t get_model() { return MDROUTE_TRACK_TYPE; }

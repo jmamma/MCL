@@ -16,6 +16,10 @@ public:
     static_assert(sizeof(MDTempoTrack) <= MDTEMPO_TRACK_LEN);
   }
 
+  size_t _sizeof() const {
+     return sizeof(MDTempoTrack) - sizeof(void*);
+  }
+
   void init() {}
 
   void get_tempo();
@@ -29,7 +33,7 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
 
-  virtual uint16_t get_track_size() { return sizeof(MDTempoTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_MDTEMPO_TRACK_START; }
 
   virtual uint8_t get_model() { return MDTEMPO_TRACK_TYPE; }

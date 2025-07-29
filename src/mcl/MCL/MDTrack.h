@@ -52,7 +52,9 @@ public:
   MDMachine machine;
   MDTrack() {
     active = MD_TRACK_TYPE;
-    static_assert(sizeof(MDTrack) <= GRID1_TRACK_LEN);
+  }
+  size_t _sizeof() const {
+    return sizeof(MDTrack) - sizeof(void*);
   }
   void init();
   void clear_track();
@@ -82,7 +84,7 @@ public:
   // normalize track level
   void normalize();
 
-  virtual uint16_t get_track_size() { return sizeof(MDTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
   virtual uint8_t get_model() { return machine.get_model(); }

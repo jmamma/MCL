@@ -7,7 +7,7 @@
 #define LOAD_AUTO 2
 #define LOAD_QUEUE 3
 
-class GridChain {
+class ATTR_PACKED() GridChain {
 public:
   GridChain() { init(); };
   uint8_t w;

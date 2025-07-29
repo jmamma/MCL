@@ -120,10 +120,7 @@ bool PerfTrack::store_in_grid(uint8_t column, uint16_t row,
     }
   }
 
-  len = sizeof(PerfTrack);
-  DEBUG_PRINTLN(len);
-
-  ret = write_grid((uint8_t *)(this), len, column, row, grid);
+  ret = write_grid(_this(), _sizeof(), column, row, grid);
 
   if (!ret) {
     DEBUG_PRINTLN(F("write failed"));
