@@ -10,7 +10,7 @@ public:
   GridChain chains;
 
   size_t _sizeof() const {
-    return sizeof(GridChain) - sizeof(void*);
+    return sizeof(GridChainTrack) - sizeof(void*);
   }
 
   GridChainTrack() {
