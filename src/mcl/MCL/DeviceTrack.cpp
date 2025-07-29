@@ -3,6 +3,21 @@
 #include "Track.h"
 #include "platform.h"
 
+/*
+ * Uncomment to show class sizes at compile time
+template<int N> struct ShowSize;
+ShowSize<sizeof(EmptyTrack)> show_empty_size;
+ShowSize<sizeof(MDTrack)> show_md_size;
+ShowSize<sizeof(A4Track)> show_a4_size;
+ShowSize<sizeof(ExtTrack)> show_ext_size;
+ShowSize<sizeof(MDFXTrack)> show_mdfx_size;
+ShowSize<sizeof(MDTempoTrack)> show_mdtempo_size;
+ShowSize<sizeof(MDRouteTrack)> show_mdroute_size;
+ShowSize<sizeof(MDLFOTrack)> show_mdlfo_size;
+ShowSize<sizeof(MNMTrack)> show_mnm_size;
+ShowSize<sizeof(PerfTrack)> show_perf_size;
+*/
+
 DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   active = track_type;
   switch (track_type) {
