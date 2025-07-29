@@ -31,16 +31,12 @@ public:
   uint8_t get_slot_model(uint8_t column, uint16_t row, bool load);
 
   uint32_t get_slot_offset(uint8_t column, int16_t row) {
-    uint32_t offset = (uint32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
-                      (uint32_t)((column + 1) + (row * (GRID_WIDTH + 1))) *
-                          (uint32_t)GRID_SLOT_BYTES;
+    uint32_t offset = (uint32_t)((column + 1) + (row * (GRID_WIDTH + 1))) * (uint32_t)GRID_SLOT_BYTES;
     return offset;
   }
 
   uint32_t get_row_header_offset(uint16_t row) {
-    uint32_t offset =
-        (uint32_t)(GRID_SLOT_BYTES * GRID_WIDTH) +
-        (uint32_t)(0 + (row * (GRID_WIDTH + 1))) * (uint32_t)GRID_SLOT_BYTES;
+    uint32_t offset = (uint32_t)(0 + (row * (GRID_WIDTH + 1))) * (uint32_t)GRID_SLOT_BYTES;
     return offset;
   }
 
