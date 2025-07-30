@@ -117,7 +117,7 @@ DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   if (active != EMPTY_TRACK_TYPE) {
     uint16_t len = ptrack->get_track_size();
 
-    if (!proj.read_grid(ptrack, len, column, row)) {
+    if (!proj.read_grid((uint8_t*)_this(), len, column, row)) {
       DEBUG_PRINTLN(F("read failed"));
       return nullptr;
     }
