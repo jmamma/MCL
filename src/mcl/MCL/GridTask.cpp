@@ -289,7 +289,7 @@ bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
                          uint8_t *track_select_array, GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
   auto *pmem_track = empty_track.load_from_mem(
-      gdt->mem_slot_idx, gdt->track_type, sizeof(GridTrack));
+      gdt->mem_slot_idx, gdt->track_type, sizeof(GridTrack) - sizeof(void*));
   if (pmem_track == nullptr) {
     return false;
   }
