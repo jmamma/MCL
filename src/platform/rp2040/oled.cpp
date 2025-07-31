@@ -7,8 +7,9 @@
 void Oled::init_display() {
   DEBUG_PRINT_FN();
 
+#ifndef PLATFORM_TBD
   SD.lock_spi();
-
+#endif
   // Configure control pins
   pinMode(OLED_CS, OUTPUT);
   pinMode(OLED_RST, OUTPUT);
@@ -35,11 +36,13 @@ void Oled::init_display() {
 #endif
   oled_display.setTextSize(1);
   oled_display.setTextColor(WHITE, BLACK);
-  oled_display.setCursor(0, 0); 
+  oled_display.setCursor(0, 0);
   oled_display.setTextWrap(false);
   oled_display.display();
 
+#ifndef PLATFORM_TBD
   SD.unlock_spi();
+#endif
 }
 
 /*
