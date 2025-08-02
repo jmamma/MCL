@@ -24,6 +24,8 @@
 
 #define MCL_CACHE_USE_ARRAYS 1
 
+#define ENCODER_RES_MULTIPLIER 8
+
 // Debug configuration
 
 #define DEBUG_PIN 2

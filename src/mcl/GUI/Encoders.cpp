@@ -1,6 +1,7 @@
 /* Copyright (c) 2009 - http://ruinwesen.com/ */
 
 #include "Encoders.h"
+#include "platform.h"
 #include <stdlib.h>
 
 EncoderParent::EncoderParent(encoder_handle_t _handler) :
@@ -52,7 +53,7 @@ int Encoder::update_rotations(encoder_t *enc) {
     while (amount > 0) {
         if (enc->normal > 0) {
             rot_counter_up += 1;
-            if (rot_counter_up > rot_res) {
+            if (rot_counter_up > rot_res * ENCODER_RES_MULTIPLIER) {
                 rot_counter_up = 0;
                 inc += 1;
             }
@@ -60,7 +61,7 @@ int Encoder::update_rotations(encoder_t *enc) {
         }
         if (enc->normal < 0) {
             rot_counter_down += 1;
-            if (rot_counter_down > rot_res) {
+            if (rot_counter_down > rot_res * ENCODER_RES_MULTIPLIER) {
                 rot_counter_down = 0;
                 inc -= 1;
             }

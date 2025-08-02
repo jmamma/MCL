@@ -4,6 +4,11 @@
 
 #include <inttypes.h>
 #include "hardware.h"
+#include "platform.h"
+
+#ifndef ENCODER_RES_MULTIPLIER
+#define ENCODER_RES_MULTIPLIER 1
+#endif
 
 class EncoderParent;
 typedef void (*encoder_handle_t)(EncoderParent *enc);
@@ -11,8 +16,13 @@ typedef void (*encoder_handle_t)(EncoderParent *enc);
 class EncoderParent {
 public:
     int old, cur;
-    int8_t rot_counter_up = 0;
-    int8_t rot_counter_down = 0;
+    #if ENCODER_RES_MULTIPLIER == 1
+        int8_t rot_counter_up = 0;
+        int8_t rot_counter_down = 0;
+    #else
+        int16_t rot_counter_up = 0;
+        int16_t rot_counter_down = 0;
+    #endif
     uint8_t rot_res = 1;
     bool redisplay;
     encoder_handle_t handler;
