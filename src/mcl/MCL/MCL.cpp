@@ -224,16 +224,38 @@ bool tbd_handleEvent(gui_event_t *event) {
             key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
         }
         else {
+           bool copy_mode = (key_interface.is_key_down(MDX_KEY_NO) ||
+                  key_interface.is_key_down(MDX_KEY_FUNC)) ||
+                 ((mcl.currentPage() == SEQ_STEP_PAGE ||
+                   mcl.currentPage() == SEQ_PTC_PAGE ||
+                   mcl.currentPage() == SEQ_EXTSTEP_PAGE) &&
+                  (key_interface.is_key_down(MDX_KEY_SCALE) ||
+                   note_interface.notes_count_on() > 0));
             // Handle function buttons with switch statement
             switch (event->source) {
                 case ButtonsClass::FUNC_BUTTON1:
-                    key = MDX_KEY_REC;
+                    key = copy_mode ? MDX_KEY_COPY : MDX_KEY_REC;
                     break;
                 case ButtonsClass::FUNC_BUTTON2:
-                    key = MDX_KEY_PLAY;
+                    key = copy_mode ? MDX_KEY_CLEAR : MDX_KEY_PLAY;
+                    if (event->mask == EVENT_BUTTON_PRESSED) {
+                      if (key == MDX_KEY_PLAY) {
+                         if (MidiClock.state == MidiClockClass::PAUSED) {
+                           MidiClock.handleImmediateMidiStart();
+                         }
+                         else if (MidiClock.state == MidiClockClass::STARTED) {
+                           MidiClock.handleImmediateMidiStop();
+                         }
+                      }
+                    }
                     break;
                 case ButtonsClass::FUNC_BUTTON3:
-                    key = MDX_KEY_STOP;
+                    key = copy_mode ? MDX_KEY_PASTE : MDX_KEY_STOP;
+                    if (event->mask == EVENT_BUTTON_PRESSED) {
+                      if (key == MDX_KEY_STOP) {
+                         MidiClock.handleImmediateMidiStop();
+                      }
+                    }
                     break;
                 case ButtonsClass::FUNC_BUTTON4:
                     key = MDX_KEY_YES;
