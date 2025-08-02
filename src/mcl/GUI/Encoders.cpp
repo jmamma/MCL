@@ -74,7 +74,7 @@ int Encoder::update_rotations(encoder_t *enc) {
 
 int Encoder::update(encoder_t *enc) {
     int inc = update_rotations(enc);
-    inc = inc + (fastmode ? 4 * enc->button : enc->button);
+    inc = fastmode ? (enc->button ? inc * 4 : inc) : inc;
     cur += inc;
     return cur;
 }

@@ -23,7 +23,7 @@
 /* --- Key Repeat Definitions --- */
 #define ARROW_KEY_START_ID         Buttons.FUNC_BUTTON6
 #define NUM_ARROW_KEYS             4
-#define LONG_PRESS_INITIAL_DELAY_MS 160
+#define LONG_PRESS_INITIAL_DELAY_MS 180
 #define LONG_PRESS_REPEAT_RATE_MS   60
 
 enum EventType {
@@ -78,7 +78,6 @@ private:
   uint16_t long_press_start_time[NUM_ARROW_KEYS];
   uint16_t last_repeat_clock[NUM_ARROW_KEYS];
   bool     is_repeating[NUM_ARROW_KEYS];
-  
   // --- Platform-specific implementation for TBD with key repeats ---
   void pollEventsTBD() {
     // Poll for standard button presses and releases

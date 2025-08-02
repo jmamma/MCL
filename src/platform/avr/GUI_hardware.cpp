@@ -116,9 +116,8 @@ void EncodersClass::poll(uint16_t sr) {
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
     if ((sr & 3) != (sr_old & 3)) {
       volatile int8_t *val = &(ENCODER_NORMAL(i));
-      if (BUTTON_DOWN(i)) {
-	  val = &(ENCODER_BUTTON(i));
-      }
+      volatile int8_t *button = &(ENCODER_BUTTON(i));
+      *button = BUTTON_DOWN(i);
 
       if (((sr_old2s[i] & 3) == 0 && (sr_old & 3) == 1 && (sr & 3) == 3) ||
 	  (((sr_old2s[i] & 3) == 3) && (sr_old & 3) == 2 && (sr & 3) == 0)){

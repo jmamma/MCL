@@ -24,7 +24,7 @@
 
 #define MCL_CACHE_USE_ARRAYS 1
 
-#define ENCODER_RES_MULTIPLIER 8
+#define ENCODER_RES_MULTIPLIER 9
 
 // Debug configuration
 
