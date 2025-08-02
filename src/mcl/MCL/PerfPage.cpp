@@ -60,7 +60,7 @@ void PerfPage::set_led_mask() {
     }
   }
   if (last_mask != mask) {
-    MD.set_trigleds(mask, TRIGLED_EXCLUSIVENDYNAMIC);
+    mcl_gui.set_trigleds(mask, TRIGLED_EXCLUSIVENDYNAMIC);
   }
   if (show_menu) {
     last_mask = mask;
@@ -74,7 +74,7 @@ void PerfPage::set_led_mask() {
   blink_mask &= ~mask;
 
   if (last_blink_mask != blink_mask) {
-    MD.set_trigleds(blink_mask, TRIGLED_EXCLUSIVENDYNAMIC, blink);
+    mcl_gui.set_trigleds(blink_mask, TRIGLED_EXCLUSIVENDYNAMIC, blink);
   }
 
   last_blink_mask = blink_mask;

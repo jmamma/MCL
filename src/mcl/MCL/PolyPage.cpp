@@ -11,7 +11,7 @@ void PolyPage::init() {
   DEBUG_PRINT_FN();
   key_interface.on();
   note_interface.init_notes();
-  MD.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
+  mcl_gui.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
 }
 
 void PolyPage::cleanup() {
@@ -56,7 +56,7 @@ void PolyPage::display() {
 
   if (mcl_cfg.poly_mask != trigled_mask) {
     trigled_mask = mcl_cfg.poly_mask;
-    MD.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
+    mcl_gui.set_trigleds(mcl_cfg.poly_mask, TRIGLED_EXCLUSIVE);
   }
 
 }

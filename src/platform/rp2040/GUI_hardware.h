@@ -1,8 +1,9 @@
 #pragma once
 
 #include <inttypes.h>
-#include "platform.h"
 #include "hardware.h"
+#include "platform.h"
+#include "LED_Hardware.h"
 
 #ifdef PLATFORM_TBD
 #include "Ui.h"
@@ -12,7 +13,8 @@ extern class Ui tbd_ui;
 class SR165Class {
   inline void rst();
   inline void clk();
- public:
+
+public:
   SR165Class();
   ALWAYS_INLINE() uint8_t read();
   ALWAYS_INLINE() uint16_t read16();
@@ -21,10 +23,10 @@ class SR165Class {
 
 #ifdef PLATFORM_TBD
 #define GUI_NUM_ENCODERS 4
-#define GUI_NUM_BUTTONS  4 + 5 + 13 + 16
+#define GUI_NUM_BUTTONS 4 + 5 + 13 + 16
 #else
 #define GUI_NUM_ENCODERS 4
-#define GUI_NUM_BUTTONS  8
+#define GUI_NUM_BUTTONS 8
 #endif
 
 class EncodersClass {
@@ -33,7 +35,7 @@ class EncodersClass {
 #ifdef PLATFORM_TBD
   uint16_t pot_old_positions[GUI_NUM_ENCODERS];
 #endif
- public:
+public:
   encoder_t encoders[GUI_NUM_ENCODERS];
 
   EncodersClass();
@@ -42,87 +44,92 @@ class EncodersClass {
   void clearEncoders();
 
 #ifdef PLATFORM_TBD
-  void pollTBD(const ui_data_t& ui_data);
+  void pollTBD(const ui_data_t &ui_data);
 #endif
 
   ALWAYS_INLINE() int8_t getNormal(uint8_t i) { return encoders[i].normal; }
-  //ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }
+  // ALWAYS_INLINE() int8_t getButton(uint8_t i) { return encoders[i].button; }
 
   ALWAYS_INLINE() int8_t limitValue(int8_t value, int8_t min, int8_t max) {
     return (value > max) ? max : (value < min ? min : value);
   }
 };
 #define ENCODER_NORMAL(i) (encoders[(i)].normal)
-#define ENCODER_SHIFT(i)  (encoders[(i)].shift)
+#define ENCODER_SHIFT(i) (encoders[(i)].shift)
 #define ENCODER_BUTTON(i) (encoders[(i)].button)
 #define ENCODER_BUTTON_SHIFT(i) (encoders[(i)].button_shift)
 
-#define B_BIT_CURRENT        0
-#define B_BIT_OLD            1
-#define B_BIT_PRESSED_ONCE   2
-#define B_BIT_DOUBLE_CLICK   3
-#define B_BIT_CLICK          4
-#define B_BIT_LONG_CLICK     5
+#define B_BIT_CURRENT 0
+#define B_BIT_OLD 1
+#define B_BIT_PRESSED_ONCE 2
+#define B_BIT_DOUBLE_CLICK 3
+#define B_BIT_CLICK 4
+#define B_BIT_LONG_CLICK 5
 
 // XXX adjust these to correct length of irq time
 #define DOUBLE_CLICK_TIME 200
-#define LONG_CLICK_TIME   800
+#define LONG_CLICK_TIME 800
 
-#define B_STATUS(i, bit)        IS_BIT_SET8(Buttons.buttons[i].status, bit)
-#define B_SET_STATUS(i, bit)    SET_BIT8(Buttons.buttons[i].status, bit)
-#define B_CLEAR_STATUS(i, bit)  CLEAR_BIT8(Buttons.buttons[i].status, bit)
-#define B_STORE_STATUS(i, bit, j) { if (j) B_SET_STATUS(i, bit);  \
-      else B_CLEAR_STATUS(i, bit); }
+#define B_STATUS(i, bit) IS_BIT_SET8(Buttons.buttons[i].status, bit)
+#define B_SET_STATUS(i, bit) SET_BIT8(Buttons.buttons[i].status, bit)
+#define B_CLEAR_STATUS(i, bit) CLEAR_BIT8(Buttons.buttons[i].status, bit)
+#define B_STORE_STATUS(i, bit, j)                                              \
+  {                                                                            \
+    if (j)                                                                     \
+      B_SET_STATUS(i, bit);                                                    \
+    else                                                                       \
+      B_CLEAR_STATUS(i, bit);                                                  \
+  }
 
-#define B_CURRENT(i)               B_STATUS(i, B_BIT_CURRENT)
-#define SET_B_CURRENT(i)           B_SET_STATUS(i, B_BIT_CURRENT)
-#define CLEAR_B_CURRENT(i)         B_CLEAR_STATUS(i, B_BIT_CURRENT)
-#define STORE_B_CURRENT(i, j)      B_STORE_STATUS(i, B_BIT_CURRENT, j)
+#define B_CURRENT(i) B_STATUS(i, B_BIT_CURRENT)
+#define SET_B_CURRENT(i) B_SET_STATUS(i, B_BIT_CURRENT)
+#define CLEAR_B_CURRENT(i) B_CLEAR_STATUS(i, B_BIT_CURRENT)
+#define STORE_B_CURRENT(i, j) B_STORE_STATUS(i, B_BIT_CURRENT, j)
 
-#define B_OLD(i)                   B_STATUS(i, B_BIT_OLD)
-#define SET_B_OLD(i)               B_SET_STATUS(i, B_BIT_OLD)
-#define CLEAR_B_OLD(i)             B_CLEAR_STATUS(i, B_BIT_OLD)
-#define STORE_B_OLD(i, j)          B_STORE_STATUS(i, B_BIT_OLD, j)
+#define B_OLD(i) B_STATUS(i, B_BIT_OLD)
+#define SET_B_OLD(i) B_SET_STATUS(i, B_BIT_OLD)
+#define CLEAR_B_OLD(i) B_CLEAR_STATUS(i, B_BIT_OLD)
+#define STORE_B_OLD(i, j) B_STORE_STATUS(i, B_BIT_OLD, j)
 
-#define B_PRESSED_ONCE(i)          B_STATUS(i, B_BIT_PRESSED_ONCE)
-#define SET_B_PRESSED_ONCE(i)      B_SET_STATUS(i, B_BIT_PRESSED_ONCE)
-#define CLEAR_B_PRESSED_ONCE(i)    B_CLEAR_STATUS(i, B_BIT_PRESSED_ONCE)
+#define B_PRESSED_ONCE(i) B_STATUS(i, B_BIT_PRESSED_ONCE)
+#define SET_B_PRESSED_ONCE(i) B_SET_STATUS(i, B_BIT_PRESSED_ONCE)
+#define CLEAR_B_PRESSED_ONCE(i) B_CLEAR_STATUS(i, B_BIT_PRESSED_ONCE)
 
-#define B_CLICK(i)                 B_STATUS(i, B_BIT_CLICK)
-#define SET_B_CLICK(i)             B_SET_STATUS(i, B_BIT_CLICK)
-#define CLEAR_B_CLICK(i)           B_CLEAR_STATUS(i, B_BIT_CLICK)
+#define B_CLICK(i) B_STATUS(i, B_BIT_CLICK)
+#define SET_B_CLICK(i) B_SET_STATUS(i, B_BIT_CLICK)
+#define CLEAR_B_CLICK(i) B_CLEAR_STATUS(i, B_BIT_CLICK)
 
-#define B_DOUBLE_CLICK(i)          B_STATUS(i, B_BIT_DOUBLE_CLICK)
-#define SET_B_DOUBLE_CLICK(i)      B_SET_STATUS(i, B_BIT_DOUBLE_CLICK)
-#define CLEAR_B_DOUBLE_CLICK(i)    B_CLEAR_STATUS(i, B_BIT_DOUBLE_CLICK)
+#define B_DOUBLE_CLICK(i) B_STATUS(i, B_BIT_DOUBLE_CLICK)
+#define SET_B_DOUBLE_CLICK(i) B_SET_STATUS(i, B_BIT_DOUBLE_CLICK)
+#define CLEAR_B_DOUBLE_CLICK(i) B_CLEAR_STATUS(i, B_BIT_DOUBLE_CLICK)
 
-#define B_LONG_CLICK(i)          B_STATUS(i, B_BIT_LONG_CLICK)
-#define SET_B_LONG_CLICK(i)      B_SET_STATUS(i, B_BIT_LONG_CLICK)
-#define CLEAR_B_LONG_CLICK(i)    B_CLEAR_STATUS(i, B_BIT_LONG_CLICK)
+#define B_LONG_CLICK(i) B_STATUS(i, B_BIT_LONG_CLICK)
+#define SET_B_LONG_CLICK(i) B_SET_STATUS(i, B_BIT_LONG_CLICK)
+#define CLEAR_B_LONG_CLICK(i) B_CLEAR_STATUS(i, B_BIT_LONG_CLICK)
 
-#define B_PRESS_TIME(i)            (buttons[(i)].press_time)
+#define B_PRESS_TIME(i) (buttons[(i)].press_time)
 
-#define B_LAST_PRESS_TIME(i)       (buttons[(i)].last_press_time)
+#define B_LAST_PRESS_TIME(i) (buttons[(i)].last_press_time)
 
-#define BUTTON_DOWN(button)           (!B_CURRENT(button))
-#define BUTTON_UP(button)             (B_CURRENT(button))
-#define OLD_BUTTON_DOWN(button)       (!B_OLD(button))
-#define OLD_BUTTON_UP(button)         (B_OLD(button))
-#define BUTTON_PRESSED(button)        (OLD_BUTTON_UP(button) && BUTTON_DOWN(button))
+#define BUTTON_DOWN(button) (!B_CURRENT(button))
+#define BUTTON_UP(button) (B_CURRENT(button))
+#define OLD_BUTTON_DOWN(button) (!B_OLD(button))
+#define OLD_BUTTON_UP(button) (B_OLD(button))
+#define BUTTON_PRESSED(button) (OLD_BUTTON_UP(button) && BUTTON_DOWN(button))
 #define BUTTON_DOUBLE_CLICKED(button) (B_DOUBLE_CLICK(button))
-#define BUTTON_LONG_CLICKED(button)   (B_LONG_CLICK(button))
-#define BUTTON_CLICKED(button)        (B_CLICK(button))
-#define BUTTON_RELEASED(button)       (OLD_BUTTON_DOWN(button) && BUTTON_UP(button))
-#define BUTTON_PRESS_TIME(button)     (clock_diff(B_PRESS_TIME(button), slowclock))
+#define BUTTON_LONG_CLICKED(button) (B_LONG_CLICK(button))
+#define BUTTON_CLICKED(button) (B_CLICK(button))
+#define BUTTON_RELEASED(button) (OLD_BUTTON_DOWN(button) && BUTTON_UP(button))
+#define BUTTON_PRESS_TIME(button) (clock_diff(B_PRESS_TIME(button), slowclock))
 
 typedef struct button_s {
-  uint8_t  status;
-  //uint16_t press_time;
-  //uint16_t last_press_time;
+  uint8_t status;
+  // uint16_t press_time;
+  // uint16_t last_press_time;
 } button_t;
 
 class ButtonsClass {
- public:
+public:
   button_t buttons[GUI_NUM_BUTTONS];
 
   static const uint8_t ENCODER1 = 0;
@@ -158,30 +165,32 @@ class ButtonsClass {
   ALWAYS_INLINE() void clear();
   ALWAYS_INLINE() void poll(uint8_t sr);
 #ifdef PLATFORM_TBD
-  void pollTBD(const ui_data_t& ui_data);
+  void pollTBD(const ui_data_t &ui_data);
 #endif
-
 };
 
 class GUIHardware {
 private:
-    bool inGui;
-    uint16_t oldsr;
+  bool inGui;
+  uint16_t oldsr;
+
 public:
-    ButtonsClass Buttons;  // Made public for macro access
+  ButtonsClass Buttons; // Made public for macro access
 #ifdef PLATFORM_TBD
-    uint32_t last_ui_systicks;
+  uint32_t last_ui_systicks;
 #endif
 
-    GUIHardware() : inGui(false), oldsr(0) {}
-    void init();
-    void poll();
-    void clear();
+  LEDHardware led;
 
-    friend class GuiClass;
+  GUIHardware() : inGui(false), oldsr(0) {}
+  void init();
+  void poll();
+  void clear();
+
+  friend class GuiClass;
 };
+
 extern GUIHardware GUI_hardware;
 extern SR165Class SR165;
 extern EncodersClass Encoders;
 extern ButtonsClass Buttons;
-

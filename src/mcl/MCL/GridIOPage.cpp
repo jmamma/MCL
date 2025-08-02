@@ -64,7 +64,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       if (show_track_type) {
         if (track < 5) {
           TOGGLE_BIT16(mcl_cfg.track_type_select, track);
-          MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+          mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
         if (show_offset) {

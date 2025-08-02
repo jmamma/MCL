@@ -3,6 +3,8 @@
 #include "Oled.h"
 #include "Project.h"
 #include "MidiActivePeering.h"
+#include "GUI_hardware.h"
+#include "MD.h"
 
 void MCLGUI::put_value_at2(uint8_t value, char *str) {
    str[0] = (value % 100) / 10 + '0';
@@ -837,6 +839,15 @@ void MCLGUI::draw_panel_number(uint8_t number) {
     oled_display.print('0');
   }
   oled_display.print(number);
+}
+
+void MCLGUI::set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink) {
+  MD.set_trigleds(bitmask, mode, blink);
+  GUI_hardware.led.set_trigleds(bitmask, mode, blink, true);
+}
+
+void MCLGUI::reset_trigleds() {
+  GUI_hardware.led.reset_trigleds();
 }
 
 MCLGUI mcl_gui;

@@ -31,6 +31,7 @@ void GridPage::init() {
   reload_slot_models = false;
   draw_encoders = false;
   // Edge case, prevent R.Clear being called if we're outside of GridPage
+  mcl_gui.reset_trigleds();
   if (mcl.currentPage() != GRID_PAGE) {
     return;
   }

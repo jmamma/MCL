@@ -14,6 +14,7 @@
 #include "Midi.h"
 #include "MidiUartParent.h"
 #include "ElektronModelTypes.h"
+#include "LED.h"
 
 enum class DataType { Kit, Pattern, Global };
 
@@ -186,14 +187,6 @@ public:
     onMessageCallbacks.remove(obj);
   }
 
-};
-
-enum TrigLEDMode {
-  TRIGLED_OVERLAY = 0,
-  TRIGLED_STEPEDIT = 1,
-  TRIGLED_EXCLUSIVE = 2,
-  TRIGLED_EXCLUSIVENDYNAMIC = 3,
-  TRIGLED_MUTE = 4
 };
 
 enum class ElektronCommand {

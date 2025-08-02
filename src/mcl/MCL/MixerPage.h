@@ -93,9 +93,11 @@ public:
   uint8_t note_to_trig(uint8_t note_num);
   void trig(uint8_t track_number) {
     disp_levels[track_number] = MD.kit.levels[track_number];
+    GUI_hardware.led.set_flashled(track_number);
     if (MD.kit.trigGroups[track_number] < 16) {
       disp_levels[MD.kit.trigGroups[track_number]] =
           MD.kit.levels[MD.kit.trigGroups[track_number]];
+      GUI_hardware.led.set_flashled(MD.kit.trigGroups[track_number]);
     }
   }
 

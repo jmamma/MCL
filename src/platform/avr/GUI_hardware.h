@@ -3,6 +3,7 @@
 #include <inttypes.h>
 #include "platform.h"
 #include "hardware.h"
+#include "LED_Hardware.h"
 
 class SR165Class {
   inline void rst();
@@ -150,7 +151,7 @@ private:
     uint16_t oldsr;
 public:
     ButtonsClass Buttons;  // Made public for macro access
-
+    LEDHardware led;
     GUIHardware() : inGui(false), oldsr(0) {}
     void init();
     void poll();

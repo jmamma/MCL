@@ -85,3 +85,15 @@ void picow_init() {
   SPI1.setSCK(SPI1_SCK_PIN);
 }
 
+void setLed(void) {
+  GUI_hardware.led.set_led(STRIP_LED1);
+}
+void clearLed(void) {
+  GUI_hardware.led.clear_led(STRIP_LED1);
+}
+void setLed2(void) {
+  GUI_hardware.led.set_led(STRIP_LED2);
+}
+void clearLed2(void) {
+  GUI_hardware.led.clear_led(STRIP_LED2);
+}

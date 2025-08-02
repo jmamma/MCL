@@ -235,7 +235,7 @@ void LFOPage::display() {
               lfo_track->length, mute_mask, slide_mask, true);
     if ((uint16_t)lfo_track->pattern_mask != trigled_mask) {
       trigled_mask = (uint16_t)lfo_track->pattern_mask;
-      MD.set_trigleds(lfo_track->pattern_mask, TRIGLED_STEPEDIT);
+      mcl_gui.set_trigleds(lfo_track->pattern_mask, TRIGLED_STEPEDIT);
     }
   }
 

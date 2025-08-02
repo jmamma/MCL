@@ -120,6 +120,7 @@ void PageSelectPage::cleanup() {
   note_interface.init_notes();
   MD.set_trigleds(0, TRIGLED_OVERLAY);
   MD.popup_text(127, 2);
+  mcl_gui.reset_trigleds();
 }
 
 uint8_t PageSelectPage::get_nextpage_down() {
@@ -283,7 +284,7 @@ void PageSelectPage::display() {
   uint16_t led_mask = 1 << page_select;
   if (trigled_mask != led_mask) {
     trigled_mask = led_mask;
-    MD.set_trigleds(trigled_mask, TRIGLED_EXCLUSIVE);
+    mcl_gui.set_trigleds(trigled_mask, TRIGLED_EXCLUSIVE);
   }
 }
 

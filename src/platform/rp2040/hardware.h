@@ -59,6 +59,15 @@ typedef struct encoder_s {
 
 inline void toggleLed(void) {
 }
+inline void toggleLed2(void) {
+}
+
+#ifdef PLATFORM_TBD
+void setLed(void);
+void clearLed(void);
+void setLed2(void);
+void clearLed2(void);
+#else
 inline void setLed(void) {
 }
 inline void clearLed(void) {
@@ -67,9 +76,7 @@ inline void setLed2(void) {
 }
 inline void clearLed2(void) {
 }
-inline void toggleLed2(void) {
-}
-
+#endif
 extern void change_usb_mode(uint8_t mode);
 
 extern void picow_init();

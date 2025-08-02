@@ -2,6 +2,7 @@
 #include "MD.h"
 #include "Midi.h"
 #include "MidiActivePeering.h"
+#include "MCLGUI.h"
 /*
 KeyInterfaceTask key_interface_task;
 
@@ -48,7 +49,7 @@ void KeyInterface::send_md_leds(TrigLEDMode mode) {
       SET_BIT16(led_mask, i);
     }
   }
-  MD.set_trigleds(led_mask, mode);
+  mcl_gui.set_trigleds(led_mask, mode);
 }
 
 void KeyInterface::enable_listener() {
@@ -87,6 +88,7 @@ bool KeyInterface::off() {
     return false;
   }
   MD.deactivate_key_interface();
+  mcl_gui.reset_trigleds();
   return true;
 }
 

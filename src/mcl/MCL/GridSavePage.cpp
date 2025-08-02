@@ -109,7 +109,7 @@ void GridSavePage::group_select() {
   show_track_type = true;
   char str[] = "SAVE GROUPS";
   MD.popup_text(str, true);
-  MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+  mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 
 bool GridSavePage::handleEvent(gui_event_t *event) {

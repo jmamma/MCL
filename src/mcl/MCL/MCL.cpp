@@ -314,7 +314,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         if (mcl.currentPage() == GRID_LOAD_PAGE ||
             mcl.currentPage() == GRID_SAVE_PAGE ||
             (mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu)) { // ||
-//            (mcl.currentPage() == MIXER_PAGE && mixer_page.preview_mute_set != 255)) {
+//            (mcl.currentPage() == MIXER_PAGE && mixer_page.preview_mute_set != 255))
           return false;
         }
         if (key_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -330,7 +330,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         key_interface.on(clear_states);
         grid_page.bank = key - MDX_KEY_BANKA + MD.currentBank * 4;
         uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-        MD.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+        mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
 
         grid_page.send_row_led();
 
@@ -471,11 +471,12 @@ bool mcl_handleEvent(gui_event_t *event) {
     }
   }
 
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    mcl.setPage(PAGE_SELECT_PAGE);
-    return true;
+  if (EVENT_BUTTON(event)) {
+    if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+      mcl.setPage(PAGE_SELECT_PAGE);
+      return true;
+    }
   }
-
   return false;
 }
 

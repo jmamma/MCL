@@ -159,6 +159,7 @@ void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   disable_record();
+  GUI_hardware.led.clear_trigleds();
   if (show_seq_menu) {
     encoders[0] = opt_param1_capture;
     encoders[1] = opt_param2_capture;
@@ -291,7 +292,7 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
     }
   }
   if (last_mute_mask != mute_mask) {
-    MD.set_trigleds(mute_mask, is_md_device ? TRIGLED_MUTE : TRIGLED_EXCLUSIVE);
+    mcl_gui.set_trigleds(mute_mask, is_md_device ? TRIGLED_MUTE : TRIGLED_EXCLUSIVE);
     return true;
   }
   return false;
@@ -482,12 +483,17 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
       if (mask_type == MASK_MUTE) {
         MD.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
+        GUI_hardware.led.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
       }
     }
     if (locks_on_step_mask_ != locks_on_step_mask) {
       locks_on_step_mask = locks_on_step_mask_;
       MD.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
     }
+
+    GUI_hardware.led.set_trigleds(mask, TRIGLED_STEPEDIT); //Normal
+    GUI_hardware.led.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1); //Blink leds
+    if (MidiClock.state == 2) { GUI_hardware.led.toggle_trigled(active_track.step_count - offset); }
   }
 }
 
