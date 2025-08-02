@@ -217,7 +217,7 @@ void MCL::setup() {
 
 bool tbd_handleEvent(gui_event_t *event) {
     // If button press is greater than 4, then we need to remap these as CMD
-    if (!EVENT_CMD(event) && event->source > ButtonsClass::BUTTON4) {
+    if (EVENT_BUTTON(event) && event->source > ButtonsClass::BUTTON4) {
         uint8_t key = 255;
         // Handle trigger buttons with range check
         if (event->source >= ButtonsClass::TRIG_BUTTON1) {
