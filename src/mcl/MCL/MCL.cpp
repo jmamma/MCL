@@ -230,8 +230,10 @@ bool tbd_handleEvent(gui_event_t *event) {
                    mcl.currentPage() == SEQ_PTC_PAGE ||
                    mcl.currentPage() == SEQ_EXTSTEP_PAGE) &&
                   (key_interface.is_key_down(MDX_KEY_SCALE) ||
-                   note_interface.notes_count_on() > 0));
-            // Handle function buttons with switch statement
+                   note_interface.notes_count_on() > 0)) ||
+                 ((mcl.currentPage() == PERF_PAGE_0) &&
+                   (note_interface.notes_count_on() > 0));
+           // Handle function buttons with switch statement
             switch (event->source) {
                 case ButtonsClass::FUNC_BUTTON1:
                     key = copy_mode ? MDX_KEY_COPY : MDX_KEY_REC;
