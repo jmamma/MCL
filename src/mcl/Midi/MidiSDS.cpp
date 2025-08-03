@@ -146,7 +146,8 @@ bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
 
   oled_display.clearDisplay();
 
-  latency_ms = (float) (1000 * sizeof(buf) / ( (float) MidiUart.speed * 0.1f)) + 20;
+  latency_ms = (10000UL * sizeof(buf)) / MidiUart.speed + 20;
+
   DEBUG_PRINTLN("latency");
   DEBUG_PRINTLN(latency_ms);
 
@@ -284,7 +285,8 @@ bool MidiSDSClass::sendSamples(bool show_progress) {
 
   uint8_t packet = 0;
 
-  uint16_t latency_ms = (float) (1000 * sizeof(data) / ( (float) MidiUart.speed * 0.1f)) + 20;
+  uint16_t latency_ms = (10000UL * sizeof(data)) / MidiUart.speed + 20;
+
   DEBUG_PRINTLN("latency");
   DEBUG_PRINTLN(latency_ms);
 
