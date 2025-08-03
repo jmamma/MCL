@@ -5,7 +5,7 @@ int MCLEncoder::update(encoder_t *enc) {
   int inc = 0;
   if (enc) {
     inc = update_rotations(enc);
-    inc = fastmode ? (enc->button ? inc * 4 : inc) : inc;
+    inc = enc->button ? inc * fast_speed : inc;
   }
   cur = limit_value(cur, inc, min, max);
   return cur;
@@ -14,7 +14,7 @@ int MCLEncoder::update(encoder_t *enc) {
 int MCLExpEncoder::update(encoder_t *enc) {
   int inc = update_rotations(enc);
 
-  if (fastmode && inc != 0) {
+  if ((!enc->button) && inc != 0) {
     int8_t r = 0;
     while (cur >>= 1) {
       r++;
@@ -26,7 +26,7 @@ int MCLExpEncoder::update(encoder_t *enc) {
     inc = 0;
   }
   else {
-    inc = inc + enc->button;
+    inc = inc;
   }
   cur = limit_value(cur, inc, min, max);
   return cur;
@@ -38,7 +38,7 @@ int MCLRelativeEncoder::update(encoder_t *enc) {
    int inc = 0;
    if (enc) {
      inc = update_rotations(enc);
-     inc = fastmode ? (enc->button ? inc * 4 : inc) : inc;
+     inc = enc->button ? inc * fast_speed : inc;
    }
    cur = inc;
   }

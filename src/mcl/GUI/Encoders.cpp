@@ -42,8 +42,7 @@ void EncoderParent::clear() {
 }
 
 Encoder::Encoder(const char *_name, encoder_handle_t _handler) :
-    EncoderParent(_handler),
-    fastmode(true) {
+    EncoderParent(_handler) {
 }
 
 int Encoder::update_rotations(encoder_t *enc) {
@@ -74,7 +73,7 @@ int Encoder::update_rotations(encoder_t *enc) {
 
 int Encoder::update(encoder_t *enc) {
     int inc = update_rotations(enc);
-    inc = fastmode ? (enc->button ? inc * 4 : inc) : inc;
+    inc = enc->button ? inc * fast_speed : inc;
     cur += inc;
     return cur;
 }

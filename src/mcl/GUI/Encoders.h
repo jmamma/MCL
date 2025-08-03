@@ -10,6 +10,8 @@
 #define ENCODER_RES_MULTIPLIER 1
 #endif
 
+#define ENCODER_FAST_SPEED 7
+#define ENCODER_SLOW_SPEED 4
 class EncoderParent;
 typedef void (*encoder_handle_t)(EncoderParent *enc);
 
@@ -43,7 +45,7 @@ public:
 
 class Encoder : public EncoderParent {
 public:
-    bool fastmode;
+    uint8_t fast_speed;
 
     Encoder(const char *_name = nullptr, encoder_handle_t _handler = nullptr);
     int update_rotations(encoder_t *enc);

@@ -35,7 +35,7 @@ class PerfEncoder : public MCLEncoder {
        name, initial value, and handling function. The initRangeEncoder
        will be called with the constructor arguments.
      **/
-    PerfEncoder(int _max = 127, int _min = 0, int res = 1) : MCLEncoder(_max , _min, res) {
+    PerfEncoder(int _max = 127, int _min = 0, int _res = 1, uint8_t _speed = ENCODER_FAST_SPEED) : MCLEncoder(_max , _min, _res, _speed) {
     }
 
    virtual int update(encoder_t *enc);

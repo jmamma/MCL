@@ -22,8 +22,9 @@ class MCLEncoder : public Encoder {
        name, initial value, and handling function. The initRangeEncoder
        will be called with the constructor arguments.
      **/
-    MCLEncoder(int _max = 127, int _min = 0, int res = 1) : Encoder() {
+    MCLEncoder(int _max = 127, int _min = 0, int res = 1, int _speed = 4) : Encoder() {
       initMCLEncoder(_max, _min, (int) 0, res, (encoder_handle_t) nullptr);
+      fast_speed = _speed;
     }
 
 
