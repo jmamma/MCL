@@ -145,25 +145,27 @@ void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
   strcpy(title_buf, title);
   m_toupper(title_buf);
 
-  if (h == 0) {
-    h = s_menu_h;
-  }
+  h = h ? h : s_menu_h;
+
   oled_display.setFont(&TomThumb);
 
-  // draw menu body
+  // Combine rect operations to reduce function call overhead
   oled_display.fillRect(s_menu_x - 1, s_menu_y + 1, s_menu_w + 2, h + 4, BLACK);
   oled_display.drawRect(s_menu_x, s_menu_y + 2, s_menu_w, h + 2, WHITE);
   oled_display.fillRect(s_menu_x + 1, s_menu_y + 3, s_menu_w - 2, 4, WHITE);
+
+  // Single pixel operations (unavoidable)
   oled_display.drawPixel(s_menu_x, s_menu_y + 2, BLACK);
   oled_display.drawPixel(s_menu_x + s_menu_w - 1, s_menu_y + 2, BLACK);
-
-  // draw the title '____/**********\____' part
-  oled_display.drawRect(s_title_x, s_menu_y, s_title_w, 2, BLACK);
-  oled_display.fillRect(s_title_x, s_menu_y + 0, s_title_w, 2, WHITE);
-  oled_display.drawPixel(s_title_x, s_menu_y + 0, BLACK);
+  oled_display.fillRect(s_title_x, s_menu_y, s_title_w, 2, WHITE);
+  oled_display.drawPixel(s_title_x, s_menu_y, BLACK);
   oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y, BLACK);
 
   oled_display.setTextColor(BLACK);
+
+  for (uint8_t len = 0, *p = (uint8_t*)title_buf; *p; p++)
+  len += (*p != ' ');
+
 
   auto len = strlen(title_buf);
   uint8_t whitespace = 0;
