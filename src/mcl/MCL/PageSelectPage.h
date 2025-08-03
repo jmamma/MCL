@@ -6,8 +6,8 @@
 #include "GUI.h"
 #include "MCLSeq.h"
 
-extern MCLEncoder page_select_param1;
-extern MCLEncoder page_select_param2;
+extern MCLRelativeEncoder page_select_param1;
+extern MCLRelativeEncoder page_select_param2;
 
 class MDCallback : public SysexCallback {
 public:

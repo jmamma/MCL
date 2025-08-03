@@ -184,7 +184,7 @@ void PageSelectPage::loop() {
     } */
   uint8_t last_page_select = page_select;
   auto enc_ = (MCLEncoder *)encoders[0];
-  int8_t diff = enc_->cur - enc_->old;
+  int8_t diff = enc_->cur;
   if ((diff > 0) && (page_select < 16)) {
     page_select = get_nextpage_up();
   }
@@ -192,20 +192,14 @@ void PageSelectPage::loop() {
     page_select = get_nextpage_down();
   }
 
-  enc_->cur = 64 + diff;
-  enc_->old = 64;
-
   enc_ = (MCLEncoder *)encoders[1];
-  diff = enc_->cur - enc_->old;
+  diff = enc_->cur;
   if ((diff > 0) && (page_select < 16)) {
     page_select = get_nextpage_catup();
   }
   if ((diff < 0) && (page_select > 0)) {
     page_select = get_nextpage_catdown();
   }
-
-  enc_->cur = 64 + diff;
-  enc_->old = 64;
 
   if (last_page_select != page_select) {
     draw_popup();
@@ -398,6 +392,6 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-MCLEncoder page_select_param1(0, 127);
-MCLEncoder page_select_param2(0, 127);
+MCLRelativeEncoder page_select_param1(0, 127);
+MCLRelativeEncoder page_select_param2(0, 127);
 PageSelectPage page_select_page(&page_select_param1, &page_select_param2);

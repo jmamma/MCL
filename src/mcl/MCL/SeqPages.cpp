@@ -5,12 +5,10 @@ MCLEncoder seq_param2(0, 4, ENCODER_RES_SEQ);
 MCLEncoder seq_param3(0, 10, ENCODER_RES_SEQ);
 MCLEncoder seq_param4(0, 64, ENCODER_RES_SEQ);
 
-MCLEncoder seq_extparam1(0, 128, ENCODER_RES_SEQ);
-MCLEncoder seq_extparam2(0, 128, ENCODER_RES_SEQ);
-MCLEncoder seq_extparam3(0, 128, ENCODER_RES_SEQ);
-MCLEncoder seq_extparam4(0, 128, ENCODER_RES_SEQ);
-
-
+MCLRelativeEncoder seq_extparam1(0, 127);
+MCLRelativeEncoder seq_extparam2(0, 127, ENCODER_RES_SEQ);
+MCLRelativeEncoder seq_extparam3(1, 128);
+MCLEncoder seq_extparam4(4, 128);
 
 MCLEncoder seq_lock1(0, 127, ENCODER_RES_PARAM);
 MCLEncoder seq_lock2(0, 127, ENCODER_RES_PARAM);

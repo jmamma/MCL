@@ -34,25 +34,13 @@ void SeqExtStepPage::config() {
 void SeqExtStepPage::config_encoders() {
   if (show_seq_menu) { return; }
 
-  seq_extparam1.max = 127;
-  seq_extparam2.max = 127;
-  seq_extparam3.max = 128;
-  seq_extparam3.min = 1;
-
-  seq_extparam4.min = 4;
-  seq_extparam4.max = 128;
   auto &active_track = mcl_seq.ext_tracks[last_ext_track];
 
   if (encoder_init) {
     encoder_init = false;
     uint8_t timing_mid = active_track.get_timing_mid();
-    seq_extparam1.cur = 64;
-
-    seq_extparam2.cur = 64;
-
     seq_extparam4.cur = 16;
     seq_extparam3.handler = NULL;
-    seq_extparam3.cur = 64;
     fov_offset = 0;
     cur_x = 0;
     fov_y = MIDI_NOTE_C3 - 1;
@@ -60,10 +48,6 @@ void SeqExtStepPage::config_encoders() {
     cur_w = timing_mid;
 
   }
-
-  seq_extparam1.old = seq_extparam1.cur;
-  seq_extparam2.old = seq_extparam2.cur;
-  seq_extparam3.old = seq_extparam3.cur;
 
   config();
   SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
@@ -679,30 +663,23 @@ void SeqExtStepPage::loop() {
   if (seq_extparam1.hasChanged()) {
     // Horizontal translation
 
-    int16_t diff = seq_extparam1.cur - seq_extparam1.old;
+    int16_t diff = seq_extparam1.cur;
     if (seq_extparam4.cur == zoom_max && BUTTON_DOWN(Buttons.ENCODER1)) {
       diff *= (timing_mid / 3);
     }
     pos_cur_x(diff);
-    seq_extparam1.cur = 64;
-    seq_extparam1.old = 64;
   }
 
   if (seq_extparam2.hasChanged()) {
     // Vertical translation
-    int16_t diff =
-        seq_extparam2.old - seq_extparam2.cur; // reverse dir for sanity.
+    int16_t diff = -1 * seq_extparam2.cur; // reverse dir for sanity.
     pos_cur_y(diff);
-    seq_extparam2.cur = 64;
-    seq_extparam2.old = 64;
   }
 
   if (seq_extparam3.hasChanged()) {
-    int16_t diff = seq_extparam3.cur - seq_extparam3.old;
+    int16_t diff = seq_extparam3.cur;
     pos_cur_w(diff);
   }
-  seq_extparam3.cur = 64;
-  seq_extparam3.old = 64;
 
   roll_length = active_track.length * timing_mid; // in ticks
 
