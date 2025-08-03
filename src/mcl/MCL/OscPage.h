@@ -33,7 +33,7 @@ public:
     enc2.initMCLEncoder(-99, 99, 0, ENCODER_RES_SEQ);
     enc3.initMCLEncoder(0, 127, 0, ENCODER_RES_SEQ);
     enc4.initMCLEncoder(0, 127, 0, ENCODER_RES_SEQ);
-
+    enc4.fast_speed = ENCODER_FAST_SPEED;
     encoders[0] = (Encoder *)&enc1;
     encoders[1] = (Encoder *)&enc2;
     encoders[2] = (Encoder *)&enc3;
