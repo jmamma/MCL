@@ -68,10 +68,8 @@ class MCLExpEncoder : public MCLEncoder {
 
 class MCLRelativeEncoder : public MCLEncoder {
   public:
-  bool changed;
   MCLRelativeEncoder(int _max = 127, int _min = 0, int res = 1) : MCLEncoder(_max,_min,res) { }
   virtual int update(encoder_t *enc);
-  virtual bool hasChanged();
 };
 
 #endif /* MCLENCODER_H__ */

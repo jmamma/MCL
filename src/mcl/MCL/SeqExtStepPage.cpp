@@ -615,7 +615,7 @@ void SeqExtStepPage::config_menu_entries() {
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
-
+    encoders[1]->rot_res = ENCODER_RES_SEQ;
   } else {
     seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
@@ -624,6 +624,7 @@ void SeqExtStepPage::config_menu_entries() {
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, false);
     seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, true);
+    encoders[1]->rot_res = 1;
   }
 
 }
@@ -660,24 +661,24 @@ void SeqExtStepPage::loop() {
       }
     }
   }
-  if (seq_extparam1.hasChanged()) {
+  int16_t diff = seq_extparam1.getValue();
+  if (diff) {
     // Horizontal translation
 
-    int16_t diff = seq_extparam1.cur;
     if (seq_extparam4.cur == zoom_max && BUTTON_DOWN(Buttons.ENCODER1)) {
       diff *= (timing_mid / 3);
     }
+    else if (!BUTTON_DOWN(Buttons.ENCODER1)) { diff = diff * timing_mid; }
     pos_cur_x(diff);
   }
-
-  if (seq_extparam2.hasChanged()) {
+  diff = seq_extparam2.getValue();
+  if (diff) {
     // Vertical translation
-    int16_t diff = -1 * seq_extparam2.cur; // reverse dir for sanity.
-    pos_cur_y(diff);
+    pos_cur_y(-1 * diff);
   }
 
-  if (seq_extparam3.hasChanged()) {
-    int16_t diff = seq_extparam3.cur;
+  diff = seq_extparam3.getValue();
+  if (diff) {
     pos_cur_w(diff);
   }
 

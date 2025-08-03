@@ -32,21 +32,16 @@ int MCLExpEncoder::update(encoder_t *enc) {
   return cur;
 }
 
+
 int MCLRelativeEncoder::update(encoder_t *enc) {
-  changed = false;
   if (cur == old) {
-    int inc = 0;
-    if (enc) {
-      inc = update_rotations(enc);
-      inc = fastmode ? (enc->button ? inc * 4 : inc) : inc;
-    }
-    cur = inc;
+   int inc = 0;
+   if (enc) {
+     inc = update_rotations(enc);
+     inc = fastmode ? (enc->button ? inc * 4 : inc) : inc;
+   }
+   cur = inc;
   }
-  if (cur != old) { changed = true; }
-  old = cur;
   return cur;
 }
 
-bool MCLRelativeEncoder::hasChanged() {
-    return changed;
-}
