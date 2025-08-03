@@ -111,38 +111,7 @@ public:
 
   void toggle_mute() { mute_state = !mute_state; }
 
-  uint8_t get_timing_mid(uint8_t speed_) {
-    uint8_t timing_mid;
-    switch (speed_) {
-    default:
-    case SEQ_SPEED_1X:
-      timing_mid = 12;
-      break;
-    case SEQ_SPEED_2X:
-      timing_mid = 6;
-      break;
-    case SEQ_SPEED_4X:
-      timing_mid = 3;
-      break;
-    case SEQ_SPEED_3_4X:
-      timing_mid = 16; // 12 * (4.0/3.0);
-      break;
-    case SEQ_SPEED_3_2X:
-      timing_mid = 8; // 12 * (2.0/3.0);
-      break;
-    case SEQ_SPEED_1_2X:
-      timing_mid = 24;
-      break;
-    case SEQ_SPEED_1_4X:
-      timing_mid = 48;
-      break;
-    case SEQ_SPEED_1_8X:
-      timing_mid = 96;
-      break;
-    }
-    return timing_mid;
-  }
-
+  uint8_t get_timing_mid(uint8_t speed_);
   uint8_t get_timing_mid() { return get_timing_mid(speed); }
 
   FORCED_INLINE() uint8_t get_timing_mid_inline() {
@@ -177,79 +146,12 @@ public:
     return timing_mid;
   }
 
+
+  void get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d);
+
+  float get_speed_multiplier(uint8_t speed_);
+
   float get_speed_multiplier() { return get_speed_multiplier(speed); }
-
-  void get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d) {
-    n = 1;
-    d = 1;
-    switch (speed_) {
-    default:
-    case SEQ_SPEED_1X:
-      //n = 1;
-      //d = 1;
-      break;
-    case SEQ_SPEED_2X:
-      //n = 1;
-      d = 2;
-      break;
-    case SEQ_SPEED_4X:
-      //n = 1;
-      d = 4;
-      break;
-    case SEQ_SPEED_3_4X:
-      n = 4;
-      d = 3;
-      break;
-    case SEQ_SPEED_3_2X:
-      n = 2;
-      d = 3;
-      break;
-    case SEQ_SPEED_1_2X:
-      n = 2;
-      //d = 1;
-      break;
-    case SEQ_SPEED_1_4X:
-      n = 4;
-      //d = 1;
-      break;
-    case SEQ_SPEED_1_8X:
-      n = 8;
-      //d = 1;
-      break;
-    }
-  }
-
-  float get_speed_multiplier(uint8_t speed_) {
-    float multi;
-    switch (speed_) {
-    default:
-    case SEQ_SPEED_1X:
-      multi = 1;
-      break;
-    case SEQ_SPEED_2X:
-      multi = 0.5;
-      break;
-    case SEQ_SPEED_4X:
-      multi = 0.25;
-      break;
-    case SEQ_SPEED_3_4X:
-      multi = (4.0 / 3.0);
-      break;
-    case SEQ_SPEED_3_2X:
-      multi = (2.0 / 3.0);
-      break;
-    case SEQ_SPEED_1_2X:
-      multi = 2.0;
-      break;
-    case SEQ_SPEED_1_4X:
-      multi = 4.0;
-      break;
-    case SEQ_SPEED_1_8X:
-      multi = 8.0;
-      break;
-    }
-    return multi;
-  }
 
   uint8_t get_quantized_step() {
     uint8_t u = 0;
