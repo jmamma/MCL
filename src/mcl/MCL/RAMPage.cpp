@@ -553,19 +553,20 @@ void RAMPage::display() {
   oled_display.drawRoundRect(progress_x, progress_y, progress_w, 4, 1, WHITE);
 
   if ((RAMPage::rec_states[page_id] != STATE_NOSTATE)) {
+    uint16_t numerator, denominator;
+
     if (MidiClock.clock_less_than(transition_step + record_len,
                                   MidiClock.div16th_counter)) {
+        numerator = MidiClock.div16th_counter;
+        denominator = transition_step + record_len;
+    } else {
+        uint8_t n = 14 + page_id;
+        numerator = mcl_seq.md_tracks[n].step_count;
+        denominator = mcl_seq.md_tracks[n].length;
+    }
 
-      remain = ((float)(MidiClock.div16th_counter) /
-                (float)(transition_step + record_len));
-    }
-    //  else if (RAMPage::rec_states[page_id] == STATE_RECORD{
-    else {
-      uint8_t n = 14 + page_id;
-      remain = (float)mcl_seq.md_tracks[n].step_count /
-               (float)mcl_seq.md_tracks[n].length;
-    }
-    uint8_t width = remain * (progress_w - 1);
+    // Fixed-point arithmetic: multiply first to maintain precision
+    uint8_t width = ((uint32_t)numerator * (progress_w - 1)) / denominator;
     oled_display.fillRect(progress_x + 1, progress_y, width, 4, WHITE);
   }
 

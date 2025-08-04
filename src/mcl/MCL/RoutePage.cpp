@@ -120,10 +120,7 @@ void RoutePage::display() {
   }
   mcl_gui.draw_knob(1, "QUANT", Q);
 
-  uint8_t step_count =
-      (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-      (64 *
-       ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
+  uint8_t step_count = (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) % 64;
 
   mcl_gui.put_value_at(step_count, Q);
   strcpy(info_line2, "STEP ");

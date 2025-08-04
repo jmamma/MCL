@@ -1287,22 +1287,16 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
 
   uint8_t playing_idx;
   if (_playing_idx == 255) {
+    uint8_t step_count;
     if (midi_device == &MD) {
-      playing_idx =
-          (mcl_seq.md_tracks[last_md_track].step_count -
-           ((mcl_seq.md_tracks[last_md_track].step_count) / 16) * 16) /
-          4;
+      step_count = mcl_seq.md_tracks[last_md_track].step_count;
     }
 #ifdef EXT_TRACKS
     else {
-      playing_idx =
-          (mcl_seq.ext_tracks[last_ext_track].step_count -
-           ((mcl_seq.ext_tracks[last_ext_track].step_count) / 16) * 16) /
-          4;
+      step_count = mcl_seq.ext_tracks[last_ext_track].step_count;
     }
 #endif
-  } else {
-    playing_idx = _playing_idx;
+    playing_idx = (step_count % 16) / 4;
   }
   uint8_t w = pidx_w;
 
@@ -1326,7 +1320,6 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
     pidx_x += w + 1;
   }
 }
-
 //  ref: design/Sequencer.png
 void SeqPage::display() {
 

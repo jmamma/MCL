@@ -167,10 +167,8 @@ void GridLoadPage::display() {
       // draw step count
     }
     oled_display.setFont(&TomThumb);
-    uint8_t step_count =
-        (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-        (64 *
-         ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
+    uint8_t step_count = (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) % 64;
+
     oled_display.setCursor(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 11,
                            MCLGUI::s_menu_y + 4 + 17);
     oled_display.print(step_count);
