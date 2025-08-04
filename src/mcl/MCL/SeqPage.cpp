@@ -115,7 +115,6 @@ void SeqPage::init() {
   MidiUartParent::handle_midi_lock = 0;
   disable_record();
   page_count = 4;
-  ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   config_encoders();
   seqpage_midi_events.setup_callbacks();
 

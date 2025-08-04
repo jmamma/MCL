@@ -87,6 +87,7 @@ void SeqStepPage::init() {
   reset_on_release = false;
   ignore_release = 0;
   update_params_queue = false;
+  ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seq_param1.max = NUM_TRIG_CONDITIONS * 2;
   seq_param2.min = 1;
   seq_param2.old = 12;

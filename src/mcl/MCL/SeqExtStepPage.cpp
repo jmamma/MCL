@@ -40,7 +40,6 @@ void SeqExtStepPage::config_encoders() {
     encoder_init = false;
     uint8_t timing_mid = active_track.get_timing_mid();
     seq_extparam4.cur = 16;
-    seq_extparam3.handler = NULL;
     fov_offset = 0;
     cur_x = 0;
     fov_y = MIDI_NOTE_C3 - 1;
