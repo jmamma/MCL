@@ -235,7 +235,7 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
     }
     ROTATE_LEFT(temp_bitmask, 8);
   }
-  if (s_progress_count == s_progress_speed) {
+  if (s_progress_count == s_progress_speed * ENCODER_RES_MULTIPLIER) { //hack use ENCODER_RES_MULTIPLIER
     s_progress_cookie = bitmask;
     ROTATE_LEFT(s_progress_cookie, 8);
     s_progress_count = 0;
