@@ -303,7 +303,8 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
       note_num--;
     }
     if (size < 12) {
-      pos = round((float)(size - 1) * (float)note_num / 12.0);
+       pos = (note_num * (size - 1) + 6) / 12;  // +6 for rounding
+
     }
   }
 

@@ -169,9 +169,9 @@ void OscPage::display() {
     // GUI.printf_at(6, "%f", freq);
   } else {
     uint8_t s = enc1.cur - 8;
-    uint8_t note = s - (floor(s / 12) * 12);
+    uint8_t note = s - ((s / 12) * 12);
     oled_display.print(number_to_note.notes_upper[note]);
-    oled_display.print((uint8_t)floor(s / 12));
+    oled_display.print((uint8_t)(s / 12));
     if (enc2.cur < 0) {
       oled_display.print(F("+"));
     }
@@ -282,7 +282,7 @@ void OscPage::draw_levels() {
 
   for (uint8_t i = 0; i < 16; i++) {
 
-    scaled_level = (uint8_t)(((float)sine_levels[i] / (float)127) * 15);
+    scaled_level = (((uint16_t) sine_levels[i] * 15) / 127) + 0;
     if (note_interface.is_note_on(i)) {
       oled_display.fillRect(0 + i * 4, 12 + (15 - scaled_level), 3,
                             scaled_level + 1, WHITE);
