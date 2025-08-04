@@ -42,6 +42,13 @@ ISR(TIMER3_COMPA_vect) {
   select_bank(BANK0);
 
   g_clock_ms++;
+  g_clock_ticks++;
+
+  if (g_clock_ticks == 60000) {
+    g_clock_ticks = 0;
+    g_clock_minutes++;
+  }
+
   MidiUart.tickActiveSense();
   MidiUart2.tickActiveSense();
   MidiUartUSB.tickActiveSense();
