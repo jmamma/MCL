@@ -888,9 +888,9 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (grid_page.bank_popup > 0) {
         if (note_interface.notes_all_off()) {
-          //note_interface.init_notes();
+          // note_interface.init_notes();
           grid_page.bank_popup_loadmask = 0;
-          //grid_page.bank_popup = 0;
+          // grid_page.bank_popup = 0;
           grid_page.close_bank_popup();
         }
         return true;
@@ -943,13 +943,13 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
     uint8_t key = event->source;
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
-            if (show_slot_menu) {
+      if (show_slot_menu) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
           switch (key) {
           case MDX_KEY_BANKA:
           case MDX_KEY_BANKB:
           case MDX_KEY_BANKC: {
-            loadmode:
+          loadmode:
             mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
             bool persistent = false;
             grid_load_page.draw_popup_title(mcl_cfg.load_mode, persistent);
@@ -967,9 +967,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
         return grid_slot_page.handleEvent(event);
       }
     }
-    next:
+  next:
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (key != MDX_KEY_FUNC) { draw_encoders = false; }
+      if (key != MDX_KEY_FUNC) {
+        draw_encoders = false;
+      }
       uint8_t inc = 1;
       if (key_interface.is_key_down(MDX_KEY_FUNC)) {
         inc = 4;
@@ -1040,15 +1042,15 @@ bool GridPage::handleEvent(gui_event_t *event) {
             goto loadmode;
           }
         }
-       }
+        }
       }
       switch (key) {
       case MDX_KEY_SCALE: {
-          grid_page.grid_select_apply = !grid_page.grid_select_apply;
-          swap_grids();
-          init();
-          return true;
-       }
+        grid_page.grid_select_apply = !grid_page.grid_select_apply;
+        swap_grids();
+        init();
+        return true;
+      }
       case MDX_KEY_UP: {
       up:
         param2.cur -= inc;
@@ -1122,22 +1124,23 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
   }
 
-  if (!show_slot_menu) {
-    if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
-    save:
-      mcl.setPage(GRID_SAVE_PAGE);
-
-      return true;
-    }
-
-    if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    load:
-      mcl.setPage(GRID_LOAD_PAGE);
-
-      return true;
-    }
-  }
   if (EVENT_BUTTON(event)) {
+
+    if (!show_slot_menu) {
+      if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
+      save:
+        mcl.setPage(GRID_SAVE_PAGE);
+
+        return true;
+      }
+
+      if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
+      load:
+        mcl.setPage(GRID_LOAD_PAGE);
+
+        return true;
+      }
+    }
 
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
     slot_menu_on:
@@ -1190,8 +1193,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       return true;
     }
-    if ((EVENT_PRESSED(event, Buttons.BUTTON1) && BUTTON_DOWN(Buttons.BUTTON4)) ||
-        (EVENT_PRESSED(event, Buttons.BUTTON4) && BUTTON_DOWN(Buttons.BUTTON1))) {
+    if ((EVENT_PRESSED(event, Buttons.BUTTON1) &&
+         BUTTON_DOWN(Buttons.BUTTON4)) ||
+        (EVENT_PRESSED(event, Buttons.BUTTON4) &&
+         BUTTON_DOWN(Buttons.BUTTON1))) {
     system:
       system_page.isSetup = false;
       mcl.pushPage(SYSTEM_PAGE);
