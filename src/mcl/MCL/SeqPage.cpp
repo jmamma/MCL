@@ -189,16 +189,16 @@ void SeqPage::bootstrap_record() {
 void SeqPage::config_mask_info(bool silent) {
   switch (mask_type) {
   case MASK_PATTERN:
-    strcpy(info2, "TRIG");
+    strcpy_P(info2, PSTR("TRIG"));
     break;
   case MASK_LOCK:
-    strcpy(info2, "LOCK");
+    strcpy_P(info2, PSTR("LOCK"));
     break;
   case MASK_SLIDE:
-    strcpy(info2, "SLIDE");
+    strcpy_P(info2, PSTR("SLIDE"));
     break;
   case MASK_MUTE:
-    strcpy(info2, "MUTE");
+    strcpy_P(info2, PSTR("MUTE"));
     break;
   }
   if (!silent) {
@@ -521,6 +521,7 @@ uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition,
 void SeqPage::draw_knob_conditional(uint8_t cond) {
   char K[4];
   conditional_str(K, cond);
+  //draw_knob(0, PRG_TO_RAM("COND"), K);
   draw_knob(0, "COND", K);
 }
 /*
@@ -589,7 +590,7 @@ void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
   char K[4];
-  strcpy(K, "--");
+  strcpy_P(K, PSTR("--"));
   K[3] = '\0';
 
   if (timing == 0) {

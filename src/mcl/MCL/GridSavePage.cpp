@@ -27,7 +27,7 @@ void GridSavePage::draw_popup() {
   char str[16] = "GROUP SAVE";
 
   if (!show_track_type) {
-    strcpy(str, "SAVE TRACKS");
+    strcpy_P(str, PSTR("SAVE TRACKS"));
   }
   mcl_gui.draw_popup(str, true);
 }

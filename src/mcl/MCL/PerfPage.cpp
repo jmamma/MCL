@@ -250,7 +250,7 @@ void PerfPage::display() {
   if (learn) {
     draw_dest(1, encoders[1]->cur);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
-    strcpy(info1, "LCK>  ");
+    strcpy_P(info1, PSTR("LCK>  "));
     mcl_gui.put_value_at(page_mode, info1 + 4);
 
     const char *str1 = "LCK";

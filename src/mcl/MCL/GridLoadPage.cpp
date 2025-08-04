@@ -27,17 +27,17 @@ void GridLoadPage::setup() {}
 void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
   switch (mode) {
   case LOAD_MANUAL: {
-    strcpy(str, "MANUAL");
+    strcpy_P(str, PSTR("MANUAL"));
     break;
   }
 
   case LOAD_QUEUE: {
-    strcpy(str, "QUEUE");
+    strcpy_P(str, PSTR("QUEUE"));
     break;
   }
 
   case LOAD_AUTO: {
-    strcpy(str, "AUTO");
+    strcpy_P(str, PSTR("AUTO"));
     break;
   }
   }
@@ -50,10 +50,10 @@ void GridLoadPage::draw_popup_title(uint8_t mode, bool persistent) {
 
 void GridLoadPage::draw_popup() {
   char str[16];
-  strcpy(str, "GROUP LOAD");
+  strcpy_P(str, PSTR("GROUP LOAD"));
 
   if (!show_track_type) {
-    strcpy(str, "LOAD TRACKS");
+    strcpy_P(str, PSTR("LOAD TRACKS"));
     // str[10] = 'X' + proj.get_grid();
   }
   mcl_gui.draw_popup(str, true);
@@ -93,17 +93,17 @@ void GridLoadPage::loop() {
 void GridLoadPage::get_modestr(char *modestr) {
   switch (encoders[0]->cur) {
   case LOAD_MANUAL: {
-    strcpy(modestr, "MAN");
+    strcpy_P(modestr, PSTR("MAN"));
     break;
   }
 
   case LOAD_QUEUE: {
-    strcpy(modestr, "QUE");
+    strcpy_P(modestr, PSTR("QUE"));
     break;
   }
 
   case LOAD_AUTO: {
-    strcpy(modestr, "AUT");
+    strcpy_P(modestr, PSTR("AUT"));
     break;
   }
   }
@@ -123,7 +123,7 @@ void GridLoadPage::display() {
     //                              "STEP", K);
     if (show_offset) {
       oled_display.setCursor(MCLGUI::s_menu_x + 26, 14);
-      oled_display.print("DESTINATION");
+      oled_display.print(F("DESTINATION"));
       trig_mask = 0;
       SET_BIT16(trig_mask, offset);
       // if (offset < 16) {
