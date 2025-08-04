@@ -59,20 +59,21 @@ bool MCLClipBoard::close() {
 }
 
 bool MCLClipBoard::copy_sequencer(uint8_t offset) {
-  if (offset < NUM_MD_TRACKS) {
-    for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-      if (!copy_sequencer_track(n)) {
-        return false;
-      }
-    }
-    copy_sequencer_track(MDFX_TRACK_NUM + NUM_MD_TRACKS);
-  } else {
-    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-      if (!copy_sequencer_track(n + NUM_MD_TRACKS)) {
-        return false;
-      }
+  bool is_md = (offset < NUM_MD_TRACKS);
+  uint8_t start_track = is_md ? 0 : NUM_MD_TRACKS;
+  uint8_t num_tracks = is_md ? NUM_MD_TRACKS : NUM_EXT_TRACKS;
+
+  for (uint8_t n = 0; n < num_tracks; n++) {
+    if (!copy_sequencer_track(start_track + n)) {
+      return false;
     }
   }
+
+  // Special MD case
+  if (is_md && !copy_sequencer_track(MDFX_TRACK_NUM + NUM_MD_TRACKS)) {
+    return false;
+  }
+
   return true;
 }
 
