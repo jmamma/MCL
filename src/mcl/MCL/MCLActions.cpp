@@ -771,8 +771,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         }
       } else if (chains[n].get_length() != QUANT_LEN) {
         links[n].loops = 1;
-        links[n].length = (float)chains[n].get_length() /
-                          (float)gdt->seq_track->get_speed_multiplier();
+        links[n].length = max(1,(float)chains[n].get_length() /
+                          (float)gdt->seq_track->get_speed_multiplier());
         while (links[n].loops * links[n].length < 8) {
           links[n].loops++;
         }
