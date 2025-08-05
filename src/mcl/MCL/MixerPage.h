@@ -49,7 +49,6 @@ public:
 
   PageIndex last_page = NULL_PAGE;
 
-  uint8_t current_mute_set = 255;
   uint8_t preview_mute_set = 255;
   uint8_t load_mute_set = 255;
 
@@ -82,7 +81,6 @@ public:
   void disable_record_mutes(bool clear = false);
   void oled_draw_mutes();
   void switch_mute_set(uint8_t state, bool load_perf = false, bool *load_types = nullptr);
-  void populate_mute_set();
 
   void load_perf_locks(uint8_t state);
   void toggle_or_solo(bool solo = false);

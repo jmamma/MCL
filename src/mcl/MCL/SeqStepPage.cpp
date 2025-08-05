@@ -97,14 +97,12 @@ void SeqStepPage::init() {
 }
 
 void SeqStepPage::disable_paramupdate_events() {
-  mcl_seq.midi_events.update_params = false;
   MD.midi_events.disable_live_kit_update();
   seq_ptc_page.cc_link_enable = false;
   RAMPage::cc_link_enable = false;
 }
 
 void SeqStepPage::enable_paramupdate_events() {
-  mcl_seq.midi_events.update_params = true;
   MD.midi_events.enable_live_kit_update();
   seq_ptc_page.cc_link_enable = true;
   RAMPage::cc_link_enable = true;

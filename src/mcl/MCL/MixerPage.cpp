@@ -394,26 +394,6 @@ void MixerPage::disable_record_mutes(bool clear) {
   }
 }
 
-void MixerPage::populate_mute_set() {
-  if (current_mute_set == 255) {
-    return;
-  }
-  for (uint8_t dev = 0; dev < 2; dev++) {
-
-    uint8_t len = (dev == 0) ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
-
-    for (uint8_t n = 0; n < len; n++) {
-      SeqTrack *seq_track = (dev == 0) ? (SeqTrack *)&mcl_seq.md_tracks[n]
-                                       : (SeqTrack *)&mcl_seq.ext_tracks[n];
-      if (seq_track->mute_state == SEQ_MUTE_ON) {
-        CLEAR_BIT16(mute_sets[dev].mutes[current_mute_set], n);
-      } else {
-        SET_BIT16(mute_sets[dev].mutes[current_mute_set], n);
-      }
-    }
-  }
-}
-
 void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) {
 
   MidiDevice *devs[2] = {

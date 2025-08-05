@@ -345,25 +345,13 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   if (track_param == 32) { // Mute
     mcl_seq.md_tracks[track].mute_state = value > 0;
-    if (mixer_page.current_mute_set != 255) {
-      if (value > 0) {
-        CLEAR_BIT16(mixer_page.mute_sets[0].mutes[mixer_page.current_mute_set],
-                    track);
-      } else {
-        SET_BIT16(mixer_page.mute_sets[0].mutes[mixer_page.current_mute_set],
-                  track);
-      }
-    }
-  }
+   }
   if (track_param > 23) {
     return;
   } // ignore level/mute
   perf_page.learn_param(track, track_param, value);
   lfo_page.learn_param(track, track_param, value);
 
-  if (!update_params) {
-    return;
-  }
 }
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
@@ -372,21 +360,15 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
 
   if (param == midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
+
    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
       if (mcl_seq.ext_tracks[n].channel != channel) {
         continue;
       }
-      mcl_seq.ext_tracks[n].mute_state = value > 0;
-      if (mixer_page.current_mute_set == 255) {
-        continue;
-      }
       if (value > 0) {
-        CLEAR_BIT16(
-            mixer_page.mute_sets[1].mutes[mixer_page.current_mute_set], n);
-        mcl_seq.ext_tracks[n].buffer_notesoff();
+        mcl_seq.ext_tracks[n].mute_on();
       } else {
-        SET_BIT16(
-            mixer_page.mute_sets[1].mutes[mixer_page.current_mute_set], n);
+        mcl_seq.ext_tracks[n].mute_state = 0;
       }
     }
     mixer_page.redraw_mutes = true;
@@ -408,7 +390,6 @@ void MCLSeqMidiEvents::setup_callbacks() {
   Midi.addOnNoteOffCallback(
        this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
 
-  update_params = true;
   Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
