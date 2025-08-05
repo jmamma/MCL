@@ -543,14 +543,14 @@ void RAMPage::display() {
   uint8_t w_x = 0, w_y = 2;
   oled_display.drawPixel(w_x + 24, w_y + 0, WHITE);
   //oled_display.drawCircle(w_x + 24, w_y + 0, 2, WHITE);
-  oled_display.drawRoundRect(w_x + 22, w_y - 2, 5, 5, 1, WHITE);
+  mcl_gui.drawRoundRect(w_x + 22, w_y - 2, 5, 5, WHITE);
   oled_display.drawLine(w_x + 12, w_y - 1, w_x + 24, w_y - 3, WHITE);
   oled_display.drawLine(w_x + 17, w_y + 15, w_x + 26, w_y + 2, WHITE);
 
   uint8_t progress_x = w_x + 0;
   uint8_t progress_y = w_y + 20;
   uint8_t progress_w = 19;
-  oled_display.drawRoundRect(progress_x, progress_y, progress_w, 4, 1, WHITE);
+  mcl_gui.drawRoundRect(progress_x, progress_y, progress_w, 4, WHITE);
 
   if ((RAMPage::rec_states[page_id] != STATE_NOSTATE)) {
     uint16_t numerator, denominator;

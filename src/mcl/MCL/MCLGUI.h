@@ -103,6 +103,8 @@ public:
   void draw_knob(uint8_t i, const char *title, const char *text);
   void draw_knob(uint8_t i, Encoder *enc, const char *name, bool highlight = false);
 
+  void drawRoundRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color);
+
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink = false);
   void reset_trigleds();
 
