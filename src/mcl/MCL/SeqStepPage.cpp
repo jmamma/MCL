@@ -148,7 +148,7 @@ void SeqStepPage::display() {
         uint8_t note_num = seq_param4.cur;
         // + base;
 
-        uint8_t note = note_num - (note_num / 12) * 12;
+        uint8_t note = note_num % 12;
         uint8_t oct = note_num / 12;
 
         strcpy(K, number_to_note.notes_upper[note]);

@@ -68,7 +68,7 @@ void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
 uint8_t NoteInterface::note_to_track_map(uint8_t note, uint8_t device) {
   uint8_t note_to_track_map[7] = {0, 2, 4, 5, 7, 9, 11};
   for (uint8_t i = 0; i < 7; i++) {
-    if (note_to_track_map[i] == (note - (note / 12) * 12)) {
+    if (note_to_track_map[i] == (note % 12)) {
       if (device == DEVICE_A4) {
         return i + NUM_MD_TRACKS;
       }
@@ -83,7 +83,7 @@ uint8_t NoteInterface::get_first_md_note() {
   uint32_t on = notes_on;
 
   uint8_t n = 0;
-  while (on) { 
+  while (on) {
     if (on & 1) {
       return n;
     }

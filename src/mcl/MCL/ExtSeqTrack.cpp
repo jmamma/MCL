@@ -18,7 +18,7 @@ void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
   speed = new_speed;
   uint8_t timing_mid = get_timing_mid();
   if (mod12_counter > timing_mid) {
-    mod12_counter = mod12_counter - (mod12_counter / timing_mid) * timing_mid;
+    mod12_counter = mod12_counter % timing_mid;
     // step_count_inc();
   }
 }
