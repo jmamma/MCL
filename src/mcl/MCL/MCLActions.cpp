@@ -731,7 +731,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
   // float div192th_per_second = tempo * 0.8f;
   // float div192th_time = 1.0 / div192th_per_second;
-  float div192th_time = 1.25 / tempo;
+  float div192th_time = 1.25f / tempo;
 
   // float div192th_time = 1.25 / tempo;
   // diff * div19th_time > 80ms equivalent to diff > (0.08/1.25) * tempo
@@ -757,7 +757,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     while ((gdt->seq_track->count_down && (MidiClock.state == 2))) {
       proj.select_grid(old_grid);
       handleIncomingMidi();
-      if (((float)diff > 0.064 * tempo) && gui_update) {
+      if (((float)diff > 0.064f * tempo) && gui_update) {
         GUI.loop();
       }
     }
@@ -773,7 +773,10 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         links[n].loops = 1;
         links[n].length = max(1,(float)chains[n].get_length() /
                           (float)gdt->seq_track->get_speed_multiplier());
-        while (links[n].loops * links[n].length < 8) {
+
+        constexpr uint8_t min_steps_before_transition = 8;
+
+        while (links[n].loops * links[n].length < min_steps_before_transition) {
           links[n].loops++;
         }
       }
