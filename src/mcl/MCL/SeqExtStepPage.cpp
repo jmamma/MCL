@@ -89,8 +89,8 @@ void SeqExtStepPage::draw_seq_pos() {
   if (is_within_fov(cur_tick_x)) {
 
     uint8_t cur_tick_fov_x =
-        min(127, draw_x + fov_pixels_per_tick * (cur_tick_x - fov_offset));
-    oled_display.drawLine(cur_tick_fov_x, 0, cur_tick_fov_x, fov_h - 1, WHITE);
+        max(draw_x,min(draw_x + fov_w, draw_x + fov_pixels_per_tick * (cur_tick_x - fov_offset)));
+    oled_display.drawFastVLine(cur_tick_fov_x, 0, fov_h, WHITE);
   }
 }
 
@@ -132,6 +132,8 @@ void SeqExtStepPage::draw_grid() {
       uint8_t grid_fov_x =
           draw_x + fov_pixels_per_tick * (grid_tick_x - fov_offset);
 
+      if (grid_fov_x < draw_x) continue;
+
       for (uint8_t k = 0; k < fov_notes; k += 1) {
         // draw crisscross
         // if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel(
@@ -147,7 +149,7 @@ void SeqExtStepPage::draw_grid() {
         if (i % n == 0) {
           //if ((fov_y + k + i) % 2 == 0) {
           if (k % 2 == 0) {
-            oled_display.drawLine(grid_fov_x, v, grid_fov_x, v + 4, WHITE);
+            oled_display.drawFastVLine(grid_fov_x, v, 4, WHITE);
           }
           continue;
         }
@@ -674,6 +676,8 @@ void SeqExtStepPage::loop() {
   diff = seq_extparam2.getValue();
   if (diff) {
     // Vertical translation
+
+    diff = BUTTON_DOWN(Buttons.ENCODER2) ? diff / 4 : diff * 4;
     pos_cur_y(-1 * diff);
   }
 
@@ -870,7 +874,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (pianoroll_mode > 0) {
       inc = 1;
       w = seq_extparam4.cur / 2;
-      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
         w *= 2;
         inc = 12;
       }
