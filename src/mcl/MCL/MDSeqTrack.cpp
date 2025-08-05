@@ -981,7 +981,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   // 32770.0 is scalar to get MD swing amount in to readible percentage
   // MD sysex docs are not clear on this one so i had to hax it.
 
-  float swing = (float)pattern->swingAmount / 16385.0;
+  float swing = (float)pattern->swingAmount / 16385.0f;
 
   uint8_t *pswingpattern;
   uint8_t timing_mid = get_timing_mid();

@@ -29,7 +29,7 @@ void MDTempoTrack::get_tempo() {
   if (MidiClock.uart_clock_recv == &MidiUart) {
     uint16_t tp;
     if (MD.get_tempo(tp)) {
-      tempo = (float)tp * 0.0416667;
+      tempo = (float)tp * 0.0416667f;
       return;
     }
   }
