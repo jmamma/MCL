@@ -17,7 +17,6 @@
 #define MEGACOMMAND_SPI_LIBRARY 1
 
 #include <Arduino.h>
-#define nop asm volatile ("nop\n\t")
 
 // SPI_HAS_TRANSACTION means SPI has beginTransaction(), endTransaction(),
 // usingInterrupt(), and SPISetting(clock, bitOrder, dataMode)
@@ -259,8 +258,8 @@ public:
     while (--count) {
       uint8_t b = *buf++;
       // nops optimize loop for 16MHz CPU 8 MHz SPI
-      nop;
-      nop;
+      asm volatile("nop");
+      asm volatile("nop");
       while (!(SPSR & (1 << SPIF))) {
       }
       SPDR = b;
