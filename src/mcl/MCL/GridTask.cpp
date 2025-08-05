@@ -118,9 +118,6 @@ void GridTask::transition_handler() {
   uint8_t slots_changed[NUM_SLOTS];
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
-  bool send_ext_slots = false;
-  bool send_md_slots = false;
-
   uint8_t div32th_margin = 6;
 
   GUI.removeTask(&grid_task);
@@ -132,8 +129,8 @@ void GridTask::transition_handler() {
              MidiClock.div32th_counter + 0.032 * max(60.0,MidiClock.get_tempo()),
              (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
-    float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
-    float div32th_time = 1.0 / div32th_per_second;
+    //float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
+    //float div32th_time = 1.0f / div32th_per_second;
 
     if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
       break;
