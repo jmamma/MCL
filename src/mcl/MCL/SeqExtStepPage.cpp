@@ -192,6 +192,8 @@ void SeqExtStepPage::draw_lockeditor() {
         } else {
           ev_end += active_track.timing_buckets.get(i);
         }*/
+    int16_t fov_pixels_per_tick_fixed = (int16_t)(fov_pixels_per_tick * 256);
+
     ev_end += active_track.timing_buckets.get(i);
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
@@ -202,17 +204,19 @@ void SeqExtStepPage::draw_lockeditor() {
 
       uint16_t next_lock_ev = ev_idx;
       ev_j_end = ev_end;
-        j = active_track.search_lock_idx(pianoroll_mode - 1, i, next_lock_ev,
-                                         ev_j_end);
-        if (next_lock_ev == 0xFFFF) {
-          next_lock_ev = ev_idx;
-        }
+      j = active_track.search_lock_idx(pianoroll_mode - 1, i, next_lock_ev,
+                                       ev_j_end);
+      if (next_lock_ev == 0xFFFF) {
+        next_lock_ev = ev_idx;
+      }
 
       auto &ev_j = active_track.events[next_lock_ev];
 
       int16_t start_x = i * timing_mid + ev.micro_timing - timing_mid;
       int16_t end_x = j * timing_mid + ev_j.micro_timing - timing_mid;
-      if (start_x == end_x) { end_x = start_x - 1; }
+      if (start_x == end_x) {
+        end_x = start_x - 1;
+      }
 
       if (is_within_fov(start_x, end_x)) {
         uint8_t start_fov_x, end_fov_x;
@@ -224,97 +228,94 @@ void SeqExtStepPage::draw_lockeditor() {
         int16_t end_x_tmp = end_x;
         uint8_t start_y_tmp = start_y;
         uint8_t end_y_tmp = end_y;
-
         if (end_x < start_x) {
           end_x_tmp += roll_length;
         }
-        float gradient;
-        if (start_x == end_x || !ev.event_on) {
-          gradient = 0;
-        } else {
-          gradient =
-              (float)(end_y - start_y) / (float)(end_x_tmp - start_x_tmp);
-        }
-        // y = mx + y2 - mx2 = m( x - x1) + y1
 
+        // Fixed-point gradient (scaled by 256 for precision)
+        int16_t gradient_fixed = 0;
+        if (start_x != end_x && ev.event_on) {
+          gradient_fixed =
+              ((int16_t)(end_y - start_y) * 256) / (end_x_tmp - start_x_tmp);
+        }
+
+        // y = mx + y2 - mx2 = m( x - x1) + y1
         if (start_x < fov_offset) {
           start_fov_x = 0;
-          start_y_tmp = ((float)(fov_offset - start_x) * gradient) + start_y;
+          // start_y_tmp = ((fov_offset - start_x) * gradient) + start_y
+          int16_t dx = fov_offset - start_x;
+          start_y_tmp = ((dx * gradient_fixed) / 256) + start_y;
         } else {
-          start_fov_x = (float)(start_x - fov_offset) * fov_pixels_per_tick;
+          // Convert fov_pixels_per_tick to fixed point once:
+          // fov_pixels_per_tick_fixed = fov_pixels_per_tick * 256
+          start_fov_x =
+              ((start_x - fov_offset) * fov_pixels_per_tick_fixed) / 256;
         }
 
         if (end_x >= fov_offset + fov_length) {
           end_fov_x = fov_w;
+          int16_t dx;
           if (start_x > end_x) {
-            end_y_tmp =
-                ((float)(fov_offset + fov_length + roll_length - start_x)) *
-                    gradient +
-                start_y;
+            dx = fov_offset + fov_length + roll_length - start_x;
           } else {
-            end_y_tmp =
-                ((float)(fov_offset + fov_length - start_x)) * gradient +
-                start_y;
+            dx = fov_offset + fov_length - start_x;
+          }
+          end_y_tmp = ((dx * gradient_fixed) / 256) + start_y;
+        } else {
+          end_fov_x = ((end_x - fov_offset) * fov_pixels_per_tick_fixed) / 256;
+        }
+
+        uint8_t start_fov_y = fov_h - ((uint16_t)start_y_tmp * fov_h) / 128;
+        uint8_t end_fov_y = fov_h - ((uint16_t)end_y_tmp * fov_h) / 128;
+
+        // Draw logic
+        if (end_x < start_x) {
+          // Wrap around note
+          if (start_x < fov_offset + fov_length) {
+            int16_t dx = fov_offset + fov_length - start_x;
+            uint8_t calc_end_y_tmp = ((dx * gradient_fixed) / 256) + start_y;
+            uint8_t tmp_end_fov_y =
+                fov_h - ((uint16_t)calc_end_y_tmp * fov_h) / 128;
+
+            draw_thick_line(start_fov_x + draw_x, start_fov_y, fov_w + draw_x,
+                            tmp_end_fov_y);
+          }
+
+          if (end_x > fov_offset) {
+            int16_t dx = roll_length - start_x + fov_offset;
+            uint8_t calc_end_y_tmp = ((dx * gradient_fixed) >> 8) + start_y;
+            uint8_t tmp_end_fov_y =
+                fov_h - ((uint16_t)calc_end_y_tmp * fov_h) / 128;
+
+            draw_thick_line(draw_x, !ev.event_on ? start_fov_y : tmp_end_fov_y,
+                            end_fov_x + draw_x,
+                            !ev.event_on ? start_fov_y : end_fov_y);
           }
         } else {
-          end_fov_x = (float)(end_x - fov_offset) * fov_pixels_per_tick;
-        }
-        uint8_t start_fov_y =
-            fov_h - (((float)start_y_tmp / 128.0) * (float)fov_h);
-        uint8_t end_fov_y = fov_h - (((float)end_y_tmp / 128.0) * (float)fov_h);
-
-     //   if (!ev.event_on) {
-          // Draw single lock.
-     //     oled_display.fillRect(start_fov_x + draw_x, start_fov_y, 2, 2, WHITE);
-     //   } else {
-          // Draw Slide
-          if (end_x < start_x) {
-            // Wrap around note
-            if (start_x < fov_offset + fov_length) {
-              //     uint8_t d = pattern_end_fov_x - start_fov_x
-              //
-              //     uint8_t end_fov_x_y = d * gradient;
-              float end_y_tmp =
-                  ((float)(fov_offset + fov_length - start_x)) * gradient +
-                  start_y;
-              uint8_t tmp_end_fov_y =
-                  fov_h - (((float)end_y_tmp / 128.0) * (float)fov_h);
-              draw_thick_line(start_fov_x + draw_x, start_fov_y, fov_w + draw_x, tmp_end_fov_y);
-            }
-
-            if (end_x > fov_offset) {
-
-              uint8_t end_y_tmp =
-                  ((float)(roll_length - start_x + fov_offset)) * gradient +
-                  start_y;
-              uint8_t tmp_end_fov_y =
-                  fov_h - (((float)end_y_tmp / 128.0) * (float)fov_h);
-
-              draw_thick_line(draw_x, !ev.event_on ? start_fov_y : tmp_end_fov_y, end_fov_x + draw_x,
-                              !ev.event_on ? start_fov_y : end_fov_y);
-            }
-
-          } else {
-            // Standard note.
-            draw_thick_line(start_fov_x + draw_x, start_fov_y,
-                            draw_x + end_fov_x, !ev.event_on ? start_fov_y : end_fov_y);
-          }
+          // Standard note
+          draw_thick_line(start_fov_x + draw_x, start_fov_y, draw_x + end_fov_x,
+                          !ev.event_on ? start_fov_y : end_fov_y);
         }
       }
-  //  }
-    /*if (j < i) {
-      break;
-    }*/
-  }
-  // Draw interactive cursor
-  int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
-  uint8_t fov_cur_y = fov_h - ((float)lock_cur_y / 128.0 * (float)fov_h);
+      //  }
+      /*if (j < i) {
+        break;
+      }*/
+      }
+    }
+    // Draw interactive cursor
+    int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
+    uint8_t fov_cur_y = fov_h - ((float)lock_cur_y / 128.0 * (float)fov_h);
 
-  oled_display.drawPixel(draw_x + fov_cur_x - 1, draw_y + fov_cur_y - 2, WHITE);
-  oled_display.drawPixel(draw_x + fov_cur_x + 1, draw_y + fov_cur_y - 2, WHITE);
-  oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y - 1 - 2, WHITE);
-  oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y + 1 - 2, WHITE);
-}
+    oled_display.drawPixel(draw_x + fov_cur_x - 1, draw_y + fov_cur_y - 2,
+                           WHITE);
+    oled_display.drawPixel(draw_x + fov_cur_x + 1, draw_y + fov_cur_y - 2,
+                           WHITE);
+    oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y - 1 - 2,
+                           WHITE);
+    oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y + 1 - 2,
+                           WHITE);
+  }
 
 void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w) {
   oled_display.drawRect(x, y, w, fov_h / fov_notes, WHITE);
