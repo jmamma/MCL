@@ -1,3 +1,33 @@
+MCL 4.70 7/07/2025
+
+Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.70
+
+- Build System
+
+  The MCL code has been restructured to accomodate different hardware and microcontroller
+  architectures using the platformio build system.
+
+  A number of low level changes were made to allow MCL to run identically across
+  different hardware platforms.
+
+- Improvements
+
+  Encoder rotation "fast mode" has been tweaked.
+  Cursor movement behaviour improved in PinoRoll.
+
+- Additions
+
+  TRANSPOSE option added to the Sequencer Track Menu.
+
+- Bug Fixes
+
+  Fixed a regression related to oddities when quickly stopping and starting
+  the sequencer.
+
+  There was an error that could result in incomplete sysex messages being received.
+
+  Fixed Regression relating to MuteCCs.
+
 MCL 4.60 21/09/2024
 
 Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.60.

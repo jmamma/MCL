@@ -243,21 +243,6 @@ def scan_patterns(A, P, L, C, n, ctx):
         for i in range(n):
             fp.write(f"{A[i]}\n{P[i]}\n{L[i]}\n{C[i]}\n")
 
-def load_patterns(A, P, L, C, n):
-    """Loads pre-computed patterns from a file."""
-    print("Loading patterns...")
-    with open("patterns.txt", "r") as fp:
-        lines = [line.strip() for line in fp.readlines()]
-    
-    fsize = int(lines[0])
-    if fsize != n:
-        raise ValueError("File size mismatch in patterns.txt")
-    
-    idx = 1
-    for i in range(n):
-        A[i], P[i], L[i], C[i] = int(lines[idx]), int(lines[idx+1]), int(lines[idx+2]), float(lines[idx+3])
-        idx += 4
-
 def compress(params: tuple, initial_ctx: Context) -> Context:
     """Main compression function using dynamic programming."""
     (padj, pshift), plen = params
@@ -270,14 +255,7 @@ def compress(params: tuple, initial_ctx: Context) -> Context:
     L = [0] * n
     C = [0.0] * (n + 1)
 
-    if os.path.exists("patterns.txt"):
-        try:
-            load_patterns(A, P, L, C, n)
-        except (ValueError, IndexError) as e:
-            print(f"patterns.txt is invalid ({e}). Rescanning...", file=sys.stderr)
-            scan_patterns(A, P, L, C, n, initial_ctx)
-    else:
-        scan_patterns(A, P, L, C, n, initial_ctx)
+    scan_patterns(A, P, L, C, n, initial_ctx)
 
     for i in range(n):
         A[i] = i + 1
@@ -341,7 +319,7 @@ def compress(params: tuple, initial_ctx: Context) -> Context:
     stopped_ctx = work_ctx.replace(lookback=0)
     res = push_num(0x01000002, stopped_ctx)
     res = bind(res, lambda c: Ok(c.replace(pending=[0xFF] + c.pending)))
-    
+
     # Insert trailing bits to flush the final byte
     def pad_and_flush(c):
         ins_0 = 9 - len(c.reg)
@@ -352,7 +330,10 @@ def compress(params: tuple, initial_ctx: Context) -> Context:
         return mctx.value
 
     final_ctx = pipe_through(res, pad_and_flush)
-    
+
+    if os.path.exists("patterns.txt"):
+       os.remove("patterns.txt")
+
     # The stream was built backwards, so reverse it for the final output
     return final_ctx.replace(stream=final_ctx.stream[::-1])
 
