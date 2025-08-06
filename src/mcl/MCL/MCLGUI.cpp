@@ -844,8 +844,8 @@ void MCLGUI::draw_panel_number(uint8_t number) {
 }
 
 void MCLGUI::drawRoundRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color) {
-  oled_display.writeFastHLine(x + 1, y, w - 2, color);         // top edge
-  oled_display.writeFastHLine(x + 1, y + h - 1, w - 2, color); // bottom edge
+  oled_display.drawFastHLine(x + 1, y, w - 2, color);         // top edge
+  oled_display.drawFastHLine(x + 1, y + h - 1, w - 2, color); // bottom edge
   oled_display.drawFastVLine(x, y + 1, h - 2, color);         // left edge
   oled_display.drawFastVLine(x + w - 1, y + 1, h - 2, color); // right edge
 }

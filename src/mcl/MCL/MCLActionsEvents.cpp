@@ -186,10 +186,10 @@ void MCLActionsMidiEvents::setup_callbacks() {
   Midi2.addOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
-  Midi.addOnControlChangeCallback(
+/*  Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onControlChangeCallback_Midi);
-
+*/
   state = true;
 }
 
@@ -216,10 +216,10 @@ void MCLActionsMidiEvents::remove_callbacks() {
   Midi2.removeOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
-  Midi.removeOnControlChangeCallback(
+/*  Midi.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onControlChangeCallback_Midi);
-
+*/
   state = false;
 }
 void MCLActionsCallbacks::setup_callbacks() {
