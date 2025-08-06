@@ -27,7 +27,7 @@
 
 uint8_t ExpLFO::get_sample(uint8_t sample_number) {
   uint8_t y = (uint8_t)((float)amplitude *
-                                    powf(M_E, (float)-1 * (float)sample_number *
+                                    (float) powf(M_E, (float)-1 * (float)sample_number *
                                                   (float)time_constant));
   return y;
 }
@@ -42,28 +42,25 @@ uint8_t IExpLFO::get_sample(uint8_t sample_number) {
 
 
 uint8_t RampLFO::get_sample(uint8_t sample_number) {
-  uint8_t y = ((float)amplitude / (float)(LFO_LENGTH)) * (sample_number);
-
-  return y;
+  return ((uint16_t)amplitude * sample_number) / LFO_LENGTH;
 }
 
 uint8_t IRampLFO::get_sample(uint8_t sample_number) {
-  RampLFO r;
-  r.amplitude = amplitude;
-  uint8_t y = amplitude - r.get_sample(sample_number);
+  return amplitude - (((uint16_t)amplitude * sample_number) / LFO_LENGTH);
 
-  return y;
 }
 
 
 uint8_t TriLFO::get_sample(uint8_t sample_number) {
-  uint8_t y;
-  if (sample_number > LFO_LENGTH / 2) {
-    y = amplitude -  1 * ( (float) amplitude / (float) (LFO_LENGTH / 2)) * (sample_number - (LFO_LENGTH / 2));
+  uint8_t half_length = LFO_LENGTH / 2;
+  if (sample_number > half_length) {
+    // Descending part: amplitude - slope * (sample - half_length)
+    uint8_t offset = sample_number - half_length;
+    return amplitude - (((uint16_t)amplitude * offset) / half_length);
   } else {
-    y = ((float)amplitude / (float)(LFO_LENGTH / 2)) * (sample_number);
+    // Ascending part: slope * sample
+    return ((uint16_t)amplitude * sample_number) / half_length;
   }
-  return y;
 }
 
 uint8_t SinLFO::get_sample(uint8_t sample_number) {
