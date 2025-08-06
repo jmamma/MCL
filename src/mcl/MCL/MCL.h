@@ -7,8 +7,8 @@
 #include "PageIndex.h"
 #include "MCLDefines.h"
 
-#define VERSION 4060
-#define VERSION_STR "B4.61"
+#define VERSION 4070
+#define VERSION_STR "4.70"
 
 #define CALLBACK_TIMEOUT 500
 #define GUI_NAME_TIMEOUT 800
