@@ -59,14 +59,9 @@ bool MNMClass::probe() {
     mcl_gui.delay_progress(400);
 
     if (!get_fw_caps()) {
-#ifdef OLED_DISPLAY
       oled_display.textbox("UPGRADE ", "MONOMACHINE");
       oled_display.display();
-#else
-      gfx.display_text("UPGRADE", "MONOMACHINE");
-#endif
-      while (1)
-        ;
+      return false;
     }
 
     if (!MNM.getBlockingGlobal(7)) {
@@ -326,7 +321,7 @@ uint16_t MNMClass::sendKitParams(uint8_t *masks) {
   //  mcl_seq.disable();
   // md_set_kit(&MNM.kit);
   uint16_t mnm_latency_ms =
-      10000.0 * ((float)sizeof(MNMKit) / (float)MidiUart.speed);
+      10000.0f * ((float)sizeof(MNMKit) / (float)MidiUart.speed);
   mnm_latency_ms += 10;
   DEBUG_DUMP(mnm_latency_ms);
   
