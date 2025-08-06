@@ -260,13 +260,6 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
         }
         return true;
       }
-      case MDX_KEY_YES: {
-        group_select();
-        return true;
-      }
-      case MDX_KEY_EXTENDED: {
-        return false;
-      }
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {
@@ -289,7 +282,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
     }
     return false;
   }
-  if (EVENT_CMD(event)) {
+  if (EVENT_BUTTON(event)) {
     if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     //  write the whole row
     load_groups:

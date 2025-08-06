@@ -126,13 +126,6 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
         mcl.setPage(GRID_PAGE);
         return false;
       }
-      case MDX_KEY_YES: {
-        group_select();
-        return true;
-      }
-      case MDX_KEY_EXTENDED: {
-        return false;
-      }
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {

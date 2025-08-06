@@ -98,15 +98,18 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
+      default: {
+        return false;
+      }
+      case MDX_KEY_YES: {
+        group_select();
+        return true;
+      }
       case MDX_KEY_BANKD: {
         return true;
       }
       case MDX_KEY_NO: {
         goto close;
-      }
-      case MDX_KEY_YES: {
-        group_select();
-        return true;
       }
       case MDX_KEY_SCALE: {
         goto toggle_grid;
