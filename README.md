@@ -1,60 +1,80 @@
-# MCL Migration: ATmega2560 to RP2040
+# MegaCommand Live (MCL)
 
-This is a WIP migration of [MCL](https://github.com/jmamma/mcl) from the ATmega2560 to the RP2040. Given MCL became a modified Arduino core, the port will initially be based around arduino-pico, enabling us to leverage the SdFat and Adafruit graphics libraries that are core components of MCL.
+A high-performance MIDI sequencer and live performance tool written in C/C++ that enhances the capabilities of the MachineDrum and other electronic instruments.
 
-## Current Progress
+## Features
 
-Port is now complete.
+- Real-time MIDI sequencing with low latency and no jitter
+- Advanced performance controls for live electronic music
+- Seamless integration with Elektron MachineDrum
+- Cross-platform firmware support
 
-- [X] Platform.txt -> Makefile translation
-  - Code can be compiled independently of the Arduino IDE
-  - Correct linking of arduino-pico, pico-sdk and related libraries
+## Platform Support
 
-- [X] VSCode + gdb + openocd SW debugger integration
-  - For realtime hardware debugging
+MCL was restructured in 2025 to support multiple hardware platforms through the PlatformIO build system. This allows the same codebase to run on different microcontroller architectures.
 
-- [X] Implementation of low level ISRs for UART + timers, as per MCL
-  - The atmega2560 does not support nested interrupts. I've re-implemented ISR locking as per MCL, with the ability to unlock when entering Sequencer and MIDI processing routines.
-  - Eventually this will be re-architectured to leverage the 2nd core.
-- [X] MIDI stack
-  - Low level MIDI stack responsible for initialising the UARTs
-  - Processing rx/tx of MIDI data
+**Current platforms:**
+- **AVR** - MegaCommand DIY and MegaCMD devices
+- **RP2350** - TBD
+- **RP2040**
 
-- [X] Validate MIDI stack at various turbo speeds (1x, 2x, 4x, 8x, 10x)
-  - [X] Sysex Tx/Rx
-  - [X] Midi Note Tx/Rx
-  - [X] MIDI CC Tx/Rx
+## Quick Start
 
-- [X] Verify SDFat is functional with the arduino-pico core
+### Download Pre-built Firmware
+Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
+- Latest firmware binaries
+- User documentation
+- Installation instructions
 
-- [X] Compressed Asset generation via 'make assets'
+### Building from Source and Uploading
 
-- [X] Oled SSD1305 display + Adafruit GFX
+1. **Install PlatformIO**
+   ```bash
+   pip install platformio
+   ```
 
-- [X] Migrate all MCL source code
+2. **Compile and upload for your device:**
 
-- [X] Fix compliation errors
+   **MegaCommand DIY:**
+   ```bash
+   platformio run -e megacommand -t upload
+   ```
 
-- [X] Fix linking
+   **MegaCMD:**
+   ```bash
+   platformio run -e megacmd -t upload
+   ```
 
-- [X] Sequencer
+   **TBD:**
+   ```bash
+   platformio run -e tbd -t upload
+   ```
 
-- [X] Verify user GUI (buttons + encoders)
+## Architecture
 
-- [X] Verify Page System
+```
+.
+├── art              Pixel-art and animations
+├── include          Header files required for building specific libraries
+├── resource         Compressable C++ data structures used by MCL
+│
+├── src
+│   ├── mcl          MCL source code
+│   ├── platform     Platform specific code
+│   └── resources    Compressed C++ data structures
+│
+└── tools            Various tools for building the firmware
+```
 
-- [X] Verify Menus
+The AVR version is built on top of the MegaCore Arduino core, and is extended for relevant platforms in `src/platform/avr`.
 
-- [X] Validate UART and timer IRQ timings.
+The RP2040/RP2350 version is built on top of the arduino-pico core, and is extended for supported hardware in `src/platform/rp2040`.
 
-- [X] MCL project/grid initialisation
+## Libraries
 
-- [X] Object serialisation to/from SD Card
-
-- [X] Port to platformio
-
-- [X] Integrate with TBD hardware libraries
-
-#Todo
-
-- [ ] Backport refactor to main MCL github repo.
+MCL builds upon proven open-source libraries:
+- [ArduinoPico](https://github.com/earlephilhower/arduino-pico)
+- [MegaCore](https://github.com/MCUdude/MegaCore)
+- [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
+- [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
+- [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
