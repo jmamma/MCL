@@ -252,10 +252,7 @@ void GUIHardware::init() {
 #else
     last_ui_systicks = 0;
     tbd_ui.InitHardware();
-    if (!tbd_ui.strip.begin()) {
-        DEBUG_PRINTLN("Failed to initialize NeoPixel strip.");
-    //    while(1);
-    }
+    tbd_ui.InitLeds();
     tbd_ui.strip.show();
     tbd_ui.strip.setBrightness(5);
 #endif
