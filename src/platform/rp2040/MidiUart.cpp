@@ -100,6 +100,7 @@ void __not_in_flash_func(MidiUartClass::handle_realtime_message)(uint8_t c) {
       MidiClock.handleImmediateMidiContinue();
       break;
     }
+    rxRb->put_h_isr(c);
   }
 }
 
