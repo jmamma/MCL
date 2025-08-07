@@ -368,7 +368,7 @@ void GridPage::display_grid_info() {
 
   uint8_t tri_x = 10, tri_y = 12;
   if (MidiClock.state == 2) {
-    oled_display.drawFastVLine(tri_x, tri_y, 4, WHITE);
+    oled_display.drawFastVLine(tri_x, tri_y, 5, WHITE);
     oled_display.fillTriangle_3px(tri_x + 1, tri_y, WHITE);
   }
   if (MidiClock.state == 0) {
