@@ -210,8 +210,7 @@ void GridTask::transition_handler() {
           uint32_t go_step = mcl_actions.next_transition * 12 -
                              mcl_actions.div192th_total_latency - 1;
 
-          mcl_actions.div192th_total_latency -=
-              mcl_actions.dev_latency[device_idx].latency;
+          mcl_actions.div192th_total_latency -= mcl_actions.dev_latency[device_idx].div192th_latency;
 
           uint32_t diff;
 
