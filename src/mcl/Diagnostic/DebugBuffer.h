@@ -2,9 +2,15 @@
 
 #include <Arduino.h>
 
+#ifndef __AVR__
+ #define DEBUG_BUFFER_SIZE 4096
+#else
+ #define DEBUG_BUFFER_SIZE 128
+#endif
+
 class DebugBuffer : public Stream {
 private:
-  static constexpr size_t BUFFER_SIZE = 128;
+  static constexpr size_t BUFFER_SIZE = DEBUG_BUFFER_SIZE;
   char buffer[BUFFER_SIZE];
   volatile uint32_t head;
   volatile uint32_t tail;
