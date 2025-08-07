@@ -104,6 +104,7 @@ void GridTask::update_transition_details() {
   } else {
     strcpy(kit_names[dev_idx], "NEW_KIT");
   }
+  send_kit_name = true;
 }
 
 void GridTask::transition_handler() {

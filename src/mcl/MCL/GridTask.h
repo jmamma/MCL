@@ -79,6 +79,7 @@ public:
   bool stop_hard_callback = false;
 
   char kit_names[NUM_DEVS][16];
+  bool send_kit_name;
 
   uint8_t last_active_row;
   uint8_t next_active_row;

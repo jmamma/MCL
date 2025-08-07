@@ -262,7 +262,10 @@ void MCLSeq::seq() {
   mdfx_track.seq();
 
   if (MDSeqTrack::load_machine_cache) {
-    MD.setKitName(grid_task.kit_names[0], uart);
+    if (grid_task.send_kit_name) {
+        MD.setKitName(grid_task.kit_names[0], uart);
+        grid_task.send_kit_name = false;
+    }
     MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart);
   }
 
