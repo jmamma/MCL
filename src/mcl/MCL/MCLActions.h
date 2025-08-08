@@ -112,7 +112,7 @@ public:
   void load_tracks(int row, uint8_t *slot_select_array,
                    uint8_t *_row_array = nullptr, uint8_t load_mode = 255, uint8_t load_offset = 255);
   void send_tracks_to_devices(uint8_t *slot_select_array,
-                              uint8_t *row_array = nullptr, uint8_t load_offset = 0);
+                              uint8_t *row_array = nullptr, uint8_t load_offset = 255);
   void manual_transition(uint8_t *slot_select_array, uint8_t *row_array, uint8_t load_offset);
   void update_chain_links(uint8_t n, GridDeviceTrack *gdt);
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
