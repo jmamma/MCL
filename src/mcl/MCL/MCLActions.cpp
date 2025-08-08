@@ -481,10 +481,10 @@ again:
     calc_latency();
   }
 
-  // //DEBUG_PRINTLN("NEXT STEP");
-  // //DEBUG_PRINTLN(next_step);
-  // //DEBUG_PRINTLN(next_transition);
-  // //DEBUG_PRINTLN(MidiClock.div16th_counter);
+  DEBUG_PRINTLN("NEXT STEP");
+  DEBUG_PRINTLN(next_step);
+  DEBUG_PRINTLN(next_transition);
+  DEBUG_PRINTLN(MidiClock.div16th_counter);
 
   // int32_t pos = next_transition - (div192th_total_latency / 12) -
   // MidiClock.div16th_counter; next transition should always be at least 2
@@ -717,6 +717,32 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   calc_latency();
 }
 
+void MCLActions::update_chain_links(uint8_t n, GridDeviceTrack *gdt) {
+    if (chains[n].is_mode_queue()) {
+      if (chains[n].get_length() == QUANT_LEN) {
+        if (links[n].loops == 0) {
+          links[n].loops = 1;
+        }
+      } else if (chains[n].get_length() != QUANT_LEN) {
+        links[n].loops = 1;
+        links[n].length = max(1,(uint8_t) ((float)chains[n].get_length() /
+                          (float)gdt->seq_track->get_speed_multiplier()));
+
+        constexpr uint8_t min_steps_before_transition = 8;
+
+        while (links[n].loops * links[n].length < min_steps_before_transition) {
+          links[n].loops++;
+        }
+      }
+      //if (links[n].length == 0) { links[n].length = 16; }
+      chains[n].inc();
+      links[n].row = chains[n].get_row();
+      if (links[n].row == 255) {
+        setLed2();
+      }
+    }
+}
+
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                                    bool gui_update) {
 
@@ -764,29 +790,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     proj.select_grid(grid_idx);
 
-    if (chains[n].is_mode_queue()) {
-      if (chains[n].get_length() == QUANT_LEN) {
-        if (links[n].loops == 0) {
-          links[n].loops = 1;
-        }
-      } else if (chains[n].get_length() != QUANT_LEN) {
-        links[n].loops = 1;
-        links[n].length = max(1,(uint8_t) ((float)chains[n].get_length() /
-                          (float)gdt->seq_track->get_speed_multiplier()));
-
-        constexpr uint8_t min_steps_before_transition = 8;
-
-        while (links[n].loops * links[n].length < min_steps_before_transition) {
-          links[n].loops++;
-        }
-      }
-      //if (links[n].length == 0) { links[n].length = 16; }
-      chains[n].inc();
-      links[n].row = chains[n].get_row();
-      if (links[n].row == 255) {
-        setLed2();
-      }
-    }
+    update_chain_links(n, gdt);
 
     // if (links[n].row >= GRID_LENGTH)
     if (links[n].row >= GRID_LENGTH ||
@@ -830,7 +834,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 void MCLActions::calc_next_slot_transition(uint8_t n,
                                            bool ignore_chain_settings,
                                            bool ignore_overflow) {
-
+ DEBUG_PRINTLN("calc_next_slot_transition");
    if (!ignore_chain_settings) {
     switch (chains[n].mode) {
     case LOAD_QUEUE: {
@@ -855,9 +859,9 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
     return;
   }
 
-
   GridDeviceTrack *gdt = get_grid_dev_track(n);
   if (gdt == nullptr) {
+    DEBUG_PRINTLN("exit");
     return;
   }
   uint16_t next_transitions_old = next_transitions[n];
@@ -901,6 +905,7 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
 }
 
 void MCLActions::calc_next_transition() {
+  DEBUG_PRINTLN(F("calc_next_transition"));
   next_transition = (uint16_t)-1;
   // DEBUG_PRINT_FN();
   int8_t slot = -1;
@@ -988,21 +993,10 @@ void MCLActions::calc_latency() {
   }
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
-      float bytes_per_second_uart1 = devs[a]->uart->speed * 0.1f;
+      float bytes_per_second_uart = devs[a]->uart->speed * 0.1f;
       float latency_in_seconds = (float)dev_latency[a].latency/
-                                 bytes_per_second_uart1;
-     // latency_in_seconds = max(.010,latency_in_seconds);
-
-      DEBUG_PRINT("Bytes: ");
-      DEBUG_PRINTLN(dev_latency[a].latency);
-      DEBUG_PRINT("Lat: ");
-      DEBUG_PRINTLN(latency_in_seconds);
-
-      //latency_in_seconds += 0.020; //16ms additional latency per device
-      // latency_in_seconds += (float) dev_latency[a].load_latency * .0002;
-
+                                 bytes_per_second_uart;
       //Transimission Latency
-      //
       dev_latency[a].div32th_latency = ceil(div32th_per_second * latency_in_seconds);
       dev_latency[a].div192th_latency = ceil(div192th_per_second * latency_in_seconds);
 
@@ -1010,26 +1004,16 @@ void MCLActions::calc_latency() {
       //We need at least 6 sequencer ticks of latency to account for seq_track load_cache() functions
       //which are splayed over count_down duration
       //if (a == 0) {
-           dev_latency[a].div32th_latency = max(1, dev_latency[a].div32th_latency);
-           dev_latency[a].div192th_latency = max(6, dev_latency[a].div192th_latency);
-     // }
-      // Program change minimum delay = 1 x 16th.
-      /*
-      if (mcl_cfg.uart2_prg_out > 0 && a == 1) {
-        if (dev_latency[a].div32th_latency < 2) {
-          dev_latency[a].div32th_latency = 2;
-          dev_latency[a].div192th_latency = 12;
-        }
-      }
-      */
+      dev_latency[a].div32th_latency = max(1, dev_latency[a].div32th_latency);
+      dev_latency[a].div192th_latency = max(6, dev_latency[a].div192th_latency);
 
       div32th_total_latency += dev_latency[a].div32th_latency;
       div192th_total_latency += dev_latency[a].div192th_latency;
     }
   }
-  // DEBUG_PRINTLN("total latency");
-  // DEBUG_PRINTLN(div32th_total_latency);
-  // DEBUG_PRINTLN(div192th_total_latency);
+   DEBUG_PRINTLN("total latency");
+   DEBUG_PRINTLN(div32th_total_latency);
+   DEBUG_PRINTLN(div192th_total_latency);
 }
 
 MCLActions mcl_actions;

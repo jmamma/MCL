@@ -142,20 +142,20 @@ end:
 
 void MCLActionsCallbacks::onMidiStartCallback() {
   DEBUG_PRINTLN("BEGIN on midi start");
-  StackMonitor::print_stack_info();
+  //StackMonitor::print_stack_info();
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
+  mcl_actions.next_transition = -1;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     GridDeviceTrack *gdt =
         mcl_actions.get_grid_dev_track(n);
-
     if (gdt == nullptr)
       continue;
-
     if (grid_page.active_slots[n] != SLOT_DISABLED) {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
       mcl_actions.chains[n].reset();
+      mcl_actions.update_chain_links(n,gdt);
       mcl_actions.calc_next_slot_transition(n);
     }
   }
