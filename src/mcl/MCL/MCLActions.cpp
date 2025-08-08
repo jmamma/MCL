@@ -302,7 +302,6 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
 
     if (load_mode == LOAD_QUEUE) {
       chains[n].add(row_array[n], get_chain_length());
-      DEBUG_PRINTLN("adding link");
       if (chains[n].num_of_links > 1) {
         slot_select_array[n] = 0;
         if (chains[n].num_of_links == 2) {
@@ -969,8 +968,7 @@ void MCLActions::calc_latency() {
             gdt->track_type != ptrack->active) {
           continue;
         }
-        // dev_latency[dev_idx].load_latency += diff;
-        dev_latency[device_idx].latency += ptrack->calc_latency(n);
+        dev_latency[device_idx].latency_bytes += ptrack->calc_latency(n);
       }
       if (send_dev[device_idx] != true) {
         num_devices++;
@@ -981,11 +979,10 @@ void MCLActions::calc_latency() {
 
   float tempo = MidiClock.get_tempo();
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
-  float div32th_per_second = tempo * 0.133333333333f;
+  //  float div32th_per_second = tempo * 0.133333333333f;
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
   float div192th_per_second = tempo * 0.8f;
 
-  div32th_total_latency = 0;
   div192th_total_latency = 0;
 
   if (mcl_cfg.uart2_prg_out > 0) {
@@ -994,25 +991,21 @@ void MCLActions::calc_latency() {
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       float bytes_per_second_uart = devs[a]->uart->speed * 0.1f;
-      float latency_in_seconds = (float)dev_latency[a].latency/
+      float latency_in_seconds = (float)dev_latency[a].latency_bytes /
                                  bytes_per_second_uart;
       //Transimission Latency
-      dev_latency[a].div32th_latency = ceil(div32th_per_second * latency_in_seconds);
       dev_latency[a].div192th_latency = ceil(div192th_per_second * latency_in_seconds);
 
       //Load Latency
       //We need at least 6 sequencer ticks of latency to account for seq_track load_cache() functions
       //which are splayed over count_down duration
       //if (a == 0) {
-      dev_latency[a].div32th_latency = max(1, dev_latency[a].div32th_latency);
       dev_latency[a].div192th_latency = max(6, dev_latency[a].div192th_latency);
 
-      div32th_total_latency += dev_latency[a].div32th_latency;
       div192th_total_latency += dev_latency[a].div192th_latency;
     }
   }
    DEBUG_PRINTLN("total latency");
-   DEBUG_PRINTLN(div32th_total_latency);
    DEBUG_PRINTLN(div192th_total_latency);
 }
 

@@ -154,9 +154,12 @@ void MCLActionsCallbacks::onMidiStartCallback() {
     if (grid_page.active_slots[n] != SLOT_DISABLED) {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
-      mcl_actions.chains[n].reset();
-      mcl_actions.update_chain_links(n,gdt);
-      mcl_actions.calc_next_slot_transition(n);
+      if (mcl_actions.chains[n].is_mode_queue()) {
+        DEBUG_PRINTLN(n);
+        mcl_actions.chains[n].reset();
+        mcl_actions.update_chain_links(n,gdt);
+        mcl_actions.calc_next_slot_transition(n);
+      }
     }
   }
   mcl_actions.calc_next_transition();

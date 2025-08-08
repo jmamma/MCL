@@ -19,9 +19,7 @@
 
 class DeviceLatency {
 public:
-  uint16_t latency;
-  // uint16_t load_latency;
-  uint8_t div32th_latency;
+  uint16_t latency_bytes;
   uint8_t div192th_latency;
 };
 
