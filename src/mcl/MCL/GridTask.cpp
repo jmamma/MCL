@@ -127,7 +127,7 @@ void GridTask::transition_handler() {
   //                = 0.032 * MidiClock.get_tempo()
   //
   while (MidiClock.clock_less_than(
-             MidiClock.div32th_counter + 0.032 * max(60.0,MidiClock.get_tempo()),
+             MidiClock.div32th_counter + max(2, 0.032 * MidiClock.get_tempo()),
              (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
     //float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
@@ -220,7 +220,7 @@ void GridTask::transition_handler() {
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
                 handleIncomingMidi();
-                if ((float)diff > tempo * 0.064f) { //0.8 * 0.08 = 0.128f
+                if ((float)diff > ceil(tempo * 0.064f)) { //0.8 * 0.08 = 0.128f
                    GUI.loop();
                }
           }
