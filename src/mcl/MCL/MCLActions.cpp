@@ -762,8 +762,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   // diff * div19th_time > 80ms equivalent to diff > (0.08/1.25) * tempo
   //float ms = (0.08 * 0.80) * tempo == 0.064 * tempo;
 
-  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-
+  uint8_t n = NUM_SLOTS;
+  while (n--) {
     if (slot_select_array[n] == 0)
       continue;
 
@@ -779,14 +779,13 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     uint32_t diff = MidiClock.clock_diff_div192(
         MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 4 * 12);
 
-    while ((gdt->seq_track->count_down && (MidiClock.state == 2))) {
+    while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
       proj.select_grid(old_grid);
       handleIncomingMidi();
-      if (((float)diff > 0.064f * tempo) && gui_update) {
+      if (((float)diff > ceil(0.064f * tempo)) && gui_update) {
         GUI.loop();
       }
     }
-
     proj.select_grid(grid_idx);
 
     update_chain_links(n, gdt);
