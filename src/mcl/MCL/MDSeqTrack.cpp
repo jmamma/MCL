@@ -136,8 +136,9 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       if (!cache_loaded) {
         load_cache();
         cache_loaded = true;
+        goto end;
       }
-      goto end;
+//      goto end;
     }
   }
 
