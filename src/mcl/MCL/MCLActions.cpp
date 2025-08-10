@@ -727,10 +727,10 @@ void MCLActions::update_chain_links(uint8_t n, GridDeviceTrack *gdt) {
         links[n].loops = 1;
         links[n].length = max(1,(uint8_t) ((float)chains[n].get_length() /
                           (float)gdt->seq_track->get_speed_multiplier()));
-        constexpr uint8_t min_steps_before_transition = 2;
+       /* constexpr uint8_t min_steps_before_transition = 2;
         while (links[n].loops * links[n].length < min_steps_before_transition) {
           links[n].loops++;
-        }
+        }*/
       }
       //if (links[n].length == 0) { links[n].length = 16; }
       chains[n].inc();
