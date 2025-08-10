@@ -717,7 +717,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 }
 
 void MCLActions::update_chain_links(uint8_t n, GridDeviceTrack *gdt) {
-    if (chains[n].is_mode_queue()) {
+
+   if (chains[n].is_mode_queue()) {
       if (chains[n].get_length() == QUANT_LEN) {
         if (links[n].loops == 0) {
           links[n].loops = 1;
@@ -726,9 +727,7 @@ void MCLActions::update_chain_links(uint8_t n, GridDeviceTrack *gdt) {
         links[n].loops = 1;
         links[n].length = max(1,(uint8_t) ((float)chains[n].get_length() /
                           (float)gdt->seq_track->get_speed_multiplier()));
-
-        constexpr uint8_t min_steps_before_transition = 8;
-
+        constexpr uint8_t min_steps_before_transition = 2;
         while (links[n].loops * links[n].length < min_steps_before_transition) {
           links[n].loops++;
         }
@@ -938,6 +937,11 @@ void MCLActions::calc_latency() {
       midi_active_peering.get_device(UART2_PORT),
   };
 
+  ElektronDevice *elektron_devs[2] = {
+      devs[0]->asElektronDevice(),
+      devs[1]->asElektronDevice(),
+  };
+
   memset(dev_latency,0,sizeof(dev_latency));
 
   bool send_dev[NUM_DEVS] = {0};
@@ -975,6 +979,12 @@ void MCLActions::calc_latency() {
       send_dev[device_idx] = true;
     }
   }
+
+  #if defined(__AVR__)
+  /* atmega2560 is not fast enough to pack elektron data at 8x turbo for Analog4 etc..
+   * double the latency required */
+  if (send_dev[1] && elektron_devs[1] != nullptr && devs[1]->uart->speed >= 250000) { dev_latency[1].latency_bytes *= 2; }
+  #endif
 
   float tempo = MidiClock.get_tempo();
   //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
