@@ -72,6 +72,7 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 
 void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                               uint8_t slotnumber) {
+  seq_track->cache_loaded = false;
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   // load_seq_data(seq_track);
 }

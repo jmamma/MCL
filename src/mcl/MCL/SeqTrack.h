@@ -68,9 +68,9 @@ public:
   uint8_t step_count;
   uint8_t mod12_counter;
 
-  uint8_t count_down;
-  bool    cache_loaded : 4;
-  bool    load_sound : 4;
+  volatile uint8_t count_down;
+  bool    cache_loaded;
+  bool    load_sound;
 
   SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
@@ -105,7 +105,7 @@ public:
     mod12_counter = -1;
     step_count = 0;
     count_down = 0;
-    cache_loaded = 0;
+    cache_loaded = true; //Default should assume cache is loaded. Override in transition_load where required.
     load_sound = 0;
   }
 
