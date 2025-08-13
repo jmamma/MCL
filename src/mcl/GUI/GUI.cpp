@@ -109,7 +109,7 @@ void GuiClass::loop() {
     page->finalize();
   }
 
-  if (use_screen_saver && g_clock_minutes >= SCREEN_SAVER_TIMEOUT) {
+  if (use_screen_saver && g_clock_minutes >= SCREEN_SAVER_TIMEOUT && !screen_saver) {
     screen_saver = true;
     oled_display.sleep();
   }
