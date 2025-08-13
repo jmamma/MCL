@@ -154,7 +154,7 @@ void MCLActionsCallbacks::onMidiStartCallback() {
     if (grid_page.active_slots[n] != SLOT_DISABLED) {
       mcl_actions.next_transitions[n] = 0;
       mcl_actions.transition_offsets[n] = 0;
-      if (mcl_actions.chains[n].is_mode_queue()) {
+      if (mcl_actions.chains[n].is_mode_queue() || mcl_actions.chains[n].is_mode_auto()) {
         mcl_actions.calc_next_slot_transition(n);
       }
     }

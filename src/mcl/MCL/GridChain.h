@@ -19,6 +19,7 @@ public:
   uint8_t rows[NUM_LINKS];
 
   bool is_mode_queue() { return (mode == LOAD_QUEUE && num_of_links); }
+  bool is_mode_auto() { return (mode == LOAD_AUTO); }
 
   void init() {
     r = 0;
