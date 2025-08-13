@@ -24,7 +24,7 @@ void WavDesigner::prompt_send() {
   if (sample_browser.file.open(WAV_NAME, O_READ)) {
     while (mcl.currentPage() == SAMPLE_BROWSER &&
            sample_browser.pending_action == PA_SELECT && sample_browser.show_samplemgr) {
-      GUI.loop();
+      mcl.loop();
     }
   }
   DEBUG_PRINTLN("cleaning up");

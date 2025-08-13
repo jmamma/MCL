@@ -218,7 +218,7 @@ void GridTask::transition_handler() {
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
                 if ((float)diff > ceil(tempo * 0.064f)) { //0.8 * 0.08 = 0.128f
-                   GUI.loop();
+                   mcl.loop();
                }
           }
         }

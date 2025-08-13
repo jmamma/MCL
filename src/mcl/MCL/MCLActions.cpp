@@ -572,7 +572,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   DEBUG_PRINTLN("send tracks to devices");
 
   uint8_t select_array[NUM_SLOTS];
-  // Take a copy, because we call GUI.loop later.
+
   memcpy(select_array, slot_select_array, NUM_SLOTS);
 
   MidiDevice *devs[2] = {
@@ -664,11 +664,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   // note, do not re-enter grid_task -- stackoverflow
 
-  //GUI.removeTask(&grid_task);
   while (clock_diff(myclock, read_clock_ms()) < latency_ms) {
-    // GUI.loop();
   }
-  //GUI.addTask(&grid_task);
 
   handle_mute_states(mute_states,true);
   /*All the tracks have been sent so clear the write queue*/
@@ -815,7 +812,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     proj.select_grid(old_grid);
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
       if (((float)diff > ceil(0.064f * tempo)) && gui_update) {
-          GUI.loop();
+          mcl.loop();
       }
     }
     proj.select_grid(grid_idx);

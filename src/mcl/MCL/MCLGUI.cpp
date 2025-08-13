@@ -49,7 +49,7 @@ bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
   text_input_page.init_text(dst, title, len);
   mcl.pushPage(TEXT_INPUT_PAGE);
   while (mcl.currentPage() == TEXT_INPUT_PAGE) {
-    GUI.loop();
+    mcl.loop();
   }
   m_trim_space(dst);
   return text_input_page.return_state;
@@ -59,7 +59,7 @@ bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
   questiondialog_page.init(title, text);
   mcl.pushPage(QUESTIONDIALOG_PAGE);
   while (mcl.currentPage() == QUESTIONDIALOG_PAGE) {
-    GUI.loop();
+    mcl.loop();
   }
   return questiondialog_page.return_state;
 }
@@ -68,7 +68,7 @@ void MCLGUI::wait_for_project() {
   again:
   mcl.setPage(START_MENU_PAGE);
   while (mcl.currentPage() == START_MENU_PAGE || mcl.currentPage() == TEXT_INPUT_PAGE || mcl.currentPage() == LOAD_PROJ_PAGE) {
-    GUI.loop();
+    mcl.loop();
   }
   if (!proj.project_loaded) { goto again; }
   DEBUG_PRINTLN("finished");
