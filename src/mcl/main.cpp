@@ -31,7 +31,6 @@ void setup() {
   picow_init();
 #endif
   mcl.setup();
-  GUI.init();
 }
 
 void loop() {
@@ -39,5 +38,5 @@ void loop() {
    debugBuffer.transmit();
    ISRTiming::print_stats();
 #endif
-   GUI.loop();
+   mcl.loop();
 }

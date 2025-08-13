@@ -18,8 +18,10 @@ void GridTask::setup(uint16_t _interval) { interval = _interval; }
 void GridTask::destroy() {}
 
 void GridTask::row_update() {
-  grid_page.set_active_row(last_active_row); // send led update
-  MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
+  if (last_active_row < GRID_LENGTH) {
+    grid_page.set_active_row(last_active_row); // send led update
+    MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
+  }
 }
 
 void GridTask::gui_update() {
@@ -29,9 +31,7 @@ void GridTask::gui_update() {
         auto active_track = mcl_seq.md_tracks[last_md_track];
         MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
       }
-      if (last_active_row < GRID_LENGTH) {
-        row_update();
-      }
+      row_update();
     }
     MDSeqTrack::gui_update = 0;
   }
@@ -59,26 +59,25 @@ void GridTask::load_queue_handler() {
     mcl_actions.load_tracks(255, track_select, row_select_array, mode, offset);
   }
 }
-
 void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
   //  A4Track *a4_track = (A4Track *)&temp_track;
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
   // MD GUI update.
 
-  perf_page.encoder_check();
-  key_interface.check_key_throttle();
+  GUI.removeTask(&grid_task);
 
   if (stop_hard_callback) {
     mcl_actions_callbacks.StopHardCallback();
     stop_hard_callback = false;
     load_queue.init();
-    return;
   }
-
-  gui_update();
-  load_queue_handler();
-  GridTask::transition_handler();
+  else {
+    gui_update();
+    load_queue_handler();
+    GridTask::transition_handler();
+  }
+  GUI.addTask(&grid_task);
 }
 
 void GridTask::update_transition_details() {
@@ -121,7 +120,6 @@ void GridTask::transition_handler() {
 
   uint8_t div32th_margin = 6;
 
-  GUI.removeTask(&grid_task);
 
   // 240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
   //                = 0.032 * MidiClock.get_tempo()
@@ -219,7 +217,6 @@ void GridTask::transition_handler() {
                        MidiClock.div192th_counter, go_step)) != 0) &&
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
-                handleIncomingMidi();
                 if ((float)diff > ceil(tempo * 0.064f)) { //0.8 * 0.08 = 0.128f
                    GUI.loop();
                }
@@ -278,7 +275,6 @@ void GridTask::transition_handler() {
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency();
   }
-  GUI.addTask(&grid_task);
 }
 
 bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,

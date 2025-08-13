@@ -84,6 +84,7 @@ public:
   PageIndex currentPage() { return current_page; }
 
   void setup();
+  void loop();
 };
 
 extern MCL mcl;

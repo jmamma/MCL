@@ -128,6 +128,8 @@ void MCL::setup() {
   DEBUG_DUMP(sizeof(MDTempoTrack));
   DEBUG_DUMP(sizeof(GridChainTrack));
 
+  GUI.init();
+
   bool ret = false;
 
   delay(50);
@@ -213,6 +215,12 @@ void MCL::setup() {
 #endif
   }
   param4.cur = 4;
+}
+
+void MCL::loop() {
+  perf_page.encoder_check();
+  key_interface.check_key_throttle();
+  GUI.loop();
 }
 
 bool tbd_handleEvent(gui_event_t *event) {
