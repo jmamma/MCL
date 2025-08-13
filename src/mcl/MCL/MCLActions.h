@@ -113,6 +113,7 @@ public:
                               uint8_t *row_array = nullptr, uint8_t load_offset = 255);
   void manual_transition(uint8_t *slot_select_array, uint8_t *row_array, uint8_t load_offset);
   void update_chain_links(uint8_t n, GridDeviceTrack *gdt);
+  void cache_track(uint8_t n, GridDeviceTrack* gdt, uint8_t track_idx);
   void cache_next_tracks(uint8_t *slot_select_array, bool gui_update = false);
   void calc_next_slot_transition(uint8_t n, bool ignore_chain_settings = false,
                                  bool ignore_overflow = false);

@@ -664,11 +664,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   // note, do not re-enter grid_task -- stackoverflow
 
-  GUI.removeTask(&grid_task);
+  //GUI.removeTask(&grid_task);
   while (clock_diff(myclock, read_clock_ms()) < latency_ms) {
-    //  GUI.loop();
+    // GUI.loop();
   }
-  GUI.addTask(&grid_task);
+  //GUI.addTask(&grid_task);
 
   handle_mute_states(mute_states,true);
   /*All the tracks have been sent so clear the write queue*/
@@ -741,6 +741,40 @@ void MCLActions::update_chain_links(uint8_t n, GridDeviceTrack *gdt) {
     }
 }
 
+void MCLActions::cache_track(uint8_t n, GridDeviceTrack* gdt, uint8_t track_idx) {
+  EmptyTrack empty_track;
+
+  auto *ptrack = empty_track.load_from_grid_512(track_idx, links[n].row);
+  send_machine[n] = 0;
+
+  if (ptrack == nullptr ||
+      (ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type)) {
+    empty_track.clear();
+    if (ptrack->active != EMPTY_TRACK_TYPE) {
+      empty_track.init();
+    }
+    ptrack = empty_track.init_track_type(gdt->track_type);
+    ptrack->init(track_idx, gdt->seq_track);
+  } else {
+    if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
+      ptrack->init_track_type(ptrack->get_parent_model());
+    }
+    if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
+      DEBUG_PRINTLN("comparing sound");
+      if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
+        DEBUG_PRINTLN("no match");
+        ptrack->transition_cache(track_idx, n);
+        send_machine[n] = 1;
+      }
+    }
+  }
+
+  if (ptrack != nullptr) {
+    ptrack->store_in_mem(gdt->mem_slot_idx);
+  }
+}
+
+
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                                    bool gui_update) {
 
@@ -778,51 +812,21 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     uint32_t diff = MidiClock.clock_diff_div192(
         MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 4 * 12);
 
+    proj.select_grid(old_grid);
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
-      proj.select_grid(old_grid);
-      handleIncomingMidi();
       if (((float)diff > ceil(0.064f * tempo)) && gui_update) {
-        GUI.loop();
+          GUI.loop();
       }
     }
     proj.select_grid(grid_idx);
 
     update_chain_links(n, gdt);
 
-    // if (links[n].row >= GRID_LENGTH)
     if (links[n].row >= GRID_LENGTH ||
         links[n].row == grid_page.active_slots[n] || links[n].loops == 0)
       continue;
 
-    EmptyTrack empty_track;
-
-    auto *ptrack = empty_track.load_from_grid_512(track_idx, links[n].row);
-    send_machine[n] = 0;
-
-    if (ptrack == nullptr || ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type) {
-      // EMPTY_TRACK_TYPE
-      ////DEBUG_PRINTLN(F("clear track"));
-      empty_track.clear();
-      if (ptrack->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
-      ptrack = empty_track.init_track_type(gdt->track_type);
-      ptrack->init(track_idx, gdt->seq_track);
-    } else {
-      if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
-        ptrack->init_track_type(ptrack->get_parent_model());
-      }
-      if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
-        DEBUG_PRINTLN("comparing sound");
-        if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
-          DEBUG_PRINTLN("no match");
-          ptrack->transition_cache(track_idx, n);
-          send_machine[n] = 1;
-        }
-      }
-    }
-    if (ptrack == nullptr) {
-      continue;
-    }
-    ptrack->store_in_mem(gdt->mem_slot_idx);
+    cache_track(n, gdt, track_idx);
   }
   //  //DEBUG_PRINTLN("cache finished");
   proj.select_grid(old_grid);
