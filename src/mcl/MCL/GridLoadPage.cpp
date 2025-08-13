@@ -125,7 +125,7 @@ void GridLoadPage::display() {
       oled_display.setCursor(MCLGUI::s_menu_x + 26, 14);
       oled_display.print(F("DESTINATION"));
       trig_mask = 0;
-      SET_BIT16(trig_mask, offset);
+      if (offset < 16) { SET_BIT16(trig_mask, offset); }
       // if (offset < 16) {
       //   oled_display.setCursor(MCLGUI::s_menu_x + 4 + offset * MCLGUI::seq_w
       //   + 1, 16);
