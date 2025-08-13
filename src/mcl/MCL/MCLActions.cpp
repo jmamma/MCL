@@ -750,7 +750,7 @@ void MCLActions::cache_track(uint8_t n, GridDeviceTrack* gdt, uint8_t track_idx)
   if (ptrack == nullptr ||
       (ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type)) {
     empty_track.clear();
-    if (ptrack->active != EMPTY_TRACK_TYPE) {
+    if (ptrack == nullptr || ptrack->active != EMPTY_TRACK_TYPE) {
       empty_track.init();
     }
     ptrack = empty_track.init_track_type(gdt->track_type);
