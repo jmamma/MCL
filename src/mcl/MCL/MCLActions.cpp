@@ -370,7 +370,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
 
     if (device_track == nullptr || device_track->active != gdt->track_type && device_track->get_parent_model() != gdt->track_type) {
       empty_track.clear();
-      if (device_track->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
+      if (device_track == nullptr || device_track->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
       device_track = device_track->init_track_type(gdt->track_type);
       if (device_track) {
         device_track->init(track_idx_dst, gdt_dst->seq_track);
