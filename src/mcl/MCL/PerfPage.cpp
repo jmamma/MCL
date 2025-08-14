@@ -308,7 +308,7 @@ void PerfPage::display() {
 
 
 void PerfPage::encoder_check() {
-  if (GUI.currentPage() == this || mcl.currentPage() == MIXER_PAGE) return;
+  if (!isSetup || GUI.currentPage() == this || mcl.currentPage() == MIXER_PAGE) return;
   encoder_send();
 }
 
