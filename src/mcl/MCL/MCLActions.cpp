@@ -811,6 +811,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     proj.select_grid(old_grid);
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
+          handleIncomingMidi();
       if (((float)diff > ceil(0.064f * tempo)) && gui_update) {
           mcl.loop();
       }

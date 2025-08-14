@@ -124,6 +124,6 @@ void handleIncomingMidi() {
   Midi2.processMidi();
   MidiUSB.processMidi();
 
-  MidiUartParent::handle_midi_lock = 0;
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 
