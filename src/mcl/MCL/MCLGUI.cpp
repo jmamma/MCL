@@ -186,7 +186,7 @@ void MCLGUI::clear_popup(uint8_t h) {
   if (h == 0) {
     h = s_menu_h;
   }
-  oled_display.fillRect(s_menu_x + 1, s_menu_y + 7, s_menu_w - 2, h - 8, BLACK);
+  oled_display.fillRect(s_menu_x + 1, s_menu_y + 7, s_menu_w - 2, h - 4, BLACK);
 }
 
 void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
