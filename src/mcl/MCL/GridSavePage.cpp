@@ -24,24 +24,21 @@ void GridSavePage::init() {
 void GridSavePage::setup() {}
 
 void GridSavePage::draw_popup() {
-  char str[16] = "GROUP SAVE";
-
-  if (!show_track_type) {
-    strcpy_P(str, PSTR("SAVE TRACKS"));
-  }
+  char str[16];
+  strcpy_P(str, PSTR("SAVE TRACKS"));
   mcl_gui.draw_popup(str, true);
 }
 
 void GridSavePage::loop() {}
 void GridSavePage::display() {
 
-  draw_popup();
-
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
+  oled_display.setFont(&TomThumb);
   if (show_track_type) {
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
   } else {
+    mcl_gui.clear_popup();
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 24, note_interface.notes_off | note_interface.notes_on );
     oled_display.setFont(&Elektrothic);
     oled_display.setCursor(MCLGUI::s_menu_x + 4, 21);
@@ -106,10 +103,7 @@ void GridSavePage::save() {
 }
 
 void GridSavePage::group_select() {
-  show_track_type = true;
-  char str[] = "SAVE GROUPS";
-  MD.popup_text(str, true);
-  mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+  show_group_select_ui("SAVE GROUPS");
 }
 
 bool GridSavePage::handleEvent(gui_event_t *event) {

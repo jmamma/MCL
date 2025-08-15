@@ -951,7 +951,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           loadmode:
             mcl_cfg.load_mode = key - MDX_KEY_BANKA + 1;
             bool persistent = false;
-            grid_load_page.draw_popup_title(mcl_cfg.load_mode, persistent);
+            grid_load_page.md_popup_title(mcl_cfg.load_mode, persistent);
             return true;
           }
           case MDX_KEY_NO: {

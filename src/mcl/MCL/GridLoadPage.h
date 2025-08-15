@@ -21,7 +21,7 @@ class GridLoadPage : public GridIOPage {
  void get_mode_str(char *str, uint8_t mode);
  void display_load();
  void draw_popup();
- void draw_popup_title(uint8_t mode, bool persistent = true);
+ void md_popup_title(uint8_t mode, bool persistent = true);
  void loop();
  void display();
  void action() { load(); }

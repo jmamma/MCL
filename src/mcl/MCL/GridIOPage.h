@@ -18,6 +18,7 @@ class GridIOPage : public LightPage {
 
  }
  void track_select_array_from_type_select(uint8_t *track_select_array);
+ void show_group_select_ui(char *title);
  virtual void init();
  virtual void cleanup();
  virtual void draw_popup() = 0;

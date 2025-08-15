@@ -138,45 +138,43 @@ void MCLGUI::draw_knob(uint8_t i, Encoder *enc, const char *title, bool highligh
   draw_light_encoder(x + 7, 6, enc, title,highlight);
 }
 
-static char title_buf[16];
 
 //  ref: Design/popup_menu.png
-void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
+
+static char title_buf[16];
+
+void MCLGUI::draw_popup_title(const char *title) {
   strcpy(title_buf, title);
-  m_toupper(title_buf);
-
-  h = h ? h : s_menu_h;
-
-  oled_display.setFont(&TomThumb);
-
-  // Combine rect operations to reduce function call overhead
-  oled_display.fillRect(s_menu_x - 1, s_menu_y + 1, s_menu_w + 2, h + 4, BLACK);
-  oled_display.drawRect(s_menu_x, s_menu_y + 2, s_menu_w, h + 2, WHITE);
-  oled_display.fillRect(s_menu_x + 1, s_menu_y + 3, s_menu_w - 2, 4, WHITE);
-
-  // Single pixel operations (unavoidable)
-  oled_display.drawPixel(s_menu_x, s_menu_y + 2, BLACK);
-  oled_display.drawPixel(s_menu_x + s_menu_w - 1, s_menu_y + 2, BLACK);
-  oled_display.fillRect(s_title_x, s_menu_y, s_title_w, 2, WHITE);
-  oled_display.drawPixel(s_title_x, s_menu_y, BLACK);
-  oled_display.drawPixel(s_title_x + s_title_w - 1, s_menu_y, BLACK);
-
-  oled_display.setTextColor(BLACK);
-
-  for (uint8_t len = 0, *p = (uint8_t*)title_buf; *p; p++)
-  len += (*p != ' ');
-
-
+  //m_toupper(title_buf);
   auto len = strlen(title_buf);
   uint8_t whitespace = 0;
   for (uint8_t n = 0; n < len; n++) {
     if (title_buf[n] == ' ') { whitespace++; }
   }
   len -= whitespace;
-  oled_display.setCursor(s_title_x + (s_title_w - len * 4) / 2, s_menu_y + 6);
+
+  oled_display.setFont(&TomThumb);
+
   // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
+  oled_display.drawFastHLine(s_title_x + 2, s_menu_y, s_title_w - 4, WHITE);
+  oled_display.drawFastHLine(s_title_x + 1, s_menu_y + 1, s_title_w - 2, WHITE);
+  oled_display.fillRect(s_menu_x + 1, s_menu_y + 2, s_menu_w - 2, 5, WHITE);
+
+  oled_display.setTextColor(BLACK);
+  oled_display.setCursor(s_title_x + (s_title_w - len * 4) / 2, s_menu_y + 6);
   oled_display.println(title_buf);
   oled_display.setTextColor(WHITE);
+
+}
+
+void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
+
+  h = h ? h : s_menu_h;
+
+  // Combine rect operations to reduce function call overhead
+  oled_display.fillRect(s_menu_x - 1, s_menu_y + 1, s_menu_w + 2, h + 4, BLACK);
+  drawRoundRect(s_menu_x, s_menu_y + 2, s_menu_w, h + 2, WHITE);
+  draw_popup_title(title);
   if (!deferred_display) {
     oled_display.display();
   }
@@ -186,7 +184,7 @@ void MCLGUI::clear_popup(uint8_t h) {
   if (h == 0) {
     h = s_menu_h;
   }
-  oled_display.fillRect(s_menu_x + 1, s_menu_y + 4, s_menu_w - 2, h - 5, BLACK);
+  oled_display.fillRect(s_menu_x + 1, s_menu_y + 7, s_menu_w - 2, h - 8, BLACK);
 }
 
 void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
@@ -674,12 +672,6 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
 //  oled_display.clearDisplay();
 
   uint8_t x = 0;
-  //oled_display.fillRect(0, 0, 128, 7, WHITE);
-  oled_display.fillRect(s_title_x + 10, 0, 50, 7, WHITE);
-  oled_display.setCursor(s_title_x + (s_title_w - 12 * 4) / 2 + 2, 6);
-  // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
-  oled_display.setTextColor(BLACK);
-  oled_display.println("GROUP SELECT");
 
   oled_display.fillRect(0, 8, 128, 23, BLACK);
   MCLGIF *gif;
@@ -730,6 +722,16 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
 
     if (select) {
    //   gif->reset();
+      oled_display.fillRect(x + 1, 10, 23, 20, INVERT);
+      drawRoundRect(x, 9, 24, 21, WHITE);
+      oled_display.drawRect(x + 1, 10, 22, 19, BLACK);
+} else {
+      oled_display.drawRect(x, 9, 24, 21, WHITE);
+}
+
+/*
+    if (select) {
+   //   gif->reset();
       oled_display.fillRect(x, 9, 24, 21, INVERT);
 
        oled_display.drawRect(x + 1, 10, 22, 19, BLACK);
@@ -740,7 +742,7 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
       oled_display.drawPixel(x + 23,9,!select);
       oled_display.drawPixel(x,9 + 20,!select);
       oled_display.drawPixel(x + 23,9 + 20,!select);
-
+*/
     x += 26;
   }
 }

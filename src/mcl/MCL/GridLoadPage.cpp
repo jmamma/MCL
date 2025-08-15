@@ -19,7 +19,8 @@ void GridLoadPage::init() {
   encoders[1]->cur = mcl_cfg.chain_queue_length;
   encoders[3]->cur = mcl_cfg.chain_load_quant;
 
-  draw_popup_title(mcl_cfg.load_mode);
+  md_popup_title(mcl_cfg.load_mode);
+  draw_popup();
 }
 
 void GridLoadPage::setup() {}
@@ -42,7 +43,7 @@ void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
   }
   }
 }
-void GridLoadPage::draw_popup_title(uint8_t mode, bool persistent) {
+void GridLoadPage::md_popup_title(uint8_t mode, bool persistent) {
   char modestr[16] = "LOAD ";
   get_mode_str(modestr + 5, mode);
   MD.popup_text(modestr, persistent);
@@ -50,12 +51,8 @@ void GridLoadPage::draw_popup_title(uint8_t mode, bool persistent) {
 
 void GridLoadPage::draw_popup() {
   char str[16];
-  strcpy_P(str, PSTR("GROUP LOAD"));
-
-  if (!show_track_type) {
-    strcpy_P(str, PSTR("LOAD TRACKS"));
+  strcpy_P(str, PSTR("LOAD TRACKS"));
     // str[10] = 'X' + proj.get_grid();
-  }
   mcl_gui.draw_popup(str, true);
 }
 
@@ -75,7 +72,7 @@ void GridLoadPage::display_load() {
 void GridLoadPage::loop() {
   if (encoders[0]->hasChanged()) {
     mcl_cfg.load_mode = encoders[0]->cur;
-    draw_popup_title(mcl_cfg.load_mode);
+    md_popup_title(mcl_cfg.load_mode);
   }
   if (encoders[1]->hasChanged()) {
     if (encoders[0]->cur == LOAD_QUEUE) {
@@ -109,15 +106,20 @@ void GridLoadPage::get_modestr(char *modestr) {
   }
 }
 
+void GridLoadPage::group_select() {
+  show_group_select_ui("LOAD GROUPS");
+}
+
 void GridLoadPage::display() {
 
-  draw_popup();
 
   const uint64_t mute_mask = 0, slide_mask = 0;
 
+  oled_display.setFont(&TomThumb);
   if (show_track_type) {
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
   } else {
+    mcl_gui.clear_popup();
     uint16_t trig_mask = note_interface.notes_off | note_interface.notes_on;
     //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
     //                              "STEP", K);
@@ -210,13 +212,6 @@ void GridLoadPage::load() {
   grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(),
                            track_select_array, offset);
   mcl.setPage(GRID_PAGE);
-}
-
-void GridLoadPage::group_select() {
-  show_track_type = true;
-  char str[] = "LOAD GROUPS";
-  MD.popup_text(str, true);
-  MD.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
 }
 
 void GridLoadPage::group_load(uint8_t row, uint8_t offset_) {

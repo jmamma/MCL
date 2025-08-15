@@ -29,6 +29,13 @@ void GridIOPage::init() {
   R.use_icons_logo();
 }
 
+void GridIOPage::show_group_select_ui(char *title) {
+  show_track_type = true;
+  MD.popup_text(title, true);
+  mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+  mcl_gui.draw_popup_title(title);
+}
+
 void GridIOPage::track_select_array_from_type_select(
     uint8_t *track_select_array) {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
