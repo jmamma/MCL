@@ -24,7 +24,7 @@
 #if defined(__AVR__)
   #define GUI_THRESHOLD_FACTOR 0.064f  //80ms
 #else
-  #define GUI_THRESHOLD_FACTOR 0.064f  //40ms
+  #define GUI_THRESHOLD_FACTOR 0.064f  //80ms
 #endif
 
 class DeviceLatency {
