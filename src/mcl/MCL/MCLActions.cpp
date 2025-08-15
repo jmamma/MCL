@@ -944,20 +944,32 @@ void MCLActions::calc_latency() {
       devs[1]->asElektronDevice(),
   };
 
-  memset(dev_latency,0,sizeof(dev_latency));
+  memset(dev_latency, 0, sizeof(dev_latency));
 
   bool send_dev[NUM_DEVS] = {0};
 
   uint8_t num_devices = 0;
 
-  // DEBUG_PRINTLN("calc latency");
-  // DEBUG_CHECK_STACK();
+#if defined(__AVR__)
+  constexpr uint16_t TRACK_LOAD_TIME = 4; // 4 ms
+#else
+  constexpr uint16_t TRACK_LOAD_TIME = 0; // 0 ms
+#endif
+
+  constexpr uint32_t LOAD_DIVISOR = (10 * 1000);
+
+  uint16_t dev_load_penalty[2] = {0};
+
+  if constexpr (TRACK_LOAD_TIME > 0) {
+    dev_load_penalty[0] = (devs[0]->uart->speed * TRACK_LOAD_TIME) / LOAD_DIVISOR;
+    dev_load_penalty[1] = (devs[1]->uart->speed * TRACK_LOAD_TIME) / LOAD_DIVISOR;
+  }
+
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((grid_page.active_slots[n] == SLOT_DISABLED))
       continue;
     if (next_transitions[n] == next_transition) {
       GridDeviceTrack *gdt = get_grid_dev_track(n);
-      uint8_t track_idx = get_track_idx(n);
       if (gdt == nullptr) {
         continue;
       }
@@ -973,7 +985,7 @@ void MCLActions::calc_latency() {
             gdt->track_type != ptrack->active) {
           continue;
         }
-        dev_latency[device_idx].latency_bytes += ptrack->calc_latency(n);
+        dev_latency[device_idx].latency_bytes += ptrack->calc_latency(n) + dev_load_penalty[device_idx];
       }
       if (send_dev[device_idx] != true) {
         num_devices++;
