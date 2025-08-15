@@ -222,7 +222,7 @@ void GridTask::transition_handler() {
                  (MidiClock.div192th_counter < go_step) &&
                  (MidiClock.state == 2)) {
                    handleIncomingMidi();
-                if ((float)diff > ceil(tempo * 0.064f)) { //0.8 * 0.08 seconds = 0.064f
+                if ((float)diff > ceil(tempo * GUI_THRESHOLD_FACTOR)) {
                    mcl.loop();
                }
           }
@@ -311,7 +311,7 @@ bool GridTask::transition_load(uint8_t n, uint8_t track_idx,
     return false;
   }
 
-  gdt->seq_track->count_down = -1;
+  gdt->seq_track->count_down = 0;
   gdt->seq_track->load_sound = mcl_actions.send_machine[n];
   if (mcl_actions.send_machine[n] == 1) {
     pmem_track->transition_send(track_idx, n);

@@ -781,16 +781,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   uint32_t diff = 0;
 
   float tempo = MidiClock.get_tempo();
-  //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
-  float div32th_per_second = tempo * 0.133333333333f;
-  //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
-  // float div192th_per_second = tempo * 0.8f;
-  // float div192th_time = 1.0 / div192th_per_second;
-  float div192th_time = 1.25f / tempo;
-
-  // float div192th_time = 1.25 / tempo;
-  // diff * div19th_time > 80ms equivalent to diff > (0.08/1.25) * tempo
-  //float ms = (0.08 * 0.80) * tempo == 0.064 * tempo;
 
   uint8_t n = NUM_SLOTS;
   while (n--) {
@@ -812,7 +802,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     proj.select_grid(old_grid);
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
           handleIncomingMidi();
-      if (((float)diff > ceil(0.064f * tempo)) && gui_update) {
+      if (((float)diff > ceil(GUI_THRESHOLD_FACTOR * tempo)) && gui_update) {
           mcl.loop();
       }
     }

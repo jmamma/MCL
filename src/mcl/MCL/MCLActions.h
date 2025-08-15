@@ -17,6 +17,16 @@
 #define TRANSITION_MUTE 2
 #define TRANSITION_UNMUTE 3
 
+//div192th_time = 1.25 / tempo;
+//diff * div19th_time > 80ms equivalent to diff > (0.08/1.25) * tempo
+//float ms = (0.08 * 0.80) * tempo == 0.064 * tempo; 80ms
+
+#if defined(__AVR__)
+  #define GUI_THRESHOLD_FACTOR 0.064f  //80ms
+#else
+  #define GUI_THRESHOLD_FACTOR 0.016f  //20ms
+#endif
+
 class DeviceLatency {
 public:
   uint16_t latency_bytes;
