@@ -24,7 +24,7 @@
 #if defined(__AVR__)
   #define GUI_THRESHOLD_FACTOR 0.064f  //80ms
 #else
-  #define GUI_THRESHOLD_FACTOR 0.016f  //20ms
+  #define GUI_THRESHOLD_FACTOR 0.064f  //40ms
 #endif
 
 class DeviceLatency {
@@ -117,7 +117,7 @@ public:
   void save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
                    uint8_t readpattern = 255);
 
-  void load_tracks(int row, uint8_t *slot_select_array,
+  void load_tracks(uint8_t *slot_select_array,
                    uint8_t *_row_array = nullptr, uint8_t load_mode = 255, uint8_t load_offset = 255);
   void send_tracks_to_devices(uint8_t *slot_select_array,
                               uint8_t *row_array = nullptr, uint8_t load_offset = 255);

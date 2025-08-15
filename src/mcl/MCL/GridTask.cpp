@@ -56,7 +56,7 @@ void GridTask::load_queue_handler() {
       DEBUG_PRINTLN(row_select_array[n]);
     }
     mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(255, track_select, row_select_array, mode, offset);
+    mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
   }
 }
 void GridTask::run() {

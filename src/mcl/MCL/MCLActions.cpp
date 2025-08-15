@@ -269,7 +269,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
   proj.select_grid(old_grid);
 }
 
-void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
+void MCLActions::load_tracks(uint8_t *slot_select_array,
                              uint8_t *_row_array, uint8_t load_mode, uint8_t load_offset) {
   // DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
@@ -294,11 +294,7 @@ void MCLActions::load_tracks(int row, uint8_t *slot_select_array,
 
     if (gdt == nullptr) { continue; }
 
-    if (_row_array == nullptr) {
-      row_array[n] = row;
-    } else {
-      row_array[n] = _row_array[n];
-    }
+    row_array[n] = _row_array[n];
 
     if (load_mode == LOAD_QUEUE) {
       chains[n].add(row_array[n], get_chain_length());
@@ -795,10 +791,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       continue;
 
     //Assumes next transisiton is only 4 steps away
-    //
     uint32_t diff = MidiClock.clock_diff_div192(
         MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 4 * 12);
-
     proj.select_grid(old_grid);
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
           handleIncomingMidi();
