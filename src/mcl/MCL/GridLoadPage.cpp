@@ -214,7 +214,7 @@ void GridLoadPage::load() {
   mcl.setPage(GRID_PAGE);
 }
 
-void GridLoadPage::group_load(uint8_t row, uint8_t offset_) {
+void GridLoadPage::group_load(uint8_t row, uint8_t load_offset) {
 
   if (row >= GRID_LENGTH) {
     return;
@@ -228,7 +228,7 @@ void GridLoadPage::group_load(uint8_t row, uint8_t offset_) {
   // oled_display.display();
 
   mcl_actions.write_original = 1;
-  grid_task.load_queue.put(mcl_cfg.load_mode, row, track_select_array, offset);
+  grid_task.load_queue.put(mcl_cfg.load_mode, row, track_select_array, load_offset);
 }
 
 bool GridLoadPage::handleEvent(gui_event_t *event) {
