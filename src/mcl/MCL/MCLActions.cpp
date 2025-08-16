@@ -795,7 +795,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
         MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 4 * 12);
     proj.select_grid(old_grid);
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
-          handleIncomingMidi();
+
+            handleIncomingMidi();
       if (((float)diff > ceil(GUI_THRESHOLD_FACTOR * tempo)) && gui_update) {
           mcl.loop();
       }
@@ -934,19 +935,13 @@ void MCLActions::calc_latency() {
 
   uint8_t num_devices = 0;
 
-#if defined(__AVR__)
-  constexpr uint16_t TRACK_LOAD_TIME = 4; // 4 ms
-#else
-  constexpr uint16_t TRACK_LOAD_TIME = 0; // 0 ms
-#endif
-
   constexpr uint32_t LOAD_DIVISOR = (10 * 1000);
 
   uint16_t dev_load_penalty[2] = {0};
 
-  if constexpr (TRACK_LOAD_TIME > 0) {
-    dev_load_penalty[0] = (devs[0]->uart->speed * TRACK_LOAD_TIME) / LOAD_DIVISOR;
-    dev_load_penalty[1] = (devs[1]->uart->speed * TRACK_LOAD_TIME) / LOAD_DIVISOR;
+  if constexpr (TRACK_MIN_LOAD_TIME > 0) {
+    dev_load_penalty[0] = (devs[0]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
+    dev_load_penalty[1] = (devs[1]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
   }
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -969,7 +964,7 @@ void MCLActions::calc_latency() {
             gdt->track_type != ptrack->active) {
           continue;
         }
-        dev_latency[device_idx].latency_bytes += ptrack->calc_latency(n) + dev_load_penalty[device_idx];
+        dev_latency[device_idx].latency_bytes += max(ptrack->calc_latency(n),dev_load_penalty[device_idx]);
       }
       if (send_dev[device_idx] != true) {
         num_devices++;

@@ -23,8 +23,10 @@
 
 #if defined(__AVR__)
   #define GUI_THRESHOLD_FACTOR 0.064f  //80ms
+  #define TRACK_MIN_LOAD_TIME 16 //16ms
 #else
-  #define GUI_THRESHOLD_FACTOR 0.064f  //80ms
+  #define GUI_THRESHOLD_FACTOR 0.008f  //10ms
+  #define TRACK_MIN_LOAD_TIME 1 //1ms
 #endif
 
 class DeviceLatency {
