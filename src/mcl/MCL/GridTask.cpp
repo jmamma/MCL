@@ -74,6 +74,7 @@ void GridTask::run() {
   }
   else {
     gui_update();
+    load_queue_handler();
     GridTask::transition_handler();
   }
   GUI.addTask(&grid_task);
