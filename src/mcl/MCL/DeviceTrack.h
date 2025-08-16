@@ -110,7 +110,7 @@ public:
 
     // 2. Calculate offsets using safe, portable uintptr_t arithmetic.
     uintptr_t sound_data_offset = (reinterpret_cast<uintptr_t>(get_sound_data_ptr()) - reinterpret_cast<uintptr_t>(this));
-    uintptr_t pos = region_base + (static_cast<uintptr_t>(get_track_size()) * column) + sound_data_offset;
+    uintptr_t pos = region_base + (static_cast<uintptr_t>(MEMORY_ALIGN(get_track_size())) * column) + sound_data_offset;
     // 3. Convert the final calculated address back to a pointer.
     volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
     return memcmp_bank1(get_sound_data_ptr(), ptr, get_sound_data_size());

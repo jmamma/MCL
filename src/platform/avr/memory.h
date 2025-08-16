@@ -79,7 +79,6 @@
 
 #ifdef __cplusplus
 
-
 /* MegaCommand hardware has 8KB of stack memory and access to 128KB of external SRAM, split across 4 banks.
    Because stack memory and external memory share the same address range, we lose direct access to the other banks and have to access
    them via special modes */

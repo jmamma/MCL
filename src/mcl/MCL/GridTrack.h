@@ -58,7 +58,7 @@ public:
   ///  caller guarantees that the type is reconstructed correctly
   ///  uploads from the runtime object to BANK1
   bool store_in_mem(uint8_t column) {
-    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * (uint32_t)(column));
+    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column));
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(ptr, _this(), get_track_size());
     return true;
@@ -67,8 +67,8 @@ public:
   ///  caller guarantees that the type is reconstructed correctly
   ///  downloads from BANK1 to the runtime object
   bool load_from_mem(uint8_t column, size_t size = 0) {
-    uint16_t bytes = size ? size : get_track_size();
-    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * (uint32_t)(column));
+          uint16_t bytes = size ? size : get_track_size();
+    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column));
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(_this(), ptr, bytes);
     return true;
@@ -98,9 +98,8 @@ public:
   }
 
   virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uint16_t get_region_size() { return get_track_size(); }
+  virtual uint16_t get_region_size() { return MEMORY_ALIGN(get_track_size()); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
-  bool is_external() { return get_region() != BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same) { }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }

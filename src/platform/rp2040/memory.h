@@ -26,6 +26,8 @@
 
 #define NUM_CLOCK_CALLBACKS 4
 
+#define MEMORY_ALIGN(size) (((size) + 3) & ~3)
+
 //BANK1
 template<typename T>
 FORCED_INLINE() extern inline T get_bank1(volatile T *dst) {

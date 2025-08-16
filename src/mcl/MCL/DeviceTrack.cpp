@@ -142,7 +142,7 @@ bool DeviceTrackChunk::load_from_mem_chunk(uint8_t column, uint8_t chunk) {
   // 2. Calculate the final address using uintptr_t for the variable and all
   // parts of the calculation.
   uintptr_t pos = get_region() +
-                  (static_cast<uintptr_t>(get_track_size()) * column) + offset +
+                  static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column)) + offset +
                   (chunk_size * chunk);
   // 3. Convert the final integer address back to a pointer for the memory copy.
   volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
@@ -165,7 +165,7 @@ bool DeviceTrackChunk::load_link_from_mem(uint8_t column) {
                      reinterpret_cast<uintptr_t>(this);
   // 2. Calculate the final address using uintptr_t.
   uintptr_t pos = get_region() +
-                  (static_cast<uintptr_t>(get_track_size()) * column) + offset;
+                  static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column)) + offset;
   // 3. Convert the final integer address back to a pointer.
   volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
   memcpy_bank1(&this->link, ptr, sizeof(GridLink));

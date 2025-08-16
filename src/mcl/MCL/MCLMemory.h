@@ -67,23 +67,20 @@ constexpr size_t NUM_LOCKS = 8;
 // MDFXTrack 43
 // MDTempoTrack 11
 
+#if !defined(MEMORY_ALIGN)
+#define MEMORY_ALIGN(size) (size)  // for avr, dont align
+#endif
 
-// So we manually allocate the following BANK1 memory regions, with a little bit of headroom:
+constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(534);
+constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2094);
 
-constexpr size_t GRID1_TRACK_LEN = 534;
-constexpr size_t GRID2_TRACK_LEN = 2094;
-
-constexpr size_t DEVICE_TRACK_LEN = 7;
-constexpr size_t MDLFO_TRACK_LEN = 226;
-constexpr size_t MDROUTE_TRACK_LEN = 25;
-constexpr size_t MDFX_TRACK_LEN = 43;
-constexpr size_t MDTEMPO_TRACK_LEN = 11;
-constexpr size_t PERF_TRACK_LEN = 491;
-constexpr size_t GRIDCHAIN_TRACK_LEN = 551;
-
-//Use these to produce compiler errors that probes the sizes!
-template<uint32_t X> struct __SIZE_PROBE;
-
+constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);
+constexpr size_t MDLFO_TRACK_LEN = MEMORY_ALIGN(226);
+constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(25);
+constexpr size_t MDFX_TRACK_LEN = MEMORY_ALIGN(43);
+constexpr size_t MDTEMPO_TRACK_LEN = MEMORY_ALIGN(11);
+constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(491);
+constexpr size_t GRIDCHAIN_TRACK_LEN = MEMORY_ALIGN(551);
 
 #ifdef EXT_TRACKS
 constexpr size_t EMPTY_TRACK_LEN = GRID2_TRACK_LEN - DEVICE_TRACK_LEN;
