@@ -74,7 +74,6 @@ void GridTask::run() {
   }
   else {
     gui_update();
-    load_queue_handler();
     GridTask::transition_handler();
   }
   GUI.addTask(&grid_task);
@@ -107,7 +106,6 @@ void GridTask::update_transition_details() {
 }
 
 void GridTask::transition_handler() {
-
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
       midi_active_peering.get_device(UART2_PORT),
@@ -120,20 +118,22 @@ void GridTask::transition_handler() {
 
   uint8_t div32th_margin = 6;
 
-
-  // 240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
-  //                = 0.032 * MidiClock.get_tempo()
-  //
   while (MidiClock.clock_less_than(
              MidiClock.div32th_counter + max(2, 0.032f * MidiClock.get_tempo()),
              (uint32_t)mcl_actions.next_transition * 2) <= 0) {
 
+
+  // 240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
+  //                = 0.032 * MidiClock.get_tempo()
+  //
+  if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
+      break;
+  }
     //float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
     //float div32th_time = 1.0f / div32th_per_second;
 
-    if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
-      break;
-    }
+    load_queue_handler();
+
     DEBUG_PRINTLN(F("Preparing for next transition:"));
     DEBUG_PRINTLN(MidiClock.div16th_counter);
     DEBUG_PRINTLN(mcl_actions.next_transition);
@@ -215,16 +215,21 @@ void GridTask::transition_handler() {
 
           mcl_actions.div192th_total_latency -= mcl_actions.dev_latency[device_idx].div192th_latency;
 
-          uint32_t diff;
+          while (true) {
+            //uint32_t counter = atomic_read(&MidiClock.div192th_counter);
+            uint32_t counter = MidiClock.div192th_counter;
 
-          while (((diff = MidiClock.clock_diff_div192(
-                       MidiClock.div192th_counter, go_step)) != 0) &&
-                 (MidiClock.div192th_counter < go_step) &&
-                 (MidiClock.state == 2)) {
-                   handleIncomingMidi();
-                if ((float)diff > ceil(tempo * GUI_THRESHOLD_FACTOR)) {
-                   mcl.loop();
-               }
+            uint32_t diff = MidiClock.clock_diff_div192(counter, go_step);
+
+            if (diff == 0 || counter >= go_step || MidiClock.state != 2) {
+              break;
+            }
+
+            handleIncomingMidi();
+
+            if ((float)diff > ceil(tempo * GUI_THRESHOLD_FACTOR)) {
+              mcl.loop();
+            }
           }
         }
         wait = false;
