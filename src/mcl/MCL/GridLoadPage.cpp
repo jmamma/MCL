@@ -284,8 +284,6 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
       key_interface.off();
 
       group_load(grid_page.getRow(), offset);
-      grid_task.load_queue_handler();
-      grid_task.transition_handler();
       mcl.setPage(GRID_PAGE);
       return true;
     }
