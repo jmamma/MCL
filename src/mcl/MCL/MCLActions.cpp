@@ -790,17 +790,19 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
     if (gdt == nullptr)
       continue;
 
-    //Assumes next transisiton is only 4 steps away
-    uint32_t diff = MidiClock.clock_diff_div192(
-        MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 4 * 12);
     proj.select_grid(old_grid);
-    while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
 
-            handleIncomingMidi();
+    //Assumes next transisiton is only 2 steps away
+    uint32_t diff = MidiClock.clock_diff_div192(
+        MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 2 * 12);
+
+    while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
+      handleIncomingMidi();
       if (((float)diff > ceil(GUI_THRESHOLD_FACTOR * tempo)) && gui_update) {
-          mcl.loop();
+        mcl.loop();
       }
     }
+
     proj.select_grid(grid_idx);
 
     update_chain_links(n, gdt);
@@ -811,7 +813,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     cache_track(n, gdt, track_idx);
   }
-  //  //DEBUG_PRINTLN("cache finished");
   proj.select_grid(old_grid);
 }
 
@@ -939,10 +940,8 @@ void MCLActions::calc_latency() {
 
   uint16_t dev_load_penalty[2] = {0};
 
-  if constexpr (TRACK_MIN_LOAD_TIME > 0) {
-    dev_load_penalty[0] = (devs[0]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
-    dev_load_penalty[1] = (devs[1]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
-  }
+  dev_load_penalty[0] = (devs[0]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
+  dev_load_penalty[1] = (devs[1]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((grid_page.active_slots[n] == SLOT_DISABLED))
