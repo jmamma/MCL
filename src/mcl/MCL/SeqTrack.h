@@ -69,7 +69,7 @@ public:
   uint8_t mod12_counter;
 
   volatile uint8_t count_down;
-  bool    cache_loaded;
+  volatile bool    cache_loaded;
   bool    load_sound;
 
   SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }

@@ -774,7 +774,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   uint8_t old_grid = proj.get_grid();
 
   const uint8_t div32th_margin = 1;
-  uint32_t diff = 0;
 
   float tempo = MidiClock.get_tempo();
 
@@ -792,14 +791,15 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     proj.select_grid(old_grid);
 
-    //Assumes next transisiton is only 2 steps away
-    uint32_t diff = MidiClock.clock_diff_div192(
-        MidiClock.div192th_counter, (uint32_t)next_transition * 12 + 2 * 12);
+    //Assume next transition is 4 steps away.
+    uint32_t next = (uint32_t)next_transition * 12 + 4 * 12 - 1;
 
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
       handleIncomingMidi();
-      if (((float)diff > ceil(GUI_THRESHOLD_FACTOR * tempo)) && gui_update) {
-        mcl.loop();
+      uint32_t counter = MidiClock.div192th_counter;
+      uint32_t diff = MidiClock.clock_diff_div192(counter, next);
+      if ((diff > (uint32_t) ceil(GUI_THRESHOLD_FACTOR * tempo)) && gui_update) {
+         mcl.loop();
       }
     }
 

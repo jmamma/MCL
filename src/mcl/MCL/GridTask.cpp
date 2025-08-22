@@ -106,6 +106,26 @@ void GridTask::update_transition_details() {
   send_kit_name = true;
 }
 
+void GridTask::wait_blocking(uint32_t go_step) {
+  float tempo = MidiClock.get_tempo();
+  while (true) {
+    // uint32_t counter = atomic_read(&MidiClock.div192th_counter);
+    uint32_t counter = MidiClock.div192th_counter;
+
+    uint32_t diff = MidiClock.clock_diff_div192(counter, go_step);
+
+    if (diff == 0 || counter >= go_step || MidiClock.state != 2) {
+      break;
+    }
+
+    handleIncomingMidi();
+
+    if ((float)diff > ceil(tempo * GUI_THRESHOLD_FACTOR)) {
+      mcl.loop();
+    }
+  }
+}
+
 void GridTask::transition_handler() {
   MidiDevice *devs[2] = {
       midi_active_peering.get_device(UART1_PORT),
@@ -185,7 +205,6 @@ void GridTask::transition_handler() {
     if (mcl_cfg.uart2_prg_out > 0 && row != 255) {
       MidiUart2.sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
     }
-    float tempo = MidiClock.get_tempo();
     // float div192th_per_second = tempo * 0.8f;
     // float div192th_time = 1.0 / div192th_per_second;
     // float div192th_time = 1.0 / (tempo * 0.8f);
@@ -215,23 +234,7 @@ void GridTask::transition_handler() {
                              mcl_actions.div192th_total_latency - 1;
 
           mcl_actions.div192th_total_latency -= mcl_actions.dev_latency[device_idx].div192th_latency;
-
-          while (true) {
-            //uint32_t counter = atomic_read(&MidiClock.div192th_counter);
-            uint32_t counter = MidiClock.div192th_counter;
-
-            uint32_t diff = MidiClock.clock_diff_div192(counter, go_step);
-
-            if (diff == 0 || counter >= go_step || MidiClock.state != 2) {
-              break;
-            }
-
-            handleIncomingMidi();
-
-            if ((float)diff > ceil(tempo * GUI_THRESHOLD_FACTOR)) {
-              mcl.loop();
-            }
-          }
+          wait_blocking(go_step);
         }
         wait = false;
         if (transition_load(n, track_idx, gdt)) {
@@ -247,10 +250,14 @@ void GridTask::transition_handler() {
     bool update_gui = true;
 
     DEBUG_PRINTLN("cache next");
+#if !defined(__AVR__)
+    uint32_t go_step = mcl_actions.next_transition * 12 - 1;
+    wait_blocking(go_step);
+#endif
 
     volatile uint32_t clk = read_clock_ms();
     mcl_actions.cache_next_tracks(track_select_array, update_gui);
-
+    gui_update();
     uint32_t t = clock_diff(clk, read_clock_ms());
     DEBUG_PRINTLN("time");
     DEBUG_PRINTLN(t);
@@ -282,7 +289,6 @@ void GridTask::transition_handler() {
       chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
     }
 
-    gui_update();
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency();
   }
