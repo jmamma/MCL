@@ -70,6 +70,7 @@ public:
 
   ALWAYS_INLINE() void disable_tx_irq() {
     uart_set_irq_enables(uart_hw, true, false);
+    uart_get_hw(uart_hw)->icr = UART_UARTICR_TXIC_BITS;
   }
 
   // Basic MIDI UART operations
