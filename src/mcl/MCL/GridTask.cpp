@@ -244,10 +244,10 @@ void GridTask::transition_handler() {
     bool update_gui = true;
 
     DEBUG_PRINTLN("cache next");
-#if !defined(__AVR__)
-    uint32_t go_step = mcl_actions.next_transition * 12 - 1;
-    wait_blocking(go_step);
-#endif
+//#if !defined(__AVR__)
+//    uint32_t go_step = mcl_actions.next_transition * 12 - 1;
+//    wait_blocking(go_step);
+//#endif
 
     volatile uint32_t clk = read_clock_ms();
     mcl_actions.cache_next_tracks(track_select_array, update_gui);
