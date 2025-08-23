@@ -791,8 +791,8 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     proj.select_grid(old_grid);
 
-    //Assume next transition is 4 steps away.
-    uint32_t next = (uint32_t)next_transition * 12 + 4 * 12 - 1;
+    //Assume next transition is 2 steps away.
+    uint32_t next = (uint32_t)next_transition * 12 + 2 * 12 - 1;
 
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
       handleIncomingMidi();
@@ -856,13 +856,13 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
   float l = links[n].length;
   len =
       (float)links[n].loops * l * (float)gdt->seq_track->get_speed_multiplier();
-  while (len < 4) {
-    if (len < 1) {
+  //while (len < 4) {
+  if (len < 1) {
       len = 4;
       transition_offsets[n] = 0;
-    } else {
-      len = len * 2;
-    }
+  //  } else {
+  //    len = len * 2;
+  //  }
   }
 
   // Last offset must be carried over to new offset.
