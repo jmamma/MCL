@@ -123,12 +123,15 @@ bool ElektronDevice::get_fw_caps() {
   auto listener = getSysexListener();
   DEBUG_PRINTLN("caps");
   listener->sysex->rd_cur = listener->msg_rd;
+  uint8_t b = 0;
   if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x30) {
-      ((uint8_t *)&(fw_caps))[0] = listener->sysex->getByte(begin+1);
-      ((uint8_t *)&(fw_caps))[1] = listener->sysex->getByte(begin+2);
+      for (uint8_t n = 0; n < 4; n++) {
+        b = listener->sysex->getByte(begin+n);
+        if (b == 0xF7) { break; }
+        ((uint8_t *)&(fw_caps))[n] = b;
+      }
       return true;
   }
-
   return false;
 }
 

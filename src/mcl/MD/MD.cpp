@@ -213,11 +213,12 @@ bool MDClass::probe() {
   if (uart->device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
     uint8_t count = 3;
 
-    uint16_t fw_caps_mask =
-        ((uint16_t)FW_CAP_MASTER_FX | (uint16_t)FW_CAP_TRIG_LEDS |
-         (uint16_t)FW_CAP_UNDOKIT_SYNC | (uint16_t)FW_CAP_TONAL |
-         (uint16_t)FW_CAP_ENHANCED_GUI | (uint16_t)FW_CAP_ENHANCED_MIDI) |
-        (uint16_t)FW_CAP_MACHINE_CACHE | (uint16_t)FW_CAP_UNDO_CACHE | (uint16_t)FW_CAP_MID_MACHINE;
+    uint32_t fw_caps_mask =
+        ((uint32_t)FW_CAP_MASTER_FX | (uint32_t)FW_CAP_TRIG_LEDS |
+         (uint32_t)FW_CAP_UNDOKIT_SYNC | (uint32_t)FW_CAP_TONAL |
+         (uint32_t)FW_CAP_ENHANCED_GUI | (uint32_t)FW_CAP_ENHANCED_MIDI) |
+        (uint32_t)FW_CAP_MACHINE_CACHE | (uint32_t)FW_CAP_UNDO_CACHE |
+        (uint32_t)FW_CAP_MID_MACHINE | (uint32_t)FW_CAPS_LENGTH_CHECK;
 
     while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) &&
            count) {
@@ -714,8 +715,12 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
 
   DEBUG_PRINT("assign machine bulk: ");
   DEBUG_PRINTLN(track);
-  uint8_t data[43] = {0x70, 0x5b};
+  uint8_t data[44] = {0x70, 0x5b}; // Increased size by 1 for length byte
   uint8_t i = 2;
+
+  // Reserve space for length - will be calculated later
+  uint8_t length_index = i++;
+
   data[i++] = track;
   if (machine->get_model() >= 128) {
     data[i++] = (machine->get_model() - 128);
@@ -758,9 +763,15 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
   DEBUG_PRINT("i : ");
   DEBUG_PRINTLN(i);
 end:
+  // Calculate and insert length (total data length minus the command bytes and length byte itself)
+  uint8_t payload_length = i - 1;
+  data[length_index] = payload_length;
+
+  DEBUG_PRINT("payload length: ");
+  DEBUG_PRINTLN(payload_length);
+
   return sendRequest(data, i, send);
 }
-
 void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_) {
   DEBUG_PRINTLN("load machine cache");
   uint8_t a = track_mask & 0x7F;

@@ -246,8 +246,10 @@ public:
 
 #define FW_CAP_LOW(x) (1 << x)
 #define FW_CAP_HIGH(x) (FW_CAP_LOW(x + 8))
+#define FW_CAP_HIGHER(x) (FW_CAP_LOW(x + 16))
+#define FW_CAP_HIGHEST(x) (FW_CAP_LOW(x + 24))
 
- //#define FW_CAP_DEBUG        FW_CAP_LOW(0)
+//#define FW_CAP_DEBUG        FW_CAP_LOW(0)
 #define FW_CAP_TRIG_INTERFACE FW_CAP_LOW(1)
 #define FW_CAP_MUTE_STATE     FW_CAP_LOW(2)
 #define FW_CAP_SAMPLE         FW_CAP_LOW(3)
@@ -257,18 +259,21 @@ public:
 
 #define FW_CAP_UNDOKIT_SYNC   FW_CAP_HIGH(0)
 #define FW_CAP_TONAL          FW_CAP_HIGH(1)
-#define FW_CAP_ENHANCED_GUI FW_CAP_HIGH(2)
-#define FW_CAP_ENHANCED_MIDI FW_CAP_HIGH(3)
-#define FW_CAP_MACHINE_CACHE FW_CAP_HIGH(4)
-#define FW_CAP_UNDO_CACHE    FW_CAP_HIGH(5)
-#define FW_CAP_MID_MACHINE   FW_CAP_HIGH(6)
+#define FW_CAP_ENHANCED_GUI   FW_CAP_HIGH(2)
+#define FW_CAP_ENHANCED_MIDI  FW_CAP_HIGH(3)
+#define FW_CAP_MACHINE_CACHE  FW_CAP_HIGH(4)
+#define FW_CAP_UNDO_CACHE     FW_CAP_HIGH(5)
+#define FW_CAP_MID_MACHINE    FW_CAP_HIGH(6)
+
+#define FW_CAPS_LENGTH_CHECK  FW_CAP_HIGHER(0)
+
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
 public:
   const ElektronSysexProtocol sysex_protocol;
 
   /// Runtime variables
-  uint16_t fw_caps;
+  uint32_t fw_caps;
   /** Stores the current global of the MD, usually set by the MDTask. **/
   uint8_t currentGlobal;
   /** Stores the current kit of the MD, usually set by the MDTask. **/
