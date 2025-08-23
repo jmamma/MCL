@@ -804,8 +804,9 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       handleIncomingMidi();
       uint32_t counter = MidiClock.div192th_counter;
       uint32_t diff = MidiClock.clock_diff_div192(counter, next);
-      if ((diff > (uint32_t) ceil(GUI_THRESHOLD_FACTOR * tempo)) && gui_update) {
+      if (gui_update && (diff > (uint32_t) ceil(GUI_THRESHOLD_FACTOR * tempo))) {
          mcl.loop();
+         gui_update = false;
       }
     }
 
