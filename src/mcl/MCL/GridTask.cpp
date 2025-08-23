@@ -25,17 +25,11 @@ void GridTask::row_update() {
 }
 
 void GridTask::gui_update() {
-  if (MDSeqTrack::gui_update) {
-    if (MidiClock.state == 2) {
-      if (mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_md_track)) {
-        auto active_track = mcl_seq.md_tracks[last_md_track];
-        MD.sync_seqtrack(active_track.length, active_track.speed, active_track.step_count);
-      }
-      row_update();
-    }
-    MDSeqTrack::gui_update = 0;
-  }
+  if (!update) { return; }
+  row_update();
+  update = 0;
 }
+
 void GridTask::load_queue_handler() {
   if (!load_queue.is_empty()) {
     uint8_t mode;

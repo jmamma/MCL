@@ -84,7 +84,7 @@ public:
   uint8_t last_active_row;
   uint8_t next_active_row;
   bool chain_behaviour;
-
+  bool update = false;
 
   uint8_t load_row_midi = 255;
   uint8_t load_row = 255;

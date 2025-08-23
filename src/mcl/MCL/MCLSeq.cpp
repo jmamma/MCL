@@ -4,7 +4,6 @@
 #include "SeqPages.h"
 #include "MCL.h"
 #include "AuxPages.h"
-#include "GridTask.h"
 
 void MCLSeq::setup() {
 
@@ -261,12 +260,8 @@ void MCLSeq::seq() {
 
   mdfx_track.seq();
 
-  if (MDSeqTrack::load_machine_cache) {
-    if (grid_task.send_kit_name) {
-        MD.setKitName(grid_task.kit_names[0], uart);
-        grid_task.send_kit_name = false;
-    }
-    MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart);
+  if (last_md_track < NUM_MD_TRACKS) {
+    md_tracks[last_md_track].post_seq(uart);
   }
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {

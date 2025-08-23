@@ -5,6 +5,7 @@
 #include "MidiClock.h"
 #include "AuxPages.h"
 #include "SeqPages.h"
+#include "GridTask.h"
 
 uint16_t MDSeqTrack::gui_update = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
@@ -209,6 +210,23 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
 end:
   uart = uart_old;
   uart2 = uart2_old;
+}
+
+void MDSeqTrack::post_seq(MidiUartClass *uart) {
+  if (MDSeqTrack::load_machine_cache) {
+    if (grid_task.send_kit_name) {
+        MD.setKitName(grid_task.kit_names[0], uart);
+        grid_task.send_kit_name = false;
+    }
+    MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart);
+  }
+  if (MDSeqTrack::gui_update) {
+     if (mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,track_number)) {
+      MD.sync_seqtrack(length, speed, length - 1, uart);
+    }
+    MDSeqTrack::gui_update = 0;
+    grid_task.update = true;
+  }
 }
 
 bool MDSeqTrack::is_param(uint8_t param_id) {
