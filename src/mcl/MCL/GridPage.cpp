@@ -238,7 +238,7 @@ void GridPage::loop() {
 
       mcl_cfg.tempo = MidiClock.get_tempo();
       DEBUG_PRINTLN(F("write cfg"));
-      if (MidiClock.state != 2) { mcl_cfg.write_cfg(); }
+      mcl_cfg.write_cfg();
       grid_lastclock = read_clock_ms();
       write_cfg = false;
       // }
