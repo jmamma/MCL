@@ -125,6 +125,7 @@ bool ElektronDevice::get_fw_caps() {
   listener->sysex->rd_cur = listener->msg_rd;
   uint8_t b = 0;
   if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x30) {
+      begin++;
       for (uint8_t n = 0; n < 4; n++) {
         b = listener->sysex->getByte(begin+n);
         if (b == 0xF7) { break; }
