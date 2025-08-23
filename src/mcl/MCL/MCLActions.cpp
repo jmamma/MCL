@@ -438,9 +438,14 @@ again:
           links[dst].length = gdt_dst->seq_track->length;
           links[dst].row = row;
 
-          next_transitions[dst] = MidiClock.div16th_counter - ((float)gdt_dst->seq_track->step_count *
-                                gdt_dst->seq_track->get_speed_multiplier() + (gdt_dst->seq_track->mod12_counter / 12) );
+          LOCK();
+          uint8_t cur_step_count = gdt_dst->seq_track->step_count;
+          uint8_t cur_mod12_counter = gdt_dst->seq_track->mod12_counter;
+          uint8_t cur_div16th_counter = MidiClock.div16th_counter;
+          CLEAR_LOCK();
 
+          next_transitions[dst] = cur_div16th_counter - ((float)cur_step_count *
+                                gdt_dst->seq_track->get_speed_multiplier() + (cur_mod12_counter / 12) );
 
           bool ignore_chain_settings = true;
           bool ignore_overflow = true;
@@ -778,6 +783,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
   float tempo = MidiClock.get_tempo();
 
   uint8_t n = NUM_SLOTS;
+
   while (n--) {
     if (slot_select_array[n] == 0)
       continue;
