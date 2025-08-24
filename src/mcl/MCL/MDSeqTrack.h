@@ -59,8 +59,8 @@ public:
 
   void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 
-  static void pre_seq();
-  static void post_seq(MidiUartClass *uart);
+  static void pre_seq(MidiUartClass *uart_);
+  static void post_seq(MidiUartClass *uart_);
 
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }

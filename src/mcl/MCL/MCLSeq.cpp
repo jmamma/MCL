@@ -251,7 +251,7 @@ void MCLSeq::seq() {
   }
   //  Stopwatch sw;
 
-  MDSeqTrack::pre_seq();
+  MDSeqTrack::pre_seq(uart);
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart,uart2);
