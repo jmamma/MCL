@@ -250,8 +250,9 @@ void MCLSeq::seq() {
     uart2 = &MidiUart2;
   }
   //  Stopwatch sw;
-  MDSeqTrack::md_trig_mask = 0;
-  MDSeqTrack::load_machine_cache = 0;
+
+  MDSeqTrack::pre_seq();
+
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].seq(uart,uart2);
     md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
@@ -260,9 +261,7 @@ void MCLSeq::seq() {
 
   mdfx_track.seq();
 
-  if (last_md_track < NUM_MD_TRACKS) {
-    md_tracks[last_md_track].post_seq(uart);
-  }
+  MDSeqTrack::post_seq(uart);
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].seq();

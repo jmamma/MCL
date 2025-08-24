@@ -58,7 +58,9 @@ public:
   void set_step(uint8_t step, uint8_t mask_type, bool val);
 
   void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
-  void post_seq(MidiUartClass *uart);
+
+  static void pre_seq();
+  static void post_seq(MidiUartClass *uart);
 
   void mute() { mute_state = SEQ_MUTE_ON; }
   void unmute() { mute_state = SEQ_MUTE_OFF; }
