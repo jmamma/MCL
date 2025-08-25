@@ -4,8 +4,8 @@
 menu_option_t MENU_OPTIONS[] = {
   // 0: RAM PAGE LINK
   {0, "MONO"}, {1, "STEREO"},
-  // 2: MIDI TURBO 1/2
-  {0, "1x"}, {1, "2x"}, {2,"4x"}, {3,"8x"}, {4,"SHAK"},
+  // 2: OFF
+  {128, "PRG"}, {129, "PB"}, {130, "CHP"}, {131, "OFF"}, {132, "LEARN"},
   // 7: MIDI CLK REC
   {0, "1"}, {1, "2"}, {2,"USB"},
   // 10: MIDI FWD
@@ -38,10 +38,12 @@ menu_option_t MENU_OPTIONS[] = {
   {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"},
   // 52: GRID
   {0, "X"}, {1, "Y"},
-  // 54: PIANO ROLL
-  {0,"NOTE"},
-  // 55: OFF
-  {128, "PRG"}, {129, "PB"}, {130, "CHP"}, {131, "OFF"}, {132, "LEARN"},
+  // 54: MIDI TURBO 1/
+  #if defined(__AVR__)
+  {0, "1x"}, {1, "2x"}, {2,"4x"}, {3,"8x"}, {4,"--"}, {5,"--"},
+  #else
+  {0, "1x"}, {1, "2x"}, {2,"4x"}, {3,"6.7x"}, {4,"8x"}, {5,"10x"},
+  #endif
   // 60: PROB
   {1, "L1"}, {2, "L2"}, {3, "L3"}, {4, "L4"}, {5, "L5"}, {6, "L6"}, {7, "L7"}, {8, "L8"}, {9, "P1"}, {10, "P2"}, {11, "P5"}, {12, "P7"}, {13, "P9"}, {14, "1S"},
   // 74: WAV
@@ -73,6 +75,8 @@ menu_option_t MENU_OPTIONS[] = {
   // 122
   {0, "--"}, {1,"PERF"},
   // 124
-  {0, "GENER"}, {1,"MD"}
+  {0, "GENER"}, {1,"MD"},
+  // 126: PIANO ROLL
+  {0,"NOTE"}
 };
 

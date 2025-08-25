@@ -4,16 +4,22 @@ uint8_t TurboLight::lookup_speed(uint8_t speed) {
   switch (speed) {
     default:
     case 0:
-      return 1;
-
+      return 1; //1x
     case 1:
-      return 2;
-
+      return 2; //2x
     case 2:
-      return 4;
-
+      return 4; //4x
+#if defined(__AVR__)
     case 3:
-      return 7;
+      return 7; //8x
+#else
+    case 3:
+      return 6; //6.7x
+    case 4:
+      return 7; //8x
+    case 5:
+      return 8; //10x
+#endif
   }
 }
 

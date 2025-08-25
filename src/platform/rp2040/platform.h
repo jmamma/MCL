@@ -31,6 +31,8 @@
 #define DEBUG_PIN 2
 #define SERIAL_SPEED 9600
 
+#define DEFAULT_TURBO_SPEED 5 //10x
+
 // Platform compatibility defines
 #ifndef PROGMEM
 #define PROGMEM   // Empty macro for non-AVR platforms
@@ -71,6 +73,15 @@ extern uint8_t SW_IRQ3;
 
 // C++ specific functionality
 #ifdef __cplusplus
+
+template<typename T>
+inline T atomic_read(const volatile T *ptr) {
+    T value;
+    LOCK();
+    value = *ptr;
+    CLEAR_LOCK();
+    return value;
+}
 
 #include "DebugBuffer.h"
 extern DebugBuffer debugBuffer;

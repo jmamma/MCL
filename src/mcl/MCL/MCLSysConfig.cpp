@@ -5,6 +5,7 @@
 #include "GridChain.h"
 #include "MCLSd.h"
 #include "hardware.h"
+#include "platform.h"
 
 // Consolidated display function to reduce code duplication
 static void show_message(const char* line1) {
@@ -126,9 +127,9 @@ bool MCLSysConfig::cfg_init() {
   strncpy(project, my_string, 16);
   //clock_send = 0;
   //clock_rec = 0;
-  uart1_turbo_speed = 3;
+  uart1_turbo_speed = DEFAULT_TURBO_SPEED;
   //uart2_turbo_speed = 0;
-  usb_turbo_speed = 3;
+  usb_turbo_speed = DEFAULT_TURBO_SPEED;
   //col = 0;
   //row = 0;
   //cur_row = 0;

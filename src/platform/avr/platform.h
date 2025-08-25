@@ -18,6 +18,7 @@
 // Debug configuration
 
 #define SERIAL_SPEED 250000
+#define DEFAULT_TURBO_SPEED 3 //8x
 
 #ifndef _BV
 #define _BV(bit) (1u << (bit))

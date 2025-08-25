@@ -11,6 +11,7 @@
   ExitPage
  ***/
 
+
 menu_t<boot_menu_page_N> boot_menu_layout = {
     "BOOT",
     {
@@ -73,11 +74,17 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
     0
 };
 
+#if defined(__AVR__)
+  #define TURBO_RANGE 4
+#else
+  #define TURBO_RANGE 6
+#endif
+
 menu_t<midiport_menu_page_N> midiport_menu_layout = {
     "PORTS",
     {
-        {"TURBO 1:",  0, 4, 4, 2, NULL_PAGE, 0, 2},
-        {"TURBO 2:",  0, 4, 4, 3, NULL_PAGE, 0, 2},
+        {"TURBO 1:",  0, TURBO_RANGE, TURBO_RANGE, 2, NULL_PAGE, 0, 54},
+        {"TURBO 2:",  0, TURBO_RANGE, TURBO_RANGE, 3, NULL_PAGE, 0, 54},
         {"TURBO USB:", 0, 4, 4, 55, NULL_PAGE , 0, 2},
         {"DRIVER 1:", 0, 2, 2, 61, NULL_PAGE, 0, 124},
         {"DRIVER 2:", 0, 2, 2, 4, NULL_PAGE, 0, 84},
@@ -195,8 +202,8 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"TRACK SEL:",  1, 17,                  0,                   14, NULL_PAGE,  3,  0},
         {"DEVICE:",     1, 3,                   2,                   50, NULL_PAGE,  0,  128},
         {"EDIT:",       0, 4,                   4,                   15, NULL_PAGE,  4,  48},
-        {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, NULL_PAGE,  0,  54},
-        {"CC:",         0, 133,                 5,                   17, NULL_PAGE,  0,  55},
+        {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, NULL_PAGE,  0,  126},
+        {"CC:",         0, 133,                 5,                   17, NULL_PAGE,  0,  2},
         {"SLIDE:",      0, 2,                   2,                   18, NULL_PAGE,  0,  25},
         {"ARPEGGIATOR", 0, 0,                   0,                   0,  ARP_PAGE, 0,  0},
         {"KEY:",        0, 12,                  12,                  19, NULL_PAGE,  0,  104},
