@@ -218,6 +218,13 @@ void MDSeqTrack::pre_seq(MidiUartClass *uart_) {
 }
 
 void MDSeqTrack::post_seq(MidiUartClass *uart_) {
+  if (MDSeqTrack::load_machine_cache) {
+    MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart_);
+    if (grid_task.send_kit_name) {
+      grid_task.send_kit_name = false;
+      MD.setKitName(grid_task.kit_names[0], uart_);
+    }
+  }
   if (MDSeqTrack::gui_update) {
     if (last_md_track < NUM_MD_TRACKS && mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_md_track)) {
       auto active_track = mcl_seq.md_tracks[last_md_track];
@@ -225,13 +232,6 @@ void MDSeqTrack::post_seq(MidiUartClass *uart_) {
     }
     MDSeqTrack::gui_update = 0;
     grid_task.update = true;
-  }
-  if (MDSeqTrack::load_machine_cache) {
-    MD.loadMachinesCache(MDSeqTrack::load_machine_cache, uart_);
-    if (grid_task.send_kit_name) {
-      grid_task.send_kit_name = false;
-      MD.setKitName(grid_task.kit_names[0], uart_);
-    }
   }
 }
 
