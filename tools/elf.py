@@ -85,7 +85,7 @@ def calculate_and_embed_checksum(elf_file, env):
     if section_offset == -1:
         print(f"✗ Error: Section '{checksum_section_name}' not found in the ELF file.")
         env.Exit(1)
-    
+
     print(f"Found section '{checksum_section_name}': size={section_size} bytes, file_offset={hex(section_offset)}")
 
     if section_size != 2:
@@ -95,7 +95,7 @@ def calculate_and_embed_checksum(elf_file, env):
     with open(elf_file, "rb") as f:
         firmware_data = bytearray(f.read())
 
-    placeholder_value = 0xDADA # Or 0xDEAD, matching your C++ code
+    placeholder_value = 0xDADA
     current_value = (firmware_data[section_offset + 1] << 8) | firmware_data[section_offset]
 
     print(f"Verifying placeholder at offset {hex(section_offset)}...")
@@ -169,7 +169,6 @@ def combined_post_build_actions(source, target, env):
     # Look up the family, defaulting to None if the env is not in the map
     platform_family = env_mapping.get(env_name)
 
-    
     # The 'target' of this action is the final ELF file ($PROGPATH).
     if platform_family == "avr":
       elf_file = str(source[0])

@@ -62,7 +62,7 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
   uint16_t checksum_value = firmware_checksum;
 #endif
   oled_display.print("0x");
-  oled_display.print(firmware_checksum,HEX);
+  oled_display.print(checksum_value,HEX);
   oled_display.display();
   delay(800);
 
