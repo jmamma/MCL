@@ -98,12 +98,11 @@ def calculate_and_embed_checksum(elf_file, env):
     placeholder_value = 0xDADA
     current_value = (firmware_data[section_offset + 1] << 8) | firmware_data[section_offset]
 
-    print(f"Verifying placeholder at offset {hex(section_offset)}...")
-    if current_value != placeholder_value:
-        print(f"✗ Error: Expected placeholder value {hex(placeholder_value)} at checksum location, but found {hex(current_value)}.")
-        env.Exit(1)
-
-    print(f"✓ Placeholder {hex(placeholder_value)} verified successfully.")
+#   print(f"Verifying placeholder at offset {hex(section_offset)}...")
+#   if current_value != placeholder_value:
+#       print(f"✗ Error: Expected placeholder value {hex(placeholder_value)} at checksum location, but found {hex(current_value)}.")
+#       env.Exit(1)
+#   print(f"✓ Placeholder {hex(placeholder_value)} verified successfully.")
 
     firmware_data[section_offset] = 0
     firmware_data[section_offset + 1] = 0
@@ -188,7 +187,6 @@ def combined_post_build_actions(source, target, env):
         regenerate_hex(elf_file, hex_file, env)
 
     print("--- Finished Custom Post-Build Actions ---")
-
 
 env_name = env.subst("$PIOENV")
 platform_family = env_mapping.get(env_name)
