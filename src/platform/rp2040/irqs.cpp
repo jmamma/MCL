@@ -157,3 +157,30 @@ void setup_irqs() {
 uint8_t SW_IRQ1;
 uint8_t SW_IRQ2;
 uint8_t SW_IRQ3;
+
+#ifdef MULTICORE
+
+void core1_handler(uint32_t event_type) {
+  switch(event_type) {
+    case CORE1_EVENT1:
+      // Sequencer
+      softirq1_handler();
+      break;
+    default:
+      // Unknown event type
+      break;
+  }
+}
+
+void core1_loop() {
+  uint32_t event_data;
+  // Check for software interrupts from core0
+  if (rp2040.fifo.pop_nb(&event_data)) {
+    // Got an event - handle it
+    core1_handler(event_data);
+  }
+}
+
+#endif
+
+

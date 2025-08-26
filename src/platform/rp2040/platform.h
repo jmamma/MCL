@@ -63,6 +63,22 @@ extern uint8_t SW_IRQ1;
 extern uint8_t SW_IRQ2;
 extern uint8_t SW_IRQ3;
 
+#ifdef MULTICORE
+
+#define CORE1_EVENT1 0x01
+
+#define TRIGGER_CORE1_EVENT(x) rp2040.fifo.push_nb(x)
+
+#define TRIGGER_SW_IRQ1()  TRIGGER_CORE1_EVENT(CORE1_EVENT1)
+#define TRIGGER_SW_IRQ2()  irq_set_pending(SW_IRQ2)
+#define TRIGGER_SW_IRQ3()  irq_set_pending(SW_IRQ3)
+
+#define CLEAR_SW_IRQ1()
+#define CLEAR_SW_IRQ2()    irq_clear(SW_IRQ2)
+#define CLEAR_SW_IRQ3()    irq_clear(SW_IRQ3)
+
+#else
+
 #define TRIGGER_SW_IRQ1()  irq_set_pending(SW_IRQ1)
 #define TRIGGER_SW_IRQ2()  irq_set_pending(SW_IRQ2)
 #define TRIGGER_SW_IRQ3()  irq_set_pending(SW_IRQ3)
@@ -70,6 +86,8 @@ extern uint8_t SW_IRQ3;
 #define CLEAR_SW_IRQ1()    irq_clear(SW_IRQ1)
 #define CLEAR_SW_IRQ2()    irq_clear(SW_IRQ2)
 #define CLEAR_SW_IRQ3()    irq_clear(SW_IRQ3)
+
+#endif
 
 // C++ specific functionality
 #ifdef __cplusplus

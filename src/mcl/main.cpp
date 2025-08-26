@@ -40,3 +40,12 @@ void loop() {
 #endif
    mcl.loop();
 }
+
+#if defined(MULTICORE)
+void setup1() {
+}
+
+void loop1() {
+  core1_loop();
+}
+#endif

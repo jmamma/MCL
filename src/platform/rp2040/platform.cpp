@@ -7,3 +7,6 @@ DebugBuffer debugBuffer(&Serial);
 #endif
 ISRTiming isrTiming;
 
+#ifdef MULTICORE
+bool core1_separate_stack = true;
+#endif
