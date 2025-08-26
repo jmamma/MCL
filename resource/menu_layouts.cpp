@@ -85,7 +85,7 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
     {
         {"TURBO 1:",  0, TURBO_RANGE, TURBO_RANGE, 2, NULL_PAGE, 0, 54},
         {"TURBO 2:",  0, TURBO_RANGE, TURBO_RANGE, 3, NULL_PAGE, 0, 54},
-        {"TURBO USB:", 0, 4, 4, 55, NULL_PAGE , 0, 2},
+        {"TURBO USB:", 0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE , 0, 54},
         {"DRIVER 1:", 0, 2, 2, 61, NULL_PAGE, 0, 124},
         {"DRIVER 2:", 0, 2, 2, 4, NULL_PAGE, 0, 84},
         {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 100},
