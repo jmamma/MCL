@@ -125,6 +125,9 @@ public:
   }
 
   void init() {
+    TinyUSBDevice.detach();
+    delay(10);
+    TinyUSBDevice.attach();
     TinyUSBDevice.setID(0x1209, 0x3070); // Your pid.codes VID/PID
     TinyUSBDevice.setManufacturerDescriptor("MegaCMD (www.megacmd.com)");
     TinyUSBDevice.setProductDescriptor("MegaCommand");
