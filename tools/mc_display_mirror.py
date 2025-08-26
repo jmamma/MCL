@@ -1,4 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
+
 # Author: Justin Mammarella
 # Date: 06/4/2023
 # Description: Connect to MegaCommand via MIDI and receive
@@ -41,7 +42,7 @@ def main():
         device = pygame.midi.get_device_info(d)
         device_name = device[1].decode()
         device_type = device[2]
-        if device_name == "MegaCMD":
+        if device_name == "MegaCMD" or device_name == "MegaCommand":
             if device_type == 1:
                midi_device_in = d
             if device_type == 0:
