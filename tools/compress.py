@@ -343,15 +343,6 @@ def main():
         print(f"Usage: python {sys.argv[0]} <infile> <outfile> [adj_cost] [shift_offset] [len_cost_adj]")
         sys.exit(1)
 
-    try:
-        import psutil
-        psutil.Process().nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
-    except (ImportError, AttributeError):
-        try:
-            os.nice(10)
-        except AttributeError:
-            print("Warning: Could not set process priority.", file=sys.stderr)
-
     infile, outfile = sys.argv[1], sys.argv[2]
     print(f"Packing file: {infile}")
     try:
@@ -359,7 +350,7 @@ def main():
     except FileNotFoundError:
         print(f"Error: Input file not found: {infile}", file=sys.stderr)
         sys.exit(1)
-        
+
     initial_ctx = Context(
         stream=[], reg=[], pending=[], data=file_data, 
         data_head=0, data_len=len(file_data), lookback=1, max_seg=0
@@ -371,17 +362,17 @@ def main():
         padj = float(sys.argv[3])
         pshift = int(sys.argv[4], 0) # Allow hex input e.g. 0x300
         plen = float(sys.argv[5])
-    
+
     # The F# code was structured to allow searching over multiple parameters.
     # We run with the single specified (or default) set of parameters.
     param_sets = [((padj, pshift), plen)]
     results = [compress(params, initial_ctx) for params in param_sets]
     best_ctx = min(results, key=lambda ctx: len(ctx.stream))
-    
+
     outdata = bytes(best_ctx.stream)
     with open(outfile, "wb") as f:
         f.write(outdata)
-        
+    
     print("Compression complete.")
     print(f"In file size  = {len(file_data):08X} ({len(file_data)})")
     print(f"Out file size = {len(outdata):08X} ({len(outdata)})")

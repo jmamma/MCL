@@ -65,22 +65,22 @@ def calculate_and_embed_checksum(elf_file, env):
     print(f"Reading section info from: {os.path.basename(elf_file)}")
     cmd = [objdump, "-h", elf_file]
     result = run_command_for_output(cmd, env)
-    
+
     section_offset = -1
     section_size = -1
     regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+([0-9a-f]+)\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)")
-    
+
     for line in result.stdout.splitlines():
         match = regex.search(line)
         if match:
             section_size = int(match.group(1), 16)
             section_offset = int(match.group(2), 16)
             break
-    
+
     if section_offset == -1:
         print(f"✗ Error: Section '{checksum_section_name}' not found in the ELF file.")
         env.Exit(1)
-        
+    
     print(f"Found section '{checksum_section_name}': size={section_size} bytes, file_offset={hex(section_offset)}")
 
     if section_size != 2:
@@ -92,12 +92,12 @@ def calculate_and_embed_checksum(elf_file, env):
 
     placeholder_value = 0xDADA # Or 0xDEAD, matching your C++ code
     current_value = (firmware_data[section_offset + 1] << 8) | firmware_data[section_offset]
-    
+
     print(f"Verifying placeholder at offset {hex(section_offset)}...")
     if current_value != placeholder_value:
         print(f"✗ Error: Expected placeholder value {hex(placeholder_value)} at checksum location, but found {hex(current_value)}.")
         env.Exit(1)
-    
+
     print(f"✓ Placeholder {hex(placeholder_value)} verified successfully.")
 
     firmware_data[section_offset] = 0
@@ -110,12 +110,14 @@ def calculate_and_embed_checksum(elf_file, env):
         else:
             word = firmware_data[i]
         checksum = (checksum + word) & 0xFFFF
-    print(f"Calculated 16-bit checksum: {hex(checksum)}")
+    print("┌" + "─" * 48 + "┐")
+    print(f"│ Firmware checksum: | {hex(checksum):<15}")
+    print("└" + "─" * 48 + "┘")
 
     with open(elf_file, "r+b") as f:
         f.seek(section_offset)
         f.write(checksum.to_bytes(2, byteorder='little'))
-    
+
     print(f"✓ Successfully embedded checksum into {os.path.basename(elf_file)}")
     print("--------------------------------------")
 
