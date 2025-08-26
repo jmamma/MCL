@@ -5,10 +5,11 @@ import subprocess
 from SCons.Script import DefaultEnvironment
 
 # --- Script Header ---
-# This script customizes the PlatformIO build process.
-# 1. After a build, it calculates a 16-bit checksum of the ELF file and embeds it back.
-# 2. It then regenerates the final HEX file to include only .text and .data sections,
-#    ensuring the updated checksum is included.
+# This script customizes the PlatformIO build process for multiple platforms.
+# 1. After any build, it calculates and embeds a 16-bit checksum into the final ELF file.
+# 2. It uses an environment mapping to identify the platform family (e.g., "avr", "rp2040").
+# 3. If the platform family is "avr", it then regenerates the final HEX file to include
+#    only specific sections. For all other platforms, this step is skipped.
 
 env = DefaultEnvironment()
 
@@ -37,7 +38,6 @@ def get_tool_path(env, tool_name):
 def run_command_for_output(cmd, env):
     """
     Helper to run a command (like objdump) and capture its output for parsing.
-    Uses subprocess directly for better output handling.
     """
     try:
         result = subprocess.run(
@@ -51,7 +51,7 @@ def run_command_for_output(cmd, env):
         env.Exit(1)
 
 # =================================================================
-# Checksum Calculation and Embedding Logic
+# Checksum Calculation and Embedding Logic (Platform-Agnostic)
 # =================================================================
 
 def calculate_and_embed_checksum(elf_file, env):
@@ -61,10 +61,7 @@ def calculate_and_embed_checksum(elf_file, env):
     print("--- Running Checksum Calculation ---")
     checksum_section_name = ".firmware_checksum"
 
-    # 1. Get path to objdump tool
     objdump = get_tool_path(env, "objdump")
-
-    # 2. Use objdump to get section headers and find our checksum section's offset
     print(f"Reading section info from: {os.path.basename(elf_file)}")
     cmd = [objdump, "-h", elf_file]
     result = run_command_for_output(cmd, env)
@@ -74,7 +71,6 @@ def calculate_and_embed_checksum(elf_file, env):
     regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+([0-9a-f]+)\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)")
     
     for line in result.stdout.splitlines():
-        print(line)
         match = regex.search(line)
         if match:
             section_size = int(match.group(1), 16)
@@ -91,69 +87,50 @@ def calculate_and_embed_checksum(elf_file, env):
         print(f"✗ Error: The size of '{checksum_section_name}' must be 2 bytes (uint16_t), but it is {section_size} bytes.")
         env.Exit(1)
 
-    # 3. Read ELF into memory
     with open(elf_file, "rb") as f:
         firmware_data = bytearray(f.read())
 
-    # 4. *** NEW: Verify the placeholder value before proceeding ***
-    placeholder_value = 0xDADA
-    # Read the current 16-bit value from the file (little-endian)
+    placeholder_value = 0xDADA # Or 0xDEAD, matching your C++ code
     current_value = (firmware_data[section_offset + 1] << 8) | firmware_data[section_offset]
     
     print(f"Verifying placeholder at offset {hex(section_offset)}...")
     if current_value != placeholder_value:
         print(f"✗ Error: Expected placeholder value {hex(placeholder_value)} at checksum location, but found {hex(current_value)}.")
-        print("  This might happen if the firmware was already patched or the C++ code is incorrect.")
-        print("  Please ensure the source code contains: ... firmware_checksum = 0xDEAD;")
         env.Exit(1)
     
     print(f"✓ Placeholder {hex(placeholder_value)} verified successfully.")
 
-    # 5. Zero out the checksum section for accurate calculation
     firmware_data[section_offset] = 0
     firmware_data[section_offset + 1] = 0
 
-    # 6. Calculate the 16-bit checksum
     checksum = 0
     for i in range(0, len(firmware_data), 2):
         if i + 1 < len(firmware_data):
-            word = (firmware_data[i+1] << 8) | firmware_data[i] # Little-endian
+            word = (firmware_data[i+1] << 8) | firmware_data[i]
         else:
-            word = firmware_data[i] # Handle odd-length firmware
-        checksum = (checksum + word) & 0xFFFF # Ensure it remains 16-bit
+            word = firmware_data[i]
+        checksum = (checksum + word) & 0xFFFF
     print(f"Calculated 16-bit checksum: {hex(checksum)}")
 
-    # 7. Embed the new checksum back into the ELF file
     with open(elf_file, "r+b") as f:
         f.seek(section_offset)
         f.write(checksum.to_bytes(2, byteorder='little'))
+    
     print(f"✓ Successfully embedded checksum into {os.path.basename(elf_file)}")
     print("--------------------------------------")
 
 # =================================================================
-# Custom HEX File Generation (Your Original Function)
+# Custom HEX File Generation (AVR-Specific)
 # =================================================================
 
 def regenerate_hex(elf_file, hex_file, env):
     """
     Generates a .hex file from a .elf file, including only .text and .data sections.
     """
-    print("--- Regenerating HEX File for Upload ---")
-    print(f"Source ELF: {elf_file}")
-    print(f"Target HEX: {hex_file}")
-
-    if not os.path.exists(elf_file):
-        print(f"✗ Error: ELF file not found at '{elf_file}'. Skipping HEX regeneration.")
-        env.Exit(1) 
-
+    print("--- Regenerating HEX File for Upload (AVR Specific) ---")
     objcopy = env.subst("$OBJCOPY")
-    if not objcopy:
-        print("✗ Error: $OBJCOPY path not found in environment.")
-        env.Exit(1)
-
     cmd = f'"{objcopy}" -O ihex -j .text -j .data "{elf_file}" "{hex_file}"'
     print(f"Running command: {cmd}")
-
     result = env.Execute(cmd)
     if result == 0:
         print(f"✓ Custom HEX file '{hex_file}' was generated successfully!")
@@ -173,17 +150,34 @@ def combined_post_build_actions(source, target, env):
     """
     print("\n--- Starting Custom Post-Build Actions ---")
 
-    # The 'target' of this SCons action is the default-generated .hex file.
-    hex_file = str(target[0])
-    # Derive the corresponding .elf file path from the .hex file path.
-    elf_file = os.path.splitext(hex_file)[0] + ".elf"
+    # The 'target' of this action is the final ELF file ($PROGPATH).
+    elf_file = str(target[0])
 
-    # Step 1: Calculate and embed the checksum into the ELF file.
+    # *** NEW: Use the environment name and mapping for platform detection ***
+    env_name = env.subst("$PIOENV")
+    env_mapping = {
+        "rp2040": "rp2040", "rp2350": "rp2040", "tbd": "rp2040",
+        "avr": "avr", "megacmd": "avr", "megacommand": "avr", "nano": "avr",
+    }
+    # Look up the family, defaulting to None if the env is not in the map
+    platform_family = env_mapping.get(env_name)
+
+    print(f"Detected environment '{env_name}', mapped to platform family '{platform_family}'.")
+
+    # Step 1: Calculate and embed the checksum. This is done for ALL platforms.
     calculate_and_embed_checksum(elf_file, env)
 
-    # Step 2: Regenerate the HEX file from the newly-patched ELF file.
-    regenerate_hex(elf_file, hex_file, env)
+    # Step 2: Regenerate the HEX file ONLY for the 'avr' platform family.
+    if platform_family == "avr":
+        print(f"Platform family is '{platform_family}', proceeding with HEX file regeneration.")
+        # Derive the .hex file path from the .elf file path.
+        hex_file = os.path.splitext(elf_file)[0] + ".hex"
+        regenerate_hex(elf_file, hex_file, env)
 
-# Register the combined action to be called after the default HEX file is built.
-env.AddPostAction("$BUILD_DIR/${PROGNAME}.hex", combined_post_build_actions)
-print("✓ Registered combined checksum and HEX regeneration post-build action.")
+    print("--- Finished Custom Post-Build Actions ---")
+
+
+# Register the action to be called after the final program is linked.
+# $PROGPATH is the path to the final ELF file, which is platform-agnostic.
+env.AddPostAction("$PROGPATH", combined_post_build_actions)
+print("✓ Registered multi-platform checksum and post-build action.")

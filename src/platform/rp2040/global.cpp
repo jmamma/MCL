@@ -14,6 +14,8 @@
 #include "SoftwareSPI.h"
 #include "Ui.h"
 
+const uint16_t __attribute__((section(".firmware_checksum"), used, aligned(4))) firmware_checksum = 0xDADA;
+
 // Buffer array definitions
 uint8_t seq_tx1_buf[TX_SEQBUF_SIZE];
 uint8_t seq_tx2_buf[TX_SEQBUF_SIZE];

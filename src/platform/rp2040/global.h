@@ -1,6 +1,8 @@
 // global.h
 #pragma once
 
+extern const uint16_t firmware_checksum;
+
 class MidiClass;
 class MidiUartClass;
 class MidiUartUSBClass;

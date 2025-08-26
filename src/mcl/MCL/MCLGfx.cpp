@@ -55,8 +55,12 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(104, 32);
   //uint32_t checksum_addr = (uint32_t)&firmware_checksum;
+#if defined(__AVR__)
   uint32_t checksum_addr = pgm_get_far_address(firmware_checksum);
   uint16_t checksum_value = pgm_read_word_far(checksum_addr);
+#else
+  uint16_t checksum_value = firmware_checksum;
+#endif
   oled_display.print("0x");
   oled_display.print(firmware_checksum,HEX);
   oled_display.display();
