@@ -52,12 +52,19 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
       oled_display.display();
     }  oled_display.clearDisplay();
     */
+  oled_display.setFont(&TomThumb);
+  oled_display.setCursor(104, 32);
+  //uint32_t checksum_addr = (uint32_t)&firmware_checksum;
+  uint32_t checksum_addr = pgm_get_far_address(firmware_checksum);
+  uint16_t checksum_value = pgm_read_word_far(checksum_addr);
+  oled_display.print("0x");
+  oled_display.print(firmware_checksum,HEX);
   oled_display.display();
-  delay(750);
+  delay(800);
 
   for (uint8_t a = 0; a < 32; a++) {
-    oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 31, a, BLACK);
-    oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 31, 32 - a,
+    oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 33, a, BLACK);
+    oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 33, 32 - a,
                           BLACK);
     oled_display.display();
 #ifndef __AVR__

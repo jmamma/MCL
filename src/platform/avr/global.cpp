@@ -13,6 +13,8 @@
 #include "Elektron.h"
 #include "MidiIDSysex.h"
 
+const uint16_t __attribute__((section(".firmware_checksum"), used, aligned(2))) firmware_checksum = 0xDADA;
+
 // Buffer array definitions
 
 uint8_t (*seq_tx1_buf)[TX_SEQBUF_SIZE] = (uint8_t(*)[TX_SEQBUF_SIZE])BANK1_UARTSEQ_TX1_BUFFER_START;
