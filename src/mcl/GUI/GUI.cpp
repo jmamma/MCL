@@ -168,9 +168,20 @@ void GuiClass::display() {
   }
 #endif
 #ifndef DEBUGMODE
+#if defined(__AVR__)
   if (display_mirror) {
     mirror();
   }
+#else
+  if (display_mirror) {
+    static uint16_t last_mirror_time = 0;
+    uint16_t current_time = read_clock_ms();
+    if (clock_diff(last_mirror_time, current_time) >= 40) { // 40ms = 25fps
+      mirror();
+      last_mirror_time = current_time;
+    }
+  }
+#endif
 #endif
   oled_display.display();
 }
