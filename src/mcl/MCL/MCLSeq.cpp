@@ -239,8 +239,8 @@ void MCLSeq::seq() {
 #else
     //Have to flush the first byte to re-trigger the uart tx isr.
     LOCK();
-    MidiUart.tx_isr();
-    MidiUart2.tx_isr();
+    MidiUart.tx_flush();
+    MidiUart2.tx_flush();
     CLEAR_LOCK();
 #endif
     // Flip uart / side_channel buffer for next run
