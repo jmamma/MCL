@@ -75,7 +75,7 @@ def calculate_and_embed_checksum(elf_file, env):
     regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+([0-9a-f]+)\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)")
 
     for line in result.stdout.splitlines():
-        print(line)
+#       print(line)
         match = regex.search(line)
         if match:
             section_size = int(match.group(1), 16)
