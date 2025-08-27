@@ -19,10 +19,9 @@ menu_t<boot_menu_page_N> boot_menu_layout = {
 #if defined(__AVR__)
         {"OS UPGRADE",  0, 0, 0, 0, NULL_PAGE, 27, 0},
         {"DFU MODE",    0, 0, 0, 0, NULL_PAGE, 26, 0},
-#else
+#endif
         {"USB DISK",    0, 0, 0, 0, NULL_PAGE, 28, 0},
         {"EXIT",        0, 0, 0, 0, NULL_PAGE, 29, 0},
-#endif
     },
     0
 };
