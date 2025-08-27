@@ -38,6 +38,7 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
   oled_display.setTextSize(1);
   oled_display.print(F("V"));
   oled_display.print(VERSION_STR);
+  oled_display.display();
 
   delay(750);
 
@@ -47,7 +48,7 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
                           BLACK);
     oled_display.display();
 #ifndef __AVR__
-    delay(20);
+    delay(10);
 #endif
   }
 
