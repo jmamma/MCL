@@ -110,7 +110,7 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
 #endif
 };
 
-void mcl_setup() { mcl.setup(); }
+void mcl_setup() { mcl.current_page = NULL_PAGE; } //Exit blocking loop in mcl_setup
 
 void MCL::setup() {
 
@@ -147,9 +147,7 @@ void MCL::setup() {
   }
 #endif
 
-  R.Clear();
-  R.use_icons_boot();
-  if (BUTTON_DOWN(Buttons.BUTTON2)) {
+ if (BUTTON_DOWN(Buttons.BUTTON2)) {
     // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     mcl.setPage(BOOT_MENU_PAGE);
     while (mcl.currentPage() == BOOT_MENU_PAGE) {
@@ -162,7 +160,8 @@ void MCL::setup() {
     delay(2000);
     return;
   }
-
+  R.Clear();
+  R.use_icons_boot();
   gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
 
   ret = mcl_sd.load_init();

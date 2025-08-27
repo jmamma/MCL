@@ -26,6 +26,7 @@ void MCLGfx::draw_evil(unsigned char* evil) {
 }
 
 void MCLGfx::splashscreen(unsigned char* bitmap) {
+  oled_display.clearDisplay();
   oled_display.setFont();
 
   oled_display.drawBitmap(35, 8, bitmap, BITMAP_MCL_LOGO_W,
