@@ -264,19 +264,13 @@ void GridTask::transition_handler() {
       if (gdt == nullptr) {
         continue;
       }
-
-      bool ignore_chain_settings = true;
-      bool auto_check = true;
+      bool ignore_chain_settings = false;
       if (track_select_array[n]) {
         last_slot = n;
-        ignore_chain_settings = false;
-        auto_check = false;
-        mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
-      } else if (mcl_actions.chains[n].mode == LOAD_AUTO &&
-                 mcl_actions.links[n].loops == 0) {
-        mcl_actions.next_transitions[n] = -1;
       }
+      mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
+
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
       last_active_row = slots_changed[last_slot];
       next_active_row = mcl_actions.links[last_slot].row;
