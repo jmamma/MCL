@@ -1,6 +1,10 @@
 #pragma once
 
+#if defined(__AVR__)
 constexpr size_t boot_menu_page_N = 4;
+#else
+constexpr size_t boot_menu_page_N = 2;
+#endif
 constexpr size_t start_menu_page_N = 2;
 constexpr size_t system_menu_page_N = 6;
 constexpr size_t midi_config_page_N = 6;
