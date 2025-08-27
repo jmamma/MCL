@@ -62,6 +62,9 @@ void change_usb_mode(uint8_t mode) {
     usb_msc.setCapacity(block_count, 512);
     usb_msc.setUnitReady(true);
   }
+  if (mode == USB_SERIAL) { //OS UPGRADE
+    rp2040.rebootToBootloader();
+  }
 }
 
 void picow_init() {
