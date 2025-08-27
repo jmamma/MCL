@@ -626,11 +626,11 @@ void GridPage::display() {
   else {
     draw_encoders = false;
   }
-  /*
+  
   if (row_scan) {
-    mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 9, 7, false);
+    mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 18, 7, false);
   }
-  */
+  
 }
 
 void rename_row() {
@@ -691,8 +691,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
   SeqTrack seq_track;
-  uint16_t target_length = slot.link.length * seq_track.get_speed_multiplier(slot.link.speed) * slot.link.loops;
-
 
   if (old_col == 255) {
     if (swap_grids()) { return; }
@@ -718,10 +716,16 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   uint8_t slot_update = 0;
 
+  uint16_t target_length = slot.link.length * seq_track.get_speed_multiplier(slot.link.speed) * slot.link.loops;
+
+  bool slot_changed_length = temp_slot.link.length != slot.link.length;
+  bool slot_changed_loops = temp_slot.link.loops != slot.link.loops;
+  bool slot_changed_row = temp_slot.link.row != slot.link.row;
+
   if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
-    if ((temp_slot.link.row != slot.link.row) ||
-        (temp_slot.link.loops != slot.link.loops) ||
-        (temp_slot.link.length != slot.link.length)) {
+    if ((slot_changed_length) ||
+        (slot_changed_loops) ||
+        (slot_changed_row)) {
       slot_update = 1;
       DEBUG_PRINTLN("Slot update");
     }
@@ -785,12 +789,9 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
     oled_display.display();
 
-
-
     GridRowHeader header;
 
     again:
-
 
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       uint8_t ypos = y + getRow();
@@ -817,16 +818,34 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
           else {
             temp_slot.load_from_grid(xpos,ypos);
             uint16_t temp_slot_length = temp_slot.link.length * seq_track.get_speed_multiplier(temp_slot.link.speed);
-            //check if length is an even multiple, otherwise skip.
-            if (temp_slot_length && !(target_length % temp_slot_length) && temp_slot_length <= target_length) {
-              temp_slot.link.loops = target_length / temp_slot_length;
+            bool store_slot = false;
+            if (slot_changed_loops && slot.link.loops == 0) {
+                temp_slot.link.loops = 0;
+                store_slot = true;
+            }
+            else if (slot_changed_loops || slot_changed_length) {
+              //User adjusted both loops and length on src, assume they want to update all selected slots to this value.
+              if (slot_changed_loops && slot_changed_length) {
+                temp_slot.link.loops = slot.link.loops;
+                temp_slot.link.length = slot.link.length;
+                store_slot = true;
+              }
+              //User changed loops, check if length of current is an even multiple of src length, if so increase loops to match
+              else if (slot_changed_loops && temp_slot_length && !(target_length % temp_slot_length) && temp_slot_length <= target_length) {
+                temp_slot.link.loops = target_length / temp_slot_length;
+                store_slot = true;
+              }
+              //User changed length, if speeds are the same we can increaase the length;
+              else if (slot_changed_length && temp_slot.link.speed == slot.link.speed) {
+                temp_slot.link.length = slot.link.length;
+                store_slot = true;
+              }
+            }
+            if (slot_changed_row) {
+              store_slot = true;
               temp_slot.link.row = slot.link.row;
-              temp_slot.store_in_grid(xpos, ypos);
             }
-            else if (temp_slot.link.speed == slot.link.speed) {
-              temp_slot.link.length = slot.link.length;
-              temp_slot.store_in_grid(xpos, ypos);
-            }
+            if (store_slot) { temp_slot.store_in_grid(xpos, ypos); }
           }
         } else if (slot_load == 1) {
           // if (height > 1 && y == 0) {
@@ -1142,6 +1161,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
 
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+      if (key_interface.is_key_down(MDX_KEY_NO)) { return true; }
     slot_menu_on:
       DEBUG_DUMP(getCol());
       DEBUG_DUMP(getRow());
