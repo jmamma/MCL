@@ -38,33 +38,8 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
   oled_display.setTextSize(1);
   oled_display.print(F("V"));
   oled_display.print(VERSION_STR);
-  /*  for (float length = 0; length < 32; length += 0.7) {
 
-      // display.fillRect(0, 0, 128, length, BLACK);
-      for (uint8_t x = 0; x < 50 + (length * 5); x++) {
-
-        oled_display.drawPixel(random(20, 110), 30 - random(0, (int)length),
-                               BLACK);
-      }
-
-   √   //:    display.drawLine(0, length, 128, length, BLACK);
-
-      oled_display.display();
-    }  oled_display.clearDisplay();
-    */
-  oled_display.setFont(&TomThumb);
-  oled_display.setCursor(104, 32);
-  //uint32_t checksum_addr = (uint32_t)&firmware_checksum;
-#if defined(__AVR__)
-  uint32_t checksum_addr = pgm_get_far_address(firmware_checksum);
-  uint16_t checksum_value = pgm_read_word_far(checksum_addr);
-#else
-  uint16_t checksum_value = firmware_checksum;
-#endif
-  oled_display.print("0x");
-  oled_display.print(checksum_value,HEX);
-  oled_display.display();
-  delay(800);
+  delay(750);
 
   for (uint8_t a = 0; a < 32; a++) {
     oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 33, a, BLACK);
@@ -72,7 +47,7 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
                           BLACK);
     oled_display.display();
 #ifndef __AVR__
-    delay(10);
+    delay(20);
 #endif
   }
 

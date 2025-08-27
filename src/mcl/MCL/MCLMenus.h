@@ -37,7 +37,7 @@ extern MCLEncoder config_param14;
 
 extern void new_proj_handler();
 
-extern MenuPage<boot_menu_page_N> boot_menu_page;
+extern BootMenuPage<boot_menu_page_N> boot_menu_page;
 
 extern MenuPage<start_menu_page_N> start_menu_page;
 

@@ -36,7 +36,7 @@ public:
   encoders[1]->old = 0;
   }
   void loop();
-  void display();
+  virtual void display();
   void setup();
   void init();
   bool enter();
@@ -66,6 +66,32 @@ public:
   void set_layout(menu_t<N>* layout) {
     menu.set_layout(layout);
   }
+};
+
+template <int N> class BootMenuPage : public MenuPage<N> {
+public:
+
+  BootMenuPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
+           Encoder *e3 = NULL, Encoder *e4 = NULL)
+      : MenuPage<N>(e1, e2, e3, e4) {
+  }
+  virtual void display() {
+    MenuPage<N>::display();
+    oled_display.setCursor(0, 25);
+    oled_display.setTextSize(1);
+    oled_display.print(VERSION_STR);
+    oled_display.setCursor(0, 32);
+  //uint32_t checksum_addr = (uint32_t)&firmware_checksum;
+#if defined(__AVR__)
+    uint32_t checksum_addr = pgm_get_far_address(firmware_checksum);
+    uint16_t checksum_value = pgm_read_word_far(checksum_addr);
+#else
+    uint16_t checksum_value = firmware_checksum;
+#endif
+    oled_display.print("0x");
+    oled_display.print(checksum_value,HEX);
+  }
+
 };
 
 #endif /* MENUPAGE_H__ */
