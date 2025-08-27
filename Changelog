@@ -30,6 +30,8 @@ Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.7
 
   Fixed Regression relating to MuteCCs.
 
+  GridPage: Improvements to applying LOOP and LEN settings across multiple slots.
+
 MCL 4.60 21/09/2024
 
 Please upgrade to Machinedrum OS X.11 & Monomachine OS X.01 before using MCL 4.60.
