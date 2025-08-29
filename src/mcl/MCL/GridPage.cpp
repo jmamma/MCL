@@ -686,9 +686,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     proj.select_grid(0);
   }
 
-  GridTrack temp_slot;
-  temp_slot.load_from_grid(_col, getRow());
-
   uint8_t track_select_array[NUM_SLOTS] = {0};
   SeqTrack seq_track;
 
@@ -711,6 +708,10 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       return;
     }
   }
+
+  GridTrack temp_slot;
+  if (!temp_slot.load_from_grid(_col, getRow())) { return; }
+
   width = old_col != 255 ? GRID_WIDTH - _col : param3.cur;
   height = param4.cur;
 
@@ -816,7 +817,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
             slot.store_in_grid(xpos, ypos);
           }
           else {
-            temp_slot.load_from_grid(xpos,ypos);
+            if (!temp_slot.load_from_grid(xpos,ypos)) { continue; }
             uint16_t temp_slot_length = temp_slot.link.length * seq_track.get_speed_multiplier(temp_slot.link.speed);
             bool store_slot = false;
             if (slot_changed_loops && slot.link.loops == 0) {
@@ -831,8 +832,13 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
                 store_slot = true;
               }
               //User changed loops, check if length of current is an even multiple of src length, if so increase loops to match
-              else if (slot_changed_loops && temp_slot_length && !(target_length % temp_slot_length) && temp_slot_length <= target_length) {
-                temp_slot.link.loops = target_length / temp_slot_length;
+              else if (slot_changed_loops && temp_slot_length) {
+                if (!(target_length % temp_slot_length) && temp_slot_length <= target_length) {
+                  temp_slot.link.loops = target_length / temp_slot_length; //try and match the src track target length
+                }
+                else {
+                  temp_slot.link.loops = slot.link.loops; //just change the loops
+                }
                 store_slot = true;
               }
               //User changed length, if speeds are the same we can increaase the length;
@@ -882,6 +888,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     load_old_col();
   }
   mcl_cfg.load_mode = load_mode_old;
+  end2:
   slot_apply = 0;
   slot_load = 0;
   slot_clear = 0;
@@ -1165,7 +1172,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
     slot_menu_on:
       DEBUG_DUMP(getCol());
       DEBUG_DUMP(getRow());
-      slot.load_from_grid(getCol(), getRow());
+      if (!slot.load_from_grid(getCol(), getRow())) { return true; }
       DEBUG_PRINTLN(F("what's in the slot"));
       DEBUG_DUMP(slot.link.loops);
       DEBUG_DUMP(slot.link.row);
