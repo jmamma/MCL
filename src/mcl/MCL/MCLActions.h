@@ -23,7 +23,7 @@
 
 #if defined(__AVR__)
   #define GUI_THRESHOLD_FACTOR 0.064f  //80ms
-  #define TRACK_MIN_LOAD_TIME 16 //16ms
+  #define TRACK_MIN_LOAD_TIME 4 //4ms
 #else
   #define GUI_THRESHOLD_FACTOR 0.016f  //20ms
   #define TRACK_MIN_LOAD_TIME 1 //1ms
