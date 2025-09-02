@@ -268,6 +268,7 @@ void GridTask::transition_handler() {
       if (track_select_array[n]) {
         last_slot = n;
       }
+      if (!track_select_array[n] && mcl_actions.chains[n].mode == LOAD_MANUAL) continue;
       mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
 
