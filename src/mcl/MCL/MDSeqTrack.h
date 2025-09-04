@@ -16,6 +16,9 @@
 
 class MDTrack;
 
+const uint8_t number_midi_cc = 6 * 2 + 4;
+const uint8_t midi_cc_array_size = 6 * 2 + 4;
+
 class TrigNotes {
 public:
   uint8_t note1;
@@ -23,8 +26,7 @@ public:
   uint8_t note3;
   uint8_t len;
   uint8_t vel;
-  uint8_t prog = 255;
-
+  uint8_t ccs[midi_cc_array_size];
   uint16_t count_down;
   bool first_trig = false;
 };
@@ -41,10 +43,10 @@ public:
 
   TrigNotes notes;
 
-  const uint8_t number_midi_cc = 6 * 2 + 4;
-  const uint8_t midi_cc_array_size = 6 * 2 + 4;
-
-  MDSeqTrack() : SeqSlideTrack() { active = MD_TRACK_TYPE; }
+  MDSeqTrack() : SeqSlideTrack() {
+    active = MD_TRACK_TYPE;
+    memset(notes.ccs, 255, sizeof(notes.ccs));
+  }
   ALWAYS_INLINE() void reset() {
     SeqSlideTrack::reset();
     oneshot_mask = 0;
@@ -135,7 +137,7 @@ public:
     memcpy(&notes.note1, MD.kit.params[track_number], 5);
     notes.count_down = 0;
   }
-  void process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs);
+  void process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs, bool is_lock = false);
   void send_notes_ccs(uint8_t *ccs, bool send_ccs);
   void send_notes(uint8_t first_note = 255, MidiUartClass *uart2_ = nullptr);
   void send_notes_on(MidiUartClass *uart2_ = nullptr);
