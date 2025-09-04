@@ -469,7 +469,7 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
   }
 }
 
-void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs, bool is_lock) {
+void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs) {
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
 
   uint8_t i = param - 5;
@@ -555,7 +555,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     lock_idx += lock_bit;
     if (send) {
       if (is_midi_model && p < 21) {
-        process_note_locks(p, val, ccs, true);
+        process_note_locks(p, val, ccs);
         send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
       }
 

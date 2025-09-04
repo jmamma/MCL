@@ -2,6 +2,37 @@ MCL 4.70 7/07/2025
 
 Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.70
 
+- Improvements
+
+  Fixed several performance issues, related to sequencer transitions.
+  Slot loading should now be consistent and reliable.
+
+  Encoder rotation "fast mode" has been tweaked.
+
+  Cursor movement behaviour improved in PinoRoll.
+
+  MID Machines will now only transmit Prog Change and CC parameters when they
+  differ from the last transmitted value.
+
+- Additions
+
+  TRANSPOSE option added to the Sequencer Track Menu.
+
+- Bug Fixes
+
+  Fixed crashes and lockups related to sequencer transitions.
+
+  Fixed a regression related to oddities when quickly stopping and starting
+  the sequencer.
+
+  There was a bug that could result in incomplete sysex messages being received.
+
+  Fixed Regression relating to receiving MuteCCs.
+
+  GridPage: Improvements to applying LOOP and LEN settings across multiple slots.
+
+  MID Maachine incorrect prorgram change transmission.
+
 - Build System
 
   The MCL code has been restructured to accomodate different hardware and microcontroller
@@ -10,27 +41,6 @@ Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.7
   A number of low level changes were made to allow MCL to run identically on
   different hardware platforms.
 
-- Improvements
-
-  Encoder rotation "fast mode" has been tweaked.
-  Cursor movement behaviour improved in PinoRoll.
-
-- Additions
-
-  TRANSPOSE option added to the Sequencer Track Menu.
-
-- Bug Fixes
-
-  Fixed several performance issues, crashes and lockups related to sequencer transitions.
-
-  Fixed a regression related to oddities when quickly stopping and starting
-  the sequencer.
-
-  There was an error that could result in incomplete sysex messages being received.
-
-  Fixed Regression relating to MuteCCs.
-
-  GridPage: Improvements to applying LOOP and LEN settings across multiple slots.
 
 MCL 4.60 21/09/2024
 
