@@ -137,7 +137,7 @@ public:
     memcpy(&notes.note1, MD.kit.params[track_number], 5);
     notes.count_down = 0;
   }
-  void process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs, bool is_lock = false);
+  void process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs);
   void send_notes_ccs(uint8_t *ccs, bool send_ccs);
   void send_notes(uint8_t first_note = 255, MidiUartClass *uart2_ = nullptr);
   void send_notes_on(MidiUartClass *uart2_ = nullptr);
