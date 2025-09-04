@@ -127,6 +127,14 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
     }
     step_count_inc();
   }
+
+  if (notes.count_down) {
+    notes.count_down--;
+    if (notes.count_down == 0) {
+      send_notes_off();
+    }
+  }
+
   if (count_down) {
     count_down--;
     if (count_down == 0) {
@@ -137,16 +145,8 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       if (!cache_loaded) {
         load_cache();
         cache_loaded = true;
-        goto end;
       }
-//      goto end;
-    }
-  }
-
-  if (notes.count_down) {
-    notes.count_down--;
-    if (notes.count_down == 0) {
-      send_notes_off();
+      goto end;
     }
   }
 
@@ -468,8 +468,7 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
   }
 }
 
-void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs,
-                                    bool is_lock) {
+void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs) {
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
 
   uint8_t i = param - 5;
@@ -489,7 +488,8 @@ void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs,
     ccs[i + 1] = val;
     break;
   case 20:
-    if (notes.prog != val || is_lock) {
+    //if (notes.prog != val || is_lock) {
+    if (notes.prog != val) {
       ccs[0] = val;
     }
     else {
@@ -523,7 +523,8 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
       // first note, we want to send all CCs regardless if they dont have locks.
       memcpy(ccs + 1, &MD.kit.params[track_number][5], sizeof(ccs) - 1);
       //prevent re-transmission of program change.
-      //process_note_locks(20, MD.kit.params[track_number][20],ccs);
+      //
+      process_note_locks(20, MD.kit.params[track_number][20],ccs);
       send_ccs = true;
       notes.first_trig = false;
     } else {
@@ -548,7 +549,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     lock_idx += lock_bit;
     if (send) {
       if (is_midi_model && p < 21) {
-        process_note_locks(p, val, ccs, true);
+        process_note_locks(p, val, ccs);
         send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
       }
 
@@ -963,7 +964,7 @@ void MDSeqTrack::clear_locks() {
 
   memset(locks, 0, sizeof(locks));
   cur_event_idx = 0;
-  notes.first_trig = true;
+  //notes.first_trig = true;
 }
 
 void MDSeqTrack::clear_track(bool locks) {
@@ -973,7 +974,7 @@ void MDSeqTrack::clear_track(bool locks) {
     clear_locks();
   }
   memset(steps, 0, sizeof(steps));
-  notes.first_trig = true;
+  //notes.first_trig = true;
 }
 
 void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {

@@ -666,6 +666,7 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
         load_cache();
         cache_loaded = true;
       }
+      goto end;
     }
   }
 

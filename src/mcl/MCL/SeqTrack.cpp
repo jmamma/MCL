@@ -121,7 +121,7 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
         if (is_midi_model) {
           uint8_t p = param;
           send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
-          mcl_seq.md_tracks[track_number].process_note_locks(p, val, ccs, true);
+          mcl_seq.md_tracks[track_number].process_note_locks(p, val, ccs);
         }
         else {
           MD.setTrackParam_inline(track_number, param, val);
