@@ -145,7 +145,6 @@ uint8_t Grid::get_slot_model(uint8_t column, uint16_t row, bool load) {
 
 bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
 
-  bool ret;
   int b;
   GridTrack temp_track;
 
@@ -158,21 +157,8 @@ bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
 
   temp_track.active = EMPTY_TRACK_TYPE;
   temp_track.link.init(row);
+  bool ret = temp_track.store_in_grid(column, row);
 
-  uint32_t offset = get_slot_offset(column, row);
-
-  ret = file.seekSet(offset);
-
-  if (!ret) {
-    DEBUG_PRINT_FN();
-    DEBUG_PRINTLN(F("Clear grid failed: "));
-    DEBUG_DUMP(row);
-    DEBUG_DUMP(column);
-    return false;
-  }
-  // DEBUG_PRINTLN("Writing");
-  // DEBUG_DUMP(sizeof(temptrack.active));
-  ret = mcl_sd.write_data((uint8_t *)&(temp_track), sizeof(temp_track), &file);
   if (!ret) {
     DEBUG_PRINTLN(F("Write failed"));
     return false;
