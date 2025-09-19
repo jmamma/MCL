@@ -153,11 +153,6 @@ void SampleBrowserPage::send_sample(int slot, char *newname, bool silent) {
     file.close();
     bool is_syx =
         strcmp(c_syx_suffix, &temp_entry[strlen(temp_entry) - 4]) == 0;
-    if (!silent) {
-      if (!mcl_gui.wait_for_confirm("Sample Slot", "Overwrite?")) {
-        return;
-      }
-    }
     if (is_syx) {
       success = midi_sds.sendSyx(temp_entry, slot);
     } else {
@@ -252,7 +247,9 @@ void SampleBrowserPage::on_select(const char *__) {
       recv_wav(slot);
       break;
     case PA_SELECT:
-      send_sample(slot);
+      if (mcl_gui.wait_for_confirm("Sample Slot", "Overwrite?")) {
+         send_sample(slot);
+      }
       break;
     }
     pending_action = 0;
