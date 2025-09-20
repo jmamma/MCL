@@ -626,11 +626,11 @@ void GridPage::display() {
   else {
     draw_encoders = false;
   }
-  
+#ifdef DEBUGMODE
   if (row_scan) {
     mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 18, 7, false);
   }
-  
+#endif
 }
 
 void rename_row() {
