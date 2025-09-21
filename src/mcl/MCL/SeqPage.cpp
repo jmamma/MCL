@@ -490,7 +490,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       MD.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
     }
 
-    GUI_hardware.led.set_trigleds(mask, TRIGLED_STEPEDIT); //Normal
+    GUI_hardware.led.set_trigleds(led_mask, TRIGLED_STEPEDIT); //Normal
     GUI_hardware.led.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1); //Blink leds
     if (MidiClock.state == 2) { GUI_hardware.led.toggle_trigled(active_track.step_count - offset); }
   }
