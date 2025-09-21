@@ -147,33 +147,46 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
 // send current selected sample file to slot
 void SampleBrowserPage::send_sample(int slot, char *newname, bool silent) {
   bool success;
-  if (file.isOpen()) {
-    char temp_entry[FILE_ENTRY_SIZE];
-    file.getName(temp_entry, FILE_ENTRY_SIZE);
-    file.close();
-    bool is_syx =
-        strcmp(c_syx_suffix, &temp_entry[strlen(temp_entry) - 4]) == 0;
-    if (is_syx) {
-      success = midi_sds.sendSyx(temp_entry, slot);
-    } else {
-      char *ptr = newname;
-      if (newname == nullptr) {
-        if (isdigit(temp_entry[0]) && isdigit(temp_entry[1]) &&
-            (temp_entry[2] != '.') && (temp_entry[2] != '\0')) {
-          ptr = temp_entry + 2;
-        }
+
+  if (!file.isOpen())
+    return;
+
+#if defined(__AVR__)
+  MidiUartClass *uart_clock_recv = nullptr;
+  if (MidiClock.uart_clock_recv != &MidiUart) {
+    uart_clock_recv = MidiClock.uart_clock_recv;
+    MidiClock.uart_clock_recv = nullptr;
+  }
+#endif
+
+  char temp_entry[FILE_ENTRY_SIZE];
+  file.getName(temp_entry, FILE_ENTRY_SIZE);
+  file.close();
+  bool is_syx = strcmp(c_syx_suffix, &temp_entry[strlen(temp_entry) - 4]) == 0;
+  if (is_syx) {
+    success = midi_sds.sendSyx(temp_entry, slot);
+  } else {
+    char *ptr = newname;
+    if (newname == nullptr) {
+      if (isdigit(temp_entry[0]) && isdigit(temp_entry[1]) &&
+          (temp_entry[2] != '.') && (temp_entry[2] != '\0')) {
+        ptr = temp_entry + 2;
       }
-      success =
-          midi_sds.sendWav(temp_entry, ptr, slot, /* show progress */ true);
     }
-    if (!silent) {
-      if (success) {
-        gfx.alert("Sample sent", temp_entry);
-      } else {
-        gfx.alert("Send failed", temp_entry);
-      }
+    success = midi_sds.sendWav(temp_entry, ptr, slot, /* show progress */ true);
+  }
+  if (!silent) {
+    if (success) {
+      gfx.alert("Sample sent", temp_entry);
+    } else {
+      gfx.alert("Send failed", temp_entry);
     }
   }
+#if defined(__AVR__)
+  if (uart_clock_recv) {
+    MidiClock.uart_clock_recv = uart_clock_recv;
+  }
+#endif
 }
 
 void SampleBrowserPage::recv_wav(int slot, bool silent) {
@@ -201,6 +214,13 @@ void SampleBrowserPage::recv_wav(int slot, bool silent) {
   if (SD.exists(temp_entry)) { gfx.alert("File exists!", temp_entry); return; }
   DEBUG_PRINTLN("bulk recv");
   DEBUG_PRINTLN(temp_entry);
+  #if defined(__AVR__)
+    MidiUartClass *uart_clock_recv = nullptr;
+    if (MidiClock.uart_clock_recv != &MidiUart) {
+      uart_clock_recv = MidiClock.uart_clock_recv;
+      MidiClock.uart_clock_recv = nullptr;
+    }
+  #endif
   bool ret = midi_sds.recvWav(temp_entry, slot);
   if (!silent) {
     if (ret) {
@@ -209,6 +229,9 @@ void SampleBrowserPage::recv_wav(int slot, bool silent) {
       gfx.alert("Receive failed", temp_entry);
     }
   }
+  #if defined(__AVR__)
+    if (uart_clock_recv) { MidiClock.uart_clock_recv = uart_clock_recv; }
+  #endif
 }
 
 void SampleBrowserPage::on_new() {
