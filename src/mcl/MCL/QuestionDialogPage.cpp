@@ -71,14 +71,14 @@ bool QuestionDialogPage::handleEvent(gui_event_t *event) {
     if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
     YES_released:
       return_state = true;
-      mcl.popPage();
+      mcl.popPage(false);
       return true;
     }
 
     if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
     NO_released:
       return_state = false;
-      mcl.popPage();
+      mcl.popPage(false);
       return true;
     }
 

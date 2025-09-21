@@ -38,7 +38,7 @@ void GuiClass::popPage(LightPage *page) {
   }
 }
 
-void GuiClass::popPage() {
+void GuiClass::popPage(bool re_init) {
   LightPage *lastpage = currentPage();
   if (lastpage != NULL) {
     lastpage->cleanup();
@@ -55,7 +55,9 @@ void GuiClass::popPage() {
     pageStack.reset();
     pushPage(lastpage);
   }
-  currentPage()->init();
+  if (re_init) {
+    currentPage()->init();
+  }
 }
 
 LightPage *GuiClass::currentPage() {

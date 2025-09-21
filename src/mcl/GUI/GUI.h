@@ -39,7 +39,7 @@ public:
   LightPage *currentPage();
   void setPage(LightPage *page);
   void pushPage(LightPage *page);
-  void popPage();
+  void popPage(bool re_init = true);
   void popPage(LightPage *page);
   bool handleTopEvent(gui_event_t *event);
 

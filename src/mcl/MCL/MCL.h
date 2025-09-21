@@ -66,8 +66,8 @@ public:
     GUI.pushPage(getPage(page));
   }
 
-  void popPage() {
-    GUI.popPage();
+  void popPage(bool re_init = true) {
+    GUI.popPage(re_init);
     for (uint8_t n = 0; n < NUM_PAGES; n++) {
       if (GUI.currentPage() == getPage((PageIndex) n)) {
         current_page = (PageIndex) n;
