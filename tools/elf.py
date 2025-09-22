@@ -72,65 +72,94 @@ def calculate_and_embed_checksum(elf_file, env):
 
     section_offset = -1
     section_size = -1
-    regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+([0-9a-f]+)\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)")
+
+    # ALSO get the .text section end to match C code behavior
+    text_section_end = -1
+
+    # Parse both .firmware_checksum and .text sections
+    checksum_regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+([0-9a-f]+)\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)")
+    text_regex = re.compile(r"^\s*\d+\s+\.text\s+([0-9a-f]+)\s+([0-9a-f]+)")
 
     for line in result.stdout.splitlines():
-#       print(line)
-        match = regex.search(line)
+        #print(line)
+
+        # Check for .firmware_checksum section
+        match = checksum_regex.search(line)
         if match:
             section_size = int(match.group(1), 16)
             section_offset = int(match.group(2), 16)
-            break
+
+        # Check for .text section to get its size
+        text_match = text_regex.search(line)
+        if text_match:
+            text_size = int(text_match.group(1), 16)
+            text_vma = int(text_match.group(2), 16)
+            # For .text section that starts at 0, the end is just the size
+            if text_vma == 0:
+                text_section_end = text_size
 
     if section_offset == -1:
         print(f"✗ Error: Section '{checksum_section_name}' not found in the ELF file.")
         env.Exit(1)
 
+    if text_section_end == -1:
+        print(f"✗ Error: .text section not found in the ELF file.")
+        env.Exit(1)
+
     print(f"Found section '{checksum_section_name}': size={section_size} bytes, file_offset={hex(section_offset)}")
+    print(f"Found .text section end: {text_section_end} bytes (0x{text_section_end:x})")
 
     if section_size != 2:
         print(f"✗ Error: The size of '{checksum_section_name}' must be 2 bytes (uint16_t), but it is {section_size} bytes.")
         env.Exit(1)
+    # Extract the .text section binary data using objcopy
+    objcopy = get_tool_path(env, "objcopy")
+    text_bin_file = elf_file + ".text.bin"
+    # Extract .text section to binary file
+    cmd = [objcopy, "-O", "binary", "-j", ".text", elf_file, text_bin_file]
+    print(f"Extracting .text section: {' '.join(cmd)}")
+    result = run_command_for_output(cmd, env)
+    # Read the extracted .text section binary data
+    with open(text_bin_file, "rb") as f:
+        text_data = bytearray(f.read())
+    # Clean up temporary file
+    os.remove(text_bin_file)
+    print(f"Extracted .text section: {len(text_data)} bytes")
 
-    with open(elf_file, "rb") as f:
-        firmware_data = bytearray(f.read())
-
-    placeholder_value = 0xDADA
-    current_value = (firmware_data[section_offset + 1] << 8) | firmware_data[section_offset]
-
-#   print(f"Verifying placeholder at offset {hex(section_offset)}...")
-#   if current_value != placeholder_value:
-#       print(f"✗ Error: Expected placeholder value {hex(placeholder_value)} at checksum location, but found {hex(current_value)}.")
-#       env.Exit(1)
-#   print(f"✓ Placeholder {hex(placeholder_value)} verified successfully.")
-
-    firmware_data[section_offset] = 0
-    firmware_data[section_offset + 1] = 0
+    checksum_boundary = text_section_end
 
     checksum = 0
-    for i in range(0, len(firmware_data), 2):
-        if i + 1 < len(firmware_data):
-            word = (firmware_data[i+1] << 8) | firmware_data[i]
+    for i in range(0, checksum_boundary, 2):
+        if i + 1 < checksum_boundary:
+            word = (text_data[i+1] << 8) | text_data[i]
         else:
-            word = firmware_data[i]
+            word = text_data[i]
         checksum = (checksum + word) & 0xFFFF
+
     print("┌" + "─" * 48 + "┐")
-    print(f"│ Firmware checksum: | {hex(checksum):<15}")
+    print(f"│ Firmware checksum: | 0x{checksum:04x}")
     print("└" + "─" * 48 + "┘")
 
+    print(f"text_section_end: {text_section_end}")
+    print(f"Will checksum from 0 to {checksum_boundary}")
+    print(f"Python calculated checksum: {checksum}")
+
+    # Embed the checksum
     with open(elf_file, "r+b") as f:
         f.seek(section_offset)
         f.write(checksum.to_bytes(2, byteorder='little'))
 
-    print(elf_file)
+    # Verify it was written correctly
     with open(elf_file, "rb") as f:
-      f.seek(section_offset)
-      data = f.read(2)
-      written = int.from_bytes(data, byteorder="little")
+        f.seek(section_offset)
+        data = f.read(2)
+        written = int.from_bytes(data, byteorder="little")
 
     if written != checksum:
-      print("bad times")
-    print(f"✓ Successfully embedded checksum into {os.path.basename(elf_file)}")
+        print("✗ Error: Failed to write checksum correctly!")
+        env.Exit(1)
+
+    print(f"✓ Successfully embedded checksum {checksum} into {os.path.basename(elf_file)}")
     print("--------------------------------------")
 
 # =================================================================

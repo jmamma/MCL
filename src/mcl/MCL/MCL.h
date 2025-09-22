@@ -95,3 +95,4 @@ bool tbd_handleEvent(gui_event_t *event);
 
 bool mcl_handleEvent(gui_event_t *event);
 
+health_status health_check();
