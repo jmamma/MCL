@@ -400,13 +400,12 @@ uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num,
   }
 
   tuning_t const *tuning = MD.getKitModelTuning(track);
-
-  uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
-  note_num = note_num - note_offset;
-
   if (tuning == NULL) {
     return 255;
   }
+
+  uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
+  note_num = note_num - note_offset;
 
   if (note_num >= tuning->len) {
     return 255;
