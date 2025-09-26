@@ -161,7 +161,7 @@ public:
   uint8_t mix;
 
   void init(uint8_t track) {
-    memset(&destinationTrack,0,sizeof(this));
+    memset(&destinationTrack,0,sizeof(MDLFO));
     destinationTrack = track;
     speed = 64;
     uint16_t *lfo_states2 = (uint16_t *) &state[5 + 18];
