@@ -9,7 +9,7 @@ from SCons.Script import DefaultEnvironment
 # This script customizes the PlatformIO build process.
 # 1. Calculates and embeds a 16-bit checksum into the final ELF file.
 # 2. Creates/validates a 'manifest.ini' file containing a full build manifest
-#    (checksum, size, version string, version code, and Git commit ID).
+#    (checksum, size, version string, version code, Git commit ID, and filename).
 # 3. For 'avr', regenerates the HEX file to include only specific sections.
 # 4. Renames the final firmware artifact based on VERSION_STR and copies it to
 #    a clean './build/{env_name}/' directory.
@@ -78,7 +78,7 @@ def get_git_commit_id(env):
     except (subprocess.CalledProcessError, FileNotFoundError):
         return "N/A"
 
-def create_checksum_entry(env, env_name, checksum, firmware_size, version_str, version_code, git_commit_id):
+def create_checksum_entry(env, env_name, checksum, firmware_size, version_str, version_code, git_commit_id, filename):
     """Creates or updates the checksum entry in build/manifest.ini"""
     project_dir = env.subst("$PROJECT_DIR")
     checksums_file = os.path.join(project_dir, "build", "manifest.ini")
@@ -92,7 +92,8 @@ def create_checksum_entry(env, env_name, checksum, firmware_size, version_str, v
         'size': str(firmware_size),
         'version_string': version_str,
         'version_code': version_code,
-        'commit': git_commit_id
+        'commit': git_commit_id,
+        'filename': filename
     }
 
     os.makedirs(os.path.dirname(checksums_file), exist_ok=True)
@@ -108,7 +109,8 @@ def create_checksum_entry(env, env_name, checksum, firmware_size, version_str, v
     print(f"Commit:         {git_commit_id}")
     print(f"Checksum:       0x{checksum:04x}")
     print(f"Size:           {firmware_size} bytes")
-    print(f"File:           {os.path.relpath(checksums_file, project_dir)}")
+    print(f"Filename:       {filename}")
+    print(f"Manifest File:  {os.path.relpath(checksums_file, project_dir)}")
     print("=" * 60 + "\n")
 
 def validate_checksum(env, env_name, checksum, firmware_size):
@@ -344,23 +346,28 @@ def combined_post_build_actions(source, target, env):
     version_str = get_version_str(env) or "N/A"
     version_code = get_version_code(env)
     git_commit_id = get_git_commit_id(env)
+    
+    # Step 3: Determine the final firmware name *before* creating the manifest.
+    if version_str == "N/A":
+        print("⚠ Warning: -DVERSION_STR not found. Skipping firmware rename & copy.")
+        new_firmware_name = "firmware" + FIRMWARE_EXTENSIONS.get(platform_family, ".bin")
+    else:
+        transformed_version = '_'.join(filter(str.isalnum, version_str)).lower()
+        firmware_ext = FIRMWARE_EXTENSIONS.get(platform_family, ".bin")
+        new_firmware_name = f"mcl_{transformed_version}{firmware_ext}"
+    
+    print(f"✓ Target filename will be '{new_firmware_name}'")
 
-    # Step 3: Create or validate checksum manifest.
+    # Step 4: Create or validate checksum manifest.
     if CHECKSUM_MODE.lower() == "create":
-        create_checksum_entry(env, env_name, checksum, firmware_size, version_str, version_code, git_commit_id)
+        create_checksum_entry(env, env_name, checksum, firmware_size, version_str, version_code, git_commit_id, new_firmware_name)
     else:
         validate_checksum(env, env_name, checksum, firmware_size)
 
-    # Step 4: Generate, rename, and copy the final firmware artifact.
+    # Step 5: Generate, rename, and copy the final firmware artifact.
     if version_str == "N/A":
-        print("⚠ Warning: -DVERSION_STR not found. Skipping firmware rename & copy.")
-        print("--- Finished Custom Post-Build Actions ---")
+        print("--- Finished Custom Post-Build Actions (skipped copy due to missing version) ---")
         return
-
-    transformed_version = '_'.join(filter(str.isalnum, version_str)).lower()
-    firmware_ext = FIRMWARE_EXTENSIONS.get(platform_family, ".bin")
-    new_firmware_name = f"mcl_{transformed_version}{firmware_ext}"
-    print(f"✓ Target filename will be '{new_firmware_name}'")
 
     source_firmware_path = os.path.splitext(elf_file)[0] + firmware_ext
     if platform_family == "avr":
