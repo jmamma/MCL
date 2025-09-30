@@ -257,10 +257,10 @@ void SeqStepPage::loop() {
             uint8_t machine_pitch =
                 seq_ptc_page.get_machine_pitch(last_md_track, note_num);
             if (is_midi_model) { machine_pitch = note_num; }
-            if (machine_pitch != MD.kit.params[last_md_track][0]) {
+           // if (machine_pitch != MD.kit.params[last_md_track][0]) {
               active_track.set_track_pitch(step, machine_pitch);
               seq_step_page.encoders_used_clock[3] = read_clock_ms(); // indicate that encoder has changed.
-            }
+           // }
           }
         }
       }
