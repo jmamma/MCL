@@ -121,7 +121,6 @@ void SeqPtcPage::config() {
   config_encoders();
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
-  char buf[len1] = {'\0'};
 
   char str_first[3] = "--";
   char str_second[3] = "--";
@@ -511,8 +510,6 @@ void SeqPtcPage::draw_popup_octave() {
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
-  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
@@ -877,8 +874,6 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
-  uint8_t track;
-  uint8_t track_param;
 
   bool send_uart2 = true;
 
@@ -1034,7 +1029,6 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track > 15) {
     return;
   }
-  uint8_t start_track;
   if (track_param == 32) {
     return;
   } // don't process mute

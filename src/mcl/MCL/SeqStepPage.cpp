@@ -252,7 +252,6 @@ void SeqStepPage::loop() {
           }
           if (seq_param4.hasChanged() && (seq_param4.cur > 0) &&
               (last_md_track < NUM_MD_TRACKS) && (tuning != NULL || is_midi_model)) {
-            uint8_t base = tuning->base;
             uint8_t note_num = seq_param4.cur;
             uint8_t machine_pitch =
                 seq_ptc_page.get_machine_pitch(last_md_track, note_num);
@@ -313,7 +312,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
 
   if (EVENT_NOTE(event) && !grid_page.bank_popup) {
-    uint8_t mask = event->mask;
     uint8_t port = event->port;
     MidiDevice *device = midi_active_peering.get_device(port);
 

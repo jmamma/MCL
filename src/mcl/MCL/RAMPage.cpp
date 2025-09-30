@@ -189,7 +189,6 @@ void RAMPage::reverse(uint8_t track) {
 }
 
 bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
-  uint8_t model = (MD.kit.get_model(track));
 
   if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return false;
@@ -352,8 +351,6 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   md_track.machine.muteGroup = 127;
 
-  uint8_t magic = encoders[1]->cur;
-
   md_track.link.init(mcl_actions.links[track].row, 0, steps, SEQ_SPEED_1X);
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.lfo.destinationTrack = track;
@@ -408,7 +405,7 @@ void RAMPage::setup_ram_rec_stereo(uint8_t track, uint8_t lev, uint8_t source,
   setup_ram_rec(track, RAM_R1_MODEL, lev, source, len, rate, 0, track + 1);
   uint8_t source_link_track = source;
   if (source >= SOURCE_INPA) {
-    uint8_t source_link_track = SOURCE_INPB;
+    source_link_track = SOURCE_INPB;
   }
   setup_ram_rec(track + 1, RAM_R2_MODEL, lev, source_link_track, len, rate, 127,
                 track);
@@ -452,7 +449,6 @@ void RAMPage::loop() {
 void RAMPage::display() {
 
   oled_display.clearDisplay();
-  float remain;
   oled_display.setCursor(28, 24);
   switch (RAMPage::rec_states[page_id]) {
   case STATE_QUEUE:
@@ -619,7 +615,6 @@ void RAMPage::display() {
 }
 
 void RAMPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param, uint8_t value) {
-  uint8_t param_true = 0;
 
   if ((mcl_cfg.ram_page_mode == MONO) || (!cc_link_enable) || grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return;
@@ -688,7 +683,6 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_NOTE(event)) {
-    uint8_t track = event->source;
     if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
       return true;
     }

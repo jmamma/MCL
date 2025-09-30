@@ -197,9 +197,6 @@ public:
      oled_display.textbox("FILL SCENES", "");
      if (scene >= NUM_SCENES) { return; }
 
-     uint8_t *params = (uint8_t *) &MD.kit.params;
-     uint8_t *params_orig = (uint8_t *) &MD.kit.params_orig;
-
      for (uint8_t track = 0; track < 16; track++) {
        for (uint8_t param = 0; param < 24; param++) {
          if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
