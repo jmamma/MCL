@@ -269,6 +269,15 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
   proj.select_grid(old_grid);
 }
 
+void MCLActions::row_update(uint8_t last_slot) {
+  if (last_slot != 255) {
+    //grid_task.last_active_row = grid_task.last_active_row;
+    grid_task.next_active_row = chains[last_slot].mode > 1 ? links[last_slot].row : grid_task.last_active_row;
+    grid_task.chain_behaviour = chains[last_slot].mode > 1;
+    grid_task.row_update();
+  }
+}
+
 void MCLActions::load_tracks(uint8_t *slot_select_array,
                              uint8_t *_row_array, uint8_t load_mode, uint8_t load_offset) {
   // DEBUG_PRINT_FN();
@@ -285,6 +294,7 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
   uint8_t row_array[NUM_SLOTS] = {};
   uint8_t cache_track_array[NUM_SLOTS] = {};
   bool recache = false;
+  uint8_t last_slot = 255;
   DEBUG_PRINTLN("load tracks");
   DEBUG_PRINTLN(load_mode);
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
@@ -303,6 +313,7 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
         if (chains[n].num_of_links == 2) {
           cache_track_array[n] = 1;
           recache = true;
+          last_slot = n;
         }
       }
     } else {
@@ -327,6 +338,7 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
   if (recache) {
     bool gui_update = false;
     cache_next_tracks(cache_track_array, gui_update);
+    row_update(last_slot);
   } else {
     send_tracks_to_devices(slot_select_array, row_array, load_offset);
   }
@@ -702,14 +714,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   grid_task.last_active_row = row;
   grid_task.next_active_row = row;
   grid_task.chain_behaviour = false;
-
-  if (last_slot != 255) {
-    grid_task.last_active_row = grid_task.last_active_row;
-    grid_task.next_active_row = links[last_slot].row;
-    grid_task.chain_behaviour = chains[last_slot].mode > 1;
-  }
-  grid_task.row_update();
-
+  row_update(last_slot);
   calc_next_transition();
   calc_latency();
 }

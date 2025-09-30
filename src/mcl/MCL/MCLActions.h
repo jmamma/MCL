@@ -115,7 +115,7 @@ public:
   void send_globals();
   void switch_global(uint8_t global_page);
   void kit_reload(uint8_t pattern);
-
+  void row_update(uint8_t last_slot);
   void save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
                    uint8_t readpattern = 255);
 

@@ -20,7 +20,7 @@ void GridTask::destroy() {}
 void GridTask::row_update() {
   if (last_active_row < GRID_LENGTH) {
     grid_page.set_active_row(last_active_row); // send led update
-    MD.draw_pattern_idx(last_active_row, next_active_row, chain_behaviour);
+    MD.draw_pattern_idx(next_active_row, last_active_row, chain_behaviour);
   }
 }
 
@@ -274,8 +274,9 @@ void GridTask::transition_handler() {
 
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
       last_active_row = slots_changed[last_slot];
-      next_active_row = mcl_actions.links[last_slot].row;
       chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
+      next_active_row = chain_behaviour ? mcl_actions.links[last_slot].row : last_active_row;
+      row_update();
     }
 
     mcl_actions.calc_next_transition();
