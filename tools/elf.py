@@ -6,35 +6,36 @@ import configparser
 from SCons.Script import DefaultEnvironment
 
 # --- Script Header ---
-# This script customizes the PlatformIO build process for multiple platforms.
-# 1. After any build, it calculates and embeds a 16-bit checksum into the final ELF file.
-# 2. It uses an environment mapping to identify the platform family (e.g., "avr", "rp2040").
-# 3. If the platform family is "avr", it then regenerates the final HEX file to include
-#    only specific sections. For all other platforms, this step is skipped.
-# 4. Based on CHECKSUM_MODE flag, either creates or validates checksums.
+# This script customizes the PlatformIO build process.
+# 1. Calculates and embeds a 16-bit checksum into the final ELF file.
+# 2. Creates/validates a 'manifest.ini' file containing a full build manifest
+#    (checksum, size, version string, version code, and Git commit ID).
+# 3. For 'avr', regenerates the HEX file to include only specific sections.
+# 4. Renames the final firmware artifact based on VERSION_STR and copies it to
+#    a clean './build/{env_name}/' directory.
 
 # =================================================================
-# Configuration Flag
+# Configuration
 # =================================================================
-# Set this to "create" to generate/update checksums.ini
-# Set to "validate" to verify builds against checksums.ini
 
 env = DefaultEnvironment()
-env_mapping = {
-        "rp2040": "rp2040", "rp2350": "rp2040", "tbd": "rp2040",
-        "avr": "avr", "megacmd": "avr", "megacommand": "avr", "nano": "avr",
-}
 
-CHECKSUM_MODE = os.environ.get("CHECKSUM_MODE", "validate")  # Default to validate
+ENV_MAPPING = {
+    "rp2040": "rp2040", "rp2350": "rp2040", "tbd": "rp2040",
+    "avr": "avr", "megacmd": "avr", "megacommand": "avr", "nano": "avr",
+}
+FIRMWARE_EXTENSIONS = {
+    "rp2040": ".uf2",
+    "avr": ".hex"
+}
+CHECKSUM_MODE = os.environ.get("CHECKSUM_MODE", "validate")
 
 # =================================================================
-# Helper Functions for Tool Paths and Command Execution
+# Helper Functions
 # =================================================================
 
 def get_tool_path(env, tool_name):
-    """
-    Finds the full path to a toolchain executable like 'objdump'.
-    """
+    """Finds the full path to a toolchain executable like 'objdump'."""
     cc_path = env.subst("$CC")
     toolchain_bin_dir = os.path.dirname(cc_path)
     cc_base = os.path.basename(cc_path)
@@ -42,7 +43,6 @@ def get_tool_path(env, tool_name):
     prefixed_tool_path = os.path.join(toolchain_bin_dir, f"{prefix}{tool_name}")
     if os.path.exists(prefixed_tool_path):
         return prefixed_tool_path
-
     fallback_path = shutil.which(f"{prefix}{tool_name}")
     if fallback_path:
         return fallback_path
@@ -50,9 +50,7 @@ def get_tool_path(env, tool_name):
     env.Exit(1)
 
 def run_command_for_output(cmd, env):
-    """
-    Helper to run a command (like objdump) and capture its output for parsing.
-    """
+    """Runs a command and captures its output."""
     try:
         result = subprocess.run(
             cmd, capture_output=True, text=True, encoding='utf-8', errors='ignore', check=True
@@ -65,97 +63,83 @@ def run_command_for_output(cmd, env):
         env.Exit(1)
 
 # =================================================================
-# Checksum Creation Logic
+# Checksum and Manifest Logic
 # =================================================================
 
-def create_checksum_entry(env_name, checksum, firmware_size):
-    """
-    Creates or updates the checksum entry in checksums.ini
-    """
-    checksums_file = "checksums.ini"
+def get_git_commit_id(env):
+    """Gets the short git commit hash of the current HEAD."""
+    try:
+        project_dir = env.subst("$PROJECT_DIR")
+        result = subprocess.run(
+            ["git", "rev-parse", "--short", "HEAD"],
+            capture_output=True, text=True, check=True, cwd=project_dir
+        )
+        return result.stdout.strip()
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "N/A"
+
+def create_checksum_entry(env, env_name, checksum, firmware_size, version_str, version_code, git_commit_id):
+    """Creates or updates the checksum entry in build/manifest.ini"""
+    project_dir = env.subst("$PROJECT_DIR")
+    checksums_file = os.path.join(project_dir, "build", "manifest.ini")
     config = configparser.ConfigParser()
 
-    # Read existing file if it exists
     if os.path.exists(checksums_file):
         config.read(checksums_file)
-        print(f"\n✓ Found existing checksums.ini")
-    else:
-        print(f"\n✓ Creating new checksums.ini")
-
-    # Check if entry exists
-    if env_name in config:
-        old_checksum = config[env_name].get('checksum', '0x0000')
-        old_size = config[env_name].get('size', '0')
-        print(f"\n⚠ Updating existing entry for '{env_name}':")
-        print(f"  Old checksum: {old_checksum} → New: 0x{checksum:04x}")
-        print(f"  Old size:     {old_size} → New: {firmware_size} bytes")
-    else:
-        print(f"\n✓ Creating new entry for '{env_name}'")
-
-    # Update or create entry
+    
     config[env_name] = {
         'checksum': f'0x{checksum:04x}',
-        'size': str(firmware_size)
+        'size': str(firmware_size),
+        'version_string': version_str,
+        'version_code': version_code,
+        'commit': git_commit_id
     }
 
-    # Write to file
+    os.makedirs(os.path.dirname(checksums_file), exist_ok=True)
     with open(checksums_file, 'w') as f:
         config.write(f)
 
-    print(f"\n" + "=" * 60)
-    print(f"✓ CHECKSUM ENTRY SAVED")
+    print("\n" + "=" * 60)
+    print("✓ CHECKSUM MANIFEST SAVED")
     print("=" * 60)
-    print(f"Environment: {env_name}")
-    print(f"Checksum:    0x{checksum:04x}")
-    print(f"Size:        {firmware_size} bytes")
-    print(f"File:        {checksums_file}")
+    print(f"Environment:    {env_name}")
+    print(f"Version String: {version_str}")
+    print(f"Version Code:   {version_code}")
+    print(f"Commit:         {git_commit_id}")
+    print(f"Checksum:       0x{checksum:04x}")
+    print(f"Size:           {firmware_size} bytes")
+    print(f"File:           {os.path.relpath(checksums_file, project_dir)}")
     print("=" * 60 + "\n")
 
-# =================================================================
-# Checksum Validation Logic
-# =================================================================
-
-def validate_checksum(env_name, checksum, firmware_size):
-    """
-    Validates the calculated checksum against official values stored in checksums.ini
-    """
-    checksums_file = "checksums.ini"
+def validate_checksum(env, env_name, checksum, firmware_size):
+    """Validates the checksum against values stored in build/manifest.ini"""
+    project_dir = env.subst("$PROJECT_DIR")
+    checksums_file = os.path.join(project_dir, "build", "manifest.ini")
     config = configparser.ConfigParser()
 
-    # Check if checksums file exists
     if not os.path.exists(checksums_file):
         print("\n" + "!" * 60)
-        print("! ERROR: checksums.ini file not found!")
-        print("! Cannot validate without reference checksums.")
-        print("! Run with CHECKSUM_MODE=create to generate checksums.ini")
+        print("! ERROR: manifest.ini file not found!")
+        print(f"! Expected at: {os.path.relpath(checksums_file, project_dir)}")
+        print("! Run with CHECKSUM_MODE=create to generate it.")
         print("!" * 60 + "\n")
         return
 
-    # Read existing checksums file
     config.read(checksums_file)
 
-    # Check if this environment has an entry
     if env_name not in config:
         print("\n" + "!" * 60)
-        print(f"! ERROR: No checksum entry found for '{env_name}'")
-        print("! Cannot validate without reference checksum.")
-        print("! Run with CHECKSUM_MODE=create to add this environment")
+        print(f"! ERROR: No checksum entry found for '{env_name}' in manifest.ini")
+        print("! Run with CHECKSUM_MODE=create to add this entry.")
         print("!" * 60 + "\n")
         return
 
-    # Get official values
-    official_checksum_str = config[env_name].get('checksum', '0x0000')
-    official_size_str = config[env_name].get('size', '0')
+    official_checksum = int(config[env_name].get('checksum', '0'), 0)
+    official_size = int(config[env_name].get('size', '0'))
+    official_version_str = config[env_name].get('version_string', 'N/A')
+    official_version_code = config[env_name].get('version_code', 'N/A')
+    official_commit = config[env_name].get('commit', 'N/A')
 
-    # Parse official checksum (handles both 0x1234 and 1234 formats)
-    if official_checksum_str.startswith('0x'):
-        official_checksum = int(official_checksum_str, 16)
-    else:
-        official_checksum = int(official_checksum_str)
-
-    official_size = int(official_size_str)
-
-    # Compare values
     checksum_matches = (checksum == official_checksum)
     size_matches = (firmware_size == official_size)
 
@@ -163,17 +147,19 @@ def validate_checksum(env_name, checksum, firmware_size):
         print("\n" + "=" * 60)
         print("✓ CHECKSUM VALIDATION PASSED")
         print("=" * 60)
-        print(f"Environment: {env_name}")
-        print(f"Checksum:    0x{checksum:04x} (matches official)")
-        print(f"Size:        {firmware_size} bytes (matches official)")
+        print(f"Environment:    {env_name}")
+        print(f"Version String: {official_version_str} (official)")
+        print(f"Version Code:   {official_version_code} (official)")
+        print(f"Commit:         {official_commit} (official)")
+        print(f"Checksum:       0x{checksum:04x} (matches)")
+        print(f"Size:           {firmware_size} bytes (matches)")
         print("=" * 60 + "\n")
     else:
-        print("\n" + "!" * 60)
-        print("!" * 60)
+        print("\n" + "!" * 60 + "\n" + "!" * 60)
         print("!!!  CHECKSUM VALIDATION FAILED  !!!")
-        print("!" * 60)
-        print("!" * 60)
-        print(f"\nEnvironment: {env_name}\n")
+        print("!" * 60 + "\n" + "!" * 60)
+        print(f"\nEnvironment: {env_name}")
+        print(f"Official build is based on Version '{official_version_str}' (Code: {official_version_code}), Commit '{official_commit}'\n")
 
         if not checksum_matches:
             print(f"❌ CHECKSUM MISMATCH:")
@@ -189,232 +175,205 @@ def validate_checksum(env_name, checksum, firmware_size):
             print(f"   Difference:          {firmware_size - official_size:+d} bytes")
         else:
             print(f"\n✓  Size matches:         {firmware_size} bytes")
-
+        
         print("\n" + "!" * 60)
         print("! This build does NOT match the official firmware!")
-        print("! Possible causes:")
-        print("!   - Code modifications")
-        print("!   - Different compiler version")
-        print("!   - Different optimization settings")
-        print("!   - Different library versions")
-        print("!" * 60)
-        print("!" * 60 + "\n")
-
-        # Optional: Uncomment to make build fail on mismatch
+        print("!" * 60 + "\n" + "!" * 60 + "\n")
         # env.Exit(1)
 
 # =================================================================
-# Checksum Calculation and Embedding Logic (Platform-Agnostic)
+# Checksum Calculation and Embedding (Platform-Agnostic)
 # =================================================================
 
 def calculate_and_embed_checksum(elf_file, env, platform_family):
-    """
-    Calculates the checksum of the ELF file and embeds it into the '.firmware_checksum' section.
-    Checksum is calculated across all code/data sections (e.g. .text, .data, .rodata).
-    Returns the checksum and firmware size for validation/creation.
-    """
+    """Calculates and embeds the checksum into the ELF file."""
     print("--- Running Checksum Calculation ---")
     checksum_section_name = ".firmware_checksum"
     objdump = get_tool_path(env, "objdump")
-    print(f"Reading section info from: {os.path.basename(elf_file)}")
     cmd = [objdump, "-h", elf_file]
     result = run_command_for_output(cmd, env)
 
     section_offset = -1
     section_size = -1
-    firmware_checksum_vma = -1
-
     sections = []
-    checksum_regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+([0-9a-f]+)\s+([0-9a-f]+)\s+[0-9a-f]+\s+([0-9a-f]+)")
+    checksum_regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+([0-9a-f]+)\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)")
     section_regex = re.compile(r"^\s*\d+\s+(\S+)\s+([0-9a-f]+)\s+([0-9a-f]+)\s+([0-9a-f]+)\s+([0-9a-f]+)")
 
     for line in result.stdout.splitlines():
         match = checksum_regex.search(line)
         if match:
             section_size = int(match.group(1), 16)
-            firmware_checksum_vma = int(match.group(2), 16)
-            section_offset = int(match.group(3), 16)
-            print(f"Found .firmware_checksum: VMA=0x{firmware_checksum_vma:08x}, size={section_size}, offset=0x{section_offset:x}")
-
+            section_offset = int(match.group(2), 16)
         section_match = section_regex.search(line)
         if section_match:
-            sections.append({
-                'name': section_match.group(1),
-                'size': int(section_match.group(2), 16),
-                'vma': int(section_match.group(3), 16),
-                'lma': int(section_match.group(4), 16),
-                'file_offset': int(section_match.group(5), 16)
-            })
+            sections.append({ 'name': section_match.group(1), 'size': int(section_match.group(2), 16), 'vma': int(section_match.group(3), 16), 'lma': int(section_match.group(4), 16), 'file_offset': int(section_match.group(5), 16) })
 
     if section_offset == -1:
         print(f"✗ Error: Section '{checksum_section_name}' not found in the ELF file.")
         env.Exit(1)
     if section_size != 2:
-        print(f"✗ Error: The size of '{checksum_section_name}' must be 2 bytes (uint16_t), but it is {section_size} bytes.")
+        print(f"✗ Error: The size of '{checksum_section_name}' must be 2 bytes, but it is {section_size} bytes.")
         env.Exit(1)
 
-    # --- MODIFIED LOGIC START ---
-    # Identify sections that are part of the program image stored in flash.
     sections_to_checksum = []
     PROG_SECTIONS = ['.text', '.data', '.rodata']
-
-    print("\n--- Identifying sections for checksum ---")
     for section in sections:
-        if section['name'] in PROG_SECTIONS and section['size'] > 0:
+        if any(section['name'].startswith(s) for s in PROG_SECTIONS) and section['size'] > 0:
             sections_to_checksum.append(section)
 
     if not sections_to_checksum:
-        print(f"✗ Error: No program sections ({', '.join(PROG_SECTIONS)}) with content found.")
+        print(f"✗ Error: No program sections ({', '.join(PROG_SECTIONS)}) found.")
         env.Exit(1)
+    
+    sort_key = 'lma' if platform_family == "avr" else 'vma'
+    sections_to_checksum.sort(key=lambda s: s[sort_key])
 
-    # Sort sections by their load address to ensure a consistent order for checksumming.
-    # For AVR, LMA (Load Memory Address) is the location in Flash.
-    # For ARM/others, VMA (Virtual Memory Address) is typically the Flash address.
-    if platform_family == "avr":
-        sections_to_checksum.sort(key=lambda s: s['lma'])
-        print("\n--- Sections to be included in checksum (sorted by LMA for AVR) ---")
-    else:
-        sections_to_checksum.sort(key=lambda s: s['vma'])
-        print("\n--- Sections to be included in checksum (sorted by VMA) ---")
-
-    for section in sections_to_checksum:
-        print(f"  ✓ {section['name']:<20} (LMA=0x{section['lma']:08x}, VMA=0x{section['vma']:08x}, Size={section['size']})")
-
-    # Calculate firmware size for validation. This should represent the
-    # total space occupied by the included sections in flash.
     firmware_size = 0
-    if platform_family == "avr":
-        if sections_to_checksum:
-            # The size is determined by the end address of the last section in flash (LMA).
-            last_section = sections_to_checksum[-1]
+    if sections_to_checksum:
+        last_section = sections_to_checksum[-1]
+        if platform_family == "avr":
             firmware_size = last_section['lma'] + last_section['size']
-            print(f"\nPlatform: AVR - Firmware size determined by end of last section (LMA): {firmware_size} bytes")
-    else:
-        if sections_to_checksum:
-            # For other platforms, it's the span from the start of the first section
-            # to the end of the last one. Assumes they are contiguous.
+        else:
             first_section = sections_to_checksum[0]
-            last_section = sections_to_checksum[-1]
             firmware_size = (last_section['vma'] + last_section['size']) - first_section['vma']
-            print(f"\nPlatform: {platform_family} - Firmware size determined by VMA span: {firmware_size} bytes")
-    # --- MODIFIED LOGIC END ---
 
-    # Extract binary data from each section and concatenate
     objcopy = get_tool_path(env, "objcopy")
     all_data = bytearray()
-
     for section in sections_to_checksum:
         section_bin_file = elf_file + f".{section['name']}.bin"
         cmd = [objcopy, "-O", "binary", "-j", section['name'], elf_file, section_bin_file]
-        print(f"Extracting {section['name']} section...")
         run_command_for_output(cmd, env)
-
         with open(section_bin_file, "rb") as f:
             all_data.extend(f.read())
         os.remove(section_bin_file)
 
-    print(f"\nTotal data for checksum: {len(all_data)} bytes")
-
-    # Calculate checksum over all extracted data
     checksum = 0
     for i in range(0, len(all_data), 2):
-        if i + 1 < len(all_data):
-            word = (all_data[i+1] << 8) | all_data[i]
-        else:
-            word = all_data[i]
+        word = (all_data[i+1] << 8) | all_data[i] if i + 1 < len(all_data) else all_data[i]
         checksum = (checksum + word) & 0xFFFF
 
-    print("┌" + "─" * 48 + "┐")
+    print("\n┌" + "─" * 48 + "┐")
     print(f"│ Firmware checksum: 0x{checksum:04x}                     │")
     print("└" + "─" * 48 + "┘")
-
-    # Embed the checksum
+    
     with open(elf_file, "r+b") as f:
         f.seek(section_offset)
         f.write(checksum.to_bytes(2, byteorder='little'))
-
-    # Verify it was written correctly
-    with open(elf_file, "rb") as f:
-        f.seek(section_offset)
-        data = f.read(2)
-        written = int.from_bytes(data, byteorder="little")
-
-    if written != checksum:
-        print("✗ Error: Failed to write checksum correctly!")
-        env.Exit(1)
-
+    
     print(f"✓ Successfully embedded checksum 0x{checksum:04x} into {os.path.basename(elf_file)}")
     print("--------------------------------------")
-
     return checksum, firmware_size
 
-
 # =================================================================
-# Custom HEX File Generation (AVR-Specific)
+# Firmware Parsing and Generation
 # =================================================================
 
-def regenerate_hex(elf_file, hex_file, env):
-    """
-    Generates a .hex file from a .elf file, including only .text and .data sections.
-    """
+def get_version_str(env):
+    """Parses CPPDEFINES to find and return the VERSION_STR value."""
+    for define in env.get("CPPDEFINES", []):
+        if isinstance(define, tuple) and define[0] == "VERSION_STR":
+            value = define[1]
+            return value.strip('"\\') if isinstance(value, str) else str(value)
+    return None
+
+def get_version_code(env):
+    """Parses CPPDEFINES to find and return the VERSION value."""
+    for define in env.get("CPPDEFINES", []):
+        if isinstance(define, tuple) and define[0] == "VERSION":
+            return str(define[1])
+    return "N/A"
+
+def regenerate_hex_for_avr(elf_file, env, new_hex_filename):
+    """(AVR-Specific) Generates a custom .hex file."""
     print("--- Regenerating HEX File for Upload (AVR Specific) ---")
     objcopy = env.subst("$OBJCOPY")
-    cmd = f'"{objcopy}" -O ihex -j .text -j .firmware_checksum -j .data "{elf_file}" "{hex_file}"'
-    print(f"Running command: {cmd}")
-    result = env.Execute(cmd)
-    if result == 0:
-        print(f"✓ Custom HEX file '{hex_file}' was generated successfully!")
+    build_dir = env.subst("$BUILD_DIR")
+    hex_file_path = os.path.join(build_dir, new_hex_filename)
+    
+    cmd = f'"{objcopy}" -O ihex -j .text -j .firmware_checksum -j .data "{elf_file}" "{hex_file_path}"'
+    if env.Execute(cmd) == 0:
+        print(f"✓ Custom HEX file '{new_hex_filename}' generated successfully!")
+        print("--------------------------------------")
+        return hex_file_path
     else:
-        print(f"✗ Failed to generate custom HEX file. Exit code: {result}")
-        env.Exit(result)
+        print(f"✗ Failed to generate custom HEX file.")
+        env.Exit(1)
+
+def copy_and_rename_firmware(env, env_name, source_firmware_path, new_firmware_name):
+    """Copies the final firmware artifact to the ./build/{env_name}/ directory."""
+    print("--- Copying and Renaming Final Firmware ---")
+    if not os.path.exists(source_firmware_path):
+        print(f"✗ Error: Source firmware file not found at '{source_firmware_path}'")
+        return
+
+    project_dir = env.subst("$PROJECT_DIR")
+    dest_dir = os.path.join(project_dir, "build", env_name)
+    os.makedirs(dest_dir, exist_ok=True)
+    
+    dest_file_path = os.path.join(dest_dir, new_firmware_name)
+    shutil.copy2(source_firmware_path, dest_file_path)
+    
+    print(f"✓ Firmware copied successfully!")
+    print(f"  From: {os.path.relpath(source_firmware_path, project_dir)}")
+    print(f"  To:   {os.path.relpath(dest_file_path, project_dir)}")
     print("--------------------------------------")
-    return result
 
 # =================================================================
 # Main Callback Function and Action Registration
 # =================================================================
 
 def combined_post_build_actions(source, target, env):
-    """
-    The main callback function that orchestrates all post-build steps.
-    """
+    """The main callback function that orchestrates all post-build steps."""
     print("\n--- Starting Custom Post-Build Actions ---")
     print(f"CHECKSUM_MODE: {CHECKSUM_MODE}")
     
     env_name = env.subst("$PIOENV")
-    platform_family = env_mapping.get(env_name)
+    platform_family = ENV_MAPPING.get(env_name)
 
-    if platform_family == "avr":
-        elf_file = str(source[0])
-    else:
-        elf_file = str(target[0])
+    if not platform_family:
+        print(f"✗ Warning: Env '{env_name}' not in ENV_MAPPING. Skipping custom actions.")
+        return
 
-    print(f"Detected environment '{env_name}', mapped to platform family '{platform_family}'.")
+    elf_file = env.subst("$PROGPATH")
+    print(f"Detected environment '{env_name}', mapped to platform '{platform_family}'.")
 
-    # Step 1: Calculate and embed the checksum. This is done for ALL platforms.
-    # --- MODIFIED: Pass platform_family to the function ---
+    # Step 1: Calculate and embed the checksum.
     checksum, firmware_size = calculate_and_embed_checksum(elf_file, env, platform_family)
 
-    # Step 2: Create or validate checksum based on mode
-    if CHECKSUM_MODE.lower() == "create":
-        create_checksum_entry(env_name, checksum, firmware_size)
-    else:
-        validate_checksum(env_name, checksum, firmware_size)
+    # Step 2: Get versioning info for the manifest.
+    version_str = get_version_str(env) or "N/A"
+    version_code = get_version_code(env)
+    git_commit_id = get_git_commit_id(env)
 
-    # Step 3: Regenerate the HEX file ONLY for the 'avr' platform family.
+    # Step 3: Create or validate checksum manifest.
+    if CHECKSUM_MODE.lower() == "create":
+        create_checksum_entry(env, env_name, checksum, firmware_size, version_str, version_code, git_commit_id)
+    else:
+        validate_checksum(env, env_name, checksum, firmware_size)
+
+    # Step 4: Generate, rename, and copy the final firmware artifact.
+    if version_str == "N/A":
+        print("⚠ Warning: -DVERSION_STR not found. Skipping firmware rename & copy.")
+        print("--- Finished Custom Post-Build Actions ---")
+        return
+
+    transformed_version = '_'.join(filter(str.isalnum, version_str)).lower()
+    firmware_ext = FIRMWARE_EXTENSIONS.get(platform_family, ".bin")
+    new_firmware_name = f"mcl_{transformed_version}{firmware_ext}"
+    print(f"✓ Target filename will be '{new_firmware_name}'")
+
+    source_firmware_path = None
     if platform_family == "avr":
-        print(f"Platform family is '{platform_family}', proceeding with HEX file regeneration.")
-        hex_file = os.path.splitext(elf_file)[0] + ".hex"
-        regenerate_hex(elf_file, hex_file, env)
+        source_firmware_path = regenerate_hex_for_avr(elf_file, env, new_firmware_name)
+    else:
+        source_firmware_path = os.path.splitext(elf_file)[0] + firmware_ext
+    
+    if source_firmware_path:
+        copy_and_rename_firmware(env, env_name, source_firmware_path, new_firmware_name)
 
     print("--- Finished Custom Post-Build Actions ---")
 
-env_name = env.subst("$PIOENV")
-platform_family = env_mapping.get(env_name)
+# Register the post-build action after the final program is linked.
+env.AddPostAction("$PROGPATH", combined_post_build_actions)
 
-if platform_family == "avr":
-    env.AddPostAction("$BUILD_DIR/${PROGNAME}.hex", combined_post_build_actions)
-else:
-    env.AddPostAction("$PROGPATH", combined_post_build_actions)
-
-print(f"✓ Registered multi-platform checksum and post-build action (Mode: {CHECKSUM_MODE}).")
+print(f"✓ Registered multi-platform post-build action (Mode: {CHECKSUM_MODE}).")
