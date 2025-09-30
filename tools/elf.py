@@ -362,12 +362,10 @@ def combined_post_build_actions(source, target, env):
     new_firmware_name = f"mcl_{transformed_version}{firmware_ext}"
     print(f"✓ Target filename will be '{new_firmware_name}'")
 
-    source_firmware_path = None
+    source_firmware_path = os.path.splitext(elf_file)[0] + firmware_ext
     if platform_family == "avr":
-        source_firmware_path = regenerate_hex_for_avr(elf_file, env, new_firmware_name)
-    else:
-        source_firmware_path = os.path.splitext(elf_file)[0] + firmware_ext
-    
+        source_firmware_path = regenerate_hex_for_avr(elf_file, env, elf_file)
+
     if source_firmware_path:
         copy_and_rename_firmware(env, env_name, source_firmware_path, new_firmware_name)
 
