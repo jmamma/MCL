@@ -121,7 +121,6 @@ uint8_t popcount32(const uint32_t bits);
 
 /** Number of elements in a static array. **/
 #define countof(arr) ((sizeof(arr)/sizeof(arr[0])))
-  
 /** Compile-time assertion in C. **/
 #define C_ASSERT(e) extern char __C_ASSERT__[(e)?1:-1]
 
@@ -159,6 +158,11 @@ uint8_t u_limit_value(uint8_t value, int8_t encoder, uint8_t min, uint8_t max);
 int limit_value(int value, int encoder, int min, int max);
 uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
 
+typedef enum {
+    HEALTH_OK = 0,
+    BAD_CHECKSUM = 1,
+    BAD_RAM = 2
+} health_status;
 
 /** @} **/
 
@@ -166,7 +170,7 @@ uint8_t interpolate_8(uint8_t start, uint8_t end, uint8_t amount);
 	 * \addtogroup helpers_locking "Locking" and AVR-specific functions
 	 * @{
 	 **/
-	
+
 #ifdef AVR
   #include <avr/interrupt.h>
 
