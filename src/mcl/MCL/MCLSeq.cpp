@@ -365,7 +365,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
       if (value > 0) {
         mcl_seq.ext_tracks[n].mute_on();
       } else {
-        mcl_seq.ext_tracks[n].mute_state = 0;
+        mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_OFF;
       }
     }
     mixer_page.redraw_mutes = true;
