@@ -4,7 +4,7 @@ Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.7
 
 - Improvements
 
-  Fixed several performance issues, related to sequencer transitions.
+  Fixed several stability and performance issues, related to sequencer transitions.
 
   Slot loading should now be consistent and reliable.
 
@@ -38,9 +38,10 @@ Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.7
 
   Fixes an issue when trying to parameter lock PTC value that matches the kit PTC value.
 
+  Sample transfer would fail when there was external MIDI clock on port 2.
+
   Pattern IDX indicator on the MD should now display correctly when chaining or
   loading patterns/rows.
-
 
 - Build System
 
