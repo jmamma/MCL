@@ -5,6 +5,7 @@ Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.7
 - Improvements
 
   Fixed several performance issues, related to sequencer transitions.
+
   Slot loading should now be consistent and reliable.
 
   Encoder rotation "fast mode" has been tweaked.
@@ -31,7 +32,15 @@ Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.7
 
   GridPage: Improvements to applying LOOP and LEN settings across multiple slots.
 
-  MID Maachine incorrect prorgram change transmission.
+  MID Maachine incorrect program change transmission.
+
+  Fixes corrupt LFO initialisation bug when using MCL RAM pages.
+
+  Fixes an issue when trying to parameter lock PTC value that matches the kit PTC value.
+
+  Pattern IDX indicator on the MD should now display correctly when chaining or
+  loading patterns/rows.
+
 
 - Build System
 
