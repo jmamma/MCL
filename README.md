@@ -25,10 +25,11 @@ MCL can now be run across different hardware platforms using PlatformIO.
 
 2.  **Clone the Repository**
 
-    First, you need a local copy of the MCL repository. If you haven't already, open your terminal, navigate to a directory of your choice, and run the following commands:
+    First, you need a local copy of the MCL repository.  Open your terminal, navigate to a directory of your choice, and run the following commands:
     ```bash
     git clone https://github.com/jmamma/MCL.git
     cd MCL
+    git pull origin main
     ```
 3.  **Place the MegaCommand in to OS UPGRADE mode**
 
@@ -103,6 +104,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
