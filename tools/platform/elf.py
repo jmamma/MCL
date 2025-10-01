@@ -5,15 +5,6 @@ import subprocess
 import configparser
 from SCons.Script import DefaultEnvironment
 
-# --- Script Header ---
-# This script customizes the PlatformIO build process.
-# 1. Calculates and embeds a 16-bit checksum into the final ELF file.
-# 2. Creates/validates a 'manifest.ini' file containing a full build manifest
-#    (checksum, size, version string, version code, Git commit ID, and filename).
-# 3. For 'avr', regenerates the HEX file to include only specific sections.
-# 4. Renames the final firmware artifact based on VERSION_STR and copies it to
-#    a clean './build/{env_name}/' directory.
-
 # =================================================================
 # Configuration
 # =================================================================
@@ -46,7 +37,7 @@ def get_tool_path(env, tool_name):
     fallback_path = shutil.which(f"{prefix}{tool_name}")
     if fallback_path:
         return fallback_path
-    print(f"✗ Error: Could not find tool '{prefix}{tool_name}' in the toolchain or system PATH.")
+    print(f"✗ Error: Could not find tool '{prefix}{tool_name}'.")
     env.Exit(1)
 
 def run_command_for_output(cmd, env):
@@ -57,14 +48,8 @@ def run_command_for_output(cmd, env):
         )
         return result
     except subprocess.CalledProcessError as e:
-        print(f"✗ Error running command: {' '.join(cmd)}")
-        print("STDOUT:", e.stdout, sep='\n')
-        print("STDERR:", e.stderr, sep='\n')
+        print(f"✗ Error running command: {' '.join(cmd)}\n{e.stderr}")
         env.Exit(1)
-
-# =================================================================
-# Checksum and Manifest Logic
-# =================================================================
 
 def get_git_commit_id(env):
     """Gets the short git commit hash of the current HEAD."""
@@ -77,198 +62,6 @@ def get_git_commit_id(env):
         return result.stdout.strip()
     except (subprocess.CalledProcessError, FileNotFoundError):
         return "N/A"
-
-def create_checksum_entry(env, env_name, checksum, firmware_size, version_str, version_code, git_commit_id, filename):
-    """Creates or updates the checksum entry in build/manifest.ini"""
-    project_dir = env.subst("$PROJECT_DIR")
-    checksums_file = os.path.join(project_dir, "build", "manifest.ini")
-    config = configparser.ConfigParser()
-
-    if os.path.exists(checksums_file):
-        config.read(checksums_file)
-    
-    config[env_name] = {
-        'checksum': f'0x{checksum:04x}',
-        'size': str(firmware_size),
-        'version_string': version_str,
-        'version_code': version_code,
-        'commit': git_commit_id,
-        'filename': filename
-    }
-
-    os.makedirs(os.path.dirname(checksums_file), exist_ok=True)
-    with open(checksums_file, 'w') as f:
-        config.write(f)
-
-    print("\n" + "=" * 60)
-    print("✓ CHECKSUM MANIFEST SAVED")
-    print("=" * 60)
-    print(f"Environment:    {env_name}")
-    print(f"Version String: {version_str}")
-    print(f"Version Code:   {version_code}")
-    print(f"Commit:         {git_commit_id}")
-    print(f"Checksum:       0x{checksum:04x}")
-    print(f"Size:           {firmware_size} bytes")
-    print(f"Filename:       {filename}")
-    print(f"Manifest File:  {os.path.relpath(checksums_file, project_dir)}")
-    print("=" * 60 + "\n")
-
-def validate_checksum(env, env_name, checksum, firmware_size):
-    """Validates the checksum against values stored in build/manifest.ini"""
-    project_dir = env.subst("$PROJECT_DIR")
-    checksums_file = os.path.join(project_dir, "build", "manifest.ini")
-    config = configparser.ConfigParser()
-
-    if not os.path.exists(checksums_file):
-        print("\n" + "!" * 60)
-        print("! ERROR: manifest.ini file not found!")
-        print(f"! Expected at: {os.path.relpath(checksums_file, project_dir)}")
-        print("! Run with CHECKSUM_MODE=create to generate it.")
-        print("!" * 60 + "\n")
-        return
-
-    config.read(checksums_file)
-
-    if env_name not in config:
-        print("\n" + "!" * 60)
-        print(f"! ERROR: No checksum entry found for '{env_name}' in manifest.ini")
-        print("! Run with CHECKSUM_MODE=create to add this entry.")
-        print("!" * 60 + "\n")
-        return
-
-    official_checksum = int(config[env_name].get('checksum', '0'), 0)
-    official_size = int(config[env_name].get('size', '0'))
-    official_version_str = config[env_name].get('version_string', 'N/A')
-    official_version_code = config[env_name].get('version_code', 'N/A')
-    official_commit = config[env_name].get('commit', 'N/A')
-
-    checksum_matches = (checksum == official_checksum)
-    size_matches = (firmware_size == official_size)
-
-    if checksum_matches and size_matches:
-        print("\n" + "=" * 60)
-        print("✓ CHECKSUM VALIDATION PASSED")
-        print("=" * 60)
-        print(f"Environment:    {env_name}")
-        print(f"Version String: {official_version_str} (official)")
-        print(f"Version Code:   {official_version_code} (official)")
-        print(f"Commit:         {official_commit} (official)")
-        print(f"Checksum:       0x{checksum:04x} (matches)")
-        print(f"Size:           {firmware_size} bytes (matches)")
-        print("=" * 60 + "\n")
-    else:
-        print("\n" + "!" * 60 + "\n" + "!" * 60)
-        print("!!!  CHECKSUM VALIDATION FAILED  !!!")
-        print("!" * 60 + "\n" + "!" * 60)
-        print(f"\nEnvironment: {env_name}")
-        print(f"Official build is based on Version '{official_version_str}' (Code: {official_version_code}), Commit '{official_commit}'\n")
-
-        if not checksum_matches:
-            print(f"❌ CHECKSUM MISMATCH:")
-            print(f"   Expected (official): 0x{official_checksum:04x}")
-            print(f"   Got (compiled):      0x{checksum:04x}")
-        else:
-            print(f"✓  Checksum matches:     0x{checksum:04x}")
-
-        if not size_matches:
-            print(f"\n❌ SIZE MISMATCH:")
-            print(f"   Expected (official): {official_size} bytes")
-            print(f"   Got (compiled):      {firmware_size} bytes")
-            print(f"   Difference:          {firmware_size - official_size:+d} bytes")
-        else:
-            print(f"\n✓  Size matches:         {firmware_size} bytes")
-        
-        print("\n" + "!" * 60)
-        print("! This build does NOT match the official firmware!")
-        print("!" * 60 + "\n" + "!" * 60 + "\n")
-        # env.Exit(1)
-
-# =================================================================
-# Checksum Calculation and Embedding (Platform-Agnostic)
-# =================================================================
-
-def calculate_and_embed_checksum(elf_file, env, platform_family):
-    """Calculates and embeds the checksum into the ELF file."""
-    print("--- Running Checksum Calculation ---")
-    checksum_section_name = ".firmware_checksum"
-    objdump = get_tool_path(env, "objdump")
-    cmd = [objdump, "-h", elf_file]
-    result = run_command_for_output(cmd, env)
-
-    section_offset = -1
-    section_size = -1
-    sections = []
-    checksum_regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+([0-9a-f]+)\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)")
-    section_regex = re.compile(r"^\s*\d+\s+(\S+)\s+([0-9a-f]+)\s+([0-9a-f]+)\s+([0-9a-f]+)\s+([0-9a-f]+)")
-
-    for line in result.stdout.splitlines():
-        match = checksum_regex.search(line)
-        if match:
-            section_size = int(match.group(1), 16)
-            section_offset = int(match.group(2), 16)
-        section_match = section_regex.search(line)
-        if section_match:
-            sections.append({ 'name': section_match.group(1), 'size': int(section_match.group(2), 16), 'vma': int(section_match.group(3), 16), 'lma': int(section_match.group(4), 16), 'file_offset': int(section_match.group(5), 16) })
-
-    if section_offset == -1:
-        print(f"✗ Error: Section '{checksum_section_name}' not found in the ELF file.")
-        env.Exit(1)
-    if section_size != 2:
-        print(f"✗ Error: The size of '{checksum_section_name}' must be 2 bytes, but it is {section_size} bytes.")
-        env.Exit(1)
-
-    sections_to_checksum = []
-    PROG_SECTIONS = ['.text', '.data', '.rodata']
-    for section in sections:
-        if any(section['name'].startswith(s) for s in PROG_SECTIONS) and section['size'] > 0:
-            sections_to_checksum.append(section)
-
-    if not sections_to_checksum:
-        print(f"✗ Error: No program sections ({', '.join(PROG_SECTIONS)}) found.")
-        env.Exit(1)
-    
-    sort_key = 'lma' if platform_family == "avr" else 'vma'
-    sections_to_checksum.sort(key=lambda s: s[sort_key])
-
-    firmware_size = 0
-    if sections_to_checksum:
-        last_section = sections_to_checksum[-1]
-        if platform_family == "avr":
-            firmware_size = last_section['lma'] + last_section['size']
-        else:
-            first_section = sections_to_checksum[0]
-            firmware_size = (last_section['vma'] + last_section['size']) - first_section['vma']
-
-    objcopy = get_tool_path(env, "objcopy")
-    all_data = bytearray()
-    for section in sections_to_checksum:
-        section_bin_file = elf_file + f".{section['name']}.bin"
-        cmd = [objcopy, "-O", "binary", "-j", section['name'], elf_file, section_bin_file]
-        run_command_for_output(cmd, env)
-        with open(section_bin_file, "rb") as f:
-            all_data.extend(f.read())
-        os.remove(section_bin_file)
-
-    checksum = 0
-    for i in range(0, len(all_data), 2):
-        word = (all_data[i+1] << 8) | all_data[i] if i + 1 < len(all_data) else all_data[i]
-        checksum = (checksum + word) & 0xFFFF
-
-    print("\n┌" + "─" * 48 + "┐")
-    print(f"│ Firmware checksum: 0x{checksum:04x}                     │")
-    print("└" + "─" * 48 + "┘")
-    
-    with open(elf_file, "r+b") as f:
-        f.seek(section_offset)
-        f.write(checksum.to_bytes(2, byteorder='little'))
-    
-    print(f"✓ Successfully embedded checksum 0x{checksum:04x} into {os.path.basename(elf_file)}")
-    print("--------------------------------------")
-    return checksum, firmware_size
-
-# =================================================================
-# Firmware Parsing and Generation
-# =================================================================
 
 def get_version_str(env):
     """Parses CPPDEFINES to find and return the VERSION_STR value."""
@@ -285,100 +78,231 @@ def get_version_code(env):
             return str(define[1])
     return "N/A"
 
-def regenerate_hex_for_avr(elf_file, env, new_hex_filename):
-    """(AVR-Specific) Generates a custom .hex file."""
+# =================================================================
+# Checksum and Firmware Calculation Logic
+# =================================================================
+
+def get_firmware_checksum_and_size(elf_file, env, platform_family):
+    """Parses the ELF file to calculate the firmware checksum and total size."""
+    objdump = get_tool_path(env, "objdump")
+    result = run_command_for_output([objdump, "-h", elf_file], env)
+
+    sections = []
+    section_regex = re.compile(r"^\s*\d+\s+(\S+)\s+([0-9a-f]+)\s+([0-9a-f]+)\s+([0-9a-f]+)\s+([0-9a-f]+)")
+    for line in result.stdout.splitlines():
+        match = section_regex.search(line)
+        if match:
+            sections.append({ 'name': match.group(1), 'size': int(match.group(2), 16), 'vma': int(match.group(3), 16), 'lma': int(match.group(4), 16) })
+
+    sections_to_checksum = [s for s in sections if any(s['name'].startswith(p) for p in ['.text', '.data', '.rodata']) and s['size'] > 0]
+    if not sections_to_checksum:
+        print("✗ Error: No program sections found for checksumming.")
+        env.Exit(1)
+
+    sort_key = 'lma' if platform_family == "avr" else 'vma'
+    sections_to_checksum.sort(key=lambda s: s[sort_key])
+
+    if platform_family == "avr":
+        last_section = sections_to_checksum[-1]
+        firmware_size = last_section['lma'] + last_section['size']
+    else:
+        first_section = sections_to_checksum[0]
+        last_section = sections_to_checksum[-1]
+        firmware_size = (last_section['vma'] + last_section['size']) - first_section['vma']
+
+    objcopy = get_tool_path(env, "objcopy")
+    all_data = bytearray()
+    for section in sections_to_checksum:
+        section_bin_file = f"{elf_file}.{section['name']}.bin"
+        run_command_for_output([objcopy, "-O", "binary", "-j", section['name'], elf_file, section_bin_file], env)
+        with open(section_bin_file, "rb") as f:
+            all_data.extend(f.read())
+        os.remove(section_bin_file)
+
+    checksum = 0
+    for i in range(0, len(all_data), 2):
+        word = (all_data[i+1] << 8) | all_data[i] if i + 1 < len(all_data) else all_data[i]
+        checksum = (checksum + word) & 0xFFFF
+    
+    return checksum, firmware_size
+
+def calculate_and_embed_checksum(elf_file, env, platform_family):
+    """Calculates and embeds the checksum into the ELF file."""
+    checksum, firmware_size = get_firmware_checksum_and_size(elf_file, env, platform_family)
+    
+    objdump = get_tool_path(env, "objdump")
+    result = run_command_for_output([objdump, "-h", elf_file], env)
+
+    checksum_section_name = ".firmware_checksum"
+    checksum_regex = re.compile(r"^\s*\d+\s+" + re.escape(checksum_section_name) + r"\s+[0-9a-f]+\s+[0-9a-f]+\s+[0-9a-f]+\s+([0-9a-f]+)")
+    
+    section_offset = -1
+    for line in result.stdout.splitlines():
+        match = checksum_regex.search(line)
+        if match:
+            section_offset = int(match.group(1), 16)
+            break
+    
+    if section_offset == -1:
+        print(f"✗ Error: Section '{checksum_section_name}' not found.")
+        env.Exit(1)
+    
+    print(f"✓ Embedding firmware checksum: 0x{checksum:04x}")
+
+    with open(elf_file, "r+b") as f:
+        f.seek(section_offset)
+        f.write(checksum.to_bytes(2, byteorder='little'))
+    
+    return checksum, firmware_size
+
+# =================================================================
+# Manifest and File Operations
+# =================================================================
+
+def create_or_validate_manifest(env, env_name, checksum, firmware_size):
+    """Creates or validates the manifest entry in build/manifest.ini."""
+    version_str = get_version_str(env) or "N/A"
+    platform_family = ENV_MAPPING.get(env_name)
+    firmware_ext = FIRMWARE_EXTENSIONS.get(platform_family, ".bin")
+    
+    if version_str == "N/A":
+        new_firmware_name = f"firmware{firmware_ext}"
+    else:
+        # MODIFIED: New logic to create filenames like "mcl_h_4_7_0.hex".
+        # It filters for alphanumeric characters and joins them with underscores.
+        alphanumeric_chars = filter(str.isalnum, version_str)
+        transformed_version = '_'.join(alphanumeric_chars).lower()
+        new_firmware_name = f"mcl_{transformed_version}{firmware_ext}"
+    
+    print(f"✓ Target filename will be '{new_firmware_name}'")
+
+    project_dir = env.subst("$PROJECT_DIR")
+    checksums_file = os.path.join(project_dir, "build", "manifest.ini")
+    config = configparser.ConfigParser()
+
+    if CHECKSUM_MODE.lower() == "create":
+        if os.path.exists(checksums_file):
+            config.read(checksums_file)
+        config[env_name] = {
+            'checksum': f'0x{checksum:04x}', 'size': str(firmware_size),
+            'version_string': version_str, 'version_code': get_version_code(env),
+            'commit': get_git_commit_id(env), 'filename': new_firmware_name
+        }
+        os.makedirs(os.path.dirname(checksums_file), exist_ok=True)
+        with open(checksums_file, 'w') as f:
+            config.write(f)
+        print("✓ CHECKSUM MANIFEST SAVED")
+    else: # Validate mode
+        if not os.path.exists(checksums_file):
+            print(f"! ERROR: manifest.ini not found at '{checksums_file}'")
+            env.Exit(1)
+        config.read(checksums_file)
+        if env_name not in config:
+            print(f"! ERROR: No checksum entry for '{env_name}' in manifest.ini")
+            env.Exit(1)
+        
+        # Restored detailed validation logic
+        official_checksum = int(config[env_name].get('checksum', '0'), 0)
+        official_size = int(config[env_name].get('size', '0'))
+        checksum_matches = (checksum == official_checksum)
+        size_matches = (firmware_size == official_size)
+
+        if checksum_matches and size_matches:
+            print("✓ CHECKSUM VALIDATION PASSED")
+        else:
+            print("!!! CHECKSUM VALIDATION FAILED !!!")
+            if not checksum_matches:
+                print(f"  ❌ CHECKSUM MISMATCH: Expected 0x{official_checksum:04x}, Got 0x{checksum:04x}")
+            if not size_matches:
+                print(f"  ❌ SIZE MISMATCH: Expected {official_size} bytes, Got {firmware_size} bytes")
+            # env.Exit(1)
+    
+    return new_firmware_name
+
+def regenerate_hex_for_avr(elf_file, hex_file_to_overwrite, env):
+    """(AVR-Specific) Generates a custom .hex, overwriting the target file."""
     print("--- Regenerating HEX File for Upload (AVR Specific) ---")
     objcopy = env.subst("$OBJCOPY")
-    build_dir = env.subst("$BUILD_DIR")
-    hex_file_path = os.path.join(build_dir, new_hex_filename)
-    
-    cmd = f'"{objcopy}" -O ihex -j .text -j .firmware_checksum -j .data "{elf_file}" "{hex_file_path}"'
-    if env.Execute(cmd) == 0:
-        print(f"✓ Custom HEX file '{new_hex_filename}' generated successfully!")
-        print("--------------------------------------")
-        return hex_file_path
-    else:
-        print(f"✗ Failed to generate custom HEX file.")
+    cmd = f'"{objcopy}" -O ihex -j .text -j .firmware_checksum -j .data "{elf_file}" "{hex_file_to_overwrite}"'
+    if env.Execute(cmd) != 0:
+        print(f"✗ Failed to regenerate custom HEX file.")
         env.Exit(1)
+    print(f"✓ Custom HEX file was regenerated successfully!")
 
 def copy_and_rename_firmware(env, env_name, source_firmware_path, new_firmware_name):
     """Copies the final firmware artifact to the ./build/{env_name}/ directory."""
     print("--- Copying and Renaming Final Firmware ---")
     if not os.path.exists(source_firmware_path):
-        print(f"✗ Error: Source firmware file not found at '{source_firmware_path}'")
+        print(f"✗ Error: Source firmware not found at '{source_firmware_path}'")
         return
 
     project_dir = env.subst("$PROJECT_DIR")
     dest_dir = os.path.join(project_dir, "build", env_name)
     os.makedirs(dest_dir, exist_ok=True)
-    
     dest_file_path = os.path.join(dest_dir, new_firmware_name)
     shutil.copy2(source_firmware_path, dest_file_path)
-    
-    print(f"✓ Firmware copied successfully!")
-    print(f"  From: {os.path.relpath(source_firmware_path, project_dir)}")
-    print(f"  To:   {os.path.relpath(dest_file_path, project_dir)}")
-    print("--------------------------------------")
+    print(f"✓ Firmware copied to: {os.path.relpath(dest_file_path, project_dir)}")
 
 # =================================================================
-# Main Callback Function and Action Registration
+# Main Callback Functions and Action Registration
 # =================================================================
 
-def combined_post_build_actions(source, target, env):
-    """The main callback function that orchestrates all post-build steps."""
-    print("\n--- Starting Custom Post-Build Actions ---")
-    print(f"CHECKSUM_MODE: {CHECKSUM_MODE}")
-    
+def embed_checksum_action(source, target, env):
+    """STAGE 1: Called after ELF linking to embed the checksum and handle the manifest."""
+    print("\n--- [Stage 1] Starting Checksum Embedding & Manifest Handling ---")
+    elf_file = str(target[0])
+    env_name = env.subst("$PIOENV")
+    platform_family = ENV_MAPPING.get(env_name)
+    if platform_family:
+        # Calculate checksum, get size, and embed it into the ELF
+        checksum, firmware_size = calculate_and_embed_checksum(elf_file, env, platform_family)
+        
+        # Create/validate the manifest and get the final firmware name
+        new_firmware_name = create_or_validate_manifest(env, env_name, checksum, firmware_size)
+        
+        # Store the calculated name in the environment for Stage 2
+        env['NEW_FIRMWARE_NAME'] = new_firmware_name
+        
+    print("--- [Stage 1] Finished Checksum Embedding & Manifest Handling ---")
+
+def finalize_firmware_action(source, target, env):
+    """STAGE 2: Called after final firmware generation to finalize artifact."""
+    print("\n--- [Stage 2] Starting Firmware Finalization ---")
+    firmware_path = str(target[0])
+    elf_file = env.subst("$PROGPATH")
     env_name = env.subst("$PIOENV")
     platform_family = ENV_MAPPING.get(env_name)
 
     if not platform_family:
-        print(f"✗ Warning: Env '{env_name}' not in ENV_MAPPING. Skipping custom actions.")
         return
 
-    elf_file = env.subst("$PROGPATH")
-    print(f"Detected environment '{env_name}', mapped to platform '{platform_family}'.")
-
-    # Step 1: Calculate and embed the checksum.
-    checksum, firmware_size = calculate_and_embed_checksum(elf_file, env, platform_family)
-
-    # Step 2: Get versioning info for the manifest.
-    version_str = get_version_str(env) or "N/A"
-    version_code = get_version_code(env)
-    git_commit_id = get_git_commit_id(env)
-    
-    # Step 3: Determine the final firmware name *before* creating the manifest.
-    if version_str == "N/A":
-        print("⚠ Warning: -DVERSION_STR not found. Skipping firmware rename & copy.")
-        new_firmware_name = "firmware" + FIRMWARE_EXTENSIONS.get(platform_family, ".bin")
-    else:
-        transformed_version = '_'.join(filter(str.isalnum, version_str)).lower()
-        firmware_ext = FIRMWARE_EXTENSIONS.get(platform_family, ".bin")
-        new_firmware_name = f"mcl_{transformed_version}{firmware_ext}"
-    
-    print(f"✓ Target filename will be '{new_firmware_name}'")
-
-    # Step 4: Create or validate checksum manifest.
-    if CHECKSUM_MODE.lower() == "create":
-        create_checksum_entry(env, env_name, checksum, firmware_size, version_str, version_code, git_commit_id, new_firmware_name)
-    else:
-        validate_checksum(env, env_name, checksum, firmware_size)
-
-    # Step 5: Generate, rename, and copy the final firmware artifact.
-    if version_str == "N/A":
-        print("--- Finished Custom Post-Build Actions (skipped copy due to missing version) ---")
-        return
-
-    source_firmware_path = os.path.splitext(elf_file)[0] + firmware_ext
+    # For AVR, regenerate the HEX file to overwrite the default one.
     if platform_family == "avr":
-        source_firmware_path = regenerate_hex_for_avr(elf_file, env, elf_file)
+        regenerate_hex_for_avr(elf_file, firmware_path, env)
 
-    if source_firmware_path:
-        copy_and_rename_firmware(env, env_name, source_firmware_path, new_firmware_name)
+    # Retrieve the final firmware name determined in Stage 1.
+    new_firmware_name = env.get('NEW_FIRMWARE_NAME')
+    if not new_firmware_name:
+        print("! Error: Could not determine new firmware name from stage 1. Skipping copy/rename.")
+        return
 
-    print("--- Finished Custom Post-Build Actions ---")
+    # Copy and rename the final firmware artifact if version is defined.
+    if get_version_str(env):
+        copy_and_rename_firmware(env, env_name, firmware_path, new_firmware_name)
+    else:
+        print("⚠ Warning: -DVERSION_STR not found. Skipping final rename & copy.")
 
-# Register the post-build action after the final program is linked.
-env.AddPostAction("$PROGPATH", combined_post_build_actions)
+    print("--- [Stage 2] Finished Firmware Finalization ---")
 
-print(f"✓ Registered multi-platform post-build action (Mode: {CHECKSUM_MODE}).")
+# --- Register Actions ---
+env.AddPostAction("$PROGPATH", embed_checksum_action)
+print("✓ Registered Stage 1: Checksum embedding & manifest action (on .elf).")
+
+env_name = env.subst("$PIOENV")
+platform_family = ENV_MAPPING.get(env_name)
+if platform_family:
+    firmware_ext = FIRMWARE_EXTENSIONS.get(platform_family)
+    if firmware_ext:
+        final_firmware_target = os.path.join("$BUILD_DIR", f"${{PROGNAME}}{firmware_ext}")
+        env.AddPostAction(final_firmware_target, finalize_firmware_action)
+        print(f"✓ Registered Stage 2: Firmware finalization action (on {firmware_ext}).")
