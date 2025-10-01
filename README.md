@@ -100,11 +100,12 @@ The RP2040/RP2350 version is built on top of the arduino-pico core, and is exten
 ## Libraries
 
 MCL builds upon proven open-source libraries:
-- [ArduinoPico](https://github.com/earlephilhower/arduino-pico)
-- [MegaCore](https://github.com/MCUdude/MegaCore)
+- [ArduinoPico](https://github.com/earlephilhower/arduino-pico) by Earle F. Philhower, III
+- [MegaCore](https://github.com/MCUdude/MegaCore) by MCUdude
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
