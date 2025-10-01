@@ -57,9 +57,9 @@ MCL can now be run across different hardware platforms using PlatformIO.
     *   Flashes the downloaded firmware onto your device.
 
 
-### Building and uploading MCL from Source
+### Developers
 
-For developers:
+Building and uploading MCL from Source:
 
    **MegaCommand DIY:**
    ```bash
@@ -76,7 +76,7 @@ For developers:
    platformio run -e tbd -t upload
    ```
 
-## Architecture
+### Architecture
 
 ```
 .
@@ -96,7 +96,7 @@ The AVR version is built on top of the MegaCore Arduino core, and is extended fo
 
 The RP2040/RP2350 version is built on top of the arduino-pico core, and is extended for supported hardware in `src/platform/rp2040`.
 
-## Libraries
+### Libraries
 
 MCL builds upon proven open-source libraries:
 - [ArduinoPico](https://github.com/earlephilhower/arduino-pico)
@@ -104,6 +104,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
