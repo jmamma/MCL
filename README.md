@@ -81,6 +81,7 @@ Building and uploading MCL from Source:
 ```
 .
 ├── art              Pixel-art and animations
+├── build            Release manifest and compiled firmwares. 
 ├── include          Header files required for building specific libraries
 ├── resource         Compressable C++ data structures used by MCL
 │
@@ -104,6 +105,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
