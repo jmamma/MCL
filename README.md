@@ -33,7 +33,7 @@ MCL can now be run across different hardware platforms using PlatformIO.
     ```
 3.  **Place the MegaCommand in to OS UPGRADE mode**
 
-    Hold down the < Page > button when powering-on the MegaCommand to enter the boot menu and then select OS UPGRADE.
+    Hold down the < Page > button when powering-on the MegaCommand to enter the boot menu.
 
     Select "OS UPGRADE" to place the MegaCommand in to serial mode.
 
@@ -104,6 +104,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
