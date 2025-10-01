@@ -133,7 +133,7 @@ def build_assets_platform(env, resource_dir, build_dir, gen_dir, platform):
                     os.remove(tmp_path)
 
         # 3. Compress the binary data
-        compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "compress.py")
+        compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools/platform/", "compress.py")
         run_command(["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)])
 
         # 4. Generate C++ source from compressed data
