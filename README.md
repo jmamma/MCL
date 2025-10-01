@@ -2,6 +2,11 @@
 
 A high-performance MIDI sequencer and live performance tool written in C/C++ that enhances the capabilities of the MachineDrum and other electronic instruments.
 
+Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
+- Latest firmware binaries
+- User documentation
+- Installation instructions
+
 ## Platform Support
 
 MCL can now be run across different hardware platforms using PlatformIO.
@@ -49,13 +54,6 @@ MCL can now be run across different hardware platforms using PlatformIO.
     *   Fetches the latest MCL release manifest from this respostiory.
     *   Downloads the latest firmware file for your selected device.
     *   Flashes the downloaded firmware onto your device.
-
-## Download Pre-built Firmware
-Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
-- Latest firmware binaries
-- User documentation
-- Installation instructions
-
 
 ## Developers
 
@@ -105,6 +103,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
