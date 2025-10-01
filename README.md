@@ -2,12 +2,6 @@
 
 A high-performance MIDI sequencer and live performance tool written in C/C++ that enhances the capabilities of the MachineDrum and other electronic instruments.
 
-### Download Pre-built Firmware
-Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
-- Latest firmware binaries
-- User documentation
-- Installation instructions
-
 ## Platform Support
 
 MCL can now be run across different hardware platforms using PlatformIO.
@@ -17,7 +11,7 @@ MCL can now be run across different hardware platforms using PlatformIO.
 - **RP2350** - TBD
 - **RP2040**
 
-### Upgrade MCL
+## Upgrade MCL
 
 1. **Install PlatformIO Core**
    ```bash
@@ -56,8 +50,14 @@ MCL can now be run across different hardware platforms using PlatformIO.
     *   Downloads the latest firmware file for your selected device.
     *   Flashes the downloaded firmware onto your device.
 
+## Download Pre-built Firmware
+Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
+- Latest firmware binaries
+- User documentation
+- Installation instructions
 
-### Developers
+
+## Developers
 
 Building and uploading MCL from Source:
 
@@ -76,7 +76,7 @@ Building and uploading MCL from Source:
    platformio run -e tbd -t upload
    ```
 
-### Architecture
+## Architecture
 
 ```
 .
@@ -97,7 +97,7 @@ The AVR version is built on top of the MegaCore Arduino core, and is extended fo
 
 The RP2040/RP2350 version is built on top of the arduino-pico core, and is extended for supported hardware in `src/platform/rp2040`.
 
-### Libraries
+## Libraries
 
 MCL builds upon proven open-source libraries:
 - [ArduinoPico](https://github.com/earlephilhower/arduino-pico)
@@ -105,6 +105,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
