@@ -52,8 +52,8 @@ MCL can now be run across different hardware platforms using PlatformIO.
     ```
 
     When you execute one of these commands, a script automatically performs the following steps:
-    *   Fetches the latest release manifest from the official repository.
-    *   Downloads the correct firmware file for your selected device.
+    *   Fetches the latest MCL release manifest from this respostiory.
+    *   Downloads the latest firmware file for your selected device.
     *   Flashes the downloaded firmware onto your device.
 
 
@@ -104,6 +104,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
