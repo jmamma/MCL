@@ -33,17 +33,17 @@ MCL can now be run across different hardware platforms using PlatformIO.
     ```
 3.  **Place the MegaCommand in to OS UPGRADE mode**
 
-    Open the MCL boot menu by holding down the Page Select button and power on the device.
+    Hold down the < Page > button when powering-on the MegaCommand to enter the boot menu and then select OS UPGRADE.
 
     Select "OS UPGRADE" to place the MegaCommand in to serial mode.
-    
+
 4.  **Run the Upload Command**
 
     Choose the command that corresponds to your hardware:
 
     **MegaCommand DIY:**
     ```bash
-    platformio run -t nobuild -t upload -e megacommand_latest 
+    platformio run -t nobuild -t upload -e megacommand_latest
     ```
 
     **MegaCMD:**
