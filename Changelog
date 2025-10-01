@@ -10,7 +10,7 @@ Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.7
 
   Encoder rotation "fast mode" has been tweaked.
 
-  Cursor movement behaviour improved in PinoRoll.
+  Cursor movement behaviour improved in PianoRoll.
 
   MID Machines will now only transmit Prog Change and CC parameters when they
   differ from the last transmitted value.
