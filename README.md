@@ -10,21 +10,56 @@ Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
 
 ## Platform Support
 
-MCL can now be compiled and run on different hardware platforms using the PlatformIO build system.
+MCL can now be run across different hardware platforms using PlatformIO.
 
 **Current platforms:**
 - **AVR** - MegaCommand DIY and MegaCMD devices
 - **RP2350** - TBD
 - **RP2040**
 
-### Building from Source and Uploading
+### Upgrade MCL
 
-1. **Install PlatformIO**
+1. **Install PlatformIO Core**
    ```bash
    pip install platformio
    ```
 
-2. **Compile and upload for your device:**
+2.  **Clone the Repository**
+
+    First, you need a local copy of the MCL repository. If you haven't already, open your terminal, navigate to a directory of your choice, and run the following commands:
+    ```bash
+    git clone https://github.com/jmamma/MCL.git
+    cd MCL
+    ```
+3.  **Place the MegaCommand in to OS UPGRADE mode**
+
+    Open the MCL boot menu by holding down the Page Select button and power on the device.
+
+    Select "OS UPGRADE" to place the MegaCommand in to serial mode.
+    
+4.  **Run the Upload Command**
+
+    Choose the command that corresponds to your hardware:
+
+    **MegaCommand DIY:**
+    ```bash
+    platformio run -t nobuild -t upload -e megacommand_latest 
+    ```
+
+    **MegaCMD:**
+    ```bash
+    platformio run -t nobuild -t upload -e megacmd_latest
+    ```
+
+    When you execute one of these commands, a script automatically performs the following steps:
+    *   Fetches the latest release manifest from the official repository.
+    *   Downloads the correct firmware file for your selected device.
+    *   Flashes the downloaded firmware onto your device.
+
+
+### Building and uploading MCL from Source
+
+For developers:
 
    **MegaCommand DIY:**
    ```bash
@@ -69,4 +104,14 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
+
+
+
+
+
+
+
+
+
 
