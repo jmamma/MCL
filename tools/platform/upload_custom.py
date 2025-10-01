@@ -10,11 +10,11 @@ Import("env")
 
 print(">>> upload_custom.py loaded — PIOENV:", env.subst("$PIOENV"))
 
-def download_manifest(repo, branch="main"):
+def download_manifest(repo, branch="master"):
     """
     Downloads the manifest.ini file from the specified GitHub repository to a temporary file.
     """
-    manifest_url = f"https://raw.githubusercontent.com/{repo}/{branch}/manifest.ini"
+    manifest_url = f"https://raw.githubusercontent.com/{repo}/{branch}/build/manifest.ini"
     print(f"→ Downloading latest manifest from: {manifest_url}")
 
     try:
