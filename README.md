@@ -29,7 +29,7 @@ MCL can now be run across different hardware platforms using PlatformIO.
     ```bash
     git clone https://github.com/jmamma/MCL.git
     cd MCL
-    git pull origin main
+    git pull origin master
     ```
 3.  **Place the MegaCommand in to OS UPGRADE mode**
 
@@ -104,6 +104,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
