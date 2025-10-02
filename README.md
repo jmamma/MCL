@@ -60,7 +60,7 @@ MCL can now be run across different hardware platforms using PlatformIO.
     ```
     platformio run -t nobuild -t upload --upload-port <port> -e <environment>
     ```
-## Developers
+## Building from Source Code
 
 Building and uploading MCL from Source:
 
@@ -108,6 +108,7 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
 
 
 
