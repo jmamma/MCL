@@ -29,7 +29,7 @@ MCL can now be run across different hardware platforms using PlatformIO.
     ```bash
     git clone https://github.com/jmamma/MCL.git
     cd MCL
-    git pull origin main
+    git pull origin master
     ```
 3.  **Place the MegaCommand in to OS UPGRADE mode**
 
@@ -55,8 +55,12 @@ MCL can now be run across different hardware platforms using PlatformIO.
     *   Fetches the latest MCL release manifest from this respostiory.
     *   Downloads the latest firmware file for your selected device.
     *   Flashes the downloaded firmware onto your device.
-
-## Developers
+  
+    Should platformio not detect the correct upload port you can specify it like so:
+    ```
+    platformio run -t nobuild -t upload --upload-port <port> -e <environment>
+    ```
+## Building from Source Code
 
 Building and uploading MCL from Source:
 
@@ -104,6 +108,9 @@ MCL builds upon proven open-source libraries:
 - [MIDICtrl Framework](https://github.com/wesen/mididuino) by Manuel Odendahl
 - [SdFat Library](https://github.com/greiman/SdFat) by Bill Greiman
 - [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library) by Adafruit
+
+
+
 
 
 
