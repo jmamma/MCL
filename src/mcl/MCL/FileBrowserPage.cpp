@@ -45,7 +45,6 @@ void FileBrowserPage::setup() {
   oled_display.clearDisplay();
   // char *mcl = ".mcl";
   // strcpy(match, mcl);
-  strcpy(title, "Files");
   SD.chdir();
   strcpy(lwd, "/");
 
@@ -164,6 +163,7 @@ void FileBrowserPage::init() {
   show_samplemgr = false;
   draw_dirs = false;
   strcpy(focus_match, "");
+  strcpy(title, "Files");
   file_types.reset();
   SD.chdir(lwd);
 }
