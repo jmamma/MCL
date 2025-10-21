@@ -69,9 +69,9 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
         {"PORT CONFIG", 0, 0, 0, 0, MIDIPORT_MENU_PAGE, 0, 0},
         {"SYNC",  0, 0, 0, 0, MIDICLOCK_MENU_PAGE, 0, 0},
         {"ROUTING", 0, 0, 0, 0, MIDIROUTE_MENU_PAGE, 0, 0},
-        {"PROGRAM", 0, 0, 0, 0, MIDIPROGRAM_MENU_PAGE, 0, 0},
+        {"CONTROLLER", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
         {"MD MIDI", 0, 0, 0, 0, MIDIMACHINEDRUM_MENU_PAGE, 0 ,0},
-        {"GENRAL MIDI", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
+        {"PROGRAM", 0, 0, 0, 0, MIDIPROGRAM_MENU_PAGE, 0, 0},
     },
     0
 };
@@ -90,7 +90,6 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
         {"TURBO USB:", 0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE , 0, 54},
         {"DRIVER 1:", 0, 2, 2, 61, NULL_PAGE, 0, 124},
         {"DRIVER 2:", 0, 2, 2, 4, NULL_PAGE, 0, 84},
-        {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 100},
     },
     24
 };
@@ -123,10 +122,8 @@ menu_t<midiroute_menu_page_N> midiroute_menu_layout = {
         //            m  r  n  d  p  f  o
         {"MIDI 1 FWD:", 0, 4, 4, 7, NULL_PAGE, 0, 10},
         {"MIDI 2 FWD:", 0, 4, 4, 51, NULL_PAGE, 0, 92},
-
         {"USB FWD:", 0, 4, 4, 52, NULL_PAGE, 0, 96},
 
-        {"CC LOOP:", 0, 2, 2, 11, NULL_PAGE, 0, 86},
     },
     24
 };
@@ -143,9 +140,12 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
 };
 
 menu_t<midigeneric_menu_page_N> midigeneric_menu_layout = {
-    "GEN MIDI",
+    "CONTROL",
     {
         //              m  r   n  d  p  f  o
+        {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 100},
+        {"NOTE FWD:",  0, 2, 2, 64, NULL_PAGE, 0, 25},
+        {"CC FWD:", 0, 2, 2, 11, NULL_PAGE, 0, 25},
         {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 121},
     },
     24

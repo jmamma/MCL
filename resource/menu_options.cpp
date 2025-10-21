@@ -53,7 +53,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 84: MIDI_DEVICE
   {0, "GENER"}, {1, "ELEKT"},
   // 86"
-  {0, "OFF"}, {1, "2->2"},
+  {0, "OFF"}, {1, "CTRL->2"},
   // 88
   {0, "--"},{17, "OMNI"},
   // 90

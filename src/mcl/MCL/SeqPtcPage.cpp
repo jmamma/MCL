@@ -457,7 +457,7 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
   if (track_number == 255) {
     track_number = last_ext_track;
   }
-  mcl_seq.ext_tracks[track_number].note_on(note_num, velocity, uart_);
+  if (mcl_cfg.uart_note_fwd) mcl_seq.ext_tracks[track_number].note_on(note_num, velocity, uart_);
   // if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
   reset_undo();
   mcl_seq.ext_tracks[track_number].record_track_noteon(note_num, velocity);
@@ -469,7 +469,7 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
   if (track_number == 255) {
     track_number = last_ext_track;
   }
-  mcl_seq.ext_tracks[track_number].note_off(note_num, velocity, uart_);
+  if (mcl_cfg.uart_note_fwd) mcl_seq.ext_tracks[track_number].note_off(note_num, velocity, uart_);
   // if (seq_ptc_page.recording && (MidiClock.state == 2)) {
   reset_undo();
   mcl_seq.ext_tracks[track_number].record_track_noteoff(note_num);
@@ -879,7 +879,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 
   // CC_FWD
   //
-  if (mcl_cfg.uart_cc_loopback) {
+  if (mcl_cfg.uart_cc_fwd) {
     MidiUart2.sendCC(channel, param, value);
     send_uart2 = false;
   }

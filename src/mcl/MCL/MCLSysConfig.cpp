@@ -99,6 +99,7 @@ bool MCLSysConfig::cfg_init() {
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Initialising cfgfile"));
+  cfgfile.close();
   if (!SD.remove("/config.mcls")) {
     DEBUG_PRINTLN(F("Failed to remove old config file"));
   }
@@ -159,7 +160,7 @@ bool MCLSysConfig::cfg_init() {
   track_type_select = 0b00000011;
   uart1_device = 1;
   //uart2_device = 0;
-  //uart_cc_loopback = 0;
+  //uart_cc_fwd = 0;
   //uart2_prg_mode = 0;
   usb_mode = USB_SERIAL;
   //midi_transport_rec = 0;
@@ -170,6 +171,7 @@ bool MCLSysConfig::cfg_init() {
   uart2_cc_mute = 128;
   uart2_cc_level = 128;
   //grid_page_mode = 0;
+  uart_note_fwd = 1;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {
