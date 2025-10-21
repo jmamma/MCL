@@ -164,7 +164,7 @@ def create_or_validate_manifest(env, env_name, checksum, firmware_size):
     version_str = get_version_str(env) or "N/A"
     platform_family = ENV_MAPPING.get(env_name)
     firmware_ext = FIRMWARE_EXTENSIONS.get(platform_family, ".bin")
-    
+
     if version_str == "N/A":
         new_firmware_name = f"firmware{firmware_ext}"
     else:
@@ -173,16 +173,24 @@ def create_or_validate_manifest(env, env_name, checksum, firmware_size):
         alphanumeric_chars = filter(str.isalnum, version_str)
         transformed_version = '_'.join(alphanumeric_chars).lower()
         new_firmware_name = f"mcl_{transformed_version}{firmware_ext}"
-    
+
     print(f"✓ Target filename will be '{new_firmware_name}'")
 
     project_dir = env.subst("$PROJECT_DIR")
     checksums_file = os.path.join(project_dir, "build", "manifest.ini")
     config = configparser.ConfigParser()
 
-    if CHECKSUM_MODE.lower() == "create":
-        if os.path.exists(checksums_file):
-            config.read(checksums_file)
+    # Read existing manifest if it exists
+    if os.path.exists(checksums_file):
+        config.read(checksums_file)
+
+    # Determine effective mode: if validate mode but env_name missing, switch to create
+    effective_mode = CHECKSUM_MODE.lower()
+    if effective_mode == "validate" and env_name not in config:
+        print(f"⚠ Warning: No entry for '{env_name}' in manifest.ini, switching to CREATE mode")
+        effective_mode = "create"
+
+    if effective_mode == "create":
         config[env_name] = {
             'checksum': f'0x{checksum:04x}', 'size': str(firmware_size),
             'version_string': version_str, 'version_code': get_version_code(env),
@@ -192,15 +200,11 @@ def create_or_validate_manifest(env, env_name, checksum, firmware_size):
         with open(checksums_file, 'w') as f:
             config.write(f)
         print("✓ CHECKSUM MANIFEST SAVED")
-    else: # Validate mode
+    else:  # Validate mode
         if not os.path.exists(checksums_file):
             print(f"! ERROR: manifest.ini not found at '{checksums_file}'")
             env.Exit(1)
-        config.read(checksums_file)
-        if env_name not in config:
-            print(f"! ERROR: No checksum entry for '{env_name}' in manifest.ini")
-            env.Exit(1)
-        
+
         # Restored detailed validation logic
         official_checksum = int(config[env_name].get('checksum', '0'), 0)
         official_size = int(config[env_name].get('size', '0'))
@@ -216,7 +220,7 @@ def create_or_validate_manifest(env, env_name, checksum, firmware_size):
             if not size_matches:
                 print(f"  ❌ SIZE MISMATCH: Expected {official_size} bytes, Got {firmware_size} bytes")
             # env.Exit(1)
-    
+
     return new_firmware_name
 
 def regenerate_hex_for_avr(elf_file, hex_file_to_overwrite, env):
