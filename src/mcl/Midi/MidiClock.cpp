@@ -100,10 +100,10 @@ void MidiClockClass::start() {
     state = STARTED;
 
     if (uart_transport_forward1) {
-      uart_transport_forward1->sendRaw(MIDI_START);
+      uart_transport_forward1->sendRealtime(MIDI_START);
     }
     if (uart_transport_forward2) {
-      uart_transport_forward2->sendRaw(MIDI_START);
+      uart_transport_forward2->sendRealtime(MIDI_START);
     }
   }
 }
@@ -113,10 +113,10 @@ void MidiClockClass::stop() {
   if (mode == INTERNAL_MIDI) {
     state = PAUSED;
     if (uart_transport_forward1) {
-      uart_transport_forward1->sendRaw(MIDI_STOP);
+      uart_transport_forward1->sendRealtime(MIDI_STOP);
     }
     if (uart_transport_forward2) {
-      uart_transport_forward2->sendRaw(MIDI_STOP);
+      uart_transport_forward2->sendRealtime(MIDI_STOP);
     }
   }
 }
@@ -125,10 +125,10 @@ void MidiClockClass::pause() {
   if (mode == INTERNAL_MIDI) {
     if (state == PAUSED) {
     if (uart_transport_forward1) {
-      uart_transport_forward1->sendRaw(MIDI_CONTINUE);
+      uart_transport_forward1->sendRealtime(MIDI_CONTINUE);
     }
     if (uart_transport_forward2) {
-      uart_transport_forward2->sendRaw(MIDI_CONTINUE);
+      uart_transport_forward2->sendRealtime(MIDI_CONTINUE);
     }
     } else {
       stop();
@@ -169,7 +169,7 @@ void MidiClockClass::setSongPositionPtr(uint16_t pos) {
                   uint8_t msg[3] = { MIDI_SONG_POSITION_PTR, 0, 0 };
                   msg[1] = pos & 0x7F;
                   msg[2] = (pos >> 7) & 0x7F;
-                  MidiUart.sendRaw(msg, 3);
+                  MidiUart.sendRealtime(msg, 3);
           }
 
           USE_LOCK();

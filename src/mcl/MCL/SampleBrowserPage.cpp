@@ -151,14 +151,6 @@ void SampleBrowserPage::send_sample(int slot, char *newname, bool silent) {
   if (!file.isOpen())
     return;
 
-#if defined(__AVR__)
-  MidiUartClass *uart_clock_recv = nullptr;
-  if (MidiClock.uart_clock_recv != &MidiUart) {
-    uart_clock_recv = MidiClock.uart_clock_recv;
-    MidiClock.uart_clock_recv = nullptr;
-  }
-#endif
-
   char temp_entry[FILE_ENTRY_SIZE];
   file.getName(temp_entry, FILE_ENTRY_SIZE);
   file.close();
@@ -182,11 +174,6 @@ void SampleBrowserPage::send_sample(int slot, char *newname, bool silent) {
       gfx.alert("Send failed", temp_entry);
     }
   }
-#if defined(__AVR__)
-  if (uart_clock_recv) {
-    MidiClock.uart_clock_recv = uart_clock_recv;
-  }
-#endif
 }
 
 void SampleBrowserPage::recv_wav(int slot, bool silent) {

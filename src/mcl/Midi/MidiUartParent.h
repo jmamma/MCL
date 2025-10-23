@@ -82,6 +82,7 @@ public:
   virtual uint8_t m_getc() = 0;
   virtual void m_putc(uint8_t *src, uint16_t size) = 0;
   virtual void m_putc(uint8_t c) = 0;
+  virtual void m_putc_realtime(uint8_t c) = 0;
   virtual void m_putc_immediate(uint8_t c) { m_putc(c); }
   virtual void m_recv(uint8_t *src, uint16_t size) = 0;
   virtual bool avail() { return false; }
@@ -193,6 +194,7 @@ public:
   }
   void sendRaw(uint8_t *msg, uint16_t cnt) { m_putc(msg, cnt); }
   void sendRaw(uint8_t byte) { m_putc(byte); }
+  void sendRealtime(uint8_t byte) { m_putc_realtime(byte); }
 
   void sendString(const char *data) { sendString(data, strlen(data)); }
   void sendString(const char *data, uint16_t cnt);

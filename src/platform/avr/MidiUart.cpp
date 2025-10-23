@@ -16,12 +16,13 @@
 #include "MCLSeq.h"
 
 MidiUartClass::MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb,
-                             RingBuffer<> *_txRb) : MidiUartParent() {
+                             RingBuffer<> *_txRb, RingBuffer<> *_txRb_realtime) : MidiUartParent() {
   udr = udr_;
   mode = UART_MIDI;
   rxRb = _rxRb;
   txRb = _txRb;
   txRb_sidechannel = nullptr;
+  txRb_realtime = _txRb_realtime;
 }
 
 void MidiUartClass::init() {

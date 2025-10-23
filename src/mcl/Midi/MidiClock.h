@@ -260,9 +260,9 @@ public:
     clock_last_time = read_clock();
     div192th_countdown = 0;
 
-    if (uart_clock_forward1) { uart_clock_forward1->sendRaw(0xF8); }
-    if (uart_clock_forward2) { uart_clock_forward2->sendRaw(0xF8); }
-    if (uart_clock_forward3) { uart_clock_forward3->sendRaw(0xF8); }
+    if (uart_clock_forward1) { uart_clock_forward1->sendRealtime(0xF8); }
+    if (uart_clock_forward2) { uart_clock_forward2->sendRealtime(0xF8); }
+    if (uart_clock_forward3) { uart_clock_forward3->sendRealtime(0xF8); }
 
     incrementCounters();
     if ((step_counter == 1) && (state == STARTED)) {
