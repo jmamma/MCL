@@ -10,13 +10,14 @@
 #include "pico.h"
 
 MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<> *_rxRb,
-                             RingBuffer<> *_txRb)
+                             RingBuffer<> *_txRb, RingBuffer<> *_txRb_realtime)
     : MidiUartParent() {
   uart_hw = uart_hw_;
   mode = UART_MIDI;
   rxRb = _rxRb;
   txRb = _txRb;
   txRb_sidechannel = nullptr;
+  txRb_realtime = _txRb_realtime;
 }
 
 void MidiUartClass::init() {
@@ -166,7 +167,12 @@ void __not_in_flash_func(MidiUartClass::tx_isr)() {
   bool rs = 1;
 again:
 #endif
-  if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
+  if (!txRb_realtime->isEmpty_isr()) {
+    sendActiveSenseTimer = sendActiveSenseTimeout;
+    uint8_t c = txRb_realtime->get_h_isr();
+    write_char(c);
+  }
+  else if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
     if (!txRb_sidechannel->isEmpty()) {
       uint8_t c = txRb_sidechannel->get();
 #ifdef RUNNING_STATUS_OUT
@@ -233,7 +239,7 @@ again:
     goto again;
   }
 #endif
-  if (txRb->isEmpty() && (txRb_sidechannel == nullptr)) {
+  if (txRb_realtime->isEmpty_isr() && txRb->isEmpty() && (txRb_sidechannel == nullptr)) {
     disable_tx_irq();
   } else {
     enable_tx_irq();

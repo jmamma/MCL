@@ -52,6 +52,7 @@ public:
   volatile RingBuffer<> *rxRb;
   volatile RingBuffer<> *txRb;
   volatile RingBuffer<> *txRb_sidechannel;
+  volatile RingBuffer<> *txRb_realtime;
 
 #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
@@ -59,7 +60,7 @@ public:
 #endif
 
   MidiUartClass(uart_inst_t *uart_hw, RingBuffer<> *_rxRb = nullptr,
-                RingBuffer<> *_txRb = nullptr);
+                RingBuffer<> *_txRb = nullptr, RingBuffer<> *_txRb_realtime = nullptr);
 
   void realtime_isr(uint8_t c);
   void rx_isr();
@@ -95,6 +96,14 @@ public:
       }
     }
   }
+
+  ALWAYS_INLINE() void m_putc_realtime(uint8_t c) {
+    LOCK();
+    txRb_realtime->put_h_isr(c);
+    tx_flush();
+    CLEAR_LOCK();
+  }
+
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
     LOCK();
     txRb->put_h_isr(src, size);
@@ -118,8 +127,8 @@ public:
   bool usb_ready;
 
   MidiUartUSBClass(uart_inst_t *uart_hw, RingBuffer<> *_rxRb = nullptr,
-                   RingBuffer<> *_txRb = nullptr)
-      : MidiUartClass(uart_hw, _rxRb, _txRb) {
+                   RingBuffer<> *_txRb = nullptr, RingBuffer<> *_txRb_realtime = nullptr)
+      : MidiUartClass(uart_hw, _rxRb, _txRb, _txRb_realtime) {
 
     usb_ready = false;
   }
