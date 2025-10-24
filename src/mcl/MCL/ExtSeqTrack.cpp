@@ -363,7 +363,7 @@ end:
 }
 
 uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
-                                     uint16_t &ev_idx, uint16_t ev_end) {
+                                     uint16_t &ev_idx, uint16_t ev_end, uint8_t _length) {
   // Scan for matching note off;
   uint8_t j = step;
   ++ev_idx;
@@ -377,7 +377,7 @@ uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
       return j;
     }
     ++j;
-    if (j >= length) {
+    if (j >= _length) {
       // wrap around
       j = 0;
       ev_end = 0;
