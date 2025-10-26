@@ -47,7 +47,7 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
 
   if (expand && old_length <= 16 && length >= 16) {
     for (uint8_t n = old_length; n < length; n++) {
-      if (timing_buckets.get(n) != 0) {
+      if (event_buckets.get(n) != 0) {
         expand = false;
         return;
       }
@@ -86,11 +86,11 @@ void ExtSeqTrack::remove_event(uint16_t index) {
     return;
   }
   for (step = 0; step < length && ev_idx <= index; ++step) {
-    bucket = timing_buckets.get(step);
+    bucket = event_buckets.get(step);
     ev_idx += bucket;
   }
   --step;
-  timing_buckets.set(step, bucket - 1);
+  event_buckets.set(step, bucket - 1);
   // move [index+1...event_count-1] to [index...event_count-2]
   memmove(events + index, events + index + 1,
           sizeof(ext_event_t) * (event_count - index - 1));
@@ -102,7 +102,7 @@ void ExtSeqTrack::remove_event(uint16_t index) {
 }
 
 uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
-  uint8_t u = timing_buckets.get(step);
+  uint8_t u = event_buckets.get(step);
   if (15 == u || event_count >= NUM_EXT_EVENTS) {
     // bucket full or track full
     return 0xFFFF;
@@ -115,7 +115,7 @@ uint16_t ExtSeqTrack::add_event(uint8_t step, ext_event_t *e) {
   while (idx < end && events[idx] < *e) {
     ++idx;
   }
-  timing_buckets.set(step, u + 1);
+  event_buckets.set(step, u + 1);
   // move [idx...event_count-1] to [idx+1...event_count]
   memmove(events + idx + 1, events + idx,
           sizeof(ext_event_t) * (event_count - idx));
@@ -148,7 +148,7 @@ void ExtSeqTrack::recalc_slides() {
   // Slide -> from last lock event on start step to first lock event on
   // destination step
   bool find = false;
-  for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
+  for (int8_t n = event_buckets.get(step) - 1; n >= 0; n--) {
     auto &e = events[curidx + n];
     if (e.is_lock && e.event_on) {
       find_array[e.lock_idx] = 1;
@@ -162,7 +162,7 @@ void ExtSeqTrack::recalc_slides() {
   find_next_locks(curidx, step, find_array);
 
   ext_event_t *e;
-  for (int8_t n = timing_buckets.get(step) - 1; n >= 0; n--) {
+  for (int8_t n = event_buckets.get(step) - 1; n >= 0; n--) {
     e = &events[curidx + n];
     uint8_t c = e->lock_idx;
     uint8_t param = locks_params[c] - 1;
@@ -209,7 +209,7 @@ uint8_t ExtSeqTrack::find_next_lock(uint8_t step, uint8_t lock_idx,
 
 again:
   for (; next_step < max_len; next_step++) {
-    end += timing_buckets.get(next_step);
+    end += event_buckets.get(next_step);
     for (; curidx < end; curidx++) {
       auto &e = events[curidx];
       if (!e.is_lock || !e.event_on)
@@ -243,7 +243,7 @@ void ExtSeqTrack::find_next_locks(uint16_t curidx, uint8_t step,
   }
   // caller ensures step < length
 
-  curidx += timing_buckets.get(step);
+  curidx += event_buckets.get(step);
   uint8_t next_step = step + 1;
 
   uint16_t end = curidx;
@@ -251,7 +251,7 @@ void ExtSeqTrack::find_next_locks(uint16_t curidx, uint8_t step,
 
 again:
   for (; next_step < max_len; next_step++) {
-    end += timing_buckets.get(next_step);
+    end += event_buckets.get(next_step);
     for (; curidx < end; curidx++) {
       if (count == 0) {
         return;
@@ -355,7 +355,7 @@ uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
       ev_end = 0;
     }
     ev_idx = ev_end;
-    ev_end += timing_buckets.get(j);
+    ev_end += event_buckets.get(j);
   } while (j != step);
 end:
   ev_idx = 0xFFFF;
@@ -383,7 +383,7 @@ uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
       ev_end = 0;
     }
     ev_idx = ev_end;
-    ev_end += timing_buckets.get(j);
+    ev_end += event_buckets.get(j);
   } while (j != step);
 
   ev_idx = 0xFFFF;
@@ -516,7 +516,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
 
   again:
     note_idx_on = find_midi_note(i, cur_y, ev_idx, /*event_on*/ true);
-    ev_end = ev_idx + timing_buckets.get(i);
+    ev_end = ev_idx + event_buckets.get(i);
 
     if (note_idx_on != 0xFFFF) {
       note_on_found = true;
@@ -647,7 +647,7 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
   mod12_counter++;
 
   if (mod12_counter == timing_mid) {
-    cur_event_idx += timing_buckets.get(step_count);
+    cur_event_idx += event_buckets.get(step_count);
     mod12_counter = 0;
     if (ignore_step == step_count) {
       ignore_step = 255;
@@ -693,7 +693,7 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     // < timing_mid]
 
     ev_idx = cur_event_idx;
-    ev_end = cur_event_idx + timing_buckets.get(step_count);
+    ev_end = cur_event_idx + event_buckets.get(step_count);
 
     send_slides(locks_params, channel);
 
@@ -713,7 +713,7 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     } else {
       next_step = step_count + 1;
     }
-    ev_end = ev_idx + timing_buckets.get(next_step);
+    ev_end = ev_idx + event_buckets.get(next_step);
 
     // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
@@ -856,7 +856,7 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
   uint8_t r = 4;
 
   for (uint8_t n = step; n < min(length, step + 3); n++) {
-    end += timing_buckets.get(n);
+    end += event_buckets.get(n);
     for (; start_idx < end; start_idx++) {
       DEBUG_DUMP(start_idx);
       uint8_t i = start_idx;
@@ -1132,7 +1132,7 @@ void ExtSeqTrack::clear_ext_conditional() {
 void ExtSeqTrack::clear_ext_notes() {
   event_count = 0;
   for (uint8_t c = 0; c < NUM_EXT_STEPS; c++) {
-    timing_buckets.set(c, 0);
+    event_buckets.set(c, 0);
   }
 }
 
@@ -1157,7 +1157,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
 
   switch (dir) {
   case DIR_LEFT:
-    n_cur = timing_buckets.get(0);
+    n_cur = event_buckets.get(0);
     memcpy(ev_cur, events, sizeof(ext_event_t) * n_cur);
 
     memmove(events, events + n_cur, sizeof(ext_event_t) * (ev_end - n_cur));
@@ -1168,10 +1168,10 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     memmove(velocities, velocities + 1, length - 1);
     velocities[length - 1] = vel_tmp;
 
-    timing_buckets.shift_left(length);
+    event_buckets.shift_left(length);
     break;
   case DIR_RIGHT:
-    n_cur = timing_buckets.get(length - 1);
+    n_cur = event_buckets.get(length - 1);
     memcpy(ev_cur, events + ev_end - n_cur, sizeof(ext_event_t) * n_cur);
     memmove(events + n_cur, events, sizeof(ext_event_t) * (ev_end - n_cur));
     memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
@@ -1179,7 +1179,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     memmove(velocities + 1, velocities, length - 1);
     velocities[0] = vel_tmp;
 
-    timing_buckets.shift_right(length);
+    event_buckets.shift_right(length);
     break;
   case DIR_REVERSE:
     uint16_t end = ev_end / 2;
@@ -1208,7 +1208,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
       velocities[z] = vel_tmp;
     }
     // reverse timing buckets
-    timing_buckets.reverse(length);
+    event_buckets.reverse(length);
     break;
   }
 

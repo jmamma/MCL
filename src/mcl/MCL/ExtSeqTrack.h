@@ -86,7 +86,7 @@ public:
 
 class ATTR_PACKED() ExtSeqTrackData {
 public:
-  NibbleArray<NUM_EXT_STEPS> timing_buckets;
+  NibbleArray<NUM_EXT_STEPS> event_buckets;
   ext_event_t events[NUM_EXT_EVENTS];
   uint8_t locks_params[NUM_LOCKS];
   uint16_t event_count;
@@ -94,10 +94,10 @@ public:
   uint8_t locks_params_orig[NUM_LOCKS];
   uint8_t channel;
   void set_channel(uint8_t channel_) { channel = channel_; }
-  uint8_t *data() const { return (uint8_t *)&timing_buckets; }
+  uint8_t *data() const { return (uint8_t *)&event_buckets; }
   void clear() {
     event_count = 0;
-    timing_buckets.clear();
+    event_buckets.clear();
   }
 };
 
@@ -209,9 +209,9 @@ public:
                           uint16_t &ev_end);
   void locate(uint8_t step, uint16_t &ev_idx, uint16_t &ev_end) {
     ev_idx = 0;
-    ev_end = timing_buckets.get(step);
+    ev_end = event_buckets.get(step);
     for (uint8_t i = 0; i < step; ++i) {
-      ev_idx += timing_buckets.get(i);
+      ev_idx += event_buckets.get(i);
     }
 
     ev_end += ev_idx;

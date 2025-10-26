@@ -192,11 +192,11 @@ void SeqExtStepPage::draw_lockeditor() {
           ev_end = ev_j_end;
           // active_track.locate(i, ev_idx, ev_end);
         } else {
-          ev_end += active_track.timing_buckets.get(i);
+          ev_end += active_track.event_buckets.get(i);
         }*/
     int16_t fov_pixels_per_tick_fixed = (int16_t)(fov_pixels_per_tick * 256);
 
-    ev_end += active_track.timing_buckets.get(i);
+    ev_end += active_track.event_buckets.get(i);
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
 
@@ -342,7 +342,7 @@ void SeqExtStepPage::draw_pianoroll() {
   uint8_t h = fov_h / fov_notes;
   for (uint8_t i = 0; i < active_track.length; i++) {
     // Update bucket index range
-    ev_end += active_track.timing_buckets.get(i);
+    ev_end += active_track.event_buckets.get(i);
 
     for (; ev_idx != ev_end; ++ev_idx) {
       auto &ev = active_track.events[ev_idx];
@@ -395,9 +395,9 @@ void SeqExtStepPage::draw_pianoroll() {
           // && (cur_y == fov_y)) {
           proj_y = draw_y + fov_h + 1;
         }
-
+        bool wrap = note_end < note_start;
         if (proj_y != 255) {
-          if (note_end < note_start) {
+          if (wrap) {
             // Wrap around note
 
             if (note_start < fov_offset + fov_length) {
@@ -418,7 +418,7 @@ void SeqExtStepPage::draw_pianoroll() {
         }
         // Draw notes
         if ((note_val > fov_y) && (note_val <= fov_y + fov_notes)) {
-          if (note_end < note_start) {
+          if (wrap) {
             // Wrap around note
             if (note_start < fov_offset + fov_length) {
               draw_note(note_fov_start + draw_x,
