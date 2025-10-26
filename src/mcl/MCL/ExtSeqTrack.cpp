@@ -1142,6 +1142,40 @@ void ExtSeqTrack::clear_track() {
   buffer_notesoff();
 }
 
+void ExtSeqTrack::clear_step(uint8_t step) {
+  uint16_t start_idx, end_idx;
+  locate(step, start_idx, end_idx);
+
+  uint8_t bucket_size = event_buckets.get(step);
+
+  if (bucket_size > 0) {
+    // Remove events by shifting everything after this step's events
+    memmove(events + start_idx, events + end_idx,
+            sizeof(ext_event_t) * (event_count - end_idx));
+
+    // Update counts
+    event_count -= bucket_size;
+    event_buckets.set(step, 0);
+
+    // Update cur_event_idx if we're clearing before current position
+    if (step < step_count) {
+      cur_event_idx -= bucket_size;
+    } else if (step == step_count) {
+      // If clearing current step, reset to start of step
+      cur_event_idx = start_idx;
+    }
+
+    epoch++;
+  }
+
+  // Clear velocity for this step
+  velocities[step] = 0;
+
+  // Clear masks for this step
+  CLEAR_BIT128_P(oneshot_mask, step);
+  CLEAR_BIT128_P(mute_mask, step);
+}
+
 void ExtSeqTrack::modify_track(uint8_t dir) {
   uint8_t old_mute_state = mute_state;
   uint8_t n_cur;
@@ -1152,8 +1186,49 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
 
   uint8_t timing_mid = get_timing_mid();
 
-  uint16_t ev_idx, ev_end;
-  locate(length, ev_idx, ev_end);
+  uint16_t step_idx = 0, ev_end;
+
+  // Check for orphaned notes and clear events beyond length
+  for (uint8_t step = 0; step < NUM_EXT_STEPS; step++) {
+    uint8_t bucket = event_buckets.get(step);
+    uint16_t step_end = step_idx + bucket;
+    if (step < length) {
+      // Check each note-on in this step
+      for (uint16_t i = step_idx; i < step_end; i++) {
+        auto &ev = events[i];
+        if (!ev.is_lock && ev.event_on) {
+          // Found a note-on, search for its note-off
+          uint16_t search_idx = i;
+          uint16_t search_end = step_end;
+          uint8_t note_off_step = search_note_off(ev.event_value, step, search_idx, search_end, length);
+          // If note-off is beyond new length or not found, add one at the end
+          if (note_off_step >= length && search_idx != 0xFFFF) {
+            ext_event_t note_off_event = events[search_idx];
+            uint8_t wrapped_step = note_off_step % length;
+            add_event(wrapped_step, &note_off_event);
+          } else if (search_idx == 0xFFFF) {
+            // No note-off found, add one at track end
+            ext_event_t note_off_event;
+            note_off_event.is_lock = false;
+            note_off_event.cond_id = 0;
+            note_off_event.event_value = ev.event_value;
+            note_off_event.event_on = false;
+            note_off_event.micro_timing = timing_mid - 1;
+            add_event(length - 1, &note_off_event);
+          }
+        }
+      }
+      step_idx = step_end;
+    } else {
+      event_buckets.set(step, 0);
+      CLEAR_BIT128_P(oneshot_mask, step);
+      CLEAR_BIT128_P(mute_mask, step);
+      velocities[step] = 0;
+    }
+  }
+
+  event_count = step_idx;
+  ev_end = step_idx;
 
   switch (dir) {
   case DIR_LEFT:

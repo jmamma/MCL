@@ -163,6 +163,8 @@ public:
 
   bool set_track_step(uint8_t &step, uint8_t utiming, uint8_t note_num,
                       uint8_t event_on, uint8_t velocity, uint8_t cond);
+  void clear_step(uint8_t step);
+
   void clear_ext_conditional();
   void clear_ext_notes();
 
