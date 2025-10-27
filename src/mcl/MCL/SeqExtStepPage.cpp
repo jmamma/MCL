@@ -308,15 +308,7 @@ void SeqExtStepPage::draw_lockeditor() {
     // Draw interactive cursor
     int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
     uint8_t fov_cur_y = fov_h - ((float)lock_cur_y / 128.0 * (float)fov_h);
-
-    oled_display.drawPixel(draw_x + fov_cur_x - 1, draw_y + fov_cur_y - 2,
-                           WHITE);
-    oled_display.drawPixel(draw_x + fov_cur_x + 1, draw_y + fov_cur_y - 2,
-                           WHITE);
-    oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y - 1 - 2,
-                           WHITE);
-    oled_display.drawPixel(draw_x + fov_cur_x, draw_y + fov_cur_y + 1 - 2,
-                           WHITE);
+    mcl_gui.draw_cross(fov_cur_x, fov_cur_y);
   }
 
 void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov) {
@@ -640,12 +632,13 @@ void SeqExtStepPage::loop() {
   uint8_t timing_mid = active_track.get_timing_mid();
   SeqPage::loop();
 
+  bool is_lockeditor = (pianoroll_mode > 0);
   // If pianoroll_edit mode changed.
   if (show_seq_menu) {
     display_mute_mask(midi_device, 8);
     if (last_pianoroll_mode != pianoroll_mode) {
 
-      if (pianoroll_mode > 0) {
+      if (is_lockeditor) {
         if (mcl_seq.ext_tracks[last_ext_track]
                 .locks_params[pianoroll_mode - 1] == 0) {
           param_select = PARAM_OFF;
@@ -657,7 +650,7 @@ void SeqExtStepPage::loop() {
       }
       last_pianoroll_mode = pianoroll_mode;
     }
-    if ((pianoroll_mode > 0)) {
+    if (is_lockeditor) {
       if (param_select == PARAM_OFF) {
         mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] = 0;
       } else {
@@ -678,9 +671,15 @@ void SeqExtStepPage::loop() {
   }
   diff = seq_extparam2.getValue();
   if (diff) {
-    // Vertical translation
+        // Vertical translation
+    bool button_pressed = BUTTON_DOWN(Buttons.ENCODER2);
 
-    diff = BUTTON_DOWN(Buttons.ENCODER2) ? diff / 4 : diff * 4;
+    // Multiply by 4 when mode and button state match, divide by 4 otherwise
+    if (is_lockeditor == button_pressed) {
+        diff >>= 2;  // divide by 4
+    } else {
+        diff <<= 2;  // multiply by 4
+    }
     pos_cur_y(-1 * diff);
   }
 
