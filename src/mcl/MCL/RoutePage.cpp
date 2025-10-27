@@ -33,24 +33,17 @@ void RoutePage::draw_routes() {
   /*Display 16 track routes on screen,
    For 16 tracks check to see if there is a route*/
   for (uint8_t i = 0; i < 16; i++) {
+    if (mcl_cfg.routing[i] == 6)
+      continue;
 
-    if (mcl_cfg.routing[i] != 6) {
-      cur = (char)'A' + mcl_cfg.routing[i];
-      auto x = MCLGUI::seq_x0 + i * (MCLGUI::seq_w + 1);
-      oled_display.setCursor(x + 1, MCLGUI::trig_y + 5);
+    const auto x = MCLGUI::seq_x0 + i * (MCLGUI::seq_w + 1);
+    const bool note_on = note_interface.is_note_on(i);
 
-      if (note_interface.is_note_on(i)) {
-        oled_display.fillRect(x, MCLGUI::trig_y, MCLGUI::seq_w, MCLGUI::trig_h,
-                              WHITE);
-        oled_display.setTextColor(BLACK);
-      } else {
-        oled_display.fillRect(x, MCLGUI::trig_y, MCLGUI::seq_w, MCLGUI::trig_h,
-                              BLACK);
-        oled_display.setTextColor(WHITE);
-      }
-
-      oled_display.print(cur);
-    }
+    oled_display.fillRect(x, MCLGUI::trig_y, MCLGUI::seq_w, MCLGUI::trig_h,
+                          note_on ? WHITE : BLACK);
+    oled_display.setTextColor(note_on ? BLACK : WHITE);
+    oled_display.setCursor(x + 1, MCLGUI::trig_y + 5);
+    oled_display.print((char)('A' + mcl_cfg.routing[i]));
   }
 
   oled_display.setTextColor(WHITE);
