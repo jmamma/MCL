@@ -74,6 +74,12 @@ void MCLGUI::wait_for_project() {
   DEBUG_PRINTLN("finished");
 }
 
+void MCLGUI::draw_cross(uint8_t x, uint8_t y, uint8_t color) {
+  oled_display.drawPixel(x - 1, y, color);
+  oled_display.drawPixel(x + 1, y, color);
+  oled_display.drawPixel(x, y - 1, color);
+  oled_display.drawPixel(x, y + 1, color);
+}
 
 void MCLGUI::draw_vertical_dashline(uint8_t x, uint8_t from, uint8_t to) {
   for (uint8_t y = from; y < to; y += 2) {

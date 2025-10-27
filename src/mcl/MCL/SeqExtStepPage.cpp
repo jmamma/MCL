@@ -319,8 +319,9 @@ void SeqExtStepPage::draw_lockeditor() {
                            WHITE);
   }
 
-void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w) {
+void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov) {
   oled_display.drawRect(x, y, w, fov_h / fov_notes, WHITE);
+  if (note_beyond_fov) { w += 1; }
   oled_display.fillRect(x + 1, y + 1, w - 2, fov_h / fov_notes - 2, BLACK);
 }
 
@@ -352,7 +353,7 @@ void SeqExtStepPage::draw_pianoroll() {
       if (ev.is_lock || !ev.event_on) {
         continue;
       }
-
+      bool note_beyond_fov = false;
       uint16_t note_off_idx = ev_idx;
       uint8_t j =
           active_track.search_note_off(note_val, i, note_off_idx, ev_end);
@@ -369,16 +370,17 @@ void SeqExtStepPage::draw_pianoroll() {
       if (is_within_fov(note_start, note_end)) {
         uint8_t note_fov_start, note_fov_end;
 
+        bool note_beyond_fov = false;
+
         if (note_start < fov_offset) {
           note_fov_start = 0;
         } else {
           note_fov_start =
               (float)(note_start - fov_offset) * fov_pixels_per_tick;
         }
-
         if (note_end >= fov_offset + fov_length) {
           note_fov_end = fov_w;
-
+          note_beyond_fov = true;
         } else {
           note_fov_end = (float)(note_end - fov_offset) * fov_pixels_per_tick;
         }
@@ -396,6 +398,7 @@ void SeqExtStepPage::draw_pianoroll() {
           proj_y = draw_y + fov_h + 1;
         }
         bool wrap = note_end < note_start;
+        note_beyond_fov |= wrap;
         if (proj_y != 255) {
           if (wrap) {
             // Wrap around note
@@ -423,17 +426,17 @@ void SeqExtStepPage::draw_pianoroll() {
             if (note_start < fov_offset + fov_length) {
               draw_note(note_fov_start + draw_x,
                                     draw_y + note_fov_y,
-                                    pattern_end_fov_x - note_fov_start);
+                                    pattern_end_fov_x - note_fov_start, note_beyond_fov);
             }
 
             if (note_end > fov_offset) {
-              draw_note(draw_x, draw_y + note_fov_y, note_fov_end);
+              draw_note(draw_x, draw_y + note_fov_y, note_fov_end, false);
             }
 
           } else {
             // Standard note.
             draw_note(note_fov_start + draw_x, draw_y + note_fov_y,
-                                  note_fov_end - note_fov_start);
+                                  note_fov_end - note_fov_start, note_beyond_fov);
           }
         }
       }
