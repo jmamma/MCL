@@ -146,6 +146,19 @@ public:
     return timing_mid;
   }
 
+  static uint16_t get_speed_multiplier_int(uint8_t speed) {
+  switch (speed) {
+    case SEQ_SPEED_2X:   return 6;  // 0.5  * 12
+    case SEQ_SPEED_4X:   return 3;  // 0.25 * 12
+    case SEQ_SPEED_3_4X: return 16; // 1.33 * 12
+    case SEQ_SPEED_3_2X: return 8;  // 0.66 * 12
+    case SEQ_SPEED_1_2X: return 24; // 2.0  * 12
+    case SEQ_SPEED_1_4X: return 48; // 4.0  * 12
+    case SEQ_SPEED_1_8X: return 96; // 8.0  * 12
+    default:
+    case SEQ_SPEED_1X:   return 12; // 1.0  * 12
+  }
+  }
 
   void get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d);
 

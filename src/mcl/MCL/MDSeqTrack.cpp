@@ -70,11 +70,21 @@ void MDSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
     old_speed = speed;
   }
   if (timing_adjust) {
-    float mult =
-        get_speed_multiplier(new_speed) / get_speed_multiplier(old_speed);
+    // --- Start of optimized block ---
+    uint16_t new_mult = get_speed_multiplier_int(new_speed);
+    uint16_t old_mult = get_speed_multiplier_int(old_speed);
+
     for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
-      timing[i] = round(mult * (float)timing[i]);
+      // Use a 32-bit intermediate variable to prevent overflow during multiplication
+      uint32_t numerator = (uint32_t)timing[i] * new_mult;
+
+      // Add half of the denominator before dividing for proper rounding
+      numerator += (old_mult / 2);
+
+      // Perform the final division to get the new timing value
+      timing[i] = (uint8_t)(numerator / old_mult);
     }
+    // --- End of optimized block ---
   }
   speed = new_speed;
   uint8_t timing_mid = get_timing_mid();

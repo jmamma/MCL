@@ -3,16 +3,31 @@
 
 uint8_t ExtSeqTrack::epoch = 0;
 
+
 void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
                             bool timing_adjust) {
   if (old_speed == 255) {
     old_speed = speed;
   }
   if (timing_adjust) {
-    float mult =
-        get_speed_multiplier(new_speed) / get_speed_multiplier(old_speed);
+    // Use integer multipliers based on a scale of 12
+    uint16_t new_mult = get_speed_multiplier_int(new_speed);
+    uint16_t old_mult = get_speed_multiplier_int(old_speed);
+
     for (uint16_t i = 0; i < event_count; i++) {
-      events[i].micro_timing = round(mult * (float)events[i].micro_timing);
+      // Original formula: timing = round(timing * (new_mult_float / old_mult_float))
+      // Integer formula:  timing = (timing * new_mult_int) / old_mult_int
+
+      // 1. Calculate numerator using 32-bit to prevent any potential overflow
+      // before division (e.g., if timing is 255 and new_mult is 96, result is 24480,
+      // which fits in uint16_t, but uint32_t is safer if timing is larger).
+      uint32_t numerator = (uint32_t)events[i].micro_timing * new_mult;
+
+      // 2. Add half of the denominator for rounding
+      numerator += (old_mult / 2);
+
+      // 3. Perform division
+      events[i].micro_timing = (uint8_t)(numerator / old_mult);
     }
   }
   speed = new_speed;
