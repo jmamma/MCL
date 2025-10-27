@@ -675,11 +675,9 @@ void SeqExtStepPage::loop() {
     bool button_pressed = BUTTON_DOWN(Buttons.ENCODER2);
 
     // Multiply by 4 when mode and button state match, divide by 4 otherwise
-    if (is_lockeditor == button_pressed) {
-        diff >>= 2;  // divide by 4
-    } else {
-        diff <<= 2;  // multiply by 4
-    }
+    if (is_lockeditor) { diff = button_pressed ? diff / 4 : diff * 4; }
+    //else { diff = button_pressed ? diff * 4 : diff / 4; }
+
     pos_cur_y(-1 * diff);
   }
 
@@ -848,8 +846,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     if (mask == EVENT_BUTTON_PRESSED) {
       // cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
       int a = 16 * timing_mid;
-      pos_cur_x(((cur_x / a) * a + timing_mid * track) - cur_x);
-      pos_cur_x(((cur_x / a) * a + timing_mid * track) - cur_x);
+      int new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
+      pos_cur_x(new_x);
+      pos_cur_x(new_x);
       note_interface.last_note = track;
     }
     if (mask == EVENT_BUTTON_RELEASED) {
