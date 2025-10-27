@@ -85,7 +85,7 @@ void ExtSeqTrack::remove_event(uint16_t index) {
     // bucket empty
     return;
   }
-  for (step = 0; step < length && ev_idx <= index; ++step) {
+  for (step = 0; step < NUM_EXT_STEPS && ev_idx <= index; ++step) {
     bucket = event_buckets.get(step);
     ev_idx += bucket;
   }
@@ -369,7 +369,7 @@ uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
   ++ev_idx;
 
   do {
-    for (; ev_idx != ev_end; ++ev_idx) {
+    for (; ev_idx < ev_end; ++ev_idx) {
       auto &ev = events[ev_idx];
       if (ev.is_lock || ev.event_value != note_val || ev.event_on) {
         continue;
@@ -886,7 +886,7 @@ void ExtSeqTrack::clear_track_locks() {
 }
 
 void ExtSeqTrack::clear_track_locks(uint8_t idx) {
-  for (uint8_t n = 0; n < length; n++) {
+  for (uint8_t n = 0; n < NUM_EXT_STEPS; n++) {
     clear_track_locks_idx(n, idx, 255);
     locks_slide_data[n].init();
   }
