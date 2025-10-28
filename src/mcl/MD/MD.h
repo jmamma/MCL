@@ -194,7 +194,6 @@ public:
    * as the channel settings and the trigger track settings stored in
    * the global variable.
    **/
-  void sendNoteOn(uint8_t track, uint8_t pitch, uint8_t velocity);
   void parallelTrig(uint16_t mask, MidiUartClass *uart_ = nullptr);
   void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartClass *uart_ = nullptr);
   /**

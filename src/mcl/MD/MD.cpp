@@ -335,28 +335,18 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
 
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
                            MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
-
   if (global.drumMapping[track] != -1 && global.baseChannel != 127) {
-    uart_->sendNoteOn(global.baseChannel, global.drumMapping[track], velocity);
+    sendNoteOn(global.baseChannel, global.drumMapping[track], velocity, uart_);
   }
 }
 
 void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
                             MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t data[6] = {0x70, 0x3D, length, speed, step_count};
   sendRequest(data, sizeof(data), uart_);
 }
 
 void MDClass::parallelTrig(uint16_t mask, MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t a;
   uint8_t b;
   uint8_t c;
@@ -366,9 +356,9 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartClass *uart_) {
   c = mask >> 7 & 0xF7;
   b = mask & 0x7F;
 
-  uart_->sendNoteOn(global.baseChannel + 1, a, b);
+  sendNoteOn(global.baseChannel + 1, a, b, uart_);
   if (c > 0) {
-    uart_->sendNoteOn(global.baseChannel + 2, c, 0);
+    sendNoteOn(global.baseChannel + 2, c, 0, uart_);
   }
 }
 
@@ -398,9 +388,6 @@ void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value,
 void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
                                    MidiUartClass *uart_, bool update_kit) {
 
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
@@ -425,9 +412,9 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     return;
   }
   if (update_kit) {
-    uart_->sendCC(channel + global.baseChannel, cc, value);
+    sendCC(channel + global.baseChannel, cc, value, uart_);
   } else {
-    uart_->sendPolyKeyPressure(channel + global.baseChannel, cc, value);
+    sendPolyKeyPressure(channel + global.baseChannel, cc, value, uart_);
   }
 }
 
@@ -476,9 +463,6 @@ uint8_t MDClass::setCompressorParams(uint8_t *values, bool send) {
 void MDClass::setFXParam(uint8_t param, uint8_t value, uint8_t type,
                          bool update_kit, MidiUartClass *uart_) {
 
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t len = 4;
   if (update_kit) {
     switch (type) {
@@ -498,7 +482,7 @@ void MDClass::setFXParam(uint8_t param, uint8_t value, uint8_t type,
     len = 3;
   }
   uint8_t data[4] = {type, param, value, 0x7F};
-  sendRequest(data, len);
+  sendRequest(data, len, uart_);
 }
 
 void MDClass::setEchoParam(uint8_t param, uint8_t value) {
@@ -563,19 +547,6 @@ uint8_t MDClass::trackGetPitch(uint8_t track, uint8_t pitch) {
   }
 
   return pgm_read_byte(&tuning->tuning[pitch - base]);
-}
-
-void MDClass::sendNoteOn(uint8_t track, uint8_t pitch, uint8_t velocity) {
-  uint8_t realPitch = trackGetPitch(track, pitch);
-  if (realPitch == 128)
-    return;
-  setTrackParam(track, 0, realPitch);
-  //  setTrackParam(track, 0, realPitch);
-  //  delay(20);
-  triggerTrack(track, velocity);
-  //  delay(20);
-  //  setTrackParam(track, 0, realPitch - 10);
-  //  triggerTrack(track, velocity);
 }
 
 void MDClass::sliceTrack32(uint8_t track, uint8_t from, uint8_t to,
@@ -853,13 +824,10 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 void MDClass::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
   if (global.baseChannel == 127)
     return;
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 12 + b;
-  uart_->sendCC(channel + global.baseChannel, cc, (uint8_t)mute);
+  sendCC(channel + global.baseChannel, cc, (uint8_t)mute);
 }
 
 void MDClass::setGlobal(uint8_t id) {

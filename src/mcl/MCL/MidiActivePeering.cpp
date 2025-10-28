@@ -201,7 +201,9 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       for (uint8_t probe_retry = 0; probe_retry < 6 && !probe_success;
            ++probe_retry) {
         DEBUG_PRINTLN("probing...");
+        drivers[i]->in_probe = true;
         probe_success = drivers[i]->probe();
+        drivers[i]->in_probe = false;
       } // for retries
 
       MidiIDSysexListener.cleanup();

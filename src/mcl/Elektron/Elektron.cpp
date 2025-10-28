@@ -17,9 +17,11 @@ uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
 MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartClass *uart_) {
-   if (!send) {
+    if (!send) {
         return len + sysex_protocol.header_size + 2;
     }
+
+    if (!connected && !in_probe) { return 0; }
 
     uart_ = uart_ ? uart_ : uart;
 
@@ -39,6 +41,38 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, Midi
 
     return i;
 }
+
+void MidiDevice::sendNoteOff(uint8_t channel, uint8_t note, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendNoteOff(channel,note);
+}
+
+void MidiDevice::sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendNoteOn(channel,note,velocity);
+}
+
+void MidiDevice::sendCC(uint8_t channel, uint8_t cc, uint8_t value, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendCC(channel,cc,value);
+}
+
+void MidiDevice::sendPolyKeyPressure(uint8_t channel, uint8_t cc, uint8_t value, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendPolyKeyPressure(channel,cc,value);
+}
+
+void MidiDevice::sendNRPN(uint8_t channel, uint16_t parameter, uint16_t value, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendNRPN(channel,parameter,value);
+}
+
+
 /*
   if (uart_ == nullptr) { uart_ = uart; }
 
