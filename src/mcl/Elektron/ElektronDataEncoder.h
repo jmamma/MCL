@@ -74,6 +74,8 @@ public:
   virtual uint16_t finish();
 
   virtual void init(uint8_t *_sysex = nullptr, MidiUartClass *_uart = nullptr);
+  void flush8Bytes();
+
   DATA_ENCODER_RETURN_TYPE encode7Bit(uint8_t inb);
 
   virtual DATA_ENCODER_RETURN_TYPE pack8(uint8_t inb);
@@ -149,6 +151,7 @@ public:
 
   virtual void init(MidiClass *_midi, uint16_t _offset);
   virtual void init(uint8_t *_data);
+  uint8_t readByte();
   virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);
 };
 
