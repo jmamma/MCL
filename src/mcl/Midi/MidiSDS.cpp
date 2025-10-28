@@ -227,32 +227,6 @@ void MidiSDSClass::sendDumpRequest(uint16_t slot) {
   data[5] = (sampleNumber >> 7) & 0x7F;
   MidiUart.sendRaw(data, 7);
 }
-
-void MidiSDSClass::sendDumpHeader() {
-  uint8_t data[21] = {0xF0, 0x7E, 0x00, 0x1,  0x00, 0x00, 0x00,
-                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF7};
-
-  data[2] = deviceID;
-  data[4] = sampleNumber & 0x7F;
-  data[5] = sampleNumber >> 7;
-  data[6] = sampleFormat;
-
-  uint32_t vals[4] = {samplePeriod, sampleLength, loopStart, loopEnd};
-  uint8_t idx = 7;
-
-  for (uint8_t i = 0; i < 4; ++i) {
-    uint32_t v = vals[i];
-    data[idx++] = v & 0x7F;
-    data[idx++] = (v >> 7) & 0x7F;
-    data[idx++] = (v >> 14) & 0x7F;
-  }
-
-  data[19] = loopType;
-
-  MidiUart.sendRaw(data, 21);
-}
-
 bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
   if (len > 120)
     return false;

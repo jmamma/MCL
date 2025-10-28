@@ -30,12 +30,12 @@ public:
   bool use_hand_shake = true;
   bool hand_shake_state;
   uint8_t state = SDS_READY;
-  
+
   // Cached calculations
   uint8_t midiBytes_per_word;
   uint8_t bytes_per_word;
   int32_t sample_offset;
-  
+
   MidiSDSClass() {
     deviceID = 0x00;
     packetNumber = 0;
@@ -49,21 +49,22 @@ public:
     state = SDS_READY;
     hand_shake_state = false;
   }
-  
+
   void setSampleRate(uint32_t hz) { samplePeriod = (uint32_t)1000000000 / hz; }
-  
+
   uint8_t waitForMsg(uint16_t timeout = 2000);
   uint8_t waitForHandshake();
-  
+
   // Public interface methods
   bool sendSyx(const char *filename, uint16_t sample_number);
-  bool sendWav(const char *filename, const char *samplename, uint16_t sample_number, bool show_progress = false);
+  bool sendWav(const char *filename, const char *samplename,
+               uint16_t sample_number, bool show_progress = false);
   bool recvWav(const char *filename, uint16_t sample_number);
-  
+
   void incPacketNumber();
   void cancel();
   void dump_header();
-  
+
   // MIDI message methods
   void sendAckMessage();
   void sendNakMessage();
@@ -72,23 +73,21 @@ public:
   void sendEOFMessage();
   void sendGeneralMessage(uint8_t type);
   void sendDumpRequest(uint16_t slot);
-  void sendDumpHeader();
   bool sendData(uint8_t *buf, uint8_t len);
 
 private:
   // Consolidated send method (used by sendSyx and sendWav)
-  bool sendFile(SDSFileReader& reader, const char* filename, 
-                uint16_t sample_number, const char* samplename,
+  bool sendFile(SDSFileReader &reader, const char *filename,
+                uint16_t sample_number, const char *samplename,
                 bool show_progress);
 };
-
 // Abstract base class for file readers
 struct SDSFileReader {
   virtual ~SDSFileReader() {}
-  virtual bool open(const char* filename) = 0;
+  virtual bool open(const char *filename) = 0;
   virtual void close() = 0;
   virtual uint32_t size() = 0;
-  virtual int readPacket(uint8_t* buf, size_t bufsize) = 0;
+  virtual int readPacket(uint8_t *buf, size_t bufsize) = 0;
   virtual bool hasMorePackets() = 0;
   virtual uint32_t position() = 0;
 };
