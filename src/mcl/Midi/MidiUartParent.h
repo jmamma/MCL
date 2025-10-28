@@ -70,7 +70,7 @@ public:
     }
     if (activeSenseEnabled) {
       if (sendActiveSenseTimer == 0) {
-        m_putc(MIDI_ACTIVE_SENSE);
+        m_putc_realtime(MIDI_ACTIVE_SENSE);
         sendActiveSenseTimer = sendActiveSenseTimeout;
       } else {
         sendActiveSenseTimer--;
