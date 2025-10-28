@@ -488,26 +488,21 @@ void MidiSDSClass::sendDumpHeader() {
   uint8_t data[21] = {0xF0, 0x7E, 0x00, 0x1,  0x00, 0x00, 0x00,
                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF7};
-  data[2] = deviceID;
-  data[4] = (sampleNumber & 0x7F);
-  data[5] = (sampleNumber >> 7) & 0x7F;
-  data[6] = sampleFormat;
 
-  data[7] = (samplePeriod)&0x7F;
-  data[8] = (samplePeriod >> 7) & 0x7F;
-  data[9] = (samplePeriod >> 14) & 0x7F;
+  data[2]  = deviceID;
+  data[4]  = sampleNumber & 0x7F;
+  data[5]  = sampleNumber >> 7;
+  data[6]  = sampleFormat;
 
-  data[10] = (sampleLength)&0x7F;
-  data[11] = (sampleLength >> 7) & 0x7F;
-  data[12] = (sampleLength >> 14) & 0x7F;
+  uint32_t vals[4] = {samplePeriod, sampleLength, loopStart, loopEnd};
+  uint8_t  idx = 7;
 
-  data[13] = (loopStart)&0x7F;
-  data[14] = (loopStart >> 7) & 0x7F;
-  data[15] = (loopStart >> 14) & 0x7F;
-
-  data[16] = (loopEnd)&0x7F;
-  data[17] = (loopEnd >> 7) & 0x7F;
-  data[18] = (loopEnd >> 14) & 0x7F;
+  for (uint8_t i = 0; i < 4; ++i) {
+    uint32_t v = vals[i];
+    data[idx++] = v & 0x7F;
+    data[idx++] = (v >> 7) & 0x7F;
+    data[idx++] = (v >> 14) & 0x7F;
+  }
 
   data[19] = loopType;
 
