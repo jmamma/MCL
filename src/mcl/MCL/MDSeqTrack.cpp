@@ -591,24 +591,16 @@ void MDSeqTrack::reset_params() {
     //notes.prog = MD.kit.params[track_number][20];
     //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_notes_ccs(ccs, send_ccs);
-  } else {
+  }
+#if defined(__AVR__)
+  else {
+    //Ugly hack, removing this section of code causes the avr compiler to bloat
+    if (track_number < 255) { return; }
     MDTrack md_track;
     md_track.get_machine_from_kit(track_number);
     MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
   }
-
-  /*
-  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    bool send = false;
-    uint8_t send_param;
-    if (locks_params[c]) {
-      uint8_t p = locks_params[c] - 1;
-      uint8_t send_param = MD.kit.params[track_number][p];
-      bool update_kit = false;
-      MD.setTrackParam_inline(track_number, p, send_param, uart, update_kit);
-    }
-  }
-*/
+#endif
 }
 
 void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
