@@ -49,7 +49,7 @@ RingBuffer<uint8_t> seq_tx4_rb(*seq_tx4_buf, TX_SEQBUF_SIZE);
 // UART ring buffers
 RingBuffer<uint8_t> uart1_rx_rb(*uart1_rx_buf, UART1_RX_BUFFER_LEN);
 RingBuffer<uint8_t> uart1_tx_rb(*uart1_tx_buf, UART1_TX_BUFFER_LEN);
-RingBuffer<uint8_t> uart1_rt_rb(*uart1_tx_buf, UART1_RT_BUFFER_LEN);
+RingBuffer<uint8_t> uart1_rt_rb(*uart1_rt_buf, UART1_RT_BUFFER_LEN);
 RingBuffer<uint8_t> uart1_sysex_rb(*uart1_sysex_buf, SYSEX1_DATA_LEN);
 
 RingBuffer<uint8_t> uart2_rx_rb(*uart2_rx_buf, UART2_RX_BUFFER_LEN);
