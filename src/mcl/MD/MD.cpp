@@ -343,7 +343,7 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
 void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
                             MidiUartClass *uart_) {
   uint8_t data[6] = {0x70, 0x3D, length, speed, step_count};
-  sendRequest(data, sizeof(data), uart_);
+  sendRequest(data, sizeof(data), true, uart_);
 }
 
 void MDClass::parallelTrig(uint16_t mask, MidiUartClass *uart_) {
@@ -482,7 +482,7 @@ void MDClass::setFXParam(uint8_t param, uint8_t value, uint8_t type,
     len = 3;
   }
   uint8_t data[4] = {type, param, value, 0x7F};
-  sendRequest(data, len, uart_);
+  sendRequest(data, len, true, uart_);
 }
 
 void MDClass::setEchoParam(uint8_t param, uint8_t value) {
@@ -749,7 +749,7 @@ void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_) {
   uint8_t b = (track_mask >> 7) & 0x7F;
   uint8_t c = (track_mask >> 14) & 0x7F;
   uint8_t data[5] = {0x70, 0x62, a, b, c};
-  sendRequest(data, countof(data), uart_);
+  sendRequest(data, countof(data), true, uart_);
 }
 
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
