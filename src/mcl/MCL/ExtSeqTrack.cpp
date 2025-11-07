@@ -10,14 +10,10 @@ void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
     old_speed = speed;
   }
   if (timing_adjust) {
-    // Use integer multipliers based on a scale of 12
     uint16_t new_mult = get_speed_multiplier_int(new_speed);
     uint16_t old_mult = get_speed_multiplier_int(old_speed);
 
     for (uint16_t i = 0; i < event_count; i++) {
-      // Original formula: timing = round(timing * (new_mult_float / old_mult_float))
-      // Integer formula:  timing = (timing * new_mult_int) / old_mult_int
-
       // 1. Calculate numerator using 32-bit to prevent any potential overflow
       // before division (e.g., if timing is 255 and new_mult is 96, result is 24480,
       // which fits in uint16_t, but uint32_t is safer if timing is larger).
@@ -1216,12 +1212,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
           uint16_t search_idx = i;
           uint16_t search_end = step_end;
           uint8_t note_off_step = search_note_off(ev.event_value, step, search_idx, search_end, length);
-          // If note-off is beyond new length or not found, add one at the end
-          if (note_off_step >= length && search_idx != 0xFFFF) {
-            ext_event_t note_off_event = events[search_idx];
-            uint8_t wrapped_step = note_off_step % length;
-            add_event(wrapped_step, &note_off_event);
-          } else if (search_idx == 0xFFFF) {
+          if (note_off_step >= length) {
             // No note-off found, add one at track end
             ext_event_t note_off_event;
             note_off_event.is_lock = false;
@@ -1242,8 +1233,10 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     }
   }
 
-  event_count = step_idx;
-  ev_end = step_idx;
+  uint16_t dummy;
+  locate(length - 1, dummy, ev_end);
+
+  event_count = ev_end;
 
   switch (dir) {
   case DIR_LEFT:
