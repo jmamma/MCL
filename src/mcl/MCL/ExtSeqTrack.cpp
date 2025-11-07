@@ -474,16 +474,14 @@ void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
   DEBUG_DUMP(start_utiming);
 
   uint8_t end_step = ((cur_x + cur_w) / timing_mid);
-again:
-  uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
   DEBUG_DUMP(end_step);
-  DEBUG_DUMP(end_utiming);
 
   if (end_step == step) {
     DEBUG_PRINTLN(F("ALERT start == end"));
     end_step = end_step + 1;
-    goto again;
   }
+  uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
+  DEBUG_DUMP(end_utiming);
 
   if (end_step >= length) {
     end_step = end_step - length;
@@ -1005,7 +1003,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
   return false;
 }
 
-bool ExtSeqTrack::set_track_step(uint8_t &step, uint8_t utiming,
+bool ExtSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
                                  uint8_t note_num, uint8_t event_on,
                                  uint8_t velocity, uint8_t cond) {
   ext_event_t e;
@@ -1196,48 +1194,43 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   buffer_notesoff();
 
   uint8_t timing_mid = get_timing_mid();
+  uint16_t step_idx = 0, ev_end = 0;
 
-  uint16_t step_idx = 0, ev_end;
+  // Collect orphaned notes first (don't modify events yet)
+  uint8_t orphaned_notes[16]; // Max possible orphaned notes
+  uint8_t orphaned_count = 0;
 
   // Check for orphaned notes and clear events beyond length
   for (uint8_t step = 0; step < NUM_EXT_STEPS; step++) {
-    uint8_t bucket = event_buckets.get(step);
-    uint16_t step_end = step_idx + bucket;
     if (step < length) {
+      step_idx = ev_end;
+      ev_end += event_buckets.get(step);
       // Check each note-on in this step
-      for (uint16_t i = step_idx; i < step_end; i++) {
+      for (uint16_t i = step_idx; i < ev_end; i++) {
         auto &ev = events[i];
         if (!ev.is_lock && ev.event_on) {
           // Found a note-on, search for its note-off
           uint16_t search_idx = i;
-          uint16_t search_end = step_end;
-          uint8_t note_off_step = search_note_off(ev.event_value, step, search_idx, search_end, length);
-          if (note_off_step >= length) {
-            // No note-off found, add one at track end
-            ext_event_t note_off_event;
-            note_off_event.is_lock = false;
-            note_off_event.cond_id = 0;
-            note_off_event.event_value = ev.event_value;
-            note_off_event.event_on = false;
-            note_off_event.micro_timing = timing_mid - 1;
-            add_event(length - 1, &note_off_event);
+          uint16_t step_end = ev_end;
+          uint8_t note_off_step = search_note_off(ev.event_value, step,
+                                                  search_idx, step_end, NUM_EXT_STEPS);
+          if (note_off_step >= length && orphaned_count < 16) {
+            orphaned_notes[orphaned_count++] = ev.event_value;
           }
         }
       }
-      step_idx = step_end;
     } else {
-      event_buckets.set(step, 0);
-      CLEAR_BIT128_P(oneshot_mask, step);
-      CLEAR_BIT128_P(mute_mask, step);
-      velocities[step] = 0;
+      clear_step(step);
     }
   }
+  // Now add all the missing note-offs
 
-  uint16_t dummy;
-  locate(length - 1, dummy, ev_end);
-
-  event_count = ev_end;
-
+  //event_count = ev_end;
+  for (uint8_t i = 0; i < orphaned_count; i++) {
+    set_track_step(length - 1, (timing_mid * 2) - 1, orphaned_notes[i], false, 0, 0);
+  }
+  ev_end = event_count;
+  //locate(length - 1, step_idx, ev_end);
   switch (dir) {
   case DIR_LEFT:
     n_cur = event_buckets.get(0);

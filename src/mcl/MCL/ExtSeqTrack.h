@@ -161,7 +161,7 @@ public:
   void record_track_noteon(uint8_t note_num, uint8_t velocity);
   void record_track_noteoff(uint8_t note_num);
 
-  bool set_track_step(uint8_t &step, uint8_t utiming, uint8_t note_num,
+  bool set_track_step(uint8_t step, uint8_t utiming, uint8_t note_num,
                       uint8_t event_on, uint8_t velocity, uint8_t cond);
   void clear_step(uint8_t step);
 
