@@ -73,7 +73,7 @@ void PerfEncoder::scene_autofill() {
 }
 
 void PerfEncoder::clear_scenes() {
-  oled_display.textbox_P(mclstr_clear_scenes_word);
+  oled_display.textbox_P(mclstr_clear_word, mclstr_scenes);
   perf_data.clear_scene(active_scene_a);
   perf_data.clear_scene(active_scene_b);
 }

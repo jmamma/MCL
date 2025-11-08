@@ -5,6 +5,7 @@
 #include "MCLClipBoard.h"
 #include "MCLSeq.h"
 #include "SeqPages.h"
+#include "MCLStrings.h"
 
 #define LEARN_MIN 1
 #define LEARN_MAX 2
@@ -504,9 +505,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       if (t < NUM_SCENES) {
         switch (key) {
         case MDX_KEY_COPY: {
-          char str[] = "COPY SCENE";
-          oled_display.textbox(str, "");
-          MD.popup_text(str);
+          oled_display.textbox_P(mclstr_copy_word, mclstr_scene_word);
           mcl_clipboard.copy_scene(
               &perf_encoders[perf_id]->perf_data.scenes[t]);
           undo = 255;
@@ -518,22 +517,17 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           }
           if (mcl_clipboard.paste_scene(
                   &perf_encoders[perf_id]->perf_data.scenes[t])) {
-            char str[] = "PASTE SCENE";
-            oled_display.textbox(str, "");
-            MD.popup_text(str);
+            oled_display.textbox_P(mclstr_paste_word, mclstr_scene_word);
             config_encoders();
             send_locks(t);
           }
           return true;
         }
         case MDX_KEY_CLEAR: {
-          char str[] = "CLEAR SCENE";
           if (t == undo) {
             if (mcl_clipboard.paste_scene(
                     &perf_encoders[perf_id]->perf_data.scenes[undo])) {
-              char str[] = "UNDO CLEAR";
-              oled_display.textbox(str, "");
-              MD.popup_text(str);
+              oled_display.textbox_P(mclstr_undo_word, mclstr_clear_word);
               undo = 255;
               goto end_clear;
             }
@@ -544,8 +538,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
             mcl_clipboard.copy_scene(
                 &perf_encoders[perf_id]->perf_data.scenes[t]);
           }
-          oled_display.textbox(str, "");
-          MD.popup_text(str);
+          oled_display.textbox_P(mclstr_clear_word, mclstr_scene_word);
           perf_encoders[perf_id]->perf_data.clear_scene(t);
         end_clear:
           config_encoders();

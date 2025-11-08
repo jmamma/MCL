@@ -4,6 +4,7 @@
 #include "MD.h"
 #include "Project.h"
 #include "ResourceManager.h"
+#include "MCLStrings.h"
 
 uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
@@ -29,11 +30,13 @@ void GridIOPage::init() {
   R.use_icons_logo();
 }
 
-void GridIOPage::show_group_select_ui(char *title) {
+void GridIOPage::show_group_select_ui(const char *title_P) {
   show_track_type = true;
-  MD.popup_text(title, true);
+  MD.popup_text_P(title_P, true);
   mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
-  mcl_gui.draw_popup_title(title);
+  char str[16];
+  mclstr_copy_progmem(str, title_P, sizeof(str));
+  mcl_gui.draw_popup_title(str);
 }
 
 void GridIOPage::track_select_array_from_type_select(

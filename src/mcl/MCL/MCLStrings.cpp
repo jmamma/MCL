@@ -46,48 +46,35 @@ MCLSTR_DEFINE(hw_error, "HW ERROR:");
 MCLSTR_DEFINE(wrong_len, "WRONG LEN");
 MCLSTR_DEFINE(wrong_checksum, "WRONG CHECKSUM");
 
+// Action verbs (for building two-part messages)
+MCLSTR_DEFINE(clear_word, "CLEAR");
+MCLSTR_DEFINE(copy_word, "COPY");
+MCLSTR_DEFINE(paste_word, "PASTE");
+MCLSTR_DEFINE(undo_word, "UNDO");
+MCLSTR_DEFINE(save_word, "SAVE");
+MCLSTR_DEFINE(load_word, "LOAD");
+MCLSTR_DEFINE(fill_word, "FILL");
+
+// Device prefixes
+MCLSTR_DEFINE(md_prefix, "MD");
+MCLSTR_DEFINE(ext_prefix, "EXT");
+
+// Common object words (also declared in Line 2 section)
+MCLSTR_DEFINE(step_word, "STEP");
+MCLSTR_DEFINE(scene_word, "SCENE");
+MCLSTR_DEFINE(poly_word, "POLY");
+
 // Track operations - Clear
 MCLSTR_DEFINE(clear_md, "CLEAR MD ");
 MCLSTR_DEFINE(clear_ext, "CLEAR EXT ");
-MCLSTR_DEFINE(clear, "CLEAR ");
-MCLSTR_DEFINE(clear_page, "CLEAR PAGE");
-MCLSTR_DEFINE(clear_track_word, "CLEAR TRACK");
-MCLSTR_DEFINE(clear_scenes, "CLEAR SCENES");
-MCLSTR_DEFINE(fill_scenes, "FILL SCENES");
 
 // Track operations - Copy
 MCLSTR_DEFINE(copy_md, "COPY MD ");
 MCLSTR_DEFINE(copy_ext, "COPY EXT ");
-MCLSTR_DEFINE(copy, "COPY ");
-MCLSTR_DEFINE(copy_page, "COPY PAGE");
-MCLSTR_DEFINE(copy_track, "COPY TRACK");
 
 // Track operations - Paste/Undo
 MCLSTR_DEFINE(paste_md, "PASTE MD ");
-MCLSTR_DEFINE(paste_ext, "PASTE EXT ");
-MCLSTR_DEFINE(paste, "PASTE");
-MCLSTR_DEFINE(paste_page, "PASTE PAGE");
-MCLSTR_DEFINE(paste_track, "PASTE TRACK");
-MCLSTR_DEFINE(undo, "UNDO");
-MCLSTR_DEFINE(undo_track, "UNDO TRACK");
-MCLSTR_DEFINE(undo_page, "UNDO PAGE");
-MCLSTR_DEFINE(paste_md_tracks, "PASTE MD ");
-MCLSTR_DEFINE(paste_ext_tracks, "PASTE EXT TRACKS");
-MCLSTR_DEFINE(undo_tracks, "UNDO ");
-MCLSTR_DEFINE(undo_ext_tracks, "UNDO EXT TRACKS");
-MCLSTR_DEFINE(paste_ext_track, "PASTE EXT TRACK");
-MCLSTR_DEFINE(undo_ext_track, "UNDO EXT TRACK");
-MCLSTR_DEFINE(copy_step, "COPY STEP");
-MCLSTR_DEFINE(undo_step, "UNDO STEP");
-MCLSTR_DEFINE(paste_step, "PASTE STEP");
 MCLSTR_DEFINE(transpose, "TRANSPOSE");
-MCLSTR_DEFINE(clear_track, "CLEAR TRACK");
-MCLSTR_DEFINE(clear_poly_tracks, "CLEAR POLY TRACKS");
-MCLSTR_DEFINE(clear_step, "CLEAR STEP: ");
-MCLSTR_DEFINE(clear_step_word, "CLEAR STEP");
-MCLSTR_DEFINE(clear_scenes_word, "CLEAR SCENES");
-MCLSTR_DEFINE(clear_ext_tracks, "CLEAR EXT TRACKS");
-MCLSTR_DEFINE(clear_ext_track, "CLEAR EXT TRACK");
 
 // Grid operations
 MCLSTR_DEFINE(slot, "SLOT ");
@@ -123,6 +110,9 @@ MCLSTR_DEFINE(locks, "LOCKS");
 MCLSTR_DEFINE(lock, "LOCK");
 MCLSTR_DEFINE(slots, "SLOTS");
 MCLSTR_DEFINE(slot_word, "SLOT");
+MCLSTR_DEFINE(scenes, "SCENES");
+MCLSTR_DEFINE(ext_track, "EXT TRACK");
+MCLSTR_DEFINE(ext_tracks, "EXT TRACKS");
 MCLSTR_DEFINE(link, "LINK");
 MCLSTR_DEFINE(update, "UPDATE");
 MCLSTR_DEFINE(full, "FULL");

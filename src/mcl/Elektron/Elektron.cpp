@@ -296,6 +296,31 @@ void ElektronDevice::popup_text_P(const char *str_P, uint8_t persistent) {
   // waitBlocking();
 }
 
+void ElektronDevice::popup_text_P(const char *str1_P, const char *str2_P, uint8_t persistent) {
+  uint8_t data[67] = {0x70, 0x3B, persistent};
+  uint8_t pos = 3;
+
+  // Copy first string
+  char c;
+  while (pos < 66 && (c = pgm_read_byte(str1_P++)) != '\0') {
+    data[pos++] = c;
+  }
+
+  // Add space
+  if (pos < 66) {
+    data[pos++] = ' ';
+  }
+
+  // Copy second string
+  while (pos < 66 && (c = pgm_read_byte(str2_P++)) != '\0') {
+    data[pos++] = c;
+  }
+
+  data[pos] = '\0';
+  sendRequest(data, pos + 1);
+  // waitBlocking();
+}
+
 void ElektronDevice::draw_bank(uint8_t bank) {
   uint8_t data[5] = {0x70, 0x3C, 0x22, bank};
   sendRequest(data, 5);

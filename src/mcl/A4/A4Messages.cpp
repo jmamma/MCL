@@ -1,6 +1,8 @@
 #include "A4.h"
 #include "A4Messages.h"
 #include "MCLGUI.h"
+#include "MCLStrings.h"
+#include "Oled.h"
 
 uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
   encoder.stop7Bit();
@@ -73,12 +75,12 @@ bool A4Sound::fromSysex(MidiClass *midi) {
   // len / offset: checksum'ed part
   uint16_t len = reclen - a4sound_checksum_startidx;
   if (reclen != a4sound_sysex_len) {
-    mcl_gui.draw_textbox_P(mclstr_wrong_len);
+    oled_display.textbox_P(mclstr_wrong_len);
     return false;
   }
 
   if (!ElektronHelper::checkSysexChecksumAnalog(midi, a4sound_checksum_startidx, len)) {
-    mcl_gui.draw_textbox_P(mclstr_wrong_checksum);
+    oled_display.textbox_P(mclstr_wrong_checksum);
     return false;
   }
 

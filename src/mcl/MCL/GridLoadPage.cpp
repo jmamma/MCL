@@ -108,7 +108,7 @@ void GridLoadPage::get_modestr(char *modestr) {
 }
 
 void GridLoadPage::group_select() {
-  show_group_select_ui("LOAD GROUPS");
+  show_group_select_ui(mclstr_load_groups);
 }
 
 void GridLoadPage::display() {

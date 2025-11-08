@@ -635,20 +635,20 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           switch (last_rec_event) {
           case REC_EVENT_TRIG:
             if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox(mclstr_clear, mclstr_tracks);
+              oled_display.textbox(mclstr_clear_word, mclstr_tracks);
               for (uint8_t n = 0; n < 16; ++n) {
                 mcl_seq.md_tracks[n].clear_track();
               }
             } else {
-              oled_display.textbox(mclstr_clear, mclstr_track);
+              oled_display.textbox(mclstr_clear_word, mclstr_track);
               mcl_seq.md_tracks[last_step].clear_track();
             }
             break;
           case REC_EVENT_CC:
-            oled_display.textbox(mclstr_clear, mclstr_lock);
+            oled_display.textbox(mclstr_clear_word, mclstr_lock);
             active_track.clear_param_locks(last_param_id);
             if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox(mclstr_clear, mclstr_locks);
+              oled_display.textbox(mclstr_clear_word, mclstr_locks);
               for (uint8_t c = 0; c < NUM_LOCKS; c++) {
                 if (active_track.locks_params[c] > 0) {
                   active_track.clear_param_locks(active_track.locks_params[c] -

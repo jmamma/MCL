@@ -11,7 +11,7 @@
 // Consolidated display function to reduce code duplication
 static void show_message(const char* line1) {
   oled_display.clearDisplay();
-  oled_display.textbox(line1);
+  oled_display.textbox_P(line1);
   oled_display.display();
 }
 

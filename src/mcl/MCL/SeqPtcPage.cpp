@@ -491,9 +491,10 @@ void SeqPtcPage::recalc_notemask() {
 
 void SeqPtcPage::draw_popup_transpose() {
   char str[] = "KEY:   ";
+  char empty[] = "";
   strcpy(str + 5, number_to_note.notes_upper[transpose]);
   MD.popup_text(str);
-  oled_display.textbox(str);
+  oled_display.textbox(str, empty);
 }
 
 void SeqPtcPage::draw_popup_octave() {

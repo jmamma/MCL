@@ -368,6 +368,7 @@ public:
   void popup_text(uint8_t action_string, uint8_t persistent = 0);
   void popup_text(char *str, uint8_t persistent = 0);
   void popup_text_P(const char *str_P, uint8_t persistent = 0);
+  void popup_text_P(const char *str1_P, const char *str2_P, uint8_t persistent = 0);
 
   void draw_bank(uint8_t bank);
   void draw_close_bank();

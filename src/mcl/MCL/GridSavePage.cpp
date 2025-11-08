@@ -17,8 +17,7 @@ void GridSavePage::init() {
   key_interface.send_md_leds(TRIGLED_OVERLAY);
   key_interface.on();
   grid_page.reload_slot_models = false;
-  char str[] = "SAVE SLOTS";
-  MD.popup_text(str, true);
+  MD.popup_text_P(mclstr_save_slots, true);
   draw_popup();
 }
 
@@ -81,7 +80,7 @@ void GridSavePage::display() {
 }
 
 void GridSavePage::save() {
-  oled_display.textbox_P(mclstr_save_tracks);
+  oled_display.textbox_P(mclstr_save_word, mclstr_tracks);
   oled_display.display();
 
   uint8_t save_mode = SAVE_SEQ;
@@ -104,7 +103,7 @@ void GridSavePage::save() {
 }
 
 void GridSavePage::group_select() {
-  show_group_select_ui("SAVE GROUPS");
+  show_group_select_ui(mclstr_save_groups);
 }
 
 bool GridSavePage::handleEvent(gui_event_t *event) {
@@ -150,7 +149,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
       track_select_array_from_type_select(track_select_array);
 
-      oled_display.textbox_P(mclstr_save_groups);
+      oled_display.textbox_P(mclstr_save_word, mclstr_groups);
       //oled_display.display();
 
       uint8_t save_mode = SAVE_SEQ;

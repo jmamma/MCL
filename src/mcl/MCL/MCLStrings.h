@@ -63,52 +63,41 @@ MCLSTR_DECLARE(wrong_checksum);
 // Record
 MCLSTR_DECLARE(rec);
 
+// Action verbs (for building two-part messages)
+MCLSTR_DECLARE(clear_word);
+MCLSTR_DECLARE(copy_word);
+MCLSTR_DECLARE(paste_word);
+MCLSTR_DECLARE(undo_word);
+MCLSTR_DECLARE(save_word);
+MCLSTR_DECLARE(load_word);
+MCLSTR_DECLARE(fill_word);
+
+// Device prefixes
+MCLSTR_DECLARE(md_prefix);
+MCLSTR_DECLARE(ext_prefix);
+
+// Common object words (also declared in Line 2 section)
+MCLSTR_DECLARE(step_word);
+MCLSTR_DECLARE(scene_word);
+MCLSTR_DECLARE(poly_word);
+
 // Track operations - Clear
 MCLSTR_DECLARE(clear_md);
 MCLSTR_DECLARE(clear_ext);
-MCLSTR_DECLARE(clear);
-MCLSTR_DECLARE(clear_page);
-MCLSTR_DECLARE(clear_track);
-MCLSTR_DECLARE(clear_scenes);
-MCLSTR_DECLARE(fill_scenes);
 
 // Track operations - Copy
 MCLSTR_DECLARE(copy_md);
 MCLSTR_DECLARE(copy_ext);
-MCLSTR_DECLARE(copy);
-MCLSTR_DECLARE(copy_page);
-MCLSTR_DECLARE(copy_track);
 
 // Track operations - Paste/Undo
 MCLSTR_DECLARE(paste_md);
-MCLSTR_DECLARE(paste_ext);
-MCLSTR_DECLARE(paste);
-MCLSTR_DECLARE(paste_page);
-MCLSTR_DECLARE(paste_track);
-MCLSTR_DECLARE(undo);
-MCLSTR_DECLARE(undo_track);
-MCLSTR_DECLARE(undo_page);
-MCLSTR_DECLARE(paste_md_tracks);
-MCLSTR_DECLARE(paste_ext_tracks);
-MCLSTR_DECLARE(undo_tracks);
-MCLSTR_DECLARE(undo_ext_tracks);
-MCLSTR_DECLARE(paste_ext_track);
-MCLSTR_DECLARE(undo_ext_track);
-MCLSTR_DECLARE(copy_step);
-MCLSTR_DECLARE(undo_step);
-MCLSTR_DECLARE(paste_step);
 MCLSTR_DECLARE(transpose);
-MCLSTR_DECLARE(clear_poly_tracks);
-MCLSTR_DECLARE(clear_step);
-MCLSTR_DECLARE(clear_step_word);
-MCLSTR_DECLARE(clear_scenes_word);
-MCLSTR_DECLARE(clear_ext_tracks);
-MCLSTR_DECLARE(clear_ext_track);
 
 // Grid operations
 MCLSTR_DECLARE(slot);
 MCLSTR_DECLARE(dice);
 MCLSTR_DECLARE(slice);
+MCLSTR_DECLARE(save_slots);
 
 // Save/Load operations
 MCLSTR_DECLARE(save_tracks);
@@ -138,6 +127,9 @@ MCLSTR_DECLARE(locks);
 MCLSTR_DECLARE(lock);
 MCLSTR_DECLARE(slots);
 MCLSTR_DECLARE(slot_word);
+MCLSTR_DECLARE(scenes);
+MCLSTR_DECLARE(ext_track);
+MCLSTR_DECLARE(ext_tracks);
 MCLSTR_DECLARE(link);
 MCLSTR_DECLARE(update);
 MCLSTR_DECLARE(full);

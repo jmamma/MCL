@@ -742,17 +742,17 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       slot_undo_x = _col;
       slot_undo_y = getRow();
       if (width > 0) {
-        oled_display.textbox_P(mclstr_clear, mclstr_slots);
+        oled_display.textbox_P(mclstr_clear_word, mclstr_slots);
       } else {
-        oled_display.textbox_P(mclstr_clear, mclstr_slot_word);
+        oled_display.textbox_P(mclstr_clear_word, mclstr_slot_word);
       }
       slot_undo = 1;
     } else {
       slot_undo = 0;
       if (width > 0) {
-        oled_display.textbox_P(mclstr_copy, mclstr_slots);
+        oled_display.textbox_P(mclstr_copy_word, mclstr_slots);
       } else {
-        oled_display.textbox_P(mclstr_copy, mclstr_slot_word);
+        oled_display.textbox_P(mclstr_copy_word, mclstr_slot_word);
       }
     }
     mcl_clipboard.copy(_col + 16 * proj.get_grid(), getRow(), width, height);
@@ -770,9 +770,9 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   else if (slot_paste == 1) {
     if (undo) {
-      oled_display.textbox_P(mclstr_undo);
+      oled_display.textbox_P(mclstr_undo_word);
     } else {
-      oled_display.textbox_P(mclstr_paste);
+      oled_display.textbox_P(mclstr_paste_word);
     }
     slot_undo = 0;
     mcl_clipboard.paste(_col + 16 * proj.get_grid(), getRow());
