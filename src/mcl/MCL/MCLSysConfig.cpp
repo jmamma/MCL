@@ -6,24 +6,25 @@
 #include "MCLSd.h"
 #include "hardware.h"
 #include "platform.h"
+#include "MCLStrings.h"
 
 // Consolidated display function to reduce code duplication
 static void show_message(const char* line1) {
   oled_display.clearDisplay();
-  oled_display.textbox(line1, "");
+  oled_display.textbox(line1);
   oled_display.display();
 }
 
 // Common wait routine
 static inline void usb_wait() {
-  show_message("PLEASE WAIT");
+  show_message(mclstr_please_wait);
   delay(4000);
 }
 
 // Simplified megacmd check
 static inline bool megacmd_check() {
   if (!IS_MEGACMD()) {
-    show_message("MODE N/A");
+    show_message(mclstr_mode_na);
     return false;
   }
   return true;

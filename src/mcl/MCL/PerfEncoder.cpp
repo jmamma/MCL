@@ -3,6 +3,7 @@
 #include "MD.h"
 #include "PerfData.h"
 #include "MidiUart.h"
+#include "MCLStrings.h"
 
 #define DIV_1_127 (1.00f / 127.0f)
 
@@ -72,7 +73,7 @@ void PerfEncoder::scene_autofill() {
 }
 
 void PerfEncoder::clear_scenes() {
-  oled_display.textbox("CLEAR SCENES", "");
+  oled_display.textbox_P(mclstr_clear_scenes_word);
   perf_data.clear_scene(active_scene_a);
   perf_data.clear_scene(active_scene_b);
 }

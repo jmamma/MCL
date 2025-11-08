@@ -8,6 +8,7 @@
 #include "MD.h"
 #include "MidiClock.h"
 #include "Project.h"
+#include "MCLStrings.h"
 
 void GridLoadPage::init() {
   GridIOPage::init();
@@ -28,17 +29,17 @@ void GridLoadPage::setup() {}
 void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
   switch (mode) {
   case LOAD_MANUAL: {
-    strcpy_P(str, PSTR("MANUAL"));
+    strcpy_P(str, mclstr_manual);
     break;
   }
 
   case LOAD_QUEUE: {
-    strcpy_P(str, PSTR("QUEUE"));
+    strcpy_P(str, mclstr_queue);
     break;
   }
 
   case LOAD_AUTO: {
-    strcpy_P(str, PSTR("AUTO"));
+    strcpy_P(str, mclstr_auto);
     break;
   }
   }
@@ -51,7 +52,7 @@ void GridLoadPage::md_popup_title(uint8_t mode, bool persistent) {
 
 void GridLoadPage::draw_popup() {
   char str[16];
-  strcpy_P(str, PSTR("LOAD TRACKS"));
+  mclstr_copy_progmem(str, mclstr_load_tracks, sizeof(str));
     // str[10] = 'X' + proj.get_grid();
   mcl_gui.draw_popup(str, true);
 }
@@ -90,17 +91,17 @@ void GridLoadPage::loop() {
 void GridLoadPage::get_modestr(char *modestr) {
   switch (encoders[0]->cur) {
   case LOAD_MANUAL: {
-    strcpy_P(modestr, PSTR("MAN"));
+    strcpy_P(modestr, mclstr_manual_short);
     break;
   }
 
   case LOAD_QUEUE: {
-    strcpy_P(modestr, PSTR("QUE"));
+    strcpy_P(modestr, mclstr_queue_short);
     break;
   }
 
   case LOAD_AUTO: {
-    strcpy_P(modestr, PSTR("AUT"));
+    strcpy_P(modestr, mclstr_auto_short);
     break;
   }
   }

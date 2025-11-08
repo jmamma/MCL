@@ -8,6 +8,7 @@
 #include "MidiActivePeering.h"
 #include "MCLClipBoard.h"
 #include "MNMParams.h"
+#include "MCLStrings.h"
 
 #define PERF_ENC 1
 #define GRID_ENC 0
@@ -741,17 +742,17 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       slot_undo_x = _col;
       slot_undo_y = getRow();
       if (width > 0) {
-        oled_display.textbox("CLEAR ", "SLOTS");
+        oled_display.textbox_P(mclstr_clear, mclstr_slots);
       } else {
-        oled_display.textbox("CLEAR ", "SLOT");
+        oled_display.textbox_P(mclstr_clear, mclstr_slot_word);
       }
       slot_undo = 1;
     } else {
       slot_undo = 0;
       if (width > 0) {
-        oled_display.textbox("COPY ", "SLOTS");
+        oled_display.textbox_P(mclstr_copy, mclstr_slots);
       } else {
-        oled_display.textbox("COPY ", "SLOT");
+        oled_display.textbox_P(mclstr_copy, mclstr_slot_word);
       }
     }
     mcl_clipboard.copy(_col + 16 * proj.get_grid(), getRow(), width, height);
@@ -769,15 +770,15 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   else if (slot_paste == 1) {
     if (undo) {
-      oled_display.textbox("UNDO", "");
+      oled_display.textbox_P(mclstr_undo);
     } else {
-      oled_display.textbox("PASTE", "");
+      oled_display.textbox_P(mclstr_paste);
     }
     slot_undo = 0;
     mcl_clipboard.paste(_col + 16 * proj.get_grid(), getRow());
   } else {
     if (slot_update == 1) {
-      oled_display.textbox("SLOT ", "UPDATE");
+      oled_display.textbox_P(mclstr_slot, mclstr_update);
     }
 
     if (slot_load) {

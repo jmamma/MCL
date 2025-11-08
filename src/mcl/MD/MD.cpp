@@ -6,6 +6,7 @@
 #include "MCLGUI.h"
 #include "MDTrackSelect.h"
 #include "SeqPages.h"
+#include "MCLStrings.h"
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -228,7 +229,7 @@ bool MDClass::probe() {
     }
 
     if (((fw_caps & fw_caps_mask) != fw_caps_mask)) {
-      oled_display.textbox("UPGRADE ", "MACHINEDRUM");
+      oled_display.textbox_P(mclstr_upgrade, mclstr_machinedrum);
       oled_display.display();
       return false;
     }

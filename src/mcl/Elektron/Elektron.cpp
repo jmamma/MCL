@@ -288,6 +288,14 @@ void ElektronDevice::popup_text(char *str, uint8_t persistent) {
   // waitBlocking();
 }
 
+void ElektronDevice::popup_text_P(const char *str_P, uint8_t persistent) {
+  uint8_t data[67] = {0x70, 0x3B, persistent};
+  uint8_t len = strlen_P(str_P);
+  strcpy_P((char*) (data + 3), str_P);
+  sendRequest(data, 3 + len + 1);
+  // waitBlocking();
+}
+
 void ElektronDevice::draw_bank(uint8_t bank) {
   uint8_t data[5] = {0x70, 0x3C, 0x22, bank};
   sendRequest(data, 5);

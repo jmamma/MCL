@@ -73,12 +73,12 @@ bool A4Sound::fromSysex(MidiClass *midi) {
   // len / offset: checksum'ed part
   uint16_t len = reclen - a4sound_checksum_startidx;
   if (reclen != a4sound_sysex_len) {
-    mcl_gui.draw_textbox("WRONG LEN", "");
+    mcl_gui.draw_textbox_P(mclstr_wrong_len);
     return false;
   }
 
   if (!ElektronHelper::checkSysexChecksumAnalog(midi, a4sound_checksum_startidx, len)) {
-    mcl_gui.draw_textbox("WRONG CHECKSUM", "");
+    mcl_gui.draw_textbox_P(mclstr_wrong_checksum);
     return false;
   }
 

@@ -4,11 +4,12 @@
 #include "MD.h"
 #include "MidiActivePeering.h"
 #include "AuxPages.h"
+#include "MCLStrings.h"
 
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24
 
-scale_t *scales[24]{
+const scale_t * const scales[24] PROGMEM = {
     &chromaticScale, &ionianScale, &dorianScale, &phrygianScale, &lydianScale,
     &mixolydianScale, &aeolianScale, &locrianScale, &harmonicMinorScale,
     &melodicMinorScale,
@@ -29,14 +30,6 @@ scale_t *scales[24]{
     //&minorMin7ArpMin9,
     //&minorMaj7Arp9,
     //&minorMaj7ArpMin9
-};
-
-typedef char scale_name_t[4];
-
-const scale_name_t scale_names[] PROGMEM = {
-    "---", "MAJ", "DOR", "PHR", "LYD", "MIX", "MIN", "LOC",
-    "mHA", "mME", "MPE", "mPE", "sPE", "ISS", "BLU", "MBP",
-    "DBP", "mBP", "MA",  "MIA", "MM7", "Mm7", "mm7", "M79",
 };
 
 void SeqPtcPage::setup() {
@@ -282,7 +275,8 @@ void SeqPtcPage::display() {
 }
 
 uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
-  uint8_t size = scales[ptc_param_scale.cur]->size;
+  const scale_t *scale = (const scale_t *)pgm_read_ptr(&scales[ptc_param_scale.cur]);
+  uint8_t size = pgm_read_byte(&scale->size);
   uint8_t oct;
 
   uint8_t d = size;
@@ -307,7 +301,7 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
     }
   }
 
-  return scales[ptc_param_scale.cur]->pitches[pos] + oct * 12 + transpose;
+  return pgm_read_byte(&scale->pitches[pos]) + oct * 12 + transpose;
 }
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
@@ -499,7 +493,7 @@ void SeqPtcPage::draw_popup_transpose() {
   char str[] = "KEY:   ";
   strcpy(str + 5, number_to_note.notes_upper[transpose]);
   MD.popup_text(str);
-  oled_display.textbox(str, "");
+  oled_display.textbox(str);
 }
 
 void SeqPtcPage::draw_popup_octave() {
@@ -1049,7 +1043,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   }
 
   if (display_polylink && mcl.currentPage() != MIXER_PAGE) {
-    oled_display.textbox("POLY-", "LINK");
+    oled_display.textbox_P(mclstr_poly, mclstr_link);
   }
 }
 

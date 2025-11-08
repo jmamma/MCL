@@ -7,6 +7,7 @@
 #include "GridPages.h"
 #include "AuxPages.h"
 #include "MidiActivePeering.h"
+#include "MCLStrings.h"
 
 #define STATE_NOSTATE 0
 #define STATE_QUEUE 1
@@ -724,7 +725,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     }
 
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-      oled_display.textbox("DICE", "");
+      oled_display.textbox_P(mclstr_dice);
       RAMPage::slice_modes[page_id] = 1;
       if (mcl_cfg.ram_page_mode == MONO) {
         slice(14 + page_id, 255);
@@ -737,7 +738,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     no:
       RAMPage::slice_modes[page_id] = 0;
-      oled_display.textbox("SLICE", "");
+      oled_display.textbox_P(mclstr_slice);
       if (mcl_cfg.ram_page_mode == MONO) {
         if (!slice(14 + page_id, 255)) {
           setup_ram_play_mono(14 + page_id);

@@ -8,6 +8,7 @@
 #include "ResourceManager.h"
 #include "MCLClipBoard.h"
 #include "MDTrack.h"
+#include "MCLStrings.h"
 
 uint8_t SeqPage::page_select = 0;
 
@@ -101,8 +102,7 @@ void SeqPage::enable_record() {
   MD.set_rec_mode(2);
   recording = true;
   setLed2();
-  oled_display.textbox("REC", "");
-}
+      oled_display.textbox_P(mclstr_rec);}
 
 void SeqPage::disable_record() {
   MD.set_rec_mode((mcl.currentPage() == SEQ_STEP_PAGE));
@@ -188,16 +188,16 @@ void SeqPage::bootstrap_record() {
 void SeqPage::config_mask_info(bool silent) {
   switch (mask_type) {
   case MASK_PATTERN:
-    strcpy_P(info2, PSTR("TRIG"));
+    mclstr_copy_progmem(info2, mclstr_trig, sizeof(info2));
     break;
   case MASK_LOCK:
-    strcpy_P(info2, PSTR("LOCK"));
+    mclstr_copy_progmem(info2, mclstr_lock, sizeof(info2));
     break;
   case MASK_SLIDE:
-    strcpy_P(info2, PSTR("SLIDE"));
+    mclstr_copy_progmem(info2, mclstr_slide, sizeof(info2));
     break;
   case MASK_MUTE:
-    strcpy_P(info2, PSTR("MUTE"));
+    mclstr_copy_progmem(info2, mclstr_mute, sizeof(info2));
     break;
   }
   if (!silent) {
@@ -589,7 +589,7 @@ void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
   char K[4];
-  strcpy_P(K, PSTR("--"));
+  mclstr_copy_progmem(K, mclstr_dash, sizeof(K));
   K[3] = '\0';
 
   if (timing == 0) {
@@ -726,7 +726,7 @@ void opt_clear_track_handler() {
     if (opt_clear == 2) {
 
       MD.popup_text(2);
-      oled_display.textbox("CLEAR MD ", "TRACKS");
+      oled_display.textbox_P(mclstr_clear_md, mclstr_tracks);
       oled_display.display();
       uint8_t old_mutes[16];
       for (uint8_t n = 0; n < 16; n++) {
@@ -740,46 +740,21 @@ void opt_clear_track_handler() {
         mcl_seq.md_tracks[n].clear_track();
         mcl_seq.md_tracks[n].mute_state = old_mutes[n];
       }
-    } else if (opt_clear == 1) {
-      bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-      const char *str = "CLEAR TRACK";
-      if (is_poly) {
-        str = "CLEAR POLY TRACKS";
-      }
-      oled_display.textbox(str, "");
-      oled_display.display();
-      MD.popup_text((char *)str);
-      if (copy) {
-        opt_copy_track_handler(opt_clear);
-      }
-      if (is_poly) {
-        for (uint8_t c = 0; c < 16; c++) {
-          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
-            mcl_clipboard.copy_sequencer_track(c);
-            mcl_seq.md_tracks[c].clear_track();
-          }
-        }
-      } else {
-        mcl_seq.md_tracks[last_md_track].clear_track();
-      }
-    }
+      oled_display.textbox_P(str);
   } else {
     if (copy) {
       opt_copy_track_handler(opt_clear);
     }
-    const char *str = "CLEAR EXT TRACK";
+    const char *str_p = mclstr_clear_ext_track;
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
-        str = "CLEAR EXT TRACKS";
+        str_p = mclstr_clear_ext_tracks;
         mcl_seq.ext_tracks[n].clear_track();
       }
     } else if (opt_clear == 1) {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
     }
-    if (opt_clear) {
-      oled_display.textbox((char *)str, "");
-      MD.popup_text((char *)str);
-    }
+      oled_display.textbox_P(str_p);
   }
   opt_clear = 0;
 }
@@ -789,22 +764,22 @@ void opt_clear_locks_handler() {
   if (opt_midi_device_capture == &MD) {
     if (opt_clear == 2) {
       for (uint8_t n = 0; n < 16; ++n) {
-        oled_display.textbox("CLEAR MD ", "LOCKS");
+        oled_display.textbox_P(mclstr_clear_md, mclstr_locks);
 
         mcl_seq.md_tracks[n].clear_locks();
       }
     } else if (opt_clear == 1) {
-      oled_display.textbox("CLEAR ", "LOCKS");
+      oled_display.textbox_P(mclstr_clear, mclstr_locks);
       mcl_seq.md_tracks[last_md_track].clear_locks();
     }
   } else {
     auto &active_track = mcl_seq.ext_tracks[last_ext_track];
     if (opt_clear == 2) {
-      oled_display.textbox("CLEAR ", "LOCKS");
+      oled_display.textbox_P(mclstr_clear, mclstr_locks);
       active_track.clear_track_locks();
     }
     if (opt_clear == 1) {
-      oled_display.textbox("CLEAR ", "LOCK");
+      oled_display.textbox_P(mclstr_clear, mclstr_lock);
       if (SeqPage::pianoroll_mode > 0) {
         active_track.clear_track_locks(SeqPage::pianoroll_mode - 1);
       }
@@ -855,7 +830,7 @@ void opt_copy_track_handler(uint8_t op) {
 
     if (opt_midi_device_capture == &MD) {
       if (!silent) {
-        oled_display.textbox("COPY MD ", "TRACKS");
+        oled_display.textbox_P(mclstr_copy_md, mclstr_tracks);
         oled_display.display();
         MD.popup_text(1);
       }
@@ -864,7 +839,7 @@ void opt_copy_track_handler(uint8_t op) {
 #ifdef EXT_TRACKS
     else {
       if (!silent) {
-        oled_display.textbox("COPY EXT ", "TRACKS");
+        oled_display.textbox_P(mclstr_copy_ext, mclstr_tracks);
         oled_display.display();
       }
       mcl_clipboard.copy_sequencer(NUM_MD_TRACKS);
@@ -874,7 +849,7 @@ void opt_copy_track_handler(uint8_t op) {
   if (opt_copy == 1) {
     if (opt_midi_device_capture == &MD) {
       if (!silent) {
-        oled_display.textbox("COPY TRACK", "");
+        oled_display.textbox_P(mclstr_copy_track);
         MD.popup_text(4);
       }
       mcl_clipboard.copy_track = last_md_track;
@@ -883,9 +858,8 @@ void opt_copy_track_handler(uint8_t op) {
 #ifdef EXT_TRACKS
     else {
       if (!silent) {
-        const char *str = "COPY EXT TRACK";
-        MD.popup_text((char *)str);
-        oled_display.textbox(str, "");
+        MD.popup_text_P(mclstr_copy_ext);
+        oled_display.textbox_P(mclstr_copy_ext, mclstr_track);
       }
       mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
       mcl_clipboard.copy_sequencer_track(last_ext_track + NUM_MD_TRACKS);
@@ -908,34 +882,25 @@ void opt_paste_track_handler() {
 
     if (opt_midi_device_capture == &MD) {
       if (!undo) {
-        oled_display.textbox("PASTE MD ", "TRACKS");
+        oled_display.textbox_P(mclstr_paste_md_tracks, mclstr_tracks);
         oled_display.display();
         MD.popup_text(3);
       } else {
-        oled_display.textbox("UNDO ", "TRACKS");
+        oled_display.textbox_P(mclstr_undo_tracks, mclstr_tracks);
         oled_display.display();
         MD.popup_text(22);
       }
       mcl_clipboard.paste_sequencer();
-    } else {
-      const char *str = "UNDO EXT TRACKS";
-      if (!undo) {
-        str = "PASTE EXT TRACKS";
-      }
-      oled_display.textbox(str, "");
-      oled_display.display();
-      MD.popup_text((char *)str);
-      mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
-    }
+      oled_display.textbox_P(str);
   }
   if (opt_paste == 1) {
     if (opt_midi_device_capture == &MD) {
       bool is_poly = false;
       if (!undo) {
-        oled_display.textbox("PASTE TRACK", "");
+        oled_display.textbox_P(mclstr_paste_track);
         MD.popup_text(6);
       } else {
-        oled_display.textbox("UNDO TRACK", "");
+        oled_display.textbox_P(mclstr_undo_track);
         is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
         MD.popup_text(23);
       }
@@ -949,17 +914,7 @@ void opt_paste_track_handler() {
         mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                             last_md_track);
       }
-    } else {
-      const char *str = "UNDO EXT TRACK";
-      if (!undo) {
-        str = "PASTE EXT TRACK";
-      }
-      oled_display.textbox(str, "");
-      MD.popup_text((char *)str);
-
-      mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
-                                          last_ext_track + NUM_MD_TRACKS);
-    }
+      oled_display.textbox_P(str);
   }
   opt_undo = 255;
   opt_paste = 0;
@@ -977,7 +932,7 @@ void opt_clear_page_handler() {
   CLEAR:
     opt_copy_page_handler(PAGE_UNDO);
   }
-  oled_display.textbox("CLEAR PAGE", "");
+  oled_display.textbox_P(mclstr_clear_page);
   MD.popup_text(57);
   MDSeqStep empty_step;
   memset(&empty_step, 0, sizeof(empty_step));
@@ -1001,7 +956,7 @@ void opt_copy_page_handler(uint8_t op) {
   }
 
   if (!silent) {
-    oled_display.textbox("COPY PAGE", "");
+    oled_display.textbox_P(mclstr_copy_page);
     MD.popup_text(54);
   }
   for (uint8_t n = 0; n < 16; n++) {
@@ -1016,10 +971,10 @@ void opt_copy_page_handler(uint8_t op) {
 void opt_paste_page_handler() {
   if (opt_undo == PAGE_UNDO) {
     opt_undo = 255;
-    oled_display.textbox("UNDO PAGE", "");
+    oled_display.textbox_P(mclstr_undo_page);
     MD.popup_text(55);
   } else {
-    oled_display.textbox("PASTE PAGE", "");
+    oled_display.textbox_P(mclstr_paste_page);
     MD.popup_text(56);
   }
   for (uint8_t n = 0; n < 16; n++) {
@@ -1043,9 +998,8 @@ void opt_clear_step_handler() {
   CLEAR:
     opt_copy_step_handler(STEP_UNDO);
   }
-  char str[] = "CLEAR STEP";
-  oled_display.textbox(str, "");
-  MD.popup_text(str);
+  oled_display.textbox_P(mclstr_clear_step);
+  MD.popup_text_P(mclstr_clear_step);
   MDSeqStep empty_step;
   memset(&empty_step, 0, sizeof(empty_step));
   mcl_seq.md_tracks[last_md_track].paste_step(
@@ -1063,9 +1017,8 @@ void opt_copy_step_handler(uint8_t op) {
     silent = true;
   }
   if (!silent) {
-    char str[] = "COPY STEP";
-    oled_display.textbox(str, "");
-    MD.popup_text(str);
+    oled_display.textbox_P(mclstr_copy_step);
+    MD.popup_text_P(mclstr_copy_step);
   }
   mcl_seq.md_tracks[last_md_track].copy_step(SeqPage::step_select +
                                                  SeqPage::page_select * 16,
@@ -1075,14 +1028,12 @@ void opt_copy_step_handler(uint8_t op) {
 void opt_paste_step_handler() {
   if (opt_undo == STEP_UNDO) {
     opt_undo = 255;
-    char str[] = "UNDO STEP";
-    oled_display.textbox(str, "");
-    MD.popup_text(str);
+    oled_display.textbox_P(mclstr_undo_step);
+    MD.popup_text_P(mclstr_undo_step);
   } else {
 
-    char str2[] = "PASTE STEP";
-    oled_display.textbox(str2, "");
-    MD.popup_text(str2);
+    oled_display.textbox_P(mclstr_paste_step);
+    MD.popup_text_P(mclstr_paste_step);
   }
   mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select +
                                                   SeqPage::page_select * 16,
@@ -1100,7 +1051,7 @@ void opt_mute_step_handler() {
 
 void opt_clear_step_locks_handler() {
   if (opt_clear_step == 1) {
-    oled_display.textbox("CLEAR STEP: ", "LOCKS");
+    oled_display.textbox_P(mclstr_clear_step, mclstr_locks);
     MD.popup_text(14);
   }
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
@@ -1207,9 +1158,8 @@ void opt_transpose_track_handler() {
   bool is_all = opt_transpose >= 25;
   int8_t transpose_value = is_all ? (opt_transpose - 37) : (opt_transpose - 12);
   if (transpose_value == 0) {  return; }
-  const char *str = "TRANSPOSE";
-  oled_display.textbox(str, "");
-  MD.popup_text((char *)str);
+  oled_display.textbox_P(mclstr_transpose);
+  MD.popup_text_P(mclstr_transpose);
   if (opt_midi_device_capture == &MD) {
     if (is_all) {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
@@ -1375,7 +1325,7 @@ void SeqPage::draw_knob(uint8_t i, Encoder *enc, const char *title) {
 
 void SeqPageMidiEvents::onMidiStartCallback() {
   if (SeqPage::recording) {
-    oled_display.textbox("REC", "");
+    oled_display.textbox_P(mclstr_rec);
   }
 }
 

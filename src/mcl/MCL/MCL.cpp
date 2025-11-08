@@ -12,6 +12,7 @@
 #include "A4.h"
 #include "MidiSetup.h"
 #include "Project.h"
+#include "MCLStrings.h"
 
 
 #include "GridPages.h"
@@ -141,7 +142,7 @@ void MCL::setup() {
     char value_str[4];
     mcl_gui.put_value_at(health, value_str);
     oled_display.init_display();
-    oled_display.textbox("HW ERROR:", value_str);
+    oled_display.textbox(mclstr_hw_error, value_str);
     oled_display.display();
     while (1);
   }
@@ -211,7 +212,7 @@ void MCL::setup() {
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
-    oled_display.textbox("DISPLAY ", "MIRROR");
+    oled_display.textbox_P(mclstr_display_mirror, mclstr_mirror);
     GUI.display_mirror = true;
 #endif
   }

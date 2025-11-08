@@ -6,6 +6,7 @@
 #include "AuxPages.h"
 #include "GridPages.h"
 #include "PageSelectPage.h"
+#include "MCLStrings.h"
 
 #define MIDI_OMNI_MODE 17
 #define NUM_KEYS 24
@@ -634,20 +635,20 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           switch (last_rec_event) {
           case REC_EVENT_TRIG:
             if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox("CLEAR ", "TRACKS");
+              oled_display.textbox(mclstr_clear, mclstr_tracks);
               for (uint8_t n = 0; n < 16; ++n) {
                 mcl_seq.md_tracks[n].clear_track();
               }
             } else {
-              oled_display.textbox("CLEAR ", "TRACK");
+              oled_display.textbox(mclstr_clear, mclstr_track);
               mcl_seq.md_tracks[last_step].clear_track();
             }
             break;
           case REC_EVENT_CC:
-            oled_display.textbox("CLEAR ", "LOCK");
+            oled_display.textbox(mclstr_clear, mclstr_lock);
             active_track.clear_param_locks(last_param_id);
             if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox("CLEAR ", "LOCKS");
+              oled_display.textbox(mclstr_clear, mclstr_locks);
               for (uint8_t c = 0; c < NUM_LOCKS; c++) {
                 if (active_track.locks_params[c] > 0) {
                   active_track.clear_param_locks(active_track.locks_params[c] -
@@ -754,7 +755,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     oled_display.textbox(str, str2);
   }
   if (store_lock == 1) {
-    oled_display.textbox("LOCK PARAMS ", "FULL");
+    oled_display.textbox_P(mclstr_lock_params, mclstr_full);
     // seq_step_page.send_locks(step);
   }
 }

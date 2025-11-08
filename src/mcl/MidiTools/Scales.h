@@ -31,50 +31,50 @@ typedef struct scale_s {
 #define majorScale ionianScale
 #define minorScale aeolianScale
 
-extern uint8_t invMajorScale[12];
+extern const uint8_t invMajorScale[12] PROGMEM;
 
-extern scale_t chromaticScale;
-extern scale_t ionianScale;
-extern scale_t dorianScale;
-extern scale_t phrygianScale;
-extern scale_t lydianScale;
-extern scale_t mixolydianScale;
-extern scale_t aeolianScale;
-extern scale_t locrianScale;
+extern const scale_t chromaticScale PROGMEM;
+extern const scale_t ionianScale PROGMEM;
+extern const scale_t dorianScale PROGMEM;
+extern const scale_t phrygianScale PROGMEM;
+extern const scale_t lydianScale PROGMEM;
+extern const scale_t mixolydianScale PROGMEM;
+extern const scale_t aeolianScale PROGMEM;
+extern const scale_t locrianScale PROGMEM;
 
-extern scale_t harmonicMinorScale;
+extern const scale_t harmonicMinorScale PROGMEM;
 
-extern scale_t melodicMinorScale;
-extern scale_t lydianDominantScale;
+extern const scale_t melodicMinorScale PROGMEM;
+extern const scale_t lydianDominantScale PROGMEM;
 
-extern scale_t wholeToneScale;
-extern scale_t wholeHalfStepScale;
-extern scale_t halfWholeStepScale;
+extern const scale_t wholeToneScale PROGMEM;
+extern const scale_t wholeHalfStepScale PROGMEM;
+extern const scale_t halfWholeStepScale PROGMEM;
 
-extern scale_t majorPentatonicScale;
-extern scale_t minorPentatonicScale;
-extern scale_t suspendedPentatonicScale;
-extern scale_t inSenScale;
+extern const scale_t majorPentatonicScale PROGMEM;
+extern const scale_t minorPentatonicScale PROGMEM;
+extern const scale_t suspendedPentatonicScale PROGMEM;
+extern const scale_t inSenScale PROGMEM;
 
-extern scale_t bluesScale;
-extern scale_t majorBebopScale;
-extern scale_t dominantBebopScale;
-extern scale_t minorBebopScale;
+extern const scale_t bluesScale PROGMEM;
+extern const scale_t majorBebopScale PROGMEM;
+extern const scale_t dominantBebopScale PROGMEM;
+extern const scale_t minorBebopScale PROGMEM;
 
-extern scale_t majorArp;
-extern scale_t minorArp;
-extern scale_t majorMaj7Arp;
-extern scale_t majorMin7Arp;
-extern scale_t minorMin7Arp;
-extern scale_t minorMaj7Arp;
-extern scale_t majorMaj7Arp9;
-extern scale_t majorMaj7ArpMin9;
-extern scale_t majorMin7Arp9;
-extern scale_t majorMin7ArpMin9;
-extern scale_t minorMin7Arp9;
-extern scale_t minorMin7ArpMin9;
-extern scale_t minorMaj7Arp9;
-extern scale_t minorMaj7ArpMin9;
+extern const scale_t majorArp PROGMEM;
+extern const scale_t minorArp PROGMEM;
+extern const scale_t majorMaj7Arp PROGMEM;
+extern const scale_t majorMin7Arp PROGMEM;
+extern const scale_t minorMin7Arp PROGMEM;
+extern const scale_t minorMaj7Arp PROGMEM;
+extern const scale_t majorMaj7Arp9 PROGMEM;
+extern const scale_t majorMaj7ArpMin9 PROGMEM;
+extern const scale_t majorMin7Arp9 PROGMEM;
+extern const scale_t majorMin7ArpMin9 PROGMEM;
+extern const scale_t minorMin7Arp9 PROGMEM;
+extern const scale_t minorMin7ArpMin9 PROGMEM;
+extern const scale_t minorMaj7Arp9 PROGMEM;
+extern const scale_t minorMaj7ArpMin9 PROGMEM;
 
 uint8_t randomScalePitch(const scale_t *scale, uint8_t octaves = 0);
 uint8_t scalePitch(uint8_t pitch, uint8_t root, const uint8_t *scale);

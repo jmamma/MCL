@@ -7,6 +7,7 @@
 #include "MCLActions.h"
 #include "MD.h"
 #include "MDTrack.h"
+#include "MCLStrings.h"
 
 #define S_PAGE 3
 
@@ -25,7 +26,7 @@ void GridSavePage::setup() {}
 
 void GridSavePage::draw_popup() {
   char str[16];
-  strcpy_P(str, PSTR("SAVE TRACKS"));
+  mclstr_copy_progmem(str, mclstr_save_tracks, sizeof(str));
   mcl_gui.draw_popup(str, true);
 }
 
@@ -80,7 +81,7 @@ void GridSavePage::display() {
 }
 
 void GridSavePage::save() {
-  oled_display.textbox("SAVE TRACKS", "");
+  oled_display.textbox_P(mclstr_save_tracks);
   oled_display.display();
 
   uint8_t save_mode = SAVE_SEQ;
@@ -149,7 +150,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
       track_select_array_from_type_select(track_select_array);
 
-      oled_display.textbox("SAVE GROUPS", "");
+      oled_display.textbox_P(mclstr_save_groups);
       //oled_display.display();
 
       uint8_t save_mode = SAVE_SEQ;

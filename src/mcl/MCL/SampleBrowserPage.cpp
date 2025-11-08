@@ -4,14 +4,15 @@
 #include "Wav.h"
 #include "MidiSDS.h"
 #include "MD.h"
+#include "MCLStrings.h"
 
-const char *c_wav_root = "/Samples/WAV";
-const char *c_syx_root = "/Samples/SYX";
-const char *c_wav_suffix = ".wav";
-const char *c_syx_suffix = ".syx";
+const char *c_wav_root = mclstr_path_wav_root;
+const char *c_syx_root = mclstr_path_syx_root;
+const char *c_wav_suffix = mclstr_suffix_wav;
+const char *c_syx_suffix = mclstr_suffix_syx;
 
-const char *c_wav_name = "WAV";
-const char *c_syx_name = "SYSEX";
+const char *c_wav_name = mclstr_name_wav;
+const char *c_syx_name = mclstr_name_sysex;
 
 static bool s_query_returned = false;
 

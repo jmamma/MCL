@@ -14,7 +14,7 @@
 #define TRIG_EVENT 0xD0
 #define NO_EVENT 0x00
 
-extern scale_t *scales[24];
+extern const scale_t * const scales[24] PROGMEM;
 
 class SeqPtcMidiEvents : public MidiCallback {
 public:

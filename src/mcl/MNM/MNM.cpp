@@ -4,6 +4,7 @@
 #include "TurboLight.h"
 #include "MidiActivePeering.h"
 #include "GridTrack.h"
+#include "MCLStrings.h"
 
 const ElektronSysexProtocol mnm_protocol = {
     monomachine_sysex_hdr,
@@ -59,7 +60,7 @@ bool MNMClass::probe() {
     mcl_gui.delay_progress(400);
 
     if (!get_fw_caps()) {
-      oled_display.textbox("UPGRADE ", "MONOMACHINE");
+      oled_display.textbox_P(mclstr_upgrade, mclstr_monomachine);
       oled_display.display();
       return false;
     }

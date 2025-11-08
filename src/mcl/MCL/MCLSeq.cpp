@@ -4,6 +4,7 @@
 #include "SeqPages.h"
 #include "MCL.h"
 #include "AuxPages.h"
+#include "MCLStrings.h"
 
 void MCLSeq::setup() {
 
@@ -134,7 +135,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
 
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   if (SeqPage::recording) {
-    oled_display.textbox("REC", "");
+    oled_display.textbox_P(mclstr_rec);
   }
 }
 

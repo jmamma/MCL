@@ -6,13 +6,14 @@
 #include "GUI.h"
 #include "MIDISds.h"
 #include "DSP.h"
+#include "MCLStrings.h"
 
 #ifdef WAV_DESIGNER
 #define WAV_NAME "WAVE.wav"
 
 void WavDesigner::prompt_send() {
   //  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
-  oled_display.textbox("Render", "");
+  oled_display.textbox_P(mclstr_render);
   oled_display.display();
   //Order of statements important for directory switching.
   mcl.pushPage(SAMPLE_BROWSER);
@@ -30,7 +31,7 @@ void WavDesigner::prompt_send() {
   DEBUG_PRINTLN("cleaning up");
   sample_browser.file.close();
   mcl.setPage(WD_MIXER_PAGE);
-  oled_display.textbox("Sending..","");
+  oled_display.textbox_P(mclstr_sending);
   oled_display.display();
   wd.send();
 }
