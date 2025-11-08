@@ -115,8 +115,10 @@ void SeqPtcPage::config() {
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
 
-  char str_first[3] = "--";
-  char str_second[3] = "--";
+  char str_first[3];
+  mclstr_copy_progmem(str_first, mclstr_dash, sizeof(str_first));
+  char str_second[3];
+  mclstr_copy_progmem(str_second, mclstr_dash, sizeof(str_second));
   if (midi_device == &MD) {
     const char *str;
     str = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
@@ -138,7 +140,7 @@ void SeqPtcPage::config() {
   strncat(info1, ">", len1 - 2);        // -2 for str_second and null  
   strncat(info1, str_second, len1 - 1); // -1 for null terminator
 
-  strcpy(info2, "CHROMAT");
+  strcpy_P(info2, mclstr_chromat);
   display_page_index = false;
 
   // config menu
@@ -214,39 +216,39 @@ void SeqPtcPage::display() {
 
   // draw OCTAVE
   mcl_gui.put_value_at(ptc_param_oct.getValue(), buf1);
-  draw_knob(0, "OCT", buf1);
+  draw_knob(0, mclstr_oct, buf1);
 
   // draw FREQ
   if (ptc_param_fine_tune.getValue() < 32) {
-    strcpy(buf1, "-");
+    strcpy_P(buf1, mclstr_minus);
     mcl_gui.put_value_at(32 - ptc_param_fine_tune.getValue(), buf1 + 1);
   } else if (ptc_param_fine_tune.getValue() > 32) {
-    strcpy(buf1, "+");
+    strcpy_P(buf1, mclstr_plus);
     mcl_gui.put_value_at(ptc_param_fine_tune.getValue() - 32, buf1 + 1);
   } else {
-    strcpy(buf1, "0");
+    strcpy_P(buf1, mclstr_zero);
   }
-  draw_knob(1, "DET", buf1); // detune
+  draw_knob(1, mclstr_det, buf1); // detune
 
   // draw LEN
   if (midi_device == &MD) {
     mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
     if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
-      draw_knob(2, "PLEN", buf1);
+      draw_knob(2, mclstr_plen, buf1);
     } else {
-      draw_knob(2, "LEN", buf1);
+    draw_knob(2, mclstr_len, buf1);
     }
   }
 #ifdef EXT_TRACKS
   else {
     mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
-    draw_knob(2, "LEN", buf1);
+    draw_knob(2, mclstr_len, buf1);
   }
 #endif
 
   // draw SCALE
   strncpy_P(buf1, scale_names[ptc_param_scale.getValue()], 4);
-  draw_knob(3, "SCA", buf1);
+  draw_knob(3, mclstr_sca, buf1);
 
   // draw TI keyboard
 
@@ -258,12 +260,12 @@ void SeqPtcPage::display() {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
   if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
-    oled_display.print(F("PLY"));
+    mcl_print_P(mclstr_ply_label);
   }
 
   uint64_t *mask = note_mask;
   if (arp_track->enabled) {
-    oled_display.print(F("ARP"));
+    mcl_print_P(mclstr_arp);
     mask = arp_track->note_mask;
   }
 
@@ -941,7 +943,8 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
                                        SeqPage::slide);
           if (SeqPage::pianoroll_mode == 0) {
             char str[] = "CC:";
-            char str2[] = "--  ";
+            char str2[4];
+            mclstr_copy_progmem(str2, mclstr_dash_dash_space, sizeof(str2));
             mcl_gui.put_value_at(value, str2);
             oled_display.textbox(str, str2);
           } else {

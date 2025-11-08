@@ -50,7 +50,7 @@ void PolyPage::display() {
   oled_display.clearDisplay();
 
   oled_display.setCursor(0, 15);
-  oled_display.println("VOICE SELECT ");
+  mcl_println_P(mclstr_voice_select);
 
   draw_mask();
 

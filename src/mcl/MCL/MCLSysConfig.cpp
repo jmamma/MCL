@@ -9,7 +9,7 @@
 #include "MCLStrings.h"
 
 // Consolidated display function to reduce code duplication
-static void show_message(const char* line1) {
+static void show_message(PGM_P line1) {
   oled_display.clearDisplay();
   oled_display.textbox_P(line1);
   oled_display.display();
@@ -31,7 +31,7 @@ static inline bool megacmd_check() {
 }
 
 // Combined USB mode change function
-static void enter_usb_mode(uint8_t mode, const char* line1) {
+static void enter_usb_mode(uint8_t mode, PGM_P line1) {
   usb_wait();
   show_message(line1);
 
@@ -46,16 +46,16 @@ static void enter_usb_mode(uint8_t mode, const char* line1) {
 
 // Optimized public functions
 void usb_os_update() {
-  enter_usb_mode(USB_SERIAL, "OS UPDATE");
+  enter_usb_mode(USB_SERIAL, mclstr_os_update);
 }
 
 void usb_dfu_mode() {
-  enter_usb_mode(USB_DFU, "DFU MODE");
+  enter_usb_mode(USB_DFU, mclstr_dfu_mode);
 }
 
 void usb_disk_mode() {
   if (megacmd_check()) {
-    enter_usb_mode(USB_STORAGE, "USB DISK");
+    enter_usb_mode(USB_STORAGE, mclstr_usb_disk);
   }
 }
 

@@ -23,7 +23,7 @@ void SoundBrowserPage::init() {
 
   key_interface.off();
 
-  strcpy(title, "SOUND");
+  strcpy_P(title, mclstr_title_sound);
   show_dirs = true;
   show_save = true;
   show_filemenu = true;
@@ -32,7 +32,7 @@ void SoundBrowserPage::init() {
   SD.chdir(lwd);
   query_filesystem();
 
-  strcpy(str_save, "[ SAVE ]");
+  strcpy_P(str_save, mclstr_action_save_bracket);
 
   R.Clear();
   R.use_machine_names_short();

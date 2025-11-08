@@ -666,7 +666,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
           m_toupper(dst);
           dst[len - 1] = '\0';
         } else {
-          strcpy(dst, "NEW KIT");
+          strcpy_P(dst, mclstr_new_kit);
         }
         // DEBUG_PRINTLN("SEND NAME");
         // DEBUG_PRINTLN(dst);

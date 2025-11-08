@@ -6,6 +6,10 @@
 #include "GUI.h"
 #include "Menu.h"
 #include "MCLGfx.h"
+#include "MCLStrings.h"
+
+// Forward declaration for mcl_print_P used in template
+void mcl_print_P(const char* str_P);
 
 #ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
@@ -88,7 +92,7 @@ public:
 #else
     uint16_t checksum_value = firmware_checksum;
 #endif
-    oled_display.print("0x");
+    mcl_print_P(mclstr_hex_prefix);
     oled_display.print(checksum_value,HEX);
   }
 

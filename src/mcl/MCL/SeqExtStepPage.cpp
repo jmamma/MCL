@@ -24,7 +24,7 @@ void SeqExtStepPage::config() {
 */
 #endif
 
-  strcpy(info2, "EXT");
+  strcpy_P(info2, mclstr_ext);
   // config menu
   config_as_trackedit();
 
@@ -753,10 +753,10 @@ void SeqExtStepPage::display() {
     str[3] = oct + '0';
     str[4] = 0;
     strcat(info1, str);
-    strcpy(info2, "NOTE");
+    strcpy_P(info2, mclstr_note);
     draw_pianoroll();
   } else {
-    strcpy(info2, "LOCK  ");
+    strcpy_P(info2, mclstr_lock_space);
     mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
     mcl_gui.put_value_at(lock_cur_y, info1);
     draw_lockeditor();

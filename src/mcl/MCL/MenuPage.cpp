@@ -164,7 +164,7 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
   uint8_t number_of_options = get_menu()->get_number_of_options(item_n);
   if (get_menu()->get_option_range(item_n) > 0) {
 
-    oled_display.print(F(" "));
+    mcl_print_P(mclstr_space);
     uint8_t *pdest = get_menu()->get_dest_variable(item_n);
     const char *option_name = get_menu()->get_option_name(item_n, *pdest);
     if (option_name == NULL) {

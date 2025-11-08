@@ -90,7 +90,7 @@ static void prepare_display(uint8_t *buf) {
   oled_display.clearDisplay();
   oled_display.setFont();
   oled_display.setCursor(60, 10);
-  oled_display.println("Peering...");
+  mcl_println_P(mclstr_peering);
   if (!resource_loaded) {
     R.Clear();
     R.use_icons_device();

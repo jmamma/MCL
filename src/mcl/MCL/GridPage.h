@@ -5,6 +5,7 @@
 #include "GridRowHeader.h"
 #include "GUI.h"
 #include "MCL.h"
+#include "MCLStrings.h"
 
 #define MAX_VISIBLE_ROWS 4
 #define MAX_VISIBLE_COLS 8

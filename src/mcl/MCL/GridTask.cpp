@@ -95,7 +95,7 @@ void GridTask::update_transition_details() {
     m_toupper(kit_names[dev_idx]);
     kit_names[dev_idx][len - 1] = '\0';
   } else {
-    strcpy(kit_names[dev_idx], "NEW_KIT");
+    strcpy_P(kit_names[dev_idx], mclstr_new_kit_underscore);
   }
   send_kit_name = true;
 }

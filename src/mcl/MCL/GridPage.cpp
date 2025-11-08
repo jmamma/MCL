@@ -330,7 +330,7 @@ void GridPage::display_counters() {
   oled_display.setCursor(24, y_offset);
   oled_display.print(val);
 
-  oled_display.print(F(":"));
+  mcl_print_P(mclstr_colon);
   oled_display.print(MidiClock.beat_counter);
 
   if ((mcl_actions.next_transition != (uint16_t)-1) &&
@@ -347,7 +347,7 @@ void GridPage::display_counters() {
     }
     oled_display.setCursor(24, y_offset + 8);
     oled_display.print(val);
-    oled_display.print(F(":"));
+    mcl_print_P(mclstr_colon);
     oled_display.print(mcl_actions.nearest_beat);
   }
 }
@@ -362,7 +362,7 @@ void GridPage::display_grid_info() {
 
   display_counters();
   oled_display.setFont(&TomThumb);
-  //  oled_display.print(F(":"));
+  //  mcl_print_P(mclstr_colon);
   // oled_display.print(MidiClock.step_counter);
 
   oled_display.setCursor(22, y_offset + 1 * 8);
@@ -398,7 +398,7 @@ void GridPage::display_grid_info() {
   mcl_gui.put_value_at2(param1.cur + 1, val);
   val[2] = '\0';
   oled_display.print(val);
-  oled_display.print(F(" "));
+  mcl_print_P(mclstr_space);
   uint8_t b = param2.cur / 16;
   oled_display.print((char)('A' + b));
   mcl_gui.put_value_at2(param2.cur - b * 16 + 1, val);
@@ -742,17 +742,17 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       slot_undo_x = _col;
       slot_undo_y = getRow();
       if (width > 0) {
-        oled_display.textbox_P(mclstr_clear_word, mclstr_slots);
+        oled_display.textbox_P(mclstr_clear, mclstr_slots);
       } else {
-        oled_display.textbox_P(mclstr_clear_word, mclstr_slot_word);
+        oled_display.textbox_P(mclstr_clear, mclstr_slot);
       }
       slot_undo = 1;
     } else {
       slot_undo = 0;
       if (width > 0) {
-        oled_display.textbox_P(mclstr_copy_word, mclstr_slots);
+        oled_display.textbox_P(mclstr_copy, mclstr_slots);
       } else {
-        oled_display.textbox_P(mclstr_copy_word, mclstr_slot_word);
+        oled_display.textbox_P(mclstr_copy, mclstr_slot);
       }
     }
     mcl_clipboard.copy(_col + 16 * proj.get_grid(), getRow(), width, height);
@@ -770,9 +770,9 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   else if (slot_paste == 1) {
     if (undo) {
-      oled_display.textbox_P(mclstr_undo_word);
+      oled_display.textbox_P(mclstr_undo);
     } else {
-      oled_display.textbox_P(mclstr_paste_word);
+      oled_display.textbox_P(mclstr_paste);
     }
     slot_undo = 0;
     mcl_clipboard.paste(_col + 16 * proj.get_grid(), getRow());
@@ -868,7 +868,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       // If all slots are deleted then clear the row name
       else if ((header.is_empty() && (slot_clear == 1)) || (activate_header)) {
         header.active = activate_header;
-        strcpy(header.name, "\0");
+        strcpy_P(header.name, mclstr_empty);
         proj.write_grid_row_header(&header, ypos);
       }
     }

@@ -135,15 +135,15 @@ void SeqStepPage::display() {
   mcl_gui.put_value_at(seq_param3.getValue(), K);
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
-    draw_knob(2, "PLEN", K);
+    draw_knob(2, mclstr_plen, K);
   } else {
-    draw_knob(2, "LEN", K);
+    draw_knob(2, mclstr_len, K);
   }
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   bool is_ptc = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL) || tuning != NULL;
   if (show_pitch) {
     if (is_ptc) {
-      strcpy(K, "--");
+      strcpy_P(K, mclstr_dash);
       if (seq_param4.cur != 0) {
         // uint8_t base = tuning->base;
         uint8_t note_num = seq_param4.cur;
@@ -156,7 +156,7 @@ void SeqStepPage::display() {
         mcl_gui.put_value_at(oct, K + 2);
         K[3] = 0;
       }
-      draw_knob(3, "PTC", K);
+      draw_knob(3, mclstr_ptc, K);
     }
   }
 
@@ -635,20 +635,20 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           switch (last_rec_event) {
           case REC_EVENT_TRIG:
             if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox(mclstr_clear_word, mclstr_tracks);
+              oled_display.textbox(mclstr_clear, mclstr_tracks);
               for (uint8_t n = 0; n < 16; ++n) {
                 mcl_seq.md_tracks[n].clear_track();
               }
             } else {
-              oled_display.textbox(mclstr_clear_word, mclstr_track);
+              oled_display.textbox(mclstr_clear, mclstr_track);
               mcl_seq.md_tracks[last_step].clear_track();
             }
             break;
           case REC_EVENT_CC:
-            oled_display.textbox(mclstr_clear_word, mclstr_lock);
+            oled_display.textbox(mclstr_clear, mclstr_lock);
             active_track.clear_param_locks(last_param_id);
             if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox(mclstr_clear_word, mclstr_locks);
+              oled_display.textbox(mclstr_clear, mclstr_locks);
               for (uint8_t c = 0; c < NUM_LOCKS; c++) {
                 if (active_track.locks_params[c] > 0) {
                   active_track.clear_param_locks(active_track.locks_params[c] -
@@ -740,8 +740,10 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     }
   }
   if (store_lock == 0) {
-    char str[5] = "--  ";
-    char str2[4] = "-- ";
+    char str[5];
+    mclstr_copy_progmem(str, mclstr_dash_dash_space, sizeof(str));
+    char str2[4];
+    mclstr_copy_progmem(str2, mclstr_dash_space, sizeof(str2));
     const char *modelname =
         model_param_name(MD.kit.get_model(last_md_track), track_param);
     if (modelname != NULL) {

@@ -238,15 +238,16 @@ void PerfPage::display() {
   mcl_gui.draw_knob_frame();
 
   char info1[8] = ""; // Use an appropriate size for your needs
-  char info2[12] = "PARAMETER";
+  char info2[12]; // Use an appropriate size for your needs
+  mclstr_copy_progmem(info2, mclstr_parameter, sizeof(info2));
 
   uint8_t scene = learn - 1;
 
   PerfEncoder *e = perf_encoders[perf_id];
 
-  char str1[] = " A";
-  str1[1] = 'A' + perf_id;
-  mcl_gui.draw_knob(0, encoders[0], str1);
+  char perf_label[] = " A";
+  perf_label[1] = 'A' + perf_id;
+  mcl_gui.draw_knob(0, encoders[0], perf_label, false);
 
   if (learn) {
     draw_dest(1, encoders[1]->cur);
@@ -254,11 +255,11 @@ void PerfPage::display() {
     mclstr_copy_progmem(info1, mclstr_lck_arrow, sizeof(info1));
     mcl_gui.put_value_at(page_mode, info1 + 4);
 
-    const char *str1 = "LCK";
+    const char *lock_label = mclstr_lck;
     uint8_t v = encoders[3]->cur;
     bool is_lock = encoders[3]->cur != 0;
     if (!is_lock) {
-      str1 = "OFF";
+      lock_label = mclstr_off;
       // Show the "non-lock" value
       uint8_t c = page_mode - 1;
       v = 0; //perf_encoders[perf_id]->perf_data.scenes[scene].params[c].val;
@@ -268,12 +269,12 @@ void PerfPage::display() {
 
     bool show_value = mcl_gui.show_encoder_value(encoders[3]);
     mcl_gui.draw_light_encoder(MCLGUI::knob_x0 + 3 * MCLGUI::knob_w + 7, 6, v,
-                               str1, is_lock, show_value);
+                               lock_label, is_lock, show_value);
 
   } else {
     draw_dest(1, encoders[1]->cur, false);
     draw_param(2, encoders[1]->cur, encoders[2]->cur);
-    mcl_gui.draw_knob(3, encoders[3], "THR");
+    mcl_gui.draw_knob(3, encoders[3], mclstr_thr);
     strcpy(info2, e->name);
   }
 
@@ -294,7 +295,7 @@ void PerfPage::display() {
   if (key_interface.is_key_down(MDX_KEY_LEFT) ||
       key_interface.is_key_down(MDX_KEY_RIGHT)) {
     oled_display.setCursor(54, MCLGUI::pane_info2_y + 4);
-    oled_display.print(F("SELECT"));
+    mcl_print_P(mclstr_select_label);
   }
 
   oled_display.setCursor(80, MCLGUI::pane_info2_y + 4);
@@ -505,7 +506,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       if (t < NUM_SCENES) {
         switch (key) {
         case MDX_KEY_COPY: {
-          oled_display.textbox_P(mclstr_copy_word, mclstr_scene_word);
+          oled_display.textbox_P(mclstr_copy, mclstr_scene);
           mcl_clipboard.copy_scene(
               &perf_encoders[perf_id]->perf_data.scenes[t]);
           undo = 255;
@@ -517,7 +518,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           }
           if (mcl_clipboard.paste_scene(
                   &perf_encoders[perf_id]->perf_data.scenes[t])) {
-            oled_display.textbox_P(mclstr_paste_word, mclstr_scene_word);
+            oled_display.textbox_P(mclstr_paste, mclstr_scene);
             config_encoders();
             send_locks(t);
           }
@@ -527,7 +528,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           if (t == undo) {
             if (mcl_clipboard.paste_scene(
                     &perf_encoders[perf_id]->perf_data.scenes[undo])) {
-              oled_display.textbox_P(mclstr_undo_word, mclstr_clear_word);
+              oled_display.textbox_P(mclstr_undo, mclstr_clear);
               undo = 255;
               goto end_clear;
             }
@@ -538,7 +539,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
             mcl_clipboard.copy_scene(
                 &perf_encoders[perf_id]->perf_data.scenes[t]);
           }
-          oled_display.textbox_P(mclstr_clear_word, mclstr_scene_word);
+          oled_display.textbox_P(mclstr_clear, mclstr_scene);
           perf_encoders[perf_id]->perf_data.clear_scene(t);
         end_clear:
           config_encoders();

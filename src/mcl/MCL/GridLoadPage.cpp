@@ -126,7 +126,7 @@ void GridLoadPage::display() {
     //                              "STEP", K);
     if (show_offset) {
       oled_display.setCursor(MCLGUI::s_menu_x + 26, 14);
-      oled_display.print(F("DESTINATION"));
+      mcl_print_P(mclstr_destination);
       trig_mask = 0;
       if (offset < 16) { SET_BIT16(trig_mask, offset); }
       // if (offset < 16) {
@@ -146,26 +146,22 @@ void GridLoadPage::display() {
       char modestr[7];
       get_modestr(modestr);
 
-      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7,
-                                "MODE", modestr);
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7, mclstr_mode, modestr);
 
       if (encoders[0]->getValue() == LOAD_QUEUE) {
         if (encoders[1]->getValue() == 1) {
-          strcpy(K, "--");
+          strcpy_P(K, mclstr_dash);
         } else {
           mcl_gui.put_value_at(encoders[1]->cur, K);
         }
-        mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9,
-                                  MCLGUI::s_menu_y + 7, "LEN", K);
+        mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7, mclstr_len, K);
       }
       // draw quantize
       if (mcl_cfg.chain_load_quant == 1) {
-        strcpy(K, "--");
+        strcpy_P(K, mclstr_dash);
       } else {
         mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
       }
-      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
-                                MCLGUI::s_menu_y + 7, "QUANT", K);
 
       // draw step count
     }
@@ -181,17 +177,17 @@ void GridLoadPage::display() {
     // draw data flow in the center
     /*
     oled_display.setCursor(48, MCLGUI::s_menu_y + 4 + 12);
-    oled_display.print(F("SND"));
+    mcl_print_P(mclstr_snd);
     oled_display.setCursor(46, MCLGUI::s_menu_y + 4 + 19);
-    oled_display.print(F("GRID"));
+    mcl_print_P(mclstr_grid);
 
     mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 4 + 8, 5);
     mcl_gui.draw_horizontal_arrow(63, MCLGUI::s_menu_y + 4 + 15, 5);
 
     oled_display.setCursor(74, MCLGUI::s_menu_y + 4 + 12);
-    oled_display.print(F("MD"));
+    mcl_print_P(mclstr_md_prefix);
     oled_display.setCursor(74, MCLGUI::s_menu_y + 4 + 19);
-    oled_display.print(F("SEQ"));
+    mcl_print_P(mclstr_seq);
     */
   }
 }

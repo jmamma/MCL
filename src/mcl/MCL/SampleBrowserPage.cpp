@@ -61,23 +61,21 @@ void SampleBrowserPage::display() {
         uint8_t decimal =
             ((sample_rate_f - (float)sample_rate) * (float)10.0f) + 0.5f;
         oled_display.print(decimal);
-        oled_display.print(F("k "));
+        mcl_print_P(mclstr_k_space);
 
         oled_display.print(wav_file.header.fmt.bitRate);
         oled_display.print('/');
         oled_display.print(wav_file.header.fmt.numChannels);
-      /*
+
       float seconds = wav_file.header.get_length() / (float)wav_file.header.fmt.sampleRate;
       int16_t minutes = seconds * 0.01666666667f;
       int16_t ms = ((float)seconds - int(seconds)) * 1000;
-      */
-      /*
+
       oled_display.print(minutes);
-      oled_display.print(F(":"));
+      oled_display.print(mclstr_colon);
       oled_display.print(int(seconds));
-      oled_display.print(F(":"));
+      oled_display.print(mclstr_colon);
       oled_display.print(ms);
-      */
         size = wav_file.file.size();
         wav_file.close();
       }
@@ -95,7 +93,7 @@ void SampleBrowserPage::display() {
       }
       else {
        oled_display.print(size / 1024);
-       oled_display.print(F("kB"));
+       mcl_print_P(mclstr_kb);
       }
     }
   }
@@ -109,7 +107,7 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
   file_types.reset();
   file_types.add(c_wav_suffix);
   file_types.add(c_syx_suffix);
-  strcpy(str_save, "[ RECV ]");
+  strcpy_P(str_save, mclstr_action_recv_bracket);
 
   key_interface.off();
   filemenu_active = false;
@@ -118,7 +116,7 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
   show_samplemgr = show_samplemgr_;
 
   if (show_samplemgr) {
-    strcpy(title, "MD-ROM");
+    strcpy_P(title, mclstr_title_md_rom);
     encoders[1] = &samplebrowser_param3;
     draw_dirs = false;
     show_dirs = false;
@@ -128,7 +126,7 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
     show_parent = false;
     query_sample_slots();
   } else {
-    strcpy(title, "SAMPLE");
+    strcpy_P(title, mclstr_title_sample);
     encoders[1] = &samplebrowser_param2;
     if (old_cur_row != 255) { cur_row = old_cur_row; old_cur_row = 255;}
     draw_dirs = true;
@@ -409,7 +407,7 @@ void SampleBrowserPage::end() {
     }
     bool slot_occupied = s_tmpbuf[4];
     s_tmpbuf[4] = 0;
-    strcpy(temp_entry, "00 - ");
+    strcpy_P(temp_entry, mclstr_zero_dash_space);
     if (i < 9) {
       mcl_gui.put_value_at(i + 1, temp_entry + 1);
     } else {

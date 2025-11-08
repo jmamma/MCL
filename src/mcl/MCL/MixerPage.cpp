@@ -196,7 +196,8 @@ void send_fx(uint8_t param, EncoderParent *enc, uint8_t type) {
   //  }
   PGM_P param_name = NULL;
   char str[4];
-  char str2[] = "--  ";
+  char str2[4];
+  mclstr_copy_progmem(str2, mclstr_dash_dash_space, sizeof(str2));
 
   param_name = fx_param_name(type, param);
   strncpy(str, param_name, 4);
@@ -297,7 +298,7 @@ void MixerPage::display() {
     oled_display.setFont(&TomThumb);
     if (load_mute_set != 255 && load_mute_set == preview_mute_set) {
       oled_display.setCursor(111, 31);
-      oled_display.print("LOAD");
+      mcl_print_P(mclstr_load);
     }
     oled_display.setFont();
   } else {

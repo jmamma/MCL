@@ -30,7 +30,7 @@ static PageIndex get_page(uint8_t pageidx, char *str) {
     return R.page_entries->Entries[pageidx].Page;
   } else {
     if (str) {
-      strcpy(str, "----");
+      strcpy_P(str, mclstr_four_dashes);
     }
     return NULL_PAGE;
   }
@@ -70,7 +70,7 @@ static void get_category_name(uint8_t page_number, char *str) {
 
 get_category_name_fail:
   if (str) {
-    strcpy(str, "----");
+    strcpy_P(str, mclstr_four_dashes);
   }
   return;
 }
@@ -89,7 +89,7 @@ void PageSelectPage::init() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print(F("PAGE SELECT"));
+  mcl_print_P(mclstr_page_select);
   oled_display.setTextColor(WHITE);
 
   loop_init = true;
@@ -218,7 +218,7 @@ void PageSelectPage::display() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print(F("PAGE SELECT"));
+  mcl_print_P(mclstr_page_select);
   oled_display.setTextColor(WHITE);
   uint8_t label_pos[4] = {30, 57, 81, 104};
   for (uint8_t i = 0; i < 4; ++i) {

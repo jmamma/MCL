@@ -4,6 +4,8 @@
 #define MCLSTRINGS_H__
 
 #include <avr/pgmspace.h>
+#include <stddef.h> // For size_t
+#include <string.h> // For strncpy
 
 /**
  * Central string repository for MCL UI text
@@ -21,9 +23,14 @@
 // Common single characters / symbols
 MCLSTR_DECLARE(space);
 MCLSTR_DECLARE(dash);
+MCLSTR_DECLARE(dash_dash_space);
+MCLSTR_DECLARE(dash_space);
 MCLSTR_DECLARE(plus);
 MCLSTR_DECLARE(arrow_right);
 MCLSTR_DECLARE(empty);
+MCLSTR_DECLARE(k_space);
+MCLSTR_DECLARE(colon);
+MCLSTR_DECLARE(kb);
 
 // Common labels
 MCLSTR_DECLARE(hz);
@@ -33,6 +40,102 @@ MCLSTR_DECLARE(len);
 MCLSTR_DECLARE(sca);
 MCLSTR_DECLARE(rec);
 MCLSTR_DECLARE(lck_arrow);
+MCLSTR_DECLARE(load);
+MCLSTR_DECLARE(mode);
+MCLSTR_DECLARE(save);
+MCLSTR_DECLARE(voice_select);
+MCLSTR_DECLARE(cond);
+MCLSTR_DECLARE(hex_prefix); // For "0x"
+MCLSTR_DECLARE(plen);
+MCLSTR_DECLARE(quant);
+MCLSTR_DECLARE(arp);
+MCLSTR_DECLARE(rate);
+MCLSTR_DECLARE(range);
+MCLSTR_DECLARE(spd);
+MCLSTR_DECLARE(dep1);
+MCLSTR_DECLARE(dep2);
+MCLSTR_DECLARE(ofs1);
+MCLSTR_DECLARE(ofs2);
+MCLSTR_DECLARE(src);
+MCLSTR_DECLARE(sli);
+MCLSTR_DECLARE(ptc);
+MCLSTR_DECLARE(seq);
+MCLSTR_DECLARE(dest);
+MCLSTR_DECLARE(destination);
+MCLSTR_DECLARE(snd);
+MCLSTR_DECLARE(no_option);
+MCLSTR_DECLARE(yes_option);
+MCLSTR_DECLARE(queue_option);
+MCLSTR_DECLARE(record_option);
+MCLSTR_DECLARE(play_option);
+MCLSTR_DECLARE(ram_prefix);
+MCLSTR_DECLARE(mono_option);
+MCLSTR_DECLARE(s_colon);
+MCLSTR_DECLARE(l_colon);
+MCLSTR_DECLARE(gui_loop);
+MCLSTR_DECLARE(wav_label);
+MCLSTR_DECLARE(sd_card_error);
+MCLSTR_DECLARE(osc_mixer);
+MCLSTR_DECLARE(ply_label);
+MCLSTR_DECLARE(utiming_label);
+MCLSTR_DECLARE(v_label);
+MCLSTR_DECLARE(select_label);
+MCLSTR_DECLARE(par);
+MCLSTR_DECLARE(thr);
+MCLSTR_DECLARE(utim);
+MCLSTR_DECLARE(route);
+MCLSTR_DECLARE(parameter);
+MCLSTR_DECLARE(parameter);
+MCLSTR_DECLARE(lck);
+MCLSTR_DECLARE(off);
+
+// Common two-character display strings
+MCLSTR_DECLARE(on);
+MCLSTR_DECLARE(lat);
+MCLSTR_DECLARE(ech);
+MCLSTR_DECLARE(rev);
+MCLSTR_DECLARE(eq);
+MCLSTR_DECLARE(dyn);
+MCLSTR_DECLARE(ext);
+MCLSTR_DECLARE(ler);
+MCLSTR_DECLARE(l1);
+
+// Common display labels
+MCLSTR_DECLARE(note);
+MCLSTR_DECLARE(chromat);
+MCLSTR_DECLARE(zero);
+MCLSTR_DECLARE(minus);
+MCLSTR_DECLARE(lock_space);
+
+// Browser page titles
+MCLSTR_DECLARE(title_md_rom);
+MCLSTR_DECLARE(title_sample);
+MCLSTR_DECLARE(title_sound);
+MCLSTR_DECLARE(title_files);
+MCLSTR_DECLARE(title_project);
+
+// Browser actions
+MCLSTR_DECLARE(action_recv_bracket);
+MCLSTR_DECLARE(action_save_bracket);
+
+// File browser
+MCLSTR_DECLARE(root_path);
+MCLSTR_DECLARE(empty_str);
+
+// Kit/Sound
+MCLSTR_DECLARE(new_kit);
+MCLSTR_DECLARE(new_kit_underscore);
+
+// Step display
+MCLSTR_DECLARE(step_label);
+MCLSTR_DECLARE(step_prefix);
+MCLSTR_DECLARE(zero_dash_space);
+MCLSTR_DECLARE(four_dashes);
+MCLSTR_DECLARE(delete_space);
+MCLSTR_DECLARE(step_space);
+
+// Page names (for grid page)
+MCLSTR_DECLARE(empty_page);
 
 // =============================================================================
 // PAGE TITLES
@@ -59,18 +162,16 @@ MCLSTR_DECLARE(display_mirror);
 MCLSTR_DECLARE(hw_error);
 MCLSTR_DECLARE(wrong_len);
 MCLSTR_DECLARE(wrong_checksum);
-
-// Record
-MCLSTR_DECLARE(rec);
+MCLSTR_DECLARE(this_piece_of);
+MCLSTR_DECLARE(machine_is_ok);
+MCLSTR_DECLARE(peering);
 
 // Action verbs (for building two-part messages)
-MCLSTR_DECLARE(clear_word);
-MCLSTR_DECLARE(copy_word);
-MCLSTR_DECLARE(paste_word);
-MCLSTR_DECLARE(undo_word);
-MCLSTR_DECLARE(save_word);
-MCLSTR_DECLARE(load_word);
-MCLSTR_DECLARE(fill_word);
+MCLSTR_DECLARE(clear);
+MCLSTR_DECLARE(copy);
+MCLSTR_DECLARE(paste);
+MCLSTR_DECLARE(undo);
+MCLSTR_DECLARE(fill);
 
 // Combined action verbs and common object words
 MCLSTR_DECLARE(clear_step);
@@ -83,9 +184,10 @@ MCLSTR_DECLARE(md_prefix);
 MCLSTR_DECLARE(ext_prefix);
 
 // Common object words (also declared in Line 2 section)
-MCLSTR_DECLARE(step_word);
-MCLSTR_DECLARE(scene_word);
-MCLSTR_DECLARE(poly_word);
+MCLSTR_DECLARE(step);
+MCLSTR_DECLARE(scene);
+MCLSTR_DECLARE(poly);
+MCLSTR_DECLARE(slot);
 
 // Track operations - Clear
 MCLSTR_DECLARE(clear_md);
@@ -100,10 +202,12 @@ MCLSTR_DECLARE(paste_md);
 MCLSTR_DECLARE(transpose);
 
 // Grid operations
-MCLSTR_DECLARE(slot);
 MCLSTR_DECLARE(dice);
 MCLSTR_DECLARE(slice);
 MCLSTR_DECLARE(save_slots);
+
+// Special strings
+MCLSTR_DECLARE(allowed_chars);
 
 // Save/Load operations
 MCLSTR_DECLARE(save_tracks);
@@ -112,7 +216,6 @@ MCLSTR_DECLARE(load_tracks);
 MCLSTR_DECLARE(load_groups);
 
 // Poly/Link messages
-MCLSTR_DECLARE(poly);
 MCLSTR_DECLARE(lock_params);
 
 // Upgrade
@@ -132,7 +235,6 @@ MCLSTR_DECLARE(track);
 MCLSTR_DECLARE(locks);
 MCLSTR_DECLARE(lock);
 MCLSTR_DECLARE(slots);
-MCLSTR_DECLARE(slot_word);
 MCLSTR_DECLARE(scenes);
 MCLSTR_DECLARE(ext_track);
 MCLSTR_DECLARE(ext_tracks);
@@ -173,6 +275,7 @@ MCLSTR_DECLARE(suffix_syx);
 MCLSTR_DECLARE(suffix_snd);
 MCLSTR_DECLARE(name_wav);
 MCLSTR_DECLARE(name_sysex);
+MCLSTR_DECLARE(name_snd);
 
 // =============================================================================
 // WAVEFORM NAMES (4 chars each)

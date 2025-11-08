@@ -39,7 +39,7 @@ void OscMixerPage::display() {
     oled_display.setCursor(0, 0);
     oled_display.fillRect(0, 0, 64, 32, BLACK);
 
-    oled_display.print(F("OSC MIXER"));
+    mcl_print_P(mclstr_osc_mixer);
     draw_levels();
     scanline_width = 4;
     draw_wav();

@@ -4,8 +4,8 @@
 void ConvertProjectPage::init() {
 
   DEBUG_PRINT_FN();
-  strcpy(title, "Project");
-  strcpy(lwd, "/");
+  strcpy_P(title, mclstr_title_project);
+  strcpy_P(lwd, mclstr_root_path);
   SD.chdir("/");
 
   show_dirs = false;

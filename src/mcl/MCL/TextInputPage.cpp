@@ -8,7 +8,7 @@ inline char _getchar(uint8_t i) {
   if (i >= sz_allowedchar)
     i = sz_allowedchar - 1;
   return i
-      ["abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_&@-=!"];
+      [mclstr_allowed_chars];
 }
 
 // chr -> idx

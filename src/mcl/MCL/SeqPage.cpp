@@ -521,70 +521,37 @@ void SeqPage::draw_knob_conditional(uint8_t cond) {
   char K[4];
   conditional_str(K, cond);
   //draw_knob(0, PRG_TO_RAM("COND"), K);
-  draw_knob(0, "COND", K);
+  draw_knob(0, mclstr_cond, K);
 }
-/*
-void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
-  if (cond == 0) {
-    strcpy(str, "L1");
-  } else {
-    if (cond > NUM_TRIG_CONDITIONS) {
-      cond = cond - NUM_TRIG_CONDITIONS;
-    }
 
-    if (cond <= 8) {
-      strcpy(str, "L  ");
-      str[1] = cond + '0';
-    } else if (cond <= 13) {
-      strcpy(str, "P  ");
-      uint8_t prob[5] = {1, 2, 5, 7, 9};
-      str[1] = prob[cond - 9] + '0';
-    } else if (cond == 14) {
-      strcpy(str, "1S ");
-    }
-    str[3] = '\0';
-    if (seq_param1.getValue() > NUM_TRIG_CONDITIONS) {
-      str[2] = '^';
-      if (is_md) {
-        str[2] = '+';
-      }
+void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
+  if (!s) return;
+
+  if (c > NUM_TRIG_CONDITIONS)
+    c -= NUM_TRIG_CONDITIONS;
+
+  static const char PROGMEM ptab[] = "12579";  // probability digits
+
+  char a = 'L', b = '1';
+  if (c) {
+    if (c <= 8) {
+      b = '0' + c;             // L2..L8
+    } else if (c <= 13) {
+      a = 'P';                 // P1..P9
+      b = pgm_read_byte(&ptab[c - 9]);
+    } else if (c == 14) {
+      a = '1'; b = 'S';        // 1S
     }
   }
-}
-*/
-void SeqPage::conditional_str(char *str, uint8_t cond, bool is_md) {
-  if (str == nullptr)
-    return;
 
-  if (cond == 0) {
-    str[0] = 'L';
-    str[1] = '1';
-    str[2] = '\0';
-  } else {
-    if (cond > NUM_TRIG_CONDITIONS) {
-      cond -= NUM_TRIG_CONDITIONS;
-    }
+  s[0] = a;
+  s[1] = b;
+  uint8_t i = 2;
 
-    if (cond <= 8) {
-      str[0] = 'L';
-      str[1] = cond + '0';
-      str[2] = '\0';
-    } else if (cond <= 13) {
-      static const uint8_t prob[5] = {1, 2, 5, 7, 9};
-      str[0] = 'P';
-      str[1] = prob[cond - 9] + '0';
-      str[2] = '\0';
-    } else if (cond == 14) {
-      str[0] = '1';
-      str[1] = 'S';
-      str[2] = '\0';
-    }
+  if (seq_param1.getValue() > NUM_TRIG_CONDITIONS)
+    s[i++] = m ? '+' : '^';
 
-    if (seq_param1.getValue() > NUM_TRIG_CONDITIONS) {
-      str[2] = is_md ? '+' : '^';
-      str[3] = '\0';
-    }
-  }
+  s[i] = '\0';
 }
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
@@ -599,7 +566,7 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
     K[0] = '+';
     mcl_gui.put_value_at(timing - timing_mid, K + 1);
   }
-  draw_knob(1, "UTIM", K);
+  draw_knob(1, mclstr_utim, K);
 }
 
 void SeqPage::length_handler(uint8_t length, bool multi) {
@@ -750,10 +717,10 @@ void opt_clear_track_handler() {
       for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
         mcl_seq.ext_tracks[n].clear_track();
       }
-      oled_display.textbox_P(mclstr_clear_word, mclstr_ext_tracks);
+      oled_display.textbox_P(mclstr_clear, mclstr_ext_tracks);
     } else if (opt_clear == 1) {
       mcl_seq.ext_tracks[last_ext_track].clear_track();
-      oled_display.textbox_P(mclstr_clear_word, mclstr_ext_track);
+      oled_display.textbox_P(mclstr_clear, mclstr_ext_track);
     }
   }
   opt_clear = 0;
@@ -768,18 +735,17 @@ void opt_clear_locks_handler() {
 
         mcl_seq.md_tracks[n].clear_locks();
       }
-    } else if (opt_clear == 1) {
-      oled_display.textbox_P(mclstr_clear_word, mclstr_locks);
+oled_display.textbox_P(mclstr_clear, mclstr_locks);
       mcl_seq.md_tracks[last_md_track].clear_locks();
     }
   } else {
     auto &active_track = mcl_seq.ext_tracks[last_ext_track];
     if (opt_clear == 2) {
-      oled_display.textbox_P(mclstr_clear_word, mclstr_locks);
+    oled_display.textbox_P(mclstr_clear, mclstr_locks);
       active_track.clear_track_locks();
     }
     if (opt_clear == 1) {
-      oled_display.textbox_P(mclstr_clear_word, mclstr_lock);
+      oled_display.textbox_P(mclstr_clear, mclstr_lock);
       if (SeqPage::pianoroll_mode > 0) {
         active_track.clear_track_locks(SeqPage::pianoroll_mode - 1);
       }
@@ -849,7 +815,7 @@ void opt_copy_track_handler(uint8_t op) {
   if (opt_copy == 1) {
     if (opt_midi_device_capture == &MD) {
       if (!silent) {
-        oled_display.textbox_P(mclstr_copy_word, mclstr_track);
+        oled_display.textbox_P(mclstr_copy, mclstr_track);
         MD.popup_text(4);
       }
       mcl_clipboard.copy_track = last_md_track;
@@ -859,7 +825,7 @@ void opt_copy_track_handler(uint8_t op) {
     else {
       if (!silent) {
         MD.popup_text_P(mclstr_copy_ext);
-        oled_display.textbox_P(mclstr_copy_word, mclstr_ext_track);
+        oled_display.textbox_P(mclstr_copy, mclstr_ext_track);
       }
       mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
       mcl_clipboard.copy_sequencer_track(last_ext_track + NUM_MD_TRACKS);
@@ -886,7 +852,7 @@ void opt_paste_track_handler() {
         oled_display.display();
         MD.popup_text(3);
       } else {
-        oled_display.textbox_P(mclstr_undo_word, mclstr_tracks);
+        oled_display.textbox_P(mclstr_undo, mclstr_tracks);
         oled_display.display();
         MD.popup_text(22);
       }
@@ -898,10 +864,10 @@ void opt_paste_track_handler() {
     if (opt_midi_device_capture == &MD) {
       bool is_poly = false;
       if (!undo) {
-        oled_display.textbox_P(mclstr_paste_word, mclstr_track);
+        oled_display.textbox_P(mclstr_paste, mclstr_track);
         MD.popup_text(6);
       } else {
-        oled_display.textbox_P(mclstr_undo_word, mclstr_track);
+        oled_display.textbox_P(mclstr_undo, mclstr_track);
         is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
         MD.popup_text(23);
       }
@@ -916,9 +882,9 @@ void opt_paste_track_handler() {
                                             last_md_track);
       }
       if (!undo) {
-        oled_display.textbox_P(mclstr_paste_word, mclstr_track);
+        oled_display.textbox_P(mclstr_paste, mclstr_track);
       } else {
-        oled_display.textbox_P(mclstr_undo_word, mclstr_track);
+        oled_display.textbox_P(mclstr_undo, mclstr_track);
       }
     }
   }
@@ -938,7 +904,7 @@ void opt_clear_page_handler() {
   CLEAR:
     opt_copy_page_handler(PAGE_UNDO);
   }
-  oled_display.textbox_P(mclstr_clear_word, mclstr_page);
+  oled_display.textbox_P(mclstr_clear, mclstr_page);
   MD.popup_text(57);
   MDSeqStep empty_step;
   memset(&empty_step, 0, sizeof(empty_step));
@@ -962,7 +928,7 @@ void opt_copy_page_handler(uint8_t op) {
   }
 
   if (!silent) {
-    oled_display.textbox_P(mclstr_copy_word, mclstr_page);
+    oled_display.textbox_P(mclstr_copy, mclstr_page);
     MD.popup_text(54);
   }
   for (uint8_t n = 0; n < 16; n++) {
@@ -977,10 +943,10 @@ void opt_copy_page_handler(uint8_t op) {
 void opt_paste_page_handler() {
   if (opt_undo == PAGE_UNDO) {
     opt_undo = 255;
-    oled_display.textbox_P(mclstr_undo_word, mclstr_page);
+    oled_display.textbox_P(mclstr_undo, mclstr_page);
     MD.popup_text(55);
   } else {
-    oled_display.textbox_P(mclstr_paste_word, mclstr_page);
+    oled_display.textbox_P(mclstr_paste, mclstr_page);
     MD.popup_text(56);
   }
   for (uint8_t n = 0; n < 16; n++) {
@@ -1057,7 +1023,7 @@ void opt_mute_step_handler() {
 
 void opt_clear_step_locks_handler() {
   if (opt_clear_step == 1) {
-    oled_display.textbox_P(mclstr_clear_word, mclstr_locks);
+    oled_display.textbox_P(mclstr_clear, mclstr_locks);
     MD.popup_text(14);
   }
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {

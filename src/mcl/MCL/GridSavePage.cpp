@@ -46,8 +46,10 @@ void GridSavePage::display() {
 
     oled_display.setFont(&TomThumb);
 
+    char save_label[8];
+    mclstr_copy_progmem(save_label, mclstr_save, sizeof(save_label));
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7,
-                              "MODE", "SAVE");
+                              mclstr_mode, save_label);
 
     char step[4] = {'\0'};
     uint8_t step_count =
@@ -64,9 +66,9 @@ void GridSavePage::display() {
     constexpr uint8_t data_x = 56;
 
     oled_display.setCursor(data_x + 9, MCLGUI::s_menu_y + 15);
-    oled_display.print(F("SND"));
+    mcl_print_P(mclstr_name_snd);
     oled_display.setCursor(data_x + 9, MCLGUI::s_menu_y + 22);
-    oled_display.print(F("SEQ"));
+    mcl_print_P(mclstr_seq);
 
     oled_display.drawFastHLine(data_x + 13 + 9, MCLGUI::s_menu_y + 11, 2, WHITE);
     oled_display.drawFastHLine(data_x + 13 + 9, MCLGUI::s_menu_y + 18, 2,
@@ -75,12 +77,12 @@ void GridSavePage::display() {
     mcl_gui.draw_horizontal_arrow(data_x + 16 + 9, MCLGUI::s_menu_y + 15, 5);
 
     oled_display.setCursor(data_x + 24 + 9, MCLGUI::s_menu_y + 18);
-    oled_display.print(F("GRID"));
+    mcl_print_P(mclstr_grid);
   }
 }
 
 void GridSavePage::save() {
-  oled_display.textbox_P(mclstr_save_word, mclstr_tracks);
+  oled_display.textbox_P(mclstr_save, mclstr_tracks);
   oled_display.display();
 
   uint8_t save_mode = SAVE_SEQ;
@@ -149,7 +151,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
 
       track_select_array_from_type_select(track_select_array);
 
-      oled_display.textbox_P(mclstr_save_word, mclstr_groups);
+      oled_display.textbox_P(mclstr_save, mclstr_groups);
       //oled_display.display();
 
       uint8_t save_mode = SAVE_SEQ;

@@ -102,21 +102,21 @@ void RoutePage::display() {
 
   char str_tmp[2] = "0";
   str_tmp[0] = encoders[0]->cur + 'A';
-  mcl_gui.draw_knob(0, "ROUTE", str_tmp);
+  mcl_gui.draw_knob(0, mclstr_route, str_tmp);
 
   char Q[4] = {'\0'};
   if (encoders[1]->getValue() == 1) {
-    strcpy(Q, "--");
+    strcpy_P(Q, mclstr_dash);
   } else {
     x = encoders[1]->getValue();
     mcl_gui.put_value_at(x, Q);
   }
-  mcl_gui.draw_knob(1, "QUANT", Q);
+  mcl_gui.draw_knob(1, mclstr_quant, Q);
 
   uint8_t step_count = (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) % 64;
 
   mcl_gui.put_value_at(step_count, Q);
-  strcpy(info_line2, "STEP ");
+  strcpy_P(info_line2, mclstr_step_space);
   strcat(info_line2, Q);
   mcl_gui.draw_panel_labels("ROUTE", info_line2);
 

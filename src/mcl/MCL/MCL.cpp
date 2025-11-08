@@ -158,7 +158,7 @@ void MCL::setup() {
     }
   }
   if (!ret) {
-    oled_display.print(F("SD CARD ERROR :-("));
+    mcl_print_P(mclstr_sd_card_error);
     oled_display.display();
     delay(2000);
     return;
