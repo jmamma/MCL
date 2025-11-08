@@ -55,6 +55,12 @@ MCLSTR_DEFINE(save_word, "SAVE");
 MCLSTR_DEFINE(load_word, "LOAD");
 MCLSTR_DEFINE(fill_word, "FILL");
 
+// Combined action verbs and common object words
+MCLSTR_DEFINE(clear_step, "CLEAR STEP");
+MCLSTR_DEFINE(copy_step, "COPY STEP");
+MCLSTR_DEFINE(paste_step, "PASTE STEP");
+MCLSTR_DEFINE(undo_step, "UNDO STEP");
+
 // Device prefixes
 MCLSTR_DEFINE(md_prefix, "MD");
 MCLSTR_DEFINE(ext_prefix, "EXT");

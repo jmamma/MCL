@@ -1004,8 +1004,8 @@ void opt_clear_step_handler() {
   CLEAR:
     opt_copy_step_handler(STEP_UNDO);
   }
-  oled_display.textbox_P(mclstr_clear_word, mclstr_step_word);
-  MD.popup_text_P(mclstr_clear_word, mclstr_step_word);
+  oled_display.textbox_P(mclstr_clear_step);
+  MD.popup_text_P(mclstr_clear_step);
   MDSeqStep empty_step;
   memset(&empty_step, 0, sizeof(empty_step));
   mcl_seq.md_tracks[last_md_track].paste_step(
@@ -1023,8 +1023,8 @@ void opt_copy_step_handler(uint8_t op) {
     silent = true;
   }
   if (!silent) {
-    oled_display.textbox_P(mclstr_copy_word, mclstr_step_word);
-    MD.popup_text_P(mclstr_copy_word, mclstr_step_word);
+    oled_display.textbox_P(mclstr_copy_step);
+    MD.popup_text_P(mclstr_copy_step);
   }
   mcl_seq.md_tracks[last_md_track].copy_step(SeqPage::step_select +
                                                  SeqPage::page_select * 16,
@@ -1034,12 +1034,12 @@ void opt_copy_step_handler(uint8_t op) {
 void opt_paste_step_handler() {
   if (opt_undo == STEP_UNDO) {
     opt_undo = 255;
-    oled_display.textbox_P(mclstr_undo_word, mclstr_step_word);
-    MD.popup_text_P(mclstr_undo_word, mclstr_step_word);
+    oled_display.textbox_P(mclstr_undo_step);
+    MD.popup_text_P(mclstr_undo_step);
   } else {
 
-    oled_display.textbox_P(mclstr_paste_word, mclstr_step_word);
-    MD.popup_text_P(mclstr_paste_word, mclstr_step_word);
+    oled_display.textbox_P(mclstr_paste_step);
+    MD.popup_text_P(mclstr_paste_step);
   }
   mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select +
                                                   SeqPage::page_select * 16,

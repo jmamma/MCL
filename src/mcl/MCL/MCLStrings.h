@@ -72,6 +72,12 @@ MCLSTR_DECLARE(save_word);
 MCLSTR_DECLARE(load_word);
 MCLSTR_DECLARE(fill_word);
 
+// Combined action verbs and common object words
+MCLSTR_DECLARE(clear_step);
+MCLSTR_DECLARE(copy_step);
+MCLSTR_DECLARE(paste_step);
+MCLSTR_DECLARE(undo_step);
+
 // Device prefixes
 MCLSTR_DECLARE(md_prefix);
 MCLSTR_DECLARE(ext_prefix);
