@@ -133,9 +133,9 @@ void GridTask::transition_handler() {
 
   uint8_t div32th_margin = 6;
 
-  while (MidiClock.clock_less_than(
-             MidiClock.div32th_counter + max(2, 0.032f * MidiClock.get_tempo()),
-             (uint32_t)mcl_actions.next_transition * 2)) {
+  while (!MidiClock.clock_less_than(
+      MidiClock.div32th_counter + max(2, 0.032f * MidiClock.get_tempo()),
+      (uint32_t)mcl_actions.next_transition * 2)) {
     memset(track_select_array, 0, sizeof(track_select_array));
 
 
