@@ -6,13 +6,13 @@
 #include "MD.h"
 #include "MCLStrings.h"
 
-const char *c_wav_root = mclstr_path_wav_root;
-const char *c_syx_root = mclstr_path_syx_root;
-const char *c_wav_suffix = mclstr_suffix_wav;
-const char *c_syx_suffix = mclstr_suffix_syx;
+const char *c_wav_root = "/Samples/WAV";
+const char *c_syx_root = "/Samples/SYX";
+const char *c_wav_suffix = ".wav";
+const char *c_syx_suffix = ".syx";
 
-const char *c_wav_name = mclstr_name_wav;
-const char *c_syx_name = mclstr_name_sysex;
+const char *c_wav_name = "WAV";
+const char *c_syx_name = "SYSEX";
 
 static bool s_query_returned = false;
 
@@ -66,16 +66,17 @@ void SampleBrowserPage::display() {
         oled_display.print(wav_file.header.fmt.bitRate);
         oled_display.print('/');
         oled_display.print(wav_file.header.fmt.numChannels);
-
+/*
       float seconds = wav_file.header.get_length() / (float)wav_file.header.fmt.sampleRate;
       int16_t minutes = seconds * 0.01666666667f;
       int16_t ms = ((float)seconds - int(seconds)) * 1000;
 
       oled_display.print(minutes);
-      oled_display.print(mclstr_colon);
+      oled_display.print(':');
       oled_display.print(int(seconds));
-      oled_display.print(mclstr_colon);
+      oled_display.print(':');
       oled_display.print(ms);
+*/
         size = wav_file.file.size();
         wav_file.close();
       }
