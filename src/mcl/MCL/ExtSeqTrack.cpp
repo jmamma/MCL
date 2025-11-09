@@ -1072,6 +1072,13 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
     int16_t roll_length = length * timing_mid;
     bool wrap = false;
 
+    if (start_x < 0) {
+      start_x += roll_length;
+    }
+    if (end_x < 0) {
+      end_x += roll_length;
+    }
+
     if (mcl_cfg.rec_quant) {
       if (end_x < start_x) {
         end_x += roll_length;
