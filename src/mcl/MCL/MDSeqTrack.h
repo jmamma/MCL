@@ -7,6 +7,7 @@
 #include "MD.h"
 #include "MDSeqTrackData.h"
 #include "SeqTrack.h"
+#include "MidiClock.h"
 
 #define UART1_PORT 1
 
@@ -116,6 +117,20 @@ public:
 
   void set_length(uint8_t len, bool expand = false);
   void re_sync();
+  ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
+    if (count_down) {
+      return false;
+    }
+    if (!MidiClock.isStarted()) {
+      if (speed == new_speed && !has_pending_speed_change()) {
+        return false;
+      }
+      clear_pending_speed_change();
+      set_speed(new_speed, speed, true);
+      return true;
+    }
+    return SeqTrackBase::request_speed_change(new_speed);
+  }
 
   void rotate_left() { modify_track(DIR_LEFT); }
   void rotate_right() { modify_track(DIR_RIGHT); }

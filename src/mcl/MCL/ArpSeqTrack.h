@@ -4,6 +4,7 @@
 
 #include "MidiUart.h"
 #include "SeqTrack.h"
+#include "MidiClock.h"
 #include "platform.h"
 #include "GridTrack.h"
 
@@ -85,6 +86,20 @@ public:
   void re_sync();
   void set_speed(uint8_t speed_);
   void set_length(uint8_t length_);
+  ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
+    if (count_down) {
+      return false;
+    }
+    if (!MidiClock.isStarted()) {
+      if (speed == new_speed && !has_pending_speed_change()) {
+        return false;
+      }
+      clear_pending_speed_change();
+      set_speed(new_speed);
+      return true;
+    }
+    return SeqTrackBase::request_speed_change(new_speed);
+  }
 
   uint8_t get_next_note_up(int8_t cur);
   void render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_);

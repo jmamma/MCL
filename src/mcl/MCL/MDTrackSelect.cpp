@@ -1,5 +1,6 @@
 #include "MDTrackSelect.h"
 #include "MD.h"
+#include "MidiClock.h"
 #include "SeqPtcPage.h"
 #include "SeqPages.h"
 
@@ -83,18 +84,36 @@ void MDTrackSelect::end() {
     update_pattern:
       uint8_t len =
           is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
+
+      bool wait_for_tick = MidiClock.isStarted();
+      uint8_t mod12_snapshot = MidiClock.mod12_counter;
+
+      for (uint8_t n = 0; n < len;) {
+        if (wait_for_tick) {
+          if (!MidiClock.isStarted() ||
+              mod12_snapshot != MidiClock.mod12_counter) {
+            wait_for_tick = false;
+          } else {
+            continue;
+          }
+        }
+        if (is_md_device) {
+          mcl_seq.md_tracks[n].request_speed_change(new_speed);
+        } else {
+          mcl_seq.ext_tracks[n].request_speed_change(new_speed);
+        }
+        n++;
+      }
+
       for (uint8_t n = 0; n < len; n++) {
         if (is_md_device) {
-          auto &track = mcl_seq.md_tracks[n];
-          track.set_length(length, expand);
-          track.request_speed_change(new_speed);
-        } else {
-          auto &track = mcl_seq.ext_tracks[n];
-          track.set_length(length, expand);
-          if (last_ext_track == n) {
-            seq_extparam4.cur = length;
-          }
-          track.request_speed_change(new_speed);
+          mcl_seq.md_tracks[n].set_length(length, expand);
+          continue;
+        }
+        auto &track = mcl_seq.ext_tracks[n];
+        track.set_length(length, expand);
+        if (last_ext_track == n) {
+          seq_extparam4.cur = length;
         }
       }
       if (is_seq_page) {

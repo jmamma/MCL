@@ -8,6 +8,7 @@
 #include "NibbleArray.h"
 #include "mcl.h"
 #include "SeqTrack.h"
+#include "MidiClock.h"
 #include "platform.h"
 
 #define NUM_EXT_STEPS 128
@@ -263,6 +264,20 @@ public:
   void modify_track(uint8_t dir);
 
   void set_speed(uint8_t new_speed, uint8_t old_speed = 255, bool timing_adjust = true);
+  ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
+    if (count_down) {
+      return false;
+    }
+    if (!MidiClock.isStarted()) {
+      if (speed == new_speed && !has_pending_speed_change()) {
+        return false;
+      }
+      clear_pending_speed_change();
+      set_speed(new_speed, speed, true);
+      return true;
+    }
+    return SeqTrackBase::request_speed_change(new_speed);
+  }
   void mute_on();
   void transpose(int8_t offset);
 };
