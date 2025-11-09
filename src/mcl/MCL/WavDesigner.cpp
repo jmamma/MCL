@@ -159,9 +159,9 @@ bool WavDesigner::render() {
     // Need to correctly convert from float to int
     int16_t out_sample;
     if (sample > 0) {
-      out_sample = (int16_t)(sample + 0.5);
+      out_sample = (int16_t)(sample + 0.5f);
     } else {
-      out_sample = (int16_t)(sample - 0.5);
+      out_sample = (int16_t)(sample - 0.5f);
     }
     DEBUG_PRINTLN(out_sample);
     buffer[samples_so_far] = out_sample;
