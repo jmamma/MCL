@@ -8,6 +8,10 @@
 #include "MCLSysConfig.h"
 #include "GridLink.h"
 
+class DeviceTrack;
+class EmptyTrack;
+class SeqTrack;
+
 #define PATTERN_STORE 0
 #define PATTERN_UDEF 254
 #define STORE_IN_PLACE 0
@@ -133,6 +137,12 @@ public:
   void calc_latency();
 
 private:
+  static bool track_supports_type(DeviceTrack *track, uint8_t track_type);
+  DeviceTrack *load_and_prepare_track(uint8_t track_idx, uint16_t row,
+                                      uint8_t track_type, SeqTrack *seq_track,
+                                      uint8_t seq_track_idx, bool &was_rebuilt,
+                                      EmptyTrack &scratch,
+                                      int8_t link_slot = -1);
   void collect_tracks(uint8_t *slot_select_array, uint8_t *row_array, uint8_t load_offset);
   void cache_track(uint8_t n, uint8_t track_idx, uint8_t dev_idx,
                    GridDeviceTrack *gdt);

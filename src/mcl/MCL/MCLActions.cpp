@@ -12,6 +12,49 @@
 
 #define MD_KIT_LENGTH 0x4D0
 
+inline bool MCLActions::track_supports_type(DeviceTrack *track, uint8_t track_type) {
+  if (track == nullptr) {
+    return false;
+  }
+  return (track->active == track_type) ||
+         (track->get_parent_model() == track_type);
+}
+
+DeviceTrack *MCLActions::load_and_prepare_track(uint8_t track_idx, uint16_t row,
+                                                uint8_t track_type, SeqTrack *seq_track,
+                                                uint8_t seq_track_idx, bool &was_rebuilt,
+                                                EmptyTrack &scratch,
+                                                int8_t link_slot) {
+  auto *device_track = scratch.load_from_grid_512(track_idx, row);
+  if (device_track == nullptr) {
+    return nullptr;
+  }
+  if (link_slot >= 0) {
+    scratch.link.store_in_mem(link_slot, &(links[0]));
+  }
+
+  if (!track_supports_type(device_track, track_type)) {
+    scratch.clear();
+    if (device_track == nullptr || device_track->active != EMPTY_TRACK_TYPE) {
+      scratch.init();
+    }
+    device_track = scratch.init_track_type(track_type);
+    if (device_track != nullptr && seq_track != nullptr) {
+      device_track->init(seq_track_idx, seq_track);
+    }
+    was_rebuilt = true;
+    return device_track;
+  }
+
+  if (device_track->get_parent_model() == track_type &&
+      device_track->allow_cast_to_parent()) {
+    device_track->init_track_type(device_track->get_parent_model());
+  }
+
+  was_rebuilt = false;
+  return device_track;
+}
+
 // No STL, no closure, no std::function, cannot make this generic...
 // void __attribute__ ((noinline)) FOREACH_GRID_TRACK(void(*fn)(uint8_t,
 // uint8_t, uint8_t, MidiDevice*, ElektronDevice*)) { uint8_t grid; uint8_t
@@ -372,29 +415,29 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       continue;
     }
     uint8_t row = row_array[n];
-    EmptyTrack empty_track;
+    EmptyTrack scratch;
+    bool rebuilt = false;
+    auto *device_track =
+        load_and_prepare_track(track_idx, row, gdt->track_type,
+                               gdt_dst->seq_track, track_idx_dst, rebuilt,
+                               scratch);
 
-    auto *device_track = empty_track.load_from_grid(track_idx, row);
+    if (device_track == nullptr) {
+      send_machine[dst] = 0;
+      continue;
+    }
 
-    if (device_track == nullptr || device_track->active != gdt->track_type && device_track->get_parent_model() != gdt->track_type) {
-      empty_track.clear();
-      if (device_track == nullptr || device_track->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
-      device_track = device_track->init_track_type(gdt->track_type);
-      if (device_track) {
-        device_track->init(track_idx_dst, gdt_dst->seq_track);
-      }
+    if (rebuilt) {
       send_machine[dst] = 0;
     } else {
-      if (device_track->get_parent_model() == gdt->track_type && device_track->allow_cast_to_parent()) {
-        device_track->init_track_type(device_track->get_parent_model());
+      if (load_offset != 255) {
+        device_track->on_copy(track_idx, track_idx_dst, false);
       }
-      if (load_offset != 255) { device_track->on_copy(track_idx, track_idx_dst, false); }
       device_track->transition_cache(track_idx_dst, dst);
       send_machine[dst] = 1;
     }
-    if (device_track) {
-      device_track->store_in_mem(gdt_dst->mem_slot_idx);
-    }
+
+    device_track->store_in_mem(gdt_dst->mem_slot_idx);
   }
 
   proj.select_grid(old_grid);
@@ -531,35 +574,29 @@ bool MCLActions::load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
                             GridDeviceTrack *gdt, GridDeviceTrack *gdt_dst, uint8_t *send_masks) {
   uint8_t track_idx = get_track_idx(i);
   uint8_t track_idx_dst = get_track_idx(dst);
-  EmptyTrack empty_track;
-  auto *ptrack = empty_track.load_from_grid_512(track_idx, row);
+  EmptyTrack scratch;
+  bool rebuilt = false;
+  auto *ptrack = load_and_prepare_track(track_idx, row, gdt->track_type,
+                                        gdt_dst->seq_track, track_idx_dst,
+                                        rebuilt, scratch, dst);
 
   if (ptrack == nullptr) {
     // DEBUG_PRINTLN("bad read");
     return false;
   } // read failure
 
-  ptrack->link.store_in_mem(dst, &(links[0]));
 
-  if (ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type) {
-    empty_track.clear();
-    if (ptrack->active != EMPTY_TRACK_TYPE) { empty_track.init(); }
-    ptrack->init_track_type(gdt->track_type);
-    ptrack->init(track_idx_dst, gdt_dst->seq_track);
+  if (rebuilt) {
     ptrack->load_immediate_cleared(dst, gdt_dst->seq_track);
   } else {
-    if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
-      ptrack->init_track_type(ptrack->get_parent_model());
+    send_masks[dst] = 1;
+    if (i != dst) {
+      ptrack->on_copy(track_idx, track_idx_dst, false);
     }
-    if (ptrack != nullptr) {
-      send_masks[dst] = 1;
-      if (i != dst) { ptrack->on_copy(track_idx, track_idx_dst, false); }
-      ptrack->load_immediate(track_idx_dst, gdt_dst->seq_track);
-    }
+    ptrack->load_immediate(track_idx_dst, gdt_dst->seq_track);
   }
-  if (ptrack != nullptr) {
-      ptrack->store_in_mem(gdt_dst->mem_slot_idx);
-   }
+
+  ptrack->store_in_mem(gdt_dst->mem_slot_idx);
 
   return true;
 }
@@ -745,36 +782,26 @@ void MCLActions::update_chain_links(uint8_t n, GridDeviceTrack *gdt) {
 }
 
 void MCLActions::cache_track(uint8_t n, GridDeviceTrack* gdt, uint8_t track_idx) {
-  EmptyTrack empty_track;
-
-  auto *ptrack = empty_track.load_from_grid_512(track_idx, links[n].row);
+  EmptyTrack scratch;
   send_machine[n] = 0;
+  bool rebuilt = false;
+  auto *ptrack =
+      load_and_prepare_track(track_idx, links[n].row, gdt->track_type,
+                             gdt->seq_track, track_idx, rebuilt, scratch);
+  if (ptrack == nullptr) {
+    return;
+  }
 
-  if (ptrack == nullptr ||
-      (ptrack->active != gdt->track_type && ptrack->get_parent_model() != gdt->track_type)) {
-    empty_track.clear();
-    if (ptrack == nullptr || ptrack->active != EMPTY_TRACK_TYPE) {
-      empty_track.init();
-    }
-    ptrack = empty_track.init_track_type(gdt->track_type);
-    ptrack->init(track_idx, gdt->seq_track);
-  } else {
-    if (ptrack->get_parent_model() == gdt->track_type && ptrack->allow_cast_to_parent()) {
-      ptrack->init_track_type(ptrack->get_parent_model());
-    }
-    if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
-      DEBUG_PRINTLN("comparing sound");
-      if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
-        DEBUG_PRINTLN("no match");
-        ptrack->transition_cache(track_idx, n);
-        send_machine[n] = 1;
-      }
+  if (!rebuilt && ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
+    DEBUG_PRINTLN("comparing sound");
+    if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
+      DEBUG_PRINTLN("no match");
+      ptrack->transition_cache(track_idx, n);
+      send_machine[n] = 1;
     }
   }
 
-  if (ptrack != nullptr) {
-    ptrack->store_in_mem(gdt->mem_slot_idx);
-  }
+  ptrack->store_in_mem(gdt->mem_slot_idx);
 }
 
 
