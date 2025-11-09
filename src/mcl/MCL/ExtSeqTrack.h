@@ -104,6 +104,7 @@ public:
 class ExtSeqTrack : public ExtSeqTrackData, public SeqSlideTrack {
 
 public:
+  static constexpr uint8_t MAX_EVENTS_PER_STEP = 15;
   bool is_generic_midi = true;
   uint64_t note_buffer[2] = {
       0}; // 2 x 64 bit masks to store state of 128 notes.

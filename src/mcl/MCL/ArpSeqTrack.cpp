@@ -7,7 +7,7 @@
 void ArpSeqTrack::set_speed(uint8_t speed_) {
   speed = speed_;
   uint8_t timing_mid = get_timing_mid();
-  if (mod12_counter > timing_mid) {
+  if (timing_mid && mod12_counter >= timing_mid) {
     mod12_counter = mod12_counter % timing_mid;
   }
 }
@@ -276,5 +276,4 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   }
   mute_state = mute_state_old;
 }
-
 

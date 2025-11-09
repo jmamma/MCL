@@ -28,7 +28,7 @@ void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
   }
   speed = new_speed;
   uint8_t timing_mid = get_timing_mid();
-  if (mod12_counter > timing_mid) {
+  if (timing_mid && mod12_counter >= timing_mid) {
     mod12_counter = mod12_counter % timing_mid;
     // step_count_inc();
   }
@@ -63,13 +63,18 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
         return;
       }
     }
-    ext_event_t empty_events[8];
+    ext_event_t empty_events[MAX_EVENTS_PER_STEP];
     uint8_t a = 0;
     for (uint8_t n = old_length; n < 128; n++) {
       uint16_t ev_idx, ev_end;
       locate(a, ev_idx, ev_end);
-      memcpy(empty_events, &events[ev_idx], sizeof(empty_events));
-      for (uint8_t m = 0; m < (ev_end - ev_idx); m++) {
+      uint8_t bucket_size = ev_end - ev_idx;
+      if (bucket_size > MAX_EVENTS_PER_STEP) {
+        bucket_size = MAX_EVENTS_PER_STEP;
+      }
+      memcpy(empty_events, &events[ev_idx],
+             bucket_size * sizeof(ext_event_t));
+      for (uint8_t m = 0; m < bucket_size; m++) {
         add_event(n, &empty_events[m]);
       }
       velocities[n] = velocities[a];
