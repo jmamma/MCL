@@ -154,7 +154,7 @@ void GridLoadPage::display() {
         } else {
           mcl_gui.put_value_at(encoders[1]->cur, K);
         }
-        mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7, mclstr_len, K);
+        mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, MCLGUI::s_menu_y + 7, mclstr_len, K);
       }
       // draw quantize
       if (mcl_cfg.chain_load_quant == 1) {
@@ -162,6 +162,8 @@ void GridLoadPage::display() {
       } else {
         mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
       }
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
+                                MCLGUI::s_menu_y + 7, mclstr_quant, K);
 
       // draw step count
     }
