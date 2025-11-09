@@ -640,15 +640,14 @@ void opt_speed_handler() {
     DEBUG_PRINTLN(F("okay using MD for length update"));
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].set_speed(opt_speed);
+        auto &track = mcl_seq.md_tracks[n];
+        track.request_speed_change(opt_speed);
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
       auto &active_track = mcl_seq.md_tracks[last_md_track];
-      uint8_t last_speed = active_track.speed;
-      if (opt_speed != last_speed) {
-        active_track.set_speed(opt_speed);
-        MD.sync_seqtrack(active_track.length, active_track.speed,
+      if (active_track.request_speed_change(opt_speed)) {
+        MD.sync_seqtrack(active_track.length, opt_speed,
                          active_track.step_count);
       }
     }
@@ -658,16 +657,15 @@ void opt_speed_handler() {
   else {
     if (BUTTON_DOWN(Buttons.BUTTON4)) {
       for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-        mcl_seq.ext_tracks[n].set_speed(opt_speed);
+        auto &track = mcl_seq.ext_tracks[n];
+        track.request_speed_change(opt_speed);
       }
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
-      uint8_t last_speed = mcl_seq.ext_tracks[last_ext_track].speed;
-      if (opt_speed != last_speed) {
-        mcl_seq.ext_tracks[last_ext_track].set_speed(opt_speed);
-        seq_extstep_page.config_encoders();
-      }
+      auto &active_track = mcl_seq.ext_tracks[last_ext_track];
+      active_track.request_speed_change(opt_speed);
     }
+    seq_extstep_page.config_encoders();
   }
 #endif
   //  opt_seqpage_capture->init();

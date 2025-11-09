@@ -53,6 +53,10 @@ public:
 class SeqTrackBase {
 public:
   uint8_t active;
+  struct PendingSpeedChange {
+    uint8_t value : 7;
+    uint8_t active : 1;
+  };
 
   uint8_t port = UART1_PORT;
   MidiUartClass *uart = &MidiUart;
@@ -71,6 +75,7 @@ public:
   volatile uint8_t count_down;
   volatile bool    cache_loaded;
   bool    load_sound;
+  PendingSpeedChange pending_speed_change{};
 
   SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
@@ -107,6 +112,7 @@ public:
     count_down = 0;
     cache_loaded = true; //Default should assume cache is loaded. Override in transition_load where required.
     load_sound = 0;
+    pending_speed_change.active = 0;
   }
 
   void toggle_mute() { mute_state = !mute_state; }
@@ -171,6 +177,39 @@ public:
     return get_quantized_step(u);
   }
   uint8_t get_quantized_step(uint8_t &utiming, uint8_t quant = 255);
+
+  ALWAYS_INLINE() void queue_speed_change(uint8_t new_speed) {
+    pending_speed_change.value = new_speed & 0x7F;
+    pending_speed_change.active = 1;
+  }
+
+  ALWAYS_INLINE() bool has_pending_speed_change() const {
+    return pending_speed_change.active;
+  }
+
+  ALWAYS_INLINE() bool consume_pending_speed_change(uint8_t &new_speed) {
+    if (!has_pending_speed_change()) {
+      return false;
+    }
+    new_speed = pending_speed_change.value;
+    pending_speed_change.active = 0;
+    return true;
+  }
+
+  ALWAYS_INLINE() void clear_pending_speed_change() {
+    pending_speed_change.active = 0;
+  }
+
+  ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
+    if (count_down) {
+      return false;
+    }
+    if (speed == new_speed && !has_pending_speed_change()) {
+      return false;
+    }
+    queue_speed_change(new_speed);
+    return true;
+  }
 };
 
 class SeqTrack : public SeqTrackBase {

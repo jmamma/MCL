@@ -656,6 +656,13 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
   MidiUartClass *uart_old = uart;
   uart = uart_;
 
+  if (mod12_counter == 0) {
+    uint8_t pending_speed;
+    if (consume_pending_speed_change(pending_speed)) {
+      set_speed(pending_speed, speed, true);
+    }
+  }
+
   uint8_t timing_mid = get_timing_mid_inline();
 
   mod12_counter++;
