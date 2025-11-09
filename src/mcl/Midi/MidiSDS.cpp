@@ -7,6 +7,40 @@
 #include "MCLGUI.h"
 #include "MD.h"
 
+namespace {
+constexpr uint8_t kProgressUpdateInterval = 10;
+constexpr uint8_t kMaxHandshakeRetries = 3;
+
+inline void wait_for_latency(uint16_t latency_ms) {
+  if (!latency_ms) {
+    return;
+  }
+  uint16_t start = read_clock_ms();
+  while (clock_diff(start, read_clock_ms()) < latency_ms) {
+  }
+}
+
+inline uint16_t calculate_latency(uint32_t uart_speed, size_t packet_bytes) {
+  if (uart_speed == 0) {
+    return 0;
+  }
+  return static_cast<uint16_t>((10000UL * packet_bytes) / uart_speed + 20);
+}
+
+inline void update_progress(bool show_progress, int &counter, uint32_t pos,
+                            uint32_t total) {
+  if (++counter <= kProgressUpdateInterval) {
+    return;
+  }
+  counter = 0;
+  if (!show_progress || total == 0) {
+    return;
+  }
+  uint32_t progress = pos >= total ? 80 : (pos * 80 / total);
+  mcl_gui.draw_progress("Sending sample", progress, 80);
+}
+} // namespace
+
 // ============================================================================
 // File Reader Implementations
 // ============================================================================
@@ -197,6 +231,15 @@ static void _setName(const char *filename, uint16_t slot) {
   MD.setSampleName(slot, name);
 }
 
+static inline void set_sample_name_if_needed(const char *samplename,
+                                             const char *filename,
+                                             uint16_t slot) {
+  const char *source = (samplename && samplename[0]) ? samplename : filename;
+  if (source) {
+    _setName(source, slot);
+  }
+}
+
 // ============================================================================
 // General MIDI SDS Message Functions
 // ============================================================================
@@ -289,6 +332,39 @@ void MidiSDSClass::cancel() {
   state = SDS_READY;
 }
 
+bool MidiSDSClass::transmitPacket(uint8_t *buf, uint8_t len) {
+  if (buf[0] != 0xF0) {
+    return sendData(buf, len);
+  }
+  MidiUart.sendRaw(buf, len);
+  return true;
+}
+
+MidiSDSClass::AckResult MidiSDSClass::awaitDataAck(uint16_t latency_ms) {
+  if (!hand_shake_state) {
+    wait_for_latency(latency_ms);
+    return AckResult::Ok;
+  }
+
+  uint8_t reply = waitForMsg(2000);
+  if (reply == 255) {
+    hand_shake_state = false;
+    return AckResult::Ok;
+  }
+
+  if (reply == MIDI_SDS_WAIT) {
+    reply = waitForMsg();
+  }
+
+  if (reply == MIDI_SDS_ACK) {
+    return AckResult::Ok;
+  }
+  if (reply == MIDI_SDS_CANCEL) {
+    return AckResult::Cancel;
+  }
+  return AckResult::Retry;
+}
+
 // ============================================================================
 // Consolidated Send File Function
 // ============================================================================
@@ -326,7 +402,11 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
     buf[5] = (sample_number >> 7) & 0x7F;
   }
 
-  MidiUart.sendRaw(buf, szbuf);
+  if (!transmitPacket(buf, szbuf)) {
+    ret = false;
+    goto cleanup;
+  }
+
   reply = waitForHandshake();
   if (reply == MIDI_SDS_CANCEL) {
     ret = false;
@@ -334,40 +414,24 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
   }
 
   // Set sample name if provided
-  if (samplename) {
-    _setName(samplename, sample_number);
-  } else if (filename) {
-    _setName(filename, sample_number);
-  }
+  set_sample_name_if_needed(samplename, filename, sample_number);
 
   oled_display.clearDisplay();
-  latency_ms = (10000UL * sizeof(buf)) / MidiUart.speed + 20;
-
-  DEBUG_PRINTLN("latency");
-  DEBUG_PRINTLN(latency_ms);
+  latency_ms = calculate_latency(MidiUart.speed, sizeof(buf));
 
   // Send remaining packets
   while (reader.hasMorePackets()) {
     const uint32_t pos = reader.position();
-
-    DEBUG_PRINT("pos = ");
-    DEBUG_PRINTLN(pos);
-    DEBUG_PRINT("fsize = ");
-    DEBUG_PRINTLN(fsize);
-
-    if (pos >= fsize)
+    if (pos >= fsize) {
       break;
+    }
+
     if (key_interface.is_key_down(MDX_KEY_NO)) {
       ret = false;
       goto cleanup;
     }
 
-    if (++show_progress_counter > 10) {
-      show_progress_counter = 0;
-      if (show_progress) {
-        mcl_gui.draw_progress("Sending sample", pos * 80 / fsize, 80);
-      }
-    }
+    update_progress(show_progress, show_progress_counter, pos, fsize);
 
     szbuf = reader.readPacket(buf, sizeof(buf));
     if (szbuf <= 0) {
@@ -376,46 +440,22 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
       goto cleanup;
     }
 
-    uint8_t n_retry = 0;
-  retry:
-    // For data packets (not sysex), wrap in SDS data format
-    if (buf[0] != 0xF0) {
-      if (!sendData(buf, szbuf)) {
+    uint8_t retries = 0;
+    while (true) {
+      if (!transmitPacket(buf, szbuf)) {
         ret = false;
         goto cleanup;
       }
-    } else {
-      MidiUart.sendRaw(buf, szbuf);
-    }
-
-    if (!hand_shake_state) {
-      uint16_t myclock = read_clock_ms();
-      while (clock_diff(myclock, read_clock_ms()) < latency_ms)
-        ;
-    } else if (buf[1] == 0x7E && buf[3] == 0x02) {
-      // Expect handshake for data packets
-      reply = waitForMsg(2000);
-      switch (reply) {
-      case 255: // nothing came back
-        hand_shake_state = false;
+      AckResult ack = awaitDataAck(latency_ms);
+      if (ack == AckResult::Ok) {
+        incPacketNumber();
         break;
-      case MIDI_SDS_WAIT:
-        reply = waitForMsg();
-        if (reply != MIDI_SDS_ACK) {
-          ret = false;
-          goto cleanup;
-        }
-      case MIDI_SDS_ACK:
-        break;
-      default:
-        if (n_retry++ > 3) {
-          ret = false;
-          goto cleanup;
-        }
-        goto retry;
+      }
+      if (ack == AckResult::Cancel || ++retries > kMaxHandshakeRetries) {
+        ret = false;
+        goto cleanup;
       }
     }
-    incPacketNumber();
   }
 
 cleanup:

@@ -76,6 +76,11 @@ public:
   bool sendData(uint8_t *buf, uint8_t len);
 
 private:
+  enum class AckResult : uint8_t { Ok, Retry, Cancel };
+
+  bool transmitPacket(uint8_t *buf, uint8_t len);
+  AckResult awaitDataAck(uint16_t latency_ms);
+
   // Consolidated send method (used by sendSyx and sendWav)
   bool sendFile(SDSFileReader &reader, const char *filename,
                 uint16_t sample_number, const char *samplename,
