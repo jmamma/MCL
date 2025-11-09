@@ -11,7 +11,7 @@ void QuestionDialogPage::init(const char* title_, const char* text_) {
   oled_display.setCursor(MCLGUI::dlg_info_x2 - 82, MCLGUI::dlg_info_y1 + 23);
   mcl_print_P(mclstr_no_option);
 
-  oled_display.setCursor(MCLGUI::dlg_info_x2 - 54, MCLGUI::dlg_info_y1 + 23);
+  oled_display.setCursor(MCLGUI::dlg_info_x2 - 53, MCLGUI::dlg_info_y1 + 23);
   mcl_print_P(mclstr_yes_option);
 
   oled_display.drawRect(MCLGUI::dlg_info_x2 - 88, MCLGUI::dlg_info_y1 + 16, 18, 9, WHITE);
