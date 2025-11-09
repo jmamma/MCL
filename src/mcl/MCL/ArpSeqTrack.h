@@ -104,6 +104,12 @@ public:
   uint8_t get_next_note_up(int8_t cur);
   void render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_);
 
+protected:
+  virtual void on_cycle_midpoint(MidiUartClass *uart_, MidiUartClass *uart2_);
+  virtual void dispatch_note(uint8_t note, MidiUartClass *uart_,
+                             MidiUartClass *uart2_) = 0;
+  virtual void on_render_begin();
+
 };
 
 class MDArpSeqTrack : public ArpSeqTrack {
@@ -112,6 +118,9 @@ class MDArpSeqTrack : public ArpSeqTrack {
       ArpSeqTrack::init();
       active = MD_ARP_TRACK_TYPE;
     }
+  protected:
+    void dispatch_note(uint8_t note, MidiUartClass *uart_,
+                       MidiUartClass *uart2_) override;
 };
 
 class ExtArpSeqTrack : public ArpSeqTrack {
@@ -120,4 +129,9 @@ class ExtArpSeqTrack : public ArpSeqTrack {
       ArpSeqTrack::init();
       active = EXT_ARP_TRACK_TYPE;
     }
+  protected:
+    void dispatch_note(uint8_t note, MidiUartClass *uart_,
+                       MidiUartClass *uart2_) override;
+    void on_cycle_midpoint(MidiUartClass *uart_, MidiUartClass *uart2_) override;
+    void on_render_begin() override;
 };

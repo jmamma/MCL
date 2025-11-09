@@ -280,6 +280,13 @@ public:
       step_count++;
     }
   }
+  virtual void set_length(uint8_t len, bool expand = false) = 0;
+  virtual void clear_track(bool locks = true) = 0;
+  virtual void rotate_left() = 0;
+  virtual void rotate_right() = 0;
+  virtual void reverse() = 0;
+  virtual void transpose(int8_t offset) = 0;
+
   bool conditional(uint8_t condition);
 };
 
@@ -291,8 +298,8 @@ public:
   uint8_t locks_slides_recalc = 255;
   uint16_t locks_slides_idx = 0;
 
-  const uint8_t number_midi_cc = 6 * 2 + 4;
-  const uint8_t midi_cc_array_size = 6 * 2 + 4;
+  static constexpr uint8_t number_midi_cc = 6 * 2 + 4;
+  static constexpr uint8_t midi_cc_array_size = 6 * 2 + 4;
 
   ALWAYS_INLINE() void reset() {
     for (uint8_t n = 0; n < NUM_LOCKS; n++) {
@@ -304,8 +311,13 @@ public:
 
   void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0,
                      int8_t y1);
-  void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
+  virtual void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
 
+protected:
+  virtual void on_slide_dispatch_begin(uint8_t channel);
+  virtual void dispatch_slide_value(uint8_t param, uint8_t value,
+                                    uint8_t channel);
+  virtual void on_slide_dispatch_end();
 };
 
 #endif /* SEQTRACK_H__ */

@@ -695,6 +695,43 @@ void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
   }
 }
 
+void MDSeqTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
+  SlideDispatchContext ctx{};
+  ctx.is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  uint8_t ccs[midi_cc_array_size];
+  if (ctx.is_midi_model) {
+    ctx.ccs = ccs;
+    ctx.send_ccs = false;
+    memset(ccs, 255, sizeof(ccs));
+  } else {
+    ctx.ccs = nullptr;
+  }
+
+  slide_ctx = &ctx;
+  SeqSlideTrack::send_slides(locks_params, channel);
+  slide_ctx = nullptr;
+
+  if (ctx.is_midi_model) {
+    send_notes_ccs(ccs, ctx.send_ccs);
+  }
+}
+
+void MDSeqTrack::dispatch_slide_value(uint8_t param, uint8_t val, uint8_t channel) {
+  if (slide_ctx == nullptr) {
+    SeqSlideTrack::dispatch_slide_value(param, val, channel);
+    return;
+  }
+
+  if (!slide_ctx->is_midi_model) {
+    MD.setTrackParam_inline(track_number, param, val);
+    return;
+  }
+
+  slide_ctx->send_ccs |= ((param > 4 && param < 8) ||
+                          ((param > 8) && (param & 1)) || (param == 20));
+  process_note_locks(param, val, slide_ctx->ccs);
+}
+
 void MDSeqTrack::send_trig() { send_trig_inline(); }
 
 void MDSeqTrack::send_trig_inline() {

@@ -5,6 +5,7 @@
 #include "MidiActivePeering.h"
 #include "AuxPages.h"
 #include "MCLStrings.h"
+#include "SeqTrackUtil.h"
 
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24
@@ -60,16 +61,19 @@ void SeqPtcPage::config_encoders() {
 
   encoders[0]->cur = octs[dev];
   encoders[1]->cur = fine_tunes[dev];
+  bool is_md_device = (dev == 0);
+  uint8_t track_idx = is_md_device ? last_md_track : last_ext_track;
+  SeqTrack &track = SeqTrackUtil::get_track(is_md_device, track_idx);
 
-  if (dev == 0) {
+  if (is_md_device) {
     ptc_param_len.max = 64;
-    ptc_param_len.cur = mcl_seq.md_tracks[last_md_track].length;
+    ptc_param_len.cur = track.length;
     show_chan = false;
   }
 #ifdef EXT_TRACKS
   else {
     ptc_param_len.max = (uint8_t)128;
-    ptc_param_len.cur = mcl_seq.ext_tracks[last_ext_track].length;
+    ptc_param_len.cur = track.length;
   }
 #endif
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, show_chan);
@@ -188,23 +192,19 @@ void SeqPtcPage::render_arp(bool recalc_notemask_, MidiDevice *midi_dev,
     recalc_notemask();
   }
 
-  SeqTrack *seq_track;
-  ArpSeqTrack *arp_track;
-  if (midi_dev == &MD) {
-    seq_track = &mcl_seq.md_tracks[track];
-    arp_track = &mcl_seq.md_arp_tracks[track];
+  bool is_md_device = (midi_dev == &MD);
+  SeqTrack &seq_track = SeqTrackUtil::get_track(is_md_device, track);
+  ArpSeqTrack &arp_track =
+      SeqTrackUtil::get_arp_track(is_md_device, track);
+
+  if (seq_track.speed == SEQ_SPEED_3_4X ||
+      seq_track.speed == SEQ_SPEED_3_2X) {
+    arp_track.speed = SEQ_SPEED_3_2X;
   } else {
-    seq_track = &mcl_seq.ext_tracks[track];
-    arp_track = &mcl_seq.ext_arp_tracks[track];
+    arp_track.speed = SEQ_SPEED_2X;
   }
-  if (seq_track->speed == SEQ_SPEED_3_4X ||
-      seq_track->speed == SEQ_SPEED_3_2X) {
-    arp_track->speed = SEQ_SPEED_3_2X;
-  } else {
-    arp_track->speed = SEQ_SPEED_2X;
-  }
-  arp_track->render(arp_mode.cur, ptc_param_oct.cur, ptc_param_fine_tune.cur,
-                    arp_range.cur, note_mask);
+  arp_track.render(arp_mode.cur, ptc_param_oct.cur, ptc_param_fine_tune.cur,
+                   arp_range.cur, note_mask);
 }
 
 void SeqPtcPage::display() {

@@ -1164,7 +1164,7 @@ void ExtSeqTrack::clear_ext_notes() {
   }
 }
 
-void ExtSeqTrack::clear_track() {
+void ExtSeqTrack::clear_track(bool) {
   clear_ext_notes();
   clear_ext_conditional();
   buffer_notesoff();

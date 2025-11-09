@@ -75,12 +75,7 @@ void SeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8
 }
 
 void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
-  uint8_t ccs[midi_cc_array_size];
-  bool send_ccs = false;
-  bool is_midi_model = (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
-  if (is_midi_model) {
-    memset(ccs, 255, sizeof(ccs));
-  }
+  on_slide_dispatch_begin(channel);
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
 
@@ -116,35 +111,28 @@ void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel)
         }
       }
       uint8_t param = locks_params[c] - 1;
-      switch (active) {
-      case MD_TRACK_TYPE:
-        if (is_midi_model) {
-          uint8_t p = param;
-          send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
-          mcl_seq.md_tracks[track_number].process_note_locks(p, val, ccs);
-        }
-        else {
-          MD.setTrackParam_inline(track_number, param, val);
-        }
-        break;
-      default:
-        if (param == PARAM_PB) {
-          uart->sendPitchBend(channel, val << 7);
-          break;
-        }
-        if (param == PARAM_CHP) {
-          uart->sendChannelPressure(channel, val);
-          break;
-        }
-        uart->sendCC(channel, param, val);
-        break;
-      }
+      dispatch_slide_value(param, val, channel);
     }
   }
-  if (is_midi_model) {
-    mcl_seq.md_tracks[track_number].send_notes_ccs(ccs, send_ccs);
-  }
+  on_slide_dispatch_end();
 }
+
+void SeqSlideTrack::on_slide_dispatch_begin(uint8_t) {}
+
+void SeqSlideTrack::dispatch_slide_value(uint8_t param, uint8_t val,
+                                         uint8_t channel) {
+  if (param == PARAM_PB) {
+    uart->sendPitchBend(channel, val << 7);
+    return;
+  }
+  if (param == PARAM_CHP) {
+    uart->sendChannelPressure(channel, val);
+    return;
+  }
+  uart->sendCC(channel, param, val);
+}
+
+void SeqSlideTrack::on_slide_dispatch_end() {}
 
 uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   if (quant == 255) { quant = mcl_cfg.rec_quant; }

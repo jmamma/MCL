@@ -180,9 +180,9 @@ public:
   bool clear_track_locks(uint8_t step, uint8_t track_param,
                          uint8_t value = 255);
   bool clear_track_locks_idx(uint8_t step, uint8_t lock_idx, uint8_t value = 255);
-  void clear_track();
+  virtual void clear_track(bool locks = true) override;
   void store_mute_state();
-  void set_length(uint8_t len, bool expand = false);
+  virtual void set_length(uint8_t len, bool expand = false) override;
   void re_sync();
   void reset_params();
   void handle_event(uint16_t index, uint8_t step);
@@ -257,9 +257,9 @@ public:
     }
   }
 
-  void rotate_left() { modify_track(DIR_LEFT); }
-  void rotate_right() { modify_track(DIR_RIGHT); }
-  void reverse() { modify_track(DIR_REVERSE); }
+  virtual void rotate_left() override { modify_track(DIR_LEFT); }
+  virtual void rotate_right() override { modify_track(DIR_RIGHT); }
+  virtual void reverse() override { modify_track(DIR_REVERSE); }
 
   void modify_track(uint8_t dir);
 
@@ -279,7 +279,7 @@ public:
     return SeqTrackBase::request_speed_change(new_speed);
   }
   void mute_on();
-  void transpose(int8_t offset);
+  virtual void transpose(int8_t offset) override;
 };
 
 #endif /* EXTSEQTRACK_H__ */

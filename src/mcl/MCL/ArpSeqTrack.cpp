@@ -31,33 +31,15 @@ void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   mod12_counter++;
   if (mod12_counter == timing_mid) {
     step_count_inc();
-    if (active == EXT_ARP_TRACK_TYPE && last_note_on != 255 && step_count == length / 2) {
-        seq_ptc_page.note_off_ext(last_note_on, 0, track_number, uart2_);
-        last_note_on = 255;
-    }
+    on_cycle_midpoint(uart_, uart2_);
     mod12_counter = 0;
   }
-      bool is_midi_model =
-          ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
   if (mod12_counter == 0 && enabled && mute_state == SEQ_MUTE_OFF) {
    if (step_count == 0) {
       if (len > 0) {
         uint8_t note = mode == ARP_RND2 ? notes[get_random(len)] : notes[idx];
         note += oct*12;
-        switch (active) {
-          case MD_ARP_TRACK_TYPE:
-            if (is_midi_model) {
-              mcl_seq.md_tracks[track_number].send_notes(note, uart2_);
-              seq_ptc_page.record(note, track_number);
-            } else {
-            seq_ptc_page.trig_md(note, track_number, CTRL_EVENT, fine_tune, uart_);
-            }
-            break;
-          case EXT_ARP_TRACK_TYPE:
-            seq_ptc_page.note_on_ext(note, 127, track_number, uart2_);
-            last_note_on = note;
-            break;
-        }
+        dispatch_note(note, uart_, uart2_);
         idx++;
         if (idx == len) {
           idx = 0;
@@ -95,11 +77,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   if (!enabled) {
     return;
   }
-  switch (active) {
-    case EXT_ARP_TRACK_TYPE:
-      seq_ptc_page.buffer_notesoff_ext(track_number);
-      break;
-  }
+  on_render_begin();
 
   memcpy(note_mask, note_mask_, sizeof(note_mask));
   uint8_t num_of_notes = 0;
@@ -277,3 +255,35 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   mute_state = mute_state_old;
 }
 
+void ArpSeqTrack::on_cycle_midpoint(MidiUartClass *, MidiUartClass *) {}
+
+void ArpSeqTrack::on_render_begin() {}
+
+void MDArpSeqTrack::dispatch_note(uint8_t note, MidiUartClass *uart_,
+                                  MidiUartClass *uart2_) {
+  bool is_midi_model =
+      ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  if (is_midi_model) {
+    mcl_seq.md_tracks[track_number].send_notes(note, uart2_);
+    seq_ptc_page.record(note, track_number);
+  } else {
+    seq_ptc_page.trig_md(note, track_number, CTRL_EVENT, fine_tune, uart_);
+  }
+}
+
+void ExtArpSeqTrack::dispatch_note(uint8_t note, MidiUartClass *,
+                                   MidiUartClass *uart2_) {
+  seq_ptc_page.note_on_ext(note, 127, track_number, uart2_);
+  last_note_on = note;
+}
+
+void ExtArpSeqTrack::on_cycle_midpoint(MidiUartClass *, MidiUartClass *uart2_) {
+  if (last_note_on != 255 && step_count == length / 2) {
+    seq_ptc_page.note_off_ext(last_note_on, 0, track_number, uart2_);
+    last_note_on = 255;
+  }
+}
+
+void ExtArpSeqTrack::on_render_begin() {
+  seq_ptc_page.buffer_notesoff_ext(track_number);
+}

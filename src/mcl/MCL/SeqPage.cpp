@@ -9,6 +9,7 @@
 #include "MCLClipBoard.h"
 #include "MDTrack.h"
 #include "MCLStrings.h"
+#include "SeqTrackUtil.h"
 
 uint8_t SeqPage::page_select = 0;
 
@@ -71,6 +72,40 @@ static MCLEncoder *opt_param2_capture = nullptr;
 MusicalNotes number_to_note;
 
 uint8_t copy_mask = 0;
+
+static inline uint8_t selected_track_index(bool is_md_device) {
+#ifdef EXT_TRACKS
+  return is_md_device ? last_md_track : last_ext_track;
+#else
+  (void)is_md_device;
+  return last_md_track;
+#endif
+}
+
+static inline SeqTrack &selected_track(bool is_md_device) {
+  return SeqTrackUtil::get_track(is_md_device,
+                                 selected_track_index(is_md_device));
+}
+
+static inline void apply_track_op(bool is_md_device, bool apply_all,
+                                  void (SeqTrack::*fn)()) {
+  if (apply_all) {
+    SeqTrackUtil::for_each_track(
+        is_md_device, [&](SeqTrack &track, uint8_t) { (track.*fn)(); });
+  } else {
+    (selected_track(is_md_device).*fn)();
+  }
+}
+
+static inline void apply_transpose(bool is_md_device, bool apply_all,
+                                   int8_t offset) {
+  if (apply_all) {
+    SeqTrackUtil::for_each_track(
+        is_md_device, [&](SeqTrack &track, uint8_t) { track.transpose(offset); });
+  } else {
+    selected_track(is_md_device).transpose(offset);
+  }
+}
 
 void SeqPage::setup() {}
 
@@ -268,28 +303,23 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
 bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
   uint16_t last_mute_mask = mute_mask;
 
-  bool is_md_device = (device == &MD);
+  bool is_md_device = SeqTrackUtil::is_md_device(device);
   mute_mask = 0;
-
-  uint8_t len = is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
 
   // Hack to display last_ext_track
   if (offset > 0 && !is_md_device) {
     SET_BIT16(mute_mask, last_ext_track);
   }
 
-  for (uint8_t n = 0; n < len; n++) {
-
-    SeqTrack *seq_track = is_md_device ? (SeqTrack *)&mcl_seq.md_tracks[n]
-                                       : (SeqTrack *)&mcl_seq.ext_tracks[n];
-
-    if (seq_track->mute_state == SEQ_MUTE_OFF) {
-      uint8_t d = offset + n;
-      if (d < 16) {
-        SET_BIT16(mute_mask, d);
-      }
-    }
-  }
+  SeqTrackUtil::for_each_track(is_md_device,
+      [&](SeqTrack &seq_track, uint8_t idx) {
+        if (seq_track.mute_state == SEQ_MUTE_OFF) {
+          uint8_t d = offset + idx;
+          if (d < 16) {
+            SET_BIT16(mute_mask, d);
+          }
+        }
+      });
   if (last_mute_mask != mute_mask) {
     mcl_gui.set_trigleds(mute_mask, is_md_device ? TRIGLED_MUTE : TRIGLED_EXCLUSIVE);
     return true;
@@ -571,12 +601,11 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
 
 void SeqPage::length_handler(uint8_t length, bool multi) {
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-  if (opt_midi_device_capture == &MD) {
-
+  bool is_md_device = SeqTrackUtil::is_md_device(opt_midi_device_capture);
+  if (is_md_device) {
     if (multi) {
-      for (uint8_t c = 0; c < 16; c++) {
-        mcl_seq.md_tracks[c].set_length(length);
-      }
+      SeqTrackUtil::for_each_track(true,
+          [&](SeqTrack &track, uint8_t) { track.set_length(length); });
     } else {
       if ((mcl_cfg.poly_mask) && (is_poly)) {
         for (uint8_t c = 0; c < 16; c++) {
@@ -585,24 +614,26 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
           }
         }
       } else {
-        mcl_seq.md_tracks[last_md_track].set_length(length);
+        selected_track(true).set_length(length);
       }
     }
     auto &active_track = mcl_seq.md_tracks[last_md_track];
     MD.sync_seqtrack(active_track.length, active_track.speed,
                      active_track.step_count);
   } else {
+#ifdef EXT_TRACKS
     if (multi) {
-      for (uint8_t c = 0; c < NUM_EXT_TRACKS; c++) {
-        mcl_seq.ext_tracks[c].set_length(length);
-        if (last_ext_track == c) {
-          seq_extparam4.cur = length;
-        }
-      }
+      SeqTrackUtil::for_each_track(false, [&](SeqTrack &track, uint8_t idx) {
+        track.set_length(length);
+        SeqTrackUtil::sync_ext_length_encoder(false, idx, length,
+                                              last_ext_track == idx);
+      });
     } else {
-      mcl_seq.ext_tracks[last_ext_track].set_length(length);
-      seq_extparam4.cur = length;
+      uint8_t idx = selected_track_index(false);
+      selected_track(false).set_length(length);
+      SeqTrackUtil::sync_ext_length_encoder(false, idx, length, true);
     }
+#endif
   }
 }
 
@@ -636,39 +667,30 @@ void opt_trackid_handler() {
 
 void opt_speed_handler() {
 
-  if (opt_midi_device_capture == &MD) {
-    DEBUG_PRINTLN(F("okay using MD for length update"));
-    if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        auto &track = mcl_seq.md_tracks[n];
-        track.request_speed_change(opt_speed);
-      }
-      GUI.ignoreNextEvent(Buttons.BUTTON4);
-    } else {
-      auto &active_track = mcl_seq.md_tracks[last_md_track];
-      if (active_track.request_speed_change(opt_speed)) {
-        MD.sync_seqtrack(active_track.length, opt_speed,
-                         active_track.step_count);
-      }
+  bool is_md_device =
+      SeqTrackUtil::is_md_device(opt_midi_device_capture);
+
+  if (BUTTON_DOWN(Buttons.BUTTON4)) {
+    SeqTrackUtil::for_each_track(
+        is_md_device,
+        [&](SeqTrack &track, uint8_t) { track.request_speed_change(opt_speed); });
+    GUI.ignoreNextEvent(Buttons.BUTTON4);
+  } else {
+    auto &active_track = selected_track(is_md_device);
+    if (active_track.request_speed_change(opt_speed) && is_md_device) {
+      MD.sync_seqtrack(active_track.length, opt_speed,
+                       active_track.step_count);
     }
+  }
+
+  if (is_md_device) {
     seq_step_page.config_encoders();
   }
 #ifdef EXT_TRACKS
   else {
-    if (BUTTON_DOWN(Buttons.BUTTON4)) {
-      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-        auto &track = mcl_seq.ext_tracks[n];
-        track.request_speed_change(opt_speed);
-      }
-      GUI.ignoreNextEvent(Buttons.BUTTON4);
-    } else {
-      auto &active_track = mcl_seq.ext_tracks[last_ext_track];
-      active_track.request_speed_change(opt_speed);
-    }
     seq_extstep_page.config_encoders();
   }
 #endif
-  //  opt_seqpage_capture->init();
 }
 
 void opt_clear_track_handler() {
@@ -1040,88 +1062,32 @@ void opt_clear_step_locks_handler() {
 }
 
 void opt_shift_track_handler() {
+  bool is_md_device =
+      SeqTrackUtil::is_md_device(opt_midi_device_capture);
   switch (opt_shift) {
   case 1:
-    if (opt_midi_device_capture == &MD) {
-      mcl_seq.md_tracks[last_md_track].rotate_left();
-    }
-#ifdef EXT_TRACKS
-    else {
-      mcl_seq.ext_tracks[last_ext_track].rotate_left();
-    }
-#endif
+    apply_track_op(is_md_device, false, &SeqTrack::rotate_left);
     break;
   case 2:
-    if (opt_midi_device_capture == &MD) {
-      mcl_seq.md_tracks[last_md_track].rotate_right();
-    }
-#ifdef EXT_TRACKS
-    else {
-      mcl_seq.ext_tracks[last_ext_track].rotate_right();
-    }
-#endif
+    apply_track_op(is_md_device, false, &SeqTrack::rotate_right);
     break;
   case 3:
-    if (opt_midi_device_capture == &MD) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].rotate_left();
-      }
-    }
-#ifdef EXT_TRACKS
-    else {
-      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-        mcl_seq.ext_tracks[n].rotate_left();
-      }
-    }
-#endif
+    apply_track_op(is_md_device, true, &SeqTrack::rotate_left);
     break;
   case 4:
-    if (opt_midi_device_capture == &MD) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].rotate_right();
-      }
-    }
-#ifdef EXT_TRACKS
-    else {
-      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-        mcl_seq.ext_tracks[n].rotate_right();
-      }
-    }
-#endif
+    apply_track_op(is_md_device, true, &SeqTrack::rotate_right);
     break;
   }
 }
 void opt_reverse_track_handler() {
 
-  if (opt_reverse == 2) {
-    if (opt_midi_device_capture == &MD) {
-      // oled_display.textbox("REVERSE ", "MD TRACKS");
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].reverse();
-      }
-    }
-#ifdef EXT_TRACKS
-    else {
-      // oled_display.textbox("REVERSE ", "EXT TRACKS");
-      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-        mcl_seq.ext_tracks[n].reverse();
-      }
-    }
-#endif
+  if (opt_reverse == 0) {
+    return;
   }
-
-  if (opt_reverse == 1) {
-    if (opt_midi_device_capture == &MD) {
-      // oled_display.textbox("REVERSE ", "TRACK");
-      mcl_seq.md_tracks[last_md_track].reverse();
-    }
-#ifdef EXT_TRACKS
-    else {
-      // oled_display.textbox("REVERSE ", "EXT TRACK");
-      mcl_seq.ext_tracks[last_ext_track].reverse();
-    }
-#endif
-  }
+  bool is_md_device =
+      SeqTrackUtil::is_md_device(opt_midi_device_capture);
+  bool apply_all = opt_reverse == 2;
+  apply_track_op(is_md_device, apply_all, &SeqTrack::reverse);
 }
 
 void opt_transpose_track_handler() {
@@ -1130,27 +1096,9 @@ void opt_transpose_track_handler() {
   if (transpose_value == 0) {  return; }
   oled_display.textbox_P(mclstr_transpose);
   MD.popup_text_P(mclstr_transpose);
-  if (opt_midi_device_capture == &MD) {
-    if (is_all) {
-      for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        mcl_seq.md_tracks[n].transpose(transpose_value);
-      }
-    } else {
-      mcl_seq.md_tracks[last_md_track].transpose(transpose_value);
-    }
-  }
-#ifdef EXT_TRACKS
-  else {
-    if (is_all) {
-      for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-        mcl_seq.ext_tracks[n].transpose(transpose_value);
-      }
-    } else {
-      mcl_seq.ext_tracks[last_ext_track].transpose(transpose_value);
-    }
-  }
-#endif
- // opt_transpose = 12;
+  bool is_md_device =
+      SeqTrackUtil::is_md_device(opt_midi_device_capture);
+  apply_transpose(is_md_device, is_all, transpose_value);
 }
 
 
