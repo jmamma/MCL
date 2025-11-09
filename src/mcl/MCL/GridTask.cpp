@@ -135,7 +135,8 @@ void GridTask::transition_handler() {
 
   while (MidiClock.clock_less_than(
              MidiClock.div32th_counter + max(2, 0.032f * MidiClock.get_tempo()),
-             (uint32_t)mcl_actions.next_transition * 2) <= 0) {
+             (uint32_t)mcl_actions.next_transition * 2)) {
+    memset(track_select_array, 0, sizeof(track_select_array));
 
 
   // 240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
