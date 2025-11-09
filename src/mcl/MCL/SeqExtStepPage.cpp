@@ -307,8 +307,8 @@ void SeqExtStepPage::draw_lockeditor() {
     }
     // Draw interactive cursor
     int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
-    uint8_t fov_cur_y = fov_h - ((float)lock_cur_y / 128.0 * (float)fov_h);
-    mcl_gui.draw_cross(fov_cur_x, fov_cur_y);
+    uint8_t fov_cur_y = fov_h - ((float)lock_cur_y / 128.0f * (float)fov_h);
+    mcl_gui.draw_cross(draw_x + fov_cur_x, draw_y + fov_cur_y);
   }
 
 void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov) {
