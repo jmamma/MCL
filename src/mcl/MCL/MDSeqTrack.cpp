@@ -110,7 +110,7 @@ void MDSeqTrack::load_cache() {
 
   MDTrack t;
   t.load_from_mem(track_number, MD_TRACK_TYPE);
-  t.load_seq_data((SeqTrack *)this);
+  t.load_seq_data(this);
   if (load_sound) {
     MD.insertMachineInKit(track_number, &(t.machine), false);
     SET_BIT32(load_machine_cache, track_number);

@@ -48,7 +48,7 @@ public:
     active = PERF_TRACK_TYPE;
   }
 
-  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+  virtual void init(uint8_t tracknumber, SeqTrackBase *seq_track) {
     init();
   }
 
@@ -64,18 +64,18 @@ public:
     memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
   }
 
-  void load_perf(bool immediate, SeqTrack *seq_track);
+  void load_perf(bool immediate, SeqTrackBase *seq_track);
   void get_perf();
 
   uint16_t calc_latency(uint8_t tracknumber);
 
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
-  void transition_load(uint8_t tracknumber, SeqTrack *seq_track, uint8_t slotnumber);
+  void transition_load(uint8_t tracknumber, SeqTrackBase *seq_track, uint8_t slotnumber);
   bool store_in_grid(uint8_t column, uint16_t row,
-                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
+                     SeqTrackBase *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track);
 
   virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_PERF_TRACK_START; }

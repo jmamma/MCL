@@ -19,21 +19,21 @@ public:
   size_t _sizeof() const {
      return sizeof(ExtTrack) - sizeof(void*);
   }
-  virtual void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+  virtual void transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
                                uint8_t slotnumber);
   virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return true; }
-  void load_seq_data(SeqTrack *seq_track);
+  void load_seq_data(SeqTrackBase *seq_track);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t column, uint16_t row,
-                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
+                     SeqTrackBase *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
 
-  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+  virtual void init(uint8_t tracknumber, SeqTrackBase *seq_track) {
     ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
     seq_data.channel = ext_seq_track->channel;
     link.speed = SEQ_SPEED_1X;
   }
-  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  virtual void load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track);
 
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return _sizeof(); }

@@ -640,7 +640,7 @@ void ExtSeqTrack::load_cache() {
   // Save on stack space, break ExtTrack in to chunks.
   //  GridTrack g;
   //  g.load_from_mem(track_number, BANK1_A4_TRACKS_START);
-  //  g.load_link_data((SeqTrack *) this);
+  //  g.load_link_data(this);
   buffer_notesoff();
   ExtTrackChunk t;
 
@@ -649,7 +649,7 @@ void ExtSeqTrack::load_cache() {
     t.load_chunk(data(), n);
   }
   t.load_link_from_mem(track_number);
-  t.load_link_data((SeqTrack *)this);
+  t.load_link_data(this);
 }
 
 void ExtSeqTrack::seq(MidiUartClass *uart_) {

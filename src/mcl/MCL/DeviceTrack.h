@@ -142,7 +142,7 @@ class DeviceTrackChunk : public DeviceTrack {
   bool load_chunk(volatile void *ptr, uint8_t chunk);
   bool load_link_from_mem(uint8_t column);
   bool store_in_grid(uint8_t column, uint16_t row,
-                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
+                     SeqTrackBase *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false) { return false; };
 
   uint8_t get_chunk_count() { return (get_seq_data_size() / sizeof(seq_data_chunk)) + 1; }

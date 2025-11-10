@@ -15,7 +15,7 @@ void A4Track::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
     sound.toSysex();
 }
 
-void A4Track::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+void A4Track::transition_load(uint8_t tracknumber, SeqTrackBase* seq_track, uint8_t slotnumber) {
   uint8_t n = slotnumber;
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
@@ -33,11 +33,11 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
   return ret;
 }
 
-void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+void A4Track::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
   load_seq_data(seq_track);
 }
 
-bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
+bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrackBase *seq_track, uint8_t merge,
                             bool online, Grid *grid) {
 
   active = A4_TRACK_TYPE;

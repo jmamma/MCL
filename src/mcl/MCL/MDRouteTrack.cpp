@@ -7,8 +7,8 @@
 void MDRouteTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 }
 
-void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                              uint8_t slotnumber) {
+void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
+                                  uint8_t slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
    if (mcl_actions.send_machine[slotnumber]) {
     load_routes();
@@ -29,7 +29,7 @@ uint16_t MDRouteTrack::send_routes(bool send) {
   return bytes;
 }
 
-void MDRouteTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+void MDRouteTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
   load_link_data(seq_track);
   load_routes();
   send_routes();
@@ -47,7 +47,7 @@ void MDRouteTrack::get_routes() {
 }
 
 bool MDRouteTrack::store_in_grid(uint8_t column, uint16_t row,
-                                 SeqTrack *seq_track, uint8_t merge,
+                                 SeqTrackBase *seq_track, uint8_t merge,
                                  bool online, Grid *grid) {
   active = MDROUTE_TRACK_TYPE;
   bool ret;

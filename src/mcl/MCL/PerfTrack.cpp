@@ -8,9 +8,12 @@ void PerfTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   DEBUG_PRINTLN("transition send");
 }
 
-void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+void PerfTrack::transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
                                   uint8_t slotnumber) {
   DEBUG_PRINTLN("transition send");
+  if (seq_track) {
+    seq_track->cache_loaded = false;
+  }
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   if (mcl_actions.send_machine[slotnumber]) {
     load_perf(false, seq_track);
@@ -60,7 +63,7 @@ void PerfTrack::get_perf() {
 }
 
 
-void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
+void PerfTrack::load_perf(bool immediate, SeqTrackBase *seq_track) {
   DEBUG_PRINTLN("load perf");
   DEBUG_PRINTLN( sizeof(scenes));
   mixer_page.load_mute_set = 255;
@@ -97,14 +100,14 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
  }
 }
 
-void PerfTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+void PerfTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
   DEBUG_PRINTLN("load immediate");
   load_link_data(seq_track);
   load_perf(true, seq_track);
 }
 
 bool PerfTrack::store_in_grid(uint8_t column, uint16_t row,
-                                 SeqTrack *seq_track, uint8_t merge,
+                                 SeqTrackBase *seq_track, uint8_t merge,
                                  bool online, Grid *grid) {
   active = PERF_TRACK_TYPE;
   bool ret;

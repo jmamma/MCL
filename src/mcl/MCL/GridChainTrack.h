@@ -21,10 +21,10 @@ public:
   void init() {}
 
   bool store_in_grid(uint8_t column, uint16_t row,
-                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
+                     SeqTrackBase *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track);
   void get_chains();
   void place_chains();
 

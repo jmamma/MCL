@@ -3,7 +3,7 @@
 
 void MDLFOTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
 
-void MDLFOTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+void MDLFOTrack::transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
                                   uint8_t slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   memcpy(mcl_seq.lfo_tracks[0].data(), lfo_data.data(),
@@ -13,7 +13,7 @@ void MDLFOTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 
 uint16_t MDLFOTrack::calc_latency(uint8_t tracknumber) { return 0; }
 
-void MDLFOTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+void MDLFOTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
   memcpy(mcl_seq.lfo_tracks[0].data(), lfo_data.data(),
          sizeof(LFOSeqTrackData));
   DEBUG_PRINTLN("MD LFO LOAD IMMI");
@@ -30,7 +30,7 @@ void MDLFOTrack::get_lfos() {
 }
 
 bool MDLFOTrack::store_in_grid(uint8_t column, uint16_t row,
-                               SeqTrack *seq_track, uint8_t merge,
+                               SeqTrackBase *seq_track, uint8_t merge,
                                bool online, Grid *grid) {
   active = MDLFO_TRACK_TYPE;
   bool ret;

@@ -12,7 +12,7 @@ enum GridGroup {
   GROUP_TEMPO,
 };
 
-class SeqTrack;
+class SeqTrackBase;
 
 class GridDeviceTrack {
 public:
@@ -20,13 +20,13 @@ public:
   uint8_t track_type;
   GridGroup group_type;
   uint8_t mem_slot_idx;
-  SeqTrack *seq_track;
+  SeqTrackBase *seq_track;
 
   GridDeviceTrack() {
     init();
   }
 
-  void init(uint8_t _track_type = EMPTY_TRACK_TYPE, GridGroup _group_type = GROUP_DEV, uint8_t _device_idx = 255, SeqTrack *_seq_track = nullptr, uint8_t _mem_slot_idx = 255) {
+  void init(uint8_t _track_type = EMPTY_TRACK_TYPE, GridGroup _group_type = GROUP_DEV, uint8_t _device_idx = 255, SeqTrackBase *_seq_track = nullptr, uint8_t _mem_slot_idx = 255) {
     track_type = _track_type;
     group_type = _group_type;
     mem_slot_idx = _mem_slot_idx;
@@ -34,7 +34,7 @@ public:
     device_idx = _device_idx;
   }
 
-  SeqTrack *get_seq_track() { return seq_track; }
+  SeqTrackBase *get_seq_track() { return seq_track; }
   bool isActive() { return track_type != EMPTY_TRACK_TYPE; }
 };
 

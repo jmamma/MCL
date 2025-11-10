@@ -2,7 +2,7 @@
 #include "MCLActions.h"
 #include "Project.h"
 
-void GridChainTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+void GridChainTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
   load_link_data(seq_track);
   get_chains();
 }
@@ -16,7 +16,7 @@ void GridChainTrack::get_chains() {
   memcpy(&chains, &mcl_actions.chains, sizeof(GridChain));
 }
 
-bool GridChainTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
+bool GridChainTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrackBase *seq_track,
                               uint8_t merge, bool online) {
   active = GRIDCHAIN_TRACK_TYPE;
   bool ret;

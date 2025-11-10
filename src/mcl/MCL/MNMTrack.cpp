@@ -12,7 +12,7 @@ uint16_t MNMTrack::calc_latency(uint8_t tracknumber) {
   return MNM.setMachine(tracknumber, tracknumber, false);
 }
 
-void MNMTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+void MNMTrack::transition_load(uint8_t tracknumber, SeqTrackBase* seq_track, uint8_t slotnumber) {
   uint8_t n = slotnumber;
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
@@ -28,13 +28,13 @@ void MNMTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 }
 
 
-void MNMTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+void MNMTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
   DEBUG_PRINT_FN();
   MNM.insertMachineInKit(tracknumber, &(machine));
   load_seq_data(seq_track);
 }
 
-void MNMTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
+void MNMTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrackBase *seq_track) {
   DEBUG_PRINT_FN();
   load_seq_data(seq_track);
 }
@@ -64,7 +64,7 @@ void MNMTrack::get_machine_from_kit(uint8_t tracknumber) {
   machine.type = MNM.kit.types[tracknumber];
 }
 
-bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
+bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrackBase *seq_track, uint8_t merge,
                                   bool online, Grid *grid) {
 
   DEBUG_PRINT_FN();
@@ -89,4 +89,3 @@ bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
   bool ret = write_grid((uint8_t *)(this), len, column, row, grid);
   return ret;
 }
-
