@@ -129,7 +129,7 @@ public:
       set_speed(new_speed, speed, true);
       return true;
     }
-    return SeqTrackBase::request_speed_change(new_speed);
+    return SeqTrack::request_speed_change(new_speed);
   }
 
   virtual void rotate_left() override { modify_track(DIR_LEFT); }

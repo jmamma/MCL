@@ -12,12 +12,12 @@ bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row,
   }
 }
 
-void GridTrack::load_link_data(SeqTrackBase *seq_track) {
+void GridTrack::load_link_data(SeqTrack *seq_track) {
   seq_track->speed = link.speed;
   seq_track->length = link.length;
 }
 
-void GridTrack::transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
+void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
   uint8_t n = slotnumber;
   if (seq_track == nullptr) { return; }
@@ -71,7 +71,7 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 }
 
 // merge and online are ignored here.
-bool GridTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrackBase *seq_track, uint8_t merge,
+bool GridTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                               bool online, Grid *grid) {
 
   DEBUG_PRINT_FN();

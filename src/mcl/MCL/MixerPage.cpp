@@ -27,7 +27,7 @@ void MixerPage::oled_draw_mutes() {
   if (preview_mute_set != 255 && load_types[preview_mute_set][!is_md_device] == 0) { draw = false; }
   for (uint8_t i = 0; i < len; ++i) {
     // draw routing
-    SeqTrack &seq_track = SeqTrackUtil::get_track(is_md_device, i);
+    SeqTrackCond &seq_track = SeqTrackUtil::get_track(is_md_device, i);
 
     uint8_t mute_state =
         preview_mute_set != 255
@@ -409,7 +409,7 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
       uint8_t len = SeqTrackUtil::track_count(is_md_device);
 
       for (uint8_t n = 0; n < len; n++) {
-        SeqTrack &seq_track = SeqTrackUtil::get_track(is_md_device, n);
+        SeqTrackCond &seq_track = SeqTrackUtil::get_track(is_md_device, n);
 
         bool mute_state = IS_BIT_CLEAR16(mute_sets[dev].mutes[state], n);
         // Flip
@@ -455,7 +455,7 @@ void MixerPage::toggle_or_solo(bool solo) {
   for (uint8_t i = 0; i < len; i++) {
     bool note_on = note_interface.is_note_on(i);
     bool mute_state = false;
-    SeqTrack &seq_track = SeqTrackUtil::get_track(is_md_device, i);
+    SeqTrackCond &seq_track = SeqTrackUtil::get_track(is_md_device, i);
 
     if (solo) {
       if (seq_track.mute_state == note_on) {
@@ -501,7 +501,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           if (ext_key_down) {
             mute_toggle = 1;
           }
-          SeqTrack &seq_track =
+          SeqTrackCond &seq_track =
               SeqTrackUtil::get_track(is_md_device, track);
 
           uint8_t mute_set = preview_mute_set;

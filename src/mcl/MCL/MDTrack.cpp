@@ -5,7 +5,7 @@
 #include "MCLSeq.h"
 
 void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
-                          SeqTrackBase *seq_track) {
+                          SeqTrack *seq_track) {
   DEBUG_PRINTLN(F("paste seq track"));
   if (machine.trigGroup == src_track) {
     machine.trigGroup = 255;
@@ -70,20 +70,20 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   }
 }
 
-void MDTrack::transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
+void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                               uint8_t slotnumber) {
   seq_track->cache_loaded = false;
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   // load_seq_data(seq_track);
 }
 
-void MDTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
+void MDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate");
   MD.insertMachineInKit(tracknumber, &(machine));
   load_seq_data(seq_track);
 }
 
-void MDTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrackBase *seq_track) {
+void MDTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate");
   load_seq_data(seq_track);
 }
@@ -118,7 +118,7 @@ void MDTrack::init() {
   seq_data.init();
 }
 
-void MDTrack::load_seq_data(SeqTrackBase *seq_track) {
+void MDTrack::load_seq_data(SeqTrack *seq_track) {
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
 
   memcpy(md_seq_track->data(), seq_data.data(), sizeof(seq_data));
@@ -158,7 +158,7 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrackBase *seq_track,
+bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
                             uint8_t merge, bool online, Grid *grid) {
   active = MD_TRACK_TYPE;
 

@@ -50,7 +50,7 @@ public:
 
 // ephemeral data
 
-class SeqTrackBase {
+class SeqTrack {
 public:
   uint8_t active;
   struct PendingSpeedChange {
@@ -77,7 +77,7 @@ public:
   bool    load_sound;
   PendingSpeedChange pending_speed_change{};
 
-  SeqTrackBase() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
+  SeqTrack() { active = EMPTY_TRACK_TYPE; record_mutes = false; }
 
   ALWAYS_INLINE() void step_count_inc() {
     if (step_count == length - 1) {
@@ -212,7 +212,7 @@ public:
   }
 };
 
-class SeqTrack : public SeqTrackBase {
+class SeqTrackCond : public SeqTrack {
 
 public:
   // Conditional counters
@@ -225,7 +225,7 @@ public:
 
   uint8_t ignore_step;
 
-  SeqTrack() { reset(); }
+  SeqTrackCond() { reset(); }
 
   ALWAYS_INLINE() void reset() {
     cur_event_idx = 0;
@@ -233,7 +233,7 @@ public:
     iterations_6 = 1;
     iterations_7 = 1;
     iterations_8 = 1;
-    SeqTrackBase::reset();
+    SeqTrack::reset();
     ignore_step = 255;
   }
 
@@ -290,7 +290,7 @@ public:
   bool conditional(uint8_t condition);
 };
 
-class SeqSlideTrack : public SeqTrack {
+class SeqSlideTrack : public SeqTrackCond {
 public:
   SlideData locks_slide_data[NUM_LOCKS];
   uint8_t locks_slide_next_lock_val[NUM_LOCKS];
@@ -305,8 +305,8 @@ public:
     for (uint8_t n = 0; n < NUM_LOCKS; n++) {
       locks_slide_data[n].init();
     }
-    SeqTrack::reset();
-  }
+    SeqTrackCond::reset();
+}
 
 
   void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0,

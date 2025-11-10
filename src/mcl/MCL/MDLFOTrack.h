@@ -16,20 +16,20 @@ public:
   }
   void init() {};
 
-  virtual void init(uint8_t tracknumber, SeqTrackBase *seq_track) {
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
      lfo_data.init();
   }
 
   void get_lfos();
   uint16_t calc_latency(uint8_t tracknumber);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
-  void transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
+  void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber);
   bool store_in_grid(uint8_t column, uint16_t row,
-                     SeqTrackBase *seq_track = nullptr, uint8_t merge = 0,
+                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
 
-  void load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_MDLFO_TRACK_START; }

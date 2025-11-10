@@ -754,7 +754,7 @@ uint8_t MDSeqTrack::trig_conditional(uint8_t condition) {
       send_trig = TRIG_TRUE;
     }
   } else {
-    send_trig = SeqTrack::conditional(condition);
+    send_trig = conditional(condition);
   }
   return send_trig;
 }

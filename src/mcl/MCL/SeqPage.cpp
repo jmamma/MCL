@@ -82,16 +82,16 @@ static inline uint8_t selected_track_index(bool is_md_device) {
 #endif
 }
 
-static inline SeqTrack &selected_track(bool is_md_device) {
+static inline SeqTrackCond &selected_track(bool is_md_device) {
   return SeqTrackUtil::get_track(is_md_device,
                                  selected_track_index(is_md_device));
 }
 
 static inline void apply_track_op(bool is_md_device, bool apply_all,
-                                  void (SeqTrack::*fn)()) {
+                                  void (SeqTrackCond::*fn)()) {
   if (apply_all) {
     SeqTrackUtil::for_each_track(
-        is_md_device, [&](SeqTrack &track, uint8_t) { (track.*fn)(); });
+        is_md_device, [&](SeqTrackCond &track, uint8_t) { (track.*fn)(); });
   } else {
     (selected_track(is_md_device).*fn)();
   }
@@ -101,7 +101,7 @@ static inline void apply_transpose(bool is_md_device, bool apply_all,
                                    int8_t offset) {
   if (apply_all) {
     SeqTrackUtil::for_each_track(
-        is_md_device, [&](SeqTrack &track, uint8_t) { track.transpose(offset); });
+        is_md_device, [&](SeqTrackCond &track, uint8_t) { track.transpose(offset); });
   } else {
     selected_track(is_md_device).transpose(offset);
   }
@@ -312,7 +312,7 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
   }
 
   SeqTrackUtil::for_each_track(is_md_device,
-      [&](SeqTrack &seq_track, uint8_t idx) {
+      [&](SeqTrackCond &seq_track, uint8_t idx) {
         if (seq_track.mute_state == SEQ_MUTE_OFF) {
           uint8_t d = offset + idx;
           if (d < 16) {
@@ -605,7 +605,7 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
   if (is_md_device) {
     if (multi) {
       SeqTrackUtil::for_each_track(true,
-          [&](SeqTrack &track, uint8_t) { track.set_length(length); });
+          [&](SeqTrackCond &track, uint8_t) { track.set_length(length); });
     } else {
       if ((mcl_cfg.poly_mask) && (is_poly)) {
         for (uint8_t c = 0; c < 16; c++) {
@@ -623,7 +623,7 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
   } else {
 #ifdef EXT_TRACKS
     if (multi) {
-      SeqTrackUtil::for_each_track(false, [&](SeqTrack &track, uint8_t idx) {
+      SeqTrackUtil::for_each_track(false, [&](SeqTrackCond &track, uint8_t idx) {
         track.set_length(length);
         SeqTrackUtil::sync_ext_length_encoder(false, idx, length,
                                               last_ext_track == idx);
@@ -673,7 +673,7 @@ void opt_speed_handler() {
   if (BUTTON_DOWN(Buttons.BUTTON4)) {
     SeqTrackUtil::for_each_track(
         is_md_device,
-        [&](SeqTrack &track, uint8_t) { track.request_speed_change(opt_speed); });
+        [&](SeqTrackCond &track, uint8_t) { track.request_speed_change(opt_speed); });
     GUI.ignoreNextEvent(Buttons.BUTTON4);
   } else {
     auto &active_track = selected_track(is_md_device);
@@ -1066,16 +1066,16 @@ void opt_shift_track_handler() {
       SeqTrackUtil::is_md_device(opt_midi_device_capture);
   switch (opt_shift) {
   case 1:
-    apply_track_op(is_md_device, false, &SeqTrack::rotate_left);
+    apply_track_op(is_md_device, false, &SeqTrackCond::rotate_left);
     break;
   case 2:
-    apply_track_op(is_md_device, false, &SeqTrack::rotate_right);
+    apply_track_op(is_md_device, false, &SeqTrackCond::rotate_right);
     break;
   case 3:
-    apply_track_op(is_md_device, true, &SeqTrack::rotate_left);
+    apply_track_op(is_md_device, true, &SeqTrackCond::rotate_left);
     break;
   case 4:
-    apply_track_op(is_md_device, true, &SeqTrack::rotate_right);
+    apply_track_op(is_md_device, true, &SeqTrackCond::rotate_right);
     break;
   }
 }
@@ -1087,7 +1087,7 @@ void opt_reverse_track_handler() {
   bool is_md_device =
       SeqTrackUtil::is_md_device(opt_midi_device_capture);
   bool apply_all = opt_reverse == 2;
-  apply_track_op(is_md_device, apply_all, &SeqTrack::reverse);
+  apply_track_op(is_md_device, apply_all, &SeqTrackCond::reverse);
 }
 
 void opt_transpose_track_handler() {

@@ -2,7 +2,7 @@
 #include "MD.h"
 
 void MDFXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
-                          SeqTrackBase *seq_track) {
+                          SeqTrack *seq_track) {
   load_link_data(seq_track);
   send_fx(true);
 }
@@ -10,7 +10,7 @@ void MDFXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
 void MDFXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 }
 
-void MDFXTrack::transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
+void MDFXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   // load_seq_data(seq_track);
@@ -49,12 +49,12 @@ uint16_t MDFXTrack::send_fx(bool send) {
   return bytes;
 }
 
-void MDFXTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
+void MDFXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);
   place_fx_in_kit();
 }
 
-void MDFXTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrackBase *seq_track) {
+void MDFXTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);
 }
 
@@ -98,7 +98,7 @@ void MDFXTrack::get_fx_from_kit() {
   */
 }
 
-bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrackBase *seq_track,
+bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
                               uint8_t merge, bool online, Grid *grid) {
   active = MDFX_TRACK_TYPE;
   bool ret;

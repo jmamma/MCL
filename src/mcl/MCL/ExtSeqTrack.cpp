@@ -786,7 +786,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
       send_note = true;
     }
   } else {
-    send_note = SeqTrack::conditional(condition);
+    send_note = conditional(condition);
   }
 
   if (send_note) {

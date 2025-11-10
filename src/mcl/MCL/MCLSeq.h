@@ -61,7 +61,7 @@ public:
   static constexpr uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
 #endif
 
-  SeqTrackBase aux_tracks[NUM_AUX_TRACKS];
+  SeqTrack aux_tracks[NUM_AUX_TRACKS];
 
   PerfSeqTrack perf_track;
   MDFXSeqTrack mdfx_track;

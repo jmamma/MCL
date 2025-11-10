@@ -61,20 +61,20 @@ public:
   uint16_t calc_latency(uint8_t tracknumber);
   bool transition_cache(uint8_t tracknumber, uint8_t slotnumber);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
-  void transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
+  void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber);
-  void load_seq_data(SeqTrackBase *seq_track);
+  void load_seq_data(SeqTrack *seq_track);
   void get_machine_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
 
   bool store_in_grid(uint8_t column, uint16_t row,
-                     SeqTrackBase *seq_track = nullptr, uint8_t merge = 0,
+                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
-  void load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
-  void load_immediate_cleared(uint8_t tracknumber, SeqTrackBase *seq_track);
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
 
-  void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrackBase *seq_track);
+  void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track);
   // scale machine track vol by percentage
   void scale_vol(float scale);
 

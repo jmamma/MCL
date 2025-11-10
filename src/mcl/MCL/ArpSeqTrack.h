@@ -49,13 +49,13 @@ class ArpSeqData {
 };
 
 //Ephemeral
-class ArpSeqTrack : public ArpSeqData, public SeqTrackBase  {
+class ArpSeqTrack : public ArpSeqData, public SeqTrack  {
 
 public:
   uint8_t last_note_on;
   uint8_t idx;
 
-  ArpSeqTrack() : SeqTrackBase() {
+  ArpSeqTrack() : SeqTrack() {
     active = ARP_TRACK_TYPE;
     init();
   }
@@ -78,7 +78,7 @@ public:
   }
 
   ALWAYS_INLINE() void reset() {
-    SeqTrackBase::reset();
+    SeqTrack::reset();
   }
 
   void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
@@ -98,7 +98,7 @@ public:
       set_speed(new_speed);
       return true;
     }
-    return SeqTrackBase::request_speed_change(new_speed);
+    return SeqTrack::request_speed_change(new_speed);
   }
 
   uint8_t get_next_note_up(int8_t cur);

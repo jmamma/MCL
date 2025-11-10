@@ -1,7 +1,7 @@
 #include "ExtTrack.h"
 #include "Global.h"
 
-void ExtTrack::transition_load(uint8_t tracknumber, SeqTrackBase* seq_track, uint8_t slotnumber) {
+void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
   DEBUG_DUMP(F("transition_load_ext"));
   DEBUG_DUMP((uint16_t) seq_track);
   DEBUG_DUMP(slotnumber);
@@ -13,7 +13,7 @@ void ExtTrack::transition_load(uint8_t tracknumber, SeqTrackBase* seq_track, uin
   //load_seq_data(seq_track);
 }
 
-void ExtTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
+void ExtTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate, ext");
   load_seq_data(seq_track);
 }
@@ -23,7 +23,7 @@ bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
   return true;
 }
 
-void ExtTrack::load_seq_data(SeqTrackBase *seq_track) {
+void ExtTrack::load_seq_data(SeqTrack *seq_track) {
 #ifdef EXT_TRACKS
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
 
@@ -45,7 +45,7 @@ void ExtTrack::load_seq_data(SeqTrackBase *seq_track) {
 #endif
 }
 
-bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrackBase *seq_track, uint8_t merge,
+bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
                              bool online, Grid *grid) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track

@@ -32,7 +32,7 @@
 #include "SeqTrack.h"
 
 class Grid;
-class SeqTrackBase;
+class SeqTrack;
 
 class ATTR_PACKED() GridTrack {
 public:
@@ -54,7 +54,7 @@ public:
   // save header without data to grid
   bool write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid = nullptr);
 
-  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrackBase *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
+  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  uploads from the runtime object to BANK1
@@ -82,19 +82,19 @@ public:
  }
 
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
-  void load_link_data(SeqTrackBase *seq_track);
+  void load_link_data(SeqTrack *seq_track);
 
-  virtual void init(uint8_t tracknumber, SeqTrackBase *seq_track) {}
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {}
 
-  virtual void load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {}
-  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrackBase *seq_track) { load_immediate(tracknumber, seq_track); }
+  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
+  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) { load_immediate(tracknumber, seq_track); }
 
   virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
   virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
-  virtual void transition_load(uint8_t tracknumber, SeqTrackBase* seq_track, uint8_t slotnumber);
-  virtual void load_seq_data(SeqTrackBase *seq_track) {}
+  virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
+  virtual void load_seq_data(SeqTrack *seq_track) {}
 
-  virtual void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrackBase *seq_track) {
+  virtual void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track) {
      load_immediate(dest_track, seq_track);
   }
 

@@ -688,7 +688,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   }
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
-  SeqTrackBase seq_track;
+  SeqTrack seq_track;
 
   if (old_col == 255) {
     if (swap_grids()) { return; }

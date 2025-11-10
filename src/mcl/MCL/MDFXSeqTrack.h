@@ -8,10 +8,10 @@
 #include "MidiUartParent.h"
 #include "platform.h"
 
-class MDFXSeqTrack : public SeqTrackBase {
+class MDFXSeqTrack : public SeqTrack {
 
 public:
-  MDFXSeqTrack() { SeqTrackBase::reset(); }
+  MDFXSeqTrack() { SeqTrack::reset(); }
 
   ALWAYS_INLINE() void seq() {
     uint8_t timing_mid = get_timing_mid();

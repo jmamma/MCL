@@ -651,7 +651,7 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
   uint8_t dev = (midi_device == &MD) ? 0 : 1;
 
-  SeqTrackBase *arp_track = dev ? (SeqTrackBase*) &mcl_seq.ext_arp_tracks[last_ext_track] : (SeqTrackBase*) &mcl_seq.md_arp_tracks[last_md_track];
+  SeqTrack *arp_track = dev ? (SeqTrack*) &mcl_seq.ext_arp_tracks[last_ext_track] : (SeqTrack*) &mcl_seq.md_arp_tracks[last_md_track];
   dev_note_channels[dev] = channel;
   if (note_type) {
     bool notes_all_off = seq_ptc_page.dev_note_masks[dev][0] == 0 && seq_ptc_page.dev_note_masks[dev][1] == 0;

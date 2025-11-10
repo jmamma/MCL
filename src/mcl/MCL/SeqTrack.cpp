@@ -134,7 +134,7 @@ void SeqSlideTrack::dispatch_slide_value(uint8_t param, uint8_t val,
 
 void SeqSlideTrack::on_slide_dispatch_end() {}
 
-uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
+uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   if (quant == 255) { quant = mcl_cfg.rec_quant; }
 
   uint8_t timing_mid = get_timing_mid();
@@ -163,7 +163,7 @@ uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   return step;
 }
 
-bool SeqTrack::conditional(uint8_t condition) {
+bool SeqTrackCond::conditional(uint8_t condition) {
   bool send_note = false;
   uint8_t random_byte = 0;
   if (condition >= 9) { random_byte = get_random_byte(); }
@@ -237,7 +237,7 @@ bool SeqTrack::conditional(uint8_t condition) {
   return send_note;
 }
 
-uint8_t SeqTrackBase::get_timing_mid(uint8_t speed_) {
+uint8_t SeqTrack::get_timing_mid(uint8_t speed_) {
   uint8_t timing_mid;
   switch (speed_) {
   default:
@@ -269,7 +269,7 @@ uint8_t SeqTrackBase::get_timing_mid(uint8_t speed_) {
   return timing_mid;
 }
 
-void SeqTrackBase::get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d) {
+void SeqTrack::get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d) {
   n = 1;
   d = 1;
   switch (speed_) {
@@ -309,7 +309,7 @@ void SeqTrackBase::get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d) 
   }
 }
 
-float SeqTrackBase::get_speed_multiplier(uint8_t speed_) {
+float SeqTrack::get_speed_multiplier(uint8_t speed_) {
   float multi;
   switch (speed_) {
   default:

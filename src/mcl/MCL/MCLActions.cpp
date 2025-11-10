@@ -21,7 +21,7 @@ inline bool MCLActions::track_supports_type(DeviceTrack *track, uint8_t track_ty
 }
 
 DeviceTrack *MCLActions::load_and_prepare_track(uint8_t track_idx, uint16_t row,
-                                                uint8_t track_type, SeqTrackBase *seq_track,
+                                                uint8_t track_type, SeqTrack *seq_track,
                                                 uint8_t seq_track_idx, bool &was_rebuilt,
                                                 EmptyTrack &scratch,
                                                 int8_t link_slot) {

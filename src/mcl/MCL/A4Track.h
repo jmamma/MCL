@@ -19,15 +19,15 @@ public:
   }
   uint16_t calc_latency(uint8_t tracknumber);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
-  void transition_load(uint8_t tracknumber, SeqTrackBase *seq_track,
+  void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber);
   bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
     return false;
   }
-  virtual void load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track);
+  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t column, uint16_t row,
-                     SeqTrackBase *seq_track = nullptr, uint8_t merge = 0,
+                     SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
   virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uint8_t get_model() { return A4_TRACK_TYPE; } // TODO

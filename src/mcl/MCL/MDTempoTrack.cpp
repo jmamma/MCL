@@ -15,11 +15,11 @@ uint16_t MDTempoTrack::send_tempo(bool send) {
   return MD.setTempo(tempo, send);
 }
 
-void MDTempoTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrackBase *seq_track) {
+void MDTempoTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);
 }
 
-void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrackBase *seq_track) {
+void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_link_data(seq_track);
   send_tempo();
 }
@@ -38,7 +38,7 @@ void MDTempoTrack::get_tempo() {
 }
 
 bool MDTempoTrack::store_in_grid(uint8_t column, uint16_t row,
-                                 SeqTrackBase *seq_track, uint8_t merge,
+                                 SeqTrack *seq_track, uint8_t merge,
                                  bool online, Grid *grid) {
   active = MDTEMPO_TRACK_TYPE;
   bool ret;
