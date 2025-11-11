@@ -259,22 +259,14 @@ public:
       step_count = 0;
       cur_event_idx = 0;
 
-      iterations_5++;
-      iterations_6++;
-      iterations_7++;
-      iterations_8++;
-
-      if (iterations_5 > 5) {
-        iterations_5 = 1;
-      }
-      if (iterations_6 > 6) {
-        iterations_6 = 1;
-      }
-      if (iterations_7 > 7) {
-        iterations_7 = 1;
-      }
-      if (iterations_8 > 8) {
-        iterations_8 = 1;
+      // Iteration counters are contiguous uint8_t members, so walk them as an array to save code size.
+      uint8_t *iteration = &iterations_5;
+      for (uint8_t max = 5; max <= 8; max++, iteration++) {
+        uint8_t value = *iteration + 1;
+        if (value > max) {
+          value = 1;
+        }
+        *iteration = value;
       }
     } else {
       step_count++;
