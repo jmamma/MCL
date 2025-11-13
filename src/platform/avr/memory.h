@@ -90,6 +90,14 @@ class RamBankSelector {
   FORCED_INLINE() ~RamBankSelector() { switch_ram_bank_noret(m_oldbank); }
 };
 
+class RamBankSelectorFast {
+  private:
+  uint8_t m_oldbank;
+  public:
+  FORCED_INLINE() RamBankSelectorFast() { m_oldbank = switch_ram_bank_fast_isr(); }
+  FORCED_INLINE() ~RamBankSelectorFast() { switch_ram_bank_noret_fast(m_oldbank); }
+};
+
 class RamAccessFringe {
   uint8_t irqlock_tmp;
   public:
@@ -109,6 +117,7 @@ class RamAccessFringe {
 
 #define ram_access_fringe() RamAccessFringe __ram_access_fringe
 #define select_bank(x) RamBankSelector __bank_selector(x)
+#define select_bank_fast() RamBankSelectorFast __bank_selector_fast
 
 template<typename T>
 FORCED_INLINE() extern inline T get_bank1(volatile T *dst) {
