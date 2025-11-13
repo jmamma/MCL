@@ -7,8 +7,7 @@ constexpr auto sz_allowedchar = 69;
 inline char _getchar(uint8_t i) {
   if (i >= sz_allowedchar)
     i = sz_allowedchar - 1;
-  return i
-      [mclstr_allowed_chars];
+  return pgm_read_byte(&mclstr_allowed_chars[i]);
 }
 
 // chr -> idx

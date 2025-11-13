@@ -199,6 +199,7 @@ MCLSTR_DECLARE(copy_ext);
 
 // Track operations - Paste/Undo
 MCLSTR_DECLARE(paste_md);
+MCLSTR_DECLARE(paste_ext);
 MCLSTR_DECLARE(transpose);
 
 // Grid operations
@@ -232,6 +233,7 @@ MCLSTR_DECLARE(sending);
 // Common words
 MCLSTR_DECLARE(tracks);
 MCLSTR_DECLARE(track);
+MCLSTR_DECLARE(poly_tracks);
 MCLSTR_DECLARE(locks);
 MCLSTR_DECLARE(lock);
 MCLSTR_DECLARE(slots);

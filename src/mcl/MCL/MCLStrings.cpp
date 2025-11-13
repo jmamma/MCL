@@ -194,6 +194,7 @@ MCLSTR_DEFINE(copy_ext, "COPY EXT ");
 
 // Track operations - Paste/Undo
 MCLSTR_DEFINE(paste_md, "PASTE MD ");
+MCLSTR_DEFINE(paste_ext, "PASTE EXT ");
 MCLSTR_DEFINE(transpose, "TRANSPOSE");
 
 // Grid operations
@@ -227,6 +228,7 @@ MCLSTR_DEFINE(sending, "Sending..");
 // Common words
 MCLSTR_DEFINE(tracks, "TRACKS");
 MCLSTR_DEFINE(track, "TRACK");
+MCLSTR_DEFINE(poly_tracks, "POLY TRACKS");
 MCLSTR_DEFINE(locks, "LOCKS");
 MCLSTR_DEFINE(lock, "LOCK");
 MCLSTR_DEFINE(slots, "SLOTS");
