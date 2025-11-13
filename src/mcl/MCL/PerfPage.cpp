@@ -245,9 +245,10 @@ void PerfPage::display() {
 
   PerfEncoder *e = perf_encoders[perf_id];
 
-  char perf_label[] = " A";
+  static char perf_label[4] = " A";
   perf_label[1] = 'A' + perf_id;
-  mcl_gui.draw_knob(0, encoders[0], perf_label, false);
+  perf_label[2] = '\0';
+  mcl_gui.draw_knob(0, encoders[0], perf_label, false, false);
 
   if (learn) {
     draw_dest(1, encoders[1]->cur);

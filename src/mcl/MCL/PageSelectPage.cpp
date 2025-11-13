@@ -97,6 +97,7 @@ void PageSelectPage::init() {
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   draw_popup();
+  MidiUartParent::handle_midi_lock = 1;
   md_prepare();
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
@@ -109,11 +110,23 @@ void PageSelectPage::draw_popup() {
 }
 
 void PageSelectPage::md_prepare() {
+  //static uint16_t last_kit_request_time = 0;
+  //uint16_t current_time = read_clock_ms();
+  // Don't request if callback is already waiting for a response
+  if (kit_cb.state) {
+    return;
+  }
+  // Only request kit if more than 2 seconds (2000ms) has passed
+  //if (clock_diff(last_kit_request_time, current_time) < 2000) {
+  //  return;
+  //}
+
   kit_cb.init();
   auto listener = MD.getSysexListener();
   listener->addOnMessageCallback(
       &kit_cb, (sysex_callback_ptr_t)&MDCallback::onReceived);
   MD.requestKit(0x7F);
+  //last_kit_request_time = current_time;
 }
 
 void PageSelectPage::cleanup() {
