@@ -114,7 +114,7 @@ void OscMixerPage::draw_wav() {
                 sine_osc.get_sample(n, freqs[i] * (float)f) * sine_gain;
           }
         }
-        osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
+        osc_sample = (1.00f / wd.pages[i].largest_sine_peak) * osc_sample;
         break;
       case 2:
         tri_osc.width = wd.pages[i].get_width();

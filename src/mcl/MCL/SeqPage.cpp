@@ -107,6 +107,16 @@ static inline void apply_transpose(bool is_md_device, bool apply_all,
   }
 }
 
+static inline void display_popup(const char *str_P) {
+  oled_display.textbox_P(str_P);
+  MD.popup_text_P(str_P);
+}
+
+static inline void display_popup(const char *str1_P, const char *str2_P) {
+  oled_display.textbox_P(str1_P, str2_P);
+  MD.popup_text_P(str1_P, str2_P);
+}
+
 void SeqPage::setup() {}
 
 void SeqPage::check_and_set_page_select() {
@@ -731,9 +741,9 @@ void opt_clear_track_handler() {
     } else if (opt_clear == 1) {
       bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
       if (is_poly) {
-        oled_display.textbox_P(mclstr_clear, mclstr_poly_tracks);
+        display_popup(mclstr_clear, mclstr_poly_tracks);
       } else {
-        oled_display.textbox_P(mclstr_clear, mclstr_track);
+        display_popup(mclstr_clear, mclstr_track);
       }
       oled_display.display();
       if (copy) {
@@ -901,12 +911,11 @@ void opt_paste_track_handler() {
       mcl_clipboard.paste_sequencer();
     } else {
       if (!undo) {
-        oled_display.textbox_P(mclstr_paste_ext, mclstr_tracks);
+        display_popup(mclstr_paste_ext, mclstr_tracks);
       } else {
-        oled_display.textbox_P(mclstr_undo, mclstr_ext_tracks);
+        display_popup(mclstr_undo, mclstr_ext_tracks);
       }
       oled_display.display();
-      MD.popup_text_P(!undo ? mclstr_paste : mclstr_undo);
       mcl_clipboard.paste_sequencer(NUM_MD_TRACKS);
     }
   }
@@ -933,11 +942,10 @@ void opt_paste_track_handler() {
       }
     } else {
       if (!undo) {
-        oled_display.textbox_P(mclstr_paste, mclstr_ext_track);
+        display_popup(mclstr_paste, mclstr_ext_track);
       } else {
-        oled_display.textbox_P(mclstr_undo, mclstr_ext_track);
+        display_popup(mclstr_undo, mclstr_ext_track);
       }
-      MD.popup_text_P(!undo ? mclstr_paste : mclstr_undo);
       mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
                                           last_ext_track + NUM_MD_TRACKS);
     }
