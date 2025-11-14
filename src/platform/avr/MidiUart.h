@@ -187,16 +187,16 @@ public:
 
   ALWAYS_INLINE() void realtime_isr(uint8_t c);
 
-  // Optimized rx_isr: Fast-path for data bytes in sysex (opt #2)
+  // Optimized rx_isr: Fast-path for data bytes in sysex
   ALWAYS_INLINE() void rx_isr() {
     uint8_t c = read_char();
     recvActiveSenseTimer = 0;
 
-    // Optimization: Check data byte first (most common in sysex streams)
+    // Data byte fast path - check state FIRST to avoid redundant guards
     if (!MIDI_IS_STATUS_BYTE(c)) {
-      // Data byte fast path
       if (midi->live_state == midi_wait_sysex) {
-        midi->midiSysex->handleByte(c);
+        // In SYSEX mode - record directly, skip handleByte guard
+        midi->midiSysex->recordByte(c);
         return;
       }
       // Not in sysex, buffer it
