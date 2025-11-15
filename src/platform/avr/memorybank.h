@@ -19,7 +19,7 @@ FORCED_INLINE() inline uint8_t switch_ram_bank(uint8_t x) {
 }
 
 // Fast ISR-specific bank switch: always switches to BANK0 if not already there
-FORCED_INLINE() inline uint8_t switch_ram_bank_fast_isr() {
+FORCED_INLINE() inline uint8_t switch_ram_bank_fast() {
   uint8_t old_bank = BANK_PORT & BANK_MASK;
   if (old_bank) {  // If not zero (i.e., if BANK1), switch to BANK0
     BANK_PORT &= ~BANK_MASK;

@@ -94,7 +94,7 @@ class RamBankSelectorFast {
   private:
   uint8_t m_oldbank;
   public:
-  FORCED_INLINE() RamBankSelectorFast() { m_oldbank = switch_ram_bank_fast_isr(); }
+  FORCED_INLINE() RamBankSelectorFast() { m_oldbank = switch_ram_bank_fast(); }
   FORCED_INLINE() ~RamBankSelectorFast() { switch_ram_bank_noret_fast(m_oldbank); }
 };
 
@@ -150,6 +150,13 @@ FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
   select_bank(BANK1);
   uint8_t c = *dst;
   return c;
+}
+
+// Fast ISR-optimized bank1 byte write (assumes currently in BANK0)
+FORCED_INLINE() extern inline void put_byte_bank1_isr(volatile uint8_t *dst, uint8_t byte) {
+  BANK_PORT |= BANK_MASK;  // Switch to BANK1
+  *dst = byte;
+  BANK_PORT &= ~BANK_MASK; // Switch back to BANK0
 }
 
 
