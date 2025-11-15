@@ -158,14 +158,12 @@ public:
   uint8_t mode;
   // Ring buffers with compile-time sizes
   int8_t in_message_tx;
+
   volatile RingBuffer<> *rxRb;
   volatile RingBuffer<> *txRb;
   volatile RingBuffer<> *txRb_sidechannel;
   volatile RingBuffer<> *txRb_realtime;
   volatile RingBuffer<> *sysex_rb_cache;  // Cached pointer to sysex rb for fast ISR path
-
-  // UART-level receive state (moved from MidiClass for ISR performance)
-  midi_state_t live_state;
 
 #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;

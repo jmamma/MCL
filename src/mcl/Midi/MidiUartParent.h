@@ -44,6 +44,10 @@ public:
 
   uint8_t mode;
 
+  // UART-level receive state (for ISR performance)
+  // Placed early in parent structure for efficient offset access in ISR
+  midi_state_t live_state;
+
   MidiClass *midi;
 
   MidiID device;
@@ -52,6 +56,7 @@ public:
     activeSenseEnabled = 0;
     recvActiveSenseTimer = 0;
     sendActiveSenseTimer = 0;
+    live_state = midi_wait_status;
   }
 
   void setActiveSenseTimer(uint16_t timeout) {

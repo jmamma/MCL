@@ -125,20 +125,20 @@ public:
     ledger[msg_wr].state = SYSEX_STATE_REC;
   }
 
-  ALWAYS_INLINE() void stopRecord() {
+  __attribute__((noinline)) void stopRecord() {
     recording = false;
-    
+
     // Calculate recordLen from buffer positions (deferred from per-byte increment)
     volatile uint8_t *start = ledger[msg_wr].ptr;
     volatile uint8_t *end = rb->buf + rb->wr;
-    
+
     if (end >= start) {
       ledger[msg_wr].recordLen = end - start;
     } else {
       // Wrapped around the ring buffer
       ledger[msg_wr].recordLen = (rb->buf + rb->len - start) + (end - rb->buf);
     }
-    
+
     ledger[msg_wr].state = SYSEX_STATE_FIN;
     msg_wr++;
     if (msg_wr == NUM_SYSEX_MSGS) {
