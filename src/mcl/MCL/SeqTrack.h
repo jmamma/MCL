@@ -32,19 +32,17 @@ class SeqTrack_270 {};
 
 class SlideData {
 public:
-  int16_t err;
-  int8_t inc;
-  int16_t dx;
-  int16_t dy;
-  int16_t x0;
-  int8_t y0;
-  int8_t y1;
-  bool steep;
-  int16_t x1;
-  uint8_t yflip;
+  int16_t x0;      // Current step position
+  int16_t x1;      // End step position
+  uint16_t accum;  // Fixed-point accumulator (8.8 format)
+  uint16_t delta;  // Fixed-point delta per step (8.8 format)
+  int8_t y0;       // Start value
+  int8_t y1;       // Target value
   ALWAYS_INLINE() void init() {
-    dy = 0;
-    dx = 0;
+    x0 = 0;
+    x1 = 0;
+    accum = 0;
+    delta = 0;
   }
 };
 
