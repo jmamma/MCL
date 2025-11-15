@@ -164,6 +164,9 @@ public:
   volatile RingBuffer<> *txRb_realtime;
   volatile RingBuffer<> *sysex_rb_cache;  // Cached pointer to sysex rb for fast ISR path
 
+  // UART-level receive state (moved from MidiClass for ISR performance)
+  midi_state_t live_state;
+
 #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
   bool running_status_enabled;
@@ -194,7 +197,7 @@ public:
 
     // Data byte fast path - check state FIRST to avoid redundant guards
     if (!MIDI_IS_STATUS_BYTE(c)) {
-      if (midi->live_state == midi_wait_sysex) {
+      if (live_state == midi_wait_sysex) {
         // In SYSEX mode - record directly to ringbuffer, skip timer reset
         // (timer gets reset on sysex start/end status bytes)
         // Use cached rb pointer to avoid pointer chain overhead
@@ -214,7 +217,7 @@ public:
       return;
     }
     // Non-realtime status byte - simplified state machine
-    switch (midi->live_state) {
+    switch (live_state) {
     case midi_wait_sysex:
       if (c != MIDI_SYSEX_END) {
         midi->midiSysex->abort();
@@ -222,12 +225,12 @@ public:
       } else {
         midi->midiSysex->end_immediate();
       }
-      midi->live_state = midi_wait_status;
+      live_state = midi_wait_status;
       break;
 
     case midi_wait_status:
       if (c == MIDI_SYSEX_START) {
-        midi->live_state = midi_wait_sysex;
+        live_state = midi_wait_sysex;
         midi->midiSysex->reset();
         break;
       }

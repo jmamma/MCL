@@ -37,7 +37,8 @@ void MidiClass::init() {
   last_status = running_status = 0;
   in_state = midi_ignore_message;
   in_state = midi_wait_status;
-  live_state = midi_wait_status;
+  // live_state now lives in MidiUartClass for ISR performance
+  uart->live_state = midi_wait_status;
 }
 
 void MidiClass::processSysex() {

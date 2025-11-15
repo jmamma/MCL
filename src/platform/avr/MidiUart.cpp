@@ -23,6 +23,7 @@ MidiUartClass::MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb,
   txRb = _txRb;
   txRb_sidechannel = nullptr;
   txRb_realtime = _txRb_realtime;
+  live_state = midi_wait_status;
 }
 
 void MidiUartClass::init() {

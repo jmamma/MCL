@@ -18,6 +18,7 @@ MidiUartClass::MidiUartClass(uart_inst_t *uart_hw_, RingBuffer<> *_rxRb,
   txRb = _txRb;
   txRb_sidechannel = nullptr;
   txRb_realtime = _txRb_realtime;
+  live_state = midi_wait_status;
 }
 
 void MidiUartClass::init() {
@@ -134,7 +135,7 @@ void __not_in_flash_func(MidiUartClass::rx_isr)() {
     handle_realtime_message(c);
     return;
   }
-  switch (midi->live_state) {
+  switch (live_state) {
   case midi_wait_sysex:
     if (MIDI_IS_STATUS_BYTE(c)) {
       if (c != MIDI_SYSEX_END) {
@@ -143,7 +144,7 @@ void __not_in_flash_func(MidiUartClass::rx_isr)() {
       } else {
         midi->midiSysex->end_immediate();
       }
-      midi->live_state = midi_wait_status;
+      live_state = midi_wait_status;
     } else {
       midi->midiSysex->handleByte(c);
     }
@@ -151,7 +152,7 @@ void __not_in_flash_func(MidiUartClass::rx_isr)() {
 
   case midi_wait_status:
     if (c == MIDI_SYSEX_START) {
-      midi->live_state = midi_wait_sysex;
+      live_state = midi_wait_sysex;
       midi->midiSysex->reset();
       break;
     }

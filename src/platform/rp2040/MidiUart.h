@@ -54,6 +54,9 @@ public:
   volatile RingBuffer<> *txRb_sidechannel;
   volatile RingBuffer<> *txRb_realtime;
 
+  // UART-level receive state (moved from MidiClass for ISR performance)
+  midi_state_t live_state;
+
 #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
   bool running_status_enabled;
