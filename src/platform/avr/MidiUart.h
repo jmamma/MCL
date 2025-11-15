@@ -189,20 +189,16 @@ public:
 
   ALWAYS_INLINE() void realtime_isr(uint8_t c);
 
-  // Optimized rx_isr: Fast-path for data bytes in sysex
+  // This routines is optimised at the assembly level, for fast execution path.
+
   ALWAYS_INLINE() void rx_isr() {
     uint8_t c = read_char();
 
-    // Data byte fast path - check state FIRST to avoid redundant guards
     if (!MIDI_IS_STATUS_BYTE(c)) {
       if (live_state == midi_wait_sysex) {
-        // In SYSEX mode - record directly to ringbuffer, skip timer reset
-        // (timer gets reset on sysex start/end status bytes)
-        // Use cached rb pointer to avoid pointer chain overhead
         sysex_rb_cache->put_h_isr(c);
         return;
       }
-      // Not in sysex, buffer it
       recvActiveSenseTimer = 0;
       rxRb->put_h_isr(c);
       return;
@@ -214,7 +210,6 @@ public:
       realtime_isr(c);
       return;
     }
-    // Non-realtime status byte - simplified state machine
     switch (live_state) {
     case midi_wait_sysex:
       if (c != MIDI_SYSEX_END) {
