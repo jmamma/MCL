@@ -37,6 +37,11 @@ void MidiUartClass::init() {
 
   *src = (3 << UCSZ00);
   *srb = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
+
+  // Cache sysex rb pointer for fast ISR path
+  if (midi && midi->midiSysex) {
+    sysex_rb_cache = midi->midiSysex->rb;
+  }
 }
 
 void MidiUartClass::set_speed(uint32_t speed_) {

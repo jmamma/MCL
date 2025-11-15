@@ -162,6 +162,7 @@ public:
   volatile RingBuffer<> *txRb;
   volatile RingBuffer<> *txRb_sidechannel;
   volatile RingBuffer<> *txRb_realtime;
+  volatile RingBuffer<> *sysex_rb_cache;  // Cached pointer to sysex rb for fast ISR path
 
 #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
@@ -190,19 +191,24 @@ public:
   // Optimized rx_isr: Fast-path for data bytes in sysex
   ALWAYS_INLINE() void rx_isr() {
     uint8_t c = read_char();
-    recvActiveSenseTimer = 0;
 
     // Data byte fast path - check state FIRST to avoid redundant guards
     if (!MIDI_IS_STATUS_BYTE(c)) {
       if (midi->live_state == midi_wait_sysex) {
-        // In SYSEX mode - record directly, skip handleByte guard
-        midi->midiSysex->recordByte(c);
+        // In SYSEX mode - record directly to ringbuffer, skip timer reset
+        // (timer gets reset on sysex start/end status bytes)
+        // Use cached rb pointer to avoid pointer chain overhead
+        sysex_rb_cache->put_h_isr(c);
         return;
       }
       // Not in sysex, buffer it
+      recvActiveSenseTimer = 0;
       rxRb->put_h_isr(c);
       return;
     }
+    // Status byte - reset active sense timer
+    recvActiveSenseTimer = 0;
+
     if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
       realtime_isr(c);
       return;
