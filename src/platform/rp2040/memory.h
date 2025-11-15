@@ -55,6 +55,11 @@ FORCED_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t
   *dst = byte;
 }
 
+// ISR-optimized version (on RP2040, same as regular put_byte_bank1 since no memory banks)
+FORCED_INLINE() extern inline void put_byte_bank1_isr(volatile uint8_t *dst, uint8_t byte) {
+  *dst = byte;
+}
+
 FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
   uint8_t c = *dst;
   return c;
