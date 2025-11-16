@@ -274,14 +274,14 @@ void MDSeqTrack::recalc_slides() {
   uint8_t step = locks_slides_recalc;
   uint8_t timing_mid = get_timing_mid();
 
+  // Build mask of active lock params, then AND with step's locks
   uint8_t find_mask = 0;
-  uint8_t cur_mask = 1;
   for (uint8_t i = 0; i < NUM_LOCKS; i++) {
-    if (locks_params[i] && (steps[step].locks & cur_mask)) {
-      find_mask |= cur_mask;
+    if (locks_params[i]) {
+      find_mask |= (1 << i);
     }
-    cur_mask <<= 1;
   }
+  find_mask &= steps[step].locks;
 
   auto lockidx = locks_slides_idx;
   if (find_mask == 0) {
@@ -329,8 +329,14 @@ void MDSeqTrack::find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask) {
 
 again:
   for (; next_step < max_len; next_step++) {
-    uint8_t cur_mask = 1;
     auto lcks = get_step_locks(next_step);
+
+    // Early skip if no locks and no trig
+    if (!lcks && !steps[next_step].trig) {
+      continue;
+    }
+
+    uint8_t cur_mask = 1;
     for (uint8_t i = 0; i < NUM_LOCKS; ++i) {
 
       if (mask & cur_mask) {
