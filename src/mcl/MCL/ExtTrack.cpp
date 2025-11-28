@@ -36,7 +36,8 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
 
   ext_track->buffer_notesoff();
 
-  memcpy(ext_track->data(), &seq_data, sizeof(seq_data));
+  uint8_t *dest = ext_track->data();
+  memcpy(dest, &seq_data, sizeof(seq_data));
   load_link_data(seq_track);
   ext_track->clear_mutes();
   ext_track->pgm_oneshot = 0;
@@ -62,7 +63,8 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
     get_track_from_sysex(column);
     link.length = seq_track->length;
     link.speed = seq_track->speed;
-    memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
+    uint8_t *src = ext_track->data();
+    memcpy(&seq_data, src, sizeof(seq_data));
   }
 #endif
   ret = write_grid(_this(), _sizeof(), column, row, grid);
