@@ -244,7 +244,7 @@ void MDSeqTrack::post_seq(MidiUartClass *uart_) {
   }
   if (MDSeqTrack::gui_update) {
     if (last_md_track < NUM_MD_TRACKS && mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_md_track)) {
-      auto active_track = mcl_seq.md_tracks[last_md_track];
+      auto &active_track = mcl_seq.md_tracks[last_md_track];
       MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1, uart_);
     }
     MDSeqTrack::gui_update = 0;
