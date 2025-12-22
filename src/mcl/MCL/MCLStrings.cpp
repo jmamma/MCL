@@ -25,7 +25,7 @@ MCLSTR_DEFINE(lck, "LCK");
 MCLSTR_DEFINE(load, "LOAD");
 MCLSTR_DEFINE(mode, "MODE");
 MCLSTR_DEFINE(save, "SAVE");
-MCLSTR_DEFINE(voice_select, "VOICE SELECT ");
+MCLSTR_DEFINE(voice_select, "VOICE SELECT");
 MCLSTR_DEFINE(cond, "COND");
 MCLSTR_DEFINE(hex_prefix, "0x");
 MCLSTR_DEFINE(plen, "PLEN");
@@ -67,8 +67,8 @@ MCLSTR_DEFINE(step_prefix, "S");
 // Common labels
 MCLSTR_DEFINE(zero_dash_space, "00 - ");
 MCLSTR_DEFINE(four_dashes, "----");
-MCLSTR_DEFINE(delete_space, "Delete ");
-MCLSTR_DEFINE(step_space, "STEP ");
+MCLSTR_DEFINE(delete_space, "Delete");
+MCLSTR_DEFINE(step_space, "STEP");
 
 // Common labels
 MCLSTR_DEFINE(destination, "DESTINATION");
@@ -185,16 +185,16 @@ MCLSTR_DEFINE(poly, "POLY");
 MCLSTR_DEFINE(slot, "SLOT");
 
 // Track operations - Clear
-MCLSTR_DEFINE(clear_md, "CLEAR MD ");
-MCLSTR_DEFINE(clear_ext, "CLEAR EXT ");
+MCLSTR_DEFINE(clear_md, "CLEAR MD");
+MCLSTR_DEFINE(clear_ext, "CLEAR EXT");
 
 // Track operations - Copy
-MCLSTR_DEFINE(copy_md, "COPY MD ");
-MCLSTR_DEFINE(copy_ext, "COPY EXT ");
+MCLSTR_DEFINE(copy_md, "COPY MD");
+MCLSTR_DEFINE(copy_ext, "COPY EXT");
 
 // Track operations - Paste/Undo
-MCLSTR_DEFINE(paste_md, "PASTE MD ");
-MCLSTR_DEFINE(paste_ext, "PASTE EXT ");
+MCLSTR_DEFINE(paste_md, "PASTE MD");
+MCLSTR_DEFINE(paste_ext, "PASTE EXT");
 MCLSTR_DEFINE(transpose, "TRANSPOSE");
 
 // Grid operations
@@ -212,10 +212,10 @@ MCLSTR_DEFINE(load_tracks, "LOAD TRACKS");
 MCLSTR_DEFINE(load_groups, "LOAD GROUPS");
 
 // Poly/Link messages
-MCLSTR_DEFINE(lock_params, "LOCK PARAMS ");
+MCLSTR_DEFINE(lock_params, "LOCK PARAMS");
 
 // Upgrade
-MCLSTR_DEFINE(upgrade, "UPGRADE ");
+MCLSTR_DEFINE(upgrade, "UPGRADE");
 
 // WavDesigner
 MCLSTR_DEFINE(render, "Render");

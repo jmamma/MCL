@@ -459,13 +459,19 @@ void Oled::draw_textbox(char *text, char *text2) {
   auto oldfont = getFont();
   setFont();
   uint8_t font_width = 6;
-  uint8_t w = ((strlen(text) + strlen(text2) + 2) * font_width);
+  uint8_t len1 = strlen(text);
+  uint8_t len2 = strlen(text2);
+  uint8_t len_total = (strlen(text) + strlen(text2) + 2);
+  bool use_space = (len2 > 0);
+  if (use_space) { len_total++; }
+  uint8_t w = (len_total * font_width);
   uint8_t x = 64 - w / 2;
   uint8_t y = 8;
   fillRect(x - 1, y - 1, w + 2, 8 * 2 + 2, 0);
   drawRect(x, y, w, 8 * 2, 1);
   setCursor(x + font_width, y + 4);
   print(text);
+  if (use_space) { print(' '); }
   print(text2);
   setFont(oldfont);
 }
