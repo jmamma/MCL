@@ -848,6 +848,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       int a = 16 * timing_mid;
       int new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
       pos_cur_x(new_x);
+      new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
       pos_cur_x(new_x);
       note_interface.last_note = track;
     }
