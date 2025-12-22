@@ -118,6 +118,7 @@ public:
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count;
   volatile bool mute_state_pending;
+  volatile bool notesoff_pending;
 
   uint8_t locks_slide_next_lock_utiming[NUM_LOCKS];
 
@@ -129,6 +130,7 @@ public:
     memset(ignore_notes,0, sizeof(ignore_notes));
     pgm_oneshot = 0;
     mute_state_pending = false;
+    notesoff_pending = false;
   }
 
   void seq(MidiUartClass *uart_);

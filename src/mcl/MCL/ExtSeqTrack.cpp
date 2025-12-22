@@ -84,7 +84,7 @@ void ExtSeqTrack::set_length(uint8_t len, bool expand) {
       }
     }
   } else if (length < old_length) {
-    buffer_notesoff();
+      notesoff_pending = true;
   }
 }
 
@@ -706,6 +706,11 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     buffer_notesoff();
   }
 
+  if (notesoff_pending) {
+    notesoff_pending = false;
+    buffer_notesoff();
+  }
+
   if ((is_generic_midi || (!is_generic_midi && count_down == 0)) &&
       (mute_state == SEQ_MUTE_OFF)) {
     // SEQ_MUTE_OFF)) {
@@ -1167,7 +1172,7 @@ void ExtSeqTrack::clear_ext_notes() {
 void ExtSeqTrack::clear_track(bool) {
   clear_ext_notes();
   clear_ext_conditional();
-  buffer_notesoff();
+  notesoff_pending = true;
 }
 
 void ExtSeqTrack::clear_step(uint8_t step) {
@@ -1210,7 +1215,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   ext_event_t ev_cur[16];
   uint8_t vel_tmp;
   mute_state = SEQ_MUTE_ON;
-  buffer_notesoff();
+  notesoff_pending = true;
 
   uint8_t timing_mid = get_timing_mid();
   uint16_t step_idx = 0, ev_end = 0;

@@ -30,11 +30,7 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
   uint8_t old_mute = seq_track->mute_state;
 
   seq_track->mute_state = SEQ_MUTE_ON;
-
-  seq_tx3.txRb->init();
-  seq_tx4.txRb->init();
-
-  ext_track->buffer_notesoff();
+  ext_track->notesoff_pending = true;
 
   uint8_t *dest = ext_track->data();
   memcpy(dest, &seq_data, sizeof(seq_data));
