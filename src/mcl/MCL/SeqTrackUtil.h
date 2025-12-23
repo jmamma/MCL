@@ -40,21 +40,6 @@ public:
     return static_cast<ArpSeqTrack &>(mcl_seq.md_arp_tracks[index]);
   }
 
-  static inline void sync_ext_length_encoder(bool is_md_device,
-                                             uint8_t track_idx,
-                                             uint8_t length, bool force) {
-#ifdef EXT_TRACKS
-    if (!is_md_device && (force || last_ext_track == track_idx)) {
-      seq_extparam4.cur = length;
-    }
-#else
-    (void)is_md_device;
-    (void)track_idx;
-    (void)length;
-    (void)force;
-#endif
-  }
-
   template <typename Fn>
   static inline void for_each_track(bool is_md_device, Fn fn) {
     uint8_t len = track_count(is_md_device);

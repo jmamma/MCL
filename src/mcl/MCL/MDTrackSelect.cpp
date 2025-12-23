@@ -1,6 +1,5 @@
 #include "MDTrackSelect.h"
 #include "MD.h"
-#include "MidiClock.h"
 #include "SeqPtcPage.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
@@ -71,37 +70,22 @@ void MDTrackSelect::end() {
 
       auto &track = SeqTrackUtil::get_track(is_md_device, n);
       track.set_length(length, expand);
-      SeqTrackUtil::sync_ext_length_encoder(
-          is_md_device, n, length, mcl.currentPage() == SEQ_EXTSTEP_PAGE);
+      if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) { seq_extparam4.cur = length; }
       track.request_speed_change(new_speed);
       SeqPage *seq_page = (SeqPage*) GUI.currentPage();
       seq_page->config_encoders();
     } else {
     update_pattern:
       uint8_t len = SeqTrackUtil::track_count(is_md_device);
-
-      bool wait_for_tick = MidiClock.isStarted();
-      uint8_t mod12_snapshot = MidiClock.mod12_counter;
-
-      for (uint8_t n = 0; n < len;) {
-        if (wait_for_tick) {
-          if (!MidiClock.isStarted() ||
-              mod12_snapshot != MidiClock.mod12_counter) {
-            wait_for_tick = false;
-          } else {
-            continue;
-          }
-        }
-        SeqTrackUtil::get_track(is_md_device, n)
-            .request_speed_change(new_speed);
-        n++;
-      }
-
       for (uint8_t n = 0; n < len; n++) {
         auto &track = SeqTrackUtil::get_track(is_md_device, n);
         track.set_length(length, expand);
-        SeqTrackUtil::sync_ext_length_encoder(is_md_device, n, length,
-                                              last_ext_track == n);
+      }
+      for (uint8_t n = 0; n < len; n++) {
+        SeqTrackUtil::get_track(is_md_device, n).request_speed_change(new_speed);
+      }
+      if (!is_md_device && last_ext_track < len) {
+        seq_extparam4.cur = length;
       }
       if (is_seq_page) {
         SeqPage *seq_page = (SeqPage*) GUI.currentPage();

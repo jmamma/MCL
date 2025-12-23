@@ -636,13 +636,12 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
     if (multi) {
       SeqTrackUtil::for_each_track(false, [&](SeqTrackCond &track, uint8_t idx) {
         track.set_length(length);
-        SeqTrackUtil::sync_ext_length_encoder(false, idx, length,
-                                              last_ext_track == idx);
+        seq_extparam4.cur = length;
       });
     } else {
       uint8_t idx = selected_track_index(false);
       selected_track(false).set_length(length);
-      SeqTrackUtil::sync_ext_length_encoder(false, idx, length, true);
+      seq_extparam4.cur = length;
     }
 #endif
   }
