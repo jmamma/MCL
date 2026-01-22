@@ -85,7 +85,7 @@ bool WavDesigner::render() {
   uint16_t buffer[256];
   uint16_t samples_so_far = 0;
 
-  int16_t largest_sample_so_far = 0;
+  int32_t largest_sample_so_far = 0;
   // Render each sample
   uint32_t pos = 0;
   bool write_header = false;

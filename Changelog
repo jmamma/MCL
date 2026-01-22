@@ -32,7 +32,7 @@ peering. This manifested in strange parameter resets on the MD.
 
 - Pianoroll / External MIDI tracks:
 
-  Fixes to note deletion when notes extend beyond track length.
+  Fixe note deletion when notes extend beyond track length.
 
   Left and Right rotation now correctly handles notes existing beyond track
   length.
@@ -45,6 +45,7 @@ peering. This manifested in strange parameter resets on the MD.
   Fix wrap-around edge cases when live recording in to Ext MIDI track beyond
   track length.
 
+  MIDI notes could be stuck during slot transitions for A4, MNM drivers.
 
 MCL 4.70 01/10/2025
 
