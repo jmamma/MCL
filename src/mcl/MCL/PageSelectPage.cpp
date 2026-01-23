@@ -116,6 +116,10 @@ void PageSelectPage::md_prepare() {
   if (kit_cb.state) {
     return;
   }
+  // Don't request kit while sequencer is running (causes clock problems)
+  if (MidiClock.state == 2) {
+    return;
+  }
   // Only request kit if more than 2 seconds (2000ms) has passed
   //if (clock_diff(last_kit_request_time, current_time) < 2000) {
   //  return;
