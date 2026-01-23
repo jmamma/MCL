@@ -80,14 +80,77 @@ void MDSysexListenerClass::end() {
     if (track > 15) { return; }
     if (param > 7) { return; }
 
-    uint8_t *p = &MD.kit.lfos[track].destinationTrack;
-    p[param] = value;
+    {
+      uint8_t *p = &MD.kit.lfos[track].destinationTrack;
+      p[param] = value;
 
-    //LFOS, LFOD, LFOM
-    if (4 < param && param < 8) {
-      MD.kit.params[track][param + 16] = value;
+      //LFOS, LFOD, LFOM
+      if (4 < param && param < 8) {
+        MD.kit.params[track][param + 16] = value;
+        perf_page.learn_param(track, param + 16, value);
+        lfo_page.learn_param(track, param + 16, value);
+      }
     }
 
+    break;
+
+  case MD_KIT_LOADED_ID:
+    // Kit loaded notification: F0 00 20 3C 02 00 54 <kitIdx> F7
+    {
+      uint8_t kitIdx = sysex->getByte(offset++);
+      MD.currentKit = kitIdx;
+      // Could trigger kit reload callback here if needed
+    }
+    break;
+
+  case MD_MACHINE_UPDATE_ID:
+    // Machine update: F0 00 20 3C 02 00 63 <track> <model> <flags_byte> <data_flags> [data...] F7
+    {
+      track = sysex->getByte(offset++);
+      if (track > 15) { return; }
+
+      uint8_t model = sysex->getByte(offset++);
+      uint8_t flags_byte = sysex->getByte(offset++);
+      uint8_t data_flags = sysex->getByte(offset++);
+
+      // Decode model: flags_byte = (tonal << 1) | uwFlag
+      uint8_t uwFlag = flags_byte & 0x01;
+      // uint8_t tonal = (flags_byte >> 1) & 0x01;
+
+      if (uwFlag) {
+        model += 128;
+      }
+      MD.kit.models[track] = model;
+
+      // Params (24 bytes)
+      if (data_flags & 0x01) {
+        for (int i = 0; i < 24; i++) {
+          MD.kit.params[track][i] = sysex->getByte(offset++);
+        }
+      }
+
+      // LFO (5 bytes: destTrack, destParam, shape1, shape2, type)
+      if (data_flags & 0x02) {
+        MD.kit.lfos[track].destinationTrack = sysex->getByte(offset++);
+        MD.kit.lfos[track].destinationParam = sysex->getByte(offset++);
+        MD.kit.lfos[track].shape1 = sysex->getByte(offset++);
+        MD.kit.lfos[track].shape2 = sysex->getByte(offset++);
+        MD.kit.lfos[track].type = sysex->getByte(offset++);
+      }
+
+      // Level (1 byte)
+      if (data_flags & 0x04) {
+        MD.kit.levels[track] = sysex->getByte(offset++);
+      }
+
+      // Trig + Mute groups (2 bytes)
+      if (data_flags & 0x08) {
+        uint8_t trig = sysex->getByte(offset++);
+        uint8_t mute = sysex->getByte(offset++);
+        MD.kit.trigGroups[track] = (trig == 0x7F) ? 255 : trig;
+        MD.kit.muteGroups[track] = (mute == 0x7F) ? 255 : mute;
+      }
+    }
     break;
   }
 }
