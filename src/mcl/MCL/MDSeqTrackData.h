@@ -71,7 +71,7 @@ public:
     }
   }
 
-  FORCED_INLINE() uint8_t find_param(uint8_t param_id) const {
+  uint8_t find_param(uint8_t param_id) const {
     param_id += 1;
     if (!param_id)
       return 255;
@@ -83,7 +83,7 @@ public:
     return 255;
   }
 
-  FORCED_INLINE() uint16_t get_lockidx(uint8_t step) const {
+  uint16_t get_lockidx(uint8_t step) const {
     uint16_t idx = 0;
     for (uint8_t i = 0; i < step; ++i) {
       idx += popcount(steps[i].locks);
@@ -91,7 +91,7 @@ public:
     return idx;
   }
 
-  FORCED_INLINE() uint16_t get_lockidx(uint8_t step, uint8_t lock_idx) const {
+  uint16_t get_lockidx(uint8_t step, uint8_t lock_idx) const {
     uint8_t mask = 1 << lock_idx;
     uint8_t rmask = (mask - 1);
     if (steps[step].is_lock_bit(lock_idx)) {
