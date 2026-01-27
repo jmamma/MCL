@@ -22,8 +22,8 @@ void MenuPageBase::init() {
     cur_row = 0;
   }
 
-  ((MCLEncoder *)encoders[0])->max =
-      get_menu()->get_option_range(encoders[1]->cur) - 1;
+  uint8_t range = get_menu()->get_option_range(encoders[1]->cur);
+  ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
   ((MCLEncoder *)encoders[0])->min =
       get_menu()->get_option_min(encoders[1]->cur);
 
@@ -115,8 +115,8 @@ void MenuPageBase::cleanup() {
 void MenuPageBase::loop() {
 
   if (encoders[1]->hasChanged()) {
-    ((MCLEncoder *)encoders[0])->max =
-        get_menu()->get_option_range(encoders[1]->cur) - 1;
+    uint8_t range = get_menu()->get_option_range(encoders[1]->cur);
+    ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
     ((MCLEncoder *)encoders[0])->min =
         get_menu()->get_option_min(encoders[1]->cur);
 
