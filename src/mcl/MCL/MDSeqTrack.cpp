@@ -604,15 +604,6 @@ void MDSeqTrack::reset_params() {
     //process_note_locks(20, MD.kit.params[track_number][20],ccs);
     send_notes_ccs(ccs, send_ccs);
   }
-#if defined(__AVR__)
-  else {
-    //Ugly hack, removing this section of code causes the avr compiler to bloat
-    if (track_number < 255) { return; }
-    MDTrack md_track;
-    md_track.get_machine_from_kit(track_number);
-    MD.assignMachineBulk(track_number, &md_track.machine, 255, 1, true);
-  }
-#endif
 }
 
 void MDSeqTrack::get_step_locks(uint8_t step, uint8_t *params,
