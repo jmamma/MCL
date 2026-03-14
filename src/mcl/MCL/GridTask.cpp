@@ -10,6 +10,7 @@
 #include "MCLGUI.h"
 #include "Project.h"
 #include "StackMonitor.h"
+#include "MCLSeq.h"
 
 #define DIV16_MARGIN 8
 
@@ -76,8 +77,8 @@ void GridTask::run() {
 
 void GridTask::update_transition_details() {
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
   ElektronDevice *elektron_devs[2] = {
       devs[0]->asElektronDevice(),
@@ -122,8 +123,8 @@ void GridTask::wait_blocking(uint32_t go_step) {
 
 void GridTask::transition_handler() {
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
 
   bool send_device[2] = {0};
@@ -198,7 +199,7 @@ void GridTask::transition_handler() {
     bool wait;
 
     if (mcl_cfg.uart2_prg_out > 0 && row != 255) {
-      MidiUart2.sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
+      mcl_seq.ext_uart->sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
     }
     // float div192th_per_second = tempo * 0.8f;
     // float div192th_time = 1.0 / div192th_per_second;

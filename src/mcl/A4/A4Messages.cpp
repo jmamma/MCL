@@ -91,7 +91,7 @@ bool A4Sound::fromSysex(MidiClass *midi) {
 }
 
 uint16_t A4Sound::toSysex() {
-  ElektronDataToSysexEncoder encoder(&MidiUart2);
+  ElektronDataToSysexEncoder encoder(Analog4.uart);
   return toSysex(&encoder);
 }
 
@@ -112,7 +112,7 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder *encoder) {
 }
 
 uint16_t A4Kit::toSysex() {
-  ElektronDataToSysexEncoder encoder(&MidiUart2);
+  ElektronDataToSysexEncoder encoder(Analog4.uart);
   return toSysex(&encoder);
 }
 

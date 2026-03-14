@@ -69,7 +69,7 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
 
-  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+  SeqPage::midi_device = midi_active_peering.dev1;
 
   midi_events.setup_callbacks();
   key_interface.on();
@@ -767,7 +767,7 @@ void SeqStepMidiEvents::setup_callbacks() {
     return;
   }
 
-  Midi.addOnControlChangeCallback(
+  MD.midi->addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   state = true;
@@ -778,7 +778,7 @@ void SeqStepMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  Midi.removeOnControlChangeCallback(
+  MD.midi->removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   state = false;

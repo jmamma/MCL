@@ -90,6 +90,7 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
         {"TURBO USB:", 0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE , 0, 54},
         {"DRIVER 1:", 0, 2, 2, 61, NULL_PAGE, 0, 124},
         {"DRIVER 2:", 0, 2, 2, 4, NULL_PAGE, 0, 84},
+        {"USB DEV:",  0, 3, 3, 65, NULL_PAGE, 0, 127},
     },
     24
 };

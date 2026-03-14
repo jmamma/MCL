@@ -4,14 +4,15 @@
 #include "PerfData.h"
 #include "MidiUart.h"
 #include "MCLStrings.h"
+#include "MCLSeq.h"
 
 #define DIV_1_127 (1.00f / 127.0f)
 
 PerfScene PerfData::scenes[NUM_SCENES];
 
 void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_,MidiUartClass *uart2_) {
-  if (uart_ == nullptr) { uart_ = &MidiUart; }
-  if (uart2_ == nullptr) { uart2_ = &MidiUart2; }
+  if (uart_ == nullptr) { uart_ = mcl_seq.md_uart; }
+  if (uart2_ == nullptr) { uart2_ = mcl_seq.ext_uart; }
 
   if (dest >= NUM_MD_TRACKS + 4) {
     uint8_t channel = dest - NUM_MD_TRACKS - 4;

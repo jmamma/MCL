@@ -45,6 +45,9 @@ public:
   bool uart_sidechannel;
   bool realtime;
 
+  MidiUartClass *md_uart = &MidiUart;
+  MidiUartClass *ext_uart = &MidiUart2;
+
   static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
   MDArpSeqTrack md_arp_tracks[NUM_MD_TRACKS];
@@ -74,6 +77,7 @@ public:
   void disable() { state = false; }
 
   void setup();
+  void set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_);
 
   uint8_t find_ext_track(uint8_t channel);
 

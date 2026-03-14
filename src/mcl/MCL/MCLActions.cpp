@@ -59,8 +59,8 @@ DeviceTrack *MCLActions::load_and_prepare_track(uint8_t track_idx, uint16_t row,
 // void __attribute__ ((noinline)) FOREACH_GRID_TRACK(void(*fn)(uint8_t,
 // uint8_t, uint8_t, MidiDevice*, ElektronDevice*)) { uint8_t grid; uint8_t
 // track_idx; MidiDevice *devs[2] = {
-// midi_active_peering.get_device(UART1_PORT),
-// midi_active_peering.get_device(UART2_PORT),
+// midi_active_peering.dev1,
+// midi_active_peering.dev2,
 //};
 // ElektronDevice *elektron_devs[2] = {
 // devs[0]->asElektronDevice(),
@@ -96,9 +96,9 @@ void MCLActions::kit_reload(uint8_t pattern) {
     if (mcl_actions.do_kit_reload != 255) {
       if (mcl_actions.writepattern == pattern) {
         auto dev1 =
-            midi_active_peering.get_device(UART1_PORT)->asElektronDevice();
+            midi_active_peering.dev1->asElektronDevice();
         auto dev2 =
-            midi_active_peering.get_device(UART2_PORT)->asElektronDevice();
+            midi_active_peering.dev2->asElektronDevice();
         if (dev1 != nullptr) {
           dev1->loadKit(mcl_actions.do_kit_reload);
         }
@@ -133,8 +133,8 @@ void md_import() {
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
 
   ElektronDevice *elektron_devs[2] = {
@@ -181,8 +181,8 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
 
   bool save_dev_tracks[2] = {false, false};
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
   ElektronDevice *elektron_devs[2] = {
       devs[0]->asElektronDevice(),
@@ -325,8 +325,8 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
                              uint8_t *_row_array, uint8_t load_mode, uint8_t load_offset) {
   // DEBUG_PRINT_FN();
   ElektronDevice *elektron_devs[2] = {
-      midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
-      midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
+      midi_active_peering.dev1->asElektronDevice(),
+      midi_active_peering.dev2->asElektronDevice(),
   };
   if (load_mode == 255) {
     load_mode = mcl_cfg.load_mode;
@@ -626,8 +626,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   memcpy(select_array, slot_select_array, NUM_SLOTS);
 
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
 
   uint8_t send_masks[NUM_SLOTS] = {0};
@@ -688,7 +688,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   proj.read_grid_row_header(&row_header, row);
 
   if (mcl_cfg.uart2_prg_out > 0) {
-    MidiUart2.sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
+    mcl_seq.ext_uart->sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
   }
 
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {
@@ -959,8 +959,8 @@ void MCLActions::calc_latency() {
   EmptyTrack empty_track;
 
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
 
   ElektronDevice *elektron_devs[2] = {

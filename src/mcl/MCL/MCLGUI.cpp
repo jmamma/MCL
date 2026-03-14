@@ -699,8 +699,8 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
   char dev[6];
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
 //  oled_display.clearDisplay();
 

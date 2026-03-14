@@ -43,6 +43,16 @@ const ElektronSysexProtocol a4_protocol = {
 A4Class::A4Class()
     : ElektronDevice(&Midi2, "A4", DEVICE_A4, a4_protocol) {}
 
+void A4Class::setup_listeners() {
+  A4SysexListener.setup(midi);
+}
+
+void A4Class::cleanup_listeners() {
+  if (midi && midi->midiSysex) {
+    midi->midiSysex->removeSysexListener(&A4SysexListener);
+  }
+}
+
 void A4Class::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 1;
 
@@ -96,7 +106,7 @@ uint16_t A4Class::sendRequest(uint8_t type, uint8_t param, bool send) {
       buf[i++] = a4_sysex_ftr[n];
     }
     buf[i++] = 0xF7;
-    MidiUart2.m_putc(buf, i);
+    uart->m_putc(buf, i);
   }
   return len;
 }
@@ -204,5 +214,5 @@ void A4Class::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
 }
 
 void A4Class::setLevel(uint8_t track, uint8_t value) {
-  MidiUart2.sendCC(track, 95, value);
+  uart->sendCC(track, 95, value);
 }

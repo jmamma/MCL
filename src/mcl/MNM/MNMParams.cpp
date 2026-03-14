@@ -36,7 +36,7 @@ const char* MNMClass::getMachineName(uint8_t machine) {
   return NULL;
 }
 
-model_to_param_names_t mnm_model_param_names[] = {
+static model_to_param_names_t mnm_model_param_names[] = {
   { MNM_GND_SIN_MODEL,    0},
   { MNM_GND_NOIS_MODEL,   2},
 

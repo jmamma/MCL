@@ -268,7 +268,7 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
     if (track >= mcl_seq.num_ext_tracks) {
       return;
     }
-    MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
+    MidiDevice *dev = midi_active_peering.dev2;
     midi_device = dev;
     select_track(dev, track);
     opt_trackid = last_ext_track + 1;
@@ -407,7 +407,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         seq_menu_page.gen_menu_device_names();
         seq_menu_page.gen_menu_transpose_names();
         mcl_cfg.seq_dev =
-            opt_midi_device_capture == &MD ? UART1_PORT : UART2_PORT;
+            uartToPort(opt_midi_device_capture == &MD ? MD.uart : mcl_seq.ext_uart);
         return true;
       }
     }
@@ -1233,8 +1233,8 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
 void SeqPage::display() {
 
   bool is_md = (midi_device == &MD);
-  const char *int_name = midi_active_peering.get_device(UART1_PORT)->name;
-  const char *ext_name = midi_active_peering.get_device(UART2_PORT)->name;
+  const char *int_name = midi_active_peering.dev1->name;
+  const char *ext_name = midi_active_peering.dev2->name;
 
   uint8_t track_id = last_md_track;
   if (!is_md) {

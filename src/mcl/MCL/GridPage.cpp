@@ -1,5 +1,8 @@
 #include "GridPage.h"
 #include "AuxPages.h"
+#ifdef PLATFORM_TBD
+#include "Ui.h"
+#endif
 #include "GridPages.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
@@ -379,14 +382,13 @@ void GridPage::display_grid_info() {
 
   oled_display.setCursor(0, y_offset + 1 + 1 * 8);
   char dev[3] = "  ";
-
-  MidiUart.device.get_name(dev);
+  MD.uart->device.get_name(dev);
   dev[2] = '\0';
   oled_display.print(dev);
 
   oled_display.setCursor(0, y_offset + 3 * 8);
   char dev2[3] = "  ";
-  MidiUart2.device.get_name(dev2);
+  generic_midi_device.uart->device.get_name(dev2);
   dev2[2] = '\0';
   oled_display.print(dev2);
 
@@ -630,6 +632,30 @@ void GridPage::display() {
 #ifdef DEBUGMODE
   if (row_scan) {
     mcl_gui.draw_progress_bar(8, 8, false, 18, 2, 18, 7, false);
+  }
+#endif
+
+#ifdef PLATFORM_TBD
+  // DEBUG: raw button data
+  {
+    extern Ui tbd_ui;
+    ui_data_t dbg = tbd_ui.CopyUiData();
+    char buf[32];
+    oled_display.setFont();
+    oled_display.setTextSize(1);
+    oled_display.setTextColor(WHITE, BLACK);
+    oled_display.setCursor(0, 32);
+    snprintf(buf, sizeof(buf), "f:%02X d:%04X", dbg.f_btns, dbg.d_btns);
+    oled_display.print(buf);
+    oled_display.setCursor(0, 40);
+    snprintf(buf, sizeof(buf), "m:%04X p:%02X%02X%02X%02X",
+      dbg.mcl_btns,
+      dbg.pot_states[0], dbg.pot_states[1],
+      dbg.pot_states[2], dbg.pot_states[3]);
+    oled_display.print(buf);
+    oled_display.setCursor(0, 48);
+    snprintf(buf, sizeof(buf), "fl:%02X ml:%04X", dbg.f_btns_long_press, dbg.mcl_btns_long_press);
+    oled_display.print(buf);
   }
 #endif
 }

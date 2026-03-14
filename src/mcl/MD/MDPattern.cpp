@@ -143,7 +143,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 }
 
 uint16_t MDPattern::toSysex() {
-  ElektronDataToSysexEncoder encoder(&MidiUart);
+  ElektronDataToSysexEncoder encoder(MD.uart);
   return toSysex(&encoder);
 }
 

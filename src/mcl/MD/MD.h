@@ -59,6 +59,8 @@ public:
    **/
   MDGlobalLight global;
 
+  virtual void setup_listeners();
+  virtual void cleanup_listeners();
   virtual bool probe();
   virtual void setup();
   virtual void init_grid_devices(uint8_t device_idx);

@@ -12,4 +12,6 @@ class MidiSetup {
 
 extern MidiSetup midi_setup;
 
+void configure_driver_ports();
+
 #endif /* MIDISETUP_H__ */

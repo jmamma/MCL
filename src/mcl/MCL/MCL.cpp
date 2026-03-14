@@ -183,22 +183,12 @@ void MCL::setup() {
 
   note_interface.setup();
 
-  MD.midi_events.enable_live_kit_update();
+  configure_driver_ports();
 
   mcl_actions.setup();
   mcl_seq.setup();
 
-  MDSysexListener.setup(&Midi);
-
-  key_interface.setup(&Midi);
   key_interface.enable_listener();
-
-  md_track_select.setup(&Midi);
-
-#ifdef EXT_TRACKS
-  A4SysexListener.setup(&Midi2);
-  MNMSysexListener.setup(&Midi2);
-#endif
   perf_page.setup();
 
   grid_task.init();
@@ -459,7 +449,7 @@ bool mcl_handleEvent(gui_event_t *event) {
              key_interface.is_key_down(MDX_KEY_NO)))
           break;
         opt_clear = 2;
-        //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
+        //  MidiDevice *dev = midi_active_peering.dev2;
         if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
         else if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;

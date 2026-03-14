@@ -115,7 +115,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 63,
     &opt_transpose,
     // 64
-    &mcl_cfg.uart_note_fwd
+    &mcl_cfg.uart_note_fwd,
+    // 65
+    &mcl_cfg.usb_device
 };
 
 const menu_function_ptr_t menu_target_functions[] PROGMEM = {

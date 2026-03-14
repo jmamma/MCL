@@ -77,6 +77,8 @@ menu_option_t MENU_OPTIONS[] = {
   // 124
   {0, "GENER"}, {1,"MD"},
   // 126: PIANO ROLL
-  {0,"NOTE"}
+  {0,"NOTE"},
+  // 127: USB DEVICE
+  {0, "OFF"}, {1, "DRV 1"}, {2, "DRV 2"},
 };
 

@@ -5,7 +5,7 @@
 
 #include "MCLSd.h"
 
-#define CONFIG_VERSION 4013
+#define CONFIG_VERSION 4014
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -71,6 +71,7 @@ public:
   uint8_t uart1_device;
   uint8_t grid_page_mode;
   uint8_t uart_note_fwd;
+  uint8_t usb_device;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

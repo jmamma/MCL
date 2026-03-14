@@ -6,12 +6,15 @@
 #include "MidiUart.h"
 #define UART1_PORT 1
 #define UART2_PORT 2
+#define UARTUSB_PORT 3
 
 void MidiID::send_id_request(uint8_t id, uint8_t port) {
   uint8_t data[6] = {0xF0, 0x7E, id, 0x06, 0x01, 0xF7};
   MidiUartClass *uart;
   if (port == UART1_PORT) {
     uart = &MidiUart;
+  } else if (port == UARTUSB_PORT) {
+    uart = &MidiUartUSB;
   } else {
     uart = &MidiUart2;
   }
@@ -29,6 +32,9 @@ bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
     DEBUG_PRINTLN("adding listener port1");
     MidiSysex.addSysexListener(&MidiIDSysexListener);
   }
+  else if (port == UARTUSB_PORT) {
+    MidiSysexUSB.addSysexListener(&MidiIDSysexListener);
+  }
   else {
     MidiSysex2.addSysexListener(&MidiIDSysexListener);
   }
@@ -37,6 +43,9 @@ bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   if (port == UART1_PORT) {
     DEBUG_PRINTLN("removing listener port1");
     MidiSysex.removeSysexListener(&MidiIDSysexListener);
+  }
+  else if (port == UARTUSB_PORT) {
+    MidiSysexUSB.removeSysexListener(&MidiIDSysexListener);
   }
   else {
     MidiSysex2.removeSysexListener(&MidiIDSysexListener);
@@ -57,12 +66,14 @@ uint8_t MidiID::waitForId(uint8_t id, uint8_t port, uint16_t timeout) {
   uint16_t current_clock = start_clock;
   send_id_request(id, port);
   DEBUG_PRINTLN("waiting for ID");
+  MidiUartParent::handle_midi_lock = 1;
   do {
     current_clock = read_slowclock();
     handleIncomingMidi();
     // GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (!MidiIDSysexListener.isIDMessage));
+  MidiUartParent::handle_midi_lock = 0;
   return get_id();
 }
 

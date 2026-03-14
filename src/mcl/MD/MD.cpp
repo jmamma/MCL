@@ -7,6 +7,7 @@
 #include "MDTrackSelect.h"
 #include "SeqPages.h"
 #include "MCLStrings.h"
+#include "MidiActivePeering.h"
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -45,7 +46,7 @@ void MDMidiEvents::enable_live_kit_update() {
   if (kitupdate_state) {
     return;
   }
-  Midi.addOnControlChangeCallback(
+  MD.midi->addOnControlChangeCallback(
       this, (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
   kitupdate_state = true;
 }
@@ -55,7 +56,7 @@ void MDMidiEvents::disable_live_kit_update() {
   if (!kitupdate_state) {
     return;
   }
-  Midi.removeOnControlChangeCallback(
+  MD.midi->removeOnControlChangeCallback(
       this, (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
   kitupdate_state = false;
 }
@@ -90,6 +91,31 @@ const ElektronSysexProtocol md_protocol = {
 };
 
 MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
+
+void MDClass::setup_listeners() {
+  MDSysexListener.setup(midi);
+  key_interface.setup(midi);
+  md_track_select.setup(midi);
+  // MDSysexListener.setup() calls addSysexListener internally,
+  // but key_interface/md_track_select.setup() only set the sysex pointer.
+  // Re-register them here so cleanup_listeners() + setup_listeners() is symmetric.
+  if (midi && midi->midiSysex) {
+    midi->midiSysex->addSysexListener(&key_interface);
+    midi->midiSysex->addSysexListener(&md_track_select);
+  }
+  midi_events.enable_live_kit_update();
+}
+
+void MDClass::cleanup_listeners() {
+  midi_events.disable_live_kit_update();
+  // Remove sysex listeners from the current (old) sysex object
+  // before setPort() reassigns midi to the new port.
+  if (midi && midi->midiSysex) {
+    midi->midiSysex->removeSysexListener(&MDSysexListener);
+    midi->midiSysex->removeSysexListener(&key_interface);
+    midi->midiSysex->removeSysexListener(&md_track_select);
+  }
+}
 
 void MDClass::setup() {
   resetMidiMap();
@@ -210,8 +236,9 @@ bool MDClass::probe() {
   DEBUG_PRINTLN("md probe");
   connected = false;
 
-  // Begin main probe sequence
-  if (uart->device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
+  // Begin main probe sequence — derive port from uart pointer
+  uint8_t probe_port = uartToPort(uart);
+  if (uart->device.getBlockingId(DEVICE_MD, probe_port, CALLBACK_TIMEOUT)) {
     uint8_t count = 3;
 
     uint32_t fw_caps_mask =
@@ -234,7 +261,8 @@ bool MDClass::probe() {
       return false;
     }
 
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo_speed), uart);
+    turbo_light.set_speed(turbo_light.lookup_speed(
+        (probe_port == UARTUSB_PORT) ? mcl_cfg.usb_turbo_speed : mcl_cfg.uart1_turbo_speed), uart);
     mcl_gui.delay_progress(100);
 
     //   if (mcl_cfg.clock_rec == 0) {

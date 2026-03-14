@@ -61,7 +61,7 @@ public:
 
 class MidiSysexClass {
 protected:
-  bool recording;
+  volatile bool recording;
   uint8_t recvIds[3];
   bool sysexLongId;
 

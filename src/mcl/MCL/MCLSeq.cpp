@@ -5,11 +5,27 @@
 #include "MCL.h"
 #include "AuxPages.h"
 #include "MCLStrings.h"
+#include "MidiActivePeering.h"
+#include "MD.h"
+
+void MCLSeq::set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_) {
+  md_uart = md_uart_;
+  ext_uart = ext_uart_;
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_tracks[i].uart = md_uart;
+    md_tracks[i].uart2 = ext_uart;
+  }
+#ifdef EXT_TRACKS
+  for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    ext_tracks[i].uart = ext_uart;
+    ext_tracks[i].uart2 = md_uart;
+  }
+#endif
+}
 
 void MCLSeq::setup() {
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-
     md_tracks[i].track_number = i;
     md_tracks[i].set_length(16);
     md_tracks[i].speed = SEQ_SPEED_1X;
@@ -26,7 +42,6 @@ void MCLSeq::setup() {
 #endif
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].uart = &MidiUart2;
     ext_tracks[i].set_channel(i);
     ext_tracks[i].set_length(16);
     ext_tracks[i].speed = SEQ_SPEED_1X;
@@ -184,11 +199,11 @@ void MCLSeq::seq() {
   again:
 
 #if defined(__AVR__)
-    UART_CLEAR_ISR_TX_BIT();
-    UART2_CLEAR_ISR_TX_BIT();
+    md_uart->disable_tx_irq();
+    ext_uart->disable_tx_irq();
 #else
-    MidiUart.disable_tx_irq();
-    MidiUart2.disable_tx_irq();
+    md_uart->disable_tx_irq();
+    ext_uart->disable_tx_irq();
 #endif
     if (uart_sidechannel) {
       uart = &seq_tx2;
@@ -197,18 +212,8 @@ void MCLSeq::seq() {
       // finish transmiting before next Seq() call. We will drain the old buffer
       // in to the new to retain the MIDI data.
       if (engage_sidechannel) {
-        /*
-                while (!seq_tx2.txRb.isEmpty_isr()) {
-                  setLed2();
-                  seq_tx1.txRb.put_h_isr(seq_tx2.txRb.get_h_isr());
-                }
-                while (!seq_tx4.txRb.isEmpty_isr()) {
-                  setLed2();
-                  seq_tx3.txRb.put_h_isr(seq_tx4.txRb.get_h_isr());
-                }
-        */
-        MidiUart.txRb_sidechannel = seq_tx1.txRb;
-        MidiUart2.txRb_sidechannel = seq_tx3.txRb;
+        md_uart->txRb_sidechannel = seq_tx1.txRb;
+        ext_uart->txRb_sidechannel = seq_tx3.txRb;
       } else {
         // Purge stale buffers (from MIDI CONTINUE).
         seq_tx2.txRb->init();
@@ -218,16 +223,8 @@ void MCLSeq::seq() {
       uart = &seq_tx1;
       uart2 = &seq_tx3;
       if (engage_sidechannel) {
-        /*
-                while (!seq_tx1.txRb.isEmpty_isr()) {
-                  seq_tx2.txRb.put_h_isr(seq_tx1.txRb.get_h_isr());
-                }
-                while (!seq_tx3.txRb.isEmpty_isr()) {
-                  seq_tx4.txRb.put_h_isr(seq_tx3.txRb.get_h_isr());
-                }
-        */
-        MidiUart.txRb_sidechannel = seq_tx2.txRb;
-        MidiUart2.txRb_sidechannel = seq_tx4.txRb;
+        md_uart->txRb_sidechannel = seq_tx2.txRb;
+        ext_uart->txRb_sidechannel = seq_tx4.txRb;
       } else {
         seq_tx1.txRb->init();
         seq_tx3.txRb->init();
@@ -235,20 +232,20 @@ void MCLSeq::seq() {
     }
     // clearLed2();
 #if defined(__AVR__)
-    UART_SET_ISR_TX_BIT();
-    UART2_SET_ISR_TX_BIT();
+    md_uart->enable_tx_irq();
+    ext_uart->enable_tx_irq();
 #else
     //Have to flush the first byte to re-trigger the uart tx isr.
     LOCK();
-    MidiUart.tx_flush();
-    MidiUart2.tx_flush();
+    md_uart->tx_flush();
+    ext_uart->tx_flush();
     CLEAR_LOCK();
 #endif
     // Flip uart / side_channel buffer for next run
     uart_sidechannel = !uart_sidechannel;
   } else {
-    uart = &MidiUart;
-    uart2 = &MidiUart2;
+    uart = md_uart;
+    uart2 = ext_uart;
   }
   //  Stopwatch sw;
 
@@ -357,7 +354,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t param = msg[1];
   uint8_t value = msg[2];
 
-  if (param == midi_active_peering.get_device(UART2_PORT)->get_mute_cc()) {
+  if (param == midi_active_peering.dev2->get_mute_cc()) {
 
    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
       if (mcl_seq.ext_tracks[n].channel != channel) {
@@ -383,16 +380,16 @@ void MCLSeqMidiEvents::setup_callbacks() {
     return;
   }
 
-  Midi.addOnNoteOnCallback(
+  MD.midi->addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
-  Midi.addOnNoteOffCallback(
+  MD.midi->addOnNoteOffCallback(
        this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
 
-  Midi.addOnControlChangeCallback(
+  MD.midi->addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
 #ifdef EXT_TRACKS
-  Midi2.addOnControlChangeCallback(
+  generic_midi_device.midi->addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
 #endif
@@ -405,15 +402,15 @@ void MCLSeqMidiEvents::remove_callbacks() {
     return;
   }
 
-  Midi.removeOnNoteOnCallback(
+  MD.midi->removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
-  Midi.removeOnNoteOffCallback(
+  MD.midi->removeOnNoteOffCallback(
       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
-  Midi.removeOnControlChangeCallback(
+  MD.midi->removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
 
-  Midi2.removeOnControlChangeCallback(
+  generic_midi_device.midi->removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
 

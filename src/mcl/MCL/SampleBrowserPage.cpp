@@ -19,7 +19,7 @@ static bool s_query_returned = false;
 void SampleBrowserPage::setup() {
   SD.mkdir(c_wav_root, true);
   SD.mkdir(c_syx_root, true);
-  sysex = Midi.midiSysex;
+  sysex = MD.midi->midiSysex;
   FileBrowserPage::setup();
   _cd(c_wav_root);
   position.reset();
@@ -203,7 +203,7 @@ void SampleBrowserPage::recv_wav(int slot, bool silent) {
   DEBUG_PRINTLN(temp_entry);
   #if defined(__AVR__)
     MidiUartClass *uart_clock_recv = nullptr;
-    if (MidiClock.uart_clock_recv != &MidiUart) {
+    if (MidiClock.uart_clock_recv != MD.uart) {
       uart_clock_recv = MidiClock.uart_clock_recv;
       MidiClock.uart_clock_recv = nullptr;
     }

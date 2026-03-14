@@ -173,6 +173,7 @@ bool MCLSysConfig::cfg_init() {
   uart2_cc_level = 128;
   //grid_page_mode = 0;
   uart_note_fwd = 1;
+  //usb_device = 0;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

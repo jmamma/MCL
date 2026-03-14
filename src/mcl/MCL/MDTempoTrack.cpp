@@ -26,7 +26,7 @@ void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 
 void MDTempoTrack::get_tempo() {
   bool tempo_from_clock = true;
-  if (MidiClock.uart_clock_recv == &MidiUart) {
+  if (MidiClock.uart_clock_recv == MD.uart) {
     uint16_t tp;
     if (MD.get_tempo(tp)) {
       tempo = (float)tp * 0.0416667f;

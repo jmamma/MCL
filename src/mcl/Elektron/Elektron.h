@@ -143,6 +143,16 @@ public:
     return (ElektronDevice*) this;
   }
 
+  virtual void setup_listeners() {}
+  virtual void cleanup_listeners() {}
+
+  void setPort(MidiClass *_midi) {
+    cleanup_listeners();
+    midi = _midi;
+    uart = _midi ? _midi->uart : nullptr;
+    setup_listeners();
+  }
+
   virtual void init_grid_devices(uint8_t device_idx) {};
 
   virtual void setup() { };

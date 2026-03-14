@@ -49,7 +49,7 @@ void SeqExtStepPage::config_encoders() {
   }
 
   config();
-  SeqPage::midi_device = midi_active_peering.get_device(UART2_PORT);
+  SeqPage::midi_device = midi_active_peering.dev2;
 
 }
 
@@ -57,7 +57,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
 
-  midi_device = midi_active_peering.get_device(UART2_PORT);
+  midi_device = midi_active_peering.dev2;
 
   SeqPage::init();
   MD.set_rec_mode(3);

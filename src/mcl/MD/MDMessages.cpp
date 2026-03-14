@@ -227,7 +227,7 @@ bool MDKit::fromSysex(MidiClass *midi) {
 }
 
 uint16_t MDKit::toSysex() {
-  ElektronDataToSysexEncoder encoder(&MidiUart);
+  ElektronDataToSysexEncoder encoder(MD.uart);
   return toSysex(&encoder);
 }
 
