@@ -61,6 +61,10 @@ void MidiUartClass::init() {
 }
 
 void MidiUartClass::set_speed(uint32_t speed_) {
+  if (!uart_hw) {
+    speed = speed_;
+    return;
+  }
   // Wait for TX buffer to empty before changing speed
   while (!txRb->isEmpty())
     ;
@@ -71,7 +75,10 @@ void MidiUartClass::set_speed(uint32_t speed_) {
   speed = speed_;
 }
 
-void MidiUartClass::m_putc_immediate(uint8_t c) { uart_putc_raw(uart_hw, c); }
+void MidiUartClass::m_putc_immediate(uint8_t c) {
+  if (!uart_hw) return;
+  uart_putc_raw(uart_hw, c);
+}
 
 void __not_in_flash_func(MidiUartClass::handle_realtime_message)(uint8_t c) {
   if (c == MIDI_CLOCK) {
