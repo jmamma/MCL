@@ -97,6 +97,12 @@ static MidiClass *_getMidiClass(uint8_t port) {
   return ret;
 }
 
+static uint8_t portToLogicalIdx(uint8_t port) {
+  if (port == UARTUSB_PORT)
+    return (mcl_cfg.usb_device == 2) ? 1 : 0;
+  return port - 1;
+}
+
 static bool resource_loaded = false;
 static size_t resource_size = 0;
 static void prepare_display(uint8_t *buf) {
@@ -151,7 +157,7 @@ void MidiActivePeering::disconnect(uint8_t port) {
     // USB port can host either port1 or port2 drivers
     drivers = port1_drivers;
     nr_drivers = 1;
-    device_idx = 2;
+    device_idx = portToLogicalIdx(port);
     // Also try port2 drivers
     for (size_t i = 0; i < countof(port2_drivers); ++i) {
       if (port2_drivers[i]->connected) {
@@ -187,7 +193,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
     pmidi->device.set_name(driver->name);
     pmidi->device.set_id(driver->id);
   }
-  driver->init_grid_devices(port - 1);
+  driver->init_grid_devices(portToLogicalIdx(port));
 
   *connected_dev = driver;
   update_dev_cache();
@@ -214,7 +220,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
     DEBUG_PRINTLN("disconnecting");
     for (size_t i = 0; i < nr_drivers; ++i) {
       if (drivers[i]->connected)
-        drivers[i]->disconnect(port - 1);
+        drivers[i]->disconnect(portToLogicalIdx(port));
     }
     // reset MidiID to none
     pmidi->device.init();
@@ -247,7 +253,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       if (probe_success) {
         pmidi->device.set_id(drivers[i]->id);
         pmidi->device.set_name(drivers[i]->name);
-        drivers[i]->init_grid_devices(port - 1);
+        drivers[i]->init_grid_devices(portToLogicalIdx(port));
         *active_device = drivers[i];
         // Re-enable MidiClock/Transport recv
         midi_setup.cfg_clock_recv();
