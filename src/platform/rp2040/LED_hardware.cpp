@@ -61,6 +61,10 @@ void LEDHardware::show() {
       final_render_state >>= 1;
     }
 
+    // Step-edit indicator (MCL LED, fbtn_map[0])
+    setPixelColor(tbd_ui.rgb_led_fbtn_map[0],
+                  current_led_mode == TRIGLED_STEPEDIT ? STRIP_RED : STRIP_BLACK, false);
+
     tbd_ui.strip.show();
     updateLeds = false;
   }
