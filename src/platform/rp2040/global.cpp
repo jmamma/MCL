@@ -124,6 +124,15 @@ MidiSetup midi_setup;
 
 SdFat_ SD;
 
+// TinyUSB callback — fires from tud_task() in USB IRQ context (mutex held).
+// Drain the FIFO: realtime bytes (clock, start, stop) get handled immediately
+// for low latency; everything else is routed into MCL's ring buffers for the
+// main loop to process via processSysex()/processMidi().
+extern "C" void tud_midi_rx_cb(uint8_t itf) {
+  (void)itf;
+  MidiUartUSB.receive();
+}
+
 void handleIncomingMidi() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;

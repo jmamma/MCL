@@ -134,9 +134,6 @@ public:
   int8_t tx_message_len;
   uint8_t tx_packet[4];
 
-  // Debug: circular packet log
-  uint8_t pkt_log[64][4];
-  uint8_t pkt_log_idx;
 
   MidiUartUSBClass(uart_inst_t *uart_hw, RingBuffer<> *_rxRb = nullptr,
                    RingBuffer<> *_txRb = nullptr, RingBuffer<> *_txRb_realtime = nullptr)
@@ -148,8 +145,6 @@ public:
     tx_data_cnt = 0;
     tx_message_len = -1;
     memset(tx_packet, 0, 4);
-    pkt_log_idx = 0;
-    memset(pkt_log, 0, sizeof(pkt_log));
   }
 
   void init() {
@@ -191,11 +186,6 @@ public:
     uint8_t packet[4];
 
     while (usb_midi.readPacket(packet)) {
-      // Log packet (skip active sense 0xFE)
-      if (!(packet[0] == 0x0F && packet[1] == 0xFE)) {
-        memcpy(pkt_log[pkt_log_idx & 63], packet, 4);
-        pkt_log_idx++;
-      }
       uint8_t cin = packet[0] & 0x0F;
       uint8_t len;
 
@@ -327,23 +317,23 @@ public:
           return true;
         case 0xF7: // SysEx End
           if (!tx_in_sysex) break;
-          tx_in_sysex = false;
           // End packet CIN depends on how many data bytes buffered
           if (tx_data_cnt == 0) {
             uint8_t pkt[4] = {0x05, 0xF7, 0, 0};
-            return usb_midi.writePacket(pkt);
+            if (!usb_midi.writePacket(pkt)) return false;
           } else if (tx_data_cnt == 1) {
             tx_packet[0] = 0x06;
-            tx_packet[1 + tx_data_cnt] = 0xF7;
+            tx_packet[2] = 0xF7;
             tx_packet[3] = 0;
-            tx_data_cnt = 0;
-            return usb_midi.writePacket(tx_packet);
+            if (!usb_midi.writePacket(tx_packet)) return false;
           } else { // tx_data_cnt == 2
             tx_packet[0] = 0x07;
-            tx_packet[1 + tx_data_cnt] = 0xF7;
-            tx_data_cnt = 0;
-            return usb_midi.writePacket(tx_packet);
+            tx_packet[3] = 0xF7;
+            if (!usb_midi.writePacket(tx_packet)) return false;
           }
+          tx_in_sysex = false;
+          tx_data_cnt = 0;
+          return true;
         case 0xF1: // MTC Quarter Frame
           tx_packet[0] = 0x02; tx_message_len = 1; break;
         case 0xF2: // Song Position
@@ -379,8 +369,11 @@ public:
       tx_data_cnt++;
       if (tx_data_cnt == 3) {
         tx_packet[0] = 0x04; // SysEx continue
+        if (!usb_midi.writePacket(tx_packet)) {
+          tx_data_cnt--; // undo; byte will be re-peeked
+          return false;
+        }
         tx_data_cnt = 0;
-        return usb_midi.writePacket(tx_packet);
       }
       return true;
     }
@@ -390,8 +383,12 @@ public:
       tx_data_cnt++;
       tx_message_len--;
       if (tx_message_len == 0) {
+        if (!usb_midi.writePacket(tx_packet)) {
+          tx_data_cnt--;
+          tx_message_len++;
+          return false;
+        }
         tx_data_cnt = 0;
-        return usb_midi.writePacket(tx_packet);
       }
     }
     return true;
