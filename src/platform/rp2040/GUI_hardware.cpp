@@ -153,8 +153,11 @@ void ButtonsClass::poll(uint8_t but) {
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   // rev_c button mapping
 
-  // f_btns: 0:F1, 1:F2 -> BUTTON1, BUTTON2
-  STORE_B_CURRENT(BUTTON1, !(ui_data.f_btns & (1 << 0)));
+  // f:01 -> NO, f:02 -> YES
+  STORE_B_CURRENT(FUNC_BUTTON5, !(ui_data.f_btns & (1 << 0))); // f:01 -> NO
+  STORE_B_CURRENT(FUNC_BUTTON4, !(ui_data.f_btns & (1 << 1))); // f:02 -> YES
+
+  STORE_B_CURRENT(BUTTON1, !(ui_data.mcl_btns & (1 << 7))); // m:0080
   STORE_B_CURRENT(BUTTON2, !(ui_data.mcl_btns & (1 << 5)));
 
   // f_btns: 2:POT1, 3:POT2, 4:POT3, 5:POT4 -> Encoder buttons
@@ -174,7 +177,7 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   STORE_B_CURRENT(FUNC_BUTTON3, !(ui_data.mcl_btns & (1 << 10))); // STOP
 
   STORE_B_CURRENT(BUTTON3, !(ui_data.mcl_btns & (1 << 4)));
-  STORE_B_CURRENT(BUTTON4, !(ui_data.f_btns & (1 << 1)));
+  STORE_B_CURRENT(BUTTON4, !(ui_data.mcl_btns & (1 << 6))); // m:0040
 
   // Sequencer Buttons
   for (int i = 0; i < 16; i++) {
