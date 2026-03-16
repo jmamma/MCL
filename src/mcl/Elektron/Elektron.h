@@ -18,6 +18,8 @@
 
 enum class DataType { Kit, Pattern, Global };
 
+class ElektronDataToSysexEncoder;
+
 /**
  * Class grouping various helper functions to convert elektron sysex
  * data. These are deprecated and should be replaced by the elektron
@@ -56,6 +58,13 @@ public:
   static bool checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset,
                                        uint16_t len);
   static void calculateSysexChecksumAnalog(uint8_t *data, uint16_t len);
+
+  /* Sysex encode helpers: factor out repeated toSysex prologue/epilogue */
+  static void beginSysexEncode(ElektronDataToSysexEncoder *encoder,
+                                uint8_t *hdr, uint8_t hdr_size,
+                                uint8_t msg_id, uint8_t version,
+                                uint8_t origPosition);
+  static uint16_t finishSysexEncode(ElektronDataToSysexEncoder *encoder);
 };
 
 class SysexCallback {

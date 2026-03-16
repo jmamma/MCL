@@ -89,15 +89,7 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
 }
 
 uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
-  encoder->stop7Bit();
-  encoder->begin();
-  encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  encoder->pack8(MD_GLOBAL_MESSAGE_ID);
-  encoder->pack8(0x05); // version
-  encoder->pack8(0x01); // revision
-
-  encoder->startChecksum();
-  encoder->pack8(origPosition);
+  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_GLOBAL_MESSAGE_ID, 0x05, origPosition);
 
   encoder->pack(drumRouting, 16);
 
@@ -150,10 +142,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack8(programChange);
   encoder->pack8(trigMode);
 
-  uint16_t enclen = encoder->finish();
-  encoder->finishChecksum();
-
-  return enclen + 5;
+  return ElektronHelper::finishSysexEncode(encoder);
 }
 
 uint8_t MDMachine::get_model() { return model; }
@@ -239,15 +228,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
     // DEBUG_PRINTLN(F("swing"));
     // DEBUG_DUMP(encoder->throttle_mod12);
   //}
-  encoder->stop7Bit();
-  encoder->begin();
-  encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  encoder->pack8(MD_KIT_MESSAGE_ID);
-  encoder->pack8(MDX_KIT_VERSION); // version
-  encoder->pack8(0x01); // revision
-
-  encoder->startChecksum();
-  encoder->pack8(origPosition);
+  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_KIT_MESSAGE_ID, MDX_KIT_VERSION, origPosition);
 
   encoder->pack((uint8_t *)name, 16);
   name[16] = '\0';
@@ -276,10 +257,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack(trigGroups, 16);
   encoder->pack(muteGroups, 16);
   // encoder->pack(tuning, 2);
-  uint16_t enclen = encoder->finish();
-  encoder->finishChecksum();
-
-  return enclen + 5;
+  return ElektronHelper::finishSysexEncode(encoder);
 }
 
 uint8_t swapNumber(uint8_t num, uint8_t a, uint8_t b) {
@@ -395,15 +373,7 @@ void MDKit::init_dynamix() {
 }
 
 uint16_t MDSong::toSysex(ElektronDataToSysexEncoder *encoder) {
-  encoder->stop7Bit();
-  encoder->begin();
-  encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  encoder->pack8(MD_PATTERN_MESSAGE_ID);
-  encoder->pack8(0x04); // version
-  encoder->pack8(0x01); // revision
-
-  encoder->startChecksum();
-  encoder->pack8(origPosition);
+  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_PATTERN_MESSAGE_ID, 0x04, origPosition);
   encoder->pack((uint8_t *)name, 16);
 
   for (uint8_t i = 0; i < numRows; i++) {
@@ -415,8 +385,5 @@ uint16_t MDSong::toSysex(ElektronDataToSysexEncoder *encoder) {
     encoder->stop7Bit();
   }
 
-  uint16_t enclen = encoder->finish();
-  encoder->finishChecksum();
-
-  return enclen + 5;
+  return ElektronHelper::finishSysexEncode(encoder);
 }

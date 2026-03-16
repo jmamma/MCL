@@ -4,6 +4,26 @@
 
 #define SYSEX_RETRIES 1
 
+void ElektronHelper::beginSysexEncode(ElektronDataToSysexEncoder *encoder,
+                                       uint8_t *hdr, uint8_t hdr_size,
+                                       uint8_t msg_id, uint8_t version,
+                                       uint8_t origPosition) {
+  encoder->stop7Bit();
+  encoder->begin();
+  encoder->pack(hdr, hdr_size);
+  encoder->pack8(msg_id);
+  encoder->pack8(version);
+  encoder->pack8(0x01); // revision
+  encoder->startChecksum();
+  encoder->pack8(origPosition);
+}
+
+uint16_t ElektronHelper::finishSysexEncode(ElektronDataToSysexEncoder *encoder) {
+  uint16_t enclen = encoder->finish();
+  encoder->finishChecksum();
+  return enclen + 5;
+}
+
 void MidiDevice::add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, GridDeviceTrack *gdt) {
   proj.grids[grid_idx].add_track(track_idx, gdt);
 }
