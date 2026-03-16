@@ -146,6 +146,7 @@ void SeqPage::toggle_record() {
 void SeqPage::enable_record() {
   MD.set_rec_mode(2);
   recording = true;
+  GUI_hardware.led.rec_active = true;
   setLed2();
   oled_display.textbox_P(mclstr_rec);
 }
@@ -153,6 +154,7 @@ void SeqPage::enable_record() {
 void SeqPage::disable_record() {
   MD.set_rec_mode((mcl.currentPage() == SEQ_STEP_PAGE));
   recording = false;
+  GUI_hardware.led.rec_active = false;
   clearLed2();
 }
 
@@ -204,7 +206,7 @@ void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   disable_record();
-  GUI_hardware.led.clear_trigleds();
+  GUI_hardware.led.reset_trigleds();
   if (show_seq_menu) {
     encoders[0] = opt_param1_capture;
     encoders[1] = opt_param2_capture;

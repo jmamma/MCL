@@ -1020,12 +1020,10 @@ void MDClass::release_right_arrow() {
   send_gui_command(MD_GUI_RIGHTARROW, MD_GUI_CMD_OFF);
 }
 
-void MDClass::press_yes_button() {
-
-  send_gui_command(MD_GUI_YES, MD_GUI_CMD_ON);
-}
-
+void MDClass::press_yes_button() { send_gui_command(MD_GUI_YES, MD_GUI_CMD_ON); }
+void MDClass::release_yes_button() { send_gui_command(MD_GUI_YES, MD_GUI_CMD_OFF); }
 void MDClass::press_no_button() { send_gui_command(MD_GUI_NO, MD_GUI_CMD_ON); }
+void MDClass::release_no_button() { send_gui_command(MD_GUI_NO, MD_GUI_CMD_OFF); }
 
 void MDClass::hold_scale_button() {
 

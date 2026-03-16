@@ -382,7 +382,9 @@ public:
   void hold_right_arrow();
   void release_right_arrow();
   void press_yes_button();
+  void release_yes_button();
   void press_no_button();
+  void release_no_button();
   void hold_scale_button();
   void release_scale_button();
   void toggle_scale_window();

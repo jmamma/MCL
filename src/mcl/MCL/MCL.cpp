@@ -215,7 +215,14 @@ void MCL::loop() {
   GUI.loop();
 }
 
+static bool tbd_rec_held = false;
+
 bool tbd_handleEvent(gui_event_t *event) {
+    // Track physical REC button state (unaffected by key_interface state resets)
+    if (EVENT_BUTTON(event) && event->source == ButtonsClass::FUNC_BUTTON1) {
+        tbd_rec_held = (event->mask == EVENT_BUTTON_PRESSED);
+    }
+
     // If button press is greater than 4, then we need to remap these as CMD
     if (EVENT_BUTTON(event) && event->source > ButtonsClass::BUTTON4) {
         uint8_t key = 255;
@@ -242,12 +249,18 @@ bool tbd_handleEvent(gui_event_t *event) {
                     key = copy_mode ? MDX_KEY_CLEAR : MDX_KEY_PLAY;
                     if (event->mask == EVENT_BUTTON_PRESSED) {
                       if (key == MDX_KEY_PLAY) {
-                         if (MidiClock.state == MidiClockClass::PAUSED) {
+                        if (tbd_rec_held) {
+                          // REC + PLAY: enable sequencer record mode, start clock if needed
+                          seq_step_page.enable_record();
+                          if (MidiClock.state != MidiClockClass::STARTED) {
+                            MidiClock.handleImmediateMidiStart();
+                          }
+                          key = 255;
+                        } else if (MidiClock.state == MidiClockClass::PAUSED) {
                            MidiClock.handleImmediateMidiStart();
-                         }
-                         else if (MidiClock.state == MidiClockClass::STARTED) {
+                        } else if (MidiClock.state == MidiClockClass::STARTED) {
                            MidiClock.handleImmediateMidiStop();
-                         }
+                        }
                       }
                     }
                     break;
@@ -282,7 +295,36 @@ bool tbd_handleEvent(gui_event_t *event) {
             }
         }
         if (key != 255) {
-            key_interface.key_event(key, !(event->mask & 1));
+            bool is_release = !(event->mask & 1);
+            if (MD.connected && (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
+                                 key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT ||
+                                 key == MDX_KEY_YES || key == MDX_KEY_NO)) {
+                if (!is_release && key_interface.is_key_down(key)) {
+                    return true; // suppress key repeat
+                }
+                if (is_release) {
+                    switch (key) {
+                        case MDX_KEY_UP:    CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_up_arrow();                          break;
+                        case MDX_KEY_DOWN:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_down_arrow();                        break;
+                        case MDX_KEY_LEFT:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_left_arrow();                        break;
+                        case MDX_KEY_RIGHT: CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_right_arrow();                       break;
+                        case MDX_KEY_YES:   MD.release_yes_button(); break;
+                        case MDX_KEY_NO:    MD.release_no_button();  break;
+                        default: break;
+                    }
+                } else {
+                    switch (key) {
+                        case MDX_KEY_UP:    SET_BIT64(key_interface.cmd_key_state, key); MD.hold_up_arrow();    break;
+                        case MDX_KEY_DOWN:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_down_arrow();  break;
+                        case MDX_KEY_LEFT:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_left_arrow();  break;
+                        case MDX_KEY_RIGHT: SET_BIT64(key_interface.cmd_key_state, key); MD.hold_right_arrow(); break;
+                        case MDX_KEY_YES:   MD.press_yes_button();    break;
+                        case MDX_KEY_NO:    MD.press_no_button();     break;
+                    }
+                }
+                return true;
+            }
+            key_interface.key_event(key, is_release);
             return true;
         }
     }
@@ -384,6 +426,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         } else {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
+            GUI_hardware.led.rec_active = false;
             MD.set_rec_mode(mcl.currentPage() == SEQ_STEP_PAGE);
             clearLed2();
             key_interface.ignoreNextEvent(MDX_KEY_REC);
