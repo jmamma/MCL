@@ -98,27 +98,10 @@ void MDFXTrack::get_fx_from_kit() {
   */
 }
 
-bool MDFXTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
-                              uint8_t merge, bool online, Grid *grid) {
-  active = MDFX_TRACK_TYPE;
-  bool ret;
-  int b = 0;
-  DEBUG_PRINT_FN();
-  uint32_t len;
-
-  if (column != 255 && online == true) {
-    get_fx_from_kit();
-    if (merge == SAVE_MD) {
-        link.length = MD.pattern.patternLength;
-        link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-    }
+void MDFXTrack::get_online_data(uint8_t merge) {
+  get_fx_from_kit();
+  if (merge == SAVE_MD) {
+    link.length = MD.pattern.patternLength;
+    link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
   }
-
-  ret = write_grid(_this(), _sizeof(), column, row, grid);
-
-  if (!ret) {
-    DEBUG_PRINTLN(F("write failed"));
-    return false;
-  }
-  return true;
 }

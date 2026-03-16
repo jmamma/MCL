@@ -20,6 +20,7 @@ public:
 
   void init() {}
 
+  virtual void get_online_data(uint8_t merge) override;
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
