@@ -18,6 +18,18 @@ bool MenuBase::is_entry_enable(uint8_t entry_index) {
   return IS_BIT_SET(entry_mask[midx], bit);
 }
 
+menu_function_t MenuBase::get_exit_function() {
+    if (layout_base == nullptr) return nullptr;
+    menu_function_ptr_t fn;
+    #if defined(__AVR__)
+        fn.word = pgm_read_word(&menu_target_functions[exit_fn_id].word);
+    #else
+        fn.words.low = pgm_read_word(&menu_target_functions[exit_fn_id].words.low);
+        fn.words.high = pgm_read_word(&menu_target_functions[exit_fn_id].words.high);
+    #endif
+    return fn.fn;
+}
+
 menu_function_t MenuBase::get_row_function(uint8_t item_n) {
     const menu_item_t *item = get_item(item_n);
     if (item == nullptr) { return nullptr; }
