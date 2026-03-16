@@ -520,7 +520,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     active_track.get_mask(&locks_on_step_mask_, MASK_LOCKS_ON_STEP);
     shed_mask(locks_on_step_mask_, active_track.length, offset);
 
-    if (led_mask != trigled_mask) {
+    if ((uint16_t)led_mask != trigled_mask) {
       trigled_mask = led_mask;
       MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
       if (mask_type == MASK_MUTE) {
@@ -528,7 +528,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
         GUI_hardware.led.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
       }
     }
-    if (locks_on_step_mask_ != locks_on_step_mask) {
+    if ((uint16_t)locks_on_step_mask_ != locks_on_step_mask) {
       locks_on_step_mask = locks_on_step_mask_;
       MD.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
     }
