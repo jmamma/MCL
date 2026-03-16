@@ -186,6 +186,7 @@ public:
     uint8_t packet[4];
 
     while (usb_midi.readPacket(packet)) {
+      recvActiveSenseTimer = 0;
       uint8_t cin = packet[0] & 0x0F;
       uint8_t len;
 
