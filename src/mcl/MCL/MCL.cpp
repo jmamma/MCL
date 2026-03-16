@@ -216,15 +216,11 @@ void MCL::loop() {
 }
 
 static bool tbd_rec_held = false;
-static bool tbd_no_held = false;
 
 bool tbd_handleEvent(gui_event_t *event) {
-    // Track physical REC and NO button states
+    // Track physical REC button state (unaffected by key_interface state resets)
     if (EVENT_BUTTON(event) && event->source == ButtonsClass::FUNC_BUTTON1) {
         tbd_rec_held = (event->mask == EVENT_BUTTON_PRESSED);
-    }
-    if (EVENT_BUTTON(event) && event->source == ButtonsClass::FUNC_BUTTON5) {
-        tbd_no_held = (event->mask == EVENT_BUTTON_PRESSED);
     }
 
     // If button press is greater than 4, then we need to remap these as CMD
@@ -233,6 +229,16 @@ bool tbd_handleEvent(gui_event_t *event) {
         // Handle trigger buttons with range check
         if (event->source >= ButtonsClass::TRIG_BUTTON1) {
             key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
+            // In grid page (no bank popup), trig buttons trigger drum sounds
+            if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
+                if (event->mask == EVENT_BUTTON_PRESSED && key < NUM_MD_TRACKS) {
+                    MD.triggerTrack(key, 127);
+                    mixer_page.trig(key);
+                    if (SeqPage::recording && MidiClock.state == 2) {
+                        mcl_seq.md_tracks[key].record_track(127);
+                    }
+                }
+            }
         }
         else {
            bool copy_mode = (key_interface.is_key_down(MDX_KEY_NO) ||
@@ -260,12 +266,10 @@ bool tbd_handleEvent(gui_event_t *event) {
                             MidiClock.handleImmediateMidiStart();
                           }
                           key = 255;
-                        } else if (tbd_no_held || MidiClock.state == MidiClockClass::PAUSED) {
-                          // NO + PLAY or stopped: MIDI Start from beginning
-                          MidiClock.handleImmediateMidiStart();
-                          key = 255;
-                        } else if (MidiClock.state == MidiClockClass::STARTED) {
+                        } else if (MidiClock.state == MidiClockClass::PAUSED) {
                            MidiClock.handleImmediateMidiContinue();
+                        } else if (MidiClock.state == MidiClockClass::STARTED) {
+                           MidiClock.handleImmediateMidiStop();
                         }
                       }
                     }
