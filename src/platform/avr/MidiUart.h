@@ -155,6 +155,9 @@ private:
   volatile uint8_t *ucsra() { return udr - 6; }
 
 public:
+  void enable_tx_irq() { set_tx(); }
+  void disable_tx_irq() { clear_tx(); }
+
   uint8_t mode;
   // Ring buffers with compile-time sizes
   int8_t in_message_tx;
