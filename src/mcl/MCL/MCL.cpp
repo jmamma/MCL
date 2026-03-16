@@ -216,11 +216,15 @@ void MCL::loop() {
 }
 
 static bool tbd_rec_held = false;
+static bool tbd_no_held = false;
 
 bool tbd_handleEvent(gui_event_t *event) {
-    // Track physical REC button state (unaffected by key_interface state resets)
+    // Track physical REC and NO button states
     if (EVENT_BUTTON(event) && event->source == ButtonsClass::FUNC_BUTTON1) {
         tbd_rec_held = (event->mask == EVENT_BUTTON_PRESSED);
+    }
+    if (EVENT_BUTTON(event) && event->source == ButtonsClass::FUNC_BUTTON5) {
+        tbd_no_held = (event->mask == EVENT_BUTTON_PRESSED);
     }
 
     // If button press is greater than 4, then we need to remap these as CMD
@@ -256,23 +260,17 @@ bool tbd_handleEvent(gui_event_t *event) {
                             MidiClock.handleImmediateMidiStart();
                           }
                           key = 255;
-                        } else if (MidiClock.state == MidiClockClass::PAUSED) {
-                           MidiClock.handleImmediateMidiStart();
+                        } else if (tbd_no_held || MidiClock.state == MidiClockClass::PAUSED) {
+                          // NO + PLAY or stopped: MIDI Start from beginning
+                          MidiClock.handleImmediateMidiStart();
+                          key = 255;
                         } else if (MidiClock.state == MidiClockClass::STARTED) {
-                           MidiClock.handleImmediateMidiStop();
+                           MidiClock.handleImmediateMidiContinue();
                         }
                       }
                     }
                     break;
                 case ButtonsClass::FUNC_BUTTON3:
-                    key = copy_mode ? MDX_KEY_PASTE : MDX_KEY_STOP;
-                    if (event->mask == EVENT_BUTTON_PRESSED) {
-                      if (key == MDX_KEY_STOP) {
-                         MidiClock.handleImmediateMidiStop();
-                      }
-                    }
-                    break;
-                case ButtonsClass::FUNC_BUTTON4:
                     key = MDX_KEY_YES;
                     break;
                 case ButtonsClass::FUNC_BUTTON5:
