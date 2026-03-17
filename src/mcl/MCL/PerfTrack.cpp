@@ -108,8 +108,5 @@ void PerfTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 
 void PerfTrack::get_online_data(uint8_t merge) {
   get_perf();
-  if (merge == SAVE_MD) {
-    link.length = MD.pattern.patternLength;
-    link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-  }
+  update_link_from_pattern(merge);
 }

@@ -39,8 +39,5 @@ void MDTempoTrack::get_tempo() {
 
 void MDTempoTrack::get_online_data(uint8_t merge) {
   get_tempo();
-  if (merge == SAVE_MD) {
-    link.length = MD.pattern.patternLength;
-    link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-  }
+  update_link_from_pattern(merge);
 }

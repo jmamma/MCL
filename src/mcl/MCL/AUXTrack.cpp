@@ -1,4 +1,13 @@
 #include "AUXTrack.h"
+#include "MD.h"
+#include "MDTrack.h"
+
+void AUXTrack::update_link_from_pattern(uint8_t merge) {
+  if (merge == SAVE_MD) {
+    link.length = MD.pattern.patternLength;
+    link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+  }
+}
 
 bool AUXTrack::store_in_grid(uint8_t column, uint16_t row,
                               SeqTrack *seq_track, uint8_t merge,

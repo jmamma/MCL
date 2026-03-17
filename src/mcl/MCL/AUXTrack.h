@@ -13,6 +13,7 @@ public:
 
   // Subclass captures current device state when saving online.
   virtual void get_online_data(uint8_t merge) = 0;
+  void update_link_from_pattern(uint8_t merge);
 
   virtual bool store_in_grid(uint8_t column, uint16_t row,
                               SeqTrack *seq_track = nullptr, uint8_t merge = 0,

@@ -48,8 +48,5 @@ void MDRouteTrack::get_routes() {
 
 void MDRouteTrack::get_online_data(uint8_t merge) {
   get_routes();
-  if (merge == SAVE_MD) {
-    link.length = MD.pattern.patternLength;
-    link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-  }
+  update_link_from_pattern(merge);
 }
