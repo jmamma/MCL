@@ -36,7 +36,7 @@ public:
 
   static constexpr uint8_t zoom_max = 32;
 
-  float fov_pixels_per_tick;
+  uint16_t fov_pixels_per_tick; // Q8: actual_value × 256
 
   int16_t cur_x;
   int16_t cur_y;

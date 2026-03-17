@@ -89,7 +89,7 @@ void SeqExtStepPage::draw_seq_pos() {
   if (is_within_fov(cur_tick_x)) {
 
     uint8_t cur_tick_fov_x =
-        max(draw_x,min(draw_x + fov_w, draw_x + fov_pixels_per_tick * (cur_tick_x - fov_offset)));
+        max(draw_x,min(draw_x + fov_w, (uint8_t)(draw_x + (((int32_t)fov_pixels_per_tick * (int)(cur_tick_x - fov_offset)) >> 8))));
     oled_display.drawFastVLine(cur_tick_fov_x, 0, fov_h, WHITE);
   }
 }
@@ -130,7 +130,7 @@ void SeqExtStepPage::draw_grid() {
     uint16_t grid_tick_x = i * active_track.get_timing_mid();
     if (is_within_fov(grid_tick_x)) {
       uint8_t grid_fov_x =
-          draw_x + fov_pixels_per_tick * (grid_tick_x - fov_offset);
+          draw_x + (((int32_t)fov_pixels_per_tick * (int)(grid_tick_x - fov_offset)) >> 8);
 
       if (grid_fov_x < draw_x) continue;
 
@@ -179,7 +179,7 @@ void SeqExtStepPage::draw_lockeditor() {
 
   if (is_within_fov(roll_length)) {
     pattern_end_fov_x =
-        min(fov_w, fov_pixels_per_tick * (roll_length - fov_offset));
+        min(fov_w, (uint8_t)(((int32_t)fov_pixels_per_tick * (roll_length - fov_offset)) >> 8));
   }
 
   uint16_t ev_idx = 0, ev_end = 0, ev_j_end;
@@ -194,7 +194,6 @@ void SeqExtStepPage::draw_lockeditor() {
         } else {
           ev_end += active_track.event_buckets.get(i);
         }*/
-    int16_t fov_pixels_per_tick_fixed = (int16_t)(fov_pixels_per_tick * 256);
 
     ev_end += active_track.event_buckets.get(i);
     for (; ev_idx != ev_end; ++ev_idx) {
@@ -251,7 +250,7 @@ void SeqExtStepPage::draw_lockeditor() {
           // Convert fov_pixels_per_tick to fixed point once:
           // fov_pixels_per_tick_fixed = fov_pixels_per_tick * 256
           start_fov_x =
-              ((start_x - fov_offset) * fov_pixels_per_tick_fixed) / 256;
+              ((int32_t)(start_x - fov_offset) * fov_pixels_per_tick) >> 8;
         }
 
         if (end_x >= fov_offset + fov_length) {
@@ -264,7 +263,7 @@ void SeqExtStepPage::draw_lockeditor() {
           }
           end_y_tmp = ((dx * gradient_fixed) / 256) + start_y;
         } else {
-          end_fov_x = ((end_x - fov_offset) * fov_pixels_per_tick_fixed) / 256;
+          end_fov_x = ((int32_t)(end_x - fov_offset) * fov_pixels_per_tick) >> 8;
         }
 
         uint8_t start_fov_y = fov_h - ((uint16_t)start_y_tmp * fov_h) / 128;
@@ -306,8 +305,8 @@ void SeqExtStepPage::draw_lockeditor() {
       }
     }
     // Draw interactive cursor
-    int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
-    uint8_t fov_cur_y = fov_h - ((float)lock_cur_y / 128.0f * (float)fov_h);
+    int16_t fov_cur_x = ((int32_t)(cur_x - fov_offset) * fov_pixels_per_tick) >> 8;
+    uint8_t fov_cur_y = fov_h - ((uint16_t)lock_cur_y * fov_h / 128);
     mcl_gui.draw_cross(draw_x + fov_cur_x, draw_y + fov_cur_y);
   }
 
@@ -328,7 +327,7 @@ void SeqExtStepPage::draw_pianoroll() {
 
   if (is_within_fov(roll_length)) {
     pattern_end_fov_x =
-        min(fov_w, fov_pixels_per_tick * (roll_length - fov_offset));
+        min(fov_w, (uint8_t)(((int32_t)fov_pixels_per_tick * (roll_length - fov_offset)) >> 8));
   }
 
   uint16_t ev_idx = 0, ev_end = 0;
@@ -368,13 +367,13 @@ void SeqExtStepPage::draw_pianoroll() {
           note_fov_start = 0;
         } else {
           note_fov_start =
-              (float)(note_start - fov_offset) * fov_pixels_per_tick;
+              ((int32_t)(note_start - fov_offset) * fov_pixels_per_tick) >> 8;
         }
         if (note_end >= fov_offset + fov_length) {
           note_fov_end = fov_w;
           note_beyond_fov = true;
         } else {
-          note_fov_end = (float)(note_end - fov_offset) * fov_pixels_per_tick;
+          note_fov_end = ((int32_t)(note_end - fov_offset) * fov_pixels_per_tick) >> 8;
         }
         //On screen notes to be no less than 2 pixels, regardless of zoom
         if (i < j && note_fov_end - note_fov_start < 2) { note_fov_end = note_fov_start + 2; }
@@ -436,8 +435,8 @@ void SeqExtStepPage::draw_pianoroll() {
   }
   // Draw interactive cursor
   uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * ((fov_h) / fov_notes));
-  int16_t fov_cur_x = (float)(cur_x - fov_offset) * fov_pixels_per_tick;
-  uint8_t fov_cur_w = ceil((float)(cur_w)*fov_pixels_per_tick);
+  int16_t fov_cur_x = ((int32_t)(cur_x - fov_offset) * fov_pixels_per_tick) >> 8;
+  uint8_t fov_cur_w = ((int32_t)cur_w * fov_pixels_per_tick + 255) >> 8;
   if (fov_cur_x < 0) {
     fov_cur_x = 0;
   }
@@ -694,7 +693,7 @@ void SeqExtStepPage::loop() {
 
   if (cur_w > roll_length) { cur_w = roll_length / 2; }
 
-  int fov_length_new = active_track.length * timing_mid * fov_pixels_per_tick;
+  int fov_length_new = ((int32_t)active_track.length * timing_mid * fov_pixels_per_tick) >> 8;
   if (fov_length_new < fov_w) {
       seq_extparam4.cur = active_track.length  * active_track.get_speed_multiplier();
       if (seq_extparam4.cur > zoom_max) {
@@ -715,13 +714,13 @@ void SeqExtStepPage::loop() {
 
     int x = cur_x - fov_offset;
 
-    int fov_old_x = x * fov_pixels_per_tick;
+    int fov_old_x = ((int32_t)x * fov_pixels_per_tick) >> 8;
 
-    fov_pixels_per_tick = (float)fov_w / (float)fov_length;
+    fov_pixels_per_tick = ((uint32_t)fov_w << 8) / fov_length;
 
-    int fov_cur_x = x * fov_pixels_per_tick;
+    int fov_cur_x = ((int32_t)x * fov_pixels_per_tick) >> 8;
 
-    int offset = (fov_cur_x - fov_old_x) / fov_pixels_per_tick;
+    int offset = ((int32_t)(fov_cur_x - fov_old_x) << 8) / fov_pixels_per_tick;
 
     fov_offset += offset;
 
