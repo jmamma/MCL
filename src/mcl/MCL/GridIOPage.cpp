@@ -39,6 +39,19 @@ void GridIOPage::show_group_select_ui(const char *title_P) {
   mcl_gui.draw_popup_title(str);
 }
 
+void GridIOPage::populate_track_select_from_notes(uint8_t *track_select_array) {
+  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+    if (note_interface.is_note(n)) {
+      SET_BIT32(track_select, n + proj.get_grid() * 16);
+    }
+  }
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    if (IS_BIT_SET32(track_select, n)) {
+      track_select_array[n] = 1;
+    }
+  }
+}
+
 void GridIOPage::track_select_array_from_type_select(
     uint8_t *track_select_array) {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {

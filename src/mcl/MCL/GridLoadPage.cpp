@@ -197,17 +197,7 @@ void GridLoadPage::load() {
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
-  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    if (note_interface.is_note(n)) {
-      SET_BIT32(track_select, n + proj.get_grid() * 16);
-    }
-  }
-
-  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if (IS_BIT_SET32(track_select, n)) {
-      track_select_array[n] = 1;
-    }
-  }
+  populate_track_select_from_notes(track_select_array);
   grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(),
                            track_select_array, offset);
   mcl.setPage(GRID_PAGE);
