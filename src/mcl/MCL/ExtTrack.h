@@ -23,6 +23,7 @@ public:
                                uint8_t slotnumber);
   virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return true; }
   void load_seq_data(SeqTrack *seq_track);
+  void transition_load_device(uint8_t tracknumber, SeqTrack *seq_track, uint8_t slotnumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
