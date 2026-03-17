@@ -4,9 +4,6 @@
 #include "MD.h"
 #include "MCLActions.h"
 
-void MDRouteTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-}
-
 void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                   uint8_t slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);

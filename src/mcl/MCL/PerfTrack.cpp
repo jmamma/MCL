@@ -4,10 +4,6 @@
 #include "MCLActions.h"
 #include "MDTrack.h"
 
-void PerfTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-  DEBUG_PRINTLN("transition send");
-}
-
 void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                   uint8_t slotnumber) {
   DEBUG_PRINTLN("transition send");
