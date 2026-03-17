@@ -189,13 +189,15 @@ void MidiSetup::cfg_ports(bool boot) {
 }
 
 void configure_driver_ports() {
+  uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
+  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
   MidiClass *md_midi = (mcl_cfg.usb_device == 1) ? &MidiUSB : &Midi;
   MidiClass *ext_midi = (mcl_cfg.usb_device == 2) ? &MidiUSB : &Midi2;
 
-  MD.setPort(md_midi);
-  MNM.setPort(ext_midi);
-  Analog4.setPort(ext_midi);
-  generic_midi_device.setPort(ext_midi);
+  MD.setPort(md_midi, md_port);
+  MNM.setPort(ext_midi, ext_port);
+  Analog4.setPort(ext_midi, ext_port);
+  generic_midi_device.setPort(ext_midi, ext_port);
 
   mcl_seq.set_ports(MD.uart, generic_midi_device.uart);
 

@@ -133,6 +133,7 @@ public:
   const uint8_t id; // Device identifier
   const bool isElektronDevice;
   uint8_t track_type;
+  uint8_t port; // Physical port number (UART1_PORT, UART2_PORT, UARTUSB_PORT)
 
   MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const bool _isElektronDevice)
     : name(_name), id(_id), isElektronDevice(_isElektronDevice)
@@ -140,6 +141,7 @@ public:
     midi = _midi;
     uart = midi ? midi->uart : nullptr;
     track_type = 0;
+    port = 0;
     connected = false;
     in_probe = false;
   }
@@ -155,10 +157,11 @@ public:
   virtual void setup_listeners() {}
   virtual void cleanup_listeners() {}
 
-  void setPort(MidiClass *_midi) {
+  void setPort(MidiClass *_midi, uint8_t _port = 0) {
     cleanup_listeners();
     midi = _midi;
     uart = _midi ? _midi->uart : nullptr;
+    port = _port;
     setup_listeners();
   }
 

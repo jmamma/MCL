@@ -274,11 +274,11 @@ extern const unsigned char __R_menu_options[] PROGMEM;
 struct __T_menu_options {
   union {
     menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[1143];
+    char zz__MENU_OPTIONS[1170];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 1143 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 1143;
-  static constexpr size_t __total_size = 1143;
+  static constexpr size_t countof_MENU_OPTIONS = 1170 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 1170;
+  static constexpr size_t __total_size = 1170;
 };
 
 extern const unsigned char __R_menu_layouts[] PROGMEM;
@@ -363,10 +363,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_midiprogram_menu_layout = 74;
   union {
     menu_t<midiport_menu_page_N> midiport_menu_layout[0];
-    char zz__midiport_menu_layout[116];
+    char zz__midiport_menu_layout[137];
   };
-  static constexpr size_t countof_midiport_menu_layout = 116 / sizeof(menu_t<midiport_menu_page_N>);
-  static constexpr size_t sizeofof_midiport_menu_layout = 116;
+  static constexpr size_t countof_midiport_menu_layout = 137 / sizeof(menu_t<midiport_menu_page_N>);
+  static constexpr size_t sizeofof_midiport_menu_layout = 137;
   union {
     menu_t<midi_config_page_N> midiconfig_menu_layout[0];
     char zz__midiconfig_menu_layout[137];
@@ -397,7 +397,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 95;
-  static constexpr size_t __total_size = 2183;
+  static constexpr size_t __total_size = 2204;
 };
 
 extern const unsigned char __R_icons_logo[] PROGMEM;
