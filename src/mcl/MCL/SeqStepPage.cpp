@@ -12,6 +12,15 @@
 #define NUM_KEYS 24
 #define NOTE_C2 48
 
+bool SeqStepPage::toggle_mask(uint8_t mask) {
+  if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+    mask_type = (mask_type == mask) ? MASK_PATTERN : mask;
+    config_mask_info(false);
+    return true;
+  }
+  return false;
+}
+
 void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
   bool is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
@@ -564,40 +573,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
         return true;
       }
-      case MDX_KEY_BANKB: {
-        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-          if (mask_type == MASK_LOCK) {
-            mask_type = MASK_PATTERN;
-          } else {
-            mask_type = MASK_LOCK;
-          }
-          config_mask_info(false);
-        return true;
-        }
-      }
-      case MDX_KEY_BANKC: {
-        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-          if (mask_type == MASK_MUTE) {
-            mask_type = MASK_PATTERN;
-          } else {
-            mask_type = MASK_MUTE;
-          }
-          config_mask_info(false);
-        return true;
-        }
-      }
-
-      case MDX_KEY_BANKD: {
-        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-          if (mask_type == MASK_SLIDE) {
-            mask_type = MASK_PATTERN;
-          } else {
-            mask_type = MASK_SLIDE;
-          }
-          config_mask_info(false);
-        return true;
-        }
-      }
+      case MDX_KEY_BANKB: { if (toggle_mask(MASK_LOCK))  return true; }
+      case MDX_KEY_BANKC: { if (toggle_mask(MASK_MUTE))  return true; }
+      case MDX_KEY_BANKD: { if (toggle_mask(MASK_SLIDE)) return true; }
       }
       if (step != 255) {
         switch (key) {

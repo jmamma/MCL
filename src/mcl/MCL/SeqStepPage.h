@@ -45,6 +45,7 @@ public:
   virtual void loop();
   virtual void cleanup();
   void send_locks(uint8_t step);
+  bool toggle_mask(uint8_t mask);
 };
 
 #endif /* SEQSTEPPAGE_H__ */
