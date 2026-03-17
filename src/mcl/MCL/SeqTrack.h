@@ -169,6 +169,7 @@ public:
   float get_speed_multiplier(uint8_t speed_);
 
   float get_speed_multiplier() { return get_speed_multiplier(speed); }
+  uint16_t get_speed_multiplier_int() { return get_speed_multiplier_int(speed); }
 
   uint8_t get_quantized_step() {
     uint8_t u = 0;

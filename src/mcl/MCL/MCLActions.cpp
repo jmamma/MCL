@@ -499,8 +499,8 @@ again:
           uint8_t cur_div16th_counter = MidiClock.div16th_counter;
           CLEAR_LOCK();
 
-          next_transitions[dst] = cur_div16th_counter - ((float)cur_step_count *
-                                gdt_dst->seq_track->get_speed_multiplier() + (cur_mod12_counter / 12) );
+          next_transitions[dst] = cur_div16th_counter - ((uint16_t)cur_step_count *
+                                gdt_dst->seq_track->get_speed_multiplier_int() / 12 + cur_mod12_counter / 12);
 
           bool ignore_chain_settings = true;
           bool ignore_overflow = true;
@@ -741,8 +741,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
         if (gdt != nullptr) {
           transition_level[n] = 0;
           next_transitions[n] = MidiClock.div16th_counter -
-                                (gdt->seq_track->step_count *
-                                 gdt->seq_track->get_speed_multiplier());
+                                ((uint16_t)gdt->seq_track->step_count *
+                                 gdt->seq_track->get_speed_multiplier_int() / 12);
           calc_next_slot_transition(n);
         }
     }
@@ -765,8 +765,8 @@ void MCLActions::update_chain_links(uint8_t n, GridDeviceTrack *gdt) {
         }
       } else if (chains[n].get_length() != QUANT_LEN) {
         links[n].loops = 1;
-        links[n].length = max(1,(uint8_t) ((float)chains[n].get_length() /
-                          (float)gdt->seq_track->get_speed_multiplier()));
+        links[n].length = max(1,(uint8_t) ((uint16_t)chains[n].get_length() * 12 /
+                          gdt->seq_track->get_speed_multiplier_int()));
        /* constexpr uint8_t min_steps_before_transition = 2;
         while (links[n].loops * links[n].length < min_steps_before_transition) {
           links[n].loops++;
@@ -889,36 +889,30 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
   }
   uint16_t next_transitions_old = next_transitions[n];
 
-  float len;
-
-  float l = links[n].length;
-  len =
-      (float)links[n].loops * l * (float)gdt->seq_track->get_speed_multiplier();
-  //while (len < 4) {
-  if (len < 1) {
-      len = 4;
+  // Q12: loops * length * speed_int (where speed_int = speed_multiplier * 12)
+  uint32_t len_q12 = (uint32_t)links[n].loops * links[n].length * gdt->seq_track->get_speed_multiplier_int();
+  if (len_q12 < 12) {
+      len_q12 = 48; // len = 4 in Q12
       transition_offsets[n] = 0;
-  //  } else {
-  //    len = len * 2;
-  //  }
   }
 
-  // Last offset must be carried over to new offset.
-  transition_offsets[n] += (float)(len - (uint16_t)(len)) * 12;
+  // Carry fractional steps as sub-step offset (0..11)
+  transition_offsets[n] += len_q12 % 12;
   if (transition_offsets[n] >= 12) {
-    transition_offsets[n] = transition_offsets[n] - 12;
-    len++;
+    transition_offsets[n] -= 12;
+    len_q12 += 12;
   }
 
   // DEBUG_DUMP(len - (uint16_t)(len));
   // DEBUG_DUMP(transition_offsets[n]);
-  next_transitions[n] += (uint16_t)len;
+  uint16_t len_steps = len_q12 / 12;
+  next_transitions[n] += len_steps;
 
   // check for overflow and make sure next nearest step is greater than
   // midiclock counter
   while ((next_transitions[n] >= next_transitions_old) &&
          (next_transitions[n] < MidiClock.div16th_counter)) {
-    next_transitions[n] += (uint16_t)len;
+    next_transitions[n] += len_steps;
   }
 
   DEBUG_PRINT("slot ");

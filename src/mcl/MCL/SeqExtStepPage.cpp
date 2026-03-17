@@ -695,7 +695,7 @@ void SeqExtStepPage::loop() {
 
   int fov_length_new = ((int32_t)active_track.length * timing_mid * fov_pixels_per_tick) >> 8;
   if (fov_length_new < fov_w) {
-      seq_extparam4.cur = active_track.length  * active_track.get_speed_multiplier();
+      seq_extparam4.cur = (uint16_t)active_track.length * active_track.get_speed_multiplier_int() / 12;
       if (seq_extparam4.cur > zoom_max) {
         seq_extparam4.cur = zoom_max;
       }

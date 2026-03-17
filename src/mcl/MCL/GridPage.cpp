@@ -744,7 +744,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   uint8_t slot_update = 0;
 
-  uint16_t target_length = slot.link.length * seq_track.get_speed_multiplier(slot.link.speed) * slot.link.loops;
+  uint16_t target_length = (uint32_t)slot.link.length * seq_track.get_speed_multiplier_int(slot.link.speed) * slot.link.loops / 12;
 
   bool slot_changed_length = temp_slot.link.length != slot.link.length;
   bool slot_changed_loops = temp_slot.link.loops != slot.link.loops;
@@ -845,7 +845,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
           }
           else {
             if (!temp_slot.load_from_grid(xpos,ypos)) { continue; }
-            uint16_t temp_slot_length = temp_slot.link.length * seq_track.get_speed_multiplier(temp_slot.link.speed);
+            uint16_t temp_slot_length = (uint16_t)temp_slot.link.length * seq_track.get_speed_multiplier_int(temp_slot.link.speed) / 12;
             bool store_slot = false;
             if (slot_changed_loops && slot.link.loops == 0) {
                 temp_slot.link.loops = 0;
