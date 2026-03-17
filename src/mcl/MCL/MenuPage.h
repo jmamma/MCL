@@ -40,7 +40,6 @@ public:
   }
   void loop();
   virtual void display();
-  void setup();
   void init();
   bool enter();
   void exit();

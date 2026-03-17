@@ -75,7 +75,6 @@ get_category_name_fail:
   return;
 }
 
-void PageSelectPage::setup() {}
 void PageSelectPage::init() {
   DEBUG_PRINTLN("page select init");
   key_interface.on();

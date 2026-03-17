@@ -19,8 +19,6 @@ void PerfPageParent::init() {
 
 void PerfPageParent::cleanup() { MD.set_key_repeat(1); remove_callbacks(); }
 
-void PerfPageParent::loop() {}
-
 void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
 
   char myName[4];
@@ -77,8 +75,6 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest) {
   const char *label = dest ? mclstr_dest : mclstr_src;
   mcl_gui.draw_knob(knob, label, K);
 }
-
-void PerfPageParent::display() {}
 
 bool PerfPageParent::handleEvent(gui_event_t *event) {
   /*

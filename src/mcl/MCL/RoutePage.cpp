@@ -6,14 +6,12 @@
 #include "MidiClock.h"
 #include "MCLActions.h"
 
-void RoutePage::setup() {}
 void RoutePage::init() {
   hasChanged = false;
   R.Clear();
   R.use_icons_page();
   key_interface.on();
 }
-void RoutePage::cleanup() { }
 void RoutePage::set_level(int curtrack, int value) {
   // in_sysex = 1;
   MD.setTrackParam(curtrack, 33, value);

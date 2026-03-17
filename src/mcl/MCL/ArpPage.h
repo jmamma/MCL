@@ -31,7 +31,6 @@ public:
   void display();
   void setup();
   void init();
-  void cleanup();
 };
 
 #endif /* ARPPAGE_H__ */

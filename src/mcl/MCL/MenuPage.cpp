@@ -105,8 +105,6 @@ void MenuPageBase::gen_menu_row_names() {
   }
 }
 
-void MenuPageBase::setup() {}
-
 void MenuPageBase::cleanup() {
   key_interface.ignoreNextEventClear(MDX_KEY_YES);
   key_interface.ignoreNextEventClear(MDX_KEY_NO);

@@ -24,8 +24,6 @@ uint8_t _findchar(char chr) {
   return sz_allowedchar - 1;
 }
 
-void TextInputPage::setup() {}
-
 void TextInputPage::init() {
   oled_display.setTextColor(WHITE, BLACK);
   mcl_gui.draw_popup(title,false,24);

@@ -16,9 +16,7 @@ class RoutePage : public LightPage {
 
  virtual bool handleEvent(gui_event_t *event);
  virtual void display();
- virtual void setup();
  virtual void init();
- virtual void cleanup();
 
  void toggle_route(int i, uint8_t routing);
  void toggle_routes_batch(bool solo = false);

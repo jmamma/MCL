@@ -24,8 +24,6 @@ void GridLoadPage::init() {
   draw_popup();
 }
 
-void GridLoadPage::setup() {}
-
 void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
   switch (mode) {
   case LOAD_MANUAL: {

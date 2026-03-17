@@ -21,15 +21,12 @@ void GridSavePage::init() {
   draw_popup();
 }
 
-void GridSavePage::setup() {}
-
 void GridSavePage::draw_popup() {
   char str[16];
   mclstr_copy_progmem(str, mclstr_save_tracks, sizeof(str));
   mcl_gui.draw_popup(str, true);
 }
 
-void GridSavePage::loop() {}
 void GridSavePage::display() {
 
   const uint64_t slide_mask = 0;

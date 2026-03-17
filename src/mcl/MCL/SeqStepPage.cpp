@@ -21,7 +21,6 @@ bool SeqStepPage::toggle_mask(uint8_t mask) {
   return false;
 }
 
-void SeqStepPage::setup() { SeqPage::setup(); }
 void SeqStepPage::config() {
   bool is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
 

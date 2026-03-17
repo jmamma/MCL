@@ -41,7 +41,6 @@ public:
   void setup();
   void init();
   void loop();
-  void cleanup();
   void setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev, uint8_t source, uint8_t len,
                      uint8_t rate, uint8_t pan, uint8_t linked_track = 255);
   void setup_ram_rec_mono(uint8_t track, uint8_t lev, uint8_t source, uint8_t len,

@@ -19,7 +19,6 @@ public:
   void toggle_mask(uint8_t i);
   void draw_mask();
   void display();
-  void setup();
   void init();
   void cleanup();
 };

@@ -38,7 +38,6 @@ public:
   void disable_paramupdate_events();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
-  virtual void setup();
   virtual void init();
   virtual void config();
   virtual void config_encoders();

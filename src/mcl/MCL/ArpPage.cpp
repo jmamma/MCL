@@ -59,8 +59,6 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
   last_arp_track = arp_track;
 }
 
-void ArpPage::cleanup() {}
-
 void ArpPage::loop() {
   uint8_t n = current_track;
 

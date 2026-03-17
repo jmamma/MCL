@@ -3,8 +3,6 @@
 #include "MD.h"
 #include "SeqPages.h"
 #include "MidiActivePeering.h"
-void PolyPage::setup() {}
-
 void PolyPage::init() {
 
   poly_mask = &mcl_cfg.poly_mask;

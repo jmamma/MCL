@@ -30,7 +30,7 @@ void OscPage::init() {
   oled_display.clearDisplay();
 }
 
-void OscPage::cleanup() { }
+void OscPage::cleanup() {}
 
 bool OscPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
