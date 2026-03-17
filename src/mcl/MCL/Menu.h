@@ -3,7 +3,7 @@
 #include "mcl.h"
 #include "MenuTypes.h"
 
-#define MAX_MENU_ITEMS 16
+#define MAX_MENU_ITEMS 32
 
 class MenuBase {
 public:
