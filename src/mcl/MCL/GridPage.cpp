@@ -447,7 +447,7 @@ void GridPage::display_grid() {
   uint8_t row_shift = 0;
   uint8_t col_shift = 0;
   auto grid_id = proj.get_grid();
-  auto *device = midi_active_peering.get_device(grid_id + 1);
+  auto *device = grid_id == 0 ? midi_active_peering.dev1 : midi_active_peering.dev2;
   if (show_slot_menu) {
     if (cur_col + param3.cur > MAX_VISIBLE_COLS - 1) {
 

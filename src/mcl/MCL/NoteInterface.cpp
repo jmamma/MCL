@@ -112,7 +112,7 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
   }
   uint8_t note_num = note_interface.note_to_track_map(
       msg[1], midi_active_peering.dev1->id);
-  note_interface.note_on_event(note_num, UART1_PORT);
+  note_interface.note_on_event(note_num, midi_active_peering.dev1->port);
 }
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
@@ -123,7 +123,7 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   uint8_t note_num = note_interface.note_to_track_map(
       msg[1], midi_active_peering.dev2->id);
   DEBUG_PRINTLN(note_num);
-  note_interface.note_on_event(note_num, uartToPort(mcl_seq.ext_uart));
+  note_interface.note_on_event(note_num, midi_active_peering.dev2->port);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
@@ -133,7 +133,7 @@ void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   }
   uint8_t note_num = note_interface.note_to_track_map(
       msg[1], midi_active_peering.dev1->id);
-  note_interface.note_off_event(note_num, UART1_PORT);
+  note_interface.note_off_event(note_num, midi_active_peering.dev1->port);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
@@ -146,7 +146,7 @@ void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
       msg[1], midi_active_peering.dev2->id);
   DEBUG_PRINTLN(F("note to track"));
   DEBUG_PRINTLN(note_num);
-  note_interface.note_off_event(note_num, uartToPort(mcl_seq.ext_uart));
+  note_interface.note_off_event(note_num, midi_active_peering.dev2->port);
 }
 
 void NoteInterfaceMidiEvents::setup_callbacks() {

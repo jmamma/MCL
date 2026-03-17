@@ -9,8 +9,6 @@
 #include "SeqTrack.h"
 #include "MidiClock.h"
 
-#define UART1_PORT 1
-
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0

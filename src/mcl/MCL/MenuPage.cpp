@@ -41,9 +41,10 @@ void MenuPageBase::gen_menu_device_names() {
       (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
   m->set_custom_options(p,0);
 
+  MidiDevice *devs[] = { midi_active_peering.dev1, midi_active_peering.dev2 };
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
     p->pos = n + 1;
-    strcpy(p->name, midi_active_peering.get_device(n + 1)->name);
+    strcpy(p->name, devs[n]->name);
     p++;
   }
 }

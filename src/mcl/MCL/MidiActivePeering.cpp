@@ -60,15 +60,6 @@ void GenericMidiDevice::init_grid_devices(uint8_t device_idx) {
   }
 }
 
-uint8_t uartToPort(MidiUartClass *uart) {
-  if (uart == &MidiUart) return UART1_PORT;
-#ifdef EXT_TRACKS
-  if (uart == &MidiUart2) return UART2_PORT;
-#endif
-  if (uart == &MidiUartUSB) return UARTUSB_PORT;
-  return 0;
-}
-
 /// It is the caller's responsibility to check for null MidiUart device
 static MidiUartClass *_getMidiUart(uint8_t port) {
   MidiUartClass *ret = nullptr;

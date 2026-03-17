@@ -113,7 +113,7 @@ void KeyInterface::key_event(uint8_t key, bool key_release) {
     return;
   }
 
-  uint8_t md_port = uartToPort(MD.uart);
+  uint8_t md_port = MD.port;
   if (key < 16) {
     if (key_release) {
       note_interface.note_off_event(key, md_port);

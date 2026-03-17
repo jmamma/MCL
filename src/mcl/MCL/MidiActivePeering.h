@@ -62,6 +62,4 @@ extern GenericMidiDevice generic_midi_device;
 extern NullMidiDevice null_midi_device;
 extern MidiActivePeering midi_active_peering;
 
-uint8_t uartToPort(MidiUartClass *uart);
-
 #endif /* MIDIACTIVEPEERING_H__ */

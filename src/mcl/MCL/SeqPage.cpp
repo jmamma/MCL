@@ -408,8 +408,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         seq_menu_page.init();
         seq_menu_page.gen_menu_device_names();
         seq_menu_page.gen_menu_transpose_names();
-        mcl_cfg.seq_dev =
-            uartToPort(opt_midi_device_capture == &MD ? MD.uart : mcl_seq.ext_uart);
+        mcl_cfg.seq_dev = (opt_midi_device_capture == midi_active_peering.dev1) ? 1 : 2;
         return true;
       }
     }
@@ -423,7 +422,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         row_func =
             seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
         MidiDevice *old_dev = midi_device;
-        midi_device = midi_active_peering.get_device(mcl_cfg.seq_dev);
+        midi_device = (mcl_cfg.seq_dev == 1) ? midi_active_peering.dev1 : midi_active_peering.dev2;
         if (old_dev == midi_device) {
           opt_speed_handler();
           opt_length_handler();

@@ -21,8 +21,6 @@
 #define TRIG_TRUE 1
 #define TRIG_ONESHOT 3
 
-#define UART1_PORT 1
-
 // Sequencer editing constants
 #define DIR_LEFT 0
 #define DIR_RIGHT 1
@@ -56,7 +54,6 @@ public:
     uint8_t active : 1;
   };
 
-  uint8_t port = UART1_PORT;
   MidiUartClass *uart = &MidiUart;
   MidiUartClass *uart2 = &MidiUart2;
   uint8_t mute_state = SEQ_MUTE_OFF;
@@ -164,11 +161,6 @@ public:
   }
   }
 
-  void get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d);
-
-  float get_speed_multiplier(uint8_t speed_);
-
-  float get_speed_multiplier() { return get_speed_multiplier(speed); }
   uint16_t get_speed_multiplier_int() { return get_speed_multiplier_int(speed); }
 
   uint8_t get_quantized_step() {

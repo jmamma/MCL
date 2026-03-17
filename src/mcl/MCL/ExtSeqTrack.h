@@ -19,8 +19,6 @@
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
 
-#define UART2_PORT 2
-
 #define PARAM_PRG 128
 #define PARAM_PB 129
 #define PARAM_CHP 130

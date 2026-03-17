@@ -237,7 +237,7 @@ bool MDClass::probe() {
   connected = false;
 
   // Begin main probe sequence — derive port from uart pointer
-  uint8_t probe_port = uartToPort(uart);
+  uint8_t probe_port = port;
   if (uart->device.getBlockingId(DEVICE_MD, probe_port, CALLBACK_TIMEOUT)) {
     uint8_t count = 3;
 
