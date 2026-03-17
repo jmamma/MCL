@@ -7,7 +7,6 @@
 EncoderParent::EncoderParent(encoder_handle_t _handler) :
     old(0),
     cur(0),
-    redisplay(false),
     handler(_handler) {
 }
 
@@ -25,11 +24,9 @@ void EncoderParent::setValue(int value, bool handle) {
     } else {
         old = cur = value;
     }
-    redisplay = true;
 }
 
 void EncoderParent::displayAt(int i) {
-    redisplay = false;
 }
 
 bool EncoderParent::hasChanged() {

@@ -26,7 +26,6 @@ public:
         int16_t rot_counter_down = 0;
     #endif
     uint8_t rot_res = 1;
-    bool redisplay;
     encoder_handle_t handler;
 
     EncoderParent(encoder_handle_t _handler = nullptr);
