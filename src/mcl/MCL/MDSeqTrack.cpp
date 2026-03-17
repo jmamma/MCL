@@ -1056,7 +1056,8 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   // 32770.0 is scalar to get MD swing amount in to readible percentage
   // MD sysex docs are not clear on this one so i had to hax it.
 
-  float swing = (float)pattern->swingAmount / 16385.0f;
+  // 16385 ≈ 2^14; use shift to avoid float arithmetic
+  uint32_t swing_q14 = pattern->swingAmount;
 
   uint8_t *pswingpattern;
   uint8_t timing_mid = get_timing_mid();
@@ -1076,7 +1077,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
       steps[a].cond_plock = false;
       timing[a] = timing_mid;
       if (IS_BIT_SET64_P(pswingpattern, a)) {
-        timing[a] += round(swing * timing_mid);
+        timing[a] += (uint8_t)((swing_q14 * timing_mid + 8192) >> 14);
       }
     }
   }

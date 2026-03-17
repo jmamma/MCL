@@ -53,13 +53,11 @@ void SampleBrowserPage::display() {
         if (!wav_file.open(temp_entry, false)) { goto end; }
         oled_display.setCursor(0, 23);
 
-        float sample_rate_f = (wav_file.header.fmt.sampleRate * 0.001f);
-        uint16_t sample_rate = (uint16_t)sample_rate_f;
+        uint16_t sample_rate = wav_file.header.fmt.sampleRate / 1000;
         oled_display.print(sample_rate);
         oled_display.print('.');
 
-        uint8_t decimal =
-            ((sample_rate_f - (float)sample_rate) * (float)10.0f) + 0.5f;
+        uint8_t decimal = (wav_file.header.fmt.sampleRate % 1000) / 100;
         oled_display.print(decimal);
         mcl_print_P(mclstr_k_space);
 

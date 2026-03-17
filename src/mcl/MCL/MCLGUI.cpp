@@ -214,8 +214,7 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
   oled_display.fillRect(x_pos + 1, y_pos + 1, width - 2,
                         height - 2, BLACK);
 
-  float prog = (float)cur / (float)_max;
-  auto progx = (uint8_t)(x_pos + 1 + prog * (width - 2));
+  auto progx = (uint8_t)(x_pos + 1 + ((uint16_t)cur * (width - 2)) / _max);
   // draw the progress
   oled_display.fillRect(x_pos + 1, y_pos + 1, progx - x_pos - 1,
                         height - 2, WHITE);
@@ -505,7 +504,6 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   SeqTrack seq_track;
   uint8_t timing_mid = seq_track.get_timing_mid(speed);
   uint8_t degrees = timing_mid * 2;
-  uint8_t heights[16];
   // Triplets
 
   uint8_t heights_lowres[6] = {11, 4, 6, 10, 4, 8};
