@@ -102,7 +102,7 @@ void GridTask::update_transition_details() {
 }
 
 void GridTask::wait_blocking(uint32_t go_step) {
-  float tempo = MidiClock.get_tempo();
+  uint16_t tempo_uint = (uint16_t)MidiClock.get_tempo();
   while (true) {
     // uint32_t counter = atomic_read(&MidiClock.div192th_counter);
     uint32_t counter = MidiClock.div192th_counter;
@@ -115,7 +115,7 @@ void GridTask::wait_blocking(uint32_t go_step) {
 
     handleIncomingMidi();
 
-    if ((float)diff > ceil(tempo * GUI_THRESHOLD_FACTOR)) {
+    if (diff > (uint32_t)((uint32_t)tempo_uint * 64 + 999) / 1000) {
       mcl.loop();
     }
   }
@@ -135,7 +135,7 @@ void GridTask::transition_handler() {
   uint8_t div32th_margin = 6;
 
   while (!MidiClock.clock_less_than(
-      MidiClock.div32th_counter + max(2, 0.032f * MidiClock.get_tempo()),
+      MidiClock.div32th_counter + max(2u, ((uint16_t)MidiClock.get_tempo() * 32u + 999u) / 1000u),
       (uint32_t)mcl_actions.next_transition * 2)) {
     memset(track_select_array, 0, sizeof(track_select_array));
 

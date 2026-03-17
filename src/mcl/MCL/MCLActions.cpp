@@ -812,7 +812,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
   const uint8_t div32th_margin = 1;
 
-  float tempo = MidiClock.get_tempo();
+  uint16_t tempo_uint = (uint16_t)MidiClock.get_tempo();
 
   uint8_t n = NUM_SLOTS;
 
@@ -836,7 +836,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       handleIncomingMidi();
       uint32_t counter = MidiClock.div192th_counter;
       uint32_t diff = MidiClock.clock_diff_div192(counter, next);
-      if (gui_update && (diff > (uint32_t) ceil(GUI_THRESHOLD_FACTOR * tempo))) {
+      if (gui_update && (diff > (uint32_t)((uint32_t)tempo_uint * 64 + 999) / 1000)) {
          mcl.loop();
       }
     }
@@ -1010,11 +1010,9 @@ void MCLActions::calc_latency() {
   if (send_dev[1] && elektron_devs[1] != nullptr && devs[1]->uart->speed >= 250000) { dev_latency[1].latency_bytes *= 2; }
   #endif
 
-  float tempo = MidiClock.get_tempo();
-  //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f = tempo * 8 / 60
-  //  float div32th_per_second = tempo * 0.133333333333f;
-  //  div32th_per_second: tempo / 60.0f * 4.0f * 2.0f * 6.0f = tempo * 8 / 10
-  float div192th_per_second = tempo * 0.8f;
+  // div192th_latency = ceil(tempo * 0.8 * latency_bytes * 10 / speed)
+  //                  = ceil(tempo * 8 * latency_bytes / speed)
+  uint16_t tempo_uint = (uint16_t)MidiClock.get_tempo();
 
   div192th_total_latency = 0;
 
@@ -1023,11 +1021,10 @@ void MCLActions::calc_latency() {
   }
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
-      float bytes_per_second_uart = devs[a]->uart->speed * 0.1f;
-      float latency_in_seconds = (float)dev_latency[a].latency_bytes /
-                                 bytes_per_second_uart;
+      uint32_t den = devs[a]->uart->speed;
+      uint32_t num = (uint32_t)tempo_uint * 8 * dev_latency[a].latency_bytes;
       //Transimission Latency
-      dev_latency[a].div192th_latency = ceil(div192th_per_second * latency_in_seconds);
+      dev_latency[a].div192th_latency = (uint8_t)((num + den - 1) / den);
 
       //Load Latency
       //We need at least 6 sequencer ticks of latency to account for seq_track load_cache() functions
