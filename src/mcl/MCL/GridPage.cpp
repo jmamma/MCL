@@ -757,7 +757,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       }
     }
     uint8_t copy_w = (old_col != 255) ? width + param3.cur : width;
-    mcl_clipboard.copy(_col + 16 * cur_grid, getRow(), copy_w, height);
+    mcl_clipboard.copy(_col + GRID_WIDTH * cur_grid, getRow(), copy_w, height);
   }
     if (slot_clear) {
       goto run;
@@ -770,7 +770,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       oled_display.textbox_P(mclstr_paste);
     }
     slot_undo = 0;
-    mcl_clipboard.paste(_col + 16 * cur_grid, getRow());
+    mcl_clipboard.paste(_col + GRID_WIDTH * cur_grid, getRow());
   } else {
     if (slot_update == 1) {
       oled_display.textbox_P(mclstr_slot, mclstr_update);
@@ -853,7 +853,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
           // if (height > 1 && y == 0) {
           //   mcl_actions.chains[xpos].init();
           // }
-          track_select_array[xpos + cur_grid * 16] = 1;
+          track_select_array[xpos + cur_grid * GRID_WIDTH] = 1;
         }
       }
       if (slot_load == 1) {
