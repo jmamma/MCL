@@ -136,7 +136,7 @@ void GridLoadPage::display() {
 
       oled_display.setFont(&Elektrothic);
       oled_display.setCursor(MCLGUI::s_menu_x + 4, 21);
-      oled_display.print((char)(0x3A + proj.get_grid()));
+      oled_display.print((char)(0x3A + old_grid));
 
       oled_display.setFont(&TomThumb);
       char K[4] = {'\0'};

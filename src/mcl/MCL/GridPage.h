@@ -39,7 +39,7 @@ public:
 
   uint8_t active_slots[NUM_SLOTS];
 
-  uint8_t grid_select_apply;
+  uint8_t cur_grid = 0;
   uint8_t slot_clear;
 
   uint8_t slot_apply;
@@ -92,7 +92,6 @@ public:
   void setup();
   void cleanup();
   void init();
-  bool swap_grids();
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
   void load_old_col();

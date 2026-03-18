@@ -64,7 +64,7 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &mcl_cfg.rec_automation,
 
     // 31
-    &grid_page.grid_select_apply, &mcl_cfg.load_mode, &slot.link.loops,
+    &grid_page.cur_grid, &mcl_cfg.load_mode, &slot.link.loops,
     &slot.link.row, &grid_page.slot_apply, &grid_page.slot_clear,
     &grid_page.slot_copy, &grid_page.slot_paste, &slot.link.length,
 

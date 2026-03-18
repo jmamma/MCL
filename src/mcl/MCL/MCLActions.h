@@ -104,14 +104,6 @@ public:
     return q;
   }
 
-  uint8_t get_grid_idx(uint8_t slot_number) {
-    return slot_number < GRID_WIDTH ? 0 : 1;
-  }
-
-  uint8_t get_track_idx(uint8_t slot_number) {
-    return slot_number < GRID_WIDTH ? slot_number : slot_number - GRID_WIDTH;
-  }
-
   GridDeviceTrack *get_grid_dev_track(uint8_t slot_number);
 
   void init_chains();

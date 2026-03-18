@@ -23,7 +23,6 @@ public:
 class Project : public ProjectHeader {
 public:
   File file;
-  uint8_t grid_select;
 
   MidiDeviceGrid grids[NUM_GRIDS];
 
@@ -38,88 +37,49 @@ public:
   bool new_project_master_file(const char *projectname);
   bool write_header();
 
-  void select_grid(uint8_t i) { grid_select = i; }
-  void toggle_grid() { grid_select = !grid_select; }
-
-  uint8_t get_grid() { return grid_select; }
-  // Write data to a specific grid
-  bool write_grid(void *data, size_t len, uint8_t col, uint16_t row,
-                  uint8_t grid = 255) {
-    if (grid == 255) {
-      grid = grid_select;
-    }
-    DEBUG_DUMP(grid);
-    bool ret = grids[grid].write(data, len, col, row);
-    return ret;
+  // Write data — col is logical 0–31, routed to physical grid/col
+  bool write_grid(void *data, size_t len, uint8_t col, uint16_t row) {
+    last_grid_ = col >> 4;
+    return grids[last_grid_].write(data, len, col & 0xF, row);
   }
-  // Write without seek.
-  bool write_grid(void *data, size_t len,
-                 uint8_t grid = 255) {
-    if (grid == 255) {
-      grid = grid_select;
-    }
-    bool ret = grids[grid].write(data, len);
-    return ret;
+  // Write without seek (uses grid from last seeked call)
+  bool write_grid(void *data, size_t len) {
+    return grids[last_grid_].write(data, len);
   }
 
-  // Read data from a specific grid
-  bool read_grid(void *data, size_t len, uint8_t col, uint16_t row,
-                 uint8_t grid = 255) {
-    if (grid == 255) {
-      grid = grid_select;
-    }
-    bool ret = grids[grid].read(data, len, col, row);
-    return ret;
+  // Read data — col is logical 0–31, routed to physical grid/col
+  bool read_grid(void *data, size_t len, uint8_t col, uint16_t row) {
+    last_grid_ = col >> 4;
+    return grids[last_grid_].read(data, len, col & 0xF, row);
   }
-  // Read without seek.
-  bool read_grid(void *data, size_t len,
-                 uint8_t grid = 255) {
-    if (grid == 255) {
-      grid = grid_select;
-    }
-    bool ret = grids[grid].read(data, len);
-    return ret;
+  // Read without seek
+  bool read_grid(void *data, size_t len) {
+    return grids[last_grid_].read(data, len);
   }
 
-  bool clear_row_grid(uint16_t row, uint8_t grid = 255) {
-     if (grid == 255) {
-      grid = grid_select;
-    }
-    bool ret = grids[grid].clear_row(row);
-    return ret;
+  bool clear_row_grid(uint16_t row, uint8_t grid) {
+    return grids[grid].clear_row(row);
   }
 
-
-  bool clear_slot_grid(uint8_t col, uint16_t row, uint8_t grid = 255) {
-     if (grid == 255) {
-      grid = grid_select;
-    }
-    bool ret = grids[grid].clear_slot(col, row);
-    return ret;
+  bool clear_slot_grid(uint8_t col, uint16_t row) {
+    uint8_t g = col >> 4;
+    return grids[g].clear_slot(col & 0xF, row);
   }
 
   bool write_grid_row_header(GridRowHeader *row_header, uint16_t row,
-                             uint8_t grid = 255) {
-    if (grid == 255) {
-      grid = grid_select;
-    }
-    bool ret = grids[grid].write_row_header(row_header, row);
-    return ret;
+                             uint8_t grid) {
+    return grids[grid].write_row_header(row_header, row);
   }
 
   bool read_grid_row_header(GridRowHeader *row_header, uint16_t row,
-                            uint8_t grid = 255) {
-    if (grid == 255) {
-      grid = grid_select;
-    }
+                            uint8_t grid) {
     DEBUG_PRINT_FN();
     DEBUG_DUMP(grid);
-    bool ret = grids[grid].read_row_header(row_header, row);
-    return ret;
+    return grids[grid].read_row_header(row_header, row);
   }
 
   bool sync_grid(uint8_t grid) { return grids[grid].sync(); }
-  bool sync_grid() { return sync_grid(grid_select); }
+  bool sync_grid() { sync_grid(0); return sync_grid(1); }
   bool close_project() {
     bool ret = true;
     // Close main file
@@ -134,6 +94,9 @@ public:
     }
     return ret;
   }
+
+private:
+  uint8_t last_grid_ = 0;
 };
 
 extern Project proj;

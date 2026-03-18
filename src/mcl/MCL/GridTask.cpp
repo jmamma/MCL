@@ -86,7 +86,7 @@ void GridTask::update_transition_details() {
   };
 
   GridRowHeader row_header;
-  proj.read_grid_row_header(&row_header, next_active_row);
+  proj.read_grid_row_header(&row_header, next_active_row, 0);
   uint8_t dev_idx = 0;
 
   uint8_t len = elektron_devs[0]->sysex_protocol.kitname_length;
@@ -177,7 +177,7 @@ void GridTask::transition_handler() {
       if (gdt == nullptr)
         continue;
 
-      uint8_t track_idx = mcl_actions.get_track_idx(n);
+      uint8_t track_idx = n & 0xF;
       uint8_t device_idx = gdt->device_idx;
 
       if (link_load(n, track_idx, slots_changed, track_select_array, gdt)) {
@@ -221,7 +221,7 @@ void GridTask::transition_handler() {
         if (device_idx != c)
           continue;
 
-        uint8_t track_idx = mcl_actions.get_track_idx(n);
+        uint8_t track_idx = n & 0xF;
         // Wait on first track of each device;
 
         if (wait && send_device[c]) {

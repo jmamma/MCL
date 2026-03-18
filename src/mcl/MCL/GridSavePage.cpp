@@ -39,7 +39,7 @@ void GridSavePage::display() {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 24, note_interface.notes_off | note_interface.notes_on );
     oled_display.setFont(&Elektrothic);
     oled_display.setCursor(MCLGUI::s_menu_x + 4, 21);
-    oled_display.print((char)(0x3A + proj.get_grid()));
+    oled_display.print((char)(0x3A + old_grid));
 
     oled_display.setFont(&TomThumb);
 
@@ -132,7 +132,6 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
     save_groups:
       key_interface.off();
-      uint8_t offset = proj.get_grid() * 16;
 
       uint8_t track_select_array[NUM_SLOTS] = {0};
 

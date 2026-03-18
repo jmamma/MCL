@@ -560,7 +560,6 @@ void sdcard_bench() {
   DeviceTrack *ptrack;
   while (1) {
     uint16_t cl = read_clock_ms();
-    proj.select_grid(0);
     for (uint8_t n = 0; n < 16; n++) {
       auto *ptrack = empty_track.load_from_grid_512(n, 0);
       ptrack->init_track_type(MD_TRACK_TYPE);
@@ -569,8 +568,7 @@ void sdcard_bench() {
       if (ptrack) ptrack->store_in_mem(0);
       CLEAR_LOCK();
     }
-    proj.select_grid(1);
-    for (uint8_t n = 0; n < 16; n++) {
+    for (uint8_t n = 16; n < 32; n++) {
       auto *ptrack = empty_track.load_from_grid_512(n, 0);
       ptrack->init_track_type(A4_TRACK_TYPE);
       USE_LOCK();

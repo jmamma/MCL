@@ -16,12 +16,10 @@ uint8_t GridIOPage::old_grid = 0;
 void GridIOPage::cleanup() {
   key_interface.send_md_leds();
   MD.popup_text(127, 2);
-  proj.select_grid(old_grid);
   offset = 255;
 }
 
 void GridIOPage::init() {
-  old_grid = proj.get_grid();
   show_track_type = false;
   track_select = 0;
   show_offset = 0;
@@ -42,7 +40,7 @@ void GridIOPage::show_group_select_ui(const char *title_P) {
 void GridIOPage::populate_track_select_from_notes(uint8_t *track_select_array) {
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
     if (note_interface.is_note(n)) {
-      SET_BIT32(track_select, n + proj.get_grid() * 16);
+      SET_BIT32(track_select, n + old_grid * 16);
     }
   }
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -145,14 +143,14 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     toggle_grid:
       for (uint8_t n = 0; n < GRID_WIDTH; n++) {
         if (note_interface.is_note(n)) {
-          TOGGLE_BIT32(track_select, n + proj.get_grid() * 16);
+          TOGGLE_BIT32(track_select, n + old_grid * 16);
           if (note_interface.is_note_on(n)) {
             note_interface.ignoreNextEvent(n);
           }
           note_interface.clear_note(n);
         }
       }
-      proj.toggle_grid();
+      old_grid = !old_grid;
       key_interface.send_md_leds();
       return true;
     }
