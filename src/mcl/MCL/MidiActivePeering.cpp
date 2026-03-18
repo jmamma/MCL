@@ -90,7 +90,7 @@ static MidiClass *_getMidiClass(uint8_t port) {
 
 static uint8_t portToLogicalIdx(uint8_t port) {
   if (port == UARTUSB_PORT)
-    return (mcl_cfg.usb_device == 2) ? 1 : 0;
+    return (mcl_cfg.usb_device >= 2) ? 1 : 0;
   return port - 1;
 }
 
@@ -266,6 +266,10 @@ void MidiActivePeering::update_dev_cache() {
   uint8_t p2 = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
   dev1 = get_device(p1);
   dev2 = get_device(p2);
+  // USB GENER maps to dev2 slot
+  if (mcl_cfg.usb_device == 3) {
+    dev2 = get_device(UARTUSB_PORT);
+  }
 }
 
 GenericMidiDevice::GenericMidiDevice()
@@ -299,7 +303,9 @@ void MidiActivePeering::run() {
     nr_drivers = 1;
     drivers = generic_drivers;
   }
-  probePort(md_port, drivers, nr_drivers, &connected_midi_devices[md_port - 1], resource_buf);
+  if (mcl_cfg.uart1_device != 2) {
+    probePort(md_port, drivers, nr_drivers, &connected_midi_devices[md_port - 1], resource_buf);
+  }
 #ifdef EXT_TRACKS
   drivers = port2_drivers;
   nr_drivers = countof(port2_drivers);
@@ -307,7 +313,9 @@ void MidiActivePeering::run() {
     nr_drivers = 1;
     drivers = generic_drivers;
   }
-  probePort(ext_port, drivers, nr_drivers, &connected_midi_devices[ext_port - 1], resource_buf);
+  if (mcl_cfg.uart2_device != 2) {
+    probePort(ext_port, drivers, nr_drivers, &connected_midi_devices[ext_port - 1], resource_buf);
+  }
   if (resource_loaded) {
     // XXX doesn't work yet
     // R.Restore(resource_buf, resource_size);

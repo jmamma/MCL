@@ -153,7 +153,10 @@ void MidiSetup::cfg_ports(bool boot) {
   uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
   uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
 
-  if (mcl_cfg.uart1_device == 0) {
+  if (mcl_cfg.uart1_device == 2) {
+      // OFF
+      midi_active_peering.force_connect(md_port, &null_midi_device);
+  } else if (mcl_cfg.uart1_device == 0) {
       midi_active_peering.disconnect(md_port);
       midi_active_peering.force_connect(md_port, &generic_midi_device);
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo_speed),
@@ -167,7 +170,10 @@ void MidiSetup::cfg_ports(bool boot) {
       midi_active_peering.force_connect(md_port, &null_midi_device);
   }
 
-  if (mcl_cfg.uart2_device == 0) {
+  if (mcl_cfg.uart2_device == 2) {
+      // OFF
+      midi_active_peering.force_connect(ext_port, &null_midi_device);
+  } else if (mcl_cfg.uart2_device == 0) {
       midi_active_peering.disconnect(ext_port);
       midi_active_peering.force_connect(ext_port, &generic_midi_device);
       turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed),
@@ -177,9 +183,14 @@ void MidiSetup::cfg_ports(bool boot) {
                            mcl_seq.ext_uart);
     delay(100);
     elektron_devs[1]->setup();
-
   } else {
     midi_active_peering.force_connect(ext_port, &null_midi_device);
+  }
+
+  // USB GENER handling
+  if (mcl_cfg.usb_device == 3) {
+    midi_active_peering.disconnect(UARTUSB_PORT);
+    midi_active_peering.force_connect(UARTUSB_PORT, &generic_midi_device);
   }
 
   if (MD.connected) {
@@ -189,15 +200,27 @@ void MidiSetup::cfg_ports(bool boot) {
 }
 
 void configure_driver_ports() {
+  // MD on USB if usb_device==1, else default to UART1
   uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
-  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
   MidiClass *md_midi = (mcl_cfg.usb_device == 1) ? &MidiUSB : &Midi;
+
+  // ELEKT on USB if usb_device==2, else default to UART2
+  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
   MidiClass *ext_midi = (mcl_cfg.usb_device == 2) ? &MidiUSB : &Midi2;
+
+  // GENER: check USB first, then PORT2, then PORT1
+  MidiClass *gen_midi = ext_midi;
+  uint8_t gen_port = ext_port;
+  if (mcl_cfg.usb_device == 3) {
+    gen_midi = &MidiUSB; gen_port = UARTUSB_PORT;
+  } else if (mcl_cfg.uart1_device == 0) {
+    gen_midi = &Midi; gen_port = UART1_PORT;
+  }
 
   MD.setPort(md_midi, md_port);
   MNM.setPort(ext_midi, ext_port);
   Analog4.setPort(ext_midi, ext_port);
-  generic_midi_device.setPort(ext_midi, ext_port);
+  generic_midi_device.setPort(gen_midi, gen_port);
 
   mcl_seq.set_ports(MD.uart, generic_midi_device.uart);
 

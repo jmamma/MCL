@@ -67,6 +67,19 @@ void mclsys_apply_config() {
 }
 
 void mclsys_apply_config_midi() {
+  // USB takes priority over MIDI ports
+  if (mcl_cfg.usb_device == 1 && mcl_cfg.uart1_device == 1)
+    mcl_cfg.uart1_device = 2; // USB=MD wins, PORT1→OFF
+  if (mcl_cfg.usb_device == 2 && mcl_cfg.uart2_device == 1)
+    mcl_cfg.uart2_device = 2; // USB=ELEKT wins, PORT2→OFF
+  if (mcl_cfg.usb_device == 3) {
+    if (mcl_cfg.uart1_device == 0) mcl_cfg.uart1_device = 2; // USB=GENER, PORT1→OFF
+    if (mcl_cfg.uart2_device == 0) mcl_cfg.uart2_device = 2; // USB=GENER, PORT2→OFF
+  }
+  // Between MIDI ports: both GENER → PORT2 wins
+  if (mcl_cfg.uart1_device == 0 && mcl_cfg.uart2_device == 0)
+    mcl_cfg.uart1_device = 2;
+
   mclsys_apply_config();
   midi_setup.cfg_ports();
 }

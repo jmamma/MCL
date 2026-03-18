@@ -50,35 +50,35 @@ menu_option_t MENU_OPTIONS[] = {
   {0, "--"}, {1, "SIN"}, {2, "TRI"}, {3, "PUL"}, {4, "SAW"}, {5, "USR"},
   // 80: OSC
   {0, "OSC1"}, {1, "OSC2"}, {2, "OSC3"}, {3, "MIXER"},
-  // 84: MIDI_DEVICE
-  {0, "GENER"}, {1, "ELEKT"},
-  // 86"
+  // 84:
   {0, "OFF"}, {1, "CTRL->2"},
-  // 88
+  // 86
   {0, "--"},{17, "OMNI"},
-  // 90
+  // 88
   {0, "BASIC"}, {1, "ADV"},
-  // 92: MIDI2 FWD
+  // 90: MIDI2 FWD
   {0, "OFF"}, {1, "1"}, {2, "USB"}, {3, "1 + USB"},
-  // 96: MIDIUSB FWD
+  // 94: MIDIUSB FWD
   {0, "OFF"}, {1, "1"}, {2, "2"}, {3, "1 + 2"},
-  // 100: MIDI CLK SEND
+  // 98: MIDI CLK SEND
   {0, "OFF"}, {1, "2"}, {2, "USB"}, {3, "2 + USB"},
-  // 104: NOTES
+  // 102: NOTES
   {0, "C"}, {1, "C#"}, {2, "D"}, {3, "D#"}, {4, "E"}, {5, "F"}, {6, "F#"}, {7, "G"}, {8, "G#"}, {9, "A"}, {10, "A#"}, {11, "B"},
-  // 116
+  // 114
   {0, "CTRL"},
-  // 117
+  // 115
   {0, "A"}, {1, "B"}, {2, "C"}, {3, "D"},
-  // 121
+  // 119
   {128, "--"},
-  // 122
+  // 120
   {0, "--"}, {1,"PERF"},
-  // 124
-  {0, "GENER"}, {1,"MD"},
-  // 126: PIANO ROLL
+  // 122: PIANO ROLL
   {0,"NOTE"},
-  // 127: USB DEVICE
-  {0, "OFF"}, {1, "DRV 1"}, {2, "DRV 2"},
+  // 123: PORT 1 device
+  {0, "GENER"}, {1, "MD"}, {2, "OFF"},
+  // 126: PORT 2 device
+  {0, "GENER"}, {1, "ELEKT"}, {2, "OFF"},
+  // 129: USB device
+  {0, "OFF"}, {1, "MD"}, {2, "ELEKT"}, {3, "GENER"},
 };
 
