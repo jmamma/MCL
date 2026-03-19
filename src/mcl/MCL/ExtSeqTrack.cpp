@@ -883,13 +883,15 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
 
   for (uint8_t n = step; n < min(length, step + 3); n++) {
     end += event_buckets.get(n);
-    for (; start_idx < end; start_idx++) {
+    for (; start_idx < end;) {
       DEBUG_DUMP(start_idx);
-      uint8_t i = start_idx;
-      if (!events[i].is_lock || events[i].lock_idx != lock_idx)
+      uint16_t i = start_idx;
+      if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
         //|| (events[i].event_value > value + r ||
         // events[i].event_value < min(0, value - r)))
+        ++start_idx;
         continue;
+      }
       int16_t event_x = n * timing_mid + events[i].micro_timing - timing_mid;
       if (event_x == cur_x || (event_x <= cur_x + r && event_x >= cur_x - r)) {
         uint8_t param = locks_params[lock_idx] - 1;
@@ -897,7 +899,10 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
           pgm_oneshot = 0;
         }
         remove_event(i);
+        --end;
         ret = true;
+      } else {
+        ++start_idx;
       }
     }
   }
@@ -930,16 +935,20 @@ bool ExtSeqTrack::clear_track_locks_idx(uint8_t step, uint8_t lock_idx,
   locate(step, start_idx, end);
   bool ret = false;
 
-  for (uint16_t i = start_idx; i != end; ++i) {
+  for (uint16_t i = start_idx; i != end;) {
     if (!events[i].is_lock || events[i].lock_idx != lock_idx) {
+      ++i;
       continue;
     }
     if (value == 255 || (events[i].event_value == value)) {
       remove_event(i);
+      --end;
       ret = true;
       if (value != 255) {
         break;
       }
+    } else {
+      ++i;
     }
   }
   return ret;
