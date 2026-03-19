@@ -888,7 +888,7 @@ void MDSeqTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
     return;
 
   uint8_t mask = (1 << match);
-  uint8_t idx = get_lockidx(step);
+  uint16_t idx = get_lockidx(step);
   uint8_t locks_ = steps[step].locks;
 
   if (!(steps[step].locks & mask)) {
@@ -920,34 +920,31 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
   uint8_t mask = 1 << match;
   uint8_t nmask = ~mask;
   uint8_t rmask = mask - 1;
-  uint8_t idx = 0;
   bool remove[NUM_MD_STEPS];
 
   // pass1, mark
   for (uint8_t x = 0; x < NUM_MD_STEPS; x++) {
-    uint8_t _locks = steps[x].locks;
-    uint8_t nlocks = popcount(_locks);
-    if (_locks & mask) {
+    if (steps[x].locks & mask) {
       remove[x] = true;
       steps[x].locks &= nmask;
     } else {
       remove[x] = false;
     }
-    idx += nlocks;
   }
 
   // pass2, sweep
-  uint8_t rd = 0;
-  uint8_t wr = 0;
+  uint16_t rd = 0;
+  uint16_t wr = 0;
   for (uint8_t i = 0; i < NUM_MD_STEPS; ++i) {
     uint8_t _locks = steps[i].locks;
     uint8_t nlocks = popcount(_locks);
+    uint8_t n_src = nlocks + (remove[i] ? 1 : 0);
     uint8_t skip = NUM_LOCKS;
     if (remove[i]) {
       // how many before me?
       skip = popcount(_locks & rmask);
     }
-    for (uint8_t j = 0; j < nlocks; ++j) {
+    for (uint8_t j = 0; j < n_src; ++j) {
       if (skip == j) {
         ++rd;
       } else {
@@ -958,6 +955,8 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
 
   MD.setTrackParam(track_number, param_id,
                    MD.kit.params[track_number][locks_params[match] - 1]);
+  cur_event_idx = get_lockidx(step_count);
+  clean_params();
 }
 
 void MDSeqTrack::clear_step_locks(uint8_t step) {
