@@ -249,7 +249,7 @@ void MidiSDSClass::sendGeneralMessage(uint8_t type) {
   data[2] = deviceID;
   data[3] = type;
   data[4] = packetNumber;
-  MidiUart.sendRaw(data, 6);
+  MD.uart->sendRaw(data, 6);
 }
 
 void MidiSDSClass::sendAckMessage() { sendGeneralMessage(MIDI_SDS_ACK); }
@@ -268,7 +268,7 @@ void MidiSDSClass::sendDumpRequest(uint16_t slot) {
   data[2] = deviceID;
   data[4] = sampleNumber & 0x7F;
   data[5] = (sampleNumber >> 7) & 0x7F;
-  MidiUart.sendRaw(data, 7);
+  MD.uart->sendRaw(data, 7);
 }
 bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
   if (len > 120)
@@ -286,7 +286,7 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
     data[n++] = 0x00;
   data[n++] = checksum & 0x7F;
   data[n] = 0xF7;
-  MidiUart.m_putc(data, 127);
+  MD.uart->m_putc(data, 127);
   return true;
 }
 
@@ -336,7 +336,7 @@ bool MidiSDSClass::transmitPacket(uint8_t *buf, uint8_t len) {
   if (buf[0] != 0xF0) {
     return sendData(buf, len);
   }
-  MidiUart.sendRaw(buf, len);
+  MD.uart->sendRaw(buf, len);
   return true;
 }
 
@@ -384,7 +384,7 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
     return false;
   }
 
-  MidiSDSSysexListener.setup(&Midi);
+  MidiSDSSysexListener.setup(MD.midi);
   fsize = reader.size();
   state = SDS_SEND;
   packetNumber = 0;
@@ -417,7 +417,7 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
   set_sample_name_if_needed(samplename, filename, sample_number);
 
   oled_display.clearDisplay();
-  latency_ms = calculate_latency(MidiUart.speed, sizeof(buf));
+  latency_ms = calculate_latency(MD.uart->speed, sizeof(buf));
 
   // Send remaining packets
   while (reader.hasMorePackets()) {
@@ -461,7 +461,7 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
 cleanup:
   reader.close();
   state = SDS_READY;
-  MidiSDSSysexListener.cleanup(&Midi);
+  MidiSDSSysexListener.cleanup(MD.midi);
   return ret;
 }
 
@@ -494,7 +494,7 @@ bool MidiSDSClass::recvWav(const char *filename, uint16_t sample_number) {
   }
 
   // init
-  MidiSDSSysexListener.setup(&Midi);
+  MidiSDSSysexListener.setup(MD.midi);
   int i = 0;
   uint8_t retries = 3;
   uint8_t m = 255;
@@ -563,7 +563,7 @@ recv_fail:
 fin:
   wav_file.close();
   state = SDS_READY;
-  MidiSDSSysexListener.cleanup(&Midi);
+  MidiSDSSysexListener.cleanup(MD.midi);
   return ret;
 }
 
