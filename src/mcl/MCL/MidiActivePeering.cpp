@@ -299,21 +299,21 @@ void MidiActivePeering::run() {
 
   MidiDevice **drivers = port1_drivers;
   uint8_t nr_drivers = countof(port1_drivers);
-  if (!mcl_cfg.uart1_device) {
+  if (!mcl_cfg.uart1_device && md_port != UARTUSB_PORT) {
     nr_drivers = 1;
     drivers = generic_drivers;
   }
-  if (mcl_cfg.uart1_device != 2) {
+  if (mcl_cfg.uart1_device != 2 || md_port == UARTUSB_PORT) {
     probePort(md_port, drivers, nr_drivers, &connected_midi_devices[md_port - 1], resource_buf);
   }
 #ifdef EXT_TRACKS
   drivers = port2_drivers;
   nr_drivers = countof(port2_drivers);
-  if (!mcl_cfg.uart2_device) {
+  if (!mcl_cfg.uart2_device && ext_port != UARTUSB_PORT) {
     nr_drivers = 1;
     drivers = generic_drivers;
   }
-  if (mcl_cfg.uart2_device != 2) {
+  if (mcl_cfg.uart2_device != 2 || ext_port == UARTUSB_PORT) {
     probePort(ext_port, drivers, nr_drivers, &connected_midi_devices[ext_port - 1], resource_buf);
   }
   if (resource_loaded) {

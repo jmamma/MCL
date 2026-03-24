@@ -153,8 +153,8 @@ void MidiSetup::cfg_ports(bool boot) {
   uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
   uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
 
-  if (mcl_cfg.uart1_device == 2) {
-      // OFF
+  if (mcl_cfg.uart1_device == 2 && md_port != UARTUSB_PORT) {
+      // OFF (physical port only; USB peering handled by run())
       midi_active_peering.force_connect(md_port, &null_midi_device);
   } else if (mcl_cfg.uart1_device == 0) {
       midi_active_peering.disconnect(md_port);
@@ -170,8 +170,8 @@ void MidiSetup::cfg_ports(bool boot) {
       midi_active_peering.force_connect(md_port, &null_midi_device);
   }
 
-  if (mcl_cfg.uart2_device == 2) {
-      // OFF
+  if (mcl_cfg.uart2_device == 2 && ext_port != UARTUSB_PORT) {
+      // OFF (physical port only; USB peering handled by run())
       midi_active_peering.force_connect(ext_port, &null_midi_device);
   } else if (mcl_cfg.uart2_device == 0) {
       midi_active_peering.disconnect(ext_port);
