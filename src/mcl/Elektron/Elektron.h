@@ -233,6 +233,10 @@ enum class ElektronCommand {
   DrawCloseMicrotiming
 };
 
+// SPS sysex request version byte: 0 = SPS-X (extended), 1 = legacy
+#define SYSEX_VERSION_SPSX   0x00
+#define SYSEX_VERSION_LEGACY 0x01
+
 /// sysex constants for constructing data frames
 class ElektronSysexProtocol {
 public:
