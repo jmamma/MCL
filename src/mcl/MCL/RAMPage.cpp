@@ -3,6 +3,7 @@
 #include "MCLGUI.h"
 #include "MCLActions.h"
 #include "MDTrack.h"
+#include "SeqTrackUtil.h"
 #include "MCLSeq.h"
 #include "GridPages.h"
 #include "AuxPages.h"
@@ -60,9 +61,11 @@ void RAMPage::setup_sequencer(uint8_t track) {
 
   USE_LOCK();
   SET_LOCK();
-  mcl_seq.md_tracks[track].clear_track();
-  mcl_seq.md_tracks[track].steps[0].trig = true;
-  mcl_seq.md_tracks[track].length = encoders[3]->cur * 4;
+  SeqTrackUtil::with_md_track(track, [&](auto &t) {
+    t.clear_track();
+    t.set_step(0, MASK_PATTERN, true);
+    t.length = encoders[3]->cur * 4;
+  });
   CLEAR_LOCK();
 }
 
@@ -200,6 +203,62 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   uint8_t step_inc = track_length / slices;
   bool clear_locks = true;
 
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    auto &trk = mcl_seq.spsx_tracks[track];
+    auto &ln_trk = mcl_seq.spsx_tracks[linked_track];
+    trk.clear_track(clear_locks);
+    trk.locks_params[0] = ROM_STRT + 1;
+    trk.locks_params[1] = ROM_END + 1;
+    uint8_t mode = encoders[1]->cur;
+    for (uint8_t s = 0; s < slices; s++) {
+      uint8_t n = s * step_inc;
+      if ((linked_track < track) || (linked_track == 255)) {
+        trk.set_step(n, SPSX_MASK_PATTERN, true);
+      }
+      trk.microtiming[n] = 0;
+      if (linked_track < track) {
+        trk.set_track_locks_i(n, 0, ln_trk.get_track_lock(n, 0));
+        trk.set_track_locks_i(n, 1, ln_trk.get_track_lock(n, 1));
+      } else if (RAMPage::slice_modes[page_id] == 0) {
+        trk.set_track_locks_i(n, 0, sample_inc * s);
+        trk.set_track_locks_i(n, 1, sample_inc * (s + 1));
+      } else {
+        switch (mode) {
+        default:
+          trk.set_track_locks_i(n, 1, sample_inc * s);
+          trk.set_track_locks_i(n, 0, sample_inc * (s + 1));
+          break;
+        case 5:
+          trk.set_track_locks_i(n, 0, sample_inc * (slices - s));
+          trk.set_track_locks_i(n, 1, sample_inc * (slices - s + 1));
+          break;
+        case 6: {
+          uint8_t t = get_random(slices);
+          trk.set_track_locks_i(n, 0, sample_inc * t);
+          trk.set_track_locks_i(n, 1, sample_inc * (t + 1));
+          break;
+        }
+        case 4: case 3: case 2: case 1: {
+          uint8_t m = mode;
+          if (m == 4) { m = (get_random_byte() > 64) ? s : s + 1; }
+          else { while (m > slices) m--; }
+          if (s % m == 0) {
+            trk.set_track_locks_i(n, 1, sample_inc * s);
+            trk.set_track_locks_i(n, 0, sample_inc * (s + 1));
+          } else {
+            trk.set_track_locks_i(n, 0, sample_inc * s);
+            trk.set_track_locks_i(n, 1, sample_inc * (s + 1));
+          }
+          break;
+        }
+        }
+      }
+    }
+    return true;
+  }
+#endif
+
   auto &trk = mcl_seq.md_tracks[track];
   auto &ln_trk = mcl_seq.md_tracks[linked_track];
   trk.clear_track(clear_locks);
@@ -291,7 +350,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   md_seq_track.clear_track(clear_locks);
 
-  mcl_seq.md_tracks[track].clear_track(clear_locks); // make sure current track does not retrigger
+  SeqTrackUtil::with_md_track(track, [&](auto &t) { t.clear_track(clear_locks); });
 
   md_track.machine.init();
 
@@ -557,8 +616,9 @@ void RAMPage::display() {
         denominator = transition_step + record_len;
     } else {
         uint8_t n = 14 + page_id;
-        numerator = mcl_seq.md_tracks[n].step_count;
-        denominator = mcl_seq.md_tracks[n].length;
+        auto &bt = SeqTrackUtil::get_seq_track(true, n);
+        numerator = bt.step_count;
+        denominator = bt.length;
     }
 
     // Fixed-point arithmetic: multiply first to maintain precision
@@ -620,7 +680,7 @@ void RAMPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param, u
     return;
   }
 
-  if (track_param == 32) {
+  if (track_param == MODEL_MUTE) {
     return;
   } // ignore mute
 

@@ -426,14 +426,9 @@ void SeqStepPage::send_locks(uint8_t step) {
   uint8_t params[MD_PARAMS_PER_TRACK];
   memset(params, 255, sizeof(params));
   bool ignore_locks_disabled = true;
-#if !defined(__AVR__)
-  if (mcl_seq.using_spsx_tracks) {
-    mcl_seq.spsx_tracks[last_md_track].get_step_locks(step, params, ignore_locks_disabled);
-  } else
-#endif
-  {
-    mcl_seq.md_tracks[last_md_track].get_step_locks(step, params, ignore_locks_disabled);
-  }
+  SeqTrackUtil::with_md_track(last_md_track, [&](auto &t) {
+    t.get_step_locks(step, params, ignore_locks_disabled);
+  });
   MD.activate_encoder_interface(params);
 }
 
@@ -703,54 +698,27 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
-#if !defined(__AVR__)
-      if (mcl_seq.using_spsx_tracks) {
-        SPSXSeqTrack &st = mcl_seq.spsx_tracks[last_md_track];
+      SeqTrackUtil::with_md_track(last_md_track, [&](auto &track) {
         if (event->mask == EVENT_BUTTON_RELEASED) {
           for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
             if (note_interface.is_note_on(n)) {
-              st.clear_step_lock(n + (page_select * 16), param);
+              track.clear_step_lock(n + (page_select * 16), param);
             }
           }
         }
         if (event->mask == EVENT_BUTTON_PRESSED) {
-          int8_t lock_idx = st.find_param(param);
+          int8_t lock_idx = track.find_param(param);
           for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
             if (note_interface.is_note_on(n)) {
               uint8_t s = n + (page_select * 16);
-              if (lock_idx == -1 || !st.steps[s].is_lock(lock_idx)) {
-                st.set_track_locks(s, param, MD.kit.params[last_md_track][param]);
+              if (lock_idx == -1 || !track.steps[s].is_lock(lock_idx)) {
+                track.set_track_locks(s, param, MD.kit.params[last_md_track][param]);
                 key_interface.ignoreNextEvent(key);
               }
             }
           }
         }
-      } else
-#endif
-      {
-        MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
-        if (event->mask == EVENT_BUTTON_RELEASED) {
-          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-            if (note_interface.is_note_on(n)) {
-              uint8_t s = n + (page_select * 16);
-              active_track.clear_step_lock(s, param);
-            }
-          }
-        }
-        if (event->mask == EVENT_BUTTON_PRESSED) {
-          int8_t lock_idx = active_track.find_param(param);
-          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-            if (note_interface.is_note_on(n)) {
-              uint8_t s = n + (page_select * 16);
-              if (lock_idx == -1 || !active_track.steps[s].is_lock(lock_idx)) {
-                active_track.set_track_locks(s, param,
-                                             MD.kit.params[last_md_track][param]);
-                key_interface.ignoreNextEvent(key);
-              }
-            }
-          }
-        }
-      }
+      });
       send_locks(step);
       return true;
     }
@@ -819,19 +787,14 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           config_mask_info(false);
         }
         else {
-          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-            if (note_interface.is_note_on(n)) {
-              uint8_t s = n + (page_select * 16);
-#if !defined(__AVR__)
-              if (mcl_seq.using_spsx_tracks) {
-                TOGGLE_BIT64(mcl_seq.spsx_tracks[last_md_track].mute_mask, s);
-              } else
-#endif
-              {
-                TOGGLE_BIT64(active_track.mute_mask, s);
+          SeqTrackUtil::with_md_track(last_md_track, [&](auto &track) {
+            for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+              if (note_interface.is_note_on(n)) {
+                uint8_t s = n + (page_select * 16);
+                TOGGLE_BIT64(track.mute_mask, s);
               }
             }
-          }
+          });
         }
         return true;
       }
@@ -941,14 +904,9 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     if (MidiClock.state != 2) return;
     seq_step_page.last_param_id = track_param;
     seq_step_page.config_encoders();
-#if !defined(__AVR__)
-    if (mcl_seq.using_spsx_tracks) {
-      mcl_seq.spsx_tracks[track].record_track_locks(track_param, value);
-    } else
-#endif
-    {
-      mcl_seq.md_tracks[track].record_track_locks(track_param, value);
-    }
+    SeqTrackUtil::with_md_track(track, [&](auto &t) {
+      t.record_track_locks(track_param, value);
+    });
     return;
   }
 
