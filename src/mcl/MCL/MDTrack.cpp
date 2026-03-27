@@ -77,8 +77,18 @@ void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
   // load_seq_data(seq_track);
 }
 
+static void apply_spsx_defaults(MDMachine &m) {
+  memset(&m.params[MD_PARAMS_LEGACY], 0, MD_PARAMS_PER_TRACK - MD_PARAMS_LEGACY);
+  m.params[MODEL_ENVDCY] = 127;
+  m.params[MODEL_ENVMIX] = 127;
+  m.params[MODEL_LFO2SPD] = 64;
+}
+
 void MDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate");
+  if (active == MD_TRACK_TYPE && MD.is_spsx) {
+    apply_spsx_defaults(machine);
+  }
   MD.insertMachineInKit(tracknumber, &(machine));
   load_seq_data(seq_track);
 }
@@ -90,7 +100,7 @@ void MDTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
 
 void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
   //  trackName[0] = '\0';
-  memcpy(machine.params, MD.kit.params[tracknumber], 24);
+  memcpy(machine.params, MD.kit.params[tracknumber], MD_PARAMS_PER_TRACK);
 
   machine.track = tracknumber;
   machine.level = MD.kit.levels[tracknumber];
