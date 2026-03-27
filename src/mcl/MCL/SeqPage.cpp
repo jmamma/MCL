@@ -123,15 +123,8 @@ void SeqPage::setup() {}
 
 void SeqPage::check_and_set_page_select() {
   reset_undo();
-  uint8_t track_length;
-#if !defined(__AVR__)
-  if (mcl_seq.using_spsx_tracks) {
-    track_length = mcl_seq.spsx_tracks[last_md_track].length;
-  } else
-#endif
-  {
-    track_length = mcl_seq.md_tracks[last_md_track].length;
-  }
+  uint8_t track_length = SeqTrackUtil::with_md_track_r(last_md_track,
+      [](auto &t) -> uint8_t { return t.length; });
   if (page_select >= page_count || page_select * 16 >= track_length) {
     page_select = 0;
   }
@@ -474,20 +467,11 @@ void SeqPage::shed_mask(uint64_t &mask, uint8_t length, uint8_t offset) {
 
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   uint64_t mask;
-#if !defined(__AVR__)
-  if (mcl_seq.using_spsx_tracks) {
-    auto &st = mcl_seq.spsx_tracks[last_md_track];
-    st.get_mask(&mask, SPSX_MASK_LOCKS_ON_STEP);
-    shed_mask(mask, st.length, 0);
-    draw_lock_mask(offset, mask, st.step_count, st.length, show_current_step);
-    return;
-  }
-#endif
-  auto &active_track = mcl_seq.md_tracks[last_md_track];
-  active_track.get_mask(&mask, MASK_LOCKS_ON_STEP);
-  shed_mask(mask, active_track.length, 0);
-  draw_lock_mask(offset, mask, active_track.step_count, active_track.length,
-                 show_current_step);
+  SeqTrackUtil::with_md_track(last_md_track, [&](auto &track) {
+    track.get_mask(&mask, MASK_LOCKS_ON_STEP);
+    shed_mask(mask, track.length, 0);
+    draw_lock_mask(offset, mask, track.step_count, track.length, show_current_step);
+  });
 }
 
 void SeqPage::draw_mask(const uint8_t offset, const uint64_t &pattern_mask,
@@ -506,60 +490,31 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     uint64_t led_mask = 0;
     uint8_t step_count, length;
 
-#if !defined(__AVR__)
-    if (mcl_seq.using_spsx_tracks) {
-      auto &st = mcl_seq.spsx_tracks[last_md_track];
-      step_count = st.step_count;
-      length = st.length;
-      st.get_mask(&mask, SPSX_MASK_PATTERN);
+    SeqTrackUtil::with_md_track(last_md_track, [&](auto &track) {
+      step_count = track.step_count;
+      length = track.length;
+      track.get_mask(&mask, MASK_PATTERN);
 
       switch (mask_type) {
       case MASK_PATTERN:
         led_mask = mask;
-        mute_mask = st.mute_mask;
+        mute_mask = track.mute_mask;
         break;
       case MASK_LOCK:
-        st.get_mask(&lock_mask, SPSX_MASK_LOCK);
+        track.get_mask(&lock_mask, MASK_LOCK);
         led_mask = lock_mask;
         mask = lock_mask;
         break;
       case MASK_MUTE:
-        mute_mask = st.mute_mask;
+        mute_mask = track.mute_mask;
         led_mask = mute_mask;
         break;
       case MASK_SLIDE:
-        st.get_mask(&slide_mask, SPSX_MASK_SLIDE);
+        track.get_mask(&slide_mask, MASK_SLIDE);
         led_mask = slide_mask;
         break;
       }
-    } else
-#endif
-    {
-      auto &active_track = mcl_seq.md_tracks[last_md_track];
-      step_count = active_track.step_count;
-      length = active_track.length;
-      active_track.get_mask(&mask, MASK_PATTERN);
-
-      switch (mask_type) {
-      case MASK_PATTERN:
-        led_mask = mask;
-        mute_mask = active_track.mute_mask;
-        break;
-      case MASK_LOCK:
-        active_track.get_mask(&lock_mask, MASK_LOCK);
-        led_mask = lock_mask;
-        mask = lock_mask;
-        break;
-      case MASK_MUTE:
-        mute_mask = active_track.mute_mask;
-        led_mask = mute_mask;
-        break;
-      case MASK_SLIDE:
-        active_track.get_mask(&slide_mask, MASK_SLIDE);
-        led_mask = slide_mask;
-        break;
-      }
-    }
+    });
 
     shed_mask(led_mask, length, offset);
     draw_mask(offset, mask, step_count, length,
@@ -569,14 +524,9 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       return;
 
     uint64_t locks_on_step_mask_ = 0;
-#if !defined(__AVR__)
-    if (mcl_seq.using_spsx_tracks) {
-      mcl_seq.spsx_tracks[last_md_track].get_mask(&locks_on_step_mask_, SPSX_MASK_LOCKS_ON_STEP);
-    } else
-#endif
-    {
-      mcl_seq.md_tracks[last_md_track].get_mask(&locks_on_step_mask_, MASK_LOCKS_ON_STEP);
-    }
+    SeqTrackUtil::with_md_track(last_md_track, [&](auto &track) {
+      track.get_mask(&locks_on_step_mask_, MASK_LOCKS_ON_STEP);
+    });
     shed_mask(locks_on_step_mask_, length, offset);
 
     if ((uint16_t)led_mask != trigled_mask) {
@@ -755,44 +705,22 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   bool is_md_device = SeqTrackUtil::is_md_device(opt_midi_device_capture);
   if (is_md_device) {
-#if !defined(__AVR__)
-    if (mcl_seq.using_spsx_tracks) {
-      if (multi) {
-        for (uint8_t i = 0; i < mcl_seq.num_md_tracks; i++) {
-          mcl_seq.spsx_tracks[i].set_length(length);
-        }
-      } else if (mcl_cfg.poly_mask && is_poly) {
-        for (uint8_t c = 0; c < 16; c++) {
-          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
-            mcl_seq.spsx_tracks[c].set_length(length);
-          }
-        }
-      } else {
-        mcl_seq.spsx_tracks[last_md_track].set_length(length);
-      }
-      auto &st = mcl_seq.spsx_tracks[last_md_track];
-      MD.sync_seqtrack(st.length, st.speed, st.step_count);
-    } else
-#endif
-    {
-      if (multi) {
-        SeqTrackUtil::for_each_track(true,
-            [&](SeqTrackCond &track, uint8_t) { track.set_length(length); });
-      } else {
-        if ((mcl_cfg.poly_mask) && (is_poly)) {
-          for (uint8_t c = 0; c < 16; c++) {
-            if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
-              mcl_seq.md_tracks[c].set_length(length);
-            }
-          }
-        } else {
-          selected_track(true).set_length(length);
+    if (multi) {
+      SeqTrackUtil::for_each_md_track([&](auto &track, uint8_t) {
+        track.set_length(length);
+      });
+    } else if (mcl_cfg.poly_mask && is_poly) {
+      for (uint8_t c = 0; c < 16; c++) {
+        if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+          SeqTrackUtil::with_md_track(c, [&](auto &t) { t.set_length(length); });
         }
       }
-      auto &active_track = mcl_seq.md_tracks[last_md_track];
-      MD.sync_seqtrack(active_track.length, active_track.speed,
-                       active_track.step_count);
+    } else {
+      SeqTrackUtil::with_md_track(last_md_track, [&](auto &t) { t.set_length(length); });
     }
+    SeqTrackUtil::with_md_track(last_md_track, [](auto &t) {
+      MD.sync_seqtrack(t.length, t.speed, t.step_count);
+    });
   } else {
 #ifdef EXT_TRACKS
     if (multi) {
