@@ -87,24 +87,26 @@ static inline SeqTrackCond &selected_track(bool is_md_device) {
                                  selected_track_index(is_md_device));
 }
 
-static inline void apply_track_op(bool is_md_device, bool apply_all,
-                                  void (SeqTrackCond::*fn)()) {
-  if (apply_all) {
+template <typename Fn>
+static inline void apply_track_op(bool is_md_device, bool apply_all, Fn fn) {
+  if (is_md_device) {
+    uint8_t len = apply_all ? mcl_seq.num_md_tracks : 1;
+    uint8_t start = apply_all ? 0 : selected_track_index(true);
+    for (uint8_t i = start; i < start + len; i++) {
+      SeqTrackUtil::with_md_track(i, fn);
+    }
+  } else if (apply_all) {
     SeqTrackUtil::for_each_track(
-        is_md_device, [&](SeqTrackCond &track, uint8_t) { (track.*fn)(); });
+        is_md_device, [&](SeqTrackCond &track, uint8_t) { fn(track); });
   } else {
-    (selected_track(is_md_device).*fn)();
+    fn(selected_track(is_md_device));
   }
 }
 
 static inline void apply_transpose(bool is_md_device, bool apply_all,
                                    int8_t offset) {
-  if (apply_all) {
-    SeqTrackUtil::for_each_track(
-        is_md_device, [&](SeqTrackCond &track, uint8_t) { track.transpose(offset); });
-  } else {
-    selected_track(is_md_device).transpose(offset);
-  }
+  apply_track_op(is_md_device, apply_all,
+      [&](auto &t) { t.transpose(offset); });
 }
 
 static inline void display_popup(const char *str_P) {
@@ -121,8 +123,16 @@ void SeqPage::setup() {}
 
 void SeqPage::check_and_set_page_select() {
   reset_undo();
-  if (page_select >= page_count ||
-      page_select * 16 >= mcl_seq.md_tracks[last_md_track].length) {
+  uint8_t track_length;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    track_length = mcl_seq.spsx_tracks[last_md_track].length;
+  } else
+#endif
+  {
+    track_length = mcl_seq.md_tracks[last_md_track].length;
+  }
+  if (page_select >= page_count || page_select * 16 >= track_length) {
     page_select = 0;
   }
   ElektronDevice *elektron_dev = midi_device->asElektronDevice();
@@ -291,9 +301,9 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     }
     last_md_track = track;
     is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
-    MD.sync_seqtrack(active_track.length, active_track.speed,
-                     active_track.step_count);
+    auto &base_track = SeqTrackUtil::get_seq_track(true, last_md_track);
+    MD.sync_seqtrack(base_track.length, base_track.speed,
+                     base_track.step_count);
     check_and_set_page_select();
     if (mcl_cfg.track_select && send) {
       MD.currentTrack = track;
@@ -324,8 +334,8 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
     SET_BIT16(mute_mask, last_ext_track);
   }
 
-  SeqTrackUtil::for_each_track(is_md_device,
-      [&](SeqTrackCond &seq_track, uint8_t idx) {
+  SeqTrackUtil::for_each_seq_track(is_md_device,
+      [&](SeqTrack &seq_track, uint8_t idx) {
         if (seq_track.mute_state == SEQ_MUTE_OFF) {
           uint8_t d = offset + idx;
           if (d < 16) {
@@ -359,13 +369,13 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         key_interface.is_key_down(MDX_KEY_FUNC)) {
       switch (key) {
       case MDX_KEY_LEFT:
-        mcl_seq.md_tracks[last_md_track].rotate_left();
+        SeqTrackUtil::with_md_track(last_md_track, [](auto &t) { t.rotate_left(); });
         return true;
       case MDX_KEY_RIGHT:
-        mcl_seq.md_tracks[last_md_track].rotate_right();
+        SeqTrackUtil::with_md_track(last_md_track, [](auto &t) { t.rotate_right(); });
         return true;
       case MDX_KEY_UP:
-        mcl_seq.md_tracks[last_md_track].reverse();
+        SeqTrackUtil::with_md_track(last_md_track, [](auto &t) { t.reverse(); });
         return true;
       }
     }
@@ -390,10 +400,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (!show_seq_menu) {
         show_seq_menu = true;
         if (opt_midi_device_capture == &MD) {
-          auto &active_track = mcl_seq.md_tracks[last_md_track];
+          auto &bt = SeqTrackUtil::get_seq_track(true, last_md_track);
           opt_trackid = last_md_track + 1;
-          opt_speed = active_track.speed;
-          opt_length = active_track.length;
+          opt_speed = bt.speed;
+          opt_length = bt.length;
         } else {
           opt_trackid = last_ext_track + 1;
           opt_speed = mcl_seq.ext_tracks[last_ext_track].speed;
@@ -463,8 +473,17 @@ void SeqPage::shed_mask(uint64_t &mask, uint8_t length, uint8_t offset) {
 }
 
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
-  auto &active_track = mcl_seq.md_tracks[last_md_track];
   uint64_t mask;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    auto &st = mcl_seq.spsx_tracks[last_md_track];
+    st.get_mask(&mask, SPSX_MASK_LOCKS_ON_STEP);
+    shed_mask(mask, st.length, 0);
+    draw_lock_mask(offset, mask, st.step_count, st.length, show_current_step);
+    return;
+  }
+#endif
+  auto &active_track = mcl_seq.md_tracks[last_md_track];
   active_track.get_mask(&mask, MASK_LOCKS_ON_STEP);
   shed_mask(mask, active_track.length, 0);
   draw_lock_mask(offset, mask, active_track.step_count, active_track.length,
@@ -483,41 +502,82 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
                         bool show_current_step) {
 
   if (device == DEVICE_MD) {
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
     uint64_t mask, lock_mask, mute_mask = 0, slide_mask = 0;
-    active_track.get_mask(&mask, MASK_PATTERN);
     uint64_t led_mask = 0;
+    uint8_t step_count, length;
 
-    switch (mask_type) {
-    case MASK_PATTERN:
-      led_mask = mask;
-      mute_mask = active_track.mute_mask;
-      break;
-    case MASK_LOCK:
-      active_track.get_mask(&lock_mask, MASK_LOCK);
-      led_mask = lock_mask;
-      mask = lock_mask;
-      break;
-    case MASK_MUTE:
-      mute_mask = active_track.mute_mask;
-      led_mask = mute_mask;
-      break;
-    case MASK_SLIDE:
-      active_track.get_mask(&slide_mask, MASK_SLIDE);
-      led_mask = slide_mask;
-      break;
+#if !defined(__AVR__)
+    if (mcl_seq.using_spsx_tracks) {
+      auto &st = mcl_seq.spsx_tracks[last_md_track];
+      step_count = st.step_count;
+      length = st.length;
+      st.get_mask(&mask, SPSX_MASK_PATTERN);
+
+      switch (mask_type) {
+      case MASK_PATTERN:
+        led_mask = mask;
+        mute_mask = st.mute_mask;
+        break;
+      case MASK_LOCK:
+        st.get_mask(&lock_mask, SPSX_MASK_LOCK);
+        led_mask = lock_mask;
+        mask = lock_mask;
+        break;
+      case MASK_MUTE:
+        mute_mask = st.mute_mask;
+        led_mask = mute_mask;
+        break;
+      case MASK_SLIDE:
+        st.get_mask(&slide_mask, SPSX_MASK_SLIDE);
+        led_mask = slide_mask;
+        break;
+      }
+    } else
+#endif
+    {
+      auto &active_track = mcl_seq.md_tracks[last_md_track];
+      step_count = active_track.step_count;
+      length = active_track.length;
+      active_track.get_mask(&mask, MASK_PATTERN);
+
+      switch (mask_type) {
+      case MASK_PATTERN:
+        led_mask = mask;
+        mute_mask = active_track.mute_mask;
+        break;
+      case MASK_LOCK:
+        active_track.get_mask(&lock_mask, MASK_LOCK);
+        led_mask = lock_mask;
+        mask = lock_mask;
+        break;
+      case MASK_MUTE:
+        mute_mask = active_track.mute_mask;
+        led_mask = mute_mask;
+        break;
+      case MASK_SLIDE:
+        active_track.get_mask(&slide_mask, MASK_SLIDE);
+        led_mask = slide_mask;
+        break;
+      }
     }
-    shed_mask(led_mask, active_track.length, offset);
-    draw_mask(offset, mask, active_track.step_count, active_track.length,
+
+    shed_mask(led_mask, length, offset);
+    draw_mask(offset, mask, step_count, length,
               mute_mask, slide_mask, show_current_step);
 
     if (recording)
       return;
 
     uint64_t locks_on_step_mask_ = 0;
-
-    active_track.get_mask(&locks_on_step_mask_, MASK_LOCKS_ON_STEP);
-    shed_mask(locks_on_step_mask_, active_track.length, offset);
+#if !defined(__AVR__)
+    if (mcl_seq.using_spsx_tracks) {
+      mcl_seq.spsx_tracks[last_md_track].get_mask(&locks_on_step_mask_, SPSX_MASK_LOCKS_ON_STEP);
+    } else
+#endif
+    {
+      mcl_seq.md_tracks[last_md_track].get_mask(&locks_on_step_mask_, MASK_LOCKS_ON_STEP);
+    }
+    shed_mask(locks_on_step_mask_, length, offset);
 
     if ((uint16_t)led_mask != trigled_mask) {
       trigled_mask = led_mask;
@@ -532,17 +592,21 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       MD.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
     }
 
-    GUI_hardware.led.set_trigleds(led_mask, TRIGLED_STEPEDIT); //Normal
-    GUI_hardware.led.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1); //Blink leds
-    if (MidiClock.state == 2) { GUI_hardware.led.toggle_trigled(active_track.step_count - offset); }
+    GUI_hardware.led.set_trigleds(led_mask, TRIGLED_STEPEDIT);
+    GUI_hardware.led.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
+    if (MidiClock.state == 2) { GUI_hardware.led.toggle_trigled(step_count - offset); }
   }
 }
 
 // from knob value to step value
 uint8_t SeqPage::translate_to_step_conditional(uint8_t condition,
                                                /*OUT*/ bool *plock) {
-  if (condition > NUM_TRIG_CONDITIONS) {
-    condition = condition - NUM_TRIG_CONDITIONS;
+  uint8_t num_cond = NUM_TRIG_CONDITIONS;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) num_cond = SPSX_NUM_TRIG_CONDITIONS;
+#endif
+  if (condition > num_cond) {
+    condition = condition - num_cond;
     *plock = true;
   } else {
     *plock = false;
@@ -553,8 +617,12 @@ uint8_t SeqPage::translate_to_step_conditional(uint8_t condition,
 // from step value to knob value
 uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition,
                                                /*IN*/ bool plock) {
+  uint8_t num_cond = NUM_TRIG_CONDITIONS;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) num_cond = SPSX_NUM_TRIG_CONDITIONS;
+#endif
   if (plock) {
-    condition = condition + NUM_TRIG_CONDITIONS;
+    condition = condition + num_cond;
   }
   return condition;
 }
@@ -569,9 +637,63 @@ void SeqPage::draw_knob_conditional(uint8_t cond) {
 void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
   if (!s) return;
 
-  if (c > NUM_TRIG_CONDITIONS)
-    c -= NUM_TRIG_CONDITIONS;
+  uint8_t num_cond = NUM_TRIG_CONDITIONS;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) num_cond = SPSX_NUM_TRIG_CONDITIONS;
+#endif
 
+  if (c > num_cond)
+    c -= num_cond;
+
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    // SPSX condition names
+    char a = '-', b = '-';
+    if (c == 0) {
+      // 100% = default, show as empty
+      a = '-'; b = '-';
+    } else if (c <= SPSX_COND_10PCT) {
+      // Percentage: 90,75,66,50,33,25,10
+      static const uint8_t pcts[] = {90, 75, 66, 50, 33, 25, 10};
+      uint8_t pct = pcts[c - 1];
+      a = '0' + (pct / 10);
+      b = '0' + (pct % 10);
+    } else if (c == SPSX_COND_ONESHOT) {
+      a = '1'; b = 'S';
+    } else if (c == SPSX_COND_FIRST) {
+      a = '1'; b = 'T';
+    } else if (c == SPSX_COND_NOT_FIRST) {
+      a = '!'; b = '1';
+    } else if (c == SPSX_COND_FILL) {
+      a = 'F'; b = 'L';
+    } else if (c == SPSX_COND_NOT_FILL) {
+      a = '!'; b = 'F';
+    } else if (c == SPSX_COND_PRE) {
+      a = 'P'; b = 'R';
+    } else if (c == SPSX_COND_NOT_PRE) {
+      a = '!'; b = 'P';
+    } else if (c == SPSX_COND_NEI) {
+      a = 'N'; b = 'E';
+    } else if (c == SPSX_COND_NOT_NEI) {
+      a = '!'; b = 'N';
+    } else if (c >= SPSX_COND_ITER_BASE && c <= SPSX_COND_ITER_MAX) {
+      uint8_t x, y;
+      if (spsx_cond_iter_decode(c, x, y)) {
+        a = '0' + x;
+        b = '0' + y;
+      }
+    }
+    s[0] = a;
+    s[1] = b;
+    uint8_t i = 2;
+    if (seq_param1.getValue() > num_cond)
+      s[i++] = m ? '+' : '^';
+    s[i] = '\0';
+    return;
+  }
+#endif
+
+  // Legacy MD condition names
   static const char PROGMEM ptab[] = "12579";  // probability digits
 
   char a = 'L', b = '1';
@@ -590,7 +712,7 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
   s[1] = b;
   uint8_t i = 2;
 
-  if (seq_param1.getValue() > NUM_TRIG_CONDITIONS)
+  if (seq_param1.getValue() > num_cond)
     s[i++] = m ? '+' : '^';
 
   s[i] = '\0';
@@ -601,6 +723,24 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
   mclstr_copy_progmem(K, mclstr_dash, sizeof(K));
   K[3] = '\0';
 
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    // SPSX: timing param is microtiming mapped to 0..254 (center=127)
+    int8_t mt = (int8_t)(timing - 127);
+    if (mt < 0) {
+      K[0] = '-';
+      mcl_gui.put_value_at(-mt, K + 1);
+    } else if (mt > 0) {
+      K[0] = '+';
+      mcl_gui.put_value_at(mt, K + 1);
+    }
+    // mt == 0: keep dashes
+    draw_knob(1, mclstr_utim, K);
+    return;
+  }
+#endif
+
+  // Legacy MD timing display
   if (timing == 0) {
   } else if ((timing < timing_mid) && (timing != 0)) {
     mcl_gui.put_value_at(timing_mid - timing, K + 1);
@@ -615,23 +755,44 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   bool is_md_device = SeqTrackUtil::is_md_device(opt_midi_device_capture);
   if (is_md_device) {
-    if (multi) {
-      SeqTrackUtil::for_each_track(true,
-          [&](SeqTrackCond &track, uint8_t) { track.set_length(length); });
-    } else {
-      if ((mcl_cfg.poly_mask) && (is_poly)) {
+#if !defined(__AVR__)
+    if (mcl_seq.using_spsx_tracks) {
+      if (multi) {
+        for (uint8_t i = 0; i < mcl_seq.num_md_tracks; i++) {
+          mcl_seq.spsx_tracks[i].set_length(length);
+        }
+      } else if (mcl_cfg.poly_mask && is_poly) {
         for (uint8_t c = 0; c < 16; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
-            mcl_seq.md_tracks[c].set_length(length);
+            mcl_seq.spsx_tracks[c].set_length(length);
           }
         }
       } else {
-        selected_track(true).set_length(length);
+        mcl_seq.spsx_tracks[last_md_track].set_length(length);
       }
+      auto &st = mcl_seq.spsx_tracks[last_md_track];
+      MD.sync_seqtrack(st.length, st.speed, st.step_count);
+    } else
+#endif
+    {
+      if (multi) {
+        SeqTrackUtil::for_each_track(true,
+            [&](SeqTrackCond &track, uint8_t) { track.set_length(length); });
+      } else {
+        if ((mcl_cfg.poly_mask) && (is_poly)) {
+          for (uint8_t c = 0; c < 16; c++) {
+            if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+              mcl_seq.md_tracks[c].set_length(length);
+            }
+          }
+        } else {
+          selected_track(true).set_length(length);
+        }
+      }
+      auto &active_track = mcl_seq.md_tracks[last_md_track];
+      MD.sync_seqtrack(active_track.length, active_track.speed,
+                       active_track.step_count);
     }
-    auto &active_track = mcl_seq.md_tracks[last_md_track];
-    MD.sync_seqtrack(active_track.length, active_track.speed,
-                     active_track.step_count);
   } else {
 #ifdef EXT_TRACKS
     if (multi) {
@@ -728,15 +889,18 @@ void opt_clear_track_handler() {
       oled_display.display();
       uint8_t old_mutes[16];
       for (uint8_t n = 0; n < 16; n++) {
-        old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
-        mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
+        auto &bt = SeqTrackUtil::get_seq_track(true, n);
+        old_mutes[n] = bt.mute_state;
+        bt.mute_state = SEQ_MUTE_ON;
       }
       if (copy) {
         opt_copy_track_handler(opt_clear);
       }
       for (uint8_t n = 0; n < 16; ++n) {
-        mcl_seq.md_tracks[n].clear_track();
-        mcl_seq.md_tracks[n].mute_state = old_mutes[n];
+        SeqTrackUtil::with_md_track(n, [&](auto &t) {
+          t.clear_track();
+          t.mute_state = old_mutes[n];
+        });
       }
     } else if (opt_clear == 1) {
       bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
@@ -753,11 +917,11 @@ void opt_clear_track_handler() {
         for (uint8_t c = 0; c < 16; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
             mcl_clipboard.copy_sequencer_track(c);
-            mcl_seq.md_tracks[c].clear_track();
+            SeqTrackUtil::with_md_track(c, [](auto &t) { t.clear_track(); });
           }
         }
       } else {
-        mcl_seq.md_tracks[last_md_track].clear_track();
+        SeqTrackUtil::with_md_track(last_md_track, [](auto &t) { t.clear_track(); });
       }
     }
   } else {
@@ -781,14 +945,11 @@ void opt_clear_locks_handler() {
 
   if (opt_midi_device_capture == &MD) {
     if (opt_clear == 2) {
-      for (uint8_t n = 0; n < 16; ++n) {
-        oled_display.textbox_P(mclstr_clear_md, mclstr_locks);
-
-        mcl_seq.md_tracks[n].clear_locks();
-      }
+      oled_display.textbox_P(mclstr_clear_md, mclstr_locks);
+      SeqTrackUtil::for_each_md_track([](auto &t, uint8_t) { t.clear_locks(); });
     } else if (opt_clear == 1) {
       oled_display.textbox_P(mclstr_clear, mclstr_locks);
-      mcl_seq.md_tracks[last_md_track].clear_locks();
+      SeqTrackUtil::with_md_track(last_md_track, [](auto &t) { t.clear_locks(); });
     }
   } else {
     auto &active_track = mcl_seq.ext_tracks[last_ext_track];
@@ -968,14 +1129,24 @@ void opt_clear_page_handler() {
   }
   oled_display.textbox_P(mclstr_clear, mclstr_page);
   MD.popup_text(57);
-  MDSeqStep empty_step;
-  memset(&empty_step, 0, sizeof(empty_step));
-  for (uint8_t n = 0; n < 16; n++) {
-    uint8_t step = n + SeqPage::page_select * 16;
-    if (step >= mcl_seq.md_tracks[last_md_track].length) {
-      return;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    auto &st = mcl_seq.spsx_tracks[last_md_track];
+    for (uint8_t n = 0; n < 16; n++) {
+      uint8_t step = n + SeqPage::page_select * 16;
+      if (step >= st.length) return;
+      st.clear_step(step);
     }
-    mcl_seq.md_tracks[last_md_track].paste_step(step, &empty_step);
+  } else
+#endif
+  {
+    MDSeqStep empty_step;
+    memset(&empty_step, 0, sizeof(empty_step));
+    for (uint8_t n = 0; n < 16; n++) {
+      uint8_t step = n + SeqPage::page_select * 16;
+      if (step >= mcl_seq.md_tracks[last_md_track].length) return;
+      mcl_seq.md_tracks[last_md_track].paste_step(step, &empty_step);
+    }
   }
 }
 
@@ -993,12 +1164,25 @@ void opt_copy_page_handler(uint8_t op) {
     oled_display.textbox_P(mclstr_copy, mclstr_page);
     MD.popup_text(54);
   }
-  for (uint8_t n = 0; n < 16; n++) {
-    uint8_t step = n + SeqPage::page_select * 16;
-    if (step >= mcl_seq.md_tracks[last_md_track].length) {
-      return;
+  uint8_t track_len;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    auto &st = mcl_seq.spsx_tracks[last_md_track];
+    track_len = st.length;
+    for (uint8_t n = 0; n < 16; n++) {
+      uint8_t step = n + SeqPage::page_select * 16;
+      if (step >= track_len) return;
+      st.copy_step(step, &mcl_clipboard.spsx_steps[n]);
     }
-    mcl_seq.md_tracks[last_md_track].copy_step(step, &mcl_clipboard.steps[n]);
+  } else
+#endif
+  {
+    track_len = mcl_seq.md_tracks[last_md_track].length;
+    for (uint8_t n = 0; n < 16; n++) {
+      uint8_t step = n + SeqPage::page_select * 16;
+      if (step >= track_len) return;
+      mcl_seq.md_tracks[last_md_track].copy_step(step, &mcl_clipboard.steps[n]);
+    }
   }
 }
 
@@ -1011,12 +1195,25 @@ void opt_paste_page_handler() {
     oled_display.textbox_P(mclstr_paste, mclstr_page);
     MD.popup_text(56);
   }
-  for (uint8_t n = 0; n < 16; n++) {
-    uint8_t step = n + SeqPage::page_select * 16;
-    if (step >= mcl_seq.md_tracks[last_md_track].length) {
-      return;
+  uint8_t track_len;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    auto &st = mcl_seq.spsx_tracks[last_md_track];
+    track_len = st.length;
+    for (uint8_t n = 0; n < 16; n++) {
+      uint8_t step = n + SeqPage::page_select * 16;
+      if (step >= track_len) return;
+      st.paste_step(step, &mcl_clipboard.spsx_steps[n]);
     }
-    mcl_seq.md_tracks[last_md_track].paste_step(step, &mcl_clipboard.steps[n]);
+  } else
+#endif
+  {
+    track_len = mcl_seq.md_tracks[last_md_track].length;
+    for (uint8_t n = 0; n < 16; n++) {
+      uint8_t step = n + SeqPage::page_select * 16;
+      if (step >= track_len) return;
+      mcl_seq.md_tracks[last_md_track].paste_step(step, &mcl_clipboard.steps[n]);
+    }
   }
 }
 
@@ -1034,11 +1231,19 @@ void opt_clear_step_handler() {
   }
   oled_display.textbox_P(mclstr_clear_step);
   MD.popup_text_P(mclstr_clear_step);
-  MDSeqStep empty_step;
-  memset(&empty_step, 0, sizeof(empty_step));
-  mcl_seq.md_tracks[last_md_track].paste_step(
-      SeqPage::step_select + SeqPage::page_select * 16, &empty_step);
-  mcl_seq.md_tracks[last_md_track].clean_params();
+  uint8_t step = SeqPage::step_select + SeqPage::page_select * 16;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    mcl_seq.spsx_tracks[last_md_track].clear_step(step);
+    mcl_seq.spsx_tracks[last_md_track].clean_params();
+  } else
+#endif
+  {
+    MDSeqStep empty_step;
+    memset(&empty_step, 0, sizeof(empty_step));
+    mcl_seq.md_tracks[last_md_track].paste_step(step, &empty_step);
+    mcl_seq.md_tracks[last_md_track].clean_params();
+  }
 }
 
 void opt_copy_step_handler_cb() { opt_copy_step_handler(255); }
@@ -1054,9 +1259,15 @@ void opt_copy_step_handler(uint8_t op) {
     oled_display.textbox_P(mclstr_copy_step);
     MD.popup_text_P(mclstr_copy_step);
   }
-  mcl_seq.md_tracks[last_md_track].copy_step(SeqPage::step_select +
-                                                 SeqPage::page_select * 16,
-                                             &mcl_clipboard.steps[0]);
+  uint8_t step = SeqPage::step_select + SeqPage::page_select * 16;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    mcl_seq.spsx_tracks[last_md_track].copy_step(step, &mcl_clipboard.spsx_steps[0]);
+  } else
+#endif
+  {
+    mcl_seq.md_tracks[last_md_track].copy_step(step, &mcl_clipboard.steps[0]);
+  }
 }
 
 void opt_paste_step_handler() {
@@ -1065,20 +1276,32 @@ void opt_paste_step_handler() {
     oled_display.textbox_P(mclstr_undo_step);
     MD.popup_text_P(mclstr_undo_step);
   } else {
-
     oled_display.textbox_P(mclstr_paste_step);
     MD.popup_text_P(mclstr_paste_step);
   }
-  mcl_seq.md_tracks[last_md_track].paste_step(SeqPage::step_select +
-                                                  SeqPage::page_select * 16,
-                                              &mcl_clipboard.steps[0]);
+  uint8_t step = SeqPage::step_select + SeqPage::page_select * 16;
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    mcl_seq.spsx_tracks[last_md_track].paste_step(step, &mcl_clipboard.spsx_steps[0]);
+  } else
+#endif
+  {
+    mcl_seq.md_tracks[last_md_track].paste_step(step, &mcl_clipboard.steps[0]);
+  }
 }
 
 void opt_mute_step_handler() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     if (note_interface.is_note_on(n)) {
-      TOGGLE_BIT64(mcl_seq.md_tracks[last_md_track].mute_mask,
-                   n + SeqPage::page_select * 16);
+      uint8_t s = n + SeqPage::page_select * 16;
+#if !defined(__AVR__)
+      if (mcl_seq.using_spsx_tracks) {
+        TOGGLE_BIT64(mcl_seq.spsx_tracks[last_md_track].mute_mask, s);
+      } else
+#endif
+      {
+        TOGGLE_BIT64(mcl_seq.md_tracks[last_md_track].mute_mask, s);
+      }
     }
   }
 }
@@ -1092,8 +1315,12 @@ void opt_clear_step_locks_handler() {
     if (note_interface.is_note_on(n)) {
 
       if (opt_midi_device_capture == &MD) {
-        mcl_seq.md_tracks[last_md_track].clear_step_locks(
-            n + SeqPage::page_select * 16);
+        uint8_t s = n + SeqPage::page_select * 16;
+#if !defined(__AVR__)
+        if (mcl_seq.using_spsx_tracks) { mcl_seq.spsx_tracks[last_md_track].clear_step(s); }
+        else
+#endif
+        { mcl_seq.md_tracks[last_md_track].clear_step_locks(s); }
       } else {
         //        mcl_seq.ext_tracks[last_ext_track].clear_step_locks(
         //          SeqPage::step_select + SeqPage::page_select * 16);
@@ -1108,16 +1335,16 @@ void opt_shift_track_handler() {
       SeqTrackUtil::is_md_device(opt_midi_device_capture);
   switch (opt_shift) {
   case 1:
-    apply_track_op(is_md_device, false, &SeqTrackCond::rotate_left);
+    apply_track_op(is_md_device, false, [](auto &t) { t.rotate_left(); });
     break;
   case 2:
-    apply_track_op(is_md_device, false, &SeqTrackCond::rotate_right);
+    apply_track_op(is_md_device, false, [](auto &t) { t.rotate_right(); });
     break;
   case 3:
-    apply_track_op(is_md_device, true, &SeqTrackCond::rotate_left);
+    apply_track_op(is_md_device, true, [](auto &t) { t.rotate_left(); });
     break;
   case 4:
-    apply_track_op(is_md_device, true, &SeqTrackCond::rotate_right);
+    apply_track_op(is_md_device, true, [](auto &t) { t.rotate_right(); });
     break;
   }
 }
@@ -1129,7 +1356,7 @@ void opt_reverse_track_handler() {
   bool is_md_device =
       SeqTrackUtil::is_md_device(opt_midi_device_capture);
   bool apply_all = opt_reverse == 2;
-  apply_track_op(is_md_device, apply_all, &SeqTrackCond::reverse);
+  apply_track_op(is_md_device, apply_all, [](auto &t) { t.reverse(); });
 }
 
 void opt_transpose_track_handler() {
@@ -1199,7 +1426,7 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
   if (_playing_idx == 255) {
     uint8_t step_count;
     if (midi_device == &MD) {
-      step_count = mcl_seq.md_tracks[last_md_track].step_count;
+      step_count = SeqTrackUtil::get_seq_track(true, last_md_track).step_count;
     }
 #ifdef EXT_TRACKS
     else {

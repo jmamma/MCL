@@ -27,7 +27,7 @@ void MixerPage::oled_draw_mutes() {
   if (preview_mute_set != 255 && load_types[preview_mute_set][!is_md_device] == 0) { draw = false; }
   for (uint8_t i = 0; i < len; ++i) {
     // draw routing
-    SeqTrackCond &seq_track = SeqTrackUtil::get_track(is_md_device, i);
+    SeqTrack &seq_track = SeqTrackUtil::get_seq_track(is_md_device, i);
 
     uint8_t mute_state =
         preview_mute_set != 255
@@ -365,9 +365,11 @@ void MixerPage::record_mutes_set(bool state) {
   for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
       if (is_md_device) {
-        mcl_seq.md_tracks[i].record_mutes = state;
-        if (!state)
-          mcl_seq.md_tracks[i].clear_mute();
+        SeqTrack &bt = SeqTrackUtil::get_seq_track(true, i);
+        bt.record_mutes = state;
+        if (!state) {
+          SeqTrackUtil::with_md_track(i, [](auto &t) { t.clear_mute(); });
+        }
       } else if (i < mcl_seq.num_ext_tracks) {
         mcl_seq.ext_tracks[i].record_mutes = state;
         if (!state)
@@ -385,9 +387,10 @@ void MixerPage::disable_record_mutes(bool clear) {
         mcl_seq.ext_tracks[n].clear_mute();
       }
     }
-    mcl_seq.md_tracks[n].record_mutes = false;
+    SeqTrack &bt = SeqTrackUtil::get_seq_track(true, n);
+    bt.record_mutes = false;
     if (clear) {
-      mcl_seq.md_tracks[n].clear_mute();
+      SeqTrackUtil::with_md_track(n, [](auto &t) { t.clear_mute(); });
     }
   }
   if (!seq_step_page.recording) {
@@ -409,7 +412,7 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
       uint8_t len = SeqTrackUtil::track_count(is_md_device);
 
       for (uint8_t n = 0; n < len; n++) {
-        SeqTrackCond &seq_track = SeqTrackUtil::get_track(is_md_device, n);
+        SeqTrack &seq_track = SeqTrackUtil::get_seq_track(is_md_device, n);
 
         bool mute_state = IS_BIT_CLEAR16(mute_sets[dev].mutes[state], n);
         // Flip
@@ -455,7 +458,7 @@ void MixerPage::toggle_or_solo(bool solo) {
   for (uint8_t i = 0; i < len; i++) {
     bool note_on = note_interface.is_note_on(i);
     bool mute_state = false;
-    SeqTrackCond &seq_track = SeqTrackUtil::get_track(is_md_device, i);
+    SeqTrack &seq_track = SeqTrackUtil::get_seq_track(is_md_device, i);
 
     if (solo) {
       if (seq_track.mute_state == note_on) {
@@ -501,8 +504,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           if (ext_key_down) {
             mute_toggle = 1;
           }
-          SeqTrackCond &seq_track =
-              SeqTrackUtil::get_track(is_md_device, track);
+          SeqTrack &seq_track =
+              SeqTrackUtil::get_seq_track(is_md_device, track);
 
           uint8_t mute_set = preview_mute_set;
 
@@ -574,7 +577,8 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (midi_device == &MD) {
           for (uint8_t i = 0; i < 16; i++) {
             if (note_interface.is_note_on(i)) {
-              for (uint8_t c = 0; c < 24; c++) {
+              uint8_t num_params = MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+              for (uint8_t c = 0; c < num_params; c++) {
                 MD.restore_kit_param(i, c);
               }
             }
@@ -847,7 +851,7 @@ uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 
 void MixerPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
                                              uint8_t value) {
-  if (track_param == 32) {
+  if (track_param == MODEL_MUTE) {
     redraw_mutes = true;
     return;
   } // don't process mute

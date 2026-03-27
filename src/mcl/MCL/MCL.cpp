@@ -235,7 +235,7 @@ bool tbd_handleEvent(gui_event_t *event) {
                     MD.triggerTrack(key, 127);
                     mixer_page.trig(key);
                     if (SeqPage::recording && MidiClock.state == 2) {
-                        mcl_seq.md_tracks[key].record_track(127);
+                        SeqTrackUtil::with_md_track(key, [](auto &t) { t.record_track(127); });
                     }
                 }
             }

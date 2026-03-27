@@ -51,6 +51,15 @@ void MCLSeq::setup() {
     ext_arp_tracks[i].track_number = i;
   }
 #endif
+#if !defined(__AVR__)
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    spsx_tracks[i].track_number = i;
+    spsx_tracks[i].length = 16;
+    spsx_tracks[i].speed = SPSX_SPEED_1X;
+    spsx_tracks[i].mute_state = SPSX_MUTE_OFF;
+    spsx_tracks[i].seq_class = this;
+  }
+#endif
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].length = 16;
     aux_tracks[i].speed = SEQ_SPEED_1X;
@@ -116,10 +125,18 @@ void MCLSeq::onMidiStartImmediateCallback() {
   seq_tx3.txRb->init();
   seq_tx4.txRb->init();
 
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].reset();
-    md_arp_tracks[i].reset();
+  SeqTrackUtil::for_each_md_track([](auto &track, uint8_t) { track.reset(); });
+#if !defined(__AVR__)
+  if (using_spsx_tracks) {
+    neighbor_trig_mask = 0;
+  } else
+#endif
+  {
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
+      md_arp_tracks[i].reset();
+    }
   }
+#endif
 
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
@@ -169,14 +186,12 @@ void MCLSeq::onMidiStopCallback() {
 #endif
   MD.reset_dsp_params();
 
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].reset_params();
-    md_tracks[i].send_notes_off();
-    md_tracks[i].locks_slides_recalc = 255;
-    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-      md_tracks[i].locks_slide_data[c].init();
-    }
-  }
+  SeqTrackUtil::for_each_md_track([](auto &track, uint8_t) {
+    track.reset_params();
+    track.send_notes_off();
+    track.locks_slides_recalc = 255;
+    for (auto &sd : track.locks_slide_data) { sd.init(); }
+  });
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].reset_params();
@@ -249,6 +264,40 @@ void MCLSeq::seq() {
   }
   //  Stopwatch sw;
 
+#if !defined(__AVR__)
+  if (using_spsx_tracks) {
+    spsx_tracks[0].pre_seq(uart);
+
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
+      spsx_tracks[i].seq(uart, uart2);
+    }
+
+    mdfx_track.seq();
+
+    spsx_tracks[0].post_seq(uart);
+
+    for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+      aux_tracks[i].seq();
+    }
+
+#ifdef LFO_TRACKS
+    for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+      lfo_tracks[i].seq(uart, uart2);
+    }
+#endif
+
+    perf_track.seq(uart, uart2);
+
+    // SPSX send_trig_inline accumulates into MDSeqTrack::md_trig_mask
+    if (MDSeqTrack::md_trig_mask > 0) {
+      MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+    }
+
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
+      spsx_tracks[i].recalc_slides();
+    }
+  } else {
+#endif
   MDSeqTrack::pre_seq(uart);
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
@@ -276,6 +325,9 @@ void MCLSeq::seq() {
   if (MDSeqTrack::md_trig_mask > 0) {
     MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
   }
+#if !defined(__AVR__)
+  }
+#endif
 
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
@@ -285,9 +337,15 @@ void MCLSeq::seq() {
   }
 #endif
 
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].recalc_slides();
+#if !defined(__AVR__)
+  if (!using_spsx_tracks) {
+#endif
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
+      md_tracks[i].recalc_slides();
+    }
+#if !defined(__AVR__)
   }
+#endif
 
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].recalc_slides();
@@ -300,6 +358,30 @@ void MCLSeq::seq() {
   }
 }
 
+#if !defined(__AVR__)
+void MCLSeq::switch_to_spsx() {
+  if (MidiClock.state != MidiClockClass::PAUSED) return;
+  MidiClock.clock_interpolation = SPSX_SEQ_INTERPOLATION;
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    spsx_tracks[i].track_number = i;
+    spsx_tracks[i].seq_class = this;
+    spsx_tracks[i].reset();
+  }
+  using_spsx_tracks = true;
+  neighbor_trig_mask = 0;
+  fill_mask = 0;
+}
+
+void MCLSeq::switch_to_legacy() {
+  if (MidiClock.state != MidiClockClass::PAUSED) return;
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    spsx_tracks[i].send_notes_off();
+  }
+  MidiClock.clock_interpolation = 2;
+  using_spsx_tracks = false;
+}
+#endif
+
 void MCLSeqMidiEvents::onNoteCallback_Midi(uint8_t *msg) {
   uint8_t note_num = msg[1];
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -307,11 +389,10 @@ void MCLSeqMidiEvents::onNoteCallback_Midi(uint8_t *msg) {
   if (n < 16) {
     bool is_midi_machine = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);
     if (is_midi_machine) {
-      if (msg[2]) {mcl_seq.md_tracks[n].send_notes(255); }
-      //velocity 0 == NoteOff
-      //Only send note off if the sequener is not running, otherwise defer to note length
-      else if (MidiClock.state != 2) { mcl_seq.md_tracks[n].send_notes_off(); }
-
+      SeqTrackUtil::with_md_track(n, [&](auto &track) {
+        if (msg[2]) { track.send_notes(255); }
+        else if (MidiClock.state != 2) { track.send_notes_off(); }
+      });
     }
     if (msg[0] != 153 && msg[2]) {
       mixer_page.disp_levels[n] = MD.kit.levels[n];
@@ -331,19 +412,24 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
-  mcl_seq.md_tracks[track].onControlChangeCallback_Midi(track_param, value);
+#if !defined(__AVR__)
+  if (!mcl_seq.using_spsx_tracks)
+#endif
+  {
+    mcl_seq.md_tracks[track].onControlChangeCallback_Midi(track_param, value);
+  }
 
   if (mcl.currentPage() == MIXER_PAGE) {
     mixer_page.onControlChangeCallback_Midi(track, track_param, value);
   }
   ram_page_a.onControlChangeCallback_Midi(track, track_param, value);
 
-  if (track_param == 32) { // Mute
-    mcl_seq.md_tracks[track].mute_state = value > 0;
+  if (track_param == MODEL_MUTE) { // Mute
+    SeqTrackUtil::with_md_track(track, [&](auto &t) { t.mute_state = value > 0; });
    }
-  if (track_param > 23) {
+  if (track_param >= (MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY)) {
     return;
-  } // ignore level/mute
+  }
   perf_page.learn_param(track, track_param, value);
   lfo_page.learn_param(track, track_param, value);
 
