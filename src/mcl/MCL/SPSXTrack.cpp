@@ -53,11 +53,15 @@ bool SPSXTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
 }
 
 void SPSXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+  // mute_state must follow the LIVE engine, not the slot's stored seq_version:
+  // a legacy-saved slot played through an SPSX engine (or vice versa after a
+  // mode switch) would otherwise write to the wrong array and the engine
+  // would never see the mute change.
   switch (mcl_actions.transition_level[slotnumber]) {
   case TRANSITION_UNMUTE:
     MD.muteTrack(tracknumber, false);
 #if !defined(__AVR__)
-    if (has_spsx_seq()) {
+    if (mcl_seq.using_spsx_tracks) {
       mcl_seq.spsx_tracks[slotnumber].mute_state = SPSX_MUTE_OFF;
     } else
 #endif
@@ -68,7 +72,7 @@ void SPSXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   case TRANSITION_MUTE:
     MD.muteTrack(tracknumber, true);
 #if !defined(__AVR__)
-    if (has_spsx_seq()) {
+    if (mcl_seq.using_spsx_tracks) {
       mcl_seq.spsx_tracks[slotnumber].mute_state = SPSX_MUTE_ON;
     } else
 #endif
