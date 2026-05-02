@@ -355,6 +355,7 @@ public:
     void send_notes(uint8_t first_note = 255);
     void send_notes_on();
     void send_notes_off();
+    void onControlChangeCallback_Midi(uint8_t track_param, uint8_t value);
 
     // ========================================================================
     // Slide Methods

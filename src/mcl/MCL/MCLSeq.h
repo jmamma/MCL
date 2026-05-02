@@ -62,6 +62,11 @@ public:
   uint16_t fill_mask = 0;
   void switch_to_spsx();
   void switch_to_legacy();
+  void set_fill(bool held) { fill_mask = held ? 0xFFFF : 0; }
+  void set_fill_track(uint8_t track, bool held) {
+    if (held) fill_mask |= (uint16_t)(1u << track);
+    else fill_mask &= (uint16_t)~(1u << track);
+  }
 #endif
 
 #ifdef EXT_TRACKS

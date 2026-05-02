@@ -412,12 +412,9 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
-#if !defined(__AVR__)
-  if (!mcl_seq.using_spsx_tracks)
-#endif
-  {
-    mcl_seq.md_tracks[track].onControlChangeCallback_Midi(track_param, value);
-  }
+  SeqTrackUtil::with_md_track(track, [track_param, value](auto &t) {
+    t.onControlChangeCallback_Midi(track_param, value);
+  });
 
   if (mcl.currentPage() == MIXER_PAGE) {
     mixer_page.onControlChangeCallback_Midi(track, track_param, value);

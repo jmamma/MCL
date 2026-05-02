@@ -212,11 +212,9 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
                (SeqTrack *)&(mcl_seq.spsx_tracks[i]));
       add_track_to_grid(grid_idx, i, &gdt);
     }
-    mcl_seq.using_spsx_tracks = true;
-    MidiClock.clock_interpolation = SPSX_SEQ_INTERPOLATION;
+    mcl_seq.switch_to_spsx();
   } else {
-    mcl_seq.using_spsx_tracks = false;
-    MidiClock.clock_interpolation = 2;
+    mcl_seq.switch_to_legacy();
 #endif
     for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
       gdt.init(MD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.md_tracks[i]));

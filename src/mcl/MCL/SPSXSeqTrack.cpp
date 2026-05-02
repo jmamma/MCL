@@ -472,6 +472,18 @@ void SPSXSeqTrack::send_notes(uint8_t first_note) {
     send_notes_on();
 }
 
+void SPSXSeqTrack::onControlChangeCallback_Midi(uint8_t track_param, uint8_t value) {
+    if (!is_midi_model() || MD.encoder_interface) return;
+    if (track_param <= 4 || track_param >= 21) return;
+    // Skip CC destination params (even-numbered slots in 8..19 range)
+    if (!(track_param & 1) && track_param > 7 && track_param < 20) return;
+
+    uint8_t ccs[spsx_midi_cc_array_size];
+    memset(ccs, 255, sizeof(ccs));
+    process_note_locks(track_param, value, ccs);
+    send_notes_ccs(ccs, true);
+}
+
 void SPSXSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
     if (!port2 || !send_ccs) return;
     uint8_t channel = get_midi_channel();
