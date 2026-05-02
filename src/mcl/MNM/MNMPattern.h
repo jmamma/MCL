@@ -114,8 +114,8 @@ public:
   virtual void    setTrig(uint8_t track, uint8_t trig) { setTrig(track, trig, true, true, true, true); }
   virtual void    setNote(uint8_t track, uint8_t step, uint8_t note); virtual void clearTrig(uint8_t track, uint8_t trig) { clearTrig(track, trig, true, true, true, true); }
 
-  virtual int8_t  getLockIdx(uint8_t track, uint8_t param) { return paramLocks[track][param]; }
-  virtual void    setLockIdx(uint8_t track, uint8_t param, int8_t value) { paramLocks[track][param] = value; }
+  virtual ep_lock_idx_t getLockIdx(uint8_t track, uint8_t param) { return paramLocks[track][param]; }
+  virtual void          setLockIdx(uint8_t track, uint8_t param, ep_lock_idx_t value) { paramLocks[track][param] = (int8_t)value; }
   virtual void    recalculateLockPatterns();
 
   /** ElektronSysexObject implementation */
@@ -184,7 +184,7 @@ public:
     setTrig(track, trig, false, false, false, false, true);
   }
 
-  int8_t getNextEmptyLock();
+  ep_lock_idx_t getNextEmptyLock();
 
   void setChordNote(uint8_t track, uint8_t step, uint8_t note);
   void clearChordNote(uint8_t track, uint8_t step, uint8_t note);

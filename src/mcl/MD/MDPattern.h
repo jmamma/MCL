@@ -205,6 +205,11 @@ public:
     maxParams = 24;
 #endif
     maxTracks = 16;
+    // Total addressable lock rows. Base ElektronPattern storage covers the
+    // first 64; MDPattern's ext_locks extension carries rows 64..MAX_LOCK_ROWS-1.
+    // The inherited base-class methods (addLock/cleanupLocks/getNextEmptyLock)
+    // self-cap at the base 64 slots; ext rows are populated only via
+    // set_lock_track_param/lock_row from sysex round-trip.
 #if !defined(__AVR__)
     maxLocks = MAX_LOCK_ROWS;
 #else

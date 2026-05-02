@@ -21,12 +21,26 @@
  * for both monomachine and machinedrum and allows to write patches
  * working on either kind of pattern.
  **/
+
+// Lock-row index/count types. On rp2040, MDPattern stores up to MAX_LOCK_ROWS
+// (=544) lock rows via its ext_locks extension, so the index/count types must
+// be wide enough to address them. AVR has no SPSX extension and never sees
+// values > 64, so it stays on the original 8-bit types to save the byte and
+// keep linkage compatible with existing AVR-only code.
+#if !defined(__AVR__)
+typedef int16_t  ep_lock_idx_t;   // -1 sentinel + rows 0..32766
+typedef uint16_t ep_lock_max_t;
+#else
+typedef int8_t   ep_lock_idx_t;
+typedef uint8_t  ep_lock_max_t;
+#endif
+
 class ElektronPattern: public ElektronSysexObject {
 public:
 	uint8_t maxParams;
 	uint8_t maxTracks;
 	uint8_t maxSteps;
-	uint8_t maxLocks;
+	ep_lock_max_t maxLocks;
 
 	uint8_t locks[64][64];
 	int8_t lockTracks[64];
@@ -86,7 +100,7 @@ public:
 	/** Clear all the paramlocks on track. **/
 	void clearTrackLocks(uint8_t track);
 	/** Clear the lock pattern for the given lock. **/
-	void clearLockPattern(int8_t lock);
+	void clearLockPattern(ep_lock_idx_t lock);
 
 	/** Set the trigger at step on track (machine specific). **/
 	virtual void setTrig(uint8_t track, uint8_t step)                { }
@@ -103,14 +117,14 @@ public:
 	uint8_t getLock(uint8_t track, uint8_t trig, uint8_t param);
 
 	/** Get the lock index for parameter param on track track (machine specific). **/
-	virtual int8_t getLockIdx(uint8_t track, uint8_t param)             { return -1; }
+	virtual ep_lock_idx_t getLockIdx(uint8_t track, uint8_t param)             { return -1; }
 	/** Set the lock index for the parameter param on track track. **/
-	virtual void setLockIdx(uint8_t track, uint8_t param, int8_t value) { }
+	virtual void setLockIdx(uint8_t track, uint8_t param, ep_lock_idx_t value) { }
 	/** Reorganize the lock patterns to be in the correct order (machine specific). **/
 	virtual void recalculateLockPatterns()                              { }
 
 	/** Get the index of the next empty lock, or -1 if no lock is available. **/
-	int8_t getNextEmptyLock();
+	ep_lock_idx_t getNextEmptyLock();
 	/** Reorganize the locks and remove empty locked parameters. **/
 	void cleanupLocks();
 	
