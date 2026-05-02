@@ -47,6 +47,9 @@ void MDPattern::clearPattern() {
   memset(ext_track_speeds, 0xFF, sizeof(ext_track_speeds));
   patternTempo = 0;
   chain_change = 0;
+  memset(ext_locks, -1, sizeof(ext_locks));
+  memset(ext_lockTracks, -1, sizeof(ext_lockTracks));
+  memset(ext_lockParams, -1, sizeof(ext_lockParams));
 #endif
 }
 /*
@@ -183,17 +186,30 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     // High 32 bits of lockPatterns (params 24-33)
     decoder.get32hi(lockPatterns, 16);
 
-    // Expanded lock rows
+    // Expanded lock rows. Wire format mirrors the host (src/host/Midi/MDPattern.cpp):
+    // numRows is a little-endian u16, then for rows 64..numRows-1 the encoder
+    // emits 32 bytes of low-step locks per row, followed (for 64-step / extra
+    // patterns) by 32 bytes of high-step locks per row.
     uint8_t lo = decoder.gget8();
     uint8_t hi = decoder.gget8();
     uint16_t totalRows = (uint16_t)(lo | (hi << 8));
 
     if (totalRows > 64) {
-      // MCL only supports 64 lock rows; skip extras
-      uint16_t extraRows = totalRows - 64;
-      decoder.skip(extraRows * 32);
+      uint16_t cap = (totalRows < MAX_LOCK_ROWS) ? totalRows : MAX_LOCK_ROWS;
+      for (uint16_t i = 64; i < cap; i++) {
+        decoder.get((uint8_t*)lock_row(i), 32);
+      }
+      // Past-cap rows: drop them (MCL refuses patterns deeper than MAX_LOCK_ROWS)
+      if (totalRows > MAX_LOCK_ROWS) {
+        decoder.skip((totalRows - MAX_LOCK_ROWS) * 32);
+      }
       if (isExtraPattern) {
-        decoder.skip(extraRows * 32);
+        for (uint16_t i = 64; i < cap; i++) {
+          decoder.get((uint8_t*)(lock_row(i) + 32), 32);
+        }
+        if (totalRows > MAX_LOCK_ROWS) {
+          decoder.skip((totalRows - MAX_LOCK_ROWS) * 32);
+        }
       }
     }
 
@@ -204,15 +220,16 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 
     decoder.stopRLE();
 
-    // Rebuild lock tracking with full param range (0-33)
+    // Rebuild lock tracking with full param range (0-33). MCL stores up to
+    // MAX_LOCK_ROWS rows: rows 0..63 in the base lockTracks/lockParams arrays,
+    // rows 64..MAX_LOCK_ROWS-1 in ext_lockTracks/ext_lockParams.
     numRows = 0;
     for (uint8_t i = 0; i < 16; i++) {
       for (uint8_t j = 0; j < maxParams; j++) {
         if (IS_BIT_SET64(lockPatterns[i], j)) {
-          if (numRows < 64) {
-            paramLocks[i][j] = numRows;
-            lockTracks[numRows] = i;
-            lockParams[numRows] = j;
+          if (numRows < MAX_LOCK_ROWS) {
+            paramLocks[i][j] = (int16_t)numRows;
+            set_lock_track_param(numRows, (int16_t)i, (int16_t)j);
           }
           numRows++;
         }
@@ -352,7 +369,20 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
     encoder->pack8(numRows & 0xFF);
     encoder->pack8((numRows >> 8) & 0xFF);
 
-    // MCL doesn't produce extra rows beyond 64
+    // Extra lock rows (64..numRows-1). Symmetric with fromSysex above:
+    // first 32 bytes per row (low steps), then if isExtraPattern another
+    // 32 bytes per row (high steps).
+    if (numRows > 64) {
+      uint16_t cap = (numRows < MAX_LOCK_ROWS) ? numRows : MAX_LOCK_ROWS;
+      for (uint16_t i = 64; i < cap; i++) {
+        encoder->pack((const uint8_t*)lock_row(i), 32);
+      }
+      if (isExtraPattern) {
+        for (uint16_t i = 64; i < cap; i++) {
+          encoder->pack((const uint8_t*)(lock_row(i) + 32), 32);
+        }
+      }
+    }
 
     // Per-pattern tempo (little-endian u16)
     encoder->pack8((uint8_t)(patternTempo & 0xFF));
@@ -441,7 +471,7 @@ void MDPattern::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
   uint64_t _slidePattern;
   uint64_t _swingPattern;
 #if !defined(__AVR__)
-  int8_t _paramLocks[MD_PARAMS_PER_TRACK];
+  int16_t _paramLocks[MD_PARAMS_PER_TRACK];
 #else
   int8_t _paramLocks[24];
 #endif

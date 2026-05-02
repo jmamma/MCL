@@ -1319,13 +1319,15 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
         }
     }
 
-    // Import lock values from pattern rows
+    // Import lock values from pattern rows. Row indices are int16_t now and
+    // can exceed 64; use lock_row() to handle the extended-rows extension array.
     for (uint8_t p = 0; p < pattern->maxParams; p++) {
-        int8_t row = pattern->paramLocks[trk][p];
+        int16_t row = pattern->paramLocks[trk][p];
         if (row < 0) continue;
 
+        const int8_t *row_data = pattern->lock_row((uint16_t)row);
         for (uint8_t s = 0; s < 64; s++) {
-            int8_t lockval = pattern->locks[row][s];
+            int8_t lockval = row_data[s];
             if (lockval >= 0 && SPSX_IS_BIT_SET64(trig_mask, s)) {
                 set_track_locks(s, p, lockval);
             }

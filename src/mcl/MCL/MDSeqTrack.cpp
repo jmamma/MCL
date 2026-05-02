@@ -1048,12 +1048,20 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
 #endif
       continue;
     }
+#if !defined(__AVR__)
+    int16_t idx = pattern->paramLocks[track_number][i];
+#else
     int8_t idx = pattern->paramLocks[track_number][i];
+#endif
     if (idx < 0) {
       continue;
     }
     for (uint8_t s = 0; s < 64; s++) {
+#if !defined(__AVR__)
+      int8_t lockval = pattern->lock_row((uint16_t)idx)[s];
+#else
       int8_t lockval = pattern->locks[idx][s];
+#endif
       if (lockval >= 0 &&
           IS_BIT_SET64(pattern->trigPatterns[track_number], s)) {
         set_track_locks(s, i, lockval);

@@ -14,6 +14,10 @@
 // Must match the host SPSXSeqDefines NUM_LOCKS so ext_locks_params round-trips
 // without truncation.
 #define MD_PATTERN_LOCK_SLOTS 34
+// Maximum number of distinct param-lock rows the host can transmit in a v0x40
+// pattern. The base ElektronPattern::locks[64][64] array covers rows 0-63;
+// MDPattern adds an extension array (rp2040 only) for rows 64..MAX_LOCK_ROWS-1.
+#define MAX_LOCK_ROWS 544
 #endif
 
 /**
@@ -82,10 +86,13 @@ public:
   uint64_t slidePatterns[16];
   uint64_t swingPatterns[16];
 
-  uint8_t numRows;
 #if !defined(__AVR__)
-  int8_t paramLocks[16][MD_PARAMS_PER_TRACK];
+  uint16_t numRows;
+  // paramLocks holds row indices (0..MAX_LOCK_ROWS-1). int16_t needed since
+  // SPS-X patterns can carry > 127 lock rows.
+  int16_t paramLocks[16][MD_PARAMS_PER_TRACK];
 #else
+  uint8_t numRows;
   int8_t paramLocks[16][24];
 #endif
 
@@ -101,6 +108,39 @@ public:
   uint8_t ext_track_speeds[16];
   uint16_t patternTempo;
   uint8_t chain_change;
+
+  /** Extended lock rows (64..MAX_LOCK_ROWS-1). Base class locks[64][64]
+   *  covers the first 64 rows; this array extends storage for v0x40 patterns
+   *  with deep automation. ext_lockTracks/ext_lockParams are widened so they
+   *  can hold the matching track/param mapping for extended rows.
+   *  Memory cost: ~30.7 KB on rp2040 only. **/
+  int8_t  ext_locks[MAX_LOCK_ROWS - 64][64];
+  int16_t ext_lockTracks[MAX_LOCK_ROWS - 64];
+  int16_t ext_lockParams[MAX_LOCK_ROWS - 64];
+#endif
+
+#if !defined(__AVR__)
+  /** Return a pointer to the 64-step int8_t row for the given lock row index.
+   *  Rows 0..63 live in the base ElektronPattern::locks; rows 64..MAX_LOCK_ROWS-1
+   *  live in MDPattern::ext_locks. */
+  inline int8_t *lock_row(uint16_t row) {
+    return (row < 64) ? (int8_t*)locks[row] : ext_locks[row - 64];
+  }
+  inline int16_t lock_track(uint16_t row) const {
+    return (row < 64) ? (int16_t)lockTracks[row] : ext_lockTracks[row - 64];
+  }
+  inline int16_t lock_param(uint16_t row) const {
+    return (row < 64) ? (int16_t)lockParams[row] : ext_lockParams[row - 64];
+  }
+  inline void set_lock_track_param(uint16_t row, int16_t track, int16_t param) {
+    if (row < 64) {
+      lockTracks[row] = (int8_t)track;
+      lockParams[row] = (int8_t)param;
+    } else {
+      ext_lockTracks[row - 64] = track;
+      ext_lockParams[row - 64] = param;
+    }
+  }
 #endif
 
   /** ElektronPattern implementation */
@@ -159,7 +199,11 @@ public:
     maxParams = 24;
 #endif
     maxTracks = 16;
+#if !defined(__AVR__)
+    maxLocks = MAX_LOCK_ROWS;
+#else
     maxLocks = 64;
+#endif
 
     isExtraPattern = false;
   }
