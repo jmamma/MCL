@@ -249,10 +249,14 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
             }
         }
 
-        // Next step triggers early (negative microtiming)
+        // Next step triggers early (negative microtiming).
+        // At very high speeds (e.g. tps=12 at 8x) and large negative microtiming,
+        // tps + microtiming_to_ticks(mt) can underflow to 0 or below, which would
+        // fire the trigger immediately on every tick. Clamp to >= 1.
         int8_t mt_next = microtiming[next_step];
         if (mt_next < 0 && current_step == 255) {
             int16_t trigger_tick = (int16_t)(tps + spsx_microtiming_to_ticks(mt_next, tps));
+            if (trigger_tick < 1) trigger_tick = 1;
             if (tick_counter == (uint16_t)trigger_tick) {
                 current_step = next_step;
             }
@@ -899,9 +903,12 @@ void SPSXSeqTrack::clear_mutes() { oneshot_mask = 0; mute_mask = 0; }
 void SPSXSeqTrack::clear_slide_data() { slide_mask = 0; }
 
 void SPSXSeqTrack::clear_step(uint8_t step) {
-    uint8_t idx = (uint8_t)get_lockidx(step);
+    uint16_t idx16 = get_lockidx(step);
     uint8_t cnt = spsx_popcount(steps[step].locks);
-    if (cnt != 0) {
+    // Defensive: in normal state idx+cnt <= SPSX_NUM_MD_LOCK_SLOTS, but guard
+    // against any corruption that would make memmove size underflow.
+    if (cnt != 0 && idx16 + cnt <= SPSX_NUM_MD_LOCK_SLOTS) {
+        uint8_t idx = (uint8_t)idx16;
         memmove(locks + idx, locks + idx + cnt, SPSX_NUM_MD_LOCK_SLOTS - idx - cnt);
         if (step < step_count) cur_event_idx -= cnt;
     }
@@ -910,6 +917,21 @@ void SPSXSeqTrack::clear_step(uint8_t step) {
     steps[step].cond_id = 0;
     steps[step].cond_plock = 0;
     microtiming[step] = 0;
+}
+
+// Clear lock values on a step while preserving trig/condition/microtiming.
+// SPSX equivalent of MDSeqTrack::clear_step_locks — used by the "clear locks"
+// UI gesture that should leave the step's trigger and timing intact.
+void SPSXSeqTrack::clear_step_locks(uint8_t step) {
+    uint16_t idx16 = get_lockidx(step);
+    uint8_t cnt = spsx_popcount(steps[step].locks);
+    if (cnt == 0 || idx16 + cnt > SPSX_NUM_MD_LOCK_SLOTS) return;
+    uint8_t idx = (uint8_t)idx16;
+    memmove(locks + idx, locks + idx + cnt, SPSX_NUM_MD_LOCK_SLOTS - idx - cnt);
+    if (step < step_count) cur_event_idx -= cnt;
+    steps[step].locks = 0;
+    steps[step].locks_enabled = false;
+    clean_params();
 }
 
 void SPSXSeqTrack::disable_step_locks(uint8_t step) { steps[step].locks_enabled = false; }
@@ -1324,8 +1346,11 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
             steps[s].locks_enabled = flags & 1;
         }
 
-        // Copy lock params mapping (first MD_PATTERN_LOCK_SLOTS entries)
-        for (uint8_t i = 0; i < MD_PATTERN_LOCK_SLOTS && i < SPSX_NUM_LOCKS; i++) {
+        // Copy full lock-params mapping. MD_PATTERN_LOCK_SLOTS is sized to match
+        // host NUM_LOCKS (== SPSX_NUM_LOCKS), so this is a 1:1 copy.
+        static_assert(MD_PATTERN_LOCK_SLOTS == SPSX_NUM_LOCKS,
+                      "ext_locks_params width must match SPSX track lock slots");
+        for (uint8_t i = 0; i < SPSX_NUM_LOCKS; i++) {
             locks_params[i] = pattern->ext_locks_params[trk][i];
         }
 

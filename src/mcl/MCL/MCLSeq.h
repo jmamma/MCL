@@ -60,8 +60,10 @@ public:
   bool using_spsx_tracks = false;
   uint16_t neighbor_trig_mask = 0;
   uint16_t fill_mask = 0;
-  void switch_to_spsx();
-  void switch_to_legacy();
+  // Mode switch — only safe when MidiClock is PAUSED. Returns false if
+  // refused (transport playing). Callers must stop transport first.
+  bool switch_to_spsx();
+  bool switch_to_legacy();
   void set_fill(bool held) { fill_mask = held ? 0xFFFF : 0; }
   void set_fill_track(uint8_t track, bool held) {
     if (held) fill_mask |= (uint16_t)(1u << track);

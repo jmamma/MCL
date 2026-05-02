@@ -175,7 +175,6 @@ bool MDPattern::fromSysex(MidiClass *midi) {
       decoder.get((uint8_t*)ext_microtiming[t], 64);
       decoder.get(ext_step_flags[t], 64);
       decoder.get(ext_locks_params[t], MD_PATTERN_LOCK_SLOTS);
-      decoder.skip(MD_PARAMS_PER_TRACK - MD_PATTERN_LOCK_SLOTS);
     }
 
     decoder.get(ext_track_lengths, 16);
@@ -342,7 +341,6 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
       encoder->pack((const uint8_t*)ext_microtiming[t], 64);
       encoder->pack(ext_step_flags[t], 64);
       encoder->pack(ext_locks_params[t], MD_PATTERN_LOCK_SLOTS);
-      encoder->fill8(0, MD_PARAMS_PER_TRACK - MD_PATTERN_LOCK_SLOTS);
     }
 
     encoder->pack(ext_track_lengths, 16);

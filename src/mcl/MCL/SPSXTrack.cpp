@@ -86,18 +86,8 @@ void SPSXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 
 void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
-#if defined(__AVR__)
-  if (seq_version != SPSX_SEQ_VERSION_LEGACY) {
-    // Incompatible seq format — load empty sequence, keep machine
-    MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
-    md_seq_track->init();
-    load_link_data(seq_track);
-    md_seq_track->set_length(link.length);
-    return;
-  }
-#endif
 #if !defined(__AVR__)
-  if (has_spsx_seq()) {
+  if (seq_version == SPSX_SEQ_VERSION_SPSX) {
     SPSXSeqTrack *spsx_seq_track = (SPSXSeqTrack *)seq_track;
     memcpy(spsx_seq_track->SPSXSeqTrackData::data(),
            seq_data.spsx.data(), sizeof(SPSXSeqTrackData));
@@ -108,13 +98,21 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
     return;
   }
 #endif
-  // Legacy MDSeqTrackData path (AVR + rp2040 fallback)
+  if (seq_version == SPSX_SEQ_VERSION_LEGACY) {
+    MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
+    memcpy(md_seq_track->data(), seq_data.legacy.data(), sizeof(MDSeqTrackData));
+    load_link_data(seq_track);
+    md_seq_track->clear_mutes();
+    md_seq_track->set_length(md_seq_track->length);
+    md_seq_track->notes.first_trig = true;
+    return;
+  }
+  // Unknown / corrupted seq_version: load an empty sequence rather than
+  // memcpy garbage through the wrong union member.
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
-  memcpy(md_seq_track->data(), seq_data.legacy.data(), sizeof(MDSeqTrackData));
+  md_seq_track->init();
   load_link_data(seq_track);
-  md_seq_track->clear_mutes();
-  md_seq_track->set_length(md_seq_track->length);
-  md_seq_track->notes.first_trig = true;
+  md_seq_track->set_length(link.length);
 }
 
 static void apply_spsx_defaults(MDMachine &m) {

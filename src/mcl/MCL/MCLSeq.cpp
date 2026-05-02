@@ -129,6 +129,7 @@ void MCLSeq::onMidiStartImmediateCallback() {
 #if !defined(__AVR__)
   if (using_spsx_tracks) {
     neighbor_trig_mask = 0;
+    fill_mask = 0;
   } else
 #endif
   {
@@ -359,8 +360,15 @@ void MCLSeq::seq() {
 }
 
 #if !defined(__AVR__)
-void MCLSeq::switch_to_spsx() {
-  if (MidiClock.state != MidiClockClass::PAUSED) return;
+// Mode switch is only safe with the transport stopped: seq() runs in ISR
+// context and the switch rebinds spsx_tracks state + clock_interpolation.
+// Callers (currently MD::init_grid_devices on probe) must ensure transport
+// is paused. Returns true on success, false if the switch was rejected.
+bool MCLSeq::switch_to_spsx() {
+  if (MidiClock.state != MidiClockClass::PAUSED) {
+    DEBUG_PRINTLN(F("switch_to_spsx: refused, transport not PAUSED"));
+    return false;
+  }
   MidiClock.clock_interpolation = SPSX_SEQ_INTERPOLATION;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     spsx_tracks[i].track_number = i;
@@ -370,15 +378,25 @@ void MCLSeq::switch_to_spsx() {
   using_spsx_tracks = true;
   neighbor_trig_mask = 0;
   fill_mask = 0;
+  return true;
 }
 
-void MCLSeq::switch_to_legacy() {
-  if (MidiClock.state != MidiClockClass::PAUSED) return;
+bool MCLSeq::switch_to_legacy() {
+  if (MidiClock.state != MidiClockClass::PAUSED) {
+    DEBUG_PRINTLN(F("switch_to_legacy: refused, transport not PAUSED"));
+    return false;
+  }
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     spsx_tracks[i].send_notes_off();
   }
+  // Drop any trig bits SPSX accumulated; legacy pre_seq won't run until next
+  // tick and we don't want a parallelTrig drain seeing stale SPSX state.
+  MDSeqTrack::md_trig_mask = 0;
+  fill_mask = 0;
+  neighbor_trig_mask = 0;
   MidiClock.clock_interpolation = 2;
   using_spsx_tracks = false;
+  return true;
 }
 #endif
 

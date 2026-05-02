@@ -10,8 +10,10 @@
 //#define MDPATTERN_TOSYSEX_ENABLE
 
 #if !defined(__AVR__)
-// Number of MCL sequencer lock slots per track (matches SeqTrack.h NUM_LOCKS)
-#define MD_PATTERN_LOCK_SLOTS 8
+// Number of lock slots per track in the SPS-X (v0x40) pattern wire format.
+// Must match the host SPSXSeqDefines NUM_LOCKS so ext_locks_params round-trips
+// without truncation.
+#define MD_PATTERN_LOCK_SLOTS 34
 #endif
 
 /**

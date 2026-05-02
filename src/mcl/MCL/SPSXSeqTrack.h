@@ -400,6 +400,7 @@ public:
     void clear_mutes();
     void clear_slide_data();
     void clear_step(uint8_t step);
+    void clear_step_locks(uint8_t step);
     void disable_step_locks(uint8_t step);
     void enable_step_locks(uint8_t step);
     uint64_t get_step_locks_mask(uint8_t step);

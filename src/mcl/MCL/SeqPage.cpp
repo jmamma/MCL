@@ -1244,11 +1244,9 @@ void opt_clear_step_locks_handler() {
 
       if (opt_midi_device_capture == &MD) {
         uint8_t s = n + SeqPage::page_select * 16;
-#if !defined(__AVR__)
-        if (mcl_seq.using_spsx_tracks) { mcl_seq.spsx_tracks[last_md_track].clear_step(s); }
-        else
-#endif
-        { mcl_seq.md_tracks[last_md_track].clear_step_locks(s); }
+        SeqTrackUtil::with_md_track(last_md_track, [s](auto &t) {
+          t.clear_step_locks(s);
+        });
       } else {
         //        mcl_seq.ext_tracks[last_ext_track].clear_step_locks(
         //          SeqPage::step_select + SeqPage::page_select * 16);

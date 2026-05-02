@@ -542,6 +542,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             active_track.steps[step].cond_id = 0;
             active_track.steps[step].cond_plock = false;
             active_track.microtiming[step] = 0;
+            SPSX_CLEAR_BIT64(active_track.mute_mask, step);
           }
         }
         return true;
