@@ -55,21 +55,39 @@ void MDTrackSelect::handle_track_select_legacy(uint8_t len) {
       MD.currentTrack = b & 0xF;
       uint8_t n = is_md_device ? MD.currentTrack : last_ext_track;
 
-      auto &track = SeqTrackUtil::get_track(is_md_device, n);
-      track.set_length(length, expand);
+#if !defined(__AVR__)
+      if (is_md_device && mcl_seq.using_spsx_tracks) {
+        mcl_seq.spsx_tracks[n].set_length(length, expand);
+        mcl_seq.spsx_tracks[n].set_speed(new_speed);
+      } else
+#endif
+      {
+        auto &track = SeqTrackUtil::get_track(is_md_device, n);
+        track.set_length(length, expand);
+        track.request_speed_change(new_speed);
+      }
       if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) { seq_extparam4.cur = length; }
-      track.request_speed_change(new_speed);
       SeqPage *seq_page = (SeqPage*) GUI.currentPage();
       seq_page->config_encoders();
     } else {
     update_pattern:
       uint8_t track_len = SeqTrackUtil::track_count(is_md_device);
-      for (uint8_t n = 0; n < track_len; n++) {
-        auto &track = SeqTrackUtil::get_track(is_md_device, n);
-        track.set_length(length, expand);
-      }
-      for (uint8_t n = 0; n < track_len; n++) {
-        SeqTrackUtil::get_track(is_md_device, n).request_speed_change(new_speed);
+#if !defined(__AVR__)
+      if (is_md_device && mcl_seq.using_spsx_tracks) {
+        for (uint8_t n = 0; n < track_len; n++) {
+          mcl_seq.spsx_tracks[n].set_length(length, expand);
+          mcl_seq.spsx_tracks[n].set_speed(new_speed);
+        }
+      } else
+#endif
+      {
+        for (uint8_t n = 0; n < track_len; n++) {
+          auto &track = SeqTrackUtil::get_track(is_md_device, n);
+          track.set_length(length, expand);
+        }
+        for (uint8_t n = 0; n < track_len; n++) {
+          SeqTrackUtil::get_track(is_md_device, n).request_speed_change(new_speed);
+        }
       }
       if (!is_md_device && last_ext_track < track_len) {
         seq_extparam4.cur = length;

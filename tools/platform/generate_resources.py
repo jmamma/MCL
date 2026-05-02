@@ -5,6 +5,7 @@ import os
 import subprocess
 import shutil
 import re
+import hashlib
 Import("env")
 
 # =============================================================================
@@ -203,25 +204,62 @@ def build_assets_platform(env, resource_dir, build_dir, gen_dir, platform):
 # Main Dispatcher & Entry Point
 # =============================================================================
 
+def compute_resource_hash(env, resource_dir, compress_script_path):
+    """Compute a combined hash of all resource files and the build scripts."""
+    h = hashlib.sha256()
+    # Hash the generate_resources.py script itself
+    script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "platform", "generate_resources.py")
+    if os.path.exists(script_path):
+        with open(script_path, "rb") as f:
+            h.update(f.read())
+    # Hash the compress script
+    if os.path.exists(compress_script_path):
+        with open(compress_script_path, "rb") as f:
+            h.update(f.read())
+    # Hash all resource files sorted by name for determinism
+    for fname in sorted(os.listdir(resource_dir)):
+        fpath = os.path.join(resource_dir, fname)
+        if os.path.isfile(fpath):
+            h.update(fname.encode())
+            with open(fpath, "rb") as f:
+                h.update(f.read())
+    return h.hexdigest()
+
 def build_assets(env):
     """Main dispatcher for the asset build process."""
-    print("--- Running Custom Asset Build Script ---")
     resource_dir = os.path.join(env.subst("$PROJECT_DIR"), "resource")
     if not os.path.isdir(resource_dir) or not os.listdir(resource_dir):
         return
 
     platform_subdir = get_platform_subdir(env)
-    print(f"Detected environment: {env.subst('$PIOENV')} -> Using platform: {platform_subdir}")
 
     resource_build_dir = os.path.join(env.subst("$BUILD_DIR"), "resource_assets")
     generated_src_dir = os.path.join(env.subst("$PROJECT_DIR"), "src", "resources", platform_subdir)
     os.makedirs(resource_build_dir, exist_ok=True)
     os.makedirs(generated_src_dir, exist_ok=True)
 
+    # Check if resources have changed since last build
+    compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools/platform/", "compress.py")
+    current_hash = compute_resource_hash(env, resource_dir, compress_script_path)
+    hash_file = os.path.join(resource_build_dir, f".resource_hash_{platform_subdir}")
+    if os.path.exists(hash_file):
+        with open(hash_file, "r") as f:
+            cached_hash = f.read().strip()
+        if cached_hash == current_hash:
+            print("--- Resources unchanged, skipping asset generation ---")
+            return
+
+    print("--- Running Custom Asset Build Script ---")
+    print(f"Detected environment: {env.subst('$PIOENV')} -> Using platform: {platform_subdir}")
+
     if platform_subdir in ["avr", "rp2040"]:
         build_assets_platform(env, resource_dir, resource_build_dir, generated_src_dir, platform_subdir)
     else:
         print(f"Warning: No asset build pipeline defined for platform '{platform_subdir}'.")
+
+    # Cache the hash after successful generation
+    with open(hash_file, "w") as f:
+        f.write(current_hash)
 
     print("--- Custom Asset Build Script Finished ---\n")
 

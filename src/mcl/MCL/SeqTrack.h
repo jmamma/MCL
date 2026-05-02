@@ -67,7 +67,11 @@ public:
   uint8_t step_count;
   uint8_t mod12_counter;
 
+#if !defined(__AVR__)
+  volatile uint16_t count_down;
+#else
   volatile uint8_t count_down;
+#endif
   volatile bool    cache_loaded;
   bool    load_sound;
   PendingSpeedChange pending_speed_change{};

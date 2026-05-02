@@ -40,17 +40,15 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex->get_recordLen() - 5;
   uint16_t offset = 5;
 
-  if (len != 0xC4 - 6) {
-    //		printf("wrong length\n");
-    // wrong length
+  if (len < 4) {
     return false;
   }
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
-    //		printf("wrong checksum\n");
     return false;
   }
 
+  uint8_t version = midi->midiSysex->getByte(offset + 1);
   origPosition = midi->midiSysex->getByte(offset + 3);
   ElektronSysexDecoder decoder(midi, offset + 4);
   decoder.stop7Bit();
@@ -79,6 +77,19 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
 
   decoder.get(&drumLeft, 12);
 
+  if (version >= 5) {
+    decoder.get8(&programChange);
+    decoder.get8(&trigMode);
+  }
+
+  if (version >= 7) {
+    decoder.get8(&seqTempoMode);
+    decoder.get8(&channelMode);
+  } else {
+    seqTempoMode = 0;
+    channelMode = 0;
+  }
+
   for (int i = 0; i < 128; i++) {
     if (keyMap[i] < 16) {
       drumMapping[keyMap[i]] = i;
@@ -89,7 +100,8 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
 }
 
 uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
-  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_GLOBAL_MESSAGE_ID, 0x05, origPosition);
+  uint8_t ver = MD.is_spsx ? 0x07 : 0x05;
+  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_GLOBAL_MESSAGE_ID, ver, origPosition);
 
   encoder->pack(drumRouting, 16);
 
@@ -142,6 +154,11 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack8(programChange);
   encoder->pack8(trigMode);
 
+  if (MD.is_spsx) {
+    encoder->pack8(seqTempoMode);
+    encoder->pack8(channelMode);
+  }
+
   return ElektronHelper::finishSysexEncode(encoder);
 }
 
@@ -165,9 +182,10 @@ bool MDKit::get_tonal(uint8_t track) {
 bool MDKit::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex->get_recordLen() - 5;
   uint16_t offset = 5;
-  if (len != (0x4d1 - 7)) {
-    DEBUG_PRINTLN(F("kit wrong length"));
-    DEBUG_DUMP(len);
+
+  // Minimum: header(4) + name(16) + params(16*24) + levels(16) = 420
+  if (len < 420) {
+    DEBUG_PRINTLN(F("kit too short"));
     return false;
   }
 
@@ -183,7 +201,10 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';
 
-  decoder.get((uint8_t *)params, 16 * 24);
+  uint8_t params_per_track = (version == 65) ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  for (uint8_t i = 0; i < 16; i++) {
+    decoder.get((uint8_t *)params[i], params_per_track);
+  }
 
   decoder.get(levels, 16);
 
@@ -206,6 +227,16 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.start7Bit();
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
+
+  if (version < 65) {
+    // Default-fill extended params for legacy kits
+    for (uint8_t i = 0; i < 16; i++) {
+      memset(&params[i][MD_PARAMS_LEGACY], 0, MD_PARAMS_PER_TRACK - MD_PARAMS_LEGACY);
+      params[i][MODEL_ENVDCY] = 127;
+      params[i][MODEL_ENVMIX] = 127;
+      params[i][MODEL_LFO2SPD] = 64;
+    }
+  }
   /*
   if (version >= 5) {
     decoder.get(tuning, 2);
@@ -228,12 +259,16 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
     // DEBUG_PRINTLN(F("swing"));
     // DEBUG_DUMP(encoder->throttle_mod12);
   //}
-  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_KIT_MESSAGE_ID, MDX_KIT_VERSION, origPosition);
+  uint8_t kit_ver = MD.is_spsx ? 65 : MDX_KIT_VERSION;
+  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_KIT_MESSAGE_ID, kit_ver, origPosition);
 
   encoder->pack((uint8_t *)name, 16);
   name[16] = '\0';
 
-  encoder->pack((uint8_t *)params, 16 * 24);
+  uint8_t params_per_track = MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  for (uint8_t i = 0; i < 16; i++) {
+    encoder->pack((uint8_t *)params[i], params_per_track);
+  }
   encoder->pack(levels, 16);
 
   encoder->start7Bit();
@@ -271,7 +306,7 @@ uint8_t swapNumber(uint8_t num, uint8_t a, uint8_t b) {
 }
 
 void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
-  uint8_t _params[24];
+  uint8_t _params[MD_PARAMS_PER_TRACK];
   uint8_t _level;
   uint32_t _model;
   MDLFO _lfo;
@@ -293,9 +328,9 @@ void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
 #endif
 
   /* swap params */
-  memcpy(_params, params[srcTrack], 24);
-  memcpy(params[srcTrack], params[dstTrack], 24);
-  memcpy(params[dstTrack], _params, 24);
+  memcpy(_params, params[srcTrack], MD_PARAMS_PER_TRACK);
+  memcpy(params[srcTrack], params[dstTrack], MD_PARAMS_PER_TRACK);
+  memcpy(params[dstTrack], _params, MD_PARAMS_PER_TRACK);
 
   memcpy(&_lfo, &lfos[srcTrack], sizeof(_lfo));
   memcpy(&lfos[srcTrack], &lfos[dstTrack], sizeof(_lfo));

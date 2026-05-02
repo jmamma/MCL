@@ -52,7 +52,16 @@ public:
 
   volatile uint8_t mod8_free_counter;
   volatile uint16_t div192_time;
+#if !defined(__AVR__)
+  volatile uint16_t div192th_countdown;
+#else
   volatile uint8_t div192th_countdown;
+#endif
+
+#if !defined(__AVR__)
+  volatile uint8_t clock_interpolation = 2; // 2=legacy(48PPQN), 16=SPSX(384PPQN)
+  volatile uint8_t interp_budget = 0;
+#endif
   volatile uint16_t clock_last_time;
 
   volatile uint16_t last_diff_clock8;
@@ -353,7 +362,11 @@ public:
     if (mod8_free_counter == 8) {
       diff_clock8 = midi_clock_diff(last_clock8, read_clock());
       last_clock8 = read_clock();
+#if !defined(__AVR__)
+      div192_time = diff_clock8 / (8 * clock_interpolation);
+#else
       div192_time = diff_clock8 / 16;
+#endif
       mod8_free_counter = 0;
     }
     if (state == STARTED) {
@@ -361,6 +374,9 @@ public:
       mod6_counter++;
       mod12_counter++;
       div192th_counter++;
+#if !defined(__AVR__)
+      interp_budget = clock_interpolation - 1;
+#endif
       if (mod6_counter == 6) {
         // one step
         step_counter++;

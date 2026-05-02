@@ -299,6 +299,7 @@ public:
 #define FW_CAP_MID_MACHINE    FW_CAP_HIGH(6)
 
 #define FW_CAPS_LENGTH_CHECK  FW_CAP_HIGHER(0)
+#define FW_CAP_SPSX           FW_CAP_HIGHER(1)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {
@@ -438,7 +439,7 @@ public:
    *sysex message. Register a callback with the MDSysexListener to act on that
    *message.
    **/
-  void requestPattern(uint8_t pattern);
+  virtual void requestPattern(uint8_t pattern);
   /**
    * Request a song from the machinedrum, which will answer by sending a long
    *sysex message. Register a callback with the MDSysexListener to act on that
@@ -450,7 +451,7 @@ public:
    *sysex message. Register a callback with the MDSysexListener to act on that
    *message.
    **/
-  void requestGlobal(uint8_t global);
+  virtual void requestGlobal(uint8_t global);
 
   bool getBlockingData(DataType type, uint8_t index, uint16_t timeout);
   /**

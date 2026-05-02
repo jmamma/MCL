@@ -4,9 +4,15 @@
 #define MDPATTERN_H__
 
 #include "ElektronPattern.h"
+#include "MDParams.h"
 #include <inttypes.h>
 
 //#define MDPATTERN_TOSYSEX_ENABLE
+
+#if !defined(__AVR__)
+// Number of MCL sequencer lock slots per track (matches SeqTrack.h NUM_LOCKS)
+#define MD_PATTERN_LOCK_SLOTS 8
+#endif
 
 /**
  * \addtogroup MD Elektron MachineDrum
@@ -41,10 +47,14 @@ public:
    **/
   uint64_t trigPatterns[16];
   /**
-   * Stores the lockPattern for each track as 24-bit bit mask (bit set:
-   *parameter is locked)
+   * Stores the lockPattern for each track as a bit mask (bit set:
+   *parameter is locked). uint64_t on rp2040 to support params 24-33.
    **/
+#if !defined(__AVR__)
+  uint64_t lockPatterns[16];
+#else
   uint32_t lockPatterns[16];
+#endif
 
   /** Stores the accent pattern as a 64-bit bitmask. **/
   uint64_t accentPattern;
@@ -71,9 +81,25 @@ public:
   uint64_t swingPatterns[16];
 
   uint8_t numRows;
+#if !defined(__AVR__)
+  int8_t paramLocks[16][MD_PARAMS_PER_TRACK];
+#else
   int8_t paramLocks[16][24];
+#endif
 
   bool isExtraPattern;
+
+#if !defined(__AVR__)
+  /** SPS-X extension fields (rp2040 only) **/
+  uint8_t version;
+  int8_t ext_microtiming[16][64];
+  uint8_t ext_step_flags[16][64];
+  uint8_t ext_locks_params[16][MD_PATTERN_LOCK_SLOTS];
+  uint8_t ext_track_lengths[16];
+  uint8_t ext_track_speeds[16];
+  uint16_t patternTempo;
+  uint8_t chain_change;
+#endif
 
   /** ElektronPattern implementation */
 
@@ -125,7 +151,11 @@ public:
 
   MDPattern(bool _init = true) : ElektronPattern(_init) {
     maxSteps = 64;
+#if !defined(__AVR__)
+    maxParams = MD_PARAMS_PER_TRACK;
+#else
     maxParams = 24;
+#endif
     maxTracks = 16;
     maxLocks = 64;
 

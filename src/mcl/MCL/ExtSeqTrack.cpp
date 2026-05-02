@@ -186,6 +186,11 @@ void ExtSeqTrack::recalc_slides() {
         param > PARAM_CHP)
       continue;
 
+    // Skip params where find_next_locks found no target
+    if (find_array[c]) {
+      locks_slide_data[c].init();
+      continue;
+    }
     uint8_t next_lockstep = locks_slide_next_lock_step[c];
 
     if (step == next_lockstep) {

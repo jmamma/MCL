@@ -58,10 +58,10 @@ void __not_in_flash_func(timer2_handler)() {
   MidiClock.div192th_countdown++;
   if (MidiClock.state == MidiClockClass::STARTED) {
     if (MidiClock.div192th_countdown >= MidiClock.div192_time) {
-      if (MidiClock.div192th_counter != MidiClock.div192th_counter_last) {
+      if (MidiClock.interp_budget > 0) {
         MidiClock.increment192Counter();
         MidiClock.div192th_countdown = 0;
-        MidiClock.div192th_counter_last = MidiClock.div192th_counter;
+        MidiClock.interp_budget--;
         if (!MidiClock.inCallback) {
           TRIGGER_SW_IRQ1();
         }

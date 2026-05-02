@@ -11,3 +11,4 @@
 #include "MDTempoTrack.h"
 #include "MNMTrack.h"
 #include "PerfTrack.h"
+#include "SPSXTrack.h"

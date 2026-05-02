@@ -28,6 +28,11 @@ void ElektronDataToSysexEncoder::init(uint8_t *_sysex,
   inChecksum = false;
   checksum = 0;
   retLen = 0;
+#if !defined(__AVR__)
+  inRLE = false;
+  rleCount = 0;
+  rleByte = 0;
+#endif
   start7Bit();
 }
 
@@ -133,7 +138,43 @@ DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::encode7Bit(uint8_t inb) {
   DATA_ENCODER_TRUE();
 }
 
+#if !defined(__AVR__)
+void ElektronDataToSysexEncoder::startRLE() {
+  inRLE = true;
+  rleCount = 0;
+  rleByte = 0;
+}
+
+void ElektronDataToSysexEncoder::stopRLE() {
+  rleFlush();
+  inRLE = false;
+}
+
+void ElektronDataToSysexEncoder::rleFlush() {
+  if (!rleCount) return;
+  if (rleByte < 0x80 && rleCount == 1) {
+    encode7Bit(rleByte);
+  } else {
+    encode7Bit(0x80 | rleCount);
+    encode7Bit(rleByte);
+  }
+  rleCount = 0;
+}
+#endif
+
 DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::pack8(uint8_t inb) {
+#if !defined(__AVR__)
+  if (inRLE) {
+    if (inb == rleByte && rleCount < 0x7F) {
+      rleCount++;
+      DATA_ENCODER_TRUE();
+    }
+    rleFlush();
+    rleCount = 1;
+    rleByte = inb;
+    DATA_ENCODER_TRUE();
+  }
+#endif
   if (in7Bit) {
     DATA_ENCODER_CHECK(encode7Bit(inb));
   } else {
@@ -211,11 +252,21 @@ uint16_t ElektronSysexToDataEncoder::finish() {
 
 void ElektronSysexDecoder::init(uint8_t *_data) {
   DataDecoder::init(_data);
+#if !defined(__AVR__)
+  inRLE = false;
+  rleCount = 0;
+  rleByte = 0;
+#endif
   start7Bit();
 }
 
 void ElektronSysexDecoder::init(MidiClass *_midi, uint16_t _offset) {
   DataDecoder::init(_midi, _offset);
+#if !defined(__AVR__)
+  inRLE = false;
+  rleCount = 0;
+  rleByte = 0;
+#endif
   start7Bit();
 }
 
@@ -224,7 +275,56 @@ uint8_t ElektronSysexDecoder::readByte() {
   return data ? *(ptr++) : midi->midiSysex->getByte(n++);
 }
 
+#if !defined(__AVR__)
+void ElektronSysexDecoder::startRLE() {
+  inRLE = true;
+  rleCount = 0;
+  rleByte = 0;
+}
+
+void ElektronSysexDecoder::stopRLE() {
+  inRLE = false;
+  rleCount = 0;
+}
+
+void ElektronSysexDecoder::getRaw8(uint8_t *c) {
+  if (in7Bit) {
+    if ((cnt7 % 8) == 0) {
+      bits = readByte();
+      cnt7++;
+    }
+    bits <<= 1;
+    *c = readByte() | (bits & 0x80);
+    cnt7++;
+  } else {
+    *c = readByte();
+  }
+}
+#endif
+
 DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
+#if !defined(__AVR__)
+  if (inRLE) {
+    if (rleCount > 0) {
+      rleCount--;
+      *c = rleByte;
+      DATA_ENCODER_TRUE();
+    }
+    uint8_t b;
+    getRaw8(&b);
+    if (b & 0x80) {
+      uint8_t count = b & 0x7F;
+      getRaw8(&rleByte);
+      if (count > 1) {
+        rleCount = count - 1;
+      }
+      *c = rleByte;
+    } else {
+      *c = b;
+    }
+    DATA_ENCODER_TRUE();
+  }
+#endif
   if (in7Bit) {
     if ((cnt7 % 8) == 0) {
       bits = readByte();

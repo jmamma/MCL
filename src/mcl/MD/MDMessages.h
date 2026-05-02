@@ -58,6 +58,7 @@ public:
 
   uint8_t programChange;
   uint8_t trigMode;
+  uint8_t channelMode = 0;
 };
 
 class MDGlobal: public ElektronSysexObject {
@@ -112,6 +113,8 @@ public:
 
   uint8_t programChange;
   uint8_t trigMode;
+  uint8_t seqTempoMode;
+  uint8_t channelMode;
 
   MDGlobal() : ElektronSysexObject() {};
 
@@ -180,7 +183,7 @@ class ATTR_PACKED() MDMachine {
    **/
 
 public:
-  uint8_t params[24];
+  uint8_t params[MD_PARAMS_PER_TRACK];
   uint8_t track;
   uint8_t level;
   uint32_t model;
@@ -191,13 +194,17 @@ public:
   void scale_vol(float scale);
   float normalize_level();
   void init() {
-  uint8_t init_params[24] = { 0, 0, 0, 0,
+  memset(params, 0, sizeof(params));
+  uint8_t init_params[MD_PARAMS_LEGACY] = { 0, 0, 0, 0,
              0, 0, 0, 0,
              0, 0, 64, 64,
              0, 127, 0, 0,
              0, 127, 64, 0,
              0, 64, 0, 0 };
-  memcpy(&params,&init_params, sizeof(params));
+  memcpy(&params, &init_params, MD_PARAMS_LEGACY);
+  params[MODEL_ENVDCY] = 127;
+  params[MODEL_ENVMIX] = 127;
+  params[MODEL_LFO2SPD] = 64;
   level = 127;
   model = GND_MODEL;
   trigGroup = 127;
@@ -230,9 +237,9 @@ public:
   char name[17];
 
   /** The parameters for each track. **/
-  uint8_t params[16][24];
+  uint8_t params[16][MD_PARAMS_PER_TRACK];
   /** Duplicate params not included in the origin MD structure */
-  uint8_t params_orig[16][24];
+  uint8_t params_orig[16][MD_PARAMS_PER_TRACK];
   /** The levels of each track. **/
   uint8_t levels[16];
   /** The selected drum model for each track. **/

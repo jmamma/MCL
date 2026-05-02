@@ -58,11 +58,15 @@ public:
    * the channel settings and the trigger settings of the MachineDrum.
    **/
   MDGlobalLight global;
+  bool is_spsx = false;
 
   virtual void setup_listeners();
   virtual void cleanup_listeners();
   virtual bool probe();
   virtual void setup();
+  virtual void requestKit(uint8_t kit);
+  virtual void requestPattern(uint8_t pattern);
+  virtual void requestGlobal(uint8_t global);
   virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
   virtual MCLGIF *gif();
@@ -84,6 +88,7 @@ public:
   void setLocalOn(bool localOn);
   void setProgramChange(uint8_t val);
   void setExternalSync();
+  void setChannelMode(uint8_t mode);
   //---
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask);

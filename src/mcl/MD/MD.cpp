@@ -2,6 +2,8 @@
 #include "GridTrack.h"
 #include "ResourceManager.h"
 #include "MCLSeq.h"
+#include "MidiClock.h"
+#include "SeqTrackUtil.h"
 #include "TurboLight.h"
 #include "MCLGUI.h"
 #include "MDTrackSelect.h"
@@ -21,20 +23,12 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
-  if (param >= 16) {
-    if (track > 15) {
-      return;
-    }
-    if (track_param > 23) {
-      return;
-    }
+  uint8_t param_limit = MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  if (track_param < param_limit && track < 16) {
     MD.kit.params[track][track_param] = value;
     last_md_param = track_param;
-  } else {
-    if (param > 7 && param < 12) {
-      track = param - 8 + (channel - MD.global.baseChannel) * 4;
-      MD.kit.levels[track] = value;
-    }
+  } else if (track_param == MODEL_LEVEL && track < 16) {
+    MD.kit.levels[track] = value;
   }
 }
 
@@ -138,6 +132,9 @@ void MDClass::setup() {
   setExternalSync();
   setProgramChange(2);
   setLocalOn(true);
+  if (is_spsx) {
+    setChannelMode(1); // EXPANDED mode for extended CC
+  }
 }
 
 void MDClass::setBaseChannel(uint8_t channel) {
@@ -153,6 +150,30 @@ void MDClass::setLocalOn(bool localOn) {
 void MDClass::setProgramChange(uint8_t val) {
   uint8_t data[3] = {0x70, 0x4C, val};
   sendRequest(data, sizeof(data));
+}
+
+void MDClass::requestKit(uint8_t kit) {
+  uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
+  uint8_t data[] = {sysex_protocol.kitrequest_id, kit, ver};
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::requestPattern(uint8_t pattern) {
+  uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
+  uint8_t data[] = {sysex_protocol.patternrequest_id, pattern, ver};
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::requestGlobal(uint8_t global) {
+  uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
+  uint8_t data[] = {sysex_protocol.globalrequest_id, global, ver};
+  sendRequest(data, sizeof(data));
+}
+
+void MDClass::setChannelMode(uint8_t mode) {
+  uint8_t data[3] = {0x70, 0x4F, mode};
+  sendRequest(data, sizeof(data));
+  global.channelMode = mode;
 }
 
 void MDClass::setExternalSync() {
@@ -184,10 +205,26 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 0;
 
   GridDeviceTrack gdt;
-  for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-    gdt.init(MD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.md_tracks[i]));
-    add_track_to_grid(grid_idx, i, &gdt);
+#if !defined(__AVR__)
+  if (is_spsx) {
+    for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
+      gdt.init(MDSPSX_TRACK_TYPE, GROUP_DEV, device_idx,
+               (SeqTrack *)&(mcl_seq.spsx_tracks[i]));
+      add_track_to_grid(grid_idx, i, &gdt);
+    }
+    mcl_seq.using_spsx_tracks = true;
+    MidiClock.clock_interpolation = SPSX_SEQ_INTERPOLATION;
+  } else {
+    mcl_seq.using_spsx_tracks = false;
+    MidiClock.clock_interpolation = 2;
+#endif
+    for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
+      gdt.init(MD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.md_tracks[i]));
+      add_track_to_grid(grid_idx, i, &gdt);
+    }
+#if !defined(__AVR__)
   }
+#endif
   grid_idx = 1;
 
   gdt.init(MDFX_TRACK_TYPE, GROUP_DEV, device_idx,
@@ -261,6 +298,8 @@ bool MDClass::probe() {
       return false;
     }
 
+    is_spsx = (fw_caps & FW_CAP_SPSX) != 0;
+
     turbo_light.set_speed(turbo_light.lookup_speed(
         (probe_port == UARTUSB_PORT) ? mcl_cfg.usb_turbo_speed : mcl_cfg.uart1_turbo_speed), uart);
     mcl_gui.delay_progress(100);
@@ -322,17 +361,33 @@ uint8_t MDClass::noteToTrack(uint8_t pitch) {
 void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
                       uint8_t *param) {
 
-  *track = (channel - global.baseChannel) * 4;
+  int control_ch = (int)channel - (int)global.baseChannel;
+
+  if (control_ch < 0 || control_ch >= (is_spsx ? 8 : 4)) {
+    *track = 255;
+    return;
+  }
+
+  // Extended channels (base+4..+7): params 24-33
+  if (is_spsx && control_ch >= 4) {
+    *track = (control_ch - 4) * 4;
+    if (cc > 39) { *track = 255; return; }
+    *track += cc % 4;
+    *param = (cc / 4) + MD_PARAMS_LEGACY;
+    return;
+  }
+
+  *track = control_ch * 4;
 
   if (cc < 16) {
     if (cc > 11) {
       *track += cc - 12;
-      *param = 32; // MUTE
+      *param = MODEL_MUTE;
       return;
     }
     if (cc > 7) {
       *track += (cc - 8);
-      *param = 33; // LEV
+      *param = MODEL_LEVEL;
       return;
     }
     // Ignore General MIDI CC below 8
@@ -420,7 +475,7 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
-  if (param < 32) {
+  if (param < MD_PARAMS_LEGACY) {
     cc = param;
     if (b < 2) {
       cc += 16 + b * 24;
@@ -430,9 +485,20 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     if (update_kit) {
       kit.params[track][param] = value;
     }
-  } else if (param == 32) { // MUTE
+  } else if (param >= MD_PARAMS_LEGACY && param < MD_PARAMS_PER_TRACK && is_spsx) {
+    // Extended params on extended channels (base+4..+7)
+    uint8_t ext_channel = channel + 4 + global.baseChannel;
+    cc = (param - MD_PARAMS_LEGACY) * 4 + b;
+    if (update_kit) {
+      kit.params[track][param] = value;
+      sendCC(ext_channel, cc, value, uart_);
+    } else {
+      sendPolyKeyPressure(ext_channel, cc, value, uart_);
+    }
+    return;
+  } else if (param == MODEL_MUTE) { // MUTE
     cc = 12 + b;
-  } else if (param == 33) { // LEV
+  } else if (param == MODEL_LEVEL) { // LEV
     if (update_kit) {
       kit.levels[track] = value;
     }
@@ -683,7 +749,8 @@ void MDClass::setMachine(uint8_t track, MDKit *kit) {
   setTrigGroup(track, kit->trigGroups[track]);
   setMuteGroup(track, kit->muteGroups[track]);
   // uart->useRunningStatus = true;
-  for (uint8_t i = 0; i < 24; i++) {
+  uint8_t num_params = is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  for (uint8_t i = 0; i < num_params; i++) {
     setTrackParam(track, i, kit->params[track][i]);
   }
   // uart->useRunningStatus = false;
@@ -704,7 +771,8 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
     setMuteGroup(track, machine->muteGroup);
   }
   //  uart->useRunningStatus = true;
-  for (uint8_t i = 0; i < 24; i++) {
+  uint8_t num_params = is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  for (uint8_t i = 0; i < num_params; i++) {
     setTrackParam(track, i, machine->params[i]);
   }
   //  uart->useRunningStatus = false;
@@ -783,7 +851,7 @@ void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_) {
 
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
   MDKit *kit_ = &kit;
-  memcpy(kit_->params_orig[track], machine->params, 24);
+  memcpy(kit_->params_orig[track], machine->params, MD_PARAMS_PER_TRACK);
 }
 
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
@@ -794,7 +862,7 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
 
   MDKit *kit_ = &kit;
 
-  memcpy(kit_->params[track], machine->params, 24);
+  memcpy(kit_->params[track], machine->params, MD_PARAMS_PER_TRACK);
   setOrigParams(track, machine);
 
   if (set_level) {
@@ -881,7 +949,8 @@ void MDClass::getPatternName(uint8_t pattern, char str[5]) {
 }
 
 bool MDClass::checkParamSettings() {
-  return (MD.global.baseChannel <= 12);
+  uint8_t max_base = MD.global.channelMode ? 8 : 12;
+  return (MD.global.baseChannel <= max_base);
 }
 
 bool MDClass::checkTriggerSettings() { return false; }
@@ -1214,13 +1283,15 @@ void MDClass::updateKitParams() {
   uint16_t old_mutes[16];
 
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    old_mutes[n] = mcl_seq.md_tracks[n].mute_state;
-    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
+    SeqTrack &bt = SeqTrackUtil::get_seq_track(true, n);
+    old_mutes[n] = bt.mute_state;
+    bt.mute_state = SEQ_MUTE_ON;
   }
   undokit_sync();
 
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-    mcl_seq.md_tracks[n].mute_state = old_mutes[n];
+    SeqTrack &bt = SeqTrackUtil::get_seq_track(true, n);
+    bt.mute_state = old_mutes[n];
   }
 }
 

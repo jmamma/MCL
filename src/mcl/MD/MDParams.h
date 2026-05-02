@@ -777,7 +777,24 @@
 #define MODEL_LFOS 21
 #define MODEL_LFOD 22
 #define MODEL_LFOM 23
-#define MODEL_LEVEL 33
+
+#define MODEL_ENVATT  24
+#define MODEL_ENVHLD  25
+#define MODEL_ENVDCY  26
+#define MODEL_ENVMIX  27
+#define MODEL_LFO2SPD 28
+#define MODEL_LFO2DEP 29
+#define MODEL_LFO2MIX 30
+#define MODEL_RTRG    31
+#define MODEL_RTIM    32
+#define MODEL_RENV    33
+
+#define MD_PARAMS_PER_TRACK  34
+#define MD_PARAMS_LEGACY     24
+
+// Virtual param IDs (not array indices, used by parseCC/setTrackParam)
+#define MODEL_MUTE  40
+#define MODEL_LEVEL 41
 
 #define MD_ECHO_TIME 0
 #define MD_ECHO_MOD 1

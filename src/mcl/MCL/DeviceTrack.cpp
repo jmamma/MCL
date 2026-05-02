@@ -28,6 +28,11 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
     break;
   case MD_TRACK_TYPE:
     ::new (this) MDTrack;
+    active = track_type;
+    break;
+  case MDSPSX_TRACK_TYPE:
+    ::new (this) SPSXTrack;
+    active = track_type;
     break;
   case A4_TRACK_TYPE:
     ::new (this) A4Track;

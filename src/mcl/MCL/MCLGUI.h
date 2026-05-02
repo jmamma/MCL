@@ -66,6 +66,9 @@ public:
   void delay_progress(uint16_t clock_);
 
   void draw_microtiming(uint8_t resolution, uint8_t timing);
+#if !defined(__AVR__)
+  void draw_microtiming_spsx(uint8_t speed, int8_t microtiming);
+#endif
   void clear_leftpane();
   void clear_rightpane();
 

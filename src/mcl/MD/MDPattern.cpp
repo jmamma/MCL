@@ -16,7 +16,7 @@ void MDPattern::clearPattern() {
   numRows = 0;
 
   //	m_memclr(this, sizeof(MDPattern));
-  memset(&trigPatterns, 0, 8 * 16 + 4 * 16 + 4 * 8 + 6);
+  memset(&trigPatterns, 0, sizeof(trigPatterns) + sizeof(lockPatterns) + 4 * 8 + 6);
   memset(&accentPatterns, 0, 8 * 3 * 16 + 1);
 
   memset(paramLocks, -1, sizeof(paramLocks));
@@ -37,6 +37,17 @@ void MDPattern::clearPattern() {
   //	origPosition = 0;
   //	kit = 0;
   //	scale = 0;
+
+#if !defined(__AVR__)
+  version = 0x03;
+  memset(ext_microtiming, 0, sizeof(ext_microtiming));
+  memset(ext_step_flags, 0, sizeof(ext_step_flags));
+  memset(ext_locks_params, 0, sizeof(ext_locks_params));
+  memset(ext_track_lengths, 0, sizeof(ext_track_lengths));
+  memset(ext_track_speeds, 0xFF, sizeof(ext_track_speeds));
+  patternTempo = 0;
+  chain_change = 0;
+#endif
 }
 /*
 void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
@@ -54,12 +65,20 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex->get_recordLen() - 5;
   uint16_t offset = 5;
 
-  if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {
-    DEBUG_PRINTLN(F("WRONG LENGTH"));
-    return false;
-  }
+#if !defined(__AVR__)
+  version = midi->midiSysex->getByte(6);
+  bool is_spsx_pat = (version == 0x40);
 
-  isExtraPattern = (len == (0x1521 - 6));
+  if (!is_spsx_pat) {
+#endif
+    if ((len != (0xACA - 6)) && (len != (0x1521 - 6))) {
+      DEBUG_PRINTLN(F("WRONG LENGTH"));
+      return false;
+    }
+    isExtraPattern = (len == (0x1521 - 6));
+#if !defined(__AVR__)
+  }
+#endif
 
   if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
 
@@ -83,12 +102,6 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 
   decoder.get32(&swingAmount);
 
-  /*
-   accentPattern = decoder.gget32();
-   slidePattern  = decoder.gget32();
-   swingPattern  = decoder.gget32();
-   swingAmount   = decoder.gget32();
-   */
   decoder.stop7Bit();
 
   accentAmount = decoder.gget8();
@@ -97,6 +110,12 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   scale = decoder.gget8();
   kit = decoder.gget8();
   numLockedRows = decoder.gget8();
+
+#if !defined(__AVR__)
+  if (is_spsx_pat) {
+    isExtraPattern = (patternLength > 32);
+  }
+#endif
 
   decoder.start7Bit();
   for (uint8_t i = 0; i < 64; i++) {
@@ -111,17 +130,25 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   decoder.get32(slidePatterns, 16);
   decoder.get32(swingPatterns, 16);
 
-  numRows = 0;
-  for (int i = 0; i < 16; i++) {
-    for (int j = 0; j < 24; j++) {
-      if (IS_BIT_SET32(lockPatterns[i], j)) {
-        paramLocks[i][j] = numRows;
-        lockTracks[numRows] = i;
-        lockParams[numRows] = j;
-        numRows++;
+  // Build lock tracking for V3 (params 0-23 only)
+  // SPSX defers until extension is decoded so high bits are available
+#if !defined(__AVR__)
+  if (!is_spsx_pat) {
+#endif
+    numRows = 0;
+    for (int i = 0; i < 16; i++) {
+      for (int j = 0; j < 24; j++) {
+        if (IS_BIT_SET32(lockPatterns[i], j)) {
+          paramLocks[i][j] = numRows;
+          lockTracks[numRows] = i;
+          lockParams[numRows] = j;
+          numRows++;
+        }
       }
     }
+#if !defined(__AVR__)
   }
+#endif
 
   if (isExtraPattern) {
     decoder.start7Bit();
@@ -138,6 +165,62 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     decoder.get32hi(slidePatterns, 16);
     decoder.get32hi(swingPatterns, 16);
   }
+
+#if !defined(__AVR__)
+  if (is_spsx_pat) {
+    decoder.start7Bit();
+    decoder.startRLE();
+
+    for (uint8_t t = 0; t < 16; t++) {
+      decoder.get((uint8_t*)ext_microtiming[t], 64);
+      decoder.get(ext_step_flags[t], 64);
+      decoder.get(ext_locks_params[t], MD_PATTERN_LOCK_SLOTS);
+      decoder.skip(MD_PARAMS_PER_TRACK - MD_PATTERN_LOCK_SLOTS);
+    }
+
+    decoder.get(ext_track_lengths, 16);
+    decoder.get(ext_track_speeds, 16);
+
+    // High 32 bits of lockPatterns (params 24-33)
+    decoder.get32hi(lockPatterns, 16);
+
+    // Expanded lock rows
+    uint8_t lo = decoder.gget8();
+    uint8_t hi = decoder.gget8();
+    uint16_t totalRows = (uint16_t)(lo | (hi << 8));
+
+    if (totalRows > 64) {
+      // MCL only supports 64 lock rows; skip extras
+      uint16_t extraRows = totalRows - 64;
+      decoder.skip(extraRows * 32);
+      if (isExtraPattern) {
+        decoder.skip(extraRows * 32);
+      }
+    }
+
+    lo = decoder.gget8();
+    hi = decoder.gget8();
+    patternTempo = (uint16_t)(lo | (hi << 8));
+    chain_change = decoder.gget8();
+
+    decoder.stopRLE();
+
+    // Rebuild lock tracking with full param range (0-33)
+    numRows = 0;
+    for (uint8_t i = 0; i < 16; i++) {
+      for (uint8_t j = 0; j < maxParams; j++) {
+        if (IS_BIT_SET64(lockPatterns[i], j)) {
+          if (numRows < 64) {
+            paramLocks[i][j] = numRows;
+            lockTracks[numRows] = i;
+            lockParams[numRows] = j;
+          }
+          numRows++;
+        }
+      }
+    }
+  }
+#endif
 
   return true;
 }
@@ -162,32 +245,18 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   cleanupLocks();
   recalculateLockPatterns();
 
-  /*
-  int8_t paramLocks_[16][24];
-  uint8_t locks_[64][64];
-  int8_t lockTracks_[64];
-  int8_t lockParams_[64];
-
-  numRows = 0;
-  for (int i = 0; i < 16; i++) {
-      for (int j = 0; j < 24; j++) {
-          if (IS_BIT_SET32(lockPatterns[i], j)) {
-              paramLocks_[i][j] = numRows;
-              lockTracks_[numRows] = i;
-              lockParams_[numRows] = j;
-              paramLocks_[i][j] = numRows;
-              int idx_ = paramLocks[i][j];
-              for (int k = 0; k < 64; k++) {
-                  locks_[k][numRows] = locks[k][idx_];
-              }
-              numRows++;
-          }
-      }
-  }
-   */
   uint16_t sysexLength = isExtraPattern ? 0x151d : 0xac6;
 
-  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_PATTERN_MESSAGE_ID, 0x03, origPosition);
+#if !defined(__AVR__)
+  bool use_spsx = MD.is_spsx;
+  uint8_t ver = use_spsx ? 0x40 : 0x03;
+  uint8_t paramLimit = use_spsx ? MD_PARAMS_PER_TRACK : 24;
+#else
+  uint8_t ver = 0x03;
+  uint8_t paramLimit = 24;
+#endif
+
+  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_PATTERN_MESSAGE_ID, ver, origPosition);
 
   encoder->start7Bit();
   encoder->pack32(trigPatterns, 16);
@@ -215,7 +284,7 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 
   uint8_t lockIdx = 0;
   for (uint8_t track = 0; track < 16; track++) {
-    for (uint8_t param = 0; param < 24; param++) {
+    for (uint8_t param = 0; param < paramLimit; param++) {
       int8_t lock = paramLocks[track][param];
       if ((lock != -1) && (lockIdx < 64)) {
         encoder->pack(locks[lock], 32);
@@ -247,7 +316,7 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 
     lockIdx = 0;
     for (uint8_t track = 0; track < 16; track++) {
-      for (uint8_t param = 0; param < 24; param++) {
+      for (uint8_t param = 0; param < paramLimit; param++) {
         int8_t lock = paramLocks[track][param];
         if ((lock != -1) && (lockIdx < 64)) {
           encoder->pack(locks[lock] + 32, 32);
@@ -264,8 +333,47 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
     encoder->finish();
   }
 
+#if !defined(__AVR__)
+  if (use_spsx) {
+    encoder->start7Bit();
+    encoder->startRLE();
+
+    for (uint8_t t = 0; t < 16; t++) {
+      encoder->pack((const uint8_t*)ext_microtiming[t], 64);
+      encoder->pack(ext_step_flags[t], 64);
+      encoder->pack(ext_locks_params[t], MD_PATTERN_LOCK_SLOTS);
+      encoder->fill8(0, MD_PARAMS_PER_TRACK - MD_PATTERN_LOCK_SLOTS);
+    }
+
+    encoder->pack(ext_track_lengths, 16);
+    encoder->pack(ext_track_speeds, 16);
+
+    encoder->pack32hi(lockPatterns, 16);
+
+    // numRows (little-endian u16)
+    encoder->pack8(numRows & 0xFF);
+    encoder->pack8((numRows >> 8) & 0xFF);
+
+    // MCL doesn't produce extra rows beyond 64
+
+    // Per-pattern tempo (little-endian u16)
+    encoder->pack8((uint8_t)(patternTempo & 0xFF));
+    encoder->pack8((uint8_t)((patternTempo >> 8) & 0xFF));
+    encoder->pack8(chain_change);
+
+    encoder->stopRLE();
+    encoder->finish();
+  }
+#endif
+
   encoder->finishChecksum();
 
+#if !defined(__AVR__)
+  if (use_spsx) {
+    // SPSX length is variable due to RLE; use actual encoded length
+    return encoder->finish() + 1; // +1 for F7
+  }
+#endif
   return sysexLength + 5;
 #else
   return 0;
@@ -274,9 +382,13 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 void MDPattern::recalculateLockPatterns() {
   for (uint8_t track = 0; track < 16; track++) {
     lockPatterns[track] = 0;
-    for (uint8_t param = 0; param < 24; param++) {
+    for (uint8_t param = 0; param < maxParams; param++) {
       if (paramLocks[track][param] != -1) {
+#if !defined(__AVR__)
+        SET_BIT64(lockPatterns[track], param);
+#else
         SET_BIT32(lockPatterns[track], param);
+#endif
       }
     }
   }
@@ -330,13 +442,17 @@ void MDPattern::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
   uint64_t _accentPattern;
   uint64_t _slidePattern;
   uint64_t _swingPattern;
+#if !defined(__AVR__)
+  int8_t _paramLocks[MD_PARAMS_PER_TRACK];
+#else
   int8_t _paramLocks[24];
+#endif
 
   _trigPattern = trigPatterns[srcTrack];
   _accentPattern = accentPatterns[srcTrack];
   _slidePattern = slidePatterns[srcTrack];
   _swingPattern = swingPatterns[srcTrack];
-  for (uint8_t i = 0; i < 24; i++) {
+  for (uint8_t i = 0; i < maxParams; i++) {
     _paramLocks[i] = paramLocks[srcTrack][i];
   }
 
@@ -348,7 +464,7 @@ void MDPattern::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
   slidePatterns[dstTrack] = _slidePattern;
   swingPatterns[srcTrack] = swingPatterns[dstTrack];
   swingPatterns[dstTrack] = _swingPattern;
-  for (uint8_t i = 0; i < 24; i++) {
+  for (uint8_t i = 0; i < maxParams; i++) {
     paramLocks[srcTrack][i] = paramLocks[dstTrack][i];
     paramLocks[dstTrack][i] = _paramLocks[i];
   }

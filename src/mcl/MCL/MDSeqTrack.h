@@ -77,7 +77,7 @@ public:
                       bool ignore_locks_disabled = false);
 
   void recalc_slides();
-  void find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask);
+  void find_next_locks(uint8_t curidx, uint8_t step, uint8_t &mask);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);
   void set_track_step(uint8_t step, uint8_t utiming,

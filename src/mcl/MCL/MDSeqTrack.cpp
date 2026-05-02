@@ -296,6 +296,11 @@ void MDSeqTrack::recalc_slides() {
     if (!steps[step].locks_enabled) {
       continue;
     }
+    // Skip params where find_next_locks found no target
+    if (find_mask & (1 << c)) {
+      locks_slide_data[c].init();
+      continue;
+    }
     auto next_lockstep = locks_slide_next_lock_step[c];
     if (step == next_lockstep) {
       locks_slide_data[c].init();
@@ -318,7 +323,7 @@ end:
   locks_slides_recalc = 255;
 }
 
-void MDSeqTrack::find_next_locks(uint8_t curidx, uint8_t step, uint8_t mask) {
+void MDSeqTrack::find_next_locks(uint8_t curidx, uint8_t step, uint8_t &mask) {
   DEBUG_PRINT_FN();
   DEBUG_DUMP(step);
   // caller ensures step < length
@@ -1026,8 +1031,19 @@ void MDSeqTrack::clear_track(bool locks) {
 
 void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   DEBUG_PRINT_FN();
-  for (uint8_t i = 0; i < 24; i++) {
+
+#if !defined(__AVR__)
+  uint8_t num_params = pattern->version >= 0x40 ? MD_PARAMS_PER_TRACK : 24;
+#else
+  uint8_t num_params = 24;
+#endif
+
+  for (uint8_t i = 0; i < num_params; i++) {
+#if !defined(__AVR__)
+    if (!IS_BIT_SET64(pattern->lockPatterns[track_number], i)) {
+#else
     if (!IS_BIT_SET32(pattern->lockPatterns[track_number], i)) {
+#endif
       continue;
     }
     int8_t idx = pattern->paramLocks[track_number][i];
@@ -1051,9 +1067,6 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   } else {
     pslide = (uint8_t *)&pattern->slidePatterns[track_number];
   }
-
-  // 32770.0 is scalar to get MD swing amount in to readible percentage
-  // MD sysex docs are not clear on this one so i had to hax it.
 
   // 16385 ≈ 2^14; use shift to avoid float arithmetic
   uint32_t swing_q14 = pattern->swingAmount;
@@ -1080,6 +1093,24 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
       }
     }
   }
+
+#if !defined(__AVR__)
+  // Apply SPSX step flags (conditionals) and microtiming
+  if (pattern->version >= 0x40) {
+    for (uint8_t a = 0; a < length; a++) {
+      if (steps[a].trig) {
+        uint8_t flags = pattern->ext_step_flags[track_number][a];
+        steps[a].cond_id = flags >> 2;
+        steps[a].cond_plock = (flags >> 1) & 1;
+        steps[a].locks_enabled = flags & 1;
+        int8_t mt = pattern->ext_microtiming[track_number][a];
+        if (mt != 0) {
+          timing[a] = (uint8_t)((int16_t)timing[a] + mt);
+        }
+      }
+    }
+  }
+#endif
 }
 
 void MDSeqTrack::modify_track(uint8_t dir) {

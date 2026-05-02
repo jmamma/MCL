@@ -151,8 +151,8 @@ static const char* get_param_name(const model_param_name_t *names, uint8_t param
   uint8_t id;
   if (names == NULL)
     return NULL;
-  
-  while ((id = names[i].id) != 127 && i < 24) {
+
+  while ((id = names[i].id) != 127 && i < MD_PARAMS_PER_TRACK) {
     if (id == param) {
       return names[i].name ;
     }
@@ -170,12 +170,31 @@ static uint16_t get_model_param_names(uint8_t model) {
   return 0xFFFF;
 }
 
+// Extended param names (params 24-33) — hardcoded to avoid resource changes
+static const char* ext_param_name(uint8_t param) {
+  switch (param) {
+    case MODEL_ENVATT:  return "ATK";
+    case MODEL_ENVHLD:  return "HLD";
+    case MODEL_ENVDCY:  return "DCY";
+    case MODEL_ENVMIX:  return "MIX";
+    case MODEL_LFO2SPD: return "SP2";
+    case MODEL_LFO2DEP: return "DP2";
+    case MODEL_LFO2MIX: return "MX2";
+    case MODEL_RTRG:    return "RTG";
+    case MODEL_RTIM:    return "RTM";
+    case MODEL_RENV:    return "REN";
+    default:            return NULL;
+  }
+}
+
 /// Caller is responsible to make machine_param_names is loaded in RM
 const char* model_param_name(uint8_t model, uint8_t param) {
-  if (param == 32) {
+  if (param == MODEL_MUTE) {
     return "MUT";
-  } else if (param == 33) {
+  } else if (param == MODEL_LEVEL) {
     return "LEV";
+  } else if (param >= MD_PARAMS_LEGACY && param < MD_PARAMS_PER_TRACK) {
+    return ext_param_name(param);
   }
 
   uint16_t model_idx;

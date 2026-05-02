@@ -122,9 +122,10 @@ void MDSysexListenerClass::end() {
       }
       MD.kit.models[track] = model;
 
-      // Params (24 bytes)
+      // Params (34 bytes for SPS-X, 24 for legacy)
       if (data_flags & 0x01) {
-        for (int i = 0; i < 24; i++) {
+        uint8_t num_params = MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+        for (int i = 0; i < num_params; i++) {
           MD.kit.params[track][i] = sysex->getByte(offset++);
         }
       }

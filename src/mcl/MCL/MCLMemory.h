@@ -71,7 +71,7 @@ constexpr size_t NUM_LOCKS = 8;
 #define MEMORY_ALIGN(size) (size)  // for avr, dont align
 #endif
 
-constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(534);
+constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(548); // SPSXTrack = MDTrack + seq_version byte
 constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2094);
 
 constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);
@@ -90,6 +90,12 @@ constexpr size_t EMPTY_TRACK_LEN = GRID1_TRACK_LEN - DEVICE_TRACK_LEN;
 
 // Total size of main grid cache for MD tracks
 constexpr size_t MD_CACHE_LEN = GRID1_TRACK_LEN * NUM_MD_TRACKS;
+
+#if !defined(__AVR__)
+// SPSX tracks are larger than MD tracks (~1056 bytes vs 544)
+constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1056);
+constexpr size_t SPSX_CACHE_LEN = SPSX_TRACK_LEN * NUM_MD_TRACKS;
+#endif
 
 // Total size of auxiliary tracks cache
 constexpr size_t AUX_CACHE_LEN = GRIDCHAIN_TRACK_LEN +
@@ -115,6 +121,9 @@ extern uint8_t md_cache[MD_CACHE_LEN];
 extern uint8_t aux_cache[AUX_CACHE_LEN];
 extern uint8_t ext_cache[EXT_CACHE_LEN];
 extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
+#if !defined(__AVR__)
+extern uint8_t spsx_cache[SPSX_CACHE_LEN];
+#endif
 
 // Declare the start addresses as external constants. They are not `constexpr` because their
 // values (the array addresses) are resolved at link-time. We use `uintptr_t` as it is
@@ -122,6 +131,9 @@ extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
 extern const uintptr_t BANK1_MD_TRACKS_START;
 extern const uintptr_t BANK1_AUX_TRACKS_START;
 extern const uintptr_t BANK1_EXT_TRACKS_START;
+#if !defined(__AVR__)
+extern const uintptr_t BANK1_SPSX_TRACKS_START;
+#endif
 
 extern const uintptr_t BANK1_GRIDCHAIN_TRACK_START;
 extern const uintptr_t BANK1_PERF_TRACK_START;

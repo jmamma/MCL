@@ -5,6 +5,9 @@
 #include "Grid.h"
 #include "Shared.h"
 #include "MDSeqTrackData.h"
+#if !defined(__AVR__)
+#include "SPSXSeqTrackData.h"
+#endif
 #include "PerfData.h"
 #define FILENAME_CLIPBOARD "clipboard.tmp"
 
@@ -21,6 +24,9 @@ public:
   Grid grids[NUM_GRIDS];
 
   MDSeqStep steps[16];
+#if !defined(__AVR__)
+  SPSXSeqStep spsx_steps[16];
+#endif
   PerfScene scene;
 
   bool init();

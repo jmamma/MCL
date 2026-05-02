@@ -45,6 +45,9 @@ void MidiClockClass::init() {
   beat_counter = 1;
   step_counter = 1;
   isInit = false;
+#if !defined(__AVR__)
+  interp_budget = 0;
+#endif
   clearLed();
 }
 

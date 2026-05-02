@@ -425,8 +425,16 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel
   if (is_midi_model_) {
     machine_pitch = note_num;
     next_track = track_number;
-    mcl_seq.md_tracks[next_track].send_notes_off();
-    mcl_seq.md_tracks[next_track].send_notes(machine_pitch);
+#if !defined(__AVR__)
+    if (mcl_seq.using_spsx_tracks) {
+      mcl_seq.spsx_tracks[next_track].send_notes_off();
+      mcl_seq.spsx_tracks[next_track].send_notes(machine_pitch);
+    } else
+#endif
+    {
+      mcl_seq.md_tracks[next_track].send_notes_off();
+      mcl_seq.md_tracks[next_track].send_notes(machine_pitch);
+    }
     goto rec;
   }
   if (machine_pitch == 255) {
@@ -443,8 +451,16 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel
 void SeqPtcPage::record(uint8_t pitch, uint8_t track) {
   if ((recording) && (MidiClock.state == 2)) {
     reset_undo();
-    mcl_seq.md_tracks[track].record_track(127);
-    mcl_seq.md_tracks[track].record_track_pitch(pitch);
+#if !defined(__AVR__)
+    if (mcl_seq.using_spsx_tracks) {
+      mcl_seq.spsx_tracks[track].record_track(127);
+      mcl_seq.spsx_tracks[track].record_track_pitch(pitch);
+    } else
+#endif
+    {
+      mcl_seq.md_tracks[track].record_track(127);
+      mcl_seq.md_tracks[track].record_track_pitch(pitch);
+    }
   }
 
 }
@@ -767,14 +783,22 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
         }
         bool is_midi_model_ = ((MD.kit.models[pos] & 0xF0) == MID_01_MODEL);;
         if (is_midi_model_) {
-          mcl_seq.md_tracks[pos].send_notes_on();
+#if !defined(__AVR__)
+          if (mcl_seq.using_spsx_tracks) { mcl_seq.spsx_tracks[pos].send_notes_on(); }
+          else
+#endif
+          { mcl_seq.md_tracks[pos].send_notes_on(); }
         }
         else {
           MD.triggerTrack(pos, msg[2]);
         }
         if ((seq_ptc_page.recording) && (MidiClock.state == 2)) {
           reset_undo();
-          mcl_seq.md_tracks[pos].record_track(msg[2]);
+#if !defined(__AVR__)
+          if (mcl_seq.using_spsx_tracks) { mcl_seq.spsx_tracks[pos].record_track(msg[2]); }
+          else
+#endif
+          { mcl_seq.md_tracks[pos].record_track(msg[2]); }
         }
       }
     }
@@ -843,7 +867,11 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
     bool is_midi_model_ = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);
     if (is_midi_model_) {
       if (!arp_track->enabled || (MidiClock.state != 2)) {
-      mcl_seq.md_tracks[n].send_notes_off();
+#if !defined(__AVR__)
+        if (mcl_seq.using_spsx_tracks) { mcl_seq.spsx_tracks[n].send_notes_off(); }
+        else
+#endif
+        { mcl_seq.md_tracks[n].send_notes_off(); }
       }
     }
     return;
@@ -1027,7 +1055,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track > 15) {
     return;
   }
-  if (track_param == 32) {
+  if (track_param == MODEL_MUTE) {
     return;
   } // don't process mute
   if (mcl_cfg.poly_mask && IS_BIT_SET16(mcl_cfg.poly_mask, track)) {

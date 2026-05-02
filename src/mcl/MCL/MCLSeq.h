@@ -12,6 +12,9 @@
 #include "ExtSeqTrack.h"
 #include "MDFXseqTrack.h"
 #include "PerfSeqTrack.h"
+#if !defined(__AVR__)
+#include "SPSXSeqTrack.h"
+#endif
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -51,6 +54,15 @@ public:
   static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
   MDArpSeqTrack md_arp_tracks[NUM_MD_TRACKS];
+
+#if !defined(__AVR__)
+  SPSXSeqTrack spsx_tracks[NUM_MD_TRACKS];
+  bool using_spsx_tracks = false;
+  uint16_t neighbor_trig_mask = 0;
+  uint16_t fill_mask = 0;
+  void switch_to_spsx();
+  void switch_to_legacy();
+#endif
 
 #ifdef EXT_TRACKS
   ExtSeqTrack ext_tracks[NUM_EXT_TRACKS];
