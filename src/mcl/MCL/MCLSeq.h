@@ -57,6 +57,10 @@ public:
 
 #if !defined(__AVR__)
   SPSXSeqTrack spsx_tracks[NUM_MD_TRACKS];
+  // Engine-mode flag: true when the sequencer is running the SPSX track
+  // engine (spsx_tracks[]) instead of legacy md_tracks[]. Distinct from
+  // MD.is_spsx (firmware capability) — readers asking "what does the engine
+  // store?" should test this, not MD.is_spsx.
   bool using_spsx_tracks = false;
   uint16_t neighbor_trig_mask = 0;
   uint16_t fill_mask = 0;
@@ -69,6 +73,9 @@ public:
     if (held) fill_mask |= (uint16_t)(1u << track);
     else fill_mask &= (uint16_t)~(1u << track);
   }
+#else
+  // AVR has no SPSX engine. Provide a constant so portable readers compile.
+  static constexpr bool using_spsx_tracks = false;
 #endif
 
 #ifdef EXT_TRACKS

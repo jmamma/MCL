@@ -58,6 +58,9 @@ public:
    * the channel settings and the trigger settings of the MachineDrum.
    **/
   MDGlobalLight global;
+  // True when the connected MD firmware reports SPSX caps. Controls only
+  // device-facing decisions (sysex format, kit param ranges). Does NOT mean
+  // the local sequencer is in SPSX mode — see MCLSeq::using_spsx_tracks.
   bool is_spsx = false;
 
   virtual void setup_listeners();

@@ -137,7 +137,6 @@ void MCLSeq::onMidiStartImmediateCallback() {
       md_arp_tracks[i].reset();
     }
   }
-#endif
 
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     // ext_tracks[i].start_clock32th = 0;
@@ -442,7 +441,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param == MODEL_MUTE) { // Mute
     SeqTrackUtil::with_md_track(track, [&](auto &t) { t.mute_state = value > 0; });
    }
-  if (track_param >= (MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY)) {
+  // Engine, not device: perf/lfo learn_param indexes engine-shaped state.
+  if (track_param >= (using_spsx_tracks ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY)) {
     return;
   }
   perf_page.learn_param(track, track_param, value);

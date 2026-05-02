@@ -198,7 +198,8 @@ public:
      oled_display.textbox_P(mclstr_fill, mclstr_scenes);
      if (scene >= NUM_SCENES) { return; }
 
-     uint8_t num_params = MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+     // Engine, not device: scenes store params indexed by engine width.
+     uint8_t num_params = mcl_seq.using_spsx_tracks ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
      for (uint8_t track = 0; track < 16; track++) {
        for (uint8_t param = 0; param < num_params; param++) {
          if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
