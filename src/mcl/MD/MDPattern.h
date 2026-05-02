@@ -126,6 +126,12 @@ public:
   inline int8_t *lock_row(uint16_t row) {
     return (row < 64) ? (int8_t*)locks[row] : ext_locks[row - 64];
   }
+#else
+  // AVR has no ext_locks; only rows 0..63 exist. Provided so the encoder
+  // doesn't need #ifdef branches at every access site.
+  inline int8_t *lock_row(uint8_t row) { return (int8_t*)locks[row]; }
+#endif
+#if !defined(__AVR__)
   inline int16_t lock_track(uint16_t row) const {
     return (row < 64) ? (int16_t)lockTracks[row] : ext_lockTracks[row - 64];
   }

@@ -301,9 +301,13 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   uint8_t lockIdx = 0;
   for (uint8_t track = 0; track < 16; track++) {
     for (uint8_t param = 0; param < paramLimit; param++) {
-      int8_t lock = paramLocks[track][param];
+      // paramLocks values can exceed 63 on SPSX patterns loaded from sysex
+      // (rows 64..MAX_LOCK_ROWS-1 live in ext_locks). Use lock_row() so the
+      // access stays bounded; ext rows are also re-emitted in the SPSX block
+      // below for the host decoder.
+      int16_t lock = paramLocks[track][param];
       if ((lock != -1) && (lockIdx < 64)) {
-        encoder->pack(locks[lock], 32);
+        encoder->pack((const uint8_t*)lock_row((uint16_t)lock), 32);
         lockIdx++;
       }
     }
@@ -333,9 +337,9 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
     lockIdx = 0;
     for (uint8_t track = 0; track < 16; track++) {
       for (uint8_t param = 0; param < paramLimit; param++) {
-        int8_t lock = paramLocks[track][param];
+        int16_t lock = paramLocks[track][param];
         if ((lock != -1) && (lockIdx < 64)) {
-          encoder->pack(locks[lock] + 32, 32);
+          encoder->pack((const uint8_t*)(lock_row((uint16_t)lock) + 32), 32);
           lockIdx++;
         }
       }
