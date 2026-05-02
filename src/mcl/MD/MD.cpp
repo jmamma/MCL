@@ -252,8 +252,9 @@ void MDClass::get_mutes() {
   uint16_t mutes;
   if (get_mute_state(mutes)) {
     for (uint8_t n = 0; n < 16; n++) {
-      mcl_seq.md_tracks[n].mute_state = IS_BIT_SET16(mutes, n);
-      DEBUG_PRINTLN(mcl_seq.md_tracks[n].mute_state);
+      uint8_t m = IS_BIT_SET16(mutes, n);
+      SeqTrackUtil::with_md_track(n, [m](auto &t) { t.mute_state = m; });
+      DEBUG_PRINTLN(m);
     }
   } else {
     DEBUG_PRINTLN("mute state failed");

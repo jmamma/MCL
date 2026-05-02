@@ -6,6 +6,7 @@
 #include "AuxPages.h"
 #include "SeqPages.h"
 #include "GridTask.h"
+#include "SeqTrackUtil.h"
 
 uint16_t MDSeqTrack::gui_update = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
@@ -243,8 +244,9 @@ void MDSeqTrack::post_seq(MidiUartClass *uart_) {
   }
   if (MDSeqTrack::gui_update) {
     if (last_md_track < NUM_MD_TRACKS && mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_md_track)) {
-      auto &active_track = mcl_seq.md_tracks[last_md_track];
-      MD.sync_seqtrack(active_track.length, active_track.speed, active_track.length - 1, uart_);
+      SeqTrackUtil::with_md_track(last_md_track, [uart_](auto &t) {
+        MD.sync_seqtrack(t.length, t.speed, t.length - 1, uart_);
+      });
     }
     MDSeqTrack::gui_update = 0;
     grid_task.update = true;

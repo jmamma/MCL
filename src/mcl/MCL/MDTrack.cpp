@@ -3,6 +3,7 @@
 #include "MCLActions.h"
 #include "Shared.h"
 #include "MCLSeq.h"
+#include "SeqTrackUtil.h"
 
 void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
                           SeqTrack *seq_track) {
@@ -58,12 +59,12 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   case TRANSITION_UNMUTE:
     DEBUG_PRINTLN(F("unmuting"));
     MD.muteTrack(tracknumber, false);
-    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_OFF;
+    SeqTrackUtil::with_md_track(n, [](auto &t) { t.mute_state = SEQ_MUTE_OFF; });
     break;
   case TRANSITION_MUTE:
     DEBUG_PRINTLN(F("muting"));
     MD.muteTrack(tracknumber, true);
-    mcl_seq.md_tracks[n].mute_state = SEQ_MUTE_ON;
+    SeqTrackUtil::with_md_track(n, [](auto &t) { t.mute_state = SEQ_MUTE_ON; });
     break;
   default:
     break;
