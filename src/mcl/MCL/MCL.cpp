@@ -394,9 +394,13 @@ bool tbd_handleEvent(gui_event_t *event) {
     }
 
     if (key != 255) {
-        if (MD.connected && (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
-                             key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT ||
-                             key == MDX_KEY_YES || key == MDX_KEY_NO)) {
+        const bool is_arrow = (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
+                               key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT);
+        // Arrows on the grid page navigate MCL, not the MD's GUI.
+        const bool md_forward = MD.connected &&
+            !(is_arrow && mcl.currentPage() == GRID_PAGE);
+        if (md_forward && (is_arrow ||
+                           key == MDX_KEY_YES || key == MDX_KEY_NO)) {
             if (!is_release && key_interface.is_key_down(key)) {
                 return true; // suppress key repeat
             }
