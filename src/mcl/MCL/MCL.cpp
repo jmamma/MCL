@@ -310,6 +310,13 @@ bool tbd_handleEvent(gui_event_t *event) {
         return true;
     }
 
+    // SPS-mode hijacks BUTTON1 as the BANK_GROUP toggle (A-D ↔ E-H), so
+    // intercept it before the BUTTON1..4 fall-through to mcl_handleEvent.
+    if (tbd_sps_mode && event->source == ButtonsClass::BUTTON1) {
+        key_interface.key_event(MDX_KEY_BANKGROUP, is_release);
+        return true;
+    }
+
     // BUTTON1..BUTTON4 are MCL local roles handled by mcl_handleEvent.
     // GridPage's native BUTTON1+BUTTON4 chord (SYSTEM_PAGE) is preserved here.
     if (event->source <= ButtonsClass::BUTTON4) {
