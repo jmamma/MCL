@@ -75,6 +75,12 @@ public:
   void draw_encoder(uint8_t x, uint8_t y, uint8_t value, bool highlight = false);
   void draw_encoder(uint8_t x, uint8_t y, Encoder *encoder);
 
+  // Bottom-strip encoder readout (TBD only, free real estate at y=32..63
+  // on the 128x64 panel). Draws four columns: dial + value + label.
+  // Pass nullptr for any unused encoder; nullptr labels print blank.
+  void draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
+                          const char *const labels[4]);
+
   bool show_encoder_value(Encoder *encoder, int timeout = SHOW_VALUE_TIMEOUT);
 
   void draw_cross(uint8_t x, uint8_t y, uint8_t color = WHITE);

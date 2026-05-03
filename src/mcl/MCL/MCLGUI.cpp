@@ -348,6 +348,37 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
   draw_encoder(x, y, encoder->cur);
 }
 
+void MCLGUI::draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
+                                const char *const labels[4]) {
+  // 128 px wide, 4 columns of 32 px. Dial is 11x11, drawn near the top
+  // of the strip; value (0-127) printed below it; label on the bottom row.
+  oled_display.fillRect(0, y_top, 128, 32, BLACK);
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont();
+  oled_display.setTextSize(1);
+  oled_display.setTextColor(WHITE, BLACK);
+  for (uint8_t n = 0; n < 4; n++) {
+    uint8_t x = n * 32;
+    if (encoders[n]) {
+      draw_encoder(x + 10, y_top + 2, encoders[n]);
+      char val[4];
+      put_value_at2(encoders[n]->cur, val);
+      oled_display.setCursor(x + 8, y_top + 17);
+      oled_display.print(val);
+    }
+    if (labels[n]) {
+      uint8_t len = (uint8_t)strlen(labels[n]);
+      if (len > 5) len = 5;
+      uint8_t lw = len * 6;
+      oled_display.setCursor(x + (32 - lw) / 2, y_top + 24);
+      for (uint8_t k = 0; k < len; k++) {
+        oled_display.write(labels[n][k]);
+      }
+    }
+  }
+  oled_display.setFont(oldfont);
+}
+
 bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
   uint8_t match = 255;
 

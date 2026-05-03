@@ -695,8 +695,7 @@ void GridPage::display() {
   }
 #endif
 
-#ifdef PLATFORM_TBD
-  // DEBUG: raw button data
+#if defined(PLATFORM_TBD) && defined(DEBUG_TBD_BUTTONS)
   {
     extern Ui tbd_ui;
     ui_data_t dbg = tbd_ui.CopyUiData();
@@ -717,6 +716,12 @@ void GridPage::display() {
     snprintf(buf, sizeof(buf), "fl:%02X ml:%04X", dbg.f_btns_long_press, dbg.mcl_btns_long_press);
     oled_display.print(buf);
   }
+#endif
+
+#ifdef PLATFORM_TBD
+  // Bottom 32 px (y=32..63 on the 128x64 panel) hosts the SPS-mode
+  // encoder strip when the latch is active.
+  sps_mode.draw_strip(32);
 #endif
 }
 

@@ -8,13 +8,13 @@
 #include "GridPages.h"
 #include "KeyInterface.h"
 #include "GUI_hardware.h"
+#include "MCLGUI.h"
+#include "ResourceManager.h"
 
 SpsMode sps_mode;
 
 namespace {
 
-// Panel arrow IDs used throughout. UP=6, LEFT=7, DOWN=8, RIGHT=9 in
-// ButtonsClass.
 inline bool is_arrow_source(uint8_t source) {
   return source == ButtonsClass::FUNC_BUTTON6 ||
          source == ButtonsClass::FUNC_BUTTON7 ||
@@ -32,13 +32,45 @@ inline bool is_release(const gui_event_t *event) {
 
 } // namespace
 
+bool SpsMode::encoder_passthrough_page() const {
+  PageIndex pg = mcl.currentPage();
+  return (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
+          pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0 ||
+          pg == PAGE_SELECT_PAGE);
+}
+
 void SpsMode::set_latched(bool v) {
   latched_ = v;
   GUI_hardware.led.sps_active = v;
   GUI_hardware.led.updateLeds = true;
-  if (!v && grid_page.bank_popup) {
+  if (v) {
+    resync_from_kit();
+  } else if (grid_page.bank_popup) {
     grid_page.close_bank_popup();
   }
+}
+
+void SpsMode::resync_from_kit() {
+  bound_track_ = MD.currentTrack;
+  bound_page_  = MD.currentSynthPage;
+  uint8_t base = MD.currentSynthPage * 8;
+  for (uint8_t i = 0; i < 4; i++) {
+    uint8_t param = base + i;
+    if (param >= MD_PARAMS_LEGACY) {
+      enc[i].setValue(0);
+      continue;
+    }
+    enc[i].setValue(MD.kit.params[MD.currentTrack][param]);
+  }
+}
+
+void SpsMode::send_param(uint8_t i) {
+  if (!MD.connected) return;
+  uint8_t base = MD.currentSynthPage * 8;
+  uint8_t param = base + i;
+  if (param >= MD_PARAMS_LEGACY) return;
+  uint8_t v = (uint8_t)enc[i].cur;
+  MD.setTrackParam(MD.currentTrack, param, v, nullptr, true);
 }
 
 bool SpsMode::handle_toggle_button(gui_event_t *event) {
@@ -52,9 +84,6 @@ bool SpsMode::handle_toggle_button(gui_event_t *event) {
 bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
   if (!is_arrow_source(event->source)) return false;
   if (!key_interface.is_key_down(MDX_KEY_FUNC)) return false;
-  // Eat both press and release so the arrow's grid navigation modifier
-  // and the SPS-mode bank routing don't also fire. MD windows are
-  // toggle-on commands so we only fire on press.
   if (MD.connected && is_press(event)) {
     switch (event->source) {
       case ButtonsClass::FUNC_BUTTON6: MD.toggle_accent_window(); break; // UP
@@ -90,10 +119,8 @@ bool SpsMode::handle_arrow_to_bank(gui_event_t *event) {
     case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKD; break; // UP
     default: return true;
   }
-  // The TBD event loop auto-repeats held arrows; ignore repeats so the
-  // bank popup doesn't reopen and re-flood MD with LED sysex.
   if (!is_release(event) && key_interface.is_key_down(key)) {
-    return true;
+    return true; // already down — ignore TBD auto-repeat
   }
   key_interface.key_event(key, is_release(event));
   return true;
@@ -102,17 +129,15 @@ bool SpsMode::handle_arrow_to_bank(gui_event_t *event) {
 bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
   if (!latched_ || !MD.connected) return false;
   if (trig_idx >= 16) return false;
-  // Pages that own the trig pad keep their local role.
   PageIndex pg = mcl.currentPage();
   if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
       pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0) {
     return false;
   }
-  // Bank popup's pattern-load handler still wins on grid page.
   if (grid_page.bank_popup) return false;
 
   if (is_press(event)) {
-    MD.hold_trig(trig_idx + 1);     // hold_trig API is 1-indexed
+    MD.hold_trig(trig_idx + 1);
   } else if (is_release(event)) {
     MD.release_trig(trig_idx + 1);
   }
@@ -120,43 +145,49 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
 }
 
 void SpsMode::poll_encoders() {
-  if (!latched_ || !MD.connected) return;
-  PageIndex pg = mcl.currentPage();
-  // Pages that own the four encoders for their own purposes — leave them
-  // alone. PAGE_SELECT_PAGE in particular needs the encoder to scroll the
-  // page list. Step / perf use them for live track/step editing.
-  if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
-      pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0 ||
-      pg == PAGE_SELECT_PAGE) {
-    return;
+  if (!latched_) return;
+  if (encoder_passthrough_page()) return;
+
+  // Track / synth-page change: bring our cur values back in sync with
+  // the kit so the encoder strip doesn't show a stale snapshot.
+  if (bound_track_ != MD.currentTrack || bound_page_ != MD.currentSynthPage) {
+    resync_from_kit();
   }
-  // Rate-limit to match Encoder::update_rotations (rot_res=1,
-  // ENCODER_RES_MULTIPLIER=1) so SPS-mode tweaking feels the same as
-  // turning a page-bound encoder. Without this the raw panel delta gives
-  // ~2x the apparent speed.
-  static int8_t accum[4] = {0, 0, 0, 0};
-  const uint8_t base = (uint8_t)(MD.currentSynthPage * 8);
+
+  // Snapshot the panel deltas, clear the source so the active page
+  // doesn't also rotate, then run the standard MCLEncoder update path.
+  encoder_t snapshot[4];
   for (uint8_t i = 0; i < 4; i++) {
-    int8_t delta = Encoders.encoders[i].normal;
-    if (delta == 0) continue;
-    uint8_t param = base + i;
-    if (param >= MD_PARAMS_LEGACY) {
-      Encoders.encoders[i].normal = 0;
-      accum[i] = 0;
-      continue;
-    }
-    accum[i] += delta;
-    int inc = 0;
-    while (accum[i] >= 2)  { accum[i] -= 2; inc += 1; }
-    while (accum[i] <= -2) { accum[i] += 2; inc -= 1; }
-    // Eat the delta so the active MCL page's encoders don't also rotate.
+    snapshot[i] = Encoders.encoders[i];
     Encoders.encoders[i].normal = 0;
-    if (inc == 0) continue;
-    int v = (int)MD.kit.params[MD.currentTrack][param] + inc;
-    if (v < 0) v = 0;
-    if (v > 127) v = 127;
-    MD.setTrackParam(MD.currentTrack, param, (uint8_t)v, nullptr, true);
   }
+  for (uint8_t i = 0; i < 4; i++) {
+    enc[i].update(&snapshot[i]);
+    if (enc[i].cur < enc[i].min) enc[i].cur = enc[i].min;
+    if (enc[i].cur > enc[i].max) enc[i].cur = enc[i].max;
+    if (enc[i].hasChanged()) {
+      send_param(i);
+      enc[i].old = enc[i].cur;
+    }
+  }
+}
+
+void SpsMode::draw_strip(uint8_t y_top) {
+  if (!latched_) return;
+  if (encoder_passthrough_page()) return;
+
+  Encoder *encs[4];
+  const char *labels[4];
+  uint8_t base = MD.currentSynthPage * 8;
+  uint8_t model = MD.kit.get_model(MD.currentTrack);
+  for (uint8_t i = 0; i < 4; i++) {
+    uint8_t param = base + i;
+    encs[i] = (param < MD_PARAMS_LEGACY) ? &enc[i] : nullptr;
+    labels[i] = (param < MD_PARAMS_LEGACY)
+                    ? model_param_name(model, param)
+                    : nullptr;
+  }
+  mcl_gui.draw_encoder_strip(y_top, encs, labels);
 }
 
 #else // !PLATFORM_TBD
@@ -169,6 +200,10 @@ bool SpsMode::handle_button1(gui_event_t *) { return false; }
 bool SpsMode::handle_arrow_to_bank(gui_event_t *) { return false; }
 bool SpsMode::handle_trig_forward(gui_event_t *, uint8_t) { return false; }
 void SpsMode::poll_encoders() {}
+void SpsMode::draw_strip(uint8_t) {}
+void SpsMode::resync_from_kit() {}
+void SpsMode::send_param(uint8_t) {}
+bool SpsMode::encoder_passthrough_page() const { return true; }
 void SpsMode::set_latched(bool) {}
 
 #endif // PLATFORM_TBD
