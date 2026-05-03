@@ -262,14 +262,12 @@ MidiDevice *MidiActivePeering::get_device(uint8_t port) {
 }
 
 void MidiActivePeering::update_dev_cache() {
-  uint8_t p1 = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
-  uint8_t p2 = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
-  dev1 = get_device(p1);
-  dev2 = get_device(p2);
+  PortSlot s[SLOT_COUNT];
+  resolve_slots(s);
+  dev1 = s[SLOT_MD].port    ? get_device(s[SLOT_MD].port)    : &null_midi_device;
+  dev2 = s[SLOT_ELEKT].port ? get_device(s[SLOT_ELEKT].port) : &null_midi_device;
   // USB GENER maps to dev2 slot
-  if (mcl_cfg.usb_device == 3) {
-    dev2 = get_device(UARTUSB_PORT);
-  }
+  if (mcl_cfg.usb_device == 3) dev2 = get_device(UARTUSB_PORT);
 }
 
 GenericMidiDevice::GenericMidiDevice()
@@ -294,28 +292,23 @@ void MidiActivePeering::run() {
   }
 #endif
 
-  uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
-  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
+  PortSlot s[SLOT_COUNT];
+  resolve_slots(s);
 
-  MidiDevice **drivers = port1_drivers;
-  uint8_t nr_drivers = countof(port1_drivers);
-  if (!mcl_cfg.uart1_device && md_port != UARTUSB_PORT) {
-    nr_drivers = 1;
-    drivers = generic_drivers;
-  }
-  if (mcl_cfg.uart1_device != 2 || md_port == UARTUSB_PORT) {
-    probePort(md_port, drivers, nr_drivers, &connected_midi_devices[md_port - 1], resource_buf);
-  }
+  auto probe_slot = [&](const PortSlot &slot,
+                        MidiDevice **drivers, uint8_t nr) {
+    if (!slot.port || slot.off) return;
+    // GENER replaces the slot's driver list when this UART is set to GENER
+    bool is_gener = (slot.port == UART1_PORT && mcl_cfg.uart1_device == 0) ||
+                    (slot.port == UART2_PORT && mcl_cfg.uart2_device == 0);
+    if (is_gener) { drivers = generic_drivers; nr = 1; }
+    probePort(slot.port, drivers, nr,
+              &connected_midi_devices[slot.port - 1], resource_buf);
+  };
+
+  probe_slot(s[SLOT_MD], port1_drivers, countof(port1_drivers));
 #ifdef EXT_TRACKS
-  drivers = port2_drivers;
-  nr_drivers = countof(port2_drivers);
-  if (!mcl_cfg.uart2_device && ext_port != UARTUSB_PORT) {
-    nr_drivers = 1;
-    drivers = generic_drivers;
-  }
-  if (mcl_cfg.uart2_device != 2 || ext_port == UARTUSB_PORT) {
-    probePort(ext_port, drivers, nr_drivers, &connected_midi_devices[ext_port - 1], resource_buf);
-  }
+  probe_slot(s[SLOT_ELEKT], port2_drivers, countof(port2_drivers));
   if (resource_loaded) {
     // XXX doesn't work yet
     // R.Restore(resource_buf, resource_size);
