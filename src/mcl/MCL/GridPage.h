@@ -61,8 +61,7 @@ public:
   // bank_popup states:
   //   0 = closed
   //   1 = bank held (preview, MD-bank-key entry)
-  //   2 = pattern stage (bank chosen, trig press loads/chains)
-  //   3 = bank-select stage (waiting for trig to pick a bank)
+  //   2 = pattern stage (trig press loads/chains in current bank)
   uint8_t bank_popup = 0;
   uint16_t bank_popup_lastclock;
   uint16_t bank_popup_loadmask;
@@ -71,20 +70,23 @@ public:
   // paths are suppressed — close_bank_popup() is only called when the
   // external trigger fires (release of the modifier).
   bool bank_popup_external = false;
+  // While true, the trig pad is showing the colour-coded bank overlay
+  // (driven by an arrow modifier held during the external flow). Trig
+  // press in this mode picks a bank instead of loading a pattern.
+  bool bank_overlay_active = false;
 
-  // Bank-select stage: 8 banks laid out as top-half / bottom-half halves of
-  // the trig pad (Layout A). Trigs 0..3 -> banks 0..3, trigs 8..11 -> banks 4..7.
+  // 8 banks laid out as top-half / bottom-half halves of the trig pad
+  // (Layout A). Trigs 0..3 -> banks 0..3, trigs 8..11 -> banks 4..7.
   static constexpr uint16_t BANK_SELECT_TOP_MASK = 0x000F; // trig 0..3
   static constexpr uint16_t BANK_SELECT_BOT_MASK = 0x0F00; // trig 8..11
   static constexpr uint8_t  BANK_SELECT_COUNT    = 8;
 
-  // Trig that picked the bank in stage 3 — its release must be eaten so
-  // it doesn't fire EVENT_NOTE RELEASED and trip notes_all_off → close.
-  // 0xFF = none pending.
+  // Trig that picked the bank during the bank overlay — its release must
+  // be eaten so it doesn't fall through to a bogus pattern load. 0xFF = none.
   uint8_t bank_pick_trig = 0xFF;
-  // Most-recently-pressed pattern trig in stage-2 external flow. Used by
-  // display() so the OLED reflects the press before the queued load
-  // updates grid_task.last_active_row. 0xFF = nothing pressed yet.
+  // Most-recently-pressed pattern trig in the external pattern-select flow.
+  // Used by display() so the OLED reflects the press before the queued
+  // load updates grid_task.last_active_row. 0xFF = nothing pressed yet.
   uint8_t bank_popup_pending_trig = 0xFF;
 
   bool draw_encoders;
@@ -120,11 +122,19 @@ public:
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
   void load_old_col();
-  // Open the colour-coded bank-select stage. Caller is responsible for
-  // calling close_bank_popup() to finalize (e.g. on modifier release).
+  // Open the external pattern-select popup (single action: trig press
+  // loads pattern in current bank). Caller is responsible for calling
+  // close_bank_popup() to finalize (e.g. on modifier release).
   // Platform-agnostic — entry trigger is wired in tbd_handleEvent.
-  void open_bank_select();
+  void open_pattern_select();
+  // Push/pop the colour-coded bank overlay on the trig pad. Used while an
+  // arrow modifier is held during the external pattern-select flow.
+  void enter_bank_overlay();
+  void exit_bank_overlay();
   void close_bank_popup();
+  // LED painters for the external pattern-select popup.
+  void paint_pattern_view();
+  void paint_bank_overlay();
 
   void loop();
   void send_row_led();
