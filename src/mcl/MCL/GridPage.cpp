@@ -105,7 +105,8 @@ void GridPage::send_row_led() {
 }
 void GridPage::close_bank_popup() {
   if (bank_popup == 0) { return; }
-  if (bank_popup == 2) {
+  bool was_external = bank_popup_external;
+  if (bank_popup == 2 && !was_external) {
     MD.draw_close_bank();
   }
   key_interface.off();
@@ -118,9 +119,12 @@ void GridPage::close_bank_popup() {
   bank_popup_loadmask = 0;
   bank_popup_external = false;
   note_interface.init_notes();
-  // Drop colour-override mode and clear blink leds.
-  mcl_gui.set_trigleds(0, TRIGLED_OVERLAY);
-  MD.set_trigleds(0, TRIGLED_EXCLUSIVENDYNAMIC, 1);
+  // Drop colour-override mode locally. MD-side LED reset only when the
+  // MD-driven flow opened the popup; the internal flow leaves the MD alone.
+  mcl_gui.set_trigleds_local(0, TRIGLED_OVERLAY);
+  if (!was_external) {
+    MD.set_trigleds(0, TRIGLED_EXCLUSIVENDYNAMIC, 1);
+  }
 }
 
 // Layout A bank-select stage. The colour-coded LEDs serve as the only
@@ -971,12 +975,20 @@ bool GridPage::handleEvent(gui_event_t *event) {
         grid_page.bank = b;
         grid_page.bank_popup = 2;
         grid_page.bank_popup_lastclock = read_clock_ms();
-        // Hand the pattern grid to the existing render path.
+        // Internal mode — keep all LED traffic on TBD/MCL side; do not
+        // call mcl_gui.set_trigleds (echoes to MD) or send_row_led
+        // (MD-only). Active-row blink on TBD is set via the local blink
+        // mask so the user sees the current pattern blinking.
         uint16_t *pattern_mask = (uint16_t *)&grid_page.row_states[0];
-        mcl_gui.set_trigleds(pattern_mask[grid_page.bank],
-                             TRIGLED_EXCLUSIVENDYNAMIC);
-        grid_page.send_row_led();
-        MD.draw_bank(b);
+        mcl_gui.set_trigleds_local(pattern_mask[grid_page.bank],
+                                   TRIGLED_EXCLUSIVENDYNAMIC);
+        if (grid_task.last_active_row < GRID_LENGTH) {
+          uint64_t blink_rows[2] = {0};
+          SET_BIT128_P(&blink_rows, grid_task.last_active_row);
+          uint16_t *blink_mask = (uint16_t *)&blink_rows[0];
+          mcl_gui.set_trigleds_local(blink_mask[grid_page.bank],
+                                     TRIGLED_EXCLUSIVENDYNAMIC, true);
+        }
         return true;
       }
       if (grid_page.bank_popup > 0) {

@@ -999,6 +999,10 @@ void MCLGUI::set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink) {
   GUI_hardware.led.set_trigleds(bitmask, mode, blink, true);
 }
 
+void MCLGUI::set_trigleds_local(uint16_t bitmask, TrigLEDMode mode, bool blink) {
+  GUI_hardware.led.set_trigleds(bitmask, mode, blink, true);
+}
+
 void MCLGUI::set_trigleds_color(uint16_t bitmask, uint32_t rgb) {
   GUI_hardware.led.set_trigleds_color(bitmask, rgb);
 }
