@@ -52,8 +52,8 @@ void SpsMode::set_latched(bool v) {
 
 void SpsMode::resync_from_kit() {
   bound_track_ = MD.currentTrack;
-  bound_page_  = MD.currentSynthPage;
-  uint8_t base = MD.currentSynthPage * 8;
+  bound_sub_page_ = sub_page_;
+  uint8_t base = param_base();
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t param = base + i;
     if (param >= MD_PARAMS_LEGACY) {
@@ -66,8 +66,7 @@ void SpsMode::resync_from_kit() {
 
 void SpsMode::send_param(uint8_t i) {
   if (!MD.connected) return;
-  uint8_t base = MD.currentSynthPage * 8;
-  uint8_t param = base + i;
+  uint8_t param = param_base() + i;
   if (param >= MD_PARAMS_LEGACY) return;
   uint8_t v = (uint8_t)enc[i].cur;
   MD.setTrackParam(MD.currentTrack, param, v, nullptr, true);
@@ -127,8 +126,24 @@ bool SpsMode::handle_arrow_to_bank(gui_event_t *event) {
 }
 
 bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
-  if (!latched_ || !MD.connected) return false;
+  if (!latched_) return false;
   if (trig_idx >= 16) return false;
+
+  // MCL_B (TBD_KEY_SPS) held + trig press selects the 4-param window.
+  // Each panel column (top trig N + bottom trig N+8) maps to sub_page = N.
+  // Eaten so the trig doesn't also forward to the MD as a panel key.
+  // We check the button state directly (rather than MDX_KEY_FUNC) because
+  // MCL_B and MCL_Y share that key code — only MCL_B is the SPS-mode
+  // modifier here.
+  if (BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS)) {
+    if (is_press(event)) {
+      sub_page_ = trig_idx & 0x07;  // collapse 16 trigs into 8 columns
+      resync_from_kit();
+    }
+    return true;
+  }
+
+  if (!MD.connected) return false;
   PageIndex pg = mcl.currentPage();
   if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
       pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0) {
@@ -156,9 +171,9 @@ void SpsMode::poll_encoders() {
   if (!latched_) return;
   if (encoder_passthrough_page()) return;
 
-  // Track / synth-page change: bring our cur values back in sync with
-  // the kit so the encoder strip doesn't show a stale snapshot.
-  if (bound_track_ != MD.currentTrack || bound_page_ != MD.currentSynthPage) {
+  // Track / sub-page change: bring our cur values back in sync with the
+  // kit so the encoder strip doesn't show a stale snapshot.
+  if (bound_track_ != MD.currentTrack || bound_sub_page_ != sub_page_) {
     resync_from_kit();
   }
 
@@ -182,6 +197,52 @@ void SpsMode::poll_encoders() {
   }
 }
 
+void SpsMode::poll_page_overlay() {
+  const bool want_overlay =
+      latched_ && BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS);
+  if (want_overlay == page_overlay_painted_) {
+    // If still painted, refresh in case sub_page_ moved (so the blink
+    // tracks the newly-picked column without waiting for a next frame).
+    if (want_overlay) {
+      // Fall through to repaint.
+    } else {
+      return;
+    }
+  }
+  if (!want_overlay) {
+    // Drop colour-override mode. Page rendering takes back over —
+    // anything drawing trig LEDs continuously will repopulate.
+    mcl_gui.set_trigleds_local(0, TRIGLED_OVERLAY);
+    page_overlay_painted_ = false;
+    return;
+  }
+  // 8 warm hues, one per column. Each column = the top trig (col)
+  // paired with the bottom trig (col + 8). Picked to be visually
+  // distinct under bright lights but stay in the warm half of the
+  // wheel so it reads as "this is the page selector, not a bank".
+  static constexpr uint32_t kCols[8] = {
+      ((uint32_t)255 << 16) | ((uint32_t)0   << 8) | 0,    // red
+      ((uint32_t)255 << 16) | ((uint32_t)48  << 8) | 0,    // red-orange
+      ((uint32_t)255 << 16) | ((uint32_t)96  << 8) | 0,    // orange
+      ((uint32_t)220 << 16) | ((uint32_t)128 << 8) | 0,    // dark amber
+      ((uint32_t)255 << 16) | ((uint32_t)160 << 8) | 0,    // amber
+      ((uint32_t)200 << 16) | ((uint32_t)128 << 8) | 24,   // gold
+      ((uint32_t)255 << 16) | ((uint32_t)200 << 8) | 0,    // yellow
+      ((uint32_t)255 << 16) | ((uint32_t)96  << 8) | 32,   // peach
+  };
+  mcl_gui.set_trigleds_color(0xFFFF, 0); // clear all
+  for (uint8_t c = 0; c < 8; c++) {
+    uint16_t mask = ((uint16_t)1 << c) | ((uint16_t)1 << (c + 8));
+    mcl_gui.set_trigleds_color(mask, kCols[c]);
+  }
+  // Highlight the current sub-page column with a blink so the user
+  // can tell which 4-param window is in play.
+  uint8_t cur = sub_page_ & 0x07;
+  uint16_t cur_mask = ((uint16_t)1 << cur) | ((uint16_t)1 << (cur + 8));
+  mcl_gui.set_trigleds_blink_color(cur_mask, kCols[cur]);
+  page_overlay_painted_ = true;
+}
+
 void SpsMode::draw_strip(uint8_t y_top) {
   if (!latched_) return;
   if (encoder_passthrough_page()) return;
@@ -189,7 +250,7 @@ void SpsMode::draw_strip(uint8_t y_top) {
   Encoder *encs[4];
   const char *labels[4];
   bool show[4];
-  uint8_t base = MD.currentSynthPage * 8;
+  uint8_t base = param_base();
   uint8_t model = MD.kit.get_model(MD.currentTrack);
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t param = base + i;
@@ -212,6 +273,7 @@ bool SpsMode::handle_button1(gui_event_t *) { return false; }
 bool SpsMode::handle_arrow_to_bank(gui_event_t *) { return false; }
 bool SpsMode::handle_trig_forward(gui_event_t *, uint8_t) { return false; }
 void SpsMode::poll_encoders() {}
+void SpsMode::poll_page_overlay() {}
 void SpsMode::draw_strip(uint8_t) {}
 void SpsMode::resync_from_kit() {}
 void SpsMode::send_param(uint8_t) {}

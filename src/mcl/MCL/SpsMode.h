@@ -34,6 +34,10 @@ public:
   // the encoder column (step / perf / page-select).
   void poll_encoders();
 
+  // Paint / clear the page-select overlay on the trig LEDs while PAGE
+  // is held during the latch. Called from MCL::loop on state changes.
+  void poll_page_overlay();
+
   // Draw the encoder strip on the bottom of the OLED. Call from
   // GridPage::display() (or any other 32-px-tall page that wants to
   // show it). No-op when the latch is off.
@@ -57,16 +61,23 @@ public:
 private:
   bool latched_ = false;
   uint8_t bound_track_ = 255;
-  uint8_t bound_page_ = 255;
+  uint8_t bound_sub_page_ = 255;
+  // Param window selector (0..7). Each window covers 4 consecutive
+  // params; PAGE+trig addresses one of 8 columns directly. With legacy
+  // (24-param) kits only 0..5 are populated; SPSX (34) extends to 8.
+  uint8_t sub_page_ = 0;
   // Per-encoder "last used" timestamp for the value-show timeout (matches
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
   // when the timeout has fully elapsed.
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
+  // Whether the page-select trig overlay is currently painted.
+  bool page_overlay_painted_ = false;
 
   void set_latched(bool v);
   bool encoder_passthrough_page() const;
   void send_param(uint8_t i);
   bool show_value(uint8_t i) const;
+  uint8_t param_base() const { return (uint8_t)(sub_page_ * 4); }
 };
 
 extern SpsMode sps_mode;

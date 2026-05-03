@@ -229,6 +229,7 @@ void MCL::setup() {
 void MCL::loop() {
   perf_page.encoder_check();
   sps_mode.poll_encoders();
+  sps_mode.poll_page_overlay();
   key_interface.check_key_throttle();
   GUI.loop();
 }
@@ -389,10 +390,15 @@ bool tbd_handleEvent(gui_event_t *event) {
             case ButtonsClass::FUNC_BUTTON8:  key = MDX_KEY_DOWN;  break;
             case ButtonsClass::FUNC_BUTTON9:  key = MDX_KEY_RIGHT; break;
             case ButtonsClass::TBD_KEY_FUNC:  key = MDX_KEY_FUNC;  break;
-            case ButtonsClass::TBD_KEY_YES:   key = MDX_KEY_YES;   break;
-            case ButtonsClass::TBD_KEY_PAGE:  key = MDX_KEY_PAGE;  break;
-            // MCL_B is now a second FUNC modifier (the original SPS-passthrough
-            // role moved to the FUNC_BUTTON5 latch + arrow-as-bank flow above).
+            // MCL_X (top-right) -> YES, MCL_A (bottom-right) -> NO. Both
+            // local AND transmitted to the MD; the slot names TBD_KEY_PAGE
+            // / TBD_KEY_YES are kept as wiring slots even though the MDX
+            // codes have moved.
+            case ButtonsClass::TBD_KEY_PAGE:  key = MDX_KEY_YES;   break; // MCL_X
+            case ButtonsClass::TBD_KEY_YES:   key = MDX_KEY_NO;    break; // MCL_A
+            // MCL_B is the SPS-mode page-select modifier (held + trig =
+            // sub_page pick). Kept on MDX_KEY_FUNC so chord shortcuts that
+            // already key off FUNC continue to work.
             case ButtonsClass::TBD_KEY_SPS:   key = MDX_KEY_FUNC;  break;
             default: break;
         }
@@ -401,11 +407,13 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (key != 255) {
         const bool is_arrow = (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
                                key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT);
-        // Arrows on the grid page navigate MCL, not the MD's GUI.
-        const bool md_forward = MD.connected &&
-            !(is_arrow && mcl.currentPage() == GRID_PAGE);
-        if (md_forward && (is_arrow ||
-                           key == MDX_KEY_YES || key == MDX_KEY_NO)) {
+
+        // Arrows: forward to MD's GUI when off the grid page; on grid page
+        // they stay local for grid navigation. Forward-only path — local
+        // cmd_key_state is touched via SET_BIT64 directly, no EVENT_CMD.
+        const bool md_forward_arrow = MD.connected && is_arrow &&
+            mcl.currentPage() != GRID_PAGE;
+        if (md_forward_arrow) {
             if (!is_release && key_interface.is_key_down(key)) {
                 return true; // suppress key repeat
             }
@@ -415,8 +423,6 @@ bool tbd_handleEvent(gui_event_t *event) {
                     case MDX_KEY_DOWN:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_down_arrow();  break;
                     case MDX_KEY_LEFT:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_left_arrow();  break;
                     case MDX_KEY_RIGHT: CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_right_arrow(); break;
-                    case MDX_KEY_YES:   MD.release_yes_button(); break;
-                    case MDX_KEY_NO:    MD.release_no_button();  break;
                     default: break;
                 }
             } else {
@@ -425,12 +431,27 @@ bool tbd_handleEvent(gui_event_t *event) {
                     case MDX_KEY_DOWN:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_down_arrow();  break;
                     case MDX_KEY_LEFT:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_left_arrow();  break;
                     case MDX_KEY_RIGHT: SET_BIT64(key_interface.cmd_key_state, key); MD.hold_right_arrow(); break;
-                    case MDX_KEY_YES:   MD.press_yes_button();   break;
-                    case MDX_KEY_NO:    MD.press_no_button();    break;
+                    default: break;
                 }
             }
             return true;
         }
+
+        // YES/NO: transmit to MD AND fire the local key_event so MCL pages
+        // (which key off MDX_KEY_YES / MDX_KEY_NO via EVENT_CMD) still see
+        // the press. Persists across SPS-mode latching since neither the
+        // SpsMode handlers above nor the SPS-mode poll touches these keys.
+        if (MD.connected && (key == MDX_KEY_YES || key == MDX_KEY_NO)) {
+            if (is_release) {
+                if (key == MDX_KEY_YES) MD.release_yes_button();
+                else                    MD.release_no_button();
+            } else {
+                if (key == MDX_KEY_YES) MD.press_yes_button();
+                else                    MD.press_no_button();
+            }
+            // Fall through to key_event below.
+        }
+
         key_interface.key_event(key, is_release);
         return true;
     }
