@@ -38,6 +38,7 @@
 #define MDX_KEY_PAGE 0x38
 #define MDX_KEY_FUNCYES 0x3A
 #define MDX_KEY_FUNCEXTENDED 0x3B
+#define MDX_KEY_SPS 0x3C
 
 #include "Task.h"
 

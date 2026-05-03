@@ -410,8 +410,8 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     }
     if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
 #ifdef PLATFORM_TBD
-      // ENC4 press is owned by tbd_handleEvent (sticky-shift toggle). Let
-      // it fall through so the registered handler can time press-vs-hold.
+      // ENC4 press is owned by tbd_handleEvent (page-shift-menu latch).
+      // Let it fall through so the registered handler can time press-vs-hold.
       return false;
 #else
       page_select = get_category_page(3);

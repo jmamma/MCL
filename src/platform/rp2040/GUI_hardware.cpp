@@ -136,7 +136,7 @@ ButtonsClass::ButtonsClass() {
     enc1_rotated_while_held  = false;
     enc4_long_press_seen     = false;
     enc4_rotated_while_held  = false;
-    tbd_shift_latched        = false;
+    tbd_menu_latched         = false;
 #endif
     clear();
 }
@@ -236,21 +236,24 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   //   TOP_LEFT -> BUTTON1 (left action: NO/save/cancel, page-dependent)
   //   TOP_RIGHT-> BUTTON4 (right action: YES/load/confirm, page-dependent)
   // BUTTON2 (MCL PageSelect) is driven only by ENC1 click above.
-  // BUTTON3 (shift) is driven by the ENC4 sticky-shift latch — toggling
-  // tbd_shift_latched generates a normal press/release pair via pollEvents,
-  // so every existing BUTTON3 chord and menu hookup keeps working.
-  // MCL_B has no MCL slot for now.
+  // BUTTON3 mirrors the ENC4 page-shift-menu latch. SeqPage and GridPage
+  // open their per-page shift menu on BUTTON3 press and apply on release,
+  // so toggling tbd_menu_latched here synthesizes the same event pair an
+  // AVR rig produces by holding/releasing a hardware shift key. The MDX
+  // passthrough modifier is a separate input on MCL_B (TBD_KEY_SPS).
   STORE_B_CURRENT(BUTTON1, TBD_BUTTON_TOP_LEFT(ui_data));
   STORE_B_CURRENT(BUTTON4, TBD_BUTTON_TOP_RIGHT(ui_data));
-  STORE_B_CURRENT(BUTTON3, !tbd_shift_latched);
+  STORE_B_CURRENT(BUTTON3, !tbd_menu_latched);
 
   // Cluster: left column = modifiers, right column = direct MD actions.
   //   MCL_Y (TL) -> MDX_KEY_FUNC
   //   MCL_X (TR) -> MDX_KEY_PAGE
   //   MCL_A (BR) -> MDX_KEY_YES
+  //   MCL_B (BL) -> MDX_KEY_SPS  (held = reroute panel to MDX passthrough)
   STORE_B_CURRENT(TBD_KEY_FUNC, TBD_BUTTON_Y(ui_data));
   STORE_B_CURRENT(TBD_KEY_PAGE, TBD_BUTTON_X(ui_data));
   STORE_B_CURRENT(TBD_KEY_YES,  TBD_BUTTON_A(ui_data));
+  STORE_B_CURRENT(TBD_KEY_SPS,  TBD_BUTTON_B(ui_data));
 
   // Sequencer Buttons
   for (int i = 0; i < 16; i++) {

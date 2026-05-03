@@ -231,6 +231,7 @@ void MCL::loop() {
   GUI.loop();
 }
 
+#ifdef PLATFORM_TBD
 static bool tbd_rec_held = false;
 
 bool tbd_handleEvent(gui_event_t *event) {
@@ -243,7 +244,7 @@ bool tbd_handleEvent(gui_event_t *event) {
         return false;
     }
 
-    const bool shift_held = BUTTON_DOWN(Buttons.BUTTON3);
+    const bool sps_held   = key_interface.is_key_down(MDX_KEY_SPS);
     const bool is_press   = (event->mask == EVENT_BUTTON_PRESSED);
     const bool is_release = !(event->mask & 1);
 
@@ -269,10 +270,13 @@ bool tbd_handleEvent(gui_event_t *event) {
         return true;
     }
 
-    // ENC4 click is sticky shift (tap to latch / tap to unlatch).
-    // pollTBD drives BUTTON3.B_CURRENT from tbd_shift_latched, so toggling
-    // the latch generates a normal BUTTON3 press or release event for every
-    // existing shift consumer. Same tap gating as ENC1.
+    // ENC4 tap latches/unlatches the per-page shift menu (seq menu on
+    // sequencer pages, slot menu on the grid page). pollTBD mirrors the
+    // latch onto BUTTON3.B_CURRENT, so each toggle synthesizes a normal
+    // BUTTON3 press or release pair — the existing menu open/apply
+    // handlers in SeqPage and GridPage consume them unchanged. The MDX
+    // passthrough modifier lives on MCL_B (MDX_KEY_SPS), not here.
+    // Same tap gating as ENC1.
     if (event->source == ButtonsClass::ENCODER4) {
         static bool enc4_armed = false;
         if (is_press) {
@@ -281,14 +285,14 @@ bool tbd_handleEvent(gui_event_t *event) {
         }
         if (enc4_armed && !Buttons.enc4_long_press_seen
                        && !Buttons.enc4_rotated_while_held) {
-            Buttons.tbd_shift_latched = !Buttons.tbd_shift_latched;
+            Buttons.tbd_menu_latched = !Buttons.tbd_menu_latched;
         }
         enc4_armed = false;
         return true;
     }
 
-    // shift + TOP_RIGHT (BUTTON4) -> BANK_GROUP. Suppress BUTTON4 to MCL pages.
-    if (shift_held && event->source == ButtonsClass::BUTTON4) {
+    // SPS + TOP_RIGHT (BUTTON4) -> BANK_GROUP. Suppress BUTTON4 to MCL pages.
+    if (sps_held && event->source == ButtonsClass::BUTTON4) {
         key_interface.key_event(MDX_KEY_BANKGROUP, is_release);
         return true;
     }
@@ -301,18 +305,19 @@ bool tbd_handleEvent(gui_event_t *event) {
 
     uint8_t key = 255;
 
-    // shift chords: arrows -> banks, transport -> menus.
-    // Suppresses the source's normal MDX key.
-    if (shift_held) {
+    // SPS-passthrough: while MCL_B is held, panel keys reroute to MDX keys.
+    // Arrows -> banks, transport -> menus. Suppresses the source's normal role.
+    // Mapping is provisional and slated for revision.
+    if (sps_held) {
         switch (event->source) {
-            case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKA;    break; // shift + UP
-            case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKB;    break; // shift + RIGHT
-            case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKC;    break; // shift + DOWN
-            case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKD;    break; // shift + LEFT
-            case ButtonsClass::FUNC_BUTTON1: key = MDX_KEY_KIT;      break; // shift + REC
-            case ButtonsClass::FUNC_BUTTON2: key = MDX_KEY_GLOBAL;   break; // shift + PLAY
-            case ButtonsClass::FUNC_BUTTON3: key = MDX_KEY_SCALE;    break; // shift + STOP
-            case ButtonsClass::FUNC_BUTTON5: key = MDX_KEY_EXTENDED; break; // shift + NO
+            case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKA;    break; // SPS + UP
+            case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKB;    break; // SPS + RIGHT
+            case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKC;    break; // SPS + DOWN
+            case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKD;    break; // SPS + LEFT
+            case ButtonsClass::FUNC_BUTTON1: key = MDX_KEY_KIT;      break; // SPS + REC
+            case ButtonsClass::FUNC_BUTTON2: key = MDX_KEY_GLOBAL;   break; // SPS + PLAY
+            case ButtonsClass::FUNC_BUTTON3: key = MDX_KEY_SCALE;    break; // SPS + STOP
+            case ButtonsClass::FUNC_BUTTON5: key = MDX_KEY_EXTENDED; break; // SPS + NO
             default: break;
         }
         if (key != 255) {
@@ -381,6 +386,7 @@ bool tbd_handleEvent(gui_event_t *event) {
             case ButtonsClass::TBD_KEY_FUNC:  key = MDX_KEY_FUNC;  break;
             case ButtonsClass::TBD_KEY_YES:   key = MDX_KEY_YES;   break;
             case ButtonsClass::TBD_KEY_PAGE:  key = MDX_KEY_PAGE;  break;
+            case ButtonsClass::TBD_KEY_SPS:   key = MDX_KEY_SPS;   break;
             default: break;
         }
     }
@@ -419,6 +425,7 @@ bool tbd_handleEvent(gui_event_t *event) {
     }
     return false;
 }
+#endif // PLATFORM_TBD
 
 bool mcl_handleEvent(gui_event_t *event) {
   /*
