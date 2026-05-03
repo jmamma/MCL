@@ -333,19 +333,46 @@ bool tbd_handleEvent(gui_event_t *event) {
 
     uint8_t key = 255;
 
-    // SPS-mode arrow → bank: latched mode reroutes the four arrows to
-    // MDX_KEY_BANKA..D. The existing MD bank-popup flow in mcl_handleEvent
-    // takes it from there (popup, trig press loads, auto-close), so we
-    // don't need a parallel implementation.
-    if (tbd_sps_mode) {
-        switch (event->source) {
-            case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKA; break; // LEFT
-            case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKB; break; // DOWN
-            case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKC; break; // RIGHT
-            case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKD; break; // UP
-            default: break;
+    {
+        const bool is_arrow_src =
+            (event->source == ButtonsClass::FUNC_BUTTON6 ||
+             event->source == ButtonsClass::FUNC_BUTTON7 ||
+             event->source == ButtonsClass::FUNC_BUTTON8 ||
+             event->source == ButtonsClass::FUNC_BUTTON9);
+        const bool func_held_now = key_interface.is_key_down(MDX_KEY_FUNC);
+
+        // FUNC + ARROW takes priority over SPS-mode: open the corresponding
+        // MD window via 0x40 GUI commands. Eaten so the SPS-mode bank flow
+        // and the local grid navigation modifier don't also fire.
+        if (is_arrow_src && func_held_now) {
+            if (MD.connected && is_press) {
+                switch (event->source) {
+                    case ButtonsClass::FUNC_BUTTON6: MD.toggle_accent_window(); break; // UP
+                    case ButtonsClass::FUNC_BUTTON9: MD.toggle_swing_window();  break; // RIGHT
+                    case ButtonsClass::FUNC_BUTTON8: MD.toggle_slide_window();  break; // DOWN
+                    case ButtonsClass::FUNC_BUTTON7: MD.toggle_mute_window();   break; // LEFT
+                    default: break;
+                }
+            }
+            return true;
         }
-        if (key != 255) {
+
+        // SPS-mode arrow → bank: latched mode reroutes the four arrows to
+        // MDX_KEY_BANKA..D. Existing MD bank-popup flow in mcl_handleEvent
+        // takes it from there. Suppress key-repeat presses (the TBD event
+        // loop auto-repeats held arrows) so the popup doesn't reopen and
+        // flood the MD with LED sysex.
+        if (tbd_sps_mode && is_arrow_src) {
+            switch (event->source) {
+                case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKA; break; // LEFT
+                case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKB; break; // DOWN
+                case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKC; break; // RIGHT
+                case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKD; break; // UP
+                default: break;
+            }
+            if (!is_release && key_interface.is_key_down(key)) {
+                return true; // already-down: ignore key-repeat
+            }
             key_interface.key_event(key, is_release);
             return true;
         }
@@ -423,28 +450,6 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (key != 255) {
         const bool is_arrow = (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
                                key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT);
-        const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
-
-        // FUNC + ARROW: open the corresponding MD window directly via the
-        // 0x40 GUI commands — no need to chord FUNC over the wire. Eat
-        // the arrow press locally so the grid navigation modifier doesn't
-        // also fire.
-        if (MD.connected && func_held && is_arrow && is_press) {
-            switch (key) {
-                case MDX_KEY_UP:    MD.toggle_accent_window(); break;
-                case MDX_KEY_RIGHT: MD.toggle_swing_window();  break;
-                case MDX_KEY_DOWN:  MD.toggle_slide_window();  break;
-                case MDX_KEY_LEFT:  MD.toggle_mute_window();   break;
-                default: break;
-            }
-            return true;
-        }
-        // FUNC + ARROW release: just eat to keep the press/release pair
-        // symmetrical (the MD windows are toggle-on commands, no release).
-        if (func_held && is_arrow) {
-            return true;
-        }
-
         // Arrows on the grid page navigate MCL, not the MD's GUI.
         const bool md_forward = MD.connected &&
             !(is_arrow && mcl.currentPage() == GRID_PAGE);
