@@ -249,7 +249,8 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   //   MCL_Y (TL) -> MDX_KEY_FUNC
   //   MCL_X (TR) -> MDX_KEY_PAGE
   //   MCL_A (BR) -> MDX_KEY_YES
-  //   MCL_B (BL) -> MDX_KEY_SPS  (held = reroute panel to MDX passthrough)
+  //   MCL_B (BL) -> MDX_KEY_FUNC (second FUNC modifier; SPS-mode lives on
+  //                               the FUNC_BUTTON5 latch in tbd_handleEvent)
   STORE_B_CURRENT(TBD_KEY_FUNC, TBD_BUTTON_Y(ui_data));
   STORE_B_CURRENT(TBD_KEY_PAGE, TBD_BUTTON_X(ui_data));
   STORE_B_CURRENT(TBD_KEY_YES,  TBD_BUTTON_A(ui_data));

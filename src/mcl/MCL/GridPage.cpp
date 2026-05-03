@@ -65,7 +65,6 @@ void GridPage::cleanup() {
   oled_display.setFont();
   oled_display.setTextColor(WHITE, BLACK);
   bank_popup = 0;
-  bank_popup_external = false;
 }
 
 void GridPage::load_row(uint8_t n, uint8_t row) {
@@ -105,8 +104,7 @@ void GridPage::send_row_led() {
 }
 void GridPage::close_bank_popup() {
   if (bank_popup == 0) { return; }
-  bool was_external = bank_popup_external;
-  if (bank_popup == 2 && !was_external) {
+  if (bank_popup == 2) {
     MD.draw_close_bank();
   }
   key_interface.off();
@@ -117,102 +115,9 @@ void GridPage::close_bank_popup() {
   last_page = NULL_PAGE;
   bank_popup = 0;
   bank_popup_loadmask = 0;
-  bank_popup_external = false;
-  bank_overlay_active = false;
-  bank_pick_trig = 0xFF;
-  bank_popup_pending_trig = 0xFF;
   note_interface.init_notes();
-  // Drop colour-override mode locally. MD-side LED reset only when the
-  // MD-driven flow opened the popup; the internal flow leaves the MD alone.
-  mcl_gui.set_trigleds_local(0, TRIGLED_OVERLAY);
-  if (!was_external) {
-    MD.set_trigleds(0, TRIGLED_EXCLUSIVENDYNAMIC, 1);
-  }
-}
-
-// Open the external pattern-select popup directly into the pattern stage.
-// The current bank is whatever was selected previously; an arrow modifier
-// (handled in tbd_handleEvent) flips into the bank overlay temporarily so
-// the user can pick a different bank without leaving the popup.
-void GridPage::open_pattern_select() {
-  if (bank_popup != 0) { return; }
-  if (mcl.currentPage() != GRID_PAGE) {
-    if (last_page == 255) {
-      last_page = mcl.currentPage();
-    }
-    mcl.setPage(GRID_PAGE);
-  }
-  bank_popup = 2;
-  bank_popup_loadmask = 0;
-  bank_popup_lastclock = read_clock_ms();
-  bank_popup_external = true;
-  bank_overlay_active = false;
-  bank_pick_trig = 0xFF;
-  bank_popup_pending_trig = 0xFF;
-  bool clear_states = false;
-  key_interface.on(clear_states);
-  paint_pattern_view();
-}
-
-void GridPage::enter_bank_overlay() {
-  if (!bank_popup_external || bank_popup != 2) { return; }
-  bank_overlay_active = true;
-  // Always repaint — the caller may be re-entering after a bank pick,
-  // in which case the highlight needs to move to the new current bank.
-  paint_bank_overlay();
-}
-
-void GridPage::exit_bank_overlay() {
-  if (!bank_overlay_active) { return; }
-  bank_overlay_active = false;
-  bank_pick_trig = 0xFF;
-  paint_pattern_view();
-}
-
-void GridPage::paint_pattern_view() {
-  // Colour-override palette so the just-pressed trig can stand out from
-  // the steady "pattern exists" lights.
-  constexpr uint32_t kColorPattern =
-      ((uint32_t)80 << 16) | ((uint32_t)0  << 8) | 0;   // dim red
-  constexpr uint32_t kColorActive =
-      ((uint32_t)255 << 16) | ((uint32_t)0  << 8) | 0;  // bright red
-  constexpr uint32_t kColorPick =
-      ((uint32_t)160 << 16) | ((uint32_t)80 << 8) | 0;  // amber
-  uint16_t *pattern_mask = (uint16_t *)&row_states[0];
-  uint16_t patterns = pattern_mask[bank & 0x07];
-
-  mcl_gui.set_trigleds_color(0xFFFF, 0); // clear all
-  mcl_gui.set_trigleds_color(patterns, kColorPattern);
-
-  // Active row blinks bright red — only when it lives in the current bank.
-  uint16_t active_bit = 0;
-  if (grid_task.last_active_row < GRID_LENGTH) {
-    uint8_t row_bank = (grid_task.last_active_row / 16) & 0x07;
-    if (row_bank == (bank & 0x07)) {
-      active_bit = (uint16_t)1 << (grid_task.last_active_row % 16);
-      mcl_gui.set_trigleds_blink_color(active_bit, kColorActive);
-    }
-  }
-
-  // Most-recent press: amber blink (overrides active-row colour if same trig).
-  if (bank_popup_pending_trig < 16) {
-    mcl_gui.set_trigleds_blink_color((uint16_t)1 << bank_popup_pending_trig,
-                                     kColorPick);
-  }
-}
-
-void GridPage::paint_bank_overlay() {
-  // Two-colour palette: top half blue (banks 0..3), bottom half green
-  // (banks 4..7). Current bank blinks in its own colour.
-  constexpr uint32_t kColorTop = ((uint32_t)0  << 16) | ((uint32_t)32 << 8) | 96;
-  constexpr uint32_t kColorBot = ((uint32_t)0  << 16) | ((uint32_t)96 << 8) | 32;
-  mcl_gui.set_trigleds_color(0xFFFF, 0); // clear all trigs
-  mcl_gui.set_trigleds_color(BANK_SELECT_TOP_MASK, kColorTop);
-  mcl_gui.set_trigleds_color(BANK_SELECT_BOT_MASK, kColorBot);
-  uint8_t cur = bank & 0x07;
-  uint8_t cur_trig = (cur < 4) ? cur : (cur - 4 + 8);
-  uint32_t cur_color = (cur < 4) ? kColorTop : kColorBot;
-  mcl_gui.set_trigleds_blink_color((uint16_t)1 << cur_trig, cur_color);
+  // Clear blink leds
+  MD.set_trigleds(0, TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 
 void GridPage::load_old_col() {
@@ -354,7 +259,7 @@ void GridPage::loop() {
      param4.checkHandle();
   }
 
-  if (bank_popup == 2 && !bank_popup_external &&
+  if (bank_popup == 2 &&
       clock_diff(bank_popup_lastclock, read_clock_ms()) > 800) {
     close_bank_popup();
     return;
@@ -726,29 +631,6 @@ void GridPage::display() {
   }
 #endif
 
-  // MCL_B pattern-select popup. Bank overlay (arrow held) shows just the
-  // bank letter; otherwise show the active/just-pressed pattern.
-  if (bank_popup_external && bank_popup == 2) {
-    char line2[4];
-    line2[0] = (char)('A' + (bank & 0x07));
-    if (bank_overlay_active) {
-      line2[1] = '\0';
-      oled_display.textbox("BANK ", line2);
-    } else {
-      uint8_t row = grid_task.last_active_row;
-      uint8_t row_bank = (row / 16) & 0x07;
-      if (bank_popup_pending_trig < 16) {
-        mcl_gui.put_value_at2(bank_popup_pending_trig + 1, line2 + 1);
-      } else if (row < GRID_LENGTH && row_bank == (bank & 0x07)) {
-        mcl_gui.put_value_at2((row % 16) + 1, line2 + 1);
-      } else {
-        line2[1] = '-';
-        line2[2] = '-';
-        line2[3] = '\0';
-      }
-      oled_display.textbox("PATTERN: ", line2);
-    }
-  }
 
 #ifdef PLATFORM_TBD
   // DEBUG: raw button data
@@ -1072,17 +954,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
         grid_page.load_row(track, row);
 
-        // Immediate feedback for the external (MCL_B) flow: stash the
-        // pressed trig and repaint so the LED amber-blink + OLED appear
-        // before the queued load completes.
-        if (grid_page.bank_popup_external && grid_page.bank_popup == 2 &&
-            !grid_page.bank_overlay_active) {
-          grid_page.bank_popup_pending_trig = track;
-          grid_page.paint_pattern_view();
-        }
-
-        if (!grid_page.bank_popup_external &&
-            !key_interface.is_key_down(MDX_KEY_BANKA) &&
+        if (!key_interface.is_key_down(MDX_KEY_BANKA) &&
             !key_interface.is_key_down(MDX_KEY_BANKB) &&
             !key_interface.is_key_down(MDX_KEY_BANKC) &&
             !key_interface.is_key_down(MDX_KEY_BANKD)) {

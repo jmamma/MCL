@@ -65,29 +65,6 @@ public:
   uint8_t bank_popup = 0;
   uint16_t bank_popup_lastclock;
   uint16_t bank_popup_loadmask;
-  // Set when the popup was opened by an external modifier (MCL_B held).
-  // While set, the AVR-style "auto-close on trig release / no bank key held"
-  // paths are suppressed — close_bank_popup() is only called when the
-  // external trigger fires (release of the modifier).
-  bool bank_popup_external = false;
-  // While true, the trig pad is showing the colour-coded bank overlay
-  // (driven by an arrow modifier held during the external flow). Trig
-  // press in this mode picks a bank instead of loading a pattern.
-  bool bank_overlay_active = false;
-
-  // 8 banks laid out as top-half / bottom-half halves of the trig pad
-  // (Layout A). Trigs 0..3 -> banks 0..3, trigs 8..11 -> banks 4..7.
-  static constexpr uint16_t BANK_SELECT_TOP_MASK = 0x000F; // trig 0..3
-  static constexpr uint16_t BANK_SELECT_BOT_MASK = 0x0F00; // trig 8..11
-  static constexpr uint8_t  BANK_SELECT_COUNT    = 8;
-
-  // Trig that picked the bank during the bank overlay — its release must
-  // be eaten so it doesn't fall through to a bogus pattern load. 0xFF = none.
-  uint8_t bank_pick_trig = 0xFF;
-  // Most-recently-pressed pattern trig in the external pattern-select flow.
-  // Used by display() so the OLED reflects the press before the queued
-  // load updates grid_task.last_active_row. 0xFF = nothing pressed yet.
-  uint8_t bank_popup_pending_trig = 0xFF;
 
   bool draw_encoders;
   uint16_t draw_encoders_lastclock;
@@ -122,19 +99,7 @@ public:
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
   void load_old_col();
-  // Open the external pattern-select popup (single action: trig press
-  // loads pattern in current bank). Caller is responsible for calling
-  // close_bank_popup() to finalize (e.g. on modifier release).
-  // Platform-agnostic — entry trigger is wired in tbd_handleEvent.
-  void open_pattern_select();
-  // Push/pop the colour-coded bank overlay on the trig pad. Used while an
-  // arrow modifier is held during the external pattern-select flow.
-  void enter_bank_overlay();
-  void exit_bank_overlay();
   void close_bank_popup();
-  // LED painters for the external pattern-select popup.
-  void paint_pattern_view();
-  void paint_bank_overlay();
 
   void loop();
   void send_row_led();

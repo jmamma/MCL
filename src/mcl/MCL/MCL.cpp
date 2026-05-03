@@ -233,6 +233,11 @@ void MCL::loop() {
 
 #ifdef PLATFORM_TBD
 static bool tbd_rec_held = false;
+// SPS-mode latch (toggled by FUNC_BUTTON5, the button next to STOP).
+// When latched, panel arrows route to MDX_KEY_BANKA..D so the existing
+// MD bank/pattern popup flow runs unchanged. Toggling closes any open
+// bank popup so the user doesn't get stuck with stale state.
+static bool tbd_sps_mode = false;
 
 bool tbd_handleEvent(gui_event_t *event) {
     // Track physical REC button state (unaffected by key_interface state resets)
@@ -244,9 +249,21 @@ bool tbd_handleEvent(gui_event_t *event) {
         return false;
     }
 
-    const bool sps_held   = key_interface.is_key_down(MDX_KEY_SPS);
     const bool is_press   = (event->mask == EVENT_BUTTON_PRESSED);
     const bool is_release = !(event->mask & 1);
+
+    // FUNC_BUTTON5 (panel button next to STOP) toggles SPS mode. Eats the
+    // event so it doesn't double as MDX_KEY_NO. Toggling off closes any
+    // open bank popup left over from the previous SPS-mode session.
+    if (event->source == ButtonsClass::FUNC_BUTTON5) {
+        if (is_press) {
+            tbd_sps_mode = !tbd_sps_mode;
+            if (!tbd_sps_mode && grid_page.bank_popup) {
+                grid_page.close_bank_popup();
+            }
+        }
+        return true;
+    }
 
     // ENC1 click toggles MCL PageSelect (tap-only). The release is honored
     // only when the press was a clean tap — not flagged as long-press by
@@ -274,8 +291,7 @@ bool tbd_handleEvent(gui_event_t *event) {
     // sequencer pages, slot menu on the grid page). pollTBD mirrors the
     // latch onto BUTTON3.B_CURRENT, so each toggle synthesizes a normal
     // BUTTON3 press or release pair — the existing menu open/apply
-    // handlers in SeqPage and GridPage consume them unchanged. The MDX
-    // passthrough modifier lives on MCL_B (MDX_KEY_SPS), not here.
+    // handlers in SeqPage and GridPage consume them unchanged.
     // Same tap gating as ENC1.
     if (event->source == ButtonsClass::ENCODER4) {
         static bool enc4_armed = false;
@@ -291,12 +307,6 @@ bool tbd_handleEvent(gui_event_t *event) {
         return true;
     }
 
-    // SPS + TOP_RIGHT (BUTTON4) -> BANK_GROUP. Suppress BUTTON4 to MCL pages.
-    if (sps_held && event->source == ButtonsClass::BUTTON4) {
-        key_interface.key_event(MDX_KEY_BANKGROUP, is_release);
-        return true;
-    }
-
     // BUTTON1..BUTTON4 are MCL local roles handled by mcl_handleEvent.
     // GridPage's native BUTTON1+BUTTON4 chord (SYSTEM_PAGE) is preserved here.
     if (event->source <= ButtonsClass::BUTTON4) {
@@ -305,43 +315,16 @@ bool tbd_handleEvent(gui_event_t *event) {
 
     uint8_t key = 255;
 
-    // SPS-passthrough: while MCL_B is held, panel keys reroute to MDX keys.
-    // Arrows on grid page open the bank overlay (eaten locally — they no
-    // longer fire MD bank-key events). Transport remaps to menus. Suppresses
-    // the source's normal role.
-    if (sps_held) {
-        const bool is_arrow = (event->source == ButtonsClass::FUNC_BUTTON6 ||
-                               event->source == ButtonsClass::FUNC_BUTTON7 ||
-                               event->source == ButtonsClass::FUNC_BUTTON8 ||
-                               event->source == ButtonsClass::FUNC_BUTTON9);
-        if (is_arrow && mcl.currentPage() == GRID_PAGE &&
-            grid_page.bank_popup_external) {
-            if (is_press) {
-                grid_page.enter_bank_overlay();
-            } else {
-                // Only exit the overlay when no other arrow is still held.
-                // The releasing arrow is still B_CURRENT==down for one tick;
-                // skip its own slot so we don't lock the overlay open.
-                bool any_other_arrow =
-                    (event->source != ButtonsClass::FUNC_BUTTON6 &&
-                     BUTTON_DOWN(ButtonsClass::FUNC_BUTTON6)) ||
-                    (event->source != ButtonsClass::FUNC_BUTTON7 &&
-                     BUTTON_DOWN(ButtonsClass::FUNC_BUTTON7)) ||
-                    (event->source != ButtonsClass::FUNC_BUTTON8 &&
-                     BUTTON_DOWN(ButtonsClass::FUNC_BUTTON8)) ||
-                    (event->source != ButtonsClass::FUNC_BUTTON9 &&
-                     BUTTON_DOWN(ButtonsClass::FUNC_BUTTON9));
-                if (!any_other_arrow) {
-                    grid_page.exit_bank_overlay();
-                }
-            }
-            return true;
-        }
+    // SPS-mode arrow → bank: latched mode reroutes the four arrows to
+    // MDX_KEY_BANKA..D. The existing MD bank-popup flow in mcl_handleEvent
+    // takes it from there (popup, trig press loads, auto-close), so we
+    // don't need a parallel implementation.
+    if (tbd_sps_mode) {
         switch (event->source) {
-            case ButtonsClass::FUNC_BUTTON1: key = MDX_KEY_KIT;      break; // SPS + REC
-            case ButtonsClass::FUNC_BUTTON2: key = MDX_KEY_GLOBAL;   break; // SPS + PLAY
-            case ButtonsClass::FUNC_BUTTON3: key = MDX_KEY_SCALE;    break; // SPS + STOP
-            case ButtonsClass::FUNC_BUTTON5: key = MDX_KEY_EXTENDED; break; // SPS + NO
+            case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKA; break; // UP
+            case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKB; break; // RIGHT
+            case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKC; break; // DOWN
+            case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKD; break; // LEFT
             default: break;
         }
         if (key != 255) {
@@ -355,26 +338,6 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
         event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
         key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
-        // Bank overlay (arrow held during external pattern-select) owns
-        // trig events — eat them locally so they don't pollute
-        // note_interface or fall through to the pattern-load path.
-        if (mcl.currentPage() == GRID_PAGE && grid_page.bank_overlay_active) {
-            if (is_press) {
-                int8_t b = -1;
-                if (key < 4)                    b = key;
-                else if (key >= 8 && key < 12)  b = key - 8 + 4;
-                if (b >= 0) {
-                    grid_page.bank = b;
-                    grid_page.bank_pick_trig = key;
-                    grid_page.bank_popup_pending_trig = 0xFF;
-                    // Repaint overlay so the new current bank blinks.
-                    grid_page.enter_bank_overlay();
-                }
-            } else if (is_release && grid_page.bank_pick_trig == key) {
-                grid_page.bank_pick_trig = 0xFF;
-            }
-            return true; // eat trig events while overlay is active
-        }
         if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
             if (is_press && key < NUM_MD_TRACKS) {
                 MD.triggerTrack(key, 127);
@@ -432,7 +395,9 @@ bool tbd_handleEvent(gui_event_t *event) {
             case ButtonsClass::TBD_KEY_FUNC:  key = MDX_KEY_FUNC;  break;
             case ButtonsClass::TBD_KEY_YES:   key = MDX_KEY_YES;   break;
             case ButtonsClass::TBD_KEY_PAGE:  key = MDX_KEY_PAGE;  break;
-            case ButtonsClass::TBD_KEY_SPS:   key = MDX_KEY_SPS;   break;
+            // MCL_B is now a second FUNC modifier (the original SPS-passthrough
+            // role moved to the FUNC_BUTTON5 latch + arrow-as-bank flow above).
+            case ButtonsClass::TBD_KEY_SPS:   key = MDX_KEY_FUNC;  break;
             default: break;
         }
     }
@@ -471,18 +436,6 @@ bool tbd_handleEvent(gui_event_t *event) {
             return true;
         }
         key_interface.key_event(key, is_release);
-
-        // MCL_B held on grid page enters single-action pattern select for
-        // the current bank. While held, an arrow modifier (handled above)
-        // flips into the bank overlay so a different bank can be picked.
-        // Release closes the popup.
-        if (key == MDX_KEY_SPS && mcl.currentPage() == GRID_PAGE) {
-            if (is_press) {
-                grid_page.open_pattern_select();
-            } else {
-                grid_page.close_bank_popup();
-            }
-        }
         return true;
     }
     return false;
@@ -543,11 +496,6 @@ bool mcl_handleEvent(gui_event_t *event) {
         }
         if (key_interface.is_key_down(MDX_KEY_FUNC)) {
           return false;
-        }
-        // MCL_B bank-select stage owns the popup — ignore MD bank keys until
-        // the modifier is released.
-        if (grid_page.bank_popup_external) {
-          return true;
         }
         if (grid_page.last_page == 255) {
           grid_page.last_page = mcl.currentPage();
