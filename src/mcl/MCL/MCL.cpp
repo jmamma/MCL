@@ -411,15 +411,15 @@ bool tbd_handleEvent(gui_event_t *event) {
         const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
 
         // FUNC + ARROW: open the corresponding MD window directly via the
-        // 0x40 GUI commands (TEMPO/SWING/ACCENT/SLIDE) — no need to chord
-        // FUNC over the wire. Eat the arrow press locally so the grid
-        // navigation modifier doesn't also fire.
+        // 0x40 GUI commands — no need to chord FUNC over the wire. Eat
+        // the arrow press locally so the grid navigation modifier doesn't
+        // also fire.
         if (MD.connected && func_held && is_arrow && is_press) {
             switch (key) {
-                case MDX_KEY_UP:    MD.toggle_tempo_window();  break;
+                case MDX_KEY_UP:    MD.toggle_accent_window(); break;
                 case MDX_KEY_RIGHT: MD.toggle_swing_window();  break;
-                case MDX_KEY_DOWN:  MD.toggle_accent_window(); break;
-                case MDX_KEY_LEFT:  MD.toggle_slide_window();  break;
+                case MDX_KEY_DOWN:  MD.toggle_slide_window();  break;
+                case MDX_KEY_LEFT:  MD.toggle_mute_window();   break;
                 default: break;
             }
             return true;
