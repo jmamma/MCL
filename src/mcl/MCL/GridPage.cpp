@@ -645,23 +645,10 @@ void GridPage::display() {
     oled_display.print("SPS");
   }
   if (bank_popup) {
-    char line2[4];
+    char line2[2];
     line2[0] = (char)('A' + (bank & 0x07));
-    if (bank_popup == 2) {
-      uint8_t row = grid_task.last_active_row;
-      uint8_t row_bank = (row / 16) & 0x07;
-      if (row < GRID_LENGTH && row_bank == (bank & 0x07)) {
-        mcl_gui.put_value_at2((row % 16) + 1, line2 + 1);
-      } else {
-        line2[1] = '-';
-        line2[2] = '-';
-        line2[3] = '\0';
-      }
-      oled_display.textbox("PATTERN: ", line2);
-    } else {
-      line2[1] = '\0';
-      oled_display.textbox("BANK ", line2);
-    }
+    line2[1] = '\0';
+    oled_display.textbox("BANK ", line2);
   }
 #endif
 
