@@ -645,23 +645,40 @@ void GridPage::display() {
     oled_display.print("SPS");
   }
   if (bank_popup) {
-    char line2[2];
-    line2[0] = (char)('A' + (bank & 0x07));
-    line2[1] = '\0';
-    oled_display.textbox("BANK ", line2);
-
-    // Countdown squares below the textbox, mirroring the SPS firmware's
-    // BankPopupPage: 4 outlines (always visible), each fills when the
-    // remaining time exceeds its threshold. Map our 800 ms auto-close to
-    // the firmware's 34-tick scale so the visual cadence matches.
+    // Self-contained popup window — same black-fill / white-outline
+    // style as oled_display.textbox(), but tall enough to also hold the
+    // 4 countdown squares from the SPS firmware's BankPopupPage. Drawn
+    // inline (not via the textbox queue) so we own the full layout.
     constexpr uint16_t kBankPopupTimeoutMs = 800;
     constexpr uint8_t  kBoxThresholds[4] = {7, 15, 23, 31};
-    constexpr uint8_t  kBoxW = 5;
-    constexpr uint8_t  kBoxH = 5;
-    constexpr uint8_t  kBoxGap = 2;
-    constexpr uint8_t  kBoxY = 26;
-    constexpr uint8_t  kBoxStartX =
-        64 - (4 * kBoxW + 3 * kBoxGap) / 2;  // = 51
+
+    constexpr uint8_t kWinW = 50;
+    constexpr uint8_t kWinH = 26;
+    constexpr uint8_t kWinX = 64 - kWinW / 2;
+    constexpr uint8_t kWinY = 8;
+
+    oled_display.fillRect(kWinX - 1, kWinY - 1, kWinW + 2, kWinH + 2, BLACK);
+    oled_display.drawRect(kWinX, kWinY, kWinW, kWinH, WHITE);
+
+    // Title "BANK X" — default 6x8 font, manually centred.
+    oled_display.setFont();
+    oled_display.setTextSize(1);
+    oled_display.setTextColor(WHITE, BLACK);
+    char title[8];
+    title[0] = 'B'; title[1] = 'A'; title[2] = 'N'; title[3] = 'K';
+    title[4] = ' '; title[5] = (char)('A' + (bank & 0x07));
+    title[6] = '\0';
+    constexpr uint8_t kTitleW = 6 * 6;  // "BANK X" = 6 chars * 6 px
+    oled_display.setCursor(64 - kTitleW / 2, kWinY + 4);
+    oled_display.print(title);
+
+    // 4 countdown squares — outlines always shown, fills drop right-to-
+    // left as the remaining time crosses each firmware threshold.
+    constexpr uint8_t kSqW = 5;
+    constexpr uint8_t kSqH = 5;
+    constexpr uint8_t kSqGap = 2;
+    constexpr uint8_t kSqStartX = 64 - (4 * kSqW + 3 * kSqGap) / 2;
+    constexpr uint8_t kSqY = kWinY + kWinH - kSqH - 3;  // bottom-aligned
 
     uint16_t elapsed = clock_diff(bank_popup_lastclock, read_clock_ms());
     uint16_t remaining =
@@ -669,10 +686,10 @@ void GridPage::display() {
     uint8_t ticks = (uint8_t)((uint32_t)remaining * 34 / kBankPopupTimeoutMs);
 
     for (uint8_t i = 0; i < 4; i++) {
-      uint8_t bx = kBoxStartX + i * (kBoxW + kBoxGap);
-      oled_display.drawRect(bx, kBoxY, kBoxW, kBoxH, WHITE);
+      uint8_t bx = kSqStartX + i * (kSqW + kSqGap);
+      oled_display.drawRect(bx, kSqY, kSqW, kSqH, WHITE);
       if (ticks > kBoxThresholds[i]) {
-        oled_display.fillRect(bx + 1, kBoxY + 1, kBoxW - 2, kBoxH - 2, WHITE);
+        oled_display.fillRect(bx + 1, kSqY + 1, kSqW - 2, kSqH - 2, WHITE);
       }
     }
   }
