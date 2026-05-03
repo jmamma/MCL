@@ -237,7 +237,7 @@ static bool tbd_rec_held = false;
 // When latched, panel arrows route to MDX_KEY_BANKA..D so the existing
 // MD bank/pattern popup flow runs unchanged. Toggling closes any open
 // bank popup so the user doesn't get stuck with stale state.
-static bool tbd_sps_mode = false;
+bool tbd_sps_mode = false;
 
 bool tbd_handleEvent(gui_event_t *event) {
     // Track physical REC button state (unaffected by key_interface state resets)

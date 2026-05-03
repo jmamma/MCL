@@ -631,6 +631,39 @@ void GridPage::display() {
   }
 #endif
 
+#ifdef PLATFORM_TBD
+  // SPS-mode + bank-popup feedback. The MD's bank popup is normally drawn
+  // on the MD's own screen; on TBD we mirror it locally so the user can
+  // tell SPS arrows actually opened a popup. Latch indicator stays visible
+  // for the full duration of SPS mode.
+  extern bool tbd_sps_mode;
+  if (tbd_sps_mode) {
+    oled_display.setFont();
+    oled_display.setTextSize(1);
+    oled_display.setTextColor(WHITE, BLACK);
+    oled_display.setCursor(108, 0);
+    oled_display.print("SPS");
+  }
+  if (bank_popup) {
+    char line2[4];
+    line2[0] = (char)('A' + (bank & 0x07));
+    if (bank_popup == 2) {
+      uint8_t row = grid_task.last_active_row;
+      uint8_t row_bank = (row / 16) & 0x07;
+      if (row < GRID_LENGTH && row_bank == (bank & 0x07)) {
+        mcl_gui.put_value_at2((row % 16) + 1, line2 + 1);
+      } else {
+        line2[1] = '-';
+        line2[2] = '-';
+        line2[3] = '\0';
+      }
+      oled_display.textbox("PATTERN: ", line2);
+    } else {
+      line2[1] = '\0';
+      oled_display.textbox("BANK ", line2);
+    }
+  }
+#endif
 
 #ifdef PLATFORM_TBD
   // DEBUG: raw button data
