@@ -6,6 +6,7 @@
 #include "MCLMemory.h"
 #include "MD.h"
 #include "MCLStrings.h"
+#include "MCLSeq.h"
 
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
 

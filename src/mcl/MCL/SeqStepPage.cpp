@@ -1,5 +1,6 @@
 #include "SeqStepPage.h"
 #include "SeqPages.h"
+#include "SeqTrackUtil.h"
 #include "MD.h"
 #include "MidiActivePeering.h"
 #include "MCLGUI.h"
@@ -943,7 +944,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
       }
     }
     if (store_lock == 1) {
-      oled_display.textbox_P(mclstr_lock_f);
+      oled_display.textbox_P(mclstr_lock_params, mclstr_full);
     }
     return;
   }

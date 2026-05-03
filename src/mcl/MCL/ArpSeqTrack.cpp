@@ -1,5 +1,6 @@
 #include "ArpSeqTrack.h"
 #include "SeqPages.h"
+#include "SeqTrackUtil.h"
 
 //length will determine retrig speed.
 //arp position (idx) is independent of length
