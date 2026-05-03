@@ -257,12 +257,36 @@ bool tbd_handleEvent(gui_event_t *event) {
     // rejects the spurious boot-time release before any press.
     if (event->source == ButtonsClass::ENCODER1) {
         static bool enc1_armed = false;
+        static int enc1_press_cur = 0;
         if (is_press) {
             enc1_armed = true;
+            // Snapshot the active page's first encoder so a fast-mode
+            // rotation while held is detectable on release even if the
+            // panel's pot_states bits raced past pollTBD without latching
+            // enc1_rotated_while_held.
+            LightPage *pg = (LightPage *)GUI.currentPage();
+            if (pg && pg->encoders[0]) enc1_press_cur = pg->encoders[0]->cur;
+            else                       enc1_press_cur = 0;
             return true;
         }
-        if (enc1_armed && !Buttons.enc1_long_press_seen
-                       && !Buttons.enc1_rotated_while_held) {
+        bool rotated_during_press = Buttons.enc1_rotated_while_held;
+        if (!rotated_during_press) {
+            LightPage *pg = (LightPage *)GUI.currentPage();
+            if (pg && pg->encoders[0] && pg->encoders[0]->cur != enc1_press_cur) {
+                rotated_during_press = true;
+            }
+        }
+        if (!rotated_during_press && sps_mode.is_active()) {
+            // SPS-mode steals encoder rotation before the page sees it, so
+            // also peek at our captured deltas.
+            for (uint8_t i = 0; i < 4; i++) {
+                if (sps_mode.enc[i].old != sps_mode.enc[i].cur) {
+                    rotated_during_press = true;
+                    break;
+                }
+            }
+        }
+        if (enc1_armed && !Buttons.enc1_long_press_seen && !rotated_during_press) {
             if (mcl.currentPage() == PAGE_SELECT_PAGE) {
                 page_select_page.close_to_selection();
             } else {

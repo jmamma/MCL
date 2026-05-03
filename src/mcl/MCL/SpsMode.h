@@ -58,10 +58,15 @@ private:
   bool latched_ = false;
   uint8_t bound_track_ = 255;
   uint8_t bound_page_ = 255;
+  // Per-encoder "last used" timestamp for the value-show timeout (matches
+  // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
+  // when the timeout has fully elapsed.
+  uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
 
   void set_latched(bool v);
   bool encoder_passthrough_page() const;
   void send_param(uint8_t i);
+  bool show_value(uint8_t i) const;
 };
 
 extern SpsMode sps_mode;

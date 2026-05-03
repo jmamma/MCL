@@ -144,6 +144,14 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
   return true;
 }
 
+bool SpsMode::show_value(uint8_t i) const {
+  // Mirrors MCLGUI::show_encoder_value: visible while the encoder is
+  // pressed, or for SHOW_VALUE_TIMEOUT after the last cur change.
+  if (BUTTON_DOWN(Buttons.ENCODER1 + i)) return true;
+  if (enc_used_clock_[i] == 0) return false;
+  return clock_diff(enc_used_clock_[i], read_clock_ms()) < SHOW_VALUE_TIMEOUT;
+}
+
 void SpsMode::poll_encoders() {
   if (!latched_) return;
   if (encoder_passthrough_page()) return;
@@ -161,6 +169,7 @@ void SpsMode::poll_encoders() {
     snapshot[i] = Encoders.encoders[i];
     Encoders.encoders[i].normal = 0;
   }
+  uint16_t now = read_clock_ms();
   for (uint8_t i = 0; i < 4; i++) {
     enc[i].update(&snapshot[i]);
     if (enc[i].cur < enc[i].min) enc[i].cur = enc[i].min;
@@ -168,6 +177,7 @@ void SpsMode::poll_encoders() {
     if (enc[i].hasChanged()) {
       send_param(i);
       enc[i].old = enc[i].cur;
+      enc_used_clock_[i] = now ? now : 1; // 0 reserved for "never"
     }
   }
 }
@@ -178,6 +188,7 @@ void SpsMode::draw_strip(uint8_t y_top) {
 
   Encoder *encs[4];
   const char *labels[4];
+  bool show[4];
   uint8_t base = MD.currentSynthPage * 8;
   uint8_t model = MD.kit.get_model(MD.currentTrack);
   for (uint8_t i = 0; i < 4; i++) {
@@ -186,8 +197,9 @@ void SpsMode::draw_strip(uint8_t y_top) {
     labels[i] = (param < MD_PARAMS_LEGACY)
                     ? model_param_name(model, param)
                     : nullptr;
+    show[i] = encs[i] ? show_value(i) : false;
   }
-  mcl_gui.draw_encoder_strip(y_top, encs, labels);
+  mcl_gui.draw_encoder_strip(y_top, encs, labels, show);
 }
 
 #else // !PLATFORM_TBD

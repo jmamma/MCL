@@ -76,10 +76,13 @@ public:
   void draw_encoder(uint8_t x, uint8_t y, Encoder *encoder);
 
   // Bottom-strip encoder readout (TBD only, free real estate at y=32..63
-  // on the 128x64 panel). Draws four columns: dial + value + label.
-  // Pass nullptr for any unused encoder; nullptr labels print blank.
+  // on the 128x64 panel). Layout per column: label on top, dial in
+  // middle, value below (only when show_values[i] is true). Pass nullptr
+  // for any unused encoder; nullptr labels print blank. Reuses
+  // draw_md_encoder so the look matches the rest of the GUI.
   void draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
-                          const char *const labels[4]);
+                          const char *const labels[4],
+                          const bool show_values[4]);
 
   bool show_encoder_value(Encoder *encoder, int timeout = SHOW_VALUE_TIMEOUT);
 
