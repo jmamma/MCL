@@ -255,9 +255,12 @@ bool tbd_handleEvent(gui_event_t *event) {
     // FUNC_BUTTON5 (panel button next to STOP) toggles SPS mode. Eats the
     // event so it doesn't double as MDX_KEY_NO. Toggling off closes any
     // open bank popup left over from the previous SPS-mode session.
+    // Status LED (above PLAY) mirrors the latch state in amber.
     if (event->source == ButtonsClass::FUNC_BUTTON5) {
         if (is_press) {
             tbd_sps_mode = !tbd_sps_mode;
+            GUI_hardware.led.sps_active = tbd_sps_mode;
+            GUI_hardware.led.updateLeds = true;
             if (!tbd_sps_mode && grid_page.bank_popup) {
                 grid_page.close_bank_popup();
             }

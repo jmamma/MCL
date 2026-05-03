@@ -37,11 +37,16 @@ public:
   TrigLEDMode current_led_mode;
   bool updateLeds;
   bool rec_active;
+  // SPS-mode latch indicator. When true, the second status LED (above
+  // BUTTON_PLAY, fbtn_map[1]) lights amber to signal the user that
+  // arrows now act as bank-select. White was considered but red+amber
+  // is easier to tell apart on the strip than red+white.
+  bool sps_active;
   LEDHardware()
       : led_base_state(0), led_blink_mask(0), led_flash_mask(0),
         last_render_state(0), blink_last_trigger_time(0), updateLeds(true),
         current_led_mode(TRIGLED_OVERLAY), last_blink_hint(false), rec_active(false),
-        trig_color_override(false) {
+        sps_active(false), trig_color_override(false) {
     memset(led_flash_start_time, 0, sizeof(led_flash_start_time));
     memset(trig_colors, 0, sizeof(trig_colors));
   }

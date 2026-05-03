@@ -87,6 +87,12 @@ void LEDHardware::show() {
                                  : (bool)((led_base_state >> STRIP_LED3) & 1);
     setPixelColor(tbd_ui.rgb_led_fbtn_map[0], rec_led_on ? STRIP_RED : STRIP_BLACK, false);
 
+    // STRIP_LED2 (fbtn_map[1]) doubles as the SPS-mode latch indicator —
+    // amber while latched, otherwise the normal led_base_state-driven red.
+    if (sps_active) {
+      setPixelColor(tbd_ui.rgb_led_fbtn_map[1], COLOR(255, 96, 0), false);
+    }
+
     tbd_ui.strip.show();
     updateLeds = false;
   }
