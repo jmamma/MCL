@@ -185,7 +185,7 @@ void MDClass::setExternalSync() {
 
   b = global.clockIn;
 
-  if (!global.transportIn) {
+  if (global.transportIn) {
     b |= 1 << 4;
   }
 

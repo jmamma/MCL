@@ -125,8 +125,7 @@ uint16_t MDGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   if (clockIn)
     //        byte = byte + 1;
     SET_BIT(byte, 0);
-  if (!transportIn)
-    //       byte = byte + 8;
+  if (transportIn)
     SET_BIT(byte, 4);
   if (clockOut)
     //      byte = byte + 16;
