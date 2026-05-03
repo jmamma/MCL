@@ -34,6 +34,9 @@ extern MCLEncoder config_param11;
 extern MCLEncoder config_param12;
 extern MCLEncoder config_param13;
 extern MCLEncoder config_param14;
+extern MCLEncoder config_param15;
+extern MCLEncoder config_param16;
+extern MCLEncoder config_param17;
 
 extern void new_proj_handler();
 
@@ -56,6 +59,12 @@ extern MenuPage<aux_config_page_N> aux_config_page;
 extern MenuPage<md_import_page_N> md_import_page;
 
 extern MenuPage<midiport_menu_page_N> midiport_menu_page;
+
+extern MenuPage<port1_menu_page_N> port1_menu_page;
+
+extern MenuPage<port2_menu_page_N> port2_menu_page;
+
+extern MenuPage<usbport_menu_page_N> usbport_menu_page;
 
 extern MenuPage<midiprogram_menu_page_N> midiprogram_menu_page;
 

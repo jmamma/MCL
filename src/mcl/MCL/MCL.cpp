@@ -91,6 +91,9 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
 
     // MIDI menu pages
     { .ptr = &midiport_menu_page },
+    { .ptr = &port1_menu_page },
+    { .ptr = &port2_menu_page },
+    { .ptr = &usbport_menu_page },
     { .ptr = &midiprogram_menu_page },
     { .ptr = &midiclock_menu_page },
     { .ptr = &midiroute_menu_page },

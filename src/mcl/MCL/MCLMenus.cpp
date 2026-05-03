@@ -27,6 +27,9 @@ MCLEncoder config_param11(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param12(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param13(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param14(0, 17, ENCODER_RES_SYS);
+MCLEncoder config_param15(0, 11, ENCODER_RES_SYS);
+MCLEncoder config_param16(0, 11, ENCODER_RES_SYS);
+MCLEncoder config_param17(0, 11, ENCODER_RES_SYS);
 
 
 uint8_t opt_import_src = 0;
@@ -192,6 +195,9 @@ MenuPage<mcl_config_page_N> mcl_config_page(&config_param1, &config_param5);
 MenuPage<md_import_page_N> md_import_page(&config_param1, &config_param8);
 
 MenuPage<midiport_menu_page_N> midiport_menu_page(&config_param1, &config_param9);
+MenuPage<port1_menu_page_N> port1_menu_page(&config_param1, &config_param15);
+MenuPage<port2_menu_page_N> port2_menu_page(&config_param1, &config_param16);
+MenuPage<usbport_menu_page_N> usbport_menu_page(&config_param1, &config_param17);
 MenuPage<midiprogram_menu_page_N> midiprogram_menu_page(&config_param1, &config_param10);
 MenuPage<midiclock_menu_page_N> midiclock_menu_page(&config_param1, &config_param11);
 MenuPage<midiroute_menu_page_N> midiroute_menu_page(&config_param1, &config_param12);

@@ -85,12 +85,36 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
 menu_t<midiport_menu_page_N> midiport_menu_layout = {
     "PORTS",
     {
-        {"PORT 1:",    0, 3, 3, 61, NULL_PAGE, 0, 123},
-        {"PORT 2:",    0, 3, 3, 4,  NULL_PAGE, 0, 126},
-        {"USB:",       0, 4, 4, 65, NULL_PAGE, 0, 129},
-        {"TURBO 1:",   0, TURBO_RANGE, TURBO_RANGE, 2,  NULL_PAGE, 0, 54},
-        {"TURBO 2:",   0, TURBO_RANGE, TURBO_RANGE, 3,  NULL_PAGE, 0, 54},
-        {"TURBO USB:", 0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE, 0, 54},
+        {"PORT 1", 0, 0, 0, 0, PORT1_MENU_PAGE,   0, 0},
+        {"PORT 2", 0, 0, 0, 0, PORT2_MENU_PAGE,   0, 0},
+        {"USB",    0, 0, 0, 0, USBPORT_MENU_PAGE, 0, 0},
+    },
+    24
+};
+
+menu_t<port1_menu_page_N> port1_menu_layout = {
+    "PORT 1",
+    {
+        {"DRIVER:", 0, 3, 3, 61, NULL_PAGE, 0, 123},
+        {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 2, NULL_PAGE, 0, 54},
+    },
+    24
+};
+
+menu_t<port2_menu_page_N> port2_menu_layout = {
+    "PORT 2",
+    {
+        {"DRIVER:", 0, 3, 3, 4, NULL_PAGE, 0, 126},
+        {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 3, NULL_PAGE, 0, 54},
+    },
+    24
+};
+
+menu_t<usbport_menu_page_N> usbport_menu_layout = {
+    "USB",
+    {
+        {"DRIVER:", 0, 4, 4, 65, NULL_PAGE, 0, 129},
+        {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE, 0, 54},
     },
     24
 };
