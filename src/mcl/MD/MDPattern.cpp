@@ -89,7 +89,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  origPosition = midi->midiSysex->getByte(3);
+  origPosition = midi->midiSysex->getByte(8);
   ElektronSysexDecoder decoder(midi, offset + 0xA - 6);
   decoder.get32(trigPatterns, 16);
 
@@ -294,7 +294,7 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack8(doubleTempo);
   encoder->pack8(scale);
   encoder->pack8(kit);
-  encoder->pack8(numLockedRows);
+  encoder->pack8((numRows < 255) ? (uint8_t)numRows : 255);
 
   encoder->start7Bit();
 
@@ -369,9 +369,10 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 
     encoder->pack32hi(lockPatterns, 16);
 
+    uint16_t out_numRows = (numRows < MAX_LOCK_ROWS) ? numRows : MAX_LOCK_ROWS;
     // numRows (little-endian u16)
-    encoder->pack8(numRows & 0xFF);
-    encoder->pack8((numRows >> 8) & 0xFF);
+    encoder->pack8(out_numRows & 0xFF);
+    encoder->pack8((out_numRows >> 8) & 0xFF);
 
     // Extra lock rows (64..numRows-1). Symmetric with fromSysex above:
     // first 32 bytes per row (low steps), then if isExtraPattern another
