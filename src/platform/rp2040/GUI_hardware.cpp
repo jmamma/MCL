@@ -174,7 +174,7 @@ void ButtonsClass::poll(uint8_t but) {
 #define TBD_BUTTON_REC(ui)        (!((ui).mcl_btns & (1 << 9)))
 #define TBD_BUTTON_STOP(ui)       (!((ui).mcl_btns & (1 << 10)))
 #define TBD_BUTTON_NO(ui)         (!((ui).mcl_btns & (1 << 11)))
-#define TBD_BUTTON_TRIG(ui, n)    (!!((ui).d_btns  & (1 << (n)))) // n=0..15, active-high
+#define TBD_BUTTON_TRIG(ui, n)    (!((ui).d_btns  & (1 << (n)))) // n=0..15
 
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   // Per-press latches for ENC1 (PageSelect toggle) and ENC4 (sticky shift).
