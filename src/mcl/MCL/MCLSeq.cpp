@@ -443,7 +443,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     SeqTrackUtil::with_md_track(track, [&](auto &t) { t.mute_state = value > 0; });
    }
   // Engine, not device: perf/lfo learn_param indexes engine-shaped state.
-  if (track_param >= (mcl_seq.using_spsx_tracks ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY)) {
+  if (track_param >= (mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK)) {
     return;
   }
   perf_page.learn_param(track, track_param, value);

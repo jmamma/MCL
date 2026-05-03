@@ -15,10 +15,12 @@
 #define SPSX_SEQ_VERSION_LEGACY 0  // MDSeqTrackData (AVR + rp2040)
 #define SPSX_SEQ_VERSION_SPSX   1  // SPSXSeqTrackData (rp2040 only)
 
+#if !defined(__AVR__)
+
 class ATTR_PACKED() SPSXTrack : public DeviceTrack {
 public:
   // Machine data first — fixed offset for memcmp_sound / get_sound_data_ptr
-  MDMachine machine;
+  SPSMachine machine;
 
   // Seq format discriminator
   uint8_t seq_version;
@@ -90,8 +92,13 @@ public:
   virtual bool allow_cast_to_parent() { return true; }
 
   virtual void *get_sound_data_ptr() { return &machine; }
-  virtual size_t get_sound_data_size() { return sizeof(MDMachine); }
+  virtual size_t get_sound_data_size() { return sizeof(SPSMachine); }
   virtual size_t get_sound_cmp_size() { return 27; }
 };
+
+static_assert(MEMORY_ALIGN(sizeof(SPSXTrack) - sizeof(void*)) <= SPSX_TRACK_LEN,
+              "SPSXTrack outgrew SPSX_TRACK_LEN — bump SPSX_TRACK_LEN or shrink");
+
+#endif // !__AVR__
 
 #endif /* SPSXTRACK_H__ */

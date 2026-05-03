@@ -90,7 +90,7 @@ public:
   uint16_t numRows;
   // paramLocks holds row indices (0..MAX_LOCK_ROWS-1). int16_t needed since
   // SPS-X patterns can carry > 127 lock rows.
-  int16_t paramLocks[16][MD_PARAMS_PER_TRACK];
+  int16_t paramLocks[16][SPS_PARAMS_PER_TRACK];
 #else
   uint8_t numRows;
   int8_t paramLocks[16][24];
@@ -200,7 +200,7 @@ public:
   MDPattern(bool _init = true) : ElektronPattern(_init) {
     maxSteps = 64;
 #if !defined(__AVR__)
-    maxParams = MD_PARAMS_PER_TRACK;
+    maxParams = SPS_PARAMS_PER_TRACK;
 #else
     maxParams = 24;
 #endif

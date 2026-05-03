@@ -92,8 +92,9 @@ constexpr size_t EMPTY_TRACK_LEN = GRID1_TRACK_LEN - DEVICE_TRACK_LEN;
 constexpr size_t MD_CACHE_LEN = GRID1_TRACK_LEN * NUM_MD_TRACKS;
 
 #if !defined(__AVR__)
-// SPSX tracks are larger than MD tracks (~1056 bytes vs 544)
-constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1056);
+// SPSX tracks carry SPSMachine (34 params + 2 LFOs) + SeqDataUnion + extras.
+// Sized with headroom; static_assert in SPSXTrack.h enforces fit.
+constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1120);
 constexpr size_t SPSX_CACHE_LEN = SPSX_TRACK_LEN * NUM_MD_TRACKS;
 #endif
 

@@ -30,10 +30,12 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
     ::new (this) MDTrack;
     active = track_type;
     break;
+#if !defined(__AVR__)
   case MDSPSX_TRACK_TYPE:
     ::new (this) SPSXTrack;
     active = track_type;
     break;
+#endif
   case A4_TRACK_TYPE:
     ::new (this) A4Track;
     break;

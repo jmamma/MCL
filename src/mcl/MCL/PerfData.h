@@ -200,7 +200,7 @@ public:
      if (scene >= NUM_SCENES) { return; }
 
      // Engine, not device: scenes store params indexed by engine width.
-     uint8_t num_params = mcl_seq.using_spsx_tracks ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+     uint8_t num_params = mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
      for (uint8_t track = 0; track < 16; track++) {
        for (uint8_t param = 0; param < num_params; param++) {
          if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {

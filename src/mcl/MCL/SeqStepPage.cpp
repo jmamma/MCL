@@ -424,7 +424,7 @@ void SeqStepPage::loop() {
 }
 
 void SeqStepPage::send_locks(uint8_t step) {
-  uint8_t params[MD_PARAMS_PER_TRACK];
+  uint8_t params[SPS_PARAMS_PER_TRACK];
   memset(params, 255, sizeof(params));
   bool ignore_locks_disabled = true;
   SeqTrackUtil::with_md_track(last_md_track, [&](auto &t) {
@@ -899,7 +899,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   // Engine, not device: the recorder writes into the active engine's lock
   // storage (24 slots legacy, 34 SPSX). If device sends an SPSX-range CC
   // while the engine is in legacy mode, drop it — there's nowhere to store.
-  uint8_t param_limit = mcl_seq.using_spsx_tracks ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  uint8_t param_limit = mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   if (track_param >= param_limit) {
     return;
   }

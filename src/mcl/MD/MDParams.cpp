@@ -152,7 +152,7 @@ static const char* get_param_name(const model_param_name_t *names, uint8_t param
   if (names == NULL)
     return NULL;
 
-  while ((id = names[i].id) != 127 && i < MD_PARAMS_PER_TRACK) {
+  while ((id = names[i].id) != 127 && i < SPS_PARAMS_PER_TRACK) {
     if (id == param) {
       return names[i].name ;
     }
@@ -193,7 +193,7 @@ const char* model_param_name(uint8_t model, uint8_t param) {
     return "MUT";
   } else if (param == MODEL_LEVEL) {
     return "LEV";
-  } else if (param >= MD_PARAMS_LEGACY && param < MD_PARAMS_PER_TRACK) {
+  } else if (param >= MD_PARAMS_PER_TRACK && param < SPS_PARAMS_PER_TRACK) {
     return ext_param_name(param);
   }
 

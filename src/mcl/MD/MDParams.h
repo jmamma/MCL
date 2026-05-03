@@ -789,8 +789,8 @@
 #define MODEL_RTIM    32
 #define MODEL_RENV    33
 
-#define MD_PARAMS_PER_TRACK  34
-#define MD_PARAMS_LEGACY     24
+#define SPS_PARAMS_PER_TRACK  34
+#define MD_PARAMS_PER_TRACK     24
 
 // Virtual param IDs (not array indices, used by parseCC/setTrackParam)
 #define MODEL_MUTE  40

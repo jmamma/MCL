@@ -170,6 +170,92 @@ bool MDMachine::get_tonal() {
   return false;
 }
 
+#if !defined(__AVR__)
+void SPSMachine::scale_vol(float scale) {
+  params[MODEL_VOL] = (uint8_t)((float)params[MODEL_VOL] * scale);
+  if (params[MODEL_VOL] > 127) {
+    params[MODEL_VOL] = 127;
+  }
+  if ((lfos[0].destinationParam == MODEL_VOL) && (lfos[0].destinationTrack == track)) {
+    params[MODEL_LFOD] = (uint8_t)((float)params[MODEL_LFOD] * scale);
+
+    if (params[MODEL_LFOD] > 127) {
+      params[MODEL_LFOD] = 127;
+    }
+    lfos[0].depth = params[MODEL_LFOD];
+  }
+}
+
+float SPSMachine::normalize_level() {
+  if (level == 127) {
+    return 1.0;
+  }
+
+  float scale = (float)level / (float)127;
+  level = 127;
+
+  scale_vol(scale);
+  return scale;
+}
+
+uint8_t SPSMachine::get_model() { return model; }
+bool SPSMachine::get_tonal() {
+  if (model >= 0x20000) {
+    return true;
+  }
+  return false;
+}
+
+// ---- Compact LFO state pack/unpack (SPS-X v65 kits) ----
+// State layout matches host/elektron/MDTypes.cpp (pack/unpack_compact_lfo_state).
+// type % 3: 0=FREE (saves 2-byte phase), 1=TRIG (no state), 2=HOLD (saves two int16 holds).
+static void pack_compact_lfo_state(const MDLFO &lfo, uint8_t out[4]) {
+  uint8_t base_mode = lfo.type % 3;
+  if (base_mode == 0) {
+    int32_t time;
+    memcpy(&time, &lfo.state[27], sizeof(int32_t));
+    uint16_t phase = (uint16_t)(time & 0x7FFF);
+    memcpy(out, &phase, 2);
+    out[2] = 0;
+    out[3] = 0;
+  } else if (base_mode == 2) {
+    int32_t hold0, hold1;
+    memcpy(&hold0, &lfo.state[11], sizeof(int32_t));
+    memcpy(&hold1, &lfo.state[15], sizeof(int32_t));
+    int16_t h0 = (int16_t)hold0;
+    int16_t h1 = (int16_t)hold1;
+    memcpy(out, &h0, 2);
+    memcpy(out + 2, &h1, 2);
+  } else {
+    memset(out, 0, 4);
+  }
+}
+
+static void unpack_compact_lfo_state(MDLFO &lfo, const uint8_t in[4], int track) {
+  memset(lfo.state, 0, 31);
+  uint32_t seed0 = 0x1234 + (uint32_t)(track * 0x1111);
+  uint32_t seed1 = 0x5678 + (uint32_t)(track * 0x2222);
+  memcpy(&lfo.state[19], &seed0, sizeof(uint32_t));
+  memcpy(&lfo.state[23], &seed1, sizeof(uint32_t));
+
+  uint8_t base_mode = lfo.type % 3;
+  if (base_mode == 0) {
+    uint16_t phase;
+    memcpy(&phase, in, 2);
+    int32_t time = (int32_t)(phase & 0x7FFF);
+    memcpy(&lfo.state[27], &time, sizeof(int32_t));
+  } else if (base_mode == 2) {
+    int16_t h0, h1;
+    memcpy(&h0, in, 2);
+    memcpy(&h1, in + 2, 2);
+    int32_t hold0 = (int32_t)h0;
+    int32_t hold1 = (int32_t)h1;
+    memcpy(&lfo.state[11], &hold0, sizeof(int32_t));
+    memcpy(&lfo.state[15], &hold1, sizeof(int32_t));
+  }
+}
+#endif
+
 
 uint8_t MDKit::get_model(uint8_t track) { return models[track]; }
 bool MDKit::get_tonal(uint8_t track) {
@@ -195,13 +281,30 @@ bool MDKit::fromSysex(MidiClass *midi) {
   }
 
   uint8_t version = midi->midiSysex->getByte(1 + offset);
+
+  // Accept stock (1-4), MDX (64), SPS-X (65). Reject anything else.
+  bool is_spsx_kit = false;
+  if ((version >= 1 && version <= 4) || version == MDX_KIT_VERSION) {
+    /* legacy/MDX layout: 24 params/track, full 36-byte LFO-A, no LFO-B */
+  } else if (version == 65) {
+#if !defined(__AVR__)
+    is_spsx_kit = true;   /* 34 params/track, compact LFO-A + LFO-B */
+#else
+    DEBUG_PRINTLN(F("SPS-X kit on AVR — reject"));
+    return false;
+#endif
+  } else {
+    DEBUG_PRINTLN(F("unknown kit version"));
+    return false;
+  }
+
   origPosition = midi->midiSysex->getByte(3 + offset);
   ElektronSysexDecoder decoder(midi, offset + 4);
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';
 
-  uint8_t params_per_track = (version == 65) ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  uint8_t params_per_track = is_spsx_kit ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   for (uint8_t i = 0; i < 16; i++) {
     decoder.get((uint8_t *)params[i], params_per_track);
   }
@@ -210,14 +313,35 @@ bool MDKit::fromSysex(MidiClass *midi) {
 
   decoder.start7Bit();
   decoder.get32(models, 16);
-  decoder.stop7Bit(); // reset 7 bit
-  decoder.start7Bit();
-
-  for (uint8_t i = 0; i < 16; i++) {
-    decoder.get((uint8_t *)&lfos[i], 5 + 31);
-  }
-
   decoder.stop7Bit();
+
+  // LFO-A section: compact 9 bytes/track for SPS-X, full 36 for legacy/MDX
+#if !defined(__AVR__)
+  if (is_spsx_kit) {
+    decoder.start7Bit();
+    for (uint8_t i = 0; i < 16; i++) {
+      uint8_t compact[9];
+      decoder.get(compact, 9);
+      lfos[i].destinationTrack = compact[0];
+      lfos[i].destinationParam = compact[1];
+      lfos[i].shape1 = compact[2];
+      lfos[i].shape2 = compact[3];
+      lfos[i].type = compact[4];
+      unpack_compact_lfo_state(lfos[i], compact + 5, i);
+      lfos[i].speed = 64;
+      lfos[i].depth = 0;
+      lfos[i].mix = 0;
+    }
+    decoder.stop7Bit();
+  } else
+#endif
+  {
+    decoder.start7Bit();
+    for (uint8_t i = 0; i < 16; i++) {
+      decoder.get((uint8_t *)&lfos[i], 5 + 31);
+    }
+    decoder.stop7Bit();
+  }
 
   decoder.get(reverb, 8);
   decoder.get(delay, 8);
@@ -228,20 +352,37 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.get(trigGroups, 16);
   decoder.get(muteGroups, 16);
 
-  if (version < 65) {
-    // Default-fill extended params for legacy kits
+#if !defined(__AVR__)
+  if (is_spsx_kit) {
+    // SPS-X LFO-B section: compact 9 bytes/track (lives after trig/mute groups)
+    decoder.start7Bit();
     for (uint8_t i = 0; i < 16; i++) {
-      memset(&params[i][MD_PARAMS_LEGACY], 0, MD_PARAMS_PER_TRACK - MD_PARAMS_LEGACY);
-      params[i][MODEL_ENVDCY] = 127;
-      params[i][MODEL_ENVMIX] = 127;
+      uint8_t compact[9];
+      decoder.get(compact, 9);
+      lfosB[i].destinationTrack = compact[0];
+      lfosB[i].destinationParam = compact[1];
+      lfosB[i].shape1 = compact[2];
+      lfosB[i].shape2 = compact[3];
+      lfosB[i].type = compact[4];
+      unpack_compact_lfo_state(lfosB[i], compact + 5, i);
+      lfosB[i].speed = params[i][MODEL_LFO2SPD];
+      lfosB[i].depth = params[i][MODEL_LFO2DEP];
+      lfosB[i].mix   = params[i][MODEL_LFO2MIX];
+    }
+    decoder.stop7Bit();
+  } else {
+    // Legacy/MDX kit: synthesize SPS-X side state with safe defaults so a
+    // later toSysex(SPS-X) round-trips cleanly.
+    for (uint8_t i = 0; i < 16; i++) {
+      memset(&params[i][MD_PARAMS_PER_TRACK], 0, SPS_PARAMS_PER_TRACK - MD_PARAMS_PER_TRACK);
+      params[i][MODEL_ENVDCY]  = 127;
+      params[i][MODEL_ENVMIX]  = 127;
       params[i][MODEL_LFO2SPD] = 64;
+      lfosB[i].init(i);
     }
   }
-  /*
-  if (version >= 5) {
-    decoder.get(tuning, 2);
-  }
-  */
+#endif
+
   DEBUG_PRINTLN(F("md kit okay"));
   return true;
 }
@@ -252,20 +393,25 @@ uint16_t MDKit::toSysex() {
 }
 
 uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
-  //if ((MidiClock.state == 2) && (MD.midi->uart->speed > 62500)) {
-    //encoder->throttle = true;
-    // float swing = (float) MD->swing_last / 16385->0;
-    // encoder->throttle_mod12 = floor((swing) * 12);
-    // DEBUG_PRINTLN(F("swing"));
-    // DEBUG_DUMP(encoder->throttle_mod12);
-  //}
-  uint8_t kit_ver = MD.is_spsx ? 65 : MDX_KIT_VERSION;
-  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_KIT_MESSAGE_ID, kit_ver, origPosition);
+  // Pick wire version: SPS-X (65) when SPS firmware is connected, else MDX (64).
+  // Stock MD firmware accepts version 64 with the legacy 24-param/36-byte-LFO
+  // layout. Real differentiation between stock and MDX isn't needed: both parse
+  // the same body; only the version byte differs.
+#if !defined(__AVR__)
+  bool emit_spsx = MD.is_spsx;
+#else
+  bool emit_spsx = false;
+#endif
+  uint8_t kit_ver = emit_spsx ? 65 : MDX_KIT_VERSION;
+
+  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr,
+                                   sizeof(machinedrum_sysex_hdr),
+                                   MD_KIT_MESSAGE_ID, kit_ver, origPosition);
 
   encoder->pack((uint8_t *)name, 16);
   name[16] = '\0';
 
-  uint8_t params_per_track = MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  uint8_t params_per_track = emit_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   for (uint8_t i = 0; i < 16; i++) {
     encoder->pack((uint8_t *)params[i], params_per_track);
   }
@@ -274,14 +420,30 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->start7Bit();
   encoder->pack32(models, 16);
   encoder->stop7Bit();
-  encoder->start7Bit();
-  for (uint8_t i = 0; i < 16; i++) {
-    //        encoder->pack((uint8_t *)&lfos[i], 36);
-    uint16_t *lfo_states2 = (uint16_t *) &lfos[i].state[5 + 18];
-    if (!lfo_states2[0] && !lfo_states2[1]) { lfo_states2[1] = 0x29a; } //666
-    encoder->pack((uint8_t *)&lfos[i], 5 + 31);
+
+  // LFO-A section: compact 9 bytes/track for SPS-X, full 36 for MDX/legacy.
+#if !defined(__AVR__)
+  if (emit_spsx) {
+    encoder->start7Bit();
+    for (uint8_t i = 0; i < 16; i++) {
+      encoder->pack(&lfos[i].destinationTrack, 5);
+      uint8_t compact_state[4];
+      pack_compact_lfo_state(lfos[i], compact_state);
+      encoder->pack(compact_state, 4);
+    }
+    encoder->stop7Bit();
+  } else
+#endif
+  {
+    encoder->start7Bit();
+    for (uint8_t i = 0; i < 16; i++) {
+      // Ensure LFSR magic marker is set for firmware compat
+      uint16_t *lfo_states2 = (uint16_t *) &lfos[i].state[5 + 18];
+      if (!lfo_states2[0] && !lfo_states2[1]) { lfo_states2[1] = 0x29a; } // 666
+      encoder->pack((uint8_t *)&lfos[i], 5 + 31);
+    }
+    encoder->stop7Bit();
   }
-  encoder->stop7Bit();
 
   encoder->pack(reverb, 8);
   encoder->pack(delay, 8);
@@ -291,7 +453,21 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->start7Bit();
   encoder->pack(trigGroups, 16);
   encoder->pack(muteGroups, 16);
-  // encoder->pack(tuning, 2);
+
+#if !defined(__AVR__)
+  if (emit_spsx) {
+    // SPS-X LFO-B section: compact 9 bytes/track, after trig/mute groups.
+    encoder->start7Bit();
+    for (uint8_t i = 0; i < 16; i++) {
+      encoder->pack(&lfosB[i].destinationTrack, 5);
+      uint8_t compact_state[4];
+      pack_compact_lfo_state(lfosB[i], compact_state);
+      encoder->pack(compact_state, 4);
+    }
+    encoder->stop7Bit();
+  }
+#endif
+
   return ElektronHelper::finishSysexEncode(encoder);
 }
 
@@ -306,7 +482,7 @@ uint8_t swapNumber(uint8_t num, uint8_t a, uint8_t b) {
 }
 
 void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
-  uint8_t _params[MD_PARAMS_PER_TRACK];
+  uint8_t _params[SPS_PARAMS_PER_TRACK];
   uint8_t _level;
   uint32_t _model;
   MDLFO _lfo;
@@ -328,13 +504,19 @@ void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
 #endif
 
   /* swap params */
-  memcpy(_params, params[srcTrack], MD_PARAMS_PER_TRACK);
-  memcpy(params[srcTrack], params[dstTrack], MD_PARAMS_PER_TRACK);
-  memcpy(params[dstTrack], _params, MD_PARAMS_PER_TRACK);
+  memcpy(_params, params[srcTrack], SPS_PARAMS_PER_TRACK);
+  memcpy(params[srcTrack], params[dstTrack], SPS_PARAMS_PER_TRACK);
+  memcpy(params[dstTrack], _params, SPS_PARAMS_PER_TRACK);
 
   memcpy(&_lfo, &lfos[srcTrack], sizeof(_lfo));
   memcpy(&lfos[srcTrack], &lfos[dstTrack], sizeof(_lfo));
   memcpy(&lfos[dstTrack], &_lfo, sizeof(_lfo));
+
+#if !defined(__AVR__)
+  memcpy(&_lfo, &lfosB[srcTrack], sizeof(_lfo));
+  memcpy(&lfosB[srcTrack], &lfosB[dstTrack], sizeof(_lfo));
+  memcpy(&lfosB[dstTrack], &_lfo, sizeof(_lfo));
+#endif
 
   /* swap level, model, trig group, mute group */
   _level = levels[srcTrack];

@@ -194,17 +194,13 @@ public:
   void scale_vol(float scale);
   float normalize_level();
   void init() {
-  memset(params, 0, sizeof(params));
-  uint8_t init_params[MD_PARAMS_LEGACY] = { 0, 0, 0, 0,
+  uint8_t init_params[MD_PARAMS_PER_TRACK] = { 0, 0, 0, 0,
              0, 0, 0, 0,
              0, 0, 64, 64,
              0, 127, 0, 0,
              0, 127, 64, 0,
              0, 64, 0, 0 };
-  memcpy(&params, &init_params, MD_PARAMS_LEGACY);
-  params[MODEL_ENVDCY] = 127;
-  params[MODEL_ENVMIX] = 127;
-  params[MODEL_LFO2SPD] = 64;
+  memcpy(params, init_params, MD_PARAMS_PER_TRACK);
   level = 127;
   model = GND_MODEL;
   trigGroup = 127;
@@ -220,6 +216,55 @@ public:
   }
   /* @} */
 };
+
+#if !defined(__AVR__)
+class ATTR_PACKED() SPSMachine {
+public:
+  uint8_t params[SPS_PARAMS_PER_TRACK];
+  uint8_t track;
+  uint8_t level;
+  uint32_t model;
+  MDLFO lfos[2];   // [0] = LFO-A, [1] = LFO-B
+  uint8_t trigGroup;
+  uint8_t muteGroup;
+
+  void scale_vol(float scale);
+  float normalize_level();
+  void init() {
+    uint8_t init_params[MD_PARAMS_PER_TRACK] = { 0, 0, 0, 0,
+               0, 0, 0, 0,
+               0, 0, 64, 64,
+               0, 127, 0, 0,
+               0, 127, 64, 0,
+               0, 64, 0, 0 };
+    memset(params, 0, sizeof(params));
+    memcpy(params, init_params, MD_PARAMS_PER_TRACK);
+    params[MODEL_ENVDCY]  = 127;
+    params[MODEL_ENVMIX]  = 127;
+    params[MODEL_LFO2SPD] = 64;
+    level = 127;
+    model = GND_MODEL;
+    trigGroup = 127;
+    muteGroup = 127;
+    lfos[0].init(track);
+    lfos[1].init(track);
+  }
+
+  uint8_t get_model();
+  bool get_tonal();
+
+  uint32_t get_model_raw() {
+    return model & 0x200FF;
+  }
+};
+#endif
+
+static_assert(sizeof(MDMachine) == MD_PARAMS_PER_TRACK + 1 + 1 + 4 + sizeof(MDLFO) + 1 + 1,
+              "MDMachine layout changed — MDTrack on-disk format will break, bump GRID_VERSION");
+#if !defined(__AVR__)
+static_assert(sizeof(SPSMachine) == SPS_PARAMS_PER_TRACK + 1 + 1 + 4 + 2 * sizeof(MDLFO) + 1 + 1,
+              "SPSMachine layout changed — SPSXTrack on-disk format will break");
+#endif
 
 /**
  * This class stores the settings for a complete kit on the
@@ -237,15 +282,19 @@ public:
   char name[17];
 
   /** The parameters for each track. **/
-  uint8_t params[16][MD_PARAMS_PER_TRACK];
+  uint8_t params[16][SPS_PARAMS_PER_TRACK];
   /** Duplicate params not included in the origin MD structure */
-  uint8_t params_orig[16][MD_PARAMS_PER_TRACK];
+  uint8_t params_orig[16][SPS_PARAMS_PER_TRACK];
   /** The levels of each track. **/
   uint8_t levels[16];
   /** The selected drum model for each track. **/
   uint32_t models[16];
-  /** The LFO settings for each track. **/
+  /** The LFO-A settings for each track. **/
   MDLFO lfos[16];
+#if !defined(__AVR__)
+  /** The LFO-B settings for each track (SPS-X v65 kits only). **/
+  MDLFO lfosB[16];
+#endif
   /** The settings of the reverb effect. **/
   uint8_t reverb[8];
   /** The settings of the delay effect. **/

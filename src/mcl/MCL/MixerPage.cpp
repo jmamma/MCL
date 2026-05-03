@@ -577,7 +577,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (midi_device == &MD) {
           for (uint8_t i = 0; i < 16; i++) {
             if (note_interface.is_note_on(i)) {
-              uint8_t num_params = MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+              uint8_t num_params = MD.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
               for (uint8_t c = 0; c < num_params; c++) {
                 MD.restore_kit_param(i, c);
               }

@@ -23,7 +23,7 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
-  uint8_t param_limit = MD.is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  uint8_t param_limit = MD.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   if (track_param < param_limit && track < 16) {
     MD.kit.params[track][track_param] = value;
     last_md_param = track_param;
@@ -372,7 +372,7 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
     *track = (control_ch - 4) * 4;
     if (cc > 39) { *track = 255; return; }
     *track += cc % 4;
-    *param = (cc / 4) + MD_PARAMS_LEGACY;
+    *param = (cc / 4) + MD_PARAMS_PER_TRACK;
     return;
   }
 
@@ -474,7 +474,7 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
-  if (param < MD_PARAMS_LEGACY) {
+  if (param < MD_PARAMS_PER_TRACK) {
     cc = param;
     if (b < 2) {
       cc += 16 + b * 24;
@@ -484,10 +484,10 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     if (update_kit) {
       kit.params[track][param] = value;
     }
-  } else if (param >= MD_PARAMS_LEGACY && param < MD_PARAMS_PER_TRACK && is_spsx) {
+  } else if (param >= MD_PARAMS_PER_TRACK && param < SPS_PARAMS_PER_TRACK && is_spsx) {
     // Extended params on extended channels (base+4..+7)
     uint8_t ext_channel = channel + 4 + global.baseChannel;
-    cc = (param - MD_PARAMS_LEGACY) * 4 + b;
+    cc = (param - MD_PARAMS_PER_TRACK) * 4 + b;
     if (update_kit) {
       kit.params[track][param] = value;
       sendCC(ext_channel, cc, value, uart_);
@@ -748,7 +748,7 @@ void MDClass::setMachine(uint8_t track, MDKit *kit) {
   setTrigGroup(track, kit->trigGroups[track]);
   setMuteGroup(track, kit->muteGroups[track]);
   // uart->useRunningStatus = true;
-  uint8_t num_params = is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  uint8_t num_params = is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   for (uint8_t i = 0; i < num_params; i++) {
     setTrackParam(track, i, kit->params[track][i]);
   }
@@ -769,13 +769,31 @@ void MDClass::setMachine(uint8_t track, MDMachine *machine) {
   } else {
     setMuteGroup(track, machine->muteGroup);
   }
-  //  uart->useRunningStatus = true;
-  uint8_t num_params = is_spsx ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY;
+  for (uint8_t i = 0; i < MD_PARAMS_PER_TRACK; i++) {
+    setTrackParam(track, i, machine->params[i]);
+  }
+}
+
+#if !defined(__AVR__)
+void MDClass::setMachine(uint8_t track, SPSMachine *machine) {
+  assignMachine(track, machine->get_model(), machine->get_tonal());
+  setLFO(track, &(machine->lfos[0]), false);
+  if (machine->trigGroup == 255) {
+    setTrigGroup(track, 127);
+  } else {
+    setTrigGroup(track, machine->trigGroup);
+  }
+  if (machine->muteGroup == 255) {
+    setMuteGroup(track, 127);
+  } else {
+    setMuteGroup(track, machine->muteGroup);
+  }
+  uint8_t num_params = is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   for (uint8_t i = 0; i < num_params; i++) {
     setTrackParam(track, i, machine->params[i]);
   }
-  //  uart->useRunningStatus = false;
 }
+#endif
 
 uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
                                    uint8_t level, uint8_t mode, bool send) {
@@ -839,6 +857,58 @@ end:
 
   return sendRequest(data, i, send);
 }
+
+#if !defined(__AVR__)
+uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
+                                   uint8_t level, uint8_t mode, bool send) {
+  uint8_t data[44] = {0x70, 0x5b};
+  uint8_t i = 2;
+
+  uint8_t length_index = i++;
+
+  data[i++] = track;
+  if (machine->get_model() >= 128) {
+    data[i++] = (machine->get_model() - 128);
+    data[i] = 0x01;
+  } else {
+    data[i++] = machine->get_model();
+    data[i] = 0x00;
+  }
+  if (machine->get_tonal()) {
+    data[i] += 2;
+  }
+  i++;
+
+  if (mode == 0) {
+    goto end;
+  }
+
+  memcpy(data + i, machine->params, 24);
+  i += 24;
+
+  if (mode == 1) {
+    goto end;
+  }
+
+  memcpy(data + i, &machine->lfos[0], 5);
+  i += 5;
+  if (machine->trigGroup > 15) {
+    machine->trigGroup = 127;
+  }
+  if (machine->muteGroup > 15) {
+    machine->muteGroup = 127;
+  }
+  data[i++] = machine->trigGroup;
+  data[i++] = machine->muteGroup;
+  if (level != 255) {
+    data[i++] = level;
+  }
+end:
+  data[length_index] = i - 1;
+  return sendRequest(data, i, send);
+}
+#endif
+
 void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_) {
   DEBUG_PRINTLN("load machine cache");
   uint8_t a = track_mask & 0x7F;
@@ -853,6 +923,13 @@ void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
   memcpy(kit_->params_orig[track], machine->params, MD_PARAMS_PER_TRACK);
 }
 
+#if !defined(__AVR__)
+void MDClass::setOrigParams(uint8_t track, SPSMachine *machine) {
+  MDKit *kit_ = &kit;
+  memcpy(kit_->params_orig[track], machine->params, SPS_PARAMS_PER_TRACK);
+}
+#endif
+
 void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
                                  bool set_level) {
 
@@ -862,6 +939,13 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
   MDKit *kit_ = &kit;
 
   memcpy(kit_->params[track], machine->params, MD_PARAMS_PER_TRACK);
+  if (is_spsx) {
+    memset(&kit_->params[track][MD_PARAMS_PER_TRACK], 0,
+           SPS_PARAMS_PER_TRACK - MD_PARAMS_PER_TRACK);
+    kit_->params[track][MODEL_ENVDCY]  = 127;
+    kit_->params[track][MODEL_ENVMIX]  = 127;
+    kit_->params[track][MODEL_LFO2SPD] = 64;
+  }
   setOrigParams(track, machine);
 
   if (set_level) {
@@ -893,6 +977,42 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
   }
 }
 
+#if !defined(__AVR__)
+void MDClass::insertMachineInKit(uint8_t track, SPSMachine *machine,
+                                 bool set_level) {
+  MDKit *kit_ = &kit;
+
+  memcpy(kit_->params[track], machine->params, SPS_PARAMS_PER_TRACK);
+  setOrigParams(track, machine);
+
+  if (set_level) {
+    kit_->levels[track] = machine->level;
+  }
+  kit_->models[track] = machine->get_model_raw();
+
+  if (machine->lfos[0].destinationTrack > 15) {
+    machine->lfos[0].destinationTrack = track;
+  }
+  if (machine->lfos[1].destinationTrack > 15) {
+    machine->lfos[1].destinationTrack = track;
+  }
+  memcpy(&(kit_->lfos[track]),  &machine->lfos[0], sizeof(MDLFO));
+  memcpy(&(kit_->lfosB[track]), &machine->lfos[1], sizeof(MDLFO));
+
+  if ((machine->trigGroup < 16) && (machine->trigGroup != track)) {
+    kit_->trigGroups[track] = machine->trigGroup;
+  } else {
+    kit_->trigGroups[track] = 255;
+  }
+
+  if ((machine->muteGroup < 16) && (machine->muteGroup != track)) {
+    kit_->muteGroups[track] = machine->muteGroup;
+  } else {
+    kit_->muteGroups[track] = 255;
+  }
+}
+#endif
+
 uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
                              bool send) {
   uint16_t bytes = 0;
@@ -916,6 +1036,30 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 
   return bytes;
 }
+
+#if !defined(__AVR__)
+uint8_t MDClass::sendMachine(uint8_t track, SPSMachine *machine, bool send_level,
+                             bool send) {
+  uint16_t bytes = 0;
+
+  MDKit *kit_ = &kit;
+
+  uint8_t level = 255;
+
+  uint8_t track_ = track;
+  if (track_ > 15) {
+    track_ -= 16;
+  }
+
+  if ((send_level) && (kit_->levels[track_] != machine->level)) {
+    level = machine->level;
+  }
+
+  bytes = MD.assignMachineBulk(track, machine, level, 255, send);
+
+  return bytes;
+}
+#endif
 
 void MDClass::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
   if (global.baseChannel == 127)

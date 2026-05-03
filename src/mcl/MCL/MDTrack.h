@@ -108,4 +108,7 @@ public:
   virtual size_t get_sound_data_size() { return 0; }
 };
 
+static_assert(MEMORY_ALIGN(sizeof(MDTrack) - sizeof(void*)) <= GRID1_TRACK_LEN,
+              "MDTrack outgrew GRID1_TRACK_LEN — on-disk row format changed, bump GRID_VERSION");
+
 #endif /* MDTRACK_H__ */

@@ -5,6 +5,8 @@
 #include "MCLSysConfig.h"
 #include "Shared.h"
 
+#if !defined(__AVR__)
+
 void SPSXTrack::init() {
   machine.init();
   seq_version = SPSX_SEQ_VERSION_LEGACY;
@@ -16,18 +18,21 @@ void SPSXTrack::clear_track() {
 }
 
 void SPSXTrack::get_machine_from_kit(uint8_t tracknumber) {
-  memcpy(machine.params, MD.kit.params[tracknumber], MD_PARAMS_PER_TRACK);
+  memcpy(machine.params, MD.kit.params[tracknumber], SPS_PARAMS_PER_TRACK);
   machine.track = tracknumber;
   machine.level = MD.kit.levels[tracknumber];
   machine.model = MD.kit.models[tracknumber];
-  memcpy(&machine.lfo, &MD.kit.lfos[tracknumber], sizeof(machine.lfo));
+  memcpy(&machine.lfos[0], &MD.kit.lfos[tracknumber],  sizeof(MDLFO));
+  memcpy(&machine.lfos[1], &MD.kit.lfosB[tracknumber], sizeof(MDLFO));
   if (MD.kit.lfos[tracknumber].destinationTrack == tracknumber) {
-    machine.lfo.destinationTrack = tracknumber;
+    machine.lfos[0].destinationTrack = tracknumber;
     machine.track = tracknumber;
   }
   machine.trigGroup = MD.kit.trigGroups[tracknumber];
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
 }
+
+
 
 uint16_t SPSXTrack::calc_latency(uint8_t tracknumber) {
   bool send_machine = false, send_level = false;
@@ -119,13 +124,6 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
   md_seq_track->set_length(link.length);
 }
 
-static void apply_spsx_defaults(MDMachine &m) {
-  memset(&m.params[MD_PARAMS_LEGACY], 0, MD_PARAMS_PER_TRACK - MD_PARAMS_LEGACY);
-  m.params[MODEL_ENVDCY] = 127;
-  m.params[MODEL_ENVMIX] = 127;
-  m.params[MODEL_LFO2SPD] = 64;
-}
-
 void SPSXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   MD.insertMachineInKit(tracknumber, &machine);
   load_seq_data(seq_track);
@@ -139,8 +137,10 @@ void SPSXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
                             SeqTrack *seq_track) {
   if (machine.trigGroup == src_track) machine.trigGroup = 255;
   if (machine.muteGroup == src_track) machine.muteGroup = 255;
-  if (machine.lfo.destinationTrack == src_track) {
-    machine.lfo.destinationTrack = dest_track;
+  for (uint8_t li = 0; li < 2; li++) {
+    if (machine.lfos[li].destinationTrack == src_track) {
+      machine.lfos[li].destinationTrack = dest_track;
+    }
   }
   load_immediate(dest_track, seq_track);
   MD.sendMachine(dest_track, &machine, true, true);
@@ -288,17 +288,21 @@ void SPSXTrack::on_copy(int16_t s_col, int16_t d_col, bool destination_same) {
   if (destination_same) {
     if (machine.trigGroup == s_col) machine.trigGroup = 255;
     if (machine.muteGroup == s_col) machine.muteGroup = 255;
-    if (machine.lfo.destinationTrack == s_col) {
-      machine.lfo.destinationTrack = d_col;
+    for (uint8_t li = 0; li < 2; li++) {
+      if (machine.lfos[li].destinationTrack == s_col) {
+        machine.lfos[li].destinationTrack = d_col;
+      }
     }
   } else {
-    int lfo_dest = machine.lfo.destinationTrack - s_col;
     int trig_dest = machine.trigGroup - s_col;
     int mute_dest = machine.muteGroup - s_col;
-    if (range_check(d_col + lfo_dest, 0, 15))
-      machine.lfo.destinationTrack = d_col + lfo_dest;
-    else
-      machine.lfo.destinationTrack = 255;
+    for (uint8_t li = 0; li < 2; li++) {
+      int lfo_dest = machine.lfos[li].destinationTrack - s_col;
+      if (range_check(d_col + lfo_dest, 0, 15))
+        machine.lfos[li].destinationTrack = d_col + lfo_dest;
+      else
+        machine.lfos[li].destinationTrack = 255;
+    }
     if (range_check(d_col + trig_dest, 0, 15))
       machine.trigGroup = d_col + trig_dest;
     else
@@ -309,3 +313,5 @@ void SPSXTrack::on_copy(int16_t s_col, int16_t d_col, bool destination_same) {
       machine.muteGroup = 255;
   }
 }
+
+#endif // !__AVR__

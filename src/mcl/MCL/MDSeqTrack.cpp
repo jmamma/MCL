@@ -1035,7 +1035,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   DEBUG_PRINT_FN();
 
 #if !defined(__AVR__)
-  uint8_t num_params = pattern->version >= 0x40 ? MD_PARAMS_PER_TRACK : 24;
+  uint8_t num_params = pattern->version >= 0x40 ? SPS_PARAMS_PER_TRACK : 24;
 #else
   uint8_t num_params = 24;
 #endif

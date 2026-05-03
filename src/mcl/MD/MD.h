@@ -254,6 +254,9 @@ public:
    **/
   void assignMachine(uint8_t track, uint8_t model, uint8_t init = 255);
   uint8_t assignMachineBulk(uint8_t track, MDMachine *machine, uint8_t send_level, uint8_t mode = 255, bool send = true);
+#if !defined(__AVR__)
+  uint8_t assignMachineBulk(uint8_t track, SPSMachine *machine, uint8_t send_level, uint8_t mode = 255, bool send = true);
+#endif
   /**
    * Load the given machine (including parameters) on the given track
    * out of the machine structure.
@@ -262,6 +265,9 @@ public:
   void setMachine(uint8_t track, MDKit *kit);
 
   void setMachine(uint8_t track, MDMachine *machine);
+#if !defined(__AVR__)
+  void setMachine(uint8_t track, SPSMachine *machine);
+#endif
 
   /**
    * Load machine, but only send parameters that differ from MD.kit, returns
@@ -270,10 +276,20 @@ public:
    **/
   uint8_t sendMachine(uint8_t track, MDMachine *machine, bool send_level,
                       bool send = true);
+#if !defined(__AVR__)
+  uint8_t sendMachine(uint8_t track, SPSMachine *machine, bool send_level,
+                      bool send = true);
+#endif
   uint8_t sendMachineCache(uint8_t track, MDMachine *machine, bool send_level,
                       bool send = true) {
      return sendMachine(track + 16, machine, send_level, send);
   }
+#if !defined(__AVR__)
+  uint8_t sendMachineCache(uint8_t track, SPSMachine *machine, bool send_level,
+                      bool send = true) {
+     return sendMachine(track + 16, machine, send_level, send);
+  }
+#endif
 
   void loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_ = nullptr);
 
@@ -281,8 +297,15 @@ public:
    * Inserts a machine in to the MDKit object
    **/
   void setOrigParams(uint8_t track, MDMachine *machine);
+#if !defined(__AVR__)
+  void setOrigParams(uint8_t track, SPSMachine *machine);
+#endif
   void insertMachineInKit(uint8_t track, MDMachine *machine,
                           bool set_level = true);
+#if !defined(__AVR__)
+  void insertMachineInKit(uint8_t track, SPSMachine *machine,
+                          bool set_level = true);
+#endif
   /**
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.

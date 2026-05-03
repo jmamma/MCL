@@ -266,7 +266,7 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 #if !defined(__AVR__)
   bool use_spsx = MD.is_spsx;
   uint8_t ver = use_spsx ? 0x40 : 0x03;
-  uint8_t paramLimit = use_spsx ? MD_PARAMS_PER_TRACK : 24;
+  uint8_t paramLimit = use_spsx ? SPS_PARAMS_PER_TRACK : 24;
 #else
   uint8_t ver = 0x03;
   uint8_t paramLimit = 24;
@@ -476,7 +476,7 @@ void MDPattern::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
   uint64_t _slidePattern;
   uint64_t _swingPattern;
 #if !defined(__AVR__)
-  int16_t _paramLocks[MD_PARAMS_PER_TRACK];
+  int16_t _paramLocks[SPS_PARAMS_PER_TRACK];
 #else
   int8_t _paramLocks[24];
 #endif

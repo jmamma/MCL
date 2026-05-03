@@ -56,7 +56,7 @@ void SpsMode::resync_from_kit() {
   uint8_t base = param_base();
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t param = base + i;
-    if (param >= MD_PARAMS_LEGACY) {
+    if (param >= MD_PARAMS_PER_TRACK) {
       enc[i].setValue(0);
       continue;
     }
@@ -67,7 +67,7 @@ void SpsMode::resync_from_kit() {
 void SpsMode::send_param(uint8_t i) {
   if (!MD.connected) return;
   uint8_t param = param_base() + i;
-  if (param >= MD_PARAMS_LEGACY) return;
+  if (param >= MD_PARAMS_PER_TRACK) return;
   uint8_t v = (uint8_t)enc[i].cur;
   MD.setTrackParam(MD.currentTrack, param, v, nullptr, true);
 }
@@ -160,9 +160,9 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
 }
 
 bool SpsMode::show_value(uint8_t i) const {
-  // Mirrors MCLGUI::show_encoder_value: visible while the encoder is
-  // pressed, or for SHOW_VALUE_TIMEOUT after the last cur change.
-  if (BUTTON_DOWN(Buttons.ENCODER1 + i)) return true;
+  // Visible only for SHOW_VALUE_TIMEOUT after the last rotation. Press
+  // alone does NOT pop the value — pressing ENC1 is the PageSelect tap
+  // gesture, and we don't want the strip to flash the value during it.
   if (enc_used_clock_[i] == 0) return false;
   return clock_diff(enc_used_clock_[i], read_clock_ms()) < SHOW_VALUE_TIMEOUT;
 }
@@ -254,8 +254,8 @@ void SpsMode::draw_strip(uint8_t y_top) {
   uint8_t model = MD.kit.get_model(MD.currentTrack);
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t param = base + i;
-    encs[i] = (param < MD_PARAMS_LEGACY) ? &enc[i] : nullptr;
-    labels[i] = (param < MD_PARAMS_LEGACY)
+    encs[i] = (param < MD_PARAMS_PER_TRACK) ? &enc[i] : nullptr;
+    labels[i] = (param < MD_PARAMS_PER_TRACK)
                     ? model_param_name(model, param)
                     : nullptr;
     show[i] = encs[i] ? show_value(i) : false;
