@@ -116,6 +116,7 @@ public:
   void drawRoundRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color);
 
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink = false);
+  void set_trigleds_color(uint16_t bitmask, uint32_t rgb);
   void reset_trigleds();
 
   static constexpr uint8_t seq_w = 5;

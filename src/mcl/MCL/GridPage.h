@@ -58,9 +58,25 @@ public:
 
   PageIndex last_page = NULL_PAGE;
 
+  // bank_popup states:
+  //   0 = closed
+  //   1 = bank held (preview, MD-bank-key entry)
+  //   2 = pattern stage (bank chosen, trig press loads/chains)
+  //   3 = bank-select stage (waiting for trig to pick a bank)
   uint8_t bank_popup = 0;
   uint16_t bank_popup_lastclock;
   uint16_t bank_popup_loadmask;
+  // Set when the popup was opened by an external modifier (MCL_B held).
+  // While set, the AVR-style "auto-close on trig release / no bank key held"
+  // paths are suppressed — close_bank_popup() is only called when the
+  // external trigger fires (release of the modifier).
+  bool bank_popup_external = false;
+
+  // Bank-select stage: 8 banks laid out as top-half / bottom-half halves of
+  // the trig pad (Layout A). Trigs 0..3 -> banks 0..3, trigs 8..11 -> banks 4..7.
+  static constexpr uint16_t BANK_SELECT_TOP_MASK = 0x000F; // trig 0..3
+  static constexpr uint16_t BANK_SELECT_BOT_MASK = 0x0F00; // trig 8..11
+  static constexpr uint8_t  BANK_SELECT_COUNT    = 8;
 
   bool draw_encoders;
   uint16_t draw_encoders_lastclock;
@@ -95,6 +111,10 @@ public:
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
   void load_old_col();
+  // Open the colour-coded bank-select stage. Caller is responsible for
+  // calling close_bank_popup() to finalize (e.g. on modifier release).
+  // Platform-agnostic — entry trigger is wired in tbd_handleEvent.
+  void open_bank_select();
   void close_bank_popup();
 
   void loop();

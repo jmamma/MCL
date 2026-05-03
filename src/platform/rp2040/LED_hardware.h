@@ -30,6 +30,8 @@ private:
   uint32_t last_render_state;
   uint32_t blink_last_trigger_time;
   bool last_blink_hint;
+  bool trig_color_override;
+  uint32_t trig_colors[16];
 
 public:
   TrigLEDMode current_led_mode;
@@ -38,12 +40,15 @@ public:
   LEDHardware()
       : led_base_state(0), led_blink_mask(0), led_flash_mask(0),
         last_render_state(0), blink_last_trigger_time(0), updateLeds(true),
-        current_led_mode(TRIGLED_OVERLAY), last_blink_hint(false), rec_active(false) {
+        current_led_mode(TRIGLED_OVERLAY), last_blink_hint(false), rec_active(false),
+        trig_color_override(false) {
     memset(led_flash_start_time, 0, sizeof(led_flash_start_time));
+    memset(trig_colors, 0, sizeof(trig_colors));
   }
 
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink = false,
                     bool update = true);
+  void set_trigleds_color(uint16_t bitmask, uint32_t rgb);
   void clear_trigleds() {
      set_trigleds(0, current_led_mode, false, false);
      set_trigleds(0, current_led_mode, true, true);

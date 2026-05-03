@@ -65,6 +65,7 @@ void GridPage::cleanup() {
   oled_display.setFont();
   oled_display.setTextColor(WHITE, BLACK);
   bank_popup = 0;
+  bank_popup_external = false;
 }
 
 void GridPage::load_row(uint8_t n, uint8_t row) {
@@ -103,6 +104,7 @@ void GridPage::send_row_led() {
   MD.set_trigleds(blink_mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 void GridPage::close_bank_popup() {
+  if (bank_popup == 0) { return; }
   if (bank_popup == 2) {
     MD.draw_close_bank();
   }
@@ -113,9 +115,40 @@ void GridPage::close_bank_popup() {
   }
   last_page = NULL_PAGE;
   bank_popup = 0;
+  bank_popup_loadmask = 0;
+  bank_popup_external = false;
   note_interface.init_notes();
-  // Clear blink leds
+  // Drop colour-override mode and clear blink leds.
+  mcl_gui.set_trigleds(0, TRIGLED_OVERLAY);
   MD.set_trigleds(0, TRIGLED_EXCLUSIVENDYNAMIC, 1);
+}
+
+// Layout A bank-select stage. The colour-coded LEDs serve as the only
+// "you are here" cue while waiting for the user to commit to a bank;
+// no OLED popup until a bank trig is pressed (which transitions to
+// bank_popup=2 and reuses the existing pattern-load/chain handler).
+void GridPage::open_bank_select() {
+  if (bank_popup != 0) { return; }
+  if (mcl.currentPage() != GRID_PAGE) {
+    if (last_page == 255) {
+      last_page = mcl.currentPage();
+    }
+    mcl.setPage(GRID_PAGE);
+  }
+  bank_popup = 3;
+  bank_popup_loadmask = 0;
+  bank_popup_lastclock = read_clock_ms();
+  bank_popup_external = true;
+  bool clear_states = false;
+  key_interface.on(clear_states);
+
+  // Two-colour palette: top half blue, bottom half green. Tweak as needed.
+  // Keep the colours distinct enough to be obvious under bright lights.
+  constexpr uint32_t kColorTop = ((uint32_t)0   << 16) | ((uint32_t)32  << 8) | 96;  // blue
+  constexpr uint32_t kColorBot = ((uint32_t)0   << 16) | ((uint32_t)96  << 8) | 32;  // green
+  mcl_gui.set_trigleds_color(0xFFFF, 0); // clear all trigs
+  mcl_gui.set_trigleds_color(BANK_SELECT_TOP_MASK, kColorTop);
+  mcl_gui.set_trigleds_color(BANK_SELECT_BOT_MASK, kColorBot);
 }
 
 void GridPage::load_old_col() {
@@ -257,7 +290,8 @@ void GridPage::loop() {
      param4.checkHandle();
   }
 
-  if (bank_popup == 2 && clock_diff(bank_popup_lastclock, read_clock_ms()) > 800) {
+  if (bank_popup == 2 && !bank_popup_external &&
+      clock_diff(bank_popup_lastclock, read_clock_ms()) > 800) {
     close_bank_popup();
     return;
   }
@@ -911,7 +945,9 @@ bool GridPage::handleEvent(gui_event_t *event) {
     uint8_t row = grid_page.bank * 16 + track;
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (grid_page.bank_popup > 0) {
-        if (note_interface.notes_all_off()) {
+        // External-modifier mode keeps the popup open until the modifier
+        // (e.g. MCL_B) is released; trig releases just fall through.
+        if (!grid_page.bank_popup_external && note_interface.notes_all_off()) {
           // note_interface.init_notes();
           grid_page.bank_popup_loadmask = 0;
           // grid_page.bank_popup = 0;
@@ -922,6 +958,27 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
+      // Bank-select stage: pick a bank, transition to the existing
+      // pattern-stage handler (bank_popup=2) so chain/load logic is shared.
+      if (grid_page.bank_popup == 3) {
+        int8_t b = -1;
+        if (track < 4)                      b = track;
+        else if (track >= 8 && track < 12)  b = track - 8 + 4;
+        if (b < 0) {
+          // Non-bank trig in bank-select stage — eat the event.
+          return true;
+        }
+        grid_page.bank = b;
+        grid_page.bank_popup = 2;
+        grid_page.bank_popup_lastclock = read_clock_ms();
+        // Hand the pattern grid to the existing render path.
+        uint16_t *pattern_mask = (uint16_t *)&grid_page.row_states[0];
+        mcl_gui.set_trigleds(pattern_mask[grid_page.bank],
+                             TRIGLED_EXCLUSIVENDYNAMIC);
+        grid_page.send_row_led();
+        MD.draw_bank(b);
+        return true;
+      }
       if (grid_page.bank_popup > 0) {
 
         uint8_t load_mode_old = mcl_cfg.load_mode;
@@ -952,7 +1009,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
         grid_page.load_row(track, row);
 
-        if (!key_interface.is_key_down(MDX_KEY_BANKA) &&
+        if (!grid_page.bank_popup_external &&
+            !key_interface.is_key_down(MDX_KEY_BANKA) &&
             !key_interface.is_key_down(MDX_KEY_BANKB) &&
             !key_interface.is_key_down(MDX_KEY_BANKC) &&
             !key_interface.is_key_down(MDX_KEY_BANKD)) {

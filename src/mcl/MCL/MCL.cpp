@@ -427,6 +427,17 @@ bool tbd_handleEvent(gui_event_t *event) {
             return true;
         }
         key_interface.key_event(key, is_release);
+
+        // MCL_B held on grid page opens the colour-coded bank-select stage.
+        // Stage 1 is LEDs only; the OLED/pattern view appears after a bank
+        // trig is pressed (handled inside GridPage). Release closes.
+        if (key == MDX_KEY_SPS && mcl.currentPage() == GRID_PAGE) {
+            if (is_press) {
+                grid_page.open_bank_select();
+            } else {
+                grid_page.close_bank_popup();
+            }
+        }
         return true;
     }
     return false;
@@ -487,6 +498,11 @@ bool mcl_handleEvent(gui_event_t *event) {
         }
         if (key_interface.is_key_down(MDX_KEY_FUNC)) {
           return false;
+        }
+        // MCL_B bank-select stage owns the popup — ignore MD bank keys until
+        // the modifier is released.
+        if (grid_page.bank_popup_external) {
+          return true;
         }
         if (grid_page.last_page == 255) {
           grid_page.last_page = mcl.currentPage();

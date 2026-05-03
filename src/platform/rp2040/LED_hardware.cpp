@@ -66,7 +66,13 @@ void LEDHardware::show() {
       }
 
       if (id < 255) {
-        setPixelColor(id, is_on ? STRIP_RED : STRIP_BLACK, false);
+        uint32_t color;
+        if (i < 16 && trig_color_override) {
+          color = trig_colors[i];
+        } else {
+          color = is_on ? STRIP_RED : STRIP_BLACK;
+        }
+        setPixelColor(id, color, false);
       }
       final_render_state >>= 1;
     }
@@ -84,6 +90,12 @@ void LEDHardware::show() {
 void LEDHardware::set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink,
                         bool update) {
   current_led_mode = mode;
+  // Plain set_trigleds returns to monochrome rendering — colour override
+  // ends here; the next caller has to re-arm it explicitly.
+  if (trig_color_override) {
+    trig_color_override = false;
+    memset(trig_colors, 0, sizeof(trig_colors));
+  }
   if (mode == TRIGLED_STEPEDIT) {
     SET_BIT32(led_base_state, STRIP_LED3);
   } else {
@@ -98,6 +110,19 @@ void LEDHardware::set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink,
     updateLeds = true;
   }
 }
+void LEDHardware::set_trigleds_color(uint16_t bitmask, uint32_t rgb) {
+  trig_color_override = true;
+  for (uint8_t i = 0; i < 16; i++) {
+    if (bitmask & (1u << i)) {
+      trig_colors[i] = rgb;
+    }
+  }
+  // Force a render — final_render_state matters less in override mode but
+  // show() bails when it equals last_render_state, so nudge updateLeds.
+  updateLeds = true;
+  last_render_state = ~last_render_state;
+}
+
 void LEDHardware::set_flashled(uint8_t n) {
   if ((n < 16) && (current_led_mode == TRIGLED_STEPEDIT || current_led_mode == TRIGLED_MUTE || current_led_mode == TRIGLED_EXCLUSIVE)) { 
         return; }
