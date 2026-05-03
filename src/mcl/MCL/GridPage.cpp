@@ -655,7 +655,7 @@ void GridPage::display() {
     constexpr uint8_t kWinW = 50;
     constexpr uint8_t kWinH = 26;
     constexpr uint8_t kWinX = 64 - kWinW / 2;
-    constexpr uint8_t kWinY = 8;
+    constexpr uint8_t kWinY = (32 - kWinH) / 2;  // vertically centred in 32 px
 
     oled_display.fillRect(kWinX - 1, kWinY - 1, kWinW + 2, kWinH + 2, BLACK);
     oled_display.drawRect(kWinX, kWinY, kWinW, kWinH, WHITE);
