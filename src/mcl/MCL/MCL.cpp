@@ -326,8 +326,10 @@ bool tbd_handleEvent(gui_event_t *event) {
         }
     }
 
-    // Trig buttons
-    if (event->source >= ButtonsClass::TRIG_BUTTON1) {
+    // Trig buttons. Restricted to TRIG_BUTTON1..TRIG_BUTTON16 — TBD_KEY_* IDs
+    // sit immediately above this range and must reach the else-branch switch.
+    if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
+        event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
         key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
         if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
             if (is_press && key < NUM_MD_TRACKS) {
