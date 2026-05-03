@@ -183,6 +183,14 @@ void SPSMachine::scale_vol(float scale) {
     }
     lfos[0].depth = params[MODEL_LFOD];
   }
+  if ((lfos[1].destinationParam == MODEL_VOL) && (lfos[1].destinationTrack == track)) {
+    params[MODEL_LFO2DEP] = (uint8_t)((float)params[MODEL_LFO2DEP] * scale);
+
+    if (params[MODEL_LFO2DEP] > 127) {
+      params[MODEL_LFO2DEP] = 127;
+    }
+    lfos[1].depth = params[MODEL_LFO2DEP];
+  }
 }
 
 float SPSMachine::normalize_level() {
