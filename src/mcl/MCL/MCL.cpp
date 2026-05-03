@@ -383,6 +383,25 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
         event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
         key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
+
+        // SPS-mode: forward trig press/release as 0x40 MD_GUI_TRIG_* sysex
+        // so the MD/SPS sees them as panel-key events. Skip on pages that
+        // already own trigs (step edit, perf, anywhere note_interface is
+        // collecting trigs for a chord) — those keep their local role.
+        const PageIndex pg = mcl.currentPage();
+        const bool trig_page_owns =
+            (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
+             pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0);
+        if (tbd_sps_mode && MD.connected && !trig_page_owns &&
+            !grid_page.bank_popup && key < 16) {
+            if (is_press) {
+                MD.hold_trig(key + 1);     // hold_trig API is 1-indexed
+            } else if (is_release) {
+                MD.release_trig(key + 1);
+            }
+            return true;
+        }
+
         if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
             if (is_press && key < NUM_MD_TRACKS) {
                 MD.triggerTrack(key, 127);
