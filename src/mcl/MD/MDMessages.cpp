@@ -371,12 +371,20 @@ bool MDKit::fromSysex(MidiClass *midi) {
     decoder.stop7Bit();
   } else {
     // Legacy/MDX kit: synthesize SPS-X side state with safe defaults so a
-    // later toSysex(SPS-X) round-trips cleanly.
+    // later toSysex(SPS-X) round-trips cleanly. Mirrors host MDTypes.cpp
+    // (versions <65 fallback) — envelope bypass-on, retrig off + RENV on.
     for (uint8_t i = 0; i < 16; i++) {
       memset(&params[i][MD_PARAMS_PER_TRACK], 0, SPS_PARAMS_PER_TRACK - MD_PARAMS_PER_TRACK);
+      params[i][MODEL_ENVATT]  = 0;
+      params[i][MODEL_ENVHLD]  = 0;
       params[i][MODEL_ENVDCY]  = 127;
       params[i][MODEL_ENVMIX]  = 127;
       params[i][MODEL_LFO2SPD] = 64;
+      params[i][MODEL_LFO2DEP] = 0;
+      params[i][MODEL_LFO2MIX] = 0;
+      params[i][MODEL_RTRG]    = 0;
+      params[i][MODEL_RTIM]    = 0;
+      params[i][MODEL_RENV]    = 1;   // envelope reset ON
       lfosB[i].init(i);
     }
   }
@@ -567,25 +575,25 @@ bool MDSong::fromSysex(MidiClass *midi) {
 }
 
 void MDKit::init_eq() {
-  eq[MD_EQ_LF] = 0;
-  eq[MD_EQ_LG] = 64;
-  eq[MD_EQ_HF] = 0;
-  eq[MD_EQ_HG] = 64;
-  eq[MD_EQ_PF] = 64;
-  eq[MD_EQ_PG] = 64;
-  eq[MD_EQ_PQ] = 64;
-  eq[MD_EQ_GAIN] = 127;
+  eq[MD_EQ_LF]   = 0x40;
+  eq[MD_EQ_LG]   = 0x40;
+  eq[MD_EQ_HF]   = 0x40;
+  eq[MD_EQ_HG]   = 0x40;
+  eq[MD_EQ_PF]   = 0x40;
+  eq[MD_EQ_PG]   = 0x40;
+  eq[MD_EQ_PQ]   = 0x40;
+  eq[MD_EQ_GAIN] = 0x7F;
 }
 
 void MDKit::init_dynamix() {
-  dynamics[MD_DYN_ATCK] = 127;
-  dynamics[MD_DYN_REL] = 127;
-  dynamics[MD_DYN_TRHD] = 127;
-  dynamics[MD_DYN_RTIO] = 0;
-  dynamics[MD_DYN_KNEE] = 127;
-  dynamics[MD_DYN_HP] = 127;
+  dynamics[MD_DYN_ATCK] = 0x7F;
+  dynamics[MD_DYN_REL]  = 0x7F;
+  dynamics[MD_DYN_TRHD] = 0x7F;
+  dynamics[MD_DYN_RTIO] = 0x7F;
+  dynamics[MD_DYN_KNEE] = 0x7F;
+  dynamics[MD_DYN_HP]   = 0x7F;
   dynamics[MD_DYN_OUTG] = 0;
-  dynamics[MD_DYN_MIX] = 127;
+  dynamics[MD_DYN_MIX]  = 0;
 }
 
 uint16_t MDSong::toSysex(ElektronDataToSysexEncoder *encoder) {

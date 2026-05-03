@@ -939,13 +939,25 @@ void MDClass::insertMachineInKit(uint8_t track, MDMachine *machine,
   MDKit *kit_ = &kit;
 
   memcpy(kit_->params[track], machine->params, MD_PARAMS_PER_TRACK);
+#if !defined(__AVR__)
   if (is_spsx) {
+    // Mirror MDKit::fromSysex legacy fallback (host MDTypes.cpp): envelope
+    // bypass-on, retrig off + RENV on. Keeps single-machine inserts
+    // consistent with full-kit inserts.
     memset(&kit_->params[track][MD_PARAMS_PER_TRACK], 0,
            SPS_PARAMS_PER_TRACK - MD_PARAMS_PER_TRACK);
+    kit_->params[track][MODEL_ENVATT]  = 0;
+    kit_->params[track][MODEL_ENVHLD]  = 0;
     kit_->params[track][MODEL_ENVDCY]  = 127;
     kit_->params[track][MODEL_ENVMIX]  = 127;
     kit_->params[track][MODEL_LFO2SPD] = 64;
+    kit_->params[track][MODEL_LFO2DEP] = 0;
+    kit_->params[track][MODEL_LFO2MIX] = 0;
+    kit_->params[track][MODEL_RTRG]    = 0;
+    kit_->params[track][MODEL_RTIM]    = 0;
+    kit_->params[track][MODEL_RENV]    = 1;   // envelope reset ON
   }
+#endif
   setOrigParams(track, machine);
 
   if (set_level) {
