@@ -666,6 +666,18 @@ void GridPage::display() {
   }
 #endif
 
+  // MCL_B bank-select / pattern overlay. Stage 3 = waiting for bank trig
+  // (no OLED until first bank press, per UX). Stage 2 + external = bank
+  // chosen, pattern slots active.
+  if (bank_popup_external) {
+    if (bank_popup == 2) {
+      char title[16];
+      snprintf(title, sizeof(title), "BANK %c PATTERN",
+               (char)('A' + (bank & 0x07)));
+      mcl_gui.draw_popup(title, true);
+    }
+  }
+
 #ifdef PLATFORM_TBD
   // DEBUG: raw button data
   {
