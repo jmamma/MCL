@@ -19,6 +19,7 @@
 #include "AuxPages.h"
 #include "ProjectPages.h"
 #include "SeqPages.h"
+#include "SeqTrackUtil.h"
 
 #include "PageSelectPage.h"
 #include "MenuPage.h"
@@ -142,7 +143,13 @@ void MCL::setup() {
     char value_str[4];
     mcl_gui.put_value_at(health, value_str);
     oled_display.init_display();
-    oled_display.textbox(mclstr_hw_error, value_str);
+    // mclstr_hw_error is PROGMEM, value_str is RAM. AVR's Adafruit_SSD1305
+    // only exposes textbox(RAM, RAM) and rp2040's Oled has no mixed overload,
+    // so copy the PROGMEM label into RAM first.
+    char hw_err[17];
+    strncpy_P(hw_err, mclstr_hw_error, sizeof(hw_err));
+    hw_err[sizeof(hw_err) - 1] = '\0';
+    oled_display.textbox(hw_err, value_str);
     oled_display.display();
     while (1);
   }
@@ -150,7 +157,13 @@ void MCL::setup() {
   ret = mcl_sd.sd_init();
   oled_display.init_display();
 
- if (BUTTON_DOWN(Buttons.BUTTON2)) {
+#ifdef PLATFORM_TBD
+  // TBD has no dedicated BUTTON2 — boot menu opens if ENC1 or TOP_LEFT
+  // (BUTTON1) is held at boot. Whichever one the user discovers, works.
+  if (BUTTON_DOWN(Buttons.ENCODER1) || BUTTON_DOWN(Buttons.BUTTON1)) {
+#else
+  if (BUTTON_DOWN(Buttons.BUTTON2)) {
+#endif
     // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     mcl.setPage(BOOT_MENU_PAGE);
     while (mcl.currentPage() == BOOT_MENU_PAGE) {
@@ -223,112 +236,183 @@ bool tbd_handleEvent(gui_event_t *event) {
         tbd_rec_held = (event->mask == EVENT_BUTTON_PRESSED);
     }
 
-    // If button press is greater than 4, then we need to remap these as CMD
-    if (EVENT_BUTTON(event) && event->source > ButtonsClass::BUTTON4) {
-        uint8_t key = 255;
-        // Handle trigger buttons with range check
-        if (event->source >= ButtonsClass::TRIG_BUTTON1) {
-            key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
-            // In grid page (no bank popup), trig buttons trigger drum sounds
-            if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
-                if (event->mask == EVENT_BUTTON_PRESSED && key < NUM_MD_TRACKS) {
-                    MD.triggerTrack(key, 127);
-                    mixer_page.trig(key);
-                    if (SeqPage::recording && MidiClock.state == 2) {
-                        SeqTrackUtil::with_md_track(key, [](auto &t) { t.record_track(127); });
-                    }
-                }
+    if (!EVENT_BUTTON(event)) {
+        return false;
+    }
+
+    const bool shift_held = BUTTON_DOWN(Buttons.BUTTON3);
+    const bool is_press   = (event->mask == EVENT_BUTTON_PRESSED);
+    const bool is_release = !(event->mask & 1);
+
+    // ENC1 click toggles MCL PageSelect (tap-only). The release is honored
+    // only when the press was a clean tap — not flagged as long-press by
+    // the panel and the encoder didn't rotate while held. armed=false
+    // rejects the spurious boot-time release before any press.
+    if (event->source == ButtonsClass::ENCODER1) {
+        static bool enc1_armed = false;
+        if (is_press) {
+            enc1_armed = true;
+            return true;
+        }
+        if (enc1_armed && !Buttons.enc1_long_press_seen
+                       && !Buttons.enc1_rotated_while_held) {
+            if (mcl.currentPage() == PAGE_SELECT_PAGE) {
+                page_select_page.close_to_selection();
+            } else {
+                mcl.setPage(PAGE_SELECT_PAGE);
             }
         }
-        else {
-           bool copy_mode = (key_interface.is_key_down(MDX_KEY_NO) ||
-                  key_interface.is_key_down(MDX_KEY_FUNC)) ||
-                 ((mcl.currentPage() == SEQ_STEP_PAGE ||
-                   mcl.currentPage() == SEQ_PTC_PAGE ||
-                   mcl.currentPage() == SEQ_EXTSTEP_PAGE) &&
-                  (key_interface.is_key_down(MDX_KEY_SCALE) ||
-                   note_interface.notes_count_on() > 0)) ||
-                 ((mcl.currentPage() == PERF_PAGE_0) &&
-                   (note_interface.notes_count_on() > 0));
-           // Handle function buttons with switch statement
-            switch (event->source) {
-                case ButtonsClass::FUNC_BUTTON1:
-                    key = copy_mode ? MDX_KEY_COPY : MDX_KEY_REC;
-                    break;
-                case ButtonsClass::FUNC_BUTTON2:
-                    key = copy_mode ? MDX_KEY_CLEAR : MDX_KEY_PLAY;
-                    if (event->mask == EVENT_BUTTON_PRESSED) {
-                      if (key == MDX_KEY_PLAY) {
-                        if (tbd_rec_held) {
-                          // REC + PLAY: enable sequencer record mode, start clock if needed
-                          seq_step_page.enable_record();
-                          if (MidiClock.state != MidiClockClass::STARTED) {
-                            MidiClock.handleImmediateMidiStart();
-                          }
-                          key = 255;
-                        } else if (MidiClock.state == MidiClockClass::PAUSED) {
-                           MidiClock.handleImmediateMidiContinue();
-                        } else if (MidiClock.state == MidiClockClass::STARTED) {
-                           MidiClock.handleImmediateMidiStop();
-                        }
-                      }
-                    }
-                    break;
-                case ButtonsClass::FUNC_BUTTON3:
-                    key = MDX_KEY_YES;
-                    break;
-                case ButtonsClass::FUNC_BUTTON5:
-                    key = MDX_KEY_NO;
-                    break;
-                case ButtonsClass::FUNC_BUTTON6:
-                    key = MDX_KEY_UP;
-                    break;
-                case ButtonsClass::FUNC_BUTTON7:
-                    key = MDX_KEY_LEFT;
-                    break;
-                case ButtonsClass::FUNC_BUTTON8:
-                    key = MDX_KEY_DOWN;
-                    break;
-                case ButtonsClass::FUNC_BUTTON9:
-                    key = MDX_KEY_RIGHT;
-                    break;
-                default:
-                    break;
-            }
+        enc1_armed = false;
+        return true;
+    }
+
+    // ENC4 click is sticky shift (tap to latch / tap to unlatch).
+    // pollTBD drives BUTTON3.B_CURRENT from tbd_shift_latched, so toggling
+    // the latch generates a normal BUTTON3 press or release event for every
+    // existing shift consumer. Same tap gating as ENC1.
+    if (event->source == ButtonsClass::ENCODER4) {
+        static bool enc4_armed = false;
+        if (is_press) {
+            enc4_armed = true;
+            return true;
+        }
+        if (enc4_armed && !Buttons.enc4_long_press_seen
+                       && !Buttons.enc4_rotated_while_held) {
+            Buttons.tbd_shift_latched = !Buttons.tbd_shift_latched;
+        }
+        enc4_armed = false;
+        return true;
+    }
+
+    // shift + TOP_RIGHT (BUTTON4) -> BANK_GROUP. Suppress BUTTON4 to MCL pages.
+    if (shift_held && event->source == ButtonsClass::BUTTON4) {
+        key_interface.key_event(MDX_KEY_BANKGROUP, is_release);
+        return true;
+    }
+
+    // BUTTON1..BUTTON4 are MCL local roles handled by mcl_handleEvent.
+    // GridPage's native BUTTON1+BUTTON4 chord (SYSTEM_PAGE) is preserved here.
+    if (event->source <= ButtonsClass::BUTTON4) {
+        return false;
+    }
+
+    uint8_t key = 255;
+
+    // shift chords: arrows -> banks, transport -> menus.
+    // Suppresses the source's normal MDX key.
+    if (shift_held) {
+        switch (event->source) {
+            case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKA;    break; // shift + UP
+            case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKB;    break; // shift + RIGHT
+            case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKC;    break; // shift + DOWN
+            case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKD;    break; // shift + LEFT
+            case ButtonsClass::FUNC_BUTTON1: key = MDX_KEY_KIT;      break; // shift + REC
+            case ButtonsClass::FUNC_BUTTON2: key = MDX_KEY_GLOBAL;   break; // shift + PLAY
+            case ButtonsClass::FUNC_BUTTON3: key = MDX_KEY_SCALE;    break; // shift + STOP
+            case ButtonsClass::FUNC_BUTTON5: key = MDX_KEY_EXTENDED; break; // shift + NO
+            default: break;
         }
         if (key != 255) {
-            bool is_release = !(event->mask & 1);
-            if (MD.connected && (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
-                                 key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT ||
-                                 key == MDX_KEY_YES || key == MDX_KEY_NO)) {
-                if (!is_release && key_interface.is_key_down(key)) {
-                    return true; // suppress key repeat
-                }
-                if (is_release) {
-                    switch (key) {
-                        case MDX_KEY_UP:    CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_up_arrow();                          break;
-                        case MDX_KEY_DOWN:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_down_arrow();                        break;
-                        case MDX_KEY_LEFT:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_left_arrow();                        break;
-                        case MDX_KEY_RIGHT: CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_right_arrow();                       break;
-                        case MDX_KEY_YES:   MD.release_yes_button(); break;
-                        case MDX_KEY_NO:    MD.release_no_button();  break;
-                        default: break;
-                    }
-                } else {
-                    switch (key) {
-                        case MDX_KEY_UP:    SET_BIT64(key_interface.cmd_key_state, key); MD.hold_up_arrow();    break;
-                        case MDX_KEY_DOWN:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_down_arrow();  break;
-                        case MDX_KEY_LEFT:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_left_arrow();  break;
-                        case MDX_KEY_RIGHT: SET_BIT64(key_interface.cmd_key_state, key); MD.hold_right_arrow(); break;
-                        case MDX_KEY_YES:   MD.press_yes_button();    break;
-                        case MDX_KEY_NO:    MD.press_no_button();     break;
-                    }
-                }
-                return true;
-            }
             key_interface.key_event(key, is_release);
             return true;
         }
+    }
+
+    // Trig buttons
+    if (event->source >= ButtonsClass::TRIG_BUTTON1) {
+        key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
+        if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
+            if (is_press && key < NUM_MD_TRACKS) {
+                MD.triggerTrack(key, 127);
+                mixer_page.trig(key);
+                if (SeqPage::recording && MidiClock.state == 2) {
+                    SeqTrackUtil::with_md_track(key, [](auto &t) { t.record_track(127); });
+                }
+            }
+        }
+    } else {
+        const bool copy_mode = (key_interface.is_key_down(MDX_KEY_NO) ||
+              key_interface.is_key_down(MDX_KEY_FUNC)) ||
+             ((mcl.currentPage() == SEQ_STEP_PAGE ||
+               mcl.currentPage() == SEQ_PTC_PAGE ||
+               mcl.currentPage() == SEQ_EXTSTEP_PAGE) &&
+              (key_interface.is_key_down(MDX_KEY_SCALE) ||
+               note_interface.notes_count_on() > 0)) ||
+             ((mcl.currentPage() == PERF_PAGE_0) &&
+               (note_interface.notes_count_on() > 0));
+
+        switch (event->source) {
+            case ButtonsClass::FUNC_BUTTON1:
+                key = copy_mode ? MDX_KEY_COPY : MDX_KEY_REC;
+                break;
+            case ButtonsClass::FUNC_BUTTON2:
+                key = copy_mode ? MDX_KEY_CLEAR : MDX_KEY_PLAY;
+                if (is_press && key == MDX_KEY_PLAY) {
+                    if (tbd_rec_held) {
+                      // REC + PLAY: enable sequencer record mode, start clock if needed
+                      seq_step_page.enable_record();
+                      if (MidiClock.state != MidiClockClass::STARTED) {
+                        MidiClock.handleImmediateMidiStart();
+                      }
+                      key = 255;
+                    } else if (MidiClock.state == MidiClockClass::PAUSED) {
+                       MidiClock.handleImmediateMidiContinue();
+                    } else if (MidiClock.state == MidiClockClass::STARTED) {
+                       MidiClock.handleImmediateMidiStop();
+                    }
+                }
+                break;
+            case ButtonsClass::FUNC_BUTTON3:
+                key = copy_mode ? MDX_KEY_PASTE : MDX_KEY_STOP;
+                if (is_press && key == MDX_KEY_STOP &&
+                    (MidiClock.state == MidiClockClass::STARTED ||
+                     MidiClock.state == MidiClockClass::PAUSED)) {
+                    MidiClock.handleImmediateMidiStop();
+                }
+                break;
+            case ButtonsClass::FUNC_BUTTON5:  key = MDX_KEY_NO;    break;
+            case ButtonsClass::FUNC_BUTTON6:  key = MDX_KEY_UP;    break;
+            case ButtonsClass::FUNC_BUTTON7:  key = MDX_KEY_LEFT;  break;
+            case ButtonsClass::FUNC_BUTTON8:  key = MDX_KEY_DOWN;  break;
+            case ButtonsClass::FUNC_BUTTON9:  key = MDX_KEY_RIGHT; break;
+            case ButtonsClass::TBD_KEY_FUNC:  key = MDX_KEY_FUNC;  break;
+            case ButtonsClass::TBD_KEY_YES:   key = MDX_KEY_YES;   break;
+            case ButtonsClass::TBD_KEY_PAGE:  key = MDX_KEY_PAGE;  break;
+            default: break;
+        }
+    }
+
+    if (key != 255) {
+        if (MD.connected && (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
+                             key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT ||
+                             key == MDX_KEY_YES || key == MDX_KEY_NO)) {
+            if (!is_release && key_interface.is_key_down(key)) {
+                return true; // suppress key repeat
+            }
+            if (is_release) {
+                switch (key) {
+                    case MDX_KEY_UP:    CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_up_arrow();    break;
+                    case MDX_KEY_DOWN:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_down_arrow();  break;
+                    case MDX_KEY_LEFT:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_left_arrow();  break;
+                    case MDX_KEY_RIGHT: CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_right_arrow(); break;
+                    case MDX_KEY_YES:   MD.release_yes_button(); break;
+                    case MDX_KEY_NO:    MD.release_no_button();  break;
+                    default: break;
+                }
+            } else {
+                switch (key) {
+                    case MDX_KEY_UP:    SET_BIT64(key_interface.cmd_key_state, key); MD.hold_up_arrow();    break;
+                    case MDX_KEY_DOWN:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_down_arrow();  break;
+                    case MDX_KEY_LEFT:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_left_arrow();  break;
+                    case MDX_KEY_RIGHT: SET_BIT64(key_interface.cmd_key_state, key); MD.hold_right_arrow(); break;
+                    case MDX_KEY_YES:   MD.press_yes_button();   break;
+                    case MDX_KEY_NO:    MD.press_no_button();    break;
+                }
+            }
+            return true;
+        }
+        key_interface.key_event(key, is_release);
+        return true;
     }
     return false;
 }

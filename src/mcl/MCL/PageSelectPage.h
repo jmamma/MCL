@@ -51,6 +51,11 @@ public:
   uint8_t get_nextpage_up();
   uint8_t get_nextpage_catup();
   uint8_t get_nextpage_catdown();
+
+  // Mirror of the BUTTON2-release branch in handleEvent: navigate to the
+  // currently-highlighted page (or back to GRID_PAGE if BUTTON1 is held or
+  // the slot is empty). Used by the TBD ENC1-click toggle.
+  void close_to_selection();
 };
 
 extern PageSelectPage page_select_page;

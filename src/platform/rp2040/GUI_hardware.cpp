@@ -131,6 +131,13 @@ void EncodersClass::pollTBD(const ui_data_t& ui_data) {
 /**********************************************/
 
 ButtonsClass::ButtonsClass() {
+#ifdef PLATFORM_TBD
+    enc1_long_press_seen     = false;
+    enc1_rotated_while_held  = false;
+    enc4_long_press_seen     = false;
+    enc4_rotated_while_held  = false;
+    tbd_shift_latched        = false;
+#endif
     clear();
 }
 
@@ -150,37 +157,104 @@ void ButtonsClass::poll(uint8_t but) {
         but_tmp >>= 1;
     }
 }
+// TBD physical button -> active-low bit extraction.
+// Each macro evaluates true when the named button is pressed.
+#define TBD_BUTTON_TOP_LEFT(ui)   (!((ui).f_btns   & (1 << 0)))
+#define TBD_BUTTON_TOP_RIGHT(ui)  (!((ui).f_btns   & (1 << 1)))
+#define TBD_BUTTON_ENC(ui, n)     (!((ui).f_btns   & (1 << ((n) + 2)))) // n=0..3
+#define TBD_BUTTON_LEFT(ui)       (!((ui).mcl_btns & (1 << 0)))
+#define TBD_BUTTON_DOWN(ui)       (!((ui).mcl_btns & (1 << 1)))
+#define TBD_BUTTON_RIGHT(ui)      (!((ui).mcl_btns & (1 << 2)))
+#define TBD_BUTTON_UP(ui)         (!((ui).mcl_btns & (1 << 3)))
+#define TBD_BUTTON_A(ui)          (!((ui).mcl_btns & (1 << 4)))
+#define TBD_BUTTON_B(ui)          (!((ui).mcl_btns & (1 << 5)))
+#define TBD_BUTTON_X(ui)          (!((ui).mcl_btns & (1 << 6)))
+#define TBD_BUTTON_Y(ui)          (!((ui).mcl_btns & (1 << 7)))
+#define TBD_BUTTON_PLAY(ui)       (!((ui).mcl_btns & (1 << 8)))
+#define TBD_BUTTON_REC(ui)        (!((ui).mcl_btns & (1 << 9)))
+#define TBD_BUTTON_STOP(ui)       (!((ui).mcl_btns & (1 << 10)))
+#define TBD_BUTTON_NO(ui)         (!((ui).mcl_btns & (1 << 11)))
+#define TBD_BUTTON_TRIG(ui, n)    (!!((ui).d_btns  & (1 << (n)))) // n=0..15, active-high
+
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
-  // rev_c button mapping
+  // Per-press latches for ENC1 (PageSelect toggle) and ENC4 (sticky shift).
+  // Each clears on press edge, then latches if (a) the panel flagged a
+  // long-press or (b) the encoder rotated while held. Both must be false
+  // on release for tbd_handleEvent to honor the tap. Must run BEFORE
+  // STORE_B_CURRENT so B_OLD still reflects last cycle.
+  // f_btns_long_press: bit 2 = ENC1, bit 5 = ENC4 (= bit (n+2) for ENCn).
+  // TBD_BUTTON_ENC follows AVR convention (1 = not pressed, 0 = pressed),
+  // so a "pressed" predicate negates it. B_OLD likewise: !B_OLD == pressed.
+  {
+    const bool enc1_was_pressed = !B_OLD(ENCODER1);
+    const bool enc1_is_pressed  = !TBD_BUTTON_ENC(ui_data, 0);
+    if (enc1_is_pressed && !enc1_was_pressed) {
+      enc1_long_press_seen    = false;
+      enc1_rotated_while_held = false;
+    }
+    if (enc1_is_pressed) {
+      if (ui_data.f_btns_long_press & (1 << 2)) enc1_long_press_seen = true;
+      if (ui_data.pot_states[0] & 0x03)         enc1_rotated_while_held = true;
+    }
 
-  STORE_B_CURRENT(FUNC_BUTTON5, !(ui_data.mcl_btns & (1 << 11))); // m:0800 -> NO
-
-  STORE_B_CURRENT(BUTTON1, !(ui_data.mcl_btns & (1 << 7))); // m:0080
-  STORE_B_CURRENT(BUTTON2, !(ui_data.f_btns & (1 << 0))); // f:01
-
-  // f_btns: 2:POT1, 3:POT2, 4:POT3, 5:POT4 -> Encoder buttons
-  for (uint8_t i = 0; i < 4; i++) {
-    STORE_B_CURRENT(ENCODER1 + i, !(ui_data.f_btns & (1 << (i + 2))));
+    const bool enc4_was_pressed = !B_OLD(ENCODER4);
+    const bool enc4_is_pressed  = !TBD_BUTTON_ENC(ui_data, 3);
+    if (enc4_is_pressed && !enc4_was_pressed) {
+      enc4_long_press_seen    = false;
+      enc4_rotated_while_held = false;
+    }
+    if (enc4_is_pressed) {
+      if (ui_data.f_btns_long_press & (1 << 5)) enc4_long_press_seen = true;
+      if (ui_data.pot_states[3] & 0x03)         enc4_rotated_while_held = true;
+    }
   }
 
-  // Direction buttons: LEFT=bit0, DOWN=bit1, RIGHT=bit2, UP=bit3
-  STORE_B_CURRENT(FUNC_BUTTON7, !(ui_data.mcl_btns & (1 << 0))); // LEFT
-  STORE_B_CURRENT(FUNC_BUTTON8, !(ui_data.mcl_btns & (1 << 1))); // DOWN
-  STORE_B_CURRENT(FUNC_BUTTON9, !(ui_data.mcl_btns & (1 << 2))); // RIGHT
-  STORE_B_CURRENT(FUNC_BUTTON6, !(ui_data.mcl_btns & (1 << 3))); // UP
+  // Encoder click buttons. ENC1 click is intercepted in tbd_handleEvent
+  // as a tap-toggle for MCL PageSelect (open/close); BUTTON2 is only ever
+  // synthesized through that interception, never mirrored here.
+  for (uint8_t i = 0; i < 4; i++) {
+    STORE_B_CURRENT(ENCODER1 + i, TBD_BUTTON_ENC(ui_data, i));
+  }
+  // BUTTON2 has no TBD physical source — keep it pinned to the
+  // "not pressed" state (B_CURRENT==1 in AVR convention) so the BOOT_MENU
+  // check in MCL::setup doesn't fire spuriously at boot.
+  STORE_B_CURRENT(BUTTON2, 1);
 
-  // PLAY=bit8, REC=bit9, STOP=bit10
-  STORE_B_CURRENT(FUNC_BUTTON2, !(ui_data.mcl_btns & (1 << 8)));  // PLAY
-  STORE_B_CURRENT(FUNC_BUTTON1, !(ui_data.mcl_btns & (1 << 9)));  // REC
-  STORE_B_CURRENT(FUNC_BUTTON3, !(ui_data.mcl_btns & (1 << 10))); // STOP
+  // Arrow cluster (left -> up -> down -> right)
+  STORE_B_CURRENT(FUNC_BUTTON7, TBD_BUTTON_LEFT(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON6, TBD_BUTTON_UP(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON8, TBD_BUTTON_DOWN(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON9, TBD_BUTTON_RIGHT(ui_data));
 
-  STORE_B_CURRENT(BUTTON3, !(ui_data.mcl_btns & (1 << 4)));
-  STORE_B_CURRENT(BUTTON4, !(ui_data.mcl_btns & (1 << 6))); // m:0040
+  // Transport row (play / rec / stop / no)
+  STORE_B_CURRENT(FUNC_BUTTON2, TBD_BUTTON_PLAY(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON1, TBD_BUTTON_REC(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON3, TBD_BUTTON_STOP(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON5, TBD_BUTTON_NO(ui_data));
+
+  // MCL universal slots:
+  //   TOP_LEFT -> BUTTON1 (left action: NO/save/cancel, page-dependent)
+  //   TOP_RIGHT-> BUTTON4 (right action: YES/load/confirm, page-dependent)
+  // BUTTON2 (MCL PageSelect) is driven only by ENC1 click above.
+  // BUTTON3 (shift) is driven by the ENC4 sticky-shift latch — toggling
+  // tbd_shift_latched generates a normal press/release pair via pollEvents,
+  // so every existing BUTTON3 chord and menu hookup keeps working.
+  // MCL_B has no MCL slot for now.
+  STORE_B_CURRENT(BUTTON1, TBD_BUTTON_TOP_LEFT(ui_data));
+  STORE_B_CURRENT(BUTTON4, TBD_BUTTON_TOP_RIGHT(ui_data));
+  STORE_B_CURRENT(BUTTON3, !tbd_shift_latched);
+
+  // Cluster: left column = modifiers, right column = direct MD actions.
+  //   MCL_Y (TL) -> MDX_KEY_FUNC
+  //   MCL_X (TR) -> MDX_KEY_PAGE
+  //   MCL_A (BR) -> MDX_KEY_YES
+  STORE_B_CURRENT(TBD_KEY_FUNC, TBD_BUTTON_Y(ui_data));
+  STORE_B_CURRENT(TBD_KEY_PAGE, TBD_BUTTON_X(ui_data));
+  STORE_B_CURRENT(TBD_KEY_YES,  TBD_BUTTON_A(ui_data));
 
   // Sequencer Buttons
   for (int i = 0; i < 16; i++) {
-    bool state = ui_data.d_btns & (1 << i);
-    STORE_B_CURRENT(i + TRIG_BUTTON1, !state);
+    STORE_B_CURRENT(i + TRIG_BUTTON1, TBD_BUTTON_TRIG(ui_data, i));
   }
 }
 

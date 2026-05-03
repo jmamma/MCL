@@ -189,6 +189,16 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
   }
 }
 
+void PageSelectPage::close_to_selection() {
+  PageIndex p = get_page(get_pageidx(page_select), nullptr);
+  if (BUTTON_DOWN(Buttons.BUTTON1) || (p == NULL_PAGE)) {
+    GUI.ignoreNextEvent(Buttons.BUTTON1);
+    mcl.setPage(GRID_PAGE);
+  } else {
+    mcl.setPage(p);
+  }
+}
+
 void PageSelectPage::loop() {
   /*  if (loop_init) {
       bool switch_tracks = false;
@@ -363,15 +373,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   if (EVENT_BUTTON(event)) {
     if (EVENT_RELEASED(event, Buttons.BUTTON2)) {
     release:
-      PageIndex p;
-      p = get_page(get_pageidx(page_select), nullptr);
-      if (BUTTON_DOWN(Buttons.BUTTON1) || (p == NULL_PAGE)) {
-        GUI.ignoreNextEvent(Buttons.BUTTON1);
-        //  md_exploit.off();
-        mcl.setPage(GRID_PAGE);
-      } else {
-        mcl.setPage(p);
-      }
+      close_to_selection();
       return true;
     }
 
@@ -389,8 +391,14 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
     }
 
     if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
+#ifdef PLATFORM_TBD
+      // ENC1 press is owned by tbd_handleEvent (tap-toggle gate). Let it fall
+      // through so the registered handler can time press-vs-hold.
+      return false;
+#else
       page_select = get_category_page(0);
       return true;
+#endif
     }
     if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
       page_select = get_category_page(1);
@@ -401,9 +409,25 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       return true;
     }
     if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
+#ifdef PLATFORM_TBD
+      // ENC4 press is owned by tbd_handleEvent (sticky-shift toggle). Let
+      // it fall through so the registered handler can time press-vs-hold.
+      return false;
+#else
       page_select = get_category_page(3);
       return true;
+#endif
     }
+#ifdef PLATFORM_TBD
+    // Trig N (0..15) highlights page slot N. Commit happens via the
+    // usual close path (ENC1 tap or BUTTON2 release).
+    if (event->mask == EVENT_BUTTON_PRESSED &&
+        event->source >= Buttons.TRIG_BUTTON1 &&
+        event->source < Buttons.TRIG_BUTTON1 + 16) {
+      page_select = event->source - Buttons.TRIG_BUTTON1;
+      return true;
+    }
+#endif
   }
   return false;
 }

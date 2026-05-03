@@ -151,6 +151,14 @@ public:
   static const uint8_t FUNC_BUTTON9 = 16;
   static const uint8_t TRIG_BUTTON1 = 17;
 
+#ifdef PLATFORM_TBD
+  // TBD-only slots for MD-direct keys that have no AVR equivalent.
+  // Numbered after TRIG_BUTTON16 (= 32). GUI_NUM_BUTTONS = 38 leaves room.
+  static const uint8_t TBD_KEY_FUNC = 33; // MD FUNC modifier (cluster MCL_Y)
+  static const uint8_t TBD_KEY_YES  = 34; // MD YES (cluster MCL_X)
+  static const uint8_t TBD_KEY_PAGE = 35; // MD PAGE (cluster MCL_B)
+#endif
+
   static const uint16_t ENCODER1_MASK = _BV(ENCODER1);
   static const uint16_t ENCODER2_MASK = _BV(ENCODER2);
   static const uint16_t ENCODER3_MASK = _BV(ENCODER3);
@@ -165,6 +173,19 @@ public:
   ALWAYS_INLINE() void clear();
   ALWAYS_INLINE() void poll(uint8_t sr);
 #ifdef PLATFORM_TBD
+  // Per-press latches for the click-toggle gates on ENC1 and ENC4.
+  // *_long_press_seen: panel flagged the held press (f_btns_long_press).
+  // *_rotated_while_held: encoder rotated at any point during the press.
+  // Either being true on release suppresses the tap-toggle.
+  // Cleared on press edge.
+  bool enc1_long_press_seen;
+  bool enc1_rotated_while_held;
+  bool enc4_long_press_seen;
+  bool enc4_rotated_while_held;
+  // Sticky shift: ENC4 tap toggles this; pollTBD drives BUTTON3 from it
+  // so every existing BUTTON3 consumer (chord-hold or press/release) sees
+  // a normal press/release pair on each toggle.
+  bool tbd_shift_latched;
   void pollTBD(const ui_data_t &ui_data);
 #endif
 };
