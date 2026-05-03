@@ -373,7 +373,7 @@ void MCLGUI::draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
       // TomThumb advance is ~4 px; centre by glyph count.
       uint8_t lw = len * 4;
       oled_display.setFont(&TomThumb);
-      oled_display.setCursor(cx + (kCellW - lw) / 2, y_top + 5);
+      oled_display.setCursor(cx + (kCellW - lw) / 2, y_top + 6);
       for (uint8_t k = 0; k < len; k++) {
         oled_display.write(labels[n][k]);
       }
@@ -381,11 +381,8 @@ void MCLGUI::draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
 
     if (encoders[n]) {
       uint8_t dial_x = cx + (kCellW - kDialW) / 2;
-      uint8_t dial_y = y_top + 7;
+      uint8_t dial_y = y_top + 8;
       draw_encoder(dial_x, dial_y, encoders[n]);
-      // tick marks (centred top + bottom corners), same accents
-      // draw_md_encoder uses.
-      oled_display.drawPixel(dial_x + kDialW / 2, dial_y - 2, WHITE);
 
       if (show_values[n]) {
         char val[4];

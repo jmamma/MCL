@@ -256,37 +256,33 @@ bool tbd_handleEvent(gui_event_t *event) {
     // the panel and the encoder didn't rotate while held. armed=false
     // rejects the spurious boot-time release before any press.
     if (event->source == ButtonsClass::ENCODER1) {
+        // Tap-only PageSelect toggle. "Tap" = pressed and released
+        // quickly (< 250 ms) without any encoder rotation in the
+        // window. Anything held longer is assumed to be a fast-mode
+        // rotation grip even if the panel's pot_states bits raced
+        // past pollTBD without latching enc1_rotated_while_held.
         static bool enc1_armed = false;
-        static int enc1_press_cur = 0;
+        static uint16_t enc1_press_ms = 0;
+        // Panel polls at ~16 Hz (62 ms / frame), so a press and its
+        // matching release always span at least one frame. Anything
+        // below ~80 ms rejects every legitimate tap. 200 ms gives a
+        // margin while still excluding deliberate holds.
+        // TBD panel ticks systicks at 100 Hz (10 ms / frame), so the
+        // measured press duration is quantised to ≥1 frame plus queue
+        // drain. Real "deliberate quick tap" lands around 30–80 ms;
+        // 100 ms keeps that range in scope while still excluding any
+        // held grip.
+        static constexpr uint16_t kEnc1TapMaxMs = 150;
         if (is_press) {
             enc1_armed = true;
-            // Snapshot the active page's first encoder so a fast-mode
-            // rotation while held is detectable on release even if the
-            // panel's pot_states bits raced past pollTBD without latching
-            // enc1_rotated_while_held.
-            LightPage *pg = (LightPage *)GUI.currentPage();
-            if (pg && pg->encoders[0]) enc1_press_cur = pg->encoders[0]->cur;
-            else                       enc1_press_cur = 0;
+            enc1_press_ms = read_clock_ms();
             return true;
         }
-        bool rotated_during_press = Buttons.enc1_rotated_while_held;
-        if (!rotated_during_press) {
-            LightPage *pg = (LightPage *)GUI.currentPage();
-            if (pg && pg->encoders[0] && pg->encoders[0]->cur != enc1_press_cur) {
-                rotated_during_press = true;
-            }
-        }
-        if (!rotated_during_press && sps_mode.is_active()) {
-            // SPS-mode steals encoder rotation before the page sees it, so
-            // also peek at our captured deltas.
-            for (uint8_t i = 0; i < 4; i++) {
-                if (sps_mode.enc[i].old != sps_mode.enc[i].cur) {
-                    rotated_during_press = true;
-                    break;
-                }
-            }
-        }
-        if (enc1_armed && !Buttons.enc1_long_press_seen && !rotated_during_press) {
+        const bool too_long =
+            clock_diff(enc1_press_ms, read_clock_ms()) > kEnc1TapMaxMs;
+        if (enc1_armed && !Buttons.enc1_long_press_seen
+                       && !Buttons.enc1_rotated_while_held
+                       && !too_long) {
             if (mcl.currentPage() == PAGE_SELECT_PAGE) {
                 page_select_page.close_to_selection();
             } else {
