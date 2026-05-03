@@ -351,18 +351,54 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
 void MCLGUI::draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
                                 const char *const labels[4],
                                 const bool show_values[4]) {
-  // 128 px wide, four 32-px columns. Each cell hands off to
-  // draw_md_encoder (label on top, dial below, value beneath when
-  // show_value is true) so the look matches every other page.
+  // 128 px wide, four 32-px columns. Layout fits inside 32 px of vertical
+  // space:
+  //   label  (TomThumb,  baseline y_top+5)        rows 0..5
+  //   dial   (11x11,     y_top+7..y_top+17)       rows 7..17
+  //   value  (6x8 font,  y_top+22..y_top+29)      rows 22..29
+  // Trims labels at 5 chars (32 px / 6 px-glyph ≈ 5).
   oled_display.fillRect(0, y_top, 128, 32, BLACK);
+  auto oldfont = oled_display.getFont();
+  oled_display.setTextColor(WHITE, BLACK);
+
+  constexpr uint8_t kCellW = 32;
+  constexpr uint8_t kDialW = 11;
+
   for (uint8_t n = 0; n < 4; n++) {
-    if (!encoders[n]) continue;
-    uint8_t x = n * 32 + 10;  // 11-px dial centred in the 32-px column
-    const char empty_label[1] = {'\0'};
-    const char *name = labels[n] ? labels[n] : empty_label;
-    draw_md_encoder(x, y_top, encoders[n]->cur, name, show_values[n],
-                    /*name_is_progmem=*/false);
+    uint8_t cx = n * kCellW;
+
+    if (labels[n] && labels[n][0] != '\0') {
+      uint8_t len = (uint8_t)strlen(labels[n]);
+      if (len > 5) len = 5;
+      // TomThumb advance is ~4 px; centre by glyph count.
+      uint8_t lw = len * 4;
+      oled_display.setFont(&TomThumb);
+      oled_display.setCursor(cx + (kCellW - lw) / 2, y_top + 5);
+      for (uint8_t k = 0; k < len; k++) {
+        oled_display.write(labels[n][k]);
+      }
+    }
+
+    if (encoders[n]) {
+      uint8_t dial_x = cx + (kCellW - kDialW) / 2;
+      uint8_t dial_y = y_top + 7;
+      draw_encoder(dial_x, dial_y, encoders[n]);
+      // tick marks (centred top + bottom corners), same accents
+      // draw_md_encoder uses.
+      oled_display.drawPixel(dial_x + kDialW / 2, dial_y - 2, WHITE);
+
+      if (show_values[n]) {
+        char val[4];
+        put_value_at(encoders[n]->cur, val);
+        uint8_t vlen = (uint8_t)strlen(val);
+        uint8_t vw = vlen * 6;
+        oled_display.setFont();
+        oled_display.setCursor(cx + (kCellW - vw) / 2, y_top + 22);
+        oled_display.print(val);
+      }
+    }
   }
+  oled_display.setFont(oldfont);
 }
 
 bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
