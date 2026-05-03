@@ -310,10 +310,18 @@ bool tbd_handleEvent(gui_event_t *event) {
         return true;
     }
 
-    // SPS-mode hijacks BUTTON1 as the BANK_GROUP toggle (A-D ↔ E-H), so
-    // intercept it before the BUTTON1..4 fall-through to mcl_handleEvent.
+    // SPS-mode hijacks BUTTON1 as the BANK_GROUP toggle (A-D ↔ E-H).
+    // Flip MD.currentBank locally for immediate UI response, and bounce
+    // the keypress through SPS so its handleBankGroupButton() updates the
+    // bank-group LED. SPS echoes the new state back via the next
+    // track-index sysex, which keeps MD.currentBank consistent.
     if (tbd_sps_mode && event->source == ButtonsClass::BUTTON1) {
-        key_interface.key_event(MDX_KEY_BANKGROUP, is_release);
+        if (is_press) {
+            MD.currentBank ^= 1;
+            if (MD.connected) {
+                MD.press_bankgroup_button();
+            }
+        }
         return true;
     }
 
@@ -331,10 +339,10 @@ bool tbd_handleEvent(gui_event_t *event) {
     // don't need a parallel implementation.
     if (tbd_sps_mode) {
         switch (event->source) {
-            case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKA; break; // UP
-            case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKB; break; // RIGHT
-            case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKC; break; // DOWN
-            case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKD; break; // LEFT
+            case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKA; break; // LEFT
+            case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKB; break; // DOWN
+            case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKC; break; // RIGHT
+            case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKD; break; // UP
             default: break;
         }
         if (key != 255) {
