@@ -12,6 +12,7 @@
 #include "MCLClipBoard.h"
 #include "MNMParams.h"
 #include "MCLStrings.h"
+#include "SpsMode.h"
 
 #define PERF_ENC 1
 #define GRID_ENC 0
@@ -636,8 +637,7 @@ void GridPage::display() {
   // on the MD's own screen; on TBD we mirror it locally so the user can
   // tell SPS arrows actually opened a popup. Latch indicator stays visible
   // for the full duration of SPS mode.
-  extern bool tbd_sps_mode;
-  if (tbd_sps_mode) {
+  if (sps_mode.is_active()) {
     oled_display.setFont();
     oled_display.setTextSize(1);
     oled_display.setTextColor(WHITE, BLACK);

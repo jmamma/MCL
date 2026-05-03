@@ -26,6 +26,7 @@
 #include "MixerPage.h"
 #include "GridSavePage.h"
 #include "GridLoadPage.h"
+#include "SpsMode.h"
 
 #ifdef WAV_DESIGNER
 #include "OscMixerPage.h"
@@ -227,17 +228,13 @@ void MCL::setup() {
 
 void MCL::loop() {
   perf_page.encoder_check();
+  sps_mode.poll_encoders();
   key_interface.check_key_throttle();
   GUI.loop();
 }
 
 #ifdef PLATFORM_TBD
 static bool tbd_rec_held = false;
-// SPS-mode latch (toggled by FUNC_BUTTON5, the button next to STOP).
-// When latched, panel arrows route to MDX_KEY_BANKA..D so the existing
-// MD bank/pattern popup flow runs unchanged. Toggling closes any open
-// bank popup so the user doesn't get stuck with stale state.
-bool tbd_sps_mode = false;
 
 bool tbd_handleEvent(gui_event_t *event) {
     // Track physical REC button state (unaffected by key_interface state resets)
@@ -252,21 +249,7 @@ bool tbd_handleEvent(gui_event_t *event) {
     const bool is_press   = (event->mask == EVENT_BUTTON_PRESSED);
     const bool is_release = !(event->mask & 1);
 
-    // FUNC_BUTTON5 (panel button next to STOP) toggles SPS mode. Eats the
-    // event so it doesn't double as MDX_KEY_NO. Toggling off closes any
-    // open bank popup left over from the previous SPS-mode session.
-    // Status LED (above PLAY) mirrors the latch state in amber.
-    if (event->source == ButtonsClass::FUNC_BUTTON5) {
-        if (is_press) {
-            tbd_sps_mode = !tbd_sps_mode;
-            GUI_hardware.led.sps_active = tbd_sps_mode;
-            GUI_hardware.led.updateLeds = true;
-            if (!tbd_sps_mode && grid_page.bank_popup) {
-                grid_page.close_bank_popup();
-            }
-        }
-        return true;
-    }
+    if (sps_mode.handle_toggle_button(event)) return true;
 
     // ENC1 click toggles MCL PageSelect (tap-only). The release is honored
     // only when the press was a clean tap — not flagged as long-press by
@@ -310,20 +293,7 @@ bool tbd_handleEvent(gui_event_t *event) {
         return true;
     }
 
-    // SPS-mode hijacks BUTTON1 as the BANK_GROUP toggle (A-D ↔ E-H).
-    // Flip MD.currentBank locally for immediate UI response, and bounce
-    // the keypress through SPS so its handleBankGroupButton() updates the
-    // bank-group LED. SPS echoes the new state back via the next
-    // track-index sysex, which keeps MD.currentBank consistent.
-    if (tbd_sps_mode && event->source == ButtonsClass::BUTTON1) {
-        if (is_press) {
-            MD.currentBank ^= 1;
-            if (MD.connected) {
-                MD.press_bankgroup_button();
-            }
-        }
-        return true;
-    }
+    if (sps_mode.handle_button1(event)) return true;
 
     // BUTTON1..BUTTON4 are MCL local roles handled by mcl_handleEvent.
     // GridPage's native BUTTON1+BUTTON4 chord (SYSTEM_PAGE) is preserved here.
@@ -333,50 +303,8 @@ bool tbd_handleEvent(gui_event_t *event) {
 
     uint8_t key = 255;
 
-    {
-        const bool is_arrow_src =
-            (event->source == ButtonsClass::FUNC_BUTTON6 ||
-             event->source == ButtonsClass::FUNC_BUTTON7 ||
-             event->source == ButtonsClass::FUNC_BUTTON8 ||
-             event->source == ButtonsClass::FUNC_BUTTON9);
-        const bool func_held_now = key_interface.is_key_down(MDX_KEY_FUNC);
-
-        // FUNC + ARROW takes priority over SPS-mode: open the corresponding
-        // MD window via 0x40 GUI commands. Eaten so the SPS-mode bank flow
-        // and the local grid navigation modifier don't also fire.
-        if (is_arrow_src && func_held_now) {
-            if (MD.connected && is_press) {
-                switch (event->source) {
-                    case ButtonsClass::FUNC_BUTTON6: MD.toggle_accent_window(); break; // UP
-                    case ButtonsClass::FUNC_BUTTON9: MD.toggle_swing_window();  break; // RIGHT
-                    case ButtonsClass::FUNC_BUTTON8: MD.toggle_slide_window();  break; // DOWN
-                    case ButtonsClass::FUNC_BUTTON7: MD.toggle_mute_window();   break; // LEFT
-                    default: break;
-                }
-            }
-            return true;
-        }
-
-        // SPS-mode arrow → bank: latched mode reroutes the four arrows to
-        // MDX_KEY_BANKA..D. Existing MD bank-popup flow in mcl_handleEvent
-        // takes it from there. Suppress key-repeat presses (the TBD event
-        // loop auto-repeats held arrows) so the popup doesn't reopen and
-        // flood the MD with LED sysex.
-        if (tbd_sps_mode && is_arrow_src) {
-            switch (event->source) {
-                case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKA; break; // LEFT
-                case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKB; break; // DOWN
-                case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKC; break; // RIGHT
-                case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKD; break; // UP
-                default: break;
-            }
-            if (!is_release && key_interface.is_key_down(key)) {
-                return true; // already-down: ignore key-repeat
-            }
-            key_interface.key_event(key, is_release);
-            return true;
-        }
-    }
+    if (sps_mode.handle_func_arrow_chord(event)) return true;
+    if (sps_mode.handle_arrow_to_bank(event))    return true;
 
     // Trig buttons. Restricted to TRIG_BUTTON1..TRIG_BUTTON16 — TBD_KEY_* IDs
     // sit immediately above this range and must reach the else-branch switch.
@@ -384,23 +312,7 @@ bool tbd_handleEvent(gui_event_t *event) {
         event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
         key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
 
-        // SPS-mode: forward trig press/release as 0x40 MD_GUI_TRIG_* sysex
-        // so the MD/SPS sees them as panel-key events. Skip on pages that
-        // already own trigs (step edit, perf, anywhere note_interface is
-        // collecting trigs for a chord) — those keep their local role.
-        const PageIndex pg = mcl.currentPage();
-        const bool trig_page_owns =
-            (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
-             pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0);
-        if (tbd_sps_mode && MD.connected && !trig_page_owns &&
-            !grid_page.bank_popup && key < 16) {
-            if (is_press) {
-                MD.hold_trig(key + 1);     // hold_trig API is 1-indexed
-            } else if (is_release) {
-                MD.release_trig(key + 1);
-            }
-            return true;
-        }
+        if (sps_mode.handle_trig_forward(event, key)) return true;
 
         if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
             if (is_press && key < NUM_MD_TRACKS) {
