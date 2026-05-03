@@ -22,6 +22,7 @@ public:
   // set_trigleds() / reset_trigleds() returns to monochrome rendering.
   // No-op on platforms without addressable LEDs.
   void set_trigleds_color(uint16_t bitmask, uint32_t rgb) {}
+  void set_trigleds_blink_color(uint16_t bitmask, uint32_t rgb) {}
   void clear_trigleds() {}
   void reset_trigleds() {}
   void setPixelColor(uint32_t n, uint32_t c, bool update = true) {}

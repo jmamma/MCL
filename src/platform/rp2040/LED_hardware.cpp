@@ -68,7 +68,12 @@ void LEDHardware::show() {
       if (id < 255) {
         uint32_t color;
         if (i < 16 && trig_color_override) {
-          color = trig_colors[i];
+          if ((led_blink_mask >> i) & 1) {
+            // Colored blink: toggle visibility while keeping the colour.
+            color = is_on ? trig_colors[i] : STRIP_BLACK;
+          } else {
+            color = trig_colors[i];
+          }
         } else {
           color = is_on ? STRIP_RED : STRIP_BLACK;
         }
@@ -115,10 +120,24 @@ void LEDHardware::set_trigleds_color(uint16_t bitmask, uint32_t rgb) {
   for (uint8_t i = 0; i < 16; i++) {
     if (bitmask & (1u << i)) {
       trig_colors[i] = rgb;
+      // Solid colour: ensure blink isn't lingering on these bits.
+      CLEAR_BIT32(led_blink_mask, i);
     }
   }
   // Force a render — final_render_state matters less in override mode but
   // show() bails when it equals last_render_state, so nudge updateLeds.
+  updateLeds = true;
+  last_render_state = ~last_render_state;
+}
+
+void LEDHardware::set_trigleds_blink_color(uint16_t bitmask, uint32_t rgb) {
+  trig_color_override = true;
+  for (uint8_t i = 0; i < 16; i++) {
+    if (bitmask & (1u << i)) {
+      trig_colors[i] = rgb;
+      SET_BIT32(led_blink_mask, i);
+    }
+  }
   updateLeds = true;
   last_render_state = ~last_render_state;
 }

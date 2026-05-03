@@ -120,6 +120,7 @@ public:
   // shouldn't pilot the MD's display (e.g. the MCL_B bank-select stage).
   void set_trigleds_local(uint16_t bitmask, TrigLEDMode mode, bool blink = false);
   void set_trigleds_color(uint16_t bitmask, uint32_t rgb);
+  void set_trigleds_blink_color(uint16_t bitmask, uint32_t rgb);
   void reset_trigleds();
 
   static constexpr uint8_t seq_w = 5;

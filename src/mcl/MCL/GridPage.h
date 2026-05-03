@@ -78,6 +78,15 @@ public:
   static constexpr uint16_t BANK_SELECT_BOT_MASK = 0x0F00; // trig 8..11
   static constexpr uint8_t  BANK_SELECT_COUNT    = 8;
 
+  // Trig that picked the bank in stage 3 — its release must be eaten so
+  // it doesn't fire EVENT_NOTE RELEASED and trip notes_all_off → close.
+  // 0xFF = none pending.
+  uint8_t bank_pick_trig = 0xFF;
+  // Most-recently-pressed pattern trig in stage-2 external flow. Used by
+  // display() so the OLED reflects the press before the queued load
+  // updates grid_task.last_active_row. 0xFF = nothing pressed yet.
+  uint8_t bank_popup_pending_trig = 0xFF;
+
   bool draw_encoders;
   uint16_t draw_encoders_lastclock;
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

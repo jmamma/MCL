@@ -49,6 +49,7 @@ public:
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink = false,
                     bool update = true);
   void set_trigleds_color(uint16_t bitmask, uint32_t rgb);
+  void set_trigleds_blink_color(uint16_t bitmask, uint32_t rgb);
   void clear_trigleds() {
      set_trigleds(0, current_led_mode, false, false);
      set_trigleds(0, current_led_mode, true, true);

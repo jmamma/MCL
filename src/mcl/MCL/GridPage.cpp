@@ -118,6 +118,8 @@ void GridPage::close_bank_popup() {
   bank_popup = 0;
   bank_popup_loadmask = 0;
   bank_popup_external = false;
+  bank_pick_trig = 0xFF;
+  bank_popup_pending_trig = 0xFF;
   note_interface.init_notes();
   // Drop colour-override mode locally. MD-side LED reset only when the
   // MD-driven flow opened the popup; the internal flow leaves the MD alone.
@@ -153,6 +155,14 @@ void GridPage::open_bank_select() {
   mcl_gui.set_trigleds_color(0xFFFF, 0); // clear all trigs
   mcl_gui.set_trigleds_color(BANK_SELECT_TOP_MASK, kColorTop);
   mcl_gui.set_trigleds_color(BANK_SELECT_BOT_MASK, kColorBot);
+
+  // Blink the bank that owns the last-loaded row, so the user can see
+  // which bank is currently active. Banks 0..3 -> trigs 0..3,
+  // banks 4..7 -> trigs 8..11.
+  uint8_t last_bank = (grid_task.last_active_row / 16) & 0x07;
+  uint8_t last_trig = (last_bank < 4) ? last_bank : (last_bank - 4 + 8);
+  uint32_t color = (last_bank < 4) ? kColorTop : kColorBot;
+  mcl_gui.set_trigleds_blink_color((uint16_t)1 << last_trig, color);
 }
 
 void GridPage::load_old_col() {
@@ -666,15 +676,33 @@ void GridPage::display() {
   }
 #endif
 
-  // MCL_B bank-select / pattern overlay. Stage 3 = waiting for bank trig
-  // (no OLED until first bank press, per UX). Stage 2 + external = bank
-  // chosen, pattern slots active.
+  // MCL_B bank-select / pattern overlay.
   if (bank_popup_external) {
-    if (bank_popup == 2) {
-      char title[16];
-      snprintf(title, sizeof(title), "BANK %c PATTERN",
-               (char)('A' + (bank & 0x07)));
-      mcl_gui.draw_popup(title, true);
+    if (bank_popup == 3) {
+      // Bank-select stage: show the bank of the last-loaded row.
+      char line2[4];
+      uint8_t last_bank = (grid_task.last_active_row / 16) & 0x07;
+      line2[0] = (char)('A' + last_bank);
+      line2[1] = '\0';
+      oled_display.textbox("BANK ", line2);
+    } else if (bank_popup == 2) {
+      // Pattern-pick stage. Bank is fixed at the stage-3 pick. Prefer the
+      // most-recent press (immediate feedback) over the active row, which
+      // only updates after the queued load completes.
+      char line2[4];
+      line2[0] = (char)('A' + (bank & 0x07));
+      uint8_t row = grid_task.last_active_row;
+      uint8_t row_bank = (row / 16) & 0x07;
+      if (bank_popup_pending_trig < 16) {
+        mcl_gui.put_value_at2(bank_popup_pending_trig + 1, line2 + 1);
+      } else if (row < GRID_LENGTH && row_bank == (bank & 0x07)) {
+        mcl_gui.put_value_at2((row % 16) + 1, line2 + 1);
+      } else {
+        line2[1] = '-';
+        line2[2] = '-';
+        line2[3] = '\0';
+      }
+      oled_display.textbox("PATTERN: ", line2);
     }
   }
 
@@ -961,12 +989,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
     uint8_t row = grid_page.bank * 16 + track;
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (grid_page.bank_popup > 0) {
-        // External-modifier mode keeps the popup open until the modifier
-        // (e.g. MCL_B) is released; trig releases just fall through.
-        if (!grid_page.bank_popup_external && note_interface.notes_all_off()) {
-          // note_interface.init_notes();
+        if (note_interface.notes_all_off()) {
           grid_page.bank_popup_loadmask = 0;
-          // grid_page.bank_popup = 0;
           grid_page.close_bank_popup();
         }
         return true;
@@ -974,35 +998,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
     }
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      // Bank-select stage: pick a bank, transition to the existing
-      // pattern-stage handler (bank_popup=2) so chain/load logic is shared.
-      if (grid_page.bank_popup == 3) {
-        int8_t b = -1;
-        if (track < 4)                      b = track;
-        else if (track >= 8 && track < 12)  b = track - 8 + 4;
-        if (b < 0) {
-          // Non-bank trig in bank-select stage — eat the event.
-          return true;
-        }
-        grid_page.bank = b;
-        grid_page.bank_popup = 2;
-        grid_page.bank_popup_lastclock = read_clock_ms();
-        // Internal mode — keep all LED traffic on TBD/MCL side; do not
-        // call mcl_gui.set_trigleds (echoes to MD) or send_row_led
-        // (MD-only). Active-row blink on TBD is set via the local blink
-        // mask so the user sees the current pattern blinking.
-        uint16_t *pattern_mask = (uint16_t *)&grid_page.row_states[0];
-        mcl_gui.set_trigleds_local(pattern_mask[grid_page.bank],
-                                   TRIGLED_EXCLUSIVENDYNAMIC);
-        if (grid_task.last_active_row < GRID_LENGTH) {
-          uint64_t blink_rows[2] = {0};
-          SET_BIT128_P(&blink_rows, grid_task.last_active_row);
-          uint16_t *blink_mask = (uint16_t *)&blink_rows[0];
-          mcl_gui.set_trigleds_local(blink_mask[grid_page.bank],
-                                     TRIGLED_EXCLUSIVENDYNAMIC, true);
-        }
-        return true;
-      }
       if (grid_page.bank_popup > 0) {
 
         uint8_t load_mode_old = mcl_cfg.load_mode;
@@ -1032,6 +1027,17 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
 
         grid_page.load_row(track, row);
+
+        // Immediate feedback for the external (MCL_B) flow: blink the
+        // pressed trig in a distinct colour so it's obvious among the
+        // already-lit pattern LEDs, and stash it for the OLED.
+        if (grid_page.bank_popup_external && grid_page.bank_popup == 2) {
+          grid_page.bank_popup_pending_trig = track;
+          // Amber/orange — distinct from the cool pattern-list palette.
+          constexpr uint32_t kColorPick =
+              ((uint32_t)160 << 16) | ((uint32_t)80 << 8) | 0;
+          mcl_gui.set_trigleds_blink_color((uint16_t)1 << track, kColorPick);
+        }
 
         if (!grid_page.bank_popup_external &&
             !key_interface.is_key_down(MDX_KEY_BANKA) &&

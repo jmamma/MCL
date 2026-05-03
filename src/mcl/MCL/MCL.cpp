@@ -331,6 +331,41 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
         event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
         key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
+        // Bank-select stage owns trig events — handle them here so we don't
+        // pollute note_interface with phantom presses for the bank pick.
+        if (mcl.currentPage() == GRID_PAGE && grid_page.bank_popup == 3) {
+            if (is_press) {
+                int8_t b = -1;
+                if (key < 4)                    b = key;
+                else if (key >= 8 && key < 12)  b = key - 8 + 4;
+                if (b >= 0) {
+                    grid_page.bank = b;
+                    grid_page.bank_popup = 2;
+                    grid_page.bank_popup_lastclock = read_clock_ms();
+                    grid_page.bank_pick_trig = key;
+                    uint16_t *pattern_mask = (uint16_t *)&grid_page.row_states[0];
+                    mcl_gui.set_trigleds_local(pattern_mask[grid_page.bank],
+                                               TRIGLED_EXCLUSIVENDYNAMIC);
+                    if (grid_task.last_active_row < GRID_LENGTH) {
+                        uint64_t blink_rows[2] = {0};
+                        SET_BIT128_P(&blink_rows, grid_task.last_active_row);
+                        uint16_t *blink_mask = (uint16_t *)&blink_rows[0];
+                        mcl_gui.set_trigleds_local(blink_mask[grid_page.bank],
+                                                   TRIGLED_EXCLUSIVENDYNAMIC, true);
+                    }
+                }
+            }
+            return true; // eat trig events while in bank-select stage
+        }
+        // Stage 2 just transitioned: eat the bank-pick trig's release so
+        // it doesn't fire EVENT_NOTE RELEASED → notes_all_off → close.
+        if (mcl.currentPage() == GRID_PAGE && grid_page.bank_popup == 2 &&
+            grid_page.bank_pick_trig == key) {
+            if (is_release) {
+                grid_page.bank_pick_trig = 0xFF;
+            }
+            return true;
+        }
         if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
             if (is_press && key < NUM_MD_TRACKS) {
                 MD.triggerTrack(key, 127);
