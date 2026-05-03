@@ -1,5 +1,6 @@
 #include "DiagnosticPage.h"
 #include "MCLSeq.h"
+#include "SeqTrackUtil.h"
 #include "MCLGUI.h"
 #include "SeqPages.h"
 #include "MCL.h"
@@ -393,7 +394,7 @@ bool MCLSeq::switch_to_legacy() {
   MDSeqTrack::md_trig_mask = 0;
   fill_mask = 0;
   neighbor_trig_mask = 0;
-  MidiClock.clock_interpolation = 2;
+  MidiClock.clock_interpolation = LEGACY_SEQ_INTERPOLATION;
   using_spsx_tracks = false;
   return true;
 }
@@ -442,7 +443,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     SeqTrackUtil::with_md_track(track, [&](auto &t) { t.mute_state = value > 0; });
    }
   // Engine, not device: perf/lfo learn_param indexes engine-shaped state.
-  if (track_param >= (using_spsx_tracks ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY)) {
+  if (track_param >= (mcl_seq.using_spsx_tracks ? MD_PARAMS_PER_TRACK : MD_PARAMS_LEGACY)) {
     return;
   }
   perf_page.learn_param(track, track_param, value);

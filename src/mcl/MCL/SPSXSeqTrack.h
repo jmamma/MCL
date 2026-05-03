@@ -12,10 +12,8 @@
 class MCLSeq;
 class MDPattern;
 
-// Track type for SPSX tracks
-#ifndef SPSX_TRACK_TYPE
-#define SPSX_TRACK_TYPE 17
-#endif
+// Track type for SPSX tracks is defined as MDSPSX_TRACK_TYPE in GridTrack.h
+#include "GridTrack.h"
 
 // ============================================================================
 // SlideData - Fixed-point slide interpolation (8.8 format)
@@ -291,7 +289,7 @@ public:
     spsx_retrig_state_t retrig;
 
     SPSXSeqTrack() : SPSXSeqSlideTrack() {
-        active = SPSX_TRACK_TYPE;
+        active = MDSPSX_TRACK_TYPE;
         oneshot_mask = 0;
         mute_mask = 0;
         notes.init();

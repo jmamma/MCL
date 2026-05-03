@@ -4,12 +4,18 @@
 #if !defined(__AVR__)
 
 #include <cstdint>
+// platform.h provides the inline definition of get_random_byte() used by
+// spsx_get_random_byte() further down.
+#include "platform.h"
+
+extern uint8_t get_random_byte();
 
 // ============================================================================
 // SPSX Sequencer Interpolation
 // ============================================================================
 // 16x MIDI clock interpolation — matches host resolution
 #define SPSX_SEQ_INTERPOLATION 16
+#define LEGACY_SEQ_INTERPOLATION 2
 
 // Ticks per step at 1X speed (6 * interpolation)
 #define SPSX_TICKS_PER_STEP_1X (6 * SPSX_SEQ_INTERPOLATION)
