@@ -364,9 +364,10 @@ bool MDKit::fromSysex(MidiClass *midi) {
       lfosB[i].shape2 = compact[3];
       lfosB[i].type = compact[4];
       unpack_compact_lfo_state(lfosB[i], compact + 5, i);
-      lfosB[i].speed = params[i][MODEL_LFO2SPD];
-      lfosB[i].depth = params[i][MODEL_LFO2DEP];
-      lfosB[i].mix   = params[i][MODEL_LFO2MIX];
+      // speed/depth/mix live in params[MODEL_LFO2SPD/DEP/MIX]; do not
+      // mirror them into the lfosB struct fields. The wire format never
+      // carries them in the LFO-B compact section, and host treats
+      // params[] as the single source of truth (MDTypes.cpp:454-466).
     }
     decoder.stop7Bit();
   } else {
