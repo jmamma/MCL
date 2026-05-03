@@ -408,6 +408,28 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (key != 255) {
         const bool is_arrow = (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
                                key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT);
+        const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
+
+        // FUNC + ARROW: open the corresponding MD window directly via the
+        // 0x40 GUI commands (TEMPO/SWING/ACCENT/SLIDE) — no need to chord
+        // FUNC over the wire. Eat the arrow press locally so the grid
+        // navigation modifier doesn't also fire.
+        if (MD.connected && func_held && is_arrow && is_press) {
+            switch (key) {
+                case MDX_KEY_UP:    MD.toggle_tempo_window();  break;
+                case MDX_KEY_RIGHT: MD.toggle_swing_window();  break;
+                case MDX_KEY_DOWN:  MD.toggle_accent_window(); break;
+                case MDX_KEY_LEFT:  MD.toggle_slide_window();  break;
+                default: break;
+            }
+            return true;
+        }
+        // FUNC + ARROW release: just eat to keep the press/release pair
+        // symmetrical (the MD windows are toggle-on commands, no release).
+        if (func_held && is_arrow) {
+            return true;
+        }
+
         // Arrows on the grid page navigate MCL, not the MD's GUI.
         const bool md_forward = MD.connected &&
             !(is_arrow && mcl.currentPage() == GRID_PAGE);
