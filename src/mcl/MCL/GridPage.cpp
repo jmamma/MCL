@@ -1280,6 +1280,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       return true;
     }
+#ifndef PLATFORM_TBD
+    // A + X → SYSTEM_PAGE on AVR. TBD reaches the system page via the
+    // TL → TR chord in tbd_handleEvent so this slot is free for Y/X
+    // chord assignments.
     if ((EVENT_PRESSED(event, Buttons.BUTTON1) &&
          BUTTON_DOWN(Buttons.BUTTON4)) ||
         (EVENT_PRESSED(event, Buttons.BUTTON4) &&
@@ -1289,6 +1293,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       mcl.pushPage(SYSTEM_PAGE);
       return true;
     }
+#endif
   }
   return false;
 }
