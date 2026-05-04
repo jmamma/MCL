@@ -362,11 +362,29 @@ struct __T_menu_layouts {
   static constexpr size_t countof_midiprogram_menu_layout = 74 / sizeof(menu_t<midiprogram_menu_page_N>);
   static constexpr size_t sizeofof_midiprogram_menu_layout = 74;
   union {
-    menu_t<midiport_menu_page_N> midiport_menu_layout[0];
-    char zz__midiport_menu_layout[137];
+    menu_t<usbport_menu_page_N> usbport_menu_layout[0];
+    char zz__usbport_menu_layout[53];
   };
-  static constexpr size_t countof_midiport_menu_layout = 137 / sizeof(menu_t<midiport_menu_page_N>);
-  static constexpr size_t sizeofof_midiport_menu_layout = 137;
+  static constexpr size_t countof_usbport_menu_layout = 53 / sizeof(menu_t<usbport_menu_page_N>);
+  static constexpr size_t sizeofof_usbport_menu_layout = 53;
+  union {
+    menu_t<port2_menu_page_N> port2_menu_layout[0];
+    char zz__port2_menu_layout[53];
+  };
+  static constexpr size_t countof_port2_menu_layout = 53 / sizeof(menu_t<port2_menu_page_N>);
+  static constexpr size_t sizeofof_port2_menu_layout = 53;
+  union {
+    menu_t<port1_menu_page_N> port1_menu_layout[0];
+    char zz__port1_menu_layout[53];
+  };
+  static constexpr size_t countof_port1_menu_layout = 53 / sizeof(menu_t<port1_menu_page_N>);
+  static constexpr size_t sizeofof_port1_menu_layout = 53;
+  union {
+    menu_t<midiport_menu_page_N> midiport_menu_layout[0];
+    char zz__midiport_menu_layout[74];
+  };
+  static constexpr size_t countof_midiport_menu_layout = 74 / sizeof(menu_t<midiport_menu_page_N>);
+  static constexpr size_t sizeofof_midiport_menu_layout = 74;
   union {
     menu_t<midi_config_page_N> midiconfig_menu_layout[0];
     char zz__midiconfig_menu_layout[137];
@@ -397,7 +415,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 95;
-  static constexpr size_t __total_size = 2204;
+  static constexpr size_t __total_size = 2300;
 };
 
 extern const unsigned char __R_icons_logo[] PROGMEM;
