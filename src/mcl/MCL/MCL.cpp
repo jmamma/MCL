@@ -44,6 +44,9 @@
 #include "RAMPage.h"
 #include "SoundBrowserPage.h"
 #include "PerfPage.h"
+#ifdef PLATFORM_TBD
+#include "BankPopupPage.h"
+#endif
 
 // In MCL.cpp:
 const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
@@ -107,6 +110,9 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
     // Performance page
     { .ptr = &perf_page },
 
+#ifdef PLATFORM_TBD
+    { .ptr = &bank_popup_page },
+#endif
 #ifdef WAV_DESIGNER
     // WAV Designer pages
     { .ptr = &wd.mixer },
@@ -235,13 +241,12 @@ void MCL::loop() {
 
 static bool tbd_rec_held = false;
 
-// Open the grid bank popup at the current bank, in countdown state. Used
-// by the TBD NO button outside SPS-mode to trigger a bank-select gesture
-// without holding a hardware BANK key. Returns true if the popup opened.
+// Push the BankPopupPage; its setup()/init() handle state seeding and
+// MD-side bank-group sync. Returns true if the page was pushed.
 static bool tbd_open_bank_popup() {
   PageIndex pg = mcl.currentPage();
   if (pg == GRID_LOAD_PAGE || pg == GRID_SAVE_PAGE ||
-      pg == TEXT_INPUT_PAGE) {
+      pg == TEXT_INPUT_PAGE || pg == BANK_POPUP_PAGE) {
     return false;
   }
   if (pg == GRID_PAGE && grid_page.show_slot_menu) return false;
@@ -249,31 +254,7 @@ static bool tbd_open_bank_popup() {
   if (grid_page.last_page == 255 && pg != GRID_PAGE) {
     grid_page.last_page = pg;
   }
-  if (pg != GRID_PAGE) {
-    mcl.setPage(GRID_PAGE);
-  }
-  // State 2 = "popup up". We skip state 1 since there's no hardware BANK
-  // key being held. The auto-close countdown is disabled on TBD (see
-  // GridPage::loop) — the popup stays up until trig→pattern picks one or
-  // a re-press of NO closes it.
-  grid_page.bank_popup = 2;
-  grid_page.bank_popup_loadmask = 0;
-  grid_page.bank_popup_oled_visible = true;
-  bool clear_states = false;
-  key_interface.on(clear_states);
-  // Sync MD.currentBank to whichever group grid_page.bank lives in.
-  // Without this the arrow-cycle math underflows: if MCL has bank A
-  // (=0) selected but the MD is in group 1, letter = 0 - 4 wraps to
-  // 252, and RIGHT arrow lands on F instead of B.
-  uint8_t group = grid_page.bank / 4;
-  if (MD.currentBank != group) {
-    MD.currentBank = group;
-    if (MD.connected) MD.press_bankgroup_button();
-  }
-  uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-  mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
-  grid_page.send_row_led();
-  if (MD.connected) MD.draw_bank(grid_page.bank % 4);
+  mcl.pushPage(BANK_POPUP_PAGE);
   return true;
 }
 
@@ -348,16 +329,51 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (event->source == ButtonsClass::TBD_KEY_SPS_TOGGLE && is_press &&
         BUTTON_DOWN(ButtonsClass::BUTTON2)) {
       mcl.pushPage(SYSTEM_PAGE);
+      sps_mode.mark_tr_consumed();
       return true;
+    }
+
+    // BUTTON1 (cluster A) acts as MDX_KEY_NO for the duration of the hold —
+    // press transmits MD NO + sets cmd_key_state, release transmits MD NO
+    // off + clears cmd_key_state. On a clean tap (no other button pressed
+    // during the hold) the release falls through to the active page — on
+    // GRID_PAGE that opens GRID_SAVE_PAGE. If any other button was pressed
+    // while A was held, the release is eaten so the save shortcut doesn't
+    // fire on chord-tail.
+    static bool a_consumed = false;
+    if (EVENT_BUTTON(event) && is_press &&
+        event->source != ButtonsClass::BUTTON1 &&
+        BUTTON_DOWN(ButtonsClass::BUTTON1)) {
+      a_consumed = true;
+    }
+    if (event->source == ButtonsClass::BUTTON1) {
+      if (is_press) {
+        a_consumed = false;
+        if (MD.connected) MD.press_no_button();
+        key_interface.key_event(MDX_KEY_NO, false);
+        return true;
+      }
+      if (is_release) {
+        if (MD.connected) MD.release_no_button();
+        key_interface.key_event(MDX_KEY_NO, true);
+        if (a_consumed) {
+          a_consumed = false;
+          return true;
+        }
+        a_consumed = false;
+        // Fall through so the active page sees the release (GridPage
+        // opens GRID_SAVE_PAGE on a clean BUTTON1 release).
+        return false;
+      }
     }
 
     if (sps_mode.handle_toggle_button(event)) return true;
 
-    // ENC1 tap sends MD BANKGROUP (MD_GUI_BANKGROUP / 0x40 sysex) so the
-    // MD's own bank-group toggle is reachable from the TBD without giving
-    // up the encoder for rotation. "Tap" = pressed + released < 150 ms
-    // with no rotation in the window; anything longer is a rotation grip
-    // even if pollTBD didn't latch enc1_rotated_while_held in time.
+    // ENC1 tap toggles the bank popup (pattern-select gesture). "Tap" =
+    // pressed + released < TBD_ENC_TAP_MAX_MS with no rotation in the
+    // window; anything longer is a rotation grip even if pollTBD didn't
+    // latch enc1_rotated_while_held in time. Replaces the AVR's BANK
+    // key trigger, which TBD has no panel button for.
     if (event->source == ButtonsClass::ENCODER1) {
         static bool enc1_armed = false;
         static uint16_t enc1_press_ms = 0;
@@ -372,7 +388,11 @@ bool tbd_handleEvent(gui_event_t *event) {
         if (enc1_armed && !Buttons.enc1_long_press_seen
                        && !Buttons.enc1_rotated_while_held
                        && !too_long) {
-            if (MD.connected) MD.press_bankgroup_button();
+            if (mcl.currentPage() == BANK_POPUP_PAGE) {
+                bank_popup_page.close();
+            } else {
+                tbd_open_bank_popup();
+            }
         }
         enc1_armed = false;
         return true;

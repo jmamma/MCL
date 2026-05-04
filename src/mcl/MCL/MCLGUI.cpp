@@ -351,12 +351,13 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, Encoder *encoder) {
 void MCLGUI::draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
                                 const char *const labels[4],
                                 const bool show_values[4]) {
-  // 128 px wide, four 32-px columns. Layout fits inside 32 px of vertical
-  // space:
-  //   label  (TomThumb,  baseline y_top+5)        rows 0..5
-  //   dial   (11x11,     y_top+7..y_top+17)       rows 7..17
-  //   value  (6x8 font,  y_top+22..y_top+29)      rows 22..29
-  // Trims labels at 5 chars (32 px / 6 px-glyph ≈ 5).
+  // 128 px wide, four 32-px columns. The bottom 8-px row is shared:
+  // value (6x8) when show_values[n] is true, otherwise the label
+  // (TomThumb) sits in the same slot. This keeps the dial centred and
+  // avoids clobbering whatever the host page draws above the strip.
+  //   dial   (11x11,     y_top+3..y_top+13)       rows 3..13
+  //   value/label slot   (y_top+18..y_top+25)     rows 18..25
+  // Both value and label use the default 6x8 font; 5-char label cap.
   oled_display.fillRect(0, y_top, 128, 32, BLACK);
   auto oldfont = oled_display.getFont();
   oled_display.setTextColor(WHITE, BLACK);
@@ -367,21 +368,9 @@ void MCLGUI::draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
   for (uint8_t n = 0; n < 4; n++) {
     uint8_t cx = n * kCellW;
 
-    if (labels[n] && labels[n][0] != '\0') {
-      uint8_t len = (uint8_t)strlen(labels[n]);
-      if (len > 5) len = 5;
-      // TomThumb advance is ~4 px; centre by glyph count.
-      uint8_t lw = len * 4;
-      oled_display.setFont(&TomThumb);
-      oled_display.setCursor(cx + (kCellW - lw) / 2, y_top + 6);
-      for (uint8_t k = 0; k < len; k++) {
-        oled_display.write(labels[n][k]);
-      }
-    }
-
     if (encoders[n]) {
       uint8_t dial_x = cx + (kCellW - kDialW) / 2;
-      uint8_t dial_y = y_top + 8;
+      uint8_t dial_y = y_top + 4;
       draw_encoder(dial_x, dial_y, encoders[n]);
 
       if (show_values[n]) {
@@ -390,8 +379,17 @@ void MCLGUI::draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
         uint8_t vlen = (uint8_t)strlen(val);
         uint8_t vw = vlen * 6;
         oled_display.setFont();
-        oled_display.setCursor(cx + (kCellW - vw) / 2, y_top + 22);
+        oled_display.setCursor(cx + (kCellW - vw) / 2, y_top + 18);
         oled_display.print(val);
+      } else if (labels[n] && labels[n][0] != '\0') {
+        uint8_t len = (uint8_t)strlen(labels[n]);
+        if (len > 5) len = 5;  // 6 px advance × 5 = 30 < 32
+        uint8_t lw = len * 6;
+        oled_display.setFont();
+        oled_display.setCursor(cx + (kCellW - lw) / 2, y_top + 18);
+        for (uint8_t k = 0; k < len; k++) {
+          oled_display.write(labels[n][k]);
+        }
       }
     }
   }

@@ -10,6 +10,7 @@
 #include "GUI_hardware.h"
 #include "MCLGUI.h"
 #include "ResourceManager.h"
+#include "BankPopupPage.h"
 
 SpsMode sps_mode;
 
@@ -36,7 +37,7 @@ bool SpsMode::encoder_passthrough_page() const {
   PageIndex pg = mcl.currentPage();
   return (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
           pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0 ||
-          pg == PAGE_SELECT_PAGE);
+          pg == PAGE_SELECT_PAGE || pg == BANK_POPUP_PAGE);
 }
 
 void SpsMode::set_latched(bool v) {
@@ -45,8 +46,8 @@ void SpsMode::set_latched(bool v) {
   GUI_hardware.led.updateLeds = true;
   if (v) {
     resync_from_kit();
-  } else if (grid_page.bank_popup) {
-    grid_page.close_bank_popup();
+  } else if (mcl.currentPage() == BANK_POPUP_PAGE) {
+    bank_popup_page.close();
   }
 }
 
@@ -74,8 +75,15 @@ void SpsMode::send_param(uint8_t i) {
 
 bool SpsMode::handle_toggle_button(gui_event_t *event) {
   if (event->source != ButtonsClass::TBD_KEY_SPS_TOGGLE) return false;
+  // Toggle the latch on release rather than press so TR can be held as
+  // a modifier (TR + arrow → sub-page traversal, TL → TR → SYSTEM_PAGE).
+  // tr_consumed_ is set by chord/arrow handlers during the hold; if any
+  // gesture used the TR hold, the release does NOT flip the latch.
   if (is_press(event)) {
-    set_latched(!latched_);
+    tr_consumed_ = false;
+  } else if (is_release(event)) {
+    if (!tr_consumed_) set_latched(!latched_);
+    tr_consumed_ = false;
   }
   return true;
 }
@@ -97,12 +105,12 @@ bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
 
 bool SpsMode::handle_cluster_menus(gui_event_t *event) {
   if (!latched_) return false;
-  // BUTTON1=Y → MD NO; BUTTON4=X → MD YES; BUTTON3=A → MD SCALE (with
-  // FUNC variant for the scale-window shortcut). Press AND release are
-  // consumed so the local NO/save / YES/load / shift handlers in MCL
-  // pages don't run on either edge while latched.
-  if (event->source != ButtonsClass::BUTTON1 &&
-      event->source != ButtonsClass::BUTTON3 &&
+  // BUTTON4=X → MD YES; BUTTON3=Y → MD SCALE (with FUNC variant for the
+  // scale-window shortcut). BUTTON1=A is handled globally in
+  // tbd_handleEvent (always-on MDX_KEY_NO behaviour, not just SPS).
+  // Press AND release are consumed so the local YES/load and shift
+  // handlers in MCL pages don't run on either edge while latched.
+  if (event->source != ButtonsClass::BUTTON3 &&
       event->source != ButtonsClass::BUTTON4) return false;
   if (!MD.connected) return true;
 
@@ -114,9 +122,14 @@ bool SpsMode::handle_cluster_menus(gui_event_t *event) {
 
   if (is_press(event)) {
     switch (event->source) {
-      case ButtonsClass::BUTTON1: MD.press_no_button();  break;  // Y → NO
-      case ButtonsClass::BUTTON4: MD.press_yes_button(); break;  // X → YES
-      case ButtonsClass::BUTTON3:                                // A → SCALE
+      case ButtonsClass::BUTTON4:                                // X → YES
+        // Behave as a real MDX_KEY_YES: transmit to MD AND fire the
+        // local key_event so cmd_key_state + EVENT_CMD propagation
+        // (MCL pages keying off MDX_KEY_YES) match the AVR YES button.
+        MD.press_yes_button();
+        key_interface.key_event(MDX_KEY_YES, false);
+        break;
+      case ButtonsClass::BUTTON3:                                // Y → SCALE
         if (func_held) {
           MD.toggle_scale_window();
         } else {
@@ -128,8 +141,10 @@ bool SpsMode::handle_cluster_menus(gui_event_t *event) {
     }
   } else if (is_release(event)) {
     switch (event->source) {
-      case ButtonsClass::BUTTON1: MD.release_no_button();  break;
-      case ButtonsClass::BUTTON4: MD.release_yes_button(); break;
+      case ButtonsClass::BUTTON4:
+        MD.release_yes_button();
+        key_interface.key_event(MDX_KEY_YES, true);
+        break;
       case ButtonsClass::BUTTON3:
         if (scale_held) {
           MD.release_scale_button();
@@ -143,13 +158,16 @@ bool SpsMode::handle_cluster_menus(gui_event_t *event) {
 }
 
 bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
-  // SPS-key + arrow always cycles sub_page_, even with the latch off — the
-  // gesture is "SPS-key held", not "SPS-mode active". When the latch is
-  // off, the encoder strip is hidden, but the new sub_page_ is in place
-  // for the next time the user latches on.
+  // Either MCL_B (TBD_KEY_SPS) or TR (TBD_KEY_SPS_TOGGLE) held + arrow
+  // cycles sub_page_. Works with the latch off too — the gesture is
+  // "modifier held", not "SPS-mode active". When TR is the modifier we
+  // mark it consumed so the eventual TR release doesn't flip the latch.
   if (!is_arrow_source(event->source)) return false;
-  if (!BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS)) return false;
+  const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS);
+  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS_TOGGLE);
+  if (!b_held && !tr_held) return false;
   if (is_press(event)) {
+    if (tr_held) tr_consumed_ = true;
     int8_t delta = 0;
     switch (event->source) {
       case ButtonsClass::FUNC_BUTTON6: // UP
@@ -209,7 +227,7 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
       pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0) {
     return false;
   }
-  if (grid_page.bank_popup) return false;
+  if (mcl.currentPage() == BANK_POPUP_PAGE) return false;
 
   if (is_press(event)) {
     MD.hold_trig(trig_idx + 1);

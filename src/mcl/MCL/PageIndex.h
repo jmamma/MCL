@@ -52,6 +52,9 @@ enum PageIndex {
     SOUND_BROWSER,
     // Performance page
     PERF_PAGE_0,
+#ifdef PLATFORM_TBD
+    BANK_POPUP_PAGE,
+#endif
 #ifdef WAV_DESIGNER
     // WAV Designer pages - grouped together at the end
     WD_MIXER_PAGE,

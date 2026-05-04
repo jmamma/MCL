@@ -228,15 +228,15 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   // Universal MCL slots and 2x2 cluster, post-remap:
   //   TOP_LEFT  -> BUTTON2 (MCL PageSelect — press opens, release closes)
   //   TOP_RIGHT -> TBD_KEY_SPS_TOGGLE (SPS-mode latch toggle in tbd_handleEvent)
-  //   MCL_Y     -> BUTTON1 (universal NO/save/cancel)
+  //   MCL_Y     -> BUTTON3 (MCL shift; SPS-latched: MD SCALE)
   //   MCL_X     -> BUTTON4 (universal YES/load/confirm)
-  //   MCL_A     -> BUTTON3 (MCL shift)
+  //   MCL_A     -> BUTTON1 (universal NO/save/cancel; SPS-latched: MD NO)
   //   MCL_B     -> TBD_KEY_SPS (SPS sub-page modifier)
   STORE_B_CURRENT(BUTTON2, TBD_BUTTON_TOP_LEFT(ui_data));
   STORE_B_CURRENT(TBD_KEY_SPS_TOGGLE, TBD_BUTTON_TOP_RIGHT(ui_data));
-  STORE_B_CURRENT(BUTTON1, TBD_BUTTON_Y(ui_data));
+  STORE_B_CURRENT(BUTTON3, TBD_BUTTON_Y(ui_data));
   STORE_B_CURRENT(BUTTON4, TBD_BUTTON_X(ui_data));
-  STORE_B_CURRENT(BUTTON3, TBD_BUTTON_A(ui_data));
+  STORE_B_CURRENT(BUTTON1, TBD_BUTTON_A(ui_data));
   STORE_B_CURRENT(TBD_KEY_SPS, TBD_BUTTON_B(ui_data));
 
   // Sequencer Buttons

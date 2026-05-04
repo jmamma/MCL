@@ -25,6 +25,10 @@ public:
   bool is_active() const { return latched_; }
 
   bool handle_toggle_button(gui_event_t *event);
+  // Suppress the next TR-release latch toggle. Called by chord handlers
+  // (TL→TR system-page, TR+arrow sub-page traversal) so a held-TR used
+  // as a modifier doesn't also flip the latch on release.
+  void mark_tr_consumed() { tr_consumed_ = true; }
   bool handle_func_arrow_chord(gui_event_t *event);
   // Cluster Y/X/A in SPS-latched: Y → MD NO transmit, X → MD YES,
   // A → MD SCALE (FUNC variant: toggle_scale_window).
@@ -77,6 +81,10 @@ private:
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
   // when the timeout has fully elapsed.
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
+  // TR-press lifetime flag: set by mark_tr_consumed() when a chord or
+  // arrow used TR as a modifier; cleared on the next TR press edge and
+  // after handle_toggle_button checks it on release.
+  bool tr_consumed_ = false;
   void set_latched(bool v);
   bool encoder_passthrough_page() const;
   void send_param(uint8_t i);

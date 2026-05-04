@@ -100,6 +100,16 @@ void LEDHardware::show() {
 
 void LEDHardware::set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink,
                         bool update) {
+  // Page-owned LED gate. Mirrors set_flashled's existing convention:
+  // when a page has claimed the panel via TRIGLED_EXCLUSIVENDYNAMIC
+  // (e.g. BankPopupPage's coloured chain LEDs, GridPage's load popup),
+  // seq-driven STEPEDIT writes are dropped so the page's palette
+  // survives. The page itself can still write any mode it wants —
+  // the gate only blocks STEPEDIT specifically.
+  if (current_led_mode == TRIGLED_EXCLUSIVENDYNAMIC &&
+      mode == TRIGLED_STEPEDIT) {
+    return;
+  }
   current_led_mode = mode;
   // Plain set_trigleds returns to monochrome rendering — colour override
   // ends here; the next caller has to re-arm it explicitly.

@@ -647,47 +647,14 @@ void GridPage::display() {
 #endif
 
 #ifdef PLATFORM_TBD
-  // SPS-mode + bank-popup feedback. The MD's bank popup is normally drawn
-  // on the MD's own screen; on TBD we mirror it locally so the user can
-  // tell SPS arrows actually opened a popup. Latch indicator stays visible
-  // for the full duration of SPS mode.
+  // SPS-mode latch indicator (top-right). The bank-popup overlay itself
+  // is drawn by BankPopupPage when it's the active page on TBD.
   if (sps_mode.is_active()) {
     oled_display.setFont();
     oled_display.setTextSize(1);
     oled_display.setTextColor(WHITE, BLACK);
     oled_display.setCursor(108, 0);
     oled_display.print("SPS");
-  }
-  if (bank_popup && bank_popup_oled_visible) {
-    // 8 banks in a 2×4 grid (group 0 top, group 1 bottom). Active bank is
-    // filled inverse; the rest are dotted-corner outlines via drawRoundRect.
-    // Group is implicit from which row the active cell sits in.
-    // Window fills the full 32 px header at 96 px wide (centred at x=16).
-    constexpr uint8_t kCellW = 20;
-    constexpr uint8_t kCellH = 12;
-    constexpr uint8_t kGap   = 4;
-    constexpr uint8_t kPad   = 2;
-    constexpr uint8_t kGridW = 4 * kCellW + 3 * kGap;          // 92
-    constexpr uint8_t kGridH = 2 * kCellH + 1 * kGap;          // 28
-    constexpr uint8_t kWinW  = kGridW + 2 * kPad;              // 96
-    constexpr uint8_t kWinH  = kGridH + 2 * kPad;              // 32
-    constexpr uint8_t kWinX  = 64 - kWinW / 2;                 // 16
-    constexpr uint8_t kWinY  = (32 - kWinH) / 2;               // 0
-    constexpr uint8_t kGridX = kWinX + kPad;
-    constexpr uint8_t kGridY = kWinY + kPad;
-
-    oled_display.fillRect(kWinX - 1, kWinY - 1, kWinW + 2, kWinH + 2, BLACK);
-    oled_display.drawRect(kWinX, kWinY, kWinW, kWinH, WHITE);
-
-    for (uint8_t i = 0; i < 8; i++) {
-      uint8_t row = i / 4;
-      uint8_t col = i % 4;
-      uint8_t cx  = kGridX + col * (kCellW + kGap);
-      uint8_t cy  = kGridY + row * (kCellH + kGap);
-      mcl_gui.draw_bank_cell(cx, cy, kCellW, kCellH,
-                             (char)('A' + i),
-                             /*active=*/(i == bank));
-    }
   }
 #endif
 
