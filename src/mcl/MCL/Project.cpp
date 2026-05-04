@@ -98,7 +98,8 @@ again:
 }
 
 void Project::chdir_projects() {
-  const char *c_project_root = PRJ_DIR;
+  char path[64];
+  const char *c_project_root = mcl_sd.full_path(PRJ_DIR, path, sizeof(path));
   SD.mkdir(c_project_root, true);
   SD.chdir(c_project_root);
 }

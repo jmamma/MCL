@@ -28,16 +28,50 @@ bool MCLSd::sd_init() {
   }
   sd_state = true;
 
+#ifndef __AVR__
+  if (SD.exists("/config.mcls")) {
+    strcpy(mcl_root, "");
+    DEBUG_PRINTLN(F("Root is /"));
+  } else {
+    strcpy(mcl_root, "/MCL");
+    DEBUG_PRINTLN(F("Root is /MCL"));
+    if (!SD.exists(mcl_root)) {
+      SD.mkdir(mcl_root, true);
+      char buf[64];
+      strcpy(buf, mcl_root); strcat(buf, "/Projects");
+      SD.mkdir(buf, true);
+      strcpy(buf, mcl_root); strcat(buf, "/Samples");
+      SD.mkdir(buf, true);
+      strcpy(buf, mcl_root); strcat(buf, "/Samples/WAV");
+      SD.mkdir(buf, true);
+      strcpy(buf, mcl_root); strcat(buf, "/Samples/SYX");
+      SD.mkdir(buf, true);
+      strcpy(buf, mcl_root); strcat(buf, "/Sounds");
+      SD.mkdir(buf, true);
+    }
+  }
+#endif
+
   DEBUG_PRINTLN(F("SD Init okay"));
   return true;
 }
+
+#ifndef __AVR__
+const char *MCLSd::full_path(const char *path, char *buffer, size_t size) {
+  if (mcl_root[0] == '\0') return path;
+  if (path[0] != '/') return path;
+  strcpy(buffer, mcl_root);
+  strcat(buffer, path);
+  return buffer;
+}
+#endif
 bool MCLSd::load_init() {
   bool ret = false;
   int b;
 
   if (sd_state) {
-
-    if (mcl_cfg.cfgfile.open("/config.mcls", O_RDWR)) {
+    char path[64];
+    if (mcl_cfg.cfgfile.open(full_path("/config.mcls", path, sizeof(path)), O_RDWR)) {
       DEBUG_PRINTLN(F("Config file open: success"));
 
       if (read_data((uint8_t *)&mcl_cfg, sizeof(MCLSysConfigData),

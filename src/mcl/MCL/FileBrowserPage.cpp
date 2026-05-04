@@ -45,7 +45,15 @@ void FileBrowserPage::setup() {
   oled_display.clearDisplay();
   // char *mcl = ".mcl";
   // strcpy(match, mcl);
+#ifndef __AVR__
+  if (mcl_sd.mcl_root[0] == '\0') {
+    strcpy_P(lwd, mclstr_root_path);
+  } else {
+    strcpy(lwd, mcl_sd.mcl_root);
+  }
+#else
   strcpy_P(lwd, mclstr_root_path);
+#endif
 
   encoders[1]->cur = 1;
   encoders[2]->cur = 1;
@@ -279,13 +287,28 @@ void FileBrowserPage::_cd_up() {
   file.close();
   DEBUG_PRINTLN("cd_up");
   // don't cd up if we are at the root
+#ifndef __AVR__
+  if (mcl_sd.mcl_root[0] == '\0') {
+    if (strlen(lwd) < 2) {
+      init();
+      return;
+    }
+  } else {
+    if (strcmp(lwd, mcl_sd.mcl_root) == 0) {
+      init();
+      return;
+    }
+  }
+#else
   auto len_lwd = strlen(lwd);
   if (len_lwd < 2) {
     init();
     return;
   }
+#endif
 
   // trim ending '/'
+  auto len_lwd = strlen(lwd);
   if (lwd[len_lwd - 1] == '/') {
     lwd[--len_lwd] = '\0';
   }
@@ -300,7 +323,15 @@ void FileBrowserPage::_cd_up() {
 
   // in case root is trimmed, add it back
   if (lwd[0] == '\0') {
+#ifndef __AVR__
+    if (mcl_sd.mcl_root[0] == '\0') {
+      strcpy_P(lwd, mclstr_root_path);
+    } else {
+      strcpy(lwd, mcl_sd.mcl_root);
+    }
+#else
     strcpy_P(lwd, mclstr_root_path);
+#endif
   }
   DEBUG_PRINTLN(lwd);
   if (!SD.chdir(lwd)) {

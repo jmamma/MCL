@@ -23,7 +23,11 @@ bool MCLClipBoard::init() { return true; }
 bool MCLClipBoard::open() {
   DEBUG_PRINT_FN();
 
+#ifndef __AVR__
+  SD.chdir(mcl_sd.mcl_root[0] == '\0' ? "/" : mcl_sd.mcl_root);
+#else
   SD.chdir("/");
+#endif
   char str[] = FILENAME_CLIPBOARD;
   char grid_filename[sizeof(FILENAME_CLIPBOARD) + 2];
   strcpy(grid_filename, str);

@@ -17,11 +17,12 @@ const char *c_syx_name = "SYSEX";
 static bool s_query_returned = false;
 
 void SampleBrowserPage::setup() {
-  SD.mkdir(c_wav_root, true);
-  SD.mkdir(c_syx_root, true);
+  char path[64];
+  SD.mkdir(mcl_sd.full_path(c_wav_root, path, sizeof(path)), true);
+  SD.mkdir(mcl_sd.full_path(c_syx_root, path, sizeof(path)), true);
   sysex = MD.midi->midiSysex;
   FileBrowserPage::setup();
-  _cd(c_wav_root);
+  _cd(mcl_sd.full_path(c_wav_root, path, sizeof(path)));
   position.reset();
 }
 

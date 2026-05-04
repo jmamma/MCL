@@ -91,7 +91,8 @@ bool MCLSysConfig::write_cfg() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Writing cfg"));
   cfgfile.close();
-  ret = cfgfile.open("/config.mcls", O_RDWR);
+  char path[64];
+  ret = cfgfile.open(mcl_sd.full_path("/config.mcls", path, sizeof(path)), O_RDWR);
   if (!ret) {
     DEBUG_PRINTLN(F("Open cfg file failed"));
     return false;
@@ -114,11 +115,13 @@ bool MCLSysConfig::cfg_init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Initialising cfgfile"));
   cfgfile.close();
-  if (!SD.remove("/config.mcls")) {
+  char path[64];
+  mcl_sd.full_path("/config.mcls", path, sizeof(path));
+  if (!SD.remove(path)) {
     DEBUG_PRINTLN(F("Failed to remove old config file"));
   }
   // First open the file
-  ret = cfgfile.open("/config.mcls", O_RDWR | O_CREAT);
+  ret = cfgfile.open(path, O_RDWR | O_CREAT);
   if (!ret) {
     DEBUG_PRINTLN(F("Failed to open cfgfile"));
     return false;

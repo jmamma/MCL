@@ -5,8 +5,13 @@ void ConvertProjectPage::init() {
 
   DEBUG_PRINT_FN();
   strcpy_P(title, mclstr_title_project);
-  strcpy_P(lwd, mclstr_root_path);
-  SD.chdir("/");
+  if (mcl_sd.mcl_root[0] == '\0') {
+    strcpy_P(lwd, mclstr_root_path);
+    SD.chdir("/");
+  } else {
+    strcpy(lwd, mcl_sd.mcl_root);
+    SD.chdir(mcl_sd.mcl_root);
+  }
 
   show_dirs = false;
   select_dirs = false;

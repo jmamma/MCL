@@ -10,9 +10,10 @@ const char *c_snd_suffix = ".snd";
 static bool s_query_returned = false;
 
 void SoundBrowserPage::setup() {
-  SD.mkdir(c_snd_root, true);
+  char path[64];
+  SD.mkdir(mcl_sd.full_path(c_snd_root, path, sizeof(path)), true);
   FileBrowserPage::setup();
-  _cd(c_snd_root);
+  _cd(mcl_sd.full_path(c_snd_root, path, sizeof(path)));
   position.reset();
 }
 
