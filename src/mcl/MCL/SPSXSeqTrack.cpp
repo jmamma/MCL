@@ -1268,6 +1268,9 @@ void SPSXSeqTrack::transpose(int8_t offset) {
 // ============================================================================
 
 void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
+    // pattern arrays are sized 16; out-of-range trk is the 0xFF
+    // "no track" sentinel that crashes on dereference.
+    if (trk >= 16 || pattern == nullptr) return;
     // Build trig/slide/accent/swing masks from pattern
     trig_mask = pattern->trigPatterns[trk];
 

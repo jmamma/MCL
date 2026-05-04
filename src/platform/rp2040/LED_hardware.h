@@ -42,6 +42,10 @@ public:
   // arrows now act as bank-select. White was considered but red+amber
   // is easier to tell apart on the strip than red+white.
   bool sps_active;
+  // SPS param-page select overlay open. Overrides sps_active's amber
+  // tint to white so the LED matches the white "focused sub-page"
+  // trig LED while the overlay is up.
+  bool sps_overlay = false;
   LEDHardware()
       : led_base_state(0), led_blink_mask(0), led_flash_mask(0),
         last_render_state(0), blink_last_trigger_time(0), updateLeds(true),

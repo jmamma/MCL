@@ -8,6 +8,9 @@
 #include "GridPages.h"
 #include "PageSelectPage.h"
 #include "MCLStrings.h"
+#ifdef PLATFORM_TBD
+#include "SpsMode.h"
+#endif
 #include "MCLSeq.h"
 
 #define MIDI_OMNI_MODE 17
@@ -244,6 +247,12 @@ void SeqStepPage::display() {
     page_select_page.md_prepare();
     prepare = false;
   }
+#ifdef PLATFORM_TBD
+  // Bottom 32 px hosts the SPS-mode encoder strip when latched —
+  // overdraws the step grid's lower half so the user can see the
+  // active 4 kit params while editing steps.
+  sps_mode.draw_strip(32);
+#endif
 }
 
 void SeqStepPage::loop() {

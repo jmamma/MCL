@@ -82,6 +82,8 @@ public:
 
   void setup();
   void loop();
+
+  void load_persistent_resources();
 };
 
 extern MCL mcl;

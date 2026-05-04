@@ -88,8 +88,13 @@ void LEDHardware::show() {
     setPixelColor(tbd_ui.rgb_led_fbtn_map[0], rec_led_on ? STRIP_RED : STRIP_BLACK, false);
 
     // STRIP_LED2 (fbtn_map[1]) doubles as the SPS-mode latch indicator —
-    // amber while latched, otherwise the normal led_base_state-driven red.
-    if (sps_active) {
+    // amber while latched, white while the param-page-select overlay
+    // is open (matches the white "focused sub-page" trig LED), and
+    // off otherwise (the normal led_base_state-driven red is suppressed
+    // here since SPS owns this LED while active).
+    if (sps_overlay) {
+      setPixelColor(tbd_ui.rgb_led_fbtn_map[1], COLOR(255, 255, 255), false);
+    } else if (sps_active) {
       setPixelColor(tbd_ui.rgb_led_fbtn_map[1], COLOR(255, 96, 0), false);
     }
 

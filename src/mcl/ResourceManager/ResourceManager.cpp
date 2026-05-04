@@ -5,7 +5,11 @@ ResourceManager::ResourceManager() { }
 
 void ResourceManager::Clear() {
     DEBUG_PRINTLN("resource clear");
-	m_bufsize = 0;
+	m_bufsize = m_persistent_size;
+}
+
+void ResourceManager::SetPersistent() {
+  m_persistent_size = m_bufsize;
 }
 
 byte* ResourceManager::__use_resource(const void* pgm) {

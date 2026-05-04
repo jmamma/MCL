@@ -483,10 +483,15 @@ uint8_t ElektronDevice::getCurrentTrack(uint16_t timeout) {
       getBlockingStatus(sysex_protocol.track_index_request_id, timeout);
   if (value == 255) {
     return 255;
-  } else {
-    currentTrack = value;
-    return value;
   }
+  // Stray byte from a noisy reply has been observed to land here as
+  // 24 (= 16 + 8) and propagate through MD.currentTrack into kit /
+  // pattern indexing — guard at the source.
+  if (value >= 16) {
+    return 255;
+  }
+  currentTrack = value;
+  return value;
 }
 uint8_t ElektronDevice::getCurrentKit(uint16_t timeout) {
   uint8_t value =

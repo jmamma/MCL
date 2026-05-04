@@ -172,6 +172,7 @@ public:
   }
   virtual bool isTrackEmpty(uint8_t track);
   virtual bool isTrigSet(uint8_t track, uint8_t trig) {
+    if (track >= 16 || trig >= 64) return false;
     return IS_BIT_SET64(trigPatterns[track], trig);
   }
 

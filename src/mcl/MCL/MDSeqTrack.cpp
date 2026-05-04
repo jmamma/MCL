@@ -1033,6 +1033,10 @@ void MDSeqTrack::clear_track(bool locks) {
 
 void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   DEBUG_PRINT_FN();
+  // trigPatterns / lockPatterns / paramLocks are all sized 16; an
+  // out-of-range track_number reads adjacent memory and crashes
+  // (seen during sysex processing when track lookup returned 0xFF).
+  if (track_number >= 16 || pattern == nullptr) return;
 
 #if !defined(__AVR__)
   uint8_t num_params = pattern->version >= 0x40 ? SPS_PARAMS_PER_TRACK : 24;

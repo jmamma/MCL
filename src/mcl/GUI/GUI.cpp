@@ -3,6 +3,9 @@
 #include "MidiUart.h"
 #include "global.h"
 #include "oled.h"
+#ifdef PLATFORM_TBD
+#include "SpsMode.h"
+#endif
 
 void GuiClass::setPage(LightPage *page) {
   if (currentPage() != NULL) {
@@ -171,6 +174,10 @@ void GuiClass::display() {
     oled_display.setFont();
     page->display();
   }
+
+#ifdef PLATFORM_TBD
+  sps_mode.draw_overlay();
+#endif
 
 #ifdef DEBUGMODE
   if (g_fps == 0 && g_clock_fps == 0) {

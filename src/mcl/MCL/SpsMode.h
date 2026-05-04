@@ -20,6 +20,21 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 
+// Standard tap window for TBD-panel gestures: encoder taps (ENC1
+// pattern-select, ENC2/3/4 cluster taps), B latch toggle vs.
+// modifier hold, etc. Anything held longer than this counts as
+// a sustained press / hold gesture.
+#define TBD_TAP_MAX_MS 200
+
+// TR-hold threshold for engaging the SPS latch. Below this a TR press
+// is a no-op; past it set_latched(true) fires (one-shot per press).
+#define TBD_LATCH_HOLD_MS 250
+
+// TR-hold threshold for the SPS param-select overlay. Below this the
+// hold has either done nothing (< TBD_LATCH_HOLD_MS) or just engaged
+// the latch; past it the overlay + column LEDs render.
+#define TBD_OVERLAY_HOLD_MS 500
+
 class SpsMode {
 public:
   bool is_active() const { return latched_; }
@@ -29,6 +44,10 @@ public:
   // (TL→TR system-page, TR+arrow sub-page traversal) so a held-TR used
   // as a modifier doesn't also flip the latch on release.
   void mark_tr_consumed() { tr_consumed_ = true; }
+  // Same convention as mark_tr_consumed but for B. Called when B is
+  // used as a modifier (B+arrow sub-page traversal, B+trig column
+  // selector) so the matching B release doesn't toggle the latch.
+  void mark_b_consumed() { b_consumed_ = true; }
   bool handle_func_arrow_chord(gui_event_t *event);
   // Cluster Y/X/A in SPS-latched: Y → MD NO transmit, X → MD YES,
   // A → MD SCALE (FUNC variant: toggle_scale_window).
@@ -53,6 +72,19 @@ public:
   // GridPage::display() (or any other 32-px-tall page that wants to
   // show it). No-op when the latch is off.
   void draw_strip(uint8_t y_top);
+
+  // Paint the trig LEDs to show the active sub-page: each available
+  // sub-page lights its column dimly; the active one's column blinks.
+  // Call from MCL::loop() so it tracks sub_page_ changes.
+  void poll_page_overlay();
+
+  // Full-screen overlay drawn while MCL_B (TBD_KEY_SPS) is held + the
+  // latch is on: top half shows params 0..3 of the current 8-param
+  // page, bottom half shows 4..7. The 4 encoders are bound to whichever
+  // half sub_page_ points at; the other half renders read-only values
+  // pulled from MD.kit.params. No-op otherwise. Hooked from
+  // GuiClass::display() after the active page draws.
+  void draw_overlay();
 
   // Sync the encoder cur values to MD.kit.params for the currently
   // active track + synth page. Call when latching on, when the user
@@ -81,12 +113,40 @@ private:
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
   // when the timeout has fully elapsed.
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
-  // TR-press lifetime flag: set by mark_tr_consumed() when a chord or
-  // arrow used TR as a modifier; cleared on the next TR press edge and
-  // after handle_toggle_button checks it on release.
+  // TR-press lifetime flag: set when a chord or arrow used TR as a
+  // modifier; cleared on the next TR press edge. Suppresses the
+  // tap-toggle on TR release.
   bool tr_consumed_ = false;
+  // Timestamp of the most recent TR press edge. The release uses
+  // (now - tr_press_ms_) to distinguish a tap (≤ tap-threshold) from
+  // a hold (the overlay-view gesture) so a held TR doesn't unlatch
+  // SPS when the user just wanted to peek at the params.
+  uint16_t tr_press_ms_ = 0;
+  // Event-driven TR-held flag — set true on TR press, cleared on
+  // release. Used by poll_page_overlay's hold-timer instead of
+  // BUTTON_DOWN, which can race with the panel poll and read stale
+  // values (causing the overlay to appear immediately when
+  // tr_press_ms_ is still 0/old).
+  bool tr_pressed_ = false;
+  // B-press lifetime flag: equivalent to tr_consumed_ but for the
+  // latch-toggle role that now lives on B. Cleared on B press; if no
+  // chord set it during the hold, B release toggles the latch.
+  bool b_consumed_ = false;
+  // Last sub_page we painted; 255 = nothing painted (force a repaint
+  // when latching back on or returning from a passthrough page).
+  uint8_t painted_sub_page_ = 255;
+  // Sticky open-state for the param-page select overlay. Set when TR
+  // is held past TBD_OVERLAY_HOLD_MS; cleared by the next TR press
+  // (release closes the overlay without toggling the latch).
+  bool overlay_open_ = false;
+  // Source of the arrow press currently being held in B-overlay mode.
+  // Used to suppress repeat-press events on the same physical hold so
+  // the sub-page selector doesn't flip on every event the panel emits.
+  // Cleared on release of any arrow.
+  uint8_t arrow_consumed_source_ = 255;
   void set_latched(bool v);
   bool encoder_passthrough_page() const;
+  bool display_passthrough_page() const;
   void send_param(uint8_t i);
   bool show_value(uint8_t i) const;
   uint8_t param_base() const { return (uint8_t)(sub_page_ * 4); }
