@@ -11,6 +11,10 @@
  * fast-mode behave like every other page-bound encoder), and drawn
  * in the bottom 32 px of the OLED on TBD.
  *
+ * The param-page-select overlay is now a real LightPage
+ * (SpsOverlayPage). SpsMode pushes/pops it; rendering and event
+ * handling for the overlay live on the page itself.
+ *
  * TBD-only — guarded by PLATFORM_TBD at the include site. The header
  * still compiles on non-TBD targets but the helpers are no-ops.
  */
@@ -26,18 +30,15 @@
 // a sustained press / hold gesture.
 #define TBD_TAP_MAX_MS 200
 
-// TR-hold threshold for engaging the SPS latch. Below this a TR press
-// is a no-op; past it set_latched(true) fires (one-shot per press).
-#define TBD_LATCH_HOLD_MS 250
-
-// TR-hold threshold for the SPS param-select overlay. Below this the
-// hold has either done nothing (< TBD_LATCH_HOLD_MS) or just engaged
-// the latch; past it the overlay + column LEDs render.
+// TR-hold threshold for the SPS param-select overlay. Below this a
+// TR press is just the latch-tap window; past it SpsOverlayPage gets
+// pushed onto the page stack.
 #define TBD_OVERLAY_HOLD_MS 500
 
 class SpsMode {
 public:
   bool is_active() const { return latched_; }
+  uint8_t sub_page() const { return sub_page_; }
 
   bool handle_toggle_button(gui_event_t *event);
   // Suppress the next TR-release latch toggle. Called by chord handlers
@@ -52,15 +53,21 @@ public:
   // Cluster Y/X/A in SPS-latched: Y → MD NO transmit, X → MD YES,
   // A → MD SCALE (FUNC variant: toggle_scale_window).
   bool handle_cluster_menus(gui_event_t *event);
-  // MCL_B held + arrow: cycle sub_page_ and resync the encoder strip.
-  // Takes precedence over the FUNC+arrow window-toggle.
+  // Arrow handler: latched → cycle sub_page_; B/TR-held → also cycle
+  // (works without latch). UP/DOWN flip half within page; LEFT/RIGHT
+  // step pages (clamped, no wrap).
   bool handle_arrow_subpage(gui_event_t *event);
-  // MCL_B (TBD_KEY_SPS) on press while latched: FUNC variant toggles the
-  // MD LFO menu; bare variant fires a single press_page_button (no paired
-  // release — the MD's PAGE handler runs on both edges, so one sysex
-  // produces one page advance).
+  // B (TBD_KEY_SPS) tap fires a per-page action (grid swap on
+  // GRID_PAGE; sequencer-page advance on SEQ_*). Hold acts as the
+  // sub-page modifier (B+arrow / B+trig).
   bool handle_sps_key_tap(gui_event_t *event);
   bool handle_trig_forward(gui_event_t *event, uint8_t trig_idx);
+
+  // SpsOverlayPage delegate: handles a TR event while the overlay is
+  // the active page. Returns true when the gesture is a tap-close
+  // (caller should pop the page); false otherwise (event consumed but
+  // page stays).
+  bool handle_overlay_tr_event(gui_event_t *event);
 
   // Drives the four kit-param encoders. Call from MCL::loop *before*
   // GUI.loop() so the panel deltas don't also reach the active page.
@@ -73,18 +80,11 @@ public:
   // show it). No-op when the latch is off.
   void draw_strip(uint8_t y_top);
 
-  // Paint the trig LEDs to show the active sub-page: each available
-  // sub-page lights its column dimly; the active one's column blinks.
-  // Call from MCL::loop() so it tracks sub_page_ changes.
+  // Polled from MCL::loop. Single responsibility: when TR has been
+  // held past TBD_OVERLAY_HOLD_MS while latched, push SpsOverlayPage.
+  // No rendering — the page owns its own LEDs / OLED via its
+  // init / cleanup / display lifecycle.
   void poll_page_overlay();
-
-  // Full-screen overlay drawn while MCL_B (TBD_KEY_SPS) is held + the
-  // latch is on: top half shows params 0..3 of the current 8-param
-  // page, bottom half shows 4..7. The 4 encoders are bound to whichever
-  // half sub_page_ points at; the other half renders read-only values
-  // pulled from MD.kit.params. No-op otherwise. Hooked from
-  // GuiClass::display() after the active page draws.
-  void draw_overlay();
 
   // Sync the encoder cur values to MD.kit.params for the currently
   // active track + synth page. Call when latching on, when the user
@@ -117,36 +117,20 @@ private:
   // modifier; cleared on the next TR press edge. Suppresses the
   // tap-toggle on TR release.
   bool tr_consumed_ = false;
-  // Timestamp of the most recent TR press edge. The release uses
-  // (now - tr_press_ms_) to distinguish a tap (≤ tap-threshold) from
-  // a hold (the overlay-view gesture) so a held TR doesn't unlatch
-  // SPS when the user just wanted to peek at the params.
+  // Timestamp of the most recent TR press edge.
   uint16_t tr_press_ms_ = 0;
   // Event-driven TR-held flag — set true on TR press, cleared on
   // release. Used by poll_page_overlay's hold-timer instead of
-  // BUTTON_DOWN, which can race with the panel poll and read stale
-  // values (causing the overlay to appear immediately when
-  // tr_press_ms_ is still 0/old).
+  // BUTTON_DOWN, which can race with the panel poll.
   bool tr_pressed_ = false;
-  // B-press lifetime flag: equivalent to tr_consumed_ but for the
-  // latch-toggle role that now lives on B. Cleared on B press; if no
-  // chord set it during the hold, B release toggles the latch.
+  // B-press lifetime flag: cleared on B press; if no chord set it
+  // during the hold, B release fires the per-page tap action.
   bool b_consumed_ = false;
-  // Last sub_page we painted; 255 = nothing painted (force a repaint
-  // when latching back on or returning from a passthrough page).
-  uint8_t painted_sub_page_ = 255;
-  // Sticky open-state for the param-page select overlay. Set when TR
-  // is held past TBD_OVERLAY_HOLD_MS; cleared by the next TR press
-  // (release closes the overlay without toggling the latch).
-  bool overlay_open_ = false;
   // Source of the arrow press currently being held in B-overlay mode.
-  // Used to suppress repeat-press events on the same physical hold so
-  // the sub-page selector doesn't flip on every event the panel emits.
-  // Cleared on release of any arrow.
+  // Used to suppress repeat-press events on the same physical hold.
   uint8_t arrow_consumed_source_ = 255;
   void set_latched(bool v);
   bool encoder_passthrough_page() const;
-  bool display_passthrough_page() const;
   void send_param(uint8_t i);
   bool show_value(uint8_t i) const;
   uint8_t param_base() const { return (uint8_t)(sub_page_ * 4); }

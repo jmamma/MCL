@@ -46,6 +46,7 @@
 #include "PerfPage.h"
 #ifdef PLATFORM_TBD
 #include "BankPopupPage.h"
+#include "SpsOverlayPage.h"
 #endif
 
 // In MCL.cpp:
@@ -112,6 +113,7 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
 
 #ifdef PLATFORM_TBD
     { .ptr = &bank_popup_page },
+    { .ptr = &sps_overlay_page },
 #endif
 #ifdef WAV_DESIGNER
     // WAV Designer pages
