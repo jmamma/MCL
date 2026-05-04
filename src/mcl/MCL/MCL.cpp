@@ -340,6 +340,17 @@ bool tbd_handleEvent(gui_event_t *event) {
     const bool is_press   = (event->mask == EVENT_BUTTON_PRESSED);
     const bool is_release = !(event->mask & 1);
 
+    // TL → TR chord opens the system config page. Asymmetric on purpose:
+    // only fires when TBD_KEY_SPS_TOGGLE (TR) is the press edge while
+    // BUTTON2 (TL) is already held, so the reverse order falls through
+    // to the normal SPS toggle. Suppresses the SPS-mode latch for this
+    // TR press by short-circuiting before handle_toggle_button.
+    if (event->source == ButtonsClass::TBD_KEY_SPS_TOGGLE && is_press &&
+        BUTTON_DOWN(ButtonsClass::BUTTON2)) {
+      mcl.pushPage(SYSTEM_PAGE);
+      return true;
+    }
+
     if (sps_mode.handle_toggle_button(event)) return true;
 
     // ENC1 tap sends MD BANKGROUP (MD_GUI_BANKGROUP / 0x40 sysex) so the
