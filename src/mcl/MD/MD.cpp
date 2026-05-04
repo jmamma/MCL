@@ -1261,6 +1261,12 @@ void MDClass::release_scale_button() {
 void MDClass::toggle_scale_window() {
   send_gui_command(MD_GUI_SCALE_WIN, MD_GUI_CMD_ON);
 }
+void MDClass::press_page_button() {
+  send_gui_command(MD_GUI_PAGE, MD_GUI_CMD_ON);
+}
+void MDClass::release_page_button() {
+  send_gui_command(MD_GUI_PAGE, MD_GUI_CMD_OFF);
+}
 void MDClass::toggle_mute_window() {
 
   send_gui_command(MD_GUI_MUTE_WIN, MD_GUI_CMD_ON);
@@ -1280,10 +1286,6 @@ void MDClass::toggle_global_window() {
 void MDClass::copy() { send_gui_command(MD_GUI_COPY, MD_GUI_CMD_ON); }
 void MDClass::clear() { send_gui_command(MD_GUI_CLEAR, MD_GUI_CMD_ON); }
 void MDClass::paste() { send_gui_command(MD_GUI_PASTE, MD_GUI_CMD_ON); }
-void MDClass::toggle_synth_page() {
-
-  send_gui_command(MD_GUI_SYNTH, MD_GUI_CMD_ON);
-}
 void MDClass::track_select(uint8_t track) {
   send_gui_command(MD_GUI_TRACK_1 - 1 + track, MD_GUI_CMD_ON);
 }

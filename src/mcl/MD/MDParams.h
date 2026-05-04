@@ -896,7 +896,10 @@
 #define MD_GUI_COPY 0x34
 #define MD_GUI_CLEAR 0x35
 #define MD_GUI_PASTE 0x36
-#define MD_GUI_SYNTH 0x3A
+// PAGE key (cycle synth param pages). Wire 0x3A → MD dispatch case 0x39 →
+// MDX_KEY_HANDLER_0x39 (//Page select). NOTE: MD's 0x40 dispatcher computes
+// (pdata[7] - 1) before switching, so the case label is wire_code - 1.
+#define MD_GUI_PAGE 0x3A
 #define MD_GUI_TRACK_1 0x40
 #define MD_GUI_TRACK_2 0x41
 #define MD_GUI_TRACK_3 0x42

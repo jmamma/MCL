@@ -419,6 +419,8 @@ public:
   void hold_scale_button();
   void release_scale_button();
   void toggle_scale_window();
+  void press_page_button();
+  void release_page_button();
   void toggle_mute_window();
   void press_patternsong_button();
   void toggle_song_window();
@@ -426,7 +428,6 @@ public:
   void copy();
   void clear();
   void paste();
-  void toggle_synth_page();
   void track_select(uint8_t track);
   void encoder_button_press(uint8_t encoder);
   void tap_tempo();
