@@ -116,9 +116,17 @@ void GridPage::close_bank_popup() {
   last_page = NULL_PAGE;
   bank_popup = 0;
   bank_popup_loadmask = 0;
+  bank_popup_first_trig = 255;
+#ifdef PLATFORM_TBD
+  bank_popup_oled_visible = true;
+#endif
   note_interface.init_notes();
-  // Clear blink leds
+  // Clear blink leds. On TBD this also drops the trig colour override
+  // (set_trigleds_local resets it) so the strip returns to monochrome.
   MD.set_trigleds(0, TRIGLED_EXCLUSIVENDYNAMIC, 1);
+#ifdef PLATFORM_TBD
+  mcl_gui.set_trigleds_local(0, TRIGLED_EXCLUSIVE);
+#endif
 }
 
 void GridPage::load_old_col() {
@@ -260,11 +268,17 @@ void GridPage::loop() {
      param4.checkHandle();
   }
 
+#ifndef PLATFORM_TBD
+  // AVR: state 2 is the post-release countdown — popup auto-closes after
+  // 800 ms. On TBD the popup is opened by a NO-button gesture instead of
+  // a held BANK key, so there's no natural release to time off; the popup
+  // stays up until trig→pattern or a re-press of NO closes it.
   if (bank_popup == 2 &&
       clock_diff(bank_popup_lastclock, read_clock_ms()) > 800) {
     close_bank_popup();
     return;
   }
+#endif
 
 }
 
@@ -644,53 +658,35 @@ void GridPage::display() {
     oled_display.setCursor(108, 0);
     oled_display.print("SPS");
   }
-  if (bank_popup) {
-    // Self-contained popup window — same black-fill / white-outline
-    // style as oled_display.textbox(), but tall enough to also hold the
-    // 4 countdown squares from the SPS firmware's BankPopupPage. Drawn
-    // inline (not via the textbox queue) so we own the full layout.
-    constexpr uint16_t kBankPopupTimeoutMs = 800;
-    constexpr uint8_t  kBoxThresholds[4] = {7, 15, 23, 31};
-
-    constexpr uint8_t kWinW = 50;
-    constexpr uint8_t kWinH = 26;
-    constexpr uint8_t kWinX = 64 - kWinW / 2;
-    constexpr uint8_t kWinY = (32 - kWinH) / 2;  // vertically centred in 32 px
+  if (bank_popup && bank_popup_oled_visible) {
+    // 8 banks in a 2×4 grid (group 0 top, group 1 bottom). Active bank is
+    // filled inverse; the rest are dotted-corner outlines via drawRoundRect.
+    // Group is implicit from which row the active cell sits in.
+    // Window fills the full 32 px header at 96 px wide (centred at x=16).
+    constexpr uint8_t kCellW = 20;
+    constexpr uint8_t kCellH = 12;
+    constexpr uint8_t kGap   = 4;
+    constexpr uint8_t kPad   = 2;
+    constexpr uint8_t kGridW = 4 * kCellW + 3 * kGap;          // 92
+    constexpr uint8_t kGridH = 2 * kCellH + 1 * kGap;          // 28
+    constexpr uint8_t kWinW  = kGridW + 2 * kPad;              // 96
+    constexpr uint8_t kWinH  = kGridH + 2 * kPad;              // 32
+    constexpr uint8_t kWinX  = 64 - kWinW / 2;                 // 16
+    constexpr uint8_t kWinY  = (32 - kWinH) / 2;               // 0
+    constexpr uint8_t kGridX = kWinX + kPad;
+    constexpr uint8_t kGridY = kWinY + kPad;
 
     oled_display.fillRect(kWinX - 1, kWinY - 1, kWinW + 2, kWinH + 2, BLACK);
     oled_display.drawRect(kWinX, kWinY, kWinW, kWinH, WHITE);
 
-    // Title "BANK X" — default 6x8 font, manually centred.
-    oled_display.setFont();
-    oled_display.setTextSize(1);
-    oled_display.setTextColor(WHITE, BLACK);
-    char title[8];
-    title[0] = 'B'; title[1] = 'A'; title[2] = 'N'; title[3] = 'K';
-    title[4] = ' '; title[5] = (char)('A' + (bank & 0x07));
-    title[6] = '\0';
-    constexpr uint8_t kTitleW = 6 * 6;  // "BANK X" = 6 chars * 6 px
-    oled_display.setCursor(64 - kTitleW / 2, kWinY + 4);
-    oled_display.print(title);
-
-    // 4 countdown squares — outlines always shown, fills drop right-to-
-    // left as the remaining time crosses each firmware threshold.
-    constexpr uint8_t kSqW = 5;
-    constexpr uint8_t kSqH = 5;
-    constexpr uint8_t kSqGap = 2;
-    constexpr uint8_t kSqStartX = 64 - (4 * kSqW + 3 * kSqGap) / 2;
-    constexpr uint8_t kSqY = kWinY + kWinH - kSqH - 3;  // bottom-aligned
-
-    uint16_t elapsed = clock_diff(bank_popup_lastclock, read_clock_ms());
-    uint16_t remaining =
-        (elapsed >= kBankPopupTimeoutMs) ? 0 : (kBankPopupTimeoutMs - elapsed);
-    uint8_t ticks = (uint8_t)((uint32_t)remaining * 34 / kBankPopupTimeoutMs);
-
-    for (uint8_t i = 0; i < 4; i++) {
-      uint8_t bx = kSqStartX + i * (kSqW + kSqGap);
-      oled_display.drawRect(bx, kSqY, kSqW, kSqH, WHITE);
-      if (ticks > kBoxThresholds[i]) {
-        oled_display.fillRect(bx + 1, kSqY + 1, kSqW - 2, kSqH - 2, WHITE);
-      }
+    for (uint8_t i = 0; i < 8; i++) {
+      uint8_t row = i / 4;
+      uint8_t col = i % 4;
+      uint8_t cx  = kGridX + col * (kCellW + kGap);
+      uint8_t cy  = kGridY + row * (kCellH + kGap);
+      mcl_gui.draw_bank_cell(cx, cy, kCellW, kCellH,
+                             (char)('A' + i),
+                             /*active=*/(i == bank));
     }
   }
 #endif
@@ -1022,12 +1018,41 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
         grid_page.load_row(track, row);
 
+#ifdef PLATFORM_TBD
+        // Track first trig and repaint the strip: head=red, chained=yellow.
+        // Hide the OLED bank grid so the underlying page is visible while
+        // the user is selecting patterns; arrow-cycle re-shows it.
+        if (grid_page.bank_popup_first_trig == 255) {
+          grid_page.bank_popup_first_trig = track;
+        }
+        grid_page.bank_popup_oled_visible = false;
+        {
+          uint16_t loadmask = grid_page.bank_popup_loadmask;
+          uint16_t head_mask = (uint16_t)1 << grid_page.bank_popup_first_trig;
+          uint16_t chained_mask = loadmask & ~head_mask;
+          // Layer order matters — later calls overwrite earlier per-trig
+          // colours. Populated rows first as a dim red baseline, then the
+          // chained set in yellow, then the head in bright red.
+          uint16_t *populated = (uint16_t *)&grid_page.row_states[0];
+          constexpr uint32_t kRedDim    = ((uint32_t)48  << 16);
+          constexpr uint32_t kYellow    = ((uint32_t)255 << 16) | ((uint32_t)200 << 8);
+          constexpr uint32_t kRedBright = ((uint32_t)255 << 16);
+          mcl_gui.set_trigleds_color(populated[grid_page.bank], kRedDim);
+          mcl_gui.set_trigleds_color(chained_mask, kYellow);
+          mcl_gui.set_trigleds_color(head_mask, kRedBright);
+        }
+#else
+        // AVR: a held BANK key is the gesture modifier — pressing a trig
+        // while no BANK key is held collapses straight to "load and close".
+        // TBD keeps the popup up across multiple trig presses; the
+        // EVENT_BUTTON_RELEASED branch closes once all trigs are released.
         if (!key_interface.is_key_down(MDX_KEY_BANKA) &&
             !key_interface.is_key_down(MDX_KEY_BANKB) &&
             !key_interface.is_key_down(MDX_KEY_BANKC) &&
             !key_interface.is_key_down(MDX_KEY_BANKD)) {
           grid_page.close_bank_popup();
         }
+#endif
         mcl_cfg.load_mode = load_mode_old;
         return true;
       }

@@ -1044,6 +1044,31 @@ void MCLGUI::drawRoundRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t c
   oled_display.drawFastVLine(x + w - 1, y + 1, h - 2, color); // right edge
 }
 
+void MCLGUI::draw_bank_cell(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                            char letter, bool active) {
+  // Default 6x8 font letter centred in the cell. Cells smaller than the
+  // letter just clip — caller is expected to size 10x10 or larger.
+  uint8_t letter_x = x + (w - 6) / 2;
+  uint8_t letter_y = y + (h - 8) / 2;
+  oled_display.setFont();
+  oled_display.setTextSize(1);
+  if (active) {
+    // Filled interior; punch out the 4 corner pixels so the cell has the
+    // same dotted-corner silhouette as the inactive outline.
+    oled_display.fillRect(x, y, w, h, WHITE);
+    oled_display.drawPixel(x,         y,         BLACK);
+    oled_display.drawPixel(x + w - 1, y,         BLACK);
+    oled_display.drawPixel(x,         y + h - 1, BLACK);
+    oled_display.drawPixel(x + w - 1, y + h - 1, BLACK);
+    oled_display.setTextColor(BLACK, WHITE);
+  } else {
+    drawRoundRect(x, y, w, h, WHITE);
+    oled_display.setTextColor(WHITE, BLACK);
+  }
+  oled_display.setCursor(letter_x, letter_y);
+  oled_display.write(letter);
+}
+
 void MCLGUI::set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink) {
   MD.set_trigleds(bitmask, mode, blink);
   GUI_hardware.led.set_trigleds(bitmask, mode, blink, true);

@@ -66,7 +66,18 @@ LightPage *GuiClass::currentPage() {
   return page;
 }
 
+#ifdef PLATFORM_TBD
+extern bool tbd_handleEvent(gui_event_t *event);
+#endif
+
 bool GuiClass::handleTopEvent(gui_event_t *event) {
+#ifdef PLATFORM_TBD
+  // TBD overrides (SPS-mode cluster, FUNC chords, encoder taps, etc.)
+  // need to preempt the active page — pages otherwise consume BUTTON1-4
+  // for their local NO/YES/save/load actions before any registered
+  // event handler gets a chance to override.
+  if (tbd_handleEvent(event)) return true;
+#endif
   LightPage *page = currentPage();
   if (page != NULL) {
     return page->handleEvent(event);

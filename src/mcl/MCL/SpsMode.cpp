@@ -73,7 +73,7 @@ void SpsMode::send_param(uint8_t i) {
 }
 
 bool SpsMode::handle_toggle_button(gui_event_t *event) {
-  if (event->source != ButtonsClass::FUNC_BUTTON5) return false;
+  if (event->source != ButtonsClass::TBD_KEY_SPS_TOGGLE) return false;
   if (is_press(event)) {
     set_latched(!latched_);
   }
@@ -95,33 +95,93 @@ bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
   return true;
 }
 
-bool SpsMode::handle_button1(gui_event_t *event) {
+bool SpsMode::handle_cluster_menus(gui_event_t *event) {
   if (!latched_) return false;
-  if (event->source != ButtonsClass::BUTTON1) return false;
+  // BUTTON1=Y → MD NO; BUTTON4=X → MD YES; BUTTON3=A → MD SCALE (with
+  // FUNC variant for the scale-window shortcut). Press AND release are
+  // consumed so the local NO/save / YES/load / shift handlers in MCL
+  // pages don't run on either edge while latched.
+  if (event->source != ButtonsClass::BUTTON1 &&
+      event->source != ButtonsClass::BUTTON3 &&
+      event->source != ButtonsClass::BUTTON4) return false;
+  if (!MD.connected) return true;
+
+  const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
+  // SCALE is the only key with both basic-key press/release and a
+  // separate FUNC-shortcut (toggle_scale_window). Track whether we sent
+  // hold_scale_button on the press edge so release pairs cleanly.
+  static bool scale_held = false;
+
   if (is_press(event)) {
-    MD.currentBank ^= 1;
-    if (MD.connected) {
-      MD.press_bankgroup_button();
+    switch (event->source) {
+      case ButtonsClass::BUTTON1: MD.press_no_button();  break;  // Y → NO
+      case ButtonsClass::BUTTON4: MD.press_yes_button(); break;  // X → YES
+      case ButtonsClass::BUTTON3:                                // A → SCALE
+        if (func_held) {
+          MD.toggle_scale_window();
+        } else {
+          MD.hold_scale_button();
+          scale_held = true;
+        }
+        break;
+      default: break;
+    }
+  } else if (is_release(event)) {
+    switch (event->source) {
+      case ButtonsClass::BUTTON1: MD.release_no_button();  break;
+      case ButtonsClass::BUTTON4: MD.release_yes_button(); break;
+      case ButtonsClass::BUTTON3:
+        if (scale_held) {
+          MD.release_scale_button();
+          scale_held = false;
+        }
+        break;
+      default: break;
     }
   }
   return true;
 }
 
-bool SpsMode::handle_arrow_to_bank(gui_event_t *event) {
-  if (!latched_) return false;
+bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
+  // SPS-key + arrow always cycles sub_page_, even with the latch off — the
+  // gesture is "SPS-key held", not "SPS-mode active". When the latch is
+  // off, the encoder strip is hidden, but the new sub_page_ is in place
+  // for the next time the user latches on.
   if (!is_arrow_source(event->source)) return false;
-  uint8_t key = 255;
-  switch (event->source) {
-    case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_BANKA; break; // LEFT
-    case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_BANKB; break; // DOWN
-    case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_BANKC; break; // RIGHT
-    case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_BANKD; break; // UP
-    default: return true;
+  if (!BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS)) return false;
+  if (is_press(event)) {
+    int8_t delta = 0;
+    switch (event->source) {
+      case ButtonsClass::FUNC_BUTTON6: // UP
+      case ButtonsClass::FUNC_BUTTON7: // LEFT
+        delta = -1; break;
+      case ButtonsClass::FUNC_BUTTON8: // DOWN
+      case ButtonsClass::FUNC_BUTTON9: // RIGHT
+        delta = +1; break;
+      default: break;
+    }
+    sub_page_ = (uint8_t)((sub_page_ + 8 + delta) % 8);
+    resync_from_kit();
   }
-  if (!is_release(event) && key_interface.is_key_down(key)) {
-    return true; // already down — ignore TBD auto-repeat
+  return true;
+}
+
+bool SpsMode::handle_sps_key_tap(gui_event_t *event) {
+  if (event->source != ButtonsClass::TBD_KEY_SPS) return false;
+  // FUNC + B: one-shot LFO menu toggle. Bare B: single press_page_button
+  // on the press edge — no release counterpart. The MD's PAGE handler
+  // (MDX_KEY_HANDLER_0x39) lacks a press-edge gate, so it runs on both
+  // edges; sending only one edge gives a single page advance per tap.
+  if (is_press(event)) {
+    if (latched_ && MD.connected) {
+      const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
+      if (func_held) {
+        MD.toggle_lfo_menu();
+      } else {
+        MD.press_page_button();
+      }
+    }
   }
-  key_interface.key_event(key, is_release(event));
   return true;
 }
 
@@ -197,52 +257,6 @@ void SpsMode::poll_encoders() {
   }
 }
 
-void SpsMode::poll_page_overlay() {
-  const bool want_overlay =
-      latched_ && BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS);
-  if (want_overlay == page_overlay_painted_) {
-    // If still painted, refresh in case sub_page_ moved (so the blink
-    // tracks the newly-picked column without waiting for a next frame).
-    if (want_overlay) {
-      // Fall through to repaint.
-    } else {
-      return;
-    }
-  }
-  if (!want_overlay) {
-    // Drop colour-override mode. Page rendering takes back over —
-    // anything drawing trig LEDs continuously will repopulate.
-    mcl_gui.set_trigleds_local(0, TRIGLED_OVERLAY);
-    page_overlay_painted_ = false;
-    return;
-  }
-  // 8 warm hues, one per column. Each column = the top trig (col)
-  // paired with the bottom trig (col + 8). Picked to be visually
-  // distinct under bright lights but stay in the warm half of the
-  // wheel so it reads as "this is the page selector, not a bank".
-  static constexpr uint32_t kCols[8] = {
-      ((uint32_t)255 << 16) | ((uint32_t)0   << 8) | 0,    // red
-      ((uint32_t)255 << 16) | ((uint32_t)48  << 8) | 0,    // red-orange
-      ((uint32_t)255 << 16) | ((uint32_t)96  << 8) | 0,    // orange
-      ((uint32_t)220 << 16) | ((uint32_t)128 << 8) | 0,    // dark amber
-      ((uint32_t)255 << 16) | ((uint32_t)160 << 8) | 0,    // amber
-      ((uint32_t)200 << 16) | ((uint32_t)128 << 8) | 24,   // gold
-      ((uint32_t)255 << 16) | ((uint32_t)200 << 8) | 0,    // yellow
-      ((uint32_t)255 << 16) | ((uint32_t)96  << 8) | 32,   // peach
-  };
-  mcl_gui.set_trigleds_color(0xFFFF, 0); // clear all
-  for (uint8_t c = 0; c < 8; c++) {
-    uint16_t mask = ((uint16_t)1 << c) | ((uint16_t)1 << (c + 8));
-    mcl_gui.set_trigleds_color(mask, kCols[c]);
-  }
-  // Highlight the current sub-page column with a blink so the user
-  // can tell which 4-param window is in play.
-  uint8_t cur = sub_page_ & 0x07;
-  uint16_t cur_mask = ((uint16_t)1 << cur) | ((uint16_t)1 << (cur + 8));
-  mcl_gui.set_trigleds_blink_color(cur_mask, kCols[cur]);
-  page_overlay_painted_ = true;
-}
-
 void SpsMode::draw_strip(uint8_t y_top) {
   if (!latched_) return;
   if (encoder_passthrough_page()) return;
@@ -269,11 +283,11 @@ SpsMode sps_mode;
 
 bool SpsMode::handle_toggle_button(gui_event_t *) { return false; }
 bool SpsMode::handle_func_arrow_chord(gui_event_t *) { return false; }
-bool SpsMode::handle_button1(gui_event_t *) { return false; }
-bool SpsMode::handle_arrow_to_bank(gui_event_t *) { return false; }
+bool SpsMode::handle_cluster_menus(gui_event_t *) { return false; }
+bool SpsMode::handle_arrow_subpage(gui_event_t *) { return false; }
+bool SpsMode::handle_sps_key_tap(gui_event_t *) { return false; }
 bool SpsMode::handle_trig_forward(gui_event_t *, uint8_t) { return false; }
 void SpsMode::poll_encoders() {}
-void SpsMode::poll_page_overlay() {}
 void SpsMode::draw_strip(uint8_t) {}
 void SpsMode::resync_from_kit() {}
 void SpsMode::send_param(uint8_t) {}

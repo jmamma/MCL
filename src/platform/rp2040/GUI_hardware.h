@@ -152,12 +152,12 @@ public:
   static const uint8_t TRIG_BUTTON1 = 17;
 
 #ifdef PLATFORM_TBD
-  // TBD-only slots for MD-direct keys that have no AVR equivalent.
-  // Numbered after TRIG_BUTTON16 (= 32). GUI_NUM_BUTTONS = 38 leaves room.
-  static const uint8_t TBD_KEY_FUNC = 33; // MD FUNC modifier (cluster MCL_Y)
-  static const uint8_t TBD_KEY_YES  = 34; // MD YES (cluster MCL_X)
-  static const uint8_t TBD_KEY_PAGE = 35; // MD PAGE (cluster MCL_X)
-  static const uint8_t TBD_KEY_SPS  = 36; // MDX-passthrough modifier (cluster MCL_B)
+  // TBD-only slots. Numbered after TRIG_BUTTON16 (= 32). GUI_NUM_BUTTONS
+  // = 38 leaves room. Cluster Y/X/A now drive BUTTON1/4/3 directly so
+  // their old MDX_KEY_* slots are gone — only the SPS-related slots are
+  // kept here.
+  static const uint8_t TBD_KEY_SPS        = 36; // SPS sub-page modifier (MCL_B held + trig)
+  static const uint8_t TBD_KEY_SPS_TOGGLE = 37; // SPS-mode latch toggle (TOP_RIGHT)
 #endif
 
   static const uint16_t ENCODER1_MASK = _BV(ENCODER1);
@@ -181,13 +181,12 @@ public:
   // Cleared on press edge.
   bool enc1_long_press_seen;
   bool enc1_rotated_while_held;
+  bool enc2_long_press_seen;
+  bool enc2_rotated_while_held;
+  bool enc3_long_press_seen;
+  bool enc3_rotated_while_held;
   bool enc4_long_press_seen;
   bool enc4_rotated_while_held;
-  // Page-shift-menu latch: ENC4 tap toggles this; pollTBD drives BUTTON3
-  // from it so SeqPage/GridPage see a normal press/release pair and open
-  // or apply their per-page menu unchanged. The MDX passthrough modifier
-  // is a separate input (TBD_KEY_SPS), not this.
-  bool tbd_menu_latched;
   void pollTBD(const ui_data_t &ui_data);
 #endif
 };

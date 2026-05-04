@@ -161,13 +161,7 @@ void MCL::setup() {
   ret = mcl_sd.sd_init();
   oled_display.init_display();
 
-#ifdef PLATFORM_TBD
-  // TBD has no dedicated BUTTON2 — boot menu opens if ENC1 or TOP_LEFT
-  // (BUTTON1) is held at boot. Whichever one the user discovers, works.
-  if (BUTTON_DOWN(Buttons.ENCODER1) || BUTTON_DOWN(Buttons.BUTTON1)) {
-#else
   if (BUTTON_DOWN(Buttons.BUTTON2)) {
-#endif
     // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     mcl.setPage(BOOT_MENU_PAGE);
     while (mcl.currentPage() == BOOT_MENU_PAGE) {
@@ -185,9 +179,8 @@ void MCL::setup() {
   gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
 
   ret = mcl_sd.load_init();
-#ifdef PLATFORM_TBD
-  GUI.addEventHandler((event_handler_t)&tbd_handleEvent);
-#endif
+  // tbd_handleEvent runs from GuiClass::handleTopEvent (under PLATFORM_TBD)
+  // so it can preempt the active page on cluster overrides.
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
 
   if (ret) {
@@ -229,13 +222,110 @@ void MCL::setup() {
 void MCL::loop() {
   perf_page.encoder_check();
   sps_mode.poll_encoders();
-  sps_mode.poll_page_overlay();
   key_interface.check_key_throttle();
   GUI.loop();
 }
 
 #ifdef PLATFORM_TBD
+// Max press-to-release window (ms) that still counts as an encoder tap
+// for the SPS-mode encoder cluster gestures. Above this, the press is
+// treated as a hold and any tap-action (BANKGROUP, TEMPO, etc.) is
+// suppressed.
+#define TBD_ENC_TAP_MAX_MS 175
+
 static bool tbd_rec_held = false;
+
+// Open the grid bank popup at the current bank, in countdown state. Used
+// by the TBD NO button outside SPS-mode to trigger a bank-select gesture
+// without holding a hardware BANK key. Returns true if the popup opened.
+static bool tbd_open_bank_popup() {
+  PageIndex pg = mcl.currentPage();
+  if (pg == GRID_LOAD_PAGE || pg == GRID_SAVE_PAGE ||
+      pg == TEXT_INPUT_PAGE) {
+    return false;
+  }
+  if (pg == GRID_PAGE && grid_page.show_slot_menu) return false;
+
+  if (grid_page.last_page == 255 && pg != GRID_PAGE) {
+    grid_page.last_page = pg;
+  }
+  if (pg != GRID_PAGE) {
+    mcl.setPage(GRID_PAGE);
+  }
+  // State 2 = "popup up". We skip state 1 since there's no hardware BANK
+  // key being held. The auto-close countdown is disabled on TBD (see
+  // GridPage::loop) — the popup stays up until trig→pattern picks one or
+  // a re-press of NO closes it.
+  grid_page.bank_popup = 2;
+  grid_page.bank_popup_loadmask = 0;
+  grid_page.bank_popup_oled_visible = true;
+  bool clear_states = false;
+  key_interface.on(clear_states);
+  // Sync MD.currentBank to whichever group grid_page.bank lives in.
+  // Without this the arrow-cycle math underflows: if MCL has bank A
+  // (=0) selected but the MD is in group 1, letter = 0 - 4 wraps to
+  // 252, and RIGHT arrow lands on F instead of B.
+  uint8_t group = grid_page.bank / 4;
+  if (MD.currentBank != group) {
+    MD.currentBank = group;
+    if (MD.connected) MD.press_bankgroup_button();
+  }
+  uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
+  mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+  grid_page.send_row_led();
+  if (MD.connected) MD.draw_bank(grid_page.bank % 4);
+  return true;
+}
+
+// While the bank popup is up, arrows navigate the 8-bank grid:
+//   LEFT/RIGHT scroll bank by ±1 across all 8 banks (wraps A↔H).
+//   UP/DOWN flip group (bank ^= 4) — a quick same-letter jump.
+static bool tbd_handle_bank_arrow_cycle(gui_event_t *event) {
+  if (!grid_page.bank_popup) return false;
+
+  bool group_toggle = false;
+  int8_t letter_delta = 0;
+  switch (event->source) {
+    case ButtonsClass::FUNC_BUTTON6: // UP
+    case ButtonsClass::FUNC_BUTTON8: // DOWN
+      group_toggle = true; break;
+    case ButtonsClass::FUNC_BUTTON7: // LEFT
+      letter_delta = -1; break;
+    case ButtonsClass::FUNC_BUTTON9: // RIGHT
+      letter_delta = +1; break;
+    default:
+      return false;
+  }
+  // Consume release too so the arrows don't double-act via the else-branch
+  // (which would transmit MDX_KEY_LEFT/etc to the MD).
+  if (event->mask != EVENT_BUTTON_PRESSED) return true;
+
+  // Any arrow press while the popup is up brings the OLED grid back —
+  // useful after pattern selection has hidden it.
+  grid_page.bank_popup_oled_visible = true;
+
+  // Source of truth is grid_page.bank (0..7). LEFT/RIGHT walk linearly
+  // across all 8 banks (wrapping); UP/DOWN flip the group bit. Either
+  // path may cross the group boundary, so we re-sync MD.currentBank
+  // whenever the new bank lands in a different group.
+  uint8_t old_group = grid_page.bank / 4;
+  uint8_t new_bank = group_toggle
+                       ? (grid_page.bank ^ 4)
+                       : (uint8_t)((grid_page.bank + 8 + letter_delta) % 8);
+  if (new_bank != grid_page.bank) {
+    grid_page.bank = new_bank;
+    uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
+    mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+    grid_page.send_row_led();
+    uint8_t new_group = grid_page.bank / 4;
+    if (new_group != old_group) {
+      MD.currentBank = new_group;
+      if (MD.connected) MD.press_bankgroup_button();
+    }
+  }
+  if (MD.connected) MD.draw_bank(grid_page.bank % 4);
+  return true;
+}
 
 bool tbd_handleEvent(gui_event_t *event) {
     // Track physical REC button state (unaffected by key_interface state resets)
@@ -252,28 +342,15 @@ bool tbd_handleEvent(gui_event_t *event) {
 
     if (sps_mode.handle_toggle_button(event)) return true;
 
-    // ENC1 click toggles MCL PageSelect (tap-only). The release is honored
-    // only when the press was a clean tap — not flagged as long-press by
-    // the panel and the encoder didn't rotate while held. armed=false
-    // rejects the spurious boot-time release before any press.
+    // ENC1 tap sends MD BANKGROUP (MD_GUI_BANKGROUP / 0x40 sysex) so the
+    // MD's own bank-group toggle is reachable from the TBD without giving
+    // up the encoder for rotation. "Tap" = pressed + released < 150 ms
+    // with no rotation in the window; anything longer is a rotation grip
+    // even if pollTBD didn't latch enc1_rotated_while_held in time.
     if (event->source == ButtonsClass::ENCODER1) {
-        // Tap-only PageSelect toggle. "Tap" = pressed and released
-        // quickly (< 250 ms) without any encoder rotation in the
-        // window. Anything held longer is assumed to be a fast-mode
-        // rotation grip even if the panel's pot_states bits raced
-        // past pollTBD without latching enc1_rotated_while_held.
         static bool enc1_armed = false;
         static uint16_t enc1_press_ms = 0;
-        // Panel polls at ~16 Hz (62 ms / frame), so a press and its
-        // matching release always span at least one frame. Anything
-        // below ~80 ms rejects every legitimate tap. 200 ms gives a
-        // margin while still excluding deliberate holds.
-        // TBD panel ticks systicks at 100 Hz (10 ms / frame), so the
-        // measured press duration is quantised to ≥1 frame plus queue
-        // drain. Real "deliberate quick tap" lands around 30–80 ms;
-        // 100 ms keeps that range in scope while still excluding any
-        // held grip.
-        static constexpr uint16_t kEnc1TapMaxMs = 150;
+        static constexpr uint16_t kEnc1TapMaxMs = TBD_ENC_TAP_MAX_MS;
         if (is_press) {
             enc1_armed = true;
             enc1_press_ms = read_clock_ms();
@@ -284,37 +361,77 @@ bool tbd_handleEvent(gui_event_t *event) {
         if (enc1_armed && !Buttons.enc1_long_press_seen
                        && !Buttons.enc1_rotated_while_held
                        && !too_long) {
-            if (mcl.currentPage() == PAGE_SELECT_PAGE) {
-                page_select_page.close_to_selection();
-            } else {
-                mcl.setPage(PAGE_SELECT_PAGE);
-            }
+            if (MD.connected) MD.press_bankgroup_button();
         }
         enc1_armed = false;
         return true;
     }
 
-    // ENC4 tap latches/unlatches the per-page shift menu (seq menu on
-    // sequencer pages, slot menu on the grid page). pollTBD mirrors the
-    // latch onto BUTTON3.B_CURRENT, so each toggle synthesizes a normal
-    // BUTTON3 press or release pair — the existing menu open/apply
-    // handlers in SeqPage and GridPage consume them unchanged.
-    // Same tap gating as ENC1.
-    if (event->source == ButtonsClass::ENCODER4) {
-        static bool enc4_armed = false;
+    // SPS-latched encoder taps (ENC2/3/4). Same 150 ms tap window and
+    // long-press / rotated-while-held gating as ENC1. Outside SPS mode
+    // these clicks are consumed but no-op (pages don't see them).
+    //   ENC2: TEMPO  — bare tap_tempo;       FUNC toggle_tempo_window
+    //   ENC3: PATSONG — bare press_patternsong_button; FUNC=GLOBAL chord
+    //         (hold_function_button → toggle_global_window → release)
+    //   ENC4: KIT     — bare toggle_kit_menu; FUNC=KIT chord
+    //         (hold_function_button → toggle_kit_menu → release)
+    if (event->source >= ButtonsClass::ENCODER2 &&
+        event->source <= ButtonsClass::ENCODER4) {
+        static bool   enc_armed[3]    = {false, false, false};
+        static uint16_t enc_press_ms[3] = {0, 0, 0};
+        static constexpr uint16_t kEncTapMaxMs = TBD_ENC_TAP_MAX_MS;
+        const uint8_t idx = event->source - ButtonsClass::ENCODER2;
+        const bool *long_seen[3] = {&Buttons.enc2_long_press_seen,
+                                    &Buttons.enc3_long_press_seen,
+                                    &Buttons.enc4_long_press_seen};
+        const bool *rot_seen[3]  = {&Buttons.enc2_rotated_while_held,
+                                    &Buttons.enc3_rotated_while_held,
+                                    &Buttons.enc4_rotated_while_held};
         if (is_press) {
-            enc4_armed = true;
+            enc_armed[idx]    = true;
+            enc_press_ms[idx] = read_clock_ms();
             return true;
         }
-        if (enc4_armed && !Buttons.enc4_long_press_seen
-                       && !Buttons.enc4_rotated_while_held) {
-            Buttons.tbd_menu_latched = !Buttons.tbd_menu_latched;
+        const bool too_long =
+            clock_diff(enc_press_ms[idx], read_clock_ms()) > kEncTapMaxMs;
+        const bool tap_valid = enc_armed[idx] && !*long_seen[idx]
+                            && !*rot_seen[idx] && !too_long;
+        enc_armed[idx] = false;
+        if (!tap_valid)              return true;
+        if (!sps_mode.is_active())   return true;
+        if (!MD.connected)           return true;
+        const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
+        switch (event->source) {
+            case ButtonsClass::ENCODER2: // TEMPO
+                if (func_held) MD.toggle_tempo_window();
+                else           MD.tap_tempo();
+                break;
+            case ButtonsClass::ENCODER3: // PAT/SONG (FUNC = GLOBAL menu)
+                if (func_held) {
+                    MD.hold_function_button();
+                    MD.toggle_global_window();
+                    MD.release_function_button();
+                } else {
+                    MD.press_patternsong_button();
+                }
+                break;
+            case ButtonsClass::ENCODER4: // KIT (FUNC = machine select)
+                if (func_held) {
+                    MD.hold_function_button();
+                    MD.toggle_kit_menu();
+                    MD.release_function_button();
+                } else {
+                    MD.toggle_kit_menu();
+                }
+                break;
+            default: break;
         }
-        enc4_armed = false;
         return true;
     }
 
-    if (sps_mode.handle_button1(event)) return true;
+    // SPS-mode cluster override: while latched, Y/X/A bypass their local
+    // NO/YES/shift actions and fire MD menu-open sysex directly.
+    if (sps_mode.handle_cluster_menus(event)) return true;
 
     // BUTTON1..BUTTON4 are MCL local roles handled by mcl_handleEvent.
     // GridPage's native BUTTON1+BUTTON4 chord (SYSTEM_PAGE) is preserved here.
@@ -324,8 +441,20 @@ bool tbd_handleEvent(gui_event_t *event) {
 
     uint8_t key = 255;
 
+    // SPS sub-page traversal takes precedence over the FUNC+arrow chord —
+    // both gestures share the SPS-key-held trigger but the latch makes
+    // sub-page navigation the intent. Subpage also flags the B-tap
+    // handler so the trailing B release doesn't double-fire LFO/PAGE.
+    if (sps_mode.handle_arrow_subpage(event))    return true;
     if (sps_mode.handle_func_arrow_chord(event)) return true;
-    if (sps_mode.handle_arrow_to_bank(event))    return true;
+    // MCL_B press/release: arms / fires LFO/PAGE on tap-only release in
+    // SPS-latched mode. Must run after handle_arrow_subpage so chord
+    // detection has set b_chorded_ before B's release lands.
+    if (sps_mode.handle_sps_key_tap(event))      return true;
+
+    // Bank popup arrow navigation — works in either mode whenever the
+    // popup is up (the popup itself is opened via ENC1 tap).
+    if (tbd_handle_bank_arrow_cycle(event)) return true;
 
     // Trig buttons. Restricted to TRIG_BUTTON1..TRIG_BUTTON16 — TBD_KEY_* IDs
     // sit immediately above this range and must reach the else-branch switch.
@@ -334,6 +463,18 @@ bool tbd_handleEvent(gui_event_t *event) {
         key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
 
         if (sps_mode.handle_trig_forward(event, key)) return true;
+
+        // FUNC held + trig in normal (non-latched) mode → MD track
+        // select. FUNC is sourced from TBD NO (FUNC_BUTTON5) which sets
+        // MDX_KEY_FUNC on its press.
+        if (!sps_mode.is_active() &&
+            key_interface.is_key_down(MDX_KEY_FUNC)) {
+            if (is_press && key < NUM_MD_TRACKS) {
+                MD.currentTrack = key;
+                if (MD.connected) MD.track_select(key + 1);
+            }
+            return true;
+        }
 
         if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
             if (is_press && key < NUM_MD_TRACKS) {
@@ -384,22 +525,24 @@ bool tbd_handleEvent(gui_event_t *event) {
                     MidiClock.handleImmediateMidiStop();
                 }
                 break;
-            case ButtonsClass::FUNC_BUTTON5:  key = MDX_KEY_NO;    break;
+            // TBD NO transport button is the universal MDX_KEY_FUNC source
+            // (both modes). In normal mode this enables FUNC chords (FUNC +
+            // arrow → MD windows, FUNC + REC/PLAY/STOP → COPY/CLEAR/PASTE,
+            // etc.); in SPS-latched mode the cluster Y/X/A fire menu-open
+            // sysex directly so FUNC isn't strictly needed there but stays
+            // consistent.
+            case ButtonsClass::FUNC_BUTTON5:  key = MDX_KEY_FUNC;  break;
             case ButtonsClass::FUNC_BUTTON6:  key = MDX_KEY_UP;    break;
             case ButtonsClass::FUNC_BUTTON7:  key = MDX_KEY_LEFT;  break;
             case ButtonsClass::FUNC_BUTTON8:  key = MDX_KEY_DOWN;  break;
             case ButtonsClass::FUNC_BUTTON9:  key = MDX_KEY_RIGHT; break;
-            case ButtonsClass::TBD_KEY_FUNC:  key = MDX_KEY_FUNC;  break;
-            // MCL_X (top-right) -> YES, MCL_A (bottom-right) -> NO. Both
-            // local AND transmitted to the MD; the slot names TBD_KEY_PAGE
-            // / TBD_KEY_YES are kept as wiring slots even though the MDX
-            // codes have moved.
-            case ButtonsClass::TBD_KEY_PAGE:  key = MDX_KEY_YES;   break; // MCL_X
-            case ButtonsClass::TBD_KEY_YES:   key = MDX_KEY_NO;    break; // MCL_A
-            // MCL_B is the SPS-mode page-select modifier (held + trig =
-            // sub_page pick). Kept on MDX_KEY_FUNC so chord shortcuts that
-            // already key off FUNC continue to work.
-            case ButtonsClass::TBD_KEY_SPS:   key = MDX_KEY_FUNC;  break;
+            // MCL_B is a pure modifier (BUTTON_DOWN-checked):
+            //   normal mode + trig    = track select
+            //   SPS-latched + trig    = sub-page selector
+            //   either + arrow        = sub-page traversal
+            // MDX_KEY_FUNC is provided by TBD NO (FUNC_BUTTON5 above), so B
+            // doesn't need to emit anything.
+            case ButtonsClass::TBD_KEY_SPS: break;
             default: break;
         }
     }
@@ -408,11 +551,20 @@ bool tbd_handleEvent(gui_event_t *event) {
         const bool is_arrow = (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
                                key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT);
 
-        // Arrows: forward to MD's GUI when off the grid page; on grid page
-        // they stay local for grid navigation. Forward-only path — local
-        // cmd_key_state is touched via SET_BIT64 directly, no EVENT_CMD.
-        const bool md_forward_arrow = MD.connected && is_arrow &&
-            mcl.currentPage() != GRID_PAGE;
+        // Arrows: forward to MD's GUI only on pages that don't consume
+        // them locally. Grid + sequencer pages use arrows for their own
+        // navigation (note pitch on SEQ_PTC_PAGE, step / track on the
+        // step-edit pages, row/col on GRID_PAGE), so route those through
+        // the local key_event path instead. SPS-latched mode always
+        // forwards — the cluster owns MD navigation while latched, so
+        // arrows belong to the MD regardless of the active page.
+        const PageIndex cur_pg = mcl.currentPage();
+        const bool arrows_local =
+            !sps_mode.is_active() &&
+            (cur_pg == GRID_PAGE || cur_pg == SEQ_STEP_PAGE ||
+             cur_pg == SEQ_PTC_PAGE || cur_pg == SEQ_EXTSTEP_PAGE);
+        const bool md_forward_arrow =
+            MD.connected && is_arrow && !arrows_local;
         if (md_forward_arrow) {
             if (!is_release && key_interface.is_key_down(key)) {
                 return true; // suppress key repeat

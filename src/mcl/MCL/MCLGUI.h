@@ -123,6 +123,10 @@ public:
                  bool highlight = false, bool title_is_progmem = true);
 
   void drawRoundRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color);
+  // Bank-popup cell: rounded rect with letter inside. Active = filled
+  // interior with letter drawn inverse; inactive = outline only.
+  void draw_bank_cell(uint8_t x, uint8_t y, uint8_t w, uint8_t h, char letter,
+                      bool active);
 
   void set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink = false);
   // Local-only — does not echo to the MD. For internal MCL modes that

@@ -1,7 +1,9 @@
-/* TBD SPS-mode latch. Owns the FUNC_BUTTON5 toggle, the latched
- * arrow→BANKA-D / BUTTON1→BANKGROUP / trig→MD_GUI_TRIG_* routing, and
- * the FUNC + ARROW window-toggle chord. Pulled out of tbd_handleEvent
- * so the per-event ladder in MCL.cpp stays readable.
+/* TBD SPS-mode latch. Owns the TBD_KEY_SPS_TOGGLE (TOP_RIGHT) toggle,
+ * the cluster Y/X/A → MD menu-open 0x40 sysex (scale / LFO / kit), the
+ * trig → sub_page selector / MD_GUI_TRIG_* routing, the SPS-key + arrow
+ * sub-page traversal, and the FUNC + ARROW window-toggle chord. Pulled
+ * out of tbd_handleEvent so the per-event ladder in MCL.cpp stays
+ * readable.
  *
  * In latched state, the four hardware encoders are also captured and
  * routed to live MD kit-param updates for the current synth page —
@@ -24,8 +26,17 @@ public:
 
   bool handle_toggle_button(gui_event_t *event);
   bool handle_func_arrow_chord(gui_event_t *event);
-  bool handle_button1(gui_event_t *event);
-  bool handle_arrow_to_bank(gui_event_t *event);
+  // Cluster Y/X/A in SPS-latched: Y → MD NO transmit, X → MD YES,
+  // A → MD SCALE (FUNC variant: toggle_scale_window).
+  bool handle_cluster_menus(gui_event_t *event);
+  // MCL_B held + arrow: cycle sub_page_ and resync the encoder strip.
+  // Takes precedence over the FUNC+arrow window-toggle.
+  bool handle_arrow_subpage(gui_event_t *event);
+  // MCL_B (TBD_KEY_SPS) on press while latched: FUNC variant toggles the
+  // MD LFO menu; bare variant fires a single press_page_button (no paired
+  // release — the MD's PAGE handler runs on both edges, so one sysex
+  // produces one page advance).
+  bool handle_sps_key_tap(gui_event_t *event);
   bool handle_trig_forward(gui_event_t *event, uint8_t trig_idx);
 
   // Drives the four kit-param encoders. Call from MCL::loop *before*
@@ -33,10 +44,6 @@ public:
   // No-op when the latch is off or when the active page already owns
   // the encoder column (step / perf / page-select).
   void poll_encoders();
-
-  // Paint / clear the page-select overlay on the trig LEDs while PAGE
-  // is held during the latch. Called from MCL::loop on state changes.
-  void poll_page_overlay();
 
   // Draw the encoder strip on the bottom of the OLED. Call from
   // GridPage::display() (or any other 32-px-tall page that wants to
@@ -63,16 +70,13 @@ private:
   uint8_t bound_track_ = 255;
   uint8_t bound_sub_page_ = 255;
   // Param window selector (0..7). Each window covers 4 consecutive
-  // params; PAGE+trig addresses one of 8 columns directly. With legacy
-  // (24-param) kits only 0..5 are populated; SPSX (34) extends to 8.
+  // params; SPS-key + arrow cycles. With legacy (24-param) kits only
+  // 0..5 are populated; SPSX (34) extends to 8.
   uint8_t sub_page_ = 0;
   // Per-encoder "last used" timestamp for the value-show timeout (matches
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
   // when the timeout has fully elapsed.
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
-  // Whether the page-select trig overlay is currently painted.
-  bool page_overlay_painted_ = false;
-
   void set_latched(bool v);
   bool encoder_passthrough_page() const;
   void send_param(uint8_t i);

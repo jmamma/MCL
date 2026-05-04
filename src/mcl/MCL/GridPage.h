@@ -65,6 +65,14 @@ public:
   uint8_t bank_popup = 0;
   uint16_t bank_popup_lastclock;
   uint16_t bank_popup_loadmask;
+  // First trig pressed inside the popup, recorded so the LED repaint can
+  // distinguish "head" (red) from "chained" (yellow). 255 = none yet.
+  uint8_t bank_popup_first_trig = 255;
+#ifdef PLATFORM_TBD
+  // OLED bank-grid is hidden once trig presses start so the user can see
+  // the underlying page; re-shown on the next arrow press.
+  bool bank_popup_oled_visible = true;
+#endif
 
   bool draw_encoders;
   uint16_t draw_encoders_lastclock;
