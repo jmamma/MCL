@@ -105,13 +105,11 @@ bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
 
 bool SpsMode::handle_cluster_menus(gui_event_t *event) {
   if (!latched_) return false;
-  // BUTTON4=X → MD YES; BUTTON3=Y → MD SCALE (with FUNC variant for the
-  // scale-window shortcut). BUTTON1=A is handled globally in
-  // tbd_handleEvent (always-on MDX_KEY_NO behaviour, not just SPS).
-  // Press AND release are consumed so the local YES/load and shift
-  // handlers in MCL pages don't run on either edge while latched.
-  if (event->source != ButtonsClass::BUTTON3 &&
-      event->source != ButtonsClass::BUTTON4) return false;
+  // BUTTON3=Y → MD SCALE (with FUNC variant for the scale-window
+  // shortcut). BUTTON1=A and BUTTON4=X are handled globally in
+  // tbd_handleEvent (always-on MDX_KEY_NO / MDX_KEY_YES behaviour,
+  // not just SPS).
+  if (event->source != ButtonsClass::BUTTON3) return false;
   if (!MD.connected) return true;
 
   const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
@@ -121,37 +119,16 @@ bool SpsMode::handle_cluster_menus(gui_event_t *event) {
   static bool scale_held = false;
 
   if (is_press(event)) {
-    switch (event->source) {
-      case ButtonsClass::BUTTON4:                                // X → YES
-        // Behave as a real MDX_KEY_YES: transmit to MD AND fire the
-        // local key_event so cmd_key_state + EVENT_CMD propagation
-        // (MCL pages keying off MDX_KEY_YES) match the AVR YES button.
-        MD.press_yes_button();
-        key_interface.key_event(MDX_KEY_YES, false);
-        break;
-      case ButtonsClass::BUTTON3:                                // Y → SCALE
-        if (func_held) {
-          MD.toggle_scale_window();
-        } else {
-          MD.hold_scale_button();
-          scale_held = true;
-        }
-        break;
-      default: break;
+    if (func_held) {
+      MD.toggle_scale_window();
+    } else {
+      MD.hold_scale_button();
+      scale_held = true;
     }
   } else if (is_release(event)) {
-    switch (event->source) {
-      case ButtonsClass::BUTTON4:
-        MD.release_yes_button();
-        key_interface.key_event(MDX_KEY_YES, true);
-        break;
-      case ButtonsClass::BUTTON3:
-        if (scale_held) {
-          MD.release_scale_button();
-          scale_held = false;
-        }
-        break;
-      default: break;
+    if (scale_held) {
+      MD.release_scale_button();
+      scale_held = false;
     }
   }
   return true;

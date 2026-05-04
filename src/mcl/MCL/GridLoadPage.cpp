@@ -255,7 +255,11 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
+#ifdef PLATFORM_TBD
+      case MDX_KEY_NO:
+#else
       case MDX_KEY_YES:
+#endif
         if (show_track_type) {
           goto load_groups;
         }

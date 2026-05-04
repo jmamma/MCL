@@ -122,15 +122,29 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       default: {
         return false;
       }
+#ifdef PLATFORM_TBD
+      // TBD: A (MDX_KEY_NO) drives the group save / load gesture —
+      // press opens the popup, release commits (handled per page).
+      // The legacy AVR mapping (YES press → popup, NO press → close)
+      // is preserved on AVR.
+      case MDX_KEY_NO: {
+        group_select();
+        return true;
+      }
+      case MDX_KEY_YES: {
+        return true; // X plays no group role on TBD
+      }
+#else
       case MDX_KEY_YES: {
         group_select();
         return true;
       }
-      case MDX_KEY_BANKD: {
-        return true;
-      }
       case MDX_KEY_NO: {
         goto close;
+      }
+#endif
+      case MDX_KEY_BANKD: {
+        return true;
       }
       case MDX_KEY_SCALE: {
         goto toggle_grid;

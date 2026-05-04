@@ -321,6 +321,36 @@ bool tbd_handleEvent(gui_event_t *event) {
     const bool is_press   = (event->mask == EVENT_BUTTON_PRESSED);
     const bool is_release = !(event->mask & 1);
 
+    // Menu/config page remap: while a MenuPage is active (system, midi
+    // config, mcl config, MIDI port menus, etc.), TL replaces BUTTON1
+    // (NO/exit) and TR replaces BUTTON4 (YES/enter) so the user can
+    // navigate the menu without leaving the cluster. Stash the original
+    // source first so the A / X cluster handlers below can distinguish
+    // physical A / X events from the remapped TL / TR ones (and only
+    // emit MDX_KEY_NO / MDX_KEY_YES for the physical sources).
+    const uint8_t orig_src = event->source;
+    {
+      const PageIndex pg = mcl.currentPage();
+      const bool is_menu_page =
+          pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
+          pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
+          pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
+          pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
+          pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
+          pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
+          pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
+          pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
+          pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
+          pg == MIDIGENERIC_MENU_PAGE;
+      if (is_menu_page) {
+        if (orig_src == ButtonsClass::BUTTON2) {
+          event->source = ButtonsClass::BUTTON1;
+        } else if (orig_src == ButtonsClass::TBD_KEY_SPS_TOGGLE) {
+          event->source = ButtonsClass::BUTTON4;
+        }
+      }
+    }
+
     // TL → TR chord opens the system config page. Asymmetric on purpose:
     // only fires when TBD_KEY_SPS_TOGGLE (TR) is the press edge while
     // BUTTON2 (TL) is already held, so the reverse order falls through
@@ -333,22 +363,15 @@ bool tbd_handleEvent(gui_event_t *event) {
       return true;
     }
 
-    // BUTTON1 (cluster A) acts as MDX_KEY_NO for the duration of the hold —
-    // press transmits MD NO + sets cmd_key_state, release transmits MD NO
-    // off + clears cmd_key_state. On a clean tap (no other button pressed
-    // during the hold) the release falls through to the active page — on
-    // GRID_PAGE that opens GRID_SAVE_PAGE. If any other button was pressed
-    // while A was held, the release is eaten so the save shortcut doesn't
-    // fire on chord-tail.
-    static bool a_consumed = false;
-    if (EVENT_BUTTON(event) && is_press &&
-        event->source != ButtonsClass::BUTTON1 &&
-        BUTTON_DOWN(ButtonsClass::BUTTON1)) {
-      a_consumed = true;
-    }
-    if (event->source == ButtonsClass::BUTTON1) {
+    // BUTTON1 (cluster A) acts as MDX_KEY_NO for the lifetime of the
+    // hold — press transmits MD NO + sets cmd_key_state, release does
+    // the inverse. The event is fully consumed; A is purely a modifier
+    // on TBD. Only fires for physical A — a remapped TL (orig_src ==
+    // BUTTON2) on a menu page falls through so MenuPage's BUTTON1 exit
+    // handler runs unmodified.
+    if (event->source == ButtonsClass::BUTTON1 &&
+        orig_src == ButtonsClass::BUTTON1) {
       if (is_press) {
-        a_consumed = false;
         if (MD.connected) MD.press_no_button();
         key_interface.key_event(MDX_KEY_NO, false);
         return true;
@@ -356,14 +379,79 @@ bool tbd_handleEvent(gui_event_t *event) {
       if (is_release) {
         if (MD.connected) MD.release_no_button();
         key_interface.key_event(MDX_KEY_NO, true);
-        if (a_consumed) {
-          a_consumed = false;
-          return true;
+        return true;
+      }
+    }
+
+    // BUTTON4 (cluster X). Emits MDX_KEY_YES + MD YES sysex only in
+    // SPS-latched mode (MDX_KEY_YES passthrough for the MD's UI).
+    // Only physical X (orig_src == BUTTON4) emits — a remapped TR on
+    // a menu page falls through so MenuPage's BUTTON4 enter runs.
+    static bool yes_emitted = false;
+    if (event->source == ButtonsClass::BUTTON4 &&
+        orig_src == ButtonsClass::BUTTON4) {
+      if (is_press) {
+        yes_emitted = false;
+        if (sps_mode.is_active()) {
+          if (MD.connected) MD.press_yes_button();
+          key_interface.key_event(MDX_KEY_YES, false);
+          yes_emitted = true;
         }
-        a_consumed = false;
-        // Fall through so the active page sees the release (GridPage
-        // opens GRID_SAVE_PAGE on a clean BUTTON1 release).
-        return false;
+      } else if (is_release && yes_emitted) {
+        if (MD.connected) MD.release_yes_button();
+        key_interface.key_event(MDX_KEY_YES, true);
+        yes_emitted = false;
+      }
+    }
+
+    // X press toggles GRID_LOAD_PAGE on GRID_PAGE (open) and back on
+    // GRID_LOAD_PAGE (close). On-press, not the AVR-shared on-release
+    // behaviour at GridPage.cpp:1223. The matching X release after a
+    // toggle is eaten via x_just_toggled so GridIOPage's BUTTON4
+    // release-to-close handler doesn't immediately undo the open.
+    static bool x_just_toggled = false;
+    if (event->source == ButtonsClass::BUTTON4 &&
+        orig_src == ButtonsClass::BUTTON4) {
+      const PageIndex pg = mcl.currentPage();
+      if (is_press && pg == GRID_PAGE) {
+        mcl.setPage(GRID_LOAD_PAGE);
+        x_just_toggled = true;
+        return true;
+      }
+      if (is_press && pg == GRID_LOAD_PAGE) {
+        mcl.setPage(GRID_PAGE);
+        x_just_toggled = true;
+        return true;
+      }
+      if (is_release && x_just_toggled) {
+        x_just_toggled = false;
+        return true;
+      }
+    }
+
+    // BUTTON3 (cluster Y) routing.
+    //   GRID_PAGE: Y press opens GRID_SAVE_PAGE; Y release on entry is
+    //              dropped via ignoreNextEvent so we don't commit on tail.
+    //   GRID_SAVE_PAGE / GRID_LOAD_PAGE: Y press closes back to GRID_PAGE
+    //              (toggle behaviour). Release of the closing press is
+    //              also dropped so GridPage doesn't see a stray BUTTON3
+    //              release that opens save again. Group save/load on TBD
+    //              is driven by A (MDX_KEY_NO), not Y.
+    //   Anywhere else: fall through. SpsMode::handle_cluster_menus picks
+    //              up BUTTON3 in SPS-latched mode for MD SCALE.
+    if (event->source == ButtonsClass::BUTTON3) {
+      const PageIndex pg = mcl.currentPage();
+      if (pg == GRID_PAGE && is_press) {
+        GUI.ignoreNextEvent(ButtonsClass::BUTTON3);
+        mcl.setPage(GRID_SAVE_PAGE);
+        return true;
+      }
+      if (pg == GRID_SAVE_PAGE || pg == GRID_LOAD_PAGE) {
+        if (is_press) {
+          GUI.ignoreNextEvent(ButtonsClass::BUTTON3);
+          mcl.setPage(GRID_PAGE);
+        }
+        return true;
       }
     }
 
