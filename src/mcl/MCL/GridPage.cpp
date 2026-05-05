@@ -1061,19 +1061,49 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       if (show_slot_menu) {
 #ifdef PLATFORM_TBD
-        if (BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B)) {
+        const bool is_arrow =
+            key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
+            key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT;
+        if (is_arrow) {
+          // TBD default: when the slot menu is open, arrows navigate the
+          // menu first. Hold the normal FUNC modifier to adjust the slot
+          // geometry instead.
+          if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
+            switch (key) {
+            case MDX_KEY_UP:
+              grid_slot_page.encoders[1]->cur -= 1;
+              return true;
+            case MDX_KEY_DOWN:
+              grid_slot_page.encoders[1]->cur += 1;
+              return true;
+            case MDX_KEY_LEFT:
+              grid_slot_page.encoders[0]->cur -= 1;
+              return true;
+            case MDX_KEY_RIGHT:
+              grid_slot_page.encoders[0]->cur += 1;
+              return true;
+            default:
+              break;
+            }
+          }
           switch (key) {
           case MDX_KEY_UP:
-            grid_slot_page.encoders[1]->cur -= 1;
+            param4.cur -= inc;
             return true;
           case MDX_KEY_DOWN:
-            grid_slot_page.encoders[1]->cur += 1;
+            param4.cur += inc;
             return true;
           case MDX_KEY_LEFT:
-            grid_slot_page.encoders[0]->cur -= 1;
+            if (inc > 1) {
+              inc = 4;
+            }
+            param3.cur = max(0, param3.cur - inc);
             return true;
           case MDX_KEY_RIGHT:
-            grid_slot_page.encoders[0]->cur += 1;
+            if (inc > 1) {
+              inc = 4;
+            }
+            param3.cur += inc;
             return true;
           default:
             break;

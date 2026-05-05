@@ -862,6 +862,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
+#ifdef PLATFORM_TBD
+    if (show_seq_menu) {
+      return seq_menu_page.handleEvent(event);
+    }
+#endif
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
       return seq_menu_page.handleEvent(event);
     }

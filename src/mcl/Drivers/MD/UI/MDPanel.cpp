@@ -7,6 +7,7 @@
 #include "GridPages.h"
 #include "KeyInterface.h"
 #include "MCL.h"
+#include "NoteInterface.h"
 #include "SeqPages.h"
 
 bool MDPanel::handle_event(gui_event_t *event) {
@@ -61,8 +62,8 @@ bool MDPanel::handle_event(gui_event_t *event) {
     return true;
   }
 
-  // Physical Y acts as legacy BUTTON3 in normal mode so sequencer pages
-  // can open their track menu. SPS-latched mode repurposes it as MD NO.
+  // Physical Y is MD NO in SPS-latched mode. Normal-mode TBD routing is
+  // handled by TbdPanel after the driver has seen the raw event.
   if (event->source == ButtonsClass::BUTTON3) {
     if (!md_.sps_mode.is_active()) return false;
     if (is_press) {
@@ -98,10 +99,14 @@ bool MDPanel::handle_event(gui_event_t *event) {
     // through to the key_event path. In SPS-latched mode, or on pages
     // without local arrow ownership, arrows mirror to the MD UI.
     const PageIndex cur_pg = mcl.currentPage();
+    const bool step_edit_trig_held =
+        md_.sps_mode.is_active() && cur_pg == SEQ_STEP_PAGE &&
+        note_interface.notes_count_on() > 0;
     const bool arrows_local_only =
-        !md_.sps_mode.is_active() &&
-        (cur_pg == GRID_PAGE || cur_pg == SEQ_STEP_PAGE ||
-         cur_pg == SEQ_PTC_PAGE || cur_pg == SEQ_EXTSTEP_PAGE);
+        step_edit_trig_held ||
+        (!md_.sps_mode.is_active() &&
+         (cur_pg == GRID_PAGE || cur_pg == SEQ_STEP_PAGE ||
+          cur_pg == SEQ_PTC_PAGE || cur_pg == SEQ_EXTSTEP_PAGE));
 
     if (!arrows_local_only) {
       if (!is_release && key_interface.is_key_down(key)) return true;

@@ -224,6 +224,7 @@ bool SpsMode::handle_toggle_button(gui_event_t *event) {
 
 
 bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
+  if (!latched_) return false;
   if (!is_arrow_source(event->source)) return false;
   if (!key_interface.is_key_down(MDX_KEY_FUNC)) return false;
   if (MD.connected && is_press(event)) {

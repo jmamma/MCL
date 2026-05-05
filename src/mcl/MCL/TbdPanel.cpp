@@ -96,6 +96,20 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (device_manager.handle_ui_event(event)) return true;
 
+  // In normal mode, swap the physical Y/B roles on TBD:
+  //   Y -> MD FUNC key path
+  //   B -> legacy BUTTON3 path used by grid/seq menus
+  // SPS-latched mode keeps the driver-specific Y=NO, B=FUNC mapping.
+  if (!MD.sps_mode.is_active()) {
+    if (orig_src == ButtonsClass::BUTTON3) {
+      key_interface.key_event(MDX_KEY_FUNC, is_release);
+      return true;
+    }
+    if (orig_src == ButtonsClass::TBD_BUTTON_B) {
+      event->source = ButtonsClass::BUTTON3;
+    }
+  }
+
   // Menu/config page remap: while a MenuPage is active (system, midi
   // config, mcl config, MIDI port menus, etc.), TL replaces BUTTON1
   // (NO/exit) and TR replaces BUTTON4 (YES/enter) so the user can
