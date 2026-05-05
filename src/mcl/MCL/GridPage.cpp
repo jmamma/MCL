@@ -1060,6 +1060,26 @@ bool GridPage::handleEvent(gui_event_t *event) {
         inc = 4;
       }
       if (show_slot_menu) {
+#ifdef PLATFORM_TBD
+        if (BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B)) {
+          switch (key) {
+          case MDX_KEY_UP:
+            grid_slot_page.encoders[1]->cur -= 1;
+            return true;
+          case MDX_KEY_DOWN:
+            grid_slot_page.encoders[1]->cur += 1;
+            return true;
+          case MDX_KEY_LEFT:
+            grid_slot_page.encoders[0]->cur -= 1;
+            return true;
+          case MDX_KEY_RIGHT:
+            grid_slot_page.encoders[0]->cur += 1;
+            return true;
+          default:
+            break;
+          }
+        }
+#endif
         switch (key) {
         // case MDX_KEY_NO: {
         //  goto slot_menu_off;

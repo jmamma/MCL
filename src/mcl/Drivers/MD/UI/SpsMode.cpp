@@ -26,6 +26,10 @@ inline bool is_arrow_source(uint8_t source) {
          source == ButtonsClass::FUNC_BUTTON9;
 }
 
+inline bool is_sps_key_source(uint8_t source) {
+  return source == ButtonsClass::FUNC_BUTTON5;
+}
+
 inline bool is_press(const gui_event_t *event) {
   return event->mask == EVENT_BUTTON_PRESSED;
 }
@@ -236,48 +240,42 @@ bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
 
 bool SpsMode::handle_cluster_menus(gui_event_t *event) {
   if (!latched_) return false;
-  // BUTTON1=Y → MD SCALE (with FUNC variant for the scale-window
-  // shortcut). BUTTON3=A is the global MDX_KEY_NO passthrough
-  // handled in tbd_handleEvent; BUTTON4=X is the global
-  // MDX_KEY_YES passthrough.
-  if (event->source != ButtonsClass::BUTTON1) return false;
+  // BUTTON4=X → MD EXTENDED, or FUNC+EXTENDED when the MD FUNC key is
+  // held. BUTTON3=Y is the global MDX_KEY_NO passthrough handled in
+  // MDPanel.
+  if (event->source != ButtonsClass::BUTTON4) return false;
   if (!MD.connected) return true;
 
-  const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
-  // SCALE is the only key with both basic-key press/release and a
-  // separate FUNC-shortcut (toggle_scale_window). Track whether we sent
-  // hold_scale_button on the press edge so release pairs cleanly.
-  static bool scale_held = false;
-
   if (is_press(event)) {
-    if (func_held) {
-      MD.toggle_scale_window();
-    } else {
-      MD.hold_scale_button();
-      scale_held = true;
-    }
+    x_key_held_ = key_interface.is_key_down(MDX_KEY_FUNC)
+        ? MDX_KEY_FUNCEXTENDED
+        : MDX_KEY_EXTENDED;
+    key_interface.key_event(x_key_held_, false);
   } else if (is_release(event)) {
-    if (scale_held) {
-      MD.release_scale_button();
-      scale_held = false;
-    }
+    const uint8_t key = (x_key_held_ != 255) ? x_key_held_ : MDX_KEY_EXTENDED;
+    key_interface.key_event(key, true);
+    x_key_held_ = 255;
   }
   return true;
 }
 
 bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
-  // Either B (TBD_BUTTON_B) or TR (TBD_BUTTON_TR) held + arrow
+  // Either the physical FUNC key or TR (TBD_BUTTON_TR) held + arrow
   // cycles sub_page_. Works with the latch off too — the gesture is
   // "modifier held", not "SPS-mode active".
   if (!is_arrow_source(event->source)) return false;
-  const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B);
+  const bool sps_key_held = BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5);
   const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR);
+  if (sps_key_held && mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu) {
+    if (is_press(event)) sps_key_consumed_ = true;
+    return false;
+  }
   const bool overlay_active = (GUI.overlay == &sps_overlay_page);
   // While the SPS overlay is active (the 8-encoder page select view)
-  // or a modifier (B/TR) is held, the cluster owns sub-page traversal.
+  // or a modifier (SPS-key/TR) is held, the cluster owns sub-page traversal.
   // Otherwise, panel arrows fall through to grid / seq navigation by
   // default (even if the SPS latch is on).
-  if (!overlay_active && !b_held && !tr_held) return false;
+  if (!overlay_active && !sps_key_held && !tr_held) return false;
   if (is_press(event)) {
     // Suppress key-repeat: a held arrow only fires once per physical
     // press. The release branch clears arrow_consumed_source_ so the
@@ -285,7 +283,7 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
     if (arrow_consumed_source_ == event->source) return true;
     arrow_consumed_source_ = event->source;
 
-    if (b_held)  b_consumed_  = true;
+    if (sps_key_held) sps_key_consumed_ = true;
     // sub_page_ is the 4-param column id (0..7). The 8-param "page" is
     // sub_page_ >> 1, the half within the page is sub_page_ & 1.
     //   UP/DOWN  → flip half (toggle bit 0).
@@ -321,18 +319,26 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
   return true;
 }
 
+void SpsMode::observe_sps_key_chord(gui_event_t *event) {
+  if (!EVENT_BUTTON(event)) return;
+  if (!is_press(event)) return;
+  if (is_sps_key_source(event->source)) return;
+  if (BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
+    sps_key_consumed_ = true;
+  }
+}
+
 bool SpsMode::handle_sps_key_tap(gui_event_t *event) {
-  if (event->source != ButtonsClass::TBD_BUTTON_B) return false;
-  // B does NOT toggle the SPS latch — that's TR's role. Tap fires a
-  // per-page action; hold (with arrow / trig chord) is the SPS sub-page
-  // modifier (handle_arrow_subpage, handle_trig_forward). b_consumed_
-  // suppresses the tap action when a chord ran during the hold.
+  if (!is_sps_key_source(event->source)) return false;
+  // The physical FUNC key does NOT toggle the SPS latch — that's TR's
+  // role. Tap fires a per-page action; any other button press while it
+  // is down suppresses the release tap action.
   //   GRID_PAGE  → flip cur_grid (0/1 trig-grid view)
   //   SEQ_*      → advance sequencer page (BUTTON4 analog on AVR)
   if (is_press(event)) {
-    b_consumed_ = false;
+    sps_key_consumed_ = false;
   } else if (is_release(event)) {
-    if (!b_consumed_) {
+    if (!sps_key_consumed_) {
       const PageIndex pg = mcl.currentPage();
       if (pg == GRID_PAGE) {
         // GridPage::handleEvent already implements the cur_grid swap
@@ -353,7 +359,7 @@ bool SpsMode::handle_sps_key_tap(gui_event_t *event) {
         GUI.putEvent(&e);
       }
     }
-    b_consumed_ = false;
+    sps_key_consumed_ = false;
   }
   return true;
 }
@@ -362,15 +368,15 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
   if (!latched_) return false;
   if (trig_idx >= 16) return false;
 
-  // Trig sub-page selection requires an explicit modifier: B (TBD_BUTTON_B)
+  // Trig sub-page selection requires an explicit modifier: physical FUNC
   // or TR (TBD_BUTTON_TR) held. Without a modifier, trigs fall
   // through to the active page — so on SEQ_STEP_PAGE you can keep
   // entering parameter locks (trig press = step select), on GRID_PAGE
   // you keep triggering the track, etc. Latch state alone no longer
   // claims trigs.
-  const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B);
+  const bool sps_key_held = BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5);
   const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR);
-  if (!b_held && !tr_held) return false;
+  if (!sps_key_held && !tr_held) return false;
 
   if (is_press(event)) {
     const uint8_t max_sub_pages = MD.is_spsx ? 8 : 6;
@@ -381,7 +387,7 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
       sub_page_ = target;
       resync_from_kit();
     }
-    if (b_held)  b_consumed_  = true;
+    if (sps_key_held) sps_key_consumed_ = true;
   }
   return true;
 }
@@ -443,6 +449,7 @@ bool SpsMode::handle_toggle_button(gui_event_t *) { return false; }
 bool SpsMode::handle_func_arrow_chord(gui_event_t *) { return false; }
 bool SpsMode::handle_cluster_menus(gui_event_t *) { return false; }
 bool SpsMode::handle_arrow_subpage(gui_event_t *) { return false; }
+void SpsMode::observe_sps_key_chord(gui_event_t *) {}
 bool SpsMode::handle_sps_key_tap(gui_event_t *) { return false; }
 bool SpsMode::handle_trig_forward(gui_event_t *, uint8_t) { return false; }
 void SpsMode::poll_encoders() {}

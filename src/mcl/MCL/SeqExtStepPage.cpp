@@ -1038,10 +1038,12 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
     }
 
+#ifndef PLATFORM_TBD
     if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
       toggle_record();
       return true;
     }
+#endif
 
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
       mute_mask = 128;

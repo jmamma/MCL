@@ -1,9 +1,8 @@
 /* TBD SPS-mode latch. Owns the TBD_BUTTON_TR toggle,
- * the cluster Y/X/A → MD menu-open 0x40 sysex (scale / LFO / kit), the
- * trig → sub_page selector / MD_GUI_TRIG_* routing, the SPS-key + arrow
- * sub-page traversal, and the FUNC + ARROW window-toggle chord. Pulled
- * out of tbd_handleEvent so the per-event ladder in MCL.cpp stays
- * readable.
+ * the cluster A/X/Y MD key routing, the trig → sub_page selector /
+ * MD_GUI_TRIG_* routing, the SPS-key + arrow sub-page traversal, and
+ * the FUNC + ARROW window-toggle chord. Pulled out of tbd_handleEvent
+ * so the per-event ladder in MCL.cpp stays readable.
  *
  * In latched state, the four hardware encoders are also captured and
  * routed to live MD kit-param updates for the current synth page —
@@ -25,7 +24,7 @@
 #include "MCLEncoder.h"
 
 // Standard tap window for TBD-panel gestures: encoder taps (ENC1
-// pattern-select, ENC2/3/4 cluster taps), B latch toggle vs.
+// pattern-select, ENC2/3/4 cluster taps), SPS-key tap vs.
 // modifier hold, etc. Anything held longer than this counts as
 // a sustained press / hold gesture.
 #define TBD_TAP_MAX_MS 200
@@ -42,16 +41,20 @@ public:
 
   bool handle_toggle_button(gui_event_t *event);
   bool handle_func_arrow_chord(gui_event_t *event);
-  // Cluster Y/X/A in SPS-latched: Y → MD NO transmit, X → MD YES,
-  // A → MD SCALE (FUNC variant: toggle_scale_window).
+  // Cluster X/Y in SPS-latched: X → MD EXTENDED / FUNC+EXTENDED,
+  // Y → MD NO transmit.
   bool handle_cluster_menus(gui_event_t *event);
-  // Arrow handler: latched → cycle sub_page_; B/TR-held → also cycle
+  // Arrow handler: latched → cycle sub_page_; SPS-key/TR-held → also cycle
   // (works without latch). UP/DOWN flip half within page; LEFT/RIGHT
   // step pages (clamped, no wrap).
   bool handle_arrow_subpage(gui_event_t *event);
-  // B (TBD_BUTTON_B) tap fires a per-page action (grid swap on
-  // GRID_PAGE; sequencer-page advance on SEQ_*). Hold acts as the
-  // sub-page modifier (B+arrow / B+trig).
+  // Tracks whether the SPS key stayed a clean tap. If another button is
+  // pressed while it is down, release is ignored instead of firing the
+  // tap action.
+  void observe_sps_key_chord(gui_event_t *event);
+  // Physical FUNC tap fires a per-page action (grid swap on
+  // GRID_PAGE; sequencer-page advance on SEQ_*). Any other button
+  // pressed during the hold suppresses the release tap action.
   bool handle_sps_key_tap(gui_event_t *event);
   bool handle_trig_forward(gui_event_t *event, uint8_t trig_idx);
 
@@ -110,10 +113,13 @@ private:
   // release. Used by poll_page_overlay's hold-timer instead of
   // BUTTON_DOWN, which can race with the panel poll.
   bool tr_pressed_ = false;
-  // B-press lifetime flag: cleared on B press; if no chord set it
-  // during the hold, B release fires the per-page tap action.
-  bool b_consumed_ = false;
-  // Source of the arrow press currently being held in B-overlay mode.
+  // X press emits EXTENDED or FUNC+EXTENDED depending on the modifier
+  // state at press time; release must pair with the same key.
+  uint8_t x_key_held_ = 255;
+  // SPS-key press lifetime flag: cleared on press; if no chord set it
+  // during the hold, release fires the per-page tap action.
+  bool sps_key_consumed_ = false;
+  // Source of the arrow press currently being held in SPS-key overlay mode.
   // Used to suppress repeat-press events on the same physical hold.
   uint8_t arrow_consumed_source_ = 255;
   void set_latched(bool v);

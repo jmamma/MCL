@@ -157,9 +157,10 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (mcl.currentPage() == PAGE_SELECT_PAGE) return false;
     static constexpr uint16_t kEnc1TapMaxMs = TBD_TAP_MAX_MS;
     if (is_press) {
+      Buttons.handle_encoder_tap(0, true, kEnc1TapMaxMs);
       return true;
     }
-    if (Buttons.is_encoder_tap(0, kEnc1TapMaxMs)) {
+    if (Buttons.handle_encoder_tap(0, false, kEnc1TapMaxMs)) {
       if (mcl.currentPage() == BANK_POPUP_PAGE) {
         bank_popup_page.close();
       } else {
@@ -235,12 +236,12 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
           MidiClock.handleImmediateMidiStop();
         }
         break;
-      case ButtonsClass::FUNC_BUTTON5:  key = MDX_KEY_FUNC;  break;
+      case ButtonsClass::FUNC_BUTTON5:  break;
       case ButtonsClass::FUNC_BUTTON6:  key = MDX_KEY_UP;    break;
       case ButtonsClass::FUNC_BUTTON7:  key = MDX_KEY_LEFT;  break;
       case ButtonsClass::FUNC_BUTTON8:  key = MDX_KEY_DOWN;  break;
       case ButtonsClass::FUNC_BUTTON9:  key = MDX_KEY_RIGHT; break;
-      case ButtonsClass::TBD_BUTTON_B: break;
+      case ButtonsClass::TBD_BUTTON_B:  key = MDX_KEY_FUNC;  break;
       default: break;
     }
   }

@@ -176,10 +176,11 @@ public:
   // Per-press latches for encoder click tap gates.
   // *_long_press_seen: panel flagged the held press (f_btns_long_press).
   // *_rotated_while_held: encoder rotated at any point during the press.
-  // enc_press_ms: press-edge timestamp used by is_encoder_tap().
+  // enc_press_ms: event press-edge timestamp used by is_encoder_tap().
   // A long hold, rotation, or release after max_ms suppresses the tap.
   // Cleared on press edge.
   uint16_t enc_press_ms[GUI_NUM_ENCODERS];
+  bool enc_tap_armed[GUI_NUM_ENCODERS];
   bool enc1_long_press_seen;
   bool enc1_rotated_while_held;
   bool enc2_long_press_seen;
@@ -189,6 +190,8 @@ public:
   bool enc4_long_press_seen;
   bool enc4_rotated_while_held;
   bool is_encoder_tap(uint8_t encoder_idx, uint16_t max_ms) const;
+  bool handle_encoder_tap(uint8_t encoder_idx, bool is_press,
+                          uint16_t max_ms);
   void pollTBD(const ui_data_t &ui_data);
 #endif
 };

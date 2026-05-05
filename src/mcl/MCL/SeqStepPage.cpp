@@ -881,10 +881,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
     */
 
+#ifndef PLATFORM_TBD
     if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
       toggle_record();
       return true;
     }
+#endif
   }
   return false;
 }

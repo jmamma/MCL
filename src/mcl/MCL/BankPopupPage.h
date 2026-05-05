@@ -6,7 +6,7 @@
  *
  * Push with mcl.pushPage(BANK_POPUP_PAGE); close with
  * bank_popup_page.close() (or any of the in-page close gestures —
- * ENC1 tap, MCL_Y / NO).
+ * ENC1 tap, MCL_A / NO).
  */
 
 #pragma once

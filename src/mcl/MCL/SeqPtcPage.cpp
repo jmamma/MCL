@@ -629,9 +629,11 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         mcl.pushPage(POLY_PAGE);
         return true;
       }
+#ifndef PLATFORM_TBD
       mcl_seq.ext_tracks[last_ext_track].init_notes_on();
       toggle_record();
       return true;
+#endif
     }
     /*
       if (EVENT_PRESSED(event, Buttons.ENCODER4)) {

@@ -15,13 +15,21 @@ bool MDPanel::handle_event(gui_event_t *event) {
   const bool is_press = (event->mask == EVENT_BUTTON_PRESSED);
   const bool is_release = (event->mask == EVENT_BUTTON_RELEASED);
 
+  md_.sps_mode.observe_sps_key_chord(event);
+
   // ENCODER2..4 taps in SPS-latched mode trigger MD windows/actions.
   if (event->source >= ButtonsClass::ENCODER2 &&
       event->source <= ButtonsClass::ENCODER4) {
     const uint8_t idx = event->source - ButtonsClass::ENCODER2;
     static constexpr uint16_t kEncTapMaxMs = TBD_TAP_MAX_MS;
-    if (is_press) return true;
-    if (!Buttons.is_encoder_tap((uint8_t)(idx + 1), kEncTapMaxMs)) return true;
+    if (is_press) {
+      Buttons.handle_encoder_tap((uint8_t)(idx + 1), true, kEncTapMaxMs);
+      return true;
+    }
+    if (!Buttons.handle_encoder_tap((uint8_t)(idx + 1), false,
+                                    kEncTapMaxMs)) {
+      return true;
+    }
     if (!md_.sps_mode.is_active()) return false; // Let MCL handle normal taps.
 
     const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
@@ -53,44 +61,19 @@ bool MDPanel::handle_event(gui_event_t *event) {
     return true;
   }
 
-  // Physical A acts as MDX_KEY_NO for the lifetime of the hold. In
-  // SPS-latched mode it is device/state only, not a local MCL command.
+  // Physical Y acts as legacy BUTTON3 in normal mode so sequencer pages
+  // can open their track menu. SPS-latched mode repurposes it as MD NO.
   if (event->source == ButtonsClass::BUTTON3) {
+    if (!md_.sps_mode.is_active()) return false;
     if (is_press) {
       md_.press_no_button();
-      if (md_.sps_mode.is_active()) {
-        key_interface.set_key_state(MDX_KEY_NO, true);
-      } else {
-        key_interface.key_event(MDX_KEY_NO, false);
-      }
+      key_interface.set_key_state(MDX_KEY_NO, true);
       return true;
     } else if (is_release) {
       md_.release_no_button();
-      if (md_.sps_mode.is_active()) {
-        key_interface.set_key_state(MDX_KEY_NO, false);
-      } else {
-        key_interface.key_event(MDX_KEY_NO, true);
-      }
+      key_interface.set_key_state(MDX_KEY_NO, false);
       return true;
     }
-  }
-
-  // Physical Y is MD SCALE in SPS-latched mode. The held-state bit is
-  // maintained here; the MD sysex/hold behavior remains in SpsMode.
-  if (event->source == ButtonsClass::BUTTON1 && md_.sps_mode.is_active()) {
-    key_interface.set_key_state(MDX_KEY_SCALE, is_press);
-  }
-
-  // Physical X is MD YES in SPS-latched mode.
-  if (event->source == ButtonsClass::BUTTON4 && md_.sps_mode.is_active()) {
-    if (is_press) {
-      md_.press_yes_button();
-      key_interface.set_key_state(MDX_KEY_YES, true);
-    } else if (is_release) {
-      md_.release_yes_button();
-      key_interface.set_key_state(MDX_KEY_YES, false);
-    }
-    return true;
   }
 
   if (md_.sps_mode.handle_toggle_button(event)) return true;

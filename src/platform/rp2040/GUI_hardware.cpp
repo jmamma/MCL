@@ -134,6 +134,7 @@ ButtonsClass::ButtonsClass() {
 #ifdef PLATFORM_TBD
     for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
       enc_press_ms[i] = 0;
+      enc_tap_armed[i] = false;
     }
     enc1_long_press_seen     = false;
     enc1_rotated_while_held  = false;
@@ -167,12 +168,27 @@ void ButtonsClass::poll(uint8_t but) {
 #ifdef PLATFORM_TBD
 bool ButtonsClass::is_encoder_tap(uint8_t encoder_idx, uint16_t max_ms) const {
   if (encoder_idx >= GUI_NUM_ENCODERS) return false;
+  if (!enc_tap_armed[encoder_idx]) return false;
   const bool long_seen[4] = {enc1_long_press_seen, enc2_long_press_seen,
                              enc3_long_press_seen, enc4_long_press_seen};
   const bool rot_seen[4] = {enc1_rotated_while_held, enc2_rotated_while_held,
                             enc3_rotated_while_held, enc4_rotated_while_held};
   if (long_seen[encoder_idx] || rot_seen[encoder_idx]) return false;
   return clock_diff(enc_press_ms[encoder_idx], read_clock_ms()) <= max_ms;
+}
+
+bool ButtonsClass::handle_encoder_tap(uint8_t encoder_idx, bool is_press,
+                                      uint16_t max_ms) {
+  if (encoder_idx >= GUI_NUM_ENCODERS) return false;
+  if (is_press) {
+    enc_press_ms[encoder_idx] = read_clock_ms();
+    enc_tap_armed[encoder_idx] = true;
+    return false;
+  }
+
+  const bool tap = is_encoder_tap(encoder_idx, max_ms);
+  enc_tap_armed[encoder_idx] = false;
+  return tap;
 }
 #endif
 
@@ -192,7 +208,7 @@ bool ButtonsClass::is_encoder_tap(uint8_t encoder_idx, uint16_t max_ms) const {
 #define TBD_BUTTON_PLAY(ui)       (!((ui).mcl_btns & (1 << 8)))
 #define TBD_BUTTON_REC(ui)        (!((ui).mcl_btns & (1 << 9)))
 #define TBD_BUTTON_STOP(ui)       (!((ui).mcl_btns & (1 << 10)))
-#define TBD_BUTTON_NO(ui)         (!((ui).mcl_btns & (1 << 11)))
+#define TBD_BUTTON_FUNC(ui)       (!((ui).mcl_btns & (1 << 11)))
 #define TBD_BUTTON_TRIG(ui, n)    (!((ui).d_btns  & (1 << (n)))) // n=0..15
 
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
@@ -213,7 +229,6 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
       const bool was_pressed = !B_OLD(ENCODER1 + n);
       const bool is_pressed  = !TBD_BUTTON_ENC(ui_data, n);
       if (is_pressed && !was_pressed) {
-        enc_press_ms[n] = read_clock_ms();
         *long_seen[n] = false;
         *rot_seen[n]  = false;
       }
@@ -236,24 +251,24 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   STORE_B_CURRENT(FUNC_BUTTON8, TBD_BUTTON_DOWN(ui_data));
   STORE_B_CURRENT(FUNC_BUTTON9, TBD_BUTTON_RIGHT(ui_data));
 
-  // Transport row (play / rec / stop / no)
+  // Transport row (play / rec / stop / func)
   STORE_B_CURRENT(FUNC_BUTTON2, TBD_BUTTON_PLAY(ui_data));
   STORE_B_CURRENT(FUNC_BUTTON1, TBD_BUTTON_REC(ui_data));
   STORE_B_CURRENT(FUNC_BUTTON3, TBD_BUTTON_STOP(ui_data));
-  STORE_B_CURRENT(FUNC_BUTTON5, TBD_BUTTON_NO(ui_data));
+  STORE_B_CURRENT(FUNC_BUTTON5, TBD_BUTTON_FUNC(ui_data));
 
   // Universal MCL slots and 2x2 cluster, post-remap:
   //   TOP_LEFT  -> BUTTON2 (MCL PageSelect — press opens, release closes)
   //   TOP_RIGHT -> TBD_BUTTON_TR (mode/action button; SPS currently uses it)
-  //   MCL_Y     -> BUTTON1 (universal NO/save/cancel; SPS-latched: MD SCALE)
-  //   MCL_X     -> BUTTON4 (universal YES/load/confirm; SPS-latched: MD YES)
-  //   MCL_A     -> BUTTON3 (MCL shift; SPS-latched: MD NO)
-  //   MCL_B     -> TBD_BUTTON_B (cluster B; SPS currently uses it)
+  //   MCL_A     -> BUTTON1 (universal NO/save/cancel)
+  //   MCL_X     -> BUTTON4 (universal YES/load/confirm; SPS-latched: MD EXTENDED)
+  //   MCL_Y     -> BUTTON3 (MCL shift; SPS-latched: MD NO)
+  //   MCL_B     -> TBD_BUTTON_B (cluster B; MD FUNC)
   STORE_B_CURRENT(BUTTON2, TBD_BUTTON_TOP_LEFT(ui_data));
   STORE_B_CURRENT(TBD_BUTTON_TR, TBD_BUTTON_TOP_RIGHT(ui_data));
-  STORE_B_CURRENT(BUTTON3, TBD_BUTTON_A(ui_data));
+  STORE_B_CURRENT(BUTTON3, TBD_BUTTON_Y(ui_data));
   STORE_B_CURRENT(BUTTON4, TBD_BUTTON_X(ui_data));
-  STORE_B_CURRENT(BUTTON1, TBD_BUTTON_Y(ui_data));
+  STORE_B_CURRENT(BUTTON1, TBD_BUTTON_A(ui_data));
   STORE_B_CURRENT(TBD_BUTTON_B, TBD_BUTTON_B(ui_data));
 
   // Sequencer Buttons

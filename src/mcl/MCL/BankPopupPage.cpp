@@ -174,7 +174,7 @@ void BankPopupPage::repaint_chain_leds() {
 }
 
 bool BankPopupPage::handleEvent(gui_event_t *event) {
-  // BUTTON1 (MCL_Y / NO / cancel): close the popup without picking.
+  // BUTTON1 (MCL_A / NO / cancel): close the popup without picking.
   if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     close();
     return true;
