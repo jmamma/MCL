@@ -3,6 +3,7 @@
 #include "SeqTrackUtil.h"
 #include "../Drivers/MD/MD.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "MCLGUI.h"
 #include "AuxPages.h"
 #include "GridPages.h"
@@ -93,7 +94,7 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
 
-  SeqPage::midi_device = midi_active_peering.dev1;
+  SeqPage::midi_device = device_manager.dev1();
 
   midi_events.setup_callbacks();
   key_interface.on();
@@ -459,7 +460,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       SPSXSeqTrack &active_track = mcl_seq.spsx_tracks[last_md_track];
 
       uint8_t port = event->port;
-      MidiDevice *device = midi_active_peering.get_device(port);
+      MidiDevice *device = device_manager.device_for_port(port);
       uint8_t track = event->source;
       if (device != &MD) return true;
       if (show_seq_menu) {
@@ -562,7 +563,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     {
     MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
     uint8_t port = event->port;
-    MidiDevice *device = midi_active_peering.get_device(port);
+    MidiDevice *device = device_manager.device_for_port(port);
 
     uint8_t track = event->source;
     if (device != &MD) {

@@ -1,4 +1,5 @@
 #include "MCLEncoder.h"
+#include "DeviceManager.h"
 #include "PerfPageParent.h"
 #include "ResourceManager.h"
 #include "../Drivers/MD/MD.h"
@@ -81,7 +82,7 @@ bool PerfPageParent::handleEvent(gui_event_t *event) {
     if (EVENT_NOTE(event)) {
       uint8_t mask = event->mask;
       uint8_t port = event->port;
-      auto device = midi_active_peering.get_device(port);
+      auto device = device_manager.device_for_port(port);
 
       uint8_t track = event->source;
       uint8_t page_select = 0;

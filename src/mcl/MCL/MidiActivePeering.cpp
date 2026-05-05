@@ -99,7 +99,7 @@ void MidiActivePeering::disconnect(uint8_t port) {
     // Also try port2 drivers
     for (size_t i = 0; i < countof(port2_drivers); ++i) {
       if (port2_drivers[i]->connected) {
-        if (midi_active_peering.get_device(port)->asElektronDevice()) {
+        if (device_manager.device_for_port(port)->asElektronDevice()) {
           turbo_light.set_speed(0, pmidi);
         }
         port2_drivers[i]->disconnect(device_idx);
@@ -110,7 +110,7 @@ void MidiActivePeering::disconnect(uint8_t port) {
   }
   for (size_t i = 0; i < nr_drivers; ++i) {
     if (drivers[i]->connected) {
-      if (midi_active_peering.get_device(port)->asElektronDevice()) {
+      if (device_manager.device_for_port(port)->asElektronDevice()) {
         turbo_light.set_speed(0, pmidi);
       }
       drivers[i]->disconnect(device_idx);

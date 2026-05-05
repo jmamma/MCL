@@ -11,6 +11,7 @@
 #include "../Drivers/MD/MDParams.h"
 #include "MidiSetup.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "MCLActions.h"
 #include "Project.h"
 #include "NoteInterface.h"
@@ -185,7 +186,7 @@ bool BankPopupPage::handleEvent(gui_event_t *event) {
   // has no real BANK key — popup stays up until close()).
   if (EVENT_NOTE(event)) {
     uint8_t port = event->port;
-    MidiDevice *device = midi_active_peering.get_device(port);
+    MidiDevice *device = device_manager.device_for_port(port);
     if (device != &MD) return true;
 
     uint8_t track = event->source;

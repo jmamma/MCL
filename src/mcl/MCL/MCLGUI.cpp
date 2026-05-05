@@ -3,6 +3,7 @@
 #include "Oled.h"
 #include "Project.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "GUI_hardware.h"
 #include "../Drivers/MD/MD.h"
 #include "MCLStrings.h"
@@ -856,8 +857,8 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
   char dev[6];
   MidiDevice *devs[2] = {
-      midi_active_peering.dev1,
-      midi_active_peering.dev2,
+      device_manager.dev1(),
+      device_manager.dev2(),
   };
 //  oled_display.clearDisplay();
 

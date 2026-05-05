@@ -3,6 +3,7 @@
 #include "MCLGUI.h"
 #include "../Drivers/MD/MD.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "AuxPages.h"
 #include "MCLStrings.h"
 #include "SeqTrackUtil.h"
@@ -132,7 +133,7 @@ void SeqPtcPage::config() {
   }
 #ifdef EXT_TRACKS
   else {
-    strcpy(str_first, midi_active_peering.dev2->name);
+    strcpy(str_first, device_manager.dev2()->name);
     str_second[0] = 'T';
     str_second[1] = last_ext_track + '1';
   }
@@ -272,7 +273,7 @@ void SeqPtcPage::display() {
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, mask);
   SeqPage::display();
   if (show_seq_menu) {
-    display_mute_mask(midi_active_peering.dev2, 8);
+    display_mute_mask(device_manager.dev2(), 8);
   }
 }
 
@@ -526,7 +527,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    auto device = midi_active_peering.get_device(port);
+    auto device = device_manager.device_for_port(port);
     uint8_t note = event->source;
     // do not route EXT TI events to MD.
     if (device != &MD) {
@@ -619,8 +620,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_SCALE: {
         midi_device = midi_device == &MD
-                          ? midi_active_peering.dev2
-                          : midi_active_peering.dev1;
+                          ? device_manager.dev2()
+                          : device_manager.dev1();
         config();
         return true;
       }
@@ -731,10 +732,10 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   if (channel_event) {
     if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
-      SeqPage::midi_device = midi_active_peering.dev1;
+      SeqPage::midi_device = device_manager.dev1();
     }
   } else {
-    auto active_device = midi_active_peering.dev2;
+    auto active_device = device_manager.dev2();
     uint8_t n = mcl_seq.find_ext_track(channel);
     if (n == 255) {
       return;
@@ -995,7 +996,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 
   if (SeqPage::recording && (MidiClock.state == 2) &&
       !note_interface.notes_on) {
-    if (param != midi_active_peering.dev2->get_mute_cc()) {
+    if (param != device_manager.dev2()->get_mute_cc()) {
       mcl_seq.ext_tracks[n].record_track_locks(param, value, SeqPage::slide);
     }
   }

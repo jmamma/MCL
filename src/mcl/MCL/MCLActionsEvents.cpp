@@ -7,6 +7,7 @@
 #include "StackMonitor.h"
 #include "MCLActions.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
@@ -119,8 +120,8 @@ void MCLActionsCallbacks::StopHardCallback() {
   MidiUartParent::handle_midi_lock = 1;
   /*
    ElektronDevice *elektron_devs[2] = {
-       midi_active_peering.dev1->asElektronDevice(),
-       midi_active_peering.dev2->asElektronDevice(),
+       device_manager.dev1()->asElektronDevice(),
+       device_manager.dev2()->asElektronDevice(),
    };
 
      for (uint8_t i = 0; i < NUM_DEVS; ++i) {

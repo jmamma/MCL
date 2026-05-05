@@ -7,6 +7,7 @@
 #include "AuxPages.h"
 #include "MCLStrings.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "../Drivers/MD/MD.h"
 
 void MCLSeq::set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_) {
@@ -456,7 +457,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t param = msg[1];
   uint8_t value = msg[2];
 
-  if (param == midi_active_peering.dev2->get_mute_cc()) {
+  if (param == device_manager.dev2()->get_mute_cc()) {
 
    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
       if (mcl_seq.ext_tracks[n].channel != channel) {

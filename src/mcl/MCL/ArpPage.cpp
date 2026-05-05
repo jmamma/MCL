@@ -1,4 +1,5 @@
 #include "ArpPage.h"
+#include "DeviceManager.h"
 #include "SeqPages.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
@@ -180,7 +181,7 @@ bool ArpPage::handleEvent(gui_event_t *event) {
     }
   }
   /*  if (EVENT_NOTE(event) &&
-    midi_active_peering.get_device(event->port) == &MD) {
+    device_manager.device_for_port(event->port) == &MD) {
         key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
         return true;
 

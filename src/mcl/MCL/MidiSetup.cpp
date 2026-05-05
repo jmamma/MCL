@@ -4,6 +4,7 @@
 #include "SeqPages.h"
 #include "MCLSysConfig.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MNM/MNM.h"
 #include "../Drivers/A4/A4.h"
@@ -155,7 +156,7 @@ void MidiSetup::cfg_ports(bool boot) {
       midi_active_peering.force_connect(port, &generic_midi_device);
       turbo_light.set_speed(turbo_light.lookup_speed(turbo_cfg), uart);
     } else {                                                // MD / ELEKT (1)
-      MidiDevice *dev = midi_active_peering.get_device(port);
+      MidiDevice *dev = device_manager.device_for_port(port);
       ElektronDevice *e = dev ? dev->asElektronDevice() : nullptr;
       if (e) {
         turbo_light.set_speed(turbo_light.lookup_speed(turbo_cfg), uart);
@@ -176,7 +177,7 @@ void MidiSetup::cfg_ports(bool boot) {
   resolve_slots(s);
   auto setup_usb_slot = [](const PortSlot &slot) {
     if (slot.port != UARTUSB_PORT) return;
-    MidiDevice *dev = midi_active_peering.get_device(slot.port);
+    MidiDevice *dev = device_manager.device_for_port(slot.port);
     ElektronDevice *e = dev ? dev->asElektronDevice() : nullptr;
     if (e) {
       turbo_light.set_speed(turbo_light.lookup_speed(slot.turbo_cfg), slot.uart);

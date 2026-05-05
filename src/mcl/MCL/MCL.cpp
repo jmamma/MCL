@@ -244,7 +244,7 @@ bool mcl_handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    MidiDevice *device = midi_active_peering.get_device(port);
+    MidiDevice *device = device_manager.device_for_port(port);
 
     uint8_t track = event->source;
     if (device != &MD) {
@@ -407,7 +407,7 @@ bool mcl_handleEvent(gui_event_t *event) {
              key_interface.is_key_down(MDX_KEY_NO)))
           break;
         opt_clear = 2;
-        //  MidiDevice *dev = midi_active_peering.dev2;
+        //  MidiDevice *dev = device_manager.dev2();
         if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
         else if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;

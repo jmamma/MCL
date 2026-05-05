@@ -1,6 +1,7 @@
 #include "SeqExtStepPage.h"
 #include "MCLGUI.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "SeqPages.h"
 
 void SeqExtStepPage::setup() {
@@ -49,7 +50,7 @@ void SeqExtStepPage::config_encoders() {
   }
 
   config();
-  SeqPage::midi_device = midi_active_peering.dev2;
+  SeqPage::midi_device = device_manager.dev2();
 
 }
 
@@ -57,7 +58,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
 
-  midi_device = midi_active_peering.dev2;
+  midi_device = device_manager.dev2();
 
   SeqPage::init();
   MD.set_rec_mode(3);
@@ -826,7 +827,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = midi_active_peering.get_device(port)->id;
+    uint8_t device = device_manager.device_for_port(port)->id;
     uint8_t track = event->source;
 
     if (device != DEVICE_MD) {

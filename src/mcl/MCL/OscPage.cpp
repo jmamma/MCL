@@ -1,4 +1,5 @@
 #include "OscPage.h"
+#include "DeviceManager.h"
 #include "Osc.h"
 #include "DSP.h"
 #include "WavDesigner.h"
@@ -39,7 +40,7 @@ bool OscPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    MidiDevice *device = midi_active_peering.get_device(port);
+    MidiDevice *device = device_manager.device_for_port(port);
 
     uint8_t track = event->source;
     if (device != &MD) {

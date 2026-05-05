@@ -8,6 +8,7 @@
 #include "GridPages.h"
 #include "AuxPages.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "MCLStrings.h"
 
 #define STATE_NOSTATE 0
@@ -743,7 +744,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_NOTE(event)) {
-    if (midi_active_peering.get_device(event->port)->id != DEVICE_MD) {
+    if (device_manager.device_for_port(event->port)->id != DEVICE_MD) {
       return true;
     }
   }
