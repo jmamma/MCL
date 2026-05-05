@@ -300,8 +300,7 @@ void FileBrowserPage::_cd_up() {
     }
   }
 #else
-  auto len_lwd = strlen(lwd);
-  if (len_lwd < 2) {
+  if (strlen(lwd) < 2) {
     init();
     return;
   }

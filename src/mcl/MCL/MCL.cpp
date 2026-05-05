@@ -20,6 +20,7 @@
 #include "ProjectPages.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
+#include "DeviceManager.h"
 
 #include "PageSelectPage.h"
 #include "MenuPage.h"
@@ -231,8 +232,7 @@ void MCL::loop() {
   perf_page.encoder_check();
 
 #ifdef PLATFORM_TBD
-  midi_active_peering.dev1->ui_loop();
-  midi_active_peering.dev2->ui_loop();
+  device_manager.ui_loop();
 #endif
 
   key_interface.check_key_throttle();

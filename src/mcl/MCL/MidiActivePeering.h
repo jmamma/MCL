@@ -8,6 +8,7 @@
 #include "Task.h"
 #include "MCLSysConfig.h"
 #include "MCLSeq.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
 
 #define UART1_PORT 1
 #define UART2_PORT 2
@@ -38,27 +39,12 @@ public:
   void update_dev_cache();
 };
 
-class GenericMidiDevice : public MidiDevice {
-public:
-  GenericMidiDevice();
-
-  virtual uint8_t* icon();
-
-  virtual bool probe();
-
-  void init_grid_devices(uint8_t device_idx);
-  virtual uint8_t get_mute_cc();
-  virtual void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr);
-  virtual void setLevel(uint8_t track, uint8_t value, MidiUartClass *uart_ = nullptr);
-};
-
 class NullMidiDevice : public MidiDevice {
 public:
   NullMidiDevice();
   virtual bool probe() { return false; }
 };
 
-extern GenericMidiDevice generic_midi_device;
 extern NullMidiDevice null_midi_device;
 extern MidiActivePeering midi_active_peering;
 

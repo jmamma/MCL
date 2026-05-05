@@ -9,6 +9,7 @@
 #include "GridTask.h"
 #include "Project.h"
 #include "MidiActivePeering.h"
+#include "DeviceManager.h"
 #include "MCLClipBoard.h"
 #include "../Drivers/MNM/MNMParams.h"
 #include "MCLStrings.h"
@@ -647,8 +648,7 @@ void GridPage::display() {
 
 #ifdef PLATFORM_TBD
   // Driver UI active indicator (top-right, e.g. "SPS").
-  if (midi_active_peering.dev1->is_ui_active() ||
-      midi_active_peering.dev2->is_ui_active()) {
+  if (device_manager.is_ui_active()) {
     oled_display.setFont();
     oled_display.setTextSize(1);
     oled_display.setTextColor(WHITE, BLACK);

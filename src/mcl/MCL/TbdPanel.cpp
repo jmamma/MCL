@@ -4,15 +4,15 @@
 
 #include "MCL.h"
 #include "../Drivers/MD/MD.h"
+#include "AuxPages.h"
 #include "BankPopupPage.h"
+#include "DeviceManager.h"
 #include "GridPage.h"
 #include "GridPages.h"
 #include "GUI_hardware.h"
 #include "KeyInterface.h"
 #include "MCLGUI.h"
-#include "MidiActivePeering.h"
 #include "MidiClock.h"
-#include "MixerPage.h"
 #include "NoteInterface.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
@@ -76,14 +76,6 @@ bool TbdPanel::handle_bank_arrow_cycle(gui_event_t *event) {
   return true;
 }
 
-bool TbdPanel::handle_driver_ui_event(gui_event_t *event) {
-  MidiDevice *dev1 = midi_active_peering.dev1;
-  MidiDevice *dev2 = midi_active_peering.dev2;
-  if (dev1 && dev1->handle_ui_event(event)) return true;
-  if (dev2 && dev2 != dev1 && dev2->handle_ui_event(event)) return true;
-  return false;
-}
-
 bool TbdPanel::handleEvent(gui_event_t *event) {
   if (!EVENT_BUTTON(event)) {
     return false;
@@ -99,12 +91,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       BUTTON_DOWN(ButtonsClass::BUTTON2)) {
     mcl.pushPage(SYSTEM_PAGE);
-    midi_active_peering.dev1->mark_tr_consumed();
-    midi_active_peering.dev2->mark_tr_consumed();
+    device_manager.mark_tr_consumed();
     return true;
   }
 
-  if (handle_driver_ui_event(event)) return true;
+  if (device_manager.handle_ui_event(event)) return true;
 
   // Menu/config page remap: while a MenuPage is active (system, midi
   // config, mcl config, MIDI port menus, etc.), TL replaces BUTTON1
