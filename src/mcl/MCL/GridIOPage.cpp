@@ -1,7 +1,7 @@
 #include "GridIOPage.h"
 #include "MCLActions.h"
 #include "MCLGUI.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "Project.h"
 #include "ResourceManager.h"
 #include "MCLStrings.h"

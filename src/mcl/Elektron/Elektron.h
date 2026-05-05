@@ -167,6 +167,44 @@ public:
 
   virtual void init_grid_devices(uint8_t device_idx) {};
 
+  /**
+   * Driver lifecycle hooks.
+   */
+
+  /** Called when the driver is successfully probed and connected.
+   *  Default implementation calls init_grid_devices for backward compatibility.
+   */
+  virtual void on_connection(uint8_t device_idx) {
+    init_grid_devices(device_idx);
+  }
+
+#ifdef PLATFORM_TBD
+  /** Per-frame UI maintenance for the driver (polling, overlays, etc.).
+   *  Called from MCL::loop().
+   */
+  virtual void ui_loop() {}
+
+  /** Virtual event handler for driver-specific UI behaviors (overlays,
+   *  shortcuts). Called from tbd_handleEvent() / mcl_handleEvent().
+   *  Return true to consume the event.
+   */
+  virtual bool handle_ui_event(gui_event_t *event) {
+    (void)event;
+    return false;
+  }
+
+  /** Returns true if the driver has an active UI overlay or mode
+   *  that should suppress certain local MCL behaviors.
+   */
+  virtual bool is_ui_active() { return false; }
+
+  /** Mark the current TR/B modifier hold as consumed so the matching
+   *  release doesn't trigger its primary tap action.
+   */
+  virtual void mark_tr_consumed() {}
+  virtual void mark_b_consumed() {}
+#endif
+
   virtual void setup() { };
 
   virtual void disconnect(uint8_t device_idx) { cleanup(device_idx); connected = false; }

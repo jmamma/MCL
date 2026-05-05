@@ -1,7 +1,7 @@
 #include "SeqStepPage.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MidiActivePeering.h"
 #include "MCLGUI.h"
 #include "AuxPages.h"
@@ -9,7 +9,7 @@
 #include "PageSelectPage.h"
 #include "MCLStrings.h"
 #ifdef PLATFORM_TBD
-#include "SpsMode.h"
+#include "../Drivers/MD/UI/SpsMode.h"
 #endif
 #include "MCLSeq.h"
 

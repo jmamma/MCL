@@ -3,7 +3,7 @@
 #include "MCLGUI.h"
 #include "Wav.h"
 #include "MidiSDS.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MCLStrings.h"
 
 const char *c_wav_root = "/Samples/WAV";

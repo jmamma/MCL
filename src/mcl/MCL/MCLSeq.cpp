@@ -7,7 +7,7 @@
 #include "AuxPages.h"
 #include "MCLStrings.h"
 #include "MidiActivePeering.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 
 void MCLSeq::set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_) {
   md_uart = md_uart_;

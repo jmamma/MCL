@@ -2,7 +2,7 @@
 #include "MCLActions.h"
 #include "Project.h"
 #include "MCLGUI.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "GridPages.h"
 #include "MidiActivePeering.h"
 #include "Elektron.h"

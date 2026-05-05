@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MCLSeq.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
 #include "ArpSeqTrack.h"
 

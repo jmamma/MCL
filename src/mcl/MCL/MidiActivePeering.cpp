@@ -6,9 +6,9 @@
 #include "MidiSetup.h"
 #include "TurboLight.h"
 #include "ResourceManager.h"
-#include "MD.h"
-#include "A4.h"
-#include "MNM.h"
+#include "../Drivers/MD/MD.h"
+#include "../Drivers/A4/A4.h"
+#include "../Drivers/MNM/MNM.h"
 
 uint8_t *GenericMidiDevice::icon() { return R.icons_device->icon_turbo; }
 
@@ -184,7 +184,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
     pmidi->device.set_name(driver->name);
     pmidi->device.set_id(driver->id);
   }
-  driver->init_grid_devices(portToLogicalIdx(port));
+  driver->on_connection(portToLogicalIdx(port));
 
   *connected_dev = driver;
   update_dev_cache();
@@ -244,7 +244,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       if (probe_success) {
         pmidi->device.set_id(drivers[i]->id);
         pmidi->device.set_name(drivers[i]->name);
-        drivers[i]->init_grid_devices(portToLogicalIdx(port));
+        drivers[i]->on_connection(portToLogicalIdx(port));
         *active_device = drivers[i];
         // Re-enable MidiClock/Transport recv
         midi_setup.cfg_clock_recv();

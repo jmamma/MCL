@@ -1,7 +1,7 @@
 #include "SeqPtcPage.h"
 #include "SeqPages.h"
 #include "MCLGUI.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MidiActivePeering.h"
 #include "AuxPages.h"
 #include "MCLStrings.h"

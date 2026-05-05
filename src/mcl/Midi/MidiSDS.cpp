@@ -5,7 +5,7 @@
 #include "MidiSysexFile.h"
 #include "MidiUart.h"
 #include "MCLGUI.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 
 namespace {
 constexpr uint8_t kProgressUpdateInterval = 10;

@@ -10,9 +10,8 @@
 #include "Project.h"
 #include "MidiActivePeering.h"
 #include "MCLClipBoard.h"
-#include "MNMParams.h"
+#include "../Drivers/MNM/MNMParams.h"
 #include "MCLStrings.h"
-#include "SpsMode.h"
 
 #define PERF_ENC 1
 #define GRID_ENC 0
@@ -647,9 +646,9 @@ void GridPage::display() {
 #endif
 
 #ifdef PLATFORM_TBD
-  // SPS-mode latch indicator (top-right). The bank-popup overlay itself
-  // is drawn by BankPopupPage when it's the active page on TBD.
-  if (sps_mode.is_active()) {
+  // Driver UI active indicator (top-right, e.g. "SPS").
+  if (midi_active_peering.dev1->is_ui_active() ||
+      midi_active_peering.dev2->is_ui_active()) {
     oled_display.setFont();
     oled_display.setTextSize(1);
     oled_display.setTextColor(WHITE, BLACK);

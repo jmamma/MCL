@@ -11,6 +11,10 @@
 #include "MDParams.h"
 #include "MDSysex.h"
 
+#ifdef PLATFORM_TBD
+#include "UI/SpsMode.h"
+#endif
+
 /** Standard elektron sysex header for communicating with the machinedrum. **/
 extern uint8_t machinedrum_sysex_hdr[5];
 
@@ -47,6 +51,18 @@ class MDClass : public ElektronDevice {
 public:
   MDClass();
   MDMidiEvents midi_events;
+
+#ifdef PLATFORM_TBD
+  SpsMode sps_mode;
+
+  virtual void on_connection(uint8_t device_idx) override;
+  virtual void ui_loop() override;
+  virtual bool handle_ui_event(gui_event_t *event) override;
+  virtual bool is_ui_active() override { return sps_mode.is_active(); }
+  virtual void mark_tr_consumed() override { sps_mode.mark_tr_consumed(); }
+  virtual void mark_b_consumed() override { sps_mode.mark_b_consumed(); }
+#endif
+
   /** Stores the kit settings of the machinedrum (usually set by MDTask). **/
   MDKit kit;
   MDPattern pattern;

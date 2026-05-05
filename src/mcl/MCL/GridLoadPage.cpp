@@ -5,7 +5,7 @@
 #include "MCLActions.h"
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MidiClock.h"
 #include "Project.h"
 #include "MCLStrings.h"

@@ -1,6 +1,6 @@
 #include "PolyPage.h"
 #include "MCLGUI.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
 #include "MidiActivePeering.h"
 void PolyPage::init() {

@@ -1,7 +1,7 @@
 #include "SoundBrowserPage.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MDSound.h"
 
 const char *c_snd_root = "/Sounds";

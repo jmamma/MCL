@@ -10,7 +10,7 @@
 #include "RAMPage.h"
 #include "FXPage.h"
 #include "PerfPage.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 
 extern MCLEncoder mixer_param1;
 extern MCLEncoder mixer_param2;

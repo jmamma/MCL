@@ -1,7 +1,7 @@
 #include "MCLEncoder.h"
 #include "PerfPageParent.h"
 #include "ResourceManager.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
 

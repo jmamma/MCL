@@ -7,9 +7,9 @@
 #include "GridTask.h"
 #include "EmptyTrack.h"
 #include "MDTrackSelect.h"
-#include "MD.h"
-#include "MNM.h"
-#include "A4.h"
+#include "../Drivers/MD/MD.h"
+#include "../Drivers/MNM/MNM.h"
+#include "../Drivers/A4/A4.h"
 #include "MidiSetup.h"
 #include "Project.h"
 #include "MCLStrings.h"
@@ -26,7 +26,6 @@
 #include "MixerPage.h"
 #include "GridSavePage.h"
 #include "GridLoadPage.h"
-#include "SpsMode.h"
 
 #ifdef WAV_DESIGNER
 #include "OscMixerPage.h"
@@ -46,7 +45,6 @@
 #include "PerfPage.h"
 #ifdef PLATFORM_TBD
 #include "BankPopupPage.h"
-#include "SpsOverlayPage.h"
 #endif
 
 // In MCL.cpp:
@@ -231,8 +229,12 @@ void MCL::setup() {
 
 void MCL::loop() {
   perf_page.encoder_check();
-  sps_mode.poll_encoders();
-  sps_mode.poll_page_overlay();
+
+#ifdef PLATFORM_TBD
+  midi_active_peering.dev1->ui_loop();
+  midi_active_peering.dev2->ui_loop();
+#endif
+
   key_interface.check_key_throttle();
   GUI.loop();
 }
@@ -361,53 +363,13 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (event->source == ButtonsClass::TBD_KEY_SPS_TOGGLE && is_press &&
         BUTTON_DOWN(ButtonsClass::BUTTON2)) {
       mcl.pushPage(SYSTEM_PAGE);
-      sps_mode.mark_tr_consumed();
+      midi_active_peering.dev1->mark_tr_consumed();
+      midi_active_peering.dev2->mark_tr_consumed();
       return true;
     }
 
-    // BUTTON3 (cluster A) acts as MDX_KEY_NO for the lifetime of the
-    // hold — press transmits MD NO + sets cmd_key_state, release does
-    // the inverse. The event is fully consumed; A is purely a modifier
-    // on TBD. Only fires for physical A — a remapped TL (orig_src ==
-    // BUTTON2) on a menu page falls through so MenuPage's BUTTON1 exit
-    // handler runs unmodified.
-    if (event->source == ButtonsClass::BUTTON3 &&
-        orig_src == ButtonsClass::BUTTON3) {
-      if (is_press) {
-        if (MD.connected) MD.press_no_button();
-        // In SPS-latched mode, A is a pure MDX_KEY_NO modifier — set
-        // the cmd_key_state bit so is_key_down() works, and RETURN TRUE
-        // to block the GridPage's local Shift Menu (GridPage.cpp:1177).
-        if (sps_mode.is_active()) {
-          SET_BIT64(key_interface.cmd_key_state, MDX_KEY_NO);
-          return true;
-        } else {
-          key_interface.key_event(MDX_KEY_NO, false);
-          return true;
-        }
-      } else if (is_release) {
-        if (MD.connected) MD.release_no_button();
-        if (sps_mode.is_active()) {
-          CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_NO);
-          return true;
-        } else {
-          key_interface.key_event(MDX_KEY_NO, true);
-          return true;
-        }
-      }
-    }
-
-    // BUTTON1 (cluster Y). In SPS-latched mode this acts as MDX_KEY_SCALE
-    // (Shift). We set the state bit here and fall through so
-    // SpsMode::handle_cluster_menus can fire the sysex.
-    if (event->source == ButtonsClass::BUTTON1 &&
-        orig_src == ButtonsClass::BUTTON1) {
-      if (sps_mode.is_active()) {
-        if (is_press) SET_BIT64(key_interface.cmd_key_state, MDX_KEY_SCALE);
-        else         CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_SCALE);
-        // Fall through to let handle_cluster_menus run.
-      }
-    }
+    if (midi_active_peering.dev1->handle_ui_event(event)) return true;
+    if (midi_active_peering.dev2->handle_ui_event(event)) return true;
 
     // BUTTON4 (cluster X). Emits MDX_KEY_YES + MD YES sysex only in
     // SPS-latched mode (MDX_KEY_YES passthrough for the MD's UI).
@@ -415,39 +377,9 @@ bool tbd_handleEvent(gui_event_t *event) {
     // a menu page falls through so MenuPage's BUTTON4 enter runs.
     // The event is fully consumed in SPS mode so GridPage's BUTTON4
     // release handler (GridPage.cpp:1223 → GRID_LOAD_PAGE) can't fire.
-    static bool yes_emitted = false;
-    if (event->source == ButtonsClass::BUTTON4 &&
-        orig_src == ButtonsClass::BUTTON4) {
-      if (is_press) {
-        yes_emitted = false;
-        if (sps_mode.is_active()) {
-          if (MD.connected) MD.press_yes_button();
-          // Direct cmd_key_state update — see BUTTON1 above. Posting
-          // EVENT_CMD via key_event would hit GridPage.cpp:1170, which
-          // jumps to `load:` and opens GRID_LOAD_PAGE.
-          SET_BIT64(key_interface.cmd_key_state, MDX_KEY_YES);
-          yes_emitted = true;
-          return true;
-        }
-      } else if (is_release && yes_emitted) {
-        if (MD.connected) MD.release_yes_button();
-        CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_YES);
-        yes_emitted = false;
-        return true;
-      }
-    }
-
-    // X press toggles GRID_LOAD_PAGE on GRID_PAGE (open) and back on
-    // GRID_LOAD_PAGE (close). On-press, not the AVR-shared on-release
-    // behaviour at GridPage.cpp:1223. The matching X release after a
-    // toggle is eaten via x_just_toggled so GridIOPage's BUTTON4
-    // release-to-close handler doesn't immediately undo the open.
-    // Skipped while SPS is latched — there X is an MDX_KEY_YES
-    // passthrough already emitted above.
     static bool x_just_toggled = false;
     if (event->source == ButtonsClass::BUTTON4 &&
-        orig_src == ButtonsClass::BUTTON4 &&
-        !sps_mode.is_active()) {
+        orig_src == ButtonsClass::BUTTON4) {
       const PageIndex pg = mcl.currentPage();
       if (is_press && pg == GRID_PAGE) {
         mcl.setPage(GRID_LOAD_PAGE);
@@ -473,11 +405,8 @@ bool tbd_handleEvent(gui_event_t *event) {
     //              also dropped so GridPage doesn't see a stray BUTTON1
     //              release that opens save again. Group save/load on TBD
     //              is driven by A (MDX_KEY_NO), not Y.
-    //   Anywhere else: fall through. SpsMode::handle_cluster_menus picks
-    //              up BUTTON1 in SPS-latched mode for MD SCALE.
-    // Skipped while SPS is latched — handle_cluster_menus owns BUTTON1
-    // for MD SCALE in that mode.
-    if (event->source == ButtonsClass::BUTTON1 && !sps_mode.is_active()) {
+    //   Anywhere else: fall through.
+    if (event->source == ButtonsClass::BUTTON1) {
       const PageIndex pg = mcl.currentPage();
       if (pg == GRID_PAGE && is_press) {
         GUI.ignoreNextEvent(ButtonsClass::BUTTON1);
@@ -492,8 +421,6 @@ bool tbd_handleEvent(gui_event_t *event) {
         return true;
       }
     }
-
-    if (sps_mode.handle_toggle_button(event)) return true;
 
     // ENC1 tap toggles the bank popup (pattern-select gesture). "Tap" =
     // pressed + released < TBD_TAP_MAX_MS with no rotation in the
@@ -536,66 +463,12 @@ bool tbd_handleEvent(gui_event_t *event) {
     //         (hold_function_button → toggle_global_window → release)
     //   ENC4: KIT     — bare toggle_kit_menu; FUNC=KIT chord
     //         (hold_function_button → toggle_kit_menu → release)
+    // ENC2..4 taps in normal mode trigger local MCL actions (Grid swap/Seq advance).
+    // Handled by driver handle_ui_event in SPS mode.
     if (event->source >= ButtonsClass::ENCODER2 &&
         event->source <= ButtonsClass::ENCODER4) {
-        // PageSelectPage owns the encoder cluster — let presses fall
-        // through to its category selector handler.
-        if (mcl.currentPage() == PAGE_SELECT_PAGE) return false;
-        static bool   enc_armed[3]    = {false, false, false};
-        static uint16_t enc_press_ms[3] = {0, 0, 0};
-        static constexpr uint16_t kEncTapMaxMs = TBD_TAP_MAX_MS;
-        const uint8_t idx = event->source - ButtonsClass::ENCODER2;
-        const bool *long_seen[3] = {&Buttons.enc2_long_press_seen,
-                                    &Buttons.enc3_long_press_seen,
-                                    &Buttons.enc4_long_press_seen};
-        const bool *rot_seen[3]  = {&Buttons.enc2_rotated_while_held,
-                                    &Buttons.enc3_rotated_while_held,
-                                    &Buttons.enc4_rotated_while_held};
-        if (is_press) {
-            enc_armed[idx]    = true;
-            enc_press_ms[idx] = read_clock_ms();
-            return true;
-        }
-        const bool too_long =
-            clock_diff(enc_press_ms[idx], read_clock_ms()) > kEncTapMaxMs;
-        const bool tap_valid = enc_armed[idx] && !*long_seen[idx]
-                            && !*rot_seen[idx] && !too_long;
-        enc_armed[idx] = false;
-        if (!tap_valid)              return true;
-        if (!sps_mode.is_active())   return true;
-        if (!MD.connected)           return true;
-        const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
-        switch (event->source) {
-            case ButtonsClass::ENCODER2: // TEMPO
-                if (func_held) MD.tap_tempo();
-                else           MD.toggle_tempo_window();
-                break;
-            case ButtonsClass::ENCODER3: // PAT/SONG (FUNC = GLOBAL menu)
-                if (func_held) {
-                    MD.hold_function_button();
-                    MD.toggle_global_window();
-                    MD.release_function_button();
-                } else {
-                    MD.press_patternsong_button();
-                }
-                break;
-            case ButtonsClass::ENCODER4: // KIT (FUNC = machine select)
-                if (func_held) {
-                    MD.hold_function_button();
-                    MD.toggle_kit_menu();
-                    MD.release_function_button();
-                } else {
-                    MD.toggle_kit_menu();
-                }
-                break;
-            default: break;
-        }
-        return true;
+        // Fall through to mcl_handleEvent if the driver didn't consume it.
     }
-
-    // SPS-mode cluster override: while latched, Y/X/A bypass their local
-    // NO/YES/shift actions and fire MD menu-open sysex directly.
-    if (sps_mode.handle_cluster_menus(event)) return true;
 
     // BUTTON1..BUTTON4 are MCL local roles handled by mcl_handleEvent.
     // GridPage's native BUTTON1+BUTTON4 chord (SYSTEM_PAGE) is preserved here.
@@ -604,17 +477,6 @@ bool tbd_handleEvent(gui_event_t *event) {
     }
 
     uint8_t key = 255;
-
-    // SPS sub-page traversal takes precedence over the FUNC+arrow chord —
-    // both gestures share the SPS-key-held trigger but the latch makes
-    // sub-page navigation the intent. Subpage also flags the B-tap
-    // handler so the trailing B release doesn't double-fire LFO/PAGE.
-    if (sps_mode.handle_arrow_subpage(event))    return true;
-    if (sps_mode.handle_func_arrow_chord(event)) return true;
-    // MCL_B press/release: arms / fires LFO/PAGE on tap-only release in
-    // SPS-latched mode. Must run after handle_arrow_subpage so chord
-    // detection has set b_chorded_ before B's release lands.
-    if (sps_mode.handle_sps_key_tap(event))      return true;
 
     // Bank popup arrow navigation — works in either mode whenever the
     // popup is up (the popup itself is opened via ENC1 tap).
@@ -625,20 +487,6 @@ bool tbd_handleEvent(gui_event_t *event) {
     if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
         event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
         key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
-
-        if (sps_mode.handle_trig_forward(event, key)) return true;
-
-        // FUNC held + trig in normal (non-latched) mode → MD track
-        // select. FUNC is sourced from TBD NO (FUNC_BUTTON5) which sets
-        // MDX_KEY_FUNC on its press.
-        if (!sps_mode.is_active() &&
-            key_interface.is_key_down(MDX_KEY_FUNC)) {
-            if (is_press && key < NUM_MD_TRACKS) {
-                MD.currentTrack = key;
-                if (MD.connected) MD.track_select(key + 1);
-            }
-            return true;
-        }
 
         if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
             if (is_press && key < NUM_MD_TRACKS) {
@@ -712,72 +560,6 @@ bool tbd_handleEvent(gui_event_t *event) {
     }
 
     if (key != 255) {
-        const bool is_arrow = (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
-                               key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT);
-
-        // Arrow routing: a panel arrow now ALWAYS posts an EVENT_CMD via
-        // key_event(), so pages handle MDX_KEY_UP/DOWN/LEFT/RIGHT
-        // identically whether the press came from the local panel or
-        // from MD-replicated key sysex (e.g., SeqStepPage's microtiming
-        // adjuster reacts to either source). When SPS is latched OR
-        // we're on a non-arrow-local page (anything outside grid/seq),
-        // the arrow ALSO mirrors to the MD's UI as a side effect — so
-        // the MD's display tracks too.
-        const PageIndex cur_pg = mcl.currentPage();
-        const bool arrows_local_only =
-            !sps_mode.is_active() &&
-            (cur_pg == GRID_PAGE || cur_pg == SEQ_STEP_PAGE ||
-             cur_pg == SEQ_PTC_PAGE || cur_pg == SEQ_EXTSTEP_PAGE);
-        const bool mirror_arrow_to_md =
-            MD.connected && is_arrow && !arrows_local_only;
-        if (mirror_arrow_to_md) {
-            // Suppress repeated press edges so we don't spam the MD.
-            if (!is_release && key_interface.is_key_down(key)) {
-                return true;
-            }
-            if (is_release) {
-                switch (key) {
-                    case MDX_KEY_UP:    MD.release_up_arrow();    break;
-                    case MDX_KEY_DOWN:  MD.release_down_arrow();  break;
-                    case MDX_KEY_LEFT:  MD.release_left_arrow();  break;
-                    case MDX_KEY_RIGHT: MD.release_right_arrow(); break;
-                    default: break;
-                }
-            } else {
-                switch (key) {
-                    case MDX_KEY_UP:    MD.hold_up_arrow();    break;
-                    case MDX_KEY_DOWN:  MD.hold_down_arrow();  break;
-                    case MDX_KEY_LEFT:  MD.hold_left_arrow();  break;
-                    case MDX_KEY_RIGHT: MD.hold_right_arrow(); break;
-                    default: break;
-                }
-            }
-
-            // SPS-latched mode: arrow keys are forwarded to the MD and
-            // do NOT fall through to the local page (Grid / Seq).
-            if (sps_mode.is_active()) {
-                key_interface.key_event(key, is_release);
-                return true;
-            }
-            // Fall through to key_event below — the local fire updates
-            // cmd_key_state and posts EVENT_CMD so pages see the arrow.
-        }
-
-        // YES/NO: transmit to MD AND fire the local key_event so MCL pages
-        // (which key off MDX_KEY_YES / MDX_KEY_NO via EVENT_CMD) still see
-        // the press. Persists across SPS-mode latching since neither the
-        // SpsMode handlers above nor the SPS-mode poll touches these keys.
-        if (MD.connected && (key == MDX_KEY_YES || key == MDX_KEY_NO)) {
-            if (is_release) {
-                if (key == MDX_KEY_YES) MD.release_yes_button();
-                else                    MD.release_no_button();
-            } else {
-                if (key == MDX_KEY_YES) MD.press_yes_button();
-                else                    MD.press_no_button();
-            }
-            // Fall through to key_event below.
-        }
-
         key_interface.key_event(key, is_release);
         return true;
     }
@@ -810,9 +592,14 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_DOWN:
       case MDX_KEY_LEFT:
       case MDX_KEY_RIGHT:
-        if (sps_mode.is_active()) {
-          return true; // Forwarded to MD in tbd_handleEvent, consume here.
+#ifdef PLATFORM_TBD
+        // If any driver has an active UI (like SPS), consume the arrows
+        // here as they were already forwarded to the device.
+        if (midi_active_peering.dev1->is_ui_active() ||
+            midi_active_peering.dev2->is_ui_active()) {
+          return true;
         }
+#endif
         break;
         /*
               case MDX_KEY_UP:

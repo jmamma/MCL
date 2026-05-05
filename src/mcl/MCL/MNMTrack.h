@@ -3,7 +3,7 @@
 #pragma once
 
 #include "ExtTrack.h"
-#include "MNM.h"
+#include "../Drivers/MNM/MNM.h"
 
 class ATTR_PACKED() MNMTrack : public ExtTrack {
 public:

@@ -1,5 +1,5 @@
 #include "MNMTrack.h"
-#include "MNM.h"
+#include "../Drivers/MNM/MNM.h"
 
 
 void MNMTrack::init() {

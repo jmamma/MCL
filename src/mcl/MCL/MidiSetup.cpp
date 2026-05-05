@@ -4,9 +4,9 @@
 #include "SeqPages.h"
 #include "MCLSysConfig.h"
 #include "MidiActivePeering.h"
-#include "MD.h"
-#include "MNM.h"
-#include "A4.h"
+#include "../Drivers/MD/MD.h"
+#include "../Drivers/MNM/MNM.h"
+#include "../Drivers/A4/A4.h"
 #include "MCLSeq.h"
 
 void MidiSetup::cfg_clock_recv() {

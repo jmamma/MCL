@@ -4,7 +4,7 @@
 #include "Project.h"
 #include "MidiActivePeering.h"
 #include "GUI_hardware.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MCLStrings.h"
 #if !defined(__AVR__)
 #include "SPSXSeqDefines.h"

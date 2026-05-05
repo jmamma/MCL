@@ -134,5 +134,3 @@ private:
   bool show_value(uint8_t i) const;
   uint8_t param_base() const { return (uint8_t)(sub_page_ * 4); }
 };
-
-extern SpsMode sps_mode;

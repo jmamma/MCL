@@ -1,7 +1,7 @@
 #include "LFOSeqTrack.h"
 #include "LFO.h"
 #include "MidiClock.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MCLSeq.h"
 
 uint8_t LFOSeqTrack::wav_tables[4][WAV_LENGTH];

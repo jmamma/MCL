@@ -1,10 +1,10 @@
 #include "LFOPage.h"
 #include "LFO.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MCLGUI.h"
 #include "ResourceManager.h"
 #include "MidiActivePeering.h"
-#include "A4.h"
+#include "../Drivers/A4/A4.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1

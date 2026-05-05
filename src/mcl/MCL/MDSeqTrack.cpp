@@ -1,5 +1,5 @@
 #include "MDSeqTrack.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MDTrack.h"
 #include "MidiUart.h"
 #include "MidiClock.h"

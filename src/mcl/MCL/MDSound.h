@@ -8,7 +8,7 @@
 #define SOUND_ID 0xFFFA
 #define SOUND_VERSION 2000
 
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 
 class MDSoundData {
 public:

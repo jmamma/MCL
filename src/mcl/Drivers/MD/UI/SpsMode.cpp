@@ -2,8 +2,8 @@
 
 #ifdef PLATFORM_TBD
 #include "MCL.h"
-#include "MD.h"
-#include "MDParams.h"
+#include "../MD.h"
+#include "../MDParams.h"
 #include "GridPage.h"
 #include "GridPages.h"
 #include "KeyInterface.h"
@@ -16,8 +16,6 @@
 #include "SeqPages.h"
 #include "MCLSeq.h"
 #include "NoteInterface.h"
-
-SpsMode sps_mode;
 
 namespace {
 
@@ -448,8 +446,6 @@ void SpsMode::poll_page_overlay() {
 }
 
 #else // !PLATFORM_TBD
-
-SpsMode sps_mode;
 
 bool SpsMode::handle_toggle_button(gui_event_t *) { return false; }
 bool SpsMode::handle_func_arrow_chord(gui_event_t *) { return false; }

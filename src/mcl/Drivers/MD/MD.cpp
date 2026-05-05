@@ -10,6 +10,8 @@
 #include "SeqPages.h"
 #include "MCLStrings.h"
 #include "MidiActivePeering.h"
+#include "KeyInterface.h"
+#include "GUI_hardware.h"
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -200,6 +202,216 @@ void MDClass::setExternalSync() {
   uint8_t data[3] = {0x70, 0x4D, b};
   sendRequest(data, sizeof(data));
 }
+
+#ifdef PLATFORM_TBD
+void MDClass::on_connection(uint8_t device_idx) {
+  init_grid_devices(device_idx);
+}
+
+void MDClass::ui_loop() {
+  sps_mode.poll_encoders();
+  sps_mode.poll_page_overlay();
+}
+
+bool MDClass::handle_ui_event(gui_event_t *event) {
+  if (!connected) return false;
+
+  const bool is_press = (event->mask == EVENT_BUTTON_PRESSED);
+  const bool is_release = (event->mask == EVENT_BUTTON_RELEASED);
+
+  // ENCODER2..4 taps in SPS-latched mode trigger MD windows/actions.
+  if (event->source >= ButtonsClass::ENCODER2 &&
+      event->source <= ButtonsClass::ENCODER4) {
+    const uint8_t idx = event->source - ButtonsClass::ENCODER2;
+    static bool enc_armed[3] = {false, false, false};
+    static uint16_t enc_press_ms[3] = {0, 0, 0};
+    static constexpr uint16_t kEncTapMaxMs = TBD_TAP_MAX_MS;
+    bool *long_seen[3] = {&Buttons.enc2_long_press_seen,
+                          &Buttons.enc3_long_press_seen,
+                          &Buttons.enc4_long_press_seen};
+    bool *rot_seen[3]  = {&Buttons.enc2_rotated_while_held,
+                          &Buttons.enc3_rotated_while_held,
+                          &Buttons.enc4_rotated_while_held};
+    if (is_press) {
+      enc_armed[idx] = true;
+      enc_press_ms[idx] = read_clock_ms();
+      return true;
+    }
+    const bool too_long =
+        clock_diff(enc_press_ms[idx], read_clock_ms()) > kEncTapMaxMs;
+    const bool tap_valid = enc_armed[idx] && !*long_seen[idx] &&
+                           !*rot_seen[idx] && !too_long;
+    enc_armed[idx] = false;
+    if (!tap_valid) return true;
+    if (!sps_mode.is_active()) return false; // Let MCL handle normal taps
+
+    const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
+    switch (event->source) {
+      case ButtonsClass::ENCODER2: // TEMPO
+        if (func_held) tap_tempo();
+        else           toggle_tempo_window();
+        break;
+      case ButtonsClass::ENCODER3: // PAT/SONG (FUNC = GLOBAL menu)
+        if (func_held) {
+          hold_function_button();
+          toggle_global_window();
+          release_function_button();
+        } else {
+          press_patternsong_button();
+        }
+        break;
+      case ButtonsClass::ENCODER4: // KIT (FUNC = machine select)
+        if (func_held) {
+          hold_function_button();
+          toggle_kit_menu();
+          release_function_button();
+        } else {
+          toggle_kit_menu();
+        }
+        break;
+      default: break;
+    }
+    return true;
+  }
+
+  // BUTTON3 (cluster A) acts as MDX_KEY_NO for the lifetime of the
+  // hold — press transmits MD NO + sets cmd_key_state, release does
+  // the inverse. The event is fully consumed; A is purely a modifier
+  // on TBD.
+  if (event->source == ButtonsClass::BUTTON3) {
+    if (is_press) {
+      press_no_button();
+      // In SPS-latched mode, A is a pure MDX_KEY_NO modifier — set
+      // the cmd_key_state bit so is_key_down() works, and RETURN TRUE
+      // to block the GridPage's local Shift Menu (GridPage.cpp:1177).
+      if (sps_mode.is_active()) {
+        SET_BIT64(key_interface.cmd_key_state, MDX_KEY_NO);
+        return true;
+      } else {
+        key_interface.key_event(MDX_KEY_NO, false);
+        return true;
+      }
+    } else if (is_release) {
+      release_no_button();
+      if (sps_mode.is_active()) {
+        CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_NO);
+        return true;
+      } else {
+        key_interface.key_event(MDX_KEY_NO, true);
+        return true;
+      }
+    }
+  }
+
+  // BUTTON1 (cluster Y). In SPS-latched mode this acts as MDX_KEY_SCALE
+  // (Shift). We set the state bit here and fall through so
+  // sps_mode.handle_cluster_menus can fire the sysex.
+  if (event->source == ButtonsClass::BUTTON1) {
+    if (sps_mode.is_active()) {
+      if (is_press) SET_BIT64(key_interface.cmd_key_state, MDX_KEY_SCALE);
+      else         CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_SCALE);
+      // Fall through to let handle_cluster_menus run.
+    }
+  }
+
+  // BUTTON4 (cluster X). Emits MDX_KEY_YES + MD YES sysex only in
+  // SPS-latched mode (MDX_KEY_YES passthrough for the MD's UI).
+  if (event->source == ButtonsClass::BUTTON4) {
+    if (sps_mode.is_active()) {
+      if (is_press) {
+        press_yes_button();
+        SET_BIT64(key_interface.cmd_key_state, MDX_KEY_YES);
+      } else if (is_release) {
+        release_yes_button();
+        CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_YES);
+      }
+      return true;
+    }
+  }
+
+  if (sps_mode.handle_toggle_button(event)) return true;
+  if (sps_mode.handle_cluster_menus(event)) return true;
+  if (sps_mode.handle_arrow_subpage(event))    return true;
+  if (sps_mode.handle_func_arrow_chord(event)) return true;
+  if (sps_mode.handle_sps_key_tap(event))      return true;
+
+  const bool is_arrow = (event->source >= ButtonsClass::FUNC_BUTTON6 &&
+                         event->source <= ButtonsClass::FUNC_BUTTON9);
+
+  if (is_arrow) {
+    uint8_t key = 255;
+    switch (event->source) {
+      case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_UP;    break;
+      case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_DOWN;  break;
+      case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_LEFT;  break;
+      case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_RIGHT; break;
+    }
+
+    // Arrow routing: a panel arrow now ALWAYS posts an EVENT_CMD via
+    // key_event(), so pages handle MDX_KEY_UP/DOWN/LEFT/RIGHT
+    // identically whether the press came from the local panel or
+    // from MD-replicated key sysex. When SPS is latched OR
+    // we're on a non-arrow-local page (anything outside grid/seq),
+    // the arrow ALSO mirrors to the MD's UI as a side effect — so
+    // the MD's display tracks too.
+    const PageIndex cur_pg = mcl.currentPage();
+    const bool arrows_local_only =
+        !sps_mode.is_active() &&
+        (cur_pg == GRID_PAGE || cur_pg == SEQ_STEP_PAGE ||
+         cur_pg == SEQ_PTC_PAGE || cur_pg == SEQ_EXTSTEP_PAGE);
+    
+    if (!arrows_local_only) {
+      // Suppress repeated press edges so we don't spam the MD.
+      if (!is_release && key_interface.is_key_down(key)) {
+        return true;
+      }
+      if (is_release) {
+        switch (key) {
+          case MDX_KEY_UP:    release_up_arrow();    break;
+          case MDX_KEY_DOWN:  release_down_arrow();  break;
+          case MDX_KEY_LEFT:  release_left_arrow();  break;
+          case MDX_KEY_RIGHT: release_right_arrow(); break;
+          default: break;
+        }
+      } else {
+        switch (key) {
+          case MDX_KEY_UP:    hold_up_arrow();    break;
+          case MDX_KEY_DOWN:  hold_down_arrow();  break;
+          case MDX_KEY_LEFT:  hold_left_arrow();  break;
+          case MDX_KEY_RIGHT: hold_right_arrow(); break;
+          default: break;
+        }
+      }
+
+      // SPS-latched mode: arrow keys are forwarded to the MD and
+      // do NOT fall through to the local page (Grid / Seq).
+      if (sps_mode.is_active()) {
+        key_interface.key_event(key, is_release);
+        return true;
+      }
+    }
+  }
+
+  if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
+      event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
+    uint8_t key = event->source - ButtonsClass::TRIG_BUTTON1;
+
+    // FUNC held + trig in normal (non-latched) mode → MD track
+    // select.
+    if (!sps_mode.is_active() &&
+        key_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (is_press && key < NUM_MD_TRACKS) {
+        currentTrack = key;
+        track_select(key + 1);
+      }
+      return true;
+    }
+
+    if (sps_mode.handle_trig_forward(event, key)) return true;
+  }
+  return false;
+}
+#endif
 
 void MDClass::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 0;

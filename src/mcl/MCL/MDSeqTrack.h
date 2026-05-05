@@ -4,7 +4,7 @@
 #define MDSEQTRACK_H__
 
 #include "DeviceTrack.h"
-#include "MD.h"
+#include "../Drivers/MD/MD.h"
 #include "MDSeqTrackData.h"
 #include "SeqTrack.h"
 #include "MidiClock.h"

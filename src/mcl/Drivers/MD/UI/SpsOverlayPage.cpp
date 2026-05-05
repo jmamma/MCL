@@ -4,8 +4,8 @@
 
 #include "MCL.h"
 #include "MCLGUI.h"
-#include "MD.h"
-#include "MDParams.h"
+#include "../MD.h"
+#include "../MDParams.h"
 #include "GUI_hardware.h"
 #include "SpsMode.h"
 #include <string.h>
@@ -55,7 +55,7 @@ void SpsOverlayPage::loop() {
 }
 
 void SpsOverlayPage::paint_leds() {
-  if (painted_sub_page_ == sps_mode.sub_page()) return;
+  if (painted_sub_page_ == MD.sps_mode.sub_page()) return;
 
   // 1 trig LED = 1 sub-page (4 params); a column-pair (top trig N +
   // bottom trig N+8) = one 8-param page. Stock MD = 3 pages, SPS = 4.
@@ -80,7 +80,7 @@ void SpsOverlayPage::paint_leds() {
   }
   mcl_gui.set_trigleds_color(avail, kRed);
 
-  const uint8_t sub_page = sps_mode.sub_page();
+  const uint8_t sub_page = MD.sps_mode.sub_page();
   const uint8_t focus_page = sub_page >> 1;
   const uint8_t focus_half = sub_page & 1;
   const uint16_t focus_bit =
@@ -96,7 +96,7 @@ void SpsOverlayPage::display() {
   // active_half (toggled by UP/DOWN) selects which half is bound to
   // the encoders — marked by a 1-px bounding rect around its 128x32
   // region so the user can see what the encoders will edit.
-  const uint8_t sub_page = sps_mode.sub_page();
+  const uint8_t sub_page = MD.sps_mode.sub_page();
   const uint8_t page = sub_page >> 1;
   const uint8_t active_half = sub_page & 1;
   const uint8_t page_base = page * 8;
@@ -114,14 +114,14 @@ void SpsOverlayPage::display() {
     const uint8_t tp = page_base + i;
     const uint8_t bp = page_base + 4 + i;
     uint8_t lv;
-    if (sps_mode.active_step_lock(tp, &lv)) {
+    if (MD.sps_mode.active_step_lock(tp, &lv)) {
       top_encs[i].cur = lv;
       top_locked[i] = true;
     } else {
       top_encs[i].cur = MD.kit.params[track][tp];
     }
     top_encs[i].old = top_encs[i].cur;
-    if (sps_mode.active_step_lock(bp, &lv)) {
+    if (MD.sps_mode.active_step_lock(bp, &lv)) {
       bottom_encs[i].cur = lv;
       bot_locked[i] = true;
     } else {
