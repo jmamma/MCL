@@ -101,13 +101,15 @@ bool KeyInterface::check_key_throttle() {
   return false;
 }
 
-void KeyInterface::key_event(uint8_t key, bool key_release) {
-   if (key_release) {
-    CLEAR_BIT64(cmd_key_state, key);
-  } else {
+void KeyInterface::set_key_state(uint8_t key, bool down) {
+  if (down) {
     SET_BIT64(cmd_key_state, key);
+  } else {
+    CLEAR_BIT64(cmd_key_state, key);
   }
+}
 
+void KeyInterface::post_key_event(uint8_t key, bool key_release) {
   if (IS_BIT_SET64(ignore_next_mask, key)) {
     CLEAR_BIT64(ignore_next_mask, key);
     return;
@@ -134,6 +136,11 @@ void KeyInterface::key_event(uint8_t key, bool key_release) {
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
   event.port = md_port;
   GUI.putEvent(&event);
+}
+
+void KeyInterface::key_event(uint8_t key, bool key_release) {
+  set_key_state(key, !key_release);
+  post_key_event(key, key_release);
 }
 
 void KeyInterface::end() {

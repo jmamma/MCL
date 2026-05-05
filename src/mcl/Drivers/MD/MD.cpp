@@ -275,17 +275,17 @@ bool MDClass::handle_ui_event(gui_event_t *event) {
   }
 
   // BUTTON3 (cluster A) acts as MDX_KEY_NO for the lifetime of the
-  // hold — press transmits MD NO + sets cmd_key_state, release does
-  // the inverse. The event is fully consumed; A is purely a modifier
-  // on TBD.
+  // hold — press transmits MD NO + sets held-state, release does the
+  // inverse. In SPS-latched mode it is device/state only, not a local
+  // MCL command.
   if (event->source == ButtonsClass::BUTTON3) {
     if (is_press) {
       press_no_button();
-      // In SPS-latched mode, A is a pure MDX_KEY_NO modifier — set
-      // the cmd_key_state bit so is_key_down() works, and RETURN TRUE
-      // to block the GridPage's local Shift Menu (GridPage.cpp:1177).
+      // In SPS-latched mode, A is a pure MDX_KEY_NO modifier. Keep
+      // held-state for chord logic, but do not post a local EVENT_CMD:
+      // GridPage should never see this as its shift-menu key.
       if (sps_mode.is_active()) {
-        SET_BIT64(key_interface.cmd_key_state, MDX_KEY_NO);
+        key_interface.set_key_state(MDX_KEY_NO, true);
         return true;
       } else {
         key_interface.key_event(MDX_KEY_NO, false);
@@ -294,7 +294,7 @@ bool MDClass::handle_ui_event(gui_event_t *event) {
     } else if (is_release) {
       release_no_button();
       if (sps_mode.is_active()) {
-        CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_NO);
+        key_interface.set_key_state(MDX_KEY_NO, false);
         return true;
       } else {
         key_interface.key_event(MDX_KEY_NO, true);
@@ -308,8 +308,7 @@ bool MDClass::handle_ui_event(gui_event_t *event) {
   // sps_mode.handle_cluster_menus can fire the sysex.
   if (event->source == ButtonsClass::BUTTON1) {
     if (sps_mode.is_active()) {
-      if (is_press) SET_BIT64(key_interface.cmd_key_state, MDX_KEY_SCALE);
-      else         CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_SCALE);
+      key_interface.set_key_state(MDX_KEY_SCALE, is_press);
       // Fall through to let handle_cluster_menus run.
     }
   }
@@ -320,10 +319,10 @@ bool MDClass::handle_ui_event(gui_event_t *event) {
     if (sps_mode.is_active()) {
       if (is_press) {
         press_yes_button();
-        SET_BIT64(key_interface.cmd_key_state, MDX_KEY_YES);
+        key_interface.set_key_state(MDX_KEY_YES, true);
       } else if (is_release) {
         release_yes_button();
-        CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_YES);
+        key_interface.set_key_state(MDX_KEY_YES, false);
       }
       return true;
     }
@@ -342,18 +341,15 @@ bool MDClass::handle_ui_event(gui_event_t *event) {
     uint8_t key = 255;
     switch (event->source) {
       case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_UP;    break;
-      case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_DOWN;  break;
-      case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_LEFT;  break;
+      case ButtonsClass::FUNC_BUTTON7: key = MDX_KEY_LEFT;  break;
+      case ButtonsClass::FUNC_BUTTON8: key = MDX_KEY_DOWN;  break;
       case ButtonsClass::FUNC_BUTTON9: key = MDX_KEY_RIGHT; break;
     }
 
-    // Arrow routing: a panel arrow now ALWAYS posts an EVENT_CMD via
-    // key_event(), so pages handle MDX_KEY_UP/DOWN/LEFT/RIGHT
-    // identically whether the press came from the local panel or
-    // from MD-replicated key sysex. When SPS is latched OR
-    // we're on a non-arrow-local page (anything outside grid/seq),
-    // the arrow ALSO mirrors to the MD's UI as a side effect — so
-    // the MD's display tracks too.
+    // Arrow routing: on grid/seq pages in normal mode, arrows are local
+    // only and fall through to MCL.cpp's key_event path. In SPS-latched
+    // mode, or on pages without local arrow ownership, arrows mirror to
+    // the MD UI so the MD display tracks the panel.
     const PageIndex cur_pg = mcl.currentPage();
     const bool arrows_local_only =
         !sps_mode.is_active() &&
@@ -383,10 +379,11 @@ bool MDClass::handle_ui_event(gui_event_t *event) {
         }
       }
 
-      // SPS-latched mode: arrow keys are forwarded to the MD and
-      // do NOT fall through to the local page (Grid / Seq).
+      // SPS-latched mode: arrow keys are forwarded to the MD and kept
+      // in held-state for repeat/chord logic, but no local EVENT_CMD is
+      // posted. The local page should not need a later suppression hook.
       if (sps_mode.is_active()) {
-        key_interface.key_event(key, is_release);
+        key_interface.set_key_state(key, !is_release);
         return true;
       }
     }

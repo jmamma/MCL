@@ -87,6 +87,8 @@ public:
   void ignoreNextEventClear(uint8_t i) {
     CLEAR_BIT64(ignore_next_mask, i);
   }
+  void set_key_state(uint8_t key, bool down);
+  void post_key_event(uint8_t key, bool key_release);
   void key_event(uint8_t key, bool key_release);
 
   bool on(bool clear_states = true);

@@ -588,19 +588,6 @@ bool mcl_handleEvent(gui_event_t *event) {
         reset_undo();
       }
       switch (key) {
-      case MDX_KEY_UP:
-      case MDX_KEY_DOWN:
-      case MDX_KEY_LEFT:
-      case MDX_KEY_RIGHT:
-#ifdef PLATFORM_TBD
-        // If any driver has an active UI (like SPS), consume the arrows
-        // here as they were already forwarded to the device.
-        if (midi_active_peering.dev1->is_ui_active() ||
-            midi_active_peering.dev2->is_ui_active()) {
-          return true;
-        }
-#endif
-        break;
         /*
               case MDX_KEY_UP:
               case MDX_KEY_DOWN:
