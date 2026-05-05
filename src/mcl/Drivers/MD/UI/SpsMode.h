@@ -1,4 +1,4 @@
-/* TBD SPS-mode latch. Owns the TBD_KEY_SPS_TOGGLE (TOP_RIGHT) toggle,
+/* TBD SPS-mode latch. Owns the TBD_BUTTON_TR toggle,
  * the cluster Y/X/A → MD menu-open 0x40 sysex (scale / LFO / kit), the
  * trig → sub_page selector / MD_GUI_TRIG_* routing, the SPS-key + arrow
  * sub-page traversal, and the FUNC + ARROW window-toggle chord. Pulled
@@ -57,7 +57,7 @@ public:
   // (works without latch). UP/DOWN flip half within page; LEFT/RIGHT
   // step pages (clamped, no wrap).
   bool handle_arrow_subpage(gui_event_t *event);
-  // B (TBD_KEY_SPS) tap fires a per-page action (grid swap on
+  // B (TBD_BUTTON_B) tap fires a per-page action (grid swap on
   // GRID_PAGE; sequencer-page advance on SEQ_*). Hold acts as the
   // sub-page modifier (B+arrow / B+trig).
   bool handle_sps_key_tap(gui_event_t *event);

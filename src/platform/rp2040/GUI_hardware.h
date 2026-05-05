@@ -152,12 +152,11 @@ public:
   static const uint8_t TRIG_BUTTON1 = 17;
 
 #ifdef PLATFORM_TBD
-  // TBD-only slots. Numbered after TRIG_BUTTON16 (= 32). GUI_NUM_BUTTONS
-  // = 38 leaves room. Cluster Y/X/A now drive BUTTON1/4/3 directly so
-  // their old MDX_KEY_* slots are gone — only the SPS-related slots are
-  // kept here.
-  static const uint8_t TBD_KEY_SPS        = 36; // SPS sub-page modifier (MCL_B held + trig)
-  static const uint8_t TBD_KEY_SPS_TOGGLE = 37; // SPS-mode latch toggle (TOP_RIGHT)
+  // TBD-only panel slots. Numbered after TRIG_BUTTON16 (= 32). Most TBD
+  // controls are mapped onto the legacy MCL button namespace below; only
+  // panel controls with no legacy slot need their own IDs here.
+  static const uint8_t TBD_BUTTON_B  = 36;
+  static const uint8_t TBD_BUTTON_TR = 37;
 #endif
 
   static const uint16_t ENCODER1_MASK = _BV(ENCODER1);

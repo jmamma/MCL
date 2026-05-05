@@ -194,7 +194,7 @@ void SpsMode::send_param(uint8_t i) {
 }
 
 bool SpsMode::handle_toggle_button(gui_event_t *event) {
-  if (event->source != ButtonsClass::TBD_KEY_SPS_TOGGLE) return false;
+  if (event->source != ButtonsClass::TBD_BUTTON_TR) return false;
   // TR semantics:
   //   press                   → toggle SPS latch immediately, OR
   //                             close the overlay if one is up
@@ -268,13 +268,13 @@ bool SpsMode::handle_cluster_menus(gui_event_t *event) {
 }
 
 bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
-  // Either MCL_B (TBD_KEY_SPS) or TR (TBD_KEY_SPS_TOGGLE) held + arrow
+  // Either B (TBD_BUTTON_B) or TR (TBD_BUTTON_TR) held + arrow
   // cycles sub_page_. Works with the latch off too — the gesture is
   // "modifier held", not "SPS-mode active". When TR is the modifier we
   // mark it consumed so the eventual TR release doesn't flip the latch.
   if (!is_arrow_source(event->source)) return false;
-  const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS);
-  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS_TOGGLE);
+  const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B);
+  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR);
   const bool overlay_active = (GUI.overlay == &sps_overlay_page);
   // While the SPS overlay is active (the 8-encoder page select view)
   // or a modifier (B/TR) is held, the cluster owns sub-page traversal.
@@ -326,7 +326,7 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
 }
 
 bool SpsMode::handle_sps_key_tap(gui_event_t *event) {
-  if (event->source != ButtonsClass::TBD_KEY_SPS) return false;
+  if (event->source != ButtonsClass::TBD_BUTTON_B) return false;
   // B does NOT toggle the SPS latch — that's TR's role. Tap fires a
   // per-page action; hold (with arrow / trig chord) is the SPS sub-page
   // modifier (handle_arrow_subpage, handle_trig_forward). b_consumed_
@@ -366,14 +366,14 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
   if (!latched_) return false;
   if (trig_idx >= 16) return false;
 
-  // Trig sub-page selection requires an explicit modifier: B (TBD_KEY_SPS)
-  // or TR (TBD_KEY_SPS_TOGGLE) held. Without a modifier, trigs fall
+  // Trig sub-page selection requires an explicit modifier: B (TBD_BUTTON_B)
+  // or TR (TBD_BUTTON_TR) held. Without a modifier, trigs fall
   // through to the active page — so on SEQ_STEP_PAGE you can keep
   // entering parameter locks (trig press = step select), on GRID_PAGE
   // you keep triggering the track, etc. Latch state alone no longer
   // claims trigs.
-  const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS);
-  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS_TOGGLE);
+  const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B);
+  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR);
   if (!b_held && !tr_held) return false;
 
   if (is_press(event)) {

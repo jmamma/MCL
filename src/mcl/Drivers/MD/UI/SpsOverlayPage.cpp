@@ -45,7 +45,7 @@ void SpsOverlayPage::loop() {
   // the user's "I'm actively driving sub-page selection" gesture.
   // When TR is released, hand the LEDs back to the active page so
   // step edit / grid / etc. can repaint their own palette.
-  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS_TOGGLE);
+  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR);
   if (tr_held) {
     paint_leds();
   } else if (painted_sub_page_ != 255) {

@@ -349,18 +349,18 @@ bool tbd_handleEvent(gui_event_t *event) {
       if (is_menu_page) {
         if (orig_src == ButtonsClass::BUTTON2) {
           event->source = ButtonsClass::BUTTON1;
-        } else if (orig_src == ButtonsClass::TBD_KEY_SPS_TOGGLE) {
+        } else if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
           event->source = ButtonsClass::BUTTON4;
         }
       }
     }
 
     // TL → TR chord opens the system config page. Asymmetric on purpose:
-    // only fires when TBD_KEY_SPS_TOGGLE (TR) is the press edge while
+    // only fires when TBD_BUTTON_TR is the press edge while
     // BUTTON2 (TL) is already held, so the reverse order falls through
     // to the normal SPS toggle. Suppresses the SPS-mode latch for this
     // TR press by short-circuiting before handle_toggle_button.
-    if (event->source == ButtonsClass::TBD_KEY_SPS_TOGGLE && is_press &&
+    if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
         BUTTON_DOWN(ButtonsClass::BUTTON2)) {
       mcl.pushPage(SYSTEM_PAGE);
       midi_active_peering.dev1->mark_tr_consumed();
@@ -482,7 +482,7 @@ bool tbd_handleEvent(gui_event_t *event) {
     // popup is up (the popup itself is opened via ENC1 tap).
     if (tbd_handle_bank_arrow_cycle(event)) return true;
 
-    // Trig buttons. Restricted to TRIG_BUTTON1..TRIG_BUTTON16 — TBD_KEY_* IDs
+    // Trig buttons. Restricted to TRIG_BUTTON1..TRIG_BUTTON16 — TBD_BUTTON_* IDs
     // sit immediately above this range and must reach the else-branch switch.
     if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
         event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
@@ -554,7 +554,7 @@ bool tbd_handleEvent(gui_event_t *event) {
             //   either + arrow        = sub-page traversal
             // MDX_KEY_FUNC is provided by TBD NO (FUNC_BUTTON5 above), so B
             // doesn't need to emit anything.
-            case ButtonsClass::TBD_KEY_SPS: break;
+            case ButtonsClass::TBD_BUTTON_B: break;
             default: break;
         }
     }
