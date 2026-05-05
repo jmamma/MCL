@@ -60,6 +60,9 @@ public:
   virtual void on_connection(uint8_t device_idx) override;
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
+  virtual bool enter_ui(gui_event_t *event) override {
+    return sps_mode.handle_toggle_button(event);
+  }
   virtual bool is_ui_active() override { return sps_mode.is_active(); }
   virtual void exit_ui() override { sps_mode.disable(); }
 #endif

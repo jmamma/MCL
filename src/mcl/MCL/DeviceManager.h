@@ -20,6 +20,7 @@ public:
 #ifdef PLATFORM_TBD
   void ui_loop();
   bool handle_ui_event(gui_event_t *event);
+  bool enter_ui(gui_event_t *event);
   bool is_ui_active() const;
   void exit_ui();
 #endif

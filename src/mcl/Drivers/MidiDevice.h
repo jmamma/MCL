@@ -63,6 +63,12 @@ public:
     return false;
   }
 
+  /** Driver-specific active UI entry control. Return true to consume. */
+  virtual bool enter_ui(gui_event_t *event) {
+    (void)event;
+    return false;
+  }
+
   /** Returns true if the driver has an active UI overlay or mode. */
   virtual bool is_ui_active() { return false; }
 

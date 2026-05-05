@@ -77,7 +77,6 @@ bool MDPanel::handle_event(gui_event_t *event) {
     }
   }
 
-  if (md_.sps_mode.handle_toggle_button(event)) return true;
   if (md_.sps_mode.handle_cluster_menus(event)) return true;
   if (md_.sps_mode.handle_arrow_subpage(event))    return true;
   if (md_.sps_mode.handle_func_arrow_chord(event)) return true;

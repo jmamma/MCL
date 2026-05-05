@@ -57,6 +57,15 @@ bool DeviceManager::handle_ui_event(gui_event_t *event) {
   return false;
 }
 
+bool DeviceManager::enter_ui(gui_event_t *event) {
+  MidiDevice *dev1 = this->dev1();
+  MidiDevice *dev2 = this->dev2();
+  if (dev2 == dev1) dev2 = nullptr;
+  if (dev1 && dev1->enter_ui(event)) return true;
+  if (dev2 && dev2->enter_ui(event)) return true;
+  return false;
+}
+
 bool DeviceManager::is_ui_active() const {
   MidiDevice *dev1 = this->dev1();
   MidiDevice *dev2 = this->dev2();

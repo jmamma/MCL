@@ -85,6 +85,18 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   const bool is_release = !(event->mask & 1);
 
   const uint8_t orig_src = event->source;
+  const PageIndex pg = mcl.currentPage();
+  const bool is_menu_page =
+      pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
+      pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
+      pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
+      pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
+      pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
+      pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
+      pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
+      pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
+      pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
+      pg == MIDIGENERIC_MENU_PAGE;
 
   // TL -> TR chord opens the system config page. Asymmetric on purpose:
   // only fires when TR is the press edge while TL is already held.
@@ -92,6 +104,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       BUTTON_DOWN(ButtonsClass::BUTTON2)) {
     device_manager.exit_ui();
     mcl.pushPage(SYSTEM_PAGE);
+    return true;
+  }
+
+  if (event->source == ButtonsClass::TBD_BUTTON_TR && !is_menu_page &&
+      device_manager.enter_ui(event)) {
     return true;
   }
 
@@ -115,31 +132,16 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   // config, mcl config, MIDI port menus, etc.), TL replaces BUTTON1
   // (NO/exit) and TR replaces BUTTON4 (YES/enter) so the user can
   // navigate the menu without leaving the cluster.
-  {
-    const PageIndex pg = mcl.currentPage();
-    const bool is_menu_page =
-        pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
-        pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
-        pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
-        pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
-        pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
-        pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
-        pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
-        pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
-        pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
-        pg == MIDIGENERIC_MENU_PAGE;
-    if (is_menu_page) {
-      if (orig_src == ButtonsClass::BUTTON2) {
-        event->source = ButtonsClass::BUTTON1;
-      } else if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
-        event->source = ButtonsClass::BUTTON4;
-      }
+  if (is_menu_page) {
+    if (orig_src == ButtonsClass::BUTTON2) {
+      event->source = ButtonsClass::BUTTON1;
+    } else if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
+      event->source = ButtonsClass::BUTTON4;
     }
   }
 
   if (event->source == ButtonsClass::BUTTON4 &&
       orig_src == ButtonsClass::BUTTON4) {
-    const PageIndex pg = mcl.currentPage();
     if (is_press && pg == GRID_PAGE) {
       GUI.ignoreNextEvent(ButtonsClass::BUTTON4);
       mcl.setPage(GRID_LOAD_PAGE);
@@ -153,7 +155,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (event->source == ButtonsClass::BUTTON1) {
-    const PageIndex pg = mcl.currentPage();
     if (pg == GRID_PAGE && is_press) {
       GUI.ignoreNextEvent(ButtonsClass::BUTTON1);
       mcl.setPage(GRID_SAVE_PAGE);
