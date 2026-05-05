@@ -132,6 +132,9 @@ void EncodersClass::pollTBD(const ui_data_t& ui_data) {
 
 ButtonsClass::ButtonsClass() {
 #ifdef PLATFORM_TBD
+    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+      enc_press_ms[i] = 0;
+    }
     enc1_long_press_seen     = false;
     enc1_rotated_while_held  = false;
     enc2_long_press_seen     = false;
@@ -160,6 +163,19 @@ void ButtonsClass::poll(uint8_t but) {
         but_tmp >>= 1;
     }
 }
+
+#ifdef PLATFORM_TBD
+bool ButtonsClass::is_encoder_tap(uint8_t encoder_idx, uint16_t max_ms) const {
+  if (encoder_idx >= GUI_NUM_ENCODERS) return false;
+  const bool long_seen[4] = {enc1_long_press_seen, enc2_long_press_seen,
+                             enc3_long_press_seen, enc4_long_press_seen};
+  const bool rot_seen[4] = {enc1_rotated_while_held, enc2_rotated_while_held,
+                            enc3_rotated_while_held, enc4_rotated_while_held};
+  if (long_seen[encoder_idx] || rot_seen[encoder_idx]) return false;
+  return clock_diff(enc_press_ms[encoder_idx], read_clock_ms()) <= max_ms;
+}
+#endif
+
 // TBD physical button -> active-low bit extraction.
 // Each macro evaluates true when the named button is pressed.
 #define TBD_BUTTON_TOP_LEFT(ui)   (!((ui).f_btns   & (1 << 0)))
@@ -197,6 +213,7 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
       const bool was_pressed = !B_OLD(ENCODER1 + n);
       const bool is_pressed  = !TBD_BUTTON_ENC(ui_data, n);
       if (is_pressed && !was_pressed) {
+        enc_press_ms[n] = read_clock_ms();
         *long_seen[n] = false;
         *rot_seen[n]  = false;
       }

@@ -223,26 +223,11 @@ bool MDClass::handle_ui_event(gui_event_t *event) {
   if (event->source >= ButtonsClass::ENCODER2 &&
       event->source <= ButtonsClass::ENCODER4) {
     const uint8_t idx = event->source - ButtonsClass::ENCODER2;
-    static bool enc_armed[3] = {false, false, false};
-    static uint16_t enc_press_ms[3] = {0, 0, 0};
     static constexpr uint16_t kEncTapMaxMs = TBD_TAP_MAX_MS;
-    bool *long_seen[3] = {&Buttons.enc2_long_press_seen,
-                          &Buttons.enc3_long_press_seen,
-                          &Buttons.enc4_long_press_seen};
-    bool *rot_seen[3]  = {&Buttons.enc2_rotated_while_held,
-                          &Buttons.enc3_rotated_while_held,
-                          &Buttons.enc4_rotated_while_held};
     if (is_press) {
-      enc_armed[idx] = true;
-      enc_press_ms[idx] = read_clock_ms();
       return true;
     }
-    const bool too_long =
-        clock_diff(enc_press_ms[idx], read_clock_ms()) > kEncTapMaxMs;
-    const bool tap_valid = enc_armed[idx] && !*long_seen[idx] &&
-                           !*rot_seen[idx] && !too_long;
-    enc_armed[idx] = false;
-    if (!tap_valid) return true;
+    if (!Buttons.is_encoder_tap((uint8_t)(idx + 1), kEncTapMaxMs)) return true;
     if (!sps_mode.is_active()) return false; // Let MCL handle normal taps
 
     const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
