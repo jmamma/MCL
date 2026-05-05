@@ -139,11 +139,13 @@ bool MDPanel::handle_event(gui_event_t *event) {
       event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
     uint8_t key = event->source - ButtonsClass::TRIG_BUTTON1;
 
-    // FUNC held + trig in normal (non-latched) mode -> MD track select.
-    if (!md_.sps_mode.is_active() && key_interface.is_key_down(MDX_KEY_FUNC)) {
+    // MD FUNC held + trig -> MD track select. Physical FUNC_BUTTON5 is
+    // separate from MDX_KEY_FUNC and still drives SPS sub-page selection.
+    if (key_interface.is_key_down(MDX_KEY_FUNC)) {
       if (is_press && key < NUM_MD_TRACKS) {
         md_.currentTrack = key;
         md_.track_select(key + 1);
+        if (md_.sps_mode.is_active()) md_.sps_mode.resync_from_kit();
       }
       return true;
     }

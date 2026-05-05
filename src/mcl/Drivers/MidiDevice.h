@@ -91,3 +91,11 @@ public:
   virtual MCLGIF *gif();
   virtual uint8_t *gif_data();
 };
+
+class NullMidiDevice : public MidiDevice {
+public:
+  NullMidiDevice();
+  virtual bool probe() override { return false; }
+};
+
+extern NullMidiDevice null_midi_device;

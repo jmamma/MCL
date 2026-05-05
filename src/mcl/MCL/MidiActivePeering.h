@@ -8,11 +8,9 @@
 #include "Task.h"
 #include "MCLSysConfig.h"
 #include "MCLSeq.h"
+#include "MidiSetup.h"
+#include "../Drivers/MidiDevice.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
-
-#define UART1_PORT 1
-#define UART2_PORT 2
-#define UARTUSB_PORT 3
 
 class MidiActivePeering : public Task {
 public:
@@ -31,21 +29,14 @@ public:
    **/
   MidiDevice *get_device(uint8_t port);
 
-  /** Cached device pointers for logical driver slots, USB-resolved. */
+  /** Compatibility aliases for logical driver slots, USB-resolved. */
   MidiDevice *dev1;
   MidiDevice *dev2;
 
-  /** Refresh dev1/dev2 from connected_midi_devices + USB routing. */
+  /** Refresh compatibility aliases from DeviceManager. */
   void update_dev_cache();
 };
 
-class NullMidiDevice : public MidiDevice {
-public:
-  NullMidiDevice();
-  virtual bool probe() { return false; }
-};
-
-extern NullMidiDevice null_midi_device;
 extern MidiActivePeering midi_active_peering;
 
 #endif /* MIDIACTIVEPEERING_H__ */

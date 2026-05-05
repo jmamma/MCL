@@ -5,6 +5,10 @@
 
 #include <stdint.h>
 
+#define UART1_PORT 1
+#define UART2_PORT 2
+#define UARTUSB_PORT 3
+
 class MidiClass;
 class MidiUartClass;
 

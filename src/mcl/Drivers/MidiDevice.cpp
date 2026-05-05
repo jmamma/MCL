@@ -1,6 +1,7 @@
 #include "MidiDevice.h"
 
 #include "Midi.h"
+#include "MidiID.h"
 #include "MidiUart.h"
 #include "Project.h"
 #include "ResourceManager.h"
@@ -15,6 +16,9 @@ MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
   connected = false;
   in_probe = false;
 }
+
+NullMidiDevice::NullMidiDevice()
+    : MidiDevice(nullptr, "  ", DEVICE_NULL, false) {}
 
 void MidiDevice::add_track_to_grid(uint8_t grid_idx, uint8_t track_idx,
                                    GridDeviceTrack *gdt) {

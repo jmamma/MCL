@@ -4,6 +4,7 @@
 #include "MidiIDSysex.h"
 #include "MidiUart.h"
 #include "MidiSetup.h"
+#include "DeviceManager.h"
 #include "TurboLight.h"
 #include "ResourceManager.h"
 #include "../Drivers/MD/MD.h"
@@ -73,10 +74,6 @@ static MidiDevice *generic_drivers[] = {
     &generic_midi_device,
 };
 
-static MidiDevice *connected_midi_devices[3] = {&null_midi_device,
-                                                &null_midi_device,
-                                                &null_midi_device};
-
 void MidiActivePeering::disconnect(uint8_t port) {
   DEBUG_PRINTLN("disconnect");
   DEBUG_PRINTLN(port);
@@ -119,13 +116,12 @@ void MidiActivePeering::disconnect(uint8_t port) {
       drivers[i]->disconnect(device_idx);
     }
   }
+  device_manager.set_device_for_port(port, &null_midi_device);
+  update_dev_cache();
 }
 
 void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   if (port < 1 || port > 3) return;
-  MidiDevice **connected_dev;
-
-  connected_dev = &connected_midi_devices[port - 1];
 
   midi_active_peering.disconnect(port);
   auto *pmidi = _getMidiUart(port);
@@ -136,12 +132,12 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   }
   driver->on_connection(portToLogicalIdx(port));
 
-  *connected_dev = driver;
+  device_manager.set_device_for_port(port, driver);
   update_dev_cache();
 }
 
 static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
-                      MidiDevice **active_device, uint8_t *resource_buf) {
+                      uint8_t *resource_buf) {
   MidiUartClass *pmidi = _getMidiUart(port);
   auto *pmidi_class = _getMidiClass(port);
   if (!pmidi || !pmidi_class)
@@ -166,7 +162,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
     // reset MidiID to none
     pmidi->device.init();
     // reset connected device to /dev/null
-    *active_device = &null_midi_device;
+    device_manager.set_device_for_port(port, &null_midi_device);
   } else if (id == DEVICE_NULL && pmidi->recvActiveSenseTimer < 100) {
     bool probe_success = false;
     for (size_t i = 0; i < nr_drivers; ++i) {
@@ -195,7 +191,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
         pmidi->device.set_id(drivers[i]->id);
         pmidi->device.set_name(drivers[i]->name);
         drivers[i]->on_connection(portToLogicalIdx(port));
-        *active_device = drivers[i];
+        device_manager.set_device_for_port(port, drivers[i]);
         // Re-enable MidiClock/Transport recv
         midi_setup.cfg_clock_recv();
         break;
@@ -205,23 +201,16 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
 }
 
 MidiDevice *MidiActivePeering::get_device(uint8_t port) {
-  if (port >= 1 && port <= 3) {
-    return connected_midi_devices[port - 1];
-  }
-  return &null_midi_device;
+  return device_manager.device_for_port(port);
 }
 
 void MidiActivePeering::update_dev_cache() {
-  PortSlot s[SLOT_COUNT];
-  resolve_slots(s);
-  dev1 = s[SLOT_MD].port    ? get_device(s[SLOT_MD].port)    : &null_midi_device;
-  dev2 = s[SLOT_ELEKT].port ? get_device(s[SLOT_ELEKT].port) : &null_midi_device;
-  // USB GENER maps to dev2 slot
-  if (mcl_cfg.usb_device == 3) dev2 = get_device(UARTUSB_PORT);
+  device_manager.update_active_slots();
+  // Compatibility aliases for older MCL code. New coordination/UI code
+  // should use DeviceManager directly.
+  dev1 = device_manager.dev1();
+  dev2 = device_manager.dev2();
 }
-
-NullMidiDevice::NullMidiDevice()
-    : MidiDevice(nullptr, "  ", DEVICE_NULL, false) {}
 
 bool usb_set_speed = true;
 
@@ -250,8 +239,7 @@ void MidiActivePeering::run() {
     bool is_gener = (slot.port == UART1_PORT && mcl_cfg.uart1_device == 0) ||
                     (slot.port == UART2_PORT && mcl_cfg.uart2_device == 0);
     if (is_gener) { drivers = generic_drivers; nr = 1; }
-    probePort(slot.port, drivers, nr,
-              &connected_midi_devices[slot.port - 1], resource_buf);
+    probePort(slot.port, drivers, nr, resource_buf);
   };
 
   probe_slot(s[SLOT_MD], port1_drivers, countof(port1_drivers));
