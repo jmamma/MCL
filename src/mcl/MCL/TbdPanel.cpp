@@ -90,6 +90,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   // only fires when TR is the press edge while TL is already held.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       BUTTON_DOWN(ButtonsClass::BUTTON2)) {
+    device_manager.exit_ui();
     mcl.pushPage(SYSTEM_PAGE);
     return true;
   }

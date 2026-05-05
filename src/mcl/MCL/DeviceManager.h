@@ -21,6 +21,7 @@ public:
   void ui_loop();
   bool handle_ui_event(gui_event_t *event);
   bool is_ui_active() const;
+  void exit_ui();
 #endif
 
 private:

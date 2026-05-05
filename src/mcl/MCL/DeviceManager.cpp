@@ -64,4 +64,12 @@ bool DeviceManager::is_ui_active() const {
   return (dev1 && dev1->is_ui_active()) ||
          (dev2 && dev2->is_ui_active());
 }
+
+void DeviceManager::exit_ui() {
+  MidiDevice *dev1 = this->dev1();
+  MidiDevice *dev2 = this->dev2();
+  if (dev2 == dev1) dev2 = nullptr;
+  if (dev1) dev1->exit_ui();
+  if (dev2) dev2->exit_ui();
+}
 #endif

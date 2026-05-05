@@ -61,6 +61,7 @@ public:
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool is_ui_active() override { return sps_mode.is_active(); }
+  virtual void exit_ui() override { sps_mode.disable(); }
 #endif
 
   /** Stores the kit settings of the machinedrum (usually set by MDTask). **/

@@ -65,6 +65,9 @@ public:
 
   /** Returns true if the driver has an active UI overlay or mode. */
   virtual bool is_ui_active() { return false; }
+
+  /** Ask the driver to leave any active UI mode it owns. */
+  virtual void exit_ui() {}
 #endif
 
   virtual void setup() {}

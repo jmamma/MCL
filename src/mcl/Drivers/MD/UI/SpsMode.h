@@ -38,6 +38,7 @@ class SpsMode {
 public:
   bool is_active() const { return latched_; }
   uint8_t sub_page() const { return sub_page_; }
+  void disable() { set_latched(false); }
 
   bool handle_toggle_button(gui_event_t *event);
   bool handle_func_arrow_chord(gui_event_t *event);
