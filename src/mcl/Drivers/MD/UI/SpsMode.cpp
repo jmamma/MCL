@@ -204,13 +204,11 @@ bool SpsMode::handle_toggle_button(gui_event_t *event) {
   if (is_press(event)) {
     tr_press_ms_ = read_clock_ms();
     tr_pressed_ = true;
-    tr_consumed_ = false;
 
     if (GUI.overlay == &sps_overlay_page) {
       // Param-page-select overlay open + press → drop back to the
       // bottom strip. Latch unchanged.
       GUI.setOverlay(&sps_strip_page);
-      tr_consumed_ = true;
     } else {
       set_latched(!latched_);
     }
@@ -270,8 +268,7 @@ bool SpsMode::handle_cluster_menus(gui_event_t *event) {
 bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
   // Either B (TBD_BUTTON_B) or TR (TBD_BUTTON_TR) held + arrow
   // cycles sub_page_. Works with the latch off too — the gesture is
-  // "modifier held", not "SPS-mode active". When TR is the modifier we
-  // mark it consumed so the eventual TR release doesn't flip the latch.
+  // "modifier held", not "SPS-mode active".
   if (!is_arrow_source(event->source)) return false;
   const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B);
   const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR);
@@ -288,7 +285,6 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
     if (arrow_consumed_source_ == event->source) return true;
     arrow_consumed_source_ = event->source;
 
-    if (tr_held) tr_consumed_ = true;
     if (b_held)  b_consumed_  = true;
     // sub_page_ is the 4-param column id (0..7). The 8-param "page" is
     // sub_page_ >> 1, the half within the page is sub_page_ & 1.
@@ -386,7 +382,6 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
       resync_from_kit();
     }
     if (b_held)  b_consumed_  = true;
-    if (tr_held) tr_consumed_ = true;
   }
   return true;
 }
@@ -439,9 +434,6 @@ void SpsMode::poll_page_overlay() {
   if (clock_diff(tr_press_ms_, read_clock_ms()) <= TBD_OVERLAY_HOLD_MS) return;
 
   if (!latched_) set_latched(true);
-  // mark_tr_consumed so the TR release doesn't toggle the latch on
-  // top of the overlay install.
-  tr_consumed_ = true;
   GUI.setOverlay(&sps_overlay_page);
 }
 

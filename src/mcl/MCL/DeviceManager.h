@@ -12,8 +12,6 @@ public:
   void ui_loop();
   bool handle_ui_event(gui_event_t *event);
   bool is_ui_active() const;
-  void mark_tr_consumed();
-  void mark_b_consumed();
 #endif
 };
 

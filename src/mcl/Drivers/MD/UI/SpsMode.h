@@ -41,14 +41,6 @@ public:
   uint8_t sub_page() const { return sub_page_; }
 
   bool handle_toggle_button(gui_event_t *event);
-  // Suppress the next TR-release latch toggle. Called by chord handlers
-  // (TL→TR system-page, TR+arrow sub-page traversal) so a held-TR used
-  // as a modifier doesn't also flip the latch on release.
-  void mark_tr_consumed() { tr_consumed_ = true; }
-  // Same convention as mark_tr_consumed but for B. Called when B is
-  // used as a modifier (B+arrow sub-page traversal, B+trig column
-  // selector) so the matching B release doesn't toggle the latch.
-  void mark_b_consumed() { b_consumed_ = true; }
   bool handle_func_arrow_chord(gui_event_t *event);
   // Cluster Y/X/A in SPS-latched: Y → MD NO transmit, X → MD YES,
   // A → MD SCALE (FUNC variant: toggle_scale_window).
@@ -112,10 +104,6 @@ private:
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
   // when the timeout has fully elapsed.
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
-  // TR-press lifetime flag: set when a chord or arrow used TR as a
-  // modifier; cleared on the next TR press edge. Suppresses the
-  // tap-toggle on TR release.
-  bool tr_consumed_ = false;
   // Timestamp of the most recent TR press edge.
   uint16_t tr_press_ms_ = 0;
   // Event-driven TR-held flag — set true on TR press, cleared on

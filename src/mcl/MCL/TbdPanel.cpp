@@ -91,7 +91,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       BUTTON_DOWN(ButtonsClass::BUTTON2)) {
     mcl.pushPage(SYSTEM_PAGE);
-    device_manager.mark_tr_consumed();
     return true;
   }
 

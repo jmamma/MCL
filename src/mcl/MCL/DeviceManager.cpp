@@ -42,18 +42,4 @@ bool DeviceManager::is_ui_active() const {
   return (dev1 && dev1->is_ui_active()) ||
          (dev2 && dev2->is_ui_active());
 }
-
-void DeviceManager::mark_tr_consumed() {
-  MidiDevice *dev1 = active_dev1();
-  MidiDevice *dev2 = active_dev2();
-  if (dev1) dev1->mark_tr_consumed();
-  if (dev2) dev2->mark_tr_consumed();
-}
-
-void DeviceManager::mark_b_consumed() {
-  MidiDevice *dev1 = active_dev1();
-  MidiDevice *dev2 = active_dev2();
-  if (dev1) dev1->mark_b_consumed();
-  if (dev2) dev2->mark_b_consumed();
-}
 #endif

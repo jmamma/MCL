@@ -65,10 +65,6 @@ public:
 
   /** Returns true if the driver has an active UI overlay or mode. */
   virtual bool is_ui_active() { return false; }
-
-  /** Mark the current TR/B modifier hold as consumed. */
-  virtual void mark_tr_consumed() {}
-  virtual void mark_b_consumed() {}
 #endif
 
   virtual void setup() {}
