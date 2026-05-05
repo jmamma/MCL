@@ -12,6 +12,10 @@
 #include "ResourceManager.h"
 #include "BankPopupPage.h"
 #include "SpsOverlayPage.h"
+#include "SpsStripPage.h"
+#include "SeqPages.h"
+#include "MCLSeq.h"
+#include "NoteInterface.h"
 
 SpsMode sps_mode;
 
@@ -32,6 +36,17 @@ inline bool is_release(const gui_event_t *event) {
   return !(event->mask & 1);
 }
 
+// XOR-invert a rectangle in the OLED framebuffer. Adafruit GFX's
+// drawPixel(x,y,c) treats any color != WHITE && != BLACK as XOR, so
+// passing 2 toggles each pixel. Used to mark locked encoder slots.
+static void invert_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+  for (uint8_t yy = y; yy < y + h; yy++) {
+    for (uint8_t xx = x; xx < x + w; xx++) {
+      oled_display.drawPixel(xx, yy, 2);
+    }
+  }
+}
+
 } // namespace
 
 bool SpsMode::encoder_passthrough_page() const {
@@ -50,9 +65,54 @@ void SpsMode::set_latched(bool v) {
   GUI_hardware.led.updateLeds = true;
   if (v) {
     resync_from_kit();
-  } else if (mcl.currentPage() == BANK_POPUP_PAGE) {
-    bank_popup_page.close();
+    // Install the bottom-strip overlay so SPS params are visible on
+    // top of the active page. Replaced by SpsOverlayPage when TR is
+    // held past the overlay threshold.
+    if (GUI.overlay != &sps_overlay_page) {
+      GUI.setOverlay(&sps_strip_page);
+    }
+  } else {
+    // Latch off — clear any SPS overlay we installed.
+    if (GUI.overlay == &sps_strip_page || GUI.overlay == &sps_overlay_page) {
+      GUI.clearOverlay();
+    }
+    if (mcl.currentPage() == BANK_POPUP_PAGE) {
+      bank_popup_page.close();
+    }
   }
+}
+
+bool SpsMode::active_step_lock(uint8_t param, uint8_t *value) const {
+  if (mcl.currentPage() != SEQ_STEP_PAGE) return false;
+  if (last_md_track >= NUM_MD_TRACKS) return false;
+  if (note_interface.notes_count_on() == 0) return false;
+
+  const uint8_t param_limit =
+      mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  if (param >= param_limit) return false;
+
+  // First held trig wins (mirrors SeqStepPage's first-md-note rule).
+  for (uint8_t i = 0; i < 16; i++) {
+    if (!note_interface.is_note_on(i)) continue;
+    const uint16_t step = i + (SeqPage::page_select * 16);
+
+    uint8_t locks[SPS_PARAMS_PER_TRACK];
+    memset(locks, 255, sizeof(locks));
+#if !defined(__AVR__)
+    if (mcl_seq.using_spsx_tracks) {
+      mcl_seq.spsx_tracks[last_md_track].get_step_locks(step, locks, false);
+    } else
+#endif
+    {
+      mcl_seq.md_tracks[last_md_track].get_step_locks(step, locks, false);
+    }
+    if (locks[param] != 255) {
+      *value = locks[param];
+      return true;
+    }
+    return false;
+  }
+  return false;
 }
 
 void SpsMode::resync_from_kit() {
@@ -77,56 +137,91 @@ void SpsMode::send_param(uint8_t i) {
   uint8_t param = param_base() + i;
   if (param >= MD_PARAMS_PER_TRACK) return;
   uint8_t v = (uint8_t)enc[i].cur;
+
+  // Step-edit + trig held: record a parameter lock on each held step
+  // for the active MD track, mirroring SeqStepMidiEvents::onControl-
+  // ChangeCallback_Midi (the inbound-CC path). Don't update the kit /
+  // send a CC out — locks override the kit per-step at playback.
+  const PageIndex pg = mcl.currentPage();
+  const bool on_step_page = (pg == SEQ_STEP_PAGE);
+  if (on_step_page && note_interface.notes_count_on() > 0 &&
+      last_md_track < NUM_MD_TRACKS) {
+    const uint8_t param_limit = mcl_seq.using_spsx_tracks
+                                    ? SPS_PARAMS_PER_TRACK
+                                    : MD_PARAMS_PER_TRACK;
+    if (param >= param_limit) return;
+#if !defined(__AVR__)
+    if (mcl_seq.using_spsx_tracks) {
+      SPSXSeqTrack &st = mcl_seq.spsx_tracks[last_md_track];
+      uint16_t first_step = 0xFFFF;
+      for (uint8_t n = 0; n < 16; n++) {
+        if (!note_interface.is_note_on(n)) continue;
+        const uint16_t step = n + (SeqPage::page_select * 16);
+        if (step >= st.length) continue;
+        st.set_track_locks(step, param, v);
+        st.enable_step_locks(step);
+        if (first_step == 0xFFFF) first_step = step;
+      }
+      if (first_step != 0xFFFF) {
+        uint8_t params[SPS_PARAMS_PER_TRACK];
+        memset(params, 255, sizeof(params));
+        st.get_step_locks(first_step, params, true);
+        MD.activate_encoder_interface(params);
+      }
+      return;
+    }
+#endif
+    MDSeqTrack &active = mcl_seq.md_tracks[last_md_track];
+    uint16_t first_step = 0xFFFF;
+    for (uint8_t n = 0; n < 16; n++) {
+      if (!note_interface.is_note_on(n)) continue;
+      const uint16_t step = n + (SeqPage::page_select * 16);
+      if (step >= active.length) continue;
+      active.set_track_locks(step, param, v);
+      if (first_step == 0xFFFF) first_step = step;
+    }
+    // Notify MD which params now carry a lock at this step (mirrors
+    // SeqStepPage::send_locks → MD.activate_encoder_interface).
+    if (first_step != 0xFFFF) {
+      uint8_t params[SPS_PARAMS_PER_TRACK];
+      memset(params, 255, sizeof(params));
+      active.get_step_locks(first_step, params, true);
+      MD.activate_encoder_interface(params);
+    }
+    return;
+  }
+
+  // Default: send CC + update kit (drives the live MD synth voice).
   MD.setTrackParam(MD.currentTrack, param, v, nullptr, true);
 }
 
 bool SpsMode::handle_toggle_button(gui_event_t *event) {
   if (event->source != ButtonsClass::TBD_KEY_SPS_TOGGLE) return false;
-  // TR semantics (when the SPS overlay page is NOT current):
-  //   tap (≤ TBD_TAP_MAX_MS, no chord) → toggle SPS latch
-  //   hold ≥ TBD_OVERLAY_HOLD_MS       → poll_page_overlay pushes
-  //                                       SpsOverlayPage onto the
-  //                                       stack (sticky).
-  // When SpsOverlayPage IS current, all TR events are routed to that
-  // page's handler (handle_overlay_tr_event) — see SpsOverlayPage.cpp.
-  if (mcl.currentPage() == SPS_OVERLAY_PAGE) {
-    return false; // let the page handle TR
-  }
+  // TR semantics:
+  //   press                   → toggle SPS latch immediately, OR
+  //                             close the overlay if one is up
+  //                             (latch unchanged).
+  //   hold ≥ TBD_OVERLAY_HOLD_MS → poll_page_overlay installs the
+  //                             SPS overlay (sticky).
   if (is_press(event)) {
-    tr_consumed_ = false;
     tr_press_ms_ = read_clock_ms();
     tr_pressed_ = true;
-  } else if (is_release(event)) {
-    tr_pressed_ = false;
-    const uint16_t held = clock_diff(tr_press_ms_, read_clock_ms());
-    const bool was_tap = (held <= TBD_TAP_MAX_MS);
-    if (was_tap && !tr_consumed_) {
+    tr_consumed_ = false;
+
+    if (GUI.overlay == &sps_overlay_page) {
+      // Param-page-select overlay open + press → drop back to the
+      // bottom strip. Latch unchanged.
+      GUI.setOverlay(&sps_strip_page);
+      tr_consumed_ = true;
+    } else {
       set_latched(!latched_);
     }
-    tr_consumed_ = false;
+  } else if (is_release(event)) {
+    tr_pressed_ = false;
   }
   return true;
 }
 
-bool SpsMode::handle_overlay_tr_event(gui_event_t *event) {
-  // SpsOverlayPage delegate. Returns true on a tap-close gesture so
-  // the page can pop itself; false otherwise.
-  if (event->source != ButtonsClass::TBD_KEY_SPS_TOGGLE) return false;
-  if (is_press(event)) {
-    tr_consumed_ = false;
-    tr_press_ms_ = read_clock_ms();
-    tr_pressed_ = true;
-    return false;
-  }
-  if (is_release(event)) {
-    tr_pressed_ = false;
-    const uint16_t held = clock_diff(tr_press_ms_, read_clock_ms());
-    const bool was_tap = (held <= TBD_TAP_MAX_MS);
-    tr_consumed_ = false;
-    return was_tap;
-  }
-  return false;
-}
 
 bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
   if (!is_arrow_source(event->source)) return false;
@@ -145,11 +240,10 @@ bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
 
 bool SpsMode::handle_cluster_menus(gui_event_t *event) {
   if (!latched_) return false;
-  // BUTTON1=A → MD SCALE (with FUNC variant for the scale-window
-  // shortcut). BUTTON1=A also runs through the global MDX_KEY_NO
-  // emission in tbd_handleEvent (which falls through in SPS-latched
-  // so we can also fire SCALE here). BUTTON4=X is the global
-  // MDX_KEY_YES passthrough; BUTTON3=Y is unused in SPS-latched.
+  // BUTTON1=Y → MD SCALE (with FUNC variant for the scale-window
+  // shortcut). BUTTON3=A is the global MDX_KEY_NO passthrough
+  // handled in tbd_handleEvent; BUTTON4=X is the global
+  // MDX_KEY_YES passthrough.
   if (event->source != ButtonsClass::BUTTON1) return false;
   if (!MD.connected) return true;
 
@@ -183,11 +277,12 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
   if (!is_arrow_source(event->source)) return false;
   const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS);
   const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS_TOGGLE);
-  // While SPS is latched the cluster owns sub-page traversal — arrows
-  // do page/half navigation regardless of modifier state. Outside the
-  // latch, B-held or TR-held is still required so panel arrows fall
-  // through to grid / seq navigation by default.
-  if (!latched_ && !b_held && !tr_held) return false;
+  const bool overlay_active = (GUI.overlay == &sps_overlay_page);
+  // While the SPS overlay is active (the 8-encoder page select view)
+  // or a modifier (B/TR) is held, the cluster owns sub-page traversal.
+  // Otherwise, panel arrows fall through to grid / seq navigation by
+  // default (even if the SPS latch is on).
+  if (!overlay_active && !b_held && !tr_held) return false;
   if (is_press(event)) {
     // Suppress key-repeat: a held arrow only fires once per physical
     // press. The release branch clears arrow_consumed_source_ so the
@@ -273,22 +368,15 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
   if (!latched_) return false;
   if (trig_idx >= 16) return false;
 
-  // While SPS is latched the trig grid doubles as the sub-page
-  // selector: each LED = 1 sub-page (4 params); top trig N → sub_page
-  // 2N, bottom trig N+8 → sub_page 2N+1. Latch alone is sufficient
-  // — B / TR held only mark themselves consumed (so the matching
-  // release doesn't fire their tap action).
-  // Pages that have a hard claim on trig (step toggle, bank popup,
-  // page select) fall through unless the user explicitly chord-
-  // overrides with B / TR.
+  // Trig sub-page selection requires an explicit modifier: B (TBD_KEY_SPS)
+  // or TR (TBD_KEY_SPS_TOGGLE) held. Without a modifier, trigs fall
+  // through to the active page — so on SEQ_STEP_PAGE you can keep
+  // entering parameter locks (trig press = step select), on GRID_PAGE
+  // you keep triggering the track, etc. Latch state alone no longer
+  // claims trigs.
   const bool b_held  = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS);
   const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS_TOGGLE);
-  PageIndex pg = mcl.currentPage();
-  const bool page_owns_trig =
-      (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
-       pg == SEQ_EXTSTEP_PAGE || pg == PERF_PAGE_0 ||
-       pg == BANK_POPUP_PAGE || pg == PAGE_SELECT_PAGE);
-  if (page_owns_trig && !b_held && !tr_held) return false;
+  if (!b_held && !tr_held) return false;
 
   if (is_press(event)) {
     const uint8_t max_sub_pages = MD.is_spsx ? 8 : 6;
@@ -344,46 +432,19 @@ void SpsMode::poll_encoders() {
 }
 
 void SpsMode::poll_page_overlay() {
-  // Single responsibility: when TR has been held past
-  // TBD_OVERLAY_HOLD_MS while latched, push the SpsOverlayPage. The
-  // page owns its own LEDs / OLED / event handling lifecycle from
-  // there. Idempotent — already-current is a no-op.
+  // Install the SPS overlay (a LightPage rendered on top of whatever
+  // page is currently active) once TR has been held past the hold
+  // threshold. The active page stays current — we just layer the
+  // overlay's display + loop on top via GUI's overlay slot.
   if (!tr_pressed_) return;
-  if (mcl.currentPage() == SPS_OVERLAY_PAGE) return;
+  if (GUI.overlay == &sps_overlay_page) return;
   if (clock_diff(tr_press_ms_, read_clock_ms()) <= TBD_OVERLAY_HOLD_MS) return;
 
   if (!latched_) set_latched(true);
-  // mark_tr_consumed so the eventual TR release doesn't toggle the
-  // latch on top of the page push.
+  // mark_tr_consumed so the TR release doesn't toggle the latch on
+  // top of the overlay install.
   tr_consumed_ = true;
-  mcl.pushPage(SPS_OVERLAY_PAGE);
-}
-
-void SpsMode::draw_strip(uint8_t y_top) {
-  if (!latched_) return;
-  // Pages that own the screen palette (page-select, bank popup) skip
-  // the strip; the SPS overlay page is its own page so we never reach
-  // here while it's current.
-  PageIndex pg = mcl.currentPage();
-  if (pg == PAGE_SELECT_PAGE || pg == BANK_POPUP_PAGE ||
-      pg == SPS_OVERLAY_PAGE) {
-    return;
-  }
-
-  Encoder *encs[4];
-  const char *labels[4];
-  bool show[4];
-  uint8_t base = param_base();
-  uint8_t model = MD.kit.get_model(MD.currentTrack);
-  for (uint8_t i = 0; i < 4; i++) {
-    uint8_t param = base + i;
-    encs[i] = (param < MD_PARAMS_PER_TRACK) ? &enc[i] : nullptr;
-    labels[i] = (param < MD_PARAMS_PER_TRACK)
-                    ? model_param_name(model, param)
-                    : nullptr;
-    show[i] = encs[i] ? show_value(i) : false;
-  }
-  mcl_gui.draw_encoder_strip(y_top, encs, labels, show);
+  GUI.setOverlay(&sps_overlay_page);
 }
 
 #else // !PLATFORM_TBD
@@ -397,10 +458,9 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *) { return false; }
 bool SpsMode::handle_sps_key_tap(gui_event_t *) { return false; }
 bool SpsMode::handle_trig_forward(gui_event_t *, uint8_t) { return false; }
 void SpsMode::poll_encoders() {}
-void SpsMode::draw_strip(uint8_t) {}
 void SpsMode::poll_page_overlay() {}
-bool SpsMode::handle_overlay_tr_event(gui_event_t *) { return false; }
 void SpsMode::resync_from_kit() {}
+bool SpsMode::active_step_lock(uint8_t, uint8_t *) const { return false; }
 void SpsMode::send_param(uint8_t) {}
 bool SpsMode::encoder_passthrough_page() const { return true; }
 void SpsMode::set_latched(bool) {}

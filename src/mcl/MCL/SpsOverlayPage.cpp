@@ -7,65 +7,51 @@
 #include "MD.h"
 #include "MDParams.h"
 #include "GUI_hardware.h"
-#include "KeyInterface.h"
 #include "SpsMode.h"
+#include <string.h>
+
+namespace {
+// XOR-invert a rectangle in the OLED framebuffer. Used to mark
+// locked encoder slots (matches SpsMode::draw_strip's invert path).
+static void invert_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
+  for (uint8_t yy = y; yy < y + h; yy++) {
+    for (uint8_t xx = x; xx < x + w; xx++) {
+      oled_display.drawPixel(xx, yy, 2);
+    }
+  }
+}
+} // namespace
 
 SpsOverlayPage sps_overlay_page;
 
-namespace {
-
-inline bool is_press(const gui_event_t *event) {
-  return event->mask == EVENT_BUTTON_PRESSED;
-}
-
-inline bool is_release(const gui_event_t *event) {
-  return !(event->mask & 1);
-}
-
-inline bool is_arrow_source(uint8_t source) {
-  return source == ButtonsClass::FUNC_BUTTON6 ||
-         source == ButtonsClass::FUNC_BUTTON7 ||
-         source == ButtonsClass::FUNC_BUTTON8 ||
-         source == ButtonsClass::FUNC_BUTTON9;
-}
-
-} // namespace
-
-void SpsOverlayPage::setup() {}
-
 void SpsOverlayPage::init() {
-  // Stash where we came from so cleanup / TR-tap-close can return.
-  PageIndex cur_idx = mcl.currentPage();
-  if (cur_idx != SPS_OVERLAY_PAGE) {
-    prev_page_ = cur_idx;
-  }
-
   GUI_hardware.led.sps_overlay = true;
   GUI_hardware.led.updateLeds = true;
-
   painted_sub_page_ = 255;
-  paint_leds();
+  // LEDs only paint while TR is currently held — see loop().
 }
 
 void SpsOverlayPage::cleanup() {
   GUI_hardware.led.sps_overlay = false;
   GUI_hardware.led.updateLeds = true;
-  mcl_gui.reset_trigleds();
-  painted_sub_page_ = 255;
-}
-
-void SpsOverlayPage::close() {
-  if (prev_page_ != NULL_PAGE && prev_page_ != SPS_OVERLAY_PAGE) {
-    mcl.setPage(prev_page_);
-  } else {
-    mcl.setPage(GRID_PAGE);
+  if (painted_sub_page_ != 255) {
+    mcl_gui.reset_trigleds();
+    painted_sub_page_ = 255;
   }
 }
 
 void SpsOverlayPage::loop() {
-  // Repaint LEDs if sub_page_ changed (e.g., user pressed an arrow or
-  // a trig and SpsMode bumped sub_page_).
-  paint_leds();
+  // LED column palette is gated on TR being currently held — that's
+  // the user's "I'm actively driving sub-page selection" gesture.
+  // When TR is released, hand the LEDs back to the active page so
+  // step edit / grid / etc. can repaint their own palette.
+  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_KEY_SPS_TOGGLE);
+  if (tr_held) {
+    paint_leds();
+  } else if (painted_sub_page_ != 255) {
+    mcl_gui.reset_trigleds();
+    painted_sub_page_ = 255;
+  }
 }
 
 void SpsOverlayPage::paint_leds() {
@@ -118,11 +104,29 @@ void SpsOverlayPage::display() {
   const uint8_t track = (MD.currentTrack < 16) ? MD.currentTrack : 0;
   const uint8_t model = MD.kit.get_model(track);
 
+  // Per-slot lock substitution: when on SEQ_STEP_PAGE with a trig
+  // held, each slot's dial / value reflect the lock value (not the
+  // kit value), and the value-text rect gets XOR-inverted as a flag.
   Encoder top_encs[4], bottom_encs[4];
+  bool top_locked[4] = {false, false, false, false};
+  bool bot_locked[4] = {false, false, false, false};
   for (uint8_t i = 0; i < 4; i++) {
-    top_encs[i].cur    = MD.kit.params[track][page_base + i];
-    top_encs[i].old    = top_encs[i].cur;
-    bottom_encs[i].cur = MD.kit.params[track][page_base + 4 + i];
+    const uint8_t tp = page_base + i;
+    const uint8_t bp = page_base + 4 + i;
+    uint8_t lv;
+    if (sps_mode.active_step_lock(tp, &lv)) {
+      top_encs[i].cur = lv;
+      top_locked[i] = true;
+    } else {
+      top_encs[i].cur = MD.kit.params[track][tp];
+    }
+    top_encs[i].old = top_encs[i].cur;
+    if (sps_mode.active_step_lock(bp, &lv)) {
+      bottom_encs[i].cur = lv;
+      bot_locked[i] = true;
+    } else {
+      bottom_encs[i].cur = MD.kit.params[track][bp];
+    }
     bottom_encs[i].old = bottom_encs[i].cur;
   }
 
@@ -130,16 +134,45 @@ void SpsOverlayPage::display() {
   Encoder *bottom_strip[4] = {&bottom_encs[0], &bottom_encs[1], &bottom_encs[2], &bottom_encs[3]};
   const char *top_labels[4];
   const char *bottom_labels[4];
-  bool show_off[4] = {false, false, false, false};
+  bool top_show[4]    = {false, false, false, false};
+  bool bottom_show[4] = {false, false, false, false};
   for (uint8_t i = 0; i < 4; i++) {
     const uint8_t tp = page_base + i;
     const uint8_t bp = page_base + 4 + i;
     top_labels[i]    = (tp < MD_PARAMS_PER_TRACK) ? model_param_name(model, tp) : nullptr;
     bottom_labels[i] = (bp < MD_PARAMS_PER_TRACK) ? model_param_name(model, bp) : nullptr;
+    // Always show the value text on locked slots so the user sees
+    // the lock value clearly.
+    top_show[i]    = top_locked[i];
+    bottom_show[i] = bot_locked[i];
   }
 
-  mcl_gui.draw_encoder_strip(0,  top_strip,    top_labels,    show_off);
-  mcl_gui.draw_encoder_strip(32, bottom_strip, bottom_labels, show_off);
+  mcl_gui.draw_encoder_strip(0,  top_strip,    top_labels,    top_show);
+  mcl_gui.draw_encoder_strip(32, bottom_strip, bottom_labels, bottom_show);
+
+  // Invert covering both dial + value text on locked slots.
+  constexpr uint8_t kCellW = 32;
+  constexpr uint8_t kDialW = 11;
+  for (uint8_t i = 0; i < 4; i++) {
+    if (top_locked[i]) {
+      char val[4];
+      mcl_gui.put_value_at((uint8_t)top_encs[i].cur, val);
+      uint8_t vw = (uint8_t)strlen(val) * 6;
+      uint8_t inner_w = (vw > kDialW) ? vw : kDialW;
+      uint8_t cx = i * kCellW;
+      uint8_t inv_x = cx + (kCellW - inner_w) / 2 - 2;
+      invert_rect(inv_x, 0 + 3, inner_w + 4, 23);
+    }
+    if (bot_locked[i]) {
+      char val[4];
+      mcl_gui.put_value_at((uint8_t)bottom_encs[i].cur, val);
+      uint8_t vw = (uint8_t)strlen(val) * 6;
+      uint8_t inner_w = (vw > kDialW) ? vw : kDialW;
+      uint8_t cx = i * kCellW;
+      uint8_t inv_x = cx + (kCellW - inner_w) / 2 - 2;
+      invert_rect(inv_x, 32 + 3, inner_w + 4, 23);
+    }
+  }
 
   // 1-px bounding box around the encoder-bound half.
   const uint8_t box_y = active_half * 32;
@@ -158,49 +191,6 @@ void SpsOverlayPage::display() {
     oled_display.fillRect(126, 28, 2, 7, BLACK);
     oled_display.fillTriangle(121, 28, 121, 34, 125, 31, WHITE);
   }
-}
-
-bool SpsOverlayPage::handleEvent(gui_event_t *event) {
-  // Arrow + trig events for sub-page navigation. SpsMode's existing
-  // handlers do the work — they're page-agnostic; we just call them
-  // and consume the event.
-  if (sps_mode.handle_arrow_subpage(event)) return true;
-
-  if (EVENT_BUTTON(event)) {
-    const uint8_t src = event->source;
-
-    // TR tap closes the overlay (no latch change). Long hold release
-    // is ignored — it's the gesture that opened us.
-    if (src == ButtonsClass::TBD_KEY_SPS_TOGGLE) {
-      // Forward to SpsMode so it can manage tr_press_ms_ and
-      // arrow-modifier consumption. SpsMode's handler returns true
-      // for a tap-close; we pop on that.
-      bool was_tap_close = sps_mode.handle_overlay_tr_event(event);
-      if (was_tap_close) close();
-      return true;
-    }
-
-    // B-tap also closes, then performs the per-page action on the
-    // page underneath (grid swap / seq page advance).
-    if (src == ButtonsClass::TBD_KEY_SPS) {
-      if (is_release(event)) {
-        close();
-        // Re-dispatch the B release through SpsMode so its per-page
-        // tap action fires on the now-current underlying page.
-        sps_mode.handle_sps_key_tap(event);
-      }
-      return true;
-    }
-
-    // Trig 0..15 → sub-page jump via SpsMode's existing logic.
-    if (src >= ButtonsClass::TRIG_BUTTON1 &&
-        src < ButtonsClass::TRIG_BUTTON1 + 16) {
-      const uint8_t trig_idx = src - ButtonsClass::TRIG_BUTTON1;
-      sps_mode.handle_trig_forward(event, trig_idx);
-      return true;
-    }
-  }
-  return false;
 }
 
 #endif // PLATFORM_TBD

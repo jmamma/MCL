@@ -28,6 +28,18 @@ public:
   Vector<Task *, 4> tasks;
   Stack<LightPage *, 8> pageStack;
 
+#ifdef PLATFORM_TBD
+  // Render-on-top overlay — independent of pageStack. Drawn after the
+  // active page's display() and ticked via its loop() each frame, but
+  // does NOT affect currentPage() or event dispatch. Lets transient UI
+  // (the SPS param-page-select view) layer on top of the active page
+  // while leaving that page fully active for input. AVR builds skip
+  // this entirely.
+  LightPage *overlay = nullptr;
+  void setOverlay(LightPage *p);
+  void clearOverlay();
+#endif
+
 #ifdef GUI_NUM_ENCODERS
   static const uint8_t NUM_ENCODERS = GUI_NUM_ENCODERS;
 #endif

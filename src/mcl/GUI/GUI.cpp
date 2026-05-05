@@ -126,6 +126,14 @@ void GuiClass::loop() {
     page->finalize();
   }
 
+#ifdef PLATFORM_TBD
+  // Tick the overlay's loop after the active page so it can manage
+  // its own state (LED palette, sub-page repaint, etc.).
+  if (overlay) {
+    overlay->loop();
+  }
+#endif
+
   if (use_screen_saver && g_clock_minutes >= SCREEN_SAVER_TIMEOUT && !screen_saver) {
     screen_saver = true;
     oled_display.sleep();
@@ -172,6 +180,15 @@ void GuiClass::display() {
     page->display();
   }
 
+#ifdef PLATFORM_TBD
+  // Overlay renders on top of the active page. Lifecycle is owned by
+  // setOverlay / clearOverlay — single render hook here, no state.
+  if (overlay) {
+    oled_display.setFont();
+    overlay->display();
+  }
+#endif
+
 #ifdef DEBUGMODE
   if (g_fps == 0 && g_clock_fps == 0) {
     g_clock_fps = read_clock_ms();
@@ -206,3 +223,24 @@ void GuiClass::display() {
 GuiClass::GuiClass() {
   // Initialize any necessary state
 }
+
+#ifdef PLATFORM_TBD
+void GuiClass::setOverlay(LightPage *p) {
+  if (overlay == p) return;
+  if (overlay) overlay->cleanup();
+  overlay = p;
+  if (overlay) {
+    if (!overlay->isSetup) {
+      overlay->setup();
+      overlay->isSetup = true;
+    }
+    overlay->init();
+  }
+}
+
+void GuiClass::clearOverlay() {
+  if (!overlay) return;
+  overlay->cleanup();
+  overlay = nullptr;
+}
+#endif

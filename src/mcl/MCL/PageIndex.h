@@ -54,7 +54,6 @@ enum PageIndex {
     PERF_PAGE_0,
 #ifdef PLATFORM_TBD
     BANK_POPUP_PAGE,
-    SPS_OVERLAY_PAGE,
 #endif
 #ifdef WAV_DESIGNER
     // WAV Designer pages - grouped together at the end

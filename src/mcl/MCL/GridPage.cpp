@@ -681,11 +681,9 @@ void GridPage::display() {
   }
 #endif
 
-#ifdef PLATFORM_TBD
-  // Bottom 32 px (y=32..63 on the 128x64 panel) hosts the SPS-mode
-  // encoder strip when the latch is active.
-  sps_mode.draw_strip(32);
-#endif
+  // The SPS bottom-32 strip is now an overlay (SpsStripPage) installed
+  // by SpsMode when the latch turns on; rendering happens in
+  // GuiClass::display() via the GUI overlay slot, not here.
 }
 
 void rename_row() {

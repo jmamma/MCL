@@ -63,22 +63,11 @@ public:
   bool handle_sps_key_tap(gui_event_t *event);
   bool handle_trig_forward(gui_event_t *event, uint8_t trig_idx);
 
-  // SpsOverlayPage delegate: handles a TR event while the overlay is
-  // the active page. Returns true when the gesture is a tap-close
-  // (caller should pop the page); false otherwise (event consumed but
-  // page stays).
-  bool handle_overlay_tr_event(gui_event_t *event);
-
   // Drives the four kit-param encoders. Call from MCL::loop *before*
   // GUI.loop() so the panel deltas don't also reach the active page.
   // No-op when the latch is off or when the active page already owns
   // the encoder column (step / perf / page-select).
   void poll_encoders();
-
-  // Draw the encoder strip on the bottom of the OLED. Call from
-  // GridPage::display() (or any other 32-px-tall page that wants to
-  // show it). No-op when the latch is off.
-  void draw_strip(uint8_t y_top);
 
   // Polled from MCL::loop. Single responsibility: when TR has been
   // held past TBD_OVERLAY_HOLD_MS while latched, push SpsOverlayPage.
@@ -91,6 +80,16 @@ public:
   // changes track / synth page, or when an inbound CC / kit-load may
   // have moved the underlying values.
   void resync_from_kit();
+
+  // True if the user is on SEQ_STEP_PAGE with at least one trig held
+  // and the active MD track's seq has a lock for `param` at the held
+  // step. Out-param `value` receives the lock value (0..127). The
+  // first held step is used when multiple are held.
+  bool active_step_lock(uint8_t param, uint8_t *value) const;
+
+  // Public accessor for the value-show timeout state (SpsStripPage
+  // uses this to gate value-vs-label display per slot).
+  bool show_strip_value(uint8_t i) const { return show_value(i); }
 
   // The 4 encoders themselves. min=0, max=127, default rot_res — same
   // feel as a stock MCLEncoder.

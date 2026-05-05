@@ -247,12 +247,9 @@ void SeqStepPage::display() {
     page_select_page.md_prepare();
     prepare = false;
   }
-#ifdef PLATFORM_TBD
-  // Bottom 32 px hosts the SPS-mode encoder strip when latched —
-  // overdraws the step grid's lower half so the user can see the
-  // active 4 kit params while editing steps.
-  sps_mode.draw_strip(32);
-#endif
+  // The SPS bottom-32 strip is now an overlay (SpsStripPage) installed
+  // by SpsMode while the latch is active; rendering happens via the
+  // GUI overlay slot, not from inside this page's display().
 }
 
 void SeqStepPage::loop() {

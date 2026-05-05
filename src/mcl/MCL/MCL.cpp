@@ -113,7 +113,6 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
 
 #ifdef PLATFORM_TBD
     { .ptr = &bank_popup_page },
-    { .ptr = &sps_overlay_page },
 #endif
 #ifdef WAV_DESIGNER
     // WAV Designer pages
@@ -366,24 +365,22 @@ bool tbd_handleEvent(gui_event_t *event) {
       return true;
     }
 
-    // BUTTON1 (cluster A) acts as MDX_KEY_NO for the lifetime of the
+    // BUTTON3 (cluster A) acts as MDX_KEY_NO for the lifetime of the
     // hold — press transmits MD NO + sets cmd_key_state, release does
     // the inverse. The event is fully consumed; A is purely a modifier
     // on TBD. Only fires for physical A — a remapped TL (orig_src ==
     // BUTTON2) on a menu page falls through so MenuPage's BUTTON1 exit
     // handler runs unmodified.
-    if (event->source == ButtonsClass::BUTTON1 &&
-        orig_src == ButtonsClass::BUTTON1) {
+    if (event->source == ButtonsClass::BUTTON3 &&
+        orig_src == ButtonsClass::BUTTON3) {
       if (is_press) {
         if (MD.connected) MD.press_no_button();
         // In SPS-latched mode, A is a pure MDX_KEY_NO modifier — set
-        // the cmd_key_state bit so is_key_down() works, but skip
-        // key_event() which would post an EVENT_CMD that GridPage's
-        // MDX_KEY_NO press handler (GridPage.cpp:1177 → slot_menu_on)
-        // would react to. Falling through (not returning true) lets
-        // SpsMode::handle_cluster_menus also fire SCALE on A.
+        // the cmd_key_state bit so is_key_down() works, and RETURN TRUE
+        // to block the GridPage's local Shift Menu (GridPage.cpp:1177).
         if (sps_mode.is_active()) {
           SET_BIT64(key_interface.cmd_key_state, MDX_KEY_NO);
+          return true;
         } else {
           key_interface.key_event(MDX_KEY_NO, false);
           return true;
@@ -392,10 +389,23 @@ bool tbd_handleEvent(gui_event_t *event) {
         if (MD.connected) MD.release_no_button();
         if (sps_mode.is_active()) {
           CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_NO);
+          return true;
         } else {
           key_interface.key_event(MDX_KEY_NO, true);
           return true;
         }
+      }
+    }
+
+    // BUTTON1 (cluster Y). In SPS-latched mode this acts as MDX_KEY_SCALE
+    // (Shift). We set the state bit here and fall through so
+    // SpsMode::handle_cluster_menus can fire the sysex.
+    if (event->source == ButtonsClass::BUTTON1 &&
+        orig_src == ButtonsClass::BUTTON1) {
+      if (sps_mode.is_active()) {
+        if (is_press) SET_BIT64(key_interface.cmd_key_state, MDX_KEY_SCALE);
+        else         CLEAR_BIT64(key_interface.cmd_key_state, MDX_KEY_SCALE);
+        // Fall through to let handle_cluster_menus run.
       }
     }
 
@@ -455,28 +465,28 @@ bool tbd_handleEvent(gui_event_t *event) {
       }
     }
 
-    // BUTTON3 (cluster Y) routing.
+    // BUTTON1 (cluster Y) routing.
     //   GRID_PAGE: Y press opens GRID_SAVE_PAGE; Y release on entry is
     //              dropped via ignoreNextEvent so we don't commit on tail.
     //   GRID_SAVE_PAGE / GRID_LOAD_PAGE: Y press closes back to GRID_PAGE
     //              (toggle behaviour). Release of the closing press is
-    //              also dropped so GridPage doesn't see a stray BUTTON3
+    //              also dropped so GridPage doesn't see a stray BUTTON1
     //              release that opens save again. Group save/load on TBD
     //              is driven by A (MDX_KEY_NO), not Y.
     //   Anywhere else: fall through. SpsMode::handle_cluster_menus picks
-    //              up BUTTON3 in SPS-latched mode for MD SCALE.
-    // Skipped while SPS is latched — handle_cluster_menus owns BUTTON3
+    //              up BUTTON1 in SPS-latched mode for MD SCALE.
+    // Skipped while SPS is latched — handle_cluster_menus owns BUTTON1
     // for MD SCALE in that mode.
-    if (event->source == ButtonsClass::BUTTON3 && !sps_mode.is_active()) {
+    if (event->source == ButtonsClass::BUTTON1 && !sps_mode.is_active()) {
       const PageIndex pg = mcl.currentPage();
       if (pg == GRID_PAGE && is_press) {
-        GUI.ignoreNextEvent(ButtonsClass::BUTTON3);
+        GUI.ignoreNextEvent(ButtonsClass::BUTTON1);
         mcl.setPage(GRID_SAVE_PAGE);
         return true;
       }
       if (pg == GRID_SAVE_PAGE || pg == GRID_LOAD_PAGE) {
         if (is_press) {
-          GUI.ignoreNextEvent(ButtonsClass::BUTTON3);
+          GUI.ignoreNextEvent(ButtonsClass::BUTTON1);
           mcl.setPage(GRID_PAGE);
         }
         return true;
@@ -722,10 +732,7 @@ bool tbd_handleEvent(gui_event_t *event) {
             MD.connected && is_arrow && !arrows_local_only;
         if (mirror_arrow_to_md) {
             // Suppress repeated press edges so we don't spam the MD.
-            // Local key_event below still fires for repeat protection
-            // via its own ignore mask if needed.
             if (!is_release && key_interface.is_key_down(key)) {
-                // Already pressed — drop without firing local again either.
                 return true;
             }
             if (is_release) {
@@ -744,6 +751,13 @@ bool tbd_handleEvent(gui_event_t *event) {
                     case MDX_KEY_RIGHT: MD.hold_right_arrow(); break;
                     default: break;
                 }
+            }
+
+            // SPS-latched mode: arrow keys are forwarded to the MD and
+            // do NOT fall through to the local page (Grid / Seq).
+            if (sps_mode.is_active()) {
+                key_interface.key_event(key, is_release);
+                return true;
             }
             // Fall through to key_event below — the local fire updates
             // cmd_key_state and posts EVENT_CMD so pages see the arrow.
@@ -792,6 +806,14 @@ bool mcl_handleEvent(gui_event_t *event) {
         reset_undo();
       }
       switch (key) {
+      case MDX_KEY_UP:
+      case MDX_KEY_DOWN:
+      case MDX_KEY_LEFT:
+      case MDX_KEY_RIGHT:
+        if (sps_mode.is_active()) {
+          return true; // Forwarded to MD in tbd_handleEvent, consume here.
+        }
+        break;
         /*
               case MDX_KEY_UP:
               case MDX_KEY_DOWN:
