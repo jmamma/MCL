@@ -11,7 +11,7 @@ public:
 private:
   bool open_bank_popup();
   bool handle_bank_arrow_cycle(gui_event_t *event);
-  bool handle_md_ui_event(gui_event_t *event);
+  bool handle_driver_ui_event(gui_event_t *event);
 };
 
 extern TbdPanel tbd_panel;

@@ -12,6 +12,7 @@
 #include "MDSysex.h"
 
 #ifdef PLATFORM_TBD
+#include "UI/MDPanel.h"
 #include "UI/SpsMode.h"
 #endif
 
@@ -54,6 +55,7 @@ public:
 
 #ifdef PLATFORM_TBD
   SpsMode sps_mode;
+  MDPanel panel_ui;
 
   virtual void on_connection(uint8_t device_idx) override;
   virtual void ui_loop() override;

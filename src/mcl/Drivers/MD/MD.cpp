@@ -9,7 +9,6 @@
 #include "MDTrackSelect.h"
 #include "SeqPages.h"
 #include "MCLStrings.h"
-#include "MidiActivePeering.h"
 #include "KeyInterface.h"
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
@@ -85,7 +84,12 @@ const ElektronSysexProtocol md_protocol = {
     MD_SAVE_KIT_ID,
 };
 
+#ifdef PLATFORM_TBD
+MDClass::MDClass()
+    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol), panel_ui(*this) {}
+#else
 MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
+#endif
 
 void MDClass::setup_listeners() {
   MDSysexListener.setup(midi);
@@ -213,8 +217,7 @@ void MDClass::ui_loop() {
 }
 
 bool MDClass::handle_ui_event(gui_event_t *event) {
-  (void)event;
-  return false;
+  return panel_ui.handle_event(event);
 }
 #endif
 
