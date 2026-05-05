@@ -1,7 +1,9 @@
 #include "SeqExtStepPage.h"
 #include "MCLGUI.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "MCLSeq.h"
+#include "ExtSeqTrack.h"
+#include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
 
 void SeqExtStepPage::setup() {

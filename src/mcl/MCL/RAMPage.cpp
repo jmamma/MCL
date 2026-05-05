@@ -7,8 +7,8 @@
 #include "MCLSeq.h"
 #include "GridPages.h"
 #include "AuxPages.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 #include "MCLStrings.h"
 
 #define STATE_NOSTATE 0

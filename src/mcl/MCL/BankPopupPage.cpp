@@ -10,8 +10,8 @@
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MD/MDParams.h"
 #include "MidiSetup.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 #include "MCLActions.h"
 #include "Project.h"
 #include "NoteInterface.h"
@@ -112,18 +112,18 @@ void BankPopupPage::display() {
 
   // 8 banks in a 2×4 grid (group 0 top, group 1 bottom). Active bank is
   // filled inverse; the rest are dotted-corner outlines via drawRoundRect.
-  // Window fills the bottom 32 px (y=32..63) at 96 px wide (centred at
-  // x=16) so the underlying GridPage view in the top half stays visible.
+  // Window sits in the bottom strip at 96 px wide (centred at x=16) so
+  // the underlying GridPage view in the top half stays visible.
   constexpr uint8_t kCellW = 20;
-  constexpr uint8_t kCellH = 12;
+  constexpr uint8_t kCellH = 11;
   constexpr uint8_t kGap   = 4;
   constexpr uint8_t kPad   = 2;
   constexpr uint8_t kGridW = 4 * kCellW + 3 * kGap;          // 92
-  constexpr uint8_t kGridH = 2 * kCellH + 1 * kGap;          // 28
+  constexpr uint8_t kGridH = 2 * kCellH + 1 * kGap;          // 26
   constexpr uint8_t kWinW  = kGridW + 2 * kPad;              // 96
-  constexpr uint8_t kWinH  = kGridH + 2 * kPad;              // 32
+  constexpr uint8_t kWinH  = kGridH + 2 * kPad;              // 30
   constexpr uint8_t kWinX  = 64 - kWinW / 2;                 // 16
-  constexpr uint8_t kWinY  = 32;                             // bottom half
+  constexpr uint8_t kWinY  = 34;                             // bottom strip
   constexpr uint8_t kGridX = kWinX + kPad;
   constexpr uint8_t kGridY = kWinY + kPad;
 
@@ -233,7 +233,6 @@ bool BankPopupPage::handleEvent(gui_event_t *event) {
       if (grid_page.bank_popup_first_trig == 255) {
         grid_page.bank_popup_first_trig = track;
       }
-      grid_page.bank_popup_oled_visible = false;
       repaint_chain_leds();
 
       mcl_cfg.load_mode = load_mode_old;

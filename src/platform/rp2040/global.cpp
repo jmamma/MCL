@@ -9,6 +9,8 @@
 #include "../../mcl/Drivers/MD/MD.h"
 #include "../../mcl/Drivers/MNM/MNM.h"
 #include "../../mcl/Drivers/A4/A4.h"
+#include "../../mcl/Drivers/Generic/GenericMidiDevice.h"
+#include "../../mcl/MCL/MidiActivePeering.h"
 #include "Elektron.h"
 #include "MidiIDSysex.h"
 #include "SoftwareSPI.h"

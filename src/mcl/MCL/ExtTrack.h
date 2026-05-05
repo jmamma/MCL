@@ -5,8 +5,8 @@
 #include "ExtSeqTrack.h"
 #include "GridTrack.h"
 #include "MCLMemory.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 
 #define EMPTY_TRACK_TYPE 0
 

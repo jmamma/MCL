@@ -4,6 +4,7 @@
 #define SCALES_H__
 
 #include <inttypes.h>
+#include "platform.h"
 
 /**
  * \addtogroup Midi

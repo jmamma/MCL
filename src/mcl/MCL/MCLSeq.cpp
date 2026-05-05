@@ -6,8 +6,8 @@
 #include "MCL.h"
 #include "AuxPages.h"
 #include "MCLStrings.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
 
 void MCLSeq::set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_) {

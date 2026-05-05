@@ -1,8 +1,8 @@
 #include "PageSelectPage.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 
 const PageCategory Categories[] PROGMEM = {
     {"MAIN", 4, 0},

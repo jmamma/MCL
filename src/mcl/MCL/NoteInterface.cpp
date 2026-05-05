@@ -1,7 +1,10 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
 #include "NoteInterface.h"
+#include "Midi.h"
+#include "../Drivers/MidiDevice.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
+#include "../Drivers/MD/MD.h"
 #include "global.h"
 
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }

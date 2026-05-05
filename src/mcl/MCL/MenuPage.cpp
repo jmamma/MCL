@@ -1,7 +1,7 @@
 #include "MenuPage.h"
 #include "MCLGUI.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 #include "ResourceManager.h"
 
 void MenuPageBase::init() {

@@ -1,5 +1,6 @@
 #include "OscPage.h"
 #include "DeviceManager.h"
+#include "../Drivers/MD/MD.h"
 #include "Osc.h"
 #include "DSP.h"
 #include "WavDesigner.h"

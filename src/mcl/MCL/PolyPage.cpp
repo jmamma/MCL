@@ -2,8 +2,8 @@
 #include "MCLGUI.h"
 #include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 void PolyPage::init() {
 
   poly_mask = &mcl_cfg.poly_mask;

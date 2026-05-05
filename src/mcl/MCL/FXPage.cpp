@@ -4,8 +4,8 @@
 #include "KeyInterface.h"
 #include "PageIndex.h"
 #include "MCLGUI.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 
 #define FX_TYPE 0
 #define FX_PARAM 1

@@ -1,7 +1,6 @@
 #include "KeyInterface.h"
 #include "../Drivers/MD/MD.h"
 #include "Midi.h"
-#include "MidiActivePeering.h"
 #include "MCLGUI.h"
 /*
 KeyInterfaceTask key_interface_task;

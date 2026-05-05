@@ -2,7 +2,8 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "TurboLight.h"
-#include "MidiActivePeering.h"
+#include "MCLSeq.h"
+#include "MCLSysConfig.h"
 #include "GridTrack.h"
 #include "MCLStrings.h"
 

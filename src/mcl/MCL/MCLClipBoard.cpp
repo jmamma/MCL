@@ -8,8 +8,8 @@
 #include "MDTrack.h"
 #include "MCLGUI.h"
 #include "MCLActions.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
 
 // Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.

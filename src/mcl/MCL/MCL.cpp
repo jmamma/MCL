@@ -16,6 +16,7 @@
 
 
 #include "GridPages.h"
+#include "MidiActivePeering.h"
 #include "AuxPages.h"
 #include "ProjectPages.h"
 #include "SeqPages.h"

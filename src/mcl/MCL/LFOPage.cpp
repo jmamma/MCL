@@ -3,8 +3,8 @@
 #include "../Drivers/MD/MD.h"
 #include "MCLGUI.h"
 #include "ResourceManager.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 #include "../Drivers/A4/A4.h"
 
 #define LFO_TYPE 0

@@ -1,5 +1,7 @@
 #include "A4.h"
 #include "EmptyTrack.h"
+#include "MCLSeq.h"
+#include "MCLSysConfig.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "TurboLight.h"

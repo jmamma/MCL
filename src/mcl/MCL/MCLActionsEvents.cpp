@@ -6,8 +6,9 @@
 #include "GridTask.h"
 #include "StackMonitor.h"
 #include "MCLActions.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
 
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;

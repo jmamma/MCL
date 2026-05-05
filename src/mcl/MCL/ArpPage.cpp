@@ -1,5 +1,7 @@
 #include "ArpPage.h"
 #include "DeviceManager.h"
+#include "../Drivers/MD/MD.h"
+#include "MCLSeq.h"
 #include "SeqPages.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"

@@ -2,10 +2,10 @@
 #include "MCLGUI.h"
 #include "Oled.h"
 #include "Project.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
 #include "GUI_hardware.h"
 #include "../Drivers/MD/MD.h"
+#include "SeqTrack.h"
 #include "MCLStrings.h"
 #if !defined(__AVR__)
 #include "SPSXSeqDefines.h"

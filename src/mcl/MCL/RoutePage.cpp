@@ -2,8 +2,8 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "../Drivers/MD/MD.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
 #include "MidiClock.h"
 #include "MCLActions.h"
 

@@ -5,6 +5,7 @@
 #include "MCLSysConfig.h"
 #include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MNM/MNM.h"
 #include "../Drivers/A4/A4.h"
@@ -248,5 +249,5 @@ void configure_driver_ports() {
   generic_midi_device.setPort(g.midi, g.port);
 
   mcl_seq.set_ports(MD.uart, generic_midi_device.uart);
-  midi_active_peering.update_dev_cache();
+  device_manager.update_active_slots();
 }

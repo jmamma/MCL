@@ -1,5 +1,7 @@
 #include "MidiActivePeering.h"
 #include "MCLGUI.h"
+#include "MCLSysConfig.h"
+#include "MidiClock.h"
 #include "MidiID.h"
 #include "MidiIDSysex.h"
 #include "MidiUart.h"
@@ -7,6 +9,8 @@
 #include "DeviceManager.h"
 #include "TurboLight.h"
 #include "ResourceManager.h"
+#include "../Drivers/MidiDevice.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/A4/A4.h"
 #include "../Drivers/MNM/MNM.h"
@@ -117,13 +121,13 @@ void MidiActivePeering::disconnect(uint8_t port) {
     }
   }
   device_manager.set_device_for_port(port, &null_midi_device);
-  update_dev_cache();
+  device_manager.update_active_slots();
 }
 
 void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   if (port < 1 || port > 3) return;
 
-  midi_active_peering.disconnect(port);
+  disconnect(port);
   auto *pmidi = _getMidiUart(port);
   if (pmidi) {
     pmidi->device.init();
@@ -133,7 +137,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   driver->on_connection(portToLogicalIdx(port));
 
   device_manager.set_device_for_port(port, driver);
-  update_dev_cache();
+  device_manager.update_active_slots();
 }
 
 static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
@@ -200,18 +204,6 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
   }
 }
 
-MidiDevice *MidiActivePeering::get_device(uint8_t port) {
-  return device_manager.device_for_port(port);
-}
-
-void MidiActivePeering::update_dev_cache() {
-  device_manager.update_active_slots();
-  // Compatibility aliases for older MCL code. New coordination/UI code
-  // should use DeviceManager directly.
-  dev1 = device_manager.dev1();
-  dev2 = device_manager.dev2();
-}
-
 bool usb_set_speed = true;
 
 void MidiActivePeering::run() {
@@ -252,5 +244,5 @@ void MidiActivePeering::run() {
     resource_loaded = false;
   }
 #endif
-  update_dev_cache();
+  device_manager.update_active_slots();
 }

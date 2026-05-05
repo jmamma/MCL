@@ -8,8 +8,9 @@
 #include "MCLGUI.h"
 #include "GridTask.h"
 #include "Project.h"
-#include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "../Drivers/MidiDevice.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
 #include "MCLClipBoard.h"
 #include "../Drivers/MNM/MNMParams.h"
 #include "MCLStrings.h"
@@ -984,12 +985,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
 
 #ifdef PLATFORM_TBD
         // Track first trig and repaint the strip: head=red, chained=yellow.
-        // Hide the OLED bank grid so the underlying page is visible while
-        // the user is selecting patterns; arrow-cycle re-shows it.
+        // Keep the OLED bank grid visible while selecting patterns.
         if (grid_page.bank_popup_first_trig == 255) {
           grid_page.bank_popup_first_trig = track;
         }
-        grid_page.bank_popup_oled_visible = false;
         {
           uint16_t loadmask = grid_page.bank_popup_loadmask;
           uint16_t head_mask = (uint16_t)1 << grid_page.bank_popup_first_trig;

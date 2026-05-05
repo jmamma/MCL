@@ -3,7 +3,6 @@
 #ifndef SEQPTCPAGE_H__
 #define SEQPTCPAGE_H__
 
-#include "MidiActivePeering.h"
 #include "Scales.h"
 #include "SeqPage.h"
 
