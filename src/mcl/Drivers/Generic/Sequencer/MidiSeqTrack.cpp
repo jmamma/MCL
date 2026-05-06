@@ -2,6 +2,7 @@
 
 #ifdef PLATFORM_TBD
 
+#include "AuxPages.h"
 #include "ExtSeqTrack.h"
 #include "GridLink.h"
 #include "MidiClock.h"
@@ -604,6 +605,7 @@ void MidiSeqTrack::note_on(uint8_t note, uint8_t velocity,
   if (uart_ == nullptr) uart_ = port_;
   if (uart_ == nullptr) uart_ = uart;
   if (!uart_) return;
+  mixer_page.ext_disp_levels[track_number] = velocity;
   uart_->sendNoteOn(channel(), note, velocity);
   SET_BIT128_P(note_buffer, note);
 }

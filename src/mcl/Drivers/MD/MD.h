@@ -88,6 +88,16 @@ public:
   virtual void requestGlobal(uint8_t global);
   virtual void init_grid_devices(uint8_t device_idx);
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
+  virtual uint8_t mixer_default_param(uint8_t device_idx) const override;
+  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
+                           uint8_t param_idx,
+                           MidiDeviceMixerParam *param) override;
+  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
+                               uint8_t param_idx, int16_t value,
+                               bool send = true) override;
+  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
+                                      bool state,
+                                      bool clear = false) override;
   virtual uint8_t* icon();
   virtual MCLGIF *gif();
   virtual uint8_t* gif_data();

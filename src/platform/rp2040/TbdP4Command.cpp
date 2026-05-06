@@ -29,6 +29,7 @@ constexpr uint8_t kRequestGetTrackDefaultPresets = 0xA5;
 constexpr uint8_t kRequestGetKitIndexJSON = 0xA7;
 constexpr uint8_t kRequestLoadTrackMacroDefinition = 0xAA;
 constexpr uint8_t kRequestAnnounceApp = 0xAB;
+constexpr uint8_t kRequestSetTrackMute = 0xBD;
 
 SPISettings spi_settings(kSpiSpeed, MSBFIRST, SPI_MODE3);
 
@@ -318,6 +319,18 @@ bool TbdP4CommandTransport::load_track_macro_definition(
   out_buf[3] = track_index;
   memcpy(out_buf + kStringOffset, macro_id, len + 1);
   return send_frame(kRequestLoadTrackMacroDefinition, timeout_ms);
+}
+
+bool TbdP4CommandTransport::set_track_mute(uint8_t track_index, bool muted,
+                                           uint32_t timeout_ms) {
+  if (track_index >= 16) {
+    return false;
+  }
+
+  reset_frame(kRequestSetTrackMute);
+  out_buf[3] = track_index;
+  out_buf[4] = muted ? 1 : 0;
+  return send_frame(kRequestSetTrackMute, timeout_ms);
 }
 
 void TbdP4CommandTransport::get_stats(TbdP4CommandStats &stats) const {

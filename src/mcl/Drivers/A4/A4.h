@@ -86,6 +86,9 @@ public:
   }
 
   virtual uint8_t get_mute_cc() { return 0x5E; }
+  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
+                                      bool state,
+                                      bool clear = false) override;
   bool getBlockingGeneric(uint16_t timeout);
   /*X denotes get from RAM/unsaved  */
   bool getBlockingKitX(uint8_t kit, uint16_t timeout = 3000);

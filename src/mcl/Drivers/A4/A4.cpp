@@ -70,6 +70,18 @@ void A4Class::init_grid_devices(uint8_t device_idx) {
   }
 }
 
+void A4Class::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
+                                     bool state, bool clear) {
+  (void)device_idx;
+  if (track >= NUM_EXT_TRACKS) {
+    return;
+  }
+  mcl_seq.ext_tracks[track].record_mutes = state;
+  if (clear) {
+    mcl_seq.ext_tracks[track].clear_mute();
+  }
+}
+
 uint16_t A4Class::sendKitParams(uint8_t *masks) {
   EmptyTrack empty_track;
   for (uint8_t i = 0; i < NUM_A4_SOUND_TRACKS; i++) {

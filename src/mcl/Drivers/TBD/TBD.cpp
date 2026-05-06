@@ -61,6 +61,42 @@ TbdP4SoundData p4_default_sounds[kP4SoundTrackCount];
 bool p4_default_sound_valid[kP4SoundTrackCount];
 char p4_track_defaults_json[kP4TrackDefaultsJsonBytes];
 
+TbdP4SoundData *p4_sound_for_mixer(uint8_t device_idx, uint8_t track) {
+  if (device_idx == kTbdUiSlotPrimary) {
+    if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD ||
+        track >= mcl_seq.num_tbd_tracks) {
+      return nullptr;
+    }
+    return &mcl_seq.tbd_tracks[track].p4_sound;
+  }
+  if (device_idx == kTbdUiSlotSecondary) {
+    if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD ||
+        track >= mcl_seq.num_midi_tracks) {
+      return nullptr;
+    }
+    return &mcl_seq.midi_tracks[track].p4_sound;
+  }
+  return nullptr;
+}
+
+SeqTrack *seq_track_for_mixer(uint8_t device_idx, uint8_t track) {
+  if (device_idx == kTbdUiSlotPrimary) {
+    if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD ||
+        track >= mcl_seq.num_tbd_tracks) {
+      return nullptr;
+    }
+    return &mcl_seq.tbd_tracks[track];
+  }
+  if (device_idx == kTbdUiSlotSecondary) {
+    if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD ||
+        track >= mcl_seq.num_midi_tracks) {
+      return nullptr;
+    }
+    return &mcl_seq.midi_tracks[track];
+  }
+  return nullptr;
+}
+
 void copy_fixed_string(char *dst, size_t dst_len, const char *src) {
   if (dst == nullptr || dst_len == 0) {
     return;
@@ -922,6 +958,96 @@ bool TbdDevice::supports_capability(MidiDeviceCapability capability) const {
     return false;
   }
   return false;
+}
+
+void TbdDevice::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
+  (void)uart_;
+  tbd_p4_command.set_track_mute(track, mute);
+}
+
+uint8_t TbdDevice::mixer_default_param(uint8_t device_idx) const {
+  (void)device_idx;
+  return 0;
+}
+
+bool TbdDevice::mixer_param(uint8_t device_idx, uint8_t track,
+                            uint8_t param_idx,
+                            MidiDeviceMixerParam *param) {
+  if (param == nullptr) {
+    return false;
+  }
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  if (sound == nullptr || param_idx >= TBD_P4_MIXER_PARAM_COUNT) {
+    return false;
+  }
+
+  TbdP4ParamDescriptor &desc = sound->mixer_params.params[param_idx];
+  if (!desc.is_visible()) {
+    return false;
+  }
+
+  param->label = desc.shortname;
+  param->min_value = desc.min_value;
+  param->max_value = desc.max_value;
+  param->value = desc.value;
+  param->type = desc.type;
+  param->sendable = desc.is_sendable();
+  return true;
+}
+
+bool TbdDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
+                                uint8_t param_idx, int16_t value,
+                                bool send) {
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  if (sound == nullptr || param_idx >= TBD_P4_MIXER_PARAM_COUNT) {
+    return false;
+  }
+
+  TbdP4ParamDescriptor &desc = sound->mixer_params.params[param_idx];
+  if (!desc.is_visible()) {
+    return false;
+  }
+  if (value < desc.min_value) value = desc.min_value;
+  if (value > desc.max_value) value = desc.max_value;
+  desc.value = value;
+
+  if (!send || !desc.is_sendable() || uart == nullptr) {
+    return true;
+  }
+
+  tbd_p4_realtime.set_active_track(sound->p4_track_index);
+  if (desc.ctrl_type == TBD_P4_CTRLTYPE_CC) {
+    int16_t cc_value = value;
+    if (cc_value < 0) cc_value = 0;
+    if (cc_value > 127) cc_value = 127;
+    uart->sendCC(sound->midi_channel, desc.ctrl, (uint8_t)cc_value);
+  } else if (desc.ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
+    uint16_t nrpn_value = value < 0 ? 0 : (uint16_t)value;
+    uart->sendNRPN(sound->midi_channel, desc.ctrl, nrpn_value);
+  }
+  return true;
+}
+
+void TbdDevice::mixer_mute_track(uint8_t device_idx, uint8_t track,
+                                 bool mute, MidiUartClass *uart_) {
+  (void)uart_;
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  if (sound == nullptr) {
+    return;
+  }
+  tbd_p4_command.set_track_mute(sound->p4_track_index, mute);
+}
+
+void TbdDevice::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
+                                       bool state, bool clear) {
+  SeqTrack *seq_track = seq_track_for_mixer(device_idx, track);
+  if (seq_track == nullptr) {
+    return;
+  }
+  seq_track->record_mutes = state;
+  if (clear && device_idx == kTbdUiSlotPrimary) {
+    mcl_seq.tbd_tracks[track].clear_mute();
+  }
 }
 
 bool TbdDevice::probe() {

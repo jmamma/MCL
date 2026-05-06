@@ -45,6 +45,8 @@ public:
                                uint32_t timeout_ms = 30000);
   bool load_track_macro_definition(uint8_t track_index, const char *macro_id,
                                    uint32_t timeout_ms = 30000);
+  bool set_track_mute(uint8_t track_index, bool muted,
+                      uint32_t timeout_ms = 100);
 
   void get_stats(TbdP4CommandStats &stats) const;
 

@@ -60,6 +60,18 @@ void MNMClass::init_grid_devices(uint8_t device_idx) {
 
 }
 
+void MNMClass::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
+                                      bool state, bool clear) {
+  (void)device_idx;
+  if (track >= NUM_EXT_TRACKS) {
+    return;
+  }
+  mcl_seq.ext_tracks[track].record_mutes = state;
+  if (clear) {
+    mcl_seq.ext_tracks[track].clear_mute();
+  }
+}
+
 bool MNMClass::probe() {
   connected = false;
   DEBUG_PRINTLN("MNM probe");

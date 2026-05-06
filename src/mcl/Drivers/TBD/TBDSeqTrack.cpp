@@ -2,6 +2,7 @@
 
 #ifdef PLATFORM_TBD
 
+#include "AuxPages.h"
 #include "GridTrack.h"
 #include "MidiClock.h"
 
@@ -116,6 +117,7 @@ void TBDSeqTrack::send_trig(uint8_t velocity) {
   if (!port) {
     return;
   }
+  mixer_page.disp_levels[track_number] = velocity;
   uint8_t note = p4_sound.trig_note >= 0 ? (uint8_t)p4_sound.trig_note : 60;
   send_active_note_off();
   port->sendNoteOn(p4_sound.midi_channel, note, velocity);

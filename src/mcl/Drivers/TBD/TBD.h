@@ -16,6 +16,21 @@ public:
   virtual void on_connection(uint8_t device_idx) override;
   virtual void init_grid_devices(uint8_t device_idx) override;
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
+  virtual void muteTrack(uint8_t track, bool mute = true,
+                         MidiUartClass *uart_ = nullptr) override;
+  virtual uint8_t mixer_default_param(uint8_t device_idx) const override;
+  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
+                           uint8_t param_idx,
+                           MidiDeviceMixerParam *param) override;
+  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
+                               uint8_t param_idx, int16_t value,
+                               bool send = true) override;
+  virtual void mixer_mute_track(uint8_t device_idx, uint8_t track,
+                                bool mute,
+                                MidiUartClass *uart_ = nullptr) override;
+  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
+                                      bool state,
+                                      bool clear = false) override;
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool enter_ui(gui_event_t *event) override;

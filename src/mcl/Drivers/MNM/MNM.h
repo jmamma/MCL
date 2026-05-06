@@ -39,6 +39,9 @@ public:
   }
 
   virtual uint8_t get_mute_cc() { return 0x03; }
+  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
+                                      bool state,
+                                      bool clear = false) override;
   virtual void updateKitParams();
   virtual uint16_t sendKitParams(uint8_t *mask);
   virtual const char* getMachineName(uint8_t machine);

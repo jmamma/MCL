@@ -8,6 +8,8 @@
 #include "MCL.h"
 #include "../Drivers/MD/MD.h"
 
+class SeqTrack;
+
 class MuteSet {
 public:
   uint16_t mutes[4];
@@ -34,10 +36,11 @@ class MixerPage : public LightPage {
 public:
   uint8_t level_pressmode = 0;
   uint8_t disp_levels[16];
-  uint8_t ext_disp_levels[6];
+  uint8_t ext_disp_levels[16];
   bool mute_toggle = 0;
   uint8_t ext_key_down;
   MidiDevice *midi_device;
+  uint8_t mixer_device_idx = 0;
 
   uint8_t display_mode;
   uint8_t first_track;
@@ -61,6 +64,16 @@ public:
   //
 
   uint8_t get_mute_set(uint8_t key);
+  uint8_t default_mixer_param() const;
+  MidiDevice *device_for_mixer_slot(uint8_t device_idx) const;
+  MidiDevice *selected_mixer_device() const;
+  void sync_selected_mixer_device();
+  void select_mixer_device(uint8_t device_idx);
+  uint8_t mixer_track_count() const;
+  SeqTrack *mixer_seq_track(uint8_t track) const;
+  bool display_mute_mask();
+  TrigLEDMode mixer_led_mode() const;
+  uint8_t *mixer_meter_levels();
 
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)

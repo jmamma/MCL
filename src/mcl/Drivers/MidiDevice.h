@@ -13,6 +13,16 @@ class GridDeviceTrack;
 class MCLGIF;
 class MidiClass;
 class MidiUartClass;
+class SeqTrack;
+
+struct MidiDeviceMixerParam {
+  const char *label = nullptr;
+  int16_t min_value = 0;
+  int16_t max_value = 127;
+  int16_t value = 0;
+  uint8_t type = 0;
+  bool sendable = false;
+};
 
 /// Base class for MIDI-compatible devices.
 /// Defines basic device description data and driver interfaces.
@@ -91,6 +101,20 @@ public:
   virtual uint8_t get_mute_cc() { return 255; }
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) {}
+  virtual uint8_t mixer_track_count(uint8_t device_idx) const;
+  virtual SeqTrack *mixer_seq_track(uint8_t device_idx, uint8_t track);
+  virtual uint8_t mixer_default_param(uint8_t device_idx) const;
+  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
+                           uint8_t param_idx,
+                           MidiDeviceMixerParam *param);
+  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
+                               uint8_t param_idx, int16_t value,
+                               bool send = true);
+  virtual void mixer_mute_track(uint8_t device_idx, uint8_t track,
+                                bool mute,
+                                MidiUartClass *uart_ = nullptr);
+  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
+                                      bool state, bool clear = false);
   void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity,
                   MidiUartClass *uart_ = nullptr);
   void sendNoteOff(uint8_t channel, uint8_t note,

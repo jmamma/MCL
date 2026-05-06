@@ -49,6 +49,19 @@ void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
                 value);
 }
 
+void GenericMidiDevice::mixer_set_record_mutes(uint8_t device_idx,
+                                               uint8_t track, bool state,
+                                               bool clear) {
+  (void)device_idx;
+  if (track >= NUM_EXT_TRACKS) {
+    return;
+  }
+  mcl_seq.ext_tracks[track].record_mutes = state;
+  if (clear) {
+    mcl_seq.ext_tracks[track].clear_mute();
+  }
+}
+
 void GenericMidiDevice::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 1;
   GridDeviceTrack gdt;
