@@ -1,6 +1,7 @@
 #include "MenuTypes.h"
 #include "MCLMenuDefines.h"
 #include "MCLMemory.h"
+#include "MidiSetup.h"
 
 /****
   Menu Format:
@@ -98,6 +99,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDY_PORT_RANGE 3
   #define GRIDY_PORT_OPTIONS 3
   #define GRIDY_PORT_OPTIONS_OFFSET 143
+  #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 146
 #else
   #define GRIDX_DEVICE_RANGE 2
   #define GRIDX_DEVICE_OPTIONS 2
@@ -113,6 +115,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDY_PORT_RANGE 3
   #define GRIDY_PORT_OPTIONS 2
   #define GRIDY_PORT_OPTIONS_OFFSET 140
+  #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 7
 #endif
 
 menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
@@ -194,8 +197,17 @@ menu_t<midiprogram_menu_page_N> midiprogram_menu_layout = {
 menu_t<midiclock_menu_page_N> midiclock_menu_layout = {
     "SYNC",
     {
-        {"CLOCK RECV:",  0, 3, 3, 5, NULL_PAGE, 0, 7},
-        {"TRANS RECV:",  0, 3, 3, 53, NULL_PAGE, 0, 7},
+#if defined(PLATFORM_TBD)
+        {"CLOCK SRC:",   0, MIDI_CLOCK_SOURCE_COUNT, MIDI_CLOCK_SOURCE_COUNT,
+         5, NULL_PAGE, 0, MIDI_CLOCK_SOURCE_OPTIONS_OFFSET},
+        {"TRANS SRC:",   0, MIDI_CLOCK_SOURCE_COUNT, MIDI_CLOCK_SOURCE_COUNT,
+         53, NULL_PAGE, 0, MIDI_CLOCK_SOURCE_OPTIONS_OFFSET},
+#else
+        {"CLOCK RECV:",  0, MIDI_CLOCK_SOURCE_COUNT, MIDI_CLOCK_SOURCE_COUNT,
+         5, NULL_PAGE, 0, MIDI_CLOCK_SOURCE_OPTIONS_OFFSET},
+        {"TRANS RECV:",  0, MIDI_CLOCK_SOURCE_COUNT, MIDI_CLOCK_SOURCE_COUNT,
+         53, NULL_PAGE, 0, MIDI_CLOCK_SOURCE_OPTIONS_OFFSET},
+#endif
         {"CLOCK SEND:", 0, 4, 4, 6, NULL_PAGE, 0, 98},
         {"TRANS SEND:",  0, 4, 4, 54, NULL_PAGE, 0, 98},
     },

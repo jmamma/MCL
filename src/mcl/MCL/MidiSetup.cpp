@@ -16,20 +16,27 @@
 
 void MidiSetup::cfg_clock_recv() {
   MidiClock.mode = MidiClock.EXTERNAL_UART1;
+  MidiClock.uart_clock_recv = nullptr;
 
   // Always forward clock to MD, unless MD is the source.
   MidiClock.uart_clock_forward1 = MD.uart;
   switch (mcl_cfg.clock_rec) {
-  case 0:
+  case MIDI_CLOCK_SOURCE_PORT1:
     MidiClock.uart_clock_recv = MD.uart;
     MidiClock.uart_clock_forward1 = nullptr;
     break;
-  case 1:
+  case MIDI_CLOCK_SOURCE_PORT2:
     MidiClock.uart_clock_recv = &MidiUart2;
     break;
-  case 2:
+  case MIDI_CLOCK_SOURCE_USB:
     MidiClock.uart_clock_recv = &MidiUartUSB;
     break;
+#ifdef PLATFORM_TBD
+  case MIDI_CLOCK_SOURCE_INTERNAL:
+    MidiClock.mode = MidiClock.INTERNAL_MIDI;
+    MidiClock.resetInternalClockSource(true);
+    break;
+#endif
   }
   // Don't echo clock back to the port it came from.
   if (MidiClock.uart_clock_forward1 == MidiClock.uart_clock_recv) {
@@ -48,15 +55,20 @@ void MidiSetup::cfg_ports(bool boot) {
   MidiClock.uart_transport_forward1 = MD.uart;
   MidiClock.uart_transport_recv2 = nullptr;
   switch (mcl_cfg.midi_transport_rec) {
-  case 0:
+  case MIDI_CLOCK_SOURCE_PORT1:
     MidiClock.uart_transport_forward1 = nullptr;
     break;
-  case 1:
+  case MIDI_CLOCK_SOURCE_PORT2:
     MidiClock.uart_transport_recv2 = &MidiUart2;
     break;
-  case 2:
+  case MIDI_CLOCK_SOURCE_USB:
     MidiClock.uart_transport_recv2 = &MidiUartUSB;
     break;
+#ifdef PLATFORM_TBD
+  case MIDI_CLOCK_SOURCE_INTERNAL:
+    MidiClock.uart_transport_recv1 = nullptr;
+    break;
+#endif
   }
   if (MidiClock.uart_transport_forward1 == MidiClock.uart_transport_recv2) {
     MidiClock.uart_transport_forward1 = nullptr;

@@ -5,6 +5,7 @@
 #include "MCLMemory.h"
 #include "MCLMenuDefines.h"
 #include "MenuTypes.h"
+#include "MidiSetup.h"
 #include "PageIndex.h"
 #include "SeqDefines.h"
 

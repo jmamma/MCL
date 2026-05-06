@@ -62,6 +62,11 @@ public:
   volatile uint8_t clock_interpolation = 2; // 2=legacy(48PPQN), 16=SPSX(384PPQN)
   volatile uint8_t interp_budget = 0;
 #endif
+#ifdef PLATFORM_TBD
+  static constexpr uint32_t INTERNAL_CLOCK_PHASE_TOP = 5000UL * 60UL;
+  volatile uint32_t internal_clock_phase = 0;
+  volatile uint32_t internal_clock_step = 120UL * 24UL;
+#endif
   volatile uint16_t clock_last_time;
 
   volatile uint16_t last_diff_clock8;
@@ -292,6 +297,54 @@ public:
     }
   }
 
+#ifdef PLATFORM_TBD
+  ALWAYS_INLINE() void resetInternalClockSource(bool fire_next_tick = false) {
+    updateInternalClockInterval();
+    uint32_t step = internal_clock_step;
+    if (fire_next_tick && step > 0 && step < INTERNAL_CLOCK_PHASE_TOP) {
+      internal_clock_phase = INTERNAL_CLOCK_PHASE_TOP - step;
+    } else {
+      internal_clock_phase = 0;
+    }
+  }
+
+  ALWAYS_INLINE() void updateInternalClockInterval() {
+    uint32_t denom = internal_clock_step * (uint32_t)clock_interpolation;
+    uint32_t ticks = denom > 0 ? INTERNAL_CLOCK_PHASE_TOP / denom : 1;
+    if (ticks == 0) {
+      ticks = 1;
+    } else if (ticks > 0xFFFF) {
+      ticks = 0xFFFF;
+    }
+    div192_time = (uint16_t)ticks;
+  }
+
+  ALWAYS_INLINE() bool handleInternalTimerTick() {
+    if (mode != INTERNAL_MIDI ||
+        (state != STARTING && state != STARTED)) {
+      return false;
+    }
+
+    uint32_t step = internal_clock_step;
+    if (step == 0) {
+      return false;
+    }
+
+    uint32_t phase = internal_clock_phase + step;
+    if (phase < INTERNAL_CLOCK_PHASE_TOP) {
+      internal_clock_phase = phase;
+      return false;
+    }
+
+    do {
+      phase -= INTERNAL_CLOCK_PHASE_TOP;
+    } while (phase >= INTERNAL_CLOCK_PHASE_TOP);
+    internal_clock_phase = phase;
+    handleImmediateClock();
+    return true;
+  }
+#endif
+
   /* in interrupt on 5000Hz internal timer timeout */
   ALWAYS_INLINE() void increment192Counter() {
     if (state == STARTED) {
@@ -425,10 +478,21 @@ public:
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_START); }
 
     init();
+#ifdef PLATFORM_TBD
+    if (mode == INTERNAL_MIDI) {
+      resetInternalClockSource(true);
+    }
+#endif
 
     state = STARTING;
     onMidiStartImmediateCallbacks.call(div96th_counter);
-    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_START); }
+    if (uart_transport_recv1) {
+      uart_transport_recv1->rxRb->put_h_isr(MIDI_START);
+#ifdef PLATFORM_TBD
+    } else {
+      handleMidiStart();
+#endif
+    }
 
     DEBUG_PRINTLN(F("START"));
   }
@@ -438,7 +502,13 @@ public:
     if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_STOP); }
     if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_STOP); }
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_STOP); }
-    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_STOP); }
+    if (uart_transport_recv1) {
+      uart_transport_recv1->rxRb->put_h_isr(MIDI_STOP);
+#ifdef PLATFORM_TBD
+    } else {
+      handleMidiStop();
+#endif
+    }
     //  init();
   }
 
@@ -449,9 +519,20 @@ public:
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_CONTINUE); }
 
     state = STARTED;
+#ifdef PLATFORM_TBD
+    if (mode == INTERNAL_MIDI) {
+      resetInternalClockSource(true);
+    }
+#endif
 
     isInit = false;
-    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_CONTINUE); }
+    if (uart_transport_recv1) {
+      uart_transport_recv1->rxRb->put_h_isr(MIDI_CONTINUE);
+#ifdef PLATFORM_TBD
+    } else {
+      handleMidiContinue();
+#endif
+    }
     //  init();
   }
 

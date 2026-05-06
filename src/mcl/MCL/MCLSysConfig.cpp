@@ -67,6 +67,13 @@ void mclsys_apply_config() {
 }
 
 void mclsys_normalize_midi_config() {
+  if (mcl_cfg.clock_rec >= MIDI_CLOCK_SOURCE_COUNT) {
+    mcl_cfg.clock_rec = MIDI_CLOCK_SOURCE_PORT1;
+  }
+  if (mcl_cfg.midi_transport_rec >= MIDI_CLOCK_SOURCE_COUNT) {
+    mcl_cfg.midi_transport_rec = MIDI_CLOCK_SOURCE_PORT1;
+  }
+
 #ifdef PLATFORM_TBD
   if (mcl_cfg.grid_x_device != GRID_X_DEVICE_MD &&
       mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD) {

@@ -145,6 +145,10 @@ void MidiClockClass::setTempo(uint16_t _tempo) {
   tempo = _tempo;
   //  interval = 62500 / (tempo * 24 / 60);
   interval = (uint32_t)((uint32_t)156250 / tempo) - 16;
+#ifdef PLATFORM_TBD
+  internal_clock_step = (uint32_t)_tempo * 24UL;
+  updateInternalClockInterval();
+#endif
   CLEAR_LOCK();
 }
 

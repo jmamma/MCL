@@ -89,6 +89,8 @@ menu_option_t MENU_OPTIONS[] = {
   {0, "TBD"}, {1, "GENER"}, {2, "ELEKT"}, {3, "OFF"},
   // 143: GRID Y port
   {0, "INT"}, {1, "2"}, {2, "USB"},
+  // 146: TBD MIDI clock/transport source
+  {0, "1"}, {1, "2"}, {2, "USB"}, {3, "INT"},
 #else
   // 133: GRID X device
   {0, "OFF"}, {1, "MD"},

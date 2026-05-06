@@ -55,8 +55,19 @@ void __not_in_flash_func(timer2_handler)() {
   LOCK();
   g_clock_fast++;
 
+#ifdef PLATFORM_TBD
+  bool emitted_internal_clock = MidiClock.handleInternalTimerTick();
+  if (emitted_internal_clock && MidiClock.state == MidiClockClass::STARTED &&
+      !MidiClock.inCallback) {
+    TRIGGER_SW_IRQ1();
+  }
+#else
+  bool emitted_internal_clock = false;
+#endif
+
   MidiClock.div192th_countdown++;
-  if (MidiClock.state == MidiClockClass::STARTED) {
+  if (!emitted_internal_clock &&
+      MidiClock.state == MidiClockClass::STARTED) {
     if (MidiClock.div192th_countdown >= MidiClock.div192_time) {
       if (MidiClock.interp_budget > 0) {
         MidiClock.increment192Counter();
@@ -183,5 +194,3 @@ void core1_loop() {
 }
 
 #endif
-
-
