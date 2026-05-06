@@ -15,7 +15,9 @@ bool MDUI::handle_event(gui_event_t *event) {
 }
 
 bool MDUI::enter(gui_event_t *event) {
-  return sps_mode.handle_toggle_button(event);
+  (void)event;
+  sps_mode.enable();
+  return true;
 }
 
 bool MDUI::is_active() const {

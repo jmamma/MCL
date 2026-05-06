@@ -197,43 +197,6 @@ void SpsMode::send_param(uint8_t i) {
   MD.setTrackParam(MD.currentTrack, param, v, nullptr, true);
 }
 
-bool SpsMode::handle_toggle_button(gui_event_t *event) {
-  if (event->source == ButtonsClass::BUTTON2) {
-    if (is_release(event)) {
-      if (GUI.overlay == &sps_overlay_page) {
-        GUI.setOverlay(&sps_strip_page);
-      } else {
-        set_latched(!latched_);
-      }
-    }
-    return true;
-  }
-
-  if (event->source != ButtonsClass::TBD_BUTTON_TR) return false;
-  // TR semantics:
-  //   press                   → toggle SPS latch immediately, OR
-  //                             close the overlay if one is up
-  //                             (latch unchanged).
-  //   hold ≥ TBD_OVERLAY_HOLD_MS → poll_page_overlay installs the
-  //                             SPS overlay (sticky).
-  if (is_press(event)) {
-    tr_press_ms_ = read_clock_ms();
-    tr_pressed_ = true;
-
-    if (GUI.overlay == &sps_overlay_page) {
-      // Param-page-select overlay open + press → drop back to the
-      // bottom strip. Latch unchanged.
-      GUI.setOverlay(&sps_strip_page);
-    } else {
-      set_latched(!latched_);
-    }
-  } else if (is_release(event)) {
-    tr_pressed_ = false;
-  }
-  return true;
-}
-
-
 bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
   if (!latched_) return false;
   if (!is_arrow_source(event->source)) return false;
@@ -457,7 +420,6 @@ void SpsMode::poll_page_overlay() {
 
 #else // !PLATFORM_TBD
 
-bool SpsMode::handle_toggle_button(gui_event_t *) { return false; }
 bool SpsMode::handle_func_arrow_chord(gui_event_t *) { return false; }
 bool SpsMode::handle_cluster_menus(gui_event_t *) { return false; }
 bool SpsMode::handle_arrow_subpage(gui_event_t *) { return false; }

@@ -496,7 +496,7 @@ bool TbdUiMode::enter(uint8_t device_idx) {
   }
 
   if (latched_ && device_idx_ == device_idx) {
-    disable();
+    show_fullscreen();
     return true;
   }
 

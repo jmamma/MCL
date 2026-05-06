@@ -4,7 +4,6 @@
 
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/TBD/TBD.h"
-#include "../Drivers/TBD/TbdUiMode.h"
 #include "AuxPages.h"
 #include "MCL.h"
 #include "BankPopupPage.h"
@@ -49,49 +48,19 @@ bool TbdPanel::top_left_reserved_page() const {
 }
 
 bool TbdPanel::enter_primary_ui(gui_event_t *event) {
-  MidiDevice *primary = device_manager.primary_device();
-  if (primary == &TBD) {
-    if (tbd_ui_mode.is_active() &&
-        tbd_ui_mode.device_idx() == TbdUiMode::SLOT_PRIMARY) {
-      return true;
-    }
-  } else if (primary->is_ui_active()) {
-    return true;
-  }
-
   gui_event_t ui_event = *event;
   ui_event.source = ButtonsClass::BUTTON2;
   ui_event.mask = EVENT_BUTTON_RELEASED;
-  if (device_manager.enter_ui(primary, &ui_event)) {
-    return true;
-  }
-  ui_event = *event;
-  ui_event.source = ButtonsClass::BUTTON2;
-  ui_event.mask = EVENT_BUTTON_RELEASED;
-  return device_manager.enter_ui(&ui_event);
+  return device_manager.enter_ui_slot(DeviceManager::UI_SLOT_PRIMARY,
+                                      &ui_event, false);
 }
 
 bool TbdPanel::enter_secondary_ui(gui_event_t *event) {
-  MidiDevice *secondary = device_manager.secondary_device();
-  if (secondary == &TBD) {
-    if (tbd_ui_mode.is_active() &&
-        tbd_ui_mode.device_idx() == TbdUiMode::SLOT_SECONDARY) {
-      return true;
-    }
-  } else if (secondary->is_ui_active()) {
-    return true;
-  }
-
   gui_event_t ui_event = *event;
   ui_event.source = ButtonsClass::TBD_BUTTON_TR;
   ui_event.mask = EVENT_BUTTON_PRESSED;
-  if (device_manager.enter_ui(secondary, &ui_event)) {
-    return true;
-  }
-  ui_event = *event;
-  ui_event.source = ButtonsClass::TBD_BUTTON_TR;
-  ui_event.mask = EVENT_BUTTON_PRESSED;
-  return device_manager.enter_ui(&ui_event);
+  return device_manager.enter_ui_slot(DeviceManager::UI_SLOT_SECONDARY,
+                                      &ui_event);
 }
 
 void TbdPanel::loop() {

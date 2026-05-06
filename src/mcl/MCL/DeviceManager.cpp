@@ -36,6 +36,7 @@ void DeviceManager::set_device_for_port(uint8_t port, MidiDevice *device) {
   if (active_ui_device_ && active_ui_device_ == physical_[port - 1]) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
+    active_ui_slot_ = UI_SLOT_NONE;
   }
 #endif
   physical_[port - 1] = nonnull(device);
@@ -74,6 +75,7 @@ void DeviceManager::update_active_slots() {
       active_ui_device_ != secondary_) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
+    active_ui_slot_ = UI_SLOT_NONE;
   }
 #endif
 }
@@ -98,7 +100,10 @@ void DeviceManager::ui_loop() {
 bool DeviceManager::handle_ui_event(gui_event_t *event) {
   if (active_ui_device_) {
     if (active_ui_device_->handle_ui_event(event)) return true;
-    if (!active_ui_device_->is_ui_active()) active_ui_device_ = nullptr;
+    if (!active_ui_device_->is_ui_active()) {
+      active_ui_device_ = nullptr;
+      active_ui_slot_ = UI_SLOT_NONE;
+    }
     return false;
   }
 
@@ -106,11 +111,17 @@ bool DeviceManager::handle_ui_event(gui_event_t *event) {
   MidiDevice *secondary = secondary_device();
   if (secondary == primary) secondary = nullptr;
   if (primary && primary->handle_ui_event(event)) {
-    if (primary->is_ui_active()) active_ui_device_ = primary;
+    if (primary->is_ui_active()) {
+      active_ui_device_ = primary;
+      active_ui_slot_ = UI_SLOT_PRIMARY;
+    }
     return true;
   }
   if (secondary && secondary->handle_ui_event(event)) {
-    if (secondary->is_ui_active()) active_ui_device_ = secondary;
+    if (secondary->is_ui_active()) {
+      active_ui_device_ = secondary;
+      active_ui_slot_ = UI_SLOT_SECONDARY;
+    }
     return true;
   }
   return false;
@@ -135,12 +146,56 @@ bool DeviceManager::enter_ui(MidiDevice *device, gui_event_t *event) {
   if (active_ui_device_ && active_ui_device_ != device) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
+    active_ui_slot_ = UI_SLOT_NONE;
   }
   if (!device->enter_ui(event)) return false;
   if (device->is_ui_active()) {
     active_ui_device_ = device;
+    active_ui_slot_ = UI_SLOT_NONE;
   } else if (active_ui_device_ == device) {
     active_ui_device_ = nullptr;
+    active_ui_slot_ = UI_SLOT_NONE;
+  }
+  return true;
+}
+
+bool DeviceManager::enter_ui_slot(uint8_t slot, gui_event_t *event,
+                                  bool allow_toggle) {
+  MidiDevice *device = nullptr;
+  if (slot == UI_SLOT_PRIMARY) {
+    device = primary_device();
+  } else if (slot == UI_SLOT_SECONDARY) {
+    device = secondary_device();
+  } else {
+    return false;
+  }
+
+  device = nonnull(device);
+  if (device == &null_midi_device) return false;
+
+  if (active_ui_device_ == device && active_ui_slot_ == slot &&
+      device->is_ui_active()) {
+    if (allow_toggle) {
+      device->exit_ui();
+      active_ui_device_ = nullptr;
+      active_ui_slot_ = UI_SLOT_NONE;
+    }
+    return true;
+  }
+
+  if (active_ui_device_ && active_ui_device_ != device) {
+    active_ui_device_->exit_ui();
+    active_ui_device_ = nullptr;
+    active_ui_slot_ = UI_SLOT_NONE;
+  }
+
+  if (!device->enter_ui(event)) return false;
+  if (device->is_ui_active()) {
+    active_ui_device_ = device;
+    active_ui_slot_ = slot;
+  } else if (active_ui_device_ == device) {
+    active_ui_device_ = nullptr;
+    active_ui_slot_ = UI_SLOT_NONE;
   }
   return true;
 }
@@ -158,6 +213,7 @@ void DeviceManager::exit_ui() {
   if (active_ui_device_) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
+    active_ui_slot_ = UI_SLOT_NONE;
     return;
   }
 
@@ -166,5 +222,6 @@ void DeviceManager::exit_ui() {
   if (secondary == primary) secondary = nullptr;
   if (primary) primary->exit_ui();
   if (secondary) secondary->exit_ui();
+  active_ui_slot_ = UI_SLOT_NONE;
 }
 #endif

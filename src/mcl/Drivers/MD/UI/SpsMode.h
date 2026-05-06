@@ -1,5 +1,5 @@
-/* TBD SPS-mode latch. Owns the TBD_BUTTON_TR toggle,
- * the cluster A/X/Y MD key routing, the trig → sub_page selector /
+/* TBD SPS-mode latch. Owns the cluster A/X/Y MD key routing,
+ * the trig → sub_page selector /
  * MD_GUI_TRIG_* routing, the SPS-key + arrow sub-page traversal, and
  * the FUNC + ARROW window-toggle chord. Pulled out of tbd_handleEvent
  * so the per-event ladder in MCL.cpp stays readable.
@@ -32,9 +32,9 @@ class SpsMode {
 public:
   bool is_active() const { return latched_; }
   uint8_t sub_page() const { return sub_page_; }
+  void enable() { set_latched(true); }
   void disable() { set_latched(false); }
 
-  bool handle_toggle_button(gui_event_t *event);
   bool handle_func_arrow_chord(gui_event_t *event);
   // Cluster X/Y in SPS-latched: X → MD EXTENDED / FUNC+EXTENDED,
   // Y → MD NO transmit.

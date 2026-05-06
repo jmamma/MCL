@@ -9,8 +9,7 @@
  * Lifecycle is owned by SpsMode:
  *   - SpsMode::poll_page_overlay calls GUI.setOverlay(&sps_overlay_page)
  *     when TR has been held past TBD_OVERLAY_HOLD_MS while latched.
- *   - SpsMode::handle_toggle_button calls GUI.clearOverlay() on a TR
- *     tap while the overlay is up.
+ *   - SpsMode::disable clears SPS overlays when the device UI is exited.
  *
  * Trig / arrow sub-page navigation while TR is held is handled by
  * SpsMode's existing handlers (handle_arrow_subpage, handle_trig_forward)

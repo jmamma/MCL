@@ -23,10 +23,16 @@ public:
   MidiDevice *secondary_device() const;
 
 #ifdef PLATFORM_TBD
+  static constexpr uint8_t UI_SLOT_PRIMARY = 0;
+  static constexpr uint8_t UI_SLOT_SECONDARY = 1;
+  static constexpr uint8_t UI_SLOT_NONE = 255;
+
   void ui_loop();
   bool handle_ui_event(gui_event_t *event);
   bool enter_ui(gui_event_t *event);
   bool enter_ui(MidiDevice *device, gui_event_t *event);
+  bool enter_ui_slot(uint8_t slot, gui_event_t *event,
+                     bool allow_toggle = true);
   bool is_ui_active() const;
   void exit_ui();
 #endif
@@ -39,6 +45,7 @@ private:
   MidiDevice *secondary_ = nullptr;
 #ifdef PLATFORM_TBD
   MidiDevice *active_ui_device_ = nullptr;
+  uint8_t active_ui_slot_ = UI_SLOT_NONE;
 #endif
 };
 
