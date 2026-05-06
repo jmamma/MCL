@@ -62,8 +62,7 @@ static void prepare_display(uint8_t *buf) {
 static void disconnect_driver_list(DriverRegistry::DriverList drivers,
                                    uint8_t device_idx, uint8_t port,
                                    MidiUartClass *pmidi) {
-  const bool reset_turbo =
-      device_manager.device_for_port(port)->asElektronDevice() != nullptr;
+  const bool reset_turbo = device_manager.port_is_elektron(port);
 
   for (size_t i = 0; i < drivers.count; ++i) {
     MidiDevice *driver = drivers.items[i];

@@ -744,7 +744,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_NOTE(event)) {
-    if (device_manager.device_for_port(event->port)->id != DEVICE_MD) {
+    if (!device_manager.port_is_device(event->port, DEVICE_MD)) {
       return true;
     }
   }

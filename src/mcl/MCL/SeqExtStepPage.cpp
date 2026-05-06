@@ -829,10 +829,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = device_manager.device_for_port(port)->id;
     uint8_t track = event->source;
 
-    if (device != DEVICE_MD) {
+    if (!device_manager.port_is_device(port, DEVICE_MD)) {
       return true;
     }
     if (show_seq_menu) {

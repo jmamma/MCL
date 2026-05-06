@@ -313,12 +313,12 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    uint8_t device = device_manager.device_for_port(port)->id;
+    const bool is_md_port = device_manager.port_is_device(port, DEVICE_MD);
 
     uint8_t track = event->source;
     // note interface presses select corresponding page
     if (mask == EVENT_BUTTON_PRESSED) {
-      if (device != DEVICE_MD) {
+      if (!is_md_port) {
         return false;
       }
       if (page_select != track) {
@@ -328,7 +328,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       return true;
     }
     if (mask == EVENT_BUTTON_RELEASED) {
-      if (device != DEVICE_MD) {
+      if (!is_md_port) {
         return false;
       }
       return true;

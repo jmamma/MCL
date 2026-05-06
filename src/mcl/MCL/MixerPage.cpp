@@ -482,8 +482,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   bool is_md_device = SeqTrackUtil::is_md_device(midi_device);
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
-    uint8_t port = event->port;
-    uint8_t device = device_manager.device_for_port(port)->id;
 
     uint8_t track = event->source;
 

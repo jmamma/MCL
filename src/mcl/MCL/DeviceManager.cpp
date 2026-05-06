@@ -21,6 +21,18 @@ MidiDevice *DeviceManager::device_for_port(uint8_t port) const {
   return &null_midi_device;
 }
 
+uint8_t DeviceManager::device_id_for_port(uint8_t port) const {
+  return device_for_port(port)->id;
+}
+
+bool DeviceManager::port_is_device(uint8_t port, uint8_t device_id) const {
+  return device_id_for_port(port) == device_id;
+}
+
+bool DeviceManager::port_is_elektron(uint8_t port) const {
+  return device_for_port(port)->asElektronDevice() != nullptr;
+}
+
 void DeviceManager::set_device_for_port(uint8_t port, MidiDevice *device) {
   if (port < UART1_PORT || port > UARTUSB_PORT) return;
 #ifdef PLATFORM_TBD

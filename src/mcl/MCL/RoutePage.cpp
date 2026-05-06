@@ -124,8 +124,7 @@ void RoutePage::display() {
 
 bool RoutePage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
-    uint8_t track = event->source;
-    if (device_manager.device_for_port(event->port)->id != DEVICE_MD) {
+    if (!device_manager.port_is_device(event->port, DEVICE_MD)) {
       return true;
     }
     key_interface.send_md_leds(TRIGLED_OVERLAY);
