@@ -8,6 +8,9 @@
 #include "MCLStrings.h"
 #include "DeviceManager.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
+#if defined(PLATFORM_TBD)
+#include "../Drivers/Generic/Sequencer/StepSeqDefines.h"
+#endif
 #include "../Drivers/MD/MD.h"
 
 void MCLSeq::set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_) {
@@ -32,6 +35,7 @@ void MCLSeq::set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_) {
 }
 
 void MCLSeq::setup() {
+  configure_clock_interpolation();
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
@@ -122,6 +126,45 @@ void MCLSeq::update_params() {
 #endif
 }
 
+void MCLSeq::configure_clock_interpolation() {
+#if !defined(__AVR__)
+#if defined(PLATFORM_TBD)
+  // RP2040/TBD can host legacy and high-resolution engines together. Keep the
+  // global scheduler at the highest engine resolution and gate legacy engines
+  // in seq() so they still observe their historical 48 PPQN cadence.
+  MidiClock.clock_interpolation = STEPSEQ_SEQ_INTERPOLATION;
+#else
+  MidiClock.clock_interpolation =
+      using_spsx_tracks ? SPSX_SEQ_INTERPOLATION : LEGACY_SEQ_INTERPOLATION;
+#endif
+  legacy_tick_counter = 0;
+#endif
+}
+
+bool MCLSeq::legacy_tick_due() {
+#if !defined(__AVR__)
+  if (MidiClock.clock_interpolation <= LEGACY_SEQ_INTERPOLATION) {
+    legacy_tick_counter = 0;
+    return true;
+  }
+
+  uint8_t divider = MidiClock.clock_interpolation / LEGACY_SEQ_INTERPOLATION;
+  if (divider <= 1) {
+    legacy_tick_counter = 0;
+    return true;
+  }
+
+  bool due = legacy_tick_counter == 0;
+  legacy_tick_counter++;
+  if (legacy_tick_counter >= divider) {
+    legacy_tick_counter = 0;
+  }
+  return due;
+#else
+  return true;
+#endif
+}
+
 void seq_rec_play() {
   if (key_interface.is_key_down(MDX_KEY_REC)) {
     // key_interface.ignoreNextEvent(MDX_KEY_REC);
@@ -153,6 +196,9 @@ void MCLSeq::onMidiContinueCallback() {
 
 void MCLSeq::onMidiStartImmediateCallback() {
   realtime = true;
+#if !defined(__AVR__)
+  legacy_tick_counter = 0;
+#endif
   seq_tx1.txRb->init();
   seq_tx2.txRb->init();
   seq_tx3.txRb->init();
@@ -254,6 +300,8 @@ void MCLSeq::onMidiStopCallback() {
 void MCLSeq::seq() {
   if (!state) { return; }
 
+  const bool legacy_tick = legacy_tick_due();
+
   MidiUartClass *uart;
   MidiUartClass *uart2;
   bool engage_sidechannel = true;
@@ -323,21 +371,23 @@ void MCLSeq::seq() {
       spsx_tracks[i].seq(uart, uart2);
     }
 
-    mdfx_track.seq();
-
     spsx_tracks[0].post_seq(uart);
 
-    for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-      aux_tracks[i].seq();
-    }
+    if (legacy_tick) {
+      mdfx_track.seq();
+
+      for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+        aux_tracks[i].seq();
+      }
 
 #ifdef LFO_TRACKS
-    for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-      lfo_tracks[i].seq(uart, uart2);
-    }
+      for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+        lfo_tracks[i].seq(uart, uart2);
+      }
 #endif
 
-    perf_track.seq(uart, uart2);
+      perf_track.seq(uart, uart2);
+    }
 
     // SPSX full-velocity trigs share the legacy parallel trigger mask.
     // Lower-velocity SPSX trigs are sent inline because parallelTrig has no
@@ -351,32 +401,34 @@ void MCLSeq::seq() {
     }
   } else {
 #endif
-  MDSeqTrack::pre_seq(uart);
+  if (legacy_tick) {
+    MDSeqTrack::pre_seq(uart);
 
-  for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].seq(uart,uart2);
-    md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
-    md_arp_tracks[i].seq(uart,uart2);
-  }
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
+      md_tracks[i].seq(uart,uart2);
+      md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
+      md_arp_tracks[i].seq(uart,uart2);
+    }
 
-  mdfx_track.seq();
+    mdfx_track.seq();
 
-  MDSeqTrack::post_seq(uart);
+    MDSeqTrack::post_seq(uart);
 
-  for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-    aux_tracks[i].seq();
-  }
+    for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+      aux_tracks[i].seq();
+    }
 
 #ifdef LFO_TRACKS
-  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].seq(uart, uart2);
-  }
+    for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+      lfo_tracks[i].seq(uart, uart2);
+    }
 #endif
 
-  perf_track.seq(uart, uart2);
+    perf_track.seq(uart, uart2);
 
-  if (MDSeqTrack::md_trig_mask > 0) {
-    MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+    if (MDSeqTrack::md_trig_mask > 0) {
+      MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+    }
   }
 #if !defined(__AVR__)
   }
@@ -392,15 +444,17 @@ void MCLSeq::seq() {
 #endif
 
 #if defined(EXT_TRACKS) && !defined(PLATFORM_TBD)
-  for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].seq(uart2);
-    ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
-    ext_arp_tracks[i].seq(uart,uart2);
+  if (legacy_tick) {
+    for (uint8_t i = 0; i < num_ext_tracks; i++) {
+      ext_tracks[i].seq(uart2);
+      ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
+      ext_arp_tracks[i].seq(uart,uart2);
+    }
   }
 #endif
 
 #if !defined(__AVR__)
-  if (!using_spsx_tracks) {
+  if (!using_spsx_tracks && legacy_tick) {
 #endif
     for (uint8_t i = 0; i < num_md_tracks; i++) {
       md_tracks[i].recalc_slides();
@@ -410,8 +464,10 @@ void MCLSeq::seq() {
 #endif
 
 #if !defined(PLATFORM_TBD)
-  for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].recalc_slides();
+  if (legacy_tick) {
+    for (uint8_t i = 0; i < num_ext_tracks; i++) {
+      ext_tracks[i].recalc_slides();
+    }
   }
 #endif
 #if defined(PLATFORM_TBD)
@@ -444,6 +500,7 @@ bool MCLSeq::switch_to_spsx() {
     spsx_tracks[i].reset();
   }
   using_spsx_tracks = true;
+  configure_clock_interpolation();
   neighbor_trig_mask = 0;
   fill_mask = 0;
   return true;
@@ -462,8 +519,8 @@ bool MCLSeq::switch_to_legacy() {
   MDSeqTrack::md_trig_mask = 0;
   fill_mask = 0;
   neighbor_trig_mask = 0;
-  MidiClock.clock_interpolation = LEGACY_SEQ_INTERPOLATION;
   using_spsx_tracks = false;
+  configure_clock_interpolation();
   return true;
 }
 #endif

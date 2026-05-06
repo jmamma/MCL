@@ -109,6 +109,9 @@ public:
   MCLSeqMidiEvents midi_events;
 
   bool state = false;
+#if !defined(__AVR__)
+  uint8_t legacy_tick_counter = 0;
+#endif
 
   void enable() { state = true; }
   void disable() { state = false; }
@@ -124,6 +127,8 @@ public:
   void onMidiStartImmediateCallback();
   void onMidiContinueCallback();
   void onMidiStopCallback();
+  void configure_clock_interpolation();
+  bool legacy_tick_due();
   void seq();
 };
 
