@@ -593,12 +593,14 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
       auto active_track = active_ext_step_track();
       uint16_t timing_mid = active_track.ticks_per_step();
 
-      uint32_t pos = fov_offset + (uint32_t)timing_mid * n;
-      uint32_t w = cur_w;
+      int32_t pos = fov_offset + (int32_t)timing_mid * n;
+      int32_t w = cur_w;
+      if (pos < 0 || pos >= roll_length) continue;
       if (pos + w >= roll_length) { w = roll_length - pos - 1; }
+      if (w <= 0) continue;
 
-      active_track.delete_note(pos, w - 1, cur_y);
-      active_track.add_note(pos, w, cur_y, velocity, cond);
+      active_track.delete_note((uint32_t)pos, (uint32_t)(w - 1), cur_y);
+      active_track.add_note((uint32_t)pos, (uint32_t)w, cur_y, velocity, cond);
     }
   }
 
@@ -874,15 +876,17 @@ void SeqExtStepPage::display() {
 
 void SeqExtStepPage::enter_notes() {
   auto active_track = active_ext_step_track();
-  uint32_t w = cur_w;
+  int32_t w = cur_w;
+  if (cur_x < 0 || cur_x >= roll_length) return;
   if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
+  if (w <= 0) return;
 
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
     NoteVector note;
     if (!active_track.note_on_at(n, note))
       continue;
-    active_track.delete_note(cur_x, w - 1, note.value);
-    active_track.add_note(cur_x, w, note.value,
+    active_track.delete_note((uint32_t)cur_x, (uint32_t)(w - 1), note.value);
+    active_track.add_note((uint32_t)cur_x, (uint32_t)w, note.value,
                           velocity, cond);
   }
 }
@@ -1098,13 +1102,17 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         if (active_track.notes_on_count() > 0) {
           enter_notes();
         } else {
-          uint32_t w = cur_w;
+          int32_t w = cur_w;
+          if (cur_x < 0 || cur_x >= roll_length) return true;
           if (cur_x + w >= roll_length) {
             w = roll_length - cur_x - 1;
           }
+          if (w <= 0) return true;
 
-          if (!active_track.delete_note(cur_x, w - 1, cur_y)) {
-            active_track.add_note(cur_x, w, cur_y, velocity, cond);
+          if (!active_track.delete_note((uint32_t)cur_x, (uint32_t)(w - 1),
+                                        cur_y)) {
+            active_track.add_note((uint32_t)cur_x, (uint32_t)w, cur_y,
+                                  velocity, cond);
           }
         }
         return true;

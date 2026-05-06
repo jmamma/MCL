@@ -49,6 +49,11 @@ bool TbdPanel::enter_primary_ui(gui_event_t *event) {
   return device_manager.enter_ui(device_manager.primary_device(), &ui_event);
 }
 
+bool TbdPanel::enter_secondary_ui(gui_event_t *event) {
+  gui_event_t ui_event = *event;
+  return device_manager.enter_ui(device_manager.secondary_device(), &ui_event);
+}
+
 void TbdPanel::loop() {
   if (!top_left_pressed_ || top_left_page_select_opened_ ||
       top_left_chorded_) {
@@ -64,6 +69,7 @@ void TbdPanel::loop() {
     return;
   }
 
+  device_manager.exit_ui();
   mcl.setPage(PAGE_SELECT_PAGE);
   top_left_page_select_opened_ = true;
 }
@@ -166,8 +172,8 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
-  if (event->source == ButtonsClass::TBD_BUTTON_TR && !is_menu_page &&
-      device_manager.enter_ui(event)) {
+  if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
+      !is_menu_page && enter_secondary_ui(event)) {
     return true;
   }
 

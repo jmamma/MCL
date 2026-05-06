@@ -12,6 +12,7 @@ public:
 private:
   bool top_left_reserved_page() const;
   bool enter_primary_ui(gui_event_t *event);
+  bool enter_secondary_ui(gui_event_t *event);
   bool open_bank_popup();
   bool suppress_sps_key_release_ = false;
   uint16_t top_left_press_ms_ = 0;

@@ -3,6 +3,10 @@
 #pragma once
 
 #include "MCLSeq.h"
+#if defined(PLATFORM_TBD)
+#include "MCLSysConfig.h"
+#include "MidiSetup.h"
+#endif
 #include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
 #include "ArpSeqTrack.h"
@@ -14,13 +18,22 @@ public:
            device->supports_capability(MidiDeviceCapability::MdSequencerTracks);
   }
 
+  static inline bool use_midi_tracks_for_ext() {
+#if defined(PLATFORM_TBD)
+    return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
+#else
+    return false;
+#endif
+  }
+
   static inline uint8_t track_count(bool is_md_device) {
 #ifdef EXT_TRACKS
 #if defined(PLATFORM_TBD)
-    return is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_midi_tracks;
-#else
-    return is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
+    if (!is_md_device && use_midi_tracks_for_ext()) {
+      return mcl_seq.num_midi_tracks;
+    }
 #endif
+    return is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
 #else
     (void)is_md_device;
     return mcl_seq.num_md_tracks;
@@ -31,10 +44,11 @@ public:
 #ifdef EXT_TRACKS
     if (!is_md_device) {
 #if defined(PLATFORM_TBD)
-      return static_cast<SeqTrackCond &>(mcl_seq.midi_tracks[index]);
-#else
-      return static_cast<SeqTrackCond &>(mcl_seq.ext_tracks[index]);
+      if (use_midi_tracks_for_ext()) {
+        return static_cast<SeqTrackCond &>(mcl_seq.midi_tracks[index]);
+      }
 #endif
+      return static_cast<SeqTrackCond &>(mcl_seq.ext_tracks[index]);
     }
 #endif
     return static_cast<SeqTrackCond &>(mcl_seq.md_tracks[index]);
@@ -51,10 +65,11 @@ public:
 #ifdef EXT_TRACKS
     if (!is_md_device) {
 #if defined(PLATFORM_TBD)
-      return static_cast<SeqTrack &>(mcl_seq.midi_tracks[index]);
-#else
-      return static_cast<SeqTrack &>(mcl_seq.ext_tracks[index]);
+      if (use_midi_tracks_for_ext()) {
+        return static_cast<SeqTrack &>(mcl_seq.midi_tracks[index]);
+      }
 #endif
+      return static_cast<SeqTrack &>(mcl_seq.ext_tracks[index]);
     }
 #endif
 #if !defined(__AVR__)

@@ -9,6 +9,7 @@
 #include "MidiDeviceGrid.h"
 #include "MidiSetup.h"
 #include "TBDTrack.h"
+#include "TbdUiMode.h"
 #include "TbdP4Command.h"
 #include "TbdP4Realtime.h"
 #include <Arduino.h>
@@ -40,6 +41,9 @@ constexpr size_t kP4TrackDefaultsJsonBytes = 8192;
 constexpr size_t kP4PresetValueCount = 32;
 constexpr uint8_t kP4DefaultRomBank = 0xFF;
 constexpr int32_t kP4DefaultSampleSlice = -1;
+constexpr uint8_t kTbdUiSlotPrimary = 0;
+constexpr uint8_t kTbdUiSlotSecondary = 1;
+constexpr uint8_t kTbdUiSlotNone = 255;
 
 const P4BootPresetFallback kP4BootPresetFallbacks[] = {
     {0, "db-all-def"},    {1, "fmb-all-def"},
@@ -778,12 +782,16 @@ public:
     oled_display.drawFastHLine(0, y, 128, WHITE);
 
     char line[22];
+    const uint8_t ui_slot = TBD.ui_device_idx();
+    const uint8_t display_slot =
+        ui_slot == kTbdUiSlotSecondary ? 2 : 1;
     oled_display.setCursor(0, y + 2);
-    snprintf(line, sizeof(line), "P4 A%u S%u R%u E%lu",
+    snprintf(line, sizeof(line), "TBD%u A%u S%u R%u E%lu",
+             display_slot,
              stats.p4_alive ? 1 : 0,
              stats.p4_sync_seen ? 1 : 0,
              stats.p4_ready_pin ? 1 : 0,
-             (unsigned long)(stats.error_count % 10000));
+             (unsigned long)(stats.error_count % 1000));
     oled_display.println(line);
 
     snprintf(line, sizeof(line), "D%u WS%lu NR%lu F%lu",
@@ -810,6 +818,33 @@ public:
 };
 
 TbdP4DiagOverlay tbd_p4_diag_overlay;
+
+bool tbd_ui_slot_configured(uint8_t device_idx) {
+  if (device_idx == kTbdUiSlotPrimary) {
+    return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
+  }
+  if (device_idx == kTbdUiSlotSecondary) {
+    return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
+  }
+  return false;
+}
+
+bool tbd_ui_request_from_event(gui_event_t *event, uint8_t *device_idx) {
+  if (event == nullptr || device_idx == nullptr || !EVENT_BUTTON(event)) {
+    return false;
+  }
+  if (event->source == ButtonsClass::BUTTON2 &&
+      event->mask == EVENT_BUTTON_RELEASED) {
+    *device_idx = kTbdUiSlotPrimary;
+    return tbd_ui_slot_configured(*device_idx);
+  }
+  if (event->source == ButtonsClass::TBD_BUTTON_TR &&
+      event->mask == EVENT_BUTTON_PRESSED) {
+    *device_idx = kTbdUiSlotSecondary;
+    return tbd_ui_slot_configured(*device_idx);
+  }
+  return false;
+}
 
 } // namespace
 
@@ -1024,42 +1059,20 @@ void TbdDevice::note_off() {
 
 bool TbdDevice::enter_ui(gui_event_t *event) {
   if (port != UARTP4_PORT) return false;
-  if (!EVENT_BUTTON(event) ||
-      event->source != ButtonsClass::TBD_BUTTON_TR ||
-      event->mask != EVENT_BUTTON_PRESSED) {
+
+  uint8_t device_idx = kTbdUiSlotNone;
+  if (!tbd_ui_request_from_event(event, &device_idx)) {
     return false;
   }
 
-  if (diag_active_) {
-    exit_ui();
-  } else {
-    diag_active_ = true;
-    GUI.setOverlay(&tbd_p4_diag_overlay);
-  }
+  ui_device_idx_ = device_idx;
+  tbd_ui_mode.enter(device_idx);
+  if (!tbd_ui_mode.is_active()) ui_device_idx_ = kTbdUiSlotNone;
   return true;
 }
 
 bool TbdDevice::handle_ui_event(gui_event_t *event) {
-  if (!diag_active_) return false;
-  if (!EVENT_BUTTON(event)) return false;
-
-  if (event->source == ButtonsClass::TBD_BUTTON_TR) {
-    if (event->mask == EVENT_BUTTON_PRESSED) exit_ui();
-    return true;
-  }
-
-  if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
-      event->source < ButtonsClass::TRIG_BUTTON1 + 16) {
-    uint8_t note = (uint8_t)(36 + event->source - ButtonsClass::TRIG_BUTTON1);
-    if (event->mask == EVENT_BUTTON_PRESSED) {
-      note_on(note);
-    } else if (event->mask == EVENT_BUTTON_RELEASED) {
-      note_off();
-    }
-    return true;
-  }
-
-  return false;
+  return tbd_ui_mode.handle_event(event);
 }
 
 void TbdDevice::ui_loop() {
@@ -1067,21 +1080,17 @@ void TbdDevice::ui_loop() {
     load_default_p4_presets();
   }
 
-  if (diag_active_ && GUI.overlay == nullptr) {
-    GUI.setOverlay(&tbd_p4_diag_overlay);
-  }
+  tbd_ui_mode.poll_encoders();
 }
 
 bool TbdDevice::is_ui_active() {
-  return diag_active_;
+  return tbd_ui_mode.is_active();
 }
 
 void TbdDevice::exit_ui() {
   note_off();
-  diag_active_ = false;
-  if (GUI.overlay == &tbd_p4_diag_overlay) {
-    GUI.clearOverlay();
-  }
+  tbd_ui_mode.disable();
+  ui_device_idx_ = kTbdUiSlotNone;
 }
 
 #endif // PLATFORM_TBD
