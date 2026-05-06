@@ -4,6 +4,7 @@
 
 #include "MCL.h"
 #include "MCLGUI.h"
+#include "MCLSysConfig.h"
 #include "MCLSeq.h"
 #include "MidiDeviceGrid.h"
 #include "MidiSetup.h"
@@ -894,13 +895,19 @@ bool TbdDevice::probe() {
 }
 
 void TbdDevice::on_connection(uint8_t device_idx) {
+  (void)device_idx;
   port = UARTP4_PORT;
   midi = &MidiP4;
   uart = MidiP4.uart;
   connected = true;
   cleanup(0);
   cleanup(1);
-  init_grid_devices(device_idx);
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+    init_grid_devices(0);
+  }
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    init_grid_devices(1);
+  }
   load_default_p4_presets();
 }
 

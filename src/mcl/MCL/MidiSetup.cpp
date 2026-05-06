@@ -265,14 +265,32 @@ void configure_driver_ports() {
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
 
+#ifdef PLATFORM_TBD
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) {
+    MD.setPort(s[SLOT_MD].midi, s[SLOT_MD].port);
+  } else {
+    MD.cleanup_listeners();
+    MD.midi = s[SLOT_MD].midi;
+    MD.uart = s[SLOT_MD].uart;
+    MD.port = s[SLOT_MD].port;
+  }
+#else
   MD.setPort(s[SLOT_MD].midi, s[SLOT_MD].port);
+#endif
   MNM.setPort(s[SLOT_ELEKT].midi, s[SLOT_ELEKT].port);
   Analog4.setPort(s[SLOT_ELEKT].midi, s[SLOT_ELEKT].port);
 
   // GENER falls back to ELEKT slot's port when no UART is configured GENER
   PortSlot &g = s[SLOT_GENER].port ? s[SLOT_GENER] : s[SLOT_ELEKT];
+#ifdef PLATFORM_TBD
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) {
+    generic_midi_device.setPort(g.midi, g.port);
+  }
+#else
   generic_midi_device.setPort(g.midi, g.port);
+#endif
 
-  mcl_seq.set_ports(MD.uart, generic_midi_device.uart);
+  mcl_seq.set_ports(s[SLOT_MD].uart ? s[SLOT_MD].uart : MD.uart,
+                    g.uart ? g.uart : generic_midi_device.uart);
   device_manager.update_active_slots();
 }

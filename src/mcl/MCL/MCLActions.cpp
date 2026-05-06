@@ -11,9 +11,6 @@
 #include "EmptyTrack.h"
 #include "MDTrack.h"
 #include "GridTask.h"
-#ifdef PLATFORM_TBD
-#include "../Drivers/TBD/TBDTrack.h"
-#endif
 
 #define MD_KIT_LENGTH 0x4D0
 
@@ -69,29 +66,6 @@ DeviceTrack *MCLActions::load_and_prepare_track(uint8_t track_idx, uint16_t row,
   }
 
   if (!track_supports_type(device_track, track_type)) {
-#ifdef PLATFORM_TBD
-    if (track_type == TBD_MIDI_TRACK_TYPE &&
-        device_track->active == EXT_TRACK_TYPE) {
-      ExtSeqTrackData old_seq_data;
-      GridLink old_link;
-      if (auto *old_ext_track = device_track->as<ExtTrack>()) {
-        memcpy(&old_seq_data, &old_ext_track->seq_data, sizeof(old_seq_data));
-        memcpy(&old_link, &old_ext_track->link, sizeof(old_link));
-
-        scratch.clear();
-        auto *tbd_track =
-            static_cast<TBDMidiTrack *>(scratch.init_track_type(track_type));
-        if (tbd_track != nullptr) {
-          ExtTrack legacy;
-          legacy.seq_data = old_seq_data;
-          legacy.link = old_link;
-          tbd_track->import_legacy_ext_track(legacy, seq_track_idx, seq_track);
-          was_rebuilt = false;
-          return tbd_track;
-        }
-      }
-    }
-#endif
     scratch.clear();
     if (device_track == nullptr || device_track->active != EMPTY_TRACK_TYPE) {
       scratch.init();
@@ -232,6 +206,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
   }
 
   bool save_dev_tracks[NUM_DEVS] = {false, false};
+  bool saved_grid_rows[NUM_GRIDS] = {false, false};
   MidiDevice *devs[NUM_DEVS] = {
       device_manager.primary_device(),
       device_manager.secondary_device(),
@@ -248,7 +223,9 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
     if (slot_select_array[i] > 0) {
       GridDeviceTrack *gdt = get_grid_dev_track(i);
       if (gdt != nullptr) {
-        save_dev_tracks[gdt->device_idx] = true;
+        if (gdt->device_idx < NUM_DEVS) {
+          save_dev_tracks[gdt->device_idx] = true;
+        }
       }
     }
   }
@@ -314,6 +291,9 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
     if (slot_select_array[i] > 0) {
 
       GridDeviceTrack *gdt = get_grid_dev_track(i);
+      if (gdt == nullptr || gdt->device_idx >= NUM_DEVS) {
+        continue;
+      }
       uint8_t grid_idx = i >> 4;
       uint8_t track_idx = i & 0xF;
       uint8_t device_idx = gdt->device_idx;
@@ -338,10 +318,13 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
         }
         auto pdevice_track =
             ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
-        pdevice_track->store_in_grid(i, row, gdt->seq_track, merge,
-                                     online);
-        row_headers[grid_idx].update_model(
-            track_idx, pdevice_track->get_model(), gdt->track_type);
+        if (pdevice_track != nullptr &&
+            pdevice_track->store_in_grid(i, row, gdt->seq_track, merge,
+                                         online)) {
+          row_headers[grid_idx].update_model(
+              track_idx, pdevice_track->get_model(), gdt->track_type);
+          saved_grid_rows[grid_idx] = true;
+        }
       }
     }
   }
@@ -350,7 +333,11 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
 
   // Only set the shared row name when this row has not already been named.
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    if (!row_headers[n].active && save_dev_tracks[n] && row_name != nullptr) {
+    if (saved_grid_rows[n]) {
+      row_headers[n].active = true;
+    }
+    if (saved_grid_rows[n] && row_headers[n].name[0] == '\0' &&
+        row_name != nullptr) {
       copy_row_name(row_headers[n], row_name);
     }
     proj.write_grid_row_header(&row_headers[n], row, n);

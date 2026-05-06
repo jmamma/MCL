@@ -4,7 +4,7 @@
 
 #ifdef PLATFORM_TBD
 
-#include "ExtTrack.h"
+#include "DeviceTrack.h"
 #include "MidiSeqTrack.h"
 #include "TBDSeqTrack.h"
 #include "TbdP4SoundData.h"
@@ -82,8 +82,6 @@ public:
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
-  void import_legacy_ext_track(const ExtTrack &legacy, uint8_t tracknumber,
-                               SeqTrack *seq_track);
 
   uint16_t get_track_size() override { return _sizeof(); }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }

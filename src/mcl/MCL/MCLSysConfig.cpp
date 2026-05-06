@@ -91,11 +91,6 @@ void mclsys_normalize_midi_config() {
   if (mcl_cfg.grid_y_device > GRID_Y_DEVICE_OFF) {
     mcl_cfg.grid_y_device = GRID_Y_DEVICE_TBD;
   }
-  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
-      mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
-    mcl_cfg.grid_y_device = GRID_Y_DEVICE_GENER;
-    mcl_cfg.grid_y_port = GRID_Y_PORT_2;
-  }
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
     mcl_cfg.grid_y_port = GRID_Y_PORT_INT;
   } else if (mcl_cfg.grid_y_port > GRID_Y_PORT_USB ||

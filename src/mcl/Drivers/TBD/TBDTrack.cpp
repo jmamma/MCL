@@ -4,7 +4,6 @@
 
 #include "TBD.h"
 #include "EmptyTrack.h"
-#include "ExtSeqTrack.h"
 #include "TbdP4Command.h"
 #include "TbdP4Realtime.h"
 #include <string.h>
@@ -462,31 +461,6 @@ bool TBDMidiTrack::store_in_grid(uint8_t column, uint16_t row,
   apply_seq_defaults(slot, seq_track);
 
   return write_grid(_this(), _sizeof(), column, row, grid);
-}
-
-void TBDMidiTrack::import_legacy_ext_track(const ExtTrack &legacy,
-                                           uint8_t tracknumber,
-                                           SeqTrack *seq_track) {
-  active = TBD_MIDI_TRACK_TYPE;
-  link = legacy.link;
-  if (link.length == 0) {
-    link.length = 16;
-  }
-  set_midi_sound_default(p4_sound, tracknumber);
-  p4_sound.midi_channel = legacy.seq_data.channel;
-
-  seq_data.clear();
-  if (auto *midi_track = static_cast<MidiSeqTrack *>(seq_track)) {
-    midi_track->p4_sound = p4_sound;
-    midi_track->import_legacy_ext(legacy.seq_data, legacy.link);
-    midi_track->set_channel(p4_sound.midi_channel);
-    seq_data = midi_track->seq_data;
-  } else {
-    seq_data.channel = p4_sound.midi_channel;
-    seq_data.length = link.length;
-    seq_data.speed = link.speed;
-  }
-  apply_seq_defaults(tracknumber, seq_track);
 }
 
 #endif // PLATFORM_TBD

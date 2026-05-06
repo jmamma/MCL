@@ -2,6 +2,8 @@
 #include "MCLGUI.h"
 #include "DeviceManager.h"
 #include "MCLSeq.h"
+#include "MCLSysConfig.h"
+#include "MidiSetup.h"
 #include "SeqExtStepTrackApi.h"
 #include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
@@ -10,10 +12,11 @@ namespace {
 
 SeqExtStepTrackApi active_ext_step_track() {
 #ifdef PLATFORM_TBD
-  return SeqExtStepTrackApi(mcl_seq.midi_tracks[last_ext_track]);
-#else
-  return SeqExtStepTrackApi(mcl_seq.ext_tracks[last_ext_track]);
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    return SeqExtStepTrackApi(mcl_seq.midi_tracks[last_ext_track]);
+  }
 #endif
+  return SeqExtStepTrackApi(mcl_seq.ext_tracks[last_ext_track]);
 }
 
 } // namespace
@@ -772,7 +775,7 @@ void SeqExtStepPage::display() {
     mcl_gui.put_value_at(lock_cur_y, info1);
     draw_lockeditor();
   }
-  } while (epoch != SeqExtStepTrackApi::global_change_counter());
+  } while (epoch != active_track.change_counter());
   draw_seq_pos();
 
   SeqPage::display();
