@@ -1,5 +1,6 @@
 #include "KeyInterface.h"
 #include "../Drivers/MD/MD.h"
+#include "DeviceManager.h"
 #include "Midi.h"
 #include "MCLGUI.h"
 /*
@@ -108,13 +109,26 @@ void KeyInterface::set_key_state(uint8_t key, bool down) {
   }
 }
 
+namespace {
+
+uint8_t trig_interface_port() {
+  MidiDevice *primary = device_manager.primary_device();
+  if (primary != nullptr &&
+      primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
+    return primary->port;
+  }
+  return MD.port;
+}
+
+} // namespace
+
 void KeyInterface::post_key_event(uint8_t key, bool key_release) {
   if (IS_BIT_SET64(ignore_next_mask, key)) {
     CLEAR_BIT64(ignore_next_mask, key);
     return;
   }
 
-  uint8_t md_port = MD.port;
+  uint8_t md_port = trig_interface_port();
   if (key < 16) {
     if (key_release) {
       note_interface.note_off_event(key, md_port);

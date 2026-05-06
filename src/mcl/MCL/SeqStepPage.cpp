@@ -493,9 +493,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         reset_undo();
         config_encoders();
-        if (active_track.uses_md_sound()) {
-          MD.triggerTrack(track, 127);
-        }
+        device->triggerTrack(track, 127);
         last_rec_event = REC_EVENT_TRIG;
         last_step = track;
 

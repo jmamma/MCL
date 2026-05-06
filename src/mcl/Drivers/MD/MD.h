@@ -148,7 +148,8 @@ public:
    *
    * track goes from 0 to 15, velocity from 0 to 127.
    **/
-  void triggerTrack(uint8_t track, uint8_t velocity, MidiUartClass *uart_ = nullptr);
+  void triggerTrack(uint8_t track, uint8_t velocity,
+                    MidiUartClass *uart_ = nullptr) override;
 
   /* Restore modified kit params, with the original values. */
   void restore_kit_params();

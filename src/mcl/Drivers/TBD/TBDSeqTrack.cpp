@@ -31,6 +31,7 @@ TBDSeqTrack::TBDSeqTrack() : TBDSeqDataTrack() {
 void TBDSeqTrack::reset() {
   send_active_note_off();
   TBDSeqDataTrack::reset();
+  oneshot_mask_ = 0;
   gate_ticks_remaining_ = 0;
 }
 
@@ -103,9 +104,10 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
 
   auto &step = steps[current_step];
   const bool trig = STEPSEQ_IS_BIT_SET64(trig_mask, current_step);
-  const bool cond_ok = conditional(step.cond_id);
+  const uint8_t trig_result = trig_conditional(current_step, step.cond_id);
+  const bool cond_ok = trig_result == STEPSEQ_TRIG_TRUE;
 
-  if (cond_ok || !step.cond_plock) {
+  if (cond_ok || (!step.cond_plock && trig_result != STEPSEQ_TRIG_ONESHOT)) {
     send_parameter_locks(current_step, lock_idx);
   }
   if (cond_ok && trig) {
@@ -113,6 +115,64 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
               STEPSEQ_IS_BIT_SET64(accent_mask, current_step) ? 127 : 100);
   }
   record_trig_result(cond_ok && trig);
+}
+
+uint8_t TBDSeqTrack::trig_conditional(uint8_t step, uint8_t condition) {
+  if (STEPSEQ_IS_BIT_SET64(mute_mask, step)) {
+    return STEPSEQ_TRIG_ONESHOT;
+  }
+
+  if (condition == STEPSEQ_COND_ONESHOT) {
+    if (STEPSEQ_IS_BIT_SET64(oneshot_mask_, step)) {
+      return STEPSEQ_TRIG_ONESHOT;
+    }
+    STEPSEQ_SET_BIT64(oneshot_mask_, step);
+    return STEPSEQ_TRIG_TRUE;
+  }
+
+  return conditional(condition) ? STEPSEQ_TRIG_TRUE : STEPSEQ_TRIG_FALSE;
+}
+
+bool TBDSeqTrack::preview_step(uint8_t step) {
+  if (step >= length) {
+    return false;
+  }
+
+  MidiUartClass *old_port = port;
+  port = uart ? uart : TBD.uart;
+  if (port == nullptr) {
+    port = old_port;
+    return false;
+  }
+
+  send_parameter_locks(step, get_lockidx(step));
+  send_trig(step, STEPSEQ_IS_BIT_SET64(accent_mask, step) ? 127 : 100);
+
+  port = old_port;
+  return true;
+}
+
+bool TBDSeqTrack::trigger(uint8_t velocity, MidiUartClass *uart_) {
+  MidiUartClass *old_port = port;
+  port = uart_ ? uart_ : (uart ? uart : TBD.uart);
+  if (port == nullptr) {
+    port = old_port;
+    return false;
+  }
+
+  uint8_t step = step_count;
+  if (length == 0 || step >= length) step = 0;
+  send_trig(step, velocity);
+
+  port = old_port;
+  return true;
+}
+
+void TBDSeqTrack::send_notes_off() {
+  MidiUartClass *old_port = port;
+  port = uart ? uart : TBD.uart;
+  send_active_note_off();
+  port = old_port;
 }
 
 void TBDSeqTrack::send_trig(uint8_t step, uint8_t velocity) {
@@ -228,6 +288,19 @@ bool TBDSeqTrack::get_default_lock_value(uint8_t param_id,
 
 uint8_t TBDSeqTrack::pitch_lock_param() const {
   return TBD_P4_LOCK_NOTE_PARAM;
+}
+
+void TBDSeqTrack::clear_step_oneshot(uint8_t step) {
+  STEPSEQ_CLEAR_BIT64(oneshot_mask_, step);
+}
+
+void TBDSeqTrack::on_modify_track_begin() {
+  oneshot_mask_ = 0;
+}
+
+void TBDSeqTrack::clear_mutes() {
+  oneshot_mask_ = 0;
+  TBDSeqDataTrack::clear_mutes();
 }
 
 void TBDSeqTrack::dispatch_slide_value(uint8_t param, uint8_t value,

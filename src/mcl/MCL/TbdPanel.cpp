@@ -3,6 +3,7 @@
 #ifdef PLATFORM_TBD
 
 #include "../Drivers/MidiDevice.h"
+#include "AuxPages.h"
 #include "MCL.h"
 #include "BankPopupPage.h"
 #include "DeviceManager.h"
@@ -14,12 +15,15 @@
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
 #include "MidiSetup.h"
+#include "MCLSeq.h"
 #include "NoteInterface.h"
 #include "SeqPages.h"
+#include "SeqTrackUtil.h"
+#include "TbdTempoPage.h"
 
 TbdPanel tbd_panel;
 
-static constexpr uint16_t TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS = 300;
+static constexpr uint16_t TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS = 200;
 
 static bool is_tbd_menu_page(PageIndex pg) {
   return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
@@ -46,12 +50,20 @@ bool TbdPanel::top_left_reserved_page() const {
 
 bool TbdPanel::enter_primary_ui(gui_event_t *event) {
   gui_event_t ui_event = *event;
-  return device_manager.enter_ui(device_manager.primary_device(), &ui_event);
+  if (device_manager.enter_ui(device_manager.primary_device(), &ui_event)) {
+    return true;
+  }
+  ui_event = *event;
+  return device_manager.enter_ui(&ui_event);
 }
 
 bool TbdPanel::enter_secondary_ui(gui_event_t *event) {
   gui_event_t ui_event = *event;
-  return device_manager.enter_ui(device_manager.secondary_device(), &ui_event);
+  if (device_manager.enter_ui(device_manager.secondary_device(), &ui_event)) {
+    return true;
+  }
+  ui_event = *event;
+  return device_manager.enter_ui(&ui_event);
 }
 
 void TbdPanel::loop() {
@@ -60,7 +72,10 @@ void TbdPanel::loop() {
     return;
   }
   if (!BUTTON_DOWN(ButtonsClass::BUTTON2)) {
-    top_left_pressed_ = false;
+    if (clock_diff(top_left_press_ms_, read_clock_ms()) >
+        TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS + 500) {
+      top_left_pressed_ = false;
+    }
     return;
   }
   if (top_left_reserved_page()) return;
@@ -89,13 +104,45 @@ bool TbdPanel::open_bank_popup() {
   return true;
 }
 
+bool TbdPanel::handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx) {
+  if (event->mask != EVENT_BUTTON_PRESSED) return false;
+  if (trig_idx >= 16) return false;
+  if (device_manager.is_ui_active()) return false;
+  if (mcl.currentPage() != GRID_PAGE) return false;
+  if (grid_page.bank_popup || grid_io_overlay.is_active()) return false;
+
+  MidiDevice *primary = device_manager.primary_device();
+  if (primary == nullptr ||
+      !primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
+    return false;
+  }
+
+  primary->triggerTrack(trig_idx, 127);
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+    if (trig_idx < mcl_seq.num_tbd_tracks) {
+      mixer_page.disp_levels[trig_idx] = 127;
+      GUI_hardware.led.set_flashled(trig_idx);
+      if (SeqPage::recording && MidiClock.state == MidiClockClass::STARTED) {
+        mcl_seq.tbd_tracks[trig_idx].record_track(127);
+      }
+    }
+  } else {
+    mixer_page.trig(trig_idx);
+    if (SeqPage::recording && MidiClock.state == MidiClockClass::STARTED) {
+      SeqTrackUtil::with_md_track(trig_idx,
+                                  [](auto &track) { track.record_track(127); });
+    }
+  }
+  return true;
+}
+
 bool TbdPanel::handleEvent(gui_event_t *event) {
   if (!EVENT_BUTTON(event)) {
     return false;
   }
 
   const bool is_press   = (event->mask == EVENT_BUTTON_PRESSED);
-  const bool is_release = !(event->mask & 1);
+  const bool is_release = (event->mask == EVENT_BUTTON_RELEASED);
 
   const uint8_t orig_src = event->source;
   const PageIndex pg = mcl.currentPage();
@@ -109,6 +156,10 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       orig_src == ButtonsClass::FUNC_BUTTON5 &&
       is_release) {
     suppress_sps_key_release_ = false;
+    return true;
+  }
+
+  if (tbd_tempo_page.is_active() && tbd_tempo_page.handleEvent(event)) {
     return true;
   }
 
@@ -153,6 +204,15 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return false;
   }
 
+  if (!device_manager.is_ui_active() && !is_menu_page &&
+      orig_src == ButtonsClass::FUNC_BUTTON5 && is_press &&
+      pg != PAGE_SELECT_PAGE && pg != GRID_LOAD_PAGE &&
+      pg != GRID_SAVE_PAGE && pg != TEXT_INPUT_PAGE &&
+      pg != BANK_POPUP_PAGE && !grid_io_overlay.is_active()) {
+    tbd_tempo_page.begin(false);
+    return true;
+  }
+
   // Verification shortcut for the internal TBD/P4 target: FUNC + TBDR opens
   // the Grid Y diagnostic overlay even when the MD driver owns plain TBDR.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
@@ -174,6 +234,13 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       !is_menu_page && enter_secondary_ui(event)) {
+    return true;
+  }
+
+  if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
+      event->source < ButtonsClass::TRIG_BUTTON1 + 16 &&
+      handle_grid_trig_preview(event,
+                               event->source - ButtonsClass::TRIG_BUTTON1)) {
     return true;
   }
 

@@ -1007,6 +1007,16 @@ void TbdDevice::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
   tbd_p4_command.set_track_mute(track, mute);
 }
 
+void TbdDevice::triggerTrack(uint8_t track, uint8_t velocity,
+                             MidiUartClass *uart_) {
+  if (track >= mcl_seq.num_tbd_tracks) {
+    return;
+  }
+  tbd_p4_realtime.set_active_track(
+      mcl_seq.tbd_tracks[track].p4_sound.p4_track_index);
+  mcl_seq.tbd_tracks[track].trigger(velocity, uart_);
+}
+
 uint8_t TbdDevice::mixer_default_param(uint8_t device_idx) const {
   (void)device_idx;
   return 0;

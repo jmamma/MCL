@@ -111,10 +111,16 @@ public:
                                uint8_t param_idx, int16_t value,
                                bool send = true);
   virtual void mixer_mute_track(uint8_t device_idx, uint8_t track,
-                                bool mute,
-                                MidiUartClass *uart_ = nullptr);
+                                 bool mute,
+                                 MidiUartClass *uart_ = nullptr);
   virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
                                       bool state, bool clear = false);
+  virtual void triggerTrack(uint8_t track, uint8_t velocity,
+                            MidiUartClass *uart_ = nullptr) {
+    (void)track;
+    (void)velocity;
+    (void)uart_;
+  }
   void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity,
                   MidiUartClass *uart_ = nullptr);
   void sendNoteOff(uint8_t channel, uint8_t note,

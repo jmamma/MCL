@@ -20,6 +20,8 @@ public:
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) override;
+  virtual void triggerTrack(uint8_t track, uint8_t velocity,
+                            MidiUartClass *uart_ = nullptr) override;
   virtual uint8_t mixer_default_param(uint8_t device_idx) const override;
   virtual bool mixer_param(uint8_t device_idx, uint8_t track,
                            uint8_t param_idx,
