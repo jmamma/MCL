@@ -169,11 +169,6 @@ void md_import() {
       device_manager.secondary_device(),
   };
 
-  ElektronDevice *elektron_devs[2] = {
-      devs[0]->asElektronDevice(),
-      devs[1]->asElektronDevice(),
-  };
-
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     GridDeviceTrack *gdt =
         mcl_actions.get_grid_dev_track(n);
@@ -181,7 +176,8 @@ void md_import() {
     if (gdt == nullptr)
       continue;
 
-    if (devs[gdt->device_idx] == &MD) {
+    if (devs[gdt->device_idx]->supports_capability(
+            MidiDeviceCapability::MdPatternImport)) {
       track_select_array[n] = 1;
     }
   }
@@ -191,7 +187,7 @@ void md_import() {
     uint8_t count = n - opt_import_src;
     mcl_gui.draw_progress("IMPORTING", count, opt_import_count);
     mcl_actions.save_tracks(opt_import_dest + count, track_select_array,
-                            SAVE_MD, n);
+                            SAVE_MD_PATTERN_IMPORT, n);
   }
 
   grid_page.row_scan = GRID_LENGTH;

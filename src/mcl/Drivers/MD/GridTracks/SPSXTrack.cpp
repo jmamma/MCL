@@ -170,7 +170,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
                  spsx_seq_track->SPSXSeqTrackData::data(),
                  sizeof(SPSXSeqTrackData));
         }
-        if (merge == SAVE_MD) {
+        if (merge == SAVE_MD_PATTERN_IMPORT) {
           link.length = MD.pattern.patternLength;
           link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
         }
@@ -207,7 +207,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
           memcpy(temp_seq_track.data(), md_seq_track->data(),
                  sizeof(MDSeqTrackData));
         }
-        if (merge == SAVE_MD) {
+        if (merge == SAVE_MD_PATTERN_IMPORT) {
           link.length = MD.pattern.patternLength;
           link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
         }

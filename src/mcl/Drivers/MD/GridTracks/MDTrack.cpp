@@ -186,10 +186,10 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
         memcpy(temp_seq_track.data(), md_seq_track->data(),
                sizeof(MDSeqTrackData));
       }
-      if (merge == SAVE_MD) {
+      if (merge == SAVE_MD_PATTERN_IMPORT) {
         link.length = MD.pattern.patternLength;
         link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-        DEBUG_PRINTLN(F("SAVE_MD"));
+        DEBUG_PRINTLN(F("SAVE_MD_PATTERN_IMPORT"));
       }
       temp_seq_track.length = link.length;
       temp_seq_track.speed = link.speed;

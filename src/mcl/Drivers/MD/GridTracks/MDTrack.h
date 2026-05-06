@@ -11,7 +11,7 @@
 #define LOCK_AMOUNT 256
 
 #define SAVE_SEQ 0
-#define SAVE_MD 1
+#define SAVE_MD_PATTERN_IMPORT 1
 #define SAVE_MERGE 2
 
 class ParameterLock {
