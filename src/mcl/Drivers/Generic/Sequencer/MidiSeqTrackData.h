@@ -21,6 +21,9 @@
 #define MIDI_SEQ_TIMING_CENTER MIDI_SEQ_TICKS_PER_STEP
 #define MIDI_SEQ_TIMING_RANGE (MIDI_SEQ_TICKS_PER_STEP * 2)
 
+class ExtSeqTrackData;
+class GridLink;
+
 enum MidiSeqEventType : uint8_t {
   MIDI_SEQ_EVENT_NOTE_OFF = 0,
   MIDI_SEQ_EVENT_LOCK = 1,
@@ -198,6 +201,7 @@ public:
   bool add_lock_event(uint8_t step, int16_t microtiming, uint8_t lock_idx,
                       uint16_t value, uint8_t condition = 0,
                       uint8_t flags = 0);
+  void import_legacy_ext(const ExtSeqTrackData &legacy, const GridLink &link);
 
   bool has_data() const { return event_count > 0; }
 };

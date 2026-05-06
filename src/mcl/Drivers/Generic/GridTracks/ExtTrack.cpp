@@ -1,5 +1,17 @@
 #include "ExtTrack.h"
 #include "Global.h"
+#ifdef PLATFORM_TBD
+#include "../../TBD/TBDTrack.h"
+#endif
+
+namespace {
+bool is_legacy_ext_sequence_type(uint8_t track_type) {
+  return track_type == EXT_TRACK_TYPE ||
+         track_type == A4_TRACK_TYPE ||
+         track_type == MNM_TRACK_TYPE;
+}
+
+} // namespace
 
 void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
   DEBUG_DUMP(F("transition_load_ext"));
@@ -28,6 +40,52 @@ void ExtTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
   active = EXT_TRACK_TYPE;
   return true;
+}
+
+bool ExtTrack::can_materialize_as(uint8_t track_type) {
+#ifdef PLATFORM_TBD
+  if (track_type == TBD_MIDI_TRACK_TYPE &&
+      is_legacy_ext_sequence_type(active)) {
+    return true;
+  }
+#endif
+  return DeviceTrack::can_materialize_as(track_type);
+}
+
+DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
+                                      uint8_t tracknumber,
+                                      SeqTrack *seq_track) {
+  (void)seq_track;
+  if (track_type == EXT_TRACK_TYPE && active != EXT_TRACK_TYPE &&
+      is_legacy_ext_sequence_type(active)) {
+    GridLink old_link = link;
+    ExtSeqTrackData old_seq_data;
+    memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
+
+    auto *ext_track = static_cast<ExtTrack *>(init_track_type(EXT_TRACK_TYPE));
+    ext_track->link = old_link;
+    memcpy(&ext_track->seq_data, &old_seq_data, sizeof(old_seq_data));
+    return ext_track;
+  }
+
+#ifdef PLATFORM_TBD
+  if (track_type == TBD_MIDI_TRACK_TYPE &&
+      is_legacy_ext_sequence_type(active)) {
+    GridLink old_link = link;
+    ExtSeqTrackData old_seq_data;
+    memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
+
+    auto *midi_track =
+        static_cast<TBDMidiTrack *>(init_track_type(TBD_MIDI_TRACK_TYPE));
+    midi_track->init(tracknumber, nullptr);
+    midi_track->link = old_link;
+    midi_track->seq_data.import_legacy_ext(old_seq_data, old_link);
+    midi_track->p4_sound.midi_channel = old_seq_data.channel;
+    midi_track->seq_data.channel = old_seq_data.channel;
+    return midi_track;
+  }
+#endif
+  return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }
 
 void ExtTrack::load_seq_data(SeqTrack *seq_track) {

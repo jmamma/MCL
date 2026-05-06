@@ -43,6 +43,10 @@ public:
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
   virtual uint8_t get_parent_model() { return device_manager.secondary_device()->track_type; }
+  virtual bool can_materialize_as(uint8_t track_type);
+  virtual DeviceTrack *materialize_as(uint8_t track_type,
+                                      uint8_t tracknumber,
+                                      SeqTrack *seq_track);
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };

@@ -32,8 +32,19 @@ bool clipboard_track_supported(DeviceTrack *track, GridDeviceTrack *gdt) {
   if (gdt == nullptr) {
     return false;
   }
-  return track->active == gdt->track_type ||
-         track->get_parent_model() == gdt->track_type;
+  return track->can_materialize_as(gdt->track_type);
+}
+
+DeviceTrack *materialize_clipboard_track(DeviceTrack *track,
+                                         GridDeviceTrack *gdt,
+                                         uint8_t track_idx) {
+  if (!clipboard_track_supported(track, gdt)) {
+    return nullptr;
+  }
+  if (track->active == EMPTY_TRACK_TYPE) {
+    return track;
+  }
+  return track->materialize_as(gdt->track_type, track_idx, gdt->seq_track);
 }
 
 bool clipboard_slot_is_type(uint8_t slot, uint8_t track_type) {
@@ -200,7 +211,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
     close();
     return false;
   }
-  if (!clipboard_track_supported(device_track, gdt)) {
+  device_track = materialize_clipboard_track(device_track, gdt, track_idx);
+  if (device_track == nullptr) {
     close();
     return false;
   }
@@ -335,7 +347,8 @@ bool MCLClipBoard::paste(uint8_t col, uint16_t row) {
       GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot_n);
       uint8_t track_idx = d_col & 0xF;
 
-      if (!clipboard_track_supported(ptrack, gdt)) {
+      ptrack = materialize_clipboard_track(ptrack, gdt, track_idx);
+      if (ptrack == nullptr) {
         DEBUG_PRINTLN("track not supported");
         // Don't allow paste in to unsupported slots
         continue;

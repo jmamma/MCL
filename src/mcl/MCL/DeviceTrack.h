@@ -99,22 +99,50 @@ public:
   ///  downloads from BANK1 to the runtime object
   DeviceTrack* load_from_mem(uint8_t col, uint8_t track_type, size_t size = 0) {
     DeviceTrack *that = init_track_type(track_type);
+#if !defined(__AVR__)
+    uintptr_t load_region = that->get_region();
+    uint16_t load_region_size = that->get_region_size();
+    uint16_t load_bytes = size ? size : that->get_track_size();
+#endif
     if (!that->GridTrack::load_from_mem(col, size)) {
       return nullptr;
     }
+    if (that->active == track_type) {
+      return that;
+    }
+
     auto p = init_track_type(this->active);
-    if (p->active != track_type) {
-      if (p->get_parent_model() == track_type) {
-        if (p->allow_cast_to_parent()) {
-          p->active = p->get_parent_model();
-        }
+#if defined(__AVR__)
+    if (p->get_parent_model() == track_type && p->allow_cast_to_parent()) {
+      p->active = p->get_parent_model();
+      return p;
+    }
+    return nullptr;
+#else
+    uint16_t source_size = p->get_track_size();
+    bool parent_cast = p->get_parent_model() == track_type &&
+                       p->allow_cast_to_parent();
+
+    uintptr_t pos = load_region +
+                    static_cast<uintptr_t>(load_region_size *
+                                           static_cast<uint32_t>(col));
+    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
+    memcpy_bank1(_this(), ptr, load_bytes);
+
+    if (!p->can_materialize_as(track_type)) {
+      return nullptr;
+    }
+    if (load_bytes < source_size) {
+      if (parent_cast) {
+        return p->materialize_as(track_type, col, nullptr);
       }
-      else {
+      if (size != 0 || source_size > load_region_size) {
         return nullptr;
       }
+      memcpy_bank1(_this(), ptr, source_size);
     }
-    auto ptrack = that->init_track_type(p->active);
-    return ptrack;
+    return p->materialize_as(track_type, col, nullptr);
+#endif
   }
 
   int memcmp_sound(uint8_t column) {
@@ -140,8 +168,7 @@ public:
     if (!that->GridTrack::load_from_mem(col)) {
       return nullptr;
     }
-    auto ptrack = that->init_track_type(that->active);
-    return _dynamik_kast<T>(ptrack);
+    return _dynamik_kast<T>(that);
   }
 };
 

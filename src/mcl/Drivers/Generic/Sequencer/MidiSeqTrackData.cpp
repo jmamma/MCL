@@ -2,7 +2,41 @@
 
 #ifdef PLATFORM_TBD
 
+#include "ExtSeqTrack.h"
+#include "GridLink.h"
 #include <string.h>
+
+namespace {
+
+uint8_t legacy_ticks_for_speed(uint8_t speed) {
+  switch (speed) {
+  case SEQ_SPEED_2X:   return 6;
+  case SEQ_SPEED_4X:   return 3;
+  case SEQ_SPEED_3_4X: return 16;
+  case SEQ_SPEED_3_2X: return 8;
+  case SEQ_SPEED_1_2X: return 24;
+  case SEQ_SPEED_1_4X: return 48;
+  case SEQ_SPEED_1_8X: return 96;
+  default:
+  case SEQ_SPEED_1X:   return 12;
+  }
+}
+
+uint8_t lock_type_for_legacy_param(uint8_t param) {
+  switch (param) {
+  case PARAM_PB:  return MIDI_SEQ_LOCK_PITCH_BEND;
+  case PARAM_CHP: return MIDI_SEQ_LOCK_CHANNEL_PRESSURE;
+  case PARAM_PRG: return MIDI_SEQ_LOCK_PROGRAM_CHANGE;
+  default:        return MIDI_SEQ_LOCK_CC;
+  }
+}
+
+uint16_t value14_from_value7(uint8_t value7) {
+  if (value7 > 127) value7 = 127;
+  return (uint16_t)(((uint32_t)value7 * 0x3FFFu + 63u) / 127u);
+}
+
+} // namespace
 
 uint16_t MidiSeqTrackData::add_event(
     uint8_t step, const MidiSeqEvent &event) {
@@ -228,6 +262,51 @@ bool MidiSeqTrackData::add_lock_event(uint8_t step, int16_t microtiming,
              MIDI_SEQ_TIMING_CENTER, condition, flags);
   event.set_microtiming(microtiming);
   return add_event(step, event) != 0xFFFF;
+}
+
+void MidiSeqTrackData::import_legacy_ext(const ExtSeqTrackData &legacy,
+                                         const GridLink &link) {
+  clear();
+  channel = legacy.channel;
+  length = link.length ? link.length : 16;
+  speed = link.speed;
+
+  const uint8_t legacy_tps = legacy_ticks_for_speed(link.speed);
+  uint16_t idx = 0;
+  for (uint8_t step = 0; step < NUM_EXT_STEPS; step++) {
+    uint8_t bucket =
+        const_cast<ExtSeqTrackData &>(legacy).event_buckets.get(step);
+    for (uint8_t i = 0; i < bucket; i++, idx++) {
+      const auto &legacy_event = legacy.events[idx];
+      int16_t legacy_offset = (int16_t)legacy_event.micro_timing - legacy_tps;
+      int16_t data_offset =
+          ((int32_t)legacy_offset * MIDI_SEQ_TIMING_CENTER) / legacy_tps;
+
+      MidiSeqEvent event;
+      if (legacy_event.is_lock) {
+        uint8_t lock_idx = legacy_event.lock_idx;
+        if (lock_idx >= MIDI_SEQ_NUM_LOCKS ||
+            legacy.locks_params[lock_idx] == 0) {
+          continue;
+        }
+        uint8_t param = legacy.locks_params[lock_idx] - 1;
+        locks[lock_idx].init(lock_type_for_legacy_param(param), param, 0, 0);
+        event.init(MIDI_SEQ_EVENT_LOCK, lock_idx,
+                   value14_from_value7(legacy_event.event_value),
+                   MIDI_SEQ_TIMING_CENTER, legacy_event.cond_id,
+                   legacy_event.event_on ? MIDI_SEQ_EVENT_FLAG_SLIDE : 0);
+      } else {
+        event.init(legacy_event.event_on ? MIDI_SEQ_EVENT_NOTE_ON
+                                         : MIDI_SEQ_EVENT_NOTE_OFF,
+                   legacy_event.event_value,
+                   legacy_event.event_on ? legacy.velocities[step] : 0,
+                   MIDI_SEQ_TIMING_CENTER, legacy_event.cond_id);
+      }
+      event.set_microtiming(data_offset);
+      add_event(step, event);
+    }
+  }
+  clean_locks();
 }
 
 #endif // PLATFORM_TBD

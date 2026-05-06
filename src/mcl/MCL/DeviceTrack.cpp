@@ -108,23 +108,15 @@ DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row,
     return nullptr;
   }
 
-  // virtual functions are ready
-
-  DEBUG_PRINTLN("device load from 512");
-  DEBUG_PRINTLN(active != EMPTY_TRACK_TYPE);
-  DEBUG_PRINTLN(ptrack->get_track_size());
   if (active != EMPTY_TRACK_TYPE) {
-    if (ptrack->get_track_size() < 512) {
-      return ptrack;
-    }
-    size_t len = ptrack->get_track_size() - 512;
+    size_t len = ptrack->get_track_size();
     if (grid) {
-      if (!grid->read((uint8_t*)_this() + 512, len)) {
+      if (!grid->read(_this(), len, column, row)) {
         DEBUG_PRINTLN(F("read failed"));
         return nullptr;
       }
     } else {
-      if (!proj.read_grid((uint8_t*)_this() + 512, len)) {
+      if (!proj.read_grid(_this(), len, column, row)) {
         DEBUG_PRINTLN(F("read failed"));
         return nullptr;
       }
@@ -157,13 +149,7 @@ DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
     }
   }
 
-  auto ptrack2 = ptrack->init_track_type(active);
-  if (ptrack2 == nullptr) {
-    DEBUG_PRINTLN("unrecognized track type 2");
-    return nullptr;
-  }
-
-  return ptrack2;
+  return ptrack;
 }
 
 bool DeviceTrackChunk::load_from_mem_chunk(uint8_t column, uint8_t chunk) {

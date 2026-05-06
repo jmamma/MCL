@@ -4,11 +4,12 @@
 #include "platform.h"
 
 bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid) {
+  void *payload = data == nullptr ? _this() : data;
   if (grid == nullptr) {
-    return proj.write_grid(_this(), len, column, row);
+    return proj.write_grid(payload, len, column, row);
   }
   else {
-    return grid->write(_this(), len, column, row);
+    return grid->write(payload, len, column, row);
   }
 }
 
