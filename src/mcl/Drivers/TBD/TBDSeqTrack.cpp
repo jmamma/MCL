@@ -5,6 +5,7 @@
 #include "AuxPages.h"
 #include "GridTrack.h"
 #include "MidiClock.h"
+#include "TBD.h"
 
 namespace {
 
@@ -108,18 +109,32 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
     send_parameter_locks(current_step, lock_idx);
   }
   if (cond_ok && trig) {
-    send_trig(STEPSEQ_IS_BIT_SET64(accent_mask, current_step) ? 127 : 100);
+    send_trig(current_step,
+              STEPSEQ_IS_BIT_SET64(accent_mask, current_step) ? 127 : 100);
   }
   record_trig_result(cond_ok && trig);
 }
 
-void TBDSeqTrack::send_trig(uint8_t velocity) {
+void TBDSeqTrack::send_trig(uint8_t step, uint8_t velocity) {
   if (!port) {
     return;
   }
   mixer_page.disp_levels[track_number] = velocity;
-  uint8_t note = p4_sound.trig_note >= 0 ? (uint8_t)p4_sound.trig_note : 60;
+
+  uint8_t note = TBD_P4_DEFAULT_STEP_NOTE;
+  if (tbd_p4_sound_uses_step_note(p4_sound)) {
+    uint8_t locked_note = get_track_lock_implicit(step, TBD_P4_LOCK_NOTE_PARAM);
+    if (locked_note <= 127) {
+      note = locked_note;
+    }
+  } else if (p4_sound.trig_note >= 0) {
+    note = (uint8_t)p4_sound.trig_note;
+  }
+
   send_active_note_off();
+  if (p4_sound.note_cc >= 0 && p4_sound.note_cc <= 127) {
+    port->sendCC(p4_sound.midi_channel, (uint8_t)p4_sound.note_cc, note);
+  }
   port->sendNoteOn(p4_sound.midi_channel, note, velocity);
   active_note_ = note;
   active_note_channel_ = p4_sound.midi_channel;
@@ -169,12 +184,9 @@ void TBDSeqTrack::send_lock_value(uint8_t param, uint8_t value) {
   const uint16_t value14 = (uint16_t)(((uint32_t)value * 0x3FFFu + 63u) / 127u);
   const int16_t scaled = tbd_p4_scale_lock_value(*desc, value14);
   if (desc->ctrl_type == TBD_P4_CTRLTYPE_CC) {
-    int16_t cc_value = scaled;
-    if (cc_value < 0) cc_value = 0;
-    if (cc_value > 127) cc_value = 127;
-    port->sendCC(p4_sound.midi_channel, desc->ctrl, (uint8_t)cc_value);
+    tbd_p4_send_param_value(port, p4_sound.midi_channel, *desc, scaled);
   } else if (desc->ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
-    port->sendNRPN(p4_sound.midi_channel, desc->ctrl, (uint16_t)scaled);
+    tbd_p4_send_param_value(port, p4_sound.midi_channel, *desc, scaled);
   }
 }
 
@@ -197,6 +209,14 @@ void TBDSeqTrack::send_parameter_locks(uint8_t step, uint16_t lock_idx) {
 
 bool TBDSeqTrack::get_default_lock_value(uint8_t param_id,
                                          uint8_t &value) const {
+  if (param_id == TBD_P4_LOCK_NOTE_PARAM) {
+    if (!tbd_p4_sound_uses_step_note(p4_sound)) {
+      return false;
+    }
+    value = TBD_P4_DEFAULT_STEP_NOTE;
+    return true;
+  }
+
   const TbdP4ParamDescriptor *desc =
       tbd_p4_sound_param_for_lock(p4_sound, param_id);
   if (!desc || !desc->is_visible()) {
@@ -204,6 +224,10 @@ bool TBDSeqTrack::get_default_lock_value(uint8_t param_id,
   }
   value = tbd_p4_param_to_lock_value(*desc, desc->value);
   return true;
+}
+
+uint8_t TBDSeqTrack::pitch_lock_param() const {
+  return TBD_P4_LOCK_NOTE_PARAM;
 }
 
 void TBDSeqTrack::dispatch_slide_value(uint8_t param, uint8_t value,

@@ -21,6 +21,7 @@ public:
 
 protected:
   bool get_default_lock_value(uint8_t param_id, uint8_t &value) const override;
+  uint8_t pitch_lock_param() const override;
   void dispatch_slide_value(uint8_t param, uint8_t value,
                             uint8_t channel) override;
 
@@ -31,7 +32,7 @@ private:
 
   void service_gate();
   void send_active_note_off();
-  void send_trig(uint8_t velocity = 100);
+  void send_trig(uint8_t step, uint8_t velocity = 100);
   void send_parameter_locks(uint8_t step, uint16_t lock_idx);
   void send_lock_value(uint8_t param, uint8_t value);
 };

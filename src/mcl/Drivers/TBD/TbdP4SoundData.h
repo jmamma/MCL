@@ -13,6 +13,10 @@ static constexpr uint8_t TBD_P4_SOUND_DATA_VERSION = 1;
 static constexpr uint8_t TBD_P4_SOUND_TRACK_COUNT = 16;
 static constexpr uint8_t TBD_P4_BUS_TRACK_COUNT = 3;
 
+static constexpr uint8_t TBD_P4_TRACK_TYPE_MONOSYNTH = 1;
+static constexpr uint8_t TBD_P4_TRACK_TYPE_POLYSYNTH = 2;
+static constexpr uint8_t TBD_P4_TRACK_TYPE_DRUM = 3;
+
 static constexpr uint8_t TBD_P4_AUDIO_PARAM_COUNT = 24;
 static constexpr uint8_t TBD_P4_AUDIO_PARAM_PAGE_COUNT = 6;
 static constexpr uint8_t TBD_P4_MIXER_PARAM_COUNT = 8;
@@ -25,8 +29,11 @@ static constexpr uint8_t TBD_P4_LOCK_MIXER_PARAM_COUNT =
     TBD_P4_MIXER_PARAM_COUNT;
 static constexpr uint8_t TBD_P4_LOCK_RESERVED_PARAM_BASE =
     TBD_P4_LOCK_MIXER_PARAM_BASE + TBD_P4_LOCK_MIXER_PARAM_COUNT;
+static constexpr uint8_t TBD_P4_LOCK_NOTE_PARAM =
+    TBD_P4_LOCK_RESERVED_PARAM_BASE;
 static constexpr uint8_t TBD_P4_LOCK_PARAM_COUNT =
     TBD_P4_LOCK_RESERVED_PARAM_BASE + 2;
+static constexpr uint8_t TBD_P4_DEFAULT_STEP_NOTE = 60;
 
 static constexpr uint8_t TBD_P4_ID_LEN = 16;
 static constexpr uint8_t TBD_P4_PARAM_PAGE_NAME_LEN = 16;
@@ -232,6 +239,15 @@ tbd_p4_sound_param_for_lock(const TbdP4SoundData &sound, uint8_t lock_param) {
     return &sound.mixer_params.params[lock_param - TBD_P4_LOCK_MIXER_PARAM_BASE];
   }
   return nullptr;
+}
+
+inline bool tbd_p4_track_type_uses_step_note(uint8_t track_type) {
+  return track_type == TBD_P4_TRACK_TYPE_MONOSYNTH ||
+         track_type == TBD_P4_TRACK_TYPE_POLYSYNTH;
+}
+
+inline bool tbd_p4_sound_uses_step_note(const TbdP4SoundData &sound) {
+  return tbd_p4_track_type_uses_step_note(sound.track_type);
 }
 
 inline int16_t tbd_p4_scale_lock_value(const TbdP4ParamDescriptor &param,

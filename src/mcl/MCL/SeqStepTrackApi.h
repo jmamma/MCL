@@ -84,11 +84,25 @@ public:
 #endif
   }
 
+  bool uses_tbd_step_notes() const {
+#if !defined(__AVR__) && defined(PLATFORM_TBD)
+    return backend_ == StepSeqTbd &&
+           tbd_p4_sound_uses_step_note(
+               static_cast<TBDSeqTrack *>(step_)->p4_sound);
+#else
+    return false;
+#endif
+  }
+
+  bool uses_step_pitch() const {
+    return uses_md_sound() || uses_tbd_step_notes();
+  }
+
   bool configure_driver_panel(char *info, size_t info_len,
                               uint8_t &pitch_encoder_max) const {
 #if !defined(__AVR__) && defined(PLATFORM_TBD)
     if (backend_ == StepSeqTbd) {
-      pitch_encoder_max = 1;
+      pitch_encoder_max = uses_tbd_step_notes() ? 127 : 1;
       copy_tbd_label(static_cast<TBDSeqTrack *>(step_)->p4_sound, info,
                      info_len);
       return true;
@@ -139,9 +153,26 @@ public:
 
 #if !defined(__AVR__) && defined(PLATFORM_TBD)
     if (backend_ == StepSeqTbd) {
+      const TbdP4SoundData &sound = static_cast<TBDSeqTrack *>(step_)->p4_sound;
+      if (param_id == TBD_P4_LOCK_NOTE_PARAM) {
+        if (!tbd_p4_sound_uses_step_note(sound)) {
+          memset(&info, 0, sizeof(info));
+          return false;
+        }
+        info.active = true;
+        info.p4_param = false;
+        info.sendable = true;
+        info.param_id = param_id;
+        info.ctrl = param_id;
+        info.resolution = 128;
+        info.min_value = 0;
+        info.max_value = 127;
+        info.default_value = TBD_P4_DEFAULT_STEP_NOTE;
+        info.current_value = TBD_P4_DEFAULT_STEP_NOTE;
+        return true;
+      }
       const TbdP4ParamDescriptor *desc =
-          tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
-                                      param_id);
+          tbd_p4_sound_param_for_lock(sound, param_id);
       if (desc == nullptr || !desc->is_visible()) {
         memset(&info, 0, sizeof(info));
         return false;
@@ -169,6 +200,9 @@ public:
   uint8_t current_lock_value(uint8_t param_id) const {
 #if !defined(__AVR__) && defined(PLATFORM_TBD)
     if (backend_ == StepSeqTbd) {
+      if (param_id == TBD_P4_LOCK_NOTE_PARAM) {
+        return uses_tbd_step_notes() ? TBD_P4_DEFAULT_STEP_NOTE : 0;
+      }
       const TbdP4ParamDescriptor *desc =
           tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
                                       param_id);
@@ -202,6 +236,10 @@ public:
 
 #if !defined(__AVR__) && defined(PLATFORM_TBD)
     if (backend_ == StepSeqTbd) {
+      if (param_id == TBD_P4_LOCK_NOTE_PARAM && uses_tbd_step_notes()) {
+        copy_fixed_label("NOT", dst, dst_len, 3);
+        return dst[0] != '\0';
+      }
       const TbdP4ParamDescriptor *desc =
           tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
                                       param_id);
@@ -654,6 +692,15 @@ public:
     uint8_t lock_idx = md_->find_param(param_id);
 #endif
     return lock_idx == 255 ? -1 : (int8_t)lock_idx;
+  }
+
+  uint8_t pitch_lock_param_id() const {
+#if !defined(__AVR__) && defined(PLATFORM_TBD)
+    if (backend_ == StepSeqTbd) {
+      return TBD_P4_LOCK_NOTE_PARAM;
+    }
+#endif
+    return 0;
   }
 
   uint8_t get_track_lock_implicit(uint8_t step, uint8_t param_id) {

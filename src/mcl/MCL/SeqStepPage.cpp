@@ -93,7 +93,7 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackApi active_track,
 
   GUI_hardware.led.set_trigleds(led_mask, TRIGLED_STEPEDIT);
   GUI_hardware.led.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
-  if (MidiClock.state == 2) {
+  if (MidiClock.state == 2 && step_count >= offset && step_count < offset + 16) {
     GUI_hardware.led.toggle_trigled(step_count - offset);
   }
 }
@@ -282,9 +282,11 @@ void SeqStepPage::display() {
   tuning_t const *tuning =
       active_track.uses_md_sound() ? MD.getKitModelTuning(last_md_track)
                                    : nullptr;
-  bool is_ptc = active_track.uses_md_sound() &&
-                (((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL) ||
-                 tuning != NULL);
+  bool is_tbd_ptc = active_track.uses_tbd_step_notes();
+  bool is_ptc = is_tbd_ptc ||
+                (active_track.uses_md_sound() &&
+                 (((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL) ||
+                  tuning != NULL));
   if (show_pitch) {
     if (is_ptc) {
       strcpy_P(K, mclstr_dash);
@@ -361,6 +363,7 @@ void SeqStepPage::loop() {
     tuning_t const *tuning =
         active_track.uses_md_sound() ? MD.getKitModelTuning(last_md_track)
                                      : nullptr;
+    bool is_tbd_ptc = active_track.uses_tbd_step_notes();
 
     for (uint8_t n = 0; n < 16; n++) {
       if (note_interface.is_note_on(n)) {
@@ -392,9 +395,13 @@ void SeqStepPage::loop() {
             active_track.set_step(step, MASK_PATTERN, true);
             break;
           }
-          if (active_track.uses_md_sound() && seq_param4.hasChanged() &&
-              (seq_param4.cur > 0) &&
-              (last_md_track < NUM_MD_TRACKS) && (tuning != NULL || is_midi_model)) {
+          if (is_tbd_ptc && seq_param4.hasChanged() && seq_param4.cur > 0) {
+            active_track.set_track_pitch(step, seq_param4.cur);
+            seq_step_page.encoders_used_clock[3] = read_clock_ms();
+          } else if (active_track.uses_md_sound() && seq_param4.hasChanged() &&
+                     (seq_param4.cur > 0) &&
+                     (last_md_track < NUM_MD_TRACKS) &&
+                     (tuning != NULL || is_midi_model)) {
             uint8_t note_num = seq_param4.cur;
             uint8_t machine_pitch =
                 seq_ptc_page.get_machine_pitch(last_md_track, note_num);
@@ -513,7 +520,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
 
       send_locks(step);
-      show_pitch = active_track.uses_md_sound();
+      show_pitch = active_track.uses_step_pitch();
 
       // Cond
       uint8_t condition = active_track.knob_conditional_from_step(
@@ -522,7 +529,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param1.cur = condition;
       seq_param1.old = seq_param1.cur;
 
-      if (active_track.uses_md_sound()) {
+      if (active_track.uses_tbd_step_notes()) {
+        uint8_t pitch =
+            active_track.get_track_lock_implicit(step,
+                                                 active_track.pitch_lock_param_id());
+        seq_param4.cur = (pitch <= 127) ? pitch : 0;
+      } else if (active_track.uses_md_sound()) {
         tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
         uint8_t pitch = active_track.get_track_lock_implicit(step, 0);
         if (pitch > 127) {
