@@ -47,6 +47,7 @@ constexpr uint32_t kP4PresetReadyProbeMs = 100;
 constexpr uint32_t kP4PresetBootReadyMs = 30000;
 constexpr uint32_t kP4PresetCommandTimeoutMs = 30000;
 constexpr uint32_t kP4BootSettleMs = 1000;
+constexpr uint32_t kP4RackProcessorSettleMs = 5000;
 constexpr size_t kP4SoundTrackCount = 16;
 constexpr size_t kP4TrackDefaultsJsonBytes = 8192;
 constexpr size_t kP4PresetValueCount = 32;
@@ -54,11 +55,16 @@ constexpr uint8_t kP4DefaultRomBank = 0xFF;
 constexpr int32_t kP4DefaultSampleSlice = -1;
 constexpr uint8_t kP4AppFlags = 0x03;
 constexpr uint8_t kP4InitProgressMax = 32;
-constexpr uint32_t kP4PluginSettleMs = 1000;
 constexpr uint8_t kTbdUiSlotPrimary = 0;
 constexpr uint8_t kTbdUiSlotSecondary = 1;
 constexpr uint8_t kTbdUiSlotNone = 255;
+constexpr uint8_t kP4DriverMidiChannel = 13;
+constexpr uint8_t kP4DriverParamVolume = 0;
+constexpr uint8_t kP4DriverParamMute = 1;
+constexpr uint8_t kP4DriverParamDelay = 2;
+constexpr uint8_t kP4DriverParamReverb = 3;
 constexpr const char *kP4RackPluginId = "PicoSeqRack";
+constexpr const char *kP4ReferenceAppName = "Groovebox";
 
 const P4BootPresetFallback kP4BootPresetFallbacks[] = {
     {0, "db-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
@@ -82,11 +88,14 @@ const P4BootPresetFallback kP4BootPresetFallbacks[] = {
 P4BootPreset p4_boot_presets[kP4SoundTrackCount];
 TbdP4SoundData p4_default_sounds[kP4SoundTrackCount];
 bool p4_default_sound_valid[kP4SoundTrackCount];
+TbdP4MixerParamGroup p4_driver_params;
+bool p4_driver_params_initialized = false;
 char p4_track_defaults_json[kP4TrackDefaultsJsonBytes];
 uint8_t p4_boot_stage = 0;
 uint8_t p4_boot_fail_stage = 0;
 uint8_t p4_boot_fail_request = 0;
 uint8_t p4_boot_loaded_tracks = 0;
+uint32_t p4_trigger_count = 0;
 
 uint8_t count_p4_audio_params(const TbdP4SoundData &sound) {
   uint8_t count = 0;
@@ -227,7 +236,7 @@ bool activate_p4_sample_kit(uint8_t kit_index, uint32_t timeout_ms) {
   return true;
 }
 
-bool ensure_p4_rack_plugin(uint32_t timeout_ms) {
+void debug_p4_active_plugin(uint32_t timeout_ms) {
   char active_plugin[32] = {0};
   const bool get_ok = tbd_p4_command.get_active_plugin(
       0, active_plugin, sizeof(active_plugin), timeout_ms);
@@ -237,23 +246,14 @@ bool ensure_p4_rack_plugin(uint32_t timeout_ms) {
   DEBUG_PRINT(" id=");
   DEBUG_PRINTLN(active_plugin);
 #endif
-  if (get_ok && strcmp(active_plugin, kP4RackPluginId) == 0) {
-    return true;
-  }
-
-  const bool set_ok =
-      tbd_p4_command.set_active_plugin(0, kP4RackPluginId, timeout_ms);
 #ifdef DEBUGMODE
-  DEBUG_PRINT("tbd_init set_plugin ");
-  DEBUG_PRINT(kP4RackPluginId);
-  DEBUG_PRINT(" ok=");
-  DEBUG_PRINTLN(set_ok ? 1 : 0);
-#endif
-  if (!set_ok) {
-    return false;
+  if (get_ok && strcmp(active_plugin, kP4RackPluginId) != 0) {
+    DEBUG_PRINT("tbd_init plugin_mismatch was=");
+    DEBUG_PRINT(active_plugin);
+    DEBUG_PRINT(" want=");
+    DEBUG_PRINTLN(kP4RackPluginId);
   }
-  delay(kP4PluginSettleMs);
-  return true;
+#endif
 }
 
 TbdP4SoundData *p4_sound_for_mixer(uint8_t device_idx, uint8_t track) {
@@ -310,6 +310,41 @@ void copy_preset_id(char *dst, const char *src) {
     return;
   }
   copy_fixed_string(dst, TBD_PRESET_ID_LEN, src);
+}
+
+void init_driver_param(TbdP4ParamDescriptor &param, const char *name,
+                       uint8_t type, uint8_t ctrl, int16_t value,
+                       int16_t min_value = 0, int16_t max_value = 127) {
+  param.clear();
+  param.type = type;
+  copy_fixed_string(param.shortname, sizeof(param.shortname), name);
+  param.min_value = min_value;
+  param.max_value = max_value;
+  param.default_value = value;
+  param.value = value;
+  param.ctrl = ctrl;
+  param.ctrl_type = TBD_P4_CTRLTYPE_CC;
+  param.resolution = 127;
+}
+
+void ensure_p4_driver_params_initialized() {
+  if (p4_driver_params_initialized) {
+    return;
+  }
+
+  p4_driver_params.clear();
+  p4_driver_params.num_pages = 1;
+  copy_fixed_string(p4_driver_params.pages[0].name,
+                    sizeof(p4_driver_params.pages[0].name), "OUTPUT");
+  init_driver_param(p4_driver_params.params[kP4DriverParamVolume],
+                    "VOL", TBD_P4_PARAM_TYPE_LEVEL_MASTER, 81, 110);
+  init_driver_param(p4_driver_params.params[kP4DriverParamMute],
+                    "MUTE", TBD_P4_PARAM_TYPE_ONOFF, 80, 0);
+  init_driver_param(p4_driver_params.params[kP4DriverParamDelay],
+                    "DLY", TBD_P4_PARAM_TYPE_LEVEL, 29, 64);
+  init_driver_param(p4_driver_params.params[kP4DriverParamReverb],
+                    "REV", TBD_P4_PARAM_TYPE_LEVEL, 42, 64);
+  p4_driver_params_initialized = true;
 }
 
 void reset_p4_boot_presets_to_fallback() {
@@ -1012,9 +1047,7 @@ class TbdP4DiagOverlay : public LightPage {
 public:
   virtual void display() override {
     TbdP4RealtimeStats stats;
-    TbdP4CommandStats cmd_stats;
     tbd_p4_realtime.get_stats(stats);
-    tbd_p4_command.get_stats(cmd_stats);
 
     constexpr uint8_t y = 32;
     oled_display.fillRect(0, y, 128, 32, BLACK);
@@ -1025,13 +1058,15 @@ public:
     const uint8_t display_slot =
         ui_slot == kTbdUiSlotSecondary ? 2 : 1;
     oled_display.setCursor(0, y + 2);
-    snprintf(line, sizeof(line), "TBD%u A%uS%uR%uD%u X%u",
+    snprintf(line, sizeof(line), "T%u A%uS%uR%uD%uX%u p%uc%u",
              display_slot,
              stats.p4_alive ? 1 : 0,
              stats.p4_sync_seen ? 1 : 0,
              stats.p4_ready_pin ? 1 : 0,
              TBD.p4_defaults_loaded() ? 1 : 0,
-             stats.extended_response_seen ? 1 : 0);
+             stats.extended_response_seen ? 1 : 0,
+             stats.request_prepared ? 1 : 0,
+             stats.can_prepare_request ? 1 : 0);
     oled_display.println(line);
 
     snprintf(line, sizeof(line), "F%lu/%lu E%lu L%lu",
@@ -1041,16 +1076,16 @@ public:
              (unsigned long)(stats.length_errors % 1000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "C%lu P%lu B%lu D%lu",
-             (unsigned long)(stats.crc_errors % 1000),
+    snprintf(line, sizeof(line), "P%lu B%lu D%lu U%lu",
              (unsigned long)(stats.p4_not_ready_count % 1000),
              (unsigned long)(stats.dma_busy_count % 1000),
-             (unsigned long)(stats.dma_timeout_count % 1000));
+             (unsigned long)(stats.dma_timeout_count % 1000),
+             (unsigned long)(stats.dma_unavailable_count % 1000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "Q%lu T%lu M%lu N%lu",
-             (unsigned long)(cmd_stats.tx_frames % 1000),
-             (unsigned long)(cmd_stats.ready_timeouts % 1000),
+    snprintf(line, sizeof(line), "G%lu Q%lu M%lu N%lu",
+             (unsigned long)(p4_trigger_count % 1000),
+             (unsigned long)(stats.queued_tx_midi_bytes % 1000),
              (unsigned long)(stats.tx_midi_bytes % 1000),
              (unsigned long)(stats.tx_note_on_messages % 1000));
     oled_display.println(line);
@@ -1247,6 +1282,34 @@ void tbd_p4_send_sound_state(const TbdP4SoundData &sound) {
   }
 }
 
+uint8_t tbd_p4_driver_param_page_count() {
+  ensure_p4_driver_params_initialized();
+  return p4_driver_params.num_pages;
+}
+
+TbdP4ParamDescriptor *tbd_p4_driver_param(uint8_t index) {
+  ensure_p4_driver_params_initialized();
+  if (index >= TBD_P4_MIXER_PARAM_COUNT) {
+    return nullptr;
+  }
+  return &p4_driver_params.params[index];
+}
+
+void tbd_p4_send_driver_param(uint8_t index) {
+  TbdP4ParamDescriptor *param = tbd_p4_driver_param(index);
+  if (TBD.uart == nullptr || param == nullptr || !param->is_sendable()) {
+    return;
+  }
+  tbd_p4_send_param_value(TBD.uart, kP4DriverMidiChannel, *param, param->value);
+}
+
+void tbd_p4_send_driver_params() {
+  ensure_p4_driver_params_initialized();
+  for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+    tbd_p4_send_driver_param(i);
+  }
+}
+
 TbdDevice::TbdDevice() : MidiDevice(&MidiP4, "TBD", DEVICE_MIDI, false) {
   port = UARTP4_PORT;
 }
@@ -1269,12 +1332,14 @@ void TbdDevice::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
 
 void TbdDevice::triggerTrack(uint8_t track, uint8_t velocity,
                              MidiUartClass *uart_) {
+  p4_trigger_count++;
   if (track >= mcl_seq.num_tbd_tracks) {
     return;
   }
+  MidiUartClass *port = uart_ ? uart_ : uart;
   tbd_p4_realtime.set_active_track(
       mcl_seq.tbd_tracks[track].p4_sound.p4_track_index);
-  mcl_seq.tbd_tracks[track].trigger(velocity, uart_);
+  mcl_seq.tbd_tracks[track].trigger(velocity, port);
 }
 
 uint8_t TbdDevice::mixer_default_param(uint8_t device_idx) const {
@@ -1368,6 +1433,7 @@ void TbdDevice::disconnect(uint8_t device_idx) {
   if (device_idx < 2) {
     grid_devices_initialized_[device_idx] = false;
   }
+  p4_defaults_init_in_progress_ = false;
   connected = false;
 }
 
@@ -1381,8 +1447,13 @@ void TbdDevice::on_connection(uint8_t device_idx) {
   cleanup(1);
   grid_devices_initialized_[0] = false;
   grid_devices_initialized_[1] = false;
-  load_default_p4_presets(true);
-  apply_runtime_p4_defaults();
+  p4_defaults_loaded_ = false;
+  p4_defaults_init_failed_ = false;
+  p4_defaults_init_in_progress_ = false;
+  p4_defaults_last_attempt_ms_ = 0;
+  if (load_default_p4_presets(true)) {
+    apply_runtime_p4_defaults();
+  }
   sync_grid_devices();
 }
 
@@ -1506,6 +1577,21 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
   if (p4_defaults_loaded_) {
     return true;
   }
+  if (p4_defaults_init_in_progress_) {
+#ifdef DEBUGMODE
+    DEBUG_PRINTLN("tbd_init already in progress");
+#endif
+    return false;
+  }
+  if (p4_defaults_init_failed_) {
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init previous failure stage=");
+    DEBUG_PRINT((unsigned)p4_boot_fail_stage);
+    DEBUG_PRINT(" request=");
+    DEBUG_PRINTLN((unsigned)p4_boot_fail_request);
+#endif
+    return false;
+  }
 
   auto set_stage = [](uint8_t stage) {
     p4_boot_stage = stage;
@@ -1514,10 +1600,12 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
     DEBUG_PRINTLN((unsigned)stage);
 #endif
   };
-  auto fail = [](uint8_t stage, uint8_t request) {
+  auto fail = [this](uint8_t stage, uint8_t request) {
     p4_boot_stage = stage;
     p4_boot_fail_stage = stage;
     p4_boot_fail_request = request;
+    p4_defaults_init_failed_ = true;
+    p4_defaults_init_in_progress_ = false;
 #ifdef DEBUGMODE
     DEBUG_PRINT("tbd_init FAIL stage=");
     DEBUG_PRINT((unsigned)stage);
@@ -1552,6 +1640,7 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
     return false;
   }
   p4_defaults_last_attempt_ms_ = now;
+  p4_defaults_init_in_progress_ = true;
 
   const uint32_t ready_timeout_ms =
       show_progress ? kP4PresetBootReadyMs : kP4PresetReadyProbeMs;
@@ -1582,7 +1671,7 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
 
   set_stage(4);
   const bool announce_ok = tbd_p4_command.announce_app(
-      "MCL", kP4AppFlags, kP4PresetCommandTimeoutMs);
+      kP4ReferenceAppName, kP4AppFlags, kP4PresetCommandTimeoutMs);
 #ifdef DEBUGMODE
   DEBUG_PRINT("tbd_init announce=");
   DEBUG_PRINTLN(announce_ok ? 1 : 0);
@@ -1603,13 +1692,15 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
   advance_progress(progress);
 
   set_stage(6);
-  const bool rack_ok = ensure_p4_rack_plugin(kP4PresetCommandTimeoutMs);
+  debug_p4_active_plugin(kP4PresetCommandTimeoutMs);
+  delay(kP4RackProcessorSettleMs);
+  const bool rack_ready = tbd_p4_command.wait_ready(kP4PresetCommandTimeoutMs);
 #ifdef DEBUGMODE
-  DEBUG_PRINT("tbd_init rack=");
-  DEBUG_PRINTLN(rack_ok ? 1 : 0);
+  DEBUG_PRINT("tbd_init rack_settle=");
+  DEBUG_PRINTLN(rack_ready ? 1 : 0);
 #endif
-  if (!rack_ok) {
-    return fail(6, 0x04);
+  if (!rack_ready) {
+    return fail(6, 0x00);
   }
   advance_progress(progress);
 
@@ -1657,7 +1748,17 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
     DEBUG_PRINT(" index=");
     DEBUG_PRINTLN((unsigned)kit_index);
 #endif
-    if (!activate_p4_sample_kit(kit_index, kP4PresetCommandTimeoutMs)) {
+    const bool pre_set_ok =
+        tbd_p4_command.set_active_sample_kit(kit_index,
+                                             kP4PresetCommandTimeoutMs);
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init pre_set_sample_kit index=");
+    DEBUG_PRINT((unsigned)kit_index);
+    DEBUG_PRINT(" ok=");
+    DEBUG_PRINTLN(pre_set_ok ? 1 : 0);
+#endif
+    if (!pre_set_ok ||
+        !activate_p4_sample_kit(kit_index, kP4PresetCommandTimeoutMs)) {
       return fail(9, 0x18);
     }
     kit_loaded = true;
@@ -1714,8 +1815,26 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
   }
 
   set_stage(12);
+#ifdef DEBUGMODE
+  DEBUG_PRINTLN("tbd_init send driver and cached sound state");
+#endif
+  tbd_p4_send_driver_params();
+  for (uint8_t i = 0; i < kP4SoundTrackCount; i++) {
+    if (!p4_default_sound_valid[i]) {
+      continue;
+    }
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init send_state p4=");
+    DEBUG_PRINT((unsigned)i);
+    DEBUG_PRINT(" params=");
+    DEBUG_PRINTLN((unsigned)count_p4_sendable_params(p4_default_sounds[i]));
+#endif
+    tbd_p4_send_sound_state(p4_default_sounds[i]);
+  }
 
   p4_defaults_loaded_ = true;
+  p4_defaults_init_failed_ = false;
+  p4_defaults_init_in_progress_ = false;
   set_stage(13);
 #ifdef DEBUGMODE
   DEBUG_PRINT("tbd_init complete tracks=");
@@ -1812,6 +1931,10 @@ void TbdDevice::ui_loop() {
 
 bool TbdDevice::is_ui_active() {
   return diag_active_ || tbd_ui_mode.is_active();
+}
+
+bool TbdDevice::is_ui_collapsed() {
+  return !diag_active_ && tbd_ui_mode.is_collapsed();
 }
 
 void TbdDevice::exit_ui() {

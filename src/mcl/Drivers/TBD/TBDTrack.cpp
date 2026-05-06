@@ -225,7 +225,76 @@ void ensure_sound_default(TbdP4SoundData &sound,
   }
 }
 
-void apply_p4_sound(const TbdP4SoundData &sound) {
+void debug_p4_sound_apply(const char *source, uint8_t mcl_track,
+                          uint8_t slotnumber,
+                          const TbdP4SoundData &sound) {
+#ifdef DEBUGMODE
+  DEBUG_PRINT("TBD_P4_APPLY src=");
+  DEBUG_PRINT(source == nullptr ? "?" : source);
+  DEBUG_PRINT(" mcl=");
+  DEBUG_PRINT((unsigned)mcl_track);
+  DEBUG_PRINT(" slot=");
+  if (slotnumber == 255) {
+    DEBUG_PRINT("-");
+  } else {
+    DEBUG_PRINT((unsigned)slotnumber);
+  }
+  DEBUG_PRINT(" p4=");
+  DEBUG_PRINT((unsigned)sound.p4_track_index);
+  DEBUG_PRINT(" ch=");
+  DEBUG_PRINT((unsigned)sound.midi_channel);
+  DEBUG_PRINT(" preset=");
+  DEBUG_PRINT(sound.preset_id[0] ? sound.preset_id : "-");
+  DEBUG_PRINT(" macro=");
+  DEBUG_PRINT(sound.macro_id[0] ? sound.macro_id : "-");
+  DEBUG_PRINT(" machine=");
+  DEBUG_PRINT(sound.machine_id[0] ? sound.machine_id : "-");
+  DEBUG_PRINT(" rom=");
+  DEBUG_PRINT((unsigned)sound.rom_bank);
+  DEBUG_PRINT(" slice=");
+  DEBUG_PRINT((long)sound.sample_slice);
+  DEBUG_PRINT(" cmd=");
+  if (sound.has_machine()) {
+    DEBUG_PRINT("machine");
+  } else if (sound.has_preset()) {
+    DEBUG_PRINT("preset");
+  } else if (sound.has_macro()) {
+    DEBUG_PRINT("macro");
+  } else {
+    DEBUG_PRINT("state");
+  }
+  DEBUG_PRINT(" params=");
+  DEBUG_PRINTLN((unsigned)sound.has_sendable_params());
+#else
+  (void)source;
+  (void)mcl_track;
+  (void)slotnumber;
+  (void)sound;
+#endif
+}
+
+void debug_p4_sound_apply_result(const char *source, uint8_t mcl_track,
+                                 uint8_t p4_track_index, bool applied) {
+#ifdef DEBUGMODE
+  DEBUG_PRINT("TBD_P4_APPLY_RESULT src=");
+  DEBUG_PRINT(source == nullptr ? "?" : source);
+  DEBUG_PRINT(" mcl=");
+  DEBUG_PRINT((unsigned)mcl_track);
+  DEBUG_PRINT(" p4=");
+  DEBUG_PRINT((unsigned)p4_track_index);
+  DEBUG_PRINT(" ok=");
+  DEBUG_PRINTLN(applied ? 1 : 0);
+#else
+  (void)source;
+  (void)mcl_track;
+  (void)p4_track_index;
+  (void)applied;
+#endif
+}
+
+void apply_p4_sound(const TbdP4SoundData &sound, const char *source,
+                    uint8_t mcl_track, uint8_t slotnumber) {
+  debug_p4_sound_apply(source, mcl_track, slotnumber, sound);
   tbd_p4_realtime.set_active_track(sound.p4_track_index);
   bool applied = true;
   if (sound.has_machine()) {
@@ -244,6 +313,7 @@ void apply_p4_sound(const TbdP4SoundData &sound) {
                                                          sound.macro_id,
                                                          kPresetApplyTimeoutMs);
   }
+  debug_p4_sound_apply_result(source, mcl_track, sound.p4_track_index, applied);
   if (applied) {
     tbd_p4_send_sound_state(sound);
   }
@@ -372,9 +442,10 @@ uint16_t TBDTrack::calc_latency(uint8_t tracknumber) {
   return 2048;
 }
 
-void TBDTrack::apply_preset(uint8_t fallback_tracknumber) {
+void TBDTrack::apply_preset(uint8_t fallback_tracknumber, const char *source,
+                            uint8_t slotnumber) {
   tbd_ensure_step_sound_default(p4_sound, fallback_tracknumber);
-  apply_p4_sound(p4_sound);
+  apply_p4_sound(p4_sound, source, fallback_tracknumber, slotnumber);
 }
 
 void TBDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
@@ -385,8 +456,7 @@ void TBDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 
 void TBDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-  (void)slotnumber;
-  apply_preset(tracknumber);
+  apply_preset(tracknumber, "step.transition_send", slotnumber);
 }
 
 void TBDTrack::load_seq_data(SeqTrack *seq_track) {
@@ -408,7 +478,7 @@ void TBDTrack::load_seq_data(SeqTrack *seq_track) {
 void TBDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_seq_data(seq_track);
   apply_seq_defaults(tracknumber, seq_track);
-  apply_preset(tracknumber);
+  apply_preset(tracknumber, "step.load_immediate", 255);
 }
 
 bool TBDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
@@ -495,9 +565,10 @@ uint16_t TBDMidiTrack::calc_latency(uint8_t tracknumber) {
   return 2048;
 }
 
-void TBDMidiTrack::apply_preset(uint8_t fallback_tracknumber) {
+void TBDMidiTrack::apply_preset(uint8_t fallback_tracknumber,
+                                const char *source, uint8_t slotnumber) {
   tbd_ensure_midi_sound_default(p4_sound, fallback_tracknumber);
-  apply_p4_sound(p4_sound);
+  apply_p4_sound(p4_sound, source, fallback_tracknumber, slotnumber);
 }
 
 void TBDMidiTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
@@ -508,14 +579,13 @@ void TBDMidiTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 
 void TBDMidiTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-  (void)slotnumber;
-  apply_preset(tracknumber);
+  apply_preset(tracknumber, "midi.transition_send", slotnumber);
 }
 
 void TBDMidiTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_seq_data(seq_track);
   apply_seq_defaults(tracknumber, seq_track);
-  apply_preset(tracknumber);
+  apply_preset(tracknumber, "midi.load_immediate", 255);
 }
 
 void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {

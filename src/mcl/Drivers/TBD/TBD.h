@@ -41,6 +41,7 @@ public:
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool enter_ui(gui_event_t *event) override;
   virtual bool is_ui_active() override;
+  virtual bool is_ui_collapsed() override;
   virtual void exit_ui() override;
   virtual void on_ui_slot_button(uint8_t slot, bool pressed) override;
   bool enter_diag_ui(uint8_t device_idx);
@@ -54,6 +55,8 @@ private:
   uint8_t ui_device_idx_ = 255;
   bool diag_active_ = false;
   bool p4_defaults_loaded_ = false;
+  bool p4_defaults_init_in_progress_ = false;
+  bool p4_defaults_init_failed_ = false;
   bool grid_devices_initialized_[2] = {};
   uint32_t p4_defaults_last_attempt_ms_ = 0;
   uint8_t active_note_ = 255;
@@ -74,5 +77,9 @@ void tbd_p4_send_param_value(MidiUartClass *uart, uint8_t midi_channel,
                              const TbdP4ParamDescriptor &param,
                              int16_t value);
 void tbd_p4_send_sound_state(const TbdP4SoundData &sound);
+uint8_t tbd_p4_driver_param_page_count();
+TbdP4ParamDescriptor *tbd_p4_driver_param(uint8_t index);
+void tbd_p4_send_driver_param(uint8_t index);
+void tbd_p4_send_driver_params();
 
 #endif // PLATFORM_TBD

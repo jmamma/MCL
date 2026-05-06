@@ -35,7 +35,9 @@ public:
                      bool allow_toggle = true);
   bool handle_ui_slot_button(uint8_t slot, gui_event_t *event,
                              bool allow_toggle = true);
+  bool notify_active_ui_button(gui_event_t *event);
   bool is_ui_active() const;
+  bool is_ui_collapsed() const;
   void exit_ui();
 #endif
 

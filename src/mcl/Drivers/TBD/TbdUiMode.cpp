@@ -12,8 +12,11 @@
 #include "SeqPages.h"
 #include "SeqStepTrackApi.h"
 #include "TBD.h"
+#include "TbdP4Command.h"
 #include "TbdP4Realtime.h"
 #include "GUI_hardware.h"
+#include <ctype.h>
+#include <stdio.h>
 #include <string.h>
 
 TbdUiMode tbd_ui_mode;
@@ -23,6 +26,10 @@ TbdParamOverlayPage tbd_param_overlay_page;
 namespace {
 
 constexpr uint16_t kParamOverlayHoldMs = 500;
+constexpr uint32_t kPresetCommandTimeoutMs = 30000;
+constexpr size_t kPresetListJsonBytes = 4096;
+
+char preset_list_json[kPresetListJsonBytes];
 
 uint8_t normalized_value(const TbdP4ParamDescriptor &param) {
   if (param.max_value <= param.min_value) {
@@ -100,6 +107,155 @@ void log_arrow_press(uint8_t source, uint8_t before, uint8_t after,
 #endif
 }
 
+void copy_fixed_text(char *dst, size_t dst_len, const char *src) {
+  if (dst == nullptr || dst_len == 0) return;
+  dst[0] = '\0';
+  if (src == nullptr) return;
+  strncpy(dst, src, dst_len);
+  dst[dst_len - 1] = '\0';
+}
+
+const char *skip_json_ws(const char *p, const char *end) {
+  while (p < end && isspace((unsigned char)*p)) {
+    p++;
+  }
+  return p;
+}
+
+const char *find_json_value(const char *begin, const char *end,
+                            const char *key) {
+  const size_t key_len = strlen(key);
+  const char *p = begin;
+
+  while (p < end) {
+    if (*p != '"') {
+      p++;
+      continue;
+    }
+
+    if ((size_t)(end - p) < key_len + 3) {
+      return nullptr;
+    }
+
+    if (strncmp(p + 1, key, key_len) == 0 && p[1 + key_len] == '"') {
+      const char *v = skip_json_ws(p + key_len + 2, end);
+      if (v < end && *v == ':') {
+        return skip_json_ws(v + 1, end);
+      }
+    }
+    p++;
+  }
+
+  return nullptr;
+}
+
+bool read_json_string(const char *begin, const char *end, const char *key,
+                      char *dst, size_t dst_len) {
+  if (dst == nullptr || dst_len == 0) {
+    return false;
+  }
+  dst[0] = '\0';
+
+  const char *p = find_json_value(begin, end, key);
+  if (p == nullptr || p >= end || *p != '"') {
+    return false;
+  }
+  p++;
+
+  size_t copied = 0;
+  bool escaped = false;
+  while (p < end) {
+    const char c = *p++;
+    if (escaped) {
+      if (copied + 1 < dst_len) {
+        dst[copied++] = c;
+      }
+      escaped = false;
+      continue;
+    }
+    if (c == '\\') {
+      escaped = true;
+      continue;
+    }
+    if (c == '"') {
+      dst[copied] = '\0';
+      return true;
+    }
+    if (copied + 1 < dst_len) {
+      dst[copied++] = c;
+    }
+  }
+
+  dst[copied] = '\0';
+  return false;
+}
+
+const char *find_json_object_end(const char *begin, const char *end) {
+  bool in_string = false;
+  bool escaped = false;
+  int depth = 0;
+
+  for (const char *p = begin; p < end; p++) {
+    const char c = *p;
+    if (in_string) {
+      if (escaped) {
+        escaped = false;
+      } else if (c == '\\') {
+        escaped = true;
+      } else if (c == '"') {
+        in_string = false;
+      }
+      continue;
+    }
+
+    if (c == '"') {
+      in_string = true;
+    } else if (c == '{') {
+      depth++;
+    } else if (c == '}') {
+      depth--;
+      if (depth == 0) {
+        return p + 1;
+      }
+    }
+  }
+
+  return nullptr;
+}
+
+const char *find_json_array_end(const char *begin, const char *end) {
+  bool in_string = false;
+  bool escaped = false;
+  int depth = 0;
+
+  for (const char *p = begin; p < end; p++) {
+    const char c = *p;
+    if (in_string) {
+      if (escaped) {
+        escaped = false;
+      } else if (c == '\\') {
+        escaped = true;
+      } else if (c == '"') {
+        in_string = false;
+      }
+      continue;
+    }
+
+    if (c == '"') {
+      in_string = true;
+    } else if (c == '[') {
+      depth++;
+    } else if (c == ']') {
+      depth--;
+      if (depth == 0) {
+        return p + 1;
+      }
+    }
+  }
+
+  return nullptr;
+}
+
 void copy_text(const char *src, char *dst, size_t dst_len,
                uint8_t max_chars) {
   if (dst == nullptr || dst_len == 0) return;
@@ -123,22 +279,6 @@ void copy_text(const char *src, char *dst, size_t dst_len,
     dst[out++] = c;
   }
   dst[out] = '\0';
-}
-
-void copy_fixed(const char *src, char *dst, size_t dst_len) {
-  if (dst == nullptr || dst_len == 0) return;
-  size_t out = 0;
-  while (src && src[out] && out + 1 < dst_len) {
-    dst[out] = src[out];
-    out++;
-  }
-  dst[out] = '\0';
-}
-
-void put_uint8_2(uint8_t value, char *dst) {
-  if (value > 99) value = 99;
-  dst[0] = (char)('0' + value / 10);
-  dst[1] = (char)('0' + value % 10);
 }
 
 void put_int16_cell(int16_t value, char *dst, size_t dst_len) {
@@ -185,121 +325,19 @@ void draw_text_centered(uint8_t x, uint8_t y, uint8_t width,
   draw_text_limited(text_x, y, text, max_chars);
 }
 
-void copy_window_label(uint8_t window, char *dst, size_t dst_len) {
-  if (dst == nullptr || dst_len == 0) return;
-  dst[0] = '\0';
-
-  TbdP4SoundData *sound = tbd_ui_mode.active_sound();
-  if (sound == nullptr) {
-    copy_fixed("P4", dst, dst_len);
-    return;
-  }
-
-  const uint8_t audio_pages = clamped_audio_pages(*sound);
-  if (window < audio_pages) {
-    copy_text(sound->audio_params.pages[window].name, dst, dst_len, 10);
-    if (dst[0] == '\0') {
-      dst[0] = 'A';
-      dst[1] = (char)('1' + window);
-      dst[2] = '\0';
-    }
-    return;
-  }
-
-  window -= audio_pages;
-  if (window < clamped_mixer_pages(*sound)) {
-    copy_text(sound->mixer_params.pages[window].name, dst, dst_len, 10);
-    if (dst[0] == '\0') {
-      copy_fixed("MIX", dst, dst_len);
-      if (dst_len > 4) {
-        dst[3] = (char)('1' + window);
-        dst[4] = '\0';
-      }
-    }
-    return;
-  }
-
-  copy_fixed("P4", dst, dst_len);
-}
-
-void copy_sound_label(char *dst, size_t dst_len) {
-  if (dst == nullptr || dst_len == 0) return;
-  dst[0] = '\0';
-  TbdP4SoundData *sound = tbd_ui_mode.active_sound();
-  if (sound == nullptr) {
-    copy_fixed("P4", dst, dst_len);
-    return;
-  }
-  copy_text(sound->machine_id, dst, dst_len, 8);
-  if (dst[0] == '\0') copy_text(sound->preset_name, dst, dst_len, 8);
-  if (dst[0] == '\0') copy_text(sound->preset_id, dst, dst_len, 8);
-  if (dst[0] == '\0') copy_fixed("P4", dst, dst_len);
-}
-
-void copy_track_label(char *dst, size_t dst_len) {
-  if (dst == nullptr || dst_len < 9) return;
-  dst[0] = 'T';
-  dst[1] = 'B';
-  dst[2] = 'D';
-  dst[3] = tbd_ui_mode.device_idx() == TbdUiMode::SLOT_SECONDARY ? '2' : '1';
-  dst[4] = ' ';
-  dst[5] = 'T';
-  put_uint8_2(tbd_ui_mode.active_track_index() + 1, dst + 6);
-  dst[8] = '\0';
-}
-
-bool active_track_muted() {
-  if (tbd_ui_mode.device_idx() == TbdUiMode::SLOT_PRIMARY) {
-    if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD ||
-        last_md_track >= mcl_seq.num_tbd_tracks) {
-      return false;
-    }
-    return seq_step_api_active_track(true).mute_state() != 0;
-  }
-#ifdef EXT_TRACKS
-  if (tbd_ui_mode.device_idx() == TbdUiMode::SLOT_SECONDARY &&
-      last_ext_track < NUM_EXT_TRACKS) {
-    return mcl_seq.midi_tracks[last_ext_track].mute_state != 0;
-  }
-#endif
-  return false;
-}
-
-void copy_status_flags(char *dst, size_t dst_len) {
-  if (dst == nullptr || dst_len < 4) return;
-  dst[0] = SeqPage::recording ? 'R' : '-';
-  dst[1] = MidiClock.state == MidiClockClass::STARTED ? 'P' : '-';
-  dst[2] = active_track_muted() ? 'M' : '-';
-  dst[3] = '\0';
-}
-
 void format_param_value(const TbdP4ParamDescriptor &param, uint8_t value,
                         char *dst, size_t dst_len) {
   put_int16_cell(tbd_p4_scale_lock_value(param, value14_from_normalized(value)),
                  dst, dst_len);
 }
 
-void draw_overlay_header() {
-  oled_display.fillRect(0, 0, 128, 8, BLACK);
-  auto oldfont = oled_display.getFont();
-  oled_display.setFont();
-  oled_display.setTextColor(WHITE, BLACK);
-
-  char track[9];
-  char sound[9];
-  char flags[4];
-  copy_track_label(track, sizeof(track));
-  copy_sound_label(sound, sizeof(sound));
-  copy_status_flags(flags, sizeof(flags));
-
-  draw_text_limited(0, 0, track, 8);
-  draw_text_centered(50, 0, 48, sound, 8);
-  draw_text_limited(110, 0, flags, 3);
-  oled_display.setFont(oldfont);
-}
-
 void render_window(uint8_t y_top, uint8_t window, bool active,
                    uint8_t row_height) {
+  if (tbd_ui_mode.is_preset_page(window)) {
+    tbd_ui_mode.render_preset_window(y_top, active, row_height);
+    return;
+  }
+
   Encoder proxies[4];
   TbdUiMode::ParamSlot slots[4];
   bool has_slot[4] = {};
@@ -310,10 +348,6 @@ void render_window(uint8_t y_top, uint8_t window, bool active,
   auto oldfont = oled_display.getFont();
   oled_display.setFont();
   oled_display.setTextColor(WHITE, BLACK);
-
-  char page_label[12];
-  copy_window_label(window, page_label, sizeof(page_label));
-  draw_text_limited(2, y_top, page_label, 10);
 
   for (uint8_t i = 0; i < 4; i++) {
     if (!tbd_ui_mode.param_slot(window, i, slots[i]) ||
@@ -337,8 +371,8 @@ void render_window(uint8_t y_top, uint8_t window, bool active,
 
   constexpr uint8_t kCellW = 32;
   constexpr uint8_t kDialW = 11;
-  const uint8_t dial_y = y_top + 8;
-  const uint8_t text_y = y_top + (row_height == 28 ? 20 : 22);
+  const uint8_t dial_y = y_top + 4;
+  const uint8_t text_y = y_top + 18;
   for (uint8_t i = 0; i < 4; i++) {
     if (!has_slot[i]) continue;
     uint8_t cx = i * kCellW;
@@ -400,11 +434,266 @@ TbdP4SoundData *TbdUiMode::active_sound() const {
 }
 
 uint8_t TbdUiMode::window_count() const {
+  const uint8_t driver_pages = tbd_p4_driver_param_page_count();
   TbdP4SoundData *sound = active_sound();
-  if (sound == nullptr) return 1;
+  if (sound == nullptr) return driver_pages == 0 ? 1 : driver_pages;
 
-  uint8_t count = clamped_audio_pages(*sound) + clamped_mixer_pages(*sound);
+  uint8_t count = 1 + clamped_audio_pages(*sound) +
+                  clamped_mixer_pages(*sound) + driver_pages;
   return count == 0 ? 1 : count;
+}
+
+bool TbdUiMode::is_preset_page(uint8_t window) const {
+  return active_sound() != nullptr && window == 0;
+}
+
+void TbdUiMode::clear_preset_cache() {
+  preset_group_count_ = 0;
+  preset_count_ = 0;
+  preset_cache_p4_track_ = 255;
+  preset_cache_valid_ = false;
+  preset_cache_failed_ = false;
+  selected_group_ = 0;
+  selected_preset_ = 0;
+}
+
+bool TbdUiMode::parse_preset_list_json(const char *json) {
+  preset_group_count_ = 0;
+  preset_count_ = 0;
+  selected_group_ = 0;
+  selected_preset_ = 0;
+
+  if (json == nullptr) return false;
+  const char *end = json + strlen(json);
+  const char *groups = find_json_value(json, end, "presetgroups");
+  if (groups == nullptr || groups >= end || *groups != '[') {
+    return false;
+  }
+
+  const char *groups_end = find_json_array_end(groups, end);
+  if (groups_end == nullptr) {
+    return false;
+  }
+
+  const char *g = groups + 1;
+  while (g < groups_end && preset_group_count_ < MAX_PRESET_GROUPS &&
+         preset_count_ < MAX_PRESETS) {
+    g = skip_json_ws(g, groups_end);
+    if (g >= groups_end || *g == ']') break;
+    if (*g != '{') {
+      g++;
+      continue;
+    }
+
+    const char *group_end = find_json_object_end(g, groups_end);
+    if (group_end == nullptr) break;
+
+    PresetGroup &group = preset_groups_[preset_group_count_];
+    memset(&group, 0, sizeof(group));
+    group.first_preset = preset_count_;
+    read_json_string(g, group_end, "id", group.id, sizeof(group.id));
+    read_json_string(g, group_end, "name", group.name, sizeof(group.name));
+    if (group.name[0] == '\0') {
+      copy_fixed_text(group.name, sizeof(group.name), group.id);
+    }
+
+    const char *presets = find_json_value(g, group_end, "presets");
+    if (presets != nullptr && presets < group_end && *presets == '[') {
+      const char *presets_end = find_json_array_end(presets, group_end);
+      const char *p = presets + 1;
+      while (presets_end != nullptr && p < presets_end &&
+             preset_count_ < MAX_PRESETS) {
+        p = skip_json_ws(p, presets_end);
+        if (p >= presets_end || *p == ']') break;
+        if (*p != '{') {
+          p++;
+          continue;
+        }
+
+        const char *preset_end = find_json_object_end(p, presets_end);
+        if (preset_end == nullptr) break;
+
+        PresetEntry &entry = presets_[preset_count_];
+        memset(&entry, 0, sizeof(entry));
+        entry.group = preset_group_count_;
+        read_json_string(p, preset_end, "id", entry.id, sizeof(entry.id));
+        read_json_string(p, preset_end, "name", entry.name,
+                         sizeof(entry.name));
+        if (entry.name[0] == '\0') {
+          copy_fixed_text(entry.name, sizeof(entry.name), entry.id);
+        }
+        if (entry.id[0] != '\0') {
+          preset_count_++;
+          group.preset_count++;
+        }
+        p = preset_end;
+      }
+    }
+
+    if (group.preset_count > 0) {
+      preset_group_count_++;
+    } else {
+      preset_count_ = group.first_preset;
+    }
+    g = group_end;
+  }
+
+  return preset_group_count_ > 0 && preset_count_ > 0;
+}
+
+uint8_t TbdUiMode::selected_group_preset_count() const {
+  if (selected_group_ >= preset_group_count_) return 0;
+  return preset_groups_[selected_group_].preset_count;
+}
+
+uint8_t TbdUiMode::selected_global_preset_index() const {
+  if (selected_group_ >= preset_group_count_) return 0;
+  const PresetGroup &group = preset_groups_[selected_group_];
+  if (selected_preset_ >= group.preset_count) return group.first_preset;
+  return group.first_preset + selected_preset_;
+}
+
+void TbdUiMode::select_global_preset(uint8_t preset_index) {
+  if (preset_count_ == 0) {
+    selected_group_ = 0;
+    selected_preset_ = 0;
+    return;
+  }
+  if (preset_index >= preset_count_) {
+    preset_index = preset_count_ - 1;
+  }
+
+  selected_group_ = presets_[preset_index].group;
+  if (selected_group_ >= preset_group_count_) {
+    selected_group_ = 0;
+    selected_preset_ = 0;
+    return;
+  }
+
+  const PresetGroup &group = preset_groups_[selected_group_];
+  selected_preset_ = preset_index - group.first_preset;
+  if (selected_preset_ >= group.preset_count) {
+    selected_preset_ = 0;
+  }
+}
+
+TbdUiMode::PresetEntry *TbdUiMode::selected_preset_entry() {
+  if (selected_group_ >= preset_group_count_) return nullptr;
+  const PresetGroup &group = preset_groups_[selected_group_];
+  if (selected_preset_ >= group.preset_count) return nullptr;
+  return &presets_[group.first_preset + selected_preset_];
+}
+
+const TbdUiMode::PresetEntry *TbdUiMode::selected_preset_entry() const {
+  if (selected_group_ >= preset_group_count_) return nullptr;
+  const PresetGroup &group = preset_groups_[selected_group_];
+  if (selected_preset_ >= group.preset_count) return nullptr;
+  return &presets_[group.first_preset + selected_preset_];
+}
+
+void TbdUiMode::sync_preset_selection_to_sound() {
+  TbdP4SoundData *sound = active_sound();
+  selected_group_ = 0;
+  selected_preset_ = 0;
+  if (sound != nullptr && sound->preset_id[0] != '\0') {
+    for (uint8_t i = 0; i < preset_count_; i++) {
+      if (strncmp(presets_[i].id, sound->preset_id,
+                  sizeof(presets_[i].id)) == 0) {
+        selected_group_ = presets_[i].group;
+        selected_preset_ = i - preset_groups_[selected_group_].first_preset;
+        break;
+      }
+    }
+  }
+  enc[0].setValue(selected_group_);
+  enc[1].setValue(selected_global_preset_index());
+  enc[2].setValue(0);
+  enc[3].setValue(0);
+}
+
+bool TbdUiMode::ensure_preset_cache() {
+  TbdP4SoundData *sound = active_sound();
+  if (sound == nullptr) return false;
+  if (preset_cache_p4_track_ == sound->p4_track_index) {
+    if (preset_cache_valid_) return true;
+    if (preset_cache_failed_) return false;
+  }
+
+  clear_preset_cache();
+  preset_cache_p4_track_ = sound->p4_track_index;
+  preset_list_json[0] = '\0';
+
+  tbd_p4_command.init();
+  const bool got_list = tbd_p4_command.get_macro_sound_preset_list(
+      sound->p4_track_index, preset_list_json, sizeof(preset_list_json),
+      kPresetCommandTimeoutMs);
+  if (!got_list || !parse_preset_list_json(preset_list_json)) {
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_ui preset list failed p4=");
+    DEBUG_PRINTLN((unsigned)sound->p4_track_index);
+#endif
+    preset_cache_failed_ = true;
+    return false;
+  }
+
+  preset_cache_valid_ = true;
+  preset_cache_failed_ = false;
+  sync_preset_selection_to_sound();
+  return true;
+}
+
+void TbdUiMode::render_preset_window(uint8_t y_top, bool active,
+                                     uint8_t row_height) {
+  oled_display.fillRect(0, y_top, 128, row_height, BLACK);
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont();
+  oled_display.setTextColor(WHITE, BLACK);
+
+  TbdP4SoundData *sound = active_sound();
+  char line[24];
+  oled_display.setCursor(2, y_top + 2);
+  if (sound == nullptr) {
+    oled_display.print("PRESET");
+    oled_display.setCursor(2, y_top + 16);
+    oled_display.print("NO TRACK");
+    oled_display.setFont(oldfont);
+    return;
+  }
+
+  bool ready = ensure_preset_cache();
+  snprintf(line, sizeof(line), "PRESET T%02u", (unsigned)sound->p4_track_index);
+  oled_display.print(line);
+
+  const PresetEntry *entry = selected_preset_entry();
+  const bool current =
+      entry != nullptr &&
+      strncmp(entry->id, sound->preset_id, sizeof(entry->id)) == 0;
+  oled_display.setCursor(98, y_top + 2);
+  oled_display.print(preset_apply_in_progress_ ? "..." :
+                     (preset_apply_failed_ ? "ERR" :
+                      (current ? "CUR" : "NEW")));
+
+  if (!ready || entry == nullptr) {
+    oled_display.setCursor(2, y_top + 16);
+    oled_display.print("NO PRESETS");
+    oled_display.setFont(oldfont);
+    return;
+  }
+
+  char group_text[16];
+  char preset_text[16];
+  copy_text(preset_groups_[selected_group_].name, group_text,
+            sizeof(group_text), 13);
+  copy_text(entry->name, preset_text, sizeof(preset_text), 13);
+  oled_display.setCursor(2, y_top + 12);
+  oled_display.print(group_text);
+  oled_display.setCursor(2, y_top + 22);
+  oled_display.print(preset_text);
+
+  if (active) {
+    oled_display.drawFastVLine(123, y_top + 8, row_height - 10, WHITE);
+  }
+  oled_display.setFont(oldfont);
 }
 
 bool TbdUiMode::param_slot(uint8_t window, uint8_t encoder_idx,
@@ -413,9 +702,12 @@ bool TbdUiMode::param_slot(uint8_t window, uint8_t encoder_idx,
   if (encoder_idx >= 4) return false;
 
   TbdP4SoundData *sound = active_sound();
-  if (sound == nullptr) return false;
+  if (sound != nullptr) {
+    if (window == 0) return false;
+    window--;
+  }
 
-  const uint8_t audio_pages = clamped_audio_pages(*sound);
+  const uint8_t audio_pages = sound == nullptr ? 0 : clamped_audio_pages(*sound);
   if (window < audio_pages) {
     uint8_t param_idx = window * 4 + encoder_idx;
     if (param_idx >= TBD_P4_AUDIO_PARAM_COUNT) return false;
@@ -426,12 +718,21 @@ bool TbdUiMode::param_slot(uint8_t window, uint8_t encoder_idx,
   }
 
   window -= audio_pages;
-  if (window < clamped_mixer_pages(*sound)) {
+  const uint8_t mixer_pages = sound == nullptr ? 0 : clamped_mixer_pages(*sound);
+  if (window < mixer_pages) {
     uint8_t mixer_idx = window * 4 + encoder_idx;
     if (mixer_idx >= TBD_P4_MIXER_PARAM_COUNT) return false;
     slot.sound = sound;
     slot.lock_param = TBD_P4_LOCK_MIXER_PARAM_BASE + mixer_idx;
     slot.param = mutable_param_for_lock(*sound, slot.lock_param);
+    return is_tbd_param_visible(slot.param);
+  }
+
+  window -= mixer_pages;
+  if (window < tbd_p4_driver_param_page_count()) {
+    uint8_t driver_idx = window * 4 + encoder_idx;
+    slot.driver_param = driver_idx;
+    slot.param = tbd_p4_driver_param(driver_idx);
     return is_tbd_param_visible(slot.param);
   }
 
@@ -446,6 +747,9 @@ bool TbdUiMode::active_step_lock(uint8_t window, uint8_t encoder_idx,
 
   ParamSlot slot;
   if (!param_slot(window, encoder_idx, slot) || slot.param == nullptr) {
+    return false;
+  }
+  if (slot.driver_param != 255) {
     return false;
   }
 
@@ -535,13 +839,25 @@ void TbdUiMode::show_strip() {
   GUI.setOverlay(&tbd_param_strip_page);
 }
 
+bool TbdUiMode::is_collapsed() const {
+  return latched_ && GUI.overlay == &tbd_param_strip_page;
+}
+
 void TbdUiMode::handle_ui_slot_button(bool pressed) {
   if (pressed) {
     ui_button_press_ms_ = read_clock_ms();
     ui_button_pressed_ = true;
     ui_button_hold_handled_ = false;
   } else {
+    const bool short_press =
+        ui_button_pressed_ && !ui_button_hold_handled_ &&
+        clock_diff(ui_button_press_ms_, read_clock_ms()) <=
+            kParamOverlayHoldMs;
     ui_button_pressed_ = false;
+    if (short_press && GUI.overlay == &tbd_param_overlay_page &&
+        is_preset_page(sub_page_)) {
+      apply_selected_preset();
+    }
     ui_button_hold_handled_ = false;
   }
 }
@@ -572,13 +888,12 @@ void TbdUiMode::move_sub_page(int8_t delta) {
   }
 }
 
-void TbdUiMode::flip_sub_page_half() {
+void TbdUiMode::select_sub_page_half(bool lower_half) {
   uint8_t count = window_count();
   if (count <= 1) return;
-  uint8_t next = sub_page_ ^ 1;
-  if ((sub_page_ & 0xFE) != (next & 0xFE) || next >= count) {
-    return;
-  }
+  uint8_t next = (uint8_t)((sub_page_ & 0xFE) | (lower_half ? 1 : 0));
+  if (next >= count) return;
+  if (next == sub_page_) return;
   sub_page_ = next;
   resync_from_sound();
 }
@@ -601,6 +916,9 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
   }
   if (event->mask != EVENT_BUTTON_PRESSED &&
       event->mask != EVENT_BUTTON_RELEASED) {
+    return false;
+  }
+  if (is_collapsed()) {
     return false;
   }
 
@@ -636,7 +954,7 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
       if (GUI.overlay != &tbd_param_overlay_page) {
         show_fullscreen();
       }
-      flip_sub_page_half();
+      select_sub_page_half(event->source == ButtonsClass::FUNC_BUTTON8);
       log_arrow_press(event->source, before_sub_page, sub_page_, count, sound);
     }
     return true;
@@ -667,14 +985,18 @@ bool TbdUiMode::encoder_passthrough_page() const {
 }
 
 void TbdUiMode::resync_from_sound() {
-  TbdP4SoundData *sound = active_sound();
-  for (uint8_t i = 0; i < 4; i++) {
-    ParamSlot slot;
-    if (sound != nullptr && param_slot(sub_page_, i, slot) &&
-        is_tbd_param_visible(slot.param)) {
-      enc[i].setValue(normalized_value(*slot.param));
-    } else {
-      enc[i].setValue(0);
+  if (is_preset_page(sub_page_)) {
+    ensure_preset_cache();
+    sync_preset_selection_to_sound();
+  } else {
+    for (uint8_t i = 0; i < 4; i++) {
+      ParamSlot slot;
+      if (param_slot(sub_page_, i, slot) &&
+          is_tbd_param_visible(slot.param)) {
+        enc[i].setValue(normalized_value(*slot.param));
+      } else {
+        enc[i].setValue(0);
+      }
     }
   }
   bound_device_idx_ = device_idx_;
@@ -682,10 +1004,106 @@ void TbdUiMode::resync_from_sound() {
   bound_sub_page_ = sub_page_;
 }
 
+void TbdUiMode::poll_preset_encoders(encoder_t *snapshot,
+                                     uint16_t now) {
+  if (!ensure_preset_cache() || preset_group_count_ == 0) {
+    return;
+  }
+
+  enc[0].update(&snapshot[0]);
+  if (enc[0].cur >= preset_group_count_) {
+    enc[0].setValue(preset_group_count_ - 1);
+  }
+  uint8_t next_group = (uint8_t)enc[0].cur;
+  if (next_group != selected_group_) {
+    selected_group_ = next_group;
+    selected_preset_ = 0;
+    enc[1].setValue(preset_groups_[selected_group_].first_preset);
+    enc_used_clock_[0] = now ? now : 1;
+    preset_apply_failed_ = false;
+  }
+  enc[0].old = enc[0].cur;
+
+  if (preset_count_ == 0) {
+    enc[1].setValue(0);
+    return;
+  }
+
+  enc[1].update(&snapshot[1]);
+  if (enc[1].cur >= preset_count_) {
+    enc[1].setValue(preset_count_ - 1);
+  }
+  uint8_t next_preset = (uint8_t)enc[1].cur;
+  if (next_preset != selected_global_preset_index()) {
+    select_global_preset(next_preset);
+    enc[0].setValue(selected_group_);
+    enc_used_clock_[1] = now ? now : 1;
+    preset_apply_failed_ = false;
+  }
+  enc[1].old = enc[1].cur;
+}
+
+bool TbdUiMode::apply_selected_preset() {
+  if (preset_apply_in_progress_) {
+    return false;
+  }
+  TbdP4SoundData *sound = active_sound();
+  if (sound == nullptr || !ensure_preset_cache()) {
+    return false;
+  }
+  const PresetEntry *entry = selected_preset_entry();
+  if (entry == nullptr || entry->id[0] == '\0') {
+    return false;
+  }
+
+  preset_apply_in_progress_ = true;
+  preset_apply_failed_ = false;
+
+  TbdP4SoundData next = *sound;
+  next.audio_params.clear();
+  next.preset_name[0] = '\0';
+  next.macro_id[0] = '\0';
+  next.machine_id[0] = '\0';
+  next.rom_bank = 0xFF;
+  next.sample_slice = -1;
+  copy_fixed_text(next.preset_id, sizeof(next.preset_id), entry->id);
+
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_ui apply preset p4=");
+  DEBUG_PRINT((unsigned)next.p4_track_index);
+  DEBUG_PRINT(" id=");
+  DEBUG_PRINTLN(next.preset_id);
+#endif
+
+  const bool hydrated = TBD.hydrate_p4_sound(next);
+  const bool loaded =
+      hydrated &&
+      tbd_p4_command.load_track_sound_preset(next.p4_track_index,
+                                             next.preset_id,
+                                             next.rom_bank,
+                                             next.sample_slice,
+                                             kPresetCommandTimeoutMs);
+  if (loaded) {
+    *sound = next;
+    tbd_p4_realtime.set_active_track(sound->p4_track_index);
+    tbd_p4_send_sound_state(*sound);
+    resync_from_sound();
+  } else {
+    preset_apply_failed_ = true;
+  }
+
+  preset_apply_in_progress_ = false;
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_ui apply preset ok=");
+  DEBUG_PRINTLN(loaded ? 1 : 0);
+#endif
+  return loaded;
+}
+
 void TbdUiMode::send_param(uint8_t encoder_idx) {
   ParamSlot slot;
   if (!param_slot(sub_page_, encoder_idx, slot) ||
-      !slot.sound || !slot.param || !slot.param->is_sendable()) {
+      !slot.param || !slot.param->is_sendable()) {
     return;
   }
 
@@ -700,6 +1118,13 @@ void TbdUiMode::send_param(uint8_t encoder_idx) {
 
   if (TBD.uart == nullptr) return;
 
+  if (slot.driver_param != 255) {
+    tbd_p4_send_driver_param(slot.driver_param);
+    return;
+  }
+
+  if (!slot.sound) return;
+
   tbd_p4_realtime.set_active_track(slot.sound->p4_track_index);
   if (slot.param->ctrl_type == TBD_P4_CTRLTYPE_CC) {
     tbd_p4_send_param_value(TBD.uart, slot.sound->midi_channel, *slot.param,
@@ -712,6 +1137,9 @@ void TbdUiMode::send_param(uint8_t encoder_idx) {
 
 bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
   if (slot.param == nullptr || !slot.param->is_sendable()) {
+    return false;
+  }
+  if (slot.driver_param != 255) {
     return false;
   }
 
@@ -802,6 +1230,11 @@ void TbdUiMode::poll_encoders() {
   }
 
   uint16_t now = read_clock_ms();
+  if (is_preset_page(sub_page_)) {
+    poll_preset_encoders(snapshot, now);
+    return;
+  }
+
   for (uint8_t i = 0; i < 4; i++) {
     ParamSlot slot;
     if (!param_slot(sub_page_, i, slot)) continue;
@@ -834,22 +1267,21 @@ void TbdParamOverlayPage::display() {
   uint8_t second = first + 1;
   uint8_t count = tbd_ui_mode.window_count();
 
-  draw_overlay_header();
-  render_window(8, first, sub_page == first, 28);
+  render_window(0, first, sub_page == first, 32);
   if (second < count) {
-    render_window(36, second, sub_page == second, 28);
+    render_window(32, second, sub_page == second, 32);
   } else {
-    oled_display.fillRect(0, 36, 128, 28, BLACK);
+    oled_display.fillRect(0, 32, 128, 32, BLACK);
   }
 
-  uint8_t box_y = (sub_page == first) ? 8 : 36;
-  oled_display.drawRect(0, box_y, 128, 28, WHITE);
+  uint8_t box_y = (sub_page == first) ? 0 : 32;
+  oled_display.drawRect(0, box_y, 128, 32, WHITE);
 
   if (first > 0) {
-    oled_display.fillTriangle(6, 32, 6, 38, 2, 35, WHITE);
+    oled_display.fillTriangle(6, 28, 6, 34, 2, 31, WHITE);
   }
   if (second + 1 < count) {
-    oled_display.fillTriangle(121, 32, 121, 38, 125, 35, WHITE);
+    oled_display.fillTriangle(121, 28, 121, 34, 125, 31, WHITE);
   }
 }
 

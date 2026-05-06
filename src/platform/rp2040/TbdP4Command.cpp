@@ -28,6 +28,7 @@ constexpr uint8_t kRequestGetActivePlugin = 0x02;
 constexpr uint8_t kRequestSetActivePlugin = 0x04;
 constexpr uint8_t kRequestReboot = 0x13;
 constexpr uint8_t kRequestSetActiveSampleKit = 0x18;
+constexpr uint8_t kRequestGetMacroSoundPresetList = 0xA0;
 constexpr uint8_t kRequestGetMacroSoundPreset = 0xA1;
 constexpr uint8_t kRequestGetMacroDefinition = 0xA2;
 constexpr uint8_t kRequestActivateTrackMachine = 0xA3;
@@ -335,6 +336,22 @@ bool TbdP4CommandTransport::get_track_default_presets(
     return false;
   }
   return receive_response(kRequestGetTrackDefaultPresets, response,
+                          response_len, timeout_ms);
+}
+
+bool TbdP4CommandTransport::get_macro_sound_preset_list(
+    uint8_t track_index, char *response, size_t response_len,
+    uint32_t timeout_ms) {
+  if (response == nullptr || response_len == 0 || track_index >= 16) {
+    return false;
+  }
+
+  reset_frame(kRequestGetMacroSoundPresetList);
+  out_buf[3] = track_index;
+  if (!send_frame(kRequestGetMacroSoundPresetList, timeout_ms)) {
+    return false;
+  }
+  return receive_response(kRequestGetMacroSoundPresetList, response,
                           response_len, timeout_ms);
 }
 

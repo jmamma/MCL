@@ -331,14 +331,12 @@ void GUIHardware::init() {
     tbd_ui.InitLeds();
     tbd_ui.strip.show();
     tbd_ui.strip.setBrightness(5);
-    // Read initial button state to prevent spurious release events on boot
-    if (tbd_ui.UpdateUIInputs()) {
-      ui_data_t ui_data_current = tbd_ui.CopyUiData();
-      Buttons.clear();
-      Buttons.pollTBD(ui_data_current);
-      Encoders.pollTBD(ui_data_current);
-      last_ui_systicks = ui_data_current.systicks;
-    }
+    // InitHardware primes a stable copy before starting the async read loop.
+    ui_data_t ui_data_current = tbd_ui.CopyUiData();
+    Buttons.clear();
+    Buttons.pollTBD(ui_data_current);
+    Encoders.pollTBD(ui_data_current);
+    last_ui_systicks = ui_data_current.systicks;
 #endif
 }
 

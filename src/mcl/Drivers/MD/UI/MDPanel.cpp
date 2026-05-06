@@ -96,6 +96,11 @@ bool MDPanel::handle_event(gui_event_t *event) {
     return false;
   }
 
+  if (md_.ui.sps_mode.is_collapsed()) {
+    if (md_arrow_trace) DEBUG_PRINTLN("  -> reject (sps collapsed)");
+    return false;
+  }
+
   const bool is_press = (event->mask == EVENT_BUTTON_PRESSED);
   const bool is_release = (event->mask == EVENT_BUTTON_RELEASED);
 

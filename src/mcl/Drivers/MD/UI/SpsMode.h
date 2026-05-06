@@ -29,6 +29,7 @@
 class SpsMode {
 public:
   bool is_active() const { return latched_; }
+  bool is_collapsed() const;
   uint8_t sub_page() const { return sub_page_; }
   void enable() { set_latched(true); }
   void disable() { set_latched(false); }

@@ -39,6 +39,41 @@ static bool is_tbd_menu_page(PageIndex pg) {
          pg == MIDIGENERIC_MENU_PAGE;
 }
 
+static bool driver_ui_blocked_page(PageIndex pg) {
+  switch (pg) {
+  case MIXER_PAGE:
+  case PAGE_SELECT_PAGE:
+  case QUESTIONDIALOG_PAGE:
+  case ARP_PAGE:
+    return true;
+#ifdef WAV_DESIGNER
+  case WD_MIXER_PAGE:
+  case WD_PAGE_0:
+  case WD_PAGE_1:
+  case WD_PAGE_2:
+    return true;
+#endif
+  default:
+    return false;
+  }
+}
+
+static MidiDevice *grid_trig_preview_device() {
+  MidiDevice *primary = device_manager.primary_device();
+  if (primary != nullptr &&
+      primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
+    return primary;
+  }
+
+  MidiDevice *secondary = device_manager.secondary_device();
+  if (secondary != nullptr && secondary != primary &&
+      secondary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
+    return secondary;
+  }
+
+  return nullptr;
+}
+
 bool TbdPanel::top_left_reserved_page() const {
   PageIndex pg = mcl.currentPage();
   return is_tbd_menu_page(pg) || pg == PAGE_SELECT_PAGE ||
@@ -52,9 +87,10 @@ bool TbdPanel::handle_primary_ui_button(gui_event_t *event) {
                                              event, false);
 }
 
-bool TbdPanel::handle_secondary_ui_button(gui_event_t *event) {
+bool TbdPanel::handle_secondary_ui_button(gui_event_t *event,
+                                          bool allow_toggle) {
   return device_manager.handle_ui_slot_button(DeviceManager::UI_SLOT_SECONDARY,
-                                             event);
+                                             event, allow_toggle);
 }
 
 void TbdPanel::loop() {
@@ -78,18 +114,16 @@ bool TbdPanel::open_bank_popup() {
 bool TbdPanel::handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx) {
   if (event->mask != EVENT_BUTTON_PRESSED) return false;
   if (trig_idx >= 16) return false;
-  if (device_manager.is_ui_active()) return false;
   if (mcl.currentPage() != GRID_PAGE) return false;
   if (grid_page.bank_popup || grid_io_overlay.is_active()) return false;
 
-  MidiDevice *primary = device_manager.primary_device();
-  if (primary == nullptr ||
-      !primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
+  MidiDevice *device = grid_trig_preview_device();
+  if (device == nullptr) {
     return false;
   }
 
-  primary->triggerTrack(trig_idx, 127);
-  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+  device->triggerTrack(trig_idx, 127);
+  if (device == &TBD) {
     if (trig_idx < mcl_seq.num_tbd_tracks) {
       mixer_page.disp_levels[trig_idx] = 127;
       GUI_hardware.led.set_flashled(trig_idx);
@@ -116,10 +150,17 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   const bool is_release = (event->mask == EVENT_BUTTON_RELEASED);
 
   const uint8_t orig_src = event->source;
+  const bool is_trig_button =
+      orig_src >= ButtonsClass::TRIG_BUTTON1 &&
+      orig_src < ButtonsClass::TRIG_BUTTON1 + 16;
   const PageIndex pg = mcl.currentPage();
   const bool is_menu_page = is_tbd_menu_page(pg);
   const bool grid_page_active =
       pg == GRID_PAGE && GUI.currentPage() == mcl.getPage(GRID_PAGE);
+  const bool driver_ui_blocked = driver_ui_blocked_page(pg);
+  bool ui_active = device_manager.is_ui_active();
+  bool ui_collapsed = device_manager.is_ui_collapsed();
+  bool ui_expanded = ui_active && !ui_collapsed;
 
   const bool arrow_trace = (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
                             orig_src <= ButtonsClass::FUNC_BUTTON9);
@@ -132,7 +173,16 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     DEBUG_PRINT(" tbd_ui=");
     DEBUG_PRINT((unsigned)TBD.is_ui_active());
     DEBUG_PRINT(" dm_ui=");
-    DEBUG_PRINTLN((unsigned)device_manager.is_ui_active());
+    DEBUG_PRINT((unsigned)ui_active);
+    DEBUG_PRINT(" collapsed=");
+    DEBUG_PRINTLN((unsigned)ui_collapsed);
+  }
+
+  if (driver_ui_blocked && ui_active) {
+    device_manager.exit_ui();
+    ui_active = false;
+    ui_collapsed = false;
+    ui_expanded = false;
   }
 
   if (suppress_sps_key_release_ &&
@@ -146,6 +196,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   // own opens tempo, so this chord must be checked before the tempo overlay
   // gets first refusal on the TBDR press.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
+      !driver_ui_blocked &&
       BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5) &&
       (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ||
        mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD)) {
@@ -159,7 +210,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   const bool can_open_grid_io_overlay =
-      !device_manager.is_ui_active() && !is_menu_page &&
+      !ui_expanded && !is_menu_page &&
       grid_page_active && !grid_page.show_slot_menu &&
       !grid_io_overlay.is_active();
   auto open_grid_io_overlay = [](GridIOOverlay::Mode mode,
@@ -185,14 +236,22 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (device_manager.is_ui_active()) {
+  if (ui_active) {
     if (orig_src == ButtonsClass::BUTTON2) {
+      if (ui_collapsed) {
+        device_manager.notify_active_ui_button(event);
+        return false;
+      }
       handle_primary_ui_button(event);
-      return true;
+      return !ui_collapsed;
     }
     if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
+      if (ui_collapsed) {
+        device_manager.notify_active_ui_button(event);
+        return false;
+      }
       handle_secondary_ui_button(event);
-      return true;
+      return !ui_collapsed;
     }
   }
 
@@ -222,7 +281,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return false;
   }
 
-  if (!device_manager.is_ui_active() && !is_menu_page &&
+  if (!ui_expanded && !is_menu_page &&
       orig_src == ButtonsClass::FUNC_BUTTON5 && is_press &&
       grid_page_active && !grid_page.show_slot_menu &&
       !grid_io_overlay.is_active()) {
@@ -235,7 +294,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (TBD.is_ui_active()) {
+  if (TBD.is_ui_active() && !TBD.is_ui_collapsed()) {
     if (arrow_trace) DEBUG_PRINTLN("  -> TBD.handle_ui_event");
     if (TBD.handle_ui_event(event)) {
       if (arrow_trace) DEBUG_PRINTLN("  TBD.handle_ui_event consumed");
@@ -244,27 +303,30 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (arrow_trace) DEBUG_PRINTLN("  TBD.handle_ui_event did NOT consume");
   }
 
-  if (device_manager.is_ui_active() &&
+  if (ui_expanded &&
       device_manager.handle_ui_event(event)) {
     if (arrow_trace) DEBUG_PRINTLN("  device_manager.handle_ui_event consumed");
     return true;
   }
 
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
-      !is_menu_page && handle_secondary_ui_button(event)) {
+      !is_menu_page && !driver_ui_blocked &&
+      handle_secondary_ui_button(event)) {
     return true;
   }
 
-  if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
-      event->source < ButtonsClass::TRIG_BUTTON1 + 16 &&
+  if (is_trig_button &&
       handle_grid_trig_preview(event,
                                event->source - ButtonsClass::TRIG_BUTTON1)) {
     return true;
   }
 
-  if (device_manager.handle_ui_event(event)) return true;
+  if (!ui_collapsed && !driver_ui_blocked &&
+      device_manager.handle_ui_event(event)) {
+    return true;
+  }
 
-  if (!device_manager.is_ui_active() && pg == SEQ_PTC_PAGE &&
+  if (!ui_expanded && pg == SEQ_PTC_PAGE &&
       event->source >= ButtonsClass::TRIG_BUTTON1 &&
       event->source < ButtonsClass::TRIG_BUTTON1 + 16) {
     return seq_ptc_page.handle_tbd_keyboard_event(
@@ -275,7 +337,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   //   Y -> MD FUNC key path
   //   B -> legacy BUTTON3 path used by grid/seq menus
   // SPS-latched mode keeps the driver-specific Y=NO, B=FUNC mapping.
-  if (!device_manager.is_ui_active()) {
+  if (!ui_expanded) {
     if (orig_src == ButtonsClass::BUTTON3) {
       key_interface.key_event(MDX_KEY_FUNC, is_release);
       return true;

@@ -35,6 +35,9 @@ public:
   bool get_track_default_presets(char *response, size_t response_len,
                                  const char *template_name = nullptr,
                                  uint32_t timeout_ms = 30000);
+  bool get_macro_sound_preset_list(uint8_t track_index, char *response,
+                                   size_t response_len,
+                                   uint32_t timeout_ms = 30000);
   bool get_macro_sound_preset(const char *preset_id, char *response,
                               size_t response_len,
                               uint32_t timeout_ms = 30000);

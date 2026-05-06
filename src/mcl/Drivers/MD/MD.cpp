@@ -305,6 +305,10 @@ bool MDClass::is_ui_active() {
   return ui.is_active();
 }
 
+bool MDClass::is_ui_collapsed() {
+  return ui.is_collapsed();
+}
+
 void MDClass::exit_ui() {
   ui.exit();
 }

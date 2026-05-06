@@ -253,6 +253,19 @@ bool DeviceManager::handle_ui_slot_button(uint8_t slot, gui_event_t *event,
   return true;
 }
 
+bool DeviceManager::notify_active_ui_button(gui_event_t *event) {
+  if (event == nullptr || !EVENT_BUTTON(event) || active_ui_device_ == nullptr) {
+    return false;
+  }
+  const bool pressed = event->mask == EVENT_BUTTON_PRESSED;
+  const bool released = event->mask == EVENT_BUTTON_RELEASED;
+  if (!pressed && !released) return false;
+  if (!active_ui_device_->is_ui_active()) return false;
+
+  notify_ui_slot_button(active_ui_device_, active_ui_slot_, pressed);
+  return true;
+}
+
 bool DeviceManager::is_ui_active() const {
   if (active_ui_device_) return active_ui_device_->is_ui_active();
   MidiDevice *primary = primary_device();
@@ -260,6 +273,15 @@ bool DeviceManager::is_ui_active() const {
   if (secondary == primary) secondary = nullptr;
   return (primary && primary->is_ui_active()) ||
          (secondary && secondary->is_ui_active());
+}
+
+bool DeviceManager::is_ui_collapsed() const {
+  if (active_ui_device_) return active_ui_device_->is_ui_collapsed();
+  MidiDevice *primary = primary_device();
+  MidiDevice *secondary = secondary_device();
+  if (secondary == primary) secondary = nullptr;
+  return (primary && primary->is_ui_collapsed()) ||
+         (secondary && secondary->is_ui_collapsed());
 }
 
 void DeviceManager::exit_ui() {

@@ -5,6 +5,9 @@
 #include "DeviceManager.h"
 #include "GUI_hardware.h"
 #include "../Drivers/MD/MD.h"
+#ifdef PLATFORM_TBD
+#include "../Drivers/TBD/TBD.h"
+#endif
 #include "SeqTrack.h"
 #include "MCLStrings.h"
 #if !defined(__AVR__)
@@ -42,6 +45,12 @@ static void draw_track_type_text_icon(uint8_t x, uint8_t y,
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(x + 12 - (len * 2), y + 14);
   oled_display.print(text);
+}
+
+static void draw_tbd_track_type_icon(uint8_t x, uint8_t y_base) {
+  oled_display.setFont();
+  oled_display.setCursor(x + 3, y_base + 16);
+  oled_display.print("TBD");
 }
 #endif
 
@@ -890,10 +899,11 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
 
   oled_display.fillRect(0, 8 + y_base, 128, 23, BLACK);
 #ifdef PLATFORM_TBD
-  static const char *const labels[5] = {"X", "Y", "PRF", "RTE", "CLK"};
+  static const char *const labels[5] = {"", "", "PRF", "RTE", "CLK"};
 
   for (uint8_t i = 0; i < 5; i++) {
     bool select = IS_BIT_SET(track_type_select, i);
+    MidiDevice *device = nullptr;
     MCLGIF *gif = nullptr;
     uint8_t *icon = nullptr;
     uint8_t offset = 3;
@@ -901,12 +911,18 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
 
     switch (i) {
     case 0:
-      gif = devs[0]->gif();
-      icon = devs[0]->gif_data();
+      device = devs[0];
+      if (device != &null_midi_device) {
+        gif = device->gif();
+        icon = device->gif_data();
+      }
       break;
     case 1:
-      gif = devs[1]->gif();
-      icon = devs[1]->gif_data();
+      device = devs[1];
+      if (device != &null_midi_device) {
+        gif = device->gif();
+        icon = device->gif_data();
+      }
       offset = 4;
       break;
     case 2:
@@ -935,6 +951,8 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
                                 gif->w, gif->h, WHITE);
       }
       if (note_interface.is_note_on(i)) { gif->reset(); }
+    } else if (i < 2) {
+      if (device == &TBD) { draw_tbd_track_type_icon(x, y_base); }
     } else {
       draw_track_type_text_icon(x, 10 + y_base, labels[i]);
     }

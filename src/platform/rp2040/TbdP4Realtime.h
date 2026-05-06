@@ -10,6 +10,7 @@
 struct TbdP4RealtimeStats {
   uint32_t tx_frames;
   uint32_t rx_frames;
+  uint32_t queued_tx_midi_bytes;
   uint32_t tx_midi_bytes;
   uint32_t rx_midi_bytes;
   uint32_t tx_note_on_messages;
@@ -32,6 +33,10 @@ struct TbdP4RealtimeStats {
   uint32_t dma_busy_count;
   uint32_t dma_timeout_count;
   uint32_t dma_unavailable_count;
+  uint32_t poll_count;
+  uint32_t prepare_count;
+  uint32_t start_attempt_count;
+  uint32_t start_no_request_count;
   uint32_t last_spi_send_ms;
   uint32_t last_response_ms;
   uint8_t last_response_sequence;
@@ -44,6 +49,8 @@ struct TbdP4RealtimeStats {
   bool spi_active;
   bool dma_ready;
   bool dma_reset_pending;
+  bool request_prepared;
+  bool can_prepare_request;
 };
 
 class TbdP4RealtimeTransport {
@@ -104,14 +111,16 @@ private:
   void prepare_request();
   bool start_transaction();
   void process_response();
-  bool dma_ready() const { return dma_rx_channel_ >= 0 && dma_tx_channel_ >= 0; }
+  bool dma_ready() const { return spi_ready_; }
+  bool enter_poll();
+  void leave_poll();
 
   SpiTransaction spi_trans_[2];
-  int dma_rx_channel_ = -1;
-  int dma_tx_channel_ = -1;
+  bool spi_ready_ = false;
   uint8_t sending_trans_ = 0;
   uint8_t receiving_trans_ = 0;
   bool initialized_ = false;
+  volatile bool poll_active_ = false;
   bool spi_active_ = false;
   bool dma_reset_pending_ = false;
   bool request_prepared_ = false;
@@ -137,6 +146,7 @@ private:
   bool p4_alive_ = false;
   uint32_t receive_count_ = 0;
   uint32_t tx_frame_count_ = 0;
+  uint32_t queued_tx_midi_bytes_ = 0;
   uint32_t tx_midi_bytes_ = 0;
   uint32_t rx_midi_bytes_ = 0;
   uint32_t tx_note_on_messages_ = 0;
@@ -157,6 +167,10 @@ private:
   uint32_t dma_busy_count_ = 0;
   uint32_t dma_timeout_count_ = 0;
   uint32_t dma_unavailable_count_ = 0;
+  uint32_t poll_count_ = 0;
+  uint32_t prepare_count_ = 0;
+  uint32_t start_attempt_count_ = 0;
+  uint32_t start_no_request_count_ = 0;
   uint32_t dropped_tx_bytes_ = 0;
   uint32_t dropped_rx_bytes_ = 0;
   uint32_t led_color_ = 0;

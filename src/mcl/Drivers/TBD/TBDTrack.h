@@ -62,7 +62,8 @@ public:
   size_t _sizeof() const { return sizeof(TBDTrack) - sizeof(void *); }
 
 private:
-  void apply_preset(uint8_t fallback_tracknumber);
+  void apply_preset(uint8_t fallback_tracknumber, const char *source,
+                    uint8_t slotnumber);
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
 };
 
@@ -98,7 +99,8 @@ public:
   size_t _sizeof() const { return sizeof(TBDMidiTrack) - sizeof(void *); }
 
 private:
-  void apply_preset(uint8_t fallback_tracknumber);
+  void apply_preset(uint8_t fallback_tracknumber, const char *source,
+                    uint8_t slotnumber);
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
 };
 

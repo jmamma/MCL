@@ -195,6 +195,7 @@ void MidiUartP4Class::service_background() {
   if (tempo > 0.0f) {
     tbd_p4_realtime.set_tempo_centi((uint32_t)(tempo * 100.0f));
   }
+  tbd_p4_realtime.poll();
   tbd_p4_realtime.recover_blocking();
 }
 #endif

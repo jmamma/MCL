@@ -79,6 +79,10 @@ void SpsMode::set_latched(bool v) {
   }
 }
 
+bool SpsMode::is_collapsed() const {
+  return latched_ && GUI.overlay == &sps_strip_page;
+}
+
 bool SpsMode::active_step_lock(uint8_t param, uint8_t *value) const {
   if (mcl.currentPage() != SEQ_STEP_PAGE) return false;
   if (last_md_track >= NUM_MD_TRACKS) return false;
@@ -264,8 +268,9 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
     if (sps_key_held) sps_key_consumed_ = true;
     // sub_page_ is the 4-param column id (0..7). The 8-param "page" is
     // sub_page_ >> 1, the half within the page is sub_page_ & 1.
-    //   UP/DOWN  → flip half (toggle bit 0).
-    //   LEFT/RIGHT → cycle page by ±2 columns, with wrap.
+    //   UP    → upper half of the current page.
+    //   DOWN  → lower half of the current page, if it exists.
+    //   LEFT/RIGHT → step pages by ±2 columns, clamped.
     // Stock MD firmware exposes 24 params (3 pages = 6 columns); SPS
     // firmware exposes 32 (4 pages = 8 columns). max_columns clips the
     // wrap range so we don't scroll into blank pages on a stock MD.
@@ -274,10 +279,13 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
 
     switch (event->source) {
       case ButtonsClass::FUNC_BUTTON6: // UP
-      case ButtonsClass::FUNC_BUTTON8: // DOWN
-        sub_page_ ^= 1;
-        if (sub_page_ >= max_columns) sub_page_ = max_columns - 1;
+        sub_page_ &= 0xFE;
         break;
+      case ButtonsClass::FUNC_BUTTON8: { // DOWN
+        const uint8_t next = sub_page_ | 1;
+        if (next < max_columns) sub_page_ = next;
+        break;
+      }
       case ButtonsClass::FUNC_BUTTON7: // LEFT
       case ButtonsClass::FUNC_BUTTON9: { // RIGHT
         const int8_t delta = (event->source == ButtonsClass::FUNC_BUTTON7) ? -2 : +2;
@@ -449,5 +457,6 @@ bool SpsMode::active_step_lock(uint8_t, uint8_t *) const { return false; }
 void SpsMode::send_param(uint8_t) {}
 bool SpsMode::encoder_passthrough_page() const { return true; }
 void SpsMode::set_latched(bool) {}
+bool SpsMode::is_collapsed() const { return false; }
 
 #endif // PLATFORM_TBD

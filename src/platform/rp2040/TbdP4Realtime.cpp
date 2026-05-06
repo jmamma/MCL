@@ -3,11 +3,12 @@
 #ifdef PLATFORM_TBD
 
 #include "Arduino.h"
+#include "DaDa_SPI.h"
 #include "../../mcl/Midi/midi-common.h"
-#include <hardware/dma.h>
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
 #include <hardware/sync.h>
+#include <new>
 #include <pico/time.h>
 #include <string.h>
 
@@ -24,6 +25,9 @@ static constexpr uint8_t kP4ReadyPin = 22;
 
 volatile uint32_t ws_block_count = 0;
 volatile uint8_t ws_edge_count = 0;
+
+alignas(DaDa_SPI) uint8_t realtime_spi_storage[sizeof(DaDa_SPI)];
+DaDa_SPI *realtime_spi = nullptr;
 
 uint32_t now_ms() {
   return (uint32_t)(time_us_64() / 1000ULL);
@@ -56,6 +60,15 @@ uint32_t take_ws_blocks() {
   return count;
 }
 
+DaDa_SPI &realtime_spi_instance() {
+  if (realtime_spi == nullptr) {
+    realtime_spi = new (realtime_spi_storage)
+        DaDa_SPI(spi1, kSpiCs, kSpiMosi, kSpiMiso, kSpiSclk, kP4ReadyPin,
+                 kSpiSpeed);
+  }
+  return *realtime_spi;
+}
+
 } // namespace
 
 TbdP4RealtimeTransport tbd_p4_realtime;
@@ -72,6 +85,7 @@ void TbdP4RealtimeTransport::init() {
   request_prepared_ = false;
   can_prepare_request_ = true;
   dma_reset_pending_ = false;
+  spi_ready_ = false;
   next_spi_send_ms_ = 0;
   next_request_sequence_ = 100;
   last_seen_response_ = 0;
@@ -80,6 +94,7 @@ void TbdP4RealtimeTransport::init() {
   receive_count_ = 0;
   error_count_ = 0;
   tx_frame_count_ = 0;
+  queued_tx_midi_bytes_ = 0;
   tx_midi_bytes_ = 0;
   rx_midi_bytes_ = 0;
   tx_note_on_messages_ = 0;
@@ -103,6 +118,10 @@ void TbdP4RealtimeTransport::init() {
   dma_busy_count_ = 0;
   dma_timeout_count_ = 0;
   dma_unavailable_count_ = 0;
+  poll_count_ = 0;
+  prepare_count_ = 0;
+  start_attempt_count_ = 0;
+  start_no_request_count_ = 0;
   dropped_tx_bytes_ = 0;
   dropped_rx_bytes_ = 0;
   led_color_ = 0;
@@ -121,33 +140,8 @@ void TbdP4RealtimeTransport::init() {
   gpio_set_irq_enabled_with_callback(kWsPin, GPIO_IRQ_EDGE_FALL, true,
                                      &tbd_ws_sync_cb);
 
-  gpio_init(kP4ReadyPin);
-  gpio_set_dir(kP4ReadyPin, GPIO_IN);
-  gpio_pull_down(kP4ReadyPin);
-
-  spi_init(spi1, kSpiSpeed);
-  gpio_set_function(kSpiMiso, GPIO_FUNC_SPI);
-  gpio_set_function(kSpiMosi, GPIO_FUNC_SPI);
-  gpio_set_function(kSpiSclk, GPIO_FUNC_SPI);
-  gpio_set_function(kSpiCs, GPIO_FUNC_SPI);
-  spi_set_format(spi1, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
-  spi_get_hw(spi1)->dmacr =
-      SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS;
-
-  dma_rx_channel_ = dma_claim_unused_channel(false);
-  dma_tx_channel_ = dma_claim_unused_channel(false);
-  if (!dma_ready()) {
-    if (dma_rx_channel_ >= 0) {
-      dma_channel_unclaim(dma_rx_channel_);
-      dma_rx_channel_ = -1;
-    }
-    if (dma_tx_channel_ >= 0) {
-      dma_channel_unclaim(dma_tx_channel_);
-      dma_tx_channel_ = -1;
-    }
-    error_count_++;
-    dma_unavailable_count_++;
-  }
+  realtime_spi_instance();
+  spi_ready_ = true;
 
   initialized_ = true;
 }
@@ -171,6 +165,7 @@ bool TbdP4RealtimeTransport::enqueue_midi_byte_isr(uint8_t byte) {
   uint16_t next = midi_tx_wr_ + 1;
   if (next == kMidiFifoSize) next = 0;
   midi_tx_wr_ = next;
+  queued_tx_midi_bytes_++;
   return true;
 }
 
@@ -288,7 +283,7 @@ uint8_t TbdP4RealtimeTransport::next_sequence(uint8_t current) const {
 }
 
 bool TbdP4RealtimeTransport::p4_ready() const {
-  return gpio_get(kP4ReadyPin);
+  return realtime_spi_instance().GetP4Ready();
 }
 
 bool TbdP4RealtimeTransport::finish_transaction() {
@@ -301,32 +296,27 @@ bool TbdP4RealtimeTransport::finish_transaction() {
     return false;
   }
 
-  if (dma_channel_is_busy(dma_rx_channel_) ||
-      dma_channel_is_busy(dma_tx_channel_) ||
-      (spi_get_hw(spi1)->sr & SPI_SSPSR_BSY_BITS)) {
+  DaDa_SPI &spi = realtime_spi_instance();
+  if (spi.IsBusy()) {
     uint32_t now = now_ms();
     if (spi_deadline_ms_ != 0 && now > spi_deadline_ms_) {
       error_count_++;
       dma_timeout_count_++;
-      dma_reset_pending_ = true;
+      spi_active_ = false;
+      can_prepare_request_ = true;
+      request_prepared_ = false;
+      last_seen_response_ = 0;
       return false;
     }
     return false;
   }
 
-  dma_hw->intr = (1u << dma_rx_channel_) | (1u << dma_tx_channel_);
   spi_active_ = false;
   process_response();
   return true;
 }
 
 void TbdP4RealtimeTransport::abort_transaction_blocking() {
-  if (!dma_ready()) return;
-
-  dma_channel_abort(dma_rx_channel_);
-  dma_channel_abort(dma_tx_channel_);
-  dma_hw->intr = (1u << dma_rx_channel_) | (1u << dma_tx_channel_);
-
   spi_active_ = false;
   dma_reset_pending_ = false;
   can_prepare_request_ = true;
@@ -336,6 +326,7 @@ void TbdP4RealtimeTransport::abort_transaction_blocking() {
 void TbdP4RealtimeTransport::get_stats(TbdP4RealtimeStats &stats) const {
   stats.tx_frames = tx_frame_count_;
   stats.rx_frames = receive_count_;
+  stats.queued_tx_midi_bytes = queued_tx_midi_bytes_;
   stats.tx_midi_bytes = tx_midi_bytes_;
   stats.rx_midi_bytes = rx_midi_bytes_;
   stats.tx_note_on_messages = tx_note_on_messages_;
@@ -358,6 +349,10 @@ void TbdP4RealtimeTransport::get_stats(TbdP4RealtimeStats &stats) const {
   stats.dma_busy_count = dma_busy_count_;
   stats.dma_timeout_count = dma_timeout_count_;
   stats.dma_unavailable_count = dma_unavailable_count_;
+  stats.poll_count = poll_count_;
+  stats.prepare_count = prepare_count_;
+  stats.start_attempt_count = start_attempt_count_;
+  stats.start_no_request_count = start_no_request_count_;
   stats.last_spi_send_ms = last_spi_send_ms_;
   stats.last_response_ms = last_response_ms_;
   stats.last_response_sequence = last_seen_response_;
@@ -371,6 +366,8 @@ void TbdP4RealtimeTransport::get_stats(TbdP4RealtimeStats &stats) const {
   stats.spi_active = spi_active_;
   stats.dma_ready = dma_ready();
   stats.dma_reset_pending = dma_reset_pending_;
+  stats.request_prepared = request_prepared_;
+  stats.can_prepare_request = can_prepare_request_;
 }
 
 void TbdP4RealtimeTransport::recover_blocking() {
@@ -416,12 +413,17 @@ void TbdP4RealtimeTransport::prepare_request() {
   tx_midi_bytes_ += written;
   can_prepare_request_ = false;
   request_prepared_ = true;
+  prepare_count_++;
 }
 
 bool TbdP4RealtimeTransport::start_transaction() {
-  if (!request_prepared_) return false;
+  start_attempt_count_++;
   if (spi_active_) {
     dma_busy_count_++;
+    return false;
+  }
+  if (!request_prepared_) {
+    start_no_request_count_++;
     return false;
   }
   if (!dma_ready()) {
@@ -434,36 +436,17 @@ bool TbdP4RealtimeTransport::start_transaction() {
     p4_not_ready_count_++;
     return false;
   }
+  DaDa_SPI &spi = realtime_spi_instance();
+  if (spi.IsBusy()) {
+    dma_busy_count_++;
+    return false;
+  }
 
   uint8_t *out = spi_trans_[sending_trans_].out_buf;
   uint8_t *in = spi_trans_[sending_trans_].in_buf;
   in[0] = 0;
   in[1] = 0;
-  while (spi_is_readable(spi1)) {
-    (void)spi_get_hw(spi1)->dr;
-  }
-
-  dma_channel_config tx_config = dma_channel_get_default_config(dma_tx_channel_);
-  channel_config_set_transfer_data_size(&tx_config, DMA_SIZE_8);
-  channel_config_set_read_increment(&tx_config, true);
-  channel_config_set_write_increment(&tx_config, false);
-  channel_config_set_dreq(&tx_config, spi_get_dreq(spi1, true));
-  channel_config_set_chain_to(&tx_config, dma_tx_channel_);
-  channel_config_set_irq_quiet(&tx_config, true);
-  dma_channel_configure(dma_tx_channel_, &tx_config, &spi_get_hw(spi1)->dr,
-                        out, TBD_P4_SPI_FRAME_SIZE, false);
-
-  dma_channel_config rx_config = dma_channel_get_default_config(dma_rx_channel_);
-  channel_config_set_transfer_data_size(&rx_config, DMA_SIZE_8);
-  channel_config_set_read_increment(&rx_config, false);
-  channel_config_set_write_increment(&rx_config, true);
-  channel_config_set_dreq(&rx_config, spi_get_dreq(spi1, false));
-  channel_config_set_chain_to(&rx_config, dma_rx_channel_);
-  channel_config_set_irq_quiet(&rx_config, true);
-  dma_channel_configure(dma_rx_channel_, &rx_config, in, &spi_get_hw(spi1)->dr,
-                        TBD_P4_SPI_FRAME_SIZE, false);
-
-  dma_start_channel_mask((1u << dma_rx_channel_) | (1u << dma_tx_channel_));
+  spi.StartDMA(out, in, TBD_P4_SPI_FRAME_SIZE);
 
   receiving_trans_ = sending_trans_;
   sending_trans_ ^= 1;
@@ -474,6 +457,23 @@ bool TbdP4RealtimeTransport::start_transaction() {
   spi_deadline_ms_ = last_spi_send_ms_ + kSpiDeadlineMs;
   next_request_sequence_ = next_sequence(next_request_sequence_);
   return true;
+}
+
+bool TbdP4RealtimeTransport::enter_poll() {
+  uint32_t saved_irq = save_and_disable_interrupts();
+  if (poll_active_) {
+    restore_interrupts(saved_irq);
+    return false;
+  }
+  poll_active_ = true;
+  restore_interrupts(saved_irq);
+  return true;
+}
+
+void TbdP4RealtimeTransport::leave_poll() {
+  uint32_t saved_irq = save_and_disable_interrupts();
+  poll_active_ = false;
+  restore_interrupts(saved_irq);
 }
 
 void TbdP4RealtimeTransport::process_response() {
@@ -547,6 +547,8 @@ void TbdP4RealtimeTransport::process_response() {
 
 void TbdP4RealtimeTransport::poll() {
   if (!initialized_) init();
+  if (!enter_poll()) return;
+  poll_count_++;
 
   uint32_t now = now_ms();
   uint32_t ws_blocks = take_ws_blocks();
@@ -564,11 +566,13 @@ void TbdP4RealtimeTransport::poll() {
   prepare_request();
 
   if (now < next_spi_send_ms_) {
+    leave_poll();
     return;
   }
   if (start_transaction()) {
     next_spi_send_ms_ = now + 1;
   }
+  leave_poll();
 }
 
 #endif

@@ -227,6 +227,9 @@ encoders[3]->handler = encoder_filtq_handle;
 
 void MixerPage::init() {
   DEBUG_PRINTLN("mixer init");
+#ifdef PLATFORM_TBD
+  device_manager.exit_ui();
+#endif
   sync_selected_mixer_device();
   level_pressmode = 0;
   /*

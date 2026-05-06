@@ -24,6 +24,10 @@ bool MDUI::is_active() const {
   return sps_mode.is_active();
 }
 
+bool MDUI::is_collapsed() const {
+  return sps_mode.is_collapsed();
+}
+
 void MDUI::exit() {
   sps_mode.disable();
 }

@@ -60,6 +60,7 @@ public:
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool enter_ui(gui_event_t *event) override;
   virtual bool is_ui_active() override;
+  virtual bool is_ui_collapsed() override;
   virtual void exit_ui() override;
   virtual void on_ui_slot_button(uint8_t slot, bool pressed) override;
 #endif
