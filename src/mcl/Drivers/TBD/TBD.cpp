@@ -31,21 +31,24 @@ public:
              (unsigned long)(stats.error_count % 10000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "FR %lu/%lu SQ %u",
-             (unsigned long)(stats.tx_frames % 10000),
-             (unsigned long)(stats.rx_frames % 10000),
-             stats.last_response_sequence);
+    snprintf(line, sizeof(line), "NR%lu F%lu L%lu C%lu",
+             (unsigned long)(stats.p4_not_ready_count % 1000),
+             (unsigned long)(stats.fingerprint_errors % 1000),
+             (unsigned long)(stats.length_errors % 1000),
+             (unsigned long)(stats.crc_errors % 1000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "BY %lu/%lu",
-             (unsigned long)(stats.tx_midi_bytes % 100000),
-             (unsigned long)(stats.rx_midi_bytes % 100000));
+    snprintf(line, sizeof(line), "SQ%lu TO%lu DU%lu",
+             (unsigned long)(stats.sequence_errors % 1000),
+             (unsigned long)(stats.dma_timeout_count % 1000),
+             (unsigned long)(stats.dma_unavailable_count % 1000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "DR %lu/%lu TO %lu",
+    snprintf(line, sizeof(line), "FR%lu/%lu DR%lu/%lu",
+             (unsigned long)(stats.tx_frames % 1000),
+             (unsigned long)(stats.rx_frames % 1000),
              (unsigned long)(stats.dropped_tx_bytes % 10000),
-             (unsigned long)(stats.dropped_rx_bytes % 10000),
-             (unsigned long)(stats.dma_timeout_count % 10000));
+             (unsigned long)(stats.dropped_rx_bytes % 10000));
     oled_display.println(line);
   }
 };

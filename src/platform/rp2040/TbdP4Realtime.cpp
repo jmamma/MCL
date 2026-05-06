@@ -283,7 +283,6 @@ void TbdP4RealtimeTransport::start_transaction() {
   }
   if (dma_reset_pending_) return;
   if (!p4_ready()) {
-    error_count_++;
     p4_not_ready_count_++;
     return;
   }
