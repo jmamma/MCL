@@ -230,6 +230,8 @@ void MCL::setup() {
 }
 
 void MCL::loop() {
+  MidiUartUSB.service_background();
+
   perf_page.encoder_check();
 
 #ifdef PLATFORM_TBD

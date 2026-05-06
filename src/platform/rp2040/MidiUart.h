@@ -159,17 +159,30 @@ public:
     usb_midi.begin();
   }
   void poll() {
+    if (__get_current_exception()) {
+      service_irq();
+      return;
+    }
+    service_background();
+  }
+
+  void service_irq() {
+    // TinyUSB endpoint APIs are serviced from the USB task/main loop. Incoming
+    // MIDI is already drained by tud_midi_rx_cb(), including realtime clock.
+  }
+
+  void service_background() {
     if (!usb_ready && TinyUSBDevice.mounted()) {
       usb_ready = true;
     }
     if (!usb_ready)
       return;
-     if (mutex_try_enter(&__usb_mutex, nullptr)) {
-       if (!__get_current_exception()) { tud_task(); }
-       receive();
-       flush();
-       mutex_exit(&__usb_mutex);
-     }
+    if (mutex_try_enter(&__usb_mutex, nullptr)) {
+      tud_task();
+      receive();
+      flush();
+      mutex_exit(&__usb_mutex);
+    }
   }
 
   void m_putc_immediate(uint8_t c) {
