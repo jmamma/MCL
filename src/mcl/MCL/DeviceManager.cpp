@@ -33,7 +33,7 @@ bool DeviceManager::port_is_elektron(uint8_t port) const {
 void DeviceManager::set_device_for_port(uint8_t port, MidiDevice *device) {
   if (port < UART1_PORT || port > MIDI_PORT_COUNT) return;
 #ifdef PLATFORM_TBD
-  if (active_ui_device_ == physical_[port - 1]) {
+  if (active_ui_device_ && active_ui_device_ == physical_[port - 1]) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
   }
