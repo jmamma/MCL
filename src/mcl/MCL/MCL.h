@@ -36,14 +36,13 @@ public:
   LightPage *getPage(PageIndex page) {
     if (page >= NUM_PAGES) return nullptr;
 
-    lightpage_ptr_t p;
 #if defined(__AVR__)
+    lightpage_ptr_t p;
     p.word = pgm_read_word(&pages_table[page].word);
-#else
-    p.words.low = pgm_read_word(&pages_table[page].words.low);
-    p.words.high = pgm_read_word(&pages_table[page].words.high);
-    #endif
     return p.ptr;
+#else
+    return pages_table[page].ptr;
+#endif
   }
 
 
