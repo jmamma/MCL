@@ -351,7 +351,7 @@ public:
   uint8_t condition_count() const {
 #if !defined(__AVR__)
     if (is_stepseq()) {
-      return STEPSEQ_NUM_TRIG_CONDITIONS;
+      return STEPSEQ_NUM_TRIG_CONDITIONS - 1;
     }
 #endif
     return NUM_TRIG_CONDITIONS;
@@ -829,6 +829,11 @@ public:
       static_cast<SPSXSeqTrack *>(step_)->preview_step(step);
       return true;
     }
+#if defined(PLATFORM_TBD)
+    if (backend_ == StepSeqTbd) {
+      return static_cast<TBDSeqTrack *>(step_)->preview_step(step);
+    }
+#endif
 #endif
     return false;
   }
