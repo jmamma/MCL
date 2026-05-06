@@ -5,13 +5,14 @@
 
 #include "MCLSd.h"
 
-#define CONFIG_VERSION 4014
+#define CONFIG_VERSION 4015
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
 
 extern void mclsys_apply_config();
 extern void mclsys_apply_config_midi();
+extern void mclsys_normalize_midi_config();
 
 extern void usb_os_update();
 extern void usb_dfu_mode();
@@ -72,6 +73,10 @@ public:
   uint8_t grid_page_mode;
   uint8_t uart_note_fwd;
   uint8_t usb_device;
+  uint8_t grid_x_device;
+  uint8_t grid_x_port;
+  uint8_t grid_y_device;
+  uint8_t grid_y_port;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

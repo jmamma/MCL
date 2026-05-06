@@ -274,11 +274,11 @@ extern const unsigned char __R_menu_options[] PROGMEM;
 struct __T_menu_options {
   union {
     menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[1197];
+    char zz__MENU_OPTIONS[1278];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 1197 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 1197;
-  static constexpr size_t __total_size = 1197;
+  static constexpr size_t countof_MENU_OPTIONS = 1278 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 1278;
+  static constexpr size_t __total_size = 1278;
 };
 
 extern const unsigned char __R_menu_layouts[] PROGMEM;
@@ -363,22 +363,22 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_midiprogram_menu_layout = 74;
   union {
     menu_t<usbport_menu_page_N> usbport_menu_layout[0];
-    char zz__usbport_menu_layout[53];
+    char zz__usbport_menu_layout[32];
   };
-  static constexpr size_t countof_usbport_menu_layout = 53 / sizeof(menu_t<usbport_menu_page_N>);
-  static constexpr size_t sizeofof_usbport_menu_layout = 53;
+  static constexpr size_t countof_usbport_menu_layout = 32 / sizeof(menu_t<usbport_menu_page_N>);
+  static constexpr size_t sizeofof_usbport_menu_layout = 32;
   union {
     menu_t<port2_menu_page_N> port2_menu_layout[0];
-    char zz__port2_menu_layout[53];
+    char zz__port2_menu_layout[32];
   };
-  static constexpr size_t countof_port2_menu_layout = 53 / sizeof(menu_t<port2_menu_page_N>);
-  static constexpr size_t sizeofof_port2_menu_layout = 53;
+  static constexpr size_t countof_port2_menu_layout = 32 / sizeof(menu_t<port2_menu_page_N>);
+  static constexpr size_t sizeofof_port2_menu_layout = 32;
   union {
     menu_t<port1_menu_page_N> port1_menu_layout[0];
-    char zz__port1_menu_layout[53];
+    char zz__port1_menu_layout[32];
   };
-  static constexpr size_t countof_port1_menu_layout = 53 / sizeof(menu_t<port1_menu_page_N>);
-  static constexpr size_t sizeofof_port1_menu_layout = 53;
+  static constexpr size_t countof_port1_menu_layout = 32 / sizeof(menu_t<port1_menu_page_N>);
+  static constexpr size_t sizeofof_port1_menu_layout = 32;
   union {
     menu_t<midiport_menu_page_N> midiport_menu_layout[0];
     char zz__midiport_menu_layout[74];
@@ -386,11 +386,29 @@ struct __T_menu_layouts {
   static constexpr size_t countof_midiport_menu_layout = 74 / sizeof(menu_t<midiport_menu_page_N>);
   static constexpr size_t sizeofof_midiport_menu_layout = 74;
   union {
-    menu_t<midi_config_page_N> midiconfig_menu_layout[0];
-    char zz__midiconfig_menu_layout[137];
+    menu_t<gridy_menu_page_N> gridy_menu_layout[0];
+    char zz__gridy_menu_layout[53];
   };
-  static constexpr size_t countof_midiconfig_menu_layout = 137 / sizeof(menu_t<midi_config_page_N>);
-  static constexpr size_t sizeofof_midiconfig_menu_layout = 137;
+  static constexpr size_t countof_gridy_menu_layout = 53 / sizeof(menu_t<gridy_menu_page_N>);
+  static constexpr size_t sizeofof_gridy_menu_layout = 53;
+  union {
+    menu_t<gridx_menu_page_N> gridx_menu_layout[0];
+    char zz__gridx_menu_layout[53];
+  };
+  static constexpr size_t countof_gridx_menu_layout = 53 / sizeof(menu_t<gridx_menu_page_N>);
+  static constexpr size_t sizeofof_gridx_menu_layout = 53;
+  union {
+    menu_t<mididevice_menu_page_N> mididevice_menu_layout[0];
+    char zz__mididevice_menu_layout[53];
+  };
+  static constexpr size_t countof_mididevice_menu_layout = 53 / sizeof(menu_t<mididevice_menu_page_N>);
+  static constexpr size_t sizeofof_mididevice_menu_layout = 53;
+  union {
+    menu_t<midi_config_page_N> midiconfig_menu_layout[0];
+    char zz__midiconfig_menu_layout[158];
+  };
+  static constexpr size_t countof_midiconfig_menu_layout = 158 / sizeof(menu_t<midi_config_page_N>);
+  static constexpr size_t sizeofof_midiconfig_menu_layout = 158;
   union {
     menu_t<aux_config_page_N> auxconfig_menu_layout[0];
     char zz__auxconfig_menu_layout[53];
@@ -415,7 +433,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 95;
-  static constexpr size_t __total_size = 2300;
+  static constexpr size_t __total_size = 2417;
 };
 
 extern const unsigned char __R_icons_logo[] PROGMEM;

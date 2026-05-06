@@ -93,6 +93,9 @@ void ResourceManager::restore_menu_layout_deps() {
   md_import_page.set_layout(R.menu_layouts->mdimport_menu_layout);
   start_menu_page.set_layout(R.menu_layouts->start_menu_layout);
   boot_menu_page.set_layout(R.menu_layouts->boot_menu_layout);
+  mididevice_menu_page.set_layout(R.menu_layouts->mididevice_menu_layout);
+  gridx_menu_page.set_layout(R.menu_layouts->gridx_menu_layout);
+  gridy_menu_page.set_layout(R.menu_layouts->gridy_menu_layout);
   midiport_menu_page.set_layout(R.menu_layouts->midiport_menu_layout);
   port1_menu_page.set_layout(R.menu_layouts->port1_menu_layout);
   port2_menu_page.set_layout(R.menu_layouts->port2_menu_layout);

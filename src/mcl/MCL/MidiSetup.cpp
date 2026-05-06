@@ -37,6 +37,7 @@ void MidiSetup::cfg_clock_recv() {
 void MidiSetup::cfg_ports(bool boot) {
   DEBUG_PRINT_FN();
 
+  mclsys_normalize_midi_config();
   configure_driver_ports();
 
   // Always receive transport on port1 for MD.
@@ -195,6 +196,14 @@ void MidiSetup::cfg_ports(bool boot) {
     midi_active_peering.force_connect(UARTUSB_PORT, &generic_midi_device);
   }
 
+#ifdef PLATFORM_TBD
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    midi_active_peering.force_connect(UARTP4_PORT, &generic_midi_device);
+  } else if (device_manager.device_for_port(UARTP4_PORT) != &null_midi_device) {
+    midi_active_peering.disconnect(UARTP4_PORT);
+  }
+#endif
+
   if (MD.connected) {
     seq_ptc_page.midi_events.remove_callbacks();
     seq_ptc_page.midi_events.setup_callbacks();
@@ -205,38 +214,46 @@ void resolve_slots(PortSlot slots[SLOT_COUNT]) {
   for (uint8_t i = 0; i < SLOT_COUNT; ++i)
     slots[i] = {0, nullptr, nullptr, 0, false};
 
-  // MD slot
-  if (mcl_cfg.usb_device == 1) {
+  slots[SLOT_MD] = {UART1_PORT, &Midi, &MidiUart,
+                    mcl_cfg.uart1_turbo_speed, true};
+  slots[SLOT_ELEKT] = {UART2_PORT, &Midi2, &MidiUart2,
+                       mcl_cfg.uart2_turbo_speed, true};
+
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD &&
+      mcl_cfg.grid_x_port == GRID_X_PORT_USB) {
     slots[SLOT_MD] = {UARTUSB_PORT, &MidiUSB, &MidiUartUSB,
                       mcl_cfg.usb_turbo_speed, false};
-  } else {
+  } else if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) {
     slots[SLOT_MD] = {UART1_PORT, &Midi, &MidiUart,
-                      mcl_cfg.uart1_turbo_speed, mcl_cfg.uart1_device == 2};
+                      mcl_cfg.uart1_turbo_speed, false};
   }
 
-  // ELEKT slot (MNM / A4 / fall-through to generic on the same port)
-  if (mcl_cfg.usb_device == 2) {
-    slots[SLOT_ELEKT] = {UARTUSB_PORT, &MidiUSB, &MidiUartUSB,
-                         mcl_cfg.usb_turbo_speed, false};
-  } else {
-    slots[SLOT_ELEKT] = {UART2_PORT, &Midi2, &MidiUart2,
-                         mcl_cfg.uart2_turbo_speed, mcl_cfg.uart2_device == 2};
+  PortSlot grid_y_slot = {UART2_PORT, &Midi2, &MidiUart2,
+                          mcl_cfg.uart2_turbo_speed, false};
+  if (mcl_cfg.grid_y_port == GRID_Y_PORT_USB) {
+    grid_y_slot = {UARTUSB_PORT, &MidiUSB, &MidiUartUSB,
+                   mcl_cfg.usb_turbo_speed, false};
   }
+#ifdef PLATFORM_TBD
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    grid_y_slot = {UARTP4_PORT, &MidiP4, &MidiUartP4, 0, false};
+  }
+#endif
 
-  // GENER slot — USB priority, then whichever UART is configured GENER
-  if (mcl_cfg.usb_device == 3) {
-    slots[SLOT_GENER] = {UARTUSB_PORT, &MidiUSB, &MidiUartUSB,
-                         mcl_cfg.usb_turbo_speed, false};
-  } else if (mcl_cfg.uart1_device == 0) {
-    slots[SLOT_GENER] = {UART1_PORT, &Midi, &MidiUart,
-                         mcl_cfg.uart1_turbo_speed, false};
-  } else if (mcl_cfg.uart2_device == 0) {
-    slots[SLOT_GENER] = {UART2_PORT, &Midi2, &MidiUart2,
-                         mcl_cfg.uart2_turbo_speed, false};
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) {
+    slots[SLOT_GENER] = grid_y_slot;
+  } else if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT) {
+    slots[SLOT_ELEKT] = grid_y_slot;
+#ifdef PLATFORM_TBD
+  } else if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    slots[SLOT_GENER] = grid_y_slot;
+#endif
   }
 }
 
 void configure_driver_ports() {
+  mclsys_normalize_midi_config();
+
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
 

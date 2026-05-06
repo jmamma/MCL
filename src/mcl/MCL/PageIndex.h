@@ -39,6 +39,9 @@ enum PageIndex {
     ARP_PAGE,
     MD_IMPORT_PAGE,
     // MIDI menu pages
+    MIDIDEVICE_MENU_PAGE,
+    GRIDX_MENU_PAGE,
+    GRIDY_MENU_PAGE,
     MIDIPORT_MENU_PAGE,
     PORT1_MENU_PAGE,
     PORT2_MENU_PAGE,
@@ -66,4 +69,3 @@ enum PageIndex {
     NUM_PAGES,  // Automatically tracks total number of pages
     NULL_PAGE = 255
 };
-

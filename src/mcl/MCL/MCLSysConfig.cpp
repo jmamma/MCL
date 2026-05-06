@@ -66,19 +66,71 @@ void mclsys_apply_config() {
   mcl_cfg.write_cfg();
 }
 
-void mclsys_apply_config_midi() {
-  // USB takes priority over MIDI ports
-  if (mcl_cfg.usb_device == 1 && mcl_cfg.uart1_device == 1)
-    mcl_cfg.uart1_device = 2; // USB=MD wins, PORT1→OFF
-  if (mcl_cfg.usb_device == 2 && mcl_cfg.uart2_device == 1)
-    mcl_cfg.uart2_device = 2; // USB=ELEKT wins, PORT2→OFF
-  if (mcl_cfg.usb_device == 3) {
-    if (mcl_cfg.uart1_device == 0) mcl_cfg.uart1_device = 2; // USB=GENER, PORT1→OFF
-    if (mcl_cfg.uart2_device == 0) mcl_cfg.uart2_device = 2; // USB=GENER, PORT2→OFF
+void mclsys_normalize_midi_config() {
+  if (mcl_cfg.grid_x_device != GRID_X_DEVICE_MD) {
+    mcl_cfg.grid_x_device = GRID_X_DEVICE_OFF;
   }
-  // Between MIDI ports: both GENER → PORT2 wins
-  if (mcl_cfg.uart1_device == 0 && mcl_cfg.uart2_device == 0)
-    mcl_cfg.uart1_device = 2;
+  if (mcl_cfg.grid_x_port > GRID_X_PORT_USB) {
+    mcl_cfg.grid_x_port = GRID_X_PORT_1;
+  }
+
+#ifdef PLATFORM_TBD
+  if (mcl_cfg.grid_y_device > GRID_Y_DEVICE_OFF) {
+    mcl_cfg.grid_y_device = GRID_Y_DEVICE_TBD;
+  }
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    mcl_cfg.grid_y_port = GRID_Y_PORT_INT;
+  } else if (mcl_cfg.grid_y_port > GRID_Y_PORT_USB ||
+             mcl_cfg.grid_y_port == GRID_Y_PORT_INT) {
+    mcl_cfg.grid_y_port = GRID_Y_PORT_2;
+  }
+#else
+  if (mcl_cfg.grid_y_device < GRID_Y_DEVICE_GENER ||
+      mcl_cfg.grid_y_device > GRID_Y_DEVICE_OFF) {
+    mcl_cfg.grid_y_device = GRID_Y_DEVICE_GENER;
+  }
+  if (mcl_cfg.grid_y_port < GRID_Y_PORT_2 ||
+      mcl_cfg.grid_y_port > GRID_Y_PORT_USB) {
+    mcl_cfg.grid_y_port = GRID_Y_PORT_2;
+  }
+#endif
+
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD &&
+      mcl_cfg.grid_x_port == GRID_X_PORT_USB &&
+      mcl_cfg.grid_y_device != GRID_Y_DEVICE_OFF &&
+      mcl_cfg.grid_y_port == GRID_Y_PORT_USB) {
+    mcl_cfg.grid_y_port = GRID_Y_PORT_2;
+  }
+
+  mcl_cfg.uart1_device = 2;
+  mcl_cfg.uart2_device = 2;
+  mcl_cfg.usb_device = 0;
+
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) {
+    if (mcl_cfg.grid_x_port == GRID_X_PORT_USB) {
+      mcl_cfg.usb_device = 1;
+    } else {
+      mcl_cfg.uart1_device = 1;
+    }
+  }
+
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) {
+    if (mcl_cfg.grid_y_port == GRID_Y_PORT_USB) {
+      mcl_cfg.usb_device = 3;
+    } else {
+      mcl_cfg.uart2_device = 0;
+    }
+  } else if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT) {
+    if (mcl_cfg.grid_y_port == GRID_Y_PORT_USB) {
+      mcl_cfg.usb_device = 2;
+    } else {
+      mcl_cfg.uart2_device = 1;
+    }
+  }
+}
+
+void mclsys_apply_config_midi() {
+  mclsys_normalize_midi_config();
 
   mclsys_apply_config();
   midi_setup.cfg_ports();
@@ -190,6 +242,16 @@ bool MCLSysConfig::cfg_init() {
   //grid_page_mode = 0;
   uart_note_fwd = 1;
   //usb_device = 0;
+  grid_x_device = GRID_X_DEVICE_MD;
+  grid_x_port = GRID_X_PORT_1;
+#ifdef PLATFORM_TBD
+  grid_y_device = GRID_Y_DEVICE_TBD;
+  grid_y_port = GRID_Y_PORT_INT;
+#else
+  grid_y_device = GRID_Y_DEVICE_GENER;
+  grid_y_port = GRID_Y_PORT_2;
+#endif
+  mclsys_normalize_midi_config();
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

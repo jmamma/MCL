@@ -6,6 +6,7 @@
 
 #include "GUI.h"
 #include "MCLMemory.h"
+#include "MidiSetup.h"
 #include "midi-common.h"
 #include "MidiID.h"
 
@@ -33,7 +34,7 @@ public:
   uint32_t notes_off;
   uint32_t notes_ignore;
   uint8_t last_note;
-  uint16_t note_hold[4]; // indexed by port (UART1_PORT=1, UART2_PORT=2, UARTUSB_PORT=3)
+  uint16_t note_hold[MIDI_PORT_COUNT + 1];
   bool note_proceed = false;
   bool state = true;
   void init_notes();

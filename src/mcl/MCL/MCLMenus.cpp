@@ -30,6 +30,9 @@ MCLEncoder config_param14(0, 17, ENCODER_RES_SYS);
 MCLEncoder config_param15(0, 11, ENCODER_RES_SYS);
 MCLEncoder config_param16(0, 11, ENCODER_RES_SYS);
 MCLEncoder config_param17(0, 11, ENCODER_RES_SYS);
+MCLEncoder config_param18(0, 11, ENCODER_RES_SYS);
+MCLEncoder config_param19(0, 11, ENCODER_RES_SYS);
+MCLEncoder config_param20(0, 11, ENCODER_RES_SYS);
 
 
 uint8_t opt_import_src = 0;
@@ -120,7 +123,15 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 64
     &mcl_cfg.uart_note_fwd,
     // 65
-    &mcl_cfg.usb_device
+    &mcl_cfg.usb_device,
+    // 66
+    &mcl_cfg.grid_x_device,
+    // 67
+    &mcl_cfg.grid_x_port,
+    // 68
+    &mcl_cfg.grid_y_device,
+    // 69
+    &mcl_cfg.grid_y_port
 };
 
 const menu_function_ptr_t menu_target_functions[] PROGMEM = {
@@ -195,6 +206,9 @@ MenuPage<mcl_config_page_N> mcl_config_page(&config_param1, &config_param5);
 MenuPage<md_import_page_N> md_import_page(&config_param1, &config_param8);
 
 MenuPage<midiport_menu_page_N> midiport_menu_page(&config_param1, &config_param9);
+MenuPage<mididevice_menu_page_N> mididevice_menu_page(&config_param1, &config_param18);
+MenuPage<gridx_menu_page_N> gridx_menu_page(&config_param1, &config_param19);
+MenuPage<gridy_menu_page_N> gridy_menu_page(&config_param1, &config_param20);
 MenuPage<port1_menu_page_N> port1_menu_page(&config_param1, &config_param15);
 MenuPage<port2_menu_page_N> port2_menu_page(&config_param1, &config_param16);
 MenuPage<usbport_menu_page_N> usbport_menu_page(&config_param1, &config_param17);
@@ -224,5 +238,4 @@ MenuPage<grid_slot_page_N> grid_slot_page(&grid_slot_param1, &grid_slot_param2);
 MCLEncoder wavdesign_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder wavdesign_menu_entry_encoder(0, 4, ENCODER_RES_PAT);
 MenuPage<wavdesign_menu_page_N> wavdesign_menu_page(&wavdesign_menu_value_encoder, &wavdesign_menu_entry_encoder);
-
 

@@ -37,6 +37,9 @@ extern MCLEncoder config_param14;
 extern MCLEncoder config_param15;
 extern MCLEncoder config_param16;
 extern MCLEncoder config_param17;
+extern MCLEncoder config_param18;
+extern MCLEncoder config_param19;
+extern MCLEncoder config_param20;
 
 extern void new_proj_handler();
 
@@ -57,6 +60,12 @@ extern MenuPage<chain_config_page_N> chain_config_page;
 extern MenuPage<aux_config_page_N> aux_config_page;
 
 extern MenuPage<md_import_page_N> md_import_page;
+
+extern MenuPage<mididevice_menu_page_N> mididevice_menu_page;
+
+extern MenuPage<gridx_menu_page_N> gridx_menu_page;
+
+extern MenuPage<gridy_menu_page_N> gridy_menu_page;
 
 extern MenuPage<midiport_menu_page_N> midiport_menu_page;
 
@@ -106,4 +115,3 @@ extern uint8_t opt_import_src;
 extern uint8_t opt_import_dest;
 extern uint8_t opt_import_count;
 #endif /* MCLMENUS_H__ */
-

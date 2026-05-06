@@ -95,6 +95,9 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
     { .ptr = &md_import_page },
 
     // MIDI menu pages
+    { .ptr = &mididevice_menu_page },
+    { .ptr = &gridx_menu_page },
+    { .ptr = &gridy_menu_page },
     { .ptr = &midiport_menu_page },
     { .ptr = &port1_menu_page },
     { .ptr = &port2_menu_page },
@@ -230,7 +233,9 @@ void MCL::setup() {
 }
 
 void MCL::loop() {
+#ifndef __AVR__
   MidiUartUSB.service_background();
+#endif
 
 #ifdef PLATFORM_TBD
   MidiUartP4.service_background();

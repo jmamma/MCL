@@ -66,7 +66,8 @@ menu_t<aux_config_page_N> auxconfig_menu_layout = {
 menu_t<midi_config_page_N> midiconfig_menu_layout = {
     "MIDI",
     {
-        {"PORT CONFIG", 0, 0, 0, 0, MIDIPORT_MENU_PAGE, 0, 0},
+        {"DEVICES", 0, 0, 0, 0, MIDIDEVICE_MENU_PAGE, 0, 0},
+        {"PORTS", 0, 0, 0, 0, MIDIPORT_MENU_PAGE, 0, 0},
         {"SYNC",  0, 0, 0, 0, MIDICLOCK_MENU_PAGE, 0, 0},
         {"ROUTING", 0, 0, 0, 0, MIDIROUTE_MENU_PAGE, 0, 0},
         {"CONTROLLER", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
@@ -82,6 +83,53 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define TURBO_RANGE 6
 #endif
 
+#if defined(PLATFORM_TBD)
+  #define GRIDY_DEVICE_MIN 0
+  #define GRIDY_DEVICE_RANGE 4
+  #define GRIDY_DEVICE_OPTIONS 4
+  #define GRIDY_PORT_MIN 0
+  #define GRIDY_PORT_RANGE 3
+  #define GRIDY_PORT_OPTIONS 3
+  #define GRIDY_PORT_OPTIONS_OFFSET 141
+#else
+  #define GRIDY_DEVICE_MIN 1
+  #define GRIDY_DEVICE_RANGE 4
+  #define GRIDY_DEVICE_OPTIONS 3
+  #define GRIDY_PORT_MIN 1
+  #define GRIDY_PORT_RANGE 3
+  #define GRIDY_PORT_OPTIONS 2
+  #define GRIDY_PORT_OPTIONS_OFFSET 140
+#endif
+
+menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
+    "DEVICES",
+    {
+        {"GRID X", 0, 0, 0, 0, GRIDX_MENU_PAGE, 0, 0},
+        {"GRID Y", 0, 0, 0, 0, GRIDY_MENU_PAGE, 0, 0},
+    },
+    24
+};
+
+menu_t<gridx_menu_page_N> gridx_menu_layout = {
+    "GRID X",
+    {
+        {"DEVICE:", 0, 2, 2, 66, NULL_PAGE, 0, 133},
+        {"PORT:",   0, 2, 2, 67, NULL_PAGE, 0, 135},
+    },
+    24
+};
+
+menu_t<gridy_menu_page_N> gridy_menu_layout = {
+    "GRID Y",
+    {
+        {"DEVICE:", GRIDY_DEVICE_MIN, GRIDY_DEVICE_RANGE, GRIDY_DEVICE_OPTIONS,
+         68, NULL_PAGE, 0, 137},
+        {"PORT:", GRIDY_PORT_MIN, GRIDY_PORT_RANGE, GRIDY_PORT_OPTIONS,
+         69, NULL_PAGE, 0, GRIDY_PORT_OPTIONS_OFFSET},
+    },
+    24
+};
+
 menu_t<midiport_menu_page_N> midiport_menu_layout = {
     "PORTS",
     {
@@ -95,7 +143,6 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
 menu_t<port1_menu_page_N> port1_menu_layout = {
     "PORT 1",
     {
-        {"DRIVER:", 0, 3, 3, 61, NULL_PAGE, 0, 123},
         {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 2, NULL_PAGE, 0, 54},
     },
     24
@@ -104,7 +151,6 @@ menu_t<port1_menu_page_N> port1_menu_layout = {
 menu_t<port2_menu_page_N> port2_menu_layout = {
     "PORT 2",
     {
-        {"DRIVER:", 0, 3, 3, 4, NULL_PAGE, 0, 126},
         {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 3, NULL_PAGE, 0, 54},
     },
     24
@@ -113,7 +159,6 @@ menu_t<port2_menu_page_N> port2_menu_layout = {
 menu_t<usbport_menu_page_N> usbport_menu_layout = {
     "USB",
     {
-        {"DRIVER:", 0, 4, 4, 65, NULL_PAGE, 0, 129},
         {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE, 0, 54},
     },
     24
@@ -297,4 +342,3 @@ menu_t<perf_menu_page_N> perf_menu_layout = {
     },
     0
 };
-

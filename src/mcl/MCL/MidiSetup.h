@@ -15,6 +15,21 @@
 #define MIDI_PORT_COUNT 3
 #endif
 
+#define GRID_X_DEVICE_OFF 0
+#define GRID_X_DEVICE_MD 1
+#define GRID_X_PORT_1 0
+#define GRID_X_PORT_USB 1
+
+#ifdef PLATFORM_TBD
+#define GRID_Y_DEVICE_TBD 0
+#endif
+#define GRID_Y_DEVICE_GENER 1
+#define GRID_Y_DEVICE_ELEKT 2
+#define GRID_Y_DEVICE_OFF 3
+#define GRID_Y_PORT_INT 0
+#define GRID_Y_PORT_2 1
+#define GRID_Y_PORT_USB 2
+
 class MidiClass;
 class MidiUartClass;
 
