@@ -72,7 +72,12 @@ constexpr size_t NUM_LOCKS = 8;
 #endif
 
 constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(548); // SPSXTrack = MDTrack + seq_version byte
+#if defined(PLATFORM_TBD)
+// TBD/RP2040 grid-2 cache slots can carry enhanced MIDI/TBD tracks.
+constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(GRID_SLOT_BYTES);
+#else
 constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2094);
+#endif
 
 constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);
 constexpr size_t MDLFO_TRACK_LEN = MEMORY_ALIGN(226);

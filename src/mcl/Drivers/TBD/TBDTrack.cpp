@@ -15,13 +15,13 @@ constexpr uint8_t kDefaultRomBank = 0xFF;
 constexpr int32_t kDefaultSampleSlice = -1;
 constexpr uint32_t kPresetApplyTimeoutMs = 3000;
 
-const TbdTrackDefault kTbdTrackDefaults[] = {
-    {8, 0, "td3-all-def"},
-    {9, 1, "td3-all-def"},
-    {10, 2, "mo-all-def"},
-    {11, 3, "wtosc-all-def"},
-    {12, 4, "ro-all-def"},
-    {13, 5, "ro-all-def"},
+TbdTrackDefault kTbdTrackDefaults[] = {
+    {8, 0, "td3-all-def", kDefaultRomBank, kDefaultSampleSlice},
+    {9, 1, "td3-all-def", kDefaultRomBank, kDefaultSampleSlice},
+    {10, 2, "mo-all-def", kDefaultRomBank, kDefaultSampleSlice},
+    {11, 3, "wtosc-all-def", kDefaultRomBank, kDefaultSampleSlice},
+    {12, 4, "ro-all-def", kDefaultRomBank, kDefaultSampleSlice},
+    {13, 5, "ro-all-def", kDefaultRomBank, kDefaultSampleSlice},
 };
 
 void copy_preset_id(char *dst, const char *src) {
@@ -42,6 +42,24 @@ const TbdTrackDefault &tbd_track_default_for_slot(uint8_t slot) {
   return kTbdTrackDefaults[slot];
 }
 
+void tbd_update_track_default_from_p4(uint8_t p4_track_index,
+                                      const char *preset_id,
+                                      uint8_t rom_bank,
+                                      int32_t sample_slice) {
+  if (preset_id == nullptr || preset_id[0] == '\0') {
+    return;
+  }
+
+  for (auto &def : kTbdTrackDefaults) {
+    if (def.p4_track_index == p4_track_index) {
+      copy_preset_id(def.preset_id, preset_id);
+      def.rom_bank = rom_bank;
+      def.sample_slice = sample_slice;
+      return;
+    }
+  }
+}
+
 void TBDTrackData::clear() {
   version = kTbdTrackDataVersion;
   p4_track_index = 8;
@@ -56,8 +74,8 @@ void TBDTrackData::set_default(uint8_t slot) {
   version = kTbdTrackDataVersion;
   p4_track_index = def.p4_track_index;
   midi_channel = def.midi_channel;
-  rom_bank = kDefaultRomBank;
-  sample_slice = kDefaultSampleSlice;
+  rom_bank = def.rom_bank;
+  sample_slice = def.sample_slice;
   copy_preset_id(preset_id, def.preset_id);
 }
 
