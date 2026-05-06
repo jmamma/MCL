@@ -136,17 +136,19 @@ void GuiClass::loop() {
   }
 
 #ifdef PLATFORM_TBD
-  if (overlay_captures_encoders) {
+  if (overlay_captures_encoders && overlay) {
+    LightPage *active_overlay = overlay;
     MidiUartParent::handle_midi_lock = 1;
-    overlay->update();
+    active_overlay->update();
     MidiUartParent::handle_midi_lock = 0;
   }
   // Tick the overlay's loop after the active page so it can manage
   // its own state (LED palette, sub-page repaint, etc.).
   if (overlay) {
-    overlay->loop();
-    if (overlay_captures_encoders) {
-      overlay->finalize();
+    LightPage *active_overlay = overlay;
+    active_overlay->loop();
+    if (overlay == active_overlay && overlay_captures_encoders) {
+      active_overlay->finalize();
     }
   }
 #endif

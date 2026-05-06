@@ -36,7 +36,6 @@ void TbdTempoPage::init() {
   tempo_encoder_.cur = 0;
   tempo_encoder_.old = 0;
   tap_mode_ = tap_on_open_;
-  tap_play_pressed_ = false;
   reset_taps();
   tap_on_open_ = false;
 }
@@ -142,6 +141,11 @@ uint16_t TbdTempoPage::calculate_tap_tempo_tenths() const {
 }
 
 void TbdTempoPage::loop() {
+  if (mcl.currentPage() != GRID_PAGE) {
+    close();
+    return;
+  }
+
   if (tempo_encoder_.hasChanged()) {
     int16_t delta = (int16_t)tempo_encoder_.cur;
     tempo_encoder_.cur = 0;
@@ -166,22 +170,20 @@ bool TbdTempoPage::handleEvent(gui_event_t *event) {
   }
 
   if (event->source == ButtonsClass::FUNC_BUTTON5) {
+    if (is_press && BUTTON_DOWN(ButtonsClass::BUTTON3)) {
+      tap_mode_ = true;
+      handle_tap();
+    }
     return true;
   }
 
-  if (event->source == ButtonsClass::FUNC_BUTTON2 && is_press) {
+  if (event->source == ButtonsClass::BUTTON3) {
     if (BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
-      tap_play_pressed_ = true;
-      tap_mode_ = true;
-      handle_tap();
-      return true;
+      if (is_press) {
+        tap_mode_ = true;
+        handle_tap();
+      }
     }
-    return false;
-  }
-
-  if (event->source == ButtonsClass::FUNC_BUTTON2 && is_release &&
-      tap_play_pressed_) {
-    tap_play_pressed_ = false;
     return true;
   }
 
@@ -219,7 +221,7 @@ const char *TbdTempoPage::clock_source_label() const {
 
 void TbdTempoPage::draw_title(const char *title) {
   constexpr uint8_t kWinX = 16;
-  constexpr uint8_t kWinY = 18;
+  constexpr uint8_t kWinY = 2;
   constexpr uint8_t kWinW = 96;
 
   oled_display.setFont();
@@ -259,7 +261,7 @@ void TbdTempoPage::draw_tempo_value(uint16_t tempo_tenths, uint8_t y) {
 
 void TbdTempoPage::display() {
   constexpr uint8_t kWinX = 16;
-  constexpr uint8_t kWinY = 18;
+  constexpr uint8_t kWinY = 2;
   constexpr uint8_t kWinW = 96;
   constexpr uint8_t kWinH = 28;
 
@@ -268,21 +270,21 @@ void TbdTempoPage::display() {
 
   if (tap_mode_) {
     draw_title("TAP TEMPO");
-    draw_tempo_value(tempo_tenths_, kWinY + 22);
+    draw_tempo_value(tempo_tenths_, kWinY + 20);
     constexpr uint8_t box_w = 4;
     constexpr uint8_t spacing = 8;
     uint8_t x = 64 - 14;
     for (uint8_t i = 0; i < 4; i++) {
       uint8_t bx = x + i * spacing;
       if (i < tap_count_) {
-        oled_display.fillRect(bx, kWinY + 22, box_w, box_w, WHITE);
+        oled_display.fillRect(bx, kWinY + 23, box_w, box_w, WHITE);
       } else {
-        oled_display.drawRect(bx, kWinY + 22, box_w, box_w, WHITE);
+        oled_display.drawRect(bx, kWinY + 23, box_w, box_w, WHITE);
       }
     }
   } else {
     draw_title("TEMPO");
-    draw_tempo_value(tempo_tenths_, kWinY + 23);
+    draw_tempo_value(tempo_tenths_, kWinY + 22);
   }
 }
 

@@ -40,7 +40,6 @@ private:
   bool active_ = false;
   bool tap_mode_ = false;
   bool tap_on_open_ = false;
-  bool tap_play_pressed_ = false;
   uint16_t tempo_tenths_ = 1200;
   uint8_t tap_count_ = 0;
   uint8_t tap_index_ = 0;

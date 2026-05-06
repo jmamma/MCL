@@ -206,10 +206,14 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (!device_manager.is_ui_active() && !is_menu_page &&
       orig_src == ButtonsClass::FUNC_BUTTON5 && is_press &&
-      pg != PAGE_SELECT_PAGE && pg != GRID_LOAD_PAGE &&
-      pg != GRID_SAVE_PAGE && pg != TEXT_INPUT_PAGE &&
-      pg != BANK_POPUP_PAGE && !grid_io_overlay.is_active()) {
-    tbd_tempo_page.begin(false);
+      pg == GRID_PAGE && !grid_page.show_slot_menu &&
+      !grid_io_overlay.is_active()) {
+    bool tap = BUTTON_DOWN(ButtonsClass::BUTTON3);
+    if (tap) {
+      key_interface.key_event(MDX_KEY_FUNC, true);
+      GUI.ignoreNextEvent(ButtonsClass::BUTTON3);
+    }
+    tbd_tempo_page.begin(tap);
     return true;
   }
 
