@@ -88,7 +88,9 @@ public:
   const uint8_t *output_waveform() const { return output_waveform_; }
 
 private:
-  static constexpr uint16_t kMidiFifoSize = 2048;
+  static constexpr uint16_t kMidiByteFifoSize = 2048;
+  static constexpr uint16_t kMidiTxMessageFifoSize = 1024;
+  static constexpr uint8_t kMidiTxMessageMaxBytes = 3;
   static constexpr uint16_t kSpiDeadlineMs = 3000;
 
   struct SpiTransaction {
@@ -96,12 +98,20 @@ private:
     uint8_t in_buf[TBD_P4_SPI_FRAME_SIZE];
   };
 
-  bool fifo_full(uint16_t wr, uint16_t rd) const;
-  bool midi_tx_empty_isr() const { return midi_tx_rd_ == midi_tx_wr_; }
+  struct MidiTxMessage {
+    uint8_t data[kMidiTxMessageMaxBytes];
+    uint8_t length;
+  };
+
+  bool midi_rx_fifo_full(uint16_t wr, uint16_t rd) const;
+  bool midi_tx_message_fifo_full(uint16_t wr, uint16_t rd) const;
+  bool midi_tx_empty_isr() const { return midi_tx_msg_rd_ == midi_tx_msg_wr_; }
   bool midi_rx_empty_isr() const { return midi_rx_rd_ == midi_rx_wr_; }
-  bool pop_tx_midi_byte_locked(uint8_t &byte);
+  bool enqueue_tx_midi_message_locked(const uint8_t *data, uint8_t length);
+  bool peek_tx_midi_message_locked(MidiTxMessage &msg) const;
+  bool pop_tx_midi_message_locked(MidiTxMessage &msg);
   bool enqueue_rx_midi_byte_locked(uint8_t byte);
-  void observe_tx_midi_byte(uint8_t byte);
+  void observe_tx_midi_message(const MidiTxMessage &msg);
 
   uint16_t calc_payload_crc(const uint8_t *data, uint16_t length) const;
   uint8_t next_sequence(uint8_t current) const;
@@ -133,12 +143,17 @@ private:
   uint8_t next_request_sequence_ = 100;
   uint8_t last_seen_response_ = 0;
 
-  uint8_t midi_tx_fifo_[kMidiFifoSize];
-  volatile uint16_t midi_tx_rd_ = 0;
-  volatile uint16_t midi_tx_wr_ = 0;
-  uint8_t midi_rx_fifo_[kMidiFifoSize];
+  MidiTxMessage midi_tx_messages_[kMidiTxMessageFifoSize];
+  volatile uint16_t midi_tx_msg_rd_ = 0;
+  volatile uint16_t midi_tx_msg_wr_ = 0;
+  uint8_t midi_rx_fifo_[kMidiByteFifoSize];
   volatile uint16_t midi_rx_rd_ = 0;
   volatile uint16_t midi_rx_wr_ = 0;
+  uint8_t tx_build_data_[kMidiTxMessageMaxBytes] = {};
+  uint8_t tx_build_length_ = 0;
+  uint8_t tx_build_needed_ = 0;
+  uint8_t tx_running_status_ = 0;
+  bool tx_in_sysex_ = false;
 
   volatile uint32_t sequencer_tempo_ = 12000;
   volatile uint32_t sequencer_active_track_ = 0;
@@ -181,10 +196,6 @@ private:
   bool extended_response_seen_ = false;
   uint8_t input_waveform_[64] = {};
   uint8_t output_waveform_[64] = {};
-  uint8_t tx_parse_status_ = 0;
-  uint8_t tx_parse_needed_ = 0;
-  uint8_t tx_parse_have_ = 0;
-  uint8_t tx_parse_data_[2] = {};
 };
 
 extern TbdP4RealtimeTransport tbd_p4_realtime;

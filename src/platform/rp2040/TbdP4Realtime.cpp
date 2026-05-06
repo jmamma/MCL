@@ -33,6 +33,37 @@ uint32_t now_ms() {
   return (uint32_t)(time_us_64() / 1000ULL);
 }
 
+uint8_t midi_message_length(uint8_t status) {
+  if (status >= 0xF8) return 1;
+  if (status < 0xF0) {
+    switch (status & 0xF0) {
+    case MIDI_PROGRAM_CHANGE:
+    case MIDI_CHANNEL_PRESSURE:
+      return 2;
+    case MIDI_NOTE_OFF:
+    case MIDI_NOTE_ON:
+    case MIDI_AFTER_TOUCH:
+    case MIDI_CONTROL_CHANGE:
+    case MIDI_PITCH_WHEEL:
+      return 3;
+    default:
+      return 0;
+    }
+  }
+
+  switch (status) {
+  case MIDI_MTC_QUARTER_FRAME:
+  case MIDI_SONG_SELECT:
+    return 2;
+  case MIDI_SONG_POSITION_PTR:
+    return 3;
+  case MIDI_TUNE_REQUEST:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
 void __not_in_flash_func(tbd_ws_sync_cb)(uint gpio, uint32_t events) {
   if (gpio != kWsPin || !(events & GPIO_IRQ_EDGE_FALL)) return;
 
@@ -77,8 +108,14 @@ void TbdP4RealtimeTransport::init() {
   if (initialized_) return;
 
   memset(spi_trans_, 0, sizeof(spi_trans_));
-  midi_tx_rd_ = midi_tx_wr_ = 0;
+  memset(midi_tx_messages_, 0, sizeof(midi_tx_messages_));
+  midi_tx_msg_rd_ = midi_tx_msg_wr_ = 0;
   midi_rx_rd_ = midi_rx_wr_ = 0;
+  memset(tx_build_data_, 0, sizeof(tx_build_data_));
+  tx_build_length_ = 0;
+  tx_build_needed_ = 0;
+  tx_running_status_ = 0;
+  tx_in_sysex_ = false;
   sending_trans_ = 0;
   receiving_trans_ = 0;
   spi_active_ = false;
@@ -104,10 +141,6 @@ void TbdP4RealtimeTransport::init() {
   last_tx_status_ = 0;
   last_tx_data1_ = 0;
   last_tx_data2_ = 0;
-  tx_parse_status_ = 0;
-  tx_parse_needed_ = 0;
-  tx_parse_have_ = 0;
-  memset(tx_parse_data_, 0, sizeof(tx_parse_data_));
   fingerprint_error_count_ = 0;
   length_error_count_ = 0;
   crc_error_count_ = 0;
@@ -146,26 +179,99 @@ void TbdP4RealtimeTransport::init() {
   initialized_ = true;
 }
 
-bool TbdP4RealtimeTransport::fifo_full(uint16_t wr, uint16_t rd) const {
+bool TbdP4RealtimeTransport::midi_rx_fifo_full(uint16_t wr, uint16_t rd) const {
   uint16_t next = wr + 1;
-  if (next == kMidiFifoSize) next = 0;
+  if (next == kMidiByteFifoSize) next = 0;
+  return next == rd;
+}
+
+bool TbdP4RealtimeTransport::midi_tx_message_fifo_full(uint16_t wr,
+                                                       uint16_t rd) const {
+  uint16_t next = wr + 1;
+  if (next == kMidiTxMessageFifoSize) next = 0;
   return next == rd;
 }
 
 bool TbdP4RealtimeTransport::can_enqueue_midi_byte() const {
-  return !fifo_full(midi_tx_wr_, midi_tx_rd_);
+  return !midi_tx_message_fifo_full(midi_tx_msg_wr_, midi_tx_msg_rd_);
 }
 
 bool TbdP4RealtimeTransport::enqueue_midi_byte_isr(uint8_t byte) {
-  if (fifo_full(midi_tx_wr_, midi_tx_rd_)) {
-    dropped_tx_bytes_++;
-    return false;
+  if (byte >= 0xF8) {
+    return enqueue_tx_midi_message_locked(&byte, 1);
   }
-  midi_tx_fifo_[midi_tx_wr_] = byte;
-  uint16_t next = midi_tx_wr_ + 1;
-  if (next == kMidiFifoSize) next = 0;
-  midi_tx_wr_ = next;
-  queued_tx_midi_bytes_++;
+
+  if (tx_in_sysex_) {
+    if (byte == MIDI_SYSEX_END) {
+      tx_in_sysex_ = false;
+    }
+    return true;
+  }
+
+  if (byte & 0x80) {
+    tx_build_length_ = 0;
+    tx_build_needed_ = 0;
+
+    if (byte == MIDI_SYSEX_START) {
+      tx_in_sysex_ = true;
+      tx_running_status_ = 0;
+      return true;
+    }
+
+    const uint8_t length = midi_message_length(byte);
+    if (length == 0) {
+      if (byte >= 0xF0) {
+        tx_running_status_ = 0;
+      }
+      return true;
+    }
+
+    tx_build_data_[0] = byte;
+    tx_build_length_ = 1;
+    tx_build_needed_ = length;
+    if (byte < 0xF0) {
+      tx_running_status_ = byte;
+    } else {
+      tx_running_status_ = 0;
+    }
+
+    if (tx_build_length_ >= tx_build_needed_) {
+      const bool ok =
+          enqueue_tx_midi_message_locked(tx_build_data_, tx_build_length_);
+      tx_build_length_ = 0;
+      tx_build_needed_ = 0;
+      return ok;
+    }
+    return true;
+  }
+
+  if (tx_build_length_ == 0) {
+    if (tx_running_status_ == 0) {
+      dropped_tx_bytes_++;
+      return true;
+    }
+
+    tx_build_data_[0] = tx_running_status_;
+    tx_build_data_[1] = byte;
+    tx_build_length_ = 2;
+    tx_build_needed_ = midi_message_length(tx_running_status_);
+  } else if (tx_build_length_ < kMidiTxMessageMaxBytes) {
+    tx_build_data_[tx_build_length_++] = byte;
+  } else {
+    tx_build_length_ = 0;
+    tx_build_needed_ = 0;
+    dropped_tx_bytes_++;
+    return true;
+  }
+
+  if (tx_build_needed_ != 0 && tx_build_length_ >= tx_build_needed_) {
+    const bool ok =
+        enqueue_tx_midi_message_locked(tx_build_data_, tx_build_length_);
+    tx_build_length_ = 0;
+    tx_build_needed_ = 0;
+    return ok;
+  }
+
   return true;
 }
 
@@ -180,79 +286,76 @@ bool TbdP4RealtimeTransport::pop_rx_midi_byte_isr(uint8_t &byte) {
   if (midi_rx_empty_isr()) return false;
   byte = midi_rx_fifo_[midi_rx_rd_];
   uint16_t next = midi_rx_rd_ + 1;
-  if (next == kMidiFifoSize) next = 0;
+  if (next == kMidiByteFifoSize) next = 0;
   midi_rx_rd_ = next;
   return true;
 }
 
-bool TbdP4RealtimeTransport::pop_tx_midi_byte_locked(uint8_t &byte) {
+bool TbdP4RealtimeTransport::enqueue_tx_midi_message_locked(const uint8_t *data,
+                                                            uint8_t length) {
+  if (data == nullptr || length == 0 || length > kMidiTxMessageMaxBytes) {
+    return true;
+  }
+  if (midi_tx_message_fifo_full(midi_tx_msg_wr_, midi_tx_msg_rd_)) {
+    dropped_tx_bytes_ += length;
+    return false;
+  }
+
+  MidiTxMessage &msg = midi_tx_messages_[midi_tx_msg_wr_];
+  memset(msg.data, 0, sizeof(msg.data));
+  memcpy(msg.data, data, length);
+  msg.length = length;
+
+  uint16_t next = midi_tx_msg_wr_ + 1;
+  if (next == kMidiTxMessageFifoSize) next = 0;
+  midi_tx_msg_wr_ = next;
+  queued_tx_midi_bytes_ += length;
+  return true;
+}
+
+bool TbdP4RealtimeTransport::peek_tx_midi_message_locked(
+    MidiTxMessage &msg) const {
   if (midi_tx_empty_isr()) return false;
-  byte = midi_tx_fifo_[midi_tx_rd_];
-  uint16_t next = midi_tx_rd_ + 1;
-  if (next == kMidiFifoSize) next = 0;
-  midi_tx_rd_ = next;
+  msg = midi_tx_messages_[midi_tx_msg_rd_];
+  return true;
+}
+
+bool TbdP4RealtimeTransport::pop_tx_midi_message_locked(MidiTxMessage &msg) {
+  if (!peek_tx_midi_message_locked(msg)) return false;
+  uint16_t next = midi_tx_msg_rd_ + 1;
+  if (next == kMidiTxMessageFifoSize) next = 0;
+  midi_tx_msg_rd_ = next;
   return true;
 }
 
 bool TbdP4RealtimeTransport::enqueue_rx_midi_byte_locked(uint8_t byte) {
-  if (fifo_full(midi_rx_wr_, midi_rx_rd_)) {
+  if (midi_rx_fifo_full(midi_rx_wr_, midi_rx_rd_)) {
     dropped_rx_bytes_++;
     return false;
   }
   midi_rx_fifo_[midi_rx_wr_] = byte;
   uint16_t next = midi_rx_wr_ + 1;
-  if (next == kMidiFifoSize) next = 0;
+  if (next == kMidiByteFifoSize) next = 0;
   midi_rx_wr_ = next;
   return true;
 }
 
-void TbdP4RealtimeTransport::observe_tx_midi_byte(uint8_t byte) {
-  if (byte >= 0xF8) {
+void TbdP4RealtimeTransport::observe_tx_midi_message(
+    const MidiTxMessage &msg) {
+  if (msg.length == 0) return;
+
+  const uint8_t status = msg.data[0];
+  if (status >= 0xF8) {
     tx_realtime_messages_++;
-    last_tx_status_ = byte;
+    last_tx_status_ = status;
     last_tx_data1_ = 0;
     last_tx_data2_ = 0;
     return;
   }
 
-  if (byte & 0x80) {
-    tx_parse_status_ = byte;
-    tx_parse_have_ = 0;
-    last_tx_status_ = byte;
-    last_tx_data1_ = 0;
-    last_tx_data2_ = 0;
-    switch (byte & 0xF0) {
-    case MIDI_PROGRAM_CHANGE:
-    case MIDI_CHANNEL_PRESSURE:
-      tx_parse_needed_ = 1;
-      break;
-    case MIDI_NOTE_OFF:
-    case MIDI_NOTE_ON:
-    case MIDI_CONTROL_CHANGE:
-    case MIDI_AFTER_TOUCH:
-    case MIDI_PITCH_WHEEL:
-      tx_parse_needed_ = 2;
-      break;
-    default:
-      tx_parse_needed_ = 0;
-      break;
-    }
-    return;
-  }
-
-  if (tx_parse_status_ == 0 || tx_parse_needed_ == 0 ||
-      tx_parse_have_ >= sizeof(tx_parse_data_)) {
-    return;
-  }
-
-  tx_parse_data_[tx_parse_have_++] = byte;
-  if (tx_parse_have_ < tx_parse_needed_) {
-    return;
-  }
-
-  const uint8_t status_class = tx_parse_status_ & 0xF0;
+  const uint8_t status_class = status & 0xF0;
   if (status_class == MIDI_NOTE_ON) {
-    if (tx_parse_data_[1] == 0) {
+    if (msg.length > 2 && msg.data[2] == 0) {
       tx_note_off_messages_++;
     } else {
       tx_note_on_messages_++;
@@ -263,10 +366,9 @@ void TbdP4RealtimeTransport::observe_tx_midi_byte(uint8_t byte) {
     tx_cc_messages_++;
   }
 
-  last_tx_status_ = tx_parse_status_;
-  last_tx_data1_ = tx_parse_data_[0];
-  last_tx_data2_ = tx_parse_needed_ > 1 ? tx_parse_data_[1] : 0;
-  tx_parse_have_ = 0;
+  last_tx_status_ = status;
+  last_tx_data1_ = msg.length > 1 ? msg.data[1] : 0;
+  last_tx_data2_ = msg.length > 2 ? msg.data[2] : 0;
 }
 
 uint16_t TbdP4RealtimeTransport::calc_payload_crc(const uint8_t *data,
@@ -390,11 +492,15 @@ void TbdP4RealtimeTransport::prepare_request() {
 
   uint16_t written = 0;
   LOCK();
-  while (written < TBD_P4_SPI_MIDI_DATA_SIZE) {
-    uint8_t byte = 0;
-    if (!pop_tx_midi_byte_locked(byte)) break;
-    observe_tx_midi_byte(byte);
-    req->synth_midi[written++] = byte;
+  MidiTxMessage msg;
+  while (peek_tx_midi_message_locked(msg)) {
+    if (written + msg.length >= TBD_P4_SPI_MIDI_DATA_SIZE) {
+      break;
+    }
+    (void)pop_tx_midi_message_locked(msg);
+    memcpy(req->synth_midi + written, msg.data, msg.length);
+    written += msg.length;
+    observe_tx_midi_message(msg);
   }
   CLEAR_LOCK();
 

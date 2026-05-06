@@ -1151,7 +1151,7 @@ bool TbdUiMode::apply_selected_preset() {
   if (loaded) {
     *sound = next;
     tbd_p4_realtime.set_active_track(sound->p4_track_index);
-    tbd_p4_send_sound_state(*sound);
+    tbd_p4_send_sound_mixer_state(*sound);
     tbd_mark_p4_sound_applied(*sound);
     resync_from_sound();
   } else {

@@ -79,6 +79,7 @@ void tbd_p4_send_param_value(MidiUartClass *uart, uint8_t midi_channel,
                              const TbdP4ParamDescriptor &param,
                              int16_t value);
 void tbd_p4_send_sound_state(const TbdP4SoundData &sound);
+void tbd_p4_send_sound_mixer_state(const TbdP4SoundData &sound);
 uint8_t tbd_p4_driver_param_page_count();
 TbdP4ParamDescriptor *tbd_p4_driver_param(uint8_t index);
 void tbd_p4_send_driver_param(uint8_t index);

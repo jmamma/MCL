@@ -359,6 +359,7 @@ void apply_p4_sound(const TbdP4SoundData &sound, const char *source,
   const bool command_needed =
       !has_last || !p4_sound_same_command(sound, last_sound);
   bool applied = true;
+  bool loaded_preset_command = false;
   if (command_needed) {
     if (sound.has_preset()) {
       applied = tbd_p4_command.load_track_sound_preset(sound.p4_track_index,
@@ -366,6 +367,7 @@ void apply_p4_sound(const TbdP4SoundData &sound, const char *source,
                                                        sound.rom_bank,
                                                        sound.sample_slice,
                                                        kPresetApplyTimeoutMs);
+      loaded_preset_command = applied;
     } else {
       if (sound.has_machine()) {
         applied = tbd_p4_command.activate_track_machine(sound.p4_track_index,
@@ -383,7 +385,11 @@ void apply_p4_sound(const TbdP4SoundData &sound, const char *source,
   }
   debug_p4_sound_apply_result(source, mcl_track, sound.p4_track_index, applied);
   if (applied) {
-    tbd_p4_send_sound_state(sound);
+    if (loaded_preset_command) {
+      tbd_p4_send_sound_mixer_state(sound);
+    } else {
+      tbd_p4_send_sound_state(sound);
+    }
     tbd_mark_p4_sound_applied(sound);
   }
 }

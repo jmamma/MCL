@@ -1313,7 +1313,7 @@ void tbd_p4_send_sound_state(const TbdP4SoundData &sound) {
   }
 }
 
-static void tbd_p4_send_sound_mixer_state(const TbdP4SoundData &sound) {
+void tbd_p4_send_sound_mixer_state(const TbdP4SoundData &sound) {
   if (TBD.uart == nullptr || sound.midi_channel >= 16) {
     return;
   }
