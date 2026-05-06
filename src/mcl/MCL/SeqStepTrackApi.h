@@ -181,7 +181,11 @@ public:
     if (param_id >= lock_param_count()) {
       return 0;
     }
-    return MD.kit.params[last_md_track][param_id];
+    uint8_t track = track_index();
+    if (track >= NUM_MD_TRACKS) {
+      return 0;
+    }
+    return MD.kit.params[track][param_id];
   }
 
   bool copy_lock_param_label(uint8_t param_id, char *dst,
@@ -212,8 +216,11 @@ public:
     }
 #endif
 
-    const char *modelname =
-        model_param_name(MD.kit.get_model(last_md_track), param_id);
+    uint8_t track = track_index();
+    if (track >= NUM_MD_TRACKS) {
+      return false;
+    }
+    const char *modelname = model_param_name(MD.kit.get_model(track), param_id);
     if (modelname != nullptr) {
       copy_fixed_label(modelname, dst, dst_len, 3);
       return dst[0] != '\0';
@@ -247,6 +254,15 @@ public:
     }
 #endif
     return md_->step_count;
+  }
+
+  uint8_t track_index() const {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      return step_->track_number;
+    }
+#endif
+    return md_->track_number;
   }
 
   uint8_t mute_state() const {
@@ -905,11 +921,14 @@ inline bool seq_step_api_uses_tbd_tracks() {
 #endif
 }
 
-inline SeqStepTrackApi seq_step_api_track_for(uint8_t track) {
+inline SeqStepTrackApi seq_step_api_track_for(uint8_t track,
+                                              bool use_tbd_tracks) {
 #if defined(PLATFORM_TBD)
-  if (seq_step_api_uses_tbd_tracks()) {
+  if (use_tbd_tracks) {
     return SeqStepTrackApi(mcl_seq.tbd_tracks[track]);
   }
+#else
+  (void)use_tbd_tracks;
 #endif
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {
@@ -919,15 +938,17 @@ inline SeqStepTrackApi seq_step_api_track_for(uint8_t track) {
   return SeqStepTrackApi(mcl_seq.md_tracks[track]);
 }
 
-inline SeqStepTrackApi seq_step_api_active_track() {
-  return seq_step_api_track_for(last_md_track);
+inline SeqStepTrackApi seq_step_api_active_track(bool use_tbd_tracks) {
+  return seq_step_api_track_for(last_md_track, use_tbd_tracks);
 }
 
-inline uint8_t seq_step_api_track_count() {
+inline uint8_t seq_step_api_track_count(bool use_tbd_tracks) {
 #if defined(PLATFORM_TBD)
-  if (seq_step_api_uses_tbd_tracks()) {
+  if (use_tbd_tracks) {
     return mcl_seq.num_tbd_tracks;
   }
+#else
+  (void)use_tbd_tracks;
 #endif
   return mcl_seq.num_md_tracks;
 }

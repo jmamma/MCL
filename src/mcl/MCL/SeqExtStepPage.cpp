@@ -5,18 +5,54 @@
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #include "SeqExtStepTrackApi.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
 
 namespace {
 
-SeqExtStepTrackApi active_ext_step_track() {
+SeqExtStepTrackApi ext_step_track_api(uint8_t track) {
 #ifdef PLATFORM_TBD
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
-    return SeqExtStepTrackApi(mcl_seq.midi_tracks[last_ext_track]);
+    return SeqExtStepTrackApi(mcl_seq.midi_tracks[track]);
   }
 #endif
-  return SeqExtStepTrackApi(mcl_seq.ext_tracks[last_ext_track]);
+  return SeqExtStepTrackApi(mcl_seq.ext_tracks[track]);
+}
+
+SeqExtStepTrackApi active_ext_step_track() {
+  return ext_step_track_api(last_ext_track);
+}
+
+MidiClass *seq_ext_step_input_midi() {
+  MidiDevice *device = device_manager.secondary_device();
+  if (device != nullptr && device->midi != nullptr) {
+    return device->midi;
+  }
+  return generic_midi_device.midi;
+}
+
+bool seq_ext_step_param_menu_label(uint8_t entry_index, uint8_t option_n,
+                                   char *dst, uint8_t dst_len) {
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE ||
+      entry_index != SEQ_MENU_PARAMSELECT) {
+    return false;
+  }
+  return active_ext_step_track().copy_lock_menu_value_label(option_n, dst,
+                                                           dst_len);
+}
+
+bool seq_ext_step_menu_entry_is(uint8_t entry_index) {
+  if (!SeqPage::show_seq_menu) return false;
+  return seq_menu_page.menu.get_item_index(seq_menu_page.encoders[1]->cur) ==
+         entry_index;
+}
+
+uint8_t seq_ext_step_pitch_from_midi_note(uint8_t note_num) {
+  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  if (pitch == 255) return 255;
+  pitch += ptc_param_oct.cur * 12;
+  return pitch < 128 ? pitch : 255;
 }
 
 } // namespace
@@ -26,21 +62,8 @@ void SeqExtStepPage::setup() {
   encoder_init = true;
 }
 void SeqExtStepPage::config() {
-#ifdef EXT_TRACKS
-//  seq_extparam3.cur = mcl_seq.ext_tracks[last_ext_track].length;
-#endif
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
-
-#ifdef EXT_TRACKS
-/*
-  if (mcl_seq.ext_tracks[last_ext_track].speed == EXT_SPEED_2X) {
-    strcpy(info1, "HI-RES");
-  } else {
-    strcpy(info1, "LOW-RES");
-  }
-*/
-#endif
 
   strcpy_P(info2, mclstr_ext);
   // config menu
@@ -86,29 +109,38 @@ void SeqExtStepPage::init() {
   last_cur_x = -1;
   config_menu_entries();
   config_encoders();
-//  midi_events.setup_callbacks();
+  seq_menu_page.menu.option_name_override = seq_ext_step_param_menu_label;
+  midi_events.setup_callbacks();
 
 }
 
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
   MD.set_rec_mode(0);
-//  midi_events.remove_callbacks();
+  if (seq_menu_page.menu.option_name_override == seq_ext_step_param_menu_label) {
+    seq_menu_page.menu.option_name_override = nullptr;
+  }
+  midi_events.remove_callbacks();
 }
 
 #define MAX_FOV_W 96
 
 void SeqExtStepPage::draw_seq_pos() {
   auto active_track = active_ext_step_track();
-  uint16_t cur_tick_x = active_track.step_count() * active_track.ticks_per_step();// + active_track.mod_ticks();
+  uint32_t cur_tick_x =
+      (uint32_t)active_track.step_count() * active_track.ticks_per_step();
 
 
   // Draw sequencer position..
   if (is_within_fov(cur_tick_x)) {
 
-    uint8_t cur_tick_fov_x =
-        max(draw_x,min(draw_x + fov_w, (uint8_t)(draw_x + (((int32_t)fov_pixels_per_tick * (int)(cur_tick_x - fov_offset)) >> 8))));
-    oled_display.drawFastVLine(cur_tick_fov_x, 0, fov_h, WHITE);
+    int32_t cur_tick_fov_x =
+        draw_x + (((int32_t)fov_pixels_per_tick *
+                   (int32_t)(cur_tick_x - fov_offset)) >>
+                  8);
+    cur_tick_fov_x = max((int32_t)draw_x,
+                         min((int32_t)(draw_x + fov_w), cur_tick_fov_x));
+    oled_display.drawFastVLine((uint8_t)cur_tick_fov_x, 0, fov_h, WHITE);
   }
 }
 
@@ -145,10 +177,12 @@ void SeqExtStepPage::draw_grid() {
   }
 
   for (uint8_t i = 0; i < active_track.length(); i++) {
-    uint16_t grid_tick_x = active_track.step_tick(i);
+    uint32_t grid_tick_x = active_track.step_tick(i);
     if (is_within_fov(grid_tick_x)) {
-      uint8_t grid_fov_x =
-          draw_x + (((int32_t)fov_pixels_per_tick * (int)(grid_tick_x - fov_offset)) >> 8);
+      int32_t grid_fov_x =
+          draw_x + (((int32_t)fov_pixels_per_tick *
+                     (int32_t)(grid_tick_x - fov_offset)) >>
+                    8);
 
       if (grid_fov_x < draw_x) continue;
 
@@ -167,16 +201,16 @@ void SeqExtStepPage::draw_grid() {
         if (i % n == 0) {
           //if ((fov_y + k + i) % 2 == 0) {
           if (k % 2 == 0) {
-            oled_display.drawFastVLine(grid_fov_x, v, 4, WHITE);
+            oled_display.drawFastVLine((uint8_t)grid_fov_x, v, 4, WHITE);
           }
           continue;
         }
         if (draw) {
-          oled_display.drawPixel(grid_fov_x, v, WHITE);
+          oled_display.drawPixel((uint8_t)grid_fov_x, v, WHITE);
         }
 
         if (i % m == 0) {
-          oled_display.drawPixel(grid_fov_x, v + (h / 2), WHITE);
+          oled_display.drawPixel((uint8_t)grid_fov_x, v + (h / 2), WHITE);
         }
       }
     }
@@ -197,7 +231,9 @@ void SeqExtStepPage::draw_lockeditor() {
 
   if (is_within_fov(roll_length)) {
     pattern_end_fov_x =
-        min(fov_w, (uint8_t)(((int32_t)fov_pixels_per_tick * (roll_length - fov_offset)) >> 8));
+        min(fov_w, (uint8_t)(((int32_t)fov_pixels_per_tick *
+                              (roll_length - fov_offset)) >>
+                             8));
   }
 
   uint16_t ev_idx = 0, ev_end = 0, ev_j_end;
@@ -231,8 +267,8 @@ void SeqExtStepPage::draw_lockeditor() {
 
       auto ev_j = active_track.event(next_lock_ev);
 
-      int16_t start_x = active_track.event_tick(i, ev);
-      int16_t end_x = active_track.event_tick(j, ev_j);
+      int32_t start_x = active_track.event_tick(i, ev);
+      int32_t end_x = active_track.event_tick(j, ev_j);
       if (start_x == end_x) {
         end_x = start_x - 1;
       }
@@ -243,8 +279,8 @@ void SeqExtStepPage::draw_lockeditor() {
         uint8_t start_y = ev.event_value;
         uint8_t end_y = ev_j.event_value;
 
-        int16_t start_x_tmp = start_x;
-        int16_t end_x_tmp = end_x;
+        int32_t start_x_tmp = start_x;
+        int32_t end_x_tmp = end_x;
         uint8_t start_y_tmp = start_y;
         uint8_t end_y_tmp = end_y;
         if (end_x < start_x) {
@@ -252,17 +288,18 @@ void SeqExtStepPage::draw_lockeditor() {
         }
 
         // Fixed-point gradient (scaled by 256 for precision)
-        int16_t gradient_fixed = 0;
+        int32_t gradient_fixed = 0;
         if (start_x != end_x && ev.event_on) {
           gradient_fixed =
-              ((int16_t)(end_y - start_y) * 256) / (end_x_tmp - start_x_tmp);
+              ((int32_t)(end_y - start_y) * 256) /
+              (end_x_tmp - start_x_tmp);
         }
 
         // y = mx + y2 - mx2 = m( x - x1) + y1
         if (start_x < fov_offset) {
           start_fov_x = 0;
           // start_y_tmp = ((fov_offset - start_x) * gradient) + start_y
-          int16_t dx = fov_offset - start_x;
+          int32_t dx = fov_offset - start_x;
           start_y_tmp = ((dx * gradient_fixed) / 256) + start_y;
         } else {
           // Convert fov_pixels_per_tick to fixed point once:
@@ -273,7 +310,7 @@ void SeqExtStepPage::draw_lockeditor() {
 
         if (end_x >= fov_offset + fov_length) {
           end_fov_x = fov_w;
-          int16_t dx;
+          int32_t dx;
           if (start_x > end_x) {
             dx = fov_offset + fov_length + roll_length - start_x;
           } else {
@@ -291,7 +328,7 @@ void SeqExtStepPage::draw_lockeditor() {
         if (end_x < start_x) {
           // Wrap around note
           if (start_x < fov_offset + fov_length) {
-            int16_t dx = fov_offset + fov_length - start_x;
+            int32_t dx = fov_offset + fov_length - start_x;
             uint8_t calc_end_y_tmp = ((dx * gradient_fixed) / 256) + start_y;
             uint8_t tmp_end_fov_y =
                 fov_h - ((uint16_t)calc_end_y_tmp * fov_h) / 128;
@@ -301,7 +338,7 @@ void SeqExtStepPage::draw_lockeditor() {
           }
 
           if (end_x > fov_offset) {
-            int16_t dx = roll_length - start_x + fov_offset;
+            int32_t dx = roll_length - start_x + fov_offset;
             uint8_t calc_end_y_tmp = ((dx * gradient_fixed) >> 8) + start_y;
             uint8_t tmp_end_fov_y =
                 fov_h - ((uint16_t)calc_end_y_tmp * fov_h) / 128;
@@ -323,9 +360,12 @@ void SeqExtStepPage::draw_lockeditor() {
       }
     }
     // Draw interactive cursor
-    int16_t fov_cur_x = ((int32_t)(cur_x - fov_offset) * fov_pixels_per_tick) >> 8;
+    int32_t fov_cur_x =
+        ((int32_t)(cur_x - fov_offset) * fov_pixels_per_tick) >> 8;
     uint8_t fov_cur_y = fov_h - ((uint16_t)lock_cur_y * fov_h / 128);
-    mcl_gui.draw_cross(draw_x + fov_cur_x, draw_y + fov_cur_y);
+    if (fov_cur_x < 0) fov_cur_x = 0;
+    if (fov_cur_x > fov_w) fov_cur_x = fov_w;
+    mcl_gui.draw_cross(draw_x + (uint8_t)fov_cur_x, draw_y + fov_cur_y);
   }
 
 void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov) {
@@ -345,7 +385,9 @@ void SeqExtStepPage::draw_pianoroll() {
 
   if (is_within_fov(roll_length)) {
     pattern_end_fov_x =
-        min(fov_w, (uint8_t)(((int32_t)fov_pixels_per_tick * (roll_length - fov_offset)) >> 8));
+        min(fov_w, (uint8_t)(((int32_t)fov_pixels_per_tick *
+                              (roll_length - fov_offset)) >>
+                             8));
   }
 
   uint16_t ev_idx = 0, ev_end = 0;
@@ -371,8 +413,8 @@ void SeqExtStepPage::draw_pianoroll() {
       }
       auto ev_j = active_track.event(note_off_idx);
 
-      int16_t note_start = active_track.event_tick(i, ev);
-      int16_t note_end = active_track.event_tick(j, ev_j);
+      int32_t note_start = active_track.event_tick(i, ev);
+      int32_t note_end = active_track.event_tick(j, ev_j);
 
       if (i > j && j == 0) { note_end += timing_mid * active_track.length(); }
 
@@ -453,8 +495,9 @@ void SeqExtStepPage::draw_pianoroll() {
   }
   // Draw interactive cursor
   uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * ((fov_h) / fov_notes));
-  int16_t fov_cur_x = ((int32_t)(cur_x - fov_offset) * fov_pixels_per_tick) >> 8;
-  uint8_t fov_cur_w = ((int32_t)cur_w * fov_pixels_per_tick + 255) >> 8;
+  int32_t fov_cur_x =
+      ((int32_t)(cur_x - fov_offset) * fov_pixels_per_tick) >> 8;
+  uint16_t fov_cur_w = ((int32_t)cur_w * fov_pixels_per_tick + 255) >> 8;
   if (fov_cur_x < 0) {
     fov_cur_x = 0;
   }
@@ -462,8 +505,8 @@ void SeqExtStepPage::draw_pianoroll() {
     if (fov_cur_x + fov_cur_w > fov_w) {
       fov_cur_w = fov_w - fov_cur_x;
     }
-    oled_display.fillRect(draw_x + fov_cur_x, draw_y + fov_cur_y, fov_cur_w,
-                        (fov_h / fov_notes), WHITE);
+    oled_display.fillRect(draw_x + (uint8_t)fov_cur_x, draw_y + fov_cur_y,
+                          (uint8_t)fov_cur_w, (fov_h / fov_notes), WHITE);
   }
 }
 
@@ -473,27 +516,28 @@ void SeqExtStepPage::draw_viewport_minimap() {
 
   constexpr uint16_t width = pidx_w * 4 + 3;
 
-  uint16_t pattern_end = max(16,active_track.length()) * timing_mid;
+  uint32_t pattern_end = (uint32_t)max(16, active_track.length()) * timing_mid;
 
-  uint16_t cur_tick_x =
-      active_track.step_count() * timing_mid + active_track.mod_ticks();
+  uint32_t cur_tick_x =
+      (uint32_t)active_track.step_count() * timing_mid + active_track.mod_ticks();
 
   oled_display.drawRect(pidx_x0, pidx_y, width, pidx_h, WHITE);
 
   // viewport is [fov_offset, fov_offset+fov_length] out of [0,
   // pattern_end]
 
-  uint16_t s = fov_offset * (width - 1) / pattern_end;
+  uint16_t s = (uint32_t)fov_offset * (width - 1) / pattern_end;
   uint16_t w = fov_length * (width - 2) / pattern_end;
-  uint16_t p = min(width, cur_tick_x * (width - 1) / pattern_end);
+  uint16_t p =
+      min((uint32_t)width, cur_tick_x * (width - 1) / pattern_end);
 
   oled_display.drawFastHLine(pidx_x0 + 1 + s, pidx_y + 1, w, WHITE);
 
   oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
 }
 
-void SeqExtStepPage::pos_cur_x(int16_t diff) {
-  uint16_t w = cur_w;
+void SeqExtStepPage::pos_cur_x(int32_t diff) {
+  int32_t w = cur_w;
   if (pianoroll_mode >= 1) {
     w = 3;
   }
@@ -549,8 +593,8 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
       auto active_track = active_ext_step_track();
       uint16_t timing_mid = active_track.ticks_per_step();
 
-      uint16_t pos = fov_offset + timing_mid * n;
-      uint16_t w = cur_w;
+      uint32_t pos = fov_offset + (uint32_t)timing_mid * n;
+      uint32_t w = cur_w;
       if (pos + w >= roll_length) { w = roll_length - pos - 1; }
 
       active_track.delete_note(pos, w - 1, cur_y);
@@ -599,7 +643,7 @@ void SeqExtStepPage::pos_cur_y(int16_t diff) {
   }
 }
 
-void SeqExtStepPage::pos_cur_w(int16_t diff) {
+void SeqExtStepPage::pos_cur_w(int32_t diff) {
   if (diff < 0) {
     cur_w += diff;
     cur_w = max(cur_w, cur_w_min);
@@ -661,12 +705,33 @@ void SeqExtStepPage::loop() {
       }
       last_pianoroll_mode = pianoroll_mode;
     }
-    if (is_lockeditor) {
+    if (is_lockeditor &&
+        seq_ext_step_menu_entry_is(SEQ_MENU_PARAMSELECT)) {
+      auto *value_encoder = (MCLEncoder *)seq_menu_page.encoders[0];
+      value_encoder->min = 0;
+      value_encoder->max = active_track.lock_param_menu_max();
+      if (!active_track.selected_lock_menu_editable(pianoroll_mode - 1)) {
+        value_encoder->setValue(PARAM_OFF);
+        param_select = PARAM_OFF;
+        return;
+      }
+      bool menu_value_changed = value_encoder->cur != value_encoder->old;
+      uint8_t normalized = active_track.normalize_lock_menu_value(
+          value_encoder->cur, value_encoder->old);
+      if (normalized != value_encoder->cur) {
+        value_encoder->setValue(normalized);
+        menu_value_changed = true;
+      }
+      param_select = normalized;
       active_track.set_selected_lock_menu_value(pianoroll_mode - 1,
                                                 param_select);
+      if (menu_value_changed) {
+        lock_cur_y =
+            active_track.selected_lock_current_ui_value(pianoroll_mode - 1);
+      }
     }
   }
-  int16_t diff = seq_extparam1.getValue();
+  int32_t diff = seq_extparam1.getValue();
   if (diff) {
     // Horizontal translation
 
@@ -701,7 +766,8 @@ void SeqExtStepPage::loop() {
 
   if (cur_w > roll_length) { cur_w = roll_length / 2; }
 
-  int fov_length_new = ((int32_t)active_track.length() * timing_mid * fov_pixels_per_tick) >> 8;
+  int32_t fov_length_new =
+      ((int32_t)active_track.length() * timing_mid * fov_pixels_per_tick) >> 8;
   if (fov_length_new < fov_w) {
       seq_extparam4.cur = (uint16_t)active_track.length() * active_track.speed_multiplier_int() / 12;
       if (seq_extparam4.cur > zoom_max) {
@@ -720,15 +786,16 @@ void SeqExtStepPage::loop() {
     fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
     if (fov_length > roll_length) { fov_length = roll_length; }
 
-    int x = cur_x - fov_offset;
+    int32_t x = cur_x - fov_offset;
 
-    int fov_old_x = ((int32_t)x * fov_pixels_per_tick) >> 8;
+    int32_t fov_old_x = ((int32_t)x * fov_pixels_per_tick) >> 8;
 
     fov_pixels_per_tick = ((uint32_t)fov_w << 8) / fov_length;
 
-    int fov_cur_x = ((int32_t)x * fov_pixels_per_tick) >> 8;
+    int32_t fov_cur_x = ((int32_t)x * fov_pixels_per_tick) >> 8;
 
-    int offset = ((int32_t)(fov_cur_x - fov_old_x) << 8) / fov_pixels_per_tick;
+    int32_t offset =
+        ((int32_t)(fov_cur_x - fov_old_x) << 8) / fov_pixels_per_tick;
 
     fov_offset += offset;
 
@@ -755,7 +822,7 @@ void SeqExtStepPage::display() {
   if (pianoroll_mode == 0) {
     uint8_t oct = cur_y / 12;
     uint8_t note = cur_y - 12 * (cur_y / 12);
-    char str[4] = " ";
+    char str[5] = " ";
     strcpy(str + 1, number_to_note.notes_upper[note]);
     str[3] = oct + '0';
     str[4] = 0;
@@ -763,17 +830,15 @@ void SeqExtStepPage::display() {
     strcpy_P(info2, mclstr_note);
     draw_pianoroll();
   } else {
-#ifdef PLATFORM_TBD
     if (!active_track.copy_selected_lock_label(pianoroll_mode - 1, info2,
                                                sizeof(info2))) {
       strcpy_P(info2, mclstr_lock_space);
       mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
     }
-#else
-    strcpy_P(info2, mclstr_lock_space);
-    mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
-#endif
-    mcl_gui.put_value_at(lock_cur_y, info1);
+    if (!active_track.copy_lock_value_label(pianoroll_mode - 1, lock_cur_y,
+                                            info1, sizeof(info1))) {
+      mcl_gui.put_value_at(lock_cur_y, info1);
+    }
     draw_lockeditor();
   }
   } while (epoch != active_track.change_counter());
@@ -809,7 +874,7 @@ void SeqExtStepPage::display() {
 
 void SeqExtStepPage::enter_notes() {
   auto active_track = active_ext_step_track();
-  uint16_t w = cur_w;
+  uint32_t w = cur_w;
   if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
 
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
@@ -826,6 +891,8 @@ void SeqExtStepPage::param_select_update() {
   if (pianoroll_mode > 0) {
     auto active_track = active_ext_step_track();
     param_select = active_track.selected_lock_menu_value(pianoroll_mode - 1);
+    param_select = active_track.normalize_lock_menu_value(param_select,
+                                                          param_select);
   }
 }
 
@@ -855,8 +922,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
     if (mask == EVENT_BUTTON_PRESSED) {
       // cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
-      int a = 16 * timing_mid;
-      int new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
+      int32_t a = 16 * timing_mid;
+      int32_t new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
       pos_cur_x(new_x);
       new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
       pos_cur_x(new_x);
@@ -882,7 +949,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t inc = 1;
-    int w = timing_mid;
+    int32_t w = timing_mid;
     if (key_interface.is_key_down(MDX_KEY_FUNC)) {
       inc = 4;
       w = w * 2;
@@ -902,7 +969,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         //   seq_extparam4.cur = 16;
         //
         // int a = fov_length
-        int a = timing_mid * 16; // / active_track.get_speed_multiplier();
+        int32_t a = timing_mid * 16; // / active_track.get_speed_multiplier();
         cur_x += a;
         if (cur_x > fov_offset + fov_length) {
           fov_offset += a;
@@ -963,27 +1030,17 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         switch (key) {
 
         case MDX_KEY_LEFT: {
-          //  if (key_interface.is_key_down(MDX_KEY_FUNC) &&
-          //      (pianoroll_mode == 0)) {
-          //    mcl_seq.ext_tracks[last_ext_track].rotate_left();
-          //  } else {
           pos_cur_x(-1 * w);
           if (key_interface.is_key_down(MDX_KEY_YES)) {
             key_interface.ignoreNextEvent(MDX_KEY_YES);
           }
-          //  }
           return true;
         }
         case MDX_KEY_RIGHT: {
-          //  if (key_interface.is_key_down(MDX_KEY_FUNC) &&
-          //       (pianoroll_mode == 0)) {
-          //     mcl_seq.ext_tracks[last_ext_track].rotate_right();
-          //   } else {
           pos_cur_x(w);
           if (key_interface.is_key_down(MDX_KEY_YES)) {
             key_interface.ignoreNextEvent(MDX_KEY_YES);
           }
-          //   }
           return true;
         }
         case MDX_KEY_UP: {
@@ -1041,7 +1098,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         if (active_track.notes_on_count() > 0) {
           enter_notes();
         } else {
-          uint16_t w = cur_w;
+          uint32_t w = cur_w;
           if (cur_x + w >= roll_length) {
             w = roll_length - cur_x - 1;
           }
@@ -1073,127 +1130,244 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 }
 
 void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
-  /*
-    uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-    uint8_t param = msg[1];
-    uint8_t value = msg[2];
-    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-      if (mcl_seq.ext_tracks[n].channel == channel) {
-        if (SeqPage::pianoroll_mode > 0) {
-          if (mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] -
-                  1 ==
-              PARAM_LEARN) {
-            mcl_seq.ext_tracks[n].locks_params[SeqPage::pianoroll_mode - 1] =
-                param + 1;
-            SeqPage::param_select = param;
-          }
-        }
-        if (SeqPage::recording) {
-          DEBUG_DUMP("Record... cc");
-          mcl_seq.ext_tracks[n].record_track_locks(param, value,
-    SeqPage::slide); mcl_seq.ext_tracks[n].update_param(param, value);
-        }
-        return;
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
+
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t param = msg[1];
+  uint8_t value = msg[2];
+  uint8_t track = mcl_seq.find_ext_track(channel);
+  if (track == 255) return;
+
+  auto active_track = ext_step_track_api(track);
+  if (mcl_cfg.uart_cc_fwd) {
+    active_track.send_cc(param, value);
+  }
+
+  if (last_ext_track != track) {
+    last_ext_track = track;
+    SeqPage::midi_device = device_manager.secondary_device();
+    seq_extstep_page.config_encoders();
+  }
+
+#ifdef PLATFORM_TBD
+  SeqExtParsedControl parsed_control;
+  if (control_state.parse_cc(channel, param, value, parsed_control)) {
+    if (!parsed_control.has_value) return;
+
+    if (SeqPage::pianoroll_mode > 0) {
+      uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
+      SeqExtStepLockParamInfo info;
+      if (active_track.selected_lock_param_info(lock_idx, info) &&
+          info.learn) {
+        active_track.set_selected_lock_control(
+            lock_idx, parsed_control.ctrl_type, parsed_control.parameter,
+            parsed_control.value);
+      }
+      if (active_track.selected_lock_matches_control(
+              lock_idx, parsed_control.ctrl_type, parsed_control.parameter)) {
+        seq_extstep_page.lock_cur_y = active_track.lock_ui_value_from_control(
+            lock_idx, parsed_control.ctrl_type, parsed_control.parameter,
+            parsed_control.value);
       }
     }
-  */
+
+    if (last_ext_track == track && note_interface.notes_on &&
+        SeqPage::pianoroll_mode > 0) {
+      auto page_track = active_ext_step_track();
+      uint16_t timing_mid = page_track.ticks_per_step();
+      uint32_t page_width = 16 * (uint32_t)timing_mid;
+      uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
+      SeqExtStepLockParamInfo info;
+      if (!page_track.selected_lock_param_info(lock_idx, info)) {
+        return;
+      }
+      if (info.learn) {
+        page_track.set_selected_lock_control(
+            lock_idx, parsed_control.ctrl_type, parsed_control.parameter,
+            parsed_control.value);
+        page_track.selected_lock_param_info(lock_idx, info);
+      }
+      if (!page_track.selected_lock_matches_control(
+              lock_idx, parsed_control.ctrl_type, parsed_control.parameter)) {
+        return;
+      }
+      uint8_t lock_param = info.param_id <= 127 ? (uint8_t)info.param_id : 0;
+      for (uint8_t i = 0; i < 16; i++) {
+        if (!note_interface.is_note_on(i)) continue;
+        uint8_t step = ((seq_extstep_page.cur_x / page_width) * 16) + i;
+        if (step >= page_track.length()) continue;
+        uint8_t lock_value = page_track.lock_ui_value_from_control(
+            lock_idx, parsed_control.ctrl_type, parsed_control.parameter,
+            parsed_control.value);
+        page_track.add_lock(step, timing_mid, lock_param, lock_value,
+                            SeqPage::slide, lock_idx);
+      }
+    }
+
+    if (SeqPage::recording && MidiClock.state == 2 &&
+        !note_interface.notes_on) {
+      active_track.record_control_lock(
+          parsed_control.ctrl_type, parsed_control.parameter,
+          parsed_control.value, SeqPage::slide);
+    }
+    return;
+  }
+#endif
+
+  if (SeqPage::pianoroll_mode > 0) {
+    uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
+    SeqExtStepLockParamInfo info;
+    if (active_track.selected_lock_param_info(lock_idx, info) &&
+        info.learn) {
+      SeqPage::param_select = param;
+      active_track.set_selected_lock_menu_value(lock_idx, param);
+    }
+    if (active_track.selected_lock_matches_control(
+            lock_idx, SEQ_EXT_LOCK_CTRL_CC, param)) {
+      seq_extstep_page.lock_cur_y = active_track.lock_ui_value_from_control(
+          lock_idx, SEQ_EXT_LOCK_CTRL_CC, param, value);
+    }
+  }
+
+  if (last_ext_track == track && note_interface.notes_on &&
+      SeqPage::pianoroll_mode > 0) {
+    auto page_track = active_ext_step_track();
+    uint16_t timing_mid = page_track.ticks_per_step();
+    uint32_t page_width = 16 * (uint32_t)timing_mid;
+    uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
+    uint8_t lock_param = 0;
+    if (!page_track.selected_lock_param_id(lock_idx, lock_param)) {
+      return;
+    }
+    SeqExtStepLockParamInfo info;
+    page_track.selected_lock_param_info(lock_idx, info);
+    if (info.learn) {
+      SeqPage::param_select = param;
+      page_track.set_selected_lock_menu_value(lock_idx, param);
+      lock_param = param;
+    } else if (!page_track.selected_lock_matches_control(
+                   lock_idx, SEQ_EXT_LOCK_CTRL_CC, param)) {
+      return;
+    }
+    for (uint8_t i = 0; i < 16; i++) {
+      if (!note_interface.is_note_on(i)) continue;
+      uint8_t step = ((seq_extstep_page.cur_x / page_width) * 16) + i;
+      if (step >= page_track.length()) continue;
+      uint8_t lock_value = page_track.lock_ui_value_from_control(
+          lock_idx, SEQ_EXT_LOCK_CTRL_CC, param, value);
+      page_track.add_lock(step, timing_mid, lock_param, lock_value,
+                          SeqPage::slide, lock_idx);
+    }
+  }
+
+  if (SeqPage::recording && MidiClock.state == 2 &&
+      !note_interface.notes_on &&
+      param != device_manager.secondary_device()->get_mute_cc()) {
+    active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_CC, param, value,
+                                     SeqPage::slide);
+  }
 }
 
 void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
-  // Step edit for ExtSeq
-  // For each incoming note, check to see if note interface has any steps
-  // selected For selected steps record notes.
-#ifdef EXT_TRACKS
-/*
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
+
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t note_num = msg[1];
-  DEBUG_PRINT(F("note on midi2 ext, "));
-  DEBUG_DUMP(channel);
-  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-    if (mcl_seq.ext_tracks[n].channel == channel) {
+  uint8_t track = mcl_seq.find_ext_track(channel);
+  if (track == 255) return;
 
-      auto fov_y = seq_extstep_page.fov_y;
-      auto cur_y =
-          seq_ptc_page.seq_ext_pitch(note_num) + ptc_param_oct.cur * 12;
-      if (cur_y > 127) {
-        continue;
-      }
+  uint8_t pitch = seq_ext_step_pitch_from_midi_note(note_num);
+  if (pitch == 255) return;
 
-      if (fov_y >= cur_y && cur_y != 0) {
-        fov_y = cur_y - 1;
-      } else if (fov_y + SeqExtStepPage::fov_notes <= cur_y) {
-        fov_y = cur_y - SeqExtStepPage::fov_notes;
-      }
-      if (MidiClock.state != 2) {
-        seq_extstep_page.fov_y = fov_y;
-        seq_extstep_page.cur_y = cur_y;
-      }
-
-      if (last_ext_track != n) {
-        last_ext_track = n;
-        return;
-      }
-
-      mcl_seq.ext_tracks[n].record_track_noteon(cur_y, msg[2]);
-      if (seq_extstep_page.x_notes_down > 0) {
-        seq_extstep_page.enter_notes();
-      }
-      // if ((MidiClock.state != 2) || (seq_extstep_page.recording)) {
-      seq_extstep_page.last_rec_event = REC_EVENT_TRIG;
-      uint8_t vel = SeqPage::velocity;
-      if (seq_extstep_page.recording) {
-        vel = msg[2];
-      }
-      mcl_seq.ext_tracks[n].note_on(cur_y, vel);
-      //}
-      return;
-    }
+  if (last_ext_track != track) {
+    last_ext_track = track;
+    SeqPage::midi_device = device_manager.secondary_device();
+    seq_extstep_page.config_encoders();
   }
-*/
-#endif
+
+  auto active_track = ext_step_track_api(track);
+  seq_extstep_page.set_cur_y(pitch);
+  active_track.record_note_on(pitch, msg[2]);
+  seq_extstep_page.last_rec_event = REC_EVENT_TRIG;
+
+  uint8_t velocity = SeqPage::recording ? msg[2] : SeqPage::velocity;
+  if (mcl_cfg.uart_note_fwd) {
+    active_track.note_on(pitch, velocity);
+  }
 }
 
 void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
-#ifdef EXT_TRACKS
-/*
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
+
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t note_num = msg[1];
-  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num) + ptc_param_oct.cur * 12;
+  uint8_t track = mcl_seq.find_ext_track(channel);
+  if (track == 255) return;
 
-  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-    if (mcl_seq.ext_tracks[n].channel == channel) {
+  uint8_t pitch = seq_ext_step_pitch_from_midi_note(note_num);
+  if (pitch == 255) return;
 
-      // if (MidiClock.state != 2) {
-      mcl_seq.ext_tracks[n].note_off(pitch);
-      // }
-      if ((seq_extstep_page.recording) && (MidiClock.state == 2)) {
-        mcl_seq.ext_tracks[n].note_off(pitch);
-        mcl_seq.ext_tracks[n].record_track_noteoff(pitch);
-      } else {
-        mcl_seq.ext_tracks[n].remove_notes_on(pitch);
-      }
-      return;
-    }
+  auto active_track = ext_step_track_api(track);
+  if (mcl_cfg.uart_note_fwd) {
+    active_track.note_off(pitch, msg[2]);
   }
-  */
-#endif
+  active_track.record_note_off(pitch);
+}
+
+void SeqExtStepMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
+
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t track = mcl_seq.find_ext_track(channel);
+  if (track == 255) return;
+
+  uint16_t value = msg[1] | (msg[2] << 7);
+  auto active_track = ext_step_track_api(track);
+  active_track.pitch_bend(value);
+  if (SeqPage::recording && MidiClock.state == 2) {
+    active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_PITCH_BEND, 0, value,
+                                     SeqPage::slide);
+  }
+}
+
+void SeqExtStepMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
+
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t track = mcl_seq.find_ext_track(channel);
+  if (track == 255) return;
+
+  auto active_track = ext_step_track_api(track);
+  active_track.channel_pressure(msg[1]);
+  if (SeqPage::recording && MidiClock.state == 2) {
+    active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE, 0,
+                                     msg[1], false);
+  }
 }
 
 void SeqExtStepMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  /*
-    Midi2.addOnNoteOnCallback(
-        this,
-    (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
-    Midi2.addOnNoteOffCallback(
-        this,
-        (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
-    Midi2.addOnControlChangeCallback(this,
-                                     (midi_callback_ptr_t)&SeqExtStepMidiEvents::
-                                         onControlChangeCallback_Midi2);
-  */
+  bound_midi = seq_ext_step_input_midi();
+  if (bound_midi == nullptr) {
+    return;
+  }
+  bound_midi->addOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
+  bound_midi->addOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
+  bound_midi->addOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onControlChangeCallback_Midi2);
+  bound_midi->addOnPitchWheelCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onPitchWheelCallback_Midi2);
+  bound_midi->addOnChannelPressureCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::
+          onChannelPressureCallback_Midi2);
   state = true;
 }
 
@@ -1202,16 +1376,26 @@ void SeqExtStepMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  /*
-    Midi2.removeOnNoteOnCallback(
-        this,
-    (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
-    Midi2.removeOnNoteOffCallback(
-        this,
-        (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
-    Midi2.removeOnControlChangeCallback(
-        this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::
-                  onControlChangeCallback_Midi2);
-  */
+  if (bound_midi == nullptr) {
+    state = false;
+    bound_midi = nullptr;
+    return;
+  }
+  bound_midi->removeOnNoteOnCallback(
+      this, (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOnCallback_Midi2);
+  bound_midi->removeOnNoteOffCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onNoteOffCallback_Midi2);
+  bound_midi->removeOnControlChangeCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onControlChangeCallback_Midi2);
+  bound_midi->removeOnPitchWheelCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onPitchWheelCallback_Midi2);
+  bound_midi->removeOnChannelPressureCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::
+          onChannelPressureCallback_Midi2);
   state = false;
+  bound_midi = nullptr;
 }

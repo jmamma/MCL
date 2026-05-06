@@ -5,6 +5,7 @@
 #include "MCLSysConfig.h"
 #include "MidiActivePeering.h"
 #include "DeviceManager.h"
+#include "NoteInterface.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MNM/MNM.h"
@@ -224,6 +225,10 @@ void MidiSetup::cfg_ports(bool boot) {
     seq_ptc_page.midi_events.remove_callbacks();
     seq_ptc_page.midi_events.setup_callbacks();
   }
+  note_interface.ni_midi_events.remove_callbacks();
+  note_interface.ni_midi_events.setup_callbacks();
+  mcl_seq.midi_events.remove_callbacks();
+  mcl_seq.midi_events.setup_callbacks();
 }
 
 void resolve_slots(PortSlot slots[SLOT_COUNT]) {

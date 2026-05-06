@@ -22,7 +22,15 @@
 
 namespace {
 
-SeqStepTrackApi active_step_track() { return seq_step_api_active_track(); }
+bool use_tbd_step_tracks() { return seq_step_api_uses_tbd_tracks(); }
+
+SeqStepTrackApi step_track_for(uint8_t track) {
+  return seq_step_api_track_for(track, use_tbd_step_tracks());
+}
+
+SeqStepTrackApi active_step_track() {
+  return seq_step_api_active_track(use_tbd_step_tracks());
+}
 
 void draw_active_step_masks(SeqStepPage &page, SeqStepTrackApi active_track,
                             uint8_t offset, bool show_current_step = true) {
@@ -485,7 +493,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         last_step = track;
 
         if (MidiClock.state == 2) {
-          seq_step_api_track_for(track).record_track(127);
+          step_track_for(track).record_track(127);
         }
         key_interface.send_md_leds(TRIGLED_OVERLAY);
         return true;
@@ -761,7 +769,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
-  SeqStepTrackApi event_track = seq_step_api_track_for(track);
+  SeqStepTrackApi event_track = seq_step_api_track_for(track, false);
   uint8_t step;
   // Engine, not device: the recorder writes into the active engine's lock
   // storage. If the device sends a param outside the active engine's lock

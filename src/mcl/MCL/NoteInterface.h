@@ -14,9 +14,13 @@
 
 #define NI_MAX_NOTES NUM_SLOTS
 
+class MidiClass;
+
 class NoteInterfaceMidiEvents : public MidiCallback {
 public:
-  bool state;
+  bool state = false;
+  MidiClass *bound_primary_midi = nullptr;
+  MidiClass *bound_secondary_midi = nullptr;
   void setup_callbacks();
   void remove_callbacks();
 

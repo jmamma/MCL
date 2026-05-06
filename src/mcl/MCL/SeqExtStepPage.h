@@ -5,11 +5,20 @@
 
 #include "SeqPage.h"
 #include "SeqStepPage.h"
+#ifdef PLATFORM_TBD
+#include "SeqExtMidiControl.h"
+#endif
+
+class MidiClass;
 
 void ext_pattern_len_handler(Encoder *enc);
 class SeqExtStepMidiEvents : public MidiCallback {
 public:
-  bool state;
+  bool state = false;
+  MidiClass *bound_midi = nullptr;
+#ifdef PLATFORM_TBD
+  SeqExtMidiControlState control_state;
+#endif
 
   void setup_callbacks();
   void remove_callbacks();
@@ -17,6 +26,8 @@ public:
   void onNoteOnCallback_Midi2(uint8_t *msg);
   void onNoteOffCallback_Midi2(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
+  void onPitchWheelCallback_Midi2(uint8_t *msg);
+  void onChannelPressureCallback_Midi2(uint8_t *msg);
 };
 
 class SeqExtStepPage : public SeqPage {
@@ -27,8 +38,8 @@ public:
   static constexpr uint8_t fov_h = 28;
   int16_t fov_y;
 
-  int16_t fov_offset = 0;
-  uint16_t fov_length;
+  int32_t fov_offset = 0;
+  int32_t fov_length;
 
   static constexpr uint8_t draw_y = 2;
   static constexpr uint8_t draw_x = 128 - fov_w;
@@ -38,17 +49,17 @@ public:
 
   uint16_t fov_pixels_per_tick; // Q8: actual_value × 256
 
-  int16_t cur_x;
+  int32_t cur_x;
   int16_t cur_y;
-  int16_t cur_w;
+  int32_t cur_w;
 
-  int16_t last_cur_x;
+  int32_t last_cur_x;
 
   int8_t lock_cur_y = 64;
 
-  static constexpr int16_t cur_w_min = 2;
+  static constexpr int32_t cur_w_min = 2;
 
-  int16_t roll_length;
+  int32_t roll_length;
 
   bool scroll_dir;
 
@@ -69,16 +80,16 @@ public:
   void draw_seq_pos();
   void draw_grid();
   void set_cur_y(uint8_t cur_y_);
-  void pos_cur_x(int16_t diff);
+  void pos_cur_x(int32_t diff);
   void pos_cur_y(int16_t diff);
-  void pos_cur_w(int16_t diff);
+  void pos_cur_w(int32_t diff);
 
-  inline bool is_within_fov(int16_t x) {
+  inline bool is_within_fov(int32_t x) {
     return (x - fov_offset) < fov_length;
   }
 
-  bool is_within_fov(int16_t start_x, int16_t end_x) {
-    int16_t fov_end = fov_offset + fov_length;
+  bool is_within_fov(int32_t start_x, int32_t end_x) {
+    int32_t fov_end = fov_offset + fov_length;
     // Handle wrap-around case
     if (end_x < start_x) {
         return (start_x < fov_end) || (end_x >= fov_offset);

@@ -157,20 +157,23 @@ void NoteInterfaceMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-/*
-  Midi.addOnNoteOnCallback(
-      this,
-      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
-  Midi.addOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
-*/
-  generic_midi_device.midi->addOnNoteOnCallback(
-      this,
-      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
-  generic_midi_device.midi->addOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
+
+  bound_primary_midi = nullptr;
+  bound_secondary_midi = nullptr;
+
+  MidiDevice *secondary = device_manager.secondary_device();
+  bound_secondary_midi =
+      (secondary != nullptr && secondary->midi != nullptr)
+          ? secondary->midi
+          : generic_midi_device.midi;
+  if (bound_secondary_midi != nullptr) {
+    bound_secondary_midi->addOnNoteOnCallback(
+        this,
+        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
+    bound_secondary_midi->addOnNoteOffCallback(
+        this,
+        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
+  }
   state = true;
 }
 
@@ -179,20 +182,25 @@ void NoteInterfaceMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-/*
-  Midi.removeOnNoteOnCallback(
-      this,
-      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
-  Midi.removeOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
-*/
-  generic_midi_device.midi->removeOnNoteOnCallback(
-      this,
-      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
-  generic_midi_device.midi->removeOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
+  if (bound_primary_midi != nullptr) {
+    bound_primary_midi->removeOnNoteOnCallback(
+        this,
+        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
+    bound_primary_midi->removeOnNoteOffCallback(
+        this,
+        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
+    bound_primary_midi = nullptr;
+  }
+
+  if (bound_secondary_midi != nullptr) {
+    bound_secondary_midi->removeOnNoteOnCallback(
+        this,
+        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
+    bound_secondary_midi->removeOnNoteOffCallback(
+        this,
+        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
+    bound_secondary_midi = nullptr;
+  }
 
   state = false;
 }

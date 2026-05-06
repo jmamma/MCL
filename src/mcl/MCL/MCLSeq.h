@@ -35,7 +35,9 @@
 
 class MCLSeqMidiEvents : public MidiCallback {
 public:
-  bool state;
+  bool state = false;
+  MidiClass *bound_md_midi = nullptr;
+  MidiClass *bound_secondary_midi = nullptr;
   void setup_callbacks();
   void remove_callbacks();
 

@@ -699,18 +699,31 @@ void MCLSeqMidiEvents::setup_callbacks() {
     return;
   }
 
-  MD.midi->addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
-  MD.midi->addOnNoteOffCallback(
-       this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
+  bound_md_midi = nullptr;
+  bound_secondary_midi = nullptr;
 
-  MD.midi->addOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
+  if (seq_grid_x_runs_md_tracks() && MD.midi != nullptr) {
+    MD.midi->addOnNoteOnCallback(
+        this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
+    MD.midi->addOnNoteOffCallback(
+         this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
+
+    MD.midi->addOnControlChangeCallback(
+        this,
+        (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
+    bound_md_midi = MD.midi;
+  }
 #ifdef EXT_TRACKS
-  generic_midi_device.midi->addOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
+  MidiDevice *secondary = device_manager.secondary_device();
+  bound_secondary_midi =
+      (secondary != nullptr && secondary->midi != nullptr)
+          ? secondary->midi
+          : generic_midi_device.midi;
+  if (bound_secondary_midi != nullptr) {
+    bound_secondary_midi->addOnControlChangeCallback(
+        this,
+        (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
+  }
 #endif
   state = true;
 }
@@ -721,17 +734,23 @@ void MCLSeqMidiEvents::remove_callbacks() {
     return;
   }
 
-  MD.midi->removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
-  MD.midi->removeOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
-  MD.midi->removeOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
+  if (bound_md_midi != nullptr) {
+    bound_md_midi->removeOnNoteOnCallback(
+        this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
+    bound_md_midi->removeOnNoteOffCallback(
+        this, (midi_callback_ptr_t)&MCLSeqMidiEvents::onNoteCallback_Midi);
+    bound_md_midi->removeOnControlChangeCallback(
+        this,
+        (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi);
+    bound_md_midi = nullptr;
+  }
 
-  generic_midi_device.midi->removeOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
+  if (bound_secondary_midi != nullptr) {
+    bound_secondary_midi->removeOnControlChangeCallback(
+        this,
+        (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
+    bound_secondary_midi = nullptr;
+  }
 
   state = false;
 }
