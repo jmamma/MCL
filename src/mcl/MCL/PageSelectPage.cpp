@@ -313,7 +313,8 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    const bool is_md_port = device_manager.port_is_device(port, DEVICE_MD);
+    const bool is_md_port = device_manager.port_supports(
+        port, MidiDeviceCapability::MdTrigInterface);
 
     uint8_t track = event->source;
     // note interface presses select corresponding page

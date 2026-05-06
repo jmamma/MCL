@@ -21,12 +21,9 @@ MidiDevice *DeviceManager::device_for_port(uint8_t port) const {
   return &null_midi_device;
 }
 
-uint8_t DeviceManager::device_id_for_port(uint8_t port) const {
-  return device_for_port(port)->id;
-}
-
-bool DeviceManager::port_is_device(uint8_t port, uint8_t device_id) const {
-  return device_id_for_port(port) == device_id;
+bool DeviceManager::port_supports(uint8_t port,
+                                  MidiDeviceCapability capability) const {
+  return device_for_port(port)->supports_capability(capability);
 }
 
 bool DeviceManager::port_is_elektron(uint8_t port) const {

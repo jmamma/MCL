@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "../Drivers/MidiDeviceCapabilities.h"
 #include <inttypes.h>
 
 #ifdef PLATFORM_TBD
@@ -12,8 +13,7 @@ class MidiDevice;
 class DeviceManager {
 public:
   MidiDevice *device_for_port(uint8_t port) const;
-  uint8_t device_id_for_port(uint8_t port) const;
-  bool port_is_device(uint8_t port, uint8_t device_id) const;
+  bool port_supports(uint8_t port, MidiDeviceCapability capability) const;
   bool port_is_elektron(uint8_t port) const;
   void attach_port(uint8_t port, MidiDevice *device);
   void detach_port(uint8_t port);

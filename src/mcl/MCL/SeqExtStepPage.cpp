@@ -831,7 +831,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     uint8_t track = event->source;
 
-    if (!device_manager.port_is_device(port, DEVICE_MD)) {
+    if (!device_manager.port_supports(
+            port, MidiDeviceCapability::MdTrigInterface)) {
       return true;
     }
     if (show_seq_menu) {

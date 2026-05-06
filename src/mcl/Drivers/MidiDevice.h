@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "MidiDeviceCapabilities.h"
 #include <inttypes.h>
 
 #ifdef PLATFORM_TBD
@@ -77,6 +78,10 @@ public:
 #endif
 
   virtual void setup() {}
+  virtual bool supports_capability(MidiDeviceCapability capability) const {
+    (void)capability;
+    return false;
+  }
 
   virtual void disconnect(uint8_t device_idx) {
     cleanup(device_idx);

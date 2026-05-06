@@ -87,6 +87,7 @@ public:
   virtual void requestPattern(uint8_t pattern);
   virtual void requestGlobal(uint8_t global);
   virtual void init_grid_devices(uint8_t device_idx);
+  virtual bool supports_capability(MidiDeviceCapability capability) const override;
   virtual uint8_t* icon();
   virtual MCLGIF *gif();
   virtual uint8_t* gif_data();

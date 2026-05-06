@@ -100,7 +100,8 @@ void FXPage::display() {
 
 bool FXPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
-    if (!device_manager.port_is_device(event->port, DEVICE_MD)) {
+    if (!device_manager.port_supports(
+            event->port, MidiDeviceCapability::MdTrigInterface)) {
       return true;
     }
   }

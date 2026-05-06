@@ -118,6 +118,14 @@ void MDClass::cleanup_listeners() {
   }
 }
 
+bool MDClass::supports_capability(MidiDeviceCapability capability) const {
+  switch (capability) {
+  case MidiDeviceCapability::MdTrigInterface:
+    return true;
+  }
+  return ElektronDevice::supports_capability(capability);
+}
+
 void MDClass::setup() {
   resetMidiMap();
   setTrackRoutings(mcl_cfg.routing);
