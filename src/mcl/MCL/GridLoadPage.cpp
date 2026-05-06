@@ -87,7 +87,7 @@ void GridLoadPage::loop() {
 }
 
 void GridLoadPage::get_modestr(char *modestr) {
-  switch (encoders[0]->cur) {
+  switch (mcl_cfg.load_mode) {
   case LOAD_MANUAL: {
     strcpy_P(modestr, mclstr_manual_short);
     break;
@@ -110,20 +110,26 @@ void GridLoadPage::group_select() {
 }
 
 void GridLoadPage::display() {
+  display_at(0);
+}
 
+void GridLoadPage::display_at(uint8_t y_offset) {
 
-  const uint64_t mute_mask = 0, slide_mask = 0;
+  const uint8_t menu_y = MCLGUI::s_menu_y + y_offset;
 
   oled_display.setFont(&TomThumb);
   if (show_track_type) {
-    mcl_gui.draw_track_type_select(mcl_cfg.track_type_select);
+    char str[16];
+    mclstr_copy_progmem(str, mclstr_load_groups, sizeof(str));
+    mcl_gui.draw_popup_title(str, y_offset);
+    mcl_gui.draw_track_type_select(mcl_cfg.track_type_select, y_offset);
   } else {
-    mcl_gui.clear_popup();
+    mcl_gui.clear_popup(0, y_offset);
     uint16_t trig_mask = note_interface.notes_off | note_interface.notes_on;
     //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
     //                              "STEP", K);
     if (show_offset) {
-      oled_display.setCursor(MCLGUI::s_menu_x + 26, 14);
+      oled_display.setCursor(MCLGUI::s_menu_x + 26, 14 + y_offset);
       mcl_print_P(mclstr_destination);
       trig_mask = 0;
       if (offset < 16) { SET_BIT16(trig_mask, offset); }
@@ -135,7 +141,7 @@ void GridLoadPage::display() {
     } else {
 
       oled_display.setFont(&Elektrothic);
-      oled_display.setCursor(MCLGUI::s_menu_x + 4, 21);
+      oled_display.setCursor(MCLGUI::s_menu_x + 4, 21 + y_offset);
       oled_display.print((char)(0x3A + old_grid));
 
       oled_display.setFont(&TomThumb);
@@ -144,15 +150,17 @@ void GridLoadPage::display() {
       char modestr[7];
       get_modestr(modestr);
 
-      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, MCLGUI::s_menu_y + 7, mclstr_mode, modestr);
+      mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, menu_y + 7,
+                                mclstr_mode, modestr);
 
-      if (encoders[0]->getValue() == LOAD_QUEUE) {
-        if (encoders[1]->getValue() == 1) {
+      if (mcl_cfg.load_mode == LOAD_QUEUE) {
+        if (mcl_cfg.chain_queue_length == 1) {
           strcpy_P(K, mclstr_dash);
         } else {
-          mcl_gui.put_value_at(encoders[1]->cur, K);
+          mcl_gui.put_value_at(mcl_cfg.chain_queue_length, K);
         }
-        mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, MCLGUI::s_menu_y + 7, mclstr_len, K);
+        mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 28 + 9, menu_y + 7,
+                                  mclstr_len, K);
       }
       // draw quantize
       if (mcl_cfg.chain_load_quant == 1) {
@@ -161,7 +169,7 @@ void GridLoadPage::display() {
         mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
       }
       mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 38,
-                                MCLGUI::s_menu_y + 7, mclstr_quant, K);
+                                menu_y + 7, mclstr_quant, K);
 
       // draw step count
     }
@@ -169,10 +177,10 @@ void GridLoadPage::display() {
     uint8_t step_count = (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) % 64;
 
     oled_display.setCursor(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 11,
-                           MCLGUI::s_menu_y + 4 + 17);
+                           menu_y + 4 + 17);
     oled_display.print(step_count);
 
-    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 4 + 20,
+    mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, menu_y + 4 + 20,
                        trig_mask);
     // draw data flow in the center
     /*

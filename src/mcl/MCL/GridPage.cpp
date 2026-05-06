@@ -11,6 +11,9 @@
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
+#ifdef PLATFORM_TBD
+#include "GridIOOverlay.h"
+#endif
 #include "MCLClipBoard.h"
 #include "../Drivers/MNM/MNMParams.h"
 #include "MCLStrings.h"
@@ -541,8 +544,13 @@ void GridPage::display_grid() {
       bool a = in_area(x, y + row_shift, cur_col, cur_row, param3.cur - 1,
                        param4.cur - 1);
       bool b = is_slot_queue(track_idx, row_idx);
+      bool io_selected = false;
+#ifdef PLATFORM_TBD
+      io_selected = (row_idx == getRow()) &&
+                    grid_io_overlay.is_slot_selected(track_idx);
+#endif
 
-      if (a ^ b) {
+      if ((a ^ b) || io_selected) {
         oled_display.fillRect(cur_posx - 1, cur_posy - 6, 9, 7, WHITE);
         oled_display.setTextColor(BLACK, WHITE);
         active_cue_color = BLACK;

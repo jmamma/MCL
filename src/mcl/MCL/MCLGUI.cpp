@@ -153,7 +153,7 @@ void MCLGUI::draw_knob(uint8_t i, Encoder *enc, const char *title, bool highligh
 
 static char title_buf[16];
 
-void MCLGUI::draw_popup_title(const char *title) {
+void MCLGUI::draw_popup_title(const char *title, uint8_t y_offset) {
   strcpy(title_buf, title);
   //m_toupper(title_buf);
   auto len = strlen(title_buf);
@@ -165,36 +165,40 @@ void MCLGUI::draw_popup_title(const char *title) {
 
   oled_display.setFont(&TomThumb);
 
+  const uint8_t menu_y = s_menu_y + y_offset;
   // oled_display.setCursor(s_title_x + 2, s_menu_y + 3);
-  oled_display.drawFastHLine(s_title_x + 2, s_menu_y, s_title_w - 4, WHITE);
-  oled_display.drawFastHLine(s_title_x + 1, s_menu_y + 1, s_title_w - 2, WHITE);
-  oled_display.fillRect(s_menu_x + 1, s_menu_y + 2, s_menu_w - 2, 5, WHITE);
+  oled_display.drawFastHLine(s_title_x + 2, menu_y, s_title_w - 4, WHITE);
+  oled_display.drawFastHLine(s_title_x + 1, menu_y + 1, s_title_w - 2, WHITE);
+  oled_display.fillRect(s_menu_x + 1, menu_y + 2, s_menu_w - 2, 5, WHITE);
 
   oled_display.setTextColor(BLACK);
-  oled_display.setCursor(s_title_x + (s_title_w - len * 4) / 2, s_menu_y + 6);
+  oled_display.setCursor(s_title_x + (s_title_w - len * 4) / 2, menu_y + 6);
   oled_display.println(title_buf);
   oled_display.setTextColor(WHITE);
 
 }
 
-void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h) {
+void MCLGUI::draw_popup(const char *title, bool deferred_display, uint8_t h,
+                        uint8_t y_offset) {
 
   h = h ? h : s_menu_h;
 
+  const uint8_t menu_y = s_menu_y + y_offset;
   // Combine rect operations to reduce function call overhead
-  oled_display.fillRect(s_menu_x - 1, s_menu_y + 1, s_menu_w + 2, h + 4, BLACK);
-  drawRoundRect(s_menu_x, s_menu_y + 2, s_menu_w, h + 2, WHITE);
-  draw_popup_title(title);
+  oled_display.fillRect(s_menu_x - 1, menu_y + 1, s_menu_w + 2, h + 4, BLACK);
+  drawRoundRect(s_menu_x, menu_y + 2, s_menu_w, h + 2, WHITE);
+  draw_popup_title(title, y_offset);
   if (!deferred_display) {
     oled_display.display();
   }
 }
 
-void MCLGUI::clear_popup(uint8_t h) {
+void MCLGUI::clear_popup(uint8_t h, uint8_t y_offset) {
   if (h == 0) {
     h = s_menu_h;
   }
-  oled_display.fillRect(s_menu_x + 1, s_menu_y + 7, s_menu_w - 2, h - 4, BLACK);
+  const uint8_t menu_y = s_menu_y + y_offset;
+  oled_display.fillRect(s_menu_x + 1, menu_y + 7, s_menu_w - 2, h - 4, BLACK);
 }
 
 void MCLGUI::draw_progress(const char *msg, uint8_t cur, uint8_t _max,
@@ -854,8 +858,8 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
   }
 }
 
-void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
-  char dev[6];
+void MCLGUI::draw_track_type_select(uint8_t track_type_select,
+                                    uint8_t y_base) {
   MidiDevice *devs[2] = {
       device_manager.dev1(),
       device_manager.dev2(),
@@ -864,7 +868,7 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
 
   uint8_t x = 0;
 
-  oled_display.fillRect(0, 8, 128, 23, BLACK);
+  oled_display.fillRect(0, 8 + y_base, 128, 23, BLACK);
   MCLGIF *gif;
 
   for (uint8_t i = 0; i < 5; i++) {
@@ -873,7 +877,7 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
 
     uint8_t *icon = nullptr;
     uint8_t offset = 3;
-    int8_t y_offset = 0;
+    int8_t icon_y_offset = 0;
     switch (i) {
     case 0:
       icon = devs[0]->gif_data();
@@ -900,24 +904,27 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select) {
       gif = R.icons_logo->metronome_gif;
       gif->set_bmp(R.icons_logo->metronome_gif_data);
       offset = 4;
-      y_offset = -3;
+      icon_y_offset = -3;
       break;
     }
 
     //icon = select ? gif->get_frame(0) : gif->get_next_frame();
     icon = gif->get_next_frame();
 
-    if (icon) { oled_display.drawBitmap(x + offset, 15 + y_offset, icon, gif->w, gif->h, WHITE); }
+    if (icon) {
+      oled_display.drawBitmap(x + offset, 15 + y_base + icon_y_offset, icon,
+                              gif->w, gif->h, WHITE);
+    }
 
     if (note_interface.is_note_on(i)) { gif->reset(); }
 
     if (select) {
    //   gif->reset();
-      oled_display.fillRect(x + 1, 10, 23, 20, INVERT);
-      drawRoundRect(x, 9, 24, 21, WHITE);
-      oled_display.drawRect(x + 1, 10, 22, 19, BLACK);
+      oled_display.fillRect(x + 1, 10 + y_base, 23, 20, INVERT);
+      drawRoundRect(x, 9 + y_base, 24, 21, WHITE);
+      oled_display.drawRect(x + 1, 10 + y_base, 22, 19, BLACK);
 } else {
-      oled_display.drawRect(x, 9, 24, 21, WHITE);
+      oled_display.drawRect(x, 9 + y_base, 24, 21, WHITE);
 }
 
 /*

@@ -38,6 +38,7 @@ public:
   LightPage *overlay = nullptr;
   void setOverlay(LightPage *p);
   void clearOverlay();
+  bool overlayCapturesEncoders() const;
 #endif
 
 #ifdef GUI_NUM_ENCODERS

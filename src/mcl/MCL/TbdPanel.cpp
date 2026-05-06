@@ -8,6 +8,7 @@
 #include "BankPopupPage.h"
 #include "DeviceManager.h"
 #include "GridPage.h"
+#include "GridIOOverlay.h"
 #include "GridPages.h"
 #include "GUI_hardware.h"
 #include "KeyInterface.h"
@@ -142,9 +143,9 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (event->source == ButtonsClass::BUTTON4 &&
       orig_src == ButtonsClass::BUTTON4) {
-    if (is_press && pg == GRID_PAGE) {
+    if (is_press && pg == GRID_PAGE && !grid_io_overlay.is_active()) {
       GUI.ignoreNextEvent(ButtonsClass::BUTTON4);
-      mcl.setPage(GRID_LOAD_PAGE);
+      grid_io_overlay.begin(GridIOOverlay::MODE_LOAD);
       return true;
     }
     if (is_press && pg == GRID_LOAD_PAGE) {
@@ -155,9 +156,9 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (event->source == ButtonsClass::BUTTON1) {
-    if (pg == GRID_PAGE && is_press) {
+    if (pg == GRID_PAGE && is_press && !grid_io_overlay.is_active()) {
       GUI.ignoreNextEvent(ButtonsClass::BUTTON1);
-      mcl.setPage(GRID_SAVE_PAGE);
+      grid_io_overlay.begin(GridIOOverlay::MODE_SAVE);
       return true;
     }
     if (pg == GRID_SAVE_PAGE || pg == GRID_LOAD_PAGE) {
@@ -204,7 +205,8 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
     key = event->source - ButtonsClass::TRIG_BUTTON1;
 
-    if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
+    if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup &&
+        !grid_io_overlay.is_active()) {
       if (is_press && key < NUM_MD_TRACKS) {
         MD.triggerTrack(key, 127);
         mixer_page.trig(key);

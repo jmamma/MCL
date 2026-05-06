@@ -77,6 +77,7 @@ bool GuiClass::handleTopEvent(gui_event_t *event) {
   // for their local NO/YES/save/load actions before any registered
   // event handler gets a chance to override.
   if (tbd_handleEvent(event)) return true;
+  if (overlay && overlay->handleEvent(event)) return true;
 #endif
   LightPage *page = currentPage();
   if (page != NULL) {
@@ -118,19 +119,35 @@ void GuiClass::loop() {
 
   MidiUartParent::handle_midi_lock = 0;
   PageParent *page = currentPage();
+  bool overlay_captures_encoders = false;
+#ifdef PLATFORM_TBD
+  overlay_captures_encoders = overlayCapturesEncoders();
+#endif
   if (page != NULL) {
-    MidiUartParent::handle_midi_lock = 1;
-    page->update();
-    MidiUartParent::handle_midi_lock = 0;
+    if (!overlay_captures_encoders) {
+      MidiUartParent::handle_midi_lock = 1;
+      page->update();
+      MidiUartParent::handle_midi_lock = 0;
+    }
     page->loop();
-    page->finalize();
+    if (!overlay_captures_encoders) {
+      page->finalize();
+    }
   }
 
 #ifdef PLATFORM_TBD
+  if (overlay_captures_encoders) {
+    MidiUartParent::handle_midi_lock = 1;
+    overlay->update();
+    MidiUartParent::handle_midi_lock = 0;
+  }
   // Tick the overlay's loop after the active page so it can manage
   // its own state (LED palette, sub-page repaint, etc.).
   if (overlay) {
     overlay->loop();
+    if (overlay_captures_encoders) {
+      overlay->finalize();
+    }
   }
 #endif
 
@@ -242,5 +259,13 @@ void GuiClass::clearOverlay() {
   if (!overlay) return;
   overlay->cleanup();
   overlay = nullptr;
+}
+
+bool GuiClass::overlayCapturesEncoders() const {
+  if (!overlay) return false;
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    if (overlay->encoders[i]) return true;
+  }
+  return false;
 }
 #endif

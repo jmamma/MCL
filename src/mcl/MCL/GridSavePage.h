@@ -15,6 +15,7 @@ public:
   bool handleEvent(gui_event_t *event);
   void group_select();
   void action() { save(); }
+  void display_at(uint8_t y_offset);
   void display();
   void init();
   void draw_popup();

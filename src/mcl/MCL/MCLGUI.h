@@ -47,10 +47,10 @@ public:
   void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window,
                                uint8_t n_current);
   ///  Clear the content area of a popup
-  void clear_popup(uint8_t h = 0);
-  void draw_popup_title(const char *title);
+  void clear_popup(uint8_t h = 0, uint8_t y_offset = 0);
+  void draw_popup_title(const char *title, uint8_t y_offset = 0);
   void draw_popup(const char *title, bool deferred_display = false,
-                  uint8_t h = 0);
+                  uint8_t h = 0, uint8_t y_offset = 0);
   void draw_trigs(uint8_t x, uint8_t y,
                         const uint16_t &trig_selection);
   void draw_progress_bar(uint8_t cur, uint8_t _max,
@@ -109,7 +109,8 @@ public:
   void draw_leds(uint8_t x, uint8_t y, uint8_t offset, const uint64_t &lock_mask,
                  uint8_t step_count, uint8_t length, bool show_current_step);
 
-  void draw_track_type_select(uint8_t track_type_select);
+  void draw_track_type_select(uint8_t track_type_select,
+                              uint8_t y_offset = 0);
 
   void draw_panel_toggle(const char *s1, const char *s2, bool s1_active);
   void draw_panel_labels(const char *info1, const char *info2);
