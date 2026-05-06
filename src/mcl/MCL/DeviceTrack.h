@@ -74,6 +74,10 @@ public:
   virtual uint16_t calc_latency(uint8_t tracknumber) { return 0; }
 
   DeviceTrack *init_track_type(uint8_t track_type);
+  virtual bool can_materialize_as(uint8_t track_type);
+  virtual DeviceTrack *materialize_as(uint8_t track_type,
+                                      uint8_t tracknumber,
+                                      SeqTrack *seq_track);
   template <class T> DeviceTrack *init_track_type() {
     T *p;
     _init_track_type_impl(&p);

@@ -4,6 +4,28 @@
 #include "Shared.h"
 #include "MCLSeq.h"
 #include "SeqTrackUtil.h"
+#if !defined(__AVR__)
+#include "SPSXTrack.h"
+#endif
+
+#if !defined(__AVR__)
+namespace {
+
+void copy_md_machine_to_spsx(const MDMachine &src, SPSMachine &dest) {
+  dest.init();
+  memset(dest.params, 0, sizeof(dest.params));
+  memcpy(dest.params, src.params, MD_PARAMS_PER_TRACK);
+  dest.track = src.track;
+  dest.level = src.level;
+  dest.model = src.model;
+  dest.lfos[0] = src.lfo;
+  dest.lfos[1].init(src.track);
+  dest.trigGroup = src.trigGroup;
+  dest.muteGroup = src.muteGroup;
+}
+
+} // namespace
+#endif
 
 void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
                           SeqTrack *seq_track) {
@@ -21,6 +43,39 @@ void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
   bool send_machine = true;
   bool send_level = true;
   MD.sendMachine(dest_track, &(machine), send_level, send_machine);
+}
+
+bool MDTrack::can_materialize_as(uint8_t track_type) {
+#if !defined(__AVR__)
+  if (track_type == MDSPSX_TRACK_TYPE) {
+    return true;
+  }
+#endif
+  return DeviceTrack::can_materialize_as(track_type);
+}
+
+DeviceTrack *MDTrack::materialize_as(uint8_t track_type, uint8_t tracknumber,
+                                     SeqTrack *seq_track) {
+  (void)tracknumber;
+  (void)seq_track;
+#if !defined(__AVR__)
+  if (track_type == MDSPSX_TRACK_TYPE) {
+    GridLink old_link = link;
+    MDSeqTrackData old_seq_data;
+    MDMachine old_machine = machine;
+    memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
+
+    auto *spsx_track =
+        static_cast<SPSXTrack *>(init_track_type(MDSPSX_TRACK_TYPE));
+    spsx_track->link = old_link;
+    spsx_track->seq_version = SPSX_SEQ_VERSION_LEGACY;
+    copy_md_machine_to_spsx(old_machine, spsx_track->machine);
+    memcpy(spsx_track->seq_data.legacy.data(), old_seq_data.data(),
+           sizeof(old_seq_data));
+    return spsx_track;
+  }
+#endif
+  return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }
 
 uint16_t MDTrack::calc_latency(uint8_t tracknumber) {

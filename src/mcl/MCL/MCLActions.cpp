@@ -48,8 +48,7 @@ inline bool MCLActions::track_supports_type(DeviceTrack *track, uint8_t track_ty
   if (track == nullptr) {
     return false;
   }
-  return (track->active == track_type) ||
-         (track->get_parent_model() == track_type);
+  return track->can_materialize_as(track_type);
 }
 
 DeviceTrack *MCLActions::load_and_prepare_track(uint8_t track_idx, uint16_t row,
@@ -78,9 +77,17 @@ DeviceTrack *MCLActions::load_and_prepare_track(uint8_t track_idx, uint16_t row,
     return device_track;
   }
 
-  if (device_track->get_parent_model() == track_type &&
-      device_track->allow_cast_to_parent()) {
-    device_track->init_track_type(device_track->get_parent_model());
+  device_track = device_track->materialize_as(track_type, seq_track_idx,
+                                              seq_track);
+  if (device_track == nullptr) {
+    scratch.clear();
+    scratch.init();
+    device_track = scratch.init_track_type(track_type);
+    if (device_track != nullptr && seq_track != nullptr) {
+      device_track->init(seq_track_idx, seq_track);
+    }
+    was_rebuilt = true;
+    return device_track;
   }
 
   was_rebuilt = false;

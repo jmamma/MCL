@@ -75,6 +75,25 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   return this;
 }
 
+bool DeviceTrack::can_materialize_as(uint8_t track_type) {
+  return active == track_type ||
+         (get_parent_model() == track_type && allow_cast_to_parent());
+}
+
+DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
+                                         uint8_t tracknumber,
+                                         SeqTrack *seq_track) {
+  (void)tracknumber;
+  (void)seq_track;
+  if (active == track_type) {
+    return this;
+  }
+  if (get_parent_model() == track_type && allow_cast_to_parent()) {
+    return init_track_type(track_type);
+  }
+  return nullptr;
+}
+
 DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row,
                                              Grid *grid) {
   if (!GridTrack::load_from_grid_512(column, row, grid)) {

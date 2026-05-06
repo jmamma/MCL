@@ -66,6 +66,17 @@ int8_t legacy_timing_to_spsx(uint8_t timing, uint8_t speed) {
   return (int8_t)microtiming;
 }
 
+void copy_spsx_machine_to_md(const SPSMachine &src, MDMachine &dest) {
+  dest.init();
+  memcpy(dest.params, src.params, MD_PARAMS_PER_TRACK);
+  dest.track = src.track;
+  dest.level = src.level;
+  dest.model = src.model;
+  dest.lfo = src.lfos[0];
+  dest.trigGroup = src.trigGroup;
+  dest.muteGroup = src.muteGroup;
+}
+
 void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
                                 SPSXSeqTrack &dest) {
   uint8_t speed = dest.speed;
@@ -257,6 +268,39 @@ void SPSXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
   }
   load_immediate(dest_track, seq_track);
   MD.sendMachine(dest_track, &machine, true, true);
+}
+
+DeviceTrack *SPSXTrack::materialize_as(uint8_t track_type,
+                                       uint8_t tracknumber,
+                                       SeqTrack *seq_track) {
+  (void)tracknumber;
+  (void)seq_track;
+  if (track_type == MDSPSX_TRACK_TYPE) {
+    return this;
+  }
+  if (track_type == MD_TRACK_TYPE) {
+    GridLink old_link = link;
+    SPSMachine old_machine = machine;
+    uint8_t old_seq_version = seq_version;
+    MDSeqTrackData old_legacy_seq_data;
+    if (old_seq_version == SPSX_SEQ_VERSION_LEGACY) {
+      memcpy(&old_legacy_seq_data, &seq_data.legacy,
+             sizeof(old_legacy_seq_data));
+    }
+
+    auto *md_track = static_cast<MDTrack *>(init_track_type(MD_TRACK_TYPE));
+    md_track->link = old_link;
+    copy_spsx_machine_to_md(old_machine, md_track->machine);
+
+    if (old_seq_version == SPSX_SEQ_VERSION_LEGACY) {
+      memcpy(md_track->seq_data.data(), old_legacy_seq_data.data(),
+             sizeof(old_legacy_seq_data));
+    } else {
+      md_track->seq_data.init();
+    }
+    return md_track;
+  }
+  return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }
 
 bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,

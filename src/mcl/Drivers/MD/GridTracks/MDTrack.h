@@ -87,6 +87,10 @@ public:
   virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
+  virtual bool can_materialize_as(uint8_t track_type);
+  virtual DeviceTrack *materialize_as(uint8_t track_type,
+                                      uint8_t tracknumber,
+                                      SeqTrack *seq_track);
   virtual uint8_t get_model() { return machine.get_model(); }
   virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
 
