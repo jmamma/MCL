@@ -141,7 +141,8 @@ uint16_t TbdTempoPage::calculate_tap_tempo_tenths() const {
 }
 
 void TbdTempoPage::loop() {
-  if (mcl.currentPage() != GRID_PAGE) {
+  if (mcl.currentPage() != GRID_PAGE ||
+      GUI.currentPage() != mcl.getPage(GRID_PAGE)) {
     close();
     return;
   }
@@ -170,9 +171,13 @@ bool TbdTempoPage::handleEvent(gui_event_t *event) {
   }
 
   if (event->source == ButtonsClass::FUNC_BUTTON5) {
-    if (is_press && BUTTON_DOWN(ButtonsClass::BUTTON3)) {
-      tap_mode_ = true;
-      handle_tap();
+    if (is_press) {
+      if (BUTTON_DOWN(ButtonsClass::BUTTON3)) {
+        tap_mode_ = true;
+        handle_tap();
+      } else {
+        close();
+      }
     }
     return true;
   }

@@ -148,6 +148,8 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   const uint8_t orig_src = event->source;
   const PageIndex pg = mcl.currentPage();
   const bool is_menu_page = is_tbd_menu_page(pg);
+  const bool grid_page_active =
+      pg == GRID_PAGE && GUI.currentPage() == mcl.getPage(GRID_PAGE);
 
   if (top_left_pressed_ && orig_src != ButtonsClass::BUTTON2 && is_press) {
     top_left_chorded_ = true;
@@ -223,7 +225,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (!device_manager.is_ui_active() && !is_menu_page &&
       orig_src == ButtonsClass::FUNC_BUTTON5 && is_press &&
-      pg == GRID_PAGE && !grid_page.show_slot_menu &&
+      grid_page_active && !grid_page.show_slot_menu &&
       !grid_io_overlay.is_active()) {
     bool tap = BUTTON_DOWN(ButtonsClass::BUTTON3);
     if (tap) {
