@@ -241,18 +241,6 @@ void MCL::loop() {
 }
 
 bool mcl_handleEvent(gui_event_t *event) {
-  /*
-  if (EVENT_NOTE(event)) {
-    uint8_t mask = event->mask;
-    uint8_t port = event->port;
-    MidiDevice *device = device_manager.device_for_port(port);
-
-    uint8_t track = event->source;
-    if (device != &MD) {
-      return true;
-    }
-  }
-  */
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {

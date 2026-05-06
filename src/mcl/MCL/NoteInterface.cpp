@@ -1,10 +1,9 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 #include "DeviceManager.h"
 #include "NoteInterface.h"
-#include "Midi.h"
+#include "../Midi/Midi.h"
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
-#include "../Drivers/MD/MD.h"
 #include "global.h"
 
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
@@ -111,12 +110,13 @@ void NoteInterface::draw_notes(uint8_t line_number) {
 }
 
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  if (device_manager.primary_device() == &MD) {
+  MidiDevice *primary = device_manager.primary_device();
+  if (primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], device_manager.primary_device()->id);
-  note_interface.note_on_event(note_num, device_manager.primary_device()->port);
+      msg[1], primary->id);
+  note_interface.note_on_event(note_num, primary->port);
 }
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
@@ -130,14 +130,14 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
   note_interface.note_on_event(note_num, device_manager.secondary_device()->port);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
-  // only accept input if device is not a MD
-  // MD input is handled by the KeyInterface object
-  if (device_manager.primary_device() == &MD) {
+  // MD-style trig input is handled by the KeyInterface object.
+  MidiDevice *primary = device_manager.primary_device();
+  if (primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], device_manager.primary_device()->id);
-  note_interface.note_off_event(note_num, device_manager.primary_device()->port);
+      msg[1], primary->id);
+  note_interface.note_off_event(note_num, primary->port);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 

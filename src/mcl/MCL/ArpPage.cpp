@@ -1,10 +1,10 @@
 #include "ArpPage.h"
-#include "DeviceManager.h"
-#include "../Drivers/MD/MD.h"
+#include "KeyInterface.h"
 #include "MCLSeq.h"
 #include "SeqPages.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
+#include "SeqTrackUtil.h"
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 18, ENCODER_RES_SEQ);
@@ -24,7 +24,8 @@ void ArpPage::init() {
 
 void ArpPage::track_update(uint8_t n, bool re_render) {
 
-  if (seq_ptc_page.midi_device == &MD) {
+  bool is_md_device = SeqTrackUtil::is_md_device(seq_ptc_page.midi_device);
+  if (is_md_device) {
     if (n > 15) {
       n = last_md_track;
     }
@@ -95,7 +96,7 @@ void ArpPage::display() {
   oled_display.setTextColor(WHITE);
   mcl_print_P(mclstr_arpeggiator);
 
-  if (seq_ptc_page.midi_device == &MD) {
+  if (SeqTrackUtil::is_md_device(seq_ptc_page.midi_device)) {
     oled_display.print(current_track + 1);
   } else {
     oled_display.print(last_ext_track + 1);
@@ -182,11 +183,5 @@ bool ArpPage::handleEvent(gui_event_t *event) {
       return true;
     }
   }
-  /*  if (EVENT_NOTE(event) &&
-    device_manager.device_for_port(event->port) == &MD) {
-        key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
-        return true;
-
-    } */
   return false;
 }

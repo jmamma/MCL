@@ -11,6 +11,7 @@
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
+#include "SeqTrackUtil.h"
 
 // Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.
 
@@ -183,11 +184,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   DEBUG_PRINTLN("getting ready to paste");
   device_track->paste_track(source_track_idx, track_idx, gdt->seq_track);
 
-  MidiDevice *devs[2] = {
-      device_manager.primary_device(),
-      device_manager.secondary_device(),
-  };
-  if (devs[0] == &MD && track_idx == last_md_track) {
+  if (SeqTrackUtil::is_md_device(device_manager.primary_device()) &&
+      track_idx == last_md_track) {
     if (mcl.currentPage() == SEQ_STEP_PAGE) {
       seq_step_page.config();
     }
