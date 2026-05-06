@@ -1,4 +1,6 @@
 #include "GridIOPage.h"
+#include "GridPages.h"
+#include "GridTrack.h"
 #include "MCLActions.h"
 #include "MCLGUI.h"
 #include "../Drivers/MD/MD.h"
@@ -24,6 +26,7 @@ void GridIOPage::init() {
   track_select = 0;
   show_offset = 0;
   offset = 255;
+  old_grid = grid_page.cur_grid;
   R.Clear();
   R.use_icons_logo();
 }
@@ -34,7 +37,96 @@ void GridIOPage::show_group_select_ui(const char *title_P) {
   mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
   char str[16];
   mclstr_copy_progmem(str, title_P, sizeof(str));
-  mcl_gui.draw_popup_title(str);
+  draw_title(str);
+}
+
+void GridIOPage::draw_title(const char *title, uint8_t y_offset) {
+#ifdef PLATFORM_TBD
+  mcl_gui.draw_popup_title_plain(title, y_offset);
+#else
+  mcl_gui.draw_popup_title(title, y_offset);
+#endif
+}
+
+void GridIOPage::draw_tbd_panel_header(const char *title, uint8_t y_offset) {
+#ifdef PLATFORM_TBD
+  oled_display.setTextColor(WHITE, BLACK);
+  oled_display.setFont();
+  oled_display.setCursor(2, y_offset + 2);
+  oled_display.print(title);
+
+  char val[3];
+  const uint8_t row = grid_page.getRow();
+  const uint8_t bank = row / 16;
+  mcl_gui.put_value_at2(row - bank * 16 + 1, val);
+
+  oled_display.setCursor(92, y_offset + 2);
+  oled_display.print((char)('X' + old_grid));
+  oled_display.print(':');
+  oled_display.print((char)('A' + bank));
+  oled_display.print(val);
+#else
+  (void)title;
+  (void)y_offset;
+#endif
+}
+
+uint8_t GridIOPage::content_y_offset(uint8_t y_offset) {
+  return y_offset;
+}
+
+void GridIOPage::clear_body(uint8_t y_offset) {
+#ifdef PLATFORM_TBD
+  if (y_offset >= 32) {
+    oled_display.fillRect(0, y_offset, 128, 32, BLACK);
+    return;
+  }
+#endif
+  mcl_gui.clear_popup(0, y_offset);
+}
+
+void GridIOPage::paint_track_select_leds() {
+#ifdef PLATFORM_TBD
+  if (show_track_type) {
+    mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
+    return;
+  }
+
+  uint16_t occupied_mask = 0;
+  if (grid_page.cur_row < MAX_VISIBLE_ROWS &&
+      grid_page.row_headers[grid_page.cur_row].active) {
+    for (uint8_t n = 0; n < GRID_WIDTH && n < 16; n++) {
+      uint8_t type = grid_page.row_headers[grid_page.cur_row].track_type[n];
+      if (type != EMPTY_TRACK_TYPE && type != NULL_TRACK_TYPE && type != 255) {
+        SET_BIT16(occupied_mask, n);
+      }
+    }
+  }
+
+  uint16_t active_mask = 0;
+  if (show_offset) {
+    if (offset < GRID_WIDTH && offset < 16) {
+      SET_BIT16(active_mask, offset);
+    }
+  } else {
+    for (uint8_t n = 0; n < GRID_WIDTH && n < 16; n++) {
+      if (IS_BIT_SET32(track_select, n + old_grid * GRID_WIDTH) ||
+          note_interface.is_note(n)) {
+        SET_BIT16(active_mask, n);
+      }
+    }
+  }
+
+  constexpr uint32_t kSlotRed = ((uint32_t)255 << 16);
+  constexpr uint32_t kSlotWhite = ((uint32_t)255 << 16) |
+                                  ((uint32_t)255 << 8) |
+                                  (uint32_t)255;
+  mcl_gui.set_trigleds_local(0, TRIGLED_EXCLUSIVE);
+  mcl_gui.set_trigleds_color(occupied_mask, kSlotRed);
+  mcl_gui.set_trigleds_color(active_mask, kSlotWhite);
+#else
+  key_interface.send_md_leds(TRIGLED_OVERLAY);
+#endif
 }
 
 void GridIOPage::populate_track_select_from_notes(uint8_t *track_select_array) {
@@ -91,11 +183,11 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
         if (show_offset) {
           offset = track;
         }
-        key_interface.send_md_leds(TRIGLED_OVERLAY);
+        paint_track_select_leds();
       }
     } else {
       if (!show_track_type) {
-        key_interface.send_md_leds(TRIGLED_OVERLAY);
+        paint_track_select_leds();
 
         if (note_interface.notes_all_off()) {
           if (show_offset) {
@@ -104,6 +196,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
             if (show_offset) {
               offset = 255;
             }
+            paint_track_select_leds();
           } else if (BUTTON_DOWN(Buttons.BUTTON2)) {
             return true;
           } else {
@@ -165,7 +258,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
         }
       }
       old_grid = !old_grid;
-      key_interface.send_md_leds();
+      paint_track_select_leds();
       return true;
     }
 

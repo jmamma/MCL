@@ -35,6 +35,9 @@ struct TbdP4RealtimeStats {
   uint32_t last_spi_send_ms;
   uint32_t last_response_ms;
   uint8_t last_response_sequence;
+  uint8_t input_peak_byte;
+  uint8_t output_peak_byte;
+  bool extended_response_seen;
   bool p4_alive;
   bool p4_sync_seen;
   bool p4_ready_pin;
@@ -161,6 +164,7 @@ private:
   uint8_t network_status_ = 0;
   uint8_t input_peak_byte_ = 0;
   uint8_t output_peak_byte_ = 0;
+  bool extended_response_seen_ = false;
   uint8_t input_waveform_[64] = {};
   uint8_t output_waveform_[64] = {};
   uint8_t tx_parse_status_ = 0;

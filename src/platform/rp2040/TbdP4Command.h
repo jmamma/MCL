@@ -22,8 +22,16 @@ public:
   bool ready() const;
   bool wait_ready(uint32_t timeout_ms = 30000) const;
 
+  bool reboot(uint32_t timeout_ms = 30000);
+  bool get_active_plugin(uint8_t channel, char *response,
+                         size_t response_len,
+                         uint32_t timeout_ms = 30000);
+  bool set_active_plugin(uint8_t channel, const char *plugin_id,
+                         uint32_t timeout_ms = 30000);
   bool announce_app(const char *app_name, uint8_t flags = 0,
                     uint32_t timeout_ms = 30000);
+  bool report_pico_version(const char *version,
+                           uint32_t timeout_ms = 30000);
   bool get_track_default_presets(char *response, size_t response_len,
                                  const char *template_name = nullptr,
                                  uint32_t timeout_ms = 30000);
@@ -35,6 +43,8 @@ public:
                             uint32_t timeout_ms = 30000);
   bool get_kit_index_json(char *response, size_t response_len,
                           uint32_t timeout_ms = 30000);
+  bool get_sample_bank_index_json(char *response, size_t response_len,
+                                  uint32_t timeout_ms = 30000);
   bool set_active_sample_kit(uint8_t kit_index,
                              uint32_t timeout_ms = 30000);
   bool activate_track_machine(uint8_t track_index, const char *machine_id,

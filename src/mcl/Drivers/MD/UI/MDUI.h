@@ -15,6 +15,7 @@ public:
   bool enter(gui_event_t *event);
   bool is_active() const;
   void exit();
+  void handle_ui_slot_button(bool pressed);
 
   SpsMode sps_mode;
 

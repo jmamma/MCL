@@ -14,7 +14,12 @@
 void GridSavePage::init() {
   GridIOPage::init();
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
+#ifdef PLATFORM_TBD
+  grid_page.load_slot_models();
+  paint_track_select_leds();
+#else
   key_interface.send_md_leds(TRIGLED_OVERLAY);
+#endif
   key_interface.on();
   grid_page.reload_slot_models = false;
   MD.popup_text_P(mclstr_save_slots, true);
@@ -25,6 +30,9 @@ void GridSavePage::draw_popup() {
   char str[16];
   mclstr_copy_progmem(str, mclstr_save_tracks, sizeof(str));
   mcl_gui.draw_popup(str, true);
+#ifdef PLATFORM_TBD
+  draw_title(str);
+#endif
 }
 
 void GridSavePage::display() {
@@ -32,27 +40,50 @@ void GridSavePage::display() {
 }
 
 void GridSavePage::display_at(uint8_t y_offset) {
-  const uint8_t menu_y = MCLGUI::s_menu_y + y_offset;
+  const uint8_t body_y_offset = content_y_offset(y_offset);
+  const uint8_t menu_y = MCLGUI::s_menu_y + body_y_offset;
   oled_display.setFont(&TomThumb);
   if (show_track_type) {
     char str[16];
     mclstr_copy_progmem(str, mclstr_save_groups, sizeof(str));
-    mcl_gui.draw_popup_title(str, y_offset);
+    draw_title(str, y_offset);
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select, y_offset);
   } else {
-    mcl_gui.clear_popup(0, y_offset);
+#ifdef PLATFORM_TBD
+    if (y_offset >= 32) {
+      clear_body(y_offset);
+      draw_tbd_panel_header("SAVE", y_offset);
+
+      oled_display.setFont(&TomThumb);
+      oled_display.setTextColor(WHITE, BLACK);
+      constexpr uint8_t flow_x = 39;
+      oled_display.setCursor(flow_x, y_offset + 20);
+      mcl_print_P(mclstr_name_snd);
+      oled_display.print('+');
+      mcl_print_P(mclstr_seq);
+      mcl_gui.draw_horizontal_arrow(flow_x + 42, y_offset + 17, 5);
+      oled_display.setCursor(flow_x + 55, y_offset + 20);
+      mcl_print_P(mclstr_grid);
+      return;
+    }
+#endif
+    clear_body(y_offset);
+#ifndef PLATFORM_TBD
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, menu_y + 24,
                        note_interface.notes_off | note_interface.notes_on);
+#endif
     oled_display.setFont(&Elektrothic);
-    oled_display.setCursor(MCLGUI::s_menu_x + 4, 21 + y_offset);
+    oled_display.setCursor(MCLGUI::s_menu_x + 4, 21 + body_y_offset);
     oled_display.print((char)(0x3A + old_grid));
 
     oled_display.setFont(&TomThumb);
 
+#ifndef PLATFORM_TBD
     char save_label[8];
     mclstr_copy_progmem(save_label, mclstr_save, sizeof(save_label));
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, menu_y + 7,
                               mclstr_mode, save_label);
+#endif
 
     char step[4] = {'\0'};
     uint8_t step_count =

@@ -308,6 +308,11 @@ bool MDClass::is_ui_active() {
 void MDClass::exit_ui() {
   ui.exit();
 }
+
+void MDClass::on_ui_slot_button(uint8_t slot, bool pressed) {
+  (void)slot;
+  ui.handle_ui_slot_button(pressed);
+}
 #endif
 
 void MDClass::init_grid_devices(uint8_t device_idx) {

@@ -13,6 +13,8 @@
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #ifdef PLATFORM_TBD
 #include "GridIOOverlay.h"
+#include "EmptyTrack.h"
+#include "../Drivers/TBD/TBDTrack.h"
 #endif
 #include "MCLClipBoard.h"
 #include "../Drivers/MNM/MNMParams.h"
@@ -20,6 +22,40 @@
 
 #define PERF_ENC 1
 #define GRID_ENC 0
+
+namespace {
+
+#ifdef PLATFORM_TBD
+void set_slot_label(char label[3], char a, char b) {
+  label[0] = a;
+  label[1] = b;
+  label[2] = '\0';
+}
+
+bool copy_tbd_grid_label(uint8_t track_type, uint8_t column, uint16_t row,
+                         char label[3]) {
+  EmptyTrack scratch;
+  bool ok = false;
+
+  if (track_type == TBD_TRACK_TYPE) {
+    if (auto *track = scratch.load_from_grid<TBDTrack>(column, row)) {
+      ok = tbd_p4_copy_sound_label(track->p4_sound, label, 3, 2);
+    }
+  } else if (track_type == TBD_MIDI_TRACK_TYPE) {
+    if (auto *track = scratch.load_from_grid<TBDMidiTrack>(column, row)) {
+      ok = tbd_p4_copy_sound_label(track->p4_sound, label, 3, 2);
+    }
+  }
+
+  if (ok && label[1] == '\0') {
+    label[1] = ' ';
+    label[2] = '\0';
+  }
+  return ok;
+}
+#endif
+
+} // namespace
 
 void GridPage::init() {
   DEBUG_PRINTLN("Grid page init");
@@ -50,6 +86,9 @@ void GridPage::init() {
   R.Clear();
   R.use_machine_names_short();
   R.use_icons_knob();
+#ifdef PLATFORM_TBD
+  R.use_icons_logo();
+#endif
 }
 
 void GridPage::setup() {
@@ -325,11 +364,33 @@ void GridPage::load_slot_models() {
     row_shift = cur_row + param4.cur - MAX_VISIBLE_ROWS;
   }
 
+#ifdef PLATFORM_TBD
+  for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
+    for (uint8_t x = 0; x < GRID_WIDTH; x++) {
+      set_slot_label(slot_labels[y][x], '-', '-');
+    }
+  }
+#endif
+
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
     uint8_t row = getRow() - cur_row + n + row_shift;
     if (row >= GRID_LENGTH) { return; }
     proj.read_grid_row_header(&row_headers[n], row, cur_grid);
     update_row_state(row, row_headers[n].active);
+#ifdef PLATFORM_TBD
+    for (uint8_t x = 0; x < GRID_WIDTH; x++) {
+      uint8_t track_type = row_headers[n].track_type[x];
+      if (track_type == TBD_TRACK_TYPE) {
+        set_slot_label(slot_labels[n][x], 'T', 'B');
+      } else if (track_type == TBD_MIDI_TRACK_TYPE) {
+        set_slot_label(slot_labels[n][x], 'T', 'M');
+      } else {
+        continue;
+      }
+      copy_tbd_grid_label(track_type, (uint8_t)(x + cur_grid * GRID_WIDTH),
+                          row, slot_labels[n][x]);
+    }
+#endif
   }
 }
 
@@ -372,6 +433,18 @@ void GridPage::display_counters() {
   }
 }
 
+static void draw_grid_device_label(uint8_t x, uint8_t y,
+                                   MidiDevice *device) {
+  char label[3] = {' ', ' ', '\0'};
+  if (device != nullptr && device != &null_midi_device &&
+      device->name != nullptr) {
+    label[0] = device->name[0] ? device->name[0] : ' ';
+    label[1] = device->name[1] ? device->name[1] : ' ';
+  }
+  oled_display.setCursor(x, y);
+  oled_display.print(label);
+}
+
 void GridPage::display_grid_info() {
   uint8_t x_offset = 43;
   uint8_t y_offset = 8;
@@ -397,17 +470,10 @@ void GridPage::display_grid_info() {
     oled_display.fillRect(tri_x + 2, tri_y, 2, 5, WHITE);
   }
 
-  oled_display.setCursor(0, y_offset + 1 + 1 * 8);
-  char dev[3] = "  ";
-  MD.uart->device.get_name(dev);
-  dev[2] = '\0';
-  oled_display.print(dev);
-
-  oled_display.setCursor(0, y_offset + 3 * 8);
-  char dev2[3] = "  ";
-  generic_midi_device.uart->device.get_name(dev2);
-  dev2[2] = '\0';
-  oled_display.print(dev2);
+  draw_grid_device_label(0, y_offset + 1 + 1 * 8,
+                         device_manager.primary_device());
+  draw_grid_device_label(0, y_offset + 3 * 8,
+                         device_manager.secondary_device());
 
   oled_display.setCursor(10, y_offset + (MAX_VISIBLE_ROWS - 1) * 8);
   oled_display.print((char)('X' + cur_grid));
@@ -539,14 +605,16 @@ void GridPage::display_grid() {
           copyMachineNameShort(tmp, str);
         }
         break;
+#ifdef PLATFORM_TBD
       case TBD_TRACK_TYPE:
-        str[0] = 'T';
-        str[1] = 'B';
+        str[0] = slot_labels[y][track_idx][0];
+        str[1] = slot_labels[y][track_idx][1];
         break;
       case TBD_MIDI_TRACK_TYPE:
-        str[0] = 'T';
-        str[1] = 'M';
+        str[0] = slot_labels[y][track_idx][0];
+        str[1] = slot_labels[y][track_idx][1];
         break;
+#endif
       }
       //  Highlight the current cursor position + slot menu apply range
       bool a = in_area(x, y + row_shift, cur_col, cur_row, param3.cur - 1,
@@ -1276,14 +1344,22 @@ bool GridPage::handleEvent(gui_event_t *event) {
     if (!show_slot_menu) {
       if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
       save:
+#ifdef PLATFORM_TBD
+        grid_io_overlay.begin(GridIOOverlay::MODE_SAVE);
+#else
         mcl.setPage(GRID_SAVE_PAGE);
+#endif
 
         return true;
       }
 
       if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
       load:
+#ifdef PLATFORM_TBD
+        grid_io_overlay.begin(GridIOOverlay::MODE_LOAD);
+#else
         mcl.setPage(GRID_LOAD_PAGE);
+#endif
 
         return true;
       }

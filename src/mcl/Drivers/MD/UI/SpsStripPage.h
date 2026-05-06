@@ -1,9 +1,8 @@
 /* TBD-only. SPS-mode bottom-32 4-encoder strip as a render overlay.
  *
- * Installed via GUI.setOverlay(&sps_strip_page) by SpsMode when the
- * latch turns on; cleared when the latch turns off OR replaced by
- * SpsOverlayPage while the user is holding TR for the param-page-
- * select view.
+ * Available as the compact SPS overlay variant. SPS defaults to the
+ * full-screen SpsOverlayPage when the device UI is selected, but the
+ * logical device UI button can hold-toggle into this strip.
  *
  * Renders only y=32..63, so the active page's top-half display
  * remains visible underneath. Reads sps_mode.enc[] for live values

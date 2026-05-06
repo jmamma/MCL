@@ -12,7 +12,7 @@ namespace {
 
 constexpr uint8_t kDefaultRomBank = 0xFF;
 constexpr int32_t kDefaultSampleSlice = -1;
-constexpr uint32_t kPresetApplyTimeoutMs = 3000;
+constexpr uint32_t kPresetApplyTimeoutMs = 30000;
 
 uint8_t midi_seq_valid_speed(uint8_t speed) {
   return speed <= SEQ_SPEED_4X ? speed : SEQ_SPEED_1X;
@@ -31,8 +31,8 @@ TbdTrackDefault kTbdMidiTrackDefaults[] = {
     {9, 1, "td3-all-def", kDefaultRomBank, kDefaultSampleSlice},
     {10, 2, "mo-all-def", kDefaultRomBank, kDefaultSampleSlice},
     {11, 3, "wtosc-all-def", kDefaultRomBank, kDefaultSampleSlice},
-    {12, 4, "ro-all-def", kDefaultRomBank, kDefaultSampleSlice},
-    {13, 5, "ro-all-def", kDefaultRomBank, kDefaultSampleSlice},
+    {12, 4, "ro-full-def", 2, 2},
+    {13, 5, "ro-full-def", 3, 0},
 };
 
 TbdTrackDefault kTbdStepTrackDefaults[] = {

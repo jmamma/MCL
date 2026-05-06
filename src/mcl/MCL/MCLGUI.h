@@ -49,6 +49,7 @@ public:
   ///  Clear the content area of a popup
   void clear_popup(uint8_t h = 0, uint8_t y_offset = 0);
   void draw_popup_title(const char *title, uint8_t y_offset = 0);
+  void draw_popup_title_plain(const char *title, uint8_t y_offset = 0);
   void draw_popup(const char *title, bool deferred_display = false,
                   uint8_t h = 0, uint8_t y_offset = 0);
   void draw_trigs(uint8_t x, uint8_t y,

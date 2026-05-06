@@ -23,10 +23,8 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 
-// TR-hold threshold for the SPS param-select overlay. Below this a
-// TR press is just the latch-tap window; past it SpsOverlayPage gets
-// pushed onto the page stack.
-#define TBD_OVERLAY_HOLD_MS 500
+// Hold threshold for toggling the SPS param UI between fullscreen and strip.
+#define SPS_FULLSCREEN_HOLD_MS 500
 
 class SpsMode {
 public:
@@ -39,8 +37,8 @@ public:
   // Cluster X/Y in SPS-latched: X → MD EXTENDED / FUNC+EXTENDED,
   // Y → MD NO transmit.
   bool handle_cluster_menus(gui_event_t *event);
-  // Arrow handler: latched → cycle sub_page_; SPS-key/TR-held → also cycle
-  // (works without latch). UP/DOWN flip half within page; LEFT/RIGHT
+  // Arrow handler: latched → cycle sub_page_; SPS-key/UI-button-held →
+  // also cycle. UP/DOWN flip half within page; LEFT/RIGHT
   // step pages (clamped, no wrap).
   bool handle_arrow_subpage(gui_event_t *event);
   // Tracks whether the SPS key stayed a clean tap. If another button is
@@ -59,10 +57,12 @@ public:
   // the encoder column (step / perf / page-select).
   void poll_encoders();
 
-  // Polled from MCL::loop. Single responsibility: when TR has been
-  // held past TBD_OVERLAY_HOLD_MS while latched, push SpsOverlayPage.
-  // No rendering — the page owns its own LEDs / OLED via its
-  // init / cleanup / display lifecycle.
+  // Logical device UI button edge. The platform panel maps physical
+  // buttons to a DeviceManager slot; SPS only sees "my UI button held".
+  void handle_ui_slot_button(bool pressed);
+
+  // Polled from MDUI::loop. Holding the logical UI button toggles
+  // between full-screen params and the compact strip.
   void poll_page_overlay();
 
   // Sync the encoder cur values to MD.kit.params for the currently
@@ -80,6 +80,7 @@ public:
   // Public accessor for the value-show timeout state (SpsStripPage
   // uses this to gate value-vs-label display per slot).
   bool show_strip_value(uint8_t i) const { return show_value(i); }
+  bool ui_slot_button_held() const { return ui_button_pressed_; }
 
   // The 4 encoders themselves. min=0, max=127, default rot_res — same
   // feel as a stock MCLEncoder.
@@ -102,12 +103,9 @@ private:
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
   // when the timeout has fully elapsed.
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
-  // Timestamp of the most recent TR press edge.
-  uint16_t tr_press_ms_ = 0;
-  // Event-driven TR-held flag — set true on TR press, cleared on
-  // release. Used by poll_page_overlay's hold-timer instead of
-  // BUTTON_DOWN, which can race with the panel poll.
-  bool tr_pressed_ = false;
+  uint16_t ui_button_press_ms_ = 0;
+  bool ui_button_pressed_ = false;
+  bool ui_button_hold_handled_ = false;
   // X press emits EXTENDED or FUNC+EXTENDED depending on the modifier
   // state at press time; release must pair with the same key.
   uint8_t x_key_held_ = 255;

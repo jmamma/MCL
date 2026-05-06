@@ -75,8 +75,26 @@ void MDPanel::handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx) {
 }
 
 bool MDPanel::handle_event(gui_event_t *event) {
-  if (handle_bank_arrow_cycle(event)) return true;
-  if (!md_.connected) return false;
+  const bool md_arrow_trace =
+      EVENT_BUTTON(event) &&
+      event->source >= ButtonsClass::FUNC_BUTTON6 &&
+      event->source <= ButtonsClass::FUNC_BUTTON9;
+  if (md_arrow_trace) {
+    DEBUG_PRINT("  MDPanel::handle_event arrow=");
+    DEBUG_PRINT((unsigned)event->source);
+    DEBUG_PRINT(" md_connected=");
+    DEBUG_PRINT((unsigned)md_.connected);
+    DEBUG_PRINT(" sps_active=");
+    DEBUG_PRINTLN((unsigned)md_.ui.sps_mode.is_active());
+  }
+  if (handle_bank_arrow_cycle(event)) {
+    if (md_arrow_trace) DEBUG_PRINTLN("  -> consumed by bank_arrow_cycle");
+    return true;
+  }
+  if (!md_.connected) {
+    if (md_arrow_trace) DEBUG_PRINTLN("  -> reject (md not connected)");
+    return false;
+  }
 
   const bool is_press = (event->mask == EVENT_BUTTON_PRESSED);
   const bool is_release = (event->mask == EVENT_BUTTON_RELEASED);
@@ -143,7 +161,10 @@ bool MDPanel::handle_event(gui_event_t *event) {
   }
 
   if (md_.ui.sps_mode.handle_cluster_menus(event)) return true;
-  if (md_.ui.sps_mode.handle_arrow_subpage(event))    return true;
+  if (md_.ui.sps_mode.handle_arrow_subpage(event)) {
+    if (md_arrow_trace) DEBUG_PRINTLN("  -> consumed by handle_arrow_subpage");
+    return true;
+  }
   if (md_.ui.sps_mode.handle_func_arrow_chord(event)) return true;
   if (md_.ui.sps_mode.handle_sps_key_tap(event))      return true;
 
@@ -151,6 +172,7 @@ bool MDPanel::handle_event(gui_event_t *event) {
                          event->source <= ButtonsClass::FUNC_BUTTON9);
 
   if (is_arrow) {
+    if (md_arrow_trace) DEBUG_PRINTLN("  -> reached is_arrow mirror block");
     uint8_t key = 255;
     switch (event->source) {
       case ButtonsClass::FUNC_BUTTON6: key = MDX_KEY_UP;    break;

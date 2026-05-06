@@ -47,20 +47,14 @@ bool TbdPanel::top_left_reserved_page() const {
          grid_io_overlay.is_active();
 }
 
-bool TbdPanel::enter_primary_ui(gui_event_t *event) {
-  gui_event_t ui_event = *event;
-  ui_event.source = ButtonsClass::BUTTON2;
-  ui_event.mask = EVENT_BUTTON_RELEASED;
-  return device_manager.enter_ui_slot(DeviceManager::UI_SLOT_PRIMARY,
-                                      &ui_event, false);
+bool TbdPanel::handle_primary_ui_button(gui_event_t *event) {
+  return device_manager.handle_ui_slot_button(DeviceManager::UI_SLOT_PRIMARY,
+                                             event, false);
 }
 
-bool TbdPanel::enter_secondary_ui(gui_event_t *event) {
-  gui_event_t ui_event = *event;
-  ui_event.source = ButtonsClass::TBD_BUTTON_TR;
-  ui_event.mask = EVENT_BUTTON_PRESSED;
-  return device_manager.enter_ui_slot(DeviceManager::UI_SLOT_SECONDARY,
-                                      &ui_event);
+bool TbdPanel::handle_secondary_ui_button(gui_event_t *event) {
+  return device_manager.handle_ui_slot_button(DeviceManager::UI_SLOT_SECONDARY,
+                                             event);
 }
 
 void TbdPanel::loop() {
@@ -127,6 +121,20 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   const bool grid_page_active =
       pg == GRID_PAGE && GUI.currentPage() == mcl.getPage(GRID_PAGE);
 
+  const bool arrow_trace = (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
+                            orig_src <= ButtonsClass::FUNC_BUTTON9);
+  if (arrow_trace) {
+    DEBUG_PRINT("arrow ");
+    DEBUG_PRINT((unsigned)orig_src);
+    DEBUG_PRINT(is_press ? " P" : (is_release ? " R" : " ?"));
+    DEBUG_PRINT(" pg=");
+    DEBUG_PRINT((unsigned)pg);
+    DEBUG_PRINT(" tbd_ui=");
+    DEBUG_PRINT((unsigned)TBD.is_ui_active());
+    DEBUG_PRINT(" dm_ui=");
+    DEBUG_PRINTLN((unsigned)device_manager.is_ui_active());
+  }
+
   if (suppress_sps_key_release_ &&
       orig_src == ButtonsClass::FUNC_BUTTON5 &&
       is_release) {
@@ -173,18 +181,17 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (tbd_tempo_page.is_active() && tbd_tempo_page.handleEvent(event)) {
+    if (arrow_trace) DEBUG_PRINTLN("  arrow eaten by tempo_page");
     return true;
   }
 
   if (device_manager.is_ui_active()) {
     if (orig_src == ButtonsClass::BUTTON2) {
-      if (is_press) {
-        enter_primary_ui(event);
-      }
+      handle_primary_ui_button(event);
       return true;
     }
-    if (orig_src == ButtonsClass::TBD_BUTTON_TR && is_press) {
-      enter_secondary_ui(event);
+    if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
+      handle_secondary_ui_button(event);
       return true;
     }
   }
@@ -228,17 +235,23 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (TBD.is_ui_active() && TBD.handle_ui_event(event)) {
-    return true;
+  if (TBD.is_ui_active()) {
+    if (arrow_trace) DEBUG_PRINTLN("  -> TBD.handle_ui_event");
+    if (TBD.handle_ui_event(event)) {
+      if (arrow_trace) DEBUG_PRINTLN("  TBD.handle_ui_event consumed");
+      return true;
+    }
+    if (arrow_trace) DEBUG_PRINTLN("  TBD.handle_ui_event did NOT consume");
   }
 
   if (device_manager.is_ui_active() &&
       device_manager.handle_ui_event(event)) {
+    if (arrow_trace) DEBUG_PRINTLN("  device_manager.handle_ui_event consumed");
     return true;
   }
 
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
-      !is_menu_page && enter_secondary_ui(event)) {
+      !is_menu_page && handle_secondary_ui_button(event)) {
     return true;
   }
 
@@ -385,9 +398,14 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (key != 255) {
+    if (arrow_trace) {
+      DEBUG_PRINT("  arrow fell through to MDX_KEY ");
+      DEBUG_PRINTLN((unsigned)key);
+    }
     key_interface.key_event(key, is_release);
     return true;
   }
+  if (arrow_trace) DEBUG_PRINTLN("  arrow returned false (unhandled)");
   return false;
 }
 

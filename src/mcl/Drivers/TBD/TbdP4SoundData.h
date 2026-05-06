@@ -229,6 +229,44 @@ struct ATTR_PACKED() TbdP4SoundData {
   }
 };
 
+inline bool tbd_p4_copy_compact_label(const char *src, char *dst,
+                                      size_t dst_len,
+                                      uint8_t max_chars = 8) {
+  if (dst == nullptr || dst_len == 0) {
+    return false;
+  }
+  dst[0] = '\0';
+  if (src == nullptr || src[0] == '\0') {
+    return false;
+  }
+
+  size_t out = 0;
+  while (*src && out + 1 < dst_len && out < max_chars) {
+    char c = *src++;
+    if (c == '-' || c == '_' || c == ' ') {
+      break;
+    }
+    if (c >= 'a' && c <= 'z') {
+      c = (char)(c - ('a' - 'A'));
+    }
+    dst[out++] = c;
+  }
+  dst[out] = '\0';
+  return out != 0;
+}
+
+inline bool tbd_p4_copy_sound_label(const TbdP4SoundData &sound, char *dst,
+                                    size_t dst_len,
+                                    uint8_t max_chars = 8) {
+  if (tbd_p4_copy_compact_label(sound.machine_id, dst, dst_len, max_chars)) {
+    return true;
+  }
+  if (tbd_p4_copy_compact_label(sound.preset_name, dst, dst_len, max_chars)) {
+    return true;
+  }
+  return tbd_p4_copy_compact_label(sound.preset_id, dst, dst_len, max_chars);
+}
+
 inline const TbdP4ParamDescriptor *
 tbd_p4_sound_param_for_lock(const TbdP4SoundData &sound, uint8_t lock_param) {
   if (lock_param < TBD_P4_LOCK_AUDIO_PARAM_COUNT) {

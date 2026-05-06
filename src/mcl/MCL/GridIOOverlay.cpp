@@ -66,6 +66,7 @@ void GridIOOverlay::init() {
     grid_page.reload_slot_models = false;
   }
   sync_preview_grid();
+  GridIOPage::paint_track_select_leds();
 }
 
 void GridIOOverlay::cleanup() {
@@ -106,18 +107,8 @@ void GridIOOverlay::display() {
   oled_display.fillRect(0, y_offset, 128, 32, BLACK);
 
   if (mode_ == MODE_LOAD) {
-    if (!GridIOPage::show_track_type) {
-      char title[16];
-      mclstr_copy_progmem(title, mclstr_load_tracks, sizeof(title));
-      mcl_gui.draw_popup_title(title, y_offset);
-    }
     grid_load_page.display_at(y_offset);
   } else {
-    if (!GridIOPage::show_track_type) {
-      char title[16];
-      mclstr_copy_progmem(title, mclstr_save_tracks, sizeof(title));
-      mcl_gui.draw_popup_title(title, y_offset);
-    }
     grid_save_page.display_at(y_offset);
   }
 }
@@ -137,17 +128,18 @@ bool GridIOOverlay::handleEvent(gui_event_t *event) {
         if (GridIOPage::show_offset) {
           GridIOPage::offset = track;
         }
-        key_interface.send_md_leds(TRIGLED_OVERLAY);
+        GridIOPage::paint_track_select_leds();
       }
       return true;
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED && !GridIOPage::show_track_type) {
-      key_interface.send_md_leds(TRIGLED_OVERLAY);
+      GridIOPage::paint_track_select_leds();
       if (note_interface.notes_all_off()) {
         if (GridIOPage::show_offset) {
           GridIOPage::show_offset = false;
           note_interface.init_notes();
+          GridIOPage::paint_track_select_leds();
         } else if (BUTTON_DOWN(Buttons.BUTTON2)) {
           return true;
         } else {
@@ -181,6 +173,7 @@ bool GridIOOverlay::handleEvent(gui_event_t *event) {
           if (GridIOPage::show_offset) {
             GridIOPage::offset = 255;
           }
+          GridIOPage::paint_track_select_leds();
         }
         return true;
       case MDX_KEY_BANKA:
@@ -284,7 +277,7 @@ void GridIOOverlay::toggle_grid() {
   }
   GridIOPage::old_grid = !GridIOPage::old_grid;
   sync_preview_grid();
-  key_interface.send_md_leds();
+  GridIOPage::paint_track_select_leds();
 }
 
 void GridIOOverlay::selected_tracks(uint8_t *track_select_array) {
@@ -349,6 +342,8 @@ void GridIOOverlay::sync_preview_grid() {
     grid_page.cur_grid = GridIOPage::old_grid;
     grid_page.reload_slot_models = false;
   }
+  grid_page.load_slot_models();
+  grid_page.reload_slot_models = true;
 }
 
 #endif // PLATFORM_TBD

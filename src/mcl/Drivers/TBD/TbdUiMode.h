@@ -30,6 +30,7 @@ public:
   bool enter(uint8_t device_idx);
   void disable();
   bool handle_event(gui_event_t *event);
+  void handle_ui_slot_button(bool pressed);
   void poll_encoders();
 
   TbdP4SoundData *active_sound() const;
@@ -55,9 +56,13 @@ private:
   uint8_t bound_track_ = 255;
   uint8_t bound_sub_page_ = 255;
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
+  uint16_t ui_button_press_ms_ = 0;
+  bool ui_button_pressed_ = false;
+  bool ui_button_hold_handled_ = false;
 
   void show_fullscreen();
   void show_strip();
+  void poll_ui_button_hold();
   void resync_from_sound();
   void move_sub_page(int8_t delta);
   void flip_sub_page_half();

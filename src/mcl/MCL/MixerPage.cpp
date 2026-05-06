@@ -282,13 +282,16 @@ void MixerPage::load_perf_locks(uint8_t state) {
 void MixerPage::loop() {
   constexpr int timeout = 750;
   bool old_draw_encoders = draw_encoders;
+  sync_selected_mixer_device();
+  const bool use_perf_encoders = SeqTrackUtil::is_md_device(midi_device);
   bool mixer_encoder_edit = handle_mixer_encoder_edits();
 
-  if (!mixer_encoder_edit) {
+  if (use_perf_encoders && !mixer_encoder_edit) {
     perf_page.func_enc_check();
   }
 
-  if (!mixer_encoder_edit && (key_interface.is_key_down(MDX_KEY_NO)) &&
+  if (use_perf_encoders && !mixer_encoder_edit &&
+      (key_interface.is_key_down(MDX_KEY_NO)) &&
       preview_mute_set != 255 && note_interface.notes_on == 0) {
     for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
       PerfEncoder *enc = (PerfEncoder*) encoders[n];
@@ -302,11 +305,11 @@ void MixerPage::loop() {
     }
   }
 
-  if (!mixer_encoder_edit) {
+  if (use_perf_encoders && !mixer_encoder_edit) {
     perf_page.encoder_send();
   }
 
-  if (mixer_encoder_edit) {
+  if (mixer_encoder_edit || !use_perf_encoders) {
     draw_encoders = false;
   } else if (draw_encoders && key_interface.is_key_down(MDX_KEY_FUNC)) {
     draw_encoders = true;
@@ -452,7 +455,9 @@ void MixerPage::display() {
     seq_step_page.mute_mask = mask;
     oled_draw_mutes();
   }
-  if (draw_encoders || preview_mute_set != 255) {
+  const bool show_perf_encoders = SeqTrackUtil::is_md_device(midi_device);
+  if (show_perf_encoders &&
+      (draw_encoders || preview_mute_set != 255)) {
     // oled_display.clearDisplay();
     draw_encs();
     oled_display.setFont(&TomThumb);
@@ -577,7 +582,8 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
       }
     }
   }
-  if (state < 4 && load_perf) {
+  if (state < 4 && load_perf &&
+      SeqTrackUtil::is_md_device(selected_mixer_device())) {
     load_perf_locks(state);
   }
   redraw_mutes = true;
@@ -892,39 +898,44 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         record_mutes_set(true);
         return true;
       }
-      if (BUTTON_DOWN(Buttons.ENCODER1)) {
-        perf_param1.clear_scenes();
-      }
-      if (BUTTON_DOWN(Buttons.ENCODER2)) {
-        perf_param2.clear_scenes();
-      }
-      if (BUTTON_DOWN(Buttons.ENCODER3)) {
-        perf_param3.clear_scenes();
-      }
-      if (BUTTON_DOWN(Buttons.ENCODER4)) {
-        perf_param4.clear_scenes();
+      if (is_md_device) {
+        if (BUTTON_DOWN(Buttons.ENCODER1)) {
+          perf_param1.clear_scenes();
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER2)) {
+          perf_param2.clear_scenes();
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER3)) {
+          perf_param3.clear_scenes();
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER4)) {
+          perf_param4.clear_scenes();
+        }
       }
       redraw_mask = -1;
       return true;
     }
 
     if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-      if (BUTTON_DOWN(Buttons.ENCODER1)) {
-        perf_param1.scene_autofill();
-      }
-      if (BUTTON_DOWN(Buttons.ENCODER2)) {
-        perf_param2.scene_autofill();
-      }
-      if (BUTTON_DOWN(Buttons.ENCODER3)) {
-        perf_param3.scene_autofill();
-      }
-      if (BUTTON_DOWN(Buttons.ENCODER4)) {
-        perf_param4.scene_autofill();
+      if (is_md_device) {
+        if (BUTTON_DOWN(Buttons.ENCODER1)) {
+          perf_param1.scene_autofill();
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER2)) {
+          perf_param2.scene_autofill();
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER3)) {
+          perf_param3.scene_autofill();
+        }
+        if (BUTTON_DOWN(Buttons.ENCODER4)) {
+          perf_param4.scene_autofill();
+        }
       }
       redraw_mask = -1;
       return true;
     }
-    if (preview_mute_set != 255 && (key_interface.is_key_down(MDX_KEY_NO))) {
+    if (is_md_device && preview_mute_set != 255 &&
+        (key_interface.is_key_down(MDX_KEY_NO))) {
       if (event->source >= Buttons.ENCODER1 &&
           event->source <= Buttons.ENCODER4) {
         uint8_t b = event->source - Buttons.ENCODER1;

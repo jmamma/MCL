@@ -22,6 +22,8 @@ TbdParamOverlayPage tbd_param_overlay_page;
 
 namespace {
 
+constexpr uint16_t kParamOverlayHoldMs = 500;
+
 uint8_t normalized_value(const TbdP4ParamDescriptor &param) {
   if (param.max_value <= param.min_value) {
     return 0;
@@ -516,6 +518,8 @@ void TbdUiMode::disable() {
   bound_device_idx_ = SLOT_NONE;
   bound_track_ = 255;
   bound_sub_page_ = 255;
+  ui_button_pressed_ = false;
+  ui_button_hold_handled_ = false;
   GUI_hardware.led.set_tbd_driver_leds(false, false);
   if (GUI.overlay == &tbd_param_strip_page ||
       GUI.overlay == &tbd_param_overlay_page) {
@@ -529,6 +533,31 @@ void TbdUiMode::show_fullscreen() {
 
 void TbdUiMode::show_strip() {
   GUI.setOverlay(&tbd_param_strip_page);
+}
+
+void TbdUiMode::handle_ui_slot_button(bool pressed) {
+  if (pressed) {
+    ui_button_press_ms_ = read_clock_ms();
+    ui_button_pressed_ = true;
+    ui_button_hold_handled_ = false;
+  } else {
+    ui_button_pressed_ = false;
+    ui_button_hold_handled_ = false;
+  }
+}
+
+void TbdUiMode::poll_ui_button_hold() {
+  if (!latched_ || !ui_button_pressed_ || ui_button_hold_handled_) return;
+  if (clock_diff(ui_button_press_ms_, read_clock_ms()) <=
+      kParamOverlayHoldMs) {
+    return;
+  }
+  if (GUI.overlay == &tbd_param_overlay_page) {
+    show_strip();
+  } else {
+    show_fullscreen();
+  }
+  ui_button_hold_handled_ = true;
 }
 
 void TbdUiMode::move_sub_page(int8_t delta) {
@@ -555,7 +584,21 @@ void TbdUiMode::flip_sub_page_half() {
 }
 
 bool TbdUiMode::handle_event(gui_event_t *event) {
-  if (!latched_ || !EVENT_BUTTON(event)) return false;
+  const bool entry_arrow_trace =
+      EVENT_BUTTON(event) &&
+      event->source >= ButtonsClass::FUNC_BUTTON6 &&
+      event->source <= ButtonsClass::FUNC_BUTTON9;
+  if (entry_arrow_trace) {
+    DEBUG_PRINT("    TbdUiMode::handle_event latched=");
+    DEBUG_PRINT((unsigned)latched_);
+    DEBUG_PRINT(" mask=");
+    DEBUG_PRINTLN((unsigned)event->mask);
+  }
+
+  if (!latched_ || !EVENT_BUTTON(event)) {
+    if (entry_arrow_trace) DEBUG_PRINTLN("    -> reject (!latched/!EVENT_BUTTON)");
+    return false;
+  }
   if (event->mask != EVENT_BUTTON_PRESSED &&
       event->mask != EVENT_BUTTON_RELEASED) {
     return false;
@@ -573,7 +616,14 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
   }
 
   if (encoder_passthrough_page()) {
+    if (entry_arrow_trace) DEBUG_PRINTLN("    -> reject (encoder_passthrough_page)");
     return false;
+  }
+  if (entry_arrow_trace) {
+    DEBUG_PRINT("    -> handling, count=");
+    DEBUG_PRINT((unsigned)window_count());
+    DEBUG_PRINT(" sub_page=");
+    DEBUG_PRINTLN((unsigned)sub_page_);
   }
 
   const uint8_t before_sub_page = sub_page_;
@@ -735,7 +785,9 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
 }
 
 void TbdUiMode::poll_encoders() {
-  if (!latched_ || encoder_passthrough_page()) return;
+  if (!latched_) return;
+  poll_ui_button_hold();
+  if (encoder_passthrough_page()) return;
 
   if (bound_device_idx_ != device_idx_ ||
       bound_track_ != active_track_index() ||
@@ -750,7 +802,6 @@ void TbdUiMode::poll_encoders() {
   }
 
   uint16_t now = read_clock_ms();
-  bool edited = false;
   for (uint8_t i = 0; i < 4; i++) {
     ParamSlot slot;
     if (!param_slot(sub_page_, i, slot)) continue;
@@ -760,12 +811,7 @@ void TbdUiMode::poll_encoders() {
       send_param(i);
       enc[i].old = enc[i].cur;
       enc_used_clock_[i] = now ? now : 1;
-      edited = true;
     }
-  }
-
-  if (edited && GUI.overlay == &tbd_param_overlay_page) {
-    show_strip();
   }
 }
 

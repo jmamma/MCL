@@ -7,14 +7,15 @@
  * overlay just adds a render pass + an LED palette tick.
  *
  * Lifecycle is owned by SpsMode:
- *   - SpsMode::poll_page_overlay calls GUI.setOverlay(&sps_overlay_page)
- *     when TR has been held past TBD_OVERLAY_HOLD_MS while latched.
+ *   - SpsMode::enable defaults to GUI.setOverlay(&sps_overlay_page).
+ *   - Holding the logical device UI button toggles between this
+ *     full-screen overlay and the compact strip.
  *   - SpsMode::disable clears SPS overlays when the device UI is exited.
  *
- * Trig / arrow sub-page navigation while TR is held is handled by
- * SpsMode's existing handlers (handle_arrow_subpage, handle_trig_forward)
- * via tbd_handleEvent — so events still reach the active page when TR
- * isn't held.
+ * Trig / arrow sub-page navigation while this overlay is active, or
+ * while the logical device UI button is held, is handled by SpsMode's
+ * existing handlers (handle_arrow_subpage, handle_trig_forward) via
+ * tbd_handleEvent.
  */
 
 #pragma once

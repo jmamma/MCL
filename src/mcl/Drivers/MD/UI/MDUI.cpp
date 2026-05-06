@@ -28,4 +28,8 @@ void MDUI::exit() {
   sps_mode.disable();
 }
 
+void MDUI::handle_ui_slot_button(bool pressed) {
+  sps_mode.handle_ui_slot_button(pressed);
+}
+
 #endif // PLATFORM_TBD

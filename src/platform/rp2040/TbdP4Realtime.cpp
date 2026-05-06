@@ -110,6 +110,7 @@ void TbdP4RealtimeTransport::init() {
   network_status_ = 0;
   input_peak_byte_ = 0;
   output_peak_byte_ = 0;
+  extended_response_seen_ = false;
   memset(input_waveform_, 0, sizeof(input_waveform_));
   memset(output_waveform_, 0, sizeof(output_waveform_));
 
@@ -360,6 +361,9 @@ void TbdP4RealtimeTransport::get_stats(TbdP4RealtimeStats &stats) const {
   stats.last_spi_send_ms = last_spi_send_ms_;
   stats.last_response_ms = last_response_ms_;
   stats.last_response_sequence = last_seen_response_;
+  stats.input_peak_byte = input_peak_byte_;
+  stats.output_peak_byte = output_peak_byte_;
+  stats.extended_response_seen = extended_response_seen_;
   stats.p4_alive = p4_alive_;
   stats.p4_sync_seen = last_ws_sync_ms_ != 0 &&
                        (now_ms() - last_ws_sync_ms_) <= 300;
@@ -520,6 +524,7 @@ void TbdP4RealtimeTransport::process_response() {
   network_status_ = extended_response ? response->network_status : 0;
   input_peak_byte_ = extended_response ? response->input_peak_byte : 0;
   output_peak_byte_ = extended_response ? response->output_peak_byte : 0;
+  extended_response_seen_ = extended_response;
   memcpy(input_waveform_, response->input_waveform, sizeof(input_waveform_));
   memcpy(output_waveform_, response->output_waveform, sizeof(output_waveform_));
 

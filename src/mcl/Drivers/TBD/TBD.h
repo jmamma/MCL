@@ -42,6 +42,7 @@ public:
   virtual bool enter_ui(gui_event_t *event) override;
   virtual bool is_ui_active() override;
   virtual void exit_ui() override;
+  virtual void on_ui_slot_button(uint8_t slot, bool pressed) override;
   bool enter_diag_ui(uint8_t device_idx);
   uint8_t ui_device_idx() const { return ui_device_idx_; }
   bool p4_defaults_loaded() const { return p4_defaults_loaded_; }
@@ -57,7 +58,7 @@ private:
   uint32_t p4_defaults_last_attempt_ms_ = 0;
   uint8_t active_note_ = 255;
 
-  bool load_default_p4_presets();
+  bool load_default_p4_presets(bool show_progress = false);
   void apply_runtime_p4_defaults();
   void sync_active_p4_track();
   void note_on(uint8_t note);

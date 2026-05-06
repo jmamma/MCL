@@ -33,6 +33,8 @@ public:
   bool enter_ui(MidiDevice *device, gui_event_t *event);
   bool enter_ui_slot(uint8_t slot, gui_event_t *event,
                      bool allow_toggle = true);
+  bool handle_ui_slot_button(uint8_t slot, gui_event_t *event,
+                             bool allow_toggle = true);
   bool is_ui_active() const;
   void exit_ui();
 #endif

@@ -13,7 +13,12 @@
 void GridLoadPage::init() {
   GridIOPage::init();
   note_interface.init_notes();
+#ifdef PLATFORM_TBD
+  grid_page.load_slot_models();
+  paint_track_select_leds();
+#else
   key_interface.send_md_leds(TRIGLED_OVERLAY);
+#endif
   key_interface.on();
   // GUI.display();
   encoders[0]->cur = mcl_cfg.load_mode;
@@ -53,6 +58,9 @@ void GridLoadPage::draw_popup() {
   mclstr_copy_progmem(str, mclstr_load_tracks, sizeof(str));
     // str[10] = 'X' + proj.get_grid();
   mcl_gui.draw_popup(str, true);
+#ifdef PLATFORM_TBD
+  draw_title(str);
+#endif
 }
 
 void GridLoadPage::display_load() {
@@ -115,21 +123,60 @@ void GridLoadPage::display() {
 
 void GridLoadPage::display_at(uint8_t y_offset) {
 
-  const uint8_t menu_y = MCLGUI::s_menu_y + y_offset;
+  const uint8_t body_y_offset = content_y_offset(y_offset);
+  const uint8_t menu_y = MCLGUI::s_menu_y + body_y_offset;
 
   oled_display.setFont(&TomThumb);
   if (show_track_type) {
     char str[16];
     mclstr_copy_progmem(str, mclstr_load_groups, sizeof(str));
-    mcl_gui.draw_popup_title(str, y_offset);
+    draw_title(str, y_offset);
     mcl_gui.draw_track_type_select(mcl_cfg.track_type_select, y_offset);
   } else {
-    mcl_gui.clear_popup(0, y_offset);
+#ifdef PLATFORM_TBD
+    if (y_offset >= 32) {
+      clear_body(y_offset);
+      draw_tbd_panel_header("LOAD", y_offset);
+
+      char K[4] = {'\0'};
+      char modestr[7];
+      get_modestr(modestr);
+
+      if (show_offset) {
+        if (offset < GRID_WIDTH) {
+          mcl_gui.put_value_at(offset + 1, K);
+        } else {
+          strcpy_P(K, mclstr_dash);
+        }
+        mcl_gui.draw_text_encoder(42, y_offset + 15, "DST", K, false, false);
+      } else {
+        mcl_gui.draw_text_encoder(30, y_offset + 15, mclstr_mode, modestr);
+
+        if (mcl_cfg.load_mode == LOAD_QUEUE) {
+          if (mcl_cfg.chain_queue_length == 1) {
+            strcpy_P(K, mclstr_dash);
+          } else {
+            mcl_gui.put_value_at(mcl_cfg.chain_queue_length, K);
+          }
+          mcl_gui.draw_text_encoder(62, y_offset + 15, mclstr_len, K);
+        }
+
+        if (mcl_cfg.chain_load_quant == 1) {
+          strcpy_P(K, mclstr_dash);
+        } else {
+          mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
+        }
+        mcl_gui.draw_text_encoder(96, y_offset + 15, mclstr_quant, K);
+      }
+      return;
+    }
+#endif
+    clear_body(y_offset);
     uint16_t trig_mask = note_interface.notes_off | note_interface.notes_on;
     //    mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4, MCLGUI::s_menu_y + 8,
     //                              "STEP", K);
     if (show_offset) {
-      oled_display.setCursor(MCLGUI::s_menu_x + 26, 14 + y_offset);
+      oled_display.setCursor(MCLGUI::s_menu_x + 26, 14 + body_y_offset);
       mcl_print_P(mclstr_destination);
       trig_mask = 0;
       if (offset < 16) { SET_BIT16(trig_mask, offset); }
@@ -141,7 +188,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
     } else {
 
       oled_display.setFont(&Elektrothic);
-      oled_display.setCursor(MCLGUI::s_menu_x + 4, 21 + y_offset);
+      oled_display.setCursor(MCLGUI::s_menu_x + 4, 21 + body_y_offset);
       oled_display.print((char)(0x3A + old_grid));
 
       oled_display.setFont(&TomThumb);
@@ -180,8 +227,10 @@ void GridLoadPage::display_at(uint8_t y_offset) {
                            menu_y + 4 + 17);
     oled_display.print(step_count);
 
+#ifndef PLATFORM_TBD
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, menu_y + 4 + 20,
                        trig_mask);
+#endif
     // draw data flow in the center
     /*
     oled_display.setCursor(48, MCLGUI::s_menu_y + 4 + 12);

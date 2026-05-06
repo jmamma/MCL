@@ -67,12 +67,7 @@ void SpsMode::set_latched(bool v) {
   GUI_hardware.led.updateLeds = true;
   if (v) {
     resync_from_kit();
-    // Install the bottom-strip overlay so SPS params are visible on
-    // top of the active page. Replaced by SpsOverlayPage when TR is
-    // held past the overlay threshold.
-    if (GUI.overlay != &sps_overlay_page) {
-      GUI.setOverlay(&sps_strip_page);
-    }
+    GUI.setOverlay(&sps_overlay_page);
   } else {
     // Latch off — clear any SPS overlay we installed.
     if (GUI.overlay == &sps_strip_page || GUI.overlay == &sps_overlay_page) {
@@ -235,22 +230,30 @@ bool SpsMode::handle_cluster_menus(gui_event_t *event) {
 }
 
 bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
-  // Either the physical FUNC key or TR (TBD_BUTTON_TR) held + arrow
-  // cycles sub_page_. Works with the latch off too — the gesture is
-  // "modifier held", not "SPS-mode active".
+  // Either the physical FUNC key or the logical device UI button held
+  // + arrow cycles sub_page_.
   if (!is_arrow_source(event->source)) return false;
   const bool sps_key_held = BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5);
-  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR);
+  const bool ui_button_held = ui_button_pressed_;
+  DEBUG_PRINT("    SpsMode::handle_arrow_subpage latched=");
+  DEBUG_PRINT((unsigned)latched_);
+  DEBUG_PRINT(" sps_key=");
+  DEBUG_PRINT((unsigned)sps_key_held);
+  DEBUG_PRINT(" ui_button=");
+  DEBUG_PRINTLN((unsigned)ui_button_held);
   if (sps_key_held && mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu) {
     if (is_press(event)) sps_key_consumed_ = true;
     return false;
   }
   const bool overlay_active = (GUI.overlay == &sps_overlay_page);
   // While the SPS overlay is active (the 8-encoder page select view)
-  // or a modifier (SPS-key/TR) is held, the cluster owns sub-page traversal.
+  // or a modifier is held, the cluster owns sub-page traversal.
   // Otherwise, panel arrows fall through to grid / seq navigation by
   // default (even if the SPS latch is on).
-  if (!overlay_active && !sps_key_held && !tr_held) return false;
+  if (!overlay_active && !sps_key_held && !ui_button_held) {
+    DEBUG_PRINTLN("    -> reject (no modifier, no overlay)");
+    return false;
+  }
   if (is_press(event)) {
     // Suppress key-repeat: a held arrow only fires once per physical
     // press. The release branch clears arrow_consumed_source_ so the
@@ -344,14 +347,14 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
   if (trig_idx >= 16) return false;
 
   // Trig sub-page selection requires an explicit modifier: physical FUNC
-  // or TR (TBD_BUTTON_TR) held. Without a modifier, trigs fall
+  // or the logical device UI button held. Without a modifier, trigs fall
   // through to the active page — so on SEQ_STEP_PAGE you can keep
   // entering parameter locks (trig press = step select), on GRID_PAGE
   // you keep triggering the track, etc. Latch state alone no longer
   // claims trigs.
   const bool sps_key_held = BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5);
-  const bool tr_held = BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR);
-  if (!sps_key_held && !tr_held) return false;
+  const bool ui_button_held = ui_button_pressed_;
+  if (!sps_key_held && !ui_button_held) return false;
 
   if (is_press(event)) {
     const uint8_t max_sub_pages = MD.is_spsx ? 8 : 6;
@@ -405,17 +408,29 @@ void SpsMode::poll_encoders() {
   }
 }
 
-void SpsMode::poll_page_overlay() {
-  // Install the SPS overlay (a LightPage rendered on top of whatever
-  // page is currently active) once TR has been held past the hold
-  // threshold. The active page stays current — we just layer the
-  // overlay's display + loop on top via GUI's overlay slot.
-  if (!tr_pressed_) return;
-  if (GUI.overlay == &sps_overlay_page) return;
-  if (clock_diff(tr_press_ms_, read_clock_ms()) <= TBD_OVERLAY_HOLD_MS) return;
+void SpsMode::handle_ui_slot_button(bool pressed) {
+  if (pressed) {
+    ui_button_press_ms_ = read_clock_ms();
+    ui_button_pressed_ = true;
+    ui_button_hold_handled_ = false;
+  } else {
+    ui_button_pressed_ = false;
+    ui_button_hold_handled_ = false;
+  }
+}
 
-  if (!latched_) set_latched(true);
-  GUI.setOverlay(&sps_overlay_page);
+void SpsMode::poll_page_overlay() {
+  if (!latched_ || !ui_button_pressed_ || ui_button_hold_handled_) return;
+  if (clock_diff(ui_button_press_ms_, read_clock_ms()) <=
+      SPS_FULLSCREEN_HOLD_MS) {
+    return;
+  }
+  if (GUI.overlay == &sps_overlay_page) {
+    GUI.setOverlay(&sps_strip_page);
+  } else {
+    GUI.setOverlay(&sps_overlay_page);
+  }
+  ui_button_hold_handled_ = true;
 }
 
 #else // !PLATFORM_TBD
@@ -427,6 +442,7 @@ void SpsMode::observe_sps_key_chord(gui_event_t *) {}
 bool SpsMode::handle_sps_key_tap(gui_event_t *) { return false; }
 bool SpsMode::handle_trig_forward(gui_event_t *, uint8_t) { return false; }
 void SpsMode::poll_encoders() {}
+void SpsMode::handle_ui_slot_button(bool) {}
 void SpsMode::poll_page_overlay() {}
 void SpsMode::resync_from_kit() {}
 bool SpsMode::active_step_lock(uint8_t, uint8_t *) const { return false; }

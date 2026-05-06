@@ -85,6 +85,12 @@ public:
 
   /** Ask the driver to leave any active UI mode it owns. */
   virtual void exit_ui() {}
+
+  /** Logical active-device UI button edge for this slot. */
+  virtual void on_ui_slot_button(uint8_t slot, bool pressed) {
+    (void)slot;
+    (void)pressed;
+  }
 #endif
 
   virtual void setup() {}

@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef VERSION_STR
+#define VERSION_STR "dev"
+#endif
+
 namespace {
 
 struct P4BootPreset {
@@ -34,35 +38,223 @@ struct P4BootPreset {
 struct P4BootPresetFallback {
   uint8_t track_index;
   const char *preset_id;
+  uint8_t rom_bank;
+  int32_t sample_slice;
 };
 
 constexpr uint32_t kP4PresetRetryMs = 2000;
 constexpr uint32_t kP4PresetReadyProbeMs = 100;
-constexpr uint32_t kP4PresetCommandTimeoutMs = 3000;
+constexpr uint32_t kP4PresetBootReadyMs = 30000;
+constexpr uint32_t kP4PresetCommandTimeoutMs = 30000;
+constexpr uint32_t kP4BootSettleMs = 1000;
 constexpr size_t kP4SoundTrackCount = 16;
 constexpr size_t kP4TrackDefaultsJsonBytes = 8192;
 constexpr size_t kP4PresetValueCount = 32;
 constexpr uint8_t kP4DefaultRomBank = 0xFF;
 constexpr int32_t kP4DefaultSampleSlice = -1;
+constexpr uint8_t kP4AppFlags = 0x03;
+constexpr uint8_t kP4InitProgressMax = 32;
+constexpr uint32_t kP4PluginSettleMs = 1000;
 constexpr uint8_t kTbdUiSlotPrimary = 0;
 constexpr uint8_t kTbdUiSlotSecondary = 1;
 constexpr uint8_t kTbdUiSlotNone = 255;
+constexpr const char *kP4RackPluginId = "PicoSeqRack";
 
 const P4BootPresetFallback kP4BootPresetFallbacks[] = {
-    {0, "db-all-def"},    {1, "fmb-all-def"},
-    {2, "ds-all-def"},    {3, "hh1-all-def"},
-    {4, "rs-all-def"},    {5, "cl-all-def"},
-    {6, "ro-all-def"},    {7, "ro-all-def"},
-    {8, "td3-all-def"},   {9, "td3-all-def"},
-    {10, "mo-all-def"},   {11, "wtosc-all-def"},
-    {12, "ro-all-def"},   {13, "ro-all-def"},
-    {14, "pp-all-def"},   {15, "inp-all-def"},
+    {0, "db-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {1, "fmb-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {2, "ds-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {3, "hh1-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {4, "rs-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {5, "cl-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {6, "ro-full-def", 0, 3},
+    {7, "ro-full-def", 1, 1},
+    {8, "td3-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {9, "td3-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {10, "mo-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {11, "wtosc-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {12, "ro-full-def", 2, 2},
+    {13, "ro-full-def", 3, 0},
+    {14, "pp-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
+    {15, "inp-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
 };
 
 P4BootPreset p4_boot_presets[kP4SoundTrackCount];
 TbdP4SoundData p4_default_sounds[kP4SoundTrackCount];
 bool p4_default_sound_valid[kP4SoundTrackCount];
 char p4_track_defaults_json[kP4TrackDefaultsJsonBytes];
+uint8_t p4_boot_stage = 0;
+uint8_t p4_boot_fail_stage = 0;
+uint8_t p4_boot_fail_request = 0;
+uint8_t p4_boot_loaded_tracks = 0;
+
+uint8_t count_p4_audio_params(const TbdP4SoundData &sound) {
+  uint8_t count = 0;
+  for (uint8_t i = 0; i < TBD_P4_AUDIO_PARAM_COUNT; i++) {
+    if (sound.audio_params.params[i].type != TBD_P4_PARAM_TYPE_NONE) {
+      count++;
+    }
+  }
+  return count;
+}
+
+uint8_t count_p4_sendable_params(const TbdP4SoundData &sound) {
+  uint8_t count = 0;
+  for (uint8_t i = 0; i < TBD_P4_AUDIO_PARAM_COUNT; i++) {
+    if (sound.audio_params.params[i].is_sendable()) {
+      count++;
+    }
+  }
+  for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+    if (sound.mixer_params.params[i].is_sendable()) {
+      count++;
+    }
+  }
+  return count;
+}
+
+void debug_p4_json_result(const char *label, bool ok, const char *json) {
+#ifdef DEBUGMODE
+  const size_t len = json == nullptr ? 0 : strlen(json);
+  char head[33];
+  head[0] = '\0';
+  if (json != nullptr && len > 0) {
+    const size_t copy_len = len < sizeof(head) - 1 ? len : sizeof(head) - 1;
+    memcpy(head, json, copy_len);
+    head[copy_len] = '\0';
+    for (size_t i = 0; i < copy_len; i++) {
+      if (head[i] == '\n' || head[i] == '\r' || head[i] == '\t') {
+        head[i] = ' ';
+      }
+    }
+  }
+
+  DEBUG_PRINT("tbd_init json ");
+  DEBUG_PRINT(label);
+  DEBUG_PRINT(" ok=");
+  DEBUG_PRINT(ok ? 1 : 0);
+  DEBUG_PRINT(" len=");
+  DEBUG_PRINT((unsigned)len);
+  DEBUG_PRINT(" head=");
+  DEBUG_PRINTLN(head);
+#else
+  (void)label;
+  (void)ok;
+  (void)json;
+#endif
+}
+
+void debug_p4_boot_preset(const char *label, const P4BootPreset &preset) {
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init preset ");
+  DEBUG_PRINT(label);
+  DEBUG_PRINT(" p4=");
+  DEBUG_PRINT((unsigned)preset.track_index);
+  DEBUG_PRINT(" id=");
+  DEBUG_PRINT(preset.preset_id);
+  DEBUG_PRINT(" bank=");
+  DEBUG_PRINT((unsigned)preset.rom_bank);
+  DEBUG_PRINT(" slice=");
+  DEBUG_PRINTLN((long)preset.sample_slice);
+#else
+  (void)label;
+  (void)preset;
+#endif
+}
+
+void debug_p4_sound_summary(const char *label, const TbdP4SoundData &sound) {
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init sound ");
+  DEBUG_PRINT(label);
+  DEBUG_PRINT(" p4=");
+  DEBUG_PRINT((unsigned)sound.p4_track_index);
+  DEBUG_PRINT(" ch=");
+  DEBUG_PRINT((unsigned)sound.midi_channel);
+  DEBUG_PRINT(" preset=");
+  DEBUG_PRINT(sound.preset_id);
+  DEBUG_PRINT(" macro=");
+  DEBUG_PRINT(sound.macro_id);
+  DEBUG_PRINT(" mach=");
+  DEBUG_PRINT(sound.machine_id);
+  DEBUG_PRINT(" apg=");
+  DEBUG_PRINT((unsigned)sound.audio_params.num_pages);
+  DEBUG_PRINT(" ap=");
+  DEBUG_PRINT((unsigned)count_p4_audio_params(sound));
+  DEBUG_PRINT(" mpg=");
+  DEBUG_PRINT((unsigned)sound.mixer_params.num_pages);
+  DEBUG_PRINT(" send=");
+  DEBUG_PRINTLN((unsigned)count_p4_sendable_params(sound));
+#else
+  (void)label;
+  (void)sound;
+#endif
+}
+
+void draw_p4_init_progress(uint8_t cur) {
+  if (cur > kP4InitProgressMax) {
+    cur = kP4InitProgressMax;
+  }
+
+  oled_display.clearDisplay();
+  oled_display.setFont();
+  oled_display.setTextSize(2);
+  oled_display.setTextColor(WHITE, BLACK);
+  oled_display.setCursor(12, 10);
+  oled_display.print("TBD");
+
+  oled_display.setTextSize(1);
+  oled_display.setCursor(60, 10);
+  oled_display.print("Init P4");
+  mcl_gui.draw_progress_bar(cur, kP4InitProgressMax, false, 60, 25);
+}
+
+bool activate_p4_sample_kit(uint8_t kit_index, uint32_t timeout_ms) {
+  const bool set_ok = tbd_p4_command.set_active_sample_kit(kit_index, timeout_ms);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init set_sample_kit index=");
+  DEBUG_PRINT((unsigned)kit_index);
+  DEBUG_PRINT(" ok=");
+  DEBUG_PRINTLN(set_ok ? 1 : 0);
+#endif
+  if (!set_ok) {
+    return false;
+  }
+
+  delay(100);
+  const bool bank_ok = tbd_p4_command.get_sample_bank_index_json(
+      p4_track_defaults_json, sizeof(p4_track_defaults_json), timeout_ms);
+  debug_p4_json_result("sample_bank_index", bank_ok, p4_track_defaults_json);
+  return true;
+}
+
+bool ensure_p4_rack_plugin(uint32_t timeout_ms) {
+  char active_plugin[32] = {0};
+  const bool get_ok = tbd_p4_command.get_active_plugin(
+      0, active_plugin, sizeof(active_plugin), timeout_ms);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init active_plugin get=");
+  DEBUG_PRINT(get_ok ? 1 : 0);
+  DEBUG_PRINT(" id=");
+  DEBUG_PRINTLN(active_plugin);
+#endif
+  if (get_ok && strcmp(active_plugin, kP4RackPluginId) == 0) {
+    return true;
+  }
+
+  const bool set_ok =
+      tbd_p4_command.set_active_plugin(0, kP4RackPluginId, timeout_ms);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init set_plugin ");
+  DEBUG_PRINT(kP4RackPluginId);
+  DEBUG_PRINT(" ok=");
+  DEBUG_PRINTLN(set_ok ? 1 : 0);
+#endif
+  if (!set_ok) {
+    return false;
+  }
+  delay(kP4PluginSettleMs);
+  return true;
+}
 
 TbdP4SoundData *p4_sound_for_mixer(uint8_t device_idx, uint8_t track) {
   if (device_idx == kTbdUiSlotPrimary) {
@@ -134,8 +326,8 @@ void reset_p4_boot_presets_to_fallback() {
     }
     auto &preset = p4_boot_presets[fallback.track_index];
     preset.track_index = fallback.track_index;
-    preset.rom_bank = kP4DefaultRomBank;
-    preset.sample_slice = kP4DefaultSampleSlice;
+    preset.rom_bank = fallback.rom_bank;
+    preset.sample_slice = fallback.sample_slice;
     copy_preset_id(preset.preset_id, fallback.preset_id);
   }
 
@@ -699,8 +891,10 @@ bool sound_has_audio_params(const TbdP4SoundData &sound) {
 
 void cache_default_sound(const TbdP4SoundData &sound) {
   if (sound.p4_track_index >= kP4SoundTrackCount) {
+    debug_p4_sound_summary("cache_oob", sound);
     return;
   }
+  debug_p4_sound_summary("cache", sound);
   p4_default_sounds[sound.p4_track_index] = sound;
   p4_default_sound_valid[sound.p4_track_index] = true;
 }
@@ -714,7 +908,11 @@ bool parse_p4_track_defaults(const char *json, P4BootPreset *presets,
 
   const char *end = json + strlen(json);
   if (kit_id != nullptr && kit_id_len > 0) {
-    read_json_string(json, end, "kit", kit_id, kit_id_len);
+    char parsed_kit[32];
+    if (read_json_string(json, end, "kit", parsed_kit,
+                         sizeof(parsed_kit))) {
+      copy_fixed_string(kit_id, kit_id_len, parsed_kit);
+    }
   }
 
   const char *tracks = find_json_value(json, end, "tracks");
@@ -827,36 +1025,34 @@ public:
     const uint8_t display_slot =
         ui_slot == kTbdUiSlotSecondary ? 2 : 1;
     oled_display.setCursor(0, y + 2);
-    snprintf(line, sizeof(line), "TBD%u A%u S%u R%u D%u",
+    snprintf(line, sizeof(line), "TBD%u A%uS%uR%uD%u X%u",
              display_slot,
              stats.p4_alive ? 1 : 0,
              stats.p4_sync_seen ? 1 : 0,
              stats.p4_ready_pin ? 1 : 0,
-             TBD.p4_defaults_loaded() ? 1 : 0);
+             TBD.p4_defaults_loaded() ? 1 : 0,
+             stats.extended_response_seen ? 1 : 0);
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "F%lu/%lu E%lu L%lu C%lu",
+    snprintf(line, sizeof(line), "F%lu/%lu E%lu L%lu",
              (unsigned long)(stats.tx_frames % 1000),
              (unsigned long)(stats.rx_frames % 1000),
              (unsigned long)(stats.error_count % 1000),
-             (unsigned long)(stats.length_errors % 1000),
-             (unsigned long)(stats.crc_errors % 1000));
+             (unsigned long)(stats.length_errors % 1000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "M%lu N%lu C%lu RT%lu",
-             (unsigned long)(stats.tx_midi_bytes % 1000),
-             (unsigned long)(stats.tx_note_on_messages % 1000),
-             (unsigned long)(stats.tx_cc_messages % 1000),
-             (unsigned long)(stats.tx_realtime_messages % 1000));
+    snprintf(line, sizeof(line), "C%lu P%lu B%lu D%lu",
+             (unsigned long)(stats.crc_errors % 1000),
+             (unsigned long)(stats.p4_not_ready_count % 1000),
+             (unsigned long)(stats.dma_busy_count % 1000),
+             (unsigned long)(stats.dma_timeout_count % 1000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "Q%lu T%lu L%02X %02X%02X%02X",
+    snprintf(line, sizeof(line), "Q%lu T%lu M%lu N%lu",
              (unsigned long)(cmd_stats.tx_frames % 1000),
              (unsigned long)(cmd_stats.ready_timeouts % 1000),
-             cmd_stats.last_request,
-             stats.last_tx_status,
-             stats.last_tx_data1,
-             stats.last_tx_data2);
+             (unsigned long)(stats.tx_midi_bytes % 1000),
+             (unsigned long)(stats.tx_note_on_messages % 1000));
     oled_display.println(line);
   }
 };
@@ -905,9 +1101,15 @@ bool tbd_get_default_p4_sound(uint8_t p4_track_index,
 }
 
 bool tbd_hydrate_p4_sound(TbdP4SoundData &sound) {
+  debug_p4_sound_summary("hydrate_enter", sound);
   if (sound.version != TBD_P4_SOUND_DATA_VERSION ||
       sound_has_audio_params(sound)) {
-    return sound_has_audio_params(sound);
+    const bool hydrated = sound_has_audio_params(sound);
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init hydrate_skip result=");
+    DEBUG_PRINTLN(hydrated ? 1 : 0);
+#endif
+    return hydrated;
   }
 
   int16_t values[kP4PresetValueCount];
@@ -916,33 +1118,83 @@ bool tbd_hydrate_p4_sound(TbdP4SoundData &sound) {
   memset(value_set, 0, sizeof(value_set));
 
   tbd_p4_command.init();
-  if (!tbd_p4_command.wait_ready(kP4PresetReadyProbeMs)) {
+  if (!tbd_p4_command.wait_ready(kP4PresetCommandTimeoutMs)) {
+#ifdef DEBUGMODE
+    DEBUG_PRINTLN("tbd_init hydrate wait_ready failed");
+#endif
     return false;
   }
 
   if (sound.has_preset()) {
-    if (!tbd_p4_command.get_macro_sound_preset(
-            sound.preset_id, p4_track_defaults_json,
-            sizeof(p4_track_defaults_json), kP4PresetCommandTimeoutMs)) {
+    char requested_preset[TBD_P4_ID_LEN];
+    copy_fixed_string(requested_preset, sizeof(requested_preset),
+                      sound.preset_id);
+    const bool preset_ok = tbd_p4_command.get_macro_sound_preset(
+        sound.preset_id, p4_track_defaults_json,
+        sizeof(p4_track_defaults_json), kP4PresetCommandTimeoutMs);
+    debug_p4_json_result("macro_preset", preset_ok, p4_track_defaults_json);
+    if (!preset_ok) {
       return false;
     }
-    parse_p4_preset_json(p4_track_defaults_json, sound, values, value_set,
-                         kP4PresetValueCount);
+    const bool preset_parse_ok =
+        parse_p4_preset_json(p4_track_defaults_json, sound, values, value_set,
+                             kP4PresetValueCount);
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init hydrate preset_parse=");
+    DEBUG_PRINT(preset_parse_ok ? 1 : 0);
+    DEBUG_PRINT(" req=");
+    DEBUG_PRINT(requested_preset);
+    DEBUG_PRINT(" got=");
+    DEBUG_PRINT(sound.preset_id);
+    DEBUG_PRINT(" macro=");
+    DEBUG_PRINTLN(sound.macro_id);
+    if (preset_parse_ok && strcmp(requested_preset, sound.preset_id) != 0) {
+      DEBUG_PRINT("tbd_init hydrate preset_id_mismatch req=");
+      DEBUG_PRINT(requested_preset);
+      DEBUG_PRINT(" got=");
+      DEBUG_PRINTLN(sound.preset_id);
+    }
+#endif
   }
 
   if (!sound.has_macro()) {
+#ifdef DEBUGMODE
+    DEBUG_PRINTLN("tbd_init hydrate no macro id");
+#endif
     return false;
   }
 
-  if (!tbd_p4_command.get_macro_definition(sound.macro_id,
-                                           p4_track_defaults_json,
-                                           sizeof(p4_track_defaults_json),
-                                           kP4PresetCommandTimeoutMs)) {
+  char requested_macro[TBD_P4_ID_LEN];
+  copy_fixed_string(requested_macro, sizeof(requested_macro), sound.macro_id);
+  const bool macro_ok = tbd_p4_command.get_macro_definition(
+      sound.macro_id, p4_track_defaults_json, sizeof(p4_track_defaults_json),
+      kP4PresetCommandTimeoutMs);
+  debug_p4_json_result("macro_def", macro_ok, p4_track_defaults_json);
+  if (!macro_ok) {
     return false;
   }
 
-  return parse_p4_macro_definition(p4_track_defaults_json, values, value_set,
-                                   kP4PresetValueCount, sound);
+  const bool macro_parse_ok =
+      parse_p4_macro_definition(p4_track_defaults_json, values, value_set,
+                                kP4PresetValueCount, sound);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init hydrate macro_parse=");
+  DEBUG_PRINT(macro_parse_ok ? 1 : 0);
+  DEBUG_PRINT(" req=");
+  DEBUG_PRINT(requested_macro);
+  DEBUG_PRINT(" got=");
+  DEBUG_PRINT(sound.macro_id);
+  DEBUG_PRINT(" machine=");
+  DEBUG_PRINTLN(sound.machine_id);
+  if (macro_parse_ok && strcmp(requested_macro, sound.macro_id) != 0) {
+    DEBUG_PRINT("tbd_init hydrate macro_id_mismatch req=");
+    DEBUG_PRINT(requested_macro);
+    DEBUG_PRINT(" got=");
+    DEBUG_PRINTLN(sound.macro_id);
+  }
+#endif
+  debug_p4_sound_summary(macro_parse_ok ? "hydrate_ok" : "hydrate_fail", sound);
+  return macro_parse_ok;
 }
 
 bool TbdDevice::get_default_p4_sound(uint8_t p4_track_index,
@@ -1129,7 +1381,7 @@ void TbdDevice::on_connection(uint8_t device_idx) {
   cleanup(1);
   grid_devices_initialized_[0] = false;
   grid_devices_initialized_[1] = false;
-  load_default_p4_presets();
+  load_default_p4_presets(true);
   apply_runtime_p4_defaults();
   sync_grid_devices();
 }
@@ -1184,15 +1436,37 @@ void TbdDevice::sync_grid_devices() {
 }
 
 void TbdDevice::apply_runtime_p4_defaults() {
+#ifdef DEBUGMODE
+  DEBUG_PRINTLN("tbd_init apply_runtime_defaults begin");
+#endif
   for (uint8_t i = 0; i < mcl_seq.num_tbd_tracks; i++) {
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init runtime_tbd slot=");
+    DEBUG_PRINTLN((unsigned)i);
+#endif
+    debug_p4_sound_summary("runtime_tbd_before",
+                           mcl_seq.tbd_tracks[i].p4_sound);
     tbd_ensure_step_sound_default(mcl_seq.tbd_tracks[i].p4_sound, i);
+    debug_p4_sound_summary("runtime_tbd_after",
+                           mcl_seq.tbd_tracks[i].p4_sound);
   }
 
   for (uint8_t i = 0; i < mcl_seq.num_midi_tracks; i++) {
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init runtime_midi slot=");
+    DEBUG_PRINTLN((unsigned)i);
+#endif
+    debug_p4_sound_summary("runtime_midi_before",
+                           mcl_seq.midi_tracks[i].p4_sound);
     tbd_ensure_midi_sound_default(mcl_seq.midi_tracks[i].p4_sound, i);
     mcl_seq.midi_tracks[i].set_channel(
         mcl_seq.midi_tracks[i].p4_sound.midi_channel);
+    debug_p4_sound_summary("runtime_midi_after",
+                           mcl_seq.midi_tracks[i].p4_sound);
   }
+#ifdef DEBUGMODE
+  DEBUG_PRINTLN("tbd_init apply_runtime_defaults end");
+#endif
 }
 
 void TbdDevice::sync_active_p4_track() {
@@ -1228,57 +1502,176 @@ void TbdDevice::sync_active_p4_track() {
 #endif
 }
 
-bool TbdDevice::load_default_p4_presets() {
+bool TbdDevice::load_default_p4_presets(bool show_progress) {
   if (p4_defaults_loaded_) {
     return true;
   }
 
+  auto set_stage = [](uint8_t stage) {
+    p4_boot_stage = stage;
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init stage ");
+    DEBUG_PRINTLN((unsigned)stage);
+#endif
+  };
+  auto fail = [](uint8_t stage, uint8_t request) {
+    p4_boot_stage = stage;
+    p4_boot_fail_stage = stage;
+    p4_boot_fail_request = request;
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init FAIL stage=");
+    DEBUG_PRINT((unsigned)stage);
+    DEBUG_PRINT(" request=");
+    DEBUG_PRINTLN((unsigned)request);
+#endif
+    return false;
+  };
+  auto advance_progress = [show_progress](uint8_t &progress) {
+    if (show_progress) {
+      draw_p4_init_progress(++progress);
+    }
+  };
+  auto finish_progress = [show_progress]() {
+    if (show_progress) {
+      draw_p4_init_progress(kP4InitProgressMax);
+    }
+  };
+  uint8_t progress = 0;
+  p4_boot_fail_stage = 0;
+  p4_boot_fail_request = 0;
+  p4_boot_loaded_tracks = 0;
+  set_stage(1);
+  advance_progress(progress);
+
   const uint32_t now = millis();
   if (p4_defaults_last_attempt_ms_ != 0 &&
       now - p4_defaults_last_attempt_ms_ < kP4PresetRetryMs) {
+#ifdef DEBUGMODE
+    DEBUG_PRINTLN("tbd_init retry suppressed");
+#endif
     return false;
   }
   p4_defaults_last_attempt_ms_ = now;
 
+  const uint32_t ready_timeout_ms =
+      show_progress ? kP4PresetBootReadyMs : kP4PresetReadyProbeMs;
+
   tbd_p4_command.init();
-  if (!tbd_p4_command.wait_ready(kP4PresetReadyProbeMs)) {
-    return false;
+  advance_progress(progress);
+  set_stage(2);
+  if (!tbd_p4_command.wait_ready(ready_timeout_ms)) {
+    return fail(2, 0x00);
+  }
+  advance_progress(progress);
+
+  if (show_progress) {
+    set_stage(3);
+    const bool reboot_ok = tbd_p4_command.reboot(kP4PresetCommandTimeoutMs);
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init reboot=");
+    DEBUG_PRINTLN(reboot_ok ? 1 : 0);
+#endif
+    delay(kP4BootSettleMs);
+    const bool post_reboot_ready = tbd_p4_command.wait_ready(kP4PresetBootReadyMs);
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init post_reboot_ready=");
+    DEBUG_PRINTLN(post_reboot_ready ? 1 : 0);
+#endif
+    advance_progress(progress);
   }
 
-  if (!tbd_p4_command.announce_app("MCL", 0, kP4PresetCommandTimeoutMs)) {
-    return false;
+  set_stage(4);
+  const bool announce_ok = tbd_p4_command.announce_app(
+      "MCL", kP4AppFlags, kP4PresetCommandTimeoutMs);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init announce=");
+  DEBUG_PRINTLN(announce_ok ? 1 : 0);
+#endif
+  if (!announce_ok) {
+    return fail(4, 0xAB);
   }
+  advance_progress(progress);
 
+  set_stage(5);
+  const bool version_ok = tbd_p4_command.report_pico_version(
+      "MCL " VERSION_STR, kP4PresetCommandTimeoutMs);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init report_version=");
+  DEBUG_PRINTLN(version_ok ? 1 : 0);
+#endif
+  delay(kP4BootSettleMs);
+  advance_progress(progress);
+
+  set_stage(6);
+  const bool rack_ok = ensure_p4_rack_plugin(kP4PresetCommandTimeoutMs);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init rack=");
+  DEBUG_PRINTLN(rack_ok ? 1 : 0);
+#endif
+  if (!rack_ok) {
+    return fail(6, 0x04);
+  }
+  advance_progress(progress);
+
+  set_stage(7);
   reset_p4_boot_presets_to_fallback();
+  advance_progress(progress);
 
-  char kit_id[32] = {0};
+  char kit_id[32] = "default";
   bool kit_loaded = false;
   uint8_t loaded_kit_index = 0;
-  if (tbd_p4_command.get_track_default_presets(
-          p4_track_defaults_json, sizeof(p4_track_defaults_json), nullptr,
-          kP4PresetCommandTimeoutMs)) {
-    parse_p4_track_defaults(p4_track_defaults_json, p4_boot_presets,
-                            kP4SoundTrackCount, kit_id, sizeof(kit_id));
+  set_stage(8);
+  const bool defaults_ok = tbd_p4_command.get_track_default_presets(
+      p4_track_defaults_json, sizeof(p4_track_defaults_json), nullptr,
+      kP4PresetCommandTimeoutMs);
+  debug_p4_json_result("track_defaults", defaults_ok, p4_track_defaults_json);
+  if (defaults_ok) {
+    const bool parsed_defaults =
+        parse_p4_track_defaults(p4_track_defaults_json, p4_boot_presets,
+                                kP4SoundTrackCount, kit_id, sizeof(kit_id));
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init track_defaults_parse=");
+    DEBUG_PRINT(parsed_defaults ? 1 : 0);
+    DEBUG_PRINT(" kit=");
+    DEBUG_PRINTLN(kit_id);
+#endif
+    for (const auto &preset : p4_boot_presets) {
+      debug_p4_boot_preset("default", preset);
+    }
   }
+  advance_progress(progress);
 
-  if (kit_id[0] != '\0' &&
+  set_stage(9);
+  const bool kit_index_ok =
+      kit_id[0] != '\0' &&
       tbd_p4_command.get_kit_index_json(
           p4_track_defaults_json, sizeof(p4_track_defaults_json),
-          kP4PresetCommandTimeoutMs)) {
+          kP4PresetCommandTimeoutMs);
+  debug_p4_json_result("kit_index", kit_index_ok, p4_track_defaults_json);
+  if (kit_index_ok) {
     const uint8_t kit_index =
         find_p4_kit_index_for_id(p4_track_defaults_json, kit_id);
-    if (!tbd_p4_command.set_active_sample_kit(kit_index,
-                                              kP4PresetCommandTimeoutMs)) {
-      return false;
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init kit id=");
+    DEBUG_PRINT(kit_id);
+    DEBUG_PRINT(" index=");
+    DEBUG_PRINTLN((unsigned)kit_index);
+#endif
+    if (!activate_p4_sample_kit(kit_index, kP4PresetCommandTimeoutMs)) {
+      return fail(9, 0x18);
     }
     kit_loaded = true;
     loaded_kit_index = kit_index;
   }
+  advance_progress(progress);
 
+  set_stage(10);
   for (const auto &preset : p4_boot_presets) {
     if (preset.preset_id[0] == '\0') {
       continue;
     }
+    advance_progress(progress);
+    debug_p4_boot_preset("load", preset);
     tbd_update_track_default_from_p4(preset.track_index, preset.preset_id,
                                      preset.rom_bank, preset.sample_slice);
 
@@ -1289,24 +1682,46 @@ bool TbdDevice::load_default_p4_presets() {
     sound.sample_slice = preset.sample_slice;
     copy_preset_id(sound.preset_id, preset.preset_id);
     tbd_init_p4_sound_runtime_defaults(sound);
-    tbd_hydrate_p4_sound(sound);
+    const bool hydrated = tbd_hydrate_p4_sound(sound);
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init hydrate_result p4=");
+    DEBUG_PRINT((unsigned)preset.track_index);
+    DEBUG_PRINT(" ok=");
+    DEBUG_PRINTLN(hydrated ? 1 : 0);
+#endif
     cache_default_sound(sound);
 
-    if (!tbd_p4_command.load_track_sound_preset(
-            preset.track_index, preset.preset_id, preset.rom_bank,
-            preset.sample_slice,
-            kP4PresetCommandTimeoutMs)) {
-      return false;
+    const bool load_ok = tbd_p4_command.load_track_sound_preset(
+        preset.track_index, preset.preset_id, preset.rom_bank,
+        preset.sample_slice, kP4PresetCommandTimeoutMs);
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init p4_load_sound p4=");
+    DEBUG_PRINT((unsigned)preset.track_index);
+    DEBUG_PRINT(" ok=");
+    DEBUG_PRINTLN(load_ok ? 1 : 0);
+#endif
+    if (!load_ok) {
+      return fail(10, 0xA4);
     }
+
+    p4_boot_loaded_tracks++;
   }
 
+  set_stage(11);
   if (kit_loaded &&
-      !tbd_p4_command.set_active_sample_kit(loaded_kit_index,
-                                            kP4PresetCommandTimeoutMs)) {
-    return false;
+      !activate_p4_sample_kit(loaded_kit_index, kP4PresetCommandTimeoutMs)) {
+    return fail(11, 0x18);
   }
+
+  set_stage(12);
 
   p4_defaults_loaded_ = true;
+  set_stage(13);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_init complete tracks=");
+  DEBUG_PRINTLN((unsigned)p4_boot_loaded_tracks);
+#endif
+  finish_progress();
   return true;
 }
 
@@ -1354,6 +1769,16 @@ bool TbdDevice::enter_diag_ui(uint8_t device_idx) {
 }
 
 bool TbdDevice::handle_ui_event(gui_event_t *event) {
+  const bool arrow_trace =
+      EVENT_BUTTON(event) &&
+      event->source >= ButtonsClass::FUNC_BUTTON6 &&
+      event->source <= ButtonsClass::FUNC_BUTTON9;
+  if (arrow_trace) {
+    DEBUG_PRINT("  TbdDevice::handle_ui_event diag=");
+    DEBUG_PRINT((unsigned)diag_active_);
+    DEBUG_PRINT(" tbd_ui_mode.active=");
+    DEBUG_PRINTLN((unsigned)tbd_ui_mode.is_active());
+  }
   if (diag_active_) {
     if (GUI.overlay != &tbd_p4_diag_overlay) {
       diag_active_ = false;
@@ -1368,7 +1793,12 @@ bool TbdDevice::handle_ui_event(gui_event_t *event) {
     }
     return true;
   }
-  return tbd_ui_mode.handle_event(event);
+  bool result = tbd_ui_mode.handle_event(event);
+  if (arrow_trace) {
+    DEBUG_PRINT("  tbd_ui_mode.handle_event returned ");
+    DEBUG_PRINTLN((unsigned)result);
+  }
+  return result;
 }
 
 void TbdDevice::ui_loop() {
@@ -1392,6 +1822,12 @@ void TbdDevice::exit_ui() {
     GUI.clearOverlay();
   }
   ui_device_idx_ = kTbdUiSlotNone;
+}
+
+void TbdDevice::on_ui_slot_button(uint8_t slot, bool pressed) {
+  (void)slot;
+  if (diag_active_) return;
+  tbd_ui_mode.handle_ui_slot_button(pressed);
 }
 
 #endif // PLATFORM_TBD

@@ -2,8 +2,12 @@
 
 #ifdef PLATFORM_TBD
 
+#include "DaDa_SPI.h"
+#include "MidiUart.h"
+#include "global.h"
 #include <Arduino.h>
-#include <SPI.h>
+#include <new>
+#include <pico/time.h>
 #include <string.h>
 
 namespace {
@@ -20,6 +24,9 @@ constexpr size_t kResponseStringOffset = 7;
 constexpr size_t kStringOffset = 9;
 constexpr size_t kMaxStringParamLen = kFrameSize - kStringOffset - 1;
 
+constexpr uint8_t kRequestGetActivePlugin = 0x02;
+constexpr uint8_t kRequestSetActivePlugin = 0x04;
+constexpr uint8_t kRequestReboot = 0x13;
 constexpr uint8_t kRequestSetActiveSampleKit = 0x18;
 constexpr uint8_t kRequestGetMacroSoundPreset = 0xA1;
 constexpr uint8_t kRequestGetMacroDefinition = 0xA2;
@@ -27,14 +34,34 @@ constexpr uint8_t kRequestActivateTrackMachine = 0xA3;
 constexpr uint8_t kRequestLoadTrackSoundPreset = 0xA4;
 constexpr uint8_t kRequestGetTrackDefaultPresets = 0xA5;
 constexpr uint8_t kRequestGetKitIndexJSON = 0xA7;
+constexpr uint8_t kRequestGetSampleBankIndexJSON = 0xA8;
 constexpr uint8_t kRequestLoadTrackMacroDefinition = 0xAA;
 constexpr uint8_t kRequestAnnounceApp = 0xAB;
+constexpr uint8_t kRequestReportPicoVersion = 0xAC;
 constexpr uint8_t kRequestSetTrackMute = 0xBD;
 
-SPISettings spi_settings(kSpiSpeed, MSBFIRST, SPI_MODE3);
+constexpr uint32_t kPostTransferDelayUs = 15;
+
+alignas(DaDa_SPI) uint8_t command_spi_storage[sizeof(DaDa_SPI)];
+DaDa_SPI *command_spi = nullptr;
 
 uint8_t out_buf[kFrameSize];
 uint8_t in_buf[kFrameSize];
+
+DaDa_SPI &command_spi_instance() {
+  if (command_spi == nullptr) {
+    command_spi = new (command_spi_storage)
+        DaDa_SPI(spi0, kSpiCs, kSpiMosi, kSpiMiso, kSpiSclk, kSpiReady,
+                 kSpiSpeed);
+  }
+  return *command_spi;
+}
+
+void service_realtime_while_waiting() {
+  if (!isInInterrupt()) {
+    MidiUartP4.service_irq();
+  }
+}
 
 } // namespace
 
@@ -45,11 +72,7 @@ void TbdP4CommandTransport::init() {
     return;
   }
 
-  SPI.setMISO(kSpiMiso);
-  SPI.setMOSI(kSpiMosi);
-  SPI.setCS(kSpiCs);
-  SPI.setSCK(kSpiSclk);
-  pinMode(kSpiReady, INPUT);
+  command_spi_instance();
 
   memset(out_buf, 0, sizeof(out_buf));
   memset(in_buf, 0, sizeof(in_buf));
@@ -61,7 +84,7 @@ void TbdP4CommandTransport::init() {
 }
 
 bool TbdP4CommandTransport::ready() const {
-  return digitalRead(kSpiReady) != LOW;
+  return command_spi_instance().GetP4Ready();
 }
 
 bool TbdP4CommandTransport::wait_ready(uint32_t timeout_ms) const {
@@ -70,6 +93,7 @@ bool TbdP4CommandTransport::wait_ready(uint32_t timeout_ms) const {
     if (timeout_ms != 0 && (millis() - start_ms) >= timeout_ms) {
       return false;
     }
+    service_realtime_while_waiting();
     delay(1);
   }
   return true;
@@ -85,17 +109,46 @@ void TbdP4CommandTransport::reset_frame(uint8_t request) {
 bool TbdP4CommandTransport::transfer_frame(uint32_t timeout_ms) {
   init();
 
+  if (isInInterrupt()) {
+    ready_timeouts_++;
+#ifdef DEBUGMODE
+    DEBUG_PRINTLN("tbd_cmd transfer blocked in interrupt");
+#endif
+    return false;
+  }
+
+  DaDa_SPI &spi = command_spi_instance();
+
+  uint32_t start_ms = millis();
+  while (spi.IsBusy()) {
+    if (timeout_ms != 0 && (millis() - start_ms) >= timeout_ms) {
+      ready_timeouts_++;
+      return false;
+    }
+    service_realtime_while_waiting();
+    tight_loop_contents();
+  }
+
   if (!wait_ready(timeout_ms)) {
     ready_timeouts_++;
     return false;
   }
 
-  SPI.begin(true);
-  SPI.beginTransaction(spi_settings);
-  SPI.transfer(out_buf, in_buf, sizeof(out_buf));
-  SPI.endTransaction();
-  SPI.end();
+  spi.StartDMA(out_buf, in_buf, kFrameSize);
 
+  start_ms = millis();
+  while (spi.IsBusy()) {
+    if (timeout_ms != 0 && (millis() - start_ms) >= timeout_ms) {
+      ready_timeouts_++;
+      return false;
+    }
+    service_realtime_while_waiting();
+    tight_loop_contents();
+  }
+
+  if (kPostTransferDelayUs > 0) {
+    busy_wait_us_32(kPostTransferDelayUs);
+  }
   tx_frames_++;
   return true;
 }
@@ -112,7 +165,15 @@ bool TbdP4CommandTransport::send_frame(uint8_t request, uint32_t timeout_ms) {
     return false;
   }
 
-  delay(100);
+  return true;
+}
+
+bool TbdP4CommandTransport::reboot(uint32_t timeout_ms) {
+  reset_frame(kRequestReboot);
+  if (!transfer_frame(timeout_ms)) {
+    return false;
+  }
+  last_request_ = kRequestReboot;
   return true;
 }
 
@@ -130,11 +191,25 @@ bool TbdP4CommandTransport::receive_response(uint8_t request, char *response,
 
   do {
     if (!transfer_frame(timeout_ms)) {
+#ifdef DEBUGMODE
+      DEBUG_PRINT("tbd_cmd response transfer fail req=");
+      DEBUG_PRINTLN((unsigned)request);
+#endif
       return false;
     }
     last_request_ = request;
 
     if (in_buf[0] != 0xCA || in_buf[1] != 0xFE || in_buf[2] != request) {
+#ifdef DEBUGMODE
+      DEBUG_PRINT("tbd_cmd response bad header req=");
+      DEBUG_PRINT((unsigned)request);
+      DEBUG_PRINT(" got=");
+      DEBUG_PRINT((unsigned)in_buf[0]);
+      DEBUG_PRINT(",");
+      DEBUG_PRINT((unsigned)in_buf[1]);
+      DEBUG_PRINT(",");
+      DEBUG_PRINTLN((unsigned)in_buf[2]);
+#endif
       return false;
     }
 
@@ -159,7 +234,50 @@ bool TbdP4CommandTransport::receive_response(uint8_t request, char *response,
   } while (remaining > 0);
 
   response[copied] = '\0';
-  return total_len < response_len;
+  const bool fits = total_len < response_len;
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_cmd response req=");
+  DEBUG_PRINT((unsigned)request);
+  DEBUG_PRINT(" len=");
+  DEBUG_PRINT((unsigned long)total_len);
+  DEBUG_PRINT(" copied=");
+  DEBUG_PRINT((unsigned)copied);
+  DEBUG_PRINT(" cap=");
+  DEBUG_PRINT((unsigned)response_len);
+  DEBUG_PRINT(" fits=");
+  DEBUG_PRINTLN(fits ? 1 : 0);
+#endif
+  return fits;
+}
+
+bool TbdP4CommandTransport::get_active_plugin(uint8_t channel, char *response,
+                                              size_t response_len,
+                                              uint32_t timeout_ms) {
+  reset_frame(kRequestGetActivePlugin);
+  out_buf[3] = channel;
+  if (!send_frame(kRequestGetActivePlugin, timeout_ms)) {
+    return false;
+  }
+  return receive_response(kRequestGetActivePlugin, response, response_len,
+                          timeout_ms);
+}
+
+bool TbdP4CommandTransport::set_active_plugin(uint8_t channel,
+                                              const char *plugin_id,
+                                              uint32_t timeout_ms) {
+  if (plugin_id == nullptr) {
+    return false;
+  }
+
+  const size_t len = strlen(plugin_id);
+  if (len + 1 > kMaxStringParamLen) {
+    return false;
+  }
+
+  reset_frame(kRequestSetActivePlugin);
+  out_buf[3] = channel;
+  memcpy(out_buf + kStringOffset, plugin_id, len + 1);
+  return send_frame(kRequestSetActivePlugin, timeout_ms);
 }
 
 bool TbdP4CommandTransport::announce_app(const char *app_name, uint8_t flags,
@@ -177,6 +295,22 @@ bool TbdP4CommandTransport::announce_app(const char *app_name, uint8_t flags,
   out_buf[3] = flags;
   memcpy(out_buf + kStringOffset, app_name, len + 1);
   return send_frame(kRequestAnnounceApp, timeout_ms);
+}
+
+bool TbdP4CommandTransport::report_pico_version(const char *version,
+                                                uint32_t timeout_ms) {
+  if (version == nullptr) {
+    return false;
+  }
+
+  const size_t len = strlen(version);
+  if (len + 1 > kMaxStringParamLen) {
+    return false;
+  }
+
+  reset_frame(kRequestReportPicoVersion);
+  memcpy(out_buf + kStringOffset, version, len + 1);
+  return send_frame(kRequestReportPicoVersion, timeout_ms);
 }
 
 bool TbdP4CommandTransport::get_track_default_presets(
@@ -218,6 +352,10 @@ bool TbdP4CommandTransport::get_macro_sound_preset(
 
   reset_frame(kRequestGetMacroSoundPreset);
   memcpy(out_buf + kStringOffset, preset_id, len + 1);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_cmd get_macro_preset id=");
+  DEBUG_PRINTLN(preset_id);
+#endif
   if (!send_frame(kRequestGetMacroSoundPreset, timeout_ms)) {
     return false;
   }
@@ -239,6 +377,10 @@ bool TbdP4CommandTransport::get_macro_definition(
 
   reset_frame(kRequestGetMacroDefinition);
   memcpy(out_buf + kStringOffset, macro_id, len + 1);
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_cmd get_macro_def id=");
+  DEBUG_PRINTLN(macro_id);
+#endif
   if (!send_frame(kRequestGetMacroDefinition, timeout_ms)) {
     return false;
   }
@@ -255,6 +397,16 @@ bool TbdP4CommandTransport::get_kit_index_json(char *response,
   }
   return receive_response(kRequestGetKitIndexJSON, response, response_len,
                           timeout_ms);
+}
+
+bool TbdP4CommandTransport::get_sample_bank_index_json(
+    char *response, size_t response_len, uint32_t timeout_ms) {
+  reset_frame(kRequestGetSampleBankIndexJSON);
+  if (!send_frame(kRequestGetSampleBankIndexJSON, timeout_ms)) {
+    return false;
+  }
+  return receive_response(kRequestGetSampleBankIndexJSON, response,
+                          response_len, timeout_ms);
 }
 
 bool TbdP4CommandTransport::set_active_sample_kit(uint8_t kit_index,
