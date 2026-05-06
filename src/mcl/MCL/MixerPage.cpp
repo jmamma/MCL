@@ -168,7 +168,7 @@ void MixerPage::draw_levels() {}
 
 void encoder_level_handle(EncoderParent *enc) {
 
-  if (mixer_page.midi_device != &MD) {
+  if (!SeqTrackUtil::is_md_device(mixer_page.midi_device)) {
     return;
   }
 
@@ -243,7 +243,7 @@ void MixerPage::draw_encs() {
 
 void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
-  if (midi_device != &MD) {
+  if (!SeqTrackUtil::is_md_device(midi_device)) {
     return;
   }
 
@@ -362,7 +362,7 @@ void MixerPage::display() {
 }
 
 void MixerPage::record_mutes_set(bool state) {
-  bool is_md_device = (midi_device == &MD);
+  bool is_md_device = SeqTrackUtil::is_md_device(midi_device);
   for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
       if (is_md_device) {
@@ -525,7 +525,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           }
 
           // oled_draw_mutes();
-        } else if (first_track == 255 && midi_device == &MD) {
+        } else if (first_track == 255 && is_md_device) {
           first_track = track;
           MD.setStatus(0x22, track);
         }
@@ -573,7 +573,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         DEBUG_PRINTLN("key extended");
         ext_key_down = 1;
         redraw();
-        if (midi_device == &MD) {
+        if (is_md_device) {
           for (uint8_t i = 0; i < 16; i++) {
             if (note_interface.is_note_on(i)) {
               uint8_t num_params = MD.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
@@ -676,12 +676,12 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_SCALE: {
 
-        if (midi_device != &MD) {
+        if (!is_md_device) {
           midi_device = &MD;
         } else {
           midi_device = device_manager.secondary_device();
         }
-        is_md_device = (midi_device == &MD);
+        is_md_device = SeqTrackUtil::is_md_device(midi_device);
         key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY
                                                 : TRIGLED_EXCLUSIVE);
         redraw();
@@ -854,7 +854,7 @@ void MixerPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
     redraw_mutes = true;
     return;
   } // don't process mute
-  if (mixer_page.midi_device != &MD) {
+  if (!SeqTrackUtil::is_md_device(mixer_page.midi_device)) {
     return;
   }
   SET_BIT16(mixer_page.redraw_mask, track);

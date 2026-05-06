@@ -58,11 +58,11 @@ void SeqPtcPage::config_encoders() {
   ptc_param_len.min = 1;
   bool show_chan = true;
 
-  uint8_t dev = midi_device == &MD ? 0 : 1;
+  bool is_md_device = SeqTrackUtil::is_md_device(midi_device);
+  uint8_t dev = is_md_device ? 0 : 1;
 
   encoders[0]->cur = octs[dev];
   encoders[1]->cur = fine_tunes[dev];
-  bool is_md_device = (dev == 0);
   uint8_t track_idx = is_md_device ? last_md_track : last_ext_track;
   SeqTrack &track = SeqTrackUtil::get_track(is_md_device, track_idx);
 
@@ -97,7 +97,7 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_KEY, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, true);
-  if (midi_device == &MD) {
+  if (SeqTrackUtil::is_md_device(midi_device)) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
     seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
   }
@@ -124,7 +124,7 @@ void SeqPtcPage::config() {
   mclstr_copy_progmem(str_first, mclstr_dash, sizeof(str_first));
   char str_second[3];
   mclstr_copy_progmem(str_second, mclstr_dash, sizeof(str_second));
-  if (midi_device == &MD) {
+  if (SeqTrackUtil::is_md_device(midi_device)) {
     const char *str;
     str = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
     copyMachineNameShort(str, str_first);
@@ -157,7 +157,8 @@ void SeqPtcPage::loop() {
   }
   if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged() ||
       ptc_param_fine_tune.hasChanged()) {
-    uint8_t dev = midi_device == &MD ? 0 : 1;
+    bool is_md_device = SeqTrackUtil::is_md_device(midi_device);
+    uint8_t dev = is_md_device ? 0 : 1;
     octs[dev] = encoders[0]->cur;
     fine_tunes[dev] = encoders[1]->cur;
 
@@ -193,7 +194,7 @@ void SeqPtcPage::render_arp(bool recalc_notemask_, MidiDevice *midi_dev,
     recalc_notemask();
   }
 
-  bool is_md_device = (midi_dev == &MD);
+  bool is_md_device = SeqTrackUtil::is_md_device(midi_dev);
   SeqTrack &seq_track = SeqTrackUtil::get_track(is_md_device, track);
   ArpSeqTrack &arp_track =
       SeqTrackUtil::get_arp_track(is_md_device, track);
@@ -211,6 +212,7 @@ void SeqPtcPage::render_arp(bool recalc_notemask_, MidiDevice *midi_dev,
 void SeqPtcPage::display() {
 
   oled_display.clearDisplay();
+  bool is_md_device = SeqTrackUtil::is_md_device(midi_device);
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   draw_knob_frame();
   char buf1[4];
@@ -232,7 +234,7 @@ void SeqPtcPage::display() {
   draw_knob(1, mclstr_det, buf1); // detune
 
   // draw LEN
-  if (midi_device == &MD) {
+  if (is_md_device) {
     mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
     if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
       draw_knob(2, mclstr_plen, buf1);
@@ -257,7 +259,7 @@ void SeqPtcPage::display() {
   oled_display.setCursor(105, 32);
 
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
-  if (midi_device == &MD) {
+  if (is_md_device) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
   if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
@@ -496,7 +498,7 @@ void SeqPtcPage::buffer_notesoff_ext(uint8_t track_number) {
 void SeqPtcPage::recalc_notemask() {
   memset(note_mask, 0, sizeof(note_mask));
 
-  uint8_t dev = (midi_device == &MD) ? 0 : 1;
+  uint8_t dev = SeqTrackUtil::is_md_device(midi_device) ? 0 : 1;
 
   for (uint8_t i = 0; i < 128; i++) {
     if (IS_BIT_SET128_P(dev_note_masks[dev], i)) {
@@ -549,7 +551,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
     // note interface presses are treated as musical notes here
     scale_padding = false;
-    bool is_md = midi_device == &MD;
+    bool is_md = SeqTrackUtil::is_md_device(midi_device);
     uint8_t channel_event = NO_EVENT;
 
     if (is_md) {
@@ -619,7 +621,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_SCALE: {
-        midi_device = midi_device == &MD
+        midi_device = SeqTrackUtil::is_md_device(midi_device)
                           ? device_manager.secondary_device()
                           : device_manager.primary_device();
         config();
@@ -673,7 +675,7 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
                                       uint8_t channel) {
 
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
-  uint8_t dev = (midi_device == &MD) ? 0 : 1;
+  uint8_t dev = SeqTrackUtil::is_md_device(midi_device) ? 0 : 1;
 
   SeqTrack *arp_track = dev ? (SeqTrack*) &mcl_seq.ext_arp_tracks[last_ext_track] : (SeqTrack*) &mcl_seq.md_arp_tracks[last_md_track];
   dev_note_channels[dev] = channel;
