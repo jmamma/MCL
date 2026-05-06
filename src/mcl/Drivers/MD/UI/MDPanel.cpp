@@ -16,7 +16,7 @@ bool MDPanel::handle_event(gui_event_t *event) {
   const bool is_press = (event->mask == EVENT_BUTTON_PRESSED);
   const bool is_release = (event->mask == EVENT_BUTTON_RELEASED);
 
-  md_.sps_mode.observe_sps_key_chord(event);
+  md_.ui.sps_mode.observe_sps_key_chord(event);
 
   // ENCODER2..4 taps in SPS-latched mode trigger MD windows/actions.
   if (event->source >= ButtonsClass::ENCODER2 &&
@@ -31,7 +31,7 @@ bool MDPanel::handle_event(gui_event_t *event) {
                                     kEncTapMaxMs)) {
       return true;
     }
-    if (!md_.sps_mode.is_active()) return false; // Let MCL handle normal taps.
+    if (!md_.ui.sps_mode.is_active()) return false; // Let MCL handle normal taps.
 
     const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
     switch (event->source) {
@@ -65,7 +65,7 @@ bool MDPanel::handle_event(gui_event_t *event) {
   // Physical Y is MD NO in SPS-latched mode. Normal-mode TBD routing is
   // handled by TbdPanel after the driver has seen the raw event.
   if (event->source == ButtonsClass::BUTTON3) {
-    if (!md_.sps_mode.is_active()) return false;
+    if (!md_.ui.sps_mode.is_active()) return false;
     if (is_press) {
       md_.press_no_button();
       key_interface.set_key_state(MDX_KEY_NO, true);
@@ -77,10 +77,10 @@ bool MDPanel::handle_event(gui_event_t *event) {
     }
   }
 
-  if (md_.sps_mode.handle_cluster_menus(event)) return true;
-  if (md_.sps_mode.handle_arrow_subpage(event))    return true;
-  if (md_.sps_mode.handle_func_arrow_chord(event)) return true;
-  if (md_.sps_mode.handle_sps_key_tap(event))      return true;
+  if (md_.ui.sps_mode.handle_cluster_menus(event)) return true;
+  if (md_.ui.sps_mode.handle_arrow_subpage(event))    return true;
+  if (md_.ui.sps_mode.handle_func_arrow_chord(event)) return true;
+  if (md_.ui.sps_mode.handle_sps_key_tap(event))      return true;
 
   const bool is_arrow = (event->source >= ButtonsClass::FUNC_BUTTON6 &&
                          event->source <= ButtonsClass::FUNC_BUTTON9);
@@ -99,11 +99,11 @@ bool MDPanel::handle_event(gui_event_t *event) {
     // without local arrow ownership, arrows mirror to the MD UI.
     const PageIndex cur_pg = mcl.currentPage();
     const bool step_edit_trig_held =
-        md_.sps_mode.is_active() && cur_pg == SEQ_STEP_PAGE &&
+        md_.ui.sps_mode.is_active() && cur_pg == SEQ_STEP_PAGE &&
         note_interface.notes_count_on() > 0;
     const bool arrows_local_only =
         step_edit_trig_held ||
-        (!md_.sps_mode.is_active() &&
+        (!md_.ui.sps_mode.is_active() &&
          (cur_pg == GRID_PAGE || cur_pg == SEQ_STEP_PAGE ||
           cur_pg == SEQ_PTC_PAGE || cur_pg == SEQ_EXTSTEP_PAGE));
 
@@ -127,7 +127,7 @@ bool MDPanel::handle_event(gui_event_t *event) {
         }
       }
 
-      if (md_.sps_mode.is_active()) {
+      if (md_.ui.sps_mode.is_active()) {
         key_interface.set_key_state(key, !is_release);
         return true;
       }
@@ -144,12 +144,12 @@ bool MDPanel::handle_event(gui_event_t *event) {
       if (is_press && key < NUM_MD_TRACKS) {
         md_.currentTrack = key;
         md_.track_select(key + 1);
-        if (md_.sps_mode.is_active()) md_.sps_mode.resync_from_kit();
+        if (md_.ui.sps_mode.is_active()) md_.ui.sps_mode.resync_from_kit();
       }
       return true;
     }
 
-    if (md_.sps_mode.handle_trig_forward(event, key)) return true;
+    if (md_.ui.sps_mode.handle_trig_forward(event, key)) return true;
   }
 
   return false;

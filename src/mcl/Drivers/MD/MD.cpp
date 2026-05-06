@@ -88,7 +88,7 @@ const ElektronSysexProtocol md_protocol = {
 
 #ifdef PLATFORM_TBD
 MDClass::MDClass()
-    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol), panel_ui(*this) {}
+    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol), ui(*this) {}
 #else
 MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
 #endif
@@ -214,12 +214,23 @@ void MDClass::on_connection(uint8_t device_idx) {
 }
 
 void MDClass::ui_loop() {
-  sps_mode.poll_encoders();
-  sps_mode.poll_page_overlay();
+  ui.loop();
 }
 
 bool MDClass::handle_ui_event(gui_event_t *event) {
-  return panel_ui.handle_event(event);
+  return ui.handle_event(event);
+}
+
+bool MDClass::enter_ui(gui_event_t *event) {
+  return ui.enter(event);
+}
+
+bool MDClass::is_ui_active() {
+  return ui.is_active();
+}
+
+void MDClass::exit_ui() {
+  ui.exit();
 }
 #endif
 

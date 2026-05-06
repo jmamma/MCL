@@ -12,8 +12,7 @@
 #include "MDSysex.h"
 
 #ifdef PLATFORM_TBD
-#include "UI/MDPanel.h"
-#include "UI/SpsMode.h"
+#include "UI/MDUI.h"
 #endif
 
 /** Standard elektron sysex header for communicating with the machinedrum. **/
@@ -54,17 +53,14 @@ public:
   MDMidiEvents midi_events;
 
 #ifdef PLATFORM_TBD
-  SpsMode sps_mode;
-  MDPanel panel_ui;
+  MDUI ui;
 
   virtual void on_connection(uint8_t device_idx) override;
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
-  virtual bool enter_ui(gui_event_t *event) override {
-    return sps_mode.handle_toggle_button(event);
-  }
-  virtual bool is_ui_active() override { return sps_mode.is_active(); }
-  virtual void exit_ui() override { sps_mode.disable(); }
+  virtual bool enter_ui(gui_event_t *event) override;
+  virtual bool is_ui_active() override;
+  virtual void exit_ui() override;
 #endif
 
   /** Stores the kit settings of the machinedrum (usually set by MDTask). **/

@@ -40,7 +40,7 @@ void SpsStripPage::display() {
   const char *labels[4];
   bool show[4];
   bool locked[4] = {false, false, false, false};
-  uint8_t base = MD.sps_mode.sub_page() * 4;
+  uint8_t base = MD.ui.sps_mode.sub_page() * 4;
   uint8_t model = MD.kit.get_model(MD.currentTrack);
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t param = base + i;
@@ -51,15 +51,15 @@ void SpsStripPage::display() {
       continue;
     }
     uint8_t lock_v;
-    if (MD.sps_mode.active_step_lock(param, &lock_v)) {
+    if (MD.ui.sps_mode.active_step_lock(param, &lock_v)) {
       lock_proxy[i].cur = lock_v;
       lock_proxy[i].old = lock_v;
       encs[i] = &lock_proxy[i];
       locked[i] = true;
       show[i] = true;
     } else {
-      encs[i] = &MD.sps_mode.enc[i];
-      show[i] = MD.sps_mode.show_strip_value(i);
+      encs[i] = &MD.ui.sps_mode.enc[i];
+      show[i] = MD.ui.sps_mode.show_strip_value(i);
     }
     labels[i] = model_param_name(model, param);
   }

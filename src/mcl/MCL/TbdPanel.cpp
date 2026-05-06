@@ -119,7 +119,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   //   Y -> MD FUNC key path
   //   B -> legacy BUTTON3 path used by grid/seq menus
   // SPS-latched mode keeps the driver-specific Y=NO, B=FUNC mapping.
-  if (!MD.sps_mode.is_active()) {
+  if (!device_manager.is_ui_active()) {
     if (orig_src == ButtonsClass::BUTTON3) {
       key_interface.key_event(MDX_KEY_FUNC, is_release);
       return true;

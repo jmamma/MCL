@@ -29,6 +29,9 @@ private:
   MidiDevice *physical_[3] = {nullptr, nullptr, nullptr};
   MidiDevice *dev1_ = nullptr;
   MidiDevice *dev2_ = nullptr;
+#ifdef PLATFORM_TBD
+  MidiDevice *active_ui_device_ = nullptr;
+#endif
 };
 
 extern DeviceManager device_manager;
