@@ -8,6 +8,7 @@ class MidiUartClass;
 class MidiUartUSBClass;
 class MidiUartP4Class;
 class MidiSysexClass;
+class TbdDevice;
 
 extern MidiUartClass MidiUart;
 extern MidiUartClass MidiUart2;
@@ -42,6 +43,10 @@ extern volatile uint16_t g_clock_minutes;
 extern volatile uint16_t g_clock_ticks;
 
 extern void handleIncomingMidi();
+
+#ifdef PLATFORM_TBD
+extern TbdDevice TBD;
+#endif
 
 #include "GUI.h"
 

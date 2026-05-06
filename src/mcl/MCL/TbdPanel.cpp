@@ -2,6 +2,7 @@
 
 #ifdef PLATFORM_TBD
 
+#include "../Drivers/MidiDevice.h"
 #include "MCL.h"
 #include "BankPopupPage.h"
 #include "DeviceManager.h"
@@ -10,7 +11,9 @@
 #include "GridPages.h"
 #include "GUI_hardware.h"
 #include "KeyInterface.h"
+#include "MCLSysConfig.h"
 #include "MidiClock.h"
+#include "MidiSetup.h"
 #include "NoteInterface.h"
 #include "SeqPages.h"
 
@@ -47,11 +50,20 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
       pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
       pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
+      pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
+      pg == GRIDY_MENU_PAGE ||
       pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
       pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
       pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
       pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
       pg == MIDIGENERIC_MENU_PAGE;
+
+  if (suppress_sps_key_release_ &&
+      orig_src == ButtonsClass::FUNC_BUTTON5 &&
+      is_release) {
+    suppress_sps_key_release_ = false;
+    return true;
+  }
 
   // TL -> TR chord opens the system config page. Asymmetric on purpose:
   // only fires when TR is the press edge while TL is already held.
@@ -60,6 +72,20 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     device_manager.exit_ui();
     mcl.pushPage(SYSTEM_PAGE);
     return true;
+  }
+
+  // Verification shortcut for the internal TBD/P4 target: FUNC + TBDR opens
+  // the Grid Y diagnostic overlay even when the MD driver owns plain TBDR.
+  if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
+      BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5) &&
+      mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    MidiDevice *primary = device_manager.primary_device();
+    MidiDevice *secondary = device_manager.secondary_device();
+    if (secondary && secondary != primary &&
+        device_manager.enter_ui(secondary, event)) {
+      suppress_sps_key_release_ = true;
+      return true;
+    }
   }
 
   if (event->source == ButtonsClass::TBD_BUTTON_TR && !is_menu_page &&

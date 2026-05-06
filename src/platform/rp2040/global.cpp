@@ -10,6 +10,9 @@
 #include "../../mcl/Drivers/MNM/MNM.h"
 #include "../../mcl/Drivers/A4/A4.h"
 #include "../../mcl/Drivers/Generic/GenericMidiDevice.h"
+#ifdef PLATFORM_TBD
+#include "../../mcl/Drivers/TBD/TBD.h"
+#endif
 #include "../../mcl/MCL/MidiActivePeering.h"
 #include "Elektron.h"
 #include "MidiIDSysex.h"
@@ -132,6 +135,9 @@ MDClass MD;
 MNMClass MNM;
 A4Class Analog4;
 GenericMidiDevice generic_midi_device;
+#ifdef PLATFORM_TBD
+TbdDevice TBD;
+#endif
 NullMidiDevice null_midi_device;
 
 // -- Device manager

@@ -10,6 +10,7 @@ public:
 
 private:
   bool open_bank_popup();
+  bool suppress_sps_key_release_ = false;
 };
 
 extern TbdPanel tbd_panel;

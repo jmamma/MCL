@@ -110,23 +110,31 @@ bool DeviceManager::handle_ui_event(gui_event_t *event) {
 
 bool DeviceManager::enter_ui(gui_event_t *event) {
   if (active_ui_device_) {
-    if (!active_ui_device_->enter_ui(event)) return false;
-    if (!active_ui_device_->is_ui_active()) active_ui_device_ = nullptr;
-    return true;
+    return enter_ui(active_ui_device_, event);
   }
 
   MidiDevice *primary = primary_device();
   MidiDevice *secondary = secondary_device();
   if (secondary == primary) secondary = nullptr;
-  if (primary && primary->enter_ui(event)) {
-    if (primary->is_ui_active()) active_ui_device_ = primary;
-    return true;
-  }
-  if (secondary && secondary->enter_ui(event)) {
-    if (secondary->is_ui_active()) active_ui_device_ = secondary;
-    return true;
-  }
+  if (primary && enter_ui(primary, event)) return true;
+  if (secondary && enter_ui(secondary, event)) return true;
   return false;
+}
+
+bool DeviceManager::enter_ui(MidiDevice *device, gui_event_t *event) {
+  device = nonnull(device);
+  if (device == &null_midi_device) return false;
+  if (active_ui_device_ && active_ui_device_ != device) {
+    active_ui_device_->exit_ui();
+    active_ui_device_ = nullptr;
+  }
+  if (!device->enter_ui(event)) return false;
+  if (device->is_ui_active()) {
+    active_ui_device_ = device;
+  } else if (active_ui_device_ == device) {
+    active_ui_device_ = nullptr;
+  }
+  return true;
 }
 
 bool DeviceManager::is_ui_active() const {

@@ -9,6 +9,9 @@
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MNM/MNM.h"
 #include "../Drivers/A4/A4.h"
+#ifdef PLATFORM_TBD
+#include "../Drivers/TBD/TBD.h"
+#endif
 #include "MCLSeq.h"
 
 void MidiSetup::cfg_clock_recv() {
@@ -198,7 +201,7 @@ void MidiSetup::cfg_ports(bool boot) {
 
 #ifdef PLATFORM_TBD
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
-    midi_active_peering.force_connect(UARTP4_PORT, &generic_midi_device);
+    midi_active_peering.force_connect(UARTP4_PORT, &TBD);
   } else if (device_manager.device_for_port(UARTP4_PORT) != &null_midi_device) {
     midi_active_peering.disconnect(UARTP4_PORT);
   }
