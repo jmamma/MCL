@@ -5,9 +5,12 @@
 #include "MCLSysConfig.h"
 #include "ResourceManager.h"
 #include "TurboLight.h"
+#include <string.h>
 
 GenericMidiDevice::GenericMidiDevice()
-    : MidiDevice(&Midi2, "MI", DEVICE_MIDI, false) {}
+    : MidiDevice(&Midi2, "MI", DEVICE_MIDI, false) {
+  memset(mixer_levels, 127, sizeof(mixer_levels));
+}
 
 uint8_t *GenericMidiDevice::icon() { return R.icons_device->icon_turbo; }
 
@@ -47,6 +50,40 @@ void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
   }
   uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_level,
                 value);
+}
+
+bool GenericMidiDevice::mixer_param(uint8_t device_idx, uint8_t track,
+                                    uint8_t param_idx,
+                                    MidiDeviceMixerParam *param) {
+  (void)device_idx;
+  if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0 ||
+      mcl_cfg.uart2_cc_level > 127) {
+    return false;
+  }
+  param->label = "LEV";
+  param->min_value = 0;
+  param->max_value = 127;
+  param->value = mixer_levels[track];
+  param->type = 0;
+  param->sendable = true;
+  return true;
+}
+
+bool GenericMidiDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
+                                        uint8_t param_idx, int16_t value,
+                                        bool send) {
+  (void)device_idx;
+  if (track >= NUM_EXT_TRACKS || param_idx != 0 ||
+      mcl_cfg.uart2_cc_level > 127) {
+    return false;
+  }
+  if (value < 0) value = 0;
+  if (value > 127) value = 127;
+  mixer_levels[track] = (uint8_t)value;
+  if (send) {
+    setLevel(track, mixer_levels[track]);
+  }
+  return true;
 }
 
 void GenericMidiDevice::mixer_set_record_mutes(uint8_t device_idx,

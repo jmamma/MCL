@@ -5,6 +5,7 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "TurboLight.h"
+#include <string.h>
 
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
 
@@ -43,7 +44,9 @@ const ElektronSysexProtocol a4_protocol = {
 };
 
 A4Class::A4Class()
-    : ElektronDevice(&Midi2, "A4", DEVICE_A4, a4_protocol) {}
+    : ElektronDevice(&Midi2, "A4", DEVICE_A4, a4_protocol) {
+  memset(mixer_levels, 127, sizeof(mixer_levels));
+}
 
 void A4Class::setup_listeners() {
   A4SysexListener.setup(midi);
@@ -80,6 +83,38 @@ void A4Class::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
   if (clear) {
     mcl_seq.ext_tracks[track].clear_mute();
   }
+}
+
+bool A4Class::mixer_param(uint8_t device_idx, uint8_t track,
+                          uint8_t param_idx,
+                          MidiDeviceMixerParam *param) {
+  (void)device_idx;
+  if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0) {
+    return false;
+  }
+  param->label = "LEV";
+  param->min_value = 0;
+  param->max_value = 127;
+  param->value = mixer_levels[track];
+  param->type = 0;
+  param->sendable = true;
+  return true;
+}
+
+bool A4Class::set_mixer_param(uint8_t device_idx, uint8_t track,
+                              uint8_t param_idx, int16_t value,
+                              bool send) {
+  (void)device_idx;
+  if (track >= NUM_EXT_TRACKS || param_idx != 0) {
+    return false;
+  }
+  if (value < 0) value = 0;
+  if (value > 127) value = 127;
+  mixer_levels[track] = (uint8_t)value;
+  if (send) {
+    setLevel(track, mixer_levels[track]);
+  }
+  return true;
 }
 
 uint16_t A4Class::sendKitParams(uint8_t *masks) {
@@ -228,5 +263,8 @@ void A4Class::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
 }
 
 void A4Class::setLevel(uint8_t track, uint8_t value) {
+  if (track < NUM_EXT_TRACKS) {
+    mixer_levels[track] = value;
+  }
   uart->sendCC(track, 95, value);
 }

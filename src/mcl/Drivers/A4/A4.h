@@ -86,6 +86,12 @@ public:
   }
 
   virtual uint8_t get_mute_cc() { return 0x5E; }
+  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
+                           uint8_t param_idx,
+                           MidiDeviceMixerParam *param) override;
+  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
+                               uint8_t param_idx, int16_t value,
+                               bool send = true) override;
   virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
                                       bool state,
                                       bool clear = false) override;
@@ -101,6 +107,8 @@ public:
   void unmuteTrack(uint8_t track) { muteTrack(track, false); }
   void setLevel(uint8_t track, uint8_t value);
 
+private:
+  uint8_t mixer_levels[NUM_EXT_TRACKS];
 
 };
 

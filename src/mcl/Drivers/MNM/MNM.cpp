@@ -72,6 +72,36 @@ void MNMClass::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
   }
 }
 
+bool MNMClass::mixer_param(uint8_t device_idx, uint8_t track,
+                           uint8_t param_idx,
+                           MidiDeviceMixerParam *param) {
+  (void)device_idx;
+  if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0) {
+    return false;
+  }
+  param->label = "LEV";
+  param->min_value = 0;
+  param->max_value = 127;
+  param->value = kit.levels[track];
+  param->type = 0;
+  param->sendable = true;
+  return true;
+}
+
+bool MNMClass::set_mixer_param(uint8_t device_idx, uint8_t track,
+                               uint8_t param_idx, int16_t value,
+                               bool send) {
+  (void)device_idx;
+  if (track >= NUM_EXT_TRACKS || param_idx != 0) {
+    return false;
+  }
+  if (value < 0) value = 0;
+  if (value > 127) value = 127;
+  kit.levels[track] = (uint8_t)value;
+  setTrackLevel(track, kit.levels[track], send);
+  return true;
+}
+
 bool MNMClass::probe() {
   connected = false;
   DEBUG_PRINTLN("MNM probe");
@@ -178,6 +208,9 @@ void MNMClass::setTrackPitch(uint8_t track, uint8_t pitch) {
 }
 
 uint8_t MNMClass::setTrackLevel(uint8_t track, uint8_t level, bool send) {
+  if (track < NUM_EXT_TRACKS) {
+    kit.levels[track] = level;
+  }
   if (send) {
     uart->sendCC(global.baseChannel + track, 7, level);
   }
