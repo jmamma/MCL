@@ -97,6 +97,8 @@ void MidiSetup::cfg_ports(bool boot) {
     break;
   }
 
+  cfg_clock_recv();
+
   MidiClock.uart_clock_forward2 = nullptr;
   MidiClock.uart_clock_forward3 = nullptr;
   switch (mcl_cfg.clock_send) {
@@ -123,8 +125,6 @@ void MidiSetup::cfg_ports(bool boot) {
     #endif
     break;
   }
-  cfg_clock_recv();
-
   Midi.uart_forward[0] = nullptr;
   Midi.uart_forward[1] = nullptr;
   if (mcl_cfg.midi_forward_1 == 1 || mcl_cfg.midi_forward_1 == 3) {
