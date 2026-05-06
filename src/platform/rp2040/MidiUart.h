@@ -162,7 +162,10 @@ public:
   void service_irq();
   void service_background();
   void set_speed(uint32_t speed_) { speed = speed_ ? speed_ : UART_BAUDRATE; }
-  void m_putc_immediate(uint8_t c) { m_putc(c); }
+  void m_putc(uint8_t *src, uint16_t size) override;
+  void m_putc(uint8_t c) override;
+  void m_putc_realtime(uint8_t c) override;
+  void m_putc_immediate(uint8_t c) override;
 };
 #endif
 

@@ -174,6 +174,35 @@ void MidiUartP4Class::poll() {
   service_irq();
 }
 
+void MidiUartP4Class::m_putc(uint8_t *src, uint16_t size) {
+  if (!src || size == 0) return;
+
+  LOCK();
+  for (uint16_t i = 0; i < size; i++) {
+    if (!tbd_p4_realtime.enqueue_midi_byte_isr(src[i])) {
+      break;
+    }
+  }
+  CLEAR_LOCK();
+}
+
+void MidiUartP4Class::m_putc(uint8_t c) {
+  LOCK();
+  tbd_p4_realtime.enqueue_midi_byte_isr(c);
+  CLEAR_LOCK();
+}
+
+void MidiUartP4Class::m_putc_realtime(uint8_t c) {
+  LOCK();
+  sendActiveSenseTimer = sendActiveSenseTimeout;
+  tbd_p4_realtime.enqueue_midi_byte_isr(c);
+  CLEAR_LOCK();
+}
+
+void MidiUartP4Class::m_putc_immediate(uint8_t c) {
+  m_putc(c);
+}
+
 void MidiUartP4Class::service_irq() {
   tx_flush();
   tbd_p4_realtime.poll();
