@@ -462,7 +462,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       uint8_t port = event->port;
       MidiDevice *device = device_manager.device_for_port(port);
       uint8_t track = event->source;
-      if (device != &MD) return true;
+      if (!device_manager.port_supports(
+              port, MidiDeviceCapability::MdTrigInterface))
+        return true;
       if (show_seq_menu) {
         opt_trackid = track + 1;
         note_interface.ignoreNextEvent(track);
@@ -566,7 +568,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     MidiDevice *device = device_manager.device_for_port(port);
 
     uint8_t track = event->source;
-    if (device != &MD) {
+    if (!device_manager.port_supports(
+            port, MidiDeviceCapability::MdTrigInterface)) {
       return true;
     }
     if (show_seq_menu) {

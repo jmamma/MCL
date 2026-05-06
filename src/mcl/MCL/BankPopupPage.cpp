@@ -186,8 +186,9 @@ bool BankPopupPage::handleEvent(gui_event_t *event) {
   // has no real BANK key — popup stays up until close()).
   if (EVENT_NOTE(event)) {
     uint8_t port = event->port;
-    MidiDevice *device = device_manager.device_for_port(port);
-    if (device != &MD) return true;
+    if (!device_manager.port_supports(
+            port, MidiDeviceCapability::MdTrigInterface))
+      return true;
 
     uint8_t track = event->source;
     if (track >= NUM_MD_TRACKS) return false;

@@ -527,10 +527,10 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
     uint8_t port = event->port;
-    auto device = device_manager.device_for_port(port);
     uint8_t note = event->source;
     // do not route EXT TI events to MD.
-    if (device != &MD) {
+    if (!device_manager.port_supports(
+            port, MidiDeviceCapability::MdTrigInterface)) {
       return false;
     }
     if (show_seq_menu) {

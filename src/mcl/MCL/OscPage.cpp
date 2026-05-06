@@ -39,12 +39,10 @@ bool OscPage::handleEvent(gui_event_t *event) {
     return true;
   }
   if (EVENT_NOTE(event)) {
-    uint8_t mask = event->mask;
     uint8_t port = event->port;
-    MidiDevice *device = device_manager.device_for_port(port);
 
-    uint8_t track = event->source;
-    if (device != &MD) {
+    if (!device_manager.port_supports(
+            port, MidiDeviceCapability::MdTrigInterface)) {
       return true;
     }
     key_interface.send_md_leds(TRIGLED_OVERLAY);

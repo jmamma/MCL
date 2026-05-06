@@ -940,12 +940,11 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
 bool GridPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
-    uint8_t mask = event->mask;
     uint8_t port = event->port;
-    MidiDevice *device = device_manager.device_for_port(port);
 
     uint8_t track = event->source;
-    if (device != &MD) {
+    if (!device_manager.port_supports(
+            port, MidiDeviceCapability::MdTrigInterface)) {
       return true;
     }
 
