@@ -157,6 +157,7 @@ public:
   // panel controls with no legacy slot need their own IDs here.
   static const uint8_t TBD_BUTTON_B  = 36;
   static const uint8_t TBD_BUTTON_TR = 37;
+  static const uint16_t TBD_TAP_MAX_MS = 200;
 #endif
 
   static const uint16_t ENCODER1_MASK = _BV(ENCODER1);

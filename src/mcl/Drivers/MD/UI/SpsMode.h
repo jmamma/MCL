@@ -23,12 +23,6 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 
-// Standard tap window for TBD-panel gestures: encoder taps (ENC1
-// pattern-select, ENC2/3/4 cluster taps), SPS-key tap vs.
-// modifier hold, etc. Anything held longer than this counts as
-// a sustained press / hold gesture.
-#define TBD_TAP_MAX_MS 200
-
 // TR-hold threshold for the SPS param-select overlay. Below this a
 // TR press is just the latch-tap window; past it SpsOverlayPage gets
 // pushed onto the page stack.

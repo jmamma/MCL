@@ -3,14 +3,79 @@
 #ifdef PLATFORM_TBD
 
 #include "../MD.h"
+#include "AuxPages.h"
 #include "GUI_hardware.h"
+#include "GridIOOverlay.h"
 #include "GridPages.h"
 #include "KeyInterface.h"
 #include "MCL.h"
+#include "MCLGUI.h"
+#include "MidiClock.h"
 #include "NoteInterface.h"
 #include "SeqPages.h"
+#include "SeqTrackUtil.h"
+
+bool MDPanel::handle_bank_arrow_cycle(gui_event_t *event) {
+  if (!grid_page.bank_popup) return false;
+
+  bool group_toggle = false;
+  int8_t letter_delta = 0;
+  switch (event->source) {
+    case ButtonsClass::FUNC_BUTTON6: // UP
+    case ButtonsClass::FUNC_BUTTON8: // DOWN
+      group_toggle = true;
+      break;
+    case ButtonsClass::FUNC_BUTTON7: // LEFT
+      letter_delta = -1;
+      break;
+    case ButtonsClass::FUNC_BUTTON9: // RIGHT
+      letter_delta = +1;
+      break;
+    default:
+      return false;
+  }
+
+  // Consume release too so arrows do not also transmit MDX_KEY_LEFT/etc.
+  if (event->mask != EVENT_BUTTON_PRESSED) return true;
+
+  // Any arrow press while the popup is up brings the OLED grid back.
+  grid_page.bank_popup_oled_visible = true;
+
+  uint8_t old_group = grid_page.bank / 4;
+  uint8_t new_bank = group_toggle
+                         ? (grid_page.bank ^ 4)
+                         : (uint8_t)((grid_page.bank + 8 + letter_delta) % 8);
+  if (new_bank != grid_page.bank) {
+    grid_page.bank = new_bank;
+    uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
+    mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+    grid_page.send_row_led();
+    uint8_t new_group = grid_page.bank / 4;
+    if (new_group != old_group) {
+      md_.currentBank = new_group;
+      if (md_.connected) md_.press_bankgroup_button();
+    }
+  }
+  if (md_.connected) md_.draw_bank(grid_page.bank % 4);
+  return true;
+}
+
+void MDPanel::handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx) {
+  if (event->mask != EVENT_BUTTON_PRESSED) return;
+  if (trig_idx >= NUM_MD_TRACKS) return;
+  if (mcl.currentPage() != GRID_PAGE) return;
+  if (grid_page.bank_popup || grid_io_overlay.is_active()) return;
+
+  md_.triggerTrack(trig_idx, 127);
+  mixer_page.trig(trig_idx);
+  if (SeqPage::recording && MidiClock.state == MidiClockClass::STARTED) {
+    SeqTrackUtil::with_md_track(trig_idx,
+                                [](auto &t) { t.record_track(127); });
+  }
+}
 
 bool MDPanel::handle_event(gui_event_t *event) {
+  if (handle_bank_arrow_cycle(event)) return true;
   if (!md_.connected) return false;
 
   const bool is_press = (event->mask == EVENT_BUTTON_PRESSED);
@@ -22,7 +87,7 @@ bool MDPanel::handle_event(gui_event_t *event) {
   if (event->source >= ButtonsClass::ENCODER2 &&
       event->source <= ButtonsClass::ENCODER4) {
     const uint8_t idx = event->source - ButtonsClass::ENCODER2;
-    static constexpr uint16_t kEncTapMaxMs = TBD_TAP_MAX_MS;
+    static constexpr uint16_t kEncTapMaxMs = ButtonsClass::TBD_TAP_MAX_MS;
     if (is_press) {
       Buttons.handle_encoder_tap((uint8_t)(idx + 1), true, kEncTapMaxMs);
       return true;
@@ -150,6 +215,7 @@ bool MDPanel::handle_event(gui_event_t *event) {
     }
 
     if (md_.ui.sps_mode.handle_trig_forward(event, key)) return true;
+    handle_grid_trig_preview(event, key);
   }
 
   return false;

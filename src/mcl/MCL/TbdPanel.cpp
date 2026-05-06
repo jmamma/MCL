@@ -3,20 +3,16 @@
 #ifdef PLATFORM_TBD
 
 #include "MCL.h"
-#include "../Drivers/MD/MD.h"
-#include "AuxPages.h"
 #include "BankPopupPage.h"
 #include "DeviceManager.h"
-#include "GridPage.h"
 #include "GridIOOverlay.h"
+#include "GridPage.h"
 #include "GridPages.h"
 #include "GUI_hardware.h"
 #include "KeyInterface.h"
-#include "MCLGUI.h"
 #include "MidiClock.h"
 #include "NoteInterface.h"
 #include "SeqPages.h"
-#include "SeqTrackUtil.h"
 
 TbdPanel tbd_panel;
 
@@ -32,48 +28,6 @@ bool TbdPanel::open_bank_popup() {
     grid_page.last_page = pg;
   }
   mcl.pushPage(BANK_POPUP_PAGE);
-  return true;
-}
-
-bool TbdPanel::handle_bank_arrow_cycle(gui_event_t *event) {
-  if (!grid_page.bank_popup) return false;
-
-  bool group_toggle = false;
-  int8_t letter_delta = 0;
-  switch (event->source) {
-    case ButtonsClass::FUNC_BUTTON6: // UP
-    case ButtonsClass::FUNC_BUTTON8: // DOWN
-      group_toggle = true; break;
-    case ButtonsClass::FUNC_BUTTON7: // LEFT
-      letter_delta = -1; break;
-    case ButtonsClass::FUNC_BUTTON9: // RIGHT
-      letter_delta = +1; break;
-    default:
-      return false;
-  }
-  // Consume release too so the arrows don't double-act via the else-branch
-  // (which would transmit MDX_KEY_LEFT/etc to the MD).
-  if (event->mask != EVENT_BUTTON_PRESSED) return true;
-
-  // Any arrow press while the popup is up brings the OLED grid back.
-  grid_page.bank_popup_oled_visible = true;
-
-  uint8_t old_group = grid_page.bank / 4;
-  uint8_t new_bank = group_toggle
-                       ? (grid_page.bank ^ 4)
-                       : (uint8_t)((grid_page.bank + 8 + letter_delta) % 8);
-  if (new_bank != grid_page.bank) {
-    grid_page.bank = new_bank;
-    uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-    mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
-    grid_page.send_row_led();
-    uint8_t new_group = grid_page.bank / 4;
-    if (new_group != old_group) {
-      MD.currentBank = new_group;
-      if (MD.connected) MD.press_bankgroup_button();
-    }
-  }
-  if (MD.connected) MD.draw_bank(grid_page.bank % 4);
   return true;
 }
 
@@ -172,7 +126,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (event->source == ButtonsClass::ENCODER1) {
     if (mcl.currentPage() == PAGE_SELECT_PAGE) return false;
-    static constexpr uint16_t kEnc1TapMaxMs = TBD_TAP_MAX_MS;
+    static constexpr uint16_t kEnc1TapMaxMs = ButtonsClass::TBD_TAP_MAX_MS;
     if (is_press) {
       Buttons.handle_encoder_tap(0, true, kEnc1TapMaxMs);
       return true;
@@ -199,22 +153,9 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   uint8_t key = 255;
 
-  if (handle_bank_arrow_cycle(event)) return true;
-
   if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
       event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
     key = event->source - ButtonsClass::TRIG_BUTTON1;
-
-    if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup &&
-        !grid_io_overlay.is_active()) {
-      if (is_press && key < NUM_MD_TRACKS) {
-        MD.triggerTrack(key, 127);
-        mixer_page.trig(key);
-        if (SeqPage::recording && MidiClock.state == 2) {
-          SeqTrackUtil::with_md_track(key, [](auto &t) { t.record_track(127); });
-        }
-      }
-    }
   } else {
     const bool copy_mode = (key_interface.is_key_down(MDX_KEY_NO) ||
           key_interface.is_key_down(MDX_KEY_FUNC)) ||
