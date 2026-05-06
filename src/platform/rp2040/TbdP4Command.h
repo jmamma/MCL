@@ -27,10 +27,18 @@ public:
   bool get_track_default_presets(char *response, size_t response_len,
                                  const char *template_name = nullptr,
                                  uint32_t timeout_ms = 30000);
+  bool get_macro_sound_preset(const char *preset_id, char *response,
+                              size_t response_len,
+                              uint32_t timeout_ms = 30000);
+  bool get_macro_definition(const char *macro_id, char *response,
+                            size_t response_len,
+                            uint32_t timeout_ms = 30000);
   bool get_kit_index_json(char *response, size_t response_len,
                           uint32_t timeout_ms = 30000);
   bool set_active_sample_kit(uint8_t kit_index,
                              uint32_t timeout_ms = 30000);
+  bool activate_track_machine(uint8_t track_index, const char *machine_id,
+                              uint32_t timeout_ms = 30000);
   bool load_track_sound_preset(uint8_t track_index, const char *preset_id,
                                uint8_t rom_bank = 0xFF,
                                int32_t sample_slice = -1,

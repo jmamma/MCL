@@ -103,6 +103,12 @@ constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1120);
 constexpr size_t SPSX_CACHE_LEN = SPSX_TRACK_LEN * NUM_MD_TRACKS;
 #endif
 
+#if defined(PLATFORM_TBD)
+// DEV1 TBD tracks carry StepSeqTrackData plus the authoritative P4 sound map.
+constexpr size_t TBD_TRACK_LEN = MEMORY_ALIGN(2048);
+constexpr size_t TBD_CACHE_LEN = TBD_TRACK_LEN * 16;
+#endif
+
 // Total size of auxiliary tracks cache
 constexpr size_t AUX_CACHE_LEN = GRIDCHAIN_TRACK_LEN +
                                 PERF_TRACK_LEN +
@@ -130,6 +136,9 @@ extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
 #if !defined(__AVR__)
 extern uint8_t spsx_cache[SPSX_CACHE_LEN];
 #endif
+#if defined(PLATFORM_TBD)
+extern uint8_t tbd_cache[TBD_CACHE_LEN];
+#endif
 
 // Declare the start addresses as external constants. They are not `constexpr` because their
 // values (the array addresses) are resolved at link-time. We use `uintptr_t` as it is
@@ -139,6 +148,9 @@ extern const uintptr_t BANK1_AUX_TRACKS_START;
 extern const uintptr_t BANK1_EXT_TRACKS_START;
 #if !defined(__AVR__)
 extern const uintptr_t BANK1_SPSX_TRACKS_START;
+#endif
+#if defined(PLATFORM_TBD)
+extern const uintptr_t BANK1_TBD_TRACKS_START;
 #endif
 
 extern const uintptr_t BANK1_GRIDCHAIN_TRACK_START;
@@ -159,6 +171,9 @@ extern const uintptr_t BANK3_FILE_ENTRIES_END;
 constexpr size_t BANK1_MD_TRACKS_START = (BANK1_SYSEX3_DATA_START + SYSEX3_DATA_LEN);
 constexpr size_t BANK1_AUX_TRACKS_START = BANK1_MD_TRACKS_START + MD_CACHE_LEN;
 constexpr size_t BANK1_EXT_TRACKS_START = BANK1_AUX_TRACKS_START + AUX_CACHE_LEN;
+#if defined(PLATFORM_TBD)
+constexpr size_t BANK1_TBD_TRACKS_START = BANK1_EXT_TRACKS_START + EXT_CACHE_LEN;
+#endif
 
 // Define track starts as offsets within the contiguous auxiliary region.
 constexpr size_t BANK1_GRIDCHAIN_TRACK_START = BANK1_AUX_TRACKS_START;

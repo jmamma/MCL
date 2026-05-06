@@ -543,6 +543,10 @@ void GridPage::display_grid() {
         str[0] = 'T';
         str[1] = 'B';
         break;
+      case TBD_MIDI_TRACK_TYPE:
+        str[0] = 'T';
+        str[1] = 'M';
+        break;
       }
       //  Highlight the current cursor position + slot menu apply range
       bool a = in_area(x, y + row_shift, cur_col, cur_row, param3.cur - 1,

@@ -10,7 +10,7 @@
 #define MIDI_SEQ_DATA_VERSION 1
 
 #define MIDI_SEQ_NUM_STEPS 128
-#define MIDI_SEQ_NUM_EVENTS 704
+#define MIDI_SEQ_NUM_EVENTS 545
 #define MIDI_SEQ_NUM_LOCKS 32
 
 // Canonical editor/storage resolution for enhanced external tracks.

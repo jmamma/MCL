@@ -62,6 +62,16 @@ void MCLSeq::setup() {
     spsx_tracks[i].seq_class = this;
   }
 #endif
+#if defined(PLATFORM_TBD)
+  for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+    tbd_tracks[i].track_number = i;
+    tbd_tracks[i].length = 16;
+    tbd_tracks[i].speed = STEPSEQ_SPEED_1X;
+    tbd_tracks[i].mute_state = STEPSEQ_MUTE_OFF;
+    tbd_tracks[i].seq_class = this;
+    tbd_tracks[i].p4_sound.p4_track_index = i;
+  }
+#endif
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].length = 16;
     aux_tracks[i].speed = SEQ_SPEED_1X;
@@ -145,6 +155,11 @@ void MCLSeq::onMidiStartImmediateCallback() {
     ext_tracks[i].reset();
     ext_arp_tracks[i].reset();
   }
+#if defined(PLATFORM_TBD)
+  for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+    tbd_tracks[i].reset();
+  }
+#endif
 
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].reset();
@@ -194,6 +209,12 @@ void MCLSeq::onMidiStopCallback() {
     track.locks_slides_recalc = 255;
     for (auto &sd : track.locks_slide_data) { sd.init(); }
   });
+#if defined(PLATFORM_TBD)
+  for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+    tbd_tracks[i].locks_slides_recalc = 255;
+    for (auto &sd : tbd_tracks[i].locks_slide_data) { sd.init(); }
+  }
+#endif
 #ifdef LFO_TRACKS
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
     lfo_tracks[i].reset_params();
@@ -333,6 +354,12 @@ void MCLSeq::seq() {
   }
 #endif
 
+#if defined(PLATFORM_TBD)
+  for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+    tbd_tracks[i].seq(uart2);
+  }
+#endif
+
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq(uart2);
@@ -354,6 +381,11 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].recalc_slides();
   }
+#if defined(PLATFORM_TBD)
+  for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+    tbd_tracks[i].recalc_slides();
+  }
+#endif
 
   if (realtime) {
     realtime = false;

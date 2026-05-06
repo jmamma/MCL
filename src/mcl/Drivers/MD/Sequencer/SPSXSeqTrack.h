@@ -19,6 +19,7 @@ using SPSXSlideData = StepSeqSlideData;
 using SPSXSeqTrackBase = StepSeqTrack;
 using SPSXSeqTrackCond = StepSeqTrackCond;
 using SPSXSeqSlideTrack = StepSeqSlideTrack;
+using SPSXSeqDataTrack = StepSeqDataTrack;
 
 // ============================================================================
 // TrigNotes - Note state for MID machines
@@ -74,26 +75,23 @@ struct spsx_retrig_state_t {
 // SPSXSeqTrack - Full SPSX Sequencer Track
 // ============================================================================
 
-class SPSXSeqTrack : public SPSXSeqTrackData, public SPSXSeqSlideTrack {
+class SPSXSeqTrack : public SPSXSeqDataTrack {
 public:
     uint64_t oneshot_mask;
-    uint64_t mute_mask;
 
     SPSXTrigNotes notes;
     spsx_retrig_state_t retrig;
 
-    SPSXSeqTrack() : SPSXSeqSlideTrack() {
+    SPSXSeqTrack() : SPSXSeqDataTrack() {
         active = MDSPSX_TRACK_TYPE;
         oneshot_mask = 0;
-        mute_mask = 0;
         notes.init();
         retrig.clear();
     }
 
     void reset() {
-        SPSXSeqSlideTrack::reset();
+        SPSXSeqDataTrack::reset();
         oneshot_mask = 0;
-        record_mutes = false;
         send_notes_off();
         retrig.clear();
     }
@@ -132,7 +130,6 @@ public:
     void send_parameter_locks(uint8_t step, bool trig, uint16_t lock_idx = 0xFFFF);
     void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);
     void reset_params();
-    void get_step_locks(uint8_t step, uint8_t *params, bool ignore_locks_disabled = false);
 
     // ========================================================================
     // MID Machine Methods
@@ -153,78 +150,15 @@ public:
     // Slide Methods
     // ========================================================================
 
-    void recalc_slides();
-    void find_next_locks(uint8_t curidx, uint8_t step, uint64_t &mask);
     void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0) override;
-
-    // ========================================================================
-    // Step Accessors
-    // ========================================================================
-
-    void get_mask(uint64_t *_pmask, uint8_t mask_type) const;
-    bool get_step(uint8_t step, uint8_t mask_type) const;
-    void set_step(uint8_t step, uint8_t mask_type, bool val);
-
-    // ========================================================================
-    // Lock Management
-    // ========================================================================
-
-    void set_track_pitch(uint8_t step, uint8_t pitch);
-    void set_track_step(uint8_t step, int8_t microtiming_val, uint8_t velocity = 127);
-    bool set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t velocity);
-    bool set_track_locks(uint8_t step, uint8_t track_param, uint8_t velocity);
-    uint8_t get_track_lock(uint8_t step, uint8_t lockidx);
-    uint8_t get_track_lock_implicit(uint8_t step, uint8_t param);
-
-    // ========================================================================
-    // Recording
-    // ========================================================================
-
-    void record_track(uint8_t velocity);
-    void record_track_locks(uint8_t track_param, uint8_t value);
-    void record_track_pitch(uint8_t pitch);
 
     // ========================================================================
     // Clear/Reset
     // ========================================================================
 
-    void clear_mute();
-    void clear_mutes();
-    void clear_slide_data();
-    void clear_step(uint8_t step);
-    void clear_step_locks(uint8_t step);
-    void disable_step_locks(uint8_t step);
-    void enable_step_locks(uint8_t step);
-    uint64_t get_step_locks_mask(uint8_t step);
-    void clear_conditional();
-    void clear_step_lock(uint8_t step, uint8_t param_id);
-    void clear_locks();
-    void clear_track(bool locks = true) override;
-    void clear_param_locks(uint8_t param_id);
-    bool is_param(uint8_t param_id);
+    void clear_mutes() override;
 
-    // ========================================================================
-    // Track Editing
-    // ========================================================================
-
-    void set_length(uint8_t len, bool expand = false) override;
-    void rotate_left() override { modify_track(SPSX_DIR_LEFT); }
-    void rotate_right() override { modify_track(SPSX_DIR_RIGHT); }
-    void reverse() override { modify_track(SPSX_DIR_REVERSE); }
-    void modify_track(uint8_t dir);
-
-    void set_speed(uint8_t new_speed, uint8_t old_speed = 255, bool timing_adjust = true);
-    void store_mute_state();
-
-    void copy_step(uint8_t n, SPSXSeqStep *step);
-    void paste_step(uint8_t n, SPSXSeqStep *step, const uint8_t *source_locks_params = nullptr);
     void preview_step(uint8_t step);
-
-    // ========================================================================
-    // Transpose
-    // ========================================================================
-
-    void transpose(int8_t offset) override;
 
     // ========================================================================
     // Pattern Import
@@ -233,6 +167,10 @@ public:
     void merge_from_md(uint8_t track_number, MDPattern *pattern);
 
 protected:
+    bool get_default_lock_value(uint8_t param_id, uint8_t &value) const override;
+    uint8_t velocity_lock_param() const override;
+    void clear_step_oneshot(uint8_t step) override;
+    void on_modify_track_begin() override;
     void dispatch_slide_value(uint8_t param, uint8_t value, uint8_t channel) override;
 
 private:

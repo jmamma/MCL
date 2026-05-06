@@ -21,6 +21,9 @@ constexpr size_t kStringOffset = 9;
 constexpr size_t kMaxStringParamLen = kFrameSize - kStringOffset - 1;
 
 constexpr uint8_t kRequestSetActiveSampleKit = 0x18;
+constexpr uint8_t kRequestGetMacroSoundPreset = 0xA1;
+constexpr uint8_t kRequestGetMacroDefinition = 0xA2;
+constexpr uint8_t kRequestActivateTrackMachine = 0xA3;
 constexpr uint8_t kRequestLoadTrackSoundPreset = 0xA4;
 constexpr uint8_t kRequestGetTrackDefaultPresets = 0xA5;
 constexpr uint8_t kRequestGetKitIndexJSON = 0xA7;
@@ -200,6 +203,48 @@ bool TbdP4CommandTransport::get_track_default_presets(
                           response_len, timeout_ms);
 }
 
+bool TbdP4CommandTransport::get_macro_sound_preset(
+    const char *preset_id, char *response, size_t response_len,
+    uint32_t timeout_ms) {
+  if (preset_id == nullptr || preset_id[0] == '\0') {
+    return false;
+  }
+
+  const size_t len = strlen(preset_id);
+  if (len + 1 > kMaxStringParamLen) {
+    return false;
+  }
+
+  reset_frame(kRequestGetMacroSoundPreset);
+  memcpy(out_buf + kStringOffset, preset_id, len + 1);
+  if (!send_frame(kRequestGetMacroSoundPreset, timeout_ms)) {
+    return false;
+  }
+  return receive_response(kRequestGetMacroSoundPreset, response, response_len,
+                          timeout_ms);
+}
+
+bool TbdP4CommandTransport::get_macro_definition(
+    const char *macro_id, char *response, size_t response_len,
+    uint32_t timeout_ms) {
+  if (macro_id == nullptr || macro_id[0] == '\0') {
+    return false;
+  }
+
+  const size_t len = strlen(macro_id);
+  if (len + 1 > kMaxStringParamLen) {
+    return false;
+  }
+
+  reset_frame(kRequestGetMacroDefinition);
+  memcpy(out_buf + kStringOffset, macro_id, len + 1);
+  if (!send_frame(kRequestGetMacroDefinition, timeout_ms)) {
+    return false;
+  }
+  return receive_response(kRequestGetMacroDefinition, response, response_len,
+                          timeout_ms);
+}
+
 bool TbdP4CommandTransport::get_kit_index_json(char *response,
                                                size_t response_len,
                                                uint32_t timeout_ms) {
@@ -216,6 +261,24 @@ bool TbdP4CommandTransport::set_active_sample_kit(uint8_t kit_index,
   reset_frame(kRequestSetActiveSampleKit);
   out_buf[3] = kit_index;
   return send_frame(kRequestSetActiveSampleKit, timeout_ms);
+}
+
+bool TbdP4CommandTransport::activate_track_machine(uint8_t track_index,
+                                                   const char *machine_id,
+                                                   uint32_t timeout_ms) {
+  if (machine_id == nullptr || machine_id[0] == '\0') {
+    return false;
+  }
+
+  const size_t len = strlen(machine_id);
+  if (len + 1 > kMaxStringParamLen) {
+    return false;
+  }
+
+  reset_frame(kRequestActivateTrackMachine);
+  out_buf[3] = track_index;
+  memcpy(out_buf + kStringOffset, machine_id, len + 1);
+  return send_frame(kRequestActivateTrackMachine, timeout_ms);
 }
 
 bool TbdP4CommandTransport::load_track_sound_preset(uint8_t track_index,

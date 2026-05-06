@@ -15,6 +15,9 @@
 #if !defined(__AVR__)
 #include "SPSXSeqTrack.h"
 #endif
+#if defined(PLATFORM_TBD)
+#include "../Drivers/TBD/TBDSeqTrack.h"
+#endif
 
 #define SEQ_MUTE_ON 1
 #define SEQ_MUTE_OFF 0
@@ -76,6 +79,11 @@ public:
 #else
   // AVR has no SPSX engine. Provide a constant so portable readers compile.
   static constexpr bool using_spsx_tracks = false;
+#endif
+
+#if defined(PLATFORM_TBD)
+  static constexpr uint8_t num_tbd_tracks = TBD_P4_SOUND_TRACK_COUNT;
+  TBDSeqTrack tbd_tracks[TBD_P4_SOUND_TRACK_COUNT];
 #endif
 
 #ifdef EXT_TRACKS

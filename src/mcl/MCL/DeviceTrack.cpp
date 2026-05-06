@@ -61,6 +61,9 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   case TBD_TRACK_TYPE:
     ::new (this) TBDTrack;
     break;
+  case TBD_MIDI_TRACK_TYPE:
+    ::new (this) TBDMidiTrack;
+    break;
 #endif
     //  case GRIDCHAIN_TRACK_TYPE:
     //    ::new (this) GridChainTrack;

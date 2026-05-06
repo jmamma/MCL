@@ -23,6 +23,7 @@ class GridChainTrack;
 class SPSXTrack;
 #ifdef PLATFORM_TBD
 class TBDTrack;
+class TBDMidiTrack;
 #endif
 
 #define __IMPL_DYNAMIK_KAST(klass, pred, aktive)                               \
@@ -47,7 +48,7 @@ private:
   }
   __IMPL_DYNAMIK_KAST(EmptyTrack, EMPTY_TRACK_TYPE || p->active == 255,
                       EMPTY_TRACK_TYPE)
-  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE || p->active == MNM_TRACK_TYPE,
+  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE || p->active == MNM_TRACK_TYPE || p->active == TBD_MIDI_TRACK_TYPE,
                       EXT_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(A4Track, A4_TRACK_TYPE, A4_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(SPSXTrack, MDSPSX_TRACK_TYPE, MDSPSX_TRACK_TYPE)
@@ -61,6 +62,7 @@ private:
   __IMPL_DYNAMIK_KAST(GridChainTrack, GRIDCHAIN_TRACK_TYPE, GRIDCHAIN_TRACK_TYPE)
 #ifdef PLATFORM_TBD
   __IMPL_DYNAMIK_KAST(TBDTrack, TBD_TRACK_TYPE, TBD_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(TBDMidiTrack, TBD_MIDI_TRACK_TYPE, TBD_MIDI_TRACK_TYPE)
 #endif
 
 public:

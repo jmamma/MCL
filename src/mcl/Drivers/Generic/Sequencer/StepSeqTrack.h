@@ -4,6 +4,7 @@
 #if !defined(__AVR__)
 
 #include "StepSeqDefines.h"
+#include "StepSeqTrackData.h"
 #include "MidiUart.h"
 #include "SeqTrack.h"
 
@@ -216,6 +217,84 @@ protected:
     virtual void on_slide_dispatch_begin(uint8_t channel);
     virtual void dispatch_slide_value(uint8_t param, uint8_t value, uint8_t channel);
     virtual void on_slide_dispatch_end();
+};
+
+// ============================================================================
+// StepSeqDataTrack - Generic SPS-style step data operations
+// ============================================================================
+
+class StepSeqDataTrack : public StepSeqTrackData, public StepSeqSlideTrack {
+public:
+    uint64_t mute_mask;
+
+    StepSeqDataTrack() : StepSeqSlideTrack() {
+        StepSeqTrackData::init();
+        mute_mask = 0;
+    }
+
+    void reset() {
+        StepSeqSlideTrack::reset();
+        record_mutes = false;
+    }
+
+    void get_mask(uint64_t *_pmask, uint8_t mask_type) const;
+    bool get_step(uint8_t step, uint8_t mask_type) const;
+    void set_step(uint8_t step, uint8_t mask_type, bool val);
+
+    void get_step_locks(uint8_t step, uint8_t *params,
+                        bool ignore_locks_enabled = false);
+    void recalc_slides();
+    void find_next_locks(uint8_t curidx, uint8_t step, uint64_t &mask);
+
+    void set_track_pitch(uint8_t step, uint8_t pitch);
+    void set_track_step(uint8_t step, int8_t microtiming_val,
+                        uint8_t velocity = 127);
+    bool set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t value);
+    bool set_track_locks(uint8_t step, uint8_t track_param, uint8_t value);
+    uint8_t get_track_lock(uint8_t step, uint8_t lockidx);
+    uint8_t get_track_lock_implicit(uint8_t step, uint8_t param);
+
+    void record_track(uint8_t velocity);
+    void record_track_locks(uint8_t track_param, uint8_t value);
+    void record_track_pitch(uint8_t pitch);
+
+    void clear_mute();
+    virtual void clear_mutes();
+    void clear_slide_data();
+    void clear_step(uint8_t step);
+    void clear_step_locks(uint8_t step);
+    void disable_step_locks(uint8_t step);
+    void enable_step_locks(uint8_t step);
+    uint64_t get_step_locks_mask(uint8_t step);
+    void clear_conditional();
+    void clear_step_lock(uint8_t step, uint8_t param_id);
+    void clear_locks();
+    void clear_track(bool locks = true) override;
+    void clear_param_locks(uint8_t param_id);
+    bool is_param(uint8_t param_id);
+
+    void set_length(uint8_t len, bool expand = false) override;
+    void rotate_left() override { modify_track(STEPSEQ_DIR_LEFT); }
+    void rotate_right() override { modify_track(STEPSEQ_DIR_RIGHT); }
+    void reverse() override { modify_track(STEPSEQ_DIR_REVERSE); }
+    void modify_track(uint8_t dir);
+
+    void set_speed(uint8_t new_speed, uint8_t old_speed = 255,
+                   bool timing_adjust = true);
+    void store_mute_state();
+
+    void copy_step(uint8_t n, StepSeqStep *step);
+    void paste_step(uint8_t n, StepSeqStep *step,
+                    const uint8_t *source_locks_params = nullptr);
+
+    void transpose(int8_t offset) override;
+
+protected:
+    virtual bool get_default_lock_value(uint8_t param_id, uint8_t &value) const;
+    virtual uint8_t velocity_lock_param() const;
+    virtual uint8_t pitch_lock_param() const;
+    virtual void clear_step_oneshot(uint8_t step);
+    virtual void on_modify_track_begin();
 };
 
 #endif // !defined(__AVR__)

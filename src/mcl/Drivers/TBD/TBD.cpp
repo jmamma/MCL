@@ -376,13 +376,20 @@ void TbdDevice::on_connection(uint8_t device_idx) {
 }
 
 void TbdDevice::init_grid_devices(uint8_t device_idx) {
-  uint8_t grid_idx = 1;
   GridDeviceTrack gdt;
 
+#if defined(PLATFORM_TBD)
+  for (uint8_t i = 0; i < mcl_seq.num_tbd_tracks; i++) {
+    gdt.init(TBD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.tbd_tracks[i]));
+    add_track_to_grid(0, i, &gdt);
+  }
+#endif
+
+  uint8_t grid_idx = 1;
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
     const auto &def = tbd_track_default_for_slot(i);
     mcl_seq.ext_tracks[i].channel = def.midi_channel;
-    gdt.init(TBD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
+    gdt.init(TBD_MIDI_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
     add_track_to_grid(grid_idx, i, &gdt);
   }
 }
