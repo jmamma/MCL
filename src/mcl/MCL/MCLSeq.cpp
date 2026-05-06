@@ -290,7 +290,9 @@ void MCLSeq::seq() {
 
     perf_track.seq(uart, uart2);
 
-    // SPSX send_trig_inline accumulates into MDSeqTrack::md_trig_mask
+    // SPSX full-velocity trigs share the legacy parallel trigger mask.
+    // Lower-velocity SPSX trigs are sent inline because parallelTrig has no
+    // velocity lane.
     if (MDSeqTrack::md_trig_mask > 0) {
       MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
     }

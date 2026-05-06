@@ -642,13 +642,6 @@ void MCLGUI::draw_microtiming_spsx(uint8_t speed, int8_t microtiming) {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
 
-  // Popup dimensions matching host (116x46, centered on 128x64)
-  constexpr uint8_t popup_w = 116;
-  constexpr uint8_t popup_h = 46;
-  constexpr uint8_t popup_x = (128 - popup_w) / 2;
-  constexpr uint8_t popup_y = (OLED_HEIGHT - popup_h) / 2;
-
-  // Derive timing_mid from SPSX ticks_per_step, capped at 23 for display
   uint16_t tps;
   switch (speed) {
   default:
@@ -661,16 +654,17 @@ void MCLGUI::draw_microtiming_spsx(uint8_t speed, int8_t microtiming) {
   case SPSX_SPEED_1_4X: tps = SPSX_TICKS_PER_STEP_1X * 4; break;
   case SPSX_SPEED_1_8X: tps = SPSX_TICKS_PER_STEP_1X * 8; break;
   }
-  uint16_t timing_mid = tps / 2;
-  if (timing_mid > 23) timing_mid = 23;
-  uint8_t degrees = timing_mid * 2;
+
+  uint16_t timing_mid = tps / 4;
+  if (timing_mid < 1) timing_mid = 1;
+  if (timing_mid > 96) timing_mid = 96;
+  uint16_t degrees = timing_mid * 2;
 
   // Convert microtiming (-127..+127) to visual position (0..degrees)
   int timing = timing_mid + (int)microtiming * (int)timing_mid / 127;
   if (timing < 0) timing = 0;
   if (timing > degrees) timing = degrees;
 
-  // Height patterns (matching host MicroTimingPopupPage)
   uint8_t heights_lowres[6] = {11, 3, 5, 9, 3, 7};
   uint8_t heights_triplets[16] = {11, 1, 3, 7, 5, 9, 5, 1, 9, 1, 5, 7, 9, 3, 5, 1};
   uint8_t heights_triplets2[8] = {11, 3, 7, 9, 1, 7, 3, 1};
@@ -687,57 +681,45 @@ void MCLGUI::draw_microtiming_spsx(uint8_t speed, int8_t microtiming) {
     h = heights_triplets2; heights_len = 8;
   }
 
-  // Draw popup frame
+  constexpr uint8_t popup_x = 8;
+  constexpr uint8_t popup_y = 1;
+  constexpr uint8_t popup_w = 128 - 16;
+  constexpr uint8_t popup_h = 32 - 2;
+  constexpr uint8_t ruler_w = 96;
+  constexpr uint8_t ruler_x = 64 - (ruler_w / 2);
+  constexpr uint8_t y_pos = 11;
+  constexpr uint8_t baseline_y = y_pos + 11;
+
   oled_display.fillRect(popup_x, popup_y, popup_w, popup_h, BLACK);
   oled_display.drawRect(popup_x + 1, popup_y + 1, popup_w - 2, popup_h - 2, WHITE);
 
-  // Text: UTIMING: +/-N
   char K[5];
   if (microtiming == 0) {
     strcpy(K, "---");
   } else if (microtiming < 0) {
     K[0] = '-';
     put_value_at(-microtiming, K + 1);
-    K[3] = '\0';
   } else {
     K[0] = '+';
     put_value_at(microtiming, K + 1);
-    K[3] = '\0';
   }
+  K[4] = '\0';
 
-  uint8_t text_y = popup_y + 10;
-  oled_display.setCursor(popup_x + 22, text_y);
+  oled_display.setCursor(ruler_x + 34, 10);
   mcl_print_P(mclstr_utiming_label);
   oled_display.print(K);
 
-  // Ruler
-  uint8_t ruler_w = popup_w - 20;
-  uint8_t ruler_x = popup_x + 10;
-  uint8_t baseline_y = popup_y + popup_h - 12;
-
   oled_display.drawLine(ruler_x, baseline_y, ruler_x + ruler_w, baseline_y, WHITE);
-
-  uint8_t x_w = ruler_w / (degrees > 0 ? degrees : 1);
-  bool degree_scalar = (x_w == 0);
-  if (degree_scalar) x_w = 1;
-
-  uint8_t x = ruler_x;
-  for (uint8_t n = 0; n <= degrees; n++) {
+  for (uint16_t n = 0; n <= degrees; n++) {
     uint8_t dist = (n >= timing_mid) ? (n - timing_mid) : (timing_mid - n);
     uint8_t tick_h = h[dist % heights_len];
+    uint8_t x = ruler_x + (uint32_t)n * ruler_w / degrees;
 
     oled_display.drawLine(x, baseline_y, x, baseline_y - tick_h, WHITE);
 
-    if (n == (uint8_t)timing) {
-      // Triangle marker below baseline
+    if (n == (uint16_t)timing) {
       oled_display.fillRect(x - 1, baseline_y + 3, 3, 3, WHITE);
       oled_display.drawPixel(x, baseline_y + 2, WHITE);
-    }
-
-    if (degree_scalar) {
-      if (n % 2 == 0) x += x_w;
-    } else {
-      x += x_w;
     }
   }
   oled_display.setFont(oldfont);

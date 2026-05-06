@@ -10,6 +10,7 @@
 #include "MidiClock.h"
 #include "MidiUart.h"
 #include "AuxPages.h"
+#include "MCLSysConfig.h"
 
 // SPSX tracks share MDSeqTrack::md_trig_mask and MDSeqTrack::gui_update statics
 
@@ -34,18 +35,31 @@ uint16_t SPSXSeqTrackBase::get_ticks_per_step(uint8_t speed_) {
 }
 
 uint8_t SPSXSeqTrackBase::get_quantized_step(int8_t &microtiming_out, uint8_t quant) {
-    if (quant == 255) quant = 1;
+    if (quant == 255) quant = mcl_cfg.rec_quant;
+
     uint16_t tps = get_ticks_per_step();
-    int16_t tick_offset = (int16_t)(tick_counter - 1);
+    int16_t tick_offset = (tick_counter == 0) ? 0 : (int16_t)(tick_counter - 1);
     uint8_t step = step_count;
-    microtiming_out = (int8_t)(tick_offset * 127 / (int16_t)(tps / 2));
-    if (quant) {
-        if (tick_offset > (int16_t)(tps / 2)) {
-            step++;
-            if (step == length) step = 0;
-        }
-        microtiming_out = 0;
+    int16_t signed_offset = tick_offset;
+
+    if (tick_offset > (int16_t)(tps / 2)) {
+        step++;
+        if (step == length) step = 0;
+        signed_offset = tick_offset - (int16_t)tps;
     }
+
+    if (quant) {
+        microtiming_out = 0;
+        return step;
+    }
+
+    int16_t timing_range = (int16_t)(tps / 4);
+    if (timing_range < 1) timing_range = 1;
+
+    int16_t mt = (int16_t)((int32_t)signed_offset * 128 / timing_range);
+    if (mt < -127) mt = -127;
+    if (mt > 127) mt = 127;
+    microtiming_out = (int8_t)mt;
     return step;
 }
 
@@ -354,12 +368,11 @@ end:
 }
 
 void SPSXSeqTrack::pre_seq(MidiUartClass *port_) {
-    (void)port_;
-    MDSeqTrack::md_trig_mask = 0;
+    MDSeqTrack::pre_seq(port_);
 }
 
 void SPSXSeqTrack::post_seq(MidiUartClass *port_) {
-    (void)port_;
+    MDSeqTrack::post_seq(port_);
 }
 
 void SPSXSeqTrack::load_cache() {
@@ -382,9 +395,12 @@ void SPSXSeqTrack::send_trig() {
 }
 
 void SPSXSeqTrack::send_trig_inline(uint8_t velocity) {
-    (void)velocity;
-    SPSX_SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
     mixer_page.trig(track_number);
+    if (velocity >= 127) {
+        SPSX_SET_BIT16(MDSeqTrack::md_trig_mask, track_number);
+        return;
+    }
+    MD.triggerTrack(track_number, velocity, port);
 }
 
 void SPSXSeqTrack::schedule_retrig(uint8_t velocity, uint8_t rtrg, uint8_t rtim, uint8_t renv) {
@@ -862,9 +878,14 @@ void SPSXSeqTrack::set_track_pitch(uint8_t step, uint8_t pitch) {
 }
 
 void SPSXSeqTrack::set_track_step(uint8_t step, int8_t microtiming_val, uint8_t velocity) {
-    (void)velocity;
     SPSX_CLEAR_BIT64(oneshot_mask, step);
     SPSX_SET_BIT64(trig_mask, step);
+    if (velocity >= 127) {
+        SPSX_SET_BIT64(accent_mask, step);
+    } else {
+        SPSX_CLEAR_BIT64(accent_mask, step);
+        set_track_locks(step, MODEL_VOL, velocity);
+    }
     steps[step].cond_id = 0;
     steps[step].cond_plock = false;
     microtiming[step] = microtiming_val;

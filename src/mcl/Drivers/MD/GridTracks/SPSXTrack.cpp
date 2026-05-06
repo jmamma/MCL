@@ -7,6 +7,108 @@
 
 #if !defined(__AVR__)
 
+namespace {
+
+uint8_t legacy_cond_to_spsx(uint8_t condition) {
+  switch (condition) {
+  case 0:
+  case 1:
+    return SPSX_COND_100PCT;
+  case 2:
+    return spsx_cond_iter_encode(2, 2);
+  case 3:
+    return spsx_cond_iter_encode(3, 3);
+  case 4:
+    return spsx_cond_iter_encode(4, 4);
+  case 5:
+    return spsx_cond_iter_encode(5, 5);
+  case 6:
+    return spsx_cond_iter_encode(6, 6);
+  case 7:
+    return spsx_cond_iter_encode(7, 7);
+  case 8:
+    return spsx_cond_iter_encode(8, 8);
+  case 9:
+    return SPSX_COND_10PCT;
+  case 10:
+    return SPSX_COND_25PCT;
+  case 11:
+    return SPSX_COND_50PCT;
+  case 12:
+    return SPSX_COND_75PCT;
+  case 13:
+    return SPSX_COND_90PCT;
+  case 14:
+    return SPSX_COND_ONESHOT;
+  default:
+    return SPSX_COND_100PCT;
+  }
+}
+
+int8_t legacy_timing_to_spsx(uint8_t timing, uint8_t speed) {
+  if (timing == 0) {
+    return 0;
+  }
+
+  uint16_t timing_mid = SeqTrack::get_speed_multiplier_int(speed);
+  uint16_t timing_quarter = timing_mid / 2;
+  if (timing_quarter == 0) {
+    timing_quarter = 1;
+  }
+
+  int16_t microtiming =
+      ((int16_t)timing - (int16_t)timing_mid) * 127 / timing_quarter;
+  if (microtiming < -127) {
+    microtiming = -127;
+  } else if (microtiming > 127) {
+    microtiming = 127;
+  }
+  return (int8_t)microtiming;
+}
+
+void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
+                                SPSXSeqTrack &dest) {
+  uint8_t speed = dest.speed;
+  dest.SPSXSeqTrackData::init();
+
+  memcpy(dest.locks, src.locks, sizeof(src.locks));
+  memset(dest.locks_params, 0, sizeof(dest.locks_params));
+  memcpy(dest.locks_params, src.locks_params, sizeof(src.locks_params));
+
+  for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
+    const MDSeqStepDescriptor &src_step = src.steps[step];
+    SPSXSeqStepDescriptor &dest_step = dest.steps[step];
+
+    dest_step.locks = src_step.locks;
+    dest_step.locks_enabled = src_step.locks_enabled;
+    dest_step.cond_plock = src_step.cond_plock;
+    dest_step.cond_id = legacy_cond_to_spsx(src_step.cond_id);
+    dest.microtiming[step] = legacy_timing_to_spsx(src.timing[step], speed);
+
+    if (src_step.trig) {
+      SPSX_SET_BIT64(dest.trig_mask, step);
+    }
+    if (src_step.slide) {
+      SPSX_SET_BIT64(dest.slide_mask, step);
+    }
+  }
+}
+
+void finalize_spsx_seq_load(SPSXSeqTrack &track) {
+  if (track.track_length != 0) {
+    track.length = track.track_length;
+  }
+  if (track.track_speed != 0xFF) {
+    track.speed = track.track_speed;
+  }
+  track.clear_mutes();
+  track.set_length(track.length);
+  track.set_speed(track.speed, track.speed, false);
+  track.notes.init();
+}
+
+} // namespace
+
 void SPSXTrack::init() {
   machine.init();
   seq_version = SPSX_SEQ_VERSION_LEGACY;
@@ -95,20 +197,29 @@ void SPSXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 
 void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
-#if !defined(__AVR__)
-  if (seq_version == SPSX_SEQ_VERSION_SPSX) {
-    SPSXSeqTrack *spsx_seq_track = (SPSXSeqTrack *)seq_track;
-    memcpy(spsx_seq_track->SPSXSeqTrackData::data(),
-           seq_data.spsx.data(), sizeof(SPSXSeqTrackData));
-    load_link_data(seq_track);
-    spsx_seq_track->clear_mutes();
-    spsx_seq_track->set_length(spsx_seq_track->length);
-    spsx_seq_track->notes.init();
+  if (seq_track == nullptr) {
     return;
   }
-#endif
+
+  if (mcl_seq.using_spsx_tracks) {
+    SPSXSeqTrack *spsx_seq_track = static_cast<SPSXSeqTrack *>(seq_track);
+    load_link_data(seq_track);
+
+    if (seq_version == SPSX_SEQ_VERSION_SPSX) {
+      memcpy(spsx_seq_track->SPSXSeqTrackData::data(), seq_data.spsx.data(),
+             sizeof(SPSXSeqTrackData));
+    } else if (seq_version == SPSX_SEQ_VERSION_LEGACY) {
+      convert_legacy_seq_to_spsx(seq_data.legacy, *spsx_seq_track);
+    } else {
+      spsx_seq_track->SPSXSeqTrackData::init();
+    }
+
+    finalize_spsx_seq_load(*spsx_seq_track);
+    return;
+  }
+
   if (seq_version == SPSX_SEQ_VERSION_LEGACY) {
-    MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
+    MDSeqTrack *md_seq_track = static_cast<MDSeqTrack *>(seq_track);
     memcpy(md_seq_track->data(), seq_data.legacy.data(), sizeof(MDSeqTrackData));
     load_link_data(seq_track);
     md_seq_track->clear_mutes();
@@ -116,9 +227,11 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
     md_seq_track->notes.first_trig = true;
     return;
   }
-  // Unknown / corrupted seq_version: load an empty sequence rather than
-  // memcpy garbage through the wrong union member.
-  MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
+
+  // SPSX/unknown data cannot be safely downcast to legacy lock storage without
+  // rebuilding lock slots. Load an empty sequence rather than corrupting the
+  // live track object.
+  MDSeqTrack *md_seq_track = static_cast<MDSeqTrack *>(seq_track);
   md_seq_track->init();
   load_link_data(seq_track);
   md_seq_track->set_length(link.length);
@@ -155,10 +268,13 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
   if (mcl_seq.using_spsx_tracks) {
     seq_version = SPSX_SEQ_VERSION_SPSX;
 
-    SPSXSeqTrack *spsx_seq_track = (SPSXSeqTrack *)seq_track;
-    spsx_seq_track->store_mute_state();
+    SPSXSeqTrack *spsx_seq_track =
+        seq_track ? static_cast<SPSXSeqTrack *>(seq_track) : nullptr;
+    if (spsx_seq_track) {
+      spsx_seq_track->store_mute_state();
+    }
 
-    if (column != 255 && online) {
+    if (column != 255 && online && spsx_seq_track) {
       get_machine_from_kit(column);
       link.length = seq_track->length;
       link.speed = seq_track->speed;
@@ -177,6 +293,8 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
         temp_seq_track.length = link.length;
         temp_seq_track.speed = link.speed;
         temp_seq_track.merge_from_md(column, &MD.pattern);
+        link.length = temp_seq_track.length;
+        link.speed = temp_seq_track.speed;
         memcpy(seq_data.spsx.data(), temp_seq_track.SPSXSeqTrackData::data(),
                sizeof(SPSXSeqTrackData));
       } else {
@@ -192,10 +310,13 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
   {
     seq_version = SPSX_SEQ_VERSION_LEGACY;
 
-    MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
-    md_seq_track->store_mute_state();
+    MDSeqTrack *md_seq_track =
+        seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;
+    if (md_seq_track) {
+      md_seq_track->store_mute_state();
+    }
 
-    if (column != 255 && online) {
+    if (column != 255 && online && md_seq_track) {
       get_machine_from_kit(column);
       link.length = seq_track->length;
       link.speed = seq_track->speed;

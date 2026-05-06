@@ -675,9 +675,8 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
 }
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
-  char K[4];
+  char K[5];
   mclstr_copy_progmem(K, mclstr_dash, sizeof(K));
-  K[3] = '\0';
 
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {
@@ -690,6 +689,7 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
       K[0] = '+';
       mcl_gui.put_value_at(mt, K + 1);
     }
+    K[4] = '\0';
     // mt == 0: keep dashes
     draw_knob(1, mclstr_utim, K);
     return;
