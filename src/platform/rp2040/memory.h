@@ -29,6 +29,9 @@
 #define MCL_MEMORY_USE_ARRAYS 1
 
 #define NUM_CLOCK_CALLBACKS 4
+#define NUM_MIDI_CALLBACKS 16
+#define NUM_SYSEX_SLAVES 16
+#define NUM_SYSEX_CALLBACKS 4
 
 #define MEMORY_ALIGN(size) (((size) + 3) & ~3)
 
@@ -117,5 +120,3 @@ extern inline uint8_t get_random(uint8_t range) {
     uint8_t randomValue = get_random_byte();
     return (uint8_t)((uint16_t)randomValue * range / 256);
 }
-
-

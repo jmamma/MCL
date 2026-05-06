@@ -6,6 +6,7 @@
 #include <inttypes.h>
 #include "Callback.h"
 #include "Vector.h"
+#include "memory.h"
 
 // Forward declarations
 class MidiUartParent;
@@ -35,6 +36,10 @@ extern "C" {
 #define MIDI_PRG_CHG_CB 4
 #define MIDI_CHAN_PRESS_CB 5
 #define MIDI_PITCH_WHEEL_CB 6
+
+#ifndef NUM_MIDI_CALLBACKS
+#define NUM_MIDI_CALLBACKS 8
+#endif
 
 typedef struct {
   uint8_t midi_status;
@@ -67,9 +72,10 @@ public:
 
   uint8_t callback;
   //  midi_callback_t callbacks[7];
-  CallbackVector1<MidiCallback, 8, uint8_t *> midiCallbacks[7];
+  CallbackVector1<MidiCallback, NUM_MIDI_CALLBACKS, uint8_t *> midiCallbacks[7];
 #ifdef HOST_MIDIDUINO
-  CallbackVector2<MidiCallback, 8, uint8_t *, uint8_t> messageCallback;
+  CallbackVector2<MidiCallback, NUM_MIDI_CALLBACKS, uint8_t *, uint8_t>
+      messageCallback;
 #endif
 
   bool midiActive;
@@ -189,4 +195,3 @@ public:
 
   /* @} */
 };
-

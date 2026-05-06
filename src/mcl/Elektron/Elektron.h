@@ -116,6 +116,10 @@ typedef void (SysexCallback::*sysex_callback_ptr_t)();
 typedef void (SysexCallback::*sysex_status_callback_ptr_t)(uint8_t type,
                                                            uint8_t param);
 
+#ifndef NUM_SYSEX_CALLBACKS
+#define NUM_SYSEX_CALLBACKS 1
+#endif
+
 #include "ElektronDataEncoder.h"
 #include "MNMDataEncoder.h"
 
@@ -124,10 +128,11 @@ class ElektronSysexListenerClass : public MidiSysexListenerClass {
 public:
   /** Vector storing the onGlobalMessage callbacks (called when a global message
    * is received). **/
-  CallbackVector<SysexCallback, 1> onMessageCallbacks;
+  CallbackVector<SysexCallback, NUM_SYSEX_CALLBACKS> onMessageCallbacks;
   /** Vector storing the onKitMessage callbacks (called when a kit message is
    * received). **/
-  CallbackVector2<SysexCallback, 1, uint8_t, uint8_t> onStatusResponseCallbacks;
+  CallbackVector2<SysexCallback, NUM_SYSEX_CALLBACKS, uint8_t, uint8_t>
+      onStatusResponseCallbacks;
 
   void addOnStatusResponseCallback(SysexCallback *obj,
                                    sysex_status_callback_ptr_t func) {

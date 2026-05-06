@@ -25,6 +25,10 @@
 
 #include "MidiUart.h"
 
+#ifndef NUM_CLOCK_CALLBACKS
+#define NUM_CLOCK_CALLBACKS 4
+#endif
+
 class ClockCallback {};
 
 typedef void (ClockCallback::*midi_clock_callback_ptr_t)(uint32_t count);

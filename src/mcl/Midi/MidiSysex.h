@@ -45,7 +45,10 @@ public:
 #endif
 };
 
+#ifndef NUM_SYSEX_SLAVES
 #define NUM_SYSEX_SLAVES 5
+#endif
+
 #define NUM_SYSEX_MSGS 24
 
 class MidiSysexLedger {
