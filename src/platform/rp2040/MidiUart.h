@@ -5,9 +5,15 @@
 #include "pico.h"
 #include "platform.h"
 #include <MidiUartParent.h>
-#include "RP2040USB.h"
+#include <pico/mutex.h>
 #include <arduino/midi/Adafruit_USBD_MIDI.h>
 #include "hardware.h"
+
+#if !defined(USE_TINYUSB)
+#error "RP2040 USB MIDI requires the Adafruit TinyUSB stack"
+#endif
+
+extern mutex_t __usb_mutex;
 
 #define UART_BAUDRATE 31250
 
