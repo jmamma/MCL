@@ -14,6 +14,36 @@
 
 #define MD_KIT_LENGTH 0x4D0
 
+namespace {
+
+const char *shared_row_name(ElektronDevice **devs,
+                            const bool *save_dev_tracks) {
+  // Preserve the existing single-source row naming model: primary device wins.
+  const char *name = devs[0] ? devs[0]->getGridRowName() : nullptr;
+  if (name != nullptr && name[0] != '\0') {
+    return name;
+  }
+
+  for (uint8_t n = 0; n < NUM_DEVS; n++) {
+    if (!save_dev_tracks[n] || devs[n] == nullptr) {
+      continue;
+    }
+    name = devs[n]->getGridRowName();
+    if (name != nullptr && name[0] != '\0') {
+      return name;
+    }
+  }
+  return nullptr;
+}
+
+void copy_row_name(GridRowHeader &row_header, const char *name) {
+  strncpy(row_header.name, name, sizeof(row_header.name));
+  row_header.name[sizeof(row_header.name) - 1] = '\0';
+  row_header.active = true;
+}
+
+} // namespace
+
 inline bool MCLActions::track_supports_type(DeviceTrack *track, uint8_t track_type) {
   if (track == nullptr) {
     return false;
@@ -179,12 +209,12 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
     readpattern = MD.currentPattern;
   }
 
-  bool save_dev_tracks[2] = {false, false};
-  MidiDevice *devs[2] = {
+  bool save_dev_tracks[NUM_DEVS] = {false, false};
+  MidiDevice *devs[NUM_DEVS] = {
       device_manager.primary_device(),
       device_manager.secondary_device(),
   };
-  ElektronDevice *elektron_devs[2] = {
+  ElektronDevice *elektron_devs[NUM_DEVS] = {
       devs[0]->asElektronDevice(),
       devs[1]->asElektronDevice(),
   };
@@ -294,13 +324,12 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
     }
   }
 
-  // Only copy row name from kit if, the current row is not active.
+  const char *row_name = shared_row_name(elektron_devs, save_dev_tracks);
+
+  // Only set the shared row name when this row has not already been named.
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    if (!row_headers[n].active && devs[0] == &MD && save_dev_tracks[n]) {
-      for (uint8_t c = 0; c < 17; c++) {
-        row_headers[n].name[c] = MD.kit.name[c];
-      }
-      row_headers[n].active = true;
+    if (!row_headers[n].active && save_dev_tracks[n] && row_name != nullptr) {
+      copy_row_name(row_headers[n], row_name);
     }
     proj.write_grid_row_header(&row_headers[n], row, n);
     proj.sync_grid(n);

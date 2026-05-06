@@ -286,6 +286,7 @@ public:
 
   virtual ElektronSysexObject* getKit() = 0;
   virtual char* getKitName() = 0;
+  const char *getGridRowName() { return getKitName(); }
   virtual ElektronSysexObject* getPattern() = 0;
   virtual ElektronSysexObject* getGlobal() = 0;
   virtual ElektronSysexListenerClass* getSysexListener() = 0;
