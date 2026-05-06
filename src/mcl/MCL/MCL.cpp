@@ -251,11 +251,14 @@ void MCL::loop() {
 
 #ifdef PLATFORM_TBD
   device_manager.ui_loop();
-  tbd_panel.loop();
 #endif
 
   key_interface.check_key_throttle();
   GUI.loop();
+
+#ifdef PLATFORM_TBD
+  tbd_panel.loop();
+#endif
 }
 
 bool mcl_handleEvent(gui_event_t *event) {

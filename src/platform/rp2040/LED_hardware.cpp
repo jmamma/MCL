@@ -67,7 +67,11 @@ void LEDHardware::show() {
 
       if (id < 255) {
         uint32_t color;
-        if (i < 16 && trig_color_override) {
+        if (i == STRIP_LED1 && tbd_driver_left_active) {
+          color = is_on ? STRIP_RED : STRIP_WHITE;
+        } else if (i == STRIP_LED2 && tbd_driver_right_active) {
+          color = STRIP_WHITE;
+        } else if (i < 16 && trig_color_override) {
           if ((led_blink_mask >> i) & 1) {
             // Colored blink: toggle visibility while keeping the colour.
             color = is_on ? trig_colors[i] : STRIP_BLACK;

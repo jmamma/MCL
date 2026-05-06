@@ -478,6 +478,8 @@ bool TbdUiMode::enter(uint8_t device_idx) {
 
   latched_ = true;
   device_idx_ = device_idx;
+  GUI_hardware.led.set_tbd_driver_leds(device_idx_ == SLOT_PRIMARY,
+                                       device_idx_ == SLOT_SECONDARY);
   sub_page_ = min(sub_page_, (uint8_t)(window_count() - 1));
   resync_from_sound();
   show_fullscreen();
@@ -490,6 +492,7 @@ void TbdUiMode::disable() {
   bound_device_idx_ = SLOT_NONE;
   bound_track_ = 255;
   bound_sub_page_ = 255;
+  GUI_hardware.led.set_tbd_driver_leds(false, false);
   if (GUI.overlay == &tbd_param_strip_page ||
       GUI.overlay == &tbd_param_overlay_page) {
     GUI.clearOverlay();
