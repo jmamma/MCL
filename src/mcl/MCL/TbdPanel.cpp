@@ -4,6 +4,7 @@
 
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/TBD/TBD.h"
+#include "../Drivers/TBD/TbdUiMode.h"
 #include "AuxPages.h"
 #include "MCL.h"
 #include "BankPopupPage.h"
@@ -23,8 +24,6 @@
 #include "TbdTempoPage.h"
 
 TbdPanel tbd_panel;
-
-static constexpr uint16_t TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS = 200;
 
 static bool is_tbd_menu_page(PageIndex pg) {
   return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
@@ -50,44 +49,52 @@ bool TbdPanel::top_left_reserved_page() const {
 }
 
 bool TbdPanel::enter_primary_ui(gui_event_t *event) {
+  MidiDevice *primary = device_manager.primary_device();
+  if (primary == &TBD) {
+    if (tbd_ui_mode.is_active() &&
+        tbd_ui_mode.device_idx() == TbdUiMode::SLOT_PRIMARY) {
+      return true;
+    }
+  } else if (primary->is_ui_active()) {
+    return true;
+  }
+
   gui_event_t ui_event = *event;
-  if (device_manager.enter_ui(device_manager.primary_device(), &ui_event)) {
+  ui_event.source = ButtonsClass::BUTTON2;
+  ui_event.mask = EVENT_BUTTON_RELEASED;
+  if (device_manager.enter_ui(primary, &ui_event)) {
     return true;
   }
   ui_event = *event;
+  ui_event.source = ButtonsClass::BUTTON2;
+  ui_event.mask = EVENT_BUTTON_RELEASED;
   return device_manager.enter_ui(&ui_event);
 }
 
 bool TbdPanel::enter_secondary_ui(gui_event_t *event) {
+  MidiDevice *secondary = device_manager.secondary_device();
+  if (secondary == &TBD) {
+    if (tbd_ui_mode.is_active() &&
+        tbd_ui_mode.device_idx() == TbdUiMode::SLOT_SECONDARY) {
+      return true;
+    }
+  } else if (secondary->is_ui_active()) {
+    return true;
+  }
+
   gui_event_t ui_event = *event;
-  if (device_manager.enter_ui(device_manager.secondary_device(), &ui_event)) {
+  ui_event.source = ButtonsClass::TBD_BUTTON_TR;
+  ui_event.mask = EVENT_BUTTON_PRESSED;
+  if (device_manager.enter_ui(secondary, &ui_event)) {
     return true;
   }
   ui_event = *event;
+  ui_event.source = ButtonsClass::TBD_BUTTON_TR;
+  ui_event.mask = EVENT_BUTTON_PRESSED;
   return device_manager.enter_ui(&ui_event);
 }
 
 void TbdPanel::loop() {
-  if (!top_left_pressed_ || top_left_page_select_opened_ ||
-      top_left_chorded_) {
-    return;
-  }
-  if (!BUTTON_DOWN(ButtonsClass::BUTTON2)) {
-    if (clock_diff(top_left_press_ms_, read_clock_ms()) >
-        TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS + 500) {
-      top_left_pressed_ = false;
-    }
-    return;
-  }
-  if (top_left_reserved_page()) return;
-  if (clock_diff(top_left_press_ms_, read_clock_ms()) <
-      TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS) {
-    return;
-  }
-
-  device_manager.exit_ui();
-  mcl.setPage(PAGE_SELECT_PAGE);
-  top_left_page_select_opened_ = true;
 }
 
 bool TbdPanel::open_bank_popup() {
@@ -151,10 +158,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   const bool grid_page_active =
       pg == GRID_PAGE && GUI.currentPage() == mcl.getPage(GRID_PAGE);
 
-  if (top_left_pressed_ && orig_src != ButtonsClass::BUTTON2 && is_press) {
-    top_left_chorded_ = true;
-  }
-
   if (suppress_sps_key_release_ &&
       orig_src == ButtonsClass::FUNC_BUTTON5 &&
       is_release) {
@@ -178,15 +181,49 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
+  const bool can_open_grid_io_overlay =
+      !device_manager.is_ui_active() && !is_menu_page &&
+      grid_page_active && !grid_page.show_slot_menu &&
+      !grid_io_overlay.is_active();
+  auto open_grid_io_overlay = [](GridIOOverlay::Mode mode,
+                                 uint8_t button) {
+    GUI.ignoreNextEvent(button);
+    grid_io_overlay.begin(mode);
+    return true;
+  };
+
+  if (can_open_grid_io_overlay && is_press) {
+    if (orig_src == ButtonsClass::BUTTON4) {
+      return open_grid_io_overlay(GridIOOverlay::MODE_LOAD,
+                                  ButtonsClass::BUTTON4);
+    }
+    if (orig_src == ButtonsClass::BUTTON1) {
+      return open_grid_io_overlay(GridIOOverlay::MODE_SAVE,
+                                  ButtonsClass::BUTTON1);
+    }
+  }
+
   if (tbd_tempo_page.is_active() && tbd_tempo_page.handleEvent(event)) {
     return true;
+  }
+
+  if (device_manager.is_ui_active()) {
+    if (orig_src == ButtonsClass::BUTTON2) {
+      if (is_press) {
+        enter_primary_ui(event);
+      }
+      return true;
+    }
+    if (orig_src == ButtonsClass::TBD_BUTTON_TR && is_press) {
+      enter_secondary_ui(event);
+      return true;
+    }
   }
 
   // TL -> TR chord opens the system config page. Asymmetric on purpose:
   // only fires when TR is the press edge while TL is already held.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       BUTTON_DOWN(ButtonsClass::BUTTON2)) {
-    top_left_chorded_ = true;
     device_manager.exit_ui();
     mcl.pushPage(SYSTEM_PAGE);
     return true;
@@ -194,32 +231,18 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (orig_src == ButtonsClass::BUTTON2 && !top_left_reserved_page()) {
     if (is_press) {
-      top_left_pressed_ = true;
-      top_left_page_select_opened_ = false;
-      top_left_chorded_ = false;
-      top_left_press_ms_ = read_clock_ms();
+      device_manager.exit_ui();
+      mcl.setPage(PAGE_SELECT_PAGE);
       return true;
     }
 
     if (is_release) {
-      bool enter_ui = top_left_pressed_ &&
-                      !top_left_page_select_opened_ &&
-                      !top_left_chorded_;
-      top_left_pressed_ = false;
-      top_left_page_select_opened_ = false;
-      top_left_chorded_ = false;
-      if (enter_ui) {
-        enter_primary_ui(event);
-      }
       return true;
     }
   }
 
   if (orig_src == ButtonsClass::BUTTON2 && pg == PAGE_SELECT_PAGE &&
       is_release) {
-    top_left_pressed_ = false;
-    top_left_page_select_opened_ = false;
-    top_left_chorded_ = false;
     return false;
   }
 
@@ -294,11 +317,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (event->source == ButtonsClass::BUTTON4 &&
       orig_src == ButtonsClass::BUTTON4) {
-    if (is_press && pg == GRID_PAGE && !grid_io_overlay.is_active()) {
-      GUI.ignoreNextEvent(ButtonsClass::BUTTON4);
-      grid_io_overlay.begin(GridIOOverlay::MODE_LOAD);
-      return true;
-    }
     if (is_press && pg == GRID_LOAD_PAGE) {
       GUI.ignoreNextEvent(ButtonsClass::BUTTON4);
       mcl.setPage(GRID_PAGE);
@@ -307,11 +325,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (event->source == ButtonsClass::BUTTON1) {
-    if (pg == GRID_PAGE && is_press && !grid_io_overlay.is_active()) {
-      GUI.ignoreNextEvent(ButtonsClass::BUTTON1);
-      grid_io_overlay.begin(GridIOOverlay::MODE_SAVE);
-      return true;
-    }
     if (pg == GRID_SAVE_PAGE || pg == GRID_LOAD_PAGE) {
       if (is_press) {
         GUI.ignoreNextEvent(ButtonsClass::BUTTON1);

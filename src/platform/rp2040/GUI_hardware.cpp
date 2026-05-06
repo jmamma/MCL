@@ -258,7 +258,7 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   STORE_B_CURRENT(FUNC_BUTTON5, TBD_BUTTON_FUNC(ui_data));
 
   // Universal MCL slots and 2x2 cluster, post-remap:
-  //   TOP_LEFT  -> BUTTON2 (TBD panel: tap enters driver-1 UI, hold opens PageSelect)
+  //   TOP_LEFT  -> BUTTON2 (TBD panel: opens PageSelect)
   //   TOP_RIGHT -> TBD_BUTTON_TR (mode/action button; SPS currently uses it)
   //   MCL_A     -> BUTTON1 (universal NO/save/cancel)
   //   MCL_X     -> BUTTON4 (universal YES/load/confirm; SPS-latched: MD EXTENDED)

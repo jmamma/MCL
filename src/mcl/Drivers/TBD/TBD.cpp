@@ -878,7 +878,8 @@ bool tbd_ui_request_from_event(gui_event_t *event, uint8_t *device_idx) {
     return false;
   }
   if (event->source == ButtonsClass::BUTTON2 &&
-      event->mask == EVENT_BUTTON_RELEASED) {
+      (event->mask == EVENT_BUTTON_PRESSED ||
+       event->mask == EVENT_BUTTON_RELEASED)) {
     *device_idx = kTbdUiSlotPrimary;
     return tbd_ui_slot_configured(*device_idx);
   }
