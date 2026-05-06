@@ -6,6 +6,7 @@
 #include <hardware/dma.h>
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
+#include <hardware/sync.h>
 #include <pico/time.h>
 #include <string.h>
 
@@ -16,10 +17,42 @@ static constexpr uint8_t kSpiSclk = 30;
 static constexpr uint8_t kSpiMosi = 31;
 static constexpr uint8_t kSpiMiso = 28;
 static constexpr uint8_t kSpiCs = 29;
+static constexpr uint8_t kWsPin = 27;
+static constexpr uint8_t kWsDivider = 32;
 static constexpr uint8_t kP4ReadyPin = 22;
+
+volatile uint32_t ws_block_count = 0;
+volatile uint8_t ws_edge_count = 0;
 
 uint32_t now_ms() {
   return (uint32_t)(time_us_64() / 1000ULL);
+}
+
+void __not_in_flash_func(tbd_ws_sync_cb)(uint gpio, uint32_t events) {
+  if (gpio != kWsPin || !(events & GPIO_IRQ_EDGE_FALL)) return;
+
+  uint8_t edge_count = ws_edge_count + 1;
+  if (edge_count >= kWsDivider) {
+    ws_edge_count = 0;
+    ws_block_count++;
+  } else {
+    ws_edge_count = edge_count;
+  }
+}
+
+void reset_ws_sync() {
+  uint32_t saved_irq = save_and_disable_interrupts();
+  ws_block_count = 0;
+  ws_edge_count = 0;
+  restore_interrupts(saved_irq);
+}
+
+uint32_t take_ws_blocks() {
+  uint32_t saved_irq = save_and_disable_interrupts();
+  uint32_t count = ws_block_count;
+  ws_block_count = 0;
+  restore_interrupts(saved_irq);
+  return count;
 }
 
 } // namespace
@@ -38,9 +71,13 @@ void TbdP4RealtimeTransport::init() {
   request_prepared_ = false;
   can_prepare_request_ = true;
   dma_reset_pending_ = false;
+  next_spi_send_ms_ = 0;
   next_request_sequence_ = 100;
   last_seen_response_ = 0;
   last_response_ms_ = 0;
+  last_ws_sync_ms_ = 0;
+  receive_count_ = 0;
+  error_count_ = 0;
   tx_frame_count_ = 0;
   tx_midi_bytes_ = 0;
   rx_midi_bytes_ = 0;
@@ -48,19 +85,41 @@ void TbdP4RealtimeTransport::init() {
   length_error_count_ = 0;
   crc_error_count_ = 0;
   sequence_error_count_ = 0;
+  ws_sync_count_ = 0;
+  missed_ws_sync_count_ = 0;
   p4_not_ready_count_ = 0;
   dma_busy_count_ = 0;
   dma_timeout_count_ = 0;
   dma_unavailable_count_ = 0;
+  dropped_tx_bytes_ = 0;
+  dropped_rx_bytes_ = 0;
+  led_color_ = 0;
+  webui_update_counter_ = 0;
+  network_status_ = 0;
+  input_peak_byte_ = 0;
+  output_peak_byte_ = 0;
+  memset(input_waveform_, 0, sizeof(input_waveform_));
+  memset(output_waveform_, 0, sizeof(output_waveform_));
+
+  reset_ws_sync();
+  gpio_init(kWsPin);
+  gpio_set_dir(kWsPin, GPIO_IN);
+  gpio_pull_down(kWsPin);
+  gpio_set_irq_enabled_with_callback(kWsPin, GPIO_IRQ_EDGE_FALL, true,
+                                     &tbd_ws_sync_cb);
 
   gpio_init(kP4ReadyPin);
   gpio_set_dir(kP4ReadyPin, GPIO_IN);
+  gpio_pull_down(kP4ReadyPin);
+
+  spi_init(spi1, kSpiSpeed);
   gpio_set_function(kSpiMiso, GPIO_FUNC_SPI);
   gpio_set_function(kSpiMosi, GPIO_FUNC_SPI);
-  gpio_set_function(kSpiCs, GPIO_FUNC_SPI);
   gpio_set_function(kSpiSclk, GPIO_FUNC_SPI);
-  spi_init(spi1, kSpiSpeed);
+  gpio_set_function(kSpiCs, GPIO_FUNC_SPI);
   spi_set_format(spi1, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
+  spi_get_hw(spi1)->dmacr =
+      SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS;
 
   dma_rx_channel_ = dma_claim_unused_channel(false);
   dma_tx_channel_ = dma_claim_unused_channel(false);
@@ -179,7 +238,6 @@ bool TbdP4RealtimeTransport::finish_transaction() {
     return false;
   }
 
-  spi_get_hw(spi1)->dmacr = 0;
   dma_hw->intr = (1u << dma_rx_channel_) | (1u << dma_tx_channel_);
   spi_active_ = false;
   process_response();
@@ -189,7 +247,6 @@ bool TbdP4RealtimeTransport::finish_transaction() {
 void TbdP4RealtimeTransport::abort_transaction_blocking() {
   if (!dma_ready()) return;
 
-  spi_get_hw(spi1)->dmacr = 0;
   dma_channel_abort(dma_rx_channel_);
   dma_channel_abort(dma_tx_channel_);
   dma_hw->intr = (1u << dma_rx_channel_) | (1u << dma_tx_channel_);
@@ -212,6 +269,8 @@ void TbdP4RealtimeTransport::get_stats(TbdP4RealtimeStats &stats) const {
   stats.length_errors = length_error_count_;
   stats.crc_errors = crc_error_count_;
   stats.sequence_errors = sequence_error_count_;
+  stats.ws_sync_count = ws_sync_count_;
+  stats.missed_ws_sync_count = missed_ws_sync_count_;
   stats.p4_not_ready_count = p4_not_ready_count_;
   stats.dma_busy_count = dma_busy_count_;
   stats.dma_timeout_count = dma_timeout_count_;
@@ -220,6 +279,8 @@ void TbdP4RealtimeTransport::get_stats(TbdP4RealtimeStats &stats) const {
   stats.last_response_ms = last_response_ms_;
   stats.last_response_sequence = last_seen_response_;
   stats.p4_alive = p4_alive_;
+  stats.p4_sync_seen = last_ws_sync_ms_ != 0 &&
+                       (now_ms() - last_ws_sync_ms_) <= 300;
   stats.p4_ready_pin = p4_ready();
   stats.spi_active = spi_active_;
   stats.dma_ready = dma_ready();
@@ -270,27 +331,30 @@ void TbdP4RealtimeTransport::prepare_request() {
   request_prepared_ = true;
 }
 
-void TbdP4RealtimeTransport::start_transaction() {
-  if (!request_prepared_) return;
+bool TbdP4RealtimeTransport::start_transaction() {
+  if (!request_prepared_) return false;
   if (spi_active_) {
     dma_busy_count_++;
-    return;
+    return false;
   }
   if (!dma_ready()) {
     error_count_++;
     dma_unavailable_count_++;
-    return;
+    return false;
   }
-  if (dma_reset_pending_) return;
+  if (dma_reset_pending_) return false;
   if (!p4_ready()) {
     p4_not_ready_count_++;
-    return;
+    return false;
   }
 
   uint8_t *out = spi_trans_[sending_trans_].out_buf;
   uint8_t *in = spi_trans_[sending_trans_].in_buf;
   in[0] = 0;
   in[1] = 0;
+  while (spi_is_readable(spi1)) {
+    (void)spi_get_hw(spi1)->dr;
+  }
 
   dma_channel_config tx_config = dma_channel_get_default_config(dma_tx_channel_);
   channel_config_set_transfer_data_size(&tx_config, DMA_SIZE_8);
@@ -312,7 +376,6 @@ void TbdP4RealtimeTransport::start_transaction() {
   dma_channel_configure(dma_rx_channel_, &rx_config, in, &spi_get_hw(spi1)->dr,
                         TBD_P4_SPI_FRAME_SIZE, false);
 
-  spi_get_hw(spi1)->dmacr = SPI_SSPDMACR_TXDMAE_BITS | SPI_SSPDMACR_RXDMAE_BITS;
   dma_start_channel_mask((1u << dma_rx_channel_) | (1u << dma_tx_channel_));
 
   receiving_trans_ = sending_trans_;
@@ -323,6 +386,7 @@ void TbdP4RealtimeTransport::start_transaction() {
   last_spi_send_ms_ = now_ms();
   spi_deadline_ms_ = last_spi_send_ms_ + kSpiDeadlineMs;
   next_request_sequence_ = next_sequence(next_request_sequence_);
+  return true;
 }
 
 void TbdP4RealtimeTransport::process_response() {
@@ -358,13 +422,6 @@ void TbdP4RealtimeTransport::process_response() {
     can_prepare_request_ = true;
     return;
   }
-  if (response->magic != 0xFEEDC0DE || response->magic2 != 0xDEADC0DE) {
-    error_count_++;
-    fingerprint_error_count_++;
-    can_prepare_request_ = true;
-    return;
-  }
-
   receive_count_++;
   uint8_t expected_sequence = next_sequence(last_seen_response_);
   if (header->response_sequence_counter != expected_sequence) {
@@ -401,14 +458,25 @@ void TbdP4RealtimeTransport::poll() {
   if (!initialized_) init();
 
   uint32_t now = now_ms();
-  p4_alive_ = (last_response_ms_ != 0 && (now - last_response_ms_) <= 300);
+  uint32_t ws_blocks = take_ws_blocks();
+  if (ws_blocks > 0) {
+    ws_sync_count_ += ws_blocks;
+    if (ws_blocks > 1) {
+      missed_ws_sync_count_ += ws_blocks - 1;
+    }
+    last_ws_sync_ms_ = now;
+  }
+
+  p4_alive_ = (last_ws_sync_ms_ != 0 && (now - last_ws_sync_ms_) <= 300);
 
   finish_transaction();
   prepare_request();
 
-  if (now >= next_spi_send_ms_) {
+  if (now < next_spi_send_ms_) {
+    return;
+  }
+  if (start_transaction()) {
     next_spi_send_ms_ = now + 1;
-    start_transaction();
   }
 }
 

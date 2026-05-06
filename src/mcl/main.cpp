@@ -17,7 +17,7 @@ void setup() {
   DEBUG_PRINTLN("debug mode online");
   GUI_hardware.init();
   delay(2000);
-#ifndef DEBUGMODE
+#if !defined(DEBUGMODE) || !defined(__AVR__)
   MidiUartUSB.init();
   #ifdef RUNNING_STATUS_OUT
   MidiUartUSB.running_status_out = 0;

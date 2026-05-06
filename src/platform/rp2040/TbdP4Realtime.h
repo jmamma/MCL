@@ -19,6 +19,8 @@ struct TbdP4RealtimeStats {
   uint32_t length_errors;
   uint32_t crc_errors;
   uint32_t sequence_errors;
+  uint32_t ws_sync_count;
+  uint32_t missed_ws_sync_count;
   uint32_t p4_not_ready_count;
   uint32_t dma_busy_count;
   uint32_t dma_timeout_count;
@@ -27,6 +29,7 @@ struct TbdP4RealtimeStats {
   uint32_t last_response_ms;
   uint8_t last_response_sequence;
   bool p4_alive;
+  bool p4_sync_seen;
   bool p4_ready_pin;
   bool spi_active;
   bool dma_ready;
@@ -88,7 +91,7 @@ private:
   bool finish_transaction();
   void abort_transaction_blocking();
   void prepare_request();
-  void start_transaction();
+  bool start_transaction();
   void process_response();
   bool dma_ready() const { return dma_rx_channel_ >= 0 && dma_tx_channel_ >= 0; }
 
@@ -105,6 +108,7 @@ private:
   uint32_t next_spi_send_ms_ = 0;
   uint32_t spi_deadline_ms_ = 0;
   uint32_t last_spi_send_ms_ = 0;
+  uint32_t last_ws_sync_ms_ = 0;
   uint32_t last_response_ms_ = 0;
   uint8_t next_request_sequence_ = 100;
   uint8_t last_seen_response_ = 0;
@@ -129,6 +133,8 @@ private:
   uint32_t length_error_count_ = 0;
   uint32_t crc_error_count_ = 0;
   uint32_t sequence_error_count_ = 0;
+  uint32_t ws_sync_count_ = 0;
+  uint32_t missed_ws_sync_count_ = 0;
   uint32_t p4_not_ready_count_ = 0;
   uint32_t dma_busy_count_ = 0;
   uint32_t dma_timeout_count_ = 0;

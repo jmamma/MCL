@@ -24,31 +24,32 @@ public:
 
     char line[22];
     oled_display.setCursor(0, y + 2);
-    snprintf(line, sizeof(line), "P4 A%u R%u D%u E%lu",
+    snprintf(line, sizeof(line), "P4 A%u S%u R%u E%lu",
              stats.p4_alive ? 1 : 0,
+             stats.p4_sync_seen ? 1 : 0,
              stats.p4_ready_pin ? 1 : 0,
-             stats.dma_ready ? 1 : 0,
              (unsigned long)(stats.error_count % 10000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "NR%lu F%lu L%lu C%lu",
+    snprintf(line, sizeof(line), "D%u WS%lu NR%lu F%lu",
+             stats.dma_ready ? 1 : 0,
+             (unsigned long)(stats.ws_sync_count % 1000),
              (unsigned long)(stats.p4_not_ready_count % 1000),
-             (unsigned long)(stats.fingerprint_errors % 1000),
+             (unsigned long)(stats.fingerprint_errors % 1000));
+    oled_display.println(line);
+
+    snprintf(line, sizeof(line), "L%lu C%lu SQ%lu MS%lu",
              (unsigned long)(stats.length_errors % 1000),
-             (unsigned long)(stats.crc_errors % 1000));
-    oled_display.println(line);
-
-    snprintf(line, sizeof(line), "SQ%lu TO%lu DU%lu",
+             (unsigned long)(stats.crc_errors % 1000),
              (unsigned long)(stats.sequence_errors % 1000),
-             (unsigned long)(stats.dma_timeout_count % 1000),
-             (unsigned long)(stats.dma_unavailable_count % 1000));
+             (unsigned long)(stats.missed_ws_sync_count % 1000));
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "FR%lu/%lu DR%lu/%lu",
+    snprintf(line, sizeof(line), "FR%lu/%lu TO%lu DU%lu",
              (unsigned long)(stats.tx_frames % 1000),
              (unsigned long)(stats.rx_frames % 1000),
-             (unsigned long)(stats.dropped_tx_bytes % 10000),
-             (unsigned long)(stats.dropped_rx_bytes % 10000));
+             (unsigned long)(stats.dma_timeout_count % 1000),
+             (unsigned long)(stats.dma_unavailable_count % 1000));
     oled_display.println(line);
   }
 };

@@ -7,6 +7,7 @@
 #include <MidiUartParent.h>
 #include <pico/mutex.h>
 #include <arduino/midi/Adafruit_USBD_MIDI.h>
+#include "tusb.h"
 #include "hardware.h"
 
 #if !defined(USE_TINYUSB)
@@ -170,12 +171,16 @@ public:
   Adafruit_USBD_MIDI usb_midi;
   bool usb_ready;
   bool in_sysex;
+  bool usb_midi_started;
 
   // TX packetization state
   bool tx_in_sysex;
   uint8_t tx_data_cnt;
   int8_t tx_message_len;
   uint8_t tx_packet[4];
+  bool sof_service_enabled;
+
+  static constexpr uint8_t USB_REALTIME_FLUSH_BUDGET = 16;
 
 
   MidiUartUSBClass(uart_inst_t *uart_hw, RingBuffer<> *_rxRb = nullptr,
@@ -184,22 +189,32 @@ public:
 
     usb_ready = false;
     in_sysex = false;
+    usb_midi_started = false;
     tx_in_sysex = false;
     tx_data_cnt = 0;
     tx_message_len = -1;
+    sof_service_enabled = false;
     memset(tx_packet, 0, 4);
+  }
+
+  void enable_sof_service() {
+    if (usb_midi_started && !sof_service_enabled && tud_inited()) {
+      tud_sof_cb_enable(true);
+      sof_service_enabled = true;
+    }
   }
 
   void init() {
     TinyUSBDevice.detach();
     delay(10);
-    TinyUSBDevice.attach();
     TinyUSBDevice.setID(0x1209, 0x3070); // Your pid.codes VID/PID
     TinyUSBDevice.setManufacturerDescriptor("MegaCMD (www.megacmd.com)");
     TinyUSBDevice.setProductDescriptor("MegaCommand");
     // Use TinyUSB MIDI interface
     usb_ready = false;
-    usb_midi.begin();
+    usb_midi_started = usb_midi.begin();
+    TinyUSBDevice.attach();
+    enable_sof_service();
   }
   void poll() {
     if (__get_current_exception()) {
@@ -214,9 +229,21 @@ public:
     // MIDI is already drained by tud_midi_rx_cb(), including realtime clock.
   }
 
+  void service_sof() {
+    if (!usb_midi_started || !tud_mounted()) {
+      return;
+    }
+    usb_ready = true;
+    flush_realtime();
+  }
+
   void service_background() {
+    if (!usb_midi_started) {
+      return;
+    }
     if (!usb_ready && TinyUSBDevice.mounted()) {
       usb_ready = true;
+      enable_sof_service();
     }
     if (!usb_ready)
       return;
@@ -451,7 +478,22 @@ public:
     return true;
   }
 
+  bool flush_realtime(uint8_t budget = USB_REALTIME_FLUSH_BUDGET) {
+    while (txRb_realtime && budget-- && !txRb_realtime->isEmpty()) {
+      uint8_t c = txRb_realtime->peek();
+      if (!flush_byte(c)) {
+        return false;
+      }
+      txRb_realtime->get();
+    }
+    return true;
+  }
+
   void flush() {
+    if (!flush_realtime()) {
+      return;
+    }
+
     // Process side channel first - takes precedence
     if (txRb_sidechannel && in_message_tx == 0) {
       while (!txRb_sidechannel->isEmpty()) {
