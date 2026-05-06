@@ -95,6 +95,13 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (device_manager.handle_ui_event(event)) return true;
 
+  if (!device_manager.is_ui_active() && pg == SEQ_PTC_PAGE &&
+      event->source >= ButtonsClass::TRIG_BUTTON1 &&
+      event->source < ButtonsClass::TRIG_BUTTON1 + 16) {
+    return seq_ptc_page.handle_tbd_keyboard_event(
+        event->source - ButtonsClass::TRIG_BUTTON1, event->mask);
+  }
+
   // In normal mode, swap the physical Y/B roles on TBD:
   //   Y -> MD FUNC key path
   //   B -> legacy BUTTON3 path used by grid/seq menus

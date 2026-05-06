@@ -85,6 +85,13 @@ public:
 
   uint8_t get_note_from_machine_pitch(uint8_t track_number, uint8_t pitch);
 
+#ifdef PLATFORM_TBD
+  uint16_t tbd_keyboard_hold_mask = 0;
+  bool handle_tbd_keyboard_event(uint8_t button, uint8_t mask);
+  void release_tbd_keyboard_notes();
+  void send_tbd_keyboard_leds();
+#endif
+
   uint8_t is_md_midi(uint8_t channel);
   virtual void config_encoders();
   void init_poly();

@@ -11,6 +11,52 @@
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24
 
+#ifdef PLATFORM_TBD
+namespace {
+
+constexpr int8_t kTbdPtcKeyMap[16] = {
+    -1, 1, 3, -1, 6, 8, 10, -1,
+     0, 2, 4,  5, 7, 9, 11, 12
+};
+
+constexpr uint16_t kTbdPtcBlackMask = 0b0000010101001010;
+constexpr uint32_t kTbdPtcNaturalColor = 0x181818;
+constexpr uint32_t kTbdPtcBlackColor = 0x000050;
+constexpr uint32_t kTbdPtcActiveColor = 0x00FF60;
+constexpr uint32_t kTbdPtcOctaveColor = 0x805000;
+constexpr uint32_t kTbdPtcOctaveDimColor = 0x201000;
+
+void tbd_ptc_send_note(SeqPtcPage &page, uint8_t note, uint8_t mask) {
+  bool old_scale_padding = page.scale_padding;
+  page.scale_padding = true;
+
+  bool is_md = SeqTrackUtil::is_md_device(SeqPage::midi_device);
+  uint8_t channel_event = NO_EVENT;
+  uint8_t note_num = note;
+
+  if (is_md) {
+    note_num += MIDI_NOTE_C4;
+    bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+    channel_event = is_poly ? POLY_EVENT : CTRL_EVENT;
+  }
+
+  uint8_t msg[] = {
+      static_cast<uint8_t>(MIDI_NOTE_ON |
+                           (is_md ? last_md_track : last_ext_track)),
+      note_num, 127};
+
+  if (mask == EVENT_BUTTON_PRESSED) {
+    page.midi_events.note_on(msg, channel_event);
+  } else if (mask == EVENT_BUTTON_RELEASED) {
+    page.midi_events.note_off(msg, channel_event);
+  }
+
+  page.scale_padding = old_scale_padding;
+}
+
+} // namespace
+#endif
+
 const scale_t * const scales[24] PROGMEM = {
     &chromaticScale, &ionianScale, &dorianScale, &phrygianScale, &lydianScale,
     &mixolydianScale, &aeolianScale, &locrianScale, &harmonicMinorScale,
@@ -49,6 +95,9 @@ void SeqPtcPage::setup() {
   isSetup = true;
 }
 void SeqPtcPage::cleanup() {
+#ifdef PLATFORM_TBD
+  release_tbd_keyboard_notes();
+#endif
   SeqPage::cleanup();
   last_midi_device = midi_device;
   params_reset();
@@ -110,7 +159,12 @@ void SeqPtcPage::init() {
   DEBUG_PRINTLN(F("control mode:"));
   DEBUG_PRINTLN(mcl_cfg.uart2_ctrl_chan);
   key_interface.on();
+#ifdef PLATFORM_TBD
+  tbd_keyboard_hold_mask = 0;
+  send_tbd_keyboard_leds();
+#else
   key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+#endif
   config();
   re_init = false;
 }
@@ -523,6 +577,94 @@ void SeqPtcPage::draw_popup_octave() {
   mcl_gui.put_value_at(ptc_param_oct.cur, str + 5);
   MD.popup_text(str);
 }
+
+#ifdef PLATFORM_TBD
+void SeqPtcPage::send_tbd_keyboard_leds() {
+  uint16_t natural_mask = 0;
+  uint16_t black_mask = 0;
+
+  for (uint8_t i = 0; i < 16; i++) {
+    int8_t note = kTbdPtcKeyMap[i];
+    if (note < 0) continue;
+    if (IS_BIT_SET16(kTbdPtcBlackMask, note % 12)) {
+      SET_BIT16(black_mask, i);
+    } else {
+      SET_BIT16(natural_mask, i);
+    }
+  }
+
+  mcl_gui.set_trigleds_local(0, TRIGLED_EXCLUSIVE);
+  mcl_gui.set_trigleds_color(natural_mask, kTbdPtcNaturalColor);
+  mcl_gui.set_trigleds_color(black_mask, kTbdPtcBlackColor);
+  mcl_gui.set_trigleds_color(1u << 0,
+                             ptc_param_oct.cur > 0 ? kTbdPtcOctaveColor
+                                                   : kTbdPtcOctaveDimColor);
+  mcl_gui.set_trigleds_color(1u << 7,
+                             ptc_param_oct.cur < 8 ? kTbdPtcOctaveColor
+                                                   : kTbdPtcOctaveDimColor);
+  if (tbd_keyboard_hold_mask) {
+    mcl_gui.set_trigleds_color(tbd_keyboard_hold_mask, kTbdPtcActiveColor);
+  }
+}
+
+void SeqPtcPage::release_tbd_keyboard_notes() {
+  uint16_t held = tbd_keyboard_hold_mask;
+  if (!held) return;
+
+  for (uint8_t i = 0; i < 16; i++) {
+    if (!IS_BIT_SET16(held, i)) continue;
+    int8_t note = kTbdPtcKeyMap[i];
+    if (note >= 0) {
+      tbd_ptc_send_note(*this, note, EVENT_BUTTON_RELEASED);
+    }
+  }
+
+  tbd_keyboard_hold_mask = 0;
+  send_tbd_keyboard_leds();
+}
+
+bool SeqPtcPage::handle_tbd_keyboard_event(uint8_t button, uint8_t mask) {
+  if (button >= 16) return false;
+  if (show_seq_menu) return false;
+
+  if (mask != EVENT_BUTTON_PRESSED && mask != EVENT_BUTTON_RELEASED) {
+    return true;
+  }
+
+  int8_t note = kTbdPtcKeyMap[button];
+  if (note < 0) {
+    if (mask == EVENT_BUTTON_PRESSED) {
+      if (button == 0 && ptc_param_oct.cur > 0) {
+        release_tbd_keyboard_notes();
+        ptc_param_oct.cur--;
+        draw_popup_octave();
+      } else if (button == 7 && ptc_param_oct.cur < 8) {
+        release_tbd_keyboard_notes();
+        ptc_param_oct.cur++;
+        draw_popup_octave();
+      }
+      send_tbd_keyboard_leds();
+    }
+    return true;
+  }
+
+  if (mask == EVENT_BUTTON_RELEASED &&
+      !IS_BIT_SET16(tbd_keyboard_hold_mask, button)) {
+    send_tbd_keyboard_leds();
+    return true;
+  }
+
+  if (mask == EVENT_BUTTON_PRESSED) {
+    SET_BIT16(tbd_keyboard_hold_mask, button);
+  } else {
+    CLEAR_BIT16(tbd_keyboard_hold_mask, button);
+  }
+
+  tbd_ptc_send_note(*this, note, mask);
+  send_tbd_keyboard_leds();
+  return true;
+}
+#endif
 
 bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
