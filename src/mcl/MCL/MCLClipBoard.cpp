@@ -184,8 +184,8 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
   device_track->paste_track(source_track_idx, track_idx, gdt->seq_track);
 
   MidiDevice *devs[2] = {
-      device_manager.dev1(),
-      device_manager.dev2(),
+      device_manager.primary_device(),
+      device_manager.secondary_device(),
   };
   if (devs[0] == &MD && track_idx == last_md_track) {
     if (mcl.currentPage() == SEQ_STEP_PAGE) {

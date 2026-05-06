@@ -18,8 +18,8 @@ public:
   void attach_port(uint8_t port, MidiDevice *device);
   void detach_port(uint8_t port);
   void update_active_slots();
-  MidiDevice *dev1() const;
-  MidiDevice *dev2() const;
+  MidiDevice *primary_device() const;
+  MidiDevice *secondary_device() const;
 
 #ifdef PLATFORM_TBD
   void ui_loop();
@@ -33,8 +33,8 @@ private:
   void set_device_for_port(uint8_t port, MidiDevice *device);
 
   MidiDevice *physical_[3] = {nullptr, nullptr, nullptr};
-  MidiDevice *dev1_ = nullptr;
-  MidiDevice *dev2_ = nullptr;
+  MidiDevice *primary_ = nullptr;
+  MidiDevice *secondary_ = nullptr;
 #ifdef PLATFORM_TBD
   MidiDevice *active_ui_device_ = nullptr;
 #endif

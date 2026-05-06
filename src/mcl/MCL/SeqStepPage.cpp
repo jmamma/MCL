@@ -94,7 +94,7 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
 
-  SeqPage::midi_device = device_manager.dev1();
+  SeqPage::midi_device = device_manager.primary_device();
 
   midi_events.setup_callbacks();
   key_interface.on();

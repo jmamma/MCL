@@ -408,7 +408,7 @@ bool mcl_handleEvent(gui_event_t *event) {
              key_interface.is_key_down(MDX_KEY_NO)))
           break;
         opt_clear = 2;
-        //  MidiDevice *dev = device_manager.dev2();
+        //  MidiDevice *dev = device_manager.secondary_device();
         if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
         else if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;

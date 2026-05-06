@@ -274,7 +274,7 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
     if (track >= mcl_seq.num_ext_tracks) {
       return;
     }
-    MidiDevice *dev = device_manager.dev2();
+    MidiDevice *dev = device_manager.secondary_device();
     midi_device = dev;
     select_track(dev, track);
     opt_trackid = last_ext_track + 1;
@@ -417,7 +417,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         seq_menu_page.init();
         seq_menu_page.gen_menu_device_names();
         seq_menu_page.gen_menu_transpose_names();
-        mcl_cfg.seq_dev = (opt_midi_device_capture == device_manager.dev1()) ? 1 : 2;
+        mcl_cfg.seq_dev = (opt_midi_device_capture == device_manager.primary_device()) ? 1 : 2;
         return true;
       }
     }
@@ -431,7 +431,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         row_func =
             seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
         MidiDevice *old_dev = midi_device;
-        midi_device = (mcl_cfg.seq_dev == 1) ? device_manager.dev1() : device_manager.dev2();
+        midi_device = (mcl_cfg.seq_dev == 1) ? device_manager.primary_device() : device_manager.secondary_device();
         if (old_dev == midi_device) {
           opt_speed_handler();
           opt_length_handler();
@@ -1393,8 +1393,8 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
 void SeqPage::display() {
 
   bool is_md = (midi_device == &MD);
-  const char *int_name = device_manager.dev1()->name;
-  const char *ext_name = device_manager.dev2()->name;
+  const char *int_name = device_manager.primary_device()->name;
+  const char *ext_name = device_manager.secondary_device()->name;
 
   uint8_t track_id = last_md_track;
   if (!is_md) {

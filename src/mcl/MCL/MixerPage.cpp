@@ -402,8 +402,8 @@ void MixerPage::disable_record_mutes(bool clear) {
 void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) {
 
   MidiDevice *devs[2] = {
-      device_manager.dev1(),
-      device_manager.dev2(),
+      device_manager.primary_device(),
+      device_manager.secondary_device(),
   };
   if (load_type != nullptr && state < 255) {
     for (uint8_t dev = 0; dev < 2; dev++) {
@@ -679,7 +679,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (midi_device != &MD) {
           midi_device = &MD;
         } else {
-          midi_device = device_manager.dev2();
+          midi_device = device_manager.secondary_device();
         }
         is_md_device = (midi_device == &MD);
         key_interface.send_md_leds(is_md_device ? TRIGLED_OVERLAY

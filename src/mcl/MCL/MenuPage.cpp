@@ -42,7 +42,7 @@ void MenuPageBase::gen_menu_device_names() {
       (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
   m->set_custom_options(p,0);
 
-  MidiDevice *devs[] = { device_manager.dev1(), device_manager.dev2() };
+  MidiDevice *devs[] = { device_manager.primary_device(), device_manager.secondary_device() };
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
     p->pos = n + 1;
     strcpy(p->name, devs[n]->name);

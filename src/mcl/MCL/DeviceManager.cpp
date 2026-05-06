@@ -56,29 +56,36 @@ void DeviceManager::detach_port(uint8_t port) {
 void DeviceManager::update_active_slots() {
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
-  dev1_ = s[SLOT_MD].port ? device_for_port(s[SLOT_MD].port) : &null_midi_device;
-  dev2_ = s[SLOT_ELEKT].port ? device_for_port(s[SLOT_ELEKT].port) : &null_midi_device;
+  primary_ =
+      s[SLOT_MD].port ? device_for_port(s[SLOT_MD].port) : &null_midi_device;
+  secondary_ =
+      s[SLOT_ELEKT].port ? device_for_port(s[SLOT_ELEKT].port) : &null_midi_device;
   // USB GENER maps to the secondary active slot.
-  if (mcl_cfg.usb_device == 3) dev2_ = device_for_port(UARTUSB_PORT);
+  if (mcl_cfg.usb_device == 3) secondary_ = device_for_port(UARTUSB_PORT);
 #ifdef PLATFORM_TBD
-  if (active_ui_device_ && active_ui_device_ != dev1_ &&
-      active_ui_device_ != dev2_) {
+  if (active_ui_device_ && active_ui_device_ != primary_ &&
+      active_ui_device_ != secondary_) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
   }
 #endif
 }
 
-MidiDevice *DeviceManager::dev1() const { return nonnull(dev1_); }
-MidiDevice *DeviceManager::dev2() const { return nonnull(dev2_); }
+MidiDevice *DeviceManager::primary_device() const {
+  return nonnull(primary_);
+}
+
+MidiDevice *DeviceManager::secondary_device() const {
+  return nonnull(secondary_);
+}
 
 #ifdef PLATFORM_TBD
 void DeviceManager::ui_loop() {
-  MidiDevice *dev1 = this->dev1();
-  MidiDevice *dev2 = this->dev2();
-  if (dev2 == dev1) dev2 = nullptr;
-  if (dev1) dev1->ui_loop();
-  if (dev2) dev2->ui_loop();
+  MidiDevice *primary = primary_device();
+  MidiDevice *secondary = secondary_device();
+  if (secondary == primary) secondary = nullptr;
+  if (primary) primary->ui_loop();
+  if (secondary) secondary->ui_loop();
 }
 
 bool DeviceManager::handle_ui_event(gui_event_t *event) {
@@ -88,15 +95,15 @@ bool DeviceManager::handle_ui_event(gui_event_t *event) {
     return false;
   }
 
-  MidiDevice *dev1 = this->dev1();
-  MidiDevice *dev2 = this->dev2();
-  if (dev2 == dev1) dev2 = nullptr;
-  if (dev1 && dev1->handle_ui_event(event)) {
-    if (dev1->is_ui_active()) active_ui_device_ = dev1;
+  MidiDevice *primary = primary_device();
+  MidiDevice *secondary = secondary_device();
+  if (secondary == primary) secondary = nullptr;
+  if (primary && primary->handle_ui_event(event)) {
+    if (primary->is_ui_active()) active_ui_device_ = primary;
     return true;
   }
-  if (dev2 && dev2->handle_ui_event(event)) {
-    if (dev2->is_ui_active()) active_ui_device_ = dev2;
+  if (secondary && secondary->handle_ui_event(event)) {
+    if (secondary->is_ui_active()) active_ui_device_ = secondary;
     return true;
   }
   return false;
@@ -109,15 +116,15 @@ bool DeviceManager::enter_ui(gui_event_t *event) {
     return true;
   }
 
-  MidiDevice *dev1 = this->dev1();
-  MidiDevice *dev2 = this->dev2();
-  if (dev2 == dev1) dev2 = nullptr;
-  if (dev1 && dev1->enter_ui(event)) {
-    if (dev1->is_ui_active()) active_ui_device_ = dev1;
+  MidiDevice *primary = primary_device();
+  MidiDevice *secondary = secondary_device();
+  if (secondary == primary) secondary = nullptr;
+  if (primary && primary->enter_ui(event)) {
+    if (primary->is_ui_active()) active_ui_device_ = primary;
     return true;
   }
-  if (dev2 && dev2->enter_ui(event)) {
-    if (dev2->is_ui_active()) active_ui_device_ = dev2;
+  if (secondary && secondary->enter_ui(event)) {
+    if (secondary->is_ui_active()) active_ui_device_ = secondary;
     return true;
   }
   return false;
@@ -125,11 +132,11 @@ bool DeviceManager::enter_ui(gui_event_t *event) {
 
 bool DeviceManager::is_ui_active() const {
   if (active_ui_device_) return active_ui_device_->is_ui_active();
-  MidiDevice *dev1 = this->dev1();
-  MidiDevice *dev2 = this->dev2();
-  if (dev2 == dev1) dev2 = nullptr;
-  return (dev1 && dev1->is_ui_active()) ||
-         (dev2 && dev2->is_ui_active());
+  MidiDevice *primary = primary_device();
+  MidiDevice *secondary = secondary_device();
+  if (secondary == primary) secondary = nullptr;
+  return (primary && primary->is_ui_active()) ||
+         (secondary && secondary->is_ui_active());
 }
 
 void DeviceManager::exit_ui() {
@@ -139,10 +146,10 @@ void DeviceManager::exit_ui() {
     return;
   }
 
-  MidiDevice *dev1 = this->dev1();
-  MidiDevice *dev2 = this->dev2();
-  if (dev2 == dev1) dev2 = nullptr;
-  if (dev1) dev1->exit_ui();
-  if (dev2) dev2->exit_ui();
+  MidiDevice *primary = primary_device();
+  MidiDevice *secondary = secondary_device();
+  if (secondary == primary) secondary = nullptr;
+  if (primary) primary->exit_ui();
+  if (secondary) secondary->exit_ui();
 }
 #endif

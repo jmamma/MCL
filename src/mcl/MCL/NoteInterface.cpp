@@ -111,46 +111,46 @@ void NoteInterface::draw_notes(uint8_t line_number) {
 }
 
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  if (device_manager.dev1() == &MD) {
+  if (device_manager.primary_device() == &MD) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], device_manager.dev1()->id);
-  note_interface.note_on_event(note_num, device_manager.dev1()->port);
+      msg[1], device_manager.primary_device()->id);
+  note_interface.note_on_event(note_num, device_manager.primary_device()->port);
 }
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
-  if (device_manager.dev2()->id !=
+  if (device_manager.secondary_device()->id !=
       note_interface.uart2_device) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], device_manager.dev2()->id);
+      msg[1], device_manager.secondary_device()->id);
   DEBUG_PRINTLN(note_num);
-  note_interface.note_on_event(note_num, device_manager.dev2()->port);
+  note_interface.note_on_event(note_num, device_manager.secondary_device()->port);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
   // only accept input if device is not a MD
   // MD input is handled by the KeyInterface object
-  if (device_manager.dev1() == &MD) {
+  if (device_manager.primary_device() == &MD) {
     return;
   }
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], device_manager.dev1()->id);
-  note_interface.note_off_event(note_num, device_manager.dev1()->port);
+      msg[1], device_manager.primary_device()->id);
+  note_interface.note_off_event(note_num, device_manager.primary_device()->port);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
-  if (device_manager.dev2()->id !=
+  if (device_manager.secondary_device()->id !=
       note_interface.uart2_device) {
     return;
   }
 
   uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], device_manager.dev2()->id);
+      msg[1], device_manager.secondary_device()->id);
   DEBUG_PRINTLN(F("note to track"));
   DEBUG_PRINTLN(note_num);
-  note_interface.note_off_event(note_num, device_manager.dev2()->port);
+  note_interface.note_off_event(note_num, device_manager.secondary_device()->port);
 }
 
 void NoteInterfaceMidiEvents::setup_callbacks() {

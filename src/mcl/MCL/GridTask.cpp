@@ -78,8 +78,8 @@ void GridTask::run() {
 
 void GridTask::update_transition_details() {
   MidiDevice *devs[2] = {
-      device_manager.dev1(),
-      device_manager.dev2(),
+      device_manager.primary_device(),
+      device_manager.secondary_device(),
   };
   ElektronDevice *elektron_devs[2] = {
       devs[0]->asElektronDevice(),
@@ -124,8 +124,8 @@ void GridTask::wait_blocking(uint32_t go_step) {
 
 void GridTask::transition_handler() {
   MidiDevice *devs[2] = {
-      device_manager.dev1(),
-      device_manager.dev2(),
+      device_manager.primary_device(),
+      device_manager.secondary_device(),
   };
 
   bool send_device[2] = {0};

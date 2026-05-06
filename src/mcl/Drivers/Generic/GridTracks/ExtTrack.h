@@ -42,7 +42,7 @@ public:
   virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
-  virtual uint8_t get_parent_model() { return device_manager.dev2()->track_type; }
+  virtual uint8_t get_parent_model() { return device_manager.secondary_device()->track_type; }
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };

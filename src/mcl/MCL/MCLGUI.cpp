@@ -861,8 +861,8 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 void MCLGUI::draw_track_type_select(uint8_t track_type_select,
                                     uint8_t y_base) {
   MidiDevice *devs[2] = {
-      device_manager.dev1(),
-      device_manager.dev2(),
+      device_manager.primary_device(),
+      device_manager.secondary_device(),
   };
 //  oled_display.clearDisplay();
 

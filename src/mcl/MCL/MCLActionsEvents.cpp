@@ -121,8 +121,8 @@ void MCLActionsCallbacks::StopHardCallback() {
   MidiUartParent::handle_midi_lock = 1;
   /*
    ElektronDevice *elektron_devs[2] = {
-       device_manager.dev1()->asElektronDevice(),
-       device_manager.dev2()->asElektronDevice(),
+       device_manager.primary_device()->asElektronDevice(),
+       device_manager.secondary_device()->asElektronDevice(),
    };
 
      for (uint8_t i = 0; i < NUM_DEVS; ++i) {

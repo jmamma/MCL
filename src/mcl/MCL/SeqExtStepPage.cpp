@@ -52,7 +52,7 @@ void SeqExtStepPage::config_encoders() {
   }
 
   config();
-  SeqPage::midi_device = device_manager.dev2();
+  SeqPage::midi_device = device_manager.secondary_device();
 
 }
 
@@ -60,7 +60,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
 
-  midi_device = device_manager.dev2();
+  midi_device = device_manager.secondary_device();
 
   SeqPage::init();
   MD.set_rec_mode(3);
