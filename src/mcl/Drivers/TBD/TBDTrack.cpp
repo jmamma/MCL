@@ -13,9 +13,6 @@ namespace {
 constexpr uint8_t kDefaultRomBank = 0xFF;
 constexpr int32_t kDefaultSampleSlice = -1;
 constexpr uint32_t kPresetApplyTimeoutMs = 3000;
-constexpr uint8_t kTbdSongTrackTypeMonosynth = 1;
-constexpr uint8_t kTbdSongTrackTypePolysynth = 2;
-constexpr uint8_t kTbdSongTrackTypeDrum = 3;
 
 uint8_t midi_seq_valid_speed(uint8_t speed) {
   return speed <= SEQ_SPEED_4X ? speed : SEQ_SPEED_1X;
@@ -58,22 +55,22 @@ TbdTrackDefault kTbdStepTrackDefaults[] = {
 };
 
 const TbdP4RuntimeDefault kTbdP4RuntimeDefaults[] = {
-    {9, 36, 0, -1, kTbdSongTrackTypeDrum},
-    {9, 37, 40, -1, kTbdSongTrackTypeDrum},
-    {9, 38, 80, -1, kTbdSongTrackTypeDrum},
-    {10, 36, 0, -1, kTbdSongTrackTypeDrum},
-    {10, 37, 40, -1, kTbdSongTrackTypeDrum},
-    {10, 38, 80, -1, kTbdSongTrackTypeDrum},
-    {11, 36, 0, -1, kTbdSongTrackTypeDrum},
-    {11, 37, 40, -1, kTbdSongTrackTypeDrum},
-    {0, -1, 0, -1, kTbdSongTrackTypeMonosynth},
-    {1, -1, 0, -1, kTbdSongTrackTypeMonosynth},
-    {2, -1, 0, -1, kTbdSongTrackTypeMonosynth},
-    {3, -1, 0, -1, kTbdSongTrackTypeMonosynth},
-    {4, -1, 0, -1, kTbdSongTrackTypePolysynth},
-    {5, -1, 0, -1, kTbdSongTrackTypePolysynth},
-    {6, -1, 0, -1, kTbdSongTrackTypePolysynth},
-    {7, -1, 0, -1, kTbdSongTrackTypeMonosynth},
+    {9, 36, 0, -1, TBD_P4_TRACK_TYPE_DRUM},
+    {9, 37, 40, -1, TBD_P4_TRACK_TYPE_DRUM},
+    {9, 38, 80, -1, TBD_P4_TRACK_TYPE_DRUM},
+    {10, 36, 0, -1, TBD_P4_TRACK_TYPE_DRUM},
+    {10, 37, 40, -1, TBD_P4_TRACK_TYPE_DRUM},
+    {10, 38, 80, -1, TBD_P4_TRACK_TYPE_DRUM},
+    {11, 36, 0, -1, TBD_P4_TRACK_TYPE_DRUM},
+    {11, 37, 40, -1, TBD_P4_TRACK_TYPE_DRUM},
+    {0, -1, 0, -1, TBD_P4_TRACK_TYPE_MONOSYNTH},
+    {1, -1, 0, -1, TBD_P4_TRACK_TYPE_MONOSYNTH},
+    {2, -1, 0, -1, TBD_P4_TRACK_TYPE_MONOSYNTH},
+    {3, -1, 0, -1, TBD_P4_TRACK_TYPE_MONOSYNTH},
+    {4, -1, 0, -1, TBD_P4_TRACK_TYPE_POLYSYNTH},
+    {5, -1, 0, -1, TBD_P4_TRACK_TYPE_POLYSYNTH},
+    {6, -1, 0, -1, TBD_P4_TRACK_TYPE_POLYSYNTH},
+    {7, -1, 0, -1, TBD_P4_TRACK_TYPE_MONOSYNTH},
 };
 
 void copy_fixed_string(char *dst, size_t dst_len, const char *src) {
@@ -137,23 +134,118 @@ void set_midi_sound_default(TbdP4SoundData &sound, uint8_t slot) {
   set_sound_from_default(sound, def);
 }
 
+bool p4_sound_has_audio_params(const TbdP4SoundData &sound) {
+  for (uint8_t i = 0; i < TBD_P4_AUDIO_PARAM_COUNT; i++) {
+    if (sound.audio_params.params[i].type != TBD_P4_PARAM_TYPE_NONE) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool p4_sound_has_identity(const TbdP4SoundData &sound) {
+  return sound.has_preset() || sound.has_macro() || sound.has_machine();
+}
+
+bool p4_sound_has_route_defaults(const TbdP4SoundData &sound) {
+  return sound.trig_gate_time_ms != 0 &&
+         sound.mixer_params.num_pages != 0 &&
+         sound.mixer_params.params[0].type != TBD_P4_PARAM_TYPE_NONE;
+}
+
+bool p4_sound_matches_track(const TbdP4SoundData &sound,
+                            uint8_t p4_track_index) {
+  return sound.version == TBD_P4_SOUND_DATA_VERSION &&
+         sound.p4_track_index == p4_track_index;
+}
+
+bool p4_sound_usable_for_track(const TbdP4SoundData &sound,
+                               uint8_t p4_track_index) {
+  return p4_sound_matches_track(sound, p4_track_index) &&
+         (p4_sound_has_route_defaults(sound) ||
+          p4_sound_has_identity(sound) ||
+          p4_sound_has_audio_params(sound));
+}
+
+uint8_t p4_sound_detail_score(const TbdP4SoundData &sound) {
+  uint8_t score = 0;
+  if (p4_sound_has_route_defaults(sound)) score++;
+  if (p4_sound_has_identity(sound)) score += 2;
+  if (p4_sound_has_audio_params(sound)) score += 4;
+  if (sound.has_sendable_params()) score++;
+  return score;
+}
+
+bool p4_sound_same_identity(const TbdP4SoundData &a,
+                            const TbdP4SoundData &b) {
+  return strncmp(a.preset_id, b.preset_id, sizeof(a.preset_id)) == 0 &&
+         strncmp(a.macro_id, b.macro_id, sizeof(a.macro_id)) == 0 &&
+         strncmp(a.machine_id, b.machine_id, sizeof(a.machine_id)) == 0 &&
+         a.rom_bank == b.rom_bank &&
+         a.sample_slice == b.sample_slice;
+}
+
+bool p4_sound_should_replace(const TbdP4SoundData &candidate,
+                             const TbdP4SoundData &selected,
+                             uint8_t p4_track_index) {
+  if (!p4_sound_usable_for_track(candidate, p4_track_index)) {
+    return false;
+  }
+  if (!p4_sound_usable_for_track(selected, p4_track_index)) {
+    return true;
+  }
+
+  if (p4_sound_detail_score(candidate) >= p4_sound_detail_score(selected)) {
+    return true;
+  }
+
+  return p4_sound_has_identity(candidate) &&
+         !p4_sound_same_identity(candidate, selected);
+}
+
+void ensure_sound_default(TbdP4SoundData &sound,
+                          const TbdP4SoundData &default_sound) {
+  if (!p4_sound_matches_track(sound, default_sound.p4_track_index)) {
+    sound = default_sound;
+    return;
+  }
+
+  if (!p4_sound_has_route_defaults(sound)) {
+    tbd_init_p4_sound_runtime_defaults(sound);
+  }
+
+  if (p4_sound_has_identity(sound) && !p4_sound_has_audio_params(sound)) {
+    tbd_hydrate_p4_sound(sound);
+  }
+
+  if (p4_sound_detail_score(default_sound) > p4_sound_detail_score(sound) &&
+      (!p4_sound_has_identity(sound) ||
+       p4_sound_same_identity(sound, default_sound))) {
+    sound = default_sound;
+  }
+}
+
 void apply_p4_sound(const TbdP4SoundData &sound) {
   tbd_p4_realtime.set_active_track(sound.p4_track_index);
+  bool applied = true;
   if (sound.has_machine()) {
-    tbd_p4_command.activate_track_machine(sound.p4_track_index,
-                                          sound.machine_id,
-                                          kPresetApplyTimeoutMs);
+    applied = tbd_p4_command.activate_track_machine(sound.p4_track_index,
+                                                    sound.machine_id,
+                                                    kPresetApplyTimeoutMs);
   }
-  if (sound.has_preset()) {
-    tbd_p4_command.load_track_sound_preset(sound.p4_track_index,
-                                           sound.preset_id,
-                                           sound.rom_bank,
-                                           sound.sample_slice,
-                                           kPresetApplyTimeoutMs);
-  } else if (sound.has_macro()) {
-    tbd_p4_command.load_track_macro_definition(sound.p4_track_index,
-                                               sound.macro_id,
-                                               kPresetApplyTimeoutMs);
+  if (applied && sound.has_preset()) {
+    applied = tbd_p4_command.load_track_sound_preset(sound.p4_track_index,
+                                                     sound.preset_id,
+                                                     sound.rom_bank,
+                                                     sound.sample_slice,
+                                                     kPresetApplyTimeoutMs);
+  } else if (applied && sound.has_macro()) {
+    applied = tbd_p4_command.load_track_macro_definition(sound.p4_track_index,
+                                                         sound.macro_id,
+                                                         kPresetApplyTimeoutMs);
+  }
+  if (applied) {
+    tbd_p4_send_sound_state(sound);
   }
 }
 
@@ -164,6 +256,26 @@ const TbdTrackDefault &tbd_track_default_for_slot(uint8_t slot) {
     slot = 0;
   }
   return kTbdMidiTrackDefaults[slot];
+}
+
+void tbd_set_step_sound_default(TbdP4SoundData &sound, uint8_t slot) {
+  set_step_sound_default(sound, slot);
+}
+
+void tbd_set_midi_sound_default(TbdP4SoundData &sound, uint8_t slot) {
+  set_midi_sound_default(sound, slot);
+}
+
+void tbd_ensure_step_sound_default(TbdP4SoundData &sound, uint8_t slot) {
+  TbdP4SoundData default_sound;
+  set_step_sound_default(default_sound, slot);
+  ensure_sound_default(sound, default_sound);
+}
+
+void tbd_ensure_midi_sound_default(TbdP4SoundData &sound, uint8_t slot) {
+  TbdP4SoundData default_sound;
+  set_midi_sound_default(default_sound, slot);
+  ensure_sound_default(sound, default_sound);
 }
 
 void tbd_init_p4_sound_runtime_defaults(TbdP4SoundData &sound) {
@@ -232,12 +344,7 @@ TBDTrack::TBDTrack() {
 }
 
 void TBDTrack::apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track) {
-  if (p4_sound.version != TBD_P4_SOUND_DATA_VERSION) {
-    set_step_sound_default(p4_sound, tracknumber);
-  }
-  if (p4_sound.has_preset()) {
-    tbd_hydrate_p4_sound(p4_sound);
-  }
+  tbd_ensure_step_sound_default(p4_sound, tracknumber);
 
   if (seq_data.track_length == 0) {
     seq_data.track_length = 16;
@@ -266,10 +373,7 @@ uint16_t TBDTrack::calc_latency(uint8_t tracknumber) {
 }
 
 void TBDTrack::apply_preset(uint8_t fallback_tracknumber) {
-  if (p4_sound.version != TBD_P4_SOUND_DATA_VERSION) {
-    set_step_sound_default(p4_sound, fallback_tracknumber);
-  }
-  tbd_hydrate_p4_sound(p4_sound);
+  tbd_ensure_step_sound_default(p4_sound, fallback_tracknumber);
   apply_p4_sound(p4_sound);
 }
 
@@ -316,17 +420,24 @@ bool TBDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
 
   const uint8_t slot = column & 0x0F;
   set_step_sound_default(p4_sound, slot);
+  const uint8_t p4_track_index = p4_sound.p4_track_index;
 
   EmptyTrack scratch;
   if (auto *cached = scratch.load_from_mem<TBDTrack>(slot)) {
-    memcpy(&p4_sound, &cached->p4_sound, sizeof(p4_sound));
+    if (p4_sound_should_replace(cached->p4_sound, p4_sound,
+                                p4_track_index)) {
+      memcpy(&p4_sound, &cached->p4_sound, sizeof(p4_sound));
+    }
   }
 
   if (seq_track != nullptr) {
     link.length = seq_track->length;
     link.speed = seq_track->speed;
     auto *tbd_track = static_cast<TBDSeqTrack *>(seq_track);
-    p4_sound = tbd_track->p4_sound;
+    if (p4_sound_should_replace(tbd_track->p4_sound, p4_sound,
+                                p4_track_index)) {
+      p4_sound = tbd_track->p4_sound;
+    }
     memcpy(seq_data.data(), tbd_track->TBDSeqTrackData::data(),
            sizeof(TBDSeqTrackData));
     seq_data.track_length = seq_track->length;
@@ -348,12 +459,7 @@ TBDMidiTrack::TBDMidiTrack() {
 
 void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,
                                       SeqTrack *seq_track) {
-  if (p4_sound.version != TBD_P4_SOUND_DATA_VERSION) {
-    set_midi_sound_default(p4_sound, tracknumber);
-  }
-  if (p4_sound.has_preset() || p4_sound.has_macro() || p4_sound.has_machine()) {
-    tbd_hydrate_p4_sound(p4_sound);
-  }
+  tbd_ensure_midi_sound_default(p4_sound, tracknumber);
 
   if (seq_data.version != MIDI_SEQ_DATA_VERSION) {
     uint8_t fallback_speed = midi_seq_valid_speed(link.speed);
@@ -390,10 +496,7 @@ uint16_t TBDMidiTrack::calc_latency(uint8_t tracknumber) {
 }
 
 void TBDMidiTrack::apply_preset(uint8_t fallback_tracknumber) {
-  if (p4_sound.version != TBD_P4_SOUND_DATA_VERSION) {
-    set_midi_sound_default(p4_sound, fallback_tracknumber);
-  }
-  tbd_hydrate_p4_sound(p4_sound);
+  tbd_ensure_midi_sound_default(p4_sound, fallback_tracknumber);
   apply_p4_sound(p4_sound);
 }
 
@@ -448,17 +551,25 @@ bool TBDMidiTrack::store_in_grid(uint8_t column, uint16_t row,
   active = TBD_MIDI_TRACK_TYPE;
 
   const uint8_t slot = column & 0x0F;
+  set_midi_sound_default(p4_sound, slot);
+  const uint8_t p4_track_index = p4_sound.p4_track_index;
 
   EmptyTrack scratch;
   if (auto *cached = scratch.load_from_mem<TBDMidiTrack>(slot)) {
-    memcpy(&p4_sound, &cached->p4_sound, sizeof(p4_sound));
+    if (p4_sound_should_replace(cached->p4_sound, p4_sound,
+                                p4_track_index)) {
+      memcpy(&p4_sound, &cached->p4_sound, sizeof(p4_sound));
+    }
   }
 
   if (seq_track != nullptr) {
     link.length = seq_track->length;
     link.speed = seq_track->speed;
     auto *midi_track = static_cast<MidiSeqTrack *>(seq_track);
-    p4_sound = midi_track->p4_sound;
+    if (p4_sound_should_replace(midi_track->p4_sound, p4_sound,
+                                p4_track_index)) {
+      p4_sound = midi_track->p4_sound;
+    }
     seq_data = midi_track->seq_data;
     seq_data.length = seq_track->length;
     seq_data.speed = seq_track->speed;

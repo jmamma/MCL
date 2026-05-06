@@ -8,6 +8,7 @@
 #include "MCLSeq.h"
 #include "MidiDeviceGrid.h"
 #include "MidiSetup.h"
+#include "SeqPages.h"
 #include "TBDTrack.h"
 #include "TbdUiMode.h"
 #include "TbdP4Command.h"
@@ -945,6 +946,47 @@ bool TbdDevice::hydrate_p4_sound(TbdP4SoundData &sound) {
   return tbd_hydrate_p4_sound(sound);
 }
 
+void tbd_p4_send_param_value(MidiUartClass *uart, uint8_t midi_channel,
+                             const TbdP4ParamDescriptor &param,
+                             int16_t value) {
+  if (uart == nullptr || midi_channel >= 16 || !param.is_sendable()) {
+    return;
+  }
+
+  if (param.ctrl_type == TBD_P4_CTRLTYPE_CC) {
+    if (value < 0) value = 0;
+    if (value > 127) value = 127;
+    uart->sendCC(midi_channel, param.ctrl, (uint8_t)value);
+    return;
+  }
+
+  if (param.ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
+    if (value < 0) value = 0;
+    if (value > 0x3FFF) value = 0x3FFF;
+    const uint16_t nrpn_value = (uint16_t)value;
+    uart->sendCC(midi_channel, 98, param.ctrl & 0x7F);
+    uart->sendCC(midi_channel, 99, (param.ctrl >> 7) & 0x7F);
+    uart->sendCC(midi_channel, 38, nrpn_value & 0x7F);
+    uart->sendCC(midi_channel, 6, (nrpn_value >> 7) & 0x7F);
+  }
+}
+
+void tbd_p4_send_sound_state(const TbdP4SoundData &sound) {
+  if (TBD.uart == nullptr || sound.midi_channel >= 16) {
+    return;
+  }
+
+  tbd_p4_realtime.set_active_track(sound.p4_track_index);
+  for (uint8_t i = 0; i < TBD_P4_AUDIO_PARAM_COUNT; i++) {
+    const TbdP4ParamDescriptor &param = sound.audio_params.params[i];
+    tbd_p4_send_param_value(TBD.uart, sound.midi_channel, param, param.value);
+  }
+  for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+    const TbdP4ParamDescriptor &param = sound.mixer_params.params[i];
+    tbd_p4_send_param_value(TBD.uart, sound.midi_channel, param, param.value);
+  }
+}
+
 TbdDevice::TbdDevice() : MidiDevice(&MidiP4, "TBD", DEVICE_MIDI, false) {
   port = UARTP4_PORT;
 }
@@ -1017,13 +1059,9 @@ bool TbdDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
 
   tbd_p4_realtime.set_active_track(sound->p4_track_index);
   if (desc.ctrl_type == TBD_P4_CTRLTYPE_CC) {
-    int16_t cc_value = value;
-    if (cc_value < 0) cc_value = 0;
-    if (cc_value > 127) cc_value = 127;
-    uart->sendCC(sound->midi_channel, desc.ctrl, (uint8_t)cc_value);
+    tbd_p4_send_param_value(uart, sound->midi_channel, desc, value);
   } else if (desc.ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
-    uint16_t nrpn_value = value < 0 ? 0 : (uint16_t)value;
-    uart->sendNRPN(sound->midi_channel, desc.ctrl, nrpn_value);
+    tbd_p4_send_param_value(uart, sound->midi_channel, desc, value);
   }
   return true;
 }
@@ -1063,13 +1101,14 @@ void TbdDevice::on_connection(uint8_t device_idx) {
   connected = true;
   cleanup(0);
   cleanup(1);
+  load_default_p4_presets();
+  apply_runtime_p4_defaults();
   if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
     init_grid_devices(0);
   }
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
     init_grid_devices(1);
   }
-  load_default_p4_presets();
 }
 
 void TbdDevice::init_grid_devices(uint8_t device_idx) {
@@ -1078,6 +1117,7 @@ void TbdDevice::init_grid_devices(uint8_t device_idx) {
 #if defined(PLATFORM_TBD)
   if (device_idx == 0) {
     for (uint8_t i = 0; i < mcl_seq.num_tbd_tracks; i++) {
+      tbd_ensure_step_sound_default(mcl_seq.tbd_tracks[i].p4_sound, i);
       gdt.init(TBD_TRACK_TYPE, GROUP_DEV, device_idx,
                &(mcl_seq.tbd_tracks[i]));
       add_track_to_grid(0, i, &gdt);
@@ -1088,13 +1128,59 @@ void TbdDevice::init_grid_devices(uint8_t device_idx) {
 
   if (device_idx == 1) {
     for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-      const auto &def = tbd_track_default_for_slot(i);
-      mcl_seq.midi_tracks[i].set_channel(def.midi_channel);
+      tbd_ensure_midi_sound_default(mcl_seq.midi_tracks[i].p4_sound, i);
+      mcl_seq.midi_tracks[i].set_channel(
+          mcl_seq.midi_tracks[i].p4_sound.midi_channel);
       gdt.init(TBD_MIDI_TRACK_TYPE, GROUP_DEV, device_idx,
                &(mcl_seq.midi_tracks[i]));
       add_track_to_grid(1, i, &gdt);
     }
   }
+}
+
+void TbdDevice::apply_runtime_p4_defaults() {
+  for (uint8_t i = 0; i < mcl_seq.num_tbd_tracks; i++) {
+    tbd_ensure_step_sound_default(mcl_seq.tbd_tracks[i].p4_sound, i);
+  }
+
+  for (uint8_t i = 0; i < mcl_seq.num_midi_tracks; i++) {
+    tbd_ensure_midi_sound_default(mcl_seq.midi_tracks[i].p4_sound, i);
+    mcl_seq.midi_tracks[i].set_channel(
+        mcl_seq.midi_tracks[i].p4_sound.midi_channel);
+  }
+}
+
+void TbdDevice::sync_active_p4_track() {
+  TbdP4SoundData *sound = tbd_ui_mode.active_sound();
+  if (sound != nullptr) {
+    tbd_p4_realtime.set_active_track(sound->p4_track_index);
+    return;
+  }
+
+#ifdef EXT_TRACKS
+  if (mcl.currentPage() == SEQ_EXTSTEP_PAGE &&
+      mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD &&
+      last_ext_track < mcl_seq.num_midi_tracks) {
+    tbd_p4_realtime.set_active_track(
+        mcl_seq.midi_tracks[last_ext_track].p4_sound.p4_track_index);
+    return;
+  }
+#endif
+
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
+      last_md_track < mcl_seq.num_tbd_tracks) {
+    tbd_p4_realtime.set_active_track(
+        mcl_seq.tbd_tracks[last_md_track].p4_sound.p4_track_index);
+    return;
+  }
+
+#ifdef EXT_TRACKS
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD &&
+      last_ext_track < mcl_seq.num_midi_tracks) {
+    tbd_p4_realtime.set_active_track(
+        mcl_seq.midi_tracks[last_ext_track].p4_sound.p4_track_index);
+  }
+#endif
 }
 
 bool TbdDevice::load_default_p4_presets() {
@@ -1121,6 +1207,8 @@ bool TbdDevice::load_default_p4_presets() {
   reset_p4_boot_presets_to_fallback();
 
   char kit_id[32] = {0};
+  bool kit_loaded = false;
+  uint8_t loaded_kit_index = 0;
   if (tbd_p4_command.get_track_default_presets(
           p4_track_defaults_json, sizeof(p4_track_defaults_json), nullptr,
           kP4PresetCommandTimeoutMs)) {
@@ -1138,6 +1226,8 @@ bool TbdDevice::load_default_p4_presets() {
                                               kP4PresetCommandTimeoutMs)) {
       return false;
     }
+    kit_loaded = true;
+    loaded_kit_index = kit_index;
   }
 
   for (const auto &preset : p4_boot_presets) {
@@ -1163,6 +1253,12 @@ bool TbdDevice::load_default_p4_presets() {
             kP4PresetCommandTimeoutMs)) {
       return false;
     }
+  }
+
+  if (kit_loaded &&
+      !tbd_p4_command.set_active_sample_kit(loaded_kit_index,
+                                            kP4PresetCommandTimeoutMs)) {
+    return false;
   }
 
   p4_defaults_loaded_ = true;
@@ -1202,11 +1298,12 @@ bool TbdDevice::handle_ui_event(gui_event_t *event) {
 }
 
 void TbdDevice::ui_loop() {
-  if (!p4_defaults_loaded_) {
-    load_default_p4_presets();
+  if (!p4_defaults_loaded_ && load_default_p4_presets()) {
+    apply_runtime_p4_defaults();
   }
 
   tbd_ui_mode.poll_encoders();
+  sync_active_p4_track();
 }
 
 bool TbdDevice::is_ui_active() {

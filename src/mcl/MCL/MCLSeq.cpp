@@ -12,6 +12,7 @@
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #if defined(PLATFORM_TBD)
 #include "../Drivers/Generic/Sequencer/StepSeqDefines.h"
+#include "../Drivers/TBD/TBDTrack.h"
 #endif
 #include "../Drivers/MD/MD.h"
 
@@ -118,11 +119,12 @@ void MCLSeq::setup() {
     tbd_tracks[i].speed = STEPSEQ_SPEED_1X;
     tbd_tracks[i].mute_state = STEPSEQ_MUTE_OFF;
     tbd_tracks[i].seq_class = this;
-    tbd_tracks[i].p4_sound.p4_track_index = i;
+    tbd_set_step_sound_default(tbd_tracks[i].p4_sound, i);
   }
   for (uint8_t i = 0; i < num_midi_tracks; i++) {
     midi_tracks[i].seq_data.clear();
-    midi_tracks[i].set_channel(i);
+    tbd_set_midi_sound_default(midi_tracks[i].p4_sound, i);
+    midi_tracks[i].set_channel(midi_tracks[i].p4_sound.midi_channel);
     midi_tracks[i].set_length(16);
     midi_tracks[i].set_speed(SEQ_SPEED_1X);
     midi_tracks[i].mute_state = SEQ_MUTE_OFF;
@@ -360,6 +362,7 @@ void MCLSeq::seq() {
   MidiUartClass *uart;
   MidiUartClass *uart2;
   bool engage_sidechannel = true;
+  const bool shared_output = md_uart == ext_uart;
 
   // If realtime, we render the first tick in realtime, subsequent ticks are
   // defered rendered.
@@ -376,13 +379,18 @@ void MCLSeq::seq() {
 #endif
     if (uart_sidechannel) {
       uart = &seq_tx2;
-      uart2 = &seq_tx4;
+      uart2 = shared_output ? &seq_tx2 : &seq_tx4;
       // If the side channel ring buffer is not empty, it means it did not
       // finish transmiting before next Seq() call. We will drain the old buffer
       // in to the new to retain the MIDI data.
       if (engage_sidechannel) {
         md_uart->txRb_sidechannel = seq_tx1.txRb;
-        ext_uart->txRb_sidechannel = seq_tx3.txRb;
+        if (shared_output) {
+          seq_tx3.txRb->init();
+          seq_tx4.txRb->init();
+        } else {
+          ext_uart->txRb_sidechannel = seq_tx3.txRb;
+        }
       } else {
         // Purge stale buffers (from MIDI CONTINUE).
         seq_tx2.txRb->init();
@@ -390,10 +398,15 @@ void MCLSeq::seq() {
       }
     } else {
       uart = &seq_tx1;
-      uart2 = &seq_tx3;
+      uart2 = shared_output ? &seq_tx1 : &seq_tx3;
       if (engage_sidechannel) {
         md_uart->txRb_sidechannel = seq_tx2.txRb;
-        ext_uart->txRb_sidechannel = seq_tx4.txRb;
+        if (shared_output) {
+          seq_tx3.txRb->init();
+          seq_tx4.txRb->init();
+        } else {
+          ext_uart->txRb_sidechannel = seq_tx4.txRb;
+        }
       } else {
         seq_tx1.txRb->init();
         seq_tx3.txRb->init();

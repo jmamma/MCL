@@ -49,6 +49,8 @@ private:
   uint8_t active_note_ = 255;
 
   bool load_default_p4_presets();
+  void apply_runtime_p4_defaults();
+  void sync_active_p4_track();
   void note_on(uint8_t note);
   void note_off();
 };
@@ -58,5 +60,9 @@ extern TbdDevice TBD;
 bool tbd_get_default_p4_sound(uint8_t p4_track_index,
                               TbdP4SoundData *sound);
 bool tbd_hydrate_p4_sound(TbdP4SoundData &sound);
+void tbd_p4_send_param_value(MidiUartClass *uart, uint8_t midi_channel,
+                             const TbdP4ParamDescriptor &param,
+                             int16_t value);
+void tbd_p4_send_sound_state(const TbdP4SoundData &sound);
 
 #endif // PLATFORM_TBD

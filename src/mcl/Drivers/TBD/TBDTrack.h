@@ -20,6 +20,10 @@ struct TbdTrackDefault {
 };
 
 const TbdTrackDefault &tbd_track_default_for_slot(uint8_t slot);
+void tbd_set_step_sound_default(TbdP4SoundData &sound, uint8_t slot);
+void tbd_set_midi_sound_default(TbdP4SoundData &sound, uint8_t slot);
+void tbd_ensure_step_sound_default(TbdP4SoundData &sound, uint8_t slot);
+void tbd_ensure_midi_sound_default(TbdP4SoundData &sound, uint8_t slot);
 void tbd_init_p4_sound_runtime_defaults(TbdP4SoundData &sound);
 void tbd_update_track_default_from_p4(uint8_t p4_track_index,
                                       const char *preset_id,
