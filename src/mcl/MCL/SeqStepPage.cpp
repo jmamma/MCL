@@ -1,7 +1,6 @@
 #include "SeqStepPage.h"
 #include "SeqStepTrackApi.h"
 #include "SeqPages.h"
-#include "SeqTrackUtil.h"
 #include "../Drivers/MD/MD.h"
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
@@ -23,29 +22,7 @@
 
 namespace {
 
-bool seq_step_uses_tbd_tracks() {
-#if defined(PLATFORM_TBD)
-  return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
-#else
-  return false;
-#endif
-}
-
-SeqStepTrackApi step_track_for(uint8_t track) {
-#if defined(PLATFORM_TBD)
-  if (seq_step_uses_tbd_tracks()) {
-    return SeqStepTrackApi(mcl_seq.tbd_tracks[track]);
-  }
-#endif
-#if !defined(__AVR__)
-  if (mcl_seq.using_spsx_tracks) {
-    return SeqStepTrackApi(mcl_seq.spsx_tracks[track]);
-  }
-#endif
-  return SeqStepTrackApi(mcl_seq.md_tracks[track]);
-}
-
-SeqStepTrackApi active_step_track() { return step_track_for(last_md_track); }
+SeqStepTrackApi active_step_track() { return seq_step_api_active_track(); }
 
 void draw_active_step_masks(SeqStepPage &page, SeqStepTrackApi active_track,
                             uint8_t offset, bool show_current_step = true) {
@@ -115,13 +92,15 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackApi active_track,
 
 void draw_active_microtiming(SeqStepTrackApi active_track,
                              uint8_t encoder_value) {
+#if !defined(__AVR__)
   if (active_track.is_stepseq()) {
     mcl_gui.draw_microtiming_spsx(
         active_track.speed(),
         active_track.microtiming_from_encoder(encoder_value));
-  } else {
-    mcl_gui.draw_microtiming(active_track.speed(), encoder_value);
+    return;
   }
+#endif
+  mcl_gui.draw_microtiming(active_track.speed(), encoder_value);
 }
 
 }
@@ -150,12 +129,13 @@ void SeqStepPage::config() {
     return;
   }
 
-  bool is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
+  SeqPage::is_midi_model =
+      ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
 
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   if (tuning) {
     seq_param4.max = tuning->len - 1 + tuning->base;
-  } else if (is_midi_model) {
+  } else if (SeqPage::is_midi_model) {
     seq_param4.max = 127;
   }
   else {
@@ -330,12 +310,7 @@ void SeqStepPage::display() {
     uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
     MidiUartParent::handle_midi_lock = 1;
 
-    if (active_track.is_tbd()) {
-      draw_active_step_masks(*this, active_track, page_select * 16);
-    } else {
-      draw_lock_mask((page_select * 16), DEVICE_MD);
-      draw_mask((page_select * 16), DEVICE_MD);
-    }
+    draw_active_step_masks(*this, active_track, page_select * 16);
 
     MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 
@@ -510,7 +485,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         last_step = track;
 
         if (MidiClock.state == 2) {
-          step_track_for(track).record_track(127);
+          seq_step_api_track_for(track).record_track(127);
         }
         key_interface.send_md_leds(TRIGLED_OVERLAY);
         return true;
@@ -625,6 +600,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
+      if (param >= active_track.lock_param_count()) {
+        return true;
+      }
       if (event->mask == EVENT_BUTTON_RELEASED) {
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
           if (note_interface.is_note_on(n)) {
@@ -638,8 +616,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           if (note_interface.is_note_on(n)) {
             uint8_t s = n + (page_select * 16);
             if (lock_idx == -1 || !active_track.step_has_lock(s, lock_idx)) {
-              active_track.set_track_locks(
-                  s, param, MD.kit.params[last_md_track][param]);
+              uint8_t value = active_track.current_lock_value(param);
+              active_track.set_track_locks(s, param, value);
               key_interface.ignoreNextEvent(key);
             }
           }
@@ -757,40 +735,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_BUTTON(event)) {
-  /*
-      if (recording) {
-        if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-          switch (last_rec_event) {
-          case REC_EVENT_TRIG:
-            if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox_P(mclstr_clear, mclstr_tracks);
-              for (uint8_t n = 0; n < 16; ++n) {
-                mcl_seq.md_tracks[n].clear_track();
-              }
-            } else {
-              oled_display.textbox_P(mclstr_clear, mclstr_track);
-              mcl_seq.md_tracks[last_step].clear_track();
-            }
-            break;
-          case REC_EVENT_CC:
-            oled_display.textbox_P(mclstr_clear, mclstr_lock);
-            active_track.clear_param_locks(last_param_id);
-            if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox_P(mclstr_clear, mclstr_locks);
-              for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-                if (active_track.locks_params[c] > 0) {
-                  active_track.clear_param_locks(active_track.locks_params[c] -
-                                                 1);
-                }
-              }
-            }
-            break;
-          }
-          return true;
-        }
-      }
-    */
-
 #ifndef PLATFORM_TBD
     if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
       toggle_record();
@@ -802,7 +746,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 }
 
 void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
-  if (seq_step_uses_tbd_tracks()) {
+  if (seq_step_api_uses_tbd_tracks()) {
     return;
   }
 
@@ -817,12 +761,12 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
+  SeqStepTrackApi event_track = seq_step_api_track_for(track);
   uint8_t step;
   // Engine, not device: the recorder writes into the active engine's lock
-  // storage (24 slots legacy, 34 SPSX). If device sends an SPSX-range CC
-  // while the engine is in legacy mode, drop it — there's nowhere to store.
-  uint8_t param_limit = mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-  if (track_param >= param_limit) {
+  // storage. If the device sends a param outside the active engine's lock
+  // surface, drop it because there is nowhere to store it.
+  if (track_param >= event_track.lock_param_count()) {
     return;
   }
 
@@ -831,7 +775,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     if (MidiClock.state != 2) return;
     seq_step_page.last_param_id = track_param;
     seq_step_page.config_encoders();
-    step_track_for(track).record_track_locks(track_param, value);
+    event_track.record_track_locks(track_param, value);
     return;
   }
 
@@ -867,14 +811,8 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     mclstr_copy_progmem(str, mclstr_dash_dash_space, sizeof(str));
     char str2[4];
     mclstr_copy_progmem(str2, mclstr_dash_space, sizeof(str2));
-    const char *modelname =
-        model_param_name(MD.kit.get_model(last_md_track), track_param);
-    if (modelname != NULL) {
-      strncpy(str, modelname, 3);
-      if (strlen(str) == 2) {
-        str[2] = ' ';
-        str[3] = '\0';
-      }
+    if (!active_track.copy_lock_param_label(track_param, str, sizeof(str))) {
+      mclstr_copy_progmem(str, mclstr_dash_dash_space, sizeof(str));
     }
     mcl_gui.put_value_at(value, str2);
     oled_display.textbox(str, str2);
@@ -889,7 +827,7 @@ void SeqStepMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  if (seq_step_uses_tbd_tracks()) {
+  if (seq_step_api_uses_tbd_tracks()) {
     return;
   }
 

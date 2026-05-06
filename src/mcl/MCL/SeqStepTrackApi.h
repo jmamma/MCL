@@ -4,9 +4,32 @@
 #define SEQSTEPTRACKAPI_H__
 
 #include "MCLSeq.h"
+#if defined(PLATFORM_TBD)
+#include "MCLSysConfig.h"
+#include "MidiSetup.h"
+#endif
 #include "SeqDefines.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
+
+extern uint8_t last_md_track;
+
+struct SeqStepLockParamInfo {
+  bool active = false;
+  bool p4_param = false;
+  bool sendable = false;
+  bool nrpn = false;
+  bool macro = false;
+  uint8_t param_id = 0;
+  uint8_t ctrl = 0;
+  uint8_t ctrl_type = 0;
+  uint16_t resolution = 128;
+  int16_t min_value = 0;
+  int16_t max_value = 127;
+  int16_t default_value = 0;
+  int16_t current_value = 0;
+};
 
 class SeqStepTrackApi {
 public:
@@ -77,6 +100,128 @@ public:
     return false;
   }
 
+  uint8_t lock_param_count() const {
+#if !defined(__AVR__)
+#if defined(PLATFORM_TBD)
+    if (backend_ == StepSeqTbd) {
+      return TBD_P4_LOCK_PARAM_COUNT;
+    }
+#endif
+    if (is_stepseq()) {
+      return STEPSEQ_NUM_LOCKS;
+    }
+#endif
+    return MD_PARAMS_PER_TRACK;
+  }
+
+  uint8_t lock_slot_count() const {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      return STEPSEQ_NUM_LOCKS;
+    }
+#endif
+    return NUM_LOCKS;
+  }
+
+  bool lock_param_info(uint8_t param_id, SeqStepLockParamInfo &info) const {
+    memset(&info, 0, sizeof(info));
+    if (param_id >= lock_param_count()) {
+      return false;
+    }
+
+    info.active = true;
+    info.sendable = true;
+    info.param_id = param_id;
+    info.ctrl = param_id;
+    info.resolution = 128;
+    info.min_value = 0;
+    info.max_value = 127;
+
+#if !defined(__AVR__) && defined(PLATFORM_TBD)
+    if (backend_ == StepSeqTbd) {
+      const TbdP4ParamDescriptor *desc =
+          tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
+                                      param_id);
+      if (desc == nullptr || !desc->is_visible()) {
+        memset(&info, 0, sizeof(info));
+        return false;
+      }
+      info.p4_param = true;
+      info.sendable = desc->is_sendable();
+      info.nrpn = desc->ctrl_type == TBD_P4_CTRLTYPE_NRPM;
+      info.macro = desc->is_macro();
+      info.ctrl = desc->ctrl;
+      info.ctrl_type = desc->ctrl_type;
+      info.resolution = desc->resolution;
+      info.min_value = desc->min_value;
+      info.max_value = desc->max_value;
+      info.default_value = desc->default_value;
+      info.current_value = desc->value;
+      return true;
+    }
+#endif
+
+    info.default_value = current_lock_value(param_id);
+    info.current_value = info.default_value;
+    return true;
+  }
+
+  uint8_t current_lock_value(uint8_t param_id) const {
+#if !defined(__AVR__) && defined(PLATFORM_TBD)
+    if (backend_ == StepSeqTbd) {
+      const TbdP4ParamDescriptor *desc =
+          tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
+                                      param_id);
+      if (desc == nullptr || !desc->is_visible()) {
+        return 64;
+      }
+      return value7_from_param_value(*desc, desc->value);
+    }
+#endif
+    if (param_id >= lock_param_count()) {
+      return 0;
+    }
+    return MD.kit.params[last_md_track][param_id];
+  }
+
+  bool copy_lock_param_label(uint8_t param_id, char *dst,
+                             size_t dst_len) const {
+    if (dst == nullptr || dst_len == 0) {
+      return false;
+    }
+    dst[0] = '\0';
+
+    SeqStepLockParamInfo info;
+    if (!lock_param_info(param_id, info) || !info.active) {
+      return false;
+    }
+
+#if !defined(__AVR__) && defined(PLATFORM_TBD)
+    if (backend_ == StepSeqTbd) {
+      const TbdP4ParamDescriptor *desc =
+          tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
+                                      param_id);
+      if (desc != nullptr && desc->shortname[0] != '\0') {
+        copy_compact_label(desc->shortname, dst, dst_len);
+        if (dst[0] != '\0') {
+          return true;
+        }
+      }
+      copy_param_number_label(info.nrpn ? 'N' : 'P', param_id, dst, dst_len);
+      return true;
+    }
+#endif
+
+    const char *modelname =
+        model_param_name(MD.kit.get_model(last_md_track), param_id);
+    if (modelname != nullptr) {
+      copy_fixed_label(modelname, dst, dst_len, 3);
+      return dst[0] != '\0';
+    }
+    copy_param_number_label('P', param_id, dst, dst_len);
+    return true;
+  }
+
   uint8_t length() const {
 #if !defined(__AVR__)
     if (is_stepseq()) {
@@ -102,6 +247,51 @@ public:
     }
 #endif
     return md_->step_count;
+  }
+
+  uint8_t mute_state() const {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      return step_->mute_state;
+    }
+#endif
+    return md_->mute_state;
+  }
+
+  void set_mute_state(uint8_t state) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->mute_state = state;
+      return;
+    }
+#endif
+    md_->mute_state = state;
+  }
+
+  void set_length(uint8_t len, bool expand = false) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->set_length(len, expand);
+      return;
+    }
+#endif
+    md_->set_length(len, expand);
+  }
+
+  bool request_speed_change(uint8_t new_speed) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      if (step_->count_down) {
+        return false;
+      }
+      if (step_->speed == new_speed) {
+        return false;
+      }
+      step_->set_speed(new_speed, step_->speed, true);
+      return true;
+    }
+#endif
+    return md_->request_speed_change(new_speed);
   }
 
   uint8_t condition_count() const {
@@ -184,6 +374,46 @@ public:
     }
 #endif
     return 0;
+  }
+
+  void rotate_left() {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->rotate_left();
+      return;
+    }
+#endif
+    md_->rotate_left();
+  }
+
+  void rotate_right() {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->rotate_right();
+      return;
+    }
+#endif
+    md_->rotate_right();
+  }
+
+  void reverse() {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->reverse();
+      return;
+    }
+#endif
+    md_->reverse();
+  }
+
+  void transpose(int8_t offset) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->transpose(offset);
+      return;
+    }
+#endif
+    md_->transpose(offset);
   }
 
   uint8_t mask_for(uint8_t ui_mask) const {
@@ -352,6 +582,36 @@ public:
 #endif
   }
 
+  void clear_step_locks(uint8_t step) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->clear_step_locks(step);
+      return;
+    }
+#endif
+    md_->clear_step_locks(step);
+  }
+
+  void clear_param_locks(uint8_t param_id) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->clear_param_locks(param_id);
+      return;
+    }
+#endif
+    md_->clear_param_locks(param_id);
+  }
+
+  void clear_locks() {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->clear_locks();
+      return;
+    }
+#endif
+    md_->clear_locks();
+  }
+
   bool set_track_locks(uint8_t step, uint8_t param_id, uint8_t value) {
 #if !defined(__AVR__)
     if (is_stepseq()) {
@@ -387,6 +647,68 @@ public:
     }
 #endif
     return md_->get_track_lock_implicit(step, param_id);
+  }
+
+  void clear_track(bool locks = true) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->clear_track(locks);
+      return;
+    }
+#endif
+    md_->clear_track(locks);
+  }
+
+  void clear_step(uint8_t step) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->clear_step(step);
+      return;
+    }
+#endif
+    MDSeqStep empty_step;
+    memset(&empty_step, 0, sizeof(empty_step));
+    md_->paste_step(step, &empty_step);
+  }
+
+  void clean_params() {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->clean_params();
+      return;
+    }
+#endif
+    md_->clean_params();
+  }
+
+  void copy_step(uint8_t step, MDSeqStep *md_step
+#if !defined(__AVR__)
+                 ,
+                 StepSeqStep *stepseq_step
+#endif
+  ) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->copy_step(step, stepseq_step);
+      return;
+    }
+#endif
+    md_->copy_step(step, md_step);
+  }
+
+  void paste_step(uint8_t step, MDSeqStep *md_step
+#if !defined(__AVR__)
+                  ,
+                  StepSeqStep *stepseq_step
+#endif
+  ) {
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->paste_step(step, stepseq_step);
+      return;
+    }
+#endif
+    md_->paste_step(step, md_step);
   }
 
   void set_track_pitch(uint8_t step, uint8_t pitch) {
@@ -457,7 +779,72 @@ public:
   }
 
 private:
+  static void append_uint8(uint8_t value, char *dst, size_t dst_len,
+                           size_t &out) {
+    if (dst == nullptr || dst_len == 0) {
+      return;
+    }
+    if (value >= 100 && out + 1 < dst_len) {
+      dst[out++] = (char)('0' + value / 100);
+      value %= 100;
+    }
+    if ((value >= 10 || out > 0) && out + 1 < dst_len) {
+      dst[out++] = (char)('0' + value / 10);
+      value %= 10;
+    }
+    if (out + 1 < dst_len) {
+      dst[out++] = (char)('0' + value);
+    }
+    dst[out] = '\0';
+  }
+
+  static void copy_param_number_label(char prefix, uint8_t number, char *dst,
+                                      size_t dst_len) {
+    if (dst == nullptr || dst_len == 0) {
+      return;
+    }
+    if (dst_len < 2) {
+      dst[0] = '\0';
+      return;
+    }
+    size_t out = 0;
+    dst[out++] = prefix;
+    append_uint8(number, dst, dst_len, out);
+  }
+
+  static void copy_fixed_label(const char *src, char *dst, size_t dst_len,
+                               uint8_t max_chars) {
+    if (dst == nullptr || dst_len == 0) {
+      return;
+    }
+    if (src == nullptr) {
+      dst[0] = '\0';
+      return;
+    }
+    size_t out = 0;
+    while (*src && out + 1 < dst_len && out < max_chars) {
+      dst[out++] = *src++;
+    }
+    dst[out] = '\0';
+    if (out == 2 && out + 1 < dst_len) {
+      dst[out++] = ' ';
+      dst[out] = '\0';
+    }
+  }
+
 #if !defined(__AVR__) && defined(PLATFORM_TBD)
+  static uint8_t value7_from_param_value(const TbdP4ParamDescriptor &desc,
+                                         int16_t value) {
+    if (desc.max_value <= desc.min_value) {
+      return 0;
+    }
+    if (value < desc.min_value) value = desc.min_value;
+    if (value > desc.max_value) value = desc.max_value;
+    uint16_t range = (uint16_t)(desc.max_value - desc.min_value);
+    uint16_t offset = (uint16_t)(value - desc.min_value);
+    return (uint8_t)(((uint32_t)offset * 127u + (range / 2u)) / range);
+  }
+
   static void copy_compact_label(const char *src, char *dst, size_t dst_len) {
     if (dst == nullptr || dst_len == 0) {
       return;
@@ -509,5 +896,40 @@ private:
   StepSeqDataTrack *step_;
 #endif
 };
+
+inline bool seq_step_api_uses_tbd_tracks() {
+#if defined(PLATFORM_TBD)
+  return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
+#else
+  return false;
+#endif
+}
+
+inline SeqStepTrackApi seq_step_api_track_for(uint8_t track) {
+#if defined(PLATFORM_TBD)
+  if (seq_step_api_uses_tbd_tracks()) {
+    return SeqStepTrackApi(mcl_seq.tbd_tracks[track]);
+  }
+#endif
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    return SeqStepTrackApi(mcl_seq.spsx_tracks[track]);
+  }
+#endif
+  return SeqStepTrackApi(mcl_seq.md_tracks[track]);
+}
+
+inline SeqStepTrackApi seq_step_api_active_track() {
+  return seq_step_api_track_for(last_md_track);
+}
+
+inline uint8_t seq_step_api_track_count() {
+#if defined(PLATFORM_TBD)
+  if (seq_step_api_uses_tbd_tracks()) {
+    return mcl_seq.num_tbd_tracks;
+  }
+#endif
+  return mcl_seq.num_md_tracks;
+}
 
 #endif /* SEQSTEPTRACKAPI_H__ */
