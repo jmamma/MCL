@@ -1409,7 +1409,8 @@ void SeqPage::display() {
   //  draw current active track
   mcl_gui.draw_panel_number(track_id);
 
-  if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
+  if (mcl.currentPage() == SEQ_EXTSTEP_PAGE ||
+      (!is_md && mcl.currentPage() == SEQ_PTC_PAGE)) {
     mcl_gui.draw_panel_toggle(ext_name, int_name, true);
   } else {
     mcl_gui.draw_panel_toggle(int_name, ext_name, is_md);
