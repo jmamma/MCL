@@ -4,9 +4,7 @@
 #include "helpers.h"
 #include "global.h"
 #include "MidiUart.h"
-#define UART1_PORT 1
-#define UART2_PORT 2
-#define UARTUSB_PORT 3
+#include "MidiSetup.h"
 
 void MidiID::send_id_request(uint8_t id, uint8_t port) {
   uint8_t data[6] = {0xF0, 0x7E, id, 0x06, 0x01, 0xF7};
@@ -15,6 +13,10 @@ void MidiID::send_id_request(uint8_t id, uint8_t port) {
     uart = &MidiUart;
   } else if (port == UARTUSB_PORT) {
     uart = &MidiUartUSB;
+#ifdef PLATFORM_TBD
+  } else if (port == UARTP4_PORT) {
+    uart = &MidiUartP4;
+#endif
   } else {
     uart = &MidiUart2;
   }
@@ -35,6 +37,11 @@ bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   else if (port == UARTUSB_PORT) {
     MidiSysexUSB.addSysexListener(&MidiIDSysexListener);
   }
+#ifdef PLATFORM_TBD
+  else if (port == UARTP4_PORT) {
+    MidiSysexP4.addSysexListener(&MidiIDSysexListener);
+  }
+#endif
   else {
     MidiSysex2.addSysexListener(&MidiIDSysexListener);
   }
@@ -47,6 +54,11 @@ bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   else if (port == UARTUSB_PORT) {
     MidiSysexUSB.removeSysexListener(&MidiIDSysexListener);
   }
+#ifdef PLATFORM_TBD
+  else if (port == UARTP4_PORT) {
+    MidiSysexP4.removeSysexListener(&MidiIDSysexListener);
+  }
+#endif
   else {
     MidiSysex2.removeSysexListener(&MidiIDSysexListener);
   }

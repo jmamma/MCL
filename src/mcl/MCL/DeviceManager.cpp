@@ -15,7 +15,7 @@ inline MidiDevice *nonnull(MidiDevice *device) {
 DeviceManager device_manager;
 
 MidiDevice *DeviceManager::device_for_port(uint8_t port) const {
-  if (port >= UART1_PORT && port <= UARTUSB_PORT) {
+  if (port >= UART1_PORT && port <= MIDI_PORT_COUNT) {
     return nonnull(physical_[port - 1]);
   }
   return &null_midi_device;
@@ -31,7 +31,7 @@ bool DeviceManager::port_is_elektron(uint8_t port) const {
 }
 
 void DeviceManager::set_device_for_port(uint8_t port, MidiDevice *device) {
-  if (port < UART1_PORT || port > UARTUSB_PORT) return;
+  if (port < UART1_PORT || port > MIDI_PORT_COUNT) return;
 #ifdef PLATFORM_TBD
   if (active_ui_device_ == physical_[port - 1]) {
     active_ui_device_->exit_ui();
@@ -60,6 +60,8 @@ void DeviceManager::update_active_slots() {
   // USB GENER maps to the secondary active slot.
   if (mcl_cfg.usb_device == 3) secondary_ = device_for_port(UARTUSB_PORT);
 #ifdef PLATFORM_TBD
+  MidiDevice *p4_device = device_for_port(UARTP4_PORT);
+  if (p4_device != &null_midi_device) secondary_ = p4_device;
   if (active_ui_device_ && active_ui_device_ != primary_ &&
       active_ui_device_ != secondary_) {
     active_ui_device_->exit_ui();

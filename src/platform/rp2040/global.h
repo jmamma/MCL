@@ -6,19 +6,29 @@ extern const uint16_t firmware_checksum;
 class MidiClass;
 class MidiUartClass;
 class MidiUartUSBClass;
+class MidiUartP4Class;
 class MidiSysexClass;
 
 extern MidiUartClass MidiUart;
 extern MidiUartClass MidiUart2;
 extern MidiUartUSBClass MidiUartUSB;
+#ifdef PLATFORM_TBD
+extern MidiUartP4Class MidiUartP4;
+#endif
 
 extern MidiClass Midi;
 extern MidiClass Midi2;
 extern MidiClass MidiUSB;
+#ifdef PLATFORM_TBD
+extern MidiClass MidiP4;
+#endif
 
 extern MidiSysexClass MidiSysex;
 extern MidiSysexClass MidiSysex2;
 extern MidiSysexClass MidiSysexUSB;
+#ifdef PLATFORM_TBD
+extern MidiSysexClass MidiSysexP4;
+#endif
 
 extern MidiUartClass seq_tx1;
 extern MidiUartClass seq_tx2;

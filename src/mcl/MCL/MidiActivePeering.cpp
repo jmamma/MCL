@@ -23,6 +23,10 @@ static MidiUartClass *_getMidiUart(uint8_t port) {
 #endif
   else if (port == UARTUSB_PORT)
     ret = &MidiUartUSB;
+#ifdef PLATFORM_TBD
+  else if (port == UARTP4_PORT)
+    ret = &MidiUartP4;
+#endif
   return ret;
 }
 
@@ -37,10 +41,18 @@ static MidiClass *_getMidiClass(uint8_t port) {
 #endif
   else if (port == UARTUSB_PORT)
     ret = &MidiUSB;
+#ifdef PLATFORM_TBD
+  else if (port == UARTP4_PORT)
+    ret = &MidiP4;
+#endif
   return ret;
 }
 
 static uint8_t portToLogicalIdx(uint8_t port) {
+#ifdef PLATFORM_TBD
+  if (port == UARTP4_PORT)
+    return 1;
+#endif
   if (port == UARTUSB_PORT)
     return (mcl_cfg.usb_device >= 2) ? 1 : 0;
   return port - 1;
@@ -100,6 +112,11 @@ void MidiActivePeering::disconnect(uint8_t port) {
     device_idx = portToLogicalIdx(port);
     disconnect_driver_list(DriverRegistry::elektron_drivers(), device_idx,
                            port, pmidi);
+#ifdef PLATFORM_TBD
+  } else if (port == UARTP4_PORT) {
+    drivers = DriverRegistry::generic_drivers();
+    device_idx = portToLogicalIdx(port);
+#endif
   } else {
     return;
   }
@@ -108,7 +125,7 @@ void MidiActivePeering::disconnect(uint8_t port) {
 }
 
 void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
-  if (port < 1 || port > 3) return;
+  if (port < UART1_PORT || port > MIDI_PORT_COUNT) return;
 
   disconnect(port);
   auto *pmidi = _getMidiUart(port);
@@ -131,6 +148,9 @@ static void probePort(uint8_t port, DriverRegistry::DriverList drivers,
   uint8_t id = pmidi->device.get_id();
   oled_display.setTextColor(WHITE, BLACK);
   if (id != DEVICE_NULL && port != UARTUSB_PORT &&
+#ifdef PLATFORM_TBD
+      port != UARTP4_PORT &&
+#endif
       pmidi->recvActiveSenseTimer > 300 && pmidi->speed > 31250) {
 
     if ((port == UART1_PORT && MidiClock.uart_clock_recv == pmidi) ||

@@ -25,6 +25,9 @@ void setup() {
 #endif
   MidiUart.init();
   MidiUart2.init();
+#ifdef PLATFORM_TBD
+  MidiUartP4.init();
+#endif
   setup_irqs();
 
 #if !defined(PLATFORM_TBD) && !defined(__AVR__)

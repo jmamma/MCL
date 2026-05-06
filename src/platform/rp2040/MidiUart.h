@@ -16,11 +16,19 @@
 #define TIMER_CLEAR_INT(timer_num) timer_hw->intr = (1u << timer_num)
 #define UART_MIDI 0
 #define UART_SERIAL 1
+#define UART_P4_SPI 2
+
+#ifdef PLATFORM_TBD
+class TbdP4RealtimeTransport;
+#endif
 
 class MidiUartClass : public MidiUartParent {
 private:
   uart_inst_t *uart_hw;
   uint8_t mode;
+#ifdef PLATFORM_TBD
+  TbdP4RealtimeTransport *p4_transport;
+#endif
 
   ALWAYS_INLINE() bool write_char(uint8_t c) {
     if (!uart_hw) {
@@ -63,14 +71,21 @@ public:
   MidiUartClass(uart_inst_t *uart_hw, RingBuffer<> *_rxRb = nullptr,
                 RingBuffer<> *_txRb = nullptr, RingBuffer<> *_txRb_realtime = nullptr);
 
+#ifdef PLATFORM_TBD
+  void attach_p4_transport(TbdP4RealtimeTransport *transport);
+  void flush_p4_transport();
+#endif
+
   void realtime_isr(uint8_t c);
   void rx_isr();
   void tx_isr();
   ALWAYS_INLINE() void enable_tx_irq() {
+    if (!uart_hw) return;
     uart_set_irq_enables(uart_hw, true, true);
   }
 
   ALWAYS_INLINE() void disable_tx_irq() {
+    if (!uart_hw) return;
     uart_set_irq_enables(uart_hw, true, false);
     uart_get_hw(uart_hw)->icr = UART_UARTICR_TXIC_BITS;
   }
@@ -89,6 +104,12 @@ public:
     rxRb->put_h_isr(src, size);
   }
   ALWAYS_INLINE() void tx_flush() {
+#ifdef PLATFORM_TBD
+    if (p4_transport) {
+      flush_p4_transport();
+      return;
+    }
+#endif
     if (uart_hw) { // Important, don't allow flush for non-hw uarts.
       if (uart_is_writable(uart_hw)) {
         tx_isr();
@@ -121,6 +142,22 @@ public:
 
   void handle_realtime_message(uint8_t c);
 };
+
+#ifdef PLATFORM_TBD
+class MidiUartP4Class : public MidiUartClass {
+public:
+  MidiUartP4Class(RingBuffer<> *_rxRb = nullptr, RingBuffer<> *_txRb = nullptr,
+                  RingBuffer<> *_txRb_realtime = nullptr)
+      : MidiUartClass(nullptr, _rxRb, _txRb, _txRb_realtime) {}
+
+  void init();
+  void poll();
+  void service_irq();
+  void service_background();
+  void set_speed(uint32_t speed) { (void)speed; }
+  void m_putc_immediate(uint8_t c) { m_putc(c); }
+};
+#endif
 
 class MidiUartUSBClass : public MidiUartClass {
 public:

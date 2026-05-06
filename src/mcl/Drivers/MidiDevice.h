@@ -26,7 +26,7 @@ public:
   const uint8_t id; // Device identifier
   const bool isElektronDevice;
   uint8_t track_type;
-  uint8_t port; // Physical port number (UART1_PORT, UART2_PORT, UARTUSB_PORT)
+  uint8_t port; // MIDI port number (UART1_PORT, UART2_PORT, UARTUSB_PORT, etc.)
 
   MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
              const bool _isElektronDevice);

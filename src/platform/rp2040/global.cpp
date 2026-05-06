@@ -39,6 +39,13 @@ uint8_t uartusb_tx_buf[UARTUSB_TX_BUFFER_LEN];
 uint8_t uartusb_rt_buf[UARTUSB_RT_BUFFER_LEN];
 uint8_t uartusb_sysex_buf[SYSEXUSB_DATA_LEN];
 
+#ifdef PLATFORM_TBD
+uint8_t uartp4_rx_buf[UARTUSB_RX_BUFFER_LEN];
+uint8_t uartp4_tx_buf[UARTUSB_TX_BUFFER_LEN];
+uint8_t uartp4_rt_buf[UARTUSB_RT_BUFFER_LEN];
+uint8_t uartp4_sysex_buf[SYSEXUSB_DATA_LEN];
+#endif
+
 // Sequencer ring buffers
 RingBuffer seq_tx1_rb(seq_tx1_buf, TX_SEQBUF_SIZE);
 RingBuffer seq_tx2_rb(seq_tx2_buf, TX_SEQBUF_SIZE);
@@ -61,6 +68,13 @@ RingBuffer uartusb_tx_rb(uartusb_tx_buf, UARTUSB_TX_BUFFER_LEN);
 RingBuffer uartusb_rt_rb(uartusb_rt_buf, UARTUSB_RT_BUFFER_LEN);
 RingBuffer uartusb_sysex_rb(uartusb_sysex_buf, SYSEXUSB_DATA_LEN);
 
+#ifdef PLATFORM_TBD
+RingBuffer uartp4_rx_rb(uartp4_rx_buf, UARTUSB_RX_BUFFER_LEN);
+RingBuffer uartp4_tx_rb(uartp4_tx_buf, UARTUSB_TX_BUFFER_LEN);
+RingBuffer uartp4_rt_rb(uartp4_rt_buf, UARTUSB_RT_BUFFER_LEN);
+RingBuffer uartp4_sysex_rb(uartp4_sysex_buf, SYSEXUSB_DATA_LEN);
+#endif
+
 // MIDI UART instances
 MidiUartClass seq_tx1(nullptr, nullptr, &seq_tx1_rb);
 MidiUartClass seq_tx2(nullptr, nullptr, &seq_tx2_rb);
@@ -70,16 +84,25 @@ MidiUartClass seq_tx4(nullptr, nullptr, &seq_tx4_rb);
 MidiUartClass MidiUart(uart1, &uart1_rx_rb, &uart1_tx_rb, &uart1_rt_rb);
 MidiUartClass MidiUart2(uart0, &uart2_rx_rb, &uart2_tx_rb, &uart2_rt_rb);
 MidiUartUSBClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb, &uartusb_rt_rb);
+#ifdef PLATFORM_TBD
+MidiUartP4Class MidiUartP4(&uartp4_rx_rb, &uartp4_tx_rb, &uartp4_rt_rb);
+#endif
 
 // Sysex instances
 MidiSysexClass MidiSysex(&MidiUart, &uart1_sysex_rb);
 MidiSysexClass MidiSysex2(&MidiUart2, &uart2_sysex_rb);
 MidiSysexClass MidiSysexUSB(&MidiUartUSB, &uartusb_sysex_rb);
+#ifdef PLATFORM_TBD
+MidiSysexClass MidiSysexP4(&MidiUartP4, &uartp4_sysex_rb);
+#endif
 
 // MIDI class instances
 MidiClass Midi(&MidiUart, &MidiSysex);
 MidiClass Midi2(&MidiUart2, &MidiSysex2);
 MidiClass MidiUSB(&MidiUartUSB, &MidiSysexUSB);
+#ifdef PLATFORM_TBD
+MidiClass MidiP4(&MidiUartP4, &MidiSysexP4);
+#endif
 
 MidiIDSysexListenerClass MidiIDSysexListener;
 
@@ -148,6 +171,12 @@ void handleIncomingMidi() {
   MidiUartUSB.service_irq();
   MidiUSB.processSysex();
   MidiUSB.processMidi();
+
+#ifdef PLATFORM_TBD
+  MidiUartP4.service_irq();
+  MidiP4.processSysex();
+  MidiP4.processMidi();
+#endif
 
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }

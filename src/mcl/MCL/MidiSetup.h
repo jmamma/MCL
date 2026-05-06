@@ -8,6 +8,12 @@
 #define UART1_PORT 1
 #define UART2_PORT 2
 #define UARTUSB_PORT 3
+#ifdef PLATFORM_TBD
+#define UARTP4_PORT 4
+#define MIDI_PORT_COUNT 4
+#else
+#define MIDI_PORT_COUNT 3
+#endif
 
 class MidiClass;
 class MidiUartClass;
@@ -30,7 +36,7 @@ enum SlotIdx : uint8_t {
 };
 
 struct PortSlot {
-  uint8_t port;            // UART1_PORT / UART2_PORT / UARTUSB_PORT, 0 = unassigned
+  uint8_t port;            // UART*_PORT, 0 = unassigned
   MidiClass *midi;
   MidiUartClass *uart;
   uint8_t turbo_cfg;       // mcl_cfg.uartX_turbo_speed

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "MidiSetup.h"
 #include "../Drivers/MidiDeviceCapabilities.h"
 #include <inttypes.h>
 
@@ -32,7 +33,7 @@ public:
 private:
   void set_device_for_port(uint8_t port, MidiDevice *device);
 
-  MidiDevice *physical_[3] = {nullptr, nullptr, nullptr};
+  MidiDevice *physical_[MIDI_PORT_COUNT] = {};
   MidiDevice *primary_ = nullptr;
   MidiDevice *secondary_ = nullptr;
 #ifdef PLATFORM_TBD
