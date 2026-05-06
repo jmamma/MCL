@@ -20,9 +20,17 @@ MidiClockClass::MidiClockClass() {
 
   uart_clock_forward1 = nullptr;
   uart_clock_forward2 = nullptr;
+  uart_clock_forward3 = nullptr;
+#ifdef PLATFORM_TBD
+  uart_clock_forward4 = nullptr;
+#endif
 
   uart_transport_forward1 = nullptr;
   uart_transport_forward2 = nullptr;
+  uart_transport_forward3 = nullptr;
+#ifdef PLATFORM_TBD
+  uart_transport_forward4 = nullptr;
+#endif
 
   setTempo(120);
   useImmediateClock = true;
@@ -108,6 +116,14 @@ void MidiClockClass::start() {
     if (uart_transport_forward2) {
       uart_transport_forward2->sendRealtime(MIDI_START);
     }
+    if (uart_transport_forward3) {
+      uart_transport_forward3->sendRealtime(MIDI_START);
+    }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) {
+      uart_transport_forward4->sendRealtime(MIDI_START);
+    }
+#endif
   }
 }
 
@@ -121,6 +137,14 @@ void MidiClockClass::stop() {
     if (uart_transport_forward2) {
       uart_transport_forward2->sendRealtime(MIDI_STOP);
     }
+    if (uart_transport_forward3) {
+      uart_transport_forward3->sendRealtime(MIDI_STOP);
+    }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) {
+      uart_transport_forward4->sendRealtime(MIDI_STOP);
+    }
+#endif
   }
 }
 
@@ -133,6 +157,14 @@ void MidiClockClass::pause() {
     if (uart_transport_forward2) {
       uart_transport_forward2->sendRealtime(MIDI_CONTINUE);
     }
+    if (uart_transport_forward3) {
+      uart_transport_forward3->sendRealtime(MIDI_CONTINUE);
+    }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) {
+      uart_transport_forward4->sendRealtime(MIDI_CONTINUE);
+    }
+#endif
     } else {
       stop();
     }

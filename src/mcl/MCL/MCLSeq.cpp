@@ -53,23 +53,24 @@ bool seq_grid_y_runs_legacy_ext_tracks() {
 
 } // namespace
 
-void MCLSeq::set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_) {
-  md_uart = md_uart_;
-  ext_uart = ext_uart_;
+void MCLSeq::set_outputs(MidiUartClass *primary_output_,
+                         MidiUartClass *secondary_output_) {
+  primary_output = primary_output_;
+  secondary_output = secondary_output_;
   for (uint8_t i = 0; i < num_md_tracks; i++) {
-    md_tracks[i].uart = md_uart;
-    md_tracks[i].uart2 = ext_uart;
+    md_tracks[i].uart = primary_output;
+    md_tracks[i].uart2 = secondary_output;
   }
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
-    ext_tracks[i].uart = ext_uart;
-    ext_tracks[i].uart2 = md_uart;
+    ext_tracks[i].uart = secondary_output;
+    ext_tracks[i].uart2 = primary_output;
   }
 #endif
 #if defined(PLATFORM_TBD)
   for (uint8_t i = 0; i < num_midi_tracks; i++) {
-    midi_tracks[i].uart = ext_uart;
-    midi_tracks[i].uart2 = md_uart;
+    midi_tracks[i].uart = secondary_output;
+    midi_tracks[i].uart2 = primary_output;
   }
 #endif
 }
@@ -362,7 +363,7 @@ void MCLSeq::seq() {
   MidiUartClass *uart;
   MidiUartClass *uart2;
   bool engage_sidechannel = true;
-  const bool shared_output = md_uart == ext_uart;
+  const bool shared_output = primary_output == secondary_output;
 
   // If realtime, we render the first tick in realtime, subsequent ticks are
   // defered rendered.
@@ -371,11 +372,11 @@ void MCLSeq::seq() {
   again:
 
 #if defined(__AVR__)
-    md_uart->disable_tx_irq();
-    ext_uart->disable_tx_irq();
+    primary_output->disable_tx_irq();
+    secondary_output->disable_tx_irq();
 #else
-    md_uart->disable_tx_irq();
-    ext_uart->disable_tx_irq();
+    primary_output->disable_tx_irq();
+    secondary_output->disable_tx_irq();
 #endif
     if (uart_sidechannel) {
       uart = &seq_tx2;
@@ -384,12 +385,12 @@ void MCLSeq::seq() {
       // finish transmiting before next Seq() call. We will drain the old buffer
       // in to the new to retain the MIDI data.
       if (engage_sidechannel) {
-        md_uart->txRb_sidechannel = seq_tx1.txRb;
+        primary_output->txRb_sidechannel = seq_tx1.txRb;
         if (shared_output) {
           seq_tx3.txRb->init();
           seq_tx4.txRb->init();
         } else {
-          ext_uart->txRb_sidechannel = seq_tx3.txRb;
+          secondary_output->txRb_sidechannel = seq_tx3.txRb;
         }
       } else {
         // Purge stale buffers (from MIDI CONTINUE).
@@ -400,12 +401,12 @@ void MCLSeq::seq() {
       uart = &seq_tx1;
       uart2 = shared_output ? &seq_tx1 : &seq_tx3;
       if (engage_sidechannel) {
-        md_uart->txRb_sidechannel = seq_tx2.txRb;
+        primary_output->txRb_sidechannel = seq_tx2.txRb;
         if (shared_output) {
           seq_tx3.txRb->init();
           seq_tx4.txRb->init();
         } else {
-          ext_uart->txRb_sidechannel = seq_tx4.txRb;
+          secondary_output->txRb_sidechannel = seq_tx4.txRb;
         }
       } else {
         seq_tx1.txRb->init();
@@ -414,20 +415,20 @@ void MCLSeq::seq() {
     }
     // clearLed2();
 #if defined(__AVR__)
-    md_uart->enable_tx_irq();
-    ext_uart->enable_tx_irq();
+    primary_output->enable_tx_irq();
+    secondary_output->enable_tx_irq();
 #else
     //Have to flush the first byte to re-trigger the uart tx isr.
     LOCK();
-    md_uart->tx_flush();
-    ext_uart->tx_flush();
+    primary_output->tx_flush();
+    secondary_output->tx_flush();
     CLEAR_LOCK();
 #endif
     // Flip uart / side_channel buffer for next run
     uart_sidechannel = !uart_sidechannel;
   } else {
-    uart = md_uart;
-    uart2 = ext_uart;
+    uart = primary_output;
+    uart2 = secondary_output;
   }
   //  Stopwatch sw;
 

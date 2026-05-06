@@ -7,7 +7,11 @@
 
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
+#ifdef PLATFORM_TBD
+#define TX_SEQBUF_SIZE 0x400UL
+#else
 #define TX_SEQBUF_SIZE 0x200UL
+#endif
 #define RT_BUF_SIZE 0x08UL
 
 #define UART1_RX_BUFFER_LEN RX_BUF_SIZE

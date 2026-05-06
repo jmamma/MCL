@@ -714,7 +714,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   proj.read_grid_row_header(&row_header, row, 0);
 
   if (mcl_cfg.uart2_prg_out > 0) {
-    mcl_seq.ext_uart->sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
+    mcl_seq.secondary_output->sendProgramChange(mcl_cfg.uart2_prg_out - 1,
+                                                row);
   }
 
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {

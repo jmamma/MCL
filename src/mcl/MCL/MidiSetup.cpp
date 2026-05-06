@@ -15,6 +15,44 @@
 #endif
 #include "MCLSeq.h"
 
+namespace {
+
+#ifdef PLATFORM_TBD
+bool tbd_p4_device_active() {
+  return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ||
+         mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
+}
+
+bool midi_forward_list_has(MidiUartClass *uart, MidiUartClass *a,
+                           MidiUartClass *b, MidiUartClass *c) {
+  return uart != nullptr && (uart == a || uart == b || uart == c);
+}
+
+void cfg_p4_clock_forward() {
+  MidiClock.uart_clock_forward4 = nullptr;
+  if (!tbd_p4_device_active() || MidiClock.uart_clock_recv == &MidiUartP4 ||
+      midi_forward_list_has(&MidiUartP4, MidiClock.uart_clock_forward1,
+                            MidiClock.uart_clock_forward2,
+                            MidiClock.uart_clock_forward3)) {
+    return;
+  }
+  MidiClock.uart_clock_forward4 = &MidiUartP4;
+}
+
+void cfg_p4_transport_forward() {
+  MidiClock.uart_transport_forward4 = nullptr;
+  if (!tbd_p4_device_active() ||
+      midi_forward_list_has(&MidiUartP4, MidiClock.uart_transport_forward1,
+                            MidiClock.uart_transport_forward2,
+                            MidiClock.uart_transport_forward3)) {
+    return;
+  }
+  MidiClock.uart_transport_forward4 = &MidiUartP4;
+}
+#endif
+
+} // namespace
+
 void MidiSetup::cfg_clock_recv() {
   MidiClock.mode = MidiClock.EXTERNAL_UART1;
   MidiClock.uart_clock_recv = nullptr;
@@ -43,6 +81,9 @@ void MidiSetup::cfg_clock_recv() {
   if (MidiClock.uart_clock_forward1 == MidiClock.uart_clock_recv) {
     MidiClock.uart_clock_forward1 = nullptr;
   }
+#ifdef PLATFORM_TBD
+  cfg_p4_clock_forward();
+#endif
 }
 
 void MidiSetup::cfg_ports(bool boot) {
@@ -77,6 +118,9 @@ void MidiSetup::cfg_ports(bool boot) {
 
   MidiClock.uart_transport_forward2 = nullptr;
   MidiClock.uart_transport_forward3 = nullptr;
+#ifdef PLATFORM_TBD
+  MidiClock.uart_transport_forward4 = nullptr;
+#endif
   switch (mcl_cfg.midi_transport_send) {
   case 1:
     if (MidiClock.uart_transport_recv2 == &MidiUart2 && mcl_cfg.uart2_device > 0) {
@@ -97,11 +141,17 @@ void MidiSetup::cfg_ports(bool boot) {
     MidiClock.uart_transport_forward3 = &MidiUartUSB;
     break;
   }
+#ifdef PLATFORM_TBD
+  cfg_p4_transport_forward();
+#endif
 
   cfg_clock_recv();
 
   MidiClock.uart_clock_forward2 = nullptr;
   MidiClock.uart_clock_forward3 = nullptr;
+#ifdef PLATFORM_TBD
+  MidiClock.uart_clock_forward4 = nullptr;
+#endif
   switch (mcl_cfg.clock_send) {
   case 1:
     if (MidiClock.uart_clock_recv == &MidiUart2 && mcl_cfg.uart2_device > 0) {
@@ -126,6 +176,9 @@ void MidiSetup::cfg_ports(bool boot) {
     #endif
     break;
   }
+#ifdef PLATFORM_TBD
+  cfg_p4_clock_forward();
+#endif
   Midi.uart_forward[0] = nullptr;
   Midi.uart_forward[1] = nullptr;
   if (mcl_cfg.midi_forward_1 == 1 || mcl_cfg.midi_forward_1 == 3) {
@@ -307,7 +360,7 @@ void configure_driver_ports() {
   generic_midi_device.setPort(g.midi, g.port);
 #endif
 
-  mcl_seq.set_ports(s[SLOT_MD].uart ? s[SLOT_MD].uart : MD.uart,
-                    g.uart ? g.uart : generic_midi_device.uart);
+  mcl_seq.set_outputs(s[SLOT_MD].uart ? s[SLOT_MD].uart : MD.uart,
+                      g.uart ? g.uart : generic_midi_device.uart);
   device_manager.update_active_slots();
 }

@@ -54,8 +54,9 @@ public:
   bool uart_sidechannel;
   bool realtime;
 
-  MidiUartClass *md_uart = &MidiUart;
-  MidiUartClass *ext_uart = &MidiUart2;
+  // Logical sequencer outputs; both may resolve to the same physical transport.
+  MidiUartClass *primary_output = &MidiUart;
+  MidiUartClass *secondary_output = &MidiUart2;
 
   static constexpr uint8_t num_md_tracks = NUM_MD_TRACKS;
   MDSeqTrack md_tracks[NUM_MD_TRACKS];
@@ -119,7 +120,8 @@ public:
   void disable() { state = false; }
 
   void setup();
-  void set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_);
+  void set_outputs(MidiUartClass *primary_output_,
+                   MidiUartClass *secondary_output_);
 
   uint8_t find_ext_track(uint8_t channel);
 

@@ -1098,7 +1098,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   // CC_FWD
   //
   if (mcl_cfg.uart_cc_fwd) {
-    mcl_seq.ext_uart->sendCC(channel, param, value);
+    mcl_seq.secondary_output->sendCC(channel, param, value);
     send_uart2 = false;
   }
   uint8_t channel_event = seq_ptc_page.is_md_midi(channel);

@@ -200,7 +200,8 @@ void GridTask::transition_handler() {
     bool wait;
 
     if (mcl_cfg.uart2_prg_out > 0 && row != 255) {
-      mcl_seq.ext_uart->sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
+      mcl_seq.secondary_output->sendProgramChange(mcl_cfg.uart2_prg_out - 1,
+                                                  row);
     }
     // float div192th_per_second = tempo * 0.8f;
     // float div192th_time = 1.0 / div192th_per_second;

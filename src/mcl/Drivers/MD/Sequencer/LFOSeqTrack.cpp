@@ -164,11 +164,12 @@ void LFOSeqTrack::reset_params() {
     uint8_t wav_value = get_param_offset(dest, i);
     if (dest >= NUM_MD_TRACKS + 4) {
       uint8_t channel = dest - (NUM_MD_TRACKS + 4);
-      mcl_seq.ext_uart->sendCC(channel, param, wav_value);
+      mcl_seq.secondary_output->sendCC(channel, param, wav_value);
     } else if (dest >= NUM_MD_TRACKS) {
-      MD.setFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS, false, mcl_seq.md_uart);
+      MD.setFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS, false,
+                    mcl_seq.primary_output);
     } else {
-      MD.setTrackParam(dest, param, wav_value, mcl_seq.md_uart);
+      MD.setTrackParam(dest, param, wav_value, mcl_seq.primary_output);
     }
   }
 }

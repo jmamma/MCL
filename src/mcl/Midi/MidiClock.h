@@ -131,10 +131,16 @@ public:
   MidiUartClass *uart_clock_forward1;
   MidiUartClass *uart_clock_forward2;
   MidiUartClass *uart_clock_forward3;
+#ifdef PLATFORM_TBD
+  MidiUartClass *uart_clock_forward4;
+#endif
 
   MidiUartClass *uart_transport_forward1;
   MidiUartClass *uart_transport_forward2;
   MidiUartClass *uart_transport_forward3;
+#ifdef PLATFORM_TBD
+  MidiUartClass *uart_transport_forward4;
+#endif
 
   MidiClockClass();
 
@@ -281,6 +287,9 @@ public:
     if (uart_clock_forward1) { uart_clock_forward1->sendRealtime(0xF8); }
     if (uart_clock_forward2) { uart_clock_forward2->sendRealtime(0xF8); }
     if (uart_clock_forward3) { uart_clock_forward3->sendRealtime(0xF8); }
+#ifdef PLATFORM_TBD
+    if (uart_clock_forward4) { uart_clock_forward4->sendRealtime(0xF8); }
+#endif
 
     incrementCounters();
     if ((step_counter == 1) && (state == STARTED)) {
@@ -480,6 +489,9 @@ public:
     if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_START); }
     if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_START); }
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_START); }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) { uart_transport_forward4->sendRaw(MIDI_START); }
+#endif
 
     init();
 #ifdef PLATFORM_TBD
@@ -506,6 +518,9 @@ public:
     if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_STOP); }
     if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_STOP); }
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_STOP); }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) { uart_transport_forward4->sendRaw(MIDI_STOP); }
+#endif
     if (uart_transport_recv1) {
       uart_transport_recv1->rxRb->put_h_isr(MIDI_STOP);
 #ifdef PLATFORM_TBD
@@ -521,6 +536,9 @@ public:
     if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_CONTINUE); }
     if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_CONTINUE); }
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_CONTINUE); }
+#ifdef PLATFORM_TBD
+    if (uart_transport_forward4) { uart_transport_forward4->sendRaw(MIDI_CONTINUE); }
+#endif
 
     state = STARTED;
 #ifdef PLATFORM_TBD
