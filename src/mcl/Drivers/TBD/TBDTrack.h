@@ -5,6 +5,7 @@
 #ifdef PLATFORM_TBD
 
 #include "ExtTrack.h"
+#include "MidiSeqTrack.h"
 #include "TBDSeqTrack.h"
 #include "TbdP4SoundData.h"
 
@@ -19,6 +20,7 @@ struct TbdTrackDefault {
 };
 
 const TbdTrackDefault &tbd_track_default_for_slot(uint8_t slot);
+void tbd_init_p4_sound_runtime_defaults(TbdP4SoundData &sound);
 void tbd_update_track_default_from_p4(uint8_t p4_track_index,
                                       const char *preset_id,
                                       uint8_t rom_bank,
@@ -60,9 +62,10 @@ private:
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
 };
 
-class ATTR_PACKED() TBDMidiTrack : public ExtTrack {
+class ATTR_PACKED() TBDMidiTrack : public DeviceTrack {
 public:
   TbdP4SoundData p4_sound;
+  MidiSeqTrackData seq_data;
 
   TBDMidiTrack();
 
@@ -75,15 +78,18 @@ public:
     return false;
   }
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
+  void load_seq_data(SeqTrack *seq_track) override;
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
+  void import_legacy_ext_track(const ExtTrack &legacy, uint8_t tracknumber,
+                               SeqTrack *seq_track);
 
   uint16_t get_track_size() override { return _sizeof(); }
+  uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
+  uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }
   uint8_t get_device_type() override { return TBD_MIDI_TRACK_TYPE; }
-  uint8_t get_parent_model() override { return EXT_TRACK_TYPE; }
-  bool allow_cast_to_parent() override { return true; }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
 

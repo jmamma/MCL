@@ -44,6 +44,7 @@ enum MidiSeqEventFlag : uint8_t {
 
 enum MidiSeqLockFlag : uint8_t {
   MIDI_SEQ_LOCK_FLAG_14BIT = 1 << 0,
+  MIDI_SEQ_LOCK_FLAG_P4_PARAM = 1 << 1,
 };
 
 #pragma pack(push, 1)

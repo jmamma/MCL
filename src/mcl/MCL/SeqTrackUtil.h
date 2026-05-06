@@ -16,7 +16,11 @@ public:
 
   static inline uint8_t track_count(bool is_md_device) {
 #ifdef EXT_TRACKS
+#if defined(PLATFORM_TBD)
+    return is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_midi_tracks;
+#else
     return is_md_device ? mcl_seq.num_md_tracks : mcl_seq.num_ext_tracks;
+#endif
 #else
     (void)is_md_device;
     return mcl_seq.num_md_tracks;
@@ -26,7 +30,11 @@ public:
   static inline SeqTrackCond &get_track(bool is_md_device, uint8_t index) {
 #ifdef EXT_TRACKS
     if (!is_md_device) {
+#if defined(PLATFORM_TBD)
+      return static_cast<SeqTrackCond &>(mcl_seq.midi_tracks[index]);
+#else
       return static_cast<SeqTrackCond &>(mcl_seq.ext_tracks[index]);
+#endif
     }
 #endif
     return static_cast<SeqTrackCond &>(mcl_seq.md_tracks[index]);
@@ -42,7 +50,11 @@ public:
   static inline SeqTrack &get_seq_track(bool is_md_device, uint8_t index) {
 #ifdef EXT_TRACKS
     if (!is_md_device) {
+#if defined(PLATFORM_TBD)
+      return static_cast<SeqTrack &>(mcl_seq.midi_tracks[index]);
+#else
       return static_cast<SeqTrack &>(mcl_seq.ext_tracks[index]);
+#endif
     }
 #endif
 #if !defined(__AVR__)

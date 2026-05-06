@@ -11,6 +11,9 @@
 #include "EmptyTrack.h"
 #include "MDTrack.h"
 #include "GridTask.h"
+#ifdef PLATFORM_TBD
+#include "../Drivers/TBD/TBDTrack.h"
+#endif
 
 #define MD_KIT_LENGTH 0x4D0
 
@@ -66,6 +69,29 @@ DeviceTrack *MCLActions::load_and_prepare_track(uint8_t track_idx, uint16_t row,
   }
 
   if (!track_supports_type(device_track, track_type)) {
+#ifdef PLATFORM_TBD
+    if (track_type == TBD_MIDI_TRACK_TYPE &&
+        device_track->active == EXT_TRACK_TYPE) {
+      ExtSeqTrackData old_seq_data;
+      GridLink old_link;
+      if (auto *old_ext_track = device_track->as<ExtTrack>()) {
+        memcpy(&old_seq_data, &old_ext_track->seq_data, sizeof(old_seq_data));
+        memcpy(&old_link, &old_ext_track->link, sizeof(old_link));
+
+        scratch.clear();
+        auto *tbd_track =
+            static_cast<TBDMidiTrack *>(scratch.init_track_type(track_type));
+        if (tbd_track != nullptr) {
+          ExtTrack legacy;
+          legacy.seq_data = old_seq_data;
+          legacy.link = old_link;
+          tbd_track->import_legacy_ext_track(legacy, seq_track_idx, seq_track);
+          was_rebuilt = false;
+          return tbd_track;
+        }
+      }
+    }
+#endif
     scratch.clear();
     if (device_track == nullptr || device_track->active != EMPTY_TRACK_TYPE) {
       scratch.init();

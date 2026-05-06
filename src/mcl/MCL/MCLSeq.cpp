@@ -23,6 +23,12 @@ void MCLSeq::set_ports(MidiUartClass *md_uart_, MidiUartClass *ext_uart_) {
     ext_tracks[i].uart2 = md_uart;
   }
 #endif
+#if defined(PLATFORM_TBD)
+  for (uint8_t i = 0; i < num_midi_tracks; i++) {
+    midi_tracks[i].uart = ext_uart;
+    midi_tracks[i].uart2 = md_uart;
+  }
+#endif
 }
 
 void MCLSeq::setup() {
@@ -71,6 +77,15 @@ void MCLSeq::setup() {
     tbd_tracks[i].seq_class = this;
     tbd_tracks[i].p4_sound.p4_track_index = i;
   }
+  for (uint8_t i = 0; i < num_midi_tracks; i++) {
+    midi_tracks[i].seq_data.clear();
+    midi_tracks[i].set_channel(i);
+    midi_tracks[i].set_length(16);
+    midi_tracks[i].set_speed(SEQ_SPEED_1X);
+    midi_tracks[i].mute_state = SEQ_MUTE_OFF;
+    midi_tracks[i].init_notes_on();
+    midi_tracks[i].track_number = i;
+  }
 #endif
   for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
     aux_tracks[i].length = 16;
@@ -117,9 +132,15 @@ void seq_rec_play() {
 
 uint8_t MCLSeq::find_ext_track(uint8_t channel) {
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+#if defined(PLATFORM_TBD)
+    if (midi_tracks[n].channel() == channel) {
+      return n;
+    }
+#else
     if (ext_tracks[n].channel == channel) {
       return n;
     }
+#endif
   }
   return 255;
 }
@@ -158,6 +179,9 @@ void MCLSeq::onMidiStartImmediateCallback() {
 #if defined(PLATFORM_TBD)
   for (uint8_t i = 0; i < num_tbd_tracks; i++) {
     tbd_tracks[i].reset();
+  }
+  for (uint8_t i = 0; i < num_midi_tracks; i++) {
+    midi_tracks[i].reset();
   }
 #endif
 
@@ -213,6 +237,10 @@ void MCLSeq::onMidiStopCallback() {
   for (uint8_t i = 0; i < num_tbd_tracks; i++) {
     tbd_tracks[i].locks_slides_recalc = 255;
     for (auto &sd : tbd_tracks[i].locks_slide_data) { sd.init(); }
+  }
+  for (uint8_t i = 0; i < num_midi_tracks; i++) {
+    midi_tracks[i].buffer_notesoff();
+    midi_tracks[i].reset_params();
   }
 #endif
 #ifdef LFO_TRACKS
@@ -358,9 +386,12 @@ void MCLSeq::seq() {
   for (uint8_t i = 0; i < num_tbd_tracks; i++) {
     tbd_tracks[i].seq(uart2);
   }
+  for (uint8_t i = 0; i < num_midi_tracks; i++) {
+    midi_tracks[i].seq(uart2);
+  }
 #endif
 
-#ifdef EXT_TRACKS
+#if defined(EXT_TRACKS) && !defined(PLATFORM_TBD)
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].seq(uart2);
     ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
@@ -378,9 +409,11 @@ void MCLSeq::seq() {
   }
 #endif
 
+#if !defined(PLATFORM_TBD)
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
     ext_tracks[i].recalc_slides();
   }
+#endif
 #if defined(PLATFORM_TBD)
   for (uint8_t i = 0; i < num_tbd_tracks; i++) {
     tbd_tracks[i].recalc_slides();
@@ -494,6 +527,16 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   if (param == device_manager.secondary_device()->get_mute_cc()) {
 
    for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+#if defined(PLATFORM_TBD)
+      if (mcl_seq.midi_tracks[n].channel() != channel) {
+        continue;
+      }
+      if (value > 0) {
+        mcl_seq.midi_tracks[n].mute_state = SEQ_MUTE_ON;
+      } else {
+        mcl_seq.midi_tracks[n].mute_state = SEQ_MUTE_OFF;
+      }
+#else
       if (mcl_seq.ext_tracks[n].channel != channel) {
         continue;
       }
@@ -502,6 +545,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
       } else {
         mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_OFF;
       }
+#endif
     }
     mixer_page.redraw_mutes = true;
     return;

@@ -48,7 +48,7 @@ private:
   }
   __IMPL_DYNAMIK_KAST(EmptyTrack, EMPTY_TRACK_TYPE || p->active == 255,
                       EMPTY_TRACK_TYPE)
-  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE || p->active == MNM_TRACK_TYPE || p->active == TBD_MIDI_TRACK_TYPE,
+  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE || p->active == MNM_TRACK_TYPE,
                       EXT_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(A4Track, A4_TRACK_TYPE, A4_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(SPSXTrack, MDSPSX_TRACK_TYPE, MDSPSX_TRACK_TYPE)

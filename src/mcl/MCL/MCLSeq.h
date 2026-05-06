@@ -16,6 +16,7 @@
 #include "SPSXSeqTrack.h"
 #endif
 #if defined(PLATFORM_TBD)
+#include "../Drivers/Generic/Sequencer/MidiSeqTrack.h"
 #include "../Drivers/TBD/TBDSeqTrack.h"
 #endif
 
@@ -84,6 +85,8 @@ public:
 #if defined(PLATFORM_TBD)
   static constexpr uint8_t num_tbd_tracks = TBD_P4_SOUND_TRACK_COUNT;
   TBDSeqTrack tbd_tracks[TBD_P4_SOUND_TRACK_COUNT];
+  static constexpr uint8_t num_midi_tracks = NUM_EXT_TRACKS;
+  MidiSeqTrack midi_tracks[NUM_EXT_TRACKS];
 #endif
 
 #ifdef EXT_TRACKS
