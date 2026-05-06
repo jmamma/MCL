@@ -2,9 +2,9 @@
 
 #include "SPSXSeqTrack.h"
 #include "SPSXTrack.h"
-#include "../Drivers/MD/MD.h"
+#include "MD.h"
 #include "MDPattern.h"
-#include "../Drivers/MD/MDParams.h"
+#include "MDParams.h"
 #include "MCLSeq.h"
 #include "MDSeqTrack.h"
 #include "MidiClock.h"

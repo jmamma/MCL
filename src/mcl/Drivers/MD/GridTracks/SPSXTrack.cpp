@@ -1,5 +1,5 @@
 #include "SPSXTrack.h"
-#include "../Drivers/MD/MD.h"
+#include "MD.h"
 #include "MCLActions.h"
 #include "MCLSeq.h"
 #include "MCLSysConfig.h"

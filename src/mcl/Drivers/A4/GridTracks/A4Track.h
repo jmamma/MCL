@@ -3,7 +3,7 @@
 #ifndef A4TRACK_H__
 #define A4TRACK_H__
 
-#include "../Drivers/A4/A4.h"
+#include "A4.h"
 #include "ExtTrack.h"
 
 // Use a more specific name to avoid conflict with Arduino's Print class

@@ -1,7 +1,7 @@
 #include "MDRouteTrack.h"
 #include "MCLSysConfig.h"
 #include "MDTrack.h"
-#include "../Drivers/MD/MD.h"
+#include "MD.h"
 #include "MCLActions.h"
 
 void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,

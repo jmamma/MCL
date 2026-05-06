@@ -6,7 +6,7 @@
 #include "GridTrack.h"
 #include "MCLMemory.h"
 #include "DeviceManager.h"
-#include "../Drivers/MidiDevice.h"
+#include "MidiDevice.h"
 
 #define EMPTY_TRACK_TYPE 0
 

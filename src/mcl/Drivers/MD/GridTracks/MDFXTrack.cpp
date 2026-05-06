@@ -1,5 +1,5 @@
 #include "MDFXTrack.h"
-#include "../Drivers/MD/MD.h"
+#include "MD.h"
 
 void MDFXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
                           SeqTrack *seq_track) {
