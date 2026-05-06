@@ -84,21 +84,21 @@ menu_option_t MENU_OPTIONS[] = {
   // 133: GRID X device
   {0, "OFF"}, {1, "MD"}, {2, "TBD"},
   // 136: GRID X port
-  {0, "INT"}, {1, "1"}, {2, "USB"},
+  {0, "INT"}, {1, "MIDI 1"}, {2, "USB"},
   // 139: GRID Y device
   {0, "TBD"}, {1, "GENER"}, {2, "ELEKT"}, {3, "OFF"},
   // 143: GRID Y port
-  {0, "INT"}, {1, "2"}, {2, "USB"},
+  {0, "INT"}, {1, "MIDI 2"}, {2, "USB"},
   // 146: TBD MIDI clock/transport source
   {0, "1"}, {1, "2"}, {2, "USB"}, {3, "INT"},
 #else
   // 133: GRID X device
   {0, "OFF"}, {1, "MD"},
   // 135: GRID X port
-  {0, "1"}, {1, "USB"},
+  {0, "MIDI 1"}, {1, "USB"},
   // 137: GRID Y device
   {1, "GENER"}, {2, "ELEKT"}, {3, "OFF"},
   // 140: GRID Y port
-  {1, "2"}, {2, "USB"},
+  {1, "MIDI 2"}, {2, "USB"},
 #endif
 };

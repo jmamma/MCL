@@ -1093,6 +1093,14 @@ bool TbdDevice::probe() {
   return true;
 }
 
+void TbdDevice::disconnect(uint8_t device_idx) {
+  cleanup(device_idx);
+  if (device_idx < 2) {
+    grid_devices_initialized_[device_idx] = false;
+  }
+  connected = false;
+}
+
 void TbdDevice::on_connection(uint8_t device_idx) {
   (void)device_idx;
   port = UARTP4_PORT;
@@ -1101,17 +1109,18 @@ void TbdDevice::on_connection(uint8_t device_idx) {
   connected = true;
   cleanup(0);
   cleanup(1);
+  grid_devices_initialized_[0] = false;
+  grid_devices_initialized_[1] = false;
   load_default_p4_presets();
   apply_runtime_p4_defaults();
-  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
-    init_grid_devices(0);
-  }
-  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
-    init_grid_devices(1);
-  }
+  sync_grid_devices();
 }
 
 void TbdDevice::init_grid_devices(uint8_t device_idx) {
+  if (device_idx < 2 && grid_devices_initialized_[device_idx]) {
+    return;
+  }
+
   GridDeviceTrack gdt;
 
 #if defined(PLATFORM_TBD)
@@ -1122,6 +1131,7 @@ void TbdDevice::init_grid_devices(uint8_t device_idx) {
                &(mcl_seq.tbd_tracks[i]));
       add_track_to_grid(0, i, &gdt);
     }
+    grid_devices_initialized_[0] = true;
     return;
   }
 #endif
@@ -1135,6 +1145,23 @@ void TbdDevice::init_grid_devices(uint8_t device_idx) {
                &(mcl_seq.midi_tracks[i]));
       add_track_to_grid(1, i, &gdt);
     }
+    grid_devices_initialized_[1] = true;
+  }
+}
+
+void TbdDevice::sync_grid_devices() {
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+    init_grid_devices(0);
+  } else if (grid_devices_initialized_[0]) {
+    cleanup(0);
+    grid_devices_initialized_[0] = false;
+  }
+
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    init_grid_devices(1);
+  } else if (grid_devices_initialized_[1]) {
+    cleanup(1);
+    grid_devices_initialized_[1] = false;
   }
 }
 

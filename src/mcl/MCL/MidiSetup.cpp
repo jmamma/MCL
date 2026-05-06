@@ -49,6 +49,22 @@ void cfg_p4_transport_forward() {
   }
   MidiClock.uart_transport_forward4 = &MidiUartP4;
 }
+
+void cfg_p4_device_connection() {
+  if (tbd_p4_device_active()) {
+    if (device_manager.device_for_port(UARTP4_PORT) == &TBD && TBD.connected) {
+      TBD.sync_grid_devices();
+      device_manager.update_active_slots();
+      return;
+    }
+    midi_active_peering.force_connect(UARTP4_PORT, &TBD);
+    return;
+  }
+
+  if (device_manager.device_for_port(UARTP4_PORT) != &null_midi_device) {
+    midi_active_peering.disconnect(UARTP4_PORT);
+  }
+}
 #endif
 
 } // namespace
@@ -266,12 +282,7 @@ void MidiSetup::cfg_ports(bool boot) {
   }
 
 #ifdef PLATFORM_TBD
-  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ||
-      mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
-    midi_active_peering.force_connect(UARTP4_PORT, &TBD);
-  } else if (device_manager.device_for_port(UARTP4_PORT) != &null_midi_device) {
-    midi_active_peering.disconnect(UARTP4_PORT);
-  }
+  cfg_p4_device_connection();
 #endif
 
   if (MD.connected) {

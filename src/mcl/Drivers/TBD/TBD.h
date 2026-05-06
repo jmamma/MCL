@@ -13,8 +13,10 @@ public:
   TbdDevice();
 
   virtual bool probe() override;
+  virtual void disconnect(uint8_t device_idx) override;
   virtual void on_connection(uint8_t device_idx) override;
   virtual void init_grid_devices(uint8_t device_idx) override;
+  void sync_grid_devices();
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) override;
@@ -45,6 +47,7 @@ private:
   uint8_t ui_device_idx_ = 255;
   bool diag_active_ = false;
   bool p4_defaults_loaded_ = false;
+  bool grid_devices_initialized_[2] = {};
   uint32_t p4_defaults_last_attempt_ms_ = 0;
   uint8_t active_note_ = 255;
 
