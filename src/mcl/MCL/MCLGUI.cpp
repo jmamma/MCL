@@ -24,6 +24,27 @@ void mcl_println_P(const char* str_P) {
   mclstr_copy_progmem(buffer, str_P, sizeof(buffer));
   oled_display.println(buffer);
 }
+
+#ifdef PLATFORM_TBD
+static void draw_track_type_text_icon(uint8_t x, uint8_t y,
+                                      const char *label) {
+  char text[4] = {'\0', '\0', '\0', '\0'};
+  uint8_t len = 0;
+  while (len < 3 && label != nullptr && label[len] != '\0') {
+    text[len] = label[len];
+    len++;
+  }
+  if (len == 0) {
+    text[0] = '-';
+    len = 1;
+  }
+
+  oled_display.setFont(&TomThumb);
+  oled_display.setCursor(x + 12 - (len * 2), y + 14);
+  oled_display.print(text);
+}
+#endif
+
 void MCLGUI::put_value_at(uint8_t value, char *str, bool fixed) {
   uint8_t d2 = 0;
   while (value >= 100) { value -= 100; d2++; }
@@ -842,15 +863,36 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
 
 void MCLGUI::draw_track_type_select(uint8_t track_type_select,
                                     uint8_t y_base) {
+#ifndef PLATFORM_TBD
   MidiDevice *devs[2] = {
       device_manager.primary_device(),
       device_manager.secondary_device(),
   };
+#endif
 //  oled_display.clearDisplay();
 
   uint8_t x = 0;
 
   oled_display.fillRect(0, 8 + y_base, 128, 23, BLACK);
+#ifdef PLATFORM_TBD
+  static const char *const labels[5] = {"X", "Y", "PRF", "RTE", "CLK"};
+
+  for (uint8_t i = 0; i < 5; i++) {
+    bool select = IS_BIT_SET(track_type_select, i);
+
+    draw_track_type_text_icon(x, 10 + y_base, labels[i]);
+
+    if (select) {
+      oled_display.fillRect(x + 1, 10 + y_base, 23, 20, INVERT);
+      drawRoundRect(x, 9 + y_base, 24, 21, WHITE);
+      oled_display.drawRect(x + 1, 10 + y_base, 22, 19, BLACK);
+    } else {
+      oled_display.drawRect(x, 9 + y_base, 24, 21, WHITE);
+    }
+
+    x += 26;
+  }
+#else
   MCLGIF *gif;
 
   for (uint8_t i = 0; i < 5; i++) {
@@ -925,6 +967,7 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
 */
     x += 26;
   }
+#endif
 }
 
 void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset,
