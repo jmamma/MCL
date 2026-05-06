@@ -20,9 +20,9 @@ constexpr int8_t kTbdPtcKeyMap[16] = {
 };
 
 constexpr uint16_t kTbdPtcBlackMask = 0b0000010101001010;
-constexpr uint32_t kTbdPtcNaturalColor = 0x303030;
+constexpr uint32_t kTbdPtcNaturalColor = 0xFFFFFF;
 constexpr uint32_t kTbdPtcBlackColor = 0x0000A0;
-constexpr uint32_t kTbdPtcActiveColor = 0x00FF60;
+constexpr uint32_t kTbdPtcActiveColor = 0xFF0000;
 constexpr uint32_t kTbdPtcOctaveColor = 0x805000;
 constexpr uint32_t kTbdPtcOctaveDimColor = 0x201000;
 

@@ -19,6 +19,55 @@
 
 TbdPanel tbd_panel;
 
+static constexpr uint16_t TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS = 500;
+
+static bool is_tbd_menu_page(PageIndex pg) {
+  return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
+         pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
+         pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
+         pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
+         pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
+         pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
+         pg == GRIDY_MENU_PAGE ||
+         pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
+         pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
+         pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
+         pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
+         pg == MIDIGENERIC_MENU_PAGE;
+}
+
+bool TbdPanel::top_left_reserved_page() const {
+  PageIndex pg = mcl.currentPage();
+  return is_tbd_menu_page(pg) || pg == PAGE_SELECT_PAGE ||
+         pg == BANK_POPUP_PAGE || pg == TEXT_INPUT_PAGE ||
+         pg == GRID_SAVE_PAGE || pg == GRID_LOAD_PAGE ||
+         grid_io_overlay.is_active();
+}
+
+bool TbdPanel::enter_primary_ui(gui_event_t *event) {
+  gui_event_t ui_event = *event;
+  return device_manager.enter_ui(device_manager.primary_device(), &ui_event);
+}
+
+void TbdPanel::loop() {
+  if (!top_left_pressed_ || top_left_page_select_opened_ ||
+      top_left_chorded_) {
+    return;
+  }
+  if (!BUTTON_DOWN(ButtonsClass::BUTTON2)) {
+    top_left_pressed_ = false;
+    return;
+  }
+  if (top_left_reserved_page()) return;
+  if (clock_diff(top_left_press_ms_, read_clock_ms()) <
+      TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS) {
+    return;
+  }
+
+  mcl.setPage(PAGE_SELECT_PAGE);
+  top_left_page_select_opened_ = true;
+}
+
 bool TbdPanel::open_bank_popup() {
   PageIndex pg = mcl.currentPage();
   if (pg == GRID_LOAD_PAGE || pg == GRID_SAVE_PAGE ||
@@ -44,19 +93,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   const uint8_t orig_src = event->source;
   const PageIndex pg = mcl.currentPage();
-  const bool is_menu_page =
-      pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
-      pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
-      pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
-      pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
-      pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
-      pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
-      pg == GRIDY_MENU_PAGE ||
-      pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
-      pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
-      pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
-      pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
-      pg == MIDIGENERIC_MENU_PAGE;
+  const bool is_menu_page = is_tbd_menu_page(pg);
+
+  if (top_left_pressed_ && orig_src != ButtonsClass::BUTTON2 && is_press) {
+    top_left_chorded_ = true;
+  }
 
   if (suppress_sps_key_release_ &&
       orig_src == ButtonsClass::FUNC_BUTTON5 &&
@@ -69,9 +110,41 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   // only fires when TR is the press edge while TL is already held.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       BUTTON_DOWN(ButtonsClass::BUTTON2)) {
+    top_left_chorded_ = true;
     device_manager.exit_ui();
     mcl.pushPage(SYSTEM_PAGE);
     return true;
+  }
+
+  if (orig_src == ButtonsClass::BUTTON2 && !top_left_reserved_page()) {
+    if (is_press) {
+      top_left_pressed_ = true;
+      top_left_page_select_opened_ = false;
+      top_left_chorded_ = false;
+      top_left_press_ms_ = read_clock_ms();
+      return true;
+    }
+
+    if (is_release) {
+      bool enter_ui = top_left_pressed_ &&
+                      !top_left_page_select_opened_ &&
+                      !top_left_chorded_;
+      top_left_pressed_ = false;
+      top_left_page_select_opened_ = false;
+      top_left_chorded_ = false;
+      if (enter_ui) {
+        enter_primary_ui(event);
+      }
+      return true;
+    }
+  }
+
+  if (orig_src == ButtonsClass::BUTTON2 && pg == PAGE_SELECT_PAGE &&
+      is_release) {
+    top_left_pressed_ = false;
+    top_left_page_select_opened_ = false;
+    top_left_chorded_ = false;
+    return false;
   }
 
   // Verification shortcut for the internal TBD/P4 target: FUNC + TBDR opens

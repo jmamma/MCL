@@ -47,6 +47,7 @@
 #include "PerfPage.h"
 #ifdef PLATFORM_TBD
 #include "BankPopupPage.h"
+#include "TbdPanel.h"
 #endif
 
 // In MCL.cpp:
@@ -250,6 +251,7 @@ void MCL::loop() {
 
 #ifdef PLATFORM_TBD
   device_manager.ui_loop();
+  tbd_panel.loop();
 #endif
 
   key_interface.check_key_throttle();

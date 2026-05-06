@@ -198,6 +198,17 @@ void SpsMode::send_param(uint8_t i) {
 }
 
 bool SpsMode::handle_toggle_button(gui_event_t *event) {
+  if (event->source == ButtonsClass::BUTTON2) {
+    if (is_release(event)) {
+      if (GUI.overlay == &sps_overlay_page) {
+        GUI.setOverlay(&sps_strip_page);
+      } else {
+        set_latched(!latched_);
+      }
+    }
+    return true;
+  }
+
   if (event->source != ButtonsClass::TBD_BUTTON_TR) return false;
   // TR semantics:
   //   press                   → toggle SPS latch immediately, OR
