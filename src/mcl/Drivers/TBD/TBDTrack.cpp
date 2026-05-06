@@ -17,6 +17,10 @@ constexpr uint8_t kTbdSongTrackTypeMonosynth = 1;
 constexpr uint8_t kTbdSongTrackTypePolysynth = 2;
 constexpr uint8_t kTbdSongTrackTypeDrum = 3;
 
+uint8_t midi_seq_valid_speed(uint8_t speed) {
+  return speed <= SEQ_SPEED_4X ? speed : SEQ_SPEED_1X;
+}
+
 struct TbdP4RuntimeDefault {
   uint8_t midi_channel;
   int8_t trig_note;
@@ -352,14 +356,14 @@ void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,
   }
 
   if (seq_data.version != MIDI_SEQ_DATA_VERSION) {
+    uint8_t fallback_speed = midi_seq_valid_speed(link.speed);
     seq_data.clear();
+    seq_data.speed = fallback_speed;
   }
   if (seq_data.length == 0) {
     seq_data.length = link.length ? link.length : 16;
   }
-  if (seq_data.speed == 0) {
-    seq_data.speed = link.speed;
-  }
+  seq_data.speed = midi_seq_valid_speed(seq_data.speed);
   seq_data.channel = p4_sound.midi_channel;
 
   if (seq_track != nullptr) {
@@ -368,7 +372,7 @@ void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,
     midi_track->seq_data.channel = p4_sound.midi_channel;
     midi_track->set_channel(p4_sound.midi_channel);
     midi_track->set_length(seq_data.length ? seq_data.length : link.length);
-    midi_track->set_speed(seq_data.speed ? seq_data.speed : link.speed);
+    midi_track->set_speed(seq_data.speed);
   }
 }
 
@@ -422,14 +426,16 @@ void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
   midi_track->notesoff_pending = true;
 
   if (seq_data.version != MIDI_SEQ_DATA_VERSION) {
+    uint8_t fallback_speed = midi_seq_valid_speed(link.speed);
     seq_data.clear();
+    seq_data.speed = fallback_speed;
   }
   load_link_data(seq_track);
   midi_track->seq_data = seq_data;
   midi_track->p4_sound = p4_sound;
   midi_track->set_channel(p4_sound.midi_channel);
   midi_track->set_length(seq_data.length ? seq_data.length : link.length);
-  midi_track->set_speed(seq_data.speed ? seq_data.speed : link.speed);
+  midi_track->set_speed(midi_seq_valid_speed(seq_data.speed));
   midi_track->mute_state = old_mute;
 }
 

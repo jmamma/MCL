@@ -3,6 +3,7 @@
 #ifdef PLATFORM_TBD
 
 #include "GridTrack.h"
+#include "MidiClock.h"
 
 namespace {
 
@@ -26,8 +27,9 @@ TBDSeqTrack::TBDSeqTrack() : TBDSeqDataTrack() {
 }
 
 void TBDSeqTrack::reset() {
+  send_active_note_off();
   TBDSeqDataTrack::reset();
-  mute_mask = 0;
+  gate_ticks_remaining_ = 0;
 }
 
 void TBDSeqTrack::seq(MidiUartClass *uart_) {
@@ -35,6 +37,7 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
   uint16_t tps = get_ticks_per_step();
 
   tick_counter++;
+  service_gate();
   if (tick_counter >= tps) {
     tick_counter = 0;
     cur_event_idx += stepseq_popcount(steps[step_count].locks);
@@ -43,12 +46,14 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
     }
     step_count_inc();
   }
+  update_legacy_progress_counter(tps);
 
   if (count_down) {
     count_down--;
     if (count_down == 0) {
       reset();
       tick_counter = 0;
+      mod12_counter = 0;
     }
     return;
   }
@@ -112,7 +117,40 @@ void TBDSeqTrack::send_trig(uint8_t velocity) {
     return;
   }
   uint8_t note = p4_sound.trig_note >= 0 ? (uint8_t)p4_sound.trig_note : 60;
+  send_active_note_off();
   port->sendNoteOn(p4_sound.midi_channel, note, velocity);
+  active_note_ = note;
+  active_note_channel_ = p4_sound.midi_channel;
+
+  uint16_t tick_time = MidiClock.div192_time;
+  gate_ticks_remaining_ =
+      tick_time == 0
+          ? 1
+          : (uint16_t)(((uint32_t)p4_sound.trig_gate_time_ms * 5u +
+                        tick_time - 1u) /
+                       tick_time);
+  if (gate_ticks_remaining_ == 0) {
+    gate_ticks_remaining_ = 1;
+  }
+}
+
+void TBDSeqTrack::service_gate() {
+  if (gate_ticks_remaining_ == 0) {
+    return;
+  }
+  gate_ticks_remaining_--;
+  if (gate_ticks_remaining_ == 0) {
+    send_active_note_off();
+  }
+}
+
+void TBDSeqTrack::send_active_note_off() {
+  if (!port || active_note_ == 255) {
+    active_note_ = 255;
+    return;
+  }
+  port->sendNoteOff(active_note_channel_, active_note_);
+  active_note_ = 255;
 }
 
 void TBDSeqTrack::send_lock_value(uint8_t param, uint8_t value) {

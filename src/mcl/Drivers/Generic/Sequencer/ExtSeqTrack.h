@@ -6,6 +6,7 @@
 //#include "MidiUartClass.h"
 #include "MidiUart.h"
 #include "NibbleArray.h"
+#include "GridTrack.h"
 #include "mcl.h"
 #include "SeqTrack.h"
 #include "MidiClock.h"
@@ -78,7 +79,7 @@ struct ATTR_PACKED() ext_event_t {
 class NoteVector {
 public:
   uint8_t step;
-  int8_t utiming;
+  int16_t utiming;
   uint8_t value;
   uint8_t velocity;
 };

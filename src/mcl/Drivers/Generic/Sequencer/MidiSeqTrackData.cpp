@@ -77,10 +77,11 @@ bool MidiSeqTrackData::clear_step(uint8_t step) {
 }
 
 uint8_t MidiSeqTrackData::find_lock_idx(uint8_t type,
-                                        uint16_t parameter) const {
+                                        uint16_t parameter,
+                                        uint8_t flags) const {
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     if (locks[i].is_active() && locks[i].type == (type & 0x07) &&
-        locks[i].parameter == parameter) {
+        locks[i].parameter == parameter && locks[i].flags == (flags & 0x1F)) {
       return i;
     }
   }
@@ -91,7 +92,7 @@ uint8_t MidiSeqTrackData::find_or_create_lock(uint8_t type,
                                               uint16_t parameter,
                                               uint16_t default_value,
                                               uint8_t flags) {
-  uint8_t idx = find_lock_idx(type, parameter);
+  uint8_t idx = find_lock_idx(type, parameter, flags);
   if (idx != 255) {
     return idx;
   }

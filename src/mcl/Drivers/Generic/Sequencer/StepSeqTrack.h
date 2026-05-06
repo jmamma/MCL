@@ -63,6 +63,13 @@ public:
         }
     }
 
+    void update_legacy_progress_counter(uint16_t tps) {
+        uint16_t legacy_tps = SeqTrack::get_speed_multiplier_int(speed);
+        mod12_counter = (tps == 0)
+                            ? 0
+                            : (uint8_t)(((uint32_t)tick_counter * legacy_tps) / tps);
+    }
+
     void seq() {
         uint16_t tps = get_ticks_per_step();
         tick_counter++;
@@ -77,10 +84,12 @@ public:
             tick_counter = 0;
             step_count_inc();
         }
+        update_legacy_progress_counter(tps);
     }
 
     void reset() {
         tick_counter = 0;
+        mod12_counter = 0;
         step_count = 0;
         count_down = 0;
         cache_loaded = true;
@@ -156,6 +165,7 @@ public:
             tick_counter = 0;
             step_count_inc();
         }
+        update_legacy_progress_counter(tps);
     }
 
     void step_count_inc() {

@@ -151,6 +151,7 @@ public:
     memset(this, 0, sizeof(MidiSeqTrackData));
     version = MIDI_SEQ_DATA_VERSION;
     length = 16;
+    speed = 0;
   }
 
   uint16_t locate_start(uint8_t step) const {
@@ -178,7 +179,8 @@ public:
   void remove_event(uint16_t index);
   bool clear_step(uint8_t step);
 
-  uint8_t find_lock_idx(uint8_t type, uint16_t parameter) const;
+  uint8_t find_lock_idx(uint8_t type, uint16_t parameter,
+                        uint8_t flags = 0) const;
   uint8_t find_or_create_lock(uint8_t type, uint16_t parameter,
                               uint16_t default_value = 0, uint8_t flags = 0);
   void clean_locks();

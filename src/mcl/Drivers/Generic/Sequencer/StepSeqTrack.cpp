@@ -520,6 +520,11 @@ void StepSeqDataTrack::clear_step(uint8_t step) {
     steps[step].cond_id = 0;
     steps[step].cond_plock = 0;
     microtiming[step] = 0;
+    STEPSEQ_CLEAR_BIT64(trig_mask, step);
+    STEPSEQ_CLEAR_BIT64(slide_mask, step);
+    STEPSEQ_CLEAR_BIT64(accent_mask, step);
+    STEPSEQ_CLEAR_BIT64(swing_mask, step);
+    STEPSEQ_CLEAR_BIT64(mute_mask, step);
 }
 
 void StepSeqDataTrack::clear_step_locks(uint8_t step) {
@@ -801,6 +806,11 @@ void StepSeqDataTrack::modify_track(uint8_t dir) {
 void StepSeqDataTrack::copy_step(uint8_t n, StepSeqStep *step) {
     step->active = true;
     step->microtiming = microtiming[n];
+    step->trig = STEPSEQ_IS_BIT_SET64(trig_mask, n);
+    step->slide = STEPSEQ_IS_BIT_SET64(slide_mask, n);
+    step->accent = STEPSEQ_IS_BIT_SET64(accent_mask, n);
+    step->swing = STEPSEQ_IS_BIT_SET64(swing_mask, n);
+    step->mute = STEPSEQ_IS_BIT_SET64(mute_mask, n);
     uint16_t idx = get_lockidx(n);
     uint64_t lcks = steps[n].locks;
     uint64_t mask = 1ULL;
@@ -828,6 +838,13 @@ void StepSeqDataTrack::paste_step(uint8_t n, StepSeqStep *step,
     steps[n].locks_enabled = step->data.locks_enabled;
     steps[n].cond_plock = step->data.cond_plock;
     steps[n].cond_id = step->data.cond_id;
+    set_step(n, STEPSEQ_MASK_PATTERN, step->trig);
+    set_step(n, STEPSEQ_MASK_SLIDE, step->slide);
+    set_step(n, STEPSEQ_MASK_MUTE, step->mute);
+    if (step->accent) STEPSEQ_SET_BIT64(accent_mask, n);
+    else STEPSEQ_CLEAR_BIT64(accent_mask, n);
+    if (step->swing) STEPSEQ_SET_BIT64(swing_mask, n);
+    else STEPSEQ_CLEAR_BIT64(swing_mask, n);
 }
 
 void StepSeqDataTrack::transpose(int8_t offset) {

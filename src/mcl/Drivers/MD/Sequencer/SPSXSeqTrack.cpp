@@ -54,6 +54,7 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
         }
         step_count_inc();
     }
+    update_legacy_progress_counter(tps);
 
     // MID machine note-off countdown
     if (notes.count_down) {
@@ -68,6 +69,7 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
         if (count_down == 0) {
             reset();
             tick_counter = 0;
+            mod12_counter = 0;
             SPSX_SET_BIT16(MDSeqTrack::gui_update, track_number);
         } else if (count_down <= track_number / 4 + 1) {
             if (!cache_loaded) {

@@ -57,14 +57,14 @@ public:
 
   uint16_t ticks_per_step() const;
   uint16_t speed_multiplier_int() const { return ticks_per_step(); }
-  uint16_t event_tick(uint8_t step, const MidiSeqEvent &event) const;
+  int32_t event_tick(uint8_t step, const MidiSeqEvent &event) const;
   uint8_t page_timing_to_data(uint16_t timing) const;
   uint16_t data_timing_to_page(uint8_t timing) const;
-  uint8_t step_from_tick(uint16_t tick) const {
+  uint8_t step_from_tick(uint32_t tick) const {
     uint16_t tps = ticks_per_step();
     return tps == 0 ? 0 : tick / tps;
   }
-  uint16_t timing_from_tick(uint16_t tick) const;
+  uint16_t timing_from_tick(uint32_t tick) const;
 
   void set_channel(uint8_t channel);
   uint8_t channel() const;
@@ -83,16 +83,31 @@ public:
                 MidiUartClass *uart_ = nullptr);
   void buffer_notesoff();
   void reset_params();
+  void send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_ = nullptr);
+  void pitch_bend(uint16_t value, MidiUartClass *uart_ = nullptr);
+  void channel_pressure(uint8_t pressure, MidiUartClass *uart_ = nullptr);
 
-  bool add_note(uint16_t tick, uint16_t width, uint8_t note, uint8_t velocity,
+  bool add_note(uint32_t tick, uint32_t width, uint8_t note, uint8_t velocity,
                 uint8_t condition = 0);
-  bool del_note(uint16_t tick, uint16_t width = 0, uint8_t note = 0);
+  bool del_note(uint32_t tick, uint32_t width = 0, uint8_t note = 0);
+  void record_track_noteon(uint8_t note, uint8_t velocity);
+  void record_track_noteoff(uint8_t note);
+  bool record_lock(uint8_t type, uint16_t parameter, uint16_t value,
+                   bool slide, uint8_t lock_flags = 0,
+                   uint16_t default_value = 0);
 
   uint8_t selected_lock_param(uint8_t slot) const;
   void set_selected_lock_param(uint8_t slot, uint8_t param);
+  bool set_selected_lock_control(uint8_t slot, uint8_t type,
+                                 uint16_t parameter,
+                                 uint16_t default_value = 0,
+                                 uint8_t flags = 0);
   bool add_lock(uint8_t step, uint16_t timing, uint8_t param, uint8_t value,
                 bool slide, uint8_t lock_idx);
-  bool del_lock(int16_t tick, uint8_t lock_idx, uint8_t value);
+  bool set_p4_lock(uint8_t step, uint16_t timing, uint8_t param,
+                   uint8_t value, bool slide);
+  bool record_p4_lock(uint8_t param, uint8_t value, bool slide);
+  bool del_lock(uint32_t tick, uint8_t lock_idx, uint8_t value);
   uint8_t count_lock_event(uint8_t step, uint8_t lock_idx) const;
   uint8_t search_lock_idx(uint8_t lock_idx, uint8_t step, uint16_t &event_idx,
                           uint16_t &event_end) const;
@@ -114,6 +129,7 @@ public:
 private:
   MidiUartClass *port_ = nullptr;
 
+  void update_legacy_progress_counter();
   uint16_t add_event(uint8_t step, const MidiSeqEvent &event);
   void remove_event(uint16_t index);
   void handle_event(const MidiSeqEvent &event, uint8_t step,

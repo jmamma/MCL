@@ -43,6 +43,11 @@ public:
     bool active;
     uint8_t locks[STEPSEQ_NUM_LOCKS];
     int8_t microtiming;
+    bool trig;
+    bool slide;
+    bool accent;
+    bool swing;
+    bool mute;
     StepSeqStepDescriptor data;
 };
 
