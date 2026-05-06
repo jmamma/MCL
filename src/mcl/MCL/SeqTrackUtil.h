@@ -3,14 +3,15 @@
 #pragma once
 
 #include "MCLSeq.h"
-#include "../Drivers/MD/MD.h"
+#include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
 #include "ArpSeqTrack.h"
 
 class SeqTrackUtil {
 public:
   static inline bool is_md_device(const MidiDevice *device) {
-    return device == &MD;
+    return device &&
+           device->supports_capability(MidiDeviceCapability::MdSequencerTracks);
   }
 
   static inline uint8_t track_count(bool is_md_device) {

@@ -121,6 +121,7 @@ void MDClass::cleanup_listeners() {
 bool MDClass::supports_capability(MidiDeviceCapability capability) const {
   switch (capability) {
   case MidiDeviceCapability::MdTrigInterface:
+  case MidiDeviceCapability::MdSequencerTracks:
     return true;
   }
   return ElektronDevice::supports_capability(capability);

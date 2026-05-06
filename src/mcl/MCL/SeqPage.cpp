@@ -130,7 +130,7 @@ void SeqPage::check_and_set_page_select() {
     page_select = 0;
   }
   ElektronDevice *elektron_dev = midi_device->asElektronDevice();
-  if (elektron_dev != &MD) {
+  if (!SeqTrackUtil::is_md_device(midi_device)) {
     DEBUG_PRINTLN("bad device");
   }
   if (elektron_dev != nullptr) {
@@ -286,7 +286,7 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
 
 void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   reset_undo();
-  if (device == &MD) {
+  if (SeqTrackUtil::is_md_device(device)) {
     DEBUG_PRINTLN("setting md track");
     opt_undo = 255;
     DEBUG_PRINTLN(track);
@@ -398,7 +398,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       // If MD trig is held and BUTTON3 is pressed, launch note menu
       if (!show_seq_menu) {
         show_seq_menu = true;
-        if (opt_midi_device_capture == &MD) {
+        if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
           auto &bt = SeqTrackUtil::get_seq_track(true, last_md_track);
           opt_trackid = last_md_track + 1;
           opt_speed = bt.speed;
@@ -755,7 +755,7 @@ void pattern_len_handler(EncoderParent *enc) {
 void opt_length_handler() { seq_step_page.length_handler(opt_length); }
 
 void opt_channel_handler() {
-  if (opt_midi_device_capture == &MD) {
+  if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
   } else {
     uint8_t chan = opt_channel - 1;
     if (mcl_seq.ext_tracks[last_ext_track].channel != chan) {
@@ -813,7 +813,7 @@ void opt_clear_track_handler() {
   COPY:
     copy = true;
   }
-  if (opt_midi_device_capture == &MD ||
+  if (SeqTrackUtil::is_md_device(opt_midi_device_capture) ||
       !(mcl.currentPage() == SEQ_PTC_PAGE ||
         mcl.currentPage() == SEQ_EXTSTEP_PAGE)) {
     if (opt_clear == 2) {
@@ -877,7 +877,7 @@ void opt_clear_track_handler() {
 
 void opt_clear_locks_handler() {
 
-  if (opt_midi_device_capture == &MD) {
+  if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
     if (opt_clear == 2) {
       oled_display.textbox_P(mclstr_clear_md, mclstr_locks);
       SeqTrackUtil::for_each_md_track([](auto &t, uint8_t) { t.clear_locks(); });
@@ -903,7 +903,7 @@ void opt_clear_locks_handler() {
 }
 
 void opt_clear_all_tracks_handler() {
-  if (opt_midi_device_capture == &MD) {
+  if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
   }
 #ifdef EXT_TRACKS
   else {
@@ -913,7 +913,7 @@ void opt_clear_all_tracks_handler() {
 }
 
 void opt_clear_all_locks_handler() {
-  if (opt_midi_device_capture == &MD) {
+  if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
   }
 #ifdef EXT_TRACKS
   else {
@@ -932,8 +932,9 @@ void opt_copy_track_handler(uint8_t op) {
     opt_undo = op;
     silent = true;
   } else {
-    SET_BIT(copy_mask,
-            (uint8_t)(opt_midi_device_capture == &MD) * 4 + opt_copy);
+    const uint8_t copy_slot =
+        SeqTrackUtil::is_md_device(opt_midi_device_capture) ? 4 : 0;
+    SET_BIT(copy_mask, copy_slot + opt_copy);
   }
   DEBUG_PRINTLN("copying");
   DEBUG_PRINTLN(opt_copy);
@@ -941,7 +942,7 @@ void opt_copy_track_handler(uint8_t op) {
   DEBUG_PRINTLN("/end");
   if (opt_copy == 2) {
 
-    if (opt_midi_device_capture == &MD) {
+    if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
       if (!silent) {
         oled_display.textbox_P(mclstr_copy_md, mclstr_tracks);
         oled_display.display();
@@ -960,7 +961,7 @@ void opt_copy_track_handler(uint8_t op) {
 #endif
   }
   if (opt_copy == 1) {
-    if (opt_midi_device_capture == &MD) {
+    if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
       if (!silent) {
         oled_display.textbox_P(mclstr_copy, mclstr_track);
         MD.popup_text(4);
@@ -986,14 +987,16 @@ void opt_paste_track_handler() {
   bool undo = false;
   if (opt_undo != 255) {
     undo = true;
-  } else if (!IS_BIT_SET(copy_mask,
-                         (uint8_t)(opt_midi_device_capture == &MD) * 4 +
-                             opt_paste)) {
-    return;
+  } else {
+    const uint8_t copy_slot =
+        SeqTrackUtil::is_md_device(opt_midi_device_capture) ? 4 : 0;
+    if (!IS_BIT_SET(copy_mask, copy_slot + opt_paste)) {
+      return;
+    }
   }
   if (opt_paste == 2) {
 
-    if (opt_midi_device_capture == &MD) {
+    if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
       if (!undo) {
         oled_display.textbox_P(mclstr_paste_md, mclstr_tracks);
         oled_display.display();
@@ -1015,7 +1018,7 @@ void opt_paste_track_handler() {
     }
   }
   if (opt_paste == 1) {
-    if (opt_midi_device_capture == &MD) {
+    if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
       bool is_poly = false;
       if (!undo) {
         oled_display.textbox_P(mclstr_paste, mclstr_track);
@@ -1248,7 +1251,7 @@ void opt_clear_step_locks_handler() {
   for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
     if (note_interface.is_note_on(n)) {
 
-      if (opt_midi_device_capture == &MD) {
+      if (SeqTrackUtil::is_md_device(opt_midi_device_capture)) {
         uint8_t s = n + SeqPage::page_select * 16;
         SeqTrackUtil::with_md_track(last_md_track, [s](auto &t) {
           t.clear_step_locks(s);
@@ -1340,7 +1343,8 @@ void SeqPage::loop() {
 
   if (show_seq_menu) {
     seq_menu_page.loop();
-    if (opt_midi_device_capture != &MD && opt_trackid > NUM_EXT_TRACKS) {
+    if (!SeqTrackUtil::is_md_device(opt_midi_device_capture) &&
+        opt_trackid > NUM_EXT_TRACKS) {
       // lock trackid to [1..4]
       opt_trackid = min(opt_trackid, NUM_EXT_TRACKS);
       seq_menu_value_encoder.cur = opt_trackid;
@@ -1357,7 +1361,7 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
   uint8_t playing_idx;
   if (_playing_idx == 255) {
     uint8_t step_count;
-    if (midi_device == &MD) {
+    if (SeqTrackUtil::is_md_device(midi_device)) {
       step_count = SeqTrackUtil::get_seq_track(true, last_md_track).step_count;
     }
 #ifdef EXT_TRACKS
@@ -1392,7 +1396,7 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
 //  ref: design/Sequencer.png
 void SeqPage::display() {
 
-  bool is_md = (midi_device == &MD);
+  bool is_md = SeqTrackUtil::is_md_device(midi_device);
   const char *int_name = device_manager.primary_device()->name;
   const char *ext_name = device_manager.secondary_device()->name;
 
