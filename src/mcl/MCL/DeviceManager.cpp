@@ -30,7 +30,15 @@ void DeviceManager::set_device_for_port(uint8_t port, MidiDevice *device) {
   }
 #endif
   physical_[port - 1] = nonnull(device);
+}
+
+void DeviceManager::attach_port(uint8_t port, MidiDevice *device) {
+  set_device_for_port(port, device);
   update_active_slots();
+}
+
+void DeviceManager::detach_port(uint8_t port) {
+  attach_port(port, &null_midi_device);
 }
 
 void DeviceManager::update_active_slots() {
@@ -43,6 +51,7 @@ void DeviceManager::update_active_slots() {
 #ifdef PLATFORM_TBD
   if (active_ui_device_ && active_ui_device_ != dev1_ &&
       active_ui_device_ != dev2_) {
+    active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
   }
 #endif

@@ -12,7 +12,8 @@ class MidiDevice;
 class DeviceManager {
 public:
   MidiDevice *device_for_port(uint8_t port) const;
-  void set_device_for_port(uint8_t port, MidiDevice *device);
+  void attach_port(uint8_t port, MidiDevice *device);
+  void detach_port(uint8_t port);
   void update_active_slots();
   MidiDevice *dev1() const;
   MidiDevice *dev2() const;
@@ -26,6 +27,8 @@ public:
 #endif
 
 private:
+  void set_device_for_port(uint8_t port, MidiDevice *device);
+
   MidiDevice *physical_[3] = {nullptr, nullptr, nullptr};
   MidiDevice *dev1_ = nullptr;
   MidiDevice *dev2_ = nullptr;
