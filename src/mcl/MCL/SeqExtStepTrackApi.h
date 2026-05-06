@@ -415,10 +415,27 @@ public:
                                  uint16_t ctrl, uint16_t default_value = 0) {
 #ifdef PLATFORM_TBD
     if (midi_track_) {
+      uint8_t p4_lock_param = 255;
+      uint16_t p4_value14 = 0;
+      uint16_t p4_default_value14 = 0;
+      if (find_p4_control(ctrl_type, ctrl, default_value, p4_lock_param,
+                          p4_value14, p4_default_value14)) {
+        return midi_track_->set_selected_lock_control(
+            slot, MIDI_SEQ_LOCK_CC, p4_lock_param, p4_default_value14,
+            MIDI_SEQ_LOCK_FLAG_P4_PARAM | MIDI_SEQ_LOCK_FLAG_14BIT);
+      }
+
       uint8_t type = ctrl_type_to_midi_lock_type(ctrl_type);
       if (type == MIDI_SEQ_LOCK_OFF) return false;
+      uint16_t lock_default = default_value;
+      if (type == MIDI_SEQ_LOCK_CC ||
+          type == MIDI_SEQ_LOCK_CHANNEL_PRESSURE ||
+          type == MIDI_SEQ_LOCK_PROGRAM_CHANGE ||
+          type == MIDI_SEQ_LOCK_POLY_PRESSURE) {
+        lock_default = value14_from_value7((uint8_t)default_value);
+      }
       return midi_track_->set_selected_lock_control(slot, type, ctrl,
-                                                    default_value);
+                                                    lock_default);
     }
 #endif
     if (ctrl_type == SEQ_EXT_LOCK_CTRL_CC && ctrl <= 127) {
@@ -729,9 +746,7 @@ public:
                    MidiUartClass *uart_ = nullptr) {
 #ifdef PLATFORM_TBD
     if (midi_track_) {
-      (void)note;
-      (void)pressure;
-      (void)uart_;
+      midi_track_->after_touch(note, pressure, uart_);
       return;
     }
 #endif
@@ -795,12 +810,14 @@ public:
     if (midi_track_) {
       uint8_t lock_param = 255;
       uint16_t value14 = value;
+      uint16_t default_value14 = 0;
       uint8_t lock_flags = 0;
-      if (find_p4_control(ctrl_type, ctrl, value, lock_param, value14)) {
+      if (find_p4_control(ctrl_type, ctrl, value, lock_param, value14,
+                          default_value14)) {
         lock_flags = MIDI_SEQ_LOCK_FLAG_P4_PARAM |
                      MIDI_SEQ_LOCK_FLAG_14BIT;
         return midi_track_->record_lock(MIDI_SEQ_LOCK_CC, lock_param, value14,
-                                        slide, lock_flags);
+                                        slide, lock_flags, default_value14);
       }
       uint8_t midi_type = ctrl_type_to_midi_lock_type(ctrl_type);
       if (midi_type == MIDI_SEQ_LOCK_OFF) return false;
@@ -953,7 +970,8 @@ private:
   }
 
   bool find_p4_control(uint8_t ctrl_type, uint16_t ctrl, uint16_t value,
-                       uint8_t &lock_param, uint16_t &value14) const {
+                       uint8_t &lock_param, uint16_t &value14,
+                       uint16_t &default_value14) const {
     if (!midi_track_) return false;
     uint8_t p4_ctrl_type = ctrl_type == SEQ_EXT_LOCK_CTRL_NRPN
                                ? TBD_P4_CTRLTYPE_NRPM
@@ -972,6 +990,7 @@ private:
       lock_menu_value_info(i, info);
       lock_param = i;
       value14 = value14_from_param_actual(info, (int16_t)value);
+      default_value14 = value14_from_param_actual(info, info.current_value);
       return true;
     }
     return false;

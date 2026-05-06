@@ -86,6 +86,8 @@ public:
   void send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_ = nullptr);
   void pitch_bend(uint16_t value, MidiUartClass *uart_ = nullptr);
   void channel_pressure(uint8_t pressure, MidiUartClass *uart_ = nullptr);
+  void after_touch(uint8_t note, uint8_t pressure,
+                   MidiUartClass *uart_ = nullptr);
 
   bool add_note(uint32_t tick, uint32_t width, uint8_t note, uint8_t velocity,
                 uint8_t condition = 0);

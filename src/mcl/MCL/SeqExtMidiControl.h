@@ -40,34 +40,33 @@ public:
     case 99: // NRPN MSB
       ctrl_type_[channel] = CTRL_NRPN;
       param_msb_[channel] = value & 0x7F;
-      value_msb_[channel] = 0xFF;
-      value_lsb_[channel] = 0;
+      reset_value(channel);
+      clear_null_selection(channel);
       return true;
     case 98: // NRPN LSB
       ctrl_type_[channel] = CTRL_NRPN;
       param_lsb_[channel] = value & 0x7F;
-      value_msb_[channel] = 0xFF;
-      value_lsb_[channel] = 0;
+      reset_value(channel);
+      clear_null_selection(channel);
       return true;
     case 101: // RPN MSB
       ctrl_type_[channel] = CTRL_RPN;
       param_msb_[channel] = value & 0x7F;
-      value_msb_[channel] = 0xFF;
-      value_lsb_[channel] = 0;
+      reset_value(channel);
+      clear_null_selection(channel);
       return true;
     case 100: // RPN LSB
       ctrl_type_[channel] = CTRL_RPN;
       param_lsb_[channel] = value & 0x7F;
-      value_msb_[channel] = 0xFF;
-      value_lsb_[channel] = 0;
-      if (param_msb_[channel] == 127 && param_lsb_[channel] == 127) {
-        ctrl_type_[channel] = CTRL_OFF;
-      }
+      reset_value(channel);
+      clear_null_selection(channel);
       return true;
     case 6: // Data Entry MSB
+      if (ctrl_type_[channel] == CTRL_OFF) return false;
       value_msb_[channel] = value & 0x7F;
       return make_value(channel, out);
     case 38: // Data Entry LSB
+      if (ctrl_type_[channel] == CTRL_OFF) return false;
       value_lsb_[channel] = value & 0x7F;
       if (value_msb_[channel] == 0xFF) return true;
       return make_value(channel, out);
@@ -77,6 +76,17 @@ public:
   }
 
 private:
+  void reset_value(uint8_t channel) {
+    value_msb_[channel] = 0xFF;
+    value_lsb_[channel] = 0;
+  }
+
+  void clear_null_selection(uint8_t channel) {
+    if (param_msb_[channel] == 127 && param_lsb_[channel] == 127) {
+      ctrl_type_[channel] = CTRL_OFF;
+    }
+  }
+
   bool make_value(uint8_t channel, SeqExtParsedControl &out) const {
     if (ctrl_type_[channel] == CTRL_OFF ||
         param_msb_[channel] == 0xFF || param_lsb_[channel] == 0xFF ||

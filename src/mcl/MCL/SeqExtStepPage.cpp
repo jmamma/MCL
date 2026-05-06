@@ -24,6 +24,12 @@ SeqExtStepTrackApi active_ext_step_track() {
   return ext_step_track_api(last_ext_track);
 }
 
+#ifdef PLATFORM_TBD
+bool seq_ext_step_uses_midi_seq_tracks() {
+  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
+}
+#endif
+
 MidiClass *seq_ext_step_input_midi() {
   MidiDevice *device = device_manager.secondary_device();
   if (device != nullptr && device->midi != nullptr) {
@@ -86,6 +92,12 @@ void SeqExtStepPage::config_encoders() {
     fov_y = MIDI_NOTE_C3 - 1;
     cur_y = fov_y + 1;
     cur_w = timing_mid;
+    roll_length = (int32_t)max((uint8_t)1, active_track.length()) * timing_mid;
+    fov_length = min((int32_t)seq_extparam4.cur * timing_mid, roll_length);
+    if (fov_length <= 0) {
+      fov_length = timing_mid ? timing_mid : 1;
+    }
+    fov_pixels_per_tick = ((uint32_t)fov_w << 8) / fov_length;
 
   }
 
@@ -369,9 +381,15 @@ void SeqExtStepPage::draw_lockeditor() {
   }
 
 void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov) {
+  if (w == 0) {
+    w = 1;
+  }
   oled_display.drawRect(x, y, w, fov_h / fov_notes, WHITE);
   if (note_beyond_fov) { w += 1; }
-  oled_display.fillRect(x + 1, y + 1, w - 2, fov_h / fov_notes - 2, BLACK);
+  uint8_t h = fov_h / fov_notes;
+  if (w > 2 && h > 2) {
+    oled_display.fillRect(x + 1, y + 1, w - 2, h - 2, BLACK);
+  }
 }
 
 void SeqExtStepPage::draw_pianoroll() {
@@ -1159,7 +1177,8 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 
 #ifdef PLATFORM_TBD
   SeqExtParsedControl parsed_control;
-  if (control_state.parse_cc(channel, param, value, parsed_control)) {
+  if (seq_ext_step_uses_midi_seq_tracks() &&
+      control_state.parse_cc(channel, param, value, parsed_control)) {
     if (!parsed_control.has_value) return;
 
     if (SeqPage::pianoroll_mode > 0) {
@@ -1228,7 +1247,8 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     if (active_track.selected_lock_param_info(lock_idx, info) &&
         info.learn) {
       SeqPage::param_select = param;
-      active_track.set_selected_lock_menu_value(lock_idx, param);
+      active_track.set_selected_lock_control(lock_idx, SEQ_EXT_LOCK_CTRL_CC,
+                                             param, value);
     }
     if (active_track.selected_lock_matches_control(
             lock_idx, SEQ_EXT_LOCK_CTRL_CC, param)) {
@@ -1251,8 +1271,11 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     page_track.selected_lock_param_info(lock_idx, info);
     if (info.learn) {
       SeqPage::param_select = param;
-      page_track.set_selected_lock_menu_value(lock_idx, param);
-      lock_param = param;
+      page_track.set_selected_lock_control(lock_idx, SEQ_EXT_LOCK_CTRL_CC,
+                                           param, value);
+      if (!page_track.selected_lock_param_id(lock_idx, lock_param)) {
+        return;
+      }
     } else if (!page_track.selected_lock_matches_control(
                    lock_idx, SEQ_EXT_LOCK_CTRL_CC, param)) {
       return;
@@ -1353,6 +1376,21 @@ void SeqExtStepMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
   }
 }
 
+void SeqExtStepMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
+
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t track = mcl_seq.find_ext_track(channel);
+  if (track == 255) return;
+
+  auto active_track = ext_step_track_api(track);
+  active_track.after_touch(msg[1], msg[2]);
+  if (SeqPage::recording && MidiClock.state == 2) {
+    active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_POLY_PRESSURE, msg[1],
+                                     msg[2], false);
+  }
+}
+
 void SeqExtStepMidiEvents::setup_callbacks() {
   if (state) {
     return;
@@ -1372,6 +1410,9 @@ void SeqExtStepMidiEvents::setup_callbacks() {
   bound_midi->addOnPitchWheelCallback(
       this,
       (midi_callback_ptr_t)&SeqExtStepMidiEvents::onPitchWheelCallback_Midi2);
+  bound_midi->addOnAfterTouchCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onAfterTouchCallback_Midi2);
   bound_midi->addOnChannelPressureCallback(
       this,
       (midi_callback_ptr_t)&SeqExtStepMidiEvents::
@@ -1400,6 +1441,9 @@ void SeqExtStepMidiEvents::remove_callbacks() {
   bound_midi->removeOnPitchWheelCallback(
       this,
       (midi_callback_ptr_t)&SeqExtStepMidiEvents::onPitchWheelCallback_Midi2);
+  bound_midi->removeOnAfterTouchCallback(
+      this,
+      (midi_callback_ptr_t)&SeqExtStepMidiEvents::onAfterTouchCallback_Midi2);
   bound_midi->removeOnChannelPressureCallback(
       this,
       (midi_callback_ptr_t)&SeqExtStepMidiEvents::

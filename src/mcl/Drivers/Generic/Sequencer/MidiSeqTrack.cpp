@@ -9,6 +9,7 @@
 #include "MCLSysConfig.h"
 #include "SeqPage.h"
 #include "mcl.h"
+#include "../../TBD/TBD.h"
 #include <string.h>
 
 uint8_t MidiSeqTrack::epoch = 0;
@@ -78,6 +79,20 @@ uint16_t clamp_value14(int32_t value) {
   return (uint16_t)value;
 }
 
+bool current_event_due(uint16_t timing, uint16_t tps, uint16_t tick_counter) {
+  if (timing < tps) return false;
+  uint16_t trigger_tick = (uint16_t)(timing - tps + 1);
+  if (trigger_tick >= tps) trigger_tick = tps - 1;
+  return tick_counter == trigger_tick;
+}
+
+bool next_event_due(uint16_t timing, uint16_t tps, uint16_t tick_counter) {
+  if (timing >= tps) return false;
+  uint16_t trigger_tick = timing;
+  if (trigger_tick < 1) trigger_tick = 1;
+  return tick_counter == trigger_tick;
+}
+
 } // namespace
 
 MidiSeqTrack::MidiSeqTrack() : SeqTrackCond() {
@@ -137,8 +152,9 @@ uint8_t MidiSeqTrack::page_timing_to_data(uint16_t timing) const {
 }
 
 uint16_t MidiSeqTrack::timing_from_tick(uint32_t tick) const {
-  uint8_t step = step_from_tick(tick);
-  return ticks_per_step() + tick - ((uint16_t)step * ticks_per_step());
+  uint16_t tps = ticks_per_step();
+  if (tps == 0) return MIDI_SEQ_TIMING_CENTER;
+  return (uint16_t)(tps + (tick % tps));
 }
 
 int32_t MidiSeqTrack::event_tick(uint8_t step,
@@ -231,16 +247,19 @@ uint8_t MidiSeqTrack::search_note_off(uint8_t note, uint8_t step,
 bool MidiSeqTrack::add_note(uint32_t tick, uint32_t width, uint8_t note,
                             uint8_t velocity, uint8_t condition) {
   uint16_t tps = ticks_per_step();
-  uint8_t step = tick / tps;
-  uint16_t start_timing = timing_from_tick(tick);
+  if (tps == 0 || length == 0) return false;
+
+  uint32_t raw_step = tick / tps;
+  uint16_t start_timing = (uint16_t)(tps + (tick % tps));
   uint32_t end_tick = tick + width;
-  uint8_t end_step = end_tick / tps;
-  if (end_step == step) {
-    end_step++;
+  uint32_t raw_end_step = end_tick / tps;
+  if (raw_end_step == raw_step) {
+    raw_end_step++;
   }
-  uint16_t end_timing = tps + end_tick - ((uint32_t)end_step * tps);
-  if (step >= length) step %= length;
-  if (end_step >= length) end_step -= length;
+  uint16_t end_timing =
+      (uint16_t)(tps + end_tick - (raw_end_step * (uint32_t)tps));
+  uint8_t step = (uint8_t)(raw_step % length);
+  uint8_t end_step = (uint8_t)(raw_end_step % length);
 
   uint16_t start_idx = 0;
   if (find_note_event(step, note, true, start_idx) != 0xFFFF) {
@@ -639,6 +658,14 @@ void MidiSeqTrack::channel_pressure(uint8_t pressure, MidiUartClass *uart_) {
   uart_->sendChannelPressure(channel(), pressure);
 }
 
+void MidiSeqTrack::after_touch(uint8_t note, uint8_t pressure,
+                               MidiUartClass *uart_) {
+  if (uart_ == nullptr) uart_ = port_;
+  if (uart_ == nullptr) uart_ = uart;
+  if (!uart_) return;
+  uart_->sendPolyKeyPressure(channel(), note, pressure);
+}
+
 void MidiSeqTrack::buffer_notesoff() {
   if (!port_) port_ = uart;
   if (!port_) return;
@@ -652,7 +679,6 @@ void MidiSeqTrack::buffer_notesoff() {
 }
 
 void MidiSeqTrack::record_track_noteon(uint8_t note, uint8_t velocity) {
-  uint16_t tps = ticks_per_step();
   int16_t timing = tick_counter > 0 ? (int16_t)tick_counter - 1 : 0;
   uint8_t step = step_count;
 
@@ -769,11 +795,9 @@ void MidiSeqTrack::send_p4_lock_value(uint8_t param, uint16_t value14) {
   if (!desc || !desc->is_sendable()) return;
   int16_t scaled = tbd_p4_scale_lock_value(*desc, value14);
   if (desc->ctrl_type == TBD_P4_CTRLTYPE_CC) {
-    if (scaled < 0) scaled = 0;
-    if (scaled > 127) scaled = 127;
-    port_->sendCC(channel(), desc->ctrl, (uint8_t)scaled);
+    tbd_p4_send_param_value(port_, channel(), *desc, scaled);
   } else if (desc->ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
-    port_->sendNRPN(channel(), desc->ctrl, (uint16_t)scaled);
+    tbd_p4_send_param_value(port_, channel(), *desc, scaled);
   }
 }
 
@@ -1041,7 +1065,7 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
   for (; ev_idx < ev_end; ev_idx++) {
     const auto &event = seq_data.events[ev_idx];
     uint16_t timing = data_timing_to_page(event.timing);
-    if (timing >= tps && timing - tps == tick_counter) {
+    if (current_event_due(timing, tps, tick_counter)) {
       handle_event(event, step_count, bucket_start);
     }
   }
@@ -1053,7 +1077,7 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
   for (; ev_idx < ev_end; ev_idx++) {
     const auto &event = seq_data.events[ev_idx];
     uint16_t timing = data_timing_to_page(event.timing);
-    if (timing < tps && timing == tick_counter) {
+    if (next_event_due(timing, tps, tick_counter)) {
       handle_event(event, next_step, bucket_start);
     }
   }

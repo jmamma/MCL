@@ -27,6 +27,7 @@ public:
   void onNoteOffCallback_Midi2(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
   void onPitchWheelCallback_Midi2(uint8_t *msg);
+  void onAfterTouchCallback_Midi2(uint8_t *msg);
   void onChannelPressureCallback_Midi2(uint8_t *msg);
 };
 
