@@ -2,6 +2,8 @@
 
 #ifdef PLATFORM_TBD
 
+#include "DeviceManager.h"
+#include "GridPages.h"
 #include "MCL.h"
 #include "MCLGUI.h"
 #include "MCLSeq.h"
@@ -12,6 +14,7 @@
 #include "SeqPages.h"
 #include "SeqStepTrackApi.h"
 #include "TBD.h"
+#include "TBDTrack.h"
 #include "TbdP4Command.h"
 #include "TbdP4Realtime.h"
 #include "GUI_hardware.h"
@@ -30,6 +33,14 @@ constexpr uint32_t kPresetCommandTimeoutMs = 30000;
 constexpr size_t kPresetListJsonBytes = 4096;
 
 char preset_list_json[kPresetListJsonBytes];
+
+void claim_tbd_ui_trig_leds() {
+  if (grid_page.bank_popup) {
+    grid_page.close_bank_popup();
+    return;
+  }
+  mcl_gui.set_trigleds_local(0, TRIGLED_EXCLUSIVE);
+}
 
 uint8_t normalized_value(const TbdP4ParamDescriptor &param) {
   if (param.max_value <= param.min_value) {
@@ -433,6 +444,54 @@ TbdP4SoundData *TbdUiMode::active_sound() const {
   return nullptr;
 }
 
+bool TbdUiMode::select_track(uint8_t track_idx) {
+  if (!latched_) return false;
+
+  MidiDevice *device = nullptr;
+  uint8_t seq_slot = 1;
+
+  if (device_idx_ == SLOT_PRIMARY) {
+    if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD ||
+        track_idx >= mcl_seq.num_tbd_tracks) {
+      return false;
+    }
+    last_md_track = track_idx;
+    device = &TBD;
+    seq_slot = 1;
+  } else if (device_idx_ == SLOT_SECONDARY) {
+#ifdef EXT_TRACKS
+    if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD ||
+        track_idx >= mcl_seq.num_midi_tracks ||
+        track_idx >= NUM_EXT_TRACKS) {
+      return false;
+    }
+    last_ext_track = track_idx;
+    device = device_manager.secondary_device();
+    seq_slot = 2;
+#else
+    return false;
+#endif
+  } else {
+    return false;
+  }
+
+  const PageIndex pg = mcl.currentPage();
+  if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
+      pg == SEQ_EXTSTEP_PAGE) {
+    SeqPage::select_device_slot(seq_slot);
+    if (device != nullptr) {
+      seq_step_page.select_track(device, track_idx, false);
+    }
+  }
+
+  TbdP4SoundData *sound = active_sound();
+  if (sound != nullptr) {
+    tbd_p4_realtime.set_active_track(sound->p4_track_index);
+  }
+  resync_from_sound();
+  return true;
+}
+
 uint8_t TbdUiMode::window_count() const {
   const uint8_t driver_pages = tbd_p4_driver_param_page_count();
   TbdP4SoundData *sound = active_sound();
@@ -802,12 +861,14 @@ bool TbdUiMode::enter(uint8_t device_idx) {
   }
 
   if (latched_ && device_idx_ == device_idx) {
+    claim_tbd_ui_trig_leds();
     show_fullscreen();
     return true;
   }
 
   latched_ = true;
   device_idx_ = device_idx;
+  claim_tbd_ui_trig_leds();
   GUI_hardware.led.set_tbd_driver_leds(device_idx_ == SLOT_PRIMARY,
                                        device_idx_ == SLOT_SECONDARY);
   sub_page_ = min(sub_page_, (uint8_t)(window_count() - 1));
@@ -817,6 +878,7 @@ bool TbdUiMode::enter(uint8_t device_idx) {
 }
 
 void TbdUiMode::disable() {
+  const bool was_latched = latched_;
   latched_ = false;
   device_idx_ = SLOT_NONE;
   bound_device_idx_ = SLOT_NONE;
@@ -825,6 +887,9 @@ void TbdUiMode::disable() {
   ui_button_pressed_ = false;
   ui_button_hold_handled_ = false;
   GUI_hardware.led.set_tbd_driver_leds(false, false);
+  if (was_latched) {
+    mcl_gui.reset_trigleds();
+  }
   if (GUI.overlay == &tbd_param_strip_page ||
       GUI.overlay == &tbd_param_overlay_page) {
     GUI.clearOverlay();
@@ -1087,6 +1152,7 @@ bool TbdUiMode::apply_selected_preset() {
     *sound = next;
     tbd_p4_realtime.set_active_track(sound->p4_track_index);
     tbd_p4_send_sound_state(*sound);
+    tbd_mark_p4_sound_applied(*sound);
     resync_from_sound();
   } else {
     preset_apply_failed_ = true;

@@ -225,6 +225,35 @@ void ensure_sound_default(TbdP4SoundData &sound,
   }
 }
 
+TbdP4SoundData g_last_applied_sounds[TBD_P4_SOUND_TRACK_COUNT];
+bool g_last_applied_valid[TBD_P4_SOUND_TRACK_COUNT] = {};
+
+bool p4_sound_same_command(const TbdP4SoundData &a,
+                           const TbdP4SoundData &b) {
+  return a.p4_track_index == b.p4_track_index &&
+         strncmp(a.preset_id, b.preset_id, sizeof(a.preset_id)) == 0 &&
+         strncmp(a.macro_id, b.macro_id, sizeof(a.macro_id)) == 0 &&
+         strncmp(a.machine_id, b.machine_id, sizeof(a.machine_id)) == 0 &&
+         a.rom_bank == b.rom_bank &&
+         a.sample_slice == b.sample_slice;
+}
+
+bool p4_sound_same_state(const TbdP4SoundData &a,
+                         const TbdP4SoundData &b) {
+  return memcmp(&a, &b, sizeof(TbdP4SoundData)) == 0;
+}
+
+bool p4_last_applied_sound(uint8_t p4_track_index, TbdP4SoundData *sound) {
+  if (p4_track_index >= TBD_P4_SOUND_TRACK_COUNT ||
+      !g_last_applied_valid[p4_track_index]) {
+    return false;
+  }
+  if (sound != nullptr) {
+    *sound = g_last_applied_sounds[p4_track_index];
+  }
+  return true;
+}
+
 void debug_p4_sound_apply(const char *source, uint8_t mcl_track,
                           uint8_t slotnumber,
                           const TbdP4SoundData &sound) {
@@ -254,10 +283,10 @@ void debug_p4_sound_apply(const char *source, uint8_t mcl_track,
   DEBUG_PRINT(" slice=");
   DEBUG_PRINT((long)sound.sample_slice);
   DEBUG_PRINT(" cmd=");
-  if (sound.has_machine()) {
-    DEBUG_PRINT("machine");
-  } else if (sound.has_preset()) {
+  if (sound.has_preset()) {
     DEBUG_PRINT("preset");
+  } else if (sound.has_machine()) {
+    DEBUG_PRINT("machine");
   } else if (sound.has_macro()) {
     DEBUG_PRINT("macro");
   } else {
@@ -292,34 +321,82 @@ void debug_p4_sound_apply_result(const char *source, uint8_t mcl_track,
 #endif
 }
 
+void debug_p4_sound_apply_skip(const char *source, uint8_t mcl_track,
+                               uint8_t p4_track_index,
+                               const char *reason) {
+#ifdef DEBUGMODE
+  DEBUG_PRINT("TBD_P4_APPLY_SKIP src=");
+  DEBUG_PRINT(source == nullptr ? "?" : source);
+  DEBUG_PRINT(" mcl=");
+  DEBUG_PRINT((unsigned)mcl_track);
+  DEBUG_PRINT(" p4=");
+  DEBUG_PRINT((unsigned)p4_track_index);
+  DEBUG_PRINT(" reason=");
+  DEBUG_PRINTLN(reason == nullptr ? "?" : reason);
+#else
+  (void)source;
+  (void)mcl_track;
+  (void)p4_track_index;
+  (void)reason;
+#endif
+}
+
 void apply_p4_sound(const TbdP4SoundData &sound, const char *source,
                     uint8_t mcl_track, uint8_t slotnumber) {
   debug_p4_sound_apply(source, mcl_track, slotnumber, sound);
   tbd_p4_realtime.set_active_track(sound.p4_track_index);
-  bool applied = true;
-  if (sound.has_machine()) {
-    applied = tbd_p4_command.activate_track_machine(sound.p4_track_index,
-                                                    sound.machine_id,
-                                                    kPresetApplyTimeoutMs);
+
+  TbdP4SoundData last_sound;
+  const bool has_last =
+      p4_last_applied_sound(sound.p4_track_index, &last_sound);
+  if (has_last && p4_sound_same_state(sound, last_sound)) {
+    debug_p4_sound_apply_skip(source, mcl_track, sound.p4_track_index,
+                              "same-state");
+    debug_p4_sound_apply_result(source, mcl_track, sound.p4_track_index, true);
+    return;
   }
-  if (applied && sound.has_preset()) {
-    applied = tbd_p4_command.load_track_sound_preset(sound.p4_track_index,
-                                                     sound.preset_id,
-                                                     sound.rom_bank,
-                                                     sound.sample_slice,
-                                                     kPresetApplyTimeoutMs);
-  } else if (applied && sound.has_macro()) {
-    applied = tbd_p4_command.load_track_macro_definition(sound.p4_track_index,
-                                                         sound.macro_id,
-                                                         kPresetApplyTimeoutMs);
+
+  const bool command_needed =
+      !has_last || !p4_sound_same_command(sound, last_sound);
+  bool applied = true;
+  if (command_needed) {
+    if (sound.has_preset()) {
+      applied = tbd_p4_command.load_track_sound_preset(sound.p4_track_index,
+                                                       sound.preset_id,
+                                                       sound.rom_bank,
+                                                       sound.sample_slice,
+                                                       kPresetApplyTimeoutMs);
+    } else {
+      if (sound.has_machine()) {
+        applied = tbd_p4_command.activate_track_machine(sound.p4_track_index,
+                                                        sound.machine_id,
+                                                        kPresetApplyTimeoutMs);
+      }
+      if (applied && sound.has_macro()) {
+        applied = tbd_p4_command.load_track_macro_definition(
+            sound.p4_track_index, sound.macro_id, kPresetApplyTimeoutMs);
+      }
+    }
+  } else {
+    debug_p4_sound_apply_skip(source, mcl_track, sound.p4_track_index,
+                              "same-command");
   }
   debug_p4_sound_apply_result(source, mcl_track, sound.p4_track_index, applied);
   if (applied) {
     tbd_p4_send_sound_state(sound);
+    tbd_mark_p4_sound_applied(sound);
   }
 }
 
 } // namespace
+
+void tbd_mark_p4_sound_applied(const TbdP4SoundData &sound) {
+  if (sound.p4_track_index >= TBD_P4_SOUND_TRACK_COUNT) {
+    return;
+  }
+  g_last_applied_sounds[sound.p4_track_index] = sound;
+  g_last_applied_valid[sound.p4_track_index] = true;
+}
 
 const TbdTrackDefault &tbd_track_default_for_slot(uint8_t slot) {
   if (slot >= sizeof(kTbdMidiTrackDefaults) / sizeof(kTbdMidiTrackDefaults[0])) {

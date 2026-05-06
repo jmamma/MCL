@@ -50,11 +50,22 @@ void GridIOPage::draw_title(const char *title, uint8_t y_offset) {
 
 void GridIOPage::draw_tbd_panel_header(const char *title, uint8_t y_offset) {
 #ifdef PLATFORM_TBD
-  oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont();
-  oled_display.setCursor(2, y_offset + 2);
+
+  uint8_t title_len = 0;
+  while (title[title_len] != '\0') title_len++;
+
+  constexpr uint8_t title_x = 0;
+  constexpr uint8_t title_h = 12;
+  const uint8_t title_y = y_offset + (32 - title_h) / 2;
+  const uint8_t title_w = title_len * 6 + 4;
+
+  oled_display.fillRect(title_x, title_y, title_w, title_h, WHITE);
+  oled_display.setTextColor(BLACK, WHITE);
+  oled_display.setCursor(title_x + 2, title_y + 2);
   oled_display.print(title);
 
+  oled_display.setTextColor(WHITE, BLACK);
   char val[3];
   const uint8_t row = grid_page.getRow();
   const uint8_t bank = row / 16;

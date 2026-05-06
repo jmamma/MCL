@@ -33,6 +33,7 @@ public:
   void disable();
   bool handle_event(gui_event_t *event);
   void handle_ui_slot_button(bool pressed);
+  bool select_track(uint8_t track_idx);
   void poll_encoders();
 
   TbdP4SoundData *active_sound() const;

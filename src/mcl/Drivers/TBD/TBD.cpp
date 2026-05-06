@@ -122,6 +122,16 @@ uint8_t count_p4_sendable_params(const TbdP4SoundData &sound) {
   return count;
 }
 
+uint8_t count_p4_sendable_mixer_params(const TbdP4SoundData &sound) {
+  uint8_t count = 0;
+  for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+    if (sound.mixer_params.params[i].is_sendable()) {
+      count++;
+    }
+  }
+  return count;
+}
+
 void debug_p4_json_result(const char *label, bool ok, const char *json) {
 #ifdef DEBUGMODE
   const size_t len = json == nullptr ? 0 : strlen(json);
@@ -271,6 +281,27 @@ TbdP4SoundData *p4_sound_for_mixer(uint8_t device_idx, uint8_t track) {
     }
     return &mcl_seq.midi_tracks[track].p4_sound;
   }
+  return nullptr;
+}
+
+TbdP4SoundData *active_p4_sound_for_note() {
+  TbdP4SoundData *sound = tbd_ui_mode.active_sound();
+  if (sound != nullptr) {
+    return sound;
+  }
+
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
+      last_md_track < mcl_seq.num_tbd_tracks) {
+    return &mcl_seq.tbd_tracks[last_md_track].p4_sound;
+  }
+
+#ifdef EXT_TRACKS
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD &&
+      last_ext_track < mcl_seq.num_midi_tracks) {
+    return &mcl_seq.midi_tracks[last_ext_track].p4_sound;
+  }
+#endif
+
   return nullptr;
 }
 
@@ -1282,6 +1313,18 @@ void tbd_p4_send_sound_state(const TbdP4SoundData &sound) {
   }
 }
 
+static void tbd_p4_send_sound_mixer_state(const TbdP4SoundData &sound) {
+  if (TBD.uart == nullptr || sound.midi_channel >= 16) {
+    return;
+  }
+
+  tbd_p4_realtime.set_active_track(sound.p4_track_index);
+  for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+    const TbdP4ParamDescriptor &param = sound.mixer_params.params[i];
+    tbd_p4_send_param_value(TBD.uart, sound.midi_channel, param, param.value);
+  }
+}
+
 uint8_t tbd_p4_driver_param_page_count() {
   ensure_p4_driver_params_initialized();
   return p4_driver_params.num_pages;
@@ -1816,7 +1859,7 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
 
   set_stage(12);
 #ifdef DEBUGMODE
-  DEBUG_PRINTLN("tbd_init send driver and cached sound state");
+  DEBUG_PRINTLN("tbd_init send driver and cached mixer state");
 #endif
   tbd_p4_send_driver_params();
   for (uint8_t i = 0; i < kP4SoundTrackCount; i++) {
@@ -1824,12 +1867,13 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
       continue;
     }
 #ifdef DEBUGMODE
-    DEBUG_PRINT("tbd_init send_state p4=");
+    DEBUG_PRINT("tbd_init send_mixer p4=");
     DEBUG_PRINT((unsigned)i);
     DEBUG_PRINT(" params=");
-    DEBUG_PRINTLN((unsigned)count_p4_sendable_params(p4_default_sounds[i]));
+    DEBUG_PRINTLN((unsigned)count_p4_sendable_mixer_params(p4_default_sounds[i]));
 #endif
-    tbd_p4_send_sound_state(p4_default_sounds[i]);
+    tbd_p4_send_sound_mixer_state(p4_default_sounds[i]);
+    tbd_mark_p4_sound_applied(p4_default_sounds[i]);
   }
 
   p4_defaults_loaded_ = true;
@@ -1846,15 +1890,22 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
 
 void TbdDevice::note_on(uint8_t note) {
   if (port != UARTP4_PORT || uart == nullptr) return;
+  TbdP4SoundData *sound = active_p4_sound_for_note();
+  if (sound == nullptr || sound->midi_channel >= 16) return;
+
   note_off();
   active_note_ = note;
-  tbd_p4_realtime.set_active_track(tbd_track_default_for_slot(0).p4_track_index);
-  uart->sendNoteOn(0, note, 100);
+  active_note_channel_ = sound->midi_channel;
+  tbd_p4_realtime.set_active_track(sound->p4_track_index);
+  if (sound->note_cc >= 0 && sound->note_cc <= 127) {
+    uart->sendCC(sound->midi_channel, (uint8_t)sound->note_cc, note);
+  }
+  uart->sendNoteOn(sound->midi_channel, note, 100);
 }
 
 void TbdDevice::note_off() {
   if (active_note_ == 255 || uart == nullptr) return;
-  uart->sendNoteOff(0, active_note_);
+  uart->sendNoteOff(active_note_channel_, active_note_);
   active_note_ = 255;
 }
 
@@ -1885,6 +1936,11 @@ bool TbdDevice::enter_diag_ui(uint8_t device_idx) {
                                        device_idx == kTbdUiSlotSecondary);
   GUI.setOverlay(&tbd_p4_diag_overlay);
   return true;
+}
+
+bool TbdDevice::select_ui_track(uint8_t track_idx) {
+  if (diag_active_) return false;
+  return tbd_ui_mode.select_track(track_idx);
 }
 
 bool TbdDevice::handle_ui_event(gui_event_t *event) {

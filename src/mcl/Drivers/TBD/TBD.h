@@ -45,6 +45,7 @@ public:
   virtual void exit_ui() override;
   virtual void on_ui_slot_button(uint8_t slot, bool pressed) override;
   bool enter_diag_ui(uint8_t device_idx);
+  bool select_ui_track(uint8_t track_idx);
   uint8_t ui_device_idx() const { return ui_device_idx_; }
   bool p4_defaults_loaded() const { return p4_defaults_loaded_; }
   bool get_default_p4_sound(uint8_t p4_track_index,
@@ -60,6 +61,7 @@ private:
   bool grid_devices_initialized_[2] = {};
   uint32_t p4_defaults_last_attempt_ms_ = 0;
   uint8_t active_note_ = 255;
+  uint8_t active_note_channel_ = 0;
 
   bool load_default_p4_presets(bool show_progress = false);
   void apply_runtime_p4_defaults();

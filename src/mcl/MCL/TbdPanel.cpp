@@ -161,6 +161,9 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   bool ui_active = device_manager.is_ui_active();
   bool ui_collapsed = device_manager.is_ui_collapsed();
   bool ui_expanded = ui_active && !ui_collapsed;
+  if (!ui_expanded) {
+    ui_b_button_held_ = false;
+  }
 
   const bool arrow_trace = (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
                             orig_src <= ButtonsClass::FUNC_BUTTON9);
@@ -306,6 +309,35 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (ui_expanded &&
       device_manager.handle_ui_event(event)) {
     if (arrow_trace) DEBUG_PRINTLN("  device_manager.handle_ui_event consumed");
+    return true;
+  }
+
+  if (ui_expanded) {
+    if (orig_src == ButtonsClass::TBD_BUTTON_B) {
+      ui_b_button_held_ = is_press;
+      if (is_release) ui_b_button_held_ = false;
+      return true;
+    }
+    if (is_trig_button) {
+      if (ui_b_button_held_ && is_press) {
+        TBD.select_ui_track(orig_src - ButtonsClass::TRIG_BUTTON1);
+        return true;
+      }
+
+      const uint8_t trig_idx = orig_src - ButtonsClass::TRIG_BUTTON1;
+      if (pg == GRID_PAGE) {
+        handle_grid_trig_preview(event, trig_idx);
+        return true;
+      }
+      if (pg == SEQ_PTC_PAGE) {
+        return seq_ptc_page.handle_tbd_keyboard_event(trig_idx, event->mask);
+      }
+      if (pg == SEQ_STEP_PAGE || pg == SEQ_EXTSTEP_PAGE) {
+        key_interface.key_event(trig_idx, is_release);
+        return true;
+      }
+      return true;
+    }
     return true;
   }
 

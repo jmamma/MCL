@@ -29,6 +29,7 @@ void tbd_update_track_default_from_p4(uint8_t p4_track_index,
                                       const char *preset_id,
                                       uint8_t rom_bank,
                                       int32_t sample_slice);
+void tbd_mark_p4_sound_applied(const TbdP4SoundData &sound);
 
 class ATTR_PACKED() TBDTrack : public DeviceTrack {
 public:
