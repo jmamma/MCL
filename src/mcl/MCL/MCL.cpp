@@ -178,17 +178,24 @@ void MCL::setup() {
       loop();
     }
   }
+  if (ret) {
+    R.Clear();
+    R.use_icons_boot();
+    gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
+
+    ret = mcl_sd.load_init();
+  }
+
   if (!ret) {
+    oled_display.clearDisplay();
+    oled_display.setFont();
+    oled_display.setTextColor(WHITE, BLACK);
+    oled_display.setCursor(0, 0);
     mcl_print_P(mclstr_sd_card_error);
     oled_display.display();
     delay(2000);
     return;
   }
-  R.Clear();
-  R.use_icons_boot();
-  gfx.splashscreen(R.icons_boot->mcl_logo_bitmap);
-
-  ret = mcl_sd.load_init();
 
   load_persistent_resources();
 
@@ -196,9 +203,7 @@ void MCL::setup() {
   // so it can preempt the active page on cluster overrides.
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
 
-  if (ret) {
-    mcl.setPage(GRID_PAGE);
-  }
+  mcl.setPage(GRID_PAGE);
 
   DEBUG_PRINTLN(F("tempo:"));
   DEBUG_PRINTLN(mcl_cfg.tempo);

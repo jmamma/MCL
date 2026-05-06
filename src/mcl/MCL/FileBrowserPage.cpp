@@ -352,6 +352,12 @@ bool FileBrowserPage::_cd(const char *child) {
   DEBUG_PRINTLN(lwd);
 
   file.close();
+#ifndef __AVR__
+  char rooted_child[64];
+  if (mcl_sd.mcl_root[0] != '\0' && child[0] == '/') {
+    child = mcl_sd.full_path(child, rooted_child, sizeof(rooted_child));
+  }
+#endif
   const char *ptr = child;
 
   if (child[0] == '/' && child[1] != '\0') {

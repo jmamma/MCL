@@ -1,5 +1,6 @@
 #include "LoadProjectPage.h"
 #include "MCLGFX.h"
+#include "MCLSd.h"
 #include "MCLSysConfig.h"
 #include "Project.h"
 
@@ -22,7 +23,12 @@ void LoadProjectPage::init() {
 
 void LoadProjectPage::setup() {
   FileBrowserPage::setup();
+#ifndef __AVR__
+  char path[64];
+  _cd(mcl_sd.full_path(PRJ_DIR, path, sizeof(path)));
+#else
   _cd(PRJ_DIR);
+#endif
 }
 
 void LoadProjectPage::on_select(const char *entry) {

@@ -11,6 +11,14 @@
 #ifdef WAV_DESIGNER
 #define WAV_NAME "WAVE.wav"
 
+#ifndef __AVR__
+extern const char *c_wav_root;
+static bool wavdesigner_chdir_wav_root() {
+  char path[64];
+  return SD.chdir(mcl_sd.full_path(c_wav_root, path, sizeof(path)));
+}
+#endif
+
 void WavDesigner::prompt_send() {
   //  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
   oled_display.textbox_P(mclstr_render);
@@ -40,6 +48,12 @@ bool WavDesigner::render() {
   DEBUG_PRINT_FN();
   float sample_rate = 44100;
   Wav wav_file;
+
+#ifndef __AVR__
+  if (!wavdesigner_chdir_wav_root()) {
+    return false;
+  }
+#endif
 
   if (!wav_file.open(WAV_NAME, true, 1, sample_rate, 16, true)) {
     return false;
@@ -239,6 +253,11 @@ bool WavDesigner::render() {
 }
 
 bool WavDesigner::send() {
+#ifndef __AVR__
+  if (!wavdesigner_chdir_wav_root()) {
+    return false;
+  }
+#endif
   return midi_sds.sendWav(WAV_NAME, WAV_NAME, mixer.enc4.cur, false);
 }
 

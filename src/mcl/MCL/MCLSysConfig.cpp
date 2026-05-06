@@ -168,12 +168,12 @@ bool MCLSysConfig::cfg_init() {
   DEBUG_PRINTLN(F("Initialising cfgfile"));
   cfgfile.close();
   char path[64];
-  mcl_sd.full_path("/config.mcls", path, sizeof(path));
-  if (!SD.remove(path)) {
+  const char *cfg_path = mcl_sd.full_path("/config.mcls", path, sizeof(path));
+  if (!SD.remove(cfg_path)) {
     DEBUG_PRINTLN(F("Failed to remove old config file"));
   }
   // First open the file
-  ret = cfgfile.open(path, O_RDWR | O_CREAT);
+  ret = cfgfile.open(cfg_path, O_RDWR | O_CREAT);
   if (!ret) {
     DEBUG_PRINTLN(F("Failed to open cfgfile"));
     return false;

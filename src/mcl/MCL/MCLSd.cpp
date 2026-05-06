@@ -60,8 +60,19 @@ bool MCLSd::sd_init() {
 const char *MCLSd::full_path(const char *path, char *buffer, size_t size) {
   if (mcl_root[0] == '\0') return path;
   if (path[0] != '/') return path;
-  strcpy(buffer, mcl_root);
-  strcat(buffer, path);
+
+  size_t root_len = strlen(mcl_root);
+  if (strncmp(path, mcl_root, root_len) == 0 &&
+      (path[root_len] == '\0' || path[root_len] == '/')) {
+    return path;
+  }
+
+  if (size == 0) return path;
+  strncpy(buffer, mcl_root, size);
+  buffer[size - 1] = '\0';
+  if (path[1] != '\0') {
+    strncat(buffer, path, size - strlen(buffer) - 1);
+  }
   return buffer;
 }
 #endif
