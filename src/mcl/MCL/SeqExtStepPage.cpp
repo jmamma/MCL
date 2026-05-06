@@ -656,21 +656,14 @@ void SeqExtStepPage::loop() {
     if (last_pianoroll_mode != pianoroll_mode) {
 
       if (is_lockeditor) {
-        if (active_track.selected_lock_param(pianoroll_mode - 1) == 0) {
-          param_select = PARAM_OFF;
-        } else {
-          param_select = active_track.selected_lock_param(pianoroll_mode - 1) - 1;
-        }
+        param_select =
+            active_track.selected_lock_menu_value(pianoroll_mode - 1);
       }
       last_pianoroll_mode = pianoroll_mode;
     }
     if (is_lockeditor) {
-      if (param_select == PARAM_OFF) {
-        active_track.set_selected_lock_param(pianoroll_mode - 1, 0);
-      } else {
-        active_track.set_selected_lock_param(pianoroll_mode - 1,
-                                             param_select + 1);
-      }
+      active_track.set_selected_lock_menu_value(pianoroll_mode - 1,
+                                                param_select);
     }
   }
   int16_t diff = seq_extparam1.getValue();
@@ -770,8 +763,16 @@ void SeqExtStepPage::display() {
     strcpy_P(info2, mclstr_note);
     draw_pianoroll();
   } else {
+#ifdef PLATFORM_TBD
+    if (!active_track.copy_selected_lock_label(pianoroll_mode - 1, info2,
+                                               sizeof(info2))) {
+      strcpy_P(info2, mclstr_lock_space);
+      mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
+    }
+#else
     strcpy_P(info2, mclstr_lock_space);
     mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
+#endif
     mcl_gui.put_value_at(lock_cur_y, info1);
     draw_lockeditor();
   }
@@ -824,12 +825,7 @@ void SeqExtStepPage::enter_notes() {
 void SeqExtStepPage::param_select_update() {
   if (pianoroll_mode > 0) {
     auto active_track = active_ext_step_track();
-    if (active_track.selected_lock_param(pianoroll_mode - 1) == 0) {
-      param_select = PARAM_OFF;
-    } else {
-      param_select =
-          active_track.selected_lock_param(pianoroll_mode - 1) - 1;
-    }
+    param_select = active_track.selected_lock_menu_value(pianoroll_mode - 1);
   }
 }
 
@@ -1032,10 +1028,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
         bool clear = false;
         clear = active_track.delete_lock(cur_x, lock_idx, lock_cur_y);
-        if (!clear && active_track.selected_lock_param(lock_idx) - 1 > 0) {
-          active_track.add_lock(step, utiming,
-                                active_track.selected_lock_param(lock_idx) - 1,
-                                lock_cur_y, slide, lock_idx);
+        uint8_t param_id = 0;
+        if (!clear && active_track.selected_lock_param_id(lock_idx, param_id)) {
+          active_track.add_lock(step, utiming, param_id, lock_cur_y, slide,
+                                lock_idx);
         }
         DEBUG_DUMP(active_track.count_lock_event(step, lock_idx));
         return true;

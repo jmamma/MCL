@@ -8,6 +8,7 @@
 #include "../Drivers/Generic/Sequencer/MidiSeqTrack.h"
 #endif
 #include <stdint.h>
+#include <stddef.h>
 
 struct SeqExtStepEvent {
   bool is_lock;
@@ -16,6 +17,34 @@ struct SeqExtStepEvent {
   uint8_t cond_id;
   uint16_t event_value;
   int16_t micro_timing;
+};
+
+struct SeqExtStepLockParamInfo {
+  bool active = false;
+  bool p4_param = false;
+  bool sendable = false;
+  bool nrpn = false;
+  bool macro = false;
+  uint8_t type = 0;
+  uint8_t ctrl = 0;
+  uint8_t ctrl_type = 0;
+  uint16_t param_id = 0;
+  uint16_t resolution = 128;
+  int16_t min_value = 0;
+  int16_t max_value = 127;
+  int16_t default_value = 0;
+  int16_t current_value = 0;
+};
+
+enum SeqExtStepLockCtrlType : uint8_t {
+  SEQ_EXT_LOCK_CTRL_OFF = 0,
+  SEQ_EXT_LOCK_CTRL_CC = 1,
+  SEQ_EXT_LOCK_CTRL_NRPN = 2,
+  SEQ_EXT_LOCK_CTRL_RPN = 3,
+  SEQ_EXT_LOCK_CTRL_PITCH_BEND = 4,
+  SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE = 5,
+  SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE = 6,
+  SEQ_EXT_LOCK_CTRL_POLY_PRESSURE = 7,
 };
 
 class SeqExtStepTrackApi {
@@ -188,6 +217,20 @@ public:
     return ext_track_->locks_params[slot];
   }
 
+  bool selected_lock_param_id(uint8_t slot, uint8_t &param_id) const {
+    uint8_t selected = selected_lock_param(slot);
+    if (selected == 0 || selected == PARAM_OFF) {
+      return false;
+    }
+    param_id = selected - 1;
+    return true;
+  }
+
+  uint8_t selected_lock_menu_value(uint8_t slot) const {
+    uint8_t param_id = 0;
+    return selected_lock_param_id(slot, param_id) ? param_id : PARAM_OFF;
+  }
+
   void set_selected_lock_param(uint8_t slot, uint8_t param) {
 #ifdef PLATFORM_TBD
     if (midi_track_) {
@@ -196,6 +239,112 @@ public:
     }
 #endif
     ext_track_->locks_params[slot] = param;
+  }
+
+  void set_selected_lock_menu_value(uint8_t slot, uint8_t menu_value) {
+    if (menu_value == PARAM_OFF) {
+      set_selected_lock_param(slot, 0);
+    } else {
+      set_selected_lock_param(slot, menu_value + 1);
+    }
+  }
+
+  bool selected_lock_param_info(uint8_t slot,
+                                SeqExtStepLockParamInfo &info) const {
+    info = SeqExtStepLockParamInfo();
+#ifdef PLATFORM_TBD
+    if (midi_track_) {
+      if (slot >= MIDI_SEQ_NUM_LOCKS) return false;
+      const auto &lock = midi_track_->seq_data.locks[slot];
+      if (!lock.is_active()) return false;
+      info.active = true;
+      info.param_id = lock.parameter;
+      info.default_value = lock.default_value;
+      info.current_value = lock.default_value;
+      info.resolution = (lock.flags & MIDI_SEQ_LOCK_FLAG_14BIT) ? 0x4000 : 128;
+
+      if (lock.flags & MIDI_SEQ_LOCK_FLAG_P4_PARAM) {
+        const TbdP4ParamDescriptor *desc =
+            tbd_p4_sound_param_for_lock(midi_track_->p4_sound,
+                                        (uint8_t)lock.parameter);
+        if (!desc || !desc->is_visible()) return info.active;
+        info.p4_param = true;
+        info.sendable = desc->is_sendable();
+        info.nrpn = desc->ctrl_type == TBD_P4_CTRLTYPE_NRPM;
+        info.macro = desc->is_macro();
+        info.type = desc->type;
+        info.ctrl = desc->ctrl;
+        info.ctrl_type = desc->ctrl_type;
+        info.resolution = desc->resolution;
+        info.min_value = desc->min_value;
+        info.max_value = desc->max_value;
+        info.default_value = desc->default_value;
+        info.current_value = desc->value;
+        return true;
+      }
+
+      info.sendable = true;
+      info.nrpn = lock.type == MIDI_SEQ_LOCK_NRPN;
+      info.ctrl_type = lock.type;
+      return true;
+    }
+#endif
+    uint8_t param_id = 0;
+    if (!selected_lock_param_id(slot, param_id)) return false;
+    info.active = true;
+    info.param_id = param_id;
+    info.sendable = param_id <= PARAM_CHP;
+    info.ctrl = param_id;
+    info.ctrl_type =
+        param_id == PARAM_PB    ? SEQ_EXT_LOCK_CTRL_PITCH_BEND
+        : param_id == PARAM_CHP ? SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE
+        : param_id == PARAM_PRG ? SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE
+                                : SEQ_EXT_LOCK_CTRL_CC;
+    return true;
+  }
+
+  bool copy_selected_lock_label(uint8_t slot, char *dst,
+                                size_t dst_len) const {
+    if (dst == nullptr || dst_len == 0) return false;
+    dst[0] = '\0';
+    SeqExtStepLockParamInfo info;
+    if (!selected_lock_param_info(slot, info) || !info.active) return false;
+
+#ifdef PLATFORM_TBD
+    if (midi_track_ && info.p4_param) {
+      const TbdP4ParamDescriptor *desc =
+          tbd_p4_sound_param_for_lock(midi_track_->p4_sound,
+                                      (uint8_t)info.param_id);
+      if (desc && desc->shortname[0] != '\0') {
+        copy_compact_label(desc->shortname, dst, dst_len);
+        if (dst[0] != '\0') return true;
+      }
+      copy_param_number_label('P', (uint8_t)info.param_id, dst, dst_len);
+      return true;
+    }
+#endif
+
+    switch (info.ctrl_type) {
+    case SEQ_EXT_LOCK_CTRL_PITCH_BEND:
+      copy_literal("PB", dst, dst_len);
+      break;
+    case SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE:
+      copy_literal("CHP", dst, dst_len);
+      break;
+    case SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE:
+      copy_literal("PRG", dst, dst_len);
+      break;
+    case SEQ_EXT_LOCK_CTRL_NRPN:
+      copy_param_number_label('N', (uint8_t)info.param_id, dst, dst_len);
+      break;
+    case SEQ_EXT_LOCK_CTRL_RPN:
+      copy_param_number_label('R', (uint8_t)info.param_id, dst, dst_len);
+      break;
+    default:
+      copy_param_number_label('C', (uint8_t)info.param_id, dst, dst_len);
+      break;
+    }
+    return true;
   }
 
   uint8_t notes_on_count() const {
@@ -230,6 +379,70 @@ public:
   }
 
 private:
+  static void copy_literal(const char *src, char *dst, size_t dst_len) {
+    if (dst == nullptr || dst_len == 0) return;
+    size_t out = 0;
+    while (src && src[out] && out + 1 < dst_len) {
+      dst[out] = src[out];
+      out++;
+    }
+    dst[out] = '\0';
+  }
+
+  static void append_uint8(uint8_t value, char *dst, size_t dst_len,
+                           size_t &out) {
+    if (dst == nullptr || dst_len == 0) return;
+    if (out + 1 >= dst_len) {
+      dst[dst_len - 1] = '\0';
+      return;
+    }
+    if (value >= 100 && out + 1 < dst_len) {
+      dst[out++] = (char)('0' + value / 100);
+      value %= 100;
+    }
+    if ((value >= 10 || out > 1) && out + 1 < dst_len) {
+      dst[out++] = (char)('0' + value / 10);
+      value %= 10;
+    }
+    if (out + 1 < dst_len) {
+      dst[out++] = (char)('0' + value);
+    }
+    dst[out] = '\0';
+  }
+
+  static void copy_param_number_label(char prefix, uint8_t number, char *dst,
+                                      size_t dst_len) {
+    if (dst == nullptr || dst_len == 0) return;
+    size_t out = 0;
+    if (out + 1 >= dst_len) {
+      dst[0] = '\0';
+      return;
+    }
+    dst[out++] = prefix;
+    append_uint8(number, dst, dst_len, out);
+  }
+
+#ifdef PLATFORM_TBD
+  static void copy_compact_label(const char *src, char *dst, size_t dst_len) {
+    if (dst == nullptr || dst_len == 0) return;
+    dst[0] = '\0';
+    if (src == nullptr || src[0] == '\0') return;
+
+    size_t out = 0;
+    while (*src && out + 1 < dst_len) {
+      char c = *src++;
+      if (c == '-' || c == '_' || c == ' ') {
+        break;
+      }
+      if (c >= 'a' && c <= 'z') {
+        c = (char)(c - ('a' - 'A'));
+      }
+      dst[out++] = c;
+    }
+    dst[out] = '\0';
+  }
+#endif
+
   static uint8_t value7_from_14(uint16_t value14) {
     if (value14 > 0x3FFF) value14 = 0x3FFF;
     return (uint8_t)(((uint32_t)value14 * 127u + 0x1FFFu) / 0x3FFFu);
