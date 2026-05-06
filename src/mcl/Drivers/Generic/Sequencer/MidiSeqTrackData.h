@@ -14,9 +14,8 @@
 #define MIDI_SEQ_NUM_LOCKS 32
 
 // Canonical editor/storage resolution for enhanced external tracks.
-// 96 ticks per 16th note is 8x the current 1X MCL scheduler resolution and
-// maps cleanly to MIDI-clock PPQN. Playback backends can quantize from here
-// or pass the full position to a timestamp-capable target.
+// 96 ticks per 16th note matches the high-resolution RP2040 scheduler
+// (384 PPQN). Legacy engines are downsampled from that scheduler when needed.
 #define MIDI_SEQ_TICKS_PER_STEP 96
 #define MIDI_SEQ_TIMING_CENTER MIDI_SEQ_TICKS_PER_STEP
 #define MIDI_SEQ_TIMING_RANGE (MIDI_SEQ_TICKS_PER_STEP * 2)

@@ -604,14 +604,11 @@ void TbdUiMode::send_param(uint8_t encoder_idx) {
 
   tbd_p4_realtime.set_active_track(slot.sound->p4_track_index);
   if (slot.param->ctrl_type == TBD_P4_CTRLTYPE_CC) {
-    if (scaled < 0) scaled = 0;
-    if (scaled > 127) scaled = 127;
-    TBD.uart->sendCC(slot.sound->midi_channel, slot.param->ctrl,
-                     (uint8_t)scaled);
+    tbd_p4_send_param_value(TBD.uart, slot.sound->midi_channel, *slot.param,
+                            scaled);
   } else if (slot.param->ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
-    if (scaled < 0) scaled = 0;
-    TBD.uart->sendNRPN(slot.sound->midi_channel, slot.param->ctrl,
-                       (uint16_t)scaled);
+    tbd_p4_send_param_value(TBD.uart, slot.sound->midi_channel, *slot.param,
+                            scaled);
   }
 }
 
