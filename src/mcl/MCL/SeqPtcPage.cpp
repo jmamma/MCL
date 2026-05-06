@@ -20,8 +20,8 @@ constexpr int8_t kTbdPtcKeyMap[16] = {
 };
 
 constexpr uint16_t kTbdPtcBlackMask = 0b0000010101001010;
-constexpr uint32_t kTbdPtcNaturalColor = 0x181818;
-constexpr uint32_t kTbdPtcBlackColor = 0x000050;
+constexpr uint32_t kTbdPtcNaturalColor = 0x303030;
+constexpr uint32_t kTbdPtcBlackColor = 0x0000A0;
 constexpr uint32_t kTbdPtcActiveColor = 0x00FF60;
 constexpr uint32_t kTbdPtcOctaveColor = 0x805000;
 constexpr uint32_t kTbdPtcOctaveDimColor = 0x201000;
@@ -161,6 +161,7 @@ void SeqPtcPage::init() {
   key_interface.on();
 #ifdef PLATFORM_TBD
   tbd_keyboard_hold_mask = 0;
+  tbd_keyboard_led_refresh_ms = read_clock_ms();
   send_tbd_keyboard_leds();
 #else
   key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
@@ -209,8 +210,11 @@ void SeqPtcPage::loop() {
   if (re_init) {
     init();
   }
-  if (ptc_param_oct.hasChanged() || ptc_param_scale.hasChanged() ||
-      ptc_param_fine_tune.hasChanged()) {
+  bool scale_changed = ptc_param_scale.hasChanged();
+  bool keyboard_param_changed = ptc_param_oct.hasChanged() ||
+                                scale_changed ||
+                                ptc_param_fine_tune.hasChanged();
+  if (keyboard_param_changed) {
     bool is_md_device = SeqTrackUtil::is_md_device(midi_device);
     uint8_t dev = is_md_device ? 0 : 1;
     octs[dev] = encoders[0]->cur;
@@ -221,9 +225,19 @@ void SeqPtcPage::loop() {
       track = last_ext_track;
       mcl_seq.ext_tracks[last_ext_track].buffer_notesoff();
     }
-    render_arp(ptc_param_scale.hasChanged(), midi_device, track);
+    render_arp(scale_changed, midi_device, track);
   }
   SeqPage::loop();
+#ifdef PLATFORM_TBD
+  if (!show_seq_menu) {
+    uint16_t now = read_clock_ms();
+    if (keyboard_param_changed ||
+        clock_diff(tbd_keyboard_led_refresh_ms, now) > 250) {
+      tbd_keyboard_led_refresh_ms = now;
+      send_tbd_keyboard_leds();
+    }
+  }
+#endif
 }
 uint8_t SeqPtcPage::find_arp_track(uint8_t channel_event) {
   uint8_t track = last_md_track;
@@ -715,7 +729,11 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       midi_events.note_off(msg, channel_event);
     }
 
+#ifdef PLATFORM_TBD
+    send_tbd_keyboard_leds();
+#else
     key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+#endif
     // deferred trigger redraw to update TI keyboard feedback.
 
     return true;

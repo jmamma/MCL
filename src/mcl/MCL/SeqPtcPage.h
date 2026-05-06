@@ -87,6 +87,7 @@ public:
 
 #ifdef PLATFORM_TBD
   uint16_t tbd_keyboard_hold_mask = 0;
+  uint16_t tbd_keyboard_led_refresh_ms = 0;
   bool handle_tbd_keyboard_event(uint8_t button, uint8_t mask);
   void release_tbd_keyboard_notes();
   void send_tbd_keyboard_leds();
