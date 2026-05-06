@@ -11,6 +11,25 @@
 
 class GridLink;
 
+class MidiSeqSlideData {
+public:
+  int32_t x0 = 0;
+  int32_t x1 = 0;
+  int32_t accum = 0;
+  int32_t delta = 0;
+  uint16_t y0 = 0;
+  uint16_t y1 = 0;
+
+  void init() {
+    x0 = 0;
+    x1 = 0;
+    accum = 0;
+    delta = 0;
+    y0 = 0;
+    y1 = 0;
+  }
+};
+
 class MidiSeqTrack : public SeqTrackCond {
 public:
   MidiSeqTrackData seq_data;
@@ -23,11 +42,18 @@ public:
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count = 0;
   bool notesoff_pending = false;
+  MidiSeqSlideData locks_slide_data[MIDI_SEQ_NUM_LOCKS];
+  uint16_t locks_slide_next_lock_val[MIDI_SEQ_NUM_LOCKS] = {0};
+  uint8_t locks_slide_next_lock_step[MIDI_SEQ_NUM_LOCKS] = {0};
+  uint8_t locks_slide_next_lock_timing[MIDI_SEQ_NUM_LOCKS] = {0};
+  uint8_t locks_slides_recalc = 255;
+  uint16_t locks_slides_idx = 0;
 
   MidiSeqTrack();
 
   void reset();
   void seq(MidiUartClass *uart_);
+  void recalc_slides();
 
   uint16_t ticks_per_step() const;
   uint16_t speed_multiplier_int() const { return ticks_per_step(); }
@@ -90,10 +116,16 @@ private:
 
   uint16_t add_event(uint8_t step, const MidiSeqEvent &event);
   void remove_event(uint16_t index);
-  void handle_event(const MidiSeqEvent &event);
+  void handle_event(const MidiSeqEvent &event, uint8_t step,
+                    uint16_t bucket_start);
   void send_lock_value(const MidiSeqLockDefinition &lock,
                        const MidiSeqEvent &event);
   void send_p4_lock_value(uint8_t param, uint16_t value14);
+  void prepare_slide(uint8_t lock_idx, int32_t x0, int32_t x1, uint16_t y0,
+                     uint16_t y1);
+  void send_slides();
+  void find_next_locks(uint16_t curidx, uint8_t step, bool *find_array);
+  void invalidate_lock_slide(uint8_t lock_idx, uint8_t step);
   uint16_t find_note_event(uint8_t step, uint8_t note, bool note_on,
                            uint16_t &start_idx) const;
 };

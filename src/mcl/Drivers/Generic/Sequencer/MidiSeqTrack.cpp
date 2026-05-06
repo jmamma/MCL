@@ -59,6 +59,12 @@ uint16_t value14_from_value7(uint8_t value7) {
   return (uint16_t)(((uint32_t)value7 * 0x3FFFu + 63u) / 127u);
 }
 
+uint16_t clamp_value14(int32_t value) {
+  if (value < 0) return 0;
+  if (value > 0x3FFF) return 0x3FFF;
+  return (uint16_t)value;
+}
+
 } // namespace
 
 MidiSeqTrack::MidiSeqTrack() : SeqTrackCond() {
@@ -68,12 +74,20 @@ MidiSeqTrack::MidiSeqTrack() : SeqTrackCond() {
   length = seq_data.length;
   speed = seq_data.speed;
   init_notes_on();
+  for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+    locks_slide_data[i].init();
+  }
 }
 
 void MidiSeqTrack::reset() {
   SeqTrackCond::reset();
   tick_counter = 0;
   cache_loaded = true;
+  locks_slides_recalc = 255;
+  locks_slides_idx = 0;
+  for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+    locks_slide_data[i].init();
+  }
 }
 
 uint16_t MidiSeqTrack::ticks_per_step() const {
@@ -125,6 +139,10 @@ uint8_t MidiSeqTrack::channel() const {
 void MidiSeqTrack::set_speed(uint8_t new_speed, bool) {
   speed = new_speed;
   seq_data.speed = new_speed;
+  locks_slides_recalc = 255;
+  for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+    locks_slide_data[i].init();
+  }
 }
 
 void MidiSeqTrack::set_length(uint8_t len, bool) {
@@ -138,12 +156,19 @@ void MidiSeqTrack::set_length(uint8_t len, bool) {
   uint16_t start = 0, end = 0;
   seq_data.locate(step_count, start, end);
   cur_event_idx = start;
+  locks_slides_recalc = 255;
+  for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+    locks_slide_data[i].init();
+  }
 }
 
 uint16_t MidiSeqTrack::add_event(uint8_t step, const MidiSeqEvent &event) {
   uint16_t idx = seq_data.add_event(step, event);
   if (idx != 0xFFFF) {
     if (step < step_count) cur_event_idx++;
+    if (event.type == MIDI_SEQ_EVENT_LOCK) {
+      invalidate_lock_slide(event.target, step);
+    }
     epoch++;
   }
   return idx;
@@ -158,9 +183,13 @@ void MidiSeqTrack::remove_event(uint16_t index) {
     if (index < start + bucket) break;
     start += bucket;
   }
+  MidiSeqEvent event = seq_data.events[index];
   seq_data.remove_event(index);
   if (step < step_count && cur_event_idx > 0) {
     cur_event_idx--;
+  }
+  if (event.type == MIDI_SEQ_EVENT_LOCK) {
+    invalidate_lock_slide(event.target, step);
   }
   epoch++;
 }
@@ -205,7 +234,15 @@ bool MidiSeqTrack::add_note(uint16_t tick, uint16_t width, uint8_t note,
           condition);
   MidiSeqEvent off;
   off.init(MIDI_SEQ_EVENT_NOTE_OFF, note, 0, page_timing_to_data(end_timing), 0);
-  return add_event(step, on) != 0xFFFF && add_event(end_step, off) != 0xFFFF;
+  uint16_t on_idx = add_event(step, on);
+  if (on_idx == 0xFFFF) {
+    return false;
+  }
+  if (add_event(end_step, off) == 0xFFFF) {
+    remove_event(on_idx);
+    return false;
+  }
+  return true;
 }
 
 bool MidiSeqTrack::del_note(uint16_t tick, uint16_t width, uint8_t note) {
@@ -277,6 +314,7 @@ void MidiSeqTrack::set_selected_lock_param(uint8_t slot, uint8_t param) {
   if (slot >= MIDI_SEQ_NUM_LOCKS) return;
   if (param == 0) {
     seq_data.locks[slot].clear();
+    invalidate_lock_slide(slot, 0);
     seq_data.clean_locks();
     epoch++;
     return;
@@ -389,6 +427,7 @@ void MidiSeqTrack::clear_track_locks(uint8_t lock_idx) {
   }
   if (lock_idx < MIDI_SEQ_NUM_LOCKS) {
     seq_data.locks[lock_idx].clear();
+    locks_slide_data[lock_idx].init();
   }
   seq_data.clean_locks();
 }
@@ -530,7 +569,171 @@ void MidiSeqTrack::send_lock_value(const MidiSeqLockDefinition &lock,
   }
 }
 
-void MidiSeqTrack::handle_event(const MidiSeqEvent &event) {
+void MidiSeqTrack::invalidate_lock_slide(uint8_t lock_idx, uint8_t) {
+  if (lock_idx >= MIDI_SEQ_NUM_LOCKS) return;
+  locks_slide_data[lock_idx].init();
+}
+
+void MidiSeqTrack::prepare_slide(uint8_t lock_idx, int32_t x0, int32_t x1,
+                                 uint16_t y0, uint16_t y1) {
+  if (lock_idx >= MIDI_SEQ_NUM_LOCKS) return;
+  auto &slide = locks_slide_data[lock_idx];
+  slide.x0 = x0;
+  slide.x1 = x1;
+  slide.y0 = y0;
+  slide.y1 = y1;
+  slide.accum = 0;
+
+  int32_t steps = x1 - x0;
+  slide.delta = steps > 0 ? ((((int32_t)y1 - (int32_t)y0) << 8) / steps) : 0;
+}
+
+void MidiSeqTrack::send_slides() {
+  for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+    const auto &lock = seq_data.locks[i];
+    if (!lock.is_active()) continue;
+
+    auto &slide = locks_slide_data[i];
+    if (slide.x0 >= slide.x1) continue;
+
+    int32_t value = (int32_t)slide.y0 + (slide.accum >> 8);
+    slide.accum += slide.delta;
+    slide.x0++;
+
+    if (slide.x0 >= slide.x1) {
+      value = slide.y1;
+      slide.init();
+    }
+
+    MidiSeqEvent event;
+    event.init(MIDI_SEQ_EVENT_LOCK, i, clamp_value14(value));
+    send_lock_value(lock, event);
+  }
+}
+
+void MidiSeqTrack::find_next_locks(uint16_t curidx, uint8_t step,
+                                   bool *find_array) {
+  uint8_t count = 0;
+  for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+    if (find_array[i]) count++;
+  }
+  if (count == 0 || length == 0) return;
+
+  curidx += seq_data.event_buckets[step];
+  uint8_t next_step = step + 1;
+  uint16_t end = curidx;
+  uint8_t max_len = length;
+
+again:
+  for (; next_step < max_len; next_step++) {
+    end += seq_data.event_buckets[next_step];
+    for (; curidx < end; curidx++) {
+      if (count == 0) return;
+      const auto &event = seq_data.events[curidx];
+      if (event.type != MIDI_SEQ_EVENT_LOCK ||
+          event.target >= MIDI_SEQ_NUM_LOCKS ||
+          !seq_data.locks[event.target].is_active()) {
+        continue;
+      }
+
+      uint8_t lock_idx = event.target;
+      if (!find_array[lock_idx]) continue;
+
+      locks_slide_next_lock_val[lock_idx] = event.value;
+      locks_slide_next_lock_step[lock_idx] = next_step;
+      locks_slide_next_lock_timing[lock_idx] = event.timing;
+      find_array[lock_idx] = false;
+      count--;
+    }
+  }
+
+  if (next_step == length) {
+    next_step = 0;
+    curidx = 0;
+    end = 0;
+    max_len = step;
+    goto again;
+  }
+}
+
+void MidiSeqTrack::recalc_slides() {
+  if (locks_slides_recalc == 255) return;
+
+  uint8_t step = locks_slides_recalc;
+  if (step >= length || step >= MIDI_SEQ_NUM_STEPS || length == 0) {
+    locks_slides_recalc = 255;
+    return;
+  }
+
+  uint16_t bucket_start = 0;
+  uint16_t bucket_end = 0;
+  seq_data.locate(step, bucket_start, bucket_end);
+  uint16_t curidx = locks_slides_idx;
+  if (curidx < bucket_start || curidx > bucket_end) {
+    curidx = bucket_start;
+  }
+
+  bool find_array[MIDI_SEQ_NUM_LOCKS] = {};
+  bool find = false;
+  uint8_t bucket = seq_data.event_buckets[step];
+  for (int16_t n = (int16_t)bucket - 1; n >= 0; n--) {
+    const auto &event = seq_data.events[curidx + n];
+    if (event.type == MIDI_SEQ_EVENT_LOCK &&
+        (event.flags() & MIDI_SEQ_EVENT_FLAG_SLIDE) &&
+        event.target < MIDI_SEQ_NUM_LOCKS &&
+        seq_data.locks[event.target].is_active()) {
+      find_array[event.target] = true;
+      find = true;
+    }
+  }
+
+  if (!find) {
+    locks_slides_recalc = 255;
+    return;
+  }
+
+  find_next_locks(curidx, step, find_array);
+
+  uint16_t tps = ticks_per_step();
+  for (int16_t n = (int16_t)bucket - 1; n >= 0; n--) {
+    const auto &event = seq_data.events[curidx + n];
+    if (event.type != MIDI_SEQ_EVENT_LOCK ||
+        !(event.flags() & MIDI_SEQ_EVENT_FLAG_SLIDE) ||
+        event.target >= MIDI_SEQ_NUM_LOCKS ||
+        !seq_data.locks[event.target].is_active()) {
+      continue;
+    }
+
+    uint8_t lock_idx = event.target;
+    if (find_array[lock_idx]) {
+      locks_slide_data[lock_idx].init();
+      continue;
+    }
+
+    uint8_t next_step = locks_slide_next_lock_step[lock_idx];
+    if (step == next_step) {
+      locks_slide_data[lock_idx].init();
+      continue;
+    }
+
+    int32_t x0 = (int32_t)step * tps + data_timing_to_page(event.timing) -
+                 tps + 1;
+    uint16_t next_timing =
+        data_timing_to_page(locks_slide_next_lock_timing[lock_idx]);
+    int32_t x1 = next_step < step
+                     ? (int32_t)(length + next_step) * tps + next_timing -
+                           tps - 1
+                     : (int32_t)next_step * tps + next_timing - tps - 1;
+
+    prepare_slide(lock_idx, x0, x1, event.value,
+                  locks_slide_next_lock_val[lock_idx]);
+  }
+
+  locks_slides_recalc = 255;
+}
+
+void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
+                                uint16_t bucket_start) {
   if (event.type == MIDI_SEQ_EVENT_NOTE_ON) {
     if (conditional(event.condition)) {
       note_on(event.target, (uint8_t)event.value);
@@ -539,7 +742,13 @@ void MidiSeqTrack::handle_event(const MidiSeqEvent &event) {
     note_off(event.target);
   } else if (event.type == MIDI_SEQ_EVENT_LOCK &&
              event.target < MIDI_SEQ_NUM_LOCKS) {
-    send_lock_value(seq_data.locks[event.target], event);
+    if (conditional(event.condition)) {
+      send_lock_value(seq_data.locks[event.target], event);
+      if (event.flags() & MIDI_SEQ_EVENT_FLAG_SLIDE) {
+        locks_slides_recalc = step;
+        locks_slides_idx = bucket_start;
+      }
+    }
   }
 }
 
@@ -578,24 +787,28 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
     return;
   }
 
+  send_slides();
+
   uint16_t ev_idx = cur_event_idx;
   uint16_t ev_end = cur_event_idx + seq_data.event_buckets[step_count];
+  uint16_t bucket_start = cur_event_idx;
   for (; ev_idx < ev_end; ev_idx++) {
     const auto &event = seq_data.events[ev_idx];
     uint16_t timing = data_timing_to_page(event.timing);
     if (timing >= tps && timing - tps == tick_counter) {
-      handle_event(event);
+      handle_event(event, step_count, bucket_start);
     }
   }
 
   uint8_t next_step = step_count == length - 1 ? 0 : step_count + 1;
   ev_idx = next_step == 0 ? 0 : ev_end;
   ev_end = ev_idx + seq_data.event_buckets[next_step];
+  bucket_start = ev_idx;
   for (; ev_idx < ev_end; ev_idx++) {
     const auto &event = seq_data.events[ev_idx];
     uint16_t timing = data_timing_to_page(event.timing);
     if (timing < tps && timing == tick_counter) {
-      handle_event(event);
+      handle_event(event, next_step, bucket_start);
     }
   }
 }
@@ -610,6 +823,12 @@ void MidiSeqTrack::clear_track(bool) {
   seq_data.speed = spd;
   length = len;
   speed = spd;
+  tick_counter = 0;
+  locks_slides_recalc = 255;
+  locks_slides_idx = 0;
+  for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+    locks_slide_data[i].init();
+  }
   notesoff_pending = true;
   epoch++;
 }
@@ -636,6 +855,11 @@ void MidiSeqTrack::import_legacy_ext(const ExtSeqTrackData &legacy,
   seq_data.speed = link.speed;
   length = seq_data.length;
   speed = seq_data.speed;
+  locks_slides_recalc = 255;
+  locks_slides_idx = 0;
+  for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+    locks_slide_data[i].init();
+  }
 
   const uint8_t legacy_tps = legacy_ticks_for_speed(link.speed);
   uint16_t idx = 0;
