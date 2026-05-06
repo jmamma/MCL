@@ -57,6 +57,11 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   case MNM_TRACK_TYPE:
     ::new (this) MNMTrack;
     break;
+#ifdef PLATFORM_TBD
+  case TBD_TRACK_TYPE:
+    ::new (this) TBDTrack;
+    break;
+#endif
     //  case GRIDCHAIN_TRACK_TYPE:
     //    ::new (this) GridChainTrack;
     //    break;

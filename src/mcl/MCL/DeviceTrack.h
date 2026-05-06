@@ -21,6 +21,9 @@ class MNMTrack;
 class PerfTrack;
 class GridChainTrack;
 class SPSXTrack;
+#ifdef PLATFORM_TBD
+class TBDTrack;
+#endif
 
 #define __IMPL_DYNAMIK_KAST(klass, pred, aktive)                               \
   void _dynamik_kast_impl(DeviceTrack *p, klass **pp) {                        \
@@ -56,6 +59,9 @@ private:
   __IMPL_DYNAMIK_KAST(MDLFOTrack, MDLFO_TRACK_TYPE, MDLFO_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(PerfTrack, PERF_TRACK_TYPE, PERF_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(GridChainTrack, GRIDCHAIN_TRACK_TYPE, GRIDCHAIN_TRACK_TYPE)
+#ifdef PLATFORM_TBD
+  __IMPL_DYNAMIK_KAST(TBDTrack, TBD_TRACK_TYPE, TBD_TRACK_TYPE)
+#endif
 
 public:
 

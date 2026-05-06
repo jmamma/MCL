@@ -165,6 +165,7 @@ void MidiUartClass::flush_p4_transport() {
 }
 
 void MidiUartP4Class::init() {
+  speed = UART_BAUDRATE;
   attach_p4_transport(&tbd_p4_realtime);
   tbd_p4_realtime.init();
 }

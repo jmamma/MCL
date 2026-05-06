@@ -5,6 +5,7 @@
 #ifdef PLATFORM_TBD
 
 #include "../MidiDevice.h"
+#include <stdint.h>
 
 class TbdDevice : public MidiDevice {
 public:
@@ -21,8 +22,11 @@ public:
 
 private:
   bool diag_active_ = false;
+  bool p4_defaults_loaded_ = false;
+  uint32_t p4_defaults_last_attempt_ms_ = 0;
   uint8_t active_note_ = 255;
 
+  bool load_default_p4_presets();
   void note_on(uint8_t note);
   void note_off();
 };

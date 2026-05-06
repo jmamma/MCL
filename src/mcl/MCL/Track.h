@@ -12,3 +12,6 @@
 #include "MNMTrack.h"
 #include "PerfTrack.h"
 #include "SPSXTrack.h"
+#ifdef PLATFORM_TBD
+#include "../Drivers/TBD/TBDTrack.h"
+#endif

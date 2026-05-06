@@ -539,6 +539,10 @@ void GridPage::display_grid() {
           copyMachineNameShort(tmp, str);
         }
         break;
+      case TBD_TRACK_TYPE:
+        str[0] = 'T';
+        str[1] = 'B';
+        break;
       }
       //  Highlight the current cursor position + slot menu apply range
       bool a = in_area(x, y + row_shift, cur_col, cur_row, param3.cur - 1,

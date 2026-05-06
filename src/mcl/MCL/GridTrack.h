@@ -24,6 +24,7 @@
 #define GRIDCHAIN_TRACK_TYPE 15
 #define PERF_TRACK_TYPE 16
 #define MDSPSX_TRACK_TYPE 17
+#define TBD_TRACK_TYPE 18
 
 #define NULL_TRACK_TYPE 128
 #define EMPTY_TRACK_TYPE 0
@@ -47,7 +48,7 @@ public:
   void* _this() { return &version; }
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
-  bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE); }
+  bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE || active == TBD_TRACK_TYPE); }
 
   // load header without data from grid
   bool load_from_grid_512(uint8_t column, uint16_t row, Grid *grid = nullptr);

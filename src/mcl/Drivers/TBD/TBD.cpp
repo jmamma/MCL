@@ -7,10 +7,33 @@
 #include "MCLSeq.h"
 #include "MidiDeviceGrid.h"
 #include "MidiSetup.h"
+#include "TBDTrack.h"
+#include "TbdP4Command.h"
 #include "TbdP4Realtime.h"
+#include <Arduino.h>
 #include <stdio.h>
 
 namespace {
+
+struct P4BootPreset {
+  uint8_t track_index;
+  const char *preset_id;
+};
+
+constexpr uint32_t kP4PresetRetryMs = 2000;
+constexpr uint32_t kP4PresetReadyProbeMs = 100;
+constexpr uint32_t kP4PresetCommandTimeoutMs = 3000;
+
+const P4BootPreset kP4BootPresets[] = {
+    {0, "db-all-def"},    {1, "fmb-all-def"},
+    {2, "ds-all-def"},    {3, "hh1-all-def"},
+    {4, "rs-all-def"},    {5, "cl-all-def"},
+    {6, "ro-all-def"},    {7, "ro-all-def"},
+    {8, "td3-all-def"},   {9, "td3-all-def"},
+    {10, "mo-all-def"},   {11, "wtosc-all-def"},
+    {12, "ro-all-def"},   {13, "ro-all-def"},
+    {14, "pp-all-def"},   {15, "inp-all-def"},
+};
 
 class TbdP4DiagOverlay : public LightPage {
 public:
@@ -73,6 +96,7 @@ void TbdDevice::on_connection(uint8_t device_idx) {
   uart = MidiP4.uart;
   connected = true;
   init_grid_devices(device_idx);
+  load_default_p4_presets();
 }
 
 void TbdDevice::init_grid_devices(uint8_t device_idx) {
@@ -80,15 +104,49 @@ void TbdDevice::init_grid_devices(uint8_t device_idx) {
   GridDeviceTrack gdt;
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    gdt.init(EXT_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
+    const auto &def = tbd_track_default_for_slot(i);
+    mcl_seq.ext_tracks[i].channel = def.midi_channel;
+    gdt.init(TBD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
     add_track_to_grid(grid_idx, i, &gdt);
   }
+}
+
+bool TbdDevice::load_default_p4_presets() {
+  if (p4_defaults_loaded_) {
+    return true;
+  }
+
+  const uint32_t now = millis();
+  if (p4_defaults_last_attempt_ms_ != 0 &&
+      now - p4_defaults_last_attempt_ms_ < kP4PresetRetryMs) {
+    return false;
+  }
+  p4_defaults_last_attempt_ms_ = now;
+
+  tbd_p4_command.init();
+  if (!tbd_p4_command.wait_ready(kP4PresetReadyProbeMs)) {
+    return false;
+  }
+
+  tbd_p4_command.announce_app("MCL", 0, kP4PresetCommandTimeoutMs);
+
+  for (const auto &preset : kP4BootPresets) {
+    if (!tbd_p4_command.load_track_sound_preset(
+            preset.track_index, preset.preset_id, 0xFF, -1,
+            kP4PresetCommandTimeoutMs)) {
+      return false;
+    }
+  }
+
+  p4_defaults_loaded_ = true;
+  return true;
 }
 
 void TbdDevice::note_on(uint8_t note) {
   if (port != UARTP4_PORT || uart == nullptr) return;
   note_off();
   active_note_ = note;
+  tbd_p4_realtime.set_active_track(tbd_track_default_for_slot(0).p4_track_index);
   uart->sendNoteOn(0, note, 100);
 }
 
@@ -139,6 +197,10 @@ bool TbdDevice::handle_ui_event(gui_event_t *event) {
 }
 
 void TbdDevice::ui_loop() {
+  if (!p4_defaults_loaded_) {
+    load_default_p4_presets();
+  }
+
   if (diag_active_ && GUI.overlay == nullptr) {
     GUI.setOverlay(&tbd_p4_diag_overlay);
   }

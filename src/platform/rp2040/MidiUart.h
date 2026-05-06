@@ -161,7 +161,7 @@ public:
   void poll();
   void service_irq();
   void service_background();
-  void set_speed(uint32_t speed) { (void)speed; }
+  void set_speed(uint32_t speed_) { speed = speed_ ? speed_ : UART_BAUDRATE; }
   void m_putc_immediate(uint8_t c) { m_putc(c); }
 };
 #endif
