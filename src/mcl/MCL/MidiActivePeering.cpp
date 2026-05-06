@@ -51,7 +51,7 @@ static MidiClass *_getMidiClass(uint8_t port) {
 static uint8_t portToLogicalIdx(uint8_t port) {
 #ifdef PLATFORM_TBD
   if (port == UARTP4_PORT)
-    return 1;
+    return (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) ? 0 : 1;
 #endif
   if (port == UARTUSB_PORT)
     return (mcl_cfg.usb_device >= 2) ? 1 : 0;
@@ -98,6 +98,19 @@ void MidiActivePeering::disconnect(uint8_t port) {
   if (!pmidi) {
     return;
   }
+#ifdef PLATFORM_TBD
+  if (port == UARTP4_PORT) {
+    disconnect_driver_list(DriverRegistry::generic_drivers(), 0, port, pmidi);
+    disconnect_driver_list(DriverRegistry::generic_drivers(), 1, port, pmidi);
+    MidiDevice *attached = device_manager.device_for_port(port);
+    if (attached != &null_midi_device) {
+      attached->disconnect(0);
+      attached->disconnect(1);
+    }
+    device_manager.detach_port(port);
+    return;
+  }
+#endif
   DriverRegistry::DriverList drivers = DriverRegistry::generic_drivers();
   uint8_t device_idx;
   if (port == UART1_PORT) {
@@ -112,11 +125,6 @@ void MidiActivePeering::disconnect(uint8_t port) {
     device_idx = portToLogicalIdx(port);
     disconnect_driver_list(DriverRegistry::elektron_drivers(), device_idx,
                            port, pmidi);
-#ifdef PLATFORM_TBD
-  } else if (port == UARTP4_PORT) {
-    drivers = DriverRegistry::generic_drivers();
-    device_idx = portToLogicalIdx(port);
-#endif
   } else {
     return;
   }

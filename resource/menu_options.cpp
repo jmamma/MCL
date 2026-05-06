@@ -80,16 +80,21 @@ menu_option_t MENU_OPTIONS[] = {
   {0, "GENER"}, {1, "ELEKT"}, {2, "OFF"},
   // 129: USB device
   {0, "OFF"}, {1, "MD"}, {2, "ELEKT"}, {3, "GENER"},
+#if defined(PLATFORM_TBD)
+  // 133: GRID X device
+  {0, "OFF"}, {1, "MD"}, {2, "TBD"},
+  // 136: GRID X port
+  {0, "INT"}, {1, "1"}, {2, "USB"},
+  // 139: GRID Y device
+  {0, "TBD"}, {1, "GENER"}, {2, "ELEKT"}, {3, "OFF"},
+  // 143: GRID Y port
+  {0, "INT"}, {1, "2"}, {2, "USB"},
+#else
   // 133: GRID X device
   {0, "OFF"}, {1, "MD"},
   // 135: GRID X port
   {0, "1"}, {1, "USB"},
   // 137: GRID Y device
-#if defined(PLATFORM_TBD)
-  {0, "TBD"}, {1, "GENER"}, {2, "ELEKT"}, {3, "OFF"},
-  // 141: GRID Y port
-  {0, "INT"}, {1, "2"}, {2, "USB"},
-#else
   {1, "GENER"}, {2, "ELEKT"}, {3, "OFF"},
   // 140: GRID Y port
   {1, "2"}, {2, "USB"},

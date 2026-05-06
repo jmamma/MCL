@@ -5,6 +5,7 @@
 #ifdef PLATFORM_TBD
 
 #include "../MidiDevice.h"
+#include "TbdP4SoundData.h"
 #include <stdint.h>
 
 class TbdDevice : public MidiDevice {
@@ -14,11 +15,15 @@ public:
   virtual bool probe() override;
   virtual void on_connection(uint8_t device_idx) override;
   virtual void init_grid_devices(uint8_t device_idx) override;
+  virtual bool supports_capability(MidiDeviceCapability capability) const override;
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool enter_ui(gui_event_t *event) override;
   virtual bool is_ui_active() override;
   virtual void exit_ui() override;
+  bool get_default_p4_sound(uint8_t p4_track_index,
+                            TbdP4SoundData *sound) const;
+  bool hydrate_p4_sound(TbdP4SoundData &sound);
 
 private:
   bool diag_active_ = false;
@@ -32,5 +37,9 @@ private:
 };
 
 extern TbdDevice TBD;
+
+bool tbd_get_default_p4_sound(uint8_t p4_track_index,
+                              TbdP4SoundData *sound);
+bool tbd_hydrate_p4_sound(TbdP4SoundData &sound);
 
 #endif // PLATFORM_TBD

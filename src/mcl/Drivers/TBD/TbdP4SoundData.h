@@ -33,7 +33,68 @@ static constexpr uint8_t TBD_P4_PARAM_PAGE_NAME_LEN = 16;
 static constexpr uint8_t TBD_P4_PARAM_SHORT_NAME_LEN = 8;
 
 static constexpr uint8_t TBD_P4_PARAM_TYPE_NONE = 0;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_NUMBER = 1;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_BIG_NUMBER = 2;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_LEVEL = 10;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_PAN = 11;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_BIPOLAR = 12;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_GAIN_LEVEL = 14;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_LEVEL_MASTER = 15;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_FILTER_TYPE = 20;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_FILTER_CUTOFF = 21;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_FILTER_Q = 22;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_FILTER_MODE = 23;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_ENV_ATTACK = 30;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_ENV_DECAY = 31;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_ENV_AMOUNT = 32;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_ENV_ATTACK_FAST = 33;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_DB_THRESHOLD = 34;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_DB_GAIN = 35;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_RATIO = 36;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_SECONDS = 37;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_MS = 38;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_COMP_ATTACK = 39;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_DISTORTION = 40;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_SHAPE = 41;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_SHAPE2 = 42;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_SHAPE3 = 43;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_FREQ = 44;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_NOISE = 45;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_COMP_RELEASE = 46;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_SAMPLE_BANK = 60;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_SAMPLE_SLICE = 61;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_MACRO_SHAPE = 62;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_CHORD_SHAPE = 70;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_CHORD_INV = 71;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_NNOTES = 74;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_ONOFF = 77;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TAPE_DIGITAL = 78;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_FREE_SYNC = 79;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_SCALE = 80;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TIME_DIVISOR = 81;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_PERCENT = 82;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_PITCH_SEMI = 85;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_SPEED_MULT = 86;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_BITCR_BITS = 87;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TBD_MODEL = 88;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TBD_MOD_TYPE = 89;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TBD_VOICES = 90;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_PLAITS_MODEL = 91;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_PLAITS_HARM = 92;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_PLAITS_COLOR = 93;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_PLAITS_DETUNE = 94;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TBD_CHORD = 95;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_PLAITS_DECAY = 96;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TBD_ENVSH = 97;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TBD_MSNAP = 98;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_WTOSC_BANK = 99;
 static constexpr uint8_t TBD_P4_PARAM_TYPE_HIDDEN = 100;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_LFO_RATE = 101;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TD3_FTYPE = 102;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TD3_DRIVE = 103;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TD3_ACCLEV = 104;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_TD3_ACCENT = 105;
+static constexpr uint8_t TBD_P4_PARAM_TYPE_MS_2S = 110;
 
 static constexpr uint8_t TBD_P4_AUDIO_PARAM_FLAG_MACRO = 0x01;
 
@@ -137,6 +198,20 @@ struct ATTR_PACKED() TbdP4SoundData {
   bool has_preset() const { return preset_id[0] != '\0'; }
   bool has_macro() const { return macro_id[0] != '\0'; }
   bool has_machine() const { return machine_id[0] != '\0'; }
+
+  bool has_sendable_params() const {
+    for (uint8_t i = 0; i < TBD_P4_AUDIO_PARAM_COUNT; i++) {
+      if (audio_params.params[i].is_sendable()) {
+        return true;
+      }
+    }
+    for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+      if (mixer_params.params[i].is_sendable()) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   bool valid_param_index(uint8_t index) const {
     return index < TBD_P4_AUDIO_PARAM_COUNT;

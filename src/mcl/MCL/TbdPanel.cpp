@@ -151,11 +151,16 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   // the Grid Y diagnostic overlay even when the MD driver owns plain TBDR.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5) &&
-      mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+      (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ||
+       mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD)) {
     MidiDevice *primary = device_manager.primary_device();
     MidiDevice *secondary = device_manager.secondary_device();
     if (secondary && secondary != primary &&
         device_manager.enter_ui(secondary, event)) {
+      suppress_sps_key_release_ = true;
+      return true;
+    }
+    if (primary && device_manager.enter_ui(primary, event)) {
       suppress_sps_key_release_ = true;
       return true;
     }

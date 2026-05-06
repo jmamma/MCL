@@ -200,7 +200,8 @@ void MidiSetup::cfg_ports(bool boot) {
   }
 
 #ifdef PLATFORM_TBD
-  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ||
+      mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
     midi_active_peering.force_connect(UARTP4_PORT, &TBD);
   } else if (device_manager.device_for_port(UARTP4_PORT) != &null_midi_device) {
     midi_active_peering.disconnect(UARTP4_PORT);
@@ -229,6 +230,10 @@ void resolve_slots(PortSlot slots[SLOT_COUNT]) {
   } else if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) {
     slots[SLOT_MD] = {UART1_PORT, &Midi, &MidiUart,
                       mcl_cfg.uart1_turbo_speed, false};
+#ifdef PLATFORM_TBD
+  } else if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+    slots[SLOT_MD] = {UARTP4_PORT, &MidiP4, &MidiUartP4, 0, false};
+#endif
   }
 
   PortSlot grid_y_slot = {UART2_PORT, &Midi2, &MidiUart2,

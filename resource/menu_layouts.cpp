@@ -84,17 +84,31 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
 #endif
 
 #if defined(PLATFORM_TBD)
+  #define GRIDX_DEVICE_RANGE 3
+  #define GRIDX_DEVICE_OPTIONS 3
+  #define GRIDX_PORT_MIN 0
+  #define GRIDX_PORT_RANGE 3
+  #define GRIDX_PORT_OPTIONS 3
+  #define GRIDX_PORT_OPTIONS_OFFSET 136
   #define GRIDY_DEVICE_MIN 0
   #define GRIDY_DEVICE_RANGE 4
   #define GRIDY_DEVICE_OPTIONS 4
+  #define GRIDY_DEVICE_OPTIONS_OFFSET 139
   #define GRIDY_PORT_MIN 0
   #define GRIDY_PORT_RANGE 3
   #define GRIDY_PORT_OPTIONS 3
-  #define GRIDY_PORT_OPTIONS_OFFSET 141
+  #define GRIDY_PORT_OPTIONS_OFFSET 143
 #else
+  #define GRIDX_DEVICE_RANGE 2
+  #define GRIDX_DEVICE_OPTIONS 2
+  #define GRIDX_PORT_MIN 0
+  #define GRIDX_PORT_RANGE 2
+  #define GRIDX_PORT_OPTIONS 2
+  #define GRIDX_PORT_OPTIONS_OFFSET 135
   #define GRIDY_DEVICE_MIN 1
   #define GRIDY_DEVICE_RANGE 4
   #define GRIDY_DEVICE_OPTIONS 3
+  #define GRIDY_DEVICE_OPTIONS_OFFSET 137
   #define GRIDY_PORT_MIN 1
   #define GRIDY_PORT_RANGE 3
   #define GRIDY_PORT_OPTIONS 2
@@ -113,8 +127,10 @@ menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
 menu_t<gridx_menu_page_N> gridx_menu_layout = {
     "GRID X",
     {
-        {"DEVICE:", 0, 2, 2, 66, NULL_PAGE, 0, 133},
-        {"PORT:",   0, 2, 2, 67, NULL_PAGE, 0, 135},
+        {"DEVICE:", 0, GRIDX_DEVICE_RANGE, GRIDX_DEVICE_OPTIONS,
+         66, NULL_PAGE, 0, 133},
+        {"PORT:", GRIDX_PORT_MIN, GRIDX_PORT_RANGE, GRIDX_PORT_OPTIONS,
+         67, NULL_PAGE, 0, GRIDX_PORT_OPTIONS_OFFSET},
     },
     24
 };
@@ -123,7 +139,7 @@ menu_t<gridy_menu_page_N> gridy_menu_layout = {
     "GRID Y",
     {
         {"DEVICE:", GRIDY_DEVICE_MIN, GRIDY_DEVICE_RANGE, GRIDY_DEVICE_OPTIONS,
-         68, NULL_PAGE, 0, 137},
+         68, NULL_PAGE, 0, GRIDY_DEVICE_OPTIONS_OFFSET},
         {"PORT:", GRIDY_PORT_MIN, GRIDY_PORT_RANGE, GRIDY_PORT_OPTIONS,
          69, NULL_PAGE, 0, GRIDY_PORT_OPTIONS_OFFSET},
     },

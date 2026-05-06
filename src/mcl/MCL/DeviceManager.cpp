@@ -61,7 +61,15 @@ void DeviceManager::update_active_slots() {
   if (mcl_cfg.usb_device == 3) secondary_ = device_for_port(UARTUSB_PORT);
 #ifdef PLATFORM_TBD
   MidiDevice *p4_device = device_for_port(UARTP4_PORT);
-  if (p4_device != &null_midi_device) secondary_ = p4_device;
+  if (p4_device != &null_midi_device) {
+    if (s[SLOT_MD].port == UARTP4_PORT) {
+      primary_ = p4_device;
+    }
+    if (s[SLOT_ELEKT].port == UARTP4_PORT ||
+        s[SLOT_GENER].port == UARTP4_PORT) {
+      secondary_ = p4_device;
+    }
+  }
   if (active_ui_device_ && active_ui_device_ != primary_ &&
       active_ui_device_ != secondary_) {
     active_ui_device_->exit_ui();

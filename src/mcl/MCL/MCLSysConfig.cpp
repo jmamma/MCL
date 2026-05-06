@@ -67,16 +67,34 @@ void mclsys_apply_config() {
 }
 
 void mclsys_normalize_midi_config() {
+#ifdef PLATFORM_TBD
+  if (mcl_cfg.grid_x_device != GRID_X_DEVICE_MD &&
+      mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD) {
+    mcl_cfg.grid_x_device = GRID_X_DEVICE_OFF;
+  }
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+    mcl_cfg.grid_x_port = GRID_X_PORT_INT;
+  } else if (mcl_cfg.grid_x_port > GRID_X_PORT_USB ||
+             mcl_cfg.grid_x_port == GRID_X_PORT_INT) {
+    mcl_cfg.grid_x_port = GRID_X_PORT_1;
+  }
+#else
   if (mcl_cfg.grid_x_device != GRID_X_DEVICE_MD) {
     mcl_cfg.grid_x_device = GRID_X_DEVICE_OFF;
   }
   if (mcl_cfg.grid_x_port > GRID_X_PORT_USB) {
     mcl_cfg.grid_x_port = GRID_X_PORT_1;
   }
+#endif
 
 #ifdef PLATFORM_TBD
   if (mcl_cfg.grid_y_device > GRID_Y_DEVICE_OFF) {
     mcl_cfg.grid_y_device = GRID_Y_DEVICE_TBD;
+  }
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
+      mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    mcl_cfg.grid_y_device = GRID_Y_DEVICE_GENER;
+    mcl_cfg.grid_y_port = GRID_Y_PORT_2;
   }
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
     mcl_cfg.grid_y_port = GRID_Y_PORT_INT;

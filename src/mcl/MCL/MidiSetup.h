@@ -17,8 +17,15 @@
 
 #define GRID_X_DEVICE_OFF 0
 #define GRID_X_DEVICE_MD 1
+#ifdef PLATFORM_TBD
+#define GRID_X_DEVICE_TBD 2
+#define GRID_X_PORT_INT 0
+#define GRID_X_PORT_1 1
+#define GRID_X_PORT_USB 2
+#else
 #define GRID_X_PORT_1 0
 #define GRID_X_PORT_USB 1
+#endif
 
 #ifdef PLATFORM_TBD
 #define GRID_Y_DEVICE_TBD 0
