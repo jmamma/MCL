@@ -18,6 +18,20 @@
 #define NUM_KEYS 24
 #define NOTE_C2 48
 
+#if !defined(__AVR__)
+namespace {
+uint8_t spsx_stepedit_mask(uint8_t mask) {
+  switch (mask) {
+  case MASK_LOCK:    return SPSX_MASK_LOCK;
+  case MASK_MUTE:    return SPSX_MASK_MUTE;
+  case MASK_SLIDE:   return SPSX_MASK_SLIDE;
+  case MASK_PATTERN:
+  default:           return SPSX_MASK_PATTERN;
+  }
+}
+}
+#endif
+
 bool SeqStepPage::toggle_mask(uint8_t mask) {
   if (key_interface.is_key_down(MDX_KEY_FUNC)) {
     mask_type = (mask_type == mask) ? MASK_PATTERN : mask;
@@ -474,6 +488,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       uint8_t step = track + (page_select * 16);
       step_select = track;
+      uint8_t edit_mask = spsx_stepedit_mask(mask_type);
 
       if (recording) {
         if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -524,7 +539,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         seq_param2.cur = (uint8_t)(mt + 127);
         seq_param2.old = seq_param2.cur;
 
-        if (!active_track.get_step(step, SPSX_MASK_PATTERN)) {
+        if (!active_track.get_step(step, edit_mask)) {
           reset_undo();
           bool cond_plock;
           active_track.steps[step].cond_id =
@@ -532,7 +547,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           active_track.steps[step].cond_plock = cond_plock;
           active_track.microtiming[step] = mt;
           SPSX_CLEAR_BIT64(active_track.mute_mask, step);
-          active_track.set_step(step, SPSX_MASK_PATTERN, true);
+          active_track.set_step(step, edit_mask, true);
           SET_BIT16(ignore_release, track);
         }
       } else if (event->mask == EVENT_BUTTON_RELEASED) {
@@ -544,15 +559,17 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
         if (step >= active_track.length) return true;
 
-        if (active_track.get_step(step, SPSX_MASK_PATTERN)) {
+        if (active_track.get_step(step, edit_mask)) {
           if (clock_diff(note_interface.note_hold[port], read_clock_ms()) <
               TRIG_HOLD_TIME) {
             reset_undo();
-            active_track.set_step(step, SPSX_MASK_PATTERN, false);
+            active_track.set_step(step, edit_mask, false);
             active_track.steps[step].cond_id = 0;
             active_track.steps[step].cond_plock = false;
             active_track.microtiming[step] = 0;
-            SPSX_CLEAR_BIT64(active_track.mute_mask, step);
+            if (edit_mask == SPSX_MASK_PATTERN) {
+              SPSX_CLEAR_BIT64(active_track.mute_mask, step);
+            }
           }
         }
         return true;
