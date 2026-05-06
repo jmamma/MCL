@@ -539,28 +539,28 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
 
   const bool is_press = event->mask == EVENT_BUTTON_PRESSED;
   const bool fullscreen = GUI.overlay == &tbd_param_overlay_page;
+  const bool strip = GUI.overlay == &tbd_param_strip_page;
+  const bool param_overlay = fullscreen || strip;
 
   if (event->source == ButtonsClass::FUNC_BUTTON6 ||
       event->source == ButtonsClass::FUNC_BUTTON8) {
-    if (is_press && fullscreen) {
+    if (is_press && param_overlay) {
       flip_sub_page_half();
     }
-    return fullscreen;
+    return param_overlay;
   }
 
   if (event->source == ButtonsClass::FUNC_BUTTON7 ||
       event->source == ButtonsClass::FUNC_BUTTON9) {
-    if (is_press) {
+    if (is_press && param_overlay) {
       int8_t delta = event->source == ButtonsClass::FUNC_BUTTON7 ? -2 : 2;
-      if (!fullscreen && BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
+      if (BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
         delta = event->source == ButtonsClass::FUNC_BUTTON7 ? -1 : 1;
       }
-      if (fullscreen || BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
-        move_sub_page(delta);
-        return true;
-      }
+      move_sub_page(delta);
+      return true;
     }
-    return fullscreen;
+    return param_overlay;
   }
 
   return false;
