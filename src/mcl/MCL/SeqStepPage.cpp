@@ -191,7 +191,7 @@ void SeqStepPage::init() {
   SeqPage::init();
 
   pitch_param = 255;
-  SeqPage::midi_device = device_manager.primary_device();
+  SeqPage::select_device_slot(1);
   SeqStepTrackApi active_track = active_step_track();
 
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);

@@ -74,6 +74,30 @@ uint8_t clamped_mixer_pages(const TbdP4SoundData &sound) {
              (uint8_t)TBD_P4_MIXER_PARAM_PAGE_COUNT);
 }
 
+void log_arrow_press(uint8_t source, uint8_t before, uint8_t after,
+                     uint8_t count, TbdP4SoundData *sound) {
+#ifdef DEBUGMODE
+  DEBUG_PRINT("tbd_ui_arrow src ");
+  DEBUG_PRINT((unsigned)source);
+  DEBUG_PRINT(" page ");
+  DEBUG_PRINT((unsigned)before);
+  DEBUG_PRINT("->");
+  DEBUG_PRINT((unsigned)after);
+  DEBUG_PRINT(" count ");
+  DEBUG_PRINT((unsigned)count);
+  if (sound == nullptr) {
+    DEBUG_PRINTLN(" sound null");
+    return;
+  }
+  DEBUG_PRINT(" audio ");
+  DEBUG_PRINT((unsigned)sound->audio_params.num_pages);
+  DEBUG_PRINT(" mixer ");
+  DEBUG_PRINT((unsigned)sound->mixer_params.num_pages);
+  DEBUG_PRINT(" p4 ");
+  DEBUG_PRINTLN((unsigned)sound->p4_track_index);
+#endif
+}
+
 void copy_text(const char *src, char *dst, size_t dst_len,
                uint8_t max_chars) {
   if (dst == nullptr || dst_len == 0) return;
@@ -538,29 +562,50 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
   }
 
   const bool is_press = event->mask == EVENT_BUTTON_PRESSED;
-  const bool fullscreen = GUI.overlay == &tbd_param_overlay_page;
-  const bool strip = GUI.overlay == &tbd_param_strip_page;
-  const bool param_overlay = fullscreen || strip;
+  const bool is_param_arrow =
+      event->source == ButtonsClass::FUNC_BUTTON6 ||
+      event->source == ButtonsClass::FUNC_BUTTON7 ||
+      event->source == ButtonsClass::FUNC_BUTTON8 ||
+      event->source == ButtonsClass::FUNC_BUTTON9;
+
+  if (!is_param_arrow) {
+    return false;
+  }
+
+  if (encoder_passthrough_page()) {
+    return false;
+  }
+
+  const uint8_t before_sub_page = sub_page_;
+  const uint8_t count = window_count();
+  TbdP4SoundData *sound = active_sound();
 
   if (event->source == ButtonsClass::FUNC_BUTTON6 ||
       event->source == ButtonsClass::FUNC_BUTTON8) {
-    if (is_press && param_overlay) {
+    if (is_press) {
+      if (GUI.overlay != &tbd_param_overlay_page) {
+        show_fullscreen();
+      }
       flip_sub_page_half();
+      log_arrow_press(event->source, before_sub_page, sub_page_, count, sound);
     }
-    return param_overlay;
+    return true;
   }
 
   if (event->source == ButtonsClass::FUNC_BUTTON7 ||
       event->source == ButtonsClass::FUNC_BUTTON9) {
-    if (is_press && param_overlay) {
+    if (is_press) {
+      if (GUI.overlay != &tbd_param_overlay_page) {
+        show_fullscreen();
+      }
       int8_t delta = event->source == ButtonsClass::FUNC_BUTTON7 ? -2 : 2;
       if (BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
         delta = event->source == ButtonsClass::FUNC_BUTTON7 ? -1 : 1;
       }
       move_sub_page(delta);
-      return true;
+      log_arrow_press(event->source, before_sub_page, sub_page_, count, sound);
     }
-    return param_overlay;
+    return true;
   }
 
   return false;

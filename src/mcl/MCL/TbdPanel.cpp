@@ -3,6 +3,7 @@
 #ifdef PLATFORM_TBD
 
 #include "../Drivers/MidiDevice.h"
+#include "../Drivers/TBD/TBD.h"
 #include "AuxPages.h"
 #include "MCL.h"
 #include "BankPopupPage.h"
@@ -159,6 +160,22 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  // FUNC + TBDR opens the P4 transport/SPI diagnostic overlay. FUNC on its
+  // own opens tempo, so this chord must be checked before the tempo overlay
+  // gets first refusal on the TBDR press.
+  if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
+      BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5) &&
+      (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ||
+       mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD)) {
+    uint8_t diag_device_idx =
+        mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD ? 1 : 0;
+    device_manager.exit_ui();
+    if (TBD.enter_diag_ui(diag_device_idx)) {
+      suppress_sps_key_release_ = true;
+      return true;
+    }
+  }
+
   if (tbd_tempo_page.is_active() && tbd_tempo_page.handleEvent(event)) {
     return true;
   }
@@ -217,23 +234,13 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  // Verification shortcut for the internal TBD/P4 target: FUNC + TBDR opens
-  // the Grid Y diagnostic overlay even when the MD driver owns plain TBDR.
-  if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
-      BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5) &&
-      (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ||
-       mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD)) {
-    MidiDevice *primary = device_manager.primary_device();
-    MidiDevice *secondary = device_manager.secondary_device();
-    if (secondary && secondary != primary &&
-        device_manager.enter_ui(secondary, event)) {
-      suppress_sps_key_release_ = true;
-      return true;
-    }
-    if (primary && device_manager.enter_ui(primary, event)) {
-      suppress_sps_key_release_ = true;
-      return true;
-    }
+  if (TBD.is_ui_active() && TBD.handle_ui_event(event)) {
+    return true;
+  }
+
+  if (device_manager.is_ui_active() &&
+      device_manager.handle_ui_event(event)) {
+    return true;
   }
 
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&

@@ -39,6 +39,7 @@ public:
 
   uint16_t tick_counter = 0;
   uint64_t note_buffer[2] = {0};
+  uint64_t oneshot_mask[2] = {0};
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count = 0;
   bool notesoff_pending = false;
@@ -136,6 +137,7 @@ private:
   void remove_event(uint16_t index);
   void handle_event(const MidiSeqEvent &event, uint8_t step,
                     uint16_t bucket_start);
+  bool conditional_for_event(uint8_t condition, uint8_t step);
   void send_lock_value(const MidiSeqLockDefinition &lock,
                        const MidiSeqEvent &event);
   void send_p4_lock_value(uint8_t param, uint16_t value14);

@@ -102,7 +102,7 @@ void SeqExtStepPage::config_encoders() {
   }
 
   config();
-  SeqPage::midi_device = device_manager.secondary_device();
+  SeqPage::select_device_slot(2);
 
 }
 
@@ -110,7 +110,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
 
-  midi_device = device_manager.secondary_device();
+  select_device_slot(2);
 
   SeqPage::init();
   MD.set_rec_mode(3);
@@ -1171,7 +1171,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 
   if (last_ext_track != track) {
     last_ext_track = track;
-    SeqPage::midi_device = device_manager.secondary_device();
+    SeqPage::select_device_slot(2);
     seq_extstep_page.config_encoders();
   }
 
@@ -1312,7 +1312,7 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   if (last_ext_track != track) {
     last_ext_track = track;
-    SeqPage::midi_device = device_manager.secondary_device();
+    SeqPage::select_device_slot(2);
     seq_extstep_page.config_encoders();
   }
 

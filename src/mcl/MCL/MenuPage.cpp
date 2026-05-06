@@ -45,7 +45,18 @@ void MenuPageBase::gen_menu_device_names() {
   MidiDevice *devs[] = { device_manager.primary_device(), device_manager.secondary_device() };
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
     p->pos = n + 1;
-    strcpy(p->name, devs[n]->name);
+    if (devs[0] == devs[1]) {
+      if (strcmp(devs[n]->name, "TBD") == 0) {
+        strcpy(p->name, n == 0 ? "TB1" : "TB2");
+      } else {
+        strncpy(p->name, devs[n]->name, sizeof(p->name) - 3);
+        p->name[sizeof(p->name) - 3] = '\0';
+        strncat(p->name, n == 0 ? ":1" : ":2",
+                sizeof(p->name) - strlen(p->name) - 1);
+      }
+    } else {
+      strcpy(p->name, devs[n]->name);
+    }
     p++;
   }
 }

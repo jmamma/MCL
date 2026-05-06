@@ -68,6 +68,10 @@ void MCLSeq::set_outputs(MidiUartClass *primary_output_,
   }
 #endif
 #if defined(PLATFORM_TBD)
+  for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+    tbd_tracks[i].uart = primary_output;
+    tbd_tracks[i].uart2 = secondary_output;
+  }
   for (uint8_t i = 0; i < num_midi_tracks; i++) {
     midi_tracks[i].uart = secondary_output;
     midi_tracks[i].uart2 = primary_output;
@@ -334,6 +338,7 @@ void MCLSeq::onMidiStopCallback() {
 #if defined(PLATFORM_TBD)
   if (seq_grid_x_runs_tbd_tracks()) {
     for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+      tbd_tracks[i].send_notes_off();
       tbd_tracks[i].locks_slides_recalc = 255;
       for (auto &sd : tbd_tracks[i].locks_slide_data) { sd.init(); }
     }

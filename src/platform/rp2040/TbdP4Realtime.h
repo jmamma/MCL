@@ -12,6 +12,13 @@ struct TbdP4RealtimeStats {
   uint32_t rx_frames;
   uint32_t tx_midi_bytes;
   uint32_t rx_midi_bytes;
+  uint32_t tx_note_on_messages;
+  uint32_t tx_note_off_messages;
+  uint32_t tx_cc_messages;
+  uint32_t tx_realtime_messages;
+  uint8_t last_tx_status;
+  uint8_t last_tx_data1;
+  uint8_t last_tx_data2;
   uint32_t dropped_tx_bytes;
   uint32_t dropped_rx_bytes;
   uint32_t error_count;
@@ -84,6 +91,7 @@ private:
   bool midi_rx_empty_isr() const { return midi_rx_rd_ == midi_rx_wr_; }
   bool pop_tx_midi_byte_locked(uint8_t &byte);
   bool enqueue_rx_midi_byte_locked(uint8_t byte);
+  void observe_tx_midi_byte(uint8_t byte);
 
   uint16_t calc_payload_crc(const uint8_t *data, uint16_t length) const;
   uint8_t next_sequence(uint8_t current) const;
@@ -128,6 +136,13 @@ private:
   uint32_t tx_frame_count_ = 0;
   uint32_t tx_midi_bytes_ = 0;
   uint32_t rx_midi_bytes_ = 0;
+  uint32_t tx_note_on_messages_ = 0;
+  uint32_t tx_note_off_messages_ = 0;
+  uint32_t tx_cc_messages_ = 0;
+  uint32_t tx_realtime_messages_ = 0;
+  uint8_t last_tx_status_ = 0;
+  uint8_t last_tx_data1_ = 0;
+  uint8_t last_tx_data2_ = 0;
   uint32_t error_count_ = 0;
   uint32_t fingerprint_error_count_ = 0;
   uint32_t length_error_count_ = 0;
@@ -148,6 +163,10 @@ private:
   uint8_t output_peak_byte_ = 0;
   uint8_t input_waveform_[64] = {};
   uint8_t output_waveform_[64] = {};
+  uint8_t tx_parse_status_ = 0;
+  uint8_t tx_parse_needed_ = 0;
+  uint8_t tx_parse_have_ = 0;
+  uint8_t tx_parse_data_[2] = {};
 };
 
 extern TbdP4RealtimeTransport tbd_p4_realtime;

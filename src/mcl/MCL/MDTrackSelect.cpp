@@ -40,7 +40,7 @@ bool MDTrackSelect::off() {
 void MDTrackSelect::handle_track_select_legacy(uint8_t len) {
   if (len == 8) {
     bool is_md_device =
-        SeqTrackUtil::is_md_device(SeqPage::midi_device) &&
+        SeqPage::active_device_is_md() &&
         (mcl.currentPage() != SEQ_EXTSTEP_PAGE);
     bool expand = true;
     bool is_seq_page = mcl.isSeqPage();

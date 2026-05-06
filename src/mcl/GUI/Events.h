@@ -14,6 +14,12 @@
 #define MAX_BUTTONS GUI_NUM_BUTTONS
 #define MAX_EVENTS 32
 
+#if defined(PLATFORM_TBD)
+typedef uint64_t event_ignore_mask_t;
+#else
+typedef uint8_t event_ignore_mask_t;
+#endif
+
 #define EVENT_PRESSED(event, button) ((event)->mask & EVENT_BUTTON_PRESSED && (event)->source == button)
 #define EVENT_RELEASED(event, button) ((event)->mask & EVENT_BUTTON_RELEASED && (event)->source == button)
 #define EVENT_BUTTON(event) ((event->type == BUTTON))
@@ -41,8 +47,12 @@ typedef struct gui_event_s {
 
 class EventManager {
 private:
-  volatile uint8_t ignoreMask;
+  volatile event_ignore_mask_t ignoreMask;
   volatile CRingBuffer<gui_event_t, MAX_EVENTS> eventBuffer;
+
+  static event_ignore_mask_t buttonMask(uint8_t button) {
+    return ((event_ignore_mask_t)1) << button;
+  }
 
   // --- Generic/default implementation ---
   void pollEvents_() {
@@ -51,7 +61,8 @@ private:
       bool released = BUTTON_RELEASED(i);
 
       if (pressed || released) {
-        if (!isIgnored(i)) {
+        bool ignored = isIgnored(i);
+        if (!ignored) {
           gui_event_t event;
           event.source = i;
           event.type = BUTTON;
@@ -76,7 +87,8 @@ private:
       bool released = BUTTON_RELEASED(i);
 
       if (pressed || released) {
-        if (!isIgnored(i)) {
+        bool ignored = isIgnored(i);
+        if (!ignored) {
           gui_event_t event;
           event.source = i;
           event.type = BUTTON;
@@ -91,7 +103,7 @@ private:
             i < (ARROW_KEY_START_ID + NUM_ARROW_KEYS)) {
           uint8_t arrow_key_index = i - ARROW_KEY_START_ID;
 
-          if (pressed && !isIgnored(i)) {
+          if (pressed && !ignored) {
             // Start tracking for repeats on press
             long_press_start_time[arrow_key_index] = read_clock_ms();
             is_repeating[arrow_key_index] = false;
@@ -156,18 +168,18 @@ public:
 
   void setIgnoreMask(uint8_t button) {
     if (button < MAX_BUTTONS) {
-      ignoreMask |= _BV(button);
+      ignoreMask |= buttonMask(button);
     }
   }
 
   void clearIgnoreMask(uint8_t button) {
     if (button < MAX_BUTTONS) {
-      ignoreMask &= ~_BV(button);
+      ignoreMask &= ~buttonMask(button);
     }
   }
 
   bool isIgnored(uint8_t button) {
-    return (button < MAX_BUTTONS) && (ignoreMask & _BV(button));
+    return (button < MAX_BUTTONS) && (ignoreMask & buttonMask(button));
   }
 
   // --- Public dispatcher function ---

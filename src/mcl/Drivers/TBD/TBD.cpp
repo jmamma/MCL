@@ -2,6 +2,8 @@
 
 #ifdef PLATFORM_TBD
 
+#include "GUI.h"
+#include "GUI_hardware.h"
 #include "MCL.h"
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
@@ -812,7 +814,9 @@ class TbdP4DiagOverlay : public LightPage {
 public:
   virtual void display() override {
     TbdP4RealtimeStats stats;
+    TbdP4CommandStats cmd_stats;
     tbd_p4_realtime.get_stats(stats);
+    tbd_p4_command.get_stats(cmd_stats);
 
     constexpr uint8_t y = 32;
     oled_display.fillRect(0, y, 128, 32, BLACK);
@@ -823,33 +827,36 @@ public:
     const uint8_t display_slot =
         ui_slot == kTbdUiSlotSecondary ? 2 : 1;
     oled_display.setCursor(0, y + 2);
-    snprintf(line, sizeof(line), "TBD%u A%u S%u R%u E%lu",
+    snprintf(line, sizeof(line), "TBD%u A%u S%u R%u D%u",
              display_slot,
              stats.p4_alive ? 1 : 0,
              stats.p4_sync_seen ? 1 : 0,
              stats.p4_ready_pin ? 1 : 0,
-             (unsigned long)(stats.error_count % 1000));
+             TBD.p4_defaults_loaded() ? 1 : 0);
     oled_display.println(line);
 
-    snprintf(line, sizeof(line), "D%u WS%lu NR%lu F%lu",
-             stats.dma_ready ? 1 : 0,
-             (unsigned long)(stats.ws_sync_count % 1000),
-             (unsigned long)(stats.p4_not_ready_count % 1000),
-             (unsigned long)(stats.fingerprint_errors % 1000));
-    oled_display.println(line);
-
-    snprintf(line, sizeof(line), "L%lu C%lu SQ%lu MS%lu",
-             (unsigned long)(stats.length_errors % 1000),
-             (unsigned long)(stats.crc_errors % 1000),
-             (unsigned long)(stats.sequence_errors % 1000),
-             (unsigned long)(stats.missed_ws_sync_count % 1000));
-    oled_display.println(line);
-
-    snprintf(line, sizeof(line), "FR%lu/%lu TO%lu DU%lu",
+    snprintf(line, sizeof(line), "F%lu/%lu E%lu L%lu C%lu",
              (unsigned long)(stats.tx_frames % 1000),
              (unsigned long)(stats.rx_frames % 1000),
-             (unsigned long)(stats.dma_timeout_count % 1000),
-             (unsigned long)(stats.dma_unavailable_count % 1000));
+             (unsigned long)(stats.error_count % 1000),
+             (unsigned long)(stats.length_errors % 1000),
+             (unsigned long)(stats.crc_errors % 1000));
+    oled_display.println(line);
+
+    snprintf(line, sizeof(line), "M%lu N%lu C%lu RT%lu",
+             (unsigned long)(stats.tx_midi_bytes % 1000),
+             (unsigned long)(stats.tx_note_on_messages % 1000),
+             (unsigned long)(stats.tx_cc_messages % 1000),
+             (unsigned long)(stats.tx_realtime_messages % 1000));
+    oled_display.println(line);
+
+    snprintf(line, sizeof(line), "Q%lu T%lu L%02X %02X%02X%02X",
+             (unsigned long)(cmd_stats.tx_frames % 1000),
+             (unsigned long)(cmd_stats.ready_timeouts % 1000),
+             cmd_stats.last_request,
+             stats.last_tx_status,
+             stats.last_tx_data1,
+             stats.last_tx_data2);
     oled_display.println(line);
   }
 };
@@ -1324,13 +1331,42 @@ bool TbdDevice::enter_ui(gui_event_t *event) {
     return false;
   }
 
+  diag_active_ = false;
   ui_device_idx_ = device_idx;
   tbd_ui_mode.enter(device_idx);
   if (!tbd_ui_mode.is_active()) ui_device_idx_ = kTbdUiSlotNone;
   return true;
 }
 
+bool TbdDevice::enter_diag_ui(uint8_t device_idx) {
+  if (port != UARTP4_PORT || !tbd_ui_slot_configured(device_idx)) {
+    return false;
+  }
+
+  tbd_ui_mode.disable();
+  diag_active_ = true;
+  ui_device_idx_ = device_idx;
+  GUI_hardware.led.set_tbd_driver_leds(device_idx == kTbdUiSlotPrimary,
+                                       device_idx == kTbdUiSlotSecondary);
+  GUI.setOverlay(&tbd_p4_diag_overlay);
+  return true;
+}
+
 bool TbdDevice::handle_ui_event(gui_event_t *event) {
+  if (diag_active_) {
+    if (GUI.overlay != &tbd_p4_diag_overlay) {
+      diag_active_ = false;
+      ui_device_idx_ = kTbdUiSlotNone;
+      GUI_hardware.led.set_tbd_driver_leds(false, false);
+      return false;
+    }
+    if (EVENT_BUTTON(event) && event->mask == EVENT_BUTTON_PRESSED &&
+        (event->source == ButtonsClass::BUTTON1 ||
+         event->source == ButtonsClass::TBD_BUTTON_TR)) {
+      exit_ui();
+    }
+    return true;
+  }
   return tbd_ui_mode.handle_event(event);
 }
 
@@ -1344,12 +1380,16 @@ void TbdDevice::ui_loop() {
 }
 
 bool TbdDevice::is_ui_active() {
-  return tbd_ui_mode.is_active();
+  return diag_active_ || tbd_ui_mode.is_active();
 }
 
 void TbdDevice::exit_ui() {
   note_off();
+  diag_active_ = false;
   tbd_ui_mode.disable();
+  if (GUI.overlay == &tbd_p4_diag_overlay) {
+    GUI.clearOverlay();
+  }
   ui_device_idx_ = kTbdUiSlotNone;
 }
 

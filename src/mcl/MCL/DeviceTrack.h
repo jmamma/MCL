@@ -136,7 +136,7 @@ public:
       if (parent_cast) {
         return p->materialize_as(track_type, col, nullptr);
       }
-      if (size != 0 || source_size > load_region_size) {
+      if (source_size > load_region_size) {
         return nullptr;
       }
       memcpy_bank1(_this(), ptr, source_size);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef PLATFORM_TBD
@@ -8,6 +9,7 @@ static constexpr uint16_t TBD_P4_SPI_FRAME_SIZE = 512;
 static constexpr uint16_t TBD_P4_SPI_MIDI_DATA_SIZE = 256;
 static constexpr uint16_t TBD_P4_SPI_USB_MIDI_DATA_SIZE = 256;
 static constexpr uint16_t TBD_P4_SPI_HEADER_SIZE = 16;
+static constexpr uint16_t TBD_P4_SPI_RESPONSE_LEGACY_SIZE = 468;
 
 struct __attribute__((packed)) TbdP4SpiRequestHeader {
   uint16_t magic;
@@ -64,6 +66,9 @@ static_assert(sizeof(TbdP4SpiRequest) == 276,
               "TBD P4 request payload layout drifted");
 static_assert(sizeof(TbdP4SpiResponse) == 480,
               "TBD P4 response payload layout drifted");
+static_assert(offsetof(TbdP4SpiResponse, screenshot_request_counter) ==
+                  TBD_P4_SPI_RESPONSE_LEGACY_SIZE,
+              "TBD P4 legacy response payload layout drifted");
 static_assert(2 + TBD_P4_SPI_HEADER_SIZE + sizeof(TbdP4SpiResponse) <=
                   TBD_P4_SPI_FRAME_SIZE,
               "TBD P4 response no longer fits in one SPI frame");

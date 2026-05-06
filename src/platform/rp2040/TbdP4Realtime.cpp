@@ -3,6 +3,7 @@
 #ifdef PLATFORM_TBD
 
 #include "Arduino.h"
+#include "../../mcl/Midi/midi-common.h"
 #include <hardware/dma.h>
 #include <hardware/gpio.h>
 #include <hardware/spi.h>
@@ -81,6 +82,17 @@ void TbdP4RealtimeTransport::init() {
   tx_frame_count_ = 0;
   tx_midi_bytes_ = 0;
   rx_midi_bytes_ = 0;
+  tx_note_on_messages_ = 0;
+  tx_note_off_messages_ = 0;
+  tx_cc_messages_ = 0;
+  tx_realtime_messages_ = 0;
+  last_tx_status_ = 0;
+  last_tx_data1_ = 0;
+  last_tx_data2_ = 0;
+  tx_parse_status_ = 0;
+  tx_parse_needed_ = 0;
+  tx_parse_have_ = 0;
+  memset(tx_parse_data_, 0, sizeof(tx_parse_data_));
   fingerprint_error_count_ = 0;
   length_error_count_ = 0;
   crc_error_count_ = 0;
@@ -198,6 +210,69 @@ bool TbdP4RealtimeTransport::enqueue_rx_midi_byte_locked(uint8_t byte) {
   return true;
 }
 
+void TbdP4RealtimeTransport::observe_tx_midi_byte(uint8_t byte) {
+  if (byte >= 0xF8) {
+    tx_realtime_messages_++;
+    last_tx_status_ = byte;
+    last_tx_data1_ = 0;
+    last_tx_data2_ = 0;
+    return;
+  }
+
+  if (byte & 0x80) {
+    tx_parse_status_ = byte;
+    tx_parse_have_ = 0;
+    last_tx_status_ = byte;
+    last_tx_data1_ = 0;
+    last_tx_data2_ = 0;
+    switch (byte & 0xF0) {
+    case MIDI_PROGRAM_CHANGE:
+    case MIDI_CHANNEL_PRESSURE:
+      tx_parse_needed_ = 1;
+      break;
+    case MIDI_NOTE_OFF:
+    case MIDI_NOTE_ON:
+    case MIDI_CONTROL_CHANGE:
+    case MIDI_AFTER_TOUCH:
+    case MIDI_PITCH_WHEEL:
+      tx_parse_needed_ = 2;
+      break;
+    default:
+      tx_parse_needed_ = 0;
+      break;
+    }
+    return;
+  }
+
+  if (tx_parse_status_ == 0 || tx_parse_needed_ == 0 ||
+      tx_parse_have_ >= sizeof(tx_parse_data_)) {
+    return;
+  }
+
+  tx_parse_data_[tx_parse_have_++] = byte;
+  if (tx_parse_have_ < tx_parse_needed_) {
+    return;
+  }
+
+  const uint8_t status_class = tx_parse_status_ & 0xF0;
+  if (status_class == MIDI_NOTE_ON) {
+    if (tx_parse_data_[1] == 0) {
+      tx_note_off_messages_++;
+    } else {
+      tx_note_on_messages_++;
+    }
+  } else if (status_class == MIDI_NOTE_OFF) {
+    tx_note_off_messages_++;
+  } else if (status_class == MIDI_CONTROL_CHANGE) {
+    tx_cc_messages_++;
+  }
+
+  last_tx_status_ = tx_parse_status_;
+  last_tx_data1_ = tx_parse_data_[0];
+  last_tx_data2_ = tx_parse_needed_ > 1 ? tx_parse_data_[1] : 0;
+  tx_parse_have_ = 0;
+}
+
 uint16_t TbdP4RealtimeTransport::calc_payload_crc(const uint8_t *data,
                                                   uint16_t length) const {
   uint16_t sum = 42;
@@ -262,6 +337,13 @@ void TbdP4RealtimeTransport::get_stats(TbdP4RealtimeStats &stats) const {
   stats.rx_frames = receive_count_;
   stats.tx_midi_bytes = tx_midi_bytes_;
   stats.rx_midi_bytes = rx_midi_bytes_;
+  stats.tx_note_on_messages = tx_note_on_messages_;
+  stats.tx_note_off_messages = tx_note_off_messages_;
+  stats.tx_cc_messages = tx_cc_messages_;
+  stats.tx_realtime_messages = tx_realtime_messages_;
+  stats.last_tx_status = last_tx_status_;
+  stats.last_tx_data1 = last_tx_data1_;
+  stats.last_tx_data2 = last_tx_data2_;
   stats.dropped_tx_bytes = dropped_tx_bytes_;
   stats.dropped_rx_bytes = dropped_rx_bytes_;
   stats.error_count = error_count_;
@@ -310,6 +392,7 @@ void TbdP4RealtimeTransport::prepare_request() {
   while (written < TBD_P4_SPI_MIDI_DATA_SIZE) {
     uint8_t byte = 0;
     if (!pop_tx_midi_byte_locked(byte)) break;
+    observe_tx_midi_byte(byte);
     req->synth_midi[written++] = byte;
   }
   CLEAR_LOCK();
@@ -405,7 +488,10 @@ void TbdP4RealtimeTransport::process_response() {
     can_prepare_request_ = true;
     return;
   }
-  if (header->payload_length != sizeof(TbdP4SpiResponse)) {
+  bool legacy_response =
+      header->payload_length == TBD_P4_SPI_RESPONSE_LEGACY_SIZE;
+  bool extended_response = header->payload_length == sizeof(TbdP4SpiResponse);
+  if (!legacy_response && !extended_response) {
     error_count_++;
     length_error_count_++;
     can_prepare_request_ = true;
@@ -431,9 +517,9 @@ void TbdP4RealtimeTransport::process_response() {
   last_response_ms_ = now_ms();
   led_color_ = response->led_color;
   webui_update_counter_ = response->webui_update_counter;
-  network_status_ = response->network_status;
-  input_peak_byte_ = response->input_peak_byte;
-  output_peak_byte_ = response->output_peak_byte;
+  network_status_ = extended_response ? response->network_status : 0;
+  input_peak_byte_ = extended_response ? response->input_peak_byte : 0;
+  output_peak_byte_ = extended_response ? response->output_peak_byte : 0;
   memcpy(input_waveform_, response->input_waveform, sizeof(input_waveform_));
   memcpy(output_waveform_, response->output_waveform, sizeof(output_waveform_));
 

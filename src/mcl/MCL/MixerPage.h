@@ -74,6 +74,9 @@ public:
   bool display_mute_mask();
   TrigLEDMode mixer_led_mode() const;
   uint8_t *mixer_meter_levels();
+  bool mixer_param_supported_for_held_tracks(uint8_t param);
+  uint8_t mixer_param_for_encoder(uint8_t encoder_idx);
+  bool handle_mixer_encoder_edits();
 
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)

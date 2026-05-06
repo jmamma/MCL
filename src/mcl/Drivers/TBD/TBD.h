@@ -42,7 +42,9 @@ public:
   virtual bool enter_ui(gui_event_t *event) override;
   virtual bool is_ui_active() override;
   virtual void exit_ui() override;
+  bool enter_diag_ui(uint8_t device_idx);
   uint8_t ui_device_idx() const { return ui_device_idx_; }
+  bool p4_defaults_loaded() const { return p4_defaults_loaded_; }
   bool get_default_p4_sound(uint8_t p4_track_index,
                             TbdP4SoundData *sound) const;
   bool hydrate_p4_sound(TbdP4SoundData &sound);

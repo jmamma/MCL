@@ -24,7 +24,7 @@ void ArpPage::init() {
 
 void ArpPage::track_update(uint8_t n, bool re_render) {
 
-  bool is_md_device = SeqTrackUtil::is_md_device(seq_ptc_page.midi_device);
+  bool is_md_device = SeqPage::active_device_is_md();
   if (is_md_device) {
     if (n > 15) {
       n = last_md_track;
@@ -96,7 +96,7 @@ void ArpPage::display() {
   oled_display.setTextColor(WHITE);
   mcl_print_P(mclstr_arpeggiator);
 
-  if (SeqTrackUtil::is_md_device(seq_ptc_page.midi_device)) {
+  if (SeqPage::active_device_is_md()) {
     oled_display.print(current_track + 1);
   } else {
     oled_display.print(last_ext_track + 1);

@@ -525,6 +525,7 @@ void StepSeqDataTrack::clear_step(uint8_t step) {
     STEPSEQ_CLEAR_BIT64(accent_mask, step);
     STEPSEQ_CLEAR_BIT64(swing_mask, step);
     STEPSEQ_CLEAR_BIT64(mute_mask, step);
+    clear_step_oneshot(step);
 }
 
 void StepSeqDataTrack::clear_step_locks(uint8_t step) {

@@ -79,6 +79,8 @@ uint16_t clamp_value14(int32_t value) {
   return (uint16_t)value;
 }
 
+constexpr uint8_t MIDI_SEQ_COND_ONESHOT = 14;
+
 bool current_event_due(uint16_t timing, uint16_t tps, uint16_t tick_counter) {
   if (timing < tps) return false;
   uint16_t trigger_tick = (uint16_t)(timing - tps + 1);
@@ -111,6 +113,7 @@ void MidiSeqTrack::reset() {
   SeqTrackCond::reset();
   tick_counter = 0;
   mod12_counter = 0;
+  memset(oneshot_mask, 0, sizeof(oneshot_mask));
   cache_loaded = true;
   locks_slides_recalc = 255;
   locks_slides_idx = 0;
@@ -260,6 +263,7 @@ bool MidiSeqTrack::add_note(uint32_t tick, uint32_t width, uint8_t note,
       (uint16_t)(tps + end_tick - (raw_end_step * (uint32_t)tps));
   uint8_t step = (uint8_t)(raw_step % length);
   uint8_t end_step = (uint8_t)(raw_end_step % length);
+  CLEAR_BIT128_P(oneshot_mask, step);
 
   uint16_t start_idx = 0;
   if (find_note_event(step, note, true, start_idx) != 0xFFFF) {
@@ -1003,14 +1007,14 @@ void MidiSeqTrack::recalc_slides() {
 void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
                                 uint16_t bucket_start) {
   if (event.type == MIDI_SEQ_EVENT_NOTE_ON) {
-    if (conditional(event.condition)) {
+    if (conditional_for_event(event.condition, step)) {
       note_on(event.target, (uint8_t)event.value);
     }
   } else if (event.type == MIDI_SEQ_EVENT_NOTE_OFF) {
     note_off(event.target);
   } else if (event.type == MIDI_SEQ_EVENT_LOCK &&
              event.target < MIDI_SEQ_NUM_LOCKS) {
-    if (conditional(event.condition)) {
+    if (conditional_for_event(event.condition, step)) {
       send_lock_value(seq_data.locks[event.target], event);
       if (event.flags() & MIDI_SEQ_EVENT_FLAG_SLIDE) {
         locks_slides_recalc = step;
@@ -1018,6 +1022,17 @@ void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
       }
     }
   }
+}
+
+bool MidiSeqTrack::conditional_for_event(uint8_t condition, uint8_t step) {
+  if (condition == MIDI_SEQ_COND_ONESHOT) {
+    if (IS_BIT_SET128_P(oneshot_mask, step)) {
+      return false;
+    }
+    SET_BIT128_P(oneshot_mask, step);
+    return true;
+  }
+  return conditional(condition);
 }
 
 void MidiSeqTrack::seq(MidiUartClass *uart_) {
@@ -1091,6 +1106,7 @@ void MidiSeqTrack::clear_track(bool) {
   seq_data.channel = ch;
   seq_data.length = len;
   seq_data.speed = spd;
+  memset(oneshot_mask, 0, sizeof(oneshot_mask));
   length = len;
   speed = spd;
   tick_counter = 0;

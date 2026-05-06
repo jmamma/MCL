@@ -568,7 +568,7 @@ public:
   void start();
   void stop();
   void pause();
-  void setTempo(uint16_t tempo);
+  void setTempo(float tempo);
   bool getBlinkHint(bool onbeat);
 
   bool isStarted() { return state == STARTED; }

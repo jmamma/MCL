@@ -160,8 +160,7 @@ static inline void seq_copy_device_slot_name(uint8_t slot, char *dst,
                                              uint8_t len) {
   if (len == 0) return;
   if (SeqPage::devices_share_physical()) {
-    strncpy(dst, normalized_seq_slot(slot) == 2 ? "TBD:MID" : "TBD:SND",
-            len);
+    strncpy(dst, normalized_seq_slot(slot) == 2 ? "TB2" : "TB1", len);
   } else {
     strncpy(dst, SeqPage::device_for_seq_slot(slot)->name, len);
   }
@@ -687,6 +686,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         select_device_slot(mcl_cfg.seq_dev);
         opt_midi_device_capture = midi_device;
         opt_midi_device_slot_capture = current_device_slot();
+        if (mcl.currentPage() == SEQ_PTC_PAGE) {
+          seq_ptc_page.last_midi_device = midi_device;
+          seq_ptc_page.last_midi_device_slot = opt_midi_device_slot_capture;
+        }
         if (old_dev == midi_device && old_slot == opt_midi_device_slot_capture) {
           opt_speed_handler();
           opt_length_handler();
@@ -1686,12 +1689,7 @@ void SeqPage::display() {
   //  draw current active track
   mcl_gui.draw_panel_number(track_id);
 
-  if (mcl.currentPage() == SEQ_EXTSTEP_PAGE ||
-      (!is_md && mcl.currentPage() == SEQ_PTC_PAGE)) {
-    mcl_gui.draw_panel_toggle(ext_name, int_name, true);
-  } else {
-    mcl_gui.draw_panel_toggle(int_name, ext_name, is_md);
-  }
+  mcl_gui.draw_panel_toggle(int_name, ext_name, current_device_slot() == 1);
   //  draw stop/play/rec state
   mcl_gui.draw_panel_status(recording, MidiClock.state == 2);
 

@@ -69,6 +69,7 @@ public:
 
   uint8_t find_arp_track(uint8_t channel_event);
   MidiDevice *last_midi_device = nullptr;
+  uint8_t last_midi_device_slot = 1;
 
   SeqPtcMidiEvents midi_events;
   SeqPtcPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

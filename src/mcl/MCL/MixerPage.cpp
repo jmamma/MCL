@@ -95,6 +95,60 @@ uint8_t *MixerPage::mixer_meter_levels() {
   return mixer_device_idx == 0 ? disp_levels : ext_disp_levels;
 }
 
+bool MixerPage::mixer_param_supported_for_held_tracks(uint8_t param) {
+  sync_selected_mixer_device();
+  uint8_t len = mixer_track_count();
+  for (uint8_t i = 0; i < len; i++) {
+    if (note_interface.is_note_on(i)) {
+      MidiDeviceMixerParam info;
+      if (midi_device->mixer_param(mixer_device_idx, i, param, &info)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+uint8_t MixerPage::mixer_param_for_encoder(uint8_t encoder_idx) {
+  sync_selected_mixer_device();
+
+  if (SeqTrackUtil::is_md_device(midi_device)) {
+    switch (encoder_idx) {
+    case 1:
+      return MODEL_FLTF;
+    case 2:
+      return MODEL_FLTW;
+    case 3:
+      return MODEL_FLTQ;
+    default:
+      return MODEL_LEVEL;
+    }
+  }
+
+  if (mixer_param_supported_for_held_tracks(encoder_idx)) {
+    return encoder_idx;
+  }
+  if (mixer_param_supported_for_held_tracks(display_mode)) {
+    return display_mode;
+  }
+  return default_mixer_param();
+}
+
+bool MixerPage::handle_mixer_encoder_edits() {
+  if (note_interface.notes_count_on() == 0) {
+    return false;
+  }
+
+  bool handled = false;
+  for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
+    if (encoders[n] != nullptr && encoders[n]->hasChanged()) {
+      adjust_param(encoders[n], mixer_param_for_encoder(n));
+      handled = true;
+    }
+  }
+  return handled;
+}
+
 bool MixerPage::display_mute_mask() {
   uint16_t last_mute_mask = seq_step_page.mute_mask;
   seq_step_page.mute_mask = 0;
@@ -227,11 +281,15 @@ void MixerPage::load_perf_locks(uint8_t state) {
 }
 void MixerPage::loop() {
   constexpr int timeout = 750;
-  perf_page.func_enc_check();
   bool old_draw_encoders = draw_encoders;
+  bool mixer_encoder_edit = handle_mixer_encoder_edits();
 
-  if ((key_interface.is_key_down(MDX_KEY_NO))&& preview_mute_set != 255 &&
-      note_interface.notes_on == 0) {
+  if (!mixer_encoder_edit) {
+    perf_page.func_enc_check();
+  }
+
+  if (!mixer_encoder_edit && (key_interface.is_key_down(MDX_KEY_NO)) &&
+      preview_mute_set != 255 && note_interface.notes_on == 0) {
     for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
       PerfEncoder *enc = (PerfEncoder*) encoders[n];
       if (enc->hasChanged()) {
@@ -244,9 +302,13 @@ void MixerPage::loop() {
     }
   }
 
-  perf_page.encoder_send();
+  if (!mixer_encoder_edit) {
+    perf_page.encoder_send();
+  }
 
-  if (draw_encoders && key_interface.is_key_down(MDX_KEY_FUNC)) {
+  if (mixer_encoder_edit) {
+    draw_encoders = false;
+  } else if (draw_encoders && key_interface.is_key_down(MDX_KEY_FUNC)) {
     draw_encoders = true;
   } else {
     draw_encoders = false;
