@@ -121,11 +121,16 @@ void MidiActivePeering::disconnect(uint8_t port) {
     return;
   }
   disconnect_driver_list(drivers, device_idx, port, pmidi);
+  MidiDevice *attached = device_manager.device_for_port(port);
+  if (attached != &null_midi_device && attached->connected) {
+    attached->disconnect(device_idx);
+  }
   device_manager.detach_port(port);
 }
 
 void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   if (port < UART1_PORT || port > MIDI_PORT_COUNT) return;
+  if (!driver) driver = &null_midi_device;
 
   disconnect(port);
   auto *pmidi = _getMidiUart(port);

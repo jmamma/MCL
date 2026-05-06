@@ -54,7 +54,9 @@ TbdP4DiagOverlay tbd_p4_diag_overlay;
 
 } // namespace
 
-TbdDevice::TbdDevice() : MidiDevice(&MidiP4, "TBD", DEVICE_MIDI, false) {}
+TbdDevice::TbdDevice() : MidiDevice(&MidiP4, "TBD", DEVICE_MIDI, false) {
+  port = UARTP4_PORT;
+}
 
 bool TbdDevice::probe() {
   connected = true;
@@ -62,6 +64,9 @@ bool TbdDevice::probe() {
 }
 
 void TbdDevice::on_connection(uint8_t device_idx) {
+  port = UARTP4_PORT;
+  midi = &MidiP4;
+  uart = MidiP4.uart;
   connected = true;
   init_grid_devices(device_idx);
 }
