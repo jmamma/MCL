@@ -19,7 +19,7 @@
 
 TbdPanel tbd_panel;
 
-static constexpr uint16_t TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS = 500;
+static constexpr uint16_t TBD_TOP_LEFT_PAGE_SELECT_HOLD_MS = 300;
 
 static bool is_tbd_menu_page(PageIndex pg) {
   return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
