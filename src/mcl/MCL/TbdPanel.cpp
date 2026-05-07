@@ -123,7 +123,7 @@ static bool tbd_y_button3_page(PageIndex pg) {
   case SEQ_STEP_PAGE:
   case SEQ_EXTSTEP_PAGE:
   case SEQ_PTC_PAGE:
-    return !SeqPage::show_seq_menu;
+    return true;
   default:
     return false;
   }
