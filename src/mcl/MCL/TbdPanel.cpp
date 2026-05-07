@@ -3,6 +3,7 @@
 #ifdef PLATFORM_TBD
 
 #include "../Drivers/MidiDevice.h"
+#include "../Drivers/MD/MD.h"
 #include "../Drivers/TBD/TBD.h"
 #include "AuxPages.h"
 #include "MCL.h"
@@ -24,12 +25,47 @@
 
 TbdPanel tbd_panel;
 
+static bool tbd_transport_forward_has(MidiUartClass *uart) {
+  if (uart == nullptr) return false;
+  if (MidiClock.uart_transport_forward1 == uart ||
+      MidiClock.uart_transport_forward2 == uart ||
+      MidiClock.uart_transport_forward3 == uart) {
+    return true;
+  }
+  if (MidiClock.uart_transport_forward4 == uart) {
+    return true;
+  }
+  return false;
+}
+
+static void tbd_forward_local_transport_to_md(uint8_t msg) {
+  if (!MD.connected || MD.uart == nullptr || MD.uart == &MidiUartP4) return;
+  if (tbd_transport_forward_has(MD.uart)) return;
+  MD.uart->sendRealtime(msg);
+}
+
+static void tbd_handle_local_transport(uint8_t msg) {
+  tbd_forward_local_transport_to_md(msg);
+  switch (msg) {
+  case MIDI_START:
+    MidiClock.handleImmediateMidiStart();
+    break;
+  case MIDI_STOP:
+    MidiClock.handleImmediateMidiStop();
+    break;
+  case MIDI_CONTINUE:
+    MidiClock.handleImmediateMidiContinue();
+    break;
+  }
+}
+
 static bool is_tbd_menu_page(PageIndex pg) {
   return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
          pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
          pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
          pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
          pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
+         pg == SAMPLE_BROWSER || pg == SOUND_BROWSER ||
          pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
          pg == GRIDY_MENU_PAGE ||
          pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
@@ -45,6 +81,9 @@ static bool driver_ui_blocked_page(PageIndex pg) {
   case PAGE_SELECT_PAGE:
   case QUESTIONDIALOG_PAGE:
   case ARP_PAGE:
+  case LOAD_PROJ_PAGE:
+  case SAMPLE_BROWSER:
+  case SOUND_BROWSER:
     return true;
 #ifdef WAV_DESIGNER
   case WD_MIXER_PAGE:
@@ -74,12 +113,14 @@ static MidiDevice *grid_trig_preview_device() {
   return nullptr;
 }
 
-static bool y_button_scale_action_available(PageIndex pg) {
+static bool tbd_y_b_swap_page(PageIndex pg) {
   switch (pg) {
   case GRID_PAGE:
     return GUI.currentPage() == mcl.getPage(GRID_PAGE) &&
-           !grid_page.show_slot_menu && !grid_io_overlay.is_active();
+           !grid_page.show_slot_menu;
   case MIXER_PAGE:
+  case GRID_SAVE_PAGE:
+  case GRID_LOAD_PAGE:
     return true;
   case SEQ_STEP_PAGE:
   case SEQ_EXTSTEP_PAGE:
@@ -391,21 +432,28 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
-  // In normal mode, swap the physical Y/B roles on TBD:
-  //   Y -> Scale on grid/mixer/seq pages, otherwise MD FUNC key path
-  //   B -> legacy BUTTON3 path used by grid/seq menus
-  // SPS-latched mode keeps the driver-specific Y=NO, B=FUNC mapping.
+  // Normal MCL pages use a panel-local Y/B mapping:
+  //   Grid/GridIO/Mixer/Seq: B -> Scale/page-toggle, Y -> legacy BUTTON3 menus
+  // Other pages keep Y as MD FUNC and B as legacy BUTTON3. Expanded driver UI
+  // handling runs before this block, so SPS fullscreen UI keeps its raw cluster
+  // semantics. Collapsed driver UI intentionally follows the active page.
   if (!ui_expanded) {
+    const bool swap_y_b = !is_menu_page && tbd_y_b_swap_page(pg);
     if (orig_src == ButtonsClass::BUTTON3) {
-      if (!is_menu_page && y_button_scale_action_available(pg)) {
-        key_interface.key_event(MDX_KEY_SCALE, is_release);
+      if (swap_y_b) {
+        event->source = ButtonsClass::BUTTON3;
+      } else {
+        key_interface.key_event(MDX_KEY_FUNC, is_release);
         return true;
       }
-      key_interface.key_event(MDX_KEY_FUNC, is_release);
-      return true;
     }
     if (orig_src == ButtonsClass::TBD_BUTTON_B) {
-      event->source = ButtonsClass::BUTTON3;
+      if (swap_y_b) {
+        key_interface.key_event(MDX_KEY_SCALE, is_release);
+        return true;
+      } else {
+        event->source = ButtonsClass::BUTTON3;
+      }
     }
   }
 
@@ -493,13 +541,13 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
           if (BUTTON_DOWN(ButtonsClass::FUNC_BUTTON1)) {
             seq_step_page.enable_record();
             if (MidiClock.state != MidiClockClass::STARTED) {
-              MidiClock.handleImmediateMidiStart();
+              tbd_handle_local_transport(MIDI_START);
             }
             key = 255;
           } else if (MidiClock.state == MidiClockClass::PAUSED) {
-             MidiClock.handleImmediateMidiContinue();
+             tbd_handle_local_transport(MIDI_CONTINUE);
           } else if (MidiClock.state == MidiClockClass::STARTED) {
-             MidiClock.handleImmediateMidiStop();
+             tbd_handle_local_transport(MIDI_STOP);
           }
         }
         break;
@@ -508,7 +556,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
         if (is_press && key == MDX_KEY_STOP &&
             (MidiClock.state == MidiClockClass::STARTED ||
              MidiClock.state == MidiClockClass::PAUSED)) {
-          MidiClock.handleImmediateMidiStop();
+          tbd_handle_local_transport(MIDI_STOP);
         }
         break;
       case ButtonsClass::FUNC_BUTTON5:  break;

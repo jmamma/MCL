@@ -3,6 +3,66 @@
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
 #include "ResourceManager.h"
+#include "MCLSysConfig.h"
+#include "MidiSetup.h"
+
+namespace {
+
+#ifdef PLATFORM_TBD
+bool is_grid_y_device_value(uint8_t *dest_var) {
+  return dest_var == &mcl_cfg.grid_y_device;
+}
+
+uint8_t grid_y_device_to_menu_value(uint8_t stored_value) {
+  switch (stored_value) {
+  case GRID_Y_DEVICE_GENER:
+    return 0;
+  case GRID_Y_DEVICE_ELEKT:
+    return 1;
+  case GRID_Y_DEVICE_TBD:
+    return 2;
+  case GRID_Y_DEVICE_OFF:
+    return 3;
+  default:
+    return 0;
+  }
+}
+
+uint8_t grid_y_device_from_menu_value(uint8_t menu_value) {
+  switch (menu_value) {
+  case 0:
+    return GRID_Y_DEVICE_GENER;
+  case 1:
+    return GRID_Y_DEVICE_ELEKT;
+  case 2:
+    return GRID_Y_DEVICE_TBD;
+  case 3:
+    return GRID_Y_DEVICE_OFF;
+  default:
+    return GRID_Y_DEVICE_GENER;
+  }
+}
+#endif
+
+uint8_t menu_value_from_stored(uint8_t *dest_var, uint8_t stored_value) {
+#ifdef PLATFORM_TBD
+  if (is_grid_y_device_value(dest_var)) {
+    return grid_y_device_to_menu_value(stored_value);
+  }
+#endif
+  return stored_value;
+}
+
+uint8_t stored_value_from_menu(uint8_t *dest_var, uint8_t menu_value) {
+#ifdef PLATFORM_TBD
+  if (is_grid_y_device_value(dest_var)) {
+    return grid_y_device_from_menu_value(menu_value);
+  }
+#endif
+  return menu_value;
+}
+
+} // namespace
 
 void MenuPageBase::init() {
   DEBUG_PRINTLN("MenuPageBase::init");
@@ -30,7 +90,7 @@ void MenuPageBase::init() {
 
   uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
   if (dest_var != NULL) {
-    encoders[0]->setValue(*dest_var);
+    encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
   }
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
@@ -143,7 +203,7 @@ void MenuPageBase::loop() {
     cur_row = new_val;
     uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
-      encoders[0]->setValue(*dest_var);
+      encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
     } else {
       encoders[0]->setValue(0);
     }
@@ -151,7 +211,7 @@ void MenuPageBase::loop() {
   if (encoders[0]->hasChanged()) {
     uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
-      *dest_var = encoders[0]->cur;
+      *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
     }
   }
 }
