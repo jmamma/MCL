@@ -429,7 +429,7 @@ void ensure_p4_driver_params_initialized() {
   init_driver_param(p4_driver_params.params[22], "Mute",
                     TBD_P4_PARAM_TYPE_ONOFF, 80, 0);
   init_driver_param(p4_driver_params.params[23], "Lev",
-                    TBD_P4_PARAM_TYPE_LEVEL_MASTER, 81, 64);
+                    TBD_P4_PARAM_TYPE_LEVEL_MASTER, 81, 110);
   p4_driver_params_initialized = true;
 }
 
