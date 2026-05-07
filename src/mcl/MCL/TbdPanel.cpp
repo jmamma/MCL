@@ -14,6 +14,7 @@
 #include "GridPages.h"
 #include "GUI_hardware.h"
 #include "KeyInterface.h"
+#include "MenuPage.h"
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
 #include "MidiSetup.h"
@@ -69,6 +70,21 @@ static bool is_tbd_menu_page(PageIndex pg) {
          pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
          pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
          pg == SAMPLE_BROWSER || pg == SOUND_BROWSER ||
+         pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
+         pg == GRIDY_MENU_PAGE ||
+         pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
+         pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
+         pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
+         pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
+         pg == MIDIGENERIC_MENU_PAGE;
+}
+
+static bool is_tbd_config_menu_page(PageIndex pg) {
+  return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
+         pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
+         pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
+         pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
+         pg == MD_IMPORT_PAGE ||
          pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
          pg == GRIDY_MENU_PAGE ||
          pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
@@ -221,6 +237,14 @@ bool TbdPanel::handle_menu_no_hold(gui_event_t *event, bool is_press,
   const bool opened = menu_no_hold_opened_;
   reset_menu_no_hold();
   if (opened) return true;
+
+  if (is_tbd_config_menu_page(mcl.currentPage())) {
+    MenuPageBase *menu = static_cast<MenuPageBase *>(GUI.currentPage());
+    if (menu != nullptr) {
+      menu->exit();
+    }
+    return true;
+  }
 
   event->source = ButtonsClass::BUTTON1;
   event->mask = EVENT_BUTTON_PRESSED;

@@ -211,95 +211,6 @@ bool ButtonsClass::handle_encoder_tap(uint8_t encoder_idx, bool is_press,
 #define TBD_BUTTON_FUNC(ui)       (!((ui).mcl_btns & (1 << 11)))
 #define TBD_BUTTON_TRIG(ui, n)    (!((ui).d_btns  & (1 << (n)))) // n=0..15
 
-#ifdef PLATFORM_TBD
-static constexpr uint8_t kTbdUiStm32ResetPin = 40;
-static constexpr uint16_t kTbdUiStallRecoverMs = 1200;
-static constexpr uint16_t kTbdUiResetLowMs = 100;
-static constexpr uint16_t kTbdUiBootWaitMs = 250;
-
-enum TbdUiRecoveryState : uint8_t {
-  TBD_UI_RECOVERY_IDLE = 0,
-  TBD_UI_RECOVERY_RESET_LOW,
-  TBD_UI_RECOVERY_BOOT_WAIT,
-};
-
-static uint16_t tbd_ui_last_packet_ms = 0;
-static uint16_t tbd_ui_recovery_state_ms = 0;
-static TbdUiRecoveryState tbd_ui_recovery_state = TBD_UI_RECOVERY_IDLE;
-
-static inline void tbd_ui_i2c_release(uint8_t pin) {
-  pinMode(pin, INPUT_PULLUP);
-}
-
-static inline void tbd_ui_i2c_low(uint8_t pin) {
-  digitalWrite(pin, LOW);
-  pinMode(pin, OUTPUT);
-}
-
-static void tbd_ui_i2c_bus_recover() {
-  pinMode(I2C_SDA, INPUT_PULLUP);
-  tbd_ui_i2c_release(I2C_SCL);
-  delayMicroseconds(10);
-
-  for (uint8_t i = 0; i < 18 && digitalRead(I2C_SDA) == LOW; i++) {
-    tbd_ui_i2c_low(I2C_SCL);
-    delayMicroseconds(10);
-    tbd_ui_i2c_release(I2C_SCL);
-    delayMicroseconds(10);
-  }
-
-  tbd_ui_i2c_low(I2C_SDA);
-  delayMicroseconds(10);
-  tbd_ui_i2c_release(I2C_SCL);
-  delayMicroseconds(10);
-  tbd_ui_i2c_release(I2C_SDA);
-  delayMicroseconds(10);
-}
-
-static void tbd_ui_recovery_begin(uint16_t now) {
-  DEBUG_PRINTLN("TBD UI I2C recovery");
-  Wire1.abortAsync();
-  Wire1.end();
-  pinMode(kTbdUiStm32ResetPin, OUTPUT);
-  digitalWrite(kTbdUiStm32ResetPin, LOW);
-  tbd_ui_recovery_state = TBD_UI_RECOVERY_RESET_LOW;
-  tbd_ui_recovery_state_ms = now;
-}
-
-static bool tbd_ui_recovery_step(uint16_t now) {
-  switch (tbd_ui_recovery_state) {
-  case TBD_UI_RECOVERY_IDLE:
-    return false;
-
-  case TBD_UI_RECOVERY_RESET_LOW:
-    if (clock_diff(tbd_ui_recovery_state_ms, now) < kTbdUiResetLowMs) {
-      return true;
-    }
-    tbd_ui_i2c_bus_recover();
-    digitalWrite(kTbdUiStm32ResetPin, HIGH);
-    tbd_ui_recovery_state = TBD_UI_RECOVERY_BOOT_WAIT;
-    tbd_ui_recovery_state_ms = now;
-    return true;
-
-  case TBD_UI_RECOVERY_BOOT_WAIT:
-    if (clock_diff(tbd_ui_recovery_state_ms, now) < kTbdUiBootWaitMs) {
-      return true;
-    }
-    Wire1.setSDA(I2C_SDA);
-    Wire1.setSCL(I2C_SCL);
-    Wire1.setClock(400000);
-    Wire1.begin();
-    tbd_ui.UpdateUIInputs();
-    tbd_ui_last_packet_ms = now;
-    tbd_ui_recovery_state = TBD_UI_RECOVERY_IDLE;
-    return true;
-  }
-
-  tbd_ui_recovery_state = TBD_UI_RECOVERY_IDLE;
-  return false;
-}
-#endif
-
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   // Per-press tap-detection latches for all 4 encoders. Each clears on
   // the press edge, then latches if (a) the panel flagged a long-press
@@ -382,12 +293,6 @@ void GUIHardware::poll() {
         GUI.events.pollEvents();
     }
 #else
-    uint16_t now = read_clock_ms();
-    if (tbd_ui_recovery_step(now)) {
-      led.show();
-      inGui = false;
-      return;
-    }
     if (tbd_ui.UpdateUIInputs()) {
       ui_data_t ui_data_current = tbd_ui.CopyUiData();
       if (ui_data_current.systicks != last_ui_systicks) {
@@ -395,12 +300,8 @@ void GUIHardware::poll() {
         Buttons.pollTBD(ui_data_current);
         Encoders.pollTBD(ui_data_current);
         last_ui_systicks = ui_data_current.systicks;
-        tbd_ui_last_packet_ms = now;
         GUI.events.pollEvents();
       }
-    }
-    if (clock_diff(tbd_ui_last_packet_ms, now) > kTbdUiStallRecoverMs) {
-      tbd_ui_recovery_begin(now);
     }
 #endif
     led.show();
@@ -436,8 +337,6 @@ void GUIHardware::init() {
     Buttons.pollTBD(ui_data_current);
     Encoders.pollTBD(ui_data_current);
     last_ui_systicks = ui_data_current.systicks;
-    tbd_ui_last_packet_ms = read_clock_ms();
-    tbd_ui_recovery_state = TBD_UI_RECOVERY_IDLE;
     tbd_ui.UpdateUIInputs();
 #endif
 }
