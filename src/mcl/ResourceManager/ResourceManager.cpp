@@ -6,10 +6,16 @@ ResourceManager::ResourceManager() { }
 void ResourceManager::Clear() {
     DEBUG_PRINTLN("resource clear");
 	m_bufsize = m_persistent_size;
+#if defined(PLATFORM_TBD)
+	icons_knob = m_persistent_icons_knob;
+#endif
 }
 
 void ResourceManager::SetPersistent() {
   m_persistent_size = m_bufsize;
+#if defined(PLATFORM_TBD)
+  m_persistent_icons_knob = icons_knob;
+#endif
 }
 
 byte* ResourceManager::__use_resource(const void* pgm) {

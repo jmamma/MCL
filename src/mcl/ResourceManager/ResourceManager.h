@@ -13,6 +13,9 @@ private:
 	uint8_t m_buffer[RM_BUFSIZE];
 	uint16_t m_bufsize = 0;
 	uint16_t m_persistent_size = 0;
+#if defined(PLATFORM_TBD)
+	__T_icons_knob *m_persistent_icons_knob = nullptr;
+#endif
 	byte* __use_resource(const void* pgm);
 
 public:

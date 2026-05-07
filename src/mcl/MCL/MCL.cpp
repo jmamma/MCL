@@ -516,6 +516,9 @@ void MCL::load_persistent_resources() {
   R.Clear();
   R.use_machine_param_names();
   R.use_machine_names_short();
+#if defined(PLATFORM_TBD)
+  R.use_icons_knob();
+#endif
   R.SetPersistent();
 #endif
 }
