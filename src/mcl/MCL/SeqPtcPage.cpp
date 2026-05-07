@@ -76,9 +76,6 @@ SeqExtStepTrackApi ptc_ext_track_api(uint8_t track) {
 }
 
 bool ptc_ext_arp_enabled(uint8_t track) {
-  if (SeqTrackUtil::use_midi_tracks_for_ext()) {
-    return false;
-  }
   return mcl_seq.ext_arp_tracks[track].enabled;
 }
 

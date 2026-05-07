@@ -449,6 +449,11 @@ void MCLSeq::seq() {
     spsx_tracks[0].post_seq(uart);
 
     if (legacy_tick) {
+      for (uint8_t i = 0; i < num_md_tracks; i++) {
+        md_arp_tracks[i].mute_state = spsx_tracks[i].mute_state;
+        md_arp_tracks[i].seq(uart, uart2);
+      }
+
       mdfx_track.seq();
 
       for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
@@ -519,6 +524,12 @@ void MCLSeq::seq() {
   if (seq_grid_y_runs_tbd_midi_tracks()) {
     for (uint8_t i = 0; i < num_midi_tracks; i++) {
       midi_tracks[i].seq(uart2);
+    }
+    if (legacy_tick) {
+      for (uint8_t i = 0; i < num_midi_tracks; i++) {
+        ext_arp_tracks[i].mute_state = midi_tracks[i].mute_state;
+        ext_arp_tracks[i].seq(uart, uart2);
+      }
     }
   }
 #endif
