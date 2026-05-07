@@ -48,6 +48,9 @@ public:
   void gen_menu_row_names();
   void gen_menu_transpose_names();
   virtual bool handleEvent(gui_event_t *event);
+#ifdef PLATFORM_TBD
+  MenuPageBase *asMenuPage() override { return this; }
+#endif
 
 protected:
   virtual MenuBase *get_menu() = 0;

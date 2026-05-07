@@ -63,35 +63,14 @@ static void tbd_handle_local_transport(uint8_t msg) {
   }
 }
 
-static bool is_tbd_menu_page(PageIndex pg) {
-  return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
-         pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
-         pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
-         pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
-         pg == MD_IMPORT_PAGE || pg == LOAD_PROJ_PAGE ||
-         pg == SAMPLE_BROWSER || pg == SOUND_BROWSER ||
-         pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
-         pg == GRIDY_MENU_PAGE ||
-         pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
-         pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
-         pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
-         pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
-         pg == MIDIGENERIC_MENU_PAGE;
+static MenuPageBase *active_tbd_menu_page() {
+  LightPage *page = GUI.currentPage();
+  return page != nullptr ? page->asMenuPage() : nullptr;
 }
 
-static bool is_tbd_config_menu_page(PageIndex pg) {
-  return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
-         pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
-         pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
-         pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
-         pg == MD_IMPORT_PAGE ||
-         pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
-         pg == GRIDY_MENU_PAGE ||
-         pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
-         pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
-         pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
-         pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
-         pg == MIDIGENERIC_MENU_PAGE;
+static bool is_tbd_reserved_page(PageIndex pg) {
+  return active_tbd_menu_page() != nullptr ||
+         pg == LOAD_PROJ_PAGE || pg == SAMPLE_BROWSER || pg == SOUND_BROWSER;
 }
 
 static bool driver_ui_blocked_page(PageIndex pg) {
@@ -168,7 +147,7 @@ static bool tbd_b_scale_page(PageIndex pg) {
 
 bool TbdPanel::top_left_reserved_page() const {
   PageIndex pg = mcl.currentPage();
-  return is_tbd_menu_page(pg) || pg == PAGE_SELECT_PAGE ||
+  return is_tbd_reserved_page(pg) || pg == PAGE_SELECT_PAGE ||
          pg == BANK_POPUP_PAGE || pg == TEXT_INPUT_PAGE ||
          pg == GRID_SAVE_PAGE || pg == GRID_LOAD_PAGE ||
          grid_io_overlay.is_active();
@@ -196,7 +175,7 @@ void TbdPanel::loop() {
   if (!menu_no_hold_tracking_) return;
 
   if (!BUTTON_DOWN(ButtonsClass::BUTTON2) ||
-      !is_tbd_menu_page(mcl.currentPage())) {
+      active_tbd_menu_page() == nullptr) {
     reset_menu_no_hold();
     return;
   }
@@ -238,17 +217,11 @@ bool TbdPanel::handle_menu_no_hold(gui_event_t *event, bool is_press,
   reset_menu_no_hold();
   if (opened) return true;
 
-  if (is_tbd_config_menu_page(mcl.currentPage())) {
-    MenuPageBase *menu = static_cast<MenuPageBase *>(GUI.currentPage());
-    if (menu != nullptr) {
-      menu->exit();
-    }
-    return true;
+  MenuPageBase *menu = active_tbd_menu_page();
+  if (menu != nullptr) {
+    menu->exit();
   }
-
-  event->source = ButtonsClass::BUTTON1;
-  event->mask = EVENT_BUTTON_PRESSED;
-  return false;
+  return true;
 }
 
 bool TbdPanel::open_bank_popup() {
@@ -309,7 +282,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       orig_src >= ButtonsClass::TRIG_BUTTON1 &&
       orig_src < ButtonsClass::TRIG_BUTTON1 + 16;
   const PageIndex pg = mcl.currentPage();
-  const bool is_menu_page = is_tbd_menu_page(pg);
+  const bool is_menu_page = active_tbd_menu_page() != nullptr;
   const bool grid_page_active =
       pg == GRID_PAGE && GUI.currentPage() == mcl.getPage(GRID_PAGE);
   const bool driver_ui_blocked = driver_ui_blocked_page(pg);
