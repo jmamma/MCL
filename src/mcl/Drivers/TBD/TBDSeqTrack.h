@@ -20,6 +20,9 @@ public:
   void seq(MidiUartClass *uart_);
   void set_length(uint8_t len, bool expand = false) override;
   bool trigger(uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
+  bool note_on(uint8_t note, uint8_t velocity = 100,
+               MidiUartClass *uart_ = nullptr);
+  void note_off(MidiUartClass *uart_ = nullptr);
   bool preview_step(uint8_t step);
   void send_notes_off();
   void clear_mutes() override;
@@ -40,6 +43,7 @@ private:
 
   uint8_t trig_conditional(uint8_t step, uint8_t condition);
   void service_gate();
+  void send_note_on(uint8_t note, uint8_t velocity);
   void send_active_note_off();
   void send_trig(uint8_t step, uint8_t velocity = 100);
   void send_parameter_locks(uint8_t step, uint16_t lock_idx, bool trig);

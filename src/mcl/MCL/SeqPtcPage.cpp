@@ -8,6 +8,9 @@
 #include "MCLStrings.h"
 #include "SeqTrackUtil.h"
 #include "SeqExtStepTrackApi.h"
+#ifdef PLATFORM_TBD
+#include "../Drivers/TBD/TBD.h"
+#endif
 
 #define MIDI_LOCAL_MODE 0
 #define NUM_KEYS 24
@@ -26,6 +29,11 @@ constexpr uint32_t kTbdPtcBlackColor = 0x0000A0;
 constexpr uint32_t kTbdPtcActiveColor = 0xFF0000;
 
 void tbd_ptc_send_note(SeqPtcPage &page, uint8_t note, uint8_t mask) {
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+    page.handle_tbd_note_event(note, mask, true);
+    return;
+  }
+
   bool old_scale_padding = page.scale_padding;
   page.scale_padding = true;
 
@@ -622,6 +630,54 @@ void SeqPtcPage::draw_popup_octave() {
 }
 
 #ifdef PLATFORM_TBD
+bool SeqPtcPage::handle_tbd_note_event(uint8_t note, uint8_t mask,
+                                       bool padded) {
+  if (mask != EVENT_BUTTON_PRESSED && mask != EVENT_BUTTON_RELEASED) {
+    return true;
+  }
+  if (last_md_track >= mcl_seq.num_tbd_tracks) {
+    return true;
+  }
+
+  bool old_scale_padding = scale_padding;
+  scale_padding = padded;
+  uint8_t pitch = calc_scale_note(note, scale_padding);
+  scale_padding = old_scale_padding;
+
+  if (mask == EVENT_BUTTON_PRESSED) {
+    SET_BIT128_P(dev_note_masks[0], note);
+    if (pitch != 255) {
+      SET_BIT128_P(note_mask, pitch);
+    }
+  } else {
+    CLEAR_BIT128_P(dev_note_masks[0], note);
+    if (arp_enabled.cur != ARP_LATCH && pitch != 255) {
+      CLEAR_BIT128_P(note_mask, pitch);
+    }
+  }
+
+  if (pitch == 255) {
+    return true;
+  }
+  pitch += ptc_param_oct.cur * 12;
+  if (pitch >= 128) {
+    return true;
+  }
+
+  auto &track = mcl_seq.tbd_tracks[last_md_track];
+  if (mask == EVENT_BUTTON_PRESSED) {
+    track.note_on(pitch, 127);
+    if (recording && MidiClock.state == 2) {
+      reset_undo();
+      track.record_track(127);
+      track.record_track_pitch(pitch);
+    }
+  } else {
+    track.note_off();
+  }
+  return true;
+}
+
 void SeqPtcPage::send_tbd_keyboard_leds() {
   uint16_t natural_mask = 0;
   uint16_t black_mask = 0;
@@ -704,6 +760,16 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     }
     if (show_seq_menu) {
       if (mask == EVENT_BUTTON_PRESSED) {
+#ifdef PLATFORM_TBD
+        if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
+            device_manager.device_for_port(port) == &TBD) {
+          opt_trackid = note + 1;
+          note_interface.ignoreNextEvent(note);
+          select_track(&TBD, note);
+          seq_menu_page.select_item(0);
+          return true;
+        }
+#endif
         toggle_ext_mask(note);
       }
       return true;
@@ -717,6 +783,14 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
     */
 
     // note interface presses are treated as musical notes here
+#ifdef PLATFORM_TBD
+    if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
+        device_manager.device_for_port(port) == &TBD) {
+      handle_tbd_note_event(note, mask, false);
+      send_tbd_keyboard_leds();
+      return true;
+    }
+#endif
     scale_padding = false;
     bool is_md = active_device_is_md();
     uint8_t channel_event = NO_EVENT;

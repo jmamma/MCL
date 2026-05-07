@@ -6,6 +6,7 @@
 #include "GridTrack.h"
 #include "MidiClock.h"
 #include "TBD.h"
+#include "TbdP4Realtime.h"
 
 namespace {
 
@@ -192,6 +193,28 @@ bool TBDSeqTrack::trigger(uint8_t velocity, MidiUartClass *uart_) {
   return true;
 }
 
+bool TBDSeqTrack::note_on(uint8_t note, uint8_t velocity, MidiUartClass *uart_) {
+  MidiUartClass *old_port = port;
+  port = uart_ ? uart_ : (uart ? uart : TBD.uart);
+  if (port == nullptr || p4_sound.midi_channel >= 16 || note > 127) {
+    port = old_port;
+    return false;
+  }
+
+  tbd_p4_realtime.set_active_track(p4_sound.p4_track_index);
+  send_note_on(note, velocity);
+
+  port = old_port;
+  return true;
+}
+
+void TBDSeqTrack::note_off(MidiUartClass *uart_) {
+  MidiUartClass *old_port = port;
+  port = uart_ ? uart_ : (uart ? uart : TBD.uart);
+  send_active_note_off();
+  port = old_port;
+}
+
 void TBDSeqTrack::send_notes_off() {
   MidiUartClass *old_port = port;
   port = uart ? uart : TBD.uart;
@@ -203,7 +226,6 @@ void TBDSeqTrack::send_trig(uint8_t step, uint8_t velocity) {
   if (!port) {
     return;
   }
-  mixer_page.disp_levels[track_number] = velocity;
 
   uint8_t note = TBD_P4_DEFAULT_STEP_NOTE;
   if (tbd_p4_sound_uses_step_note(p4_sound)) {
@@ -215,13 +237,8 @@ void TBDSeqTrack::send_trig(uint8_t step, uint8_t velocity) {
     note = (uint8_t)p4_sound.trig_note;
   }
 
-  send_active_note_off();
-  if (p4_sound.note_cc >= 0 && p4_sound.note_cc <= 127) {
-    port->sendCC(p4_sound.midi_channel, (uint8_t)p4_sound.note_cc, note);
-  }
-  port->sendNoteOn(p4_sound.midi_channel, note, velocity);
-  active_note_ = note;
-  active_note_channel_ = p4_sound.midi_channel;
+  tbd_p4_realtime.set_active_track(p4_sound.p4_track_index);
+  send_note_on(note, velocity);
 
   uint16_t tick_time = MidiClock.div192_time;
   gate_ticks_remaining_ =
@@ -233,6 +250,18 @@ void TBDSeqTrack::send_trig(uint8_t step, uint8_t velocity) {
   if (gate_ticks_remaining_ == 0) {
     gate_ticks_remaining_ = 1;
   }
+}
+
+void TBDSeqTrack::send_note_on(uint8_t note, uint8_t velocity) {
+  mixer_page.disp_levels[track_number] = velocity;
+
+  send_active_note_off();
+  if (p4_sound.note_cc >= 0 && p4_sound.note_cc <= 127) {
+    port->sendCC(p4_sound.midi_channel, (uint8_t)p4_sound.note_cc, note);
+  }
+  port->sendNoteOn(p4_sound.midi_channel, note, velocity);
+  active_note_ = note;
+  active_note_channel_ = p4_sound.midi_channel;
 }
 
 void TBDSeqTrack::service_gate() {

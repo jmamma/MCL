@@ -21,7 +21,8 @@ namespace {
 
 #if defined(PLATFORM_TBD)
 bool seq_page_uses_tbd_step_tracks() {
-  if (mcl.currentPage() == SEQ_STEP_PAGE &&
+  PageIndex page = mcl.currentPage();
+  if ((page == SEQ_STEP_PAGE || page == SEQ_PTC_PAGE) &&
       mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
     return true;
   }
@@ -501,7 +502,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   const uint8_t device_slot = seq_slot_for_device(device);
   bool is_md_device = slot_is_md_device(device_slot);
 #if defined(PLATFORM_TBD)
-  if (is_md_device && device == &TBD && seq_page_uses_tbd_step_tracks()) {
+  if (device == &TBD && seq_page_uses_tbd_step_tracks()) {
     if (track >= mcl_seq.num_tbd_tracks) {
       return;
     }
