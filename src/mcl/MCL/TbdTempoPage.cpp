@@ -268,7 +268,7 @@ void TbdTempoPage::display() {
   constexpr uint8_t kWinX = 16;
   constexpr uint8_t kWinY = 2;
   constexpr uint8_t kWinW = 96;
-  constexpr uint8_t kWinH = 28;
+  constexpr uint8_t kWinH = 30;
 
   oled_display.fillRect(kWinX - 1, kWinY - 1, kWinW + 2, kWinH + 2, BLACK);
   oled_display.drawRect(kWinX, kWinY, kWinW, kWinH, WHITE);
