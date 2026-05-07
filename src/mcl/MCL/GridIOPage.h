@@ -25,6 +25,7 @@ class GridIOPage : public LightPage {
   static uint8_t content_y_offset(uint8_t y_offset);
   static void clear_body(uint8_t y_offset);
   static void paint_track_select_leds();
+  static bool slot_matches_track_type_select(uint8_t slot);
   virtual void init();
  virtual void cleanup();
  virtual void draw_popup() = 0;

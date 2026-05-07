@@ -1,6 +1,6 @@
 /* TBD SPS-mode latch. Owns the cluster A/X/Y MD key routing,
  * the trig → sub_page selector /
- * MD_GUI_TRIG_* routing, the SPS-key + arrow sub-page traversal, and
+ * MD_GUI_TRIG_* routing, the UI-button + arrow sub-page traversal, and
  * the FUNC + ARROW window-toggle chord. Pulled out of tbd_handleEvent
  * so the per-event ladder in MCL.cpp stays readable.
  *
@@ -35,8 +35,8 @@ public:
   void disable() { set_latched(false); }
 
   bool handle_func_arrow_chord(gui_event_t *event);
-  // Cluster X/Y in SPS-latched: X → MD EXTENDED / FUNC+EXTENDED,
-  // Y → MD NO transmit.
+  // Cluster in SPS-latched: X -> MD YES, A/Y -> MD NO,
+  // B -> MD SCALE, FUNC -> MD FUNC.
   bool handle_cluster_menus(gui_event_t *event);
   // Arrow handler: latched → cycle sub_page_; SPS-key/UI-button-held →
   // also cycle. UP/DOWN flip half within page; LEFT/RIGHT
@@ -99,7 +99,7 @@ private:
   uint8_t bound_track_ = 255;
   uint8_t bound_sub_page_ = 255;
   // Param window selector. Each window covers 4 consecutive params;
-  // SPS-key + arrow cycles. Legacy MD kits expose 24 params, SPSX 34.
+  // UI button + arrow cycles. Legacy MD kits expose 24 params, SPSX 34.
   uint8_t sub_page_ = 0;
   // Per-encoder "last used" timestamp for the value-show timeout (matches
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
@@ -108,9 +108,7 @@ private:
   uint16_t ui_button_press_ms_ = 0;
   bool ui_button_pressed_ = false;
   bool ui_button_hold_handled_ = false;
-  // X press emits EXTENDED or FUNC+EXTENDED depending on the modifier
-  // state at press time; release must pair with the same key.
-  uint8_t x_key_held_ = 255;
+  bool scale_key_held_ = false;
   // SPS-key press lifetime flag: cleared on press; if no chord set it
   // during the hold, release fires the per-page tap action.
   bool sps_key_consumed_ = false;

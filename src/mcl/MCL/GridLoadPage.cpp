@@ -151,7 +151,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
       get_modestr(modestr);
 
       if (show_offset) {
-        if (offset < GRID_WIDTH) {
+        if (offset < NUM_SLOTS) {
           mcl_gui.put_value_at(offset + 1, K);
         } else {
           strcpy_P(K, mclstr_dash);
@@ -320,11 +320,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
-#ifdef PLATFORM_TBD
-      case MDX_KEY_NO:
-#else
       case MDX_KEY_YES:
-#endif
         if (show_track_type) {
           goto load_groups;
         }

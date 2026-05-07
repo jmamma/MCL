@@ -116,13 +116,13 @@ void GridIOPage::paint_track_select_leds() {
 
   uint16_t active_mask = 0;
   if (show_offset) {
-    if (offset < GRID_WIDTH && offset < 16) {
-      SET_BIT16(active_mask, offset);
+    if (offset < NUM_SLOTS && offset / GRID_WIDTH == old_grid) {
+      SET_BIT16(active_mask, offset % GRID_WIDTH);
     }
   } else {
     for (uint8_t n = 0; n < GRID_WIDTH && n < 16; n++) {
-      if (IS_BIT_SET32(track_select, n + old_grid * GRID_WIDTH) ||
-          note_interface.is_note(n)) {
+      uint8_t slot = n + old_grid * GRID_WIDTH;
+      if (IS_BIT_SET32(track_select, slot) || note_interface.is_note(slot)) {
         SET_BIT16(active_mask, n);
       }
     }
@@ -141,9 +141,9 @@ void GridIOPage::paint_track_select_leds() {
 }
 
 void GridIOPage::populate_track_select_from_notes(uint8_t *track_select_array) {
-  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (note_interface.is_note(n)) {
-      SET_BIT32(track_select, n + old_grid * 16);
+      SET_BIT32(track_select, n);
     }
   }
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -153,29 +153,31 @@ void GridIOPage::populate_track_select_from_notes(uint8_t *track_select_array) {
   }
 }
 
+bool GridIOPage::slot_matches_track_type_select(uint8_t slot) {
+  if (slot >= NUM_SLOTS) return false;
+
+  GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot);
+  if (gdt == nullptr) return false;
+
+  uint8_t match = 255;
+  switch (gdt->group_type) {
+  case GROUP_DEV:
+    match = gdt->device_idx;
+    break;
+  case GROUP_AUX:
+  case GROUP_PERF:
+  case GROUP_TEMPO:
+    match = gdt->group_type + 1;
+    break;
+  }
+
+  return match != 255 && IS_BIT_SET16(mcl_cfg.track_type_select, match);
+}
+
 void GridIOPage::track_select_array_from_type_select(
     uint8_t *track_select_array) {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(n);
-
-    uint8_t device_idx = gdt->device_idx;
-    if (gdt == nullptr)
-      continue;
-    uint8_t match = 255;
-    switch (gdt->group_type) {
-    case GROUP_DEV:
-      match = gdt->device_idx;
-      break;
-    case GROUP_AUX:
-    case GROUP_PERF:
-    case GROUP_TEMPO:
-      match = gdt->group_type + 1;
-      break;
-    }
-    if (match == 255) {
-      continue;
-    }
-    if (IS_BIT_SET16(mcl_cfg.track_type_select, match)) {
+    if (slot_matches_track_type_select(n)) {
       track_select_array[n] = 1;
     }
   }
@@ -226,19 +228,6 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       default: {
         return false;
       }
-#ifdef PLATFORM_TBD
-      // TBD: A (MDX_KEY_NO) drives the group save / load gesture —
-      // press opens the popup, release commits (handled per page).
-      // The legacy AVR mapping (YES press → popup, NO press → close)
-      // is preserved on AVR.
-      case MDX_KEY_NO: {
-        group_select();
-        return true;
-      }
-      case MDX_KEY_YES: {
-        return true; // X plays no group role on TBD
-      }
-#else
       case MDX_KEY_YES: {
         group_select();
         return true;
@@ -246,7 +235,6 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_NO: {
         goto close;
       }
-#endif
       case MDX_KEY_BANKD: {
         return true;
       }

@@ -116,7 +116,7 @@ void GridIOOverlay::display() {
 bool GridIOOverlay::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
-    if (track >= GRID_WIDTH) return true;
+    if (track >= NUM_SLOTS) return true;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (GridIOPage::show_track_type) {
@@ -125,6 +125,7 @@ bool GridIOOverlay::handleEvent(gui_event_t *event) {
           mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
+        focus_slot(track);
         if (GridIOPage::show_offset) {
           GridIOPage::offset = track;
         }
@@ -156,10 +157,11 @@ bool GridIOOverlay::handleEvent(gui_event_t *event) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
-      case MDX_KEY_NO:
+      case MDX_KEY_YES:
         group_select();
         return true;
-      case MDX_KEY_YES:
+      case MDX_KEY_NO:
+        close();
         return true;
       case MDX_KEY_BANKD:
         return true;
@@ -195,7 +197,7 @@ bool GridIOOverlay::handleEvent(gui_event_t *event) {
     }
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      if (key == MDX_KEY_NO && GridIOPage::show_track_type) {
+      if (key == MDX_KEY_YES && GridIOPage::show_track_type) {
         group_action();
         return true;
       }
@@ -267,12 +269,13 @@ void GridIOOverlay::group_select() {
 
 void GridIOOverlay::toggle_grid() {
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    if (note_interface.is_note(n)) {
-      TOGGLE_BIT32(GridIOPage::track_select, n + GridIOPage::old_grid * GRID_WIDTH);
-      if (note_interface.is_note_on(n)) {
-        note_interface.ignoreNextEvent(n);
+    uint8_t slot = n + GridIOPage::old_grid * GRID_WIDTH;
+    if (note_interface.is_note(slot)) {
+      TOGGLE_BIT32(GridIOPage::track_select, slot);
+      if (note_interface.is_note_on(slot)) {
+        note_interface.ignoreNextEvent(slot);
       }
-      note_interface.clear_note(n);
+      note_interface.clear_note(slot);
     }
   }
   GridIOPage::old_grid = !GridIOPage::old_grid;
@@ -280,10 +283,24 @@ void GridIOOverlay::toggle_grid() {
   GridIOPage::paint_track_select_leds();
 }
 
+void GridIOOverlay::focus_slot(uint8_t slot) {
+  if (slot >= NUM_SLOTS) return;
+
+  uint8_t grid = slot / GRID_WIDTH;
+  if (grid >= NUM_GRIDS) return;
+
+  if (GridIOPage::old_grid == grid && grid_page.cur_grid == grid) {
+    return;
+  }
+
+  GridIOPage::old_grid = grid;
+  sync_preview_grid();
+}
+
 void GridIOOverlay::selected_tracks(uint8_t *track_select_array) {
-  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (note_interface.is_note(n)) {
-      SET_BIT32(GridIOPage::track_select, n + GridIOPage::old_grid * GRID_WIDTH);
+      SET_BIT32(GridIOPage::track_select, n);
     }
   }
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -296,15 +313,16 @@ void GridIOOverlay::selected_tracks(uint8_t *track_select_array) {
 uint16_t GridIOOverlay::visible_select_mask() const {
   uint16_t mask = 0;
   if (GridIOPage::show_offset) {
-    if (GridIOPage::offset < GRID_WIDTH) {
-      SET_BIT16(mask, GridIOPage::offset);
+    if (GridIOPage::offset < NUM_SLOTS &&
+        GridIOPage::offset / GRID_WIDTH == GridIOPage::old_grid) {
+      SET_BIT16(mask, GridIOPage::offset % GRID_WIDTH);
     }
     return mask;
   }
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    if (IS_BIT_SET32(GridIOPage::track_select,
-                     n + GridIOPage::old_grid * GRID_WIDTH) ||
-        note_interface.is_note(n)) {
+    uint8_t slot = n + GridIOPage::old_grid * GRID_WIDTH;
+    if (IS_BIT_SET32(GridIOPage::track_select, slot) ||
+        note_interface.is_note(slot)) {
       SET_BIT16(mask, n);
     }
   }
@@ -314,7 +332,11 @@ uint16_t GridIOOverlay::visible_select_mask() const {
 bool GridIOOverlay::is_slot_selected(uint8_t visible_slot) const {
   if (!is_active()) return false;
   if (visible_slot >= GRID_WIDTH) return false;
-  if (GridIOPage::show_track_type) return false;
+  if (GridIOPage::show_track_type) {
+    if (grid_page.cur_grid != GridIOPage::old_grid) return false;
+    return GridIOPage::slot_matches_track_type_select(
+        visible_slot + GridIOPage::old_grid * GRID_WIDTH);
+  }
   if (grid_page.cur_grid != GridIOPage::old_grid) return false;
   uint16_t mask = visible_select_mask();
   return IS_BIT_SET16(mask, visible_slot);

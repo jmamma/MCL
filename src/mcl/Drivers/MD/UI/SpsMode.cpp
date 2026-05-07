@@ -222,21 +222,75 @@ bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
 
 bool SpsMode::handle_cluster_menus(gui_event_t *event) {
   if (!latched_) return false;
-  // BUTTON4=X → MD EXTENDED, or FUNC+EXTENDED when the MD FUNC key is
-  // held. BUTTON3=Y is the global MDX_KEY_NO passthrough handled in
-  // MDPanel.
-  if (event->source != ButtonsClass::BUTTON4) return false;
+  bool yes_key = false;
+  bool scale_key = false;
+  bool func_key = false;
+  uint8_t key = 255;
+  switch (event->source) {
+    case ButtonsClass::BUTTON4: // X
+      yes_key = true;
+      key = MDX_KEY_YES;
+      break;
+    case ButtonsClass::BUTTON1: // A
+    case ButtonsClass::BUTTON3: // Y legacy shortcut
+      key = MDX_KEY_NO;
+      break;
+    case ButtonsClass::TBD_BUTTON_B: // B
+      scale_key = true;
+      key = MDX_KEY_SCALE;
+      break;
+    case ButtonsClass::FUNC_BUTTON5: // FUNC
+      func_key = true;
+      key = MDX_KEY_FUNC;
+      break;
+    default:
+      return false;
+  }
+
   if (!MD.connected) return true;
 
   if (is_press(event)) {
-    x_key_held_ = key_interface.is_key_down(MDX_KEY_FUNC)
-        ? MDX_KEY_FUNCEXTENDED
-        : MDX_KEY_EXTENDED;
-    key_interface.key_event(x_key_held_, false);
+    if (scale_key) {
+      if (key_interface.is_key_down(MDX_KEY_FUNC) ||
+          BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
+        MD.toggle_scale_window();
+        scale_key_held_ = false;
+      } else {
+        MD.hold_scale_button();
+        key_interface.key_event(MDX_KEY_SCALE, false);
+        scale_key_held_ = true;
+      }
+    } else if (func_key) {
+      sps_key_consumed_ = false;
+      MD.hold_function_button();
+      key_interface.set_key_state(MDX_KEY_FUNC, true);
+    } else if (yes_key) {
+      MD.press_yes_button();
+    } else {
+      MD.press_no_button();
+    }
+    if (!scale_key && !func_key) {
+      key_interface.set_key_state(key, true);
+    }
   } else if (is_release(event)) {
-    const uint8_t key = (x_key_held_ != 255) ? x_key_held_ : MDX_KEY_EXTENDED;
-    key_interface.key_event(key, true);
-    x_key_held_ = 255;
+    if (scale_key) {
+      if (scale_key_held_) {
+        MD.release_scale_button();
+        key_interface.key_event(MDX_KEY_SCALE, true);
+      }
+      scale_key_held_ = false;
+    } else if (func_key) {
+      MD.release_function_button();
+      key_interface.set_key_state(MDX_KEY_FUNC, false);
+      sps_key_consumed_ = false;
+    } else if (yes_key) {
+      MD.release_yes_button();
+    } else {
+      MD.release_no_button();
+    }
+    if (!scale_key && !func_key) {
+      key_interface.set_key_state(key, false);
+    }
   }
   return true;
 }

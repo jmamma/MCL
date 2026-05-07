@@ -31,6 +31,7 @@ private:
   void group_action();
   void group_select();
   void toggle_grid();
+  void focus_slot(uint8_t slot);
   void selected_tracks(uint8_t *track_select_array);
   uint16_t visible_select_mask() const;
   void load_mode_title(char *title, uint8_t size) const;

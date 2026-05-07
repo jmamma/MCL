@@ -6,6 +6,11 @@
 #define BITMAP_MCL_LOGO_W 58
 #define BITMAP_MCL_LOGO_H 19
 
+#if defined(OLED_WIDTH) && defined(OLED_HEIGHT) && (OLED_WIDTH == 128) &&        \
+    (OLED_HEIGHT == 64)
+#define MCL_SPLASH_128_64
+#endif
+
 void MCLGfx::draw_evil(unsigned char* evil) {
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
@@ -29,13 +34,19 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
   oled_display.clearDisplay();
   oled_display.setFont();
 
-  oled_display.drawBitmap(35, 8, bitmap, BITMAP_MCL_LOGO_W,
+#ifdef MCL_SPLASH_128_64
+  constexpr uint8_t logo_y = (OLED_HEIGHT - BITMAP_MCL_LOGO_H) / 2;
+#else
+  constexpr uint8_t logo_y = 8;
+#endif
+
+  oled_display.drawBitmap(35, logo_y, bitmap, BITMAP_MCL_LOGO_W,
                           BITMAP_MCL_LOGO_H, WHITE);
   /* oled_display.println("MEGA");
    oled_display.setCursor(22, 15);
    oled_display.println("COMMAND");
    */
-  oled_display.setCursor(90, 8);
+  oled_display.setCursor(90, logo_y);
   oled_display.setTextSize(1);
   mcl_print_P(mclstr_v_label);
   oled_display.print(VERSION_STR);
@@ -44,9 +55,18 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
   delay(750);
 
   for (uint8_t a = 0; a < 32; a++) {
+#ifdef MCL_SPLASH_128_64
+    constexpr uint8_t wipe_top = (OLED_HEIGHT - 32) / 2;
+    constexpr uint8_t wipe_bottom = wipe_top + 31;
+    oled_display.drawLine(35, wipe_top + a, BITMAP_MCL_LOGO_W + 35 + 33,
+                          wipe_top + a, BLACK);
+    oled_display.drawLine(35, wipe_bottom - a, BITMAP_MCL_LOGO_W + 35 + 33,
+                          wipe_bottom - a, BLACK);
+#else
     oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 33, a, BLACK);
     oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 33, 32 - a,
                           BLACK);
+#endif
     oled_display.display();
 #ifndef __AVR__
     delay(10);

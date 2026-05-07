@@ -731,17 +731,6 @@ void GridPage::display() {
   }
 #endif
 
-#ifdef PLATFORM_TBD
-  // Driver UI active indicator (top-right, e.g. "SPS").
-  if (device_manager.is_ui_active()) {
-    oled_display.setFont();
-    oled_display.setTextSize(1);
-    oled_display.setTextColor(WHITE, BLACK);
-    oled_display.setCursor(108, 0);
-    oled_display.print("SPS");
-  }
-#endif
-
 #if defined(PLATFORM_TBD) && defined(DEBUG_TBD_BUTTONS)
   {
     extern Ui tbd_ui;

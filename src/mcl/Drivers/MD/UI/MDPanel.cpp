@@ -96,15 +96,17 @@ bool MDPanel::handle_event(gui_event_t *event) {
     return false;
   }
 
-  if (md_.ui.sps_mode.is_collapsed()) {
-    if (md_arrow_trace) DEBUG_PRINTLN("  -> reject (sps collapsed)");
-    return false;
-  }
-
   const bool is_press = (event->mask == EVENT_BUTTON_PRESSED);
   const bool is_release = (event->mask == EVENT_BUTTON_RELEASED);
 
   md_.ui.sps_mode.observe_sps_key_chord(event);
+  if (md_.ui.sps_mode.handle_cluster_menus(event)) return true;
+  if (md_.ui.sps_mode.handle_func_arrow_chord(event)) return true;
+
+  if (md_.ui.sps_mode.is_collapsed()) {
+    if (md_arrow_trace) DEBUG_PRINTLN("  -> reject (sps collapsed)");
+    return false;
+  }
 
   // ENCODER2..4 taps in SPS-latched mode trigger MD windows/actions.
   if (event->source >= ButtonsClass::ENCODER2 &&
@@ -150,27 +152,10 @@ bool MDPanel::handle_event(gui_event_t *event) {
     return true;
   }
 
-  // Physical Y is MD NO in SPS-latched mode. Normal-mode TBD routing is
-  // handled by TbdPanel after the driver has seen the raw event.
-  if (event->source == ButtonsClass::BUTTON3) {
-    if (!md_.ui.sps_mode.is_active()) return false;
-    if (is_press) {
-      md_.press_no_button();
-      key_interface.set_key_state(MDX_KEY_NO, true);
-      return true;
-    } else if (is_release) {
-      md_.release_no_button();
-      key_interface.set_key_state(MDX_KEY_NO, false);
-      return true;
-    }
-  }
-
-  if (md_.ui.sps_mode.handle_cluster_menus(event)) return true;
   if (md_.ui.sps_mode.handle_arrow_subpage(event)) {
     if (md_arrow_trace) DEBUG_PRINTLN("  -> consumed by handle_arrow_subpage");
     return true;
   }
-  if (md_.ui.sps_mode.handle_func_arrow_chord(event)) return true;
   if (md_.ui.sps_mode.handle_sps_key_tap(event))      return true;
 
   const bool is_arrow = (event->source >= ButtonsClass::FUNC_BUTTON6 &&
@@ -230,8 +215,8 @@ bool MDPanel::handle_event(gui_event_t *event) {
       event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
     uint8_t key = event->source - ButtonsClass::TRIG_BUTTON1;
 
-    // MD FUNC held + trig -> MD track select. Physical FUNC_BUTTON5 is
-    // separate from MDX_KEY_FUNC and still drives SPS sub-page selection.
+    // MD FUNC held + trig -> MD track select. In SPS mode the physical
+    // FUNC button drives MDX_KEY_FUNC directly.
     if (key_interface.is_key_down(MDX_KEY_FUNC)) {
       if (is_press && key < NUM_MD_TRACKS) {
         md_.currentTrack = key;

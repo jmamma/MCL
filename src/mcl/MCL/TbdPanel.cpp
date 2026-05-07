@@ -20,6 +20,7 @@
 #include "MidiSetup.h"
 #include "MCLSeq.h"
 #include "NoteInterface.h"
+#include "PageSelectPage.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
 #include "TbdTempoPage.h"
@@ -68,9 +69,20 @@ static MenuPageBase *active_tbd_menu_page() {
   return page != nullptr ? page->asMenuPage() : nullptr;
 }
 
+static bool is_tbd_browser_nav_page(PageIndex pg) {
+  return pg == LOAD_PROJ_PAGE || pg == SAMPLE_BROWSER || pg == SOUND_BROWSER;
+}
+
 static bool is_tbd_reserved_page(PageIndex pg) {
-  return active_tbd_menu_page() != nullptr ||
-         pg == LOAD_PROJ_PAGE || pg == SAMPLE_BROWSER || pg == SOUND_BROWSER;
+  return active_tbd_menu_page() != nullptr || is_tbd_browser_nav_page(pg);
+}
+
+static void close_tbd_menu_page(MenuPageBase *menu) {
+  LightPage *before = GUI.currentPage();
+  menu->exit();
+  if (GUI.currentPage() == before) {
+    mcl.setPage(GRID_PAGE);
+  }
 }
 
 static bool driver_ui_blocked_page(PageIndex pg) {
@@ -219,7 +231,7 @@ bool TbdPanel::handle_menu_no_hold(gui_event_t *event, bool is_press,
 
   MenuPageBase *menu = active_tbd_menu_page();
   if (menu != nullptr) {
-    menu->exit();
+    close_tbd_menu_page(menu);
   }
   return true;
 }
@@ -282,7 +294,9 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       orig_src >= ButtonsClass::TRIG_BUTTON1 &&
       orig_src < ButtonsClass::TRIG_BUTTON1 + 16;
   const PageIndex pg = mcl.currentPage();
-  const bool is_menu_page = active_tbd_menu_page() != nullptr;
+  MenuPageBase *menu_page = active_tbd_menu_page();
+  const bool is_menu_page = menu_page != nullptr;
+  const bool is_local_nav_page = is_menu_page || is_tbd_browser_nav_page(pg);
   const bool grid_page_active =
       pg == GRID_PAGE && GUI.currentPage() == mcl.getPage(GRID_PAGE);
   const bool driver_ui_blocked = driver_ui_blocked_page(pg);
@@ -345,7 +359,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   const bool can_open_grid_io_overlay =
-      !ui_expanded && !is_menu_page &&
+      !ui_expanded && !is_local_nav_page &&
       grid_page_active && !grid_page.show_slot_menu &&
       !grid_io_overlay.is_active();
   auto open_grid_io_overlay = [](GridIOOverlay::Mode mode,
@@ -390,6 +404,18 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
+  if (ui_collapsed && MD.ui.sps_mode.is_active() &&
+      (orig_src == ButtonsClass::BUTTON1 ||
+       orig_src == ButtonsClass::BUTTON3 ||
+       orig_src == ButtonsClass::BUTTON4 ||
+       orig_src == ButtonsClass::FUNC_BUTTON5 ||
+       orig_src == ButtonsClass::TBD_BUTTON_B ||
+       (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
+        orig_src <= ButtonsClass::FUNC_BUTTON9)) &&
+      device_manager.handle_ui_event(event)) {
+    return true;
+  }
+
   // TL -> TR chord opens the system config page. Asymmetric on purpose:
   // only fires when TR is the press edge while TL is already held.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
@@ -403,6 +429,9 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (orig_src == ButtonsClass::BUTTON2 && !top_left_reserved_page()) {
     if (is_press) {
       device_manager.exit_ui();
+      if (pg == GRID_PAGE) {
+        page_select_page.page_select = GRID_PAGE;
+      }
       mcl.setPage(PAGE_SELECT_PAGE);
       return true;
     }
@@ -422,7 +451,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (!ui_expanded && !is_menu_page &&
+  if (!ui_expanded && !is_local_nav_page &&
       orig_src == ButtonsClass::FUNC_BUTTON5 && is_press &&
       grid_page_active && !grid_page.show_slot_menu &&
       !grid_io_overlay.is_active()) {
@@ -508,7 +537,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
-      !is_menu_page && !driver_ui_blocked &&
+      !is_local_nav_page && !driver_ui_blocked &&
       handle_secondary_ui_button(event)) {
     return true;
   }
@@ -533,11 +562,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
-  // Menu/config page remap: while a MenuPage is active (system, midi
-  // config, mcl config, MIDI port menus, etc.), TL replaces BUTTON1
+  // Menu/browser page remap: while a local navigation page is active
+  // (MenuPageBase or FileBrowserPage-style pages), TL replaces BUTTON1
   // (NO/exit) and TR replaces BUTTON4 (YES/enter) so the user can
-  // navigate the menu without leaving the cluster.
-  if (is_menu_page) {
+  // navigate without leaving the TBD cluster.
+  if (is_local_nav_page) {
     if (orig_src == ButtonsClass::BUTTON2) {
       event->source = ButtonsClass::BUTTON1;
     } else if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
