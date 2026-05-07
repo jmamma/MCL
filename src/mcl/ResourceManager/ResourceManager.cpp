@@ -6,6 +6,10 @@ ResourceManager::ResourceManager() { }
 void ResourceManager::Clear() {
     DEBUG_PRINTLN("resource clear");
 	m_bufsize = m_persistent_size;
+#if !defined(__AVR__)
+	machine_param_names = m_persistent_machine_param_names;
+	machine_names_short = m_persistent_machine_names_short;
+#endif
 #if defined(PLATFORM_TBD)
 	icons_knob = m_persistent_icons_knob;
 #endif
@@ -13,6 +17,10 @@ void ResourceManager::Clear() {
 
 void ResourceManager::SetPersistent() {
   m_persistent_size = m_bufsize;
+#if !defined(__AVR__)
+  m_persistent_machine_param_names = machine_param_names;
+  m_persistent_machine_names_short = machine_names_short;
+#endif
 #if defined(PLATFORM_TBD)
   m_persistent_icons_knob = icons_knob;
 #endif

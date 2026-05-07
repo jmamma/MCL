@@ -13,6 +13,10 @@ private:
 	uint8_t m_buffer[RM_BUFSIZE];
 	uint16_t m_bufsize = 0;
 	uint16_t m_persistent_size = 0;
+#if !defined(__AVR__)
+	__T_machine_param_names *m_persistent_machine_param_names = nullptr;
+	__T_machine_names_short *m_persistent_machine_names_short = nullptr;
+#endif
 #if defined(PLATFORM_TBD)
 	__T_icons_knob *m_persistent_icons_knob = nullptr;
 #endif
