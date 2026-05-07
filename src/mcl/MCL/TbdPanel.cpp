@@ -588,7 +588,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (!ui_expanded && pg == SEQ_PTC_PAGE &&
+  if (!ui_expanded && (pg == SEQ_PTC_PAGE || pg == ARP_PAGE) &&
       event->source >= ButtonsClass::TRIG_BUTTON1 &&
       event->source < ButtonsClass::TRIG_BUTTON1 + 16) {
     if (seq_ptc_page.handle_tbd_keyboard_event(
