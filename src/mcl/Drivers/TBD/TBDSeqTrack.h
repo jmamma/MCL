@@ -41,7 +41,7 @@ private:
   void service_gate();
   void send_active_note_off();
   void send_trig(uint8_t step, uint8_t velocity = 100);
-  void send_parameter_locks(uint8_t step, uint16_t lock_idx);
+  void send_parameter_locks(uint8_t step, uint16_t lock_idx, bool trig);
   void send_lock_value(uint8_t param, uint8_t value);
 };
 

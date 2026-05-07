@@ -104,11 +104,16 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
 
   auto &step = steps[current_step];
   const bool trig = STEPSEQ_IS_BIT_SET64(trig_mask, current_step);
+  const bool slide = STEPSEQ_IS_BIT_SET64(slide_mask, current_step);
   const uint8_t trig_result = trig_conditional(current_step, step.cond_id);
   const bool cond_ok = trig_result == STEPSEQ_TRIG_TRUE;
 
   if (cond_ok || (!step.cond_plock && trig_result != STEPSEQ_TRIG_ONESHOT)) {
-    send_parameter_locks(current_step, lock_idx);
+    send_parameter_locks(current_step, lock_idx, trig);
+    if (slide) {
+      locks_slides_recalc = current_step;
+      locks_slides_idx = lock_idx;
+    }
   }
   if (cond_ok && trig) {
     send_trig(current_step,
@@ -145,7 +150,7 @@ bool TBDSeqTrack::preview_step(uint8_t step) {
     return false;
   }
 
-  send_parameter_locks(step, get_lockidx(step));
+  send_parameter_locks(step, get_lockidx(step), true);
   send_trig(step, STEPSEQ_IS_BIT_SET64(accent_mask, step) ? 127 : 100);
 
   port = old_port;
@@ -250,17 +255,29 @@ void TBDSeqTrack::send_lock_value(uint8_t param, uint8_t value) {
   }
 }
 
-void TBDSeqTrack::send_parameter_locks(uint8_t step, uint16_t lock_idx) {
-  if (!steps[step].locks_enabled) {
-    return;
-  }
-
+void TBDSeqTrack::send_parameter_locks(uint8_t step, uint16_t lock_idx,
+                                       bool trig) {
   uint64_t mask = 1ULL;
   for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
-    if (steps[step].locks & mask) {
-      if (locks_params[c] != 0 && lock_idx < STEPSEQ_NUM_LOCK_SLOTS) {
-        send_lock_value(locks_params[c] - 1, locks[lock_idx]);
+    const bool lock_bit = (steps[step].locks & mask) != 0;
+    const bool lock_present = lock_bit && steps[step].locks_enabled;
+    if (locks_params[c] != 0) {
+      const uint8_t param = locks_params[c] - 1;
+      uint8_t value = 0;
+      bool send = false;
+
+      if (lock_present && lock_idx < STEPSEQ_NUM_LOCK_SLOTS) {
+        value = locks[lock_idx];
+        send = true;
+      } else if (trig && get_default_lock_value(param, value)) {
+        send = true;
       }
+
+      if (send) {
+        send_lock_value(param, value);
+      }
+    }
+    if (lock_bit) {
       lock_idx++;
     }
     mask <<= 1;
