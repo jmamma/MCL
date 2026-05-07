@@ -42,6 +42,8 @@ void cfg_p4_clock_forward() {
 void cfg_p4_transport_forward() {
   MidiClock.uart_transport_forward4 = nullptr;
   if (!tbd_p4_device_active() ||
+      MidiClock.uart_transport_recv1 == &MidiUartP4 ||
+      MidiClock.uart_transport_recv2 == &MidiUartP4 ||
       midi_forward_list_has(&MidiUartP4, MidiClock.uart_transport_forward1,
                             MidiClock.uart_transport_forward2,
                             MidiClock.uart_transport_forward3)) {
@@ -125,6 +127,9 @@ void MidiSetup::cfg_ports(bool boot) {
 #ifdef PLATFORM_TBD
   case MIDI_CLOCK_SOURCE_INTERNAL:
     MidiClock.uart_transport_recv1 = nullptr;
+    if (tbd_p4_device_active()) {
+      MidiClock.uart_transport_recv2 = &MidiUartP4;
+    }
     break;
 #endif
   }
