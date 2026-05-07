@@ -244,7 +244,7 @@ public:
           tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
                                       param_id);
       if (desc != nullptr && desc->shortname[0] != '\0') {
-        copy_compact_label(desc->shortname, dst, dst_len);
+        tbd_p4_copy_param_label(*desc, dst, dst_len);
         if (dst[0] != '\0') {
           return true;
         }

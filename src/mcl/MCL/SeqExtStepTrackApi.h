@@ -523,7 +523,7 @@ public:
           tbd_p4_sound_param_for_lock(midi_track_->p4_sound,
                                       (uint8_t)info.param_id);
       if (desc && desc->shortname[0] != '\0') {
-        copy_compact_label(desc->shortname, dst, dst_len);
+        tbd_p4_copy_param_label(*desc, dst, dst_len);
         if (dst[0] != '\0') return true;
       }
       copy_param_number_label('P', info.param_id, dst, dst_len);
@@ -576,7 +576,7 @@ public:
           tbd_p4_sound_param_for_lock(midi_track_->p4_sound,
                                       (uint8_t)info.param_id);
       if (desc && desc->shortname[0] != '\0') {
-        copy_compact_label(desc->shortname, dst, dst_len);
+        tbd_p4_copy_param_label(*desc, dst, dst_len);
         if (dst[0] != '\0') return true;
       }
       copy_param_number_label(info.nrpn ? 'N' : 'P', info.param_id,
@@ -1006,24 +1006,6 @@ private:
     return (uint16_t)((offset * 0x3FFFu + (range / 2u)) / range);
   }
 
-  static void copy_compact_label(const char *src, char *dst, size_t dst_len) {
-    if (dst == nullptr || dst_len == 0) return;
-    dst[0] = '\0';
-    if (src == nullptr || src[0] == '\0') return;
-
-    size_t out = 0;
-    while (*src && out + 1 < dst_len) {
-      char c = *src++;
-      if (c == '-' || c == '_' || c == ' ') {
-        break;
-      }
-      if (c >= 'a' && c <= 'z') {
-        c = (char)(c - ('a' - 'A'));
-      }
-      dst[out++] = c;
-    }
-    dst[out] = '\0';
-  }
 #endif
 
   static uint8_t value7_from_14(uint16_t value14) {

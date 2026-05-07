@@ -268,6 +268,154 @@ inline bool tbd_p4_copy_compact_label(const char *src, char *dst,
   return out != 0;
 }
 
+inline char tbd_p4_label_upper(char c) {
+  if (c >= 'a' && c <= 'z') {
+    return (char)(c - ('a' - 'A'));
+  }
+  return c;
+}
+
+inline bool tbd_p4_label_token_char(char c) {
+  return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+         (c >= '0' && c <= '9');
+}
+
+inline char tbd_p4_next_label_token(const char *&src) {
+  if (src == nullptr) {
+    return '\0';
+  }
+  while (*src && !tbd_p4_label_token_char(*src)) {
+    src++;
+  }
+  if (!*src) {
+    return '\0';
+  }
+  return tbd_p4_label_upper(*src++);
+}
+
+inline bool tbd_p4_label_match(const char *a, const char *b) {
+  const char *pa = a;
+  const char *pb = b;
+  while (true) {
+    const char ca = tbd_p4_next_label_token(pa);
+    const char cb = tbd_p4_next_label_token(pb);
+    if (ca != cb) {
+      return false;
+    }
+    if (ca == '\0') {
+      return true;
+    }
+  }
+}
+
+inline bool tbd_p4_copy_param_label_literal(const char *src, char *dst,
+                                            size_t dst_len,
+                                            uint8_t max_chars = 4) {
+  if (dst == nullptr || dst_len == 0) {
+    return false;
+  }
+  dst[0] = '\0';
+  if (src == nullptr || src[0] == '\0') {
+    return false;
+  }
+
+  size_t out = 0;
+  while (*src && out + 1 < dst_len && out < max_chars) {
+    dst[out++] = *src++;
+  }
+  dst[out] = '\0';
+  return out != 0;
+}
+
+inline bool tbd_p4_copy_param_label(const char *src, char *dst,
+                                    size_t dst_len,
+                                    uint8_t max_chars = 4) {
+  struct ParamLabelAlias {
+    const char *name;
+    const char *label;
+  };
+
+  static const ParamLabelAlias aliases[] = {
+      {"LEVEL", "LEV"},       {"LEV", "LEV"},
+      {"PAN", "PAN"},         {"T.LEN", "TLEN"},
+      {"Dly.Lev", "DLY"},     {"Delay Level", "DLY"},
+      {"Rev.Lev", "REV"},     {"Reverb Level", "REV"},
+      {"RevTime", "RTIM"},    {"RevLP", "RLP"},
+      {"Tapedig", "TAPE"},    {"Freeze", "FRZ"},
+      {"St.Wid", "WID"},      {"Width2", "WID2"},
+      {"Fx2send", "FX2"},     {"Feedb.", "FDBK"},
+      {"Thres", "THR"},       {"Ratio", "RTO"},
+      {"Attack", "ATK"},      {"Atk", "ATK"},
+      {"Decay", "DEC"},       {"Release", "REL"},
+      {"Rel", "REL"},         {"Sustain", "SUS"},
+      {"Gain", "GAIN"},       {"Mute", "MUTE"},
+      {"Mix", "MIX"},         {"Frequency", "FREQ"},
+      {"freq", "FREQ"},       {"cutoff", "CUT"},
+      {"reso", "RES"},        {"tone", "TONE"},
+      {"dirt", "DIRT"},       {"fm-env", "FMEV"},
+      {"fm-decay", "FMDC"},   {"fm-accent", "FMAC"},
+      {"accent", "ACC"},      {"noise", "NOIS"},
+      {"snap", "SNAP"},       {"bank", "BANK"},
+      {"slice", "SLIC"},      {"start", "STRT"},
+      {"end", "END"},         {"type", "TYPE"},
+      {"bitcr", "BCR"},       {"speed", "SPD"},
+      {"pitch", "PIT"},       {"loop", "LOOP"},
+      {"pingpong", "PING"},   {"ppstart", "PPST"},
+      {"eg2fm", "E2FM"},      {"tsmode", "TSMD"},
+      {"tsamt", "TSAM"},      {"shape", "SHAP"},
+      {"satur", "SAT"},       {"drive", "DRV"},
+      {"slide", "SLID"},      {"acclev", "ACLV"},
+      {"slidelev", "SLLV"},   {"synctrig", "STRG"},
+      {"ratiomode", "RTIO"},  {"envsync", "ESYN"},
+      {"waveshap", "WSHP"},   {"qscale", "QSCL"},
+      {"loopenv", "LENV"},    {"decim", "DCIM"},
+      {"bitred", "BRED"},     {"wavebank", "WBK"},
+      {"wave", "WAVE"},       {"tune", "TUNE"},
+      {"e2wave", "E2WV"},     {"e2filt", "E2FL"},
+      {"l2wave", "L2WV"},     {"l2am", "L2AM"},
+      {"l2fm", "L2FM"},       {"l2filt", "L2FL"},
+      {"chord", "CHRD"},      {"inver", "INV"},
+      {"detune", "DTUN"},     {"nnotes", "NNOT"},
+      {"in_gain", "IGN"},     {"in_mono", "MONO"},
+      {"in_hp", "IHP"},       {"in_drive", "IDRV"},
+      {"in_ftype", "IFLT"},   {"in_fcutoff", "ICUT"},
+      {"in_freso", "IRES"},   {"in_fenv", "IENV"},
+  };
+
+  if (dst == nullptr || dst_len == 0) {
+    return false;
+  }
+  dst[0] = '\0';
+
+  for (const auto &alias : aliases) {
+    if (tbd_p4_label_match(src, alias.name)) {
+      return tbd_p4_copy_param_label_literal(alias.label, dst, dst_len,
+                                             max_chars);
+    }
+  }
+
+  if (src == nullptr || src[0] == '\0') {
+    return false;
+  }
+
+  size_t out = 0;
+  while (*src && out + 1 < dst_len && out < max_chars) {
+    char c = *src++;
+    if (!tbd_p4_label_token_char(c)) {
+      continue;
+    }
+    dst[out++] = tbd_p4_label_upper(c);
+  }
+  dst[out] = '\0';
+  return out != 0;
+}
+
+inline bool tbd_p4_copy_param_label(const TbdP4ParamDescriptor &param,
+                                    char *dst, size_t dst_len,
+                                    uint8_t max_chars = 4) {
+  return tbd_p4_copy_param_label(param.shortname, dst, dst_len, max_chars);
+}
+
 inline bool tbd_p4_copy_sound_label(const TbdP4SoundData &sound, char *dst,
                                     size_t dst_len,
                                     uint8_t max_chars = 8) {

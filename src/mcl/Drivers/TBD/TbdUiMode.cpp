@@ -412,7 +412,7 @@ void render_window(uint8_t y_top, uint8_t window, bool active,
     if (show_value) {
       format_param_value(*slots[i].param, display_value[i], text, sizeof(text));
     } else {
-      copy_text(slots[i].param->shortname, text, sizeof(text), 5);
+      tbd_p4_copy_param_label(*slots[i].param, text, sizeof(text));
       if (text[0] == '\0') {
         text[0] = slots[i].param->ctrl_type == TBD_P4_CTRLTYPE_NRPM ? 'N' : 'P';
         text[1] = (char)('0' + (slots[i].lock_param / 10) % 10);
@@ -420,7 +420,7 @@ void render_window(uint8_t y_top, uint8_t window, bool active,
         text[3] = '\0';
       }
     }
-    draw_text_centered(cx, text_y, kCellW, text, 5);
+    draw_text_centered(cx, text_y, kCellW, text, 4);
 
     if (locked[i]) {
       uint8_t text_w = (uint8_t)strlen(text) * 6;
