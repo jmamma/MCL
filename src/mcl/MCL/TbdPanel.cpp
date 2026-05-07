@@ -22,8 +22,11 @@
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
 #include "TbdTempoPage.h"
+#include "helpers.h"
 
 TbdPanel tbd_panel;
+
+static constexpr uint16_t kTbdMenuNoHoldMs = LONG_CLICK_TIME;
 
 static bool tbd_transport_forward_has(MidiUartClass *uart) {
   if (uart == nullptr) return false;
@@ -167,6 +170,61 @@ bool TbdPanel::handle_secondary_ui_button(gui_event_t *event,
 }
 
 void TbdPanel::loop() {
+  if (menu_no_hold_opened_) {
+    if (!BUTTON_DOWN(ButtonsClass::BUTTON2)) {
+      reset_menu_no_hold();
+    }
+    return;
+  }
+
+  if (!menu_no_hold_tracking_) return;
+
+  if (!BUTTON_DOWN(ButtonsClass::BUTTON2) ||
+      !is_tbd_menu_page(mcl.currentPage())) {
+    reset_menu_no_hold();
+    return;
+  }
+
+  if (clock_diff(menu_no_hold_start_ms_, read_clock_ms()) <
+      kTbdMenuNoHoldMs) {
+    return;
+  }
+
+  menu_no_hold_tracking_ = false;
+  menu_no_hold_opened_ = true;
+  GUI.ignoreNextEvent(ButtonsClass::BUTTON2);
+  device_manager.exit_ui();
+  mcl.setPage(PAGE_SELECT_PAGE);
+}
+
+void TbdPanel::reset_menu_no_hold() {
+  menu_no_hold_start_ms_ = 0;
+  menu_no_hold_tracking_ = false;
+  menu_no_hold_opened_ = false;
+}
+
+bool TbdPanel::handle_menu_no_hold(gui_event_t *event, bool is_press,
+                                   bool is_release) {
+  if (event->source != ButtonsClass::BUTTON2) return false;
+
+  if (is_press) {
+    menu_no_hold_start_ms_ = read_clock_ms();
+    menu_no_hold_tracking_ = true;
+    menu_no_hold_opened_ = false;
+    return true;
+  }
+
+  if (!is_release || (!menu_no_hold_tracking_ && !menu_no_hold_opened_)) {
+    return false;
+  }
+
+  const bool opened = menu_no_hold_opened_;
+  reset_menu_no_hold();
+  if (opened) return true;
+
+  event->source = ButtonsClass::BUTTON1;
+  event->mask = EVENT_BUTTON_PRESSED;
+  return false;
 }
 
 bool TbdPanel::open_bank_popup() {
@@ -339,6 +397,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   // only fires when TR is the press edge while TL is already held.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       BUTTON_DOWN(ButtonsClass::BUTTON2)) {
+    reset_menu_no_hold();
     device_manager.exit_ui();
     mcl.pushPage(SYSTEM_PAGE);
     return true;
@@ -359,6 +418,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (orig_src == ButtonsClass::BUTTON2 && pg == PAGE_SELECT_PAGE &&
       is_release) {
     return false;
+  }
+
+  if (is_menu_page && orig_src == ButtonsClass::BUTTON2 &&
+      handle_menu_no_hold(event, is_press, is_release)) {
+    return true;
   }
 
   if (!ui_expanded && !is_menu_page &&
