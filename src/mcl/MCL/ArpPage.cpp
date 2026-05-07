@@ -19,7 +19,11 @@ void ArpPage::init() {
   DEBUG_PRINT_FN();
 //  seq_ptc_page.display();
   track_update();
+#ifdef PLATFORM_TBD
+  seq_ptc_page.send_tbd_keyboard_leds();
+#else
   key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
+#endif
 }
 
 void ArpPage::track_update(uint8_t n, bool re_render) {
@@ -133,6 +137,10 @@ void ArpPage::display() {
 }
 
 bool ArpPage::handleEvent(gui_event_t *event) {
+  if (EVENT_NOTE(event)) {
+    return seq_ptc_page.handleEvent(event);
+  }
+
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -176,10 +184,6 @@ bool ArpPage::handleEvent(gui_event_t *event) {
         GUI.ignoreNextEvent(event->source);
     exit:
       mcl.popPage();
-      return true;
-    }
-    if (EVENT_NOTE(event)) {
-      seq_ptc_page.handleEvent(event);
       return true;
     }
   }
