@@ -56,26 +56,21 @@ void SpsOverlayPage::paint_leds() {
   if (painted_sub_page_ == MD.ui.sps_mode.sub_page()) return;
 
   // 1 trig LED = 1 sub-page (4 params); a column-pair (top trig N +
-  // bottom trig N+8) = one 8-param page. Stock MD = 3 pages, SPS = 4.
-  // All available pairs light standard red; the focused sub-page is
-  // solid white.
+  // bottom trig N+8) = one 8-param page. SPS has a partial final page.
+  // Available sub-pages light standard red; the focused sub-page is white.
   constexpr uint32_t kRed   = ((uint32_t)255 << 16);
   constexpr uint32_t kWhite = ((uint32_t)255 << 16) |
                               ((uint32_t)255 << 8)  |
                               (uint32_t)255;
 
-  const uint8_t max_pages = MD.is_spsx ? 4 : 3;
-
-  // Clear unavailable pairs so they don't leak.
-  for (uint8_t page = max_pages; page < 8; page++) {
-    const uint16_t bits = ((uint16_t)1 << page) | ((uint16_t)1 << (page + 8));
-    mcl_gui.set_trigleds_color(bits, 0);
-  }
-
   uint16_t avail = 0;
-  for (uint8_t page = 0; page < max_pages; page++) {
-    avail |= ((uint16_t)1 << page) | ((uint16_t)1 << (page + 8));
+  const uint8_t max_columns = MD.ui.sps_mode.param_window_count();
+  for (uint8_t column = 0; column < max_columns; column++) {
+    const uint8_t page = column >> 1;
+    const uint8_t bit = page + ((column & 1) ? 8 : 0);
+    avail |= (uint16_t)1 << bit;
   }
+  mcl_gui.set_trigleds_color((uint16_t)~avail, 0);
   mcl_gui.set_trigleds_color(avail, kRed);
 
   const uint8_t sub_page = MD.ui.sps_mode.sub_page();
@@ -101,6 +96,7 @@ void SpsOverlayPage::display() {
   // Defensive: clamp track to the kit's 0..15 range.
   const uint8_t track = (MD.currentTrack < 16) ? MD.currentTrack : 0;
   const uint8_t model = MD.kit.get_model(track);
+  const uint8_t param_count = MD.ui.sps_mode.param_count();
 
   // Per-slot lock substitution: when on SEQ_STEP_PAGE with a trig
   // held, each slot's dial / value reflect the lock value (not the
@@ -112,14 +108,18 @@ void SpsOverlayPage::display() {
     const uint8_t tp = page_base + i;
     const uint8_t bp = page_base + 4 + i;
     uint8_t lv;
-    if (MD.ui.sps_mode.active_step_lock(tp, &lv)) {
+    if (tp >= param_count) {
+      top_encs[i].cur = 0;
+    } else if (MD.ui.sps_mode.active_step_lock(tp, &lv)) {
       top_encs[i].cur = lv;
       top_locked[i] = true;
     } else {
       top_encs[i].cur = MD.kit.params[track][tp];
     }
     top_encs[i].old = top_encs[i].cur;
-    if (MD.ui.sps_mode.active_step_lock(bp, &lv)) {
+    if (bp >= param_count) {
+      bottom_encs[i].cur = 0;
+    } else if (MD.ui.sps_mode.active_step_lock(bp, &lv)) {
       bottom_encs[i].cur = lv;
       bot_locked[i] = true;
     } else {
@@ -137,8 +137,9 @@ void SpsOverlayPage::display() {
   for (uint8_t i = 0; i < 4; i++) {
     const uint8_t tp = page_base + i;
     const uint8_t bp = page_base + 4 + i;
-    top_labels[i]    = (tp < MD_PARAMS_PER_TRACK) ? model_param_name(model, tp) : nullptr;
-    bottom_labels[i] = (bp < MD_PARAMS_PER_TRACK) ? model_param_name(model, bp) : nullptr;
+    top_labels[i] = (tp < param_count) ? model_param_name(model, tp) : nullptr;
+    bottom_labels[i] =
+        (bp < param_count) ? model_param_name(model, bp) : nullptr;
     // Always show the value text on locked slots so the user sees
     // the lock value clearly.
     top_show[i]    = top_locked[i];
@@ -178,7 +179,7 @@ void SpsOverlayPage::display() {
 
   // Page-nav indicators: filled triangles in the gutter, far-left /
   // far-right. Only shown when LEFT/RIGHT would actually move (no wrap).
-  const uint8_t max_columns = MD.is_spsx ? 8 : 6;
+  const uint8_t max_columns = MD.ui.sps_mode.param_window_count();
   const bool can_left  = ((int)sub_page - 2) >= 0;
   const bool can_right = ((int)sub_page + 2) < (int)max_columns;
   if (can_left) {

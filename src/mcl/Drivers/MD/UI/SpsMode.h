@@ -82,6 +82,8 @@ public:
   // uses this to gate value-vs-label display per slot).
   bool show_strip_value(uint8_t i) const { return show_value(i); }
   bool ui_slot_button_held() const { return ui_button_pressed_; }
+  uint8_t param_count() const;
+  uint8_t param_window_count() const;
 
   // The 4 encoders themselves. min=0, max=127, default rot_res — same
   // feel as a stock MCLEncoder.
@@ -96,9 +98,8 @@ private:
   bool latched_ = false;
   uint8_t bound_track_ = 255;
   uint8_t bound_sub_page_ = 255;
-  // Param window selector (0..7). Each window covers 4 consecutive
-  // params; SPS-key + arrow cycles. With legacy (24-param) kits only
-  // 0..5 are populated; SPSX (34) extends to 8.
+  // Param window selector. Each window covers 4 consecutive params;
+  // SPS-key + arrow cycles. Legacy MD kits expose 24 params, SPSX 34.
   uint8_t sub_page_ = 0;
   // Per-encoder "last used" timestamp for the value-show timeout (matches
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared

@@ -83,6 +83,14 @@ bool SpsMode::is_collapsed() const {
   return latched_ && GUI.overlay == &sps_strip_page;
 }
 
+uint8_t SpsMode::param_count() const {
+  return MD.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+}
+
+uint8_t SpsMode::param_window_count() const {
+  return (uint8_t)((param_count() + 3) / 4);
+}
+
 bool SpsMode::active_step_lock(uint8_t param, uint8_t *value) const {
   if (mcl.currentPage() != SEQ_STEP_PAGE) return false;
   if (last_md_track >= NUM_MD_TRACKS) return false;
@@ -125,7 +133,7 @@ void SpsMode::resync_from_kit() {
   uint8_t base = param_base();
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t param = base + i;
-    if (param >= MD_PARAMS_PER_TRACK) {
+    if (param >= param_count()) {
       enc[i].setValue(0);
       continue;
     }
@@ -136,7 +144,7 @@ void SpsMode::resync_from_kit() {
 void SpsMode::send_param(uint8_t i) {
   if (!MD.connected) return;
   uint8_t param = param_base() + i;
-  if (param >= MD_PARAMS_PER_TRACK) return;
+  if (param >= param_count()) return;
   uint8_t v = (uint8_t)enc[i].cur;
 
   // Step-edit + trig held: record a parameter lock on each held step
@@ -271,10 +279,10 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
     //   UP    → upper half of the current page.
     //   DOWN  → lower half of the current page, if it exists.
     //   LEFT/RIGHT → step pages by ±2 columns, clamped.
-    // Stock MD firmware exposes 24 params (3 pages = 6 columns); SPS
-    // firmware exposes 32 (4 pages = 8 columns). max_columns clips the
+    // Stock MD firmware exposes 24 params; SPS firmware exposes 34.
+    // max_columns clips the
     // wrap range so we don't scroll into blank pages on a stock MD.
-    const uint8_t max_columns = MD.is_spsx ? 8 : 6;
+    const uint8_t max_columns = param_window_count();
     if (sub_page_ >= max_columns) sub_page_ = max_columns - 1;
 
     switch (event->source) {
@@ -365,7 +373,7 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
   if (!sps_key_held && !ui_button_held) return false;
 
   if (is_press(event)) {
-    const uint8_t max_sub_pages = MD.is_spsx ? 8 : 6;
+    const uint8_t max_sub_pages = param_window_count();
     const uint8_t page_col = trig_idx & 0x07;
     const uint8_t half = (trig_idx >= 8) ? 1 : 0;
     const uint8_t target = page_col * 2 + half;
@@ -455,6 +463,8 @@ void SpsMode::poll_page_overlay() {}
 void SpsMode::resync_from_kit() {}
 bool SpsMode::active_step_lock(uint8_t, uint8_t *) const { return false; }
 void SpsMode::send_param(uint8_t) {}
+uint8_t SpsMode::param_count() const { return 0; }
+uint8_t SpsMode::param_window_count() const { return 0; }
 bool SpsMode::encoder_passthrough_page() const { return true; }
 void SpsMode::set_latched(bool) {}
 bool SpsMode::is_collapsed() const { return false; }

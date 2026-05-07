@@ -629,18 +629,21 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
       case MDX_KEY_SCALE:
-        goto scale_press;
+        page_select += 1;
+        check_and_set_page_select();
+        return true;
       }
     }
   }
   if (EVENT_BUTTON(event)) {
+#ifndef PLATFORM_TBD
     // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
     if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
-    scale_press:
       page_select += 1;
       check_and_set_page_select();
       return true;
     }
+#endif
 
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
       // If MD trig is held and BUTTON3 is pressed, launch note menu

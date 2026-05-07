@@ -41,10 +41,11 @@ void SpsStripPage::display() {
   bool show[4];
   bool locked[4] = {false, false, false, false};
   uint8_t base = MD.ui.sps_mode.sub_page() * 4;
+  uint8_t param_count = MD.ui.sps_mode.param_count();
   uint8_t model = MD.kit.get_model(MD.currentTrack);
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t param = base + i;
-    if (param >= MD_PARAMS_PER_TRACK) {
+    if (param >= param_count) {
       encs[i] = nullptr;
       labels[i] = nullptr;
       show[i] = false;

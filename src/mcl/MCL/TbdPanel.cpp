@@ -113,7 +113,23 @@ static MidiDevice *grid_trig_preview_device() {
   return nullptr;
 }
 
-static bool tbd_y_b_swap_page(PageIndex pg) {
+static bool tbd_y_button3_page(PageIndex pg) {
+  switch (pg) {
+  case GRID_PAGE:
+  case MIXER_PAGE:
+  case GRID_SAVE_PAGE:
+  case GRID_LOAD_PAGE:
+    return true;
+  case SEQ_STEP_PAGE:
+  case SEQ_EXTSTEP_PAGE:
+  case SEQ_PTC_PAGE:
+    return !SeqPage::show_seq_menu;
+  default:
+    return false;
+  }
+}
+
+static bool tbd_b_scale_page(PageIndex pg) {
   switch (pg) {
   case GRID_PAGE:
     return GUI.currentPage() == mcl.getPage(GRID_PAGE) &&
@@ -406,6 +422,30 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  // Normal MCL pages use a panel-local Y/B mapping:
+  //   Grid/GridIO/Mixer/Seq: B -> Scale/page-toggle, Y -> legacy BUTTON3 menus
+  // Other pages keep Y as MD FUNC and B as legacy BUTTON3. Expanded driver UI
+  // handling runs before this block, so SPS fullscreen UI keeps its raw cluster
+  // semantics. Collapsed driver UI intentionally follows the active page.
+  if (!ui_expanded) {
+    if (orig_src == ButtonsClass::BUTTON3) {
+      if (!is_menu_page && tbd_y_button3_page(pg)) {
+        event->source = ButtonsClass::BUTTON3;
+      } else {
+        key_interface.key_event(MDX_KEY_FUNC, is_release);
+        return true;
+      }
+    }
+    if (orig_src == ButtonsClass::TBD_BUTTON_B) {
+      if (!is_menu_page && tbd_b_scale_page(pg)) {
+        key_interface.key_event(MDX_KEY_SCALE, is_release);
+        return true;
+      } else {
+        event->source = ButtonsClass::BUTTON3;
+      }
+    }
+  }
+
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       !is_menu_page && !driver_ui_blocked &&
       handle_secondary_ui_button(event)) {
@@ -429,31 +469,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (seq_ptc_page.handle_tbd_keyboard_event(
             event->source - ButtonsClass::TRIG_BUTTON1, event->mask)) {
       return true;
-    }
-  }
-
-  // Normal MCL pages use a panel-local Y/B mapping:
-  //   Grid/GridIO/Mixer/Seq: B -> Scale/page-toggle, Y -> legacy BUTTON3 menus
-  // Other pages keep Y as MD FUNC and B as legacy BUTTON3. Expanded driver UI
-  // handling runs before this block, so SPS fullscreen UI keeps its raw cluster
-  // semantics. Collapsed driver UI intentionally follows the active page.
-  if (!ui_expanded) {
-    const bool swap_y_b = !is_menu_page && tbd_y_b_swap_page(pg);
-    if (orig_src == ButtonsClass::BUTTON3) {
-      if (swap_y_b) {
-        event->source = ButtonsClass::BUTTON3;
-      } else {
-        key_interface.key_event(MDX_KEY_FUNC, is_release);
-        return true;
-      }
-    }
-    if (orig_src == ButtonsClass::TBD_BUTTON_B) {
-      if (swap_y_b) {
-        key_interface.key_event(MDX_KEY_SCALE, is_release);
-        return true;
-      } else {
-        event->source = ButtonsClass::BUTTON3;
-      }
     }
   }
 
