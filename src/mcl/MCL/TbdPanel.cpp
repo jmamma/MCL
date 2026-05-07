@@ -74,6 +74,22 @@ static MidiDevice *grid_trig_preview_device() {
   return nullptr;
 }
 
+static bool y_button_scale_action_available(PageIndex pg) {
+  switch (pg) {
+  case GRID_PAGE:
+    return GUI.currentPage() == mcl.getPage(GRID_PAGE) &&
+           !grid_page.show_slot_menu && !grid_io_overlay.is_active();
+  case MIXER_PAGE:
+    return true;
+  case SEQ_STEP_PAGE:
+  case SEQ_EXTSTEP_PAGE:
+  case SEQ_PTC_PAGE:
+    return !SeqPage::show_seq_menu;
+  default:
+    return false;
+  }
+}
+
 bool TbdPanel::top_left_reserved_page() const {
   PageIndex pg = mcl.currentPage();
   return is_tbd_menu_page(pg) || pg == PAGE_SELECT_PAGE ||
@@ -376,11 +392,15 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   // In normal mode, swap the physical Y/B roles on TBD:
-  //   Y -> MD FUNC key path
+  //   Y -> Scale on grid/mixer/seq pages, otherwise MD FUNC key path
   //   B -> legacy BUTTON3 path used by grid/seq menus
   // SPS-latched mode keeps the driver-specific Y=NO, B=FUNC mapping.
   if (!ui_expanded) {
     if (orig_src == ButtonsClass::BUTTON3) {
+      if (!is_menu_page && y_button_scale_action_available(pg)) {
+        key_interface.key_event(MDX_KEY_SCALE, is_release);
+        return true;
+      }
       key_interface.key_event(MDX_KEY_FUNC, is_release);
       return true;
     }
