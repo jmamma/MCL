@@ -18,9 +18,12 @@ private:
   bool handle_secondary_ui_button(gui_event_t *event,
                                   bool allow_toggle = true);
   bool handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx);
+  bool handle_mixer_mute_yes_no(gui_event_t *event, uint8_t orig_src);
   bool open_bank_popup();
   bool suppress_sps_key_release_ = false;
   bool ui_b_button_held_ = false;
+  bool mixer_yes_button_down_ = false;
+  bool mixer_no_button_down_ = false;
   uint16_t menu_no_hold_start_ms_ = 0;
   bool menu_no_hold_tracking_ = false;
   bool menu_no_hold_opened_ = false;

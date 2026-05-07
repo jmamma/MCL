@@ -281,6 +281,37 @@ bool TbdPanel::handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx) {
   return true;
 }
 
+bool TbdPanel::handle_mixer_mute_yes_no(gui_event_t *event, uint8_t orig_src) {
+  uint8_t key = 255;
+  bool *latched = nullptr;
+
+  if (orig_src == ButtonsClass::BUTTON4) {
+    key = MDX_KEY_YES;
+    latched = &mixer_yes_button_down_;
+  } else if (orig_src == ButtonsClass::BUTTON1) {
+    key = MDX_KEY_NO;
+    latched = &mixer_no_button_down_;
+  } else {
+    return false;
+  }
+
+  if (event->mask == EVENT_BUTTON_RELEASED) {
+    if (!*latched) return false;
+    *latched = false;
+    key_interface.key_event(key, true);
+    return true;
+  }
+
+  if (event->mask != EVENT_BUTTON_PRESSED || mcl.currentPage() != MIXER_PAGE ||
+      note_interface.notes_count_on() == 0) {
+    return false;
+  }
+
+  *latched = true;
+  key_interface.key_event(key, false);
+  return true;
+}
+
 bool TbdPanel::handleEvent(gui_event_t *event) {
   if (!EVENT_BUTTON(event)) {
     return false;
@@ -545,6 +576,10 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (is_trig_button &&
       handle_grid_trig_preview(event,
                                event->source - ButtonsClass::TRIG_BUTTON1)) {
+    return true;
+  }
+
+  if (handle_mixer_mute_yes_no(event, orig_src)) {
     return true;
   }
 
