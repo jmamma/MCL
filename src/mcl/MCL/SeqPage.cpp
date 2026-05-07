@@ -863,47 +863,48 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
 #if !defined(__AVR__)
   if (seq_page_uses_stepseq_conditions()) {
     // SPSX condition names
-    char a = '-', b = '-';
+    const bool cond_plock = seq_param1.getValue() > num_cond;
+    char a = '-', b = '-', d = '-';
     if (c == 0) {
       // 100% = default, show as empty
-      a = '-'; b = '-';
+      a = '-'; b = '-'; d = '-';
     } else if (c <= SPSX_COND_10PCT) {
       // Percentage: 90,75,66,50,33,25,10
       static const uint8_t pcts[] = {90, 75, 66, 50, 33, 25, 10};
       uint8_t pct = pcts[c - 1];
       a = '0' + (pct / 10);
       b = '0' + (pct % 10);
+      d = '%';
     } else if (c == SPSX_COND_ONESHOT) {
-      a = '1'; b = 'S';
+      a = '1'; b = 'S'; d = 'H';
     } else if (c == SPSX_COND_FIRST) {
-      a = '1'; b = 'T';
+      a = '1'; b = 'S'; d = 'T';
     } else if (c == SPSX_COND_NOT_FIRST) {
-      a = '!'; b = '1';
+      a = '!'; b = '1'; d = 'S';
     } else if (c == SPSX_COND_FILL) {
-      a = 'F'; b = 'L';
+      a = 'F'; b = 'I'; d = 'L';
     } else if (c == SPSX_COND_NOT_FILL) {
-      a = '!'; b = 'F';
+      a = '!'; b = 'F'; d = 'L';
     } else if (c == SPSX_COND_PRE) {
-      a = 'P'; b = 'R';
+      a = 'P'; b = 'R'; d = 'E';
     } else if (c == SPSX_COND_NOT_PRE) {
-      a = '!'; b = 'P';
+      a = '!'; b = 'P'; d = 'R';
     } else if (c == SPSX_COND_NEI) {
-      a = 'N'; b = 'E';
+      a = 'N'; b = 'E'; d = 'I';
     } else if (c == SPSX_COND_NOT_NEI) {
-      a = '!'; b = 'N';
+      a = '!'; b = 'N'; d = 'E';
     } else if (c >= SPSX_COND_ITER_BASE && c <= SPSX_COND_ITER_MAX) {
       uint8_t x, y;
       if (spsx_cond_iter_decode(c, x, y)) {
         a = '0' + x;
-        b = '0' + y;
+        b = '/';
+        d = '0' + y;
       }
     }
     s[0] = a;
     s[1] = b;
-    uint8_t i = 2;
-    if (seq_param1.getValue() > num_cond)
-      s[i++] = m ? '+' : '^';
-    s[i] = '\0';
+    s[2] = cond_plock ? (m ? '+' : '^') : d;
+    s[3] = '\0';
     return;
   }
 #endif
