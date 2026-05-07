@@ -68,7 +68,11 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
     "MIDI",
     {
         {"DEVICES", 0, 0, 0, 0, MIDIDEVICE_MENU_PAGE, 0, 0},
+#if defined(PLATFORM_TBD)
+        {"TURBO", 0, 0, 0, 0, MIDIPORT_MENU_PAGE, 0, 0},
+#else
         {"PORTS", 0, 0, 0, 0, MIDIPORT_MENU_PAGE, 0, 0},
+#endif
         {"SYNC",  0, 0, 0, 0, MIDICLOCK_MENU_PAGE, 0, 0},
         {"ROUTING", 0, 0, 0, 0, MIDIROUTE_MENU_PAGE, 0, 0},
         {"CONTROLLER", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
@@ -150,12 +154,21 @@ menu_t<gridy_menu_page_N> gridy_menu_layout = {
 };
 
 menu_t<midiport_menu_page_N> midiport_menu_layout = {
+#if defined(PLATFORM_TBD)
+    "TURBO",
+    {
+        {"MIDI 1:", 0, TURBO_RANGE, TURBO_RANGE, 2, NULL_PAGE, 0, 54},
+        {"MIDI 2:", 0, TURBO_RANGE, TURBO_RANGE, 3, NULL_PAGE, 0, 54},
+        {"USB:",    0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE, 0, 54},
+    },
+#else
     "PORTS",
     {
         {"PORT 1", 0, 0, 0, 0, PORT1_MENU_PAGE,   0, 0},
         {"PORT 2", 0, 0, 0, 0, PORT2_MENU_PAGE,   0, 0},
         {"USB",    0, 0, 0, 0, USBPORT_MENU_PAGE, 0, 0},
     },
+#endif
     24
 };
 
