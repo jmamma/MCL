@@ -913,48 +913,9 @@ private:
     return (uint8_t)(((uint32_t)offset * 127u + (range / 2u)) / range);
   }
 
-  static void copy_compact_label(const char *src, char *dst, size_t dst_len) {
-    if (dst == nullptr || dst_len == 0) {
-      return;
-    }
-    dst[0] = '\0';
-    if (src == nullptr || src[0] == '\0') {
-      return;
-    }
-
-    size_t out = 0;
-    while (*src && out + 1 < dst_len && out < 5) {
-      char c = *src++;
-      if (c == '-' || c == '_' || c == ' ') {
-        break;
-      }
-      if (c >= 'a' && c <= 'z') {
-        c = (char)(c - ('a' - 'A'));
-      }
-      dst[out++] = c;
-    }
-    dst[out] = '\0';
-  }
-
   static void copy_tbd_label(const TbdP4SoundData &sound, char *dst,
                              size_t dst_len) {
-    copy_compact_label(sound.machine_id, dst, dst_len);
-    if (dst_len == 0 || dst[0] != '\0') {
-      return;
-    }
-    copy_compact_label(sound.preset_name, dst, dst_len);
-    if (dst[0] != '\0') {
-      return;
-    }
-    copy_compact_label(sound.preset_id, dst, dst_len);
-    if (dst[0] != '\0') {
-      return;
-    }
-    if (dst_len > 2) {
-      dst[0] = 'P';
-      dst[1] = '4';
-      dst[2] = '\0';
-    }
+    tbd_p4_copy_sound_notice(sound, dst, dst_len);
   }
 #endif
 

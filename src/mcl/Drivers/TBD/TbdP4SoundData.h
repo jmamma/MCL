@@ -308,6 +308,66 @@ inline bool tbd_p4_label_match(const char *a, const char *b) {
   }
 }
 
+inline bool tbd_p4_copy_compact_label_token(const char *src,
+                                            uint8_t token_index, char *dst,
+                                            size_t dst_len,
+                                            uint8_t max_chars = 3) {
+  if (dst == nullptr || dst_len == 0) {
+    return false;
+  }
+  dst[0] = '\0';
+  if (src == nullptr || src[0] == '\0') {
+    return false;
+  }
+
+  uint8_t token = 0;
+  while (*src) {
+    while (*src && !tbd_p4_label_token_char(*src)) {
+      src++;
+    }
+    if (!*src) {
+      break;
+    }
+
+    if (token == token_index) {
+      size_t out = 0;
+      while (*src && tbd_p4_label_token_char(*src) &&
+             out + 1 < dst_len && out < max_chars) {
+        dst[out++] = tbd_p4_label_upper(*src++);
+      }
+      dst[out] = '\0';
+      return out != 0;
+    }
+
+    while (*src && tbd_p4_label_token_char(*src)) {
+      src++;
+    }
+    token++;
+  }
+  return false;
+}
+
+inline bool tbd_p4_copy_track_label(uint8_t track, char *dst, size_t dst_len) {
+  if (dst == nullptr || dst_len < 3) {
+    return false;
+  }
+  uint8_t one_based = track + 1;
+  dst[0] = 'T';
+  if (one_based >= 10) {
+    if (dst_len < 4) {
+      dst[0] = '\0';
+      return false;
+    }
+    dst[1] = (char)('0' + one_based / 10);
+    dst[2] = (char)('0' + one_based % 10);
+    dst[3] = '\0';
+  } else {
+    dst[1] = (char)('0' + one_based);
+    dst[2] = '\0';
+  }
+  return true;
+}
+
 inline bool tbd_p4_copy_param_label_literal(const char *src, char *dst,
                                             size_t dst_len,
                                             uint8_t max_chars = 4) {
@@ -426,6 +486,50 @@ inline bool tbd_p4_copy_sound_label(const TbdP4SoundData &sound, char *dst,
     return true;
   }
   return tbd_p4_copy_compact_label(sound.preset_id, dst, dst_len, max_chars);
+}
+
+inline bool tbd_p4_copy_sound_notice(const TbdP4SoundData &sound, char *dst,
+                                     size_t dst_len) {
+  if (dst == nullptr || dst_len == 0) {
+    return false;
+  }
+  dst[0] = '\0';
+
+  char left[4];
+  char right[4];
+  left[0] = '\0';
+  right[0] = '\0';
+
+  if (!tbd_p4_copy_compact_label(sound.machine_id, left, sizeof(left), 3) &&
+      !tbd_p4_copy_compact_label_token(sound.preset_id, 0, left, sizeof(left),
+                                       3)) {
+    left[0] = 'T';
+    left[1] = 'B';
+    left[2] = 'D';
+    left[3] = '\0';
+  }
+
+  if (!tbd_p4_copy_compact_label(sound.preset_name, right, sizeof(right), 3) ||
+      strcmp(left, right) == 0) {
+    if (!tbd_p4_copy_compact_label_token(sound.preset_id, 1, right,
+                                         sizeof(right), 3) &&
+        !tbd_p4_copy_compact_label(sound.macro_id, right, sizeof(right), 3)) {
+      tbd_p4_copy_track_label(sound.p4_track_index, right, sizeof(right));
+    }
+  }
+
+  size_t out = 0;
+  for (const char *s = left; *s && out + 1 < dst_len; s++) {
+    dst[out++] = *s;
+  }
+  if (right[0] != '\0' && out + 2 < dst_len) {
+    dst[out++] = '>';
+    for (const char *s = right; *s && out + 1 < dst_len; s++) {
+      dst[out++] = *s;
+    }
+  }
+  dst[out] = '\0';
+  return out != 0;
 }
 
 inline const TbdP4ParamDescriptor *

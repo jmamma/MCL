@@ -214,6 +214,14 @@ void SeqPtcPage::config() {
   mclstr_copy_progmem(str_first, mclstr_dash, sizeof(str_first));
   char str_second[3];
   mclstr_copy_progmem(str_second, mclstr_dash, sizeof(str_second));
+  info1[0] = '\0';
+#ifdef PLATFORM_TBD
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
+      last_md_track < mcl_seq.num_tbd_tracks) {
+    tbd_p4_copy_sound_notice(mcl_seq.tbd_tracks[last_md_track].p4_sound,
+                             info1, len1);
+  } else
+#endif
   if (active_device_is_md()) {
     const char *str;
     str = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
@@ -228,12 +236,14 @@ void SeqPtcPage::config() {
     str_second[1] = last_ext_track + '1';
   }
 #endif
-  // Initialize info1 as empty string
-  info1[0] = '\0';
-  // Use strncat but leave room for subsequent concatenations
-  strncpy(info1, str_first, len1 - 3);  // -3 for ">" and str_second and null
-  strncat(info1, ">", len1 - 2);        // -2 for str_second and null  
-  strncat(info1, str_second, len1 - 1); // -1 for null terminator
+  if (info1[0] == '\0') {
+    // Use strncat but leave room for subsequent concatenations
+    strncpy(info1, str_first,
+            len1 - 3);           // -3 for ">" and str_second and null
+    strncat(info1, ">", len1 - 2); // -2 for str_second and null
+    strncat(info1, str_second,
+            len1 - 1); // -1 for null terminator
+  }
 
   strcpy_P(info2, mclstr_chromat);
   display_page_index = false;
