@@ -80,6 +80,9 @@ public:
     return false;
   }
 
+  /** Returns true if this driver implements an MCL-side UI mode. */
+  virtual bool supports_ui() const { return false; }
+
   /** Returns true if the driver has an active UI overlay or mode. */
   virtual bool is_ui_active() { return false; }
 

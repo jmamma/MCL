@@ -9,6 +9,7 @@
 #include "MCL.h"
 #include "BankPopupPage.h"
 #include "DeviceManager.h"
+#include "FileBrowserPage.h"
 #include "GridIOOverlay.h"
 #include "GridPage.h"
 #include "GridPages.h"
@@ -28,7 +29,7 @@
 
 TbdPanel tbd_panel;
 
-static constexpr uint16_t kTbdMenuNoHoldMs = LONG_CLICK_TIME;
+static constexpr uint16_t kTbdTopLeftPageSelectHoldMs = 400;
 
 static bool tbd_transport_forward_has(MidiUartClass *uart) {
   if (uart == nullptr) return false;
@@ -64,25 +65,34 @@ static void tbd_handle_local_transport(uint8_t msg) {
   }
 }
 
-static MenuPageBase *active_tbd_menu_page() {
-  LightPage *page = GUI.currentPage();
-  return page != nullptr ? page->asMenuPage() : nullptr;
+static bool is_tbd_menu_page(PageIndex pg) {
+  return pg == SYSTEM_PAGE || pg == BOOT_MENU_PAGE ||
+         pg == START_MENU_PAGE || pg == MIDI_CONFIG_PAGE ||
+         pg == MD_CONFIG_PAGE || pg == CHAIN_CONFIG_PAGE ||
+         pg == AUX_CONFIG_PAGE || pg == MCL_CONFIG_PAGE ||
+         pg == MD_IMPORT_PAGE ||
+         pg == MIDIDEVICE_MENU_PAGE || pg == GRIDX_MENU_PAGE ||
+         pg == GRIDY_MENU_PAGE ||
+         pg == MIDIPORT_MENU_PAGE || pg == PORT1_MENU_PAGE ||
+         pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
+         pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
+         pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
+         pg == MIDIGENERIC_MENU_PAGE;
 }
 
-static bool is_tbd_browser_nav_page(PageIndex pg) {
-  return pg == LOAD_PROJ_PAGE || pg == SAMPLE_BROWSER || pg == SOUND_BROWSER;
+static bool is_tbd_file_browser_page(PageIndex pg) {
+  return pg == LOAD_PROJ_PAGE || pg == SAMPLE_BROWSER ||
+         pg == SOUND_BROWSER;
 }
 
-static bool is_tbd_reserved_page(PageIndex pg) {
-  return active_tbd_menu_page() != nullptr || is_tbd_browser_nav_page(pg);
+static FileBrowserPage *active_tbd_file_browser_page(PageIndex pg) {
+  if (!is_tbd_file_browser_page(pg)) return nullptr;
+  return static_cast<FileBrowserPage *>(GUI.currentPage());
 }
 
-static void close_tbd_menu_page(MenuPageBase *menu) {
-  LightPage *before = GUI.currentPage();
-  menu->exit();
-  if (GUI.currentPage() == before) {
-    mcl.setPage(GRID_PAGE);
-  }
+static MenuPageBase *active_tbd_menu_page(PageIndex pg) {
+  if (!is_tbd_menu_page(pg)) return nullptr;
+  return static_cast<MenuPageBase *>(GUI.currentPage());
 }
 
 static bool driver_ui_blocked_page(PageIndex pg) {
@@ -157,12 +167,11 @@ static bool tbd_b_scale_page(PageIndex pg) {
   }
 }
 
-bool TbdPanel::top_left_reserved_page() const {
-  PageIndex pg = mcl.currentPage();
-  return is_tbd_reserved_page(pg) || pg == PAGE_SELECT_PAGE ||
-         pg == BANK_POPUP_PAGE || pg == TEXT_INPUT_PAGE ||
-         pg == GRID_SAVE_PAGE || pg == GRID_LOAD_PAGE ||
-         grid_io_overlay.is_active();
+bool TbdPanel::top_left_page_select_hold_allowed(uint8_t pg) const {
+  return pg != PAGE_SELECT_PAGE && pg != BANK_POPUP_PAGE &&
+         pg != TEXT_INPUT_PAGE && pg != GRID_SAVE_PAGE &&
+         pg != GRID_LOAD_PAGE &&
+         !grid_io_overlay.is_active();
 }
 
 bool TbdPanel::handle_primary_ui_button(gui_event_t *event) {
@@ -176,64 +185,104 @@ bool TbdPanel::handle_secondary_ui_button(gui_event_t *event,
                                              event, allow_toggle);
 }
 
-void TbdPanel::loop() {
-  if (menu_no_hold_opened_) {
-    if (!BUTTON_DOWN(ButtonsClass::BUTTON2)) {
-      reset_menu_no_hold();
-    }
-    return;
-  }
-
-  if (!menu_no_hold_tracking_) return;
-
-  if (!BUTTON_DOWN(ButtonsClass::BUTTON2) ||
-      active_tbd_menu_page() == nullptr) {
-    reset_menu_no_hold();
-    return;
-  }
-
-  if (clock_diff(menu_no_hold_start_ms_, read_clock_ms()) <
-      kTbdMenuNoHoldMs) {
-    return;
-  }
-
-  menu_no_hold_tracking_ = false;
-  menu_no_hold_opened_ = true;
-  GUI.ignoreNextEvent(ButtonsClass::BUTTON2);
-  device_manager.exit_ui();
-  mcl.setPage(PAGE_SELECT_PAGE);
+bool TbdPanel::open_secondary_ui_from_tap(gui_event_t *event) {
+  gui_event_t open_event = *event;
+  open_event.mask = EVENT_BUTTON_PRESSED;
+  return device_manager.enter_ui_slot_tap(DeviceManager::UI_SLOT_SECONDARY,
+                                          &open_event);
 }
 
-void TbdPanel::reset_menu_no_hold() {
-  menu_no_hold_start_ms_ = 0;
-  menu_no_hold_tracking_ = false;
-  menu_no_hold_opened_ = false;
-}
-
-bool TbdPanel::handle_menu_no_hold(gui_event_t *event, bool is_press,
-                                   bool is_release) {
-  if (event->source != ButtonsClass::BUTTON2) return false;
-
-  if (is_press) {
-    menu_no_hold_start_ms_ = read_clock_ms();
-    menu_no_hold_tracking_ = true;
-    menu_no_hold_opened_ = false;
-    return true;
-  }
-
-  if (!is_release || (!menu_no_hold_tracking_ && !menu_no_hold_opened_)) {
+bool TbdPanel::handle_active_ui_button(gui_event_t *event, uint8_t orig_src) {
+  if (orig_src != ButtonsClass::BUTTON2 &&
+      orig_src != ButtonsClass::TBD_BUTTON_TR) {
     return false;
   }
 
-  const bool opened = menu_no_hold_opened_;
-  reset_menu_no_hold();
-  if (opened) return true;
-
-  MenuPageBase *menu = active_tbd_menu_page();
-  if (menu != nullptr) {
-    close_tbd_menu_page(menu);
+  if (event->mask == EVENT_BUTTON_PRESSED) {
+    active_ui_button_pressed_ = true;
+    active_ui_button_source_ = orig_src;
+    active_ui_button_press_ms_ = read_clock_ms();
+    if (orig_src == ButtonsClass::BUTTON2) {
+      begin_top_left_page_select_hold();
+    } else {
+      device_manager.notify_active_ui_button(event);
+    }
+    return true;
   }
+
+  if (event->mask == EVENT_BUTTON_RELEASED) {
+    const bool tracked =
+        active_ui_button_pressed_ && active_ui_button_source_ == orig_src;
+    const uint16_t held_ms =
+        tracked ? clock_diff(active_ui_button_press_ms_, read_clock_ms()) : 0;
+    const bool short_tap =
+        tracked && held_ms <= kTbdTopLeftPageSelectHoldMs;
+
+    active_ui_button_pressed_ = false;
+    active_ui_button_source_ = 255;
+
+    if (orig_src == ButtonsClass::BUTTON2) {
+      reset_top_left_page_select_hold();
+      if (!short_tap) {
+        open_page_select_from_top_left();
+        return true;
+      }
+      gui_event_t open_event = *event;
+      open_event.mask = EVENT_BUTTON_PRESSED;
+      device_manager.enter_ui_slot_tap(DeviceManager::UI_SLOT_PRIMARY,
+                                       &open_event);
+      return true;
+    }
+
+    device_manager.notify_active_ui_button(event);
+    if (short_tap) {
+      device_manager.exit_ui();
+    }
+    return true;
+  }
+
   return true;
+}
+
+void TbdPanel::begin_top_left_page_select_hold() {
+  top_left_page_select_hold_tracking_ = true;
+  top_left_page_select_hold_ms_ = read_clock_ms();
+}
+
+void TbdPanel::reset_top_left_page_select_hold() {
+  top_left_page_select_hold_tracking_ = false;
+  top_left_page_select_hold_ms_ = 0;
+}
+
+void TbdPanel::open_page_select_from_top_left() {
+  top_left_page_select_hold_tracking_ = false;
+  device_manager.exit_ui();
+  PageIndex current_page = mcl.currentPage();
+  if (current_page != PAGE_SELECT_PAGE) {
+    top_left_page_select_base_page_ = current_page;
+  }
+  if (current_page == GRID_PAGE) {
+    page_select_page.page_select = GRID_PAGE;
+  }
+  mcl.setPage(PAGE_SELECT_PAGE);
+}
+
+void TbdPanel::loop() {
+  if (!top_left_page_select_hold_tracking_) return;
+
+  if (!BUTTON_DOWN(ButtonsClass::BUTTON2) ||
+      !device_manager.is_ui_active() ||
+      !top_left_page_select_hold_allowed(mcl.currentPage())) {
+    reset_top_left_page_select_hold();
+    return;
+  }
+
+  if (clock_diff(top_left_page_select_hold_ms_, read_clock_ms()) <
+      kTbdTopLeftPageSelectHoldMs) {
+    return;
+  }
+
+  open_page_select_from_top_left();
 }
 
 bool TbdPanel::open_bank_popup() {
@@ -325,15 +374,19 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       orig_src >= ButtonsClass::TRIG_BUTTON1 &&
       orig_src < ButtonsClass::TRIG_BUTTON1 + 16;
   const PageIndex pg = mcl.currentPage();
-  MenuPageBase *menu_page = active_tbd_menu_page();
-  const bool is_menu_page = menu_page != nullptr;
-  const bool is_local_nav_page = is_menu_page || is_tbd_browser_nav_page(pg);
+  const bool is_menu_page = is_tbd_menu_page(pg);
+  const bool is_file_browser_page = is_tbd_file_browser_page(pg);
+  const bool is_local_nav_page = is_menu_page || is_file_browser_page;
   const bool grid_page_active =
       pg == GRID_PAGE && GUI.currentPage() == mcl.getPage(GRID_PAGE);
   const bool driver_ui_blocked = driver_ui_blocked_page(pg);
   bool ui_active = device_manager.is_ui_active();
   bool ui_collapsed = device_manager.is_ui_collapsed();
   bool ui_expanded = ui_active && !ui_collapsed;
+  if (!ui_active) {
+    active_ui_button_pressed_ = false;
+    active_ui_button_source_ = 255;
+  }
   if (!ui_expanded) {
     ui_b_button_held_ = false;
   }
@@ -365,6 +418,13 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     ui_expanded = false;
   }
 
+  if (suppress_top_left_release_ &&
+      orig_src == ButtonsClass::BUTTON2 && is_release) {
+    suppress_top_left_release_ = false;
+    reset_top_left_page_select_hold();
+    return true;
+  }
+
   if (suppress_sps_key_release_ &&
       orig_src == ButtonsClass::FUNC_BUTTON5 &&
       is_release) {
@@ -386,6 +446,41 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (TBD.enter_diag_ui(diag_device_idx)) {
       suppress_sps_key_release_ = true;
       return true;
+    }
+  }
+
+  // TL -> TR chord opens the system config page. Asymmetric on purpose:
+  // only fires when TR is the press edge while TL is already held.
+  if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
+      BUTTON_DOWN(ButtonsClass::BUTTON2)) {
+    reset_top_left_page_select_hold();
+    device_manager.exit_ui();
+    if (pg == PAGE_SELECT_PAGE && top_left_page_select_base_page_ < NUM_PAGES) {
+      mcl.setPage((PageIndex)top_left_page_select_base_page_);
+      top_left_page_select_base_page_ = 255;
+    }
+    suppress_top_left_release_ = true;
+    mcl.pushPage(SYSTEM_PAGE);
+    return true;
+  }
+
+  if (ui_active && !is_local_nav_page && !driver_ui_blocked &&
+      (orig_src == ButtonsClass::BUTTON2 ||
+       orig_src == ButtonsClass::TBD_BUTTON_TR)) {
+    return handle_active_ui_button(event, orig_src);
+  }
+
+  if (orig_src == ButtonsClass::TBD_BUTTON_TR &&
+      !is_local_nav_page && !driver_ui_blocked) {
+    if (device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_SECONDARY)) {
+      if (is_press || is_release) {
+        handle_secondary_ui_button(event, false);
+        return !ui_collapsed;
+      }
+    } else if (is_press) {
+      if (open_secondary_ui_from_tap(event)) {
+        return true;
+      }
     }
   }
 
@@ -416,25 +511,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (ui_active) {
-    if (orig_src == ButtonsClass::BUTTON2) {
-      if (ui_collapsed) {
-        device_manager.notify_active_ui_button(event);
-        return false;
-      }
-      handle_primary_ui_button(event);
-      return !ui_collapsed;
-    }
-    if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
-      if (ui_collapsed) {
-        device_manager.notify_active_ui_button(event);
-        return false;
-      }
-      handle_secondary_ui_button(event);
-      return !ui_collapsed;
-    }
-  }
-
   if (ui_collapsed && MD.ui.sps_mode.is_active() &&
       (orig_src == ButtonsClass::BUTTON1 ||
        orig_src == ButtonsClass::BUTTON3 ||
@@ -447,39 +523,52 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  // TL -> TR chord opens the system config page. Asymmetric on purpose:
-  // only fires when TR is the press edge while TL is already held.
-  if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
-      BUTTON_DOWN(ButtonsClass::BUTTON2)) {
-    reset_menu_no_hold();
-    device_manager.exit_ui();
-    mcl.pushPage(SYSTEM_PAGE);
+  if (orig_src == ButtonsClass::BUTTON2 && is_file_browser_page) {
+    FileBrowserPage *browser = active_tbd_file_browser_page(pg);
+    if (is_press) {
+      if (browser != nullptr && !browser->tbd_can_cd_up()) {
+        open_page_select_from_top_left();
+      }
+      return true;
+    }
+    if (is_release) {
+      reset_top_left_page_select_hold();
+      if (browser != nullptr) {
+        if (browser->tbd_can_cd_up()) {
+          return browser->tbd_cd_up();
+        }
+      }
+    }
     return true;
   }
 
-  if (orig_src == ButtonsClass::BUTTON2 && !top_left_reserved_page()) {
-    if (is_press) {
-      device_manager.exit_ui();
-      if (pg == GRID_PAGE) {
-        page_select_page.page_select = GRID_PAGE;
-      }
-      mcl.setPage(PAGE_SELECT_PAGE);
-      return true;
-    }
-
+  if (orig_src == ButtonsClass::BUTTON2 && is_menu_page) {
     if (is_release) {
+      reset_top_left_page_select_hold();
+      MenuPageBase *menu = active_tbd_menu_page(pg);
+      if (menu != nullptr) {
+        menu->exit();
+      }
+    }
+    return true;
+  }
+
+  if (orig_src == ButtonsClass::BUTTON2 &&
+      top_left_page_select_hold_allowed(pg)) {
+    if (is_press) {
+      open_page_select_from_top_left();
       return true;
     }
+    if (is_release) {
+      reset_top_left_page_select_hold();
+    }
+    return true;
   }
 
   if (orig_src == ButtonsClass::BUTTON2 && pg == PAGE_SELECT_PAGE &&
       is_release) {
+    top_left_page_select_base_page_ = 255;
     return false;
-  }
-
-  if (is_menu_page && orig_src == ButtonsClass::BUTTON2 &&
-      handle_menu_no_hold(event, is_press, is_release)) {
-    return true;
   }
 
   if (!ui_expanded && !is_local_nav_page &&
@@ -527,7 +616,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
         handle_grid_trig_preview(event, trig_idx);
         return true;
       }
-      if (pg == SEQ_PTC_PAGE) {
+      if (pg == SEQ_PTC_PAGE || pg == ARP_PAGE) {
         if (seq_ptc_page.handle_tbd_keyboard_event(trig_idx, event->mask)) {
           return true;
         }
@@ -567,12 +656,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
-  if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
-      !is_local_nav_page && !driver_ui_blocked &&
-      handle_secondary_ui_button(event)) {
-    return true;
-  }
-
   if (is_trig_button &&
       handle_grid_trig_preview(event,
                                event->source - ButtonsClass::TRIG_BUTTON1)) {
@@ -597,14 +680,8 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
-  // Menu/browser page remap: while a local navigation page is active
-  // (MenuPageBase or FileBrowserPage-style pages), TL replaces BUTTON1
-  // (NO/exit) and TR replaces BUTTON4 (YES/enter) so the user can
-  // navigate without leaving the TBD cluster.
-  if (is_local_nav_page) {
-    if (orig_src == ButtonsClass::BUTTON2) {
-      event->source = ButtonsClass::BUTTON1;
-    } else if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
+  if (is_menu_page || is_file_browser_page) {
+    if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
       event->source = ButtonsClass::BUTTON4;
     }
   }

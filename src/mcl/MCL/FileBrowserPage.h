@@ -164,6 +164,10 @@ public:
   virtual void on_cancel() { mcl.popPage(); }
   virtual void chdir_type() {}
   virtual bool _handle_filemenu();
+#ifdef PLATFORM_TBD
+  bool tbd_can_cd_up() const;
+  bool tbd_cd_up();
+#endif
 
 protected:
   void _cd_up();

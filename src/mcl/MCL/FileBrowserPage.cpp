@@ -441,6 +441,27 @@ bool FileBrowserPage::_handle_filemenu() {
   return false;
 }
 
+#ifdef PLATFORM_TBD
+bool FileBrowserPage::tbd_can_cd_up() const {
+  if (!show_parent) return false;
+#ifndef __AVR__
+  if (mcl_sd.mcl_root[0] == '\0') {
+    return strlen(lwd) >= 2;
+  }
+  return strcmp(lwd, mcl_sd.mcl_root) != 0;
+#else
+  return strlen(lwd) >= 2;
+#endif
+}
+
+bool FileBrowserPage::tbd_cd_up() {
+  if (tbd_can_cd_up()) {
+    _cd_up();
+  }
+  return true;
+}
+#endif
+
 bool FileBrowserPage::rm_dir(const char *dir) {
   char temp_entry[FILE_ENTRY_SIZE];
 

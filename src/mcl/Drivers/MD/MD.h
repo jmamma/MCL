@@ -59,6 +59,7 @@ public:
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool enter_ui(gui_event_t *event) override;
+  virtual bool supports_ui() const override { return true; }
   virtual bool is_ui_active() override;
   virtual bool is_ui_collapsed() override;
   virtual void exit_ui() override;

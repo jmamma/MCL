@@ -4,10 +4,6 @@
 
 #include "Events.h"
 
-#ifdef PLATFORM_TBD
-class MenuPageBase;
-#endif
-
 class PageParent {
   /**
    * \addtogroup gui_parent_page
@@ -73,9 +69,6 @@ public:
    * true if the event was handled by the page.
    **/
   virtual bool handleEvent(gui_event_t *event) { return false; }
-#ifdef PLATFORM_TBD
-  virtual MenuPageBase *asMenuPage() { return NULL; }
-#endif
   /**
    * Dynamic initialization of the page (for example registering the
    * page as a callback handler for MIDI events. This method should
