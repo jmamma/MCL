@@ -7,6 +7,7 @@
 #include "GridPages.h"
 #include "GridTask.h"
 #include "MCLActions.h"
+#include "DeviceManager.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
 #include "MCLSysConfig.h"
@@ -15,6 +16,16 @@
 #include <string.h>
 
 GridIOOverlay grid_io_overlay;
+
+namespace {
+
+bool save_needs_md_current_pattern() {
+  return MD.connected &&
+         (device_manager.primary_device() == &MD ||
+          device_manager.secondary_device() == &MD);
+}
+
+} // namespace
 
 GridIOOverlay::GridIOOverlay()
     : LightPage(&unused_enc_, &mode_enc_, &queue_len_enc_, &quant_enc_),
@@ -61,7 +72,9 @@ void GridIOOverlay::init() {
     load_mode_title(title, sizeof(title));
     MD.popup_text(title, true);
   } else {
-    MD.getCurrentPattern(CALLBACK_TIMEOUT);
+    if (save_needs_md_current_pattern()) {
+      MD.getCurrentPattern(CALLBACK_TIMEOUT);
+    }
     MD.popup_text_P(mclstr_save_slots, true);
     grid_page.reload_slot_models = false;
   }

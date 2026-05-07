@@ -5,6 +5,7 @@
 #include "MidiClock.h"
 #include "GridPages.h"
 #include "MCLActions.h"
+#include "DeviceManager.h"
 #include "../Drivers/MD/MD.h"
 #include "MDTrack.h"
 #include "MCLStrings.h"
@@ -17,9 +18,25 @@ static constexpr uint8_t kSaveModeEncoder = 1;
 static constexpr uint8_t kSaveModeEncoder = 0;
 #endif
 
+namespace {
+
+bool save_needs_md_current_pattern() {
+#ifdef PLATFORM_TBD
+  return MD.connected &&
+         (device_manager.primary_device() == &MD ||
+          device_manager.secondary_device() == &MD);
+#else
+  return true;
+#endif
+}
+
+} // namespace
+
 void GridSavePage::init() {
   GridIOPage::init();
-  MD.getCurrentPattern(CALLBACK_TIMEOUT);
+  if (save_needs_md_current_pattern()) {
+    MD.getCurrentPattern(CALLBACK_TIMEOUT);
+  }
 #ifdef PLATFORM_TBD
   grid_page.load_slot_models();
   paint_track_select_leds();
