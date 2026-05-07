@@ -2,6 +2,9 @@
 #include "Project.h"
 #include "MCLActions.h"
 #include "platform.h"
+#if !defined(__AVR__)
+#include "../Drivers/Generic/Sequencer/StepSeqDefines.h"
+#endif
 
 bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid) {
   void *payload = data == nullptr ? _this() : data;
@@ -18,6 +21,14 @@ void GridTrack::load_link_data(SeqTrack *seq_track) {
   seq_track->length = link.length;
 }
 
+uint8_t GridTrack::transition_countdown_resolution() {
+#if !defined(__AVR__)
+  return STEPSEQ_LEGACY_SEQ_INTERPOLATION;
+#else
+  return 1;
+#endif
+}
+
 void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
   uint8_t n = slotnumber;
@@ -29,6 +40,16 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
   if (target < now && (now - target) < 4096u) {
     count_down = 1;
   }
+#if !defined(__AVR__)
+  const uint8_t countdown_resolution = transition_countdown_resolution();
+  if (countdown_resolution > 0 &&
+      MidiClock.clock_interpolation > countdown_resolution) {
+    const uint8_t divider = MidiClock.clock_interpolation / countdown_resolution;
+    if (divider > 1) {
+      count_down = (count_down + divider - 1) / divider;
+    }
+  }
+#endif
   USE_LOCK();
   SET_LOCK();
   seq_track->count_down = count_down;

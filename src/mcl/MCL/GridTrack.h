@@ -95,6 +95,7 @@ public:
   virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
   virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
   virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
+  virtual uint8_t transition_countdown_resolution();
   virtual void load_seq_data(SeqTrack *seq_track) {}
 
   virtual void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track) {

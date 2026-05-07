@@ -56,6 +56,7 @@ public:
   void clear_track();
 
   uint16_t calc_latency(uint8_t tracknumber);
+  uint8_t transition_countdown_resolution() override;
   bool transition_cache(uint8_t tracknumber, uint8_t slotnumber);
   void transition_send(uint8_t tracknumber, uint8_t slotnumber);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,

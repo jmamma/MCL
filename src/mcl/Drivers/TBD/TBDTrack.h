@@ -40,6 +40,9 @@ public:
 
   void init(uint8_t tracknumber, SeqTrack *seq_track) override;
   uint16_t calc_latency(uint8_t tracknumber) override;
+  uint8_t transition_countdown_resolution() override {
+    return STEPSEQ_SEQ_INTERPOLATION;
+  }
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber) override;
   void transition_send(uint8_t tracknumber, uint8_t slotnumber) override;
@@ -77,6 +80,9 @@ public:
 
   void init(uint8_t tracknumber, SeqTrack *seq_track) override;
   uint16_t calc_latency(uint8_t tracknumber) override;
+  uint8_t transition_countdown_resolution() override {
+    return STEPSEQ_SEQ_INTERPOLATION;
+  }
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        uint8_t slotnumber) override;
   void transition_send(uint8_t tracknumber, uint8_t slotnumber) override;

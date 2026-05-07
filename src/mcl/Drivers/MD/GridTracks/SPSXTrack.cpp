@@ -157,6 +157,11 @@ uint16_t SPSXTrack::calc_latency(uint8_t tracknumber) {
   return latency;
 }
 
+uint8_t SPSXTrack::transition_countdown_resolution() {
+  return mcl_seq.using_spsx_tracks ? SPSX_SEQ_INTERPOLATION
+                                   : LEGACY_SEQ_INTERPOLATION;
+}
+
 bool SPSXTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
   bool send_level = false;
   bool send = true;
