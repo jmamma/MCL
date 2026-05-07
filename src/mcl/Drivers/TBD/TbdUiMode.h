@@ -64,6 +64,7 @@ private:
   uint16_t ui_button_press_ms_ = 0;
   bool ui_button_pressed_ = false;
   bool ui_button_hold_handled_ = false;
+  bool suppress_ui_button_apply_ = false;
 
   struct PresetGroup {
     char id[TBD_P4_ID_LEN];

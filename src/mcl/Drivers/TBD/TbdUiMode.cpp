@@ -17,6 +17,7 @@
 #include "TBDTrack.h"
 #include "TbdP4Command.h"
 #include "TbdP4Realtime.h"
+#include "Elektrothic.h"
 #include "GUI_hardware.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -334,6 +335,16 @@ void draw_text_centered(uint8_t x, uint8_t y, uint8_t width,
     text_x = x + (width - text_w) / 2;
   }
   draw_text_limited(text_x, y, text, max_chars);
+}
+
+void draw_elektro_track_number(uint8_t y_top, uint8_t track_number) {
+  oled_display.setFont(&Elektrothic);
+  oled_display.setCursor(MCLGUI::pane_trackid_x,
+                         y_top + MCLGUI::pane_trackid_y);
+  if (track_number < 10) {
+    oled_display.print('0');
+  }
+  oled_display.print(track_number);
 }
 
 void format_param_value(const TbdP4ParamDescriptor &param, uint8_t value,
@@ -656,9 +667,16 @@ void TbdUiMode::sync_preset_selection_to_sound() {
   selected_preset_ = 0;
   if (sound != nullptr && sound->preset_id[0] != '\0') {
     for (uint8_t i = 0; i < preset_count_; i++) {
-      if (strncmp(presets_[i].id, sound->preset_id,
-                  sizeof(presets_[i].id)) == 0) {
-        selected_group_ = presets_[i].group;
+      const uint8_t group_idx = presets_[i].group;
+      const bool preset_matches =
+          strncmp(presets_[i].id, sound->preset_id,
+                  sizeof(presets_[i].id)) == 0;
+      const bool machine_matches =
+          group_idx < preset_group_count_ &&
+          strncmp(preset_groups_[group_idx].id, sound->machine_id,
+                  sizeof(preset_groups_[group_idx].id)) == 0;
+      if (preset_matches && machine_matches) {
+        selected_group_ = group_idx;
         selected_preset_ = i - preset_groups_[selected_group_].first_preset;
         break;
       }
@@ -703,37 +721,47 @@ bool TbdUiMode::ensure_preset_cache() {
 
 void TbdUiMode::render_preset_window(uint8_t y_top, bool active,
                                      uint8_t row_height) {
+  (void)active;
   oled_display.fillRect(0, y_top, 128, row_height, BLACK);
   auto oldfont = oled_display.getFont();
   oled_display.setFont();
   oled_display.setTextColor(WHITE, BLACK);
 
   TbdP4SoundData *sound = active_sound();
-  char line[24];
-  oled_display.setCursor(2, y_top + 2);
+  oled_display.setCursor(32, y_top + 2);
   if (sound == nullptr) {
-    oled_display.print("PRESET");
-    oled_display.setCursor(2, y_top + 16);
+    oled_display.print("SOUND");
+    oled_display.setCursor(32, y_top + 16);
     oled_display.print("NO TRACK");
     oled_display.setFont(oldfont);
     return;
   }
 
   bool ready = ensure_preset_cache();
-  snprintf(line, sizeof(line), "PRESET T%02u", (unsigned)sound->p4_track_index);
-  oled_display.print(line);
+  draw_elektro_track_number(y_top, (uint8_t)(sound->p4_track_index + 1));
+  oled_display.setFont();
+  oled_display.setCursor(32, y_top + 2);
+  oled_display.print("SOUND");
 
   const PresetEntry *entry = selected_preset_entry();
+  const PresetGroup *group =
+      selected_group_ < preset_group_count_ ? &preset_groups_[selected_group_]
+                                            : nullptr;
   const bool current =
-      entry != nullptr &&
-      strncmp(entry->id, sound->preset_id, sizeof(entry->id)) == 0;
-  oled_display.setCursor(98, y_top + 2);
-  oled_display.print(preset_apply_in_progress_ ? "..." :
-                     (preset_apply_failed_ ? "ERR" :
-                      (current ? "CUR" : "NEW")));
+      entry != nullptr && group != nullptr &&
+      strncmp(entry->id, sound->preset_id, sizeof(entry->id)) == 0 &&
+      strncmp(group->id, sound->machine_id, sizeof(group->id)) == 0;
+  oled_display.setCursor(108, y_top + 2);
+  if (preset_apply_in_progress_) {
+    oled_display.print("...");
+  } else if (preset_apply_failed_) {
+    oled_display.print("ERR");
+  } else if (current) {
+    oled_display.print("CUR");
+  }
 
   if (!ready || entry == nullptr) {
-    oled_display.setCursor(2, y_top + 16);
+    oled_display.setCursor(32, y_top + 16);
     oled_display.print("NO PRESETS");
     oled_display.setFont(oldfont);
     return;
@@ -744,14 +772,23 @@ void TbdUiMode::render_preset_window(uint8_t y_top, bool active,
   copy_text(preset_groups_[selected_group_].name, group_text,
             sizeof(group_text), 13);
   copy_text(entry->name, preset_text, sizeof(preset_text), 13);
-  oled_display.setCursor(2, y_top + 12);
-  oled_display.print(group_text);
-  oled_display.setCursor(2, y_top + 22);
-  oled_display.print(preset_text);
 
-  if (active) {
-    oled_display.drawFastVLine(123, y_top + 8, row_height - 10, WHITE);
+  if (row_height >= 64) {
+    oled_display.setCursor(32, y_top + 18);
+    oled_display.print("MACHINE");
+    oled_display.setCursor(32, y_top + 29);
+    oled_display.print(group_text);
+    oled_display.setCursor(32, y_top + 42);
+    oled_display.print("PRESET");
+    oled_display.setCursor(32, y_top + 53);
+    oled_display.print(preset_text);
+  } else {
+    oled_display.setCursor(32, y_top + 12);
+    oled_display.print(group_text);
+    oled_display.setCursor(32, y_top + 22);
+    oled_display.print(preset_text);
   }
+
   oled_display.setFont(oldfont);
 }
 
@@ -868,10 +905,15 @@ bool TbdUiMode::enter(uint8_t device_idx) {
 
   latched_ = true;
   device_idx_ = device_idx;
+  suppress_ui_button_apply_ = true;
   claim_tbd_ui_trig_leds();
   GUI_hardware.led.set_tbd_driver_leds(device_idx_ == SLOT_PRIMARY,
                                        device_idx_ == SLOT_SECONDARY);
-  sub_page_ = min(sub_page_, (uint8_t)(window_count() - 1));
+  const uint8_t count = window_count();
+  if (active_sound() != nullptr && sub_page_ == 0 && count > 1) {
+    sub_page_ = 1;
+  }
+  sub_page_ = min(sub_page_, (uint8_t)(count - 1));
   resync_from_sound();
   show_fullscreen();
   return true;
@@ -886,6 +928,7 @@ void TbdUiMode::disable() {
   bound_sub_page_ = 255;
   ui_button_pressed_ = false;
   ui_button_hold_handled_ = false;
+  suppress_ui_button_apply_ = false;
   GUI_hardware.led.set_tbd_driver_leds(false, false);
   if (was_latched) {
     mcl_gui.reset_trigleds();
@@ -919,10 +962,13 @@ void TbdUiMode::handle_ui_slot_button(bool pressed) {
         clock_diff(ui_button_press_ms_, read_clock_ms()) <=
             kParamOverlayHoldMs;
     ui_button_pressed_ = false;
-    if (short_press && GUI.overlay == &tbd_param_overlay_page &&
-        is_preset_page(sub_page_)) {
+    if (short_press && suppress_ui_button_apply_) {
+      suppress_ui_button_apply_ = false;
+    } else if (short_press && GUI.overlay == &tbd_param_overlay_page &&
+               is_preset_page(sub_page_)) {
       apply_selected_preset();
     }
+    if (!short_press) suppress_ui_button_apply_ = false;
     ui_button_hold_handled_ = false;
   }
 }
@@ -945,8 +991,11 @@ void TbdUiMode::move_sub_page(int8_t delta) {
   uint8_t count = window_count();
   if (count == 0) return;
   int16_t next = (int16_t)sub_page_ + delta;
+  if (is_preset_page(sub_page_) && delta > 0) {
+    next = 1;
+  }
   if (next < 0) next = 0;
-  if (next >= count) next = count - 1;
+  if (next >= count) return;
   if (sub_page_ != (uint8_t)next) {
     sub_page_ = (uint8_t)next;
     resync_from_sound();
@@ -956,7 +1005,15 @@ void TbdUiMode::move_sub_page(int8_t delta) {
 void TbdUiMode::select_sub_page_half(bool lower_half) {
   uint8_t count = window_count();
   if (count <= 1) return;
-  uint8_t next = (uint8_t)((sub_page_ & 0xFE) | (lower_half ? 1 : 0));
+  if (is_preset_page(sub_page_)) return;
+
+  uint8_t first = sub_page_;
+  if (active_sound() != nullptr) {
+    first = (uint8_t)(1 + (((sub_page_ - 1) / 2) * 2));
+  } else {
+    first = sub_page_ & 0xFE;
+  }
+  uint8_t next = first + (lower_half ? 1 : 0);
   if (next >= count) return;
   if (next == sub_page_) return;
   sub_page_ = next;
@@ -988,6 +1045,17 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
   }
 
   const bool is_press = event->mask == EVENT_BUTTON_PRESSED;
+  if (is_preset_page(sub_page_) &&
+      event->source == ButtonsClass::ENCODER2) {
+    if (is_press) {
+      if (GUI.overlay != &tbd_param_overlay_page) {
+        show_fullscreen();
+      }
+      apply_selected_preset();
+    }
+    return true;
+  }
+
   const bool is_param_arrow =
       event->source == ButtonsClass::FUNC_BUTTON6 ||
       event->source == ButtonsClass::FUNC_BUTTON7 ||
@@ -1329,9 +1397,21 @@ void TbdParamOverlayPage::display() {
   if (!tbd_ui_mode.is_active()) return;
 
   uint8_t sub_page = tbd_ui_mode.sub_page();
-  uint8_t first = sub_page & 0xFE;
-  uint8_t second = first + 1;
   uint8_t count = tbd_ui_mode.window_count();
+
+  if (tbd_ui_mode.is_preset_page(sub_page)) {
+    render_window(0, sub_page, true, 64);
+    if (count > 1) {
+      oled_display.fillTriangle(121, 28, 121, 34, 125, 31, WHITE);
+    }
+    return;
+  }
+
+  uint8_t first = sub_page & 0xFE;
+  if (sub_page > 0 && tbd_ui_mode.is_preset_page(0)) {
+    first = (uint8_t)(1 + (((sub_page - 1) / 2) * 2));
+  }
+  uint8_t second = first + 1;
 
   render_window(0, first, sub_page == first, 32);
   if (second < count) {
