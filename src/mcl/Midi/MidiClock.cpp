@@ -64,17 +64,18 @@ uint32_t MidiClockClass::clock_diff_div192(uint32_t old_clock,
   if (new_clock >= old_clock)
     return new_clock - old_clock;
   else
-    return new_clock + (0xBFFF4 - old_clock); // 0xBFFF4 = 0xFFFF * 12
+    return new_clock +
+           ((0x10000UL * (uint32_t)div192th_ticks_per_16th()) - old_clock);
 }
 
 bool MidiClockClass::clock_less_than(uint16_t a, uint16_t b) {
   uint32_t a_new = (uint32_t)a;
   if (a < MidiClock.div16th_counter) {
-    a_new += 0xFFFF;
+    a_new += 0x10000UL;
   }
   uint32_t b_new = (uint32_t)b;
   if (b < MidiClock.div16th_counter) {
-    b_new += 0xFFFF;
+    b_new += 0x10000UL;
   }
   return a_new < b_new;
 }
@@ -82,11 +83,11 @@ bool MidiClockClass::clock_less_than(uint16_t a, uint16_t b) {
 bool MidiClockClass::clock_less_than(uint32_t a, uint32_t b) {
   uint32_t a_new = (uint64_t)a;
   if (a < MidiClock.div32th_counter) {
-    a_new += 0x1FFFE; // 0xFFFF * 2 (max value for div32th counter)
+    a_new += 0x20000UL;
   }
   uint32_t b_new = (uint64_t)b;
   if (b < MidiClock.div32th_counter) {
-    b_new += 0x1FFFE;
+    b_new += 0x20000UL;
   }
   return a_new < b_new;
 }

@@ -239,6 +239,30 @@ public:
 
   volatile bool inCallback = false;
 
+  ALWAYS_INLINE() uint16_t div192th_ticks_per_16th() const {
+#if !defined(__AVR__)
+    uint8_t interpolation = clock_interpolation;
+    if (interpolation == 0) {
+      interpolation = 2;
+    }
+    return (uint16_t)(6u * interpolation);
+#else
+    return 12;
+#endif
+  }
+
+  ALWAYS_INLINE() uint32_t div16th_to_div192(uint32_t div16th,
+                                             uint8_t q12_offset = 0) const {
+    const uint32_t ticks_per_16th = div192th_ticks_per_16th();
+    return div16th * ticks_per_16th +
+           ((uint32_t)q12_offset * ticks_per_16th) / 12u;
+  }
+
+  ALWAYS_INLINE() uint32_t scale_legacy_div192_to_current(uint32_t ticks) const {
+    const uint32_t ticks_per_16th = div192th_ticks_per_16th();
+    return (ticks * ticks_per_16th + 11u) / 12u;
+  }
+
   /*
   ALWAYS_INLINE() void callCallbacks(bool isMidiEvent = false) {
     if (state != STARTED)

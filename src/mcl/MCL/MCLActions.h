@@ -36,15 +36,15 @@ class SeqTrack;
 class DeviceLatency {
 public:
   uint16_t latency_bytes;
-  uint8_t div192th_latency;
+  uint16_t div192th_latency;
 };
 
 class LinkModeData {
 public:
   DeviceLatency dev_latency[NUM_DEVS];
 
-  uint8_t div192th_total_latency;
-  uint8_t div32th_total_latency;
+  uint16_t div192th_total_latency;
+  uint16_t div32th_total_latency;
 
   GridLink links[NUM_SLOTS];
 

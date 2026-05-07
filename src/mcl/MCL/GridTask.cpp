@@ -116,7 +116,10 @@ void GridTask::wait_blocking(uint32_t go_step) {
 
     handleIncomingMidi();
 
-    if (diff > (uint32_t)((uint32_t)tempo_uint * 64 + 999) / 1000) {
+    uint32_t gui_threshold =
+        MidiClock.scale_legacy_div192_to_current(
+            ((uint32_t)tempo_uint * 64 + 999) / 1000);
+    if (diff > gui_threshold) {
       mcl.loop();
     }
   }
@@ -228,10 +231,20 @@ void GridTask::transition_handler() {
 
         if (wait && send_device[c]) {
 
-          uint32_t go_step = mcl_actions.next_transition * 12 -
-                             mcl_actions.div192th_total_latency - 1;
+          uint32_t go_step =
+              MidiClock.div16th_to_div192(mcl_actions.next_transition);
+          uint16_t latency = mcl_actions.div192th_total_latency;
+          go_step = go_step > (uint32_t)latency + 1u
+                        ? go_step - latency - 1u
+                        : 0;
 
-          mcl_actions.div192th_total_latency -= mcl_actions.dev_latency[device_idx].div192th_latency;
+          if (mcl_actions.div192th_total_latency >
+              mcl_actions.dev_latency[device_idx].div192th_latency) {
+            mcl_actions.div192th_total_latency -=
+                mcl_actions.dev_latency[device_idx].div192th_latency;
+          } else {
+            mcl_actions.div192th_total_latency = 0;
+          }
           wait_blocking(go_step);
         }
         wait = false;

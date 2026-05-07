@@ -350,6 +350,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
     proj.write_grid_row_header(&row_headers[n], row, n);
     proj.sync_grid(n);
   }
+  grid_page.reload_slot_models = false;
 }
 
 void MCLActions::row_update(uint8_t last_slot) {
@@ -546,6 +547,7 @@ again:
         // transition_level[n] = gridio_param3.getValue();
         transition_level[dst] = 0;
         next_transitions[dst] = next_step;
+        transition_offsets[dst] = 0;
         links[dst].row = row;
         links[dst].loops = 1;
         // if (grid_page.active_slots[n] < 0) {
@@ -587,8 +589,15 @@ again:
     }
     uint32_t next_32th = next_16th * 2;
 
-    if (next_32th - (div192th_total_latency / 6) - headroom <=
-        (uint32_t)MidiClock.div32th_counter) {
+    uint32_t ticks_per_32th = MidiClock.div192th_ticks_per_16th() / 2u;
+    if (ticks_per_32th == 0) {
+      ticks_per_32th = 6;
+    }
+    const uint32_t latency_32th =
+        ((uint32_t)div192th_total_latency + ticks_per_32th - 1u) /
+        ticks_per_32th;
+    const uint32_t transition_guard = latency_32th + headroom;
+    if (next_32th <= (uint32_t)MidiClock.div32th_counter + transition_guard) {
 
       if (q == 255) {
         increase_loops = 1;
@@ -770,6 +779,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
           next_transitions[n] = MidiClock.div16th_counter -
                                 ((uint16_t)gdt->seq_track->step_count *
                                  gdt->seq_track->get_speed_multiplier_int() / 12);
+          transition_offsets[n] = 0;
           calc_next_slot_transition(n);
         }
     }
@@ -851,13 +861,21 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       continue;
 
     //Assume next transition is 2 steps away.
-    uint32_t next = (uint32_t)next_transition * 12 + 2 * 12 - 1;
+    uint32_t next = MidiClock.div16th_to_div192(
+                        (uint32_t)next_transition + 2u) -
+                    1u;
 
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
       handleIncomingMidi();
       uint32_t counter = MidiClock.div192th_counter;
       uint32_t diff = MidiClock.clock_diff_div192(counter, next);
-      if (gui_update && (diff > (uint32_t)((uint32_t)tempo_uint * 64 + 999) / 1000)) {
+      if (diff == 0 || counter >= next) {
+        break;
+      }
+      uint32_t gui_threshold =
+          MidiClock.scale_legacy_div192_to_current(
+              ((uint32_t)tempo_uint * 64 + 999) / 1000);
+      if (gui_update && diff > gui_threshold) {
          mcl.loop();
       }
     }
@@ -1004,6 +1022,7 @@ void MCLActions::calc_latency() {
 
       uint8_t device_idx = gdt->device_idx;
       if (send_machine[n] == 1) {
+        uint8_t track_idx = n & 0xF;
         // Optimised, assume we dont need to read the entire object to calculate
         // latency.
         auto *ptrack = empty_track.load_from_mem(
@@ -1013,7 +1032,8 @@ void MCLActions::calc_latency() {
             gdt->track_type != ptrack->active) {
           continue;
         }
-        dev_latency[device_idx].latency_bytes += max(ptrack->calc_latency(n),dev_load_penalty[device_idx]);
+        dev_latency[device_idx].latency_bytes +=
+            max(ptrack->calc_latency(track_idx), dev_load_penalty[device_idx]);
       }
       if (send_dev[device_idx] != true) {
         num_devices++;
@@ -1042,15 +1062,27 @@ void MCLActions::calc_latency() {
       uint32_t den = devs[a]->uart->speed;
       uint32_t num = (uint32_t)tempo_uint * 8 * dev_latency[a].latency_bytes;
       //Transimission Latency
-      dev_latency[a].div192th_latency = (uint8_t)((num + den - 1) / den);
+      uint32_t latency = (num + den - 1) / den;
+      latency = MidiClock.scale_legacy_div192_to_current(latency);
 
       //Load Latency
       //We need at least 6 sequencer ticks of latency to account for seq_track load_cache() functions
       //which are splayed over count_down duration
       //if (a == 0) {
-      dev_latency[a].div192th_latency = max(6, dev_latency[a].div192th_latency);
+      const uint32_t min_latency =
+          MidiClock.scale_legacy_div192_to_current(6);
+      if (latency < min_latency) {
+        latency = min_latency;
+      }
+      if (latency > 0xFFFFu) {
+        latency = 0xFFFFu;
+      }
+      dev_latency[a].div192th_latency = (uint16_t)latency;
 
-      div192th_total_latency += dev_latency[a].div192th_latency;
+      uint32_t total_latency =
+          (uint32_t)div192th_total_latency + dev_latency[a].div192th_latency;
+      div192th_total_latency =
+          total_latency > 0xFFFFu ? 0xFFFFu : (uint16_t)total_latency;
     }
   }
    DEBUG_PRINTLN("total latency");
