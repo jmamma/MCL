@@ -10,6 +10,14 @@
 #include "Project.h"
 #include "MCLStrings.h"
 
+#ifdef PLATFORM_TBD
+static constexpr uint8_t kLoadModeEncoder = 1;
+static constexpr uint8_t kLoadLenEncoder = 2;
+#else
+static constexpr uint8_t kLoadModeEncoder = 0;
+static constexpr uint8_t kLoadLenEncoder = 1;
+#endif
+
 void GridLoadPage::init() {
   GridIOPage::init();
   note_interface.init_notes();
@@ -21,8 +29,8 @@ void GridLoadPage::init() {
 #endif
   key_interface.on();
   // GUI.display();
-  encoders[0]->cur = mcl_cfg.load_mode;
-  encoders[1]->cur = mcl_cfg.chain_queue_length;
+  encoders[kLoadModeEncoder]->cur = mcl_cfg.load_mode;
+  encoders[kLoadLenEncoder]->cur = mcl_cfg.chain_queue_length;
   encoders[3]->cur = mcl_cfg.chain_load_quant;
 
   md_popup_title(mcl_cfg.load_mode);
@@ -77,16 +85,16 @@ void GridLoadPage::display_load() {
 }
 
 void GridLoadPage::loop() {
-  if (encoders[0]->hasChanged()) {
-    mcl_cfg.load_mode = encoders[0]->cur;
+  if (encoders[kLoadModeEncoder]->hasChanged()) {
+    mcl_cfg.load_mode = encoders[kLoadModeEncoder]->cur;
     md_popup_title(mcl_cfg.load_mode);
   }
-  if (encoders[1]->hasChanged()) {
-    if (encoders[0]->cur == LOAD_QUEUE) {
-      mcl_cfg.chain_queue_length = encoders[1]->cur;
+  if (encoders[kLoadLenEncoder]->hasChanged()) {
+    if (encoders[kLoadModeEncoder]->cur == LOAD_QUEUE) {
+      mcl_cfg.chain_queue_length = encoders[kLoadLenEncoder]->cur;
     } else {
       // Lock encoder
-      encoders[1]->cur = encoders[1]->old;
+      encoders[kLoadLenEncoder]->cur = encoders[kLoadLenEncoder]->old;
     }
   }
   if (encoders[3]->hasChanged()) {
@@ -303,7 +311,7 @@ bool GridLoadPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {
         if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
-          encoders[0]->cur = key - MDX_KEY_BANKA + 1;
+          encoders[kLoadModeEncoder]->cur = key - MDX_KEY_BANKA + 1;
           return true;
         }
       }

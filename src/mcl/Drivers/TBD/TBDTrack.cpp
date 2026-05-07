@@ -452,7 +452,7 @@ void tbd_init_p4_sound_runtime_defaults(TbdP4SoundData &sound) {
 
   const uint8_t base_cc =
       sound.device_start_cc < 0 ? 0 : (uint8_t)sound.device_start_cc;
-  const int16_t level_default = sound.p4_track_index == 15 ? 0 : 64;
+  const int16_t level_default = sound.p4_track_index == 15 ? 1 : 64;
   set_param(sound.mixer_params.params[0], "LEVEL", TBD_P4_PARAM_TYPE_LEVEL,
             base_cc + 1, TBD_P4_CTRLTYPE_CC, level_default);
   set_param(sound.mixer_params.params[1], "PAN", TBD_P4_PARAM_TYPE_PAN,
@@ -463,6 +463,7 @@ void tbd_init_p4_sound_runtime_defaults(TbdP4SoundData &sound) {
             base_cc + 4, TBD_P4_CTRLTYPE_CC, 0);
   set_param(sound.mixer_params.params[4], "T.LEN", TBD_P4_PARAM_TYPE_HIDDEN,
             base_cc + 5, TBD_P4_CTRLTYPE_CC, 1);
+  tbd_p4_set_track_length(sound, TBD_P4_DEFAULT_TRACK_LENGTH);
 }
 
 void tbd_update_track_default_from_p4(uint8_t p4_track_index,
@@ -502,6 +503,7 @@ void TBDTrack::apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track) {
   if (seq_data.track_length == 0) {
     seq_data.track_length = 16;
   }
+  tbd_p4_set_track_length(p4_sound, seq_data.track_length);
   if (seq_data.track_speed == 0xFF) {
     seq_data.track_speed = STEPSEQ_SPEED_1X;
   }
@@ -624,6 +626,7 @@ void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,
   }
   seq_data.speed = midi_seq_valid_speed(seq_data.speed);
   seq_data.channel = p4_sound.midi_channel;
+  tbd_p4_set_track_length(p4_sound, seq_data.length);
 
   if (seq_track != nullptr) {
     auto *midi_track = static_cast<MidiSeqTrack *>(seq_track);

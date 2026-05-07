@@ -201,6 +201,14 @@ void MidiSeqTrack::set_length(uint8_t len, bool) {
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     locks_slide_data[i].init();
   }
+
+  tbd_p4_set_track_length(p4_sound, length);
+  const auto &param =
+      p4_sound.mixer_params.params[TBD_P4_MIXER_TRACK_LENGTH_PARAM];
+  MidiUartClass *target = port_ ? port_ : TBD.uart;
+  if (target != nullptr && p4_sound.midi_channel < 16 && param.is_sendable()) {
+    tbd_p4_send_param_value(target, p4_sound.midi_channel, param, param.value);
+  }
 }
 
 uint16_t MidiSeqTrack::add_event(uint8_t step, const MidiSeqEvent &event) {

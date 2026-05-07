@@ -18,6 +18,7 @@ public:
 
   void reset();
   void seq(MidiUartClass *uart_);
+  void set_length(uint8_t len, bool expand = false) override;
   bool trigger(uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
   bool preview_step(uint8_t step);
   void send_notes_off();

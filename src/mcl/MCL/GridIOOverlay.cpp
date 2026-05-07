@@ -17,7 +17,7 @@
 GridIOOverlay grid_io_overlay;
 
 GridIOOverlay::GridIOOverlay()
-    : LightPage(&mode_enc_, &queue_len_enc_, &unused_enc_, &quant_enc_),
+    : LightPage(&unused_enc_, &mode_enc_, &queue_len_enc_, &quant_enc_),
       mode_enc_(LOAD_QUEUE, LOAD_MANUAL, ENCODER_RES_PAT),
       queue_len_enc_(64, 1, ENCODER_RES_PAT),
       unused_enc_(0, 0, ENCODER_RES_PAT),

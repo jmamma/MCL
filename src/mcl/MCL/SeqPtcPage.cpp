@@ -24,8 +24,6 @@ constexpr uint16_t kTbdPtcBlackMask = 0b0000010101001010;
 constexpr uint32_t kTbdPtcNaturalColor = 0xFFFFFF;
 constexpr uint32_t kTbdPtcBlackColor = 0x0000A0;
 constexpr uint32_t kTbdPtcActiveColor = 0xFF0000;
-constexpr uint32_t kTbdPtcOctaveColor = 0x805000;
-constexpr uint32_t kTbdPtcOctaveDimColor = 0x201000;
 
 void tbd_ptc_send_note(SeqPtcPage &page, uint8_t note, uint8_t mask) {
   bool old_scale_padding = page.scale_padding;
@@ -641,12 +639,6 @@ void SeqPtcPage::send_tbd_keyboard_leds() {
   mcl_gui.set_trigleds_local(0, TRIGLED_EXCLUSIVE);
   mcl_gui.set_trigleds_color(natural_mask, kTbdPtcNaturalColor);
   mcl_gui.set_trigleds_color(black_mask, kTbdPtcBlackColor);
-  mcl_gui.set_trigleds_color(1u << 0,
-                             ptc_param_oct.cur > 0 ? kTbdPtcOctaveColor
-                                                   : kTbdPtcOctaveDimColor);
-  mcl_gui.set_trigleds_color(1u << 7,
-                             ptc_param_oct.cur < 8 ? kTbdPtcOctaveColor
-                                                   : kTbdPtcOctaveDimColor);
   if (tbd_keyboard_hold_mask) {
     mcl_gui.set_trigleds_color(tbd_keyboard_hold_mask, kTbdPtcActiveColor);
   }
@@ -678,18 +670,6 @@ bool SeqPtcPage::handle_tbd_keyboard_event(uint8_t button, uint8_t mask) {
 
   int8_t note = kTbdPtcKeyMap[button];
   if (note < 0) {
-    if (mask == EVENT_BUTTON_PRESSED) {
-      if (button == 0 && ptc_param_oct.cur > 0) {
-        release_tbd_keyboard_notes();
-        ptc_param_oct.cur--;
-        draw_popup_octave();
-      } else if (button == 7 && ptc_param_oct.cur < 8) {
-        release_tbd_keyboard_notes();
-        ptc_param_oct.cur++;
-        draw_popup_octave();
-      }
-      send_tbd_keyboard_leds();
-    }
     return true;
   }
 

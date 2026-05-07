@@ -61,6 +61,13 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
     return;
   }
 
+  if (record_mutes) {
+    int8_t mt = 0;
+    uint8_t quant = 0;
+    uint8_t step = get_quantized_step(mt, quant);
+    STEPSEQ_SET_BIT64(mute_mask, step);
+  }
+
   if (mute_state == STEPSEQ_MUTE_ON || ignore_step == step_count) {
     return;
   }
@@ -120,6 +127,18 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
               STEPSEQ_IS_BIT_SET64(accent_mask, current_step) ? 127 : 100);
   }
   record_trig_result(cond_ok && trig);
+}
+
+void TBDSeqTrack::set_length(uint8_t len, bool expand) {
+  TBDSeqDataTrack::set_length(len, expand);
+  tbd_p4_set_track_length(p4_sound, length);
+
+  MidiUartClass *target = port ? port : (uart ? uart : TBD.uart);
+  const auto &param =
+      p4_sound.mixer_params.params[TBD_P4_MIXER_TRACK_LENGTH_PARAM];
+  if (target != nullptr && p4_sound.midi_channel < 16 && param.is_sendable()) {
+    tbd_p4_send_param_value(target, p4_sound.midi_channel, param, param.value);
+  }
 }
 
 uint8_t TBDSeqTrack::trig_conditional(uint8_t step, uint8_t condition) {

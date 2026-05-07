@@ -11,6 +11,12 @@
 
 #define S_PAGE 3
 
+#ifdef PLATFORM_TBD
+static constexpr uint8_t kSaveModeEncoder = 1;
+#else
+static constexpr uint8_t kSaveModeEncoder = 0;
+#endif
+
 void GridSavePage::init() {
   GridIOPage::init();
   MD.getCurrentPattern(CALLBACK_TIMEOUT);
@@ -148,7 +154,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC: {
-        encoders[0]->cur = key - MDX_KEY_BANKA;
+        encoders[kSaveModeEncoder]->cur = key - MDX_KEY_BANKA;
         return true;
       }
       }

@@ -167,6 +167,10 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   const bool arrow_trace = (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
                             orig_src <= ButtonsClass::FUNC_BUTTON9);
+  const bool is_transport_button =
+      orig_src == ButtonsClass::FUNC_BUTTON1 ||
+      orig_src == ButtonsClass::FUNC_BUTTON2 ||
+      orig_src == ButtonsClass::FUNC_BUTTON3;
   if (arrow_trace) {
     DEBUG_PRINT("arrow ");
     DEBUG_PRINT((unsigned)orig_src);
@@ -312,7 +316,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (ui_expanded) {
+  if (ui_expanded && !is_transport_button) {
     if (orig_src == ButtonsClass::TBD_BUTTON_B) {
       ui_b_button_held_ = is_press;
       if (is_release) ui_b_button_held_ = false;
@@ -330,7 +334,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
         return true;
       }
       if (pg == SEQ_PTC_PAGE) {
-        return seq_ptc_page.handle_tbd_keyboard_event(trig_idx, event->mask);
+        if (seq_ptc_page.handle_tbd_keyboard_event(trig_idx, event->mask)) {
+          return true;
+        }
+        key_interface.key_event(trig_idx, is_release);
+        return true;
       }
       if (pg == SEQ_STEP_PAGE || pg == SEQ_EXTSTEP_PAGE) {
         key_interface.key_event(trig_idx, is_release);
@@ -361,8 +369,10 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (!ui_expanded && pg == SEQ_PTC_PAGE &&
       event->source >= ButtonsClass::TRIG_BUTTON1 &&
       event->source < ButtonsClass::TRIG_BUTTON1 + 16) {
-    return seq_ptc_page.handle_tbd_keyboard_event(
-        event->source - ButtonsClass::TRIG_BUTTON1, event->mask);
+    if (seq_ptc_page.handle_tbd_keyboard_event(
+            event->source - ButtonsClass::TRIG_BUTTON1, event->mask)) {
+      return true;
+    }
   }
 
   // In normal mode, swap the physical Y/B roles on TBD:

@@ -34,6 +34,8 @@ static constexpr uint8_t TBD_P4_LOCK_NOTE_PARAM =
 static constexpr uint8_t TBD_P4_LOCK_PARAM_COUNT =
     TBD_P4_LOCK_RESERVED_PARAM_BASE + 2;
 static constexpr uint8_t TBD_P4_DEFAULT_STEP_NOTE = 60;
+static constexpr uint8_t TBD_P4_MIXER_TRACK_LENGTH_PARAM = 4;
+static constexpr uint8_t TBD_P4_DEFAULT_TRACK_LENGTH = 16;
 
 static constexpr uint8_t TBD_P4_ID_LEN = 16;
 static constexpr uint8_t TBD_P4_PARAM_PAGE_NAME_LEN = 16;
@@ -143,7 +145,7 @@ struct ATTR_PACKED() TbdP4ParamDescriptor {
   }
 
   bool is_sendable() const {
-    return is_visible() &&
+    return type != TBD_P4_PARAM_TYPE_NONE &&
            (ctrl_type == TBD_P4_CTRLTYPE_CC ||
             ctrl_type == TBD_P4_CTRLTYPE_NRPM);
   }
@@ -228,6 +230,17 @@ struct ATTR_PACKED() TbdP4SoundData {
     return index < TBD_P4_MIXER_PARAM_COUNT;
   }
 };
+
+inline uint8_t tbd_p4_normalize_track_length(uint8_t length) {
+  if (length == 0) return TBD_P4_DEFAULT_TRACK_LENGTH;
+  return length > 127 ? 127 : length;
+}
+
+inline void tbd_p4_set_track_length(TbdP4SoundData &sound, uint8_t length) {
+  if (TBD_P4_MIXER_TRACK_LENGTH_PARAM >= TBD_P4_MIXER_PARAM_COUNT) return;
+  sound.mixer_params.params[TBD_P4_MIXER_TRACK_LENGTH_PARAM].value =
+      tbd_p4_normalize_track_length(length);
+}
 
 inline bool tbd_p4_copy_compact_label(const char *src, char *dst,
                                       size_t dst_len,

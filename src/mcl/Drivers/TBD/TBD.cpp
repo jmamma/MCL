@@ -59,10 +59,6 @@ constexpr uint8_t kTbdUiSlotPrimary = 0;
 constexpr uint8_t kTbdUiSlotSecondary = 1;
 constexpr uint8_t kTbdUiSlotNone = 255;
 constexpr uint8_t kP4DriverMidiChannel = 13;
-constexpr uint8_t kP4DriverParamVolume = 0;
-constexpr uint8_t kP4DriverParamMute = 1;
-constexpr uint8_t kP4DriverParamDelay = 2;
-constexpr uint8_t kP4DriverParamReverb = 3;
 constexpr const char *kP4RackPluginId = "PicoSeqRack";
 constexpr const char *kP4ReferenceAppName = "Groovebox";
 
@@ -88,7 +84,7 @@ const P4BootPresetFallback kP4BootPresetFallbacks[] = {
 P4BootPreset p4_boot_presets[kP4SoundTrackCount];
 TbdP4SoundData p4_default_sounds[kP4SoundTrackCount];
 bool p4_default_sound_valid[kP4SoundTrackCount];
-TbdP4MixerParamGroup p4_driver_params;
+TbdP4AudioParamGroup p4_driver_params;
 bool p4_driver_params_initialized = false;
 char p4_track_defaults_json[kP4TrackDefaultsJsonBytes];
 uint8_t p4_boot_stage = 0;
@@ -358,23 +354,82 @@ void init_driver_param(TbdP4ParamDescriptor &param, const char *name,
   param.resolution = 127;
 }
 
+void init_driver_page(uint8_t page, const char *name) {
+  if (page >= TBD_P4_AUDIO_PARAM_PAGE_COUNT) {
+    return;
+  }
+  copy_fixed_string(p4_driver_params.pages[page].name,
+                    sizeof(p4_driver_params.pages[page].name), name);
+  if (p4_driver_params.num_pages <= page) {
+    p4_driver_params.num_pages = page + 1;
+  }
+}
+
 void ensure_p4_driver_params_initialized() {
   if (p4_driver_params_initialized) {
     return;
   }
 
   p4_driver_params.clear();
-  p4_driver_params.num_pages = 1;
-  copy_fixed_string(p4_driver_params.pages[0].name,
-                    sizeof(p4_driver_params.pages[0].name), "OUTPUT");
-  init_driver_param(p4_driver_params.params[kP4DriverParamVolume],
-                    "VOL", TBD_P4_PARAM_TYPE_LEVEL_MASTER, 81, 110);
-  init_driver_param(p4_driver_params.params[kP4DriverParamMute],
-                    "MUTE", TBD_P4_PARAM_TYPE_ONOFF, 80, 0);
-  init_driver_param(p4_driver_params.params[kP4DriverParamDelay],
-                    "DLY", TBD_P4_PARAM_TYPE_LEVEL, 29, 64);
-  init_driver_param(p4_driver_params.params[kP4DriverParamReverb],
-                    "REV", TBD_P4_PARAM_TYPE_LEVEL, 42, 64);
+  init_driver_page(0, "FX1 DLY1");
+  init_driver_param(p4_driver_params.params[0], "Time",
+                    TBD_P4_PARAM_TYPE_NUMBER, 20, 16);
+  init_driver_param(p4_driver_params.params[1], "Sync",
+                    TBD_P4_PARAM_TYPE_ONOFF, 21, 0);
+  init_driver_param(p4_driver_params.params[2], "Freeze",
+                    TBD_P4_PARAM_TYPE_ONOFF, 22, 0);
+  init_driver_param(p4_driver_params.params[3], "Tapedig",
+                    TBD_P4_PARAM_TYPE_TAPE_DIGITAL, 23, 0);
+
+  init_driver_page(1, "FX1 DLY2");
+  init_driver_param(p4_driver_params.params[4], "St.Wid",
+                    TBD_P4_PARAM_TYPE_BIPOLAR, 24, 32);
+  init_driver_param(p4_driver_params.params[5], "Fx2send",
+                    TBD_P4_PARAM_TYPE_LEVEL, 25, 0);
+  init_driver_param(p4_driver_params.params[6], "Feedb.",
+                    TBD_P4_PARAM_TYPE_LEVEL, 26, 32);
+  init_driver_param(p4_driver_params.params[7], "Base",
+                    TBD_P4_PARAM_TYPE_NUMBER, 27, 0);
+
+  init_driver_page(2, "FX1 DLY3");
+  init_driver_param(p4_driver_params.params[8], "Width2",
+                    TBD_P4_PARAM_TYPE_BIPOLAR, 28, 32);
+  init_driver_param(p4_driver_params.params[9], "Dly.Lev",
+                    TBD_P4_PARAM_TYPE_LEVEL, 29, 64);
+  init_driver_param(p4_driver_params.params[10], "RevTime",
+                    TBD_P4_PARAM_TYPE_NUMBER, 40, 64);
+  init_driver_param(p4_driver_params.params[11], "RevLP",
+                    TBD_P4_PARAM_TYPE_FILTER_CUTOFF, 41, 96);
+
+  init_driver_page(3, "FX2 REV");
+  init_driver_param(p4_driver_params.params[12], "Rev.Lev",
+                    TBD_P4_PARAM_TYPE_LEVEL, 42, 64);
+  init_driver_param(p4_driver_params.params[13], "Thres",
+                    TBD_P4_PARAM_TYPE_DB_THRESHOLD, 60, 100);
+  init_driver_param(p4_driver_params.params[14], "Ratio",
+                    TBD_P4_PARAM_TYPE_RATIO, 61, 32);
+  init_driver_param(p4_driver_params.params[15], "Atk",
+                    TBD_P4_PARAM_TYPE_ENV_ATTACK, 62, 0);
+
+  init_driver_page(4, "COMP");
+  init_driver_param(p4_driver_params.params[16], "Rel",
+                    TBD_P4_PARAM_TYPE_ENV_DECAY, 63, 20);
+  init_driver_param(p4_driver_params.params[17], "LPF",
+                    TBD_P4_PARAM_TYPE_FILTER_CUTOFF, 64, 48);
+  init_driver_param(p4_driver_params.params[18], "Gain",
+                    TBD_P4_PARAM_TYPE_DB_GAIN, 65, 0);
+  init_driver_param(p4_driver_params.params[19], "Mix",
+                    TBD_P4_PARAM_TYPE_LEVEL, 66, 64);
+
+  init_driver_page(5, "SUM");
+  init_driver_param(p4_driver_params.params[20], "Dly.Lev",
+                    TBD_P4_PARAM_TYPE_LEVEL, 67, 64);
+  init_driver_param(p4_driver_params.params[21], "Rev.Lev",
+                    TBD_P4_PARAM_TYPE_LEVEL, 68, 64);
+  init_driver_param(p4_driver_params.params[22], "Mute",
+                    TBD_P4_PARAM_TYPE_ONOFF, 80, 0);
+  init_driver_param(p4_driver_params.params[23], "Lev",
+                    TBD_P4_PARAM_TYPE_LEVEL_MASTER, 81, 64);
   p4_driver_params_initialized = true;
 }
 
@@ -1332,7 +1387,7 @@ uint8_t tbd_p4_driver_param_page_count() {
 
 TbdP4ParamDescriptor *tbd_p4_driver_param(uint8_t index) {
   ensure_p4_driver_params_initialized();
-  if (index >= TBD_P4_MIXER_PARAM_COUNT) {
+  if (index >= TBD_P4_AUDIO_PARAM_COUNT) {
     return nullptr;
   }
   return &p4_driver_params.params[index];
@@ -1348,7 +1403,7 @@ void tbd_p4_send_driver_param(uint8_t index) {
 
 void tbd_p4_send_driver_params() {
   ensure_p4_driver_params_initialized();
-  for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+  for (uint8_t i = 0; i < TBD_P4_AUDIO_PARAM_COUNT; i++) {
     tbd_p4_send_driver_param(i);
   }
 }
@@ -1561,6 +1616,11 @@ void TbdDevice::apply_runtime_p4_defaults() {
     debug_p4_sound_summary("runtime_tbd_before",
                            mcl_seq.tbd_tracks[i].p4_sound);
     tbd_ensure_step_sound_default(mcl_seq.tbd_tracks[i].p4_sound, i);
+    tbd_p4_set_track_length(
+        mcl_seq.tbd_tracks[i].p4_sound,
+        mcl_seq.tbd_tracks[i].length
+            ? mcl_seq.tbd_tracks[i].length
+            : TBD_P4_DEFAULT_TRACK_LENGTH);
     debug_p4_sound_summary("runtime_tbd_after",
                            mcl_seq.tbd_tracks[i].p4_sound);
   }
@@ -1573,6 +1633,11 @@ void TbdDevice::apply_runtime_p4_defaults() {
     debug_p4_sound_summary("runtime_midi_before",
                            mcl_seq.midi_tracks[i].p4_sound);
     tbd_ensure_midi_sound_default(mcl_seq.midi_tracks[i].p4_sound, i);
+    tbd_p4_set_track_length(
+        mcl_seq.midi_tracks[i].p4_sound,
+        mcl_seq.midi_tracks[i].seq_data.length
+            ? mcl_seq.midi_tracks[i].seq_data.length
+            : TBD_P4_DEFAULT_TRACK_LENGTH);
     mcl_seq.midi_tracks[i].set_channel(
         mcl_seq.midi_tracks[i].p4_sound.midi_channel);
     debug_p4_sound_summary("runtime_midi_after",
@@ -1752,8 +1817,6 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
   advance_progress(progress);
 
   char kit_id[32] = "default";
-  bool kit_loaded = false;
-  uint8_t loaded_kit_index = 0;
   set_stage(8);
   const bool defaults_ok = tbd_p4_command.get_track_default_presets(
       p4_track_defaults_json, sizeof(p4_track_defaults_json), nullptr,
@@ -1791,21 +1854,9 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
     DEBUG_PRINT(" index=");
     DEBUG_PRINTLN((unsigned)kit_index);
 #endif
-    const bool pre_set_ok =
-        tbd_p4_command.set_active_sample_kit(kit_index,
-                                             kP4PresetCommandTimeoutMs);
-#ifdef DEBUGMODE
-    DEBUG_PRINT("tbd_init pre_set_sample_kit index=");
-    DEBUG_PRINT((unsigned)kit_index);
-    DEBUG_PRINT(" ok=");
-    DEBUG_PRINTLN(pre_set_ok ? 1 : 0);
-#endif
-    if (!pre_set_ok ||
-        !activate_p4_sample_kit(kit_index, kP4PresetCommandTimeoutMs)) {
+    if (!activate_p4_sample_kit(kit_index, kP4PresetCommandTimeoutMs)) {
       return fail(9, 0x18);
     }
-    kit_loaded = true;
-    loaded_kit_index = kit_index;
   }
   advance_progress(progress);
 
@@ -1818,6 +1869,19 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
     debug_p4_boot_preset("load", preset);
     tbd_update_track_default_from_p4(preset.track_index, preset.preset_id,
                                      preset.rom_bank, preset.sample_slice);
+
+    const bool load_ok = tbd_p4_command.load_track_sound_preset(
+        preset.track_index, preset.preset_id, preset.rom_bank,
+        preset.sample_slice, kP4PresetCommandTimeoutMs);
+#ifdef DEBUGMODE
+    DEBUG_PRINT("tbd_init p4_load_sound p4=");
+    DEBUG_PRINT((unsigned)preset.track_index);
+    DEBUG_PRINT(" ok=");
+    DEBUG_PRINTLN(load_ok ? 1 : 0);
+#endif
+    if (!load_ok) {
+      return fail(10, 0xA4);
+    }
 
     TbdP4SoundData sound;
     sound.clear();
@@ -1835,27 +1899,10 @@ bool TbdDevice::load_default_p4_presets(bool show_progress) {
 #endif
     cache_default_sound(sound);
 
-    const bool load_ok = tbd_p4_command.load_track_sound_preset(
-        preset.track_index, preset.preset_id, preset.rom_bank,
-        preset.sample_slice, kP4PresetCommandTimeoutMs);
-#ifdef DEBUGMODE
-    DEBUG_PRINT("tbd_init p4_load_sound p4=");
-    DEBUG_PRINT((unsigned)preset.track_index);
-    DEBUG_PRINT(" ok=");
-    DEBUG_PRINTLN(load_ok ? 1 : 0);
-#endif
-    if (!load_ok) {
-      return fail(10, 0xA4);
-    }
-
     p4_boot_loaded_tracks++;
   }
 
   set_stage(11);
-  if (kit_loaded &&
-      !activate_p4_sample_kit(loaded_kit_index, kP4PresetCommandTimeoutMs)) {
-    return fail(11, 0x18);
-  }
 
   set_stage(12);
 #ifdef DEBUGMODE
