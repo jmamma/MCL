@@ -22,9 +22,16 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
   uint8_t n = slotnumber;
   if (seq_track == nullptr) { return; }
+  const uint32_t now = MidiClock.div192th_counter;
+  const uint32_t target = (uint32_t)mcl_actions.next_transition * 12u +
+                          (uint32_t)mcl_actions.transition_offsets[n] - 1u;
+  uint32_t count_down = MidiClock.clock_diff_div192(now, target);
+  if (target < now && (now - target) < 4096u) {
+    count_down = 1;
+  }
   USE_LOCK();
   SET_LOCK();
-  seq_track->count_down = MidiClock.clock_diff_div192(MidiClock.div192th_counter, (uint32_t) mcl_actions.next_transition * (uint32_t) 12 + (uint32_t) mcl_actions.transition_offsets[n] - 1);
+  seq_track->count_down = count_down;
   CLEAR_LOCK();
 
 }

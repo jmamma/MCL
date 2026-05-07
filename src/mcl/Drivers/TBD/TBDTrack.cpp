@@ -524,7 +524,7 @@ void TBDTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
 
 uint16_t TBDTrack::calc_latency(uint8_t tracknumber) {
   (void)tracknumber;
-  return 2048;
+  return 0;
 }
 
 void TBDTrack::apply_preset(uint8_t fallback_tracknumber, const char *source,
@@ -648,7 +648,7 @@ void TBDMidiTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
 
 uint16_t TBDMidiTrack::calc_latency(uint8_t tracknumber) {
   (void)tracknumber;
-  return 2048;
+  return 0;
 }
 
 void TBDMidiTrack::apply_preset(uint8_t fallback_tracknumber,
