@@ -19,10 +19,17 @@ class MidiClass;
 class NoteInterfaceMidiEvents : public MidiCallback {
 public:
   bool state = false;
+#if !defined(__AVR__)
+  MidiClass *bound_primary_midi = nullptr;
+#endif
   MidiClass *bound_secondary_midi = nullptr;
   void setup_callbacks();
   void remove_callbacks();
 
+#if !defined(__AVR__)
+  void onNoteOnCallback_Midi(uint8_t *msg);
+  void onNoteOffCallback_Midi(uint8_t *msg);
+#endif
   void onNoteOnCallback_Midi2(uint8_t *msg);
   void onNoteOffCallback_Midi2(uint8_t *msg);
 };
