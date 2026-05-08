@@ -104,8 +104,6 @@ bool WavDesigner::render() {
   uint32_t pos = 0;
   bool write_header = false;
 
-  float max_sine_gain = 0.0004921259843f; ; //(float)1 / (float)16) / 127;
-
   // Zero crossing detection vars
   bool zero_crossing_found = false;
   int32_t first_zero_crossing = 0;
@@ -119,42 +117,14 @@ bool WavDesigner::render() {
     // Render each oscillator
     for (uint8_t i = 0; i < 3; i++) {
       OscPage* page = &pages[i];  // Cache pointer to current page
+      uint8_t osc_type = page->get_osc_type();
       float osc_sample = 0;
-      switch (page->get_osc_type()) {
-      case 0:
-        // osc_sample = 0; // Already initialized
-        break;
-      // Sine wave with 16 overtones.
-      case 1: {
-        float freq = page->get_freq();  // Cache frequency
-        float largest_peak = page->largest_sine_peak;
-        if (largest_peak != 0) {
-          for (uint8_t h = 1; h <= 16; h++) {
-            uint8_t sine_level = page->sine_levels[h - 1];
-            if (sine_level != 0) {
-              float sine_gain = sine_level * max_sine_gain;
-              osc_sample += sine_osc.get_sample(n, freq * (float)h) * sine_gain;
-            }
-          }
-          osc_sample *= (1.00f / largest_peak);
-        }
-        break;
-      }
-      case 2:
-        tri_osc.width = page->get_width();
-        osc_sample = tri_osc.get_sample(n, page->get_freq());
-        break;
-      case 3:
-        pulse_osc.width = page->get_width();
-        osc_sample = pulse_osc.get_sample(n, page->get_freq());
-        break;
-      case 4:
-        saw_osc.width = page->get_width();
-        osc_sample = saw_osc.get_sample(n, page->get_freq());
-        break;
-      case 5:
-        osc_sample = usr_osc.get_sample(n, page->get_freq(), page->usr_values);
-        break;
+      if (osc_type != 0) {
+        osc_sample =
+            render_osc_sample(osc_type, page->get_width(), page->sine_levels,
+                              page->usr_values, page->largest_sine_peak, n,
+                              page->get_freq(), sine_osc, tri_osc, pulse_osc,
+                              saw_osc, usr_osc);
       }
       // Sum oscillator samples together
       sample += dsp.saturate(osc_sample * mixer.get_gain(i), mixer.get_max_gain());

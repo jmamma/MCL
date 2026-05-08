@@ -113,7 +113,7 @@ float TriOsc::get_sample(uint32_t sample_number, float freq) {
 }
 
 float UsrOsc::get_sample(uint32_t sample_number, float freq,
-                         uint8_t *usr_values) {
+                         const uint8_t *usr_values) {
 
   float n_cycle = floorf(sample_rate / freq);
 
@@ -142,4 +142,45 @@ float UsrOsc::get_sample(uint32_t sample_number, float freq,
   float y = m * n + b;
 
   return y;
+}
+
+float render_osc_sample(uint8_t osc_type, float width,
+                        const uint8_t *sine_levels,
+                        const uint8_t *usr_values, float largest_sine_peak,
+                        uint32_t sample_number, float freq,
+                        SineOsc &sine_osc, TriOsc &tri_osc,
+                        PulseOsc &pulse_osc, SawOsc &saw_osc,
+                        UsrOsc &usr_osc, bool guard_zero_peak) {
+  float osc_sample = 0;
+  switch (osc_type) {
+  case SIN_OSC:
+    if (!guard_zero_peak || largest_sine_peak != 0) {
+      constexpr float max_sine_gain = 0.0004921259843f;
+      for (uint8_t h = 1; h <= 16; h++) {
+        uint8_t sine_level = sine_levels[h - 1];
+        if (sine_level != 0) {
+          osc_sample += sine_osc.get_sample(sample_number, freq * (float)h) *
+                        (sine_level * max_sine_gain);
+        }
+      }
+      osc_sample *= 1.00f / largest_sine_peak;
+    }
+    break;
+  case TRI_OSC:
+    tri_osc.width = width;
+    osc_sample = tri_osc.get_sample(sample_number, freq);
+    break;
+  case PUL_OSC:
+    pulse_osc.width = width;
+    osc_sample = pulse_osc.get_sample(sample_number, freq);
+    break;
+  case SAW_OSC:
+    saw_osc.width = width;
+    osc_sample = saw_osc.get_sample(sample_number, freq);
+    break;
+  case USR_OSC:
+    osc_sample = usr_osc.get_sample(sample_number, freq, usr_values);
+    break;
+  }
+  return osc_sample;
 }

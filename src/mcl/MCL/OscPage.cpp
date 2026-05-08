@@ -192,7 +192,6 @@ void OscPage::draw_wav(uint8_t wav_type) {
   SineOsc sine_osc(w);
   UsrOsc usr_osc(w);
   float sample = 0;
-  float max_sine_gain = 0.0004921259843f; // (float)1 / (float)16 / 127;
   uint8_t n = sample_number;
   // for (uint8_t n = 0; n < 128 - x; n++) {
 
@@ -201,34 +200,9 @@ void OscPage::draw_wav(uint8_t wav_type) {
     //  if ((scanline_width < w) && (wav_type > 0)) {
     //  oled_display.drawLine(n + x, 0, n + x, 32, BLACK);
     // }
-    switch (wav_type) {
-    case SIN_OSC:
-      sample = 0;
-      for (uint8_t f = 1; f <= 16; f++) {
-        if (sine_levels[f - 1] != 0) {
-          float sine_gain = (float)sine_levels[f - 1] * max_sine_gain;
-          sample += sine_osc.get_sample((uint32_t)n, 1 * (float)f) * sine_gain;
-        }
-      }
-      if (largest_sine_peak == 0) {
-        sample = 0;
-      } else {
-        sample = (1.00f / largest_sine_peak) * sample;
-      }
-      break;
-    case USR_OSC:
-      sample = usr_osc.get_sample((uint32_t)n, 1, usr_values);
-      break;
-    case TRI_OSC:
-      sample = tri_osc.get_sample((uint32_t)n, 1);
-      break;
-    case PUL_OSC:
-      sample = pul_osc.get_sample((uint32_t)n, 1);
-      break;
-    case SAW_OSC:
-      sample = saw_osc.get_sample((uint32_t)n, 1);
-      break;
-    }
+    sample = render_osc_sample(wav_type, osc_width, sine_levels, usr_values,
+                               largest_sine_peak, n, 1.0f, sine_osc, tri_osc,
+                               pul_osc, saw_osc, usr_osc);
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00f)) + (h / 2) + y);
     if (wav_type != 0) {
        oled_display.drawPixel(x + n, pixel_y, WHITE);

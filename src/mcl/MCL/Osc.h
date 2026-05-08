@@ -84,8 +84,16 @@ class UsrOsc : public Osc {
 public:
   UsrOsc(float sample_rate_ = 44100) { set_sample_rate(sample_rate_); }
   float get_sample(uint32_t sample_number, float freq,
-                   uint8_t *usr_values);
+                   const uint8_t *usr_values);
 
 };
+
+float render_osc_sample(uint8_t osc_type, float width,
+                        const uint8_t *sine_levels,
+                        const uint8_t *usr_values, float largest_sine_peak,
+                        uint32_t sample_number, float freq,
+                        SineOsc &sine_osc, TriOsc &tri_osc,
+                        PulseOsc &pulse_osc, SawOsc &saw_osc,
+                        UsrOsc &usr_osc, bool guard_zero_peak = true);
 
 #endif /* OSC_H__ */

@@ -64,7 +64,6 @@ void OscMixerPage::draw_wav() {
   SawOsc saw_osc(w);
   SineOsc sine_osc(w);
   UsrOsc usr_osc(w);
-  float max_sine_gain = (float)1 / (float)16;
 
   // Work out lowest base frequency.
   float fund_freq = 20000;
@@ -92,43 +91,12 @@ void OscMixerPage::draw_wav() {
     // Render each oscillator
     for (i = 0; i < 3; i++) {
       float osc_sample = 0;
-      switch (wd.pages[i].get_osc_type()) {
-      case 0:
-        osc_sample += 0;
-        break;
-      // Sine wave with 16 overtones.
-      case 1:
-        for (uint8_t f = 1; f <= 16; f++) {
-          // osc_sample += sine_gain * sine_osc.get_sample(n,
-          // wd.pages[i].get_freq() * (float) h, 0);
-          if (wd.pages[i].sine_levels[f - 1] != 0) {
-
-            float sine_gain =
-                ((float)wd.pages[i].sine_levels[f - 1] / (float)127) *
-                max_sine_gain;
-
-            osc_sample +=
-                sine_osc.get_sample(n, freqs[i] * (float)f) * sine_gain;
-          }
-        }
-        osc_sample = (1.00f / wd.pages[i].largest_sine_peak) * osc_sample;
-        break;
-      case 2:
-        tri_osc.width = wd.pages[i].get_width();
-        osc_sample += tri_osc.get_sample(n, freqs[i]);
-        break;
-      case 3:
-        pul_osc.width = wd.pages[i].get_width();
-        osc_sample += pul_osc.get_sample(n, freqs[i]);
-        break;
-      case 4:
-        saw_osc.width = wd.pages[i].get_width();
-        osc_sample += saw_osc.get_sample(n, freqs[i]);
-        break;
-      case 5:
-        osc_sample += usr_osc.get_sample(n, freqs[i], wd.pages[i].usr_values);
-        break;
-      }
+      osc_sample =
+          render_osc_sample(wd.pages[i].get_osc_type(), wd.pages[i].get_width(),
+                            wd.pages[i].sine_levels, wd.pages[i].usr_values,
+                            wd.pages[i].largest_sine_peak, n, freqs[i],
+                            sine_osc, tri_osc, pul_osc, saw_osc, usr_osc,
+                            false);
       // Sum oscillator samples together
       sample += dsp.saturate((osc_sample * wd.mixer.get_gain(i)),
                              wd.mixer.get_max_gain());
