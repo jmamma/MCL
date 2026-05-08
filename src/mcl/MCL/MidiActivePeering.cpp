@@ -9,56 +9,13 @@
 #include "DeviceManager.h"
 #include "TurboLight.h"
 #include "ResourceManager.h"
-#ifdef PLATFORM_TBD
 #include "../Drivers/DriverRegistry.h"
-#else
-#include "../Drivers/A4/A4.h"
-#include "../Drivers/Generic/GenericMidiDevice.h"
-#include "../Drivers/MD/MD.h"
-#include "../Drivers/MNM/MNM.h"
-#endif
 #include "../Drivers/MidiDevice.h"
 
-#ifdef PLATFORM_TBD
 using DriverList = DriverRegistry::DriverList;
-
-static DriverList md_drivers() { return DriverRegistry::md_drivers(); }
-static DriverList elektron_drivers() {
-  return DriverRegistry::elektron_drivers();
-}
-static DriverList generic_drivers() { return DriverRegistry::generic_drivers(); }
-#else
-struct DriverList {
-  MidiDevice **items;
-  uint8_t count;
-};
-
-static MidiDevice *md_slot_driver_list[] = {
-    &MD,
-};
-
-static MidiDevice *elektron_slot_driver_list[] = {
-    &MNM,
-    &Analog4,
-    &generic_midi_device,
-};
-
-static MidiDevice *generic_driver_list[] = {
-    &generic_midi_device,
-};
-
-static DriverList md_drivers() {
-  return {md_slot_driver_list, countof(md_slot_driver_list)};
-}
-
-static DriverList elektron_drivers() {
-  return {elektron_slot_driver_list, countof(elektron_slot_driver_list)};
-}
-
-static DriverList generic_drivers() {
-  return {generic_driver_list, countof(generic_driver_list)};
-}
-#endif
+using DriverRegistry::elektron_drivers;
+using DriverRegistry::generic_drivers;
+using DriverRegistry::md_drivers;
 
 /// It is the caller's responsibility to check for null MidiUart device
 static MidiUartClass *_getMidiUart(uint8_t port) {
