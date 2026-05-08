@@ -44,7 +44,11 @@ public:
   };
 
   explicit SeqStepTrackApi(MDSeqTrack &track)
-      : backend_(LegacyMD), md_(&track)
+      :
+#if !defined(__AVR__)
+        backend_(LegacyMD),
+#endif
+        md_(&track)
 #if !defined(__AVR__)
         ,
         step_(nullptr)
@@ -839,9 +843,11 @@ public:
   }
 
   bool send_md_parameter_locks(uint8_t step) {
+#if !defined(__AVR__)
     if (backend_ != LegacyMD) {
       return false;
     }
+#endif
     md_->send_parameter_locks(step, true);
     return true;
   }
@@ -919,7 +925,9 @@ private:
   }
 #endif
 
+#if !defined(__AVR__)
   Backend backend_;
+#endif
   MDSeqTrack *md_;
 #if !defined(__AVR__)
   StepSeqDataTrack *step_;
