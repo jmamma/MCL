@@ -414,7 +414,9 @@ bool MDClass::probe() {
       return false;
     }
 
+#if !defined(__AVR__)
     is_spsx = (fw_caps & FW_CAP_SPSX) != 0;
+#endif
 
     turbo_light.set_speed(turbo_light.lookup_speed(
         (probe_port == UARTUSB_PORT) ? mcl_cfg.usb_turbo_speed : mcl_cfg.uart1_turbo_speed), uart);

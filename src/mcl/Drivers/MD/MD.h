@@ -80,7 +80,11 @@ public:
   // True when the connected MD firmware reports SPSX caps. Controls only
   // device-facing decisions (sysex format, kit param ranges). Does NOT mean
   // the local sequencer is in SPSX mode — see MCLSeq::using_spsx_tracks.
+#if defined(__AVR__)
+  static constexpr bool is_spsx = false;
+#else
   bool is_spsx = false;
+#endif
 
   virtual void setup_listeners();
   virtual void cleanup_listeners();
