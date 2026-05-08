@@ -195,7 +195,7 @@ void GridPage::loop() {
   int8_t diff, new_val;
   if (show_slot_menu) {
     if (param3.hasChanged()) {
-        if ((cur_grid == 0) && (getCol() + param3.cur > GRID_WIDTH)) {
+        if ((cur_grid == 0) && (getCol() + param3.cur > (int)GRID_WIDTH)) {
         old_col = getCol();
         cur_col = 0;
         param1.cur = 0;
@@ -266,7 +266,6 @@ void GridPage::loop() {
     reload_slot_models = true;
     grid_lastclock = read_clock_ms();
 
-    volatile uint8_t *ptr;
     write_cfg = true;
   }
   param3.cur = 1;
@@ -396,7 +395,6 @@ void GridPage::load_slot_models() {
 
 void GridPage::display_counters() {
   uint8_t y_offset = 8;
-  uint8_t x_offset = 20;
 
   char val[3] = "";
   val[2] = '\0';
@@ -446,12 +444,11 @@ static void draw_grid_device_label(uint8_t x, uint8_t y,
 }
 
 void GridPage::display_grid_info() {
-  uint8_t x_offset = 43;
   uint8_t y_offset = 8;
 
   oled_display.setFont(&Elektrothic);
   oled_display.setCursor(0, 10);
-  oled_display.print((uint16_t)round(MidiClock.get_tempo()));
+  oled_display.print((uint16_t)(MidiClock.get_tempo() + 0.5f));
 
   display_counters();
   oled_display.setFont(&TomThumb);
@@ -974,8 +971,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       }
     }
   }
- end:
-
  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
     proj.sync_grid(cur_grid);
   }
@@ -993,7 +988,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     load_old_col();
   }
   mcl_cfg.load_mode = load_mode_old;
-  end2:
   slot_apply = 0;
   slot_load = 0;
   slot_clear = 0;
@@ -1256,19 +1250,16 @@ bool GridPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_UP: {
-      up:
         param2.cur -= inc;
         reset_undo();
         return true;
       }
       case MDX_KEY_DOWN: {
-      down:
         param2.cur += inc;
         reset_undo();
         return true;
       }
       case MDX_KEY_LEFT: {
-      left:
         if (inc > 1) {
           inc = 4;
         }
@@ -1277,7 +1268,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_RIGHT: {
-      right:
         if (inc > 1) {
           inc = 4;
         }
@@ -1414,7 +1404,6 @@ bool GridPage::handleEvent(gui_event_t *event) {
          BUTTON_DOWN(Buttons.BUTTON4)) ||
         (EVENT_PRESSED(event, Buttons.BUTTON4) &&
          BUTTON_DOWN(Buttons.BUTTON1))) {
-    system:
       system_page.isSetup = false;
       mcl.pushPage(SYSTEM_PAGE);
       return true;

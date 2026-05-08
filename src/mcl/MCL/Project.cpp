@@ -280,7 +280,6 @@ bool Project::new_project_master_file(const char *projectname) {
     return false;
   }
 
-  uint8_t ledstatus = 0;
   ret = file.seekSet(0);
 
   if (!ret) {

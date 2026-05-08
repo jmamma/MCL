@@ -185,7 +185,6 @@ void PerfPage::update_params() {
     if (learn) {
       uint8_t scene = learn - 1;
 
-      PerfEncoder *e = perf_encoders[perf_id];
       PerfParam *p = &perf_encoders[perf_id]->perf_data.scenes[scene].params[c];
       p->dest = encoders[1]->cur;
       p->param = encoders[2]->cur;
@@ -230,11 +229,6 @@ void PerfPage::display() {
 
   oled_display.clearDisplay();
 
-  uint8_t x = mcl_gui.knob_x0 + 5;
-  uint8_t y = 8;
-  uint8_t lfo_height = 7;
-  uint8_t width = 13;
-
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   mcl_gui.draw_knob_frame();
 
@@ -263,7 +257,6 @@ void PerfPage::display() {
     if (!is_lock) {
       lock_label = mclstr_off;
       // Show the "non-lock" value
-      uint8_t c = page_mode - 1;
       v = 0; //perf_encoders[perf_id]->perf_data.scenes[scene].params[c].val;
     } else {
       v -= 1;
@@ -354,7 +347,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       uint8_t scene = learn - 1;
       uint8_t n = d->add_param(dest, param, scene, value);
       if (n < 255) {
-        if (dest + 1 <= NUM_MD_TRACKS) {
+        if (dest + 1 <= (uint8_t)NUM_MD_TRACKS) {
           key_interface.ignoreNextEvent(param - MD.currentSynthPage * 8 + 16);
         }
         page_mode = n + 1;
@@ -411,10 +404,6 @@ bool PerfPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_NOTE(event)) {
-    uint8_t mask = event->mask;
-    uint8_t port = event->port;
-    auto device = device_manager.device_for_port(port);
-
     uint8_t track = event->source;
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -591,7 +580,6 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     }
 
     if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-    page_mode_up:
       page_mode++;
       if (page_mode > NUM_PERF_PARAMS) {
         page_mode = 0;

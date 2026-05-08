@@ -32,18 +32,16 @@ bool seq_page_uses_tbd_step_tracks() {
 bool seq_page_uses_tbd_step_tracks() { return false; }
 #endif
 
-bool seq_page_uses_stepseq_conditions() {
 #if !defined(__AVR__)
+bool seq_page_uses_stepseq_conditions() {
 #if defined(PLATFORM_TBD)
   if (seq_step_api_uses_tbd_tracks() && !seq_page_uses_tbd_step_tracks()) {
     return false;
   }
 #endif
   return seq_step_api_active_track(seq_page_uses_tbd_step_tracks()).is_stepseq();
-#else
-  return false;
-#endif
 }
+#endif
 
 } // namespace
 
@@ -1002,7 +1000,6 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
         seq_extparam4.cur = length;
       });
     } else {
-      uint8_t idx = selected_track_index(false);
       selected_track(false).set_length(length);
       seq_extparam4.cur = length;
     }

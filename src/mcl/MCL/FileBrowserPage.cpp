@@ -74,7 +74,7 @@ void FileBrowserPage::get_entry(uint16_t n, char *entry, uint8_t &type) {
 }
 
 bool FileBrowserPage::add_entry(const char *entry, uint8_t type) {
-  if (numEntries >= NUM_FILE_ENTRIES) {
+  if (numEntries >= (int)NUM_FILE_ENTRIES) {
     return false;
   }
   char buf[FILE_ENTRY_SIZE];
@@ -215,7 +215,7 @@ void FileBrowserPage::draw_filebrowser() {
       mcl_print_P(mclstr_arrow_right);
     }
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
-    if (entry_num < numEntries) {
+    if (entry_num < (uint16_t)numEntries) {
       uint8_t type;
       get_entry(entry_num, temp_entry, type);
       if (type == DIR_TYPE && draw_dirs) {

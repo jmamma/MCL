@@ -64,14 +64,6 @@ uint8_t popcount32(const uint32_t bits) {
     return popcount(((uint8_t*)&(bits))[0]) + popcount(((uint8_t*)&(bits))[1]) + popcount(((uint8_t*)&(bits))[2]) + popcount(((uint8_t*)&(bits))[3]);
 }
 
-static char tohex(uint8_t i) {
-  if (i < 10) {
-    return i + '0';
-  } else {
-    return i - 10 + 'a';
-  }
-}
-
 /** Convert the string to UPPERCASE. **/
 void m_toupper(char *str) {
   char chr;

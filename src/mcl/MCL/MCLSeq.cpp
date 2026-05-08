@@ -26,21 +26,15 @@ bool seq_grid_x_runs_md_tracks() {
 #endif
 }
 
+#if defined(PLATFORM_TBD)
 bool seq_grid_x_runs_tbd_tracks() {
-#ifdef PLATFORM_TBD
   return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
-#else
-  return false;
-#endif
 }
 
 bool seq_grid_y_runs_tbd_midi_tracks() {
-#ifdef PLATFORM_TBD
   return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
-#else
-  return false;
-#endif
 }
+#endif
 
 bool seq_grid_y_runs_legacy_ext_tracks() {
 #ifdef PLATFORM_TBD
@@ -632,8 +626,6 @@ bool MCLSeq::switch_to_legacy() {
 #endif
 
 void MCLSeqMidiEvents::onNoteCallback_Midi(uint8_t *msg) {
-  uint8_t note_num = msg[1];
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t n = MD.noteToTrack(msg[1]);
   if (n < 16) {
     bool is_midi_machine = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);

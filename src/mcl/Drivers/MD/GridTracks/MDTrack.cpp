@@ -108,7 +108,6 @@ bool MDTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
 
 void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
   uint8_t n = slotnumber;
-  bool send_level = false;
   DEBUG_PRINTLN("transition send");
   switch (mcl_actions.transition_level[n]) {
   case TRANSITION_UNMUTE:
@@ -219,9 +218,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   active = MD_TRACK_TYPE;
 
   bool ret;
-  int b = 0;
   DEBUG_PRINT_FN();
-  uint32_t len;
 
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
   md_seq_track->store_mute_state();

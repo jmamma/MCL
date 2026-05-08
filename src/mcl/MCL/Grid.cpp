@@ -146,7 +146,6 @@ uint8_t Grid::get_slot_model(uint8_t column, uint16_t row, bool load) {
 bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
 
   bool ret;
-  int b;
   GridTrack temp_track;
 
   if (update_header) {

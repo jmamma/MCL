@@ -242,7 +242,6 @@ void MixerPage::init() {
   key_interface.on();
   mcl_gui.set_trigleds(0, mixer_led_mode());
   preview_mute_set = 255;
-  bool switch_tracks = false;
   oled_display.clearDisplay();
   set_display_mode(default_mixer_param());
   first_track = 255;
@@ -725,7 +724,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_PATSONGKIT: {
-        bool clear = true;
         disable_record_mutes(true);
         // key_interface.ignore_next_event(GLOBAL);
         break;

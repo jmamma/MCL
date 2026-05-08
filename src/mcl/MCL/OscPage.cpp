@@ -87,7 +87,6 @@ void OscPage::loop() {
     }
   }
 
-  int dir = 0;
   int16_t newval;
   int8_t diff = enc_->cur - enc_->old;
   for (uint8_t i = 0; i < 16; i++) {
@@ -254,7 +253,6 @@ void OscPage::draw_wav(uint8_t wav_type) {
 }
 
 void OscPage::draw_usr() {
-  uint8_t scaled_val1;
   uint8_t h = 30;
   float sample;
   uint8_t w = 128 - 64;

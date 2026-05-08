@@ -450,7 +450,7 @@ void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
 
 void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
                                       uint16_t lock_idx) {
-  uint16_t idx, end;
+  uint16_t idx;
   if (lock_idx == 0xFFFF) {
     idx = get_lockidx(step);
   } else {
@@ -499,8 +499,6 @@ void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
 }
 
 void MDSeqTrack::process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs) {
-  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
-
   uint8_t i = param - 5;
   switch (param) {
   case 0:
@@ -600,7 +598,6 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
 }
 
 void MDSeqTrack::reset_params() {
-  bool re_assign = false;
   bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
   if (is_midi_model) {
     uint8_t ccs[midi_cc_array_size];
@@ -863,8 +860,6 @@ void MDSeqTrack::record_track(uint8_t velocity) {
 
 void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
                                 uint8_t velocity) {
-  uint8_t condition = 0;
-
   //  timing = 3;
   // condition = 3;
   if (MidiClock.state != 2) {

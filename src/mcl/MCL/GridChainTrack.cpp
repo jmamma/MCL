@@ -24,9 +24,7 @@ bool GridChainTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_t
                               uint8_t merge, bool online) {
   active = GRIDCHAIN_TRACK_TYPE;
   bool ret;
-  int b = 0;
   DEBUG_PRINT_FN();
-  uint32_t len;
 
   if (column != 255 && online == true) {
     get_chains();

@@ -259,7 +259,6 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
       len++;
     }
   }
-  end:
   if (idx >= len) {
     idx = len - 1;
   }

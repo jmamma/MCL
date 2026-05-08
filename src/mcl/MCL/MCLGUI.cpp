@@ -274,11 +274,7 @@ void MCLGUI::draw_progress_bar(uint8_t cur, uint8_t _max, bool deferred_display,
   oled_display.fillRect(x_pos + 1, y_pos + 1, progx - x_pos - 1,
                         height - 2, WHITE);
 
-  uint8_t shift = 1;
-
   // draw the '///////' pattern, using circular shifting
-  uint8_t x = 0;
-
   uint8_t bitmask = s_progress_cookie;
   uint8_t temp_bitmask = s_progress_cookie;
 
@@ -459,7 +455,7 @@ bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
 
   if (match != 255) {
     if (clock_diff(((LightPage *)GUI.currentPage())->encoders_used_clock[match],
-                   read_clock_ms()) < timeout || BUTTON_DOWN(Buttons.ENCODER1 + match)) {
+                   read_clock_ms()) < (uint16_t)timeout || BUTTON_DOWN(Buttons.ENCODER1 + match)) {
       return true;
     } else {
       ((LightPage *)GUI.currentPage())->encoders_used_clock[match] =

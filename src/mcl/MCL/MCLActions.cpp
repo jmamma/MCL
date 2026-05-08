@@ -497,7 +497,6 @@ void MCLActions::manual_transition(uint8_t *slot_select_array,
 again:
   bool overflow = next_step < MidiClock.div16th_counter;
   uint8_t row = grid_task.next_active_row;
-  uint16_t div16th_counter = MidiClock.div16th_counter;
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
 
@@ -845,8 +844,6 @@ void MCLActions::cache_track(uint8_t n, GridDeviceTrack* gdt, uint8_t track_idx)
 void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                                    bool gui_update) {
 
-  const uint8_t div32th_margin = 1;
-
   uint16_t tempo_uint = (uint16_t)MidiClock.get_tempo();
 
   uint8_t n = NUM_SLOTS;
@@ -914,7 +911,8 @@ void MCLActions::calc_next_slot_transition(uint8_t n,
   }
 
   // next transition[n] already valid, use this.
-  if (next_transitions[n] == -1 || (next_transitions[n] > next_transition && !ignore_overflow)) {
+  if (next_transitions[n] == (uint16_t)-1 ||
+      (next_transitions[n] > next_transition && !ignore_overflow)) {
     return;
   }
 
@@ -961,14 +959,12 @@ void MCLActions::calc_next_transition() {
   DEBUG_PRINTLN(F("calc_next_transition"));
   next_transition = (uint16_t)-1;
   // DEBUG_PRINT_FN();
-  int8_t slot = -1;
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (grid_page.active_slots[n] != SLOT_DISABLED) {
       if ((links[n].loops > 0)) {
         // && (links[n].row != grid_page.active_slots[n])) || links[n].length) {
         if (MidiClock.clock_less_than(next_transitions[n], next_transition)) {
           next_transition = next_transitions[n];
-          slot = n;
         }
       }
     }

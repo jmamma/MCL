@@ -503,7 +503,7 @@ void ElektronDevice::setKitName(const char *name, MidiUartClass *uart_) {
 }
 
 uint8_t ElektronDevice::setTempo(float tempo, bool send) {
-  uint16_t qtempo = round(tempo * 24.0f);
+  uint16_t qtempo = (uint16_t)(tempo * 24.0f + 0.5f);
   uint8_t data[3] = {sysex_protocol.tempo_set_id, (uint8_t)(qtempo >> 7),
                      (uint8_t)(qtempo & 0x7F)};
   return sendRequest(data, countof(data), send);

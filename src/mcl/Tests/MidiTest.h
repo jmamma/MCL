@@ -60,6 +60,7 @@ private:
       ids[1] = 0x13;
       ids[2] = 0x37;
     }
+    virtual ~TestSysexListener() {}
 
     virtual void end() {
       DEBUG_PRINTLN("Received SYSEX:");

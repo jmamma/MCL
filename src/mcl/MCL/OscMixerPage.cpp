@@ -87,7 +87,6 @@ void OscMixerPage::draw_wav() {
   }
   // float buffer[w];
   oled_display.fillRect(sample_number + x, 0, scanline_width, 32, BLACK);
-  float largest_sample_so_far;
   for (uint32_t n = sample_number; n < scanline_width + sample_number; n++) {
     float sample = 0;
     // Render each oscillator
@@ -164,7 +163,6 @@ void OscMixerPage::draw_wav() {
 
 void OscMixerPage::draw_levels() {
   uint8_t scaled_level;
-  char str[17] = "                ";
   for (uint8_t i = 0; i < 3; i++) {
 
     scaled_level = (uint8_t)(((float)encoders[i]->cur / (float)127) * 15);

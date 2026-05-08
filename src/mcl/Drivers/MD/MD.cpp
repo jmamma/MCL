@@ -380,7 +380,6 @@ void MDClass::get_mutes() {
 bool MDClass::probe() {
   DEBUG_PRINT_FN();
 
-  bool ts = md_track_select.state;
   bool ti = key_interface.state;
 
   md_track_select.off();
@@ -454,7 +453,6 @@ bool MDClass::probe() {
   }
 
   else {
-  abort:
     DEBUG_PRINTLN(F("delay"));
     mcl_gui.delay_progress(4600);
   }

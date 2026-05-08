@@ -391,19 +391,15 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   }
 
   else {
-    uint32_t num_of_samples =
+    num_of_samples =
         (header.data.chunk_size / header.fmt.numChannels) / sample_size;
   }
 
-  int16_t buffer_size = 512;
+  const uint16_t buffer_size = 512;
 
   uint8_t buffer[buffer_size];
 
-  int16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
-
-  int32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
-
-  uint8_t word_offset = 4 - sample_size;
+  uint16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
 
   DEBUG_DUMP(sample_size);
   DEBUG_DUMP(header.fmt.bitRate);
@@ -520,16 +516,16 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
         (header.data.chunk_size / header.fmt.numChannels) / sample_size;
   }
 
-  int16_t buffer_size = 512;
+  const uint16_t buffer_size = 512;
 
   uint8_t buffer[buffer_size];
 
-  int16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
+  uint16_t read_size = buffer_size / (sample_size * header.fmt.numChannels);
 
   int16_t sample_val16 = 0;
   __int24 sample_val24 = 0;
 
-  uint32_t sample_max = (pow(2, header.fmt.bitRate) / 2);
+  uint32_t sample_max = UINT32_C(1) << (header.fmt.bitRate - 1);
   bool write_header = false;
   DEBUG_PRINTLN(F("read_size"));
   DEBUG_PRINTLN(read_size);
@@ -540,10 +536,11 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
 
   bool is_signed;
 
-  for (int32_t n = 0; n < sample_index + num_of_samples; n += read_size) {
+  uint32_t sample_end = sample_index + num_of_samples;
+  for (uint32_t n = 0; n < sample_end; n += read_size) {
     // Adjust read size if too large
-    if (n + read_size > sample_index + num_of_samples) {
-      read_size = sample_index + num_of_samples - n;
+    if (n + read_size > sample_end) {
+      read_size = sample_end - n;
     }
     // Read read_size samples.
 
@@ -564,7 +561,7 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
           sample_val16 = ((int16_t *)&buffer)[buf_index];
           sample_val16 = (int16_t)((float)sample_val16 * (float)gain);
           is_signed = (sample_val16 < 0);
-          if (abs(sample_val16) > sample_max) {
+          if ((uint32_t)abs(sample_val16) > sample_max) {
             sample_val16 = sample_max;
             if (is_signed) {
               sample_val16 *= -1;
@@ -579,7 +576,7 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
           sample_val24 = ((__int24 *)&buffer)[buf_index];
           sample_val24 = (__int24)((float)sample_val24 * (float)gain);
           is_signed = ((int32_t)sample_val24 < 0);
-          if (abs(sample_val24) > sample_max) {
+          if ((uint32_t)abs(sample_val24) > sample_max) {
             sample_val24 = sample_max;
             if (is_signed) {
               sample_val24 *= -1;
@@ -608,4 +605,3 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
 
     return true;
 }
-

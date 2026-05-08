@@ -55,27 +55,6 @@ static void get_category_name_by_idx(uint8_t catidx, char *str) {
   }
 }
 
-static void get_category_name(uint8_t page_number, char *str) {
-  uint8_t pageidx, catidx;
-
-  pageidx = get_pageidx(page_number);
-  if (pageidx >= R.page_entries->countof_Entries) {
-    goto get_category_name_fail;
-  }
-  catidx = R.page_entries->Entries[pageidx].CategoryId;
-  if (catidx >= n_category) {
-    goto get_category_name_fail;
-  }
-  get_category_name_by_idx(catidx, str);
-  return;
-
-get_category_name_fail:
-  if (str) {
-    strcpy_P(str, mclstr_four_dashes);
-  }
-  return;
-}
-
 void PageSelectPage::init() {
   DEBUG_PRINTLN("page select init");
   key_interface.on();

@@ -10,21 +10,22 @@ void Osc::set_sample_rate(float hz) { sample_rate = hz; }
 
 float Osc::poly_blep(float t, float freq) {
 
-    float phase_inc = (freq * 2.0 * PI) / (float) sample_rate;
-    float dt = phase_inc / (2.0 * PI);
+    const float two_pi = 2.0f * (float)PI;
+    float phase_inc = (freq * two_pi) / (float) sample_rate;
+    float dt = phase_inc / two_pi;
 
     // 0 <= t < 1
     if (t < dt) {
         t /= dt;
-        return t+t - t*t - 1.0;
+        return t + t - t * t - 1.0f;
     }
     // -1 < t < 0
-    else if (t > 1.0 - dt) {
-        t = (t - 1.0) / dt;
-        return t*t + t+t + 1.0;
+    else if (t > 1.0f - dt) {
+        t = (t - 1.0f) / dt;
+        return t * t + t + t + 1.0f;
     }
     // 0 otherwise
-    else return 0.0;
+    else return 0.0f;
 }
 
 
@@ -32,18 +33,18 @@ float SineOsc::get_sample(uint32_t sample_number, float freq) {
 
   float sample_duration = (float)1 / (float)sample_rate;
   // float sample_duration = (float) 1 / (float) freq;
-  return -1 * sin(2 * PI * freq * sample_number * sample_duration);
+  return -sinf((2.0f * (float)PI) * freq * sample_number * sample_duration);
   // return sin(radians * sample_time);
 }
 
 float PulseOsc::get_sample(uint32_t sample_number, float freq) {
 
-  float n_cycle = floor(sample_rate / freq);
+  float n_cycle = floorf(sample_rate / freq);
 
   sample_number = sample_number + (n_cycle);
-  float n =
-      (float)sample_number - (float)floor(sample_number / n_cycle) * n_cycle;
-  float n_edge = floor(n_cycle * width);
+  float cycle_pos = (float)floorf((float)sample_number / n_cycle);
+  float n = (float)sample_number - cycle_pos * n_cycle;
+  float n_edge = floorf(n_cycle * width);
 
   float out = 0.0;
 
@@ -69,12 +70,12 @@ void PulseOsc::set_skew(float skew_) { skew = skew_; }
 
 float SawOsc::get_sample(uint32_t sample_number, float freq) {
 
-  float n_cycle = floor(sample_rate / freq);
-  sample_number = sample_number + (n_cycle * .5);
-  float n =
-      (float)sample_number - (float)floor(sample_number / n_cycle) * n_cycle;
+  float n_cycle = floorf(sample_rate / freq);
+  sample_number = sample_number + (n_cycle * 0.5f);
+  float cycle_pos = (float)floorf((float)sample_number / n_cycle);
+  float n = (float)sample_number - cycle_pos * n_cycle;
 
-  float n_edge = floor(n_cycle * (width + .5));
+  float n_edge = floorf(n_cycle * (width + 0.5f));
   float a = ((vmin - vmax) / n_edge);
   float b = vmax;
   float y = a * n + b;
@@ -91,11 +92,12 @@ float SawOsc::get_sample(uint32_t sample_number, float freq) {
 }
 
 float TriOsc::get_sample(uint32_t sample_number, float freq) {
-  float n_cycle = floor(sample_rate / freq);
-  sample_number = sample_number + (n_cycle * .75);
+  float n_cycle = floorf(sample_rate / freq);
+  sample_number = sample_number + (n_cycle * 0.75f);
 
-  float n = sample_number - floor(sample_number / n_cycle) * n_cycle;
-  float n_edge = floor(n_cycle * width);
+  float cycle_pos = (float)floorf((float)sample_number / n_cycle);
+  float n = (float)sample_number - cycle_pos * n_cycle;
+  float n_edge = floorf(n_cycle * width);
 
   if (n < n_edge) {
     float b = vmin;
@@ -113,13 +115,14 @@ float TriOsc::get_sample(uint32_t sample_number, float freq) {
 float UsrOsc::get_sample(uint32_t sample_number, float freq,
                          uint8_t *usr_values) {
 
-  float n_cycle = floor(sample_rate / freq);
+  float n_cycle = floorf(sample_rate / freq);
 
-  float n = sample_number - floor(sample_number / n_cycle) * n_cycle;
+  float cycle_pos = (float)floorf((float)sample_number / n_cycle);
+  float n = (float)sample_number - cycle_pos * n_cycle;
 
   float partition_size_n = n_cycle / (float)16;
 
-  int start = floor(n / partition_size_n);
+  int start = floorf(n / partition_size_n);
   float n_start = start * partition_size_n;
   int end;
   float n_end;

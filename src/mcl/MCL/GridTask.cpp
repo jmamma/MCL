@@ -126,17 +126,10 @@ void GridTask::wait_blocking(uint32_t go_step) {
 }
 
 void GridTask::transition_handler() {
-  MidiDevice *devs[2] = {
-      device_manager.primary_device(),
-      device_manager.secondary_device(),
-  };
-
   bool send_device[2] = {0};
 
   uint8_t slots_changed[NUM_SLOTS];
   uint8_t track_select_array[NUM_SLOTS] = {0};
-
-  uint8_t div32th_margin = 6;
 
   while (!MidiClock.clock_less_than(
       MidiClock.div32th_counter + max(2u, ((uint16_t)MidiClock.get_tempo() * 32u + 999u) / 1000u),
@@ -266,12 +259,15 @@ void GridTask::transition_handler() {
 //    wait_blocking(go_step);
 //#endif
 
-    volatile uint32_t clk = read_clock_ms();
+#ifdef DEBUGMODE
+    uint32_t clk = read_clock_ms();
+#endif
     mcl_actions.cache_next_tracks(track_select_array, update_gui);
     gui_update();
-    uint32_t t = clock_diff(clk, read_clock_ms());
+#ifdef DEBUGMODE
     DEBUG_PRINTLN("time");
-    DEBUG_PRINTLN(t);
+    DEBUG_PRINTLN(clock_diff(clk, read_clock_ms()));
+#endif
 
 
     // Once tracks are cached, we can calculate their next transition

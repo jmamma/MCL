@@ -159,7 +159,6 @@ struct WavReader : SDSFileReader {
     }
 
     uint8_t n = 0, byte_count = 0;
-    int32_t encode_val;
     const uint8_t max_n = 120 - midi_bytes_per_word;
 
     while (n <= max_n && (samples_sent + byte_count / bytes_per_word) < total_samples) {

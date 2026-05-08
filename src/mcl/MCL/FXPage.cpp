@@ -54,7 +54,6 @@ void FXPage::loop() {
       uint8_t fx_param = params[n].param;
       uint8_t fx_type = params[n].type;
 
-      uint8_t val;
       MD.setFXParam(fx_param, enc->cur, fx_type, true);
     }
   }

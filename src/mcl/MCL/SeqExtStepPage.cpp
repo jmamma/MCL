@@ -69,8 +69,6 @@ void SeqExtStepPage::setup() {
 }
 void SeqExtStepPage::config() {
   // config info labels
-  constexpr uint8_t len1 = sizeof(info1);
-
   strcpy_P(info2, mclstr_ext);
   // config menu
   config_as_trackedit();
@@ -236,17 +234,8 @@ void SeqExtStepPage::draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2,
 
 void SeqExtStepPage::draw_lockeditor() {
   auto active_track = active_ext_step_track();
-  uint16_t timing_mid = active_track.ticks_per_step();
 
   // Absolute piano roll dimensions
-  uint8_t pattern_end_fov_x = fov_w;
-
-  if (is_within_fov(roll_length)) {
-    pattern_end_fov_x =
-        min(fov_w, (uint8_t)(((int32_t)fov_pixels_per_tick *
-                              (roll_length - fov_offset)) >>
-                             8));
-  }
 
   uint16_t ev_idx = 0, ev_end = 0, ev_j_end;
   uint8_t j = 0;
@@ -396,7 +385,6 @@ void SeqExtStepPage::draw_pianoroll() {
   auto active_track = active_ext_step_track();
   uint16_t timing_mid = active_track.ticks_per_step();
 
-  uint8_t roll_height = 127; // 127, Notes.
   // Absolute piano roll dimensions
 
   uint8_t pattern_end_fov_x = fov_w;
@@ -409,7 +397,6 @@ void SeqExtStepPage::draw_pianoroll() {
   }
 
   uint16_t ev_idx = 0, ev_end = 0;
-  uint8_t h = fov_h / fov_notes;
   for (uint8_t i = 0; i < active_track.length(); i++) {
     // Update bucket index range
     ev_end += active_track.event_bucket_size(i);
@@ -422,7 +409,6 @@ void SeqExtStepPage::draw_pianoroll() {
       if (ev.is_lock || !ev.event_on) {
         continue;
       }
-      bool note_beyond_fov = false;
       uint16_t note_off_idx = ev_idx;
       uint8_t j =
           active_track.search_note_off(note_val, i, note_off_idx, ev_end);
@@ -958,8 +944,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
-  bool ignore_clear = false;
-
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
 #ifdef PLATFORM_TBD
@@ -1082,7 +1066,6 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     } else {
       switch (key) {
       case MDX_KEY_YES: {
-        ignore_clear = true;
         goto YES;
       }
       }

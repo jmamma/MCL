@@ -276,7 +276,6 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   if (PerfPageParent::handleEvent(event)) { return true; }
 
   if (EVENT_NOTE(event)) {
-    uint8_t mask = event->mask;
     uint8_t port = event->port;
     auto device = device_manager.device_for_port(port);
 

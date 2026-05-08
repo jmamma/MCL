@@ -3,7 +3,7 @@
 
 class StackMonitor {
 private:
-    static constexpr uint32_t STACK_WARN_THRESHOLD = 1024;  // Warning at 1K left
+    static constexpr int32_t STACK_WARN_THRESHOLD = 1024;  // Warning at 1K left
 
     // These match the linker script exactly
     static constexpr uint32_t SCRATCH_X_START = 0x20080000;

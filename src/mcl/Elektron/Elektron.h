@@ -217,10 +217,10 @@ public:
   virtual uint16_t toSysex(ElektronDataToSysexEncoder *encoder) = 0;
 };
 
-#define FW_CAP_LOW(x) (1 << x)
-#define FW_CAP_HIGH(x) (FW_CAP_LOW(x + 8))
-#define FW_CAP_HIGHER(x) (FW_CAP_LOW(x + 16))
-#define FW_CAP_HIGHEST(x) (FW_CAP_LOW(x + 24))
+#define FW_CAP_LOW(x) (UINT32_C(1) << (x))
+#define FW_CAP_HIGH(x) (FW_CAP_LOW((x) + 8))
+#define FW_CAP_HIGHER(x) (FW_CAP_LOW((x) + 16))
+#define FW_CAP_HIGHEST(x) (FW_CAP_LOW((x) + 24))
 
 //#define FW_CAP_DEBUG        FW_CAP_LOW(0)
 #define FW_CAP_TRIG_INTERFACE FW_CAP_LOW(1)

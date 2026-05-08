@@ -111,10 +111,9 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
                              bool online, Grid *grid) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track
-   * object*/
+  * object*/
   bool ret;
 
-  int b = 0;
   if (grid == nullptr) { DEBUG_PRINTLN("grid is nullptr"); }
 
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;

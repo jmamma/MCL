@@ -152,7 +152,6 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
 }
 
 void LFOSeqTrack::reset_params() {
-  uint16_t mod12_counter = MidiClock.mod12_counter;
 //  while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {}; 
 
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {

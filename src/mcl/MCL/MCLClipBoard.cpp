@@ -196,7 +196,6 @@ bool MCLClipBoard::paste_sequencer_track(uint8_t source_track, uint8_t track) {
 
   if (gdt == nullptr) { return false; }
 
-  uint8_t grid_idx = track >> 4;
   uint8_t source_grid_idx = source_track >> 4;
 
   if (!open()) {
@@ -251,7 +250,7 @@ bool MCLClipBoard::copy(uint8_t col, uint16_t row, uint8_t w, uint16_t h) {
   DEBUG_PRINTLN(row);
   DEBUG_PRINTLN(w);
 
-  for (int y = 0; y < h; y++) {
+  for (uint8_t y = 0; y < h; y++) {
     if (h > 4) {
       mcl_gui.draw_progress("", y, h);
     }
@@ -356,7 +355,7 @@ bool MCLClipBoard::paste(uint8_t col, uint16_t row) {
       int16_t link_row_offset = ptrack->link.row - t_row;
 
       int16_t new_link_row = row + link_row_offset;
-      if (new_link_row >= GRID_LENGTH) {
+      if (new_link_row >= (int16_t)GRID_LENGTH) {
         new_link_row = y + row;
       } else if (new_link_row < 0) {
         new_link_row = y + row;

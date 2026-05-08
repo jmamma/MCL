@@ -158,7 +158,6 @@ void mclsys_apply_config_midi() {
 
 bool MCLSysConfig::write_cfg() {
   bool ret;
-  int b;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Writing cfg"));
@@ -182,7 +181,6 @@ bool MCLSysConfig::write_cfg() {
 
 bool MCLSysConfig::cfg_init() {
   bool ret;
-  int b;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Initialising cfgfile"));

@@ -232,7 +232,6 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
     return;
   }
 
-  uint8_t number_of_options = get_menu()->get_number_of_options(item_n);
   if (get_menu()->get_option_range(item_n) > 0) {
 
     mcl_print_P(mclstr_space);

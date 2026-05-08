@@ -39,7 +39,6 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
   active = A4_TRACK_TYPE;
 
   bool ret;
-  int b = 0;
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("storing a4 track"));
 

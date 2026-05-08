@@ -485,9 +485,10 @@ __attribute__((weak)) health_status health_check() {
 void sdcard_bench() {
 
   EmptyTrack empty_track;
-  DeviceTrack *ptrack;
   while (1) {
+#ifdef DEBUGMODE
     uint16_t cl = read_clock_ms();
+#endif
     for (uint8_t n = 0; n < 16; n++) {
       auto *ptrack = empty_track.load_from_grid_512(n, 0);
       ptrack->init_track_type(MD_TRACK_TYPE);
@@ -504,9 +505,11 @@ void sdcard_bench() {
       if (ptrack) ptrack->store_in_mem(0);
       CLEAR_LOCK();
     }
+#ifdef DEBUGMODE
     uint16_t diff = clock_diff(cl, read_clock_ms());
     DEBUG_PRINT("Clock :");
     DEBUG_PRINTLN(diff);
+#endif
   }
 }
 

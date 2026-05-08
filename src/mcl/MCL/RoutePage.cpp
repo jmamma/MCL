@@ -25,8 +25,6 @@ void RoutePage::draw_routes() {
   mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, 0, 0, -1, 16, mute_mask,
                      slide_mask);
 
-  char cur;
-
   oled_display.setFont(&TomThumb);
 
   /*Display 16 track routes on screen,

@@ -7,8 +7,6 @@
 const char *c_snd_root = "/Sounds";
 const char *c_snd_suffix = ".snd";
 
-static bool s_query_returned = false;
-
 void SoundBrowserPage::setup() {
   char path[64];
   SD.mkdir(mcl_sd.full_path(c_snd_root, path, sizeof(path)), true);
@@ -43,7 +41,7 @@ void SoundBrowserPage::save_sound() {
 
   MDSound sound;
   char sound_name[8];
-  uint8_t l = min(strlen(MD.kit.name),4);
+  uint8_t l = min((uint8_t)strlen(MD.kit.name), (uint8_t)4);
   memcpy(sound_name, MD.kit.name, l);
   const char *tmp = getMDMachineNameShort(MD.kit.get_model(MD.currentTrack), 2);
   if (tmp) {

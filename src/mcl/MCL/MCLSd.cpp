@@ -77,9 +77,6 @@ const char *MCLSd::full_path(const char *path, char *buffer, size_t size) {
 }
 #endif
 bool MCLSd::load_init() {
-  bool ret = false;
-  int b;
-
   if (sd_state) {
     char path[64];
     if (mcl_cfg.cfgfile.open(full_path("/config.mcls", path, sizeof(path)), O_RDWR)) {
@@ -165,7 +162,6 @@ bool MCLSd::seek(uint32_t pos, File *filep) {
 }
 
 bool MCLSd::write_data(void *data, size_t len, File *filep) {
-  bool ret;
   uint32_t pos = filep->curPosition();
   uint8_t n = 0;
 
@@ -177,7 +173,7 @@ bool MCLSd::write_data(void *data, size_t len, File *filep) {
     DEBUG_PRINTLN("write retry");
     delay(20);
     write_fail++;
-    ret = filep->seekSet(pos);
+    filep->seekSet(pos);
     n++;
   } while (n < SD_MAX_RETRIES);
 
@@ -188,7 +184,6 @@ bool MCLSd::write_data(void *data, size_t len, File *filep) {
    Function for reading from the project file
 */
 bool MCLSd::read_data(void *data, size_t len, File *filep) {
-  bool ret;
   uint32_t pos = filep->curPosition();
   uint8_t n = 0;
 
@@ -200,7 +195,7 @@ bool MCLSd::read_data(void *data, size_t len, File *filep) {
     DEBUG_PRINTLN("read retry");
     delay(20);
     read_fail++;
-    ret = filep->seekSet(pos);
+    filep->seekSet(pos);
     n++;
   } while (n < SD_MAX_RETRIES);
 

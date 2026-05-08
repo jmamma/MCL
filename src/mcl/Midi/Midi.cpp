@@ -109,6 +109,9 @@ again:
     return;
 
   switch (in_state) {
+  case midi_wait_sysex:
+    break;
+
   case midi_ignore_message:
     if (MIDI_IS_STATUS_BYTE(byte)) {
       in_state = midi_wait_status;
