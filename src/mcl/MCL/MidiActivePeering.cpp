@@ -9,8 +9,56 @@
 #include "DeviceManager.h"
 #include "TurboLight.h"
 #include "ResourceManager.h"
+#ifdef PLATFORM_TBD
 #include "../Drivers/DriverRegistry.h"
+#else
+#include "../Drivers/A4/A4.h"
+#include "../Drivers/Generic/GenericMidiDevice.h"
+#include "../Drivers/MD/MD.h"
+#include "../Drivers/MNM/MNM.h"
+#endif
 #include "../Drivers/MidiDevice.h"
+
+#ifdef PLATFORM_TBD
+using DriverList = DriverRegistry::DriverList;
+
+static DriverList md_drivers() { return DriverRegistry::md_drivers(); }
+static DriverList elektron_drivers() {
+  return DriverRegistry::elektron_drivers();
+}
+static DriverList generic_drivers() { return DriverRegistry::generic_drivers(); }
+#else
+struct DriverList {
+  MidiDevice **items;
+  uint8_t count;
+};
+
+static MidiDevice *md_slot_driver_list[] = {
+    &MD,
+};
+
+static MidiDevice *elektron_slot_driver_list[] = {
+    &MNM,
+    &Analog4,
+    &generic_midi_device,
+};
+
+static MidiDevice *generic_driver_list[] = {
+    &generic_midi_device,
+};
+
+static DriverList md_drivers() {
+  return {md_slot_driver_list, countof(md_slot_driver_list)};
+}
+
+static DriverList elektron_drivers() {
+  return {elektron_slot_driver_list, countof(elektron_slot_driver_list)};
+}
+
+static DriverList generic_drivers() {
+  return {generic_driver_list, countof(generic_driver_list)};
+}
+#endif
 
 /// It is the caller's responsibility to check for null MidiUart device
 static MidiUartClass *_getMidiUart(uint8_t port) {
@@ -59,7 +107,7 @@ static uint8_t portToLogicalIdx(uint8_t port) {
 }
 
 static bool resource_loaded = false;
-static void prepare_display(uint8_t *buf) {
+static void prepare_display() {
   oled_display.clearDisplay();
   oled_display.setFont();
   oled_display.setCursor(60, 10);
@@ -71,8 +119,7 @@ static void prepare_display(uint8_t *buf) {
   }
 }
 
-static void disconnect_driver_list(DriverRegistry::DriverList drivers,
-                                   uint8_t device_idx, uint8_t port,
+static void disconnect_driver_list(DriverList drivers, uint8_t device_idx, uint8_t port,
                                    MidiUartClass *pmidi) {
   const bool reset_turbo = device_manager.port_is_elektron(port);
 
@@ -84,11 +131,9 @@ static void disconnect_driver_list(DriverRegistry::DriverList drivers,
   }
 }
 
-static DriverRegistry::DriverList drivers_for_slot(uint8_t slot_idx,
-                                                   bool force_generic) {
-  if (force_generic) return DriverRegistry::generic_drivers();
-  return slot_idx == SLOT_MD ? DriverRegistry::md_drivers()
-                             : DriverRegistry::elektron_drivers();
+static DriverList drivers_for_slot(uint8_t slot_idx, bool force_generic) {
+  if (force_generic) return generic_drivers();
+  return slot_idx == SLOT_MD ? md_drivers() : elektron_drivers();
 }
 
 void MidiActivePeering::disconnect(uint8_t port) {
@@ -100,8 +145,8 @@ void MidiActivePeering::disconnect(uint8_t port) {
   }
 #ifdef PLATFORM_TBD
   if (port == UARTP4_PORT) {
-    disconnect_driver_list(DriverRegistry::generic_drivers(), 0, port, pmidi);
-    disconnect_driver_list(DriverRegistry::generic_drivers(), 1, port, pmidi);
+    disconnect_driver_list(generic_drivers(), 0, port, pmidi);
+    disconnect_driver_list(generic_drivers(), 1, port, pmidi);
     MidiDevice *attached = device_manager.device_for_port(port);
     if (attached != &null_midi_device) {
       attached->disconnect(0);
@@ -111,20 +156,19 @@ void MidiActivePeering::disconnect(uint8_t port) {
     return;
   }
 #endif
-  DriverRegistry::DriverList drivers = DriverRegistry::generic_drivers();
+  DriverList drivers = generic_drivers();
   uint8_t device_idx;
   if (port == UART1_PORT) {
-    drivers = DriverRegistry::md_drivers();
+    drivers = md_drivers();
     device_idx = 0;
   } else if (port == UART2_PORT) {
-    drivers = DriverRegistry::elektron_drivers();
+    drivers = elektron_drivers();
     device_idx = 1;
   } else if (port == UARTUSB_PORT) {
     // USB port can host either MD-slot or ELEKT-slot drivers.
-    drivers = DriverRegistry::md_drivers();
+    drivers = md_drivers();
     device_idx = portToLogicalIdx(port);
-    disconnect_driver_list(DriverRegistry::elektron_drivers(), device_idx,
-                           port, pmidi);
+    disconnect_driver_list(elektron_drivers(), device_idx, port, pmidi);
   } else {
     return;
   }
@@ -152,8 +196,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   device_manager.attach_port(port, driver);
 }
 
-static void probePort(uint8_t port, DriverRegistry::DriverList drivers,
-                      uint8_t *resource_buf) {
+static void probePort(uint8_t port, DriverList drivers) {
   MidiUartClass *pmidi = _getMidiUart(port);
   auto *pmidi_class = _getMidiClass(port);
   if (!pmidi || !pmidi_class)
@@ -191,7 +234,7 @@ static void probePort(uint8_t port, DriverRegistry::DriverList drivers,
       MidiIDSysexListener.setup(pmidi_class);
 
       auto oldfont = oled_display.getFont();
-      prepare_display(resource_buf);
+      prepare_display();
       uint8_t *icon = driver->icon();
       if (icon) {
         oled_display.drawBitmap(14, 8, icon, 34, 24, WHITE);
@@ -224,7 +267,6 @@ static void probePort(uint8_t port, DriverRegistry::DriverList drivers,
 bool usb_set_speed = true;
 
 void MidiActivePeering::run() {
-  byte resource_buf[RM_BUFSIZE];
   resource_loaded = false;
 
   // Setting USB turbo speed too early can cause OS upload to fail
@@ -245,15 +287,13 @@ void MidiActivePeering::run() {
   if (s[SLOT_MD].port && !s[SLOT_MD].off) {
     bool is_gener = (s[SLOT_MD].port == UART1_PORT && mcl_cfg.uart1_device == 0) ||
                     (s[SLOT_MD].port == UART2_PORT && mcl_cfg.uart2_device == 0);
-    probePort(s[SLOT_MD].port, drivers_for_slot(SLOT_MD, is_gener),
-              resource_buf);
+    probePort(s[SLOT_MD].port, drivers_for_slot(SLOT_MD, is_gener));
   }
 #ifdef EXT_TRACKS
   if (s[SLOT_ELEKT].port && !s[SLOT_ELEKT].off) {
     bool is_gener = (s[SLOT_ELEKT].port == UART1_PORT && mcl_cfg.uart1_device == 0) ||
                     (s[SLOT_ELEKT].port == UART2_PORT && mcl_cfg.uart2_device == 0);
-    probePort(s[SLOT_ELEKT].port, drivers_for_slot(SLOT_ELEKT, is_gener),
-              resource_buf);
+    probePort(s[SLOT_ELEKT].port, drivers_for_slot(SLOT_ELEKT, is_gener));
   }
   if (resource_loaded) {
     // XXX restoring resources after the peering display doesn't work yet.
@@ -266,13 +306,11 @@ void MidiActivePeering::run() {
   uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
 
   if (mcl_cfg.uart1_device != 2) {
-    probePort(md_port, drivers_for_slot(SLOT_MD, mcl_cfg.uart1_device == 0),
-              resource_buf);
+    probePort(md_port, drivers_for_slot(SLOT_MD, mcl_cfg.uart1_device == 0));
   }
 #ifdef EXT_TRACKS
   if (mcl_cfg.uart2_device != 2) {
-    probePort(ext_port, drivers_for_slot(SLOT_ELEKT, mcl_cfg.uart2_device == 0),
-              resource_buf);
+    probePort(ext_port, drivers_for_slot(SLOT_ELEKT, mcl_cfg.uart2_device == 0));
   }
   if (resource_loaded) {
     // XXX restoring resources after the peering display doesn't work yet.
