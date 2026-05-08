@@ -19,7 +19,6 @@ class SeqPageMidiEvents : public MidiCallback, public ClockCallback {
 public:
   void setup_callbacks();
   void remove_callbacks();
-  virtual void onControlChangeCallback_Midi(uint8_t *msg);
   void onMidiStartCallback();
 };
 

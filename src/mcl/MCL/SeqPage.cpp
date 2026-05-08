@@ -1733,17 +1733,9 @@ void SeqPageMidiEvents::onMidiStartCallback() {
 void SeqPageMidiEvents::setup_callbacks() {
   MidiClock.addOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&SeqPageMidiEvents::onMidiStartCallback);
-  //   Midi.addOnControlChangeCallback(
-  //      this,
-  //      (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
 
 void SeqPageMidiEvents::remove_callbacks() {
   MidiClock.removeOnMidiStartCallback(
       this, (midi_clock_callback_ptr_t)&SeqPageMidiEvents::onMidiStartCallback);
-  //  Midi.removeOnControlChangeCallback(
-  //      this,
-  //    (midi_callback_ptr_t)&SeqPageMidiEvents::onControlChangeCallback_Midi);
 }
-
-void SeqPageMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
