@@ -90,6 +90,32 @@ void apply_physical_port(uint8_t port, MidiUartClass *uart,
   }
 }
 
+void cfg_send_forwards(uint8_t mode, MidiUartClass *recv,
+                       bool block_first_when_recv,
+                       MidiUartClass *&first, MidiUartClass *first_target,
+                       MidiUartClass *&second, MidiUartClass *second_target) {
+  first = nullptr;
+  second = nullptr;
+  if ((mode & 1) && !(recv == first_target && block_first_when_recv)) {
+    first = first_target;
+  }
+  if (mode & 2) {
+    second = second_target;
+  }
+}
+
+void cfg_midi_forwards(MidiClass &midi, uint8_t mode, MidiUartClass *first,
+                       MidiUartClass *second) {
+  midi.uart_forward[0] = nullptr;
+  midi.uart_forward[1] = nullptr;
+  if (mode & 1) {
+    midi.uart_forward[0] = first;
+  }
+  if (mode & 2) {
+    midi.uart_forward[1] = second;
+  }
+}
+
 #ifdef PLATFORM_TBD
 void setup_usb_slot(const PortSlot &slot) {
   if (slot.port != UARTUSB_PORT) return;
@@ -141,7 +167,6 @@ void MidiSetup::cfg_clock_recv() {
 void MidiSetup::cfg_ports(bool boot) {
   DEBUG_PRINT_FN();
 
-  mclsys_normalize_midi_config();
   configure_driver_ports();
 
   // Always receive transport on port1 for MD.
@@ -171,98 +196,37 @@ void MidiSetup::cfg_ports(bool boot) {
     MidiClock.uart_transport_forward1 = nullptr;
   }
 
-  MidiClock.uart_transport_forward2 = nullptr;
-  MidiClock.uart_transport_forward3 = nullptr;
+  cfg_send_forwards(mcl_cfg.midi_transport_send,
+                    MidiClock.uart_transport_recv2, mcl_cfg.uart2_device > 0,
+                    MidiClock.uart_transport_forward2, &MidiUart2,
+                    MidiClock.uart_transport_forward3, &MidiUartUSB);
 #ifdef PLATFORM_TBD
   MidiClock.uart_transport_forward4 = nullptr;
 #endif
-  switch (mcl_cfg.midi_transport_send) {
-  case 1:
-    if (MidiClock.uart_transport_recv2 == &MidiUart2 && mcl_cfg.uart2_device > 0) {
-    }
-    else {
-      MidiClock.uart_transport_forward2 = &MidiUart2;
-    }
-    break;
-  case 2:
-    MidiClock.uart_transport_forward3 = &MidiUartUSB;
-    break;
-  case 3:
-    if (MidiClock.uart_transport_recv2 == &MidiUart2 && mcl_cfg.uart2_device > 0) {
-    }
-    else {
-      MidiClock.uart_transport_forward2 = &MidiUart2;
-    }
-    MidiClock.uart_transport_forward3 = &MidiUartUSB;
-    break;
-  }
 #ifdef PLATFORM_TBD
   cfg_p4_transport_forward();
 #endif
 
   cfg_clock_recv();
 
-  MidiClock.uart_clock_forward2 = nullptr;
-  MidiClock.uart_clock_forward3 = nullptr;
+  cfg_send_forwards(mcl_cfg.clock_send, MidiClock.uart_clock_recv,
+                    mcl_cfg.uart2_device > 0, MidiClock.uart_clock_forward2,
+                    &MidiUart2, MidiClock.uart_clock_forward3,
+#ifndef DEBUGMODE
+                    &MidiUartUSB
+#else
+                    nullptr
+#endif
+                    );
 #ifdef PLATFORM_TBD
   MidiClock.uart_clock_forward4 = nullptr;
 #endif
-  switch (mcl_cfg.clock_send) {
-  case 1:
-    if (MidiClock.uart_clock_recv == &MidiUart2 && mcl_cfg.uart2_device > 0) {
-    }
-    else {
-      MidiClock.uart_clock_forward2 = &MidiUart2;
-    }
-    break;
-  case 2:
-    #ifndef DEBUGMODE
-    MidiClock.uart_clock_forward3 = &MidiUartUSB;
-    #endif
-    break;
-  case 3:
-    if (MidiClock.uart_clock_recv == &MidiUart2 && mcl_cfg.uart2_device > 0) {
-    }
-    else {
-      MidiClock.uart_clock_forward2 = &MidiUart2;
-    }
-#ifndef DEBUGMODE
-    MidiClock.uart_clock_forward3 = &MidiUartUSB;
-    #endif
-    break;
-  }
 #ifdef PLATFORM_TBD
   cfg_p4_clock_forward();
 #endif
-  Midi.uart_forward[0] = nullptr;
-  Midi.uart_forward[1] = nullptr;
-  if (mcl_cfg.midi_forward_1 == 1 || mcl_cfg.midi_forward_1 == 3) {
-    Midi.uart_forward[0] = &MidiUart2;
-  }
-  if (mcl_cfg.midi_forward_1 == 2 || mcl_cfg.midi_forward_1 == 3) {
-    Midi.uart_forward[1] = &MidiUartUSB;
-    ;
-  }
-
-  Midi2.uart_forward[0] = nullptr;
-  Midi2.uart_forward[1] = nullptr;
-  if (mcl_cfg.midi_forward_2 == 1 || mcl_cfg.midi_forward_2 == 3) {
-    Midi2.uart_forward[0] = &MidiUart;
-  }
-  if (mcl_cfg.midi_forward_2 == 2 || mcl_cfg.midi_forward_2 == 3) {
-    Midi2.uart_forward[1] = &MidiUartUSB;
-    ;
-  }
-
-  MidiUSB.uart_forward[0] = nullptr;
-  MidiUSB.uart_forward[1] = nullptr;
-  if (mcl_cfg.midi_forward_usb == 1 || mcl_cfg.midi_forward_usb == 3) {
-    MidiUSB.uart_forward[0] = &MidiUart;
-  }
-  if (mcl_cfg.midi_forward_usb == 2 || mcl_cfg.midi_forward_usb == 3) {
-    MidiUSB.uart_forward[1] = &MidiUart2;
-    ;
-  }
+  cfg_midi_forwards(Midi, mcl_cfg.midi_forward_1, &MidiUart2, &MidiUartUSB);
+  cfg_midi_forwards(Midi2, mcl_cfg.midi_forward_2, &MidiUart, &MidiUartUSB);
+  cfg_midi_forwards(MidiUSB, mcl_cfg.midi_forward_usb, &MidiUart, &MidiUart2);
 
   #if defined(__AVR__) && !defined(DEBUGMODE)
   if (!boot) {
