@@ -129,6 +129,20 @@ void setup_usb_slot(const PortSlot &slot) {
 }
 #endif
 
+void remove_port_sensitive_callbacks() {
+  seq_ptc_page.midi_events.remove_callbacks();
+  note_interface.ni_midi_events.remove_callbacks();
+  mcl_seq.midi_events.remove_callbacks();
+}
+
+void setup_port_sensitive_callbacks() {
+  if (MD.connected) {
+    seq_ptc_page.midi_events.setup_callbacks();
+  }
+  note_interface.ni_midi_events.setup_callbacks();
+  mcl_seq.midi_events.setup_callbacks();
+}
+
 } // namespace
 
 void MidiSetup::cfg_clock_recv() {
@@ -167,6 +181,7 @@ void MidiSetup::cfg_clock_recv() {
 void MidiSetup::cfg_ports(bool boot) {
   DEBUG_PRINT_FN();
 
+  remove_port_sensitive_callbacks();
   configure_driver_ports();
 
   // Always receive transport on port1 for MD.
@@ -277,14 +292,7 @@ void MidiSetup::cfg_ports(bool boot) {
   cfg_p4_device_connection();
 #endif
 
-  if (MD.connected) {
-    seq_ptc_page.midi_events.remove_callbacks();
-    seq_ptc_page.midi_events.setup_callbacks();
-  }
-  note_interface.ni_midi_events.remove_callbacks();
-  note_interface.ni_midi_events.setup_callbacks();
-  mcl_seq.midi_events.remove_callbacks();
-  mcl_seq.midi_events.setup_callbacks();
+  setup_port_sensitive_callbacks();
 }
 
 #ifdef PLATFORM_TBD

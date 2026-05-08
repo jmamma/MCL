@@ -23,9 +23,6 @@ extern const scale_t * const scales[24] PROGMEM;
 class SeqPtcMidiEvents : public MidiCallback {
 public:
   bool state = false;
-  MidiClass *bound_midi[3] = {};
-  uint8_t bound_midi_count = 0;
-  MidiClass *bound_md_midi = nullptr;
 #ifdef PLATFORM_TBD
   SeqExtMidiControlState control_state;
 #endif

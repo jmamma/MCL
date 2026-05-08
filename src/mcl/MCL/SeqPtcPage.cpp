@@ -1369,12 +1369,6 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
 void SeqPtcMidiEvents::setup_midi(MidiClass *midi) {
   if (midi == nullptr) return;
-  for (uint8_t i = 0; i < bound_midi_count; i++) {
-    if (bound_midi[i] == midi) return;
-  }
-  if (bound_midi_count >= sizeof(bound_midi) / sizeof(bound_midi[0])) {
-    return;
-  }
   midi->addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
   midi->addOnNoteOffCallback(
@@ -1389,10 +1383,10 @@ void SeqPtcMidiEvents::setup_midi(MidiClass *midi) {
   midi->addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi2);
-  bound_midi[bound_midi_count++] = midi;
 }
 
 void SeqPtcMidiEvents::cleanup_midi(MidiClass *midi) {
+  if (midi == nullptr) return;
   midi->removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&SeqPtcMidiEvents::onNoteOnCallback_Midi2);
   midi->removeOnPitchWheelCallback(
@@ -1416,8 +1410,6 @@ void SeqPtcMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  bound_midi_count = 0;
-  bound_md_midi = nullptr;
   if (mcl_cfg.midi_ctrl_port == 1 || mcl_cfg.midi_ctrl_port == 3) {
     setup_midi(&Midi2);
   }
@@ -1437,7 +1429,6 @@ void SeqPtcMidiEvents::setup_callbacks() {
     MD.midi->addOnControlChangeCallback(
         this,
         (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
-    bound_md_midi = MD.midi;
   }
   state = true;
 }
@@ -1446,16 +1437,11 @@ void SeqPtcMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  for (uint8_t i = 0; i < bound_midi_count; i++) {
-    cleanup_midi(bound_midi[i]);
-    bound_midi[i] = nullptr;
-  }
-  bound_midi_count = 0;
-  if (bound_md_midi != nullptr) {
-    bound_md_midi->removeOnControlChangeCallback(
-        this,
-        (midi_callback_ptr_t)&SeqPtcMidiEvents::onControlChangeCallback_Midi);
-    bound_md_midi = nullptr;
-  }
+  cleanup_midi(&Midi);
+  cleanup_midi(&Midi2);
+  cleanup_midi(&MidiUSB);
+#ifdef PLATFORM_TBD
+  cleanup_midi(&MidiP4);
+#endif
   state = false;
 }

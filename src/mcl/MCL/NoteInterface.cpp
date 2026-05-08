@@ -6,6 +6,56 @@
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #include "global.h"
 
+namespace {
+
+MidiClass *note_interface_secondary_midi() {
+  MidiDevice *secondary = device_manager.secondary_device();
+  return (secondary != nullptr && secondary->midi != nullptr)
+             ? secondary->midi
+             : generic_midi_device.midi;
+}
+
+void setup_note_interface_midi(NoteInterfaceMidiEvents *events,
+                               MidiClass *midi) {
+  if (midi == nullptr) return;
+  midi->addOnNoteOnCallback(
+      events,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
+  midi->addOnNoteOffCallback(
+      events,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
+}
+
+void cleanup_note_interface_midi(NoteInterfaceMidiEvents *events,
+                                 MidiClass *midi) {
+  if (midi == nullptr) return;
+#if !defined(__AVR__)
+  midi->removeOnNoteOnCallback(
+      events,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
+  midi->removeOnNoteOffCallback(
+      events,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
+#endif
+  midi->removeOnNoteOnCallback(
+      events,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
+  midi->removeOnNoteOffCallback(
+      events,
+      (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
+}
+
+void cleanup_note_interface_all_midi(NoteInterfaceMidiEvents *events) {
+  cleanup_note_interface_midi(events, &Midi);
+  cleanup_note_interface_midi(events, &Midi2);
+  cleanup_note_interface_midi(events, &MidiUSB);
+#ifdef PLATFORM_TBD
+  cleanup_note_interface_midi(events, &MidiP4);
+#endif
+}
+
+} // namespace
+
 void NoteInterface::setup() { ni_midi_events.setup_callbacks(); }
 
 void NoteInterface::init_notes() {
@@ -163,24 +213,7 @@ void NoteInterfaceMidiEvents::setup_callbacks() {
     return;
   }
 
-#if !defined(__AVR__)
-  bound_primary_midi = nullptr;
-#endif
-  bound_secondary_midi = nullptr;
-
-  MidiDevice *secondary = device_manager.secondary_device();
-  bound_secondary_midi =
-      (secondary != nullptr && secondary->midi != nullptr)
-          ? secondary->midi
-          : generic_midi_device.midi;
-  if (bound_secondary_midi != nullptr) {
-    bound_secondary_midi->addOnNoteOnCallback(
-        this,
-        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
-    bound_secondary_midi->addOnNoteOffCallback(
-        this,
-        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
-  }
+  setup_note_interface_midi(this, note_interface_secondary_midi());
   state = true;
 }
 
@@ -189,28 +222,7 @@ void NoteInterfaceMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-#if !defined(__AVR__)
-  if (bound_primary_midi != nullptr) {
-    bound_primary_midi->removeOnNoteOnCallback(
-        this,
-        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
-    bound_primary_midi->removeOnNoteOffCallback(
-        this,
-        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
-    bound_primary_midi = nullptr;
-  }
-#endif
-
-  if (bound_secondary_midi != nullptr) {
-    bound_secondary_midi->removeOnNoteOnCallback(
-        this,
-        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi2);
-    bound_secondary_midi->removeOnNoteOffCallback(
-        this,
-        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi2);
-    bound_secondary_midi = nullptr;
-  }
-
+  cleanup_note_interface_all_midi(this);
   state = false;
 }
 
