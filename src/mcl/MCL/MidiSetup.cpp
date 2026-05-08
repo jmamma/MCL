@@ -69,6 +69,38 @@ void cfg_p4_device_connection() {
 }
 #endif
 
+void apply_physical_port(uint8_t port, MidiUartClass *uart,
+                         uint8_t turbo_cfg, uint8_t device_cfg) {
+  if (device_cfg == 2) { // OFF
+    midi_active_peering.force_connect(port, &null_midi_device);
+  } else if (device_cfg == 0) { // GENER
+    midi_active_peering.disconnect(port);
+    midi_active_peering.force_connect(port, &generic_midi_device);
+    turbo_light.set_speed(turbo_light.lookup_speed(turbo_cfg), uart);
+  } else { // MD / ELEKT (1)
+    MidiDevice *dev = device_manager.device_for_port(port);
+    ElektronDevice *e = dev ? dev->asElektronDevice() : nullptr;
+    if (e) {
+      turbo_light.set_speed(turbo_light.lookup_speed(turbo_cfg), uart);
+      delay(100);
+      e->setup();
+    } else {
+      midi_active_peering.force_connect(port, &null_midi_device);
+    }
+  }
+}
+
+void setup_usb_slot(const PortSlot &slot) {
+  if (slot.port != UARTUSB_PORT) return;
+  MidiDevice *dev = device_manager.device_for_port(slot.port);
+  ElektronDevice *e = dev ? dev->asElektronDevice() : nullptr;
+  if (e) {
+    turbo_light.set_speed(turbo_light.lookup_speed(slot.turbo_cfg), slot.uart);
+    delay(100);
+    e->setup();
+  }
+}
+
 } // namespace
 
 void MidiSetup::cfg_clock_recv() {
@@ -237,46 +269,16 @@ void MidiSetup::cfg_ports(bool boot) {
   }
   #endif
 
-  // Apply driver/turbo for one physical UART port.
   // USB ports are not handled here (peering happens in MidiActivePeering::run()).
-  auto apply_port = [](uint8_t port, MidiUartClass *uart,
-                       uint8_t turbo_cfg, uint8_t device_cfg) {
-    if (device_cfg == 2) {                                  // OFF
-      midi_active_peering.force_connect(port, &null_midi_device);
-    } else if (device_cfg == 0) {                           // GENER
-      midi_active_peering.disconnect(port);
-      midi_active_peering.force_connect(port, &generic_midi_device);
-      turbo_light.set_speed(turbo_light.lookup_speed(turbo_cfg), uart);
-    } else {                                                // MD / ELEKT (1)
-      MidiDevice *dev = device_manager.device_for_port(port);
-      ElektronDevice *e = dev ? dev->asElektronDevice() : nullptr;
-      if (e) {
-        turbo_light.set_speed(turbo_light.lookup_speed(turbo_cfg), uart);
-        delay(100);
-        e->setup();
-      } else {
-        midi_active_peering.force_connect(port, &null_midi_device);
-      }
-    }
-  };
-
-  apply_port(UART1_PORT, &MidiUart,  mcl_cfg.uart1_turbo_speed, mcl_cfg.uart1_device);
-  apply_port(UART2_PORT, &MidiUart2, mcl_cfg.uart2_turbo_speed, mcl_cfg.uart2_device);
+  apply_physical_port(UART1_PORT, &MidiUart, mcl_cfg.uart1_turbo_speed,
+                      mcl_cfg.uart1_device);
+  apply_physical_port(UART2_PORT, &MidiUart2, mcl_cfg.uart2_turbo_speed,
+                      mcl_cfg.uart2_device);
 
   // USB-hosted MD or ELEKT slot: run setup() on connected Elektron device.
   // (USB GENER is handled below; USB OFF leaves nothing to do.)
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
-  auto setup_usb_slot = [](const PortSlot &slot) {
-    if (slot.port != UARTUSB_PORT) return;
-    MidiDevice *dev = device_manager.device_for_port(slot.port);
-    ElektronDevice *e = dev ? dev->asElektronDevice() : nullptr;
-    if (e) {
-      turbo_light.set_speed(turbo_light.lookup_speed(slot.turbo_cfg), slot.uart);
-      delay(100);
-      e->setup();
-    }
-  };
   setup_usb_slot(s[SLOT_MD]);
   setup_usb_slot(s[SLOT_ELEKT]);
 

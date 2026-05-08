@@ -241,17 +241,19 @@ void MidiActivePeering::run() {
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
 
-  auto probe_slot = [&](uint8_t slot_idx, const PortSlot &slot) {
-    if (!slot.port || slot.off) return;
-    // GENER replaces the slot's driver list when this UART is set to GENER
-    bool is_gener = (slot.port == UART1_PORT && mcl_cfg.uart1_device == 0) ||
-                    (slot.port == UART2_PORT && mcl_cfg.uart2_device == 0);
-    probePort(slot.port, drivers_for_slot(slot_idx, is_gener), resource_buf);
-  };
-
-  probe_slot(SLOT_MD, s[SLOT_MD]);
+  if (s[SLOT_MD].port && !s[SLOT_MD].off) {
+    bool is_gener = (s[SLOT_MD].port == UART1_PORT && mcl_cfg.uart1_device == 0) ||
+                    (s[SLOT_MD].port == UART2_PORT && mcl_cfg.uart2_device == 0);
+    probePort(s[SLOT_MD].port, drivers_for_slot(SLOT_MD, is_gener),
+              resource_buf);
+  }
 #ifdef EXT_TRACKS
-  probe_slot(SLOT_ELEKT, s[SLOT_ELEKT]);
+  if (s[SLOT_ELEKT].port && !s[SLOT_ELEKT].off) {
+    bool is_gener = (s[SLOT_ELEKT].port == UART1_PORT && mcl_cfg.uart1_device == 0) ||
+                    (s[SLOT_ELEKT].port == UART2_PORT && mcl_cfg.uart2_device == 0);
+    probePort(s[SLOT_ELEKT].port, drivers_for_slot(SLOT_ELEKT, is_gener),
+              resource_buf);
+  }
   if (resource_loaded) {
     // XXX restoring resources after the peering display doesn't work yet.
     GUI.currentPage()->init();
