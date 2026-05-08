@@ -11,27 +11,17 @@ void LFOSeqTrack::load_tables() {
   TriLFO tri_lfo;
   RampLFO ramp_lfo;
   IExpLFO iexp_lfo;
-  LFO *lfo;
 
-  for (uint8_t n = 0; n < 4; n++) {
-    switch (n) {
-    case SIN_WAV:
-      lfo = (LFO *)&sin_lfo;
-      break;
-    case TRI_WAV:
-      lfo = (LFO *)&tri_lfo;
-      break;
-    case RAMP_WAV:
-      lfo = (LFO *)&ramp_lfo;
-      break;
-    case IEXP_WAV:
-      lfo = (LFO *)&iexp_lfo;
-      break;
-    }
-    lfo->amplitude = 128;
-    for (uint8_t i = 0; i < LFO_LENGTH; i++) {
-      wav_tables[n][i] = lfo->get_sample(i);
-    }
+  sin_lfo.amplitude = 128;
+  tri_lfo.amplitude = 128;
+  ramp_lfo.amplitude = 128;
+  iexp_lfo.amplitude = 128;
+
+  for (uint8_t i = 0; i < LFO_LENGTH; i++) {
+    wav_tables[SIN_WAV][i] = sin_lfo.get_sample(i);
+    wav_tables[TRI_WAV][i] = tri_lfo.get_sample(i);
+    wav_tables[RAMP_WAV][i] = ramp_lfo.get_sample(i);
+    wav_tables[IEXP_WAV][i] = iexp_lfo.get_sample(i);
   }
 }
 

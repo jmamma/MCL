@@ -19,7 +19,7 @@
 class LFO {
 public:
   uint8_t amplitude;
-  virtual uint8_t get_sample(uint8_t sample_number);
+  uint8_t get_sample(uint8_t sample_number);
 };
 
 class ExpLFO : public LFO {
