@@ -42,6 +42,7 @@ MidiClass *seq_ext_step_input_midi() {
 }
 #endif
 
+#ifdef PLATFORM_TBD
 bool seq_ext_step_param_menu_label(uint8_t entry_index, uint8_t option_n,
                                    char *dst, uint8_t dst_len) {
   if (mcl.currentPage() != SEQ_EXTSTEP_PAGE ||
@@ -51,12 +52,7 @@ bool seq_ext_step_param_menu_label(uint8_t entry_index, uint8_t option_n,
   return active_ext_step_track().copy_lock_menu_value_label(option_n, dst,
                                                            dst_len);
 }
-
-bool seq_ext_step_menu_entry_is(uint8_t entry_index) {
-  if (!SeqPage::show_seq_menu) return false;
-  return seq_menu_page.menu.get_item_index(seq_menu_page.encoders[1]->cur) ==
-         entry_index;
-}
+#endif
 
 uint8_t seq_ext_step_pitch_from_midi_note(uint8_t note_num) {
   uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
@@ -64,6 +60,14 @@ uint8_t seq_ext_step_pitch_from_midi_note(uint8_t note_num) {
   pitch += ptc_param_oct.cur * 12;
   return pitch < 128 ? pitch : 255;
 }
+
+#ifdef PLATFORM_TBD
+bool seq_ext_step_menu_entry_is(uint8_t entry_index) {
+  if (!SeqPage::show_seq_menu) return false;
+  return seq_menu_page.menu.get_item_index(seq_menu_page.encoders[1]->cur) ==
+         entry_index;
+}
+#endif
 
 } // namespace
 
@@ -126,7 +130,9 @@ void SeqExtStepPage::init() {
   last_cur_x = -1;
   config_menu_entries();
   config_encoders();
+#ifdef PLATFORM_TBD
   seq_menu_page.menu.option_name_override = seq_ext_step_param_menu_label;
+#endif
   midi_events.setup_callbacks();
 
 }
@@ -134,9 +140,11 @@ void SeqExtStepPage::init() {
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
   MD.set_rec_mode(0);
+#ifdef PLATFORM_TBD
   if (seq_menu_page.menu.option_name_override == seq_ext_step_param_menu_label) {
     seq_menu_page.menu.option_name_override = nullptr;
   }
+#endif
   midi_events.remove_callbacks();
 }
 
@@ -714,11 +722,18 @@ void SeqExtStepPage::loop() {
     if (last_pianoroll_mode != pianoroll_mode) {
 
       if (is_lockeditor) {
+#ifdef PLATFORM_TBD
         param_select =
             active_track.selected_lock_menu_value(pianoroll_mode - 1);
+#else
+        uint8_t selected =
+            mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1];
+        param_select = selected == 0 ? PARAM_OFF : selected - 1;
+#endif
       }
       last_pianoroll_mode = pianoroll_mode;
     }
+#ifdef PLATFORM_TBD
     if (is_lockeditor &&
         seq_ext_step_menu_entry_is(SEQ_MENU_PARAMSELECT)) {
       auto *value_encoder = (MCLEncoder *)seq_menu_page.encoders[0];
@@ -744,6 +759,12 @@ void SeqExtStepPage::loop() {
             active_track.selected_lock_current_ui_value(pianoroll_mode - 1);
       }
     }
+#else
+    if (is_lockeditor) {
+      mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] =
+          param_select == PARAM_OFF ? 0 : param_select + 1;
+    }
+#endif
   }
   seq_extstep_tick_t diff = seq_extparam1.getValue();
   if (diff) {
@@ -844,6 +865,7 @@ void SeqExtStepPage::display() {
     strcpy_P(info2, mclstr_note);
     draw_pianoroll();
   } else {
+#ifdef PLATFORM_TBD
     if (!active_track.copy_selected_lock_label(pianoroll_mode - 1, info2,
                                                sizeof(info2))) {
       strcpy_P(info2, mclstr_lock_space);
@@ -853,6 +875,11 @@ void SeqExtStepPage::display() {
                                             info1, sizeof(info1))) {
       mcl_gui.put_value_at(lock_cur_y, info1);
     }
+#else
+    strcpy_P(info2, mclstr_lock_space);
+    mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
+    mcl_gui.put_value_at(lock_cur_y, info1);
+#endif
     draw_lockeditor();
   }
   } while (epoch != active_track.change_counter());
@@ -905,10 +932,16 @@ void SeqExtStepPage::enter_notes() {
 
 void SeqExtStepPage::param_select_update() {
   if (pianoroll_mode > 0) {
+#ifdef PLATFORM_TBD
     auto active_track = active_ext_step_track();
     param_select = active_track.selected_lock_menu_value(pianoroll_mode - 1);
     param_select = active_track.normalize_lock_menu_value(param_select,
                                                           param_select);
+#else
+    uint8_t selected =
+        mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1];
+    param_select = selected == 0 ? PARAM_OFF : selected - 1;
+#endif
   }
 }
 
