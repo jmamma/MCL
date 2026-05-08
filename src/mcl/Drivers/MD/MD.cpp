@@ -916,7 +916,9 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, MDMachine *machine,
 
   DEBUG_PRINT("assign machine bulk: ");
   DEBUG_PRINTLN(track);
-  uint8_t data[44] = {0x70, 0x5b}; // Increased size by 1 for length byte
+  uint8_t data[44]; // Increased size by 1 for length byte
+  data[0] = 0x70;
+  data[1] = 0x5b;
   uint8_t i = 2;
 
   // Reserve space for length - will be calculated later
@@ -977,7 +979,9 @@ end:
 #if !defined(__AVR__)
 uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
                                    uint8_t level, uint8_t mode, bool send) {
-  uint8_t data[44] = {0x70, 0x5b};
+  uint8_t data[44];
+  data[0] = 0x70;
+  data[1] = 0x5b;
   uint8_t i = 2;
 
   uint8_t length_index = i++;

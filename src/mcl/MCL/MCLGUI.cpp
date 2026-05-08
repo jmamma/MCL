@@ -14,6 +14,20 @@
 #include "SPSXSeqDefines.h"
 #endif
 
+namespace {
+
+#if defined(__AVR__)
+uint8_t pgm_height_at(const uint8_t *heights, uint8_t idx) {
+  return pgm_read_byte(heights + idx);
+}
+#else
+uint8_t pgm_height_at(const uint8_t *heights, uint8_t idx) {
+  return heights[idx];
+}
+#endif
+
+} // namespace
+
 // Helper function for printing PROGMEM strings
 void mcl_print_P(const char* str_P) {
   char buffer[64]; // Choose a suitable buffer size
@@ -605,13 +619,14 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   uint8_t degrees = timing_mid * 2;
   // Triplets
 
-  uint8_t heights_lowres[6] = {11, 4, 6, 10, 4, 8};
-  uint8_t heights_triplets[16] = {11, 2, 4, 8, 6,  10, 6, 2,
-                                    10, 2, 6, 8, 10, 4,  6, 2};
-  uint8_t heights_triplets2[8] = {11, 4, 8, 10, 2, 8, 4, 2};
-  uint8_t heights_highres[12] = {11, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
+  static const uint8_t heights_lowres[] PROGMEM = {11, 4, 6, 10, 4, 8};
+  static const uint8_t heights_triplets[] PROGMEM = {
+      11, 2, 4, 8, 6, 10, 6, 2, 10, 2, 6, 8, 10, 4, 6, 2};
+  static const uint8_t heights_triplets2[] PROGMEM = {11, 4, 8, 10, 2, 8, 4, 2};
+  static const uint8_t heights_highres[] PROGMEM = {
+      11, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
 
-  uint8_t *h = heights_highres;
+  const uint8_t *h = heights_highres;
   uint8_t heights_len = 12;
 
   if (speed == SEQ_SPEED_2X) {
@@ -653,16 +668,16 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   oled_display.setCursor(x_pos + 34, 10);
   mcl_print_P(mclstr_utiming_label);
   oled_display.print(K);
-  oled_display.drawLine(x, y_pos + h[0], x + w, y_pos + h[0],
-                        WHITE);
+  uint8_t base_h = pgm_height_at(h, 0);
+  oled_display.drawLine(x, y_pos + base_h, x + w, y_pos + base_h, WHITE);
   for (uint8_t n = 0; n <= degrees; n++) {
-    oled_display.drawLine(x, y_pos + h[0], x,
-                          y_pos + h[0] - h[a], WHITE);
+    oled_display.drawLine(x, y_pos + base_h, x,
+                          y_pos + base_h - pgm_height_at(h, a), WHITE);
     a++;
 
     if (n == timing) {
-      oled_display.fillRect(x - 1, y_pos + h[0] + 3, 3, 3, WHITE);
-      oled_display.drawPixel(x, y_pos + h[0] + 2, WHITE);
+      oled_display.fillRect(x - 1, y_pos + base_h + 3, 3, 3, WHITE);
+      oled_display.drawPixel(x, y_pos + base_h + 2, WHITE);
     }
 
     if (a == heights_len) {

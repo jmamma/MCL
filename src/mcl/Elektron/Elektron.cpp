@@ -258,7 +258,10 @@ void ElektronDevice::popup_text(uint8_t action_string, uint8_t persistent) {
 }
 
 void ElektronDevice::popup_text(char *str, uint8_t persistent) {
-  uint8_t data[67] = {0x70, 0x3B, persistent};
+  uint8_t data[67];
+  data[0] = 0x70;
+  data[1] = 0x3B;
+  data[2] = persistent;
   uint8_t len = strlen(str);
   strcpy((char*) (data + 3), str);
   sendRequest(data, 3 + len + 1);
@@ -266,7 +269,10 @@ void ElektronDevice::popup_text(char *str, uint8_t persistent) {
 }
 
 void ElektronDevice::popup_text_P(const char *str_P, uint8_t persistent) {
-  uint8_t data[67] = {0x70, 0x3B, persistent};
+  uint8_t data[67];
+  data[0] = 0x70;
+  data[1] = 0x3B;
+  data[2] = persistent;
   uint8_t len = strlen_P(str_P);
   strcpy_P((char*) (data + 3), str_P);
   sendRequest(data, 3 + len + 1);
@@ -274,7 +280,10 @@ void ElektronDevice::popup_text_P(const char *str_P, uint8_t persistent) {
 }
 
 void ElektronDevice::popup_text_P(const char *str1_P, const char *str2_P, uint8_t persistent) {
-  uint8_t data[67] = {0x70, 0x3B, persistent};
+  uint8_t data[67];
+  data[0] = 0x70;
+  data[1] = 0x3B;
+  data[2] = persistent;
   uint8_t len1 = strlen_P(str1_P);
   uint8_t len2 = strlen_P(str2_P);
   strcpy_P((char*) (data + 3), str1_P);
