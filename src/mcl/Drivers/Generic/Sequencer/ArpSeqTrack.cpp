@@ -2,6 +2,16 @@
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
 
+namespace {
+
+#if defined(PLATFORM_TBD)
+bool md_arp_targets_tbd() {
+  return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
+}
+#endif
+
+} // namespace
+
 //length will determine retrig speed.
 //arp position (idx) is independent of length
 
@@ -262,6 +272,21 @@ void ArpSeqTrack::on_render_begin() {}
 
 void MDArpSeqTrack::dispatch_note(uint8_t note, MidiUartClass *uart_,
                                   MidiUartClass *uart2_) {
+#if defined(PLATFORM_TBD)
+  if (md_arp_targets_tbd()) {
+    if (track_number < mcl_seq.num_tbd_tracks) {
+      auto &track = mcl_seq.tbd_tracks[track_number];
+      track.note_on(note, 127, uart_);
+      last_note_on = note;
+      if (SeqPage::recording && MidiClock.state == 2) {
+        reset_undo();
+        track.record_track(127);
+        track.record_track_pitch(note);
+      }
+    }
+    return;
+  }
+#endif
   bool is_midi_model =
       ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
   if (is_midi_model) {
@@ -270,6 +295,28 @@ void MDArpSeqTrack::dispatch_note(uint8_t note, MidiUartClass *uart_,
   } else {
     seq_ptc_page.trig_md(note, track_number, CTRL_EVENT, fine_tune, uart_);
   }
+}
+
+void MDArpSeqTrack::on_cycle_midpoint(MidiUartClass *uart_,
+                                      MidiUartClass *) {
+#if defined(PLATFORM_TBD)
+  if (md_arp_targets_tbd() && last_note_on != 255 &&
+      step_count == length / 2 && track_number < mcl_seq.num_tbd_tracks) {
+    mcl_seq.tbd_tracks[track_number].note_off(uart_);
+    last_note_on = 255;
+  }
+#else
+  (void)uart_;
+#endif
+}
+
+void MDArpSeqTrack::on_render_begin() {
+#if defined(PLATFORM_TBD)
+  if (md_arp_targets_tbd() && track_number < mcl_seq.num_tbd_tracks) {
+    mcl_seq.tbd_tracks[track_number].send_notes_off();
+    last_note_on = 255;
+  }
+#endif
 }
 
 void ExtArpSeqTrack::dispatch_note(uint8_t note, MidiUartClass *,

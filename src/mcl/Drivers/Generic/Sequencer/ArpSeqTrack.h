@@ -118,9 +118,11 @@ class MDArpSeqTrack : public ArpSeqTrack {
       ArpSeqTrack::init();
       active = MD_ARP_TRACK_TYPE;
     }
-  protected:
+protected:
+    void on_cycle_midpoint(MidiUartClass *uart_, MidiUartClass *uart2_) override;
     void dispatch_note(uint8_t note, MidiUartClass *uart_,
                        MidiUartClass *uart2_) override;
+    void on_render_begin() override;
 };
 
 class ExtArpSeqTrack : public ArpSeqTrack {

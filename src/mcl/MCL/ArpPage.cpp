@@ -6,6 +6,14 @@
 #include "MCLStrings.h"
 #include "SeqTrackUtil.h"
 
+#ifdef PLATFORM_TBD
+namespace {
+bool arp_uses_tbd_primary_tracks() {
+  return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
+}
+} // namespace
+#endif
+
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 18, ENCODER_RES_SEQ);
 MCLEncoder arp_rate(1, 16, ENCODER_RES_SEQ);
@@ -29,6 +37,14 @@ void ArpPage::init() {
 void ArpPage::track_update(uint8_t n, bool re_render) {
 
   bool is_md_device = SeqPage::active_device_is_md();
+#ifdef PLATFORM_TBD
+  if (arp_uses_tbd_primary_tracks()) {
+    if (n > 15) {
+      n = last_md_track;
+    }
+    arp_track = &mcl_seq.md_arp_tracks[n];
+  } else
+#endif
   if (is_md_device) {
     if (n > 15) {
       n = last_md_track;
@@ -100,7 +116,11 @@ void ArpPage::display() {
   oled_display.setTextColor(WHITE);
   mcl_print_P(mclstr_arpeggiator);
 
-  if (SeqPage::active_device_is_md()) {
+  if (SeqPage::active_device_is_md()
+#ifdef PLATFORM_TBD
+      || arp_uses_tbd_primary_tracks()
+#endif
+  ) {
     oled_display.print(current_track + 1);
   } else {
     oled_display.print(last_ext_track + 1);

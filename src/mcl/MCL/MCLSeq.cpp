@@ -520,6 +520,12 @@ void MCLSeq::seq() {
     for (uint8_t i = 0; i < num_tbd_tracks; i++) {
       tbd_tracks[i].seq(uart);
     }
+    if (legacy_tick) {
+      for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+        md_arp_tracks[i].mute_state = tbd_tracks[i].mute_state;
+        md_arp_tracks[i].seq(uart, uart2);
+      }
+    }
   }
   if (seq_grid_y_runs_tbd_midi_tracks()) {
     for (uint8_t i = 0; i < num_midi_tracks; i++) {

@@ -28,8 +28,12 @@ constexpr uint32_t kTbdPtcNaturalColor = 0xFFFFFF;
 constexpr uint32_t kTbdPtcBlackColor = 0x0000A0;
 constexpr uint32_t kTbdPtcActiveColor = 0xFF0000;
 
+bool ptc_uses_tbd_primary_tracks() {
+  return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
+}
+
 void tbd_ptc_send_note(SeqPtcPage &page, uint8_t note, uint8_t mask) {
-  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+  if (ptc_uses_tbd_primary_tracks()) {
     page.handle_tbd_note_event(note, mask, true);
     return;
   }
@@ -305,24 +309,39 @@ void SeqPtcPage::render_arp(bool recalc_notemask_, MidiDevice *midi_dev,
   }
 
   bool is_md_device = SeqPage::device_is_md(midi_dev);
-  SeqTrack &seq_track = SeqTrackUtil::get_seq_track(is_md_device, track);
-  ArpSeqTrack &arp_track =
-      SeqTrackUtil::get_arp_track(is_md_device, track);
-
-  if (seq_track.speed == SEQ_SPEED_3_4X ||
-      seq_track.speed == SEQ_SPEED_3_2X) {
-    arp_track.speed = SEQ_SPEED_3_2X;
-  } else {
-    arp_track.speed = SEQ_SPEED_2X;
+  SeqTrack *seq_track = nullptr;
+  ArpSeqTrack *arp_track = nullptr;
+#ifdef PLATFORM_TBD
+  if (ptc_uses_tbd_primary_tracks()) {
+    if (track >= mcl_seq.num_tbd_tracks) return;
+    seq_track = &mcl_seq.tbd_tracks[track];
+    arp_track = &mcl_seq.md_arp_tracks[track];
+  } else
+#endif
+  {
+    seq_track = &SeqTrackUtil::get_seq_track(is_md_device, track);
+    arp_track = &SeqTrackUtil::get_arp_track(is_md_device, track);
   }
-  arp_track.render(arp_mode.cur, ptc_param_oct.cur, ptc_param_fine_tune.cur,
-                   arp_range.cur, note_mask);
+
+  if (seq_track->speed == SEQ_SPEED_3_4X ||
+      seq_track->speed == SEQ_SPEED_3_2X) {
+    arp_track->speed = SEQ_SPEED_3_2X;
+  } else {
+    arp_track->speed = SEQ_SPEED_2X;
+  }
+  arp_track->render(arp_mode.cur, ptc_param_oct.cur, ptc_param_fine_tune.cur,
+                    arp_range.cur, note_mask);
 }
 
 void SeqPtcPage::display() {
 
   oled_display.clearDisplay();
   bool is_md_device = active_device_is_md();
+#ifdef PLATFORM_TBD
+  bool uses_tbd_primary_tracks = ptc_uses_tbd_primary_tracks();
+#else
+  bool uses_tbd_primary_tracks = false;
+#endif
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   draw_knob_frame();
   char buf1[4];
@@ -369,7 +388,7 @@ void SeqPtcPage::display() {
   oled_display.setCursor(105, 32);
 
   ArpSeqTrack *arp_track = &mcl_seq.ext_arp_tracks[last_ext_track];
-  if (is_md_device) {
+  if (is_md_device || uses_tbd_primary_tracks) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
   if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
@@ -377,7 +396,9 @@ void SeqPtcPage::display() {
   }
 
   uint64_t *mask = note_mask;
-  if (is_md_device ? arp_track->enabled : ptc_ext_arp_enabled(last_ext_track)) {
+  if ((is_md_device || uses_tbd_primary_tracks)
+          ? arp_track->enabled
+          : ptc_ext_arp_enabled(last_ext_track)) {
     mcl_print_P(mclstr_arp);
     mask = arp_track->note_mask;
   }
@@ -611,6 +632,11 @@ void SeqPtcPage::recalc_notemask() {
   memset(note_mask, 0, sizeof(note_mask));
 
   uint8_t dev = active_device_is_md() ? 0 : 1;
+#ifdef PLATFORM_TBD
+  if (ptc_uses_tbd_primary_tracks()) {
+    dev = 0;
+  }
+#endif
 
   for (uint8_t i = 0; i < 128; i++) {
     if (IS_BIT_SET128_P(dev_note_masks[dev], i)) {
@@ -652,6 +678,18 @@ bool SeqPtcPage::handle_tbd_note_event(uint8_t note, uint8_t mask,
   scale_padding = old_scale_padding;
 
   if (mask == EVENT_BUTTON_PRESSED) {
+    bool notes_all_off = dev_note_masks[0][0] == 0 && dev_note_masks[0][1] == 0;
+    if (notes_all_off) {
+      mcl_seq.md_arp_tracks[last_md_track].idx = 0;
+      if (mcl_cfg.rec_quant == 0) {
+        auto &arp_track = mcl_seq.md_arp_tracks[last_md_track];
+        arp_track.mod12_counter = arp_track.get_timing_mid() - 2;
+        arp_track.step_count = arp_track.length - 1;
+      }
+      if (arp_enabled.cur == ARP_LATCH) {
+        memset(note_mask, 0, sizeof(note_mask));
+      }
+    }
     SET_BIT128_P(dev_note_masks[0], note);
     if (pitch != 255) {
       SET_BIT128_P(note_mask, pitch);
@@ -672,14 +710,21 @@ bool SeqPtcPage::handle_tbd_note_event(uint8_t note, uint8_t mask,
   }
 
   auto &track = mcl_seq.tbd_tracks[last_md_track];
+  auto &arp_track = mcl_seq.md_arp_tracks[last_md_track];
+  arp_page.track_update(last_md_track);
+  render_arp(false, &TBD, last_md_track);
+  bool arp_running = arp_track.enabled && MidiClock.state == 2;
+
   if (mask == EVENT_BUTTON_PRESSED) {
-    track.note_on(pitch, 127);
-    if (recording && MidiClock.state == 2) {
+    if (!arp_running) {
+      track.note_on(pitch, 127);
+    }
+    if (!arp_running && recording && MidiClock.state == 2) {
       reset_undo();
       track.record_track(127);
       track.record_track_pitch(pitch);
     }
-  } else {
+  } else if (!arp_running) {
     track.note_off();
   }
   return true;
