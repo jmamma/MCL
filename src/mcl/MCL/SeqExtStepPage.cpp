@@ -90,8 +90,11 @@ void SeqExtStepPage::config_encoders() {
     fov_y = MIDI_NOTE_C3 - 1;
     cur_y = fov_y + 1;
     cur_w = timing_mid;
-    roll_length = (int32_t)max((uint8_t)1, active_track.length()) * timing_mid;
-    fov_length = min((int32_t)seq_extparam4.cur * timing_mid, roll_length);
+    roll_length = (seq_extstep_tick_t)max((uint8_t)1, active_track.length()) *
+                  (seq_extstep_tick_t)timing_mid;
+    seq_extstep_tick_t requested_fov =
+        (seq_extstep_tick_t)seq_extparam4.cur * (seq_extstep_tick_t)timing_mid;
+    fov_length = requested_fov < roll_length ? requested_fov : roll_length;
     if (fov_length <= 0) {
       fov_length = timing_mid ? timing_mid : 1;
     }
@@ -268,8 +271,8 @@ void SeqExtStepPage::draw_lockeditor() {
 
       auto ev_j = active_track.event(next_lock_ev);
 
-      int32_t start_x = active_track.event_tick(i, ev);
-      int32_t end_x = active_track.event_tick(j, ev_j);
+      seq_extstep_tick_t start_x = active_track.event_tick(i, ev);
+      seq_extstep_tick_t end_x = active_track.event_tick(j, ev_j);
       if (start_x == end_x) {
         end_x = start_x - 1;
       }
@@ -280,8 +283,8 @@ void SeqExtStepPage::draw_lockeditor() {
         uint8_t start_y = ev.event_value;
         uint8_t end_y = ev_j.event_value;
 
-        int32_t start_x_tmp = start_x;
-        int32_t end_x_tmp = end_x;
+        seq_extstep_tick_t start_x_tmp = start_x;
+        seq_extstep_tick_t end_x_tmp = end_x;
         uint8_t start_y_tmp = start_y;
         uint8_t end_y_tmp = end_y;
         if (end_x < start_x) {
@@ -300,7 +303,7 @@ void SeqExtStepPage::draw_lockeditor() {
         if (start_x < fov_offset) {
           start_fov_x = 0;
           // start_y_tmp = ((fov_offset - start_x) * gradient) + start_y
-          int32_t dx = fov_offset - start_x;
+          seq_extstep_tick_t dx = fov_offset - start_x;
           start_y_tmp = ((dx * gradient_fixed) / 256) + start_y;
         } else {
           // Convert fov_pixels_per_tick to fixed point once:
@@ -311,7 +314,7 @@ void SeqExtStepPage::draw_lockeditor() {
 
         if (end_x >= fov_offset + fov_length) {
           end_fov_x = fov_w;
-          int32_t dx;
+          seq_extstep_tick_t dx;
           if (start_x > end_x) {
             dx = fov_offset + fov_length + roll_length - start_x;
           } else {
@@ -329,7 +332,7 @@ void SeqExtStepPage::draw_lockeditor() {
         if (end_x < start_x) {
           // Wrap around note
           if (start_x < fov_offset + fov_length) {
-            int32_t dx = fov_offset + fov_length - start_x;
+            seq_extstep_tick_t dx = fov_offset + fov_length - start_x;
             uint8_t calc_end_y_tmp = ((dx * gradient_fixed) / 256) + start_y;
             uint8_t tmp_end_fov_y =
                 fov_h - ((uint16_t)calc_end_y_tmp * fov_h) / 128;
@@ -339,7 +342,7 @@ void SeqExtStepPage::draw_lockeditor() {
           }
 
           if (end_x > fov_offset) {
-            int32_t dx = roll_length - start_x + fov_offset;
+            seq_extstep_tick_t dx = roll_length - start_x + fov_offset;
             uint8_t calc_end_y_tmp = ((dx * gradient_fixed) >> 8) + start_y;
             uint8_t tmp_end_fov_y =
                 fov_h - ((uint16_t)calc_end_y_tmp * fov_h) / 128;
@@ -417,8 +420,8 @@ void SeqExtStepPage::draw_pianoroll() {
       }
       auto ev_j = active_track.event(note_off_idx);
 
-      int32_t note_start = active_track.event_tick(i, ev);
-      int32_t note_end = active_track.event_tick(j, ev_j);
+      seq_extstep_tick_t note_start = active_track.event_tick(i, ev);
+      seq_extstep_tick_t note_end = active_track.event_tick(j, ev_j);
 
       if (i > j && j == 0) { note_end += timing_mid * active_track.length(); }
 
@@ -540,8 +543,8 @@ void SeqExtStepPage::draw_viewport_minimap() {
   oled_display.drawPixel(pidx_x0 + 1 + p, pidx_y + 1, INVERT);
 }
 
-void SeqExtStepPage::pos_cur_x(int32_t diff) {
-  int32_t w = cur_w;
+void SeqExtStepPage::pos_cur_x(seq_extstep_tick_t diff) {
+  seq_extstep_tick_t w = cur_w;
   if (pianoroll_mode >= 1) {
     w = 3;
   }
@@ -597,8 +600,9 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
       auto active_track = active_ext_step_track();
       uint16_t timing_mid = active_track.ticks_per_step();
 
-      int32_t pos = fov_offset + (int32_t)timing_mid * n;
-      int32_t w = cur_w;
+      seq_extstep_tick_t pos =
+          fov_offset + (seq_extstep_tick_t)timing_mid * n;
+      seq_extstep_tick_t w = cur_w;
       if (pos < 0 || pos >= roll_length) continue;
       if (pos + w >= roll_length) { w = roll_length - pos - 1; }
       if (w <= 0) continue;
@@ -649,7 +653,7 @@ void SeqExtStepPage::pos_cur_y(int16_t diff) {
   }
 }
 
-void SeqExtStepPage::pos_cur_w(int32_t diff) {
+void SeqExtStepPage::pos_cur_w(seq_extstep_tick_t diff) {
   if (diff < 0) {
     cur_w += diff;
     cur_w = max(cur_w, cur_w_min);
@@ -737,7 +741,7 @@ void SeqExtStepPage::loop() {
       }
     }
   }
-  int32_t diff = seq_extparam1.getValue();
+  seq_extstep_tick_t diff = seq_extparam1.getValue();
   if (diff) {
     // Horizontal translation
 
@@ -792,7 +796,7 @@ void SeqExtStepPage::loop() {
     fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
     if (fov_length > roll_length) { fov_length = roll_length; }
 
-    int32_t x = cur_x - fov_offset;
+    seq_extstep_tick_t x = cur_x - fov_offset;
 
     int32_t fov_old_x = ((int32_t)x * fov_pixels_per_tick) >> 8;
 
@@ -880,7 +884,7 @@ void SeqExtStepPage::display() {
 
 void SeqExtStepPage::enter_notes() {
   auto active_track = active_ext_step_track();
-  int32_t w = cur_w;
+  seq_extstep_tick_t w = cur_w;
   if (cur_x < 0 || cur_x >= roll_length) return;
   if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
   if (w <= 0) return;
@@ -930,8 +934,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
     if (mask == EVENT_BUTTON_PRESSED) {
       // cur_x = fov_offset + (float)(fov_length / 16) * (float)track;
-      int32_t a = 16 * timing_mid;
-      int32_t new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
+      seq_extstep_tick_t a = 16 * timing_mid;
+      seq_extstep_tick_t new_x =
+          ((cur_x / a) * a + timing_mid * track) - cur_x;
       pos_cur_x(new_x);
       new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
       pos_cur_x(new_x);
@@ -955,7 +960,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t inc = 1;
-    int32_t w = timing_mid;
+    seq_extstep_tick_t w = timing_mid;
     if (key_interface.is_key_down(MDX_KEY_FUNC)) {
       inc = 4;
       w = w * 2;
@@ -975,7 +980,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         //   seq_extparam4.cur = 16;
         //
         // int a = fov_length
-        int32_t a = timing_mid * 16; // / active_track.get_speed_multiplier();
+        seq_extstep_tick_t a =
+            timing_mid * 16; // / active_track.get_speed_multiplier();
         cur_x += a;
         if (cur_x > fov_offset + fov_length) {
           fov_offset += a;
@@ -1012,13 +1018,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_LEFT: {
           pos_cur_w(-1 * w);
           if (cur_w == cur_w_min && w > 1) {
-            cur_w = timing_mid / 2;
+            cur_w = (seq_extstep_tick_t)(timing_mid / 2);
           }
           return true;
         }
         case MDX_KEY_RIGHT: {
-          if (cur_w == timing_mid / 2 && w > 1) {
-            w = timing_mid / 2;
+          if (cur_w == (seq_extstep_tick_t)(timing_mid / 2) && w > 1) {
+            w = (seq_extstep_tick_t)(timing_mid / 2);
           }
           pos_cur_w(w);
           return true;
@@ -1103,7 +1109,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         if (active_track.notes_on_count() > 0) {
           enter_notes();
         } else {
-          int32_t w = cur_w;
+          seq_extstep_tick_t w = cur_w;
           if (cur_x < 0 || cur_x >= roll_length) return true;
           if (cur_x + w >= roll_length) {
             w = roll_length - cur_x - 1;

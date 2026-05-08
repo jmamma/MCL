@@ -11,6 +11,12 @@
 
 class MidiClass;
 
+#if defined(__AVR__)
+using seq_extstep_tick_t = int16_t;
+#else
+using seq_extstep_tick_t = int32_t;
+#endif
+
 void ext_pattern_len_handler(Encoder *enc);
 class SeqExtStepMidiEvents : public MidiCallback {
 public:
@@ -39,8 +45,8 @@ public:
   static constexpr uint8_t fov_h = 28;
   int16_t fov_y;
 
-  int32_t fov_offset = 0;
-  int32_t fov_length;
+  seq_extstep_tick_t fov_offset = 0;
+  seq_extstep_tick_t fov_length;
 
   static constexpr uint8_t draw_y = 2;
   static constexpr uint8_t draw_x = 128 - fov_w;
@@ -50,17 +56,17 @@ public:
 
   uint16_t fov_pixels_per_tick; // Q8: actual_value × 256
 
-  int32_t cur_x;
+  seq_extstep_tick_t cur_x;
   int16_t cur_y;
-  int32_t cur_w;
+  seq_extstep_tick_t cur_w;
 
-  int32_t last_cur_x;
+  seq_extstep_tick_t last_cur_x;
 
   int8_t lock_cur_y = 64;
 
-  static constexpr int32_t cur_w_min = 2;
+  static constexpr seq_extstep_tick_t cur_w_min = 2;
 
-  int32_t roll_length;
+  seq_extstep_tick_t roll_length;
 
   bool scroll_dir;
 
@@ -81,16 +87,16 @@ public:
   void draw_seq_pos();
   void draw_grid();
   void set_cur_y(uint8_t cur_y_);
-  void pos_cur_x(int32_t diff);
+  void pos_cur_x(seq_extstep_tick_t diff);
   void pos_cur_y(int16_t diff);
-  void pos_cur_w(int32_t diff);
+  void pos_cur_w(seq_extstep_tick_t diff);
 
-  inline bool is_within_fov(int32_t x) {
+  inline bool is_within_fov(seq_extstep_tick_t x) {
     return (x - fov_offset) < fov_length;
   }
 
-  bool is_within_fov(int32_t start_x, int32_t end_x) {
-    int32_t fov_end = fov_offset + fov_length;
+  bool is_within_fov(seq_extstep_tick_t start_x, seq_extstep_tick_t end_x) {
+    seq_extstep_tick_t fov_end = fov_offset + fov_length;
     // Handle wrap-around case
     if (end_x < start_x) {
         return (start_x < fov_end) || (end_x >= fov_offset);
