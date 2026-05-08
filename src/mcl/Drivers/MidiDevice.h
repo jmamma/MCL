@@ -57,12 +57,18 @@ public:
 
   virtual void init_grid_devices(uint8_t device_idx) {}
 
-#ifdef PLATFORM_TBD
   /** Called when the driver is successfully probed and connected. */
+#ifdef PLATFORM_TBD
   virtual void on_connection(uint8_t device_idx) {
     init_grid_devices(device_idx);
   }
+#else
+  void on_connection(uint8_t device_idx) {
+    init_grid_devices(device_idx);
+  }
+#endif
 
+#ifdef PLATFORM_TBD
   /** Per-frame UI maintenance for the driver (polling, overlays, etc.). */
   virtual void ui_loop() {}
 

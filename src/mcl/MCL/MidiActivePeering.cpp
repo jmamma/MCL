@@ -91,14 +91,6 @@ static DriverRegistry::DriverList drivers_for_slot(uint8_t slot_idx,
                              : DriverRegistry::elektron_drivers();
 }
 
-static void connect_driver(MidiDevice *driver, uint8_t device_idx) {
-#ifdef PLATFORM_TBD
-  driver->on_connection(device_idx);
-#else
-  driver->init_grid_devices(device_idx);
-#endif
-}
-
 void MidiActivePeering::disconnect(uint8_t port) {
   DEBUG_PRINTLN("disconnect");
   DEBUG_PRINTLN(port);
@@ -155,7 +147,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
     pmidi->device.set_name(driver->name);
     pmidi->device.set_id(driver->id);
   }
-  connect_driver(driver, portToLogicalIdx(port));
+  driver->on_connection(portToLogicalIdx(port));
 
   device_manager.attach_port(port, driver);
 }
@@ -219,7 +211,7 @@ static void probePort(uint8_t port, DriverRegistry::DriverList drivers,
       if (probe_success) {
         pmidi->device.set_id(driver->id);
         pmidi->device.set_name(driver->name);
-        connect_driver(driver, portToLogicalIdx(port));
+        driver->on_connection(portToLogicalIdx(port));
         device_manager.attach_port(port, driver);
         // Re-enable MidiClock/Transport recv
         midi_setup.cfg_clock_recv();
