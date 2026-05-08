@@ -23,7 +23,8 @@ MidiDevice *generic_driver_list[] = {
 
 template <size_t N>
 DriverRegistry::DriverList make_list(MidiDevice *(&items)[N]) {
-  return {items, N};
+  static_assert(N <= UINT8_MAX, "DriverList count exceeds uint8_t");
+  return {items, static_cast<uint8_t>(N)};
 }
 
 } // namespace

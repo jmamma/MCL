@@ -76,7 +76,7 @@ static void disconnect_driver_list(DriverRegistry::DriverList drivers,
                                    MidiUartClass *pmidi) {
   const bool reset_turbo = device_manager.port_is_elektron(port);
 
-  for (size_t i = 0; i < drivers.count; ++i) {
+  for (uint8_t i = 0; i < drivers.count; ++i) {
     MidiDevice *driver = drivers.items[i];
     if (!driver->connected) continue;
     if (reset_turbo) turbo_light.set_speed(0, pmidi);
@@ -174,7 +174,7 @@ static void probePort(uint8_t port, DriverRegistry::DriverList drivers,
     }
     pmidi->set_speed((uint32_t)31250);
     DEBUG_PRINTLN("disconnecting");
-    for (size_t i = 0; i < drivers.count; ++i) {
+    for (uint8_t i = 0; i < drivers.count; ++i) {
       MidiDevice *driver = drivers.items[i];
       if (driver->connected)
         driver->disconnect(portToLogicalIdx(port));
@@ -185,7 +185,7 @@ static void probePort(uint8_t port, DriverRegistry::DriverList drivers,
     device_manager.detach_port(port);
   } else if (id == DEVICE_NULL && pmidi->recvActiveSenseTimer < 100) {
     bool probe_success = false;
-    for (size_t i = 0; i < drivers.count; ++i) {
+    for (uint8_t i = 0; i < drivers.count; ++i) {
       MidiDevice *driver = drivers.items[i];
 
       MidiIDSysexListener.setup(pmidi_class);
@@ -238,6 +238,7 @@ void MidiActivePeering::run() {
   }
 #endif
 
+#ifdef PLATFORM_TBD
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
 
@@ -259,6 +260,26 @@ void MidiActivePeering::run() {
     GUI.currentPage()->init();
     resource_loaded = false;
   }
+#endif
+#else
+  uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
+  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
+
+  if (mcl_cfg.uart1_device != 2) {
+    probePort(md_port, drivers_for_slot(SLOT_MD, mcl_cfg.uart1_device == 0),
+              resource_buf);
+  }
+#ifdef EXT_TRACKS
+  if (mcl_cfg.uart2_device != 2) {
+    probePort(ext_port, drivers_for_slot(SLOT_ELEKT, mcl_cfg.uart2_device == 0),
+              resource_buf);
+  }
+  if (resource_loaded) {
+    // XXX restoring resources after the peering display doesn't work yet.
+    GUI.currentPage()->init();
+    resource_loaded = false;
+  }
+#endif
 #endif
   device_manager.update_active_slots();
 }

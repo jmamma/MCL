@@ -90,6 +90,7 @@ void apply_physical_port(uint8_t port, MidiUartClass *uart,
   }
 }
 
+#ifdef PLATFORM_TBD
 void setup_usb_slot(const PortSlot &slot) {
   if (slot.port != UARTUSB_PORT) return;
   MidiDevice *dev = device_manager.device_for_port(slot.port);
@@ -100,6 +101,7 @@ void setup_usb_slot(const PortSlot &slot) {
     e->setup();
   }
 }
+#endif
 
 } // namespace
 
@@ -270,6 +272,7 @@ void MidiSetup::cfg_ports(bool boot) {
   #endif
 
   // USB ports are not handled here (peering happens in MidiActivePeering::run()).
+#ifdef PLATFORM_TBD
   apply_physical_port(UART1_PORT, &MidiUart, mcl_cfg.uart1_turbo_speed,
                       mcl_cfg.uart1_device);
   apply_physical_port(UART2_PORT, &MidiUart2, mcl_cfg.uart2_turbo_speed,
@@ -287,6 +290,24 @@ void MidiSetup::cfg_ports(bool boot) {
     midi_active_peering.disconnect(UARTUSB_PORT);
     midi_active_peering.force_connect(UARTUSB_PORT, &generic_midi_device);
   }
+#else
+  uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
+  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
+  MidiUartClass *md_uart =
+      (md_port == UARTUSB_PORT) ? &MidiUartUSB : &MidiUart;
+  MidiUartClass *ext_uart =
+      (ext_port == UARTUSB_PORT) ? &MidiUartUSB : &MidiUart2;
+
+  apply_physical_port(md_port, md_uart, mcl_cfg.uart1_turbo_speed,
+                      mcl_cfg.uart1_device);
+  apply_physical_port(ext_port, ext_uart, mcl_cfg.uart2_turbo_speed,
+                      mcl_cfg.uart2_device);
+
+  if (mcl_cfg.usb_device == 3) {
+    midi_active_peering.disconnect(UARTUSB_PORT);
+    midi_active_peering.force_connect(UARTUSB_PORT, &generic_midi_device);
+  }
+#endif
 
 #ifdef PLATFORM_TBD
   cfg_p4_device_connection();
@@ -302,6 +323,7 @@ void MidiSetup::cfg_ports(bool boot) {
   mcl_seq.midi_events.setup_callbacks();
 }
 
+#ifdef PLATFORM_TBD
 void resolve_slots(PortSlot slots[SLOT_COUNT]) {
   for (uint8_t i = 0; i < SLOT_COUNT; ++i)
     slots[i] = {0, nullptr, nullptr, 0, false};
@@ -346,14 +368,15 @@ void resolve_slots(PortSlot slots[SLOT_COUNT]) {
 #endif
   }
 }
+#endif
 
 void configure_driver_ports() {
   mclsys_normalize_midi_config();
 
+#ifdef PLATFORM_TBD
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
 
-#ifdef PLATFORM_TBD
   if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) {
     MD.setPort(s[SLOT_MD].midi, s[SLOT_MD].port);
   } else {
@@ -362,23 +385,40 @@ void configure_driver_ports() {
     MD.uart = s[SLOT_MD].uart;
     MD.port = s[SLOT_MD].port;
   }
-#else
-  MD.setPort(s[SLOT_MD].midi, s[SLOT_MD].port);
-#endif
   MNM.setPort(s[SLOT_ELEKT].midi, s[SLOT_ELEKT].port);
   Analog4.setPort(s[SLOT_ELEKT].midi, s[SLOT_ELEKT].port);
 
   // GENER falls back to ELEKT slot's port when no UART is configured GENER
   PortSlot &g = s[SLOT_GENER].port ? s[SLOT_GENER] : s[SLOT_ELEKT];
-#ifdef PLATFORM_TBD
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) {
     generic_midi_device.setPort(g.midi, g.port);
   }
-#else
-  generic_midi_device.setPort(g.midi, g.port);
-#endif
 
   mcl_seq.set_outputs(s[SLOT_MD].uart ? s[SLOT_MD].uart : MD.uart,
                       g.uart ? g.uart : generic_midi_device.uart);
+#else
+  uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
+  MidiClass *md_midi = (mcl_cfg.usb_device == 1) ? &MidiUSB : &Midi;
+
+  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
+  MidiClass *ext_midi = (mcl_cfg.usb_device == 2) ? &MidiUSB : &Midi2;
+
+  MidiClass *gen_midi = ext_midi;
+  uint8_t gen_port = ext_port;
+  if (mcl_cfg.usb_device == 3) {
+    gen_midi = &MidiUSB;
+    gen_port = UARTUSB_PORT;
+  } else if (mcl_cfg.uart1_device == 0) {
+    gen_midi = &Midi;
+    gen_port = UART1_PORT;
+  }
+
+  MD.setPort(md_midi, md_port);
+  MNM.setPort(ext_midi, ext_port);
+  Analog4.setPort(ext_midi, ext_port);
+  generic_midi_device.setPort(gen_midi, gen_port);
+
+  mcl_seq.set_outputs(MD.uart, generic_midi_device.uart);
+#endif
   device_manager.update_active_slots();
 }

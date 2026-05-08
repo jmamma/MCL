@@ -80,6 +80,7 @@ void DeviceManager::detach_port(uint8_t port) {
 }
 
 void DeviceManager::update_active_slots() {
+#ifdef PLATFORM_TBD
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
   primary_ =
@@ -88,7 +89,6 @@ void DeviceManager::update_active_slots() {
       s[SLOT_ELEKT].port ? device_for_port(s[SLOT_ELEKT].port) : &null_midi_device;
   // USB GENER maps to the secondary active slot.
   if (mcl_cfg.usb_device == 3) secondary_ = device_for_port(UARTUSB_PORT);
-#ifdef PLATFORM_TBD
   MidiDevice *p4_device = device_for_port(UARTP4_PORT);
   if (p4_device != &null_midi_device) {
     if (s[SLOT_MD].port == UARTP4_PORT) {
@@ -106,6 +106,15 @@ void DeviceManager::update_active_slots() {
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
   }
+#else
+  uint8_t primary_port =
+      (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
+  uint8_t secondary_port = (mcl_cfg.usb_device == 2 ||
+                            mcl_cfg.usb_device == 3)
+                               ? UARTUSB_PORT
+                               : UART2_PORT;
+  primary_ = device_for_port(primary_port);
+  secondary_ = device_for_port(secondary_port);
 #endif
 }
 

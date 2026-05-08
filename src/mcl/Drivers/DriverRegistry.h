@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stddef.h>
+#include <stdint.h>
 
 class MidiDevice;
 
@@ -8,7 +8,7 @@ namespace DriverRegistry {
 
 struct DriverList {
   MidiDevice **items;
-  size_t count;
+  uint8_t count;
 };
 
 DriverList md_drivers();
