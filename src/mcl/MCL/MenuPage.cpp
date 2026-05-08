@@ -76,19 +76,20 @@ void MenuPageBase::init() {
   R.restore_menu_layout_deps();
   gen_menu_row_names();
 
-  ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
+  MenuBase *m = get_menu();
+  ((MCLEncoder *)encoders[1])->max = m->get_number_of_items() - 1;
 
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
     cur_row = 0;
   }
 
-  uint8_t range = get_menu()->get_option_range(encoders[1]->cur);
+  uint8_t range = m->get_option_range(encoders[1]->cur);
   ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
   ((MCLEncoder *)encoders[0])->min =
-      get_menu()->get_option_min(encoders[1]->cur);
+      m->get_option_min(encoders[1]->cur);
 
-  uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
+  uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
   if (dest_var != NULL) {
     encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
   }
@@ -184,12 +185,13 @@ void MenuPageBase::cleanup() {
 }
 
 void MenuPageBase::loop() {
+  MenuBase *m = get_menu();
 
   if (encoders[1]->hasChanged()) {
-    uint8_t range = get_menu()->get_option_range(encoders[1]->cur);
+    uint8_t range = m->get_option_range(encoders[1]->cur);
     ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
     ((MCLEncoder *)encoders[0])->min =
-        get_menu()->get_option_min(encoders[1]->cur);
+        m->get_option_min(encoders[1]->cur);
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
@@ -201,7 +203,7 @@ void MenuPageBase::loop() {
     }
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
-    uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
+    uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
       encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
     } else {
@@ -209,7 +211,7 @@ void MenuPageBase::loop() {
     }
   }
   if (encoders[0]->hasChanged()) {
-    uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
+    uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
       *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
     }
@@ -217,26 +219,27 @@ void MenuPageBase::loop() {
 }
 
 void MenuPageBase::draw_scrollbar(uint8_t x_offset) {
-  mcl_gui.draw_vertical_scrollbar(x_offset, get_menu()->get_number_of_items(),
+  MenuBase *m = get_menu();
+  mcl_gui.draw_vertical_scrollbar(x_offset, m->get_number_of_items(),
                                   visible_rows, encoders[1]->cur - cur_row);
 }
 
-void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
-  const char *name = get_menu()->get_item_name(item_n);
+void MenuPageBase::draw_item(MenuBase *m, uint8_t item_n,
+                             uint8_t number_of_items) {
+  const char *name = m->get_item_name(item_n);
   if (name != nullptr) {
     oled_display.print(name);
   }
-  uint8_t number_of_items = get_menu()->get_number_of_items();
 
   if (item_n > number_of_items - 1) {
     return;
   }
 
-  if (get_menu()->get_option_range(item_n) > 0) {
+  if (m->get_option_range(item_n) > 0) {
 
     mcl_print_P(mclstr_space);
-    uint8_t *pdest = get_menu()->get_dest_variable(item_n);
-    const char *option_name = get_menu()->get_option_name(item_n, *pdest);
+    uint8_t *pdest = m->get_dest_variable(item_n);
+    const char *option_name = m->get_option_name(item_n, *pdest);
     if (option_name == NULL) {
       oled_display.println(*pdest);
     } else {
@@ -248,7 +251,8 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
 void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
                              uint8_t width) {
   oled_display.setCursor(x_offset, y_offset);
-  uint8_t number_of_items = get_menu()->get_number_of_items();
+  MenuBase *m = get_menu();
+  uint8_t number_of_items = m->get_number_of_items();
   uint8_t max_items;
   if (number_of_items > visible_rows) {
     max_items = visible_rows;
@@ -266,7 +270,7 @@ void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
     } else {
       oled_display.setTextColor(WHITE, BLACK);
     }
-    draw_item(encoders[1]->cur - cur_row + n, n);
+    draw_item(m, encoders[1]->cur - cur_row + n, number_of_items);
   }
 
   // draw_item.read(getRow());
@@ -276,13 +280,14 @@ void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
 
 void MenuPageBase::display() {
 
-  uint8_t number_of_items = get_menu()->get_number_of_items();
+  MenuBase *m = get_menu();
+  uint8_t number_of_items = m->get_number_of_items();
   uint8_t x_offset = 43;
   oled_display.clearDisplay();
   oled_display.setTextColor(WHITE, BLACK);
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 8);
-  oled_display.println(get_menu()->get_name());
+  oled_display.println(m->get_name());
   mcl_gui.draw_vertical_dashline(x_offset - 6);
 
   draw_menu(x_offset, 8);
@@ -294,8 +299,9 @@ void MenuPageBase::display() {
 
 bool MenuPageBase::enter() {
   DEBUG_PRINT_FN();
-  void (*row_func)() = get_menu()->get_row_function(encoders[1]->cur);
-  PageIndex page_callback = get_menu()->get_page_callback(encoders[1]->cur);
+  MenuBase *m = get_menu();
+  void (*row_func)() = m->get_row_function(encoders[1]->cur);
+  PageIndex page_callback = m->get_page_callback(encoders[1]->cur);
   if (page_callback != NULL_PAGE) {
     DEBUG_PRINTLN("menu pushing page");
     DEBUG_PRINTLN((uint16_t)page_callback);
@@ -314,7 +320,8 @@ void MenuPageBase::exit() {
   if (GUI.currentPage() != this) {
     return;
   }
-  void (*exit_func)() = get_menu()->get_exit_function();
+  MenuBase *m = get_menu();
+  void (*exit_func)() = m->get_exit_function();
   if (exit_func != NULL) {
     (*exit_func)();
   }

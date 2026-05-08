@@ -31,7 +31,7 @@ public:
       : LightPage(e1, e2, e3, e4) {}
 
   void draw_scrollbar(uint8_t x_offset);
-  void draw_item(uint8_t item_n, uint8_t row);
+  void draw_item(MenuBase *menu, uint8_t item_n, uint8_t number_of_items);
   void draw_menu(uint8_t x_offset, uint8_t y_offset,
                  uint8_t width = MENU_WIDTH);
   void select_item(uint8_t item = 0) {
