@@ -109,15 +109,6 @@ uint8_t NoteInterface::notes_count() {
 void NoteInterface::draw_notes(uint8_t line_number) {
 }
 
-void NoteInterfaceMidiEvents::onNoteOnCallback_Midi(uint8_t *msg) {
-  MidiDevice *primary = device_manager.primary_device();
-  if (primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
-    return;
-  }
-  uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], primary->id);
-  note_interface.note_on_event(note_num, primary->port);
-}
 void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   if (device_manager.secondary_device()->id !=
@@ -128,16 +119,6 @@ void NoteInterfaceMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       msg[1], device_manager.secondary_device()->id);
   DEBUG_PRINTLN(note_num);
   note_interface.note_on_event(note_num, device_manager.secondary_device()->port);
-}
-void NoteInterfaceMidiEvents::onNoteOffCallback_Midi(uint8_t *msg) {
-  // MD-style trig input is handled by the KeyInterface object.
-  MidiDevice *primary = device_manager.primary_device();
-  if (primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
-    return;
-  }
-  uint8_t note_num = note_interface.note_to_track_map(
-      msg[1], primary->id);
-  note_interface.note_off_event(note_num, primary->port);
 }
 void NoteInterfaceMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
@@ -158,7 +139,6 @@ void NoteInterfaceMidiEvents::setup_callbacks() {
     return;
   }
 
-  bound_primary_midi = nullptr;
   bound_secondary_midi = nullptr;
 
   MidiDevice *secondary = device_manager.secondary_device();
@@ -182,16 +162,6 @@ void NoteInterfaceMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  if (bound_primary_midi != nullptr) {
-    bound_primary_midi->removeOnNoteOnCallback(
-        this,
-        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOnCallback_Midi);
-    bound_primary_midi->removeOnNoteOffCallback(
-        this,
-        (midi_callback_ptr_t)&NoteInterfaceMidiEvents::onNoteOffCallback_Midi);
-    bound_primary_midi = nullptr;
-  }
-
   if (bound_secondary_midi != nullptr) {
     bound_secondary_midi->removeOnNoteOnCallback(
         this,
