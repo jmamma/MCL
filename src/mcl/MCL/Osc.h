@@ -16,7 +16,7 @@ class Osc {
 public:
   float sample_rate;
   Osc(float sample_rate_ = 44100) { sample_rate = sample_rate_; }
-  virtual float get_sample(uint32_t sample_number, float freq);
+  float get_sample(uint32_t sample_number, float freq);
   float poly_blep(float t, float freq);
   void set_sample_rate(float hz);
 };
