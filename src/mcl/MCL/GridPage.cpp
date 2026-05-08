@@ -796,8 +796,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   }
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
-  SeqTrack seq_track;
-
   uint8_t load_mode_old = mcl_cfg.load_mode;
   uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == _col &&
                  slot_undo_y == getRow();
@@ -822,7 +820,10 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   uint8_t slot_update = 0;
 
-  uint16_t target_length = (uint32_t)slot.link.length * seq_track.get_speed_multiplier_int(slot.link.speed) * slot.link.loops / 12;
+  uint16_t target_length =
+      (uint32_t)slot.link.length *
+      SeqTrack::get_speed_multiplier_int(slot.link.speed) * slot.link.loops /
+      12;
 
   bool slot_changed_length = temp_slot.link.length != slot.link.length;
   bool slot_changed_loops = temp_slot.link.loops != slot.link.loops;
@@ -917,7 +918,9 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
           }
           else {
             if (!temp_slot.load_from_grid(xpos + cur_grid * GRID_WIDTH, ypos)) { continue; }
-            uint16_t temp_slot_length = (uint16_t)temp_slot.link.length * seq_track.get_speed_multiplier_int(temp_slot.link.speed) / 12;
+            uint16_t temp_slot_length =
+                (uint16_t)temp_slot.link.length *
+                SeqTrack::get_speed_multiplier_int(temp_slot.link.speed) / 12;
             bool store_slot = false;
             if (slot_changed_loops && slot.link.loops == 0) {
                 temp_slot.link.loops = 0;

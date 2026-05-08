@@ -116,7 +116,7 @@ public:
 
   void toggle_mute() { mute_state = !mute_state; }
 
-  uint8_t get_timing_mid(uint8_t speed_);
+  static uint8_t get_timing_mid(uint8_t speed_);
   uint8_t get_timing_mid() { return get_timing_mid(speed); }
 
   FORCED_INLINE() uint8_t get_timing_mid_inline() {

@@ -614,8 +614,7 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   oled_display.setFont(&TomThumb);
 
   oled_display.setTextColor(WHITE);
-  SeqTrack seq_track;
-  uint8_t timing_mid = seq_track.get_timing_mid(speed);
+  uint8_t timing_mid = SeqTrack::get_timing_mid(speed);
   uint8_t degrees = timing_mid * 2;
   // Triplets
 
