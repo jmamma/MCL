@@ -19,15 +19,13 @@ public:
   void draw_dest(uint8_t knob, uint8_t value, bool dest = true);
   void draw_param(uint8_t knob, uint8_t  dest, uint8_t param);
 
-  virtual void setup();
+  void setup();
 
-  virtual void init();
-  virtual void cleanup();
+  void init();
+  void cleanup();
   virtual void config_encoders() {};
-  virtual void setup_callbacks() {};
-  virtual void remove_callbacks() {};
 
-  virtual bool handleEvent(gui_event_t *event);
+  bool handleEvent(gui_event_t *event);
 };
 
 #endif /* PERFPAGEPARENT_H__ */

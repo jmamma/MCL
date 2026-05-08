@@ -15,10 +15,9 @@ void PerfPageParent::init() {
   R.Clear();
   R.use_machine_param_names();
   R.use_icons_knob();
-  setup_callbacks();
 }
 
-void PerfPageParent::cleanup() { MD.set_key_repeat(1); remove_callbacks(); }
+void PerfPageParent::cleanup() { MD.set_key_repeat(1); }
 
 void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
 
