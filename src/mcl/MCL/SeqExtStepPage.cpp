@@ -5,9 +5,11 @@
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #include "SeqExtStepTrackApi.h"
-#include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
+#ifdef PLATFORM_TBD
+#include "../Drivers/Generic/GenericMidiDevice.h"
+#endif
 
 namespace {
 
@@ -30,6 +32,7 @@ bool seq_ext_step_uses_midi_seq_tracks() {
 }
 #endif
 
+#ifdef PLATFORM_TBD
 MidiClass *seq_ext_step_input_midi() {
   MidiDevice *device = device_manager.secondary_device();
   if (device != nullptr && device->midi != nullptr) {
@@ -37,6 +40,7 @@ MidiClass *seq_ext_step_input_midi() {
   }
   return generic_midi_device.midi;
 }
+#endif
 
 bool seq_ext_step_param_menu_label(uint8_t entry_index, uint8_t option_n,
                                    char *dst, uint8_t dst_len) {
@@ -1381,6 +1385,10 @@ void SeqExtStepMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
 }
 
 void SeqExtStepMidiEvents::setup_callbacks() {
+#ifndef PLATFORM_TBD
+  state = true;
+  return;
+#else
   if (state) {
     return;
   }
@@ -1407,10 +1415,16 @@ void SeqExtStepMidiEvents::setup_callbacks() {
       (midi_callback_ptr_t)&SeqExtStepMidiEvents::
           onChannelPressureCallback_Midi2);
   state = true;
+#endif
 }
 
 void SeqExtStepMidiEvents::remove_callbacks() {
 
+#ifndef PLATFORM_TBD
+  state = false;
+  bound_midi = nullptr;
+  return;
+#else
   if (!state) {
     return;
   }
@@ -1439,4 +1453,5 @@ void SeqExtStepMidiEvents::remove_callbacks() {
           onChannelPressureCallback_Midi2);
   state = false;
   bound_midi = nullptr;
+#endif
 }
