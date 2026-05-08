@@ -83,13 +83,20 @@ static inline uint8_t normalized_seq_slot(uint8_t slot) {
   return slot == 2 ? 2 : 1;
 }
 
+#if defined(__AVR__)
+constexpr bool kSeqSlotsCanSharePhysicalDevice = false;
+#else
+constexpr bool kSeqSlotsCanSharePhysicalDevice = true;
+#endif
+
 MidiDevice *SeqPage::device_for_seq_slot(uint8_t slot) {
   return normalized_seq_slot(slot) == 2 ? device_manager.secondary_device()
                                        : device_manager.primary_device();
 }
 
 bool SeqPage::devices_share_physical() {
-  return device_manager.primary_device() == device_manager.secondary_device();
+  return kSeqSlotsCanSharePhysicalDevice &&
+         device_manager.primary_device() == device_manager.secondary_device();
 }
 
 uint8_t SeqPage::current_device_slot() {
