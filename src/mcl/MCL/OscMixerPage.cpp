@@ -44,13 +44,9 @@ void OscMixerPage::display() {
   }
 }
 
-float OscMixerPage::get_max_gain() {
-  float max_gain = (float)MAX_HEADROOM / (num_of_channels);
-  return max_gain;
-}
 float OscMixerPage::get_gain(uint8_t channel) {
   MCLEncoder *enc_ = (MCLEncoder *)(encoders[channel]);
-  float max_gain = (float)MAX_HEADROOM / (num_of_channels);
+  float max_gain = (float)MAX_HEADROOM / (float)NUM_CHANNELS;
   return ((float)enc_->cur / (float)127) * max_gain;
 }
 
@@ -98,8 +94,7 @@ void OscMixerPage::draw_wav() {
                             sine_osc, tri_osc, pul_osc, saw_osc, usr_osc,
                             false);
       // Sum oscillator samples together
-      sample += dsp.saturate((osc_sample * wd.mixer.get_gain(i)),
-                             wd.mixer.get_max_gain());
+      sample += osc_sample * wd.mixer.get_gain(i);
       // DEBUG_PRINTLN(mixer.get_gain(i));
     }
     // Check for overflow outside of int16_t ranges.

@@ -127,7 +127,7 @@ bool WavDesigner::render() {
                               saw_osc, usr_osc);
       }
       // Sum oscillator samples together
-      sample += dsp.saturate(osc_sample * mixer.get_gain(i), mixer.get_max_gain());
+      sample += osc_sample * mixer.get_gain(i);
     }
     // Check for overflow outside of int16_t ranges.
     DEBUG_PRINTLN(sample);

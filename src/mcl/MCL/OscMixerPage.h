@@ -9,7 +9,7 @@
 class OscMixerPage : public WavDesignerPage {
 public:
   // Static variables shared amongst derived objects
-  float num_of_channels = 3;
+  static constexpr uint8_t NUM_CHANNELS = 3;
   uint8_t sample_number;
   uint8_t scanline_width;
   MCLEncoder enc1;
@@ -37,7 +37,6 @@ public:
   virtual void init();
   virtual void loop();
   virtual void cleanup();
-  float get_max_gain();
   float get_gain(uint8_t channel);
   void draw_levels();
   void draw_wav();
