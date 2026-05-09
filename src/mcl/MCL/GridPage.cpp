@@ -147,7 +147,6 @@ void GridPage::send_row_led() {
   MD.set_trigleds(blink_mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 void GridPage::close_bank_popup() {
-  if (bank_popup == 0) { return; }
   if (bank_popup == 2) {
     MD.draw_close_bank();
   }
@@ -159,8 +158,8 @@ void GridPage::close_bank_popup() {
   last_page = NULL_PAGE;
   bank_popup = 0;
   bank_popup_loadmask = 0;
-  bank_popup_first_trig = 255;
 #ifdef PLATFORM_TBD
+  bank_popup_first_trig = 255;
   bank_popup_oled_visible = true;
 #endif
   note_interface.init_notes();
@@ -433,12 +432,8 @@ void GridPage::display_counters() {
 
 static void draw_grid_device_label(uint8_t x, uint8_t y,
                                    MidiDevice *device) {
-  char label[3] = {' ', ' ', '\0'};
-  if (device != nullptr && device != &null_midi_device &&
-      device->name != nullptr) {
-    label[0] = device->name[0] ? device->name[0] : ' ';
-    label[1] = device->name[1] ? device->name[1] : ' ';
-  }
+  const char *name = device->name;
+  char label[3] = {name[0] ? name[0] : ' ', name[1] ? name[1] : ' ', '\0'};
   oled_display.setCursor(x, y);
   oled_display.print(label);
 }

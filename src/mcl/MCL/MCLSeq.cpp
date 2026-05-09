@@ -758,9 +758,7 @@ void MCLSeqMidiEvents::setup_callbacks() {
 #ifdef EXT_TRACKS
   MidiDevice *secondary = device_manager.secondary_device();
   MidiClass *secondary_midi =
-      (secondary != nullptr && secondary->midi != nullptr)
-          ? secondary->midi
-          : generic_midi_device.midi;
+      secondary->midi != nullptr ? secondary->midi : generic_midi_device.midi;
   setup_mcl_seq_secondary_midi(this, secondary_midi);
 #endif
   state = true;

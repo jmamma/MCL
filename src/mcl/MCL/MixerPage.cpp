@@ -283,7 +283,8 @@ void MixerPage::loop() {
   bool old_draw_encoders = draw_encoders;
   sync_selected_mixer_device();
   const bool use_perf_encoders = SeqTrackUtil::is_md_device(midi_device);
-  bool mixer_encoder_edit = handle_mixer_encoder_edits(use_perf_encoders);
+  bool mixer_encoder_edit = note_interface.notes_on &&
+                            handle_mixer_encoder_edits(use_perf_encoders);
 
   if (use_perf_encoders && !mixer_encoder_edit) {
     perf_page.func_enc_check();
