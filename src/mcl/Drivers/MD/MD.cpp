@@ -1217,7 +1217,7 @@ void MDClass::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 12 + b;
-  sendCC(channel + global.baseChannel, cc, (uint8_t)mute);
+  sendCC(channel + global.baseChannel, cc, (uint8_t)mute, uart_);
 }
 
 void MDClass::setGlobal(uint8_t id) {
