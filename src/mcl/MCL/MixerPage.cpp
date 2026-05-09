@@ -283,14 +283,15 @@ void MixerPage::loop() {
   bool old_draw_encoders = draw_encoders;
   sync_selected_mixer_device();
   const bool use_perf_encoders = SeqTrackUtil::is_md_device(midi_device);
-  bool mixer_encoder_edit = note_interface.notes_on &&
+  const bool notes_on = note_interface.notes_on;
+  bool mixer_encoder_edit = notes_on &&
                             handle_mixer_encoder_edits(use_perf_encoders);
 
   if (use_perf_encoders && !mixer_encoder_edit) {
     perf_page.func_enc_check();
 
     if ((key_interface.is_key_down(MDX_KEY_NO)) &&
-        preview_mute_set != 255 && note_interface.notes_on == 0) {
+        preview_mute_set != 255 && !notes_on) {
       for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
         PerfEncoder *enc = (PerfEncoder*) encoders[n];
         if (enc->hasChanged()) {
@@ -314,7 +315,7 @@ void MixerPage::loop() {
       for (uint8_t n = 0; n < 4; n++) {
         bool check = (key_interface.cmd_key_state & mask);
 
-        if (note_interface.notes_on || check) {
+        if (notes_on || check) {
           encoders_used_clock[n] = read_clock_ms() + timeout + 1;
         }
         if (mcl_gui.show_encoder_value(encoders[n], timeout)) {
