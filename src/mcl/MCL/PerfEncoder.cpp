@@ -10,6 +10,9 @@
 
 PerfScene PerfData::scenes[NUM_SCENES];
 
+PerfEncoder::PerfEncoder(int _max, int _min, int _res, uint8_t _speed)
+    : MCLEncoder(_max, _min, _res, _speed) {}
+
 void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_,MidiUartClass *uart2_) {
   if (uart_ == nullptr) { uart_ = mcl_seq.primary_output; }
   if (uart2_ == nullptr) { uart2_ = mcl_seq.secondary_output; }

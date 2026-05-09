@@ -83,7 +83,7 @@ public:
 
   MidiSysexListenerClass *listeners[NUM_SYSEX_SLAVES];
 
-  MidiSysexClass(MidiUartClass *_uart, RingBuffer<> *_rb) {
+  MidiSysexClass(MidiUartClass *_uart, RingBuffer<> *_rb) NOINLINE() {
     uart = _uart;
     recording = false;
     sysexLongId = false;
