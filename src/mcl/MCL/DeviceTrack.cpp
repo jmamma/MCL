@@ -20,7 +20,6 @@ ShowSize<sizeof(GridRowHeader)> show_perf_size;
 */
 
 DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
-  active = track_type;
   switch (track_type) {
   default:
   case EMPTY_TRACK_TYPE:
@@ -28,12 +27,10 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
     break;
   case MD_TRACK_TYPE:
     ::new (this) MDTrack;
-    active = track_type;
     break;
 #if !defined(__AVR__)
   case MDSPSX_TRACK_TYPE:
     ::new (this) SPSXTrack;
-    active = track_type;
     break;
 #endif
   case A4_TRACK_TYPE:
