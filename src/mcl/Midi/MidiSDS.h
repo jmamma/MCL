@@ -88,7 +88,7 @@ private:
   // Consolidated send method (used by sendSyx and sendWav)
   bool sendFile(SDSFileReader &reader, const char *filename,
                 uint16_t sample_number, const char *samplename,
-                bool show_progress, bool require_sds_header);
+                bool show_progress);
 };
 // Abstract base class for file readers
 struct SDSFileReader {

@@ -370,7 +370,7 @@ MidiSDSClass::AckResult MidiSDSClass::awaitDataAck(uint16_t latency_ms) {
 
 bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
                             uint16_t sample_number, const char *samplename,
-                            bool show_progress, bool require_sds_header) {
+                            bool show_progress) {
   uint8_t buf[256];
   int szbuf;
   bool ret = true;
@@ -394,11 +394,6 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
     ret = false;
     goto cleanup;
   }
-  if (require_sds_header &&
-      (szbuf < 4 || buf[1] != 0x7E || buf[3] != 0x01)) {
-    ret = false;
-    goto cleanup;
-  }
 
   // Validate and update sample number for first packet
   if (buf[1] == 0x7E && (buf[3] == 0x01 || buf[3] == 0x03)) {
@@ -418,9 +413,7 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
   }
 
   // Set sample name if provided
-  if (samplename != nullptr) {
-    set_sample_name_if_needed(samplename, filename, sample_number);
-  }
+  set_sample_name_if_needed(samplename, filename, sample_number);
 
   oled_display.clearDisplay();
   latency_ms = calculate_latency(MD.uart->speed, sizeof(buf));
@@ -477,7 +470,7 @@ cleanup:
 
 bool MidiSDSClass::sendSyx(const char *filename, uint16_t sample_number) {
   SyxReader reader;
-  return sendFile(reader, filename, sample_number, nullptr, true, true);
+  return sendFile(reader, filename, sample_number, nullptr, true);
 }
 
 bool MidiSDSClass::sendWav(const char *filename, const char *samplename,
@@ -485,9 +478,7 @@ bool MidiSDSClass::sendWav(const char *filename, const char *samplename,
   WavReader reader;
   reader.wav = &wav_file;
   reader.sample_num = sample_number;
-  const char *sample_name = samplename ? samplename : filename;
-  return sendFile(reader, filename, sample_number, sample_name, show_progress,
-                  false);
+  return sendFile(reader, filename, sample_number, samplename, show_progress);
 }
 
 // ============================================================================
