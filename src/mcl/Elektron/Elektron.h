@@ -362,7 +362,7 @@ public:
    * requestPattern, etc...
    **/
   void sendCommand(ElektronCommand command, uint8_t param);
-  virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartClass *uart_ = nullptr);
+  uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartClass *uart_ = nullptr);
   virtual uint16_t sendRequest(uint8_t type, uint8_t param, bool send = true);
 
  /**
