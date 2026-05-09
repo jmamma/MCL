@@ -418,8 +418,13 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
       MidiDeviceMixerParam info;
       if (midi_device->mixer_param(mixer_device_idx, i, param, &info)) {
         newval = info.value + dir;
+#ifdef PLATFORM_TBD
         if (newval < info.min_value) newval = info.min_value;
         if (newval > info.max_value) newval = info.max_value;
+#else
+        if (newval < 0) newval = 0;
+        if (newval > 127) newval = 127;
+#endif
         if (midi_device->set_mixer_param(mixer_device_idx, i, param, newval,
                                          true)) {
           SET_BIT16(redraw_mask, i);

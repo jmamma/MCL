@@ -24,8 +24,6 @@ struct MidiDeviceMixerParam {
   uint8_t type = 0;
   bool sendable = false;
 #else
-  uint8_t min_value = 0;
-  uint8_t max_value = 127;
   uint8_t value = 0;
 #endif
 
@@ -36,8 +34,8 @@ struct MidiDeviceMixerParam {
     max_value = max_value_;
     value = value_;
 #else
-    min_value = (uint8_t)min_value_;
-    max_value = (uint8_t)max_value_;
+    (void)min_value_;
+    (void)max_value_;
     value = (uint8_t)value_;
 #endif
   }
