@@ -334,15 +334,21 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
 
   GridDeviceTrack gdt;
 #if !defined(__AVR__)
-  if (is_spsx) {
+  bool use_spsx_tracks = mcl_seq.using_spsx_tracks;
+  if (is_spsx != use_spsx_tracks) {
+    if (!(is_spsx ? mcl_seq.switch_to_spsx() : mcl_seq.switch_to_legacy())) {
+      return;
+    }
+    use_spsx_tracks = is_spsx;
+  }
+
+  if (use_spsx_tracks) {
     for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
       gdt.init(MDSPSX_TRACK_TYPE, GROUP_DEV, device_idx,
                (SeqTrack *)&(mcl_seq.spsx_tracks[i]));
       add_track_to_grid(grid_idx, i, &gdt);
     }
-    mcl_seq.switch_to_spsx();
   } else {
-    mcl_seq.switch_to_legacy();
 #endif
     for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
       gdt.init(MD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.md_tracks[i]));
