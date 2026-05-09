@@ -113,15 +113,15 @@ public:
 
     auto p = init_track_type(this->active);
 #if defined(__AVR__)
-    if (p->allow_cast_to_parent() && p->get_parent_model() == track_type) {
-      p->active = track_type;
+    if (p->get_parent_model() == track_type && p->allow_cast_to_parent()) {
+      p->active = p->get_parent_model();
       return p;
     }
     return nullptr;
 #else
     uint16_t source_size = p->get_track_size();
-    bool parent_cast = p->allow_cast_to_parent() &&
-                       p->get_parent_model() == track_type;
+    bool parent_cast = p->get_parent_model() == track_type &&
+                       p->allow_cast_to_parent();
 
     uintptr_t pos = load_region +
                     static_cast<uintptr_t>(load_region_size *

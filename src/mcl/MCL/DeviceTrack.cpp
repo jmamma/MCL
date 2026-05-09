@@ -74,7 +74,7 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
 
 bool DeviceTrack::can_materialize_as(uint8_t track_type) {
   return active == track_type ||
-         (allow_cast_to_parent() && get_parent_model() == track_type);
+         (get_parent_model() == track_type && allow_cast_to_parent());
 }
 
 DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
@@ -85,7 +85,7 @@ DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
   if (active == track_type) {
     return this;
   }
-  if (allow_cast_to_parent() && get_parent_model() == track_type) {
+  if (get_parent_model() == track_type && allow_cast_to_parent()) {
     return init_track_type(track_type);
   }
   return nullptr;

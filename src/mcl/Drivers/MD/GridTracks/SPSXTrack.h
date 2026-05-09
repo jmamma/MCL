@@ -92,6 +92,9 @@ public:
                                       SeqTrack *seq_track);
   virtual uint8_t get_model() { return machine.get_model(); }
   virtual uint8_t get_device_type() { return MDSPSX_TRACK_TYPE; }
+  virtual uint8_t get_parent_model() { return MD_TRACK_TYPE; }
+  virtual bool allow_cast_to_parent() { return true; }
+
   virtual void *get_sound_data_ptr() { return &machine; }
   virtual size_t get_sound_data_size() { return sizeof(SPSMachine); }
   virtual size_t get_sound_cmp_size() { return 27; }
