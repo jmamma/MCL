@@ -67,7 +67,7 @@ public:
   void addTask(Task *task) { tasks.add(task); }
   void removeTask(Task *task) { tasks.remove(task); }
 
-  virtual void loop();
+  void loop();
   void wake_screen_saver();
   void mirror();
   void display();
@@ -75,7 +75,7 @@ public:
     events.init();
   }
   // Methods previously in Sketch that might be needed
-  virtual void show() {}
-  virtual void hide() {}
-  virtual void setup() {}
+  void show() {}
+  void hide() {}
+  void setup() {}
 };
