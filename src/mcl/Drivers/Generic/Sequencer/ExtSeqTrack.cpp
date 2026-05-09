@@ -922,6 +922,9 @@ void ExtSeqTrack::clear_track_locks() {
 }
 
 void ExtSeqTrack::clear_track_locks(uint8_t idx) {
+  if (idx >= NUM_LOCKS) {
+    return;
+  }
   for (uint8_t n = 0; n < NUM_EXT_STEPS; n++) {
     clear_track_locks_idx(n, idx, 255);
   }
@@ -936,6 +939,9 @@ bool ExtSeqTrack::clear_track_locks(uint8_t step, uint8_t track_param,
 
 bool ExtSeqTrack::clear_track_locks_idx(uint8_t step, uint8_t lock_idx,
                                         uint8_t value) {
+  if (lock_idx >= NUM_LOCKS) {
+    return false;
+  }
   uint16_t start_idx, end;
   locate(step, start_idx, end);
   bool ret = false;
