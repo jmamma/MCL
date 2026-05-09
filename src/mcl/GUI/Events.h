@@ -47,7 +47,7 @@ typedef struct gui_event_s {
 
 class EventManager {
 private:
-  volatile event_ignore_mask_t ignoreMask;
+  volatile event_ignore_mask_t ignoreMask = 0;
   volatile CRingBuffer<gui_event_t, MAX_EVENTS> eventBuffer;
 
   static event_ignore_mask_t buttonMask(uint8_t button) {
@@ -153,7 +153,7 @@ private:
   }
 #endif
 public:
-  EventManager() : ignoreMask(0) {}
+  EventManager() = default;
 
   void init() {
     eventBuffer.init();
