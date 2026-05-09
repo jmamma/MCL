@@ -526,9 +526,9 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   uint16_t note_idx_off, note_idx_on;
   bool note_on_found = false;
   uint16_t ev_idx, ev_end;
-  int32_t note_start, note_end;
-  const int32_t selection_start = cur_x;
-  const int32_t selection_end = (uint32_t)cur_x + cur_w;
+  int16_t note_start, note_end;
+  const int16_t selection_start = (int16_t)cur_x;
+  const int16_t selection_end = (int16_t)(cur_x + cur_w);
   bool ret = false;
 
   for (uint8_t i = 0; i < length; i++) {
