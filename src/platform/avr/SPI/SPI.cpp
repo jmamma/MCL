@@ -15,6 +15,10 @@
 
 SPIClass SPI;
 
+#if defined(__AVR_ATmega2560__) && (PIN_SPI_SS == 53) && (PIN_SPI_MOSI == 51) && (PIN_SPI_SCK == 52)
+#define SPI_FIXED_MEGA_PINS 1
+#endif
+
 uint8_t SPIClass::initialized = 0;
 uint8_t SPIClass::interruptMode = 0;
 uint8_t SPIClass::interruptMask = 0;
@@ -29,6 +33,9 @@ void SPIClass::begin()
         uint8_t sreg = SREG;
   noInterrupts(); // Protect from a scheduler and prevent transactionBegin
   if (!initialized) {
+#ifdef SPI_FIXED_MEGA_PINS
+    DDRB |= _BV(PB0);
+#else
     // Set SS to high so a connected chip will be "deselected" by default
     uint8_t port = digitalPinToPort(SS);
     uint8_t bit = digitalPinToBitMask(SS);
@@ -44,6 +51,7 @@ void SPIClass::begin()
     // a general purpose output port (it doesn't influence
     // SPI operations).
     pinMode(SS, OUTPUT);
+#endif
 
     // Warning: if the SS pin ever becomes a LOW INPUT then SPI
     // automatically switches to Slave, so the data direction of
@@ -57,8 +65,12 @@ void SPIClass::begin()
     // clocking in a single bit since the lines go directly
     // from "input" to SPI control.
     // http://code.google.com/p/arduino/issues/detail?id=888
+#ifdef SPI_FIXED_MEGA_PINS
+    DDRB |= _BV(PB1) | _BV(PB2);
+#else
     pinMode(SCK, OUTPUT);
     pinMode(MOSI, OUTPUT);
+#endif
   }
   initialized++; // reference count
   SREG = sreg;
