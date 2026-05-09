@@ -6,16 +6,16 @@ void MenuBase::enable_entry(uint8_t entry_index, bool en) {
   auto bit = entry_index % 8;
 
   if (en) {
-    entry_mask[midx] |= _BV(bit);
+    disabled_entry_mask[midx] &= ~_BV(bit);
   } else {
-    entry_mask[midx] &= ~_BV(bit);
+    disabled_entry_mask[midx] |= _BV(bit);
   }
 }
 
 bool MenuBase::is_entry_enable(uint8_t entry_index) {
   auto midx = entry_index / 8;
   auto bit = entry_index % 8;
-  return IS_BIT_SET(entry_mask[midx], bit);
+  return !IS_BIT_SET(disabled_entry_mask[midx], bit);
 }
 
 menu_function_t MenuBase::get_exit_function() {

@@ -13,7 +13,8 @@ typedef bool (*menu_option_name_override_t)(uint8_t entry_index,
 
 class MenuBase {
 public:
-  uint8_t entry_mask[4];
+  // Zero-initialized: no disabled bits means all menu entries are enabled.
+  uint8_t disabled_entry_mask[4];
   menu_option_t* custom_options[2];
 #ifdef PLATFORM_TBD
   menu_option_name_override_t option_name_override = nullptr;
@@ -25,10 +26,7 @@ public:
   uint8_t entry_count = 0;
   uint8_t exit_fn_id = 0;
 
-  MenuBase() {
-    memset(entry_mask, 0xFF, sizeof(entry_mask));
-    memset(custom_options,0,sizeof(custom_options));
-  }
+  MenuBase() = default;
 
   /// use a custom options name lookup table.
   /// the table can be dynamically generated, so it is not limited
