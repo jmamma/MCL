@@ -18,12 +18,9 @@ void OscPage::setup() {
 }
 
 float OscPage::get_freq() {
-  float fzero = 440.0f;
-  float a = pow(2.00f, 1.00f / 12.00f);
-  float n = enc1.cur - 64;
-  float fn = fzero * (float) powf(a, n);
-  float fout = fn * (float) powf(2.0f, (float)(100 - enc2.cur) / (float)1200);
-  return fout;
+  float cents = (float)(enc1.cur - 64) * 100.0f + (float)(100 - enc2.cur);
+  float scale = (float)powf(2.0f, cents / 1200.0f);
+  return 440.0f * scale;
 }
 void OscPage::init() {
   WavDesignerPage::init();

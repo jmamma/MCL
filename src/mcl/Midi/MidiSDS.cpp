@@ -93,7 +93,7 @@ struct WavReader : SDSFileReader {
     if (sample_format % 8 > 0)
       bytes_per_word++;
 
-    sample_offset = (pow(2, sample_format) / 2);
+    sample_offset = midi_sds_sample_midpoint(sample_format);
     num_samples_per_packet = 120 / midi_bytes_per_word;
 
     return true;

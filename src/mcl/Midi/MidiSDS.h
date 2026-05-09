@@ -9,6 +9,10 @@
 #define SDS_REC 0x02
 #define SDS_READY 0xFF
 
+static inline uint32_t midi_sds_sample_midpoint(uint8_t sample_format) {
+  return UINT32_C(1) << (sample_format - 1);
+}
+
 // Forward declarations for the reader classes
 struct SDSFileReader;
 struct SyxReader;

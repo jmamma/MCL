@@ -20,6 +20,13 @@ void MidiSDSSysexListenerClass::handleByte(uint8_t byte) {}
 #define MD_ID 0x02
 #define MD_SDS_NAME 0x73
 
+static uint32_t read_sds_u21(MidiSysexClass *sysex, uint8_t &idx) {
+  uint32_t value = sysex->getByte(idx++);
+  value |= ((uint32_t)sysex->getByte(idx++) << 7);
+  value |= ((uint32_t)sysex->getByte(idx++) << 14);
+  return value;
+}
+
 void MidiSDSSysexListenerClass::end() {
   if (sysex->getByte(0) == 0x7E) {
     isSDSMessage = true;
@@ -109,23 +116,15 @@ void MidiSDSSysexListenerClass::dump_header() {
 
   midi_sds.sampleFormat = sysex->getByte(i++);
 
-  midi_sds.samplePeriod = sysex->getByte(i++);
-  midi_sds.samplePeriod |= ((uint32_t)sysex->getByte(i++) << 7);
-  midi_sds.samplePeriod |= ((uint32_t)sysex->getByte(i++) << 14);
+  midi_sds.samplePeriod = read_sds_u21(sysex, i);
 
   // SampleLength in words;
   DEBUG_PRINTLN(sysex->getByte(i));
-  midi_sds.sampleLength = (uint32_t)(sysex->getByte(i++));
-  midi_sds.sampleLength |= ((uint32_t)sysex->getByte(i++) << 7);
-  midi_sds.sampleLength |= ((uint32_t)sysex->getByte(i++) << 14);
+  midi_sds.sampleLength = read_sds_u21(sysex, i);
 
-  midi_sds.loopStart = (uint32_t)(sysex->getByte(i++));
-  midi_sds.loopStart |= ((uint32_t)sysex->getByte(i++) << 7);
-  midi_sds.loopStart |= ((uint32_t)sysex->getByte(i++) << 14);
+  midi_sds.loopStart = read_sds_u21(sysex, i);
 
-  midi_sds.loopEnd = (uint32_t)(sysex->getByte(i++));
-  midi_sds.loopEnd |= ((uint32_t)sysex->getByte(i++) << 7);
-  midi_sds.loopEnd |= ((uint32_t)sysex->getByte(i++) << 14);
+  midi_sds.loopEnd = read_sds_u21(sysex, i);
 
   midi_sds.loopType = sysex->getByte(i++);
 
@@ -167,9 +166,7 @@ void MidiSDSSysexListenerClass::dump_header() {
   midi_sds.samplesSoFar = 0;
   midi_sds.packetNumber = 0;
 
-  //  midi_sds.sample_offset = (pow(2, midi_sds.sampleFormat) / 2) + 1;
-
-  midi_sds.sample_offset = (pow(2, midi_sds.sampleFormat) / 2);
+  midi_sds.sample_offset = midi_sds_sample_midpoint(midi_sds.sampleFormat);
   midi_sds.midiBytes_per_word = midi_sds.sampleFormat / 7;
   midi_sds.bytes_per_word = midi_sds.sampleFormat / 8;
   if (midi_sds.sampleFormat % 8 > 0) {
@@ -243,8 +240,7 @@ void MidiSDSSysexListenerClass::data_packet() {
       // from unsigned to signed by subtracting offset
 
       if (midi_sds.bytes_per_word > 1) {
-        signed_val = decode_val - midi_sds.sample_offset;
-        // decode_val -= midi_sds.sample_offset;
+        signed_val = (int32_t)decode_val - midi_sds.sample_offset;
       } else {
         signed_val = decode_val;
       }
