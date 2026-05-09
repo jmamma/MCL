@@ -118,6 +118,7 @@ void MDClass::cleanup_listeners() {
   }
 }
 
+#ifdef PLATFORM_TBD
 bool MDClass::supports_capability(MidiDeviceCapability capability) const {
   switch (capability) {
   case MidiDeviceCapability::MdTrigInterface:
@@ -127,6 +128,7 @@ bool MDClass::supports_capability(MidiDeviceCapability capability) const {
   }
   return ElektronDevice::supports_capability(capability);
 }
+#endif
 
 uint8_t MDClass::mixer_default_param(uint8_t device_idx) const {
   (void)device_idx;

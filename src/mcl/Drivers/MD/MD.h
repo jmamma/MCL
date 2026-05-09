@@ -94,7 +94,9 @@ public:
   virtual void requestPattern(uint8_t pattern);
   virtual void requestGlobal(uint8_t global);
   virtual void init_grid_devices(uint8_t device_idx);
+#ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
+#endif
   virtual uint8_t mixer_default_param(uint8_t device_idx) const override;
   virtual bool mixer_param(uint8_t device_idx, uint8_t track,
                            uint8_t param_idx,

@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "MidiDeviceCapabilities.h"
+#include "MidiID.h"
 #include <inttypes.h>
 
 #ifdef PLATFORM_TBD
@@ -133,10 +134,17 @@ public:
 #endif
 
   virtual void setup() {}
+#ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const {
     (void)capability;
     return false;
   }
+#else
+  bool supports_capability(MidiDeviceCapability capability) const {
+    (void)capability;
+    return id == DEVICE_MD;
+  }
+#endif
 
   virtual void disconnect(uint8_t device_idx) {
     cleanup(device_idx);
