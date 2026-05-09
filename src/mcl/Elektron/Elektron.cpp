@@ -346,23 +346,39 @@ uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
 }
 
 void ElektronDevice::requestKit(uint8_t kit) {
+#if defined(__AVR__)
+  sendRequest(sysex_protocol.kitrequest_id, kit);
+#else
   uint8_t data[] = {sysex_protocol.kitrequest_id, kit, SYSEX_VERSION_LEGACY};
   sendRequest(data, sizeof(data));
+#endif
 }
 
 void ElektronDevice::requestPattern(uint8_t pattern) {
+#if defined(__AVR__)
+  sendRequest(sysex_protocol.patternrequest_id, pattern);
+#else
   uint8_t data[] = {sysex_protocol.patternrequest_id, pattern, SYSEX_VERSION_LEGACY};
   sendRequest(data, sizeof(data));
+#endif
 }
 
 void ElektronDevice::requestSong(uint8_t song) {
+#if defined(__AVR__)
+  sendRequest(sysex_protocol.songrequest_id, song);
+#else
   uint8_t data[] = {sysex_protocol.songrequest_id, song, SYSEX_VERSION_LEGACY};
   sendRequest(data, sizeof(data));
+#endif
 }
 
 void ElektronDevice::requestGlobal(uint8_t global) {
+#if defined(__AVR__)
+  sendRequest(sysex_protocol.globalrequest_id, global);
+#else
   uint8_t data[] = {sysex_protocol.globalrequest_id, global, SYSEX_VERSION_LEGACY};
   sendRequest(data, sizeof(data));
+#endif
 }
 
 uint8_t ElektronDevice::getBlockingStatus(uint8_t type, uint16_t timeout) {

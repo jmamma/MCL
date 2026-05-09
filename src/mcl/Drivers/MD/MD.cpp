@@ -234,21 +234,33 @@ void MDClass::setProgramChange(uint8_t val) {
 }
 
 void MDClass::requestKit(uint8_t kit) {
+#if defined(__AVR__)
+  sendRequest(sysex_protocol.kitrequest_id, kit);
+#else
   uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
   uint8_t data[] = {sysex_protocol.kitrequest_id, kit, ver};
   sendRequest(data, sizeof(data));
+#endif
 }
 
 void MDClass::requestPattern(uint8_t pattern) {
+#if defined(__AVR__)
+  sendRequest(sysex_protocol.patternrequest_id, pattern);
+#else
   uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
   uint8_t data[] = {sysex_protocol.patternrequest_id, pattern, ver};
   sendRequest(data, sizeof(data));
+#endif
 }
 
 void MDClass::requestGlobal(uint8_t global) {
+#if defined(__AVR__)
+  sendRequest(sysex_protocol.globalrequest_id, global);
+#else
   uint8_t ver = is_spsx ? SYSEX_VERSION_SPSX : SYSEX_VERSION_LEGACY;
   uint8_t data[] = {sysex_protocol.globalrequest_id, global, ver};
   sendRequest(data, sizeof(data));
+#endif
 }
 
 void MDClass::setChannelMode(uint8_t mode) {
