@@ -128,6 +128,9 @@ uint8_t MixerPage::mixer_param_for_encoder(uint8_t encoder_idx,
     }
   }
 
+#if defined(__AVR__)
+  return default_mixer_param();
+#else
   if (mixer_param_supported_for_held_tracks(encoder_idx)) {
     return encoder_idx;
   }
@@ -135,16 +138,17 @@ uint8_t MixerPage::mixer_param_for_encoder(uint8_t encoder_idx,
     return display_mode;
   }
   return default_mixer_param();
+#endif
 }
 
 bool MixerPage::handle_mixer_encoder_edits(bool is_md_device) {
-  if (note_interface.notes_count_on() == 0) {
+  if (note_interface.notes_on == 0) {
     return false;
   }
 
   bool handled = false;
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-    if (encoders[n] != nullptr && encoders[n]->hasChanged()) {
+    if (encoders[n]->hasChanged()) {
       adjust_param(encoders[n], mixer_param_for_encoder(n, is_md_device));
       handled = true;
     }
