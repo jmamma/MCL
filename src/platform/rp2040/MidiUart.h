@@ -492,13 +492,17 @@ public:
     return true;
   }
 
+  bool tx_packet_idle() const {
+    return !tx_in_sysex && tx_message_len <= 0 && tx_data_cnt == 0;
+  }
+
   void flush() {
     if (!flush_realtime()) {
       return;
     }
 
     // Process side channel first - takes precedence
-    if (txRb_sidechannel && in_message_tx == 0) {
+    if (txRb_sidechannel && tx_packet_idle()) {
       while (!txRb_sidechannel->isEmpty()) {
         uint8_t c = txRb_sidechannel->peek();
         if (!flush_byte(c)) {
