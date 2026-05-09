@@ -239,6 +239,23 @@ enum SeqTrackMenuOp : uint8_t {
   SEQ_TRACK_OP_TRANSPOSE,
 };
 
+static inline bool seq_track_menu_op_for_key(uint8_t key,
+                                             SeqTrackMenuOp &op) {
+  switch (key) {
+  case MDX_KEY_LEFT:
+    op = SEQ_TRACK_OP_ROTATE_LEFT;
+    return true;
+  case MDX_KEY_RIGHT:
+    op = SEQ_TRACK_OP_ROTATE_RIGHT;
+    return true;
+  case MDX_KEY_UP:
+    op = SEQ_TRACK_OP_REVERSE;
+    return true;
+  default:
+    return false;
+  }
+}
+
 static inline void apply_track_menu_op(SeqStepTrackApi &track,
                                        SeqTrackMenuOp op, int8_t offset) {
   switch (op) {
@@ -273,6 +290,39 @@ static inline void apply_track_menu_op(SeqTrackCond &track, SeqTrackMenuOp op,
     track.transpose(offset);
     break;
   }
+}
+
+#if !defined(__AVR__)
+static inline void apply_track_menu_op(StepSeqTrackCond &track,
+                                       SeqTrackMenuOp op, int8_t offset) {
+  switch (op) {
+  case SEQ_TRACK_OP_ROTATE_LEFT:
+    track.rotate_left();
+    break;
+  case SEQ_TRACK_OP_ROTATE_RIGHT:
+    track.rotate_right();
+    break;
+  case SEQ_TRACK_OP_REVERSE:
+    track.reverse();
+    break;
+  case SEQ_TRACK_OP_TRANSPOSE:
+    track.transpose(offset);
+    break;
+  }
+}
+#endif
+
+static inline void apply_md_track_menu_op(SeqTrackMenuOp op) {
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    apply_track_menu_op(static_cast<StepSeqTrackCond &>(
+                            mcl_seq.spsx_tracks[last_md_track]),
+                        op, 0);
+    return;
+  }
+#endif
+  apply_track_menu_op(static_cast<SeqTrackCond &>(mcl_seq.md_tracks[last_md_track]),
+                      op, 0);
 }
 
 static inline void apply_track_menu_op(bool is_md_device, bool apply_all,
@@ -645,30 +695,15 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED &&
         key_interface.is_key_down(MDX_KEY_FUNC)) {
-      bool is_md_device = opt_capture_is_md_device();
-      if (seq_page_uses_step_track_ops(is_md_device)) {
-        SeqStepTrackApi track = seq_page_active_step_track();
-        switch (key) {
-        case MDX_KEY_LEFT:
-          track.rotate_left();
-          return true;
-        case MDX_KEY_RIGHT:
-          track.rotate_right();
-          return true;
-        case MDX_KEY_UP:
-          track.reverse();
-          return true;
+      SeqTrackMenuOp op;
+      if (seq_track_menu_op_for_key(key, op)) {
+        bool is_md_device = opt_capture_is_md_device();
+        if (seq_page_uses_step_track_ops(is_md_device)) {
+          SeqStepTrackApi track = seq_page_active_step_track();
+          apply_track_menu_op(track, op, 0);
+        } else {
+          apply_md_track_menu_op(op);
         }
-      }
-      switch (key) {
-      case MDX_KEY_LEFT:
-        SeqTrackUtil::with_md_track(last_md_track, [](auto &t) { t.rotate_left(); });
-        return true;
-      case MDX_KEY_RIGHT:
-        SeqTrackUtil::with_md_track(last_md_track, [](auto &t) { t.rotate_right(); });
-        return true;
-      case MDX_KEY_UP:
-        SeqTrackUtil::with_md_track(last_md_track, [](auto &t) { t.reverse(); });
         return true;
       }
     }
