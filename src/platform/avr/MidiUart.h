@@ -174,7 +174,8 @@ public:
 #endif
 
   MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb = nullptr,
-                RingBuffer<> *_txRb = nullptr, RingBuffer<> *_txRb_realtime = nullptr);
+                RingBuffer<> *_txRb = nullptr,
+                RingBuffer<> *_txRb_realtime = nullptr) NOINLINE();
 
   ALWAYS_INLINE() bool avail() { return !rxRb->isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb->get(); }
