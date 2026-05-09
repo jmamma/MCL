@@ -93,7 +93,7 @@ void FXPage::display() {
   } else {
     info1 = "FX B";
   }
-  info2 = &fx_page_title[0];
+  info2 = fx_page_title;
   mcl_gui.draw_panel_labels(info1, info2);
 }
 

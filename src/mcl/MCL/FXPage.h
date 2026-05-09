@@ -22,9 +22,7 @@ public:
       page_id = page_id_;
       params = params_;
       num_of_params = num_of_params_;
-      if (title) {
-        strcpy(fx_page_title, title);
-      }
+      fx_page_title = title ? title : "";
   }
 
   static PageIndex last_page;
@@ -32,7 +30,7 @@ public:
   bool handleEvent(gui_event_t *event);
   bool midi_state = false;
 
-  char fx_page_title[8];
+  const char *fx_page_title;
   fx_param_t *params;
   uint8_t num_of_params;
 
