@@ -55,7 +55,7 @@ class MCLEncoder : public Encoder {
        Update the value of the encoder according to pressmode and
        fastmode, and limit the resulting value using limit_value().
      **/
-    virtual int update(encoder_t *enc);
+    int update(encoder_t *enc) override;
     //  virtual void displayAt(int i);
 
     /* @} */
@@ -64,13 +64,13 @@ class MCLEncoder : public Encoder {
 class MCLExpEncoder : public MCLEncoder {
   public:
   MCLExpEncoder(uint8_t _max = 127, uint8_t _min = 0, uint8_t res = 1) : MCLEncoder(_max,_min,res) { }
-  virtual int update(encoder_t *enc);
+  int update(encoder_t *enc) override;
 };
 
 class MCLRelativeEncoder : public MCLEncoder {
   public:
   MCLRelativeEncoder(uint8_t _max = 127, uint8_t _min = 0, uint8_t res = 1) : MCLEncoder(_max,_min,res) { }
-  virtual int update(encoder_t *enc);
+  int update(encoder_t *enc) override;
 };
 
 #endif /* MCLENCODER_H__ */

@@ -38,7 +38,7 @@ class PerfEncoder : public MCLEncoder {
     PerfEncoder(int _max = 127, int _min = 0, int _res = 1,
                 uint8_t _speed = ENCODER_FAST_SPEED) NOINLINE();
 
-   virtual int update(encoder_t *enc);
+   int update(encoder_t *enc) override;
 
 };
 

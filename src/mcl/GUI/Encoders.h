@@ -29,13 +29,14 @@ public:
     encoder_handle_t handler;
 
     EncoderParent(encoder_handle_t _handler = nullptr);
-    virtual void clear();
-    virtual void checkHandle();
-    virtual bool hasChanged();
-    virtual int getValue() { return cur; }
-    virtual int getOldValue() { return old; }
-    virtual void setValue(int value, bool handle = false);
-    virtual void displayAt(int i);
+    void clear();
+    void checkHandle();
+    bool hasChanged();
+    int getValue() { return cur; }
+    int getOldValue() { return old; }
+    void setValue(int value, bool handle = false);
+    void displayAt(int i);
+    virtual int update(encoder_t *enc) { return cur; }
 
 #ifdef HOST_MIDIDUINO
     virtual ~EncoderParent() {}
@@ -48,5 +49,5 @@ public:
 
     Encoder(const char *_name = nullptr, encoder_handle_t _handler = nullptr);
     int update_rotations(encoder_t *enc);
-    virtual int update(encoder_t *enc);
+    int update(encoder_t *enc) override;
 };
