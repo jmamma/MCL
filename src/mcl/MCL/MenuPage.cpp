@@ -107,14 +107,18 @@ void MenuPageBase::gen_menu_device_names() {
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
     p->pos = n + 1;
     if (devs[0] == devs[1]) {
+#ifdef PLATFORM_TBD
       if (strcmp(devs[n]->name, "TBD") == 0) {
         strcpy(p->name, n == 0 ? "TB1" : "TB2");
       } else {
+#endif
         strncpy(p->name, devs[n]->name, sizeof(p->name) - 3);
         p->name[sizeof(p->name) - 3] = '\0';
         strncat(p->name, n == 0 ? ":1" : ":2",
                 sizeof(p->name) - strlen(p->name) - 1);
+#ifdef PLATFORM_TBD
       }
+#endif
     } else {
       strcpy(p->name, devs[n]->name);
     }
