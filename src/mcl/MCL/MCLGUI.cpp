@@ -995,32 +995,28 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
     uint8_t *icon = nullptr;
     uint8_t offset = 3;
     int8_t icon_y_offset = 0;
-    switch (i) {
-    case 0:
-      icon = devs[0]->gif_data();
-      gif = devs[0]->gif();
-      break;
-    case 1:
-      icon = devs[1]->gif_data();
-      gif = devs[1]->gif();
-      offset = 4;
-      break;
-    case 2:
-      gif = R.icons_logo->perf_gif;
-      icon = R.icons_logo->perf_gif_data;
-      offset = 3;
-      break;
-    case 3:
-      gif = R.icons_logo->route_gif;
-      icon = R.icons_logo->route_gif_data;
-      offset = 5;
-      break;
-    case 4:
-      gif = R.icons_logo->metronome_gif;
-      icon = R.icons_logo->metronome_gif_data;
-      offset = 4;
-      icon_y_offset = -3;
-      break;
+    if (i < 2) {
+      icon = devs[i]->gif_data();
+      gif = devs[i]->gif();
+      offset = i + 3;
+    } else {
+      switch (i) {
+      case 2:
+        gif = R.icons_logo->perf_gif;
+        icon = R.icons_logo->perf_gif_data;
+        break;
+      case 3:
+        gif = R.icons_logo->route_gif;
+        icon = R.icons_logo->route_gif_data;
+        offset = 5;
+        break;
+      case 4:
+        gif = R.icons_logo->metronome_gif;
+        icon = R.icons_logo->metronome_gif_data;
+        offset = 4;
+        icon_y_offset = -3;
+        break;
+      }
     }
 
     //icon = select ? gif->get_frame(0) : gif->get_next_frame();
