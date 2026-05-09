@@ -197,18 +197,16 @@ public:
 
   ALWAYS_INLINE() void rx_isr() {
     uint8_t c = read_char();
+    recvActiveSenseTimer = 0;
 
     if (!MIDI_IS_STATUS_BYTE(c)) {
       if (live_state == midi_wait_sysex) {
         sysex_rb_cache->put_h_isr(c);
         return;
       }
-      recvActiveSenseTimer = 0;
       rxRb->put_h_isr(c);
       return;
     }
-    // Status byte - reset active sense timer
-    recvActiveSenseTimer = 0;
 
     if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
       realtime_isr(c);
