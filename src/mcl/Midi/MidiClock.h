@@ -534,13 +534,6 @@ public:
 
     state = STARTING;
     onMidiStartImmediateCallbacks.call(div96th_counter);
-    if (uart_transport_recv1) {
-      uart_transport_recv1->rxRb->put_h_isr(MIDI_START);
-#ifdef PLATFORM_TBD
-    } else {
-      handleMidiStart();
-#endif
-    }
 
     DEBUG_PRINTLN(F("START"));
   }
@@ -553,13 +546,6 @@ public:
 #ifdef PLATFORM_TBD
     if (uart_transport_forward4) { uart_transport_forward4->sendRaw(MIDI_STOP); }
 #endif
-    if (uart_transport_recv1) {
-      uart_transport_recv1->rxRb->put_h_isr(MIDI_STOP);
-#ifdef PLATFORM_TBD
-    } else {
-      handleMidiStop();
-#endif
-    }
     //  init();
   }
 
@@ -580,13 +566,6 @@ public:
 #endif
 
     isInit = false;
-    if (uart_transport_recv1) {
-      uart_transport_recv1->rxRb->put_h_isr(MIDI_CONTINUE);
-#ifdef PLATFORM_TBD
-    } else {
-      handleMidiContinue();
-#endif
-    }
     //  init();
   }
 

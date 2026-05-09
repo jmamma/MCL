@@ -55,12 +55,15 @@ static void tbd_handle_local_transport(uint8_t msg) {
   switch (msg) {
   case MIDI_START:
     MidiClock.handleImmediateMidiStart();
+    MidiClock.handleMidiStart();
     break;
   case MIDI_STOP:
     MidiClock.handleImmediateMidiStop();
+    MidiClock.handleMidiStop();
     break;
   case MIDI_CONTINUE:
     MidiClock.handleImmediateMidiContinue();
+    MidiClock.handleMidiContinue();
     break;
   }
 }
