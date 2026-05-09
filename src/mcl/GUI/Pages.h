@@ -97,9 +97,7 @@ public:
   static uint16_t encoders_used_clock[4];
 
   LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-            Encoder *e4 = NULL) {
-    setEncoders(e1, e2, e3, e4);
-  }
+            Encoder *e4 = NULL) NOINLINE();
 
   void setEncoders(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                    Encoder *e4 = NULL) {

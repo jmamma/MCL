@@ -52,6 +52,7 @@ extern volatile uint32_t interrupt_lock_count;
     #define ALWAYS_INLINE() __attribute__((always_inline))
     #define FORCED_INLINE() __attribute__((always_inline))
 #endif
+#define NOINLINE() __attribute__((noinline))
 
 // C++ specific functionality
 #ifdef __cplusplus
