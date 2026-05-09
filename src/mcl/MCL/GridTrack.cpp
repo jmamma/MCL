@@ -21,13 +21,11 @@ void GridTrack::load_link_data(SeqTrack *seq_track) {
   seq_track->length = link.length;
 }
 
-uint8_t GridTrack::transition_countdown_resolution() {
 #if !defined(__AVR__)
+uint8_t GridTrack::transition_countdown_resolution() {
   return STEPSEQ_LEGACY_SEQ_INTERPOLATION;
-#else
-  return 1;
-#endif
 }
+#endif
 
 void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {

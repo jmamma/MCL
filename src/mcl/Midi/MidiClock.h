@@ -253,14 +253,22 @@ public:
 
   ALWAYS_INLINE() uint32_t div16th_to_div192(uint32_t div16th,
                                              uint8_t q12_offset = 0) const {
+#if defined(__AVR__)
+    return div16th * 12u + q12_offset;
+#else
     const uint32_t ticks_per_16th = div192th_ticks_per_16th();
     return div16th * ticks_per_16th +
            ((uint32_t)q12_offset * ticks_per_16th) / 12u;
+#endif
   }
 
   ALWAYS_INLINE() uint32_t scale_legacy_div192_to_current(uint32_t ticks) const {
+#if defined(__AVR__)
+    return ticks;
+#else
     const uint32_t ticks_per_16th = div192th_ticks_per_16th();
     return (ticks * ticks_per_16th + 11u) / 12u;
+#endif
   }
 
   /*
