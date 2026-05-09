@@ -112,6 +112,13 @@ void GridIOPage::clear_body(uint8_t y_offset) {
   mcl_gui.clear_popup(0, y_offset);
 }
 
+uint8_t GridIOPage::slot_for_note(uint8_t note) {
+  if (note < GRID_WIDTH) {
+    return note + old_grid * GRID_WIDTH;
+  }
+  return note;
+}
+
 void GridIOPage::paint_track_select_leds() {
 #ifdef PLATFORM_TBD
   if (show_track_type) {
@@ -138,7 +145,8 @@ void GridIOPage::paint_track_select_leds() {
   } else {
     for (uint8_t n = 0; n < GRID_WIDTH && n < 16; n++) {
       uint8_t slot = n + old_grid * GRID_WIDTH;
-      if (IS_BIT_SET32(track_select, slot) || note_interface.is_note(slot)) {
+      if (IS_BIT_SET32(track_select, slot) || note_interface.is_note(slot) ||
+          note_interface.is_note(n)) {
         SET_BIT16(active_mask, n);
       }
     }
@@ -159,7 +167,7 @@ void GridIOPage::paint_track_select_leds() {
 void GridIOPage::populate_track_select_from_notes(uint8_t *track_select_array) {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (note_interface.is_note(n)) {
-      SET_BIT32(track_select, n);
+      SET_BIT32(track_select, slot_for_note(n));
     }
   }
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -202,6 +210,8 @@ void GridIOPage::track_select_array_from_type_select(
 bool GridIOPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
+    if (track >= NUM_SLOTS) return true;
+    uint8_t slot = slot_for_note(track);
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (show_track_type) {
         if (track < 5) {
@@ -210,7 +220,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
         }
       } else {
         if (show_offset) {
-          offset = track;
+          offset = slot;
         }
         paint_track_select_leds();
       }
@@ -264,12 +274,19 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     toggle_grid:
       for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-        if (note_interface.is_note(n)) {
-          TOGGLE_BIT32(track_select, n + old_grid * 16);
+        uint8_t slot = n + old_grid * GRID_WIDTH;
+        if (note_interface.is_note(n) || note_interface.is_note(slot)) {
+          TOGGLE_BIT32(track_select, slot);
           if (note_interface.is_note_on(n)) {
             note_interface.ignoreNextEvent(n);
           }
+          if (slot != n && note_interface.is_note_on(slot)) {
+            note_interface.ignoreNextEvent(slot);
+          }
           note_interface.clear_note(n);
+          if (slot != n) {
+            note_interface.clear_note(slot);
+          }
         }
       }
       old_grid = !old_grid;

@@ -130,6 +130,7 @@ bool GridIOOverlay::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
     if (track >= NUM_SLOTS) return true;
+    uint8_t slot = GridIOPage::slot_for_note(track);
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (GridIOPage::show_track_type) {
@@ -138,9 +139,9 @@ bool GridIOOverlay::handleEvent(gui_event_t *event) {
           mcl_gui.set_trigleds(mcl_cfg.track_type_select, TRIGLED_EXCLUSIVE);
         }
       } else {
-        focus_slot(track);
+        focus_slot(slot);
         if (GridIOPage::show_offset) {
-          GridIOPage::offset = track;
+          GridIOPage::offset = slot;
         }
         GridIOPage::paint_track_select_leds();
       }
@@ -283,12 +284,18 @@ void GridIOOverlay::group_select() {
 void GridIOOverlay::toggle_grid() {
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
     uint8_t slot = n + GridIOPage::old_grid * GRID_WIDTH;
-    if (note_interface.is_note(slot)) {
+    if (note_interface.is_note(n) || note_interface.is_note(slot)) {
       TOGGLE_BIT32(GridIOPage::track_select, slot);
-      if (note_interface.is_note_on(slot)) {
+      if (note_interface.is_note_on(n)) {
+        note_interface.ignoreNextEvent(n);
+      }
+      if (slot != n && note_interface.is_note_on(slot)) {
         note_interface.ignoreNextEvent(slot);
       }
-      note_interface.clear_note(slot);
+      note_interface.clear_note(n);
+      if (slot != n) {
+        note_interface.clear_note(slot);
+      }
     }
   }
   GridIOPage::old_grid = !GridIOPage::old_grid;
@@ -313,7 +320,7 @@ void GridIOOverlay::focus_slot(uint8_t slot) {
 void GridIOOverlay::selected_tracks(uint8_t *track_select_array) {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (note_interface.is_note(n)) {
-      SET_BIT32(GridIOPage::track_select, n);
+      SET_BIT32(GridIOPage::track_select, GridIOPage::slot_for_note(n));
     }
   }
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -335,7 +342,7 @@ uint16_t GridIOOverlay::visible_select_mask() const {
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
     uint8_t slot = n + GridIOPage::old_grid * GRID_WIDTH;
     if (IS_BIT_SET32(GridIOPage::track_select, slot) ||
-        note_interface.is_note(slot)) {
+        note_interface.is_note(slot) || note_interface.is_note(n)) {
       SET_BIT16(mask, n);
     }
   }

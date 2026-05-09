@@ -13,6 +13,7 @@ class GridIOPage : public LightPage {
  static bool show_track_type;
  static bool show_offset;
  static uint8_t offset;
+ static uint8_t slot_for_note(uint8_t note);
 
  GridIOPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
 
