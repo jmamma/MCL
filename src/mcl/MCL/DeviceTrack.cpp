@@ -103,11 +103,6 @@ DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row,
   // header read successfully. now reconstruct the object.
   auto ptrack = init_track_type(active);
 
-  if (ptrack == nullptr) {
-    DEBUG_PRINTLN("unrecognized track type");
-    return nullptr;
-  }
-
   if (active != EMPTY_TRACK_TYPE) {
     size_t len = ptrack->get_track_size();
     if (grid) {
@@ -132,11 +127,6 @@ DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
 
   // header read successfully. now reconstruct the object.
   auto ptrack = init_track_type(active);
-
-  if (ptrack == nullptr) {
-    DEBUG_PRINTLN("unrecognized track type");
-    return nullptr;
-  }
 
   // virtual functions are ready
 

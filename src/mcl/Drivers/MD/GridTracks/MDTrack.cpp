@@ -45,12 +45,11 @@ void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
   MD.sendMachine(dest_track, &(machine), send_level, send_machine);
 }
 
-bool MDTrack::can_materialize_as(uint8_t track_type) {
 #if !defined(__AVR__)
+bool MDTrack::can_materialize_as(uint8_t track_type) {
   if (track_type == MDSPSX_TRACK_TYPE) {
     return true;
   }
-#endif
   return DeviceTrack::can_materialize_as(track_type);
 }
 
@@ -58,7 +57,6 @@ DeviceTrack *MDTrack::materialize_as(uint8_t track_type, uint8_t tracknumber,
                                      SeqTrack *seq_track) {
   (void)tracknumber;
   (void)seq_track;
-#if !defined(__AVR__)
   if (track_type == MDSPSX_TRACK_TYPE) {
     GridLink old_link = link;
     MDSeqTrackData old_seq_data;
@@ -74,9 +72,9 @@ DeviceTrack *MDTrack::materialize_as(uint8_t track_type, uint8_t tracknumber,
            sizeof(old_seq_data));
     return spsx_track;
   }
-#endif
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }
+#endif
 
 uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   uint8_t n = tracknumber;

@@ -42,15 +42,15 @@ bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
   return true;
 }
 
-bool ExtTrack::can_materialize_as(uint8_t track_type) {
 #ifdef PLATFORM_TBD
+bool ExtTrack::can_materialize_as(uint8_t track_type) {
   if (track_type == TBD_MIDI_TRACK_TYPE &&
       is_legacy_ext_sequence_type(active)) {
     return true;
   }
-#endif
   return DeviceTrack::can_materialize_as(track_type);
 }
+#endif
 
 DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
                                       uint8_t tracknumber,
