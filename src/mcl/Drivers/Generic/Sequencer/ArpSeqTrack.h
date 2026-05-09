@@ -115,7 +115,6 @@ protected:
 class MDArpSeqTrack : public ArpSeqTrack {
   public:
     MDArpSeqTrack() : ArpSeqTrack() {
-      ArpSeqTrack::init();
       active = MD_ARP_TRACK_TYPE;
     }
 protected:
@@ -128,7 +127,6 @@ protected:
 class ExtArpSeqTrack : public ArpSeqTrack {
   public:
     ExtArpSeqTrack() : ArpSeqTrack() {
-      ArpSeqTrack::init();
       active = EXT_ARP_TRACK_TYPE;
     }
   protected:
