@@ -24,14 +24,9 @@ const char *shared_row_name(ElektronDevice **devs,
     return name;
   }
 
-  for (uint8_t n = 0; n < NUM_DEVS; n++) {
-    if (!save_dev_tracks[n] || devs[n] == nullptr) {
-      continue;
-    }
-    name = devs[n]->getGridRowName();
-    if (name != nullptr && name[0] != '\0') {
-      return name;
-    }
+  if (save_dev_tracks[1] && devs[1] != nullptr) {
+    name = devs[1]->getGridRowName();
+    if (name != nullptr && name[0] != '\0') return name;
   }
   return nullptr;
 }
@@ -229,10 +224,8 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
   for (i = 0; i < NUM_SLOTS; i++) {
     if (slot_select_array[i] > 0) {
       GridDeviceTrack *gdt = get_grid_dev_track(i);
-      if (gdt != nullptr) {
-        if (gdt->device_idx < NUM_DEVS) {
-          save_dev_tracks[gdt->device_idx] = true;
-        }
+      if (gdt != nullptr && gdt->device_idx < NUM_DEVS) {
+        save_dev_tracks[gdt->device_idx] = true;
       }
     }
   }
@@ -312,26 +305,23 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
         continue;
       }
 
-      if (gdt != nullptr) {
-        // Preserve existing link settings before save.
-
-        if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
-          // DEBUG_PRINTLN(F("tl"));
-          if (!grid_track.load_from_grid(i, row))
-            continue;
-          memcpy(&empty_track.link, &grid_track.link, sizeof(GridLink));
-        } else {
-          empty_track.link.init(row);
-        }
-        auto pdevice_track =
-            ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
-        if (pdevice_track != nullptr &&
-            pdevice_track->store_in_grid(i, row, gdt->seq_track, merge,
-                                         online)) {
-          row_headers[grid_idx].update_model(
-              track_idx, pdevice_track->get_model(), gdt->track_type);
-          saved_grid_rows[grid_idx] = true;
-        }
+      // Preserve existing link settings before save.
+      if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
+        // DEBUG_PRINTLN(F("tl"));
+        if (!grid_track.load_from_grid(i, row))
+          continue;
+        memcpy(&empty_track.link, &grid_track.link, sizeof(GridLink));
+      } else {
+        empty_track.link.init(row);
+      }
+      auto pdevice_track =
+          ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
+      if (pdevice_track != nullptr &&
+          pdevice_track->store_in_grid(i, row, gdt->seq_track, merge,
+                                       online)) {
+        row_headers[grid_idx].update_model(
+            track_idx, pdevice_track->get_model(), gdt->track_type);
+        saved_grid_rows[grid_idx] = true;
       }
     }
   }
