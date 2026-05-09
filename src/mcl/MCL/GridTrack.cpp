@@ -20,6 +20,24 @@ void GridTrack::load_link_data(SeqTrack *seq_track) {
   seq_track->length = link.length;
 }
 
+uint8_t GridTrack::get_parent_model() const {
+  switch (active) {
+  case A4_TRACK_TYPE:
+  case MNM_TRACK_TYPE:
+    return EXT_TRACK_TYPE;
+#if !defined(__AVR__)
+  case MDSPSX_TRACK_TYPE:
+    return MD_TRACK_TYPE;
+#endif
+  default:
+    return NULL_TRACK_TYPE;
+  }
+}
+
+bool GridTrack::allow_cast_to_parent() const {
+  return get_parent_model() != NULL_TRACK_TYPE;
+}
+
 #if !defined(__AVR__)
 uint8_t GridTrack::transition_countdown_resolution() {
   return STEPSEQ_LEGACY_SEQ_INTERPOLATION;
