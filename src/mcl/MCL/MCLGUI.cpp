@@ -650,23 +650,20 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   uint8_t a = 0;
   uint8_t w = 96;
   uint8_t x_pos = 64 - (w / 2);
-  uint8_t x_w = (w / (degrees));
-  bool degree_scalar = false;
-  if (x_w == 0) {
-    x_w = 1;
-    degree_scalar = true;
-  }
+  bool degree_scalar = degrees > w;
+  uint8_t x_w = degree_scalar ? 1 : w / degrees;
 
   uint8_t x = x_pos;
   char K[4];
   mclstr_copy_progmem(K, mclstr_dash, sizeof(K));
 
-  if (timing == 0) {
-  } else if ((timing < timing_mid) && (timing != 0)) {
-    put_value_at(timing_mid - timing, K + 1);
-  } else {
-    K[0] = '+';
-    put_value_at(timing - timing_mid, K + 1);
+  if (timing != 0) {
+    if (timing < timing_mid) {
+      put_value_at(timing_mid - timing, K + 1);
+    } else {
+      K[0] = '+';
+      put_value_at(timing - timing_mid, K + 1);
+    }
   }
 
   oled_display.fillRect(8, 1, 128 - 16, 32 - 2, BLACK);
@@ -675,7 +672,7 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   oled_display.setCursor(x_pos + 34, 10);
   mcl_print_P(mclstr_utiming_label);
   oled_display.print(K);
-  uint8_t base_h = pgm_height_at(h, 0);
+  constexpr uint8_t base_h = 11;
   oled_display.drawLine(x, y_pos + base_h, x + w, y_pos + base_h, WHITE);
   for (uint8_t n = 0; n <= degrees; n++) {
     oled_display.drawLine(x, y_pos + base_h, x,
@@ -690,11 +687,7 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
     if (a == heights_len) {
       a = 0;
     }
-    if (degree_scalar) {
-      if (n % 2 == 0) {
-        x += x_w;
-      }
-    } else {
+    if (!degree_scalar || ((n & 1) == 0)) {
       x += x_w;
     }
   }
