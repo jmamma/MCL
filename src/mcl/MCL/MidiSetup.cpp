@@ -312,10 +312,8 @@ void resolve_slots(PortSlot slots[SLOT_COUNT]) {
   } else if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) {
     slots[SLOT_MD] = {UART1_PORT, &Midi, &MidiUart,
                       mcl_cfg.uart1_turbo_speed, false};
-#ifdef PLATFORM_TBD
   } else if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
     slots[SLOT_MD] = {UARTP4_PORT, &MidiP4, &MidiUartP4, 0, false};
-#endif
   }
 
   PortSlot grid_y_slot = {UART2_PORT, &Midi2, &MidiUart2,
@@ -324,20 +322,16 @@ void resolve_slots(PortSlot slots[SLOT_COUNT]) {
     grid_y_slot = {UARTUSB_PORT, &MidiUSB, &MidiUartUSB,
                    mcl_cfg.usb_turbo_speed, false};
   }
-#ifdef PLATFORM_TBD
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
     grid_y_slot = {UARTP4_PORT, &MidiP4, &MidiUartP4, 0, false};
   }
-#endif
 
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) {
     slots[SLOT_GENER] = grid_y_slot;
   } else if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT) {
     slots[SLOT_ELEKT] = grid_y_slot;
-#ifdef PLATFORM_TBD
   } else if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
     slots[SLOT_GENER] = grid_y_slot;
-#endif
   }
 }
 #endif

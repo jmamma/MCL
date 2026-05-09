@@ -252,11 +252,6 @@ void MidiActivePeering::run() {
                     (s[SLOT_ELEKT].port == UART2_PORT && mcl_cfg.uart2_device == 0);
     probePort(s[SLOT_ELEKT].port, drivers_for_slot(SLOT_ELEKT, is_gener));
   }
-  if (resource_loaded) {
-    // XXX restoring resources after the peering display doesn't work yet.
-    GUI.currentPage()->init();
-    resource_loaded = false;
-  }
 #endif
 #else
   uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
@@ -269,12 +264,14 @@ void MidiActivePeering::run() {
   if (mcl_cfg.uart2_device != 2) {
     probePort(ext_port, drivers_for_slot(SLOT_ELEKT, mcl_cfg.uart2_device == 0));
   }
+#endif
+#endif
+#ifdef EXT_TRACKS
   if (resource_loaded) {
     // XXX restoring resources after the peering display doesn't work yet.
     GUI.currentPage()->init();
     resource_loaded = false;
   }
-#endif
 #endif
   device_manager.update_active_slots();
 }

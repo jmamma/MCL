@@ -406,19 +406,14 @@ void MCLSeq::seq() {
   bool engage_sidechannel = true;
   const bool shared_output = primary_output == secondary_output;
 
-  // If realtime, we render the first tick in realtime, subsequent ticks are
-  // defered rendered.
+  // If realtime, render the first tick immediately and defer later ticks.
 
   if (!realtime) {
   again:
 
-#if defined(__AVR__)
     primary_output->disable_tx_irq();
     secondary_output->disable_tx_irq();
-#else
-    primary_output->disable_tx_irq();
-    secondary_output->disable_tx_irq();
-#endif
+
     MidiUartClass *primary_active = uart_sidechannel ? &seq_tx2 : &seq_tx1;
     MidiUartClass *secondary_active = uart_sidechannel ? &seq_tx4 : &seq_tx3;
     MidiUartClass *primary_side = uart_sidechannel ? &seq_tx1 : &seq_tx2;
