@@ -126,6 +126,8 @@ typedef void (SysexCallback::*sysex_status_callback_ptr_t)(uint8_t type,
 /// Base class for Elektron sysex listeners
 class ElektronSysexListenerClass : public MidiSysexListenerClass {
 public:
+  ElektronSysexListenerClass() NOINLINE();
+
   /** Vector storing the onGlobalMessage callbacks (called when a global message
    * is received). **/
   CallbackVector<SysexCallback, NUM_SYSEX_CALLBACKS> onMessageCallbacks;

@@ -14,11 +14,7 @@ class MidiIDSysexListenerClass : public MidiSysexListenerClass {
 
 public:
   bool isIDMessage;
-  MidiIDSysexListenerClass() : MidiSysexListenerClass() {
-    ids[0] = 0x7E;
-    ids[1] = 0x06;
-    ids[2] = 0x02;
-  }
+  MidiIDSysexListenerClass() : MidiSysexListenerClass(NULL, 0x7E, 0x06, 0x02) {}
 
   virtual void start();
   virtual void handleByte(uint8_t byte);

@@ -21,11 +21,7 @@ public:
    * **/
   bool isA4Message;
 
-  A4SysexListenerClass() : ElektronSysexListenerClass() {
-    ids[0] = 0;
-    ids[1] = 0x20;
-    ids[2] = 0x3c;
-  }
+  A4SysexListenerClass() : ElektronSysexListenerClass() {}
 
   virtual void start();
   virtual void handleByte(uint8_t byte);

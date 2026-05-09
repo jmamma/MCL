@@ -17,11 +17,8 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
   public:
 
   SampleBrowserPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-                  Encoder *e4 = NULL) : FileBrowserPage(e1, e2, e3, e4), MidiSysexListenerClass(){
-    ids[0] = 0;
-    ids[1] = 0x20;
-    ids[2] = 0x3c;
-  }
+                  Encoder *e4 = NULL) : FileBrowserPage(e1, e2, e3, e4),
+                                        MidiSysexListenerClass(NULL, 0, 0x20, 0x3c) {}
 
   uint8_t pending_action = 0;
   bool show_ram_slots = false;

@@ -55,11 +55,7 @@ public:
    * **/
   bool isMDMessage;
 
-  MDSysexListenerClass() : ElektronSysexListenerClass() {
-    ids[0] = 0;
-    ids[1] = 0x20;
-    ids[2] = 0x3c;
-  }
+  MDSysexListenerClass() : ElektronSysexListenerClass() {}
 
   virtual void start();
   virtual void handleByte(uint8_t byte);

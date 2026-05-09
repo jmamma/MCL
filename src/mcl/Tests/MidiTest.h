@@ -55,11 +55,7 @@ private:
     MIDITest *parent;
 
   public:
-    TestSysexListener(MIDITest *p) : MidiSysexListenerClass(), parent(p) {
-      ids[0] = 0x00;
-      ids[1] = 0x13;
-      ids[2] = 0x37;
-    }
+    TestSysexListener(MIDITest *p) : MidiSysexListenerClass(NULL, 0x00, 0x13, 0x37), parent(p) {}
     virtual ~TestSysexListener() {}
 
     virtual void end() {

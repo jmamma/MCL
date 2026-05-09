@@ -12,11 +12,7 @@ class MNMSysexListenerClass : public ElektronSysexListenerClass {
 public:
   bool isMNMMessage;
 
-  MNMSysexListenerClass() : ElektronSysexListenerClass() {
-    ids[0] = 0;
-    ids[1] = 0x20;
-    ids[2] = 0x3c;
-  }
+  MNMSysexListenerClass() : ElektronSysexListenerClass() {}
 
   virtual void start();
   virtual void handleByte(uint8_t byte);

@@ -22,12 +22,7 @@ public:
   uint8_t sds_slot;
   char sds_name[4];
   bool sds_name_rec = false;
-  MidiSDSSysexListenerClass() : MidiSysexListenerClass() {
-    ids[0] = 0x7E;
-    ids[1] = 0x00;
-    ids[2] = 0x01;
-    msgType = 255;
-  }
+  MidiSDSSysexListenerClass() : MidiSysexListenerClass(NULL, 0x7E, 0x00, 0x01) {}
 
   virtual void start();
   virtual void handleByte(uint8_t byte);

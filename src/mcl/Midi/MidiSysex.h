@@ -27,11 +27,12 @@ public:
   volatile uint8_t msgType;
   volatile uint8_t msg_rd;
 
-  MidiSysexListenerClass(MidiSysexClass *_sysex = NULL) {
+  MidiSysexListenerClass(MidiSysexClass *_sysex = NULL, uint8_t id0 = 0,
+                         uint8_t id1 = 0, uint8_t id2 = 0) {
     sysex = _sysex;
-    ids[0] = 0;
-    ids[1] = 0;
-    ids[2] = 0;
+    ids[0] = id0;
+    ids[1] = id1;
+    ids[2] = id2;
     msgType = 255;
     msg_rd = 255;
   }

@@ -4,6 +4,10 @@
 
 #define SYSEX_RETRIES 1
 
+ElektronSysexListenerClass::ElektronSysexListenerClass()
+    : MidiSysexListenerClass(NULL, 0, 0x20, 0x3c) {
+}
+
 void ElektronHelper::beginSysexEncode(ElektronDataToSysexEncoder *encoder,
                                        uint8_t *hdr, uint8_t hdr_size,
                                        uint8_t msg_id, uint8_t version,
