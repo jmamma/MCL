@@ -30,16 +30,24 @@ uint8_t pgm_height_at(const uint8_t *heights, uint8_t idx) {
 
 // Helper function for printing PROGMEM strings
 void mcl_print_P(const char* str_P) {
+#if defined(__AVR__)
+  oled_display.print(reinterpret_cast<const __FlashStringHelper *>(str_P));
+#else
   char buffer[64]; // Choose a suitable buffer size
   mclstr_copy_progmem(buffer, str_P, sizeof(buffer));
   oled_display.print(buffer);
+#endif
 }
 
 // Helper function for printing PROGMEM strings with a newline
 void mcl_println_P(const char* str_P) {
+#if defined(__AVR__)
+  oled_display.println(reinterpret_cast<const __FlashStringHelper *>(str_P));
+#else
   char buffer[64]; // Choose a suitable buffer size
   mclstr_copy_progmem(buffer, str_P, sizeof(buffer));
   oled_display.println(buffer);
+#endif
 }
 
 #ifdef PLATFORM_TBD
