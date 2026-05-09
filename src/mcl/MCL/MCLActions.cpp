@@ -17,14 +17,14 @@
 namespace {
 
 const char *shared_row_name(ElektronDevice **devs,
-                            const bool *save_dev_tracks) {
+                            uint8_t save_dev_mask) {
   // Preserve the existing single-source row naming model: primary device wins.
   const char *name = devs[0] ? devs[0]->getGridRowName() : nullptr;
   if (name != nullptr && name[0] != '\0') {
     return name;
   }
 
-  if (save_dev_tracks[1] && devs[1] != nullptr) {
+  if ((save_dev_mask & (1 << 1)) && devs[1] != nullptr) {
     name = devs[1]->getGridRowName();
     if (name != nullptr && name[0] != '\0') return name;
   }
@@ -207,8 +207,8 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
     readpattern = MD.currentPattern;
   }
 
-  bool save_dev_tracks[NUM_DEVS] = {false, false};
-  bool saved_grid_rows[NUM_GRIDS] = {false, false};
+  uint8_t save_dev_mask = 0;
+  uint8_t saved_grid_mask = 0;
   MidiDevice *devs[NUM_DEVS] = {
       device_manager.primary_device(),
       device_manager.secondary_device(),
@@ -225,7 +225,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
     if (slot_select_array[i] > 0) {
       GridDeviceTrack *gdt = get_grid_dev_track(i);
       if (gdt != nullptr && gdt->device_idx < NUM_DEVS) {
-        save_dev_tracks[gdt->device_idx] = true;
+        save_dev_mask |= (uint8_t)(1 << gdt->device_idx);
       }
     }
   }
@@ -236,18 +236,18 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
 
   for (i = 0; i < NUM_DEVS; ++i) {
     if (elektron_devs[i] != nullptr) {
-      if (save_dev_tracks[i]) {
+      if (save_dev_mask & (uint8_t)(1 << i)) {
         if (merge > 0) {
           // DEBUG_PRINTLN(F("fetching pattern"));
           // DEBUG_PRINTLN(readpattern);
           if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
             // DEBUG_PRINTLN(F("could not receive pattern"));
-            save_dev_tracks[i] = false;
+            save_dev_mask &= (uint8_t)~(1 << i);
             continue;
           }
           ElektronPattern *p = (ElektronPattern*) elektron_devs[i]->getPattern();
           if (p->isEmpty()) {
-            save_dev_tracks[i] = false;
+            save_dev_mask &= (uint8_t)~(1 << i);
             continue;
           }
           if (!elektron_devs[i]->getBlockingKit(p->getKit())) {
@@ -258,7 +258,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
           if (elektron_devs[i]->canReadWorkspaceKit()) {
             if (!elektron_devs[i]->getWorkSpaceKit()) {
               // DEBUG_PRINTLN(F("could not receive kit"));
-              save_dev_tracks[i] = false;
+              save_dev_mask &= (uint8_t)~(1 << i);
               continue;
             }
           } else if (elektron_devs[i]->canReadKit()) {
@@ -266,7 +266,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
             elektron_devs[i]->saveCurrentKit(kit);
             if (!elektron_devs[i]->getBlockingKit(kit)) {
               // DEBUG_PRINTLN(F("could not receive kit"));
-              save_dev_tracks[i] = false;
+              save_dev_mask &= (uint8_t)~(1 << i);
               continue;
             }
           }
@@ -301,7 +301,7 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
       // If save_dev_tracks[dev_idx] turns false, it means getBlockingKit
       // has failed, so we just skip this device.
 
-      if (!save_dev_tracks[device_idx]) {
+      if (!(save_dev_mask & (uint8_t)(1 << device_idx))) {
         continue;
       }
 
@@ -321,20 +321,20 @@ void MCLActions::save_tracks(int row, uint8_t *slot_select_array, uint8_t merge,
                                        online)) {
         row_headers[grid_idx].update_model(
             track_idx, pdevice_track->get_model(), gdt->track_type);
-        saved_grid_rows[grid_idx] = true;
+        saved_grid_mask |= (uint8_t)(1 << grid_idx);
       }
     }
   }
 
-  const char *row_name = shared_row_name(elektron_devs, save_dev_tracks);
+  const char *row_name = shared_row_name(elektron_devs, save_dev_mask);
 
   // Only set the shared row name when this row has not already been named.
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    if (saved_grid_rows[n]) {
+    if (saved_grid_mask & (uint8_t)(1 << n)) {
       row_headers[n].active = true;
     }
-    if (saved_grid_rows[n] && row_headers[n].name[0] == '\0' &&
-        row_name != nullptr) {
+    if ((saved_grid_mask & (uint8_t)(1 << n)) &&
+        row_headers[n].name[0] == '\0' && row_name != nullptr) {
       copy_row_name(row_headers[n], row_name);
     }
     proj.write_grid_row_header(&row_headers[n], row, n);
