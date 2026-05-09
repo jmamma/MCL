@@ -816,7 +816,10 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
 
   uint8_t offset = (first_note / 24) * 24;
 
-  offset = min(127 - num_of_notes, offset);
+  const uint8_t max_offset = 127 - num_of_notes;
+  if (offset > max_offset) {
+    offset = max_offset;
+  }
 
   for (uint8_t n = 0; n < num_of_notes; n++) {
 
@@ -886,16 +889,16 @@ void MCLGUI::draw_trigs(uint8_t x, uint8_t y, uint8_t offset,
     } else {
 
       oled_display.drawRect(x, y, seq_w, trig_h, WHITE);
-      if (((i + offset != step_count) || (MidiClock.state != 2))) {
+      if ((idx != step_count) || (MidiClock.state != 2)) {
 
-        if (IS_BIT_SET64(slide_mask, i + offset)) {
+        if (IS_BIT_SET64(slide_mask, idx)) {
           oled_display.drawPixel(x + 2, y + 2, WHITE);
-        } else if (IS_BIT_SET64(mute_mask, i + offset)) {
+        } else if (IS_BIT_SET64(mute_mask, idx)) {
           oled_display.drawPixel(x + 2, y + 1, WHITE);
           oled_display.drawPixel(x + 1, y + 2, WHITE);
           oled_display.drawPixel(x + 3, y + 2, WHITE);
           oled_display.drawPixel(x + 2, y + 3, WHITE);
-        } else if (IS_BIT_SET64(pattern_mask, i + offset)) {
+        } else if (IS_BIT_SET64(pattern_mask, idx)) {
           oled_display.fillRect(x + 1, y + 1, seq_w - 1, trig_h - 1, WHITE);
         }
       }
@@ -1067,7 +1070,7 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset,
     bool in_range = idx < length;
     bool current =
         show_current_step && step_count == idx && MidiClock.state == 2;
-    bool locked = in_range && IS_BIT_SET64(lock_mask, i + offset);
+    bool locked = in_range && IS_BIT_SET64(lock_mask, idx);
 
     // TI feedback
     //     oled_display.drawRect(x, y, seq_w, led_h, WHITE);
