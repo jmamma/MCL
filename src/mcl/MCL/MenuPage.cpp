@@ -74,19 +74,20 @@ void MenuPageBase::init() {
   R.restore_menu_layout_deps();
   gen_menu_row_names();
 
-  ((MCLEncoder *)encoders[1])->max = get_menu()->get_number_of_items() - 1;
+  MenuBase *m = get_menu();
+  ((MCLEncoder *)encoders[1])->max = m->get_number_of_items() - 1;
 
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
     cur_row = 0;
   }
 
-  uint8_t range = get_menu()->get_option_range(encoders[1]->cur);
+  uint8_t range = m->get_option_range(encoders[1]->cur);
   ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
   ((MCLEncoder *)encoders[0])->min =
-      get_menu()->get_option_min(encoders[1]->cur);
+      m->get_option_min(encoders[1]->cur);
 
-  uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
+  uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
   if (dest_var != NULL) {
 #ifdef PLATFORM_TBD
     encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));

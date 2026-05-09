@@ -113,8 +113,7 @@ namespace {
 
 uint8_t trig_interface_port() {
   MidiDevice *primary = device_manager.primary_device();
-  if (primary != nullptr &&
-      primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
+  if (primary->supports_capability(MidiDeviceCapability::MdTrigInterface)) {
     return primary->port;
   }
   return MD.port;
