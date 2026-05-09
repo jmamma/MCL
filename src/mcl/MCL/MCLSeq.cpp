@@ -419,40 +419,28 @@ void MCLSeq::seq() {
     primary_output->disable_tx_irq();
     secondary_output->disable_tx_irq();
 #endif
-    if (uart_sidechannel) {
-      uart = &seq_tx2;
-      uart2 = shared_output ? &seq_tx2 : &seq_tx4;
-      // If the side channel ring buffer is not empty, it means it did not
-      // finish transmiting before next Seq() call. We will drain the old buffer
-      // in to the new to retain the MIDI data.
-      if (engage_sidechannel) {
-        primary_output->txRb_sidechannel = seq_tx1.txRb;
-        if (shared_output) {
-          seq_tx3.txRb->init();
-          seq_tx4.txRb->init();
-        } else {
-          secondary_output->txRb_sidechannel = seq_tx3.txRb;
-        }
-      } else {
-        // Purge stale buffers (from MIDI CONTINUE).
-        seq_tx2.txRb->init();
+    MidiUartClass *primary_active = uart_sidechannel ? &seq_tx2 : &seq_tx1;
+    MidiUartClass *secondary_active = uart_sidechannel ? &seq_tx4 : &seq_tx3;
+    MidiUartClass *primary_side = uart_sidechannel ? &seq_tx1 : &seq_tx2;
+    MidiUartClass *secondary_side = uart_sidechannel ? &seq_tx3 : &seq_tx4;
+
+    uart = primary_active;
+    uart2 = shared_output ? primary_active : secondary_active;
+
+    // If the side channel ring buffer is not empty, it means it did not finish
+    // transmitting before the next seq() call. Drain it through the new buffer.
+    if (engage_sidechannel) {
+      primary_output->txRb_sidechannel = primary_side->txRb;
+      if (shared_output) {
+        seq_tx3.txRb->init();
         seq_tx4.txRb->init();
+      } else {
+        secondary_output->txRb_sidechannel = secondary_side->txRb;
       }
     } else {
-      uart = &seq_tx1;
-      uart2 = shared_output ? &seq_tx1 : &seq_tx3;
-      if (engage_sidechannel) {
-        primary_output->txRb_sidechannel = seq_tx2.txRb;
-        if (shared_output) {
-          seq_tx3.txRb->init();
-          seq_tx4.txRb->init();
-        } else {
-          secondary_output->txRb_sidechannel = seq_tx4.txRb;
-        }
-      } else {
-        seq_tx1.txRb->init();
-        seq_tx3.txRb->init();
-      }
+      // Purge stale buffers (from MIDI CONTINUE).
+      primary_active->txRb->init();
+      secondary_active->txRb->init();
     }
     // clearLed2();
 #if defined(__AVR__)
