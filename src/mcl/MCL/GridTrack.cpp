@@ -39,7 +39,11 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
     target--;
   }
   uint32_t count_down = MidiClock.clock_diff_div192(now, target);
+#if defined(__AVR__)
+  if (count_down > (0x10000UL * 12u - 4096u)) {
+#else
   if (target < now && (now - target) < 4096u) {
+#endif
     count_down = 1;
   }
 #if !defined(__AVR__)
