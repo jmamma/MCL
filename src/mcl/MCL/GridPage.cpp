@@ -361,6 +361,7 @@ void GridPage::load_slot_models() {
   if ((cur_row + param4.cur > MAX_VISIBLE_ROWS - 1)) {
     row_shift = cur_row + param4.cur - MAX_VISIBLE_ROWS;
   }
+  uint8_t base_row = getRow() - cur_row + row_shift;
 
 #ifdef PLATFORM_TBD
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
@@ -371,7 +372,7 @@ void GridPage::load_slot_models() {
 #endif
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-    uint8_t row = getRow() - cur_row + n + row_shift;
+    uint8_t row = base_row + n;
     if (row >= GRID_LENGTH) { return; }
     proj.read_grid_row_header(&row_headers[n], row, cur_grid);
     update_row_state(row, row_headers[n].active);
@@ -516,6 +517,12 @@ void GridPage::display_grid() {
 
   char str[3];
   PGM_P tmp;
+  uint8_t base_col = getCol() - cur_col;
+  uint8_t base_row = getRow() - cur_row;
+  uint8_t grid_width = getWidth();
+#ifdef PLATFORM_TBD
+  uint8_t selected_row = getRow();
+#endif
 
 //  encoders[1]->handler = NULL;
 
@@ -535,13 +542,13 @@ void GridPage::display_grid() {
 
     auto cur_posx = x_offset;
     auto cur_posy = y_offset + y * 8;
-    auto w = getWidth();
+    auto w = grid_width;
     for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift && x < w;
          x++) {
       oled_display.setCursor(cur_posx, cur_posy);
 
-      auto track_idx = x + getCol() - cur_col;
-      auto row_idx = y + getRow() - cur_row;
+      auto track_idx = x + base_col;
+      auto row_idx = y + base_row;
       uint8_t track_type = row_headers[y].track_type[track_idx];
       uint8_t model = row_headers[y].model[track_idx];
 
@@ -561,11 +568,11 @@ void GridPage::display_grid() {
       }
       case A4_TRACK_TYPE:
         str[0] = 'A';
-        str[1] = (x + getCol() - cur_col) + '1';
+        str[1] = track_idx + '1';
         break;
       case EXT_TRACK_TYPE:
         str[0] = 'M';
-        str[1] = (x + getCol() - cur_col) + '1';
+        str[1] = track_idx + '1';
         break;
       case MDFX_TRACK_TYPE:
         str[0] = 'F';
@@ -614,7 +621,7 @@ void GridPage::display_grid() {
       bool b = is_slot_queue(track_idx, row_idx);
       bool io_selected = false;
 #ifdef PLATFORM_TBD
-      io_selected = (row_idx == getRow()) &&
+      io_selected = (row_idx == selected_row) &&
                     grid_io_overlay.is_slot_selected(track_idx);
 #endif
 
@@ -653,7 +660,7 @@ void GridPage::display_grid() {
   }
 
   // optionally, draw the first separator
-  if ((getCol() - cur_col + col_shift) % 4 == 0) {
+  if ((base_col + col_shift) % 4 == 0) {
     mcl_gui.draw_vertical_dashline(x_offset - 3, 3);
   }
   oled_display.setTextColor(WHITE, BLACK);
@@ -669,11 +676,12 @@ void GridPage::display_row_info() {
   if ((cur_row + param4.cur > MAX_VISIBLE_ROWS - 1)) {
     row_shift = cur_row + param4.cur - MAX_VISIBLE_ROWS;
   }
+  uint8_t base_row = getRow() - cur_row + row_shift;
   char val[4];
   val[2] = '\0';
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-    uint8_t row = getRow() - cur_row + n + row_shift;
+    uint8_t row = base_row + n;
     if (row >= GRID_LENGTH) { return; }
     uint8_t b = row / 16;
     oled_display.setCursor(27, (n + 1) * 8);
