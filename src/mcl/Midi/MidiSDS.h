@@ -92,13 +92,15 @@ private:
 };
 // Abstract base class for file readers
 struct SDSFileReader {
-  virtual ~SDSFileReader() {}
   virtual bool open(const char *filename) = 0;
   virtual void close() = 0;
   virtual uint32_t size() = 0;
   virtual int readPacket(uint8_t *buf, size_t bufsize) = 0;
   virtual bool hasMorePackets() = 0;
   virtual uint32_t position() = 0;
+
+protected:
+  ~SDSFileReader() = default;
 };
 
 extern MidiSDSClass midi_sds;
