@@ -210,7 +210,7 @@ public:
 
   LEDHardware led;
 
-  GUIHardware() : inGui(false), oldsr(0) {}
+  GUIHardware() = default;
   void init();
   void poll();
   void clear();

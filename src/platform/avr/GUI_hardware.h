@@ -152,7 +152,7 @@ private:
 public:
     ButtonsClass Buttons;  // Made public for macro access
     LEDHardware led;
-    GUIHardware() : inGui(false), oldsr(0) {}
+    GUIHardware() = default;
     void init();
     void poll();
     void clear();
@@ -163,4 +163,3 @@ extern GUIHardware GUI_hardware;
 extern SR165Class SR165;
 extern EncodersClass Encoders;
 extern ButtonsClass Buttons;
-
