@@ -991,33 +991,32 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
     case 0:
       icon = devs[0]->gif_data();
       gif = devs[0]->gif();
-      gif->set_bmp(icon);
       break;
     case 1:
       icon = devs[1]->gif_data();
       gif = devs[1]->gif();
-      gif->set_bmp(icon);
       offset = 4;
       break;
     case 2:
       gif = R.icons_logo->perf_gif;
-      gif->set_bmp(R.icons_logo->perf_gif_data);
+      icon = R.icons_logo->perf_gif_data;
       offset = 3;
       break;
     case 3:
       gif = R.icons_logo->route_gif;
-      gif->set_bmp(R.icons_logo->route_gif_data);
+      icon = R.icons_logo->route_gif_data;
       offset = 5;
       break;
     case 4:
       gif = R.icons_logo->metronome_gif;
-      gif->set_bmp(R.icons_logo->metronome_gif_data);
+      icon = R.icons_logo->metronome_gif_data;
       offset = 4;
       icon_y_offset = -3;
       break;
     }
 
     //icon = select ? gif->get_frame(0) : gif->get_next_frame();
+    gif->set_bmp(icon);
     icon = gif->get_next_frame();
 
     if (icon) {
