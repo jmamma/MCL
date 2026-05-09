@@ -11,7 +11,7 @@ class Vector {
 	 **/
 public:
   T arr[N] = {};
-  int size = N;
+  uint8_t size = N;
 
   Vector() = default;
 
@@ -55,4 +55,3 @@ public:
 
 	/* @} */
 };
-
