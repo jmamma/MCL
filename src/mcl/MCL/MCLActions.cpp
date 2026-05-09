@@ -178,7 +178,11 @@ void md_import() {
     if (gdt == nullptr)
       continue;
 
-    if (devs[gdt->device_idx]->supports_capability(
+    if (gdt->device_idx >= NUM_DEVS)
+      continue;
+
+    if (devs[gdt->device_idx] != nullptr &&
+        devs[gdt->device_idx]->supports_capability(
             MidiDeviceCapability::MdPatternImport)) {
       track_select_array[n] = 1;
     }
@@ -720,7 +724,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     auto elektron_dev = devs[i]->asElektronDevice();
     if (elektron_dev != nullptr) {
 
-      char *dst = devs[i]->asElektronDevice()->getKitName();
+      char *dst = elektron_dev->getKitName();
       if (dst != nullptr) {
         if (row_header.active) {
           uint8_t len = elektron_dev->sysex_protocol.kitname_length;
@@ -992,10 +996,14 @@ void MCLActions::calc_latency() {
 
   constexpr uint32_t LOAD_DIVISOR = (10 * 1000);
 
-  uint16_t dev_load_penalty[2] = {0};
+  uint16_t dev_load_penalty[NUM_DEVS] = {0};
 
-  dev_load_penalty[0] = (devs[0]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
-  dev_load_penalty[1] = (devs[1]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
+  for (uint8_t i = 0; i < NUM_DEVS; i++) {
+    if (devs[i] != nullptr && devs[i]->uart != nullptr) {
+      dev_load_penalty[i] =
+          (devs[i]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
+    }
+  }
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if ((grid_page.active_slots[n] == SLOT_DISABLED))
@@ -1007,6 +1015,10 @@ void MCLActions::calc_latency() {
       }
 
       uint8_t device_idx = gdt->device_idx;
+      if (device_idx >= NUM_DEVS) {
+        continue;
+      }
+
       if (send_machine[n] == 1) {
         uint8_t track_idx = n & 0xF;
         // Optimised, assume we dont need to read the entire object to calculate
@@ -1031,7 +1043,10 @@ void MCLActions::calc_latency() {
   #if defined(__AVR__)
   /* atmega2560 is not fast enough to pack elektron data at 8x turbo for Analog4 etc..
    * double the latency required */
-  if (send_dev[1] && elektron_devs[1] != nullptr && devs[1]->uart->speed >= 250000) { dev_latency[1].latency_bytes *= 2; }
+  if (send_dev[1] && devs[1] != nullptr && elektron_devs[1] != nullptr &&
+      devs[1]->uart != nullptr && devs[1]->uart->speed >= 250000) {
+    dev_latency[1].latency_bytes *= 2;
+  }
   #endif
 
   // div192th_latency = ceil(tempo * 0.8 * latency_bytes * 10 / speed)
@@ -1045,6 +1060,10 @@ void MCLActions::calc_latency() {
   }
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
+      if (devs[a] == nullptr || devs[a]->uart == nullptr ||
+          devs[a]->uart->speed == 0) {
+        continue;
+      }
       uint32_t den = devs[a]->uart->speed;
       uint32_t num = (uint32_t)tempo_uint * 8 * dev_latency[a].latency_bytes;
       //Transimission Latency

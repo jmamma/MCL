@@ -77,20 +77,19 @@ void GridTask::run() {
 }
 
 void GridTask::update_transition_details() {
-  MidiDevice *devs[2] = {
-      device_manager.primary_device(),
-      device_manager.secondary_device(),
-  };
-  ElektronDevice *elektron_devs[2] = {
-      devs[0]->asElektronDevice(),
-      devs[1]->asElektronDevice(),
-  };
+  if (device_manager.primary_device() != &MD) {
+    send_kit_name = false;
+    return;
+  }
 
   GridRowHeader row_header;
   proj.read_grid_row_header(&row_header, next_active_row, 0);
   uint8_t dev_idx = 0;
 
-  uint8_t len = elektron_devs[0]->sysex_protocol.kitname_length;
+  uint8_t len = MD.sysex_protocol.kitname_length;
+  if (len > sizeof(kit_names[dev_idx])) {
+    len = sizeof(kit_names[dev_idx]);
+  }
 
   if (row_header.active) {
     memcpy(kit_names[dev_idx], row_header.name, len);
@@ -176,6 +175,9 @@ void GridTask::transition_handler() {
 
       uint8_t track_idx = n & 0xF;
       uint8_t device_idx = gdt->device_idx;
+      if (device_idx >= NUM_DEVS) {
+        continue;
+      }
 
       if (link_load(n, track_idx, slots_changed, track_select_array, gdt)) {
         send_device[device_idx] = true;
@@ -216,7 +218,7 @@ void GridTask::transition_handler() {
 
         uint8_t device_idx = gdt->device_idx;
 
-        if (device_idx != c)
+        if (device_idx >= NUM_DEVS || device_idx != c)
           continue;
 
         uint8_t track_idx = n & 0xF;
