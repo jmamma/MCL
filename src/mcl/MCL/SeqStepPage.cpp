@@ -764,9 +764,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 }
 
 void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
+#if !defined(__AVR__)
   if (seq_step_api_uses_tbd_tracks()) {
     return;
   }
+#endif
 
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -779,14 +781,21 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
+#if defined(__AVR__)
+  if (track_param >= MD_PARAMS_PER_TRACK) {
+    return;
+  }
+  MDSeqTrack &event_track = mcl_seq.md_tracks[track];
+  MDSeqTrack &active_track = mcl_seq.md_tracks[last_md_track];
+#else
   SeqStepTrackApi event_track = seq_step_api_track_for(track, false);
-  uint8_t step;
   // Engine, not device: the recorder writes into the active engine's lock
   // storage. If the device sends a param outside the active engine's lock
   // surface, drop it because there is nowhere to store it.
   if (track_param >= event_track.lock_param_count()) {
     return;
   }
+#endif
 
   if (SeqPage::recording) {
     seq_step_page.last_rec_event = REC_EVENT_CC;
@@ -797,12 +806,18 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
 
+#if !defined(__AVR__)
   SeqStepTrackApi active_track = active_step_track();
+#endif
   uint8_t store_lock = 255;
   for (uint8_t i = 0; i < 16; i++) {
     if ((note_interface.is_note_on(i))) {
-      step = i + (SeqPage::page_select * 16);
+      uint8_t step = i + (SeqPage::page_select * 16);
+#if defined(__AVR__)
+      if (step < active_track.length) {
+#else
       if (step < active_track.length()) {
+#endif
         if (active_track.set_track_locks(step, track_param, value)) {
           store_lock = 0;
           key_interface.ignoreNextEvent(track_param - MD.currentSynthPage * 8 +
@@ -813,6 +828,16 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
         active_track.enable_step_locks(step);
         if (seq_step_page.mask_type == MASK_PATTERN) {
+#if defined(__AVR__)
+          bool cond_plock;
+          uint8_t condition = seq_step_page.translate_to_step_conditional(
+              seq_param1.cur, &cond_plock);
+
+          active_track.steps[step].trig = true;
+          active_track.steps[step].cond_id = condition;
+          active_track.steps[step].cond_plock = cond_plock;
+          active_track.timing[step] = seq_param2.cur;
+#else
           bool cond_plock;
           uint8_t condition = active_track.step_conditional_from_knob(
               seq_param1.cur, &cond_plock);
@@ -820,18 +845,35 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
           active_track.set_step(step, MASK_PATTERN, true);
           active_track.set_conditional(step, condition, cond_plock);
           active_track.set_timing_from_encoder(step, seq_param2.cur);
+#endif
         }
       }
     }
   }
+#if defined(__AVR__)
+  if (store_lock == 0) {
+#else
   if (store_lock == 0 && !active_track.is_stepseq()) {
+#endif
     char str[5];
     mclstr_copy_progmem(str, mclstr_dash_dash_space, sizeof(str));
     char str2[4];
     mclstr_copy_progmem(str2, mclstr_dash_space, sizeof(str2));
+#if defined(__AVR__)
+    const char *modelname =
+        model_param_name(MD.kit.get_model(last_md_track), track_param);
+    if (modelname != NULL) {
+      strncpy(str, modelname, 3);
+      if (strlen(str) == 2) {
+        str[2] = ' ';
+        str[3] = '\0';
+      }
+    }
+#else
     if (!active_track.copy_lock_param_label(track_param, str, sizeof(str))) {
       mclstr_copy_progmem(str, mclstr_dash_dash_space, sizeof(str));
     }
+#endif
     mcl_gui.put_value_at(value, str2);
     oled_display.textbox(str, str2);
   }
