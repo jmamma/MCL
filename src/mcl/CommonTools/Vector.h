@@ -10,15 +10,10 @@ class Vector {
 	 * @{
 	 **/
 public:
-  T arr[N];
-  int size;
+  T arr[N] = {};
+  int size = N;
 
-  Vector() {
-    size = N;
-    for (int i = 0; i < N; i++) {
-      arr[i] = (T)0;
-    }
-  }
+  Vector() = default;
 
 	/** Add a new element t to the vector, in the first empty place. **/
   bool add(T t) {
@@ -60,5 +55,4 @@ public:
 
 	/* @} */
 };
-
 
