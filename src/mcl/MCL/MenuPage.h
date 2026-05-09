@@ -36,6 +36,7 @@ public:
                  uint8_t width = MENU_WIDTH);
   void select_item(uint8_t item = 0) {
     cur_row = 0;
+    selected_item = item;
     encoders[1]->cur = item;
   }
   void loop();
@@ -50,6 +51,8 @@ public:
   virtual bool handleEvent(gui_event_t *event);
 
 protected:
+  uint8_t selected_item = 0;
+
   virtual MenuBase *get_menu() = 0;
 };
 

@@ -184,10 +184,9 @@ void FileBrowserPage::draw_menu() {
 
 void FileBrowserPage::open_filemenu() {
   filemenu_active = true;
-  file_menu_encoder.cur = file_menu_encoder.old = 0;
-  file_menu_page.cur_row = 0;
-  encoders[0] = &config_param1;
-  encoders[1] = &file_menu_encoder;
+  file_menu_page.select_item(0);
+  encoders[0] = file_menu_page.encoders[0];
+  encoders[1] = file_menu_page.encoders[1];
   file_menu_page.init();
 }
 

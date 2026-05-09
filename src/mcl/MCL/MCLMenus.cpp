@@ -9,31 +9,8 @@
 #include "MCLActions.h"
 #include "WavDesignerPage.h"
 
-MCLEncoder options_param1(0, 11, ENCODER_RES_SYS);
-MCLEncoder options_param2(0, 17, ENCODER_RES_SYS);
-
-MCLEncoder config_param1(0, 11, ENCODER_RES_SYS);
-MCLEncoder config_param2(0, 17, ENCODER_RES_SYS);
-
-MCLEncoder config_param3(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param4(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param5(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param6(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param7(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param8(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param9(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param10(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param11(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param12(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param13(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param14(0, 17, ENCODER_RES_SYS);
-MCLEncoder config_param15(0, 11, ENCODER_RES_SYS);
-MCLEncoder config_param16(0, 11, ENCODER_RES_SYS);
-MCLEncoder config_param17(0, 11, ENCODER_RES_SYS);
-MCLEncoder config_param18(0, 11, ENCODER_RES_SYS);
-MCLEncoder config_param19(0, 11, ENCODER_RES_SYS);
-MCLEncoder config_param20(0, 11, ENCODER_RES_SYS);
-
+static MCLEncoder menu_value_encoder(0, 17, ENCODER_RES_SYS);
+static MCLEncoder menu_entry_encoder(0, 17, ENCODER_RES_SYS);
 
 uint8_t opt_import_src = 0;
 uint8_t opt_import_dest = 0;
@@ -193,30 +170,51 @@ const menu_function_ptr_t menu_target_functions[] PROGMEM = {
     // 31
     { .fn = opt_transpose_track_handler },
 };
-MenuPage<aux_config_page_N> aux_config_page(&config_param1, &config_param6);
+MenuPage<aux_config_page_N> aux_config_page(&menu_value_encoder,
+                                            &menu_entry_encoder);
 
-BootMenuPage<boot_menu_page_N> boot_menu_page(&options_param1, &options_param2);
-MenuPage<start_menu_page_N> start_menu_page(&options_param1, &options_param2);
-MenuPage<system_menu_page_N> system_page(&options_param1, &options_param2);
-MenuPage<midi_config_page_N> midi_config_page(&config_param1, &config_param3);
+BootMenuPage<boot_menu_page_N> boot_menu_page(&menu_value_encoder,
+                                              &menu_entry_encoder);
+MenuPage<start_menu_page_N> start_menu_page(&menu_value_encoder,
+                                            &menu_entry_encoder);
+MenuPage<system_menu_page_N> system_page(&menu_value_encoder,
+                                         &menu_entry_encoder);
+MenuPage<midi_config_page_N> midi_config_page(&menu_value_encoder,
+                                              &menu_entry_encoder);
 
-MenuPage<md_config_page_N> md_config_page(&config_param1, &config_param4);
-MenuPage<chain_config_page_N> chain_config_page(&config_param1, &config_param6);
-MenuPage<mcl_config_page_N> mcl_config_page(&config_param1, &config_param5);
-MenuPage<md_import_page_N> md_import_page(&config_param1, &config_param8);
+MenuPage<md_config_page_N> md_config_page(&menu_value_encoder,
+                                          &menu_entry_encoder);
+MenuPage<chain_config_page_N> chain_config_page(&menu_value_encoder,
+                                                &menu_entry_encoder);
+MenuPage<mcl_config_page_N> mcl_config_page(&menu_value_encoder,
+                                            &menu_entry_encoder);
+MenuPage<md_import_page_N> md_import_page(&menu_value_encoder,
+                                          &menu_entry_encoder);
 
-MenuPage<midiport_menu_page_N> midiport_menu_page(&config_param1, &config_param9);
-MenuPage<mididevice_menu_page_N> mididevice_menu_page(&config_param1, &config_param18);
-MenuPage<gridx_menu_page_N> gridx_menu_page(&config_param1, &config_param19);
-MenuPage<gridy_menu_page_N> gridy_menu_page(&config_param1, &config_param20);
-MenuPage<port1_menu_page_N> port1_menu_page(&config_param1, &config_param15);
-MenuPage<port2_menu_page_N> port2_menu_page(&config_param1, &config_param16);
-MenuPage<usbport_menu_page_N> usbport_menu_page(&config_param1, &config_param17);
-MenuPage<midiprogram_menu_page_N> midiprogram_menu_page(&config_param1, &config_param10);
-MenuPage<midiclock_menu_page_N> midiclock_menu_page(&config_param1, &config_param11);
-MenuPage<midiroute_menu_page_N> midiroute_menu_page(&config_param1, &config_param12);
-MenuPage<midimachinedrum_menu_page_N> midimachinedrum_menu_page(&config_param1, &config_param13);
-MenuPage<midigeneric_menu_page_N> midigeneric_menu_page(&config_param1, &config_param14);
+MenuPage<midiport_menu_page_N> midiport_menu_page(&menu_value_encoder,
+                                                  &menu_entry_encoder);
+MenuPage<mididevice_menu_page_N> mididevice_menu_page(&menu_value_encoder,
+                                                      &menu_entry_encoder);
+MenuPage<gridx_menu_page_N> gridx_menu_page(&menu_value_encoder,
+                                            &menu_entry_encoder);
+MenuPage<gridy_menu_page_N> gridy_menu_page(&menu_value_encoder,
+                                            &menu_entry_encoder);
+MenuPage<port1_menu_page_N> port1_menu_page(&menu_value_encoder,
+                                            &menu_entry_encoder);
+MenuPage<port2_menu_page_N> port2_menu_page(&menu_value_encoder,
+                                            &menu_entry_encoder);
+MenuPage<usbport_menu_page_N> usbport_menu_page(&menu_value_encoder,
+                                                &menu_entry_encoder);
+MenuPage<midiprogram_menu_page_N> midiprogram_menu_page(&menu_value_encoder,
+                                                        &menu_entry_encoder);
+MenuPage<midiclock_menu_page_N> midiclock_menu_page(&menu_value_encoder,
+                                                    &menu_entry_encoder);
+MenuPage<midiroute_menu_page_N> midiroute_menu_page(&menu_value_encoder,
+                                                    &menu_entry_encoder);
+MenuPage<midimachinedrum_menu_page_N> midimachinedrum_menu_page(
+    &menu_value_encoder, &menu_entry_encoder);
+MenuPage<midigeneric_menu_page_N> midigeneric_menu_page(&menu_value_encoder,
+                                                        &menu_entry_encoder);
 
 MCLEncoder input_encoder1(0, 127, ENCODER_RES_SYS);
 MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);
@@ -224,7 +222,8 @@ MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);
 TextInputPage text_input_page(&input_encoder1, &input_encoder2);
 
 MCLEncoder file_menu_encoder(0, 4, ENCODER_RES_PAT);
-MenuPage<file_menu_page_N> file_menu_page(&config_param1, &file_menu_encoder);
+MenuPage<file_menu_page_N> file_menu_page(&menu_value_encoder,
+                                          &file_menu_encoder);
 
 MCLEncoder seq_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder seq_menu_entry_encoder(0, 9, ENCODER_RES_PAT);
@@ -238,4 +237,3 @@ MenuPage<grid_slot_page_N> grid_slot_page(&grid_slot_param1, &grid_slot_param2);
 MCLEncoder wavdesign_menu_value_encoder(0, 16, ENCODER_RES_PAT);
 MCLEncoder wavdesign_menu_entry_encoder(0, 4, ENCODER_RES_PAT);
 MenuPage<wavdesign_menu_page_N> wavdesign_menu_page(&wavdesign_menu_value_encoder, &wavdesign_menu_entry_encoder);
-

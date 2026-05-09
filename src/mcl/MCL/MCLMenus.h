@@ -16,31 +16,6 @@
 //#include "DiagnosticPage.h"
 #define ENCODER_RES_SYS 2
 
-extern MCLEncoder options_param1;
-extern MCLEncoder options_param2;
-extern MCLEncoder config_param1;
-extern MCLEncoder config_param2;
-
-extern MCLEncoder config_param3;
-extern MCLEncoder config_param4;
-extern MCLEncoder config_param5;
-extern MCLEncoder config_param6;
-extern MCLEncoder config_param7;
-extern MCLEncoder config_param8;
-
-extern MCLEncoder config_param9;
-extern MCLEncoder config_param10;
-extern MCLEncoder config_param11;
-extern MCLEncoder config_param12;
-extern MCLEncoder config_param13;
-extern MCLEncoder config_param14;
-extern MCLEncoder config_param15;
-extern MCLEncoder config_param16;
-extern MCLEncoder config_param17;
-extern MCLEncoder config_param18;
-extern MCLEncoder config_param19;
-extern MCLEncoder config_param20;
-
 extern void new_proj_handler();
 
 extern BootMenuPage<boot_menu_page_N> boot_menu_page;

@@ -75,12 +75,14 @@ void MenuPageBase::init() {
   gen_menu_row_names();
 
   MenuBase *m = get_menu();
+  encoders[1]->cur = selected_item;
   ((MCLEncoder *)encoders[1])->max = m->get_number_of_items() - 1;
 
   if (((MCLEncoder *)encoders[1])->cur > ((MCLEncoder *)encoders[1])->max) {
     ((MCLEncoder *)encoders[1])->cur = 0;
     cur_row = 0;
   }
+  selected_item = encoders[1]->cur;
 
   uint8_t range = m->get_option_range(encoders[1]->cur);
   ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
@@ -186,6 +188,7 @@ void MenuPageBase::gen_menu_row_names() {
 }
 
 void MenuPageBase::cleanup() {
+  selected_item = encoders[1]->cur;
   key_interface.ignoreNextEventClear(MDX_KEY_YES);
   key_interface.ignoreNextEventClear(MDX_KEY_NO);
 }
@@ -209,6 +212,7 @@ void MenuPageBase::loop() {
     }
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
+    selected_item = encoders[1]->cur;
     uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
 #ifdef PLATFORM_TBD
