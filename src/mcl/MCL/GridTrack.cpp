@@ -7,12 +7,11 @@
 #endif
 
 bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid) {
-  void *payload = data == nullptr ? _this() : data;
   if (grid == nullptr) {
-    return proj.write_grid(payload, len, column, row);
+    return proj.write_grid(data, len, column, row);
   }
   else {
-    return grid->write(payload, len, column, row);
+    return grid->write(data, len, column, row);
   }
 }
 
@@ -31,6 +30,18 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                 uint8_t slotnumber) {
   uint8_t n = slotnumber;
   if (seq_track == nullptr) { return; }
+#if defined(__AVR__)
+  uint32_t target = (uint32_t)mcl_actions.next_transition * 12u +
+                    mcl_actions.transition_offsets[n];
+  if (target > 0) {
+    target--;
+  }
+  uint32_t count_down =
+      MidiClock.clock_diff_div192(MidiClock.div192th_counter, target);
+  if (count_down > (0x10000UL * 12u - 4096u)) {
+    count_down = 1;
+  }
+#else
   const uint32_t now = MidiClock.div192th_counter;
   uint32_t target =
       MidiClock.div16th_to_div192(mcl_actions.next_transition,
@@ -39,14 +50,9 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
     target--;
   }
   uint32_t count_down = MidiClock.clock_diff_div192(now, target);
-#if defined(__AVR__)
-  if (count_down > (0x10000UL * 12u - 4096u)) {
-#else
   if (target < now && (now - target) < 4096u) {
-#endif
     count_down = 1;
   }
-#if !defined(__AVR__)
   const uint8_t countdown_resolution = transition_countdown_resolution();
   if (countdown_resolution > 0 &&
       MidiClock.clock_interpolation > countdown_resolution) {
