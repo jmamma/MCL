@@ -113,10 +113,9 @@ bool MixerPage::mixer_param_supported_for_held_tracks(uint8_t param) {
   return false;
 }
 
-uint8_t MixerPage::mixer_param_for_encoder(uint8_t encoder_idx) {
-  sync_selected_mixer_device();
-
-  if (SeqTrackUtil::is_md_device(midi_device)) {
+uint8_t MixerPage::mixer_param_for_encoder(uint8_t encoder_idx,
+                                           bool is_md_device) {
+  if (is_md_device) {
     switch (encoder_idx) {
     case 1:
       return MODEL_FLTF;
@@ -138,7 +137,7 @@ uint8_t MixerPage::mixer_param_for_encoder(uint8_t encoder_idx) {
   return default_mixer_param();
 }
 
-bool MixerPage::handle_mixer_encoder_edits() {
+bool MixerPage::handle_mixer_encoder_edits(bool is_md_device) {
   if (note_interface.notes_count_on() == 0) {
     return false;
   }
@@ -146,7 +145,7 @@ bool MixerPage::handle_mixer_encoder_edits() {
   bool handled = false;
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
     if (encoders[n] != nullptr && encoders[n]->hasChanged()) {
-      adjust_param(encoders[n], mixer_param_for_encoder(n));
+      adjust_param(encoders[n], mixer_param_for_encoder(n, is_md_device));
       handled = true;
     }
   }
@@ -290,7 +289,7 @@ void MixerPage::loop() {
   bool old_draw_encoders = draw_encoders;
   sync_selected_mixer_device();
   const bool use_perf_encoders = SeqTrackUtil::is_md_device(midi_device);
-  bool mixer_encoder_edit = handle_mixer_encoder_edits();
+  bool mixer_encoder_edit = handle_mixer_encoder_edits(use_perf_encoders);
 
   if (use_perf_encoders && !mixer_encoder_edit) {
     perf_page.func_enc_check();
