@@ -162,15 +162,11 @@ static inline bool opt_capture_is_md_device() {
   return SeqTrackUtil::is_md_device(opt_midi_device_capture);
 }
 
-static inline void seq_copy_device_slot_name(uint8_t slot, char *dst,
-                                             uint8_t len) {
-  if (len == 0) return;
+static inline const char *seq_device_slot_name(uint8_t slot) {
   if (SeqPage::devices_share_physical()) {
-    strncpy(dst, normalized_seq_slot(slot) == 2 ? "TB2" : "TB1", len);
-  } else {
-    strncpy(dst, SeqPage::device_for_seq_slot(slot)->name, len);
+    return normalized_seq_slot(slot) == 2 ? "TB2" : "TB1";
   }
-  dst[len - 1] = '\0';
+  return SeqPage::device_for_seq_slot(slot)->name;
 }
 
 uint8_t opt_speed = 1;
@@ -1712,7 +1708,7 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
   uint8_t pidx_x = pidx_x0;
   bool blink = MidiClock.getBlinkHint(true);
 
-  uint8_t playing_idx;
+  uint8_t playing_idx = _playing_idx;
   if (_playing_idx == 255) {
     uint8_t step_count;
 #if defined(PLATFORM_TBD)
@@ -1761,11 +1757,6 @@ void SeqPage::display() {
     is_md = true;
   }
 #endif
-  char int_name[8];
-  char ext_name[8];
-  seq_copy_device_slot_name(1, int_name, sizeof(int_name));
-  seq_copy_device_slot_name(2, ext_name, sizeof(ext_name));
-
   uint8_t track_id = last_md_track;
   if (!is_md) {
     track_id = last_ext_track;
@@ -1775,7 +1766,8 @@ void SeqPage::display() {
   //  draw current active track
   mcl_gui.draw_panel_number(track_id);
 
-  mcl_gui.draw_panel_toggle(int_name, ext_name, current_device_slot() == 1);
+  mcl_gui.draw_panel_toggle(seq_device_slot_name(1), seq_device_slot_name(2),
+                            current_device_slot() == 1);
   //  draw stop/play/rec state
   mcl_gui.draw_panel_status(recording, MidiClock.state == 2);
 
@@ -1789,9 +1781,7 @@ void SeqPage::display() {
     constexpr uint8_t width = 52;
     oled_display.setFont(&TomThumb);
     oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
-    if (show_seq_menu) {
-      seq_menu_page.draw_menu(128 - width, 8, width);
-    }
+    seq_menu_page.draw_menu(128 - width, 8, width);
   }
 }
 
