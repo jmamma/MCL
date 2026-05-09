@@ -20,7 +20,7 @@ public:
     bool check = true;
 #endif
 
-    RingBuffer(T* buffer, uint16_t size) {
+    RingBuffer(T* buffer, uint16_t size) NOINLINE() {
         buf = buffer;
         len = size;
         init();
