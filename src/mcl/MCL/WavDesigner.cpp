@@ -72,7 +72,8 @@ bool WavDesigner::render() {
 
   // Recalculate sample rate using base frequency, for sample alignment.
 
-  uint32_t n_cycle = (uint32_t)(sample_rate / fund_freq + 0.5f);
+  // The OscPage pitch range keeps a rendered waveform well under 65535 samples.
+  uint16_t n_cycle = (uint16_t)(sample_rate / fund_freq + 0.5f);
   DEBUG_PRINTLN("n_cycle 1");
   DEBUG_PRINTLN(n_cycle);
   sample_rate = n_cycle * fund_freq;
@@ -99,19 +100,18 @@ bool WavDesigner::render() {
   uint16_t buffer[256];
   uint16_t samples_so_far = 0;
 
-  int32_t largest_sample_so_far = 0;
+  uint16_t largest_sample_so_far = 0;
   // Render each sample
-  uint32_t pos = 0;
-  bool write_header = false;
+  uint16_t pos = 0;
 
   // Zero crossing detection vars
   bool zero_crossing_found = false;
-  int32_t first_zero_crossing = 0;
-  int32_t last_zero_crossing = 0;
-  int32_t last_sample = 0;
-  uint8_t zero_crossing_count = 0;
+  uint16_t first_zero_crossing = 0;
+  uint16_t last_zero_crossing = 0;
+  int16_t last_sample = 0;
+  bool update_loop_end = false;
 
-  for (uint32_t n = 0; n < n_cycle; n++) {
+  for (uint16_t n = 0; n < n_cycle; n++) {
     float sample = 0;
 
     // Render each oscillator
@@ -154,21 +154,24 @@ bool WavDesigner::render() {
 
     // Detect largest sample in render
 
-    if ((abs(out_sample) > largest_sample_so_far)) {
-      largest_sample_so_far = abs(out_sample);
+    uint16_t sample_magnitude =
+        out_sample < 0 ? (uint16_t)-out_sample : (uint16_t)out_sample;
+    if (sample_magnitude > largest_sample_so_far) {
+      largest_sample_so_far = sample_magnitude;
       DEBUG_PRINTLN(F("large sample found"));
       DEBUG_PRINTLN(largest_sample_so_far);
     }
 
     // Detect zero crossings
 
-    if ((last_sample * out_sample < 0) || (out_sample == 0)) {
+    if (((last_sample < 0) && (out_sample > 0)) ||
+        ((last_sample > 0) && (out_sample < 0)) || (out_sample == 0)) {
       if (!zero_crossing_found) {
         first_zero_crossing = n;
         zero_crossing_found = true;
       }
-      zero_crossing_count++;
-      if (zero_crossing_count % 2 > 0) {
+      update_loop_end = !update_loop_end;
+      if (update_loop_end) {
         last_zero_crossing = n - 1;
       }
     }
@@ -180,8 +183,7 @@ bool WavDesigner::render() {
     if ((samples_so_far > 255) || (n == n_cycle - 1)) {
       DEBUG_PRINTLN(F("let's write"));
       DEBUG_PRINTLN(samples_so_far);
-      if (!wav_file.write_samples(buffer, samples_so_far, pos, 0,
-                                  write_header)) {
+      if (!wav_file.write_samples(buffer, samples_so_far, pos, 0, false)) {
         return false;
       }
 
@@ -214,8 +216,7 @@ bool WavDesigner::render() {
                             loop_end);
   wav_file.file.sync();
   wav_file.apply_gain(normalize_gain);
-  write_header = true;
-  if (!wav_file.close(write_header)) {
+  if (!wav_file.close(true)) {
     DEBUG_PRINTLN(F("could not close"));
     return false;
   }
