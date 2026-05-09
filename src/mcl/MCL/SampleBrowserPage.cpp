@@ -275,7 +275,7 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
       file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
       file_menu_page.menu.enable_entry(FM_RECVALL, state);
       file_menu_page.menu.enable_entry(FM_SENDALL, state);
-      FileBrowserPage::handleEvent(event);
+      open_filemenu();
       return true;
     }
   }

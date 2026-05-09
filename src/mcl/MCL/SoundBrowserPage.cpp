@@ -111,7 +111,7 @@ bool SoundBrowserPage::handleEvent(gui_event_t *event) {
       file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
       file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
       file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-      FileBrowserPage::handleEvent(event);
+      open_filemenu();
       return true;
     }
 

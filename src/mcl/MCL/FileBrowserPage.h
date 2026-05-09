@@ -135,6 +135,7 @@ public:
   void draw_sidebar();
   void draw_filebrowser();
   void draw_menu();
+  void open_filemenu();
 
   virtual void display();
 

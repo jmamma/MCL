@@ -182,6 +182,15 @@ void FileBrowserPage::draw_menu() {
   oled_display.display();
 }
 
+void FileBrowserPage::open_filemenu() {
+  filemenu_active = true;
+  file_menu_encoder.cur = file_menu_encoder.old = 0;
+  file_menu_page.cur_row = 0;
+  encoders[0] = &config_param1;
+  encoders[1] = &file_menu_encoder;
+  file_menu_page.init();
+}
+
 void FileBrowserPage::draw_sidebar() {
   constexpr uint8_t x_offset = 43;
   oled_display.clearDisplay();
@@ -548,12 +557,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_BUTTON(event)) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
-      filemenu_active = true;
-      file_menu_encoder.cur = file_menu_encoder.old = 0;
-      file_menu_page.cur_row = 0;
-      encoders[0] = &config_param1;
-      encoders[1] = &file_menu_encoder;
-      file_menu_page.init();
+      open_filemenu();
       return true;
     }
     if (EVENT_RELEASED(event, Buttons.BUTTON3) && filemenu_active) {
