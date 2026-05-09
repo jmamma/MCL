@@ -276,11 +276,12 @@ void GridPage::loop() {
     reload_slot_models = true;
   }
 
-  if (read_clock_ms() < grid_lastclock) {
-    grid_lastclock = read_clock_ms() + GUI_NAME_TIMEOUT;
+  uint16_t now = read_clock_ms();
+  if (now < grid_lastclock) {
+    grid_lastclock = now + GUI_NAME_TIMEOUT;
   }
 
-  if (clock_diff(grid_lastclock, read_clock_ms()) > GUI_NAME_TIMEOUT) {
+  if (clock_diff(grid_lastclock, now) > GUI_NAME_TIMEOUT) {
     ///   DEBUG_DUMP(grid_lastclock);
     //   DEBUG_DUMP(read_clock_ms());
     //   display_name = 1;
@@ -294,7 +295,7 @@ void GridPage::loop() {
       mcl_cfg.tempo = MidiClock.get_tempo();
       DEBUG_PRINTLN(F("write cfg"));
       mcl_cfg.write_cfg();
-      grid_lastclock = read_clock_ms();
+      grid_lastclock = now;
       write_cfg = false;
       // }
     }
@@ -315,7 +316,7 @@ void GridPage::loop() {
   // a held BANK key, so there's no natural release to time off; the popup
   // stays up until trig→pattern or a re-press of NO closes it.
   if (bank_popup == 2 &&
-      clock_diff(bank_popup_lastclock, read_clock_ms()) > 800) {
+      clock_diff(bank_popup_lastclock, now) > 800) {
     close_bank_popup();
     return;
   }
@@ -516,13 +517,13 @@ void GridPage::display_grid() {
   oled_display.setFont(&TomThumb);
 
   char str[3];
-  PGM_P tmp;
   uint8_t base_col = getCol() - cur_col;
   uint8_t base_row = getRow() - cur_row;
   uint8_t grid_width = getWidth();
 #ifdef PLATFORM_TBD
   uint8_t selected_row = getRow();
 #endif
+  bool blink_hint = MidiClock.getBlinkHint(false);
 
 //  encoders[1]->handler = NULL;
 
@@ -552,7 +553,6 @@ void GridPage::display_grid() {
       uint8_t track_type = row_headers[y].track_type[track_idx];
       uint8_t model = row_headers[y].model[track_idx];
 
-      bool blink = false;
       auto active_cue_color = WHITE;
 
       str[0] = str[1] = '-';
@@ -598,12 +598,13 @@ void GridPage::display_grid() {
         str[0] = 'P';
         str[1] = 'F';
         break;
-      case MNM_TRACK_TYPE:
-        tmp = getMNMMachineNameShort(model, 2);
+      case MNM_TRACK_TYPE: {
+        auto tmp = getMNMMachineNameShort(model, 2);
         if (tmp) {
           copyMachineNameShort(tmp, str);
         }
         break;
+      }
 #ifdef PLATFORM_TBD
       case TBD_TRACK_TYPE:
         str[0] = slot_labels[y][track_idx][0];
@@ -634,16 +635,16 @@ void GridPage::display_grid() {
       }
 
       uint8_t track_grid_idx = track_idx + GRID_WIDTH * cur_grid;
-      if (MidiClock.getBlinkHint(false) &&
-          row_idx == active_slots[track_grid_idx]) {
+      uint8_t active_slot = active_slots[track_grid_idx];
+      bool active = row_idx == active_slot;
+      if (blink_hint && active) {
         // blink, don't print
-        blink = true;
       } else {
         oled_display.print(str);
-      }
-      if (row_idx == active_slots[track_grid_idx] && !blink) {
-        // a gentle visual cue for active slots
-        oled_display.drawPixel(cur_posx - 1, cur_posy - 6, active_cue_color);
+        if (active) {
+          // a gentle visual cue for active slots
+          oled_display.drawPixel(cur_posx - 1, cur_posy - 6, active_cue_color);
+        }
       }
 
       // tomThumb is 4x6
@@ -1024,7 +1025,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
     }
 
-    if (event->mask == EVENT_BUTTON_PRESSED) {
+    else if (event->mask == EVENT_BUTTON_PRESSED) {
       if (grid_page.bank_popup > 0) {
 
         uint8_t load_mode_old = mcl_cfg.load_mode;
@@ -1037,7 +1038,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           }
           mcl_actions.init_chains();
         }
-        if (load_count > 0) {
+        else {
           mcl_cfg.load_mode = LOAD_QUEUE;
         }
 
@@ -1127,7 +1128,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
         draw_encoders = false;
       }
       uint8_t inc = 1;
-      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+      bool func_down = key_interface.is_key_down(MDX_KEY_FUNC);
+      if (func_down) {
         inc = 4;
       }
       if (show_slot_menu) {
@@ -1139,7 +1141,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
           // TBD default: when the slot menu is open, arrows navigate the
           // menu first. Hold the normal FUNC modifier to adjust the slot
           // geometry instead.
-          if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (!func_down) {
             switch (key) {
             case MDX_KEY_UP:
               grid_slot_page.encoders[1]->cur -= 1;
@@ -1242,7 +1244,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_BANKA:
         case MDX_KEY_BANKB:
         case MDX_KEY_BANKC: {
-          if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
+          if (!func_down) {
             goto loadmode;
           }
         }
@@ -1283,7 +1285,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_YES: {
         key_interface.ignoreNextEvent(MDX_KEY_YES);
-        if (!key_interface.is_key_down(MDX_KEY_FUNC)) {
+        if (!func_down) {
           goto load;
         }
         goto save;
