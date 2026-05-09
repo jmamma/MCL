@@ -992,7 +992,7 @@ end:
 #if !defined(__AVR__)
 uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
                                    uint8_t level, uint8_t mode, bool send) {
-  uint8_t data[44];
+  uint8_t data[54];
   data[0] = 0x70;
   data[1] = 0x5b;
   uint8_t i = 2;
@@ -1012,19 +1012,24 @@ uint8_t MDClass::assignMachineBulk(uint8_t track, SPSMachine *machine,
   }
   i++;
 
+  uint8_t num_params = is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  uint8_t num_lfos = is_spsx ? 2 : 1;
+
   if (mode == 0) {
     goto end;
   }
 
-  memcpy(data + i, machine->params, 24);
-  i += 24;
+  memcpy(data + i, machine->params, num_params);
+  i += num_params;
 
   if (mode == 1) {
     goto end;
   }
 
-  memcpy(data + i, &machine->lfos[0], 5);
-  i += 5;
+  for (uint8_t lfo = 0; lfo < num_lfos; lfo++) {
+    memcpy(data + i, &machine->lfos[lfo], 5);
+    i += 5;
+  }
   if (machine->trigGroup > 15) {
     machine->trigGroup = 127;
   }
