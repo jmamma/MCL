@@ -38,7 +38,7 @@ class EncodersClass {
 public:
   encoder_t encoders[GUI_NUM_ENCODERS];
 
-  EncodersClass();
+  EncodersClass() = default;
 
   void poll(uint16_t sr);
   void clearEncoders();
@@ -169,7 +169,7 @@ public:
   static const uint16_t BUTTON3_MASK = _BV(BUTTON3);
   static const uint16_t BUTTON4_MASK = _BV(BUTTON4);
 
-  ButtonsClass();
+  ButtonsClass() = default;
 
   ALWAYS_INLINE() void clear();
   ALWAYS_INLINE() void poll(uint8_t sr);

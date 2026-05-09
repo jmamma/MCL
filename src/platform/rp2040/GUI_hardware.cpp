@@ -71,14 +71,6 @@ ALWAYS_INLINE() uint16_t SR165Class::read16() {
 
 /**********************************************/
 
-EncodersClass::EncodersClass() {
-    clearEncoders();
-    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-        sr_old2s[i] = 0;
-    }
-    sr_old = 0;
-}
-
 void EncodersClass::clearEncoders() {
     for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
         ENCODER_NORMAL(i) = ENCODER_BUTTON(i) = 0;
@@ -129,24 +121,6 @@ void EncodersClass::pollTBD(const ui_data_t& ui_data) {
 
 
 /**********************************************/
-
-ButtonsClass::ButtonsClass() {
-#ifdef PLATFORM_TBD
-    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-      enc_press_ms[i] = 0;
-      enc_tap_armed[i] = false;
-    }
-    enc1_long_press_seen     = false;
-    enc1_rotated_while_held  = false;
-    enc2_long_press_seen     = false;
-    enc2_rotated_while_held  = false;
-    enc3_long_press_seen     = false;
-    enc3_rotated_while_held  = false;
-    enc4_long_press_seen     = false;
-    enc4_rotated_while_held  = false;
-#endif
-    clear();
-}
 
 void ButtonsClass::clear() {
     for (uint8_t i = 0; i < GUI_NUM_BUTTONS; i++) {

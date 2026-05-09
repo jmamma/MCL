@@ -94,14 +94,6 @@ ALWAYS_INLINE()  uint16_t SR165Class::read16() {
 #define ENCODER_BUTTON(i) (encoders[(i)].button)
 #define ENCODER_BUTTON_SHIFT(i) (encoders[(i)].button_shift)
 
-EncodersClass::EncodersClass() {
-  clearEncoders();
-  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
-    sr_old2s[i] = 0;
-  }
-  sr_old = 0;
-}
-
 void EncodersClass::clearEncoders() {
  // USE_LOCK();
  // SET_LOCK();
@@ -138,10 +130,6 @@ void EncodersClass::poll(uint16_t sr) {
 }
 
 /**********************************************/
-
-ButtonsClass::ButtonsClass() {
-  clear();
-}
 
 void ButtonsClass::clear() {
   for (uint8_t i = 0; i < GUI_NUM_BUTTONS; i++) {
