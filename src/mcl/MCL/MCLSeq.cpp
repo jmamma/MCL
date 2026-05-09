@@ -130,6 +130,7 @@ void MCLSeq::setup() {
   lfo_tracks[0].load_tables(); //Only needs to be done once
 
   for (uint8_t i = 0; i < num_lfo_tracks; i++) {
+    lfo_tracks[i].init();
     lfo_tracks[i].track_number = i;
   }
 #endif

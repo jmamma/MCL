@@ -72,8 +72,6 @@ public:
 
   static uint8_t wav_tables[4][WAV_LENGTH];
 
-  LFOSeqTrack() { init(); };
-
   int16_t get_sample(uint8_t n);
 
   void load_tables();
