@@ -146,13 +146,19 @@ model_to_param_names_t model_param_names[] = {
   { RAM_R4_MODEL, 548}
 };
 
+#if defined(__AVR__)
+static constexpr uint8_t MD_MODEL_PARAM_NAME_LIMIT = MD_PARAMS_PER_TRACK;
+#else
+static constexpr uint8_t MD_MODEL_PARAM_NAME_LIMIT = SPS_PARAMS_PER_TRACK;
+#endif
+
 static const char* get_param_name(const model_param_name_t *names, uint8_t param) {
   uint8_t i = 0;
   uint8_t id;
   if (names == NULL)
     return NULL;
 
-  while ((id = names[i].id) != 127 && i < SPS_PARAMS_PER_TRACK) {
+  while ((id = names[i].id) != 127 && i < MD_MODEL_PARAM_NAME_LIMIT) {
     if (id == param) {
       return names[i].name ;
     }
@@ -170,6 +176,7 @@ static uint16_t get_model_param_names(uint8_t model) {
   return 0xFFFF;
 }
 
+#if !defined(__AVR__)
 // Extended param names (params 24-33) — hardcoded to avoid resource changes
 static const char* ext_param_name(uint8_t param) {
   switch (param) {
@@ -186,6 +193,7 @@ static const char* ext_param_name(uint8_t param) {
     default:            return NULL;
   }
 }
+#endif
 
 /// Caller is responsible to make machine_param_names is loaded in RM
 const char* model_param_name(uint8_t model, uint8_t param) {
@@ -193,8 +201,10 @@ const char* model_param_name(uint8_t model, uint8_t param) {
     return "MUT";
   } else if (param == MODEL_LEVEL) {
     return "LEV";
+#if !defined(__AVR__)
   } else if (param >= MD_PARAMS_PER_TRACK && param < SPS_PARAMS_PER_TRACK) {
     return ext_param_name(param);
+#endif
   }
 
   uint16_t model_idx;

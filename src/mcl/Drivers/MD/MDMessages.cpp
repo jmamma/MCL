@@ -290,7 +290,9 @@ bool MDKit::fromSysex(MidiClass *midi) {
   uint8_t version = midi->midiSysex->getByte(1 + offset);
 
   // Accept stock (1-4), MDX (64), SPS-X (65). Reject anything else.
+#if !defined(__AVR__)
   bool is_spsx_kit = false;
+#endif
   if ((version >= 1 && version <= 4) || version == MDX_KIT_VERSION) {
     /* legacy/MDX layout: 24 params/track, full 36-byte LFO-A, no LFO-B */
   } else if (version == 65) {
@@ -311,7 +313,12 @@ bool MDKit::fromSysex(MidiClass *midi) {
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';
 
-  uint8_t params_per_track = is_spsx_kit ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+#if defined(__AVR__)
+  const uint8_t params_per_track = MD_KIT_PARAMS_PER_TRACK;
+#else
+  uint8_t params_per_track =
+      is_spsx_kit ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+#endif
   for (uint8_t i = 0; i < 16; i++) {
     decoder.get((uint8_t *)params[i], params_per_track);
   }
@@ -427,7 +434,12 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack((uint8_t *)name, 16);
   name[16] = '\0';
 
-  uint8_t params_per_track = emit_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+#if defined(__AVR__)
+  const uint8_t params_per_track = MD_KIT_PARAMS_PER_TRACK;
+#else
+  uint8_t params_per_track =
+      emit_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+#endif
   for (uint8_t i = 0; i < 16; i++) {
     encoder->pack((uint8_t *)params[i], params_per_track);
   }
@@ -498,7 +510,7 @@ uint8_t swapNumber(uint8_t num, uint8_t a, uint8_t b) {
 }
 
 void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
-  uint8_t _params[SPS_PARAMS_PER_TRACK];
+  uint8_t _params[MD_KIT_PARAMS_PER_TRACK];
   uint8_t _level;
   uint32_t _model;
   MDLFO _lfo;
@@ -520,9 +532,9 @@ void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
 #endif
 
   /* swap params */
-  memcpy(_params, params[srcTrack], SPS_PARAMS_PER_TRACK);
-  memcpy(params[srcTrack], params[dstTrack], SPS_PARAMS_PER_TRACK);
-  memcpy(params[dstTrack], _params, SPS_PARAMS_PER_TRACK);
+  memcpy(_params, params[srcTrack], MD_KIT_PARAMS_PER_TRACK);
+  memcpy(params[srcTrack], params[dstTrack], MD_KIT_PARAMS_PER_TRACK);
+  memcpy(params[dstTrack], _params, MD_KIT_PARAMS_PER_TRACK);
 
   memcpy(&_lfo, &lfos[srcTrack], sizeof(_lfo));
   memcpy(&lfos[srcTrack], &lfos[dstTrack], sizeof(_lfo));

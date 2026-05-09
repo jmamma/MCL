@@ -266,6 +266,12 @@ static_assert(sizeof(SPSMachine) == SPS_PARAMS_PER_TRACK + 1 + 1 + 4 + 2 * sizeo
               "SPSMachine layout changed — SPSXTrack on-disk format will break");
 #endif
 
+#if defined(__AVR__)
+static constexpr uint8_t MD_KIT_PARAMS_PER_TRACK = MD_PARAMS_PER_TRACK;
+#else
+static constexpr uint8_t MD_KIT_PARAMS_PER_TRACK = SPS_PARAMS_PER_TRACK;
+#endif
+
 /**
  * This class stores the settings for a complete kit on the
  * machinedrum, including effect and machine settings.
@@ -282,9 +288,9 @@ public:
   char name[17];
 
   /** The parameters for each track. **/
-  uint8_t params[16][SPS_PARAMS_PER_TRACK];
+  uint8_t params[16][MD_KIT_PARAMS_PER_TRACK];
   /** Duplicate params not included in the origin MD structure */
-  uint8_t params_orig[16][SPS_PARAMS_PER_TRACK];
+  uint8_t params_orig[16][MD_KIT_PARAMS_PER_TRACK];
   /** The levels of each track. **/
   uint8_t levels[16];
   /** The selected drum model for each track. **/

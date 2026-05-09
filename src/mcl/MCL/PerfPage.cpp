@@ -317,6 +317,13 @@ void PerfPage::encoder_send() {
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   // Intercept controller param.
+  if (dest < NUM_MD_TRACKS) {
+    uint8_t num_params =
+        mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+    if (param >= num_params) {
+      return;
+    }
+  }
 
   for (uint8_t i = 0; i < 4; i++) {
     PerfEncoder *e = perf_encoders[i];
@@ -473,6 +480,11 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       uint8_t scene = learn - 1;
 
       uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
+      uint8_t num_params =
+          mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+      if (param >= num_params) {
+        return true;
+      }
 
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       if (event->mask == EVENT_BUTTON_RELEASED) {

@@ -12,6 +12,11 @@
 
 static uint8_t get_param_device(uint8_t dest, uint8_t param) {
   if (dest <= NUM_MD_TRACKS) {
+    uint8_t num_params =
+        mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+    if (param >= num_params) {
+      return 0;
+    }
     return MD.kit.params[dest - 1][param];
   } else {
     return MD.kit.get_fx_param(dest - NUM_MD_TRACKS - 1 + MD_FX_ECHO, param);
