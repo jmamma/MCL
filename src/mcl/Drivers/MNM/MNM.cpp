@@ -79,12 +79,8 @@ bool MNMClass::mixer_param(uint8_t device_idx, uint8_t track,
   if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0) {
     return false;
   }
-  param->label = "LEV";
-  param->min_value = 0;
-  param->max_value = 127;
-  param->value = kit.levels[track];
-  param->type = 0;
-  param->sendable = true;
+  param->set_value(kit.levels[track]);
+  param->set_metadata("LEV", 0, true);
   return true;
 }
 

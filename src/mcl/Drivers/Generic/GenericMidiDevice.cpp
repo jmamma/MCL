@@ -60,12 +60,8 @@ bool GenericMidiDevice::mixer_param(uint8_t device_idx, uint8_t track,
       mcl_cfg.uart2_cc_level > 127) {
     return false;
   }
-  param->label = "LEV";
-  param->min_value = 0;
-  param->max_value = 127;
-  param->value = mixer_levels[track];
-  param->type = 0;
-  param->sendable = true;
+  param->set_value(mixer_levels[track]);
+  param->set_metadata("LEV", 0, true);
   return true;
 }
 

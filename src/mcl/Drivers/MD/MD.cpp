@@ -153,12 +153,8 @@ bool MDClass::mixer_param(uint8_t device_idx, uint8_t track,
     value = kit.params[track][param_idx];
   }
 
-  param->label = nullptr;
-  param->min_value = 0;
-  param->max_value = 127;
-  param->value = value;
-  param->type = 0;
-  param->sendable = true;
+  param->set_value(value);
+  param->set_metadata(nullptr, 0, true);
   return true;
 }
 

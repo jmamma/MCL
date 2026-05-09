@@ -16,12 +16,43 @@ class MidiUartClass;
 class SeqTrack;
 
 struct MidiDeviceMixerParam {
+#ifdef PLATFORM_TBD
   const char *label = nullptr;
   int16_t min_value = 0;
   int16_t max_value = 127;
   int16_t value = 0;
   uint8_t type = 0;
   bool sendable = false;
+#else
+  uint8_t min_value = 0;
+  uint8_t max_value = 127;
+  uint8_t value = 0;
+#endif
+
+  void set_value(int16_t value_, int16_t min_value_ = 0,
+                 int16_t max_value_ = 127) {
+#ifdef PLATFORM_TBD
+    min_value = min_value_;
+    max_value = max_value_;
+    value = value_;
+#else
+    min_value = (uint8_t)min_value_;
+    max_value = (uint8_t)max_value_;
+    value = (uint8_t)value_;
+#endif
+  }
+
+  void set_metadata(const char *label_, uint8_t type_, bool sendable_) {
+#ifdef PLATFORM_TBD
+    label = label_;
+    type = type_;
+    sendable = sendable_;
+#else
+    (void)label_;
+    (void)type_;
+    (void)sendable_;
+#endif
+  }
 };
 
 /// Base class for MIDI-compatible devices.

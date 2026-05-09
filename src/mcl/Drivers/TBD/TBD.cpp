@@ -1461,12 +1461,8 @@ bool TbdDevice::mixer_param(uint8_t device_idx, uint8_t track,
     return false;
   }
 
-  param->label = desc.shortname;
-  param->min_value = desc.min_value;
-  param->max_value = desc.max_value;
-  param->value = desc.value;
-  param->type = desc.type;
-  param->sendable = desc.is_sendable();
+  param->set_value(desc.value, desc.min_value, desc.max_value);
+  param->set_metadata(desc.shortname, desc.type, desc.is_sendable());
   return true;
 }
 

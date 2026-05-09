@@ -20,6 +20,9 @@ uint16_t track_mask_for_len(uint8_t len) {
 }
 
 uint8_t mixer_param_to_7bit(const MidiDeviceMixerParam &param) {
+#if defined(__AVR__)
+  return param.value;
+#else
   if (param.max_value <= param.min_value) {
     return 0;
   }
@@ -31,6 +34,7 @@ uint8_t mixer_param_to_7bit(const MidiDeviceMixerParam &param) {
   return (uint8_t)(((uint32_t)(value - param.min_value) * 127u +
                     (range / 2u)) /
                    range);
+#endif
 }
 
 } // namespace
