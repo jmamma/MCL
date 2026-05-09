@@ -50,11 +50,11 @@ MidiDevice *MixerPage::selected_mixer_device() const {
 
 void MixerPage::sync_selected_mixer_device() {
   midi_device = selected_mixer_device();
-  if (midi_device == nullptr || midi_device == &null_midi_device) {
+  if (midi_device == &null_midi_device) {
     mixer_device_idx = 0;
     midi_device = device_manager.primary_device();
   }
-  if (midi_device == nullptr || midi_device == &null_midi_device) {
+  if (midi_device == &null_midi_device) {
     midi_device = &MD;
   }
 }
@@ -67,26 +67,16 @@ void MixerPage::select_mixer_device(uint8_t device_idx) {
 }
 
 uint8_t MixerPage::default_mixer_param() const {
-  MidiDevice *device = selected_mixer_device();
-  if (device == nullptr) {
-    return MODEL_LEVEL;
-  }
-  return device->mixer_default_param(mixer_device_idx);
+  return selected_mixer_device()->mixer_default_param(mixer_device_idx);
 }
 
 uint8_t MixerPage::mixer_track_count() const {
-  MidiDevice *device = selected_mixer_device();
-  if (device == nullptr) {
-    return 0;
-  }
-  uint8_t count = device->mixer_track_count(mixer_device_idx);
+  uint8_t count = selected_mixer_device()->mixer_track_count(mixer_device_idx);
   return count > 16 ? 16 : count;
 }
 
 SeqTrack *MixerPage::mixer_seq_track(uint8_t track) const {
-  MidiDevice *device = selected_mixer_device();
-  return device == nullptr ? nullptr
-                           : device->mixer_seq_track(mixer_device_idx, track);
+  return selected_mixer_device()->mixer_seq_track(mixer_device_idx, track);
 }
 
 TrigLEDMode MixerPage::mixer_led_mode() const {
@@ -297,48 +287,44 @@ void MixerPage::loop() {
 
   if (use_perf_encoders && !mixer_encoder_edit) {
     perf_page.func_enc_check();
-  }
 
-  if (use_perf_encoders && !mixer_encoder_edit &&
-      (key_interface.is_key_down(MDX_KEY_NO)) &&
-      preview_mute_set != 255 && note_interface.notes_on == 0) {
-    for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-      PerfEncoder *enc = (PerfEncoder*) encoders[n];
-      if (enc->hasChanged()) {
-        if (BUTTON_DOWN(Buttons.ENCODER1 + n)) {
-          GUI.ignoreNextEvent(Buttons.ENCODER1 + n);
+    if ((key_interface.is_key_down(MDX_KEY_NO)) &&
+        preview_mute_set != 255 && note_interface.notes_on == 0) {
+      for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
+        PerfEncoder *enc = (PerfEncoder*) encoders[n];
+        if (enc->hasChanged()) {
+          if (BUTTON_DOWN(Buttons.ENCODER1 + n)) {
+            GUI.ignoreNextEvent(Buttons.ENCODER1 + n);
+          }
+          perf_locks[preview_mute_set][n] = enc->cur;
+          enc->old = enc->cur;
         }
-        perf_locks[preview_mute_set][n] = enc->cur;
-        enc->old = enc->cur;
       }
     }
-  }
 
-  if (use_perf_encoders && !mixer_encoder_edit) {
     perf_page.encoder_send();
-  }
 
-  if (mixer_encoder_edit || !use_perf_encoders) {
-    draw_encoders = false;
-  } else if (draw_encoders && key_interface.is_key_down(MDX_KEY_FUNC)) {
-    draw_encoders = true;
-  } else {
-    draw_encoders = false;
+    if (!(draw_encoders && key_interface.is_key_down(MDX_KEY_FUNC))) {
+      draw_encoders = false;
       uint64_t mask =
           ((uint64_t)1 << MDX_KEY_LEFT) | ((uint64_t)1 << MDX_KEY_UP) |
           ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN) |
           ((uint64_t)1 << MDX_KEY_YES);
-    for (uint8_t n = 0; n < 4; n++) {
-     bool check = (key_interface.cmd_key_state & mask);
+      for (uint8_t n = 0; n < 4; n++) {
+        bool check = (key_interface.cmd_key_state & mask);
 
-      if (note_interface.notes_on || check) {
-        encoders_used_clock[n] = read_clock_ms() + timeout + 1;
-      }
-      if (mcl_gui.show_encoder_value(encoders[n], timeout)) {
-        draw_encoders = true;
+        if (note_interface.notes_on || check) {
+          encoders_used_clock[n] = read_clock_ms() + timeout + 1;
+        }
+        if (mcl_gui.show_encoder_value(encoders[n], timeout)) {
+          draw_encoders = true;
+        }
       }
     }
+  } else {
+    draw_encoders = false;
   }
+
   if (draw_encoders != old_draw_encoders) {
     if (!draw_encoders) {
       redraw();
@@ -551,7 +537,7 @@ void MixerPage::record_mutes_set(bool state) {
 void MixerPage::disable_record_mutes(bool clear) {
   for (uint8_t dev = 0; dev < 2; dev++) {
     MidiDevice *device = device_for_mixer_slot(dev);
-    if (device == nullptr || device == &null_midi_device) {
+    if (device == &null_midi_device) {
       continue;
     }
     uint8_t len = device->mixer_track_count(dev);
