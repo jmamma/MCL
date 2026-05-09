@@ -128,7 +128,7 @@ void OscMixerPage::draw_levels() {
   uint8_t scaled_level;
   for (uint8_t i = 0; i < 3; i++) {
 
-    scaled_level = (uint8_t)(((float)encoders[i]->cur / (float)127) * 15);
+    scaled_level = ((uint16_t)encoders[i]->cur * 15) / 127;
     oled_display.fillRect(0 + i * 6, 12 + (15 - scaled_level), 4,
                           scaled_level + 1, WHITE);
   }
