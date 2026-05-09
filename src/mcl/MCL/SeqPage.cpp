@@ -232,27 +232,68 @@ static inline uint8_t seq_page_step_track_count() {
   return seq_step_api_track_count(seq_page_uses_tbd_step_tracks());
 }
 
-template <typename Fn>
-static inline void apply_track_op(bool is_md_device, bool apply_all, Fn fn) {
+enum SeqTrackMenuOp : uint8_t {
+  SEQ_TRACK_OP_ROTATE_LEFT,
+  SEQ_TRACK_OP_ROTATE_RIGHT,
+  SEQ_TRACK_OP_REVERSE,
+  SEQ_TRACK_OP_TRANSPOSE,
+};
+
+static inline void apply_track_menu_op(SeqStepTrackApi &track,
+                                       SeqTrackMenuOp op, int8_t offset) {
+  switch (op) {
+  case SEQ_TRACK_OP_ROTATE_LEFT:
+    track.rotate_left();
+    break;
+  case SEQ_TRACK_OP_ROTATE_RIGHT:
+    track.rotate_right();
+    break;
+  case SEQ_TRACK_OP_REVERSE:
+    track.reverse();
+    break;
+  case SEQ_TRACK_OP_TRANSPOSE:
+    track.transpose(offset);
+    break;
+  }
+}
+
+static inline void apply_track_menu_op(SeqTrackCond &track, SeqTrackMenuOp op,
+                                       int8_t offset) {
+  switch (op) {
+  case SEQ_TRACK_OP_ROTATE_LEFT:
+    track.rotate_left();
+    break;
+  case SEQ_TRACK_OP_ROTATE_RIGHT:
+    track.rotate_right();
+    break;
+  case SEQ_TRACK_OP_REVERSE:
+    track.reverse();
+    break;
+  case SEQ_TRACK_OP_TRANSPOSE:
+    track.transpose(offset);
+    break;
+  }
+}
+
+static inline void apply_track_menu_op(bool is_md_device, bool apply_all,
+                                       SeqTrackMenuOp op,
+                                       int8_t offset = 0) {
   if (seq_page_uses_step_track_ops(is_md_device)) {
     uint8_t len = apply_all ? seq_page_step_track_count() : 1;
     uint8_t start = apply_all ? 0 : last_md_track;
     for (uint8_t i = start; i < start + len; i++) {
       auto track = seq_page_step_track_for(i);
-      fn(track);
+      apply_track_menu_op(track, op, offset);
     }
   } else if (apply_all) {
-    SeqTrackUtil::for_each_track(
-        is_md_device, [&](SeqTrackCond &track, uint8_t) { fn(track); });
+    uint8_t len = SeqTrackUtil::track_count(is_md_device);
+    for (uint8_t i = 0; i < len; ++i) {
+      apply_track_menu_op(SeqTrackUtil::get_track(is_md_device, i), op,
+                          offset);
+    }
   } else {
-    fn(selected_track(is_md_device));
+    apply_track_menu_op(selected_track(is_md_device), op, offset);
   }
-}
-
-static inline void apply_transpose(bool is_md_device, bool apply_all,
-                                   int8_t offset) {
-  apply_track_op(is_md_device, apply_all,
-      [&](auto &t) { t.transpose(offset); });
 }
 
 static inline uint8_t ext_track_channel(uint8_t track) {
@@ -1542,16 +1583,16 @@ void opt_shift_track_handler() {
       opt_capture_is_md_device();
   switch (opt_shift) {
   case 1:
-    apply_track_op(is_md_device, false, [](auto &t) { t.rotate_left(); });
+    apply_track_menu_op(is_md_device, false, SEQ_TRACK_OP_ROTATE_LEFT);
     break;
   case 2:
-    apply_track_op(is_md_device, false, [](auto &t) { t.rotate_right(); });
+    apply_track_menu_op(is_md_device, false, SEQ_TRACK_OP_ROTATE_RIGHT);
     break;
   case 3:
-    apply_track_op(is_md_device, true, [](auto &t) { t.rotate_left(); });
+    apply_track_menu_op(is_md_device, true, SEQ_TRACK_OP_ROTATE_LEFT);
     break;
   case 4:
-    apply_track_op(is_md_device, true, [](auto &t) { t.rotate_right(); });
+    apply_track_menu_op(is_md_device, true, SEQ_TRACK_OP_ROTATE_RIGHT);
     break;
   }
 }
@@ -1563,7 +1604,7 @@ void opt_reverse_track_handler() {
   bool is_md_device =
       opt_capture_is_md_device();
   bool apply_all = opt_reverse == 2;
-  apply_track_op(is_md_device, apply_all, [](auto &t) { t.reverse(); });
+  apply_track_menu_op(is_md_device, apply_all, SEQ_TRACK_OP_REVERSE);
 }
 
 void opt_transpose_track_handler() {
@@ -1577,7 +1618,8 @@ void opt_transpose_track_handler() {
       seq_page_active_step_track().uses_md_sound()) {
     MD.popup_text_P(mclstr_transpose);
   }
-  apply_transpose(is_md_device, is_all, transpose_value);
+  apply_track_menu_op(is_md_device, is_all, SEQ_TRACK_OP_TRANSPOSE,
+                      transpose_value);
 }
 
 
