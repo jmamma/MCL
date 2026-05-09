@@ -78,6 +78,7 @@ uint8_t MidiID::waitForId(uint8_t id, uint8_t port, uint16_t timeout) {
   uint16_t current_clock = start_clock;
   send_id_request(id, port);
   DEBUG_PRINTLN("waiting for ID");
+  uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
   do {
     current_clock = read_slowclock();
@@ -85,7 +86,7 @@ uint8_t MidiID::waitForId(uint8_t id, uint8_t port, uint16_t timeout) {
     // GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (!MidiIDSysexListener.isIDMessage));
-  MidiUartParent::handle_midi_lock = 0;
+  MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   return get_id();
 }
 
