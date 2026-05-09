@@ -118,7 +118,7 @@ void GuiClass::loop() {
   }
 
   MidiUartParent::handle_midi_lock = 0;
-  PageParent *page = currentPage();
+  LightPage *page = currentPage();
   bool overlay_captures_encoders = false;
 #ifdef PLATFORM_TBD
   overlay_captures_encoders = overlayCapturesEncoders();

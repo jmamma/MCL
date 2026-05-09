@@ -27,7 +27,7 @@ public:
    * }
    * \endcode
    **/
-  virtual void update() {}
+  void update() {}
   /**
    * The loop() method is basically the same as the update() method.
    **/
@@ -44,24 +44,24 @@ public:
    * This method is called by the GUI main loop on every iteration, at
    * the end of the main loop.
    **/
-  virtual void finalize() {}
+  void finalize() {}
 
   /**
    * This should clear specific settings of the page and clear the
    * display if necessary.
    **/
-  virtual void clear() {}
+  void clear() {}
   /**
    * This method is called by the Page container when the page becomes
    * active (is pushed on top of the active page stack). It can be
    * used to flash specific information for example.
    **/
-  virtual void show() {}
+  void show() {}
   /**
    * This method is called by the Page container when the page is
    * removed from view.
    **/
-  virtual void hide() {}
+  void hide() {}
 
   /**
    * The basic event handler of the page, called by the event handling
@@ -108,11 +108,11 @@ public:
     isSetup = false;
   }
   /** This method will update the encoders according to the hardware moves. **/
-  virtual void update();
+  void update();
   /** This will clear the encoder movements. **/
-  virtual void clear();
+  void clear();
   /** Executes the encoder actions by calling checkHandle() on each encoder. **/
-  virtual void finalize();
+  void finalize();
   /** Call this to lock all encoders in the page. **/
   void lockEncoders() {} // TODO
   /** Call this to unlock all encoders in the page. If their value
