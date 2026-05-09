@@ -40,6 +40,22 @@ void GridIOPage::show_group_select_ui(const char *title_P) {
   draw_title(str);
 }
 
+void GridIOPage::draw_popup_P(const char *title_P) {
+  char str[16];
+  mclstr_copy_progmem(str, title_P, sizeof(str));
+  mcl_gui.draw_popup(str, true);
+#ifdef PLATFORM_TBD
+  draw_title(str);
+#endif
+}
+
+void GridIOPage::draw_grid_marker(uint8_t body_y_offset) {
+  oled_display.setFont(&Elektrothic);
+  oled_display.setCursor(MCLGUI::s_menu_x + 4, 21 + body_y_offset);
+  oled_display.print((char)(0x3A + old_grid));
+  oled_display.setFont(&TomThumb);
+}
+
 void GridIOPage::draw_title(const char *title, uint8_t y_offset) {
 #ifdef PLATFORM_TBD
   mcl_gui.draw_popup_title_plain(title, y_offset);

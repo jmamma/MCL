@@ -50,12 +50,7 @@ void GridSavePage::init() {
 }
 
 void GridSavePage::draw_popup() {
-  char str[16];
-  mclstr_copy_progmem(str, mclstr_save_tracks, sizeof(str));
-  mcl_gui.draw_popup(str, true);
-#ifdef PLATFORM_TBD
-  draw_title(str);
-#endif
+  draw_popup_P(mclstr_save_tracks);
 }
 
 void GridSavePage::display() {
@@ -95,11 +90,7 @@ void GridSavePage::display_at(uint8_t y_offset) {
     mcl_gui.draw_trigs(MCLGUI::s_menu_x + 4, menu_y + 24,
                        note_interface.notes_off | note_interface.notes_on);
 #endif
-    oled_display.setFont(&Elektrothic);
-    oled_display.setCursor(MCLGUI::s_menu_x + 4, 21 + body_y_offset);
-    oled_display.print((char)(0x3A + old_grid));
-
-    oled_display.setFont(&TomThumb);
+    draw_grid_marker(body_y_offset);
 
 #ifndef PLATFORM_TBD
     char save_label[8];
@@ -107,13 +98,6 @@ void GridSavePage::display_at(uint8_t y_offset) {
     mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + 4 + 9, menu_y + 7,
                               mclstr_mode, save_label);
 #endif
-
-    char step[4] = {'\0'};
-    uint8_t step_count =
-        (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) -
-        (64 *
-         ((MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) / 64));
-    mcl_gui.put_value_at(step_count, step);
 
     // mcl_gui.draw_text_encoder(MCLGUI::s_menu_x + MCLGUI::s_menu_w - 26,
     // MCLGUI::s_menu_y + 8, "STEP", step);

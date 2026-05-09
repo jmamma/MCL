@@ -62,13 +62,7 @@ void GridLoadPage::md_popup_title(uint8_t mode, bool persistent) {
 }
 
 void GridLoadPage::draw_popup() {
-  char str[16];
-  mclstr_copy_progmem(str, mclstr_load_tracks, sizeof(str));
-    // str[10] = 'X' + proj.get_grid();
-  mcl_gui.draw_popup(str, true);
-#ifdef PLATFORM_TBD
-  draw_title(str);
-#endif
+  draw_popup_P(mclstr_load_tracks);
 }
 
 void GridLoadPage::display_load() {
@@ -195,11 +189,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
       // }
     } else {
 
-      oled_display.setFont(&Elektrothic);
-      oled_display.setCursor(MCLGUI::s_menu_x + 4, 21 + body_y_offset);
-      oled_display.print((char)(0x3A + old_grid));
-
-      oled_display.setFont(&TomThumb);
+      draw_grid_marker(body_y_offset);
       char K[4] = {'\0'};
 
       char modestr[7];
