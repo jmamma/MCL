@@ -177,7 +177,7 @@ void handleIncomingMidi() {
   Midi.processMidi();
   Midi2.processMidi();
 
-  MidiUartUSB.service_irq();
+  MidiUartUSB.poll();
   MidiUSB.processSysex();
   MidiUSB.processMidi();
 
