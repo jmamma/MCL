@@ -87,19 +87,28 @@ void SeqExtStepPage::config() {
 void SeqExtStepPage::config_encoders() {
   if (show_seq_menu) { return; }
 
-  auto active_track = active_ext_step_track();
-
   if (encoder_init) {
     encoder_init = false;
+#if defined(__AVR__)
+    ExtSeqTrack &active_track = mcl_seq.ext_tracks[last_ext_track];
+    uint8_t timing_mid = active_track.get_timing_mid();
+#else
+    auto active_track = active_ext_step_track();
     uint16_t timing_mid = active_track.ticks_per_step();
+#endif
     seq_extparam4.cur = 16;
     fov_offset = 0;
     cur_x = 0;
     fov_y = MIDI_NOTE_C3 - 1;
     cur_y = fov_y + 1;
     cur_w = timing_mid;
+#if defined(__AVR__)
+    uint8_t track_length = active_track.length ? active_track.length : 1;
+    roll_length = (seq_extstep_tick_t)track_length * timing_mid;
+#else
     roll_length = (seq_extstep_tick_t)max((uint8_t)1, active_track.length()) *
                   (seq_extstep_tick_t)timing_mid;
+#endif
     seq_extstep_tick_t requested_fov =
         (seq_extstep_tick_t)seq_extparam4.cur * (seq_extstep_tick_t)timing_mid;
     fov_length = requested_fov < roll_length ? requested_fov : roll_length;
