@@ -52,12 +52,7 @@ public:
 
   MidiID device;
 
-  MidiUartParent() {
-    activeSenseEnabled = 0;
-    recvActiveSenseTimer = 0;
-    sendActiveSenseTimer = 0;
-    live_state = midi_wait_status;
-  }
+  MidiUartParent() = default;
 
   void setActiveSenseTimer(uint16_t timeout) {
     if (timeout == 0) {
