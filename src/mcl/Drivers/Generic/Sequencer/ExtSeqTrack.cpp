@@ -385,6 +385,13 @@ uint8_t ExtSeqTrack::search_lock_idx(uint8_t lock_idx, uint8_t step,
 uint8_t ExtSeqTrack::search_note_off(int8_t note_val, uint8_t step,
                                      uint16_t &ev_idx, uint16_t ev_end, uint8_t _length) {
   // Scan for matching note off;
+  if (_length == 0) {
+    _length = length;
+  }
+  if (_length == 0) {
+    ev_idx = 0xFFFF;
+    return step;
+  }
   uint8_t j = step;
   ++ev_idx;
 
