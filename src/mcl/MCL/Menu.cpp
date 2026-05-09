@@ -126,6 +126,7 @@ uint8_t MenuBase::get_options_offset(uint8_t item_n) {
 
 // caller ensures menu_options is loaded in ResMan
 const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
+#ifdef PLATFORM_TBD
   if (option_name_override != nullptr) {
     uint8_t entry_index = get_item_index(item_n);
     if (option_name_override(entry_index, option_n, option_name_override_buf,
@@ -133,6 +134,7 @@ const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
       return option_name_override_buf;
     }
   }
+#endif
 
   uint8_t num_of_options = get_number_of_options(item_n);
   uint8_t options_offset = get_options_offset(item_n);

@@ -5,16 +5,20 @@
 
 #define MAX_MENU_ITEMS 32
 
+#ifdef PLATFORM_TBD
 typedef bool (*menu_option_name_override_t)(uint8_t entry_index,
                                             uint8_t option_n, char *dst,
                                             uint8_t dst_len);
+#endif
 
 class MenuBase {
 public:
   uint8_t entry_mask[4];
   menu_option_t* custom_options[2];
+#ifdef PLATFORM_TBD
   menu_option_name_override_t option_name_override = nullptr;
   char option_name_override_buf[8];
+#endif
 
   // Set by Menu<N>::set_layout — avoids per-N virtual method duplication.
   const void* layout_base = nullptr;  // points to SRAM-unpacked menu_t<N>

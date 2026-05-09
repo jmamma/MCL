@@ -44,23 +44,21 @@ uint8_t grid_y_device_from_menu_value(uint8_t menu_value) {
 }
 #endif
 
-uint8_t menu_value_from_stored(uint8_t *dest_var, uint8_t stored_value) {
 #ifdef PLATFORM_TBD
+uint8_t menu_value_from_stored(uint8_t *dest_var, uint8_t stored_value) {
   if (is_grid_y_device_value(dest_var)) {
     return grid_y_device_to_menu_value(stored_value);
   }
-#endif
   return stored_value;
 }
 
 uint8_t stored_value_from_menu(uint8_t *dest_var, uint8_t menu_value) {
-#ifdef PLATFORM_TBD
   if (is_grid_y_device_value(dest_var)) {
     return grid_y_device_from_menu_value(menu_value);
   }
-#endif
   return menu_value;
 }
+#endif
 
 } // namespace
 
@@ -90,7 +88,11 @@ void MenuPageBase::init() {
 
   uint8_t *dest_var = get_menu()->get_dest_variable(encoders[1]->cur);
   if (dest_var != NULL) {
+#ifdef PLATFORM_TBD
     encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
+#else
+    encoders[0]->setValue(*dest_var);
+#endif
   }
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
@@ -208,7 +210,11 @@ void MenuPageBase::loop() {
     cur_row = new_val;
     uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
+#ifdef PLATFORM_TBD
       encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
+#else
+      encoders[0]->setValue(*dest_var);
+#endif
     } else {
       encoders[0]->setValue(0);
     }
@@ -216,7 +222,11 @@ void MenuPageBase::loop() {
   if (encoders[0]->hasChanged()) {
     uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
+#ifdef PLATFORM_TBD
       *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
+#else
+      *dest_var = encoders[0]->cur;
+#endif
     }
   }
 }
