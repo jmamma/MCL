@@ -69,7 +69,7 @@ public:
   uint8_t port; // MIDI port number (UART1_PORT, UART2_PORT, UARTUSB_PORT, etc.)
 
   MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
-             const bool _isElektronDevice);
+             const bool _isElektronDevice) NOINLINE();
 
   void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx,
                          GridDeviceTrack *gdt);
