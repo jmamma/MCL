@@ -172,6 +172,10 @@ void MDTrack::init() {
 }
 
 void MDTrack::load_seq_data(SeqTrack *seq_track) {
+  if (seq_track == nullptr) {
+    return;
+  }
+
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
   uint8_t *dest = md_seq_track->data();
   memcpy(dest, seq_data.data(), sizeof(seq_data));
@@ -218,10 +222,13 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   bool ret;
   DEBUG_PRINT_FN();
 
-  MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
-  md_seq_track->store_mute_state();
+  MDSeqTrack *md_seq_track =
+      seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;
+  if (md_seq_track) {
+    md_seq_track->store_mute_state();
+  }
 
-  if (column != 255 && online == true) {
+  if (column != 255 && online && md_seq_track) {
     get_machine_from_kit(column);
     DEBUG_DUMP("online");
     link.length = seq_track->length;
