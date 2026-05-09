@@ -109,8 +109,61 @@ void MidiDevice::setPort(MidiClass *_midi, uint8_t _port) {
   setup_listeners();
 }
 
-uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
-MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
+uint8_t *MidiDevice::icon() const {
+#ifdef PLATFORM_TBD
+  if (port == UARTP4_PORT) {
+    return nullptr;
+  }
+#endif
+  switch (id) {
+  case DEVICE_MD:
+    return R.icons_device->icon_md;
+  case DEVICE_MNM:
+    return R.icons_device->icon_mnm;
+  case DEVICE_A4:
+    return R.icons_device->icon_a4;
+  case DEVICE_MIDI:
+    return R.icons_device->icon_turbo;
+  default:
+    return nullptr;
+  }
+}
+
+MCLGIF *MidiDevice::gif() const {
+#ifdef PLATFORM_TBD
+  if (port == UARTP4_PORT) {
+    return nullptr;
+  }
+#endif
+  switch (id) {
+  case DEVICE_MD:
+    return R.icons_logo->machinedrum_gif;
+  case DEVICE_MNM:
+    return R.icons_logo->monomachine_gif;
+  case DEVICE_A4:
+    return R.icons_logo->analog_gif;
+  default:
+    return R.icons_logo->midi_gif;
+  }
+}
+
+uint8_t *MidiDevice::gif_data() const {
+#ifdef PLATFORM_TBD
+  if (port == UARTP4_PORT) {
+    return nullptr;
+  }
+#endif
+  switch (id) {
+  case DEVICE_MD:
+    return R.icons_logo->machinedrum_gif_data;
+  case DEVICE_MNM:
+    return R.icons_logo->monomachine_gif_data;
+  case DEVICE_A4:
+    return R.icons_logo->analog_gif_data;
+  default:
+    return R.icons_logo->midi_gif_data;
+  }
+}
 
 void MidiDevice::sendNoteOff(uint8_t channel, uint8_t note,
                              MidiUartClass *uart_) {

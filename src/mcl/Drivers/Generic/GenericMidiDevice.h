@@ -6,8 +6,6 @@ class GenericMidiDevice : public MidiDevice {
 public:
   GenericMidiDevice();
 
-  virtual uint8_t *icon() override;
-
   virtual bool probe() override;
 
   void init_grid_devices(uint8_t device_idx) override;

@@ -21,10 +21,6 @@ public:
   virtual void cleanup_listeners();
   virtual bool probe();
   virtual void init_grid_devices(uint8_t device_idx);
-  virtual uint8_t* icon();
-  virtual MCLGIF* gif();
-  virtual uint8_t* gif_data();
-
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool getWorkSpaceKit() {
     return getBlockingKit(0x80);

@@ -26,8 +26,6 @@ public:
   virtual bool mixer_param(uint8_t device_idx, uint8_t track,
                            uint8_t param_idx,
                            MidiDeviceMixerParam *param) override;
-  virtual MCLGIF *gif() override { return nullptr; }
-  virtual uint8_t *gif_data() override { return nullptr; }
   virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
                                uint8_t param_idx, int16_t value,
                                bool send = true) override;

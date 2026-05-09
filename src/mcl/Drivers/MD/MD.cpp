@@ -472,11 +472,6 @@ bool MDClass::probe() {
   return connected;
 }
 
-// Caller is responsible to make sure icons_device is loaded in RM
-uint8_t *MDClass::icon() { return R.icons_device->icon_md; }
-MCLGIF *MDClass::gif() { return R.icons_logo->machinedrum_gif; }
-uint8_t *MDClass::gif_data() { return R.icons_logo->machinedrum_gif_data; }
-
 uint8_t MDClass::noteToTrack(uint8_t pitch) {
  for (uint8_t i = 0; i < sizeof(MD.global.drumMapping); i++) {
    if (pitch == MD.global.drumMapping[i])

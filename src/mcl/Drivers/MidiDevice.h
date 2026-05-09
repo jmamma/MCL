@@ -184,9 +184,9 @@ public:
                            MidiUartClass *uart_ = nullptr);
   void sendNRPN(uint8_t channel, uint16_t parameter, uint16_t value,
                 MidiUartClass *uart_ = nullptr);
-  virtual uint8_t *icon() { return nullptr; }
-  virtual MCLGIF *gif();
-  virtual uint8_t *gif_data();
+  uint8_t *icon() const;
+  MCLGIF *gif() const;
+  uint8_t *gif_data() const;
 };
 
 class NullMidiDevice : public MidiDevice {

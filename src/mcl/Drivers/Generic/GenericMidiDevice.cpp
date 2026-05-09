@@ -12,8 +12,6 @@ GenericMidiDevice::GenericMidiDevice()
   memset(mixer_levels, 127, sizeof(mixer_levels));
 }
 
-uint8_t *GenericMidiDevice::icon() { return R.icons_device->icon_turbo; }
-
 bool GenericMidiDevice::probe() {
   if (mcl_cfg.uart2_turbo_speed) {
     mcl_gui.delay_progress(1200);

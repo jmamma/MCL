@@ -107,9 +107,6 @@ public:
   virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
                                       bool state,
                                       bool clear = false) override;
-  virtual uint8_t* icon();
-  virtual MCLGIF *gif();
-  virtual uint8_t* gif_data();
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool canReadKit() { return true; }

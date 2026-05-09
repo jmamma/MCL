@@ -40,10 +40,6 @@ public:
   virtual void cleanup_listeners();
   virtual bool probe();
   virtual void init_grid_devices(uint8_t device_idx);
-  virtual uint8_t* icon();
-  virtual MCLGIF* gif();
-  virtual uint8_t* gif_data();
-
   virtual uint16_t sendKitParams(uint8_t* masks);
 
   // Overriden for A4 proto version and footer injection
