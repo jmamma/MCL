@@ -11,7 +11,7 @@ class Vector {
 	 **/
 public:
   T arr[N] = {};
-  uint8_t size = N;
+  static constexpr uint8_t size = N;
 
   Vector() = default;
 
