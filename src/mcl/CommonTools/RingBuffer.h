@@ -20,11 +20,12 @@ public:
     bool check = true;
 #endif
 
-    RingBuffer(T* buffer, uint16_t size) NOINLINE() {
-        buf = buffer;
-        len = size;
-        init();
-    }
+    RingBuffer(T* buffer, uint16_t size) NOINLINE()
+        : rd(0), wr(0), len(size), buf(buffer)
+#ifdef CHECKING
+          , overflow(0)
+#endif
+    {}
 
     ALWAYS_INLINE() void init() volatile {
         LOCK();
