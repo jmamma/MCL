@@ -233,10 +233,16 @@ public:
     }
     dst[0] = '\0';
 
+#if defined(__AVR__)
+    if (param_id >= lock_param_count()) {
+      return false;
+    }
+#else
     SeqStepLockParamInfo info;
     if (!lock_param_info(param_id, info) || !info.active) {
       return false;
     }
+#endif
 
 #if !defined(__AVR__) && defined(PLATFORM_TBD)
     if (backend_ == StepSeqTbd) {
