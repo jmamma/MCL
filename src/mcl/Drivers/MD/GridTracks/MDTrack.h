@@ -7,6 +7,7 @@
 #include "MCLMemory.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
+#include "SeqTrackModData.h"
 
 #define LOCK_AMOUNT 256
 
@@ -50,6 +51,7 @@ class ATTR_PACKED() MDTrack : public DeviceTrack {
 public:
   MDSeqTrackData seq_data;
   MDMachine machine;
+  SeqTrackModData mod_data;
   MDTrack() {
     active = MD_TRACK_TYPE;
   }
@@ -95,10 +97,14 @@ public:
 #endif
   virtual uint8_t get_model() { return machine.get_model(); }
   virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
+  virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
 
   virtual void *get_sound_data_ptr() { return &machine; }
   virtual size_t get_sound_data_size() { return sizeof(MDMachine); }
   virtual size_t get_sound_cmp_size() { return 27; } //params,track,level,model
+
+private:
+  void load_arp_data(SeqTrack *seq_track);
 };
 
 class MDTrackChunk : public DeviceTrackChunk {

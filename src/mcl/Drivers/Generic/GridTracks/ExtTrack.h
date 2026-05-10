@@ -7,12 +7,14 @@
 #include "MCLMemory.h"
 #include "DeviceManager.h"
 #include "MidiDevice.h"
+#include "SeqTrackModData.h"
 
 #define EMPTY_TRACK_TYPE 0
 
 class ATTR_PACKED() ExtTrack : public DeviceTrack {
 public:
   ExtSeqTrackData seq_data;
+  SeqTrackModData mod_data;
   ExtTrack() {
     active = EXT_TRACK_TYPE;
     static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
@@ -42,6 +44,7 @@ public:
   virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
+  virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   virtual uint8_t get_parent_model() { return device_manager.secondary_device()->track_type; }
 #ifdef PLATFORM_TBD
   virtual bool can_materialize_as(uint8_t track_type);
@@ -51,6 +54,9 @@ public:
                                       SeqTrack *seq_track);
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
+
+private:
+  void load_arp_data(SeqTrack *seq_track);
 };
 /*
 class ExtTrackChunk : public DeviceTrack {

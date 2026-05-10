@@ -187,7 +187,7 @@ bool Project::load_project(const char *projectname) {
   return true;
 }
 
-bool Project::check_project_version(uint16_t version_current) {
+bool Project::check_project_version(uint16_t min_version) {
   bool ret;
 
   DEBUG_PRINT_FN();
@@ -205,7 +205,7 @@ bool Project::check_project_version(uint16_t version_current) {
     DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
-  if (version >= version_current) {
+  if (version >= min_version) {
     project_loaded = true;
     return true;
   } else {

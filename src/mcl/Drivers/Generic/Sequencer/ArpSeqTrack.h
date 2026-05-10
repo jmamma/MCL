@@ -7,6 +7,7 @@
 #include "MidiClock.h"
 #include "platform.h"
 #include "GridTrack.h"
+#include "SeqTrackModData.h"
 
 #define ARP_UP 0
 #define ARP_DOWN 1
@@ -34,24 +35,12 @@
 
 #define ARP_MAX_NOTES 16 * 3
 
-class ArpSeqData {
-  public:
-  uint8_t notes[ARP_MAX_NOTES]; //output notes
-  uint8_t len;
-
-  uint8_t enabled : 4;
-  uint8_t range : 4;
-  uint8_t oct;
-  uint8_t mode;
-
-  uint8_t fine_tune;
-  uint64_t note_mask[2]; //input notes
-};
-
 //Ephemeral
 class ArpSeqTrack : public ArpSeqData, public SeqTrack  {
 
 public:
+  uint8_t notes[ARP_MAX_NOTES]; //output notes
+  uint8_t len;
   uint8_t last_note_on;
   uint8_t idx;
 
@@ -68,11 +57,13 @@ public:
   }
 
   void init() {
+    ArpSeqData::init();
     speed = SEQ_SPEED_2X;
     length = 2;
     enabled = false;
     range = 0;
     oct = 1;
+    mode = 0;
     fine_tune = 0;
     clear_notes();
   }
@@ -86,6 +77,8 @@ public:
   void re_sync();
   void set_speed(uint8_t speed_);
   void set_length(uint8_t length_);
+  void load_data(const ArpSeqData &data);
+  void store_data(ArpSeqData *data) const;
   ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
     if (count_down) {
       return false;
@@ -102,7 +95,7 @@ public:
   }
 
   uint8_t get_next_note_up(int8_t cur);
-  void render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_);
+  void render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, const uint64_t *note_mask_);
 
 protected:
   virtual void on_cycle_midpoint(MidiUartClass *uart_, MidiUartClass *uart2_);

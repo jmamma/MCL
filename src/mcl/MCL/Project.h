@@ -9,7 +9,9 @@
 #include "MCLSysConfig.h"
 #include "ProjectPages.h"
 
-#define PROJ_VERSION 3000
+#define PROJ_MIN_READABLE_VERSION 3000
+#define PROJ_VERSION_TRACK_STORAGE_VERSION 3001
+#define PROJ_VERSION 3001
 #define PRJ_DIR "/Projects"
 
 class ProjectHeader {
@@ -33,7 +35,7 @@ public:
   bool new_project_prompt();
   bool load_project(const char *projectname);
   bool convert_project(const char *projectname);
-  bool check_project_version(uint16_t version_current = PROJ_VERSION);
+  bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
   bool new_project_master_file(const char *projectname);
   bool write_header();
 

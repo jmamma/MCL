@@ -1,5 +1,6 @@
 #include "ExtTrack.h"
 #include "Global.h"
+#include "MCLSeq.h"
 #ifdef PLATFORM_TBD
 #include "../../TBD/TBDTrack.h"
 #endif
@@ -60,10 +61,12 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
       is_legacy_ext_sequence_type(active)) {
     GridLink old_link = link;
     ExtSeqTrackData old_seq_data;
+    SeqTrackModData old_mod_data = mod_data;
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     auto *ext_track = static_cast<ExtTrack *>(init_track_type(EXT_TRACK_TYPE));
     ext_track->link = old_link;
+    ext_track->mod_data = old_mod_data;
     memcpy(&ext_track->seq_data, &old_seq_data, sizeof(old_seq_data));
     return ext_track;
   }
@@ -73,12 +76,14 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
       is_legacy_ext_sequence_type(active)) {
     GridLink old_link = link;
     ExtSeqTrackData old_seq_data;
+    SeqTrackModData old_mod_data = mod_data;
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     auto *midi_track =
         static_cast<TBDMidiTrack *>(init_track_type(TBD_MIDI_TRACK_TYPE));
     midi_track->init(tracknumber, nullptr);
     midi_track->link = old_link;
+    midi_track->mod_data = old_mod_data;
     midi_track->seq_data.import_legacy_ext(old_seq_data, old_link);
     midi_track->p4_sound.midi_channel = old_seq_data.channel;
     midi_track->seq_data.channel = old_seq_data.channel;
@@ -104,6 +109,25 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
   ext_track->pgm_oneshot = 0;
   ext_track->set_length(seq_track->length);
   seq_track->mute_state = old_mute;
+
+  load_arp_data(seq_track);
+#endif
+}
+
+void ExtTrack::load_arp_data(SeqTrack *seq_track) {
+#ifdef EXT_TRACKS
+  if (seq_track == nullptr) {
+    return;
+  }
+
+  uint8_t tracknumber = seq_track->track_number;
+  if (tracknumber < NUM_EXT_TRACKS) {
+    SeqTrack::load_arp_data(
+        mcl_seq.ext_arp_tracks[tracknumber], mod_data.arp,
+        storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+  }
+#else
+  (void)seq_track;
 #endif
 }
 
@@ -117,6 +141,12 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
   if (grid == nullptr) { DEBUG_PRINTLN("grid is nullptr"); }
 
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+  uint8_t tracknumber = column & 0x0F;
+  if (tracknumber < NUM_EXT_TRACKS) {
+    mcl_seq.ext_arp_tracks[tracknumber].store_data(&mod_data.arp);
+  } else {
+    mod_data.arp.init();
+  }
   //ext_track->store_mute_state();
 #ifdef EXT_TRACKS
   if (online) {

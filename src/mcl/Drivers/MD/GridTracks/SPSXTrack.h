@@ -5,6 +5,7 @@
 #include "MCLMemory.h"
 #include "MDSeqTrackData.h"
 #include "MDTrack.h"
+#include "SeqTrackModData.h"
 
 #if !defined(__AVR__)
 #include "SPSXSeqTrack.h"
@@ -33,6 +34,8 @@ public:
     SPSXSeqTrackData spsx;
 #endif
   } seq_data;
+
+  SeqTrackModData mod_data;
 
   SPSXTrack() {
     active = MDSPSX_TRACK_TYPE;
@@ -94,10 +97,14 @@ public:
   virtual uint8_t get_device_type() { return MDSPSX_TRACK_TYPE; }
   virtual uint8_t get_parent_model() { return MD_TRACK_TYPE; }
   virtual bool allow_cast_to_parent() { return true; }
+  virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
 
   virtual void *get_sound_data_ptr() { return &machine; }
   virtual size_t get_sound_data_size() { return sizeof(SPSMachine); }
   virtual size_t get_sound_cmp_size() { return 27; }
+
+private:
+  void load_arp_data(SeqTrack *seq_track);
 };
 
 static_assert(MEMORY_ALIGN(sizeof(SPSXTrack) - sizeof(void*)) <= SPSX_TRACK_LEN,

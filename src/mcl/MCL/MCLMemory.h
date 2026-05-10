@@ -57,7 +57,7 @@ constexpr size_t NUM_LOCKS = 8;
 // the track sizes are:
 // GridTrack 7
 // DeviceTrack 7
-// MDTrack 534
+// MDTrack 534, plus SeqTrackModData 30
 // ExtTrack 1754
 // A4Track 2094
 // EmptyTrack 2094
@@ -71,12 +71,12 @@ constexpr size_t NUM_LOCKS = 8;
 #define MEMORY_ALIGN(size) (size)  // for avr, dont align
 #endif
 
-constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(548); // SPSXTrack = MDTrack + seq_version byte
+constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(564); // MDTrack + SeqTrackModData
 #if defined(PLATFORM_TBD)
 // TBD/RP2040 grid-2 cache slots can carry enhanced MIDI/TBD tracks.
 constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(GRID_SLOT_BYTES);
 #else
-constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2094);
+constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2128);
 #endif
 
 constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);
@@ -99,7 +99,7 @@ constexpr size_t MD_CACHE_LEN = GRID1_TRACK_LEN * NUM_MD_TRACKS;
 #if !defined(__AVR__)
 // SPSX tracks carry SPSMachine (34 params + 2 LFOs) + SeqDataUnion + extras.
 // Sized with headroom; static_assert in SPSXTrack.h enforces fit.
-constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1120);
+constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1152);
 constexpr size_t SPSX_CACHE_LEN = SPSX_TRACK_LEN * NUM_MD_TRACKS;
 #endif
 

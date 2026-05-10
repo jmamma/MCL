@@ -6,6 +6,7 @@
 
 #include "DeviceTrack.h"
 #include "MidiSeqTrack.h"
+#include "SeqTrackModData.h"
 #include "TBDSeqTrack.h"
 #include "TbdP4SoundData.h"
 
@@ -35,6 +36,7 @@ class ATTR_PACKED() TBDTrack : public DeviceTrack {
 public:
   TbdP4SoundData p4_sound;
   TBDSeqTrackData seq_data;
+  SeqTrackModData mod_data;
 
   TBDTrack();
 
@@ -60,6 +62,7 @@ public:
   uintptr_t get_region() override { return BANK1_TBD_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }
   uint8_t get_device_type() override { return TBD_TRACK_TYPE; }
+  uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
 
@@ -69,12 +72,14 @@ private:
   void apply_preset(uint8_t fallback_tracknumber, const char *source,
                     uint8_t slotnumber);
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_arp_data(SeqTrack *seq_track);
 };
 
 class ATTR_PACKED() TBDMidiTrack : public DeviceTrack {
 public:
   TbdP4SoundData p4_sound;
   MidiSeqTrackData seq_data;
+  SeqTrackModData mod_data;
 
   TBDMidiTrack();
 
@@ -100,6 +105,7 @@ public:
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }
   uint8_t get_device_type() override { return TBD_MIDI_TRACK_TYPE; }
+  uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
 
@@ -109,6 +115,7 @@ private:
   void apply_preset(uint8_t fallback_tracknumber, const char *source,
                     uint8_t slotnumber);
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_arp_data(SeqTrack *seq_track);
 };
 
 #endif // PLATFORM_TBD

@@ -7,12 +7,28 @@
 #endif
 
 bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid) {
+  stamp_storage_version();
   if (grid == nullptr) {
     return proj.write_grid(data, len, column, row);
   }
   else {
     return grid->write(data, len, column, row);
   }
+}
+
+void GridTrack::stamp_storage_version() {
+  if (proj.version >= PROJ_VERSION_TRACK_STORAGE_VERSION) {
+    version[0] = storage_version();
+    version[1] = 0;
+  } else {
+    version[0] = 0;
+    version[1] = 0;
+  }
+}
+
+bool GridTrack::storage_version_at_least(uint8_t min_version) const {
+  return proj.version >= PROJ_VERSION_TRACK_STORAGE_VERSION &&
+         version[0] >= min_version;
 }
 
 void GridTrack::load_link_data(SeqTrack *seq_track) {
@@ -82,8 +98,11 @@ bool GridTrack::load_from_grid_512(uint8_t column, uint16_t row, Grid *grid) {
       return false;
     }
   }
+  uint8_t tmp_version[2] = {version[0], version[1]};
   auto tmp = this->active;
   ::new (this) GridTrack;
+  version[0] = tmp_version[0];
+  version[1] = tmp_version[1];
   this->active = tmp;
 
   if ((active == 255)) {
@@ -100,8 +119,11 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
     return false;
   }
 
+  uint8_t tmp_version[2] = {version[0], version[1]};
   auto tmp = this->active;
   ::new (this) GridTrack;
+  version[0] = tmp_version[0];
+  version[1] = tmp_version[1];
   this->active = tmp;
 
   if ((active == 255)) {

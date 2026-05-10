@@ -61,11 +61,13 @@ DeviceTrack *MDTrack::materialize_as(uint8_t track_type, uint8_t tracknumber,
     GridLink old_link = link;
     MDSeqTrackData old_seq_data;
     MDMachine old_machine = machine;
+    SeqTrackModData old_mod_data = mod_data;
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     auto *spsx_track =
         static_cast<SPSXTrack *>(init_track_type(MDSPSX_TRACK_TYPE));
     spsx_track->link = old_link;
+    spsx_track->mod_data = old_mod_data;
     spsx_track->seq_version = SPSX_SEQ_VERSION_LEGACY;
     copy_md_machine_to_spsx(old_machine, spsx_track->machine);
     memcpy(spsx_track->seq_data.legacy.data(), old_seq_data.data(),
@@ -169,6 +171,7 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
 void MDTrack::init() {
   machine.init();
   seq_data.init();
+  mod_data.init();
 }
 
 void MDTrack::load_seq_data(SeqTrack *seq_track) {
@@ -183,6 +186,21 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   md_seq_track->clear_mutes();
   md_seq_track->set_length(md_seq_track->length);
   md_seq_track->notes.first_trig = true;
+
+  load_arp_data(seq_track);
+}
+
+void MDTrack::load_arp_data(SeqTrack *seq_track) {
+  if (seq_track == nullptr) {
+    return;
+  }
+
+  uint8_t tracknumber = seq_track->track_number;
+  if (tracknumber < NUM_MD_TRACKS) {
+    SeqTrack::load_arp_data(
+        mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
+        storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+  }
 }
 
 void MDTrack::scale_seq_vol(float scale) {
@@ -222,6 +240,11 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   bool ret;
   DEBUG_PRINT_FN();
   uint8_t tracknumber = column & 0x0F;
+  if (tracknumber < NUM_MD_TRACKS) {
+    mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
+  } else {
+    mod_data.arp.init();
+  }
 
   MDSeqTrack *md_seq_track =
       seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;

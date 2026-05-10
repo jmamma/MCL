@@ -1,4 +1,5 @@
 #include "A4Track.h"
+#include "MCLSeq.h"
 
 #define A4_SOUND_LENGTH 0x19F
 
@@ -44,6 +45,11 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   uint8_t tracknumber = column & 0xF;
+  if (tracknumber < NUM_EXT_TRACKS) {
+    mcl_seq.ext_arp_tracks[tracknumber].store_data(&mod_data.arp);
+  } else {
+    mod_data.arp.init();
+  }
 
   // [>analog 4 tracks<]
 #ifdef EXT_TRACKS

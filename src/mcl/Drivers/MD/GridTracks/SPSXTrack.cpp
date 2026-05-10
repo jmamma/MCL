@@ -124,6 +124,7 @@ void SPSXTrack::init() {
   machine.init();
   seq_version = SPSX_SEQ_VERSION_LEGACY;
   seq_data.legacy.init();
+  mod_data.init();
 }
 
 void SPSXTrack::clear_track() {
@@ -231,26 +232,37 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
     }
 
     finalize_spsx_seq_load(*spsx_seq_track);
-    return;
-  }
-
-  if (seq_version == SPSX_SEQ_VERSION_LEGACY) {
+  } else if (seq_version == SPSX_SEQ_VERSION_LEGACY) {
     MDSeqTrack *md_seq_track = static_cast<MDSeqTrack *>(seq_track);
     memcpy(md_seq_track->data(), seq_data.legacy.data(), sizeof(MDSeqTrackData));
     load_link_data(seq_track);
     md_seq_track->clear_mutes();
     md_seq_track->set_length(md_seq_track->length);
     md_seq_track->notes.first_trig = true;
+  } else {
+    // SPSX/unknown data cannot be safely downcast to legacy lock storage without
+    // rebuilding lock slots. Load an empty sequence rather than corrupting the
+    // live track object.
+    MDSeqTrack *md_seq_track = static_cast<MDSeqTrack *>(seq_track);
+    md_seq_track->init();
+    load_link_data(seq_track);
+    md_seq_track->set_length(link.length);
+  }
+
+  load_arp_data(seq_track);
+}
+
+void SPSXTrack::load_arp_data(SeqTrack *seq_track) {
+  if (seq_track == nullptr) {
     return;
   }
 
-  // SPSX/unknown data cannot be safely downcast to legacy lock storage without
-  // rebuilding lock slots. Load an empty sequence rather than corrupting the
-  // live track object.
-  MDSeqTrack *md_seq_track = static_cast<MDSeqTrack *>(seq_track);
-  md_seq_track->init();
-  load_link_data(seq_track);
-  md_seq_track->set_length(link.length);
+  uint8_t tracknumber = seq_track->track_number;
+  if (tracknumber < NUM_MD_TRACKS) {
+    SeqTrack::load_arp_data(
+        mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
+        storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+  }
 }
 
 void SPSXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -286,6 +298,7 @@ DeviceTrack *SPSXTrack::materialize_as(uint8_t track_type,
   if (track_type == MD_TRACK_TYPE) {
     GridLink old_link = link;
     SPSMachine old_machine = machine;
+    SeqTrackModData old_mod_data = mod_data;
     uint8_t old_seq_version = seq_version;
     MDSeqTrackData old_legacy_seq_data;
     if (old_seq_version == SPSX_SEQ_VERSION_LEGACY) {
@@ -295,6 +308,7 @@ DeviceTrack *SPSXTrack::materialize_as(uint8_t track_type,
 
     auto *md_track = static_cast<MDTrack *>(init_track_type(MD_TRACK_TYPE));
     md_track->link = old_link;
+    md_track->mod_data = old_mod_data;
     copy_spsx_machine_to_md(old_machine, md_track->machine);
 
     if (old_seq_version == SPSX_SEQ_VERSION_LEGACY) {
@@ -313,6 +327,11 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
                               bool online, Grid *grid) {
   active = MDSPSX_TRACK_TYPE;
   uint8_t tracknumber = column & 0x0F;
+  if (tracknumber < NUM_MD_TRACKS) {
+    mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
+  } else {
+    mod_data.arp.init();
+  }
 
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {

@@ -1,4 +1,5 @@
 #include "MNMTrack.h"
+#include "MCLSeq.h"
 #include "MNM.h"
 
 
@@ -66,6 +67,11 @@ bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
   DEBUG_PRINT_FN();
   active = MNM_TRACK_TYPE;
   uint8_t tracknumber = column & 0xF;
+  if (tracknumber < NUM_EXT_TRACKS) {
+    mcl_seq.ext_arp_tracks[tracknumber].store_data(&mod_data.arp);
+  } else {
+    mod_data.arp.init();
+  }
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   if (column != 255 && online == true) {
     get_machine_from_kit(tracknumber);

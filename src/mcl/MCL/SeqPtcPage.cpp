@@ -415,12 +415,14 @@ void SeqPtcPage::display() {
     mcl_print_P(mclstr_ply_label);
   }
 
-  uint64_t *mask = note_mask;
+  uint64_t display_mask[2] = {note_mask[0], note_mask[1]};
+  uint64_t *mask = display_mask;
   if ((is_md_device || uses_tbd_primary_tracks)
           ? arp_track->enabled
           : ptc_ext_arp_enabled(last_ext_track)) {
     mcl_print_P(mclstr_arp);
-    mask = arp_track->note_mask;
+    display_mask[0] = arp_track->note_mask[0];
+    display_mask[1] = arp_track->note_mask[1];
   }
 
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, mask);

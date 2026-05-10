@@ -31,6 +31,39 @@ void ArpSeqTrack::set_length(uint8_t length_) {
   }
 }
 
+void ArpSeqTrack::load_data(const ArpSeqData &data) {
+  enabled = data.enabled;
+  range = data.range;
+  oct = data.oct;
+  mode = data.mode;
+  fine_tune = data.fine_tune;
+  set_length(data.rate ? data.rate : 2);
+  memcpy(note_mask, data.note_mask, sizeof(note_mask));
+  len = 0;
+  idx = 0;
+  last_note_on = 255;
+  if (enabled && (note_mask[0] || note_mask[1])) {
+    uint64_t render_mask[2];
+    memcpy(render_mask, note_mask, sizeof(render_mask));
+    render(mode, oct, fine_tune, range, render_mask);
+  } else {
+    clear_notes();
+  }
+}
+
+void ArpSeqTrack::store_data(ArpSeqData *data) const {
+  if (data == nullptr) {
+    return;
+  }
+  data->enabled = enabled;
+  data->range = range;
+  data->oct = oct;
+  data->mode = mode;
+  data->fine_tune = fine_tune;
+  data->rate = length ? length : 2;
+  memcpy(data->note_mask, note_mask, sizeof(data->note_mask));
+}
+
 void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   MidiUartClass *uart_old = uart;
   MidiUartClass *uart2_old = uart2;
@@ -74,7 +107,7 @@ uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
   return 255;
 }
 
-void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_) {
+void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, const uint64_t *note_mask_) {
   DEBUG_PRINT_FN();
   uint8_t mute_state_old = mute_state;
   mute_state = SEQ_MUTE_ON;

@@ -39,7 +39,7 @@ class SeqTrack;
 
 class ATTR_PACKED() GridTrack {
 public:
-  uint8_t version[2]; //Padding
+  uint8_t version[2] = {0, 0};
   uint8_t active = EMPTY_TRACK_TYPE;
   GridLink link;
 
@@ -56,6 +56,7 @@ public:
   bool load_from_grid(uint8_t column, uint16_t row);
   // save header without data to grid
   bool write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid = nullptr);
+  bool storage_version_at_least(uint8_t min_version) const;
 
   virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
 
@@ -113,6 +114,10 @@ public:
   virtual uint8_t get_device_type() { return DEVICE_NULL; }
   virtual uint8_t get_parent_model() { return NULL_TRACK_TYPE; }
   virtual bool allow_cast_to_parent() { return false; }
+  virtual uint8_t storage_version() const { return 0; }
+
+private:
+  void stamp_storage_version();
 };
 
 #endif /* GRIDTRACK_H__ */

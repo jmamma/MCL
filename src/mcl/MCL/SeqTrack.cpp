@@ -1,4 +1,5 @@
 #include "SeqTrack.h"
+#include "ArpSeqTrack.h"
 #include "MCLSeq.h"
 #include "memory.h"
 #include "MCLSysConfig.h"
@@ -81,6 +82,14 @@ void SeqSlideTrack::dispatch_slide_value(uint8_t param, uint8_t val,
 }
 
 void SeqSlideTrack::on_slide_dispatch_end() {}
+
+void SeqTrack::load_arp_data(ArpSeqTrack &arp_track, ArpSeqData stored_data,
+                             bool use_stored_data) {
+  if (!use_stored_data) {
+    stored_data.init();
+  }
+  arp_track.load_data(stored_data);
+}
 
 uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   if (quant == 255) { quant = mcl_cfg.rec_quant; }
