@@ -369,7 +369,6 @@ bool MDKit::fromSysex(MidiClass *midi) {
 #if !defined(__AVR__)
   if (is_spsx_kit) {
     // SPS-X LFO-B section: compact 9 bytes/track (lives after trig/mute groups)
-    decoder.start7Bit();
     for (uint8_t i = 0; i < 16; i++) {
       uint8_t compact[9];
       decoder.get(compact, 9);
@@ -485,7 +484,6 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
 #if !defined(__AVR__)
   if (emit_spsx) {
     // SPS-X LFO-B section: compact 9 bytes/track, after trig/mute groups.
-    encoder->start7Bit();
     for (uint8_t i = 0; i < 16; i++) {
       encoder->pack(&lfosB[i].destinationTrack, 5);
       uint8_t compact_state[4];
