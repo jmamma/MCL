@@ -283,7 +283,7 @@ public:
 
   bool selected_lock_param_id(uint8_t slot, uint8_t &param_id) const {
     uint8_t selected = selected_lock_param(slot);
-    if (selected == 0 || selected == PARAM_OFF) {
+    if (selected == 0) {
       return false;
     }
     param_id = selected - 1;
