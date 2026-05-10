@@ -256,9 +256,13 @@ void MenuPageBase::draw_item(MenuBase *m, uint8_t item_n,
 
     mcl_print_P(mclstr_space);
     uint8_t *pdest = m->get_dest_variable(item_n);
-    const char *option_name = m->get_option_name(item_n, *pdest);
+    uint8_t option_value = *pdest;
+#ifdef PLATFORM_TBD
+    option_value = menu_value_from_stored(pdest, option_value);
+#endif
+    const char *option_name = m->get_option_name(item_n, option_value);
     if (option_name == NULL) {
-      oled_display.println(*pdest);
+      oled_display.println(option_value);
     } else {
       oled_display.println(option_name);
     }
