@@ -90,8 +90,7 @@ public:
     auto *p = load_from_grid(col, row);
     if (!p)
       return nullptr;
-    auto ptrack = p->init_track_type(p->active);
-    return _dynamik_kast<T>(ptrack);
+    return _dynamik_kast<T>(p);
   }
 
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
