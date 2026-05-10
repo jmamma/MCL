@@ -188,7 +188,7 @@ void detach_stale_physical_devices() {
   for (uint8_t port = UART1_PORT; port <= MIDI_PORT_COUNT; ++port) {
     MidiDevice *device = device_manager.device_for_port(port);
     if (device != &null_midi_device && device->port != port) {
-      device_manager.detach_port(port);
+      midi_active_peering.disconnect(port);
     }
   }
 }
