@@ -27,6 +27,7 @@ private:
   bool mixer_yes_button_down_ = false;
   bool mixer_no_button_down_ = false;
   bool active_ui_button_pressed_ = false;
+  bool active_ui_button_chorded_ = false;
   uint8_t active_ui_button_source_ = 255;
   uint16_t active_ui_button_press_ms_ = 0;
   bool top_left_page_select_hold_tracking_ = false;

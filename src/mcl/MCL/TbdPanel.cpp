@@ -207,6 +207,7 @@ bool TbdPanel::handle_active_ui_button(gui_event_t *event, uint8_t orig_src) {
 
   if (event->mask == EVENT_BUTTON_PRESSED) {
     active_ui_button_pressed_ = true;
+    active_ui_button_chorded_ = false;
     active_ui_button_source_ = orig_src;
     active_ui_button_press_ms_ = read_clock_ms();
     if (orig_src == ButtonsClass::BUTTON2) {
@@ -222,14 +223,19 @@ bool TbdPanel::handle_active_ui_button(gui_event_t *event, uint8_t orig_src) {
         active_ui_button_pressed_ && active_ui_button_source_ == orig_src;
     const uint16_t held_ms =
         tracked ? clock_diff(active_ui_button_press_ms_, read_clock_ms()) : 0;
+    const bool chorded = active_ui_button_chorded_;
     const bool short_tap =
-        tracked && held_ms <= kTbdTopLeftPageSelectHoldMs;
+        tracked && !chorded && held_ms <= kTbdTopLeftPageSelectHoldMs;
 
     active_ui_button_pressed_ = false;
+    active_ui_button_chorded_ = false;
     active_ui_button_source_ = 255;
 
     if (orig_src == ButtonsClass::BUTTON2) {
       reset_top_left_page_select_hold();
+      if (chorded) {
+        return true;
+      }
       if (!short_tap) {
         open_page_select_from_top_left();
         return true;
@@ -392,6 +398,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   bool ui_expanded = ui_active && !ui_collapsed;
   if (!ui_active) {
     active_ui_button_pressed_ = false;
+    active_ui_button_chorded_ = false;
     active_ui_button_source_ = 255;
   }
   if (!ui_expanded) {
@@ -416,6 +423,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     DEBUG_PRINT((unsigned)ui_active);
     DEBUG_PRINT(" collapsed=");
     DEBUG_PRINTLN((unsigned)ui_collapsed);
+  }
+
+  if (active_ui_button_pressed_ && is_press &&
+      orig_src != active_ui_button_source_) {
+    active_ui_button_chorded_ = true;
   }
 
   if (driver_ui_blocked && ui_active) {
