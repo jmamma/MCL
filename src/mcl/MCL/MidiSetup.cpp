@@ -116,6 +116,15 @@ void cfg_midi_forwards(MidiClass &midi, uint8_t mode, MidiUartClass *first,
   }
 }
 
+MidiUartClass *port1_clock_transport_uart() {
+#ifdef PLATFORM_TBD
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+    return &MidiUart;
+  }
+#endif
+  return MD.uart;
+}
+
 #ifdef PLATFORM_TBD
 void setup_usb_slot(const PortSlot &slot) {
   if (slot.port != UARTUSB_PORT) return;
@@ -203,7 +212,7 @@ void MidiSetup::cfg_clock_recv() {
   MidiClock.uart_clock_forward1 = MD.uart;
   switch (mcl_cfg.clock_rec) {
   case MIDI_CLOCK_SOURCE_PORT1:
-    MidiClock.uart_clock_recv = MD.uart;
+    MidiClock.uart_clock_recv = port1_clock_transport_uart();
     MidiClock.uart_clock_forward1 = nullptr;
     break;
   case MIDI_CLOCK_SOURCE_PORT2:
@@ -235,7 +244,7 @@ void MidiSetup::cfg_ports(bool boot) {
   configure_driver_ports();
 
   // Always receive transport on port1 for MD.
-  MidiClock.uart_transport_recv1 = MD.uart;
+  MidiClock.uart_transport_recv1 = port1_clock_transport_uart();
   MidiClock.uart_transport_forward1 = MD.uart;
   MidiClock.uart_transport_recv2 = nullptr;
   switch (mcl_cfg.midi_transport_rec) {
