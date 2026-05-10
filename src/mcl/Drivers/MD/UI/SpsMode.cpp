@@ -393,7 +393,7 @@ bool SpsMode::handle_sps_key_tap(gui_event_t *event) {
         // on MDX_KEY_SCALE press (resets param1.max, re-init). Post
         // that event so we get the full sequence — not just the bit
         // flip.
-        key_interface.key_event(MDX_KEY_SCALE, false);
+        key_interface.post_key_event(MDX_KEY_SCALE, false);
       } else if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
                  pg == SEQ_EXTSTEP_PAGE) {
         // Synthesize the BUTTON4 release that SeqPage::handleEvent
