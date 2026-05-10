@@ -4,10 +4,11 @@
 #include "../Drivers/MD/MD.h"
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
+#include "../Drivers/MD/UI/Pages/RAMPage.h"
 #include "MCLGUI.h"
 #include "GUI_hardware.h"
-#include "AuxPages.h"
 #include "GridPages.h"
+#include "MCLSysConfig.h"
 #include "PageSelectPage.h"
 #include "MCLStrings.h"
 #ifdef PLATFORM_TBD

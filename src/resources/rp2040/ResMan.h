@@ -6,8 +6,6 @@
   void use_machine_param_names() { machine_param_names = (__T_machine_param_names*) __use_resource(__R_machine_param_names); }
   __T_machine_names_short *machine_names_short;
   void use_machine_names_short() { machine_names_short = (__T_machine_names_short*) __use_resource(__R_machine_names_short); }
-  __T_page_entries *page_entries;
-  void use_page_entries() { page_entries = (__T_page_entries*) __use_resource(__R_page_entries); }
   __T_icons_page *icons_page;
   void use_icons_page() { icons_page = (__T_icons_page*) __use_resource(__R_icons_page); }
   __T_icons_boot *icons_boot;

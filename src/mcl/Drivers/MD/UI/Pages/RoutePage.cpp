@@ -1,9 +1,9 @@
 #include "RoutePage.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
-#include "../Drivers/MD/MD.h"
+#include "../../MD.h"
 #include "DeviceManager.h"
-#include "../Drivers/MidiDevice.h"
+#include "../../../MidiDevice.h"
 #include "MidiClock.h"
 #include "MCLActions.h"
 

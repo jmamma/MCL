@@ -1,11 +1,12 @@
 #include "GridPage.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
 #ifdef PLATFORM_TBD
 #include "Ui.h"
 #endif
 #include "GridPages.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
+#include "MCLSysConfig.h"
 #include "GridTask.h"
 #include "Project.h"
 #include "DeviceManager.h"
@@ -16,6 +17,7 @@
 #include "EmptyTrack.h"
 #include "../Drivers/TBD/TBDTrack.h"
 #endif
+#include "MCLActions.h"
 #include "MCLClipBoard.h"
 #include "../Drivers/MNM/MNMParams.h"
 #include "MCLStrings.h"

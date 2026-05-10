@@ -9,7 +9,7 @@
 #include "MDSeqTrack.h"
 #include "MidiClock.h"
 #include "MidiUart.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
 #include "MCLSysConfig.h"
 
 // SPSX tracks share MDSeqTrack::md_trig_mask and MDSeqTrack::gui_update statics

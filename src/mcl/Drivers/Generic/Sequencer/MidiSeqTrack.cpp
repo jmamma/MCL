@@ -2,7 +2,7 @@
 
 #ifdef PLATFORM_TBD
 
-#include "AuxPages.h"
+#include "CommonPages.h"
 #include "ExtSeqTrack.h"
 #include "GridLink.h"
 #include "MidiClock.h"

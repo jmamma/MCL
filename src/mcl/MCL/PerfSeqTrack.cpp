@@ -1,5 +1,5 @@
 #include "PerfSeqTrack.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
 
 void PerfSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   uint8_t timing_mid = get_timing_mid();

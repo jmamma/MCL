@@ -2,7 +2,9 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "DeviceManager.h"
+#include "MCLStrings.h"
 #include "../Drivers/MidiDevice.h"
+#include "../Drivers/PageRegistry.h"
 
 const PageCategory Categories[] PROGMEM = {
     {"MAIN", 4, 0},
@@ -13,22 +15,43 @@ const PageCategory Categories[] PROGMEM = {
 
 constexpr uint8_t n_category = sizeof(Categories) / sizeof(PageCategory);
 
-static uint8_t get_pageidx(uint8_t page_number) {
-  uint8_t i = 0;
-  for (; i < R.page_entries->countof_Entries; ++i) {
-    if (page_number == R.page_entries->Entries[i].PageNumber) {
-      return i;
-    }
-  }
-  return NULL_PAGE;
+namespace {
+
+const char page_name_perf[] PROGMEM = "PERF";
+const char page_name_step_edit[] PROGMEM = "STEP EDIT";
+const char page_name_lfo[] PROGMEM = "LFO";
+const char page_name_piano_roll[] PROGMEM = "PIANO ROLL";
+const char page_name_chromatic[] PROGMEM = "CHROMATIC";
+const char page_name_sample_manager[] PROGMEM = "SAMPLE MANAGER";
+const char page_name_wav_designer[] PROGMEM = "WAV DESIGNER";
+
+static uint8_t category_for_slot(uint8_t slot) {
+  uint8_t cat = slot / 4;
+  return cat < n_category ? cat : (n_category - 1);
 }
 
-static PageIndex get_page(uint8_t pageidx, char *str) {
-  if (pageidx < R.page_entries->countof_Entries) {
+static MidiDevice *nonnull_device(MidiDevice *device) {
+  return (device == nullptr || device == &null_midi_device) ? nullptr : device;
+}
+
+static void add_common_page(PageSelectEntry *entries, const char *name_P,
+                            PageIndex page, uint8_t slot, uint8_t category,
+                            uint8_t icon_width, uint8_t icon_height,
+                            PageSelectIcon icon) {
+  PageRegistry::add_P(entries, PageRegistry::kMaxPageSlots, name_P, page,
+                      slot, category, icon_width, icon_height, icon);
+}
+
+} // namespace
+
+PageIndex PageSelectPage::get_page(uint8_t page_number, char *str) const {
+  if (page_number < PageRegistry::kMaxPageSlots &&
+      page_entries[page_number].Page != NULL_PAGE) {
     if (str) {
-      strcpy(str, R.page_entries->Entries[pageidx].Name);
+      strncpy_P(str, page_entries[page_number].Name, 16);
+      str[15] = '\0';
     }
-    return R.page_entries->Entries[pageidx].Page;
+    return page_entries[page_number].Page;
   } else {
     if (str) {
       strcpy_P(str, mclstr_four_dashes);
@@ -37,15 +60,66 @@ static PageIndex get_page(uint8_t pageidx, char *str) {
   }
 }
 
-static void get_page_icon(uint8_t pageidx, uint8_t *&icon, uint8_t &w,
-                          uint8_t &h) {
-  if (pageidx < R.page_entries->countof_Entries) {
-    icon = R.page_entries->Entries[pageidx].IconData;
-    w = R.page_entries->Entries[pageidx].IconWidth;
-    h = R.page_entries->Entries[pageidx].IconHeight;
-  } else {
+void PageSelectPage::get_page_icon(uint8_t page_number, uint8_t *&icon,
+                                   uint8_t &w, uint8_t &h) const {
+  if (page_number >= PageRegistry::kMaxPageSlots ||
+      page_entries[page_number].Page == NULL_PAGE) {
     icon = nullptr;
     w = h = 0;
+    return;
+  }
+
+  const PageSelectEntry &entry = page_entries[page_number];
+  w = entry.IconWidth;
+  h = entry.IconHeight;
+
+  switch (entry.Icon) {
+  case PAGE_ICON_GRID:
+    icon = R.icons_page->icon_grid;
+    break;
+  case PAGE_ICON_MIXER:
+    icon = R.icons_page->icon_mixer;
+    break;
+  case PAGE_ICON_PERF:
+    icon = R.icons_page->icon_perf;
+    break;
+  case PAGE_ICON_ROUTE:
+    icon = R.icons_page->icon_route;
+    break;
+  case PAGE_ICON_STEP:
+    icon = R.icons_page->icon_step;
+    break;
+  case PAGE_ICON_LFO:
+    icon = R.icons_page->icon_lfo;
+    break;
+  case PAGE_ICON_PIANOROLL:
+    icon = R.icons_page->icon_pianoroll;
+    break;
+  case PAGE_ICON_CHROMA:
+    icon = R.icons_page->icon_chroma;
+    break;
+  case PAGE_ICON_SAMPLE:
+    icon = R.icons_page->icon_sample;
+    break;
+  case PAGE_ICON_WAVD:
+    icon = R.icons_page->icon_wavd;
+    break;
+  case PAGE_ICON_RHYTMECHO:
+    icon = R.icons_page->icon_rhytmecho;
+    break;
+  case PAGE_ICON_GATEBOX:
+    icon = R.icons_page->icon_gatebox;
+    break;
+  case PAGE_ICON_RAM1:
+    icon = R.icons_page->icon_ram1;
+    break;
+  case PAGE_ICON_RAM2:
+    icon = R.icons_page->icon_ram2;
+    break;
+  default:
+    icon = nullptr;
+    w = h = 0;
+    break;
   }
 }
 
@@ -62,8 +136,7 @@ void PageSelectPage::init() {
   MidiUartParent::handle_midi_lock = 0;
   R.Clear();
   R.use_icons_page();
-  R.use_page_entries();
-  R.restore_page_entry_deps();
+  rebuild_entries();
   oled_display.fillRect(0, 0, 128, 7, WHITE);
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
@@ -83,45 +156,35 @@ void PageSelectPage::init() {
 
 void PageSelectPage::draw_popup() {
   char str[16];
-  uint8_t pageidx = get_pageidx(page_select);
-  get_page(pageidx, str);
-  MD.popup_text(str, true);
+  get_page(page_select, str);
+  MidiDevice *device = nonnull_device(page_select_ui_device);
+  if (device != nullptr) {
+    device->page_select_popup(str);
+  }
 }
 
 void PageSelectPage::md_prepare() {
-  //static uint16_t last_kit_request_time = 0;
-  //uint16_t current_time = read_clock_ms();
-  // Don't request if callback is already waiting for a response
-  if (kit_cb.state) {
-    return;
+  MidiDevice *device = nonnull_device(page_select_ui_device);
+  if (device == nullptr) {
+    device = nonnull_device(device_manager.primary_device());
   }
-  // Don't request kit while sequencer is running (causes clock problems)
-  if (MidiClock.state == 2) {
-    return;
+  if (device != nullptr) {
+    device->page_select_prepare();
   }
-  // Only request kit if more than 2 seconds (2000ms) has passed
-  //if (clock_diff(last_kit_request_time, current_time) < 2000) {
-  //  return;
-  //}
-
-  kit_cb.init();
-  auto listener = MD.getSysexListener();
-  listener->addOnMessageCallback(
-      &kit_cb, (sysex_callback_ptr_t)&MDCallback::onReceived);
-  MD.requestKit(0x7F);
-  //last_kit_request_time = current_time;
 }
 
 void PageSelectPage::cleanup() {
   note_interface.init_notes();
-  MD.set_trigleds(0, TRIGLED_OVERLAY);
-  MD.popup_text(127, 2);
+  MidiDevice *device = nonnull_device(page_select_ui_device);
+  if (device != nullptr) {
+    device->page_select_cleanup();
+  }
   mcl_gui.reset_trigleds();
 }
 
 uint8_t PageSelectPage::get_nextpage_down() {
   for (int8_t i = page_select - 1; i >= 0; i--) {
-    if (get_page(get_pageidx(i), nullptr) != NULL_PAGE) {
+    if (get_page(i, nullptr) != NULL_PAGE) {
       return i;
     }
   }
@@ -129,8 +192,8 @@ uint8_t PageSelectPage::get_nextpage_down() {
 }
 
 uint8_t PageSelectPage::get_nextpage_up() {
-  for (uint8_t i = page_select + 1; i < 16; i++) {
-    if (get_page(get_pageidx(i), nullptr) != NULL_PAGE) {
+  for (uint8_t i = page_select + 1; i < PageRegistry::kMaxPageSlots; i++) {
+    if (get_page(i, nullptr) != NULL_PAGE) {
       return i;
     }
   }
@@ -138,8 +201,7 @@ uint8_t PageSelectPage::get_nextpage_up() {
 }
 
 uint8_t PageSelectPage::get_nextpage_catdown() {
-  auto page_id = get_pageidx(page_select);
-  auto cat_id = R.page_entries->Entries[page_id].CategoryId;
+  auto cat_id = category_for_slot(page_select);
   if (cat_id > 0) {
     return pgm_read_byte(&Categories[cat_id - 1].FirstPage);
   } else {
@@ -148,8 +210,7 @@ uint8_t PageSelectPage::get_nextpage_catdown() {
 }
 
 uint8_t PageSelectPage::get_nextpage_catup() {
-  auto page_id = get_pageidx(page_select);
-  auto cat_id = R.page_entries->Entries[page_id].CategoryId;
+  auto cat_id = category_for_slot(page_select);
   if (cat_id < n_category - 1) {
     return pgm_read_byte(&Categories[cat_id + 1].FirstPage);
   } else {
@@ -158,8 +219,7 @@ uint8_t PageSelectPage::get_nextpage_catup() {
 }
 
 uint8_t PageSelectPage::get_category_page(uint8_t offset) {
-  auto page_id = get_pageidx(page_select);
-  auto cat_id = R.page_entries->Entries[page_id].CategoryId;
+  auto cat_id = category_for_slot(page_select);
   auto cat_start = pgm_read_byte(&Categories[cat_id].FirstPage);
   auto cat_size = pgm_read_byte(&Categories[cat_id].PageCount);
   if (offset >= cat_size) {
@@ -169,8 +229,54 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
   }
 }
 
+void PageSelectPage::rebuild_entries() {
+  PageRegistry::clear(page_entries, PageRegistry::kMaxPageSlots);
+  page_select_ui_device = nullptr;
+
+  add_common_page(page_entries, mclstr_grid, GRID_PAGE, 0, 0, 24, 15,
+                  PAGE_ICON_GRID);
+  add_common_page(page_entries, mclstr_mixer, MIXER_PAGE, 1, 0, 24, 16,
+                  PAGE_ICON_MIXER);
+  add_common_page(page_entries, page_name_perf, PERF_PAGE_0, 2, 0, 24, 18,
+                  PAGE_ICON_PERF);
+
+  add_common_page(page_entries, page_name_step_edit, SEQ_STEP_PAGE, 4, 1, 24,
+                  21, PAGE_ICON_STEP);
+  add_common_page(page_entries, page_name_lfo, LFO_PAGE, 5, 1, 24, 24,
+                  PAGE_ICON_LFO);
+  add_common_page(page_entries, page_name_piano_roll, SEQ_EXTSTEP_PAGE, 6, 1,
+                  24, 25, PAGE_ICON_PIANOROLL);
+  add_common_page(page_entries, page_name_chromatic, SEQ_PTC_PAGE, 7, 1, 24,
+                  25, PAGE_ICON_CHROMA);
+
+#ifdef SOUND_PAGE
+  add_common_page(page_entries, page_name_sample_manager, SAMPLE_BROWSER, 8, 2,
+                  24, 25, PAGE_ICON_SAMPLE);
+#endif
+#ifdef WAV_DESIGNER
+  add_common_page(page_entries, page_name_wav_designer, WD_PAGE_0, 9, 2, 24,
+                  19, PAGE_ICON_WAVD);
+#endif
+
+  MidiDevice *primary = nonnull_device(device_manager.primary_device());
+  MidiDevice *secondary = nonnull_device(device_manager.secondary_device());
+  if (primary != nullptr) {
+    if (primary->register_page_select_entries(
+            page_entries, PageRegistry::kMaxPageSlots) > 0) {
+      page_select_ui_device = primary;
+    }
+  }
+  if (secondary != nullptr && secondary != primary) {
+    if (secondary->register_page_select_entries(
+            page_entries, PageRegistry::kMaxPageSlots) > 0 &&
+        page_select_ui_device == nullptr) {
+      page_select_ui_device = secondary;
+    }
+  }
+}
+
 void PageSelectPage::close_to_selection() {
-  PageIndex p = get_page(get_pageidx(page_select), nullptr);
+  PageIndex p = get_page(page_select, nullptr);
   if (BUTTON_DOWN(Buttons.BUTTON1) || (p == NULL_PAGE)) {
     GUI.ignoreNextEvent(Buttons.BUTTON1);
     mcl.setPage(GRID_PAGE);
@@ -217,7 +323,6 @@ void PageSelectPage::display() {
   char str[16];
   uint8_t *icon;
   uint8_t iconw, iconh;
-  uint8_t pageidx;
   uint8_t catidx;
 
   oled_display.fillRect(0, 7, 128, 25, BLACK);
@@ -232,14 +337,14 @@ void PageSelectPage::display() {
     oled_display.setCursor(label_pos[i], 31);
     oled_display.print(str);
   }
-  pageidx = get_pageidx(page_select);
-  get_page_icon(pageidx, icon, iconw, iconh);
-  get_page(pageidx, str);
+  get_page_icon(page_select, icon, iconw, iconh);
+  get_page(page_select, str);
 
-  if (pageidx < R.page_entries->countof_Entries) {
-    catidx = R.page_entries->Entries[pageidx].CategoryId;
+  if (page_select < PageRegistry::kMaxPageSlots &&
+      page_entries[page_select].Page != NULL_PAGE) {
+    catidx = page_entries[page_select].CategoryId;
   } else {
-    catidx = 0xFF;
+    catidx = category_for_slot(page_select);
   }
 
 //  oled_display.fillRect(28, 7, 100, 16, BLACK);

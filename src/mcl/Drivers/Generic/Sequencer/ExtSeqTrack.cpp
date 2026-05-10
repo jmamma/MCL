@@ -1,5 +1,6 @@
 #include "ExtTrack.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
+#include "MCLSysConfig.h"
 
 uint8_t ExtSeqTrack::epoch = 0;
 

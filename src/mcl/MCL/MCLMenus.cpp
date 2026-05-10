@@ -5,7 +5,7 @@
 #include "MCLSysConfig.h"
 #include "MCLGUI.h"
 #include "GridPages.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
 #include "MCLActions.h"
 #include "WavDesignerPage.h"
 

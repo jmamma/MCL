@@ -3,7 +3,7 @@
 #ifdef PLATFORM_TBD
 
 #include "../MD.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
 #include "GUI_hardware.h"
 #include "GridIOOverlay.h"
 #include "GridPages.h"

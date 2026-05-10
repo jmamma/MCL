@@ -1,6 +1,7 @@
 #include "MixerPage.h"
 #include "DeviceManager.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
+#include "MDPages.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "MCLSeq.h"

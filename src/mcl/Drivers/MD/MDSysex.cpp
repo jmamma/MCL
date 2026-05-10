@@ -4,7 +4,8 @@
 #include "MDMessages.h"
 #include "MDSysex.h"
 #include "helpers.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
+#include "MDPages.h"
 
 void MDSysexListenerClass::start() {
   msgType = 255;

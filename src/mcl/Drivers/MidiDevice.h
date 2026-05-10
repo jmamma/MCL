@@ -14,6 +14,7 @@ class GridDeviceTrack;
 class MCLGIF;
 class MidiClass;
 class MidiUartClass;
+struct PageSelectEntry;
 class SeqTrack;
 
 struct MidiDeviceMixerParam {
@@ -134,6 +135,17 @@ public:
 #endif
 
   virtual void setup() {}
+  virtual uint8_t register_page_select_entries(PageSelectEntry *entries,
+                                               uint8_t max_entries) const {
+    (void)entries;
+    (void)max_entries;
+    return 0;
+  }
+  virtual void page_select_prepare() {}
+  virtual void page_select_popup(char *text) {
+    (void)text;
+  }
+  virtual void page_select_cleanup() {}
 #ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const {
     (void)capability;

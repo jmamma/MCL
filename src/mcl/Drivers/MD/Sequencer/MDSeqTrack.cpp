@@ -3,7 +3,7 @@
 #include "MDTrack.h"
 #include "MidiUart.h"
 #include "MidiClock.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
 #include "SeqPages.h"
 #include "GridTask.h"
 #include "SeqTrackUtil.h"

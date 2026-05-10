@@ -6,7 +6,6 @@
 #include "MCLMenuDefines.h"
 #include "MenuTypes.h"
 #include "MidiSetup.h"
-#include "PageIndex.h"
 #include "SeqDefines.h"
 
 extern const unsigned char __R_icons_knob[] PROGMEM;
@@ -135,17 +134,6 @@ struct __T_machine_names_short {
   static constexpr size_t countof_mnm_machine_names_short = 140 / sizeof(short_machine_name_t);
   static constexpr size_t sizeofof_mnm_machine_names_short = 140;
   static constexpr size_t __total_size = 1136;
-};
-
-extern const unsigned char __R_page_entries[] PROGMEM;
-struct __T_page_entries {
-  union {
-    PageSelectEntry Entries[0];
-    char zz__Entries[392];
-  };
-  static constexpr size_t countof_Entries = 392 / sizeof(PageSelectEntry);
-  static constexpr size_t sizeofof_Entries = 392;
-  static constexpr size_t __total_size = 392;
 };
 
 extern const unsigned char __R_icons_page[] PROGMEM;

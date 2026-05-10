@@ -4,7 +4,8 @@
 #include "../Drivers/MD/MD.h"
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
+#include "MCLSysConfig.h"
 #include "MCLStrings.h"
 #include "SeqTrackUtil.h"
 #if !defined(__AVR__)

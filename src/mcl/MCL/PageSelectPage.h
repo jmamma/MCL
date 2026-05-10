@@ -4,32 +4,21 @@
 #define PageSelectPAGE_H__
 
 #include "GUI.h"
-#include "MCLSeq.h"
+#include "MCLEncoder.h"
+#include "MenuTypes.h"
 
 extern MCLRelativeEncoder page_select_param1;
 extern MCLRelativeEncoder page_select_param2;
 
-class MDCallback : public SysexCallback {
-public:
-  bool state = false;
-  void init() { state = true; }
-  void onReceived() {
-    if (MD.kit.fromSysex(MD.midi)) {
-      mcl_seq.update_kit_params();
-    }
-    auto listener = MD.getSysexListener();
-    listener->removeOnMessageCallback(this);
-    state = false;
-  }
-};
+class MidiDevice;
 
 class PageSelectPage : public LightPage {
 public:
 
-  MDCallback kit_cb;
-
   bool loop_init = false;
   uint8_t page_select;
+  PageSelectEntry page_entries[16];
+  MidiDevice *page_select_ui_device = nullptr;
   PageSelectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
@@ -51,6 +40,10 @@ public:
   uint8_t get_nextpage_up();
   uint8_t get_nextpage_catup();
   uint8_t get_nextpage_catdown();
+  void rebuild_entries();
+  PageIndex get_page(uint8_t page_number, char *str) const;
+  void get_page_icon(uint8_t page_number, uint8_t *&icon, uint8_t &w,
+                     uint8_t &h) const;
 
   // Mirror of the BUTTON2-release branch in handleEvent: navigate to the
   // currently-highlighted page (or back to GRID_PAGE if BUTTON1 is held or

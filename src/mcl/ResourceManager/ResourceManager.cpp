@@ -62,32 +62,6 @@ void ResourceManager::Restore(uint8_t *buf, size_t sz) {
 }
 
 void ResourceManager::restore_page_entry_deps() {
-  PageSelectEntry* entry = R.page_entries->Entries;
-  struct __T_icons_page *icons = R.icons_page;
-
-  (entry++)->IconData = icons->icon_grid;
-  (entry++)->IconData = icons->icon_mixer;
-  (entry++)->IconData = icons->icon_perf;
-  (entry++)->IconData = icons->icon_route;
-  (entry++)->IconData = icons->icon_step;
-  (entry++)->IconData = icons->icon_lfo;
-  (entry++)->IconData = icons->icon_pianoroll;
-  (entry++)->IconData = icons->icon_chroma;
-
-#ifdef SOUND_PAGE
-  (entry++)->IconData = icons->icon_sample;
-#endif
-#ifdef WAV_DESIGNER
-  (entry++)->IconData = icons->icon_wavd;
-#endif
-#ifdef LOUDNESS_PAGE
-  (entry++)->IconData = icons->icon_loudness;
-#endif
-
-  (entry++)->IconData = icons->icon_rhytmecho;
-  (entry++)->IconData = icons->icon_gatebox;
-  (entry++)->IconData = icons->icon_ram1;
-  entry->IconData = icons->icon_ram2;
 }
 
 size_t ResourceManager::Size() {

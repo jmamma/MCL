@@ -1,6 +1,6 @@
 #include "PerfPage.h"
 #include "DeviceManager.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
 #include "MCLMemory.h"
 #include "MCLGUI.h"
 #include "MCLClipBoard.h"

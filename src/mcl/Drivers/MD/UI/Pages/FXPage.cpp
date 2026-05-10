@@ -1,11 +1,11 @@
 #include "ResourceManager.h"
-#include "../Drivers/MD/MD.h"
+#include "../../MD.h"
 #include "FXPage.h"
 #include "KeyInterface.h"
 #include "PageIndex.h"
 #include "MCLGUI.h"
 #include "DeviceManager.h"
-#include "../Drivers/MidiDevice.h"
+#include "../../../MidiDevice.h"
 
 #define FX_TYPE 0
 #define FX_PARAM 1

@@ -90,6 +90,11 @@ public:
   virtual void cleanup_listeners();
   virtual bool probe();
   virtual void setup();
+  virtual uint8_t register_page_select_entries(PageSelectEntry *entries,
+                                               uint8_t max_entries) const override;
+  virtual void page_select_prepare() override;
+  virtual void page_select_popup(char *text) override;
+  virtual void page_select_cleanup() override;
   virtual void requestKit(uint8_t kit);
   virtual void requestPattern(uint8_t pattern);
   virtual void requestGlobal(uint8_t global);

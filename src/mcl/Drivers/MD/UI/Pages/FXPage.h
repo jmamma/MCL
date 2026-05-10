@@ -5,6 +5,7 @@
 
 #include "GUI.h"
 #include "MCLEncoder.h"
+#include "PageIndex.h"
 
 #define NUM_FX_PAGES 2
 typedef struct fx_param_t {

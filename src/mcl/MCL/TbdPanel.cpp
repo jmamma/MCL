@@ -5,7 +5,7 @@
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/TBD/TBD.h"
-#include "AuxPages.h"
+#include "CommonPages.h"
 #include "MCL.h"
 #include "BankPopupPage.h"
 #include "DeviceManager.h"
