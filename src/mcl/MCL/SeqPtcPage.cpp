@@ -87,6 +87,26 @@ bool ptc_ext_arp_enabled(uint8_t track) {
   return mcl_seq.ext_arp_tracks[track].enabled;
 }
 
+bool ptc_uses_grid_x_tracks() {
+#ifdef PLATFORM_TBD
+  if (ptc_uses_tbd_primary_tracks()) {
+    return true;
+  }
+#endif
+  return SeqPage::active_device_is_md();
+}
+
+SeqTrack &ptc_active_track() {
+#ifdef PLATFORM_TBD
+  if (ptc_uses_tbd_primary_tracks()) {
+    return mcl_seq.tbd_tracks[last_md_track];
+  }
+#endif
+  bool grid_x_tracks = SeqPage::active_device_is_md();
+  uint8_t track_idx = grid_x_tracks ? last_md_track : last_ext_track;
+  return SeqTrackUtil::get_seq_track(grid_x_tracks, track_idx);
+}
+
 } // namespace
 
 const scale_t * const scales[24] PROGMEM = {
@@ -140,15 +160,14 @@ void SeqPtcPage::config_encoders() {
   ptc_param_len.min = 1;
   bool show_chan = true;
 
-  bool is_md_device = active_device_is_md();
-  uint8_t dev = is_md_device ? 0 : 1;
+  bool grid_x_tracks = ptc_uses_grid_x_tracks();
+  uint8_t dev = grid_x_tracks ? 0 : 1;
 
   encoders[0]->cur = octs[dev];
   encoders[1]->cur = fine_tunes[dev];
-  uint8_t track_idx = is_md_device ? last_md_track : last_ext_track;
-  SeqTrack &track = SeqTrackUtil::get_seq_track(is_md_device, track_idx);
+  SeqTrack &track = ptc_active_track();
 
-  if (is_md_device) {
+  if (grid_x_tracks) {
     ptc_param_len.max = 64;
     ptc_param_len.cur = track.length;
     show_chan = false;
@@ -186,8 +205,9 @@ void SeqPtcPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_KEY, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, true);
-  if (active_device_is_md()) {
-    seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
+  bool grid_x_tracks = ptc_uses_grid_x_tracks();
+  if (grid_x_tracks) {
+    seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, active_device_is_md());
     seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
   }
   else {
@@ -265,13 +285,13 @@ void SeqPtcPage::loop() {
                                 scale_changed ||
                                 ptc_param_fine_tune.hasChanged();
   if (keyboard_param_changed) {
-    bool is_md_device = active_device_is_md();
-    uint8_t dev = is_md_device ? 0 : 1;
+    bool grid_x_tracks = ptc_uses_grid_x_tracks();
+    uint8_t dev = grid_x_tracks ? 0 : 1;
     octs[dev] = encoders[0]->cur;
     fine_tunes[dev] = encoders[1]->cur;
 
     uint8_t track = last_md_track;
-    if (dev) {
+    if (!grid_x_tracks) {
       track = last_ext_track;
       buffer_notesoff_ext(last_ext_track);
     }
@@ -367,7 +387,7 @@ void SeqPtcPage::display() {
   draw_knob(1, mclstr_det, buf1); // detune
 
   // draw LEN
-  if (is_md_device) {
+  if (is_md_device || uses_tbd_primary_tracks) {
     mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
     if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
       draw_knob(2, mclstr_plen, buf1);
@@ -942,7 +962,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_SCALE: {
-        select_device_slot(active_device_is_md() ? 2 : 1);
+        select_device_slot(ptc_uses_grid_x_tracks() ? 2 : 1);
         config();
         return true;
       }
