@@ -349,6 +349,8 @@ public:
           if (packet[1] == 0xF7) {
             midi->midiSysex->end_immediate();
             in_sysex = false;
+          } else if (MIDI_IS_REALTIME_STATUS_BYTE(packet[1])) {
+            handle_realtime_message(packet[1]);
           } else if (!MIDI_IS_STATUS_BYTE(packet[1])) {
             midi->midiSysex->handleByte(packet[1]);
           }
