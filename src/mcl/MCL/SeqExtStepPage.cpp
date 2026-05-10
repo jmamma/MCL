@@ -1332,6 +1332,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_CC, param, value,
                                      SeqPage::slide);
   }
+  active_track.update_param(param, value);
 }
 
 void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
