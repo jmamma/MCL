@@ -221,6 +221,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
 
   bool ret;
   DEBUG_PRINT_FN();
+  uint8_t tracknumber = column & 0x0F;
 
   MDSeqTrack *md_seq_track =
       seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;
@@ -229,7 +230,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   }
 
   if (column != 255 && online && md_seq_track) {
-    get_machine_from_kit(column);
+    get_machine_from_kit(tracknumber);
     DEBUG_DUMP("online");
     link.length = seq_track->length;
     link.speed = seq_track->speed;
@@ -252,7 +253,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
       temp_seq_track.speed = link.speed;
 
       // merge md pattern data with seq_data
-      temp_seq_track.merge_from_md(column, &(MD.pattern));
+      temp_seq_track.merge_from_md(tracknumber, &(MD.pattern));
       // copy merged data in to this track object's seq data for writing to SD
       memcpy(this->seq_data.data(), temp_seq_track.data(),
              sizeof(MDSeqTrackData));
@@ -264,7 +265,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
     if (mcl_cfg.auto_normalize == 1) {
       normalize();
     }
-    MD.setOrigParams(column, &machine);
+    MD.setOrigParams(tracknumber, &machine);
   }
   // Write data to sd
 

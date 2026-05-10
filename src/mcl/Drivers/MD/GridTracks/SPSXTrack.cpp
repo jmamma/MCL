@@ -312,6 +312,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
                               SeqTrack *seq_track, uint8_t merge,
                               bool online, Grid *grid) {
   active = MDSPSX_TRACK_TYPE;
+  uint8_t tracknumber = column & 0x0F;
 
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {
@@ -324,7 +325,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
     }
 
     if (column != 255 && online && spsx_seq_track) {
-      get_machine_from_kit(column);
+      get_machine_from_kit(tracknumber);
       link.length = seq_track->length;
       link.speed = seq_track->speed;
 
@@ -341,7 +342,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
         }
         temp_seq_track.length = link.length;
         temp_seq_track.speed = link.speed;
-        temp_seq_track.merge_from_md(column, &MD.pattern);
+        temp_seq_track.merge_from_md(tracknumber, &MD.pattern);
         link.length = temp_seq_track.length;
         link.speed = temp_seq_track.speed;
         memcpy(seq_data.spsx.data(), temp_seq_track.SPSXSeqTrackData::data(),
@@ -352,7 +353,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
       }
 
       if (mcl_cfg.auto_normalize == 1) normalize();
-      MD.setOrigParams(column, &machine);
+      MD.setOrigParams(tracknumber, &machine);
     }
   } else
 #endif
@@ -366,7 +367,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
     }
 
     if (column != 255 && online && md_seq_track) {
-      get_machine_from_kit(column);
+      get_machine_from_kit(tracknumber);
       link.length = seq_track->length;
       link.speed = seq_track->speed;
 
@@ -383,7 +384,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
         }
         temp_seq_track.length = link.length;
         temp_seq_track.speed = link.speed;
-        temp_seq_track.merge_from_md(column, &(MD.pattern));
+        temp_seq_track.merge_from_md(tracknumber, &(MD.pattern));
         memcpy(seq_data.legacy.data(), temp_seq_track.data(),
                sizeof(MDSeqTrackData));
       } else {
@@ -392,7 +393,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
       }
 
       if (mcl_cfg.auto_normalize == 1) normalize();
-      MD.setOrigParams(column, &machine);
+      MD.setOrigParams(tracknumber, &machine);
     }
   }
 
