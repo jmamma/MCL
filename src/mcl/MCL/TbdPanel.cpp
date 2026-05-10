@@ -306,7 +306,7 @@ bool TbdPanel::open_bank_popup() {
   }
   if (pg == GRID_PAGE && grid_page.show_slot_menu) return false;
 
-  if (grid_page.last_page == 255 && pg != GRID_PAGE) {
+  if (grid_page.last_page == 255) {
     grid_page.last_page = pg;
   }
   mcl.pushPage(BANK_POPUP_PAGE);

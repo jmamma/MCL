@@ -29,8 +29,9 @@ BankPopupPage bank_popup_page(&bank_popup_encoder);
 
 void BankPopupPage::setup() {
   // Stash the page we came from so close() can return there cleanly.
-  if (grid_page.last_page == 255 && mcl.currentPage() != GRID_PAGE) {
-    grid_page.last_page = mcl.currentPage();
+  PageIndex pg = mcl.currentPage();
+  if (grid_page.last_page == 255 && pg != GRID_PAGE && pg != BANK_POPUP_PAGE) {
+    grid_page.last_page = pg;
   }
 }
 
