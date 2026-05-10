@@ -238,6 +238,11 @@ static uint8_t avr_grid_y_device_cfg() {
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT) return 1;
   return 2;
 }
+
+static uint8_t avr_grid_y_port() {
+  return (mcl_cfg.usb_device == 2 || mcl_cfg.usb_device == 3) ? UARTUSB_PORT
+                                                              : UART2_PORT;
+}
 #endif
 
 void MidiActivePeering::run() {
@@ -272,7 +277,7 @@ void MidiActivePeering::run() {
 #endif
 #else
   uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
-  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
+  uint8_t ext_port = avr_grid_y_port();
   uint8_t md_device_cfg =
       (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) ? 1 : 2;
   uint8_t ext_device_cfg = avr_grid_y_device_cfg();
