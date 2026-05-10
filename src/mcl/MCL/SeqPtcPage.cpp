@@ -192,11 +192,6 @@ void SeqPtcPage::init_poly() {
 void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   if (last_midi_device != nullptr) {
-#if defined(PLATFORM_TBD)
-    if (devices_share_physical()) {
-      last_midi_device_slot = current_device_slot();
-    }
-#endif
     select_device_slot(last_midi_device_slot);
   }
   SeqPage::init();
