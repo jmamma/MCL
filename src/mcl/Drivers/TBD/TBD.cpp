@@ -10,6 +10,7 @@
 #include "MCLSeq.h"
 #include "MidiDeviceGrid.h"
 #include "MidiSetup.h"
+#include "Project.h"
 #include "SeqPages.h"
 #include "TBDTrack.h"
 #include "TbdUiMode.h"
@@ -1190,6 +1191,31 @@ bool tbd_ui_slot_configured(uint8_t device_idx) {
   return false;
 }
 
+uint8_t tbd_grid_track_type(uint8_t device_idx) {
+  if (device_idx == kTbdUiSlotPrimary) {
+    return TBD_TRACK_TYPE;
+  }
+  if (device_idx == kTbdUiSlotSecondary) {
+    return TBD_MIDI_TRACK_TYPE;
+  }
+  return EMPTY_TRACK_TYPE;
+}
+
+void cleanup_tbd_grid_devices(uint8_t device_idx) {
+  uint8_t track_type = tbd_grid_track_type(device_idx);
+  if (track_type == EMPTY_TRACK_TYPE) {
+    return;
+  }
+  for (uint8_t grid_idx = 0; grid_idx < NUM_GRIDS; grid_idx++) {
+    for (uint8_t track_idx = 0; track_idx < GRID_WIDTH; track_idx++) {
+      GridDeviceTrack &track = proj.grids[grid_idx].tracks[track_idx];
+      if (track.device_idx == device_idx && track.track_type == track_type) {
+        track.init();
+      }
+    }
+  }
+}
+
 bool tbd_ui_request_from_event(gui_event_t *event, uint8_t *device_idx) {
   if (event == nullptr || device_idx == nullptr || !EVENT_BUTTON(event)) {
     return false;
@@ -1523,12 +1549,12 @@ bool TbdDevice::probe() {
 }
 
 void TbdDevice::disconnect(uint8_t device_idx) {
-  cleanup(device_idx);
+  cleanup_tbd_grid_devices(device_idx);
   if (device_idx < 2) {
     grid_devices_initialized_[device_idx] = false;
   }
   p4_defaults_init_in_progress_ = false;
-  connected = false;
+  connected = grid_devices_initialized_[0] || grid_devices_initialized_[1];
 }
 
 void TbdDevice::on_connection(uint8_t device_idx) {
@@ -1537,8 +1563,8 @@ void TbdDevice::on_connection(uint8_t device_idx) {
   midi = &MidiP4;
   uart = MidiP4.uart;
   connected = true;
-  cleanup(0);
-  cleanup(1);
+  cleanup_tbd_grid_devices(0);
+  cleanup_tbd_grid_devices(1);
   grid_devices_initialized_[0] = false;
   grid_devices_initialized_[1] = false;
   p4_defaults_loaded_ = false;
@@ -1588,14 +1614,14 @@ void TbdDevice::sync_grid_devices() {
   if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
     init_grid_devices(0);
   } else if (grid_devices_initialized_[0]) {
-    cleanup(0);
+    cleanup_tbd_grid_devices(0);
     grid_devices_initialized_[0] = false;
   }
 
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
     init_grid_devices(1);
   } else if (grid_devices_initialized_[1]) {
-    cleanup(1);
+    cleanup_tbd_grid_devices(1);
     grid_devices_initialized_[1] = false;
   }
 }
