@@ -13,10 +13,16 @@ class MidiDevice;
 
 class DeviceManager {
 public:
+  static constexpr uint8_t LOGICAL_SLOT_NONE = 255;
+
+  DeviceManager();
+
   MidiDevice *device_for_port(uint8_t port) const;
+  uint8_t logical_idx_for_port(uint8_t port) const;
   bool port_supports(uint8_t port, MidiDeviceCapability capability) const;
   bool port_is_elektron(uint8_t port) const;
-  void attach_port(uint8_t port, MidiDevice *device);
+  void attach_port(uint8_t port, MidiDevice *device,
+                   uint8_t logical_idx = LOGICAL_SLOT_NONE);
   void detach_port(uint8_t port);
   void update_active_slots();
   MidiDevice *primary_device() const;
@@ -47,6 +53,7 @@ private:
   void set_device_for_port(uint8_t port, MidiDevice *device);
 
   MidiDevice *physical_[MIDI_PORT_COUNT] = {};
+  uint8_t logical_idx_[MIDI_PORT_COUNT];
   MidiDevice *primary_ = nullptr;
   MidiDevice *secondary_ = nullptr;
 #ifdef PLATFORM_TBD

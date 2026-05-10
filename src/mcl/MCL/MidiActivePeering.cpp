@@ -118,18 +118,18 @@ void MidiActivePeering::disconnect(uint8_t port) {
   }
 #endif
   DriverList drivers = generic_drivers();
-  uint8_t device_idx;
+  uint8_t device_idx = device_manager.logical_idx_for_port(port);
+  if (device_idx == DeviceManager::LOGICAL_SLOT_NONE) {
+    device_idx = portToLogicalIdx(port);
+  }
   bool disconnected_attached = false;
   if (port == UART1_PORT) {
     drivers = md_drivers();
-    device_idx = 0;
   } else if (port == UART2_PORT) {
     drivers = elektron_drivers();
-    device_idx = 1;
   } else if (port == UARTUSB_PORT) {
     // USB port can host either MD-slot or ELEKT-slot drivers.
     drivers = md_drivers();
-    device_idx = portToLogicalIdx(port);
     disconnected_attached =
         disconnect_driver_list(elektron_drivers(), device_idx, port, pmidi);
   } else {
@@ -158,7 +158,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   }
   driver->on_connection(portToLogicalIdx(port));
 
-  device_manager.attach_port(port, driver);
+  device_manager.attach_port(port, driver, portToLogicalIdx(port));
 }
 
 static void probePort(uint8_t port, DriverList drivers) {
@@ -219,8 +219,9 @@ static void probePort(uint8_t port, DriverList drivers) {
       if (probe_success) {
         pmidi->device.set_id(driver->id);
         pmidi->device.set_name(driver->name);
-        driver->on_connection(portToLogicalIdx(port));
-        device_manager.attach_port(port, driver);
+        uint8_t device_idx = portToLogicalIdx(port);
+        driver->on_connection(device_idx);
+        device_manager.attach_port(port, driver, device_idx);
         // Re-enable MidiClock/Transport recv
         midi_setup.cfg_clock_recv();
         break;

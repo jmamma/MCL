@@ -41,11 +41,24 @@ inline gui_event_t ui_slot_entry_event(const gui_event_t *event,
 
 DeviceManager device_manager;
 
+DeviceManager::DeviceManager() {
+  for (uint8_t i = 0; i < MIDI_PORT_COUNT; ++i) {
+    logical_idx_[i] = LOGICAL_SLOT_NONE;
+  }
+}
+
 MidiDevice *DeviceManager::device_for_port(uint8_t port) const {
   if (port >= UART1_PORT && port <= MIDI_PORT_COUNT) {
     return nonnull(physical_[port - 1]);
   }
   return &null_midi_device;
+}
+
+uint8_t DeviceManager::logical_idx_for_port(uint8_t port) const {
+  if (port >= UART1_PORT && port <= MIDI_PORT_COUNT) {
+    return logical_idx_[port - 1];
+  }
+  return LOGICAL_SLOT_NONE;
 }
 
 bool DeviceManager::port_supports(uint8_t port,
@@ -70,13 +83,18 @@ void DeviceManager::set_device_for_port(uint8_t port, MidiDevice *device) {
   physical_[port - 1] = nonnull(device);
 }
 
-void DeviceManager::attach_port(uint8_t port, MidiDevice *device) {
+void DeviceManager::attach_port(uint8_t port, MidiDevice *device,
+                                uint8_t logical_idx) {
   set_device_for_port(port, device);
+  if (port >= UART1_PORT && port <= MIDI_PORT_COUNT) {
+    logical_idx_[port - 1] =
+        nonnull(device) == &null_midi_device ? LOGICAL_SLOT_NONE : logical_idx;
+  }
   update_active_slots();
 }
 
 void DeviceManager::detach_port(uint8_t port) {
-  attach_port(port, &null_midi_device);
+  attach_port(port, &null_midi_device, LOGICAL_SLOT_NONE);
 }
 
 void DeviceManager::update_active_slots() {
