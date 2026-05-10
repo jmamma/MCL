@@ -55,7 +55,7 @@ bool seq_ext_step_param_menu_label(uint8_t entry_index, uint8_t option_n,
 #endif
 
 uint8_t seq_ext_step_pitch_from_midi_note(uint8_t note_num) {
-  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  uint16_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
   if (pitch == 255) return 255;
   pitch += ptc_param_oct.cur * 12;
   return pitch < 128 ? pitch : 255;

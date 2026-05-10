@@ -743,8 +743,8 @@ bool SeqPtcPage::handle_tbd_note_event(uint8_t note, uint8_t mask,
   if (pitch == 255) {
     return true;
   }
-  pitch += ptc_param_oct.cur * 12;
-  if (pitch >= 128) {
+  uint16_t octave_pitch = (uint16_t)pitch + ptc_param_oct.cur * 12;
+  if (octave_pitch >= 128) {
     return true;
   }
 
@@ -756,12 +756,12 @@ bool SeqPtcPage::handle_tbd_note_event(uint8_t note, uint8_t mask,
 
   if (mask == EVENT_BUTTON_PRESSED) {
     if (!arp_running) {
-      track.note_on(pitch, 127);
+      track.note_on((uint8_t)octave_pitch, 127);
     }
     if (!arp_running && recording && MidiClock.state == 2) {
       reset_undo();
       track.record_track(127);
-      track.record_track_pitch(pitch);
+      track.record_track_pitch((uint8_t)octave_pitch);
     }
   } else if (!arp_running) {
     track.note_off();
