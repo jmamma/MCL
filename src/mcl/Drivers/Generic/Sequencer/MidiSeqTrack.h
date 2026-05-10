@@ -40,6 +40,7 @@ public:
   uint16_t tick_counter = 0;
   uint64_t note_buffer[2] = {0};
   uint64_t oneshot_mask[2] = {0};
+  uint64_t mute_mask[2] = {0};
   NoteVector notes_on[NUM_NOTES_ON];
   uint8_t notes_on_count = 0;
   bool notesoff_pending = false;
@@ -119,6 +120,7 @@ public:
 
   void clear_track_locks();
   void clear_track_locks(uint8_t lock_idx);
+  void clear_mute();
 
   void import_legacy_ext(const ExtSeqTrackData &legacy, const GridLink &link);
 

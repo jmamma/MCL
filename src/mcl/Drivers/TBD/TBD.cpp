@@ -1540,6 +1540,8 @@ void TbdDevice::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
   seq_track->record_mutes = state;
   if (clear && device_idx == kTbdUiSlotPrimary) {
     mcl_seq.tbd_tracks[track].clear_mute();
+  } else if (clear && device_idx == kTbdUiSlotSecondary) {
+    mcl_seq.midi_tracks[track].clear_mute();
   }
 }
 
