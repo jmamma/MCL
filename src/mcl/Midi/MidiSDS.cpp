@@ -200,7 +200,7 @@ struct WavReader : SDSFileReader {
 // ============================================================================
 
 static void _setName(const char *filename, uint16_t slot) {
-  char name[5];
+  char name[5] = {};
   int len = strlen(filename);
   int last = len - 1;
   // trim '.wav'
@@ -213,7 +213,6 @@ static void _setName(const char *filename, uint16_t slot) {
   if (last <= 4) {
     for (int i = 0; i < last; ++i) {
       name[i] = filename[i];
-      name[last] = 0;
     }
   } else {
     name[0] = filename[0];
