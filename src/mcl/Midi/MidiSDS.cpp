@@ -27,6 +27,16 @@ inline uint16_t calculate_latency(uint32_t uart_speed, size_t packet_bytes) {
   return static_cast<uint16_t>((10000UL * packet_bytes) / uart_speed + 20);
 }
 
+inline bool packet_requires_data_ack(const uint8_t *buf, uint16_t len) {
+  if (len == 0) {
+    return false;
+  }
+  if (buf[0] != 0xF0) {
+    return true;
+  }
+  return len > 4 && buf[1] == 0x7E && buf[3] == 0x02;
+}
+
 inline void update_progress(bool show_progress, int &counter, uint32_t pos,
                             uint32_t total) {
   if (++counter <= kProgressUpdateInterval) {
@@ -330,9 +340,15 @@ void MidiSDSClass::cancel() {
   state = SDS_READY;
 }
 
-bool MidiSDSClass::transmitPacket(uint8_t *buf, uint8_t len) {
+bool MidiSDSClass::transmitPacket(uint8_t *buf, uint16_t len) {
+  if (len == 0) {
+    return false;
+  }
   if (buf[0] != 0xF0) {
-    return sendData(buf, len);
+    if (len > 120) {
+      return false;
+    }
+    return sendData(buf, (uint8_t)len);
   }
   MD.uart->sendRaw(buf, len);
   return true;
@@ -439,12 +455,19 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
     }
 
     uint8_t retries = 0;
+    const uint16_t packet_len = (uint16_t)szbuf;
+    const bool needs_data_ack = packet_requires_data_ack(buf, packet_len);
     while (true) {
-      if (!transmitPacket(buf, szbuf)) {
+      if (!transmitPacket(buf, packet_len)) {
         ret = false;
         goto cleanup;
       }
-      AckResult ack = awaitDataAck(latency_ms);
+      AckResult ack = AckResult::Ok;
+      if (needs_data_ack) {
+        ack = awaitDataAck(latency_ms);
+      } else if (!hand_shake_state) {
+        wait_for_latency(latency_ms);
+      }
       if (ack == AckResult::Ok) {
         incPacketNumber();
         break;

@@ -82,7 +82,7 @@ public:
 private:
   enum class AckResult : uint8_t { Ok, Retry, Cancel };
 
-  bool transmitPacket(uint8_t *buf, uint8_t len);
+  bool transmitPacket(uint8_t *buf, uint16_t len);
   AckResult awaitDataAck(uint16_t latency_ms);
 
   // Consolidated send method (used by sendSyx and sendWav)
