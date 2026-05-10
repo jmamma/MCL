@@ -210,12 +210,7 @@ void MidiUartP4Class::service_irq() {
   uint8_t c = 0;
   uint16_t budget = TBD_P4_SPI_USB_MIDI_DATA_SIZE;
   while (budget-- && tbd_p4_realtime.pop_rx_midi_byte_isr(c)) {
-    recvActiveSenseTimer = 0;
-    if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-      handle_realtime_message(c);
-    } else if (rxRb) {
-      rxRb->put_h_isr(c);
-    }
+    handle_rx_byte(c);
   }
 }
 
@@ -262,30 +257,7 @@ void __not_in_flash_func(MidiUartClass::handle_realtime_message)(uint8_t c) {
   }
 }
 
-void __not_in_flash_func(MidiUartClass::rx_isr)() {
-  uint32_t dr = uart_get_hw(uart_hw)->dr;
-  uint8_t c = dr & 0xff; // Get the actual data byte
-
-  const uint32_t ERROR_MASK = 0xf00; // Bits 8-11 are error flags
-  bool has_errors = (dr & ERROR_MASK) != 0;
-  if (has_errors) {
-    // More detailed error checking
-#ifdef DEBUGMODE
-    if (dr & UART_UARTDR_OE_BITS) {
-      DEBUG_PRINTLN("RX_ISR: OVERRUN");
-    }
-    if (dr & UART_UARTDR_BE_BITS) {
-      DEBUG_PRINTLN("RX_ISR: BREAK ERROR");
-    }
-    if (dr & UART_UARTDR_PE_BITS) {
-      DEBUG_PRINTLN("RX_ISR: PARITY ERROR");
-    }
-    if (dr & UART_UARTDR_FE_BITS) {
-      DEBUG_PRINTLN("RX_ISR: FRAME ERROR");
-    }
-#endif
-    return;
-  }
+void __not_in_flash_func(MidiUartClass::handle_rx_byte)(uint8_t c) {
   recvActiveSenseTimer = 0;
   if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
     handle_realtime_message(c);
@@ -317,6 +289,33 @@ void __not_in_flash_func(MidiUartClass::rx_isr)() {
     rxRb->put_h_isr(c);
     break;
   }
+}
+
+void __not_in_flash_func(MidiUartClass::rx_isr)() {
+  uint32_t dr = uart_get_hw(uart_hw)->dr;
+  uint8_t c = dr & 0xff; // Get the actual data byte
+
+  const uint32_t ERROR_MASK = 0xf00; // Bits 8-11 are error flags
+  bool has_errors = (dr & ERROR_MASK) != 0;
+  if (has_errors) {
+    // More detailed error checking
+#ifdef DEBUGMODE
+    if (dr & UART_UARTDR_OE_BITS) {
+      DEBUG_PRINTLN("RX_ISR: OVERRUN");
+    }
+    if (dr & UART_UARTDR_BE_BITS) {
+      DEBUG_PRINTLN("RX_ISR: BREAK ERROR");
+    }
+    if (dr & UART_UARTDR_PE_BITS) {
+      DEBUG_PRINTLN("RX_ISR: PARITY ERROR");
+    }
+    if (dr & UART_UARTDR_FE_BITS) {
+      DEBUG_PRINTLN("RX_ISR: FRAME ERROR");
+    }
+#endif
+    return;
+  }
+  handle_rx_byte(c);
 }
 void __not_in_flash_func(MidiUartClass::tx_isr)() {
   if (!uart_is_writable(uart_hw)) { return; } //race condition

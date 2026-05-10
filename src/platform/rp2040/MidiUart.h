@@ -148,6 +148,7 @@ public:
   }
 
   void handle_realtime_message(uint8_t c);
+  void handle_rx_byte(uint8_t c);
 };
 
 #ifdef PLATFORM_TBD
