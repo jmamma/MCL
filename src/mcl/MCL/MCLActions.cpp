@@ -19,13 +19,15 @@ namespace {
 const char *shared_row_name(ElektronDevice **devs,
                             uint8_t save_dev_mask) {
   // Preserve the existing single-source row naming model: primary device wins.
-  const char *name = devs[0] ? devs[0]->getGridRowName() : nullptr;
-  if (name != nullptr && name[0] != '\0') {
-    return name;
+  if ((save_dev_mask & (1 << 0)) && devs[0] != nullptr) {
+    const char *name = devs[0]->getGridRowName();
+    if (name != nullptr && name[0] != '\0') {
+      return name;
+    }
   }
 
   if ((save_dev_mask & (1 << 1)) && devs[1] != nullptr) {
-    name = devs[1]->getGridRowName();
+    const char *name = devs[1]->getGridRowName();
     if (name != nullptr && name[0] != '\0') return name;
   }
   return nullptr;
