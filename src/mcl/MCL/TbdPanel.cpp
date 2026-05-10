@@ -779,7 +779,12 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
           tbd_handle_local_transport(MIDI_STOP);
         }
         break;
-      case ButtonsClass::FUNC_BUTTON5:  break;
+      case ButtonsClass::FUNC_BUTTON5:
+        if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
+            pg == SEQ_EXTSTEP_PAGE) {
+          key = MDX_KEY_FUNC;
+        }
+        break;
       case ButtonsClass::FUNC_BUTTON6:  key = MDX_KEY_UP;    break;
       case ButtonsClass::FUNC_BUTTON7:  key = MDX_KEY_LEFT;  break;
       case ButtonsClass::FUNC_BUTTON8:  key = MDX_KEY_DOWN;  break;

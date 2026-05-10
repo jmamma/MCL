@@ -24,6 +24,9 @@ public:
 
   uint8_t pitch_param;
   uint16_t ignore_release;
+#ifdef PLATFORM_TBD
+  uint16_t shift_select_latch;
+#endif
   uint16_t update_params_clock;
   uint8_t last_param_id;
   uint8_t last_rec_event;

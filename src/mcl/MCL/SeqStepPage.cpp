@@ -32,6 +32,27 @@ SeqStepTrackApi active_step_track() {
   return seq_step_api_active_track(use_tbd_step_tracks());
 }
 
+#ifdef PLATFORM_TBD
+void retain_shift_step_selection(SeqStepPage &page, uint8_t track) {
+  SET_BIT16(page.shift_select_latch, track);
+  SET_BIT32(note_interface.notes_on, track);
+  CLEAR_BIT32(note_interface.notes_off, track);
+}
+
+void clear_shift_step_selection(SeqStepPage &page) {
+  uint16_t latch = page.shift_select_latch;
+  if (latch == 0) {
+    return;
+  }
+  for (uint8_t n = 0; n < NUM_MD_TRACKS; ++n) {
+    if (IS_BIT_SET16(latch, n)) {
+      note_interface.clear_note(n);
+    }
+  }
+  page.shift_select_latch = 0;
+}
+#endif
+
 void draw_active_step_masks(SeqStepPage &page, SeqStepTrackApi active_track,
                             uint8_t offset, bool show_current_step = true) {
   uint64_t mask = 0, lock_mask = 0, mute_mask = 0, slide_mask = 0;
@@ -217,6 +238,9 @@ void SeqStepPage::init() {
 
   reset_on_release = false;
   ignore_release = 0;
+#ifdef PLATFORM_TBD
+  shift_select_latch = 0;
+#endif
   update_params_queue = false;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
   seq_param1.max = active_track.condition_count() * 2;
@@ -248,6 +272,9 @@ void SeqStepPage::enable_paramupdate_events() {
 void SeqStepPage::cleanup() {
   SeqStepTrackApi active_track = active_step_track();
   midi_events.remove_callbacks();
+#ifdef PLATFORM_TBD
+  clear_shift_step_selection(*this);
+#endif
   enable_paramupdate_events();
   SeqPage::cleanup();
   params_reset();
@@ -564,6 +591,14 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         SET_BIT16(ignore_release, track);
       }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
+#ifdef PLATFORM_TBD
+      if (step < active_track.length() &&
+          key_interface.is_key_down(MDX_KEY_FUNC)) {
+        CLEAR_BIT16(ignore_release, track);
+        retain_shift_step_selection(*this, track);
+        return true;
+      }
+#endif
       disable_md_micro();
       show_pitch = false;
       if (IS_BIT_SET16(ignore_release, track)) {
@@ -596,6 +631,15 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
+#ifdef PLATFORM_TBD
+    if (key == MDX_KEY_FUNC && event->mask == EVENT_BUTTON_RELEASED &&
+        shift_select_latch != 0) {
+      clear_shift_step_selection(*this);
+      disable_md_micro();
+      show_pitch = false;
+      return true;
+    }
+#endif
     uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
     if (note_interface.get_first_md_note() == 255) {
       step = 255;
