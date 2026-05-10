@@ -60,4 +60,3 @@ inline void for_each_visible_row(const ListIteratorConfig &cfg,
 }
 
 } // namespace gui
-

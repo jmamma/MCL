@@ -338,5 +338,3 @@ DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
   }
   DATA_ENCODER_TRUE();
 }
-
-
