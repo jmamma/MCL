@@ -1244,11 +1244,12 @@ void TbdUiMode::send_param(uint8_t encoder_idx) {
   uint8_t value = (uint8_t)enc[encoder_idx].cur;
   uint16_t value14 = value14_from_normalized(value);
   int16_t scaled = tbd_p4_scale_lock_value(*slot.param, value14);
-  slot.param->value = scaled;
 
   if (write_step_locks(slot, value)) {
     return;
   }
+
+  slot.param->value = scaled;
 
   if (TBD.uart == nullptr) return;
 
