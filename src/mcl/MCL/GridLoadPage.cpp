@@ -181,7 +181,9 @@ void GridLoadPage::display_at(uint8_t y_offset) {
       oled_display.setCursor(MCLGUI::s_menu_x + 26, 14 + body_y_offset);
       mcl_print_P(mclstr_destination);
       trig_mask = 0;
-      if (offset < 16) { SET_BIT16(trig_mask, offset); }
+      if (offset < NUM_SLOTS && offset / GRID_WIDTH == old_grid) {
+        SET_BIT16(trig_mask, offset % GRID_WIDTH);
+      }
       // if (offset < 16) {
       //   oled_display.setCursor(MCLGUI::s_menu_x + 4 + offset * MCLGUI::seq_w
       //   + 1, 16);
