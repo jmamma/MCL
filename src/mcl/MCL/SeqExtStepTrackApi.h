@@ -835,7 +835,8 @@ public:
       return true;
     }
     if (ctrl_type == SEQ_EXT_LOCK_CTRL_PITCH_BEND) {
-      ext_track_->record_track_locks(PARAM_PB, value7_from_14(value), slide);
+      if (value > 0x3FFF) value = 0x3FFF;
+      ext_track_->record_track_locks(PARAM_PB, (uint8_t)(value >> 7), slide);
       return true;
     }
     if (ctrl_type == SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE) {

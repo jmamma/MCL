@@ -72,13 +72,6 @@ void tbd_ptc_send_note(SeqPtcPage &page, uint8_t note, uint8_t mask) {
 
 namespace {
 
-#if defined(__AVR__)
-uint8_t value7_from_14bit(uint16_t value) {
-  if (value > 0x3FFF) return 127;
-  return (uint8_t)(((uint32_t)value * 127u + 0x1FFFu) / 0x3FFFu);
-}
-#endif
-
 #if !defined(__AVR__)
 SeqExtStepTrackApi ptc_ext_track_api(uint8_t track) {
 #ifdef PLATFORM_TBD
@@ -1378,8 +1371,7 @@ void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
   active_track.pitch_bend(pitch);
   if (SeqPage::recording && (MidiClock.state == 2)) {
 #if defined(__AVR__)
-    active_track.record_track_locks(PARAM_PB, value7_from_14bit(pitch),
-                                    SeqPage::slide);
+    active_track.record_track_locks(PARAM_PB, msg[2], SeqPage::slide);
 #else
     active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_PITCH_BEND, 0, pitch,
                                      SeqPage::slide);
