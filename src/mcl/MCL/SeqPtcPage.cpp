@@ -1055,7 +1055,9 @@ uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
   */
 }
 void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
+#ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
+#endif
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
 
@@ -1084,7 +1086,9 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 }
 
 void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
+#ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
+#endif
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t channel_event = seq_ptc_page.is_md_midi(channel);
   if (channel_event) {
@@ -1231,7 +1235,9 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
 }
 
 void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
+#ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
+#endif
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
@@ -1296,6 +1302,44 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     active_track.send_cc(param, value);
   }
 
+#if defined(__AVR__)
+  if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
+    if (SeqPage::pianoroll_mode > 0) {
+      uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
+      if (active_track.locks_params[lock_idx] - 1 == PARAM_LEARN) {
+        active_track.locks_params[lock_idx] = param + 1;
+        SeqPage::param_select = param;
+      }
+      if (active_track.locks_params[lock_idx] - 1 == param) {
+        seq_extstep_page.lock_cur_y = value;
+      }
+    }
+    if (last_ext_track == n) {
+      uint8_t timing_mid = active_track.get_timing_mid();
+      uint16_t page_width = 16 * (uint16_t)timing_mid;
+      for (uint8_t i = 0; i < 16; i++) {
+        if (!note_interface.is_note_on(i)) continue;
+        uint8_t step = ((seq_extstep_page.cur_x / page_width) * 16) + i;
+        if (step >= active_track.length) continue;
+        active_track.clear_track_locks(step, param, 255);
+        active_track.set_track_locks(step, timing_mid, param, value,
+                                     SeqPage::slide);
+        if (SeqPage::pianoroll_mode == 0) {
+          char str[] = "CC:";
+          char str2[] = "--  ";
+          mcl_gui.put_value_at(value, str2);
+          oled_display.textbox(str, str2);
+        } else {
+          uint8_t lock_idx = active_track.find_lock_idx(param);
+          if (lock_idx != 255) {
+            SeqPage::pianoroll_mode = lock_idx + 1;
+          }
+        }
+      }
+    }
+  }
+#endif
+
   if (SeqPage::recording && (MidiClock.state == 2) &&
       !note_interface.notes_on) {
 #if defined(__AVR__)
@@ -1313,7 +1357,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 }
 
 void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
+#ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
+#endif
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   if (seq_ptc_page.is_md_midi(channel)) {
     return;
@@ -1342,7 +1388,9 @@ void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
 }
 
 void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
+#ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
+#endif
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   if (seq_ptc_page.is_md_midi(channel)) {
     return;
@@ -1368,7 +1416,9 @@ void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
 }
 
 void SeqPtcMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
+#ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
+#endif
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   if (seq_ptc_page.is_md_midi(channel)) {
     return;
