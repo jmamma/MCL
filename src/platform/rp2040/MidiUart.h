@@ -322,8 +322,9 @@ public:
         if (in_sysex) {
           midi->midiSysex->end_immediate();
           in_sysex = false;
+          continue;
         }
-        continue;
+        break;
       case 0x6: // SysEx ends with 2 bytes (data + F7)
         if (in_sysex) {
           midi->midiSysex->handleByte(packet[1]);
