@@ -1,5 +1,6 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
 #include "DeviceManager.h"
+#include "MCLSysConfig.h"
 #include "NoteInterface.h"
 #include "../Midi/Midi.h"
 #include "../Drivers/MidiDevice.h"
@@ -9,6 +10,16 @@
 namespace {
 
 MidiClass *note_interface_secondary_midi() {
+#ifdef PLATFORM_TBD
+  PortSlot slots[SLOT_COUNT];
+  resolve_slots(slots);
+  const PortSlot &slot =
+      mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT ? slots[SLOT_ELEKT]
+                                                   : slots[SLOT_GENER];
+  if (slot.midi != nullptr) {
+    return slot.midi;
+  }
+#endif
   MidiDevice *secondary = device_manager.secondary_device();
   return (secondary != nullptr && secondary->midi != nullptr)
              ? secondary->midi

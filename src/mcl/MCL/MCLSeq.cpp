@@ -64,6 +64,21 @@ void setup_mcl_seq_secondary_midi(MCLSeqMidiEvents *events, MidiClass *midi) {
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
 }
 
+#ifdef PLATFORM_TBD
+MidiClass *mcl_seq_secondary_midi() {
+  PortSlot slots[SLOT_COUNT];
+  resolve_slots(slots);
+  const PortSlot &slot =
+      mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT ? slots[SLOT_ELEKT]
+                                                   : slots[SLOT_GENER];
+  if (slot.midi != nullptr) {
+    return slot.midi;
+  }
+  MidiDevice *secondary = device_manager.secondary_device();
+  return secondary->midi != nullptr ? secondary->midi : generic_midi_device.midi;
+}
+#endif
+
 void cleanup_mcl_seq_midi(MCLSeqMidiEvents *events, MidiClass *midi) {
   if (midi == nullptr) return;
   midi->removeOnNoteOnCallback(
@@ -757,10 +772,14 @@ void MCLSeqMidiEvents::setup_callbacks() {
     setup_mcl_seq_md_midi(this, MD.midi);
   }
 #ifdef EXT_TRACKS
+#ifdef PLATFORM_TBD
+  setup_mcl_seq_secondary_midi(this, mcl_seq_secondary_midi());
+#else
   MidiDevice *secondary = device_manager.secondary_device();
   MidiClass *secondary_midi =
       secondary->midi != nullptr ? secondary->midi : generic_midi_device.midi;
   setup_mcl_seq_secondary_midi(this, secondary_midi);
+#endif
 #endif
   state = true;
 }
