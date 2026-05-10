@@ -239,7 +239,7 @@ void SeqStepPage::init() {
   reset_on_release = false;
   ignore_release = 0;
 #ifdef PLATFORM_TBD
-  shift_select_latch = 0;
+  clear_shift_step_selection(*this);
 #endif
   update_params_queue = false;
   ((MCLEncoder *)encoders[2])->handler = pattern_len_handler;
@@ -486,6 +486,16 @@ void SeqStepPage::disable_md_micro() {
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
 
+#ifdef PLATFORM_TBD
+  if (EVENT_CMD(event) && event->source == MDX_KEY_FUNC &&
+      event->mask == EVENT_BUTTON_RELEASED && shift_select_latch != 0) {
+    clear_shift_step_selection(*this);
+    disable_md_micro();
+    show_pitch = false;
+    return true;
+  }
+#endif
+
   if (SeqPage::handleEvent(event)) {
     return true;
   }
@@ -631,15 +641,6 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
-#ifdef PLATFORM_TBD
-    if (key == MDX_KEY_FUNC && event->mask == EVENT_BUTTON_RELEASED &&
-        shift_select_latch != 0) {
-      clear_shift_step_selection(*this);
-      disable_md_micro();
-      show_pitch = false;
-      return true;
-    }
-#endif
     uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
     if (note_interface.get_first_md_note() == 255) {
       step = 255;

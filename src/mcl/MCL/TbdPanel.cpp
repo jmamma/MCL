@@ -152,6 +152,10 @@ static bool tbd_y_button3_page(PageIndex pg) {
   }
 }
 
+static bool tbd_seq_page(PageIndex pg) {
+  return pg == SEQ_STEP_PAGE || pg == SEQ_EXTSTEP_PAGE || pg == SEQ_PTC_PAGE;
+}
+
 static bool tbd_b_scale_page(PageIndex pg) {
   switch (pg) {
   case GRID_PAGE:
@@ -574,6 +578,12 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return false;
   }
 
+  if (!ui_expanded && orig_src == ButtonsClass::FUNC_BUTTON5 &&
+      tbd_seq_page(pg)) {
+    key_interface.key_event(MDX_KEY_FUNC, is_release);
+    return true;
+  }
+
   if (!ui_expanded && !is_local_nav_page &&
       orig_src == ButtonsClass::FUNC_BUTTON5 && is_press &&
       grid_page_active && !grid_page.show_slot_menu &&
@@ -780,8 +790,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
         }
         break;
       case ButtonsClass::FUNC_BUTTON5:
-        if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
-            pg == SEQ_EXTSTEP_PAGE) {
+        if (tbd_seq_page(pg)) {
           key = MDX_KEY_FUNC;
         }
         break;
