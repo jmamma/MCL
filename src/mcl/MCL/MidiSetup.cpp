@@ -6,6 +6,7 @@
 #include "MidiActivePeering.h"
 #include "DeviceManager.h"
 #include "NoteInterface.h"
+#include "MCLActions.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MNM/MNM.h"
@@ -141,6 +142,7 @@ void setup_usb_slot(const PortSlot &slot) {
 void remove_port_sensitive_callbacks() {
   seq_ptc_page.midi_events.remove_callbacks();
   note_interface.ni_midi_events.remove_callbacks();
+  mcl_actions_midievents.remove_callbacks();
   mcl_seq.midi_events.remove_callbacks();
 }
 
@@ -149,6 +151,7 @@ void setup_port_sensitive_callbacks() {
     seq_ptc_page.midi_events.setup_callbacks();
   }
   note_interface.ni_midi_events.setup_callbacks();
+  mcl_actions_midievents.setup_callbacks();
   mcl_seq.midi_events.setup_callbacks();
 }
 
