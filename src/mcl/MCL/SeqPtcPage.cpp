@@ -124,7 +124,7 @@ void SeqPtcPage::setup() {
   init_poly();
   midi_events.setup_callbacks();
   octs[0] = 0;
-  octs[1] = 0;
+  octs[1] = 1;
   fine_tunes[0] = 32;
   fine_tunes[1] = 32;
   memset(dev_note_masks, 0, sizeof(dev_note_masks));
