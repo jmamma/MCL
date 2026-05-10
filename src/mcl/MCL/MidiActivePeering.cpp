@@ -76,16 +76,20 @@ static void prepare_display() {
   }
 }
 
-static void disconnect_driver_list(DriverList drivers, uint8_t device_idx, uint8_t port,
-                                   MidiUartClass *pmidi) {
-  const bool reset_turbo = device_manager.port_is_elektron(port);
+static bool disconnect_driver_list(DriverList drivers, uint8_t device_idx,
+                                   uint8_t port, MidiUartClass *pmidi) {
+  bool disconnected_attached = false;
+  MidiDevice *attached = device_manager.device_for_port(port);
 
   for (uint8_t i = 0; i < drivers.count; ++i) {
     MidiDevice *driver = drivers.items[i];
-    if (!driver->connected) continue;
-    if (reset_turbo) turbo_light.set_speed(0, pmidi);
+    if (driver != attached && driver->port != port) continue;
+    if (!driver->connected && driver != attached) continue;
+    if (driver->asElektronDevice()) turbo_light.set_speed(0, pmidi);
     driver->disconnect(device_idx);
+    if (driver == attached) disconnected_attached = true;
   }
+  return disconnected_attached;
 }
 
 static DriverList drivers_for_slot(uint8_t slot_idx, bool force_generic) {
@@ -115,6 +119,7 @@ void MidiActivePeering::disconnect(uint8_t port) {
 #endif
   DriverList drivers = generic_drivers();
   uint8_t device_idx;
+  bool disconnected_attached = false;
   if (port == UART1_PORT) {
     drivers = md_drivers();
     device_idx = 0;
@@ -125,13 +130,16 @@ void MidiActivePeering::disconnect(uint8_t port) {
     // USB port can host either MD-slot or ELEKT-slot drivers.
     drivers = md_drivers();
     device_idx = portToLogicalIdx(port);
-    disconnect_driver_list(elektron_drivers(), device_idx, port, pmidi);
+    disconnected_attached =
+        disconnect_driver_list(elektron_drivers(), device_idx, port, pmidi);
   } else {
     return;
   }
-  disconnect_driver_list(drivers, device_idx, port, pmidi);
+  disconnected_attached |=
+      disconnect_driver_list(drivers, device_idx, port, pmidi);
   MidiDevice *attached = device_manager.device_for_port(port);
-  if (attached != &null_midi_device && attached->connected) {
+  if (attached != &null_midi_device && !disconnected_attached) {
+    if (attached->asElektronDevice()) turbo_light.set_speed(0, pmidi);
     attached->disconnect(device_idx);
   }
   device_manager.detach_port(port);
@@ -223,6 +231,14 @@ static void probePort(uint8_t port, DriverList drivers) {
 
 bool usb_set_speed = true;
 
+#ifndef PLATFORM_TBD
+static uint8_t avr_grid_y_device_cfg() {
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) return 0;
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT) return 1;
+  return 2;
+}
+#endif
+
 void MidiActivePeering::run() {
   resource_loaded = false;
 
@@ -256,13 +272,16 @@ void MidiActivePeering::run() {
 #else
   uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
   uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
+  uint8_t md_device_cfg =
+      (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) ? 1 : 2;
+  uint8_t ext_device_cfg = avr_grid_y_device_cfg();
 
-  if (mcl_cfg.uart1_device != 2) {
-    probePort(md_port, drivers_for_slot(SLOT_MD, mcl_cfg.uart1_device == 0));
+  if (md_device_cfg != 2) {
+    probePort(md_port, drivers_for_slot(SLOT_MD, md_device_cfg == 0));
   }
 #ifdef EXT_TRACKS
-  if (mcl_cfg.uart2_device != 2) {
-    probePort(ext_port, drivers_for_slot(SLOT_ELEKT, mcl_cfg.uart2_device == 0));
+  if (ext_device_cfg != 2) {
+    probePort(ext_port, drivers_for_slot(SLOT_ELEKT, ext_device_cfg == 0));
   }
 #endif
 #endif

@@ -143,6 +143,31 @@ void setup_port_sensitive_callbacks() {
   mcl_seq.midi_events.setup_callbacks();
 }
 
+#ifndef PLATFORM_TBD
+uint8_t avr_grid_x_device_cfg() {
+  return (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) ? 1 : 2;
+}
+
+uint8_t avr_grid_y_device_cfg() {
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) return 0;
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT) return 1;
+  return 2;
+}
+
+uint8_t turbo_cfg_for_port(uint8_t port, uint8_t uart_turbo_cfg) {
+  return (port == UARTUSB_PORT) ? mcl_cfg.usb_turbo_speed : uart_turbo_cfg;
+}
+#endif
+
+void detach_stale_physical_devices() {
+  for (uint8_t port = UART1_PORT; port <= MIDI_PORT_COUNT; ++port) {
+    MidiDevice *device = device_manager.device_for_port(port);
+    if (device != &null_midi_device && device->port != port) {
+      device_manager.detach_port(port);
+    }
+  }
+}
+
 } // namespace
 
 void MidiSetup::cfg_clock_recv() {
@@ -277,10 +302,12 @@ void MidiSetup::cfg_ports(bool boot) {
   MidiUartClass *ext_uart =
       (ext_port == UARTUSB_PORT) ? &MidiUartUSB : &MidiUart2;
 
-  apply_physical_port(md_port, md_uart, mcl_cfg.uart1_turbo_speed,
-                      mcl_cfg.uart1_device);
-  apply_physical_port(ext_port, ext_uart, mcl_cfg.uart2_turbo_speed,
-                      mcl_cfg.uart2_device);
+  apply_physical_port(md_port, md_uart,
+                      turbo_cfg_for_port(md_port, mcl_cfg.uart1_turbo_speed),
+                      avr_grid_x_device_cfg());
+  apply_physical_port(ext_port, ext_uart,
+                      turbo_cfg_for_port(ext_port, mcl_cfg.uart2_turbo_speed),
+                      avr_grid_y_device_cfg());
 
   if (mcl_cfg.usb_device == 3) {
     midi_active_peering.disconnect(UARTUSB_PORT);
@@ -386,5 +413,6 @@ void configure_driver_ports() {
 
   mcl_seq.set_outputs(MD.uart, generic_midi_device.uart);
 #endif
+  detach_stale_physical_devices();
   device_manager.update_active_slots();
 }
