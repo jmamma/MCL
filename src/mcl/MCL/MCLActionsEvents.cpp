@@ -13,6 +13,36 @@
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
 
+namespace {
+
+void add_mcl_action_midi_callbacks(MCLActionsMidiEvents *events,
+                                   MidiClass *midi) {
+  if (midi == nullptr) return;
+  midi->addOnProgramChangeCallback(
+      events, (midi_callback_ptr_t)&MCLActionsMidiEvents::
+                  onProgramChangeCallback_Midi2);
+  midi->addOnNoteOnCallback(
+      events, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
+  midi->addOnNoteOffCallback(
+      events,
+      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
+}
+
+void remove_mcl_action_midi_callbacks(MCLActionsMidiEvents *events,
+                                      MidiClass *midi) {
+  if (midi == nullptr) return;
+  midi->removeOnProgramChangeCallback(
+      events, (midi_callback_ptr_t)&MCLActionsMidiEvents::
+                  onProgramChangeCallback_Midi2);
+  midi->removeOnNoteOnCallback(
+      events, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
+  midi->removeOnNoteOffCallback(
+      events,
+      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
+}
+
+} // namespace
+
 void MCLActionsMidiEvents::onProgramChangeCallback_Midi2(uint8_t *msg) {
 
   if (mcl_cfg.uart2_prg_in - 1 == MIDI_VOICE_CHANNEL(msg[0]) ||
@@ -170,24 +200,10 @@ void MCLActionsMidiEvents::setup_callbacks() {
     return;
   }
   slot_mask = 0;
-  MidiUSB.addOnProgramChangeCallback(this,
-                                   (midi_callback_ptr_t)&MCLActionsMidiEvents::
-                                       onProgramChangeCallback_Midi2);
-
-  generic_midi_device.midi->addOnProgramChangeCallback(this,
-                                   (midi_callback_ptr_t)&MCLActionsMidiEvents::
-                                       onProgramChangeCallback_Midi2);
-
-  MidiUSB.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
-  MidiUSB.addOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
-  generic_midi_device.midi->addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
-  generic_midi_device.midi->addOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
+  add_mcl_action_midi_callbacks(this, &MidiUSB);
+  if (generic_midi_device.midi != &MidiUSB) {
+    add_mcl_action_midi_callbacks(this, generic_midi_device.midi);
+  }
 /*  Midi.addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onControlChangeCallback_Midi);
@@ -200,24 +216,10 @@ void MCLActionsMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  MidiUSB.removeOnProgramChangeCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::
-                onProgramChangeCallback_Midi2);
-
-
-  generic_midi_device.midi->removeOnProgramChangeCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::
-                onProgramChangeCallback_Midi2);
-  MidiUSB.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
-  MidiUSB.removeOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
-  generic_midi_device.midi->removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
-  generic_midi_device.midi->removeOnNoteOffCallback(
-      this,
-      (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
+  remove_mcl_action_midi_callbacks(this, &MidiUSB);
+  if (generic_midi_device.midi != &MidiUSB) {
+    remove_mcl_action_midi_callbacks(this, generic_midi_device.midi);
+  }
 /*  Midi.removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onControlChangeCallback_Midi);
