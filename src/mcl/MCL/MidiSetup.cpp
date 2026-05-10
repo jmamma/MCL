@@ -1,5 +1,6 @@
 #include "MidiSetup.h"
 #include "MidiClock.h"
+#include "MidiID.h"
 #include "TurboLight.h"
 #include "SeqPages.h"
 #include "MCLSysConfig.h"
@@ -135,6 +136,50 @@ void setup_usb_slot(const PortSlot &slot) {
     turbo_light.set_speed(turbo_light.lookup_speed(slot.turbo_cfg), slot.uart);
     delay(100);
     e->setup();
+  }
+}
+
+void cfg_usb_device_connection(const PortSlot slots[SLOT_COUNT]) {
+  uint8_t expected_slot = DeviceManager::LOGICAL_SLOT_NONE;
+  if (slots[SLOT_MD].port == UARTUSB_PORT) {
+    expected_slot = SLOT_MD;
+  } else if (slots[SLOT_ELEKT].port == UARTUSB_PORT) {
+    expected_slot = SLOT_ELEKT;
+  } else if (slots[SLOT_GENER].port == UARTUSB_PORT) {
+    expected_slot = SLOT_GENER;
+  }
+
+  if (expected_slot == SLOT_GENER) {
+    midi_active_peering.disconnect(UARTUSB_PORT);
+    midi_active_peering.force_connect(UARTUSB_PORT, &generic_midi_device);
+    return;
+  }
+
+  MidiDevice *attached = device_manager.device_for_port(UARTUSB_PORT);
+  uint8_t attached_slot = device_manager.logical_idx_for_port(UARTUSB_PORT);
+  uint8_t usb_device_id = MidiUartUSB.device.get_id();
+  bool stale = expected_slot == DeviceManager::LOGICAL_SLOT_NONE &&
+               (attached != &null_midi_device ||
+                usb_device_id != DEVICE_NULL);
+
+  if (!stale && attached == &generic_midi_device) {
+    stale = true;
+  }
+  if (!stale && attached != &null_midi_device &&
+      attached_slot != expected_slot) {
+    stale = true;
+  }
+  if (!stale && attached == &null_midi_device &&
+      usb_device_id != DEVICE_NULL) {
+    stale = true;
+  }
+  if (!stale && attached != &null_midi_device &&
+      usb_device_id != attached->id) {
+    stale = true;
+  }
+
+  if (stale) {
+    midi_active_peering.force_connect(UARTUSB_PORT, &null_midi_device);
   }
 }
 #endif
@@ -323,14 +368,9 @@ void MidiSetup::cfg_ports(bool boot) {
   // (USB GENER is handled below; USB OFF leaves nothing to do.)
   PortSlot s[SLOT_COUNT];
   resolve_slots(s);
+  cfg_usb_device_connection(s);
   setup_usb_slot(s[SLOT_MD]);
   setup_usb_slot(s[SLOT_ELEKT]);
-
-  // USB GENER
-  if (mcl_cfg.usb_device == 3) {
-    midi_active_peering.disconnect(UARTUSB_PORT);
-    midi_active_peering.force_connect(UARTUSB_PORT, &generic_midi_device);
-  }
 #else
   AvrPhysicalSlot x_slot = avr_grid_x_slot();
   AvrPhysicalSlot y_slot = avr_grid_y_slot();
@@ -400,6 +440,9 @@ void configure_driver_ports() {
     MD.setPort(s[SLOT_MD].midi, s[SLOT_MD].port);
   } else {
     MD.cleanup_listeners();
+    if (MD.connected) {
+      MD.disconnect(SLOT_MD);
+    }
     MD.midi = s[SLOT_MD].midi;
     MD.uart = s[SLOT_MD].uart;
     MD.port = s[SLOT_MD].port;
