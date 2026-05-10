@@ -668,6 +668,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   memset(mute_states, 255, sizeof(mute_states));
 
   uint8_t row = 0;
+  uint8_t row_header_grid = grid_page.cur_grid;
+  bool have_row_header_grid = false;
 
   // DEBUG_PRINTLN("send tracks 1");
   // DEBUG_PRINTLN((int)SP);
@@ -687,6 +689,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
 
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { select_array[i] = 0; continue; }
+
+    if (!have_row_header_grid) {
+      row_header_grid = i >> 4;
+      have_row_header_grid = true;
+    }
 
     mute_states[dst] = gdt_dst->seq_track->mute_state;
 
@@ -713,7 +720,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   GridRowHeader row_header;
 
-  proj.read_grid_row_header(&row_header, row, 0);
+  proj.read_grid_row_header(&row_header, row, row_header_grid);
 
   if (mcl_cfg.uart2_prg_out > 0) {
     mcl_seq.secondary_output->sendProgramChange(mcl_cfg.uart2_prg_out - 1,
