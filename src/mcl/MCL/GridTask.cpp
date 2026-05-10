@@ -133,6 +133,7 @@ void GridTask::transition_handler() {
   while (!MidiClock.clock_less_than(
       MidiClock.div32th_counter + max(2u, ((uint16_t)MidiClock.get_tempo() * 32u + 999u) / 1000u),
       (uint32_t)mcl_actions.next_transition * 2)) {
+    memset(send_device, 0, sizeof(send_device));
     memset(track_select_array, 0, sizeof(track_select_array));
 
 
