@@ -182,10 +182,16 @@ static void probePort(uint8_t port, DriverList drivers) {
     }
     pmidi->set_speed((uint32_t)31250);
     DEBUG_PRINTLN("disconnecting");
-    for (uint8_t i = 0; i < drivers.count; ++i) {
-      MidiDevice *driver = drivers.items[i];
-      if (driver->connected)
-        driver->disconnect(portToLogicalIdx(port));
+    uint8_t device_idx = device_manager.logical_idx_for_port(port);
+    if (device_idx == DeviceManager::LOGICAL_SLOT_NONE) {
+      device_idx = portToLogicalIdx(port);
+    }
+    bool disconnected_attached =
+        disconnect_driver_list(drivers, device_idx, port, pmidi);
+    MidiDevice *attached = device_manager.device_for_port(port);
+    if (attached != &null_midi_device && !disconnected_attached) {
+      if (attached->asElektronDevice()) turbo_light.set_speed(0, pmidi);
+      attached->disconnect(device_idx);
     }
     // reset MidiID to none
     pmidi->device.init();
