@@ -42,7 +42,8 @@ void SpsStripPage::display() {
   bool locked[4] = {false, false, false, false};
   uint8_t base = MD.ui.sps_mode.sub_page() * 4;
   uint8_t param_count = MD.ui.sps_mode.param_count();
-  uint8_t model = MD.kit.get_model(MD.currentTrack);
+  const uint8_t track = (MD.currentTrack < 16) ? MD.currentTrack : 0;
+  uint8_t model = MD.kit.get_model(track);
   for (uint8_t i = 0; i < 4; i++) {
     uint8_t param = base + i;
     if (param >= param_count) {
