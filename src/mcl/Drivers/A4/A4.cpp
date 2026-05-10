@@ -4,6 +4,7 @@
 #include "MCLSysConfig.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
+#include "MidiSetup.h"
 #include "TurboLight.h"
 #include <string.h>
 
@@ -163,7 +164,9 @@ bool A4Class::probe() {
   if (getBlockingSettings(0)) {
     connected = true;
     DEBUG_DUMP(connected);
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed), uart);
+    uint8_t turbo_speed =
+        (port == UARTUSB_PORT) ? mcl_cfg.usb_turbo_speed : mcl_cfg.uart2_turbo_speed;
+    turbo_light.set_speed(turbo_light.lookup_speed(turbo_speed), uart);
   }
   return connected;
 }

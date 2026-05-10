@@ -4,6 +4,7 @@
 #include "TurboLight.h"
 #include "MCLSeq.h"
 #include "MCLSysConfig.h"
+#include "MidiSetup.h"
 #include "GridTrack.h"
 #include "MCLStrings.h"
 
@@ -102,7 +103,9 @@ bool MNMClass::probe() {
   connected = false;
   DEBUG_PRINTLN("MNM probe");
   if (255 != MNM.getCurrentKit(CALLBACK_TIMEOUT)) {
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart2_turbo_speed), uart);
+    uint8_t turbo_speed =
+        (port == UARTUSB_PORT) ? mcl_cfg.usb_turbo_speed : mcl_cfg.uart2_turbo_speed;
+    turbo_light.set_speed(turbo_light.lookup_speed(turbo_speed), uart);
     // wait 400 ms, should be enought time to allow midiclock tempo to be
     // calculated before proceeding.
     mcl_gui.delay_progress(400);
