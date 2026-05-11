@@ -1,6 +1,6 @@
 #include "PerfEncoder.h"
+#include "DeviceParamTargets.h"
 #include "MCLMemory.h"
-#include "../Drivers/MD/MD.h"
 #include "PerfData.h"
 #include "MidiUart.h"
 #include "MCLStrings.h"
@@ -16,17 +16,7 @@ PerfEncoder::PerfEncoder(int _max, int _min, int _res, uint8_t _speed)
 void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_,MidiUartClass *uart2_) {
   if (uart_ == nullptr) { uart_ = mcl_seq.primary_output; }
   if (uart2_ == nullptr) { uart2_ = mcl_seq.secondary_output; }
-
-  if (dest >= NUM_MD_TRACKS + 4) {
-    uint8_t channel = dest - NUM_MD_TRACKS - 4;
-    DEBUG_PRINTLN("send cc");
-    DEBUG_PRINT(channel); DEBUG_PRINT(" "); DEBUG_PRINT(param); DEBUG_PRINT(" "); DEBUG_PRINTLN(val);
-    uart2_->sendCC(channel, param, val);
-  } else if (dest >= NUM_MD_TRACKS) {
-    MD.setFXParam(param, val, MD_FX_ECHO + dest - NUM_MD_TRACKS, false, uart_);
-  } else {
-    MD.setTrackParam(dest, param, val, uart_, false);
-  }
+  DeviceParamTargets::perf_set_param(dest, param, val, uart_, uart2_);
 }
 
 void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUartClass *uart_,MidiUartClass *uart2_) {
@@ -55,7 +45,7 @@ void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUa
       continue;
     }
     DEBUG_PRINTLN(val);
-    send_param(f->dest - 1, f->param, val, uart_, uart2_);
+    send_param(f->dest, f->param, val, uart_, uart2_);
   }
 }
 void PerfEncoder::send(MidiUartClass *uart_,MidiUartClass *uart2_) {

@@ -126,10 +126,12 @@ public:
                             bool use_stored_data);
   static void load_lfo_data(LFOSeqTrack &lfo_track,
                             const SeqLFOData &stored_data,
-                            bool use_stored_data);
+                            bool use_stored_data,
+                            bool use_sps_shape_and_speed);
   static void load_mod_data(SeqTrack *seq_track, SeqTrackModData &mod_data,
                             bool grid_x_tracks, bool use_stored_arp,
-                            bool use_stored_lfo);
+                            bool use_stored_lfo,
+                            bool use_sps_lfo_shape_and_speed);
   static void store_mod_data(SeqTrackModData &mod_data, bool grid_x_tracks,
                              uint8_t tracknumber);
   static uint8_t get_timing_mid(uint8_t speed_);

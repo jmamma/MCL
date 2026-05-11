@@ -1,0 +1,38 @@
+#pragma once
+
+#define LFO_LENGTH 128
+#define LFO_LEGACY_LENGTH 96
+#define LFO_PHASE_LENGTH 0x8000U
+#define LFO_PHASE_MASK 0x7FFFU
+
+#define TRI_WAV 0
+#define SAW_WAV 1
+#define SQU_WAV 2
+#define LIN_WAV 3
+#define EXP_WAV 4
+#define RND_WAV 5
+#define REV_LIN_WAV 6
+#define REV_EXP_WAV 7
+#define SIN_WAV 8
+#define STEP_WAV 9
+#define LINLIN_WAV 10
+
+#define LFO_SHAPE_COUNT 11
+#define LFO_WAV_COUNT LFO_SHAPE_COUNT
+
+#define LFO_TABLE_SIN 0
+#define LFO_TABLE_REV_EXP 1
+#define LFO_TABLE_EXP 2
+#define LFO_TABLE_COUNT 3
+
+#define LFO_LEGACY_SIN_WAV 0
+#define LFO_LEGACY_TRI_WAV 1
+#define LFO_LEGACY_RAMP_WAV 2
+#define LFO_LEGACY_IEXP_WAV 3
+#define LFO_LEGACY_IRAMP_WAV 4
+#define LFO_LEGACY_EXP_WAV 5
+#define LFO_LEGACY_SQU_WAV 6
+#define LFO_LEGACY_SAW_WAV 7
+#define LFO_LEGACY_RND_WAV 8
+#define LFO_LEGACY_STEP_WAV 9
+#define LFO_LEGACY_LINLIN_WAV 10

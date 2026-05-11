@@ -45,6 +45,8 @@ public:
   void track_update();
   void config_encoder_range(uint8_t i);
   void learn_param(uint8_t track, uint8_t param, uint8_t value);
+  void learn_param(uint8_t device_slot, uint8_t dest, uint8_t param,
+                   uint8_t value);
 
 protected:
   virtual void capture_seq_menu_values(bool is_md_device) override;

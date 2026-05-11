@@ -80,6 +80,28 @@ bool GenericMidiDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
+uint8_t GenericMidiDevice::param_target_count(uint8_t device_idx) const {
+  (void)device_idx;
+  return NUM_EXT_TRACKS;
+}
+
+uint8_t GenericMidiDevice::param_count(uint8_t device_idx,
+                                       uint8_t target) const {
+  (void)device_idx;
+  return target < NUM_EXT_TRACKS ? 128 : 0;
+}
+
+bool GenericMidiDevice::set_param(uint8_t device_idx, uint8_t target,
+                                  uint8_t param, uint8_t value,
+                                  MidiUartClass *uart_) {
+  (void)device_idx;
+  if (target >= NUM_EXT_TRACKS || param >= 128) {
+    return false;
+  }
+  mcl_seq.ext_tracks[target].send_cc(param, value, uart_);
+  return true;
+}
+
 void GenericMidiDevice::mixer_set_record_mutes(uint8_t device_idx,
                                                uint8_t track, bool state,
                                                bool clear) {

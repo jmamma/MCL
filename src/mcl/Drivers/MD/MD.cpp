@@ -12,6 +12,7 @@
 #include "SeqPages.h"
 #include "MCLStrings.h"
 #include "KeyInterface.h"
+#include <string.h>
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -92,6 +93,14 @@ MDClass::MDClass()
 #else
 MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
 #endif
+
+namespace {
+
+uint8_t md_target_fx_type(uint8_t target) {
+  return MD_FX_ECHO + target - NUM_MD_TRACKS;
+}
+
+} // namespace
 
 void MDClass::setup_listeners() {
   MDSysexListener.setup(midi);
@@ -177,6 +186,116 @@ bool MDClass::set_mixer_param(uint8_t device_idx, uint8_t track,
   if (value > 127) value = 127;
   setTrackParam(track, param_idx, (uint8_t)value, nullptr, true);
   return true;
+}
+
+uint8_t MDClass::param_target_count(uint8_t device_idx) const {
+  (void)device_idx;
+  return NUM_MD_TRACKS + 4;
+}
+
+uint8_t MDClass::param_count(uint8_t device_idx, uint8_t target) const {
+  (void)device_idx;
+  if (target < NUM_MD_TRACKS) {
+    return is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  }
+  if (target < NUM_MD_TRACKS + 4) {
+    return 8;
+  }
+  return 0;
+}
+
+bool MDClass::param_target_label(uint8_t device_idx, uint8_t target,
+                                 char *out, uint8_t len) const {
+  (void)device_idx;
+  if (target < NUM_MD_TRACKS) {
+    return false;
+  }
+  const char *label = nullptr;
+  switch (target - NUM_MD_TRACKS) {
+  case 0:
+    label = "ECH";
+    break;
+  case 1:
+    label = "REV";
+    break;
+  case 2:
+    label = "EQ";
+    break;
+  case 3:
+    label = "DYN";
+    break;
+  default:
+    return false;
+  }
+  if (out != nullptr && len > 0) {
+    strncpy(out, label, len - 1);
+    out[len - 1] = '\0';
+  }
+  return true;
+}
+
+bool MDClass::param_label(uint8_t device_idx, uint8_t target, uint8_t param,
+                          char *out, uint8_t len) {
+  (void)device_idx;
+  const char *label = nullptr;
+  if (target < NUM_MD_TRACKS) {
+    if (param >= param_count(device_idx, target)) {
+      return false;
+    }
+    label = model_param_name(kit.get_model(target), param);
+  } else if (target < NUM_MD_TRACKS + 4) {
+    if (param >= 8) {
+      return false;
+    }
+    label = fx_param_name(md_target_fx_type(target), param);
+  } else {
+    return false;
+  }
+  if (label == nullptr) {
+    return false;
+  }
+  if (out != nullptr && len > 0) {
+    strncpy(out, label, len - 1);
+    out[len - 1] = '\0';
+  }
+  return true;
+}
+
+bool MDClass::get_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                        uint8_t *value) {
+  (void)device_idx;
+  if (value == nullptr) {
+    return false;
+  }
+  if (target < NUM_MD_TRACKS) {
+    if (param >= param_count(device_idx, target)) {
+      return false;
+    }
+    *value = kit.params[target][param];
+    return true;
+  }
+  if (target < NUM_MD_TRACKS + 4 && param < 8) {
+    *value = kit.get_fx_param(md_target_fx_type(target), param);
+    return true;
+  }
+  return false;
+}
+
+bool MDClass::set_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                        uint8_t value, MidiUartClass *uart_) {
+  (void)device_idx;
+  if (target < NUM_MD_TRACKS) {
+    if (param >= param_count(device_idx, target)) {
+      return false;
+    }
+    setTrackParam(target, param, value, uart_, false);
+    return true;
+  }
+  if (target < NUM_MD_TRACKS + 4 && param < 8) {
+    setFXParam(param, value, md_target_fx_type(target), false, uart_);
+    return true;
+  }
+  return false;
 }
 
 void MDClass::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,

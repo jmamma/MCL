@@ -327,7 +327,7 @@ bool TbdPanel::handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx) {
   device->triggerTrack(trig_idx, 127);
   if (device == &TBD) {
     if (trig_idx < mcl_seq.num_tbd_tracks) {
-      mixer_page.disp_levels[trig_idx] = 127;
+      mixer_page.track_trig(1, trig_idx, 127);
       GUI_hardware.led.set_flashled(trig_idx);
       if (SeqPage::recording && MidiClock.state == MidiClockClass::STARTED) {
         mcl_seq.tbd_tracks[trig_idx].record_track(127);

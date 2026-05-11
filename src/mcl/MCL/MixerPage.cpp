@@ -90,6 +90,35 @@ uint8_t *MixerPage::mixer_meter_levels() {
   return mixer_device_idx == 0 ? disp_levels : ext_disp_levels;
 }
 
+void MixerPage::track_trig(uint8_t device_slot, uint8_t track_number,
+                           uint8_t level) {
+  if (track_number >= 16) {
+    return;
+  }
+  if (device_slot == 2) {
+    ext_disp_levels[track_number] = level;
+  } else {
+    disp_levels[track_number] = level;
+  }
+#ifdef LFO_TRACKS
+  mcl_seq.set_lfo_track_trig(device_slot, track_number);
+#endif
+}
+
+void MixerPage::trig(uint8_t track_number) {
+  if (track_number >= NUM_MD_TRACKS) {
+    return;
+  }
+  track_trig(1, track_number, MD.kit.levels[track_number]);
+  GUI_hardware.led.set_flashled(track_number);
+
+  uint8_t trig_group = MD.kit.trigGroups[track_number];
+  if (trig_group < NUM_MD_TRACKS) {
+    track_trig(1, trig_group, MD.kit.levels[trig_group]);
+    GUI_hardware.led.set_flashled(trig_group);
+  }
+}
+
 bool MixerPage::mixer_param_supported_for_held_tracks(uint8_t param) {
   sync_selected_mixer_device();
   uint8_t len = mixer_track_count();

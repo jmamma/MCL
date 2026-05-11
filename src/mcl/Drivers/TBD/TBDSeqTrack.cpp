@@ -253,7 +253,7 @@ void TBDSeqTrack::send_trig(uint8_t step, uint8_t velocity) {
 }
 
 void TBDSeqTrack::send_note_on(uint8_t note, uint8_t velocity) {
-  mixer_page.disp_levels[track_number] = velocity;
+  mixer_page.track_trig(1, track_number, velocity);
 
   send_active_note_off();
   if (p4_sound.note_cc >= 0 && p4_sound.note_cc <= 127) {

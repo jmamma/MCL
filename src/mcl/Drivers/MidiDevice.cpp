@@ -86,6 +86,55 @@ bool MidiDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
   return false;
 }
 
+uint8_t MidiDevice::param_target_count(uint8_t device_idx) const {
+  (void)device_idx;
+  return 0;
+}
+
+uint8_t MidiDevice::param_count(uint8_t device_idx, uint8_t target) const {
+  (void)device_idx;
+  (void)target;
+  return 0;
+}
+
+bool MidiDevice::param_target_label(uint8_t device_idx, uint8_t target,
+                                    char *out, uint8_t len) const {
+  (void)device_idx;
+  (void)target;
+  (void)out;
+  (void)len;
+  return false;
+}
+
+bool MidiDevice::param_label(uint8_t device_idx, uint8_t target,
+                             uint8_t param, char *out, uint8_t len) {
+  (void)device_idx;
+  (void)target;
+  (void)param;
+  (void)out;
+  (void)len;
+  return false;
+}
+
+bool MidiDevice::get_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                           uint8_t *value) {
+  (void)device_idx;
+  (void)target;
+  (void)param;
+  (void)value;
+  return false;
+}
+
+bool MidiDevice::set_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                           uint8_t value, MidiUartClass *uart_) {
+  (void)device_idx;
+  (void)target;
+  (void)param;
+  (void)value;
+  (void)uart_;
+  return false;
+}
+
 void MidiDevice::mixer_mute_track(uint8_t device_idx, uint8_t track,
                                   bool mute, MidiUartClass *uart_) {
   (void)device_idx;

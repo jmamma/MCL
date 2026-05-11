@@ -562,7 +562,9 @@ void TBDTrack::load_seq_data(SeqTrack *seq_track) {
 
   SeqTrack::load_mod_data(seq_track, mod_data, true,
                           storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
-                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
+                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION),
+                          storage_version_at_least(
+                              SEQ_TRACK_LFO_SPS_SHAPE_STORAGE_VERSION));
 }
 
 void TBDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -705,7 +707,9 @@ void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
 
   SeqTrack::load_mod_data(seq_track, mod_data, false,
                           storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
-                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
+                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION),
+                          storage_version_at_least(
+                              SEQ_TRACK_LFO_SPS_SHAPE_STORAGE_VERSION));
 }
 
 bool TBDMidiTrack::store_in_grid(uint8_t column, uint16_t row,

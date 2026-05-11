@@ -1,5 +1,6 @@
 #include "PerfPage.h"
 #include "DeviceManager.h"
+#include "DeviceParamTargets.h"
 #include "CommonPages.h"
 #include "MCLMemory.h"
 #include "MCLGUI.h"
@@ -107,17 +108,11 @@ void PerfPage::func_enc_check() {
   }
 }
 void PerfPage::config_encoder_range(uint8_t i) {
-  ((PerfEncoder *)encoders[i])->max = NUM_MD_TRACKS + 4 + 16;
+  ((PerfEncoder *)encoders[i])->max = DeviceParamTargets::perf_target_count();
   ((PerfEncoder *)encoders[i + 1])->min = 0;
 
-  uint8_t dest = encoders[i]->cur - 1;
-  if (dest >= NUM_MD_TRACKS + 4) {
-    ((MCLEncoder *)encoders[i + 1])->max = 127;
-  } else if (dest >= NUM_MD_TRACKS) {
-    ((MCLEncoder *)encoders[i + 1])->max = 7;
-  } else {
-    ((MCLEncoder *)encoders[i + 1])->max = 23;
-  }
+  uint8_t param_count = DeviceParamTargets::perf_param_count(encoders[i]->cur);
+  ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
 }
 
 void PerfPage::config_encoders(uint8_t show_val) {

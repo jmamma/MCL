@@ -4,6 +4,7 @@
 #include "MCLGUI.h"
 #include "ResourceManager.h"
 #include "DeviceManager.h"
+#include "DeviceParamTargets.h"
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/A4/A4.h"
 #include "SeqPages.h"
@@ -20,39 +21,24 @@
 
 namespace {
 
-void draw_midi_lfo_dest(uint8_t knob, uint8_t value) {
-  char label[4];
-  if (value == 0) {
-    strcpy_P(label, mclstr_dash);
-  } else {
-    label[0] = 'T';
-    mcl_gui.put_value_at(value, label + 1);
-  }
-  mcl_gui.draw_knob(knob, mclstr_dest, label);
-}
-
-void draw_midi_lfo_param(uint8_t knob, uint8_t param) {
-  char label[4];
-  mcl_gui.put_value_at(param, label);
-  mcl_gui.draw_knob(knob, mclstr_par, label);
-}
-
 const char *lfo_mode_label(uint8_t mode) {
   switch (mode) {
   case LFO_MODE_TRIG:
     return "TRIG";
   case LFO_MODE_ONE:
     return "ONE";
+  case LFO_MODE_TRACK_TRIG:
+    return "TRK";
   default:
     return "FREE";
   }
 }
 
 void update_lfo_key_interface(LFOSeqTrack *track) {
-  if (track->mode == LFO_MODE_FREE) {
-    key_interface.off();
-  } else {
+  if (track->mode == LFO_MODE_TRIG || track->mode == LFO_MODE_ONE) {
     key_interface.on();
+  } else {
+    key_interface.off();
   }
 }
 
@@ -123,9 +109,7 @@ void LFOPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_QUANT, false);
 
   sync_lfo_track();
-  if (lfo_track->mode != LFO_MODE_FREE) {
-    key_interface.on();
-  }
+  update_lfo_key_interface(lfo_track);
 
 
 }
@@ -137,25 +121,12 @@ void LFOPage::cleanup() {
 }
 
 void LFOPage::config_encoder_range(uint8_t i) {
-
-  if (!grid_x_tracks) {
-    ((MCLEncoder *)encoders[i])->max = NUM_EXT_TRACKS;
-    ((MCLEncoder *)encoders[i + 1])->max = 127;
-    return;
-  }
-
- ((MCLEncoder *)encoders[i])->max = NUM_MD_TRACKS + 4 + 16; 
-
-  uint8_t dest = encoders[i]->cur - 1;
-  if (dest >= NUM_MD_TRACKS + 4) {
-    ((MCLEncoder *)encoders[i + 1])->max = 127;
-  }
-  else if (dest >= NUM_MD_TRACKS) {
-    ((MCLEncoder *)encoders[i + 1])->max = 7;
-  }
-  else {
-     ((MCLEncoder *)encoders[i + 1])->max = 23; 
-  }
+  uint8_t device_slot = grid_x_tracks ? 1 : 2;
+  ((MCLEncoder *)encoders[i])->max =
+      DeviceParamTargets::slot_target_count(device_slot);
+  uint8_t param_count =
+      DeviceParamTargets::slot_param_count(device_slot, encoders[i]->cur);
+  ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
 }
 
 void LFOPage::config_encoders() {
@@ -166,12 +137,12 @@ void LFOPage::config_encoders() {
   if (page_mode == LFO_DESTINATION) {
     encoders[0]->cur = lfo_track->params[0].dest;
     ((MCLEncoder *)encoders[0])->max =
-        grid_x_tracks ? NUM_MD_TRACKS + 4 : NUM_EXT_TRACKS;
+        DeviceParamTargets::slot_target_count(grid_x_tracks ? 1 : 2);
     encoders[1]->cur = lfo_track->params[0].param;
     ((MCLEncoder *)encoders[1])->max = 23;
     encoders[2]->cur = lfo_track->params[1].dest;
     ((MCLEncoder *)encoders[2])->max =
-        grid_x_tracks ? NUM_MD_TRACKS + 4 : NUM_EXT_TRACKS;
+        DeviceParamTargets::slot_target_count(grid_x_tracks ? 1 : 2);
     encoders[3]->cur = lfo_track->params[1].param;
     ((MCLEncoder *)encoders[3])->max = 23;
 
@@ -180,7 +151,7 @@ void LFOPage::config_encoders() {
   }
   else if (page_mode == LFO_SETTINGS) {
     encoders[0]->cur = lfo_track->wav_type;
-    ((MCLEncoder *)encoders[0])->max = 5;
+    ((MCLEncoder *)encoders[0])->max = LFO_WAV_COUNT - 1;
 
     encoders[1]->cur = lfo_track->speed;
     ((MCLEncoder *)encoders[1])->max = 127;
@@ -193,7 +164,7 @@ void LFOPage::config_encoders() {
   }
   else if (page_mode == LFO_OFFSET) {
     encoders[0]->cur = lfo_track->mode;
-    ((MCLEncoder *)encoders[0])->max = LFO_MODE_ONE;
+    ((MCLEncoder *)encoders[0])->max = LFO_MODE_TRACK_TRIG;
 
     encoders[2]->cur = lfo_track->params[0].offset;
     ((MCLEncoder *)encoders[2])->max = 127;
@@ -265,14 +236,22 @@ void LFOPage::loop() {
     }
 
     if (encoders[2]->hasChanged()) {
-      if (!grid_x_tracks || lfo_track->params[0].dest > NUM_MD_TRACKS + 4) {
+      uint8_t value = 0;
+      if (!DeviceParamTargets::slot_get_param(grid_x_tracks ? 1 : 2,
+                                              lfo_track->params[0].dest,
+                                              lfo_track->params[0].param,
+                                              &value)) {
         lfo_track->params[0].offset = encoders[2]->cur;
       }
       else { encoders[2]->cur = encoders[2]->old; }
     }
 
     if (encoders[3]->hasChanged()) {
-       if (!grid_x_tracks || lfo_track->params[1].dest > NUM_MD_TRACKS + 4) {
+      uint8_t value = 0;
+      if (!DeviceParamTargets::slot_get_param(grid_x_tracks ? 1 : 2,
+                                              lfo_track->params[1].dest,
+                                              lfo_track->params[1].param,
+                                              &value)) {
          lfo_track->params[1].offset = encoders[3]->cur;
        }
        else { encoders[3]->cur = encoders[3]->old; }
@@ -297,35 +276,21 @@ void LFOPage::display() {
 
 
   if (page_mode == LFO_DESTINATION) {
-    if (grid_x_tracks) {
-      draw_dest(0, encoders[0]->cur);
-      draw_param(1, encoders[0]->cur, encoders[1]->cur);
-      draw_dest(2, encoders[2]->cur);
-      draw_param(3, encoders[2]->cur, encoders[3]->cur);
-    } else {
-      draw_midi_lfo_dest(0, encoders[0]->cur);
-      draw_midi_lfo_param(1, encoders[1]->cur);
-      draw_midi_lfo_dest(2, encoders[2]->cur);
-      draw_midi_lfo_param(3, encoders[3]->cur);
-    }
+    uint8_t device_slot = grid_x_tracks ? 1 : 2;
+    draw_dest(0, encoders[0]->cur, true, device_slot);
+    draw_param(1, encoders[0]->cur, encoders[1]->cur, device_slot);
+    draw_dest(2, encoders[2]->cur, true, device_slot);
+    draw_param(3, encoders[2]->cur, encoders[3]->cur, device_slot);
     panel_info2 = "LFO>DST";
   }
   else if (page_mode == LFO_SETTINGS) {
     uint8_t inc = LFO_LENGTH / width;
     for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
       if (n < LFO_LENGTH) {
-        int16_t out = 0;
-
-        switch (lfo_track->wav_type) {
-          case IRAMP_WAV:
-          case EXP_WAV:
-             out = (int16_t)128 - lfo_track->wav_tables[lfo_track->wav_type - 2][n];
-          break;
-          default:
-             out = lfo_track->wav_tables[lfo_track->wav_type][n];
-          break;
-        }
-        uint8_t sample = ((int16_t) out * (int16_t) lfo_height) / 128;
+        uint16_t phase = ((uint16_t)n << 8) & LFO_PHASE_MASK;
+        uint8_t out = LFOSeqTrack::get_preview_value(lfo_track->wav_type,
+                                                     phase);
+        uint8_t sample = ((int16_t)out * (int16_t)lfo_height) / 128;
 
         oled_display.drawPixel(x, y + lfo_height - sample, WHITE);
       }
@@ -413,27 +378,40 @@ bool LFOPage::apply_seq_menu_row(uint8_t row_entry, void (*row_func)()) {
 }
 
 void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
+  learn_param(1, track + 1, param, value);
+}
+
+void LFOPage::learn_param(uint8_t device_slot, uint8_t dest, uint8_t param,
+                          uint8_t value) {
   track_update();
+  if (lfo_track->device_slot != device_slot) {
+    return;
+  }
+  if (DeviceParamTargets::slot_param_count(device_slot, dest) <= param) {
+    return;
+  }
   bool reconfig = false;
   if (mcl.currentPage() == LFO_PAGE) {
   if (page_mode == LFO_DESTINATION) {
     if (encoders[0]->cur == 0 && encoders[1]->cur > 0) {
-      lfo_track->params[0].dest = track + 1;
+      lfo_track->params[0].dest = dest;
       lfo_track->params[0].param = param;
       reconfig = true;
     }
     if (encoders[2]->cur == 0 && encoders[3]->cur > 0) {
-      lfo_track->params[1].dest = track + 1;
+      lfo_track->params[1].dest = dest;
       lfo_track->params[1].param = param;
       reconfig = true;
     }
   }
   }
-  if (lfo_track->params[0].dest - 1 == track && lfo_track->params[0].param == param) {
+  if (lfo_track->params[0].dest == dest &&
+      lfo_track->params[0].param == param) {
     lfo_track->params[0].offset = value;
     reconfig = true;
   }
-  if (lfo_track->params[1].dest - 1 == track && lfo_track->params[1].param == param) {
+  if (lfo_track->params[1].dest == dest &&
+      lfo_track->params[1].param == param) {
     lfo_track->params[1].offset = value;
     reconfig = true;
   }
@@ -456,7 +434,8 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     }
   }
 
-  if (EVENT_NOTE(event)) {
+  if (EVENT_NOTE(event) &&
+      (lfo_track->mode == LFO_MODE_TRIG || lfo_track->mode == LFO_MODE_ONE)) {
     uint8_t port = event->port;
     auto device = device_manager.device_for_port(port);
 

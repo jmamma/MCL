@@ -112,7 +112,9 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
 
   SeqTrack::load_mod_data(seq_track, mod_data, false,
                           storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
-                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
+                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION),
+                          storage_version_at_least(
+                              SEQ_TRACK_LFO_SPS_SHAPE_STORAGE_VERSION));
 #endif
 }
 

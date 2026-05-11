@@ -143,8 +143,6 @@ void MCLSeq::setup() {
   }
 #ifdef LFO_TRACKS
 
-  grid_x_lfo_tracks[0].load_tables(); // Only needs to be done once
-
   for (uint8_t i = 0; i < num_grid_x_lfo_tracks; i++) {
     grid_x_lfo_tracks[i].init();
     grid_x_lfo_tracks[i].track_number = i;
@@ -350,6 +348,8 @@ void MCLSeq::onMidiStartImmediateCallback() {
   mdfx_track.reset();
   perf_track.reset();
 #ifdef LFO_TRACKS
+  clear_lfo_track_trigs(1);
+  clear_lfo_track_trigs(2);
   for (uint8_t i = 0; i < num_grid_x_lfo_tracks; i++) {
     grid_x_lfo_tracks[i].reset_runtime();
   }
@@ -516,6 +516,7 @@ void MCLSeq::seq() {
       for (uint8_t i = 0; i < num_md_tracks; i++) {
         grid_x_lfo_tracks[i].seq(uart, uart2);
       }
+      clear_lfo_track_trigs(1);
 #endif
 
       perf_track.seq(uart, uart2);
@@ -554,6 +555,7 @@ void MCLSeq::seq() {
     for (uint8_t i = 0; i < num_md_tracks; i++) {
       grid_x_lfo_tracks[i].seq(uart, uart2);
     }
+    clear_lfo_track_trigs(1);
 #endif
 
     perf_track.seq(uart, uart2);
@@ -578,6 +580,7 @@ void MCLSeq::seq() {
         md_arp_tracks[i].seq(uart, uart2);
         grid_x_lfo_tracks[i].seq(uart, uart2);
       }
+      clear_lfo_track_trigs(1);
     }
   }
   if (seq_grid_y_runs_tbd_midi_tracks()) {
@@ -590,6 +593,7 @@ void MCLSeq::seq() {
         ext_arp_tracks[i].seq(uart, uart2);
         grid_y_lfo_tracks[i].seq(uart, uart2);
       }
+      clear_lfo_track_trigs(2);
     }
   }
 #endif
@@ -602,6 +606,7 @@ void MCLSeq::seq() {
       ext_arp_tracks[i].seq(uart,uart2);
       grid_y_lfo_tracks[i].seq(uart, uart2);
     }
+    clear_lfo_track_trigs(2);
   }
 #endif
 
@@ -697,7 +702,7 @@ void MCLSeqMidiEvents::onNoteCallback_Midi(uint8_t *msg) {
       });
     }
     if (msg[0] != 153 && msg[2]) {
-      mixer_page.disp_levels[n] = MD.kit.levels[n];
+      mixer_page.track_trig(1, n, MD.kit.levels[n]);
     }
 
   }
@@ -731,7 +736,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     return;
   }
   perf_page.learn_param(track, track_param, value);
-  lfo_page.learn_param(track, track_param, value);
+  lfo_page.learn_param(1, track + 1, track_param, value);
 
 }
 
@@ -779,7 +784,10 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   }
 
   perf_page.learn_param(channel + 16 + 4, param, value);
-  lfo_page.learn_param(channel + 16 + 4, param, value);
+  uint8_t track = mcl_seq.find_ext_track(channel);
+  if (track != 255) {
+    lfo_page.learn_param(2, track + 1, param, value);
+  }
 
 }
 

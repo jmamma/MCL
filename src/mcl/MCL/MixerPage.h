@@ -105,15 +105,8 @@ public:
                                     uint8_t value);
 
   uint8_t note_to_trig(uint8_t note_num);
-  void trig(uint8_t track_number) {
-    disp_levels[track_number] = MD.kit.levels[track_number];
-    GUI_hardware.led.set_flashled(track_number);
-    if (MD.kit.trigGroups[track_number] < 16) {
-      disp_levels[MD.kit.trigGroups[track_number]] =
-          MD.kit.levels[MD.kit.trigGroups[track_number]];
-      GUI_hardware.led.set_flashled(MD.kit.trigGroups[track_number]);
-    }
-  }
+  void track_trig(uint8_t device_slot, uint8_t track_number, uint8_t level);
+  void trig(uint8_t track_number);
 
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();

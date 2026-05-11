@@ -3,26 +3,13 @@
 #ifndef PERFDATATRACK_H__
 #define PERFDATATRACK_H__
 #include "platform.h"
+#include "DeviceParamTargets.h"
 #include "MCLMemory.h"
 #include "../Drivers/MD/MD.h"
 #include "MCLStrings.h"
 #include "MCLSeq.h"
 
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
-
-static uint8_t get_param_device(uint8_t dest, uint8_t param) {
-  if (dest <= NUM_MD_TRACKS) {
-    uint8_t num_params =
-        mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-    if (param >= num_params) {
-      return 0;
-    }
-    return MD.kit.params[dest - 1][param];
-  } else {
-    return MD.kit.get_fx_param(dest - NUM_MD_TRACKS - 1 + MD_FX_ECHO, param);
-  }
-  return 255;
-}
 
 class ATTR_PACKED() PerfParam {
 public:
@@ -285,7 +272,15 @@ public:
        if (p->dest != 0) {
            f->dest = p->dest;
            f->param = p->param;
-           uint8_t v = get_param_device(p->dest, p->param);
+           uint8_t v = 0;
+           bool has_current =
+               DeviceParamTargets::perf_get_param(p->dest, p->param, &v);
+           if (!has_current && p->val == 255) {
+             continue;
+           }
+           if (!has_current) {
+             v = p->val;
+           }
            f->min = p->val == 255 ? v : p->val;
            f->max = v;
            DEBUG_PRINT("ADDING ");
@@ -301,7 +296,15 @@ public:
        PerfParam *p = &s2->params[n];
        if (p->dest != 0) {
            uint8_t m = find_existing(p->dest, p->param);
-           uint8_t v = get_param_device(p->dest, p->param);
+           uint8_t v = 0;
+           bool has_current =
+               DeviceParamTargets::perf_get_param(p->dest, p->param, &v);
+           if (!has_current && p->val == 255) {
+             continue;
+           }
+           if (!has_current) {
+             v = p->val;
+           }
            if (m != 255) {
              f = &fades[m];
              DEBUG_PRINTLN("exists");

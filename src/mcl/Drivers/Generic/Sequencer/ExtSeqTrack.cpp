@@ -773,7 +773,7 @@ ALWAYS_INLINE() void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
   if (uart_ == nullptr) {
     uart_ = uart;
   }
-  mixer_page.ext_disp_levels[track_number] = 127;
+  mixer_page.track_trig(2, track_number, 127);
   uart_->sendNoteOn(channel, note, velocity);
   SET_BIT128_P(note_buffer, note);
 }

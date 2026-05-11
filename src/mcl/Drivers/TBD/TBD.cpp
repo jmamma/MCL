@@ -281,6 +281,78 @@ TbdP4SoundData *p4_sound_for_mixer(uint8_t device_idx, uint8_t track) {
   return nullptr;
 }
 
+bool p4_param_available_for_mod(const TbdP4ParamDescriptor &desc) {
+  return desc.is_visible() && desc.is_sendable();
+}
+
+TbdP4ParamDescriptor *p4_param_for_mod(uint8_t device_idx, uint8_t track,
+                                       uint8_t param_idx) {
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  if (sound == nullptr) {
+    return nullptr;
+  }
+
+  uint8_t idx = 0;
+  for (uint8_t i = 0; i < TBD_P4_AUDIO_PARAM_COUNT; i++) {
+    TbdP4ParamDescriptor &desc = sound->audio_params.params[i];
+    if (!p4_param_available_for_mod(desc)) {
+      continue;
+    }
+    if (idx == param_idx) {
+      return &desc;
+    }
+    idx++;
+  }
+  for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+    TbdP4ParamDescriptor &desc = sound->mixer_params.params[i];
+    if (!p4_param_available_for_mod(desc)) {
+      continue;
+    }
+    if (idx == param_idx) {
+      return &desc;
+    }
+    idx++;
+  }
+  return nullptr;
+}
+
+uint8_t p4_param_count_for_mod(uint8_t device_idx, uint8_t track) {
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  if (sound == nullptr) {
+    return 0;
+  }
+  uint8_t count = 0;
+  for (uint8_t i = 0; i < TBD_P4_AUDIO_PARAM_COUNT; i++) {
+    if (p4_param_available_for_mod(sound->audio_params.params[i])) {
+      count++;
+    }
+  }
+  for (uint8_t i = 0; i < TBD_P4_MIXER_PARAM_COUNT; i++) {
+    if (p4_param_available_for_mod(sound->mixer_params.params[i])) {
+      count++;
+    }
+  }
+  return count;
+}
+
+uint8_t p4_value_to_u7(const TbdP4ParamDescriptor &desc) {
+  if (desc.max_value <= desc.min_value) {
+    return 0;
+  }
+  int16_t value = desc.value;
+  if (value < desc.min_value) value = desc.min_value;
+  if (value > desc.max_value) value = desc.max_value;
+  uint16_t range = (uint16_t)(desc.max_value - desc.min_value);
+  uint16_t offset = (uint16_t)(value - desc.min_value);
+  return (uint8_t)(((uint32_t)offset * 127u + (range / 2u)) / range);
+}
+
+int16_t p4_u7_to_value(const TbdP4ParamDescriptor &desc, uint8_t value) {
+  uint16_t value14 =
+      (uint16_t)(((uint32_t)value * 0x3FFFu + 63u) / 127u);
+  return tbd_p4_scale_lock_value(desc, value14);
+}
+
 TbdP4SoundData *active_p4_sound_for_note() {
   TbdP4SoundData *sound = tbd_ui_mode.active_sound();
   if (sound != nullptr) {
@@ -1518,6 +1590,67 @@ bool TbdDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
   } else if (desc.ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
     tbd_p4_send_param_value(uart, sound->midi_channel, desc, value);
   }
+  return true;
+}
+
+uint8_t TbdDevice::param_target_count(uint8_t device_idx) const {
+  if (device_idx == kTbdUiSlotPrimary) {
+    return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ? mcl_seq.num_tbd_tracks
+                                                       : 0;
+  }
+  if (device_idx == kTbdUiSlotSecondary) {
+    return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD ? mcl_seq.num_midi_tracks
+                                                       : 0;
+  }
+  return 0;
+}
+
+uint8_t TbdDevice::param_count(uint8_t device_idx, uint8_t target) const {
+  return p4_param_count_for_mod(device_idx, target);
+}
+
+bool TbdDevice::param_target_label(uint8_t device_idx, uint8_t target,
+                                   char *out, uint8_t len) const {
+  if (out == nullptr || len == 0 ||
+      target >= param_target_count(device_idx)) {
+    return false;
+  }
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, target);
+  if (sound != nullptr && tbd_p4_copy_sound_notice(*sound, out, len)) {
+    return true;
+  }
+  return tbd_p4_copy_track_label(target, out, len);
+}
+
+bool TbdDevice::param_label(uint8_t device_idx, uint8_t target, uint8_t param,
+                            char *out, uint8_t len) {
+  TbdP4ParamDescriptor *desc = p4_param_for_mod(device_idx, target, param);
+  return desc != nullptr && tbd_p4_copy_param_label(*desc, out, len);
+}
+
+bool TbdDevice::get_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                          uint8_t *value) {
+  if (value == nullptr) {
+    return false;
+  }
+  TbdP4ParamDescriptor *desc = p4_param_for_mod(device_idx, target, param);
+  if (desc == nullptr) {
+    return false;
+  }
+  *value = p4_value_to_u7(*desc);
+  return true;
+}
+
+bool TbdDevice::set_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                          uint8_t value, MidiUartClass *uart_) {
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, target);
+  TbdP4ParamDescriptor *desc = p4_param_for_mod(device_idx, target, param);
+  if (sound == nullptr || desc == nullptr) {
+    return false;
+  }
+  int16_t scaled = p4_u7_to_value(*desc, value);
+  MidiUartClass *port = uart_ ? uart_ : uart;
+  tbd_p4_send_param_value(port, sound->midi_channel, *desc, scaled);
   return true;
 }
 

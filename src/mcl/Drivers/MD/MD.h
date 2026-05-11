@@ -109,6 +109,17 @@ public:
   virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
                                uint8_t param_idx, int16_t value,
                                bool send = true) override;
+  virtual uint8_t param_target_count(uint8_t device_idx) const override;
+  virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const override;
+  virtual bool param_target_label(uint8_t device_idx, uint8_t target,
+                                  char *out, uint8_t len) const override;
+  virtual bool param_label(uint8_t device_idx, uint8_t target, uint8_t param,
+                           char *out, uint8_t len) override;
+  virtual bool get_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                         uint8_t *value) override;
+  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                         uint8_t value,
+                         MidiUartClass *uart_ = nullptr) override;
   virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
                                       bool state,
                                       bool clear = false) override;

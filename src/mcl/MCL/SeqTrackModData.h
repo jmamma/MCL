@@ -2,10 +2,12 @@
 
 #include "platform.h"
 #include <inttypes.h>
+#include <stddef.h>
 
 #define SEQ_TRACK_ARP_STORAGE_VERSION 1
 #define SEQ_TRACK_LFO_STORAGE_VERSION 2
-#define SEQ_TRACK_MOD_STORAGE_VERSION 2
+#define SEQ_TRACK_LFO_SPS_SHAPE_STORAGE_VERSION 3
+#define SEQ_TRACK_MOD_STORAGE_VERSION 3
 
 class ATTR_PACKED() SeqLFODataV1 {
 public:
@@ -91,6 +93,9 @@ public:
   SeqTrackModData() { init(); }
 
   void init() {
+    for (uint8_t i = 0; i < sizeof(v1_lfo_padding); ++i) {
+      v1_lfo_padding[i] = 0;
+    }
     lfo.init();
     arp.init();
   }
@@ -101,5 +106,10 @@ static_assert(sizeof(SeqLFOParamData) == 4,
               "SeqLFOParamData storage size changed");
 static_assert(sizeof(SeqLFOData) == 21, "SeqLFOData storage size changed");
 static_assert(sizeof(ArpSeqData) == 21, "ArpSeqData storage size changed");
+static_assert(offsetof(SeqTrackModData, arp) == sizeof(SeqLFODataV1),
+              "SeqTrackModData arp offset changed");
+static_assert(offsetof(SeqTrackModData, lfo) ==
+                  sizeof(SeqLFODataV1) + sizeof(ArpSeqData),
+              "SeqTrackModData lfo offset changed");
 static_assert(sizeof(SeqTrackModData) == 51,
               "SeqTrackModData storage size changed");

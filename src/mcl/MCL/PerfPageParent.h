@@ -16,8 +16,10 @@ public:
   bool midi_state = false;
 
 
-  void draw_dest(uint8_t knob, uint8_t value, bool dest = true);
-  void draw_param(uint8_t knob, uint8_t  dest, uint8_t param);
+  void draw_dest(uint8_t knob, uint8_t value, bool dest = true,
+                 uint8_t device_slot = 0);
+  void draw_param(uint8_t knob, uint8_t dest, uint8_t param,
+                  uint8_t device_slot = 0);
 
   void setup();
 
