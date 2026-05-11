@@ -4,6 +4,7 @@
 #define SEQEXTSTEPPAGE_H__
 
 #include "SeqPage.h"
+#include "SeqExtStepTypes.h"
 #include "SeqStepPage.h"
 #ifdef PLATFORM_TBD
 #include "SeqExtMidiControl.h"
@@ -11,20 +12,13 @@
 
 class MidiClass;
 
-#if defined(__AVR__)
-using seq_extstep_tick_t = int16_t;
-#else
-using seq_extstep_tick_t = int32_t;
-#endif
-
+#ifdef PLATFORM_TBD
 void ext_pattern_len_handler(Encoder *enc);
 class SeqExtStepMidiEvents : public MidiCallback {
 public:
   bool state = false;
   MidiClass *bound_midi = nullptr;
-#ifdef PLATFORM_TBD
   SeqExtMidiControlState control_state;
-#endif
 
   void setup_callbacks();
   void remove_callbacks();
@@ -36,6 +30,7 @@ public:
   void onAfterTouchCallback_Midi2(uint8_t *msg);
   void onChannelPressureCallback_Midi2(uint8_t *msg);
 };
+#endif
 
 class SeqExtStepPage : public SeqPage {
 
@@ -72,14 +67,15 @@ public:
 
   bool encoder_init;
 
+#ifdef PLATFORM_TBD
   SeqExtStepMidiEvents midi_events;
+#endif
   SeqExtStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
   virtual void config_encoders();
 
-  void draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
-                       uint8_t color = WHITE);
+  void draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
   void draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov);
   void draw_pianoroll();
   void draw_lockeditor();

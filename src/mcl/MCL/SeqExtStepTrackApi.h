@@ -4,6 +4,7 @@
 #define SEQEXTSTEPTRACKAPI_H__
 
 #include "ExtSeqTrack.h"
+#include "SeqExtStepTypes.h"
 #ifdef PLATFORM_TBD
 #include "../Drivers/Generic/Sequencer/MidiSeqTrack.h"
 #endif
@@ -97,23 +98,24 @@ public:
     return ext_track_->get_speed_multiplier_int();
   }
 
-  uint32_t step_tick(uint8_t step) const {
-    return (uint32_t)step * ticks_per_step();
+  seq_extstep_tick_t step_tick(uint8_t step) const {
+    return (seq_extstep_tick_t)step * ticks_per_step();
   }
 
-  int32_t event_tick(uint8_t step, const SeqExtStepEvent &event) const {
-    return (int32_t)step * ticks_per_step() + event.micro_timing -
+  seq_extstep_tick_t event_tick(uint8_t step,
+                                const SeqExtStepEvent &event) const {
+    return (seq_extstep_tick_t)step * ticks_per_step() + event.micro_timing -
            ticks_per_step();
   }
 
-  uint8_t step_from_tick(uint32_t tick) const {
+  uint8_t step_from_tick(seq_extstep_tick_t tick) const {
 #ifdef PLATFORM_TBD
     if (midi_track_) return midi_track_->step_from_tick(tick);
 #endif
     return tick / ticks_per_step();
   }
 
-  uint16_t timing_from_tick(uint32_t tick) const {
+  uint16_t timing_from_tick(seq_extstep_tick_t tick) const {
 #ifdef PLATFORM_TBD
     if (midi_track_) return midi_track_->timing_from_tick(tick);
 #endif
@@ -168,15 +170,16 @@ public:
     return ext_track_->search_lock_idx(lock_idx, step, event_idx, event_end);
   }
 
-  bool delete_note(uint32_t tick, uint32_t width, uint8_t note) {
+  bool delete_note(seq_extstep_tick_t tick, seq_extstep_tick_t width,
+                   uint8_t note) {
 #ifdef PLATFORM_TBD
     if (midi_track_) return midi_track_->del_note(tick, width, note);
 #endif
     return ext_track_->del_note((uint16_t)tick, (uint16_t)width, note);
   }
 
-  void add_note(uint32_t tick, uint32_t width, uint8_t note, uint8_t velocity,
-                uint8_t condition) {
+  void add_note(seq_extstep_tick_t tick, seq_extstep_tick_t width,
+                uint8_t note, uint8_t velocity, uint8_t condition) {
 #ifdef PLATFORM_TBD
     if (midi_track_) {
       midi_track_->add_note(tick, width, note, velocity, condition);
@@ -187,7 +190,7 @@ public:
                          condition);
   }
 
-  bool delete_lock(uint32_t tick, uint8_t lock_idx, uint8_t value) {
+  bool delete_lock(seq_extstep_tick_t tick, uint8_t lock_idx, uint8_t value) {
 #ifdef PLATFORM_TBD
     if (midi_track_) return midi_track_->del_lock(tick, lock_idx, value);
 #endif
