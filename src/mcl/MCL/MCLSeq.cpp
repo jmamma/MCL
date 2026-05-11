@@ -10,6 +10,7 @@
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #include "DeviceManager.h"
+#include "DeviceParamTargets.h"
 #include "global.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #if defined(PLATFORM_TBD)
@@ -45,6 +46,16 @@ bool seq_grid_y_runs_legacy_ext_tracks() {
 #else
   return true;
 #endif
+}
+
+uint8_t perf_learn_dest_for_slot(uint8_t device_slot, uint8_t slot_dest) {
+  if (slot_dest == 0 ||
+      slot_dest > DeviceParamTargets::slot_target_count(device_slot)) {
+    return 255;
+  }
+  uint8_t offset = device_slot == 2 ? DeviceParamTargets::slot_target_count(1)
+                                    : 0;
+  return offset + slot_dest - 1;
 }
 
 void setup_mcl_seq_md_midi(MCLSeqMidiEvents *events, MidiClass *midi) {
@@ -738,7 +749,10 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param >= (mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK)) {
     return;
   }
-  perf_page.learn_param(track, track_param, value);
+  uint8_t perf_dest = perf_learn_dest_for_slot(1, track + 1);
+  if (perf_dest != 255) {
+    perf_page.learn_param(perf_dest, track_param, value);
+  }
   lfo_page.learn_param(1, track + 1, track_param, value);
 
 }
@@ -786,10 +800,14 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     return;
   }
 
-  perf_page.learn_param(channel + 16 + 4, param, value);
   uint8_t track = mcl_seq.find_ext_track(channel);
   if (track != 255) {
-    lfo_page.learn_param(2, track + 1, param, value);
+    uint8_t dest = track + 1;
+    uint8_t perf_dest = perf_learn_dest_for_slot(2, dest);
+    if (perf_dest != 255) {
+      perf_page.learn_param(perf_dest, param, value);
+    }
+    lfo_page.learn_param(2, dest, param, value);
   }
 
 }
