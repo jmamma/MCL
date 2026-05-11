@@ -238,11 +238,11 @@ bool perf_set_param(uint8_t dest, uint8_t param, uint8_t value,
   }
   uint8_t target = dest - 1;
   if (target >= NUM_MD_TRACKS + 4) {
-    uint8_t channel = target - (NUM_MD_TRACKS + 4);
-    if (channel >= NUM_EXT_TRACKS) {
+    uint8_t ext_track = target - (NUM_MD_TRACKS + 4);
+    if (ext_track >= NUM_EXT_TRACKS) {
       return false;
     }
-    uart2_->sendCC(channel, param, value);
+    mcl_seq.ext_tracks[ext_track].send_cc(param, value, uart2_);
   } else if (target >= NUM_MD_TRACKS) {
     MD.setFXParam(param, value, md_fx_type(target), false, uart_);
   } else {
