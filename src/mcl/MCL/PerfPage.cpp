@@ -5,13 +5,14 @@
 #include "MCLMemory.h"
 #include "MCLGUI.h"
 #include "MCLClipBoard.h"
-#include "MCLSeq.h"
 #include "SeqPages.h"
 #include "MCLStrings.h"
 
 #define LEARN_MIN 1
 #define LEARN_MAX 2
 #define LEARN_OFF 0
+
+static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT = 24;
 
 void PerfPage::setup() {
   DEBUG_PRINT_FN();
@@ -43,7 +44,7 @@ void PerfPage::init() {
   last_mask = last_blink_mask = 0;
   show_menu = false;
   last_page_mode = 255;
-  MD.set_rec_mode(3);
+  DeviceParamTargets::perf_set_rec_mode(3);
   config_encoders();
 }
 
@@ -87,7 +88,7 @@ void PerfPage::set_led_mask() {
 void PerfPage::cleanup() {
   PerfPageParent::cleanup();
   key_interface.off();
-  MD.set_rec_mode(0);
+  DeviceParamTargets::perf_set_rec_mode(0);
 }
 void PerfPage::func_enc_check() {
   if (key_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -311,13 +312,10 @@ void PerfPage::encoder_send() {
 }
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
-  // Intercept controller param.
-  if (dest < NUM_MD_TRACKS) {
-    uint8_t num_params =
-        mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-    if (param >= num_params) {
-      return;
-    }
+  uint8_t perf_dest = dest + 1;
+  if (perf_dest == 0 ||
+      param >= DeviceParamTargets::perf_param_count(perf_dest)) {
+    return;
   }
 
   for (uint8_t i = 0; i < 4; i++) {
@@ -341,16 +339,14 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   }
 
   if (mcl.currentPage() == PERF_PAGE_0) {
-    //if (dest >= NUM_MD_TRACKS + 4 && MidiClock.state == 2) {
-    //  return;
-    //}
     if (learn) {
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       uint8_t scene = learn - 1;
       uint8_t n = d->add_param(dest, param, scene, value);
       if (n < 255) {
-        if (dest + 1 <= (uint8_t)NUM_MD_TRACKS) {
-          key_interface.ignoreNextEvent(param - MD.currentSynthPage * 8 + 16);
+        uint8_t key = 0;
+        if (DeviceParamTargets::perf_key_for_param(perf_dest, param, &key)) {
+          key_interface.ignoreNextEvent(key);
         }
         page_mode = n + 1;
         undo = 255;
@@ -379,7 +375,14 @@ void rename_perf() {
 }
 
 void PerfPage::send_locks(uint8_t scene) {
-  uint8_t params[24];
+  uint8_t editor_dest =
+      DeviceParamTargets::perf_dest_from_slot(1, last_md_track + 1);
+  if (editor_dest == 255) {
+    return;
+  }
+  editor_dest++;
+
+  uint8_t params[PERF_PARAM_EDITOR_PARAM_COUNT];
   memset(params, 255, sizeof(params));
 
   for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
@@ -387,16 +390,18 @@ void PerfPage::send_locks(uint8_t scene) {
     uint8_t dest = p->dest;
     uint8_t param = p->param;
 
-    if (param >= 24) {
+    if (param >= sizeof(params)) {
       continue;
     }
 
-    if (dest == last_md_track + 1) {
+    if (dest == editor_dest) {
       params[param] = p->val;
     }
   }
-  seq_step_page.disable_paramupdate_events();
-  MD.activate_encoder_interface(params);
+  if (DeviceParamTargets::perf_begin_param_editor(editor_dest, params,
+                                                  sizeof(params))) {
+    seq_step_page.disable_paramupdate_events();
+  }
 }
 
 bool PerfPage::handleEvent(gui_event_t *event) {
@@ -447,7 +452,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       if (note_interface.notes_all_off()) {
         learn = LEARN_OFF;
         seq_step_page.enable_paramupdate_events();
-        MD.deactivate_encoder_interface();
+        DeviceParamTargets::perf_end_param_editor();
         page_mode = PERF_DESTINATION;
         config_encoders();
       }
@@ -474,22 +479,30 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
       uint8_t scene = learn - 1;
 
-      uint8_t param = MD.currentSynthPage * 8 + key - 0x10;
-      uint8_t num_params =
-          mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-      if (param >= num_params) {
+      uint8_t editor_dest =
+          DeviceParamTargets::perf_dest_from_slot(1, last_md_track + 1);
+      if (editor_dest == 255) {
         return true;
       }
+      editor_dest++;
+
+      uint8_t param = 0;
+      if (!DeviceParamTargets::perf_param_from_key(editor_dest, key, &param)) {
+        return true;
+      }
+      uint8_t data_dest = editor_dest - 1;
 
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       if (event->mask == EVENT_BUTTON_RELEASED) {
-        d->clear_param_scene(last_md_track, param, scene);
+        d->clear_param_scene(data_dest, param, scene);
       }
       if (event->mask == EVENT_BUTTON_PRESSED) {
-        if (d->find_match(last_md_track, param, scene) == 255) {
+        if (d->find_match(data_dest, param, scene) == 255) {
           key_interface.ignoreNextEvent(key);
-          d->add_param(last_md_track, param, scene,
-                       MD.kit.params[last_md_track][param]);
+          uint8_t value = 0;
+          if (DeviceParamTargets::perf_get_param(editor_dest, param, &value)) {
+            d->add_param(data_dest, param, scene, value);
+          }
         }
       }
       send_locks(scene);

@@ -63,6 +63,31 @@ constexpr uint8_t kP4DriverMidiChannel = 13;
 constexpr const char *kP4RackPluginId = "PicoSeqRack";
 constexpr const char *kP4ReferenceAppName = "Groovebox";
 
+void copy_param_number_label(char prefix, uint8_t number, char *out,
+                             uint8_t len) {
+  if (out == nullptr || len == 0) {
+    return;
+  }
+  if (len < 2) {
+    out[0] = '\0';
+    return;
+  }
+  uint8_t pos = 0;
+  out[pos++] = prefix;
+  if (number >= 100 && pos + 1 < len) {
+    out[pos++] = (char)('0' + number / 100);
+    number %= 100;
+  }
+  if ((number >= 10 || pos > 1) && pos + 1 < len) {
+    out[pos++] = (char)('0' + number / 10);
+    number %= 10;
+  }
+  if (pos + 1 < len) {
+    out[pos++] = (char)('0' + number);
+  }
+  out[pos] = '\0';
+}
+
 const P4BootPresetFallback kP4BootPresetFallbacks[] = {
     {0, "db-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
     {1, "fmb-all-def", kP4DefaultRomBank, kP4DefaultSampleSlice},
@@ -335,16 +360,19 @@ uint8_t p4_param_count_for_mod(uint8_t device_idx, uint8_t track) {
   return count;
 }
 
-uint8_t p4_value_to_u7(const TbdP4ParamDescriptor &desc) {
+uint8_t p4_value_to_u7(const TbdP4ParamDescriptor &desc, int16_t value) {
   if (desc.max_value <= desc.min_value) {
     return 0;
   }
-  int16_t value = desc.value;
   if (value < desc.min_value) value = desc.min_value;
   if (value > desc.max_value) value = desc.max_value;
   uint16_t range = (uint16_t)(desc.max_value - desc.min_value);
   uint16_t offset = (uint16_t)(value - desc.min_value);
   return (uint8_t)(((uint32_t)offset * 127u + (range / 2u)) / range);
+}
+
+uint8_t p4_value_to_u7(const TbdP4ParamDescriptor &desc) {
+  return p4_value_to_u7(desc, desc.value);
 }
 
 int16_t p4_u7_to_value(const TbdP4ParamDescriptor &desc, uint8_t value) {
@@ -1652,6 +1680,98 @@ bool TbdDevice::set_param(uint8_t device_idx, uint8_t target, uint8_t param,
   MidiUartClass *port = uart_ ? uart_ : uart;
   tbd_p4_send_param_value(port, sound->midi_channel, *desc, scaled);
   return true;
+}
+
+uint8_t TbdDevice::sequencer_lock_param_count(uint8_t device_idx,
+                                              uint8_t target) const {
+  return p4_sound_for_mixer(device_idx, target) != nullptr
+             ? TBD_P4_LOCK_PARAM_COUNT
+             : 0;
+}
+
+bool TbdDevice::sequencer_lock_param_info(uint8_t device_idx, uint8_t target,
+                                          uint8_t param,
+                                          MidiDeviceParamInfo *info) {
+  if (info == nullptr ||
+      param >= sequencer_lock_param_count(device_idx, target)) {
+    return false;
+  }
+  *info = MidiDeviceParamInfo();
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, target);
+  if (sound == nullptr) {
+    return false;
+  }
+
+  if (param == TBD_P4_LOCK_NOTE_PARAM) {
+    if (!tbd_p4_sound_uses_step_note(*sound)) {
+      return false;
+    }
+    info->active = true;
+    info->sendable = true;
+    info->param_id = param;
+    info->ctrl = param;
+    info->default_value = TBD_P4_DEFAULT_STEP_NOTE;
+    info->current_value = TBD_P4_DEFAULT_STEP_NOTE;
+    return true;
+  }
+
+  const TbdP4ParamDescriptor *desc = tbd_p4_sound_param_for_lock(*sound, param);
+  if (desc == nullptr || !desc->is_visible()) {
+    return false;
+  }
+  info->active = true;
+  info->p4_param = true;
+  info->sendable = desc->is_sendable();
+  info->nrpn = desc->ctrl_type == TBD_P4_CTRLTYPE_NRPM;
+  info->macro = desc->is_macro();
+  info->param_id = param;
+  info->ctrl = desc->ctrl;
+  info->ctrl_type = desc->ctrl_type;
+  info->resolution = desc->resolution;
+  info->min_value = desc->min_value;
+  info->max_value = desc->max_value;
+  info->default_value = p4_value_to_u7(*desc, desc->default_value);
+  info->current_value = p4_value_to_u7(*desc);
+  return true;
+}
+
+bool TbdDevice::sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
+                                           uint8_t param, char *out,
+                                           uint8_t len) {
+  if (out == nullptr || len == 0) {
+    return false;
+  }
+  out[0] = '\0';
+  MidiDeviceParamInfo info;
+  if (!sequencer_lock_param_info(device_idx, target, param, &info)) {
+    return false;
+  }
+  if (param == TBD_P4_LOCK_NOTE_PARAM) {
+    return tbd_p4_copy_param_label_literal("NOT", out, len, 3);
+  }
+
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, target);
+  const TbdP4ParamDescriptor *desc =
+      sound != nullptr ? tbd_p4_sound_param_for_lock(*sound, param) : nullptr;
+  if (desc != nullptr && desc->shortname[0] != '\0' &&
+      tbd_p4_copy_param_label(*desc, out, len)) {
+    return true;
+  }
+  copy_param_number_label(info.nrpn ? 'N' : 'P', param, out, len);
+  return true;
+}
+
+bool TbdDevice::sequencer_uses_step_pitch(uint8_t device_idx,
+                                          uint8_t target) const {
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, target);
+  return sound != nullptr && tbd_p4_sound_uses_step_note(*sound);
+}
+
+uint8_t TbdDevice::sequencer_pitch_lock_param(uint8_t device_idx,
+                                              uint8_t target) const {
+  (void)device_idx;
+  (void)target;
+  return TBD_P4_LOCK_NOTE_PARAM;
 }
 
 void TbdDevice::mixer_mute_track(uint8_t device_idx, uint8_t track,

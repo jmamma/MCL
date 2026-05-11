@@ -3,6 +3,7 @@
 #ifndef SEQSTEPTRACKAPI_H__
 #define SEQSTEPTRACKAPI_H__
 
+#include "DeviceParamTargets.h"
 #include "MCLSeq.h"
 #if defined(PLATFORM_TBD)
 #include "MCLSysConfig.h"
@@ -15,21 +16,7 @@
 
 extern uint8_t last_md_track;
 
-struct SeqStepLockParamInfo {
-  bool active = false;
-  bool p4_param = false;
-  bool sendable = false;
-  bool nrpn = false;
-  bool macro = false;
-  uint8_t param_id = 0;
-  uint8_t ctrl = 0;
-  uint8_t ctrl_type = 0;
-  uint16_t resolution = 128;
-  int16_t min_value = 0;
-  int16_t max_value = 127;
-  int16_t default_value = 0;
-  int16_t current_value = 0;
-};
+using SeqStepLockParamInfo = MidiDeviceParamInfo;
 
 class SeqStepTrackApi {
 public:
@@ -88,48 +75,29 @@ public:
 #endif
   }
 
-  bool uses_tbd_step_notes() const {
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-    return backend_ == StepSeqTbd &&
-           tbd_p4_sound_uses_step_note(
-               static_cast<TBDSeqTrack *>(step_)->p4_sound);
-#else
-    return false;
-#endif
-  }
-
   bool uses_step_pitch() const {
-    return uses_md_sound() || uses_tbd_step_notes();
+    return uses_md_sound() ||
+           DeviceParamTargets::slot_uses_step_pitch(param_device_slot(),
+                                                    param_dest());
   }
 
   bool configure_driver_panel(char *info, size_t info_len,
                               uint8_t &pitch_encoder_max) const {
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-    if (backend_ == StepSeqTbd) {
-      pitch_encoder_max = uses_tbd_step_notes() ? 127 : 1;
-      copy_tbd_label(static_cast<TBDSeqTrack *>(step_)->p4_sound, info,
-                     info_len);
-      return true;
+    if (uses_md_sound()) {
+      (void)info;
+      (void)info_len;
+      (void)pitch_encoder_max;
+      return false;
     }
-#endif
-    (void)info;
-    (void)info_len;
-    (void)pitch_encoder_max;
-    return false;
+    pitch_encoder_max = uses_step_pitch() ? 127 : 1;
+    return DeviceParamTargets::slot_target_label(param_device_slot(),
+                                                 param_dest(), info,
+                                                 (uint8_t)info_len);
   }
 
   uint8_t lock_param_count() const {
-#if !defined(__AVR__)
-#if defined(PLATFORM_TBD)
-    if (backend_ == StepSeqTbd) {
-      return TBD_P4_LOCK_PARAM_COUNT;
-    }
-#endif
-    if (is_stepseq()) {
-      return STEPSEQ_NUM_LOCKS;
-    }
-#endif
-    return MD_PARAMS_PER_TRACK;
+    return DeviceParamTargets::slot_lock_param_count(param_device_slot(),
+                                                     param_dest());
   }
 
   uint8_t lock_slot_count() const {
@@ -142,139 +110,23 @@ public:
   }
 
   bool lock_param_info(uint8_t param_id, SeqStepLockParamInfo &info) const {
-    memset(&info, 0, sizeof(info));
-    if (param_id >= lock_param_count()) {
-      return false;
-    }
-
-    info.active = true;
-    info.sendable = true;
-    info.param_id = param_id;
-    info.ctrl = param_id;
-    info.resolution = 128;
-    info.min_value = 0;
-    info.max_value = 127;
-
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-    if (backend_ == StepSeqTbd) {
-      const TbdP4SoundData &sound = static_cast<TBDSeqTrack *>(step_)->p4_sound;
-      if (param_id == TBD_P4_LOCK_NOTE_PARAM) {
-        if (!tbd_p4_sound_uses_step_note(sound)) {
-          memset(&info, 0, sizeof(info));
-          return false;
-        }
-        info.active = true;
-        info.p4_param = false;
-        info.sendable = true;
-        info.param_id = param_id;
-        info.ctrl = param_id;
-        info.resolution = 128;
-        info.min_value = 0;
-        info.max_value = 127;
-        info.default_value = TBD_P4_DEFAULT_STEP_NOTE;
-        info.current_value = TBD_P4_DEFAULT_STEP_NOTE;
-        return true;
-      }
-      const TbdP4ParamDescriptor *desc =
-          tbd_p4_sound_param_for_lock(sound, param_id);
-      if (desc == nullptr || !desc->is_visible()) {
-        memset(&info, 0, sizeof(info));
-        return false;
-      }
-      info.p4_param = true;
-      info.sendable = desc->is_sendable();
-      info.nrpn = desc->ctrl_type == TBD_P4_CTRLTYPE_NRPM;
-      info.macro = desc->is_macro();
-      info.ctrl = desc->ctrl;
-      info.ctrl_type = desc->ctrl_type;
-      info.resolution = desc->resolution;
-      info.min_value = desc->min_value;
-      info.max_value = desc->max_value;
-      info.default_value = desc->default_value;
-      info.current_value = desc->value;
-      return true;
-    }
-#endif
-
-    info.default_value = current_lock_value(param_id);
-    info.current_value = info.default_value;
-    return true;
+    return DeviceParamTargets::slot_lock_param_info(param_device_slot(),
+                                                    param_dest(), param_id,
+                                                    &info);
   }
 
   uint8_t current_lock_value(uint8_t param_id) const {
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-    if (backend_ == StepSeqTbd) {
-      if (param_id == TBD_P4_LOCK_NOTE_PARAM) {
-        return uses_tbd_step_notes() ? TBD_P4_DEFAULT_STEP_NOTE : 0;
-      }
-      const TbdP4ParamDescriptor *desc =
-          tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
-                                      param_id);
-      if (desc == nullptr || !desc->is_visible()) {
-        return 64;
-      }
-      return value7_from_param_value(*desc, desc->value);
-    }
-#endif
-    if (param_id >= lock_param_count()) {
-      return 0;
-    }
-    uint8_t track = track_index();
-    if (track >= NUM_MD_TRACKS) {
-      return 0;
-    }
-    return MD.kit.params[track][param_id];
+    uint8_t value = 0;
+    DeviceParamTargets::slot_lock_current_value(param_device_slot(),
+                                                param_dest(), param_id,
+                                                &value);
+    return value;
   }
 
   bool copy_lock_param_label(uint8_t param_id, char *dst,
                              size_t dst_len) const {
-    if (dst == nullptr || dst_len == 0) {
-      return false;
-    }
-    dst[0] = '\0';
-
-#if defined(__AVR__)
-    if (param_id >= lock_param_count()) {
-      return false;
-    }
-#else
-    SeqStepLockParamInfo info;
-    if (!lock_param_info(param_id, info) || !info.active) {
-      return false;
-    }
-#endif
-
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-    if (backend_ == StepSeqTbd) {
-      if (param_id == TBD_P4_LOCK_NOTE_PARAM && uses_tbd_step_notes()) {
-        copy_fixed_label("NOT", dst, dst_len, 3);
-        return dst[0] != '\0';
-      }
-      const TbdP4ParamDescriptor *desc =
-          tbd_p4_sound_param_for_lock(static_cast<TBDSeqTrack *>(step_)->p4_sound,
-                                      param_id);
-      if (desc != nullptr && desc->shortname[0] != '\0') {
-        tbd_p4_copy_param_label(*desc, dst, dst_len);
-        if (dst[0] != '\0') {
-          return true;
-        }
-      }
-      copy_param_number_label(info.nrpn ? 'N' : 'P', param_id, dst, dst_len);
-      return true;
-    }
-#endif
-
-    uint8_t track = track_index();
-    if (track >= NUM_MD_TRACKS) {
-      return false;
-    }
-    const char *modelname = model_param_name(MD.kit.get_model(track), param_id);
-    if (modelname != nullptr) {
-      copy_fixed_label(modelname, dst, dst_len, 3);
-      return dst[0] != '\0';
-    }
-    copy_param_number_label('P', param_id, dst, dst_len);
-    return true;
+    return DeviceParamTargets::slot_lock_param_label(
+        param_device_slot(), param_dest(), param_id, dst, (uint8_t)dst_len);
   }
 
   uint8_t length() const {
@@ -577,6 +429,25 @@ public:
 #endif
   }
 
+  void set_pattern_step_from_edit(uint8_t step, uint8_t condition_knob,
+                                  uint8_t timing_encoder) {
+    bool cond_plock;
+    uint8_t condition = step_conditional_from_knob(condition_knob, &cond_plock);
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      step_->set_step(step, STEPSEQ_MASK_PATTERN, true);
+      step_->steps[step].cond_id = condition;
+      step_->steps[step].cond_plock = cond_plock;
+      step_->microtiming[step] = microtiming_from_encoder(timing_encoder);
+      return;
+    }
+#endif
+    md_->steps[step].trig = true;
+    md_->steps[step].cond_id = condition;
+    md_->steps[step].cond_plock = cond_plock;
+    md_->timing[step] = timing_encoder;
+  }
+
   void reset_timing(uint8_t step) {
 #if !defined(__AVR__)
     if (is_stepseq()) {
@@ -705,12 +576,8 @@ public:
   }
 
   uint8_t pitch_lock_param_id() const {
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-    if (backend_ == StepSeqTbd) {
-      return TBD_P4_LOCK_NOTE_PARAM;
-    }
-#endif
-    return 0;
+    return DeviceParamTargets::slot_pitch_lock_param(param_device_slot(),
+                                                     param_dest());
   }
 
   uint8_t get_track_lock_implicit(uint8_t step, uint8_t param_id) {
@@ -859,77 +726,8 @@ public:
   }
 
 private:
-  static void append_uint8(uint8_t value, char *dst, size_t dst_len,
-                           size_t &out) {
-    if (dst == nullptr || dst_len == 0) {
-      return;
-    }
-    if (value >= 100 && out + 1 < dst_len) {
-      dst[out++] = (char)('0' + value / 100);
-      value %= 100;
-    }
-    if ((value >= 10 || out > 0) && out + 1 < dst_len) {
-      dst[out++] = (char)('0' + value / 10);
-      value %= 10;
-    }
-    if (out + 1 < dst_len) {
-      dst[out++] = (char)('0' + value);
-    }
-    dst[out] = '\0';
-  }
-
-  static void copy_param_number_label(char prefix, uint8_t number, char *dst,
-                                      size_t dst_len) {
-    if (dst == nullptr || dst_len == 0) {
-      return;
-    }
-    if (dst_len < 2) {
-      dst[0] = '\0';
-      return;
-    }
-    size_t out = 0;
-    dst[out++] = prefix;
-    append_uint8(number, dst, dst_len, out);
-  }
-
-  static void copy_fixed_label(const char *src, char *dst, size_t dst_len,
-                               uint8_t max_chars) {
-    if (dst == nullptr || dst_len == 0) {
-      return;
-    }
-    if (src == nullptr) {
-      dst[0] = '\0';
-      return;
-    }
-    size_t out = 0;
-    while (*src && out + 1 < dst_len && out < max_chars) {
-      dst[out++] = *src++;
-    }
-    dst[out] = '\0';
-    if (out == 2 && out + 1 < dst_len) {
-      dst[out++] = ' ';
-      dst[out] = '\0';
-    }
-  }
-
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-  static uint8_t value7_from_param_value(const TbdP4ParamDescriptor &desc,
-                                         int16_t value) {
-    if (desc.max_value <= desc.min_value) {
-      return 0;
-    }
-    if (value < desc.min_value) value = desc.min_value;
-    if (value > desc.max_value) value = desc.max_value;
-    uint16_t range = (uint16_t)(desc.max_value - desc.min_value);
-    uint16_t offset = (uint16_t)(value - desc.min_value);
-    return (uint8_t)(((uint32_t)offset * 127u + (range / 2u)) / range);
-  }
-
-  static void copy_tbd_label(const TbdP4SoundData &sound, char *dst,
-                             size_t dst_len) {
-    tbd_p4_copy_sound_notice(sound, dst, dst_len);
-  }
-#endif
+  uint8_t param_device_slot() const { return 1; }
+  uint8_t param_dest() const { return track_index() + 1; }
 
 #if !defined(__AVR__)
   Backend backend_;

@@ -48,16 +48,6 @@ bool seq_grid_y_runs_legacy_ext_tracks() {
 #endif
 }
 
-uint8_t perf_learn_dest_for_slot(uint8_t device_slot, uint8_t slot_dest) {
-  if (slot_dest == 0 ||
-      slot_dest > DeviceParamTargets::slot_target_count(device_slot)) {
-    return 255;
-  }
-  uint8_t offset = device_slot == 2 ? DeviceParamTargets::slot_target_count(1)
-                                    : 0;
-  return offset + slot_dest - 1;
-}
-
 void setup_mcl_seq_md_midi(MCLSeqMidiEvents *events, MidiClass *midi) {
   if (midi == nullptr) return;
   midi->addOnNoteOnCallback(
@@ -745,11 +735,10 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param == MODEL_MUTE) { // Mute
     SeqTrackUtil::with_md_track(track, [&](auto &t) { t.mute_state = value > 0; });
    }
-  // Engine, not device: perf/lfo learn_param indexes engine-shaped state.
-  if (track_param >= (mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK)) {
+  if (track_param >= DeviceParamTargets::slot_param_count(1, track + 1)) {
     return;
   }
-  uint8_t perf_dest = perf_learn_dest_for_slot(1, track + 1);
+  uint8_t perf_dest = DeviceParamTargets::perf_dest_from_slot(1, track + 1);
   if (perf_dest != 255) {
     perf_page.learn_param(perf_dest, track_param, value);
   }
@@ -803,7 +792,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t track = mcl_seq.find_ext_track(channel);
   if (track != 255) {
     uint8_t dest = track + 1;
-    uint8_t perf_dest = perf_learn_dest_for_slot(2, dest);
+    uint8_t perf_dest = DeviceParamTargets::perf_dest_from_slot(2, dest);
     if (perf_dest != 255) {
       perf_page.learn_param(perf_dest, param, value);
     }

@@ -300,6 +300,37 @@ bool MDClass::set_param(uint8_t device_idx, uint8_t target, uint8_t param,
   }
   return false;
 }
+
+bool MDClass::sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
+                                         uint8_t param, char *out,
+                                         uint8_t len) {
+  (void)device_idx;
+  if (out == nullptr || len == 0 || target >= NUM_MD_TRACKS ||
+      param >= param_count(device_idx, target)) {
+    return false;
+  }
+  const char *label = model_param_name(kit.get_model(target), param);
+  if (label == nullptr) {
+    return false;
+  }
+  uint8_t pos = 0;
+  while (label[pos] != '\0' && pos + 1 < len && pos < 3) {
+    out[pos] = label[pos];
+    pos++;
+  }
+  out[pos] = '\0';
+  if (pos == 2 && pos + 1 < len) {
+    out[pos++] = ' ';
+    out[pos] = '\0';
+  }
+  return true;
+}
+
+bool MDClass::sequencer_uses_step_pitch(uint8_t device_idx,
+                                        uint8_t target) const {
+  (void)device_idx;
+  return target < NUM_MD_TRACKS;
+}
 #endif
 
 void MDClass::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,

@@ -41,6 +41,18 @@ public:
   virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
                          uint8_t value,
                          MidiUartClass *uart_ = nullptr) override;
+  virtual uint8_t sequencer_lock_param_count(uint8_t device_idx,
+                                             uint8_t target) const override;
+  virtual bool sequencer_lock_param_info(uint8_t device_idx, uint8_t target,
+                                         uint8_t param,
+                                         MidiDeviceParamInfo *info) override;
+  virtual bool sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
+                                          uint8_t param, char *out,
+                                          uint8_t len) override;
+  virtual bool sequencer_uses_step_pitch(uint8_t device_idx,
+                                         uint8_t target) const override;
+  virtual uint8_t sequencer_pitch_lock_param(uint8_t device_idx,
+                                             uint8_t target) const override;
   virtual void mixer_mute_track(uint8_t device_idx, uint8_t track,
                                 bool mute,
                                 MidiUartClass *uart_ = nullptr) override;

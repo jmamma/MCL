@@ -5,9 +5,8 @@
 #include "platform.h"
 #include "DeviceParamTargets.h"
 #include "MCLMemory.h"
-#include "../Drivers/MD/MD.h"
 #include "MCLStrings.h"
-#include "MCLSeq.h"
+#include "oled.h"
 
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
 
@@ -190,40 +189,7 @@ public:
   void scene_autofill(uint8_t scene) {
      oled_display.textbox_P(mclstr_fill, mclstr_scenes);
      if (scene >= NUM_SCENES) { return; }
-
-     // Engine, not device: scenes store params indexed by engine width.
-     uint8_t num_params = mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-     for (uint8_t track = 0; track < 16; track++) {
-       for (uint8_t param = 0; param < num_params; param++) {
-         if (MD.kit.params[track][param] != MD.kit.params_orig[track][param]) {
-           if (add_param(track,param,scene,MD.kit.params[track][param]) != 255) {
-             //Kit encoders go back to normal, for save.
-             uint8_t val = MD.kit.params[track][param];
-             MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr,
-                     true);
-             MD.setTrackParam(track, param, val, nullptr,
-                     false);
-           }
-         }
-
-       }
-     }
-     for (uint8_t n = 0; n < 8 * 4; n++) {
-       uint8_t fx = n / 8;
-       uint8_t param = n - fx * 8;
-       //delay and reverb are flipped in memory
-       if (fx == 0) { fx = 1; }
-       else if (fx == 1) { fx = 0; }
-       uint8_t *fxs = (uint8_t *) &MD.kit.reverb;
-       uint8_t *fxs_orig = (uint8_t *) &MD.kit.fx_orig;
-       if (fxs[n] != fxs_orig[n]) {
-         if (add_param(fx + NUM_MD_TRACKS,param,scene,fxs[n]) != 255) {
-           uint8_t val = fxs[n];
-           MD.setFXParam(param, fxs_orig[n], fx + MD_FX_ECHO, true);
-           MD.setFXParam(param, val, fx + MD_FX_ECHO, false);
-         }
-       }
-     }
+     DeviceParamTargets::perf_scene_autofill(this, scene);
   }
 
 };

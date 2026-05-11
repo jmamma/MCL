@@ -1,14 +1,11 @@
 #include "DeviceParamTargets.h"
 
-#if defined(__AVR__)
 #include "../Drivers/MD/MD.h"
-#include "DeviceManager.h"
-#include "MCLSeq.h"
-#include <string.h>
-#else
 #include "../Drivers/MidiDevice.h"
 #include "DeviceManager.h"
-#endif
+#include "MCLSeq.h"
+#include "PerfData.h"
+#include <string.h>
 
 namespace {
 
@@ -23,6 +20,24 @@ bool copy_label(const char *label, char *out, uint8_t len) {
   }
   strncpy(out, label, len - 1);
   out[len - 1] = '\0';
+  return true;
+}
+
+bool copy_short_label(const char *label, char *out, uint8_t len,
+                      uint8_t max_chars) {
+  if (label == nullptr || out == nullptr || len == 0) {
+    return false;
+  }
+  uint8_t pos = 0;
+  while (label[pos] != '\0' && pos + 1 < len && pos < max_chars) {
+    out[pos] = label[pos];
+    pos++;
+  }
+  out[pos] = '\0';
+  if (pos == 2 && pos + 1 < len) {
+    out[pos++] = ' ';
+    out[pos] = '\0';
+  }
   return true;
 }
 
@@ -192,6 +207,58 @@ bool slot_set_param(uint8_t device_slot, uint8_t dest, uint8_t param,
   return true;
 }
 
+uint8_t slot_lock_param_count(uint8_t device_slot, uint8_t dest) {
+  if (device_slot == 2 || dest == 0) {
+    return 0;
+  }
+  uint8_t target = dest - 1;
+  return target < NUM_MD_TRACKS ? MD_PARAMS_PER_TRACK : 0;
+}
+
+bool slot_lock_param_info(uint8_t device_slot, uint8_t dest, uint8_t param,
+                          MidiDeviceParamInfo *info) {
+  if (info == nullptr || param >= slot_lock_param_count(device_slot, dest)) {
+    return false;
+  }
+  *info = MidiDeviceParamInfo();
+  info->active = true;
+  info->sendable = true;
+  info->param_id = param;
+  info->ctrl = param;
+  uint8_t value = 0;
+  if (slot_get_param(device_slot, dest, param, &value)) {
+    info->default_value = value;
+    info->current_value = value;
+  }
+  return true;
+}
+
+bool slot_lock_param_label(uint8_t device_slot, uint8_t dest, uint8_t param,
+                           char *out, uint8_t len) {
+  if (device_slot == 2 || dest == 0 ||
+      param >= slot_lock_param_count(device_slot, dest)) {
+    return false;
+  }
+  uint8_t target = dest - 1;
+  return copy_short_label(model_param_name(MD.kit.get_model(target), param),
+                          out, len, 3);
+}
+
+bool slot_lock_current_value(uint8_t device_slot, uint8_t dest, uint8_t param,
+                             uint8_t *value) {
+  return slot_get_param(device_slot, dest, param, value);
+}
+
+bool slot_uses_step_pitch(uint8_t device_slot, uint8_t dest) {
+  return device_slot != 2 && dest > 0 && dest <= NUM_MD_TRACKS;
+}
+
+uint8_t slot_pitch_lock_param(uint8_t device_slot, uint8_t dest) {
+  (void)device_slot;
+  (void)dest;
+  return 0;
+}
+
 uint8_t perf_target_count() { return NUM_MD_TRACKS + 4 + NUM_EXT_TRACKS; }
 
 uint8_t perf_param_count(uint8_t dest) {
@@ -302,6 +369,56 @@ bool slot_set_param(uint8_t device_slot, uint8_t dest, uint8_t param,
                                uart_);
 }
 
+uint8_t slot_lock_param_count(uint8_t device_slot, uint8_t dest) {
+  DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
+  if (!ref.valid()) {
+    return 0;
+  }
+  return ref.device->sequencer_lock_param_count(ref.device_idx, ref.target);
+}
+
+bool slot_lock_param_info(uint8_t device_slot, uint8_t dest, uint8_t param,
+                          MidiDeviceParamInfo *info) {
+  DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
+  return ref.valid() &&
+         ref.device->sequencer_lock_param_info(ref.device_idx, ref.target,
+                                               param, info);
+}
+
+bool slot_lock_param_label(uint8_t device_slot, uint8_t dest, uint8_t param,
+                           char *out, uint8_t len) {
+  DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
+  return ref.valid() &&
+         ref.device->sequencer_lock_param_label(ref.device_idx, ref.target,
+                                                param, out, len);
+}
+
+bool slot_lock_current_value(uint8_t device_slot, uint8_t dest, uint8_t param,
+                             uint8_t *value) {
+  MidiDeviceParamInfo info;
+  if (!slot_lock_param_info(device_slot, dest, param, &info)) {
+    return false;
+  }
+  if (value != nullptr) {
+    *value = (uint8_t)info.current_value;
+  }
+  return true;
+}
+
+bool slot_uses_step_pitch(uint8_t device_slot, uint8_t dest) {
+  DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
+  return ref.valid() &&
+         ref.device->sequencer_uses_step_pitch(ref.device_idx, ref.target);
+}
+
+uint8_t slot_pitch_lock_param(uint8_t device_slot, uint8_t dest) {
+  DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
+  if (!ref.valid()) {
+    return 0;
+  }
+  return ref.device->sequencer_pitch_lock_param(ref.device_idx, ref.target);
+}
+
 uint8_t perf_target_count() {
   MidiDevice *primary = device_manager.primary_device();
   uint8_t count = primary->param_target_count(0);
@@ -345,5 +462,143 @@ bool perf_set_param(uint8_t dest, uint8_t param, uint8_t value,
   return ref.device->set_param(ref.device_idx, ref.target, param, value, uart);
 }
 #endif
+
+uint8_t perf_dest_from_slot(uint8_t device_slot, uint8_t slot_dest) {
+  if (slot_dest == 0 || slot_dest > slot_target_count(device_slot)) {
+    return 255;
+  }
+  uint8_t offset = device_slot == 2 ? slot_target_count(1) : 0;
+  return offset + slot_dest - 1;
+}
+
+static bool perf_is_primary_md_track_dest(uint8_t dest) {
+#if defined(__AVR__)
+  return dest > 0 && dest <= NUM_MD_TRACKS;
+#else
+  MidiDevice *device = slot_device(1);
+  return device != nullptr && device->id == DEVICE_MD && dest > 0 &&
+         dest <= NUM_MD_TRACKS;
+#endif
+}
+
+bool perf_param_from_key(uint8_t dest, uint8_t key, uint8_t *param) {
+  if (param == nullptr || !perf_is_primary_md_track_dest(dest) || key < 0x10 ||
+      key > 0x17) {
+    return false;
+  }
+  uint8_t value = MD.currentSynthPage * 8 + key - 0x10;
+  if (value >= perf_param_count(dest)) {
+    return false;
+  }
+  *param = value;
+  return true;
+}
+
+bool perf_key_for_param(uint8_t dest, uint8_t param, uint8_t *key) {
+  if (key == nullptr || !perf_is_primary_md_track_dest(dest) ||
+      param >= perf_param_count(dest)) {
+    return false;
+  }
+  int16_t value = (int16_t)param - (int16_t)MD.currentSynthPage * 8 + 0x10;
+  if (value < 0x10 || value > 0x17) {
+    return false;
+  }
+  *key = (uint8_t)value;
+  return true;
+}
+
+bool perf_begin_param_editor(uint8_t dest, uint8_t *params, uint8_t count) {
+  if (!perf_is_primary_md_track_dest(dest) || params == nullptr ||
+      count < MD_PARAMS_PER_TRACK) {
+    return false;
+  }
+  MD.activate_encoder_interface(params);
+  return true;
+}
+
+void perf_end_param_editor() {
+#if defined(__AVR__)
+  MD.deactivate_encoder_interface();
+#else
+  MidiDevice *device = slot_device(1);
+  if (device != nullptr && device->id == DEVICE_MD) {
+    MD.deactivate_encoder_interface();
+  }
+#endif
+}
+
+void perf_set_rec_mode(uint8_t mode) {
+#if defined(__AVR__)
+  MD.set_rec_mode(mode);
+#else
+  MidiDevice *device = slot_device(1);
+  if (device != nullptr && device->id == DEVICE_MD) {
+    MD.set_rec_mode(mode);
+  }
+#endif
+}
+
+bool perf_scene_autofill(PerfData *data, uint8_t scene) {
+#if defined(__AVR__)
+  if (data == nullptr || scene >= NUM_SCENES) {
+    return false;
+  }
+#else
+  MidiDevice *device = slot_device(1);
+  if (data == nullptr || scene >= NUM_SCENES || device == nullptr ||
+      device->id != DEVICE_MD) {
+    return false;
+  }
+#endif
+
+  uint8_t num_params =
+      mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  for (uint8_t track = 0; track < NUM_MD_TRACKS; track++) {
+    uint8_t dest = perf_dest_from_slot(1, track + 1);
+    if (dest == 255) {
+      continue;
+    }
+    for (uint8_t param = 0; param < num_params; param++) {
+      if (MD.kit.params[track][param] == MD.kit.params_orig[track][param]) {
+        continue;
+      }
+      uint8_t value = MD.kit.params[track][param];
+      if (data->add_param(dest, param, scene, value) == 255) {
+        continue;
+      }
+      // Kit encoders go back to normal for save.
+      MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr,
+                       true);
+      MD.setTrackParam(track, param, value, nullptr, false);
+    }
+  }
+
+  uint8_t *fxs = (uint8_t *)&MD.kit.reverb;
+  uint8_t *fxs_orig = (uint8_t *)&MD.kit.fx_orig;
+  for (uint8_t n = 0; n < 8 * 4; n++) {
+    uint8_t fx = n / 8;
+    uint8_t param = n - fx * 8;
+    // Delay and reverb are flipped in memory.
+    if (fx == 0) {
+      fx = 1;
+    } else if (fx == 1) {
+      fx = 0;
+    }
+    if (fxs[n] == fxs_orig[n]) {
+      continue;
+    }
+    uint8_t dest = perf_dest_from_slot(1, NUM_MD_TRACKS + fx + 1);
+    if (dest == 255) {
+      continue;
+    }
+    uint8_t value = fxs[n];
+    if (data->add_param(dest, param, scene, value) == 255) {
+      continue;
+    }
+    MD.setFXParam(param, fxs_orig[n], fx + MD_FX_ECHO, true);
+    MD.setFXParam(param, value, fx + MD_FX_ECHO, false);
+  }
+  return true;
+}
 
 } // namespace DeviceParamTargets
