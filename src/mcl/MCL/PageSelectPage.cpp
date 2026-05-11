@@ -3,6 +3,7 @@
 #include "MCLGUI.h"
 #include "DeviceManager.h"
 #include "MCLStrings.h"
+#include "../Drivers/MD/MD.h"
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/PageRegistry.h"
 
@@ -14,6 +15,7 @@ const PageCategory Categories[] PROGMEM = {
 };
 
 constexpr uint8_t n_category = sizeof(Categories) / sizeof(PageCategory);
+constexpr uint8_t kPageSelectSlots = 16;
 
 namespace {
 
@@ -24,6 +26,46 @@ const char page_name_piano_roll[] PROGMEM = "PIANO ROLL";
 const char page_name_chromatic[] PROGMEM = "CHROMATIC";
 const char page_name_sample_manager[] PROGMEM = "SAMPLE MANAGER";
 const char page_name_wav_designer[] PROGMEM = "WAV DESIGNER";
+#if defined(__AVR__)
+const char page_name_delay[] PROGMEM = "DELAY";
+const char page_name_reverb[] PROGMEM = "REVERB";
+const char page_name_ram1[] PROGMEM = "RAM-1";
+const char page_name_ram2[] PROGMEM = "RAM-2";
+
+struct AvrPageSelectEntry {
+  const char *Name;
+  uint8_t Page;
+  uint8_t IconHeight;
+  PageSelectIcon Icon;
+};
+
+const AvrPageSelectEntry avr_page_entries[kPageSelectSlots] PROGMEM = {
+    {mclstr_grid, GRID_PAGE, 15, PAGE_ICON_GRID},
+    {mclstr_mixer, MIXER_PAGE, 16, PAGE_ICON_MIXER},
+    {page_name_perf, PERF_PAGE_0, 18, PAGE_ICON_PERF},
+    {mclstr_route, ROUTE_PAGE, 14, PAGE_ICON_ROUTE},
+    {page_name_step_edit, SEQ_STEP_PAGE, 21, PAGE_ICON_STEP},
+    {page_name_lfo, LFO_PAGE, 24, PAGE_ICON_LFO},
+    {page_name_piano_roll, SEQ_EXTSTEP_PAGE, 25, PAGE_ICON_PIANOROLL},
+    {page_name_chromatic, SEQ_PTC_PAGE, 25, PAGE_ICON_CHROMA},
+#ifdef SOUND_PAGE
+    {page_name_sample_manager, SAMPLE_BROWSER, 25, PAGE_ICON_SAMPLE},
+#else
+    {nullptr, NULL_PAGE, 0, PAGE_ICON_NONE},
+#endif
+#ifdef WAV_DESIGNER
+    {page_name_wav_designer, WD_PAGE_0, 19, PAGE_ICON_WAVD},
+#else
+    {nullptr, NULL_PAGE, 0, PAGE_ICON_NONE},
+#endif
+    {nullptr, NULL_PAGE, 0, PAGE_ICON_NONE},
+    {nullptr, NULL_PAGE, 0, PAGE_ICON_NONE},
+    {page_name_delay, FX_PAGE_A, 25, PAGE_ICON_RHYTMECHO},
+    {page_name_reverb, FX_PAGE_B, 25, PAGE_ICON_GATEBOX},
+    {page_name_ram1, RAM_PAGE_A, 25, PAGE_ICON_RAM1},
+    {page_name_ram2, RAM_PAGE_B, 25, PAGE_ICON_RAM2},
+};
+#endif
 
 static uint8_t category_for_slot(uint8_t slot) {
   uint8_t cat = slot / 4;
@@ -34,35 +76,78 @@ static MidiDevice *nonnull_device(MidiDevice *device) {
   return (device == nullptr || device == &null_midi_device) ? nullptr : device;
 }
 
+#if defined(__AVR__)
+static bool is_md_device(MidiDevice *device) {
+  return device != nullptr && device->id == DEVICE_MD;
+}
+
+static bool md_page_slot(uint8_t slot) {
+  return slot == 3 || slot >= 12;
+}
+
+static PageIndex avr_page_at(uint8_t slot) {
+  return (PageIndex)pgm_read_byte(&avr_page_entries[slot].Page);
+}
+
+static bool avr_page_available(uint8_t slot, MidiDevice *ui_device) {
+  if (slot >= kPageSelectSlots || avr_page_at(slot) == NULL_PAGE) {
+    return false;
+  }
+  return !md_page_slot(slot) || ui_device != nullptr;
+}
+#else
 static void add_common_page(PageSelectEntry *entries, const char *name_P,
                             PageIndex page, uint8_t slot, uint8_t category,
                             uint8_t icon_width, uint8_t icon_height,
                             PageSelectIcon icon) {
-  PageRegistry::add_P(entries, PageRegistry::kMaxPageSlots, name_P, page,
+  PageRegistry::add_P(entries, kPageSelectSlots, name_P, page,
                       slot, category, icon_width, icon_height, icon);
 }
+#endif
 
 } // namespace
 
 PageIndex PageSelectPage::get_page(uint8_t page_number, char *str) const {
-  if (page_number < PageRegistry::kMaxPageSlots &&
+#if defined(__AVR__)
+  if (avr_page_available(page_number, page_select_ui_device)) {
+    if (str) {
+      strncpy_P(str,
+                (PGM_P)pgm_read_word(&avr_page_entries[page_number].Name),
+                16);
+      str[15] = '\0';
+    }
+    return avr_page_at(page_number);
+  }
+#else
+  if (page_number < kPageSelectSlots &&
       page_entries[page_number].Page != NULL_PAGE) {
     if (str) {
       strncpy_P(str, page_entries[page_number].Name, 16);
       str[15] = '\0';
     }
     return page_entries[page_number].Page;
-  } else {
-    if (str) {
-      strcpy_P(str, mclstr_four_dashes);
-    }
-    return NULL_PAGE;
   }
+#endif
+  if (str) {
+    strcpy_P(str, mclstr_four_dashes);
+  }
+  return NULL_PAGE;
 }
 
 void PageSelectPage::get_page_icon(uint8_t page_number, uint8_t *&icon,
                                    uint8_t &w, uint8_t &h) const {
-  if (page_number >= PageRegistry::kMaxPageSlots ||
+#if defined(__AVR__)
+  if (!avr_page_available(page_number, page_select_ui_device)) {
+    icon = nullptr;
+    w = h = 0;
+    return;
+  }
+  w = 24;
+  h = pgm_read_byte(&avr_page_entries[page_number].IconHeight);
+  PageSelectIcon entry_icon =
+      (PageSelectIcon)pgm_read_byte(&avr_page_entries[page_number].Icon);
+#else
+  if (page_number >= kPageSelectSlots ||
       page_entries[page_number].Page == NULL_PAGE) {
     icon = nullptr;
     w = h = 0;
@@ -72,8 +157,10 @@ void PageSelectPage::get_page_icon(uint8_t page_number, uint8_t *&icon,
   const PageSelectEntry &entry = page_entries[page_number];
   w = entry.IconWidth;
   h = entry.IconHeight;
+  PageSelectIcon entry_icon = entry.Icon;
+#endif
 
-  switch (entry.Icon) {
+  switch (entry_icon) {
   case PAGE_ICON_GRID:
     icon = R.icons_page->icon_grid;
     break;
@@ -158,9 +245,15 @@ void PageSelectPage::draw_popup() {
   char str[16];
   get_page(page_select, str);
   MidiDevice *device = nonnull_device(page_select_ui_device);
+#if defined(__AVR__)
+  if (is_md_device(device)) {
+    MD.page_select_popup(str);
+  }
+#else
   if (device != nullptr) {
     device->page_select_popup(str);
   }
+#endif
 }
 
 void PageSelectPage::md_prepare() {
@@ -168,17 +261,29 @@ void PageSelectPage::md_prepare() {
   if (device == nullptr) {
     device = nonnull_device(device_manager.primary_device());
   }
+#if defined(__AVR__)
+  if (is_md_device(device)) {
+    MD.page_select_prepare();
+  }
+#else
   if (device != nullptr) {
     device->page_select_prepare();
   }
+#endif
 }
 
 void PageSelectPage::cleanup() {
   note_interface.init_notes();
   MidiDevice *device = nonnull_device(page_select_ui_device);
+#if defined(__AVR__)
+  if (is_md_device(device)) {
+    MD.page_select_cleanup();
+  }
+#else
   if (device != nullptr) {
     device->page_select_cleanup();
   }
+#endif
   mcl_gui.reset_trigleds();
 }
 
@@ -192,7 +297,7 @@ uint8_t PageSelectPage::get_nextpage_down() {
 }
 
 uint8_t PageSelectPage::get_nextpage_up() {
-  for (uint8_t i = page_select + 1; i < PageRegistry::kMaxPageSlots; i++) {
+  for (uint8_t i = page_select + 1; i < kPageSelectSlots; i++) {
     if (get_page(i, nullptr) != NULL_PAGE) {
       return i;
     }
@@ -230,8 +335,18 @@ uint8_t PageSelectPage::get_category_page(uint8_t offset) {
 }
 
 void PageSelectPage::rebuild_entries() {
-  PageRegistry::clear(page_entries, PageRegistry::kMaxPageSlots);
   page_select_ui_device = nullptr;
+
+#if defined(__AVR__)
+  MidiDevice *primary = nonnull_device(device_manager.primary_device());
+  MidiDevice *secondary = nonnull_device(device_manager.secondary_device());
+  if (is_md_device(primary)) {
+    page_select_ui_device = primary;
+  } else if (is_md_device(secondary)) {
+    page_select_ui_device = secondary;
+  }
+#else
+  PageRegistry::clear(page_entries, kPageSelectSlots);
 
   add_common_page(page_entries, mclstr_grid, GRID_PAGE, 0, 0, 24, 15,
                   PAGE_ICON_GRID);
@@ -262,17 +377,18 @@ void PageSelectPage::rebuild_entries() {
   MidiDevice *secondary = nonnull_device(device_manager.secondary_device());
   if (primary != nullptr) {
     if (primary->register_page_select_entries(
-            page_entries, PageRegistry::kMaxPageSlots) > 0) {
+            page_entries, kPageSelectSlots) > 0) {
       page_select_ui_device = primary;
     }
   }
   if (secondary != nullptr && secondary != primary) {
     if (secondary->register_page_select_entries(
-            page_entries, PageRegistry::kMaxPageSlots) > 0 &&
+            page_entries, kPageSelectSlots) > 0 &&
         page_select_ui_device == nullptr) {
       page_select_ui_device = secondary;
     }
   }
+#endif
 }
 
 void PageSelectPage::close_to_selection() {
@@ -340,12 +456,16 @@ void PageSelectPage::display() {
   get_page_icon(page_select, icon, iconw, iconh);
   get_page(page_select, str);
 
-  if (page_select < PageRegistry::kMaxPageSlots &&
+#if defined(__AVR__)
+  catidx = category_for_slot(page_select);
+#else
+  if (page_select < kPageSelectSlots &&
       page_entries[page_select].Page != NULL_PAGE) {
     catidx = page_entries[page_select].CategoryId;
   } else {
     catidx = category_for_slot(page_select);
   }
+#endif
 
 //  oled_display.fillRect(28, 7, 100, 16, BLACK);
 //  oled_display.fillRect(0, 7, 28, 25, BLACK);
