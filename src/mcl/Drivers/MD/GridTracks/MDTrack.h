@@ -104,8 +104,6 @@ public:
   virtual size_t get_sound_cmp_size() { return 27; } //params,track,level,model
 
 private:
-  void load_arp_data(SeqTrack *seq_track);
-  void load_lfo_data(SeqTrack *seq_track);
 };
 
 class MDTrackChunk : public DeviceTrackChunk {

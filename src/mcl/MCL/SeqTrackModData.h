@@ -17,19 +17,6 @@ public:
   uint16_t speed;
   uint8_t depth;
   uint8_t mix;
-
-  SeqLFODataV1() { init(); }
-
-  void init() {
-    flags = 0;
-    dest_track = 0;
-    dest_param = 0;
-    shape_pack = 0;
-    type = 0;
-    speed = 0;
-    depth = 0;
-    mix = 0;
-  }
 };
 
 class ATTR_PACKED() SeqLFOParamData {
@@ -57,8 +44,6 @@ public:
   uint8_t enable;
   uint8_t length;
 
-  SeqLFOData() { init(); }
-
   void init() {
     for (uint8_t i = 0; i < 2; ++i) {
       params[i].init();
@@ -82,8 +67,6 @@ public:
   uint8_t rate;
   uint64_t note_mask[2];
 
-  ArpSeqData() { init(); }
-
   void init() {
     enabled = 0;
     range = 0;
@@ -101,14 +84,13 @@ public:
   // Keep v1_lfo before arp so projects written with storage version 1 still
   // load arp from the same byte offset. The full runtime LFO config is appended
   // as storage version 2 data.
-  SeqLFODataV1 v1_lfo;
+  uint8_t v1_lfo_padding[sizeof(SeqLFODataV1)];
   ArpSeqData arp;
   SeqLFOData lfo;
 
   SeqTrackModData() { init(); }
 
   void init() {
-    v1_lfo.init();
     lfo.init();
     arp.init();
   }

@@ -84,20 +84,79 @@ void SeqSlideTrack::dispatch_slide_value(uint8_t param, uint8_t val,
 
 void SeqSlideTrack::on_slide_dispatch_end() {}
 
-void SeqTrack::load_arp_data(ArpSeqTrack &arp_track, ArpSeqData stored_data,
+void SeqTrack::load_arp_data(ArpSeqTrack &arp_track,
+                             const ArpSeqData &stored_data,
                              bool use_stored_data) {
-  if (!use_stored_data) {
-    stored_data.init();
+  if (use_stored_data) {
+    arp_track.load_data(stored_data);
+    return;
   }
-  arp_track.load_data(stored_data);
+  ArpSeqData empty;
+  empty.init();
+  arp_track.load_data(empty);
 }
 
-void SeqTrack::load_lfo_data(LFOSeqTrack &lfo_track, SeqLFOData stored_data,
+void SeqTrack::load_lfo_data(LFOSeqTrack &lfo_track,
+                             const SeqLFOData &stored_data,
                              bool use_stored_data) {
-  if (!use_stored_data) {
-    stored_data.init();
+  if (use_stored_data) {
+    lfo_track.load_data(stored_data);
+    return;
   }
-  lfo_track.load_data(stored_data);
+  SeqLFOData empty;
+  empty.init();
+  lfo_track.load_data(empty);
+}
+
+void SeqTrack::load_mod_data(SeqTrack *seq_track, SeqTrackModData &mod_data,
+                             bool grid_x_tracks, bool use_stored_arp,
+                             bool use_stored_lfo) {
+  if (seq_track == nullptr) {
+    return;
+  }
+  uint8_t tracknumber = seq_track->track_number;
+  if (grid_x_tracks) {
+    if (tracknumber >= NUM_GRID_X_LFO_TRACKS) {
+      return;
+    }
+    load_arp_data(mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
+                  use_stored_arp);
+    load_lfo_data(mcl_seq.grid_x_lfo_tracks[tracknumber], mod_data.lfo,
+                  use_stored_lfo);
+    return;
+  }
+#ifdef EXT_TRACKS
+  if (tracknumber < NUM_GRID_Y_LFO_TRACKS) {
+    load_arp_data(mcl_seq.ext_arp_tracks[tracknumber], mod_data.arp,
+                  use_stored_arp);
+    load_lfo_data(mcl_seq.grid_y_lfo_tracks[tracknumber], mod_data.lfo,
+                  use_stored_lfo);
+  }
+#endif
+}
+
+void SeqTrack::store_mod_data(SeqTrackModData &mod_data, bool grid_x_tracks,
+                              uint8_t tracknumber) {
+  if (grid_x_tracks) {
+    if (tracknumber < NUM_GRID_X_LFO_TRACKS) {
+      mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
+      mcl_seq.grid_x_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
+    } else {
+      mod_data.arp.init();
+      mod_data.lfo.init();
+    }
+    return;
+  }
+#ifdef EXT_TRACKS
+  if (tracknumber < NUM_GRID_Y_LFO_TRACKS) {
+    mcl_seq.ext_arp_tracks[tracknumber].store_data(&mod_data.arp);
+    mcl_seq.grid_y_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
+  } else
+#endif
+  {
+    mod_data.arp.init();
+    mod_data.lfo.init();
+  }
 }
 
 uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {

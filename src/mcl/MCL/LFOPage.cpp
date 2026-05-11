@@ -351,19 +351,7 @@ void LFOPage::display() {
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
 
-  if (!lfo_track->enable) {
-    panel_info1 = "OFF";
-  } else switch (lfo_track->mode) {
-    case LFO_MODE_TRIG:
-    panel_info1 = lfo_mode_label(lfo_track->mode);
-    break;
-    case LFO_MODE_ONE:
-    panel_info1 = lfo_mode_label(lfo_track->mode);
-    break;
-    default:
-    panel_info1 = lfo_mode_label(lfo_track->mode);
-    break;
-  }
+  panel_info1 = lfo_track->enable ? lfo_mode_label(lfo_track->mode) : "OFF";
 
   if (lfo_track->mode == LFO_MODE_TRIG || lfo_track->mode == LFO_MODE_ONE) {
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);

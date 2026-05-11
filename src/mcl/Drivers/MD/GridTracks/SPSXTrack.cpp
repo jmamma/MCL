@@ -249,34 +249,9 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
     md_seq_track->set_length(link.length);
   }
 
-  load_arp_data(seq_track);
-  load_lfo_data(seq_track);
-}
-
-void SPSXTrack::load_arp_data(SeqTrack *seq_track) {
-  if (seq_track == nullptr) {
-    return;
-  }
-
-  uint8_t tracknumber = seq_track->track_number;
-  if (tracknumber < NUM_MD_TRACKS) {
-    SeqTrack::load_arp_data(
-        mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
-        storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION));
-  }
-}
-
-void SPSXTrack::load_lfo_data(SeqTrack *seq_track) {
-  if (seq_track == nullptr) {
-    return;
-  }
-
-  uint8_t tracknumber = seq_track->track_number;
-  if (tracknumber < NUM_MD_TRACKS) {
-    SeqTrack::load_lfo_data(
-        mcl_seq.grid_x_lfo_tracks[tracknumber], mod_data.lfo,
-        storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
-  }
+  SeqTrack::load_mod_data(seq_track, mod_data, true,
+                          storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
+                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
 }
 
 void SPSXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -341,13 +316,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
                               bool online, Grid *grid) {
   active = MDSPSX_TRACK_TYPE;
   uint8_t tracknumber = column & 0x0F;
-  if (tracknumber < NUM_MD_TRACKS) {
-    mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
-    mcl_seq.grid_x_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
-  } else {
-    mod_data.arp.init();
-    mod_data.lfo.init();
-  }
+  SeqTrack::store_mod_data(mod_data, true, tracknumber);
 
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {

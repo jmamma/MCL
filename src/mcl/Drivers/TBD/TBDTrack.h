@@ -72,8 +72,6 @@ private:
   void apply_preset(uint8_t fallback_tracknumber, const char *source,
                     uint8_t slotnumber);
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
-  void load_arp_data(SeqTrack *seq_track);
-  void load_lfo_data(SeqTrack *seq_track);
 };
 
 class ATTR_PACKED() TBDMidiTrack : public DeviceTrack {
@@ -116,8 +114,6 @@ private:
   void apply_preset(uint8_t fallback_tracknumber, const char *source,
                     uint8_t slotnumber);
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
-  void load_arp_data(SeqTrack *seq_track);
-  void load_lfo_data(SeqTrack *seq_track);
 };
 
 #endif // PLATFORM_TBD

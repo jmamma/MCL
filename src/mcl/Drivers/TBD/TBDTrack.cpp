@@ -560,34 +560,9 @@ void TBDTrack::load_seq_data(SeqTrack *seq_track) {
   tbd_track->set_speed(seq_data.track_speed == 0xFF ? link.speed
                                                     : seq_data.track_speed);
 
-  load_arp_data(seq_track);
-  load_lfo_data(seq_track);
-}
-
-void TBDTrack::load_arp_data(SeqTrack *seq_track) {
-  if (seq_track == nullptr) {
-    return;
-  }
-
-  uint8_t tracknumber = seq_track->track_number;
-  if (tracknumber < mcl_seq.num_tbd_tracks) {
-    SeqTrack::load_arp_data(
-        mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
-        storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION));
-  }
-}
-
-void TBDTrack::load_lfo_data(SeqTrack *seq_track) {
-  if (seq_track == nullptr) {
-    return;
-  }
-
-  uint8_t tracknumber = seq_track->track_number;
-  if (tracknumber < mcl_seq.num_tbd_tracks) {
-    SeqTrack::load_lfo_data(
-        mcl_seq.grid_x_lfo_tracks[tracknumber], mod_data.lfo,
-        storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
-  }
+  SeqTrack::load_mod_data(seq_track, mod_data, true,
+                          storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
+                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
 }
 
 void TBDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -604,13 +579,7 @@ bool TBDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   active = TBD_TRACK_TYPE;
 
   const uint8_t slot = column & 0x0F;
-  if (slot < mcl_seq.num_tbd_tracks) {
-    mcl_seq.md_arp_tracks[slot].store_data(&mod_data.arp);
-    mcl_seq.grid_x_lfo_tracks[slot].store_data(&mod_data.lfo);
-  } else {
-    mod_data.arp.init();
-    mod_data.lfo.init();
-  }
+  SeqTrack::store_mod_data(mod_data, true, slot);
   set_step_sound_default(p4_sound, slot);
   const uint8_t p4_track_index = p4_sound.p4_track_index;
 
@@ -734,34 +703,9 @@ void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
   midi_track->set_speed(midi_seq_valid_speed(seq_data.speed));
   midi_track->mute_state = old_mute;
 
-  load_arp_data(seq_track);
-  load_lfo_data(seq_track);
-}
-
-void TBDMidiTrack::load_arp_data(SeqTrack *seq_track) {
-  if (seq_track == nullptr) {
-    return;
-  }
-
-  uint8_t tracknumber = seq_track->track_number;
-  if (tracknumber < NUM_EXT_TRACKS) {
-    SeqTrack::load_arp_data(
-        mcl_seq.ext_arp_tracks[tracknumber], mod_data.arp,
-        storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION));
-  }
-}
-
-void TBDMidiTrack::load_lfo_data(SeqTrack *seq_track) {
-  if (seq_track == nullptr) {
-    return;
-  }
-
-  uint8_t tracknumber = seq_track->track_number;
-  if (tracknumber < NUM_EXT_TRACKS) {
-    SeqTrack::load_lfo_data(
-        mcl_seq.grid_y_lfo_tracks[tracknumber], mod_data.lfo,
-        storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
-  }
+  SeqTrack::load_mod_data(seq_track, mod_data, false,
+                          storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
+                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
 }
 
 bool TBDMidiTrack::store_in_grid(uint8_t column, uint16_t row,
@@ -773,13 +717,7 @@ bool TBDMidiTrack::store_in_grid(uint8_t column, uint16_t row,
   active = TBD_MIDI_TRACK_TYPE;
 
   const uint8_t slot = column & 0x0F;
-  if (slot < NUM_EXT_TRACKS) {
-    mcl_seq.ext_arp_tracks[slot].store_data(&mod_data.arp);
-    mcl_seq.grid_y_lfo_tracks[slot].store_data(&mod_data.lfo);
-  } else {
-    mod_data.arp.init();
-    mod_data.lfo.init();
-  }
+  SeqTrack::store_mod_data(mod_data, false, slot);
   set_midi_sound_default(p4_sound, slot);
   const uint8_t p4_track_index = p4_sound.p4_track_index;
 

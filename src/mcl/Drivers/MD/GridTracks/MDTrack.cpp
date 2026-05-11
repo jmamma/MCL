@@ -187,34 +187,9 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   md_seq_track->set_length(md_seq_track->length);
   md_seq_track->notes.first_trig = true;
 
-  load_arp_data(seq_track);
-  load_lfo_data(seq_track);
-}
-
-void MDTrack::load_arp_data(SeqTrack *seq_track) {
-  if (seq_track == nullptr) {
-    return;
-  }
-
-  uint8_t tracknumber = seq_track->track_number;
-  if (tracknumber < NUM_MD_TRACKS) {
-    SeqTrack::load_arp_data(
-        mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
-        storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION));
-  }
-}
-
-void MDTrack::load_lfo_data(SeqTrack *seq_track) {
-  if (seq_track == nullptr) {
-    return;
-  }
-
-  uint8_t tracknumber = seq_track->track_number;
-  if (tracknumber < NUM_MD_TRACKS) {
-    SeqTrack::load_lfo_data(
-        mcl_seq.grid_x_lfo_tracks[tracknumber], mod_data.lfo,
-        storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
-  }
+  SeqTrack::load_mod_data(seq_track, mod_data, true,
+                          storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
+                          storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
 }
 
 void MDTrack::scale_seq_vol(float scale) {

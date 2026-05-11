@@ -55,9 +55,6 @@ public:
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 
-private:
-  void load_arp_data(SeqTrack *seq_track);
-  void load_lfo_data(SeqTrack *seq_track);
 };
 /*
 class ExtTrackChunk : public DeviceTrack {
