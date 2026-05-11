@@ -97,12 +97,8 @@ public:
   uint16_t random_state[2];
   int8_t state_phase;
   int8_t random_value;
-  uint8_t step_state;
-  uint8_t env_value;
-  uint8_t env_stage;
   bool legacy_phase_offset;
   bool legacy_speed_curve;
-  bool shape_trig;
   uint8_t last_wav_value[NUM_LFO_PARAMS];
 
   static const uint8_t wav_tables[LFO_TABLE_COUNT][WAV_LENGTH] PROGMEM;
@@ -118,7 +114,6 @@ public:
     device_slot = 1;
     legacy_phase_offset = false;
     legacy_speed_curve = false;
-    shape_trig = false;
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
       last_wav_value[i] = 255;
     }

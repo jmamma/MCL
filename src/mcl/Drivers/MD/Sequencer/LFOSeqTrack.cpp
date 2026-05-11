@@ -182,11 +182,6 @@ uint8_t lfo_preview_to_u8(uint8_t wav_type, int16_t sample) {
   return (uint8_t)value;
 }
 
-uint8_t lfo_env_delta(uint16_t phase_inc) {
-  uint8_t delta = phase_inc >> 10;
-  return delta ? delta : 1;
-}
-
 uint16_t lfo_apply_speed_multiplier(uint16_t phase_inc, uint8_t multiplier) {
   uint16_t value = phase_inc;
   switch (multiplier) {
@@ -289,16 +284,11 @@ void LegacyLFOSeqTrackData::store_data(SeqLFOData *data) const {
 void LFOSeqTrack::reset_shape_state() {
   state_phase = -1;
   random_value = 0;
-  step_state = 0;
-  env_value = 0;
-  env_stage = 0;
-  shape_trig = false;
 }
 
 void LFOSeqTrack::reset_phase() {
   phase = 0;
   reset_shape_state();
-  shape_trig = true;
 }
 
 void LFOSeqTrack::reset_runtime() {
@@ -415,9 +405,6 @@ int16_t LFOSeqTrack::get_sample() {
     render_phase = (render_phase + 0x6000U) & LFO_PHASE_MASK;
   }
 
-  const bool triggered = shape_trig;
-  shape_trig = false;
-
   if (wav_type == RND_WAV) {
     int8_t coarse = (render_phase & LFO_PHASE_MASK) >> 12;
     if (coarse != state_phase) {
@@ -425,88 +412,6 @@ int16_t LFOSeqTrack::get_sample() {
       random_value = lfo_next_random(random_state);
     }
     return random_value;
-  }
-
-  if (wav_type == STEP_WAV) {
-    int8_t coarse = (render_phase & LFO_PHASE_MASK) >> 12;
-    if (coarse != state_phase) {
-      state_phase = coarse;
-      if (step_state < 16) {
-        step_state++;
-      }
-    }
-    return step_state >= 16 ? 128 : 0;
-  }
-
-  if (wav_type == LIN_WAV) {
-    if (triggered) {
-      env_value = 128;
-    }
-    uint8_t delta = lfo_env_delta(phase_inc);
-    env_value = env_value > delta ? env_value - delta : 0;
-    return env_value;
-  }
-
-  if (wav_type == EXP_WAV) {
-    if (triggered) {
-      env_value = 128;
-    }
-    if (env_value != 0) {
-      uint16_t alpha = 0x8000U - (phase_inc >> 1);
-      uint8_t next = ((uint16_t)env_value * alpha) >> 15;
-      if (next >= env_value) {
-        next = env_value - 1;
-      }
-      env_value = next;
-    }
-    return env_value;
-  }
-
-  if (wav_type == REV_LIN_WAV) {
-    if (triggered) {
-      env_value = 0;
-    }
-    uint16_t next = (uint16_t)env_value + lfo_env_delta(phase_inc);
-    env_value = next > 128 ? 128 : next;
-    return env_value;
-  }
-
-  if (wav_type == REV_EXP_WAV) {
-    if (triggered) {
-      env_value = 1;
-    }
-    uint16_t alpha = 0x8000U + phase_inc;
-    uint16_t next = ((uint16_t)env_value * alpha) >> 15;
-    if (next <= env_value) {
-      next = env_value + 1;
-    }
-    env_value = next > 128 ? 128 : next;
-    return env_value;
-  }
-
-  if (wav_type == LINLIN_WAV) {
-    if (triggered) {
-      env_value = 0;
-      env_stage = 0;
-    }
-    uint8_t delta = lfo_env_delta(phase_inc);
-    if (env_stage == 0) {
-      uint16_t next = (uint16_t)env_value + delta;
-      if (next >= 128) {
-        env_value = 128;
-        env_stage = 1;
-      } else {
-        env_value = next;
-      }
-    } else if (env_stage == 1) {
-      if (env_value <= delta) {
-        env_value = 0;
-        env_stage = 2;
-      } else {
-        env_value -= delta;
-      }
-    }
-    return env_value;
   }
 
   return get_preview_sample(wav_type, render_phase);
