@@ -33,6 +33,7 @@ extern uint8_t opt_clear;
 extern uint8_t opt_shift;
 extern uint8_t opt_reverse;
 extern uint8_t opt_transpose;
+extern uint8_t opt_lfo_mult;
 extern uint8_t opt_clear_step;
 extern uint8_t opt_length;
 extern uint8_t opt_channel;

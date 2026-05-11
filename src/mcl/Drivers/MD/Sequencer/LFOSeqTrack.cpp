@@ -203,6 +203,42 @@ uint8_t lfo_env_delta(uint16_t phase_inc) {
   return delta ? delta : 1;
 }
 
+uint16_t lfo_apply_speed_multiplier(uint16_t phase_inc, uint8_t multiplier) {
+  uint32_t value = phase_inc;
+  switch (multiplier) {
+  case LFO_SPEED_MULT_2X:
+    value <<= 1;
+    break;
+  case LFO_SPEED_MULT_4X:
+    value <<= 2;
+    break;
+  case LFO_SPEED_MULT_8X:
+    value <<= 3;
+    break;
+  case LFO_SPEED_MULT_1_2X:
+    value >>= 1;
+    break;
+  case LFO_SPEED_MULT_1_4X:
+    value >>= 2;
+    break;
+  case LFO_SPEED_MULT_1_10X:
+    value /= 10;
+    break;
+  case LFO_SPEED_MULT_1_100X:
+    value /= 100;
+    break;
+  default:
+    break;
+  }
+  if (value == 0) {
+    value = 1;
+  }
+  if (value > LFO_PHASE_MASK) {
+    value = LFO_PHASE_MASK;
+  }
+  return (uint16_t)value;
+}
+
 // MCL drives LFOs from the MIDI tick scheduler, so use the SPS curve shape at
 // a fixed nominal tempo and let tick cadence provide musical tempo sync.
 constexpr uint32_t kSpsNominalTempo = 120UL;
@@ -270,7 +306,8 @@ void LFOSeqTrack::reset_phase() {
 
 void LFOSeqTrack::reset_runtime() {
   phase = 0;
-  phase_inc = speed_to_phase_increment(speed, legacy_speed_curve);
+  phase_inc = speed_to_phase_increment(speed, legacy_speed_curve,
+                                       speed_multiplier());
   step_count = 0;
   random_state[0] = lfo_track_seed(device_slot, track_number, 0x1234U);
   random_state[1] = lfo_track_seed(device_slot, track_number, 0x5678U);
@@ -482,10 +519,16 @@ uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_) {
 
 uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_,
                                                bool legacy_curve) {
+  return speed_to_phase_increment(speed_, legacy_curve, LFO_SPEED_MULT_1X);
+}
+
+uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_,
+                                               bool legacy_curve,
+                                               uint8_t multiplier) {
+  uint32_t phase_shift;
   if (!legacy_curve) {
     uint16_t speed14 =
         (uint16_t)(((uint32_t)speed_ * 0x3FFFUL + 63UL) / 127UL);
-    uint32_t phase_shift;
     if (speed14 < 0x2000U) {
       phase_shift =
           (kSpsNominalTempoScaled *
@@ -506,29 +549,30 @@ uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_,
     if (phase_shift > LFO_PHASE_MASK) {
       phase_shift = LFO_PHASE_MASK;
     }
-    return (uint16_t)phase_shift;
+    return lfo_apply_speed_multiplier((uint16_t)phase_shift, multiplier);
   }
 
   uint16_t hold = speed_ <= 2 ? 1 : speed_ - 1;
   uint32_t cycle_ticks = (uint32_t)LFO_LEGACY_LENGTH * hold;
-  uint32_t inc = (LFO_PHASE_LENGTH + (cycle_ticks / 2)) / cycle_ticks;
-  if (inc == 0) {
-    inc = 1;
+  phase_shift = (LFO_PHASE_LENGTH + (cycle_ticks / 2)) / cycle_ticks;
+  if (phase_shift == 0) {
+    phase_shift = 1;
   }
-  if (inc > LFO_PHASE_MASK) {
-    inc = LFO_PHASE_MASK;
+  if (phase_shift > LFO_PHASE_MASK) {
+    phase_shift = LFO_PHASE_MASK;
   }
-  return (uint16_t)inc;
+  return lfo_apply_speed_multiplier((uint16_t)phase_shift, multiplier);
 }
 
 uint16_t LFOSeqTrack::phase_increment() const {
   return phase_inc ? phase_inc
-                   : speed_to_phase_increment(speed, legacy_speed_curve);
+                   : speed_to_phase_increment(speed, legacy_speed_curve,
+                                              speed_multiplier());
 }
 
 void LFOSeqTrack::advance_phase() {
   uint32_t next = (uint32_t)phase + phase_increment();
-  if (mode == LFO_MODE_ONE && next >= LFO_PHASE_LENGTH) {
+  if (base_mode() == LFO_MODE_ONE && next >= LFO_PHASE_LENGTH) {
     phase = LFO_PHASE_MASK;
     return;
   }
@@ -549,7 +593,15 @@ void LFOSeqTrack::set_wav_type(uint8_t _wav_type) {
 void LFOSeqTrack::set_speed(uint8_t _speed) {
   speed = _speed;
   legacy_speed_curve = false;
-  phase_inc = speed_to_phase_increment(speed, legacy_speed_curve);
+  phase_inc = speed_to_phase_increment(speed, legacy_speed_curve,
+                                       speed_multiplier());
+}
+
+void LFOSeqTrack::set_speed_multiplier(uint8_t multiplier) {
+  mode = pack_mode(base_mode(), multiplier);
+  legacy_speed_curve = false;
+  phase_inc = speed_to_phase_increment(speed, legacy_speed_curve,
+                                       speed_multiplier());
 }
 
 uint8_t LFOSeqTrack::get_wav_value(uint8_t dest, uint8_t param_id,
@@ -568,17 +620,20 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t dest, uint8_t param_id,
   return (uint8_t)sample;
 }
 
-void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
-  if (mode == LFO_MODE_TRACK_TRIG &&
+void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
+                      bool send_due) {
+  uint8_t current_mode = base_mode();
+  if (current_mode == LFO_MODE_TRACK_TRIG &&
       mcl_seq.lfo_track_trig_fired(device_slot, track_number)) {
     reset_phase();
-  } else if ((MidiClock.mod12_counter == 0) && (mode != LFO_MODE_FREE) &&
-             mode != LFO_MODE_TRACK_TRIG &&
+  } else if ((MidiClock.mod12_counter == 0) &&
+             (current_mode != LFO_MODE_FREE) &&
+             current_mode != LFO_MODE_TRACK_TRIG &&
              IS_BIT_SET64(pattern_mask, step_count)) {
     reset_phase();
   }
 
-  if (enable) {
+  if (enable && send_due) {
     int16_t lfo_sample = get_sample();
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       if (params[i].dest == 0) {

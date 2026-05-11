@@ -22,7 +22,7 @@
 namespace {
 
 const char *lfo_mode_label(uint8_t mode) {
-  switch (mode) {
+  switch (LFOSeqTrack::mode_base(mode)) {
   case LFO_MODE_TRIG:
     return "TRIG";
   case LFO_MODE_ONE:
@@ -35,7 +35,8 @@ const char *lfo_mode_label(uint8_t mode) {
 }
 
 void update_lfo_key_interface(LFOSeqTrack *track) {
-  if (track->mode == LFO_MODE_TRIG || track->mode == LFO_MODE_ONE) {
+  uint8_t mode = track->base_mode();
+  if (mode == LFO_MODE_TRIG || mode == LFO_MODE_ONE) {
     key_interface.on();
   } else {
     key_interface.off();
@@ -107,6 +108,7 @@ void LFOPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_REVERSE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_QUANT, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LFO_MULT, true);
 
   sync_lfo_track();
   update_lfo_key_interface(lfo_track);
@@ -163,7 +165,7 @@ void LFOPage::config_encoders() {
     ((MCLEncoder *)encoders[3])->max = 127;
   }
   else if (page_mode == LFO_OFFSET) {
-    encoders[0]->cur = lfo_track->mode;
+    encoders[0]->cur = lfo_track->base_mode();
     ((MCLEncoder *)encoders[0])->max = LFO_MODE_TRACK_TRIG;
 
     encoders[2]->cur = lfo_track->params[0].offset;
@@ -231,7 +233,7 @@ void LFOPage::loop() {
 
   else if (page_mode == LFO_OFFSET) {
     if (encoders[0]->hasChanged()) {
-      lfo_track->mode = encoders[0]->cur;
+      lfo_track->set_mode(encoders[0]->cur);
       update_lfo_key_interface(lfo_track);
     }
 
@@ -318,7 +320,8 @@ void LFOPage::display() {
 
   panel_info1 = lfo_track->enable ? lfo_mode_label(lfo_track->mode) : "OFF";
 
-  if (lfo_track->mode == LFO_MODE_TRIG || lfo_track->mode == LFO_MODE_ONE) {
+  uint8_t base_mode = lfo_track->base_mode();
+  if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
     draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
               lfo_track->length, mute_mask, slide_mask, true);
@@ -342,6 +345,7 @@ void LFOPage::capture_seq_menu_values(bool is_md_device) {
   track_update();
   opt_trackid = current_track + 1;
   opt_speed = lfo_track->speed;
+  opt_lfo_mult = lfo_track->speed_multiplier();
   opt_length = lfo_track->length ? lfo_track->length : 16;
   opt_channel = 0;
 }
@@ -352,6 +356,7 @@ void LFOPage::apply_seq_menu_values(bool same_slot) {
     return;
   }
   lfo_track->set_speed(opt_speed);
+  lfo_track->set_speed_multiplier(opt_lfo_mult);
   if (opt_length == 0) {
     opt_length = 1;
   }
@@ -369,6 +374,7 @@ bool LFOPage::apply_seq_menu_row(uint8_t row_entry, void (*row_func)()) {
     return true;
   case SEQ_MENU_DEVICE:
   case SEQ_MENU_SPEED:
+  case SEQ_MENU_LFO_MULT:
   case SEQ_MENU_LENGTH_MD:
   case SEQ_MENU_LENGTH_EXT:
     return true;
@@ -434,8 +440,9 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     }
   }
 
+  uint8_t base_mode = lfo_track->base_mode();
   if (EVENT_NOTE(event) &&
-      (lfo_track->mode == LFO_MODE_TRIG || lfo_track->mode == LFO_MODE_ONE)) {
+      (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE)) {
     uint8_t port = event->port;
     auto device = device_manager.device_for_port(port);
 

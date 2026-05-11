@@ -244,6 +244,9 @@ void MCLSeq::configure_clock_interpolation() {
 #endif
   legacy_tick_counter = 0;
 #endif
+#ifdef LFO_TRACKS
+  lfo_send_tick = 0;
+#endif
 }
 
 bool MCLSeq::legacy_tick_due() {
@@ -309,6 +312,9 @@ void MCLSeq::onMidiStartImmediateCallback() {
   realtime = true;
 #if !defined(__AVR__)
   legacy_tick_counter = 0;
+#endif
+#ifdef LFO_TRACKS
+  lfo_send_tick = 0;
 #endif
   seq_tx1.txRb->init();
   seq_tx2.txRb->init();
@@ -433,6 +439,13 @@ void MCLSeq::seq() {
   if (!state) { return; }
 
   const bool legacy_tick = legacy_tick_due();
+#ifdef LFO_TRACKS
+  bool lfo_send_due = false;
+  if (legacy_tick) {
+    lfo_send_due = (lfo_send_tick == 0);
+    lfo_send_tick ^= 1;
+  }
+#endif
 
   MidiUartClass *uart;
   MidiUartClass *uart2;
@@ -514,7 +527,7 @@ void MCLSeq::seq() {
 
 #ifdef LFO_TRACKS
       for (uint8_t i = 0; i < num_md_tracks; i++) {
-        grid_x_lfo_tracks[i].seq(uart, uart2);
+        grid_x_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
       }
       clear_lfo_track_trigs(1);
 #endif
@@ -553,7 +566,7 @@ void MCLSeq::seq() {
 
 #ifdef LFO_TRACKS
     for (uint8_t i = 0; i < num_md_tracks; i++) {
-      grid_x_lfo_tracks[i].seq(uart, uart2);
+      grid_x_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
     }
     clear_lfo_track_trigs(1);
 #endif
@@ -578,7 +591,7 @@ void MCLSeq::seq() {
       for (uint8_t i = 0; i < num_tbd_tracks; i++) {
         md_arp_tracks[i].mute_state = tbd_tracks[i].mute_state;
         md_arp_tracks[i].seq(uart, uart2);
-        grid_x_lfo_tracks[i].seq(uart, uart2);
+        grid_x_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
       }
       clear_lfo_track_trigs(1);
     }
@@ -591,7 +604,7 @@ void MCLSeq::seq() {
       for (uint8_t i = 0; i < num_midi_tracks; i++) {
         ext_arp_tracks[i].mute_state = midi_tracks[i].mute_state;
         ext_arp_tracks[i].seq(uart, uart2);
-        grid_y_lfo_tracks[i].seq(uart, uart2);
+        grid_y_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
       }
       clear_lfo_track_trigs(2);
     }
@@ -604,7 +617,7 @@ void MCLSeq::seq() {
       ext_tracks[i].seq(uart2);
       ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
       ext_arp_tracks[i].seq(uart,uart2);
-      grid_y_lfo_tracks[i].seq(uart, uart2);
+      grid_y_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
     }
     clear_lfo_track_trigs(2);
   }

@@ -108,7 +108,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 68
     &mcl_cfg.grid_y_device,
     // 69
-    &mcl_cfg.grid_y_port
+    &mcl_cfg.grid_y_port,
+    // 70
+    &opt_lfo_mult
 };
 
 const menu_function_ptr_t menu_target_functions[] PROGMEM = {

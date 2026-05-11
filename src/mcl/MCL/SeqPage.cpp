@@ -177,6 +177,7 @@ uint8_t opt_clear = 0;
 uint8_t opt_shift = 0;
 uint8_t opt_reverse = 0;
 uint8_t opt_transpose = 12;
+uint8_t opt_lfo_mult = 0;
 uint8_t opt_clear_step = 0;
 uint8_t opt_length = 0;
 uint8_t opt_channel = 0;
@@ -487,6 +488,7 @@ void SeqPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_AUTOMATION, false);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LFO_MULT, false);
 
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, false);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, false);

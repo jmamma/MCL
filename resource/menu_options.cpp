@@ -101,4 +101,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 140: GRID Y port
   {1, "MIDI 2"}, {2, "USB"},
 #endif
+  // 142 AVR / 150 TBD: LFO SPEED MULT
+  {0, "1x"}, {1, "2x"}, {2, "4x"}, {3, "8x"},
+  {4, "1/2x"}, {5, "1/4x"}, {6, "1/10x"}, {7, "1/100x"},
 };

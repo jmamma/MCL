@@ -38,6 +38,7 @@
 #define SEQ_MENU_QUANT 22
 #define SEQ_MENU_AUTOMATION 23
 #define SEQ_MENU_SOUND 24
+#define SEQ_MENU_LFO_MULT 25
 
 extern MCLEncoder seq_param1;
 extern MCLEncoder seq_param2;

@@ -104,6 +104,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDY_PORT_OPTIONS 3
   #define GRIDY_PORT_OPTIONS_OFFSET 143
   #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 146
+  #define LFO_MULT_OPTIONS_OFFSET 150
 #else
   #define GRIDX_DEVICE_RANGE 2
   #define GRIDX_DEVICE_OPTIONS 2
@@ -120,6 +121,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDY_PORT_OPTIONS 2
   #define GRIDY_PORT_OPTIONS_OFFSET 140
   #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 7
+  #define LFO_MULT_OPTIONS_OFFSET 142
 #endif
 
 menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
@@ -337,6 +339,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"QUANT:",      0, 2,                   2,                   42, NULL_PAGE,  0,  25},
         {"CC REC:",     0, 2,                   2,                   30, NULL_PAGE,  0,  25},
         {"SOUND",       0, 0,                   0,                   0,  SOUND_BROWSER, 0,  0},
+        {"LFO MULT:",   0, 8,                   8,                   70, NULL_PAGE,  0,  LFO_MULT_OPTIONS_OFFSET},
     },
     14
 };

@@ -17,6 +17,19 @@
 #define LFO_MODE_ONE 2
 // LFO resets when the paired sequencer track fires a trig.
 #define LFO_MODE_TRACK_TRIG 3
+#define LFO_MODE_MASK 0x03
+#define LFO_SPEED_MULT_SHIFT 2
+#define LFO_SPEED_MULT_MASK 0x07
+
+#define LFO_SPEED_MULT_1X 0
+#define LFO_SPEED_MULT_2X 1
+#define LFO_SPEED_MULT_4X 2
+#define LFO_SPEED_MULT_8X 3
+#define LFO_SPEED_MULT_1_2X 4
+#define LFO_SPEED_MULT_1_4X 5
+#define LFO_SPEED_MULT_1_10X 6
+#define LFO_SPEED_MULT_1_100X 7
+#define LFO_SPEED_MULT_COUNT 8
 
 // LFO will symmetrically oscillate around offset value
 #define LFO_OFFSET_CENTRE 0
@@ -115,8 +128,24 @@ public:
   void reset_phase();
   void reset_shape_state();
   void advance_phase();
+  static uint8_t mode_base(uint8_t mode) { return mode & LFO_MODE_MASK; }
+  static uint8_t mode_speed_multiplier(uint8_t mode) {
+    return (mode >> LFO_SPEED_MULT_SHIFT) & LFO_SPEED_MULT_MASK;
+  }
+  static uint8_t pack_mode(uint8_t base_mode, uint8_t speed_multiplier) {
+    return (base_mode & LFO_MODE_MASK) |
+           ((speed_multiplier & LFO_SPEED_MULT_MASK) << LFO_SPEED_MULT_SHIFT);
+  }
+  uint8_t base_mode() const { return mode_base(mode); }
+  uint8_t speed_multiplier() const { return mode_speed_multiplier(mode); }
+  void set_mode(uint8_t base_mode) {
+    mode = pack_mode(base_mode, speed_multiplier());
+  }
+  void set_speed_multiplier(uint8_t multiplier);
   static uint16_t speed_to_phase_increment(uint8_t speed);
   static uint16_t speed_to_phase_increment(uint8_t speed, bool legacy_curve);
+  static uint16_t speed_to_phase_increment(uint8_t speed, bool legacy_curve,
+                                           uint8_t multiplier);
   uint16_t phase_increment() const;
   void load_data(const SeqLFOData &data);
   void load_data(const SeqLFOData &data, bool legacy_phase);
@@ -136,7 +165,7 @@ public:
   void set_depth(uint8_t param, uint8_t depth) {
       params[param].depth = depth;
   }
-  void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
+  void seq(MidiUartClass *uart_, MidiUartClass *uart2_, bool send_due);
 };
 
 #endif /* LFOSEQTRACK_H__ */
