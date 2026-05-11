@@ -244,9 +244,6 @@ void MCLSeq::configure_clock_interpolation() {
 #endif
   legacy_tick_counter = 0;
 #endif
-#ifdef LFO_TRACKS
-  lfo_send_tick = 0;
-#endif
 }
 
 bool MCLSeq::legacy_tick_due() {
@@ -312,9 +309,6 @@ void MCLSeq::onMidiStartImmediateCallback() {
   realtime = true;
 #if !defined(__AVR__)
   legacy_tick_counter = 0;
-#endif
-#ifdef LFO_TRACKS
-  lfo_send_tick = 0;
 #endif
   seq_tx1.txRb->init();
   seq_tx2.txRb->init();
@@ -440,11 +434,7 @@ void MCLSeq::seq() {
 
   const bool legacy_tick = legacy_tick_due();
 #ifdef LFO_TRACKS
-  bool lfo_send_due = false;
-  if (legacy_tick) {
-    lfo_send_due = (lfo_send_tick == 0);
-    lfo_send_tick ^= 1;
-  }
+  const bool lfo_send_due = legacy_tick;
 #endif
 
   MidiUartClass *uart;

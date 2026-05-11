@@ -104,7 +104,6 @@ public:
   LFOSeqTrack grid_y_lfo_tracks[NUM_GRID_Y_LFO_TRACKS];
   static constexpr uint8_t num_grid_y_lfo_tracks = NUM_GRID_Y_LFO_TRACKS;
 #endif
-  uint8_t lfo_send_tick = 0;
   uint16_t lfo_track_trig_mask_device1 = 0;
   uint16_t lfo_track_trig_mask_device2 = 0;
 
