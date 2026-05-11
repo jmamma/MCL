@@ -119,17 +119,13 @@ int16_t lfo_signed_tri(uint16_t phase) {
     return p >> 6;
   }
   if (p < 0x6000U) {
-    return 128 - (p >> 6);
+    return 256 - (p >> 6);
   }
   return (p >> 6) - 512;
 }
 
 int16_t lfo_signed_saw(uint16_t phase) {
-  uint16_t p = phase & LFO_PHASE_MASK;
-  if (p < 0x4000U) {
-    return 128 - (p >> 6);
-  }
-  return 384 - (p >> 6);
+  return 128 - ((phase & LFO_PHASE_MASK) >> 7);
 }
 
 int16_t lfo_unipolar_decay(uint16_t phase) {

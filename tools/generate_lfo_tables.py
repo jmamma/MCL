@@ -72,15 +72,12 @@ def signed_tri(phase):
     if p < 0x2000:
         return p >> 6
     if p < 0x6000:
-        return 128 - (p >> 6)
+        return 256 - (p >> 6)
     return (p >> 6) - 512
 
 
 def signed_saw(phase):
-    p = phase & PHASE_MASK
-    if p < 0x4000:
-        return 128 - (p >> 6)
-    return 384 - (p >> 6)
+    return 128 - ((phase & PHASE_MASK) >> 7)
 
 
 def unipolar_decay(phase):
