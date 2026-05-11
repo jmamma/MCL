@@ -111,6 +111,7 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
   seq_track->mute_state = old_mute;
 
   load_arp_data(seq_track);
+  load_lfo_data(seq_track);
 #endif
 }
 
@@ -124,7 +125,24 @@ void ExtTrack::load_arp_data(SeqTrack *seq_track) {
   if (tracknumber < NUM_EXT_TRACKS) {
     SeqTrack::load_arp_data(
         mcl_seq.ext_arp_tracks[tracknumber], mod_data.arp,
-        storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+        storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION));
+  }
+#else
+  (void)seq_track;
+#endif
+}
+
+void ExtTrack::load_lfo_data(SeqTrack *seq_track) {
+#ifdef EXT_TRACKS
+  if (seq_track == nullptr) {
+    return;
+  }
+
+  uint8_t tracknumber = seq_track->track_number;
+  if (tracknumber < NUM_EXT_TRACKS) {
+    SeqTrack::load_lfo_data(
+        mcl_seq.grid_y_lfo_tracks[tracknumber], mod_data.lfo,
+        storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
   }
 #else
   (void)seq_track;
@@ -144,8 +162,10 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
   uint8_t tracknumber = column & 0x0F;
   if (tracknumber < NUM_EXT_TRACKS) {
     mcl_seq.ext_arp_tracks[tracknumber].store_data(&mod_data.arp);
+    mcl_seq.grid_y_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
   } else {
     mod_data.arp.init();
+    mod_data.lfo.init();
   }
   //ext_track->store_mute_state();
 #ifdef EXT_TRACKS

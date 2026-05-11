@@ -46,7 +46,8 @@ constexpr size_t MDLFO_TRACK_NUM = 13; //position of MDLFO track in grid
 constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
 constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 
-constexpr size_t NUM_LFO_TRACKS = 1;
+constexpr size_t NUM_GRID_X_LFO_TRACKS = NUM_MD_TRACKS;
+constexpr size_t NUM_GRID_Y_LFO_TRACKS = NUM_EXT_TRACKS;
 
 constexpr size_t NUM_PERF_PARAMS = 16;
 constexpr size_t NUM_SCENES = 8;
@@ -57,7 +58,7 @@ constexpr size_t NUM_LOCKS = 8;
 // the track sizes are:
 // GridTrack 7
 // DeviceTrack 7
-// MDTrack 534, plus SeqTrackModData 30
+// MDTrack 534, plus SeqTrackModData 51
 // ExtTrack 1754
 // A4Track 2094
 // EmptyTrack 2094
@@ -71,7 +72,7 @@ constexpr size_t NUM_LOCKS = 8;
 #define MEMORY_ALIGN(size) (size)  // for avr, dont align
 #endif
 
-constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(564); // MDTrack + SeqTrackModData
+constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(588); // MDTrack + SeqTrackModData
 #if defined(PLATFORM_TBD)
 // TBD/RP2040 grid-2 cache slots can carry enhanced MIDI/TBD tracks.
 constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(GRID_SLOT_BYTES);

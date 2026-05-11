@@ -98,8 +98,12 @@ public:
 #endif
 
 #ifdef LFO_TRACKS
-  LFOSeqTrack lfo_tracks[NUM_LFO_TRACKS];
-  static constexpr uint8_t num_lfo_tracks = NUM_LFO_TRACKS;
+  LFOSeqTrack grid_x_lfo_tracks[NUM_GRID_X_LFO_TRACKS];
+  static constexpr uint8_t num_grid_x_lfo_tracks = NUM_GRID_X_LFO_TRACKS;
+#ifdef EXT_TRACKS
+  LFOSeqTrack grid_y_lfo_tracks[NUM_GRID_Y_LFO_TRACKS];
+  static constexpr uint8_t num_grid_y_lfo_tracks = NUM_GRID_Y_LFO_TRACKS;
+#endif
 #endif
 
   SeqTrack aux_tracks[NUM_AUX_TRACKS];

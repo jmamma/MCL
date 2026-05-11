@@ -29,6 +29,8 @@
 class SeqTrack_270 {};
 class ArpSeqData;
 class ArpSeqTrack;
+class LFOSeqTrack;
+class SeqLFOData;
 
 class SlideData {
 public:
@@ -119,6 +121,8 @@ public:
   void toggle_mute() { mute_state = !mute_state; }
 
   static void load_arp_data(ArpSeqTrack &arp_track, ArpSeqData stored_data,
+                            bool use_stored_data);
+  static void load_lfo_data(LFOSeqTrack &lfo_track, SeqLFOData stored_data,
                             bool use_stored_data);
   static uint8_t get_timing_mid(uint8_t speed_);
   uint8_t get_timing_mid() { return get_timing_mid(speed); }

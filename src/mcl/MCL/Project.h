@@ -11,7 +11,7 @@
 
 #define PROJ_MIN_READABLE_VERSION 3000
 #define PROJ_VERSION_TRACK_STORAGE_VERSION 3001
-#define PROJ_VERSION 3001
+#define PROJ_VERSION 3002
 #define PRJ_DIR "/Projects"
 
 class ProjectHeader {

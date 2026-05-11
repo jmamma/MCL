@@ -1,5 +1,6 @@
 #include "SeqTrack.h"
 #include "ArpSeqTrack.h"
+#include "LFOSeqTrack.h"
 #include "MCLSeq.h"
 #include "memory.h"
 #include "MCLSysConfig.h"
@@ -89,6 +90,14 @@ void SeqTrack::load_arp_data(ArpSeqTrack &arp_track, ArpSeqData stored_data,
     stored_data.init();
   }
   arp_track.load_data(stored_data);
+}
+
+void SeqTrack::load_lfo_data(LFOSeqTrack &lfo_track, SeqLFOData stored_data,
+                             bool use_stored_data) {
+  if (!use_stored_data) {
+    stored_data.init();
+  }
+  lfo_track.load_data(stored_data);
 }
 
 uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {

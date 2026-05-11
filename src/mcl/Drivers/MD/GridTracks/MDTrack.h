@@ -105,6 +105,7 @@ public:
 
 private:
   void load_arp_data(SeqTrack *seq_track);
+  void load_lfo_data(SeqTrack *seq_track);
 };
 
 class MDTrackChunk : public DeviceTrackChunk {

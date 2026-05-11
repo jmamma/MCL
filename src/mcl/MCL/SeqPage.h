@@ -176,6 +176,11 @@ public:
   static constexpr uint8_t pidx_w = 6;
   static constexpr uint8_t pidx_h = 3;
 
+protected:
+  virtual void capture_seq_menu_values(bool is_md_device);
+  virtual void apply_seq_menu_values(bool same_slot);
+  virtual bool apply_seq_menu_row(uint8_t row_entry, void (*row_func)());
+
 };
 
 #endif /* SEQPAGE_H__ */

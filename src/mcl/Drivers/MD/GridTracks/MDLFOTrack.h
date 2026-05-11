@@ -7,7 +7,7 @@
 
 class ATTR_PACKED() MDLFOTrack : public AUXTrack {
 public:
-  LFOSeqTrackData lfo_data;
+  LegacyLFOSeqTrackData lfo_data;
   MDLFOTrack() {
     active = MDLFO_TRACK_TYPE;
   }

@@ -188,6 +188,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   md_seq_track->notes.first_trig = true;
 
   load_arp_data(seq_track);
+  load_lfo_data(seq_track);
 }
 
 void MDTrack::load_arp_data(SeqTrack *seq_track) {
@@ -199,7 +200,20 @@ void MDTrack::load_arp_data(SeqTrack *seq_track) {
   if (tracknumber < NUM_MD_TRACKS) {
     SeqTrack::load_arp_data(
         mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
-        storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+        storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION));
+  }
+}
+
+void MDTrack::load_lfo_data(SeqTrack *seq_track) {
+  if (seq_track == nullptr) {
+    return;
+  }
+
+  uint8_t tracknumber = seq_track->track_number;
+  if (tracknumber < NUM_MD_TRACKS) {
+    SeqTrack::load_lfo_data(
+        mcl_seq.grid_x_lfo_tracks[tracknumber], mod_data.lfo,
+        storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION));
   }
 }
 
@@ -242,8 +256,10 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   uint8_t tracknumber = column & 0x0F;
   if (tracknumber < NUM_MD_TRACKS) {
     mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
+    mcl_seq.grid_x_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
   } else {
     mod_data.arp.init();
+    mod_data.lfo.init();
   }
 
   MDSeqTrack *md_seq_track =

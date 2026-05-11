@@ -89,6 +89,20 @@ public:
     return static_cast<ArpSeqTrack &>(mcl_seq.md_arp_tracks[index]);
   }
 
+#ifdef LFO_TRACKS
+  static inline LFOSeqTrack &get_lfo_track(bool grid_x_tracks,
+                                           uint8_t index) {
+#ifdef EXT_TRACKS
+    if (!grid_x_tracks) {
+      return mcl_seq.grid_y_lfo_tracks[index];
+    }
+#else
+    (void)grid_x_tracks;
+#endif
+    return mcl_seq.grid_x_lfo_tracks[index];
+  }
+#endif
+
   template <typename Fn>
   static inline void for_each_track(bool is_md_device, Fn fn) {
     uint8_t len = track_count(is_md_device);

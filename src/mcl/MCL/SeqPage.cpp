@@ -669,6 +669,38 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
   return false;
 }
 
+void SeqPage::capture_seq_menu_values(bool is_md_device) {
+  if (seq_page_uses_step_track_ops(is_md_device)) {
+    SeqStepTrackApi bt = seq_page_active_step_track();
+    opt_trackid = last_md_track + 1;
+    opt_speed = bt.speed();
+    opt_length = bt.length();
+  } else {
+    auto &active_track = SeqTrackUtil::get_seq_track(false, last_ext_track);
+    opt_trackid = last_ext_track + 1;
+    opt_speed = active_track.speed;
+    opt_length = active_track.length;
+    opt_channel = ext_track_channel(last_ext_track) + 1;
+  }
+}
+
+void SeqPage::apply_seq_menu_values(bool same_slot) {
+  if (same_slot) {
+    opt_speed_handler();
+    opt_length_handler();
+    opt_channel_handler();
+  }
+}
+
+bool SeqPage::apply_seq_menu_row(uint8_t row_entry, void (*row_func)()) {
+  (void)row_entry;
+  if (row_func != NULL) {
+    row_func();
+    return true;
+  }
+  return false;
+}
+
 bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     return false;
@@ -729,18 +761,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_midi_device_capture = midi_device;
         opt_midi_device_slot_capture = current_device_slot();
         bool is_md_device = opt_capture_is_md_device();
-        if (seq_page_uses_step_track_ops(is_md_device)) {
-          SeqStepTrackApi bt = seq_page_active_step_track();
-          opt_trackid = last_md_track + 1;
-          opt_speed = bt.speed();
-          opt_length = bt.length();
-        } else {
-          auto &active_track = SeqTrackUtil::get_seq_track(false, last_ext_track);
-          opt_trackid = last_ext_track + 1;
-          opt_speed = active_track.speed;
-          opt_length = active_track.length;
-          opt_channel = ext_track_channel(last_ext_track) + 1;
-        }
+        capture_seq_menu_values(is_md_device);
 
         opt_param1_capture = (MCLEncoder *)encoders[0];
         opt_param2_capture = (MCLEncoder *)encoders[1];
@@ -758,10 +779,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       encoders[0] = opt_param1_capture;
       encoders[1] = opt_param2_capture;
       // oled_display.clearDisplay();
-      void (*row_func)();
+      void (*row_func)() = NULL;
+      uint8_t row_entry = 255;
       if (show_seq_menu) {
         row_func =
             seq_menu_page.menu.get_row_function(seq_menu_page.encoders[1]->cur);
+        row_entry = seq_menu_page.menu.get_item_index(seq_menu_page.encoders[1]->cur);
         MidiDevice *old_dev = midi_device;
         uint8_t old_slot = opt_midi_device_slot_capture;
         select_device_slot(mcl_cfg.seq_dev);
@@ -771,14 +794,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
           seq_ptc_page.last_midi_device = midi_device;
           seq_ptc_page.last_midi_device_slot = opt_midi_device_slot_capture;
         }
-        if (old_dev == midi_device && old_slot == opt_midi_device_slot_capture) {
-          opt_speed_handler();
-          opt_length_handler();
-          opt_channel_handler();
-        }
+        apply_seq_menu_values(old_dev == midi_device &&
+                              old_slot == opt_midi_device_slot_capture);
       }
-      if (row_func != NULL) {
-        row_func();
+      if (apply_seq_menu_row(row_entry, row_func)) {
         show_seq_menu = false;
         init();
         return true;

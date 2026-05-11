@@ -27,6 +27,8 @@ public:
   uint8_t page_mode;
   uint8_t page_id;
   LFOSeqTrack *lfo_track;
+  uint8_t current_track = 0;
+  bool grid_x_tracks = true;
 
   uint8_t waveform;
   uint8_t depth;
@@ -40,8 +42,19 @@ public:
   void cleanup();
   virtual void config_encoders();
 
+  void track_update();
   void config_encoder_range(uint8_t i);
   void learn_param(uint8_t track, uint8_t param, uint8_t value);
+
+protected:
+  virtual void capture_seq_menu_values(bool is_md_device) override;
+  virtual void apply_seq_menu_values(bool same_slot) override;
+  virtual bool apply_seq_menu_row(uint8_t row_entry,
+                                  void (*row_func)()) override;
+
+private:
+  void select_menu_track(uint8_t track);
+  void sync_lfo_track();
 };
 
 extern MCLEncoder lfo_page_param1;

@@ -143,12 +143,20 @@ void MCLSeq::setup() {
   }
 #ifdef LFO_TRACKS
 
-  lfo_tracks[0].load_tables(); //Only needs to be done once
+  grid_x_lfo_tracks[0].load_tables(); // Only needs to be done once
 
-  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].init();
-    lfo_tracks[i].track_number = i;
+  for (uint8_t i = 0; i < num_grid_x_lfo_tracks; i++) {
+    grid_x_lfo_tracks[i].init();
+    grid_x_lfo_tracks[i].track_number = i;
+    grid_x_lfo_tracks[i].device_slot = 1;
   }
+#ifdef EXT_TRACKS
+  for (uint8_t i = 0; i < num_grid_y_lfo_tracks; i++) {
+    grid_y_lfo_tracks[i].init();
+    grid_y_lfo_tracks[i].track_number = i;
+    grid_y_lfo_tracks[i].device_slot = 2;
+  }
+#endif
 #endif
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
@@ -342,10 +350,14 @@ void MCLSeq::onMidiStartImmediateCallback() {
   mdfx_track.reset();
   perf_track.reset();
 #ifdef LFO_TRACKS
-  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].sample_hold = 0;
-    lfo_tracks[i].step_count = 0;
+  for (uint8_t i = 0; i < num_grid_x_lfo_tracks; i++) {
+    grid_x_lfo_tracks[i].reset_runtime();
   }
+#ifdef EXT_TRACKS
+  for (uint8_t i = 0; i < num_grid_y_lfo_tracks; i++) {
+    grid_y_lfo_tracks[i].reset_runtime();
+  }
+#endif
 #endif
 
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
@@ -406,10 +418,14 @@ void MCLSeq::onMidiStopCallback() {
   }
 #endif
 #ifdef LFO_TRACKS
-  for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-    lfo_tracks[i].reset_params();
+  for (uint8_t i = 0; i < num_grid_x_lfo_tracks; i++) {
+    grid_x_lfo_tracks[i].reset_params();
   }
-
+#ifdef EXT_TRACKS
+  for (uint8_t i = 0; i < num_grid_y_lfo_tracks; i++) {
+    grid_y_lfo_tracks[i].reset_params();
+  }
+#endif
 #endif
 }
 
@@ -497,8 +513,8 @@ void MCLSeq::seq() {
       }
 
 #ifdef LFO_TRACKS
-      for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-        lfo_tracks[i].seq(uart, uart2);
+      for (uint8_t i = 0; i < num_md_tracks; i++) {
+        grid_x_lfo_tracks[i].seq(uart, uart2);
       }
 #endif
 
@@ -535,8 +551,8 @@ void MCLSeq::seq() {
     }
 
 #ifdef LFO_TRACKS
-    for (uint8_t i = 0; i < num_lfo_tracks; i++) {
-      lfo_tracks[i].seq(uart, uart2);
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
+      grid_x_lfo_tracks[i].seq(uart, uart2);
     }
 #endif
 
@@ -560,6 +576,7 @@ void MCLSeq::seq() {
       for (uint8_t i = 0; i < num_tbd_tracks; i++) {
         md_arp_tracks[i].mute_state = tbd_tracks[i].mute_state;
         md_arp_tracks[i].seq(uart, uart2);
+        grid_x_lfo_tracks[i].seq(uart, uart2);
       }
     }
   }
@@ -571,6 +588,7 @@ void MCLSeq::seq() {
       for (uint8_t i = 0; i < num_midi_tracks; i++) {
         ext_arp_tracks[i].mute_state = midi_tracks[i].mute_state;
         ext_arp_tracks[i].seq(uart, uart2);
+        grid_y_lfo_tracks[i].seq(uart, uart2);
       }
     }
   }
@@ -582,6 +600,7 @@ void MCLSeq::seq() {
       ext_tracks[i].seq(uart2);
       ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
       ext_arp_tracks[i].seq(uart,uart2);
+      grid_y_lfo_tracks[i].seq(uart, uart2);
     }
   }
 #endif

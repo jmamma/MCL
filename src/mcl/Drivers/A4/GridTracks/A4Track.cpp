@@ -47,8 +47,10 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
   uint8_t tracknumber = column & 0xF;
   if (tracknumber < NUM_EXT_TRACKS) {
     mcl_seq.ext_arp_tracks[tracknumber].store_data(&mod_data.arp);
+    mcl_seq.grid_y_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
   } else {
     mod_data.arp.init();
+    mod_data.lfo.init();
   }
 
   // [>analog 4 tracks<]

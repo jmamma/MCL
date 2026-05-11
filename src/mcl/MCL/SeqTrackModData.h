@@ -3,9 +3,11 @@
 #include "platform.h"
 #include <inttypes.h>
 
-#define SEQ_TRACK_MOD_STORAGE_VERSION 1
+#define SEQ_TRACK_ARP_STORAGE_VERSION 1
+#define SEQ_TRACK_LFO_STORAGE_VERSION 2
+#define SEQ_TRACK_MOD_STORAGE_VERSION 2
 
-class ATTR_PACKED() SeqLFOData {
+class ATTR_PACKED() SeqLFODataV1 {
 public:
   uint8_t flags;
   uint8_t dest_track;
@@ -16,7 +18,7 @@ public:
   uint8_t depth;
   uint8_t mix;
 
-  SeqLFOData() { init(); }
+  SeqLFODataV1() { init(); }
 
   void init() {
     flags = 0;
@@ -27,6 +29,46 @@ public:
     speed = 0;
     depth = 0;
     mix = 0;
+  }
+};
+
+class ATTR_PACKED() SeqLFOParamData {
+public:
+  uint8_t dest;
+  uint8_t param;
+  uint8_t depth;
+  uint8_t offset;
+
+  void init() {
+    dest = 0;
+    param = 0;
+    depth = 0;
+    offset = 0;
+  }
+};
+
+class ATTR_PACKED() SeqLFOData {
+public:
+  SeqLFOParamData params[2];
+  uint8_t wav_type;
+  uint8_t speed;
+  uint8_t mode;
+  uint64_t pattern_mask;
+  uint8_t enable;
+  uint8_t length;
+
+  SeqLFOData() { init(); }
+
+  void init() {
+    for (uint8_t i = 0; i < 2; ++i) {
+      params[i].init();
+    }
+    wav_type = 0;
+    speed = 0;
+    mode = 0;
+    pattern_mask = 0;
+    enable = 0;
+    length = 16;
   }
 };
 
@@ -56,18 +98,26 @@ public:
 
 class ATTR_PACKED() SeqTrackModData {
 public:
-  SeqLFOData lfo;
+  // Keep v1_lfo before arp so projects written with storage version 1 still
+  // load arp from the same byte offset. The full runtime LFO config is appended
+  // as storage version 2 data.
+  SeqLFODataV1 v1_lfo;
   ArpSeqData arp;
+  SeqLFOData lfo;
 
   SeqTrackModData() { init(); }
 
   void init() {
+    v1_lfo.init();
     lfo.init();
     arp.init();
   }
 };
 
-static_assert(sizeof(SeqLFOData) == 9, "SeqLFOData storage size changed");
+static_assert(sizeof(SeqLFODataV1) == 9, "SeqLFODataV1 storage size changed");
+static_assert(sizeof(SeqLFOParamData) == 4,
+              "SeqLFOParamData storage size changed");
+static_assert(sizeof(SeqLFOData) == 21, "SeqLFOData storage size changed");
 static_assert(sizeof(ArpSeqData) == 21, "ArpSeqData storage size changed");
-static_assert(sizeof(SeqTrackModData) == 30,
+static_assert(sizeof(SeqTrackModData) == 51,
               "SeqTrackModData storage size changed");

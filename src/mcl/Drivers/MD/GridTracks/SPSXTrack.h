@@ -105,6 +105,7 @@ public:
 
 private:
   void load_arp_data(SeqTrack *seq_track);
+  void load_lfo_data(SeqTrack *seq_track);
 };
 
 static_assert(MEMORY_ALIGN(sizeof(SPSXTrack) - sizeof(void*)) <= SPSX_TRACK_LEN,
