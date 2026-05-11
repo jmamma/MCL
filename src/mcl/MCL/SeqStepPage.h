@@ -5,7 +5,7 @@
 
 #include "SeqPage.h"
 
-class SeqStepMidiEvents : public MidiCallback, public ClockCallback {
+class SeqStepMidiEvents : public MidiCallback {
 public:
   bool state;
   void onControlChangeCallback_Midi(uint8_t *msg);

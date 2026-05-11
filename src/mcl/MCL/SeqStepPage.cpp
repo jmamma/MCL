@@ -17,9 +17,7 @@
 #endif
 #include "MCLSeq.h"
 
-#define MIDI_OMNI_MODE 17
 #define NUM_KEYS 24
-#define NOTE_C2 48
 
 namespace {
 
@@ -159,8 +157,8 @@ void SeqStepPage::config() {
     return;
   }
 
-  SeqPage::is_midi_model =
-      ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
+  uint8_t model = MD.kit.get_model(last_md_track);
+  SeqPage::is_midi_model = ((model & 0xF0) == MID_01_MODEL);
 
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   if (tuning) {
@@ -174,8 +172,8 @@ void SeqStepPage::config() {
   seq_param4.cur = 0;
   seq_param4.old = 0;
   // config info labels
-  const char *str1 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 1);
-  const char *str2 = getMDMachineNameShort(MD.kit.get_model(last_md_track), 2);
+  const char *str1 = getMDMachineNameShort(model, 1);
+  const char *str2 = getMDMachineNameShort(model, 2);
 
   // 0-1
   copyMachineNameShort(str1, info1);
@@ -290,6 +288,7 @@ void SeqStepPage::cleanup() {
 
 void SeqStepPage::display() {
   SeqStepTrackApi active_track = active_step_track();
+  bool uses_md_sound = active_track.uses_md_sound();
 
   oled_display.clearDisplay();
   draw_knob_frame();
@@ -301,37 +300,30 @@ void SeqStepPage::display() {
 
   char K[4];
   mcl_gui.put_value_at(seq_param3.getValue(), K);
-  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-  if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
+  if (IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track)) {
     draw_knob(2, mclstr_plen, K);
   } else {
     draw_knob(2, mclstr_len, K);
   }
   tuning_t const *tuning =
-      active_track.uses_md_sound() ? MD.getKitModelTuning(last_md_track)
-                                   : nullptr;
+      uses_md_sound ? MD.getKitModelTuning(last_md_track) : nullptr;
   bool is_tbd_ptc = active_track.uses_tbd_step_notes();
-  bool is_ptc = is_tbd_ptc ||
-                (active_track.uses_md_sound() &&
-                 (((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL) ||
-                  tuning != NULL));
-  if (show_pitch) {
-    if (is_ptc) {
-      strcpy_P(K, mclstr_dash);
-      if (seq_param4.cur != 0) {
-        // uint8_t base = tuning->base;
-        uint8_t note_num = seq_param4.cur;
-        // + base;
+  bool is_ptc = is_tbd_ptc || (uses_md_sound && (is_midi_model || tuning));
+  if (show_pitch && is_ptc) {
+    strcpy_P(K, mclstr_dash);
+    if (seq_param4.cur != 0) {
+      // uint8_t base = tuning->base;
+      uint8_t note_num = seq_param4.cur;
+      // + base;
 
-        uint8_t note = note_num % 12;
-        uint8_t oct = note_num / 12;
+      uint8_t note = note_num % 12;
+      uint8_t oct = note_num / 12;
 
-        strcpy(K, number_to_note.notes_upper[note]);
-        mcl_gui.put_value_at(oct, K + 2);
-        K[3] = 0;
-      }
-      draw_knob(3, mclstr_ptc, K);
+      strcpy(K, number_to_note.notes_upper[note]);
+      mcl_gui.put_value_at(oct, K + 2);
+      K[3] = 0;
     }
+    draw_knob(3, mclstr_ptc, K);
   }
 
   if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
@@ -471,8 +463,7 @@ void SeqStepPage::send_locks(uint8_t step) {
   }
   uint8_t params[SPS_PARAMS_PER_TRACK];
   memset(params, 255, sizeof(params));
-  bool ignore_locks_disabled = true;
-  active_track.get_step_locks(step, params, ignore_locks_disabled);
+  active_track.get_step_locks(step, params, true);
   MD.activate_encoder_interface(params);
 }
 
@@ -504,13 +495,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event) && !grid_page.bank_popup) {
     SeqStepTrackApi active_track = active_step_track();
     uint8_t port = event->port;
-    MidiDevice *device = device_manager.device_for_port(port);
-
     uint8_t track = event->source;
     if (!device_manager.port_supports(
             port, MidiDeviceCapability::MdTrigInterface)) {
       return true;
     }
+    MidiDevice *device = device_manager.device_for_port(port);
     if (show_seq_menu) {
       opt_trackid = track + 1;
       note_interface.ignoreNextEvent(track);
@@ -524,6 +514,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
     uint8_t step = track + (page_select * 16);
+    uint8_t length = active_track.length();
 
     step_select = track;
 
@@ -551,7 +542,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       update_params_queue = false;
       disable_paramupdate_events();
 
-      if (step >= active_track.length()) {
+      if (step >= length) {
         return true;
       }
 
@@ -603,7 +594,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
     } else if (event->mask == EVENT_BUTTON_RELEASED) {
 #ifdef PLATFORM_TBD
-      if (step < active_track.length() &&
+      if (step < length &&
           key_interface.is_key_down(MDX_KEY_FUNC)) {
         CLEAR_BIT16(ignore_release, track);
         retain_shift_step_selection(*this, track);
@@ -616,7 +607,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         CLEAR_BIT16(ignore_release, track);
         return true;
       }
-      if (step >= active_track.length()) {
+      if (step >= length) {
         return true;
       }
 
@@ -637,15 +628,12 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     return true;
   } // end EVENT_NOTE
 
-  // CMD event handling (shared between SPSX and legacy)
-  SeqStepTrackApi active_track = active_step_track();
-
   if (EVENT_CMD(event)) {
+    SeqStepTrackApi active_track = active_step_track();
     uint8_t key = event->source;
-    uint8_t step = note_interface.get_first_md_note() + (page_select * 16);
-    if (note_interface.get_first_md_note() == 255) {
-      step = 255;
-    }
+    uint8_t first_note = note_interface.get_first_md_note();
+    uint8_t page_offset = page_select * 16;
+    uint8_t step = (first_note == 255) ? 255 : first_note + page_offset;
 
     switch (key) {
     // ENCODER BUTTONS
@@ -670,7 +658,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (event->mask == EVENT_BUTTON_RELEASED) {
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
           if (note_interface.is_note_on(n)) {
-            active_track.clear_step_lock(n + (page_select * 16), param);
+            active_track.clear_step_lock(n + page_offset, param);
           }
         }
       }
@@ -678,7 +666,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         int8_t lock_idx = active_track.find_param(param);
         for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
           if (note_interface.is_note_on(n)) {
-            uint8_t s = n + (page_select * 16);
+            uint8_t s = n + page_offset;
             if (lock_idx == -1 || !active_track.step_has_lock(s, lock_idx)) {
               uint8_t value = active_track.current_lock_value(param);
               active_track.set_track_locks(s, param, value);
@@ -757,7 +745,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         else {
           for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
             if (note_interface.is_note_on(n)) {
-              active_track.toggle_mute(n + (page_select * 16));
+              active_track.toggle_mute(n + page_offset);
             }
           }
         }
@@ -770,8 +758,8 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (step != 255) {
         switch (key) {
         case MDX_KEY_YES: {
-          if (active_track.preview_step(step)) {
-          } else if (active_track.send_md_parameter_locks(step)) {
+          if (!active_track.preview_step(step) &&
+              active_track.send_md_parameter_locks(step)) {
             MD.triggerTrack(last_md_track, 127);
           }
           reset_on_release = true;
