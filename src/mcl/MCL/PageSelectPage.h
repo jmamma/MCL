@@ -17,9 +17,7 @@ public:
 
   bool loop_init = false;
   uint8_t page_select;
-#if !defined(__AVR__)
   PageSelectEntry page_entries[16];
-#endif
   MidiDevice *page_select_ui_device = nullptr;
   PageSelectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)

@@ -135,7 +135,6 @@ public:
 #endif
 
   virtual void setup() {}
-#if !defined(__AVR__)
   virtual uint8_t register_page_select_entries(PageSelectEntry *entries,
                                                uint8_t max_entries) const {
     (void)entries;
@@ -147,7 +146,6 @@ public:
     (void)text;
   }
   virtual void page_select_cleanup() {}
-#endif
 #ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const {
     (void)capability;

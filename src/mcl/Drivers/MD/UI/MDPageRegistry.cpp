@@ -25,7 +25,6 @@ public:
 
 MDPageSelectKitCallback md_page_select_kit_cb;
 
-#if !defined(__AVR__)
 const char page_name_delay[] PROGMEM = "DELAY";
 const char page_name_reverb[] PROGMEM = "REVERB";
 const char page_name_ram1[] PROGMEM = "RAM-1";
@@ -40,11 +39,9 @@ static uint8_t add_md_page(PageSelectEntry *entries, uint8_t max_entries,
              ? 1
              : 0;
 }
-#endif
 
 } // namespace
 
-#if !defined(__AVR__)
 uint8_t MDClass::register_page_select_entries(PageSelectEntry *entries,
                                               uint8_t max_entries) const {
   uint8_t count = 0;
@@ -60,7 +57,6 @@ uint8_t MDClass::register_page_select_entries(PageSelectEntry *entries,
                        24, 25, PAGE_ICON_RAM2);
   return count;
 }
-#endif
 
 void MDClass::page_select_prepare() {
   if (md_page_select_kit_cb.state) {
