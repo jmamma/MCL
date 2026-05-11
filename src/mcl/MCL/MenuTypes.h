@@ -3,12 +3,6 @@
 #include "Arduino.h"
 #include "PageIndex.h"
 
-struct PageCategory {
-  char Name[8];
-  uint8_t PageCount;
-  uint8_t FirstPage;
-};
-
 enum PageSelectIcon : uint8_t {
   PAGE_ICON_NONE = 0,
   PAGE_ICON_GRID,
@@ -30,11 +24,8 @@ enum PageSelectIcon : uint8_t {
 struct PageSelectEntry {
   const char *Name;
   PageIndex Page;
-  uint8_t PageNumber; // same as trig id
-  uint8_t CategoryId;
-  uint8_t IconWidth;
-  uint8_t IconHeight;
-  PageSelectIcon Icon;
+  // Packed as: bits 0..3 icon id, 4..8 height, 9..13 width.
+  uint16_t IconMeta;
 };
 
 typedef void (*menu_function_t)();

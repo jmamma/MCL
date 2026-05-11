@@ -15,7 +15,6 @@ class MidiDevice;
 class PageSelectPage : public LightPage {
 public:
 
-  bool loop_init = false;
   uint8_t page_select;
   PageSelectEntry page_entries[16];
   MidiDevice *page_select_ui_device = nullptr;

@@ -5,15 +5,9 @@
 #include "MCLStrings.h"
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/PageRegistry.h"
+#include <stddef.h>
 
-const PageCategory Categories[] PROGMEM = {
-    {"MAIN", 4, 0},
-    {"SEQ", 4, 4},
-    {"SND", 3, 8},
-    {"AUX", 4, 12},
-};
-
-constexpr uint8_t n_category = sizeof(Categories) / sizeof(PageCategory);
+constexpr uint8_t n_category = 4;
 
 namespace {
 
@@ -25,9 +19,40 @@ const char page_name_chromatic[] PROGMEM = "CHROMATIC";
 const char page_name_sample_manager[] PROGMEM = "SAMPLE MANAGER";
 const char page_name_wav_designer[] PROGMEM = "WAV DESIGNER";
 
+const uint16_t page_icon_offsets[] PROGMEM = {
+    0,
+    offsetof(__T_icons_page, icon_grid),
+    offsetof(__T_icons_page, icon_mixer),
+    offsetof(__T_icons_page, icon_perf),
+    offsetof(__T_icons_page, icon_route),
+    offsetof(__T_icons_page, icon_step),
+    offsetof(__T_icons_page, icon_lfo),
+    offsetof(__T_icons_page, icon_pianoroll),
+    offsetof(__T_icons_page, icon_chroma),
+    offsetof(__T_icons_page, icon_sample),
+    offsetof(__T_icons_page, icon_wavd),
+    offsetof(__T_icons_page, icon_rhytmecho),
+    offsetof(__T_icons_page, icon_gatebox),
+    offsetof(__T_icons_page, icon_ram1),
+    offsetof(__T_icons_page, icon_ram2),
+};
+
+const char page_category_names[] PROGMEM = "MAINSEQ SND AUX ";
+const uint8_t page_category_label_x[] PROGMEM = {30, 57, 81, 104};
+
+constexpr uint8_t kIconIdMask = 0x0F;
+constexpr uint8_t kIconDimMask = 0x1F;
+constexpr uint8_t kIconHeightShift = 4;
+constexpr uint8_t kIconWidthShift = 9;
+
 static uint8_t category_for_slot(uint8_t slot) {
-  uint8_t cat = slot / 4;
-  return cat < n_category ? cat : (n_category - 1);
+  return slot >> 2;
+}
+
+static uint8_t category_first_page(uint8_t cat) { return cat * 4; }
+
+static uint8_t category_page_count(uint8_t cat) {
+  return cat == 2 ? 3 : 4;
 }
 
 static MidiDevice *nonnull_device(MidiDevice *device) {
@@ -70,62 +95,23 @@ void PageSelectPage::get_page_icon(uint8_t page_number, uint8_t *&icon,
   }
 
   const PageSelectEntry &entry = page_entries[page_number];
-  w = entry.IconWidth;
-  h = entry.IconHeight;
-
-  switch (entry.Icon) {
-  case PAGE_ICON_GRID:
-    icon = R.icons_page->icon_grid;
-    break;
-  case PAGE_ICON_MIXER:
-    icon = R.icons_page->icon_mixer;
-    break;
-  case PAGE_ICON_PERF:
-    icon = R.icons_page->icon_perf;
-    break;
-  case PAGE_ICON_ROUTE:
-    icon = R.icons_page->icon_route;
-    break;
-  case PAGE_ICON_STEP:
-    icon = R.icons_page->icon_step;
-    break;
-  case PAGE_ICON_LFO:
-    icon = R.icons_page->icon_lfo;
-    break;
-  case PAGE_ICON_PIANOROLL:
-    icon = R.icons_page->icon_pianoroll;
-    break;
-  case PAGE_ICON_CHROMA:
-    icon = R.icons_page->icon_chroma;
-    break;
-  case PAGE_ICON_SAMPLE:
-    icon = R.icons_page->icon_sample;
-    break;
-  case PAGE_ICON_WAVD:
-    icon = R.icons_page->icon_wavd;
-    break;
-  case PAGE_ICON_RHYTMECHO:
-    icon = R.icons_page->icon_rhytmecho;
-    break;
-  case PAGE_ICON_GATEBOX:
-    icon = R.icons_page->icon_gatebox;
-    break;
-  case PAGE_ICON_RAM1:
-    icon = R.icons_page->icon_ram1;
-    break;
-  case PAGE_ICON_RAM2:
-    icon = R.icons_page->icon_ram2;
-    break;
-  default:
+  uint16_t meta = entry.IconMeta;
+  PageSelectIcon icon_id = (PageSelectIcon)(meta & kIconIdMask);
+  h = (meta >> kIconHeightShift) & kIconDimMask;
+  w = (meta >> kIconWidthShift) & kIconDimMask;
+  if (w == 0 || h == 0) {
     icon = nullptr;
     w = h = 0;
-    break;
+    return;
   }
+  icon = reinterpret_cast<uint8_t *>(R.icons_page) +
+         pgm_read_word(&page_icon_offsets[icon_id]);
 }
 
-static void get_category_name_by_idx(uint8_t catidx, char *str) {
-  if (str) {
-    strncpy_P(str, (PGM_P) & (Categories[catidx].Name), 16);
+static void print_category_name_by_idx(uint8_t catidx) {
+  const char *name = page_category_names + catidx * 4;
+  for (uint8_t i = 0; i < 4; ++i) {
+    oled_display.write(pgm_read_byte(name + i));
   }
 }
 
@@ -137,15 +123,7 @@ void PageSelectPage::init() {
   R.Clear();
   R.use_icons_page();
   rebuild_entries();
-  oled_display.fillRect(0, 0, 128, 7, WHITE);
-  oled_display.setFont(&TomThumb);
-  oled_display.setTextColor(BLACK);
-  oled_display.setCursor(47, 6);
-  mcl_print_P(mclstr_page_select);
-  oled_display.setTextColor(WHITE);
 
-  loop_init = true;
-  // md_exploit.on(switch_tracks);
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   draw_popup();
@@ -203,7 +181,7 @@ uint8_t PageSelectPage::get_nextpage_up() {
 uint8_t PageSelectPage::get_nextpage_catdown() {
   auto cat_id = category_for_slot(page_select);
   if (cat_id > 0) {
-    return pgm_read_byte(&Categories[cat_id - 1].FirstPage);
+    return category_first_page(cat_id - 1);
   } else {
     return page_select;
   }
@@ -212,7 +190,7 @@ uint8_t PageSelectPage::get_nextpage_catdown() {
 uint8_t PageSelectPage::get_nextpage_catup() {
   auto cat_id = category_for_slot(page_select);
   if (cat_id < n_category - 1) {
-    return pgm_read_byte(&Categories[cat_id + 1].FirstPage);
+    return category_first_page(cat_id + 1);
   } else {
     return page_select;
   }
@@ -220,8 +198,8 @@ uint8_t PageSelectPage::get_nextpage_catup() {
 
 uint8_t PageSelectPage::get_category_page(uint8_t offset) {
   auto cat_id = category_for_slot(page_select);
-  auto cat_start = pgm_read_byte(&Categories[cat_id].FirstPage);
-  auto cat_size = pgm_read_byte(&Categories[cat_id].PageCount);
+  auto cat_start = category_first_page(cat_id);
+  auto cat_size = category_page_count(cat_id);
   if (offset >= cat_size) {
     return page_select;
   } else {
@@ -286,36 +264,27 @@ void PageSelectPage::close_to_selection() {
 }
 
 void PageSelectPage::loop() {
-  /*  if (loop_init) {
-      bool switch_tracks = false;
-      // md_exploit.off(switch_tracks);
-      key_interface.on();
-      md_prepare();
-      // md_exploit.on(switch_tracks);
-      loop_init = false;
-    } */
   uint8_t last_page_select = page_select;
   auto enc_ = (MCLEncoder *)encoders[0];
   int8_t diff = enc_->cur;
-  if ((diff > 0) && (page_select < 16)) {
+  if (diff > 0) {
     page_select = get_nextpage_up();
   }
-  if ((diff < 0) && (page_select > 0)) {
+  if (diff < 0) {
     page_select = get_nextpage_down();
   }
 
   enc_ = (MCLEncoder *)encoders[1];
   diff = enc_->cur;
-  if ((diff > 0) && (page_select < 16)) {
+  if (diff > 0) {
     page_select = get_nextpage_catup();
   }
-  if ((diff < 0) && (page_select > 0)) {
+  if (diff < 0) {
     page_select = get_nextpage_catdown();
   }
 
   if (last_page_select != page_select) {
     draw_popup();
-    last_page_select = page_select;
   }
 }
 
@@ -331,21 +300,14 @@ void PageSelectPage::display() {
   oled_display.setCursor(47, 6);
   mcl_print_P(mclstr_page_select);
   oled_display.setTextColor(WHITE);
-  uint8_t label_pos[4] = {30, 57, 81, 104};
   for (uint8_t i = 0; i < 4; ++i) {
-    get_category_name_by_idx(i, str);
-    oled_display.setCursor(label_pos[i], 31);
-    oled_display.print(str);
+    oled_display.setCursor(pgm_read_byte(&page_category_label_x[i]), 31);
+    print_category_name_by_idx(i);
   }
   get_page_icon(page_select, icon, iconw, iconh);
   get_page(page_select, str);
 
-  if (page_select < PageRegistry::kMaxPageSlots &&
-      page_entries[page_select].Page != NULL_PAGE) {
-    catidx = page_entries[page_select].CategoryId;
-  } else {
-    catidx = category_for_slot(page_select);
-  }
+  catidx = category_for_slot(page_select);
 
 //  oled_display.fillRect(28, 7, 100, 16, BLACK);
 //  oled_display.fillRect(0, 7, 28, 25, BLACK);
@@ -476,20 +438,10 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    if (EVENT_PRESSED(event, Buttons.ENCODER1)) {
-      page_select = get_category_page(0);
-      return true;
-    }
-    if (EVENT_PRESSED(event, Buttons.ENCODER2)) {
-      page_select = get_category_page(1);
-      return true;
-    }
-    if (EVENT_PRESSED(event, Buttons.ENCODER3)) {
-      page_select = get_category_page(2);
-      return true;
-    }
-    if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
-      page_select = get_category_page(3);
+    if (event->mask == EVENT_BUTTON_PRESSED &&
+        event->source >= Buttons.ENCODER1 &&
+        event->source <= Buttons.ENCODER4) {
+      page_select = get_category_page(event->source - Buttons.ENCODER1);
       return true;
     }
 #ifdef PLATFORM_TBD

@@ -1016,15 +1016,21 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
     }
 
     //icon = select ? gif->get_frame(0) : gif->get_next_frame();
+#if defined(__AVR__)
+    // AVR uses a static first frame here to avoid pulling in GIF animation.
+#else
     gif->set_bmp(icon);
     icon = gif->get_next_frame();
+#endif
 
     if (icon) {
       oled_display.drawBitmap(x + offset, 15 + y_base + icon_y_offset, icon,
                               gif->w, gif->h, WHITE);
     }
 
+#if !defined(__AVR__)
     if (note_interface.is_note_on(i)) { gif->reset(); }
+#endif
 
     if (select) {
    //   gif->reset();
