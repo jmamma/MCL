@@ -105,12 +105,10 @@ DeviceParamTargetRef resolve_perf(uint8_t dest) {
     return ref;
   }
 
-  MidiDevice *secondary = device_manager.secondary_device();
-  if (secondary == primary) {
-    return ref;
-  }
   target -= primary_count;
-  if (target < secondary->param_target_count(1)) {
+  MidiDevice *secondary = device_manager.secondary_device();
+  uint8_t secondary_count = secondary->param_target_count(1);
+  if (target < secondary_count) {
     ref.device = secondary;
     ref.device_idx = 1;
     ref.target = target;
@@ -308,10 +306,7 @@ uint8_t perf_target_count() {
   MidiDevice *primary = device_manager.primary_device();
   uint8_t count = primary->param_target_count(0);
   MidiDevice *secondary = device_manager.secondary_device();
-  if (secondary != primary) {
-    count += secondary->param_target_count(1);
-  }
-  return count;
+  return count + secondary->param_target_count(1);
 }
 
 uint8_t perf_param_count(uint8_t dest) {
