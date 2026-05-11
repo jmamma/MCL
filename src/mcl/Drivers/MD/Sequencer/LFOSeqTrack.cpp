@@ -163,6 +163,26 @@ int8_t lfo_preview_random(uint16_t phase) {
   return lfo_seed_to_random_value(next);
 }
 
+int16_t lfo_terminal_sample(uint8_t wav_type, uint16_t phase) {
+  switch (wav_type) {
+  case TRI_WAV:
+  case SIN_WAV:
+  case LIN_WAV:
+  case EXP_WAV:
+  case LINLIN_WAV:
+    return 0;
+  case REV_LIN_WAV:
+  case REV_EXP_WAV:
+  case STEP_WAV:
+    return 128;
+  case SAW_WAV:
+  case SQU_WAV:
+    return -128;
+  default:
+    return LFOSeqTrack::get_preview_sample(wav_type, phase);
+  }
+}
+
 int8_t lfo_next_random(uint16_t *state) {
   uint16_t next = state[0] + state[1];
   state[1] = state[0];
@@ -412,6 +432,10 @@ int16_t LFOSeqTrack::get_sample() {
       random_value = lfo_next_random(random_state);
     }
     return random_value;
+  }
+
+  if (base_mode() == LFO_MODE_ONE && phase == LFO_PHASE_MASK) {
+    return lfo_terminal_sample(wav_type, render_phase);
   }
 
   return get_preview_sample(wav_type, render_phase);
