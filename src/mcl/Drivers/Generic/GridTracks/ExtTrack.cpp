@@ -83,7 +83,7 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
         static_cast<TBDMidiTrack *>(init_track_type(TBD_MIDI_TRACK_TYPE));
     midi_track->init(tracknumber, nullptr);
     midi_track->link = old_link;
-    midi_track->mod_data = old_mod_data;
+    midi_track->seq_data.mod() = old_mod_data;
     midi_track->seq_data.import_legacy_ext(old_seq_data, old_link);
     midi_track->p4_sound.midi_channel = old_seq_data.channel;
     midi_track->seq_data.channel = old_seq_data.channel;
@@ -135,7 +135,7 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
   if (online) {
     get_track_from_sysex(column);
     link.length = seq_track->length;
-    link.speed = seq_track->speed;
+    link.set_speed(seq_track->speed);
     uint8_t *src = ext_track->data();
     memcpy(&seq_data, src, sizeof(seq_data));
   }

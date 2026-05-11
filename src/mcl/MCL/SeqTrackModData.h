@@ -101,6 +101,13 @@ public:
   }
 };
 
+class ATTR_PACKED() SeqTrackModStorage : public SeqTrackModData {
+public:
+  SeqTrackModData &mod() { return *this; }
+  const SeqTrackModData &mod() const { return *this; }
+  void init_mod() { SeqTrackModData::init(); }
+};
+
 static_assert(sizeof(SeqLFODataV1) == 9, "SeqLFODataV1 storage size changed");
 static_assert(sizeof(SeqLFOParamData) == 4,
               "SeqLFOParamData storage size changed");
@@ -113,3 +120,5 @@ static_assert(offsetof(SeqTrackModData, lfo) ==
               "SeqTrackModData lfo offset changed");
 static_assert(sizeof(SeqTrackModData) == 51,
               "SeqTrackModData storage size changed");
+static_assert(sizeof(SeqTrackModStorage) == sizeof(SeqTrackModData),
+              "SeqTrackModStorage storage size changed");

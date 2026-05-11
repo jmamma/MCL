@@ -493,7 +493,7 @@ void tbd_update_track_default_from_p4(uint8_t p4_track_index,
 
 TBDTrack::TBDTrack() {
   active = TBD_TRACK_TYPE;
-  seq_data.init();
+  seq_data.init_storage();
   set_step_sound_default(p4_sound, 0);
   static_assert(MEMORY_ALIGN(sizeof(TBDTrack) - sizeof(void *)) <= TBD_TRACK_LEN);
 }
@@ -516,9 +516,9 @@ void TBDTrack::apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track) {
 }
 
 void TBDTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
-  seq_data.init();
+  seq_data.init_storage();
   set_step_sound_default(p4_sound, tracknumber);
-  link.speed = STEPSEQ_SPEED_1X;
+  link.set_speed(STEPSEQ_SPEED_1X);
   link.length = 16;
   apply_seq_defaults(tracknumber, seq_track);
 }
@@ -557,10 +557,10 @@ void TBDTrack::load_seq_data(SeqTrack *seq_track) {
   tbd_track->p4_sound = p4_sound;
   tbd_track->set_length(seq_data.track_length ? seq_data.track_length
                                               : link.length);
-  tbd_track->set_speed(seq_data.track_speed == 0xFF ? link.speed
+  tbd_track->set_speed(seq_data.track_speed == 0xFF ? link.speed_value()
                                                     : seq_data.track_speed);
 
-  SeqTrack::load_mod_data(seq_track, mod_data, true,
+  SeqTrack::load_mod_data(seq_track, seq_data.mod(), true,
                           storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
                           storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION),
                           storage_version_at_least(
@@ -573,6 +573,12 @@ void TBDTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   apply_preset(tracknumber, "step.load_immediate", 255);
 }
 
+void TBDTrack::load_immediate_cleared(uint8_t tracknumber,
+                                      SeqTrack *seq_track) {
+  load_seq_data(seq_track);
+  apply_seq_defaults(tracknumber, seq_track);
+}
+
 bool TBDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
                              uint8_t merge, bool online, Grid *grid) {
   (void)merge;
@@ -581,7 +587,7 @@ bool TBDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
   active = TBD_TRACK_TYPE;
 
   const uint8_t slot = column & 0x0F;
-  SeqTrack::store_mod_data(mod_data, true, slot);
+  SeqTrack::store_mod_data(seq_data.mod(), true, slot);
   set_step_sound_default(p4_sound, slot);
   const uint8_t p4_track_index = p4_sound.p4_track_index;
 
@@ -595,7 +601,7 @@ bool TBDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
 
   if (seq_track != nullptr) {
     link.length = seq_track->length;
-    link.speed = seq_track->speed;
+    link.set_speed(seq_track->speed);
     auto *tbd_track = static_cast<TBDSeqTrack *>(seq_track);
     if (p4_sound_should_replace(tbd_track->p4_sound, p4_sound,
                                 p4_track_index)) {
@@ -614,7 +620,7 @@ bool TBDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
 
 TBDMidiTrack::TBDMidiTrack() {
   active = TBD_MIDI_TRACK_TYPE;
-  seq_data.clear();
+  seq_data.clear_storage();
   set_midi_sound_default(p4_sound, 0);
   static_assert(MEMORY_ALIGN(sizeof(TBDMidiTrack) - sizeof(void *)) <=
                 GRID2_TRACK_LEN);
@@ -625,7 +631,7 @@ void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,
   tbd_ensure_midi_sound_default(p4_sound, tracknumber);
 
   if (seq_data.version != MIDI_SEQ_DATA_VERSION) {
-    uint8_t fallback_speed = midi_seq_valid_speed(link.speed);
+    uint8_t fallback_speed = midi_seq_valid_speed(link.speed_value());
     seq_data.clear();
     seq_data.speed = fallback_speed;
   }
@@ -647,9 +653,9 @@ void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,
 }
 
 void TBDMidiTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
-  seq_data.clear();
+  seq_data.clear_storage();
   set_midi_sound_default(p4_sound, tracknumber);
-  link.speed = SEQ_SPEED_1X;
+  link.set_speed(SEQ_SPEED_1X);
   link.length = 16;
   apply_seq_defaults(tracknumber, seq_track);
 }
@@ -682,6 +688,12 @@ void TBDMidiTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   apply_preset(tracknumber, "midi.load_immediate", 255);
 }
 
+void TBDMidiTrack::load_immediate_cleared(uint8_t tracknumber,
+                                          SeqTrack *seq_track) {
+  load_seq_data(seq_track);
+  apply_seq_defaults(tracknumber, seq_track);
+}
+
 void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
   if (seq_track == nullptr) {
     return;
@@ -693,19 +705,19 @@ void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
   midi_track->notesoff_pending = true;
 
   if (seq_data.version != MIDI_SEQ_DATA_VERSION) {
-    uint8_t fallback_speed = midi_seq_valid_speed(link.speed);
+    uint8_t fallback_speed = midi_seq_valid_speed(link.speed_value());
     seq_data.clear();
     seq_data.speed = fallback_speed;
   }
   load_link_data(seq_track);
-  midi_track->seq_data = seq_data;
+  midi_track->seq_data = static_cast<const MidiSeqTrackData &>(seq_data);
   midi_track->p4_sound = p4_sound;
   midi_track->set_channel(p4_sound.midi_channel);
   midi_track->set_length(seq_data.length ? seq_data.length : link.length);
   midi_track->set_speed(midi_seq_valid_speed(seq_data.speed));
   midi_track->mute_state = old_mute;
 
-  SeqTrack::load_mod_data(seq_track, mod_data, false,
+  SeqTrack::load_mod_data(seq_track, seq_data.mod(), false,
                           storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
                           storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION),
                           storage_version_at_least(
@@ -721,7 +733,7 @@ bool TBDMidiTrack::store_in_grid(uint8_t column, uint16_t row,
   active = TBD_MIDI_TRACK_TYPE;
 
   const uint8_t slot = column & 0x0F;
-  SeqTrack::store_mod_data(mod_data, false, slot);
+  SeqTrack::store_mod_data(seq_data.mod(), false, slot);
   set_midi_sound_default(p4_sound, slot);
   const uint8_t p4_track_index = p4_sound.p4_track_index;
 
@@ -735,13 +747,13 @@ bool TBDMidiTrack::store_in_grid(uint8_t column, uint16_t row,
 
   if (seq_track != nullptr) {
     link.length = seq_track->length;
-    link.speed = seq_track->speed;
+    link.set_speed(seq_track->speed);
     auto *midi_track = static_cast<MidiSeqTrack *>(seq_track);
     if (p4_sound_should_replace(midi_track->p4_sound, p4_sound,
                                 p4_track_index)) {
       p4_sound = midi_track->p4_sound;
     }
-    seq_data = midi_track->seq_data;
+    static_cast<MidiSeqTrackData &>(seq_data) = midi_track->seq_data;
     seq_data.length = seq_track->length;
     seq_data.speed = seq_track->speed;
   }

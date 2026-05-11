@@ -157,6 +157,23 @@ public:
     return memcmp_bank1(get_sound_data_ptr(), ptr, get_sound_data_size());
   }
 
+  void restore_sound_from_mem(uint8_t column) {
+    void *sound = get_sound_data_ptr();
+    size_t sound_size = get_sound_data_size();
+    if (sound == nullptr || sound_size == 0) {
+      return;
+    }
+
+    uintptr_t region_base = get_region();
+    uintptr_t sound_data_offset =
+        reinterpret_cast<uintptr_t>(sound) - reinterpret_cast<uintptr_t>(this);
+    uintptr_t pos = region_base +
+                    (static_cast<uintptr_t>(get_region_size()) * column) +
+                    sound_data_offset;
+    volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
+    memcpy_bank1(sound, ptr, sound_size);
+  }
+
   template <class T> T *load_from_mem(uint8_t col) {
     DeviceTrack *that = init_track_type<T>();
     /*

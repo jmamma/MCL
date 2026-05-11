@@ -122,9 +122,7 @@ void finalize_spsx_seq_load(SPSXSeqTrack &track) {
 
 void SPSXTrack::init() {
   machine.init();
-  seq_version = SPSX_SEQ_VERSION_LEGACY;
-  seq_data.legacy.init();
-  mod_data.init();
+  seq_storage.init_storage();
 }
 
 void SPSXTrack::clear_track() {
@@ -222,19 +220,22 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
     SPSXSeqTrack *spsx_seq_track = static_cast<SPSXSeqTrack *>(seq_track);
     load_link_data(seq_track);
 
-    if (seq_version == SPSX_SEQ_VERSION_SPSX) {
-      memcpy(spsx_seq_track->SPSXSeqTrackData::data(), seq_data.spsx.data(),
+    if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX) {
+      memcpy(spsx_seq_track->SPSXSeqTrackData::data(),
+             seq_storage.seq_data.spsx.data(),
              sizeof(SPSXSeqTrackData));
-    } else if (seq_version == SPSX_SEQ_VERSION_LEGACY) {
-      convert_legacy_seq_to_spsx(seq_data.legacy, *spsx_seq_track);
+    } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
+      convert_legacy_seq_to_spsx(seq_storage.seq_data.legacy,
+                                 *spsx_seq_track);
     } else {
       spsx_seq_track->SPSXSeqTrackData::init();
     }
 
     finalize_spsx_seq_load(*spsx_seq_track);
-  } else if (seq_version == SPSX_SEQ_VERSION_LEGACY) {
+  } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
     MDSeqTrack *md_seq_track = static_cast<MDSeqTrack *>(seq_track);
-    memcpy(md_seq_track->data(), seq_data.legacy.data(), sizeof(MDSeqTrackData));
+    memcpy(md_seq_track->data(), seq_storage.seq_data.legacy.data(),
+           sizeof(MDSeqTrackData));
     load_link_data(seq_track);
     md_seq_track->clear_mutes();
     md_seq_track->set_length(md_seq_track->length);
@@ -249,7 +250,7 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
     md_seq_track->set_length(link.length);
   }
 
-  SeqTrack::load_mod_data(seq_track, mod_data, true,
+  SeqTrack::load_mod_data(seq_track, seq_storage.mod(), true,
                           storage_version_at_least(SEQ_TRACK_ARP_STORAGE_VERSION),
                           storage_version_at_least(SEQ_TRACK_LFO_STORAGE_VERSION),
                           storage_version_at_least(
@@ -289,11 +290,11 @@ DeviceTrack *SPSXTrack::materialize_as(uint8_t track_type,
   if (track_type == MD_TRACK_TYPE) {
     GridLink old_link = link;
     SPSMachine old_machine = machine;
-    SeqTrackModData old_mod_data = mod_data;
-    uint8_t old_seq_version = seq_version;
+    SeqTrackModData old_mod_data = seq_storage.mod();
+    uint8_t old_seq_version = seq_storage.seq_version;
     MDSeqTrackData old_legacy_seq_data;
     if (old_seq_version == SPSX_SEQ_VERSION_LEGACY) {
-      memcpy(&old_legacy_seq_data, &seq_data.legacy,
+      memcpy(&old_legacy_seq_data, &seq_storage.seq_data.legacy,
              sizeof(old_legacy_seq_data));
     }
 
@@ -318,11 +319,11 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
                               bool online, Grid *grid) {
   active = MDSPSX_TRACK_TYPE;
   uint8_t tracknumber = column & 0x0F;
-  SeqTrack::store_mod_data(mod_data, true, tracknumber);
+  SeqTrack::store_mod_data(seq_storage.mod(), true, tracknumber);
 
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {
-    seq_version = SPSX_SEQ_VERSION_SPSX;
+    seq_storage.seq_version = SPSX_SEQ_VERSION_SPSX;
 
     SPSXSeqTrack *spsx_seq_track =
         seq_track ? static_cast<SPSXSeqTrack *>(seq_track) : nullptr;
@@ -333,7 +334,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
     if (column != 255 && online && spsx_seq_track) {
       get_machine_from_kit(tracknumber);
       link.length = seq_track->length;
-      link.speed = seq_track->speed;
+      link.set_speed(seq_track->speed);
 
       if (merge > 0) {
         SPSXSeqTrack temp_seq_track;
@@ -344,17 +345,19 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
         }
         if (merge == SAVE_MD_PATTERN_IMPORT) {
           link.length = MD.pattern.patternLength;
-          link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+          link.set_speed(SEQ_SPEED_1X + MD.pattern.doubleTempo);
         }
         temp_seq_track.length = link.length;
-        temp_seq_track.speed = link.speed;
+        temp_seq_track.speed = link.speed_value();
         temp_seq_track.merge_from_md(tracknumber, &MD.pattern);
         link.length = temp_seq_track.length;
-        link.speed = temp_seq_track.speed;
-        memcpy(seq_data.spsx.data(), temp_seq_track.SPSXSeqTrackData::data(),
+        link.set_speed(temp_seq_track.speed);
+        memcpy(seq_storage.seq_data.spsx.data(),
+               temp_seq_track.SPSXSeqTrackData::data(),
                sizeof(SPSXSeqTrackData));
       } else {
-        memcpy(seq_data.spsx.data(), spsx_seq_track->SPSXSeqTrackData::data(),
+        memcpy(seq_storage.seq_data.spsx.data(),
+               spsx_seq_track->SPSXSeqTrackData::data(),
                sizeof(SPSXSeqTrackData));
       }
 
@@ -364,7 +367,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
   } else
 #endif
   {
-    seq_version = SPSX_SEQ_VERSION_LEGACY;
+    seq_storage.seq_version = SPSX_SEQ_VERSION_LEGACY;
 
     MDSeqTrack *md_seq_track =
         seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;
@@ -375,7 +378,7 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
     if (column != 255 && online && md_seq_track) {
       get_machine_from_kit(tracknumber);
       link.length = seq_track->length;
-      link.speed = seq_track->speed;
+      link.set_speed(seq_track->speed);
 
       if (merge > 0) {
         MDSeqTrack temp_seq_track;
@@ -386,15 +389,15 @@ bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
         }
         if (merge == SAVE_MD_PATTERN_IMPORT) {
           link.length = MD.pattern.patternLength;
-          link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+          link.set_speed(SEQ_SPEED_1X + MD.pattern.doubleTempo);
         }
         temp_seq_track.length = link.length;
-        temp_seq_track.speed = link.speed;
+        temp_seq_track.speed = link.speed_value();
         temp_seq_track.merge_from_md(tracknumber, &(MD.pattern));
-        memcpy(seq_data.legacy.data(), temp_seq_track.data(),
+        memcpy(seq_storage.seq_data.legacy.data(), temp_seq_track.data(),
                sizeof(MDSeqTrackData));
       } else {
-        memcpy(seq_data.legacy.data(), md_seq_track->data(),
+        memcpy(seq_storage.seq_data.legacy.data(), md_seq_track->data(),
                sizeof(MDSeqTrackData));
       }
 
@@ -415,15 +418,17 @@ void SPSXTrack::scale_seq_vol(float scale) {
 #if !defined(__AVR__)
   if (has_spsx_seq()) {
     for (uint8_t n = 0; n < SPSX_NUM_MD_STEPS; n++) {
-      uint16_t idx = seq_data.spsx.get_lockidx(n);
+      uint16_t idx = seq_storage.seq_data.spsx.get_lockidx(n);
       for (uint8_t c = 0; c < SPSX_NUM_LOCKS; c++) {
-        if (seq_data.spsx.steps[n].is_lock_bit(c)) {
-          if ((seq_data.spsx.locks_params[c] == MODEL_LFOD + 1) ||
-              (seq_data.spsx.locks_params[c] == MODEL_VOL + 1)) {
-            seq_data.spsx.locks[idx] =
-                (uint8_t)(scale * (float)(seq_data.spsx.locks[idx] - 1)) + 1;
-            if (seq_data.spsx.locks[idx] > 128)
-              seq_data.spsx.locks[idx] = 128;
+        if (seq_storage.seq_data.spsx.steps[n].is_lock_bit(c)) {
+          if ((seq_storage.seq_data.spsx.locks_params[c] == MODEL_LFOD + 1) ||
+              (seq_storage.seq_data.spsx.locks_params[c] == MODEL_VOL + 1)) {
+            seq_storage.seq_data.spsx.locks[idx] =
+                (uint8_t)(scale *
+                          (float)(seq_storage.seq_data.spsx.locks[idx] - 1)) +
+                1;
+            if (seq_storage.seq_data.spsx.locks[idx] > 128)
+              seq_storage.seq_data.spsx.locks[idx] = 128;
           }
           ++idx;
         }
@@ -434,15 +439,17 @@ void SPSXTrack::scale_seq_vol(float scale) {
 #endif
   // Legacy path
   for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
-    auto idx = seq_data.legacy.get_lockidx(n);
+    auto idx = seq_storage.seq_data.legacy.get_lockidx(n);
     for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-      if (seq_data.legacy.steps[n].is_lock(c)) {
-        if ((seq_data.legacy.locks_params[c] == MODEL_LFOD + 1) ||
-            (seq_data.legacy.locks_params[c] == MODEL_VOL + 1)) {
-          seq_data.legacy.locks[idx] =
-              (uint8_t)(scale * (float)(seq_data.legacy.locks[idx] - 1)) + 1;
-          if (seq_data.legacy.locks[idx] > 128)
-            seq_data.legacy.locks[idx] = 128;
+      if (seq_storage.seq_data.legacy.steps[n].is_lock(c)) {
+        if ((seq_storage.seq_data.legacy.locks_params[c] == MODEL_LFOD + 1) ||
+            (seq_storage.seq_data.legacy.locks_params[c] == MODEL_VOL + 1)) {
+          seq_storage.seq_data.legacy.locks[idx] =
+              (uint8_t)(scale *
+                        (float)(seq_storage.seq_data.legacy.locks[idx] - 1)) +
+              1;
+          if (seq_storage.seq_data.legacy.locks[idx] > 128)
+            seq_storage.seq_data.legacy.locks[idx] = 128;
         }
         ++idx;
       }

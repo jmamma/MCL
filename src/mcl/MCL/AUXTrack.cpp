@@ -5,7 +5,7 @@
 void AUXTrack::update_link_from_pattern(uint8_t merge) {
   if (merge == SAVE_MD_PATTERN_IMPORT) {
     link.length = MD.pattern.patternLength;
-    link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+    link.set_speed(SEQ_SPEED_1X + MD.pattern.doubleTempo);
   }
 }
 

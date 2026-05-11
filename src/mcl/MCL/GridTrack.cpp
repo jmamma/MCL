@@ -32,7 +32,7 @@ bool GridTrack::storage_version_at_least(uint8_t min_version) const {
 }
 
 void GridTrack::load_link_data(SeqTrack *seq_track) {
-  seq_track->speed = link.speed;
+  seq_track->speed = link.speed_value();
   seq_track->length = link.length;
 }
 

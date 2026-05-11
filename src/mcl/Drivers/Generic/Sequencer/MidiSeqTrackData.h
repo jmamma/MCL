@@ -1,6 +1,7 @@
 #pragma once
 
 #include "MCLMemory.h"
+#include "SeqTrackModData.h"
 #include "platform.h"
 #include <stdint.h>
 #include <string.h>
@@ -206,6 +207,19 @@ public:
 };
 
 #pragma pack(pop)
+
+class ATTR_PACKED() MidiSeqTrackStorage : public MidiSeqTrackData,
+                                          public SeqTrackModStorage {
+public:
+  void clear_storage() {
+    MidiSeqTrackData::clear();
+    SeqTrackModStorage::init_mod();
+  }
+};
+
+static_assert(sizeof(MidiSeqTrackStorage) ==
+                  sizeof(MidiSeqTrackData) + sizeof(SeqTrackModStorage),
+              "MidiSeqTrackStorage storage size changed");
 
 static_assert(sizeof(MidiSeqEvent) == 5,
               "MidiSeqEvent layout changed");

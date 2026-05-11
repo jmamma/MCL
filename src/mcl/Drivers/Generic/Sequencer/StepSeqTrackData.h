@@ -4,6 +4,7 @@
 #if !defined(__AVR__)
 
 #include "StepSeqDefines.h"
+#include "SeqTrackModData.h"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -131,6 +132,19 @@ public:
     }
 };
 #pragma pack(pop)
+
+class ATTR_PACKED() StepSeqTrackStorage : public StepSeqTrackData,
+                                          public SeqTrackModStorage {
+public:
+    void init_storage() {
+        StepSeqTrackData::init();
+        SeqTrackModStorage::init_mod();
+    }
+};
+
+static_assert(sizeof(StepSeqTrackStorage) ==
+                  sizeof(StepSeqTrackData) + sizeof(SeqTrackModStorage),
+              "StepSeqTrackStorage storage size changed");
 
 #endif // !defined(__AVR__)
 #endif // STEP_SEQ_TRACK_DATA_H__

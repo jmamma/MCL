@@ -35,8 +35,7 @@ void tbd_mark_p4_sound_applied(const TbdP4SoundData &sound);
 class ATTR_PACKED() TBDTrack : public DeviceTrack {
 public:
   TbdP4SoundData p4_sound;
-  TBDSeqTrackData seq_data;
-  SeqTrackModData mod_data;
+  StepSeqTrackStorage seq_data;
 
   TBDTrack();
 
@@ -52,6 +51,7 @@ public:
     return false;
   }
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
   void load_seq_data(SeqTrack *seq_track) override;
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
@@ -77,8 +77,7 @@ private:
 class ATTR_PACKED() TBDMidiTrack : public DeviceTrack {
 public:
   TbdP4SoundData p4_sound;
-  MidiSeqTrackData seq_data;
-  SeqTrackModData mod_data;
+  MidiSeqTrackStorage seq_data;
 
   TBDMidiTrack();
 
@@ -94,6 +93,7 @@ public:
     return false;
   }
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
   void load_seq_data(SeqTrack *seq_track) override;
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,

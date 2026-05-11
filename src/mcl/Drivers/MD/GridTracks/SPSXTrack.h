@@ -18,24 +18,38 @@
 
 #if !defined(__AVR__)
 
-class ATTR_PACKED() SPSXTrack : public DeviceTrack {
+class ATTR_PACKED() SPSXTrackSeqStorage {
 public:
-  // Machine data first — fixed offset for memcmp_sound / get_sound_data_ptr
-  SPSMachine machine;
-
-  // Seq format discriminator
   uint8_t seq_version;
 
-  // Seq data — union so the size is max(legacy, spsx) on rp2040
-  // On AVR only legacy is available
   union ATTR_PACKED() SeqDataUnion {
     MDSeqTrackData legacy;
 #if !defined(__AVR__)
     SPSXSeqTrackData spsx;
 #endif
   } seq_data;
+};
 
-  SeqTrackModData mod_data;
+class ATTR_PACKED() SPSXTrackStorage : public SPSXTrackSeqStorage,
+                                       public SeqTrackModStorage {
+public:
+  void init_storage() {
+    seq_version = SPSX_SEQ_VERSION_LEGACY;
+    seq_data.legacy.init();
+    SeqTrackModStorage::init_mod();
+  }
+};
+
+static_assert(sizeof(SPSXTrackStorage) ==
+                  sizeof(SPSXTrackSeqStorage) + sizeof(SeqTrackModStorage),
+              "SPSXTrackStorage storage size changed");
+
+class ATTR_PACKED() SPSXTrack : public DeviceTrack {
+public:
+  // Machine data first — fixed offset for memcmp_sound / get_sound_data_ptr
+  SPSMachine machine;
+
+  SPSXTrackStorage seq_storage;
 
   SPSXTrack() {
     active = MDSPSX_TRACK_TYPE;
@@ -49,7 +63,7 @@ public:
 
   bool has_spsx_seq() const {
 #if !defined(__AVR__)
-    return seq_version == SPSX_SEQ_VERSION_SPSX;
+    return seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX;
 #else
     return false;
 #endif

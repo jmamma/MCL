@@ -269,9 +269,9 @@ void MidiSeqTrackData::import_legacy_ext(const ExtSeqTrackData &legacy,
   clear();
   channel = legacy.channel;
   length = link.length ? link.length : 16;
-  speed = link.speed;
+  speed = link.speed_value();
 
-  const uint8_t legacy_tps = legacy_ticks_for_speed(link.speed);
+  const uint8_t legacy_tps = legacy_ticks_for_speed(link.speed_value());
   uint16_t idx = 0;
   for (uint8_t step = 0; step < NUM_EXT_STEPS; step++) {
     uint8_t bucket =

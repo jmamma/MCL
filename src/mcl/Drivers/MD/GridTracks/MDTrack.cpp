@@ -67,10 +67,10 @@ DeviceTrack *MDTrack::materialize_as(uint8_t track_type, uint8_t tracknumber,
     auto *spsx_track =
         static_cast<SPSXTrack *>(init_track_type(MDSPSX_TRACK_TYPE));
     spsx_track->link = old_link;
-    spsx_track->mod_data = old_mod_data;
-    spsx_track->seq_version = SPSX_SEQ_VERSION_LEGACY;
+    spsx_track->seq_storage.mod() = old_mod_data;
+    spsx_track->seq_storage.seq_version = SPSX_SEQ_VERSION_LEGACY;
     copy_md_machine_to_spsx(old_machine, spsx_track->machine);
-    memcpy(spsx_track->seq_data.legacy.data(), old_seq_data.data(),
+    memcpy(spsx_track->seq_storage.seq_data.legacy.data(), old_seq_data.data(),
            sizeof(old_seq_data));
     return spsx_track;
   }
@@ -249,7 +249,7 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
     get_machine_from_kit(tracknumber);
     DEBUG_DUMP("online");
     link.length = seq_track->length;
-    link.speed = seq_track->speed;
+    link.set_speed(seq_track->speed);
 
     if (merge > 0) {
       DEBUG_PRINTLN(F("auto merge"));
@@ -262,11 +262,11 @@ bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
       }
       if (merge == SAVE_MD_PATTERN_IMPORT) {
         link.length = MD.pattern.patternLength;
-        link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
+        link.set_speed(SEQ_SPEED_1X + MD.pattern.doubleTempo);
         DEBUG_PRINTLN(F("SAVE_MD_PATTERN_IMPORT"));
       }
       temp_seq_track.length = link.length;
-      temp_seq_track.speed = link.speed;
+      temp_seq_track.speed = link.speed_value();
 
       // merge md pattern data with seq_data
       temp_seq_track.merge_from_md(tracknumber, &(MD.pattern));

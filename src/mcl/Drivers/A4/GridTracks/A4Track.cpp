@@ -51,7 +51,7 @@ bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, u
 #ifdef EXT_TRACKS
   if (column != 255 && online && get_track_from_sysex(tracknumber)) {
     link.length = seq_track->length;
-    link.speed = seq_track->speed;
+    link.set_speed(seq_track->speed);
     memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
   }
 #endif

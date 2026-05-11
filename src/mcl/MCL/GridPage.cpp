@@ -820,6 +820,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   GridTrack temp_slot;
   if (!temp_slot.load_from_grid(_col + cur_grid * GRID_WIDTH, getRow())) { return; }
+  slot.link.set_load_sound(slot_load_sound != 0);
 
   width = old_col != 255 ? GRID_WIDTH - _col : param3.cur;
   height = param4.cur;
@@ -828,17 +829,20 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   uint16_t target_length =
       (uint32_t)slot.link.length *
-      SeqTrack::get_speed_multiplier_int(slot.link.speed) * slot.link.loops /
+      SeqTrack::get_speed_multiplier_int(slot.link.speed_value()) * slot.link.loops /
       12;
 
   bool slot_changed_length = temp_slot.link.length != slot.link.length;
   bool slot_changed_loops = temp_slot.link.loops != slot.link.loops;
   bool slot_changed_row = temp_slot.link.row != slot.link.row;
+  bool slot_changed_load_sound =
+      temp_slot.link.load_sound() != slot.link.load_sound();
 
   if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
     if ((slot_changed_length) ||
         (slot_changed_loops) ||
-        (slot_changed_row)) {
+        (slot_changed_row) ||
+        (slot_changed_load_sound)) {
       slot_update = 1;
       DEBUG_PRINTLN("Slot update");
     }
@@ -926,8 +930,12 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
             if (!temp_slot.load_from_grid(xpos + cur_grid * GRID_WIDTH, ypos)) { continue; }
             uint16_t temp_slot_length =
                 (uint16_t)temp_slot.link.length *
-                SeqTrack::get_speed_multiplier_int(temp_slot.link.speed) / 12;
+                SeqTrack::get_speed_multiplier_int(temp_slot.link.speed_value()) / 12;
             bool store_slot = false;
+            if (slot_changed_load_sound) {
+              temp_slot.link.set_load_sound(slot.link.load_sound());
+              store_slot = true;
+            }
             if (slot_changed_loops && slot.link.loops == 0) {
                 temp_slot.link.loops = 0;
                 store_slot = true;
@@ -950,7 +958,8 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
                 store_slot = true;
               }
               //User changed length, if speeds are the same we can increaase the length;
-              else if (slot_changed_length && temp_slot.link.speed == slot.link.speed) {
+              else if (slot_changed_length &&
+                       temp_slot.link.speed_value() == slot.link.speed_value()) {
                 temp_slot.link.length = slot.link.length;
                 store_slot = true;
               }
@@ -1003,6 +1012,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   slot_copy = 0;
   slot_paste = 0;
   slot.load_from_grid(_col + cur_grid * GRID_WIDTH, getRow());
+  slot_load_sound = slot.link.load_sound() ? 1 : 0;
   old_col = 255;
 }
 
@@ -1363,6 +1373,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       DEBUG_PRINTLN(F("what's in the slot"));
       DEBUG_DUMP(slot.link.loops);
       DEBUG_DUMP(slot.link.row);
+      slot_load_sound = slot.link.load_sound() ? 1 : 0;
       encoders[0] = &grid_slot_param1;
       encoders[1] = &grid_slot_param2;
       encoders[2] = &param3;

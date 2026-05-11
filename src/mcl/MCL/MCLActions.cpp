@@ -458,7 +458,12 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       continue;
     }
 
-    if (rebuilt) {
+    const bool load_sound = !rebuilt && device_track->link.load_sound();
+    if (!load_sound) {
+      device_track->restore_sound_from_mem(gdt_dst->mem_slot_idx);
+    }
+
+    if (!load_sound) {
       send_machine[dst] = 0;
     } else {
       if (load_offset != 255) {
@@ -517,7 +522,7 @@ again:
           else {
             links[dst].loops = 1;
           }
-          links[dst].speed = gdt_dst->seq_track->speed;
+          links[dst].set_speed(gdt_dst->seq_track->speed);
           links[dst].length = gdt_dst->seq_track->length;
           links[dst].row = row;
 
@@ -621,8 +626,13 @@ bool MCLActions::load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
   } // read failure
 
 
-  if (rebuilt) {
-    ptrack->load_immediate_cleared(dst, gdt_dst->seq_track);
+  const bool load_sound = !rebuilt && ptrack->link.load_sound();
+  if (!load_sound) {
+    ptrack->restore_sound_from_mem(gdt_dst->mem_slot_idx);
+  }
+
+  if (!load_sound) {
+    ptrack->load_immediate_cleared(track_idx_dst, gdt_dst->seq_track);
   } else {
     send_masks[dst] = 1;
     if (i != dst) {
@@ -831,7 +841,10 @@ void MCLActions::cache_track(uint8_t n, GridDeviceTrack* gdt, uint8_t track_idx)
     return;
   }
 
-  if (!rebuilt && ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
+  const bool load_sound = !rebuilt && ptrack->link.load_sound();
+  if (!load_sound) {
+    ptrack->restore_sound_from_mem(gdt->mem_slot_idx);
+  } else if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
     DEBUG_PRINTLN("comparing sound");
     if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
       DEBUG_PRINTLN("no match");

@@ -81,7 +81,7 @@ public:
 
  void init() {
     link.length = 16;
-    link.speed = SEQ_SPEED_1X;
+    link.set_speed(SEQ_SPEED_1X);
     link.loops = 0;
  }
 

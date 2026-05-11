@@ -1163,7 +1163,7 @@ void MidiSeqTrack::import_legacy_ext(const ExtSeqTrackData &legacy,
   seq_data.clear();
   seq_data.channel = legacy.channel;
   seq_data.length = link.length ? link.length : 16;
-  seq_data.speed = link.speed;
+  seq_data.speed = link.speed_value();
   length = seq_data.length;
   speed = seq_data.speed;
   locks_slides_recalc = 255;
@@ -1172,7 +1172,7 @@ void MidiSeqTrack::import_legacy_ext(const ExtSeqTrackData &legacy,
     locks_slide_data[i].init();
   }
 
-  const uint8_t legacy_tps = legacy_ticks_for_speed(link.speed);
+  const uint8_t legacy_tps = legacy_ticks_for_speed(link.speed_value());
   uint16_t idx = 0;
   for (uint8_t step = 0; step < NUM_EXT_STEPS; step++) {
     uint8_t bucket = const_cast<ExtSeqTrackData &>(legacy).event_buckets.get(step);

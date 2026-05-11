@@ -354,6 +354,7 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
         // for ext tracks
         {"LEN:   ",   1, 129, 0, 39, NULL_PAGE, 0,  0},
         {"LOOP: ",  0, 64,  0, 33, NULL_PAGE, 0,  0},
+        {"SOUND:",  0, 2,   2, 71, NULL_PAGE, 0,  25},
         // o=128, generate the table on-demand
         {"JUMP: ", 0, 128, 128, 34, NULL_PAGE, 0, 192},
         {"CLEAR:",  0, 2,   2, 36, NULL_PAGE, 0,  33},

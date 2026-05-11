@@ -73,7 +73,7 @@ bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
     get_machine_from_kit(tracknumber);
 
     link.length = seq_track->length;
-    link.speed = seq_track->speed;
+    link.set_speed(seq_track->speed);
 
     if (merge > 0) {
       // TODO decode MNM track data from a pattern...
