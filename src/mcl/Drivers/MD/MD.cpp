@@ -96,9 +96,11 @@ MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
 
 namespace {
 
+#if !defined(__AVR__)
 uint8_t md_target_fx_type(uint8_t target) {
   return MD_FX_ECHO + target - NUM_MD_TRACKS;
 }
+#endif
 
 } // namespace
 
@@ -188,6 +190,7 @@ bool MDClass::set_mixer_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
+#if !defined(__AVR__)
 uint8_t MDClass::param_target_count(uint8_t device_idx) const {
   (void)device_idx;
   return NUM_MD_TRACKS + 4;
@@ -297,6 +300,7 @@ bool MDClass::set_param(uint8_t device_idx, uint8_t target, uint8_t param,
   }
   return false;
 }
+#endif
 
 void MDClass::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
                                      bool state, bool clear) {

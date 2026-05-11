@@ -43,6 +43,40 @@ void update_lfo_key_interface(LFOSeqTrack *track) {
   }
 }
 
+void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
+                           uint8_t encoder_idx,
+                           uint8_t param_idx) NOINLINE();
+void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
+                           uint8_t encoder_idx, uint8_t param_idx) {
+  if (encoders[encoder_idx]->hasChanged()) {
+    track->params[param_idx].dest = encoders[encoder_idx]->cur;
+  }
+  ++encoder_idx;
+  if (encoders[encoder_idx]->hasChanged()) {
+    track->params[param_idx].param = encoders[encoder_idx]->cur;
+  }
+}
+
+void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
+                       uint8_t device_slot, uint8_t encoder_idx,
+                       uint8_t param_idx) NOINLINE();
+void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
+                       uint8_t device_slot, uint8_t encoder_idx,
+                       uint8_t param_idx) {
+  if (!encoders[encoder_idx]->hasChanged()) {
+    return;
+  }
+  uint8_t value = 0;
+  if (!DeviceParamTargets::slot_get_param(device_slot,
+                                          track->params[param_idx].dest,
+                                          track->params[param_idx].param,
+                                          &value)) {
+    track->params[param_idx].offset = encoders[encoder_idx]->cur;
+  } else {
+    encoders[encoder_idx]->cur = encoders[encoder_idx]->old;
+  }
+}
+
 } // namespace
 
 void LFOPage::setup() {
@@ -197,19 +231,8 @@ void LFOPage::loop() {
     config_encoder_range(0);
     config_encoder_range(2);
 
-    if (encoders[0]->hasChanged()) {
-      lfo_track->params[0].dest = encoders[0]->cur;
-    }
-    if (encoders[1]->hasChanged()) {
-      lfo_track->params[0].param = encoders[1]->cur;
-    }
-
-    if (encoders[2]->hasChanged()) {
-      lfo_track->params[1].dest = encoders[2]->cur;
-    }
-    if (encoders[3]->hasChanged()) {
-      lfo_track->params[1].param = encoders[3]->cur;
-    }
+    update_lfo_param_pair(encoders, lfo_track, 0, 0);
+    update_lfo_param_pair(encoders, lfo_track, 2, 1);
   }
   // wav_tables need to be recalculated when depth or waveform changes.
 
@@ -237,27 +260,9 @@ void LFOPage::loop() {
       update_lfo_key_interface(lfo_track);
     }
 
-    if (encoders[2]->hasChanged()) {
-      uint8_t value = 0;
-      if (!DeviceParamTargets::slot_get_param(grid_x_tracks ? 1 : 2,
-                                              lfo_track->params[0].dest,
-                                              lfo_track->params[0].param,
-                                              &value)) {
-        lfo_track->params[0].offset = encoders[2]->cur;
-      }
-      else { encoders[2]->cur = encoders[2]->old; }
-    }
-
-    if (encoders[3]->hasChanged()) {
-      uint8_t value = 0;
-      if (!DeviceParamTargets::slot_get_param(grid_x_tracks ? 1 : 2,
-                                              lfo_track->params[1].dest,
-                                              lfo_track->params[1].param,
-                                              &value)) {
-         lfo_track->params[1].offset = encoders[3]->cur;
-       }
-       else { encoders[3]->cur = encoders[3]->old; }
-    }
+    uint8_t device_slot = grid_x_tracks ? 1 : 2;
+    update_lfo_offset(encoders, lfo_track, device_slot, 2, 0);
+    update_lfo_offset(encoders, lfo_track, device_slot, 3, 1);
   }
 
 }
@@ -288,14 +293,12 @@ void LFOPage::display() {
   else if (page_mode == LFO_SETTINGS) {
     uint8_t inc = LFO_LENGTH / width;
     for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
-      if (n < LFO_LENGTH) {
-        uint16_t phase = ((uint16_t)n << 8) & LFO_PHASE_MASK;
-        uint8_t out = LFOSeqTrack::get_preview_value(lfo_track->wav_type,
-                                                     phase);
-        uint8_t sample = ((int16_t)out * (int16_t)lfo_height) / 128;
+      uint16_t phase = ((uint16_t)n << 8) & LFO_PHASE_MASK;
+      uint8_t out = LFOSeqTrack::get_preview_value(lfo_track->wav_type,
+                                                   phase);
+      uint8_t sample = ((int16_t)out * (int16_t)lfo_height) / 128;
 
-        oled_display.drawPixel(x, y + lfo_height - sample, WHITE);
-      }
+      oled_display.drawPixel(x, y + lfo_height - sample, WHITE);
     }
     x = mcl_gui.knob_x0 + 2;
     oled_display.setCursor(x + 5, 6);
@@ -355,8 +358,12 @@ void LFOPage::apply_seq_menu_values(bool same_slot) {
   if (!same_slot) {
     return;
   }
-  lfo_track->set_speed(opt_speed);
-  lfo_track->set_speed_multiplier(opt_lfo_mult);
+  lfo_track->speed = opt_speed;
+  lfo_track->mode = LFOSeqTrack::pack_mode(lfo_track->base_mode(),
+                                           opt_lfo_mult);
+  lfo_track->legacy_speed_curve = false;
+  lfo_track->phase_inc =
+      LFOSeqTrack::speed_to_phase_increment(opt_speed, false, opt_lfo_mult);
   if (opt_length == 0) {
     opt_length = 1;
   }
@@ -397,31 +404,26 @@ void LFOPage::learn_param(uint8_t device_slot, uint8_t dest, uint8_t param,
     return;
   }
   bool reconfig = false;
-  if (mcl.currentPage() == LFO_PAGE) {
-  if (page_mode == LFO_DESTINATION) {
-    if (encoders[0]->cur == 0 && encoders[1]->cur > 0) {
-      lfo_track->params[0].dest = dest;
-      lfo_track->params[0].param = param;
+  bool on_lfo_page = mcl.currentPage() == LFO_PAGE;
+  if (on_lfo_page && page_mode == LFO_DESTINATION) {
+    for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+      uint8_t encoder_idx = i << 1;
+      if (encoders[encoder_idx]->cur == 0 &&
+          encoders[encoder_idx + 1]->cur > 0) {
+        lfo_track->params[i].dest = dest;
+        lfo_track->params[i].param = param;
+        reconfig = true;
+      }
+    }
+  }
+  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+    if (lfo_track->params[i].dest == dest &&
+        lfo_track->params[i].param == param) {
+      lfo_track->params[i].offset = value;
       reconfig = true;
     }
-    if (encoders[2]->cur == 0 && encoders[3]->cur > 0) {
-      lfo_track->params[1].dest = dest;
-      lfo_track->params[1].param = param;
-      reconfig = true;
-    }
   }
-  }
-  if (lfo_track->params[0].dest == dest &&
-      lfo_track->params[0].param == param) {
-    lfo_track->params[0].offset = value;
-    reconfig = true;
-  }
-  if (lfo_track->params[1].dest == dest &&
-      lfo_track->params[1].param == param) {
-    lfo_track->params[1].offset = value;
-    reconfig = true;
-  }
-  if (mcl.currentPage() == LFO_PAGE && reconfig) { config_encoders(); }
+  if (on_lfo_page && reconfig) { config_encoders(); }
 }
 
 

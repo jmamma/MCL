@@ -80,6 +80,7 @@ bool GenericMidiDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
+#if !defined(__AVR__)
 uint8_t GenericMidiDevice::param_target_count(uint8_t device_idx) const {
   (void)device_idx;
   return NUM_EXT_TRACKS;
@@ -101,6 +102,7 @@ bool GenericMidiDevice::set_param(uint8_t device_idx, uint8_t target,
   mcl_seq.ext_tracks[target].send_cc(param, value, uart_);
   return true;
 }
+#endif
 
 void GenericMidiDevice::mixer_set_record_mutes(uint8_t device_idx,
                                                uint8_t track, bool state,

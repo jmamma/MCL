@@ -31,11 +31,7 @@ SHAPES = (
     "LINLIN_WAV",
 )
 
-TABLE_SHAPES = (
-    "SIN_WAV",
-    "REV_EXP_WAV",
-    "EXP_WAV",
-)
+TABLE_SHAPES = ("SIN_WAV", "EXP_WAV")
 
 CENTERED_SHAPES = {"SIN_WAV", "TRI_WAV", "SQU_WAV", "SAW_WAV", "RND_WAV"}
 
@@ -64,12 +60,7 @@ def exp_table():
 
 
 def generate_tables():
-    exp = exp_table()
-    return [
-        sin_table(),
-        [128 - value for value in exp],
-        exp,
-    ]
+    return [sin_table(), exp_table()]
 
 
 def table_value(tables, table, phase):
@@ -133,13 +124,13 @@ def preview_sample(tables, shape, phase):
     if name == "LIN_WAV":
         return unipolar_decay(phase)
     if name == "EXP_WAV":
-        return table_value(tables, 2, phase)
+        return table_value(tables, 1, phase)
     if name == "RND_WAV":
         return preview_random(phase)
     if name == "REV_LIN_WAV":
         return unipolar_rise(phase)
     if name == "REV_EXP_WAV":
-        return table_value(tables, 1, phase)
+        return 128 - table_value(tables, 1, phase)
     if name == "SIN_WAV":
         return table_value(tables, 0, phase) - 128
     if name == "STEP_WAV":

@@ -175,6 +175,7 @@ public:
   virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
                                uint8_t param_idx, int16_t value,
                                bool send = true);
+#if !defined(__AVR__)
   virtual uint8_t param_target_count(uint8_t device_idx) const;
   virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const;
   virtual bool param_target_label(uint8_t device_idx, uint8_t target,
@@ -185,6 +186,7 @@ public:
                          uint8_t *value);
   virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
                          uint8_t value, MidiUartClass *uart_ = nullptr);
+#endif
   virtual void mixer_mute_track(uint8_t device_idx, uint8_t track,
                                  bool mute,
                                  MidiUartClass *uart_ = nullptr);

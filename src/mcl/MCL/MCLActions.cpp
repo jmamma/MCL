@@ -461,9 +461,6 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
     const bool load_sound = !rebuilt && device_track->link.load_sound();
     if (!load_sound) {
       device_track->restore_sound_from_mem(gdt_dst->mem_slot_idx);
-    }
-
-    if (!load_sound) {
       send_machine[dst] = 0;
     } else {
       if (load_offset != 255) {
@@ -629,9 +626,6 @@ bool MCLActions::load_track_immediate(uint8_t row, uint8_t i, uint8_t dst,
   const bool load_sound = !rebuilt && ptrack->link.load_sound();
   if (!load_sound) {
     ptrack->restore_sound_from_mem(gdt_dst->mem_slot_idx);
-  }
-
-  if (!load_sound) {
     ptrack->load_immediate_cleared(track_idx_dst, gdt_dst->seq_track);
   } else {
     send_masks[dst] = 1;

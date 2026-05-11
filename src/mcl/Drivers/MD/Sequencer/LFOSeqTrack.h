@@ -107,7 +107,7 @@ public:
 
   static const uint8_t wav_tables[LFO_TABLE_COUNT][WAV_LENGTH] PROGMEM;
 
-  int16_t get_sample();
+  int16_t get_sample() NOINLINE();
   static uint8_t get_wav_table_sample(uint8_t table, uint8_t n);
   static int16_t get_preview_sample(uint8_t wav_type, uint16_t phase);
   static uint8_t get_preview_value(uint8_t wav_type, uint16_t phase);
@@ -146,7 +146,6 @@ public:
   static uint16_t speed_to_phase_increment(uint8_t speed, bool legacy_curve);
   static uint16_t speed_to_phase_increment(uint8_t speed, bool legacy_curve,
                                            uint8_t multiplier);
-  uint16_t phase_increment() const;
   void load_data(const SeqLFOData &data);
   void load_data(const SeqLFOData &data, bool legacy_phase);
   void load_data(const SeqLFOData &data, bool legacy_phase,
@@ -158,7 +157,8 @@ public:
   uint8_t get_param_offset(uint8_t dest, uint8_t param_id);
   void reset_params();
 
-  uint8_t get_wav_value(uint8_t dest, uint8_t param_id, int16_t lfo_sample);
+  uint8_t get_wav_value(uint8_t dest, uint8_t param_id,
+                        int16_t lfo_sample) NOINLINE();
 
   void set_wav_type(uint8_t _wav_type);
   void set_speed(uint8_t _speed);

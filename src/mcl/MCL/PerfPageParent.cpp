@@ -56,6 +56,12 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
                                                                 sizeof(K));
     if (!labelled) {
       uint8_t local_value = value;
+#if defined(__AVR__)
+      K[0] = (device_slot == 2 || (!device_slot && value > 20)) ? 'M' : 'T';
+      if (!device_slot && value > 20) {
+        local_value = value - 20;
+      }
+#else
       K[0] = 'T';
       if (!device_slot) {
         uint8_t primary_count =
@@ -65,6 +71,7 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
           local_value = value - primary_count;
         }
       }
+#endif
       mcl_gui.put_value_at(local_value, K + 1);
     }
   }

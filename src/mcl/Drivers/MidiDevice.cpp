@@ -86,6 +86,7 @@ bool MidiDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
   return false;
 }
 
+#if !defined(__AVR__)
 uint8_t MidiDevice::param_target_count(uint8_t device_idx) const {
   (void)device_idx;
   return 0;
@@ -134,6 +135,7 @@ bool MidiDevice::set_param(uint8_t device_idx, uint8_t target, uint8_t param,
   (void)uart_;
   return false;
 }
+#endif
 
 void MidiDevice::mixer_mute_track(uint8_t device_idx, uint8_t track,
                                   bool mute, MidiUartClass *uart_) {
