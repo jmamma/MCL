@@ -1302,7 +1302,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
       control_state.parse_cc(channel, param, value, parsed_control)) {
     if (parsed_control.has_value && SeqPage::recording &&
         (MidiClock.state == 2) && !note_interface.notes_on) {
-      active_track.record_control_lock(
+      active_track.locks().record_control_lock(
           parsed_control.ctrl_type, parsed_control.parameter,
           parsed_control.value, SeqPage::slide);
     }
@@ -1359,8 +1359,8 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     }
 #else
     if (param != device_manager.secondary_device()->get_mute_cc()) {
-      active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_CC, param, value,
-                                       SeqPage::slide);
+      active_track.locks().record_control_lock(SEQ_EXT_LOCK_CTRL_CC, param,
+                                               value, SeqPage::slide);
     }
 #endif
   }
@@ -1391,8 +1391,8 @@ void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
 #if defined(__AVR__)
     active_track.record_track_locks(PARAM_PB, msg[2], SeqPage::slide);
 #else
-    active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_PITCH_BEND, 0, pitch,
-                                     SeqPage::slide);
+    active_track.locks().record_control_lock(SEQ_EXT_LOCK_CTRL_PITCH_BEND, 0,
+                                             pitch, SeqPage::slide);
 #endif
   }
 }
@@ -1419,8 +1419,8 @@ void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
 #if defined(__AVR__)
     active_track.record_track_locks(PARAM_CHP, msg[1], false);
 #else
-    active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE, 0,
-                                     msg[1], false);
+    active_track.locks().record_control_lock(
+        SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE, 0, msg[1], false);
 #endif
   }
 }
@@ -1445,8 +1445,8 @@ void SeqPtcMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
   active_track.after_touch(msg[1], msg[2]);
 #if !defined(__AVR__)
   if (SeqPage::recording && (MidiClock.state == 2)) {
-    active_track.record_control_lock(SEQ_EXT_LOCK_CTRL_POLY_PRESSURE, msg[1],
-                                     msg[2], false);
+    active_track.locks().record_control_lock(SEQ_EXT_LOCK_CTRL_POLY_PRESSURE,
+                                             msg[1], msg[2], false);
   }
 #endif
 }

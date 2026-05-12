@@ -884,7 +884,7 @@ bool TbdUiMode::active_step_lock(uint8_t window, uint8_t encoder_idx,
       if (!note_interface.is_note_on(i)) continue;
       uint8_t step = ((seq_extstep_page.cur_x / page_width) * 16) + i;
       if (step >= track.length()) return false;
-      return track.p4_param_lock_value(step, slot.lock_param, *value);
+      return track.locks().p4_param_lock_value(step, slot.lock_param, *value);
     }
   }
 #endif
@@ -1330,8 +1330,8 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
         if (!note_interface.is_note_on(n)) continue;
         uint8_t step = ((seq_extstep_page.cur_x / page_width) * 16) + n;
         if (step >= track.length()) continue;
-        if (track.set_p4_param_lock(step, timing_mid, slot.lock_param,
-                                    value, SeqPage::slide)) {
+        if (track.locks().set_p4_param_lock(step, timing_mid, slot.lock_param,
+                                            value, SeqPage::slide)) {
           wrote = true;
         }
       }
@@ -1339,7 +1339,8 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
     }
 
     if (SeqPage::recording && MidiClock.state == 2) {
-      return track.record_p4_param_lock(slot.lock_param, value, SeqPage::slide);
+      return track.locks().record_p4_param_lock(slot.lock_param, value,
+                                                SeqPage::slide);
     }
   }
 #endif
