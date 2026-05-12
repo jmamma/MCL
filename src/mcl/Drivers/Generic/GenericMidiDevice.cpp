@@ -23,6 +23,20 @@ private:
   GenericMidiDevice &generic() const { return (GenericMidiDevice &)device_; }
 };
 
+#if !defined(__AVR__)
+class GenericMidiParamCapability : public DeviceParamCapability {
+public:
+  explicit GenericMidiParamCapability(GenericMidiDevice &device)
+      : DeviceParamCapability(device) {}
+  virtual uint8_t target_count(uint8_t device_idx) const override;
+  virtual uint8_t param_count(uint8_t device_idx,
+                              uint8_t target) const override;
+  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                         uint8_t value,
+                         MidiUartClass *uart_ = nullptr) override;
+};
+#endif
+
 GenericMidiDevice::GenericMidiDevice()
     : MidiDevice(&Midi2, "MI", DEVICE_MIDI, false) {
   memset(mixer_levels, 127, sizeof(mixer_levels));
@@ -104,20 +118,25 @@ bool GenericMidiMixerCapability::set_param(uint8_t device_idx, uint8_t track,
 }
 
 #if !defined(__AVR__)
-uint8_t GenericMidiDevice::param_target_count(uint8_t device_idx) const {
+DeviceParamCapability *GenericMidiDevice::params() {
+  static GenericMidiParamCapability capability(*this);
+  return &capability;
+}
+
+uint8_t GenericMidiParamCapability::target_count(uint8_t device_idx) const {
   (void)device_idx;
   return NUM_EXT_TRACKS;
 }
 
-uint8_t GenericMidiDevice::param_count(uint8_t device_idx,
-                                       uint8_t target) const {
+uint8_t GenericMidiParamCapability::param_count(uint8_t device_idx,
+                                                uint8_t target) const {
   (void)device_idx;
   return target < NUM_EXT_TRACKS ? 128 : 0;
 }
 
-bool GenericMidiDevice::set_param(uint8_t device_idx, uint8_t target,
-                                  uint8_t param, uint8_t value,
-                                  MidiUartClass *uart_) {
+bool GenericMidiParamCapability::set_param(uint8_t device_idx, uint8_t target,
+                                           uint8_t param, uint8_t value,
+                                           MidiUartClass *uart_) {
   (void)device_idx;
   if (target >= NUM_EXT_TRACKS || param >= 128) {
     return false;

@@ -19,34 +19,11 @@ public:
   void sync_grid_devices();
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
   virtual DeviceMixerCapability *mixer() override;
+  virtual DeviceParamCapability *params() override;
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) override;
   virtual void triggerTrack(uint8_t track, uint8_t velocity,
                             MidiUartClass *uart_ = nullptr) override;
-  virtual uint8_t param_target_count(uint8_t device_idx) const override;
-  virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const override;
-  virtual bool param_target_label(uint8_t device_idx, uint8_t target,
-                                  char *out, uint8_t len) const override;
-  virtual bool param_label(uint8_t device_idx, uint8_t target,
-                           uint8_t param, char *out,
-                           uint8_t len) override;
-  virtual bool get_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t *value) override;
-  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t value,
-                         MidiUartClass *uart_ = nullptr) override;
-  virtual uint8_t sequencer_lock_param_count(uint8_t device_idx,
-                                             uint8_t target) const override;
-  virtual bool sequencer_lock_param_info(uint8_t device_idx, uint8_t target,
-                                         uint8_t param,
-                                         MidiDeviceParamInfo *info) override;
-  virtual bool sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
-                                          uint8_t param, char *out,
-                                          uint8_t len) override;
-  virtual bool sequencer_uses_step_pitch(uint8_t device_idx,
-                                         uint8_t target) const override;
-  virtual uint8_t sequencer_pitch_lock_param(uint8_t device_idx,
-                                             uint8_t target) const override;
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool enter_ui(gui_event_t *event) override;

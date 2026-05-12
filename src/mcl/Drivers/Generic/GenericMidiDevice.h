@@ -16,11 +16,7 @@ public:
                          MidiUartClass *uart_ = nullptr) override;
   virtual DeviceMixerCapability *mixer() override;
 #if !defined(__AVR__)
-  virtual uint8_t param_target_count(uint8_t device_idx) const override;
-  virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const override;
-  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t value,
-                         MidiUartClass *uart_ = nullptr) override;
+  virtual DeviceParamCapability *params() override;
 #endif
   virtual void setLevel(uint8_t track, uint8_t value,
                         MidiUartClass *uart_ = nullptr);

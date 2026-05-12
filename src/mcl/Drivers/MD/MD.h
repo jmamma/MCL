@@ -107,24 +107,6 @@ public:
   virtual DeviceParamCapability *params() override;
 #endif
   virtual DevicePanelCapability *panel() override;
-#if !defined(__AVR__)
-  virtual uint8_t param_target_count(uint8_t device_idx) const override;
-  virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const override;
-  virtual bool param_target_label(uint8_t device_idx, uint8_t target,
-                                  char *out, uint8_t len) const override;
-  virtual bool param_label(uint8_t device_idx, uint8_t target, uint8_t param,
-                           char *out, uint8_t len) override;
-  virtual bool get_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t *value) override;
-  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t value,
-                         MidiUartClass *uart_ = nullptr) override;
-  virtual bool sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
-                                          uint8_t param, char *out,
-                                          uint8_t len) override;
-  virtual bool sequencer_uses_step_pitch(uint8_t device_idx,
-                                         uint8_t target) const override;
-#endif
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool canReadKit() { return true; }

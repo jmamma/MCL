@@ -81,6 +81,36 @@ private:
   TbdDevice &tbd() const { return (TbdDevice &)device_; }
 };
 
+class TbdParamCapability : public DeviceParamCapability {
+public:
+  explicit TbdParamCapability(TbdDevice &device)
+      : DeviceParamCapability(device) {}
+  virtual uint8_t target_count(uint8_t device_idx) const override;
+  virtual uint8_t param_count(uint8_t device_idx,
+                              uint8_t target) const override;
+  virtual bool target_label(uint8_t device_idx, uint8_t target,
+                            char *out, uint8_t len) const override;
+  virtual bool param_label(uint8_t device_idx, uint8_t target, uint8_t param,
+                           char *out, uint8_t len) override;
+  virtual bool get_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                         uint8_t *value) override;
+  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                         uint8_t value,
+                         MidiUartClass *uart_ = nullptr) override;
+  virtual uint8_t sequencer_lock_param_count(uint8_t device_idx,
+                                             uint8_t target) const override;
+  virtual bool sequencer_lock_param_info(uint8_t device_idx, uint8_t target,
+                                         uint8_t param,
+                                         MidiDeviceParamInfo *info) override;
+  virtual bool sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
+                                          uint8_t param, char *out,
+                                          uint8_t len) override;
+  virtual bool sequencer_uses_step_pitch(uint8_t device_idx,
+                                         uint8_t target) const override;
+  virtual uint8_t sequencer_pitch_lock_param(uint8_t device_idx,
+                                             uint8_t target) const override;
+};
+
 void copy_param_number_label(char prefix, uint8_t number, char *out,
                              uint8_t len) {
   if (out == nullptr || len == 0) {
@@ -1589,6 +1619,11 @@ DeviceMixerCapability *TbdDevice::mixer() {
   return &capability;
 }
 
+DeviceParamCapability *TbdDevice::params() {
+  static TbdParamCapability capability(*this);
+  return &capability;
+}
+
 bool TbdMixerCapability::param(uint8_t device_idx, uint8_t track,
                                uint8_t param_idx,
                                MidiDeviceMixerParam *param) {
@@ -1640,7 +1675,7 @@ bool TbdMixerCapability::set_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-uint8_t TbdDevice::param_target_count(uint8_t device_idx) const {
+uint8_t TbdParamCapability::target_count(uint8_t device_idx) const {
   if (device_idx == kTbdUiSlotPrimary) {
     return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ? mcl_seq.num_tbd_tracks
                                                        : 0;
@@ -1652,14 +1687,15 @@ uint8_t TbdDevice::param_target_count(uint8_t device_idx) const {
   return 0;
 }
 
-uint8_t TbdDevice::param_count(uint8_t device_idx, uint8_t target) const {
+uint8_t TbdParamCapability::param_count(uint8_t device_idx,
+                                        uint8_t target) const {
   return p4_param_count_for_mod(device_idx, target);
 }
 
-bool TbdDevice::param_target_label(uint8_t device_idx, uint8_t target,
-                                   char *out, uint8_t len) const {
+bool TbdParamCapability::target_label(uint8_t device_idx, uint8_t target,
+                                      char *out, uint8_t len) const {
   if (out == nullptr || len == 0 ||
-      target >= param_target_count(device_idx)) {
+      target >= target_count(device_idx)) {
     return false;
   }
   TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, target);
@@ -1669,14 +1705,14 @@ bool TbdDevice::param_target_label(uint8_t device_idx, uint8_t target,
   return tbd_p4_copy_track_label(target, out, len);
 }
 
-bool TbdDevice::param_label(uint8_t device_idx, uint8_t target, uint8_t param,
-                            char *out, uint8_t len) {
+bool TbdParamCapability::param_label(uint8_t device_idx, uint8_t target,
+                                     uint8_t param, char *out, uint8_t len) {
   TbdP4ParamDescriptor *desc = p4_param_for_mod(device_idx, target, param);
   return desc != nullptr && tbd_p4_copy_param_label(*desc, out, len);
 }
 
-bool TbdDevice::get_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                          uint8_t *value) {
+bool TbdParamCapability::get_param(uint8_t device_idx, uint8_t target,
+                                   uint8_t param, uint8_t *value) {
   if (value == nullptr) {
     return false;
   }
@@ -1688,29 +1724,31 @@ bool TbdDevice::get_param(uint8_t device_idx, uint8_t target, uint8_t param,
   return true;
 }
 
-bool TbdDevice::set_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                          uint8_t value, MidiUartClass *uart_) {
+bool TbdParamCapability::set_param(uint8_t device_idx, uint8_t target,
+                                   uint8_t param, uint8_t value,
+                                   MidiUartClass *uart_) {
   TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, target);
   TbdP4ParamDescriptor *desc = p4_param_for_mod(device_idx, target, param);
   if (sound == nullptr || desc == nullptr) {
     return false;
   }
   int16_t scaled = p4_u7_to_value(*desc, value);
-  MidiUartClass *port = uart_ ? uart_ : uart;
+  MidiUartClass *port = uart_ ? uart_ : device_.uart;
   tbd_p4_send_param_value(port, sound->midi_channel, *desc, scaled);
   return true;
 }
 
-uint8_t TbdDevice::sequencer_lock_param_count(uint8_t device_idx,
-                                              uint8_t target) const {
+uint8_t TbdParamCapability::sequencer_lock_param_count(uint8_t device_idx,
+                                                       uint8_t target) const {
   return p4_sound_for_mixer(device_idx, target) != nullptr
              ? TBD_P4_LOCK_PARAM_COUNT
              : 0;
 }
 
-bool TbdDevice::sequencer_lock_param_info(uint8_t device_idx, uint8_t target,
-                                          uint8_t param,
-                                          MidiDeviceParamInfo *info) {
+bool TbdParamCapability::sequencer_lock_param_info(uint8_t device_idx,
+                                                   uint8_t target,
+                                                   uint8_t param,
+                                                   MidiDeviceParamInfo *info) {
   if (info == nullptr ||
       param >= sequencer_lock_param_count(device_idx, target)) {
     return false;
@@ -1754,9 +1792,10 @@ bool TbdDevice::sequencer_lock_param_info(uint8_t device_idx, uint8_t target,
   return true;
 }
 
-bool TbdDevice::sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
-                                           uint8_t param, char *out,
-                                           uint8_t len) {
+bool TbdParamCapability::sequencer_lock_param_label(uint8_t device_idx,
+                                                    uint8_t target,
+                                                    uint8_t param, char *out,
+                                                    uint8_t len) {
   if (out == nullptr || len == 0) {
     return false;
   }
@@ -1780,14 +1819,14 @@ bool TbdDevice::sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
   return true;
 }
 
-bool TbdDevice::sequencer_uses_step_pitch(uint8_t device_idx,
-                                          uint8_t target) const {
+bool TbdParamCapability::sequencer_uses_step_pitch(uint8_t device_idx,
+                                                   uint8_t target) const {
   TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, target);
   return sound != nullptr && tbd_p4_sound_uses_step_note(*sound);
 }
 
-uint8_t TbdDevice::sequencer_pitch_lock_param(uint8_t device_idx,
-                                              uint8_t target) const {
+uint8_t TbdParamCapability::sequencer_pitch_lock_param(uint8_t device_idx,
+                                                       uint8_t target) const {
   (void)device_idx;
   (void)target;
   return TBD_P4_LOCK_NOTE_PARAM;

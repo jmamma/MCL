@@ -180,30 +180,6 @@ public:
   virtual DeviceParamCapability *params();
 #endif
   virtual DevicePanelCapability *panel();
-#if !defined(__AVR__)
-  virtual uint8_t param_target_count(uint8_t device_idx) const;
-  virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const;
-  virtual bool param_target_label(uint8_t device_idx, uint8_t target,
-                                  char *out, uint8_t len) const;
-  virtual bool param_label(uint8_t device_idx, uint8_t target,
-                           uint8_t param, char *out, uint8_t len);
-  virtual bool get_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t *value);
-  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t value, MidiUartClass *uart_ = nullptr);
-  virtual uint8_t sequencer_lock_param_count(uint8_t device_idx,
-                                             uint8_t target) const;
-  virtual bool sequencer_lock_param_info(uint8_t device_idx, uint8_t target,
-                                         uint8_t param,
-                                         MidiDeviceParamInfo *info);
-  virtual bool sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
-                                          uint8_t param, char *out,
-                                          uint8_t len);
-  virtual bool sequencer_uses_step_pitch(uint8_t device_idx,
-                                         uint8_t target) const;
-  virtual uint8_t sequencer_pitch_lock_param(uint8_t device_idx,
-                                             uint8_t target) const;
-#endif
   virtual void triggerTrack(uint8_t track, uint8_t velocity,
                             MidiUartClass *uart_ = nullptr) {
     (void)track;
