@@ -193,7 +193,7 @@ void StepSeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t chan
 }
 
 // ============================================================================
-// StepSeqDataTrack - Backend Hooks
+// StepSeqDataTrack - Driver Hooks
 // ============================================================================
 
 bool StepSeqDataTrack::get_default_lock_value(uint8_t, uint8_t &) const {

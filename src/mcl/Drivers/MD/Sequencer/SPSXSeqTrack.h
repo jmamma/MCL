@@ -158,7 +158,7 @@ public:
 
     void clear_mutes() override;
 
-    void preview_step(uint8_t step);
+    bool preview_step(uint8_t step) override;
 
     // ========================================================================
     // Pattern Import

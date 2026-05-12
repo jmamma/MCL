@@ -282,6 +282,11 @@ public:
     void clear_track(bool locks = true) override;
     void clear_param_locks(uint8_t param_id);
     bool is_param(uint8_t param_id);
+    virtual bool owns_sound_data() const { return false; }
+    virtual bool preview_step(uint8_t step) {
+        (void)step;
+        return false;
+    }
 
     void set_length(uint8_t len, bool expand = false) override;
     void rotate_left() override { modify_track(STEPSEQ_DIR_LEFT); }

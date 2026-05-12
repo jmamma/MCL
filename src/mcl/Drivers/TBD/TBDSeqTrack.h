@@ -23,7 +23,8 @@ public:
   bool note_on(uint8_t note, uint8_t velocity = 100,
                MidiUartClass *uart_ = nullptr);
   void note_off(MidiUartClass *uart_ = nullptr);
-  bool preview_step(uint8_t step);
+  bool owns_sound_data() const override { return true; }
+  bool preview_step(uint8_t step) override;
   void send_notes_off();
   void clear_mutes() override;
 

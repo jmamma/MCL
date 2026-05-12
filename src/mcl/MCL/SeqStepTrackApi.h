@@ -20,22 +20,7 @@ using SeqStepLockParamInfo = MidiDeviceParamInfo;
 
 class SeqStepTrackApi {
 public:
-  enum Backend : uint8_t {
-    LegacyMD,
-#if !defined(__AVR__)
-    StepSeqSpsx,
-#if defined(PLATFORM_TBD)
-    StepSeqTbd,
-#endif
-#endif
-  };
-
-  explicit SeqStepTrackApi(MDSeqTrack &track)
-      :
-#if !defined(__AVR__)
-        backend_(LegacyMD),
-#endif
-        md_(&track)
+  explicit SeqStepTrackApi(MDSeqTrack &track) : legacy_md_(&track)
 #if !defined(__AVR__)
         ,
         step_(nullptr)
@@ -43,35 +28,32 @@ public:
   {}
 
 #if !defined(__AVR__)
-  explicit SeqStepTrackApi(SPSXSeqTrack &track)
-      : backend_(StepSeqSpsx), md_(nullptr), step_(&track) {}
-
-#if defined(PLATFORM_TBD)
-  explicit SeqStepTrackApi(TBDSeqTrack &track)
-      : backend_(StepSeqTbd), md_(nullptr), step_(&track) {}
-#endif
+  explicit SeqStepTrackApi(StepSeqDataTrack &track)
+      : legacy_md_(nullptr), step_(&track) {}
 #endif
 
   bool is_stepseq() const {
 #if !defined(__AVR__)
-    return backend_ != LegacyMD;
-#else
-    return false;
-#endif
-  }
-  bool is_tbd() const {
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-    return backend_ == StepSeqTbd;
+    return step_ != nullptr;
 #else
     return false;
 #endif
   }
 
   bool uses_md_sound() const {
-#if !defined(__AVR__) && defined(PLATFORM_TBD)
-    return backend_ != StepSeqTbd;
-#else
+#if !defined(__AVR__)
+    if (is_stepseq()) {
+      return !step_->owns_sound_data();
+    }
+#endif
     return true;
+  }
+
+  bool selects_track_locally() const {
+#if !defined(__AVR__)
+    return is_stepseq() && step_->owns_sound_data();
+#else
+    return false;
 #endif
   }
 
@@ -132,7 +114,7 @@ public:
       return step_->length;
     }
 #endif
-    return md_->length;
+    return legacy_md_->length;
   }
 
   uint8_t speed() const {
@@ -141,7 +123,7 @@ public:
       return step_->speed;
     }
 #endif
-    return md_->speed;
+    return legacy_md_->speed;
   }
 
   uint8_t step_count() const {
@@ -150,7 +132,7 @@ public:
       return step_->step_count;
     }
 #endif
-    return md_->step_count;
+    return legacy_md_->step_count;
   }
 
   uint8_t track_index() const {
@@ -159,7 +141,7 @@ public:
       return step_->track_number;
     }
 #endif
-    return md_->track_number;
+    return legacy_md_->track_number;
   }
 
   uint8_t mute_state() const {
@@ -168,7 +150,7 @@ public:
       return step_->mute_state;
     }
 #endif
-    return md_->mute_state;
+    return legacy_md_->mute_state;
   }
 
   void set_mute_state(uint8_t state) {
@@ -178,7 +160,7 @@ public:
       return;
     }
 #endif
-    md_->mute_state = state;
+    legacy_md_->mute_state = state;
   }
 
   void set_length(uint8_t len, bool expand = false) {
@@ -188,7 +170,7 @@ public:
       return;
     }
 #endif
-    md_->set_length(len, expand);
+    legacy_md_->set_length(len, expand);
   }
 
   bool request_speed_change(uint8_t new_speed) {
@@ -204,7 +186,7 @@ public:
       return true;
     }
 #endif
-    return md_->request_speed_change(new_speed);
+    return legacy_md_->request_speed_change(new_speed);
   }
 
   uint8_t condition_count() const {
@@ -245,7 +227,7 @@ public:
       return 127;
     }
 #endif
-    return md_->get_timing_mid();
+    return legacy_md_->get_timing_mid();
   }
 
   uint8_t timing_encoder_max() const {
@@ -254,7 +236,7 @@ public:
       return 254;
     }
 #endif
-    return md_->get_timing_mid() * 2 - 1;
+    return legacy_md_->get_timing_mid() * 2 - 1;
   }
 
   uint8_t timing_display_mid() const {
@@ -263,7 +245,7 @@ public:
       return 0;
     }
 #endif
-    return md_->get_timing_mid();
+    return legacy_md_->get_timing_mid();
   }
 
   uint8_t timing_encoder_for_step(uint8_t step) const {
@@ -272,8 +254,8 @@ public:
       return (uint8_t)(microtiming_for_step(step) + 127);
     }
 #endif
-    uint8_t timing = md_->timing[step];
-    return timing == 0 ? md_->get_timing_mid() : timing;
+    uint8_t timing = legacy_md_->timing[step];
+    return timing == 0 ? legacy_md_->get_timing_mid() : timing;
   }
 
   int8_t microtiming_from_encoder(uint8_t encoder_value) const {
@@ -296,7 +278,7 @@ public:
       return;
     }
 #endif
-    md_->rotate_left();
+    legacy_md_->rotate_left();
   }
 
   void rotate_right() {
@@ -306,7 +288,7 @@ public:
       return;
     }
 #endif
-    md_->rotate_right();
+    legacy_md_->rotate_right();
   }
 
   void reverse() {
@@ -316,7 +298,7 @@ public:
       return;
     }
 #endif
-    md_->reverse();
+    legacy_md_->reverse();
   }
 
   void transpose(int8_t offset) {
@@ -326,7 +308,7 @@ public:
       return;
     }
 #endif
-    md_->transpose(offset);
+    legacy_md_->transpose(offset);
   }
 
   uint8_t mask_for(uint8_t ui_mask) const {
@@ -353,7 +335,7 @@ public:
       step_->get_mask(mask, mask_for(ui_mask));
     } else {
 #endif
-      md_->get_mask(mask, ui_mask);
+      legacy_md_->get_mask(mask, ui_mask);
 #if !defined(__AVR__)
     }
 #endif
@@ -365,7 +347,7 @@ public:
       return step_->get_step(step, mask_for(ui_mask));
     }
 #endif
-    return md_->get_step(step, ui_mask);
+    return legacy_md_->get_step(step, ui_mask);
   }
 
   void set_step(uint8_t step, uint8_t ui_mask, bool value) {
@@ -374,7 +356,7 @@ public:
       step_->set_step(step, mask_for(ui_mask), value);
     } else {
 #endif
-      md_->set_step(step, ui_mask, value);
+      legacy_md_->set_step(step, ui_mask, value);
 #if !defined(__AVR__)
     }
 #endif
@@ -386,7 +368,7 @@ public:
       return step_->steps[step].cond_id;
     }
 #endif
-    return md_->steps[step].cond_id;
+    return legacy_md_->steps[step].cond_id;
   }
 
   bool conditional_plock(uint8_t step) const {
@@ -395,7 +377,7 @@ public:
       return step_->steps[step].cond_plock;
     }
 #endif
-    return md_->steps[step].cond_plock;
+    return legacy_md_->steps[step].cond_plock;
   }
 
   void set_conditional(uint8_t step, uint8_t condition, bool plock) {
@@ -405,8 +387,8 @@ public:
       step_->steps[step].cond_plock = plock;
     } else {
 #endif
-      md_->steps[step].cond_id = condition;
-      md_->steps[step].cond_plock = plock;
+      legacy_md_->steps[step].cond_id = condition;
+      legacy_md_->steps[step].cond_plock = plock;
 #if !defined(__AVR__)
     }
 #endif
@@ -420,7 +402,7 @@ public:
       step_->microtiming[step] = microtiming_from_encoder(encoder_value);
     } else {
 #endif
-      md_->timing[step] = encoder_value;
+      legacy_md_->timing[step] = encoder_value;
 #if !defined(__AVR__)
     }
 #endif
@@ -439,10 +421,10 @@ public:
       return;
     }
 #endif
-    md_->steps[step].trig = true;
-    md_->steps[step].cond_id = condition;
-    md_->steps[step].cond_plock = cond_plock;
-    md_->timing[step] = timing_encoder;
+    legacy_md_->steps[step].trig = true;
+    legacy_md_->steps[step].cond_id = condition;
+    legacy_md_->steps[step].cond_plock = cond_plock;
+    legacy_md_->timing[step] = timing_encoder;
   }
 
   void reset_timing(uint8_t step) {
@@ -451,7 +433,7 @@ public:
       step_->microtiming[step] = 0;
     } else {
 #endif
-      md_->timing[step] = md_->get_timing_mid();
+      legacy_md_->timing[step] = legacy_md_->get_timing_mid();
 #if !defined(__AVR__)
     }
 #endif
@@ -463,7 +445,7 @@ public:
       step_->mute_mask &= ~(1ULL << step);
     } else {
 #endif
-      md_->mute_mask &= ~(1ULL << step);
+      legacy_md_->mute_mask &= ~(1ULL << step);
 #if !defined(__AVR__)
     }
 #endif
@@ -475,7 +457,7 @@ public:
       step_->mute_mask ^= (1ULL << step);
     } else {
 #endif
-      md_->mute_mask ^= (1ULL << step);
+      legacy_md_->mute_mask ^= (1ULL << step);
 #if !defined(__AVR__)
     }
 #endif
@@ -487,7 +469,7 @@ public:
       return step_->mute_mask;
     }
 #endif
-    return md_->mute_mask;
+    return legacy_md_->mute_mask;
   }
 
   void enable_step_locks(uint8_t step) {
@@ -496,7 +478,7 @@ public:
       step_->enable_step_locks(step);
     } else {
 #endif
-      md_->enable_step_locks(step);
+      legacy_md_->enable_step_locks(step);
 #if !defined(__AVR__)
     }
 #endif
@@ -508,7 +490,7 @@ public:
       step_->clear_step_lock(step, param_id);
     } else {
 #endif
-      md_->clear_step_lock(step, param_id);
+      legacy_md_->clear_step_lock(step, param_id);
 #if !defined(__AVR__)
     }
 #endif
@@ -521,7 +503,7 @@ public:
       return;
     }
 #endif
-    md_->clear_step_locks(step);
+    legacy_md_->clear_step_locks(step);
   }
 
   void clear_param_locks(uint8_t param_id) {
@@ -531,7 +513,7 @@ public:
       return;
     }
 #endif
-    md_->clear_param_locks(param_id);
+    legacy_md_->clear_param_locks(param_id);
   }
 
   void clear_locks() {
@@ -541,7 +523,7 @@ public:
       return;
     }
 #endif
-    md_->clear_locks();
+    legacy_md_->clear_locks();
   }
 
   bool set_track_locks(uint8_t step, uint8_t param_id, uint8_t value) {
@@ -550,7 +532,7 @@ public:
       return step_->set_track_locks(step, param_id, value);
     }
 #endif
-    return md_->set_track_locks(step, param_id, value);
+    return legacy_md_->set_track_locks(step, param_id, value);
   }
 
   bool step_has_lock(uint8_t step, uint8_t lock_idx) const {
@@ -559,15 +541,15 @@ public:
       return step_->steps[step].is_lock(lock_idx);
     }
 #endif
-    return md_->steps[step].is_lock(lock_idx);
+    return legacy_md_->steps[step].is_lock(lock_idx);
   }
 
   int8_t find_param(uint8_t param_id) const {
 #if !defined(__AVR__)
     uint8_t lock_idx = is_stepseq() ? step_->find_param(param_id)
-                                    : md_->find_param(param_id);
+                                    : legacy_md_->find_param(param_id);
 #else
-    uint8_t lock_idx = md_->find_param(param_id);
+    uint8_t lock_idx = legacy_md_->find_param(param_id);
 #endif
     return lock_idx == 255 ? -1 : (int8_t)lock_idx;
   }
@@ -583,7 +565,7 @@ public:
       return step_->get_track_lock_implicit(step, param_id);
     }
 #endif
-    return md_->get_track_lock_implicit(step, param_id);
+    return legacy_md_->get_track_lock_implicit(step, param_id);
   }
 
   void clear_track(bool locks = true) {
@@ -593,7 +575,7 @@ public:
       return;
     }
 #endif
-    md_->clear_track(locks);
+    legacy_md_->clear_track(locks);
   }
 
   void clear_step(uint8_t step) {
@@ -605,7 +587,7 @@ public:
 #endif
     MDSeqStep empty_step;
     memset(&empty_step, 0, sizeof(empty_step));
-    md_->paste_step(step, &empty_step);
+    legacy_md_->paste_step(step, &empty_step);
   }
 
   void clean_params() {
@@ -615,7 +597,7 @@ public:
       return;
     }
 #endif
-    md_->clean_params();
+    legacy_md_->clean_params();
   }
 
   void copy_step(uint8_t step, MDSeqStep *md_step
@@ -630,7 +612,7 @@ public:
       return;
     }
 #endif
-    md_->copy_step(step, md_step);
+    legacy_md_->copy_step(step, md_step);
   }
 
   void paste_step(uint8_t step, MDSeqStep *md_step
@@ -645,7 +627,7 @@ public:
       return;
     }
 #endif
-    md_->paste_step(step, md_step);
+    legacy_md_->paste_step(step, md_step);
   }
 
   void set_track_pitch(uint8_t step, uint8_t pitch) {
@@ -654,7 +636,7 @@ public:
       step_->set_track_pitch(step, pitch);
     } else {
 #endif
-      md_->set_track_pitch(step, pitch);
+      legacy_md_->set_track_pitch(step, pitch);
 #if !defined(__AVR__)
     }
 #endif
@@ -667,7 +649,7 @@ public:
       step_->get_step_locks(step, params, ignore_locks_disabled);
     } else {
 #endif
-      md_->get_step_locks(step, params, ignore_locks_disabled);
+      legacy_md_->get_step_locks(step, params, ignore_locks_disabled);
 #if !defined(__AVR__)
     }
 #endif
@@ -679,7 +661,7 @@ public:
       step_->record_track(velocity);
     } else {
 #endif
-      md_->record_track(velocity);
+      legacy_md_->record_track(velocity);
 #if !defined(__AVR__)
     }
 #endif
@@ -691,7 +673,7 @@ public:
       step_->record_track_locks(param_id, value);
     } else {
 #endif
-      md_->record_track_locks(param_id, value);
+      legacy_md_->record_track_locks(param_id, value);
 #if !defined(__AVR__)
     }
 #endif
@@ -699,26 +681,12 @@ public:
 
   bool preview_step(uint8_t step) {
 #if !defined(__AVR__)
-    if (backend_ == StepSeqSpsx) {
-      static_cast<SPSXSeqTrack *>(step_)->preview_step(step);
-      return true;
-    }
-#if defined(PLATFORM_TBD)
-    if (backend_ == StepSeqTbd) {
-      return static_cast<TBDSeqTrack *>(step_)->preview_step(step);
+    if (is_stepseq()) {
+      return step_->preview_step(step);
     }
 #endif
-#endif
-    return false;
-  }
-
-  bool send_md_parameter_locks(uint8_t step) {
-#if !defined(__AVR__)
-    if (backend_ != LegacyMD) {
-      return false;
-    }
-#endif
-    md_->send_parameter_locks(step, true);
+    legacy_md_->send_parameter_locks(step, true);
+    MD.triggerTrack(legacy_md_->track_number, 127);
     return true;
   }
 
@@ -726,10 +694,7 @@ private:
   uint8_t param_device_slot() const { return 1; }
   uint8_t param_dest() const { return track_index() + 1; }
 
-#if !defined(__AVR__)
-  Backend backend_;
-#endif
-  MDSeqTrack *md_;
+  MDSeqTrack *legacy_md_;
 #if !defined(__AVR__)
   StepSeqDataTrack *step_;
 #endif

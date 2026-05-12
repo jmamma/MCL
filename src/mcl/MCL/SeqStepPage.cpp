@@ -505,7 +505,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     if (show_seq_menu) {
       opt_trackid = track + 1;
       note_interface.ignoreNextEvent(track);
-      if (active_track.is_tbd()) {
+      if (active_track.selects_track_locally()) {
         last_md_track = track;
         config();
       } else {
@@ -759,10 +759,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (step != 255) {
         switch (key) {
         case MDX_KEY_YES: {
-          if (!active_track.preview_step(step) &&
-              active_track.send_md_parameter_locks(step)) {
-            MD.triggerTrack(last_md_track, 127);
-          }
+          active_track.preview_step(step);
           reset_on_release = true;
           return true;
         }

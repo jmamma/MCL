@@ -538,8 +538,8 @@ void SPSXSeqTrack::send_slides(volatile uint8_t *locks_params_arg, uint8_t chann
 // Preview
 // ============================================================================
 
-void SPSXSeqTrack::preview_step(uint8_t step) {
-    if (step >= length) return;
+bool SPSXSeqTrack::preview_step(uint8_t step) {
+    if (step >= length) return false;
 
     // Send all lock values for this step (kit defaults overlaid with plocks)
     uint16_t lock_idx = get_lockidx(step);
@@ -566,6 +566,7 @@ void SPSXSeqTrack::preview_step(uint8_t step) {
     uint8_t velocity = SPSX_IS_BIT_SET64(accent_mask, step) ? 0x7F : 0x60;
     MD.triggerTrack(track_number, velocity);
     mixer_page.trig(track_number);
+    return true;
 }
 
 // ============================================================================
