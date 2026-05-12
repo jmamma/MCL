@@ -104,6 +104,7 @@ public:
 #endif
   virtual DeviceMixerCapability *mixer() override;
 #if !defined(__AVR__)
+  virtual DeviceStepEditCapability *step_edit() override;
   virtual DeviceParamCapability *params() override;
   virtual DevicePerfCapability *perf() override;
 #endif

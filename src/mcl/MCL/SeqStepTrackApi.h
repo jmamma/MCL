@@ -3,8 +3,12 @@
 #ifndef SEQSTEPTRACKAPI_H__
 #define SEQSTEPTRACKAPI_H__
 
+#include "../Drivers/MidiDevice.h"
 #include "DeviceParamResolver.h"
 #include "MCLSeq.h"
+#if defined(__AVR__)
+#include "MCLEncoder.h"
+#endif
 #if defined(PLATFORM_TBD)
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
@@ -15,6 +19,9 @@
 #include <string.h>
 
 extern uint8_t last_md_track;
+#if defined(__AVR__)
+extern MCLEncoder ptc_param_fine_tune;
+#endif
 
 using SeqStepLockParamInfo = MidiDeviceParamInfo;
 
@@ -40,7 +47,7 @@ public:
 #endif
   }
 
-  bool uses_md_sound() const {
+  bool uses_kit_sound() const {
 #if !defined(__AVR__)
     if (is_stepseq()) {
       return !step_->owns_sound_data();
@@ -58,22 +65,202 @@ public:
   }
 
   bool uses_step_pitch() const {
-    return uses_md_sound() ||
+    return uses_kit_sound() ||
            DeviceParamResolver::slot(param_device_slot(), param_dest())
                .uses_step_pitch();
   }
 
-  bool configure_driver_panel(char *info, size_t info_len,
-                              uint8_t &pitch_encoder_max) const {
-    if (uses_md_sound()) {
-      (void)info;
-      (void)info_len;
-      (void)pitch_encoder_max;
-      return false;
+  bool configure_panel(char *info, size_t info_len,
+                       uint8_t &pitch_encoder_max,
+                       bool &is_midi_model) const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      return configure_md_kit_panel(info, (uint8_t)info_len,
+                                    &pitch_encoder_max, &is_midi_model);
+#else
+      return step_edit()->configure_kit_sound_panel(
+          param_device_idx(), param_target(), info, (uint8_t)info_len,
+          &pitch_encoder_max, &is_midi_model);
+#endif
     }
     pitch_encoder_max = uses_step_pitch() ? 127 : 1;
+    is_midi_model = false;
     return DeviceParamResolver::slot(param_device_slot(), param_dest())
         .target_label(info, (uint8_t)info_len);
+  }
+
+  bool step_editor_available() const {
+#if defined(__AVR__)
+    return !uses_kit_sound() || MD.global.extendedMode == 2;
+#else
+    return !uses_kit_sound() || step_edit()->available(param_device_idx());
+#endif
+  }
+
+  void set_step_edit_rec_mode(uint8_t mode) const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      MD.set_rec_mode(mode);
+#else
+      step_edit()->set_rec_mode(param_device_idx(), mode);
+#endif
+    }
+  }
+
+  void sync_step_edit() const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      MD.sync_seqtrack(length(), speed(), step_count());
+#else
+      step_edit()->sync_track(param_device_idx(), length(), speed(),
+                              step_count());
+#endif
+    }
+  }
+
+  void set_step_edit_trig_leds(uint16_t mask, uint8_t mode,
+                               uint8_t blink = 0) const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      MD.set_trigleds(mask, (TrigLEDMode)mode, blink);
+#else
+      step_edit()->set_trig_leds(param_device_idx(), mask, mode, blink);
+#endif
+    }
+  }
+
+  void set_live_param_update(bool enabled) const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      if (enabled) {
+        MD.midi_events.enable_live_kit_update();
+      } else {
+        MD.midi_events.disable_live_kit_update();
+      }
+#else
+      step_edit()->set_live_param_update(param_device_idx(), enabled);
+#endif
+    }
+  }
+
+  bool uses_note_pitch() const {
+#if defined(__AVR__)
+    return uses_kit_sound() ? md_kit_uses_note_pitch() : uses_step_pitch();
+#else
+    return uses_kit_sound()
+               ? step_edit()->kit_sound_uses_note_pitch(param_device_idx(),
+                                                        param_target())
+               : uses_step_pitch();
+#endif
+  }
+
+  uint8_t note_from_pitch_lock(uint8_t pitch) const {
+#if defined(__AVR__)
+    return uses_kit_sound() ? md_kit_note_from_pitch(pitch) : pitch;
+#else
+    return uses_kit_sound()
+               ? step_edit()->kit_sound_note_from_pitch(param_device_idx(),
+                                                        param_target(), pitch)
+               : pitch;
+#endif
+  }
+
+  uint8_t pitch_lock_from_note(uint8_t note, uint8_t fine_tune = 255) const {
+#if defined(__AVR__)
+    return uses_kit_sound() ? md_kit_pitch_from_note(note, fine_tune) : note;
+#else
+    return uses_kit_sound()
+               ? step_edit()->kit_sound_pitch_from_note(
+                     param_device_idx(), param_target(), note, fine_tune)
+               : note;
+#endif
+  }
+
+  uint8_t default_pitch_lock() const {
+#if defined(__AVR__)
+    return uses_kit_sound() ? md_kit_default_pitch() : 0;
+#else
+    return uses_kit_sound()
+               ? step_edit()->kit_sound_default_pitch(param_device_idx(),
+                                                      param_target())
+               : 0;
+#endif
+  }
+
+  bool param_from_key(uint8_t key, uint8_t *param) const {
+#if defined(__AVR__)
+    return uses_kit_sound() && md_param_from_key(key, param);
+#else
+    return uses_kit_sound() &&
+           step_edit()->param_from_key(param_device_idx(), param_target(), key,
+                                       param);
+#endif
+  }
+
+  bool key_for_param(uint8_t param, uint8_t *key) const {
+#if defined(__AVR__)
+    return uses_kit_sound() && md_key_for_param(param, key);
+#else
+    return uses_kit_sound() &&
+           step_edit()->key_for_param(param_device_idx(), param_target(), param,
+                                      key);
+#endif
+  }
+
+  bool begin_param_editor(uint8_t *params, uint8_t count) const {
+#if defined(__AVR__)
+    if (!uses_kit_sound() || params == nullptr || count < MD_PARAMS_PER_TRACK) {
+      return false;
+    }
+    MD.activate_encoder_interface(params);
+    return true;
+#else
+    return uses_kit_sound() &&
+           step_edit()->begin_param_editor(param_device_idx(), param_target(),
+                                           params, count);
+#endif
+  }
+
+  void end_param_editor() const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      if (MD.encoder_interface) {
+        MD.deactivate_encoder_interface();
+      }
+#else
+      step_edit()->end_param_editor(param_device_idx());
+#endif
+    }
+  }
+
+  void close_microtiming() const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      MD.draw_close_microtiming();
+#else
+      step_edit()->close_microtiming(param_device_idx());
+#endif
+    }
+  }
+
+  void clear_step_edit_popup() const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      MD.popup_text(127, 2);
+#else
+      step_edit()->clear_popup(param_device_idx());
+#endif
+    }
+  }
+
+  void popup_text(char *text, uint8_t persistent = 0) const {
+    if (uses_kit_sound()) {
+#if defined(__AVR__)
+      MD.popup_text(text, persistent);
+#else
+      step_edit()->popup_text(param_device_idx(), text, persistent);
+#endif
+    }
   }
 
   uint8_t lock_param_count() const {
@@ -693,6 +880,132 @@ public:
 private:
   uint8_t param_device_slot() const { return 1; }
   uint8_t param_dest() const { return track_index() + 1; }
+  uint8_t param_device_idx() const {
+    return DeviceParamResolver::slot_device_idx(param_device_slot());
+  }
+  uint8_t param_target() const { return track_index(); }
+#if defined(__AVR__)
+  bool configure_md_kit_panel(char *info, uint8_t info_len, uint8_t *pitch_max,
+                              bool *is_midi_model) const {
+    if (info == nullptr || info_len < 6 || track_index() >= NUM_MD_TRACKS) {
+      return false;
+    }
+    uint8_t model = MD.kit.get_model(track_index());
+    bool midi_model = ((model & 0xF0) == MID_01_MODEL);
+    tuning_t const *tuning = MD.getKitModelTuning(track_index());
+    if (is_midi_model != nullptr) {
+      *is_midi_model = midi_model;
+    }
+    if (pitch_max != nullptr) {
+      if (tuning) {
+        *pitch_max = tuning->len - 1 + tuning->base;
+      } else if (midi_model) {
+        *pitch_max = 127;
+      } else {
+        *pitch_max = 1;
+      }
+    }
+    const char *str1 = getMDMachineNameShort(model, 1);
+    const char *str2 = getMDMachineNameShort(model, 2);
+    copyMachineNameShort(str1, info);
+    info[2] = '>';
+    copyMachineNameShort(str2, info + 3);
+    info[5] = '\0';
+    return true;
+  }
+
+  bool md_kit_uses_note_pitch() const {
+    if (track_index() >= NUM_MD_TRACKS) {
+      return false;
+    }
+    uint8_t model = MD.kit.get_model(track_index());
+    return ((model & 0xF0) == MID_01_MODEL) ||
+           MD.getKitModelTuning(track_index()) != nullptr;
+  }
+
+  uint8_t md_kit_default_pitch() const {
+    return track_index() < NUM_MD_TRACKS ? MD.kit.params[track_index()][0] : 0;
+  }
+
+  uint8_t md_kit_note_from_pitch(uint8_t pitch) const {
+    if (track_index() >= NUM_MD_TRACKS) {
+      return 255;
+    }
+    if ((MD.kit.models[track_index()] & 0xF0) == MID_01_MODEL) {
+      return pitch;
+    }
+    tuning_t const *tuning = MD.getKitModelTuning(track_index());
+    if (tuning == nullptr) {
+      return 255;
+    }
+    pitch -= ptc_param_fine_tune.getValue() - 32;
+    for (uint8_t i = 0; i < tuning->len; i++) {
+      uint8_t cc = pgm_read_byte(&tuning->tuning[i]);
+      if (cc >= pitch) {
+        uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
+        return i + note_offset;
+      }
+    }
+    return 255;
+  }
+
+  uint8_t md_kit_pitch_from_note(uint8_t note, uint8_t fine_tune) const {
+    if (track_index() >= NUM_MD_TRACKS) {
+      return 255;
+    }
+    if ((MD.kit.models[track_index()] & 0xF0) == MID_01_MODEL) {
+      return note;
+    }
+    if (fine_tune == 255) {
+      fine_tune = ptc_param_fine_tune.getValue();
+    }
+    tuning_t const *tuning = MD.getKitModelTuning(track_index());
+    if (tuning == nullptr) {
+      return 255;
+    }
+    uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
+    note -= note_offset;
+    if (note >= tuning->len) {
+      return 255;
+    }
+    int8_t pitch = (int8_t)pgm_read_byte(&tuning->tuning[note]) +
+                   (int8_t)fine_tune - 32;
+    if (pitch < 0) {
+      return 0;
+    }
+    return pitch > 127 ? 127 : (uint8_t)pitch;
+  }
+
+  bool md_param_from_key(uint8_t key, uint8_t *param) const {
+    if (param == nullptr || track_index() >= NUM_MD_TRACKS || key < 0x10 ||
+        key > 0x17) {
+      return false;
+    }
+    uint8_t value = MD.currentSynthPage * 8 + key - 0x10;
+    if (value >= MD_PARAMS_PER_TRACK) {
+      return false;
+    }
+    *param = value;
+    return true;
+  }
+
+  bool md_key_for_param(uint8_t param, uint8_t *key) const {
+    if (key == nullptr || track_index() >= NUM_MD_TRACKS ||
+        param >= MD_PARAMS_PER_TRACK) {
+      return false;
+    }
+    int16_t value = (int16_t)param - (int16_t)MD.currentSynthPage * 8 + 0x10;
+    if (value < 0x10 || value > 0x17) {
+      return false;
+    }
+    *key = (uint8_t)value;
+    return true;
+  }
+#else
+  DeviceStepEditCapability *step_edit() const {
+    return DeviceParamResolver::slot_device(param_device_slot())->step_edit();
+  }
+#endif
 
   MDSeqTrack *legacy_md_;
 #if !defined(__AVR__)
@@ -738,6 +1051,22 @@ inline uint8_t seq_step_api_track_count(bool use_tbd_tracks) {
   (void)use_tbd_tracks;
 #endif
   return mcl_seq.num_md_tracks;
+}
+
+inline bool seq_step_api_parse_kit_cc(uint8_t channel, uint8_t cc,
+                                      uint8_t *track, uint8_t *param) {
+#if defined(__AVR__)
+  if (track == nullptr || param == nullptr) {
+    return false;
+  }
+  MD.parseCC(channel, cc, track, param);
+  return *track != 255;
+#else
+  MidiDevice *device = DeviceParamResolver::slot_device(1);
+  return device != nullptr && device->step_edit()->parse_cc(
+                                  DeviceParamResolver::slot_device_idx(1),
+                                  channel, cc, track, param);
+#endif
 }
 
 #endif /* SEQSTEPTRACKAPI_H__ */

@@ -211,6 +211,51 @@ private:
 };
 #endif
 
+#if !defined(__AVR__)
+class MDStepEditCapability : public DeviceStepEditCapability {
+public:
+  explicit MDStepEditCapability(MDClass &device)
+      : DeviceStepEditCapability(device) {}
+  virtual bool available(uint8_t device_idx) const override;
+  virtual void set_rec_mode(uint8_t device_idx, uint8_t mode) override;
+  virtual void sync_track(uint8_t device_idx, uint8_t length, uint8_t speed,
+                          uint8_t step_count) override;
+  virtual void set_trig_leds(uint8_t device_idx, uint16_t mask, uint8_t mode,
+                             uint8_t blink = 0) override;
+  virtual void set_live_param_update(uint8_t device_idx,
+                                     bool enabled) override;
+  virtual bool configure_kit_sound_panel(uint8_t device_idx, uint8_t target,
+                                         char *info, uint8_t info_len,
+                                         uint8_t *pitch_max,
+                                         bool *is_midi_model) const override;
+  virtual bool kit_sound_uses_note_pitch(uint8_t device_idx,
+                                         uint8_t target) const override;
+  virtual uint8_t kit_sound_default_pitch(uint8_t device_idx,
+                                          uint8_t target) const override;
+  virtual uint8_t kit_sound_note_from_pitch(uint8_t device_idx, uint8_t target,
+                                            uint8_t pitch) const override;
+  virtual uint8_t kit_sound_pitch_from_note(uint8_t device_idx, uint8_t target,
+                                            uint8_t note,
+                                            uint8_t fine_tune) const override;
+  virtual bool param_from_key(uint8_t device_idx, uint8_t target, uint8_t key,
+                              uint8_t *param) const override;
+  virtual bool key_for_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                             uint8_t *key) const override;
+  virtual bool begin_param_editor(uint8_t device_idx, uint8_t target,
+                                  uint8_t *params, uint8_t count) override;
+  virtual void end_param_editor(uint8_t device_idx) override;
+  virtual void close_microtiming(uint8_t device_idx) override;
+  virtual void clear_popup(uint8_t device_idx) override;
+  virtual void popup_text(uint8_t device_idx, char *text,
+                          uint8_t persistent = 0) override;
+  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+                        uint8_t *target, uint8_t *param) const override;
+
+private:
+  MDClass &md() const { return (MDClass &)device_; }
+};
+#endif
+
 class MDPanelCapability : public DevicePanelCapability {
 public:
   explicit MDPanelCapability(MDClass &device) : device_(device) {}
@@ -226,6 +271,13 @@ DeviceMixerCapability *MDClass::mixer() {
   static MDMixerCapability capability(*this);
   return &capability;
 }
+
+#if !defined(__AVR__)
+DeviceStepEditCapability *MDClass::step_edit() {
+  static MDStepEditCapability capability(*this);
+  return &capability;
+}
+#endif
 
 #if !defined(__AVR__)
 DeviceParamCapability *MDClass::params() {
@@ -341,6 +393,236 @@ void MDMixerCapability::restore_track_params(uint8_t device_idx,
 void MDPanelCapability::set_key_repeat(uint8_t enabled) {
   device_.set_key_repeat(enabled);
 }
+
+#if !defined(__AVR__)
+bool MDStepEditCapability::available(uint8_t device_idx) const {
+  (void)device_idx;
+  return md().global.extendedMode == 2;
+}
+
+void MDStepEditCapability::set_rec_mode(uint8_t device_idx, uint8_t mode) {
+  (void)device_idx;
+  md().set_rec_mode(mode);
+}
+
+void MDStepEditCapability::sync_track(uint8_t device_idx, uint8_t length,
+                                      uint8_t speed, uint8_t step_count) {
+  (void)device_idx;
+  md().sync_seqtrack(length, speed, step_count);
+}
+
+void MDStepEditCapability::set_trig_leds(uint8_t device_idx, uint16_t mask,
+                                         uint8_t mode, uint8_t blink) {
+  (void)device_idx;
+  md().set_trigleds(mask, (TrigLEDMode)mode, blink);
+}
+
+void MDStepEditCapability::set_live_param_update(uint8_t device_idx,
+                                                 bool enabled) {
+  (void)device_idx;
+  if (enabled) {
+    md().midi_events.enable_live_kit_update();
+  } else {
+    md().midi_events.disable_live_kit_update();
+  }
+}
+
+bool MDStepEditCapability::configure_kit_sound_panel(
+    uint8_t device_idx, uint8_t target, char *info, uint8_t info_len,
+    uint8_t *pitch_max, bool *is_midi_model) const {
+  (void)device_idx;
+  if (target >= NUM_MD_TRACKS || info == nullptr || info_len < 6) {
+    return false;
+  }
+
+  MDClass &device = md();
+  uint8_t model = device.kit.get_model(target);
+  bool midi_model = ((model & 0xF0) == MID_01_MODEL);
+  tuning_t const *tuning = device.getKitModelTuning(target);
+  if (is_midi_model != nullptr) {
+    *is_midi_model = midi_model;
+  }
+  if (pitch_max != nullptr) {
+    if (tuning) {
+      *pitch_max = tuning->len - 1 + tuning->base;
+    } else if (midi_model) {
+      *pitch_max = 127;
+    } else {
+      *pitch_max = 1;
+    }
+  }
+
+  const char *str1 = getMDMachineNameShort(model, 1);
+  const char *str2 = getMDMachineNameShort(model, 2);
+  copyMachineNameShort(str1, info);
+  info[2] = '>';
+  copyMachineNameShort(str2, info + 3);
+  info[5] = '\0';
+  return true;
+}
+
+bool MDStepEditCapability::kit_sound_uses_note_pitch(
+    uint8_t device_idx, uint8_t target) const {
+  (void)device_idx;
+  if (target >= NUM_MD_TRACKS) {
+    return false;
+  }
+  MDClass &device = md();
+  uint8_t model = device.kit.get_model(target);
+  return ((model & 0xF0) == MID_01_MODEL) ||
+         device.getKitModelTuning(target) != nullptr;
+}
+
+uint8_t MDStepEditCapability::kit_sound_default_pitch(uint8_t device_idx,
+                                                      uint8_t target) const {
+  (void)device_idx;
+  return target < NUM_MD_TRACKS ? md().kit.params[target][0] : 0;
+}
+
+uint8_t MDStepEditCapability::kit_sound_note_from_pitch(
+    uint8_t device_idx, uint8_t target, uint8_t pitch) const {
+  (void)device_idx;
+  if (target >= NUM_MD_TRACKS) {
+    return 255;
+  }
+  MDClass &device = md();
+  if ((device.kit.models[target] & 0xF0) == MID_01_MODEL) {
+    return pitch;
+  }
+  tuning_t const *tuning = device.getKitModelTuning(target);
+  if (tuning == nullptr) {
+    return 255;
+  }
+  pitch -= ptc_param_fine_tune.getValue() - 32;
+  for (uint8_t i = 0; i < tuning->len; i++) {
+    uint8_t cc = pgm_read_byte(&tuning->tuning[i]);
+    if (cc >= pitch) {
+      uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
+      return i + note_offset;
+    }
+  }
+  return 255;
+}
+
+uint8_t MDStepEditCapability::kit_sound_pitch_from_note(
+    uint8_t device_idx, uint8_t target, uint8_t note,
+    uint8_t fine_tune) const {
+  (void)device_idx;
+  if (target >= NUM_MD_TRACKS) {
+    return 255;
+  }
+  MDClass &device = md();
+  if ((device.kit.models[target] & 0xF0) == MID_01_MODEL) {
+    return note;
+  }
+  if (fine_tune == 255) {
+    fine_tune = ptc_param_fine_tune.getValue();
+  }
+  tuning_t const *tuning = device.getKitModelTuning(target);
+  if (tuning == nullptr) {
+    return 255;
+  }
+  uint8_t note_offset = tuning->base - ((tuning->base / 12) * 12);
+  note -= note_offset;
+  if (note >= tuning->len) {
+    return 255;
+  }
+  int8_t pitch = (int8_t)pgm_read_byte(&tuning->tuning[note]) +
+                 (int8_t)fine_tune - 32;
+  if (pitch < 0) {
+    return 0;
+  }
+  return pitch > 127 ? 127 : (uint8_t)pitch;
+}
+
+bool MDStepEditCapability::param_from_key(uint8_t device_idx, uint8_t target,
+                                          uint8_t key,
+                                          uint8_t *param) const {
+  (void)device_idx;
+  if (param == nullptr || target >= NUM_MD_TRACKS || key < 0x10 ||
+      key > 0x17) {
+    return false;
+  }
+  MDClass &device = md();
+  uint8_t value = device.currentSynthPage * 8 + key - 0x10;
+  uint8_t param_count =
+      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  if (value >= param_count) {
+    return false;
+  }
+  *param = value;
+  return true;
+}
+
+bool MDStepEditCapability::key_for_param(uint8_t device_idx, uint8_t target,
+                                         uint8_t param,
+                                         uint8_t *key) const {
+  (void)device_idx;
+  if (key == nullptr || target >= NUM_MD_TRACKS) {
+    return false;
+  }
+  MDClass &device = md();
+  uint8_t param_count =
+      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  if (param >= param_count) {
+    return false;
+  }
+  int16_t value =
+      (int16_t)param - (int16_t)device.currentSynthPage * 8 + 0x10;
+  if (value < 0x10 || value > 0x17) {
+    return false;
+  }
+  *key = (uint8_t)value;
+  return true;
+}
+
+bool MDStepEditCapability::begin_param_editor(uint8_t device_idx,
+                                              uint8_t target,
+                                              uint8_t *params,
+                                              uint8_t count) {
+  (void)device_idx;
+  if (target >= NUM_MD_TRACKS || params == nullptr ||
+      count < MD_PARAMS_PER_TRACK) {
+    return false;
+  }
+  md().activate_encoder_interface(params);
+  return true;
+}
+
+void MDStepEditCapability::end_param_editor(uint8_t device_idx) {
+  (void)device_idx;
+  if (md().encoder_interface) {
+    md().deactivate_encoder_interface();
+  }
+}
+
+void MDStepEditCapability::close_microtiming(uint8_t device_idx) {
+  (void)device_idx;
+  md().draw_close_microtiming();
+}
+
+void MDStepEditCapability::clear_popup(uint8_t device_idx) {
+  (void)device_idx;
+  md().popup_text(127, 2);
+}
+
+void MDStepEditCapability::popup_text(uint8_t device_idx, char *text,
+                                      uint8_t persistent) {
+  (void)device_idx;
+  md().popup_text(text, persistent);
+}
+
+bool MDStepEditCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+                                    uint8_t cc, uint8_t *target,
+                                    uint8_t *param) const {
+  (void)device_idx;
+  if (target == nullptr || param == nullptr) {
+    return false;
+  }
+  md().parseCC(channel, cc, target, param);
+  return *target != 255;
+}
+#endif
 
 #if !defined(__AVR__)
 bool MDPerfCapability::perf_param_from_key(uint8_t device_idx, uint8_t target,

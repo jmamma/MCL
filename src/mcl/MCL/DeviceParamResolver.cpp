@@ -275,14 +275,13 @@ uint8_t DeviceParamTarget::pitch_lock_param() const {
 #endif
 }
 
-bool DeviceParamTarget::perf_param_from_key(uint8_t key,
-                                            uint8_t *param) const {
+bool DevicePerfTarget::param_from_key(uint8_t key, uint8_t *param) const {
   if (!valid()) {
     return false;
   }
 #if defined(__AVR__)
-  if (param == nullptr || device_slot == 2 || target >= NUM_MD_TRACKS ||
-      key < 0x10 || key > 0x17) {
+  if (param == nullptr || params.device_slot == 2 ||
+      params.target >= NUM_MD_TRACKS || key < 0x10 || key > 0x17) {
     return false;
   }
   uint8_t value = MD.currentSynthPage * 8 + key - 0x10;
@@ -292,18 +291,18 @@ bool DeviceParamTarget::perf_param_from_key(uint8_t key,
   *param = value;
   return true;
 #else
-  return device->perf()->perf_param_from_key(device_idx, target, key, param);
+  return params.device->perf()->perf_param_from_key(
+      params.device_idx, params.target, key, param);
 #endif
 }
 
-bool DeviceParamTarget::perf_key_for_param(uint8_t param,
-                                           uint8_t *key) const {
+bool DevicePerfTarget::key_for_param(uint8_t param, uint8_t *key) const {
   if (!valid()) {
     return false;
   }
 #if defined(__AVR__)
-  if (key == nullptr || device_slot == 2 || target >= NUM_MD_TRACKS ||
-      param >= param_count()) {
+  if (key == nullptr || params.device_slot == 2 ||
+      params.target >= NUM_MD_TRACKS || param >= param_count()) {
     return false;
   }
   int16_t value = (int16_t)param - (int16_t)MD.currentSynthPage * 8 + 0x10;
@@ -313,25 +312,26 @@ bool DeviceParamTarget::perf_key_for_param(uint8_t param,
   *key = (uint8_t)value;
   return true;
 #else
-  return device->perf()->perf_key_for_param(device_idx, target, param, key);
+  return params.device->perf()->perf_key_for_param(
+      params.device_idx, params.target, param, key);
 #endif
 }
 
-bool DeviceParamTarget::begin_perf_param_editor(uint8_t *params,
-                                                uint8_t count) const {
+bool DevicePerfTarget::begin_param_editor(uint8_t *editor_params,
+                                          uint8_t count) const {
   if (!valid()) {
     return false;
   }
 #if defined(__AVR__)
-  if (device_slot == 2 || target >= NUM_MD_TRACKS || params == nullptr ||
-      count < MD_PARAMS_PER_TRACK) {
+  if (params.device_slot == 2 || params.target >= NUM_MD_TRACKS ||
+      editor_params == nullptr || count < MD_PARAMS_PER_TRACK) {
     return false;
   }
-  MD.activate_encoder_interface(params);
+  MD.activate_encoder_interface(editor_params);
   return true;
 #else
-  return device->perf()->perf_begin_param_editor(device_idx, target, params,
-                                                 count);
+  return params.device->perf()->perf_begin_param_editor(
+      params.device_idx, params.target, editor_params, count);
 #endif
 }
 
@@ -386,10 +386,11 @@ uint8_t perf_target_count() {
 #endif
 }
 
-DeviceParamTarget perf(uint8_t dest) {
-  DeviceParamTarget target;
+DevicePerfTarget perf(uint8_t dest) {
+  DevicePerfTarget perf_target;
+  DeviceParamTarget &target = perf_target.params;
   if (dest == 0) {
-    return target;
+    return perf_target;
   }
 
 #if defined(__AVR__)
@@ -401,7 +402,7 @@ DeviceParamTarget perf(uint8_t dest) {
     target.device_slot = 2;
     target.target = local_target - (NUM_MD_TRACKS + 4);
   }
-  return target;
+  return perf_target;
 #else
   MidiDevice *primary = device_manager.primary_device();
   DeviceParamCapability *primary_params = primary->params();
@@ -412,7 +413,7 @@ DeviceParamTarget perf(uint8_t dest) {
     target.device_idx = 0;
     target.device_slot = 1;
     target.target = local_target;
-    return target;
+    return perf_target;
   }
 
   local_target -= primary_count;
@@ -425,7 +426,7 @@ DeviceParamTarget perf(uint8_t dest) {
     target.device_slot = 2;
     target.target = local_target;
   }
-  return target;
+  return perf_target;
 #endif
 }
 

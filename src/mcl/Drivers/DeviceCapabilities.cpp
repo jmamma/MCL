@@ -291,6 +291,151 @@ bool DevicePerfCapability::perf_scene_autofill(uint8_t device_idx,
 }
 #endif
 
+#if !defined(__AVR__)
+DeviceStepEditCapability::DeviceStepEditCapability(MidiDevice &device)
+    : DeviceCapability(device) {}
+
+bool DeviceStepEditCapability::available(uint8_t device_idx) const {
+  (void)device_idx;
+  return false;
+}
+
+void DeviceStepEditCapability::set_rec_mode(uint8_t device_idx,
+                                            uint8_t mode) {
+  (void)device_idx;
+  (void)mode;
+}
+
+void DeviceStepEditCapability::sync_track(uint8_t device_idx, uint8_t length,
+                                          uint8_t speed,
+                                          uint8_t step_count) {
+  (void)device_idx;
+  (void)length;
+  (void)speed;
+  (void)step_count;
+}
+
+void DeviceStepEditCapability::set_trig_leds(uint8_t device_idx,
+                                             uint16_t mask, uint8_t mode,
+                                             uint8_t blink) {
+  (void)device_idx;
+  (void)mask;
+  (void)mode;
+  (void)blink;
+}
+
+void DeviceStepEditCapability::set_live_param_update(uint8_t device_idx,
+                                                     bool enabled) {
+  (void)device_idx;
+  (void)enabled;
+}
+
+bool DeviceStepEditCapability::configure_kit_sound_panel(
+    uint8_t device_idx, uint8_t target, char *info, uint8_t info_len,
+    uint8_t *pitch_max, bool *is_midi_model) const {
+  (void)device_idx;
+  (void)target;
+  (void)info;
+  (void)info_len;
+  (void)pitch_max;
+  (void)is_midi_model;
+  return false;
+}
+
+bool DeviceStepEditCapability::kit_sound_uses_note_pitch(
+    uint8_t device_idx, uint8_t target) const {
+  (void)device_idx;
+  (void)target;
+  return false;
+}
+
+uint8_t DeviceStepEditCapability::kit_sound_default_pitch(
+    uint8_t device_idx, uint8_t target) const {
+  (void)device_idx;
+  (void)target;
+  return 0;
+}
+
+uint8_t DeviceStepEditCapability::kit_sound_note_from_pitch(
+    uint8_t device_idx, uint8_t target, uint8_t pitch) const {
+  (void)device_idx;
+  (void)target;
+  (void)pitch;
+  return 255;
+}
+
+uint8_t DeviceStepEditCapability::kit_sound_pitch_from_note(
+    uint8_t device_idx, uint8_t target, uint8_t note,
+    uint8_t fine_tune) const {
+  (void)device_idx;
+  (void)target;
+  (void)note;
+  (void)fine_tune;
+  return 255;
+}
+
+bool DeviceStepEditCapability::param_from_key(uint8_t device_idx,
+                                              uint8_t target, uint8_t key,
+                                              uint8_t *param) const {
+  (void)device_idx;
+  (void)target;
+  (void)key;
+  (void)param;
+  return false;
+}
+
+bool DeviceStepEditCapability::key_for_param(uint8_t device_idx,
+                                             uint8_t target, uint8_t param,
+                                             uint8_t *key) const {
+  (void)device_idx;
+  (void)target;
+  (void)param;
+  (void)key;
+  return false;
+}
+
+bool DeviceStepEditCapability::begin_param_editor(uint8_t device_idx,
+                                                  uint8_t target,
+                                                  uint8_t *params,
+                                                  uint8_t count) {
+  (void)device_idx;
+  (void)target;
+  (void)params;
+  (void)count;
+  return false;
+}
+
+void DeviceStepEditCapability::end_param_editor(uint8_t device_idx) {
+  (void)device_idx;
+}
+
+void DeviceStepEditCapability::close_microtiming(uint8_t device_idx) {
+  (void)device_idx;
+}
+
+void DeviceStepEditCapability::clear_popup(uint8_t device_idx) {
+  (void)device_idx;
+}
+
+void DeviceStepEditCapability::popup_text(uint8_t device_idx, char *text,
+                                          uint8_t persistent) {
+  (void)device_idx;
+  (void)text;
+  (void)persistent;
+}
+
+bool DeviceStepEditCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+                                        uint8_t cc, uint8_t *target,
+                                        uint8_t *param) const {
+  (void)device_idx;
+  (void)channel;
+  (void)cc;
+  (void)target;
+  (void)param;
+  return false;
+}
+#endif
+
 void DevicePanelCapability::set_key_repeat(uint8_t enabled) {
   (void)enabled;
 }

@@ -36,7 +36,7 @@ public:
               Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {
       }
-  void disable_md_micro();
+  void disable_microtiming_overlay();
   void enable_paramupdate_events();
   void disable_paramupdate_events();
   virtual bool handleEvent(gui_event_t *event);

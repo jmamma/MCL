@@ -86,6 +86,47 @@ public:
 };
 #endif
 
+#if !defined(__AVR__)
+class DeviceStepEditCapability : public DeviceCapability {
+public:
+  explicit DeviceStepEditCapability(MidiDevice &device);
+
+  virtual bool available(uint8_t device_idx) const;
+  virtual void set_rec_mode(uint8_t device_idx, uint8_t mode);
+  virtual void sync_track(uint8_t device_idx, uint8_t length, uint8_t speed,
+                          uint8_t step_count);
+  virtual void set_trig_leds(uint8_t device_idx, uint16_t mask, uint8_t mode,
+                             uint8_t blink = 0);
+  virtual void set_live_param_update(uint8_t device_idx, bool enabled);
+  virtual bool configure_kit_sound_panel(uint8_t device_idx, uint8_t target,
+                                         char *info, uint8_t info_len,
+                                         uint8_t *pitch_max,
+                                         bool *is_midi_model) const;
+  virtual bool kit_sound_uses_note_pitch(uint8_t device_idx,
+                                         uint8_t target) const;
+  virtual uint8_t kit_sound_default_pitch(uint8_t device_idx,
+                                          uint8_t target) const;
+  virtual uint8_t kit_sound_note_from_pitch(uint8_t device_idx, uint8_t target,
+                                            uint8_t pitch) const;
+  virtual uint8_t kit_sound_pitch_from_note(uint8_t device_idx, uint8_t target,
+                                            uint8_t note,
+                                            uint8_t fine_tune) const;
+  virtual bool param_from_key(uint8_t device_idx, uint8_t target, uint8_t key,
+                              uint8_t *param) const;
+  virtual bool key_for_param(uint8_t device_idx, uint8_t target, uint8_t param,
+                             uint8_t *key) const;
+  virtual bool begin_param_editor(uint8_t device_idx, uint8_t target,
+                                  uint8_t *params, uint8_t count);
+  virtual void end_param_editor(uint8_t device_idx);
+  virtual void close_microtiming(uint8_t device_idx);
+  virtual void clear_popup(uint8_t device_idx);
+  virtual void popup_text(uint8_t device_idx, char *text,
+                          uint8_t persistent = 0);
+  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+                        uint8_t *target, uint8_t *param) const;
+};
+#endif
+
 class DevicePanelCapability {
 public:
   virtual void set_key_repeat(uint8_t enabled);

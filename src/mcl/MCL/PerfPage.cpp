@@ -314,7 +314,7 @@ void PerfPage::encoder_send() {
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   uint8_t perf_dest = dest + 1;
-  DeviceParamTarget target = DeviceParamResolver::perf(perf_dest);
+  DevicePerfTarget target = DeviceParamResolver::perf(perf_dest);
   if (perf_dest == 0 || param >= target.param_count()) {
     return;
   }
@@ -346,7 +346,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       uint8_t n = d->add_param(dest, param, scene, value);
       if (n < 255) {
         uint8_t key = 0;
-        if (target.perf_key_for_param(param, &key)) {
+        if (target.key_for_param(param, &key)) {
           key_interface.ignoreNextEvent(key);
         }
         page_mode = n + 1;
@@ -400,7 +400,7 @@ void PerfPage::send_locks(uint8_t scene) {
     }
   }
   if (DeviceParamResolver::perf(editor_dest)
-          .begin_perf_param_editor(params, sizeof(params))) {
+          .begin_param_editor(params, sizeof(params))) {
     seq_step_page.disable_paramupdate_events();
   }
 }
@@ -488,8 +488,8 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       editor_dest++;
 
       uint8_t param = 0;
-      DeviceParamTarget editor_target = DeviceParamResolver::perf(editor_dest);
-      if (!editor_target.perf_param_from_key(key, &param)) {
+      DevicePerfTarget editor_target = DeviceParamResolver::perf(editor_dest);
+      if (!editor_target.param_from_key(key, &param)) {
         return true;
       }
       uint8_t data_dest = editor_dest - 1;

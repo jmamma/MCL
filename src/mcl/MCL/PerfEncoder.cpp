@@ -16,7 +16,7 @@ PerfEncoder::PerfEncoder(int _max, int _min, int _res, uint8_t _speed)
 void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_,MidiUartClass *uart2_) {
   if (uart_ == nullptr) { uart_ = mcl_seq.primary_output; }
   if (uart2_ == nullptr) { uart2_ = mcl_seq.secondary_output; }
-  DeviceParamTarget target = DeviceParamResolver::perf(dest);
+  DevicePerfTarget target = DeviceParamResolver::perf(dest);
   target.set_param(param, val, target.device_index() == 1 ? uart2_ : uart_);
 }
 

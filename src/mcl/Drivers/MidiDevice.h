@@ -74,6 +74,7 @@ public:
 protected:
   DeviceMixerCapability mixer_capability_;
 #if !defined(__AVR__)
+  DeviceStepEditCapability step_edit_capability_;
   DeviceParamCapability param_capability_;
   DevicePerfCapability perf_capability_;
 #endif
@@ -178,6 +179,7 @@ public:
                          MidiUartClass *uart_ = nullptr) {}
   virtual DeviceMixerCapability *mixer();
 #if !defined(__AVR__)
+  virtual DeviceStepEditCapability *step_edit();
   virtual DeviceParamCapability *params();
   virtual DevicePerfCapability *perf();
 #endif

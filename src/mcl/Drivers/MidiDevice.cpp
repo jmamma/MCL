@@ -12,7 +12,8 @@ MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
       mixer_capability_(*this)
 #if !defined(__AVR__)
       ,
-      param_capability_(*this), perf_capability_(*this)
+      step_edit_capability_(*this), param_capability_(*this),
+      perf_capability_(*this)
 #endif
 {
   midi = _midi;
@@ -42,6 +43,10 @@ DeviceMixerCapability *MidiDevice::mixer() {
 }
 
 #if !defined(__AVR__)
+DeviceStepEditCapability *MidiDevice::step_edit() {
+  return &step_edit_capability_;
+}
+
 DeviceParamCapability *MidiDevice::params() {
   return &param_capability_;
 }

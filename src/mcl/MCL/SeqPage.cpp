@@ -558,7 +558,7 @@ void SeqPage::config_mask_info(bool silent) {
     mclstr_copy_progmem(info2, mclstr_mute, sizeof(info2));
     break;
   }
-  if (!silent && seq_page_active_step_track().uses_md_sound()) {
+  if (!silent && seq_page_active_step_track().uses_kit_sound()) {
     char str[16] = "EDIT ";
     strcat(str, info2);
     if (mask_type == MASK_PATTERN) {
@@ -1087,7 +1087,7 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
       seq_page_active_step_track().set_length(length);
     }
     SeqStepTrackApi active_track = seq_page_active_step_track();
-    if (active_track.uses_md_sound()) {
+    if (active_track.uses_kit_sound()) {
       MD.sync_seqtrack(active_track.length(), active_track.speed(),
                        active_track.step_count());
     }
@@ -1146,7 +1146,7 @@ void opt_speed_handler() {
     } else {
       SeqStepTrackApi active_track = seq_page_active_step_track();
       if (active_track.request_speed_change(opt_speed) &&
-          active_track.uses_md_sound()) {
+          active_track.uses_kit_sound()) {
         MD.sync_seqtrack(active_track.length(), opt_speed,
                          active_track.step_count());
       }
@@ -1195,7 +1195,7 @@ void opt_clear_track_handler() {
     if (opt_clear == 2) {
 
       SeqStepTrackApi active_track = seq_page_active_step_track();
-      if (active_track.uses_md_sound()) {
+      if (active_track.uses_kit_sound()) {
         MD.popup_text(2);
         oled_display.textbox_P(mclstr_clear_md, mclstr_tracks);
       } else {
@@ -1222,7 +1222,7 @@ void opt_clear_track_handler() {
       SeqStepTrackApi active_track = seq_page_active_step_track();
       if (is_poly) {
         display_popup(mclstr_clear, mclstr_poly_tracks);
-      } else if (active_track.uses_md_sound()) {
+      } else if (active_track.uses_kit_sound()) {
         display_popup(mclstr_clear, mclstr_track);
       } else {
         oled_display.textbox_P(mclstr_clear, mclstr_track);
@@ -1264,7 +1264,7 @@ void opt_clear_locks_handler() {
   bool is_md_device = opt_capture_is_md_device();
   if (seq_page_uses_step_track_ops(is_md_device)) {
     if (opt_clear == 2) {
-      if (seq_page_active_step_track().uses_md_sound()) {
+      if (seq_page_active_step_track().uses_kit_sound()) {
         oled_display.textbox_P(mclstr_clear_md, mclstr_locks);
       } else {
         oled_display.textbox_P(mclstr_clear, mclstr_locks);
@@ -1337,7 +1337,7 @@ void opt_copy_track_handler(uint8_t op) {
 
     if (use_step_tracks) {
       if (!silent) {
-        if (seq_page_active_step_track().uses_md_sound()) {
+        if (seq_page_active_step_track().uses_kit_sound()) {
           oled_display.textbox_P(mclstr_copy_md, mclstr_tracks);
           MD.popup_text(1);
         } else {
@@ -1361,7 +1361,7 @@ void opt_copy_track_handler(uint8_t op) {
     if (use_step_tracks) {
       if (!silent) {
         oled_display.textbox_P(mclstr_copy, mclstr_track);
-        if (seq_page_active_step_track().uses_md_sound()) {
+        if (seq_page_active_step_track().uses_kit_sound()) {
           MD.popup_text(4);
         }
       }
@@ -1398,7 +1398,7 @@ void opt_paste_track_handler() {
 
     if (use_step_tracks) {
       if (!undo) {
-        if (seq_page_active_step_track().uses_md_sound()) {
+        if (seq_page_active_step_track().uses_kit_sound()) {
           oled_display.textbox_P(mclstr_paste_md, mclstr_tracks);
           MD.popup_text(3);
         } else {
@@ -1408,7 +1408,7 @@ void opt_paste_track_handler() {
       } else {
         oled_display.textbox_P(mclstr_undo, mclstr_tracks);
         oled_display.display();
-        if (seq_page_active_step_track().uses_md_sound()) {
+        if (seq_page_active_step_track().uses_kit_sound()) {
           MD.popup_text(22);
         }
       }
@@ -1428,14 +1428,14 @@ void opt_paste_track_handler() {
       bool is_poly = false;
       if (!undo) {
         oled_display.textbox_P(mclstr_paste, mclstr_track);
-        if (seq_page_active_step_track().uses_md_sound()) {
+        if (seq_page_active_step_track().uses_kit_sound()) {
           MD.popup_text(6);
         }
       } else {
         oled_display.textbox_P(mclstr_undo, mclstr_track);
         is_poly = !seq_page_uses_tbd_step_tracks() &&
                   IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-        if (seq_page_active_step_track().uses_md_sound()) {
+        if (seq_page_active_step_track().uses_kit_sound()) {
           MD.popup_text(23);
         }
       }
@@ -1477,7 +1477,7 @@ void opt_clear_page_handler() {
   }
   SeqStepTrackApi track = seq_page_active_step_track();
   oled_display.textbox_P(mclstr_clear, mclstr_page);
-  if (track.uses_md_sound()) {
+  if (track.uses_kit_sound()) {
     MD.popup_text(57);
   }
   for (uint8_t n = 0; n < 16; n++) {
@@ -1501,7 +1501,7 @@ void opt_copy_page_handler(uint8_t op) {
   SeqStepTrackApi track = seq_page_active_step_track();
   if (!silent) {
     oled_display.textbox_P(mclstr_copy, mclstr_page);
-    if (track.uses_md_sound()) {
+    if (track.uses_kit_sound()) {
       MD.popup_text(54);
     }
   }
@@ -1518,12 +1518,12 @@ void opt_paste_page_handler() {
   if (opt_undo == PAGE_UNDO) {
     opt_undo = 255;
     oled_display.textbox_P(mclstr_undo, mclstr_page);
-    if (track.uses_md_sound()) {
+    if (track.uses_kit_sound()) {
       MD.popup_text(55);
     }
   } else {
     oled_display.textbox_P(mclstr_paste, mclstr_page);
-    if (track.uses_md_sound()) {
+    if (track.uses_kit_sound()) {
       MD.popup_text(56);
     }
   }
@@ -1550,7 +1550,7 @@ void opt_clear_step_handler() {
   uint8_t step = SeqPage::step_select + SeqPage::page_select * 16;
   SeqStepTrackApi track = seq_page_active_step_track();
   oled_display.textbox_P(mclstr_clear_step);
-  if (track.uses_md_sound()) {
+  if (track.uses_kit_sound()) {
     MD.popup_text_P(mclstr_clear_step);
   }
   track.clear_step(step);
@@ -1569,7 +1569,7 @@ void opt_copy_step_handler(uint8_t op) {
   SeqStepTrackApi track = seq_page_active_step_track();
   if (!silent) {
     oled_display.textbox_P(mclstr_copy_step);
-    if (track.uses_md_sound()) {
+    if (track.uses_kit_sound()) {
       MD.popup_text_P(mclstr_copy_step);
     }
   }
@@ -1582,12 +1582,12 @@ void opt_paste_step_handler() {
   if (opt_undo == STEP_UNDO) {
     opt_undo = 255;
     oled_display.textbox_P(mclstr_undo_step);
-    if (track.uses_md_sound()) {
+    if (track.uses_kit_sound()) {
       MD.popup_text_P(mclstr_undo_step);
     }
   } else {
     oled_display.textbox_P(mclstr_paste_step);
-    if (track.uses_md_sound()) {
+    if (track.uses_kit_sound()) {
       MD.popup_text_P(mclstr_paste_step);
     }
   }
@@ -1610,7 +1610,7 @@ void opt_clear_step_locks_handler() {
     oled_display.textbox_P(mclstr_clear, mclstr_locks);
     bool is_md_device = opt_capture_is_md_device();
     if (seq_page_uses_step_track_ops(is_md_device) &&
-        seq_page_active_step_track().uses_md_sound()) {
+        seq_page_active_step_track().uses_kit_sound()) {
       MD.popup_text(14);
     }
   }
@@ -1667,7 +1667,7 @@ void opt_transpose_track_handler() {
   bool is_md_device =
       opt_capture_is_md_device();
   if (seq_page_uses_step_track_ops(is_md_device) &&
-      seq_page_active_step_track().uses_md_sound()) {
+      seq_page_active_step_track().uses_kit_sound()) {
     MD.popup_text_P(mclstr_transpose);
   }
   apply_track_menu_op(is_md_device, is_all, SEQ_TRACK_OP_TRANSPOSE,

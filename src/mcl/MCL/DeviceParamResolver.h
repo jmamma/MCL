@@ -38,10 +38,32 @@ struct DeviceParamTarget {
   bool lock_current_value(uint8_t param, uint8_t *value) const;
   bool uses_step_pitch() const;
   uint8_t pitch_lock_param() const;
+};
 
-  bool perf_param_from_key(uint8_t key, uint8_t *param) const;
-  bool perf_key_for_param(uint8_t param, uint8_t *key) const;
-  bool begin_perf_param_editor(uint8_t *params, uint8_t count) const;
+struct DevicePerfTarget {
+  DeviceParamTarget params;
+
+  bool valid() const { return params.valid(); }
+  uint8_t device_index() const { return params.device_index(); }
+
+  uint8_t param_count() const { return params.param_count(); }
+  bool target_label(char *out, uint8_t len) const {
+    return params.target_label(out, len);
+  }
+  bool param_label(uint8_t param, char *out, uint8_t len) const {
+    return params.param_label(param, out, len);
+  }
+  bool get_param(uint8_t param, uint8_t *value) const {
+    return params.get_param(param, value);
+  }
+  bool set_param(uint8_t param, uint8_t value,
+                 MidiUartClass *uart_ = nullptr) const {
+    return params.set_param(param, value, uart_);
+  }
+
+  bool param_from_key(uint8_t key, uint8_t *param) const;
+  bool key_for_param(uint8_t param, uint8_t *key) const;
+  bool begin_param_editor(uint8_t *params, uint8_t count) const;
 };
 
 namespace DeviceParamResolver {
@@ -52,7 +74,7 @@ uint8_t slot_target_count(uint8_t device_slot);
 DeviceParamTarget slot(uint8_t device_slot, uint8_t dest);
 
 uint8_t perf_target_count();
-DeviceParamTarget perf(uint8_t dest);
+DevicePerfTarget perf(uint8_t dest);
 uint8_t perf_dest_from_slot(uint8_t device_slot, uint8_t slot_dest);
 void end_perf_param_editor();
 void set_perf_rec_mode(uint8_t mode);
