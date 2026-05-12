@@ -1,15 +1,14 @@
 #include "LFOTrackRef.h"
 
 #include "DeviceParamResolver.h"
+#include "DeviceManager.h"
 #include "SeqPage.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
+#include "../Drivers/MidiDevice.h"
 
 #if defined(__AVR__)
 #include "../Drivers/MD/MD.h"
-#else
-#include "DeviceManager.h"
-#include "../Drivers/MidiDevice.h"
 #endif
 
 namespace {
@@ -77,6 +76,14 @@ bool LFOTrackRef::get_param(uint8_t device_slot, uint8_t dest, uint8_t param,
   return DeviceParamResolver::slot(device_slot, dest).get_param(param, value);
 }
 
+void LFOTrackRef::set_key_repeat(uint8_t enabled) {
+#if defined(__AVR__)
+  MD.set_key_repeat(enabled);
+#else
+  device_manager.primary_device()->panel()->set_key_repeat(enabled);
+#endif
+}
+
 void LFOTrackRef::sync_panel(const LFOSeqTrack &track) {
 #if defined(__AVR__)
   MD.sync_seqtrack(track.length, track.speed, track.step_count);
@@ -84,4 +91,9 @@ void LFOTrackRef::sync_panel(const LFOSeqTrack &track) {
   device_manager.primary_device()->panel()->sync_seqtrack(
       track.length, track.speed, track.step_count);
 #endif
+}
+
+bool LFOTrackRef::supports_trig_port(uint8_t port) {
+  return device_manager.port_supports(port,
+                                      MidiDeviceCapability::MdTrigInterface);
 }

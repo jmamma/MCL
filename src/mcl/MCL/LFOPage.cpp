@@ -2,8 +2,6 @@
 #include "LFO.h"
 #include "MCLGUI.h"
 #include "ResourceManager.h"
-#include "DeviceManager.h"
-#include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
 
 #define LFO_TYPE 0
@@ -95,7 +93,7 @@ void LFOPage::select_menu_track(uint8_t track) {
 }
 
 void LFOPage::init() {
-  device_manager.primary_device()->panel()->set_key_repeat(0);
+  LFOTrackRef::set_key_repeat(0);
   display_page_index = false;
   SeqPage::init();
   track_update();
@@ -414,8 +412,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event) &&
       (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE)) {
     uint8_t port = event->port;
-    if (!device_manager.port_supports(port,
-                                      MidiDeviceCapability::MdTrigInterface)) {
+    if (!LFOTrackRef::supports_trig_port(port)) {
       return true;
     }
 

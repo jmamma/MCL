@@ -4,6 +4,8 @@
 #define SEQSTEPTRACKREF_H__
 
 #include "../Drivers/MidiDeviceParam.h"
+#include "../Drivers/MidiDevice.h"
+#include "DeviceManager.h"
 #include "MCLSeq.h"
 #include <stdint.h>
 
@@ -59,6 +61,10 @@ inline bool seq_step_tracks_parse_kit_cc(uint8_t channel, uint8_t cc,
 }
 
 inline bool seq_step_tracks_parse_kit_cc_enabled() { return true; }
+
+inline MidiClass *seq_step_tracks_midi() {
+  return MD.midi;
+}
 #else
 inline DeviceStepTrackCapability *seq_step_track_capability() {
   return DeviceParamResolver::slot_device(1)->step_tracks();
@@ -94,6 +100,28 @@ inline bool seq_step_tracks_parse_kit_cc_enabled() {
   return seq_step_track_capability()->parses_kit_cc(
       seq_step_track_device_idx());
 }
+
+inline MidiClass *seq_step_tracks_midi() {
+  MidiDevice *device = DeviceParamResolver::slot_device(1);
+  return device != nullptr ? device->midi : nullptr;
+}
 #endif
+
+inline bool seq_step_tracks_supports_trig_port(uint8_t port) {
+  return device_manager.port_supports(port,
+                                      MidiDeviceCapability::MdTrigInterface);
+}
+
+inline MidiDevice *seq_step_tracks_device_for_port(uint8_t port) {
+  return device_manager.device_for_port(port);
+}
+
+inline void seq_step_tracks_trigger(uint8_t port, uint8_t track,
+                                    uint8_t velocity) {
+  MidiDevice *device = seq_step_tracks_device_for_port(port);
+  if (device != nullptr) {
+    device->triggerTrack(track, velocity);
+  }
+}
 
 #endif /* SEQSTEPTRACKREF_H__ */

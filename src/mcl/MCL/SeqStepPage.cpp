@@ -1,7 +1,4 @@
 #include "SeqStepPage.h"
-#include "../Drivers/MidiDevice.h"
-#include "DeviceManager.h"
-#include "DeviceParamResolver.h"
 #include "GUI_hardware.h"
 #include "GridPages.h"
 #include "MCLGUI.h"
@@ -436,11 +433,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     SeqStepTrackRef active_track = active_step_track();
     uint8_t port = event->port;
     uint8_t track = event->source;
-    if (!device_manager.port_supports(port,
-                                      MidiDeviceCapability::MdTrigInterface)) {
+    if (!seq_step_tracks_supports_trig_port(port)) {
       return true;
     }
-    MidiDevice *device = device_manager.device_for_port(port);
     if (show_seq_menu) {
       opt_trackid = track + 1;
       note_interface.ignoreNextEvent(track);
@@ -448,7 +443,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         seq_set_primary_track_index(track);
         config();
       } else {
-        select_track(device, track);
+        select_track(seq_step_tracks_device_for_port(port), track);
       }
       seq_menu_page.select_item(0);
       return true;
@@ -462,7 +457,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (event->mask == EVENT_BUTTON_PRESSED) {
         reset_undo();
         config_encoders();
-        device->triggerTrack(track, 127);
+        seq_step_tracks_trigger(port, track, 127);
         last_rec_event = REC_EVENT_TRIG;
         last_step = track;
 
@@ -812,11 +807,11 @@ void SeqStepMidiEvents::setup_callbacks() {
     return;
   }
 
-  MidiDevice *device = DeviceParamResolver::slot_device(1);
-  if (device == nullptr || device->midi == nullptr) {
+  MidiClass *midi = seq_step_tracks_midi();
+  if (midi == nullptr) {
     return;
   }
-  device->midi->addOnControlChangeCallback(
+  midi->addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   state = true;
@@ -827,12 +822,12 @@ void SeqStepMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  MidiDevice *device = DeviceParamResolver::slot_device(1);
-  if (device == nullptr || device->midi == nullptr) {
+  MidiClass *midi = seq_step_tracks_midi();
+  if (midi == nullptr) {
     state = false;
     return;
   }
-  device->midi->removeOnControlChangeCallback(
+  midi->removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   state = false;
