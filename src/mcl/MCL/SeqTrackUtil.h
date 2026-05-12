@@ -10,6 +10,9 @@
 #include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
 #include "ArpSeqTrack.h"
+#ifdef EXT_TRACKS
+#include "SeqExtStepTrackApi.h"
+#endif
 
 class SeqTrackUtil {
 public:
@@ -53,6 +56,17 @@ public:
 #endif
     return static_cast<SeqTrackCond &>(mcl_seq.md_tracks[index]);
   }
+
+#ifdef EXT_TRACKS
+  static inline SeqExtStepTrackApi get_ext_step_track(uint8_t index) {
+#if defined(PLATFORM_TBD)
+    if (use_midi_tracks_for_ext()) {
+      return SeqExtStepTrackApi(mcl_seq.midi_tracks[index]);
+    }
+#endif
+    return SeqExtStepTrackApi(mcl_seq.ext_tracks[index]);
+  }
+#endif
 
 #if !defined(__AVR__)
   static inline SPSXSeqTrack &get_spsx_track(uint8_t index) {

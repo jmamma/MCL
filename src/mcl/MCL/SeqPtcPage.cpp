@@ -75,12 +75,7 @@ namespace {
 
 #if !defined(__AVR__)
 SeqExtStepTrackApi ptc_ext_track_api(uint8_t track) {
-#ifdef PLATFORM_TBD
-  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
-    return SeqExtStepTrackApi(mcl_seq.midi_tracks[track]);
-  }
-#endif
-  return SeqExtStepTrackApi(mcl_seq.ext_tracks[track]);
+  return SeqTrackUtil::get_ext_step_track(track);
 }
 #endif
 

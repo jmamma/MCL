@@ -35,6 +35,14 @@ public:
     return SeqExtStepLockApi(*ext_track_);
   }
 
+  bool uses_midi_backend() const {
+#ifdef PLATFORM_TBD
+    return midi_track_ != nullptr;
+#else
+    return false;
+#endif
+  }
+
   uint8_t length() const {
 #ifdef PLATFORM_TBD
     if (midi_track_) return midi_track_->length;

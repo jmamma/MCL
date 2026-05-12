@@ -5,6 +5,7 @@
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #include "SeqExtStepTrackApi.h"
+#include "SeqTrackUtil.h"
 #include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
 #ifdef PLATFORM_TBD
@@ -14,23 +15,12 @@
 namespace {
 
 SeqExtStepTrackApi ext_step_track_api(uint8_t track) {
-#ifdef PLATFORM_TBD
-  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
-    return SeqExtStepTrackApi(mcl_seq.midi_tracks[track]);
-  }
-#endif
-  return SeqExtStepTrackApi(mcl_seq.ext_tracks[track]);
+  return SeqTrackUtil::get_ext_step_track(track);
 }
 
 SeqExtStepTrackApi active_ext_step_track() {
   return ext_step_track_api(last_ext_track);
 }
-
-#ifdef PLATFORM_TBD
-bool seq_ext_step_uses_midi_seq_tracks() {
-  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
-}
-#endif
 
 #ifdef PLATFORM_TBD
 MidiClass *seq_ext_step_input_midi() {
@@ -64,13 +54,11 @@ uint8_t seq_ext_step_pitch_from_midi_note(uint8_t note_num) {
 }
 #endif
 
-#ifdef PLATFORM_TBD
 bool seq_ext_step_menu_entry_is(uint8_t entry_index) {
   if (!SeqPage::show_seq_menu) return false;
   return seq_menu_page.menu.get_item_index(seq_menu_page.encoders[1]->cur) ==
          entry_index;
 }
-#endif
 
 } // namespace
 
@@ -92,26 +80,20 @@ void SeqExtStepPage::config_encoders() {
 
   if (encoder_init) {
     encoder_init = false;
-#if defined(__AVR__)
-    ExtSeqTrack &active_track = mcl_seq.ext_tracks[last_ext_track];
-    uint8_t timing_mid = active_track.get_timing_mid();
-#else
     auto active_track = active_ext_step_track();
     uint16_t timing_mid = active_track.ticks_per_step();
-#endif
     seq_extparam4.cur = 16;
     fov_offset = 0;
     cur_x = 0;
     fov_y = MIDI_NOTE_C3 - 1;
     cur_y = fov_y + 1;
     cur_w = timing_mid;
-#if defined(__AVR__)
-    uint8_t track_length = active_track.length ? active_track.length : 1;
-    roll_length = (seq_extstep_tick_t)track_length * timing_mid;
-#else
-    roll_length = (seq_extstep_tick_t)max((uint8_t)1, active_track.length()) *
-                  (seq_extstep_tick_t)timing_mid;
-#endif
+    uint8_t track_length = active_track.length();
+    if (track_length == 0) {
+      track_length = 1;
+    }
+    roll_length =
+        (seq_extstep_tick_t)track_length * (seq_extstep_tick_t)timing_mid;
     seq_extstep_tick_t requested_fov =
         (seq_extstep_tick_t)seq_extparam4.cur * (seq_extstep_tick_t)timing_mid;
     fov_length = requested_fov < roll_length ? requested_fov : roll_length;
@@ -755,9 +737,7 @@ void SeqExtStepPage::loop() {
   config_menu_entries();
   auto active_track = active_ext_step_track();
   uint16_t timing_mid = active_track.ticks_per_step();
-#ifdef PLATFORM_TBD
   auto active_locks = active_track.locks();
-#endif
   SeqPage::loop();
 
   bool is_lockeditor = (pianoroll_mode > 0);
@@ -767,18 +747,11 @@ void SeqExtStepPage::loop() {
     if (last_pianoroll_mode != pianoroll_mode) {
 
       if (is_lockeditor) {
-#ifdef PLATFORM_TBD
         param_select =
             active_locks.selected_lock_menu_value(pianoroll_mode - 1);
-#else
-        uint8_t selected =
-            mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1];
-        param_select = selected == 0 ? PARAM_OFF : selected - 1;
-#endif
       }
       last_pianoroll_mode = pianoroll_mode;
     }
-#ifdef PLATFORM_TBD
     if (is_lockeditor &&
         seq_ext_step_menu_entry_is(SEQ_MENU_PARAMSELECT)) {
       auto *value_encoder = (MCLEncoder *)seq_menu_page.encoders[0];
@@ -804,12 +777,6 @@ void SeqExtStepPage::loop() {
             pianoroll_mode - 1);
       }
     }
-#else
-    if (is_lockeditor) {
-      mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1] =
-          param_select == PARAM_OFF ? 0 : param_select + 1;
-    }
-#endif
   }
   seq_extstep_tick_t diff = seq_extparam1.getValue();
   if (diff) {
@@ -979,17 +946,11 @@ void SeqExtStepPage::enter_notes() {
 
 void SeqExtStepPage::param_select_update() {
   if (pianoroll_mode > 0) {
-#ifdef PLATFORM_TBD
     auto active_track = active_ext_step_track();
     auto active_locks = active_track.locks();
     param_select = active_locks.selected_lock_menu_value(pianoroll_mode - 1);
     param_select = active_locks.normalize_lock_menu_value(param_select,
                                                           param_select);
-#else
-    uint8_t selected =
-        mcl_seq.ext_tracks[last_ext_track].locks_params[pianoroll_mode - 1];
-    param_select = selected == 0 ? PARAM_OFF : selected - 1;
-#endif
   }
 }
 
@@ -1251,7 +1212,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 
 #ifdef PLATFORM_TBD
   SeqExtParsedControl parsed_control;
-  if (seq_ext_step_uses_midi_seq_tracks() &&
+  if (active_track.uses_midi_backend() &&
       control_state.parse_cc(channel, param, value, parsed_control)) {
     if (!parsed_control.has_value) return;
 
