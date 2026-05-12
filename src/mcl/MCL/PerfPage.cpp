@@ -1,6 +1,6 @@
 #include "PerfPage.h"
 #include "DeviceManager.h"
-#include "DeviceParamTargets.h"
+#include "DeviceParamResolver.h"
 #include "CommonPages.h"
 #include "MCLMemory.h"
 #include "MCLGUI.h"
@@ -44,7 +44,7 @@ void PerfPage::init() {
   last_mask = last_blink_mask = 0;
   show_menu = false;
   last_page_mode = 255;
-  DeviceParamTargets::perf_set_rec_mode(3);
+  DeviceParamResolver::set_perf_rec_mode(3);
   config_encoders();
 }
 
@@ -88,7 +88,7 @@ void PerfPage::set_led_mask() {
 void PerfPage::cleanup() {
   PerfPageParent::cleanup();
   key_interface.off();
-  DeviceParamTargets::perf_set_rec_mode(0);
+  DeviceParamResolver::set_perf_rec_mode(0);
 }
 void PerfPage::func_enc_check() {
   if (key_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -109,10 +109,11 @@ void PerfPage::func_enc_check() {
   }
 }
 void PerfPage::config_encoder_range(uint8_t i) {
-  ((PerfEncoder *)encoders[i])->max = DeviceParamTargets::perf_target_count();
+  ((PerfEncoder *)encoders[i])->max = DeviceParamResolver::perf_target_count();
   ((PerfEncoder *)encoders[i + 1])->min = 0;
 
-  uint8_t param_count = DeviceParamTargets::perf_param_count(encoders[i]->cur);
+  uint8_t param_count =
+      DeviceParamResolver::perf(encoders[i]->cur).param_count();
   ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
 }
 
@@ -313,8 +314,8 @@ void PerfPage::encoder_send() {
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   uint8_t perf_dest = dest + 1;
-  if (perf_dest == 0 ||
-      param >= DeviceParamTargets::perf_param_count(perf_dest)) {
+  DeviceParamTarget target = DeviceParamResolver::perf(perf_dest);
+  if (perf_dest == 0 || param >= target.param_count()) {
     return;
   }
 
@@ -345,7 +346,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       uint8_t n = d->add_param(dest, param, scene, value);
       if (n < 255) {
         uint8_t key = 0;
-        if (DeviceParamTargets::perf_key_for_param(perf_dest, param, &key)) {
+        if (target.perf_key_for_param(param, &key)) {
           key_interface.ignoreNextEvent(key);
         }
         page_mode = n + 1;
@@ -376,7 +377,7 @@ void rename_perf() {
 
 void PerfPage::send_locks(uint8_t scene) {
   uint8_t editor_dest =
-      DeviceParamTargets::perf_dest_from_slot(1, last_md_track + 1);
+      DeviceParamResolver::perf_dest_from_slot(1, last_md_track + 1);
   if (editor_dest == 255) {
     return;
   }
@@ -398,8 +399,8 @@ void PerfPage::send_locks(uint8_t scene) {
       params[param] = p->val;
     }
   }
-  if (DeviceParamTargets::perf_begin_param_editor(editor_dest, params,
-                                                  sizeof(params))) {
+  if (DeviceParamResolver::perf(editor_dest)
+          .begin_perf_param_editor(params, sizeof(params))) {
     seq_step_page.disable_paramupdate_events();
   }
 }
@@ -452,7 +453,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       if (note_interface.notes_all_off()) {
         learn = LEARN_OFF;
         seq_step_page.enable_paramupdate_events();
-        DeviceParamTargets::perf_end_param_editor();
+        DeviceParamResolver::end_perf_param_editor();
         page_mode = PERF_DESTINATION;
         config_encoders();
       }
@@ -480,14 +481,15 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       uint8_t scene = learn - 1;
 
       uint8_t editor_dest =
-          DeviceParamTargets::perf_dest_from_slot(1, last_md_track + 1);
+          DeviceParamResolver::perf_dest_from_slot(1, last_md_track + 1);
       if (editor_dest == 255) {
         return true;
       }
       editor_dest++;
 
       uint8_t param = 0;
-      if (!DeviceParamTargets::perf_param_from_key(editor_dest, key, &param)) {
+      DeviceParamTarget editor_target = DeviceParamResolver::perf(editor_dest);
+      if (!editor_target.perf_param_from_key(key, &param)) {
         return true;
       }
       uint8_t data_dest = editor_dest - 1;
@@ -500,7 +502,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         if (d->find_match(data_dest, param, scene) == 255) {
           key_interface.ignoreNextEvent(key);
           uint8_t value = 0;
-          if (DeviceParamTargets::perf_get_param(editor_dest, param, &value)) {
+          if (editor_target.get_param(param, &value)) {
             d->add_param(data_dest, param, scene, value);
           }
         }

@@ -1,6 +1,6 @@
 #include "MCLEncoder.h"
 #include "DeviceManager.h"
-#include "DeviceParamTargets.h"
+#include "DeviceParamResolver.h"
 #include "PerfPageParent.h"
 #include "ResourceManager.h"
 #include "../Drivers/MidiDevice.h"
@@ -33,11 +33,10 @@ void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param,
       strcpy_P(myName, mclstr_ler);
     }
   } else {
-    bool labelled = device_slot
-                        ? DeviceParamTargets::slot_param_label(
-                              device_slot, dest, param, myName, sizeof(myName))
-                        : DeviceParamTargets::perf_param_label(
-                              dest, param, myName, sizeof(myName));
+    DeviceParamTarget target = device_slot
+                                   ? DeviceParamResolver::slot(device_slot, dest)
+                                   : DeviceParamResolver::perf(dest);
+    bool labelled = target.param_label(param, myName, sizeof(myName));
     if (!labelled) {
       mcl_gui.put_value_at(param, myName);
     }
@@ -51,29 +50,21 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
   if (value == 0) {
     strcpy_P(K, mclstr_dash);
   } else {
-    bool labelled = device_slot
-                        ? DeviceParamTargets::slot_target_label(
-                              device_slot, value, K, sizeof(K))
-                        : DeviceParamTargets::perf_target_label(value, K,
-                                                                sizeof(K));
+    DeviceParamTarget target = device_slot
+                                   ? DeviceParamResolver::slot(device_slot,
+                                                               value)
+                                   : DeviceParamResolver::perf(value);
+    bool labelled = target.target_label(K, sizeof(K));
     if (!labelled) {
       uint8_t local_value = value;
-#if defined(__AVR__)
-      K[0] = (device_slot == 2 || (!device_slot && value > 20)) ? 'M' : 'T';
-      if (!device_slot && value > 20) {
-        local_value = value - 20;
-      }
-#else
-      K[0] = 'T';
+      K[0] = device_slot == 2 ? 'M' : 'T';
       if (!device_slot) {
-        uint8_t primary_count =
-            device_manager.primary_device()->params()->target_count(0);
+        uint8_t primary_count = DeviceParamResolver::slot_target_count(1);
         if (value > primary_count) {
           K[0] = 'M';
           local_value = value - primary_count;
         }
       }
-#endif
       mcl_gui.put_value_at(local_value, K + 1);
     }
   }

@@ -186,6 +186,14 @@ public:
                                           uint8_t len) override;
   virtual bool sequencer_uses_step_pitch(uint8_t device_idx,
                                          uint8_t target) const override;
+
+private:
+  MDClass &md() const { return (MDClass &)device_; }
+};
+
+class MDPerfCapability : public DevicePerfCapability {
+public:
+  explicit MDPerfCapability(MDClass &device) : DevicePerfCapability(device) {}
   virtual bool perf_param_from_key(uint8_t device_idx, uint8_t target,
                                    uint8_t key, uint8_t *param) override;
   virtual bool perf_key_for_param(uint8_t device_idx, uint8_t target,
@@ -222,6 +230,11 @@ DeviceMixerCapability *MDClass::mixer() {
 #if !defined(__AVR__)
 DeviceParamCapability *MDClass::params() {
   static MDParamCapability capability(*this);
+  return &capability;
+}
+
+DevicePerfCapability *MDClass::perf() {
+  static MDPerfCapability capability(*this);
   return &capability;
 }
 #endif
@@ -330,8 +343,8 @@ void MDPanelCapability::set_key_repeat(uint8_t enabled) {
 }
 
 #if !defined(__AVR__)
-bool MDParamCapability::perf_param_from_key(uint8_t device_idx, uint8_t target,
-                                            uint8_t key, uint8_t *param) {
+bool MDPerfCapability::perf_param_from_key(uint8_t device_idx, uint8_t target,
+                                           uint8_t key, uint8_t *param) {
   (void)device_idx;
   if (param == nullptr || target >= NUM_MD_TRACKS || key < 0x10 ||
       key > 0x17) {
@@ -348,8 +361,8 @@ bool MDParamCapability::perf_param_from_key(uint8_t device_idx, uint8_t target,
   return true;
 }
 
-bool MDParamCapability::perf_key_for_param(uint8_t device_idx, uint8_t target,
-                                           uint8_t param, uint8_t *key) {
+bool MDPerfCapability::perf_key_for_param(uint8_t device_idx, uint8_t target,
+                                          uint8_t param, uint8_t *key) {
   (void)device_idx;
   if (key == nullptr || target >= NUM_MD_TRACKS) {
     return false;
@@ -369,10 +382,10 @@ bool MDParamCapability::perf_key_for_param(uint8_t device_idx, uint8_t target,
   return true;
 }
 
-bool MDParamCapability::perf_begin_param_editor(uint8_t device_idx,
-                                                uint8_t target,
-                                                uint8_t *params,
-                                                uint8_t count) {
+bool MDPerfCapability::perf_begin_param_editor(uint8_t device_idx,
+                                               uint8_t target,
+                                               uint8_t *params,
+                                               uint8_t count) {
   (void)device_idx;
   if (target >= NUM_MD_TRACKS || params == nullptr ||
       count < MD_PARAMS_PER_TRACK) {
@@ -382,19 +395,19 @@ bool MDParamCapability::perf_begin_param_editor(uint8_t device_idx,
   return true;
 }
 
-void MDParamCapability::perf_end_param_editor(uint8_t device_idx) {
+void MDPerfCapability::perf_end_param_editor(uint8_t device_idx) {
   (void)device_idx;
   md().deactivate_encoder_interface();
 }
 
-void MDParamCapability::perf_set_rec_mode(uint8_t device_idx, uint8_t mode) {
+void MDPerfCapability::perf_set_rec_mode(uint8_t device_idx, uint8_t mode) {
   (void)device_idx;
   md().set_rec_mode(mode);
 }
 
-bool MDParamCapability::perf_scene_autofill(uint8_t device_idx,
-                                            uint8_t dest_offset,
-                                            PerfData *data, uint8_t scene) {
+bool MDPerfCapability::perf_scene_autofill(uint8_t device_idx,
+                                           uint8_t dest_offset,
+                                           PerfData *data, uint8_t scene) {
   (void)device_idx;
   if (data == nullptr || scene >= NUM_SCENES) {
     return false;

@@ -105,6 +105,7 @@ public:
   virtual DeviceMixerCapability *mixer() override;
 #if !defined(__AVR__)
   virtual DeviceParamCapability *params() override;
+  virtual DevicePerfCapability *perf() override;
 #endif
   virtual DevicePanelCapability *panel() override;
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT

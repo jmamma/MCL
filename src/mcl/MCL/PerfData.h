@@ -3,7 +3,7 @@
 #ifndef PERFDATATRACK_H__
 #define PERFDATATRACK_H__
 #include "platform.h"
-#include "DeviceParamTargets.h"
+#include "DeviceParamResolver.h"
 #include "MCLMemory.h"
 #include "MCLStrings.h"
 #include "oled.h"
@@ -189,7 +189,7 @@ public:
   void scene_autofill(uint8_t scene) {
      oled_display.textbox_P(mclstr_fill, mclstr_scenes);
      if (scene >= NUM_SCENES) { return; }
-     DeviceParamTargets::perf_scene_autofill(this, scene);
+     DeviceParamResolver::perf_scene_autofill(this, scene);
   }
 
 };
@@ -240,7 +240,7 @@ public:
            f->param = p->param;
            uint8_t v = 0;
            bool has_current =
-               DeviceParamTargets::perf_get_param(p->dest, p->param, &v);
+               DeviceParamResolver::perf(p->dest).get_param(p->param, &v);
            if (!has_current && p->val == 255) {
              continue;
            }
@@ -264,7 +264,7 @@ public:
            uint8_t m = find_existing(p->dest, p->param);
            uint8_t v = 0;
            bool has_current =
-               DeviceParamTargets::perf_get_param(p->dest, p->param, &v);
+               DeviceParamResolver::perf(p->dest).get_param(p->param, &v);
            if (!has_current && p->val == 255) {
              continue;
            }

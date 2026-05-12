@@ -1,5 +1,5 @@
 #include "LFOSeqTrack.h"
-#include "DeviceParamTargets.h"
+#include "DeviceParamResolver.h"
 #include "MidiClock.h"
 #include "MCLSeq.h"
 #include <string.h>
@@ -565,6 +565,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
   }
 
   if (enable && send_due) {
+    MidiUartClass *output_uart = device_slot == 2 ? uart2_ : uart_;
     int16_t lfo_sample = get_sample();
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       if (params[i].dest == 0) {
@@ -574,9 +575,8 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
       uint8_t wav_value = get_wav_value(dest, i, lfo_sample);
       if (last_wav_value[i] != wav_value) {
         uint8_t param = params[i].param;
-        DeviceParamTargets::slot_set_param(
-            device_slot, dest, param, wav_value,
-            device_slot == 2 ? uart2_ : uart_);
+        DeviceParamResolver::slot(device_slot, dest)
+            .set_param(param, wav_value, output_uart);
 
         last_wav_value[i] = wav_value;
       }
@@ -598,6 +598,8 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
 void LFOSeqTrack::reset_params() {
 //  while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {}; 
 
+  MidiUartClass *output_uart = device_slot == 2 ? mcl_seq.secondary_output
+                                                : mcl_seq.primary_output;
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
     if (params[i].dest == 0) {
       continue;
@@ -605,9 +607,8 @@ void LFOSeqTrack::reset_params() {
     uint8_t dest = params[i].dest;
     uint8_t param = params[i].param;
     uint8_t wav_value = get_param_offset(dest, i);
-    DeviceParamTargets::slot_set_param(
-        device_slot, dest, param, wav_value,
-        device_slot == 2 ? mcl_seq.secondary_output : mcl_seq.primary_output);
+    DeviceParamResolver::slot(device_slot, dest)
+        .set_param(param, wav_value, output_uart);
     last_wav_value[i] = 255;
   }
 }
@@ -615,7 +616,7 @@ void LFOSeqTrack::reset_params() {
 uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param_id) {
   uint8_t param = params[param_id].param;
   uint8_t value = params[param_id].offset;
-  if (DeviceParamTargets::slot_get_param(device_slot, dest, param, &value)) {
+  if (DeviceParamResolver::slot(device_slot, dest).get_param(param, &value)) {
     return value;
   }
   return params[param_id].offset;

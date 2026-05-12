@@ -5,7 +5,7 @@
 #include "SeqTrack.h"
 
 DeviceMixerCapability::DeviceMixerCapability(MidiDevice &device)
-    : device_(device) {}
+    : DeviceCapability(device) {}
 
 uint8_t DeviceMixerCapability::track_count(uint8_t device_idx) const {
   if (device_idx >= NUM_GRIDS) {
@@ -128,7 +128,7 @@ void copy_param_number_label(char prefix, uint8_t number, char *out,
 } // namespace
 
 DeviceParamCapability::DeviceParamCapability(MidiDevice &device)
-    : device_(device) {}
+    : DeviceCapability(device) {}
 
 uint8_t DeviceParamCapability::target_count(uint8_t device_idx) const {
   (void)device_idx;
@@ -235,9 +235,12 @@ uint8_t DeviceParamCapability::sequencer_pitch_lock_param(
   return 0;
 }
 
-bool DeviceParamCapability::perf_param_from_key(uint8_t device_idx,
-                                                uint8_t target, uint8_t key,
-                                                uint8_t *param) {
+DevicePerfCapability::DevicePerfCapability(MidiDevice &device)
+    : DeviceCapability(device) {}
+
+bool DevicePerfCapability::perf_param_from_key(uint8_t device_idx,
+                                               uint8_t target, uint8_t key,
+                                               uint8_t *param) {
   (void)device_idx;
   (void)target;
   (void)key;
@@ -245,9 +248,9 @@ bool DeviceParamCapability::perf_param_from_key(uint8_t device_idx,
   return false;
 }
 
-bool DeviceParamCapability::perf_key_for_param(uint8_t device_idx,
-                                               uint8_t target, uint8_t param,
-                                               uint8_t *key) {
+bool DevicePerfCapability::perf_key_for_param(uint8_t device_idx,
+                                              uint8_t target, uint8_t param,
+                                              uint8_t *key) {
   (void)device_idx;
   (void)target;
   (void)param;
@@ -255,10 +258,10 @@ bool DeviceParamCapability::perf_key_for_param(uint8_t device_idx,
   return false;
 }
 
-bool DeviceParamCapability::perf_begin_param_editor(uint8_t device_idx,
-                                                    uint8_t target,
-                                                    uint8_t *params,
-                                                    uint8_t count) {
+bool DevicePerfCapability::perf_begin_param_editor(uint8_t device_idx,
+                                                   uint8_t target,
+                                                   uint8_t *params,
+                                                   uint8_t count) {
   (void)device_idx;
   (void)target;
   (void)params;
@@ -266,20 +269,20 @@ bool DeviceParamCapability::perf_begin_param_editor(uint8_t device_idx,
   return false;
 }
 
-void DeviceParamCapability::perf_end_param_editor(uint8_t device_idx) {
+void DevicePerfCapability::perf_end_param_editor(uint8_t device_idx) {
   (void)device_idx;
 }
 
-void DeviceParamCapability::perf_set_rec_mode(uint8_t device_idx,
-                                              uint8_t mode) {
+void DevicePerfCapability::perf_set_rec_mode(uint8_t device_idx,
+                                             uint8_t mode) {
   (void)device_idx;
   (void)mode;
 }
 
-bool DeviceParamCapability::perf_scene_autofill(uint8_t device_idx,
-                                                uint8_t dest_offset,
-                                                PerfData *data,
-                                                uint8_t scene) {
+bool DevicePerfCapability::perf_scene_autofill(uint8_t device_idx,
+                                               uint8_t dest_offset,
+                                               PerfData *data,
+                                               uint8_t scene) {
   (void)device_idx;
   (void)dest_offset;
   (void)data;

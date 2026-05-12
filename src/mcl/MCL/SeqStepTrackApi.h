@@ -3,7 +3,7 @@
 #ifndef SEQSTEPTRACKAPI_H__
 #define SEQSTEPTRACKAPI_H__
 
-#include "DeviceParamTargets.h"
+#include "DeviceParamResolver.h"
 #include "MCLSeq.h"
 #if defined(PLATFORM_TBD)
 #include "MCLSysConfig.h"
@@ -77,8 +77,8 @@ public:
 
   bool uses_step_pitch() const {
     return uses_md_sound() ||
-           DeviceParamTargets::slot_uses_step_pitch(param_device_slot(),
-                                                    param_dest());
+           DeviceParamResolver::slot(param_device_slot(), param_dest())
+               .uses_step_pitch();
   }
 
   bool configure_driver_panel(char *info, size_t info_len,
@@ -90,14 +90,13 @@ public:
       return false;
     }
     pitch_encoder_max = uses_step_pitch() ? 127 : 1;
-    return DeviceParamTargets::slot_target_label(param_device_slot(),
-                                                 param_dest(), info,
-                                                 (uint8_t)info_len);
+    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+        .target_label(info, (uint8_t)info_len);
   }
 
   uint8_t lock_param_count() const {
-    return DeviceParamTargets::slot_lock_param_count(param_device_slot(),
-                                                     param_dest());
+    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+        .lock_param_count();
   }
 
   uint8_t lock_slot_count() const {
@@ -110,23 +109,21 @@ public:
   }
 
   bool lock_param_info(uint8_t param_id, SeqStepLockParamInfo &info) const {
-    return DeviceParamTargets::slot_lock_param_info(param_device_slot(),
-                                                    param_dest(), param_id,
-                                                    &info);
+    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+        .lock_param_info(param_id, &info);
   }
 
   uint8_t current_lock_value(uint8_t param_id) const {
     uint8_t value = 0;
-    DeviceParamTargets::slot_lock_current_value(param_device_slot(),
-                                                param_dest(), param_id,
-                                                &value);
+    DeviceParamResolver::slot(param_device_slot(), param_dest())
+        .lock_current_value(param_id, &value);
     return value;
   }
 
   bool copy_lock_param_label(uint8_t param_id, char *dst,
                              size_t dst_len) const {
-    return DeviceParamTargets::slot_lock_param_label(
-        param_device_slot(), param_dest(), param_id, dst, (uint8_t)dst_len);
+    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+        .lock_param_label(param_id, dst, (uint8_t)dst_len);
   }
 
   uint8_t length() const {
@@ -576,8 +573,8 @@ public:
   }
 
   uint8_t pitch_lock_param_id() const {
-    return DeviceParamTargets::slot_pitch_lock_param(param_device_slot(),
-                                                     param_dest());
+    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+        .pitch_lock_param();
   }
 
   uint8_t get_track_lock_implicit(uint8_t step, uint8_t param_id) {

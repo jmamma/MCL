@@ -10,7 +10,7 @@
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #include "DeviceManager.h"
-#include "DeviceParamTargets.h"
+#include "DeviceParamResolver.h"
 #include "global.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #if defined(PLATFORM_TBD)
@@ -735,10 +735,11 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param == MODEL_MUTE) { // Mute
     SeqTrackUtil::with_md_track(track, [&](auto &t) { t.mute_state = value > 0; });
    }
-  if (track_param >= DeviceParamTargets::slot_param_count(1, track + 1)) {
+  if (track_param >=
+      DeviceParamResolver::slot(1, track + 1).param_count()) {
     return;
   }
-  uint8_t perf_dest = DeviceParamTargets::perf_dest_from_slot(1, track + 1);
+  uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(1, track + 1);
   if (perf_dest != 255) {
     perf_page.learn_param(perf_dest, track_param, value);
   }
@@ -792,7 +793,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t track = mcl_seq.find_ext_track(channel);
   if (track != 255) {
     uint8_t dest = track + 1;
-    uint8_t perf_dest = DeviceParamTargets::perf_dest_from_slot(2, dest);
+    uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(2, dest);
     if (perf_dest != 255) {
       perf_page.learn_param(perf_dest, param, value);
     }

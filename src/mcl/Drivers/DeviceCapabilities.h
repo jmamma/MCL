@@ -9,7 +9,14 @@ class SeqTrack;
 struct MidiDeviceMixerParam;
 struct MidiDeviceParamInfo;
 
-class DeviceMixerCapability {
+class DeviceCapability {
+protected:
+  explicit DeviceCapability(MidiDevice &device) : device_(device) {}
+
+  MidiDevice &device_;
+};
+
+class DeviceMixerCapability : public DeviceCapability {
 public:
   explicit DeviceMixerCapability(MidiDevice &device);
 
@@ -29,12 +36,10 @@ public:
   virtual void select_track(uint8_t device_idx, uint8_t track);
   virtual void restore_track_params(uint8_t device_idx, uint8_t track);
 
-protected:
-  MidiDevice &device_;
 };
 
 #if !defined(__AVR__)
-class DeviceParamCapability {
+class DeviceParamCapability : public DeviceCapability {
 public:
   explicit DeviceParamCapability(MidiDevice &device);
 
@@ -60,6 +65,13 @@ public:
                                          uint8_t target) const;
   virtual uint8_t sequencer_pitch_lock_param(uint8_t device_idx,
                                              uint8_t target) const;
+
+};
+
+class DevicePerfCapability : public DeviceCapability {
+public:
+  explicit DevicePerfCapability(MidiDevice &device);
+
   virtual bool perf_param_from_key(uint8_t device_idx, uint8_t target,
                                    uint8_t key, uint8_t *param);
   virtual bool perf_key_for_param(uint8_t device_idx, uint8_t target,
@@ -71,8 +83,6 @@ public:
   virtual bool perf_scene_autofill(uint8_t device_idx, uint8_t dest_offset,
                                    PerfData *data, uint8_t scene);
 
-protected:
-  MidiDevice &device_;
 };
 #endif
 

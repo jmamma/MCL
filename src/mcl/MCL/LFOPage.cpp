@@ -4,7 +4,7 @@
 #include "MCLGUI.h"
 #include "ResourceManager.h"
 #include "DeviceManager.h"
-#include "DeviceParamTargets.h"
+#include "DeviceParamResolver.h"
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/A4/A4.h"
 #include "SeqPages.h"
@@ -67,10 +67,9 @@ void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
     return;
   }
   uint8_t value = 0;
-  if (!DeviceParamTargets::slot_get_param(device_slot,
-                                          track->params[param_idx].dest,
-                                          track->params[param_idx].param,
-                                          &value)) {
+  DeviceParamTarget target =
+      DeviceParamResolver::slot(device_slot, track->params[param_idx].dest);
+  if (!target.get_param(track->params[param_idx].param, &value)) {
     track->params[param_idx].offset = encoders[encoder_idx]->cur;
   } else {
     encoders[encoder_idx]->cur = encoders[encoder_idx]->old;
@@ -159,9 +158,9 @@ void LFOPage::cleanup() {
 void LFOPage::config_encoder_range(uint8_t i) {
   uint8_t device_slot = grid_x_tracks ? 1 : 2;
   ((MCLEncoder *)encoders[i])->max =
-      DeviceParamTargets::slot_target_count(device_slot);
+      DeviceParamResolver::slot_target_count(device_slot);
   uint8_t param_count =
-      DeviceParamTargets::slot_param_count(device_slot, encoders[i]->cur);
+      DeviceParamResolver::slot(device_slot, encoders[i]->cur).param_count();
   ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
 }
 
@@ -173,12 +172,12 @@ void LFOPage::config_encoders() {
   if (page_mode == LFO_DESTINATION) {
     encoders[0]->cur = lfo_track->params[0].dest;
     ((MCLEncoder *)encoders[0])->max =
-        DeviceParamTargets::slot_target_count(grid_x_tracks ? 1 : 2);
+        DeviceParamResolver::slot_target_count(grid_x_tracks ? 1 : 2);
     encoders[1]->cur = lfo_track->params[0].param;
     ((MCLEncoder *)encoders[1])->max = 23;
     encoders[2]->cur = lfo_track->params[1].dest;
     ((MCLEncoder *)encoders[2])->max =
-        DeviceParamTargets::slot_target_count(grid_x_tracks ? 1 : 2);
+        DeviceParamResolver::slot_target_count(grid_x_tracks ? 1 : 2);
     encoders[3]->cur = lfo_track->params[1].param;
     ((MCLEncoder *)encoders[3])->max = 23;
 
@@ -400,7 +399,7 @@ void LFOPage::learn_param(uint8_t device_slot, uint8_t dest, uint8_t param,
   if (lfo_track->device_slot != device_slot) {
     return;
   }
-  if (DeviceParamTargets::slot_param_count(device_slot, dest) <= param) {
+  if (DeviceParamResolver::slot(device_slot, dest).param_count() <= param) {
     return;
   }
   bool reconfig = false;

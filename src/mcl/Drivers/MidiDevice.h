@@ -75,6 +75,7 @@ protected:
   DeviceMixerCapability mixer_capability_;
 #if !defined(__AVR__)
   DeviceParamCapability param_capability_;
+  DevicePerfCapability perf_capability_;
 #endif
 
 public:
@@ -178,6 +179,7 @@ public:
   virtual DeviceMixerCapability *mixer();
 #if !defined(__AVR__)
   virtual DeviceParamCapability *params();
+  virtual DevicePerfCapability *perf();
 #endif
   virtual DevicePanelCapability *panel();
   virtual void triggerTrack(uint8_t track, uint8_t velocity,
