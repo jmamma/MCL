@@ -19,6 +19,9 @@
 
 namespace {
 
+constexpr uint8_t kSeqPageVisibleSteps = 16;
+constexpr uint8_t kSeqPageTrackMaskWidth = 16;
+
 bool seq_page_uses_primary_step_tracks() {
   PageIndex page = mcl.currentPage();
   return (page == SEQ_STEP_PAGE || page == SEQ_PTC_PAGE) &&
@@ -31,13 +34,37 @@ bool seq_page_uses_non_md_primary_step_tracks() {
 }
 
 #if !defined(__AVR__)
-bool seq_page_uses_percent_condition_labels() {
+bool seq_page_uses_signed_microtiming() {
   if (!seq_page_uses_primary_step_tracks()) {
     return false;
   }
-  return seq_step_active_track().uses_percent_condition_labels();
+  return seq_step_active_track().uses_signed_microtiming();
 }
 #endif
+
+uint8_t seq_page_condition_count() {
+  if (seq_page_uses_primary_step_tracks()) {
+    return seq_step_active_track().condition_count();
+  }
+  return NUM_TRIG_CONDITIONS;
+}
+
+bool seq_page_condition_label(uint8_t condition, bool plock, bool marker,
+                              char *out) {
+  if (!seq_page_uses_primary_step_tracks()) {
+    return false;
+  }
+  seq_step_active_track().condition_label(condition, plock, marker, out);
+  return true;
+}
+
+uint8_t seq_page_step_offset() {
+  return SeqPage::page_select * kSeqPageVisibleSteps;
+}
+
+uint8_t seq_page_visible_step(uint8_t step_key) {
+  return step_key + seq_page_step_offset();
+}
 
 } // namespace
 
@@ -423,7 +450,7 @@ void SeqPage::setup() {}
 void SeqPage::check_and_set_page_select() {
   reset_undo();
   uint8_t track_length = seq_page_active_step_track().length();
-  if (page_select >= page_count || page_select * 16 >= track_length) {
+  if (page_select >= page_count || seq_page_step_offset() >= track_length) {
     page_select = 0;
   }
   ElektronDevice *elektron_dev = midi_device->asElektronDevice();
@@ -653,7 +680,7 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
                                    [&](SeqTrack &seq_track, uint8_t idx) {
                                      if (seq_track.mute_state == SEQ_MUTE_OFF) {
                                        uint8_t d = offset + idx;
-                                       if (d < 16) {
+                                       if (d < kSeqPageTrackMaskWidth) {
                                          SET_BIT16(mute_mask, d);
                                        }
                                      }
@@ -916,11 +943,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 // from knob value to step value
 uint8_t SeqPage::translate_to_step_conditional(uint8_t condition,
                                                /*OUT*/ bool *plock) {
-  uint8_t num_cond = NUM_TRIG_CONDITIONS;
-#if !defined(__AVR__)
-  if (seq_page_uses_percent_condition_labels())
-    num_cond = SPSX_NUM_TRIG_CONDITIONS - 1;
-#endif
+  uint8_t num_cond = seq_page_condition_count();
   if (condition > num_cond) {
     condition = condition - num_cond;
     *plock = true;
@@ -933,11 +956,7 @@ uint8_t SeqPage::translate_to_step_conditional(uint8_t condition,
 // from step value to knob value
 uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition,
                                                /*IN*/ bool plock) {
-  uint8_t num_cond = NUM_TRIG_CONDITIONS;
-#if !defined(__AVR__)
-  if (seq_page_uses_percent_condition_labels())
-    num_cond = SPSX_NUM_TRIG_CONDITIONS - 1;
-#endif
+  uint8_t num_cond = seq_page_condition_count();
   if (plock) {
     condition = condition + num_cond;
   }
@@ -955,83 +974,15 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
   if (!s)
     return;
 
-  uint8_t num_cond = NUM_TRIG_CONDITIONS;
-#if !defined(__AVR__)
-  if (seq_page_uses_percent_condition_labels())
-    num_cond = SPSX_NUM_TRIG_CONDITIONS - 1;
-#endif
+  uint8_t num_cond = seq_page_condition_count();
+  bool plock = c > num_cond;
 
-  if (c > num_cond)
+  if (plock)
     c -= num_cond;
 
-#if !defined(__AVR__)
-  if (seq_page_uses_percent_condition_labels()) {
-    // SPSX condition names
-    const bool cond_plock = seq_param1.getValue() > num_cond;
-    char a = '-', b = '-', d = '-';
-    if (c == 0) {
-      // 100% = default, show as empty
-      a = '-';
-      b = '-';
-      d = '-';
-    } else if (c <= SPSX_COND_10PCT) {
-      // Percentage: 90,75,66,50,33,25,10
-      static const uint8_t pcts[] = {90, 75, 66, 50, 33, 25, 10};
-      uint8_t pct = pcts[c - 1];
-      a = '0' + (pct / 10);
-      b = '0' + (pct % 10);
-      d = '%';
-    } else if (c == SPSX_COND_ONESHOT) {
-      a = '1';
-      b = 'S';
-      d = 'H';
-    } else if (c == SPSX_COND_FIRST) {
-      a = '1';
-      b = 'S';
-      d = 'T';
-    } else if (c == SPSX_COND_NOT_FIRST) {
-      a = '!';
-      b = '1';
-      d = 'S';
-    } else if (c == SPSX_COND_FILL) {
-      a = 'F';
-      b = 'I';
-      d = 'L';
-    } else if (c == SPSX_COND_NOT_FILL) {
-      a = '!';
-      b = 'F';
-      d = 'L';
-    } else if (c == SPSX_COND_PRE) {
-      a = 'P';
-      b = 'R';
-      d = 'E';
-    } else if (c == SPSX_COND_NOT_PRE) {
-      a = '!';
-      b = 'P';
-      d = 'R';
-    } else if (c == SPSX_COND_NEI) {
-      a = 'N';
-      b = 'E';
-      d = 'I';
-    } else if (c == SPSX_COND_NOT_NEI) {
-      a = '!';
-      b = 'N';
-      d = 'E';
-    } else if (c >= SPSX_COND_ITER_BASE && c <= SPSX_COND_ITER_MAX) {
-      uint8_t x, y;
-      if (spsx_cond_iter_decode(c, x, y)) {
-        a = '0' + x;
-        b = '/';
-        d = '0' + y;
-      }
-    }
-    s[0] = a;
-    s[1] = b;
-    s[2] = cond_plock ? (m ? '+' : '^') : d;
-    s[3] = '\0';
+  if (seq_page_condition_label(c, plock, m, s)) {
     return;
   }
-#endif
 
   // Legacy MD condition names
   static const char PROGMEM ptab[] = "12579"; // probability digits
@@ -1053,7 +1004,7 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
   s[1] = b;
   uint8_t i = 2;
 
-  if (seq_param1.getValue() > num_cond)
+  if (plock)
     s[i++] = m ? '+' : '^';
 
   s[i] = '\0';
@@ -1064,7 +1015,7 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
   mclstr_copy_progmem(K, mclstr_dash, sizeof(K));
 
 #if !defined(__AVR__)
-  if (seq_page_uses_percent_condition_labels() || timing_mid == 0) {
+  if (seq_page_uses_signed_microtiming() || timing_mid == 0) {
     // SPSX: timing param is microtiming mapped to 0..254 (center=127)
     int8_t mt = (int8_t)(timing - 127);
     if (mt < 0) {
@@ -1102,7 +1053,7 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
         seq_page_step_track_for(i).set_length(length);
       }
     } else if (mcl_cfg.poly_mask && is_poly) {
-      for (uint8_t c = 0; c < 16; c++) {
+      for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
         if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
           seq_page_step_track_for(c).set_length(length);
         }
@@ -1256,7 +1207,7 @@ void opt_clear_track_handler() {
         opt_copy_track_handler(opt_clear);
       }
       if (is_poly) {
-        for (uint8_t c = 0; c < 16; c++) {
+        for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
             mcl_clipboard.copy_sequencer_track(c);
             seq_page_step_track_for(c).clear_track();
@@ -1464,7 +1415,7 @@ void opt_paste_track_handler() {
         }
       }
       if (is_poly) {
-        for (uint8_t c = 0; c < 16; c++) {
+        for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
           if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
             mcl_clipboard.paste_sequencer_track(c, c);
           }
@@ -1504,8 +1455,8 @@ void opt_clear_page_handler() {
   if (track.uses_kit_sound()) {
     MD.popup_text(57);
   }
-  for (uint8_t n = 0; n < 16; n++) {
-    uint8_t step = n + SeqPage::page_select * 16;
+  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
+    uint8_t step = seq_page_visible_step(n);
     if (step >= track.length())
       return;
     track.clear_step(step);
@@ -1531,8 +1482,8 @@ void opt_copy_page_handler(uint8_t op) {
     }
   }
   uint8_t track_len = track.length();
-  for (uint8_t n = 0; n < 16; n++) {
-    uint8_t step = n + SeqPage::page_select * 16;
+  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
+    uint8_t step = seq_page_visible_step(n);
     if (step >= track_len)
       return;
     copy_step_to_clipboard(track, step, n);
@@ -1554,8 +1505,8 @@ void opt_paste_page_handler() {
     }
   }
   uint8_t track_len = track.length();
-  for (uint8_t n = 0; n < 16; n++) {
-    uint8_t step = n + SeqPage::page_select * 16;
+  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
+    uint8_t step = seq_page_visible_step(n);
     if (step >= track_len)
       return;
     paste_step_from_clipboard(track, step, n);
@@ -1574,7 +1525,7 @@ void opt_clear_step_handler() {
   CLEAR:
     opt_copy_step_handler(STEP_UNDO);
   }
-  uint8_t step = SeqPage::step_select + SeqPage::page_select * 16;
+  uint8_t step = seq_page_visible_step(SeqPage::step_select);
   SeqStepTrackRef track = seq_page_active_step_track();
   oled_display.textbox_P(mclstr_clear_step);
   if (track.uses_kit_sound()) {
@@ -1600,7 +1551,7 @@ void opt_copy_step_handler(uint8_t op) {
       MD.popup_text_P(mclstr_copy_step);
     }
   }
-  uint8_t step = SeqPage::step_select + SeqPage::page_select * 16;
+  uint8_t step = seq_page_visible_step(SeqPage::step_select);
   copy_step_to_clipboard(track, step, 0);
 }
 
@@ -1618,15 +1569,15 @@ void opt_paste_step_handler() {
       MD.popup_text_P(mclstr_paste_step);
     }
   }
-  uint8_t step = SeqPage::step_select + SeqPage::page_select * 16;
+  uint8_t step = seq_page_visible_step(SeqPage::step_select);
   paste_step_from_clipboard(track, step, 0);
 }
 
 void opt_mute_step_handler() {
   SeqStepTrackRef track = seq_page_active_step_track();
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
     if (note_interface.is_note_on(n)) {
-      uint8_t s = n + SeqPage::page_select * 16;
+      uint8_t s = seq_page_visible_step(n);
       track.toggle_mute(s);
     }
   }
@@ -1641,16 +1592,13 @@ void opt_clear_step_locks_handler() {
       MD.popup_text(14);
     }
   }
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
     if (note_interface.is_note_on(n)) {
 
       bool is_md_device = opt_capture_is_md_device();
       if (seq_page_uses_step_track_ops(is_md_device)) {
-        uint8_t s = n + SeqPage::page_select * 16;
+        uint8_t s = seq_page_visible_step(n);
         seq_page_active_step_track().clear_step_locks(s);
-      } else {
-        //        mcl_seq.ext_tracks[last_ext_track].clear_step_locks(
-        //          SeqPage::step_select + SeqPage::page_select * 16);
       }
     }
   }

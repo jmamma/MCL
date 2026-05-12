@@ -5,6 +5,9 @@
 
 #include "ExtSeqTrack.h"
 #include "SeqExtStepLockApi.h"
+#ifdef PLATFORM_TBD
+#include "SeqExtMidiControl.h"
+#endif
 #include "SeqExtStepTypes.h"
 #ifdef PLATFORM_TBD
 #include "../Drivers/Generic/Sequencer/MidiSeqTrack.h"
@@ -35,13 +38,14 @@ public:
     return SeqExtStepLockApi(*ext_track_);
   }
 
-  bool uses_midi_backend() const {
 #ifdef PLATFORM_TBD
-    return midi_track_ != nullptr;
-#else
-    return false;
-#endif
+  bool parse_control_change(SeqExtMidiControlState &control_state,
+                            uint8_t channel, uint8_t cc, uint8_t value,
+                            SeqExtParsedControl &out) const {
+    return midi_track_ != nullptr &&
+           control_state.parse_cc(channel, cc, value, out);
   }
+#endif
 
   uint8_t length() const {
 #ifdef PLATFORM_TBD

@@ -1,8 +1,15 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
 #include "SeqStepTrackRef.h"
+#include "../Drivers/MD/UI/Pages/RAMPage.h"
+#include "SeqPages.h"
 
 namespace SeqStepTrackBackend {
+
+inline void set_md_linked_param_update(bool enabled) {
+  seq_ptc_page.cc_link_enable = enabled;
+  RAMPage::cc_link_enable = enabled;
+}
 
 inline MDSeqTrack *md(void *track) { return static_cast<MDSeqTrack *>(track); }
 
@@ -48,6 +55,36 @@ inline bool md_request_speed_change(void *track, uint8_t new_speed) {
 inline uint8_t md_condition_count(const void *track) {
   (void)track;
   return NUM_TRIG_CONDITIONS;
+}
+inline void md_condition_label(const void *track, uint8_t condition, bool plock,
+                               bool marker, char *out) {
+  (void)track;
+  if (out == nullptr) {
+    return;
+  }
+  static const char PROGMEM ptab[] = "12579";
+
+  char a = 'L';
+  char b = '1';
+  if (condition != 0) {
+    if (condition <= 8) {
+      b = '0' + condition;
+    } else if (condition <= 13) {
+      a = 'P';
+      b = pgm_read_byte(&ptab[condition - 9]);
+    } else if (condition == 14) {
+      a = '1';
+      b = 'S';
+    }
+  }
+
+  out[0] = a;
+  out[1] = b;
+  uint8_t i = 2;
+  if (plock) {
+    out[i++] = marker ? '+' : '^';
+  }
+  out[i] = '\0';
 }
 inline uint8_t md_timing_encoder_min(const void *track) {
   (void)track;
@@ -193,6 +230,10 @@ inline bool md_preview_step(void *track, uint8_t step) {
   MD.triggerTrack(t->track_number, 127);
   return true;
 }
+inline void md_set_linked_param_update(void *track, bool enabled) {
+  (void)track;
+  set_md_linked_param_update(enabled);
+}
 
 #if !defined(__AVR__)
 inline StepSeqDataTrack *stepseq(void *track) {
@@ -263,6 +304,77 @@ inline bool stepseq_request_speed_change(void *track, uint8_t new_speed) {
 inline uint8_t stepseq_condition_count(const void *track) {
   (void)track;
   return STEPSEQ_NUM_TRIG_CONDITIONS - 1;
+}
+inline void stepseq_condition_label(const void *track, uint8_t condition,
+                                    bool plock, bool marker, char *out) {
+  (void)track;
+  if (out == nullptr) {
+    return;
+  }
+
+  char a = '-';
+  char b = '-';
+  char d = '-';
+  if (condition == STEPSEQ_COND_100PCT) {
+    a = '-';
+    b = '-';
+    d = '-';
+  } else if (condition <= STEPSEQ_COND_10PCT) {
+    static const uint8_t pcts[] = {90, 75, 66, 50, 33, 25, 10};
+    uint8_t pct = pcts[condition - 1];
+    a = '0' + (pct / 10);
+    b = '0' + (pct % 10);
+    d = '%';
+  } else if (condition == STEPSEQ_COND_ONESHOT) {
+    a = '1';
+    b = 'S';
+    d = 'H';
+  } else if (condition == STEPSEQ_COND_FIRST) {
+    a = '1';
+    b = 'S';
+    d = 'T';
+  } else if (condition == STEPSEQ_COND_NOT_FIRST) {
+    a = '!';
+    b = '1';
+    d = 'S';
+  } else if (condition == STEPSEQ_COND_FILL) {
+    a = 'F';
+    b = 'I';
+    d = 'L';
+  } else if (condition == STEPSEQ_COND_NOT_FILL) {
+    a = '!';
+    b = 'F';
+    d = 'L';
+  } else if (condition == STEPSEQ_COND_PRE) {
+    a = 'P';
+    b = 'R';
+    d = 'E';
+  } else if (condition == STEPSEQ_COND_NOT_PRE) {
+    a = '!';
+    b = 'P';
+    d = 'R';
+  } else if (condition == STEPSEQ_COND_NEI) {
+    a = 'N';
+    b = 'E';
+    d = 'I';
+  } else if (condition == STEPSEQ_COND_NOT_NEI) {
+    a = '!';
+    b = 'N';
+    d = 'E';
+  } else if (condition >= STEPSEQ_COND_ITER_BASE &&
+             condition <= STEPSEQ_COND_ITER_MAX) {
+    uint8_t x = 0;
+    uint8_t y = 0;
+    if (stepseq_cond_iter_decode(condition, x, y)) {
+      a = '0' + x;
+      b = '/';
+      d = '0' + y;
+    }
+  }
+  out[0] = a;
+  out[1] = b;
+  out[2] = plock ? (marker ? '+' : '^') : d;
+  out[3] = '\0';
 }
 inline uint8_t stepseq_timing_encoder_min(const void *track) {
   (void)track;
@@ -409,6 +521,11 @@ inline void stepseq_record_track_locks(void *track, uint8_t param_id,
 inline bool stepseq_preview_step(void *track, uint8_t step) {
   return stepseq(track)->preview_step(step);
 }
+inline void stepseq_set_linked_param_update(void *track, bool enabled) {
+  if (stepseq_uses_kit_sound(track)) {
+    set_md_linked_param_update(enabled);
+  }
+}
 #endif
 
 } // namespace SeqStepTrackBackend
@@ -419,7 +536,6 @@ const SeqStepTrackOps *seq_step_md_ops() {
       false,
       false,
       true,
-      false,
       md_uses_kit_sound,
       md_selects_track_locally,
       md_lock_slot_count,
@@ -432,6 +548,7 @@ const SeqStepTrackOps *seq_step_md_ops() {
       md_set_length,
       md_request_speed_change,
       md_condition_count,
+      md_condition_label,
       md_timing_encoder_min,
       md_timing_encoder_center,
       md_timing_encoder_max,
@@ -473,6 +590,7 @@ const SeqStepTrackOps *seq_step_md_ops() {
       md_record_track,
       md_record_track_locks,
       md_preview_step,
+      md_set_linked_param_update,
   };
   return &ops;
 }
@@ -484,7 +602,6 @@ const SeqStepTrackOps *seq_step_stepseq_ops() {
       true,
       true,
       false,
-      true,
       stepseq_uses_kit_sound,
       stepseq_selects_track_locally,
       stepseq_lock_slot_count,
@@ -497,6 +614,7 @@ const SeqStepTrackOps *seq_step_stepseq_ops() {
       stepseq_set_length,
       stepseq_request_speed_change,
       stepseq_condition_count,
+      stepseq_condition_label,
       stepseq_timing_encoder_min,
       stepseq_timing_encoder_center,
       stepseq_timing_encoder_max,
@@ -538,6 +656,7 @@ const SeqStepTrackOps *seq_step_stepseq_ops() {
       stepseq_record_track,
       stepseq_record_track_locks,
       stepseq_preview_step,
+      stepseq_set_linked_param_update,
   };
   return &ops;
 }

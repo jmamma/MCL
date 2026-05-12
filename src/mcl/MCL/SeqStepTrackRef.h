@@ -25,7 +25,6 @@ struct SeqStepTrackOps {
   bool uses_signed_microtiming;
   bool clears_mute_on_pattern_clear;
   bool shows_lock_value_popup;
-  bool uses_percent_condition_labels;
   bool (*uses_kit_sound)(const void *track);
   bool (*selects_track_locally)(const void *track);
   uint8_t (*lock_slot_count)(const void *track);
@@ -38,6 +37,8 @@ struct SeqStepTrackOps {
   void (*set_length)(void *track, uint8_t len, bool expand);
   bool (*request_speed_change)(void *track, uint8_t new_speed);
   uint8_t (*condition_count)(const void *track);
+  void (*condition_label)(const void *track, uint8_t condition, bool plock,
+                          bool marker, char *out);
   uint8_t (*timing_encoder_min)(const void *track);
   uint8_t (*timing_encoder_center)(const void *track);
   uint8_t (*timing_encoder_max)(const void *track);
@@ -88,6 +89,7 @@ struct SeqStepTrackOps {
   void (*record_track)(void *track, uint8_t velocity);
   void (*record_track_locks)(void *track, uint8_t param_id, uint8_t value);
   bool (*preview_step)(void *track, uint8_t step);
+  void (*set_linked_param_update)(void *track, bool enabled);
 };
 
 const SeqStepTrackOps *seq_step_md_ops();
@@ -113,10 +115,6 @@ public:
   }
 
   bool shows_lock_value_popup() const { return ops_->shows_lock_value_popup; }
-
-  bool uses_percent_condition_labels() const {
-    return ops_->uses_percent_condition_labels;
-  }
 
   bool uses_kit_sound() const { return ops_->uses_kit_sound(track_); }
 
@@ -199,6 +197,7 @@ public:
 #else
       step_edit()->set_live_param_update(param_device_idx(), enabled);
 #endif
+      ops_->set_linked_param_update(track_, enabled);
     }
   }
 
@@ -365,6 +364,11 @@ public:
   }
 
   uint8_t condition_count() const { return ops_->condition_count(track_); }
+
+  void condition_label(uint8_t condition, bool plock, bool marker,
+                       char *out) const {
+    ops_->condition_label(track_, condition, plock, marker, out);
+  }
 
   uint8_t step_conditional_from_knob(uint8_t condition, bool *plock) const {
     uint8_t num_cond = condition_count();

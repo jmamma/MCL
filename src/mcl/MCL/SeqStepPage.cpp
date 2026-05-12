@@ -1,5 +1,4 @@
 #include "SeqStepPage.h"
-#include "../Drivers/MD/UI/Pages/RAMPage.h"
 #include "../Drivers/MidiDevice.h"
 #include "DeviceManager.h"
 #include "DeviceParamResolver.h"
@@ -16,9 +15,14 @@
 #endif
 #include "MCLSeq.h"
 
-#define NUM_KEYS 24
-
 namespace {
+
+constexpr uint8_t kStepPageVisibleSteps = 16;
+constexpr uint8_t kStepPageKeyboardKeys = 24;
+
+uint8_t page_step_offset() {
+  return SeqPage::page_select * kStepPageVisibleSteps;
+}
 
 SeqStepTrackRef step_track_for(uint8_t track) {
   return seq_step_track_for(track);
@@ -38,7 +42,7 @@ void clear_shift_step_selection(SeqStepPage &page) {
   if (latch == 0) {
     return;
   }
-  for (uint8_t n = 0; n < NUM_MD_TRACKS; ++n) {
+  for (uint8_t n = 0; n < kStepPageVisibleSteps; ++n) {
     if (IS_BIT_SET16(latch, n)) {
       note_interface.clear_note(n);
     }
@@ -106,7 +110,7 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
   GUI_hardware.led.set_trigleds(led_mask, TRIGLED_STEPEDIT);
   GUI_hardware.led.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
   if (MidiClock.state == 2 && step_count >= offset &&
-      step_count < offset + 16) {
+      step_count < offset + kStepPageVisibleSteps) {
     GUI_hardware.led.toggle_trigled(step_count - offset);
   }
 }
@@ -213,8 +217,6 @@ void SeqStepPage::disable_paramupdate_events() {
     return;
   }
   active_step_track().set_live_param_update(false);
-  seq_ptc_page.cc_link_enable = false;
-  RAMPage::cc_link_enable = false;
 }
 
 void SeqStepPage::enable_paramupdate_events() {
@@ -222,8 +224,6 @@ void SeqStepPage::enable_paramupdate_events() {
     return;
   }
   active_step_track().set_live_param_update(true);
-  seq_ptc_page.cc_link_enable = true;
-  RAMPage::cc_link_enable = true;
 }
 
 void SeqStepPage::cleanup() {
@@ -284,7 +284,7 @@ void SeqStepPage::display() {
     uint64_t note_mask[2] = {};
     uint8_t note = seq_param4.cur; // + tuning->base;
     SET_BIT64(note_mask, note);
-    mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, note_mask);
+    mcl_gui.draw_keyboard(32, 23, 6, 9, kStepPageKeyboardKeys, note_mask);
     SeqPage::display();
   }
 
@@ -292,7 +292,7 @@ void SeqStepPage::display() {
     uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
     MidiUartParent::handle_midi_lock = 1;
 
-    draw_active_step_masks(*this, active_track, page_select * 16);
+    draw_active_step_masks(*this, active_track, page_step_offset());
 
     MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 
@@ -334,9 +334,9 @@ void SeqStepPage::loop() {
       seq_param4.hasChanged()) {
     bool has_note_pitch = active_track.uses_note_pitch();
 
-    for (uint8_t n = 0; n < 16; n++) {
+    for (uint8_t n = 0; n < kStepPageVisibleSteps; n++) {
       if (note_interface.is_note_on(n)) {
-        uint8_t step = n + (page_select * 16);
+        uint8_t step = n + page_step_offset();
         if (step < active_track.length()) {
           bool cond_plock;
           uint8_t condition = active_track.step_conditional_from_knob(
@@ -452,7 +452,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_menu_page.select_item(0);
       return true;
     }
-    uint8_t step = track + (page_select * 16);
+    uint8_t step = track + page_step_offset();
     uint8_t length = active_track.length();
 
     step_select = track;
@@ -562,7 +562,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     SeqStepTrackRef active_track = active_step_track();
     uint8_t key = event->source;
     uint8_t first_note = note_interface.get_first_md_note();
-    uint8_t page_offset = page_select * 16;
+    uint8_t page_offset = page_step_offset();
     uint8_t step = (first_note == 255) ? 255 : first_note + page_offset;
 
     switch (key) {
@@ -586,7 +586,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       if (event->mask == EVENT_BUTTON_RELEASED) {
-        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        for (uint8_t n = 0; n < kStepPageVisibleSteps; n++) {
           if (note_interface.is_note_on(n)) {
             active_track.clear_step_lock(n + page_offset, param);
           }
@@ -594,7 +594,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       if (event->mask == EVENT_BUTTON_PRESSED) {
         int8_t lock_idx = active_track.find_param(param);
-        for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+        for (uint8_t n = 0; n < kStepPageVisibleSteps; n++) {
           if (note_interface.is_note_on(n)) {
             uint8_t s = n + page_offset;
             if (lock_idx == -1 || !active_track.step_has_lock(s, lock_idx)) {
@@ -674,7 +674,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           mask_type = MASK_PATTERN;
           config_mask_info(false);
         } else {
-          for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
+          for (uint8_t n = 0; n < kStepPageVisibleSteps; n++) {
             if (note_interface.is_note_on(n)) {
               active_track.toggle_mute(n + page_offset);
             }
@@ -742,7 +742,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track_param;
 
   if (!seq_step_tracks_parse_kit_cc(channel, param, &track, &track_param) ||
-      track > 15) {
+      track >= kStepPageVisibleSteps) {
     return;
   }
 
@@ -766,9 +766,9 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
 
   SeqStepTrackRef active_track = active_step_track();
   uint8_t store_lock = 255;
-  for (uint8_t i = 0; i < 16; i++) {
+  for (uint8_t i = 0; i < kStepPageVisibleSteps; i++) {
     if ((note_interface.is_note_on(i))) {
-      uint8_t step = i + (SeqPage::page_select * 16);
+      uint8_t step = i + page_step_offset();
       if (step < active_track.length()) {
         if (active_track.set_track_locks(step, track_param, value)) {
           store_lock = 0;
