@@ -513,3 +513,12 @@ void DevicePanelCapability::set_key_repeat(uint8_t enabled) {
 void DevicePanelCapability::set_rec_mode(uint8_t mode) {
   (void)mode;
 }
+
+#if !defined(__AVR__)
+void DevicePanelCapability::sync_seqtrack(uint8_t length, uint8_t speed,
+                                          uint8_t step_count) {
+  (void)length;
+  (void)speed;
+  (void)step_count;
+}
+#endif

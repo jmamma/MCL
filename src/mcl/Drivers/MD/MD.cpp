@@ -283,6 +283,10 @@ public:
   explicit MDPanelCapability(MDClass &device) : device_(device) {}
   virtual void set_key_repeat(uint8_t enabled) override;
   virtual void set_rec_mode(uint8_t mode) override;
+#if !defined(__AVR__)
+  virtual void sync_seqtrack(uint8_t length, uint8_t speed,
+                             uint8_t step_count) override;
+#endif
 
 private:
   MDClass &device_;
@@ -510,6 +514,13 @@ void MDPanelCapability::set_key_repeat(uint8_t enabled) {
 void MDPanelCapability::set_rec_mode(uint8_t mode) {
   device_.set_rec_mode(mode);
 }
+
+#if !defined(__AVR__)
+void MDPanelCapability::sync_seqtrack(uint8_t length, uint8_t speed,
+                                      uint8_t step_count) {
+  device_.sync_seqtrack(length, speed, step_count);
+}
+#endif
 
 #if !defined(__AVR__)
 bool MDStepEditCapability::available(uint8_t device_idx) const {

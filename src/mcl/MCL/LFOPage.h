@@ -7,6 +7,7 @@
 #include "MCLEncoder.h"
 #include "LFO.h"
 #include "LFOSeqTrack.h"
+#include "LFOTrackRef.h"
 #include "SeqPage.h"
 #include "PerfPageParent.h"
 
@@ -27,8 +28,6 @@ public:
   uint8_t page_mode;
   uint8_t page_id;
   LFOSeqTrack *lfo_track;
-  uint8_t current_track = 0;
-  bool grid_x_tracks = true;
 
   uint8_t waveform;
   uint8_t depth;

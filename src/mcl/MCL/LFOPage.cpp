@@ -1,14 +1,10 @@
 #include "LFOPage.h"
 #include "LFO.h"
-#include "../Drivers/MD/MD.h"
 #include "MCLGUI.h"
 #include "ResourceManager.h"
 #include "DeviceManager.h"
-#include "DeviceParamResolver.h"
 #include "../Drivers/MidiDevice.h"
-#include "../Drivers/A4/A4.h"
 #include "SeqPages.h"
-#include "SeqTrackUtil.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1
@@ -58,18 +54,15 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
 }
 
 void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
-                       uint8_t device_slot, uint8_t encoder_idx,
-                       uint8_t param_idx) NOINLINE();
+                       uint8_t encoder_idx, uint8_t param_idx) NOINLINE();
 void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
-                       uint8_t device_slot, uint8_t encoder_idx,
-                       uint8_t param_idx) {
+                       uint8_t encoder_idx, uint8_t param_idx) {
   if (!encoders[encoder_idx]->hasChanged()) {
     return;
   }
   uint8_t value = 0;
-  DeviceParamTarget target =
-      DeviceParamResolver::slot(device_slot, track->params[param_idx].dest);
-  if (!target.get_param(track->params[param_idx].param, &value)) {
+  if (!LFOTrackRef::get_param(track->device_slot, track->params[param_idx].dest,
+                              track->params[param_idx].param, &value)) {
     track->params[param_idx].offset = encoders[encoder_idx]->cur;
   } else {
     encoders[encoder_idx]->cur = encoders[encoder_idx]->old;
@@ -85,37 +78,16 @@ void LFOPage::setup() {
 }
 
 void LFOPage::track_update() {
-  grid_x_tracks = SeqPage::current_device_slot() == 1;
-#ifndef EXT_TRACKS
-  grid_x_tracks = true;
-#endif
-
-  if (grid_x_tracks) {
-    current_track = last_md_track;
-  } else {
-    current_track = last_ext_track;
-  }
-  lfo_track = &SeqTrackUtil::get_lfo_track(grid_x_tracks, current_track);
+  lfo_track = &LFOTrackRef::current_track();
 }
 
 void LFOPage::sync_lfo_track() {
-  MD.sync_seqtrack(lfo_track->length, lfo_track->speed,
-                   lfo_track->step_count);
+  LFOTrackRef::sync_panel(*lfo_track);
 }
 
 void LFOPage::select_menu_track(uint8_t track) {
-  if (grid_x_tracks) {
-    if (track >= NUM_GRID_X_LFO_TRACKS) {
-      return;
-    }
-    last_md_track = track;
-  } else {
-#ifdef EXT_TRACKS
-    if (track >= NUM_GRID_Y_LFO_TRACKS) {
-      return;
-    }
-    last_ext_track = track;
-#endif
+  if (!LFOTrackRef::select_track(track)) {
+    return;
   }
   track_update();
   sync_lfo_track();
@@ -156,11 +128,10 @@ void LFOPage::cleanup() {
 }
 
 void LFOPage::config_encoder_range(uint8_t i) {
-  uint8_t device_slot = grid_x_tracks ? 1 : 2;
   ((MCLEncoder *)encoders[i])->max =
-      DeviceParamResolver::slot_target_count(device_slot);
+      LFOTrackRef::target_count(lfo_track->device_slot);
   uint8_t param_count =
-      DeviceParamResolver::slot(device_slot, encoders[i]->cur).param_count();
+      LFOTrackRef::param_count(lfo_track->device_slot, encoders[i]->cur);
   ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
 }
 
@@ -172,12 +143,12 @@ void LFOPage::config_encoders() {
   if (page_mode == LFO_DESTINATION) {
     encoders[0]->cur = lfo_track->params[0].dest;
     ((MCLEncoder *)encoders[0])->max =
-        DeviceParamResolver::slot_target_count(grid_x_tracks ? 1 : 2);
+        LFOTrackRef::target_count(lfo_track->device_slot);
     encoders[1]->cur = lfo_track->params[0].param;
     ((MCLEncoder *)encoders[1])->max = 23;
     encoders[2]->cur = lfo_track->params[1].dest;
     ((MCLEncoder *)encoders[2])->max =
-        DeviceParamResolver::slot_target_count(grid_x_tracks ? 1 : 2);
+        LFOTrackRef::target_count(lfo_track->device_slot);
     encoders[3]->cur = lfo_track->params[1].param;
     ((MCLEncoder *)encoders[3])->max = 23;
 
@@ -218,8 +189,7 @@ void LFOPage::loop() {
   track_update();
   if (show_seq_menu) {
     SeqPage::loop();
-    uint8_t max_track = grid_x_tracks ? NUM_GRID_X_LFO_TRACKS
-                                      : NUM_GRID_Y_LFO_TRACKS;
+    uint8_t max_track = LFOTrackRef::track_count(lfo_track->device_slot);
     if (opt_trackid > max_track) {
       opt_trackid = max_track;
       seq_menu_value_encoder.cur = opt_trackid;
@@ -259,9 +229,8 @@ void LFOPage::loop() {
       update_lfo_key_interface(lfo_track);
     }
 
-    uint8_t device_slot = grid_x_tracks ? 1 : 2;
-    update_lfo_offset(encoders, lfo_track, device_slot, 2, 0);
-    update_lfo_offset(encoders, lfo_track, device_slot, 3, 1);
+    update_lfo_offset(encoders, lfo_track, 2, 0);
+    update_lfo_offset(encoders, lfo_track, 3, 1);
   }
 
 }
@@ -282,7 +251,7 @@ void LFOPage::display() {
 
 
   if (page_mode == LFO_DESTINATION) {
-    uint8_t device_slot = grid_x_tracks ? 1 : 2;
+    uint8_t device_slot = lfo_track->device_slot;
     draw_dest(0, encoders[0]->cur, true, device_slot);
     draw_param(1, encoders[0]->cur, encoders[1]->cur, device_slot);
     draw_dest(2, encoders[2]->cur, true, device_slot);
@@ -345,7 +314,7 @@ void LFOPage::display() {
 void LFOPage::capture_seq_menu_values(bool is_md_device) {
   (void)is_md_device;
   track_update();
-  opt_trackid = current_track + 1;
+  opt_trackid = lfo_track->track_number + 1;
   opt_speed = lfo_track->speed;
   opt_lfo_mult = lfo_track->speed_multiplier();
   opt_length = lfo_track->length ? lfo_track->length : 16;
@@ -399,7 +368,7 @@ void LFOPage::learn_param(uint8_t device_slot, uint8_t dest, uint8_t param,
   if (lfo_track->device_slot != device_slot) {
     return;
   }
-  if (DeviceParamResolver::slot(device_slot, dest).param_count() <= param) {
+  if (LFOTrackRef::param_count(device_slot, dest) <= param) {
     return;
   }
   bool reconfig = false;
@@ -445,16 +414,15 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event) &&
       (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE)) {
     uint8_t port = event->port;
-    auto device = device_manager.device_for_port(port);
+    if (!device_manager.port_supports(port,
+                                      MidiDeviceCapability::MdTrigInterface)) {
+      return true;
+    }
 
     uint8_t track = event->source;
     uint8_t page_select = 0;
     uint8_t step = track + (page_select * 16);
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (device == &Analog4) {
-        // mcl.setPage(SEQ_EXTSTEP_PAGE)
-        return true;
-      }
       if (!IS_BIT_SET64(lfo_track->pattern_mask, step)) {
 
         SET_BIT64(lfo_track->pattern_mask, step);
