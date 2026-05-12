@@ -1,15 +1,8 @@
 #include "SeqExtStepPage.h"
 #include "MCLGUI.h"
-#include "DeviceManager.h"
-#include "MCLSeq.h"
 #include "MCLSysConfig.h"
-#include "MidiSetup.h"
-#include "SeqExtStepTrackApi.h"
-#include "SeqTrackUtil.h"
+#include "SeqExtStepTrackRef.h"
 #include "SeqPages.h"
-#ifdef PLATFORM_TBD
-#include "../Drivers/Generic/GenericMidiDevice.h"
-#endif
 
 namespace {
 
@@ -17,23 +10,9 @@ constexpr uint8_t kExtStepVisibleSteps = 16;
 constexpr uint8_t kExtStepDefaultZoomSteps = 16;
 constexpr uint8_t kExtStepLockParamFallback = 0;
 
-SeqExtStepTrackApi ext_step_track_api(uint8_t track) {
-  return SeqTrackUtil::get_ext_step_track(track);
-}
-
 SeqExtStepTrackApi active_ext_step_track() {
-  return ext_step_track_api(last_ext_track);
+  return SeqExtStepTrackRef::active_track();
 }
-
-#ifdef PLATFORM_TBD
-MidiClass *seq_ext_step_input_midi() {
-  MidiDevice *device = device_manager.secondary_device();
-  if (device != nullptr && device->midi != nullptr) {
-    return device->midi;
-  }
-  return generic_midi_device.midi;
-}
-#endif
 
 #ifdef PLATFORM_TBD
 bool seq_ext_step_param_menu_label(uint8_t entry_index, uint8_t option_n,
@@ -144,8 +123,8 @@ bool seq_ext_step_handle_control(SeqExtStepTrackApi &track, uint8_t ctrl_type,
                                     update_param_select);
   }
 
-  if (last_ext_track == track_index && note_interface.notes_on &&
-      SeqPage::pianoroll_mode > 0) {
+  if (SeqExtStepTrackRef::active_track_index() == track_index &&
+      note_interface.notes_on && SeqPage::pianoroll_mode > 0) {
     auto page_track = active_ext_step_track();
     return seq_ext_step_lock_held_steps(page_track, ctrl_type, ctrl, value,
                                         update_param_select);
@@ -210,7 +189,7 @@ void SeqExtStepPage::init() {
   select_device_slot(2);
 
   SeqPage::init();
-  device_manager.primary_device()->panel()->set_rec_mode(3);
+  SeqExtStepTrackRef::set_panel_rec_mode(3);
   param_select = PARAM_OFF;
   key_interface.on();
   key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
@@ -229,7 +208,7 @@ void SeqExtStepPage::init() {
 
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
-  device_manager.primary_device()->panel()->set_rec_mode(0);
+  SeqExtStepTrackRef::set_panel_rec_mode(0);
 #ifdef PLATFORM_TBD
   if (seq_menu_page.menu.option_name_override == seq_ext_step_param_menu_label) {
     seq_menu_page.menu.option_name_override = nullptr;
@@ -839,7 +818,7 @@ void SeqExtStepPage::loop() {
   bool is_lockeditor = (pianoroll_mode > 0);
   // If pianoroll_edit mode changed.
   if (show_seq_menu) {
-    display_mute_mask(midi_device, 8);
+    display_mute_mask(SeqExtStepTrackRef::mute_mask_device(), 8);
     if (last_pianoroll_mode != pianoroll_mode) {
 
       if (is_lockeditor) {
@@ -1052,8 +1031,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     uint8_t port = event->port;
     uint8_t track = event->source;
 
-    if (!device_manager.port_supports(
-            port, MidiDeviceCapability::MdTrigInterface)) {
+    if (!SeqExtStepTrackRef::supports_trig_port(port)) {
       return true;
     }
     if (show_seq_menu) {
@@ -1278,18 +1256,17 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
-  uint8_t track = mcl_seq.find_ext_track(channel);
-  if (track == 255) return;
+  uint8_t track = 0;
+  if (!SeqExtStepTrackRef::track_for_channel(channel, &track)) return;
 
-  auto active_track = ext_step_track_api(track);
+  auto active_track = SeqExtStepTrackRef::track(track);
   auto active_locks = active_track.locks();
   if (mcl_cfg.uart_cc_fwd) {
     active_track.send_cc(param, value);
   }
 
-  if (last_ext_track != track) {
-    last_ext_track = track;
-    SeqPage::select_device_slot(2);
+  if (SeqExtStepTrackRef::active_track_index() != track) {
+    SeqExtStepTrackRef::select_track(track);
     seq_extstep_page.config_encoders();
   }
 
@@ -1318,7 +1295,7 @@ void SeqExtStepMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 
   if (SeqPage::recording && MidiClock.state == 2 &&
       !note_interface.notes_on &&
-      param != device_manager.secondary_device()->get_mute_cc()) {
+      !SeqExtStepTrackRef::is_mute_cc(param)) {
     active_locks.record_control_lock(SEQ_EXT_LOCK_CTRL_CC, param, value,
                                      SeqPage::slide);
   }
@@ -1330,19 +1307,18 @@ void SeqExtStepMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t note_num = msg[1];
-  uint8_t track = mcl_seq.find_ext_track(channel);
-  if (track == 255) return;
+  uint8_t track = 0;
+  if (!SeqExtStepTrackRef::track_for_channel(channel, &track)) return;
 
   uint8_t pitch = seq_ext_step_pitch_from_midi_note(note_num);
   if (pitch == 255) return;
 
-  if (last_ext_track != track) {
-    last_ext_track = track;
-    SeqPage::select_device_slot(2);
+  if (SeqExtStepTrackRef::active_track_index() != track) {
+    SeqExtStepTrackRef::select_track(track);
     seq_extstep_page.config_encoders();
   }
 
-  auto active_track = ext_step_track_api(track);
+  auto active_track = SeqExtStepTrackRef::track(track);
   seq_extstep_page.set_cur_y(pitch);
   active_track.record_note_on(pitch, msg[2]);
   seq_extstep_page.last_rec_event = REC_EVENT_TRIG;
@@ -1358,13 +1334,13 @@ void SeqExtStepMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t note_num = msg[1];
-  uint8_t track = mcl_seq.find_ext_track(channel);
-  if (track == 255) return;
+  uint8_t track = 0;
+  if (!SeqExtStepTrackRef::track_for_channel(channel, &track)) return;
 
   uint8_t pitch = seq_ext_step_pitch_from_midi_note(note_num);
   if (pitch == 255) return;
 
-  auto active_track = ext_step_track_api(track);
+  auto active_track = SeqExtStepTrackRef::track(track);
   if (mcl_cfg.uart_note_fwd) {
     active_track.note_off(pitch, msg[2]);
   }
@@ -1375,11 +1351,11 @@ void SeqExtStepMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
   if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
 
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t track = mcl_seq.find_ext_track(channel);
-  if (track == 255) return;
+  uint8_t track = 0;
+  if (!SeqExtStepTrackRef::track_for_channel(channel, &track)) return;
 
   uint16_t value = msg[1] | (msg[2] << 7);
-  auto active_track = ext_step_track_api(track);
+  auto active_track = SeqExtStepTrackRef::track(track);
   active_track.pitch_bend(value);
   if (SeqPage::recording && MidiClock.state == 2) {
     active_track.locks().record_control_lock(SEQ_EXT_LOCK_CTRL_PITCH_BEND, 0,
@@ -1391,10 +1367,10 @@ void SeqExtStepMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
   if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
 
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t track = mcl_seq.find_ext_track(channel);
-  if (track == 255) return;
+  uint8_t track = 0;
+  if (!SeqExtStepTrackRef::track_for_channel(channel, &track)) return;
 
-  auto active_track = ext_step_track_api(track);
+  auto active_track = SeqExtStepTrackRef::track(track);
   active_track.channel_pressure(msg[1]);
   if (SeqPage::recording && MidiClock.state == 2) {
     active_track.locks().record_control_lock(
@@ -1406,10 +1382,10 @@ void SeqExtStepMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
   if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) return;
 
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t track = mcl_seq.find_ext_track(channel);
-  if (track == 255) return;
+  uint8_t track = 0;
+  if (!SeqExtStepTrackRef::track_for_channel(channel, &track)) return;
 
-  auto active_track = ext_step_track_api(track);
+  auto active_track = SeqExtStepTrackRef::track(track);
   active_track.after_touch(msg[1], msg[2]);
   if (SeqPage::recording && MidiClock.state == 2) {
     active_track.locks().record_control_lock(SEQ_EXT_LOCK_CTRL_POLY_PRESSURE,
@@ -1425,7 +1401,7 @@ void SeqExtStepMidiEvents::setup_callbacks() {
   if (state) {
     return;
   }
-  bound_midi = seq_ext_step_input_midi();
+  bound_midi = SeqExtStepTrackRef::input_midi();
   if (bound_midi == nullptr) {
     return;
   }

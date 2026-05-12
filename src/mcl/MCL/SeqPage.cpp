@@ -592,14 +592,15 @@ void SeqPage::config_mask_info(bool silent) {
 }
 
 void SeqPage::toggle_ext_mask(uint8_t track) {
+  uint8_t ext_tracks = SeqTrackUtil::track_count(false);
   if (track > 6) {
     track -= 8;
-    if (track >= mcl_seq.num_ext_tracks) {
+    if (track >= ext_tracks) {
       return;
     }
     SeqTrackUtil::get_track(false, track).toggle_mute();
   } else {
-    if (track >= mcl_seq.num_ext_tracks) {
+    if (track >= ext_tracks) {
       return;
     }
     select_device_slot(2);
@@ -651,7 +652,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
 #ifdef EXT_TRACKS
   else {
     DEBUG_PRINTLN("setting ext track");
-    last_ext_track = min(track, NUM_EXT_TRACKS - 1);
+    last_ext_track = min(track, SeqTrackUtil::track_count(false) - 1);
     auto &active_track = SeqTrackUtil::get_seq_track(false, last_ext_track);
     MD.sync_seqtrack(min(active_track.length, 64), active_track.speed,
                      active_track.step_count);
@@ -1222,7 +1223,7 @@ void opt_clear_track_handler() {
       opt_copy_track_handler(opt_clear);
     }
     if (opt_clear == 2) {
-      for (uint8_t n = 0; n < mcl_seq.num_ext_tracks; n++) {
+      for (uint8_t n = 0; n < SeqTrackUtil::track_count(false); n++) {
         clear_ext_track(n);
       }
       oled_display.textbox_P(mclstr_clear, mclstr_ext_tracks);
