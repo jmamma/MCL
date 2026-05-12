@@ -8,6 +8,22 @@
 #include "GridTrack.h"
 #include "MCLStrings.h"
 
+class MNMMixerCapability : public DeviceMixerCapability {
+public:
+  explicit MNMMixerCapability(MNMClass &device)
+      : DeviceMixerCapability(device) {}
+  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+                     MidiDeviceMixerParam *param) override;
+  virtual bool set_param(uint8_t device_idx, uint8_t track,
+                         uint8_t param_idx, int16_t value,
+                         bool send = true) override;
+  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+                                bool state, bool clear = false) override;
+
+private:
+  MNMClass &mnm() const { return (MNMClass &)device_; }
+};
+
 const ElektronSysexProtocol mnm_protocol = {
     monomachine_sysex_hdr,
     sizeof(monomachine_sysex_hdr),
@@ -61,8 +77,13 @@ void MNMClass::init_grid_devices(uint8_t device_idx) {
 
 }
 
-void MNMClass::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
-                                      bool state, bool clear) {
+DeviceMixerCapability *MNMClass::mixer() {
+  static MNMMixerCapability capability(*this);
+  return &capability;
+}
+
+void MNMMixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
+                                          bool state, bool clear) {
   (void)device_idx;
   if (track >= NUM_EXT_TRACKS) {
     return;
@@ -73,29 +94,31 @@ void MNMClass::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
   }
 }
 
-bool MNMClass::mixer_param(uint8_t device_idx, uint8_t track,
-                           uint8_t param_idx,
-                           MidiDeviceMixerParam *param) {
+bool MNMMixerCapability::param(uint8_t device_idx, uint8_t track,
+                               uint8_t param_idx,
+                               MidiDeviceMixerParam *param) {
   (void)device_idx;
   if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0) {
     return false;
   }
-  param->set_value(kit.levels[track]);
+  MNMClass &device = mnm();
+  param->set_value(device.kit.levels[track]);
   param->set_metadata("LEV", 0, true);
   return true;
 }
 
-bool MNMClass::set_mixer_param(uint8_t device_idx, uint8_t track,
-                               uint8_t param_idx, int16_t value,
-                               bool send) {
+bool MNMMixerCapability::set_param(uint8_t device_idx, uint8_t track,
+                                   uint8_t param_idx, int16_t value,
+                                   bool send) {
   (void)device_idx;
   if (track >= NUM_EXT_TRACKS || param_idx != 0) {
     return false;
   }
   if (value < 0) value = 0;
   if (value > 127) value = 127;
-  kit.levels[track] = (uint8_t)value;
-  setTrackLevel(track, kit.levels[track], send);
+  MNMClass &device = mnm();
+  device.kit.levels[track] = (uint8_t)value;
+  device.setTrackLevel(track, device.kit.levels[track], send);
   return true;
 }
 

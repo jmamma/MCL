@@ -8,6 +8,21 @@
 #include "TurboLight.h"
 #include <string.h>
 
+class A4MixerCapability : public DeviceMixerCapability {
+public:
+  explicit A4MixerCapability(A4Class &device) : DeviceMixerCapability(device) {}
+  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+                     MidiDeviceMixerParam *param) override;
+  virtual bool set_param(uint8_t device_idx, uint8_t track,
+                         uint8_t param_idx, int16_t value,
+                         bool send = true) override;
+  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+                                bool state, bool clear = false) override;
+
+private:
+  A4Class &a4() const { return (A4Class &)device_; }
+};
+
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
 
 uint8_t a4_sysex_proto_version[2] = {0x01, 0x01};
@@ -74,8 +89,13 @@ void A4Class::init_grid_devices(uint8_t device_idx) {
   }
 }
 
-void A4Class::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
-                                     bool state, bool clear) {
+DeviceMixerCapability *A4Class::mixer() {
+  static A4MixerCapability capability(*this);
+  return &capability;
+}
+
+void A4MixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
+                                         bool state, bool clear) {
   (void)device_idx;
   if (track >= NUM_EXT_TRACKS) {
     return;
@@ -86,30 +106,32 @@ void A4Class::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
   }
 }
 
-bool A4Class::mixer_param(uint8_t device_idx, uint8_t track,
-                          uint8_t param_idx,
-                          MidiDeviceMixerParam *param) {
+bool A4MixerCapability::param(uint8_t device_idx, uint8_t track,
+                              uint8_t param_idx,
+                              MidiDeviceMixerParam *param) {
   (void)device_idx;
   if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0) {
     return false;
   }
-  param->set_value(mixer_levels[track]);
+  A4Class &device = a4();
+  param->set_value(device.mixer_levels[track]);
   param->set_metadata("LEV", 0, true);
   return true;
 }
 
-bool A4Class::set_mixer_param(uint8_t device_idx, uint8_t track,
-                              uint8_t param_idx, int16_t value,
-                              bool send) {
+bool A4MixerCapability::set_param(uint8_t device_idx, uint8_t track,
+                                  uint8_t param_idx, int16_t value,
+                                  bool send) {
   (void)device_idx;
   if (track >= NUM_EXT_TRACKS || param_idx != 0) {
     return false;
   }
   if (value < 0) value = 0;
   if (value > 127) value = 127;
-  mixer_levels[track] = (uint8_t)value;
+  A4Class &device = a4();
+  device.mixer_levels[track] = (uint8_t)value;
   if (send) {
-    setLevel(track, mixer_levels[track]);
+    device.setLevel(track, device.mixer_levels[track]);
   }
   return true;
 }

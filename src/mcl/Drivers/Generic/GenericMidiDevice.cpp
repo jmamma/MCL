@@ -7,6 +7,22 @@
 #include "TurboLight.h"
 #include <string.h>
 
+class GenericMidiMixerCapability : public DeviceMixerCapability {
+public:
+  explicit GenericMidiMixerCapability(GenericMidiDevice &device)
+      : DeviceMixerCapability(device) {}
+  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+                     MidiDeviceMixerParam *param) override;
+  virtual bool set_param(uint8_t device_idx, uint8_t track,
+                         uint8_t param_idx, int16_t value,
+                         bool send = true) override;
+  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+                                bool state, bool clear = false) override;
+
+private:
+  GenericMidiDevice &generic() const { return (GenericMidiDevice &)device_; }
+};
+
 GenericMidiDevice::GenericMidiDevice()
     : MidiDevice(&Midi2, "MI", DEVICE_MIDI, false) {
   memset(mixer_levels, 127, sizeof(mixer_levels));
@@ -50,22 +66,28 @@ void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
                 value);
 }
 
-bool GenericMidiDevice::mixer_param(uint8_t device_idx, uint8_t track,
-                                    uint8_t param_idx,
-                                    MidiDeviceMixerParam *param) {
+DeviceMixerCapability *GenericMidiDevice::mixer() {
+  static GenericMidiMixerCapability capability(*this);
+  return &capability;
+}
+
+bool GenericMidiMixerCapability::param(uint8_t device_idx, uint8_t track,
+                                       uint8_t param_idx,
+                                       MidiDeviceMixerParam *param) {
   (void)device_idx;
   if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0 ||
       mcl_cfg.uart2_cc_level > 127) {
     return false;
   }
-  param->set_value(mixer_levels[track]);
+  GenericMidiDevice &device = generic();
+  param->set_value(device.mixer_levels[track]);
   param->set_metadata("LEV", 0, true);
   return true;
 }
 
-bool GenericMidiDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
-                                        uint8_t param_idx, int16_t value,
-                                        bool send) {
+bool GenericMidiMixerCapability::set_param(uint8_t device_idx, uint8_t track,
+                                           uint8_t param_idx, int16_t value,
+                                           bool send) {
   (void)device_idx;
   if (track >= NUM_EXT_TRACKS || param_idx != 0 ||
       mcl_cfg.uart2_cc_level > 127) {
@@ -73,9 +95,10 @@ bool GenericMidiDevice::set_mixer_param(uint8_t device_idx, uint8_t track,
   }
   if (value < 0) value = 0;
   if (value > 127) value = 127;
-  mixer_levels[track] = (uint8_t)value;
+  GenericMidiDevice &device = generic();
+  device.mixer_levels[track] = (uint8_t)value;
   if (send) {
-    setLevel(track, mixer_levels[track]);
+    device.setLevel(track, device.mixer_levels[track]);
   }
   return true;
 }
@@ -104,9 +127,9 @@ bool GenericMidiDevice::set_param(uint8_t device_idx, uint8_t target,
 }
 #endif
 
-void GenericMidiDevice::mixer_set_record_mutes(uint8_t device_idx,
-                                               uint8_t track, bool state,
-                                               bool clear) {
+void GenericMidiMixerCapability::set_record_mutes(uint8_t device_idx,
+                                                  uint8_t track, bool state,
+                                                  bool clear) {
   (void)device_idx;
   if (track >= NUM_EXT_TRACKS) {
     return;

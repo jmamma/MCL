@@ -18,17 +18,11 @@ public:
   virtual void init_grid_devices(uint8_t device_idx) override;
   void sync_grid_devices();
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
+  virtual DeviceMixerCapability *mixer() override;
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) override;
   virtual void triggerTrack(uint8_t track, uint8_t velocity,
                             MidiUartClass *uart_ = nullptr) override;
-  virtual uint8_t mixer_default_param(uint8_t device_idx) const override;
-  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
-                           uint8_t param_idx,
-                           MidiDeviceMixerParam *param) override;
-  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
-                               uint8_t param_idx, int16_t value,
-                               bool send = true) override;
   virtual uint8_t param_target_count(uint8_t device_idx) const override;
   virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const override;
   virtual bool param_target_label(uint8_t device_idx, uint8_t target,
@@ -53,12 +47,6 @@ public:
                                          uint8_t target) const override;
   virtual uint8_t sequencer_pitch_lock_param(uint8_t device_idx,
                                              uint8_t target) const override;
-  virtual void mixer_mute_track(uint8_t device_idx, uint8_t track,
-                                bool mute,
-                                MidiUartClass *uart_ = nullptr) override;
-  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
-                                      bool state,
-                                      bool clear = false) override;
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool enter_ui(gui_event_t *event) override;

@@ -21,6 +21,9 @@ extern uint8_t a4_sysex_hdr[5];
 extern uint8_t a4_sysex_proto_version[2];
 extern uint8_t a4_sysex_ftr[4];
 extern const ElektronSysexProtocol a4_protocol;
+
+class A4MixerCapability;
+
 /**
  * This is the main class used to communicate with an A4
  * connected to the Minicommand.
@@ -82,15 +85,7 @@ public:
   }
 
   virtual uint8_t get_mute_cc() { return 0x5E; }
-  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
-                           uint8_t param_idx,
-                           MidiDeviceMixerParam *param) override;
-  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
-                               uint8_t param_idx, int16_t value,
-                               bool send = true) override;
-  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
-                                      bool state,
-                                      bool clear = false) override;
+  virtual DeviceMixerCapability *mixer() override;
   bool getBlockingGeneric(uint16_t timeout);
   /*X denotes get from RAM/unsaved  */
   bool getBlockingKitX(uint8_t kit, uint16_t timeout = 3000);
@@ -104,6 +99,7 @@ public:
   void setLevel(uint8_t track, uint8_t value);
 
 private:
+  friend class A4MixerCapability;
   uint8_t mixer_levels[NUM_EXT_TRACKS];
 
 };

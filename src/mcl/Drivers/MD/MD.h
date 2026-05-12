@@ -107,13 +107,6 @@ public:
   virtual DeviceParamCapability *params() override;
 #endif
   virtual DevicePanelCapability *panel() override;
-  virtual uint8_t mixer_default_param(uint8_t device_idx) const override;
-  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
-                           uint8_t param_idx,
-                           MidiDeviceMixerParam *param) override;
-  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
-                               uint8_t param_idx, int16_t value,
-                               bool send = true) override;
 #if !defined(__AVR__)
   virtual uint8_t param_target_count(uint8_t device_idx) const override;
   virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const override;
@@ -132,9 +125,6 @@ public:
   virtual bool sequencer_uses_step_pitch(uint8_t device_idx,
                                          uint8_t target) const override;
 #endif
-  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
-                                      bool state,
-                                      bool clear = false) override;
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool canReadKit() { return true; }

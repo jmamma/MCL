@@ -180,15 +180,6 @@ public:
   virtual DeviceParamCapability *params();
 #endif
   virtual DevicePanelCapability *panel();
-  virtual uint8_t mixer_track_count(uint8_t device_idx) const;
-  virtual SeqTrack *mixer_seq_track(uint8_t device_idx, uint8_t track);
-  virtual uint8_t mixer_default_param(uint8_t device_idx) const;
-  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
-                           uint8_t param_idx,
-                           MidiDeviceMixerParam *param);
-  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
-                               uint8_t param_idx, int16_t value,
-                               bool send = true);
 #if !defined(__AVR__)
   virtual uint8_t param_target_count(uint8_t device_idx) const;
   virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const;
@@ -213,11 +204,6 @@ public:
   virtual uint8_t sequencer_pitch_lock_param(uint8_t device_idx,
                                              uint8_t target) const;
 #endif
-  virtual void mixer_mute_track(uint8_t device_idx, uint8_t track,
-                                 bool mute,
-                                 MidiUartClass *uart_ = nullptr);
-  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
-                                      bool state, bool clear = false);
   virtual void triggerTrack(uint8_t track, uint8_t velocity,
                             MidiUartClass *uart_ = nullptr) {
     (void)track;

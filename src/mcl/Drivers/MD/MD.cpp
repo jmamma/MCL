@@ -147,6 +147,14 @@ namespace {
 class MDMixerCapability : public DeviceMixerCapability {
 public:
   explicit MDMixerCapability(MDClass &device) : DeviceMixerCapability(device) {}
+  virtual uint8_t default_param(uint8_t device_idx) const override;
+  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+                     MidiDeviceMixerParam *param) override;
+  virtual bool set_param(uint8_t device_idx, uint8_t track,
+                         uint8_t param_idx, int16_t value,
+                         bool send = true) override;
+  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+                                bool state, bool clear = false) override;
   virtual uint8_t trig_group(uint8_t device_idx,
                              uint8_t track) const override;
   virtual void select_track(uint8_t device_idx, uint8_t track) override;
@@ -206,29 +214,30 @@ DevicePanelCapability *MDClass::panel() {
   return &capability;
 }
 
-uint8_t MDClass::mixer_default_param(uint8_t device_idx) const {
+uint8_t MDMixerCapability::default_param(uint8_t device_idx) const {
   (void)device_idx;
   return MODEL_LEVEL;
 }
 
-bool MDClass::mixer_param(uint8_t device_idx, uint8_t track,
-                          uint8_t param_idx,
-                          MidiDeviceMixerParam *param) {
+bool MDMixerCapability::param(uint8_t device_idx, uint8_t track,
+                              uint8_t param_idx,
+                              MidiDeviceMixerParam *param) {
   (void)device_idx;
   if (param == nullptr || track >= NUM_MD_TRACKS) {
     return false;
   }
 
+  MDClass &device = md();
   int16_t value = 0;
   if (param_idx == MODEL_LEVEL) {
-    value = kit.levels[track];
+    value = device.kit.levels[track];
   } else {
     uint8_t param_limit =
-        is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+        device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
     if (param_idx >= param_limit) {
       return false;
     }
-    value = kit.params[track][param_idx];
+    value = device.kit.params[track][param_idx];
   }
 
   param->set_value(value);
@@ -236,23 +245,37 @@ bool MDClass::mixer_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-bool MDClass::set_mixer_param(uint8_t device_idx, uint8_t track,
-                              uint8_t param_idx, int16_t value,
-                              bool send) {
+bool MDMixerCapability::set_param(uint8_t device_idx, uint8_t track,
+                                  uint8_t param_idx, int16_t value,
+                                  bool send) {
   (void)device_idx;
   (void)send;
   if (track >= NUM_MD_TRACKS) {
     return false;
   }
+  MDClass &device = md();
   uint8_t param_limit =
-      is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   if (param_idx != MODEL_LEVEL && param_idx >= param_limit) {
     return false;
   }
   if (value < 0) value = 0;
   if (value > 127) value = 127;
-  setTrackParam(track, param_idx, (uint8_t)value, nullptr, true);
+  device.setTrackParam(track, param_idx, (uint8_t)value, nullptr, true);
   return true;
+}
+
+void MDMixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
+                                         bool state, bool clear) {
+  (void)device_idx;
+  if (track >= NUM_MD_TRACKS) {
+    return;
+  }
+  SeqTrack &seq_track = SeqTrackUtil::get_seq_track(true, track);
+  seq_track.record_mutes = state;
+  if (clear) {
+    SeqTrackUtil::with_md_track(track, [](auto &t) { t.clear_mute(); });
+  }
 }
 
 uint8_t MDMixerCapability::trig_group(uint8_t device_idx,
@@ -550,19 +573,6 @@ bool MDClass::sequencer_uses_step_pitch(uint8_t device_idx,
   return target < NUM_MD_TRACKS;
 }
 #endif
-
-void MDClass::mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
-                                     bool state, bool clear) {
-  (void)device_idx;
-  if (track >= NUM_MD_TRACKS) {
-    return;
-  }
-  SeqTrack &seq_track = SeqTrackUtil::get_seq_track(true, track);
-  seq_track.record_mutes = state;
-  if (clear) {
-    SeqTrackUtil::with_md_track(track, [](auto &t) { t.clear_mute(); });
-  }
-}
 
 void MDClass::setup() {
   resetMidiMap();

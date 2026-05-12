@@ -2,6 +2,8 @@
 
 #include "../MidiDevice.h"
 
+class GenericMidiMixerCapability;
+
 class GenericMidiDevice : public MidiDevice {
 public:
   GenericMidiDevice();
@@ -12,12 +14,7 @@ public:
   virtual uint8_t get_mute_cc() override;
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) override;
-  virtual bool mixer_param(uint8_t device_idx, uint8_t track,
-                           uint8_t param_idx,
-                           MidiDeviceMixerParam *param) override;
-  virtual bool set_mixer_param(uint8_t device_idx, uint8_t track,
-                               uint8_t param_idx, int16_t value,
-                               bool send = true) override;
+  virtual DeviceMixerCapability *mixer() override;
 #if !defined(__AVR__)
   virtual uint8_t param_target_count(uint8_t device_idx) const override;
   virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const override;
@@ -25,13 +22,11 @@ public:
                          uint8_t value,
                          MidiUartClass *uart_ = nullptr) override;
 #endif
-  virtual void mixer_set_record_mutes(uint8_t device_idx, uint8_t track,
-                                      bool state,
-                                      bool clear = false) override;
   virtual void setLevel(uint8_t track, uint8_t value,
                         MidiUartClass *uart_ = nullptr);
 
 private:
+  friend class GenericMidiMixerCapability;
   uint8_t mixer_levels[16];
 };
 
