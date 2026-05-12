@@ -4,11 +4,16 @@
 #include "../Drivers/MD/UI/Pages/RAMPage.h"
 #include "SeqPages.h"
 
-namespace SeqStepTrackBackend {
-
-inline void set_md_linked_param_update(bool enabled) {
+void seq_step_set_md_linked_param_update(bool enabled) {
   seq_ptc_page.cc_link_enable = enabled;
   RAMPage::cc_link_enable = enabled;
+}
+
+#if !defined(__AVR__)
+namespace SeqStepTrackOpsBackend {
+
+inline void set_md_linked_param_update(bool enabled) {
+  seq_step_set_md_linked_param_update(enabled);
 }
 
 inline MDSeqTrack *md(void *track) { return static_cast<MDSeqTrack *>(track); }
@@ -528,10 +533,10 @@ inline void stepseq_set_linked_param_update(void *track, bool enabled) {
 }
 #endif
 
-} // namespace SeqStepTrackBackend
+} // namespace SeqStepTrackOpsBackend
 
 const SeqStepTrackOps *seq_step_md_ops() {
-  using namespace SeqStepTrackBackend;
+  using namespace SeqStepTrackOpsBackend;
   static const SeqStepTrackOps ops = {
       false,
       false,
@@ -597,7 +602,7 @@ const SeqStepTrackOps *seq_step_md_ops() {
 
 #if !defined(__AVR__)
 const SeqStepTrackOps *seq_step_stepseq_ops() {
-  using namespace SeqStepTrackBackend;
+  using namespace SeqStepTrackOpsBackend;
   static const SeqStepTrackOps ops = {
       true,
       true,
@@ -660,4 +665,5 @@ const SeqStepTrackOps *seq_step_stepseq_ops() {
   };
   return &ops;
 }
+#endif
 #endif
