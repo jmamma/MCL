@@ -98,6 +98,9 @@ public:
   virtual void end();
   bool is_key_down(uint8_t key) { return IS_BIT_SET64(cmd_key_state, key); }
   void send_md_leds(TrigLEDMode mode = TRIGLED_EXCLUSIVE);
+  void send_trig_leds(TrigLEDMode mode = TRIGLED_EXCLUSIVE) {
+    send_md_leds(mode);
+  }
   void cleanup();
   /* @} */
 };

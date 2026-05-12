@@ -183,12 +183,12 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND,
                                   active_track.uses_kit_sound());
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_PRIMARY, true);
 
   midi_events.setup_callbacks();
   key_interface.on();
   active_track.set_step_edit_rec_mode(1);
-  key_interface.send_md_leds(TRIGLED_STEPEDIT);
+  key_interface.send_trig_leds(TRIGLED_STEPEDIT);
   check_and_set_page_select();
 
   active_track.sync_step_edit();
@@ -255,7 +255,7 @@ void SeqStepPage::display() {
 
   char K[4];
   mcl_gui.put_value_at(seq_param3.getValue(), K);
-  if (IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track)) {
+  if (IS_BIT_SET16(mcl_cfg.poly_mask, seq_primary_track_index())) {
     draw_knob(2, mclstr_plen, K);
   } else {
     draw_knob(2, mclstr_len, K);
@@ -297,14 +297,15 @@ void SeqStepPage::display() {
     MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 
     SeqPage::display();
-    if (md_micro && mcl_gui.show_encoder_value(&seq_param2) &&
+    if (microtiming_overlay_active() &&
+        mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!recording)) {
       draw_active_microtiming(active_track, seq_param2.cur);
     }
   }
   if (prepare) {
-    page_select_page.md_prepare();
+    page_select_page.prepare_overlay();
     prepare = false;
   }
   // The SPS bottom-32 strip is now an overlay (SpsStripPage) installed
@@ -346,7 +347,7 @@ void SeqStepPage::loop() {
           active_track.set_timing_from_encoder(step, seq_param2.cur);
 
           if (seq_param2.hasChanged()) {
-            md_micro = true;
+            set_microtiming_overlay_active(true);
             draw_active_microtiming(active_track, seq_param2.cur);
           }
           if (seq_param1.hasChanged() && active_track.uses_kit_sound()) {
@@ -385,7 +386,7 @@ void SeqStepPage::loop() {
     update_params_queue = false;
   }
 
-  if (note_interface.notes_all_off_md() && !grid_page.bank_popup) {
+  if (note_interface.trig_notes_all_released() && !grid_page.bank_popup) {
     init_encoders_used_clock();
     active_track.end_param_editor();
 
@@ -409,9 +410,9 @@ void SeqStepPage::send_locks(uint8_t step) {
 }
 
 void SeqStepPage::disable_microtiming_overlay() {
-  if (md_micro) {
+  if (microtiming_overlay_active()) {
     active_step_track().close_microtiming();
-    md_micro = false;
+    set_microtiming_overlay_active(false);
   }
 }
 
@@ -444,7 +445,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       opt_trackid = track + 1;
       note_interface.ignoreNextEvent(track);
       if (active_track.selects_track_locally()) {
-        last_md_track = track;
+        seq_set_primary_track_index(track);
         config();
       } else {
         select_track(device, track);
@@ -468,11 +469,11 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         if (MidiClock.state == 2) {
           step_track_for(track).record_track(127);
         }
-        key_interface.send_md_leds(TRIGLED_OVERLAY);
+        key_interface.send_trig_leds(TRIGLED_OVERLAY);
         return true;
       }
       if (event->mask == EVENT_BUTTON_RELEASED) {
-        key_interface.send_md_leds(TRIGLED_OVERLAY);
+        key_interface.send_trig_leds(TRIGLED_OVERLAY);
         return true;
       }
     }
@@ -561,7 +562,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     SeqStepTrackRef active_track = active_step_track();
     uint8_t key = event->source;
-    uint8_t first_note = note_interface.get_first_md_note();
+    uint8_t first_note = note_interface.get_first_trig_note();
     uint8_t page_offset = page_step_offset();
     uint8_t step = (first_note == 255) ? 255 : first_note + page_offset;
 

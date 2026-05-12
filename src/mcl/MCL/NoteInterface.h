@@ -52,10 +52,12 @@ public:
   bool is_event(gui_event_t *event) { return event->type == NOTE; }
   bool notes_all_off() { return ((notes_on == 0) && (notes_off > 0)); }
   bool notes_all_off_md() { return (((uint16_t) notes_on == 0) && ((uint16_t)notes_off > 0)); }
+  bool trig_notes_all_released() { return notes_all_off_md(); }
   uint8_t notes_count_on();
   uint8_t notes_count_off();
   uint8_t notes_count();
   uint8_t get_first_md_note();
+  uint8_t get_first_trig_note() { return get_first_md_note(); }
 
   bool is_note(uint8_t note_num);
   bool is_note_on(uint8_t note_num) { return IS_BIT_SET32(notes_on, note_num); }

@@ -109,6 +109,11 @@ public:
   static bool recording;
   static uint16_t mute_mask;
 
+  static bool microtiming_overlay_active() { return md_micro; }
+  static void set_microtiming_overlay_active(bool active) {
+    md_micro = active;
+  }
+
   bool display_page_index = true;
   char info1[8] = { '\0' };
   char info2[8] = { '\0' };

@@ -25,6 +25,7 @@
 #define SEQ_MENU_PROB 9
 #define SEQ_MENU_SPEED 10
 #define SEQ_MENU_LENGTH_MD 11
+#define SEQ_MENU_LENGTH_PRIMARY SEQ_MENU_LENGTH_MD
 #define SEQ_MENU_LENGTH_EXT 12
 #define SEQ_MENU_CHANNEL 13
 #define SEQ_MENU_COPY 14
@@ -62,6 +63,11 @@ extern uint8_t last_ext_track;
 #endif
 
 extern uint8_t last_md_track;
+
+inline uint8_t seq_primary_track_index() { return last_md_track; }
+inline void seq_set_primary_track_index(uint8_t track) {
+  last_md_track = track;
+}
 
 extern SeqStepPage seq_step_page;
 

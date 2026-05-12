@@ -30,6 +30,7 @@ public:
   virtual void loop();
   virtual void cleanup();
   virtual void md_prepare();
+  void prepare_overlay() { md_prepare(); }
   void draw_popup();
   virtual bool handleEvent(gui_event_t *event);
 
