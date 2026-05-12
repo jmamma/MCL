@@ -16,17 +16,6 @@ public:
   uint16_t mutes[4];
 };
 
-class MixerMidiEvents : public MidiCallback {
-public:
-  bool state;
-
-  void setup_callbacks();
-  void remove_callbacks();
-  void onNoteOnCallback_Midi(uint8_t *msg);
-  void onNoteOffCallback_Midi(uint8_t *msg);
-  void onControlChangeCallback_Midi(uint8_t *msg);
-};
-
 void encoder_level_handle(EncoderParent *enc);
 
 class MixerPage : public LightPage {

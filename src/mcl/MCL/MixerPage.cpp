@@ -1,7 +1,6 @@
 #include "MixerPage.h"
 #include "DeviceManager.h"
 #include "CommonPages.h"
-#include "MDPages.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "MCLSeq.h"
@@ -37,6 +36,12 @@ uint8_t mixer_param_to_7bit(const MidiDeviceMixerParam &param) {
                     (range / 2u)) /
                    range);
 #endif
+}
+
+PageIndex mixer_return_page(PageIndex &last_page) {
+  PageIndex page = last_page != NULL_PAGE ? last_page : GRID_PAGE;
+  last_page = NULL_PAGE;
+  return page;
 }
 
 } // namespace
@@ -531,19 +536,15 @@ void MixerPage::disable_record_mutes(bool clear) {
 }
 
 void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) {
-
-  MidiDevice *devs[2] = {
-      device_manager.primary_device(),
-      device_manager.secondary_device(),
-  };
   if (load_type != nullptr && state < 255) {
     for (uint8_t dev = 0; dev < 2; dev++) {
       if (!load_type[dev]) continue;
-      uint8_t len = devs[dev]->mixer()->track_count(dev);
+      MidiDevice *device = device_for_mixer_slot(dev);
+      uint8_t len = device->mixer()->track_count(dev);
       if (len > 16) len = 16;
 
       for (uint8_t n = 0; n < len; n++) {
-        SeqTrack *seq_track = devs[dev]->mixer()->seq_track(dev, n);
+        SeqTrack *seq_track = device->mixer()->seq_track(dev, n);
         if (seq_track == nullptr) {
           continue;
         }
@@ -555,7 +556,7 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
         }
         // Switch
         if (mute_state != seq_track->mute_state) {
-          devs[dev]->mixer()->mute_track(dev, n, mute_state);
+          device->mixer()->mute_track(dev, n, mute_state);
           seq_track->mute_state = mute_state;
         }
       }
@@ -724,7 +725,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
             ((uint64_t)1 << MDX_KEY_RIGHT) | ((uint64_t)1 << MDX_KEY_DOWN);
         if (((key_interface.cmd_key_state & mask) == 0)) {
           if (note_interface.notes_count_on() == 0) {
-            mcl.setPage(fx_page_a.last_page);
+            mcl.setPage(mixer_return_page(last_page));
             return true;
           }
           toggle_or_solo(true);
@@ -824,12 +825,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
         ext_key_down = 0;
         if (note_interface.notes_on == 0 && !mute_toggle) {
-          if (last_page != NULL_PAGE) {
-            mcl.setPage(last_page);
-            last_page = NULL_PAGE;
-          } else {
-            mcl.setPage(GRID_PAGE);
-          }
+          mcl.setPage(mixer_return_page(last_page));
           return true;
         }
         mute_toggle = 0;
@@ -923,53 +919,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
   return false;
 }
-/*
-void MixerMidiEvents::setup_callbacks() {
-  if (state) {
-    return;
-  }
-  Midi.addOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOnCallback_Midi);
-  //Midi.addOnNoteOffCallback(
-  //    this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOffCallback_Midi);
-  Midi.addOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&MixerMidiEvents::onControlChangeCallback_Midi);
-
-  state = true;
-}
-
-void MixerMidiEvents::remove_callbacks() {
-  if (!state) {
-    return;
-  }
-
-  DEBUG_PRINTLN(F("remove calblacks"));
-  Midi.removeOnNoteOnCallback(
-      this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOnCallback_Midi);
-  Midi.removeOnNoteOffCallback(
-      this, (midi_callback_ptr_t)&MixerMidiEvents::onNoteOffCallback_Midi);
-  Midi.removeOnControlChangeCallback(
-      this,
-      (midi_callback_ptr_t)&MixerMidiEvents::onControlChangeCallback_Midi);
-
-  state = false;
-}
-
-void MixerMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
-uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  uint8_t param = msg[1];
-  uint8_t value = msg[2];
-  uint8_t track;
-  uint8_t track_param;
-
-  MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) {
-    return;
-  }
-}
-*/
-
 void MixerPage::onControlChangeCallback_Midi(uint8_t device_slot,
                                              uint8_t track,
                                              uint8_t track_param,
