@@ -28,10 +28,6 @@ public:
 };
 
 void encoder_level_handle(EncoderParent *enc);
-void encoder_filtf_handle(EncoderParent *enc);
-void encoder_filtw_handle(EncoderParent *enc);
-void encoder_filtq_handle(EncoderParent *enc);
-void encoder_lastparam_handle(EncoderParent *enc);
 
 class MixerPage : public LightPage {
 public:
@@ -100,8 +96,8 @@ public:
   void load_perf_locks(uint8_t state);
   void toggle_or_solo(bool solo = false);
   // Handled in MCLSeq
-  void onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
-                                    uint8_t value);
+  void onControlChangeCallback_Midi(uint8_t device_slot, uint8_t track,
+                                    uint8_t track_param, uint8_t value);
 
   uint8_t note_to_trig(uint8_t note_num);
   void track_trig(uint8_t device_slot, uint8_t track_number, uint8_t level);

@@ -12,6 +12,7 @@
 #include "MidiSetup.h"
 #include "Project.h"
 #include "SeqPages.h"
+#include "SeqStepTrackRef.h"
 #include "TBDTrack.h"
 #include "TbdUiMode.h"
 #include "TbdP4Command.h"
@@ -76,6 +77,23 @@ public:
                           MidiUartClass *uart_ = nullptr) override;
   virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
                                 bool state, bool clear = false) override;
+  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+                        uint8_t *track, uint8_t *param) const override;
+  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+                              uint8_t param, int16_t value) override;
+
+private:
+  TbdDevice &tbd() const { return (TbdDevice &)device_; }
+};
+
+class TbdStepTrackCapability : public DeviceStepTrackCapability {
+public:
+  explicit TbdStepTrackCapability(TbdDevice &device)
+      : DeviceStepTrackCapability(device) {}
+  virtual bool available(uint8_t device_idx) const override;
+  virtual uint8_t track_count(uint8_t device_idx) const override;
+  virtual SeqStepTrackRef track(uint8_t device_idx, uint8_t track) const override;
+  virtual SeqStepTrackRef active_track(uint8_t device_idx) const override;
 
 private:
   TbdDevice &tbd() const { return (TbdDevice &)device_; }
@@ -1619,9 +1637,37 @@ DeviceMixerCapability *TbdDevice::mixer() {
   return &capability;
 }
 
+DeviceStepTrackCapability *TbdDevice::step_tracks() {
+  static TbdStepTrackCapability capability(*this);
+  return &capability;
+}
+
 DeviceParamCapability *TbdDevice::params() {
   static TbdParamCapability capability(*this);
   return &capability;
+}
+
+bool TbdStepTrackCapability::available(uint8_t device_idx) const {
+  return device_idx == kTbdUiSlotPrimary &&
+         mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
+}
+
+uint8_t TbdStepTrackCapability::track_count(uint8_t device_idx) const {
+  return available(device_idx) ? mcl_seq.num_tbd_tracks : 0;
+}
+
+SeqStepTrackRef TbdStepTrackCapability::track(uint8_t device_idx,
+                                              uint8_t track_idx) const {
+  (void)device_idx;
+  if (track_idx >= mcl_seq.num_tbd_tracks) {
+    track_idx = 0;
+  }
+  return SeqStepTrackRef(mcl_seq.tbd_tracks[track_idx]);
+}
+
+SeqStepTrackRef TbdStepTrackCapability::active_track(
+    uint8_t device_idx) const {
+  return track(device_idx, last_md_track);
 }
 
 bool TbdMixerCapability::param(uint8_t device_idx, uint8_t track,
@@ -1673,6 +1719,44 @@ bool TbdMixerCapability::set_param(uint8_t device_idx, uint8_t track,
     tbd_p4_send_param_value(port, sound->midi_channel, desc, value);
   }
   return true;
+}
+
+bool TbdMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+                                  uint8_t cc, uint8_t *track,
+                                  uint8_t *param) const {
+  if (track == nullptr || param == nullptr) {
+    return false;
+  }
+  uint8_t count = track_count(device_idx);
+  for (uint8_t t = 0; t < count; t++) {
+    TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, t);
+    if (sound == nullptr || sound->midi_channel != channel) {
+      continue;
+    }
+    for (uint8_t p = 0; p < TBD_P4_MIXER_PARAM_COUNT; p++) {
+      TbdP4ParamDescriptor &desc = sound->mixer_params.params[p];
+      if (desc.is_visible() && desc.ctrl_type == TBD_P4_CTRLTYPE_CC &&
+          desc.ctrl == cc) {
+        *track = t;
+        *param = p;
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+void TbdMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
+                                        uint8_t param, int16_t value) {
+  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  if (sound == nullptr || param >= TBD_P4_MIXER_PARAM_COUNT) {
+    return;
+  }
+  TbdP4ParamDescriptor &desc = sound->mixer_params.params[param];
+  if (!desc.is_visible()) {
+    return;
+  }
+  desc.value = p4_u7_to_value(desc, (uint8_t)value);
 }
 
 uint8_t TbdParamCapability::target_count(uint8_t device_idx) const {

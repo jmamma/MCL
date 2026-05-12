@@ -19,6 +19,7 @@ public:
   void sync_grid_devices();
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
   virtual DeviceMixerCapability *mixer() override;
+  virtual DeviceStepTrackCapability *step_tracks() override;
   virtual DeviceParamCapability *params() override;
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) override;

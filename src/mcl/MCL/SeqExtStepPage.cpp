@@ -4,9 +4,9 @@
 #include "MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
+#include "DeviceManager.h"
 #include "SeqExtStepTrackApi.h"
 #include "SeqTrackUtil.h"
-#include "../Drivers/MD/MD.h"
 #include "SeqPages.h"
 #ifdef PLATFORM_TBD
 #include "../Drivers/Generic/GenericMidiDevice.h"
@@ -116,7 +116,7 @@ void SeqExtStepPage::init() {
   select_device_slot(2);
 
   SeqPage::init();
-  MD.set_rec_mode(3);
+  device_manager.primary_device()->panel()->set_rec_mode(3);
   param_select = PARAM_OFF;
   key_interface.on();
   key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
@@ -135,7 +135,7 @@ void SeqExtStepPage::init() {
 
 void SeqExtStepPage::cleanup() {
   SeqPage::cleanup();
-  MD.set_rec_mode(0);
+  device_manager.primary_device()->panel()->set_rec_mode(0);
 #ifdef PLATFORM_TBD
   if (seq_menu_page.menu.option_name_override == seq_ext_step_param_menu_label) {
     seq_menu_page.menu.option_name_override = nullptr;
@@ -856,11 +856,9 @@ void SeqExtStepPage::loop() {
 }
 
 void SeqExtStepPage::display() {
-#ifdef EXT_TRACKS
+  #ifdef EXT_TRACKS
   auto active_track = active_ext_step_track();
-#ifdef PLATFORM_TBD
   auto active_locks = active_track.locks();
-#endif
   uint16_t timing_mid = active_track.ticks_per_step();
   uint8_t epoch = 0;
   do {
@@ -880,7 +878,6 @@ void SeqExtStepPage::display() {
     strcpy_P(info2, mclstr_note);
     draw_pianoroll();
   } else {
-#ifdef PLATFORM_TBD
     if (!active_locks.copy_selected_lock_label(pianoroll_mode - 1, info2,
                                                sizeof(info2))) {
       strcpy_P(info2, mclstr_lock_space);
@@ -890,11 +887,6 @@ void SeqExtStepPage::display() {
                                             info1, sizeof(info1))) {
       mcl_gui.put_value_at(lock_cur_y, info1);
     }
-#else
-    strcpy_P(info2, mclstr_lock_space);
-    mcl_gui.put_value_at(pianoroll_mode, info2 + 5);
-    mcl_gui.put_value_at(lock_cur_y, info1);
-#endif
     draw_lockeditor();
   }
   } while (epoch != active_track.change_counter());

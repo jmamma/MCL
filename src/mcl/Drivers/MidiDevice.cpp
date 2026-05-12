@@ -9,7 +9,7 @@
 MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
                        const bool _isElektronDevice)
     : name(_name), id(_id), isElektronDevice(_isElektronDevice),
-      mixer_capability_(*this)
+      mixer_capability_(*this), step_track_capability_(*this)
 #if !defined(__AVR__)
       ,
       step_edit_capability_(*this), param_capability_(*this),
@@ -40,6 +40,10 @@ void MidiDevice::cleanup(uint8_t device_idx) {
 
 DeviceMixerCapability *MidiDevice::mixer() {
   return &mixer_capability_;
+}
+
+DeviceStepTrackCapability *MidiDevice::step_tracks() {
+  return &step_track_capability_;
 }
 
 #if !defined(__AVR__)

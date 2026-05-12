@@ -6,6 +6,7 @@
 #include "MidiClock.h"
 #include "MidiSetup.h"
 #include "SeqTrackUtil.h"
+#include "SeqStepTrackRef.h"
 #include "TurboLight.h"
 #include "MCLGUI.h"
 #include "PerfData.h"
@@ -160,6 +161,11 @@ public:
   virtual void select_track(uint8_t device_idx, uint8_t track) override;
   virtual void restore_track_params(uint8_t device_idx,
                                     uint8_t track) override;
+  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+                        uint8_t *track, uint8_t *param) const override;
+  virtual bool is_mute_param(uint8_t param) const override;
+  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+                              uint8_t param, int16_t value) override;
 
 private:
   MDClass &md() const { return (MDClass &)device_; }
@@ -211,6 +217,22 @@ private:
 };
 #endif
 
+class MDStepTrackCapability : public DeviceStepTrackCapability {
+public:
+  explicit MDStepTrackCapability(MDClass &device)
+      : DeviceStepTrackCapability(device) {}
+  virtual bool available(uint8_t device_idx) const override;
+  virtual uint8_t track_count(uint8_t device_idx) const override;
+  virtual SeqStepTrackRef track(uint8_t device_idx, uint8_t track) const override;
+  virtual SeqStepTrackRef active_track(uint8_t device_idx) const override;
+  virtual bool parses_kit_cc(uint8_t device_idx) const override;
+  virtual bool parse_kit_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+                            uint8_t *track, uint8_t *param) const override;
+
+private:
+  MDClass &md() const { return (MDClass &)device_; }
+};
+
 #if !defined(__AVR__)
 class MDStepEditCapability : public DeviceStepEditCapability {
 public:
@@ -260,6 +282,7 @@ class MDPanelCapability : public DevicePanelCapability {
 public:
   explicit MDPanelCapability(MDClass &device) : device_(device) {}
   virtual void set_key_repeat(uint8_t enabled) override;
+  virtual void set_rec_mode(uint8_t mode) override;
 
 private:
   MDClass &device_;
@@ -269,6 +292,11 @@ private:
 
 DeviceMixerCapability *MDClass::mixer() {
   static MDMixerCapability capability(*this);
+  return &capability;
+}
+
+DeviceStepTrackCapability *MDClass::step_tracks() {
+  static MDStepTrackCapability capability(*this);
   return &capability;
 }
 
@@ -294,6 +322,51 @@ DevicePerfCapability *MDClass::perf() {
 DevicePanelCapability *MDClass::panel() {
   static MDPanelCapability capability(*this);
   return &capability;
+}
+
+bool MDStepTrackCapability::available(uint8_t device_idx) const {
+  (void)device_idx;
+  return true;
+}
+
+uint8_t MDStepTrackCapability::track_count(uint8_t device_idx) const {
+  (void)device_idx;
+  return mcl_seq.num_md_tracks;
+}
+
+SeqStepTrackRef MDStepTrackCapability::track(uint8_t device_idx,
+                                             uint8_t track_idx) const {
+  (void)device_idx;
+  if (track_idx >= mcl_seq.num_md_tracks) {
+    track_idx = 0;
+  }
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    return SeqStepTrackRef(mcl_seq.spsx_tracks[track_idx]);
+  }
+#endif
+  return SeqStepTrackRef(mcl_seq.md_tracks[track_idx]);
+}
+
+SeqStepTrackRef MDStepTrackCapability::active_track(
+    uint8_t device_idx) const {
+  return track(device_idx, last_md_track);
+}
+
+bool MDStepTrackCapability::parses_kit_cc(uint8_t device_idx) const {
+  (void)device_idx;
+  return true;
+}
+
+bool MDStepTrackCapability::parse_kit_cc(uint8_t device_idx, uint8_t channel,
+                                         uint8_t cc, uint8_t *track,
+                                         uint8_t *param) const {
+  (void)device_idx;
+  if (track == nullptr || param == nullptr) {
+    return false;
+  }
+  md().parseCC(channel, cc, track, param);
+  return *track != 255;
 }
 
 uint8_t MDMixerCapability::default_param(uint8_t device_idx) const {
@@ -390,8 +463,52 @@ void MDMixerCapability::restore_track_params(uint8_t device_idx,
   }
 }
 
+bool MDMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+                                 uint8_t cc, uint8_t *track,
+                                 uint8_t *param) const {
+  (void)device_idx;
+  if (track == nullptr || param == nullptr) {
+    return false;
+  }
+  md().parseCC(channel, cc, track, param);
+  return *track != 255;
+}
+
+bool MDMixerCapability::is_mute_param(uint8_t param) const {
+  return param == MODEL_MUTE;
+}
+
+void MDMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
+                                       uint8_t param, int16_t value) {
+  (void)device_idx;
+  if (track >= NUM_MD_TRACKS) {
+    return;
+  }
+  MDClass &device = md();
+  uint8_t param_limit =
+      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  if (param < param_limit) {
+    if (value < 0) value = 0;
+    if (value > 127) value = 127;
+    device.kit.params[track][param] = (uint8_t)value;
+    device.midi_events.last_md_param = param;
+  } else if (param == MODEL_LEVEL) {
+    if (value < 0) value = 0;
+    if (value > 127) value = 127;
+    device.kit.levels[track] = (uint8_t)value;
+  } else if (param == MODEL_MUTE) {
+    SeqTrackUtil::with_md_track(track, [value](auto &t) {
+      t.mute_state = value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
+    });
+  }
+}
+
 void MDPanelCapability::set_key_repeat(uint8_t enabled) {
   device_.set_key_repeat(enabled);
+}
+
+void MDPanelCapability::set_rec_mode(uint8_t mode) {
+  device_.set_rec_mode(mode);
 }
 
 #if !defined(__AVR__)

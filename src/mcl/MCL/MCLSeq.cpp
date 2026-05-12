@@ -29,6 +29,48 @@ bool seq_grid_x_runs_md_tracks() {
 #endif
 }
 
+bool handle_mixer_cc(uint8_t device_slot, MidiDevice *device, uint8_t channel,
+                     uint8_t cc, uint8_t value, uint8_t *track_out = nullptr,
+                     uint8_t *param_out = nullptr) {
+  if (device == nullptr || device_slot == 0) {
+    return false;
+  }
+  uint8_t device_idx = device_slot - 1;
+  uint8_t track = 255;
+  uint8_t track_param = 255;
+  DeviceMixerCapability *mixer = device->mixer();
+  if (!mixer->parse_cc(device_idx, channel, cc, &track, &track_param) ||
+      track == 255) {
+    return false;
+  }
+
+  mixer->update_from_cc(device_idx, track, track_param, value);
+  if (track_out != nullptr) {
+    *track_out = track;
+  }
+  if (param_out != nullptr) {
+    *param_out = track_param;
+  }
+
+  if (mcl.currentPage() == MIXER_PAGE) {
+    mixer_page.onControlChangeCallback_Midi(device_slot, track, track_param,
+                                            value);
+  }
+  if (mixer->is_mute_param(track_param)) {
+    mixer_page.redraw_mutes = true;
+    return true;
+  }
+
+  uint8_t dest = track + 1;
+  uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(device_slot,
+                                                               dest);
+  if (perf_dest != 255) {
+    perf_page.learn_param(perf_dest, track_param, value);
+  }
+  lfo_page.learn_param(device_slot, dest, track_param, value);
+  return true;
+}
+
 #if defined(PLATFORM_TBD)
 bool seq_grid_x_runs_tbd_tracks() {
   return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
@@ -715,36 +757,22 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
-  uint8_t track;
-  uint8_t track_param;
+  uint8_t track = 255;
+  uint8_t track_param = 255;
 
-  MD.parseCC(channel, param, &track, &track_param);
-  if (track > 15) {
+  MidiDevice *device = device_manager.primary_device();
+  if (!handle_mixer_cc(1, device, channel, param, value, &track,
+                       &track_param) ||
+      track > 15) {
     return;
   }
 
-  SeqTrackUtil::with_md_track(track, [track_param, value](auto &t) {
-    t.onControlChangeCallback_Midi(track_param, value);
-  });
-
-  if (mcl.currentPage() == MIXER_PAGE) {
-    mixer_page.onControlChangeCallback_Midi(track, track_param, value);
+  if (SeqTrackUtil::is_md_device(device)) {
+    SeqTrackUtil::with_md_track(track, [track_param, value](auto &t) {
+      t.onControlChangeCallback_Midi(track_param, value);
+    });
+    ram_page_a.onControlChangeCallback_Midi(track, track_param, value);
   }
-  ram_page_a.onControlChangeCallback_Midi(track, track_param, value);
-
-  if (track_param == MODEL_MUTE) { // Mute
-    SeqTrackUtil::with_md_track(track, [&](auto &t) { t.mute_state = value > 0; });
-   }
-  if (track_param >=
-      DeviceParamResolver::slot(1, track + 1).param_count()) {
-    return;
-  }
-  uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(1, track + 1);
-  if (perf_dest != 255) {
-    perf_page.learn_param(perf_dest, track_param, value);
-  }
-  lfo_page.learn_param(1, track + 1, track_param, value);
-
 }
 
 void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
@@ -752,41 +780,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t param = msg[1];
   uint8_t value = msg[2];
 
-  if (param == device_manager.secondary_device()->get_mute_cc()) {
-
-   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-#if defined(PLATFORM_TBD)
-      if (seq_grid_y_runs_tbd_midi_tracks()) {
-        if (mcl_seq.midi_tracks[n].channel() != channel) {
-          continue;
-        }
-        if (value > 0) {
-          mcl_seq.midi_tracks[n].mute_state = SEQ_MUTE_ON;
-        } else {
-          mcl_seq.midi_tracks[n].mute_state = SEQ_MUTE_OFF;
-        }
-      } else {
-        if (mcl_seq.ext_tracks[n].channel != channel) {
-          continue;
-        }
-        if (value > 0) {
-          mcl_seq.ext_tracks[n].mute_on();
-        } else {
-          mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_OFF;
-        }
-      }
-#else
-      if (mcl_seq.ext_tracks[n].channel != channel) {
-        continue;
-      }
-      if (value > 0) {
-        mcl_seq.ext_tracks[n].mute_on();
-      } else {
-        mcl_seq.ext_tracks[n].mute_state = SEQ_MUTE_OFF;
-      }
-#endif
-    }
-    mixer_page.redraw_mutes = true;
+  MidiDevice *device = device_manager.secondary_device();
+  if (handle_mixer_cc(2, device, channel, param, value)) {
     return;
   }
 

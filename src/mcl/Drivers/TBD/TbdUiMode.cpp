@@ -12,7 +12,7 @@
 #include "NoteInterface.h"
 #include "SeqExtStepTrackApi.h"
 #include "SeqPages.h"
-#include "SeqStepTrackApi.h"
+#include "SeqStepTrackRef.h"
 #include "TBD.h"
 #include "TBDTrack.h"
 #include "TbdP4Command.h"
@@ -851,7 +851,7 @@ bool TbdUiMode::active_step_lock(uint8_t window, uint8_t encoder_idx,
 
   if (device_idx_ == SLOT_PRIMARY) {
     if (mcl.currentPage() != SEQ_STEP_PAGE) return false;
-    SeqStepTrackApi track = seq_step_api_active_track(true);
+    SeqStepTrackRef track = TBD.step_tracks()->active_track(SLOT_PRIMARY);
     int8_t lock_idx = track.find_param(slot.lock_param);
     if (lock_idx < 0) return false;
 
@@ -1279,7 +1279,7 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
   }
 
   if (device_idx_ == SLOT_PRIMARY) {
-    SeqStepTrackApi track = seq_step_api_active_track(true);
+    SeqStepTrackRef track = TBD.step_tracks()->active_track(SLOT_PRIMARY);
     bool wrote = false;
     if (mcl.currentPage() == SEQ_STEP_PAGE &&
         note_interface.notes_count_on() > 0) {

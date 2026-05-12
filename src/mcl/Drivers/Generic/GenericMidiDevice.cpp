@@ -18,6 +18,10 @@ public:
                          bool send = true) override;
   virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
                                 bool state, bool clear = false) override;
+  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+                        uint8_t *track, uint8_t *param) const override;
+  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+                              uint8_t param, int16_t value) override;
 
 private:
   GenericMidiDevice &generic() const { return (GenericMidiDevice &)device_; }
@@ -115,6 +119,47 @@ bool GenericMidiMixerCapability::set_param(uint8_t device_idx, uint8_t track,
     device.setLevel(track, device.mixer_levels[track]);
   }
   return true;
+}
+
+bool GenericMidiMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+                                          uint8_t cc, uint8_t *track,
+                                          uint8_t *param) const {
+  (void)device_idx;
+  if (track == nullptr || param == nullptr) {
+    return false;
+  }
+  *track = mcl_seq.find_ext_track(channel);
+  if (*track == 255) {
+    return false;
+  }
+  if (cc == mcl_cfg.uart2_cc_level && mcl_cfg.uart2_cc_level <= 127) {
+    *param = default_param(device_idx);
+    return true;
+  }
+  if (cc == generic().get_mute_cc()) {
+    *param = MUTE_PARAM;
+    return true;
+  }
+  return false;
+}
+
+void GenericMidiMixerCapability::update_from_cc(uint8_t device_idx,
+                                                uint8_t track, uint8_t param,
+                                                int16_t value) {
+  (void)device_idx;
+  if (track >= NUM_EXT_TRACKS) {
+    return;
+  }
+  if (is_mute_param(param)) {
+    mcl_seq.ext_tracks[track].mute_state =
+        value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
+    return;
+  }
+  if (param == default_param(device_idx)) {
+    if (value < 0) value = 0;
+    if (value > 127) value = 127;
+    generic().mixer_levels[track] = (uint8_t)value;
+  }
 }
 
 #if !defined(__AVR__)

@@ -5,6 +5,7 @@
 class MidiDevice;
 class MidiUartClass;
 class PerfData;
+class SeqStepTrackRef;
 class SeqTrack;
 struct MidiDeviceMixerParam;
 struct MidiDeviceParamInfo;
@@ -18,6 +19,8 @@ protected:
 
 class DeviceMixerCapability : public DeviceCapability {
 public:
+  static constexpr uint8_t MUTE_PARAM = 255;
+
   explicit DeviceMixerCapability(MidiDevice &device);
 
   virtual uint8_t track_count(uint8_t device_idx) const;
@@ -35,7 +38,25 @@ public:
   virtual uint8_t trig_group(uint8_t device_idx, uint8_t track) const;
   virtual void select_track(uint8_t device_idx, uint8_t track);
   virtual void restore_track_params(uint8_t device_idx, uint8_t track);
+  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+                        uint8_t *track, uint8_t *param) const;
+  virtual bool is_mute_param(uint8_t param) const;
+  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+                              uint8_t param, int16_t value);
 
+};
+
+class DeviceStepTrackCapability : public DeviceCapability {
+public:
+  explicit DeviceStepTrackCapability(MidiDevice &device);
+
+  virtual bool available(uint8_t device_idx) const;
+  virtual uint8_t track_count(uint8_t device_idx) const;
+  virtual SeqStepTrackRef track(uint8_t device_idx, uint8_t track) const;
+  virtual SeqStepTrackRef active_track(uint8_t device_idx) const;
+  virtual bool parses_kit_cc(uint8_t device_idx) const;
+  virtual bool parse_kit_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+                            uint8_t *track, uint8_t *param) const;
 };
 
 #if !defined(__AVR__)
@@ -130,4 +151,5 @@ public:
 class DevicePanelCapability {
 public:
   virtual void set_key_repeat(uint8_t enabled);
+  virtual void set_rec_mode(uint8_t mode);
 };

@@ -2,6 +2,7 @@
 
 #include "MidiDevice.h"
 #include "Project.h"
+#include "SeqStepTrackRef.h"
 #include "SeqTrack.h"
 
 DeviceMixerCapability::DeviceMixerCapability(MidiDevice &device)
@@ -94,6 +95,75 @@ void DeviceMixerCapability::restore_track_params(uint8_t device_idx,
                                                  uint8_t track) {
   (void)device_idx;
   (void)track;
+}
+
+bool DeviceMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+                                     uint8_t cc, uint8_t *track,
+                                     uint8_t *param) const {
+  (void)device_idx;
+  (void)channel;
+  (void)cc;
+  (void)track;
+  (void)param;
+  return false;
+}
+
+bool DeviceMixerCapability::is_mute_param(uint8_t param) const {
+  return param == MUTE_PARAM;
+}
+
+void DeviceMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
+                                           uint8_t param, int16_t value) {
+  if (is_mute_param(param)) {
+    SeqTrack *seq_track = this->seq_track(device_idx, track);
+    if (seq_track != nullptr) {
+      seq_track->mute_state = value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
+    }
+    return;
+  }
+  set_param(device_idx, track, param, value, false);
+}
+
+DeviceStepTrackCapability::DeviceStepTrackCapability(MidiDevice &device)
+    : DeviceCapability(device) {}
+
+bool DeviceStepTrackCapability::available(uint8_t device_idx) const {
+  (void)device_idx;
+  return false;
+}
+
+uint8_t DeviceStepTrackCapability::track_count(uint8_t device_idx) const {
+  (void)device_idx;
+  return 0;
+}
+
+SeqStepTrackRef DeviceStepTrackCapability::track(uint8_t device_idx,
+                                                 uint8_t track) const {
+  (void)device_idx;
+  (void)track;
+  return SeqStepTrackRef(mcl_seq.md_tracks[0]);
+}
+
+SeqStepTrackRef DeviceStepTrackCapability::active_track(
+    uint8_t device_idx) const {
+  return track(device_idx, 0);
+}
+
+bool DeviceStepTrackCapability::parses_kit_cc(uint8_t device_idx) const {
+  (void)device_idx;
+  return false;
+}
+
+bool DeviceStepTrackCapability::parse_kit_cc(uint8_t device_idx,
+                                             uint8_t channel, uint8_t cc,
+                                             uint8_t *track,
+                                             uint8_t *param) const {
+  (void)device_idx;
+  (void)channel;
+  (void)cc;
+  (void)track;
+  (void)param;
+  return false;
 }
 
 #if !defined(__AVR__)
@@ -438,4 +508,8 @@ bool DeviceStepEditCapability::parse_cc(uint8_t device_idx, uint8_t channel,
 
 void DevicePanelCapability::set_key_repeat(uint8_t enabled) {
   (void)enabled;
+}
+
+void DevicePanelCapability::set_rec_mode(uint8_t mode) {
+  (void)mode;
 }

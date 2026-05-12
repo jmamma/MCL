@@ -5,6 +5,7 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "MCLSeq.h"
+#include "MixerPerf.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
 
@@ -148,16 +149,7 @@ bool MixerPage::mixer_param_supported_for_held_tracks(uint8_t param) {
 uint8_t MixerPage::mixer_param_for_encoder(uint8_t encoder_idx,
                                            bool is_md_device) {
   if (is_md_device) {
-    switch (encoder_idx) {
-    case 1:
-      return MODEL_FLTF;
-    case 2:
-      return MODEL_FLTW;
-    case 3:
-      return MODEL_FLTQ;
-    default:
-      return MODEL_LEVEL;
-    }
+    return MixerPerf::mixer_param_for_encoder(encoder_idx);
   }
 
 #if defined(__AVR__)
@@ -311,42 +303,24 @@ void MixerPage::set_level(int curtrack, int value) {
 }
 
 void MixerPage::load_perf_locks(uint8_t state) {
-  for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-    PerfEncoder *enc = (PerfEncoder*) encoders[n];
-    uint8_t val = perf_locks[state][n];
-    if (val < 128) {
-      enc->cur = val;
-      enc->resend = true;
-    }
-  }
+  MixerPerf::load_locks(encoders, perf_locks, state);
 }
 void MixerPage::loop() {
   constexpr int timeout = 750;
   bool old_draw_encoders = draw_encoders;
   sync_selected_mixer_device();
-  const bool use_perf_encoders = SeqTrackUtil::is_md_device(midi_device);
+  const bool use_perf_encoders = MixerPerf::available(midi_device);
   const bool notes_on = note_interface.notes_on;
   bool mixer_encoder_edit = notes_on &&
                             handle_mixer_encoder_edits(use_perf_encoders);
 
   if (use_perf_encoders && !mixer_encoder_edit) {
-    perf_page.func_enc_check();
+    MixerPerf::func_enc_check();
 
-    if ((key_interface.is_key_down(MDX_KEY_NO)) &&
-        preview_mute_set != 255 && !notes_on) {
-      for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
-        PerfEncoder *enc = (PerfEncoder*) encoders[n];
-        if (enc->hasChanged()) {
-          if (BUTTON_DOWN(Buttons.ENCODER1 + n)) {
-            GUI.ignoreNextEvent(Buttons.ENCODER1 + n);
-          }
-          perf_locks[preview_mute_set][n] = enc->cur;
-          enc->old = enc->cur;
-        }
-      }
-    }
+    MixerPerf::handle_preview_lock_edits(encoders, perf_locks,
+                                         preview_mute_set, notes_on);
 
-    perf_page.encoder_send();
+    MixerPerf::encoder_send();
 
     if (!(draw_encoders && key_interface.is_key_down(MDX_KEY_FUNC))) {
       draw_encoders = false;
@@ -357,10 +331,8 @@ void MixerPage::loop() {
       for (uint8_t n = 0; n < 4; n++) {
         bool check = (key_interface.cmd_key_state & mask);
 
-        if (notes_on || check) {
-          encoders_used_clock[n] = read_clock_ms() + timeout + 1;
-        }
-        if (mcl_gui.show_encoder_value(encoders[n], timeout)) {
+        if (MixerPerf::should_show_encoder(encoders[n], encoders_used_clock[n],
+                                           notes_on || check, timeout)) {
           draw_encoders = true;
         }
       }
@@ -385,24 +357,6 @@ void encoder_level_handle(EncoderParent *enc) {
   mixer_page.adjust_param(enc, mixer_page.default_mixer_param());
 }
 
-/*
-void encoder_filtf_handle(EncoderParent *enc) {
-  mixer_page.adjust_param(enc, MODEL_FLTF);
-}
-
-void encoder_filtw_handle(EncoderParent *enc) {
-  mixer_page.adjust_param(enc, MODEL_FLTW);
-}
-
-void encoder_filtq_handle(EncoderParent *enc) {
-  mixer_page.adjust_param(enc, MODEL_FLTQ);
-}
-
-void encoder_lastparam_handle(EncoderParent *enc) {
-  mixer_page.adjust_param(enc, MD.midi_events.last_md_param);
-}
-*/
-
 void MixerPage::draw_encs() {
   constexpr uint8_t fader_y = 11;
   oled_display.fillRect(0, fader_y, 128, 21, BLACK);
@@ -410,10 +364,9 @@ void MixerPage::draw_encs() {
     char str1[] = "A";
     str1[0] = 'A' + n;
     uint8_t pos = n * 24;
-    bool highlight =
-          (preview_mute_set != 255) && (perf_locks[preview_mute_set][n] != 255); // && (key_interface.is_key_down(MDX_KEY_NO));
-    uint8_t val =
-          highlight ? perf_locks[preview_mute_set][n] : encoders[n]->cur;
+    bool highlight = false;
+    uint8_t val = MixerPerf::display_value(encoders[n], perf_locks,
+                                           preview_mute_set, n, highlight);
     mcl_gui.draw_encoder(24 + pos, fader_y + 4, val, highlight);
     oled_display.setCursor(16 + pos, fader_y + 6);
     oled_display.print(str1);
@@ -481,7 +434,7 @@ void MixerPage::display() {
     seq_step_page.mute_mask = mask;
     oled_draw_mutes();
   }
-  const bool show_perf_encoders = SeqTrackUtil::is_md_device(midi_device);
+  const bool show_perf_encoders = MixerPerf::available(midi_device);
   if (show_perf_encoders &&
       (draw_encoders || preview_mute_set != 255)) {
     // oled_display.clearDisplay();
@@ -609,7 +562,7 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
     }
   }
   if (state < 4 && load_perf &&
-      SeqTrackUtil::is_md_device(selected_mixer_device())) {
+      MixerPerf::available(selected_mixer_device())) {
     load_perf_locks(state);
   }
   redraw_mutes = true;
@@ -663,7 +616,7 @@ void MixerPage::toggle_or_solo(bool solo) {
 bool MixerPage::handleEvent(gui_event_t *event) {
 
   sync_selected_mixer_device();
-  bool is_md_device = SeqTrackUtil::is_md_device(midi_device);
+  bool use_perf = MixerPerf::available(midi_device);
   uint8_t slot = mixer_device_idx;
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
@@ -709,7 +662,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           }
 
           // oled_draw_mutes();
-        } else if (first_track == 255 && is_md_device) {
+        } else if (first_track == 255 && use_perf) {
           first_track = track;
           midi_device->mixer()->select_track(mixer_device_idx, track);
         }
@@ -756,7 +709,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         DEBUG_PRINTLN("key extended");
         ext_key_down = 1;
         redraw();
-        if (is_md_device) {
+        if (use_perf) {
           for (uint8_t i = 0; i < 16; i++) {
             if (note_interface.is_note_on(i)) {
               midi_device->mixer()->restore_track_params(mixer_device_idx, i);
@@ -920,18 +873,18 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         record_mutes_set(true);
         return true;
       }
-      if (is_md_device) {
+      if (use_perf) {
         if (BUTTON_DOWN(Buttons.ENCODER1)) {
-          perf_param1.clear_scenes();
+          MixerPerf::clear_scenes(0);
         }
         if (BUTTON_DOWN(Buttons.ENCODER2)) {
-          perf_param2.clear_scenes();
+          MixerPerf::clear_scenes(1);
         }
         if (BUTTON_DOWN(Buttons.ENCODER3)) {
-          perf_param3.clear_scenes();
+          MixerPerf::clear_scenes(2);
         }
         if (BUTTON_DOWN(Buttons.ENCODER4)) {
-          perf_param4.clear_scenes();
+          MixerPerf::clear_scenes(3);
         }
       }
       redraw_mask = -1;
@@ -939,37 +892,31 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     }
 
     if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
-      if (is_md_device) {
+      if (use_perf) {
         if (BUTTON_DOWN(Buttons.ENCODER1)) {
-          perf_param1.scene_autofill();
+          MixerPerf::scene_autofill(0);
         }
         if (BUTTON_DOWN(Buttons.ENCODER2)) {
-          perf_param2.scene_autofill();
+          MixerPerf::scene_autofill(1);
         }
         if (BUTTON_DOWN(Buttons.ENCODER3)) {
-          perf_param3.scene_autofill();
+          MixerPerf::scene_autofill(2);
         }
         if (BUTTON_DOWN(Buttons.ENCODER4)) {
-          perf_param4.scene_autofill();
+          MixerPerf::scene_autofill(3);
         }
       }
       redraw_mask = -1;
       return true;
     }
-    if (is_md_device && preview_mute_set != 255 &&
+    if (use_perf && preview_mute_set != 255 &&
         (key_interface.is_key_down(MDX_KEY_NO))) {
       if (event->source >= Buttons.ENCODER1 &&
           event->source <= Buttons.ENCODER4) {
         uint8_t b = event->source - Buttons.ENCODER1;
-        if ((event)->mask & EVENT_BUTTON_RELEASED) {
-          perf_locks[preview_mute_set][b] = 255;
-        }
-        if ((event)->mask & EVENT_BUTTON_PRESSED) {
-          if (perf_locks[preview_mute_set][b] == 255) {
-            GUI.ignoreNextEvent(event->source);
-            perf_locks[preview_mute_set][b] = encoders[b]->cur;
-          }
-        }
+        bool pressed = ((event)->mask & EVENT_BUTTON_PRESSED) != 0;
+        MixerPerf::handle_preview_lock_button(encoders[b], perf_locks,
+                                              preview_mute_set, b, pressed);
         return true;
       }
     }
@@ -1023,22 +970,31 @@ uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
 }
 */
 
-void MixerPage::onControlChangeCallback_Midi(uint8_t track, uint8_t track_param,
+void MixerPage::onControlChangeCallback_Midi(uint8_t device_slot,
+                                             uint8_t track,
+                                             uint8_t track_param,
                                              uint8_t value) {
-  if (track_param == MODEL_MUTE) {
-    redraw_mutes = true;
-    return;
-  } // don't process mute
-  sync_selected_mixer_device();
-  if (!SeqTrackUtil::is_md_device(mixer_page.midi_device)) {
+  if (device_slot == 0) {
     return;
   }
+  uint8_t device_idx = device_slot - 1;
+  MidiDevice *device = device_for_mixer_slot(device_idx);
+  DeviceMixerCapability *mixer = device->mixer();
+  if (mixer->is_mute_param(track_param)) {
+    if (device_idx == mixer_device_idx) {
+      redraw_mutes = true;
+    }
+    return;
+  }
+  if (device_idx != mixer_device_idx) {
+    return;
+  }
+  sync_selected_mixer_device();
   SET_BIT16(mixer_page.redraw_mask, track);
   uint8_t len = mixer_page.mixer_track_count();
   for (uint8_t i = 0; i < len; i++) {
     if (note_interface.is_note_on(i) && (i != track)) {
-      if (mixer_page.midi_device->mixer()->set_param(
-              mixer_page.mixer_device_idx, i, track_param, value, true)) {
+      if (mixer->set_param(device_idx, i, track_param, value, true)) {
         SET_BIT16(mixer_page.redraw_mask, i);
       }
     }
