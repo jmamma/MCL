@@ -97,8 +97,8 @@ DeviceParamTargetRef resolve_slot(uint8_t device_slot, uint8_t dest) {
   ref.device = DeviceParamTargets::slot_device(device_slot);
   ref.device_idx = DeviceParamTargets::slot_device_idx(device_slot);
   ref.target = dest - 1;
-  if (ref.device == nullptr ||
-      ref.target >= ref.device->param_target_count(ref.device_idx)) {
+  DeviceParamCapability *params = ref.device ? ref.device->params() : nullptr;
+  if (params == nullptr || ref.target >= params->target_count(ref.device_idx)) {
     ref.device = nullptr;
   }
   return ref;
@@ -111,7 +111,8 @@ DeviceParamTargetRef resolve_perf(uint8_t dest) {
   }
 
   MidiDevice *primary = device_manager.primary_device();
-  uint8_t primary_count = primary->param_target_count(0);
+  DeviceParamCapability *primary_params = primary->params();
+  uint8_t primary_count = primary_params->target_count(0);
   uint8_t target = dest - 1;
   if (target < primary_count) {
     ref.device = primary;
@@ -122,7 +123,8 @@ DeviceParamTargetRef resolve_perf(uint8_t dest) {
 
   target -= primary_count;
   MidiDevice *secondary = device_manager.secondary_device();
-  uint8_t secondary_count = secondary->param_target_count(1);
+  DeviceParamCapability *secondary_params = secondary->params();
+  uint8_t secondary_count = secondary_params->target_count(1);
   if (target < secondary_count) {
     ref.device = secondary;
     ref.device_idx = 1;
@@ -329,7 +331,7 @@ uint8_t slot_device_idx(uint8_t device_slot) {
 
 uint8_t slot_target_count(uint8_t device_slot) {
   MidiDevice *device = slot_device(device_slot);
-  return device->param_target_count(slot_device_idx(device_slot));
+  return device->params()->target_count(slot_device_idx(device_slot));
 }
 
 uint8_t slot_param_count(uint8_t device_slot, uint8_t dest) {
@@ -337,36 +339,39 @@ uint8_t slot_param_count(uint8_t device_slot, uint8_t dest) {
   if (!ref.valid()) {
     return 0;
   }
-  return ref.device->param_count(ref.device_idx, ref.target);
+  return ref.device->params()->param_count(ref.device_idx, ref.target);
 }
 
 bool slot_target_label(uint8_t device_slot, uint8_t dest, char *out,
                        uint8_t len) {
   DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
   return ref.valid() &&
-         ref.device->param_target_label(ref.device_idx, ref.target, out, len);
+         ref.device->params()->target_label(ref.device_idx, ref.target, out,
+                                            len);
 }
 
 bool slot_param_label(uint8_t device_slot, uint8_t dest, uint8_t param,
                       char *out, uint8_t len) {
   DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
   return ref.valid() &&
-         ref.device->param_label(ref.device_idx, ref.target, param, out, len);
+         ref.device->params()->param_label(ref.device_idx, ref.target, param,
+                                           out, len);
 }
 
 bool slot_get_param(uint8_t device_slot, uint8_t dest, uint8_t param,
                     uint8_t *value) {
   DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
   return ref.valid() &&
-         ref.device->get_param(ref.device_idx, ref.target, param, value);
+         ref.device->params()->get_param(ref.device_idx, ref.target, param,
+                                         value);
 }
 
 bool slot_set_param(uint8_t device_slot, uint8_t dest, uint8_t param,
                     uint8_t value, MidiUartClass *uart_) {
   DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
   return ref.valid() &&
-         ref.device->set_param(ref.device_idx, ref.target, param, value,
-                               uart_);
+         ref.device->params()->set_param(ref.device_idx, ref.target, param,
+                                         value, uart_);
 }
 
 uint8_t slot_lock_param_count(uint8_t device_slot, uint8_t dest) {
@@ -374,23 +379,24 @@ uint8_t slot_lock_param_count(uint8_t device_slot, uint8_t dest) {
   if (!ref.valid()) {
     return 0;
   }
-  return ref.device->sequencer_lock_param_count(ref.device_idx, ref.target);
+  return ref.device->params()->sequencer_lock_param_count(ref.device_idx,
+                                                          ref.target);
 }
 
 bool slot_lock_param_info(uint8_t device_slot, uint8_t dest, uint8_t param,
                           MidiDeviceParamInfo *info) {
   DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
   return ref.valid() &&
-         ref.device->sequencer_lock_param_info(ref.device_idx, ref.target,
-                                               param, info);
+         ref.device->params()->sequencer_lock_param_info(
+             ref.device_idx, ref.target, param, info);
 }
 
 bool slot_lock_param_label(uint8_t device_slot, uint8_t dest, uint8_t param,
                            char *out, uint8_t len) {
   DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
   return ref.valid() &&
-         ref.device->sequencer_lock_param_label(ref.device_idx, ref.target,
-                                                param, out, len);
+         ref.device->params()->sequencer_lock_param_label(
+             ref.device_idx, ref.target, param, out, len);
 }
 
 bool slot_lock_current_value(uint8_t device_slot, uint8_t dest, uint8_t param,
@@ -408,7 +414,8 @@ bool slot_lock_current_value(uint8_t device_slot, uint8_t dest, uint8_t param,
 bool slot_uses_step_pitch(uint8_t device_slot, uint8_t dest) {
   DeviceParamTargetRef ref = resolve_slot(device_slot, dest);
   return ref.valid() &&
-         ref.device->sequencer_uses_step_pitch(ref.device_idx, ref.target);
+         ref.device->params()->sequencer_uses_step_pitch(ref.device_idx,
+                                                         ref.target);
 }
 
 uint8_t slot_pitch_lock_param(uint8_t device_slot, uint8_t dest) {
@@ -416,14 +423,15 @@ uint8_t slot_pitch_lock_param(uint8_t device_slot, uint8_t dest) {
   if (!ref.valid()) {
     return 0;
   }
-  return ref.device->sequencer_pitch_lock_param(ref.device_idx, ref.target);
+  return ref.device->params()->sequencer_pitch_lock_param(ref.device_idx,
+                                                          ref.target);
 }
 
 uint8_t perf_target_count() {
   MidiDevice *primary = device_manager.primary_device();
-  uint8_t count = primary->param_target_count(0);
+  uint8_t count = primary->params()->target_count(0);
   MidiDevice *secondary = device_manager.secondary_device();
-  return count + secondary->param_target_count(1);
+  return count + secondary->params()->target_count(1);
 }
 
 uint8_t perf_param_count(uint8_t dest) {
@@ -431,25 +439,28 @@ uint8_t perf_param_count(uint8_t dest) {
   if (!ref.valid()) {
     return 0;
   }
-  return ref.device->param_count(ref.device_idx, ref.target);
+  return ref.device->params()->param_count(ref.device_idx, ref.target);
 }
 
 bool perf_target_label(uint8_t dest, char *out, uint8_t len) {
   DeviceParamTargetRef ref = resolve_perf(dest);
   return ref.valid() &&
-         ref.device->param_target_label(ref.device_idx, ref.target, out, len);
+         ref.device->params()->target_label(ref.device_idx, ref.target, out,
+                                            len);
 }
 
 bool perf_param_label(uint8_t dest, uint8_t param, char *out, uint8_t len) {
   DeviceParamTargetRef ref = resolve_perf(dest);
   return ref.valid() &&
-         ref.device->param_label(ref.device_idx, ref.target, param, out, len);
+         ref.device->params()->param_label(ref.device_idx, ref.target, param,
+                                           out, len);
 }
 
 bool perf_get_param(uint8_t dest, uint8_t param, uint8_t *value) {
   DeviceParamTargetRef ref = resolve_perf(dest);
   return ref.valid() &&
-         ref.device->get_param(ref.device_idx, ref.target, param, value);
+         ref.device->params()->get_param(ref.device_idx, ref.target, param,
+                                         value);
 }
 
 bool perf_set_param(uint8_t dest, uint8_t param, uint8_t value,
@@ -459,7 +470,8 @@ bool perf_set_param(uint8_t dest, uint8_t param, uint8_t value,
     return false;
   }
   MidiUartClass *uart = ref.device_idx == 1 ? uart2_ : uart_;
-  return ref.device->set_param(ref.device_idx, ref.target, param, value, uart);
+  return ref.device->params()->set_param(ref.device_idx, ref.target, param,
+                                         value, uart);
 }
 #endif
 
@@ -471,17 +483,14 @@ uint8_t perf_dest_from_slot(uint8_t device_slot, uint8_t slot_dest) {
   return offset + slot_dest - 1;
 }
 
-static bool perf_is_primary_md_track_dest(uint8_t dest) {
 #if defined(__AVR__)
+static bool perf_is_primary_md_track_dest(uint8_t dest) {
   return dest > 0 && dest <= NUM_MD_TRACKS;
-#else
-  MidiDevice *device = slot_device(1);
-  return device != nullptr && device->id == DEVICE_MD && dest > 0 &&
-         dest <= NUM_MD_TRACKS;
-#endif
 }
+#endif
 
 bool perf_param_from_key(uint8_t dest, uint8_t key, uint8_t *param) {
+#if defined(__AVR__)
   if (param == nullptr || !perf_is_primary_md_track_dest(dest) || key < 0x10 ||
       key > 0x17) {
     return false;
@@ -492,9 +501,16 @@ bool perf_param_from_key(uint8_t dest, uint8_t key, uint8_t *param) {
   }
   *param = value;
   return true;
+#else
+  DeviceParamTargetRef ref = resolve_perf(dest);
+  return ref.valid() &&
+         ref.device->params()->perf_param_from_key(ref.device_idx, ref.target,
+                                                   key, param);
+#endif
 }
 
 bool perf_key_for_param(uint8_t dest, uint8_t param, uint8_t *key) {
+#if defined(__AVR__)
   if (key == nullptr || !perf_is_primary_md_track_dest(dest) ||
       param >= perf_param_count(dest)) {
     return false;
@@ -505,25 +521,36 @@ bool perf_key_for_param(uint8_t dest, uint8_t param, uint8_t *key) {
   }
   *key = (uint8_t)value;
   return true;
+#else
+  DeviceParamTargetRef ref = resolve_perf(dest);
+  return ref.valid() &&
+         ref.device->params()->perf_key_for_param(ref.device_idx, ref.target,
+                                                  param, key);
+#endif
 }
 
 bool perf_begin_param_editor(uint8_t dest, uint8_t *params, uint8_t count) {
+#if defined(__AVR__)
   if (!perf_is_primary_md_track_dest(dest) || params == nullptr ||
       count < MD_PARAMS_PER_TRACK) {
     return false;
   }
   MD.activate_encoder_interface(params);
   return true;
+#else
+  DeviceParamTargetRef ref = resolve_perf(dest);
+  return ref.valid() &&
+         ref.device->params()->perf_begin_param_editor(
+             ref.device_idx, ref.target, params, count);
+#endif
 }
 
 void perf_end_param_editor() {
 #if defined(__AVR__)
   MD.deactivate_encoder_interface();
 #else
-  MidiDevice *device = slot_device(1);
-  if (device != nullptr && device->id == DEVICE_MD) {
-    MD.deactivate_encoder_interface();
-  }
+  slot_device(1)->params()->perf_end_param_editor(slot_device_idx(1));
+  slot_device(2)->params()->perf_end_param_editor(slot_device_idx(2));
 #endif
 }
 
@@ -531,26 +558,18 @@ void perf_set_rec_mode(uint8_t mode) {
 #if defined(__AVR__)
   MD.set_rec_mode(mode);
 #else
-  MidiDevice *device = slot_device(1);
-  if (device != nullptr && device->id == DEVICE_MD) {
-    MD.set_rec_mode(mode);
-  }
+  slot_device(1)->params()->perf_set_rec_mode(slot_device_idx(1), mode);
+  slot_device(2)->params()->perf_set_rec_mode(slot_device_idx(2), mode);
 #endif
 }
 
 bool perf_scene_autofill(PerfData *data, uint8_t scene) {
-#if defined(__AVR__)
   if (data == nullptr || scene >= NUM_SCENES) {
     return false;
   }
-#else
-  MidiDevice *device = slot_device(1);
-  if (data == nullptr || scene >= NUM_SCENES || device == nullptr ||
-      device->id != DEVICE_MD) {
-    return false;
-  }
-#endif
 
+#if defined(__AVR__)
+  bool filled = false;
   uint8_t num_params =
       mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   for (uint8_t track = 0; track < NUM_MD_TRACKS; track++) {
@@ -570,6 +589,7 @@ bool perf_scene_autofill(PerfData *data, uint8_t scene) {
       MD.setTrackParam(track, param, MD.kit.params_orig[track][param], nullptr,
                        true);
       MD.setTrackParam(track, param, value, nullptr, false);
+      filled = true;
     }
   }
 
@@ -597,8 +617,20 @@ bool perf_scene_autofill(PerfData *data, uint8_t scene) {
     }
     MD.setFXParam(param, fxs_orig[n], fx + MD_FX_ECHO, true);
     MD.setFXParam(param, value, fx + MD_FX_ECHO, false);
+    filled = true;
   }
-  return true;
+  return filled;
+#else
+  bool filled = false;
+  uint8_t offset = 0;
+  for (uint8_t slot = 1; slot <= 2; slot++) {
+    MidiDevice *device = slot_device(slot);
+    filled |= device->params()->perf_scene_autofill(slot_device_idx(slot),
+                                                    offset, data, scene);
+    offset += slot_target_count(slot);
+  }
+  return filled;
+#endif
 }
 
 } // namespace DeviceParamTargets

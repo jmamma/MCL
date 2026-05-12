@@ -102,6 +102,11 @@ public:
 #ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
 #endif
+  virtual DeviceMixerCapability *mixer() override;
+#if !defined(__AVR__)
+  virtual DeviceParamCapability *params() override;
+#endif
+  virtual DevicePanelCapability *panel() override;
   virtual uint8_t mixer_default_param(uint8_t device_idx) const override;
   virtual bool mixer_param(uint8_t device_idx, uint8_t track,
                            uint8_t param_idx,

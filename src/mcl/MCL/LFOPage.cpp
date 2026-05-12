@@ -124,7 +124,7 @@ void LFOPage::select_menu_track(uint8_t track) {
 }
 
 void LFOPage::init() {
-  MD.set_key_repeat(0);
+  device_manager.primary_device()->panel()->set_key_repeat(0);
   display_page_index = false;
   SeqPage::init();
   track_update();

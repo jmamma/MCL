@@ -8,6 +8,7 @@
 #include "SeqTrackUtil.h"
 #include "TurboLight.h"
 #include "MCLGUI.h"
+#include "PerfData.h"
 #include "UI/MDTrackSelect.h"
 #include "SeqPages.h"
 #include "MCLStrings.h"
@@ -141,6 +142,70 @@ bool MDClass::supports_capability(MidiDeviceCapability capability) const {
 }
 #endif
 
+namespace {
+
+class MDMixerCapability : public DeviceMixerCapability {
+public:
+  explicit MDMixerCapability(MDClass &device) : DeviceMixerCapability(device) {}
+  virtual uint8_t trig_group(uint8_t device_idx,
+                             uint8_t track) const override;
+  virtual void select_track(uint8_t device_idx, uint8_t track) override;
+  virtual void restore_track_params(uint8_t device_idx,
+                                    uint8_t track) override;
+
+private:
+  MDClass &md() const { return (MDClass &)device_; }
+};
+
+#if !defined(__AVR__)
+class MDParamCapability : public DeviceParamCapability {
+public:
+  explicit MDParamCapability(MDClass &device) : DeviceParamCapability(device) {}
+  virtual bool perf_param_from_key(uint8_t device_idx, uint8_t target,
+                                   uint8_t key, uint8_t *param) override;
+  virtual bool perf_key_for_param(uint8_t device_idx, uint8_t target,
+                                  uint8_t param, uint8_t *key) override;
+  virtual bool perf_begin_param_editor(uint8_t device_idx, uint8_t target,
+                                       uint8_t *params,
+                                       uint8_t count) override;
+  virtual void perf_end_param_editor(uint8_t device_idx) override;
+  virtual void perf_set_rec_mode(uint8_t device_idx, uint8_t mode) override;
+  virtual bool perf_scene_autofill(uint8_t device_idx, uint8_t dest_offset,
+                                   PerfData *data, uint8_t scene) override;
+
+private:
+  MDClass &md() const { return (MDClass &)device_; }
+};
+#endif
+
+class MDPanelCapability : public DevicePanelCapability {
+public:
+  explicit MDPanelCapability(MDClass &device) : device_(device) {}
+  virtual void set_key_repeat(uint8_t enabled) override;
+
+private:
+  MDClass &device_;
+};
+
+} // namespace
+
+DeviceMixerCapability *MDClass::mixer() {
+  static MDMixerCapability capability(*this);
+  return &capability;
+}
+
+#if !defined(__AVR__)
+DeviceParamCapability *MDClass::params() {
+  static MDParamCapability capability(*this);
+  return &capability;
+}
+#endif
+
+DevicePanelCapability *MDClass::panel() {
+  static MDPanelCapability capability(*this);
+  return &capability;
+}
+
 uint8_t MDClass::mixer_default_param(uint8_t device_idx) const {
   (void)device_idx;
   return MODEL_LEVEL;
@@ -190,7 +255,160 @@ bool MDClass::set_mixer_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
+uint8_t MDMixerCapability::trig_group(uint8_t device_idx,
+                                      uint8_t track) const {
+  (void)device_idx;
+  if (track >= NUM_MD_TRACKS) {
+    return 255;
+  }
+  return md().kit.trigGroups[track];
+}
+
+void MDMixerCapability::select_track(uint8_t device_idx, uint8_t track) {
+  (void)device_idx;
+  if (track < NUM_MD_TRACKS) {
+    md().setStatus(0x22, track);
+  }
+}
+
+void MDMixerCapability::restore_track_params(uint8_t device_idx,
+                                             uint8_t track) {
+  (void)device_idx;
+  if (track >= NUM_MD_TRACKS) {
+    return;
+  }
+  MDClass &device = md();
+  uint8_t num_params =
+      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  for (uint8_t param = 0; param < num_params; param++) {
+    device.restore_kit_param(track, param);
+  }
+}
+
+void MDPanelCapability::set_key_repeat(uint8_t enabled) {
+  device_.set_key_repeat(enabled);
+}
+
 #if !defined(__AVR__)
+bool MDParamCapability::perf_param_from_key(uint8_t device_idx, uint8_t target,
+                                            uint8_t key, uint8_t *param) {
+  (void)device_idx;
+  if (param == nullptr || target >= NUM_MD_TRACKS || key < 0x10 ||
+      key > 0x17) {
+    return false;
+  }
+  MDClass &device = md();
+  uint8_t value = device.currentSynthPage * 8 + key - 0x10;
+  uint8_t num_params =
+      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  if (value >= num_params) {
+    return false;
+  }
+  *param = value;
+  return true;
+}
+
+bool MDParamCapability::perf_key_for_param(uint8_t device_idx, uint8_t target,
+                                           uint8_t param, uint8_t *key) {
+  (void)device_idx;
+  if (key == nullptr || target >= NUM_MD_TRACKS) {
+    return false;
+  }
+  MDClass &device = md();
+  uint8_t num_params =
+      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  if (param >= num_params) {
+    return false;
+  }
+  int16_t value =
+      (int16_t)param - (int16_t)device.currentSynthPage * 8 + 0x10;
+  if (value < 0x10 || value > 0x17) {
+    return false;
+  }
+  *key = (uint8_t)value;
+  return true;
+}
+
+bool MDParamCapability::perf_begin_param_editor(uint8_t device_idx,
+                                                uint8_t target,
+                                                uint8_t *params,
+                                                uint8_t count) {
+  (void)device_idx;
+  if (target >= NUM_MD_TRACKS || params == nullptr ||
+      count < MD_PARAMS_PER_TRACK) {
+    return false;
+  }
+  md().activate_encoder_interface(params);
+  return true;
+}
+
+void MDParamCapability::perf_end_param_editor(uint8_t device_idx) {
+  (void)device_idx;
+  md().deactivate_encoder_interface();
+}
+
+void MDParamCapability::perf_set_rec_mode(uint8_t device_idx, uint8_t mode) {
+  (void)device_idx;
+  md().set_rec_mode(mode);
+}
+
+bool MDParamCapability::perf_scene_autofill(uint8_t device_idx,
+                                            uint8_t dest_offset,
+                                            PerfData *data, uint8_t scene) {
+  (void)device_idx;
+  if (data == nullptr || scene >= NUM_SCENES) {
+    return false;
+  }
+
+  MDClass &device = md();
+  uint8_t num_params =
+      mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  bool filled = false;
+  for (uint8_t track = 0; track < NUM_MD_TRACKS; track++) {
+    uint8_t dest = dest_offset + track;
+    for (uint8_t param = 0; param < num_params; param++) {
+      if (device.kit.params[track][param] ==
+          device.kit.params_orig[track][param]) {
+        continue;
+      }
+      uint8_t value = device.kit.params[track][param];
+      if (data->add_param(dest, param, scene, value) == 255) {
+        continue;
+      }
+      // Kit encoders go back to normal for save.
+      device.setTrackParam(track, param, device.kit.params_orig[track][param],
+                           nullptr, true);
+      device.setTrackParam(track, param, value, nullptr, false);
+      filled = true;
+    }
+  }
+
+  uint8_t *fxs = (uint8_t *)&device.kit.reverb;
+  uint8_t *fxs_orig = (uint8_t *)&device.kit.fx_orig;
+  for (uint8_t n = 0; n < 8 * 4; n++) {
+    uint8_t fx = n / 8;
+    uint8_t param = n - fx * 8;
+    // Delay and reverb are flipped in memory.
+    if (fx == 0) {
+      fx = 1;
+    } else if (fx == 1) {
+      fx = 0;
+    }
+    if (fxs[n] == fxs_orig[n]) {
+      continue;
+    }
+    uint8_t dest = dest_offset + NUM_MD_TRACKS + fx;
+    uint8_t value = fxs[n];
+    if (data->add_param(dest, param, scene, value) == 255) {
+      continue;
+    }
+    device.setFXParam(param, fxs_orig[n], fx + MD_FX_ECHO, true);
+    device.setFXParam(param, value, fx + MD_FX_ECHO, false);
+    filled = true;
+  }
+  return filled;
+}
+
 uint8_t MDClass::param_target_count(uint8_t device_idx) const {
   (void)device_idx;
   return NUM_MD_TRACKS + 4;

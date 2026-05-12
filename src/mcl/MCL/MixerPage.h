@@ -6,8 +6,9 @@
 // #include "Pages.h"
 #include "GUI.h"
 #include "MCL.h"
-#include "../Drivers/MD/MD.h"
+#include "../Midi/midi-common.h"
 
+class MidiDevice;
 class SeqTrack;
 
 class MuteSet {
@@ -55,8 +56,6 @@ public:
   uint8_t preview_mute_set = 255;
   uint8_t load_mute_set = 255;
 
-  void send_fx(uint8_t param, Encoder *enc, uint8_t type);
-
   // Don't change order
   MuteSet mute_sets[2];
   uint8_t perf_locks[4][4];
@@ -81,7 +80,7 @@ public:
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
-    midi_device = &MD;
+    midi_device = nullptr;
     memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
     //memset(perf_locks, 0xFF, sizeof(perf_locks));
     memset(load_types, 1, sizeof(load_types));

@@ -3,7 +3,7 @@
 #include "DeviceParamTargets.h"
 #include "PerfPageParent.h"
 #include "ResourceManager.h"
-#include "../Drivers/MD/MD.h"
+#include "../Drivers/MidiDevice.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
 
@@ -11,14 +11,16 @@ void PerfPageParent::setup() { DEBUG_PRINT_FN(); }
 
 void PerfPageParent::init() {
   DEBUG_PRINT_FN();
-  MD.set_key_repeat(0);
+  device_manager.primary_device()->panel()->set_key_repeat(0);
   config_encoders();
   R.Clear();
   R.use_machine_param_names();
   R.use_icons_knob();
 }
 
-void PerfPageParent::cleanup() { MD.set_key_repeat(1); }
+void PerfPageParent::cleanup() {
+  device_manager.primary_device()->panel()->set_key_repeat(1);
+}
 
 void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param,
                                 uint8_t device_slot) {
@@ -65,7 +67,7 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
       K[0] = 'T';
       if (!device_slot) {
         uint8_t primary_count =
-            device_manager.primary_device()->param_target_count(0);
+            device_manager.primary_device()->params()->target_count(0);
         if (value > primary_count) {
           K[0] = 'M';
           local_value = value - primary_count;

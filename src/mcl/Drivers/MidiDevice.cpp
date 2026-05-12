@@ -41,7 +41,13 @@ void copy_param_number_label(char prefix, uint8_t number, char *out,
 
 MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
                        const bool _isElektronDevice)
-    : name(_name), id(_id), isElektronDevice(_isElektronDevice) {
+    : name(_name), id(_id), isElektronDevice(_isElektronDevice),
+      mixer_capability_(*this)
+#if !defined(__AVR__)
+      ,
+      param_capability_(*this)
+#endif
+{
   midi = _midi;
   uart = midi ? midi->uart : nullptr;
   track_type = 0;
@@ -62,6 +68,21 @@ void MidiDevice::cleanup(uint8_t device_idx) {
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
     proj.grids[n].cleanup(device_idx);
   }
+}
+
+DeviceMixerCapability *MidiDevice::mixer() {
+  return &mixer_capability_;
+}
+
+#if !defined(__AVR__)
+DeviceParamCapability *MidiDevice::params() {
+  return &param_capability_;
+}
+#endif
+
+DevicePanelCapability *MidiDevice::panel() {
+  static DevicePanelCapability panel_capability;
+  return &panel_capability;
 }
 
 uint8_t MidiDevice::mixer_track_count(uint8_t device_idx) const {

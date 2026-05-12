@@ -2,6 +2,7 @@
 #include "MCLSd.h"
 #include "MCLGUI.h"
 #include "GridPages.h"
+#include "oled.h"
 
 #include "MDTrack.h"
 #include "ExtTrack.h"
@@ -11,6 +12,11 @@
 
 #define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"
+
+void Project::draw_wait_popup(const char *message) {
+  mcl_gui.draw_infobox("PLEASE WAIT", message);
+  oled_display.display();
+}
 
 void Project::setup() {}
 
@@ -31,7 +37,7 @@ bool Project::new_project(const char *newprj) {
   strcpy(proj_filename, newprj);
   strcat(proj_filename, ".mcl");
 
-  gfx.alert("PLEASE WAIT", "CREATING PROJECT");
+  draw_wait_popup("CREATING PROJECT");
 
   DEBUG_PRINTLN(proj_filename);
   if (SD.exists(proj_filename)) {
@@ -159,6 +165,11 @@ bool Project::load_project(const char *projectname) {
     return false;
   }
 
+  bool migrate_track_storage = version < PROJ_VERSION_TRACK_STORAGE_VERSION;
+  if (migrate_track_storage) {
+    draw_wait_popup("UPGRADING PROJECT");
+  }
+
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     grids[i].close_file();
 
@@ -172,6 +183,14 @@ bool Project::load_project(const char *projectname) {
       gfx.alert("ERROR", "OPEN GRID");
       return false;
     }
+
+    if (migrate_track_storage && !migrate_grid_track_storage_versions(i)) {
+      DEBUG_PRINTLN(F("Could not migrate track storage versions"));
+      return false;
+    }
+  }
+  if (migrate_track_storage && !write_header()) {
+    return false;
   }
 
   strncpy(mcl_cfg.project, projectname, 16);
@@ -184,6 +203,7 @@ bool Project::load_project(const char *projectname) {
     return false;
   }
   grid_page.row_scan = GRID_LENGTH;
+  project_loaded = true;
   return true;
 }
 
@@ -205,12 +225,30 @@ bool Project::check_project_version(uint16_t min_version) {
     DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
-  if (version >= min_version) {
-    project_loaded = true;
-    return true;
-  } else {
-    return false;
+  return version >= min_version;
+}
+
+bool Project::migrate_grid_track_storage_versions(uint8_t grid) {
+  uint8_t legacy_version[2] = {0, 0};
+  for (uint16_t row = 0; row < GRID_LENGTH; row++) {
+    GridRowHeader row_header;
+    if (!grids[grid].read_row_header(&row_header, row)) {
+      return false;
+    }
+    for (uint8_t column = 0; column < GRID_WIDTH; column++) {
+      if (row_header.track_type[column] == EMPTY_TRACK_TYPE) {
+        continue;
+      }
+      if (!grids[grid].seek(column, row)) {
+        return false;
+      }
+      if (!grids[grid].write(legacy_version, sizeof(legacy_version))) {
+        return false;
+      }
+    }
   }
+
+  return grids[grid].sync();
 }
 
 bool Project::write_header() {

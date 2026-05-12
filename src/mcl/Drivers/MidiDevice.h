@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "DeviceCapabilities.h"
 #include "MidiDeviceCapabilities.h"
 #include "MidiID.h"
 #include "MidiDeviceParam.h"
@@ -70,6 +71,13 @@ public:
   uint8_t track_type;
   uint8_t port; // MIDI port number (UART1_PORT, UART2_PORT, UARTUSB_PORT, etc.)
 
+protected:
+  DeviceMixerCapability mixer_capability_;
+#if !defined(__AVR__)
+  DeviceParamCapability param_capability_;
+#endif
+
+public:
   MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
              const bool _isElektronDevice) NOINLINE();
 
@@ -167,6 +175,11 @@ public:
   virtual uint8_t get_mute_cc() { return 255; }
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) {}
+  virtual DeviceMixerCapability *mixer();
+#if !defined(__AVR__)
+  virtual DeviceParamCapability *params();
+#endif
+  virtual DevicePanelCapability *panel();
   virtual uint8_t mixer_track_count(uint8_t device_idx) const;
   virtual SeqTrack *mixer_seq_track(uint8_t device_idx, uint8_t track);
   virtual uint8_t mixer_default_param(uint8_t device_idx) const;

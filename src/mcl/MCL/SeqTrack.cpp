@@ -98,10 +98,9 @@ void SeqTrack::load_arp_data(ArpSeqTrack &arp_track,
 
 void SeqTrack::load_lfo_data(LFOSeqTrack &lfo_track,
                              const SeqLFOData &stored_data,
-                             bool use_stored_data,
-                             bool use_sps_shape_and_speed) {
+                             bool use_stored_data) {
   if (use_stored_data) {
-    lfo_track.load_data(stored_data, false, !use_sps_shape_and_speed);
+    lfo_track.load_data(stored_data, false, false);
     return;
   }
   SeqLFOData empty;
@@ -110,9 +109,7 @@ void SeqTrack::load_lfo_data(LFOSeqTrack &lfo_track,
 }
 
 void SeqTrack::load_mod_data(SeqTrack *seq_track, SeqTrackModData &mod_data,
-                             bool grid_x_tracks, bool use_stored_arp,
-                             bool use_stored_lfo,
-                             bool use_sps_lfo_shape_and_speed) {
+                             bool grid_x_tracks, bool use_stored_mod_data) {
   if (seq_track == nullptr) {
     return;
   }
@@ -122,17 +119,17 @@ void SeqTrack::load_mod_data(SeqTrack *seq_track, SeqTrackModData &mod_data,
       return;
     }
     load_arp_data(mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
-                  use_stored_arp);
+                  use_stored_mod_data);
     load_lfo_data(mcl_seq.grid_x_lfo_tracks[tracknumber], mod_data.lfo,
-                  use_stored_lfo, use_sps_lfo_shape_and_speed);
+                  use_stored_mod_data);
     return;
   }
 #ifdef EXT_TRACKS
   if (tracknumber < NUM_GRID_Y_LFO_TRACKS) {
     load_arp_data(mcl_seq.ext_arp_tracks[tracknumber], mod_data.arp,
-                  use_stored_arp);
+                  use_stored_mod_data);
     load_lfo_data(mcl_seq.grid_y_lfo_tracks[tracknumber], mod_data.lfo,
-                  use_stored_lfo, use_sps_lfo_shape_and_speed);
+                  use_stored_mod_data);
   }
 #endif
 }

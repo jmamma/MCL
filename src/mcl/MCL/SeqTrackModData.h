@@ -4,10 +4,7 @@
 #include <inttypes.h>
 #include <stddef.h>
 
-#define SEQ_TRACK_ARP_STORAGE_VERSION 1
-#define SEQ_TRACK_LFO_STORAGE_VERSION 2
-#define SEQ_TRACK_LFO_SPS_SHAPE_STORAGE_VERSION 3
-#define SEQ_TRACK_MOD_STORAGE_VERSION 3
+#define SEQ_TRACK_MOD_STORAGE_VERSION 1
 
 class ATTR_PACKED() SeqLFODataV1 {
 public:
@@ -83,18 +80,15 @@ public:
 
 class ATTR_PACKED() SeqTrackModData {
 public:
-  // Keep v1_lfo before arp so projects written with storage version 1 still
-  // load arp from the same byte offset. The full runtime LFO config is appended
-  // as storage version 2 data.
-  uint8_t v1_lfo_padding[sizeof(SeqLFODataV1)];
+  uint8_t reserved[sizeof(SeqLFODataV1)];
   ArpSeqData arp;
   SeqLFOData lfo;
 
   SeqTrackModData() { init(); }
 
   void init() {
-    for (uint8_t i = 0; i < sizeof(v1_lfo_padding); ++i) {
-      v1_lfo_padding[i] = 0;
+    for (uint8_t i = 0; i < sizeof(reserved); ++i) {
+      reserved[i] = 0;
     }
     lfo.init();
     arp.init();

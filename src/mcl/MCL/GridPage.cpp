@@ -12,6 +12,7 @@
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
+#include "../Drivers/MD/MD.h"
 #ifdef PLATFORM_TBD
 #include "GridIOOverlay.h"
 #include "EmptyTrack.h"
