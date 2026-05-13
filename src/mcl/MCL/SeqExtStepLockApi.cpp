@@ -119,11 +119,8 @@ uint8_t SeqExtStepLockApi::selected_lock_menu_value(uint8_t slot) const {
   return selected_lock_param_id(slot, param_id) ? param_id : PARAM_OFF;
 }
 
+#if !defined(__AVR__)
 bool SeqExtStepLockApi::selected_lock_menu_editable(uint8_t slot) const {
-#if defined(__AVR__)
-  (void)slot;
-  return true;
-#else
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return true;
   if (info.learn || info.p4_param) return true;
@@ -132,8 +129,8 @@ bool SeqExtStepLockApi::selected_lock_menu_editable(uint8_t slot) const {
           info.ctrl_type == SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE ||
           info.ctrl_type == SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE) &&
          info.param_id <= PARAM_LEARN;
-#endif
 }
+#endif
 
 uint8_t SeqExtStepLockApi::lock_param_menu_max() const {
 #ifdef PLATFORM_TBD
@@ -148,7 +145,6 @@ bool SeqExtStepLockApi::lock_menu_value_info(
     uint8_t menu_value, SeqExtStepLockParamInfo &info) const {
 #if defined(__AVR__)
   info.active = false;
-  info.p4_param = false;
   info.learn = false;
   info.param_id = 0;
   info.ctrl = 0;
@@ -405,12 +401,14 @@ bool SeqExtStepLockApi::copy_selected_lock_label(uint8_t slot, char *dst,
   case SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE:
     copy_literal("PRG", dst, dst_len);
     break;
+#if !defined(__AVR__)
   case SEQ_EXT_LOCK_CTRL_NRPN:
     copy_param_number_label('N', info.param_id, dst, dst_len);
     break;
   case SEQ_EXT_LOCK_CTRL_RPN:
     copy_param_number_label('R', info.param_id, dst, dst_len);
     break;
+#endif
   default:
     copy_param_number_label('C', info.param_id, dst, dst_len);
     break;
@@ -466,16 +464,13 @@ bool SeqExtStepLockApi::copy_lock_menu_value_label(uint8_t menu_value,
   return true;
 }
 
+#if !defined(__AVR__)
 uint8_t SeqExtStepLockApi::selected_lock_current_ui_value(uint8_t slot) const {
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return 64;
-#if defined(__AVR__)
-  (void)info;
-  return 0;
-#else
   return value7_from_param_value(info, info.current_value);
-#endif
 }
+#endif
 
 uint8_t SeqExtStepLockApi::lock_ui_value_from_control(uint8_t slot,
                                                       uint8_t ctrl_type,
@@ -485,9 +480,13 @@ uint8_t SeqExtStepLockApi::lock_ui_value_from_control(uint8_t slot,
   if (!selected_lock_param_info(slot, info) || !info.active) {
     return value7_from_14(value);
   }
+#if !defined(__AVR__)
   if (info.p4_param && info.ctrl == ctrl && info.ctrl_type == ctrl_type) {
     return value7_from_param_value(info, value);
   }
+#else
+  (void)ctrl;
+#endif
   if (ctrl_type == SEQ_EXT_LOCK_CTRL_CC ||
       ctrl_type == SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE ||
       ctrl_type == SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE ||
@@ -503,9 +502,11 @@ bool SeqExtStepLockApi::selected_lock_matches_control(uint8_t slot,
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return false;
   if (info.learn) return true;
+#if !defined(__AVR__)
   if (info.p4_param) {
     return info.ctrl == ctrl && info.ctrl_type == ctrl_type;
   }
+#endif
   return info.ctrl_type == ctrl_type && info.ctrl == ctrl;
 }
 
@@ -518,8 +519,12 @@ bool SeqExtStepLockApi::copy_lock_value_label(uint8_t slot, uint8_t value,
     put_int16(value, dst, dst_len);
     return true;
   }
+#if !defined(__AVR__)
   int16_t display_value = info.p4_param ? param_value_from_value7(info, value)
                                         : (int16_t)value;
+#else
+  int16_t display_value = (int16_t)value;
+#endif
   put_int16(display_value, dst, dst_len);
   return true;
 }
@@ -686,12 +691,9 @@ uint16_t SeqExtStepLockApi::value14_from_value7(uint8_t value7) {
 #endif
 }
 
+#if !defined(__AVR__)
 int16_t SeqExtStepLockApi::param_value_from_value7(
     const SeqExtStepLockParamInfo &info, uint8_t value7) {
-#if defined(__AVR__)
-  (void)info;
-  return value7 > 127 ? 127 : value7;
-#else
   if (info.max_value <= info.min_value) return info.min_value;
   uint16_t value14 = value14_from_value7(value7);
   int32_t range = (int32_t)info.max_value - (int32_t)info.min_value;
@@ -700,24 +702,18 @@ int16_t SeqExtStepLockApi::param_value_from_value7(
   if (scaled < info.min_value) scaled = info.min_value;
   if (scaled > info.max_value) scaled = info.max_value;
   return (int16_t)scaled;
-#endif
 }
 
 uint8_t SeqExtStepLockApi::value7_from_param_value(
     const SeqExtStepLockParamInfo &info, int16_t value) {
-#if defined(__AVR__)
-  (void)info;
-  if (value < 0) return 0;
-  return value > 127 ? 127 : (uint8_t)value;
-#else
   if (info.max_value <= info.min_value) return 0;
   if (value < info.min_value) value = info.min_value;
   if (value > info.max_value) value = info.max_value;
   uint16_t range = (uint16_t)(info.max_value - info.min_value);
   uint16_t offset = (uint16_t)(value - info.min_value);
   return (uint8_t)(((uint32_t)offset * 127u + (range / 2u)) / range);
-#endif
 }
+#endif
 
 #ifdef PLATFORM_TBD
 uint8_t SeqExtStepLockApi::ctrl_type_to_midi_lock_type(uint8_t ctrl_type) {

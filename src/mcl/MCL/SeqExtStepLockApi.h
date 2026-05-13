@@ -14,9 +14,9 @@ class MidiSeqTrack;
 
 struct SeqExtStepLockParamInfo {
   bool active = false;
-  bool p4_param = false;
   bool learn = false;
 #if !defined(__AVR__)
+  bool p4_param = false;
   bool sendable = false;
   bool nrpn = false;
   bool macro = false;
@@ -64,7 +64,11 @@ public:
   uint8_t selected_lock_param(uint8_t slot) const;
   bool selected_lock_param_id(uint8_t slot, uint8_t &param_id) const;
   uint8_t selected_lock_menu_value(uint8_t slot) const;
+#if defined(__AVR__)
+  bool selected_lock_menu_editable(uint8_t) const { return true; }
+#else
   bool selected_lock_menu_editable(uint8_t slot) const;
+#endif
   uint8_t lock_param_menu_max() const;
   bool lock_menu_value_info(uint8_t menu_value,
                             SeqExtStepLockParamInfo &info) const;
@@ -80,7 +84,11 @@ public:
                                 size_t dst_len) const;
   bool copy_lock_menu_value_label(uint8_t menu_value, char *dst,
                                   size_t dst_len) const;
+#if defined(__AVR__)
+  uint8_t selected_lock_current_ui_value(uint8_t) const { return 0; }
+#else
   uint8_t selected_lock_current_ui_value(uint8_t slot) const;
+#endif
   uint8_t lock_ui_value_from_control(uint8_t slot, uint8_t ctrl_type,
                                      uint16_t ctrl, uint16_t value) const;
   bool selected_lock_matches_control(uint8_t slot, uint8_t ctrl_type,
@@ -98,10 +106,12 @@ private:
                                       size_t dst_len);
   static void put_int16(int16_t value, char *dst, size_t dst_len);
   static uint16_t value14_from_value7(uint8_t value7);
+#if !defined(__AVR__)
   static int16_t param_value_from_value7(const SeqExtStepLockParamInfo &info,
                                          uint8_t value7);
   static uint8_t value7_from_param_value(const SeqExtStepLockParamInfo &info,
                                          int16_t value);
+#endif
 #ifdef PLATFORM_TBD
   static uint8_t ctrl_type_to_midi_lock_type(uint8_t ctrl_type);
   bool find_p4_control(uint8_t ctrl_type, uint16_t ctrl, uint16_t value,
