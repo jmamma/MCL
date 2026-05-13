@@ -28,9 +28,9 @@ MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
 NullMidiDevice::NullMidiDevice()
     : MidiDevice(nullptr, "  ", DEVICE_NULL, false) {}
 
-void MidiDevice::add_track_to_grid(DeviceIdx device_idx, uint8_t track_idx,
+void MidiDevice::add_track_to_grid(GridIdx grid_idx, uint8_t track_idx,
                                    GridDeviceTrack *gdt) {
-  proj.grids[static_cast<uint8_t>(device_idx)].add_track(track_idx, gdt);
+  proj.grids[static_cast<uint8_t>(grid_idx)].add_track(track_idx, gdt);
 }
 
 void MidiDevice::cleanup(DeviceIdx device_idx) {

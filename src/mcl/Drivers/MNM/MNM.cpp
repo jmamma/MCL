@@ -67,7 +67,7 @@ void MNMClass::init_grid_devices(DeviceIdx device_idx) {
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
     gdt.init(MNM_TRACK_TYPE, GROUP_DEV, static_cast<uint8_t>(device_idx),
              &(mcl_seq.ext_tracks[i]));
-    add_track_to_grid(DeviceIdx::Secondary, i, &gdt);
+    add_track_to_grid(GridIdx::Y, i, &gdt);
   }
 }
 

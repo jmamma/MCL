@@ -1993,7 +1993,7 @@ void TbdDevice::init_grid_devices(DeviceIdx device_idx) {
     for (uint8_t i = 0; i < mcl_seq.num_tbd_tracks; i++) {
       tbd_ensure_step_sound_default(mcl_seq.tbd_tracks[i].p4_sound, i);
       gdt.init(TBD_TRACK_TYPE, GROUP_DEV, idx, &(mcl_seq.tbd_tracks[i]));
-      add_track_to_grid(DeviceIdx::Primary, i, &gdt);
+      add_track_to_grid(GridIdx::X, i, &gdt);
     }
     grid_devices_initialized_[0] = true;
     return;
@@ -2007,7 +2007,7 @@ void TbdDevice::init_grid_devices(DeviceIdx device_idx) {
           mcl_seq.midi_tracks[i].p4_sound.midi_channel);
       gdt.init(TBD_MIDI_TRACK_TYPE, GROUP_DEV, idx,
                &(mcl_seq.midi_tracks[i]));
-      add_track_to_grid(DeviceIdx::Secondary, i, &gdt);
+      add_track_to_grid(GridIdx::Y, i, &gdt);
     }
     grid_devices_initialized_[1] = true;
   }

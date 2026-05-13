@@ -4,10 +4,17 @@
 
 class MidiDevice;
 
+// Logical device identity used for ownership/routing.
 enum class DeviceIdx : uint8_t {
   Primary = 0,
   Secondary = 1,
   None = 255,
+};
+
+// Physical grid placement.
+enum class GridIdx : uint8_t {
+  X = 0,
+  Y = 1,
 };
 
 class DeviceContext {

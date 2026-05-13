@@ -102,7 +102,7 @@ public:
   MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
              const bool _isElektronDevice) NOINLINE();
 
-  void add_track_to_grid(DeviceIdx device_idx, uint8_t track_idx,
+  void add_track_to_grid(GridIdx grid_idx, uint8_t track_idx,
                          GridDeviceTrack *gdt);
   void cleanup(DeviceIdx device_idx);
 

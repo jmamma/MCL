@@ -82,7 +82,7 @@ void A4Class::init_grid_devices(DeviceIdx device_idx) {
     }
     gdt.init(track_type, GROUP_DEV, static_cast<uint8_t>(device_idx),
              &(mcl_seq.ext_tracks[i]));
-    add_track_to_grid(DeviceIdx::Secondary, i, &gdt);
+    add_track_to_grid(GridIdx::Y, i, &gdt);
   }
 }
 
