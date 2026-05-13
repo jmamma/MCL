@@ -8,9 +8,9 @@
 
 class SeqStepTrackMdBackend {
 public:
-  explicit SeqStepTrackMdBackend(MDSeqTrack &track, uint8_t device_slot = 1)
+  explicit SeqStepTrackMdBackend(MDSeqTrack &track, uint8_t device_idx = 0)
       : track_(&track) {
-    (void)device_slot;
+    (void)device_idx;
   }
 
   bool uses_signed_microtiming() const { return false; }

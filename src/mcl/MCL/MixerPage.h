@@ -88,11 +88,11 @@ public:
   void load_perf_locks(uint8_t state);
   void toggle_or_solo(bool solo = false);
   // Handled in MCLSeq
-  void onControlChangeCallback_Midi(uint8_t device_slot, uint8_t track,
+  void onControlChangeCallback_Midi(uint8_t device_idx, uint8_t track,
                                     uint8_t track_param, uint8_t value);
 
   uint8_t note_to_trig(uint8_t note_num);
-  void track_trig(uint8_t device_slot, uint8_t track_number, uint8_t level);
+  void track_trig(uint8_t device_idx, uint8_t track_number, uint8_t level);
   void trig(uint8_t track_number);
 
   virtual bool handleEvent(gui_event_t *event);

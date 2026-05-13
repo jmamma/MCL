@@ -16,14 +16,14 @@
 class SeqStepTrackGenericBackend {
 public:
   explicit SeqStepTrackGenericBackend(MDSeqTrack &track,
-                                      uint8_t device_slot = 1)
-      : kind_(KIND_MD), device_slot_(device_slot) {
+                                      uint8_t device_idx = 0)
+      : kind_(KIND_MD), device_idx_(device_idx) {
     tracks_.md = &track;
   }
 
   explicit SeqStepTrackGenericBackend(StepSeqDataTrack &track,
-                                      uint8_t device_slot = 1)
-      : kind_(KIND_STEPSEQ), device_slot_(device_slot) {
+                                      uint8_t device_idx = 0)
+      : kind_(KIND_STEPSEQ), device_idx_(device_idx) {
     tracks_.stepseq = &track;
   }
 
@@ -39,7 +39,7 @@ public:
   }
   bool uses_step_pitch() const {
     return uses_kit_sound() ||
-           DeviceParamResolver::slot(param_device_slot(), param_dest())
+           DeviceParamResolver::target_for_idx(param_device_idx(), param_dest())
                .uses_step_pitch();
   }
 
@@ -52,7 +52,7 @@ public:
     }
     pitch_encoder_max = uses_step_pitch() ? 127 : 1;
     is_midi_model = false;
-    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+    return DeviceParamResolver::target_for_idx(param_device_idx(), param_dest())
         .target_label(info, (uint8_t)info_len);
   }
 
@@ -147,25 +147,25 @@ public:
   }
 
   uint8_t lock_param_count() const {
-    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+    return DeviceParamResolver::target_for_idx(param_device_idx(), param_dest())
         .lock_param_count();
   }
   uint8_t lock_slot_count() const {
     return kind_ == KIND_MD ? NUM_LOCKS : STEPSEQ_NUM_LOCKS;
   }
   bool lock_param_info(uint8_t param_id, SeqStepLockParamInfo &info) const {
-    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+    return DeviceParamResolver::target_for_idx(param_device_idx(), param_dest())
         .lock_param_info(param_id, &info);
   }
   uint8_t current_lock_value(uint8_t param_id) const {
     uint8_t value = 0;
-    DeviceParamResolver::slot(param_device_slot(), param_dest())
+    DeviceParamResolver::target_for_idx(param_device_idx(), param_dest())
         .lock_current_value(param_id, &value);
     return value;
   }
   bool copy_lock_param_label(uint8_t param_id, char *dst,
                              size_t dst_len) const {
-    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+    return DeviceParamResolver::target_for_idx(param_device_idx(), param_dest())
         .lock_param_label(param_id, dst, (uint8_t)dst_len);
   }
 
@@ -386,7 +386,7 @@ public:
     return lock_idx == 255 ? -1 : (int8_t)lock_idx;
   }
   uint8_t pitch_lock_param_id() const {
-    return DeviceParamResolver::slot(param_device_slot(), param_dest())
+    return DeviceParamResolver::target_for_idx(param_device_idx(), param_dest())
         .pitch_lock_param();
   }
   uint8_t get_track_lock_implicit(uint8_t step, uint8_t param_id) {
@@ -456,12 +456,10 @@ public:
   bool preview_step(uint8_t step);
 
 private:
-  uint8_t param_device_slot() const { return device_slot_; }
+  uint8_t param_device_idx() const { return device_idx_; }
   uint8_t param_dest() const { return track_index() + 1; }
   DeviceContext param_context() const {
-    uint8_t slot = param_device_slot();
-    uint8_t device_idx = slot == 0 ? 0 : slot - 1;
-    return device_manager.context_for_device(device_idx);
+    return device_manager.context_for_device(param_device_idx());
   }
   uint8_t param_target() const { return track_index(); }
   DeviceStepEditCapability *step_edit() const {
@@ -474,5 +472,5 @@ private:
     StepSeqDataTrack *stepseq;
   } tracks_;
   Kind kind_;
-  uint8_t device_slot_;
+  uint8_t device_idx_;
 };

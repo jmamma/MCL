@@ -31,7 +31,7 @@ public:
       return false;
     }
     last_ext_track = track_index;
-    SeqPage::select_device_slot(2);
+    SeqPage::select_device_idx(2);
     return true;
   }
 

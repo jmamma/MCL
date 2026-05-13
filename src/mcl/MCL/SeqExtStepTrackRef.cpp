@@ -28,7 +28,7 @@ MidiClass *SeqExtStepTrackRef::input_midi() {
 }
 
 MidiDevice *SeqExtStepTrackRef::mute_mask_device() {
-  return SeqPage::device_for_seq_slot(2);
+  return SeqPage::device_for_seq_idx(2);
 }
 
 bool SeqExtStepTrackRef::supports_trig_port(uint8_t port) {

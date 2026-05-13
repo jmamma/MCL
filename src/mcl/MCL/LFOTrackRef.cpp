@@ -28,14 +28,14 @@ LFOSeqTrack &lfo_track_for_slot(bool primary_tracks) {
 
 LFOSeqTrack &LFOTrackRef::current_track() {
 #ifdef EXT_TRACKS
-  return lfo_track_for_slot(SeqPage::current_device_slot() == 1);
+  return lfo_track_for_slot(SeqPage::current_device_idx() == 1);
 #else
   return lfo_track_for_slot(true);
 #endif
 }
 
 bool LFOTrackRef::select_track(uint8_t track) {
-  bool primary_tracks = SeqPage::current_device_slot() == 1;
+  bool primary_tracks = SeqPage::current_device_idx() == 1;
 #ifndef EXT_TRACKS
   primary_tracks = true;
 #endif
@@ -54,26 +54,26 @@ bool LFOTrackRef::select_track(uint8_t track) {
   return true;
 }
 
-uint8_t LFOTrackRef::track_count(uint8_t device_slot) {
+uint8_t LFOTrackRef::track_count(uint8_t device_idx) {
 #ifdef EXT_TRACKS
-  return device_slot == 1 ? NUM_GRID_X_LFO_TRACKS : NUM_GRID_Y_LFO_TRACKS;
+  return device_idx == 0 ? NUM_GRID_X_LFO_TRACKS : NUM_GRID_Y_LFO_TRACKS;
 #else
-  (void)device_slot;
+  (void)device_idx;
   return NUM_GRID_X_LFO_TRACKS;
 #endif
 }
 
-uint8_t LFOTrackRef::target_count(uint8_t device_slot) {
-  return DeviceParamResolver::slot_target_count(device_slot);
+uint8_t LFOTrackRef::target_count(uint8_t device_idx) {
+  return DeviceParamResolver::target_count_for_idx(device_idx);
 }
 
-uint8_t LFOTrackRef::param_count(uint8_t device_slot, uint8_t dest) {
-  return DeviceParamResolver::slot(device_slot, dest).param_count();
+uint8_t LFOTrackRef::param_count(uint8_t device_idx, uint8_t dest) {
+  return DeviceParamResolver::target_for_idx(device_idx, dest).param_count();
 }
 
-bool LFOTrackRef::get_param(uint8_t device_slot, uint8_t dest, uint8_t param,
+bool LFOTrackRef::get_param(uint8_t device_idx, uint8_t dest, uint8_t param,
                             uint8_t *value) {
-  return DeviceParamResolver::slot(device_slot, dest).get_param(param, value);
+  return DeviceParamResolver::target_for_idx(device_idx, dest).get_param(param, value);
 }
 
 void LFOTrackRef::set_key_repeat(uint8_t enabled) {

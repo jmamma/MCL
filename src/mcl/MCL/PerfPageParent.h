@@ -17,9 +17,9 @@ public:
 
 
   void draw_dest(uint8_t knob, uint8_t value, bool dest = true,
-                 uint8_t device_slot = 0);
+                 uint8_t device_idx = 255);
   void draw_param(uint8_t knob, uint8_t dest, uint8_t param,
-                  uint8_t device_slot = 0);
+                  uint8_t device_idx = 255);
 
   void setup();
 

@@ -59,7 +59,7 @@ void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
     return;
   }
   uint8_t value = 0;
-  if (!LFOTrackRef::get_param(track->device_slot, track->params[param_idx].dest,
+  if (!LFOTrackRef::get_param(track->device_idx, track->params[param_idx].dest,
                               track->params[param_idx].param, &value)) {
     track->params[param_idx].offset = encoders[encoder_idx]->cur;
   } else {
@@ -127,9 +127,9 @@ void LFOPage::cleanup() {
 
 void LFOPage::config_encoder_range(uint8_t i) {
   ((MCLEncoder *)encoders[i])->max =
-      LFOTrackRef::target_count(lfo_track->device_slot);
+      LFOTrackRef::target_count(lfo_track->device_idx);
   uint8_t param_count =
-      LFOTrackRef::param_count(lfo_track->device_slot, encoders[i]->cur);
+      LFOTrackRef::param_count(lfo_track->device_idx, encoders[i]->cur);
   ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
 }
 
@@ -141,12 +141,12 @@ void LFOPage::config_encoders() {
   if (page_mode == LFO_DESTINATION) {
     encoders[0]->cur = lfo_track->params[0].dest;
     ((MCLEncoder *)encoders[0])->max =
-        LFOTrackRef::target_count(lfo_track->device_slot);
+        LFOTrackRef::target_count(lfo_track->device_idx);
     encoders[1]->cur = lfo_track->params[0].param;
     ((MCLEncoder *)encoders[1])->max = 23;
     encoders[2]->cur = lfo_track->params[1].dest;
     ((MCLEncoder *)encoders[2])->max =
-        LFOTrackRef::target_count(lfo_track->device_slot);
+        LFOTrackRef::target_count(lfo_track->device_idx);
     encoders[3]->cur = lfo_track->params[1].param;
     ((MCLEncoder *)encoders[3])->max = 23;
 
@@ -187,7 +187,7 @@ void LFOPage::loop() {
   track_update();
   if (show_seq_menu) {
     SeqPage::loop();
-    uint8_t max_track = LFOTrackRef::track_count(lfo_track->device_slot);
+    uint8_t max_track = LFOTrackRef::track_count(lfo_track->device_idx);
     if (opt_trackid > max_track) {
       opt_trackid = max_track;
       seq_menu_value_encoder.cur = opt_trackid;
@@ -249,11 +249,11 @@ void LFOPage::display() {
 
 
   if (page_mode == LFO_DESTINATION) {
-    uint8_t device_slot = lfo_track->device_slot;
-    draw_dest(0, encoders[0]->cur, true, device_slot);
-    draw_param(1, encoders[0]->cur, encoders[1]->cur, device_slot);
-    draw_dest(2, encoders[2]->cur, true, device_slot);
-    draw_param(3, encoders[2]->cur, encoders[3]->cur, device_slot);
+    uint8_t device_idx = lfo_track->device_idx;
+    draw_dest(0, encoders[0]->cur, true, device_idx);
+    draw_param(1, encoders[0]->cur, encoders[1]->cur, device_idx);
+    draw_dest(2, encoders[2]->cur, true, device_idx);
+    draw_param(3, encoders[2]->cur, encoders[3]->cur, device_idx);
     panel_info2 = "LFO>DST";
   }
   else if (page_mode == LFO_SETTINGS) {
@@ -360,13 +360,13 @@ void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
   learn_param(1, track + 1, param, value);
 }
 
-void LFOPage::learn_param(uint8_t device_slot, uint8_t dest, uint8_t param,
+void LFOPage::learn_param(uint8_t device_idx, uint8_t dest, uint8_t param,
                           uint8_t value) {
   track_update();
-  if (lfo_track->device_slot != device_slot) {
+  if (lfo_track->device_idx != device_idx) {
     return;
   }
-  if (LFOTrackRef::param_count(device_slot, dest) <= param) {
+  if (LFOTrackRef::param_count(device_idx, dest) <= param) {
     return;
   }
   bool reconfig = false;

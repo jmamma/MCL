@@ -148,7 +148,7 @@ void SeqPtcPage::cleanup() {
 #endif
   SeqPage::cleanup();
   last_midi_device = midi_device;
-  last_midi_device_slot = current_device_slot();
+  last_midi_device_idx = current_device_idx();
   params_reset();
 }
 void SeqPtcPage::config_encoders() {
@@ -188,7 +188,7 @@ void SeqPtcPage::init_poly() {
 void SeqPtcPage::init() {
   DEBUG_PRINT_FN();
   if (last_midi_device != nullptr) {
-    select_device_slot(last_midi_device_slot);
+    select_device_idx(last_midi_device_idx);
   }
   SeqPage::init();
   seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, true);
@@ -955,7 +955,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_SCALE: {
-        select_device_slot(ptc_uses_grid_x_tracks() ? 2 : 1);
+        select_device_idx(ptc_uses_grid_x_tracks() ? 2 : 1);
         config();
         return true;
       }
@@ -1069,7 +1069,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   if (channel_event) {
     if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
-      SeqPage::select_device_slot(1);
+      SeqPage::select_device_idx(1);
     }
   } else {
     auto active_device = device_manager.secondary_device();
@@ -1078,11 +1078,11 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       return;
     }
     if (SeqPage::midi_device != active_device || (last_ext_track != n)) {
-      SeqPage::select_device_slot(2);
+      SeqPage::select_device_idx(2);
       last_ext_track = min(n, NUM_EXT_TRACKS - 1);
       seq_ptc_page.config();
     } else {
-      SeqPage::select_device_slot(2);
+      SeqPage::select_device_idx(2);
     }
   }
   uint8_t scale_padding_old = seq_ptc_page.scale_padding;

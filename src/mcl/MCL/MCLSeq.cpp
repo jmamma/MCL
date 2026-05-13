@@ -29,14 +29,13 @@ bool seq_grid_x_runs_md_tracks() {
 #endif
 }
 
-bool handle_mixer_cc(uint8_t device_slot, MidiDevice *device, uint8_t channel,
+bool handle_mixer_cc(uint8_t device_idx, MidiDevice *device, uint8_t channel,
                      uint8_t cc, uint8_t value, uint8_t *track_out = nullptr,
                      uint8_t *param_out = nullptr) {
-  if (device == nullptr || device_slot == 0) {
+  if (device == nullptr || device_idx == 255) {
     return false;
   }
-  DeviceContext ctx = DeviceContext::for_device(
-      device, device_slot == 0 ? 0 : device_slot - 1);
+  DeviceContext ctx = DeviceContext::for_device(device, device_idx);
   uint8_t track = 255;
   uint8_t track_param = 255;
   DeviceMixerCapability *mixer = device->mixer();
@@ -59,21 +58,21 @@ bool handle_mixer_cc(uint8_t device_slot, MidiDevice *device, uint8_t channel,
   }
 
   if (mcl.currentPage() == MIXER_PAGE) {
-    mixer_page.onControlChangeCallback_Midi(device_slot, track, track_param,
+    mixer_page.onControlChangeCallback_Midi(device_idx, track, track_param,
                                             value);
   }
 
   uint8_t dest = track + 1;
 #if defined(__AVR__)
-  uint8_t perf_dest = device_slot == 2 ? NUM_MD_TRACKS + 4 + track : track;
+  uint8_t perf_dest = device_idx == 1 ? NUM_MD_TRACKS + 4 + track : track;
 #else
-  uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(device_slot,
+  uint8_t perf_dest = DeviceParamResolver::perf_dest_from_idx(device_idx,
                                                                dest);
 #endif
   if (perf_dest != 255) {
     perf_page.learn_param(perf_dest, track_param, value);
   }
-  lfo_page.learn_param(device_slot, dest, track_param, value);
+  lfo_page.learn_param(device_idx, dest, track_param, value);
   return true;
 }
 
@@ -195,13 +194,13 @@ void MCLSeq::setup() {
   for (uint8_t i = 0; i < num_grid_x_lfo_tracks; i++) {
     grid_x_lfo_tracks[i].init();
     grid_x_lfo_tracks[i].track_number = i;
-    grid_x_lfo_tracks[i].device_slot = 1;
+    grid_x_lfo_tracks[i].device_idx = 0;
   }
 #ifdef EXT_TRACKS
   for (uint8_t i = 0; i < num_grid_y_lfo_tracks; i++) {
     grid_y_lfo_tracks[i].init();
     grid_y_lfo_tracks[i].track_number = i;
-    grid_y_lfo_tracks[i].device_slot = 2;
+    grid_y_lfo_tracks[i].device_idx = 1;
   }
 #endif
 #endif
@@ -797,7 +796,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 #if defined(__AVR__)
     uint8_t perf_dest = NUM_MD_TRACKS + 4 + track;
 #else
-    uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(2, dest);
+    uint8_t perf_dest = DeviceParamResolver::perf_dest_from_idx(2, dest);
 #endif
     if (perf_dest != 255) {
       perf_page.learn_param(perf_dest, param, value);

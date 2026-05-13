@@ -11,21 +11,20 @@ class PerfData;
 
 struct DeviceParamTarget {
 #if defined(__AVR__)
-  uint8_t device_slot = 0;
+  uint8_t device_idx = 255;
   uint8_t target = 0;
 
-  bool valid() const { return device_slot != 0; }
-  uint8_t device_index() const { return device_slot == 2 ? 1 : 0; }
+  bool valid() const { return device_idx != 255; }
+  uint8_t device_index() const { return device_idx; }
 #else
   MidiDevice *device = nullptr;
-  uint8_t device_slot = 0;
+  uint8_t device_idx = 255;
   uint8_t target = 0;
 
   bool valid() const { return device != nullptr; }
-  uint8_t device_index() const { return context().device_idx(); }
+  uint8_t device_index() const { return device_idx; }
   DeviceContext context() const {
-    return DeviceContext::for_device(device,
-                                     device_slot == 0 ? 0 : device_slot - 1);
+    return DeviceContext::for_device(device, device_idx);
   }
 #endif
 
@@ -72,13 +71,13 @@ struct DevicePerfTarget {
 
 namespace DeviceParamResolver {
 
-MidiDevice *slot_device(uint8_t device_slot);
-uint8_t slot_target_count(uint8_t device_slot);
-DeviceParamTarget slot(uint8_t device_slot, uint8_t dest);
+MidiDevice *device_for_idx(uint8_t device_idx);
+uint8_t target_count_for_idx(uint8_t device_idx);
+DeviceParamTarget target_for_idx(uint8_t device_idx, uint8_t dest);
 
 uint8_t perf_target_count();
 DevicePerfTarget perf(uint8_t dest);
-uint8_t perf_dest_from_slot(uint8_t device_slot, uint8_t slot_dest);
+uint8_t perf_dest_from_idx(uint8_t device_idx, uint8_t local_dest);
 void end_perf_param_editor();
 void set_perf_rec_mode(uint8_t mode);
 bool perf_scene_autofill(PerfData *data, uint8_t scene);

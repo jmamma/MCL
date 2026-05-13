@@ -5,7 +5,7 @@
 
 #include "MCLSd.h"
 
-#define CONFIG_VERSION 4015
+#define CONFIG_VERSION 4016
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0

@@ -178,7 +178,7 @@ void SeqExtStepPage::config_encoders() {
   }
 
   config();
-  SeqPage::select_device_slot(2);
+  SeqPage::select_device_idx(2);
 
 }
 
@@ -186,7 +186,7 @@ void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));
 
-  select_device_slot(2);
+  select_device_idx(2);
 
   SeqPage::init();
   SeqExtStepTrackRef::set_panel_rec_mode(3);

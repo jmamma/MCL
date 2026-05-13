@@ -312,7 +312,7 @@ void LFOSeqTrack::reset_runtime() {
   phase_inc = speed_to_phase_increment(speed, legacy_speed_curve,
                                        speed_multiplier());
   step_count = 0;
-  uint16_t seed_base = ((uint16_t)device_slot * 0x0101U) +
+  uint16_t seed_base = ((uint16_t)device_idx * 0x0101U) +
                        ((uint16_t)track_number * 0x0031U);
   random_state[0] = seed_base + 0x1234U;
   random_state[1] = seed_base + 0x5678U;
@@ -555,7 +555,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
                       bool send_due) {
   uint8_t current_mode = base_mode();
   if (current_mode == LFO_MODE_TRACK_TRIG &&
-      mcl_seq.lfo_track_trig_fired(device_slot, track_number)) {
+      mcl_seq.lfo_track_trig_fired(device_idx, track_number)) {
     reset_phase();
   } else if ((MidiClock.mod12_counter == 0) &&
              (current_mode != LFO_MODE_FREE) &&
@@ -565,7 +565,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
   }
 
   if (enable && send_due) {
-    MidiUartClass *output_uart = device_slot == 2 ? uart2_ : uart_;
+    MidiUartClass *output_uart = device_idx == 1 ? uart2_ : uart_;
     int16_t lfo_sample = get_sample();
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       if (params[i].dest == 0) {
@@ -575,7 +575,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
       uint8_t wav_value = get_wav_value(dest, i, lfo_sample);
       if (last_wav_value[i] != wav_value) {
         uint8_t param = params[i].param;
-        DeviceParamResolver::slot(device_slot, dest)
+        DeviceParamResolver::target_for_idx(device_idx, dest)
             .set_param(param, wav_value, output_uart);
 
         last_wav_value[i] = wav_value;
@@ -598,7 +598,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
 void LFOSeqTrack::reset_params() {
 //  while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {}; 
 
-  MidiUartClass *output_uart = device_slot == 2 ? mcl_seq.secondary_output
+  MidiUartClass *output_uart = device_idx == 1 ? mcl_seq.secondary_output
                                                 : mcl_seq.primary_output;
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
     if (params[i].dest == 0) {
@@ -607,7 +607,7 @@ void LFOSeqTrack::reset_params() {
     uint8_t dest = params[i].dest;
     uint8_t param = params[i].param;
     uint8_t wav_value = get_param_offset(dest, i);
-    DeviceParamResolver::slot(device_slot, dest)
+    DeviceParamResolver::target_for_idx(device_idx, dest)
         .set_param(param, wav_value, output_uart);
     last_wav_value[i] = 255;
   }
@@ -616,7 +616,7 @@ void LFOSeqTrack::reset_params() {
 uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param_id) {
   uint8_t param = params[param_id].param;
   uint8_t value = params[param_id].offset;
-  if (DeviceParamResolver::slot(device_slot, dest).get_param(param, &value)) {
+  if (DeviceParamResolver::target_for_idx(device_idx, dest).get_param(param, &value)) {
     return value;
   }
   return params[param_id].offset;

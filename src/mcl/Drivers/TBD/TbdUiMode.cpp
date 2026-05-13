@@ -489,7 +489,7 @@ bool TbdUiMode::select_track(uint8_t track_idx) {
   const PageIndex pg = mcl.currentPage();
   if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
       pg == SEQ_EXTSTEP_PAGE) {
-    SeqPage::select_device_slot(seq_slot);
+    SeqPage::select_device_idx(seq_slot);
     if (device != nullptr) {
       seq_step_page.select_track(device, track_idx, false);
     }

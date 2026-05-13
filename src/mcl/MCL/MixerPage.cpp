@@ -107,18 +107,18 @@ uint8_t *MixerPage::mixer_meter_levels() {
   return mixer_device_idx == 0 ? disp_levels : ext_disp_levels;
 }
 
-void MixerPage::track_trig(uint8_t device_slot, uint8_t track_number,
+void MixerPage::track_trig(uint8_t device_idx, uint8_t track_number,
                            uint8_t level) {
   if (track_number >= 16) {
     return;
   }
-  if (device_slot == 2) {
+  if (device_idx == 1) {
     ext_disp_levels[track_number] = level;
   } else {
     disp_levels[track_number] = level;
   }
 #ifdef LFO_TRACKS
-  mcl_seq.set_lfo_track_trig(device_slot, track_number);
+  mcl_seq.set_lfo_track_trig(device_idx, track_number);
 #endif
 }
 
@@ -922,14 +922,13 @@ bool MixerPage::handleEvent(gui_event_t *event) {
   }
   return false;
 }
-void MixerPage::onControlChangeCallback_Midi(uint8_t device_slot,
+void MixerPage::onControlChangeCallback_Midi(uint8_t device_idx,
                                              uint8_t track,
                                              uint8_t track_param,
                                              uint8_t value) {
-  if (device_slot == 0) {
+  if (device_idx == 255) {
     return;
   }
-  uint8_t device_idx = device_slot - 1;
   DeviceContext ctx = device_manager.context_for_device(device_idx);
   DeviceMixerCapability *mixer = ctx.device()->mixer();
   if (mixer->is_mute_param(track_param)) {

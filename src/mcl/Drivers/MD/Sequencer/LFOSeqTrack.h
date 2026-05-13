@@ -90,7 +90,7 @@ static_assert(sizeof(LegacyLFOSeqTrackData) == 219,
 class LFOSeqTrack : public LFOSeqTrackData {
 public:
   uint8_t track_number;
-  uint8_t device_slot;
+  uint8_t device_idx;
   uint8_t step_count;
   uint16_t phase;
   uint16_t phase_inc;
@@ -111,7 +111,7 @@ public:
   void init() {
     LFOSeqTrackData::init();
     track_number = 0;
-    device_slot = 1;
+    device_idx = 0;
     legacy_phase_offset = false;
     legacy_speed_curve = false;
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {

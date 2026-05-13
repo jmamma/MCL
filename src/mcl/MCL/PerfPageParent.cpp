@@ -24,7 +24,7 @@ void PerfPageParent::cleanup() {
 }
 
 void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param,
-                                uint8_t device_slot) {
+                                uint8_t device_idx) {
 
   char myName[4];
   mclstr_copy_progmem(myName, mclstr_dash_space, sizeof(myName));
@@ -34,8 +34,8 @@ void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param,
       strcpy_P(myName, mclstr_ler);
     }
   } else {
-    bool labelled = device_slot
-                        ? DeviceParamResolver::slot(device_slot, dest)
+    bool labelled = device_idx != 255
+                        ? DeviceParamResolver::target_for_idx(device_idx, dest)
                               .param_label(param, myName, sizeof(myName))
                         : DeviceParamResolver::perf(dest)
                               .param_label(param, myName, sizeof(myName));
@@ -47,21 +47,21 @@ void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param,
 }
 
 void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
-                               uint8_t device_slot) {
+                               uint8_t device_idx) {
   char K[5];
   if (value == 0) {
     strcpy_P(K, mclstr_dash);
   } else {
-    bool labelled = device_slot
-                        ? DeviceParamResolver::slot(device_slot, value)
+    bool labelled = device_idx != 255
+                        ? DeviceParamResolver::target_for_idx(device_idx, value)
                               .target_label(K, sizeof(K))
                         : DeviceParamResolver::perf(value).target_label(
                               K, sizeof(K));
     if (!labelled) {
       uint8_t local_value = value;
-      K[0] = device_slot == 2 ? 'M' : 'T';
-      if (!device_slot) {
-        uint8_t primary_count = DeviceParamResolver::slot_target_count(1);
+      K[0] = device_idx == 1 ? 'M' : 'T';
+      if (device_idx == 255) {
+        uint8_t primary_count = DeviceParamResolver::target_count_for_idx(0);
         if (value > primary_count) {
           K[0] = 'M';
           local_value = value - primary_count;
