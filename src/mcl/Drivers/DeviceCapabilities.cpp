@@ -11,8 +11,11 @@
 #include "SeqPages.h"
 #endif
 
-DeviceMixerCapability::DeviceMixerCapability(MidiDevice &device)
-    : DeviceCapability(device) {}
+DeviceMixerCapability::DeviceMixerCapability(MidiDevice &device,
+                                             uint8_t default_param,
+                                             uint8_t mute_param)
+    : DeviceCapability(device), default_param_(default_param),
+      mute_param_(mute_param) {}
 
 uint8_t DeviceMixerCapability::track_count(const DeviceContext &ctx) const {
   uint8_t grid_idx = static_cast<uint8_t>(ctx.device_idx());
@@ -45,9 +48,8 @@ SeqTrack *DeviceMixerCapability::seq_track(const DeviceContext &ctx,
   return gdt.seq_track;
 }
 
-uint8_t DeviceMixerCapability::default_param(const DeviceContext &ctx) const {
-  (void)ctx;
-  return 0;
+uint8_t DeviceMixerCapability::default_param() const {
+  return default_param_;
 }
 
 bool DeviceMixerCapability::param(const DeviceContext &ctx, uint8_t track,
@@ -118,7 +120,7 @@ bool DeviceMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
 }
 
 bool DeviceMixerCapability::is_mute_param(uint8_t param) const {
-  return param == MUTE_PARAM;
+  return param == mute_param_;
 }
 
 void DeviceMixerCapability::update_from_cc(const DeviceContext &ctx,

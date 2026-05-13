@@ -8,7 +8,7 @@
 #include "TurboLight.h"
 #include <string.h>
 
-class A4MixerCapability : public ExtMixerCapability {
+class A4MixerCapability final : public ExtMixerCapability {
 public:
   explicit A4MixerCapability(A4Class &device)
       : ExtMixerCapability(device, device.mixer_levels) {}

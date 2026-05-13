@@ -24,7 +24,7 @@ enum PageSelectIcon : uint8_t {
 struct PageSelectEntry {
   const char *Name;
   PageIndex Page;
-  // Packed as: bits 0..3 icon id, 4..8 height, 9..13 width.
+  // Packed as: bits 0..9 icon resource offset + 1, 10..14 height.
   uint16_t IconMeta;
 };
 

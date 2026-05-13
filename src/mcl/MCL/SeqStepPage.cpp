@@ -21,10 +21,12 @@ uint8_t page_step_offset() {
   return SeqPage::page_select * kStepPageVisibleSteps;
 }
 
+SeqStepTrackRef step_track_for(uint8_t track) NOINLINE();
 SeqStepTrackRef step_track_for(uint8_t track) {
   return seq_step_track_for(track);
 }
 
+SeqStepTrackRef active_step_track() NOINLINE();
 SeqStepTrackRef active_step_track() { return seq_step_active_track(); }
 
 #ifdef PLATFORM_TBD

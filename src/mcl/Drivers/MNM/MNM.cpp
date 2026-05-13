@@ -8,7 +8,7 @@
 #include "GridTrack.h"
 #include "MCLStrings.h"
 
-class MNMMixerCapability : public ExtMixerCapability {
+class MNMMixerCapability final : public ExtMixerCapability {
 public:
   explicit MNMMixerCapability(MNMClass &device)
       : ExtMixerCapability(device, device.kit.levels) {}

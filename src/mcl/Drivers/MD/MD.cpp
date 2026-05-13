@@ -145,10 +145,10 @@ bool MDClass::supports_capability(MidiDeviceCapability capability) const {
 
 namespace {
 
-class MDMixerCapability : public DeviceMixerCapability {
+class MDMixerCapability final : public DeviceMixerCapability {
 public:
-  explicit MDMixerCapability(MDClass &device) : DeviceMixerCapability(device) {}
-  virtual uint8_t default_param(const DeviceContext &ctx) const override;
+  explicit MDMixerCapability(MDClass &device)
+      : DeviceMixerCapability(device, MODEL_LEVEL, MODEL_MUTE) {}
   virtual bool param(const DeviceContext &ctx, uint8_t track,
                      uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
@@ -164,7 +164,6 @@ public:
                                     uint8_t track) override;
   virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
-  virtual bool is_mute_param(uint8_t param) const override;
   virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
                               uint8_t param, int16_t value) override;
 
@@ -372,11 +371,6 @@ bool MDStepTrackCapability::parse_kit_cc(const DeviceContext &ctx,
 }
 #endif
 
-uint8_t MDMixerCapability::default_param(const DeviceContext &ctx) const {
-  (void)ctx;
-  return MODEL_LEVEL;
-}
-
 bool MDMixerCapability::param(const DeviceContext &ctx, uint8_t track,
                               uint8_t param_idx,
                               MidiDeviceMixerParam *param) {
@@ -476,10 +470,6 @@ bool MDMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
   }
   md().parseCC(channel, cc, track, param);
   return *track != 255;
-}
-
-bool MDMixerCapability::is_mute_param(uint8_t param) const {
-  return param == MODEL_MUTE;
 }
 
 void MDMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,

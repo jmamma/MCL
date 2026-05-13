@@ -52,8 +52,8 @@ public:
   uint8_t default_mixer_param() const;
   MidiDevice *device_for_mixer_idx(DeviceIdx device_idx) const;
   DeviceContext context_for_mixer_idx(DeviceIdx device_idx) const;
-  DeviceContext selected_mixer_context() const;
-  MidiDevice *selected_mixer_device() const;
+  DeviceContext selected_mixer_context() const NOINLINE();
+  MidiDevice *selected_mixer_device() const NOINLINE();
   void sync_selected_mixer_device();
   void select_mixer_device(DeviceIdx device_idx);
   uint8_t mixer_track_count() const;

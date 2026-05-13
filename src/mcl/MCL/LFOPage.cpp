@@ -15,6 +15,7 @@
 
 namespace {
 
+const char *lfo_mode_label(uint8_t mode) NOINLINE();
 const char *lfo_mode_label(uint8_t mode) {
   switch (LFOSeqTrack::mode_base(mode)) {
   case LFO_MODE_TRIG:
@@ -286,10 +287,11 @@ void LFOPage::display() {
 
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
-
-  panel_info1 = lfo_track->enable ? lfo_mode_label(lfo_track->mode) : "OFF";
-
   uint8_t base_mode = lfo_track->base_mode();
+  const char *mode_label = lfo_mode_label(base_mode);
+
+  panel_info1 = lfo_track->enable ? mode_label : "OFF";
+
   if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
     draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,

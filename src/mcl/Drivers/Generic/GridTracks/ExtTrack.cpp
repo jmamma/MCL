@@ -6,11 +6,13 @@
 #endif
 
 namespace {
+#if !defined(__AVR__)
 bool is_legacy_ext_sequence_type(uint8_t track_type) {
   return track_type == EXT_TRACK_TYPE ||
          track_type == A4_TRACK_TYPE ||
          track_type == MNM_TRACK_TYPE;
 }
+#endif
 
 } // namespace
 
@@ -57,6 +59,7 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
                                       uint8_t tracknumber,
                                       SeqTrack *seq_track) {
   (void)seq_track;
+#if !defined(__AVR__)
   if (track_type == EXT_TRACK_TYPE && active != EXT_TRACK_TYPE &&
       is_legacy_ext_sequence_type(active)) {
     GridLink old_link = link;
@@ -70,6 +73,7 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
     memcpy(&ext_track->seq_data, &old_seq_data, sizeof(old_seq_data));
     return ext_track;
   }
+#endif
 
 #ifdef PLATFORM_TBD
   if (track_type == TBD_MIDI_TRACK_TYPE &&

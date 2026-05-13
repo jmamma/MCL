@@ -63,7 +63,7 @@ constexpr uint8_t kP4DriverMidiChannel = 13;
 constexpr const char *kP4RackPluginId = "PicoSeqRack";
 constexpr const char *kP4ReferenceAppName = "Groovebox";
 
-class TbdMixerCapability : public DeviceMixerCapability {
+class TbdMixerCapability final : public DeviceMixerCapability {
 public:
   explicit TbdMixerCapability(TbdDevice &device)
       : DeviceMixerCapability(device) {}

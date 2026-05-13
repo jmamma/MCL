@@ -4,6 +4,8 @@
 #include "MCLSeq.h"
 #include "MidiClock.h"
 #include "PageRegistry.h"
+#include "ResourceManager.h"
+#include <stddef.h>
 
 namespace {
 
@@ -30,41 +32,26 @@ const char page_name_reverb[] PROGMEM = "REVERB";
 const char page_name_ram1[] PROGMEM = "RAM-1";
 const char page_name_ram2[] PROGMEM = "RAM-2";
 
-struct MDPageEntry {
-  const char *name;
-  uint8_t page;
-  uint8_t slot;
-  uint8_t icon_height;
-  uint8_t icon;
+#define MD_PAGE_ENTRY(name, icon, page, slot, height) \
+  {name, PageRegistry::icon_meta(offsetof(__T_icons_page, icon), height), page, slot}
+
+const PageRegistry::Entry md_page_entries[] PROGMEM = {
+    MD_PAGE_ENTRY(mclstr_route, icon_route, ROUTE_PAGE, 3, 14),
+    MD_PAGE_ENTRY(page_name_delay, icon_rhytmecho, FX_PAGE_A, 12, 25),
+    MD_PAGE_ENTRY(page_name_reverb, icon_gatebox, FX_PAGE_B, 13, 25),
+    MD_PAGE_ENTRY(page_name_ram1, icon_ram1, RAM_PAGE_A, 14, 25),
+    MD_PAGE_ENTRY(page_name_ram2, icon_ram2, RAM_PAGE_B, 15, 25),
 };
 
-const MDPageEntry md_page_entries[] PROGMEM = {
-    {mclstr_route, ROUTE_PAGE, 3, 14, PAGE_ICON_ROUTE},
-    {page_name_delay, FX_PAGE_A, 12, 25, PAGE_ICON_RHYTMECHO},
-    {page_name_reverb, FX_PAGE_B, 13, 25, PAGE_ICON_GATEBOX},
-    {page_name_ram1, RAM_PAGE_A, 14, 25, PAGE_ICON_RAM1},
-    {page_name_ram2, RAM_PAGE_B, 15, 25, PAGE_ICON_RAM2},
-};
+#undef MD_PAGE_ENTRY
 
 } // namespace
 
 uint8_t MDClass::register_page_select_entries(PageSelectEntry *entries,
                                               uint8_t max_entries) const {
-  uint8_t count = 0;
-  for (uint8_t i = 0; i < sizeof(md_page_entries) / sizeof(md_page_entries[0]);
-       i++) {
-    const MDPageEntry *entry = &md_page_entries[i];
-    const char *name = (const char *)pgm_read_ptr(&entry->name);
-    PageIndex page = (PageIndex)pgm_read_byte(&entry->page);
-    uint8_t slot = pgm_read_byte(&entry->slot);
-    uint8_t icon_height = pgm_read_byte(&entry->icon_height);
-    PageSelectIcon icon = (PageSelectIcon)pgm_read_byte(&entry->icon);
-    if (PageRegistry::add_P(entries, max_entries, name, page, slot, 24,
-                            icon_height, icon)) {
-      count++;
-    }
-  }
-  return count;
+  return PageRegistry::add_entries_P(
+      entries, max_entries, md_page_entries,
+      sizeof(md_page_entries) / sizeof(md_page_entries[0]));
 }
 
 void MDClass::page_select_prepare() {

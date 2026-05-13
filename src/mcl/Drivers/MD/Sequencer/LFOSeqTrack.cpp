@@ -175,7 +175,7 @@ int16_t lfo_terminal_sample(uint8_t wav_type, uint16_t phase) {
   case SQU_WAV:
     return -128;
   default:
-    return LFOSeqTrack::get_preview_sample(wav_type, phase);
+    return 0;
   }
 }
 

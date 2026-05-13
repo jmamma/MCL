@@ -4,12 +4,6 @@
 
 namespace PageRegistry {
 
-static uint16_t pack_icon_meta(uint8_t icon_width, uint8_t icon_height,
-                               PageSelectIcon icon) {
-  return ((uint16_t)(icon_width & 0x1F) << 9) |
-         ((uint16_t)(icon_height & 0x1F) << 4) | (icon & 0x0F);
-}
-
 void clear(PageSelectEntry *entries, uint8_t max_entries) {
   for (uint8_t i = 0; i < max_entries; ++i) {
     entries[i].Name = nullptr;
@@ -18,18 +12,24 @@ void clear(PageSelectEntry *entries, uint8_t max_entries) {
   }
 }
 
-bool add_P(PageSelectEntry *entries, uint8_t max_entries, const char *name_P,
-           PageIndex page, uint8_t slot, uint8_t icon_width,
-           uint8_t icon_height, PageSelectIcon icon) {
-  if (slot >= max_entries) {
-    return false;
+uint8_t add_entries_P(PageSelectEntry *entries, uint8_t max_entries,
+                      const Entry *items, uint8_t item_count) {
+  uint8_t count = 0;
+  for (uint8_t i = 0; i < item_count; i++) {
+    const Entry *item = &items[i];
+    const char *name = (const char *)pgm_read_ptr(&item->name);
+    uint16_t icon_meta = pgm_read_word(&item->icon_meta);
+    PageIndex page = (PageIndex)pgm_read_byte(&item->page);
+    uint8_t slot = pgm_read_byte(&item->slot);
+    if (slot < max_entries) {
+      PageSelectEntry &entry = entries[slot];
+      entry.Name = name;
+      entry.Page = page;
+      entry.IconMeta = icon_meta;
+      count++;
+    }
   }
-
-  PageSelectEntry &entry = entries[slot];
-  entry.Name = name_P;
-  entry.Page = page;
-  entry.IconMeta = pack_icon_meta(icon_width, icon_height, icon);
-  return true;
+  return count;
 }
 
 } // namespace PageRegistry

@@ -2,36 +2,22 @@
 
 #include "DeviceParamResolver.h"
 #include "DeviceManager.h"
+#include "MCLSeq.h"
 #include "SeqPage.h"
 #include "SeqPages.h"
-#include "SeqTrackUtil.h"
 #include "../Drivers/MidiDevice.h"
 
 #if defined(__AVR__)
 #include "../Drivers/MD/MD.h"
 #endif
 
-namespace {
-
-LFOSeqTrack &lfo_track_for_slot(bool primary_tracks) {
-#ifdef EXT_TRACKS
-  if (!primary_tracks) {
-    return SeqTrackUtil::get_lfo_track(false, last_ext_track);
-  }
-#else
-  (void)primary_tracks;
-#endif
-  return SeqTrackUtil::get_lfo_track(true, last_md_track);
-}
-
-} // namespace
-
 LFOSeqTrack &LFOTrackRef::current_track() {
 #ifdef EXT_TRACKS
-  return lfo_track_for_slot(SeqPage::current_device_idx() == DeviceIdx::Primary);
-#else
-  return lfo_track_for_slot(true);
+  if (SeqPage::current_device_idx() == DeviceIdx::Secondary) {
+    return mcl_seq.grid_y_lfo_tracks[last_ext_track];
+  }
 #endif
+  return mcl_seq.grid_x_lfo_tracks[last_md_track];
 }
 
 bool LFOTrackRef::select_track(uint8_t track) {

@@ -10,6 +10,7 @@ constexpr uint8_t kExtStepVisibleSteps = 16;
 constexpr uint8_t kExtStepDefaultZoomSteps = 16;
 constexpr uint8_t kExtStepLockParamFallback = 0;
 
+SeqExtStepTrackApi active_ext_step_track() NOINLINE();
 SeqExtStepTrackApi active_ext_step_track() {
   return SeqExtStepTrackRef::active_track();
 }
@@ -466,17 +467,18 @@ void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond
   if (w == 0) {
     w = 1;
   }
-  oled_display.drawRect(x, y, w, fov_h / fov_notes, WHITE);
+  uint8_t note_h = fov_h / fov_notes;
+  oled_display.drawRect(x, y, w, note_h, WHITE);
   if (note_beyond_fov) { w += 1; }
-  uint8_t h = fov_h / fov_notes;
-  if (w > 2 && h > 2) {
-    oled_display.fillRect(x + 1, y + 1, w - 2, h - 2, BLACK);
+  if (w > 2 && note_h > 2) {
+    oled_display.fillRect(x + 1, y + 1, w - 2, note_h - 2, BLACK);
   }
 }
 
 void SeqExtStepPage::draw_pianoroll() {
   auto active_track = active_ext_step_track();
   uint16_t timing_mid = active_track.ticks_per_step();
+  uint8_t note_h = fov_h / fov_notes;
 
   // Absolute piano roll dimensions
 
@@ -531,7 +533,7 @@ void SeqExtStepPage::draw_pianoroll() {
         //On screen notes to be no less than 2 pixels, regardless of zoom
         if (i < j && note_fov_end - note_fov_start < 2) { note_fov_end = note_fov_start + 2; }
         //if (note_fov_end <= note_fov_start) { note_fov_end = note_fov_start + 1; }
-        uint8_t note_fov_y = fov_h - ((note_val - fov_y) * (fov_h / fov_notes));
+        uint8_t note_fov_y = fov_h - ((note_val - fov_y) * note_h);
         // Draw vertical projection
         uint8_t proj_y = 255;
         if (note_val > fov_y + fov_notes) {
@@ -587,7 +589,7 @@ void SeqExtStepPage::draw_pianoroll() {
     }
   }
   // Draw interactive cursor
-  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * ((fov_h) / fov_notes));
+  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * note_h);
   seq_extstep_tick_t fov_cur_x =
       fov_x_for_tick(cur_x);
   uint16_t fov_cur_w =
@@ -603,7 +605,7 @@ void SeqExtStepPage::draw_pianoroll() {
       fov_cur_w = fov_w - fov_cur_x;
     }
     oled_display.fillRect(draw_x + (uint8_t)fov_cur_x, draw_y + fov_cur_y,
-                          (uint8_t)fov_cur_w, (fov_h / fov_notes), WHITE);
+                          (uint8_t)fov_cur_w, note_h, WHITE);
   }
 }
 
@@ -796,7 +798,6 @@ void SeqExtStepPage::loop() {
   config_menu_entries();
   auto active_track = active_ext_step_track();
   uint16_t timing_mid = active_track.ticks_per_step();
-  auto active_locks = active_track.locks();
   SeqPage::loop();
 
   bool is_lockeditor = (pianoroll_mode > 0);
@@ -806,6 +807,7 @@ void SeqExtStepPage::loop() {
     if (last_pianoroll_mode != pianoroll_mode) {
 
       if (is_lockeditor) {
+        auto active_locks = active_track.locks();
         param_select =
             active_locks.selected_lock_menu_value(pianoroll_mode - 1);
       }
@@ -813,6 +815,7 @@ void SeqExtStepPage::loop() {
     }
     if (is_lockeditor &&
         seq_ext_step_menu_entry_is(SEQ_MENU_PARAMSELECT)) {
+      auto active_locks = active_track.locks();
       auto *value_encoder = (MCLEncoder *)seq_menu_page.encoders[0];
       value_encoder->min = 0;
       value_encoder->max = active_locks.lock_param_menu_max();
@@ -917,7 +920,6 @@ void SeqExtStepPage::loop() {
 void SeqExtStepPage::display() {
   #ifdef EXT_TRACKS
   auto active_track = active_ext_step_track();
-  auto active_locks = active_track.locks();
   uint16_t timing_mid = active_track.ticks_per_step();
   uint8_t epoch = 0;
   do {
@@ -939,6 +941,7 @@ void SeqExtStepPage::display() {
     strcpy_P(info2, mclstr_note);
     draw_pianoroll();
   } else {
+    auto active_locks = active_track.locks();
     if (!active_locks.copy_selected_lock_label(pianoroll_mode - 1, info2,
                                                sizeof(info2))) {
       strcpy_P(info2, mclstr_lock_space);
@@ -959,20 +962,22 @@ void SeqExtStepPage::display() {
                         BLACK);
   if (pianoroll_mode == 0) {
     const uint16_t chromatic = 0b0000010101001010;
+    uint8_t note_h = fov_h / fov_notes;
+    uint8_t top_note = fov_y + fov_notes;
     for (uint8_t k = 0; k < fov_notes; k++) {
-      uint8_t scale_pos =
-          (fov_y + fov_notes - k) - (((fov_y + fov_notes - k) / 12) * 12);
+      uint8_t note = top_note - k;
+      uint8_t scale_pos = note - ((note / 12) * 12);
       if (!IS_BIT_SET16(chromatic, scale_pos)) {
         oled_display.fillRect(draw_x - keyboard_w,
-                              draw_y + k * (fov_h / fov_notes) + 1,
-                              keyboard_w + 1, (fov_h / fov_notes) - 1, WHITE);
+                              draw_y + k * note_h + 1,
+                              keyboard_w + 1, note_h - 1, WHITE);
       } else {
         //    oled_display.fillRect(draw_x - keyboard_w,
         //                            draw_y + k * (fov_h / fov_notes) + 1,
         //                            keyboard_w + 1, (fov_h / fov_notes) -
         //                            1, BLACK);
-        oled_display.fillRect(draw_x, draw_y + k * (fov_h / fov_notes), 1,
-                              (fov_h / fov_notes) + 1, WHITE);
+        oled_display.fillRect(draw_x, draw_y + k * note_h, 1,
+                              note_h + 1, WHITE);
       }
     }
   }

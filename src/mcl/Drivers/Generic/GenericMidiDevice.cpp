@@ -7,7 +7,7 @@
 #include "TurboLight.h"
 #include <string.h>
 
-class GenericMidiMixerCapability : public ExtMixerCapability {
+class GenericMidiMixerCapability final : public ExtMixerCapability {
 public:
   explicit GenericMidiMixerCapability(GenericMidiDevice &device)
       : ExtMixerCapability(device, device.mixer_levels, true) {}

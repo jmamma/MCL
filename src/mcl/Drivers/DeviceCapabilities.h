@@ -24,11 +24,13 @@ class DeviceMixerCapability : public DeviceCapability {
 public:
   static constexpr uint8_t MUTE_PARAM = 255;
 
-  explicit DeviceMixerCapability(MidiDevice &device);
+  explicit DeviceMixerCapability(MidiDevice &device,
+                                 uint8_t default_param = 0,
+                                 uint8_t mute_param = MUTE_PARAM);
 
   virtual uint8_t track_count(const DeviceContext &ctx) const;
   virtual SeqTrack *seq_track(const DeviceContext &ctx, uint8_t track);
-  virtual uint8_t default_param(const DeviceContext &ctx) const;
+  uint8_t default_param() const;
   virtual bool param(const DeviceContext &ctx, uint8_t track, uint8_t param_idx,
                      MidiDeviceMixerParam *out);
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
@@ -43,9 +45,13 @@ public:
   virtual void restore_track_params(const DeviceContext &ctx, uint8_t track);
   virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const;
-  virtual bool is_mute_param(uint8_t param) const;
+  bool is_mute_param(uint8_t param) const;
   virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
                               uint8_t param, int16_t value);
+
+private:
+  uint8_t default_param_;
+  uint8_t mute_param_;
 };
 
 class ExtMixerCapability : public DeviceMixerCapability {

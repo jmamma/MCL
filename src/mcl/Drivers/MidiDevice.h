@@ -62,17 +62,17 @@ public:
   static bool ext_level_param(uint8_t track, uint8_t param_idx,
                               const uint8_t *levels,
                               MidiDeviceMixerParam *param,
-                              bool require_level_cc = false) NOINLINE();
+                              bool require_level_cc = false);
   static bool set_ext_level(uint8_t track, uint8_t param_idx, int16_t value,
                             uint8_t *levels, uint8_t *level,
-                            bool require_level_cc = false) NOINLINE();
+                            bool require_level_cc = false);
   static bool parse_ext_cc(uint8_t channel, uint8_t cc, uint8_t level_cc,
                            uint8_t mute_cc, uint8_t *track,
-                           uint8_t *param) NOINLINE();
+                           uint8_t *param);
   static void update_ext_from_cc(uint8_t track, uint8_t param, int16_t value,
-                                 uint8_t *levels) NOINLINE();
+                                 uint8_t *levels);
   static void set_ext_record_mute(uint8_t track, bool state,
-                                  bool clear) NOINLINE();
+                                  bool clear);
 };
 
 /// Base class for MIDI-compatible devices.
@@ -189,10 +189,17 @@ public:
   }
 #endif
 
+  #ifdef PLATFORM_TBD
   virtual void disconnect(DeviceIdx device_idx) {
     cleanup(device_idx);
     connected = false;
   }
+  #else
+  void disconnect(DeviceIdx device_idx) {
+    cleanup(device_idx);
+    connected = false;
+  }
+  #endif
   virtual bool probe() = 0;
   virtual uint8_t get_mute_cc() { return 255; }
   virtual void muteTrack(uint8_t track, bool mute = true,

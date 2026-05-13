@@ -142,7 +142,7 @@ public:
   uint8_t condition_count() const { return NUM_TRIG_CONDITIONS; }
 
   void condition_label(uint8_t condition, bool plock, bool marker,
-                       char *out) const {
+                       char *out) const NOINLINE() {
     if (out == nullptr) {
       return;
     }

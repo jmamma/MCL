@@ -253,11 +253,13 @@ static inline bool seq_page_uses_step_track_ops(bool is_md_device) {
   return is_md_device || seq_page_uses_non_md_primary_step_tracks();
 }
 
-static inline SeqStepTrackRef seq_page_step_track_for(uint8_t track) {
+SeqStepTrackRef seq_page_step_track_for(uint8_t track) NOINLINE();
+SeqStepTrackRef seq_page_step_track_for(uint8_t track) {
   return seq_step_track_for(track);
 }
 
-static inline SeqStepTrackRef seq_page_active_step_track() {
+SeqStepTrackRef seq_page_active_step_track() NOINLINE();
+SeqStepTrackRef seq_page_active_step_track() {
   return seq_step_active_track();
 }
 
