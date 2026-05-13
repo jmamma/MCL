@@ -89,40 +89,28 @@ DeviceMixerCapability *MNMClass::mixer() {
 void MNMMixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
                                           bool state, bool clear) {
   (void)device_idx;
-  if (track >= NUM_EXT_TRACKS) {
-    return;
-  }
-  mcl_seq.ext_tracks[track].record_mutes = state;
-  if (clear) {
-    mcl_seq.ext_tracks[track].clear_mute();
-  }
+  DeviceMixerSupport::set_ext_record_mute(track, state, clear);
 }
 
 bool MNMMixerCapability::param(uint8_t device_idx, uint8_t track,
                                uint8_t param_idx,
                                MidiDeviceMixerParam *param) {
   (void)device_idx;
-  if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0) {
-    return false;
-  }
-  MNMClass &device = mnm();
-  param->set_value(device.kit.levels[track]);
-  param->set_metadata("LEV", 0, true);
-  return true;
+  return DeviceMixerSupport::ext_level_param(track, param_idx,
+                                             mnm().kit.levels, param);
 }
 
 bool MNMMixerCapability::set_param(uint8_t device_idx, uint8_t track,
                                    uint8_t param_idx, int16_t value,
                                    bool send) {
   (void)device_idx;
-  if (track >= NUM_EXT_TRACKS || param_idx != 0) {
+  MNMClass &device = mnm();
+  uint8_t level = 0;
+  if (!DeviceMixerSupport::set_ext_level(track, param_idx, value,
+                                         device.kit.levels, &level)) {
     return false;
   }
-  if (value < 0) value = 0;
-  if (value > 127) value = 127;
-  MNMClass &device = mnm();
-  device.kit.levels[track] = (uint8_t)value;
-  device.setTrackLevel(track, device.kit.levels[track], send);
+  device.setTrackLevel(track, level, send);
   return true;
 }
 
@@ -130,40 +118,15 @@ bool MNMMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
                                   uint8_t cc, uint8_t *track,
                                   uint8_t *param) const {
   (void)device_idx;
-  if (track == nullptr || param == nullptr) {
-    return false;
-  }
-  *track = mcl_seq.find_ext_track(channel);
-  if (*track == 255) {
-    return false;
-  }
-  if (cc == mcl_cfg.uart2_cc_level && mcl_cfg.uart2_cc_level <= 127) {
-    *param = default_param(device_idx);
-    return true;
-  }
-  if (cc == mnm().get_mute_cc()) {
-    *param = MUTE_PARAM;
-    return true;
-  }
-  return false;
+  return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
+                                          mnm().get_mute_cc(), track, param);
 }
 
 void MNMMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
                                         uint8_t param, int16_t value) {
   (void)device_idx;
-  if (track >= NUM_EXT_TRACKS) {
-    return;
-  }
-  if (is_mute_param(param)) {
-    mcl_seq.ext_tracks[track].mute_state =
-        value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
-    return;
-  }
-  if (param == default_param(device_idx)) {
-    if (value < 0) value = 0;
-    if (value > 127) value = 127;
-    mnm().kit.levels[track] = (uint8_t)value;
-  }
+  DeviceMixerSupport::update_ext_from_cc(track, param, value,
+                                         mnm().kit.levels);
 }
 
 bool MNMClass::probe() {

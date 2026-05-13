@@ -101,41 +101,29 @@ DeviceMixerCapability *A4Class::mixer() {
 void A4MixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
                                          bool state, bool clear) {
   (void)device_idx;
-  if (track >= NUM_EXT_TRACKS) {
-    return;
-  }
-  mcl_seq.ext_tracks[track].record_mutes = state;
-  if (clear) {
-    mcl_seq.ext_tracks[track].clear_mute();
-  }
+  DeviceMixerSupport::set_ext_record_mute(track, state, clear);
 }
 
 bool A4MixerCapability::param(uint8_t device_idx, uint8_t track,
                               uint8_t param_idx,
                               MidiDeviceMixerParam *param) {
   (void)device_idx;
-  if (param == nullptr || track >= NUM_EXT_TRACKS || param_idx != 0) {
-    return false;
-  }
-  A4Class &device = a4();
-  param->set_value(device.mixer_levels[track]);
-  param->set_metadata("LEV", 0, true);
-  return true;
+  return DeviceMixerSupport::ext_level_param(track, param_idx,
+                                             a4().mixer_levels, param);
 }
 
 bool A4MixerCapability::set_param(uint8_t device_idx, uint8_t track,
                                   uint8_t param_idx, int16_t value,
                                   bool send) {
   (void)device_idx;
-  if (track >= NUM_EXT_TRACKS || param_idx != 0) {
+  A4Class &device = a4();
+  uint8_t level = 0;
+  if (!DeviceMixerSupport::set_ext_level(track, param_idx, value,
+                                         device.mixer_levels, &level)) {
     return false;
   }
-  if (value < 0) value = 0;
-  if (value > 127) value = 127;
-  A4Class &device = a4();
-  device.mixer_levels[track] = (uint8_t)value;
   if (send) {
-    device.setLevel(track, device.mixer_levels[track]);
+    device.setLevel(track, level);
   }
   return true;
 }
@@ -144,40 +132,15 @@ bool A4MixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
                                  uint8_t cc, uint8_t *track,
                                  uint8_t *param) const {
   (void)device_idx;
-  if (track == nullptr || param == nullptr) {
-    return false;
-  }
-  *track = mcl_seq.find_ext_track(channel);
-  if (*track == 255) {
-    return false;
-  }
-  if (cc == mcl_cfg.uart2_cc_level && mcl_cfg.uart2_cc_level <= 127) {
-    *param = default_param(device_idx);
-    return true;
-  }
-  if (cc == a4().get_mute_cc()) {
-    *param = MUTE_PARAM;
-    return true;
-  }
-  return false;
+  return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
+                                          a4().get_mute_cc(), track, param);
 }
 
 void A4MixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
                                        uint8_t param, int16_t value) {
   (void)device_idx;
-  if (track >= NUM_EXT_TRACKS) {
-    return;
-  }
-  if (is_mute_param(param)) {
-    mcl_seq.ext_tracks[track].mute_state =
-        value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
-    return;
-  }
-  if (param == default_param(device_idx)) {
-    if (value < 0) value = 0;
-    if (value > 127) value = 127;
-    a4().mixer_levels[track] = (uint8_t)value;
-  }
+  DeviceMixerSupport::update_ext_from_cc(track, param, value,
+                                         a4().mixer_levels);
 }
 
 uint16_t A4Class::sendKitParams(uint8_t *masks) {

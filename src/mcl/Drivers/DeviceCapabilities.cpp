@@ -1,6 +1,8 @@
 #include "DeviceCapabilities.h"
 
 #include "MidiDevice.h"
+#include "MCLSeq.h"
+#include "MCLSysConfig.h"
 #include "Project.h"
 #include "SeqStepTrackRef.h"
 #include "SeqTrack.h"
@@ -122,6 +124,85 @@ void DeviceMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
     return;
   }
   set_param(device_idx, track, param, value, false);
+}
+
+bool DeviceMixerSupport::ext_level_param(uint8_t track, uint8_t param_idx,
+                                         const uint8_t *levels,
+                                         MidiDeviceMixerParam *param,
+                                         bool require_level_cc) {
+  if (param == nullptr || levels == nullptr || track >= NUM_EXT_TRACKS ||
+      param_idx != 0 ||
+      (require_level_cc && mcl_cfg.uart2_cc_level > 127)) {
+    return false;
+  }
+  param->set_value(levels[track]);
+  param->set_metadata("LEV", 0, true);
+  return true;
+}
+
+bool DeviceMixerSupport::set_ext_level(uint8_t track, uint8_t param_idx,
+                                       int16_t value, uint8_t *levels,
+                                       uint8_t *level,
+                                       bool require_level_cc) {
+  if (levels == nullptr || level == nullptr || track >= NUM_EXT_TRACKS ||
+      param_idx != 0 ||
+      (require_level_cc && mcl_cfg.uart2_cc_level > 127)) {
+    return false;
+  }
+  if (value < 0) value = 0;
+  if (value > 127) value = 127;
+  *level = (uint8_t)value;
+  levels[track] = *level;
+  return true;
+}
+
+bool DeviceMixerSupport::parse_ext_cc(uint8_t channel, uint8_t cc,
+                                      uint8_t level_cc, uint8_t mute_cc,
+                                      uint8_t *track, uint8_t *param) {
+  if (track == nullptr || param == nullptr) {
+    return false;
+  }
+  *track = mcl_seq.find_ext_track(channel);
+  if (*track == 255) {
+    return false;
+  }
+  if (cc == level_cc && level_cc <= 127) {
+    *param = 0;
+    return true;
+  }
+  if (cc == mute_cc) {
+    *param = DeviceMixerCapability::MUTE_PARAM;
+    return true;
+  }
+  return false;
+}
+
+void DeviceMixerSupport::update_ext_from_cc(uint8_t track, uint8_t param,
+                                            int16_t value, uint8_t *levels) {
+  if (track >= NUM_EXT_TRACKS) {
+    return;
+  }
+  if (param == DeviceMixerCapability::MUTE_PARAM) {
+    mcl_seq.ext_tracks[track].mute_state =
+        value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
+    return;
+  }
+  if (param == 0 && levels != nullptr) {
+    if (value < 0) value = 0;
+    if (value > 127) value = 127;
+    levels[track] = (uint8_t)value;
+  }
+}
+
+void DeviceMixerSupport::set_ext_record_mute(uint8_t track, bool state,
+                                             bool clear) {
+  if (track >= NUM_EXT_TRACKS) {
+    return;
+  }
+  mcl_seq.ext_tracks[track].record_mutes = state;
+  if (clear) {
+    mcl_seq.ext_tracks[track].clear_mute();
+  }
 }
 
 #if !defined(__AVR__)

@@ -57,6 +57,24 @@ struct MidiDeviceMixerParam {
   }
 };
 
+class DeviceMixerSupport {
+public:
+  static bool ext_level_param(uint8_t track, uint8_t param_idx,
+                              const uint8_t *levels,
+                              MidiDeviceMixerParam *param,
+                              bool require_level_cc = false) NOINLINE();
+  static bool set_ext_level(uint8_t track, uint8_t param_idx, int16_t value,
+                            uint8_t *levels, uint8_t *level,
+                            bool require_level_cc = false) NOINLINE();
+  static bool parse_ext_cc(uint8_t channel, uint8_t cc, uint8_t level_cc,
+                           uint8_t mute_cc, uint8_t *track,
+                           uint8_t *param) NOINLINE();
+  static void update_ext_from_cc(uint8_t track, uint8_t param, int16_t value,
+                                 uint8_t *levels) NOINLINE();
+  static void set_ext_record_mute(uint8_t track, bool state,
+                                  bool clear) NOINLINE();
+};
+
 /// Base class for MIDI-compatible devices.
 /// Defines basic device description data and driver interfaces.
 class MidiDevice {
