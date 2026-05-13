@@ -13,6 +13,7 @@ MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
 #if !defined(__AVR__)
       ,
       step_track_capability_(*this),
+      ext_step_track_capability_(*this),
       step_edit_capability_(*this), param_capability_(*this),
       perf_capability_(*this)
 #endif
@@ -46,6 +47,10 @@ DeviceMixerCapability *MidiDevice::mixer() {
 #if !defined(__AVR__)
 DeviceStepTrackCapability *MidiDevice::step_tracks() {
   return &step_track_capability_;
+}
+
+DeviceExtStepTrackCapability *MidiDevice::ext_step_tracks() {
+  return &ext_step_track_capability_;
 }
 
 DeviceStepEditCapability *MidiDevice::step_edit() {

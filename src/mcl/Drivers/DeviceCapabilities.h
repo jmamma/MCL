@@ -4,8 +4,10 @@
 #include <inttypes.h>
 
 class MidiDevice;
+class MidiClass;
 class MidiUartClass;
 class PerfData;
+class SeqExtStepTrackApi;
 class SeqStepTrackRef;
 class SeqTrack;
 struct MidiDeviceMixerParam;
@@ -86,6 +88,20 @@ public:
   virtual bool parses_kit_cc(const DeviceContext &ctx) const;
   virtual bool parse_kit_cc(const DeviceContext &ctx, uint8_t channel,
                             uint8_t cc, uint8_t *track, uint8_t *param) const;
+};
+
+class DeviceExtStepTrackCapability : public DeviceCapability {
+public:
+  explicit DeviceExtStepTrackCapability(MidiDevice &device);
+
+  virtual bool available(const DeviceContext &ctx) const;
+  virtual uint8_t track_count(const DeviceContext &ctx) const;
+  virtual SeqExtStepTrackApi track(const DeviceContext &ctx, uint8_t i) const;
+  virtual SeqExtStepTrackApi active_track(const DeviceContext &ctx) const;
+  virtual bool track_for_channel(const DeviceContext &ctx, uint8_t channel,
+                                  uint8_t *track_index) const;
+  virtual MidiClass *input_midi(const DeviceContext &ctx) const;
+  virtual bool is_mute_cc(const DeviceContext &ctx, uint8_t cc) const;
 };
 
 class DeviceParamCapability : public DeviceCapability {

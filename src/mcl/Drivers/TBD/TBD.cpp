@@ -8,6 +8,8 @@
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
 #include "MCLSeq.h"
+#include "SeqExtStepTrackApi.h"
+#include "SeqPages.h"
 #include "MidiDeviceGrid.h"
 #include "MidiSetup.h"
 #include "Project.h"
@@ -96,6 +98,20 @@ public:
 
 private:
   TbdDevice &tbd() const { return (TbdDevice &)device_; }
+};
+
+class TbdExtStepTrackCapability : public DeviceExtStepTrackCapability {
+public:
+  explicit TbdExtStepTrackCapability(TbdDevice &device)
+      : DeviceExtStepTrackCapability(device) {}
+  virtual bool available(const DeviceContext &ctx) const override;
+  virtual uint8_t track_count(const DeviceContext &ctx) const override;
+  virtual SeqExtStepTrackApi track(const DeviceContext &ctx,
+                                    uint8_t i) const override;
+  virtual SeqExtStepTrackApi active_track(
+      const DeviceContext &ctx) const override;
+  virtual bool track_for_channel(const DeviceContext &ctx, uint8_t channel,
+                                  uint8_t *track_index) const override;
 };
 
 class TbdParamCapability : public DeviceParamCapability {
@@ -1642,9 +1658,54 @@ DeviceStepTrackCapability *TbdDevice::step_tracks() {
   return &capability;
 }
 
+DeviceExtStepTrackCapability *TbdDevice::ext_step_tracks() {
+  static TbdExtStepTrackCapability capability(*this);
+  return &capability;
+}
+
 DeviceParamCapability *TbdDevice::params() {
   static TbdParamCapability capability(*this);
   return &capability;
+}
+
+bool TbdExtStepTrackCapability::available(const DeviceContext &ctx) const {
+  return ctx.device_idx() == DeviceIdx::Secondary &&
+         mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
+}
+
+uint8_t TbdExtStepTrackCapability::track_count(
+    const DeviceContext &ctx) const {
+  return available(ctx) ? mcl_seq.num_midi_tracks : 0;
+}
+
+SeqExtStepTrackApi TbdExtStepTrackCapability::track(const DeviceContext &ctx,
+                                                     uint8_t i) const {
+  (void)ctx;
+  if (i >= NUM_EXT_TRACKS) {
+    i = 0;
+  }
+  return SeqExtStepTrackApi(mcl_seq.midi_tracks[i]);
+}
+
+SeqExtStepTrackApi TbdExtStepTrackCapability::active_track(
+    const DeviceContext &ctx) const {
+  return track(ctx, last_ext_track);
+}
+
+bool TbdExtStepTrackCapability::track_for_channel(
+    const DeviceContext &ctx, uint8_t channel, uint8_t *track_index) const {
+  (void)ctx;
+  if (track_index == nullptr) {
+    return false;
+  }
+  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+    if (mcl_seq.midi_tracks[n].channel() == channel) {
+      *track_index = n;
+      return true;
+    }
+  }
+  *track_index = 255;
+  return false;
 }
 
 bool TbdStepTrackCapability::available(const DeviceContext &ctx) const {

@@ -93,6 +93,7 @@ protected:
   DeviceMixerCapability mixer_capability_;
 #if !defined(__AVR__)
   DeviceStepTrackCapability step_track_capability_;
+  DeviceExtStepTrackCapability ext_step_track_capability_;
   DeviceStepEditCapability step_edit_capability_;
   DeviceParamCapability param_capability_;
   DevicePerfCapability perf_capability_;
@@ -199,6 +200,7 @@ public:
   virtual DeviceMixerCapability *mixer();
 #if !defined(__AVR__)
   virtual DeviceStepTrackCapability *step_tracks();
+  virtual DeviceExtStepTrackCapability *ext_step_tracks();
   virtual DeviceStepEditCapability *step_edit();
   virtual DeviceParamCapability *params();
   virtual DevicePerfCapability *perf();

@@ -3,19 +3,25 @@
 #ifndef SEQEXTSTEPTRACKREF_H__
 #define SEQEXTSTEPTRACKREF_H__
 
+#include "DeviceManager.h"
 #include "SeqExtStepTrackApi.h"
 #include "SeqPage.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
+#include "../Drivers/MidiDevice.h"
 #include <stdint.h>
 
 class MidiClass;
-class MidiDevice;
 
 class SeqExtStepTrackRef {
 public:
   static SeqExtStepTrackApi track(uint8_t track_index) {
+#if defined(__AVR__)
     return SeqTrackUtil::get_ext_step_track(track_index);
+#else
+    return device_manager.secondary_device()->ext_step_tracks()->track(
+        device_manager.context_for_device(DeviceIdx::Secondary), track_index);
+#endif
   }
 
   static SeqExtStepTrackApi active_track() {
@@ -36,7 +42,12 @@ public:
   }
 
   static uint8_t track_count() {
+#if defined(__AVR__)
     return SeqTrackUtil::track_count(false);
+#else
+    return device_manager.secondary_device()->ext_step_tracks()->track_count(
+        device_manager.context_for_device(DeviceIdx::Secondary));
+#endif
   }
 
   static MidiClass *input_midi();

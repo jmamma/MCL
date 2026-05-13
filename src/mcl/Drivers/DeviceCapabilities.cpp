@@ -6,6 +6,10 @@
 #include "Project.h"
 #include "SeqStepTrackRef.h"
 #include "SeqTrack.h"
+#if !defined(__AVR__)
+#include "SeqExtStepTrackApi.h"
+#include "SeqPages.h"
+#endif
 
 DeviceMixerCapability::DeviceMixerCapability(MidiDevice &device)
     : DeviceCapability(device) {}
@@ -293,6 +297,61 @@ bool DeviceStepTrackCapability::parse_kit_cc(const DeviceContext &ctx,
   (void)track;
   (void)param;
   return false;
+}
+
+DeviceExtStepTrackCapability::DeviceExtStepTrackCapability(MidiDevice &device)
+    : DeviceCapability(device) {}
+
+bool DeviceExtStepTrackCapability::available(const DeviceContext &ctx) const {
+  return ctx.device_idx() == DeviceIdx::Secondary;
+}
+
+uint8_t DeviceExtStepTrackCapability::track_count(
+    const DeviceContext &ctx) const {
+  (void)ctx;
+  return mcl_seq.num_ext_tracks;
+}
+
+SeqExtStepTrackApi DeviceExtStepTrackCapability::track(
+    const DeviceContext &ctx, uint8_t i) const {
+  (void)ctx;
+  if (i >= NUM_EXT_TRACKS) {
+    i = 0;
+  }
+  return SeqExtStepTrackApi(mcl_seq.ext_tracks[i]);
+}
+
+SeqExtStepTrackApi DeviceExtStepTrackCapability::active_track(
+    const DeviceContext &ctx) const {
+  return track(ctx, last_ext_track);
+}
+
+bool DeviceExtStepTrackCapability::track_for_channel(
+    const DeviceContext &ctx, uint8_t channel, uint8_t *track_index) const {
+  (void)ctx;
+  if (track_index == nullptr) {
+    return false;
+  }
+  for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
+    if (mcl_seq.ext_tracks[n].channel == channel) {
+      *track_index = n;
+      return true;
+    }
+  }
+  *track_index = 255;
+  return false;
+}
+
+MidiClass *DeviceExtStepTrackCapability::input_midi(
+    const DeviceContext &ctx) const {
+  (void)ctx;
+  return device_.midi;
+}
+
+bool DeviceExtStepTrackCapability::is_mute_cc(const DeviceContext &ctx,
+                                              uint8_t cc) const {
+  (void)ctx;
+  return cc == device_.get_mute_cc();
 }
 
 namespace {
