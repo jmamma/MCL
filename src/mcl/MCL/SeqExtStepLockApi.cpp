@@ -464,13 +464,16 @@ bool SeqExtStepLockApi::copy_lock_menu_value_label(uint8_t menu_value,
   return true;
 }
 
-#if !defined(__AVR__)
 uint8_t SeqExtStepLockApi::selected_lock_current_ui_value(uint8_t slot) const {
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return 64;
+#if defined(__AVR__)
+  (void)info;
+  return 0;
+#else
   return value7_from_param_value(info, info.current_value);
-}
 #endif
+}
 
 uint8_t SeqExtStepLockApi::lock_ui_value_from_control(uint8_t slot,
                                                       uint8_t ctrl_type,

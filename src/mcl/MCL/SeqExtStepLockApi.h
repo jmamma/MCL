@@ -84,11 +84,7 @@ public:
                                 size_t dst_len) const;
   bool copy_lock_menu_value_label(uint8_t menu_value, char *dst,
                                   size_t dst_len) const;
-#if defined(__AVR__)
-  uint8_t selected_lock_current_ui_value(uint8_t) const { return 0; }
-#else
   uint8_t selected_lock_current_ui_value(uint8_t slot) const;
-#endif
   uint8_t lock_ui_value_from_control(uint8_t slot, uint8_t ctrl_type,
                                      uint16_t ctrl, uint16_t value) const;
   bool selected_lock_matches_control(uint8_t slot, uint8_t ctrl_type,
