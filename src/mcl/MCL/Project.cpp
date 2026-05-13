@@ -229,7 +229,7 @@ bool Project::check_project_version(uint16_t min_version) {
 }
 
 bool Project::migrate_grid_track_storage_versions(uint8_t grid) {
-  uint8_t legacy_version[2] = {0, 0};
+  uint16_t legacy_version = 0;
   for (uint16_t row = 0; row < GRID_LENGTH; row++) {
     GridRowHeader row_header;
     if (!grids[grid].read_row_header(&row_header, row)) {
@@ -242,7 +242,8 @@ bool Project::migrate_grid_track_storage_versions(uint8_t grid) {
       if (!grids[grid].seek(column, row)) {
         return false;
       }
-      if (!grids[grid].write(legacy_version, sizeof(legacy_version))) {
+      if (!grids[grid].write((uint8_t *)&legacy_version,
+                             sizeof(legacy_version))) {
         return false;
       }
     }

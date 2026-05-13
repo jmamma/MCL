@@ -268,7 +268,9 @@ void SeqStepPage::display() {
       uint8_t note = note_num % 12;
       uint8_t oct = note_num / 12;
 
-      strcpy(K, number_to_note.notes_upper[note]);
+      const char *note_name = number_to_note.notes_upper[note];
+      K[0] = note_name[0];
+      K[1] = note_name[1];
       mcl_gui.put_value_at(oct, K + 2);
       K[3] = 0;
     }

@@ -45,6 +45,30 @@ constexpr uint8_t kIconDimMask = 0x1F;
 constexpr uint8_t kIconHeightShift = 4;
 constexpr uint8_t kIconWidthShift = 9;
 
+struct CommonPageEntry {
+  const char *name;
+  uint8_t page;
+  uint8_t slot;
+  uint8_t icon_height;
+  uint8_t icon;
+};
+
+const CommonPageEntry common_page_entries[] PROGMEM = {
+    {mclstr_grid, GRID_PAGE, 0, 15, PAGE_ICON_GRID},
+    {mclstr_mixer, MIXER_PAGE, 1, 16, PAGE_ICON_MIXER},
+    {page_name_perf, PERF_PAGE_0, 2, 18, PAGE_ICON_PERF},
+    {page_name_step_edit, SEQ_STEP_PAGE, 4, 21, PAGE_ICON_STEP},
+    {page_name_lfo, LFO_PAGE, 5, 24, PAGE_ICON_LFO},
+    {page_name_piano_roll, SEQ_EXTSTEP_PAGE, 6, 25, PAGE_ICON_PIANOROLL},
+    {page_name_chromatic, SEQ_PTC_PAGE, 7, 25, PAGE_ICON_CHROMA},
+#ifdef SOUND_PAGE
+    {page_name_sample_manager, SAMPLE_BROWSER, 8, 25, PAGE_ICON_SAMPLE},
+#endif
+#ifdef WAV_DESIGNER
+    {page_name_wav_designer, WD_PAGE_0, 9, 19, PAGE_ICON_WAVD},
+#endif
+};
+
 static uint8_t category_for_slot(uint8_t slot) {
   return slot >> 2;
 }
@@ -57,14 +81,6 @@ static uint8_t category_page_count(uint8_t cat) {
 
 static MidiDevice *nonnull_device(MidiDevice *device) {
   return (device == nullptr || device == &null_midi_device) ? nullptr : device;
-}
-
-static void add_common_page(PageSelectEntry *entries, const char *name_P,
-                            PageIndex page, uint8_t slot, uint8_t category,
-                            uint8_t icon_width, uint8_t icon_height,
-                            PageSelectIcon icon) {
-  PageRegistry::add_P(entries, PageRegistry::kMaxPageSlots, name_P, page,
-                      slot, category, icon_width, icon_height, icon);
 }
 
 } // namespace
@@ -211,30 +227,17 @@ void PageSelectPage::rebuild_entries() {
   PageRegistry::clear(page_entries, PageRegistry::kMaxPageSlots);
   page_select_ui_device = nullptr;
 
-  add_common_page(page_entries, mclstr_grid, GRID_PAGE, 0, 0, 24, 15,
-                  PAGE_ICON_GRID);
-  add_common_page(page_entries, mclstr_mixer, MIXER_PAGE, 1, 0, 24, 16,
-                  PAGE_ICON_MIXER);
-  add_common_page(page_entries, page_name_perf, PERF_PAGE_0, 2, 0, 24, 18,
-                  PAGE_ICON_PERF);
-
-  add_common_page(page_entries, page_name_step_edit, SEQ_STEP_PAGE, 4, 1, 24,
-                  21, PAGE_ICON_STEP);
-  add_common_page(page_entries, page_name_lfo, LFO_PAGE, 5, 1, 24, 24,
-                  PAGE_ICON_LFO);
-  add_common_page(page_entries, page_name_piano_roll, SEQ_EXTSTEP_PAGE, 6, 1,
-                  24, 25, PAGE_ICON_PIANOROLL);
-  add_common_page(page_entries, page_name_chromatic, SEQ_PTC_PAGE, 7, 1, 24,
-                  25, PAGE_ICON_CHROMA);
-
-#ifdef SOUND_PAGE
-  add_common_page(page_entries, page_name_sample_manager, SAMPLE_BROWSER, 8, 2,
-                  24, 25, PAGE_ICON_SAMPLE);
-#endif
-#ifdef WAV_DESIGNER
-  add_common_page(page_entries, page_name_wav_designer, WD_PAGE_0, 9, 2, 24,
-                  19, PAGE_ICON_WAVD);
-#endif
+  for (uint8_t i = 0;
+       i < sizeof(common_page_entries) / sizeof(common_page_entries[0]); i++) {
+    const CommonPageEntry *entry = &common_page_entries[i];
+    const char *name = (const char *)pgm_read_ptr(&entry->name);
+    PageIndex page = (PageIndex)pgm_read_byte(&entry->page);
+    uint8_t slot = pgm_read_byte(&entry->slot);
+    uint8_t icon_height = pgm_read_byte(&entry->icon_height);
+    PageSelectIcon icon = (PageSelectIcon)pgm_read_byte(&entry->icon);
+    PageRegistry::add_P(page_entries, PageRegistry::kMaxPageSlots, name, page,
+                        slot, 24, icon_height, icon);
+  }
 
   MidiDevice *primary = nonnull_device(device_manager.primary_device());
   MidiDevice *secondary = nonnull_device(device_manager.secondary_device());

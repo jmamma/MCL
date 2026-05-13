@@ -503,9 +503,8 @@ void MDMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
     if (value > 127) value = 127;
     device.kit.levels[track] = (uint8_t)value;
   } else if (param == MODEL_MUTE) {
-    SeqTrackUtil::with_md_track(track, [value](auto &t) {
-      t.mute_state = value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
-    });
+    SeqTrackUtil::get_seq_track(true, track).mute_state =
+        value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
   }
 }
 

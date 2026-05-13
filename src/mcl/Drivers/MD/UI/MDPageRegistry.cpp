@@ -30,31 +30,40 @@ const char page_name_reverb[] PROGMEM = "REVERB";
 const char page_name_ram1[] PROGMEM = "RAM-1";
 const char page_name_ram2[] PROGMEM = "RAM-2";
 
-static uint8_t add_md_page(PageSelectEntry *entries, uint8_t max_entries,
-                           const char *name_P, PageIndex page, uint8_t slot,
-                           uint8_t category, uint8_t icon_width,
-                           uint8_t icon_height, PageSelectIcon icon) {
-  return PageRegistry::add_P(entries, max_entries, name_P, page, slot,
-                             category, icon_width, icon_height, icon)
-             ? 1
-             : 0;
-}
+struct MDPageEntry {
+  const char *name;
+  uint8_t page;
+  uint8_t slot;
+  uint8_t icon_height;
+  uint8_t icon;
+};
+
+const MDPageEntry md_page_entries[] PROGMEM = {
+    {mclstr_route, ROUTE_PAGE, 3, 14, PAGE_ICON_ROUTE},
+    {page_name_delay, FX_PAGE_A, 12, 25, PAGE_ICON_RHYTMECHO},
+    {page_name_reverb, FX_PAGE_B, 13, 25, PAGE_ICON_GATEBOX},
+    {page_name_ram1, RAM_PAGE_A, 14, 25, PAGE_ICON_RAM1},
+    {page_name_ram2, RAM_PAGE_B, 15, 25, PAGE_ICON_RAM2},
+};
 
 } // namespace
 
 uint8_t MDClass::register_page_select_entries(PageSelectEntry *entries,
                                               uint8_t max_entries) const {
   uint8_t count = 0;
-  count += add_md_page(entries, max_entries, mclstr_route, ROUTE_PAGE, 3, 0,
-                       24, 14, PAGE_ICON_ROUTE);
-  count += add_md_page(entries, max_entries, page_name_delay, FX_PAGE_A, 12, 3,
-                       24, 25, PAGE_ICON_RHYTMECHO);
-  count += add_md_page(entries, max_entries, page_name_reverb, FX_PAGE_B, 13,
-                       3, 24, 25, PAGE_ICON_GATEBOX);
-  count += add_md_page(entries, max_entries, page_name_ram1, RAM_PAGE_A, 14, 3,
-                       24, 25, PAGE_ICON_RAM1);
-  count += add_md_page(entries, max_entries, page_name_ram2, RAM_PAGE_B, 15, 3,
-                       24, 25, PAGE_ICON_RAM2);
+  for (uint8_t i = 0; i < sizeof(md_page_entries) / sizeof(md_page_entries[0]);
+       i++) {
+    const MDPageEntry *entry = &md_page_entries[i];
+    const char *name = (const char *)pgm_read_ptr(&entry->name);
+    PageIndex page = (PageIndex)pgm_read_byte(&entry->page);
+    uint8_t slot = pgm_read_byte(&entry->slot);
+    uint8_t icon_height = pgm_read_byte(&entry->icon_height);
+    PageSelectIcon icon = (PageSelectIcon)pgm_read_byte(&entry->icon);
+    if (PageRegistry::add_P(entries, max_entries, name, page, slot, 24,
+                            icon_height, icon)) {
+      count++;
+    }
+  }
   return count;
 }
 

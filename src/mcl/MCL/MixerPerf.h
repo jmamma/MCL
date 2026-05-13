@@ -23,8 +23,8 @@ bool should_show_encoder(Encoder *encoder, uint16_t &used_clock,
 uint8_t display_value(Encoder *encoder, uint8_t locks[4][4],
                       uint8_t preview_mute_set, uint8_t encoder_idx,
                       bool &highlight);
-void clear_scenes(uint8_t encoder_idx);
-void scene_autofill(uint8_t encoder_idx);
+void clear_scenes(Encoder *encoder);
+void scene_autofill(Encoder *encoder);
 bool handle_preview_lock_button(Encoder *encoder, uint8_t locks[4][4],
                                 uint8_t preview_mute_set,
                                 uint8_t encoder_idx, bool pressed);

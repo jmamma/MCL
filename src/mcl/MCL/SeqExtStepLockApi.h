@@ -15,19 +15,23 @@ class MidiSeqTrack;
 struct SeqExtStepLockParamInfo {
   bool active = false;
   bool p4_param = false;
+  bool learn = false;
+#if !defined(__AVR__)
   bool sendable = false;
   bool nrpn = false;
   bool macro = false;
-  bool learn = false;
   uint8_t type = 0;
+#endif
   uint16_t ctrl = 0;
   uint8_t ctrl_type = 0;
   uint16_t param_id = 0;
+#if !defined(__AVR__)
   uint16_t resolution = 128;
   int16_t min_value = 0;
   int16_t max_value = 127;
   int16_t default_value = 0;
   int16_t current_value = 0;
+#endif
 };
 
 enum SeqExtStepLockCtrlType : uint8_t {

@@ -466,10 +466,7 @@ bool perf_scene_autofill(PerfData *data, uint8_t scene) {
   uint8_t num_params =
       mcl_seq.using_spsx_tracks ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
   for (uint8_t track = 0; track < NUM_MD_TRACKS; track++) {
-    uint8_t dest = perf_dest_from_slot(1, track + 1);
-    if (dest == 255) {
-      continue;
-    }
+    uint8_t dest = track;
     for (uint8_t param = 0; param < num_params; param++) {
       if (MD.kit.params[track][param] == MD.kit.params_orig[track][param]) {
         continue;
@@ -500,10 +497,7 @@ bool perf_scene_autofill(PerfData *data, uint8_t scene) {
     if (fxs[n] == fxs_orig[n]) {
       continue;
     }
-    uint8_t dest = perf_dest_from_slot(1, NUM_MD_TRACKS + fx + 1);
-    if (dest == 255) {
-      continue;
-    }
+    uint8_t dest = NUM_MD_TRACKS + fx;
     uint8_t value = fxs[n];
     if (data->add_param(dest, param, scene, value) == 255) {
       continue;

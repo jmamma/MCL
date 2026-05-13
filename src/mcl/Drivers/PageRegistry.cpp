@@ -19,9 +19,8 @@ void clear(PageSelectEntry *entries, uint8_t max_entries) {
 }
 
 bool add_P(PageSelectEntry *entries, uint8_t max_entries, const char *name_P,
-           PageIndex page, uint8_t slot, uint8_t category,
-           uint8_t icon_width, uint8_t icon_height, PageSelectIcon icon) {
-  (void)category;
+           PageIndex page, uint8_t slot, uint8_t icon_width,
+           uint8_t icon_height, PageSelectIcon icon) {
   if (slot >= max_entries) {
     return false;
   }

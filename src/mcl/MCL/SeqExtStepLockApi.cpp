@@ -120,6 +120,10 @@ uint8_t SeqExtStepLockApi::selected_lock_menu_value(uint8_t slot) const {
 }
 
 bool SeqExtStepLockApi::selected_lock_menu_editable(uint8_t slot) const {
+#if defined(__AVR__)
+  (void)slot;
+  return true;
+#else
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return true;
   if (info.learn || info.p4_param) return true;
@@ -128,6 +132,7 @@ bool SeqExtStepLockApi::selected_lock_menu_editable(uint8_t slot) const {
           info.ctrl_type == SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE ||
           info.ctrl_type == SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE) &&
          info.param_id <= PARAM_LEARN;
+#endif
 }
 
 uint8_t SeqExtStepLockApi::lock_param_menu_max() const {
@@ -141,6 +146,30 @@ uint8_t SeqExtStepLockApi::lock_param_menu_max() const {
 
 bool SeqExtStepLockApi::lock_menu_value_info(
     uint8_t menu_value, SeqExtStepLockParamInfo &info) const {
+#if defined(__AVR__)
+  info.active = false;
+  info.p4_param = false;
+  info.learn = false;
+  info.param_id = 0;
+  info.ctrl = 0;
+  info.ctrl_type = SEQ_EXT_LOCK_CTRL_OFF;
+  if (menu_value == PARAM_OFF) return false;
+  if (menu_value == PARAM_LEARN) {
+    info.active = true;
+    info.learn = true;
+    return true;
+  }
+
+  info.active = true;
+  info.param_id = menu_value;
+  info.ctrl = menu_value;
+  info.ctrl_type =
+      menu_value == PARAM_PB    ? SEQ_EXT_LOCK_CTRL_PITCH_BEND
+      : menu_value == PARAM_CHP ? SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE
+      : menu_value == PARAM_PRG ? SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE
+                                : SEQ_EXT_LOCK_CTRL_CC;
+  return true;
+#else
   info = SeqExtStepLockParamInfo();
   if (menu_value == PARAM_OFF) return false;
   if (menu_value == PARAM_LEARN) {
@@ -182,6 +211,7 @@ bool SeqExtStepLockApi::lock_menu_value_info(
       : menu_value == PARAM_PRG ? SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE
                                 : SEQ_EXT_LOCK_CTRL_CC;
   return true;
+#endif
 }
 
 uint8_t SeqExtStepLockApi::normalize_lock_menu_value(uint8_t menu_value,
@@ -274,7 +304,12 @@ bool SeqExtStepLockApi::set_selected_lock_control(uint8_t slot,
 
 bool SeqExtStepLockApi::selected_lock_param_info(
     uint8_t slot, SeqExtStepLockParamInfo &info) const {
+#if defined(__AVR__)
+  info.active = false;
+  info.learn = false;
+#else
   info = SeqExtStepLockParamInfo();
+#endif
 #ifdef PLATFORM_TBD
   if (midi_track_) {
     if (slot >= MIDI_SEQ_NUM_LOCKS) return false;
@@ -323,7 +358,9 @@ bool SeqExtStepLockApi::selected_lock_param_info(
   }
   info.active = true;
   info.param_id = param_id;
+#if !defined(__AVR__)
   info.sendable = param_id <= PARAM_CHP;
+#endif
   info.ctrl = param_id;
   info.ctrl_type =
       param_id == PARAM_PB    ? SEQ_EXT_LOCK_CTRL_PITCH_BEND
@@ -432,7 +469,12 @@ bool SeqExtStepLockApi::copy_lock_menu_value_label(uint8_t menu_value,
 uint8_t SeqExtStepLockApi::selected_lock_current_ui_value(uint8_t slot) const {
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return 64;
+#if defined(__AVR__)
+  (void)info;
+  return 0;
+#else
   return value7_from_param_value(info, info.current_value);
+#endif
 }
 
 uint8_t SeqExtStepLockApi::lock_ui_value_from_control(uint8_t slot,
@@ -541,6 +583,22 @@ void SeqExtStepLockApi::append_uint16(uint16_t value, char *dst,
     dst[dst_len - 1] = '\0';
     return;
   }
+#if defined(__AVR__)
+  if (value > 255) value = 255;
+  uint8_t v = (uint8_t)value;
+  if (v >= 100 && out + 1 < dst_len) {
+    dst[out++] = (char)('0' + v / 100);
+    v %= 100;
+  }
+  if ((v >= 10 || out > 1) && out + 1 < dst_len) {
+    dst[out++] = (char)('0' + v / 10);
+    v %= 10;
+  }
+  if (out + 1 < dst_len) {
+    dst[out++] = (char)('0' + v);
+  }
+  dst[out] = '\0';
+#else
   if (value > 9999) value = 9999;
   if (value >= 1000 && out + 1 < dst_len) {
     dst[out++] = (char)('0' + value / 1000);
@@ -558,6 +616,7 @@ void SeqExtStepLockApi::append_uint16(uint16_t value, char *dst,
     dst[out++] = (char)('0' + value);
   }
   dst[out] = '\0';
+#endif
 }
 
 void SeqExtStepLockApi::copy_param_number_label(char prefix, uint16_t number,
@@ -574,6 +633,24 @@ void SeqExtStepLockApi::copy_param_number_label(char prefix, uint16_t number,
 
 void SeqExtStepLockApi::put_int16(int16_t value, char *dst, size_t dst_len) {
   if (dst == nullptr || dst_len == 0) return;
+#if defined(__AVR__)
+  if (value < 0) value = 0;
+  if (value > 255) value = 255;
+  uint8_t v = (uint8_t)value;
+  size_t out = 0;
+  if (v >= 100 && out + 1 < dst_len) {
+    dst[out++] = (char)('0' + v / 100);
+    v %= 100;
+  }
+  if ((v >= 10 || out > 0) && out + 1 < dst_len) {
+    dst[out++] = (char)('0' + v / 10);
+    v %= 10;
+  }
+  if (out + 1 < dst_len) {
+    dst[out++] = (char)('0' + v);
+  }
+  dst[out] = '\0';
+#else
   size_t out = 0;
   if (value < 0 && out + 1 < dst_len) {
     dst[out++] = '-';
@@ -596,15 +673,25 @@ void SeqExtStepLockApi::put_int16(int16_t value, char *dst, size_t dst_len) {
     dst[out++] = (char)('0' + value);
   }
   dst[out] = '\0';
+#endif
 }
 
 uint16_t SeqExtStepLockApi::value14_from_value7(uint8_t value7) {
+#if defined(__AVR__)
+  if (value7 > 127) value7 = 127;
+  return (uint16_t)value7 << 7;
+#else
   if (value7 > 127) value7 = 127;
   return (uint16_t)(((uint32_t)value7 * 0x3FFFu + 63u) / 127u);
+#endif
 }
 
 int16_t SeqExtStepLockApi::param_value_from_value7(
     const SeqExtStepLockParamInfo &info, uint8_t value7) {
+#if defined(__AVR__)
+  (void)info;
+  return value7 > 127 ? 127 : value7;
+#else
   if (info.max_value <= info.min_value) return info.min_value;
   uint16_t value14 = value14_from_value7(value7);
   int32_t range = (int32_t)info.max_value - (int32_t)info.min_value;
@@ -613,16 +700,23 @@ int16_t SeqExtStepLockApi::param_value_from_value7(
   if (scaled < info.min_value) scaled = info.min_value;
   if (scaled > info.max_value) scaled = info.max_value;
   return (int16_t)scaled;
+#endif
 }
 
 uint8_t SeqExtStepLockApi::value7_from_param_value(
     const SeqExtStepLockParamInfo &info, int16_t value) {
+#if defined(__AVR__)
+  (void)info;
+  if (value < 0) return 0;
+  return value > 127 ? 127 : (uint8_t)value;
+#else
   if (info.max_value <= info.min_value) return 0;
   if (value < info.min_value) value = info.min_value;
   if (value > info.max_value) value = info.max_value;
   uint16_t range = (uint16_t)(info.max_value - info.min_value);
   uint16_t offset = (uint16_t)(value - info.min_value);
   return (uint8_t)(((uint32_t)offset * 127u + (range / 2u)) / range);
+#endif
 }
 
 #ifdef PLATFORM_TBD
@@ -687,6 +781,12 @@ uint16_t SeqExtStepLockApi::value14_from_param_actual(
 #endif
 
 uint8_t SeqExtStepLockApi::value7_from_14(uint16_t value14) {
+#if defined(__AVR__)
+  if (value14 > 0x3FFF) value14 = 0x3FFF;
+  value14 = (value14 + 64u) >> 7;
+  return value14 > 127 ? 127 : (uint8_t)value14;
+#else
   if (value14 > 0x3FFF) value14 = 0x3FFF;
   return (uint8_t)(((uint32_t)value14 * 127u + 0x1FFFu) / 0x3FFFu);
+#endif
 }

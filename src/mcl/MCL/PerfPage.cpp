@@ -14,6 +14,20 @@
 
 static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT = 24;
 
+namespace {
+
+uint8_t perf_editor_dest() {
+#if defined(__AVR__)
+  return last_md_track + 1;
+#else
+  uint8_t dest =
+      DeviceParamResolver::perf_dest_from_slot(1, last_md_track + 1);
+  return dest == 255 ? 0 : dest + 1;
+#endif
+}
+
+} // namespace
+
 void PerfPage::setup() {
   DEBUG_PRINT_FN();
   page_mode = PERF_DESTINATION;
@@ -376,12 +390,10 @@ void rename_perf() {
 }
 
 void PerfPage::send_locks(uint8_t scene) {
-  uint8_t editor_dest =
-      DeviceParamResolver::perf_dest_from_slot(1, last_md_track + 1);
-  if (editor_dest == 255) {
+  uint8_t editor_dest = perf_editor_dest();
+  if (editor_dest == 0) {
     return;
   }
-  editor_dest++;
 
   uint8_t params[PERF_PARAM_EDITOR_PARAM_COUNT];
   memset(params, 255, sizeof(params));
@@ -480,12 +492,10 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
       uint8_t scene = learn - 1;
 
-      uint8_t editor_dest =
-          DeviceParamResolver::perf_dest_from_slot(1, last_md_track + 1);
-      if (editor_dest == 255) {
+      uint8_t editor_dest = perf_editor_dest();
+      if (editor_dest == 0) {
         return true;
       }
-      editor_dest++;
 
       uint8_t param = 0;
       DevicePerfTarget editor_target = DeviceParamResolver::perf(editor_dest);

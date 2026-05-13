@@ -22,6 +22,11 @@ namespace {
 constexpr uint8_t kSeqPageVisibleSteps = 16;
 constexpr uint8_t kSeqPageTrackMaskWidth = 16;
 
+#if defined(__AVR__)
+bool seq_page_uses_non_md_primary_step_tracks() {
+  return false;
+}
+#else
 bool seq_page_uses_primary_step_tracks() {
   PageIndex page = mcl.currentPage();
   return (page == SEQ_STEP_PAGE || page == SEQ_PTC_PAGE) &&
@@ -29,13 +34,10 @@ bool seq_page_uses_primary_step_tracks() {
 }
 
 bool seq_page_uses_non_md_primary_step_tracks() {
-#if defined(__AVR__)
-  return false;
-#else
   return seq_page_uses_primary_step_tracks() &&
          !SeqTrackUtil::is_md_device(DeviceParamResolver::slot_device(1));
-#endif
 }
+#endif
 
 #if !defined(__AVR__)
 bool seq_page_uses_signed_microtiming() {
@@ -47,19 +49,31 @@ bool seq_page_uses_signed_microtiming() {
 #endif
 
 uint8_t seq_page_condition_count() {
+#if defined(__AVR__)
+  return NUM_TRIG_CONDITIONS;
+#else
   if (seq_page_uses_primary_step_tracks()) {
     return seq_step_active_track().condition_count();
   }
   return NUM_TRIG_CONDITIONS;
+#endif
 }
 
 bool seq_page_condition_label(uint8_t condition, bool plock, bool marker,
                               char *out) {
+#if defined(__AVR__)
+  (void)condition;
+  (void)plock;
+  (void)marker;
+  (void)out;
+  return false;
+#else
   if (!seq_page_uses_primary_step_tracks()) {
     return false;
   }
   seq_step_active_track().condition_label(condition, plock, marker, out);
   return true;
+#endif
 }
 
 uint8_t seq_page_step_offset() {

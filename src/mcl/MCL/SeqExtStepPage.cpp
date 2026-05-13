@@ -221,6 +221,14 @@ void SeqExtStepPage::cleanup() {
 
 #define MAX_FOV_W 96
 
+uint8_t SeqExtStepPage::fov_x_for_tick(seq_extstep_tick_t tick) const {
+  return (uint8_t)(((int32_t)(tick - fov_offset) * fov_pixels_per_tick) >> 8);
+}
+
+uint8_t SeqExtStepPage::lock_y_for_value(uint8_t value) const {
+  return fov_h - ((uint16_t)value * fov_h) / 128;
+}
+
 void SeqExtStepPage::draw_seq_pos() {
   auto active_track = active_ext_step_track();
   seq_extstep_tick_t cur_tick_x =
@@ -232,9 +240,7 @@ void SeqExtStepPage::draw_seq_pos() {
   if (is_within_fov(cur_tick_x)) {
 
     seq_extstep_tick_t cur_tick_fov_x =
-        draw_x + (((seq_extstep_tick_t)fov_pixels_per_tick *
-                   (seq_extstep_tick_t)(cur_tick_x - fov_offset)) >>
-                  8);
+        draw_x + fov_x_for_tick(cur_tick_x);
     cur_tick_fov_x = max((seq_extstep_tick_t)draw_x,
                          min((seq_extstep_tick_t)(draw_x + fov_w),
                              cur_tick_fov_x));
@@ -278,9 +284,7 @@ void SeqExtStepPage::draw_grid() {
     seq_extstep_tick_t grid_tick_x = active_track.step_tick(i);
     if (is_within_fov(grid_tick_x)) {
       seq_extstep_tick_t grid_fov_x =
-          draw_x + (((seq_extstep_tick_t)fov_pixels_per_tick *
-                     (seq_extstep_tick_t)(grid_tick_x - fov_offset)) >>
-                    8);
+          draw_x + fov_x_for_tick(grid_tick_x);
 
       if (grid_fov_x < draw_x) continue;
 
@@ -394,10 +398,7 @@ void SeqExtStepPage::draw_lockeditor() {
         } else {
           // Convert fov_pixels_per_tick to fixed point once:
           // fov_pixels_per_tick_fixed = fov_pixels_per_tick * 256
-          start_fov_x =
-              ((seq_extstep_tick_t)(start_x - fov_offset) *
-               (seq_extstep_tick_t)fov_pixels_per_tick) >>
-              8;
+          start_fov_x = fov_x_for_tick(start_x);
         }
 
         if (end_x >= fov_offset + fov_length) {
@@ -410,14 +411,11 @@ void SeqExtStepPage::draw_lockeditor() {
           }
           end_y_tmp = (((int32_t)dx * gradient_fixed) / 256) + start_y;
         } else {
-          end_fov_x =
-              ((seq_extstep_tick_t)(end_x - fov_offset) *
-               (seq_extstep_tick_t)fov_pixels_per_tick) >>
-              8;
+          end_fov_x = fov_x_for_tick(end_x);
         }
 
-        uint8_t start_fov_y = fov_h - ((uint16_t)start_y_tmp * fov_h) / 128;
-        uint8_t end_fov_y = fov_h - ((uint16_t)end_y_tmp * fov_h) / 128;
+        uint8_t start_fov_y = lock_y_for_value(start_y_tmp);
+        uint8_t end_fov_y = lock_y_for_value(end_y_tmp);
 
         // Draw logic
         if (end_x < start_x) {
@@ -427,7 +425,7 @@ void SeqExtStepPage::draw_lockeditor() {
             uint8_t calc_end_y_tmp =
                 (((int32_t)dx * gradient_fixed) / 256) + start_y;
             uint8_t tmp_end_fov_y =
-                fov_h - ((uint16_t)calc_end_y_tmp * fov_h) / 128;
+                lock_y_for_value(calc_end_y_tmp);
 
             draw_thick_line(start_fov_x + draw_x, start_fov_y, fov_w + draw_x,
                             tmp_end_fov_y);
@@ -438,7 +436,7 @@ void SeqExtStepPage::draw_lockeditor() {
             uint8_t calc_end_y_tmp =
                 (((int32_t)dx * gradient_fixed) >> 8) + start_y;
             uint8_t tmp_end_fov_y =
-                fov_h - ((uint16_t)calc_end_y_tmp * fov_h) / 128;
+                lock_y_for_value(calc_end_y_tmp);
 
             draw_thick_line(draw_x, !ev.event_on ? start_fov_y : tmp_end_fov_y,
                             end_fov_x + draw_x,
@@ -457,11 +455,8 @@ void SeqExtStepPage::draw_lockeditor() {
       }
     }
     // Draw interactive cursor
-    seq_extstep_tick_t fov_cur_x =
-        ((seq_extstep_tick_t)(cur_x - fov_offset) *
-         (seq_extstep_tick_t)fov_pixels_per_tick) >>
-        8;
-    uint8_t fov_cur_y = fov_h - ((uint16_t)lock_cur_y * fov_h / 128);
+    seq_extstep_tick_t fov_cur_x = fov_x_for_tick(cur_x);
+    uint8_t fov_cur_y = lock_y_for_value(lock_cur_y);
     if (fov_cur_x < 0) fov_cur_x = 0;
     if (fov_cur_x > fov_w) fov_cur_x = fov_w;
     mcl_gui.draw_cross(draw_x + (uint8_t)fov_cur_x, draw_y + fov_cur_y);
@@ -488,10 +483,7 @@ void SeqExtStepPage::draw_pianoroll() {
   uint8_t pattern_end_fov_x = fov_w;
 
   if (is_within_fov(roll_length)) {
-    pattern_end_fov_x =
-        min(fov_w, (uint8_t)(((seq_extstep_tick_t)fov_pixels_per_tick *
-                              (roll_length - fov_offset)) >>
-                             8));
+    pattern_end_fov_x = min(fov_w, fov_x_for_tick(roll_length));
   }
 
   uint16_t ev_idx = 0, ev_end = 0;
@@ -528,19 +520,13 @@ void SeqExtStepPage::draw_pianoroll() {
         if (note_start < fov_offset) {
           note_fov_start = 0;
         } else {
-          note_fov_start =
-              ((seq_extstep_tick_t)(note_start - fov_offset) *
-               (seq_extstep_tick_t)fov_pixels_per_tick) >>
-              8;
+          note_fov_start = fov_x_for_tick(note_start);
         }
         if (note_end >= fov_offset + fov_length) {
           note_fov_end = fov_w;
           note_beyond_fov = true;
         } else {
-          note_fov_end =
-              ((seq_extstep_tick_t)(note_end - fov_offset) *
-               (seq_extstep_tick_t)fov_pixels_per_tick) >>
-              8;
+          note_fov_end = fov_x_for_tick(note_end);
         }
         //On screen notes to be no less than 2 pixels, regardless of zoom
         if (i < j && note_fov_end - note_fov_start < 2) { note_fov_end = note_fov_start + 2; }
@@ -603,9 +589,7 @@ void SeqExtStepPage::draw_pianoroll() {
   // Draw interactive cursor
   uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * ((fov_h) / fov_notes));
   seq_extstep_tick_t fov_cur_x =
-      ((seq_extstep_tick_t)(cur_x - fov_offset) *
-       (seq_extstep_tick_t)fov_pixels_per_tick) >>
-      8;
+      fov_x_for_tick(cur_x);
   uint16_t fov_cur_w =
       ((seq_extstep_tick_t)cur_w *
            (seq_extstep_tick_t)fov_pixels_per_tick +
@@ -946,7 +930,9 @@ void SeqExtStepPage::display() {
     uint8_t oct = cur_y / 12;
     uint8_t note = cur_y - 12 * (cur_y / 12);
     char str[5] = " ";
-    strcpy(str + 1, number_to_note.notes_upper[note]);
+    const char *note_name = number_to_note.notes_upper[note];
+    str[1] = note_name[0];
+    str[2] = note_name[1];
     str[3] = oct + '0';
     str[4] = 0;
     strcat(info1, str);

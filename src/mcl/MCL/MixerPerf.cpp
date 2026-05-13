@@ -10,25 +10,6 @@
 #include "../Drivers/MD/MDParams.h"
 #include "../Drivers/MidiDevice.h"
 
-namespace {
-
-PerfEncoder *perf_encoder(uint8_t idx) {
-  switch (idx) {
-  case 0:
-    return &perf_param1;
-  case 1:
-    return &perf_param2;
-  case 2:
-    return &perf_param3;
-  case 3:
-    return &perf_param4;
-  default:
-    return nullptr;
-  }
-}
-
-} // namespace
-
 namespace MixerPerf {
 
 bool available(MidiDevice *device) {
@@ -108,18 +89,12 @@ uint8_t display_value(Encoder *encoder, uint8_t locks[4][4],
   return highlight ? locks[preview_mute_set][encoder_idx] : encoder->cur;
 }
 
-void clear_scenes(uint8_t encoder_idx) {
-  PerfEncoder *enc = perf_encoder(encoder_idx);
-  if (enc != nullptr) {
-    enc->clear_scenes();
-  }
+void clear_scenes(Encoder *encoder) {
+  ((PerfEncoder *)encoder)->clear_scenes();
 }
 
-void scene_autofill(uint8_t encoder_idx) {
-  PerfEncoder *enc = perf_encoder(encoder_idx);
-  if (enc != nullptr) {
-    enc->scene_autofill();
-  }
+void scene_autofill(Encoder *encoder) {
+  ((PerfEncoder *)encoder)->scene_autofill();
 }
 
 bool handle_preview_lock_button(Encoder *encoder, uint8_t locks[4][4],

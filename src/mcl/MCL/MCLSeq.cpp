@@ -52,21 +52,27 @@ bool handle_mixer_cc(uint8_t device_slot, MidiDevice *device, uint8_t channel,
     *param_out = track_param;
   }
 
-  if (mcl.currentPage() == MIXER_PAGE) {
-    mixer_page.onControlChangeCallback_Midi(device_slot, track, track_param,
-                                            value);
-  }
   if (mixer->is_mute_param(track_param)) {
     mixer_page.redraw_mutes = true;
     return true;
   }
 
+  if (mcl.currentPage() == MIXER_PAGE) {
+    mixer_page.onControlChangeCallback_Midi(device_slot, track, track_param,
+                                            value);
+  }
+
+#if defined(__AVR__)
+  uint8_t perf_dest = device_slot == 2 ? NUM_MD_TRACKS + 4 + track : track;
+#else
   uint8_t dest = track + 1;
   uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(device_slot,
                                                                dest);
+#endif
   if (perf_dest != 255) {
     perf_page.learn_param(perf_dest, track_param, value);
   }
+  uint8_t dest = track + 1;
   lfo_page.learn_param(device_slot, dest, track_param, value);
   return true;
 }
@@ -788,7 +794,11 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t track = mcl_seq.find_ext_track(channel);
   if (track != 255) {
     uint8_t dest = track + 1;
+#if defined(__AVR__)
+    uint8_t perf_dest = NUM_MD_TRACKS + 4 + track;
+#else
     uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(2, dest);
+#endif
     if (perf_dest != 255) {
       perf_page.learn_param(perf_dest, param, value);
     }
