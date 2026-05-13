@@ -315,7 +315,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
     {
         //              m  r                    n                    d   p  f   o
         {"TRACK SEL:",  1, 17,                  0,                   14, NULL_PAGE,  3,  0},
-        {"DEVICE:",     1, 3,                   2,                   50, NULL_PAGE,  0,  192},
+        {"DEVICE:",     0, 2,                   2,                   50, NULL_PAGE,  0,  192},
         {"EDIT:",       0, 4,                   4,                   15, NULL_PAGE,  4,  48},
         {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, NULL_PAGE,  0,  122},
         {"CC:",         0, 133,                 5,                   17, NULL_PAGE,  0,  2},

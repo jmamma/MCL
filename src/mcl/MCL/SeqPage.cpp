@@ -1777,7 +1777,7 @@ void SeqPage::display() {
 
   mcl_gui.draw_panel_toggle(seq_device_idx_name(DeviceIdx::Primary),
                             seq_device_idx_name(DeviceIdx::Secondary),
-                            current_device_idx() == DeviceIdx::Secondary);
+                            current_device_idx() == DeviceIdx::Primary);
   //  draw stop/play/rec state
   mcl_gui.draw_panel_status(recording, MidiClock.state == 2);
 

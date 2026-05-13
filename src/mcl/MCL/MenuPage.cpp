@@ -109,7 +109,7 @@ void MenuPageBase::gen_menu_device_names() {
 
   MidiDevice *devs[] = { device_manager.primary_device(), device_manager.secondary_device() };
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
-    p->pos = n + 1;
+    p->pos = n;
 #ifdef PLATFORM_TBD
     if (devs[0] == devs[1]) {
       if (strcmp(devs[n]->name, "TBD") == 0) {
