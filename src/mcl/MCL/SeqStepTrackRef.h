@@ -26,13 +26,7 @@ using SeqStepTrackBackend = SeqStepTrackGenericBackend;
 
 class SeqStepTrackRef : public SeqStepTrackBackend {
 public:
-  explicit SeqStepTrackRef(MDSeqTrack &track, uint8_t device_slot = 1)
-      : SeqStepTrackBackend(track, device_slot) {}
-
-#if !defined(__AVR__)
-  explicit SeqStepTrackRef(StepSeqDataTrack &track, uint8_t device_slot = 1)
-      : SeqStepTrackBackend(track, device_slot) {}
-#endif
+  using SeqStepTrackBackend::SeqStepTrackBackend;
 };
 
 #if defined(__AVR__)
