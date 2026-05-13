@@ -46,6 +46,34 @@ public:
                               uint8_t param, int16_t value);
 };
 
+class ExtMixerCapability : public DeviceMixerCapability {
+public:
+  ExtMixerCapability(MidiDevice &device, uint8_t *levels,
+                     bool require_level_cc = false)
+      : DeviceMixerCapability(device), levels_(levels),
+        require_level_cc_(require_level_cc) {}
+
+  virtual bool param(const DeviceContext &ctx, uint8_t track,
+                     uint8_t param_idx,
+                     MidiDeviceMixerParam *out) override;
+  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
+                         uint8_t param_idx, int16_t value,
+                         bool send = true) override;
+  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
+                                bool state, bool clear = false) override;
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
+                        uint8_t *track, uint8_t *param) const override;
+  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
+                              uint8_t param, int16_t value) override;
+
+protected:
+  virtual void send_level(uint8_t track, uint8_t level, bool send) = 0;
+
+private:
+  uint8_t *levels_;
+  bool require_level_cc_;
+};
+
 #if !defined(__AVR__)
 class DeviceStepTrackCapability : public DeviceCapability {
 public:

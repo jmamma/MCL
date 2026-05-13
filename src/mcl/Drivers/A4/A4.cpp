@@ -8,24 +8,17 @@
 #include "TurboLight.h"
 #include <string.h>
 
-class A4MixerCapability : public DeviceMixerCapability {
+class A4MixerCapability : public ExtMixerCapability {
 public:
-  explicit A4MixerCapability(A4Class &device) : DeviceMixerCapability(device) {}
-  virtual bool param(const DeviceContext &ctx, uint8_t track,
-                     uint8_t param_idx,
-                     MidiDeviceMixerParam *param) override;
-  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
-                         uint8_t param_idx, int16_t value,
-                         bool send = true) override;
-  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
-                                bool state, bool clear = false) override;
-  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
-                        uint8_t *track, uint8_t *param) const override;
-  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, int16_t value) override;
+  explicit A4MixerCapability(A4Class &device)
+      : ExtMixerCapability(device, device.mixer_levels) {}
 
-private:
-  A4Class &a4() const { return (A4Class &)device_; }
+protected:
+  void send_level(uint8_t track, uint8_t level, bool send) override {
+    if (send) {
+      static_cast<A4Class &>(device_).setLevel(track, level);
+    }
+  }
 };
 
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
@@ -97,52 +90,6 @@ void A4Class::init_grid_devices(uint8_t device_idx) {
 DeviceMixerCapability *A4Class::mixer() {
   static A4MixerCapability capability(*this);
   return &capability;
-}
-
-void A4MixerCapability::set_record_mutes(const DeviceContext &ctx,
-                                         uint8_t track, bool state,
-                                         bool clear) {
-  (void)ctx;
-  DeviceMixerSupport::set_ext_record_mute(track, state, clear);
-}
-
-bool A4MixerCapability::param(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param_idx,
-                              MidiDeviceMixerParam *param) {
-  (void)ctx;
-  return DeviceMixerSupport::ext_level_param(track, param_idx,
-                                             a4().mixer_levels, param);
-}
-
-bool A4MixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
-                                  uint8_t param_idx, int16_t value,
-                                  bool send) {
-  (void)ctx;
-  A4Class &device = a4();
-  uint8_t level = 0;
-  if (!DeviceMixerSupport::set_ext_level(track, param_idx, value,
-                                         device.mixer_levels, &level)) {
-    return false;
-  }
-  if (send) {
-    device.setLevel(track, level);
-  }
-  return true;
-}
-
-bool A4MixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
-                                 uint8_t cc, uint8_t *track,
-                                 uint8_t *param) const {
-  (void)ctx;
-  return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
-                                          a4().get_mute_cc(), track, param);
-}
-
-void A4MixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
-                                       uint8_t param, int16_t value) {
-  (void)ctx;
-  DeviceMixerSupport::update_ext_from_cc(track, param, value,
-                                         a4().mixer_levels);
 }
 
 uint16_t A4Class::sendKitParams(uint8_t *masks) {

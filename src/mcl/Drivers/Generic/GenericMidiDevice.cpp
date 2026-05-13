@@ -7,25 +7,17 @@
 #include "TurboLight.h"
 #include <string.h>
 
-class GenericMidiMixerCapability : public DeviceMixerCapability {
+class GenericMidiMixerCapability : public ExtMixerCapability {
 public:
   explicit GenericMidiMixerCapability(GenericMidiDevice &device)
-      : DeviceMixerCapability(device) {}
-  virtual bool param(const DeviceContext &ctx, uint8_t track,
-                     uint8_t param_idx,
-                     MidiDeviceMixerParam *param) override;
-  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
-                         uint8_t param_idx, int16_t value,
-                         bool send = true) override;
-  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
-                                bool state, bool clear = false) override;
-  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
-                        uint8_t *track, uint8_t *param) const override;
-  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, int16_t value) override;
+      : ExtMixerCapability(device, device.mixer_levels, true) {}
 
-private:
-  GenericMidiDevice &generic() const { return (GenericMidiDevice &)device_; }
+protected:
+  void send_level(uint8_t track, uint8_t level, bool send) override {
+    if (send) {
+      static_cast<GenericMidiDevice &>(device_).setLevel(track, level);
+    }
+  }
 };
 
 #if !defined(__AVR__)
@@ -88,56 +80,6 @@ void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
 DeviceMixerCapability *GenericMidiDevice::mixer() {
   static GenericMidiMixerCapability capability(*this);
   return &capability;
-}
-
-bool GenericMidiMixerCapability::param(const DeviceContext &ctx, uint8_t track,
-                                       uint8_t param_idx,
-                                       MidiDeviceMixerParam *param) {
-  (void)ctx;
-  return DeviceMixerSupport::ext_level_param(track, param_idx,
-                                             generic().mixer_levels, param,
-                                             true);
-}
-
-bool GenericMidiMixerCapability::set_param(const DeviceContext &ctx,
-                                           uint8_t track, uint8_t param_idx,
-                                           int16_t value, bool send) {
-  (void)ctx;
-  GenericMidiDevice &device = generic();
-  uint8_t level = 0;
-  if (!DeviceMixerSupport::set_ext_level(track, param_idx, value,
-                                         device.mixer_levels, &level, true)) {
-    return false;
-  }
-  if (send) {
-    device.setLevel(track, level);
-  }
-  return true;
-}
-
-bool GenericMidiMixerCapability::parse_cc(const DeviceContext &ctx,
-                                          uint8_t channel, uint8_t cc,
-                                          uint8_t *track,
-                                          uint8_t *param) const {
-  (void)ctx;
-  return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
-                                          generic().get_mute_cc(), track,
-                                          param);
-}
-
-void GenericMidiMixerCapability::update_from_cc(const DeviceContext &ctx,
-                                                uint8_t track, uint8_t param,
-                                                int16_t value) {
-  (void)ctx;
-  DeviceMixerSupport::update_ext_from_cc(track, param, value,
-                                         generic().mixer_levels);
-}
-
-void GenericMidiMixerCapability::set_record_mutes(const DeviceContext &ctx,
-                                                  uint8_t track, bool state,
-                                                  bool clear) {
-  (void)ctx;
-  DeviceMixerSupport::set_ext_record_mute(track, state, clear);
 }
 
 #if !defined(__AVR__)

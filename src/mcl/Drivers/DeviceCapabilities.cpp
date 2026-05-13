@@ -209,6 +209,49 @@ void DeviceMixerSupport::set_ext_record_mute(uint8_t track, bool state,
   }
 }
 
+bool ExtMixerCapability::param(const DeviceContext &ctx, uint8_t track,
+                               uint8_t param_idx,
+                               MidiDeviceMixerParam *out) {
+  (void)ctx;
+  return DeviceMixerSupport::ext_level_param(track, param_idx, levels_, out,
+                                              require_level_cc_);
+}
+
+bool ExtMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
+                                   uint8_t param_idx, int16_t value,
+                                   bool send) {
+  (void)ctx;
+  uint8_t level = 0;
+  if (!DeviceMixerSupport::set_ext_level(track, param_idx, value, levels_,
+                                          &level, require_level_cc_)) {
+    return false;
+  }
+  send_level(track, level, send);
+  return true;
+}
+
+void ExtMixerCapability::set_record_mutes(const DeviceContext &ctx,
+                                          uint8_t track, bool state,
+                                          bool clear) {
+  (void)ctx;
+  DeviceMixerSupport::set_ext_record_mute(track, state, clear);
+}
+
+bool ExtMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
+                                  uint8_t cc, uint8_t *track,
+                                  uint8_t *param) const {
+  (void)ctx;
+  return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
+                                          device_.get_mute_cc(), track, param);
+}
+
+void ExtMixerCapability::update_from_cc(const DeviceContext &ctx,
+                                        uint8_t track, uint8_t param,
+                                        int16_t value) {
+  (void)ctx;
+  DeviceMixerSupport::update_ext_from_cc(track, param, value, levels_);
+}
+
 #if !defined(__AVR__)
 DeviceStepTrackCapability::DeviceStepTrackCapability(MidiDevice &device)
     : DeviceCapability(device) {}

@@ -8,25 +8,15 @@
 #include "GridTrack.h"
 #include "MCLStrings.h"
 
-class MNMMixerCapability : public DeviceMixerCapability {
+class MNMMixerCapability : public ExtMixerCapability {
 public:
   explicit MNMMixerCapability(MNMClass &device)
-      : DeviceMixerCapability(device) {}
-  virtual bool param(const DeviceContext &ctx, uint8_t track,
-                     uint8_t param_idx,
-                     MidiDeviceMixerParam *param) override;
-  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
-                         uint8_t param_idx, int16_t value,
-                         bool send = true) override;
-  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
-                                bool state, bool clear = false) override;
-  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
-                        uint8_t *track, uint8_t *param) const override;
-  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, int16_t value) override;
+      : ExtMixerCapability(device, device.kit.levels) {}
 
-private:
-  MNMClass &mnm() const { return (MNMClass &)device_; }
+protected:
+  void send_level(uint8_t track, uint8_t level, bool send) override {
+    static_cast<MNMClass &>(device_).setTrackLevel(track, level, send);
+  }
 };
 
 const ElektronSysexProtocol mnm_protocol = {
@@ -85,50 +75,6 @@ void MNMClass::init_grid_devices(uint8_t device_idx) {
 DeviceMixerCapability *MNMClass::mixer() {
   static MNMMixerCapability capability(*this);
   return &capability;
-}
-
-void MNMMixerCapability::set_record_mutes(const DeviceContext &ctx,
-                                          uint8_t track, bool state,
-                                          bool clear) {
-  (void)ctx;
-  DeviceMixerSupport::set_ext_record_mute(track, state, clear);
-}
-
-bool MNMMixerCapability::param(const DeviceContext &ctx, uint8_t track,
-                               uint8_t param_idx,
-                               MidiDeviceMixerParam *param) {
-  (void)ctx;
-  return DeviceMixerSupport::ext_level_param(track, param_idx,
-                                             mnm().kit.levels, param);
-}
-
-bool MNMMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
-                                   uint8_t param_idx, int16_t value,
-                                   bool send) {
-  (void)ctx;
-  MNMClass &device = mnm();
-  uint8_t level = 0;
-  if (!DeviceMixerSupport::set_ext_level(track, param_idx, value,
-                                         device.kit.levels, &level)) {
-    return false;
-  }
-  device.setTrackLevel(track, level, send);
-  return true;
-}
-
-bool MNMMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
-                                  uint8_t cc, uint8_t *track,
-                                  uint8_t *param) const {
-  (void)ctx;
-  return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
-                                          mnm().get_mute_cc(), track, param);
-}
-
-void MNMMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
-                                        uint8_t param, int16_t value) {
-  (void)ctx;
-  DeviceMixerSupport::update_ext_from_cc(track, param, value,
-                                         mnm().kit.levels);
 }
 
 bool MNMClass::probe() {
