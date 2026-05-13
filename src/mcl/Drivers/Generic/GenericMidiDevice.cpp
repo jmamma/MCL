@@ -33,11 +33,11 @@ class GenericMidiParamCapability : public DeviceParamCapability {
 public:
   explicit GenericMidiParamCapability(GenericMidiDevice &device)
       : DeviceParamCapability(device) {}
-  virtual uint8_t target_count(uint8_t device_idx) const override;
-  virtual uint8_t param_count(uint8_t device_idx,
+  virtual uint8_t target_count(const DeviceContext &ctx) const override;
+  virtual uint8_t param_count(const DeviceContext &ctx,
                               uint8_t target) const override;
-  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t value,
+  virtual bool set_param(const DeviceContext &ctx, uint8_t target,
+                         uint8_t param, uint8_t value,
                          MidiUartClass *uart_ = nullptr) override;
 };
 #endif
@@ -146,21 +146,23 @@ DeviceParamCapability *GenericMidiDevice::params() {
   return &capability;
 }
 
-uint8_t GenericMidiParamCapability::target_count(uint8_t device_idx) const {
-  (void)device_idx;
+uint8_t
+GenericMidiParamCapability::target_count(const DeviceContext &ctx) const {
+  (void)ctx;
   return NUM_EXT_TRACKS;
 }
 
-uint8_t GenericMidiParamCapability::param_count(uint8_t device_idx,
+uint8_t GenericMidiParamCapability::param_count(const DeviceContext &ctx,
                                                 uint8_t target) const {
-  (void)device_idx;
+  (void)ctx;
   return target < NUM_EXT_TRACKS ? 128 : 0;
 }
 
-bool GenericMidiParamCapability::set_param(uint8_t device_idx, uint8_t target,
-                                           uint8_t param, uint8_t value,
+bool GenericMidiParamCapability::set_param(const DeviceContext &ctx,
+                                           uint8_t target, uint8_t param,
+                                           uint8_t value,
                                            MidiUartClass *uart_) {
-  (void)device_idx;
+  (void)ctx;
   if (target >= NUM_EXT_TRACKS || param >= 128) {
     return false;
   }

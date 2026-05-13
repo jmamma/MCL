@@ -285,31 +285,32 @@ void copy_param_number_label(char prefix, uint8_t number, char *out,
 DeviceParamCapability::DeviceParamCapability(MidiDevice &device)
     : DeviceCapability(device) {}
 
-uint8_t DeviceParamCapability::target_count(uint8_t device_idx) const {
-  (void)device_idx;
+uint8_t DeviceParamCapability::target_count(const DeviceContext &ctx) const {
+  (void)ctx;
   return 0;
 }
 
-uint8_t DeviceParamCapability::param_count(uint8_t device_idx,
+uint8_t DeviceParamCapability::param_count(const DeviceContext &ctx,
                                            uint8_t target) const {
-  (void)device_idx;
+  (void)ctx;
   (void)target;
   return 0;
 }
 
-bool DeviceParamCapability::target_label(uint8_t device_idx, uint8_t target,
-                                         char *out, uint8_t len) const {
-  (void)device_idx;
+bool DeviceParamCapability::target_label(const DeviceContext &ctx,
+                                         uint8_t target, char *out,
+                                         uint8_t len) const {
+  (void)ctx;
   (void)target;
   (void)out;
   (void)len;
   return false;
 }
 
-bool DeviceParamCapability::param_label(uint8_t device_idx, uint8_t target,
-                                        uint8_t param, char *out,
-                                        uint8_t len) {
-  (void)device_idx;
+bool DeviceParamCapability::param_label(const DeviceContext &ctx,
+                                        uint8_t target, uint8_t param,
+                                        char *out, uint8_t len) {
+  (void)ctx;
   (void)target;
   (void)param;
   (void)out;
@@ -317,19 +318,19 @@ bool DeviceParamCapability::param_label(uint8_t device_idx, uint8_t target,
   return false;
 }
 
-bool DeviceParamCapability::get_param(uint8_t device_idx, uint8_t target,
+bool DeviceParamCapability::get_param(const DeviceContext &ctx, uint8_t target,
                                       uint8_t param, uint8_t *value) {
-  (void)device_idx;
+  (void)ctx;
   (void)target;
   (void)param;
   (void)value;
   return false;
 }
 
-bool DeviceParamCapability::set_param(uint8_t device_idx, uint8_t target,
+bool DeviceParamCapability::set_param(const DeviceContext &ctx, uint8_t target,
                                       uint8_t param, uint8_t value,
                                       MidiUartClass *uart_) {
-  (void)device_idx;
+  (void)ctx;
   (void)target;
   (void)param;
   (void)value;
@@ -338,15 +339,15 @@ bool DeviceParamCapability::set_param(uint8_t device_idx, uint8_t target,
 }
 
 uint8_t DeviceParamCapability::sequencer_lock_param_count(
-    uint8_t device_idx, uint8_t target) const {
-  return param_count(device_idx, target);
+    const DeviceContext &ctx, uint8_t target) const {
+  return param_count(ctx, target);
 }
 
 bool DeviceParamCapability::sequencer_lock_param_info(
-    uint8_t device_idx, uint8_t target, uint8_t param,
+    const DeviceContext &ctx, uint8_t target, uint8_t param,
     MidiDeviceParamInfo *info) {
   if (info == nullptr ||
-      param >= sequencer_lock_param_count(device_idx, target)) {
+      param >= sequencer_lock_param_count(ctx, target)) {
     return false;
   }
   *info = MidiDeviceParamInfo();
@@ -355,7 +356,7 @@ bool DeviceParamCapability::sequencer_lock_param_info(
   info->param_id = param;
   info->ctrl = param;
   uint8_t value = 0;
-  if (get_param(device_idx, target, param, &value)) {
+  if (get_param(ctx, target, param, &value)) {
     info->default_value = value;
     info->current_value = value;
   }
@@ -363,13 +364,13 @@ bool DeviceParamCapability::sequencer_lock_param_info(
 }
 
 bool DeviceParamCapability::sequencer_lock_param_label(
-    uint8_t device_idx, uint8_t target, uint8_t param, char *out,
+    const DeviceContext &ctx, uint8_t target, uint8_t param, char *out,
     uint8_t len) {
   if (out == nullptr || len == 0 ||
-      param >= sequencer_lock_param_count(device_idx, target)) {
+      param >= sequencer_lock_param_count(ctx, target)) {
     return false;
   }
-  if (param_label(device_idx, target, param, out, len)) {
+  if (param_label(ctx, target, param, out, len)) {
     return true;
   }
   copy_param_number_label('P', param, out, len);
@@ -377,15 +378,15 @@ bool DeviceParamCapability::sequencer_lock_param_label(
 }
 
 bool DeviceParamCapability::sequencer_uses_step_pitch(
-    uint8_t device_idx, uint8_t target) const {
-  (void)device_idx;
+    const DeviceContext &ctx, uint8_t target) const {
+  (void)ctx;
   (void)target;
   return false;
 }
 
 uint8_t DeviceParamCapability::sequencer_pitch_lock_param(
-    uint8_t device_idx, uint8_t target) const {
-  (void)device_idx;
+    const DeviceContext &ctx, uint8_t target) const {
+  (void)ctx;
   (void)target;
   return 0;
 }
@@ -393,52 +394,52 @@ uint8_t DeviceParamCapability::sequencer_pitch_lock_param(
 DevicePerfCapability::DevicePerfCapability(MidiDevice &device)
     : DeviceCapability(device) {}
 
-bool DevicePerfCapability::perf_param_from_key(uint8_t device_idx,
+bool DevicePerfCapability::perf_param_from_key(const DeviceContext &ctx,
                                                uint8_t target, uint8_t key,
                                                uint8_t *param) {
-  (void)device_idx;
+  (void)ctx;
   (void)target;
   (void)key;
   (void)param;
   return false;
 }
 
-bool DevicePerfCapability::perf_key_for_param(uint8_t device_idx,
+bool DevicePerfCapability::perf_key_for_param(const DeviceContext &ctx,
                                               uint8_t target, uint8_t param,
                                               uint8_t *key) {
-  (void)device_idx;
+  (void)ctx;
   (void)target;
   (void)param;
   (void)key;
   return false;
 }
 
-bool DevicePerfCapability::perf_begin_param_editor(uint8_t device_idx,
+bool DevicePerfCapability::perf_begin_param_editor(const DeviceContext &ctx,
                                                    uint8_t target,
                                                    uint8_t *params,
                                                    uint8_t count) {
-  (void)device_idx;
+  (void)ctx;
   (void)target;
   (void)params;
   (void)count;
   return false;
 }
 
-void DevicePerfCapability::perf_end_param_editor(uint8_t device_idx) {
-  (void)device_idx;
+void DevicePerfCapability::perf_end_param_editor(const DeviceContext &ctx) {
+  (void)ctx;
 }
 
-void DevicePerfCapability::perf_set_rec_mode(uint8_t device_idx,
+void DevicePerfCapability::perf_set_rec_mode(const DeviceContext &ctx,
                                              uint8_t mode) {
-  (void)device_idx;
+  (void)ctx;
   (void)mode;
 }
 
-bool DevicePerfCapability::perf_scene_autofill(uint8_t device_idx,
+bool DevicePerfCapability::perf_scene_autofill(const DeviceContext &ctx,
                                                uint8_t dest_offset,
                                                PerfData *data,
                                                uint8_t scene) {
-  (void)device_idx;
+  (void)ctx;
   (void)dest_offset;
   (void)data;
   (void)scene;

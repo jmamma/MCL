@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "../Drivers/DeviceContext.h"
 #include "../Drivers/MidiDeviceParam.h"
 #include <inttypes.h>
 
@@ -23,6 +24,7 @@ struct DeviceParamTarget {
 
   bool valid() const { return device != nullptr; }
   uint8_t device_index() const { return device_idx; }
+  DeviceContext context() const { return DeviceContext(device, device_slot); }
 #endif
 
   uint8_t param_count() const;

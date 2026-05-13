@@ -101,7 +101,7 @@ DeviceParamTarget resolve_slot(uint8_t device_slot, uint8_t dest) {
   DeviceParamCapability *params =
       target.device != nullptr ? target.device->params() : nullptr;
   if (params == nullptr ||
-      target.target >= params->target_count(target.device_idx)) {
+      target.target >= params->target_count(target.context())) {
     target.device = nullptr;
   }
   return target;
@@ -118,7 +118,7 @@ uint8_t DeviceParamTarget::param_count() const {
   return device_slot == 2 ? (target < NUM_EXT_TRACKS ? 128 : 0)
                           : md_param_count(target);
 #else
-  return device->params()->param_count(device_idx, target);
+  return device->params()->param_count(context(), target);
 #endif
 }
 
@@ -129,7 +129,7 @@ bool DeviceParamTarget::target_label(char *out, uint8_t len) const {
 #if defined(__AVR__)
   return device_slot != 2 && md_target_label(target, out, len);
 #else
-  return device->params()->target_label(device_idx, target, out, len);
+  return device->params()->target_label(context(), target, out, len);
 #endif
 }
 
@@ -141,7 +141,7 @@ bool DeviceParamTarget::param_label(uint8_t param, char *out,
 #if defined(__AVR__)
   return device_slot != 2 && md_param_label(target, param, out, len);
 #else
-  return device->params()->param_label(device_idx, target, param, out, len);
+  return device->params()->param_label(context(), target, param, out, len);
 #endif
 }
 
@@ -152,7 +152,7 @@ bool DeviceParamTarget::get_param(uint8_t param, uint8_t *value) const {
 #if defined(__AVR__)
   return device_slot != 2 && md_get_param(target, param, value);
 #else
-  return device->params()->get_param(device_idx, target, param, value);
+  return device->params()->get_param(context(), target, param, value);
 #endif
 }
 
@@ -179,7 +179,7 @@ bool DeviceParamTarget::set_param(uint8_t param, uint8_t value,
   }
   return true;
 #else
-  return device->params()->set_param(device_idx, target, param, value, uart_);
+  return device->params()->set_param(context(), target, param, value, uart_);
 #endif
 }
 
@@ -190,7 +190,7 @@ uint8_t DeviceParamTarget::lock_param_count() const {
 #if defined(__AVR__)
   return device_slot != 2 && target < NUM_MD_TRACKS ? MD_PARAMS_PER_TRACK : 0;
 #else
-  return device->params()->sequencer_lock_param_count(device_idx, target);
+  return device->params()->sequencer_lock_param_count(context(), target);
 #endif
 }
 
@@ -215,7 +215,7 @@ bool DeviceParamTarget::lock_param_info(uint8_t param,
   }
   return true;
 #else
-  return device->params()->sequencer_lock_param_info(device_idx, target, param,
+  return device->params()->sequencer_lock_param_info(context(), target, param,
                                                      info);
 #endif
 }
@@ -232,7 +232,7 @@ bool DeviceParamTarget::lock_param_label(uint8_t param, char *out,
   return copy_short_label(model_param_name(MD.kit.get_model(target), param),
                           out, len, 3);
 #else
-  return device->params()->sequencer_lock_param_label(device_idx, target, param,
+  return device->params()->sequencer_lock_param_label(context(), target, param,
                                                       out, len);
 #endif
 }
@@ -260,7 +260,7 @@ bool DeviceParamTarget::uses_step_pitch() const {
 #if defined(__AVR__)
   return device_slot != 2 && target < NUM_MD_TRACKS;
 #else
-  return device->params()->sequencer_uses_step_pitch(device_idx, target);
+  return device->params()->sequencer_uses_step_pitch(context(), target);
 #endif
 }
 
@@ -271,7 +271,7 @@ uint8_t DeviceParamTarget::pitch_lock_param() const {
 #if defined(__AVR__)
   return 0;
 #else
-  return device->params()->sequencer_pitch_lock_param(device_idx, target);
+  return device->params()->sequencer_pitch_lock_param(context(), target);
 #endif
 }
 
@@ -292,7 +292,7 @@ bool DevicePerfTarget::param_from_key(uint8_t key, uint8_t *param) const {
   return true;
 #else
   return params.device->perf()->perf_param_from_key(
-      params.device_idx, params.target, key, param);
+      params.context(), params.target, key, param);
 #endif
 }
 
@@ -313,7 +313,7 @@ bool DevicePerfTarget::key_for_param(uint8_t param, uint8_t *key) const {
   return true;
 #else
   return params.device->perf()->perf_key_for_param(
-      params.device_idx, params.target, param, key);
+      params.context(), params.target, param, key);
 #endif
 }
 
@@ -331,7 +331,7 @@ bool DevicePerfTarget::begin_param_editor(uint8_t *editor_params,
   return true;
 #else
   return params.device->perf()->perf_begin_param_editor(
-      params.device_idx, params.target, editor_params, count);
+      params.context(), params.target, editor_params, count);
 #endif
 }
 
@@ -349,10 +349,9 @@ uint8_t slot_target_count(uint8_t device_slot) {
 #if defined(__AVR__)
   return device_slot == 2 ? NUM_EXT_TRACKS : NUM_MD_TRACKS + 4;
 #else
-  MidiDevice *device = slot_device(device_slot);
-  return device != nullptr
-             ? device->params()->target_count(slot_device_idx(device_slot))
-             : 0;
+  DeviceContext ctx = device_manager.context_for_slot(device_slot);
+  return ctx.device() != nullptr ? ctx.device()->params()->target_count(ctx)
+                                  : 0;
 #endif
 }
 
@@ -378,10 +377,10 @@ uint8_t perf_target_count() {
 #if defined(__AVR__)
   return NUM_MD_TRACKS + 4 + NUM_EXT_TRACKS;
 #else
-  MidiDevice *primary = device_manager.primary_device();
-  uint8_t count = primary->params()->target_count(0);
-  MidiDevice *secondary = device_manager.secondary_device();
-  return count + secondary->params()->target_count(1);
+  DeviceContext primary_ctx = device_manager.context_for_slot(1);
+  DeviceContext secondary_ctx = device_manager.context_for_slot(2);
+  uint8_t count = primary_ctx.device()->params()->target_count(primary_ctx);
+  return count + secondary_ctx.device()->params()->target_count(secondary_ctx);
 #endif
 }
 
@@ -403,26 +402,26 @@ DevicePerfTarget perf(uint8_t dest) {
   }
   return perf_target;
 #else
-  MidiDevice *primary = device_manager.primary_device();
-  DeviceParamCapability *primary_params = primary->params();
-  uint8_t primary_count = primary_params->target_count(0);
+  DeviceContext primary_ctx = device_manager.context_for_slot(1);
+  DeviceParamCapability *primary_params = primary_ctx.device()->params();
+  uint8_t primary_count = primary_params->target_count(primary_ctx);
   uint8_t local_target = dest - 1;
   if (local_target < primary_count) {
-    target.device = primary;
-    target.device_idx = 0;
-    target.device_slot = 1;
+    target.device = primary_ctx.device();
+    target.device_idx = primary_ctx.grid_idx();
+    target.device_slot = primary_ctx.slot();
     target.target = local_target;
     return perf_target;
   }
 
   local_target -= primary_count;
-  MidiDevice *secondary = device_manager.secondary_device();
-  DeviceParamCapability *secondary_params = secondary->params();
-  uint8_t secondary_count = secondary_params->target_count(1);
+  DeviceContext secondary_ctx = device_manager.context_for_slot(2);
+  DeviceParamCapability *secondary_params = secondary_ctx.device()->params();
+  uint8_t secondary_count = secondary_params->target_count(secondary_ctx);
   if (local_target < secondary_count) {
-    target.device = secondary;
-    target.device_idx = 1;
-    target.device_slot = 2;
+    target.device = secondary_ctx.device();
+    target.device_idx = secondary_ctx.grid_idx();
+    target.device_slot = secondary_ctx.slot();
     target.target = local_target;
   }
   return perf_target;
@@ -441,8 +440,10 @@ void end_perf_param_editor() {
 #if defined(__AVR__)
   MD.deactivate_encoder_interface();
 #else
-  slot_device(1)->perf()->perf_end_param_editor(slot_device_idx(1));
-  slot_device(2)->perf()->perf_end_param_editor(slot_device_idx(2));
+  for (uint8_t slot = 1; slot <= 2; slot++) {
+    DeviceContext ctx = device_manager.context_for_slot(slot);
+    ctx.device()->perf()->perf_end_param_editor(ctx);
+  }
 #endif
 }
 
@@ -450,8 +451,10 @@ void set_perf_rec_mode(uint8_t mode) {
 #if defined(__AVR__)
   MD.set_rec_mode(mode);
 #else
-  slot_device(1)->perf()->perf_set_rec_mode(slot_device_idx(1), mode);
-  slot_device(2)->perf()->perf_set_rec_mode(slot_device_idx(2), mode);
+  for (uint8_t slot = 1; slot <= 2; slot++) {
+    DeviceContext ctx = device_manager.context_for_slot(slot);
+    ctx.device()->perf()->perf_set_rec_mode(ctx, mode);
+  }
 #endif
 }
 
@@ -510,9 +513,9 @@ bool perf_scene_autofill(PerfData *data, uint8_t scene) {
   bool filled = false;
   uint8_t offset = 0;
   for (uint8_t slot = 1; slot <= 2; slot++) {
-    MidiDevice *device = slot_device(slot);
-    filled |= device->perf()->perf_scene_autofill(slot_device_idx(slot),
-                                                  offset, data, scene);
+    DeviceContext ctx = device_manager.context_for_slot(slot);
+    filled |=
+        ctx.device()->perf()->perf_scene_autofill(ctx, offset, data, scene);
     offset += slot_target_count(slot);
   }
   return filled;

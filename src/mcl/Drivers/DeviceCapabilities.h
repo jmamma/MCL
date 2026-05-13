@@ -64,46 +64,47 @@ class DeviceParamCapability : public DeviceCapability {
 public:
   explicit DeviceParamCapability(MidiDevice &device);
 
-  virtual uint8_t target_count(uint8_t device_idx) const;
-  virtual uint8_t param_count(uint8_t device_idx, uint8_t target) const;
-  virtual bool target_label(uint8_t device_idx, uint8_t target, char *out,
-                            uint8_t len) const;
-  virtual bool param_label(uint8_t device_idx, uint8_t target, uint8_t param,
-                           char *out, uint8_t len);
-  virtual bool get_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t *value);
-  virtual bool set_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                         uint8_t value, MidiUartClass *uart_ = nullptr);
-  virtual uint8_t sequencer_lock_param_count(uint8_t device_idx,
+  virtual uint8_t target_count(const DeviceContext &ctx) const;
+  virtual uint8_t param_count(const DeviceContext &ctx, uint8_t target) const;
+  virtual bool target_label(const DeviceContext &ctx, uint8_t target,
+                            char *out, uint8_t len) const;
+  virtual bool param_label(const DeviceContext &ctx, uint8_t target,
+                           uint8_t param, char *out, uint8_t len);
+  virtual bool get_param(const DeviceContext &ctx, uint8_t target,
+                         uint8_t param, uint8_t *value);
+  virtual bool set_param(const DeviceContext &ctx, uint8_t target,
+                         uint8_t param, uint8_t value,
+                         MidiUartClass *uart_ = nullptr);
+  virtual uint8_t sequencer_lock_param_count(const DeviceContext &ctx,
                                              uint8_t target) const;
-  virtual bool sequencer_lock_param_info(uint8_t device_idx, uint8_t target,
-                                         uint8_t param,
+  virtual bool sequencer_lock_param_info(const DeviceContext &ctx,
+                                         uint8_t target, uint8_t param,
                                          MidiDeviceParamInfo *info);
-  virtual bool sequencer_lock_param_label(uint8_t device_idx, uint8_t target,
-                                          uint8_t param, char *out,
-                                          uint8_t len);
-  virtual bool sequencer_uses_step_pitch(uint8_t device_idx,
+  virtual bool sequencer_lock_param_label(const DeviceContext &ctx,
+                                          uint8_t target, uint8_t param,
+                                          char *out, uint8_t len);
+  virtual bool sequencer_uses_step_pitch(const DeviceContext &ctx,
                                          uint8_t target) const;
-  virtual uint8_t sequencer_pitch_lock_param(uint8_t device_idx,
+  virtual uint8_t sequencer_pitch_lock_param(const DeviceContext &ctx,
                                              uint8_t target) const;
-
 };
 
 class DevicePerfCapability : public DeviceCapability {
 public:
   explicit DevicePerfCapability(MidiDevice &device);
 
-  virtual bool perf_param_from_key(uint8_t device_idx, uint8_t target,
+  virtual bool perf_param_from_key(const DeviceContext &ctx, uint8_t target,
                                    uint8_t key, uint8_t *param);
-  virtual bool perf_key_for_param(uint8_t device_idx, uint8_t target,
+  virtual bool perf_key_for_param(const DeviceContext &ctx, uint8_t target,
                                   uint8_t param, uint8_t *key);
-  virtual bool perf_begin_param_editor(uint8_t device_idx, uint8_t target,
-                                       uint8_t *params, uint8_t count);
-  virtual void perf_end_param_editor(uint8_t device_idx);
-  virtual void perf_set_rec_mode(uint8_t device_idx, uint8_t mode);
-  virtual bool perf_scene_autofill(uint8_t device_idx, uint8_t dest_offset,
-                                   PerfData *data, uint8_t scene);
-
+  virtual bool perf_begin_param_editor(const DeviceContext &ctx,
+                                       uint8_t target, uint8_t *params,
+                                       uint8_t count);
+  virtual void perf_end_param_editor(const DeviceContext &ctx);
+  virtual void perf_set_rec_mode(const DeviceContext &ctx, uint8_t mode);
+  virtual bool perf_scene_autofill(const DeviceContext &ctx,
+                                   uint8_t dest_offset, PerfData *data,
+                                   uint8_t scene);
 };
 #endif
 
