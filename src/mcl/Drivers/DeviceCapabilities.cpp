@@ -397,42 +397,41 @@ DevicePerfCapability::DevicePerfCapability(MidiDevice &device)
 bool DevicePerfCapability::perf_param_from_key(const DeviceContext &ctx,
                                                uint8_t target, uint8_t key,
                                                uint8_t *param) {
-  (void)ctx;
-  (void)target;
-  (void)key;
-  (void)param;
-  return false;
+  DeviceStepEditCapability *editor = device_.step_edit();
+  return editor != nullptr &&
+         editor->param_from_key(ctx, target, key, param);
 }
 
 bool DevicePerfCapability::perf_key_for_param(const DeviceContext &ctx,
                                               uint8_t target, uint8_t param,
                                               uint8_t *key) {
-  (void)ctx;
-  (void)target;
-  (void)param;
-  (void)key;
-  return false;
+  DeviceStepEditCapability *editor = device_.step_edit();
+  return editor != nullptr &&
+         editor->key_for_param(ctx, target, param, key);
 }
 
 bool DevicePerfCapability::perf_begin_param_editor(const DeviceContext &ctx,
                                                    uint8_t target,
                                                    uint8_t *params,
                                                    uint8_t count) {
-  (void)ctx;
-  (void)target;
-  (void)params;
-  (void)count;
-  return false;
+  DeviceStepEditCapability *editor = device_.step_edit();
+  return editor != nullptr &&
+         editor->begin_param_editor(ctx, target, params, count);
 }
 
 void DevicePerfCapability::perf_end_param_editor(const DeviceContext &ctx) {
-  (void)ctx;
+  DeviceStepEditCapability *editor = device_.step_edit();
+  if (editor != nullptr) {
+    editor->end_param_editor(ctx);
+  }
 }
 
 void DevicePerfCapability::perf_set_rec_mode(const DeviceContext &ctx,
                                              uint8_t mode) {
-  (void)ctx;
-  (void)mode;
+  DeviceStepEditCapability *editor = device_.step_edit();
+  if (editor != nullptr) {
+    editor->set_rec_mode(ctx, mode);
+  }
 }
 
 bool DevicePerfCapability::perf_scene_autofill(const DeviceContext &ctx,

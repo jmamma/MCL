@@ -201,16 +201,6 @@ private:
 class MDPerfCapability : public DevicePerfCapability {
 public:
   explicit MDPerfCapability(MDClass &device) : DevicePerfCapability(device) {}
-  virtual bool perf_param_from_key(const DeviceContext &ctx, uint8_t target,
-                                   uint8_t key, uint8_t *param) override;
-  virtual bool perf_key_for_param(const DeviceContext &ctx, uint8_t target,
-                                  uint8_t param, uint8_t *key) override;
-  virtual bool perf_begin_param_editor(const DeviceContext &ctx,
-                                       uint8_t target, uint8_t *params,
-                                       uint8_t count) override;
-  virtual void perf_end_param_editor(const DeviceContext &ctx) override;
-  virtual void perf_set_rec_mode(const DeviceContext &ctx,
-                                 uint8_t mode) override;
   virtual bool perf_scene_autofill(const DeviceContext &ctx,
                                    uint8_t dest_offset, PerfData *data,
                                    uint8_t scene) override;
@@ -764,71 +754,6 @@ bool MDStepEditCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
 #endif
 
 #if !defined(__AVR__)
-bool MDPerfCapability::perf_param_from_key(const DeviceContext &ctx,
-                                           uint8_t target, uint8_t key,
-                                           uint8_t *param) {
-  (void)ctx;
-  if (param == nullptr || target >= NUM_MD_TRACKS || key < 0x10 ||
-      key > 0x17) {
-    return false;
-  }
-  MDClass &device = md();
-  uint8_t value = device.currentSynthPage * 8 + key - 0x10;
-  uint8_t num_params =
-      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-  if (value >= num_params) {
-    return false;
-  }
-  *param = value;
-  return true;
-}
-
-bool MDPerfCapability::perf_key_for_param(const DeviceContext &ctx,
-                                          uint8_t target, uint8_t param,
-                                          uint8_t *key) {
-  (void)ctx;
-  if (key == nullptr || target >= NUM_MD_TRACKS) {
-    return false;
-  }
-  MDClass &device = md();
-  uint8_t num_params =
-      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-  if (param >= num_params) {
-    return false;
-  }
-  int16_t value =
-      (int16_t)param - (int16_t)device.currentSynthPage * 8 + 0x10;
-  if (value < 0x10 || value > 0x17) {
-    return false;
-  }
-  *key = (uint8_t)value;
-  return true;
-}
-
-bool MDPerfCapability::perf_begin_param_editor(const DeviceContext &ctx,
-                                               uint8_t target,
-                                               uint8_t *params,
-                                               uint8_t count) {
-  (void)ctx;
-  if (target >= NUM_MD_TRACKS || params == nullptr ||
-      count < MD_PARAMS_PER_TRACK) {
-    return false;
-  }
-  md().activate_encoder_interface(params);
-  return true;
-}
-
-void MDPerfCapability::perf_end_param_editor(const DeviceContext &ctx) {
-  (void)ctx;
-  md().deactivate_encoder_interface();
-}
-
-void MDPerfCapability::perf_set_rec_mode(const DeviceContext &ctx,
-                                         uint8_t mode) {
-  (void)ctx;
-  md().set_rec_mode(mode);
-}
-
 bool MDPerfCapability::perf_scene_autofill(const DeviceContext &ctx,
                                            uint8_t dest_offset,
                                            PerfData *data, uint8_t scene) {
