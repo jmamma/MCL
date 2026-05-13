@@ -148,12 +148,12 @@ public:
 };
 #endif
 
+#if !defined(__AVR__)
 class DevicePanelCapability {
 public:
   virtual void set_key_repeat(uint8_t enabled);
   virtual void set_rec_mode(uint8_t mode);
-#if !defined(__AVR__)
   virtual void sync_seqtrack(uint8_t length, uint8_t speed,
                              uint8_t step_count);
-#endif
 };
+#endif

@@ -61,10 +61,12 @@ DevicePerfCapability *MidiDevice::perf() {
 }
 #endif
 
+#if !defined(__AVR__)
 DevicePanelCapability *MidiDevice::panel() {
   static DevicePanelCapability panel_capability;
   return &panel_capability;
 }
+#endif
 
 void MidiDevice::setPort(MidiClass *_midi, uint8_t _port) {
   cleanup_listeners();

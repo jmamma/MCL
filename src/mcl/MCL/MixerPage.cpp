@@ -1,6 +1,7 @@
 #include "MixerPage.h"
 #include "DeviceManager.h"
 #include "CommonPages.h"
+#include "DevicePanelRef.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "MCLSeq.h"
@@ -274,7 +275,7 @@ void MixerPage::init() {
     encoders[i]->old = 64;
   }
   */
-  device_manager.primary_device()->panel()->set_key_repeat(0);
+  DevicePanelRef::set_primary_key_repeat(0);
   key_interface.on();
   mcl_gui.set_trigleds(0, mixer_led_mode());
   preview_mute_set = 255;
@@ -294,7 +295,7 @@ void MixerPage::init() {
 
 void MixerPage::cleanup() {
   //  md_exploit.off();
-  device_manager.primary_device()->panel()->set_key_repeat(1);
+  DevicePanelRef::set_primary_key_repeat(1);
   disable_record_mutes();
   key_interface.off();
   ext_key_down = 0;

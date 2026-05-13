@@ -506,6 +506,7 @@ bool DeviceStepEditCapability::parse_cc(uint8_t device_idx, uint8_t channel,
 }
 #endif
 
+#if !defined(__AVR__)
 void DevicePanelCapability::set_key_repeat(uint8_t enabled) {
   (void)enabled;
 }
@@ -514,7 +515,6 @@ void DevicePanelCapability::set_rec_mode(uint8_t mode) {
   (void)mode;
 }
 
-#if !defined(__AVR__)
 void DevicePanelCapability::sync_seqtrack(uint8_t length, uint8_t speed,
                                           uint8_t step_count) {
   (void)length;

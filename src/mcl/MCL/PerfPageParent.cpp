@@ -1,5 +1,6 @@
 #include "MCLEncoder.h"
 #include "DeviceManager.h"
+#include "DevicePanelRef.h"
 #include "DeviceParamResolver.h"
 #include "PerfPageParent.h"
 #include "ResourceManager.h"
@@ -11,7 +12,7 @@ void PerfPageParent::setup() { DEBUG_PRINT_FN(); }
 
 void PerfPageParent::init() {
   DEBUG_PRINT_FN();
-  device_manager.primary_device()->panel()->set_key_repeat(0);
+  DevicePanelRef::set_primary_key_repeat(0);
   config_encoders();
   R.Clear();
   R.use_machine_param_names();
@@ -19,7 +20,7 @@ void PerfPageParent::init() {
 }
 
 void PerfPageParent::cleanup() {
-  device_manager.primary_device()->panel()->set_key_repeat(1);
+  DevicePanelRef::set_primary_key_repeat(1);
 }
 
 void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param,

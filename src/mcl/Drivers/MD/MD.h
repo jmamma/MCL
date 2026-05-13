@@ -108,8 +108,8 @@ public:
   virtual DeviceStepEditCapability *step_edit() override;
   virtual DeviceParamCapability *params() override;
   virtual DevicePerfCapability *perf() override;
-#endif
   virtual DevicePanelCapability *panel() override;
+#endif
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool canReadKit() { return true; }

@@ -184,8 +184,8 @@ public:
   virtual DeviceStepEditCapability *step_edit();
   virtual DeviceParamCapability *params();
   virtual DevicePerfCapability *perf();
-#endif
   virtual DevicePanelCapability *panel();
+#endif
   virtual void triggerTrack(uint8_t track, uint8_t velocity,
                             MidiUartClass *uart_ = nullptr) {
     (void)track;
