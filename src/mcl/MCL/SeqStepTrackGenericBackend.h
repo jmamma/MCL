@@ -1,105 +1,41 @@
 #pragma once
 
+#include "../Drivers/Generic/Sequencer/StepSeqDefines.h"
+#include "../Drivers/Generic/Sequencer/StepSeqTrack.h"
+#include "../Drivers/MD/MD.h"
+#include "../Drivers/MD/Sequencer/MDSeqTrack.h"
 #include "../Drivers/MidiDevice.h"
 #include "DeviceManager.h"
 #include "DeviceParamResolver.h"
 #include "SeqDefines.h"
+#include "SeqTrack.h"
 #include <stddef.h>
 #include <stdint.h>
-
-struct SeqStepTrackOps {
-  bool uses_signed_microtiming;
-  bool clears_mute_on_pattern_clear;
-  bool shows_lock_value_popup;
-  bool (*uses_kit_sound)(const void *track);
-  bool (*selects_track_locally)(const void *track);
-  uint8_t (*lock_slot_count)(const void *track);
-  uint8_t (*length)(const void *track);
-  uint8_t (*speed)(const void *track);
-  uint8_t (*step_count)(const void *track);
-  uint8_t (*track_index)(const void *track);
-  uint8_t (*mute_state)(const void *track);
-  void (*set_mute_state)(void *track, uint8_t state);
-  void (*set_length)(void *track, uint8_t len, bool expand);
-  bool (*request_speed_change)(void *track, uint8_t new_speed);
-  uint8_t (*condition_count)(const void *track);
-  void (*condition_label)(const void *track, uint8_t condition, bool plock,
-                          bool marker, char *out);
-  uint8_t (*timing_encoder_min)(const void *track);
-  uint8_t (*timing_encoder_center)(const void *track);
-  uint8_t (*timing_encoder_max)(const void *track);
-  uint8_t (*timing_display_mid)(const void *track);
-  uint8_t (*timing_encoder_for_step)(const void *track, uint8_t step);
-  int8_t (*microtiming_for_step)(const void *track, uint8_t step);
-  void (*rotate_left)(void *track);
-  void (*rotate_right)(void *track);
-  void (*reverse)(void *track);
-  void (*transpose)(void *track, int8_t offset);
-  void (*get_mask)(const void *track, uint64_t *mask, uint8_t ui_mask);
-  bool (*get_step)(const void *track, uint8_t step, uint8_t ui_mask);
-  void (*set_step)(void *track, uint8_t step, uint8_t ui_mask, bool value);
-  uint8_t (*conditional_id)(const void *track, uint8_t step);
-  bool (*conditional_plock)(const void *track, uint8_t step);
-  void (*set_conditional)(void *track, uint8_t step, uint8_t condition,
-                          bool plock);
-  void (*set_timing_from_encoder)(void *track, uint8_t step,
-                                  uint8_t encoder_value);
-  void (*set_pattern_step_from_edit)(void *track, uint8_t step,
-                                     uint8_t condition, bool cond_plock,
-                                     uint8_t timing_encoder);
-  void (*reset_timing)(void *track, uint8_t step);
-  void (*clear_mute)(void *track, uint8_t step);
-  void (*toggle_mute)(void *track, uint8_t step);
-  uint64_t (*mute_mask)(const void *track);
-  void (*enable_step_locks)(void *track, uint8_t step);
-  void (*clear_step_lock)(void *track, uint8_t step, uint8_t param_id);
-  void (*clear_step_locks)(void *track, uint8_t step);
-  void (*clear_param_locks)(void *track, uint8_t param_id);
-  void (*clear_locks)(void *track);
-  bool (*set_track_locks)(void *track, uint8_t step, uint8_t param_id,
-                          uint8_t value);
-  bool (*step_has_lock)(const void *track, uint8_t step, uint8_t lock_idx);
-  uint8_t (*find_param)(const void *track, uint8_t param_id);
-  uint8_t (*get_track_lock_implicit)(void *track, uint8_t step,
-                                     uint8_t param_id);
-  void (*clear_track)(void *track, bool locks);
-  void (*clear_step)(void *track, uint8_t step);
-  void (*clean_params)(void *track);
-  void (*copy_step)(void *track, uint8_t step, MDSeqStep *md_step,
-                    void *stepseq_step);
-  void (*paste_step)(void *track, uint8_t step, MDSeqStep *md_step,
-                     void *stepseq_step);
-  void (*set_track_pitch)(void *track, uint8_t step, uint8_t pitch);
-  void (*get_step_locks)(void *track, uint8_t step, uint8_t *params,
-                         bool ignore_locks_disabled);
-  void (*record_track)(void *track, uint8_t velocity);
-  void (*record_track_locks)(void *track, uint8_t param_id, uint8_t value);
-  bool (*preview_step)(void *track, uint8_t step);
-  void (*set_linked_param_update)(void *track, bool enabled);
-};
-
-const SeqStepTrackOps *seq_step_md_ops();
-const SeqStepTrackOps *seq_step_stepseq_ops();
+#include <string.h>
 
 class SeqStepTrackGenericBackend {
 public:
   explicit SeqStepTrackGenericBackend(MDSeqTrack &track,
                                       uint8_t device_slot = 1)
-      : track_(&track), ops_(seq_step_md_ops()), device_slot_(device_slot) {}
+      : kind_(KIND_MD), device_slot_(device_slot) {
+    tracks_.md = &track;
+  }
 
   explicit SeqStepTrackGenericBackend(StepSeqDataTrack &track,
                                       uint8_t device_slot = 1)
-      : track_(&track), ops_(seq_step_stepseq_ops()),
-        device_slot_(device_slot) {}
-
-  bool uses_signed_microtiming() const { return ops_->uses_signed_microtiming; }
-  bool clears_mute_on_pattern_clear() const {
-    return ops_->clears_mute_on_pattern_clear;
+      : kind_(KIND_STEPSEQ), device_slot_(device_slot) {
+    tracks_.stepseq = &track;
   }
-  bool shows_lock_value_popup() const { return ops_->shows_lock_value_popup; }
-  bool uses_kit_sound() const { return ops_->uses_kit_sound(track_); }
+
+  bool uses_signed_microtiming() const { return kind_ == KIND_STEPSEQ; }
+  bool clears_mute_on_pattern_clear() const { return kind_ == KIND_STEPSEQ; }
+  bool shows_lock_value_popup() const { return kind_ == KIND_MD; }
+
+  bool uses_kit_sound() const {
+    return kind_ == KIND_MD ? true : !tracks_.stepseq->owns_sound_data();
+  }
   bool selects_track_locally() const {
-    return ops_->selects_track_locally(track_);
+    return kind_ == KIND_STEPSEQ && tracks_.stepseq->owns_sound_data();
   }
   bool uses_step_pitch() const {
     return uses_kit_sound() ||
@@ -144,12 +80,7 @@ public:
     }
   }
 
-  void set_live_param_update(bool enabled) const {
-    if (uses_kit_sound()) {
-      step_edit()->set_live_param_update(param_context(), enabled);
-      ops_->set_linked_param_update(track_, enabled);
-    }
-  }
+  void set_live_param_update(bool enabled) const;
 
   bool uses_note_pitch() const {
     return uses_kit_sound() ? step_edit()->kit_sound_uses_note_pitch(
@@ -213,7 +144,9 @@ public:
     return DeviceParamResolver::slot(param_device_slot(), param_dest())
         .lock_param_count();
   }
-  uint8_t lock_slot_count() const { return ops_->lock_slot_count(track_); }
+  uint8_t lock_slot_count() const {
+    return kind_ == KIND_MD ? NUM_LOCKS : STEPSEQ_NUM_LOCKS;
+  }
   bool lock_param_info(uint8_t param_id, SeqStepLockParamInfo &info) const {
     return DeviceParamResolver::slot(param_device_slot(), param_dest())
         .lock_param_info(param_id, &info);
@@ -230,24 +163,46 @@ public:
         .lock_param_label(param_id, dst, (uint8_t)dst_len);
   }
 
-  uint8_t length() const { return ops_->length(track_); }
-  uint8_t speed() const { return ops_->speed(track_); }
-  uint8_t step_count() const { return ops_->step_count(track_); }
-  uint8_t track_index() const { return ops_->track_index(track_); }
-  uint8_t mute_state() const { return ops_->mute_state(track_); }
-  void set_mute_state(uint8_t state) { ops_->set_mute_state(track_, state); }
+  uint8_t length() const {
+    return kind_ == KIND_MD ? tracks_.md->length : tracks_.stepseq->length;
+  }
+  uint8_t speed() const {
+    return kind_ == KIND_MD ? tracks_.md->speed : tracks_.stepseq->speed;
+  }
+  uint8_t step_count() const {
+    return kind_ == KIND_MD ? tracks_.md->step_count
+                            : tracks_.stepseq->step_count;
+  }
+  uint8_t track_index() const {
+    return kind_ == KIND_MD ? tracks_.md->track_number
+                            : tracks_.stepseq->track_number;
+  }
+  uint8_t mute_state() const {
+    return kind_ == KIND_MD ? tracks_.md->mute_state
+                            : tracks_.stepseq->mute_state;
+  }
+  void set_mute_state(uint8_t state) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->mute_state = state;
+    } else {
+      tracks_.stepseq->mute_state = state;
+    }
+  }
   void set_length(uint8_t len, bool expand = false) {
-    ops_->set_length(track_, len, expand);
+    if (kind_ == KIND_MD) {
+      tracks_.md->set_length(len, expand);
+    } else {
+      tracks_.stepseq->set_length(len, expand);
+    }
   }
-  bool request_speed_change(uint8_t new_speed) {
-    return ops_->request_speed_change(track_, new_speed);
-  }
+  bool request_speed_change(uint8_t new_speed);
 
-  uint8_t condition_count() const { return ops_->condition_count(track_); }
-  void condition_label(uint8_t condition, bool plock, bool marker,
-                       char *out) const {
-    ops_->condition_label(track_, condition, plock, marker, out);
+  uint8_t condition_count() const {
+    return kind_ == KIND_MD ? NUM_TRIG_CONDITIONS
+                            : STEPSEQ_NUM_TRIG_CONDITIONS - 1;
   }
+  void condition_label(uint8_t condition, bool plock, bool marker,
+                       char *out) const;
   uint8_t step_conditional_from_knob(uint8_t condition, bool *plock) const {
     uint8_t num_cond = condition_count();
     if (condition > num_cond) {
@@ -261,86 +216,167 @@ public:
     return plock ? condition + condition_count() : condition;
   }
 
-  uint8_t timing_encoder_min() const {
-    return ops_->timing_encoder_min(track_);
-  }
+  uint8_t timing_encoder_min() const { return kind_ == KIND_MD ? 1 : 0; }
   uint8_t timing_encoder_center() const {
-    return ops_->timing_encoder_center(track_);
+    return kind_ == KIND_MD ? SeqTrack::get_timing_mid(tracks_.md->speed)
+                            : 127;
   }
   uint8_t timing_encoder_max() const {
-    return ops_->timing_encoder_max(track_);
+    return kind_ == KIND_MD
+               ? (uint8_t)(SeqTrack::get_timing_mid(tracks_.md->speed) * 2 - 1)
+               : 254;
   }
   uint8_t timing_display_mid() const {
-    return ops_->timing_display_mid(track_);
+    return kind_ == KIND_MD ? SeqTrack::get_timing_mid(tracks_.md->speed) : 0;
   }
   uint8_t timing_encoder_for_step(uint8_t step) const {
-    return ops_->timing_encoder_for_step(track_, step);
+    if (kind_ == KIND_MD) {
+      uint8_t timing = tracks_.md->timing[step];
+      return timing == 0 ? SeqTrack::get_timing_mid(tracks_.md->speed) : timing;
+    }
+    return (uint8_t)(tracks_.stepseq->microtiming[step] + 127);
   }
   int8_t microtiming_from_encoder(uint8_t encoder_value) const {
     return (int8_t)((int16_t)encoder_value - 127);
   }
   int8_t microtiming_for_step(uint8_t step) const {
-    return ops_->microtiming_for_step(track_, step);
+    return kind_ == KIND_MD ? 0 : tracks_.stepseq->microtiming[step];
   }
 
-  void rotate_left() { ops_->rotate_left(track_); }
-  void rotate_right() { ops_->rotate_right(track_); }
-  void reverse() { ops_->reverse(track_); }
-  void transpose(int8_t offset) { ops_->transpose(track_, offset); }
-  void get_mask(uint64_t *mask, uint8_t ui_mask) const {
-    ops_->get_mask(track_, mask, ui_mask);
+  void rotate_left() {
+    if (kind_ == KIND_MD) {
+      tracks_.md->rotate_left();
+    } else {
+      tracks_.stepseq->rotate_left();
+    }
   }
-  bool get_step(uint8_t step, uint8_t ui_mask) const {
-    return ops_->get_step(track_, step, ui_mask);
+  void rotate_right() {
+    if (kind_ == KIND_MD) {
+      tracks_.md->rotate_right();
+    } else {
+      tracks_.stepseq->rotate_right();
+    }
   }
-  void set_step(uint8_t step, uint8_t ui_mask, bool value) {
-    ops_->set_step(track_, step, ui_mask, value);
+  void reverse() {
+    if (kind_ == KIND_MD) {
+      tracks_.md->reverse();
+    } else {
+      tracks_.stepseq->reverse();
+    }
   }
+  void transpose(int8_t offset) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->transpose(offset);
+    } else {
+      tracks_.stepseq->transpose(offset);
+    }
+  }
+  void get_mask(uint64_t *mask, uint8_t ui_mask) const;
+  bool get_step(uint8_t step, uint8_t ui_mask) const;
+  void set_step(uint8_t step, uint8_t ui_mask, bool value);
 
   uint8_t conditional_id(uint8_t step) const {
-    return ops_->conditional_id(track_, step);
+    return kind_ == KIND_MD ? tracks_.md->steps[step].cond_id
+                            : tracks_.stepseq->steps[step].cond_id;
   }
   bool conditional_plock(uint8_t step) const {
-    return ops_->conditional_plock(track_, step);
+    return kind_ == KIND_MD ? tracks_.md->steps[step].cond_plock
+                            : tracks_.stepseq->steps[step].cond_plock;
   }
   void set_conditional(uint8_t step, uint8_t condition, bool plock) {
-    ops_->set_conditional(track_, step, condition, plock);
+    if (kind_ == KIND_MD) {
+      tracks_.md->steps[step].cond_id = condition;
+      tracks_.md->steps[step].cond_plock = plock;
+    } else {
+      tracks_.stepseq->steps[step].cond_id = condition;
+      tracks_.stepseq->steps[step].cond_plock = plock;
+    }
   }
   void clear_conditional(uint8_t step) { set_conditional(step, 0, false); }
   void set_timing_from_encoder(uint8_t step, uint8_t encoder_value) {
-    ops_->set_timing_from_encoder(track_, step, encoder_value);
+    if (kind_ == KIND_MD) {
+      tracks_.md->timing[step] = encoder_value;
+    } else {
+      tracks_.stepseq->microtiming[step] =
+          (int8_t)((int16_t)encoder_value - 127);
+    }
   }
   void set_pattern_step_from_edit(uint8_t step, uint8_t condition_knob,
-                                  uint8_t timing_encoder) {
-    bool cond_plock;
-    uint8_t condition = step_conditional_from_knob(condition_knob, &cond_plock);
-    ops_->set_pattern_step_from_edit(track_, step, condition, cond_plock,
-                                     timing_encoder);
+                                  uint8_t timing_encoder);
+  void reset_timing(uint8_t step) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->timing[step] = tracks_.md->get_timing_mid();
+    } else {
+      tracks_.stepseq->microtiming[step] = 0;
+    }
   }
-  void reset_timing(uint8_t step) { ops_->reset_timing(track_, step); }
-  void clear_mute(uint8_t step) { ops_->clear_mute(track_, step); }
-  void toggle_mute(uint8_t step) { ops_->toggle_mute(track_, step); }
-  uint64_t mute_mask() const { return ops_->mute_mask(track_); }
+  void clear_mute(uint8_t step) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->mute_mask &= ~(1ULL << step);
+    } else {
+      tracks_.stepseq->mute_mask &= ~(1ULL << step);
+    }
+  }
+  void toggle_mute(uint8_t step) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->mute_mask ^= (1ULL << step);
+    } else {
+      tracks_.stepseq->mute_mask ^= (1ULL << step);
+    }
+  }
+  uint64_t mute_mask() const {
+    return kind_ == KIND_MD ? tracks_.md->mute_mask
+                            : tracks_.stepseq->mute_mask;
+  }
 
   void enable_step_locks(uint8_t step) {
-    ops_->enable_step_locks(track_, step);
+    if (kind_ == KIND_MD) {
+      tracks_.md->enable_step_locks(step);
+    } else {
+      tracks_.stepseq->enable_step_locks(step);
+    }
   }
   void clear_step_lock(uint8_t step, uint8_t param_id) {
-    ops_->clear_step_lock(track_, step, param_id);
+    if (kind_ == KIND_MD) {
+      tracks_.md->clear_step_lock(step, param_id);
+    } else {
+      tracks_.stepseq->clear_step_lock(step, param_id);
+    }
   }
-  void clear_step_locks(uint8_t step) { ops_->clear_step_locks(track_, step); }
+  void clear_step_locks(uint8_t step) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->clear_step_locks(step);
+    } else {
+      tracks_.stepseq->clear_step_locks(step);
+    }
+  }
   void clear_param_locks(uint8_t param_id) {
-    ops_->clear_param_locks(track_, param_id);
+    if (kind_ == KIND_MD) {
+      tracks_.md->clear_param_locks(param_id);
+    } else {
+      tracks_.stepseq->clear_param_locks(param_id);
+    }
   }
-  void clear_locks() { ops_->clear_locks(track_); }
+  void clear_locks() {
+    if (kind_ == KIND_MD) {
+      tracks_.md->clear_locks();
+    } else {
+      tracks_.stepseq->clear_locks();
+    }
+  }
   bool set_track_locks(uint8_t step, uint8_t param_id, uint8_t value) {
-    return ops_->set_track_locks(track_, step, param_id, value);
+    return kind_ == KIND_MD
+               ? tracks_.md->set_track_locks(step, param_id, value)
+               : tracks_.stepseq->set_track_locks(step, param_id, value);
   }
   bool step_has_lock(uint8_t step, uint8_t lock_idx) const {
-    return ops_->step_has_lock(track_, step, lock_idx);
+    return kind_ == KIND_MD ? tracks_.md->steps[step].is_lock(lock_idx)
+                            : tracks_.stepseq->steps[step].is_lock(lock_idx);
   }
   int8_t find_param(uint8_t param_id) const {
-    uint8_t lock_idx = ops_->find_param(track_, param_id);
+    uint8_t lock_idx = kind_ == KIND_MD
+                           ? tracks_.md->find_param(param_id)
+                           : tracks_.stepseq->find_param(param_id);
     return lock_idx == 255 ? -1 : (int8_t)lock_idx;
   }
   uint8_t pitch_lock_param_id() const {
@@ -348,31 +384,70 @@ public:
         .pitch_lock_param();
   }
   uint8_t get_track_lock_implicit(uint8_t step, uint8_t param_id) {
-    return ops_->get_track_lock_implicit(track_, step, param_id);
+    return kind_ == KIND_MD
+               ? tracks_.md->get_track_lock_implicit(step, param_id)
+               : tracks_.stepseq->get_track_lock_implicit(step, param_id);
   }
-  void clear_track(bool locks = true) { ops_->clear_track(track_, locks); }
-  void clear_step(uint8_t step) { ops_->clear_step(track_, step); }
-  void clean_params() { ops_->clean_params(track_); }
-  void copy_step(uint8_t step, MDSeqStep *md_step,
-                 StepSeqStep *stepseq_step) {
-    ops_->copy_step(track_, step, md_step, stepseq_step);
+  void clear_track(bool locks = true) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->clear_track(locks);
+    } else {
+      tracks_.stepseq->clear_track(locks);
+    }
+  }
+  void clear_step(uint8_t step);
+  void clean_params() {
+    if (kind_ == KIND_MD) {
+      tracks_.md->clean_params();
+    } else {
+      tracks_.stepseq->clean_params();
+    }
+  }
+  void copy_step(uint8_t step, MDSeqStep *md_step, StepSeqStep *stepseq_step) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->copy_step(step, md_step);
+    } else {
+      tracks_.stepseq->copy_step(step, stepseq_step);
+    }
   }
   void paste_step(uint8_t step, MDSeqStep *md_step,
                   StepSeqStep *stepseq_step) {
-    ops_->paste_step(track_, step, md_step, stepseq_step);
+    if (kind_ == KIND_MD) {
+      tracks_.md->paste_step(step, md_step);
+    } else {
+      tracks_.stepseq->paste_step(step, stepseq_step);
+    }
   }
   void set_track_pitch(uint8_t step, uint8_t pitch) {
-    ops_->set_track_pitch(track_, step, pitch);
+    if (kind_ == KIND_MD) {
+      tracks_.md->set_track_pitch(step, pitch);
+    } else {
+      tracks_.stepseq->set_track_pitch(step, pitch);
+    }
   }
   void get_step_locks(uint8_t step, uint8_t *params,
                       bool ignore_locks_disabled) {
-    ops_->get_step_locks(track_, step, params, ignore_locks_disabled);
+    if (kind_ == KIND_MD) {
+      tracks_.md->get_step_locks(step, params, ignore_locks_disabled);
+    } else {
+      tracks_.stepseq->get_step_locks(step, params, ignore_locks_disabled);
+    }
   }
-  void record_track(uint8_t velocity) { ops_->record_track(track_, velocity); }
+  void record_track(uint8_t velocity) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->record_track(velocity);
+    } else {
+      tracks_.stepseq->record_track(velocity);
+    }
+  }
   void record_track_locks(uint8_t param_id, uint8_t value) {
-    ops_->record_track_locks(track_, param_id, value);
+    if (kind_ == KIND_MD) {
+      tracks_.md->record_track_locks(param_id, value);
+    } else {
+      tracks_.stepseq->record_track_locks(param_id, value);
+    }
   }
-  bool preview_step(uint8_t step) { return ops_->preview_step(track_, step); }
+  bool preview_step(uint8_t step);
 
 private:
   uint8_t param_device_slot() const { return device_slot_; }
@@ -385,7 +460,11 @@ private:
     return param_context().device()->step_edit();
   }
 
-  void *track_;
-  const SeqStepTrackOps *ops_;
+  enum Kind : uint8_t { KIND_MD, KIND_STEPSEQ };
+  union {
+    MDSeqTrack *md;
+    StepSeqDataTrack *stepseq;
+  } tracks_;
+  Kind kind_;
   uint8_t device_slot_;
 };
