@@ -223,13 +223,15 @@ class MDStepTrackCapability : public DeviceStepTrackCapability {
 public:
   explicit MDStepTrackCapability(MDClass &device)
       : DeviceStepTrackCapability(device) {}
-  virtual bool available(uint8_t device_idx) const override;
-  virtual uint8_t track_count(uint8_t device_idx) const override;
-  virtual SeqStepTrackRef track(uint8_t device_idx, uint8_t track) const override;
-  virtual SeqStepTrackRef active_track(uint8_t device_idx) const override;
-  virtual bool parses_kit_cc(uint8_t device_idx) const override;
-  virtual bool parse_kit_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
-                            uint8_t *track, uint8_t *param) const override;
+  virtual bool available(const DeviceContext &ctx) const override;
+  virtual uint8_t track_count(const DeviceContext &ctx) const override;
+  virtual SeqStepTrackRef track(const DeviceContext &ctx,
+                                uint8_t track) const override;
+  virtual SeqStepTrackRef active_track(const DeviceContext &ctx) const override;
+  virtual bool parses_kit_cc(const DeviceContext &ctx) const override;
+  virtual bool parse_kit_cc(const DeviceContext &ctx, uint8_t channel,
+                            uint8_t cc, uint8_t *track,
+                            uint8_t *param) const override;
 
 private:
   MDClass &md() const { return (MDClass &)device_; }
@@ -330,19 +332,19 @@ DevicePanelCapability *MDClass::panel() {
   return &capability;
 }
 
-bool MDStepTrackCapability::available(uint8_t device_idx) const {
-  (void)device_idx;
+bool MDStepTrackCapability::available(const DeviceContext &ctx) const {
+  (void)ctx;
   return true;
 }
 
-uint8_t MDStepTrackCapability::track_count(uint8_t device_idx) const {
-  (void)device_idx;
+uint8_t MDStepTrackCapability::track_count(const DeviceContext &ctx) const {
+  (void)ctx;
   return mcl_seq.num_md_tracks;
 }
 
-SeqStepTrackRef MDStepTrackCapability::track(uint8_t device_idx,
+SeqStepTrackRef MDStepTrackCapability::track(const DeviceContext &ctx,
                                              uint8_t track_idx) const {
-  (void)device_idx;
+  (void)ctx;
   if (track_idx >= mcl_seq.num_md_tracks) {
     track_idx = 0;
   }
@@ -355,19 +357,20 @@ SeqStepTrackRef MDStepTrackCapability::track(uint8_t device_idx,
 }
 
 SeqStepTrackRef MDStepTrackCapability::active_track(
-    uint8_t device_idx) const {
-  return track(device_idx, last_md_track);
+    const DeviceContext &ctx) const {
+  return track(ctx, last_md_track);
 }
 
-bool MDStepTrackCapability::parses_kit_cc(uint8_t device_idx) const {
-  (void)device_idx;
+bool MDStepTrackCapability::parses_kit_cc(const DeviceContext &ctx) const {
+  (void)ctx;
   return true;
 }
 
-bool MDStepTrackCapability::parse_kit_cc(uint8_t device_idx, uint8_t channel,
-                                         uint8_t cc, uint8_t *track,
+bool MDStepTrackCapability::parse_kit_cc(const DeviceContext &ctx,
+                                         uint8_t channel, uint8_t cc,
+                                         uint8_t *track,
                                          uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   if (track == nullptr || param == nullptr) {
     return false;
   }

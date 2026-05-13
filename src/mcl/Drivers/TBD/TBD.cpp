@@ -91,10 +91,11 @@ class TbdStepTrackCapability : public DeviceStepTrackCapability {
 public:
   explicit TbdStepTrackCapability(TbdDevice &device)
       : DeviceStepTrackCapability(device) {}
-  virtual bool available(uint8_t device_idx) const override;
-  virtual uint8_t track_count(uint8_t device_idx) const override;
-  virtual SeqStepTrackRef track(uint8_t device_idx, uint8_t track) const override;
-  virtual SeqStepTrackRef active_track(uint8_t device_idx) const override;
+  virtual bool available(const DeviceContext &ctx) const override;
+  virtual uint8_t track_count(const DeviceContext &ctx) const override;
+  virtual SeqStepTrackRef track(const DeviceContext &ctx,
+                                uint8_t track) const override;
+  virtual SeqStepTrackRef active_track(const DeviceContext &ctx) const override;
 
 private:
   TbdDevice &tbd() const { return (TbdDevice &)device_; }
@@ -1648,18 +1649,18 @@ DeviceParamCapability *TbdDevice::params() {
   return &capability;
 }
 
-bool TbdStepTrackCapability::available(uint8_t device_idx) const {
-  return device_idx == kTbdUiSlotPrimary &&
+bool TbdStepTrackCapability::available(const DeviceContext &ctx) const {
+  return ctx.grid_idx() == kTbdUiSlotPrimary &&
          mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
 }
 
-uint8_t TbdStepTrackCapability::track_count(uint8_t device_idx) const {
-  return available(device_idx) ? mcl_seq.num_tbd_tracks : 0;
+uint8_t TbdStepTrackCapability::track_count(const DeviceContext &ctx) const {
+  return available(ctx) ? mcl_seq.num_tbd_tracks : 0;
 }
 
-SeqStepTrackRef TbdStepTrackCapability::track(uint8_t device_idx,
+SeqStepTrackRef TbdStepTrackCapability::track(const DeviceContext &ctx,
                                               uint8_t track_idx) const {
-  (void)device_idx;
+  (void)ctx;
   if (track_idx >= mcl_seq.num_tbd_tracks) {
     track_idx = 0;
   }
@@ -1667,8 +1668,8 @@ SeqStepTrackRef TbdStepTrackCapability::track(uint8_t device_idx,
 }
 
 SeqStepTrackRef TbdStepTrackCapability::active_track(
-    uint8_t device_idx) const {
-  return track(device_idx, last_md_track);
+    const DeviceContext &ctx) const {
+  return track(ctx, last_md_track);
 }
 
 bool TbdMixerCapability::param(const DeviceContext &ctx, uint8_t track,

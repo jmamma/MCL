@@ -66,43 +66,42 @@ inline MidiClass *seq_step_tracks_midi() {
   return MD.midi;
 }
 #else
-inline DeviceStepTrackCapability *seq_step_track_capability() {
-  return DeviceParamResolver::slot_device(1)->step_tracks();
+inline DeviceContext seq_step_track_context() {
+  return device_manager.context_for_slot(1);
 }
 
-inline uint8_t seq_step_track_device_idx() {
-  return DeviceParamResolver::slot_device_idx(1);
+inline DeviceStepTrackCapability *seq_step_track_capability() {
+  return seq_step_track_context().device()->step_tracks();
 }
 
 inline bool seq_step_tracks_available() {
-  return seq_step_track_capability()->available(seq_step_track_device_idx());
+  return seq_step_track_capability()->available(seq_step_track_context());
 }
 
 inline SeqStepTrackRef seq_step_track_for(uint8_t track) {
-  return seq_step_track_capability()->track(seq_step_track_device_idx(), track);
+  return seq_step_track_capability()->track(seq_step_track_context(), track);
 }
 
 inline SeqStepTrackRef seq_step_active_track() {
-  return seq_step_track_capability()->active_track(seq_step_track_device_idx());
+  return seq_step_track_capability()->active_track(seq_step_track_context());
 }
 
 inline uint8_t seq_step_track_count() {
-  return seq_step_track_capability()->track_count(seq_step_track_device_idx());
+  return seq_step_track_capability()->track_count(seq_step_track_context());
 }
 
 inline bool seq_step_tracks_parse_kit_cc(uint8_t channel, uint8_t cc,
                                          uint8_t *track, uint8_t *param) {
-  return seq_step_track_capability()->parse_kit_cc(seq_step_track_device_idx(),
+  return seq_step_track_capability()->parse_kit_cc(seq_step_track_context(),
                                                    channel, cc, track, param);
 }
 
 inline bool seq_step_tracks_parse_kit_cc_enabled() {
-  return seq_step_track_capability()->parses_kit_cc(
-      seq_step_track_device_idx());
+  return seq_step_track_capability()->parses_kit_cc(seq_step_track_context());
 }
 
 inline MidiClass *seq_step_tracks_midi() {
-  MidiDevice *device = DeviceParamResolver::slot_device(1);
+  MidiDevice *device = seq_step_track_context().device();
   return device != nullptr ? device->midi : nullptr;
 }
 #endif

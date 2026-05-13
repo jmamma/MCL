@@ -51,13 +51,13 @@ class DeviceStepTrackCapability : public DeviceCapability {
 public:
   explicit DeviceStepTrackCapability(MidiDevice &device);
 
-  virtual bool available(uint8_t device_idx) const;
-  virtual uint8_t track_count(uint8_t device_idx) const;
-  virtual SeqStepTrackRef track(uint8_t device_idx, uint8_t track) const;
-  virtual SeqStepTrackRef active_track(uint8_t device_idx) const;
-  virtual bool parses_kit_cc(uint8_t device_idx) const;
-  virtual bool parse_kit_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
-                            uint8_t *track, uint8_t *param) const;
+  virtual bool available(const DeviceContext &ctx) const;
+  virtual uint8_t track_count(const DeviceContext &ctx) const;
+  virtual SeqStepTrackRef track(const DeviceContext &ctx, uint8_t track) const;
+  virtual SeqStepTrackRef active_track(const DeviceContext &ctx) const;
+  virtual bool parses_kit_cc(const DeviceContext &ctx) const;
+  virtual bool parse_kit_cc(const DeviceContext &ctx, uint8_t channel,
+                            uint8_t cc, uint8_t *track, uint8_t *param) const;
 };
 
 class DeviceParamCapability : public DeviceCapability {

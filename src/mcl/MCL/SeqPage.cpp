@@ -637,9 +637,10 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   const uint8_t device_slot = seq_slot_for_device(device);
   bool is_md_device = slot_is_md_device(device_slot);
 #if !defined(__AVR__)
+  DeviceContext step_ctx(device, device_slot);
   if (!is_md_device &&
-      device->step_tracks()->available(device_slot == 2 ? 1 : 0)) {
-    if (track >= device->step_tracks()->track_count(device_slot == 2 ? 1 : 0)) {
+      device->step_tracks()->available(step_ctx)) {
+    if (track >= device->step_tracks()->track_count(step_ctx)) {
       return;
     }
     last_md_track = track;

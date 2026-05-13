@@ -213,38 +213,38 @@ void DeviceMixerSupport::set_ext_record_mute(uint8_t track, bool state,
 DeviceStepTrackCapability::DeviceStepTrackCapability(MidiDevice &device)
     : DeviceCapability(device) {}
 
-bool DeviceStepTrackCapability::available(uint8_t device_idx) const {
-  (void)device_idx;
+bool DeviceStepTrackCapability::available(const DeviceContext &ctx) const {
+  (void)ctx;
   return false;
 }
 
-uint8_t DeviceStepTrackCapability::track_count(uint8_t device_idx) const {
-  (void)device_idx;
+uint8_t DeviceStepTrackCapability::track_count(const DeviceContext &ctx) const {
+  (void)ctx;
   return 0;
 }
 
-SeqStepTrackRef DeviceStepTrackCapability::track(uint8_t device_idx,
+SeqStepTrackRef DeviceStepTrackCapability::track(const DeviceContext &ctx,
                                                  uint8_t track) const {
-  (void)device_idx;
+  (void)ctx;
   (void)track;
   return SeqStepTrackRef(mcl_seq.md_tracks[0]);
 }
 
 SeqStepTrackRef DeviceStepTrackCapability::active_track(
-    uint8_t device_idx) const {
-  return track(device_idx, 0);
+    const DeviceContext &ctx) const {
+  return track(ctx, 0);
 }
 
-bool DeviceStepTrackCapability::parses_kit_cc(uint8_t device_idx) const {
-  (void)device_idx;
+bool DeviceStepTrackCapability::parses_kit_cc(const DeviceContext &ctx) const {
+  (void)ctx;
   return false;
 }
 
-bool DeviceStepTrackCapability::parse_kit_cc(uint8_t device_idx,
+bool DeviceStepTrackCapability::parse_kit_cc(const DeviceContext &ctx,
                                              uint8_t channel, uint8_t cc,
                                              uint8_t *track,
                                              uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   (void)channel;
   (void)cc;
   (void)track;
