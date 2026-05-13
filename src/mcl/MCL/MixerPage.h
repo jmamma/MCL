@@ -10,7 +10,9 @@
 #include "../Midi/midi-common.h"
 
 class MidiDevice;
+class DeviceMixerCapability;
 class SeqTrack;
+struct MidiDeviceMixerParam;
 
 class MuteSet {
 public:
@@ -19,6 +21,35 @@ public:
 
 void encoder_level_handle(EncoderParent *enc);
 
+class MixerTarget {
+public:
+  void bind(DeviceIdx device_idx);
+  void bind(MidiDevice *device, DeviceIdx device_idx);
+
+  MidiDevice *device() const;
+  bool is_null() const;
+  bool is_md_device() const;
+  bool perf_available() const;
+
+  uint8_t default_param() const;
+  uint8_t track_count() const;
+  SeqTrack *seq_track(uint8_t track) const;
+  bool param(uint8_t track, uint8_t param_idx,
+             MidiDeviceMixerParam *out) const;
+  bool set_param(uint8_t track, uint8_t param_idx, int16_t value,
+                 bool send = true) const;
+  void mute_track(uint8_t track, bool mute) const;
+  void set_record_mutes(uint8_t track, bool state, bool clear = false) const;
+  uint8_t trig_group(uint8_t track) const;
+  void select_track(uint8_t track) const;
+  void restore_track_params(uint8_t track) const;
+  bool is_mute_param(uint8_t param) const;
+
+private:
+  DeviceContext ctx_;
+  DeviceMixerCapability *mixer_ = nullptr;
+};
+
 class MixerPage : public LightPage {
 public:
   uint8_t level_pressmode = 0;
@@ -26,8 +57,8 @@ public:
   uint8_t ext_disp_levels[16];
   bool mute_toggle = 0;
   uint8_t ext_key_down;
-  MidiDevice *midi_device;
   DeviceIdx mixer_device_idx = DeviceIdx::Primary;
+  MixerTarget mixer_target;
 
   uint8_t display_mode;
   uint8_t first_track;
@@ -50,10 +81,6 @@ public:
 
   uint8_t get_mute_set(uint8_t key);
   uint8_t default_mixer_param() const;
-  MidiDevice *device_for_mixer_idx(DeviceIdx device_idx) const;
-  DeviceContext context_for_mixer_idx(DeviceIdx device_idx) const;
-  DeviceContext selected_mixer_context() const NOINLINE();
-  MidiDevice *selected_mixer_device() const NOINLINE();
   void sync_selected_mixer_device();
   void select_mixer_device(DeviceIdx device_idx);
   uint8_t mixer_track_count() const;
@@ -68,7 +95,6 @@ public:
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
-    midi_device = nullptr;
     memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
     //memset(perf_locks, 0xFF, sizeof(perf_locks));
     memset(load_types, 1, sizeof(load_types));

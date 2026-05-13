@@ -2,6 +2,7 @@
 #include "DeviceManager.h"
 #include "CommonPages.h"
 #include "DevicePanelRef.h"
+#include "../Drivers/MidiDevice.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "MCLSeq.h"
@@ -56,38 +57,106 @@ bool mixer_arrow_or_yes_key_down() {
   return mixer_arrow_key_down() || key_interface.is_key_down(MDX_KEY_YES);
 }
 
-uint8_t mixer_track_count_for(DeviceMixerCapability *mixer,
-                              const DeviceContext &ctx) {
-  uint8_t count = mixer->track_count(ctx);
+} // namespace
+
+void MixerTarget::bind(DeviceIdx device_idx) {
+  bind(device_manager.device_for_idx(device_idx), device_idx);
+}
+
+void MixerTarget::bind(MidiDevice *device, DeviceIdx device_idx) {
+  if (device == nullptr || device == &null_midi_device) {
+    ctx_ = DeviceContext::for_device(&null_midi_device, device_idx);
+    mixer_ = nullptr;
+    return;
+  }
+  ctx_ = DeviceContext::for_device(device, device_idx);
+  mixer_ = device->mixer();
+}
+
+MidiDevice *MixerTarget::device() const {
+  return ctx_.device();
+}
+
+bool MixerTarget::is_null() const {
+  return mixer_ == nullptr;
+}
+
+bool MixerTarget::is_md_device() const {
+  return SeqTrackUtil::is_md_device(device());
+}
+
+bool MixerTarget::perf_available() const {
+  return MixerPerf::available(device());
+}
+
+uint8_t MixerTarget::default_param() const {
+  return mixer_ != nullptr ? mixer_->default_param() : 0;
+}
+
+uint8_t MixerTarget::track_count() const {
+  if (mixer_ == nullptr) {
+    return 0;
+  }
+  uint8_t count = mixer_->track_count(ctx_);
   return count > 16 ? 16 : count;
 }
 
-} // namespace
-
-MidiDevice *MixerPage::device_for_mixer_idx(DeviceIdx device_idx) const {
-  return device_manager.device_for_idx(device_idx);
+SeqTrack *MixerTarget::seq_track(uint8_t track) const {
+  return mixer_ != nullptr ? mixer_->seq_track(ctx_, track) : nullptr;
 }
 
-DeviceContext MixerPage::context_for_mixer_idx(DeviceIdx device_idx) const {
-  return device_manager.context_for_device(device_idx);
+bool MixerTarget::param(uint8_t track, uint8_t param_idx,
+                        MidiDeviceMixerParam *out) const {
+  return mixer_ != nullptr && mixer_->param(ctx_, track, param_idx, out);
 }
 
-DeviceContext MixerPage::selected_mixer_context() const {
-  return context_for_mixer_idx(mixer_device_idx);
+bool MixerTarget::set_param(uint8_t track, uint8_t param_idx, int16_t value,
+                            bool send) const {
+  return mixer_ != nullptr &&
+         mixer_->set_param(ctx_, track, param_idx, value, send);
 }
 
-MidiDevice *MixerPage::selected_mixer_device() const {
-  return device_for_mixer_idx(mixer_device_idx);
+void MixerTarget::mute_track(uint8_t track, bool mute) const {
+  if (mixer_ != nullptr) {
+    mixer_->mute_track(ctx_, track, mute);
+  }
+}
+
+void MixerTarget::set_record_mutes(uint8_t track, bool state,
+                                   bool clear) const {
+  if (mixer_ != nullptr) {
+    mixer_->set_record_mutes(ctx_, track, state, clear);
+  }
+}
+
+uint8_t MixerTarget::trig_group(uint8_t track) const {
+  return mixer_ != nullptr ? mixer_->trig_group(ctx_, track) : 255;
+}
+
+void MixerTarget::select_track(uint8_t track) const {
+  if (mixer_ != nullptr) {
+    mixer_->select_track(ctx_, track);
+  }
+}
+
+void MixerTarget::restore_track_params(uint8_t track) const {
+  if (mixer_ != nullptr) {
+    mixer_->restore_track_params(ctx_, track);
+  }
+}
+
+bool MixerTarget::is_mute_param(uint8_t param) const {
+  return mixer_ != nullptr && mixer_->is_mute_param(param);
 }
 
 void MixerPage::sync_selected_mixer_device() {
-  midi_device = selected_mixer_device();
-  if (midi_device == &null_midi_device) {
+  mixer_target.bind(mixer_device_idx);
+  if (mixer_target.is_null()) {
     mixer_device_idx = DeviceIdx::Primary;
-    midi_device = device_manager.primary_device();
+    mixer_target.bind(mixer_device_idx);
   }
-  if (midi_device == &null_midi_device) {
-    midi_device = &MD;
+  if (mixer_target.is_null()) {
+    mixer_target.bind(&MD, DeviceIdx::Primary);
   }
 }
 
@@ -99,24 +168,19 @@ void MixerPage::select_mixer_device(DeviceIdx device_idx) {
 }
 
 uint8_t MixerPage::default_mixer_param() const {
-  DeviceContext ctx = selected_mixer_context();
-  return ctx.device()->mixer()->default_param();
+  return mixer_target.default_param();
 }
 
 uint8_t MixerPage::mixer_track_count() const {
-  DeviceContext ctx = selected_mixer_context();
-  return mixer_track_count_for(ctx.device()->mixer(), ctx);
+  return mixer_target.track_count();
 }
 
 SeqTrack *MixerPage::mixer_seq_track(uint8_t track) const {
-  DeviceContext ctx = selected_mixer_context();
-  return ctx.device()->mixer()->seq_track(ctx, track);
+  return mixer_target.seq_track(track);
 }
 
 TrigLEDMode MixerPage::mixer_led_mode() const {
-  MidiDevice *device = selected_mixer_device();
-  bool is_md_device = SeqTrackUtil::is_md_device(device);
-  return is_md_device ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE;
+  return mixer_target.is_md_device() ? TRIGLED_OVERLAY : TRIGLED_EXCLUSIVE;
 }
 
 uint8_t *MixerPage::mixer_meter_levels() {
@@ -142,20 +206,20 @@ void MixerPage::trig(uint8_t track_number) {
   if (track_number >= NUM_MD_TRACKS) {
     return;
   }
-  DeviceContext ctx = device_manager.primary_context();
-  DeviceMixerCapability *mixer = ctx.device()->mixer();
+  MixerTarget target;
+  target.bind(DeviceIdx::Primary);
   MidiDeviceMixerParam info;
   uint8_t level = 127;
-  if (mixer->param(ctx, track_number, mixer->default_param(), &info)) {
+  if (target.param(track_number, target.default_param(), &info)) {
     level = mixer_param_to_7bit(info);
   }
   track_trig(DeviceIdx::Primary, track_number, level);
   GUI_hardware.led.set_flashled(track_number);
 
-  uint8_t trig_group = mixer->trig_group(ctx, track_number);
+  uint8_t trig_group = target.trig_group(track_number);
   if (trig_group < NUM_MD_TRACKS) {
     level = 127;
-    if (mixer->param(ctx, trig_group, mixer->default_param(), &info)) {
+    if (target.param(trig_group, target.default_param(), &info)) {
       level = mixer_param_to_7bit(info);
     }
     track_trig(DeviceIdx::Primary, trig_group, level);
@@ -165,13 +229,11 @@ void MixerPage::trig(uint8_t track_number) {
 
 bool MixerPage::mixer_param_supported_for_held_tracks(uint8_t param) {
   sync_selected_mixer_device();
-  DeviceContext ctx = selected_mixer_context();
-  DeviceMixerCapability *mixer = midi_device->mixer();
   uint8_t len = mixer_track_count();
   for (uint8_t i = 0; i < len; i++) {
     if (note_interface.is_note_on(i)) {
       MidiDeviceMixerParam info;
-      if (mixer->param(ctx, i, param, &info)) {
+      if (mixer_target.param(i, param, &info)) {
         return true;
       }
     }
@@ -226,9 +288,8 @@ bool MixerPage::display_mute_mask() {
   }
 
   if (last_mute_mask != seq_step_page.mute_mask) {
-    MidiDevice *device = selected_mixer_device();
     TrigLEDMode led_mode =
-        SeqTrackUtil::is_md_device(device) ? TRIGLED_MUTE : TRIGLED_EXCLUSIVE;
+        mixer_target.is_md_device() ? TRIGLED_MUTE : TRIGLED_EXCLUSIVE;
     mcl_gui.set_trigleds(seq_step_page.mute_mask, led_mode);
     return true;
   }
@@ -331,9 +392,7 @@ void MixerPage::cleanup() {
 
 void MixerPage::set_level(int curtrack, int value) {
   sync_selected_mixer_device();
-  DeviceContext ctx = selected_mixer_context();
-  DeviceMixerCapability *mixer = midi_device->mixer();
-  mixer->set_param(ctx, curtrack, mixer->default_param(), value, true);
+  mixer_target.set_param(curtrack, mixer_target.default_param(), value, true);
 }
 
 void MixerPage::load_perf_locks(uint8_t state) {
@@ -343,7 +402,7 @@ void MixerPage::loop() {
   constexpr int timeout = 750;
   bool old_draw_encoders = draw_encoders;
   sync_selected_mixer_device();
-  const bool use_perf_encoders = MixerPerf::available(midi_device);
+  const bool use_perf_encoders = mixer_target.perf_available();
   const bool notes_on = note_interface.notes_on;
   bool mixer_encoder_edit = notes_on &&
                             handle_mixer_encoder_edits(use_perf_encoders);
@@ -402,8 +461,6 @@ void MixerPage::draw_encs() {
 
 void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
   sync_selected_mixer_device();
-  DeviceContext ctx = selected_mixer_context();
-  DeviceMixerCapability *mixer = midi_device->mixer();
   set_display_mode(param);
 
   int dir = enc->getValue() - enc->old;
@@ -413,7 +470,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
   for (uint8_t i = 0; i < len; i++) {
     if (note_interface.is_note_on(i)) {
       MidiDeviceMixerParam info;
-      if (mixer->param(ctx, i, param, &info)) {
+      if (mixer_target.param(i, param, &info)) {
         newval = info.value + dir;
 #ifdef PLATFORM_TBD
         if (newval < info.min_value) newval = info.min_value;
@@ -422,7 +479,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
         if (newval < 0) newval = 0;
         if (newval > 127) newval = 127;
 #endif
-        if (mixer->set_param(ctx, i, param, newval, true)) {
+        if (mixer_target.set_param(i, param, newval, true)) {
           SET_BIT16(redraw_mask, i);
         }
       }
@@ -434,8 +491,6 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
 
 void MixerPage::display() {
   sync_selected_mixer_device();
-  DeviceContext ctx = selected_mixer_context();
-  DeviceMixerCapability *mixer = midi_device->mixer();
 
   if (oled_display.textbox_enabled) {
     redraw();
@@ -464,7 +519,7 @@ void MixerPage::display() {
     seq_step_page.mute_mask = mask;
     oled_draw_mutes();
   }
-  const bool show_perf_encoders = MixerPerf::available(midi_device);
+  const bool show_perf_encoders = mixer_target.perf_available();
   if (show_perf_encoders &&
       (draw_encoders || preview_mute_set != 255)) {
     // oled_display.clearDisplay();
@@ -489,7 +544,7 @@ void MixerPage::display() {
     for (uint8_t i = 0; i < len; i++) {
 
       MidiDeviceMixerParam info;
-      if (mixer->param(ctx, i, display_mode, &info)) {
+      if (mixer_target.param(i, display_mode, &info)) {
         fader_level = mixer_param_to_7bit(info);
       } else {
         fader_level = 127;
@@ -533,26 +588,24 @@ void MixerPage::display() {
 
 void MixerPage::record_mutes_set(bool state) {
   sync_selected_mixer_device();
-  DeviceContext ctx = selected_mixer_context();
-  DeviceMixerCapability *mixer = midi_device->mixer();
   uint8_t len = mixer_track_count();
   for (uint8_t i = 0; i < len; i++) {
     if (note_interface.is_note_on(i)) {
-      mixer->set_record_mutes(ctx, i, state, !state);
+      mixer_target.set_record_mutes(i, state, !state);
     }
   }
 }
 
 void MixerPage::disable_record_mutes(bool clear) {
   for (uint8_t dev = 0; dev < 2; dev++) {
-    DeviceContext ctx = context_for_mixer_idx(static_cast<DeviceIdx>(dev));
-    if (ctx.device() == &null_midi_device) {
+    MixerTarget target;
+    target.bind(static_cast<DeviceIdx>(dev));
+    if (target.is_null()) {
       continue;
     }
-    DeviceMixerCapability *mixer = ctx.device()->mixer();
-    uint8_t len = mixer_track_count_for(mixer, ctx);
+    uint8_t len = target.track_count();
     for (uint8_t n = 0; n < len; n++) {
-      mixer->set_record_mutes(ctx, n, false, clear);
+      target.set_record_mutes(n, false, clear);
     }
   }
   if (!seq_step_page.recording) {
@@ -564,12 +617,12 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
   if (load_type != nullptr && state < 255) {
     for (uint8_t dev = 0; dev < 2; dev++) {
       if (!load_type[dev]) continue;
-      DeviceContext ctx = context_for_mixer_idx(static_cast<DeviceIdx>(dev));
-      DeviceMixerCapability *mixer = ctx.device()->mixer();
-      uint8_t len = mixer_track_count_for(mixer, ctx);
+      MixerTarget target;
+      target.bind(static_cast<DeviceIdx>(dev));
+      uint8_t len = target.track_count();
 
       for (uint8_t n = 0; n < len; n++) {
-        SeqTrack *seq_track = mixer->seq_track(ctx, n);
+        SeqTrack *seq_track = target.seq_track(n);
         if (seq_track == nullptr) {
           continue;
         }
@@ -581,15 +634,18 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
         }
         // Switch
         if (mute_state != seq_track->mute_state) {
-          mixer->mute_track(ctx, n, mute_state);
+          target.mute_track(n, mute_state);
           seq_track->mute_state = mute_state;
         }
       }
     }
   }
-  if (state < 4 && load_perf &&
-      MixerPerf::available(selected_mixer_device())) {
-    load_perf_locks(state);
+  if (state < 4 && load_perf) {
+    MixerTarget selected;
+    selected.bind(mixer_device_idx);
+    if (selected.perf_available()) {
+      load_perf_locks(state);
+    }
   }
   redraw_mutes = true;
 }
@@ -615,8 +671,6 @@ void MixerPage::redraw() {
 
 void MixerPage::toggle_or_solo(bool solo) {
   sync_selected_mixer_device();
-  DeviceContext ctx = selected_mixer_context();
-  DeviceMixerCapability *mixer = midi_device->mixer();
   uint8_t len = mixer_track_count();
   for (uint8_t i = 0; i < len; i++) {
     bool note_on = note_interface.is_note_on(i);
@@ -629,12 +683,12 @@ void MixerPage::toggle_or_solo(bool solo) {
       bool mute_state = !note_on;
       if (seq_track->mute_state != mute_state) {
         seq_track->mute_state = mute_state;
-        mixer->mute_track(ctx, i, mute_state);
+        mixer_target.mute_track(i, mute_state);
       }
     } else if (note_on) {
       // TOGGLE
       seq_track->toggle_mute();
-      mixer->mute_track(ctx, i, seq_track->mute_state);
+      mixer_target.mute_track(i, seq_track->mute_state);
     }
   }
   oled_draw_mutes();
@@ -643,9 +697,7 @@ void MixerPage::toggle_or_solo(bool solo) {
 bool MixerPage::handleEvent(gui_event_t *event) {
 
   sync_selected_mixer_device();
-  bool use_perf = MixerPerf::available(midi_device);
-  DeviceContext ctx = selected_mixer_context();
-  DeviceMixerCapability *mixer = midi_device->mixer();
+  bool use_perf = mixer_target.perf_available();
   uint8_t slot = static_cast<uint8_t>(mixer_device_idx);
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
@@ -657,7 +709,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       key_interface.send_md_leds(mixer_led_mode());
     }
 
-    uint8_t len = mixer_track_count_for(mixer, ctx);
+    uint8_t len = mixer_target.track_count();
     if (event->mask == EVENT_BUTTON_PRESSED && track < len) {
       if (note_interface.is_note(track)) {
         if (show_mixer_menu || ext_key_down ||
@@ -676,7 +728,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           // Toggle active mutes
           if (mute_set == 255) {
             seq_track->toggle_mute();
-            mixer->mute_track(ctx, track, seq_track->mute_state);
+            mixer_target.mute_track(track, seq_track->mute_state);
             return true;
           }
 
@@ -692,7 +744,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           // oled_draw_mutes();
         } else if (first_track == 255 && use_perf) {
           first_track = track;
-          mixer->select_track(ctx, track);
+          mixer_target.select_track(track);
         }
         oled_draw_mutes();
       }
@@ -740,7 +792,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         if (use_perf) {
           for (uint8_t i = 0; i < 16; i++) {
             if (note_interface.is_note_on(i)) {
-              mixer->restore_track_params(ctx, i);
+              mixer_target.restore_track_params(i);
             }
           }
         }
@@ -934,9 +986,9 @@ void MixerPage::onControlChangeCallback_Midi(DeviceIdx device_idx,
   if (device_idx == DeviceIdx::None) {
     return;
   }
-  DeviceContext ctx = device_manager.context_for_device(device_idx);
-  DeviceMixerCapability *mixer = ctx.device()->mixer();
-  if (mixer->is_mute_param(track_param)) {
+  MixerTarget target;
+  target.bind(device_idx);
+  if (target.is_mute_param(track_param)) {
     if (device_idx == mixer_device_idx) {
       redraw_mutes = true;
     }
@@ -950,7 +1002,7 @@ void MixerPage::onControlChangeCallback_Midi(DeviceIdx device_idx,
   uint8_t len = mixer_page.mixer_track_count();
   for (uint8_t i = 0; i < len; i++) {
     if (note_interface.is_note_on(i) && (i != track)) {
-      if (mixer->set_param(ctx, i, track_param, value, true)) {
+      if (mixer_target.set_param(i, track_param, value, true)) {
         SET_BIT16(mixer_page.redraw_mask, i);
       }
     }
