@@ -35,7 +35,7 @@ bool seq_page_uses_primary_step_tracks() {
 
 bool seq_page_uses_non_md_primary_step_tracks() {
   return seq_page_uses_primary_step_tracks() &&
-         !SeqTrackUtil::is_md_device(DeviceParamResolver::device_for_idx(DeviceIdx::Secondary));
+         !SeqTrackUtil::is_md_device(DeviceParamResolver::device_for_idx(DeviceIdx::Primary));
 }
 #endif
 

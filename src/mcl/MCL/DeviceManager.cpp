@@ -145,7 +145,15 @@ MidiDevice *DeviceManager::secondary_device() const {
 }
 
 MidiDevice *DeviceManager::device_for_idx(DeviceIdx device_idx) const {
-  return device_idx == DeviceIdx::Secondary ? secondary_device() : primary_device();
+  switch (device_idx) {
+  case DeviceIdx::Primary:
+    return primary_device();
+  case DeviceIdx::Secondary:
+    return secondary_device();
+  case DeviceIdx::None:
+    break;
+  }
+  return &null_midi_device;
 }
 
 DeviceContext DeviceManager::primary_context() const {

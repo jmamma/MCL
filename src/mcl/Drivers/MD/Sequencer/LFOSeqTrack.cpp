@@ -312,7 +312,7 @@ void LFOSeqTrack::reset_runtime() {
   phase_inc = speed_to_phase_increment(speed, legacy_speed_curve,
                                        speed_multiplier());
   step_count = 0;
-  uint16_t seed_base = ((uint16_t)device_idx * 0x0101U) +
+  uint16_t seed_base = ((uint16_t)static_cast<uint8_t>(device_idx) * 0x0101U) +
                        ((uint16_t)track_number * 0x0031U);
   random_state[0] = seed_base + 0x1234U;
   random_state[1] = seed_base + 0x5678U;

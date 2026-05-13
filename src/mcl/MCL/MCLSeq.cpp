@@ -803,7 +803,7 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     if (perf_dest != 255) {
       perf_page.learn_param(perf_dest, param, value);
     }
-    lfo_page.learn_param(DeviceIdx::Primary, dest, param, value);
+    lfo_page.learn_param(DeviceIdx::Secondary, dest, param, value);
   }
 
 }
