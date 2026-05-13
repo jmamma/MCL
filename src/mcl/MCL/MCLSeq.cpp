@@ -62,17 +62,16 @@ bool handle_mixer_cc(uint8_t device_slot, MidiDevice *device, uint8_t channel,
                                             value);
   }
 
+  uint8_t dest = track + 1;
 #if defined(__AVR__)
   uint8_t perf_dest = device_slot == 2 ? NUM_MD_TRACKS + 4 + track : track;
 #else
-  uint8_t dest = track + 1;
   uint8_t perf_dest = DeviceParamResolver::perf_dest_from_slot(device_slot,
                                                                dest);
 #endif
   if (perf_dest != 255) {
     perf_page.learn_param(perf_dest, track_param, value);
   }
-  uint8_t dest = track + 1;
   lfo_page.learn_param(device_slot, dest, track_param, value);
   return true;
 }
