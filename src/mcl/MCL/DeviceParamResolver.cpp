@@ -94,9 +94,10 @@ DeviceParamTarget resolve_slot(uint8_t device_slot, uint8_t dest) {
   if (dest == 0) {
     return target;
   }
-  target.device = DeviceParamResolver::slot_device(device_slot);
-  target.device_idx = DeviceParamResolver::slot_device_idx(device_slot);
-  target.device_slot = device_slot;
+  DeviceContext ctx = device_manager.context_for_slot(device_slot);
+  target.device = ctx.device();
+  target.device_idx = ctx.grid_idx();
+  target.device_slot = ctx.slot();
   target.target = dest - 1;
   DeviceParamCapability *params =
       target.device != nullptr ? target.device->params() : nullptr;
@@ -339,10 +340,6 @@ namespace DeviceParamResolver {
 
 MidiDevice *slot_device(uint8_t device_slot) {
   return device_manager.slot_device(device_slot);
-}
-
-uint8_t slot_device_idx(uint8_t device_slot) {
-  return device_manager.context_for_slot(device_slot).grid_idx();
 }
 
 uint8_t slot_target_count(uint8_t device_slot) {

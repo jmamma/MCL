@@ -71,7 +71,6 @@ struct DevicePerfTarget {
 namespace DeviceParamResolver {
 
 MidiDevice *slot_device(uint8_t device_slot);
-uint8_t slot_device_idx(uint8_t device_slot);
 uint8_t slot_target_count(uint8_t device_slot);
 DeviceParamTarget slot(uint8_t device_slot, uint8_t dest);
 
