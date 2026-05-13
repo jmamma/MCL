@@ -12,16 +12,17 @@ class MNMMixerCapability : public DeviceMixerCapability {
 public:
   explicit MNMMixerCapability(MNMClass &device)
       : DeviceMixerCapability(device) {}
-  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+  virtual bool param(const DeviceContext &ctx, uint8_t track,
+                     uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
-  virtual bool set_param(uint8_t device_idx, uint8_t track,
+  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, int16_t value,
                          bool send = true) override;
-  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
-  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
-  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
                               uint8_t param, int16_t value) override;
 
 private:
@@ -86,24 +87,25 @@ DeviceMixerCapability *MNMClass::mixer() {
   return &capability;
 }
 
-void MNMMixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
-                                          bool state, bool clear) {
-  (void)device_idx;
+void MNMMixerCapability::set_record_mutes(const DeviceContext &ctx,
+                                          uint8_t track, bool state,
+                                          bool clear) {
+  (void)ctx;
   DeviceMixerSupport::set_ext_record_mute(track, state, clear);
 }
 
-bool MNMMixerCapability::param(uint8_t device_idx, uint8_t track,
+bool MNMMixerCapability::param(const DeviceContext &ctx, uint8_t track,
                                uint8_t param_idx,
                                MidiDeviceMixerParam *param) {
-  (void)device_idx;
+  (void)ctx;
   return DeviceMixerSupport::ext_level_param(track, param_idx,
                                              mnm().kit.levels, param);
 }
 
-bool MNMMixerCapability::set_param(uint8_t device_idx, uint8_t track,
+bool MNMMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
                                    uint8_t param_idx, int16_t value,
                                    bool send) {
-  (void)device_idx;
+  (void)ctx;
   MNMClass &device = mnm();
   uint8_t level = 0;
   if (!DeviceMixerSupport::set_ext_level(track, param_idx, value,
@@ -114,17 +116,17 @@ bool MNMMixerCapability::set_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-bool MNMMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+bool MNMMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
                                   uint8_t cc, uint8_t *track,
                                   uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
                                           mnm().get_mute_cc(), track, param);
 }
 
-void MNMMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
+void MNMMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
                                         uint8_t param, int16_t value) {
-  (void)device_idx;
+  (void)ctx;
   DeviceMixerSupport::update_ext_from_cc(track, param, value,
                                          mnm().kit.levels);
 }

@@ -148,23 +148,24 @@ namespace {
 class MDMixerCapability : public DeviceMixerCapability {
 public:
   explicit MDMixerCapability(MDClass &device) : DeviceMixerCapability(device) {}
-  virtual uint8_t default_param(uint8_t device_idx) const override;
-  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+  virtual uint8_t default_param(const DeviceContext &ctx) const override;
+  virtual bool param(const DeviceContext &ctx, uint8_t track,
+                     uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
-  virtual bool set_param(uint8_t device_idx, uint8_t track,
+  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, int16_t value,
                          bool send = true) override;
-  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
-  virtual uint8_t trig_group(uint8_t device_idx,
+  virtual uint8_t trig_group(const DeviceContext &ctx,
                              uint8_t track) const override;
-  virtual void select_track(uint8_t device_idx, uint8_t track) override;
-  virtual void restore_track_params(uint8_t device_idx,
+  virtual void select_track(const DeviceContext &ctx, uint8_t track) override;
+  virtual void restore_track_params(const DeviceContext &ctx,
                                     uint8_t track) override;
-  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
   virtual bool is_mute_param(uint8_t param) const override;
-  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
                               uint8_t param, int16_t value) override;
 
 private:
@@ -375,15 +376,15 @@ bool MDStepTrackCapability::parse_kit_cc(uint8_t device_idx, uint8_t channel,
 }
 #endif
 
-uint8_t MDMixerCapability::default_param(uint8_t device_idx) const {
-  (void)device_idx;
+uint8_t MDMixerCapability::default_param(const DeviceContext &ctx) const {
+  (void)ctx;
   return MODEL_LEVEL;
 }
 
-bool MDMixerCapability::param(uint8_t device_idx, uint8_t track,
+bool MDMixerCapability::param(const DeviceContext &ctx, uint8_t track,
                               uint8_t param_idx,
                               MidiDeviceMixerParam *param) {
-  (void)device_idx;
+  (void)ctx;
   if (param == nullptr || track >= NUM_MD_TRACKS) {
     return false;
   }
@@ -406,10 +407,10 @@ bool MDMixerCapability::param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-bool MDMixerCapability::set_param(uint8_t device_idx, uint8_t track,
+bool MDMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
                                   uint8_t param_idx, int16_t value,
                                   bool send) {
-  (void)device_idx;
+  (void)ctx;
   (void)send;
   if (track >= NUM_MD_TRACKS) {
     return false;
@@ -426,9 +427,10 @@ bool MDMixerCapability::set_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-void MDMixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
-                                         bool state, bool clear) {
-  (void)device_idx;
+void MDMixerCapability::set_record_mutes(const DeviceContext &ctx,
+                                         uint8_t track, bool state,
+                                         bool clear) {
+  (void)ctx;
   if (track >= NUM_MD_TRACKS) {
     return;
   }
@@ -439,25 +441,25 @@ void MDMixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
   }
 }
 
-uint8_t MDMixerCapability::trig_group(uint8_t device_idx,
+uint8_t MDMixerCapability::trig_group(const DeviceContext &ctx,
                                       uint8_t track) const {
-  (void)device_idx;
+  (void)ctx;
   if (track >= NUM_MD_TRACKS) {
     return 255;
   }
   return md().kit.trigGroups[track];
 }
 
-void MDMixerCapability::select_track(uint8_t device_idx, uint8_t track) {
-  (void)device_idx;
+void MDMixerCapability::select_track(const DeviceContext &ctx, uint8_t track) {
+  (void)ctx;
   if (track < NUM_MD_TRACKS) {
     md().setStatus(0x22, track);
   }
 }
 
-void MDMixerCapability::restore_track_params(uint8_t device_idx,
+void MDMixerCapability::restore_track_params(const DeviceContext &ctx,
                                              uint8_t track) {
-  (void)device_idx;
+  (void)ctx;
   if (track >= NUM_MD_TRACKS) {
     return;
   }
@@ -469,10 +471,10 @@ void MDMixerCapability::restore_track_params(uint8_t device_idx,
   }
 }
 
-bool MDMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+bool MDMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
                                  uint8_t cc, uint8_t *track,
                                  uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   if (track == nullptr || param == nullptr) {
     return false;
   }
@@ -484,9 +486,9 @@ bool MDMixerCapability::is_mute_param(uint8_t param) const {
   return param == MODEL_MUTE;
 }
 
-void MDMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
+void MDMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
                                        uint8_t param, int16_t value) {
-  (void)device_idx;
+  (void)ctx;
   if (track >= NUM_MD_TRACKS) {
     return;
   }

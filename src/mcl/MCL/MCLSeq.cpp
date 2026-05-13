@@ -35,16 +35,16 @@ bool handle_mixer_cc(uint8_t device_slot, MidiDevice *device, uint8_t channel,
   if (device == nullptr || device_slot == 0) {
     return false;
   }
-  uint8_t device_idx = device_slot - 1;
+  DeviceContext ctx(device, device_slot);
   uint8_t track = 255;
   uint8_t track_param = 255;
   DeviceMixerCapability *mixer = device->mixer();
-  if (!mixer->parse_cc(device_idx, channel, cc, &track, &track_param) ||
+  if (!mixer->parse_cc(ctx, channel, cc, &track, &track_param) ||
       track == 255) {
     return false;
   }
 
-  mixer->update_from_cc(device_idx, track, track_param, value);
+  mixer->update_from_cc(ctx, track, track_param, value);
   if (track_out != nullptr) {
     *track_out = track;
   }

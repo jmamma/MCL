@@ -11,16 +11,17 @@ class GenericMidiMixerCapability : public DeviceMixerCapability {
 public:
   explicit GenericMidiMixerCapability(GenericMidiDevice &device)
       : DeviceMixerCapability(device) {}
-  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+  virtual bool param(const DeviceContext &ctx, uint8_t track,
+                     uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
-  virtual bool set_param(uint8_t device_idx, uint8_t track,
+  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, int16_t value,
                          bool send = true) override;
-  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
-  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
-  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
                               uint8_t param, int16_t value) override;
 
 private:
@@ -89,19 +90,19 @@ DeviceMixerCapability *GenericMidiDevice::mixer() {
   return &capability;
 }
 
-bool GenericMidiMixerCapability::param(uint8_t device_idx, uint8_t track,
+bool GenericMidiMixerCapability::param(const DeviceContext &ctx, uint8_t track,
                                        uint8_t param_idx,
                                        MidiDeviceMixerParam *param) {
-  (void)device_idx;
+  (void)ctx;
   return DeviceMixerSupport::ext_level_param(track, param_idx,
                                              generic().mixer_levels, param,
                                              true);
 }
 
-bool GenericMidiMixerCapability::set_param(uint8_t device_idx, uint8_t track,
-                                           uint8_t param_idx, int16_t value,
-                                           bool send) {
-  (void)device_idx;
+bool GenericMidiMixerCapability::set_param(const DeviceContext &ctx,
+                                           uint8_t track, uint8_t param_idx,
+                                           int16_t value, bool send) {
+  (void)ctx;
   GenericMidiDevice &device = generic();
   uint8_t level = 0;
   if (!DeviceMixerSupport::set_ext_level(track, param_idx, value,
@@ -114,21 +115,29 @@ bool GenericMidiMixerCapability::set_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-bool GenericMidiMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
-                                          uint8_t cc, uint8_t *track,
+bool GenericMidiMixerCapability::parse_cc(const DeviceContext &ctx,
+                                          uint8_t channel, uint8_t cc,
+                                          uint8_t *track,
                                           uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
                                           generic().get_mute_cc(), track,
                                           param);
 }
 
-void GenericMidiMixerCapability::update_from_cc(uint8_t device_idx,
+void GenericMidiMixerCapability::update_from_cc(const DeviceContext &ctx,
                                                 uint8_t track, uint8_t param,
                                                 int16_t value) {
-  (void)device_idx;
+  (void)ctx;
   DeviceMixerSupport::update_ext_from_cc(track, param, value,
                                          generic().mixer_levels);
+}
+
+void GenericMidiMixerCapability::set_record_mutes(const DeviceContext &ctx,
+                                                  uint8_t track, bool state,
+                                                  bool clear) {
+  (void)ctx;
+  DeviceMixerSupport::set_ext_record_mute(track, state, clear);
 }
 
 #if !defined(__AVR__)
@@ -159,13 +168,6 @@ bool GenericMidiParamCapability::set_param(uint8_t device_idx, uint8_t target,
   return true;
 }
 #endif
-
-void GenericMidiMixerCapability::set_record_mutes(uint8_t device_idx,
-                                                  uint8_t track, bool state,
-                                                  bool clear) {
-  (void)device_idx;
-  DeviceMixerSupport::set_ext_record_mute(track, state, clear);
-}
 
 void GenericMidiDevice::init_grid_devices(uint8_t device_idx) {
   uint8_t grid_idx = 1;

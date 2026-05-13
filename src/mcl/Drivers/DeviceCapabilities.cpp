@@ -10,54 +10,56 @@
 DeviceMixerCapability::DeviceMixerCapability(MidiDevice &device)
     : DeviceCapability(device) {}
 
-uint8_t DeviceMixerCapability::track_count(uint8_t device_idx) const {
-  if (device_idx >= NUM_GRIDS) {
+uint8_t DeviceMixerCapability::track_count(const DeviceContext &ctx) const {
+  uint8_t grid_idx = ctx.grid_idx();
+  if (grid_idx >= NUM_GRIDS) {
     return 0;
   }
   uint8_t count = 0;
-  const MidiDeviceGrid &grid = proj.grids[device_idx];
+  const MidiDeviceGrid &grid = proj.grids[grid_idx];
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
     const GridDeviceTrack &gdt = grid.tracks[n];
     if (gdt.track_type != EMPTY_TRACK_TYPE && gdt.group_type == GROUP_DEV &&
-        gdt.device_idx == device_idx && gdt.seq_track != nullptr) {
+        gdt.device_idx == grid_idx && gdt.seq_track != nullptr) {
       count = n + 1;
     }
   }
   return count;
 }
 
-SeqTrack *DeviceMixerCapability::seq_track(uint8_t device_idx,
+SeqTrack *DeviceMixerCapability::seq_track(const DeviceContext &ctx,
                                            uint8_t track) {
-  if (device_idx >= NUM_GRIDS || track >= GRID_WIDTH) {
+  uint8_t grid_idx = ctx.grid_idx();
+  if (grid_idx >= NUM_GRIDS || track >= GRID_WIDTH) {
     return nullptr;
   }
-  GridDeviceTrack &gdt = proj.grids[device_idx].tracks[track];
+  GridDeviceTrack &gdt = proj.grids[grid_idx].tracks[track];
   if (gdt.track_type == EMPTY_TRACK_TYPE || gdt.group_type != GROUP_DEV ||
-      gdt.device_idx != device_idx) {
+      gdt.device_idx != grid_idx) {
     return nullptr;
   }
   return gdt.seq_track;
 }
 
-uint8_t DeviceMixerCapability::default_param(uint8_t device_idx) const {
-  (void)device_idx;
+uint8_t DeviceMixerCapability::default_param(const DeviceContext &ctx) const {
+  (void)ctx;
   return 0;
 }
 
-bool DeviceMixerCapability::param(uint8_t device_idx, uint8_t track,
+bool DeviceMixerCapability::param(const DeviceContext &ctx, uint8_t track,
                                   uint8_t param_idx,
                                   MidiDeviceMixerParam *out) {
-  (void)device_idx;
+  (void)ctx;
   (void)track;
   (void)param_idx;
   (void)out;
   return false;
 }
 
-bool DeviceMixerCapability::set_param(uint8_t device_idx, uint8_t track,
+bool DeviceMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
                                       uint8_t param_idx, int16_t value,
                                       bool send) {
-  (void)device_idx;
+  (void)ctx;
   (void)track;
   (void)param_idx;
   (void)value;
@@ -65,44 +67,45 @@ bool DeviceMixerCapability::set_param(uint8_t device_idx, uint8_t track,
   return false;
 }
 
-void DeviceMixerCapability::mute_track(uint8_t device_idx, uint8_t track,
+void DeviceMixerCapability::mute_track(const DeviceContext &ctx, uint8_t track,
                                        bool mute, MidiUartClass *uart_) {
-  (void)device_idx;
+  (void)ctx;
   device_.muteTrack(track, mute, uart_);
 }
 
-void DeviceMixerCapability::set_record_mutes(uint8_t device_idx,
+void DeviceMixerCapability::set_record_mutes(const DeviceContext &ctx,
                                              uint8_t track, bool state,
                                              bool clear) {
   (void)clear;
-  SeqTrack *track_ptr = seq_track(device_idx, track);
+  SeqTrack *track_ptr = seq_track(ctx, track);
   if (track_ptr != nullptr) {
     track_ptr->record_mutes = state;
   }
 }
 
-uint8_t DeviceMixerCapability::trig_group(uint8_t device_idx,
+uint8_t DeviceMixerCapability::trig_group(const DeviceContext &ctx,
                                           uint8_t track) const {
-  (void)device_idx;
+  (void)ctx;
   (void)track;
   return 255;
 }
 
-void DeviceMixerCapability::select_track(uint8_t device_idx, uint8_t track) {
-  (void)device_idx;
+void DeviceMixerCapability::select_track(const DeviceContext &ctx,
+                                         uint8_t track) {
+  (void)ctx;
   (void)track;
 }
 
-void DeviceMixerCapability::restore_track_params(uint8_t device_idx,
+void DeviceMixerCapability::restore_track_params(const DeviceContext &ctx,
                                                  uint8_t track) {
-  (void)device_idx;
+  (void)ctx;
   (void)track;
 }
 
-bool DeviceMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+bool DeviceMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
                                      uint8_t cc, uint8_t *track,
                                      uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   (void)channel;
   (void)cc;
   (void)track;
@@ -114,16 +117,17 @@ bool DeviceMixerCapability::is_mute_param(uint8_t param) const {
   return param == MUTE_PARAM;
 }
 
-void DeviceMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
-                                           uint8_t param, int16_t value) {
+void DeviceMixerCapability::update_from_cc(const DeviceContext &ctx,
+                                           uint8_t track, uint8_t param,
+                                           int16_t value) {
   if (is_mute_param(param)) {
-    SeqTrack *seq_track = this->seq_track(device_idx, track);
+    SeqTrack *seq_track = this->seq_track(ctx, track);
     if (seq_track != nullptr) {
       seq_track->mute_state = value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
     }
     return;
   }
-  set_param(device_idx, track, param, value, false);
+  set_param(ctx, track, param, value, false);
 }
 
 bool DeviceMixerSupport::ext_level_param(uint8_t track, uint8_t param_idx,

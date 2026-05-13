@@ -11,16 +11,17 @@
 class A4MixerCapability : public DeviceMixerCapability {
 public:
   explicit A4MixerCapability(A4Class &device) : DeviceMixerCapability(device) {}
-  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+  virtual bool param(const DeviceContext &ctx, uint8_t track,
+                     uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
-  virtual bool set_param(uint8_t device_idx, uint8_t track,
+  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, int16_t value,
                          bool send = true) override;
-  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
-  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
-  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
                               uint8_t param, int16_t value) override;
 
 private:
@@ -98,24 +99,25 @@ DeviceMixerCapability *A4Class::mixer() {
   return &capability;
 }
 
-void A4MixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
-                                         bool state, bool clear) {
-  (void)device_idx;
+void A4MixerCapability::set_record_mutes(const DeviceContext &ctx,
+                                         uint8_t track, bool state,
+                                         bool clear) {
+  (void)ctx;
   DeviceMixerSupport::set_ext_record_mute(track, state, clear);
 }
 
-bool A4MixerCapability::param(uint8_t device_idx, uint8_t track,
+bool A4MixerCapability::param(const DeviceContext &ctx, uint8_t track,
                               uint8_t param_idx,
                               MidiDeviceMixerParam *param) {
-  (void)device_idx;
+  (void)ctx;
   return DeviceMixerSupport::ext_level_param(track, param_idx,
                                              a4().mixer_levels, param);
 }
 
-bool A4MixerCapability::set_param(uint8_t device_idx, uint8_t track,
+bool A4MixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
                                   uint8_t param_idx, int16_t value,
                                   bool send) {
-  (void)device_idx;
+  (void)ctx;
   A4Class &device = a4();
   uint8_t level = 0;
   if (!DeviceMixerSupport::set_ext_level(track, param_idx, value,
@@ -128,17 +130,17 @@ bool A4MixerCapability::set_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-bool A4MixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+bool A4MixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
                                  uint8_t cc, uint8_t *track,
                                  uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   return DeviceMixerSupport::parse_ext_cc(channel, cc, mcl_cfg.uart2_cc_level,
                                           a4().get_mute_cc(), track, param);
 }
 
-void A4MixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
+void A4MixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
                                        uint8_t param, int16_t value) {
-  (void)device_idx;
+  (void)ctx;
   DeviceMixerSupport::update_ext_from_cc(track, param, value,
                                          a4().mixer_levels);
 }

@@ -6,6 +6,7 @@
 // #include "Pages.h"
 #include "GUI.h"
 #include "MCL.h"
+#include "../Drivers/DeviceContext.h"
 #include "../Midi/midi-common.h"
 
 class MidiDevice;
@@ -50,6 +51,8 @@ public:
   uint8_t get_mute_set(uint8_t key);
   uint8_t default_mixer_param() const;
   MidiDevice *device_for_mixer_slot(uint8_t device_idx) const;
+  DeviceContext context_for_mixer_slot(uint8_t device_idx) const;
+  DeviceContext selected_mixer_context() const;
   MidiDevice *selected_mixer_device() const;
   void sync_selected_mixer_device();
   void select_mixer_device(uint8_t device_idx);

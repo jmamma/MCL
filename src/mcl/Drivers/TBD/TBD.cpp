@@ -68,18 +68,19 @@ class TbdMixerCapability : public DeviceMixerCapability {
 public:
   explicit TbdMixerCapability(TbdDevice &device)
       : DeviceMixerCapability(device) {}
-  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+  virtual bool param(const DeviceContext &ctx, uint8_t track,
+                     uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
-  virtual bool set_param(uint8_t device_idx, uint8_t track,
+  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, int16_t value,
                          bool send = true) override;
-  virtual void mute_track(uint8_t device_idx, uint8_t track, bool mute,
+  virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr) override;
-  virtual void set_record_mutes(uint8_t device_idx, uint8_t track,
+  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
-  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
-  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
                               uint8_t param, int16_t value) override;
 
 private:
@@ -1670,13 +1671,13 @@ SeqStepTrackRef TbdStepTrackCapability::active_track(
   return track(device_idx, last_md_track);
 }
 
-bool TbdMixerCapability::param(uint8_t device_idx, uint8_t track,
+bool TbdMixerCapability::param(const DeviceContext &ctx, uint8_t track,
                                uint8_t param_idx,
                                MidiDeviceMixerParam *param) {
   if (param == nullptr) {
     return false;
   }
-  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  TbdP4SoundData *sound = p4_sound_for_mixer(ctx.grid_idx(), track);
   if (sound == nullptr || param_idx >= TBD_P4_MIXER_PARAM_COUNT) {
     return false;
   }
@@ -1691,10 +1692,10 @@ bool TbdMixerCapability::param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-bool TbdMixerCapability::set_param(uint8_t device_idx, uint8_t track,
+bool TbdMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
                                    uint8_t param_idx, int16_t value,
                                    bool send) {
-  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  TbdP4SoundData *sound = p4_sound_for_mixer(ctx.grid_idx(), track);
   if (sound == nullptr || param_idx >= TBD_P4_MIXER_PARAM_COUNT) {
     return false;
   }
@@ -1721,15 +1722,15 @@ bool TbdMixerCapability::set_param(uint8_t device_idx, uint8_t track,
   return true;
 }
 
-bool TbdMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+bool TbdMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
                                   uint8_t cc, uint8_t *track,
                                   uint8_t *param) const {
   if (track == nullptr || param == nullptr) {
     return false;
   }
-  uint8_t count = track_count(device_idx);
+  uint8_t count = track_count(ctx);
   for (uint8_t t = 0; t < count; t++) {
-    TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, t);
+    TbdP4SoundData *sound = p4_sound_for_mixer(ctx.grid_idx(), t);
     if (sound == nullptr || sound->midi_channel != channel) {
       continue;
     }
@@ -1746,9 +1747,9 @@ bool TbdMixerCapability::parse_cc(uint8_t device_idx, uint8_t channel,
   return false;
 }
 
-void TbdMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
+void TbdMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
                                         uint8_t param, int16_t value) {
-  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  TbdP4SoundData *sound = p4_sound_for_mixer(ctx.grid_idx(), track);
   if (sound == nullptr || param >= TBD_P4_MIXER_PARAM_COUNT) {
     return;
   }
@@ -1916,26 +1917,28 @@ uint8_t TbdParamCapability::sequencer_pitch_lock_param(uint8_t device_idx,
   return TBD_P4_LOCK_NOTE_PARAM;
 }
 
-void TbdMixerCapability::mute_track(uint8_t device_idx, uint8_t track,
+void TbdMixerCapability::mute_track(const DeviceContext &ctx, uint8_t track,
                                     bool mute, MidiUartClass *uart_) {
   (void)uart_;
-  TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
+  TbdP4SoundData *sound = p4_sound_for_mixer(ctx.grid_idx(), track);
   if (sound == nullptr) {
     return;
   }
   tbd_p4_command.set_track_mute(sound->p4_track_index, mute);
 }
 
-void TbdMixerCapability::set_record_mutes(uint8_t device_idx, uint8_t track,
-                                          bool state, bool clear) {
-  SeqTrack *seq_track = seq_track_for_mixer(device_idx, track);
+void TbdMixerCapability::set_record_mutes(const DeviceContext &ctx,
+                                          uint8_t track, bool state,
+                                          bool clear) {
+  uint8_t grid_idx = ctx.grid_idx();
+  SeqTrack *seq_track = seq_track_for_mixer(grid_idx, track);
   if (seq_track == nullptr) {
     return;
   }
   seq_track->record_mutes = state;
-  if (clear && device_idx == kTbdUiSlotPrimary) {
+  if (clear && grid_idx == kTbdUiSlotPrimary) {
     mcl_seq.tbd_tracks[track].clear_mute();
-  } else if (clear && device_idx == kTbdUiSlotSecondary) {
+  } else if (clear && grid_idx == kTbdUiSlotSecondary) {
     mcl_seq.midi_tracks[track].clear_mute();
   }
 }

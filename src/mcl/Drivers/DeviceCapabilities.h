@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DeviceContext.h"
 #include <inttypes.h>
 
 class MidiDevice;
@@ -23,27 +24,26 @@ public:
 
   explicit DeviceMixerCapability(MidiDevice &device);
 
-  virtual uint8_t track_count(uint8_t device_idx) const;
-  virtual SeqTrack *seq_track(uint8_t device_idx, uint8_t track);
-  virtual uint8_t default_param(uint8_t device_idx) const;
-  virtual bool param(uint8_t device_idx, uint8_t track, uint8_t param_idx,
+  virtual uint8_t track_count(const DeviceContext &ctx) const;
+  virtual SeqTrack *seq_track(const DeviceContext &ctx, uint8_t track);
+  virtual uint8_t default_param(const DeviceContext &ctx) const;
+  virtual bool param(const DeviceContext &ctx, uint8_t track, uint8_t param_idx,
                      MidiDeviceMixerParam *out);
-  virtual bool set_param(uint8_t device_idx, uint8_t track,
+  virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, int16_t value,
                          bool send = true);
-  virtual void mute_track(uint8_t device_idx, uint8_t track, bool mute,
+  virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr);
-  virtual void set_record_mutes(uint8_t device_idx, uint8_t track, bool state,
-                                bool clear = false);
-  virtual uint8_t trig_group(uint8_t device_idx, uint8_t track) const;
-  virtual void select_track(uint8_t device_idx, uint8_t track);
-  virtual void restore_track_params(uint8_t device_idx, uint8_t track);
-  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
+                                bool state, bool clear = false);
+  virtual uint8_t trig_group(const DeviceContext &ctx, uint8_t track) const;
+  virtual void select_track(const DeviceContext &ctx, uint8_t track);
+  virtual void restore_track_params(const DeviceContext &ctx, uint8_t track);
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const;
   virtual bool is_mute_param(uint8_t param) const;
-  virtual void update_from_cc(uint8_t device_idx, uint8_t track,
+  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
                               uint8_t param, int16_t value);
-
 };
 
 #if !defined(__AVR__)
