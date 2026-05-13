@@ -11,7 +11,7 @@ DeviceMixerCapability::DeviceMixerCapability(MidiDevice &device)
     : DeviceCapability(device) {}
 
 uint8_t DeviceMixerCapability::track_count(const DeviceContext &ctx) const {
-  uint8_t grid_idx = ctx.device_idx();
+  uint8_t grid_idx = static_cast<uint8_t>(ctx.device_idx());
   if (grid_idx >= NUM_GRIDS) {
     return 0;
   }
@@ -29,7 +29,7 @@ uint8_t DeviceMixerCapability::track_count(const DeviceContext &ctx) const {
 
 SeqTrack *DeviceMixerCapability::seq_track(const DeviceContext &ctx,
                                            uint8_t track) {
-  uint8_t grid_idx = ctx.device_idx();
+  uint8_t grid_idx = static_cast<uint8_t>(ctx.device_idx());
   if (grid_idx >= NUM_GRIDS || track >= GRID_WIDTH) {
     return nullptr;
   }

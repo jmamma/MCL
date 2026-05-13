@@ -20,8 +20,8 @@ uint8_t perf_editor_dest() {
 #if defined(__AVR__)
   return last_md_track + 1;
 #else
-  uint8_t dest =
-      DeviceParamResolver::perf_dest_from_idx(1, last_md_track + 1);
+  uint8_t dest = DeviceParamResolver::perf_dest_from_idx(DeviceIdx::Primary,
+                                                          last_md_track + 1);
   return dest == 255 ? 0 : dest + 1;
 #endif
 }

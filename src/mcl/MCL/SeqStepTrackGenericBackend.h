@@ -16,13 +16,13 @@
 class SeqStepTrackGenericBackend {
 public:
   explicit SeqStepTrackGenericBackend(MDSeqTrack &track,
-                                      uint8_t device_idx = 0)
+                                      DeviceIdx device_idx = DeviceIdx::Primary)
       : kind_(KIND_MD), device_idx_(device_idx) {
     tracks_.md = &track;
   }
 
   explicit SeqStepTrackGenericBackend(StepSeqDataTrack &track,
-                                      uint8_t device_idx = 0)
+                                      DeviceIdx device_idx = DeviceIdx::Primary)
       : kind_(KIND_STEPSEQ), device_idx_(device_idx) {
     tracks_.stepseq = &track;
   }
@@ -456,7 +456,7 @@ public:
   bool preview_step(uint8_t step);
 
 private:
-  uint8_t param_device_idx() const { return device_idx_; }
+  DeviceIdx param_device_idx() const { return device_idx_; }
   uint8_t param_dest() const { return track_index() + 1; }
   DeviceContext param_context() const {
     return device_manager.context_for_device(param_device_idx());
@@ -472,5 +472,5 @@ private:
     StepSeqDataTrack *stepseq;
   } tracks_;
   Kind kind_;
-  uint8_t device_idx_;
+  DeviceIdx device_idx_;
 };

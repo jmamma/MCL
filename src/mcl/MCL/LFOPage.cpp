@@ -249,7 +249,7 @@ void LFOPage::display() {
 
 
   if (page_mode == LFO_DESTINATION) {
-    uint8_t device_idx = lfo_track->device_idx;
+    DeviceIdx device_idx = lfo_track->device_idx;
     draw_dest(0, encoders[0]->cur, true, device_idx);
     draw_param(1, encoders[0]->cur, encoders[1]->cur, device_idx);
     draw_dest(2, encoders[2]->cur, true, device_idx);
@@ -357,10 +357,10 @@ bool LFOPage::apply_seq_menu_row(uint8_t row_entry, void (*row_func)()) {
 }
 
 void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
-  learn_param(1, track + 1, param, value);
+  learn_param(DeviceIdx::Primary, track + 1, param, value);
 }
 
-void LFOPage::learn_param(uint8_t device_idx, uint8_t dest, uint8_t param,
+void LFOPage::learn_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
                           uint8_t value) {
   track_update();
   if (lfo_track->device_idx != device_idx) {

@@ -55,7 +55,7 @@ public:
 #ifdef PLATFORM_TBD
   MDUI ui;
 
-  virtual void on_connection(uint8_t device_idx) override;
+  virtual void on_connection(DeviceIdx device_idx) override;
   virtual void ui_loop() override;
   virtual bool handle_ui_event(gui_event_t *event) override;
   virtual bool enter_ui(gui_event_t *event) override;
@@ -98,7 +98,7 @@ public:
   virtual void requestKit(uint8_t kit);
   virtual void requestPattern(uint8_t pattern);
   virtual void requestGlobal(uint8_t global);
-  virtual void init_grid_devices(uint8_t device_idx);
+  virtual void init_grid_devices(DeviceIdx device_idx);
 #ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
 #endif

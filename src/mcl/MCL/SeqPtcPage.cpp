@@ -955,7 +955,8 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_SCALE: {
-        select_device_idx(ptc_uses_grid_x_tracks() ? 2 : 1);
+        select_device_idx(ptc_uses_grid_x_tracks() ? DeviceIdx::Secondary
+                                                    : DeviceIdx::Primary);
         config();
         return true;
       }
@@ -1069,7 +1070,7 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
 
   if (channel_event) {
     if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
-      SeqPage::select_device_idx(1);
+      SeqPage::select_device_idx(DeviceIdx::Primary);
     }
   } else {
     auto active_device = device_manager.secondary_device();
@@ -1078,11 +1079,11 @@ void SeqPtcMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
       return;
     }
     if (SeqPage::midi_device != active_device || (last_ext_track != n)) {
-      SeqPage::select_device_idx(2);
+      SeqPage::select_device_idx(DeviceIdx::Secondary);
       last_ext_track = min(n, NUM_EXT_TRACKS - 1);
       seq_ptc_page.config();
     } else {
-      SeqPage::select_device_idx(2);
+      SeqPage::select_device_idx(DeviceIdx::Secondary);
     }
   }
   uint8_t scale_padding_old = seq_ptc_page.scale_padding;

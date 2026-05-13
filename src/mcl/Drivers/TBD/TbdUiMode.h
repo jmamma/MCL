@@ -7,15 +7,12 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 #include "TbdP4SoundData.h"
+#include "../DeviceContext.h"
 #include <stddef.h>
 #include <stdint.h>
 
 class TbdUiMode {
 public:
-  static constexpr uint8_t SLOT_PRIMARY = 0;
-  static constexpr uint8_t SLOT_SECONDARY = 1;
-  static constexpr uint8_t SLOT_NONE = 255;
-
   struct ParamSlot {
     TbdP4SoundData *sound = nullptr;
     TbdP4ParamDescriptor *param = nullptr;
@@ -25,11 +22,11 @@ public:
 
   bool is_active() const { return latched_; }
   bool is_collapsed() const;
-  uint8_t device_idx() const { return device_idx_; }
+  DeviceIdx device_idx() const { return device_idx_; }
   uint8_t sub_page() const { return sub_page_; }
   uint8_t active_track_index() const;
 
-  bool enter(uint8_t device_idx);
+  bool enter(DeviceIdx device_idx);
   void disable();
   bool handle_event(gui_event_t *event);
   void handle_ui_slot_button(bool pressed);
@@ -55,9 +52,9 @@ public:
 
 private:
   bool latched_ = false;
-  uint8_t device_idx_ = SLOT_NONE;
+  DeviceIdx device_idx_ = DeviceIdx::None;
   uint8_t sub_page_ = 0;
-  uint8_t bound_device_idx_ = SLOT_NONE;
+  DeviceIdx bound_device_idx_ = DeviceIdx::None;
   uint8_t bound_track_ = 255;
   uint8_t bound_sub_page_ = 255;
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};

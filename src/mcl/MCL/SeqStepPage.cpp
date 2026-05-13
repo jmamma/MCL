@@ -174,7 +174,7 @@ void SeqStepPage::init() {
   SeqPage::init();
 
   pitch_param = 255;
-  SeqPage::select_device_idx(1);
+  SeqPage::select_device_idx(DeviceIdx::Primary);
   SeqStepTrackRef active_track = active_step_track();
 
   seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, true);

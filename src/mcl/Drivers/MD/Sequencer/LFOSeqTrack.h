@@ -3,6 +3,7 @@
 #ifndef LFOSEQTRACK_H__
 #define LFOSEQTRACK_H__
 #include "platform.h"
+#include "../../DeviceContext.h"
 #include "LFOShapes.h"
 #include "MidiUart.h"
 #include "SeqTrackModData.h"
@@ -90,7 +91,7 @@ static_assert(sizeof(LegacyLFOSeqTrackData) == 219,
 class LFOSeqTrack : public LFOSeqTrackData {
 public:
   uint8_t track_number;
-  uint8_t device_idx;
+  DeviceIdx device_idx;
   uint8_t step_count;
   uint16_t phase;
   uint16_t phase_inc;
@@ -111,7 +112,7 @@ public:
   void init() {
     LFOSeqTrackData::init();
     track_number = 0;
-    device_idx = 0;
+    device_idx = DeviceIdx::Primary;
     legacy_phase_offset = false;
     legacy_speed_curve = false;
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {

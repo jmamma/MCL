@@ -27,7 +27,7 @@ public:
   bool mute_toggle = 0;
   uint8_t ext_key_down;
   MidiDevice *midi_device;
-  uint8_t mixer_device_idx = 0;
+  DeviceIdx mixer_device_idx = DeviceIdx::Primary;
 
   uint8_t display_mode;
   uint8_t first_track;
@@ -50,12 +50,12 @@ public:
 
   uint8_t get_mute_set(uint8_t key);
   uint8_t default_mixer_param() const;
-  MidiDevice *device_for_mixer_idx(uint8_t device_idx) const;
-  DeviceContext context_for_mixer_idx(uint8_t device_idx) const;
+  MidiDevice *device_for_mixer_idx(DeviceIdx device_idx) const;
+  DeviceContext context_for_mixer_idx(DeviceIdx device_idx) const;
   DeviceContext selected_mixer_context() const;
   MidiDevice *selected_mixer_device() const;
   void sync_selected_mixer_device();
-  void select_mixer_device(uint8_t device_idx);
+  void select_mixer_device(DeviceIdx device_idx);
   uint8_t mixer_track_count() const;
   SeqTrack *mixer_seq_track(uint8_t track) const;
   bool display_mute_mask();
@@ -88,11 +88,11 @@ public:
   void load_perf_locks(uint8_t state);
   void toggle_or_solo(bool solo = false);
   // Handled in MCLSeq
-  void onControlChangeCallback_Midi(uint8_t device_idx, uint8_t track,
+  void onControlChangeCallback_Midi(DeviceIdx device_idx, uint8_t track,
                                     uint8_t track_param, uint8_t value);
 
   uint8_t note_to_trig(uint8_t note_num);
-  void track_trig(uint8_t device_idx, uint8_t track_number, uint8_t level);
+  void track_trig(DeviceIdx device_idx, uint8_t track_number, uint8_t level);
   void trig(uint8_t track_number);
 
   virtual bool handleEvent(gui_event_t *event);

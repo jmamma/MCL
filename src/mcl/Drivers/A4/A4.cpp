@@ -72,9 +72,7 @@ void A4Class::cleanup_listeners() {
   }
 }
 
-void A4Class::init_grid_devices(uint8_t device_idx) {
-  uint8_t grid_idx = 1;
-
+void A4Class::init_grid_devices(DeviceIdx device_idx) {
   GridDeviceTrack gdt;
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
     uint8_t track_type = EXT_TRACK_TYPE;
@@ -82,8 +80,9 @@ void A4Class::init_grid_devices(uint8_t device_idx) {
     if (i < NUM_A4_SOUND_TRACKS) {
       track_type = A4_TRACK_TYPE;
     }
-    gdt.init(track_type, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
-    add_track_to_grid(grid_idx, i, &gdt);
+    gdt.init(track_type, GROUP_DEV, static_cast<uint8_t>(device_idx),
+             &(mcl_seq.ext_tracks[i]));
+    add_track_to_grid(DeviceIdx::Secondary, i, &gdt);
   }
 }
 

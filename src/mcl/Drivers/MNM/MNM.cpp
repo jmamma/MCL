@@ -61,15 +61,14 @@ void MNMClass::cleanup_listeners() {
   }
 }
 
-void MNMClass::init_grid_devices(uint8_t device_idx) {
-  uint8_t grid_idx = 1;
+void MNMClass::init_grid_devices(DeviceIdx device_idx) {
   GridDeviceTrack gdt;
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    gdt.init(MNM_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.ext_tracks[i]));
-    add_track_to_grid(grid_idx, i, &gdt);
+    gdt.init(MNM_TRACK_TYPE, GROUP_DEV, static_cast<uint8_t>(device_idx),
+             &(mcl_seq.ext_tracks[i]));
+    add_track_to_grid(DeviceIdx::Secondary, i, &gdt);
   }
-
 }
 
 DeviceMixerCapability *MNMClass::mixer() {

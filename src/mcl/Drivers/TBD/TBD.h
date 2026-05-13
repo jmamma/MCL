@@ -13,9 +13,9 @@ public:
   TbdDevice();
 
   virtual bool probe() override;
-  virtual void disconnect(uint8_t device_idx) override;
-  virtual void on_connection(uint8_t device_idx) override;
-  virtual void init_grid_devices(uint8_t device_idx) override;
+  virtual void disconnect(DeviceIdx device_idx) override;
+  virtual void on_connection(DeviceIdx device_idx) override;
+  virtual void init_grid_devices(DeviceIdx device_idx) override;
   void sync_grid_devices();
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
   virtual DeviceMixerCapability *mixer() override;
@@ -33,16 +33,16 @@ public:
   virtual bool is_ui_collapsed() override;
   virtual void exit_ui() override;
   virtual void on_ui_slot_button(uint8_t slot, bool pressed) override;
-  bool enter_diag_ui(uint8_t device_idx);
+  bool enter_diag_ui(DeviceIdx device_idx);
   bool select_ui_track(uint8_t track_idx);
-  uint8_t ui_device_idx() const { return ui_device_idx_; }
+  DeviceIdx ui_device_idx() const { return ui_device_idx_; }
   bool p4_defaults_loaded() const { return p4_defaults_loaded_; }
   bool get_default_p4_sound(uint8_t p4_track_index,
                             TbdP4SoundData *sound) const;
   bool hydrate_p4_sound(TbdP4SoundData &sound);
 
 private:
-  uint8_t ui_device_idx_ = 255;
+  DeviceIdx ui_device_idx_ = DeviceIdx::None;
   bool diag_active_ = false;
   bool p4_defaults_loaded_ = false;
   bool p4_defaults_init_in_progress_ = false;

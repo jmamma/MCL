@@ -76,7 +76,7 @@ static void prepare_display() {
   }
 }
 
-static bool disconnect_driver_list(DriverList drivers, uint8_t device_idx,
+static bool disconnect_driver_list(DriverList drivers, DeviceIdx device_idx,
                                    uint8_t port, MidiUartClass *pmidi) {
   bool disconnected_attached = false;
   MidiDevice *attached = device_manager.device_for_port(port);
@@ -106,21 +106,22 @@ void MidiActivePeering::disconnect(uint8_t port) {
   }
 #ifdef PLATFORM_TBD
   if (port == UARTP4_PORT) {
-    disconnect_driver_list(generic_drivers(), 0, port, pmidi);
-    disconnect_driver_list(generic_drivers(), 1, port, pmidi);
+    disconnect_driver_list(generic_drivers(), DeviceIdx::Primary, port, pmidi);
+    disconnect_driver_list(generic_drivers(), DeviceIdx::Secondary, port, pmidi);
     MidiDevice *attached = device_manager.device_for_port(port);
     if (attached != &null_midi_device) {
-      attached->disconnect(0);
-      attached->disconnect(1);
+      attached->disconnect(DeviceIdx::Primary);
+      attached->disconnect(DeviceIdx::Secondary);
     }
     device_manager.detach_port(port);
     return;
   }
 #endif
   DriverList drivers = generic_drivers();
-  uint8_t device_idx = device_manager.logical_idx_for_port(port);
-  if (device_idx == DeviceManager::LOGICAL_SLOT_NONE) {
-    device_idx = portToLogicalIdx(port);
+  DeviceIdx device_idx =
+      static_cast<DeviceIdx>(device_manager.logical_idx_for_port(port));
+  if (device_idx == DeviceIdx::None) {
+    device_idx = static_cast<DeviceIdx>(portToLogicalIdx(port));
   }
   bool disconnected_attached = false;
   if (port == UART1_PORT) {
@@ -156,7 +157,7 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
     pmidi->device.set_name(driver->name);
     pmidi->device.set_id(driver->id);
   }
-  driver->on_connection(portToLogicalIdx(port));
+  driver->on_connection(static_cast<DeviceIdx>(portToLogicalIdx(port)));
 
   device_manager.attach_port(port, driver, portToLogicalIdx(port));
 }
@@ -182,9 +183,10 @@ static void probePort(uint8_t port, DriverList drivers) {
     }
     pmidi->set_speed((uint32_t)31250);
     DEBUG_PRINTLN("disconnecting");
-    uint8_t device_idx = device_manager.logical_idx_for_port(port);
-    if (device_idx == DeviceManager::LOGICAL_SLOT_NONE) {
-      device_idx = portToLogicalIdx(port);
+    DeviceIdx device_idx =
+        static_cast<DeviceIdx>(device_manager.logical_idx_for_port(port));
+    if (device_idx == DeviceIdx::None) {
+      device_idx = static_cast<DeviceIdx>(portToLogicalIdx(port));
     }
     bool disconnected_attached =
         disconnect_driver_list(drivers, device_idx, port, pmidi);
@@ -225,9 +227,9 @@ static void probePort(uint8_t port, DriverList drivers) {
       if (probe_success) {
         pmidi->device.set_id(driver->id);
         pmidi->device.set_name(driver->name);
-        uint8_t device_idx = portToLogicalIdx(port);
-        driver->on_connection(device_idx);
-        device_manager.attach_port(port, driver, device_idx);
+        uint8_t logical_idx = portToLogicalIdx(port);
+        driver->on_connection(static_cast<DeviceIdx>(logical_idx));
+        device_manager.attach_port(port, driver, logical_idx);
         // Re-enable MidiClock/Transport recv
         midi_setup.cfg_clock_recv();
         break;

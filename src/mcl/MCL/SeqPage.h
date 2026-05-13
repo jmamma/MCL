@@ -9,6 +9,7 @@
 #include "shared.h"
 #include "MidiClock.h"
 #include "Midi.h"
+#include "../Drivers/DeviceContext.h"
 
 #define REC_EVENT_TRIG 0
 #define REC_EVENT_CC 1
@@ -145,13 +146,13 @@ public:
   void draw_knob_conditional(uint8_t cond);
   void draw_knob_timing(uint8_t timing, uint8_t timing_mid);
 
-  static MidiDevice *device_for_seq_idx(uint8_t device_idx);
+  static MidiDevice *device_for_seq_idx(DeviceIdx device_idx);
   static bool devices_share_physical();
-  static uint8_t current_device_idx();
-  static bool idx_is_md_device(uint8_t device_idx);
+  static DeviceIdx current_device_idx();
+  static bool idx_is_md_device(DeviceIdx device_idx);
   static bool device_is_md(MidiDevice *device);
   static bool active_device_is_md();
-  static void select_device_idx(uint8_t device_idx);
+  static void select_device_idx(DeviceIdx device_idx);
 
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(MidiDevice* device, uint8_t track, bool send = true);

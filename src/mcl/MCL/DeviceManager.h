@@ -28,10 +28,10 @@ public:
   void update_active_slots();
   MidiDevice *primary_device() const;
   MidiDevice *secondary_device() const;
-  MidiDevice *device_for_idx(uint8_t device_idx) const;
+  MidiDevice *device_for_idx(DeviceIdx device_idx) const;
   DeviceContext primary_context() const;
   DeviceContext secondary_context() const;
-  DeviceContext context_for_device(uint8_t device_idx) const;
+  DeviceContext context_for_device(DeviceIdx device_idx) const;
 
 #ifdef PLATFORM_TBD
   static constexpr uint8_t UI_SLOT_PRIMARY = 0;

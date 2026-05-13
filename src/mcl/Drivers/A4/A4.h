@@ -42,7 +42,7 @@ public:
   virtual void setup_listeners();
   virtual void cleanup_listeners();
   virtual bool probe();
-  virtual void init_grid_devices(uint8_t device_idx);
+  virtual void init_grid_devices(DeviceIdx device_idx);
   virtual uint16_t sendKitParams(uint8_t* masks);
 
   // Overriden for A4 proto version and footer injection

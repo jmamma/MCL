@@ -327,7 +327,7 @@ bool TbdPanel::handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx) {
   device->triggerTrack(trig_idx, 127);
   if (device == &TBD) {
     if (trig_idx < mcl_seq.num_tbd_tracks) {
-      mixer_page.track_trig(1, trig_idx, 127);
+      mixer_page.track_trig(DeviceIdx::Primary, trig_idx, 127);
       GUI_hardware.led.set_flashled(trig_idx);
       if (SeqPage::recording && MidiClock.state == MidiClockClass::STARTED) {
         mcl_seq.tbd_tracks[trig_idx].record_track(127);
@@ -459,8 +459,9 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5) &&
       (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ||
        mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD)) {
-    uint8_t diag_device_idx =
-        mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD ? 1 : 0;
+    DeviceIdx diag_device_idx = mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD
+                                     ? DeviceIdx::Secondary
+                                     : DeviceIdx::Primary;
     device_manager.exit_ui();
     if (TBD.enter_diag_ui(diag_device_idx)) {
       suppress_sps_key_release_ = true;

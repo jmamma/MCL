@@ -437,17 +437,17 @@ void render_window(uint8_t y_top, uint8_t window, bool active,
 } // namespace
 
 uint8_t TbdUiMode::active_track_index() const {
-  return device_idx_ == SLOT_SECONDARY ? last_ext_track : last_md_track;
+  return device_idx_ == DeviceIdx::Secondary ? last_ext_track : last_md_track;
 }
 
 TbdP4SoundData *TbdUiMode::active_sound() const {
   if (!latched_) return nullptr;
-  if (device_idx_ == SLOT_PRIMARY) {
+  if (device_idx_ == DeviceIdx::Primary) {
     if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD) return nullptr;
     if (last_md_track >= mcl_seq.num_tbd_tracks) return nullptr;
     return &mcl_seq.tbd_tracks[last_md_track].p4_sound;
   }
-  if (device_idx_ == SLOT_SECONDARY) {
+  if (device_idx_ == DeviceIdx::Secondary) {
     if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD) return nullptr;
     if (last_ext_track >= NUM_EXT_TRACKS) return nullptr;
     return &mcl_seq.midi_tracks[last_ext_track].p4_sound;
@@ -459,17 +459,17 @@ bool TbdUiMode::select_track(uint8_t track_idx) {
   if (!latched_) return false;
 
   MidiDevice *device = nullptr;
-  uint8_t seq_slot = 1;
+  DeviceIdx seq_idx = DeviceIdx::Primary;
 
-  if (device_idx_ == SLOT_PRIMARY) {
+  if (device_idx_ == DeviceIdx::Primary) {
     if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD ||
         track_idx >= mcl_seq.num_tbd_tracks) {
       return false;
     }
     last_md_track = track_idx;
     device = &TBD;
-    seq_slot = 1;
-  } else if (device_idx_ == SLOT_SECONDARY) {
+    seq_idx = DeviceIdx::Primary;
+  } else if (device_idx_ == DeviceIdx::Secondary) {
 #ifdef EXT_TRACKS
     if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD ||
         track_idx >= mcl_seq.num_midi_tracks ||
@@ -478,7 +478,7 @@ bool TbdUiMode::select_track(uint8_t track_idx) {
     }
     last_ext_track = track_idx;
     device = device_manager.secondary_device();
-    seq_slot = 2;
+    seq_idx = DeviceIdx::Secondary;
 #else
     return false;
 #endif
@@ -489,7 +489,7 @@ bool TbdUiMode::select_track(uint8_t track_idx) {
   const PageIndex pg = mcl.currentPage();
   if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
       pg == SEQ_EXTSTEP_PAGE) {
-    SeqPage::select_device_idx(seq_slot);
+    SeqPage::select_device_idx(seq_idx);
     if (device != nullptr) {
       seq_step_page.select_track(device, track_idx, false);
     }
@@ -849,9 +849,9 @@ bool TbdUiMode::active_step_lock(uint8_t window, uint8_t encoder_idx,
     return false;
   }
 
-  if (device_idx_ == SLOT_PRIMARY) {
+  if (device_idx_ == DeviceIdx::Primary) {
     if (mcl.currentPage() != SEQ_STEP_PAGE) return false;
-    DeviceContext ctx = DeviceContext::for_device(&TBD, SLOT_PRIMARY);
+    DeviceContext ctx = DeviceContext::primary(&TBD);
     SeqStepTrackRef track = TBD.step_tracks()->active_track(ctx);
     int8_t lock_idx = track.find_param(slot.lock_param);
     if (lock_idx < 0) return false;
@@ -868,7 +868,7 @@ bool TbdUiMode::active_step_lock(uint8_t window, uint8_t encoder_idx,
   }
 
 #ifdef EXT_TRACKS
-  if (device_idx_ == SLOT_SECONDARY) {
+  if (device_idx_ == DeviceIdx::Secondary) {
     if (mcl.currentPage() != SEQ_EXTSTEP_PAGE ||
         mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD ||
         last_ext_track >= NUM_EXT_TRACKS) {
@@ -893,8 +893,8 @@ bool TbdUiMode::active_step_lock(uint8_t window, uint8_t encoder_idx,
   return false;
 }
 
-bool TbdUiMode::enter(uint8_t device_idx) {
-  if (device_idx != SLOT_PRIMARY && device_idx != SLOT_SECONDARY) {
+bool TbdUiMode::enter(DeviceIdx device_idx) {
+  if (device_idx != DeviceIdx::Primary && device_idx != DeviceIdx::Secondary) {
     return false;
   }
 
@@ -908,8 +908,8 @@ bool TbdUiMode::enter(uint8_t device_idx) {
   device_idx_ = device_idx;
   suppress_ui_button_apply_ = true;
   claim_tbd_ui_trig_leds();
-  GUI_hardware.led.set_tbd_driver_leds(device_idx_ == SLOT_PRIMARY,
-                                       device_idx_ == SLOT_SECONDARY);
+  GUI_hardware.led.set_tbd_driver_leds(device_idx_ == DeviceIdx::Primary,
+                                       device_idx_ == DeviceIdx::Secondary);
   const uint8_t count = window_count();
   if (active_sound() != nullptr && sub_page_ == 0 && count > 1) {
     sub_page_ = 1;
@@ -923,8 +923,8 @@ bool TbdUiMode::enter(uint8_t device_idx) {
 void TbdUiMode::disable() {
   const bool was_latched = latched_;
   latched_ = false;
-  device_idx_ = SLOT_NONE;
-  bound_device_idx_ = SLOT_NONE;
+  device_idx_ = DeviceIdx::None;
+  bound_device_idx_ = DeviceIdx::None;
   bound_track_ = 255;
   bound_sub_page_ = 255;
   ui_button_pressed_ = false;
@@ -1279,8 +1279,8 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
     return false;
   }
 
-  if (device_idx_ == SLOT_PRIMARY) {
-    DeviceContext ctx = DeviceContext::for_device(&TBD, SLOT_PRIMARY);
+  if (device_idx_ == DeviceIdx::Primary) {
+    DeviceContext ctx = DeviceContext::primary(&TBD);
     SeqStepTrackRef track = TBD.step_tracks()->active_track(ctx);
     bool wrote = false;
     if (mcl.currentPage() == SEQ_STEP_PAGE &&
@@ -1313,7 +1313,7 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
   }
 
 #ifdef EXT_TRACKS
-  if (device_idx_ == SLOT_SECONDARY) {
+  if (device_idx_ == DeviceIdx::Secondary) {
     if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD ||
         last_ext_track >= NUM_EXT_TRACKS) {
       return false;

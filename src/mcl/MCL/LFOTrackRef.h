@@ -8,11 +8,11 @@ public:
   static LFOSeqTrack &current_track();
   static bool select_track(uint8_t track);
 
-  static uint8_t track_count(uint8_t device_idx);
+  static uint8_t track_count(DeviceIdx device_idx);
 
-  static uint8_t target_count(uint8_t device_idx);
-  static uint8_t param_count(uint8_t device_idx, uint8_t dest);
-  static bool get_param(uint8_t device_idx, uint8_t dest, uint8_t param,
+  static uint8_t target_count(DeviceIdx device_idx);
+  static uint8_t param_count(DeviceIdx device_idx, uint8_t dest);
+  static bool get_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
                         uint8_t *value);
 
   static void set_key_repeat(uint8_t enabled);

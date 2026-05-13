@@ -565,7 +565,8 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
   }
 
   if (enable && send_due) {
-    MidiUartClass *output_uart = device_idx == 1 ? uart2_ : uart_;
+    MidiUartClass *output_uart =
+        device_idx == DeviceIdx::Secondary ? uart2_ : uart_;
     int16_t lfo_sample = get_sample();
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       if (params[i].dest == 0) {
@@ -598,8 +599,9 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
 void LFOSeqTrack::reset_params() {
 //  while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {}; 
 
-  MidiUartClass *output_uart = device_idx == 1 ? mcl_seq.secondary_output
-                                                : mcl_seq.primary_output;
+  MidiUartClass *output_uart = device_idx == DeviceIdx::Secondary
+                                   ? mcl_seq.secondary_output
+                                   : mcl_seq.primary_output;
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
     if (params[i].dest == 0) {
       continue;

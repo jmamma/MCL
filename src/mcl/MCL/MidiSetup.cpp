@@ -441,7 +441,7 @@ void configure_driver_ports() {
   } else {
     MD.cleanup_listeners();
     if (MD.connected) {
-      MD.disconnect(SLOT_MD);
+      MD.disconnect(DeviceIdx::Primary);
     }
     MD.midi = s[SLOT_MD].midi;
     MD.uart = s[SLOT_MD].uart;

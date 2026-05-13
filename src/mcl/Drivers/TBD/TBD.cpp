@@ -57,9 +57,6 @@ constexpr uint8_t kP4DefaultRomBank = 0xFF;
 constexpr int32_t kP4DefaultSampleSlice = -1;
 constexpr uint8_t kP4AppFlags = 0x03;
 constexpr uint8_t kP4InitProgressMax = 32;
-constexpr uint8_t kTbdUiSlotPrimary = 0;
-constexpr uint8_t kTbdUiSlotSecondary = 1;
-constexpr uint8_t kTbdUiSlotNone = 255;
 constexpr uint8_t kP4DriverMidiChannel = 13;
 constexpr const char *kP4RackPluginId = "PicoSeqRack";
 constexpr const char *kP4ReferenceAppName = "Groovebox";
@@ -356,15 +353,15 @@ void debug_p4_active_plugin(uint32_t timeout_ms) {
 #endif
 }
 
-TbdP4SoundData *p4_sound_for_mixer(uint8_t device_idx, uint8_t track) {
-  if (device_idx == kTbdUiSlotPrimary) {
+TbdP4SoundData *p4_sound_for_mixer(DeviceIdx device_idx, uint8_t track) {
+  if (device_idx == DeviceIdx::Primary) {
     if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD ||
         track >= mcl_seq.num_tbd_tracks) {
       return nullptr;
     }
     return &mcl_seq.tbd_tracks[track].p4_sound;
   }
-  if (device_idx == kTbdUiSlotSecondary) {
+  if (device_idx == DeviceIdx::Secondary) {
     if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD ||
         track >= mcl_seq.num_midi_tracks) {
       return nullptr;
@@ -378,7 +375,7 @@ bool p4_param_available_for_mod(const TbdP4ParamDescriptor &desc) {
   return desc.is_visible() && desc.is_sendable();
 }
 
-TbdP4ParamDescriptor *p4_param_for_mod(uint8_t device_idx, uint8_t track,
+TbdP4ParamDescriptor *p4_param_for_mod(DeviceIdx device_idx, uint8_t track,
                                        uint8_t param_idx) {
   TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
   if (sound == nullptr) {
@@ -409,7 +406,7 @@ TbdP4ParamDescriptor *p4_param_for_mod(uint8_t device_idx, uint8_t track,
   return nullptr;
 }
 
-uint8_t p4_param_count_for_mod(uint8_t device_idx, uint8_t track) {
+uint8_t p4_param_count_for_mod(DeviceIdx device_idx, uint8_t track) {
   TbdP4SoundData *sound = p4_sound_for_mixer(device_idx, track);
   if (sound == nullptr) {
     return 0;
@@ -470,15 +467,15 @@ TbdP4SoundData *active_p4_sound_for_note() {
   return nullptr;
 }
 
-SeqTrack *seq_track_for_mixer(uint8_t device_idx, uint8_t track) {
-  if (device_idx == kTbdUiSlotPrimary) {
+SeqTrack *seq_track_for_mixer(DeviceIdx device_idx, uint8_t track) {
+  if (device_idx == DeviceIdx::Primary) {
     if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD ||
         track >= mcl_seq.num_tbd_tracks) {
       return nullptr;
     }
     return &mcl_seq.tbd_tracks[track];
   }
-  if (device_idx == kTbdUiSlotSecondary) {
+  if (device_idx == DeviceIdx::Secondary) {
     if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD ||
         track >= mcl_seq.num_midi_tracks) {
       return nullptr;
@@ -1309,9 +1306,9 @@ public:
     oled_display.drawFastHLine(0, y, 128, WHITE);
 
     char line[22];
-    const uint8_t ui_slot = TBD.ui_device_idx();
+    const DeviceIdx ui_slot = TBD.ui_device_idx();
     const uint8_t display_slot =
-        ui_slot == kTbdUiSlotSecondary ? 2 : 1;
+        ui_slot == DeviceIdx::Secondary ? 2 : 1;
     oled_display.setCursor(0, y + 2);
     snprintf(line, sizeof(line), "T%u A%uS%uR%uD%uX%u p%uc%u",
              display_slot,
@@ -1349,54 +1346,55 @@ public:
 
 TbdP4DiagOverlay tbd_p4_diag_overlay;
 
-bool tbd_ui_slot_configured(uint8_t device_idx) {
-  if (device_idx == kTbdUiSlotPrimary) {
+bool tbd_ui_slot_configured(DeviceIdx device_idx) {
+  if (device_idx == DeviceIdx::Primary) {
     return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
   }
-  if (device_idx == kTbdUiSlotSecondary) {
+  if (device_idx == DeviceIdx::Secondary) {
     return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
   }
   return false;
 }
 
-uint8_t tbd_grid_track_type(uint8_t device_idx) {
-  if (device_idx == kTbdUiSlotPrimary) {
+uint8_t tbd_grid_track_type(DeviceIdx device_idx) {
+  if (device_idx == DeviceIdx::Primary) {
     return TBD_TRACK_TYPE;
   }
-  if (device_idx == kTbdUiSlotSecondary) {
+  if (device_idx == DeviceIdx::Secondary) {
     return TBD_MIDI_TRACK_TYPE;
   }
   return EMPTY_TRACK_TYPE;
 }
 
-void cleanup_tbd_grid_devices(uint8_t device_idx) {
+void cleanup_tbd_grid_devices(DeviceIdx device_idx) {
   uint8_t track_type = tbd_grid_track_type(device_idx);
   if (track_type == EMPTY_TRACK_TYPE) {
     return;
   }
+  uint8_t legacy_idx = static_cast<uint8_t>(device_idx);
   for (uint8_t grid_idx = 0; grid_idx < NUM_GRIDS; grid_idx++) {
     for (uint8_t track_idx = 0; track_idx < GRID_WIDTH; track_idx++) {
       GridDeviceTrack &track = proj.grids[grid_idx].tracks[track_idx];
-      if (track.device_idx == device_idx && track.track_type == track_type) {
+      if (track.device_idx == legacy_idx && track.track_type == track_type) {
         track.init();
       }
     }
   }
 }
 
-bool tbd_ui_request_from_event(gui_event_t *event, uint8_t *device_idx) {
+bool tbd_ui_request_from_event(gui_event_t *event, DeviceIdx *device_idx) {
   if (event == nullptr || device_idx == nullptr || !EVENT_BUTTON(event)) {
     return false;
   }
   if (event->source == ButtonsClass::BUTTON2 &&
       (event->mask == EVENT_BUTTON_PRESSED ||
        event->mask == EVENT_BUTTON_RELEASED)) {
-    *device_idx = kTbdUiSlotPrimary;
+    *device_idx = DeviceIdx::Primary;
     return tbd_ui_slot_configured(*device_idx);
   }
   if (event->source == ButtonsClass::TBD_BUTTON_TR &&
       event->mask == EVENT_BUTTON_PRESSED) {
-    *device_idx = kTbdUiSlotSecondary;
+    *device_idx = DeviceIdx::Secondary;
     return tbd_ui_slot_configured(*device_idx);
   }
   return false;
@@ -1650,7 +1648,7 @@ DeviceParamCapability *TbdDevice::params() {
 }
 
 bool TbdStepTrackCapability::available(const DeviceContext &ctx) const {
-  return ctx.device_idx() == kTbdUiSlotPrimary &&
+  return ctx.device_idx() == DeviceIdx::Primary &&
          mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
 }
 
@@ -1762,12 +1760,12 @@ void TbdMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
 }
 
 uint8_t TbdParamCapability::target_count(const DeviceContext &ctx) const {
-  uint8_t grid_idx = ctx.device_idx();
-  if (grid_idx == kTbdUiSlotPrimary) {
+  DeviceIdx grid_idx = ctx.device_idx();
+  if (grid_idx == DeviceIdx::Primary) {
     return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD ? mcl_seq.num_tbd_tracks
                                                        : 0;
   }
-  if (grid_idx == kTbdUiSlotSecondary) {
+  if (grid_idx == DeviceIdx::Secondary) {
     return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD ? mcl_seq.num_midi_tracks
                                                        : 0;
   }
@@ -1815,7 +1813,7 @@ bool TbdParamCapability::get_param(const DeviceContext &ctx, uint8_t target,
 bool TbdParamCapability::set_param(const DeviceContext &ctx, uint8_t target,
                                    uint8_t param, uint8_t value,
                                    MidiUartClass *uart_) {
-  uint8_t grid_idx = ctx.device_idx();
+  DeviceIdx grid_idx = ctx.device_idx();
   TbdP4SoundData *sound = p4_sound_for_mixer(grid_idx, target);
   TbdP4ParamDescriptor *desc = p4_param_for_mod(grid_idx, target, param);
   if (sound == nullptr || desc == nullptr) {
@@ -1934,15 +1932,15 @@ void TbdMixerCapability::mute_track(const DeviceContext &ctx, uint8_t track,
 void TbdMixerCapability::set_record_mutes(const DeviceContext &ctx,
                                           uint8_t track, bool state,
                                           bool clear) {
-  uint8_t grid_idx = ctx.device_idx();
+  DeviceIdx grid_idx = ctx.device_idx();
   SeqTrack *seq_track = seq_track_for_mixer(grid_idx, track);
   if (seq_track == nullptr) {
     return;
   }
   seq_track->record_mutes = state;
-  if (clear && grid_idx == kTbdUiSlotPrimary) {
+  if (clear && grid_idx == DeviceIdx::Primary) {
     mcl_seq.tbd_tracks[track].clear_mute();
-  } else if (clear && grid_idx == kTbdUiSlotSecondary) {
+  } else if (clear && grid_idx == DeviceIdx::Secondary) {
     mcl_seq.midi_tracks[track].clear_mute();
   }
 }
@@ -1952,23 +1950,24 @@ bool TbdDevice::probe() {
   return true;
 }
 
-void TbdDevice::disconnect(uint8_t device_idx) {
+void TbdDevice::disconnect(DeviceIdx device_idx) {
+  uint8_t idx = static_cast<uint8_t>(device_idx);
   cleanup_tbd_grid_devices(device_idx);
-  if (device_idx < 2) {
-    grid_devices_initialized_[device_idx] = false;
+  if (idx < 2) {
+    grid_devices_initialized_[idx] = false;
   }
   p4_defaults_init_in_progress_ = false;
   connected = grid_devices_initialized_[0] || grid_devices_initialized_[1];
 }
 
-void TbdDevice::on_connection(uint8_t device_idx) {
+void TbdDevice::on_connection(DeviceIdx device_idx) {
   (void)device_idx;
   port = UARTP4_PORT;
   midi = &MidiP4;
   uart = MidiP4.uart;
   connected = true;
-  cleanup_tbd_grid_devices(0);
-  cleanup_tbd_grid_devices(1);
+  cleanup_tbd_grid_devices(DeviceIdx::Primary);
+  cleanup_tbd_grid_devices(DeviceIdx::Secondary);
   grid_devices_initialized_[0] = false;
   grid_devices_initialized_[1] = false;
   p4_defaults_loaded_ = false;
@@ -1981,34 +1980,34 @@ void TbdDevice::on_connection(uint8_t device_idx) {
   sync_grid_devices();
 }
 
-void TbdDevice::init_grid_devices(uint8_t device_idx) {
-  if (device_idx < 2 && grid_devices_initialized_[device_idx]) {
+void TbdDevice::init_grid_devices(DeviceIdx device_idx) {
+  uint8_t idx = static_cast<uint8_t>(device_idx);
+  if (idx < 2 && grid_devices_initialized_[idx]) {
     return;
   }
 
   GridDeviceTrack gdt;
 
 #if defined(PLATFORM_TBD)
-  if (device_idx == 0) {
+  if (device_idx == DeviceIdx::Primary) {
     for (uint8_t i = 0; i < mcl_seq.num_tbd_tracks; i++) {
       tbd_ensure_step_sound_default(mcl_seq.tbd_tracks[i].p4_sound, i);
-      gdt.init(TBD_TRACK_TYPE, GROUP_DEV, device_idx,
-               &(mcl_seq.tbd_tracks[i]));
-      add_track_to_grid(0, i, &gdt);
+      gdt.init(TBD_TRACK_TYPE, GROUP_DEV, idx, &(mcl_seq.tbd_tracks[i]));
+      add_track_to_grid(DeviceIdx::Primary, i, &gdt);
     }
     grid_devices_initialized_[0] = true;
     return;
   }
 #endif
 
-  if (device_idx == 1) {
+  if (device_idx == DeviceIdx::Secondary) {
     for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
       tbd_ensure_midi_sound_default(mcl_seq.midi_tracks[i].p4_sound, i);
       mcl_seq.midi_tracks[i].set_channel(
           mcl_seq.midi_tracks[i].p4_sound.midi_channel);
-      gdt.init(TBD_MIDI_TRACK_TYPE, GROUP_DEV, device_idx,
+      gdt.init(TBD_MIDI_TRACK_TYPE, GROUP_DEV, idx,
                &(mcl_seq.midi_tracks[i]));
-      add_track_to_grid(1, i, &gdt);
+      add_track_to_grid(DeviceIdx::Secondary, i, &gdt);
     }
     grid_devices_initialized_[1] = true;
   }
@@ -2016,16 +2015,16 @@ void TbdDevice::init_grid_devices(uint8_t device_idx) {
 
 void TbdDevice::sync_grid_devices() {
   if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
-    init_grid_devices(0);
+    init_grid_devices(DeviceIdx::Primary);
   } else if (grid_devices_initialized_[0]) {
-    cleanup_tbd_grid_devices(0);
+    cleanup_tbd_grid_devices(DeviceIdx::Primary);
     grid_devices_initialized_[0] = false;
   }
 
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
-    init_grid_devices(1);
+    init_grid_devices(DeviceIdx::Secondary);
   } else if (grid_devices_initialized_[1]) {
-    cleanup_tbd_grid_devices(1);
+    cleanup_tbd_grid_devices(DeviceIdx::Secondary);
     grid_devices_initialized_[1] = false;
   }
 }
@@ -2385,7 +2384,7 @@ void TbdDevice::note_off() {
 bool TbdDevice::enter_ui(gui_event_t *event) {
   if (port != UARTP4_PORT) return false;
 
-  uint8_t device_idx = kTbdUiSlotNone;
+  DeviceIdx device_idx = DeviceIdx::None;
   if (!tbd_ui_request_from_event(event, &device_idx)) {
     return false;
   }
@@ -2393,11 +2392,11 @@ bool TbdDevice::enter_ui(gui_event_t *event) {
   diag_active_ = false;
   ui_device_idx_ = device_idx;
   tbd_ui_mode.enter(device_idx);
-  if (!tbd_ui_mode.is_active()) ui_device_idx_ = kTbdUiSlotNone;
+  if (!tbd_ui_mode.is_active()) ui_device_idx_ = DeviceIdx::None;
   return true;
 }
 
-bool TbdDevice::enter_diag_ui(uint8_t device_idx) {
+bool TbdDevice::enter_diag_ui(DeviceIdx device_idx) {
   if (port != UARTP4_PORT || !tbd_ui_slot_configured(device_idx)) {
     return false;
   }
@@ -2405,8 +2404,8 @@ bool TbdDevice::enter_diag_ui(uint8_t device_idx) {
   tbd_ui_mode.disable();
   diag_active_ = true;
   ui_device_idx_ = device_idx;
-  GUI_hardware.led.set_tbd_driver_leds(device_idx == kTbdUiSlotPrimary,
-                                       device_idx == kTbdUiSlotSecondary);
+  GUI_hardware.led.set_tbd_driver_leds(device_idx == DeviceIdx::Primary,
+                                       device_idx == DeviceIdx::Secondary);
   GUI.setOverlay(&tbd_p4_diag_overlay);
   return true;
 }
@@ -2430,7 +2429,7 @@ bool TbdDevice::handle_ui_event(gui_event_t *event) {
   if (diag_active_) {
     if (GUI.overlay != &tbd_p4_diag_overlay) {
       diag_active_ = false;
-      ui_device_idx_ = kTbdUiSlotNone;
+      ui_device_idx_ = DeviceIdx::None;
       GUI_hardware.led.set_tbd_driver_leds(false, false);
       return false;
     }
@@ -2473,7 +2472,7 @@ void TbdDevice::exit_ui() {
   if (GUI.overlay == &tbd_p4_diag_overlay) {
     GUI.clearOverlay();
   }
-  ui_device_idx_ = kTbdUiSlotNone;
+  ui_device_idx_ = DeviceIdx::None;
 }
 
 void TbdDevice::on_ui_slot_button(uint8_t slot, bool pressed) {

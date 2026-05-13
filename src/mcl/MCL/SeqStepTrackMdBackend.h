@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Drivers/DeviceContext.h"
 #include "../Drivers/MD/MD.h"
 #include "SeqDefines.h"
 #include <stddef.h>
@@ -8,7 +9,7 @@
 
 class SeqStepTrackMdBackend {
 public:
-  explicit SeqStepTrackMdBackend(MDSeqTrack &track, uint8_t device_idx = 0)
+  explicit SeqStepTrackMdBackend(MDSeqTrack &track, DeviceIdx device_idx = DeviceIdx::Primary)
       : track_(&track) {
     (void)device_idx;
   }

@@ -10,7 +10,7 @@ public:
 
   virtual bool probe() override;
 
-  void init_grid_devices(uint8_t device_idx) override;
+  void init_grid_devices(DeviceIdx device_idx) override;
   virtual uint8_t get_mute_cc() override;
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) override;

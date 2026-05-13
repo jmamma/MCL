@@ -102,9 +102,9 @@ public:
   MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
              const bool _isElektronDevice) NOINLINE();
 
-  void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx,
+  void add_track_to_grid(DeviceIdx device_idx, uint8_t track_idx,
                          GridDeviceTrack *gdt);
-  void cleanup(uint8_t device_idx);
+  void cleanup(DeviceIdx device_idx);
 
   ElektronDevice *asElektronDevice() {
     if (!isElektronDevice) return nullptr;
@@ -116,15 +116,15 @@ public:
 
   void setPort(MidiClass *_midi, uint8_t _port = 0);
 
-  virtual void init_grid_devices(uint8_t device_idx) {}
+  virtual void init_grid_devices(DeviceIdx device_idx) { (void)device_idx; }
 
   /** Called when the driver is successfully probed and connected. */
 #ifdef PLATFORM_TBD
-  virtual void on_connection(uint8_t device_idx) {
+  virtual void on_connection(DeviceIdx device_idx) {
     init_grid_devices(device_idx);
   }
 #else
-  void on_connection(uint8_t device_idx) {
+  void on_connection(DeviceIdx device_idx) {
     init_grid_devices(device_idx);
   }
 #endif
@@ -188,7 +188,7 @@ public:
   }
 #endif
 
-  virtual void disconnect(uint8_t device_idx) {
+  virtual void disconnect(DeviceIdx device_idx) {
     cleanup(device_idx);
     connected = false;
   }

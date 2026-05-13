@@ -3,6 +3,7 @@
 #ifndef PERFPAGEPARENT_H__
 #define PERFPAGEPARENT_H__
 
+#include "../Drivers/DeviceContext.h"
 #include "GUI.h"
 #include "MCLEncoder.h"
 #include "midi-common.h"
@@ -17,9 +18,9 @@ public:
 
 
   void draw_dest(uint8_t knob, uint8_t value, bool dest = true,
-                 uint8_t device_idx = 255);
+                 DeviceIdx device_idx = DeviceIdx::None);
   void draw_param(uint8_t knob, uint8_t dest, uint8_t param,
-                  uint8_t device_idx = 255);
+                  DeviceIdx device_idx = DeviceIdx::None);
 
   void setup();
 

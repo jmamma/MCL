@@ -28,14 +28,14 @@ MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
 NullMidiDevice::NullMidiDevice()
     : MidiDevice(nullptr, "  ", DEVICE_NULL, false) {}
 
-void MidiDevice::add_track_to_grid(uint8_t grid_idx, uint8_t track_idx,
+void MidiDevice::add_track_to_grid(DeviceIdx device_idx, uint8_t track_idx,
                                    GridDeviceTrack *gdt) {
-  proj.grids[grid_idx].add_track(track_idx, gdt);
+  proj.grids[static_cast<uint8_t>(device_idx)].add_track(track_idx, gdt);
 }
 
-void MidiDevice::cleanup(uint8_t device_idx) {
+void MidiDevice::cleanup(DeviceIdx device_idx) {
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    proj.grids[n].cleanup(device_idx);
+    proj.grids[n].cleanup(static_cast<uint8_t>(device_idx));
   }
 }
 

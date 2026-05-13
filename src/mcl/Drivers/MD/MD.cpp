@@ -1059,7 +1059,7 @@ void MDClass::setExternalSync() {
 }
 
 #ifdef PLATFORM_TBD
-void MDClass::on_connection(uint8_t device_idx) {
+void MDClass::on_connection(DeviceIdx device_idx) {
   init_grid_devices(device_idx);
 }
 
@@ -1093,8 +1093,8 @@ void MDClass::on_ui_slot_button(uint8_t slot, bool pressed) {
 }
 #endif
 
-void MDClass::init_grid_devices(uint8_t device_idx) {
-  uint8_t grid_idx = 0;
+void MDClass::init_grid_devices(DeviceIdx device_idx) {
+  uint8_t legacy_device_idx = static_cast<uint8_t>(device_idx);
 
   GridDeviceTrack gdt;
 #if !defined(__AVR__)
@@ -1108,40 +1108,40 @@ void MDClass::init_grid_devices(uint8_t device_idx) {
 
   if (use_spsx_tracks) {
     for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-      gdt.init(MDSPSX_TRACK_TYPE, GROUP_DEV, device_idx,
+      gdt.init(MDSPSX_TRACK_TYPE, GROUP_DEV, legacy_device_idx,
                (SeqTrack *)&(mcl_seq.spsx_tracks[i]));
-      add_track_to_grid(grid_idx, i, &gdt);
+      add_track_to_grid(DeviceIdx::Primary, i, &gdt);
     }
   } else {
 #endif
     for (uint8_t i = 0; i < NUM_MD_TRACKS; i++) {
-      gdt.init(MD_TRACK_TYPE, GROUP_DEV, device_idx, &(mcl_seq.md_tracks[i]));
-      add_track_to_grid(grid_idx, i, &gdt);
+      gdt.init(MD_TRACK_TYPE, GROUP_DEV, legacy_device_idx,
+               &(mcl_seq.md_tracks[i]));
+      add_track_to_grid(DeviceIdx::Primary, i, &gdt);
     }
 #if !defined(__AVR__)
   }
 #endif
-  grid_idx = 1;
 
-  gdt.init(MDFX_TRACK_TYPE, GROUP_DEV, device_idx,
+  gdt.init(MDFX_TRACK_TYPE, GROUP_DEV, legacy_device_idx,
            (SeqTrack *)&(mcl_seq.mdfx_track), 0);
-  add_track_to_grid(grid_idx, MDFX_TRACK_NUM, &gdt);
+  add_track_to_grid(DeviceIdx::Secondary, MDFX_TRACK_NUM, &gdt);
 
-  gdt.init(MDLFO_TRACK_TYPE, GROUP_PERF, device_idx,
+  gdt.init(MDLFO_TRACK_TYPE, GROUP_PERF, legacy_device_idx,
            (SeqTrack *)&(mcl_seq.aux_tracks[0]), 0);
-  add_track_to_grid(grid_idx, MDLFO_TRACK_NUM, &gdt);
+  add_track_to_grid(DeviceIdx::Secondary, MDLFO_TRACK_NUM, &gdt);
 
-  gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, device_idx,
+  gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, legacy_device_idx,
            (SeqTrack *)&(mcl_seq.aux_tracks[1]), 0);
-  add_track_to_grid(grid_idx, MDROUTE_TRACK_NUM, &gdt);
+  add_track_to_grid(DeviceIdx::Secondary, MDROUTE_TRACK_NUM, &gdt);
 
-  gdt.init(MDTEMPO_TRACK_TYPE, GROUP_TEMPO, device_idx,
+  gdt.init(MDTEMPO_TRACK_TYPE, GROUP_TEMPO, legacy_device_idx,
            (SeqTrack *)&(mcl_seq.aux_tracks[2]), 0);
-  add_track_to_grid(grid_idx, MDTEMPO_TRACK_NUM, &gdt);
+  add_track_to_grid(DeviceIdx::Secondary, MDTEMPO_TRACK_NUM, &gdt);
 
-  gdt.init(PERF_TRACK_TYPE, GROUP_PERF, device_idx,
+  gdt.init(PERF_TRACK_TYPE, GROUP_PERF, legacy_device_idx,
            (SeqTrack *)&(mcl_seq.perf_track), 0);
-  add_track_to_grid(grid_idx, PERF_TRACK_NUM, &gdt);
+  add_track_to_grid(DeviceIdx::Secondary, PERF_TRACK_NUM, &gdt);
 }
 
 void MDClass::get_mutes() {
