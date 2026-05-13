@@ -73,8 +73,8 @@ public:
 
 protected:
   DeviceMixerCapability mixer_capability_;
-  DeviceStepTrackCapability step_track_capability_;
 #if !defined(__AVR__)
+  DeviceStepTrackCapability step_track_capability_;
   DeviceStepEditCapability step_edit_capability_;
   DeviceParamCapability param_capability_;
   DevicePerfCapability perf_capability_;
@@ -179,8 +179,8 @@ public:
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) {}
   virtual DeviceMixerCapability *mixer();
-  virtual DeviceStepTrackCapability *step_tracks();
 #if !defined(__AVR__)
+  virtual DeviceStepTrackCapability *step_tracks();
   virtual DeviceStepEditCapability *step_edit();
   virtual DeviceParamCapability *params();
   virtual DevicePerfCapability *perf();

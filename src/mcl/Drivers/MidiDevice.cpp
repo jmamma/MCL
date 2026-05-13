@@ -9,9 +9,10 @@
 MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
                        const bool _isElektronDevice)
     : name(_name), id(_id), isElektronDevice(_isElektronDevice),
-      mixer_capability_(*this), step_track_capability_(*this)
+      mixer_capability_(*this)
 #if !defined(__AVR__)
       ,
+      step_track_capability_(*this),
       step_edit_capability_(*this), param_capability_(*this),
       perf_capability_(*this)
 #endif
@@ -42,11 +43,11 @@ DeviceMixerCapability *MidiDevice::mixer() {
   return &mixer_capability_;
 }
 
+#if !defined(__AVR__)
 DeviceStepTrackCapability *MidiDevice::step_tracks() {
   return &step_track_capability_;
 }
 
-#if !defined(__AVR__)
 DeviceStepEditCapability *MidiDevice::step_edit() {
   return &step_edit_capability_;
 }

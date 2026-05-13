@@ -7,6 +7,10 @@
 #include "SeqPage.h"
 #include "../Drivers/MidiDevice.h"
 
+#if defined(__AVR__)
+#include "../Drivers/MD/MD.h"
+#endif
+
 #ifdef PLATFORM_TBD
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #endif
@@ -47,5 +51,9 @@ bool SeqExtStepTrackRef::is_mute_cc(uint8_t cc) {
 }
 
 void SeqExtStepTrackRef::set_panel_rec_mode(uint8_t mode) {
+#if defined(__AVR__)
+  MD.set_rec_mode(mode);
+#else
   device_manager.primary_device()->panel()->set_rec_mode(mode);
+#endif
 }

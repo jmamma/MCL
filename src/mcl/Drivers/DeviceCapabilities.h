@@ -46,6 +46,7 @@ public:
 
 };
 
+#if !defined(__AVR__)
 class DeviceStepTrackCapability : public DeviceCapability {
 public:
   explicit DeviceStepTrackCapability(MidiDevice &device);
@@ -59,7 +60,6 @@ public:
                             uint8_t *track, uint8_t *param) const;
 };
 
-#if !defined(__AVR__)
 class DeviceParamCapability : public DeviceCapability {
 public:
   explicit DeviceParamCapability(MidiDevice &device);

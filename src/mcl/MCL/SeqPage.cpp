@@ -29,8 +29,12 @@ bool seq_page_uses_primary_step_tracks() {
 }
 
 bool seq_page_uses_non_md_primary_step_tracks() {
+#if defined(__AVR__)
+  return false;
+#else
   return seq_page_uses_primary_step_tracks() &&
          !SeqTrackUtil::is_md_device(DeviceParamResolver::slot_device(1));
+#endif
 }
 
 #if !defined(__AVR__)
@@ -618,6 +622,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   reset_undo();
   const uint8_t device_slot = seq_slot_for_device(device);
   bool is_md_device = slot_is_md_device(device_slot);
+#if !defined(__AVR__)
   if (!is_md_device &&
       device->step_tracks()->available(device_slot == 2 ? 1 : 0)) {
     if (track >= device->step_tracks()->track_count(device_slot == 2 ? 1 : 0)) {
@@ -631,6 +636,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     GUI.currentPage()->config();
     return;
   }
+#endif
   if (is_md_device) {
     DEBUG_PRINTLN("setting md track");
     opt_undo = 255;

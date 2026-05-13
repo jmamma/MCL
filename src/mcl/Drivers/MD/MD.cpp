@@ -217,6 +217,7 @@ private:
 };
 #endif
 
+#if !defined(__AVR__)
 class MDStepTrackCapability : public DeviceStepTrackCapability {
 public:
   explicit MDStepTrackCapability(MDClass &device)
@@ -233,7 +234,6 @@ private:
   MDClass &md() const { return (MDClass &)device_; }
 };
 
-#if !defined(__AVR__)
 class MDStepEditCapability : public DeviceStepEditCapability {
 public:
   explicit MDStepEditCapability(MDClass &device)
@@ -299,12 +299,12 @@ DeviceMixerCapability *MDClass::mixer() {
   return &capability;
 }
 
+#if !defined(__AVR__)
 DeviceStepTrackCapability *MDClass::step_tracks() {
   static MDStepTrackCapability capability(*this);
   return &capability;
 }
 
-#if !defined(__AVR__)
 DeviceStepEditCapability *MDClass::step_edit() {
   static MDStepEditCapability capability(*this);
   return &capability;
@@ -328,6 +328,7 @@ DevicePanelCapability *MDClass::panel() {
   return &capability;
 }
 
+#if !defined(__AVR__)
 bool MDStepTrackCapability::available(uint8_t device_idx) const {
   (void)device_idx;
   return true;
@@ -372,6 +373,7 @@ bool MDStepTrackCapability::parse_kit_cc(uint8_t device_idx, uint8_t channel,
   md().parseCC(channel, cc, track, param);
   return *track != 255;
 }
+#endif
 
 uint8_t MDMixerCapability::default_param(uint8_t device_idx) const {
   (void)device_idx;

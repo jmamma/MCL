@@ -124,6 +124,7 @@ void DeviceMixerCapability::update_from_cc(uint8_t device_idx, uint8_t track,
   set_param(device_idx, track, param, value, false);
 }
 
+#if !defined(__AVR__)
 DeviceStepTrackCapability::DeviceStepTrackCapability(MidiDevice &device)
     : DeviceCapability(device) {}
 
@@ -166,7 +167,6 @@ bool DeviceStepTrackCapability::parse_kit_cc(uint8_t device_idx,
   return false;
 }
 
-#if !defined(__AVR__)
 namespace {
 
 void copy_param_number_label(char prefix, uint8_t number, char *out,

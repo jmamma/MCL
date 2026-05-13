@@ -103,8 +103,8 @@ public:
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
 #endif
   virtual DeviceMixerCapability *mixer() override;
-  virtual DeviceStepTrackCapability *step_tracks() override;
 #if !defined(__AVR__)
+  virtual DeviceStepTrackCapability *step_tracks() override;
   virtual DeviceStepEditCapability *step_edit() override;
   virtual DeviceParamCapability *params() override;
   virtual DevicePerfCapability *perf() override;
