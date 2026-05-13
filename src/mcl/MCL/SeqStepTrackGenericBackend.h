@@ -73,6 +73,12 @@ public:
     }
   }
 
+  void sync_step_edit(uint8_t length, uint8_t speed, uint8_t step_count) const {
+    if (uses_kit_sound()) {
+      step_edit()->sync_track(param_context(), length, speed, step_count);
+    }
+  }
+
   void set_step_edit_trig_leds(uint16_t mask, uint8_t mode,
                                uint8_t blink = 0) const {
     if (uses_kit_sound()) {

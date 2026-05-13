@@ -490,7 +490,7 @@ void SeqPage::toggle_record() {
 }
 
 void SeqPage::enable_record() {
-  MD.set_rec_mode(2);
+  seq_page_active_step_track().set_step_edit_rec_mode(2);
   recording = true;
   GUI_hardware.led.rec_active = true;
   setLed2();
@@ -498,7 +498,8 @@ void SeqPage::enable_record() {
 }
 
 void SeqPage::disable_record() {
-  MD.set_rec_mode((mcl.currentPage() == SEQ_STEP_PAGE));
+  seq_page_active_step_track().set_step_edit_rec_mode(
+      mcl.currentPage() == SEQ_STEP_PAGE);
   recording = false;
   GUI_hardware.led.rec_active = false;
   clearLed2();
@@ -604,7 +605,7 @@ void SeqPage::config_mask_info(bool silent) {
     if (mask_type == MASK_PATTERN) {
       MD.popup_text(-1, 2);
     } else {
-      MD.popup_text(str, 1);
+      seq_page_active_step_track().popup_text(str, 1);
     }
   }
 }
@@ -662,12 +663,12 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     last_md_track = track;
     is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
     auto &base_track = SeqTrackUtil::get_seq_track(true, last_md_track);
-    MD.sync_seqtrack(base_track.length, base_track.speed,
-                     base_track.step_count);
+    seq_page_active_step_track().sync_step_edit(
+        base_track.length, base_track.speed, base_track.step_count);
     check_and_set_page_select();
     if (mcl_cfg.track_select && send) {
       MD.currentTrack = track;
-      MD.setStatus(0x22, track);
+      device->mixer()->select_track(DeviceContext(device, device_slot), track);
     }
   }
 #ifdef EXT_TRACKS
@@ -675,8 +676,9 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     DEBUG_PRINTLN("setting ext track");
     last_ext_track = min(track, SeqTrackUtil::track_count(false) - 1);
     auto &active_track = SeqTrackUtil::get_seq_track(false, last_ext_track);
-    MD.sync_seqtrack(min(active_track.length, 64), active_track.speed,
-                     active_track.step_count);
+    seq_page_active_step_track().sync_step_edit(
+        min(active_track.length, 64), active_track.speed,
+        active_track.step_count);
   }
 #endif
   GUI.currentPage()->config();
@@ -941,17 +943,19 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     });
     shed_mask(locks_on_step_mask_, length, offset);
 
+    SeqStepTrackRef active_track = seq_page_active_step_track();
     if ((uint16_t)led_mask != trigled_mask) {
       trigled_mask = led_mask;
-      MD.set_trigleds(trigled_mask, TRIGLED_STEPEDIT);
+      active_track.set_step_edit_trig_leds(trigled_mask, TRIGLED_STEPEDIT);
       if (mask_type == MASK_MUTE) {
-        MD.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
+        active_track.set_step_edit_trig_leds(mask, TRIGLED_STEPEDIT, 1);
         GUI_hardware.led.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
       }
     }
     if ((uint16_t)locks_on_step_mask_ != locks_on_step_mask) {
       locks_on_step_mask = locks_on_step_mask_;
-      MD.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
+      active_track.set_step_edit_trig_leds(locks_on_step_mask,
+                                           TRIGLED_STEPEDIT, 1);
     }
 
     GUI_hardware.led.set_trigleds(led_mask, TRIGLED_STEPEDIT);
@@ -1083,11 +1087,7 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
     } else {
       seq_page_active_step_track().set_length(length);
     }
-    SeqStepTrackRef active_track = seq_page_active_step_track();
-    if (active_track.uses_kit_sound()) {
-      MD.sync_seqtrack(active_track.length(), active_track.speed(),
-                       active_track.step_count());
-    }
+    seq_page_active_step_track().sync_step_edit();
     seq_param3.cur = length;
   } else {
 #ifdef EXT_TRACKS
@@ -1142,10 +1142,9 @@ void opt_speed_handler() {
       GUI.ignoreNextEvent(Buttons.BUTTON4);
     } else {
       SeqStepTrackRef active_track = seq_page_active_step_track();
-      if (active_track.request_speed_change(opt_speed) &&
-          active_track.uses_kit_sound()) {
-        MD.sync_seqtrack(active_track.length(), opt_speed,
-                         active_track.step_count());
+      if (active_track.request_speed_change(opt_speed)) {
+        active_track.sync_step_edit(active_track.length(), opt_speed,
+                                    active_track.step_count());
       }
     }
     seq_step_page.config_encoders();
@@ -1161,7 +1160,8 @@ void opt_speed_handler() {
   } else {
     auto &active_track = selected_track(is_md_device);
     if (active_track.request_speed_change(opt_speed) && is_md_device) {
-      MD.sync_seqtrack(active_track.length, opt_speed, active_track.step_count);
+      seq_page_active_step_track().sync_step_edit(
+          active_track.length, opt_speed, active_track.step_count);
     }
   }
 
