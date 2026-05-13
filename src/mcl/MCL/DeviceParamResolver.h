@@ -22,8 +22,11 @@ struct DeviceParamTarget {
   uint8_t target = 0;
 
   bool valid() const { return device != nullptr; }
-  uint8_t device_index() const { return context().grid_idx(); }
-  DeviceContext context() const { return DeviceContext(device, device_slot); }
+  uint8_t device_index() const { return context().device_idx(); }
+  DeviceContext context() const {
+    return DeviceContext::for_device(device,
+                                     device_slot == 0 ? 0 : device_slot - 1);
+  }
 #endif
 
   uint8_t param_count() const;

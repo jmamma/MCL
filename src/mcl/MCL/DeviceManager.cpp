@@ -144,12 +144,20 @@ MidiDevice *DeviceManager::secondary_device() const {
   return nonnull(secondary_);
 }
 
-MidiDevice *DeviceManager::slot_device(uint8_t slot) const {
-  return slot == 2 ? secondary_device() : primary_device();
+MidiDevice *DeviceManager::device_for_idx(uint8_t device_idx) const {
+  return device_idx == 1 ? secondary_device() : primary_device();
 }
 
-DeviceContext DeviceManager::context_for_slot(uint8_t slot) const {
-  return DeviceContext(slot_device(slot), slot);
+DeviceContext DeviceManager::primary_context() const {
+  return DeviceContext::primary(primary_device());
+}
+
+DeviceContext DeviceManager::secondary_context() const {
+  return DeviceContext::secondary(secondary_device());
+}
+
+DeviceContext DeviceManager::context_for_device(uint8_t device_idx) const {
+  return DeviceContext::for_device(device_for_idx(device_idx), device_idx);
 }
 
 #ifdef PLATFORM_TBD

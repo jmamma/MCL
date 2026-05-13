@@ -35,7 +35,8 @@ bool handle_mixer_cc(uint8_t device_slot, MidiDevice *device, uint8_t channel,
   if (device == nullptr || device_slot == 0) {
     return false;
   }
-  DeviceContext ctx(device, device_slot);
+  DeviceContext ctx = DeviceContext::for_device(
+      device, device_slot == 0 ? 0 : device_slot - 1);
   uint8_t track = 255;
   uint8_t track_param = 255;
   DeviceMixerCapability *mixer = device->mixer();

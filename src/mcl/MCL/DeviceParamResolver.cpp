@@ -94,9 +94,10 @@ DeviceParamTarget resolve_slot(uint8_t device_slot, uint8_t dest) {
   if (dest == 0) {
     return target;
   }
-  DeviceContext ctx = device_manager.context_for_slot(device_slot);
+  uint8_t device_idx = device_slot == 0 ? 0 : device_slot - 1;
+  DeviceContext ctx = device_manager.context_for_device(device_idx);
   target.device = ctx.device();
-  target.device_slot = ctx.slot();
+  target.device_slot = device_slot;
   target.target = dest - 1;
   DeviceParamCapability *params =
       target.device != nullptr ? target.device->params() : nullptr;
@@ -338,14 +339,15 @@ bool DevicePerfTarget::begin_param_editor(uint8_t *editor_params,
 namespace DeviceParamResolver {
 
 MidiDevice *slot_device(uint8_t device_slot) {
-  return device_manager.slot_device(device_slot);
+  return device_manager.device_for_idx(device_slot == 0 ? 0 : device_slot - 1);
 }
 
 uint8_t slot_target_count(uint8_t device_slot) {
 #if defined(__AVR__)
   return device_slot == 2 ? NUM_EXT_TRACKS : NUM_MD_TRACKS + 4;
 #else
-  DeviceContext ctx = device_manager.context_for_slot(device_slot);
+  uint8_t device_idx = device_slot == 0 ? 0 : device_slot - 1;
+  DeviceContext ctx = device_manager.context_for_device(device_idx);
   return ctx.device() != nullptr ? ctx.device()->params()->target_count(ctx)
                                   : 0;
 #endif
@@ -373,8 +375,8 @@ uint8_t perf_target_count() {
 #if defined(__AVR__)
   return NUM_MD_TRACKS + 4 + NUM_EXT_TRACKS;
 #else
-  DeviceContext primary_ctx = device_manager.context_for_slot(1);
-  DeviceContext secondary_ctx = device_manager.context_for_slot(2);
+  DeviceContext primary_ctx = device_manager.primary_context();
+  DeviceContext secondary_ctx = device_manager.secondary_context();
   uint8_t count = primary_ctx.device()->params()->target_count(primary_ctx);
   return count + secondary_ctx.device()->params()->target_count(secondary_ctx);
 #endif
@@ -398,24 +400,24 @@ DevicePerfTarget perf(uint8_t dest) {
   }
   return perf_target;
 #else
-  DeviceContext primary_ctx = device_manager.context_for_slot(1);
+  DeviceContext primary_ctx = device_manager.primary_context();
   DeviceParamCapability *primary_params = primary_ctx.device()->params();
   uint8_t primary_count = primary_params->target_count(primary_ctx);
   uint8_t local_target = dest - 1;
   if (local_target < primary_count) {
     target.device = primary_ctx.device();
-    target.device_slot = primary_ctx.slot();
+    target.device_slot = 1;
     target.target = local_target;
     return perf_target;
   }
 
   local_target -= primary_count;
-  DeviceContext secondary_ctx = device_manager.context_for_slot(2);
+  DeviceContext secondary_ctx = device_manager.secondary_context();
   DeviceParamCapability *secondary_params = secondary_ctx.device()->params();
   uint8_t secondary_count = secondary_params->target_count(secondary_ctx);
   if (local_target < secondary_count) {
     target.device = secondary_ctx.device();
-    target.device_slot = secondary_ctx.slot();
+    target.device_slot = 2;
     target.target = local_target;
   }
   return perf_target;
@@ -434,8 +436,8 @@ void end_perf_param_editor() {
 #if defined(__AVR__)
   MD.deactivate_encoder_interface();
 #else
-  for (uint8_t slot = 1; slot <= 2; slot++) {
-    DeviceContext ctx = device_manager.context_for_slot(slot);
+  for (uint8_t device_idx = 0; device_idx < NUM_GRIDS; device_idx++) {
+    DeviceContext ctx = device_manager.context_for_device(device_idx);
     ctx.device()->perf()->perf_end_param_editor(ctx);
   }
 #endif
@@ -445,8 +447,8 @@ void set_perf_rec_mode(uint8_t mode) {
 #if defined(__AVR__)
   MD.set_rec_mode(mode);
 #else
-  for (uint8_t slot = 1; slot <= 2; slot++) {
-    DeviceContext ctx = device_manager.context_for_slot(slot);
+  for (uint8_t device_idx = 0; device_idx < NUM_GRIDS; device_idx++) {
+    DeviceContext ctx = device_manager.context_for_device(device_idx);
     ctx.device()->perf()->perf_set_rec_mode(ctx, mode);
   }
 #endif
@@ -506,11 +508,11 @@ bool perf_scene_autofill(PerfData *data, uint8_t scene) {
 #else
   bool filled = false;
   uint8_t offset = 0;
-  for (uint8_t slot = 1; slot <= 2; slot++) {
-    DeviceContext ctx = device_manager.context_for_slot(slot);
+  for (uint8_t device_idx = 0; device_idx < NUM_GRIDS; device_idx++) {
+    DeviceContext ctx = device_manager.context_for_device(device_idx);
     filled |=
         ctx.device()->perf()->perf_scene_autofill(ctx, offset, data, scene);
-    offset += slot_target_count(slot);
+    offset += slot_target_count(device_idx + 1);
   }
   return filled;
 #endif

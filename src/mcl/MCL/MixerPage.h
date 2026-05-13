@@ -50,8 +50,8 @@ public:
 
   uint8_t get_mute_set(uint8_t key);
   uint8_t default_mixer_param() const;
-  MidiDevice *device_for_mixer_slot(uint8_t device_idx) const;
-  DeviceContext context_for_mixer_slot(uint8_t device_idx) const;
+  MidiDevice *device_for_mixer_idx(uint8_t device_idx) const;
+  DeviceContext context_for_mixer_idx(uint8_t device_idx) const;
   DeviceContext selected_mixer_context() const;
   MidiDevice *selected_mixer_device() const;
   void sync_selected_mixer_device();

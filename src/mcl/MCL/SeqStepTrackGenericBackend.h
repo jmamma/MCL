@@ -459,7 +459,9 @@ private:
   uint8_t param_device_slot() const { return device_slot_; }
   uint8_t param_dest() const { return track_index() + 1; }
   DeviceContext param_context() const {
-    return device_manager.context_for_slot(param_device_slot());
+    uint8_t slot = param_device_slot();
+    uint8_t device_idx = slot == 0 ? 0 : slot - 1;
+    return device_manager.context_for_device(device_idx);
   }
   uint8_t param_target() const { return track_index(); }
   DeviceStepEditCapability *step_edit() const {

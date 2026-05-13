@@ -47,20 +47,20 @@ PageIndex mixer_return_page(PageIndex &last_page) {
 
 } // namespace
 
-MidiDevice *MixerPage::device_for_mixer_slot(uint8_t device_idx) const {
-  return device_manager.slot_device(device_idx + 1);
+MidiDevice *MixerPage::device_for_mixer_idx(uint8_t device_idx) const {
+  return device_manager.device_for_idx(device_idx);
 }
 
-DeviceContext MixerPage::context_for_mixer_slot(uint8_t device_idx) const {
-  return device_manager.context_for_slot(device_idx + 1);
+DeviceContext MixerPage::context_for_mixer_idx(uint8_t device_idx) const {
+  return device_manager.context_for_device(device_idx);
 }
 
 DeviceContext MixerPage::selected_mixer_context() const {
-  return context_for_mixer_slot(mixer_device_idx);
+  return context_for_mixer_idx(mixer_device_idx);
 }
 
 MidiDevice *MixerPage::selected_mixer_device() const {
-  return device_for_mixer_slot(mixer_device_idx);
+  return device_for_mixer_idx(mixer_device_idx);
 }
 
 void MixerPage::sync_selected_mixer_device() {
@@ -126,7 +126,7 @@ void MixerPage::trig(uint8_t track_number) {
   if (track_number >= NUM_MD_TRACKS) {
     return;
   }
-  DeviceContext ctx = device_manager.context_for_slot(1);
+  DeviceContext ctx = device_manager.primary_context();
   DeviceMixerCapability *mixer = ctx.device()->mixer();
   MidiDeviceMixerParam info;
   uint8_t level = 127;
@@ -533,7 +533,7 @@ void MixerPage::record_mutes_set(bool state) {
 
 void MixerPage::disable_record_mutes(bool clear) {
   for (uint8_t dev = 0; dev < 2; dev++) {
-    DeviceContext ctx = context_for_mixer_slot(dev);
+    DeviceContext ctx = context_for_mixer_idx(dev);
     if (ctx.device() == &null_midi_device) {
       continue;
     }
@@ -553,7 +553,7 @@ void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) 
   if (load_type != nullptr && state < 255) {
     for (uint8_t dev = 0; dev < 2; dev++) {
       if (!load_type[dev]) continue;
-      DeviceContext ctx = context_for_mixer_slot(dev);
+      DeviceContext ctx = context_for_mixer_idx(dev);
       DeviceMixerCapability *mixer = ctx.device()->mixer();
       uint8_t len = mixer->track_count(ctx);
       if (len > 16) len = 16;
@@ -930,7 +930,7 @@ void MixerPage::onControlChangeCallback_Midi(uint8_t device_slot,
     return;
   }
   uint8_t device_idx = device_slot - 1;
-  DeviceContext ctx = device_manager.context_for_slot(device_slot);
+  DeviceContext ctx = device_manager.context_for_device(device_idx);
   DeviceMixerCapability *mixer = ctx.device()->mixer();
   if (mixer->is_mute_param(track_param)) {
     if (device_idx == mixer_device_idx) {

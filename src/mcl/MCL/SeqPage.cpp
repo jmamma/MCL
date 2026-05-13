@@ -638,7 +638,8 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
   const uint8_t device_slot = seq_slot_for_device(device);
   bool is_md_device = slot_is_md_device(device_slot);
 #if !defined(__AVR__)
-  DeviceContext step_ctx(device, device_slot);
+  DeviceContext step_ctx = DeviceContext::for_device(
+      device, device_slot == 0 ? 0 : device_slot - 1);
   if (!is_md_device &&
       device->step_tracks()->available(step_ctx)) {
     if (track >= device->step_tracks()->track_count(step_ctx)) {
@@ -668,7 +669,10 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     check_and_set_page_select();
     if (mcl_cfg.track_select && send) {
       MD.currentTrack = track;
-      device->mixer()->select_track(DeviceContext(device, device_slot), track);
+      device->mixer()->select_track(
+          DeviceContext::for_device(device,
+                                    device_slot == 0 ? 0 : device_slot - 1),
+          track);
     }
   }
 #ifdef EXT_TRACKS

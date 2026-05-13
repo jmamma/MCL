@@ -61,7 +61,7 @@ inline MidiClass *seq_step_tracks_midi() {
 }
 #else
 inline DeviceContext seq_step_track_context() {
-  return device_manager.context_for_slot(1);
+  return device_manager.primary_context();
 }
 
 inline DeviceStepTrackCapability *seq_step_track_capability() {
