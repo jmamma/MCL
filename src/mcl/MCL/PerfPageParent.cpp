@@ -34,11 +34,11 @@ void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param,
       strcpy_P(myName, mclstr_ler);
     }
   } else {
-    bool labelled = device_idx != DeviceIdx::None
-                        ? DeviceParamResolver::target_for_idx(device_idx, dest)
-                              .param_label(param, myName, sizeof(myName))
-                        : DeviceParamResolver::perf(dest)
-                              .param_label(param, myName, sizeof(myName));
+    DeviceParamTarget target =
+        device_idx != DeviceIdx::None
+            ? DeviceParamResolver::target_for_idx(device_idx, dest)
+            : DeviceParamResolver::perf(dest).params;
+    bool labelled = target.param_label(param, myName, sizeof(myName));
     if (!labelled) {
       mcl_gui.put_value_at(param, myName);
     }
@@ -52,11 +52,11 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
   if (value == 0) {
     strcpy_P(K, mclstr_dash);
   } else {
-    bool labelled = device_idx != DeviceIdx::None
-                        ? DeviceParamResolver::target_for_idx(device_idx, value)
-                              .target_label(K, sizeof(K))
-                        : DeviceParamResolver::perf(value).target_label(
-                              K, sizeof(K));
+    DeviceParamTarget target =
+        device_idx != DeviceIdx::None
+            ? DeviceParamResolver::target_for_idx(device_idx, value)
+            : DeviceParamResolver::perf(value).params;
+    bool labelled = target.target_label(K, sizeof(K));
     if (!labelled) {
       uint8_t local_value = value;
       K[0] = device_idx == DeviceIdx::Secondary ? 'M' : 'T';
@@ -73,21 +73,4 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
   }
   const char *label = dest ? mclstr_dest : mclstr_src;
   mcl_gui.draw_knob(knob, label, K);
-}
-
-bool PerfPageParent::handleEvent(gui_event_t *event) {
-  /*
-    if (EVENT_NOTE(event)) {
-      uint8_t mask = event->mask;
-      uint8_t port = event->port;
-      auto device = device_manager.device_for_port(port);
-
-      uint8_t track = event->source;
-      uint8_t page_select = 0;
-      uint8_t step = track + (page_select * 16);
-      if (event->mask == EVENT_BUTTON_PRESSED) {
-      }
-    }
-  */
-  return false;
 }

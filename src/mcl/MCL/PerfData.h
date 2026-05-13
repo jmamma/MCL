@@ -196,12 +196,6 @@ public:
 
 class PerfFade {
 public:
-  PerfFade() {
-    dest = 0;
-    param = 0;
-    min = 255;
-    max = 255;
-  }
   uint8_t dest;
   uint8_t param;
   uint8_t min;
@@ -219,7 +213,6 @@ public:
   uint8_t find_existing(uint8_t dest, uint8_t param) {
     for (uint8_t n = 0; n < count; n++) {
        PerfFade *f = &fades[n];
-       if (f->dest == 0) { return 255; }
        if (f->dest == dest && f->param == param) { return n; }
     }
     return 255;

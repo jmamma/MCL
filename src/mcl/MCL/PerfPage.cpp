@@ -84,15 +84,13 @@ void PerfPage::set_led_mask() {
     last_mask = mask;
     return;
   }
-  bool blink = true;
-
   uint16_t blink_mask = 0;
 
   blink_mask |= e->perf_data.get_active_scene_mask();
   blink_mask &= ~mask;
 
   if (last_blink_mask != blink_mask) {
-    mcl_gui.set_trigleds(blink_mask, TRIGLED_EXCLUSIVENDYNAMIC, blink);
+    mcl_gui.set_trigleds(blink_mask, TRIGLED_EXCLUSIVENDYNAMIC, true);
   }
 
   last_blink_mask = blink_mask;
@@ -109,13 +107,7 @@ void PerfPage::func_enc_check() {
     for (uint8_t n = 0; n < 4; n++) {
       PerfEncoder *e = perf_encoders[n];
       if (e->hasChanged()) {
-        int dir = e->cur - e->old;
-        if (dir < 0) {
-          e->cur = 0;
-        }
-        if (dir > 0) {
-          e->cur = 127;
-        }
+        e->cur = e->cur < e->old ? 0 : 127;
         e->old = e->cur;
         e->send();
       }
@@ -123,8 +115,8 @@ void PerfPage::func_enc_check() {
   }
 }
 void PerfPage::config_encoder_range(uint8_t i) {
-  ((PerfEncoder *)encoders[i])->max = DeviceParamResolver::perf_target_count();
-  ((PerfEncoder *)encoders[i + 1])->min = 0;
+  ((MCLEncoder *)encoders[i])->max = DeviceParamResolver::perf_target_count();
+  ((MCLEncoder *)encoders[i + 1])->min = 0;
 
   uint8_t param_count =
       DeviceParamResolver::perf(encoders[i]->cur).param_count();
@@ -138,35 +130,6 @@ void PerfPage::config_encoders(uint8_t show_val) {
   encoders[2] = &fx_param3;
   encoders[3] = &fx_param4;
 
-  if (page_mode > PERF_DESTINATION) {
-    if (learn) {
-      uint8_t scene = learn - 1;
-
-      last_page_mode = page_mode;
-
-      uint8_t c = page_mode - 1;
-
-      PerfEncoder *e = perf_encoders[perf_id];
-      PerfParam *p = &e->perf_data.scenes[scene].params[c];
-
-      encoders[1]->cur = p->dest;
-      encoders[2]->cur = p->param;
-
-      uint8_t v = p->val;
-
-      if (v == 255) {
-        v = 0;
-      } else {
-        v++;
-      }
-
-      encoders[3]->cur = v;
-      ((PerfEncoder *)encoders[3])->max = 128;
-
-      config_encoder_range(1);
-    }
-  }
-
   if (page_mode == PERF_DESTINATION) {
 
     PerfData *d = &perf_encoders[perf_id]->perf_data;
@@ -174,7 +137,32 @@ void PerfPage::config_encoders(uint8_t show_val) {
     encoders[2]->cur = d->param;
     config_encoder_range(1);
     encoders[3]->cur = d->min;
-    ((PerfEncoder *)encoders[3])->max = 127;
+    ((MCLEncoder *)encoders[3])->max = 127;
+  } else if (learn) {
+    uint8_t scene = learn - 1;
+
+    last_page_mode = page_mode;
+
+    uint8_t c = page_mode - 1;
+
+    PerfEncoder *e = perf_encoders[perf_id];
+    PerfParam *p = &e->perf_data.scenes[scene].params[c];
+
+    encoders[1]->cur = p->dest;
+    encoders[2]->cur = p->param;
+
+    uint8_t v = p->val;
+
+    if (v == 255) {
+      v = 0;
+    } else {
+      v++;
+    }
+
+    encoders[3]->cur = v;
+    ((MCLEncoder *)encoders[3])->max = 128;
+
+    config_encoder_range(1);
   }
 
   if (!show_val) {
@@ -185,15 +173,16 @@ void PerfPage::update_params() {
   if (show_menu) {
     return;
   }
-  uint8_t c = page_mode - 1;
+
+  config_encoder_range(1);
+
+  if (encoders[1]->hasChanged() && encoders[1]->cur == 0) {
+    encoders[2]->cur = 0;
+  }
+
   if (page_mode > PERF_DESTINATION) {
-    config_encoder_range(1);
-
-    if (encoders[1]->hasChanged() && encoders[1]->cur == 0) {
-      encoders[2]->cur = 0;
-    }
-
     if (learn) {
+      uint8_t c = page_mode - 1;
       uint8_t scene = learn - 1;
 
       PerfParam *p = &perf_encoders[perf_id]->perf_data.scenes[scene].params[c];
@@ -206,11 +195,6 @@ void PerfPage::update_params() {
       }
     }
   } else {
-    config_encoder_range(1);
-
-    if (encoders[1]->hasChanged() && encoders[1]->cur == 0) {
-      encoders[2]->cur = 0;
-    }
     if (encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       d->update_src(encoders[1]->cur, encoders[2]->cur, encoders[3]->cur);
@@ -247,13 +231,10 @@ void PerfPage::display() {
   char info2[12]; // Use an appropriate size for your needs
   mclstr_copy_progmem(info2, mclstr_parameter, sizeof(info2));
 
-  uint8_t scene = learn - 1;
-
   PerfEncoder *e = perf_encoders[perf_id];
 
   static char perf_label[4] = " A";
   perf_label[1] = 'A' + perf_id;
-  perf_label[2] = '\0';
   mcl_gui.draw_knob(0, encoders[0], perf_label, false, false);
 
   if (learn) {
@@ -293,7 +274,7 @@ void PerfPage::display() {
   oled_display.print((char)(0x3C + perf_id));
 
   if (learn) {
-    mcl_gui.draw_panel_number(scene + 1);
+    mcl_gui.draw_panel_number(learn);
   }
   oled_display.setTextColor(WHITE, BLACK);
   mcl_gui.draw_panel_labels(info1, info2);
@@ -305,10 +286,10 @@ void PerfPage::display() {
   }
 
   oled_display.setCursor(80, MCLGUI::pane_info2_y + 4);
-  char str3[] = "SCENE: A    B";
-  str3[7] = e->active_scene_a == 255 ? '-' : '1' + e->active_scene_a;
-  str3[12] = e->active_scene_b == 255 ? '-' : '1' + e->active_scene_b;
-  oled_display.print(str3);
+  static char scene_label[] = "SCENE: A    B";
+  scene_label[7] = e->active_scene_a == 255 ? '-' : '1' + e->active_scene_a;
+  scene_label[12] = e->active_scene_b == 255 ? '-' : '1' + e->active_scene_b;
+  oled_display.print(scene_label);
   oled_display.writeFastHLine(109, MCLGUI::pane_info2_y + 1, 5, WHITE);
   oled_display.writeFastVLine(109 + ((e->cur * 5) / 128), MCLGUI::pane_info2_y,
                               3, WHITE);
@@ -418,11 +399,6 @@ void PerfPage::send_locks(uint8_t scene) {
 }
 
 bool PerfPage::handleEvent(gui_event_t *event) {
-
-  if (PerfPageParent::handleEvent(event)) {
-    return true;
-  }
-
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
 

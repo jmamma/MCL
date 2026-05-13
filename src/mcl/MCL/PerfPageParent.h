@@ -28,7 +28,6 @@ public:
   void cleanup();
   virtual void config_encoders() {};
 
-  bool handleEvent(gui_event_t *event);
 };
 
 #endif /* PERFPAGEPARENT_H__ */

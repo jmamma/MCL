@@ -396,8 +396,6 @@ void LFOPage::learn_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
 
 
 bool LFOPage::handleEvent(gui_event_t *event) {
-  if (PerfPageParent::handleEvent(event)) { return true; }
-
   bool seq_menu_button = EVENT_BUTTON(event) &&
       (EVENT_PRESSED(event, Buttons.BUTTON3) ||
        EVENT_RELEASED(event, Buttons.BUTTON3));

@@ -14,8 +14,6 @@ PerfEncoder::PerfEncoder(int _max, int _min, int _res, uint8_t _speed)
     : MCLEncoder(_max, _min, _res, _speed) {}
 
 void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_,MidiUartClass *uart2_) {
-  if (uart_ == nullptr) { uart_ = mcl_seq.primary_output; }
-  if (uart2_ == nullptr) { uart2_ = mcl_seq.secondary_output; }
   DevicePerfTarget target = DeviceParamResolver::perf(dest);
   target.set_param(param, val,
                    target.device_index() == DeviceIdx::Secondary ? uart2_
@@ -23,6 +21,9 @@ void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartC
 }
 
 void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUartClass *uart_,MidiUartClass *uart2_) {
+  if (uart_ == nullptr) { uart_ = mcl_seq.primary_output; }
+  if (uart2_ == nullptr) { uart2_ = mcl_seq.secondary_output; }
+
   PerfMorph morph;
 
   morph.populate(s1, s2);
