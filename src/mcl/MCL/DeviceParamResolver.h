@@ -18,12 +18,11 @@ struct DeviceParamTarget {
   uint8_t device_index() const { return device_slot == 2 ? 1 : 0; }
 #else
   MidiDevice *device = nullptr;
-  uint8_t device_idx = 0;
   uint8_t device_slot = 0;
   uint8_t target = 0;
 
   bool valid() const { return device != nullptr; }
-  uint8_t device_index() const { return device_idx; }
+  uint8_t device_index() const { return context().grid_idx(); }
   DeviceContext context() const { return DeviceContext(device, device_slot); }
 #endif
 

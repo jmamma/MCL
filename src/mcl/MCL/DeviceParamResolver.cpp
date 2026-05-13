@@ -96,7 +96,6 @@ DeviceParamTarget resolve_slot(uint8_t device_slot, uint8_t dest) {
   }
   DeviceContext ctx = device_manager.context_for_slot(device_slot);
   target.device = ctx.device();
-  target.device_idx = ctx.grid_idx();
   target.device_slot = ctx.slot();
   target.target = dest - 1;
   DeviceParamCapability *params =
@@ -405,7 +404,6 @@ DevicePerfTarget perf(uint8_t dest) {
   uint8_t local_target = dest - 1;
   if (local_target < primary_count) {
     target.device = primary_ctx.device();
-    target.device_idx = primary_ctx.grid_idx();
     target.device_slot = primary_ctx.slot();
     target.target = local_target;
     return perf_target;
@@ -417,7 +415,6 @@ DevicePerfTarget perf(uint8_t dest) {
   uint8_t secondary_count = secondary_params->target_count(secondary_ctx);
   if (local_target < secondary_count) {
     target.device = secondary_ctx.device();
-    target.device_idx = secondary_ctx.grid_idx();
     target.device_slot = secondary_ctx.slot();
     target.target = local_target;
   }
