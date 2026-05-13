@@ -338,12 +338,11 @@ bool DevicePerfTarget::begin_param_editor(uint8_t *editor_params,
 namespace DeviceParamResolver {
 
 MidiDevice *slot_device(uint8_t device_slot) {
-  return device_slot == 2 ? device_manager.secondary_device()
-                          : device_manager.primary_device();
+  return device_manager.slot_device(device_slot);
 }
 
 uint8_t slot_device_idx(uint8_t device_slot) {
-  return device_slot == 2 ? 1 : 0;
+  return device_manager.context_for_slot(device_slot).grid_idx();
 }
 
 uint8_t slot_target_count(uint8_t device_slot) {

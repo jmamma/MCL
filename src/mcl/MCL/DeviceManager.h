@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "MidiSetup.h"
+#include "../Drivers/DeviceContext.h"
 #include "../Drivers/MidiDeviceCapabilities.h"
 #include <inttypes.h>
 
@@ -27,6 +28,8 @@ public:
   void update_active_slots();
   MidiDevice *primary_device() const;
   MidiDevice *secondary_device() const;
+  MidiDevice *slot_device(uint8_t slot) const;
+  DeviceContext context_for_slot(uint8_t slot) const;
 
 #ifdef PLATFORM_TBD
   static constexpr uint8_t UI_SLOT_PRIMARY = 0;

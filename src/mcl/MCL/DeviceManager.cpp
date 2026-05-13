@@ -144,6 +144,14 @@ MidiDevice *DeviceManager::secondary_device() const {
   return nonnull(secondary_);
 }
 
+MidiDevice *DeviceManager::slot_device(uint8_t slot) const {
+  return slot == 2 ? secondary_device() : primary_device();
+}
+
+DeviceContext DeviceManager::context_for_slot(uint8_t slot) const {
+  return DeviceContext(slot_device(slot), slot);
+}
+
 #ifdef PLATFORM_TBD
 void DeviceManager::ui_loop() {
   MidiDevice *primary = primary_device();
