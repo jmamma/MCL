@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Drivers/MidiDevice.h"
+#include "DeviceManager.h"
 #include "DeviceParamResolver.h"
 #include "SeqDefines.h"
 #include <stddef.h>
@@ -110,7 +111,7 @@ public:
                        bool &is_midi_model) const {
     if (uses_kit_sound()) {
       return step_edit()->configure_kit_sound_panel(
-          param_device_idx(), param_target(), info, (uint8_t)info_len,
+          param_context(), param_target(), info, (uint8_t)info_len,
           &pitch_encoder_max, &is_midi_model);
     }
     pitch_encoder_max = uses_step_pitch() ? 127 : 1;
@@ -120,18 +121,18 @@ public:
   }
 
   bool step_editor_available() const {
-    return !uses_kit_sound() || step_edit()->available(param_device_idx());
+    return !uses_kit_sound() || step_edit()->available(param_context());
   }
 
   void set_step_edit_rec_mode(uint8_t mode) const {
     if (uses_kit_sound()) {
-      step_edit()->set_rec_mode(param_device_idx(), mode);
+      step_edit()->set_rec_mode(param_context(), mode);
     }
   }
 
   void sync_step_edit() const {
     if (uses_kit_sound()) {
-      step_edit()->sync_track(param_device_idx(), length(), speed(),
+      step_edit()->sync_track(param_context(), length(), speed(),
                               step_count());
     }
   }
@@ -139,72 +140,72 @@ public:
   void set_step_edit_trig_leds(uint16_t mask, uint8_t mode,
                                uint8_t blink = 0) const {
     if (uses_kit_sound()) {
-      step_edit()->set_trig_leds(param_device_idx(), mask, mode, blink);
+      step_edit()->set_trig_leds(param_context(), mask, mode, blink);
     }
   }
 
   void set_live_param_update(bool enabled) const {
     if (uses_kit_sound()) {
-      step_edit()->set_live_param_update(param_device_idx(), enabled);
+      step_edit()->set_live_param_update(param_context(), enabled);
       ops_->set_linked_param_update(track_, enabled);
     }
   }
 
   bool uses_note_pitch() const {
     return uses_kit_sound() ? step_edit()->kit_sound_uses_note_pitch(
-                                  param_device_idx(), param_target())
+                                  param_context(), param_target())
                             : uses_step_pitch();
   }
   uint8_t note_from_pitch_lock(uint8_t pitch) const {
     return uses_kit_sound() ? step_edit()->kit_sound_note_from_pitch(
-                                  param_device_idx(), param_target(), pitch)
+                                  param_context(), param_target(), pitch)
                             : pitch;
   }
   uint8_t pitch_lock_from_note(uint8_t note, uint8_t fine_tune = 255) const {
     return uses_kit_sound()
                ? step_edit()->kit_sound_pitch_from_note(
-                     param_device_idx(), param_target(), note, fine_tune)
+                     param_context(), param_target(), note, fine_tune)
                : note;
   }
   uint8_t default_pitch_lock() const {
     return uses_kit_sound() ? step_edit()->kit_sound_default_pitch(
-                                  param_device_idx(), param_target())
+                                  param_context(), param_target())
                             : 0;
   }
 
   bool param_from_key(uint8_t key, uint8_t *param) const {
     return uses_kit_sound() &&
-           step_edit()->param_from_key(param_device_idx(), param_target(), key,
+           step_edit()->param_from_key(param_context(), param_target(), key,
                                        param);
   }
   bool key_for_param(uint8_t param, uint8_t *key) const {
     return uses_kit_sound() &&
-           step_edit()->key_for_param(param_device_idx(), param_target(), param,
+           step_edit()->key_for_param(param_context(), param_target(), param,
                                       key);
   }
   bool begin_param_editor(uint8_t *params, uint8_t count) const {
     return uses_kit_sound() &&
-           step_edit()->begin_param_editor(param_device_idx(), param_target(),
+           step_edit()->begin_param_editor(param_context(), param_target(),
                                            params, count);
   }
   void end_param_editor() const {
     if (uses_kit_sound()) {
-      step_edit()->end_param_editor(param_device_idx());
+      step_edit()->end_param_editor(param_context());
     }
   }
   void close_microtiming() const {
     if (uses_kit_sound()) {
-      step_edit()->close_microtiming(param_device_idx());
+      step_edit()->close_microtiming(param_context());
     }
   }
   void clear_step_edit_popup() const {
     if (uses_kit_sound()) {
-      step_edit()->clear_popup(param_device_idx());
+      step_edit()->clear_popup(param_context());
     }
   }
   void popup_text(char *text, uint8_t persistent = 0) const {
     if (uses_kit_sound()) {
-      step_edit()->popup_text(param_device_idx(), text, persistent);
+      step_edit()->popup_text(param_context(), text, persistent);
     }
   }
 
@@ -376,12 +377,12 @@ public:
 private:
   uint8_t param_device_slot() const { return device_slot_; }
   uint8_t param_dest() const { return track_index() + 1; }
-  uint8_t param_device_idx() const {
-    return DeviceParamResolver::slot_device_idx(param_device_slot());
+  DeviceContext param_context() const {
+    return device_manager.context_for_slot(param_device_slot());
   }
   uint8_t param_target() const { return track_index(); }
   DeviceStepEditCapability *step_edit() const {
-    return DeviceParamResolver::slot_device(param_device_slot())->step_edit();
+    return param_context().device()->step_edit();
   }
 
   void *track_;

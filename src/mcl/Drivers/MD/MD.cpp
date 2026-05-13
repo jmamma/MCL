@@ -241,39 +241,40 @@ class MDStepEditCapability : public DeviceStepEditCapability {
 public:
   explicit MDStepEditCapability(MDClass &device)
       : DeviceStepEditCapability(device) {}
-  virtual bool available(uint8_t device_idx) const override;
-  virtual void set_rec_mode(uint8_t device_idx, uint8_t mode) override;
-  virtual void sync_track(uint8_t device_idx, uint8_t length, uint8_t speed,
-                          uint8_t step_count) override;
-  virtual void set_trig_leds(uint8_t device_idx, uint16_t mask, uint8_t mode,
-                             uint8_t blink = 0) override;
-  virtual void set_live_param_update(uint8_t device_idx,
+  virtual bool available(const DeviceContext &ctx) const override;
+  virtual void set_rec_mode(const DeviceContext &ctx, uint8_t mode) override;
+  virtual void sync_track(const DeviceContext &ctx, uint8_t length,
+                          uint8_t speed, uint8_t step_count) override;
+  virtual void set_trig_leds(const DeviceContext &ctx, uint16_t mask,
+                             uint8_t mode, uint8_t blink = 0) override;
+  virtual void set_live_param_update(const DeviceContext &ctx,
                                      bool enabled) override;
-  virtual bool configure_kit_sound_panel(uint8_t device_idx, uint8_t target,
-                                         char *info, uint8_t info_len,
-                                         uint8_t *pitch_max,
+  virtual bool configure_kit_sound_panel(const DeviceContext &ctx,
+                                         uint8_t target, char *info,
+                                         uint8_t info_len, uint8_t *pitch_max,
                                          bool *is_midi_model) const override;
-  virtual bool kit_sound_uses_note_pitch(uint8_t device_idx,
+  virtual bool kit_sound_uses_note_pitch(const DeviceContext &ctx,
                                          uint8_t target) const override;
-  virtual uint8_t kit_sound_default_pitch(uint8_t device_idx,
+  virtual uint8_t kit_sound_default_pitch(const DeviceContext &ctx,
                                           uint8_t target) const override;
-  virtual uint8_t kit_sound_note_from_pitch(uint8_t device_idx, uint8_t target,
+  virtual uint8_t kit_sound_note_from_pitch(const DeviceContext &ctx,
+                                            uint8_t target,
                                             uint8_t pitch) const override;
-  virtual uint8_t kit_sound_pitch_from_note(uint8_t device_idx, uint8_t target,
-                                            uint8_t note,
+  virtual uint8_t kit_sound_pitch_from_note(const DeviceContext &ctx,
+                                            uint8_t target, uint8_t note,
                                             uint8_t fine_tune) const override;
-  virtual bool param_from_key(uint8_t device_idx, uint8_t target, uint8_t key,
-                              uint8_t *param) const override;
-  virtual bool key_for_param(uint8_t device_idx, uint8_t target, uint8_t param,
-                             uint8_t *key) const override;
-  virtual bool begin_param_editor(uint8_t device_idx, uint8_t target,
+  virtual bool param_from_key(const DeviceContext &ctx, uint8_t target,
+                              uint8_t key, uint8_t *param) const override;
+  virtual bool key_for_param(const DeviceContext &ctx, uint8_t target,
+                             uint8_t param, uint8_t *key) const override;
+  virtual bool begin_param_editor(const DeviceContext &ctx, uint8_t target,
                                   uint8_t *params, uint8_t count) override;
-  virtual void end_param_editor(uint8_t device_idx) override;
-  virtual void close_microtiming(uint8_t device_idx) override;
-  virtual void clear_popup(uint8_t device_idx) override;
-  virtual void popup_text(uint8_t device_idx, char *text,
+  virtual void end_param_editor(const DeviceContext &ctx) override;
+  virtual void close_microtiming(const DeviceContext &ctx) override;
+  virtual void clear_popup(const DeviceContext &ctx) override;
+  virtual void popup_text(const DeviceContext &ctx, char *text,
                           uint8_t persistent = 0) override;
-  virtual bool parse_cc(uint8_t device_idx, uint8_t channel, uint8_t cc,
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *target, uint8_t *param) const override;
 
 private:
@@ -529,31 +530,33 @@ void MDPanelCapability::sync_seqtrack(uint8_t length, uint8_t speed,
 #endif
 
 #if !defined(__AVR__)
-bool MDStepEditCapability::available(uint8_t device_idx) const {
-  (void)device_idx;
+bool MDStepEditCapability::available(const DeviceContext &ctx) const {
+  (void)ctx;
   return md().global.extendedMode == 2;
 }
 
-void MDStepEditCapability::set_rec_mode(uint8_t device_idx, uint8_t mode) {
-  (void)device_idx;
+void MDStepEditCapability::set_rec_mode(const DeviceContext &ctx,
+                                        uint8_t mode) {
+  (void)ctx;
   md().set_rec_mode(mode);
 }
 
-void MDStepEditCapability::sync_track(uint8_t device_idx, uint8_t length,
+void MDStepEditCapability::sync_track(const DeviceContext &ctx, uint8_t length,
                                       uint8_t speed, uint8_t step_count) {
-  (void)device_idx;
+  (void)ctx;
   md().sync_seqtrack(length, speed, step_count);
 }
 
-void MDStepEditCapability::set_trig_leds(uint8_t device_idx, uint16_t mask,
-                                         uint8_t mode, uint8_t blink) {
-  (void)device_idx;
+void MDStepEditCapability::set_trig_leds(const DeviceContext &ctx,
+                                         uint16_t mask, uint8_t mode,
+                                         uint8_t blink) {
+  (void)ctx;
   md().set_trigleds(mask, (TrigLEDMode)mode, blink);
 }
 
-void MDStepEditCapability::set_live_param_update(uint8_t device_idx,
+void MDStepEditCapability::set_live_param_update(const DeviceContext &ctx,
                                                  bool enabled) {
-  (void)device_idx;
+  (void)ctx;
   if (enabled) {
     md().midi_events.enable_live_kit_update();
   } else {
@@ -562,9 +565,9 @@ void MDStepEditCapability::set_live_param_update(uint8_t device_idx,
 }
 
 bool MDStepEditCapability::configure_kit_sound_panel(
-    uint8_t device_idx, uint8_t target, char *info, uint8_t info_len,
+    const DeviceContext &ctx, uint8_t target, char *info, uint8_t info_len,
     uint8_t *pitch_max, bool *is_midi_model) const {
-  (void)device_idx;
+  (void)ctx;
   if (target >= NUM_MD_TRACKS || info == nullptr || info_len < 6) {
     return false;
   }
@@ -596,8 +599,8 @@ bool MDStepEditCapability::configure_kit_sound_panel(
 }
 
 bool MDStepEditCapability::kit_sound_uses_note_pitch(
-    uint8_t device_idx, uint8_t target) const {
-  (void)device_idx;
+    const DeviceContext &ctx, uint8_t target) const {
+  (void)ctx;
   if (target >= NUM_MD_TRACKS) {
     return false;
   }
@@ -607,15 +610,15 @@ bool MDStepEditCapability::kit_sound_uses_note_pitch(
          device.getKitModelTuning(target) != nullptr;
 }
 
-uint8_t MDStepEditCapability::kit_sound_default_pitch(uint8_t device_idx,
+uint8_t MDStepEditCapability::kit_sound_default_pitch(const DeviceContext &ctx,
                                                       uint8_t target) const {
-  (void)device_idx;
+  (void)ctx;
   return target < NUM_MD_TRACKS ? md().kit.params[target][0] : 0;
 }
 
 uint8_t MDStepEditCapability::kit_sound_note_from_pitch(
-    uint8_t device_idx, uint8_t target, uint8_t pitch) const {
-  (void)device_idx;
+    const DeviceContext &ctx, uint8_t target, uint8_t pitch) const {
+  (void)ctx;
   if (target >= NUM_MD_TRACKS) {
     return 255;
   }
@@ -639,9 +642,9 @@ uint8_t MDStepEditCapability::kit_sound_note_from_pitch(
 }
 
 uint8_t MDStepEditCapability::kit_sound_pitch_from_note(
-    uint8_t device_idx, uint8_t target, uint8_t note,
+    const DeviceContext &ctx, uint8_t target, uint8_t note,
     uint8_t fine_tune) const {
-  (void)device_idx;
+  (void)ctx;
   if (target >= NUM_MD_TRACKS) {
     return 255;
   }
@@ -669,10 +672,10 @@ uint8_t MDStepEditCapability::kit_sound_pitch_from_note(
   return pitch > 127 ? 127 : (uint8_t)pitch;
 }
 
-bool MDStepEditCapability::param_from_key(uint8_t device_idx, uint8_t target,
-                                          uint8_t key,
+bool MDStepEditCapability::param_from_key(const DeviceContext &ctx,
+                                          uint8_t target, uint8_t key,
                                           uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   if (param == nullptr || target >= NUM_MD_TRACKS || key < 0x10 ||
       key > 0x17) {
     return false;
@@ -688,10 +691,10 @@ bool MDStepEditCapability::param_from_key(uint8_t device_idx, uint8_t target,
   return true;
 }
 
-bool MDStepEditCapability::key_for_param(uint8_t device_idx, uint8_t target,
-                                         uint8_t param,
+bool MDStepEditCapability::key_for_param(const DeviceContext &ctx,
+                                         uint8_t target, uint8_t param,
                                          uint8_t *key) const {
-  (void)device_idx;
+  (void)ctx;
   if (key == nullptr || target >= NUM_MD_TRACKS) {
     return false;
   }
@@ -710,11 +713,11 @@ bool MDStepEditCapability::key_for_param(uint8_t device_idx, uint8_t target,
   return true;
 }
 
-bool MDStepEditCapability::begin_param_editor(uint8_t device_idx,
+bool MDStepEditCapability::begin_param_editor(const DeviceContext &ctx,
                                               uint8_t target,
                                               uint8_t *params,
                                               uint8_t count) {
-  (void)device_idx;
+  (void)ctx;
   if (target >= NUM_MD_TRACKS || params == nullptr ||
       count < MD_PARAMS_PER_TRACK) {
     return false;
@@ -723,33 +726,33 @@ bool MDStepEditCapability::begin_param_editor(uint8_t device_idx,
   return true;
 }
 
-void MDStepEditCapability::end_param_editor(uint8_t device_idx) {
-  (void)device_idx;
+void MDStepEditCapability::end_param_editor(const DeviceContext &ctx) {
+  (void)ctx;
   if (md().encoder_interface) {
     md().deactivate_encoder_interface();
   }
 }
 
-void MDStepEditCapability::close_microtiming(uint8_t device_idx) {
-  (void)device_idx;
+void MDStepEditCapability::close_microtiming(const DeviceContext &ctx) {
+  (void)ctx;
   md().draw_close_microtiming();
 }
 
-void MDStepEditCapability::clear_popup(uint8_t device_idx) {
-  (void)device_idx;
+void MDStepEditCapability::clear_popup(const DeviceContext &ctx) {
+  (void)ctx;
   md().popup_text(127, 2);
 }
 
-void MDStepEditCapability::popup_text(uint8_t device_idx, char *text,
+void MDStepEditCapability::popup_text(const DeviceContext &ctx, char *text,
                                       uint8_t persistent) {
-  (void)device_idx;
+  (void)ctx;
   md().popup_text(text, persistent);
 }
 
-bool MDStepEditCapability::parse_cc(uint8_t device_idx, uint8_t channel,
+bool MDStepEditCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
                                     uint8_t cc, uint8_t *target,
                                     uint8_t *param) const {
-  (void)device_idx;
+  (void)ctx;
   if (target == nullptr || param == nullptr) {
     return false;
   }
