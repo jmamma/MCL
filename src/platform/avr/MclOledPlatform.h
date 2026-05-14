@@ -10,5 +10,4 @@ inline void mcl_oled_dc_low() { mcl_avr_pins::oled_dc_low(); }
 inline void mcl_oled_reset_high() { mcl_avr_pins::oled_reset_high(); }
 inline void mcl_oled_reset_low() { mcl_avr_pins::oled_reset_low(); }
 
-void mcl_oled_spi_acquire();
-void mcl_oled_spi_release();
+void mcl_oled_set_sd_dedicated_spi(bool dedicated);

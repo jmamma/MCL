@@ -5,8 +5,9 @@
 #include "Project.h"
 
 #ifdef __AVR__
-void mcl_oled_spi_acquire() { SD.setDedicatedSpi(false); }
-void mcl_oled_spi_release() { SD.setDedicatedSpi(true); }
+void mcl_oled_set_sd_dedicated_spi(bool dedicated) {
+  SD.setDedicatedSpi(dedicated);
+}
 #endif
 
 /*
