@@ -120,7 +120,7 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
 #endif
 }
 
-bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
+bool ExtTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, uint8_t merge,
                              bool online, Grid *grid) {
   /*Assign a track to Grid i*/
   /*Extraact track data from received pattern and kit and store in track

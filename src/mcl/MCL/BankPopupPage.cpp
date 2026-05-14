@@ -194,7 +194,7 @@ bool BankPopupPage::handleEvent(gui_event_t *event) {
     uint8_t track = event->source;
     if (track >= NUM_MD_TRACKS) return false;
 
-    uint8_t row = grid_page.bank * 16 + track;
+    GridRow row = grid_page.bank * 16 + track;
 
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (note_interface.notes_all_off()) {

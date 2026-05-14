@@ -61,7 +61,7 @@ void MNMTrack::get_machine_from_kit(uint8_t tracknumber) {
   machine.type = MNM.kit.types[tracknumber];
 }
 
-bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
+bool MNMTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, uint8_t merge,
                                   bool online, Grid *grid) {
 
   DEBUG_PRINT_FN();

@@ -34,7 +34,7 @@ void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_seq_data(seq_track);
 }
 
-bool A4Track::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
+bool A4Track::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, uint8_t merge,
                             bool online, Grid *grid) {
 
   active = A4_TRACK_TYPE;

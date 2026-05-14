@@ -4,6 +4,7 @@
 #define MCLSYSCONFIG_H__
 
 #include "MCLSd.h"
+#include "MCLMemory.h"
 
 #define CONFIG_VERSION 4016
 
@@ -31,8 +32,8 @@ public:
   uint8_t clock_rec;
   uint8_t drumRouting[16];
   uint8_t routing[24];
-  uint8_t row;
-  uint8_t col;
+  GridRow row;
+  GridColumn col;
   uint8_t cur_row;
   uint8_t cur_col;
   uint16_t poly_mask;

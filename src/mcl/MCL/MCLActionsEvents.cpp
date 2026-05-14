@@ -59,7 +59,7 @@ void MCLActionsMidiEvents::onProgramChangeCallback_Midi2(uint8_t *msg) {
   }
 }
 
-uint8_t MCLActionsMidiEvents::note_to_slot(uint8_t note) {
+GridSlot MCLActionsMidiEvents::note_to_slot(uint8_t note) {
    /* disable black keys
   const uint16_t chromatic = 0b0000010101001010;
   uint8_t o = note / 12;
@@ -79,7 +79,7 @@ void MCLActionsMidiEvents::onNoteOnCallback_Midi2(uint8_t *msg) {
     if (msg[1] < MIDI_NOTE_C4) {
       return;
     }
-    uint8_t slot = note_to_slot(msg[1] - MIDI_NOTE_C4);
+    GridSlot slot = note_to_slot(msg[1] - MIDI_NOTE_C4);
     if (slot > NUM_SLOTS - 1) {
       return;
     }
@@ -105,7 +105,7 @@ void MCLActionsMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
     if (msg[1] < MIDI_NOTE_C4) {
       return;
     }
-    uint8_t slot = note_to_slot(msg[1] - MIDI_NOTE_C4);
+    GridSlot slot = note_to_slot(msg[1] - MIDI_NOTE_C4);
     if (slot > NUM_SLOTS - 1) {
       return;
     }
@@ -123,7 +123,7 @@ void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
 void MCLActionsCallbacks::StopHardCallback() {
   DEBUG_PRINTLN("BEGIN stop hard");
-  uint8_t row_array[NUM_SLOTS];
+  GridRow row_array[NUM_SLOTS];
   uint8_t slot_select_array[NUM_SLOTS] = {};
   bool proceed = false;
 

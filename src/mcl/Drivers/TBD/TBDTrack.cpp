@@ -577,7 +577,7 @@ void TBDTrack::load_immediate_cleared(uint8_t tracknumber,
   apply_seq_defaults(tracknumber, seq_track);
 }
 
-bool TBDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
+bool TBDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
                              uint8_t merge, bool online, Grid *grid) {
   (void)merge;
   (void)online;
@@ -720,7 +720,7 @@ void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
       storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
 }
 
-bool TBDMidiTrack::store_in_grid(uint8_t column, uint16_t row,
+bool TBDMidiTrack::store_in_grid(GridSlot column, GridRow row,
                                  SeqTrack *seq_track, uint8_t merge,
                                  bool online, Grid *grid) {
   (void)merge;

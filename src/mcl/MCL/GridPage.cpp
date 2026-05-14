@@ -35,7 +35,7 @@ void set_slot_label(char label[3], char a, char b) {
   label[2] = '\0';
 }
 
-bool copy_tbd_grid_label(uint8_t track_type, uint8_t column, uint16_t row,
+bool copy_tbd_grid_label(uint8_t track_type, GridSlot column, GridRow row,
                          char label[3]) {
   EmptyTrack scratch;
   bool ok = false;
@@ -114,7 +114,7 @@ void GridPage::cleanup() {
   bank_popup = 0;
 }
 
-void GridPage::load_row(uint8_t n, uint8_t row) {
+void GridPage::load_row(uint8_t n, GridRow row) {
   if (row >= GRID_LENGTH) { return; }
   if (IS_BIT_CLEAR16(grid_page.bank_popup_loadmask, n)) {
     grid_load_page.group_load(row);
@@ -122,7 +122,7 @@ void GridPage::load_row(uint8_t n, uint8_t row) {
   }
 }
 
-void GridPage::jump_to_row(uint8_t row) {
+void GridPage::jump_to_row(GridRow row) {
   //  uint8_t y = (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
   //  uint8_t r = row - y;
   uint8_t y = row;
@@ -135,7 +135,7 @@ void GridPage::jump_to_row(uint8_t row) {
   write_cfg = true;
 }
 
-void GridPage::set_active_row(uint8_t row) {
+void GridPage::set_active_row(GridRow row) {
   grid_task.last_active_row = row;
   if (bank_popup) {
     send_row_led();
@@ -143,11 +143,13 @@ void GridPage::set_active_row(uint8_t row) {
 }
 
 void GridPage::send_row_led() {
-  uint64_t rows[2] = {0};
-  if (row >= GRID_LENGTH) { return; }
-  SET_BIT128_P(&rows, grid_task.last_active_row);
-  uint16_t *blink_mask = (uint16_t *)&rows[0];
-  MD.set_trigleds(blink_mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC, 1);
+  uint8_t active_row = grid_task.last_active_row;
+  if (active_row >= GRID_LENGTH) { return; }
+  uint16_t blink_mask = 0;
+  if ((active_row >> 4) == bank) {
+    blink_mask = (uint16_t)1 << (active_row & 0x0F);
+  }
+  MD.set_trigleds(blink_mask, TRIGLED_EXCLUSIVENDYNAMIC, 1);
 }
 void GridPage::close_bank_popup() {
   if (bank_popup == 2) {
@@ -332,7 +334,7 @@ void GridPage::row_state_scan() {
     GridRowHeader header_tmp;
     row_scan--;
 
-    uint8_t row = GRID_LENGTH - row_scan - 1;
+    GridRow row = GRID_LENGTH - row_scan - 1;
     proj.read_grid_row_header(&header_tmp, row, 0);
     bool state = header_tmp.is_empty();
 
@@ -343,7 +345,7 @@ void GridPage::row_state_scan() {
   }
 }
 
-void GridPage::update_row_state(uint8_t row, bool state) {
+void GridPage::update_row_state(GridRow row, bool state) {
   // DEBUG_PRINTLN("updating row state");
   // DEBUG_PRINTLN(row);
   if (state) {
@@ -353,11 +355,11 @@ void GridPage::update_row_state(uint8_t row, bool state) {
   }
 }
 
-uint8_t GridPage::getRow() { return param2.cur; }
+GridRow GridPage::getRow() { return param2.cur; }
 
-uint8_t GridPage::getCol() { return param1.cur; }
+GridColumn GridPage::getCol() { return param1.cur; }
 
-uint8_t GridPage::getWidth() { return GRID_WIDTH; }
+GridSpan GridPage::getWidth() { return GRID_WIDTH; }
 
 void GridPage::load_slot_models() {
   DEBUG_PRINTLN("load slot models");
@@ -365,7 +367,7 @@ void GridPage::load_slot_models() {
   if ((cur_row + param4.cur > MAX_VISIBLE_ROWS - 1)) {
     row_shift = cur_row + param4.cur - MAX_VISIBLE_ROWS;
   }
-  uint8_t base_row = getRow() - cur_row + row_shift;
+  GridRow base_row = getRow() - cur_row + row_shift;
 
 #ifdef PLATFORM_TBD
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
@@ -376,7 +378,7 @@ void GridPage::load_slot_models() {
 #endif
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-    uint8_t row = base_row + n;
+    GridRow row = base_row + n;
     if (row >= GRID_LENGTH) { return; }
     proj.read_grid_row_header(&row_headers[n], row, cur_grid);
     update_row_state(row, row_headers[n].active);
@@ -502,7 +504,7 @@ void GridPage::display_grid_info() {
   oled_display.setTextColor(WHITE, BLACK);
 }
 bool GridPage::is_slot_queue(uint8_t x, uint8_t y) {
-  uint8_t slot = cur_grid * GRID_WIDTH + x;
+  GridSlot slot = cur_grid * GRID_WIDTH + x;
   if (mcl_actions.chains[slot].is_mode_queue() && !show_slot_menu) {
     for (uint8_t n = 0; n < mcl_actions.chains[slot].num_of_links; n++) {
       if (mcl_actions.chains[slot].rows[n] == y) {
@@ -520,9 +522,9 @@ void GridPage::display_grid() {
   oled_display.setFont(&TomThumb);
 
   char str[3];
-  uint8_t base_col = getCol() - cur_col;
-  uint8_t base_row = getRow() - cur_row;
-  uint8_t grid_width = getWidth();
+  GridColumn base_col = getCol() - cur_col;
+  GridRow base_row = getRow() - cur_row;
+  GridSpan grid_width = getWidth();
 #ifdef PLATFORM_TBD
   uint8_t selected_row = getRow();
 #endif
@@ -637,7 +639,7 @@ void GridPage::display_grid() {
         oled_display.setTextColor(WHITE, BLACK);
       }
 
-      uint8_t track_grid_idx = track_idx + GRID_WIDTH * cur_grid;
+      GridSlot track_grid_idx = track_idx + GRID_WIDTH * cur_grid;
       uint8_t active_slot = active_slots[track_grid_idx];
       bool active = row_idx == active_slot;
       if (blink_hint && active) {
@@ -680,12 +682,12 @@ void GridPage::display_row_info() {
   if ((cur_row + param4.cur > MAX_VISIBLE_ROWS - 1)) {
     row_shift = cur_row + param4.cur - MAX_VISIBLE_ROWS;
   }
-  uint8_t base_row = getRow() - cur_row + row_shift;
+  GridRow base_row = getRow() - cur_row + row_shift;
   char val[4];
   val[2] = '\0';
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
-    uint8_t row = base_row + n;
+    GridRow row = base_row + n;
     if (row >= GRID_LENGTH) { return; }
     uint8_t b = row / 16;
     oled_display.setCursor(27, (n + 1) * 8);
@@ -790,10 +792,10 @@ void rename_row() {
 void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }
 
 void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
-  uint8_t width;
-  uint8_t height;
+  GridSpan width;
+  GridSpan height;
 
-  uint8_t _col = getCol();;
+  GridColumn _col = getCol();;
 
     bool activate_header = false;
   //old_col != 255 indicates that the grid selection spans grids x and y.
@@ -906,7 +908,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     again:
 
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
-      uint8_t ypos = y + getRow();
+      GridRow ypos = y + getRow();
       proj.read_grid_row_header(&header, y + getRow(), cur_grid);
 
       memset(track_select_array, 0, sizeof(track_select_array));
@@ -915,7 +917,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
         mcl_gui.draw_progress("", y, height);
       }
       for (uint8_t x = 0; x < width && x + _col < getWidth(); x++) {
-        uint8_t xpos = x + _col;
+        GridColumn xpos = x + _col;
         if (slot_clear == 1) {
           // Delete slot(s)
           proj.clear_slot_grid(xpos + cur_grid * GRID_WIDTH, ypos);
@@ -1027,7 +1029,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    uint8_t row = grid_page.bank * 16 + track;
+    GridRow row = grid_page.bank * 16 + track;
     if (event->mask == EVENT_BUTTON_RELEASED) {
       if (grid_page.bank_popup > 0) {
         if (note_interface.notes_all_off()) {

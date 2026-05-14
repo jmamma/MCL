@@ -14,6 +14,17 @@ constexpr size_t GRID_WIDTH = 16;
 constexpr size_t GRID_LENGTH = 128;
 constexpr size_t GRID_SLOT_BYTES = 4096;
 
+using GridIndex = uint8_t;
+using GridColumn = uint8_t;
+using GridRow = uint8_t;
+using GridSlot = uint8_t;
+using GridSpan = uint8_t;
+
+static_assert(GRID_LENGTH < 255,
+              "GridRow must hold all project rows, the clipboard row, and 255 sentinel");
+static_assert(GRID_WIDTH * NUM_GRIDS < 255,
+              "GridSlot must hold the full logical grid width and 255 sentinel");
+
 constexpr size_t PRJ_NAME_LEN = 14;
 
 constexpr size_t NUM_SLOTS = GRID_WIDTH * NUM_GRIDS;

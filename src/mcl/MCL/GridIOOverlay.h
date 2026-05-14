@@ -31,14 +31,14 @@ private:
   void group_action();
   void group_select();
   void toggle_grid();
-  void focus_slot(uint8_t slot);
+  void focus_slot(GridSlot slot);
   void selected_tracks(uint8_t *track_select_array);
   uint16_t visible_select_mask() const;
   void load_mode_title(char *title, uint8_t size) const;
   void sync_preview_grid();
 
   Mode mode_ = MODE_LOAD;
-  uint8_t saved_grid_ = 0;
+  GridIndex saved_grid_ = 0;
   MCLEncoder mode_enc_;
   MCLExpEncoder queue_len_enc_;
   MCLEncoder unused_enc_;

@@ -11,9 +11,9 @@
 uint32_t GridIOPage::track_select = 0;
 bool GridIOPage::show_track_type = false;
 bool GridIOPage::show_offset = false;
-uint8_t GridIOPage::offset = 0;
+GridSlot GridIOPage::offset = 0;
 
-uint8_t GridIOPage::old_grid = 0;
+GridIndex GridIOPage::old_grid = 0;
 
 void GridIOPage::cleanup() {
   key_interface.send_md_leds();
@@ -83,7 +83,7 @@ void GridIOPage::draw_tbd_panel_header(const char *title, uint8_t y_offset) {
 
   oled_display.setTextColor(WHITE, BLACK);
   char val[3];
-  const uint8_t row = grid_page.getRow();
+  const GridRow row = grid_page.getRow();
   const uint8_t bank = row / 16;
   mcl_gui.put_value_at2(row - bank * 16 + 1, val);
 
@@ -112,7 +112,7 @@ void GridIOPage::clear_body(uint8_t y_offset) {
   mcl_gui.clear_popup(0, y_offset);
 }
 
-uint8_t GridIOPage::slot_for_note(uint8_t note) {
+GridSlot GridIOPage::slot_for_note(uint8_t note) {
   if (note < GRID_WIDTH) {
     return note + old_grid * GRID_WIDTH;
   }
@@ -144,7 +144,7 @@ void GridIOPage::paint_track_select_leds() {
     }
   } else {
     for (uint8_t n = 0; n < GRID_WIDTH && n < 16; n++) {
-      uint8_t slot = n + old_grid * GRID_WIDTH;
+      GridSlot slot = n + old_grid * GRID_WIDTH;
       if (IS_BIT_SET32(track_select, slot) || note_interface.is_note(slot) ||
           note_interface.is_note(n)) {
         SET_BIT16(active_mask, n);
@@ -177,7 +177,7 @@ void GridIOPage::populate_track_select_from_notes(uint8_t *track_select_array) {
   }
 }
 
-bool GridIOPage::slot_matches_track_type_select(uint8_t slot) {
+bool GridIOPage::slot_matches_track_type_select(GridSlot slot) {
   if (slot >= NUM_SLOTS) return false;
 
   GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot);
@@ -211,7 +211,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
     if (track >= NUM_SLOTS) return true;
-    uint8_t slot = slot_for_note(track);
+    GridSlot slot = slot_for_note(track);
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (show_track_type) {
         if (track < 5) {
@@ -274,7 +274,7 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
     toggle_grid:
       for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-        uint8_t slot = n + old_grid * GRID_WIDTH;
+        GridSlot slot = n + old_grid * GRID_WIDTH;
         if (note_interface.is_note(n) || note_interface.is_note(slot)) {
           TOGGLE_BIT32(track_select, slot);
           if (note_interface.is_note_on(n)) {

@@ -13,12 +13,12 @@
 
 class MCLClipBoard {
 public:
-  int t_col;
-  int t_row;
-  int t_w;
-  int t_h;
+  GridSlot t_col;
+  GridRow t_row;
+  GridSpan t_w;
+  GridSpan t_h;
 
-  uint8_t copy_track;
+  GridSlot copy_track;
   bool copy_scene_active;
 
   Grid grids[NUM_GRIDS];
@@ -36,13 +36,13 @@ public:
   void copy_scene(PerfScene *s1);
   bool paste_scene(PerfScene *s1);
 
-  bool copy_sequencer(uint8_t offset = 0);
-  bool copy_sequencer_track(uint8_t track);
-  bool paste_sequencer(uint8_t offset = 0);
-  bool paste_sequencer_track(uint8_t source_track, uint8_t track);
+  bool copy_sequencer(GridSlot offset = 0);
+  bool copy_sequencer_track(GridSlot track);
+  bool paste_sequencer(GridSlot offset = 0);
+  bool paste_sequencer_track(GridSlot source_track, GridSlot track);
 
-  bool copy(uint8_t col, uint16_t row, uint8_t w, uint16_t h);
-  bool paste(uint8_t col, uint16_t row);
+  bool copy(GridSlot col, GridRow row, GridSpan w, GridSpan h);
+  bool paste(GridSlot col, GridRow row);
 
 };
 

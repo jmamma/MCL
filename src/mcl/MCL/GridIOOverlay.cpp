@@ -130,7 +130,7 @@ bool GridIOOverlay::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
     if (track >= NUM_SLOTS) return true;
-    uint8_t slot = GridIOPage::slot_for_note(track);
+    GridSlot slot = GridIOPage::slot_for_note(track);
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (GridIOPage::show_track_type) {
@@ -283,7 +283,7 @@ void GridIOOverlay::group_select() {
 
 void GridIOOverlay::toggle_grid() {
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    uint8_t slot = n + GridIOPage::old_grid * GRID_WIDTH;
+    GridSlot slot = n + GridIOPage::old_grid * GRID_WIDTH;
     if (note_interface.is_note(n) || note_interface.is_note(slot)) {
       TOGGLE_BIT32(GridIOPage::track_select, slot);
       if (note_interface.is_note_on(n)) {
@@ -303,10 +303,10 @@ void GridIOOverlay::toggle_grid() {
   GridIOPage::paint_track_select_leds();
 }
 
-void GridIOOverlay::focus_slot(uint8_t slot) {
+void GridIOOverlay::focus_slot(GridSlot slot) {
   if (slot >= NUM_SLOTS) return;
 
-  uint8_t grid = slot / GRID_WIDTH;
+  GridIndex grid = slot / GRID_WIDTH;
   if (grid >= NUM_GRIDS) return;
 
   if (GridIOPage::old_grid == grid && grid_page.cur_grid == grid) {
@@ -340,7 +340,7 @@ uint16_t GridIOOverlay::visible_select_mask() const {
     return mask;
   }
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    uint8_t slot = n + GridIOPage::old_grid * GRID_WIDTH;
+    GridSlot slot = n + GridIOPage::old_grid * GRID_WIDTH;
     if (IS_BIT_SET32(GridIOPage::track_select, slot) ||
         note_interface.is_note(slot) || note_interface.is_note(n)) {
       SET_BIT16(mask, n);

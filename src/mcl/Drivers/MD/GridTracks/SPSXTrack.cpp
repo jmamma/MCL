@@ -312,7 +312,7 @@ DeviceTrack *SPSXTrack::materialize_as(uint8_t track_type,
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }
 
-bool SPSXTrack::store_in_grid(uint8_t column, uint16_t row,
+bool SPSXTrack::store_in_grid(GridSlot column, GridRow row,
                               SeqTrack *seq_track, uint8_t merge,
                               bool online, Grid *grid) {
   active = MDSPSX_TRACK_TYPE;

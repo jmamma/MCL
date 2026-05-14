@@ -35,8 +35,8 @@ void GridTask::gui_update() {
 void GridTask::load_queue_handler() {
   if (!load_queue.is_empty()) {
     uint8_t mode;
-    uint8_t offset;
-    uint8_t row_select_array[NUM_SLOTS];
+    GridSlot offset;
+    GridRow row_select_array[NUM_SLOTS];
     uint8_t track_select[NUM_SLOTS] = {0};
     load_queue.get(mode, offset, row_select_array);
     DEBUG_PRINTLN("load queue get");
@@ -127,7 +127,7 @@ void GridTask::wait_blocking(uint32_t go_step) {
 void GridTask::transition_handler() {
   bool send_device[2] = {0};
 
-  uint8_t slots_changed[NUM_SLOTS];
+  GridRow slots_changed[NUM_SLOTS];
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
   while (!MidiClock.clock_less_than(
@@ -154,8 +154,8 @@ void GridTask::transition_handler() {
 
     StackMonitor::print_stack_info();
 
-    uint8_t row = 255;
-    uint8_t last_slot = 255;
+    GridRow row = 255;
+    GridSlot last_slot = 255;
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       slots_changed[n] = 255;
 
@@ -221,7 +221,7 @@ void GridTask::transition_handler() {
         if (device_idx >= NUM_DEVS || device_idx != c)
           continue;
 
-        uint8_t track_idx = n & 0xF;
+        GridColumn track_idx = n & 0xF;
         // Wait on first track of each device;
 
         if (wait && send_device[c]) {
@@ -299,7 +299,7 @@ void GridTask::transition_handler() {
   }
 }
 
-bool GridTask::link_load(uint8_t n, uint8_t *slots_changed,
+bool GridTask::link_load(GridSlot n, GridRow *slots_changed,
                          uint8_t *track_select_array, GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
   auto *pmem_track = empty_track.load_from_mem(
@@ -317,7 +317,7 @@ bool GridTask::link_load(uint8_t n, uint8_t *slots_changed,
   return false;
 }
 
-bool GridTask::transition_load(uint8_t n, uint8_t track_idx,
+bool GridTask::transition_load(GridSlot n, GridColumn track_idx,
                                GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
 

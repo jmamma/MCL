@@ -114,7 +114,8 @@ bool Grid::new_grid(const char *gridname) {
   return ret;
 }
 
-bool Grid::copy_slot(uint8_t s_col, uint16_t s_row, uint8_t d_col, uint16_t d_row,
+bool Grid::copy_slot(GridColumn s_col, GridRow s_row,
+                     GridColumn d_col, GridRow d_row,
                      bool destination_same) {
   DEBUG_PRINT_FN();
   DEBUG_PRINT(s_col);
@@ -137,13 +138,13 @@ bool Grid::copy_slot(uint8_t s_col, uint16_t s_row, uint8_t d_col, uint16_t d_ro
   return track->store_in_grid(d_col, d_row);
 }
 
-uint8_t Grid::get_slot_model(uint8_t column, uint16_t row, bool load) {
+uint8_t Grid::get_slot_model(GridColumn column, GridRow row, bool load) {
   GridTrack temp_track;
   temp_track.load_from_grid(column, row);
   return temp_track.active;
 }
 
-bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
+bool Grid::clear_slot(GridColumn column, GridRow row, bool update_header) {
 
   bool ret;
   GridTrack temp_track;
@@ -179,7 +180,7 @@ bool Grid::clear_slot(uint8_t column, uint16_t row, bool update_header) {
   return true;
 }
 
-bool Grid::clear_row(uint16_t row) {
+bool Grid::clear_row(GridRow row) {
   GridRowHeader row_header;
   row_header.init();
   for (uint8_t x = 0; x < GRID_WIDTH; x++) {

@@ -246,7 +246,7 @@ void MDTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-bool MDTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
+bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
                             uint8_t merge, bool online, Grid *grid) {
   active = MD_TRACK_TYPE;
 

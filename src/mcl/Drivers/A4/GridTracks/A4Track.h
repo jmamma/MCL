@@ -26,7 +26,7 @@ public:
   }
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   bool get_track_from_sysex(uint8_t tracknumber);
-  bool store_in_grid(uint8_t column, uint16_t row,
+  bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
   virtual uint16_t get_track_size() { return _sizeof(); }

@@ -20,7 +20,7 @@ public:
   }
 
   virtual uint16_t get_track_size() { return sizeof(EmptyTrack); }
-  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false) {
+  virtual bool store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false) {
     // should not reach here
     DEBUG_PRINT_FN();
     return GridTrack::store_in_grid(column, row);

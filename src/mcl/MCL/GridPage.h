@@ -27,8 +27,8 @@ public:
 
   uint8_t cursor_x = 0;
   uint8_t cursoy_y = 0;
-  uint8_t col = 0;
-  uint8_t row = 0;
+  GridColumn col = 0;
+  GridRow row = 0;
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
   uint8_t old_col = 255;
@@ -40,17 +40,17 @@ public:
   bool slot_menu_hold = false;
   bool write_cfg = false;
 
-  uint8_t active_slots[NUM_SLOTS];
+  GridRow active_slots[NUM_SLOTS];
 
-  uint8_t cur_grid = 0;
+  GridIndex cur_grid = 0;
   uint8_t slot_clear;
 
   uint8_t slot_apply;
   uint8_t slot_copy;
   uint8_t slot_paste;
   uint8_t slot_undo;
-  uint8_t slot_undo_x;
-  uint8_t slot_undo_y;
+  GridColumn slot_undo_x;
+  GridRow slot_undo_y;
   uint8_t slot_load;
   uint8_t slot_load_sound = 1;
   uint8_t insert_rows;
@@ -85,16 +85,16 @@ public:
       : LightPage(e1, e2, e3, e4) {}
   virtual bool handleEvent(gui_event_t *event);
   void displayScroll(uint8_t i);
-  uint8_t getWidth();
-  uint8_t getCol();
-  uint8_t getRow();
+  GridSpan getWidth();
+  GridColumn getCol();
+  GridRow getRow();
 
-  void jump_to_row(uint8_t row);
-  void load_row(uint8_t n, uint8_t row);
+  void jump_to_row(GridRow row);
+  void load_row(uint8_t n, GridRow row);
 
   void row_state_scan();
-  void update_row_state(uint8_t row, bool state);
-  void set_active_row(uint8_t row);
+  void update_row_state(GridRow row, bool state);
+  void set_active_row(GridRow row);
   void send_active_row();
   bool is_slot_queue(uint8_t x, uint8_t y);
   void load_slot_models();

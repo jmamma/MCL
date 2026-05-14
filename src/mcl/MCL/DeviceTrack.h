@@ -84,9 +84,9 @@ public:
     return p;
   }
 
-  DeviceTrack *load_from_grid_512(uint8_t column, uint16_t row, Grid *grid = nullptr);
-  DeviceTrack *load_from_grid(uint8_t column, uint16_t row);
-  template <class T> T *load_from_grid(uint8_t col, uint16_t row) {
+  DeviceTrack *load_from_grid_512(GridSlot column, GridRow row, Grid *grid = nullptr);
+  DeviceTrack *load_from_grid(GridSlot column, GridRow row);
+  template <class T> T *load_from_grid(GridSlot col, GridRow row) {
     auto *p = load_from_grid(col, row);
     if (!p)
       return nullptr;
@@ -96,7 +96,7 @@ public:
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
   template <class T> T *as() { return _dynamik_kast<T>(this); }
   ///  downloads from BANK1 to the runtime object
-  DeviceTrack* load_from_mem(uint8_t col, uint8_t track_type, size_t size = 0) {
+  DeviceTrack* load_from_mem(GridSlot col, uint8_t track_type, size_t size = 0) {
     DeviceTrack *that = init_track_type(track_type);
 #if !defined(__AVR__)
     uintptr_t load_region = that->get_region();
@@ -144,7 +144,7 @@ public:
 #endif
   }
 
-  int memcmp_sound(uint8_t column) {
+  int memcmp_sound(GridSlot column) {
     // 1. Get the base address. It doesn't matter if it's from the constexpr or linker world.
     //    It's now safely inside a uintptr_t.
     uintptr_t region_base = get_region();
@@ -157,7 +157,7 @@ public:
     return memcmp_bank1(get_sound_data_ptr(), ptr, get_sound_data_size());
   }
 
-  void restore_sound_from_mem(uint8_t column) {
+  void restore_sound_from_mem(GridSlot column) {
     void *sound = get_sound_data_ptr();
     size_t sound_size = get_sound_data_size();
     if (sound == nullptr || sound_size == 0) {
@@ -174,7 +174,7 @@ public:
     memcpy_bank1(sound, ptr, sound_size);
   }
 
-  template <class T> T *load_from_mem(uint8_t col) {
+  template <class T> T *load_from_mem(GridSlot col) {
     DeviceTrack *that = init_track_type<T>();
     /*
     diag_page.println("load", (uint16_t)that);
@@ -195,10 +195,10 @@ class DeviceTrackChunk : public DeviceTrack {
 
   uint8_t seq_data_chunk[256];
 
-  bool load_from_mem_chunk(uint8_t column, uint8_t chunk);
+  bool load_from_mem_chunk(GridSlot column, uint8_t chunk);
   bool load_chunk(volatile void *ptr, uint8_t chunk);
-  bool load_link_from_mem(uint8_t column);
-  bool store_in_grid(uint8_t column, uint16_t row,
+  bool load_link_from_mem(GridSlot column);
+  bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false) { return false; };
 

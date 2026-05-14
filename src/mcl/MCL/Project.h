@@ -41,7 +41,7 @@ public:
   bool write_header();
 
   // Write data — col is logical 0–31, routed to physical grid/col
-  bool write_grid(void *data, size_t len, uint8_t col, uint16_t row) {
+  bool write_grid(void *data, size_t len, GridSlot col, GridRow row) {
     last_grid_ = col >> 4;
     return grids[last_grid_].write(data, len, col & 0xF, row);
   }
@@ -51,7 +51,7 @@ public:
   }
 
   // Read data — col is logical 0–31, routed to physical grid/col
-  bool read_grid(void *data, size_t len, uint8_t col, uint16_t row) {
+  bool read_grid(void *data, size_t len, GridSlot col, GridRow row) {
     last_grid_ = col >> 4;
     return grids[last_grid_].read(data, len, col & 0xF, row);
   }
@@ -60,28 +60,28 @@ public:
     return grids[last_grid_].read(data, len);
   }
 
-  bool clear_row_grid(uint16_t row, uint8_t grid) {
+  bool clear_row_grid(GridRow row, GridIndex grid) {
     return grids[grid].clear_row(row);
   }
 
-  bool clear_slot_grid(uint8_t col, uint16_t row) {
-    uint8_t g = col >> 4;
+  bool clear_slot_grid(GridSlot col, GridRow row) {
+    GridIndex g = col >> 4;
     return grids[g].clear_slot(col & 0xF, row);
   }
 
-  bool write_grid_row_header(GridRowHeader *row_header, uint16_t row,
-                             uint8_t grid) {
+  bool write_grid_row_header(GridRowHeader *row_header, GridRow row,
+                             GridIndex grid) {
     return grids[grid].write_row_header(row_header, row);
   }
 
-  bool read_grid_row_header(GridRowHeader *row_header, uint16_t row,
-                            uint8_t grid) {
+  bool read_grid_row_header(GridRowHeader *row_header, GridRow row,
+                            GridIndex grid) {
     DEBUG_PRINT_FN();
     DEBUG_DUMP(grid);
     return grids[grid].read_row_header(row_header, row);
   }
 
-  bool sync_grid(uint8_t grid) { return grids[grid].sync(); }
+  bool sync_grid(GridIndex grid) { return grids[grid].sync(); }
   bool sync_grid() { sync_grid(0); return sync_grid(1); }
   bool close_project() {
     bool ret = true;
@@ -100,7 +100,7 @@ public:
 
 private:
   void draw_wait_popup(const char *message);
-  uint8_t last_grid_ = 0;
+  GridIndex last_grid_ = 0;
 };
 
 extern Project proj;

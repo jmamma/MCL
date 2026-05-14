@@ -9,7 +9,7 @@ void AUXTrack::update_link_from_pattern(uint8_t merge) {
   }
 }
 
-bool AUXTrack::store_in_grid(uint8_t column, uint16_t row,
+bool AUXTrack::store_in_grid(GridSlot column, GridRow row,
                               SeqTrack *seq_track, uint8_t merge,
                               bool online, Grid *grid) {
   if (column != 255 && online) {

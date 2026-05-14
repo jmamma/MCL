@@ -52,17 +52,17 @@ public:
   bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE || active == TBD_MIDI_TRACK_TYPE); }
 
   // load header without data from grid
-  bool load_from_grid_512(uint8_t column, uint16_t row, Grid *grid = nullptr);
-  bool load_from_grid(uint8_t column, uint16_t row);
+  bool load_from_grid_512(GridSlot column, GridRow row, Grid *grid = nullptr);
+  bool load_from_grid(GridSlot column, GridRow row);
   // save header without data to grid
-  bool write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid = nullptr);
+  bool write_grid(void *data, size_t len, GridSlot column, GridRow row, Grid *grid = nullptr);
   bool storage_version_at_least(uint8_t min_version) const;
 
-  virtual bool store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
+  virtual bool store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false, Grid *grid = nullptr);
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  uploads from the runtime object to BANK1
-  bool store_in_mem(uint8_t column) {
+  bool store_in_mem(GridSlot column) {
     uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column));
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
     memcpy_bank1(ptr, _this(), get_track_size());
@@ -71,7 +71,7 @@ public:
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  downloads from BANK1 to the runtime object
-  bool load_from_mem(uint8_t column, size_t size = 0) {
+  bool load_from_mem(GridSlot column, size_t size = 0) {
           uint16_t bytes = size ? size : get_track_size();
     uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column));
     volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);

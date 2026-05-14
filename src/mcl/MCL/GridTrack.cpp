@@ -6,7 +6,7 @@
 #include "../Drivers/Generic/Sequencer/StepSeqDefines.h"
 #endif
 
-bool GridTrack::write_grid(void *data, size_t len, uint8_t column, uint16_t row, Grid *grid) {
+bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row, Grid *grid) {
   stamp_storage_version();
   if (grid == nullptr) {
     return proj.write_grid(data, len, column, row);
@@ -84,7 +84,7 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
   CLEAR_LOCK();
 
 }
-bool GridTrack::load_from_grid_512(uint8_t column, uint16_t row, Grid *grid) {
+bool GridTrack::load_from_grid_512(GridSlot column, GridRow row, Grid *grid) {
 
   if (grid) {
     if (!grid->read(_this(), 512, column, row)) {
@@ -112,7 +112,7 @@ bool GridTrack::load_from_grid_512(uint8_t column, uint16_t row, Grid *grid) {
   return true;
 }
 
-bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
+bool GridTrack::load_from_grid(GridSlot column, GridRow row) {
 
   if (!proj.read_grid(_this(), _sizeof(), column, row)) {
     DEBUG_PRINTLN(F("read failed"));
@@ -134,7 +134,7 @@ bool GridTrack::load_from_grid(uint8_t column, uint16_t row) {
 }
 
 // merge and online are ignored here.
-bool GridTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, uint8_t merge,
+bool GridTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, uint8_t merge,
                               bool online, Grid *grid) {
 
   DEBUG_PRINT_FN();

@@ -28,7 +28,7 @@ public:
   void load_seq_data(SeqTrack *seq_track);
   void transition_load_device(uint8_t tracknumber, SeqTrack *seq_track, uint8_t slotnumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
-  bool store_in_grid(uint8_t column, uint16_t row,
+  bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr);
 
@@ -86,7 +86,7 @@ class ExtTrackChunk : public DeviceTrack {
     return true;
   }
 
-  bool store_in_grid(uint8_t column, uint16_t row,
+  bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false) {};
 

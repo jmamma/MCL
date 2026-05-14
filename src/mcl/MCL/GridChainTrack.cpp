@@ -20,7 +20,7 @@ void GridChainTrack::get_online_data(uint8_t merge) {
   get_chains();
 }
 
-bool GridChainTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track,
+bool GridChainTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
                               uint8_t merge, bool online) {
   active = GRIDCHAIN_TRACK_TYPE;
   bool ret;

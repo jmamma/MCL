@@ -9,12 +9,12 @@
 class LoadQueueModes {
   public:
   uint8_t mode;
-  uint8_t offset;
+  GridSlot offset;
 };
 
 class LoadQueue {
   public:
-  uint8_t row_selects[NUM_LINKS][NUM_SLOTS];
+  GridRow row_selects[NUM_LINKS][NUM_SLOTS];
   LoadQueueModes modes[NUM_LINKS];
   uint8_t rd;
   uint8_t wr;
@@ -26,7 +26,7 @@ class LoadQueue {
     full = false;
   }
 
-  void put(uint8_t mode, uint8_t *row_select, uint8_t offset = 255) {
+  void put(uint8_t mode, GridRow *row_select, GridSlot offset = 255) {
     if (full) { return; }
     memcpy(row_selects[wr],row_select,NUM_SLOTS);
     modes[wr].mode = mode;
@@ -40,7 +40,8 @@ class LoadQueue {
   }
 
 
-  void put(uint8_t mode, uint8_t row, uint8_t *track_select_array, uint8_t offset = 255) {
+  void put(uint8_t mode, GridRow row, uint8_t *track_select_array,
+           GridSlot offset = 255) {
     if (full) { return; }
 
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -57,7 +58,7 @@ class LoadQueue {
     }
   }
 
-  void get(uint8_t &mode, uint8_t &offset, uint8_t *row_select) {
+  void get(uint8_t &mode, GridSlot &offset, GridRow *row_select) {
     memcpy(row_select,row_selects[rd],NUM_SLOTS);
     mode = modes[rd].mode;
     offset = modes[rd++].offset;
@@ -81,17 +82,17 @@ public:
   char kit_names[NUM_DEVS][16];
   bool send_kit_name;
 
-  uint8_t last_active_row;
-  uint8_t next_active_row;
+  GridRow last_active_row;
+  GridRow next_active_row;
   bool chain_behaviour;
   bool update = false;
 
-  uint8_t load_row_midi = 255;
-  uint8_t load_row = 255;
-  uint8_t midi_row = 255;
+  GridRow load_row_midi = 255;
+  GridRow load_row = 255;
+  GridRow midi_row = 255;
 
-  uint8_t load_track_select[NUM_SLOTS];
-  uint8_t midi_row_select = 255;
+  GridRow load_track_select[NUM_SLOTS];
+  GridRow midi_row_select = 255;
 
   bool midi_load;
 
@@ -122,10 +123,10 @@ public:
   void transition_handler();
   void wait_blocking(uint32_t go_step);
 
-  bool link_load(uint8_t n, uint8_t *slots_changed,
+  bool link_load(GridSlot n, GridRow *slots_changed,
                  uint8_t *track_select_array, GridDeviceTrack *gdt);
-  bool transition_load(uint8_t n, uint8_t track_idx, GridDeviceTrack *gdt);
-  bool transition_send(uint8_t n, uint8_t track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
+  bool transition_load(GridSlot n, GridColumn track_idx, GridDeviceTrack *gdt);
+  bool transition_send(GridSlot n, GridColumn track_idx, uint8_t dev_idx, GridDeviceTrack *gdt);
 
   /* @} */
 };

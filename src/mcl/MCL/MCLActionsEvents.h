@@ -5,12 +5,13 @@
 
 #include "MidiClock.h"
 #include "midi-common.h"
+#include "MCLMemory.h"
 
 class MCLActionsMidiEvents : public MidiCallback {
 public:
   bool state;
   uint32_t slot_mask;
-  uint8_t note_to_slot(uint8_t note);
+  GridSlot note_to_slot(uint8_t note);
   void setup_callbacks();
   void remove_callbacks();
   void onProgramChangeCallback_Midi2(uint8_t *msg);

@@ -91,7 +91,7 @@ DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
   return nullptr;
 }
 
-DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row,
+DeviceTrack *DeviceTrack::load_from_grid_512(GridSlot column, GridRow row,
                                              Grid *grid) {
   if (!GridTrack::load_from_grid_512(column, row, grid)) {
     return nullptr;
@@ -117,7 +117,7 @@ DeviceTrack *DeviceTrack::load_from_grid_512(uint8_t column, uint16_t row,
   return ptrack;
 }
 
-DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
+DeviceTrack *DeviceTrack::load_from_grid(GridSlot column, GridRow row) {
   if (!GridTrack::load_from_grid(column, row)) {
     return nullptr;
   }
@@ -139,7 +139,7 @@ DeviceTrack *DeviceTrack::load_from_grid(uint8_t column, uint16_t row) {
   return ptrack;
 }
 
-bool DeviceTrackChunk::load_from_mem_chunk(uint8_t column, uint8_t chunk) {
+bool DeviceTrackChunk::load_from_mem_chunk(GridSlot column, uint8_t chunk) {
   size_t chunk_size = sizeof(seq_data_chunk);
 
   // 1. Safely calculate the byte offset of the seq_data_chunk member.
@@ -167,7 +167,7 @@ bool DeviceTrackChunk::load_chunk(volatile void *ptr, uint8_t chunk) {
   return true;
 }
 
-bool DeviceTrackChunk::load_link_from_mem(uint8_t column) {
+bool DeviceTrackChunk::load_link_from_mem(GridSlot column) {
   // 1. Safely calculate the byte offset of the 'link' member.
   uintptr_t offset = reinterpret_cast<uintptr_t>(&this->link) -
                      reinterpret_cast<uintptr_t>(_this());

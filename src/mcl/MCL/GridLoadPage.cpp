@@ -258,7 +258,7 @@ void GridLoadPage::load() {
   mcl.setPage(GRID_PAGE);
 }
 
-void GridLoadPage::group_load(uint8_t row, uint8_t load_offset) {
+void GridLoadPage::group_load(GridRow row, GridSlot load_offset) {
 
   if (row >= GRID_LENGTH) {
     return;

@@ -16,7 +16,7 @@ public:
   uint8_t mode;
 
   uint8_t lengths[NUM_LINKS];
-  uint8_t rows[NUM_LINKS];
+  GridRow rows[NUM_LINKS];
 
   bool is_mode_queue() { return (mode == LOAD_QUEUE && num_of_links); }
   bool is_mode_auto() { return (mode == LOAD_AUTO); }
@@ -29,7 +29,7 @@ public:
     memset(rows, 255, sizeof(rows));
   }
 
-  bool add(uint8_t row, uint8_t length) {
+  bool add(GridRow row, uint8_t length) {
     rows[w] = row;
     lengths[w] = length;
 
@@ -44,7 +44,7 @@ public:
   }
 
   void set_pos(uint8_t pos) { r = pos; }
-  uint8_t get_row() { return rows[r]; }
+  GridRow get_row() { return rows[r]; }
 
   void inc() {
     if (!is_mode_queue())

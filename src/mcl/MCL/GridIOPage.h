@@ -4,16 +4,17 @@
 #define GRIDIOPAGE_H__
 
 #include "GUI.h"
+#include "MCLMemory.h"
 
 class GridIOPage : public LightPage {
  public:
  static uint32_t track_select;
- static uint8_t old_grid;
+ static GridIndex old_grid;
 
  static bool show_track_type;
  static bool show_offset;
- static uint8_t offset;
- static uint8_t slot_for_note(uint8_t note);
+ static GridSlot offset;
+ static GridSlot slot_for_note(uint8_t note);
 
  GridIOPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL, Encoder *e4 = NULL) : LightPage( e1, e2, e3 ,e4) {
 
@@ -28,7 +29,7 @@ class GridIOPage : public LightPage {
   static uint8_t content_y_offset(uint8_t y_offset);
   static void clear_body(uint8_t y_offset);
   static void paint_track_select_leds();
-  static bool slot_matches_track_type_select(uint8_t slot);
+  static bool slot_matches_track_type_select(GridSlot slot);
   virtual void init();
  virtual void cleanup();
  virtual void draw_popup() = 0;

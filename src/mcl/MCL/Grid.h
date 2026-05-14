@@ -28,37 +28,37 @@ public:
 
   bool close_file() { return file.close(); }
 
-  uint8_t get_slot_model(uint8_t column, uint16_t row, bool load);
+  uint8_t get_slot_model(GridColumn column, GridRow row, bool load);
 
-  uint32_t get_slot_offset(uint8_t column, int16_t row) {
+  uint32_t get_slot_offset(GridColumn column, GridRow row) {
     uint32_t offset = (uint32_t)((column + 1) + (row * (GRID_WIDTH + 1))) * (uint32_t)GRID_SLOT_BYTES;
     return offset;
   }
 
-  uint32_t get_row_header_offset(uint16_t row) {
+  uint32_t get_row_header_offset(GridRow row) {
     uint32_t offset = (uint32_t)(0 + (row * (GRID_WIDTH + 1))) * (uint32_t)GRID_SLOT_BYTES;
     return offset;
   }
 
-  bool seek(uint8_t col, uint16_t row) {
+  bool seek(GridColumn col, GridRow row) {
     return mcl_sd.seek(get_slot_offset(col, row), &file);
   }
 
-  bool seek_row_header(uint16_t row) {
+  bool seek_row_header(GridRow row) {
     return mcl_sd.seek(get_row_header_offset(row), &file);
   }
 
-  bool copy_slot(uint8_t s_col, uint16_t s_row, uint8_t d_col, uint16_t d_row,
+  bool copy_slot(GridColumn s_col, GridRow s_row, GridColumn d_col, GridRow d_row,
                  bool destination_same);
-  bool clear_slot(uint8_t column, uint16_t row, bool update_header = true);
-  bool clear_row(uint16_t row);
-  bool clear_model(uint8_t column, uint16_t row);
+  bool clear_slot(GridColumn column, GridRow row, bool update_header = true);
+  bool clear_row(GridRow row);
+  bool clear_model(GridColumn column, GridRow row);
 
   bool read(void *data, size_t len) {
     return mcl_sd.read_data(data, len, &file);
   }
 
-  bool read(void *data, size_t len, uint8_t col, uint16_t row) {
+  bool read(void *data, size_t len, GridColumn col, GridRow row) {
     bool ret = seek(col, row);
     if (ret) {
       ret = read(data, len);
@@ -70,7 +70,7 @@ public:
     return mcl_sd.write_data((void *)(data), len, &file);
   }
 
-  bool write(void *data, size_t len, uint8_t col, uint16_t row) {
+  bool write(void *data, size_t len, GridColumn col, GridRow row) {
     bool ret = seek(col, row);
     if (ret) {
       ret = write(data, len);
@@ -78,7 +78,7 @@ public:
     return ret;
   }
 
-  bool write_row_header(GridRowHeader *row_header, uint16_t row) {
+  bool write_row_header(GridRowHeader *row_header, GridRow row) {
     bool ret = seek_row_header(row);
     if (ret) {
       ret = mcl_sd.write_data(row_header->_this(), sizeof(GridRowHeader),
@@ -87,7 +87,7 @@ public:
     return ret;
   }
 
-  bool read_row_header(GridRowHeader *row_header, uint16_t row) {
+  bool read_row_header(GridRowHeader *row_header, GridRow row) {
     bool ret = seek_row_header(row);
     if (ret) {
       ret = mcl_sd.read_data(row_header->_this(), sizeof(GridRowHeader),
@@ -98,4 +98,3 @@ public:
 
   bool sync() { return file.sync(); }
 };
-
