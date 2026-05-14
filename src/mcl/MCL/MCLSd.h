@@ -6,6 +6,9 @@
 
 #include "SdFat.h"
 #include "hardware.h"
+#ifdef __AVR__
+#include "AvrHardwarePins.h"
+#endif
 
 #if SDFAT_FILE_TYPE > 1
 typedef FsFile File;
@@ -30,7 +33,11 @@ public:
     }
     void lock_spi() {
       setDedicatedSpi(false);         // Consider refactor, this is to disable the SD card
+#ifdef __AVR__
+      mcl_avr_pins::sd_cs_write(true);   // SDCard enable is active low
+#else
       digitalWrite(SPI1_SS_PIN, HIGH);   // SDCard enable is active low
+#endif
     }
     void unlock_spi() {
       setDedicatedSpi(true);

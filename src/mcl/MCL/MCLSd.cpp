@@ -3,6 +3,12 @@
 #include "MCLGUI.h"
 #include "StackMonitor.h"
 #include "Project.h"
+
+#ifdef __AVR__
+void mcl_oled_spi_acquire() { SD.setDedicatedSpi(false); }
+void mcl_oled_spi_release() { SD.setDedicatedSpi(true); }
+#endif
+
 /*
    Function for initialising the SD Card
 */
