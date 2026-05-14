@@ -333,6 +333,37 @@ public:
     ext_track_->record_track_noteoff(note);
   }
 
+  // Lock-recording helpers. AVR forwards directly to ExtSeqTrack's
+  // 7-bit lock store; non-AVR routes through SeqExtStepLockApi's
+  // generalized 14-bit record_control_lock which itself dispatches
+  // between ExtSeqTrack and MidiSeqTrack at runtime.
+  void record_cc_lock(uint8_t param, uint8_t value, bool slide) {
+#if defined(__AVR__)
+    ext_track_->record_track_locks(param, value, slide);
+#else
+    locks().record_control_lock(SEQ_EXT_LOCK_CTRL_CC, param, value, slide);
+#endif
+  }
+
+  void record_pitch_bend_lock(uint16_t value14, bool slide) {
+#if defined(__AVR__)
+    if (value14 > 0x3FFF) value14 = 0x3FFF;
+    ext_track_->record_track_locks(PARAM_PB, (uint8_t)(value14 >> 7), slide);
+#else
+    locks().record_control_lock(SEQ_EXT_LOCK_CTRL_PITCH_BEND, 0, value14,
+                                slide);
+#endif
+  }
+
+  void record_channel_pressure_lock(uint8_t value) {
+#if defined(__AVR__)
+    ext_track_->record_track_locks(PARAM_CHP, value, false);
+#else
+    locks().record_control_lock(SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE, 0, value,
+                                false);
+#endif
+  }
+
 private:
   static uint8_t value7_from_14(uint16_t value14) {
     if (value14 > 0x3FFF) value14 = 0x3FFF;
