@@ -17,8 +17,12 @@
 class SeqTrackUtil {
 public:
   static inline bool is_md_device(const MidiDevice *device) {
+#if defined(PLATFORM_TBD)
     return device &&
            device->supports_capability(MidiDeviceCapability::MdSequencerTracks);
+#else
+    return device && device->id == DEVICE_MD;
+#endif
   }
 
   static inline bool use_midi_tracks_for_ext() {
