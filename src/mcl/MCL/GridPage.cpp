@@ -24,7 +24,6 @@
 #include "MCLStrings.h"
 
 #define PERF_ENC 1
-#define GRID_ENC 0
 
 namespace {
 
@@ -289,7 +288,6 @@ void GridPage::loop() {
   if (clock_diff(grid_lastclock, now) > GUI_NAME_TIMEOUT) {
     ///   DEBUG_DUMP(grid_lastclock);
     //   DEBUG_DUMP(read_clock_ms());
-    //   display_name = 1;
     if ((write_cfg) && (MidiClock.state != 2)) {
       mcl_cfg.cur_col = cur_col;
       mcl_cfg.cur_row = cur_row;
@@ -304,7 +302,6 @@ void GridPage::loop() {
       write_cfg = false;
       // }
     }
-    // display_name = 0;
     row_state_scan();
   }
 
@@ -504,8 +501,11 @@ void GridPage::display_grid_info() {
   oled_display.setTextColor(WHITE, BLACK);
 }
 bool GridPage::is_slot_queue(uint8_t x, uint8_t y) {
+  if (show_slot_menu) {
+    return false;
+  }
   GridSlot slot = cur_grid * GRID_WIDTH + x;
-  if (mcl_actions.chains[slot].is_mode_queue() && !show_slot_menu) {
+  if (mcl_actions.chains[slot].is_mode_queue()) {
     for (uint8_t n = 0; n < mcl_actions.chains[slot].num_of_links; n++) {
       if (mcl_actions.chains[slot].rows[n] == y) {
         return true;
@@ -795,9 +795,9 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   GridSpan width;
   GridSpan height;
 
-  GridColumn _col = getCol();;
+  GridColumn _col = getCol();
 
-    bool activate_header = false;
+  bool activate_header = false;
   //old_col != 255 indicates that the grid selection spans grids x and y.
   if (old_col != 255) {
     _col = old_col;
@@ -841,7 +841,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   bool slot_changed_load_sound =
       temp_slot.link.load_sound() != slot.link.load_sound();
 
-  if (slot_copy + slot_paste + slot_clear + slot_load + undo == 0) {
+  if (!(slot_copy || slot_paste || slot_clear || slot_load || undo)) {
     if ((slot_changed_length) ||
         (slot_changed_loops) ||
         (slot_changed_row) ||
@@ -876,9 +876,9 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     uint8_t copy_w = (old_col != 255) ? width + param3.cur : width;
     mcl_clipboard.copy(_col + GRID_WIDTH * cur_grid, getRow(), copy_w, height);
   }
-    if (slot_clear) {
-      goto run;
-    }
+  if (slot_clear) {
+    goto run;
+  }
 
   else if (slot_paste == 1) {
     if (undo) {
@@ -905,11 +905,11 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
     GridRowHeader header;
 
-    again:
+  again:
 
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       GridRow ypos = y + getRow();
-      proj.read_grid_row_header(&header, y + getRow(), cur_grid);
+      proj.read_grid_row_header(&header, ypos, cur_grid);
 
       memset(track_select_array, 0, sizeof(track_select_array));
 
@@ -992,14 +992,14 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       }
     }
   }
- if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
+  if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
     proj.sync_grid(cur_grid);
   }
   if (old_col != 255 && slot_paste) {
     proj.sync_grid(1);
   }
 
-   if (old_col != 255) {
+  if (old_col != 255) {
     if (cur_grid == 0) {
       cur_grid = 1;
       width = param3.cur;
@@ -1058,15 +1058,16 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
 
         if (load_count == 1) {
-          for (uint8_t n = 0; n < 16; n++) {
-            if (IS_BIT_SET16(grid_page.bank_popup_loadmask, n)) {
-              uint8_t r = grid_page.bank * 16 + n;
-              CLEAR_BIT16(grid_page.bank_popup_loadmask, n);
-              // Reload as queue.
-              grid_page.load_row(n, r);
-              break;
-            }
+          uint16_t loadmask = grid_page.bank_popup_loadmask;
+          uint8_t n = 0;
+          while ((loadmask & 1) == 0) {
+            loadmask >>= 1;
+            n++;
           }
+          uint8_t r = grid_page.bank * 16 + n;
+          CLEAR_BIT16(grid_page.bank_popup_loadmask, n);
+          // Reload as queue.
+          grid_page.load_row(n, r);
         }
 
         grid_page.load_row(track, row);
@@ -1208,24 +1209,15 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_COPY: {
           slot_copy = 1;
-          apply_slot_changes(false, true);
-          init();
-          // if (key_interface.is_key_down(MDX_KEY_NO)) {
-          //  goto slot_menu_on;
-          //}
-          return true;
+          goto apply_slot_edit;
         }
         case MDX_KEY_CLEAR: {
           slot_clear = 1;
-          apply_slot_changes(false, true);
-          init();
-          // if (key_interface.is_key_down(MDX_KEY_NO)) {
-          //  goto slot_menu_on;
-          //}
-          return true;
+          goto apply_slot_edit;
         }
         case MDX_KEY_PASTE: {
           slot_paste = 1;
+        apply_slot_edit:
           apply_slot_changes(false, true);
           init();
           // if (key_interface.is_key_down(MDX_KEY_NO)) {
@@ -1242,17 +1234,10 @@ bool GridPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_LEFT: {
-          if (inc > 1) {
-            inc = 4;
-          }
           param3.cur = max(0, param3.cur - inc);
           return true;
         }
         case MDX_KEY_RIGHT: {
-          if (inc > 1) {
-            inc = 4;
-          }
-
           param3.cur += inc;
           return true;
         }
@@ -1283,17 +1268,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_LEFT: {
-        if (inc > 1) {
-          inc = 4;
-        }
         param1.cur = max(0, param1.cur - inc);
         reset_undo();
         return true;
       }
       case MDX_KEY_RIGHT: {
-        if (inc > 1) {
-          inc = 4;
-        }
         param1.cur += inc;
         reset_undo();
         return true;
@@ -1404,7 +1383,7 @@ bool GridPage::handleEvent(gui_event_t *event) {
         bool restore_undo = false;
         // Prevent undo from occuring when re-entering shift menu. Want to keep
         // undo flag in case user decides to undo with MD GUI.
-        if (slot_copy + slot_paste + slot_clear + slot_load == 0) {
+        if (!(slot_copy || slot_paste || slot_clear || slot_load)) {
           slot_undo = 0;
           restore_undo = true;
         }

@@ -65,11 +65,12 @@ void MDPattern::clear_step_locks(uint8_t track, uint8_t step) {
 bool MDPattern::fromSysex(MidiClass *midi) {
 
   init();
-  uint16_t len = midi->midiSysex->get_recordLen() - 5;
+  SysexView sysex(midi->midiSysex);
+  uint16_t len = sysex.get_recordLen() - 5;
   uint16_t offset = 5;
 
 #if !defined(__AVR__)
-  version = midi->midiSysex->getByte(6);
+  version = sysex.getByte(6);
   bool is_spsx_pat = (version == 0x40);
 
   if (!is_spsx_pat) {
@@ -83,14 +84,14 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   }
 #endif
 
-  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
 
     DEBUG_PRINTLN(F("bad checksum"));
     return false;
   }
 
-  origPosition = midi->midiSysex->getByte(8);
-  ElektronSysexDecoder decoder(midi, offset + 0xA - 6);
+  origPosition = sysex.getByte(8);
+  ElektronSysexDecoder decoder(sysex, offset + 0xA - 6);
   decoder.get32(trigPatterns, 16);
 
   decoder.start7Bit();

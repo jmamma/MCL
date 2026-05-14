@@ -6,11 +6,12 @@
 
 bool MNMGlobal::fromSysex(MidiClass *midi) {
   uint16_t offset = 5;
-  uint16_t len = midi->midiSysex->get_recordLen() - 5;
+  SysexView sysex(midi->midiSysex);
+  uint16_t len = sysex.get_recordLen() - 5;
 
   //DEBUG_PRINT_FN();
 
-  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
     return false;
   }
 
@@ -19,8 +20,8 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
     //DEBUG_PRINTLN(midi->midiSysex->getByte(i));
   //}
 
-  origPosition = midi->midiSysex->getByte(offset+3);
-  MNMSysexDecoder decoder(midi, offset + 4);
+  origPosition = sysex.getByte(offset+3);
+  MNMSysexDecoder decoder(sysex, offset + 4);
 
   decoder.get(&autotrackChannel, 5);
   /*
@@ -109,9 +110,10 @@ bool MNMKit::fromSysex(MidiClass *midi) {
 
 
   uint16_t decode_offset = 0;
+  SysexView sysex(midi->midiSysex);
 
-  int version = midi->midiSysex->getByte(6);
-  origPosition = midi->midiSysex->getByte(8);
+  int version = sysex.getByte(6);
+  origPosition = sysex.getByte(8);
 
   DEBUG_PRINTLN("MNM kit");
   if (version == 64) {
@@ -119,14 +121,14 @@ bool MNMKit::fromSysex(MidiClass *midi) {
      decode_offset++;
   }
 
-  uint16_t len = midi->midiSysex->get_recordLen() - 5;
+  uint16_t len = sysex.get_recordLen() - 5;
 
-  if (!ElektronHelper::checkSysexChecksum(midi, 5, len)) {
+  if (!ElektronHelper::checkSysexChecksum(sysex, 5, len)) {
     DEBUG_PRINTLN("wrong checksum");
     return false;
   }
 
-  MNMSysexDecoder decoder(midi, decode_offset + 9);
+  MNMSysexDecoder decoder(sysex, decode_offset + 9);
   decoder.get((uint8_t *)name, 11);
   name[11] = '\0';
 
@@ -214,14 +216,15 @@ uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
 
 bool MNMSong::fromSysex(MidiClass *midi) {
   uint16_t offset = 0;
-  uint16_t len = midi->midiSysex->get_recordLen();
+  SysexView sysex(midi->midiSysex);
+  uint16_t len = sysex.get_recordLen();
 
-  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
     return false;
   }
 
   //	origPosition = data[3];
-  MNMSysexDecoder decoder(midi, offset + 4);
+  MNMSysexDecoder decoder(sysex, offset + 4);
 
   return false;
 }

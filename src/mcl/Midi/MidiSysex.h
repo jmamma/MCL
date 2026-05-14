@@ -258,3 +258,31 @@ public:
     }
   }
 };
+
+class SysexView {
+public:
+  SysexView() : rb(nullptr), base(0), recordLen(0) {}
+  SysexView(MidiSysexClass *sysex) { init(sysex); }
+
+  void init(MidiSysexClass *sysex) {
+    rb = sysex->rb;
+    base = (uint16_t)((uint8_t *)sysex->get_ptr() - rb->buf);
+    recordLen = sysex->get_recordLen();
+  }
+
+  uint16_t get_recordLen() const { return recordLen; }
+
+  uint8_t getByte(uint16_t n) const {
+    uint16_t targetPos = base + n;
+    if (targetPos >= rb->len) {
+      targetPos -= rb->len;
+    }
+    volatile uint8_t *src = rb->buf + targetPos;
+    return get_bank1(src);
+  }
+
+private:
+  RingBuffer<> *rb;
+  uint16_t base;
+  uint16_t recordLen;
+};

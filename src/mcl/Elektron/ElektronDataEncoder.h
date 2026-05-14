@@ -32,7 +32,7 @@
 class ElektronDataToSysexEncoder : public DataEncoder {
 protected:
   uint16_t retLen;
-  uint16_t cnt7;
+  uint8_t cnt7;
   bool in7Bit;
   MidiUartClass *uart;
   uint8_t buf[8];
@@ -143,6 +143,7 @@ class ElektronSysexDecoder : public DataDecoder {
   uint8_t bits;
   uint8_t tmpData[7];
   bool in7Bit;
+  SysexView sysexView;
 #if !defined(__AVR__)
   bool inRLE;
   uint8_t rleByte;
@@ -155,8 +156,8 @@ public:
     init(_data);
   }
 
-  ElektronSysexDecoder(MidiClass *_midi, uint16_t _offset) {
-    init(_midi, _offset);
+  ElektronSysexDecoder(const SysexView &_sysexView, uint16_t _offset) {
+    init(_sysexView, _offset);
   }
 
   /** Start the decoding of 7-bit data. **/
@@ -175,7 +176,7 @@ public:
   void stopRLE();
 #endif
 
-  virtual void init(MidiClass *_midi, uint16_t _offset);
+  void init(const SysexView &_sysexView, uint16_t _offset);
   virtual void init(uint8_t *_data);
   uint8_t readByte();
   virtual DATA_ENCODER_RETURN_TYPE get8(uint8_t *c);

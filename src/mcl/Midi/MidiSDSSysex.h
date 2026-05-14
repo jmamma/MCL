@@ -27,9 +27,9 @@ public:
   virtual void start();
   virtual void handleByte(uint8_t byte);
   virtual void end();
-  inline void data_packet();
+  void data_packet(const SysexView &view);
   void dump_request();
-  void dump_header();
+  void dump_header(const SysexView &view);
   void ack();
   void nak();
   void cancel();

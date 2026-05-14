@@ -50,13 +50,13 @@ public:
   static void from64Bit(uint64_t num, uint8_t *b);
 
   static bool checkSysexChecksum(uint8_t *data, uint16_t len);
-  static bool checkSysexChecksum(MidiClass *midi, uint16_t offset,
+  static bool checkSysexChecksum(const SysexView &sysex, uint16_t offset,
                                  uint16_t len);
   static void calculateSysexChecksum(uint8_t *data, uint16_t len);
 
   /*Checksum calcs different offsets for Analog4+AnalogRYTM*/
   static bool checkSysexChecksumAnalog(uint8_t *data, uint16_t len);
-  static bool checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset,
+  static bool checkSysexChecksumAnalog(const SysexView &sysex, uint16_t offset,
                                        uint16_t len);
   static void calculateSysexChecksumAnalog(uint8_t *data, uint16_t len);
 

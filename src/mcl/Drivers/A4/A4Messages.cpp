@@ -70,7 +70,8 @@ void A4Sound::toSysex_impl(ElektronDataToSysexEncoder *encoder)
 }
 
 bool A4Sound::fromSysex(MidiClass *midi) {
-  const auto &reclen = midi->midiSysex->get_recordLen();
+  SysexView sysex(midi->midiSysex);
+  const uint16_t reclen = sysex.get_recordLen();
 
   // len / offset: checksum'ed part
   uint16_t len = reclen - a4sound_checksum_startidx;
@@ -79,13 +80,13 @@ bool A4Sound::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  if (!ElektronHelper::checkSysexChecksumAnalog(midi, a4sound_checksum_startidx, len)) {
+  if (!ElektronHelper::checkSysexChecksumAnalog(sysex, a4sound_checksum_startidx, len)) {
     oled_display.textbox_P(mclstr_wrong_checksum);
     return false;
   }
 
-  origPosition = midi->midiSysex->getByte(a4sound_origpos_idx);
-  ElektronSysexDecoder decoder(midi, a4sound_encoding_startidx);
+  origPosition = sysex.getByte(a4sound_origpos_idx);
+  ElektronSysexDecoder decoder(sysex, a4sound_encoding_startidx);
 
   return fromSysex_impl(&decoder);
 }

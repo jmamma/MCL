@@ -61,20 +61,21 @@ float MDMachine::normalize_level() {
 #endif
 
 bool MDGlobal::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex->get_recordLen() - 5;
+  SysexView sysex(midi->midiSysex);
+  uint16_t len = sysex.get_recordLen() - 5;
   uint16_t offset = 5;
 
   if (len < 4) {
     return false;
   }
 
-  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
     return false;
   }
 
-  uint8_t version = midi->midiSysex->getByte(offset + 1);
-  origPosition = midi->midiSysex->getByte(offset + 3);
-  ElektronSysexDecoder decoder(midi, offset + 4);
+  uint8_t version = sysex.getByte(offset + 1);
+  origPosition = sysex.getByte(offset + 3);
+  ElektronSysexDecoder decoder(sysex, offset + 4);
   decoder.stop7Bit();
   decoder.get(drumRouting, 16);
 
@@ -297,7 +298,8 @@ bool MDKit::get_tonal(uint8_t track) {
 }
 
 bool MDKit::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex->get_recordLen() - 5;
+  SysexView sysex(midi->midiSysex);
+  uint16_t len = sysex.get_recordLen() - 5;
   uint16_t offset = 5;
 
   // Minimum: header(4) + name(16) + params(16*24) + levels(16) = 420
@@ -306,12 +308,12 @@ bool MDKit::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
     DEBUG_PRINTLN("wrong checksum");
     return false;
   }
 
-  uint8_t version = midi->midiSysex->getByte(1 + offset);
+  uint8_t version = sysex.getByte(1 + offset);
 
   // Accept stock (1-4), MDX (64), SPS-X (65). Reject anything else.
 #if !defined(__AVR__)
@@ -331,8 +333,8 @@ bool MDKit::fromSysex(MidiClass *midi) {
     return false;
   }
 
-  origPosition = midi->midiSysex->getByte(3 + offset);
-  ElektronSysexDecoder decoder(midi, offset + 4);
+  origPosition = sysex.getByte(3 + offset);
+  ElektronSysexDecoder decoder(sysex, offset + 4);
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';
@@ -591,20 +593,21 @@ void MDKit::swapTracks(uint8_t srcTrack, uint8_t dstTrack) {
 }
 
 bool MDSong::fromSysex(MidiClass *midi) {
-  uint16_t len = midi->midiSysex->get_recordLen() - 5;
+  SysexView sysex(midi->midiSysex);
+  uint16_t len = sysex.get_recordLen() - 5;
   uint16_t offset = 5;
 
   if (len < 0x1a - 7)
     return false;
 
-  if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+  if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
     return false;
   }
 
   numRows = (len - (0x1A - 7)) / 12;
 
-  origPosition = midi->midiSysex->getByte(offset + 3);
-  ElektronSysexDecoder decoder(midi, offset + 4);
+  origPosition = sysex.getByte(offset + 3);
+  ElektronSysexDecoder decoder(sysex, offset + 4);
   decoder.stop7Bit();
   decoder.get((uint8_t *)name, 16);
   name[16] = '\0';

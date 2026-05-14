@@ -260,8 +260,11 @@ void ElektronSysexDecoder::init(uint8_t *_data) {
   start7Bit();
 }
 
-void ElektronSysexDecoder::init(MidiClass *_midi, uint16_t _offset) {
-  DataDecoder::init(_midi, _offset);
+void ElektronSysexDecoder::init(const SysexView &_sysexView, uint16_t _offset) {
+  data = ptr = nullptr;
+  offset = _offset;
+  n = offset;
+  sysexView = _sysexView;
 #if !defined(__AVR__)
   inRLE = false;
   rleCount = 0;
@@ -270,9 +273,8 @@ void ElektronSysexDecoder::init(MidiClass *_midi, uint16_t _offset) {
   start7Bit();
 }
 
-// Add this inline helper method
 uint8_t ElektronSysexDecoder::readByte() {
-  return data ? *(ptr++) : midi->midiSysex->getByte(n++);
+  return data ? *(ptr++) : sysexView.getByte(n++);
 }
 
 #if !defined(__AVR__)

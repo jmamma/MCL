@@ -131,13 +131,15 @@ bool ElektronHelper::checkSysexChecksumAnalog(uint8_t *data, uint16_t len) {
 
 }
 
-bool ElektronHelper::checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset, uint16_t len) {
+bool ElektronHelper::checkSysexChecksumAnalog(const SysexView &sysex, uint16_t offset, uint16_t len) {
   uint16_t cksum = 0;
   for (uint16_t i = 0; i < len - 4; i++) {
-    cksum += midi->midiSysex->getByte(i + offset);
+    cksum += sysex.getByte(i + offset);
   }
   cksum &= 0x3FFF;
-	uint16_t realcksum = ElektronHelper::to16Bit7(midi->midiSysex->getByte(offset + len - 4), midi->midiSysex->getByte(offset + len - 3));
+  uint16_t realcksum = ElektronHelper::to16Bit7(
+      sysex.getByte(offset + len - 4),
+      sysex.getByte(offset + len - 3));
   if (cksum != realcksum) {
 #ifdef HOST_MIDIDUINO
 		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
@@ -174,7 +176,6 @@ bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {
    DEBUG_PRINTLN("chksum bad");
    DEBUG_PRINTLN(cksum);
    DEBUG_PRINTLN(realcksum);
-#
 #ifdef HOST_MIDIDUINO
 		printf("wrong checksum, %x should have been %x\n", cksum, realcksum);
 #endif
@@ -184,13 +185,15 @@ bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {
 	return true;
 }
 
-bool ElektronHelper::checkSysexChecksum(MidiClass *midi, uint16_t offset, uint16_t len) {
+bool ElektronHelper::checkSysexChecksum(const SysexView &sysex, uint16_t offset, uint16_t len) {
   uint16_t cksum = 0;
   for (uint16_t i = 9 - 6; i < len - 4; i++) {
-    cksum += midi->midiSysex->getByte(i + offset);
+    cksum += sysex.getByte(i + offset);
   }
   cksum &= 0x3FFF;
-	uint16_t realcksum = ElektronHelper::to16Bit7(midi->midiSysex->getByte(offset + len - 4), midi->midiSysex->getByte(offset + len - 3));
+  uint16_t realcksum = ElektronHelper::to16Bit7(
+      sysex.getByte(offset + len - 4),
+      sysex.getByte(offset + len - 3));
   if (cksum != realcksum) {
    DEBUG_PRINTLN("chksum bad");
    DEBUG_PRINTLN(cksum);

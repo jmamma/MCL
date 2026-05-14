@@ -25,19 +25,15 @@ public:
   char slot_labels[MAX_VISIBLE_ROWS][GRID_WIDTH][3];
 #endif
 
-  uint8_t cursor_x = 0;
-  uint8_t cursoy_y = 0;
   GridColumn col = 0;
   GridRow row = 0;
   GridColumn cur_col = 0;
   GridRow cur_row = 0;
   GridColumn old_col = 255;
-  uint8_t display_name = 0;
   uint8_t bank = 0;
 
   bool reload_slot_models;
   bool show_slot_menu = false;
-  bool slot_menu_hold = false;
   bool write_cfg = false;
 
   GridRow active_slots[NUM_SLOTS];
@@ -53,7 +49,6 @@ public:
   GridRow slot_undo_y;
   uint8_t slot_load;
   uint8_t slot_load_sound = 1;
-  uint8_t insert_rows;
 
   uint16_t grid_lastclock;
 
@@ -84,7 +79,6 @@ public:
            Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
   virtual bool handleEvent(gui_event_t *event);
-  void displayScroll(uint8_t i);
   GridSpan getWidth();
   GridColumn getCol();
   GridRow getRow();
@@ -95,7 +89,6 @@ public:
   void row_state_scan();
   void update_row_state(GridRow row, bool state);
   void set_active_row(GridRow row);
-  void send_active_row();
   bool is_slot_queue(uint8_t x, uint8_t y);
   void load_slot_models();
   void display_slot_menu();

@@ -62,14 +62,15 @@ void MNMPattern::clearPattern() {
 
 bool MNMPattern::fromSysex(MidiClass *midi) {
     uint16_t offset = 0;
-    uint16_t len = midi->midiSysex->get_recordLen();
+    SysexView sysex(midi->midiSysex);
+    uint16_t len = sysex.get_recordLen();
 
-	if (!ElektronHelper::checkSysexChecksum(midi, offset, len)) {
+	if (!ElektronHelper::checkSysexChecksum(sysex, offset, len)) {
     return false;
   }
 
-  origPosition = midi->midiSysex->getByte(3);
-	MNMSysexDecoder decoder(midi, offset + 4);
+  origPosition = sysex.getByte(3);
+	MNMSysexDecoder decoder(sysex, offset + 4);
 
 	decoder.get64(ampTrigs, 6 * 13);
 	/*
@@ -424,4 +425,3 @@ void MNMPattern::recalculateLockPatterns() {
     }
   }
 }
-
