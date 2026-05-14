@@ -93,9 +93,9 @@ public:
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {}
   virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) { load_immediate(tracknumber, seq_track); }
 
-  virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
-  virtual void transition_send(uint8_t tracknumber, uint8_t slotnumber) {}
-  virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber);
+  virtual bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) { return false; }
+  virtual void transition_send(uint8_t tracknumber, GridSlot slotnumber) {}
+  virtual void transition_load(uint8_t tracknumber, SeqTrack* seq_track, GridSlot slotnumber);
 #if !defined(__AVR__)
   virtual uint8_t transition_countdown_resolution();
 #endif
@@ -109,7 +109,7 @@ public:
   virtual uint16_t get_region_size() { return MEMORY_ALIGN(get_track_size()); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
-  virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same) { }
+  virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) { }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
   virtual uint8_t get_device_type() { return DEVICE_NULL; }
   virtual uint8_t get_parent_model() { return NULL_TRACK_TYPE; }

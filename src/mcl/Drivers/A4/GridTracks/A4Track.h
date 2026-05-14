@@ -18,10 +18,10 @@ public:
     return sizeof(A4Track) - sizeof(void*);
   }
   uint16_t calc_latency(uint8_t tracknumber);
-  void transition_send(uint8_t tracknumber, uint8_t slotnumber);
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       uint8_t slotnumber);
-  bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
+                       GridSlot slotnumber);
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) {
     return false;
   }
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);

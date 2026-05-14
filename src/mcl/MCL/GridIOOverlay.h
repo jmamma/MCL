@@ -17,7 +17,7 @@ public:
 
   void begin(Mode mode);
   bool is_active() const;
-  bool is_slot_selected(uint8_t visible_slot) const;
+  bool is_slot_selected(GridColumn visible_slot) const;
 
   virtual void init() override;
   virtual void cleanup() override;

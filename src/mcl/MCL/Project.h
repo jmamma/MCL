@@ -36,7 +36,7 @@ public:
   bool load_project(const char *projectname);
   bool convert_project(const char *projectname);
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
-  bool migrate_grid_track_storage_versions(uint8_t grid);
+  bool migrate_grid_track_storage_versions(GridIndex grid);
   bool new_project_master_file(const char *projectname);
   bool write_header();
 

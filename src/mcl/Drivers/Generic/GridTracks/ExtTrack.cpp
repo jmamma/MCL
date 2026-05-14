@@ -16,7 +16,7 @@ bool is_legacy_ext_sequence_type(uint8_t track_type) {
 
 } // namespace
 
-void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, GridSlot slotnumber) {
   DEBUG_DUMP(F("transition_load_ext"));
   DEBUG_DUMP((uint16_t) seq_track);
   DEBUG_DUMP(slotnumber);
@@ -28,7 +28,7 @@ void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t
   //load_seq_data(seq_track);
 }
 
-void ExtTrack::transition_load_device(uint8_t tracknumber, SeqTrack *seq_track, uint8_t slotnumber) {
+void ExtTrack::transition_load_device(uint8_t tracknumber, SeqTrack *seq_track, GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
   ext_track->is_generic_midi = false;

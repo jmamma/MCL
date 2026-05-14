@@ -5,7 +5,7 @@
 #include "MDTrack.h"
 
 void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                  uint8_t slotnumber) {
+                                  GridSlot slotnumber) {
   DEBUG_PRINTLN("transition send");
   if (seq_track) {
     seq_track->cache_loaded = false;

@@ -13,7 +13,7 @@ void load_legacy_lfo_data(LegacyLFOSeqTrackData &lfo_data) {
 } // namespace
 
 void MDLFOTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                  uint8_t slotnumber) {
+                                  GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   load_legacy_lfo_data(lfo_data);
   load_link_data(seq_track);

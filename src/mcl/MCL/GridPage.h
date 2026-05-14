@@ -29,9 +29,9 @@ public:
   uint8_t cursoy_y = 0;
   GridColumn col = 0;
   GridRow row = 0;
-  uint8_t cur_col = 0;
-  uint8_t cur_row = 0;
-  uint8_t old_col = 255;
+  GridColumn cur_col = 0;
+  GridRow cur_row = 0;
+  GridColumn old_col = 255;
   uint8_t display_name = 0;
   uint8_t bank = 0;
 
@@ -57,7 +57,7 @@ public:
 
   uint16_t grid_lastclock;
 
-  uint8_t row_scan = 0;
+  GridRow row_scan = 0;
   uint64_t row_states[2];
 
   PageIndex last_page = NULL_PAGE;

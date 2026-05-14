@@ -19,9 +19,9 @@ public:
   uint16_t calc_latency(uint8_t tracknumber);
 
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       uint8_t slotnumber);
-  void transition_send(uint8_t tracknumber, uint8_t slotnumber);
-  bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return false; }
+                       GridSlot slotnumber);
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber);
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) { return false; }
 
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);

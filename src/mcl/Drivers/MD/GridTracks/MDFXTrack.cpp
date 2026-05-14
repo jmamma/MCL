@@ -8,12 +8,12 @@ void MDFXTrack::paste_track(uint8_t src_track, uint8_t dest_track,
 }
 
 void MDFXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                uint8_t slotnumber) {
+                                GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   // load_seq_data(seq_track);
 }
 
-bool MDFXTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
+bool MDFXTrack::transition_cache(uint8_t tracknumber, GridSlot slotnumber) {
   bool send = true;
   MD.assignFXParamsBulk(reverb, send);
   return true;

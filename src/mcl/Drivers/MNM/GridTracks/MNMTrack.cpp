@@ -13,11 +13,11 @@ uint16_t MNMTrack::calc_latency(uint8_t tracknumber) {
   return MNM.setMachine(tracknumber, tracknumber, false);
 }
 
-void MNMTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
+void MNMTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, GridSlot slotnumber) {
   transition_load_device(tracknumber, seq_track, slotnumber);
 }
 
-void MNMTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+void MNMTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
     DEBUG_PRINTLN(F("here"));
     DEBUG_PRINTLN(F("send MNM track"));
    MNM.insertMachineInKit(tracknumber, &(machine));

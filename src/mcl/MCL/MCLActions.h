@@ -59,7 +59,7 @@ public:
   uint8_t send_machine[NUM_SLOTS];
   uint8_t transition_level[NUM_SLOTS];
 
-  uint8_t dev_sync_slot[NUM_DEVS];
+  GridSlot dev_sync_slot[NUM_DEVS];
 
   GridChain chains[NUM_SLOTS];
 };

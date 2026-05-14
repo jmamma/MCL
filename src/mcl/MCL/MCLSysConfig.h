@@ -34,8 +34,8 @@ public:
   uint8_t routing[24];
   GridRow row;
   GridColumn col;
-  uint8_t cur_row;
-  uint8_t cur_col;
+  GridRow cur_row;
+  GridColumn cur_col;
   uint16_t poly_mask;
   uint8_t uart2_ctrl_chan;
   uint8_t uart2_poly_chan;

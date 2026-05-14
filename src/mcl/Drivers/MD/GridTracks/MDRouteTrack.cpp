@@ -5,7 +5,7 @@
 #include "MCLActions.h"
 
 void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                  uint8_t slotnumber) {
+                                  GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
    if (mcl_actions.send_machine[slotnumber]) {
     load_routes();

@@ -43,7 +43,7 @@ uint8_t GridTrack::transition_countdown_resolution() {
 #endif
 
 void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                uint8_t slotnumber) {
+                                GridSlot slotnumber) {
   uint8_t n = slotnumber;
   if (seq_track == nullptr) { return; }
 #if defined(__AVR__)

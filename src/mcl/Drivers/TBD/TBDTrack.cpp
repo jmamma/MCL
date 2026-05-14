@@ -256,7 +256,7 @@ bool p4_last_applied_sound(uint8_t p4_track_index, TbdP4SoundData *sound) {
 }
 
 void debug_p4_sound_apply(const char *source, uint8_t mcl_track,
-                          uint8_t slotnumber,
+                          GridSlot slotnumber,
                           const TbdP4SoundData &sound) {
 #ifdef DEBUGMODE
   DEBUG_PRINT("TBD_P4_APPLY src=");
@@ -343,7 +343,7 @@ void debug_p4_sound_apply_skip(const char *source, uint8_t mcl_track,
 }
 
 void apply_p4_sound(const TbdP4SoundData &sound, const char *source,
-                    uint8_t mcl_track, uint8_t slotnumber) {
+                    uint8_t mcl_track, GridSlot slotnumber) {
   debug_p4_sound_apply(source, mcl_track, slotnumber, sound);
   tbd_p4_realtime.set_active_track(sound.p4_track_index);
 
@@ -529,19 +529,19 @@ uint16_t TBDTrack::calc_latency(uint8_t tracknumber) {
 }
 
 void TBDTrack::apply_preset(uint8_t fallback_tracknumber, const char *source,
-                            uint8_t slotnumber) {
+                            GridSlot slotnumber) {
   tbd_ensure_step_sound_default(p4_sound, fallback_tracknumber);
   apply_p4_sound(p4_sound, source, fallback_tracknumber, slotnumber);
 }
 
 void TBDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                               uint8_t slotnumber) {
+                               GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   load_seq_data(seq_track);
   apply_seq_defaults(tracknumber, seq_track);
 }
 
-void TBDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+void TBDTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
   apply_preset(tracknumber, "step.transition_send", slotnumber);
 }
 
@@ -584,7 +584,7 @@ bool TBDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
 
   active = TBD_TRACK_TYPE;
 
-  const uint8_t slot = column & 0x0F;
+  const GridColumn slot = column & 0x0F;
   SeqTrack::store_mod_data(seq_data.mod(), true, slot);
   set_step_sound_default(p4_sound, slot);
   const uint8_t p4_track_index = p4_sound.p4_track_index;
@@ -664,19 +664,19 @@ uint16_t TBDMidiTrack::calc_latency(uint8_t tracknumber) {
 }
 
 void TBDMidiTrack::apply_preset(uint8_t fallback_tracknumber,
-                                const char *source, uint8_t slotnumber) {
+                                const char *source, GridSlot slotnumber) {
   tbd_ensure_midi_sound_default(p4_sound, fallback_tracknumber);
   apply_p4_sound(p4_sound, source, fallback_tracknumber, slotnumber);
 }
 
 void TBDMidiTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                   uint8_t slotnumber) {
+                                   GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   load_seq_data(seq_track);
   apply_seq_defaults(tracknumber, seq_track);
 }
 
-void TBDMidiTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+void TBDMidiTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
   apply_preset(tracknumber, "midi.transition_send", slotnumber);
 }
 
@@ -728,7 +728,7 @@ bool TBDMidiTrack::store_in_grid(GridSlot column, GridRow row,
 
   active = TBD_MIDI_TRACK_TYPE;
 
-  const uint8_t slot = column & 0x0F;
+  const GridColumn slot = column & 0x0F;
   SeqTrack::store_mod_data(seq_data.mod(), false, slot);
   set_midi_sound_default(p4_sound, slot);
   const uint8_t p4_track_index = p4_sound.p4_track_index;

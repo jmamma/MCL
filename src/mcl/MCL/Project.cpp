@@ -228,14 +228,14 @@ bool Project::check_project_version(uint16_t min_version) {
   return version >= min_version;
 }
 
-bool Project::migrate_grid_track_storage_versions(uint8_t grid) {
+bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
   uint16_t legacy_version = 0;
-  for (uint16_t row = 0; row < GRID_LENGTH; row++) {
+  for (GridRow row = 0; row < GRID_LENGTH; row++) {
     GridRowHeader row_header;
     if (!grids[grid].read_row_header(&row_header, row)) {
       return false;
     }
-    for (uint8_t column = 0; column < GRID_WIDTH; column++) {
+    for (GridColumn column = 0; column < GRID_WIDTH; column++) {
       if (row_header.track_type[column] == EMPTY_TRACK_TYPE) {
         continue;
       }

@@ -91,7 +91,7 @@ uint16_t MDTrack::calc_latency(uint8_t tracknumber) {
   return md_latency;
 }
 
-bool MDTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
+bool MDTrack::transition_cache(uint8_t tracknumber, GridSlot slotnumber) {
   uint8_t n = slotnumber;
   bool send_level = false;
   bool send = true;
@@ -106,7 +106,7 @@ bool MDTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
   return true;
 }
 
-void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+void MDTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
   uint8_t n = slotnumber;
   DEBUG_PRINTLN("transition send");
   switch (mcl_actions.transition_level[n]) {
@@ -126,7 +126,7 @@ void MDTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 }
 
 void MDTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                              uint8_t slotnumber) {
+                              GridSlot slotnumber) {
   seq_track->cache_loaded = false;
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   // load_seq_data(seq_track);
@@ -322,7 +322,7 @@ bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
   return true;
 }
 
-void MDTrack::on_copy(int16_t s_col, int16_t d_col, bool destination_same) {
+void MDTrack::on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) {
   // bit of a hack to keep lfos modulating the same track.
   if (destination_same) {
     if (machine.trigGroup == s_col) {

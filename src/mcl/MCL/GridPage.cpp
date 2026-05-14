@@ -125,8 +125,8 @@ void GridPage::load_row(uint8_t n, GridRow row) {
 void GridPage::jump_to_row(GridRow row) {
   //  uint8_t y = (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
   //  uint8_t r = row - y;
-  uint8_t y = row;
-  uint8_t r = row - (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
+  GridRow y = row;
+  GridRow r = row - (row / MAX_VISIBLE_ROWS) * MAX_VISIBLE_ROWS;
   param2.cur = y;
   param2.old = y;
   cur_row = r;
@@ -143,7 +143,7 @@ void GridPage::set_active_row(GridRow row) {
 }
 
 void GridPage::send_row_led() {
-  uint8_t active_row = grid_task.last_active_row;
+  GridRow active_row = grid_task.last_active_row;
   if (active_row >= GRID_LENGTH) { return; }
   uint16_t blink_mask = 0;
   if ((active_row >> 4) == bank) {
@@ -363,7 +363,7 @@ GridSpan GridPage::getWidth() { return GRID_WIDTH; }
 
 void GridPage::load_slot_models() {
   DEBUG_PRINTLN("load slot models");
-  uint8_t row_shift = 0;
+  GridSpan row_shift = 0;
   if ((cur_row + param4.cur > MAX_VISIBLE_ROWS - 1)) {
     row_shift = cur_row + param4.cur - MAX_VISIBLE_ROWS;
   }
@@ -526,14 +526,14 @@ void GridPage::display_grid() {
   GridRow base_row = getRow() - cur_row;
   GridSpan grid_width = getWidth();
 #ifdef PLATFORM_TBD
-  uint8_t selected_row = getRow();
+  GridRow selected_row = getRow();
 #endif
   bool blink_hint = MidiClock.getBlinkHint(false);
 
 //  encoders[1]->handler = NULL;
 
-  uint8_t row_shift = 0;
-  uint8_t col_shift = 0;
+  GridSpan row_shift = 0;
+  GridSpan col_shift = 0;
   if (show_slot_menu) {
     if (cur_col + param3.cur > MAX_VISIBLE_COLS - 1) {
 
@@ -640,7 +640,7 @@ void GridPage::display_grid() {
       }
 
       GridSlot track_grid_idx = track_idx + GRID_WIDTH * cur_grid;
-      uint8_t active_slot = active_slots[track_grid_idx];
+      GridRow active_slot = active_slots[track_grid_idx];
       bool active = row_idx == active_slot;
       if (blink_hint && active) {
         // blink, don't print
@@ -678,7 +678,7 @@ void GridPage::display_slot_menu() {
 }
 
 void GridPage::display_row_info() {
-  uint8_t row_shift = 0;
+  GridSpan row_shift = 0;
   if ((cur_row + param4.cur > MAX_VISIBLE_ROWS - 1)) {
     row_shift = cur_row + param4.cur - MAX_VISIBLE_ROWS;
   }

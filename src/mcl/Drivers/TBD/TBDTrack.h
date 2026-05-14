@@ -45,9 +45,9 @@ public:
     return STEPSEQ_SEQ_INTERPOLATION;
   }
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       uint8_t slotnumber) override;
-  void transition_send(uint8_t tracknumber, uint8_t slotnumber) override;
-  bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) override {
+                       GridSlot slotnumber) override;
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber) override;
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override {
     return false;
   }
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
@@ -70,7 +70,7 @@ public:
 
 private:
   void apply_preset(uint8_t fallback_tracknumber, const char *source,
-                    uint8_t slotnumber);
+                    GridSlot slotnumber);
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
 };
 
@@ -87,9 +87,9 @@ public:
     return STEPSEQ_SEQ_INTERPOLATION;
   }
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       uint8_t slotnumber) override;
-  void transition_send(uint8_t tracknumber, uint8_t slotnumber) override;
-  bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) override {
+                       GridSlot slotnumber) override;
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber) override;
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override {
     return false;
   }
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
@@ -112,7 +112,7 @@ public:
 
 private:
   void apply_preset(uint8_t fallback_tracknumber, const char *source,
-                    uint8_t slotnumber);
+                    GridSlot slotnumber);
   void apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track);
 };
 

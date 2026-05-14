@@ -47,8 +47,8 @@ public:
   void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track);
   virtual void get_online_data(uint8_t merge) override;
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                              uint8_t slotnumber);
-  bool transition_cache(uint8_t tracknumber, uint8_t slotnumber);
+                              GridSlot slotnumber);
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber);
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
   void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);

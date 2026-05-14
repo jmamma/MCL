@@ -250,7 +250,7 @@ bool MCLClipBoard::copy(GridSlot col, GridRow row, GridSpan w, GridSpan h) {
     if (h > 4) {
       mcl_gui.draw_progress("", y, h);
     }
-    uint8_t last_hdr_grid = 255;
+    GridIndex last_hdr_grid = 255;
     for (uint8_t x = 0; x < w; x++) {
       GridSlot full_col = x + col;
       GridIndex cur_grid = full_col >> 4;

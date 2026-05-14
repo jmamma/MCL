@@ -61,10 +61,10 @@ public:
   void init();
   void clear_track();
   uint16_t calc_latency(uint8_t tracknumber);
-  bool transition_cache(uint8_t tracknumber, uint8_t slotnumber);
-  void transition_send(uint8_t tracknumber, uint8_t slotnumber);
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber);
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       uint8_t slotnumber);
+                       GridSlot slotnumber);
   void load_seq_data(SeqTrack *seq_track);
   void get_machine_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
@@ -94,7 +94,7 @@ public:
 
   virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
-  virtual void on_copy(int16_t s_col, int16_t d_col, bool destination_same);
+  virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same);
 #if !defined(__AVR__)
   virtual bool can_materialize_as(uint8_t track_type);
   virtual DeviceTrack *materialize_as(uint8_t track_type,

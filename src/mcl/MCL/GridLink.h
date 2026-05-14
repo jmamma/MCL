@@ -17,7 +17,7 @@ public:
   uint8_t loops;
   uint8_t length;
   uint8_t speed;
-  GridLink(uint8_t active_ = 0, GridRow row_ = 0, uint8_t col_ = 0,
+  GridLink(uint8_t active_ = 0, GridRow row_ = 0, GridColumn col_ = 0,
             uint8_t loops_ = 0) {}
   //Store link data in link array.
   void store_in_mem(uint8_t tracknumber, GridLink *link_array) {

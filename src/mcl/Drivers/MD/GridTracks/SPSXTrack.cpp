@@ -161,7 +161,7 @@ uint8_t SPSXTrack::transition_countdown_resolution() {
                                    : LEGACY_SEQ_INTERPOLATION;
 }
 
-bool SPSXTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
+bool SPSXTrack::transition_cache(uint8_t tracknumber, GridSlot slotnumber) {
   bool send_level = false;
   bool send = true;
   switch (mcl_actions.transition_level[slotnumber]) {
@@ -174,7 +174,7 @@ bool SPSXTrack::transition_cache(uint8_t tracknumber, uint8_t slotnumber) {
   return true;
 }
 
-void SPSXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
+void SPSXTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
   // mute_state must follow the LIVE engine, not the slot's stored seq_version:
   // a legacy-saved slot played through an SPSX engine (or vice versa after a
   // mode switch) would otherwise write to the wrong array and the engine
@@ -206,7 +206,7 @@ void SPSXTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
 }
 
 void SPSXTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                                uint8_t slotnumber) {
+                                GridSlot slotnumber) {
   seq_track->cache_loaded = false;
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
 }
@@ -466,7 +466,7 @@ void SPSXTrack::normalize() {
   scale_seq_vol(scale);
 }
 
-void SPSXTrack::on_copy(int16_t s_col, int16_t d_col, bool destination_same) {
+void SPSXTrack::on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) {
   if (destination_same) {
     if (machine.trigGroup == s_col) machine.trigGroup = 255;
     if (machine.muteGroup == s_col) machine.muteGroup = 255;

@@ -13,9 +13,8 @@ class ATTR_PACKED() GridRowHeader {
   uint8_t track_type[GRID_WIDTH];
   uint8_t model[GRID_WIDTH];
   void* _this() { return &active; }
-  void update_model(int16_t column, uint8_t model_, uint8_t track_type_);
+  void update_model(GridColumn column, uint8_t model_, uint8_t track_type_);
   bool is_empty();
   void init();
 
 };
-

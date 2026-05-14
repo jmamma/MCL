@@ -24,7 +24,7 @@ public:
   void get_tempo();
   uint16_t calc_latency(uint8_t tracknumber);
   uint16_t send_tempo(bool send = true);
-  void transition_send(uint8_t tracknumber, uint8_t slotnumber);
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber);
   virtual void get_online_data(uint8_t merge) override;
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);

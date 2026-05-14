@@ -23,7 +23,7 @@ public:
   void get_lfos();
   uint16_t calc_latency(uint8_t tracknumber);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       uint8_t slotnumber);
+                       GridSlot slotnumber);
   virtual void get_online_data(uint8_t merge) override;
 
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);

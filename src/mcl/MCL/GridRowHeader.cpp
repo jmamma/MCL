@@ -1,7 +1,7 @@
 #include "GridRowHeader.h"
 #include "GridTrack.h"
 
-void GridRowHeader::update_model(int16_t column, uint8_t model_, uint8_t track_type_) {
+void GridRowHeader::update_model(GridColumn column, uint8_t model_, uint8_t track_type_) {
   model[column] = model_;
   track_type[column] = track_type_;
 }
@@ -28,4 +28,3 @@ void GridRowHeader::init() {
   }
   */
 }
-

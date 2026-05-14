@@ -349,7 +349,7 @@ uint16_t GridIOOverlay::visible_select_mask() const {
   return mask;
 }
 
-bool GridIOOverlay::is_slot_selected(uint8_t visible_slot) const {
+bool GridIOOverlay::is_slot_selected(GridColumn visible_slot) const {
   if (!is_active()) return false;
   if (visible_slot >= GRID_WIDTH) return false;
   if (GridIOPage::show_track_type) {
