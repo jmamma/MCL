@@ -193,6 +193,11 @@ DevicePerfTarget perf(uint8_t dest) {
   return perf_target;
 }
 
+uint8_t primary_perf_editor_dest(uint8_t track) {
+  uint8_t dest = perf_dest_from_idx(DeviceIdx::Primary, track + 1);
+  return dest == 255 ? 0 : dest + 1;
+}
+
 void end_perf_param_editor() {
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     DeviceContext ctx =

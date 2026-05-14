@@ -8,7 +8,6 @@
 #include "MCLSeq.h"
 #include "MixerPerf.h"
 #include "SeqPages.h"
-#include "SeqTrackUtil.h"
 
 #define FADER_LEN 18
 #define FADE_RATE 8
@@ -20,24 +19,6 @@ uint16_t track_mask_for_len(uint8_t len) {
     return 0xFFFF;
   }
   return (uint16_t)((1u << len) - 1u);
-}
-
-uint8_t mixer_param_to_7bit(const MidiDeviceMixerParam &param) {
-#if defined(__AVR__)
-  return param.value;
-#else
-  if (param.max_value <= param.min_value) {
-    return 0;
-  }
-
-  int32_t value = param.value;
-  if (value < param.min_value) value = param.min_value;
-  if (value > param.max_value) value = param.max_value;
-  const uint16_t range = (uint16_t)(param.max_value - param.min_value);
-  return (uint8_t)(((uint32_t)(value - param.min_value) * 127u +
-                    (range / 2u)) /
-                   range);
-#endif
 }
 
 PageIndex mixer_return_page(PageIndex &last_page) {
@@ -59,105 +40,8 @@ bool mixer_arrow_or_yes_key_down() {
 
 } // namespace
 
-void MixerTarget::bind(DeviceIdx device_idx) {
-  bind(device_manager.device_for_idx(device_idx), device_idx);
-}
-
-void MixerTarget::bind(MidiDevice *device, DeviceIdx device_idx) {
-  if (device == nullptr || device == &null_midi_device) {
-    ctx_ = DeviceContext::for_device(&null_midi_device, device_idx);
-    mixer_ = nullptr;
-    return;
-  }
-  ctx_ = DeviceContext::for_device(device, device_idx);
-  mixer_ = device->mixer();
-}
-
-MidiDevice *MixerTarget::device() const {
-  return ctx_.device();
-}
-
-bool MixerTarget::is_null() const {
-  return mixer_ == nullptr;
-}
-
-bool MixerTarget::is_md_device() const {
-  return SeqTrackUtil::is_md_device(device());
-}
-
-bool MixerTarget::perf_available() const {
-  return MixerPerf::available(device());
-}
-
-uint8_t MixerTarget::default_param() const {
-  return mixer_ != nullptr ? mixer_->default_param() : 0;
-}
-
-uint8_t MixerTarget::track_count() const {
-  if (mixer_ == nullptr) {
-    return 0;
-  }
-  uint8_t count = mixer_->track_count(ctx_);
-  return count > 16 ? 16 : count;
-}
-
-SeqTrack *MixerTarget::seq_track(uint8_t track) const {
-  return mixer_ != nullptr ? mixer_->seq_track(ctx_, track) : nullptr;
-}
-
-bool MixerTarget::param(uint8_t track, uint8_t param_idx,
-                        MidiDeviceMixerParam *out) const {
-  return mixer_ != nullptr && mixer_->param(ctx_, track, param_idx, out);
-}
-
-bool MixerTarget::set_param(uint8_t track, uint8_t param_idx, int16_t value,
-                            bool send) const {
-  return mixer_ != nullptr &&
-         mixer_->set_param(ctx_, track, param_idx, value, send);
-}
-
-void MixerTarget::mute_track(uint8_t track, bool mute) const {
-  if (mixer_ != nullptr) {
-    mixer_->mute_track(ctx_, track, mute);
-  }
-}
-
-void MixerTarget::set_record_mutes(uint8_t track, bool state,
-                                   bool clear) const {
-  if (mixer_ != nullptr) {
-    mixer_->set_record_mutes(ctx_, track, state, clear);
-  }
-}
-
-uint8_t MixerTarget::trig_group(uint8_t track) const {
-  return mixer_ != nullptr ? mixer_->trig_group(ctx_, track) : 255;
-}
-
-void MixerTarget::select_track(uint8_t track) const {
-  if (mixer_ != nullptr) {
-    mixer_->select_track(ctx_, track);
-  }
-}
-
-void MixerTarget::restore_track_params(uint8_t track) const {
-  if (mixer_ != nullptr) {
-    mixer_->restore_track_params(ctx_, track);
-  }
-}
-
-bool MixerTarget::is_mute_param(uint8_t param) const {
-  return mixer_ != nullptr && mixer_->is_mute_param(param);
-}
-
 void MixerPage::sync_selected_mixer_device() {
-  mixer_target.bind(mixer_device_idx);
-  if (mixer_target.is_null()) {
-    mixer_device_idx = DeviceIdx::Primary;
-    mixer_target.bind(mixer_device_idx);
-  }
-  if (mixer_target.is_null()) {
-    mixer_target.bind(&MD, DeviceIdx::Primary);
-  }
+  mixer_target.bind_selected(mixer_device_idx);
 }
 
 void MixerPage::select_mixer_device(DeviceIdx device_idx) {
@@ -211,7 +95,7 @@ void MixerPage::trig(uint8_t track_number) {
   MidiDeviceMixerParam info;
   uint8_t level = 127;
   if (target.param(track_number, target.default_param(), &info)) {
-    level = mixer_param_to_7bit(info);
+    level = target.param_value_7bit(info);
   }
   track_trig(DeviceIdx::Primary, track_number, level);
   GUI_hardware.led.set_flashled(track_number);
@@ -220,47 +104,14 @@ void MixerPage::trig(uint8_t track_number) {
   if (trig_group < NUM_MD_TRACKS) {
     level = 127;
     if (target.param(trig_group, target.default_param(), &info)) {
-      level = mixer_param_to_7bit(info);
+      level = target.param_value_7bit(info);
     }
     track_trig(DeviceIdx::Primary, trig_group, level);
     GUI_hardware.led.set_flashled(trig_group);
   }
 }
 
-bool MixerPage::mixer_param_supported_for_held_tracks(uint8_t param) {
-  sync_selected_mixer_device();
-  uint8_t len = mixer_track_count();
-  for (uint8_t i = 0; i < len; i++) {
-    if (note_interface.is_note_on(i)) {
-      MidiDeviceMixerParam info;
-      if (mixer_target.param(i, param, &info)) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-uint8_t MixerPage::mixer_param_for_encoder(uint8_t encoder_idx,
-                                           bool is_md_device) {
-  if (is_md_device) {
-    return MixerPerf::mixer_param_for_encoder(encoder_idx);
-  }
-
-#if defined(__AVR__)
-  return default_mixer_param();
-#else
-  if (mixer_param_supported_for_held_tracks(encoder_idx)) {
-    return encoder_idx;
-  }
-  if (mixer_param_supported_for_held_tracks(display_mode)) {
-    return display_mode;
-  }
-  return default_mixer_param();
-#endif
-}
-
-bool MixerPage::handle_mixer_encoder_edits(bool is_md_device) {
+bool MixerPage::handle_mixer_encoder_edits(bool use_perf_encoders) {
   if (note_interface.notes_on == 0) {
     return false;
   }
@@ -268,7 +119,9 @@ bool MixerPage::handle_mixer_encoder_edits(bool is_md_device) {
   bool handled = false;
   for (uint8_t n = 0; n < GUI_NUM_ENCODERS; n++) {
     if (encoders[n]->hasChanged()) {
-      adjust_param(encoders[n], mixer_param_for_encoder(n, is_md_device));
+      adjust_param(encoders[n],
+                   mixer_target.param_for_encoder(n, display_mode,
+                                                  use_perf_encoders));
       handled = true;
     }
   }
@@ -471,14 +324,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
     if (note_interface.is_note_on(i)) {
       MidiDeviceMixerParam info;
       if (mixer_target.param(i, param, &info)) {
-        newval = info.value + dir;
-#ifdef PLATFORM_TBD
-        if (newval < info.min_value) newval = info.min_value;
-        if (newval > info.max_value) newval = info.max_value;
-#else
-        if (newval < 0) newval = 0;
-        if (newval > 127) newval = 127;
-#endif
+        newval = mixer_target.clamp_param_value(info, info.value + dir);
         if (mixer_target.set_param(i, param, newval, true)) {
           SET_BIT16(redraw_mask, i);
         }
@@ -545,7 +391,7 @@ void MixerPage::display() {
 
       MidiDeviceMixerParam info;
       if (mixer_target.param(i, display_mode, &info)) {
-        fader_level = mixer_param_to_7bit(info);
+        fader_level = mixer_target.param_value_7bit(info);
       } else {
         fader_level = 127;
       }

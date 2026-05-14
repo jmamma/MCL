@@ -1,5 +1,4 @@
 #include "PerfPage.h"
-#include "DeviceManager.h"
 #include "DeviceParamResolver.h"
 #include "CommonPages.h"
 #include "MCLMemory.h"
@@ -17,13 +16,7 @@ static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT = 24;
 namespace {
 
 uint8_t perf_editor_dest() {
-#if defined(__AVR__)
-  return last_md_track + 1;
-#else
-  uint8_t dest = DeviceParamResolver::perf_dest_from_idx(DeviceIdx::Primary,
-                                                          last_md_track + 1);
-  return dest == 255 ? 0 : dest + 1;
-#endif
+  return DeviceParamResolver::primary_perf_editor_dest(last_md_track);
 }
 
 } // namespace

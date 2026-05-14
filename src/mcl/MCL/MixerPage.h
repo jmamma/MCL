@@ -25,6 +25,7 @@ class MixerTarget {
 public:
   void bind(DeviceIdx device_idx);
   void bind(MidiDevice *device, DeviceIdx device_idx);
+  bool bind_selected(DeviceIdx &device_idx);
 
   MidiDevice *device() const;
   bool is_null() const;
@@ -32,10 +33,15 @@ public:
   bool perf_available() const;
 
   uint8_t default_param() const;
+  uint8_t param_for_encoder(uint8_t encoder_idx, uint8_t display_mode,
+                            bool use_perf) const;
   uint8_t track_count() const;
   SeqTrack *seq_track(uint8_t track) const;
   bool param(uint8_t track, uint8_t param_idx,
              MidiDeviceMixerParam *out) const;
+  uint8_t param_value_7bit(const MidiDeviceMixerParam &param) const;
+  int16_t clamp_param_value(const MidiDeviceMixerParam &param,
+                            int16_t value) const;
   bool set_param(uint8_t track, uint8_t param_idx, int16_t value,
                  bool send = true) const;
   void mute_track(uint8_t track, bool mute) const;
@@ -88,9 +94,7 @@ public:
   bool display_mute_mask();
   TrigLEDMode mixer_led_mode() const;
   uint8_t *mixer_meter_levels();
-  bool mixer_param_supported_for_held_tracks(uint8_t param);
-  uint8_t mixer_param_for_encoder(uint8_t encoder_idx, bool is_md_device);
-  bool handle_mixer_encoder_edits(bool is_md_device);
+  bool handle_mixer_encoder_edits(bool use_perf_encoders);
 
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)

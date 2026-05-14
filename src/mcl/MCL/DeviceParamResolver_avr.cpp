@@ -299,6 +299,10 @@ DevicePerfTarget perf(uint8_t dest) {
   return perf_target;
 }
 
+uint8_t primary_perf_editor_dest(uint8_t track) {
+  return track + 1;
+}
+
 void end_perf_param_editor() {
   MD.deactivate_encoder_interface();
 }

@@ -78,6 +78,7 @@ DeviceParamTarget target_for_idx(DeviceIdx device_idx, uint8_t dest);
 uint8_t perf_target_count();
 DevicePerfTarget perf(uint8_t dest);
 uint8_t perf_dest_from_idx(DeviceIdx device_idx, uint8_t local_dest);
+uint8_t primary_perf_editor_dest(uint8_t track);
 void end_perf_param_editor();
 void set_perf_rec_mode(uint8_t mode);
 bool perf_scene_autofill(PerfData *data, uint8_t scene);
