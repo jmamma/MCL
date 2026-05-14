@@ -215,13 +215,7 @@ bool WavDesigner::render() {
   wav_file.file.sync();
   if (largest_sample_so_far > 0) {
 #if defined(__AVR__)
-    uint32_t normalize_gain_q8 =
-        ((uint32_t)MAX_HEADROOM << 8) / largest_sample_so_far;
-    if (normalize_gain_q8 > UINT16_MAX) {
-      normalize_gain_q8 = UINT16_MAX;
-    }
-    DEBUG_PRINTLN(normalize_gain_q8);
-    if (!wav_file.apply_gain16_mono_q8((uint16_t)normalize_gain_q8)) {
+    if (!wav_file.normalize16_mono(MAX_HEADROOM, largest_sample_so_far)) {
       return false;
     }
 #else

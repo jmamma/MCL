@@ -249,8 +249,9 @@ public:
                   wav_sample_t *c1_max_sample = NULL,
                   wav_sample_t *c1_min_sample = NULL);
 #if defined(__AVR__)
-  bool apply_gain16_mono_q8(uint16_t gain_q8, uint32_t num_samples = 0,
-                            uint32_t sample_index = 0);
+  bool normalize16_mono(uint16_t target_peak, uint16_t current_peak,
+                        uint32_t num_samples = 0,
+                        uint32_t sample_index = 0);
 #endif
   bool apply_gain(float gain, uint8_t channel = 0, uint32_t num_samples = 0, uint32_t sample_index = 0);
 };

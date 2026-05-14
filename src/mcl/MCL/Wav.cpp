@@ -495,10 +495,13 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
 }
 
 #if defined(__AVR__)
-bool Wav::apply_gain16_mono_q8(uint16_t gain_q8, uint32_t num_samples,
-                               uint32_t sample_index) {
+bool Wav::normalize16_mono(uint16_t target_peak, uint16_t current_peak,
+                           uint32_t num_samples, uint32_t sample_index) {
   if ((header.fmt.bitRate != 16) || (header.fmt.numChannels != 1)) {
     return false;
+  }
+  if (current_peak == 0) {
+    return true;
   }
 
   uint32_t num_of_samples = num_samples;
@@ -509,6 +512,7 @@ bool Wav::apply_gain16_mono_q8(uint16_t gain_q8, uint32_t num_samples,
   const uint16_t buffer_samples = 256;
   int16_t buffer[buffer_samples];
   uint32_t sample_end = sample_index + num_of_samples;
+  uint32_t gain_q15 = ((uint32_t)target_peak << 15) / current_peak;
 
   for (uint32_t n = sample_index; n < sample_end; n += buffer_samples) {
     uint16_t current_run = buffer_samples;
@@ -525,16 +529,13 @@ bool Wav::apply_gain16_mono_q8(uint16_t gain_q8, uint32_t num_samples,
 
     for (uint16_t i = 0; i < current_run; i++) {
       int32_t sample = buffer[i];
-      int32_t scaled;
-      if (sample < 0) {
-        scaled = -(((-sample) * (int32_t)gain_q8) >> 8);
-      } else {
-        scaled = (sample * (int32_t)gain_q8) >> 8;
-      }
+      int32_t magnitude = sample < 0 ? -sample : sample;
+      int32_t scaled = ((uint32_t)magnitude * gain_q15) >> 15;
       if (scaled > INT16_MAX) {
         scaled = INT16_MAX;
-      } else if (scaled < INT16_MIN) {
-        scaled = INT16_MIN;
+      }
+      if (sample < 0) {
+        scaled = -scaled;
       }
       buffer[i] = (int16_t)scaled;
     }
