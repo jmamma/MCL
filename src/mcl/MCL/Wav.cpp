@@ -264,8 +264,16 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
   return ret;
 }
 
-bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
-                       uint8_t channel) {
+#if defined(__AVR__)
+// Keep the generic stereo/24-bit reader out of SDS packet builders on AVR.
+#define WAV_AVR_NOINLINE __attribute__((noinline))
+#else
+#define WAV_AVR_NOINLINE
+#endif
+
+bool WAV_AVR_NOINLINE Wav::read_samples(void *data, uint32_t num_samples,
+                                        uint32_t sample_index,
+                                        uint8_t channel) {
   uint8_t sample_size = header.fmt.bitRate / 8;
   if (header.fmt.bitRate % 8 > 0) {
     sample_size++;
@@ -328,6 +336,8 @@ bool Wav::read_samples(void *data, uint32_t num_samples, uint32_t sample_index,
   }
   return true;
 }
+
+#undef WAV_AVR_NOINLINE
 
 __int24 Wav::find_peak(uint8_t channel, uint32_t num_samples,
                        uint32_t sample_index) {
