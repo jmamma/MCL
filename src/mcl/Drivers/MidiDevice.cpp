@@ -9,7 +9,7 @@
 MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
                        const bool _isElektronDevice)
     : name(_name), id(_id), isElektronDevice(_isElektronDevice)
-#if !defined(__AVR__)
+#ifdef MCL_HAS_DEVICE_CAPABILITIES
       ,
       step_track_capability_(*this),
       ext_step_track_capability_(*this),
@@ -43,7 +43,7 @@ DeviceMixerCapability *MidiDevice::mixer() {
   return nullptr;
 }
 
-#if !defined(__AVR__)
+#ifdef MCL_HAS_DEVICE_CAPABILITIES
 DeviceStepTrackCapability *MidiDevice::step_tracks() {
   return &step_track_capability_;
 }
@@ -63,9 +63,7 @@ DeviceParamCapability *MidiDevice::params() {
 DevicePerfCapability *MidiDevice::perf() {
   return &perf_capability_;
 }
-#endif
 
-#if !defined(__AVR__)
 DevicePanelCapability *MidiDevice::panel() {
   static DevicePanelCapability panel_capability;
   return &panel_capability;

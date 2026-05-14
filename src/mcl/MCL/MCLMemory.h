@@ -4,6 +4,7 @@
 
 #include "Arduino.h"
 #include "memory.h"
+#include "MCLFeatureConfig.h"
 
 #define EXT_TRACKS
 #define LFO_TRACKS
@@ -97,7 +98,7 @@ constexpr size_t EMPTY_TRACK_LEN = GRID1_TRACK_LEN - DEVICE_TRACK_LEN;
 // Total size of main grid cache for MD tracks
 constexpr size_t MD_CACHE_LEN = GRID1_TRACK_LEN * NUM_MD_TRACKS;
 
-#if !defined(__AVR__)
+#ifdef MCL_HAS_SPSX_TRACKS
 // SPSX tracks carry SPSMachine (34 params + 2 LFOs) + SeqDataUnion + extras.
 // Sized with headroom; static_assert in SPSXTrack.h enforces fit.
 constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1152);
@@ -134,7 +135,7 @@ extern uint8_t md_cache[MD_CACHE_LEN];
 extern uint8_t aux_cache[AUX_CACHE_LEN];
 extern uint8_t ext_cache[EXT_CACHE_LEN];
 extern uint8_t filebrowser_cache[FILEBROWSER_CACHE_LEN];
-#if !defined(__AVR__)
+#ifdef MCL_HAS_SPSX_TRACKS
 extern uint8_t spsx_cache[SPSX_CACHE_LEN];
 #endif
 #if defined(PLATFORM_TBD)
@@ -147,7 +148,7 @@ extern uint8_t tbd_cache[TBD_CACHE_LEN];
 extern const uintptr_t BANK1_MD_TRACKS_START;
 extern const uintptr_t BANK1_AUX_TRACKS_START;
 extern const uintptr_t BANK1_EXT_TRACKS_START;
-#if !defined(__AVR__)
+#ifdef MCL_HAS_SPSX_TRACKS
 extern const uintptr_t BANK1_SPSX_TRACKS_START;
 #endif
 #if defined(PLATFORM_TBD)

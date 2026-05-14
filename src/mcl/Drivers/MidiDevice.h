@@ -1,6 +1,7 @@
 #pragma once
 
 #include "platform.h"
+#include "MCLFeatureConfig.h"
 #include "DeviceCapabilities.h"
 #include "MidiDeviceCapabilities.h"
 #include "MidiID.h"
@@ -90,7 +91,7 @@ public:
   uint8_t port; // MIDI port number (UART1_PORT, UART2_PORT, UARTUSB_PORT, etc.)
 
 protected:
-#if !defined(__AVR__)
+#ifdef MCL_HAS_DEVICE_CAPABILITIES
   DeviceStepTrackCapability step_track_capability_;
   DeviceExtStepTrackCapability ext_step_track_capability_;
   DeviceStepEditCapability step_edit_capability_;
@@ -204,7 +205,7 @@ public:
   virtual void muteTrack(uint8_t track, bool mute = true,
                          MidiUartClass *uart_ = nullptr) {}
   virtual DeviceMixerCapability *mixer();
-#if !defined(__AVR__)
+#ifdef MCL_HAS_DEVICE_CAPABILITIES
   virtual DeviceStepTrackCapability *step_tracks();
   virtual DeviceExtStepTrackCapability *ext_step_tracks();
   virtual DeviceStepEditCapability *step_edit();
