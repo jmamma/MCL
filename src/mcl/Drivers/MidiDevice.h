@@ -20,6 +20,11 @@ class MidiUartClass;
 struct PageSelectEntry;
 class SeqTrack;
 
+struct MidiDeviceLogoGif {
+  MCLGIF *gif;
+  uint8_t *data;
+};
+
 struct MidiDeviceMixerParam {
 #ifdef PLATFORM_TBD
   const char *label = nullptr;
@@ -231,8 +236,7 @@ public:
   void sendNRPN(uint8_t channel, uint16_t parameter, uint16_t value,
                 MidiUartClass *uart_ = nullptr);
   uint8_t *icon() const;
-  MCLGIF *gif() const;
-  uint8_t *gif_data() const;
+  MidiDeviceLogoGif logo_gif() const;
 };
 
 class NullMidiDevice : public MidiDevice {

@@ -21,6 +21,12 @@ namespace {
 
 constexpr uint8_t kSeqPageVisibleSteps = 16;
 constexpr uint8_t kSeqPageTrackMaskWidth = 16;
+const char *const kMaskInfoLabels[] PROGMEM = {
+    mclstr_trig,
+    mclstr_lock,
+    mclstr_slide,
+    mclstr_mute,
+};
 
 #if defined(__AVR__)
 bool seq_page_uses_non_md_primary_step_tracks() {
@@ -584,20 +590,9 @@ void SeqPage::bootstrap_record() {
 }
 
 void SeqPage::config_mask_info(bool silent) {
-  switch (mask_type) {
-  case MASK_PATTERN:
-    mclstr_copy_progmem(info2, mclstr_trig, sizeof(info2));
-    break;
-  case MASK_LOCK:
-    mclstr_copy_progmem(info2, mclstr_lock, sizeof(info2));
-    break;
-  case MASK_SLIDE:
-    mclstr_copy_progmem(info2, mclstr_slide, sizeof(info2));
-    break;
-  case MASK_MUTE:
-    mclstr_copy_progmem(info2, mclstr_mute, sizeof(info2));
-    break;
-  }
+  const char *label =
+      reinterpret_cast<const char *>(pgm_read_ptr(&kMaskInfoLabels[mask_type]));
+  mclstr_copy_progmem(info2, label, sizeof(info2));
   if (!silent && seq_page_active_step_track().uses_kit_sound()) {
     char str[16] = "EDIT ";
     strcat(str, info2);
@@ -764,8 +759,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t key = event->source;
-    uint8_t first_note = note_interface.get_first_md_note();
-    if (first_note != 255) {
+    if (note_interface.get_first_md_note() != 255) {
       return false;
     }
 
@@ -1059,12 +1053,13 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
 #endif
 
   // Legacy MD timing display
-  if (timing == 0) {
-  } else if ((timing < timing_mid) && (timing != 0)) {
-    mcl_gui.put_value_at(timing_mid - timing, K + 1);
-  } else {
-    K[0] = '+';
-    mcl_gui.put_value_at(timing - timing_mid, K + 1);
+  if (timing != 0) {
+    if (timing < timing_mid) {
+      mcl_gui.put_value_at(timing_mid - timing, K + 1);
+    } else {
+      K[0] = '+';
+      mcl_gui.put_value_at(timing - timing_mid, K + 1);
+    }
   }
   draw_knob(1, mclstr_utim, K);
 }

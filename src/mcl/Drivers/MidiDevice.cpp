@@ -97,39 +97,23 @@ uint8_t *MidiDevice::icon() const {
   }
 }
 
-MCLGIF *MidiDevice::gif() const {
+MidiDeviceLogoGif MidiDevice::logo_gif() const {
 #ifdef PLATFORM_TBD
   if (port == UARTP4_PORT) {
-    return nullptr;
+    return {nullptr, nullptr};
   }
 #endif
   switch (id) {
   case DEVICE_MD:
-    return R.icons_logo->machinedrum_gif;
+    return {R.icons_logo->machinedrum_gif,
+            R.icons_logo->machinedrum_gif_data};
   case DEVICE_MNM:
-    return R.icons_logo->monomachine_gif;
+    return {R.icons_logo->monomachine_gif,
+            R.icons_logo->monomachine_gif_data};
   case DEVICE_A4:
-    return R.icons_logo->analog_gif;
+    return {R.icons_logo->analog_gif, R.icons_logo->analog_gif_data};
   default:
-    return R.icons_logo->midi_gif;
-  }
-}
-
-uint8_t *MidiDevice::gif_data() const {
-#ifdef PLATFORM_TBD
-  if (port == UARTP4_PORT) {
-    return nullptr;
-  }
-#endif
-  switch (id) {
-  case DEVICE_MD:
-    return R.icons_logo->machinedrum_gif_data;
-  case DEVICE_MNM:
-    return R.icons_logo->monomachine_gif_data;
-  case DEVICE_A4:
-    return R.icons_logo->analog_gif_data;
-  default:
-    return R.icons_logo->midi_gif_data;
+    return {R.icons_logo->midi_gif, R.icons_logo->midi_gif_data};
   }
 }
 

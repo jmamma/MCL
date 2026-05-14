@@ -632,20 +632,20 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   static const uint8_t heights_triplets2[] PROGMEM = {11, 4, 8, 10, 2, 8, 4, 2};
   static const uint8_t heights_highres[] PROGMEM = {
       11, 2, 4, 8, 6, 2, 10, 2, 6, 8, 4, 2};
+  static const uint8_t *const heights_by_speed[] PROGMEM = {
+      heights_highres,
+      heights_lowres,
+      heights_triplets,
+      heights_triplets2,
+  };
+  static const uint8_t heights_len_by_speed[] PROGMEM = {12, 6, 16, 8};
 
-  const uint8_t *h = heights_highres;
-  uint8_t heights_len = 12;
-
-  if (speed == SEQ_SPEED_2X) {
-    h = heights_lowres;
-    heights_len = 6;
-  } else if (speed == SEQ_SPEED_3_4X) {
-    h = heights_triplets;
-    heights_len = 16;
-  } else if (speed == SEQ_SPEED_3_2X) {
-    h = heights_triplets2;
-    heights_len = 8;
+  if (speed > SEQ_SPEED_3_2X) {
+    speed = SEQ_SPEED_1X;
   }
+  const uint8_t *h = reinterpret_cast<const uint8_t *>(
+      pgm_read_ptr(&heights_by_speed[speed]));
+  uint8_t heights_len = pgm_read_byte(&heights_len_by_speed[speed]);
   uint8_t y_pos = 11;
   uint8_t a = 0;
   uint8_t w = 96;
@@ -927,15 +927,17 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
     case 0:
       device = devs[0];
       if (device != &null_midi_device) {
-        gif = device->gif();
-        icon = device->gif_data();
+        MidiDeviceLogoGif logo = device->logo_gif();
+        gif = logo.gif;
+        icon = logo.data;
       }
       break;
     case 1:
       device = devs[1];
       if (device != &null_midi_device) {
-        gif = device->gif();
-        icon = device->gif_data();
+        MidiDeviceLogoGif logo = device->logo_gif();
+        gif = logo.gif;
+        icon = logo.data;
       }
       offset = 4;
       break;
@@ -992,8 +994,9 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
     uint8_t offset = 3;
     int8_t icon_y_offset = 0;
     if (i < 2) {
-      icon = devs[i]->gif_data();
-      gif = devs[i]->gif();
+      MidiDeviceLogoGif logo = devs[i]->logo_gif();
+      gif = logo.gif;
+      icon = logo.data;
       offset = i + 3;
     } else {
       switch (i) {
@@ -1105,11 +1108,9 @@ void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
     oled_display.setTextColor(BLACK);
   }
 
-  if (mcl.isSeqPage() || mcl.currentPage() == LFO_PAGE) {
-    oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
-    oled_display.print(s2);
-    oled_display.setTextColor(WHITE);
-  }
+  oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
+  oled_display.print(s2);
+  oled_display.setTextColor(WHITE);
 }
 
 void MCLGUI::draw_panel_labels(const char *info1, const char *info2) {
