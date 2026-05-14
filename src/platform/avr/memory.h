@@ -162,6 +162,14 @@ FORCED_INLINE() extern inline void put_byte_bank1_isr(volatile uint8_t *dst, uin
   BANK_PORT &= ~BANK_MASK; // Switch back to BANK0
 }
 
+// Fast ISR-optimized bank1 byte read (assumes currently in BANK0)
+FORCED_INLINE() extern inline uint8_t get_byte_bank1_isr(volatile uint8_t *src) {
+  BANK_PORT |= BANK_MASK;  // Switch to BANK1
+  uint8_t c = *src;
+  BANK_PORT &= ~BANK_MASK; // Switch back to BANK0
+  return c;
+}
+
 
 FORCED_INLINE() extern inline void get_bank2(volatile void *dst, volatile const void *src, uint16_t len) {
   ram_access_fringe();

@@ -71,15 +71,17 @@ public:
         }
 #endif
         // Use optimized ISR bank switching for byte buffers
+        uint16_t write = wr;
         if constexpr (sizeof(T) == 1) {
-            put_byte_bank1_isr((volatile uint8_t*)&buf[wr], c);
+            put_byte_bank1_isr((volatile uint8_t*)&buf[write], c);
         } else {
-            put_bank1(&buf[wr], c);
+            put_bank1(&buf[write], c);
         }
-        wr++;
-        if (wr == len) {
-            wr = 0;
+        write++;
+        if (write == len) {
+            write = 0;
         }
+        wr = write;
     }
 
     ALWAYS_INLINE() void get_h_isr(T* dst, uint16_t n) volatile {
@@ -119,13 +121,18 @@ public:
           return T();
         }
 #endif
-        //ret = get_bank1(&buf[rd]);
-        memcpy_bank1(&ret, (void*)(buf + rd), sizeof(T));
-
-        rd++;
-        if (rd == len) {
-            rd = 0;
+        uint16_t read = rd;
+        if constexpr (sizeof(T) == 1) {
+            ret = get_byte_bank1_isr((volatile uint8_t*)&buf[read]);
+        } else {
+            memcpy_bank1(&ret, (void*)(buf + read), sizeof(T));
         }
+
+        read++;
+        if (read == len) {
+            read = 0;
+        }
+        rd = read;
         return ret;
     }
 
@@ -138,7 +145,21 @@ public:
 
     ALWAYS_INLINE() void putp(const T* c) volatile {
         LOCK();
-        put_h_isr(c, 1);
+#ifdef CHECKING
+        if (isFull_isr() && check) {
+            overflow++;
+            setLed();
+            CLEAR_LOCK();
+            return;
+        }
+#endif
+        uint16_t write = wr;
+        memcpy_bank1((void*)(buf + write), c, sizeof(T));
+        write++;
+        if (write == len) {
+            write = 0;
+        }
+        wr = write;
         CLEAR_LOCK();
     }
 
@@ -205,4 +226,4 @@ private:
     T buffer[SIZE];
 public:
     CRingBuffer() : RingBuffer<T>(buffer, SIZE) {}
-};;
+};

@@ -67,6 +67,10 @@ FORCED_INLINE() extern inline void put_byte_bank1_isr(volatile uint8_t *dst, uin
   *dst = byte;
 }
 
+FORCED_INLINE() extern inline uint8_t get_byte_bank1_isr(volatile uint8_t *src) {
+  return *src;
+}
+
 FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
   uint8_t c = *dst;
   return c;
