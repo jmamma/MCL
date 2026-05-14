@@ -174,13 +174,12 @@ void GridTask::transition_handler() {
       if (gdt == nullptr)
         continue;
 
-      uint8_t track_idx = n & 0xF;
       uint8_t device_idx = gdt->device_idx;
       if (device_idx >= NUM_DEVS) {
         continue;
       }
 
-      if (link_load(n, track_idx, slots_changed, track_select_array, gdt)) {
+      if (link_load(n, slots_changed, track_select_array, gdt)) {
         send_device[device_idx] = true;
       }
 
@@ -300,7 +299,7 @@ void GridTask::transition_handler() {
   }
 }
 
-bool GridTask::link_load(uint8_t n, uint8_t track_idx, uint8_t *slots_changed,
+bool GridTask::link_load(uint8_t n, uint8_t *slots_changed,
                          uint8_t *track_select_array, GridDeviceTrack *gdt) {
   EmptyTrack empty_track;
   auto *pmem_track = empty_track.load_from_mem(

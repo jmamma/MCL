@@ -1210,6 +1210,53 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
 #endif
 }
 
+#if defined(__AVR__)
+static void handle_extstep_cc_lock_learn(uint8_t track, uint8_t param,
+                                         uint8_t value) {
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
+    return;
+  }
+
+  // AVR ext-step page legacy lock-learn path operates directly on the
+  // underlying ExtSeqTrack (uses members not exposed by SeqExtStepTrackApi).
+  ExtSeqTrack &ext_track = mcl_seq.ext_tracks[track];
+  if (SeqPage::pianoroll_mode > 0) {
+    uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
+    if (ext_track.locks_params[lock_idx] - 1 == PARAM_LEARN) {
+      ext_track.locks_params[lock_idx] = param + 1;
+      SeqPage::param_select = param;
+    }
+    if (ext_track.locks_params[lock_idx] - 1 == param) {
+      seq_extstep_page.lock_cur_y = value;
+    }
+  }
+  if (last_ext_track != track) {
+    return;
+  }
+
+  uint8_t timing_mid = ext_track.get_timing_mid();
+  uint16_t page_width = 16 * (uint16_t)timing_mid;
+  for (uint8_t i = 0; i < 16; i++) {
+    if (!note_interface.is_note_on(i)) continue;
+    uint8_t step = ((seq_extstep_page.cur_x / page_width) * 16) + i;
+    if (step >= ext_track.length) continue;
+    ext_track.clear_track_locks(step, param, 255);
+    ext_track.set_track_locks(step, timing_mid, param, value, SeqPage::slide);
+    if (SeqPage::pianoroll_mode == 0) {
+      char str[] = "CC:";
+      char str2[] = "--  ";
+      mcl_gui.put_value_at(value, str2);
+      oled_display.textbox(str, str2);
+    } else {
+      uint8_t lock_idx = ext_track.find_lock_idx(param);
+      if (lock_idx != 255) {
+        SeqPage::pianoroll_mode = lock_idx + 1;
+      }
+    }
+  }
+}
+#endif
+
 void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 #ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
@@ -1275,45 +1322,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   }
 
 #if defined(__AVR__)
-  if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
-    // AVR ext-step page legacy lock-learn path operates directly on the
-    // underlying ExtSeqTrack (uses members not exposed by
-    // SeqExtStepTrackApi).
-    ExtSeqTrack &ext_track = mcl_seq.ext_tracks[n];
-    if (SeqPage::pianoroll_mode > 0) {
-      uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
-      if (ext_track.locks_params[lock_idx] - 1 == PARAM_LEARN) {
-        ext_track.locks_params[lock_idx] = param + 1;
-        SeqPage::param_select = param;
-      }
-      if (ext_track.locks_params[lock_idx] - 1 == param) {
-        seq_extstep_page.lock_cur_y = value;
-      }
-    }
-    if (last_ext_track == n) {
-      uint8_t timing_mid = ext_track.get_timing_mid();
-      uint16_t page_width = 16 * (uint16_t)timing_mid;
-      for (uint8_t i = 0; i < 16; i++) {
-        if (!note_interface.is_note_on(i)) continue;
-        uint8_t step = ((seq_extstep_page.cur_x / page_width) * 16) + i;
-        if (step >= ext_track.length) continue;
-        ext_track.clear_track_locks(step, param, 255);
-        ext_track.set_track_locks(step, timing_mid, param, value,
-                                  SeqPage::slide);
-        if (SeqPage::pianoroll_mode == 0) {
-          char str[] = "CC:";
-          char str2[] = "--  ";
-          mcl_gui.put_value_at(value, str2);
-          oled_display.textbox(str, str2);
-        } else {
-          uint8_t lock_idx = ext_track.find_lock_idx(param);
-          if (lock_idx != 255) {
-            SeqPage::pianoroll_mode = lock_idx + 1;
-          }
-        }
-      }
-    }
-  }
+  handle_extstep_cc_lock_learn(n, param, value);
 #endif
 
   if (SeqPage::recording && (MidiClock.state == 2) &&

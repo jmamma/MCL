@@ -77,11 +77,17 @@ public:
   void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
 
   void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track);
+#if !defined(__AVR__)
   // scale machine track vol by percentage
   void scale_vol(float scale);
+#endif
 
   // scale vol locks by percentage
+#if defined(__AVR__)
+  void scale_seq_vol(uint8_t scale);
+#else
   void scale_seq_vol(float scale);
+#endif
 
   // normalize track level
   void normalize();

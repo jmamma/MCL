@@ -18,9 +18,39 @@ void OscPage::setup() {
 }
 
 float OscPage::get_freq() {
+#if defined(__AVR__)
+  static const uint16_t semitone_q15[12] PROGMEM = {
+      32768, 34716, 36781, 38968, 41285, 43740,
+      46341, 49097, 52016, 55109, 58386, 61858,
+  };
+
+  int8_t coarse = (int8_t)enc1.cur - 64;
+  int8_t octave = coarse / 12;
+  int8_t semitone = coarse % 12;
+  if (semitone < 0) {
+    semitone += 12;
+    octave--;
+  }
+
+  uint32_t freq_q15 = 440UL * pgm_read_word(semitone_q15 + semitone);
+  if (octave > 0) {
+    freq_q15 <<= octave;
+  } else if (octave < 0) {
+    freq_q15 >>= -octave;
+  }
+
+  int16_t fine = 100 - enc2.cur;
+  // Q15 approximation of 2^(fine_cents / 1200). The quadratic term keeps
+  // the AVR path within about 0.3 cents over the encoder range.
+  int32_t fine_q15 = 32768 + fine * 19;
+  fine_q15 += ((int32_t)fine * fine * 11 + 1024) >> 11;
+  freq_q15 = (freq_q15 * (uint32_t)fine_q15) >> 15;
+  return (float)freq_q15 * (1.0f / 32768.0f);
+#else
   float cents = (float)(enc1.cur - 64) * 100.0f + (float)(100 - enc2.cur);
   float scale = (float)powf(2.0f, cents / 1200.0f);
   return 440.0f * scale;
+#endif
 }
 void OscPage::init() {
   WavDesignerPage::init();

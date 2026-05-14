@@ -9,6 +9,29 @@
 
 #define MDX_KIT_VERSION 64
 
+#if defined(__AVR__)
+static uint8_t scale_7bit(uint8_t value, uint8_t scale) {
+  return ((uint16_t)value * scale) / 127;
+}
+
+void MDMachine::scale_vol(uint8_t scale) {
+  params[MODEL_VOL] = scale_7bit(params[MODEL_VOL], scale);
+  if ((lfo.destinationParam == MODEL_VOL) && (lfo.destinationTrack == track)) {
+    params[MODEL_LFOD] = scale_7bit(params[MODEL_LFOD], scale);
+    lfo.depth = params[MODEL_LFOD];
+  }
+}
+
+uint8_t MDMachine::normalize_level() {
+  uint8_t scale = level;
+  if (scale == 127) {
+    return 127;
+  }
+  level = 127;
+  scale_vol(scale);
+  return scale;
+}
+#else
 void MDMachine::scale_vol(float scale) {
   params[MODEL_VOL] = (uint8_t)((float)params[MODEL_VOL] * scale);
   if (params[MODEL_VOL] > 127) {
@@ -35,6 +58,7 @@ float MDMachine::normalize_level() {
   scale_vol(scale);
   return scale;
 }
+#endif
 
 bool MDGlobal::fromSysex(MidiClass *midi) {
   uint16_t len = midi->midiSysex->get_recordLen() - 5;

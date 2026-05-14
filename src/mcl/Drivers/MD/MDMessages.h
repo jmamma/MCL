@@ -191,8 +191,13 @@ public:
   uint8_t trigGroup;
   uint8_t muteGroup;
 
+#if defined(__AVR__)
+  void scale_vol(uint8_t scale);
+  uint8_t normalize_level();
+#else
   void scale_vol(float scale);
   float normalize_level();
+#endif
   void init() {
   uint8_t init_params[MD_PARAMS_PER_TRACK] = { 0, 0, 0, 0,
              0, 0, 0, 0,

@@ -192,6 +192,29 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
       storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
 }
 
+#if defined(__AVR__)
+static uint8_t scale_lock_value(uint8_t value, uint8_t scale) {
+  return (((uint16_t)(value - 1) * scale) / 127) + 1;
+}
+
+void MDTrack::scale_seq_vol(uint8_t scale) {
+  for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
+    auto idx = seq_data.get_lockidx(n);
+    for (uint8_t c = 0; c < NUM_LOCKS; c++) {
+      if (seq_data.steps[n].is_lock(c)) {
+        if ((seq_data.locks_params[c] == MODEL_LFOD + 1) ||
+            (seq_data.locks_params[c] == MODEL_VOL + 1)) {
+          seq_data.locks[idx] = scale_lock_value(seq_data.locks[idx], scale);
+          if (seq_data.locks[idx] > 128) {
+            seq_data.locks[idx] = 128;
+          }
+        }
+        ++idx;
+      }
+    }
+  }
+}
+#else
 void MDTrack::scale_seq_vol(float scale) {
   for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
     auto idx = seq_data.get_lockidx(n);
@@ -216,9 +239,10 @@ void MDTrack::scale_vol(float scale) {
   machine.scale_vol(scale);
   scale_seq_vol(scale);
 }
+#endif
 
 void MDTrack::normalize() {
-  float scale = machine.normalize_level();
+  auto scale = machine.normalize_level();
   scale_seq_vol(scale);
 }
 

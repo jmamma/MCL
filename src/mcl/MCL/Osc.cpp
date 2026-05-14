@@ -39,12 +39,12 @@ float SineOsc::get_sample(uint32_t sample_number, float freq) {
 
 float PulseOsc::get_sample(uint32_t sample_number, float freq) {
 
-  float n_cycle = floorf(sample_rate / freq);
+  float n_cycle = (uint16_t)(sample_rate / freq);
 
   sample_number = sample_number + (n_cycle);
-  float cycle_pos = (float)floorf((float)sample_number / n_cycle);
+  float cycle_pos = (uint32_t)((float)sample_number / n_cycle);
   float n = (float)sample_number - cycle_pos * n_cycle;
-  float n_edge = floorf(n_cycle * width);
+  float n_edge = (uint16_t)(n_cycle * width);
 
   float out = 0.0;
 
@@ -70,12 +70,12 @@ void PulseOsc::set_skew(float skew_) { skew = skew_; }
 
 float SawOsc::get_sample(uint32_t sample_number, float freq) {
 
-  float n_cycle = floorf(sample_rate / freq);
+  float n_cycle = (uint16_t)(sample_rate / freq);
   sample_number = sample_number + (n_cycle * 0.5f);
-  float cycle_pos = (float)floorf((float)sample_number / n_cycle);
+  float cycle_pos = (uint32_t)((float)sample_number / n_cycle);
   float n = (float)sample_number - cycle_pos * n_cycle;
 
-  float n_edge = floorf(n_cycle * (width + 0.5f));
+  float n_edge = (uint16_t)(n_cycle * (width + 0.5f));
   float a = ((vmin - vmax) / n_edge);
   float b = vmax;
   float y = a * n + b;
@@ -92,12 +92,12 @@ float SawOsc::get_sample(uint32_t sample_number, float freq) {
 }
 
 float TriOsc::get_sample(uint32_t sample_number, float freq) {
-  float n_cycle = floorf(sample_rate / freq);
+  float n_cycle = (uint16_t)(sample_rate / freq);
   sample_number = sample_number + (n_cycle * 0.75f);
 
-  float cycle_pos = (float)floorf((float)sample_number / n_cycle);
+  float cycle_pos = (uint32_t)((float)sample_number / n_cycle);
   float n = (float)sample_number - cycle_pos * n_cycle;
-  float n_edge = floorf(n_cycle * width);
+  float n_edge = (uint16_t)(n_cycle * width);
 
   if (n < n_edge) {
     float b = vmin;
@@ -115,14 +115,14 @@ float TriOsc::get_sample(uint32_t sample_number, float freq) {
 float UsrOsc::get_sample(uint32_t sample_number, float freq,
                          const uint8_t *usr_values) {
 
-  float n_cycle = floorf(sample_rate / freq);
+  float n_cycle = (uint16_t)(sample_rate / freq);
 
-  float cycle_pos = (float)floorf((float)sample_number / n_cycle);
+  float cycle_pos = (uint32_t)((float)sample_number / n_cycle);
   float n = (float)sample_number - cycle_pos * n_cycle;
 
   float partition_size_n = n_cycle / (float)16;
 
-  int start = floorf(n / partition_size_n);
+  int start = (int)(n / partition_size_n);
   float n_start = start * partition_size_n;
   int end;
   float n_end;
