@@ -243,7 +243,7 @@ public:
     return (uint8_t)(tracks_.stepseq->microtiming[step] + 127);
   }
   int8_t microtiming_from_encoder(uint8_t encoder_value) const {
-    return (int8_t)((int16_t)encoder_value - 127);
+    return (int8_t)(encoder_value - 127);
   }
   int8_t microtiming_for_step(uint8_t step) const {
     return kind_ == KIND_MD ? 0 : tracks_.stepseq->microtiming[step];
@@ -304,7 +304,7 @@ public:
       tracks_.md->timing[step] = encoder_value;
     } else {
       tracks_.stepseq->microtiming[step] =
-          (int8_t)((int16_t)encoder_value - 127);
+          (int8_t)(encoder_value - 127);
     }
   }
   void set_pattern_step_from_edit(uint8_t step, uint8_t condition_knob,

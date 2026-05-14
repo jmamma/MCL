@@ -98,8 +98,8 @@ bool DeviceMixerSupport::ext_level_param(uint8_t track, uint8_t param_idx,
 }
 
 bool DeviceMixerSupport::set_ext_level(uint8_t track, uint8_t param_idx,
-                                       int16_t value, uint8_t *levels,
-                                       uint8_t *level,
+                                       MidiDeviceMixerValue value,
+                                       uint8_t *levels, uint8_t *level,
                                        bool require_level_cc) {
   if (levels == nullptr || level == nullptr || track >= NUM_EXT_TRACKS ||
       param_idx != 0 ||
@@ -135,7 +135,8 @@ bool DeviceMixerSupport::parse_ext_cc(uint8_t channel, uint8_t cc,
 }
 
 void DeviceMixerSupport::update_ext_from_cc(uint8_t track, uint8_t param,
-                                            int16_t value, uint8_t *levels) {
+                                            MidiDeviceMixerValue value,
+                                            uint8_t *levels) {
   if (track >= NUM_EXT_TRACKS) {
     return;
   }
@@ -185,7 +186,8 @@ SeqTrack *ExtMixerCapability::seq_track(const DeviceContext &ctx,
 }
 
 bool ExtMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
-                                   uint8_t param_idx, int16_t value,
+                                   uint8_t param_idx,
+                                   MidiDeviceMixerValue value,
                                    bool send) {
   (void)ctx;
   uint8_t level = 0;
@@ -214,7 +216,7 @@ bool ExtMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
 
 void ExtMixerCapability::update_from_cc(const DeviceContext &ctx,
                                         uint8_t track, uint8_t param,
-                                        int16_t value) {
+                                        MidiDeviceMixerValue value) {
   (void)ctx;
   DeviceMixerSupport::update_ext_from_cc(track, param, value, levels_);
 }

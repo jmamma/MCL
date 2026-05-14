@@ -136,8 +136,8 @@ uint8_t MixerTarget::param_value_7bit(const MidiDeviceMixerParam &param) const {
 #endif
 }
 
-int16_t MixerTarget::clamp_param_value(const MidiDeviceMixerParam &param,
-                                       int16_t value) const {
+MidiDeviceMixerValue MixerTarget::clamp_param_value(
+    const MidiDeviceMixerParam &param, int16_t value) const {
 #ifdef PLATFORM_TBD
   if (value < param.min_value) return param.min_value;
   if (value > param.max_value) return param.max_value;
@@ -150,8 +150,8 @@ int16_t MixerTarget::clamp_param_value(const MidiDeviceMixerParam &param,
 #endif
 }
 
-bool MixerTarget::set_param(uint8_t track, uint8_t param_idx, int16_t value,
-                            bool send) const {
+bool MixerTarget::set_param(uint8_t track, uint8_t param_idx,
+                            MidiDeviceMixerValue value, bool send) const {
   return mixer_ != nullptr &&
          mixer_->set_param(ctx_, track, param_idx, value, send);
 }

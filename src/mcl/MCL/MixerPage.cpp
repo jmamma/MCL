@@ -187,7 +187,7 @@ void MixerPage::oled_draw_mutes() {
       if (mute_state) {
         oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
       } else {
-        oled_display.drawLine(fader_x, 5, 5 + (i * 8), 5, WHITE);
+        oled_display.drawFastHLine(fader_x, 5, 6, WHITE);
       }
     }
     fader_x += 8;
@@ -316,8 +316,8 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
   sync_selected_mixer_device();
   set_display_mode(param);
 
-  int dir = enc->getValue() - enc->old;
-  int16_t newval;
+  int8_t dir = (int8_t)(enc->getValue() - enc->old);
+  MidiDeviceMixerValue newval;
 
   uint8_t len = mixer_track_count();
   for (uint8_t i = 0; i < len; i++) {

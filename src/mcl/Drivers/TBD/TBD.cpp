@@ -71,7 +71,7 @@ public:
                      uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
-                         uint8_t param_idx, int16_t value,
+                         uint8_t param_idx, MidiDeviceMixerValue value,
                          bool send = true) override;
   virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr) override;
@@ -80,7 +80,7 @@ public:
   virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
   virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, int16_t value) override;
+                              uint8_t param, MidiDeviceMixerValue value) override;
 
 private:
   TbdDevice &tbd() const { return (TbdDevice &)device_; }
@@ -1753,7 +1753,8 @@ bool TbdMixerCapability::param(const DeviceContext &ctx, uint8_t track,
 }
 
 bool TbdMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
-                                   uint8_t param_idx, int16_t value,
+                                   uint8_t param_idx,
+                                   MidiDeviceMixerValue value,
                                    bool send) {
   TbdP4SoundData *sound = p4_sound_for_mixer(ctx.device_idx(), track);
   if (sound == nullptr || param_idx >= TBD_P4_MIXER_PARAM_COUNT) {
@@ -1808,7 +1809,8 @@ bool TbdMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
 }
 
 void TbdMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
-                                        uint8_t param, int16_t value) {
+                                        uint8_t param,
+                                        MidiDeviceMixerValue value) {
   TbdP4SoundData *sound = p4_sound_for_mixer(ctx.device_idx(), track);
   if (sound == nullptr || param >= TBD_P4_MIXER_PARAM_COUNT) {
     return;

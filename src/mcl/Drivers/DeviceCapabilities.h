@@ -13,6 +13,12 @@ class SeqTrack;
 struct MidiDeviceMixerParam;
 struct MidiDeviceParamInfo;
 
+#if defined(PLATFORM_TBD)
+using MidiDeviceMixerValue = int16_t;
+#else
+using MidiDeviceMixerValue = uint8_t;
+#endif
+
 class DeviceCapability {
 protected:
   explicit DeviceCapability(MidiDevice &device) : device_(device) {}
@@ -39,7 +45,7 @@ public:
   virtual bool param(const DeviceContext &ctx, uint8_t track, uint8_t param_idx,
                      MidiDeviceMixerParam *out) = 0;
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
-                         uint8_t param_idx, int16_t value,
+                         uint8_t param_idx, MidiDeviceMixerValue value,
                          bool send = true) = 0;
   virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr);
@@ -52,7 +58,7 @@ public:
                         uint8_t *track, uint8_t *param) const = 0;
   bool is_mute_param(uint8_t param) const;
   virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, int16_t value) = 0;
+                              uint8_t param, MidiDeviceMixerValue value) = 0;
 
 private:
   uint8_t default_param_;
@@ -73,14 +79,14 @@ public:
                      uint8_t param_idx,
                      MidiDeviceMixerParam *out) override;
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
-                         uint8_t param_idx, int16_t value,
+                         uint8_t param_idx, MidiDeviceMixerValue value,
                          bool send = true) override;
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
   virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
   virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, int16_t value) override;
+                              uint8_t param, MidiDeviceMixerValue value) override;
 
 protected:
   virtual void send_level(uint8_t track, uint8_t level, bool send) = 0;

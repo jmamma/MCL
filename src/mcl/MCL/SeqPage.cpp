@@ -938,21 +938,23 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     shed_mask(locks_on_step_mask_, length, offset);
 
     SeqStepTrackRef active_track = seq_page_active_step_track();
-    if ((uint16_t)led_mask != trigled_mask) {
-      trigled_mask = led_mask;
+    uint16_t led_mask16 = (uint16_t)led_mask;
+    uint16_t locks_on_step_mask16 = (uint16_t)locks_on_step_mask_;
+    if (led_mask16 != trigled_mask) {
+      trigled_mask = led_mask16;
       active_track.set_step_edit_trig_leds(trigled_mask, TRIGLED_STEPEDIT);
       if (mask_type == MASK_MUTE) {
         active_track.set_step_edit_trig_leds(mask, TRIGLED_STEPEDIT, 1);
         GUI_hardware.led.set_trigleds(mask, TRIGLED_STEPEDIT, 1);
       }
     }
-    if ((uint16_t)locks_on_step_mask_ != locks_on_step_mask) {
-      locks_on_step_mask = locks_on_step_mask_;
+    if (locks_on_step_mask16 != locks_on_step_mask) {
+      locks_on_step_mask = locks_on_step_mask16;
       active_track.set_step_edit_trig_leds(locks_on_step_mask,
                                            TRIGLED_STEPEDIT, 1);
     }
 
-    GUI_hardware.led.set_trigleds(led_mask, TRIGLED_STEPEDIT);
+    GUI_hardware.led.set_trigleds(led_mask16, TRIGLED_STEPEDIT);
     GUI_hardware.led.set_trigleds(locks_on_step_mask, TRIGLED_STEPEDIT, 1);
     if (MidiClock.state == 2) {
       GUI_hardware.led.toggle_trigled(step_count - offset);

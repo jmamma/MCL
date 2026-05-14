@@ -233,7 +233,7 @@ bool DevicePerfTarget::key_for_param(uint8_t param, uint8_t *key) const {
       params.target >= NUM_MD_TRACKS || param >= param_count()) {
     return false;
   }
-  int16_t value = (int16_t)param - (int16_t)MD.currentSynthPage * 8 + 0x10;
+  int8_t value = (int8_t)param - (int8_t)MD.currentSynthPage * 8 + 0x10;
   if (value < 0x10 || value > 0x17) {
     return false;
   }

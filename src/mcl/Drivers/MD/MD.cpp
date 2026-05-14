@@ -156,7 +156,7 @@ public:
                      uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
-                         uint8_t param_idx, int16_t value,
+                         uint8_t param_idx, MidiDeviceMixerValue value,
                          bool send = true) override;
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
@@ -168,7 +168,7 @@ public:
   virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
   virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, int16_t value) override;
+                              uint8_t param, MidiDeviceMixerValue value) override;
 
 private:
   MDClass &md() const { return (MDClass &)device_; }
@@ -397,7 +397,7 @@ bool MDMixerCapability::param(const DeviceContext &ctx, uint8_t track,
   }
 
   MDClass &device = md();
-  int16_t value = 0;
+  MidiDeviceMixerValue value = 0;
   if (param_idx == MODEL_LEVEL) {
     value = device.kit.levels[track];
   } else {
@@ -415,7 +415,8 @@ bool MDMixerCapability::param(const DeviceContext &ctx, uint8_t track,
 }
 
 bool MDMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
-                                  uint8_t param_idx, int16_t value,
+                                  uint8_t param_idx,
+                                  MidiDeviceMixerValue value,
                                   bool send) {
   (void)ctx;
   (void)send;
@@ -490,7 +491,8 @@ bool MDMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
 }
 
 void MDMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
-                                       uint8_t param, int16_t value) {
+                                       uint8_t param,
+                                       MidiDeviceMixerValue value) {
   (void)ctx;
   if (track >= NUM_MD_TRACKS) {
     return;

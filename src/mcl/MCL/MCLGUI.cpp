@@ -673,10 +673,10 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   mcl_print_P(mclstr_utiming_label);
   oled_display.print(K);
   constexpr uint8_t base_h = 11;
-  oled_display.drawLine(x, y_pos + base_h, x + w, y_pos + base_h, WHITE);
+  oled_display.drawFastHLine(x, y_pos + base_h, w + 1, WHITE);
   for (uint8_t n = 0; n <= degrees; n++) {
-    oled_display.drawLine(x, y_pos + base_h, x,
-                          y_pos + base_h - pgm_height_at(h, a), WHITE);
+    uint8_t tick_h = pgm_height_at(h, a);
+    oled_display.drawFastVLine(x, y_pos + base_h - tick_h, tick_h + 1, WHITE);
     a++;
 
     if (n == timing) {
@@ -1133,8 +1133,7 @@ void MCLGUI::draw_panel_status(bool recording, bool playing) {
     oled_display.drawPixel(pane_cir_x1, pane_tri_y + 4, BLACK);
     oled_display.drawPixel(pane_cir_x2, pane_tri_y + 4, BLACK);
   } else if (playing) {
-    oled_display.drawLine(pane_tri_x, pane_tri_y, pane_tri_x, pane_tri_y + 4,
-                          WHITE);
+    oled_display.drawFastVLine(pane_tri_x, pane_tri_y, 5, WHITE);
     oled_display.fillTriangle_3px(pane_tri_x + 1, pane_tri_y, WHITE);
   } else {
     oled_display.fillRect(pane_tri_x, pane_tri_y, 4, 5, WHITE);

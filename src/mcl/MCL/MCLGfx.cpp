@@ -58,14 +58,13 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
 #ifdef MCL_SPLASH_128_64
     constexpr uint8_t wipe_top = (OLED_HEIGHT - 32) / 2;
     constexpr uint8_t wipe_bottom = wipe_top + 31;
-    oled_display.drawLine(35, wipe_top + a, BITMAP_MCL_LOGO_W + 35 + 33,
-                          wipe_top + a, BLACK);
-    oled_display.drawLine(35, wipe_bottom - a, BITMAP_MCL_LOGO_W + 35 + 33,
-                          wipe_bottom - a, BLACK);
+    oled_display.drawFastHLine(35, wipe_top + a, BITMAP_MCL_LOGO_W + 34,
+                               BLACK);
+    oled_display.drawFastHLine(35, wipe_bottom - a, BITMAP_MCL_LOGO_W + 34,
+                               BLACK);
 #else
-    oled_display.drawLine(35, a, BITMAP_MCL_LOGO_W + 35 + 33, a, BLACK);
-    oled_display.drawLine(35, 32 - a, BITMAP_MCL_LOGO_W + 35 + 33, 32 - a,
-                          BLACK);
+    oled_display.drawFastHLine(35, a, BITMAP_MCL_LOGO_W + 34, BLACK);
+    oled_display.drawFastHLine(35, 32 - a, BITMAP_MCL_LOGO_W + 34, BLACK);
 #endif
     oled_display.display();
 #ifndef __AVR__

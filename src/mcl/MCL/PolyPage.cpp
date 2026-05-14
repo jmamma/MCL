@@ -32,7 +32,7 @@ void PolyPage::draw_mask() {
 
     }
     else {
-      oled_display.drawLine(x, 5, 5 + x, 5, WHITE);
+      oled_display.drawFastHLine(x, 5, 6, WHITE);
     }
   }
 }

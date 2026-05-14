@@ -7,6 +7,7 @@
 #include "GUI.h"
 #include "MCL.h"
 #include "../Drivers/DeviceContext.h"
+#include "../Drivers/DeviceCapabilities.h"
 #include "../Midi/midi-common.h"
 
 class MidiDevice;
@@ -40,9 +41,9 @@ public:
   bool param(uint8_t track, uint8_t param_idx,
              MidiDeviceMixerParam *out) const;
   uint8_t param_value_7bit(const MidiDeviceMixerParam &param) const;
-  int16_t clamp_param_value(const MidiDeviceMixerParam &param,
-                            int16_t value) const;
-  bool set_param(uint8_t track, uint8_t param_idx, int16_t value,
+  MidiDeviceMixerValue clamp_param_value(const MidiDeviceMixerParam &param,
+                                         int16_t value) const;
+  bool set_param(uint8_t track, uint8_t param_idx, MidiDeviceMixerValue value,
                  bool send = true) const;
   void mute_track(uint8_t track, bool mute) const;
   void set_record_mutes(uint8_t track, bool state, bool clear = false) const;

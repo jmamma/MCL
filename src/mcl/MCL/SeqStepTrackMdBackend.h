@@ -196,7 +196,7 @@ public:
   }
 
   int8_t microtiming_from_encoder(uint8_t encoder_value) const {
-    return (int8_t)((int16_t)encoder_value - 127);
+    return (int8_t)(encoder_value - 127);
   }
 
   int8_t microtiming_for_step(uint8_t step) const {
@@ -434,7 +434,7 @@ private:
         param >= MD_PARAMS_PER_TRACK) {
       return false;
     }
-    int16_t value = (int16_t)param - (int16_t)MD.currentSynthPage * 8 + 0x10;
+    int8_t value = (int8_t)param - (int8_t)MD.currentSynthPage * 8 + 0x10;
     if (value < 0x10 || value > 0x17) {
       return false;
     }

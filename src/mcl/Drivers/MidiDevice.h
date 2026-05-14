@@ -37,8 +37,9 @@ struct MidiDeviceMixerParam {
   uint8_t value = 0;
 #endif
 
-  void set_value(int16_t value_, int16_t min_value_ = 0,
-                 int16_t max_value_ = 127) {
+  void set_value(MidiDeviceMixerValue value_,
+                 MidiDeviceMixerValue min_value_ = 0,
+                 MidiDeviceMixerValue max_value_ = 127) {
 #ifdef PLATFORM_TBD
     min_value = min_value_;
     max_value = max_value_;
@@ -69,14 +70,15 @@ public:
                               const uint8_t *levels,
                               MidiDeviceMixerParam *param,
                               bool require_level_cc = false);
-  static bool set_ext_level(uint8_t track, uint8_t param_idx, int16_t value,
+  static bool set_ext_level(uint8_t track, uint8_t param_idx,
+                            MidiDeviceMixerValue value,
                             uint8_t *levels, uint8_t *level,
                             bool require_level_cc = false);
   static bool parse_ext_cc(uint8_t channel, uint8_t cc, uint8_t level_cc,
                            uint8_t mute_cc, uint8_t *track,
                            uint8_t *param);
-  static void update_ext_from_cc(uint8_t track, uint8_t param, int16_t value,
-                                 uint8_t *levels);
+  static void update_ext_from_cc(uint8_t track, uint8_t param,
+                                 MidiDeviceMixerValue value, uint8_t *levels);
   static void set_ext_record_mute(uint8_t track, bool state,
                                   bool clear);
 };
