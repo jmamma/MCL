@@ -264,6 +264,33 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
   return ret;
 }
 
+bool Wav::write_mono_samples(void *data, uint32_t num_samples,
+                             uint32_t sample_offset, bool writeheader) {
+  uint8_t bytes_per_sample = header.fmt.bitRate / 8;
+  uint32_t position = sample_offset * bytes_per_sample;
+  uint32_t size = num_samples * bytes_per_sample;
+  bool ret = write_data(data, size, position + data_offset);
+
+  if (!ret) {
+    DEBUG_PRINTLN(F("write failed"));
+    return false;
+  }
+
+  uint32_t new_subchunk2Size = position + size;
+  if (new_subchunk2Size > header.data.chunk_size) {
+    header.data.chunk_size = new_subchunk2Size;
+    header.chunk_size = header.total_len() - sizeof(chunk_t);
+  }
+  if (writeheader) {
+    ret = write_header();
+  }
+  if (!ret) {
+    DEBUG_PRINTLN(F("write header failed"));
+    return false;
+  }
+  return ret;
+}
+
 #if defined(__AVR__)
 // Keep the generic stereo/24-bit reader out of SDS packet builders on AVR.
 #define WAV_AVR_NOINLINE __attribute__((noinline))

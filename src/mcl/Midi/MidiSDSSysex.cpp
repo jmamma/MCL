@@ -38,10 +38,9 @@ void MidiSDSSysexListenerClass::end() {
   if ((sysex->getByte(2) == ELEKTRON_ID) && (sysex->getByte(3) == MD_ID) &&
       (sysex->getByte(5) == MD_SDS_NAME)) {
     sds_slot = sysex->getByte(6);
-    sds_name[0] = sysex->getByte(7);
-    sds_name[1] = sysex->getByte(8);
-    sds_name[2] = sysex->getByte(9);
-    sds_name[3] = sysex->getByte(10);
+    for (uint8_t i = 0; i < sizeof(sds_name); ++i) {
+      sds_name[i] = sysex->getByte(7 + i);
+    }
     sds_name_rec = true;
     DEBUG_PRINTLN(F("sample name received"));
 
@@ -185,16 +184,17 @@ void MidiSDSSysexListenerClass::dump_header() {
 void MidiSDSSysexListenerClass::data_packet() {
   uint8_t checksum = 0;
   uint8_t packetNumber = sysex->getByte(3);
+  uint16_t record_len = sysex->get_recordLen();
   if (packetNumber != midi_sds.packetNumber) {
     DEBUG_PRINTLN(F("Packet received out of order"));
     midi_sds.sendNakMessage();
     return;
   }
-  for (uint16_t b = 0; b < sysex->get_recordLen() - 1; b++) {
+  for (uint16_t b = 0; b < record_len - 1; b++) {
     checksum ^= sysex->getByte(b);
   }
-  if ((sysex->get_recordLen() == 125) &&
-      (sysex->getByte(sysex->get_recordLen() - 1) == checksum)) {
+  if ((record_len == 125) &&
+      (sysex->getByte(record_len - 1) == checksum)) {
     // 120 byte data stream divided in to m words.
     // 7bits per data midi data byte.
     // For an 8bit sample (smallest bit rate), 2 midi data bytes are required.
@@ -214,7 +214,7 @@ void MidiSDSSysexListenerClass::data_packet() {
 
     uint8_t samples[120];
 
-    uint32_t num_of_samples = 0;
+    uint8_t num_of_samples = 0;
     uint8_t byte_count = 0;
 
     uint32_t decode_val = 0;
@@ -257,9 +257,8 @@ void MidiSDSSysexListenerClass::data_packet() {
       num_of_samples++;
     }
 
-    bool write_header = false;
-    if (midi_sds.wav_file.write_samples(
-            &samples, num_of_samples, midi_sds.samplesSoFar, 0, write_header)) {
+    if (midi_sds.wav_file.write_mono_samples(
+            samples, num_of_samples, midi_sds.samplesSoFar, false)) {
       midi_sds.samplesSoFar += num_of_samples;
       if (midi_sds.use_hand_shake) {
         midi_sds.sendAckMessage();
@@ -284,8 +283,8 @@ void MidiSDSSysexListenerClass::data_packet() {
   } else {
     DEBUG_PRINTLN(F("sds packet checksum error"));
     DEBUG_PRINTLN(midi_sds.packetNumber);
-    DEBUG_PRINTLN(sysex->get_recordLen());
-    DEBUG_PRINTLN(sysex->getByte(sysex->get_recordLen() - 1));
+    DEBUG_PRINTLN(record_len);
+    DEBUG_PRINTLN(sysex->getByte(record_len - 1));
     DEBUG_PRINT(F(" "));
     DEBUG_PRINT(checksum);
     midi_sds.sendNakMessage();

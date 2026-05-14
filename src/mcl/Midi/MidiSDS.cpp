@@ -37,7 +37,7 @@ inline bool packet_requires_data_ack(const uint8_t *buf, uint16_t len) {
   return len > 4 && buf[1] == 0x7E && buf[3] == 0x02;
 }
 
-inline void update_progress(bool show_progress, int &counter, uint32_t pos,
+inline void update_progress(bool show_progress, uint8_t &counter, uint32_t pos,
                             uint32_t total) {
   if (++counter <= kProgressUpdateInterval) {
     return;
@@ -49,6 +49,61 @@ inline void update_progress(bool show_progress, int &counter, uint32_t pos,
   uint32_t progress = pos >= total ? 80 : (pos * 80 / total);
   mcl_gui.draw_progress("Sending sample", progress, 80);
 }
+
+#if defined(__AVR__)
+// SDS sends one WAV channel to the MD; keep this packet-sized path local so AVR
+// does not pull in Wav::read_samples' generic all-channel reader.
+bool __attribute__((noinline))
+read_wav_packet_channel0(Wav &wav, uint8_t *data, uint8_t num_samples,
+                         uint32_t sample_index) {
+  uint8_t sample_size = wav.header.fmt.bitRate / 8;
+  if (wav.header.fmt.bitRate % 8 > 0) {
+    sample_size++;
+  }
+
+  uint8_t channels = wav.header.fmt.numChannels;
+  if (channels == 0) {
+    return false;
+  }
+
+  uint8_t frame_size = sample_size * channels;
+  uint32_t position = sample_index * frame_size;
+  uint16_t read_size = num_samples * sample_size;
+  uint16_t frame_read_size = read_size * channels;
+
+  if (position >= wav.header.data.chunk_size) {
+    return true;
+  }
+  uint32_t available = wav.header.data.chunk_size - position;
+  if (frame_read_size > available) {
+    read_size = available / channels;
+    frame_read_size = read_size * channels;
+  }
+
+  if (channels == 1) {
+    return wav.read_data(data, read_size, position + wav.data_offset);
+  }
+
+  char tmp_buf[80];
+  uint8_t full_run =
+      ((sizeof(tmp_buf) / channels) / sample_size) * sample_size * channels;
+  position += wav.data_offset;
+  while (read_size > 0) {
+    uint8_t current_run = min((uint16_t)full_run, frame_read_size);
+    if (!wav.read_data(tmp_buf, current_run, position)) {
+      return false;
+    }
+    position += current_run;
+    read_size -= current_run / channels;
+    frame_read_size -= current_run;
+    for (uint8_t p = 0; p < current_run; p += frame_size) {
+      memcpy(data, tmp_buf + p, sample_size);
+      data += sample_size;
+    }
+  }
+  return true;
+}
+#endif
 } // namespace
 
 // ============================================================================
@@ -84,7 +139,7 @@ struct WavReader : SDSFileReader {
   uint8_t bytes_per_word;
   uint8_t midi_bytes_per_word;
   uint32_t sample_offset;
-  uint32_t num_samples_per_packet;
+  uint8_t num_samples_per_packet;
   uint8_t sample_format;
 
   bool open(const char *filename) override {
@@ -164,7 +219,14 @@ struct WavReader : SDSFileReader {
       return 0;
 
     uint8_t samples[120];
-    if (!wav->read_samples(&samples, num_samples_per_packet, samples_sent, 0)) {
+    bool read_ok;
+#if defined(__AVR__)
+    read_ok = read_wav_packet_channel0(*wav, samples, num_samples_per_packet,
+                                       samples_sent);
+#else
+    read_ok = wav->read_samples(&samples, num_samples_per_packet, samples_sent, 0);
+#endif
+    if (!read_ok) {
       return -1;
     }
 
@@ -253,10 +315,7 @@ static inline void set_sample_name_if_needed(const char *samplename,
 // ============================================================================
 
 void MidiSDSClass::sendGeneralMessage(uint8_t type) {
-  uint8_t data[6] = {0xF0, 0x7E, 0x00, 0x00, 0x00, 0xF7};
-  data[2] = deviceID;
-  data[3] = type;
-  data[4] = packetNumber;
+  uint8_t data[6] = {0xF0, 0x7E, deviceID, type, packetNumber, 0xF7};
   MD.uart->sendRaw(data, 6);
 }
 
@@ -281,16 +340,19 @@ void MidiSDSClass::sendDumpRequest(uint16_t slot) {
 bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
   if (len > 120)
     return false;
-  uint8_t data[127] = {0xF0, 0x7E, deviceID, 0x02, packetNumber};
-  uint8_t checksum = 0;
+  uint8_t data[127];
+  data[0] = 0xF0;
+  data[1] = 0x7E;
+  data[2] = deviceID;
+  data[3] = 0x02;
+  data[4] = packetNumber;
+  uint8_t checksum = 0x7E ^ deviceID ^ 0x02 ^ packetNumber;
   uint8_t n = 5;
-  for (uint8_t i = 1; i < 5; i++)
-    checksum ^= data[i];
   for (uint8_t i = 0; i < len; i++) {
     data[n++] = buf[i];
     checksum ^= buf[i];
   }
-  for (uint8_t i = len; i < 120; i++)
+  while (n < 125)
     data[n++] = 0x00;
   data[n++] = checksum & 0x7F;
   data[n] = 0xF7;
@@ -391,7 +453,7 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
   bool ret = true;
   uint8_t reply;
   uint32_t fsize;
-  int show_progress_counter = 0;
+  uint8_t show_progress_counter = 0;
   uint16_t latency_ms;
 
   if (state != SDS_READY || !reader.open(filename)) {

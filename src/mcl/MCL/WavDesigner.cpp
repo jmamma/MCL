@@ -183,7 +183,7 @@ bool WavDesigner::render() {
     if ((samples_so_far > 255) || (n == n_cycle - 1)) {
       DEBUG_PRINTLN(F("let's write"));
       DEBUG_PRINTLN(samples_so_far);
-      if (!wav_file.write_samples(buffer, samples_so_far, pos, 0, false)) {
+      if (!wav_file.write_mono_samples(buffer, samples_so_far, pos, false)) {
         return false;
       }
 
