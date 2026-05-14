@@ -1,7 +1,7 @@
 #pragma once
 
 #include "platform.h"
-#include "MCLFeatureConfig.h"
+#include "../MCL/MCLFeatureConfig.h"
 #include "DeviceCapabilities.h"
 #include "MidiDeviceCapabilities.h"
 #include "MidiID.h"
@@ -97,6 +97,7 @@ protected:
   DeviceStepEditCapability step_edit_capability_;
   DeviceParamCapability param_capability_;
   DevicePerfCapability perf_capability_;
+  DevicePanelCapability panel_capability_;
 #endif
 
 public:

@@ -65,8 +65,7 @@ DevicePerfCapability *MidiDevice::perf() {
 }
 
 DevicePanelCapability *MidiDevice::panel() {
-  static DevicePanelCapability panel_capability;
-  return &panel_capability;
+  return &panel_capability_;
 }
 #endif
 

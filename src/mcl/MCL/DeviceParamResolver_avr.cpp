@@ -285,22 +285,13 @@ uint8_t perf_target_count() {
 DevicePerfTarget perf(uint8_t dest) {
   DevicePerfTarget perf_target;
   DeviceParamTarget &target = perf_target.params;
-  if (dest == 0) {
-    return perf_target;
-  }
-  uint8_t local_target = dest - 1;
-  if (local_target < NUM_MD_TRACKS + 4) {
-    target.device_idx = DeviceIdx::Primary;
+  DeviceIdx device_idx = DeviceIdx::None;
+  uint8_t local_target = 0;
+  if (perf_dest_to_target(dest, &device_idx, &local_target)) {
+    target.device_idx = device_idx;
     target.target = local_target;
-  } else if (local_target < NUM_MD_TRACKS + 4 + NUM_EXT_TRACKS) {
-    target.device_idx = DeviceIdx::Secondary;
-    target.target = local_target - (NUM_MD_TRACKS + 4);
   }
   return perf_target;
-}
-
-uint8_t primary_perf_editor_dest(uint8_t track) {
-  return track + 1;
 }
 
 void end_perf_param_editor() {

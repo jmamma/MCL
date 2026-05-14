@@ -71,14 +71,19 @@ struct DevicePerfTarget {
 
 namespace DeviceParamResolver {
 
+static constexpr uint8_t INVALID_PERF_DATA_DEST = 255;
+
 MidiDevice *device_for_idx(DeviceIdx device_idx);
 uint8_t target_count_for_idx(DeviceIdx device_idx);
 DeviceParamTarget target_for_idx(DeviceIdx device_idx, uint8_t dest);
 
 uint8_t perf_target_count();
 DevicePerfTarget perf(uint8_t dest);
-uint8_t perf_dest_from_idx(DeviceIdx device_idx, uint8_t local_dest);
-uint8_t primary_perf_editor_dest(uint8_t track);
+uint8_t perf_data_dest_for_target(DeviceIdx device_idx, uint8_t target);
+uint8_t perf_dest_for_target(DeviceIdx device_idx, uint8_t target);
+bool perf_dest_to_target(uint8_t perf_dest, DeviceIdx *device_idx,
+                         uint8_t *target);
+uint8_t primary_perf_editor_dest(uint8_t target);
 void end_perf_param_editor();
 void set_perf_rec_mode(uint8_t mode);
 bool perf_scene_autofill(PerfData *data, uint8_t scene);

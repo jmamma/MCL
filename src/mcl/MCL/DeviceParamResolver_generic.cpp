@@ -166,36 +166,17 @@ uint8_t perf_target_count() {
 DevicePerfTarget perf(uint8_t dest) {
   DevicePerfTarget perf_target;
   DeviceParamTarget &target = perf_target.params;
-  if (dest == 0) {
+  DeviceIdx device_idx = DeviceIdx::None;
+  uint8_t local_target = 0;
+  if (!perf_dest_to_target(dest, &device_idx, &local_target)) {
     return perf_target;
   }
 
-  DeviceContext primary_ctx = device_manager.primary_context();
-  DeviceParamCapability *primary_params = primary_ctx.device()->params();
-  uint8_t primary_count = primary_params->target_count(primary_ctx);
-  uint8_t local_target = dest - 1;
-  if (local_target < primary_count) {
-    target.device = primary_ctx.device();
-    target.device_idx = DeviceIdx::Primary;
-    target.target = local_target;
-    return perf_target;
-  }
-
-  local_target -= primary_count;
-  DeviceContext secondary_ctx = device_manager.secondary_context();
-  DeviceParamCapability *secondary_params = secondary_ctx.device()->params();
-  uint8_t secondary_count = secondary_params->target_count(secondary_ctx);
-  if (local_target < secondary_count) {
-    target.device = secondary_ctx.device();
-    target.device_idx = DeviceIdx::Secondary;
-    target.target = local_target;
-  }
+  DeviceContext ctx = device_manager.context_for_device(device_idx);
+  target.device = ctx.device();
+  target.device_idx = device_idx;
+  target.target = local_target;
   return perf_target;
-}
-
-uint8_t primary_perf_editor_dest(uint8_t track) {
-  uint8_t dest = perf_dest_from_idx(DeviceIdx::Primary, track + 1);
-  return dest == 255 ? 0 : dest + 1;
 }
 
 void end_perf_param_editor() {

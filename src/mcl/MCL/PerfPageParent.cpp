@@ -61,11 +61,12 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
       uint8_t local_value = value;
       K[0] = device_idx == DeviceIdx::Secondary ? 'M' : 'T';
       if (device_idx == DeviceIdx::None) {
-        uint8_t primary_count =
-            DeviceParamResolver::target_count_for_idx(DeviceIdx::Primary);
-        if (value > primary_count) {
-          K[0] = 'M';
-          local_value = value - primary_count;
+        DeviceIdx dest_device = DeviceIdx::None;
+        uint8_t target = 0;
+        if (DeviceParamResolver::perf_dest_to_target(value, &dest_device,
+                                                     &target)) {
+          K[0] = dest_device == DeviceIdx::Secondary ? 'M' : 'T';
+          local_value = target + 1;
         }
       }
       mcl_gui.put_value_at(local_value, K + 1);

@@ -66,15 +66,9 @@ bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
   }
 
   uint8_t dest = track + 1;
-#if defined(__AVR__)
-  uint8_t perf_dest = device_idx == DeviceIdx::Secondary
-                          ? NUM_MD_TRACKS + 4 + track
-                          : track;
-#else
-  uint8_t perf_dest = DeviceParamResolver::perf_dest_from_idx(device_idx,
-                                                               dest);
-#endif
-  if (perf_dest != 255) {
+  uint8_t perf_dest =
+      DeviceParamResolver::perf_data_dest_for_target(device_idx, track);
+  if (perf_dest != DeviceParamResolver::INVALID_PERF_DATA_DEST) {
     perf_page.learn_param(perf_dest, track_param, value);
   }
   lfo_page.learn_param(device_idx, dest, track_param, value);
@@ -797,12 +791,10 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t track = mcl_seq.find_ext_track(channel);
   if (track != 255) {
     uint8_t dest = track + 1;
-#if defined(__AVR__)
-    uint8_t perf_dest = NUM_MD_TRACKS + 4 + track;
-#else
-    uint8_t perf_dest = DeviceParamResolver::perf_dest_from_idx(DeviceIdx::Secondary, dest);
-#endif
-    if (perf_dest != 255) {
+    uint8_t perf_dest =
+        DeviceParamResolver::perf_data_dest_for_target(DeviceIdx::Secondary,
+                                                       track);
+    if (perf_dest != DeviceParamResolver::INVALID_PERF_DATA_DEST) {
       perf_page.learn_param(perf_dest, param, value);
     }
     lfo_page.learn_param(DeviceIdx::Secondary, dest, param, value);
