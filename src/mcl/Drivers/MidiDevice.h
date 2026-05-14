@@ -90,7 +90,6 @@ public:
   uint8_t port; // MIDI port number (UART1_PORT, UART2_PORT, UARTUSB_PORT, etc.)
 
 protected:
-  DeviceMixerCapability mixer_capability_;
 #if !defined(__AVR__)
   DeviceStepTrackCapability step_track_capability_;
   DeviceExtStepTrackCapability ext_step_track_capability_;

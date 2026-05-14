@@ -28,26 +28,31 @@ public:
                                  uint8_t default_param = 0,
                                  uint8_t mute_param = MUTE_PARAM);
 
+#if defined(__AVR__)
+  virtual uint8_t track_count(const DeviceContext &ctx) const = 0;
+  virtual SeqTrack *seq_track(const DeviceContext &ctx, uint8_t track) = 0;
+#else
   virtual uint8_t track_count(const DeviceContext &ctx) const;
   virtual SeqTrack *seq_track(const DeviceContext &ctx, uint8_t track);
+#endif
   uint8_t default_param() const;
   virtual bool param(const DeviceContext &ctx, uint8_t track, uint8_t param_idx,
-                     MidiDeviceMixerParam *out);
+                     MidiDeviceMixerParam *out) = 0;
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, int16_t value,
-                         bool send = true);
+                         bool send = true) = 0;
   virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr);
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
-                                bool state, bool clear = false);
+                                bool state, bool clear = false) = 0;
   virtual uint8_t trig_group(const DeviceContext &ctx, uint8_t track) const;
   virtual void select_track(const DeviceContext &ctx, uint8_t track);
   virtual void restore_track_params(const DeviceContext &ctx, uint8_t track);
   virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
-                        uint8_t *track, uint8_t *param) const;
+                        uint8_t *track, uint8_t *param) const = 0;
   bool is_mute_param(uint8_t param) const;
   virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, int16_t value);
+                              uint8_t param, int16_t value) = 0;
 
 private:
   uint8_t default_param_;
@@ -61,6 +66,9 @@ public:
       : DeviceMixerCapability(device), levels_(levels),
         require_level_cc_(require_level_cc) {}
 
+  virtual uint8_t track_count(const DeviceContext &ctx) const override;
+  virtual SeqTrack *seq_track(const DeviceContext &ctx,
+                              uint8_t track) override;
   virtual bool param(const DeviceContext &ctx, uint8_t track,
                      uint8_t param_idx,
                      MidiDeviceMixerParam *out) override;

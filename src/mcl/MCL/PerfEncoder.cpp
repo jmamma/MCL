@@ -13,6 +13,71 @@ PerfScene PerfData::scenes[NUM_SCENES];
 PerfEncoder::PerfEncoder(int _max, int _min, int _res, uint8_t _speed)
     : MCLEncoder(_max, _min, _res, _speed) {}
 
+void PerfMorph::populate(PerfScene *s1, PerfScene *s2) {
+  count = 0;
+  if (s1 == nullptr && s2 == nullptr) { return; }
+  if (s1 == nullptr) {
+    s1 = s2;
+    s2 = nullptr;
+  }
+  for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
+    PerfFade *f = &fades[count];
+    PerfParam *p = &s1->params[n];
+    if (p->dest != 0) {
+      f->dest = p->dest;
+      f->param = p->param;
+      uint8_t v = 0;
+      bool has_current =
+          DeviceParamResolver::perf(p->dest).get_param(p->param, &v);
+      if (!has_current && p->val == 255) {
+        continue;
+      }
+      if (!has_current) {
+        v = p->val;
+      }
+      f->min = p->val == 255 ? v : p->val;
+      f->max = v;
+      DEBUG_PRINT("ADDING ");
+      DEBUG_PRINT(f->min);
+      DEBUG_PRINT(" ");
+      DEBUG_PRINT(f->max);
+      count++;
+    }
+  }
+  if (s2 == nullptr) { return; }
+  for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
+    PerfFade *f = &fades[count];
+    PerfParam *p = &s2->params[n];
+    if (p->dest != 0) {
+      uint8_t m = find_existing(p->dest, p->param);
+      uint8_t v = 0;
+      bool has_current =
+          DeviceParamResolver::perf(p->dest).get_param(p->param, &v);
+      if (!has_current && p->val == 255) {
+        continue;
+      }
+      if (!has_current) {
+        v = p->val;
+      }
+      if (m != 255) {
+        f = &fades[m];
+        DEBUG_PRINTLN("exists");
+      } else {
+        f->dest = p->dest;
+        f->param = p->param;
+        f->min = v;
+        count++;
+        DEBUG_PRINTLN("does not exist");
+      }
+      f->max = p->val == 255 ? v : p->val;
+      DEBUG_PRINT("HERE ");
+      DEBUG_PRINT(f->min);
+      DEBUG_PRINT(" ");
+      DEBUG_PRINT(f->max);
+    }
+  }
+}
+
 void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_,MidiUartClass *uart2_) {
   DevicePerfTarget target = DeviceParamResolver::perf(dest);
   target.set_param(param, val,
@@ -36,9 +101,6 @@ void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUa
     DEBUG_PRINTLN(f->min);
 
     uint8_t val = 0;
-    if (f->max == 255 || f->min == 255) {
-      continue;
-    }
     int8_t range = f->max - f->min;
     int16_t q = cur_ * range;
     DEBUG_PRINTLN("range");

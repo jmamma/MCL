@@ -150,11 +150,10 @@ public:
   void store_legacy_data(SeqLFOData *data) const;
   void set_legacy_phase_offset(bool enable) { legacy_phase_offset = enable; }
 
-  uint8_t get_param_offset(uint8_t dest, uint8_t param_id);
   void reset_params();
 
-  uint8_t get_wav_value(uint8_t dest, uint8_t param_id,
-                        int16_t lfo_sample) NOINLINE();
+  uint8_t get_wav_value(uint8_t offset, uint8_t param_id,
+                        int16_t lfo_sample);
 
   void set_wav_type(uint8_t _wav_type);
   void set_speed(uint8_t _speed);

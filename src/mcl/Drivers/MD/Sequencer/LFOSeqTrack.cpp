@@ -535,9 +535,8 @@ void LFOSeqTrack::set_speed_multiplier(uint8_t multiplier) {
                                        speed_multiplier());
 }
 
-uint8_t LFOSeqTrack::get_wav_value(uint8_t dest, uint8_t param_id,
+uint8_t LFOSeqTrack::get_wav_value(uint8_t offset, uint8_t param_id,
                                    int16_t lfo_sample) {
-  int16_t offset = get_param_offset(dest, param_id);
   int16_t depth = params[param_id].depth;
   int16_t sample = ((lfo_sample * depth) / 128) + offset;
 
@@ -573,11 +572,14 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
         continue;
       }
       uint8_t dest = params[i].dest;
-      uint8_t wav_value = get_wav_value(dest, i, lfo_sample);
+      uint8_t param = params[i].param;
+      DeviceParamTarget target =
+          DeviceParamResolver::target_for_idx(device_idx, dest);
+      uint8_t offset = params[i].offset;
+      target.get_param(param, &offset);
+      uint8_t wav_value = get_wav_value(offset, i, lfo_sample);
       if (last_wav_value[i] != wav_value) {
-        uint8_t param = params[i].param;
-        DeviceParamResolver::target_for_idx(device_idx, dest)
-            .set_param(param, wav_value, output_uart);
+        target.set_param(param, wav_value, output_uart);
 
         last_wav_value[i] = wav_value;
       }
@@ -608,18 +610,11 @@ void LFOSeqTrack::reset_params() {
     }
     uint8_t dest = params[i].dest;
     uint8_t param = params[i].param;
-    uint8_t wav_value = get_param_offset(dest, i);
-    DeviceParamResolver::target_for_idx(device_idx, dest)
-        .set_param(param, wav_value, output_uart);
+    DeviceParamTarget target =
+        DeviceParamResolver::target_for_idx(device_idx, dest);
+    uint8_t wav_value = params[i].offset;
+    target.get_param(param, &wav_value);
+    target.set_param(param, wav_value, output_uart);
     last_wav_value[i] = 255;
   }
-}
-
-uint8_t LFOSeqTrack::get_param_offset(uint8_t dest, uint8_t param_id) {
-  uint8_t param = params[param_id].param;
-  uint8_t value = params[param_id].offset;
-  if (DeviceParamResolver::target_for_idx(device_idx, dest).get_param(param, &value)) {
-    return value;
-  }
-  return params[param_id].offset;
 }

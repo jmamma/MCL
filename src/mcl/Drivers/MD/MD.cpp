@@ -149,6 +149,9 @@ class MDMixerCapability final : public DeviceMixerCapability {
 public:
   explicit MDMixerCapability(MDClass &device)
       : DeviceMixerCapability(device, MODEL_LEVEL, MODEL_MUTE) {}
+  virtual uint8_t track_count(const DeviceContext &ctx) const override;
+  virtual SeqTrack *seq_track(const DeviceContext &ctx,
+                              uint8_t track) override;
   virtual bool param(const DeviceContext &ctx, uint8_t track,
                      uint8_t param_idx,
                      MidiDeviceMixerParam *param) override;
@@ -370,6 +373,20 @@ bool MDStepTrackCapability::parse_kit_cc(const DeviceContext &ctx,
   return *track != 255;
 }
 #endif
+
+uint8_t MDMixerCapability::track_count(const DeviceContext &ctx) const {
+  (void)ctx;
+  return mcl_seq.num_md_tracks;
+}
+
+SeqTrack *MDMixerCapability::seq_track(const DeviceContext &ctx,
+                                       uint8_t track) {
+  (void)ctx;
+  if (track >= mcl_seq.num_md_tracks) {
+    return nullptr;
+  }
+  return &SeqTrackUtil::get_seq_track(true, track);
+}
 
 bool MDMixerCapability::param(const DeviceContext &ctx, uint8_t track,
                               uint8_t param_idx,

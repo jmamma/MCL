@@ -39,6 +39,9 @@ bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
   uint8_t track = 255;
   uint8_t track_param = 255;
   DeviceMixerCapability *mixer = device->mixer();
+  if (mixer == nullptr) {
+    return false;
+  }
   if (!mixer->parse_cc(ctx, channel, cc, &track, &track_param) ||
       track == 255) {
     return false;
@@ -486,7 +489,6 @@ void MCLSeq::seq() {
 #ifdef LFO_TRACKS
   const bool lfo_send_due = legacy_tick;
 #endif
-
   MidiUartClass *uart;
   MidiUartClass *uart2;
   bool engage_sidechannel = true;
