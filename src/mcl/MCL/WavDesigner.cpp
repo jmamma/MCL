@@ -208,14 +208,30 @@ bool WavDesigner::render() {
   // first_zero_crossing = 0;
   // Normalise wav
 
-  float normalize_gain = ((float)(MAX_HEADROOM / (float)largest_sample_so_far));
   DEBUG_PRINTLN("gain:");
   DEBUG_PRINTLN(largest_sample_so_far);
-  DEBUG_PRINTLN(normalize_gain);
   wav_file.header.smpl.init(wav_file.header.fmt, SDS_LOOP_FORWARD, loop_start,
                             loop_end);
   wav_file.file.sync();
-  wav_file.apply_gain(normalize_gain);
+  if (largest_sample_so_far > 0) {
+#if defined(__AVR__)
+    uint32_t normalize_gain_q8 =
+        ((uint32_t)MAX_HEADROOM << 8) / largest_sample_so_far;
+    if (normalize_gain_q8 > UINT16_MAX) {
+      normalize_gain_q8 = UINT16_MAX;
+    }
+    DEBUG_PRINTLN(normalize_gain_q8);
+    if (!wav_file.apply_gain16_mono_q8((uint16_t)normalize_gain_q8)) {
+      return false;
+    }
+#else
+    float normalize_gain = ((float)(MAX_HEADROOM / (float)largest_sample_so_far));
+    DEBUG_PRINTLN(normalize_gain);
+    if (!wav_file.apply_gain(normalize_gain)) {
+      return false;
+    }
+#endif
+  }
   if (!wav_file.close(true)) {
     DEBUG_PRINTLN(F("could not close"));
     return false;

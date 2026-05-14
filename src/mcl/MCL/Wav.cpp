@@ -494,6 +494,60 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   }
 }
 
+#if defined(__AVR__)
+bool Wav::apply_gain16_mono_q8(uint16_t gain_q8, uint32_t num_samples,
+                               uint32_t sample_index) {
+  if ((header.fmt.bitRate != 16) || (header.fmt.numChannels != 1)) {
+    return false;
+  }
+
+  uint32_t num_of_samples = num_samples;
+  if (num_of_samples == 0) {
+    num_of_samples = header.data.chunk_size / sizeof(int16_t);
+  }
+
+  const uint16_t buffer_samples = 256;
+  int16_t buffer[buffer_samples];
+  uint32_t sample_end = sample_index + num_of_samples;
+
+  for (uint32_t n = sample_index; n < sample_end; n += buffer_samples) {
+    uint16_t current_run = buffer_samples;
+    if (n + current_run > sample_end) {
+      current_run = sample_end - n;
+    }
+
+    uint32_t position = data_offset + n * sizeof(int16_t);
+    uint16_t bytes = current_run * sizeof(int16_t);
+    if (!read_data(buffer, bytes, position)) {
+      DEBUG_PRINTLN("could not read");
+      return false;
+    }
+
+    for (uint16_t i = 0; i < current_run; i++) {
+      int32_t sample = buffer[i];
+      int32_t scaled;
+      if (sample < 0) {
+        scaled = -(((-sample) * (int32_t)gain_q8) >> 8);
+      } else {
+        scaled = (sample * (int32_t)gain_q8) >> 8;
+      }
+      if (scaled > INT16_MAX) {
+        scaled = INT16_MAX;
+      } else if (scaled < INT16_MIN) {
+        scaled = INT16_MIN;
+      }
+      buffer[i] = (int16_t)scaled;
+    }
+
+    if (!write_data(buffer, bytes, position)) {
+      DEBUG_PRINTLN("could not write");
+      return false;
+    }
+  }
+  return true;
+}
+#endif
+
 bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
                      uint32_t sample_index) {
   DEBUG_PRINT_FN();
