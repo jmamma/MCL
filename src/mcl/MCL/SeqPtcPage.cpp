@@ -613,10 +613,10 @@ void SeqPtcPage::note_on_ext(uint8_t note_num, uint8_t velocity,
   if (track_number == 255) {
     track_number = last_ext_track;
   }
-  auto track = SeqExtStepTrackRef::track(track_number);
+  auto &&track = SeqExtStepTrackRef::runtime_track(track_number);
   if (mcl_cfg.uart_note_fwd) track.note_on(note_num, velocity, uart_);
   reset_undo();
-  track.record_note_on(note_num, velocity);
+  SeqExtStepTrackRef::record_note_on(track, note_num, velocity);
 }
 
 void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
@@ -624,14 +624,14 @@ void SeqPtcPage::note_off_ext(uint8_t note_num, uint8_t velocity,
   if (track_number == 255) {
     track_number = last_ext_track;
   }
-  auto track = SeqExtStepTrackRef::track(track_number);
+  auto &&track = SeqExtStepTrackRef::runtime_track(track_number);
   if (mcl_cfg.uart_note_fwd) track.note_off(note_num, velocity, uart_);
   reset_undo();
-  track.record_note_off(note_num);
+  SeqExtStepTrackRef::record_note_off(track, note_num);
 }
 
 void SeqPtcPage::buffer_notesoff_ext(uint8_t track_number) {
-  SeqExtStepTrackRef::track(track_number).buffer_notesoff();
+  SeqExtStepTrackRef::runtime_track(track_number).buffer_notesoff();
 }
 
 void SeqPtcPage::recalc_notemask() {
@@ -1256,7 +1256,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   }
 
   // Send mod wheel CC#1 or bank select CC#0
-  auto active_track = SeqExtStepTrackRef::track(n);
+  auto &&active_track = SeqExtStepTrackRef::runtime_track(n);
 #ifdef PLATFORM_TBD
   SeqExtParsedControl parsed_control;
   if (SeqTrackUtil::use_midi_tracks_for_ext() &&
@@ -1319,7 +1319,8 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   if (SeqPage::recording && (MidiClock.state == 2) &&
       !note_interface.notes_on) {
     if (param != device_manager.secondary_device()->get_mute_cc()) {
-      active_track.record_cc_lock(param, value, SeqPage::slide);
+      SeqExtStepTrackRef::record_cc_lock(active_track, param, value,
+                                         SeqPage::slide);
     }
   }
   active_track.update_param(param, value);
@@ -1339,10 +1340,11 @@ void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
     return;
   }
   uint16_t pitch = msg[1] | (msg[2] << 7);
-  auto active_track = SeqExtStepTrackRef::track(n);
+  auto &&active_track = SeqExtStepTrackRef::runtime_track(n);
   active_track.pitch_bend(pitch);
   if (SeqPage::recording && (MidiClock.state == 2)) {
-    active_track.record_pitch_bend_lock(pitch, SeqPage::slide);
+    SeqExtStepTrackRef::record_pitch_bend_lock(active_track, pitch,
+                                               SeqPage::slide);
   }
 }
 
@@ -1358,10 +1360,10 @@ void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
   if (n == 255) {
     return;
   }
-  auto active_track = SeqExtStepTrackRef::track(n);
+  auto &&active_track = SeqExtStepTrackRef::runtime_track(n);
   active_track.channel_pressure(msg[1]);
   if (SeqPage::recording && (MidiClock.state == 2)) {
-    active_track.record_channel_pressure_lock(msg[1]);
+    SeqExtStepTrackRef::record_channel_pressure_lock(active_track, msg[1]);
   }
 }
 
@@ -1377,7 +1379,7 @@ void SeqPtcMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
   if (n == 255) {
     return;
   }
-  auto active_track = SeqExtStepTrackRef::track(n);
+  auto &&active_track = SeqExtStepTrackRef::runtime_track(n);
   active_track.after_touch(msg[1], msg[2]);
 #if !defined(__AVR__)
   if (SeqPage::recording && (MidiClock.state == 2)) {

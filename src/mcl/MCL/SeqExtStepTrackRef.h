@@ -21,8 +21,14 @@ class MidiClass;
 class SeqExtStepTrackRef : public SeqExtStepTrackBackend {
 public:
   using SeqExtStepTrackBackend::track;
+  using SeqExtStepTrackBackend::runtime_track;
   using SeqExtStepTrackBackend::track_count;
   using SeqExtStepTrackBackend::set_panel_rec_mode;
+  using SeqExtStepTrackBackend::record_note_on;
+  using SeqExtStepTrackBackend::record_note_off;
+  using SeqExtStepTrackBackend::record_cc_lock;
+  using SeqExtStepTrackBackend::record_pitch_bend_lock;
+  using SeqExtStepTrackBackend::record_channel_pressure_lock;
 #ifdef PLATFORM_TBD
   using SeqExtStepTrackBackend::input_midi;
   using SeqExtStepTrackBackend::track_for_channel;
