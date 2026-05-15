@@ -21,6 +21,9 @@
 #define LFO_MODE_MASK 0x03
 #define LFO_SPEED_MULT_SHIFT 2
 #define LFO_SPEED_MULT_MASK 0x07
+#define LFO_MODE_LEGACY_PHASE 0x20
+#define LFO_MODE_LEGACY_SUBTRACT 0x40
+#define LFO_MODE_LEGACY_FLAGS (LFO_MODE_LEGACY_PHASE | LFO_MODE_LEGACY_SUBTRACT)
 
 #define LFO_SPEED_MULT_1X 0
 #define LFO_SPEED_MULT_2X 1
@@ -98,8 +101,6 @@ public:
   uint16_t random_state[2];
   int8_t state_phase;
   int8_t random_value;
-  bool legacy_phase_offset;
-  bool legacy_speed_curve;
   uint8_t last_wav_value[NUM_LFO_PARAMS];
 
   static const uint8_t wav_tables[LFO_TABLE_COUNT][WAV_LENGTH] PROGMEM;
@@ -113,8 +114,6 @@ public:
     LFOSeqTrackData::init();
     track_number = 0;
     device_idx = DeviceIdx::Primary;
-    legacy_phase_offset = false;
-    legacy_speed_curve = false;
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
       last_wav_value[i] = 255;
     }
@@ -128,6 +127,12 @@ public:
   static uint8_t mode_speed_multiplier(uint8_t mode) {
     return (mode >> LFO_SPEED_MULT_SHIFT) & LFO_SPEED_MULT_MASK;
   }
+  static bool mode_legacy_phase(uint8_t mode) {
+    return (mode & LFO_MODE_LEGACY_PHASE) != 0;
+  }
+  static bool mode_legacy_subtract(uint8_t mode) {
+    return (mode & LFO_MODE_LEGACY_SUBTRACT) != 0;
+  }
   static uint8_t pack_mode(uint8_t base_mode, uint8_t speed_multiplier) {
     return (base_mode & LFO_MODE_MASK) |
            ((speed_multiplier & LFO_SPEED_MULT_MASK) << LFO_SPEED_MULT_SHIFT);
@@ -135,22 +140,17 @@ public:
   uint8_t base_mode() const { return mode_base(mode); }
   uint8_t speed_multiplier() const { return mode_speed_multiplier(mode); }
   void set_mode(uint8_t base_mode) {
-    mode = pack_mode(base_mode, speed_multiplier());
+    mode = (mode & LFO_MODE_LEGACY_FLAGS) |
+           pack_mode(base_mode, speed_multiplier());
   }
   void set_speed_multiplier(uint8_t multiplier);
   static uint16_t speed_to_phase_increment(uint8_t speed);
-  static uint16_t speed_to_phase_increment(uint8_t speed, bool legacy_curve);
-  static uint16_t speed_to_phase_increment(uint8_t speed, bool legacy_curve,
-                                           uint8_t multiplier);
+  static uint16_t speed_to_phase_increment(uint8_t speed, uint8_t multiplier);
   static void convert_legacy_data(const SeqLFOData &legacy_data,
                                   SeqLFOData *data);
   void load_data(const SeqLFOData &data);
-  void load_data(const SeqLFOData &data, bool legacy_phase);
-  void load_data(const SeqLFOData &data, bool legacy_phase,
-                 bool legacy_shape_and_speed);
   void store_data(SeqLFOData *data) const;
   void store_legacy_data(SeqLFOData *data) const;
-  void set_legacy_phase_offset(bool enable) { legacy_phase_offset = enable; }
 
   void reset_params();
 

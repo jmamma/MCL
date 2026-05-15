@@ -50,13 +50,13 @@ uint8_t lfo_legacy_shape_to_sps(uint8_t wav_type) {
   case LFO_LEGACY_TRI_WAV:
     return TRI_WAV;
   case LFO_LEGACY_RAMP_WAV:
-    return REV_LIN_WAV;
-  case LFO_LEGACY_IEXP_WAV:
-    return REV_EXP_WAV;
-  case LFO_LEGACY_IRAMP_WAV:
     return LIN_WAV;
-  case LFO_LEGACY_EXP_WAV:
+  case LFO_LEGACY_IEXP_WAV:
     return EXP_WAV;
+  case LFO_LEGACY_IRAMP_WAV:
+    return REV_LIN_WAV;
+  case LFO_LEGACY_EXP_WAV:
+    return REV_EXP_WAV;
   case LFO_LEGACY_SQU_WAV:
     return SQU_WAV;
   case LFO_LEGACY_SAW_WAV:
@@ -69,6 +69,22 @@ uint8_t lfo_legacy_shape_to_sps(uint8_t wav_type) {
     return LINLIN_WAV;
   default:
     return TRI_WAV;
+  }
+}
+
+bool lfo_legacy_shape_is_centered(uint8_t wav_type) {
+  return wav_type == LFO_LEGACY_SIN_WAV || wav_type == LFO_LEGACY_TRI_WAV;
+}
+
+bool lfo_legacy_shape_uses_subtract(uint8_t wav_type) {
+  switch (wav_type) {
+  case LFO_LEGACY_RAMP_WAV:
+  case LFO_LEGACY_IEXP_WAV:
+  case LFO_LEGACY_IRAMP_WAV:
+  case LFO_LEGACY_EXP_WAV:
+    return true;
+  default:
+    return false;
   }
 }
 
@@ -234,10 +250,6 @@ uint16_t lfo_apply_speed_multiplier(uint16_t phase_inc, uint8_t multiplier) {
   return value;
 }
 
-uint16_t lfo_abs_diff(uint16_t a, uint16_t b) {
-  return a > b ? a - b : b - a;
-}
-
 // MCL drives LFOs from the MIDI tick scheduler, so use the SPS curve shape at
 // a fixed nominal tempo and let tick cadence provide musical tempo sync.
 constexpr uint32_t kSpsNominalTempo = 120UL;
@@ -258,6 +270,40 @@ const uint16_t lfo_sps_phase_inc_hi_table[64] PROGMEM = {
 };
 #endif
 
+// Bits 0..5 store the new speed. Bits 6..7 select 1x, 1/2x, 1/4x, 1/10x.
+// Generated from the legacy 96-step curve; worst phase increment error is 1.
+const uint8_t lfo_legacy_speed_map[128] PROGMEM = {
+  0x79, 0x79, 0x79, 0xB9, 0x53, 0x07, 0xF9, 0x93,
+  0xE9, 0xE4, 0xE0, 0xDD, 0xDA, 0xD8, 0xD6, 0x02,
+  0x02, 0x87, 0xD1, 0xD0, 0x43, 0x43, 0xCE, 0xCE,
+  0x85, 0xCC, 0xCC, 0xCB, 0xCB, 0x01, 0x01, 0x01,
+  0x01, 0x01, 0xC9, 0xC9, 0xC9, 0x83, 0x83, 0x83,
+  0x83, 0x83, 0xC7, 0xC7, 0xC7, 0xC7, 0xC7, 0xC6,
+  0xC6, 0xC6, 0xC6, 0xC6, 0xC6, 0xC6, 0x41, 0x41,
+  0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
+  0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
+  0x41, 0x41, 0x41, 0x41, 0x41, 0xC4, 0xC4, 0xC4,
+  0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4,
+  0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4,
+  0xC4, 0xC4, 0xC4, 0x81, 0x81, 0x81, 0x81, 0x81,
+  0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81,
+  0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81,
+  0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81
+};
+
+uint8_t lfo_legacy_speed_multiplier(uint8_t packed) {
+  switch (packed >> 6) {
+  case 1:
+    return LFO_SPEED_MULT_1_2X;
+  case 2:
+    return LFO_SPEED_MULT_1_4X;
+  case 3:
+    return LFO_SPEED_MULT_1_10X;
+  default:
+    return LFO_SPEED_MULT_1X;
+  }
+}
+
 } // namespace
 
 void LegacyLFOSeqTrackData::init() {
@@ -277,7 +323,7 @@ void LegacyLFOSeqTrackData::init() {
 void LegacyLFOSeqTrackData::load_data(const SeqLFOData &data) {
   wav_type = data.wav_type;
   speed = data.speed;
-  mode = data.mode;
+  mode = LFOSeqTrack::mode_base(data.mode);
   pattern_mask = data.pattern_mask;
   enable = data.enable;
   length = data.length;
@@ -313,8 +359,7 @@ void LFOSeqTrack::reset_phase() {
 
 void LFOSeqTrack::reset_runtime() {
   phase = 0;
-  phase_inc = speed_to_phase_increment(speed, legacy_speed_curve,
-                                       speed_multiplier());
+  phase_inc = speed_to_phase_increment(speed, speed_multiplier());
   step_count = 0;
   uint16_t seed_base = ((uint16_t)static_cast<uint8_t>(device_idx) * 0x0101U) +
                        ((uint16_t)track_number * 0x0031U);
@@ -324,17 +369,7 @@ void LFOSeqTrack::reset_runtime() {
 }
 
 void LFOSeqTrack::load_data(const SeqLFOData &data) {
-  load_data(data, false, false);
-}
-
-void LFOSeqTrack::load_data(const SeqLFOData &data, bool legacy_phase) {
-  load_data(data, legacy_phase, false);
-}
-
-void LFOSeqTrack::load_data(const SeqLFOData &data, bool legacy_phase,
-                            bool legacy_shape_and_speed) {
-  wav_type = legacy_shape_and_speed ? lfo_legacy_shape_to_sps(data.wav_type)
-                                    : data.wav_type;
+  wav_type = data.wav_type;
   if (wav_type >= LFO_SHAPE_COUNT) {
     wav_type = TRI_WAV;
   }
@@ -343,8 +378,6 @@ void LFOSeqTrack::load_data(const SeqLFOData &data, bool legacy_phase,
   pattern_mask = data.pattern_mask;
   enable = data.enable;
   length = data.length ? data.length : 16;
-  legacy_phase_offset = legacy_phase;
-  legacy_speed_curve = legacy_shape_and_speed;
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
     params[i] = data.params[i];
     last_wav_value[i] = 255;
@@ -421,7 +454,7 @@ uint8_t LFOSeqTrack::get_preview_value(uint8_t wav_type, uint16_t phase) {
 
 int16_t LFOSeqTrack::get_sample() {
   uint16_t render_phase = phase;
-  if (legacy_phase_offset && (wav_type == SIN_WAV || wav_type == TRI_WAV)) {
+  if (mode_legacy_phase(mode) && (wav_type == SIN_WAV || wav_type == TRI_WAV)) {
     render_phase = (render_phase + 0x6000U) & LFO_PHASE_MASK;
   }
 
@@ -442,60 +475,40 @@ int16_t LFOSeqTrack::get_sample() {
 }
 
 uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_) {
-  return speed_to_phase_increment(speed_, false);
+  return speed_to_phase_increment(speed_, LFO_SPEED_MULT_1X);
 }
 
 uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_,
-                                               bool legacy_curve) {
-  return speed_to_phase_increment(speed_, legacy_curve, LFO_SPEED_MULT_1X);
-}
-
-uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_,
-                                               bool legacy_curve,
                                                uint8_t multiplier) {
-  if (!legacy_curve) {
 #if defined(__AVR__)
-    uint16_t phase_shift;
-    if (speed_ < 64) {
-      phase_shift = speed_ ? (uint16_t)speed_ * 12 : 1;
-      if (speed_ >= 33) {
-        --phase_shift;
-      }
-    } else {
-      phase_shift = pgm_read_word(&lfo_sps_phase_inc_hi_table[speed_ - 64]);
+  uint16_t phase_shift;
+  if (speed_ < 64) {
+    phase_shift = speed_ ? (uint16_t)speed_ * 12 : 1;
+    if (speed_ >= 33) {
+      --phase_shift;
     }
-    return lfo_apply_speed_multiplier((uint16_t)phase_shift, multiplier);
-#else
-    uint32_t phase_shift;
-    uint16_t speed14 =
-        (uint16_t)(((uint32_t)speed_ * 0x3FFFUL + 63UL) / 127UL);
-    if (speed14 < 0x2000U) {
-      phase_shift =
-          (kSpsNominalTempoScaled *
-               ((uint32_t)speed14 * 0x10UL + 0x10UL) +
-           0x3C8FEUL) /
-          0x791FDUL;
-    } else {
-      uint32_t x =
-          (uint32_t)speed14 * (((uint32_t)speed14 * speed14) >> 13);
-      phase_shift =
-          (kSpsNominalTempoScaled *
-           (((uint32_t)speed14 * (x >> 17)) >> 10)) /
-          0x4099UL;
-    }
-    if (phase_shift == 0) {
-      phase_shift = 1;
-    }
-    if (phase_shift > LFO_PHASE_MASK) {
-      phase_shift = LFO_PHASE_MASK;
-    }
-    return lfo_apply_speed_multiplier((uint16_t)phase_shift, multiplier);
-#endif
+  } else {
+    phase_shift = pgm_read_word(&lfo_sps_phase_inc_hi_table[speed_ - 64]);
   }
-
-  uint16_t hold = speed_ <= 2 ? 1 : speed_ - 1;
-  uint16_t cycle_ticks = (uint16_t)LFO_LEGACY_LENGTH * hold;
-  uint16_t phase_shift = (LFO_PHASE_LENGTH + (cycle_ticks / 2)) / cycle_ticks;
+  return lfo_apply_speed_multiplier((uint16_t)phase_shift, multiplier);
+#else
+  uint32_t phase_shift;
+  uint16_t speed14 =
+      (uint16_t)(((uint32_t)speed_ * 0x3FFFUL + 63UL) / 127UL);
+  if (speed14 < 0x2000U) {
+    phase_shift =
+        (kSpsNominalTempoScaled *
+             ((uint32_t)speed14 * 0x10UL + 0x10UL) +
+         0x3C8FEUL) /
+        0x791FDUL;
+  } else {
+    uint32_t x =
+        (uint32_t)speed14 * (((uint32_t)speed14 * speed14) >> 13);
+    phase_shift =
+        (kSpsNominalTempoScaled *
+         (((uint32_t)speed14 * (x >> 17)) >> 10)) /
+        0x4099UL;
+  }
   if (phase_shift == 0) {
     phase_shift = 1;
   }
@@ -503,6 +516,7 @@ uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_,
     phase_shift = LFO_PHASE_MASK;
   }
   return lfo_apply_speed_multiplier((uint16_t)phase_shift, multiplier);
+#endif
 }
 
 void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
@@ -519,33 +533,18 @@ void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
     base_mode = LFO_MODE_FREE;
   }
 
-  uint16_t target =
-      speed_to_phase_increment(legacy_data.speed, true, LFO_SPEED_MULT_1X);
-  uint16_t best_diff = 0xFFFFU;
-  uint8_t best_speed = 0;
-  uint8_t best_multiplier = LFO_SPEED_MULT_1X;
-
-  for (uint8_t multiplier = 0; multiplier < LFO_SPEED_MULT_COUNT;
-       ++multiplier) {
-    for (uint8_t speed = 0; speed < 128; ++speed) {
-      uint16_t candidate = speed_to_phase_increment(speed, false, multiplier);
-      uint16_t diff = lfo_abs_diff(target, candidate);
-      if (diff < best_diff) {
-        best_diff = diff;
-        best_speed = speed;
-        best_multiplier = multiplier;
-        if (diff == 0) {
-          break;
-        }
-      }
+  uint8_t packed =
+      pgm_read_byte(&lfo_legacy_speed_map[legacy_data.speed & 0x7FU]);
+  data->speed = packed & 0x3F;
+  data->mode = pack_mode(base_mode, lfo_legacy_speed_multiplier(packed));
+  if (lfo_legacy_shape_is_centered(legacy_data.wav_type)) {
+    data->mode |= LFO_MODE_LEGACY_PHASE;
+    for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+      data->params[i].depth >>= 1;
     }
-    if (best_diff == 0) {
-      break;
-    }
+  } else if (lfo_legacy_shape_uses_subtract(legacy_data.wav_type)) {
+    data->mode |= LFO_MODE_LEGACY_SUBTRACT;
   }
-
-  data->speed = best_speed;
-  data->mode = pack_mode(base_mode, best_multiplier);
   if (data->length == 0) {
     data->length = 16;
   }
@@ -564,6 +563,7 @@ void LFOSeqTrack::set_wav_type(uint8_t _wav_type) {
   uint8_t wav = _wav_type < LFO_SHAPE_COUNT ? _wav_type : TRI_WAV;
   if (wav_type != wav) {
     wav_type = wav;
+    mode &= ~LFO_MODE_LEGACY_FLAGS;
     reset_shape_state();
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
       last_wav_value[i] = 255;
@@ -573,22 +573,20 @@ void LFOSeqTrack::set_wav_type(uint8_t _wav_type) {
 
 void LFOSeqTrack::set_speed(uint8_t _speed) {
   speed = _speed;
-  legacy_speed_curve = false;
-  phase_inc = speed_to_phase_increment(speed, legacy_speed_curve,
-                                       speed_multiplier());
+  phase_inc = speed_to_phase_increment(speed, speed_multiplier());
 }
 
 void LFOSeqTrack::set_speed_multiplier(uint8_t multiplier) {
-  mode = pack_mode(base_mode(), multiplier);
-  legacy_speed_curve = false;
-  phase_inc = speed_to_phase_increment(speed, legacy_speed_curve,
-                                       speed_multiplier());
+  mode = (mode & LFO_MODE_LEGACY_FLAGS) | pack_mode(base_mode(), multiplier);
+  phase_inc = speed_to_phase_increment(speed, speed_multiplier());
 }
 
 uint8_t LFOSeqTrack::get_wav_value(uint8_t offset, uint8_t param_id,
                                    int16_t lfo_sample) {
   int16_t depth = params[param_id].depth;
-  int16_t sample = ((lfo_sample * depth) / 128) + offset;
+  int16_t delta = (lfo_sample * depth) / 128;
+  int16_t sample = mode_legacy_subtract(mode) ? offset - delta
+                                              : offset + delta;
 
   if (sample > 127) {
     return 127;

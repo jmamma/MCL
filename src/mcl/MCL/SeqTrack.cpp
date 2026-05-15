@@ -100,7 +100,7 @@ void SeqTrack::load_lfo_data(LFOSeqTrack &lfo_track,
                              const SeqLFOData &stored_data,
                              bool use_stored_data) {
   if (use_stored_data) {
-    lfo_track.load_data(stored_data, false, false);
+    lfo_track.load_data(stored_data);
     return;
   }
   SeqLFOData empty;

@@ -52,6 +52,45 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
   }
 }
 
+void lfo_mult_label(uint8_t multiplier, char *out) {
+  out[0] = '1';
+  if (multiplier >= LFO_SPEED_MULT_1_2X) {
+    out[1] = '/';
+    switch (multiplier) {
+    case LFO_SPEED_MULT_1_2X:
+      out[2] = '2';
+      out[3] = 'x';
+      out[4] = '\0';
+      return;
+    case LFO_SPEED_MULT_1_4X:
+      out[2] = '4';
+      out[3] = 'x';
+      out[4] = '\0';
+      return;
+    case LFO_SPEED_MULT_1_10X:
+      out[2] = '1';
+      out[3] = '0';
+      out[4] = 'x';
+      out[5] = '\0';
+      return;
+    default:
+      out[2] = '1';
+      out[3] = '0';
+      out[4] = '0';
+      out[5] = 'x';
+      out[6] = '\0';
+      return;
+    }
+  }
+  if (multiplier == LFO_SPEED_MULT_2X ||
+      multiplier == LFO_SPEED_MULT_4X ||
+      multiplier == LFO_SPEED_MULT_8X) {
+    out[0] = '0' + (1 << multiplier);
+  }
+  out[1] = 'x';
+  out[2] = '\0';
+}
+
 void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
                        uint8_t encoder_idx, uint8_t param_idx) NOINLINE();
 void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
@@ -171,6 +210,9 @@ void LFOPage::config_encoders() {
     encoders[0]->cur = lfo_track->base_mode();
     ((MCLEncoder *)encoders[0])->max = LFO_MODE_TRACK_TRIG;
 
+    encoders[1]->cur = lfo_track->speed_multiplier();
+    ((MCLEncoder *)encoders[1])->max = LFO_SPEED_MULT_COUNT - 1;
+
     encoders[2]->cur = lfo_track->params[0].offset;
     ((MCLEncoder *)encoders[2])->max = 127;
 
@@ -227,6 +269,9 @@ void LFOPage::loop() {
       lfo_track->set_mode(encoders[0]->cur);
       update_lfo_key_interface(lfo_track);
     }
+    if (encoders[1]->hasChanged()) {
+      lfo_track->set_speed_multiplier(encoders[1]->cur);
+    }
 
     update_lfo_offset(encoders, lfo_track, 2, 0);
     update_lfo_offset(encoders, lfo_track, 3, 1);
@@ -237,11 +282,6 @@ void LFOPage::loop() {
 void LFOPage::display() {
   track_update();
   oled_display.clearDisplay();
-
-  uint8_t x = mcl_gui.knob_x0 + 5;
-  uint8_t y = 8;
-  uint8_t lfo_height = 7;
-  uint8_t width = 13;
 
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   SeqPage::draw_knob_frame();
@@ -258,18 +298,27 @@ void LFOPage::display() {
     panel_info2 = "LFO>DST";
   }
   else if (page_mode == LFO_SETTINGS) {
-    uint8_t inc = LFO_LENGTH / width;
-    for (uint8_t n = 0; n < LFO_LENGTH; n += inc, x++) {
-      uint16_t phase = ((uint16_t)n << 8) & LFO_PHASE_MASK;
-      uint8_t out = LFOSeqTrack::get_preview_value(lfo_track->wav_type,
-                                                   phase);
-      uint8_t sample = ((int16_t)out * (int16_t)lfo_height) / 128;
+    const uint8_t preview_x = mcl_gui.knob_x0 + 5;
+    const uint8_t preview_y = 11;
+    const uint8_t preview_height = 7;
+    const uint8_t preview_width = 15;
 
-      oled_display.drawPixel(x, y + lfo_height - sample, WHITE);
-    }
-    x = mcl_gui.knob_x0 + 2;
-    oled_display.setCursor(x + 5, 6);
+    oled_display.setFont(&TomThumb);
+    oled_display.setTextColor(WHITE);
+    oled_display.setCursor(mcl_gui.knob_x0 + 5, mcl_gui.knob_y0 + 6);
     mcl_print_P(mclstr_wav_label);
+    oled_display.setFont();
+
+    uint16_t phase = 0;
+    const uint16_t phase_step = LFO_PHASE_MASK / (preview_width - 1);
+    for (uint8_t i = 0; i < preview_width; ++i, phase += phase_step) {
+      uint8_t out = LFOSeqTrack::get_preview_value(lfo_track->wav_type,
+                                                   phase & LFO_PHASE_MASK);
+      uint8_t sample = ((int16_t)out * (int16_t)preview_height) / 128;
+
+      oled_display.drawPixel(preview_x + i, preview_y + preview_height - sample,
+                             WHITE);
+    }
 
     draw_knob(1, encoders[1], mclstr_spd);
     draw_knob(2, encoders[2], mclstr_dep1);
@@ -277,7 +326,10 @@ void LFOPage::display() {
     panel_info2 = "LFO>MOD";
   }
   else { //if (page_mode == LFO_OFFSET) {
+    char mult_label[7];
+    lfo_mult_label(encoders[1]->cur, mult_label);
     mcl_gui.draw_knob(0, mclstr_mode, lfo_mode_label(encoders[0]->cur));
+    mcl_gui.draw_knob(1, mclstr_mult, mult_label);
     draw_knob(2, encoders[2], mclstr_ofs1);
     draw_knob(3, encoders[3], mclstr_ofs2);
     panel_info2 = "LFO>OFS";
@@ -327,11 +379,11 @@ void LFOPage::apply_seq_menu_values(bool same_slot) {
     return;
   }
   lfo_track->speed = opt_speed;
-  lfo_track->mode = LFOSeqTrack::pack_mode(lfo_track->base_mode(),
+  lfo_track->mode = (lfo_track->mode & LFO_MODE_LEGACY_FLAGS) |
+                    LFOSeqTrack::pack_mode(lfo_track->base_mode(),
                                            opt_lfo_mult);
-  lfo_track->legacy_speed_curve = false;
   lfo_track->phase_inc =
-      LFOSeqTrack::speed_to_phase_increment(opt_speed, false, opt_lfo_mult);
+      LFOSeqTrack::speed_to_phase_increment(opt_speed, opt_lfo_mult);
   if (opt_length == 0) {
     opt_length = 1;
   }
