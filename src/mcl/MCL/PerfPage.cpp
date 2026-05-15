@@ -1,25 +1,14 @@
 #include "PerfPage.h"
-#include "DeviceParamResolver.h"
 #include "CommonPages.h"
 #include "MCLMemory.h"
 #include "MCLGUI.h"
 #include "MCLClipBoard.h"
+#include "PerfPageTargetRef.h"
 #include "SeqPages.h"
 #include "MCLStrings.h"
 
-#define LEARN_MIN 1
-#define LEARN_MAX 2
-#define LEARN_OFF 0
-
 static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT = 24;
-
-namespace {
-
-uint8_t perf_editor_dest() {
-  return DeviceParamResolver::primary_perf_editor_dest(last_md_track);
-}
-
-} // namespace
+static constexpr uint8_t PERF_LEARN_OFF = 0;
 
 void PerfPage::setup() {
   DEBUG_PRINT_FN();
@@ -51,7 +40,7 @@ void PerfPage::init() {
   last_mask = last_blink_mask = 0;
   show_menu = false;
   last_page_mode = 255;
-  DeviceParamResolver::set_perf_rec_mode(3);
+  PerfPageTargetRef::set_rec_mode(3);
   config_encoders();
 }
 
@@ -93,7 +82,7 @@ void PerfPage::set_led_mask() {
 void PerfPage::cleanup() {
   PerfPageParent::cleanup();
   key_interface.off();
-  DeviceParamResolver::set_perf_rec_mode(0);
+  PerfPageTargetRef::set_rec_mode(0);
 }
 void PerfPage::func_enc_check() {
   if (key_interface.is_key_down(MDX_KEY_FUNC)) {
@@ -108,11 +97,11 @@ void PerfPage::func_enc_check() {
   }
 }
 void PerfPage::config_encoder_range(uint8_t i) {
-  ((MCLEncoder *)encoders[i])->max = DeviceParamResolver::perf_target_count();
+  ((MCLEncoder *)encoders[i])->max = PerfPageTargetRef::target_count();
   ((MCLEncoder *)encoders[i + 1])->min = 0;
 
   uint8_t param_count =
-      DeviceParamResolver::perf(encoders[i]->cur).param_count();
+      PerfPageTargetRef::target(encoders[i]->cur).param_count();
   ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
 }
 
@@ -302,8 +291,8 @@ void PerfPage::encoder_send() {
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   uint8_t perf_dest = dest + 1;
-  DevicePerfTarget target = DeviceParamResolver::perf(perf_dest);
-  if (perf_dest == 0 || param >= target.param_count()) {
+  DevicePerfTarget target = PerfPageTargetRef::target(perf_dest);
+  if (!target.valid() || param >= target.param_count()) {
     return;
   }
   bool on_perf_page = mcl.currentPage() == PERF_PAGE_0;
@@ -317,7 +306,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       if (value >= min) {
         uint8_t cur = value - min;
         uint8_t range = 127 - min;
-        uint8_t val = ((uint16_t)cur * 127) / range;
+        uint8_t val = range == 0 ? 127 : ((uint16_t)cur * 127) / range;
         e->cur = val;
         //perf_encoders[i]->send();
         if (on_perf_page) {
@@ -364,7 +353,7 @@ void rename_perf() {
 }
 
 void PerfPage::send_locks(uint8_t scene) {
-  uint8_t editor_dest = perf_editor_dest();
+  uint8_t editor_dest = PerfPageTargetRef::active_editor_dest();
   if (editor_dest == 0) {
     return;
   }
@@ -385,8 +374,7 @@ void PerfPage::send_locks(uint8_t scene) {
       params[param] = p->val;
     }
   }
-  if (DeviceParamResolver::perf(editor_dest)
-          .begin_param_editor(params, sizeof(params))) {
+  if (PerfPageTargetRef::begin_editor(editor_dest, params, sizeof(params))) {
     seq_step_page.disable_paramupdate_events();
   }
 }
@@ -432,9 +420,9 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         return true;
       }
       if (note_interface.notes_all_off()) {
-        learn = LEARN_OFF;
+        learn = PERF_LEARN_OFF;
         seq_step_page.enable_paramupdate_events();
-        DeviceParamResolver::end_perf_param_editor();
+        PerfPageTargetRef::end_editor();
         page_mode = PERF_DESTINATION;
         config_encoders();
       }
@@ -461,13 +449,13 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
       uint8_t scene = learn - 1;
 
-      uint8_t editor_dest = perf_editor_dest();
+      uint8_t editor_dest = PerfPageTargetRef::active_editor_dest();
       if (editor_dest == 0) {
         return true;
       }
 
       uint8_t param = 0;
-      DevicePerfTarget editor_target = DeviceParamResolver::perf(editor_dest);
+      DevicePerfTarget editor_target = PerfPageTargetRef::target(editor_dest);
       if (!editor_target.param_from_key(key, &param)) {
         return true;
       }
@@ -493,7 +481,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     }
     if (event->mask == EVENT_BUTTON_PRESSED) {
 
-      uint8_t t = note_interface.get_first_md_note();
+      uint8_t t = PerfPageTargetRef::pressed_scene();
       if (t < NUM_SCENES) {
         switch (key) {
         case MDX_KEY_COPY: {

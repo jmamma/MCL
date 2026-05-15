@@ -22,10 +22,8 @@ public:
   uint8_t undo = 255;
 
   uint8_t learn = 0;
-  uint8_t old_mode = 0;
   uint8_t last_page_mode;
 
-  bool midi_state = false;
   uint8_t page_mode = 0;
   uint8_t perf_id = 0;
 
@@ -57,9 +55,6 @@ public:
 
   void encoder_check();
   void encoder_send();
-
-  void onControlChangeCallback_Midi(uint8_t *msg);
-  void onControlChangeCallback_Midi2(uint8_t *msg);
 };
 extern void rename_perf();
 

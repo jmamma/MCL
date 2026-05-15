@@ -18,8 +18,6 @@ public:
 
 };
 
-#define LEARN_MIN 1
-
 class ATTR_PACKED() PerfScene {
 public:
   PerfParam params[NUM_PERF_PARAMS];
