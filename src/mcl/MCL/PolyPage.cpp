@@ -4,6 +4,8 @@
 #include "SeqPages.h"
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
+#include "MCLSysConfig.h"
+#include "TomThumb.h"
 
 namespace {
 
@@ -14,6 +16,18 @@ void ptc_group_label(uint8_t group, char *out) {
   }
   out[0] = 'C';
   mcl_gui.put_value_at(group, out + 1);
+}
+
+void ptc_group_box_label(uint8_t group, char *out) {
+  if (group == PTC_GROUP_OFF) {
+    out[0] = '\0';
+    return;
+  }
+  if (group == PTC_GROUP_LOCAL) {
+    out[0] = '\0';
+    return;
+  }
+  mcl_gui.put_value_at(group, out);
 }
 
 } // namespace
@@ -36,30 +50,40 @@ void PolyPage::cleanup() {
 }
 
 void PolyPage::draw_mask() {
-  uint16_t selected_mask = ptc_groups.mask_for_group(selected_group);
+  auto oldfont = oled_display.getFont();
+  oled_display.setFont(&TomThumb);
+
   for (uint8_t i = 0; i < 16; i++) {
 
     uint8_t x = i * 8;
-
+    uint8_t group = ptc_groups.group_for_track(i);
+    bool is_selected = group == selected_group;
     bool is_note = note_interface.is_note(i);
-    oled_display.fillRect(x, 2, 6, 6, is_note);
-    if (is_note) {
-    }
-    else if (IS_BIT_SET16(selected_mask, i)) {
-      oled_display.drawRect(x, 2, 6, 6, WHITE);
 
+    if (is_note || is_selected) {
+      oled_display.fillRect(x, 2, 7, 7, WHITE);
+    } else {
+      oled_display.fillRect(x, 2, 7, 7, BLACK);
     }
-    else if (ptc_groups.track_has_group(i)) {
-      oled_display.drawFastVLine(x + 3, 2, 6, WHITE);
+
+    if (group != PTC_GROUP_OFF) {
+      if (!is_note && !is_selected) {
+        oled_display.drawRect(x, 2, 7, 7, WHITE);
+      }
+      char label[3] = {};
+      ptc_group_box_label(group, label);
+      uint8_t text_x = label[1] ? x : x + 2;
+      oled_display.setCursor(text_x, 8);
+      oled_display.setTextColor((is_note || is_selected) ? BLACK : WHITE);
+      oled_display.print(label);
     }
-    else {
+    else if (!is_note) {
       oled_display.drawFastHLine(x, 5, 6, WHITE);
     }
   }
-}
 
-void PolyPage::sync_legacy_mask() {
-  mcl_cfg.poly_mask = ptc_groups.legacy_poly_mask();
+  oled_display.setTextColor(WHITE);
+  oled_display.setFont(oldfont);
 }
 
 void PolyPage::cycle_group(int8_t direction) {
@@ -83,7 +107,11 @@ void PolyPage::toggle_group(uint8_t i) {
   uint8_t group = ptc_groups.group_for_track(i);
   ptc_groups.set_track_group(i, group == selected_group ? PTC_GROUP_OFF
                                                         : selected_group);
-  sync_legacy_mask();
+}
+
+void PolyPage::save_ptc_groups() {
+  ptc_groups.store(mcl_cfg.ptc_group);
+  mcl_cfg.write_cfg();
 }
 
 void PolyPage::display() {
@@ -153,8 +181,7 @@ bool PolyPage::handleEvent(gui_event_t *event) {
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
   exit:
-    sync_legacy_mask();
-    mcl_cfg.write_cfg();
+    save_ptc_groups();
     mcl.popPage();
     GUI.currentPage()->init();
     return true;

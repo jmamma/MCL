@@ -3,6 +3,7 @@
 #include "MCLGUI.h"
 #include "StackMonitor.h"
 #include "Project.h"
+#include "PtcGroups.h"
 
 #ifdef __AVR__
 void mcl_oled_set_sd_dedicated_spi(bool dedicated) {
@@ -106,7 +107,9 @@ bool MCLSd::load_init() {
 
         }
 
-        else if (mcl_cfg.number_projects > 0) {
+        ptc_groups.load(mcl_cfg.ptc_group);
+
+        if (mcl_cfg.number_projects > 0) {
           DEBUG_PRINTLN(
               F("Project count greater than 0, try to load existing"));
           if (!proj.load_project(mcl_cfg.project)) {

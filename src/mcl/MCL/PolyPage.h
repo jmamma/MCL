@@ -18,7 +18,7 @@ public:
 
   bool handleEvent(gui_event_t *event);
   void cycle_group(int8_t direction);
-  void sync_legacy_mask();
+  void save_ptc_groups();
   void toggle_group(uint8_t i);
   void draw_mask();
   void display();

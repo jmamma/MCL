@@ -215,6 +215,7 @@ bool MCLSysConfig::cfg_init() {
   char my_string[16] = "/project000.mcl";
 
   memset((uint8_t *)&version, 0, sizeof(MCLSysConfigData)); //<---- flush zero to config
+  ptc_groups.clear();
 
   version = CONFIG_VERSION;
   //number_projects = 0;

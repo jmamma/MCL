@@ -5,8 +5,9 @@
 
 #include "MCLSd.h"
 #include "MCLMemory.h"
+#include "PtcGroups.h"
 
-#define CONFIG_VERSION 4016
+#define CONFIG_VERSION 4017
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -78,6 +79,7 @@ public:
   uint8_t grid_x_port;
   uint8_t grid_y_device;
   uint8_t grid_y_port;
+  uint8_t ptc_group[PTC_GROUP_TRACKS];
 };
 
 class MCLSysConfig : public MCLSysConfigData {

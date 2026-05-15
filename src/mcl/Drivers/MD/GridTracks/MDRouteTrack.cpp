@@ -54,7 +54,7 @@ void MDRouteTrack::clear_ptc_groups() {
 
 void MDRouteTrack::load_ptc_groups() {
   ptc_groups.load(ptc_group);
-  mcl_cfg.poly_mask = ptc_groups.legacy_poly_mask();
+  ptc_groups.store(mcl_cfg.ptc_group);
 }
 
 void MDRouteTrack::load_legacy_poly_mask(uint16_t poly_mask,
@@ -109,7 +109,7 @@ void MDRouteTrack::load_routes() {
 void MDRouteTrack::get_routes() {
   memcpy(routing, mcl_cfg.routing, sizeof(routing));
   ptc_groups.store(ptc_group);
-  mcl_cfg.poly_mask = ptc_groups.legacy_poly_mask();
+  ptc_groups.store(mcl_cfg.ptc_group);
 }
 
 void MDRouteTrack::get_online_data(uint8_t merge) {
