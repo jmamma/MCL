@@ -215,7 +215,7 @@ bool MCLClipBoard::paste_sequencer_track(GridSlot source_track, GridSlot track) 
   device_track->paste_track(source_track_idx, track_idx, gdt->seq_track);
 
   if (SeqTrackUtil::is_md_device(device_manager.primary_device()) &&
-      track_idx == last_md_track) {
+      track_idx == last_primary_track) {
     if (mcl.currentPage() == SEQ_STEP_PAGE) {
       seq_step_page.config();
     }

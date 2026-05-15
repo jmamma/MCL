@@ -24,7 +24,7 @@ uint8_t last_ext_track;
 SeqExtStepPage seq_extstep_page(&seq_extparam1, &seq_extparam2, &seq_extparam3,
                                 &seq_extparam4);
 
-uint8_t last_md_track;
+uint8_t last_primary_track;
 
 SeqPtcPage seq_ptc_page(&ptc_param_oct, &ptc_param_fine_tune, &ptc_param_len, &ptc_param_scale);
 

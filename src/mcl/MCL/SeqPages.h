@@ -62,11 +62,11 @@ extern MCLEncoder seq_lock2;
 extern uint8_t last_ext_track;
 #endif
 
-extern uint8_t last_md_track;
+extern uint8_t last_primary_track;
 
-inline uint8_t seq_primary_track_index() { return last_md_track; }
+inline uint8_t seq_primary_track_index() { return last_primary_track; }
 inline void seq_set_primary_track_index(uint8_t track) {
-  last_md_track = track;
+  last_primary_track = track;
 }
 
 extern SeqStepPage seq_step_page;

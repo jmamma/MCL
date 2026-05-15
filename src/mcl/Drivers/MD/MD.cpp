@@ -189,7 +189,8 @@ public:
                          uint8_t param, uint8_t *value) override;
   virtual bool set_param(const DeviceContext &ctx, uint8_t target,
                          uint8_t param, uint8_t value,
-                         MidiUartClass *uart_ = nullptr) override;
+                         MidiUartClass *uart_ = nullptr,
+                         bool update_kit = false) override;
   virtual bool sequencer_lock_param_label(const DeviceContext &ctx,
                                           uint8_t target, uint8_t param,
                                           char *out, uint8_t len) override;
@@ -249,6 +250,8 @@ public:
                                          bool *is_midi_model) const override;
   virtual bool kit_sound_uses_note_pitch(const DeviceContext &ctx,
                                          uint8_t target) const override;
+  virtual bool kit_sound_voice_allocatable(const DeviceContext &ctx,
+                                           uint8_t target) const override;
   virtual uint8_t kit_sound_default_pitch(const DeviceContext &ctx,
                                           uint8_t target) const override;
   virtual uint8_t kit_sound_note_from_pitch(const DeviceContext &ctx,
@@ -353,7 +356,7 @@ SeqStepTrackRef MDStepTrackCapability::track(const DeviceContext &ctx,
 
 SeqStepTrackRef MDStepTrackCapability::active_track(
     const DeviceContext &ctx) const {
-  return track(ctx, last_md_track);
+  return track(ctx, last_primary_track);
 }
 
 bool MDStepTrackCapability::parses_kit_cc(const DeviceContext &ctx) const {
@@ -609,6 +612,12 @@ bool MDStepEditCapability::kit_sound_uses_note_pitch(
   uint8_t model = device.kit.get_model(target);
   return ((model & 0xF0) == MID_01_MODEL) ||
          device.getKitModelTuning(target) != nullptr;
+}
+
+bool MDStepEditCapability::kit_sound_voice_allocatable(
+    const DeviceContext &ctx, uint8_t target) const {
+  (void)ctx;
+  return target < NUM_MD_TRACKS && md().getKitModelTuning(target) != nullptr;
 }
 
 uint8_t MDStepEditCapability::kit_sound_default_pitch(const DeviceContext &ctx,
@@ -916,13 +925,14 @@ bool MDParamCapability::get_param(const DeviceContext &ctx, uint8_t target,
 
 bool MDParamCapability::set_param(const DeviceContext &ctx, uint8_t target,
                                   uint8_t param, uint8_t value,
-                                  MidiUartClass *uart_) {
+                                  MidiUartClass *uart_,
+                                  bool update_kit) {
   MDClass &device = md();
   if (target < NUM_MD_TRACKS) {
     if (param >= param_count(ctx, target)) {
       return false;
     }
-    device.setTrackParam(target, param, value, uart_, false);
+    device.setTrackParam(target, param, value, uart_, update_kit);
     return true;
   }
   if (target < NUM_MD_TRACKS + 4 && param < 8) {

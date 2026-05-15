@@ -138,7 +138,8 @@ public:
                          uint8_t param, uint8_t *value);
   virtual bool set_param(const DeviceContext &ctx, uint8_t target,
                          uint8_t param, uint8_t value,
-                         MidiUartClass *uart_ = nullptr);
+                         MidiUartClass *uart_ = nullptr,
+                         bool update_kit = false);
   virtual uint8_t sequencer_lock_param_count(const DeviceContext &ctx,
                                              uint8_t target) const;
   virtual bool sequencer_lock_param_info(const DeviceContext &ctx,
@@ -190,6 +191,8 @@ public:
                                          bool *is_midi_model) const;
   virtual bool kit_sound_uses_note_pitch(const DeviceContext &ctx,
                                          uint8_t target) const;
+  virtual bool kit_sound_voice_allocatable(const DeviceContext &ctx,
+                                           uint8_t target) const;
   virtual uint8_t kit_sound_default_pitch(const DeviceContext &ctx,
                                           uint8_t target) const;
   virtual uint8_t kit_sound_note_from_pitch(const DeviceContext &ctx,

@@ -93,7 +93,7 @@ uint8_t SpsMode::param_window_count() const {
 
 bool SpsMode::active_step_lock(uint8_t param, uint8_t *value) const {
   if (mcl.currentPage() != SEQ_STEP_PAGE) return false;
-  if (last_md_track >= NUM_MD_TRACKS) return false;
+  if (last_primary_track >= NUM_MD_TRACKS) return false;
   if (note_interface.notes_count_on() == 0) return false;
 
   const uint8_t param_limit =
@@ -109,11 +109,11 @@ bool SpsMode::active_step_lock(uint8_t param, uint8_t *value) const {
     memset(locks, 255, sizeof(locks));
 #if !defined(__AVR__)
     if (mcl_seq.using_spsx_tracks) {
-      mcl_seq.spsx_tracks[last_md_track].get_step_locks(step, locks, false);
+      mcl_seq.spsx_tracks[last_primary_track].get_step_locks(step, locks, false);
     } else
 #endif
     {
-      mcl_seq.md_tracks[last_md_track].get_step_locks(step, locks, false);
+      mcl_seq.md_tracks[last_primary_track].get_step_locks(step, locks, false);
     }
     if (locks[param] != 255) {
       *value = locks[param];
@@ -154,14 +154,14 @@ void SpsMode::send_param(uint8_t i) {
   const PageIndex pg = mcl.currentPage();
   const bool on_step_page = (pg == SEQ_STEP_PAGE);
   if (on_step_page && note_interface.notes_count_on() > 0 &&
-      last_md_track < NUM_MD_TRACKS) {
+      last_primary_track < NUM_MD_TRACKS) {
     const uint8_t param_limit = mcl_seq.using_spsx_tracks
                                     ? SPS_PARAMS_PER_TRACK
                                     : MD_PARAMS_PER_TRACK;
     if (param >= param_limit) return;
 #if !defined(__AVR__)
     if (mcl_seq.using_spsx_tracks) {
-      SPSXSeqTrack &st = mcl_seq.spsx_tracks[last_md_track];
+      SPSXSeqTrack &st = mcl_seq.spsx_tracks[last_primary_track];
       uint16_t first_step = 0xFFFF;
       for (uint8_t n = 0; n < 16; n++) {
         if (!note_interface.is_note_on(n)) continue;
@@ -180,7 +180,7 @@ void SpsMode::send_param(uint8_t i) {
       return;
     }
 #endif
-    MDSeqTrack &active = mcl_seq.md_tracks[last_md_track];
+    MDSeqTrack &active = mcl_seq.md_tracks[last_primary_track];
     uint16_t first_step = 0xFFFF;
     for (uint8_t n = 0; n < 16; n++) {
       if (!note_interface.is_note_on(n)) continue;

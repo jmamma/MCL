@@ -349,7 +349,7 @@ uint8_t MCLSeq::find_ext_track(uint8_t channel) {
 void MCLSeq::onMidiContinueCallback() {
   update_params();
   seq_rec_play();
-  SET_BIT16(MDSeqTrack::gui_update, last_md_track); //force cursor resync
+  SET_BIT16(MDSeqTrack::gui_update, last_primary_track); //force cursor resync
 }
 
 void MCLSeq::onMidiStartImmediateCallback() {

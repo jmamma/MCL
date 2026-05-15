@@ -74,7 +74,8 @@ public:
              Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {}
   uint8_t seq_ext_pitch(uint8_t note_num);
-  uint8_t process_ext_event(uint8_t note_num, bool note_type, uint8_t channel);
+  uint8_t process_ext_event(uint8_t note_num, bool note_type, uint8_t channel,
+                            bool primary_event = false);
   uint8_t get_machine_pitch(uint8_t track, uint8_t note_num,
                             uint8_t fine_tune = 255);
   uint8_t get_next_voice(uint8_t pitch, uint8_t track_number, uint8_t channel_event);
@@ -82,8 +83,10 @@ public:
                         uint8_t channel_event);
   uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
   void record(uint8_t pitch, uint8_t tracknumber);
-  void trig_md(uint8_t note_num, uint8_t track_number = 255, uint8_t channel_event = CTRL_EVENT,
-               uint8_t fine_tune = 255, MidiUartClass *uart_ = nullptr);
+  void trig_primary(uint8_t note_num, uint8_t track_number = 255,
+                    uint8_t channel_event = CTRL_EVENT,
+                    uint8_t fine_tune = 255,
+                    MidiUartClass *uart_ = nullptr);
 
   void note_on_ext(uint8_t note_num, uint8_t velocity,
                    uint8_t track_number = 255, MidiUartClass *uart_ = nullptr);
@@ -106,7 +109,7 @@ public:
   void send_tbd_keyboard_leds();
 #endif
 
-  uint8_t is_md_midi(uint8_t channel);
+  uint8_t primary_channel_event(uint8_t channel);
   virtual void config_encoders();
   void init_poly();
 

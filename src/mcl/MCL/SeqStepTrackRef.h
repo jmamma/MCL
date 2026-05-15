@@ -9,7 +9,7 @@
 #include "MCLSeq.h"
 #include <stdint.h>
 
-extern uint8_t last_md_track;
+extern uint8_t last_primary_track;
 
 using SeqStepLockParamInfo = MidiDeviceParamInfo;
 
@@ -40,7 +40,7 @@ inline SeqStepTrackRef seq_step_track_for(uint8_t track) {
 }
 
 inline SeqStepTrackRef seq_step_active_track() {
-  return seq_step_track_for(last_md_track);
+  return seq_step_track_for(last_primary_track);
 }
 
 inline uint8_t seq_step_track_count() { return mcl_seq.num_md_tracks; }

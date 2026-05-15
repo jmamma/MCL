@@ -244,10 +244,10 @@ uint8_t copy_mask = 0;
 
 static inline uint8_t selected_track_index(bool is_md_device) {
 #ifdef EXT_TRACKS
-  return is_md_device ? last_md_track : last_ext_track;
+  return is_md_device ? last_primary_track : last_ext_track;
 #else
   (void)is_md_device;
-  return last_md_track;
+  return last_primary_track;
 #endif
 }
 
@@ -280,7 +280,7 @@ static inline bool seq_page_active_step_track_uses_poly_mask() {
 }
 
 static inline uint16_t seq_page_active_poly_mask() {
-  return ptc_groups.mask_for_track(last_md_track);
+  return ptc_groups.mask_for_track(last_primary_track);
 }
 
 enum SeqTrackMenuOp : uint8_t {
@@ -366,20 +366,20 @@ static inline void apply_md_track_menu_op(SeqTrackMenuOp op) {
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {
     apply_track_menu_op(
-        static_cast<StepSeqTrackCond &>(mcl_seq.spsx_tracks[last_md_track]), op,
+        static_cast<StepSeqTrackCond &>(mcl_seq.spsx_tracks[last_primary_track]), op,
         0);
     return;
   }
 #endif
   apply_track_menu_op(
-      static_cast<SeqTrackCond &>(mcl_seq.md_tracks[last_md_track]), op, 0);
+      static_cast<SeqTrackCond &>(mcl_seq.md_tracks[last_primary_track]), op, 0);
 }
 
 static inline void apply_track_menu_op(bool is_md_device, bool apply_all,
                                        SeqTrackMenuOp op, int8_t offset = 0) {
   if (seq_page_uses_step_track_ops(is_md_device)) {
     uint8_t len = apply_all ? seq_page_step_track_count() : 1;
-    uint8_t start = apply_all ? 0 : last_md_track;
+    uint8_t start = apply_all ? 0 : last_primary_track;
     for (uint8_t i = start; i < start + len; i++) {
       auto track = seq_page_step_track_for(i);
       apply_track_menu_op(track, op, offset);
@@ -578,9 +578,9 @@ void SeqPage::params_reset() {
   }
   if (MidiClock.state != 2) {
     MDTrack md_track;
-    md_track.machine.model = MD.kit.models[last_md_track];
-    MD.assignMachineBulk(last_md_track, &md_track.machine, 255, 0, true);
-    MD.setTrackParam(last_md_track, 0, MD.kit.params[last_md_track][0]);
+    md_track.machine.model = MD.kit.models[last_primary_track];
+    MD.assignMachineBulk(last_primary_track, &md_track.machine, 255, 0, true);
+    MD.setTrackParam(last_primary_track, 0, MD.kit.params[last_primary_track][0]);
   }
 }
 
@@ -643,7 +643,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     if (track >= device->step_tracks()->track_count(step_ctx)) {
       return;
     }
-    last_md_track = track;
+    last_primary_track = track;
     SeqStepTrackRef base_track = seq_page_active_step_track();
     opt_speed = base_track.speed();
     opt_length = base_track.length();
@@ -659,9 +659,9 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     if (track >= NUM_MD_TRACKS) {
       return;
     }
-    last_md_track = track;
-    is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
-    auto &base_track = SeqTrackUtil::get_seq_track(true, last_md_track);
+    last_primary_track = track;
+    is_midi_model = ((MD.kit.models[last_primary_track] & 0xF0) == MID_01_MODEL);
+    auto &base_track = SeqTrackUtil::get_seq_track(true, last_primary_track);
     seq_page_active_step_track().sync_step_edit(
         base_track.length, base_track.speed, base_track.step_count);
     check_and_set_page_select();
@@ -720,7 +720,7 @@ bool SeqPage::display_mute_mask(MidiDevice *device, uint8_t offset) {
 void SeqPage::capture_seq_menu_values(bool is_md_device) {
   if (seq_page_uses_step_track_ops(is_md_device)) {
     SeqStepTrackRef bt = seq_page_active_step_track();
-    opt_trackid = last_md_track + 1;
+    opt_trackid = last_primary_track + 1;
     opt_speed = bt.speed();
     opt_length = bt.length();
   } else {
@@ -879,7 +879,7 @@ void SeqPage::shed_mask(uint64_t &mask, uint8_t length, uint8_t offset) {
 
 void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
   uint64_t mask;
-  SeqTrackUtil::with_md_track(last_md_track, [&](auto &track) {
+  SeqTrackUtil::with_md_track(last_primary_track, [&](auto &track) {
     track.get_mask(&mask, MASK_LOCKS_ON_STEP);
     shed_mask(mask, track.length, 0);
     draw_lock_mask(offset, mask, track.step_count, track.length,
@@ -903,7 +903,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     uint64_t led_mask = 0;
     uint8_t step_count, length;
 
-    SeqTrackUtil::with_md_track(last_md_track, [&](auto &track) {
+    SeqTrackUtil::with_md_track(last_primary_track, [&](auto &track) {
       step_count = track.step_count;
       length = track.length;
       track.get_mask(&mask, MASK_PATTERN);
@@ -937,7 +937,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       return;
 
     uint64_t locks_on_step_mask_ = 0;
-    SeqTrackUtil::with_md_track(last_md_track, [&](auto &track) {
+    SeqTrackUtil::with_md_track(last_primary_track, [&](auto &track) {
       track.get_mask(&locks_on_step_mask_, MASK_LOCKS_ON_STEP);
     });
     shed_mask(locks_on_step_mask_, length, offset);
@@ -1366,8 +1366,8 @@ void opt_copy_track_handler(uint8_t op) {
           MD.popup_text(4);
         }
       }
-      mcl_clipboard.copy_track = last_md_track;
-      mcl_clipboard.copy_sequencer_track(last_md_track);
+      mcl_clipboard.copy_track = last_primary_track;
+      mcl_clipboard.copy_sequencer_track(last_primary_track);
     }
 #ifdef EXT_TRACKS
     else {
@@ -1450,7 +1450,7 @@ void opt_paste_track_handler() {
         }
       } else {
         mcl_clipboard.paste_sequencer_track(mcl_clipboard.copy_track,
-                                            last_md_track);
+                                            last_primary_track);
       }
     } else {
       if (!undo) {
@@ -1691,7 +1691,7 @@ void SeqPage::config_as_lockedit() {
 }
 
 bool SeqPage::md_track_change_check() {
-  if (last_md_track != MD.currentTrack ||
+  if (last_primary_track != MD.currentTrack ||
       last_md_model != MD.kit.models[MD.currentTrack]) {
     last_md_model = MD.kit.models[MD.currentTrack];
     select_track(&MD, MD.currentTrack, false);
@@ -1735,7 +1735,7 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
     if (seq_page_uses_non_md_primary_step_tracks()) {
       step_count = seq_page_active_step_track().step_count();
     } else if (active_device_is_md()) {
-      step_count = SeqTrackUtil::get_seq_track(true, last_md_track).step_count;
+      step_count = SeqTrackUtil::get_seq_track(true, last_primary_track).step_count;
     }
 #ifdef EXT_TRACKS
     else {
@@ -1774,7 +1774,7 @@ void SeqPage::display() {
   if (seq_page_uses_non_md_primary_step_tracks()) {
     is_md = true;
   }
-  uint8_t track_id = last_md_track;
+  uint8_t track_id = last_primary_track;
   if (!is_md) {
     track_id = last_ext_track;
   }

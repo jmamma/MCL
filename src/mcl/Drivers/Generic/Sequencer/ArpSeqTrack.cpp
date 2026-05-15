@@ -325,7 +325,7 @@ void MDArpSeqTrack::dispatch_note(uint8_t note, MidiUartClass *uart_,
     SeqTrackUtil::with_md_track(track_number, [&](auto &t) { t.send_notes(note); });
     seq_ptc_page.record(note, track_number);
   } else {
-    seq_ptc_page.trig_md(note, track_number, CTRL_EVENT, fine_tune, uart_);
+    seq_ptc_page.trig_primary(note, track_number, CTRL_EVENT, fine_tune, uart_);
   }
 }
 

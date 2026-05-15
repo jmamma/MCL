@@ -243,8 +243,8 @@ void MDSeqTrack::post_seq(MidiUartClass *uart_) {
     }
   }
   if (MDSeqTrack::gui_update) {
-    if (last_md_track < NUM_MD_TRACKS && mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_md_track)) {
-      SeqTrackUtil::with_md_track(last_md_track, [uart_](auto &t) {
+    if (last_primary_track < NUM_MD_TRACKS && mcl.currentPage() == SEQ_STEP_PAGE && IS_BIT_SET16(MDSeqTrack::gui_update,last_primary_track)) {
+      SeqTrackUtil::with_md_track(last_primary_track, [uart_](auto &t) {
         MD.sync_seqtrack(t.length, t.speed, t.length - 1, uart_);
       });
     }

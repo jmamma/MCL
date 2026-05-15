@@ -17,7 +17,7 @@ LFOSeqTrack &LFOTrackRef::current_track() {
     return mcl_seq.grid_y_lfo_tracks[last_ext_track];
   }
 #endif
-  return mcl_seq.grid_x_lfo_tracks[last_md_track];
+  return mcl_seq.grid_x_lfo_tracks[last_primary_track];
 }
 
 bool LFOTrackRef::select_track(uint8_t track) {
@@ -31,7 +31,7 @@ bool LFOTrackRef::select_track(uint8_t track) {
     return false;
   }
   if (primary_tracks) {
-    last_md_track = track;
+    last_primary_track = track;
   } else {
 #ifdef EXT_TRACKS
     last_ext_track = track;

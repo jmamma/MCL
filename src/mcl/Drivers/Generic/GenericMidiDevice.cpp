@@ -30,7 +30,8 @@ public:
                               uint8_t target) const override;
   virtual bool set_param(const DeviceContext &ctx, uint8_t target,
                          uint8_t param, uint8_t value,
-                         MidiUartClass *uart_ = nullptr) override;
+                         MidiUartClass *uart_ = nullptr,
+                         bool update_kit = false) override;
 };
 #endif
 
@@ -103,8 +104,10 @@ uint8_t GenericMidiParamCapability::param_count(const DeviceContext &ctx,
 bool GenericMidiParamCapability::set_param(const DeviceContext &ctx,
                                            uint8_t target, uint8_t param,
                                            uint8_t value,
-                                           MidiUartClass *uart_) {
+                                           MidiUartClass *uart_,
+                                           bool update_kit) {
   (void)ctx;
+  (void)update_kit;
   if (target >= NUM_EXT_TRACKS || param >= 128) {
     return false;
   }

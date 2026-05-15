@@ -396,12 +396,14 @@ bool DeviceParamCapability::get_param(const DeviceContext &ctx, uint8_t target,
 
 bool DeviceParamCapability::set_param(const DeviceContext &ctx, uint8_t target,
                                       uint8_t param, uint8_t value,
-                                      MidiUartClass *uart_) {
+                                      MidiUartClass *uart_,
+                                      bool update_kit) {
   (void)ctx;
   (void)target;
   (void)param;
   (void)value;
   (void)uart_;
+  (void)update_kit;
   return false;
 }
 
@@ -565,6 +567,13 @@ bool DeviceStepEditCapability::configure_kit_sound_panel(
 }
 
 bool DeviceStepEditCapability::kit_sound_uses_note_pitch(
+    const DeviceContext &ctx, uint8_t target) const {
+  (void)ctx;
+  (void)target;
+  return false;
+}
+
+bool DeviceStepEditCapability::kit_sound_voice_allocatable(
     const DeviceContext &ctx, uint8_t target) const {
   (void)ctx;
   (void)target;

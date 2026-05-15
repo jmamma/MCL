@@ -40,14 +40,14 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
 #ifdef PLATFORM_TBD
   if (arp_uses_tbd_primary_tracks()) {
     if (n > 15) {
-      n = last_md_track;
+      n = last_primary_track;
     }
     arp_track = &mcl_seq.md_arp_tracks[n];
   } else
 #endif
   if (is_md_device) {
     if (n > 15) {
-      n = last_md_track;
+      n = last_primary_track;
     }
     arp_track = &mcl_seq.md_arp_tracks[n];
   } else {

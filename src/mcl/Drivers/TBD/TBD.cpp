@@ -129,7 +129,8 @@ public:
                          uint8_t param, uint8_t *value) override;
   virtual bool set_param(const DeviceContext &ctx, uint8_t target,
                          uint8_t param, uint8_t value,
-                         MidiUartClass *uart_ = nullptr) override;
+                         MidiUartClass *uart_ = nullptr,
+                         bool update_kit = false) override;
   virtual uint8_t sequencer_lock_param_count(const DeviceContext &ctx,
                                              uint8_t target) const override;
   virtual bool sequencer_lock_param_info(const DeviceContext &ctx,
@@ -469,8 +470,8 @@ TbdP4SoundData *active_p4_sound_for_note() {
   }
 
   if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
-      last_md_track < mcl_seq.num_tbd_tracks) {
-    return &mcl_seq.tbd_tracks[last_md_track].p4_sound;
+      last_primary_track < mcl_seq.num_tbd_tracks) {
+    return &mcl_seq.tbd_tracks[last_primary_track].p4_sound;
   }
 
 #ifdef EXT_TRACKS
@@ -1728,7 +1729,7 @@ SeqStepTrackRef TbdStepTrackCapability::track(const DeviceContext &ctx,
 
 SeqStepTrackRef TbdStepTrackCapability::active_track(
     const DeviceContext &ctx) const {
-  return track(ctx, last_md_track);
+  return track(ctx, last_primary_track);
 }
 
 bool TbdMixerCapability::param(const DeviceContext &ctx, uint8_t track,
@@ -1875,7 +1876,9 @@ bool TbdParamCapability::get_param(const DeviceContext &ctx, uint8_t target,
 
 bool TbdParamCapability::set_param(const DeviceContext &ctx, uint8_t target,
                                    uint8_t param, uint8_t value,
-                                   MidiUartClass *uart_) {
+                                   MidiUartClass *uart_,
+                                   bool update_kit) {
+  (void)update_kit;
   DeviceIdx grid_idx = ctx.device_idx();
   TbdP4SoundData *sound = p4_sound_for_mixer(grid_idx, target);
   TbdP4ParamDescriptor *desc = p4_param_for_mod(grid_idx, target, param);
@@ -2154,9 +2157,9 @@ void TbdDevice::sync_active_p4_track() {
 #endif
 
   if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
-      last_md_track < mcl_seq.num_tbd_tracks) {
+      last_primary_track < mcl_seq.num_tbd_tracks) {
     tbd_p4_realtime.set_active_track(
-        mcl_seq.tbd_tracks[last_md_track].p4_sound.p4_track_index);
+        mcl_seq.tbd_tracks[last_primary_track].p4_sound.p4_track_index);
     return;
   }
 

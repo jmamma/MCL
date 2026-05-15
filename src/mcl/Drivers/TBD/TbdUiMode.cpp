@@ -437,15 +437,15 @@ void render_window(uint8_t y_top, uint8_t window, bool active,
 } // namespace
 
 uint8_t TbdUiMode::active_track_index() const {
-  return device_idx_ == DeviceIdx::Secondary ? last_ext_track : last_md_track;
+  return device_idx_ == DeviceIdx::Secondary ? last_ext_track : last_primary_track;
 }
 
 TbdP4SoundData *TbdUiMode::active_sound() const {
   if (!latched_) return nullptr;
   if (device_idx_ == DeviceIdx::Primary) {
     if (mcl_cfg.grid_x_device != GRID_X_DEVICE_TBD) return nullptr;
-    if (last_md_track >= mcl_seq.num_tbd_tracks) return nullptr;
-    return &mcl_seq.tbd_tracks[last_md_track].p4_sound;
+    if (last_primary_track >= mcl_seq.num_tbd_tracks) return nullptr;
+    return &mcl_seq.tbd_tracks[last_primary_track].p4_sound;
   }
   if (device_idx_ == DeviceIdx::Secondary) {
     if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD) return nullptr;
@@ -466,7 +466,7 @@ bool TbdUiMode::select_track(uint8_t track_idx) {
         track_idx >= mcl_seq.num_tbd_tracks) {
       return false;
     }
-    last_md_track = track_idx;
+    last_primary_track = track_idx;
     device = &TBD;
     seq_idx = DeviceIdx::Primary;
   } else if (device_idx_ == DeviceIdx::Secondary) {

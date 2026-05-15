@@ -20,7 +20,7 @@ void ptc_group_label(uint8_t group, char *out) {
 
 void PolyPage::init() {
   DEBUG_PRINT_FN();
-  selected_group = ptc_groups.group_for_track(last_md_track);
+  selected_group = ptc_groups.group_for_track(last_primary_track);
   if (selected_group == PTC_GROUP_OFF) {
     selected_group = PTC_GROUP_LOCAL;
   }
