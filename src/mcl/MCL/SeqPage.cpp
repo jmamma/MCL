@@ -36,8 +36,14 @@ bool seq_page_uses_non_md_primary_step_tracks() {
 #else
 bool seq_page_uses_primary_step_tracks() {
   PageIndex page = mcl.currentPage();
-  return (page == SEQ_STEP_PAGE || page == SEQ_PTC_PAGE) &&
-         seq_step_tracks_available();
+  if (!seq_step_tracks_available()) {
+    return false;
+  }
+  if (page == SEQ_STEP_PAGE) {
+    return true;
+  }
+  return page == SEQ_PTC_PAGE &&
+         SeqPage::current_device_idx() == DeviceIdx::Primary;
 }
 
 bool seq_page_uses_non_md_primary_step_tracks() {
@@ -150,9 +156,6 @@ DeviceIdx SeqPage::current_device_idx() {
     return DeviceIdx::Secondary;
   }
 #endif
-  if (seq_page_uses_non_md_primary_step_tracks()) {
-    return DeviceIdx::Primary;
-  }
   if (devices_share_physical()) {
     return static_cast<DeviceIdx>(mcl_cfg.seq_dev);
   }

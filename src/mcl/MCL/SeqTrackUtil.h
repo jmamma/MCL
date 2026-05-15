@@ -7,6 +7,7 @@
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #endif
+#include "../Drivers/DeviceContext.h"
 #include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
 #include "ArpSeqTrack.h"
@@ -118,6 +119,42 @@ public:
     (void)grid_x_tracks;
 #endif
     return mcl_seq.grid_x_lfo_tracks[index];
+  }
+#endif
+
+  // ========================================================================
+  // DeviceIdx-based overloads. Primary resolves the active primary backend
+  // (TBD-as-primary, SPSX, or MD). Secondary resolves the active secondary
+  // backend (TBD-MIDI or ext).
+  // ========================================================================
+
+  static inline uint8_t track_count(DeviceIdx device_idx) {
+#if defined(PLATFORM_TBD)
+    if (device_idx == DeviceIdx::Primary &&
+        mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+      return mcl_seq.num_tbd_tracks;
+    }
+#endif
+    return track_count(device_idx == DeviceIdx::Primary);
+  }
+
+  static inline SeqTrack &seq_track(DeviceIdx device_idx, uint8_t index) {
+#if defined(PLATFORM_TBD)
+    if (device_idx == DeviceIdx::Primary &&
+        mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD) {
+      return static_cast<SeqTrack &>(mcl_seq.tbd_tracks[index]);
+    }
+#endif
+    return get_seq_track(device_idx == DeviceIdx::Primary, index);
+  }
+
+  static inline ArpSeqTrack &arp_track(DeviceIdx device_idx, uint8_t index) {
+    return get_arp_track(device_idx == DeviceIdx::Primary, index);
+  }
+
+#ifdef LFO_TRACKS
+  static inline LFOSeqTrack &lfo_track(DeviceIdx device_idx, uint8_t index) {
+    return get_lfo_track(device_idx == DeviceIdx::Primary, index);
   }
 #endif
 
