@@ -234,6 +234,10 @@ uint16_t lfo_apply_speed_multiplier(uint16_t phase_inc, uint8_t multiplier) {
   return value;
 }
 
+uint16_t lfo_abs_diff(uint16_t a, uint16_t b) {
+  return a > b ? a - b : b - a;
+}
+
 // MCL drives LFOs from the MIDI tick scheduler, so use the SPS curve shape at
 // a fixed nominal tempo and let tick cadence provide musical tempo sync.
 constexpr uint32_t kSpsNominalTempo = 120UL;
@@ -499,6 +503,52 @@ uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_,
     phase_shift = LFO_PHASE_MASK;
   }
   return lfo_apply_speed_multiplier((uint16_t)phase_shift, multiplier);
+}
+
+void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
+                                      SeqLFOData *data) {
+  if (data == nullptr) {
+    return;
+  }
+
+  *data = legacy_data;
+  data->wav_type = lfo_legacy_shape_to_sps(legacy_data.wav_type);
+
+  uint8_t base_mode = mode_base(legacy_data.mode);
+  if (base_mode > LFO_MODE_ONE) {
+    base_mode = LFO_MODE_FREE;
+  }
+
+  uint16_t target =
+      speed_to_phase_increment(legacy_data.speed, true, LFO_SPEED_MULT_1X);
+  uint16_t best_diff = 0xFFFFU;
+  uint8_t best_speed = 0;
+  uint8_t best_multiplier = LFO_SPEED_MULT_1X;
+
+  for (uint8_t multiplier = 0; multiplier < LFO_SPEED_MULT_COUNT;
+       ++multiplier) {
+    for (uint8_t speed = 0; speed < 128; ++speed) {
+      uint16_t candidate = speed_to_phase_increment(speed, false, multiplier);
+      uint16_t diff = lfo_abs_diff(target, candidate);
+      if (diff < best_diff) {
+        best_diff = diff;
+        best_speed = speed;
+        best_multiplier = multiplier;
+        if (diff == 0) {
+          break;
+        }
+      }
+    }
+    if (best_diff == 0) {
+      break;
+    }
+  }
+
+  data->speed = best_speed;
+  data->mode = pack_mode(base_mode, best_multiplier);
+  if (data->length == 0) {
+    data->length = 16;
+  }
 }
 
 void LFOSeqTrack::advance_phase() {

@@ -274,11 +274,7 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
       if (track0->active == MD_TRACK_TYPE) {
         MDTrack *md_track = static_cast<MDTrack *>(track0);
         md_track->mod_data.init();
-
-        LFOSeqTrack migrated_lfo;
-        migrated_lfo.init();
-        migrated_lfo.load_data(legacy_lfo, true, true);
-        migrated_lfo.store_data(&md_track->mod_data.lfo);
+        LFOSeqTrack::convert_legacy_data(legacy_lfo, &md_track->mod_data.lfo);
 
         md_track->version[0] = SEQ_TRACK_MOD_STORAGE_VERSION;
         md_track->version[1] = 0;

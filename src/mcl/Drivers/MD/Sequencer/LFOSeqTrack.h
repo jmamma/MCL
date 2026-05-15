@@ -142,6 +142,8 @@ public:
   static uint16_t speed_to_phase_increment(uint8_t speed, bool legacy_curve);
   static uint16_t speed_to_phase_increment(uint8_t speed, bool legacy_curve,
                                            uint8_t multiplier);
+  static void convert_legacy_data(const SeqLFOData &legacy_data,
+                                  SeqLFOData *data);
   void load_data(const SeqLFOData &data);
   void load_data(const SeqLFOData &data, bool legacy_phase);
   void load_data(const SeqLFOData &data, bool legacy_phase,
