@@ -37,6 +37,7 @@ public:
   bool convert_project(const char *projectname);
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
   bool migrate_grid_track_storage_versions(GridIndex grid);
+  bool migrate_track_storage_versions();
   bool new_project_master_file(const char *projectname);
   bool write_header();
 
@@ -100,6 +101,10 @@ public:
 
 private:
   void draw_wait_popup(const char *message);
+  void draw_upgrade_progress(GridIndex grid, GridRow row);
+  bool migrate_legacy_md_aux_slots(GridRow row,
+                                   const GridRowHeader &grid_x_header,
+                                   bool *converted_track0_lfo);
   GridIndex last_grid_ = 0;
 };
 

@@ -1,10 +1,18 @@
 #include "MDLFOTrack.h"
 #include "MCLSeq.h"
+#include "Project.h"
 
 namespace {
 
+bool legacy_lfo_slot_enabled() {
+  return proj.version < PROJ_VERSION_TRACK_STORAGE_VERSION;
+}
+
 void load_legacy_lfo_data(LegacyLFOSeqTrackData &lfo_data) NOINLINE();
 void load_legacy_lfo_data(LegacyLFOSeqTrackData &lfo_data) {
+  if (!legacy_lfo_slot_enabled()) {
+    return;
+  }
   SeqLFOData data;
   lfo_data.store_data(&data);
   mcl_seq.grid_x_lfo_tracks[0].load_data(data, true, true);
@@ -30,6 +38,10 @@ void MDLFOTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 }
 
 void MDLFOTrack::get_lfos() {
+  if (!legacy_lfo_slot_enabled()) {
+    lfo_data.init();
+    return;
+  }
   SeqLFOData data;
   mcl_seq.grid_x_lfo_tracks[0].store_legacy_data(&data);
   lfo_data.load_data(data);

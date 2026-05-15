@@ -9,6 +9,8 @@
 #include "A4Track.h"
 #include "MNMTrack.h"
 #include "MDFXTrack.h"
+#include "MDLFOTrack.h"
+#include "EmptyTrack.h"
 
 #define PRJ_NAME_LEN 14
 #define PRJ_DIR "/Projects"
@@ -16,6 +18,13 @@
 void Project::draw_wait_popup(const char *message) {
   mcl_gui.draw_infobox("PLEASE WAIT", message);
   oled_display.display();
+}
+
+void Project::draw_upgrade_progress(GridIndex grid, GridRow row) {
+#ifdef OLED_DISPLAY
+  uint8_t progress = grid * (GRID_LENGTH / NUM_GRIDS) + row / NUM_GRIDS;
+  mcl_gui.draw_progress_bar(progress, GRID_LENGTH, false, 31, 22);
+#endif
 }
 
 void Project::setup() {}
@@ -183,11 +192,11 @@ bool Project::load_project(const char *projectname) {
       gfx.alert("ERROR", "OPEN GRID");
       return false;
     }
+  }
 
-    if (migrate_track_storage && !migrate_grid_track_storage_versions(i)) {
-      DEBUG_PRINTLN(F("Could not migrate track storage versions"));
-      return false;
-    }
+  if (migrate_track_storage && !migrate_track_storage_versions()) {
+    DEBUG_PRINTLN(F("Could not migrate track storage versions"));
+    return false;
   }
   if (migrate_track_storage && !write_header()) {
     return false;
@@ -228,15 +237,132 @@ bool Project::check_project_version(uint16_t min_version) {
   return version >= min_version;
 }
 
+bool Project::migrate_legacy_md_aux_slots(GridRow row,
+                                          const GridRowHeader &grid_x_header,
+                                          bool *converted_track0_lfo) {
+  *converted_track0_lfo = false;
+
+  GridRowHeader grid_y_header;
+  if (!grids[1].read_row_header(&grid_y_header, row)) {
+    return false;
+  }
+
+  EmptyTrack scratch;
+  GridTrack empty_slot;
+  empty_slot.link.init(row);
+  bool clear_lfo_slot = false;
+  bool clear_legacy_perf_slot = false;
+  bool perf_moved_to_lfo_slot = false;
+
+  if (grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
+    auto *legacy_track =
+        scratch.load_from_grid_512(MDLFO_TRACK_NUM, row, &grids[1]);
+    if (legacy_track == nullptr) {
+      return false;
+    }
+
+    if (legacy_track->active == MDLFO_TRACK_TYPE &&
+        grid_x_header.track_type[0] == MD_TRACK_TYPE) {
+      SeqLFOData legacy_lfo;
+      static_cast<MDLFOTrack *>(legacy_track)->lfo_data.store_data(&legacy_lfo);
+
+      auto *track0 = scratch.load_from_grid_512(0, row, &grids[0]);
+      if (track0 == nullptr) {
+        return false;
+      }
+
+      if (track0->active == MD_TRACK_TYPE) {
+        MDTrack *md_track = static_cast<MDTrack *>(track0);
+        md_track->mod_data.init();
+
+        LFOSeqTrack migrated_lfo;
+        migrated_lfo.init();
+        migrated_lfo.load_data(legacy_lfo, true, true);
+        migrated_lfo.store_data(&md_track->mod_data.lfo);
+
+        md_track->version[0] = SEQ_TRACK_MOD_STORAGE_VERSION;
+        md_track->version[1] = 0;
+        if (!grids[0].write(md_track->_this(), md_track->_sizeof(), 0, row)) {
+          return false;
+        }
+        *converted_track0_lfo = true;
+      }
+    }
+
+    grid_y_header.update_model(MDLFO_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
+    clear_lfo_slot = true;
+  }
+
+  if (grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
+    auto *perf_track =
+        scratch.load_from_grid_512(LEGACY_PERF_TRACK_NUM, row, &grids[1]);
+    if (perf_track == nullptr) {
+      return false;
+    }
+
+    if (perf_track->active == PERF_TRACK_TYPE) {
+      if (!perf_track->store_in_grid(PERF_TRACK_NUM, row, nullptr, 0, false,
+                                     &grids[1])) {
+        return false;
+      }
+      grid_y_header.update_model(PERF_TRACK_NUM, PERF_TRACK_TYPE,
+                                 PERF_TRACK_TYPE);
+      perf_moved_to_lfo_slot = true;
+    }
+    grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
+    clear_legacy_perf_slot = true;
+  }
+
+  if (clear_lfo_slot && !perf_moved_to_lfo_slot &&
+      grid_y_header.track_type[MDLFO_TRACK_NUM] == EMPTY_TRACK_TYPE &&
+      !grids[1].write(empty_slot._this(), empty_slot._sizeof(),
+                      MDLFO_TRACK_NUM, row)) {
+    return false;
+  }
+
+  if (clear_legacy_perf_slot &&
+      grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == EMPTY_TRACK_TYPE &&
+      !grids[1].write(empty_slot._this(), empty_slot._sizeof(),
+                      LEGACY_PERF_TRACK_NUM, row)) {
+    return false;
+  }
+
+  if (!grids[1].write_row_header(&grid_y_header, row)) {
+    return false;
+  }
+  return true;
+}
+
+bool Project::migrate_track_storage_versions() {
+  for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
+    if (!migrate_grid_track_storage_versions(grid)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
   uint16_t legacy_version = 0;
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
+    draw_upgrade_progress(grid, row);
+
     GridRowHeader row_header;
     if (!grids[grid].read_row_header(&row_header, row)) {
       return false;
     }
+
+    bool converted_track0_lfo = false;
+    if (grid == 0 &&
+        !migrate_legacy_md_aux_slots(row, row_header, &converted_track0_lfo)) {
+      return false;
+    }
+
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
       if (row_header.track_type[column] == EMPTY_TRACK_TYPE) {
+        continue;
+      }
+      if (grid == 0 && column == 0 && converted_track0_lfo) {
         continue;
       }
       if (!grids[grid].seek(column, row)) {
@@ -249,6 +375,7 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
     }
   }
 
+  draw_upgrade_progress(grid, GRID_LENGTH);
   return grids[grid].sync();
 }
 

@@ -52,9 +52,10 @@ constexpr size_t NUM_INSTRUMENT_TRACKS = (NUM_MD_TRACKS + NUM_EXT_TRACKS);
 constexpr size_t NUM_AUX_TRACKS = 3;
 
 constexpr size_t GRIDCHAIN_TRACK_NUM = 10;
-constexpr size_t PERF_TRACK_NUM = 11;
+constexpr size_t LEGACY_PERF_TRACK_NUM = 11;
 constexpr size_t MDFX_TRACK_NUM = 12; //position of MDFX track in grid
-constexpr size_t MDLFO_TRACK_NUM = 13; //position of MDLFO track in grid
+constexpr size_t MDLFO_TRACK_NUM = 13; // legacy MD master LFO grid slot
+constexpr size_t PERF_TRACK_NUM = 13;
 constexpr size_t MDROUTE_TRACK_NUM = 14; //position of MDROUTE track in grid
 constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 
