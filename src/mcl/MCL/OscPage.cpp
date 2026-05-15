@@ -3,6 +3,7 @@
 #include "../Drivers/MD/MD.h"
 #include "Osc.h"
 #include "DSP.h"
+#include "MidiNotes.h"
 #include "WavDesigner.h"
 
 #ifdef WAV_DESIGNER
@@ -11,6 +12,9 @@ void osc_mod_handler(EncoderParent *enc) {}
 
 uint32_t OscPage::exploit_delay_clock = 0;
 
+static constexpr int16_t WD_OSC_NOTE_OFFSET = 8;
+static constexpr uint8_t WD_OSC_FREQ_FRAC_BITS = 3;
+
 void OscPage::setup() {
   for (uint8_t i = 0; i < 16; i++) {
     usr_values[i] = get_random(127);
@@ -18,13 +22,13 @@ void OscPage::setup() {
 }
 
 float OscPage::get_freq() {
+  int16_t coarse = (int16_t)enc1.cur - (WD_OSC_NOTE_OFFSET + MIDI_NOTE_A4);
 #if defined(__AVR__)
   static const uint16_t semitone_q15[12] PROGMEM = {
       32768, 34716, 36781, 38968, 41285, 43740,
       46341, 49097, 52016, 55109, 58386, 61858,
   };
 
-  int8_t coarse = (int8_t)enc1.cur - 64;
   int8_t octave = coarse / 12;
   int8_t semitone = coarse % 12;
   if (semitone < 0) {
@@ -32,22 +36,26 @@ float OscPage::get_freq() {
     octave--;
   }
 
-  uint32_t freq_q15 = 440UL * pgm_read_word(semitone_q15 + semitone);
+  uint32_t freq_q3 =
+      (440UL * pgm_read_word(semitone_q15 + semitone) +
+       (1UL << (15 - WD_OSC_FREQ_FRAC_BITS - 1))) >>
+      (15 - WD_OSC_FREQ_FRAC_BITS);
   if (octave > 0) {
-    freq_q15 <<= octave;
+    freq_q3 <<= octave;
   } else if (octave < 0) {
-    freq_q15 >>= -octave;
+    uint8_t shift = -octave;
+    freq_q3 = (freq_q3 + (1UL << (shift - 1))) >> shift;
   }
 
-  int16_t fine = 100 - enc2.cur;
+  int16_t fine = -enc2.cur;
   // Q15 approximation of 2^(fine_cents / 1200). The quadratic term keeps
   // the AVR path within about 0.3 cents over the encoder range.
   int32_t fine_q15 = 32768 + fine * 19;
   fine_q15 += ((int32_t)fine * fine * 11 + 1024) >> 11;
-  freq_q15 = (freq_q15 * (uint32_t)fine_q15) >> 15;
-  return (float)freq_q15 * (1.0f / 32768.0f);
+  freq_q3 = (freq_q3 * (uint32_t)fine_q15 + 16384UL) >> 15;
+  return (float)freq_q3 * (1.0f / (1 << WD_OSC_FREQ_FRAC_BITS));
 #else
-  float cents = (float)(enc1.cur - 64) * 100.0f + (float)(100 - enc2.cur);
+  float cents = (float)coarse * 100.0f - (float)enc2.cur;
   float scale = (float)powf(2.0f, cents / 1200.0f);
   return 440.0f * scale;
 #endif
