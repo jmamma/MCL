@@ -238,9 +238,12 @@ bool Project::check_project_version(uint16_t min_version) {
 }
 
 bool Project::migrate_legacy_md_aux_slots(GridRow row,
-                                          const GridRowHeader &grid_x_header,
+                                          GridRowHeader *grid_x_header,
                                           bool *converted_track0_lfo) {
   *converted_track0_lfo = false;
+  if (grid_x_header == nullptr) {
+    return false;
+  }
 
   GridRowHeader grid_y_header;
   if (!grids[1].read_row_header(&grid_y_header, row)) {
@@ -262,7 +265,8 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     }
 
     if (legacy_track->active == MDLFO_TRACK_TYPE &&
-        grid_x_header.track_type[0] == MD_TRACK_TYPE) {
+        (grid_x_header->track_type[0] == MD_TRACK_TYPE ||
+         grid_x_header->track_type[0] == EMPTY_TRACK_TYPE)) {
       SeqLFOData legacy_lfo;
       static_cast<MDLFOTrack *>(legacy_track)->lfo_data.store_data(&legacy_lfo);
 
@@ -271,8 +275,18 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
         return false;
       }
 
+      MDTrack *md_track = nullptr;
       if (track0->active == MD_TRACK_TYPE) {
-        MDTrack *md_track = static_cast<MDTrack *>(track0);
+        md_track = static_cast<MDTrack *>(track0);
+      } else if (track0->active == EMPTY_TRACK_TYPE) {
+        md_track = static_cast<MDTrack *>(track0->init_track_type(MD_TRACK_TYPE));
+        md_track->init();
+        md_track->link.init(row);
+        md_track->machine.track = 0;
+        md_track->machine.lfo.init(0);
+      }
+
+      if (md_track != nullptr) {
         md_track->mod_data.init();
         LFOSeqTrack::convert_legacy_data(legacy_lfo, &md_track->mod_data.lfo);
 
@@ -280,6 +294,13 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
         md_track->version[1] = 0;
         if (!grids[0].write(md_track->_this(), md_track->_sizeof(), 0, row)) {
           return false;
+        }
+        if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
+          grid_x_header->active = true;
+          grid_x_header->update_model(0, md_track->get_model(), MD_TRACK_TYPE);
+          if (!grids[0].write_row_header(grid_x_header, row)) {
+            return false;
+          }
         }
         *converted_track0_lfo = true;
       }
@@ -350,7 +371,7 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
 
     bool converted_track0_lfo = false;
     if (grid == 0 &&
-        !migrate_legacy_md_aux_slots(row, row_header, &converted_track0_lfo)) {
+        !migrate_legacy_md_aux_slots(row, &row_header, &converted_track0_lfo)) {
       return false;
     }
 

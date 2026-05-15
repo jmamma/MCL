@@ -103,7 +103,7 @@ private:
   void draw_wait_popup(const char *message);
   void draw_upgrade_progress(GridIndex grid, GridRow row);
   bool migrate_legacy_md_aux_slots(GridRow row,
-                                   const GridRowHeader &grid_x_header,
+                                   GridRowHeader *grid_x_header,
                                    bool *converted_track0_lfo);
   GridIndex last_grid_ = 0;
 };
