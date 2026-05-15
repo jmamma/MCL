@@ -5,6 +5,7 @@
 #include "MCLStrings.h"
 #include "MCLSysConfig.h"
 #include "PageSelectPage.h"
+#include "PtcGroups.h"
 #include "SeqPages.h"
 #include "SeqStepTrackRef.h"
 #ifdef PLATFORM_TBD
@@ -254,7 +255,7 @@ void SeqStepPage::display() {
 
   char K[4];
   mcl_gui.put_value_at(seq_param3.getValue(), K);
-  if (IS_BIT_SET16(mcl_cfg.poly_mask, seq_primary_track_index())) {
+  if (ptc_groups.track_has_group(seq_primary_track_index())) {
     draw_knob(2, mclstr_plen, K);
   } else {
     draw_knob(2, mclstr_len, K);

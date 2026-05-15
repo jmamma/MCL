@@ -51,8 +51,9 @@ class SeqPtcPage : public SeqPage, public ClockCallback {
 public:
   bool re_init = false;
   uint8_t transpose = 0;
-  int8_t poly_notes[MAX_POLY_NOTES];
-  uint8_t poly_order[MAX_POLY_NOTES];
+  int8_t voice_pitch[MAX_POLY_NOTES];
+  uint8_t voice_order[MAX_POLY_NOTES];
+  bool voice_active[MAX_POLY_NOTES];
 
   uint8_t dev_note_channels[NUM_DEVS];
   uint64_t dev_note_masks[NUM_DEVS][2];
@@ -64,7 +65,7 @@ public:
   uint8_t octs[NUM_DEVS];
   uint8_t fine_tunes[NUM_DEVS];
 
-  uint8_t find_arp_track(uint8_t channel_event);
+  uint8_t find_arp_track(uint8_t channel_event, uint8_t channel);
   MidiDevice *last_midi_device = nullptr;
   DeviceIdx last_midi_device_idx = DeviceIdx::Primary;
 
@@ -77,6 +78,8 @@ public:
   uint8_t get_machine_pitch(uint8_t track, uint8_t note_num,
                             uint8_t fine_tune = 255);
   uint8_t get_next_voice(uint8_t pitch, uint8_t track_number, uint8_t channel_event);
+  uint8_t release_voice(uint8_t pitch, uint8_t track_number,
+                        uint8_t channel_event);
   uint8_t calc_scale_note(uint8_t note_num, bool padded = false);
   void record(uint8_t pitch, uint8_t tracknumber);
   void trig_md(uint8_t note_num, uint8_t track_number = 255, uint8_t channel_event = CTRL_EVENT,

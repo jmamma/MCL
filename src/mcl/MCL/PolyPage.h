@@ -5,10 +5,11 @@
 
 //#include "Pages.h"
 #include "GUI.h"
+#include "PtcGroups.h"
 
 class PolyPage : public LightPage {
 public:
-  uint16_t *poly_mask;
+  uint8_t selected_group = PTC_GROUP_LOCAL;
 
   PolyPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
@@ -16,7 +17,9 @@ public:
       }
 
   bool handleEvent(gui_event_t *event);
-  void toggle_mask(uint8_t i);
+  void cycle_group(int8_t direction);
+  void sync_legacy_mask();
+  void toggle_group(uint8_t i);
   void draw_mask();
   void display();
   void init();

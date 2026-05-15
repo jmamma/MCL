@@ -1136,7 +1136,7 @@ void MDClass::init_grid_devices(DeviceIdx device_idx) {
            (SeqTrack *)&(mcl_seq.mdfx_track), 0);
   add_track_to_grid(GridIdx::Y, MDFX_TRACK_NUM, &gdt);
 
-  gdt.init(MDROUTE_TRACK_TYPE, GROUP_AUX, legacy_device_idx,
+  gdt.init(MD_ROUTE_TRACK_TYPE, GROUP_AUX, legacy_device_idx,
            (SeqTrack *)&(mcl_seq.aux_tracks[1]), 0);
   add_track_to_grid(GridIdx::Y, MDROUTE_TRACK_NUM, &gdt);
 

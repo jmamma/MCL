@@ -46,6 +46,9 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
     ::new (this) MDTempoTrack;
     break;
   case MDROUTE_TRACK_TYPE:
+    ::new (this) LegacyMDRouteTrack;
+    break;
+  case MD_ROUTE_TRACK_TYPE:
     ::new (this) MDRouteTrack;
     break;
   case MDLFO_TRACK_TYPE:

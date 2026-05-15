@@ -11,7 +11,8 @@
 
 #define PROJ_MIN_READABLE_VERSION 3000
 #define PROJ_VERSION_TRACK_STORAGE_VERSION 3001
-#define PROJ_VERSION 3002
+#define PROJ_VERSION_ROUTE_TRACK_TYPE 3003
+#define PROJ_VERSION 3003
 #define PRJ_DIR "/Projects"
 
 class ProjectHeader {
@@ -36,8 +37,11 @@ public:
   bool load_project(const char *projectname);
   bool convert_project(const char *projectname);
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
-  bool migrate_grid_track_storage_versions(GridIndex grid);
-  bool migrate_track_storage_versions();
+  bool migrate_grid_track_storage_versions(GridIndex grid,
+                                           bool stamp_track_versions,
+                                           bool migrate_route_tracks);
+  bool migrate_track_storage_versions(bool stamp_track_versions,
+                                      bool migrate_route_tracks);
   bool new_project_master_file(const char *projectname);
   bool write_header();
 
@@ -104,7 +108,9 @@ private:
   void draw_upgrade_progress(GridIndex grid, GridRow row);
   bool migrate_legacy_md_aux_slots(GridRow row,
                                    GridRowHeader *grid_x_header,
-                                   bool *converted_track0_lfo);
+                                   bool *converted_track0_lfo,
+                                   bool migrate_legacy_aux_layout,
+                                   bool migrate_route_tracks);
   GridIndex last_grid_ = 0;
 };
 

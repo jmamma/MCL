@@ -9,6 +9,7 @@
 #include "MCLSeq.h"
 #include "MCLStrings.h"
 #include "MDTrack.h"
+#include "PtcGroups.h"
 #include "ResourceManager.h"
 #include "SeqPages.h"
 #include "SeqStepTrackRef.h"
@@ -276,6 +277,10 @@ static inline uint8_t seq_page_step_track_count() {
 static inline bool seq_page_active_step_track_uses_poly_mask() {
   SeqStepTrackRef track = seq_page_active_step_track();
   return !track.selects_track_locally();
+}
+
+static inline uint16_t seq_page_active_poly_mask() {
+  return ptc_groups.mask_for_track(last_md_track);
 }
 
 enum SeqTrackMenuOp : uint8_t {
@@ -1069,15 +1074,16 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
 void SeqPage::length_handler(uint8_t length, bool multi) {
   bool is_md_device = opt_capture_is_md_device();
   if (seq_page_uses_step_track_ops(is_md_device)) {
+    uint16_t poly_mask = seq_page_active_poly_mask();
     bool is_poly = seq_page_active_step_track_uses_poly_mask() &&
-                   IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+                   poly_mask;
     if (multi) {
       for (uint8_t i = 0; i < seq_page_step_track_count(); i++) {
         seq_page_step_track_for(i).set_length(length);
       }
-    } else if (mcl_cfg.poly_mask && is_poly) {
+    } else if (is_poly) {
       for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
-        if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+        if (IS_BIT_SET16(poly_mask, c)) {
           seq_page_step_track_for(c).set_length(length);
         }
       }
@@ -1211,8 +1217,9 @@ void opt_clear_track_handler() {
         track.set_mute_state(old_mutes[n]);
       }
     } else if (opt_clear == 1) {
+      uint16_t poly_mask = seq_page_active_poly_mask();
       bool is_poly = seq_page_active_step_track_uses_poly_mask() &&
-                     IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+                     poly_mask;
       SeqStepTrackRef active_track = seq_page_active_step_track();
       if (is_poly) {
         display_popup(mclstr_clear, mclstr_poly_tracks);
@@ -1227,7 +1234,7 @@ void opt_clear_track_handler() {
       }
       if (is_poly) {
         for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
-          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+          if (IS_BIT_SET16(poly_mask, c)) {
             mcl_clipboard.copy_sequencer_track(c);
             seq_page_step_track_for(c).clear_track();
           }
@@ -1427,15 +1434,17 @@ void opt_paste_track_handler() {
         }
       } else {
         oled_display.textbox_P(mclstr_undo, mclstr_track);
+        uint16_t poly_mask = seq_page_active_poly_mask();
         is_poly = seq_page_active_step_track_uses_poly_mask() &&
-                  IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+                  poly_mask;
         if (seq_page_active_step_track().uses_kit_sound()) {
           MD.popup_text(23);
         }
       }
       if (is_poly) {
+        uint16_t poly_mask = seq_page_active_poly_mask();
         for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
-          if (IS_BIT_SET16(mcl_cfg.poly_mask, c)) {
+          if (IS_BIT_SET16(poly_mask, c)) {
             mcl_clipboard.paste_sequencer_track(c, c);
           }
         }

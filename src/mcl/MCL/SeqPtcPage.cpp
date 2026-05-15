@@ -7,6 +7,7 @@
 #include "CommonPages.h"
 #include "MCLSysConfig.h"
 #include "MCLStrings.h"
+#include "PtcGroups.h"
 #include "SeqExtStepTrackApi.h"
 #include "SeqExtStepTrackRef.h"
 #include "SeqTrackUtil.h"
@@ -49,8 +50,7 @@ void tbd_ptc_send_note(SeqPtcPage &page, uint8_t note, uint8_t mask) {
 
   if (is_md) {
     note_num += MIDI_NOTE_C4;
-    bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-    channel_event = is_poly ? POLY_EVENT : CTRL_EVENT;
+    channel_event = CTRL_EVENT;
   }
 
   uint8_t msg[] = {
@@ -94,6 +94,17 @@ SeqTrack &ptc_active_track() {
   bool grid_x_tracks = SeqPage::active_device_is_md();
   uint8_t track_idx = grid_x_tracks ? last_md_track : last_ext_track;
   return SeqTrackUtil::get_seq_track(grid_x_tracks, track_idx);
+}
+
+uint16_t ptc_mask_for_event(uint8_t track, uint8_t channel_event,
+                            uint8_t channel) {
+  if (channel_event == POLY_EVENT) {
+    uint16_t mask = ptc_groups.mask_for_midi_channel(channel);
+    if (mask) {
+      return mask;
+    }
+  }
+  return ptc_groups.mask_for_track(track);
 }
 
 } // namespace
@@ -172,8 +183,9 @@ void SeqPtcPage::config_encoders() {
 
 void SeqPtcPage::init_poly() {
   for (uint8_t x = 0; x < 16; x++) {
-    poly_notes[x] = -1;
-    poly_order[x] = 0;
+    voice_pitch[x] = -1;
+    voice_order[x] = 0;
+    voice_active[x] = false;
   }
   cc_link_enable = true;
 }
@@ -293,19 +305,11 @@ void SeqPtcPage::loop() {
   }
 #endif
 }
-uint8_t SeqPtcPage::find_arp_track(uint8_t channel_event) {
+uint8_t SeqPtcPage::find_arp_track(uint8_t channel_event, uint8_t channel) {
   uint8_t track = last_md_track;
-  if (IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track)) { channel_event = POLY_EVENT; }
-  if (channel_event == POLY_EVENT) {
-    uint16_t mask = mcl_cfg.poly_mask;
-    uint8_t n = 0;
-    while (mask) {
-      if (mask & 1) {
-        return n;
-      }
-      n++;
-      mask = mask >> 1;
-    }
+  uint16_t mask = ptc_mask_for_event(track, channel_event, channel);
+  if (mask) {
+    return ptc_groups.first_track(mask);
   }
   return track;
 }
@@ -350,7 +354,7 @@ void SeqPtcPage::display() {
 #else
   bool uses_tbd_primary_tracks = false;
 #endif
-  bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
+  bool is_poly = ptc_groups.track_has_group(last_md_track);
   draw_knob_frame();
   char buf1[4];
 
@@ -373,7 +377,7 @@ void SeqPtcPage::display() {
   // draw LEN
   if (is_md_device || uses_tbd_primary_tracks) {
     mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
-    if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
+    if (is_poly) {
       draw_knob(2, mclstr_plen, buf1);
     } else {
     draw_knob(2, mclstr_len, buf1);
@@ -399,7 +403,7 @@ void SeqPtcPage::display() {
   if (is_md_device || uses_tbd_primary_tracks) {
     arp_track = &mcl_seq.md_arp_tracks[last_md_track];
   }
-  if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
+  if (is_poly) {
     mcl_print_P(mclstr_ply_label);
   }
 
@@ -453,62 +457,125 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
                                    uint8_t channel_event) {
   uint8_t voice = 255;
+  int oldest_val = -1;
+  uint16_t voice_mask = 0;
 
   if (channel_event == POLY_EVENT) {
-    goto poly;
+    voice_mask = ptc_groups.mask_for_track(track_number);
+    if (!voice_mask) {
+      return 255;
+    }
   } else if (channel_event == CTRL_EVENT) {
+    voice_mask = ptc_groups.mask_for_track(track_number);
 
     // mono
-    if (!mcl_cfg.poly_mask ||
-        (!IS_BIT_SET16(mcl_cfg.poly_mask, track_number))) {
+    if (!voice_mask) {
+      if (track_number >= NUM_MD_TRACKS) {
+        return 255;
+      }
+      voice_active[track_number] = true;
+      voice_pitch[track_number] = pitch;
       return track_number;
     }
   } else {
     return 255;
   }
 
-poly:
-  // If track previously played pitch, re-use this track
+  // If track is currently playing this pitch, re-use this track.
   for (uint8_t x = 0; x < 16; x++) {
-    if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
-      if (poly_notes[x] == pitch || poly_notes[x] == -1) {
-        voice = x;
-      }
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(voice_mask, x) &&
+        voice_active[x] && voice_pitch[x] == pitch) {
+      voice = x;
     }
   }
 
-  int oldest_val = -1;
   if (voice != 255) {
     goto end;
   }
-  // Reuse oldest note
 
+  // Prefer an inactive voice that was last associated with this pitch.
   for (uint8_t x = 0; x < 16; x++) {
-    if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
-      if (poly_order[x] > oldest_val) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(voice_mask, x)) {
+      if (!voice_active[x] && voice_pitch[x] == pitch) {
         voice = x;
-        oldest_val = poly_order[x];
       }
     }
   }
 
-  // Shift up
+  if (voice != 255) {
+    goto end;
+  }
+
+  // Then use any inactive voice.
+  for (uint8_t x = 0; x < 16; x++) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(voice_mask, x)) {
+      if (!voice_active[x]) {
+        voice = x;
+      }
+    }
+  }
+
+  if (voice != 255) {
+    goto end;
+  }
+  // Reuse oldest active note.
+
+  for (uint8_t x = 0; x < 16; x++) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(voice_mask, x)) {
+      if (voice_order[x] > oldest_val) {
+        voice = x;
+        oldest_val = voice_order[x];
+      }
+    }
+  }
+
+  if (voice == 255) {
+    return 255;
+  }
 
 end:
 
   for (uint8_t x = 0; x < 16; x++) {
-    if (MD.isMelodicTrack(x) && IS_BIT_SET16(mcl_cfg.poly_mask, x)) {
-      if (poly_order[x] <= poly_order[voice] && x != voice) {
-        poly_order[x]++;
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(voice_mask, x)) {
+      if (voice_order[x] <= voice_order[voice] && x != voice) {
+        voice_order[x]++;
       }
     }
   }
   // set selected voice to be the latest note.
 
-  poly_order[voice] = 0;
-  poly_notes[voice] = pitch;
+  voice_order[voice] = 0;
+  voice_pitch[voice] = pitch;
+  voice_active[voice] = true;
 
   return voice;
+}
+
+uint8_t SeqPtcPage::release_voice(uint8_t pitch, uint8_t track_number,
+                                  uint8_t channel_event) {
+  if (track_number >= NUM_MD_TRACKS) {
+    return 255;
+  }
+
+  uint16_t voice_mask = ptc_groups.mask_for_track(track_number);
+  if (channel_event == CTRL_EVENT && !voice_mask) {
+    voice_active[track_number] = false;
+    return track_number;
+  }
+
+  if (channel_event != POLY_EVENT && channel_event != CTRL_EVENT) {
+    return 255;
+  }
+
+  for (uint8_t x = 0; x < 16; x++) {
+    if (MD.isMelodicTrack(x) && IS_BIT_SET16(voice_mask, x) &&
+        voice_active[x] && voice_pitch[x] == pitch) {
+      voice_active[x] = false;
+      return x;
+    }
+  }
+
+  return 255;
 }
 
 uint8_t SeqPtcPage::get_note_from_machine_pitch(uint8_t track_number, uint8_t pitch) {
@@ -565,10 +632,9 @@ void SeqPtcPage::trig_md(uint8_t note_num, uint8_t track_number, uint8_t channel
   if (next_track > 15) { return; }
 
   uint8_t machine_pitch = get_machine_pitch(next_track, note_num, fine_tune);
-  bool is_midi_model_ = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  bool is_midi_model_ = ((MD.kit.models[next_track] & 0xF0) == MID_01_MODEL);
   if (is_midi_model_) {
     machine_pitch = note_num;
-    next_track = track_number;
 #if !defined(__AVR__)
     if (mcl_seq.using_spsx_tracks) {
       mcl_seq.spsx_tracks[next_track].send_notes_off();
@@ -855,8 +921,7 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
 
     if (is_md) {
       note += MIDI_NOTE_C4;
-      bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
-      channel_event = is_poly ? POLY_EVENT : CTRL_EVENT;
+      channel_event = CTRL_EVENT;
     } else {
       //      note += MIDI_NOTE_C1;
     }
@@ -1014,7 +1079,7 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
 }
 
 uint8_t SeqPtcPage::is_md_midi(uint8_t channel) {
-  if (mcl_cfg.uart2_poly_chan - 1 == channel) {
+  if (ptc_groups.group_for_midi_channel(channel) != PTC_GROUP_OFF) {
     return POLY_EVENT;
   }
   if (mcl_cfg.uart2_ctrl_chan - 1 == channel) {
@@ -1124,7 +1189,7 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
     note_num = ((note_num / 12) - (MIDI_NOTE_C4 / 12)) * 12 + note;
 
     pitch = seq_ptc_page.process_ext_event(note_num, note_on, channel);
-    uint8_t n = seq_ptc_page.find_arp_track(channel_event);
+    uint8_t n = seq_ptc_page.find_arp_track(channel_event, channel);
     arp_page.track_update(n);
 
     seq_ptc_page.render_arp(false, SeqPage::midi_device, n);
@@ -1176,18 +1241,20 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
     note_num = ((note_num / 12) - (MIDI_NOTE_C4 / 12)) * 12 + note;
 
     pitch = seq_ptc_page.process_ext_event(note_num, false, channel);
-    uint8_t n = seq_ptc_page.find_arp_track(channel_event);
+    uint8_t n = seq_ptc_page.find_arp_track(channel_event, channel);
     seq_ptc_page.render_arp(false, SeqPage::midi_device, n);
     if (pitch == 255) { return; }
+    uint8_t voice = seq_ptc_page.release_voice(pitch, n, channel_event);
+    if (voice == 255) { return; }
     ArpSeqTrack *arp_track = &mcl_seq.md_arp_tracks[n];
-    bool is_midi_model_ = ((MD.kit.models[n] & 0xF0) == MID_01_MODEL);
+    bool is_midi_model_ = ((MD.kit.models[voice] & 0xF0) == MID_01_MODEL);
     if (is_midi_model_) {
       if (!arp_track->enabled || (MidiClock.state != 2)) {
 #if !defined(__AVR__)
-        if (mcl_seq.using_spsx_tracks) { mcl_seq.spsx_tracks[n].send_notes_off(); }
+        if (mcl_seq.using_spsx_tracks) { mcl_seq.spsx_tracks[voice].send_notes_off(); }
         else
 #endif
-        { mcl_seq.md_tracks[n].send_notes_off(); }
+        { mcl_seq.md_tracks[voice].send_notes_off(); }
       }
     }
     return;
@@ -1288,8 +1355,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
       return;
     }
     if (channel_event == POLY_EVENT) {
+      uint16_t mask = ptc_groups.mask_for_midi_channel(channel);
       for (uint8_t n = 0; n < NUM_MD_TRACKS; n++) {
-        if (IS_BIT_SET16(mcl_cfg.poly_mask, n)) {
+        if (IS_BIT_SET16(mask, n)) {
           MD.setTrackParam(n, param - 16, value, nullptr, true);
         }
       }
@@ -1417,11 +1485,12 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   if (track_param == MODEL_MUTE) {
     return;
   } // don't process mute
-  if (mcl_cfg.poly_mask && IS_BIT_SET16(mcl_cfg.poly_mask, track)) {
+  uint16_t mask = ptc_groups.mask_for_track(track);
+  if (mask) {
 
     for (uint8_t n = 0; n < 16; n++) {
 
-      if (IS_BIT_SET16(mcl_cfg.poly_mask, n) && (n != track)) {
+      if (IS_BIT_SET16(mask, n) && (n != track)) {
         if ((track_param < 24 && track_param > 7) ||
             (track_param < 8 && MD.kit.models[n] == MD.kit.models[track])) {
           MD.setTrackParam(n, track_param, value, nullptr, true);

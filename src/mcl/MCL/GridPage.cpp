@@ -584,6 +584,7 @@ void GridPage::display_grid() {
         str[1] = 'X';
         break;
       case MDROUTE_TRACK_TYPE:
+      case MD_ROUTE_TRACK_TYPE:
         str[0] = 'R';
         str[1] = 'T';
         break;

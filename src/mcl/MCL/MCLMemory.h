@@ -77,7 +77,7 @@ constexpr size_t NUM_LOCKS = 8;
 // EmptyTrack 2094
 //
 // MDLFOTrack 226
-// MDRouteTrack 25
+// MDRouteTrack 39
 // MDFXTrack 43
 // MDTempoTrack 11
 
@@ -95,7 +95,7 @@ constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2128);
 
 constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);
 constexpr size_t MDLFO_TRACK_LEN = MEMORY_ALIGN(226);
-constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(25);
+constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(39);
 constexpr size_t MDFX_TRACK_LEN = MEMORY_ALIGN(43);
 constexpr size_t MDTEMPO_TRACK_LEN = MEMORY_ALIGN(11);
 constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(491);

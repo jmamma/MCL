@@ -10,6 +10,7 @@
 #include "MNMTrack.h"
 #include "MDFXTrack.h"
 #include "MDLFOTrack.h"
+#include "MDRouteTrack.h"
 #include "EmptyTrack.h"
 
 #define PRJ_NAME_LEN 14
@@ -175,7 +176,8 @@ bool Project::load_project(const char *projectname) {
   }
 
   bool migrate_track_storage = version < PROJ_VERSION_TRACK_STORAGE_VERSION;
-  if (migrate_track_storage) {
+  bool migrate_route_tracks = version < PROJ_VERSION_ROUTE_TRACK_TYPE;
+  if (migrate_track_storage || migrate_route_tracks) {
     draw_wait_popup("UPGRADING PROJECT");
   }
 
@@ -194,11 +196,13 @@ bool Project::load_project(const char *projectname) {
     }
   }
 
-  if (migrate_track_storage && !migrate_track_storage_versions()) {
-    DEBUG_PRINTLN(F("Could not migrate track storage versions"));
+  if ((migrate_track_storage || migrate_route_tracks) &&
+      !migrate_track_storage_versions(migrate_track_storage,
+                                      migrate_route_tracks)) {
+    DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
-  if (migrate_track_storage && !write_header()) {
+  if ((migrate_track_storage || migrate_route_tracks) && !write_header()) {
     return false;
   }
 
@@ -239,7 +243,9 @@ bool Project::check_project_version(uint16_t min_version) {
 
 bool Project::migrate_legacy_md_aux_slots(GridRow row,
                                           GridRowHeader *grid_x_header,
-                                          bool *converted_track0_lfo) {
+                                          bool *converted_track0_lfo,
+                                          bool migrate_legacy_aux_layout,
+                                          bool migrate_route_tracks) {
   *converted_track0_lfo = false;
   if (grid_x_header == nullptr) {
     return false;
@@ -257,7 +263,8 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
   bool clear_legacy_perf_slot = false;
   bool perf_moved_to_lfo_slot = false;
 
-  if (grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
+  if (migrate_legacy_aux_layout &&
+      grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
     auto *legacy_track =
         scratch.load_from_grid_512(MDLFO_TRACK_NUM, row, &grids[1]);
     if (legacy_track == nullptr) {
@@ -310,7 +317,8 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     clear_lfo_slot = true;
   }
 
-  if (grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
+  if (migrate_legacy_aux_layout &&
+      grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
     auto *perf_track =
         scratch.load_from_grid_512(LEGACY_PERF_TRACK_NUM, row, &grids[1]);
     if (perf_track == nullptr) {
@@ -344,22 +352,62 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     return false;
   }
 
+  if (migrate_route_tracks &&
+      grid_y_header.track_type[MDROUTE_TRACK_NUM] == MDROUTE_TRACK_TYPE) {
+    auto *route_track =
+        scratch.load_from_grid_512(MDROUTE_TRACK_NUM, row, &grids[1]);
+    if (route_track == nullptr) {
+      return false;
+    }
+
+    if (route_track->active == MDROUTE_TRACK_TYPE) {
+      auto *legacy_route = static_cast<LegacyMDRouteTrack *>(route_track);
+      GridLink link = legacy_route->link;
+      uint8_t routing[16];
+      memcpy(routing, legacy_route->routing, sizeof(routing));
+      uint16_t poly_mask = legacy_route->poly_mask;
+
+      auto *new_route = static_cast<MDRouteTrack *>(
+          route_track->init_track_type(MD_ROUTE_TRACK_TYPE));
+      new_route->link = link;
+      memcpy(new_route->routing, routing, sizeof(routing));
+      new_route->load_legacy_poly_mask(poly_mask, cfg.uart2_poly_chan);
+      new_route->version[0] = 0;
+      new_route->version[1] = 0;
+
+      if (!grids[1].write(new_route->_this(), new_route->_sizeof(),
+                          MDROUTE_TRACK_NUM, row)) {
+        return false;
+      }
+      grid_y_header.update_model(MDROUTE_TRACK_NUM, new_route->get_model(),
+                                 MD_ROUTE_TRACK_TYPE);
+    }
+  }
+
   if (!grids[1].write_row_header(&grid_y_header, row)) {
     return false;
   }
   return true;
 }
 
-bool Project::migrate_track_storage_versions() {
-  for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
-    if (!migrate_grid_track_storage_versions(grid)) {
+bool Project::migrate_track_storage_versions(bool stamp_track_versions,
+                                             bool migrate_route_tracks) {
+  GridIndex grid_count = stamp_track_versions ? NUM_GRIDS : 1;
+  for (GridIndex grid = 0; grid < grid_count; grid++) {
+    if (!migrate_grid_track_storage_versions(grid, stamp_track_versions,
+                                             migrate_route_tracks)) {
       return false;
     }
+  }
+  if (migrate_route_tracks && !grids[1].sync()) {
+    return false;
   }
   return true;
 }
 
-bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
+bool Project::migrate_grid_track_storage_versions(GridIndex grid,
+                                                  bool stamp_track_versions,
+                                                  bool migrate_route_tracks) {
   uint16_t legacy_version = 0;
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
@@ -371,8 +419,14 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
 
     bool converted_track0_lfo = false;
     if (grid == 0 &&
-        !migrate_legacy_md_aux_slots(row, &row_header, &converted_track0_lfo)) {
+        !migrate_legacy_md_aux_slots(row, &row_header, &converted_track0_lfo,
+                                     stamp_track_versions,
+                                     migrate_route_tracks)) {
       return false;
+    }
+
+    if (!stamp_track_versions) {
+      continue;
     }
 
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
