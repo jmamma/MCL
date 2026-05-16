@@ -183,6 +183,57 @@ void SeqExtStepPage::config_encoders() {
 
 }
 
+bool SeqExtStepPage::handle_cc_lock_learn(uint8_t track_index, uint8_t param,
+                                          uint8_t value) {
+  if (mcl.currentPage() != SEQ_EXTSTEP_PAGE ||
+      track_index >= SeqExtStepTrackRef::track_count()) {
+    return false;
+  }
+
+  auto track = SeqExtStepTrackRef::track(track_index);
+  auto locks = track.locks();
+  if (SeqPage::pianoroll_mode > 0) {
+    uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
+    uint8_t param_id = 0;
+    if (locks.selected_lock_param_id(lock_idx, param_id) &&
+        param_id == PARAM_LEARN) {
+      locks.set_selected_lock_control(lock_idx, SEQ_EXT_LOCK_CTRL_CC, param,
+                                      value);
+      SeqPage::param_select = param;
+    }
+    if (locks.selected_lock_matches_control(lock_idx, SEQ_EXT_LOCK_CTRL_CC,
+                                            param)) {
+      lock_cur_y = locks.lock_ui_value_from_control(
+          lock_idx, SEQ_EXT_LOCK_CTRL_CC, param, value);
+    }
+  }
+
+  if (SeqExtStepTrackRef::active_track_index() != track_index) {
+    return true;
+  }
+
+  uint16_t timing_mid = track.ticks_per_step();
+  uint16_t page_width = seq_ext_step_page_width(timing_mid);
+  for (uint8_t i = 0; i < kExtStepVisibleSteps; i++) {
+    if (!note_interface.is_note_on(i)) continue;
+    uint8_t step = ((cur_x / page_width) * kExtStepVisibleSteps) + i;
+    if (step >= track.length()) continue;
+    locks.replace_param_lock(step, timing_mid, param, value, SeqPage::slide);
+    if (SeqPage::pianoroll_mode == 0) {
+      char str[] = "CC:";
+      char str2[] = "--  ";
+      mcl_gui.put_value_at(value, str2);
+      oled_display.textbox(str, str2);
+    } else {
+      uint8_t lock_idx = locks.selected_lock_slot_for_param(param);
+      if (lock_idx != 255) {
+        SeqPage::pianoroll_mode = lock_idx + 1;
+      }
+    }
+  }
+  return true;
+}
+
 void SeqExtStepPage::init() {
   page_count = 8;
   DEBUG_PRINTLN(F("seq extstep init"));

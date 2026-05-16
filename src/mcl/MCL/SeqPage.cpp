@@ -3,6 +3,9 @@
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MidiDevice.h"
 #include "DeviceManager.h"
+#if !defined(__AVR__)
+#include "DevicePanelRef.h"
+#endif
 #include "DeviceParamResolver.h"
 #include "MCLClipBoard.h"
 #include "MCLGUI.h"
@@ -12,6 +15,7 @@
 #include "PtcGroups.h"
 #include "ResourceManager.h"
 #include "SeqPages.h"
+#include "SeqExtStepTrackRef.h"
 #include "SeqStepTrackRef.h"
 #include "SeqTrackUtil.h"
 #ifdef PLATFORM_TBD
@@ -28,6 +32,14 @@ const char *const kMaskInfoLabels[] PROGMEM = {
     mclstr_slide,
     mclstr_mute,
 };
+
+#if defined(__AVR__)
+#define seq_panel_popup_text(...) MD.popup_text(__VA_ARGS__)
+#define seq_panel_popup_text_P(...) MD.popup_text_P(__VA_ARGS__)
+#else
+#define seq_panel_popup_text(...) DevicePanelRef::popup_text(__VA_ARGS__)
+#define seq_panel_popup_text_P(...) DevicePanelRef::popup_text_P(__VA_ARGS__)
+#endif
 
 #if defined(__AVR__)
 bool seq_page_uses_non_md_primary_step_tracks() {
@@ -398,52 +410,23 @@ static inline void apply_track_menu_op(bool is_md_device, bool apply_all,
 }
 
 static inline uint8_t ext_track_channel(uint8_t track) {
-#if defined(PLATFORM_TBD)
-  if (SeqTrackUtil::use_midi_tracks_for_ext()) {
-    return mcl_seq.midi_tracks[track].channel();
-  }
-#endif
-  return mcl_seq.ext_tracks[track].channel;
+  return SeqExtStepTrackRef::track(track).channel();
 }
 
 static inline void set_ext_track_channel(uint8_t track, uint8_t channel) {
-#if defined(PLATFORM_TBD)
-  if (SeqTrackUtil::use_midi_tracks_for_ext()) {
-    if (mcl_seq.midi_tracks[track].channel() != channel) {
-      mcl_seq.midi_tracks[track].buffer_notesoff();
-      mcl_seq.midi_tracks[track].set_channel(channel);
-    }
-    return;
-  }
-#endif
-  if (mcl_seq.ext_tracks[track].channel != channel) {
-    mcl_seq.ext_tracks[track].buffer_notesoff();
-    mcl_seq.ext_tracks[track].channel = channel;
-  }
+  SeqExtStepTrackRef::track(track).set_channel(channel);
 }
 
 static inline void clear_ext_track(uint8_t track) {
-  SeqTrackUtil::get_track(false, track).clear_track();
+  SeqExtStepTrackRef::track(track).clear_track();
 }
 
 static inline void clear_ext_track_locks(uint8_t track) {
-#if defined(PLATFORM_TBD)
-  if (SeqTrackUtil::use_midi_tracks_for_ext()) {
-    mcl_seq.midi_tracks[track].clear_track_locks();
-    return;
-  }
-#endif
-  mcl_seq.ext_tracks[track].clear_track_locks();
+  SeqExtStepTrackRef::track(track).clear_track_locks();
 }
 
 static inline void clear_ext_track_locks(uint8_t track, uint8_t lock_idx) {
-#if defined(PLATFORM_TBD)
-  if (SeqTrackUtil::use_midi_tracks_for_ext()) {
-    mcl_seq.midi_tracks[track].clear_track_locks(lock_idx);
-    return;
-  }
-#endif
-  mcl_seq.ext_tracks[track].clear_track_locks(lock_idx);
+  SeqExtStepTrackRef::track(track).clear_track_locks(lock_idx);
 }
 
 static inline void copy_step_to_clipboard(SeqStepTrackRef track, uint8_t step,
@@ -468,12 +451,12 @@ static inline void paste_step_from_clipboard(SeqStepTrackRef track,
 
 static inline void display_popup(const char *str_P) {
   oled_display.textbox_P(str_P);
-  MD.popup_text_P(str_P);
+  seq_panel_popup_text_P(str_P);
 }
 
 static inline void display_popup(const char *str1_P, const char *str2_P) {
   oled_display.textbox_P(str1_P, str2_P);
-  MD.popup_text_P(str1_P, str2_P);
+  seq_panel_popup_text_P(str1_P, str2_P);
 }
 
 void SeqPage::setup() {}
@@ -605,7 +588,7 @@ void SeqPage::config_mask_info(bool silent) {
     char str[16] = "EDIT ";
     strcat(str, info2);
     if (mask_type == MASK_PATTERN) {
-      MD.popup_text(-1, 2);
+      seq_panel_popup_text((uint8_t)-1, 2);
     } else {
       seq_page_active_step_track().popup_text(str, 1);
     }
@@ -1199,7 +1182,7 @@ void opt_clear_track_handler() {
 
       SeqStepTrackRef active_track = seq_page_active_step_track();
       if (active_track.uses_kit_sound()) {
-        MD.popup_text(2);
+        seq_panel_popup_text(2);
         oled_display.textbox_P(mclstr_clear_md, mclstr_tracks);
       } else {
         oled_display.textbox_P(mclstr_clear, mclstr_tracks);
@@ -1343,7 +1326,7 @@ void opt_copy_track_handler(uint8_t op) {
       if (!silent) {
         if (seq_page_active_step_track().uses_kit_sound()) {
           oled_display.textbox_P(mclstr_copy_md, mclstr_tracks);
-          MD.popup_text(1);
+          seq_panel_popup_text(1);
         } else {
           oled_display.textbox_P(mclstr_copy, mclstr_tracks);
         }
@@ -1366,7 +1349,7 @@ void opt_copy_track_handler(uint8_t op) {
       if (!silent) {
         oled_display.textbox_P(mclstr_copy, mclstr_track);
         if (seq_page_active_step_track().uses_kit_sound()) {
-          MD.popup_text(4);
+          seq_panel_popup_text(4);
         }
       }
       mcl_clipboard.copy_track = last_primary_track;
@@ -1375,7 +1358,7 @@ void opt_copy_track_handler(uint8_t op) {
 #ifdef EXT_TRACKS
     else {
       if (!silent) {
-        MD.popup_text_P(mclstr_copy_ext);
+        seq_panel_popup_text_P(mclstr_copy_ext);
         oled_display.textbox_P(mclstr_copy, mclstr_ext_track);
       }
       mcl_clipboard.copy_track = last_ext_track + NUM_MD_TRACKS;
@@ -1404,7 +1387,7 @@ void opt_paste_track_handler() {
       if (!undo) {
         if (seq_page_active_step_track().uses_kit_sound()) {
           oled_display.textbox_P(mclstr_paste_md, mclstr_tracks);
-          MD.popup_text(3);
+          seq_panel_popup_text(3);
         } else {
           oled_display.textbox_P(mclstr_paste, mclstr_tracks);
         }
@@ -1413,7 +1396,7 @@ void opt_paste_track_handler() {
         oled_display.textbox_P(mclstr_undo, mclstr_tracks);
         oled_display.display();
         if (seq_page_active_step_track().uses_kit_sound()) {
-          MD.popup_text(22);
+          seq_panel_popup_text(22);
         }
       }
       mcl_clipboard.paste_sequencer();
@@ -1433,7 +1416,7 @@ void opt_paste_track_handler() {
       if (!undo) {
         oled_display.textbox_P(mclstr_paste, mclstr_track);
         if (seq_page_active_step_track().uses_kit_sound()) {
-          MD.popup_text(6);
+          seq_panel_popup_text(6);
         }
       } else {
         oled_display.textbox_P(mclstr_undo, mclstr_track);
@@ -1441,7 +1424,7 @@ void opt_paste_track_handler() {
         is_poly = seq_page_active_step_track_uses_poly_mask() &&
                   poly_mask;
         if (seq_page_active_step_track().uses_kit_sound()) {
-          MD.popup_text(23);
+          seq_panel_popup_text(23);
         }
       }
       if (is_poly) {
@@ -1484,7 +1467,7 @@ void opt_clear_page_handler() {
   SeqStepTrackRef track = seq_page_active_step_track();
   oled_display.textbox_P(mclstr_clear, mclstr_page);
   if (track.uses_kit_sound()) {
-    MD.popup_text(57);
+    seq_panel_popup_text(57);
   }
   for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
     uint8_t step = seq_page_visible_step(n);
@@ -1509,7 +1492,7 @@ void opt_copy_page_handler(uint8_t op) {
   if (!silent) {
     oled_display.textbox_P(mclstr_copy, mclstr_page);
     if (track.uses_kit_sound()) {
-      MD.popup_text(54);
+      seq_panel_popup_text(54);
     }
   }
   uint8_t track_len = track.length();
@@ -1527,12 +1510,12 @@ void opt_paste_page_handler() {
     opt_undo = 255;
     oled_display.textbox_P(mclstr_undo, mclstr_page);
     if (track.uses_kit_sound()) {
-      MD.popup_text(55);
+      seq_panel_popup_text(55);
     }
   } else {
     oled_display.textbox_P(mclstr_paste, mclstr_page);
     if (track.uses_kit_sound()) {
-      MD.popup_text(56);
+      seq_panel_popup_text(56);
     }
   }
   uint8_t track_len = track.length();
@@ -1560,7 +1543,7 @@ void opt_clear_step_handler() {
   SeqStepTrackRef track = seq_page_active_step_track();
   oled_display.textbox_P(mclstr_clear_step);
   if (track.uses_kit_sound()) {
-    MD.popup_text_P(mclstr_clear_step);
+    seq_panel_popup_text_P(mclstr_clear_step);
   }
   track.clear_step(step);
   track.clean_params();
@@ -1579,7 +1562,7 @@ void opt_copy_step_handler(uint8_t op) {
   if (!silent) {
     oled_display.textbox_P(mclstr_copy_step);
     if (track.uses_kit_sound()) {
-      MD.popup_text_P(mclstr_copy_step);
+      seq_panel_popup_text_P(mclstr_copy_step);
     }
   }
   uint8_t step = seq_page_visible_step(SeqPage::step_select);
@@ -1592,12 +1575,12 @@ void opt_paste_step_handler() {
     opt_undo = 255;
     oled_display.textbox_P(mclstr_undo_step);
     if (track.uses_kit_sound()) {
-      MD.popup_text_P(mclstr_undo_step);
+      seq_panel_popup_text_P(mclstr_undo_step);
     }
   } else {
     oled_display.textbox_P(mclstr_paste_step);
     if (track.uses_kit_sound()) {
-      MD.popup_text_P(mclstr_paste_step);
+      seq_panel_popup_text_P(mclstr_paste_step);
     }
   }
   uint8_t step = seq_page_visible_step(SeqPage::step_select);
@@ -1620,7 +1603,7 @@ void opt_clear_step_locks_handler() {
     bool is_md_device = opt_capture_is_md_device();
     if (seq_page_uses_step_track_ops(is_md_device) &&
         seq_page_active_step_track().uses_kit_sound()) {
-      MD.popup_text(14);
+      seq_panel_popup_text(14);
     }
   }
   for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
@@ -1673,7 +1656,7 @@ void opt_transpose_track_handler() {
   bool is_md_device = opt_capture_is_md_device();
   if (seq_page_uses_step_track_ops(is_md_device) &&
       seq_page_active_step_track().uses_kit_sound()) {
-    MD.popup_text_P(mclstr_transpose);
+    seq_panel_popup_text_P(mclstr_transpose);
   }
   apply_track_menu_op(is_md_device, is_all, SEQ_TRACK_OP_TRANSPOSE,
                       transpose_value);

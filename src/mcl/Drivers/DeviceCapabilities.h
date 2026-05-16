@@ -224,5 +224,10 @@ public:
   virtual void set_rec_mode(uint8_t mode);
   virtual void sync_seqtrack(uint8_t length, uint8_t speed,
                              uint8_t step_count);
+  virtual void popup_text(uint8_t action_string, uint8_t persistent = 0);
+  virtual void popup_text(char *text, uint8_t persistent = 0);
+  virtual void popup_text_P(const char *text_P, uint8_t persistent = 0);
+  virtual void popup_text_P(const char *text1_P, const char *text2_P,
+                            uint8_t persistent = 0);
 };
 #endif

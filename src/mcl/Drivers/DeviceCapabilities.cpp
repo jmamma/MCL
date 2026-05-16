@@ -683,4 +683,29 @@ void DevicePanelCapability::sync_seqtrack(uint8_t length, uint8_t speed,
   (void)speed;
   (void)step_count;
 }
+
+void DevicePanelCapability::popup_text(uint8_t action_string,
+                                       uint8_t persistent) {
+  (void)action_string;
+  (void)persistent;
+}
+
+void DevicePanelCapability::popup_text(char *text, uint8_t persistent) {
+  (void)text;
+  (void)persistent;
+}
+
+void DevicePanelCapability::popup_text_P(const char *text_P,
+                                         uint8_t persistent) {
+  (void)text_P;
+  (void)persistent;
+}
+
+void DevicePanelCapability::popup_text_P(const char *text1_P,
+                                         const char *text2_P,
+                                         uint8_t persistent) {
+  (void)text1_P;
+  (void)text2_P;
+  (void)persistent;
+}
 #endif

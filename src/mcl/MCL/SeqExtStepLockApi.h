@@ -55,6 +55,8 @@ public:
   bool delete_lock(seq_extstep_tick_t tick, uint8_t lock_idx, uint8_t value);
   bool add_lock(uint8_t step, uint16_t timing, uint8_t param, uint8_t value,
                 bool slide, uint8_t lock_idx);
+  bool replace_param_lock(uint8_t step, uint16_t timing, uint8_t param,
+                          uint8_t value, bool slide);
   bool set_p4_param_lock(uint8_t step, uint16_t timing, uint8_t param,
                          uint8_t value, bool slide);
   bool record_p4_param_lock(uint8_t param, uint8_t value, bool slide);
@@ -89,6 +91,7 @@ public:
                                      uint16_t ctrl, uint16_t value) const;
   bool selected_lock_matches_control(uint8_t slot, uint8_t ctrl_type,
                                      uint16_t ctrl) const;
+  uint8_t selected_lock_slot_for_param(uint8_t param) const;
   bool copy_lock_value_label(uint8_t slot, uint8_t value, char *dst,
                              size_t dst_len) const;
   bool record_control_lock(uint8_t ctrl_type, uint16_t ctrl, uint16_t value,

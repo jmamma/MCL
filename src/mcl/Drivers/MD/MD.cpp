@@ -287,6 +287,13 @@ public:
   virtual void set_rec_mode(uint8_t mode) override;
   virtual void sync_seqtrack(uint8_t length, uint8_t speed,
                              uint8_t step_count) override;
+  virtual void popup_text(uint8_t action_string,
+                          uint8_t persistent = 0) override;
+  virtual void popup_text(char *text, uint8_t persistent = 0) override;
+  virtual void popup_text_P(const char *text_P,
+                            uint8_t persistent = 0) override;
+  virtual void popup_text_P(const char *text1_P, const char *text2_P,
+                            uint8_t persistent = 0) override;
 
 private:
   MDClass &device_;
@@ -530,6 +537,23 @@ void MDPanelCapability::set_rec_mode(uint8_t mode) {
 void MDPanelCapability::sync_seqtrack(uint8_t length, uint8_t speed,
                                       uint8_t step_count) {
   device_.sync_seqtrack(length, speed, step_count);
+}
+
+void MDPanelCapability::popup_text(uint8_t action_string, uint8_t persistent) {
+  device_.popup_text(action_string, persistent);
+}
+
+void MDPanelCapability::popup_text(char *text, uint8_t persistent) {
+  device_.popup_text(text, persistent);
+}
+
+void MDPanelCapability::popup_text_P(const char *text_P, uint8_t persistent) {
+  device_.popup_text_P(text_P, persistent);
+}
+
+void MDPanelCapability::popup_text_P(const char *text1_P, const char *text2_P,
+                                     uint8_t persistent) {
+  device_.popup_text_P(text1_P, text2_P, persistent);
 }
 #endif
 

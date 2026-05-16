@@ -106,6 +106,7 @@ public:
   void param_select_update();
   void enter_notes();
   void config_menu_entries();
+  bool handle_cc_lock_learn(uint8_t track, uint8_t param, uint8_t value);
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
   virtual void loop();

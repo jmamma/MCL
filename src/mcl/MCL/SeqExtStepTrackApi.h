@@ -219,6 +219,52 @@ public:
     return ext_track_->channel;
   }
 
+  void set_channel(uint8_t channel) {
+#ifdef PLATFORM_TBD
+    if (midi_track_) {
+      if (midi_track_->channel() != channel) {
+        midi_track_->buffer_notesoff();
+        midi_track_->set_channel(channel);
+      }
+      return;
+    }
+#endif
+    if (ext_track_->channel != channel) {
+      ext_track_->buffer_notesoff();
+      ext_track_->channel = channel;
+    }
+  }
+
+  void clear_track() {
+#ifdef PLATFORM_TBD
+    if (midi_track_) {
+      midi_track_->clear_track();
+      return;
+    }
+#endif
+    ext_track_->clear_track();
+  }
+
+  void clear_track_locks() {
+#ifdef PLATFORM_TBD
+    if (midi_track_) {
+      midi_track_->clear_track_locks();
+      return;
+    }
+#endif
+    ext_track_->clear_track_locks();
+  }
+
+  void clear_track_locks(uint8_t lock_idx) {
+#ifdef PLATFORM_TBD
+    if (midi_track_) {
+      midi_track_->clear_track_locks(lock_idx);
+      return;
+    }
+#endif
+    ext_track_->clear_track_locks(lock_idx);
+  }
+
   void note_on(uint8_t note, uint8_t velocity,
                MidiUartClass *uart_ = nullptr) {
 #ifdef PLATFORM_TBD

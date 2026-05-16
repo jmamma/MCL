@@ -26,6 +26,30 @@ bool SeqExtStepLockApi::add_lock(uint8_t step, uint16_t timing, uint8_t param,
                                      lock_idx);
 }
 
+bool SeqExtStepLockApi::replace_param_lock(uint8_t step, uint16_t timing,
+                                           uint8_t param, uint8_t value,
+                                           bool slide) {
+#ifdef PLATFORM_TBD
+  if (midi_track_) {
+    uint8_t lock_idx = selected_lock_slot_for_param(param);
+    if (lock_idx == 255) {
+      for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+        if (!midi_track_->seq_data.locks[i].is_active()) {
+          lock_idx = i;
+          break;
+        }
+      }
+    }
+    if (lock_idx == 255) {
+      return false;
+    }
+    return add_lock(step, timing, param, value, slide, lock_idx);
+  }
+#endif
+  ext_track_->clear_track_locks(step, param, 255);
+  return ext_track_->set_track_locks(step, timing, param, value, slide);
+}
+
 bool SeqExtStepLockApi::set_p4_param_lock(uint8_t step, uint16_t timing,
                                           uint8_t param, uint8_t value,
                                           bool slide) {
@@ -511,6 +535,29 @@ bool SeqExtStepLockApi::selected_lock_matches_control(uint8_t slot,
   }
 #endif
   return info.ctrl_type == ctrl_type && info.ctrl == ctrl;
+}
+
+uint8_t SeqExtStepLockApi::selected_lock_slot_for_param(uint8_t param) const {
+#ifdef PLATFORM_TBD
+  if (midi_track_) {
+    for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
+      SeqExtStepLockParamInfo info;
+      if (selected_lock_param_info(i, info) && info.active &&
+          !info.learn && info.ctrl_type == SEQ_EXT_LOCK_CTRL_CC &&
+          info.ctrl == param) {
+        return i;
+      }
+    }
+    return 255;
+  }
+#endif
+  for (uint8_t i = 0; i < NUM_LOCKS; i++) {
+    uint8_t param_id = 0;
+    if (selected_lock_param_id(i, param_id) && param_id == param) {
+      return i;
+    }
+  }
+  return 255;
 }
 
 bool SeqExtStepLockApi::copy_lock_value_label(uint8_t slot, uint8_t value,
