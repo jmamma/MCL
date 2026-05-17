@@ -42,6 +42,7 @@ public:
   void loop();
   virtual void display();
   void init();
+  void init(bool generate_row_names);
   bool enter();
   void exit();
   void cleanup();

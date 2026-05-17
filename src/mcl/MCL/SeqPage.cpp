@@ -800,7 +800,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         opt_param2_capture = (MCLEncoder *)encoders[1];
         encoders[0] = &seq_menu_value_encoder;
         encoders[1] = &seq_menu_entry_encoder;
-        seq_menu_page.init();
+        seq_menu_page.init(false);
         seq_menu_page.gen_menu_device_names();
         seq_menu_page.gen_menu_transpose_names();
         mcl_cfg.seq_dev = static_cast<uint8_t>(opt_midi_device_idx_capture);

@@ -1,6 +1,7 @@
 #include "MenuPage.h"
 #include "MCLGUI.h"
 #include "DeviceManager.h"
+#include "DevicePanelRef.h"
 #include "../Drivers/MidiDevice.h"
 #include "ResourceManager.h"
 #include "MCLSysConfig.h"
@@ -63,7 +64,12 @@ uint8_t stored_value_from_menu(uint8_t *dest_var, uint8_t menu_value) {
 } // namespace
 
 void MenuPageBase::init() {
+  init(true);
+}
+
+void MenuPageBase::init(bool generate_row_names) {
   DEBUG_PRINTLN("MenuPageBase::init");
+  DevicePanelRef::set_primary_key_repeat(1);
   R.Clear();
   R.use_machine_names_short(); // for grid page
   R.use_icons_knob(); // for grid page
@@ -72,7 +78,9 @@ void MenuPageBase::init() {
   DEBUG_PRINT("R.Size() = ");
   DEBUG_PRINTLN(R.Size());
   R.restore_menu_layout_deps();
-  gen_menu_row_names();
+  if (generate_row_names) {
+    gen_menu_row_names();
+  }
 
   MenuBase *m = get_menu();
   encoders[1]->cur = selected_item;
