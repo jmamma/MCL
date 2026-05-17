@@ -59,7 +59,7 @@ void ProjectVersionPage::init() {
   show_copy = false;
   show_move = false;
   show_versions = false;
-  strcpy(title, "VERSIONS");
+  strcpy(title, "VERSION");
   strcpy(str_save, "BACKUP");
   query_versions();
 }
@@ -97,10 +97,6 @@ void ProjectVersionPage::query_versions() {
     char label[FILE_ENTRY_SIZE] = {'\0'};
     strcpy(label, "V");
     append_u8(label, sizeof(label), pair + 1);
-    strcat(label, " ");
-    append_u8(label, sizeof(label), pair * NUM_GRIDS);
-    strcat(label, "/");
-    append_u8(label, sizeof(label), pair * NUM_GRIDS + NUM_GRIDS - 1);
     add_entry(label, VERSION_ENTRY_BASE + pair);
     if (have_active && pair == active_pair) {
       cur_file = numEntries - 1;

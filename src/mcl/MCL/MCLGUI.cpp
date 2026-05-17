@@ -351,13 +351,23 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
 
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
-  oled_display.setCursor(dlg_info_x1 + 4, dlg_info_y1 + 6);
-  strcpy(title_buf, line1);
+  uint8_t title_len = copy_popup_title(line1);
   m_toupper(title_buf);
+  uint8_t title_w = title_len * 4;
+  uint8_t title_x = dlg_info_x1;
+  if (title_w < dlg_info_w) {
+    title_x += (dlg_info_w - title_w) / 2;
+  }
+  oled_display.setCursor(title_x, dlg_info_y1 + 6);
   oled_display.println(title_buf);
 
   oled_display.setTextColor(WHITE);
-  oled_display.setCursor(dlg_info_x1 + 23, dlg_info_y1 + 15 + line2_offset);
+  uint8_t line2_w = strlen(line2) * 4;
+  uint8_t line2_x = dlg_info_x1;
+  if (line2_w < dlg_info_w) {
+    line2_x += (dlg_info_w - line2_w) / 2;
+  }
+  oled_display.setCursor(line2_x, dlg_info_y1 + 15 + line2_offset);
   oled_display.println(line2);
 
   oled_display.setFont(oldfont);

@@ -152,10 +152,10 @@ public:
   static constexpr uint8_t s_rightpane_offset_x = 43;
   static constexpr uint8_t s_rightpane_offset_y = 8;
 
-  static constexpr auto dlg_info_y1 = 2;
-  static constexpr auto dlg_info_y2 = 27;
-  static constexpr auto dlg_info_x1 = 12;
-  static constexpr auto dlg_info_x2 = 124;
+  static constexpr auto dlg_info_y1 = 1;
+  static constexpr auto dlg_info_y2 = 28;
+  static constexpr auto dlg_info_x1 = 8;
+  static constexpr auto dlg_info_x2 = 120;
   static constexpr auto dlg_circle_x = dlg_info_x1 + 10;
   static constexpr auto dlg_circle_y = dlg_info_y1 + 15;
 
@@ -194,7 +194,7 @@ public:
   static constexpr uint8_t knob_y0 = 1;
   static constexpr uint8_t knob_y = 20;
 
-  static constexpr uint8_t s_progress_x = 31;
+  static constexpr uint8_t s_progress_x = 32;
   static constexpr uint8_t s_progress_y = 16;
   static constexpr uint8_t s_progress_w = 64;
   static constexpr uint8_t s_progress_h = 5;

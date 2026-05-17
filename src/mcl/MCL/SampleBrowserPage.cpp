@@ -271,15 +271,21 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
       bool action_entry = param2->cur == 0;
       bool regular_entry = !action_entry && param2->cur < numEntries;
+      bool clone_entry = regular_entry;
       if (regular_entry) {
         char entry[FILE_ENTRY_SIZE] = {'\0'};
-        get_entry(param2->cur, entry);
+        uint8_t entry_type;
+        get_entry(param2->cur, entry, entry_type);
         regular_entry = strcmp(entry, "..") != 0;
+        clone_entry = regular_entry;
+#ifdef __AVR__
+        clone_entry = clone_entry && entry_type == FILE_TYPE;
+#endif
       }
       file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !action_entry);
       file_menu_page.menu.enable_entry(FM_DELETE, regular_entry); // delete
       file_menu_page.menu.enable_entry(FM_RENAME, regular_entry); // rename
-      file_menu_page.menu.enable_entry(FM_DUPLICATE, regular_entry);
+      file_menu_page.menu.enable_entry(FM_DUPLICATE, clone_entry);
       file_menu_page.menu.enable_entry(FM_MOVE, regular_entry);
       file_menu_page.menu.enable_entry(FM_VERSIONS, false);
       file_menu_page.menu.enable_entry(FM_RECVALL, action_entry);

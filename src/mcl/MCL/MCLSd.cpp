@@ -261,7 +261,7 @@ bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
     ok = false;
   }
 
-  uint8_t buf[256];
+  uint8_t buf[512];
   uint32_t copied = 0;
   while (ok) {
     int n = in.read(buf, sizeof(buf));
@@ -337,6 +337,7 @@ bool MCLSd::remove_dir(const char *dir) {
   return ok;
 }
 
+#ifndef __AVR__
 bool MCLSd::copy_dir(const char *src, const char *dst, uint8_t progress_base,
                      uint8_t progress_span, uint8_t progress_max) {
   if (SD.exists(dst)) {
@@ -386,5 +387,6 @@ bool MCLSd::copy_dir(const char *src, const char *dst, uint8_t progress_base,
   }
   return ok;
 }
+#endif
 
 MCLSd mcl_sd;

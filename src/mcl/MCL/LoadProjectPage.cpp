@@ -53,9 +53,9 @@ void LoadProjectPage::setup() {
   FileBrowserPage::setup();
 #ifndef __AVR__
   char path[64];
-  _cd(mcl_sd.full_path(PRJ_DIR, path, sizeof(path)));
+  strcpy(lwd, mcl_sd.full_path(PRJ_DIR, path, sizeof(path)));
 #else
-  _cd(PRJ_DIR);
+  strcpy(lwd, PRJ_DIR);
 #endif
   position.reset();
 }
@@ -193,8 +193,10 @@ void LoadProjectPage::on_copy(const char *from, const char *to) {
            build_project_path(to, to_project_path, sizeof(to_project_path)) &&
            proj.copy_project(from_project_path, to_project_path);
     } else {
+#ifndef __AVR__
       mcl_gui.draw_progress("CLONE", 0, 64);
       ok = mcl_sd.copy_dir(from, to, 0, 64, 64);
+#endif
     }
   } else {
     mcl_gui.draw_progress("CLONE", 0, 64);
@@ -254,7 +256,12 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
     file_menu_page.menu.enable_entry(FM_DELETE, regular_entry);
     file_menu_page.menu.enable_entry(FM_RENAME, regular_entry);
+#ifdef __AVR__
+    file_menu_page.menu.enable_entry(FM_DUPLICATE,
+                                     regular_entry && entry_type == FILE_TYPE);
+#else
     file_menu_page.menu.enable_entry(FM_DUPLICATE, regular_entry);
+#endif
     file_menu_page.menu.enable_entry(FM_MOVE, regular_entry);
     file_menu_page.menu.enable_entry(FM_VERSIONS, project_entry);
     file_menu_page.menu.enable_entry(FM_RECVALL, false);

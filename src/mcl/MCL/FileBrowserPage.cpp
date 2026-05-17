@@ -566,9 +566,16 @@ void FileBrowserPage::on_copy(const char *from, const char *to) {
   file.open(from, O_READ);
   bool dir = file.isDirectory();
   file.close();
-  mcl_gui.draw_progress("CLONE", 0, 64);
-  bool ok = dir ? mcl_sd.copy_dir(from, to, 0, 64, 64)
-                : mcl_sd.copy_file(from, to, 0, 64, 64);
+  bool ok = false;
+  if (dir) {
+#ifndef __AVR__
+    mcl_gui.draw_progress("CLONE", 0, 64);
+    ok = mcl_sd.copy_dir(from, to, 0, 64, 64);
+#endif
+  } else {
+    mcl_gui.draw_progress("CLONE", 0, 64);
+    ok = mcl_sd.copy_file(from, to, 0, 64, 64);
+  }
   if (ok) {
     gfx.alert("SUCCESS", "Cloned.");
   } else {
@@ -614,6 +621,16 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
   }
   if (EVENT_BUTTON(event)) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
+#ifdef __AVR__
+      bool can_clone = false;
+      if (show_copy && encoders[1]->getValue() < numEntries) {
+        char entry[FILE_ENTRY_SIZE] = {'\0'};
+        uint8_t entry_type;
+        get_entry(encoders[1]->getValue(), entry, entry_type);
+        can_clone = strcmp(entry, "..") != 0 && entry_type == FILE_TYPE;
+      }
+      file_menu_page.menu.enable_entry(FM_DUPLICATE, can_clone);
+#endif
       open_filemenu();
       return true;
     }

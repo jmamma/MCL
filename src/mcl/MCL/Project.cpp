@@ -139,7 +139,8 @@ void Project::draw_wait_popup(const char *message) {
 void Project::draw_upgrade_progress(GridIndex grid, GridRow row) {
 #ifdef OLED_DISPLAY
   uint8_t progress = grid * (GRID_LENGTH / NUM_GRIDS) + row / NUM_GRIDS;
-  mcl_gui.draw_progress_bar(progress, GRID_LENGTH, false, 31, 21);
+  mcl_gui.draw_progress_bar(progress, GRID_LENGTH, false, MCLGUI::s_progress_x,
+                            21);
 #endif
 }
 
