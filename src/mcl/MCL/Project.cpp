@@ -17,33 +17,19 @@
 
 namespace {
 
-bool append_char(char *out, size_t out_len, char c) {
-  size_t len = strlen(out);
-  if (len + 2 > out_len) {
-    return false;
+char *write_u8(char *out, uint8_t value) {
+  if (value >= 100) {
+    *out++ = '0' + value / 100;
+    value %= 100;
+    *out++ = '0' + value / 10;
+    value %= 10;
+  } else if (value >= 10) {
+    *out++ = '0' + value / 10;
+    value %= 10;
   }
-  out[len] = c;
-  out[len + 1] = '\0';
-  return true;
-}
-
-bool append_u8(char *out, size_t out_len, uint8_t value) {
-  char tmp[3];
-  uint8_t n = 0;
-  do {
-    tmp[n++] = (value % 10) + '0';
-    value /= 10;
-  } while (value > 0 && n < sizeof(tmp));
-
-  size_t len = strlen(out);
-  if (len + n + 1 > out_len) {
-    return false;
-  }
-  while (n > 0) {
-    out[len++] = tmp[--n];
-  }
-  out[len] = '\0';
-  return true;
+  *out++ = '0' + value;
+  *out = '\0';
+  return out;
 }
 
 bool join_project_file(char *out, size_t out_len, const char *project,
@@ -279,8 +265,10 @@ bool Project::build_grid_filename(const char *basename, uint8_t suffix,
   if (name_len == 0 || name_len > PRJ_NAME_LEN || name_len + 5 > out_len) {
     return false;
   }
-  strcpy(out, basename);
-  return append_char(out, out_len, '.') && append_u8(out, out_len, suffix);
+  memcpy(out, basename, name_len);
+  out[name_len] = '.';
+  write_u8(out + name_len + 1, suffix);
+  return true;
 }
 
 bool Project::project_pair_exists(uint8_t pair, const char *basename) {

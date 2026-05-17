@@ -6,23 +6,20 @@
 
 namespace {
 
-bool append_u8(char *out, size_t out_len, uint8_t value) {
-  char tmp[3];
-  uint8_t n = 0;
-  do {
-    tmp[n++] = (value % 10) + '0';
-    value /= 10;
-  } while (value > 0 && n < sizeof(tmp));
-
-  size_t len = strlen(out);
-  if (len + n + 1 > out_len) {
-    return false;
+void write_version_label(char *out, uint8_t pair) {
+  uint8_t value = pair + 1;
+  *out++ = 'V';
+  if (value >= 100) {
+    *out++ = '1';
+    value -= 100;
+    *out++ = '0' + value / 10;
+    value %= 10;
+  } else if (value >= 10) {
+    *out++ = '0' + value / 10;
+    value %= 10;
   }
-  while (n > 0) {
-    out[len++] = tmp[--n];
-  }
-  out[len] = '\0';
-  return true;
+  *out++ = '0' + value;
+  *out = '\0';
 }
 
 } // namespace
@@ -94,9 +91,8 @@ void ProjectVersionPage::query_versions() {
       continue;
     }
 
-    char label[FILE_ENTRY_SIZE] = {'\0'};
-    strcpy(label, "V");
-    append_u8(label, sizeof(label), pair + 1);
+    char label[5];
+    write_version_label(label, pair);
     add_entry(label, VERSION_ENTRY_BASE + pair);
     if (have_active && pair == active_pair) {
       cur_file = numEntries - 1;
