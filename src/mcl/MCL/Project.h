@@ -50,6 +50,8 @@ public:
   bool write_header();
   bool build_grid_filename(const char *basename, uint8_t suffix, char *out,
                            size_t out_len) const;
+  // Expects SD to already be in the project directory.
+  bool project_pair_exists(uint8_t pair, const char *basename);
   bool read_active_grid_pair(const char *projectname, uint8_t *pair);
   bool grid_pair_exists(const char *projectname, uint8_t pair);
   bool create_backup(const char *projectname);
@@ -128,7 +130,7 @@ private:
                       uint8_t source_pair, uint8_t dest_pair);
   bool split_project_path(const char *projectname, const char **basename) const;
   bool project_file_name(const char *basename, char *out, size_t out_len) const;
-  bool project_pair_exists(uint8_t pair, const char *basename);
+  uint8_t project_pair_file_mask(uint8_t pair, const char *basename);
   bool migrate_legacy_md_aux_slots(GridRow row,
                                    GridRowHeader *grid_x_header,
                                    bool *converted_track0_lfo,

@@ -4,32 +4,14 @@
 #include "MCLMenus.h"
 #include "Project.h"
 
-namespace {
-
-void write_version_label(char *out, uint8_t pair) {
-  uint8_t value = pair + 1;
-  *out++ = 'V';
-  if (value >= 100) {
-    *out++ = '1';
-    value -= 100;
-    *out++ = '0' + value / 10;
-    value %= 10;
-  } else if (value >= 10) {
-    *out++ = '0' + value / 10;
-    value %= 10;
-  }
-  *out++ = '0' + value;
-  *out = '\0';
-}
-
-} // namespace
-
 void ProjectVersionPage::set_project(const char *project) {
-  strcpy(project_path, project);
+  strncpy(project_path, project, sizeof(project_path) - 1);
+  project_path[sizeof(project_path) - 1] = '\0';
 
   const char *basename = strrchr(project_path, '/');
   basename = basename == nullptr ? project_path : basename + 1;
-  strcpy(project_name, basename);
+  strncpy(project_name, basename, sizeof(project_name) - 1);
+  project_name[sizeof(project_name) - 1] = '\0';
 }
 
 void ProjectVersionPage::setup() {
@@ -75,22 +57,12 @@ void ProjectVersionPage::query_versions() {
   }
 
   for (uint8_t pair = 0; pair < 128; pair++) {
-    bool complete = true;
-    for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-      char grid_name[PRJ_NAME_LEN + 5];
-      if (!proj.build_grid_filename(project_name, pair * NUM_GRIDS + i,
-                                    grid_name, sizeof(grid_name)) ||
-          !SD.exists(grid_name)) {
-        complete = false;
-        break;
-      }
-    }
-    if (!complete) {
+    if (!proj.project_pair_exists(pair, project_name)) {
       continue;
     }
 
-    char label[5];
-    write_version_label(label, pair);
+    char label[5] = {'V'};
+    mcl_gui.put_value_at(pair + 1, label + 1);
     add_entry(label, VERSION_ENTRY_BASE + pair);
     if (have_active && pair == active_pair) {
       cur_file = numEntries - 1;

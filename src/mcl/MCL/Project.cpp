@@ -292,16 +292,23 @@ bool Project::build_grid_filename(const char *basename, uint8_t suffix,
   return true;
 }
 
-bool Project::project_pair_exists(uint8_t pair, const char *basename) {
+uint8_t Project::project_pair_file_mask(uint8_t pair, const char *basename) {
+  uint8_t mask = 0;
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     char grid_name[PRJ_NAME_LEN + 5];
     if (!build_grid_filename(basename, pair * NUM_GRIDS + i, grid_name,
-                             sizeof(grid_name)) ||
-        !SD.exists(grid_name)) {
-      return false;
+                             sizeof(grid_name))) {
+      return 0xFF;
+    }
+    if (SD.exists(grid_name)) {
+      mask |= 1 << i;
     }
   }
-  return true;
+  return mask;
+}
+
+bool Project::project_pair_exists(uint8_t pair, const char *basename) {
+  return project_pair_file_mask(pair, basename) == ((1 << NUM_GRIDS) - 1);
 }
 
 bool Project::grid_pair_exists(const char *projectname, uint8_t pair) {
@@ -915,16 +922,11 @@ bool Project::create_backup(const char *projectname) {
   uint8_t dest_pair = 0;
   bool found = false;
   for (uint8_t pair = 1; pair < 128; pair++) {
-    bool any_file = false;
-    for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-      char grid_name[PRJ_NAME_LEN + 5];
-      if (!build_grid_filename(basename, pair * NUM_GRIDS + i, grid_name,
-                               sizeof(grid_name))) {
-        return false;
-      }
-      any_file |= SD.exists(grid_name);
+    uint8_t mask = project_pair_file_mask(pair, basename);
+    if (mask == 0xFF) {
+      return false;
     }
-    if (!any_file) {
+    if (mask == 0) {
       dest_pair = pair;
       found = true;
       break;
