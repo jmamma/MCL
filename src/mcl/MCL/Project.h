@@ -17,6 +17,9 @@
 #define PROJ_VERSION 3005
 #define PRJ_DIR "/Projects"
 
+static_assert(PROJ_VERSION_TRACK_STORAGE_VERSION < PROJ_VERSION_ROUTE_TRACK_TYPE,
+              "route migration must cover legacy track-storage projects");
+
 class ProjectHeader {
 public:
   uint32_t version;
@@ -42,10 +45,8 @@ public:
   bool convert_project(const char *projectname);
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
   bool migrate_grid_track_storage_versions(GridIndex grid,
-                                           bool stamp_track_versions,
-                                           bool migrate_route_tracks);
-  bool migrate_track_storage_versions(bool stamp_track_versions,
-                                      bool migrate_route_tracks);
+                                           bool stamp_track_versions);
+  bool migrate_track_storage_versions(bool stamp_track_versions);
   bool new_project_master_file(const char *projectname);
   bool write_header();
   bool build_grid_filename(const char *basename, uint8_t suffix, char *out,
@@ -134,8 +135,7 @@ private:
   bool migrate_legacy_md_aux_slots(GridRow row,
                                    GridRowHeader *grid_x_header,
                                    bool *converted_track0_lfo,
-                                   bool migrate_legacy_aux_layout,
-                                   bool migrate_route_tracks);
+                                   bool migrate_legacy_aux_layout);
   GridIndex last_grid_ = 0;
 };
 

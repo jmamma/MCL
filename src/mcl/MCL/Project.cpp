@@ -98,6 +98,14 @@ public:
   LegacyMDRouteData route;
 };
 
+class ATTR_PACKED() MDRouteTrackStorage {
+public:
+  uint8_t version[2];
+  uint8_t active;
+  GridLink link;
+  MDRouteData route;
+};
+
 static_assert(offsetof(LegacyMDLFOTrackStorage, lfo_data) ==
                   sizeof(GridTrack) - sizeof(void *),
               "Legacy MD LFO storage prefix changed");
@@ -112,7 +120,12 @@ static_assert(sizeof(LegacyMDRouteTrackStorage) ==
                   sizeof(GridTrack) - sizeof(void *) +
                       sizeof(LegacyMDRouteData),
               "Legacy MD route storage size changed");
-
+static_assert(offsetof(MDRouteTrackStorage, route) ==
+                  sizeof(GridTrack) - sizeof(void *),
+              "MD route storage prefix changed");
+static_assert(sizeof(MDRouteTrackStorage) ==
+                  sizeof(GridTrack) - sizeof(void *) + sizeof(MDRouteData),
+              "MD route storage size changed");
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
 
@@ -503,8 +516,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   }
 
   if ((migrate_track_storage || migrate_route_tracks) &&
-      !migrate_track_storage_versions(migrate_track_storage,
-                                      migrate_route_tracks)) {
+      !migrate_track_storage_versions(migrate_track_storage)) {
     DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
@@ -613,8 +625,7 @@ bool Project::check_project_version(uint16_t min_version) {
 bool Project::migrate_legacy_md_aux_slots(GridRow row,
                                           GridRowHeader *grid_x_header,
                                           bool *converted_track0_lfo,
-                                          bool migrate_legacy_aux_layout,
-                                          bool migrate_route_tracks) {
+                                          bool migrate_legacy_aux_layout) {
   *converted_track0_lfo = false;
   if (grid_x_header == nullptr) {
     return false;
@@ -630,7 +641,6 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
   empty_slot.link.init(row);
   bool clear_lfo_slot = false;
   bool clear_legacy_perf_slot = false;
-  bool perf_moved_to_lfo_slot = false;
 
   if (migrate_legacy_aux_layout &&
       grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
@@ -701,13 +711,12 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
       }
       grid_y_header.update_model(PERF_TRACK_NUM, PERF_TRACK_TYPE,
                                  PERF_TRACK_TYPE);
-      perf_moved_to_lfo_slot = true;
     }
     grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
     clear_legacy_perf_slot = true;
   }
 
-  if (clear_lfo_slot && !perf_moved_to_lfo_slot &&
+  if (clear_lfo_slot &&
       grid_y_header.track_type[MDLFO_TRACK_NUM] == EMPTY_TRACK_TYPE &&
       !grids[1].write(empty_slot._this(), empty_slot._sizeof(),
                       MDLFO_TRACK_NUM, row)) {
@@ -721,8 +730,7 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     return false;
   }
 
-  if (migrate_route_tracks &&
-      grid_y_header.track_type[MDROUTE_TRACK_NUM] == MDROUTE_TRACK_TYPE) {
+  if (grid_y_header.track_type[MDROUTE_TRACK_NUM] == MDROUTE_TRACK_TYPE) {
     LegacyMDRouteTrackStorage legacy_route;
     if (!grids[1].read(&legacy_route, sizeof(legacy_route), MDROUTE_TRACK_NUM,
                        row)) {
@@ -730,16 +738,25 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     }
 
     if (legacy_route.active == MDROUTE_TRACK_TYPE) {
-      MDRouteTrack new_route;
-      new_route.link = legacy_route.link;
-      memcpy(new_route.routing, legacy_route.route.routing,
-             sizeof(new_route.routing));
-      new_route.load_legacy_poly_mask(legacy_route.route.poly_mask,
-                                      cfg.uart2_poly_chan);
+      MDRouteTrackStorage new_route;
       new_route.version[0] = 0;
       new_route.version[1] = 0;
+      new_route.active = MD_ROUTE_TRACK_TYPE;
+      new_route.link = legacy_route.link;
+      memcpy(new_route.route.routing, legacy_route.route.routing,
+             sizeof(new_route.route.routing));
+      uint8_t ptc_group =
+          cfg.uart2_poly_chan >= PTC_MIDI_GROUP_MIN &&
+                  cfg.uart2_poly_chan <= PTC_MIDI_GROUP_MAX
+              ? cfg.uart2_poly_chan
+              : PTC_GROUP_LOCAL;
+      for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
+        new_route.route.ptc_group[i] =
+            IS_BIT_SET16(legacy_route.route.poly_mask, i) ? ptc_group
+                                                          : PTC_GROUP_OFF;
+      }
 
-      if (!grids[1].write(new_route._this(), new_route._sizeof(),
+      if (!grids[1].write(&new_route, sizeof(new_route),
                           MDROUTE_TRACK_NUM, row)) {
         return false;
       }
@@ -754,24 +771,21 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
   return true;
 }
 
-bool Project::migrate_track_storage_versions(bool stamp_track_versions,
-                                             bool migrate_route_tracks) {
+bool Project::migrate_track_storage_versions(bool stamp_track_versions) {
   GridIndex grid_count = stamp_track_versions ? NUM_GRIDS : 1;
   for (GridIndex grid = 0; grid < grid_count; grid++) {
-    if (!migrate_grid_track_storage_versions(grid, stamp_track_versions,
-                                             migrate_route_tracks)) {
+    if (!migrate_grid_track_storage_versions(grid, stamp_track_versions)) {
       return false;
     }
   }
-  if (migrate_route_tracks && !grids[1].sync()) {
+  if (!grids[1].sync()) {
     return false;
   }
   return true;
 }
 
 bool Project::migrate_grid_track_storage_versions(GridIndex grid,
-                                                  bool stamp_track_versions,
-                                                  bool migrate_route_tracks) {
+                                                  bool stamp_track_versions) {
   uint16_t legacy_version = 0;
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
@@ -784,8 +798,7 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid,
     bool converted_track0_lfo = false;
     if (grid == 0 &&
         !migrate_legacy_md_aux_slots(row, &row_header, &converted_track0_lfo,
-                                     stamp_track_versions,
-                                     migrate_route_tracks)) {
+                                     stamp_track_versions)) {
       return false;
     }
 
