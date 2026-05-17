@@ -40,6 +40,7 @@ public:
   void loop();
   void cleanup();
   virtual void config_encoders();
+  virtual bool moveEncoderFocusPage(int8_t direction) override;
 
   void track_update();
   void config_encoder_range(uint8_t i);

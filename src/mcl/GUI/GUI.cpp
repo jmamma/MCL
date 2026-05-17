@@ -81,7 +81,10 @@ bool GuiClass::handleTopEvent(gui_event_t *event) {
 #endif
   LightPage *page = currentPage();
   if (page != NULL) {
-    return page->handleEvent(event);
+    if (page->handleEvent(event)) {
+      return true;
+    }
+    return page->handleEncoderKeyControls(event);
   }
   return false;
 }

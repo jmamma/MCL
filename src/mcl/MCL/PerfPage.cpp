@@ -261,8 +261,7 @@ void PerfPage::display() {
   oled_display.setTextColor(WHITE, BLACK);
   mcl_gui.draw_panel_labels(info1, info2);
 
-  if (key_interface.is_key_down(MDX_KEY_LEFT) ||
-      key_interface.is_key_down(MDX_KEY_RIGHT)) {
+  if (PerfPageTargetRef::pressed_scene() < NUM_SCENES) {
     oled_display.setCursor(54, MCLGUI::pane_info2_y + 4);
     mcl_print_P(mclstr_select_label);
   }
@@ -395,17 +394,6 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
-      PerfEncoder *e = perf_encoders[perf_id];
-
-      if (key_interface.is_key_down(MDX_KEY_LEFT)) {
-        e->active_scene_a = e->active_scene_a == track ? 255 : track;
-        return true;
-      }
-      if (key_interface.is_key_down(MDX_KEY_RIGHT)) {
-        e->active_scene_b = e->active_scene_b == track ? 255 : track;
-        return true;
-      }
-
       learn = track + 1;
       uint8_t scene = track;
       send_locks(scene);
@@ -534,22 +522,38 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           e->send_params(0, s1, s2);
           return true;
         }
+        case MDX_KEY_LEFT: {
+          PerfEncoder *e = perf_encoders[perf_id];
+          e->active_scene_a = e->active_scene_a == t ? 255 : t;
+          return true;
+        }
+        case MDX_KEY_RIGHT: {
+          PerfEncoder *e = perf_encoders[perf_id];
+          e->active_scene_b = e->active_scene_b == t ? 255 : t;
+          return true;
+        }
         }
       }
       switch (key) {
       case MDX_KEY_UP: {
-        if (learn && page_mode < NUM_PERF_PARAMS) {
-          page_mode++;
-          config_encoders();
+        if (learn) {
+          if (page_mode < NUM_PERF_PARAMS) {
+            page_mode++;
+            config_encoders();
+          }
+          return true;
         }
-        return true;
+        break;
       }
       case MDX_KEY_DOWN: {
-        if (learn && page_mode > 1) {
-          page_mode--;
-          config_encoders();
+        if (learn) {
+          if (page_mode > 1) {
+            page_mode--;
+            config_encoders();
+          }
+          return true;
         }
-        return true;
+        break;
       }
       }
     }

@@ -226,6 +226,19 @@ void LFOPage::config_encoders() {
 
 }
 
+bool LFOPage::moveEncoderFocusPage(int8_t direction) {
+  if (show_seq_menu) {
+    return false;
+  }
+  if (direction > 0) {
+    page_mode = page_mode < LFO_OFFSET ? page_mode + 1 : 0;
+  } else {
+    page_mode = page_mode > 0 ? page_mode - 1 : LFO_OFFSET;
+  }
+  config_encoders();
+  return true;
+}
+
 void LFOPage::loop() {
   track_update();
   if (show_seq_menu) {
@@ -490,20 +503,6 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_YES: {
         goto lfo_enable;
-      }
-      case MDX_KEY_UP: {
-        if (page_mode < LFO_OFFSET) {
-          page_mode++;
-          config_encoders();
-        }
-        return true;
-      }
-      case MDX_KEY_DOWN: {
-        if (page_mode > 0) {
-          page_mode--;
-          config_encoders();
-        }
-        return true;
       }
       }
     }

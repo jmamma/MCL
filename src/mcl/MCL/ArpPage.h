@@ -18,7 +18,6 @@ public:
   ArpSeqTrack *arp_track;
   ArpSeqTrack *last_arp_track;
   uint8_t current_track;
-  uint8_t param_select = 0;
   ArpPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
@@ -29,7 +28,6 @@ public:
   void track_update(uint8_t n = 255, bool re_render = true);
   void loop();
   void display();
-  void setup();
   void init();
 };
 

@@ -191,12 +191,16 @@ void MCLGUI::draw_knob_frame() {
 void MCLGUI::draw_knob(uint8_t i, const char *title, const char *text,
                        bool title_is_progmem) {
   uint8_t x = knob_x0 + i * knob_w;
-  draw_text_encoder(x, knob_y0, title, text, false, title_is_progmem);
+  LightPage *page = GUI.currentPage();
+  bool highlight = page != NULL && page->isEncoderFocused(i);
+  draw_text_encoder(x, knob_y0, title, text, highlight, title_is_progmem);
 }
 
 void MCLGUI::draw_knob(uint8_t i, Encoder *enc, const char *title, bool highlight,
                        bool title_is_progmem) {
   uint8_t x = knob_x0 + i * knob_w;
+  LightPage *page = GUI.currentPage();
+  highlight = highlight || (page != NULL && page->isEncoderFocused(i));
   draw_light_encoder(x + 7, 6, enc, title, highlight, title_is_progmem);
 }
 

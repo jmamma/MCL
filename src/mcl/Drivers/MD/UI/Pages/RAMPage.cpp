@@ -783,6 +783,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
                                4 * encoders[3]->cur - 1, 128);
         }
       }
+      return true;
     }
 
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
@@ -810,6 +811,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
           setup_ram_play_stereo(14);
         }
       }
+      return true;
     }
   }
   return false;

@@ -92,9 +92,13 @@ public:
 class LightPage : public PageParent {
 
 public:
+  enum { ENCODER_FOCUS_NONE = 255 };
+
   Encoder *encoders[GUI_NUM_ENCODERS];
 
   static uint16_t encoders_used_clock[4];
+  uint8_t encoder_focus;
+  uint8_t encoder_key_control_mask;
 
   LightPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL) NOINLINE();
@@ -113,6 +117,18 @@ public:
   void clear();
   /** Executes the encoder actions by calling checkHandle() on each encoder. **/
   void finalize();
+  bool handleEncoderKeyControls(gui_event_t *event);
+  bool selectEncoderFocus(int8_t start, int8_t step);
+  virtual bool moveEncoderFocusPage(int8_t direction) { return false; }
+  void enableEncoderKeyControls(uint8_t mask = 0x0F) {
+    encoder_key_control_mask = mask;
+  }
+  void disableEncoderKeyControls() {
+    encoder_key_control_mask = 0;
+    resetEncoderFocus();
+  }
+  void resetEncoderFocus() { encoder_focus = ENCODER_FOCUS_NONE; }
+  bool isEncoderFocused(uint8_t i) const { return encoder_focus == i; }
   /** Call this to lock all encoders in the page. **/
   void lockEncoders() {} // TODO
   /** Call this to unlock all encoders in the page. If their value

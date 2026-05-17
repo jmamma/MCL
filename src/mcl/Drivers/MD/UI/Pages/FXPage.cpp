@@ -40,6 +40,13 @@ void FXPage::update_encoders() {
   init_encoders_used_clock();
 }
 
+bool FXPage::moveEncoderFocusPage(int8_t direction) {
+  (void)direction;
+  page_mode = !(page_mode);
+  update_encoders();
+  return true;
+}
+
 void FXPage::cleanup() {
   //  md_exploit.off();
   MD.set_key_repeat(1);
@@ -116,18 +123,10 @@ bool FXPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_SCALE:
-      case MDX_KEY_DOWN:
         if (mcl.currentPage() == FX_PAGE_B) {
           goto toggle_mode;
         } else {
           mcl.setPage(FX_PAGE_B);
-        }
-        break;
-      case MDX_KEY_LEFT:
-        if (mcl.currentPage() == FX_PAGE_A) {
-          goto toggle_mode;
-        } else {
-          mcl.setPage(FX_PAGE_A);
         }
         break;
       }

@@ -859,43 +859,11 @@ bool SeqPtcPage::handleEvent(gui_event_t *event) {
       return seq_menu_page.handleEvent(event);
     }
     if (event->mask == EVENT_BUTTON_PRESSED &&
-        !key_interface.is_key_down(MDX_KEY_FUNC)) {
-      switch (key) {
-      case MDX_KEY_LEFT: {
-        if (transpose > 0) {
-          transpose -= 1;
-        }
-        draw_popup_transpose();
-        return true;
-      }
-      case MDX_KEY_RIGHT: {
-        if (transpose < 11) {
-          transpose += 1;
-        }
-        draw_popup_transpose();
-        return true;
-      }
-      case MDX_KEY_UP: {
-        if (ptc_param_oct.cur < 8) {
-          ptc_param_oct.cur += 1;
-        }
-        draw_popup_octave();
-        return true;
-      }
-      case MDX_KEY_DOWN: {
-        if (ptc_param_oct.cur > 0) {
-          ptc_param_oct.cur -= 1;
-        }
-        draw_popup_octave();
-        return true;
-      }
-      case MDX_KEY_SCALE: {
-        select_device_idx(ptc_uses_grid_x_tracks() ? DeviceIdx::Secondary
-                                                    : DeviceIdx::Primary);
-        config();
-        return true;
-      }
-      }
+        !key_interface.is_key_down(MDX_KEY_FUNC) && key == MDX_KEY_SCALE) {
+      select_device_idx(ptc_uses_grid_x_tracks() ? DeviceIdx::Secondary
+                                                  : DeviceIdx::Primary);
+      config();
+      return true;
     }
   }
   if (EVENT_BUTTON(event)) {

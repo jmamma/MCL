@@ -17,10 +17,6 @@ MCLEncoder arp_mode(0, 18, ENCODER_RES_SEQ);
 MCLEncoder arp_rate(1, 16, ENCODER_RES_SEQ);
 MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
 
-void ArpPage::setup() {
-  param_select = 255;
-}
-
 void ArpPage::init() {
   DEBUG_PRINT_FN();
 //  seq_ptc_page.display();
@@ -128,17 +124,17 @@ void ArpPage::display() {
     break;
   }
 
-  mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, mclstr_arp, str, param_select == 0);
+  mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, mclstr_arp, str, isEncoderFocused(0));
 
   strncpy_P(str, arp_names[encoders[1]->cur], 4);
 
-  mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, mclstr_mode, str, param_select == 1);
+  mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, mclstr_mode, str, isEncoderFocused(1));
 
   mcl_gui.put_value_at(encoders[2]->cur, str);
-  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, mclstr_rate, str, param_select == 2);
+  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, mclstr_rate, str, isEncoderFocused(2));
 
   mcl_gui.put_value_at(encoders[3]->cur, str);
-  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, mclstr_range, str, param_select == 3);
+  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, mclstr_range, str, isEncoderFocused(3));
 
 }
 
@@ -155,29 +151,6 @@ bool ArpPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_YES:
       case MDX_KEY_NO:
         goto exit;
-      }
-      if (param_select == 255) { param_select = 0; return true; }
-      switch (key) {
-       case MDX_KEY_LEFT: {
-        if (param_select > 0) {
-          param_select--;
-        }
-        return true;
-      }
-      case MDX_KEY_RIGHT: {
-        if (param_select < 3) {
-          param_select++;
-        }
-        return true;
-      }
-      case MDX_KEY_UP: {
-        encoders[param_select]->cur++;
-        return true;
-      }
-      case MDX_KEY_DOWN: {
-        encoders[param_select]->cur--;
-        return true;
-      }
       }
     }
   }

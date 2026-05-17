@@ -45,6 +45,7 @@ public:
   void cleanup();
 
   void update_encoders();
+  virtual bool moveEncoderFocusPage(int8_t direction) override;
 
 };
 
