@@ -44,6 +44,7 @@ private:
   bool move_to_current_folder();
   bool is_project_dir(const char *entry) const;
   void focus_current_project();
+  bool jump_to_current_project();
   bool move_destination_mode = false;
   char move_source_path[PRJ_PATH_LEN] = {'\0'};
 };

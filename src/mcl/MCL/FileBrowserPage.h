@@ -97,7 +97,7 @@ public:
 
   char lwd[128];
   static char title[12];
-  static char str_save[12];
+  static char str_save[16];
   uint8_t cur_row;
   static uint8_t cur_file;
 

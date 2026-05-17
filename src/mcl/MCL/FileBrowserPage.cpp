@@ -11,7 +11,7 @@ File FileBrowserPage::file;
 int FileBrowserPage::numEntries;
 
 char FileBrowserPage::title[12];
-char FileBrowserPage::str_save[12];
+char FileBrowserPage::str_save[16];
 char FileBrowserPage::focus_match[FILE_ENTRY_SIZE];
 uint8_t FileBrowserPage::cur_file = 0;
 

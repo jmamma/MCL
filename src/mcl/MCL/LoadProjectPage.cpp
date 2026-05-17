@@ -39,7 +39,7 @@ void LoadProjectPage::init() {
   show_versions = false;
   draw_dirs = true;
   strcpy(title, move_destination_mode ? "DEST" : "PROJECT");
-  strcpy(str_save, move_destination_mode ? "MOVE" : "NEW");
+  strcpy(str_save, move_destination_mode ? "[ MOVE ]" : "[ NEW PROJECT ]");
 
   if (!move_destination_mode) {
     focus_current_project();
@@ -219,6 +219,22 @@ void LoadProjectPage::on_copy(const char *from, const char *to) {
 }
 
 bool LoadProjectPage::handleEvent(gui_event_t *event) {
+  if (!filemenu_active && EVENT_CMD(event) &&
+      event->mask == EVENT_BUTTON_PRESSED) {
+    switch (event->source) {
+    case MDX_KEY_LEFT:
+      encoders[1]->cur = encoders[1]->old = 0;
+      cur_row = 0;
+      selection_change = true;
+      return true;
+    case MDX_KEY_RIGHT:
+      if (!move_destination_mode) {
+        return jump_to_current_project();
+      }
+      return true;
+    }
+  }
+
   if (EVENT_BUTTON(event) && EVENT_PRESSED(event, Buttons.BUTTON3) &&
       show_filemenu) {
     if (move_destination_mode) {
@@ -531,4 +547,35 @@ void LoadProjectPage::focus_current_project() {
   }
   memcpy(focus_match, focus, len);
   focus_match[len] = '\0';
+}
+
+bool LoadProjectPage::jump_to_current_project() {
+  if (!proj.project_loaded || mcl_cfg.project[0] == '\0') {
+    return false;
+  }
+
+#ifndef __AVR__
+  char root[64];
+  strcpy(lwd, mcl_sd.full_path(PRJ_DIR, root, sizeof(root)));
+#else
+  strcpy(lwd, PRJ_DIR);
+#endif
+
+  const char *slash = strrchr(mcl_cfg.project, '/');
+  if (slash != nullptr) {
+    size_t root_len = strlen(lwd);
+    size_t parent_len = slash - mcl_cfg.project;
+    if (root_len + parent_len + 2 > sizeof(lwd)) {
+      return false;
+    }
+    lwd[root_len++] = '/';
+    memcpy(lwd + root_len, mcl_cfg.project, parent_len);
+    lwd[root_len + parent_len] = '\0';
+  }
+
+  position.reset();
+  cur_row = 0;
+  init();
+  encoders[1]->old = encoders[1]->cur;
+  return true;
 }
