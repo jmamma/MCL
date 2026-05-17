@@ -386,15 +386,16 @@ bool SampleBrowserPage::_handle_filemenu() {
 void SampleBrowserPage::start() {}
 
 void SampleBrowserPage::end() {
-  if (sysex->getByte(3) != 0x02)
+  SysexView view(sysex);
+  if (view.getByte(3) != 0x02)
     return;
-  if (sysex->getByte(4) != 0x00)
+  if (view.getByte(4) != 0x00)
     return;
-  if (sysex->getByte(5) != 0x72)
+  if (view.getByte(5) != 0x72)
     return;
-  if (sysex->getByte(6) != 0x34)
+  if (view.getByte(6) != 0x34)
     return;
-  int nr_samplecount = sysex->getByte(7);
+  int nr_samplecount = view.getByte(7);
   if (nr_samplecount > 48)
     return;
 
@@ -403,7 +404,7 @@ void SampleBrowserPage::end() {
 
   for (uint8_t i = 0, j = 7; i < nr_samplecount; ++i) {
     for (uint8_t k = 0; k < 5; ++k) {
-      s_tmpbuf[k] = sysex->getByte(++j);
+      s_tmpbuf[k] = view.getByte(++j);
     }
     bool slot_occupied = s_tmpbuf[4];
     s_tmpbuf[4] = 0;

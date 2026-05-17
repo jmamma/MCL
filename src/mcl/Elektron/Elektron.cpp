@@ -89,12 +89,12 @@ bool ElektronDevice::get_tempo(uint16_t &tempo) {
 
   auto begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
-  listener->sysex->rd_cur = listener->msg_rd;
+  SysexView sysex(listener->sysex, listener->msg_rd);
 
   tempo = 0;
-  if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x3F) {
-      tempo = listener->sysex->getByte(begin+1) << 7;
-      tempo |= (listener->sysex->getByte(begin+2));
+  if (msgType == 0x72 && sysex.getByte(begin) == 0x3F) {
+      tempo = sysex.getByte(begin+1) << 7;
+      tempo |= (sysex.getByte(begin+2));
       return true;
   }
 
@@ -111,12 +111,12 @@ bool ElektronDevice::get_mute_state(uint16_t &mute_state) {
 
   auto begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
-  listener->sysex->rd_cur = listener->msg_rd;
+  SysexView sysex(listener->sysex, listener->msg_rd);
   mute_state = 0;
-  if (msgType == 0x72 && listener->sysex->getByte(begin) == 0x33) {
-      mute_state = listener->sysex->getByte(begin+1);
-      mute_state |= (listener->sysex->getByte(begin+2) << 7);
-      mute_state |= (listener->sysex->getByte(begin+3) << 14);
+  if (msgType == 0x72 && sysex.getByte(begin) == 0x33) {
+      mute_state = sysex.getByte(begin+1);
+      mute_state |= (sysex.getByte(begin+2) << 7);
+      mute_state |= (sysex.getByte(begin+3) << 14);
       return true;
   }
 
@@ -136,13 +136,12 @@ bool ElektronDevice::get_fw_caps() {
   auto begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
   DEBUG_PRINTLN("caps");
-  auto *sysex = listener->sysex;
-  sysex->rd_cur = listener->msg_rd;
+  SysexView sysex(listener->sysex, listener->msg_rd);
   uint8_t b = 0;
-  if (msgType == 0x72 && sysex->getByte(begin) == 0x30) {
+  if (msgType == 0x72 && sysex.getByte(begin) == 0x30) {
       begin++;
       for (uint8_t n = 0; n < 4; n++) {
-        b = sysex->getByte(begin+n);
+        b = sysex.getByte(begin+n);
         if (b == 0xF7) { break; }
         ((uint8_t *)&(fw_caps))[n] = b;
       }

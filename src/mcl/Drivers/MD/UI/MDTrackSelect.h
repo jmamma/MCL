@@ -27,7 +27,7 @@ public:
   void cleanup();
 
   // Message handlers
-  void handle_track_select_legacy(uint8_t len);
+  void handle_track_select_legacy(const SysexView &view, uint8_t len);
   /* @} */
 };
 

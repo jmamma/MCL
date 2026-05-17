@@ -37,7 +37,8 @@ bool MDTrackSelect::off() {
   return true;
 }
 
-void MDTrackSelect::handle_track_select_legacy(uint8_t len) {
+void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
+                                               uint8_t len) {
   if (len == 8) {
     bool is_md_device =
         SeqPage::active_device_is_md() &&
@@ -45,13 +46,13 @@ void MDTrackSelect::handle_track_select_legacy(uint8_t len) {
     bool expand = true;
     bool is_seq_page = mcl.isSeqPage();
     reset_undo();
-    uint8_t length = sysex->getByte(6);
-    uint8_t new_speed = sysex->getByte(7);
+    uint8_t length = view.getByte(6);
+    uint8_t new_speed = view.getByte(7);
     if (is_seq_page) {
       if (SeqPage::recording) {
         goto update_pattern;
       }
-      uint8_t b = sysex->getByte(3);
+      uint8_t b = view.getByte(3);
       MD.currentTrack = b & 0xF;
       uint8_t n = is_md_device ? MD.currentTrack : last_ext_track;
 
@@ -99,19 +100,19 @@ void MDTrackSelect::handle_track_select_legacy(uint8_t len) {
     }
   } else {
 
-    uint8_t b = sysex->getByte(2);
+    uint8_t b = view.getByte(2);
     MD.global.extendedMode = b >> 4;
     MD.global.baseChannel = b & 0xF;
 
-    b = sysex->getByte(3);
+    b = view.getByte(3);
     if (len != 8) {
       MD.currentTrack = b & 0xF;
     }
     MD.currentSynthPage = (b >> 4) & 3;
     MD.currentBank = (b & 64) > 0;
 
-    b = sysex->getByte(4);
-    MD.kit.models[MD.currentTrack] = sysex->getByte(5);
+    b = view.getByte(4);
+    MD.kit.models[MD.currentTrack] = view.getByte(5);
     if (b & 1) {
       MD.kit.models[MD.currentTrack] += 128;
     }
@@ -132,21 +133,22 @@ void MDTrackSelect::end() {
   if (!state) {
     return;
   }
-  if (sysex->getByte(0) != ids[0]) {
+  SysexView view(sysex);
+  if (view.getByte(0) != ids[0]) {
     return;
   }
-  if (sysex->getByte(1) != ids[1]) {
+  if (view.getByte(1) != ids[1]) {
     return;
   }
 
   DEBUG_PRINTLN("track select end");
-  uint8_t len = sysex->get_recordLen();
+  uint8_t len = view.get_recordLen();
   DEBUG_PRINTLN(len);
   DEBUG_PRINTLN(msg_rd);
 
   // Handle legacy track select format only
   // Machine updates (0x63) and kit loaded (0x54) now use Elektron sysex
-  handle_track_select_legacy(len);
+  handle_track_select_legacy(view, len);
 }
 
 MDTrackSelect md_track_select;

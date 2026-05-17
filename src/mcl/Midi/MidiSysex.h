@@ -263,11 +263,18 @@ class SysexView {
 public:
   SysexView() : rb(nullptr), base(0), recordLen(0) {}
   SysexView(MidiSysexClass *sysex) { init(sysex); }
+  SysexView(MidiSysexClass *sysex, uint8_t msg_rd) { init(sysex, msg_rd); }
 
   void init(MidiSysexClass *sysex) {
     rb = sysex->rb;
     base = (uint16_t)((uint8_t *)sysex->get_ptr() - rb->buf);
     recordLen = sysex->get_recordLen();
+  }
+
+  void init(MidiSysexClass *sysex, uint8_t msg_rd) {
+    rb = sysex->rb;
+    base = (uint16_t)((uint8_t *)sysex->ledger[msg_rd].ptr - rb->buf);
+    recordLen = sysex->ledger[msg_rd].recordLen;
   }
 
   uint16_t get_recordLen() const { return recordLen; }
