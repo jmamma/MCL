@@ -147,11 +147,13 @@ public:
 
   static constexpr uint8_t FILE_TYPE = 0;
   static constexpr uint8_t DIR_TYPE = 1;
+  static constexpr uint8_t UNKNOWN_DIR_TYPE = 2;
   static constexpr uint8_t SKIP_TYPE = 255;
 
   bool add_entry(const char *entry, uint8_t type = FILE_TYPE);
   void get_entry(uint16_t n, char *entry);
   void get_entry(uint16_t n, char *entry, uint8_t &type);
+  void set_entry_type(uint16_t n, uint8_t type);
 
   void draw_scrollbar(uint8_t x_offset);
   bool create_folder();
@@ -173,6 +175,12 @@ public:
   // and there's a last chance to clean up.
   virtual void on_cancel() { mcl.popPage(); }
   virtual void chdir_type() {}
+  virtual uint8_t resolve_entry_type(uint16_t n, const char *entry,
+                                     uint8_t type) {
+    (void)n;
+    (void)entry;
+    return type;
+  }
   virtual bool _handle_filemenu();
 #ifdef PLATFORM_TBD
   virtual bool tbd_can_cd_up() const;

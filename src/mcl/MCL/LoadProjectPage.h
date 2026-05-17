@@ -32,6 +32,8 @@ public:
 protected:
   virtual bool can_show_parent_entry() const;
   virtual uint8_t entry_type_for_dir(const char *entry);
+  virtual uint8_t resolve_entry_type(uint16_t n, const char *entry,
+                                     uint8_t type);
   virtual bool _handle_filemenu();
 
 private:

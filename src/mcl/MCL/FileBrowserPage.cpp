@@ -76,6 +76,12 @@ void FileBrowserPage::get_entry(uint16_t n, char *entry, uint8_t &type) {
   strcpy(entry, buf + 1);
 }
 
+void FileBrowserPage::set_entry_type(uint16_t n, uint8_t type) {
+  volatile uint8_t *ptr =
+      (uint8_t *)BANK3_FILE_ENTRIES_START + n * FILE_ENTRY_SIZE;
+  put_bank3(ptr, &type, 1);
+}
+
 bool FileBrowserPage::can_show_parent_entry() const {
   return show_parent && strcmp(lwd, "/") != 0;
 }
@@ -246,6 +252,7 @@ void FileBrowserPage::draw_filebrowser() {
     if (entry_num < (uint16_t)numEntries) {
       uint8_t type;
       get_entry(entry_num, temp_entry, type);
+      type = resolve_entry_type(entry_num, temp_entry, type);
       if (type == DIR_TYPE && draw_dirs) {
         oled_display.drawRect(x_offset, y_pos - 4, 6, 4, !color);
         oled_display.drawFastHLine(x_offset + 1, y_pos - 1 - 4, 3, !color);
@@ -588,10 +595,10 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
         goto NO;
       case MDX_KEY_UP:
         encoders[1]->cur -= inc;
-        break;
+        return true;
       case MDX_KEY_DOWN:
         encoders[1]->cur += inc;
-        break;
+        return true;
         /*
         case MDX_KEY_LEFT:
           _cd_up();

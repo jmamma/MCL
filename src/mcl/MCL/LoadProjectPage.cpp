@@ -28,7 +28,7 @@ void LoadProjectPage::init() {
   FileBrowserPage::init();
 
   show_dirs = true;
-  select_dirs = false;
+  select_dirs = true;
   show_save = false;
   show_parent = true;
   show_new_folder = true;
@@ -65,6 +65,14 @@ void LoadProjectPage::on_select(const char *entry) {
   DEBUG_DUMP(entry);
 
   file.close();
+  file.open(entry, O_READ);
+  bool dir = file.isDirectory();
+  file.close();
+
+  if (dir && !is_project_dir(entry)) {
+    _cd(entry);
+    return;
+  }
 
   char proj_filename[PRJ_PATH_LEN] = {'\0'};
   if (!build_project_path(entry, proj_filename, sizeof(proj_filename))) {
@@ -229,14 +237,12 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
   if (EVENT_BUTTON(event) && EVENT_PRESSED(event, Buttons.BUTTON3) &&
       show_filemenu) {
     char entry[FILE_ENTRY_SIZE] = {'\0'};
-    uint8_t entry_type = SKIP_TYPE;
     bool regular_entry = encoders[1]->getValue() < numEntries;
     if (regular_entry) {
-      get_entry(encoders[1]->getValue(), entry, entry_type);
+      get_entry(encoders[1]->getValue(), entry);
       regular_entry = strcmp(entry, "..") != 0;
     }
-    bool project_entry = regular_entry && entry_type == FILE_TYPE &&
-                         is_project_dir(entry);
+    bool project_entry = regular_entry && is_project_dir(entry);
 
     file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
     file_menu_page.menu.enable_entry(FM_DELETE, regular_entry);
@@ -296,7 +302,26 @@ bool LoadProjectPage::tbd_can_cd_up() const {
 #endif
 
 uint8_t LoadProjectPage::entry_type_for_dir(const char *entry) {
+#ifdef __AVR__
+  (void)entry;
+  return UNKNOWN_DIR_TYPE;
+#else
   return is_project_dir(entry) ? FILE_TYPE : DIR_TYPE;
+#endif
+}
+
+uint8_t LoadProjectPage::resolve_entry_type(uint16_t n, const char *entry,
+                                            uint8_t type) {
+#ifdef __AVR__
+  if (type == UNKNOWN_DIR_TYPE) {
+    type = is_project_dir(entry) ? FILE_TYPE : DIR_TYPE;
+    set_entry_type(n, type);
+  }
+#else
+  (void)n;
+  (void)entry;
+#endif
+  return type;
 }
 
 bool LoadProjectPage::is_project_dir(const char *entry) const {

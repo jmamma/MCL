@@ -123,6 +123,8 @@ private:
   bool read_header();
   bool load_project_impl(const char *projectname, uint8_t requested_pair,
                          bool use_requested_pair);
+  bool copy_grid_pair(const char *basename, uint8_t source_pair,
+                      uint8_t dest_pair);
   bool split_project_path(const char *projectname, const char **basename) const;
   bool project_file_name(const char *basename, char *out, size_t out_len) const;
   bool project_pair_exists(uint8_t pair, const char *basename);

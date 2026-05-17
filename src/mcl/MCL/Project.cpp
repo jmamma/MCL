@@ -46,6 +46,24 @@ bool append_u8(char *out, size_t out_len, uint8_t value) {
   return true;
 }
 
+bool copy_grid_slot_raw(Grid &src_grid, Grid &dst_grid, GridColumn col,
+                        GridRow row) {
+  uint8_t buf[256];
+  if (!src_grid.seek(col, row) || !dst_grid.seek(col, row)) {
+    return false;
+  }
+
+  uint16_t remaining = GRID_SLOT_BYTES;
+  while (remaining > 0) {
+    uint16_t n = remaining > sizeof(buf) ? sizeof(buf) : remaining;
+    if (!src_grid.read(buf, n) || !dst_grid.write(buf, n)) {
+      return false;
+    }
+    remaining -= n;
+  }
+  return true;
+}
+
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
 
@@ -770,6 +788,83 @@ bool Project::store_config_from_system() {
   return write_header();
 }
 
+bool Project::copy_grid_pair(const char *basename, uint8_t source_pair,
+                             uint8_t dest_pair) {
+  char created[NUM_GRIDS][PRJ_NAME_LEN + 5];
+  memset(created, 0, sizeof(created));
+
+  bool ok = true;
+  for (uint8_t grid_idx = 0; ok && grid_idx < NUM_GRIDS; grid_idx++) {
+    char src_name[PRJ_NAME_LEN + 5] = {'\0'};
+    char dst_name[PRJ_NAME_LEN + 5] = {'\0'};
+    Grid src_grid;
+    Grid dst_grid;
+
+    ok = build_grid_filename(basename, source_pair * NUM_GRIDS + grid_idx,
+                             src_name, sizeof(src_name)) &&
+         build_grid_filename(basename, dest_pair * NUM_GRIDS + grid_idx,
+                             dst_name, sizeof(dst_name)) &&
+         !SD.exists(dst_name) && src_grid.open_file(src_name) &&
+         dst_grid.new_file(dst_name);
+    if (!ok) {
+      src_grid.close_file();
+      dst_grid.close_file();
+      break;
+    }
+
+    strcpy(created[grid_idx], dst_name);
+    ok = dst_grid.write_header();
+
+    EmptyTrack scratch;
+    GridTrack empty_slot;
+    for (GridRow row = 0; ok && row < GRID_LENGTH; row++) {
+      draw_upgrade_progress(grid_idx, row);
+
+      GridRowHeader row_header;
+      ok = src_grid.read_row_header(&row_header, row) &&
+           dst_grid.write_row_header(&row_header, row);
+      if (!ok) {
+        break;
+      }
+
+      for (GridColumn col = 0; ok && col < GRID_WIDTH; col++) {
+        if (row_header.track_type[col] == EMPTY_TRACK_TYPE) {
+          empty_slot.active = EMPTY_TRACK_TYPE;
+          empty_slot.link.init(row);
+          ok = dst_grid.write(empty_slot._this(), empty_slot._sizeof(), col,
+                              row);
+          continue;
+        }
+
+        auto *track = scratch.load_from_grid_512(col, row, &src_grid);
+        if (track != nullptr && track->active == row_header.track_type[col]) {
+          ok = dst_grid.write(track->_this(), track->get_track_size(), col,
+                              row);
+        } else {
+          ok = copy_grid_slot_raw(src_grid, dst_grid, col, row);
+        }
+      }
+    }
+
+    if (ok) {
+      draw_upgrade_progress(grid_idx, GRID_LENGTH);
+      ok = dst_grid.sync();
+    }
+
+    src_grid.close_file();
+    dst_grid.close_file();
+  }
+
+  if (!ok) {
+    for (uint8_t i = 0; i < NUM_GRIDS; i++) {
+      if (created[i][0] != '\0') {
+        SD.remove(created[i]);
+      }
+    }
+  }
+  return ok;
+}
+
 bool Project::create_backup(const char *projectname) {
   const char *basename = nullptr;
   if (!split_project_path(projectname, &basename)) {
@@ -814,28 +909,7 @@ bool Project::create_backup(const char *projectname) {
   }
 
   draw_wait_popup("CREATING BACKUP");
-  char copied[NUM_GRIDS][PRJ_NAME_LEN + 5];
-  memset(copied, 0, sizeof(copied));
-  for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-    char src[PRJ_NAME_LEN + 5] = {'\0'};
-    char dst[PRJ_NAME_LEN + 5] = {'\0'};
-    if (!build_grid_filename(basename, source_pair * NUM_GRIDS + i, src,
-                             sizeof(src)) ||
-        !build_grid_filename(basename, dest_pair * NUM_GRIDS + i, dst,
-                             sizeof(dst))) {
-      return false;
-    }
-    strcpy(copied[i], dst);
-    if (!mcl_sd.copy_file(src, dst)) {
-      for (uint8_t n = 0; n <= i; n++) {
-        if (copied[n][0] != '\0') {
-          SD.remove(copied[n]);
-        }
-      }
-      return false;
-    }
-  }
-  return true;
+  return copy_grid_pair(basename, source_pair, dest_pair);
 }
 
 bool Project::delete_backup(const char *projectname, uint8_t pair) {
