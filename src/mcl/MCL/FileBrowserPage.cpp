@@ -25,6 +25,9 @@ bool FileBrowserPage::show_filemenu = true;
 bool FileBrowserPage::show_overwrite = false;
 
 bool FileBrowserPage::show_samplemgr = false;
+bool FileBrowserPage::show_copy = false;
+bool FileBrowserPage::show_move = false;
+bool FileBrowserPage::show_versions = false;
 
 bool FileBrowserPage::filemenu_active = false;
 
@@ -106,6 +109,9 @@ void FileBrowserPage::query_filesystem() {
   file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
   file_menu_page.menu.enable_entry(FM_DELETE, true); // delete
   file_menu_page.menu.enable_entry(FM_RENAME, true); // rename
+  file_menu_page.menu.enable_entry(FM_DUPLICATE, show_copy);
+  file_menu_page.menu.enable_entry(FM_MOVE, show_move);
+  file_menu_page.menu.enable_entry(FM_VERSIONS, show_versions);
   file_menu_page.menu.enable_entry(FM_CANCEL, true); // cancel
   file_menu_page.menu.enable_entry(FM_RECVALL, false);
   file_menu_page.menu.enable_entry(FM_SENDALL, false);
@@ -179,6 +185,9 @@ void FileBrowserPage::query_filesystem() {
 void FileBrowserPage::init() {
   filemenu_active = false;
   show_samplemgr = false;
+  show_copy = false;
+  show_move = false;
+  show_versions = false;
   draw_dirs = false;
   strcpy_P(focus_match, mclstr_empty);
   strcpy_P(title, mclstr_title_files);
@@ -456,6 +465,40 @@ bool FileBrowserPage::_handle_filemenu() {
       on_rename(buf1, buf2);
     }
     return true;
+  case FM_DUPLICATE: // duplicate
+    strcat(buf2, buf1);
+    if (suffix_pos != nullptr) {
+      buf2[suffix_pos - buf1] = '\0';
+    }
+    {
+      size_t suffix_len = suffix_pos == nullptr ? 0 : strlen(suffix_pos);
+      size_t max_base = NAME_LENGTH > suffix_len + 2
+                            ? NAME_LENGTH - suffix_len - 2
+                            : 0;
+      size_t base_len = strlen(buf2);
+      if (base_len > max_base) {
+        base_len = max_base;
+        buf2[base_len] = '\0';
+      }
+      buf2[base_len++] = '_';
+      buf2[base_len++] = '2';
+      buf2[base_len] = '\0';
+    }
+    if (suffix_pos != nullptr) {
+      strcat(buf2, suffix_pos);
+    }
+    name_length = max(name_length, strlen(buf2));
+    if (mcl_gui.wait_for_input(buf2, "DUPLICATE:", name_length)) {
+      on_copy(buf1, buf2);
+    }
+    return true;
+  case FM_MOVE: // move
+    strcat(buf2, buf1);
+    name_length = max(name_length, strlen(buf2));
+    if (mcl_gui.wait_for_input(buf2, "MOVE TO:", name_length)) {
+      on_move(buf1, buf2);
+    }
+    return true;
   }
   return false;
 }
@@ -482,28 +525,7 @@ bool FileBrowserPage::tbd_cd_up() {
 #endif
 
 bool FileBrowserPage::rm_dir(const char *dir) {
-  char temp_entry[FILE_ENTRY_SIZE];
-
-  // SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
-  DEBUG_PRINTLN("preparing to delete");
-  DEBUG_PRINTLN(dir);
-  if (_cd(dir)) {
-    File d;
-    d.open(lwd);
-    d.rewind();
-    // bool ret = SD.vwd()->rmRfStar(); // extra 276 bytes
-    while (file.openNext(&d, O_READ)) {
-      file.getName(temp_entry, FILE_ENTRY_SIZE);
-      DEBUG_PRINT("deleting ");
-      DEBUG_PRINTLN(temp_entry);
-      file.close();
-      SD.remove(temp_entry);
-    }
-    SD.chdir("/");
-    _cd_up();
-    return SD.rmdir(dir);
-  }
-  return false;
+  return mcl_sd.remove_dir(dir);
 }
 
 void FileBrowserPage::on_delete(const char *entry) {
@@ -531,6 +553,22 @@ void FileBrowserPage::on_rename(const char *from, const char *to) {
   } else {
     gfx.alert("ERROR", "File not renamed.");
   }
+}
+
+void FileBrowserPage::on_copy(const char *from, const char *to) {
+  file.open(from, O_READ);
+  bool dir = file.isDirectory();
+  file.close();
+  bool ok = dir ? mcl_sd.copy_dir(from, to) : mcl_sd.copy_file(from, to);
+  if (ok) {
+    gfx.alert("SUCCESS", "Duplicated.");
+  } else {
+    gfx.alert("ERROR", "Not duplicated.");
+  }
+}
+
+void FileBrowserPage::on_move(const char *from, const char *to) {
+  on_rename(from, to);
 }
 
 bool FileBrowserPage::handleEvent(gui_event_t *event) {

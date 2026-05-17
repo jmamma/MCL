@@ -388,16 +388,16 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_mdimport_menu_layout = 96;
   union {
     menu_t<mcl_config_page_N> mclconfig_menu_layout[0];
-    char zz__mclconfig_menu_layout[32];
+    char zz__mclconfig_menu_layout[56];
   };
-  static constexpr size_t countof_mclconfig_menu_layout = 32 / sizeof(menu_t<mcl_config_page_N>);
-  static constexpr size_t sizeofof_mclconfig_menu_layout = 32;
+  static constexpr size_t countof_mclconfig_menu_layout = 56 / sizeof(menu_t<mcl_config_page_N>);
+  static constexpr size_t sizeofof_mclconfig_menu_layout = 56;
   union {
     menu_t<file_menu_page_N> file_menu_layout[0];
-    char zz__file_menu_layout[140];
+    char zz__file_menu_layout[200];
   };
-  static constexpr size_t countof_file_menu_layout = 140 / sizeof(menu_t<file_menu_page_N>);
-  static constexpr size_t sizeofof_file_menu_layout = 140;
+  static constexpr size_t countof_file_menu_layout = 200 / sizeof(menu_t<file_menu_page_N>);
+  static constexpr size_t sizeofof_file_menu_layout = 200;
   union {
     menu_t<seq_menu_page_N> seq_menu_layout[0];
     char zz__seq_menu_layout[560];
@@ -422,7 +422,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_perf_menu_layout = 56 / sizeof(menu_t<perf_menu_page_N>);
   static constexpr size_t sizeofof_perf_menu_layout = 56;
-  static constexpr size_t __total_size = 2488;
+  static constexpr size_t __total_size = 2572;
 };
 
 extern const unsigned char __R_icons_logo[] PROGMEM;

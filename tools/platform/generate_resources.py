@@ -18,7 +18,8 @@ def get_platform_subdir(env):
     """
     env_name = env.subst("$PIOENV")
     env_mapping = {
-        "rp2040": "rp2040", "rp2350": "rp2040", "tbd": "rp2040",
+        "rp2040": "rp2040", "rp2350": "rp2040",
+        "tbd": "rp2040", "tbd_picoboot3": "rp2040",
         "avr": "avr", "megacmd": "avr", "megacommand": "avr", "nano": "avr",
     }
     for key, value in env_mapping.items():

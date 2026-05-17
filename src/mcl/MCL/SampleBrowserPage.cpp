@@ -269,12 +269,21 @@ void SampleBrowserPage::on_select(const char *__) {
 bool SampleBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_BUTTON(event)) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
-      bool state = (param2->cur == 0);
-      file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
-      file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
-      file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-      file_menu_page.menu.enable_entry(FM_RECVALL, state);
-      file_menu_page.menu.enable_entry(FM_SENDALL, state);
+      bool action_entry = param2->cur == 0;
+      bool regular_entry = !action_entry && param2->cur < numEntries;
+      if (regular_entry) {
+        char entry[FILE_ENTRY_SIZE] = {'\0'};
+        get_entry(param2->cur, entry);
+        regular_entry = strcmp(entry, "..") != 0;
+      }
+      file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !action_entry);
+      file_menu_page.menu.enable_entry(FM_DELETE, regular_entry); // delete
+      file_menu_page.menu.enable_entry(FM_RENAME, regular_entry); // rename
+      file_menu_page.menu.enable_entry(FM_DUPLICATE, regular_entry);
+      file_menu_page.menu.enable_entry(FM_MOVE, regular_entry);
+      file_menu_page.menu.enable_entry(FM_VERSIONS, false);
+      file_menu_page.menu.enable_entry(FM_RECVALL, action_entry);
+      file_menu_page.menu.enable_entry(FM_SENDALL, action_entry);
       open_filemenu();
       return true;
     }

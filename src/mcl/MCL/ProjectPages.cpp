@@ -4,6 +4,8 @@
 MCLEncoder loadproj_param1(0, 64, ENCODER_RES_SYS);
 
 LoadProjectPage load_proj_page(&loadproj_param1,&loadproj_param1);
+#ifndef __AVR__
+ProjectVersionPage project_version_page(&loadproj_param1,&loadproj_param1);
+#endif
 
 //ConvertProjectPage convert_proj_page(&loadproj_param1,&loadproj_param1);
-

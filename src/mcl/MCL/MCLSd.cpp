@@ -5,6 +5,30 @@
 #include "Project.h"
 #include "PtcGroups.h"
 
+namespace {
+
+bool join_path(char *dst, size_t dst_len, const char *dir, const char *entry) {
+  if (dst_len == 0) {
+    return false;
+  }
+  dst[0] = '\0';
+  size_t dir_len = strlen(dir);
+  size_t entry_len = strlen(entry);
+  bool add_sep = dir_len > 0 && dir[dir_len - 1] != '/';
+  size_t needed = dir_len + (add_sep ? 1 : 0) + entry_len + 1;
+  if (needed > dst_len) {
+    return false;
+  }
+  strcpy(dst, dir);
+  if (add_sep) {
+    strcat(dst, "/");
+  }
+  strcat(dst, entry);
+  return true;
+}
+
+} // namespace
+
 #ifdef __AVR__
 void mcl_oled_set_sd_dedicated_spi(bool dedicated) {
   SD.setDedicatedSpi(dedicated);
@@ -107,6 +131,9 @@ bool MCLSd::load_init() {
 
         }
 
+        if (mcl_cfg.project_config > 1) {
+          mcl_cfg.project_config = 0;
+        }
         ptc_groups.load(mcl_cfg.ptc_group);
 
         if (mcl_cfg.number_projects > 0) {
@@ -210,6 +237,139 @@ bool MCLSd::read_data(void *data, size_t len, File *filep) {
   } while (n < SD_MAX_RETRIES);
 
   return false;
+}
+
+bool MCLSd::copy_file(const char *src, const char *dst) {
+  if (SD.exists(dst)) {
+    return false;
+  }
+
+  File in;
+  File out;
+  if (!in.open(src, O_READ)) {
+    return false;
+  }
+  if (!out.open(dst, O_RDWR | O_CREAT | O_TRUNC)) {
+    in.close();
+    return false;
+  }
+
+  bool ok = true;
+  uint32_t size = in.size();
+  if (size > 0 && !out.preAllocate(size)) {
+    ok = false;
+  }
+
+  uint8_t buf[256];
+  while (ok) {
+    int n = in.read(buf, sizeof(buf));
+    if (n < 0) {
+      ok = false;
+      break;
+    }
+    if (n == 0) {
+      break;
+    }
+    ok = write_data(buf, (size_t)n, &out);
+  }
+  if (ok) {
+    ok = out.sync();
+  }
+
+  out.close();
+  in.close();
+  if (!ok) {
+    SD.remove(dst);
+  }
+  return ok;
+}
+
+bool MCLSd::remove_dir(const char *dir) {
+  File d;
+  if (!d.open(dir, O_READ) || !d.isDirectory()) {
+    d.close();
+    return false;
+  }
+  d.rewind();
+
+  File entry_file;
+  char entry[FILE_ENTRY_SIZE];
+  char path[128];
+  bool ok = true;
+
+  while (entry_file.openNext(&d, O_READ)) {
+    entry_file.getName(entry, sizeof(entry));
+    bool is_dir = entry_file.isDirectory();
+    entry_file.close();
+
+    if (entry[0] == '\0' || entry[0] == '.') {
+      continue;
+    }
+    if (!join_path(path, sizeof(path), dir, entry)) {
+      ok = false;
+      continue;
+    }
+    if (is_dir) {
+      if (!remove_dir(path)) {
+        ok = false;
+      }
+    } else if (!SD.remove(path)) {
+      ok = false;
+    }
+  }
+
+  entry_file.close();
+  d.close();
+  if (!SD.rmdir(dir)) {
+    ok = false;
+  }
+  return ok;
+}
+
+bool MCLSd::copy_dir(const char *src, const char *dst) {
+  if (SD.exists(dst)) {
+    return false;
+  }
+  if (!SD.mkdir(dst, true)) {
+    return false;
+  }
+
+  File dir;
+  if (!dir.open(src, O_READ) || !dir.isDirectory()) {
+    dir.close();
+    remove_dir(dst);
+    return false;
+  }
+  dir.rewind();
+
+  File entry_file;
+  char entry[FILE_ENTRY_SIZE];
+  char src_path[128];
+  char dst_path[128];
+  bool ok = true;
+
+  while (ok && entry_file.openNext(&dir, O_READ)) {
+    entry_file.getName(entry, sizeof(entry));
+    bool is_dir = entry_file.isDirectory();
+    entry_file.close();
+
+    if (entry[0] == '\0' || entry[0] == '.') {
+      continue;
+    }
+    if (!join_path(src_path, sizeof(src_path), src, entry) ||
+        !join_path(dst_path, sizeof(dst_path), dst, entry)) {
+      ok = false;
+      break;
+    }
+    ok = is_dir ? copy_dir(src_path, dst_path) : copy_file(src_path, dst_path);
+  }
+
+  entry_file.close();
+  dir.close();
+  if (!ok) {
+    remove_dir(dst);
+  }
+  return ok;
 }
 
 MCLSd mcl_sd;

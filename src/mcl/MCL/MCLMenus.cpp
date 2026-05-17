@@ -112,7 +112,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 70
     &opt_lfo_mult,
     // 71
-    &grid_page.slot_load_sound
+    &grid_page.slot_load_sound,
+    // 72
+    &mcl_cfg.project_config
 };
 
 const menu_function_ptr_t menu_target_functions[] PROGMEM = {

@@ -30,6 +30,7 @@ enum PageIndex {
     RAM_PAGE_B,
     // Configuration pages
     LOAD_PROJ_PAGE,
+    PROJECT_VERSION_PAGE,
     MIDI_CONFIG_PAGE,
     MD_CONFIG_PAGE,
     CHAIN_CONFIG_PAGE,

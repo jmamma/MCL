@@ -5,6 +5,7 @@
 #include "Project.h"
 #include "DevicePanelRef.h"
 #include "KeyInterface.h"
+#include "MCLMenus.h"
 
 namespace {
 
@@ -33,6 +34,8 @@ void LoadProjectPage::init() {
   show_new_folder = true;
   show_filemenu = true;
   show_overwrite = false;
+  show_copy = true;
+  show_versions = false;
   draw_dirs = true;
   strcpy(title, "PROJECT");
 
@@ -135,13 +138,7 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     return;
   }
 
-  char grid_filename[f_len] = {'\0'};
-  char to_grid_filename[f_len] = {'\0'};
-  char proj_filename[f_len] = {'\0'};
-
-  char to_proj_filename[f_len] = {'\0'};
   bool reload_current = false;
-  uint8_t l, l2 = 0;
 
   if (!SD.chdir(from)) {
     goto error;
@@ -151,33 +148,8 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     DEBUG_PRINTLN("reload current");
     reload_current = true;
   }
-  strncpy(proj_filename, from, f_len);
-  strcat(proj_filename, ".mcl");
 
-  strncpy(to_proj_filename, to, f_len);
-  strcat(to_proj_filename, ".mcl");
-
-  strncpy(to_grid_filename, to, f_len);
-  strncpy(grid_filename, from, f_len);
-  l = strlen(grid_filename);
-  l2 = strlen(to_grid_filename);
-
-  for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-    grid_filename[l] = '.';
-    grid_filename[l + 1] = i + '0';
-    grid_filename[l + 2] = '\0';
-
-    to_grid_filename[l2] = '.';
-    to_grid_filename[l2 + 1] = i + '0';
-    to_grid_filename[l2 + 2] = '\0';
-
-    if (!SD.rename(grid_filename, to_grid_filename)) {
-      DEBUG_PRINTLN("Rename failed");
-      goto error;
-    }
-  }
-
-  if (!SD.rename(proj_filename, to_proj_filename)) {
+  if (!proj.rename_project_files(from, to)) {
     goto error;
   }
   SD.chdir(lwd);
@@ -189,8 +161,119 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     return;
   }
 error:
+  SD.chdir(lwd);
   DEBUG_PRINTLN("error");
   gfx.alert("ERROR", "Not renamed.");
+}
+
+void LoadProjectPage::on_copy(const char *from, const char *to) {
+  if (strcmp(from, "..") == 0) {
+    return;
+  }
+
+  file.open(from, O_READ);
+  bool dir = file.isDirectory();
+  file.close();
+
+  bool ok = false;
+  if (dir) {
+    if (is_project_dir(from)) {
+      char from_project_path[PRJ_PATH_LEN] = {'\0'};
+      char to_project_path[PRJ_PATH_LEN] = {'\0'};
+      ok = build_project_path(from, from_project_path,
+                              sizeof(from_project_path)) &&
+           build_project_path(to, to_project_path, sizeof(to_project_path)) &&
+           proj.copy_project(from_project_path, to_project_path);
+    } else {
+      ok = mcl_sd.copy_dir(from, to);
+    }
+  } else {
+    ok = mcl_sd.copy_file(from, to);
+  }
+
+  if (ok) {
+    gfx.alert("SUCCESS", "Duplicated.");
+  } else {
+    gfx.alert("ERROR", "Not duplicated.");
+  }
+}
+
+void LoadProjectPage::on_move(const char *from, const char *to) {
+  if (strcmp(from, "..") == 0) {
+    return;
+  }
+
+  file.open(from, O_READ);
+  bool dir = file.isDirectory();
+  file.close();
+
+  if (!dir || !is_project_dir(from)) {
+    on_rename(from, to);
+    return;
+  }
+
+  char from_project_path[PRJ_PATH_LEN] = {'\0'};
+  char to_project_path[PRJ_PATH_LEN] = {'\0'};
+  bool ok = build_project_path(from, from_project_path,
+                               sizeof(from_project_path)) &&
+            build_project_path(to, to_project_path, sizeof(to_project_path)) &&
+            proj.move_project(from_project_path, to_project_path);
+  if (ok) {
+    gfx.alert("SUCCESS", "Project moved.");
+  } else {
+    gfx.alert("ERROR", "Not moved.");
+  }
+}
+
+bool LoadProjectPage::handleEvent(gui_event_t *event) {
+  if (EVENT_BUTTON(event) && EVENT_PRESSED(event, Buttons.BUTTON3) &&
+      show_filemenu) {
+    char entry[FILE_ENTRY_SIZE] = {'\0'};
+    uint8_t entry_type = SKIP_TYPE;
+    bool regular_entry = encoders[1]->getValue() < numEntries;
+    if (regular_entry) {
+      get_entry(encoders[1]->getValue(), entry, entry_type);
+      regular_entry = strcmp(entry, "..") != 0;
+    }
+#ifndef __AVR__
+    bool project_entry = regular_entry && entry_type == FILE_TYPE &&
+                         is_project_dir(entry);
+#endif
+
+    file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
+    file_menu_page.menu.enable_entry(FM_DELETE, regular_entry);
+    file_menu_page.menu.enable_entry(FM_RENAME, regular_entry);
+    file_menu_page.menu.enable_entry(FM_DUPLICATE, regular_entry);
+    file_menu_page.menu.enable_entry(FM_MOVE, regular_entry);
+#ifndef __AVR__
+    file_menu_page.menu.enable_entry(FM_VERSIONS, project_entry);
+#else
+    file_menu_page.menu.enable_entry(FM_VERSIONS, false);
+#endif
+    file_menu_page.menu.enable_entry(FM_RECVALL, false);
+    file_menu_page.menu.enable_entry(FM_SENDALL, false);
+    open_filemenu();
+    return true;
+  }
+  return FileBrowserPage::handleEvent(event);
+}
+
+bool LoadProjectPage::_handle_filemenu() {
+#ifndef __AVR__
+  if (file_menu_page.menu.get_item_index(file_menu_encoder.cur) ==
+      FM_VERSIONS) {
+    char entry[FILE_ENTRY_SIZE] = {'\0'};
+    get_entry(encoders[1]->getValue(), entry);
+    char project_path[PRJ_PATH_LEN] = {'\0'};
+    if (is_project_dir(entry) &&
+        build_project_path(entry, project_path, sizeof(project_path))) {
+      project_version_page.set_project(project_path);
+      mcl.pushPage(PROJECT_VERSION_PAGE);
+    }
+    return false;
+  }
+#endif
+  return FileBrowserPage::_handle_filemenu();
 }
 
 bool LoadProjectPage::current_project_parent(const char **parent) const {

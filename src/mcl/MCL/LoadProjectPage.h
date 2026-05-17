@@ -19,6 +19,9 @@ public:
   virtual void on_select(const char *entry);
   virtual void on_delete(const char *entry);
   virtual void on_rename( const char *from, const char *to);
+  virtual void on_copy(const char *from, const char *to);
+  virtual void on_move(const char *from, const char *to);
+  virtual bool handleEvent(gui_event_t *event);
   virtual void setup();
   virtual void init();
   virtual void cleanup();
@@ -29,6 +32,7 @@ public:
 protected:
   virtual bool can_show_parent_entry() const;
   virtual uint8_t entry_type_for_dir(const char *entry);
+  virtual bool _handle_filemenu();
 
 private:
   bool build_project_path(const char *entry, char *out, size_t out_len) const;

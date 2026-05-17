@@ -55,6 +55,9 @@ class MCLSd {
   bool seek(uint32_t pos, File *filep);
   bool read_data(void *data, size_t len, File *filep);
   bool write_data(void *data, size_t len, File *filep);
+  bool copy_file(const char *src, const char *dst);
+  bool copy_dir(const char *src, const char *dst);
+  bool remove_dir(const char *dir);
 
 #ifndef __AVR__
   const char *full_path(const char *path, char *buffer, size_t size);

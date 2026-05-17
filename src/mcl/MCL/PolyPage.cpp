@@ -4,6 +4,7 @@
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
 #include "MCLSysConfig.h"
+#include "Project.h"
 #include "TomThumb.h"
 
 namespace {
@@ -164,7 +165,9 @@ void PolyPage::release_track(uint8_t i) {
 
 void PolyPage::save_ptc_groups() {
   ptc_groups.store(mcl_cfg.ptc_group);
-  mcl_cfg.write_cfg();
+  if (mcl_cfg.write_cfg()) {
+    proj.store_config_from_system();
+  }
 }
 
 void PolyPage::loop() {

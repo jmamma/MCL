@@ -292,6 +292,7 @@ menu_t<mcl_config_page_N> mclconfig_menu_layout = {
     {
         //           m  r  n  d   p  f  o
         {"DISPLAY:", 0, 2, 2, 13, NULL_PAGE, 0, 23},
+        {"PROJ CFG:", 0, 2, 2, 72, NULL_PAGE, 0, 25},
     },
     1
 };
@@ -304,6 +305,9 @@ menu_t<file_menu_page_N> file_menu_layout = {
         {"NEW DIR",   0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"DELETE",    0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"RENAME",    0, 0, 0, 0, NULL_PAGE, 0, 0},
+        {"DUPLICATE",      0, 0, 0, 0, NULL_PAGE, 0, 0},
+        {"MOVE",      0, 0, 0, 0, NULL_PAGE, 0, 0},
+        {"VERSIONS",  0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"RECV ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"SEND ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},
     },

@@ -5,11 +5,17 @@
 
 #include "MCLEncoder.h"
 #include "LoadProjectPage.h"
+#ifndef __AVR__
+#include "ProjectVersionPage.h"
+#endif
 #include "ConvertProjectPage.h"
 
 extern MCLEncoder loadproj_param1;
 
 extern LoadProjectPage load_proj_page;
+#ifndef __AVR__
+extern ProjectVersionPage project_version_page;
+#endif
 
 //extern ConvertProjectPage convert_proj_page;
 

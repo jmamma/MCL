@@ -80,6 +80,7 @@ public:
   uint8_t grid_y_device;
   uint8_t grid_y_port;
   uint8_t ptc_group[PTC_GROUP_TRACKS];
+  uint8_t project_config;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

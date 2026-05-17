@@ -4,6 +4,7 @@
 #include "MidiSetup.h"
 #include "GridChain.h"
 #include "MCLSd.h"
+#include "Project.h"
 #include "hardware.h"
 #include "platform.h"
 #include "MCLStrings.h"
@@ -63,7 +64,9 @@ void usb_disk_mode() {
 void mclsys_apply_config() {
   DEBUG_PRINT_FN();
   GUI.display_mirror = mcl_cfg.display_mirror;
-  mcl_cfg.write_cfg();
+  if (mcl_cfg.write_cfg()) {
+    proj.store_config_from_system();
+  }
 }
 
 void mclsys_normalize_midi_config() {
@@ -274,6 +277,7 @@ bool MCLSysConfig::cfg_init() {
   grid_y_device = GRID_Y_DEVICE_GENER;
   grid_y_port = GRID_Y_PORT_2;
 #endif
+  project_config = 0;
   mclsys_normalize_midi_config();
   cfgfile.close();
   ret = write_cfg();

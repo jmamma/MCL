@@ -84,8 +84,8 @@ static bool is_tbd_menu_page(PageIndex pg) {
 }
 
 static bool is_tbd_file_browser_page(PageIndex pg) {
-  return pg == LOAD_PROJ_PAGE || pg == SAMPLE_BROWSER ||
-         pg == SOUND_BROWSER;
+  return pg == LOAD_PROJ_PAGE || pg == PROJECT_VERSION_PAGE ||
+         pg == SAMPLE_BROWSER || pg == SOUND_BROWSER;
 }
 
 static FileBrowserPage *active_tbd_file_browser_page(PageIndex pg) {

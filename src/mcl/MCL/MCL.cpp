@@ -87,6 +87,11 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
 
     // Configuration pages
     { .ptr = &load_proj_page },
+#ifndef __AVR__
+    { .ptr = &project_version_page },
+#else
+    { .ptr = &load_proj_page },
+#endif
     { .ptr = &midi_config_page },
     { .ptr = &md_config_page },
     { .ptr = &chain_config_page },

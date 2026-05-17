@@ -27,8 +27,11 @@
 #define FM_NEW_FOLDER 1
 #define FM_DELETE 2
 #define FM_RENAME 3
-#define FM_RECVALL 4
-#define FM_SENDALL 5
+#define FM_DUPLICATE 4
+#define FM_MOVE 5
+#define FM_VERSIONS 6
+#define FM_RECVALL 7
+#define FM_SENDALL 8
 
 #define NAME_LENGTH 14
 
@@ -109,6 +112,9 @@ public:
   static bool show_filemenu;
   static bool show_overwrite;
   static bool show_samplemgr;
+  static bool show_copy;
+  static bool show_move;
+  static bool show_versions;
 
   static bool filemenu_active;
 
@@ -161,6 +167,8 @@ public:
   virtual void on_select(const char *) {}
   virtual void on_delete(const char *);
   virtual void on_rename(const char *from, const char *to);
+  virtual void on_copy(const char *from, const char *to);
+  virtual void on_move(const char *from, const char *to);
   // on cancel, the page will be popped,
   // and there's a last chance to clean up.
   virtual void on_cancel() { mcl.popPage(); }

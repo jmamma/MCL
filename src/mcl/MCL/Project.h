@@ -12,13 +12,16 @@
 #define PROJ_MIN_READABLE_VERSION 3000
 #define PROJ_VERSION_TRACK_STORAGE_VERSION 3001
 #define PROJ_VERSION_ROUTE_TRACK_TYPE 3003
-#define PROJ_VERSION 3003
+#define PROJ_VERSION_GRID_PAIRS 3004
+#define PROJ_VERSION_PROJECT_CONFIG 3005
+#define PROJ_VERSION 3005
 #define PRJ_DIR "/Projects"
 
 class ProjectHeader {
 public:
   uint32_t version;
-  uint8_t reserved[16];
+  uint8_t active_grid_pair;
+  uint8_t reserved[15];
   uint32_t hash;
   MCLSysConfigData cfg;
 };
@@ -35,6 +38,9 @@ public:
   bool new_project(const char *newprj);
   bool new_project_prompt();
   bool load_project(const char *projectname);
+#ifndef __AVR__
+  bool load_project_version(const char *projectname, uint8_t pair);
+#endif
   bool convert_project(const char *projectname);
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
   bool migrate_grid_track_storage_versions(GridIndex grid,
@@ -44,6 +50,18 @@ public:
                                       bool migrate_route_tracks);
   bool new_project_master_file(const char *projectname);
   bool write_header();
+  bool build_grid_filename(const char *basename, uint8_t suffix, char *out,
+                           size_t out_len) const;
+#ifndef __AVR__
+  bool read_active_grid_pair(const char *projectname, uint8_t *pair);
+  bool grid_pair_exists(const char *projectname, uint8_t pair);
+  bool create_backup(const char *projectname);
+  bool delete_backup(const char *projectname, uint8_t pair);
+#endif
+  bool rename_project_files(const char *from_basename, const char *to_basename);
+  bool copy_project(const char *from_project, const char *to_project);
+  bool move_project(const char *from_project, const char *to_project);
+  bool store_config_from_system();
 
   // Write data — col is logical 0–31, routed to physical grid/col
   bool write_grid(void *data, size_t len, GridSlot col, GridRow row) {
@@ -106,6 +124,16 @@ public:
 private:
   void draw_wait_popup(const char *message);
   void draw_upgrade_progress(GridIndex grid, GridRow row);
+  bool read_header();
+#ifdef __AVR__
+  bool load_project_impl(const char *projectname);
+#else
+  bool load_project_impl(const char *projectname, uint8_t requested_pair,
+                         bool use_requested_pair);
+#endif
+  bool split_project_path(const char *projectname, const char **basename) const;
+  bool project_file_name(const char *basename, char *out, size_t out_len) const;
+  bool project_pair_exists(uint8_t pair, const char *basename);
   bool migrate_legacy_md_aux_slots(GridRow row,
                                    GridRowHeader *grid_x_header,
                                    bool *converted_track0_lfo,
