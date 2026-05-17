@@ -37,14 +37,11 @@ void GridTask::load_queue_handler() {
     uint8_t mode;
     GridSlot offset;
     GridRow row_select_array[NUM_SLOTS];
-    uint8_t track_select[NUM_SLOTS] = {0};
-    load_queue.get(mode, offset, row_select_array);
+    uint8_t track_select[NUM_SLOTS];
+    load_queue.get(mode, offset, row_select_array, track_select);
     DEBUG_PRINTLN("load queue get");
     DEBUG_PRINTLN(mode);
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      if (row_select_array[n] < 128) {
-        track_select[n] = 1;
-      }
       DEBUG_PRINT(n);
       DEBUG_PRINT(" ");
       DEBUG_PRINT(track_select[n]);
@@ -84,19 +81,17 @@ void GridTask::update_transition_details() {
 
   GridRowHeader row_header;
   proj.read_grid_row_header(&row_header, next_active_row, 0);
-  uint8_t dev_idx = 0;
-
   uint8_t len = MD.sysex_protocol.kitname_length;
-  if (len > sizeof(kit_names[dev_idx])) {
-    len = sizeof(kit_names[dev_idx]);
+  if (len > sizeof(kit_names[0])) {
+    len = sizeof(kit_names[0]);
   }
 
   if (row_header.active) {
-    memcpy(kit_names[dev_idx], row_header.name, len);
-    m_toupper(kit_names[dev_idx]);
-    kit_names[dev_idx][len - 1] = '\0';
+    memcpy(kit_names[0], row_header.name, len);
+    m_toupper(kit_names[0]);
+    kit_names[0][len - 1] = '\0';
   } else {
-    strcpy_P(kit_names[dev_idx], mclstr_new_kit_underscore);
+    strcpy_P(kit_names[0], mclstr_new_kit_underscore);
   }
   send_kit_name = true;
 }
@@ -125,10 +120,10 @@ void GridTask::wait_blocking(uint32_t go_step) {
 }
 
 void GridTask::transition_handler() {
-  bool send_device[2] = {0};
+  bool send_device[2];
 
   GridRow slots_changed[NUM_SLOTS];
-  uint8_t track_select_array[NUM_SLOTS] = {0};
+  uint8_t track_select_array[NUM_SLOTS];
 
   while (!MidiClock.clock_less_than(
       MidiClock.div32th_counter + max(2u, ((uint16_t)MidiClock.get_tempo() * 32u + 999u) / 1000u),

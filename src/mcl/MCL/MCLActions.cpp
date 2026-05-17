@@ -372,8 +372,11 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
   if (load_mode != LOAD_MANUAL) {
     load_offset = 255;
   }
-  GridRow row_array[NUM_SLOTS] = {};
-  uint8_t cache_track_array[NUM_SLOTS] = {};
+  GridRow row_array[NUM_SLOTS];
+  uint8_t cache_track_array[NUM_SLOTS];
+  if (load_mode == LOAD_QUEUE) {
+    memset(cache_track_array, 0, sizeof(cache_track_array));
+  }
   bool recache = false;
   GridSlot last_slot = 255;
   DEBUG_PRINTLN("load tracks");
@@ -660,10 +663,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
                                         GridRow *row_array, GridSlot load_offset) {
   // DEBUG_PRINT_FN();
   DEBUG_PRINTLN("send tracks to devices");
-
-  uint8_t select_array[NUM_SLOTS];
-
-  memcpy(select_array, slot_select_array, NUM_SLOTS);
+  // Unsupported slots are cleared from slot_select_array before cache refresh.
 
   MidiDevice *devs[2] = {
       device_manager.primary_device(),
@@ -686,7 +686,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   GridSlot first_slot = 255;
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
-    if (select_array[i] == 0) { continue; }
+    if (slot_select_array[i] == 0) { continue; }
 
     if (first_slot == 255) { first_slot = i; }
 
@@ -695,7 +695,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     GridSlot dst = load_offset == 255 ? i : (i - first_slot) + load_offset;
     GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
 
-    if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { select_array[i] = 0; continue; }
+    if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { slot_select_array[i] = 0; continue; }
 
     if (!have_row_header_grid) {
       row_header_grid = i >> 4;
@@ -716,7 +716,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     // DEBUG_DUMP(row);
 
     if (!load_track_immediate(row, i, dst, gdt, gdt_dst, send_masks)) {
-      select_array[i] = 0;
+      slot_select_array[i] = 0;
     }
   }
   handle_mute_states(mute_states,false);
@@ -774,12 +774,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   if (load_offset == 255) {
   bool gui_update = false;
-  cache_next_tracks(select_array, gui_update);
+  cache_next_tracks(slot_select_array, gui_update);
 
   // in_sysex = 0;
 
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      if ((select_array[n] == 0) || (grid_page.active_slots[n] == SLOT_DISABLED)) { continue; }
+      if ((slot_select_array[n] == 0) || (grid_page.active_slots[n] == SLOT_DISABLED)) { continue; }
         GridDeviceTrack *gdt = get_grid_dev_track(n);
         if (gdt != nullptr) {
           transition_level[n] = 0;
@@ -1000,16 +1000,14 @@ void MCLActions::calc_latency() {
       device_manager.secondary_device(),
   };
 
-  ElektronDevice *elektron_devs[2] = {
-      devs[0]->asElektronDevice(),
-      devs[1]->asElektronDevice(),
-  };
+#if defined(__AVR__)
+  ElektronDevice *secondary_elektron =
+      devs[1] != nullptr ? devs[1]->asElektronDevice() : nullptr;
+#endif
 
   memset(dev_latency, 0, sizeof(dev_latency));
 
   bool send_dev[NUM_DEVS] = {0};
-
-  uint8_t num_devices = 0;
 
   constexpr uint32_t LOAD_DIVISOR = (10 * 1000);
 
@@ -1050,9 +1048,6 @@ void MCLActions::calc_latency() {
         dev_latency[device_idx].latency_bytes +=
             max(ptrack->calc_latency(track_idx), dev_load_penalty[device_idx]);
       }
-      if (send_dev[device_idx] != true) {
-        num_devices++;
-      }
       send_dev[device_idx] = true;
     }
   }
@@ -1060,7 +1055,7 @@ void MCLActions::calc_latency() {
   #if defined(__AVR__)
   /* atmega2560 is not fast enough to pack elektron data at 8x turbo for Analog4 etc..
    * double the latency required */
-  if (send_dev[1] && devs[1] != nullptr && elektron_devs[1] != nullptr &&
+  if (send_dev[1] && devs[1] != nullptr && secondary_elektron != nullptr &&
       devs[1]->uart != nullptr && devs[1]->uart->speed >= 250000) {
     dev_latency[1].latency_bytes *= 2;
   }

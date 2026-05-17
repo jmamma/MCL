@@ -273,7 +273,7 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
       bool regular_entry = !action_entry && param2->cur < numEntries;
       bool clone_entry = regular_entry;
       if (regular_entry) {
-        char entry[FILE_ENTRY_SIZE] = {'\0'};
+        char entry[FILE_ENTRY_SIZE];
         uint8_t entry_type;
         get_entry(param2->cur, entry, entry_type);
         regular_entry = strcmp(entry, "..") != 0;
@@ -282,14 +282,19 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
         clone_entry = clone_entry && entry_type == FILE_TYPE;
 #endif
       }
-      file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !action_entry);
-      file_menu_page.menu.enable_entry(FM_DELETE, regular_entry); // delete
-      file_menu_page.menu.enable_entry(FM_RENAME, regular_entry); // rename
-      file_menu_page.menu.enable_entry(FM_DUPLICATE, clone_entry);
-      file_menu_page.menu.enable_entry(FM_MOVE, regular_entry);
-      file_menu_page.menu.enable_entry(FM_VERSIONS, false);
-      file_menu_page.menu.enable_entry(FM_RECVALL, action_entry);
-      file_menu_page.menu.enable_entry(FM_SENDALL, action_entry);
+      uint16_t disabled = FM_MASK(FM_VERSIONS);
+      if (action_entry) {
+        disabled |= FM_MASK(FM_NEW_FOLDER);
+      } else {
+        disabled |= FM_MASK(FM_RECVALL) | FM_MASK(FM_SENDALL);
+      }
+      if (!regular_entry) {
+        disabled |= FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME) | FM_MASK(FM_MOVE);
+      }
+      if (!clone_entry) {
+        disabled |= FM_MASK(FM_DUPLICATE);
+      }
+      set_file_menu_disabled_mask(disabled);
       open_filemenu();
       return true;
     }
@@ -360,7 +365,7 @@ bool SampleBrowserPage::_handle_filemenu() {
     DEBUG_PRINTLN(numEntries);
     for (uint8_t n = 0; n < numEntries && !key_interface.is_key_down(MDX_KEY_NO); n++) {
       DEBUG_PRINTLN("Recv wav");
-      char wav_name[FILE_ENTRY_SIZE] = "";
+      char wav_name[FILE_ENTRY_SIZE];
       get_entry(n, wav_name);
       DEBUG_PRINTLN(wav_name);
       if (wav_name[5] != '[') {
@@ -375,7 +380,7 @@ bool SampleBrowserPage::_handle_filemenu() {
     if (!mcl_gui.wait_for_confirm("Send all", "Overwrite?")) {
       return true;
     }
-    char wav_name[FILE_ENTRY_SIZE] = "";
+    char wav_name[FILE_ENTRY_SIZE];
     for (uint8_t n = 0; n < numEntries && !key_interface.is_key_down(MDX_KEY_NO); n++) {
       get_entry(n, wav_name);
       DEBUG_PRINTLN(wav_name);

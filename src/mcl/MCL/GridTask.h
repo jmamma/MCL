@@ -58,8 +58,12 @@ class LoadQueue {
     }
   }
 
-  void get(uint8_t &mode, GridSlot &offset, GridRow *row_select) {
-    memcpy(row_select,row_selects[rd],NUM_SLOTS);
+  void get(uint8_t &mode, GridSlot &offset, GridRow *row_select,
+           uint8_t *track_select) {
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      row_select[n] = row_selects[rd][n];
+      track_select[n] = row_select[n] < GRID_LENGTH;
+    }
     mode = modes[rd].mode;
     offset = modes[rd++].offset;
     if (rd == NUM_LINKS) {

@@ -401,8 +401,7 @@ void GridPage::load_slot_models() {
 void GridPage::display_counters() {
   uint8_t y_offset = 8;
 
-  char val[3] = "";
-  val[2] = '\0';
+  char val[3];
 
   mcl_gui.put_value_at2(MidiClock.bar_counter, val);
 
@@ -807,7 +806,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     cur_grid = 0;
   }
 
-  uint8_t track_select_array[NUM_SLOTS] = {0};
+  uint8_t track_select_array[NUM_SLOTS];
   uint8_t load_mode_old = mcl_cfg.load_mode;
   uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == _col &&
                  slot_undo_y == getRow();
@@ -990,7 +989,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       // If all slots are deleted then clear the row name
       else if ((header.is_empty() && (slot_clear == 1)) || (activate_header)) {
         header.active = activate_header;
-        strcpy_P(header.name, mclstr_empty);
+        header.name[0] = '\0';
         proj.write_grid_row_header(&header, ypos, cur_grid);
       }
     }

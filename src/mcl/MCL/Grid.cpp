@@ -86,7 +86,7 @@ bool Grid::new_grid(const char *gridname) {
   oled_display.drawRect(15, 23, 98, 6, WHITE);
 #endif
   // Initialise the project file by filling the grid with blank data.
-  for (uint16_t i = 0; i < GRID_LENGTH; i++) {
+  for (GridRow i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
     mcl_gui.draw_progress("INITIALIZING", i, GRID_LENGTH);

@@ -33,6 +33,8 @@
 #define FM_RECVALL 7
 #define FM_SENDALL 8
 
+#define FM_MASK(entry) (1U << (entry))
+
 #define NAME_LENGTH 14
 
 class FileBrowserFileTypes {

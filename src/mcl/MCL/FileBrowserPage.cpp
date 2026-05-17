@@ -112,15 +112,20 @@ void FileBrowserPage::query_filesystem() {
   call_handle_filemenu = false;
   // config menu
   file_menu_page.visible_rows = 3;
-  file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
-  file_menu_page.menu.enable_entry(FM_DELETE, true); // delete
-  file_menu_page.menu.enable_entry(FM_RENAME, true); // rename
-  file_menu_page.menu.enable_entry(FM_DUPLICATE, show_copy);
-  file_menu_page.menu.enable_entry(FM_MOVE, show_move);
-  file_menu_page.menu.enable_entry(FM_VERSIONS, show_versions);
-  file_menu_page.menu.enable_entry(FM_CANCEL, true); // cancel
-  file_menu_page.menu.enable_entry(FM_RECVALL, false);
-  file_menu_page.menu.enable_entry(FM_SENDALL, false);
+  uint16_t disabled = FM_MASK(FM_RECVALL) | FM_MASK(FM_SENDALL);
+  if (!show_new_folder) {
+    disabled |= FM_MASK(FM_NEW_FOLDER);
+  }
+  if (!show_copy) {
+    disabled |= FM_MASK(FM_DUPLICATE);
+  }
+  if (!show_move) {
+    disabled |= FM_MASK(FM_MOVE);
+  }
+  if (!show_versions) {
+    disabled |= FM_MASK(FM_VERSIONS);
+  }
+  set_file_menu_disabled_mask(disabled);
 
   file_menu_encoder.cur = file_menu_encoder.old = 0;
   file_menu_encoder.max = file_menu_page.menu.get_number_of_items() - 1;
@@ -139,16 +144,11 @@ void FileBrowserPage::query_filesystem() {
   if (show_save) {
     add_entry(&str_save[0]);
   }
-  // SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
-  // SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
-  file.getName(temp_entry, FILE_ENTRY_SIZE);
-
   if (can_show_parent_entry()) {
     add_entry("..", DIR_TYPE);
   }
   //  iterate through the files
   while (file.openNext(&d, O_READ) && (numEntries < MAX_ENTRIES)) {
-    memset(temp_entry, 0, sizeof(temp_entry));
     file.getName(temp_entry, FILE_ENTRY_SIZE);
     bool is_match_file = false;
     DEBUG_PRINTLN(numEntries);
@@ -165,10 +165,10 @@ void FileBrowserPage::query_filesystem() {
       is_match_file =
           len >= 4 && file_types.compare(&temp_entry[len - 4]);
     }
-    if (is_match_file && (strlen(temp_entry) > 0)) {
+    if (is_match_file && temp_entry[0] != '\0') {
       DEBUG_PRINTLN(F("file matched"));
       if (add_entry(temp_entry, entry_type)) {
-        if (strlen(focus_match) > 0 && strcmp(temp_entry, focus_match) == 0) {
+        if (focus_match[0] != '\0' && strcmp(temp_entry, focus_match) == 0) {
           DEBUG_DUMP(temp_entry);
           DEBUG_DUMP(mcl_cfg.project);
           cur_file = numEntries - 1;
@@ -195,7 +195,7 @@ void FileBrowserPage::init() {
   show_move = false;
   show_versions = false;
   draw_dirs = false;
-  strcpy_P(focus_match, mclstr_empty);
+  focus_match[0] = '\0';
   strcpy_P(title, mclstr_title_files);
   file_types.reset();
   SD.chdir(lwd);
@@ -437,7 +437,7 @@ bool FileBrowserPage::_handle_filemenu() {
   get_entry(encoders[1]->getValue(), buf1);
 
   char *suffix_pos = strchr(buf1, '.');
-  char buf2[32] = {'\0'};
+  char buf2[32];
   for (uint8_t n = 1; n < 32; n++) {
     buf2[n] = ' ';
   }
@@ -624,7 +624,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
 #ifdef __AVR__
       bool can_clone = false;
       if (show_copy && encoders[1]->getValue() < numEntries) {
-        char entry[FILE_ENTRY_SIZE] = {'\0'};
+        char entry[FILE_ENTRY_SIZE];
         uint8_t entry_type;
         get_entry(encoders[1]->getValue(), entry, entry_type);
         can_clone = strcmp(entry, "..") != 0 && entry_type == FILE_TYPE;

@@ -11,19 +11,30 @@ bool join_path(char *dst, size_t dst_len, const char *dir, const char *entry) {
   if (dst_len == 0) {
     return false;
   }
-  dst[0] = '\0';
-  size_t dir_len = strlen(dir);
-  size_t entry_len = strlen(entry);
-  bool add_sep = dir_len > 0 && dir[dir_len - 1] != '/';
-  size_t needed = dir_len + (add_sep ? 1 : 0) + entry_len + 1;
-  if (needed > dst_len) {
-    return false;
+  char *write = dst;
+  char *end = dst + dst_len - 1;
+  while (*dir != '\0') {
+    if (write == end) {
+      *dst = '\0';
+      return false;
+    }
+    *write++ = *dir++;
   }
-  strcpy(dst, dir);
-  if (add_sep) {
-    strcat(dst, "/");
+  if (write != dst && write[-1] != '/') {
+    if (write == end) {
+      *dst = '\0';
+      return false;
+    }
+    *write++ = '/';
   }
-  strcat(dst, entry);
+  while (*entry != '\0') {
+    if (write == end) {
+      *dst = '\0';
+      return false;
+    }
+    *write++ = *entry++;
+  }
+  *write = '\0';
   return true;
 }
 

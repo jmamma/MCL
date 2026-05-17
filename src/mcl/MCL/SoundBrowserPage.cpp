@@ -108,12 +108,14 @@ bool SoundBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_BUTTON(event)) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
       bool state = (param2->cur == 0);
-      file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
-      file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
-      file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-      file_menu_page.menu.enable_entry(FM_DUPLICATE, false);
-      file_menu_page.menu.enable_entry(FM_MOVE, false);
-      file_menu_page.menu.enable_entry(FM_VERSIONS, false);
+      uint16_t disabled = FM_MASK(FM_DUPLICATE) | FM_MASK(FM_MOVE) |
+                          FM_MASK(FM_VERSIONS) | FM_MASK(FM_RECVALL) |
+                          FM_MASK(FM_SENDALL);
+      if (state) {
+        disabled |=
+            FM_MASK(FM_NEW_FOLDER) | FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME);
+      }
+      set_file_menu_disabled_mask(disabled);
       open_filemenu();
       return true;
     }

@@ -75,6 +75,11 @@ extern MCLEncoder file_menu_encoder;
 
 extern MenuPage<file_menu_page_N> file_menu_page;
 
+inline void set_file_menu_disabled_mask(uint16_t mask) {
+  file_menu_page.menu.disabled_entry_mask[0] = (uint8_t)mask;
+  file_menu_page.menu.disabled_entry_mask[1] = (uint8_t)(mask >> 8);
+}
+
 extern MCLEncoder seq_menu_value_encoder;
 extern MCLEncoder seq_menu_entry_encoder;
 

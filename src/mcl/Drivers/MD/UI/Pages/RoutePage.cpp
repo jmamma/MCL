@@ -101,7 +101,7 @@ void RoutePage::display() {
   str_tmp[0] = encoders[0]->cur + 'A';
   mcl_gui.draw_knob(0, mclstr_route, str_tmp);
 
-  char Q[4] = {'\0'};
+  char Q[4];
   if (encoders[1]->getValue() == 1) {
     strcpy_P(Q, mclstr_dash);
   } else {

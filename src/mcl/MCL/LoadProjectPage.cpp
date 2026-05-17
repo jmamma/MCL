@@ -73,16 +73,12 @@ void LoadProjectPage::on_select(const char *entry) {
   }
 
   file.close();
-  file.open(entry, O_READ);
-  bool dir = file.isDirectory();
-  file.close();
-
-  if (dir && !is_project_dir(entry)) {
+  if (!is_project_dir(entry)) {
     _cd(entry);
     return;
   }
 
-  char proj_filename[PRJ_PATH_LEN] = {'\0'};
+  char proj_filename[PRJ_PATH_LEN];
   if (!build_project_path(entry, proj_filename, sizeof(proj_filename))) {
     gfx.alert("ERROR", "BAD PATH");
     return;
@@ -102,18 +98,13 @@ void LoadProjectPage::on_select(const char *entry) {
 }
 
 void LoadProjectPage::on_delete(const char *entry) {
-  file.open(entry, O_READ);
-  bool dir = file.isDirectory();
-  file.close();
-  char project_path[PRJ_PATH_LEN] = {'\0'};
+  char project_path[PRJ_PATH_LEN];
   if (build_project_path(entry, project_path, sizeof(project_path)) &&
       path_starts_with_dir(mcl_cfg.project, project_path)) {
     gfx.alert("ERROR", "CURRENT PROJECT");
     return;
   }
-  if (dir) {
-    rm_dir(entry);
-  }
+  rm_dir(entry);
 }
 
 void LoadProjectPage::on_rename(const char *from, const char *to) {
@@ -124,16 +115,8 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
   strncpy(from,from_,f_len);
 */
   DEBUG_PRINTLN("on rename");
-  file.open(from, O_READ);
-  bool dir = file.isDirectory();
-  file.close();
-
-  if (!dir) {
-    return;
-  }
-
   bool project_dir = is_project_dir(from);
-  char from_project_path[PRJ_PATH_LEN] = {'\0'};
+  char from_project_path[PRJ_PATH_LEN];
   if (!build_project_path(from, from_project_path, sizeof(from_project_path))) {
     gfx.alert("ERROR", "BAD PATH");
     return;
@@ -148,7 +131,7 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     return;
   }
 
-  char to_project_path[PRJ_PATH_LEN] = {'\0'};
+  char to_project_path[PRJ_PATH_LEN];
   if (!build_project_path(to, to_project_path, sizeof(to_project_path))) {
     gfx.alert("ERROR", "BAD PATH");
     return;
@@ -187,15 +170,19 @@ void LoadProjectPage::on_copy(const char *from, const char *to) {
     return;
   }
 
+  bool ok = false;
+#ifdef __AVR__
+  bool dir = true;
+#else
   file.open(from, O_READ);
   bool dir = file.isDirectory();
   file.close();
+#endif
 
-  bool ok = false;
   if (dir) {
     if (is_project_dir(from)) {
-      char from_project_path[PRJ_PATH_LEN] = {'\0'};
-      char to_project_path[PRJ_PATH_LEN] = {'\0'};
+      char from_project_path[PRJ_PATH_LEN];
+      char to_project_path[PRJ_PATH_LEN];
       ok = build_project_path(from, from_project_path,
                               sizeof(from_project_path)) &&
            build_project_path(to, to_project_path, sizeof(to_project_path)) &&
@@ -206,10 +193,13 @@ void LoadProjectPage::on_copy(const char *from, const char *to) {
       ok = mcl_sd.copy_dir(from, to, 0, 64, 64);
 #endif
     }
-  } else {
+  }
+#ifndef __AVR__
+  else {
     mcl_gui.draw_progress("CLONE", 0, 64);
     ok = mcl_sd.copy_file(from, to, 0, 64, 64);
   }
+#endif
 
   if (ok) {
     gfx.alert("SUCCESS", "Cloned.");
@@ -240,19 +230,19 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
   if (EVENT_BUTTON(event) && EVENT_PRESSED(event, Buttons.BUTTON3) &&
       show_filemenu) {
     if (move_destination_mode) {
-      file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
-      file_menu_page.menu.enable_entry(FM_DELETE, false);
-      file_menu_page.menu.enable_entry(FM_RENAME, false);
-      file_menu_page.menu.enable_entry(FM_DUPLICATE, false);
-      file_menu_page.menu.enable_entry(FM_MOVE, false);
-      file_menu_page.menu.enable_entry(FM_VERSIONS, false);
-      file_menu_page.menu.enable_entry(FM_RECVALL, false);
-      file_menu_page.menu.enable_entry(FM_SENDALL, false);
+      uint16_t disabled = FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME) |
+                          FM_MASK(FM_DUPLICATE) | FM_MASK(FM_MOVE) |
+                          FM_MASK(FM_VERSIONS) | FM_MASK(FM_RECVALL) |
+                          FM_MASK(FM_SENDALL);
+      if (!show_new_folder) {
+        disabled |= FM_MASK(FM_NEW_FOLDER);
+      }
+      set_file_menu_disabled_mask(disabled);
       open_filemenu();
       return true;
     }
 
-    char entry[FILE_ENTRY_SIZE] = {'\0'};
+    char entry[FILE_ENTRY_SIZE];
     uint16_t entry_idx = encoders[1]->getValue();
     uint8_t entry_type = FILE_TYPE;
     bool regular_entry = entry_idx < static_cast<uint16_t>(numEntries) &&
@@ -266,19 +256,24 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     }
     bool project_entry = regular_entry && entry_type == FILE_TYPE;
 
-    file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
-    file_menu_page.menu.enable_entry(FM_DELETE, regular_entry);
-    file_menu_page.menu.enable_entry(FM_RENAME, regular_entry);
+    uint16_t disabled = FM_MASK(FM_RECVALL) | FM_MASK(FM_SENDALL);
+    if (!show_new_folder) {
+      disabled |= FM_MASK(FM_NEW_FOLDER);
+    }
+    if (!regular_entry) {
+      disabled |= FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME) | FM_MASK(FM_MOVE);
+    }
 #ifdef __AVR__
-    file_menu_page.menu.enable_entry(FM_DUPLICATE,
-                                     regular_entry && entry_type == FILE_TYPE);
+    if (!regular_entry || entry_type != FILE_TYPE) {
 #else
-    file_menu_page.menu.enable_entry(FM_DUPLICATE, regular_entry);
+    if (!regular_entry) {
 #endif
-    file_menu_page.menu.enable_entry(FM_MOVE, regular_entry);
-    file_menu_page.menu.enable_entry(FM_VERSIONS, project_entry);
-    file_menu_page.menu.enable_entry(FM_RECVALL, false);
-    file_menu_page.menu.enable_entry(FM_SENDALL, false);
+      disabled |= FM_MASK(FM_DUPLICATE);
+    }
+    if (!project_entry) {
+      disabled |= FM_MASK(FM_VERSIONS);
+    }
+    set_file_menu_disabled_mask(disabled);
     open_filemenu();
     return true;
   }
@@ -296,14 +291,11 @@ bool LoadProjectPage::_handle_filemenu() {
   }
 
   if (item == FM_DELETE) {
-    char entry[FILE_ENTRY_SIZE] = {'\0'};
-    char message[32] = {'\0'};
+    char entry[FILE_ENTRY_SIZE];
+    char message[32];
     uint8_t entry_type;
     uint16_t entry_idx = encoders[1]->getValue();
     get_entry(entry_idx, entry, entry_type);
-    if (entry_type == UNKNOWN_DIR_TYPE) {
-      entry_type = resolve_entry_type(entry_idx, entry, entry_type);
-    }
 
     strcpy_P(message, mclstr_delete_space);
     strcat(message, entry);
@@ -316,9 +308,9 @@ bool LoadProjectPage::_handle_filemenu() {
     return true;
   }
   if (item == FM_VERSIONS) {
-    char entry[FILE_ENTRY_SIZE] = {'\0'};
+    char entry[FILE_ENTRY_SIZE];
     get_entry(encoders[1]->getValue(), entry);
-    char project_path[PRJ_PATH_LEN] = {'\0'};
+    char project_path[PRJ_PATH_LEN];
     if (is_project_dir(entry) &&
         build_project_path(entry, project_path, sizeof(project_path))) {
       project_version_page.set_project(project_path);
@@ -327,7 +319,7 @@ bool LoadProjectPage::_handle_filemenu() {
     return false;
   }
   if (item == FM_MOVE) {
-    char entry[FILE_ENTRY_SIZE] = {'\0'};
+    char entry[FILE_ENTRY_SIZE];
     get_entry(encoders[1]->getValue(), entry);
     enter_move_destination(entry);
     return false;
@@ -360,7 +352,7 @@ bool LoadProjectPage::move_to_current_folder() {
   const char *name = strrchr(move_source_path, '/');
   name = name == nullptr ? move_source_path : name + 1;
 
-  char dest_path[PRJ_PATH_LEN] = {'\0'};
+  char dest_path[PRJ_PATH_LEN];
   if (!build_project_path(name, dest_path, sizeof(dest_path))) {
     gfx.alert("ERROR", "BAD PATH");
     return false;
@@ -448,7 +440,7 @@ uint8_t LoadProjectPage::entry_type_for_dir(const char *entry) {
     if (is_project_dir(entry)) {
       return SKIP_TYPE;
     }
-    char project_path[PRJ_PATH_LEN] = {'\0'};
+    char project_path[PRJ_PATH_LEN];
     if (!build_project_path(entry, project_path, sizeof(project_path)) ||
         path_starts_with_dir(project_path, move_source_path)) {
       return SKIP_TYPE;
@@ -483,7 +475,7 @@ bool LoadProjectPage::is_project_dir(const char *entry) const {
     return false;
   }
 
-  char project_file[PRJ_NAME_LEN * 2 + 6] = {'\0'};
+  char project_file[PRJ_NAME_LEN * 2 + 6];
   strcpy(project_file, entry);
   strcat(project_file, "/");
   strcat(project_file, entry);

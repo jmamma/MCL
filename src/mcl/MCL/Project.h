@@ -36,7 +36,7 @@ public:
   bool project_loaded = false;
   void setup();
   bool new_project(const char *newprj);
-  bool new_project_prompt(const char *parent = nullptr);
+  bool new_project_prompt(const char *parent = nullptr) NOINLINE();
   bool load_project(const char *projectname);
   bool load_project_version(const char *projectname, uint8_t pair);
   bool convert_project(const char *projectname);

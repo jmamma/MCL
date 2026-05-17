@@ -261,13 +261,13 @@ void GridIOOverlay::action() {
 void GridIOOverlay::group_action() {
   key_interface.off();
   if (mode_ == MODE_LOAD) {
-    uint8_t track_select_array[NUM_SLOTS] = {0};
+    uint8_t track_select_array[NUM_SLOTS];
     grid_load_page.track_select_array_from_type_select(track_select_array);
     mcl_actions.write_original = 1;
     grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(),
                              track_select_array, GridIOPage::offset);
   } else {
-    uint8_t track_select_array[NUM_SLOTS] = {0};
+    uint8_t track_select_array[NUM_SLOTS];
     grid_save_page.track_select_array_from_type_select(track_select_array);
     mcl_actions.save_tracks(grid_page.getRow(), track_select_array, SAVE_SEQ);
   }

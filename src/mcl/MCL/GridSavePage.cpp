@@ -126,7 +126,7 @@ void GridSavePage::save() {
   oled_display.display();
 
   uint8_t save_mode = SAVE_SEQ;
-  uint8_t track_select_array[NUM_SLOTS] = {0};
+  uint8_t track_select_array[NUM_SLOTS];
 
   populate_track_select_from_notes(track_select_array);
 
@@ -176,7 +176,7 @@ bool GridSavePage::handleEvent(gui_event_t *event) {
     save_groups:
       key_interface.off();
 
-      uint8_t track_select_array[NUM_SLOTS] = {0};
+      uint8_t track_select_array[NUM_SLOTS];
 
       track_select_array_from_type_select(track_select_array);
 

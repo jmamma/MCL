@@ -37,21 +37,30 @@ bool join_project_file(char *out, size_t out_len, const char *project,
   if (out_len == 0) {
     return false;
   }
-  out[0] = '\0';
-
-  size_t project_len = strlen(project);
-  size_t filename_len = strlen(filename);
-  bool add_sep = project_len > 0 && project[project_len - 1] != '/';
-  size_t needed = project_len + (add_sep ? 1 : 0) + filename_len + 1;
-  if (needed > out_len) {
-    return false;
+  char *write = out;
+  char *end = out + out_len - 1;
+  while (*project != '\0') {
+    if (write == end) {
+      *out = '\0';
+      return false;
+    }
+    *write++ = *project++;
   }
-
-  strcpy(out, project);
-  if (add_sep) {
-    strcat(out, "/");
+  if (write != out && write[-1] != '/') {
+    if (write == end) {
+      *out = '\0';
+      return false;
+    }
+    *write++ = '/';
   }
-  strcat(out, filename);
+  while (*filename != '\0') {
+    if (write == end) {
+      *out = '\0';
+      return false;
+    }
+    *write++ = *filename++;
+  }
+  *write = '\0';
   return true;
 }
 
@@ -151,7 +160,7 @@ bool Project::new_project(const char *newprj) {
   }
 
 
-  char proj_filename[PRJ_NAME_LEN  + 5] = {'\0'};
+  char proj_filename[PRJ_NAME_LEN  + 5];
   if (!project_file_name(basename, proj_filename, sizeof(proj_filename))) {
     gfx.alert("ERROR", "BAD NAME");
     return false;
@@ -169,7 +178,7 @@ bool Project::new_project(const char *newprj) {
   //
 
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-    char grid_filename[PRJ_NAME_LEN  + 5] = {'\0'};
+    char grid_filename[PRJ_NAME_LEN  + 5];
     if (!build_grid_filename(basename, i, grid_filename,
                              sizeof(grid_filename))) {
       gfx.alert("ERROR", "BAD NAME");
@@ -189,30 +198,22 @@ bool Project::new_project(const char *newprj) {
 }
 
 bool Project::new_project_prompt(const char *parent) {
-  char newprj[PRJ_NAME_LEN];
+  char newprj[PRJ_NAME_LEN] = "project___";
 
-  char my_string[PRJ_NAME_LEN] = "project___";
-
-  my_string[7] = (mcl_cfg.number_projects % 1000) / 100 + '0';
-  my_string[7 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
-  my_string[7 + 2] = (mcl_cfg.number_projects % 10) + '0';
-
-  strncpy(newprj, my_string, PRJ_NAME_LEN);
+  newprj[7] = (mcl_cfg.number_projects % 1000) / 100 + '0';
+  newprj[7 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
+  newprj[7 + 2] = (mcl_cfg.number_projects % 10) + '0';
 again:
   if (mcl_gui.wait_for_input(newprj, "New Project:", PRJ_NAME_LEN)) {
-    char project_path[PRJ_PATH_LEN] = {'\0'};
+    char project_path[PRJ_PATH_LEN];
     if (parent != nullptr && parent[0] != '\0') {
-      size_t parent_len = strlen(parent);
-      size_t name_len = strlen(newprj);
-      if (parent_len + name_len + 2 > sizeof(project_path)) {
+      if (!join_project_file(project_path, sizeof(project_path), parent,
+                             newprj)) {
         gfx.alert("ERROR", "BAD PATH");
         goto again;
       }
-      strcpy(project_path, parent);
-      strcat(project_path, "/");
-      strcat(project_path, newprj);
     } else {
-      strncpy(project_path, newprj, sizeof(project_path) - 1);
+      strcpy(project_path, newprj);
     }
 
     if (!new_project(project_path)) {
@@ -293,7 +294,7 @@ bool Project::build_grid_filename(const char *basename, uint8_t suffix,
 
 bool Project::project_pair_exists(uint8_t pair, const char *basename) {
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-    char grid_name[PRJ_NAME_LEN + 5] = {'\0'};
+    char grid_name[PRJ_NAME_LEN + 5];
     if (!build_grid_filename(basename, pair * NUM_GRIDS + i, grid_name,
                              sizeof(grid_name)) ||
         !SD.exists(grid_name)) {
@@ -325,7 +326,7 @@ bool Project::read_active_grid_pair(const char *projectname, uint8_t *pair) {
     return true;
   }
 
-  char proj_filename[PRJ_NAME_LEN + 5] = {'\0'};
+  char proj_filename[PRJ_NAME_LEN + 5];
   if (!project_file_name(basename, proj_filename, sizeof(proj_filename))) {
     return false;
   }
@@ -377,7 +378,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     return false;
   }
 
-  char proj_filename[PRJ_NAME_LEN  + 5] = {'\0'};
+  char proj_filename[PRJ_NAME_LEN  + 5];
   if (!project_file_name(project_basename, proj_filename,
                          sizeof(proj_filename))) {
     DEBUG_PRINTLN("bad project filename");
@@ -446,7 +447,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   }
 
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-    char grid_name[PRJ_NAME_LEN  + 5] = {'\0'};
+    char grid_name[PRJ_NAME_LEN  + 5];
     grids[i].close_file();
 
     if (!build_grid_filename(project_basename, pair * NUM_GRIDS + i,
@@ -827,10 +828,10 @@ bool Project::copy_grid_pair(const char *from_project,
   chdir_projects();
   bool ok = true;
   for (uint8_t grid_idx = 0; ok && grid_idx < NUM_GRIDS; grid_idx++) {
-    char src_name[PRJ_NAME_LEN + 5] = {'\0'};
-    char dst_name[PRJ_NAME_LEN + 5] = {'\0'};
-    char src_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
-    char dst_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
+    char src_name[PRJ_NAME_LEN + 5];
+    char dst_name[PRJ_NAME_LEN + 5];
+    char src_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
+    char dst_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
     Grid src_grid;
     Grid dst_grid;
 
@@ -877,8 +878,8 @@ bool Project::copy_grid_pair(const char *from_project,
 
   if (!ok) {
     for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-      char dst_name[PRJ_NAME_LEN + 5] = {'\0'};
-      char dst_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
+      char dst_name[PRJ_NAME_LEN + 5];
+      char dst_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
       if (build_grid_filename(to_basename, dest_pair * NUM_GRIDS + i,
                               dst_name, sizeof(dst_name)) &&
           join_project_file(dst_path, sizeof(dst_path), to_project,
@@ -916,7 +917,7 @@ bool Project::create_backup(const char *projectname) {
   for (uint8_t pair = 1; pair < 128; pair++) {
     bool any_file = false;
     for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-      char grid_name[PRJ_NAME_LEN + 5] = {'\0'};
+      char grid_name[PRJ_NAME_LEN + 5];
       if (!build_grid_filename(basename, pair * NUM_GRIDS + i, grid_name,
                                sizeof(grid_name))) {
         return false;
@@ -960,7 +961,7 @@ bool Project::delete_backup(const char *projectname, uint8_t pair) {
 
   bool ok = true;
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-    char grid_name[PRJ_NAME_LEN + 5] = {'\0'};
+    char grid_name[PRJ_NAME_LEN + 5];
     if (!build_grid_filename(basename, pair * NUM_GRIDS + i, grid_name,
                              sizeof(grid_name)) ||
         !SD.remove(grid_name)) {
@@ -972,8 +973,8 @@ bool Project::delete_backup(const char *projectname, uint8_t pair) {
 
 bool Project::rename_project_files(const char *from_basename,
                                    const char *to_basename) {
-  char from_name[PRJ_NAME_LEN + 5] = {'\0'};
-  char to_name[PRJ_NAME_LEN + 5] = {'\0'};
+  char from_name[PRJ_NAME_LEN + 5];
+  char to_name[PRJ_NAME_LEN + 5];
 
   for (uint16_t suffix = 0; suffix < PROJECT_RENAME_SUFFIXES; suffix++) {
     if (!build_grid_filename(from_basename, suffix, from_name,
@@ -1014,10 +1015,10 @@ bool Project::copy_project(const char *from_project, const char *to_project) {
 
   draw_wait_popup("CLONING PROJECT");
 
-  char from_name[PRJ_NAME_LEN + 5] = {'\0'};
-  char to_name[PRJ_NAME_LEN + 5] = {'\0'};
-  char from_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
-  char to_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
+  char from_name[PRJ_NAME_LEN + 5];
+  char to_name[PRJ_NAME_LEN + 5];
+  char from_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
+  char to_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
   bool ok = project_file_name(from_basename, from_name, sizeof(from_name)) &&
             project_file_name(to_basename, to_name, sizeof(to_name)) &&
             join_project_file(from_path, sizeof(from_path), from_project,

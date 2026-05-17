@@ -56,7 +56,12 @@ void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
   }
 }
 void GridLoadPage::md_popup_title(uint8_t mode, bool persistent) {
-  char modestr[16] = "LOAD ";
+  char modestr[16];
+  modestr[0] = 'L';
+  modestr[1] = 'O';
+  modestr[2] = 'A';
+  modestr[3] = 'D';
+  modestr[4] = ' ';
   get_mode_str(modestr + 5, mode);
   MD.popup_text(modestr, persistent);
 }
@@ -71,8 +76,8 @@ void GridLoadPage::display_load() {
   if (mcl_cfg.load_mode == LOAD_QUEUE) {
     str1 = "QUEUE";
   }
-  char str3[16] = "";
-  strcat(str3, str1);
+  char str3[16];
+  strcpy(str3, str1);
   strcat(str3, str2);
   MD.popup_text(str3);
   oled_display.textbox(str1, str2);
@@ -140,7 +145,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
       clear_body(y_offset);
       draw_tbd_panel_header("LOAD", y_offset);
 
-      char K[4] = {'\0'};
+      char K[4];
       char modestr[7];
       get_modestr(modestr);
 
@@ -192,7 +197,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
     } else {
 
       draw_grid_marker(body_y_offset);
-      char K[4] = {'\0'};
+      char K[4];
 
       char modestr[7];
       get_modestr(modestr);
@@ -250,7 +255,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
 }
 void GridLoadPage::load() {
 
-  uint8_t track_select_array[NUM_SLOTS] = {0};
+  uint8_t track_select_array[NUM_SLOTS];
 
   populate_track_select_from_notes(track_select_array);
   grid_task.load_queue.put(mcl_cfg.load_mode, grid_page.getRow(),
@@ -263,7 +268,7 @@ void GridLoadPage::group_load(GridRow row, GridSlot load_offset) {
   if (row >= GRID_LENGTH) {
     return;
   }
-  uint8_t track_select_array[NUM_SLOTS] = {0};
+  uint8_t track_select_array[NUM_SLOTS];
   track_select_array_from_type_select(track_select_array);
   //   load_tracks_to_md(-1);
   // if (!silent) {

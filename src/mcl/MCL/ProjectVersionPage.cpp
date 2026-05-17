@@ -25,13 +25,11 @@ void write_version_label(char *out, uint8_t pair) {
 } // namespace
 
 void ProjectVersionPage::set_project(const char *project) {
-  strncpy(project_path, project, sizeof(project_path) - 1);
-  project_path[sizeof(project_path) - 1] = '\0';
+  strcpy(project_path, project);
 
   const char *basename = strrchr(project_path, '/');
   basename = basename == nullptr ? project_path : basename + 1;
-  strncpy(project_name, basename, sizeof(project_name) - 1);
-  project_name[sizeof(project_name) - 1] = '\0';
+  strcpy(project_name, basename);
 }
 
 void ProjectVersionPage::setup() {
@@ -79,7 +77,7 @@ void ProjectVersionPage::query_versions() {
   for (uint8_t pair = 0; pair < 128; pair++) {
     bool complete = true;
     for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-      char grid_name[PRJ_NAME_LEN + 5] = {'\0'};
+      char grid_name[PRJ_NAME_LEN + 5];
       if (!proj.build_grid_filename(project_name, pair * NUM_GRIDS + i,
                                     grid_name, sizeof(grid_name)) ||
           !SD.exists(grid_name)) {
@@ -124,14 +122,14 @@ bool ProjectVersionPage::handleEvent(gui_event_t *event) {
     bool can_delete = selected_pair(&pair) && pair > 0 &&
                       proj.read_active_grid_pair(project_path, &active_pair) &&
                       pair != active_pair;
-    file_menu_page.menu.enable_entry(FM_NEW_FOLDER, false);
-    file_menu_page.menu.enable_entry(FM_DELETE, can_delete);
-    file_menu_page.menu.enable_entry(FM_RENAME, false);
-    file_menu_page.menu.enable_entry(FM_DUPLICATE, false);
-    file_menu_page.menu.enable_entry(FM_MOVE, false);
-    file_menu_page.menu.enable_entry(FM_VERSIONS, false);
-    file_menu_page.menu.enable_entry(FM_RECVALL, false);
-    file_menu_page.menu.enable_entry(FM_SENDALL, false);
+    uint16_t disabled = FM_MASK(FM_NEW_FOLDER) | FM_MASK(FM_RENAME) |
+                        FM_MASK(FM_DUPLICATE) | FM_MASK(FM_MOVE) |
+                        FM_MASK(FM_VERSIONS) | FM_MASK(FM_RECVALL) |
+                        FM_MASK(FM_SENDALL);
+    if (!can_delete) {
+      disabled |= FM_MASK(FM_DELETE);
+    }
+    set_file_menu_disabled_mask(disabled);
     open_filemenu();
     return true;
   }
