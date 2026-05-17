@@ -10,9 +10,9 @@
 #include "A4Track.h"
 #include "MNMTrack.h"
 #include "MDFXTrack.h"
-#include "MDLFOTrack.h"
 #include "MDRouteTrack.h"
 #include "EmptyTrack.h"
+#include "LFOSeqTrack.h"
 #include <stddef.h>
 
 namespace {
@@ -81,6 +81,37 @@ bool copy_grid_slot_raw(Grid &src_grid, Grid &dst_grid, GridColumn col,
   }
   return true;
 }
+
+class ATTR_PACKED() LegacyMDLFOTrackStorage {
+public:
+  uint8_t version[2];
+  uint8_t active;
+  GridLink link;
+  LegacyLFOSeqTrackData lfo_data;
+};
+
+class ATTR_PACKED() LegacyMDRouteTrackStorage {
+public:
+  uint8_t version[2];
+  uint8_t active;
+  GridLink link;
+  LegacyMDRouteData route;
+};
+
+static_assert(offsetof(LegacyMDLFOTrackStorage, lfo_data) ==
+                  sizeof(GridTrack) - sizeof(void *),
+              "Legacy MD LFO storage prefix changed");
+static_assert(sizeof(LegacyMDLFOTrackStorage) ==
+                  sizeof(GridTrack) - sizeof(void *) +
+                      sizeof(LegacyLFOSeqTrackData),
+              "Legacy MD LFO storage size changed");
+static_assert(offsetof(LegacyMDRouteTrackStorage, route) ==
+                  sizeof(GridTrack) - sizeof(void *),
+              "Legacy MD route storage prefix changed");
+static_assert(sizeof(LegacyMDRouteTrackStorage) ==
+                  sizeof(GridTrack) - sizeof(void *) +
+                      sizeof(LegacyMDRouteData),
+              "Legacy MD route storage size changed");
 
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
@@ -603,17 +634,17 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
 
   if (migrate_legacy_aux_layout &&
       grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
-    auto *legacy_track =
-        scratch.load_from_grid_512(MDLFO_TRACK_NUM, row, &grids[1]);
-    if (legacy_track == nullptr) {
+    LegacyMDLFOTrackStorage legacy_track;
+    if (!grids[1].read(&legacy_track, sizeof(legacy_track), MDLFO_TRACK_NUM,
+                       row)) {
       return false;
     }
 
-    if (legacy_track->active == MDLFO_TRACK_TYPE &&
+    if (legacy_track.active == MDLFO_TRACK_TYPE &&
         (grid_x_header->track_type[0] == MD_TRACK_TYPE ||
          grid_x_header->track_type[0] == EMPTY_TRACK_TYPE)) {
       SeqLFOData legacy_lfo;
-      static_cast<MDLFOTrack *>(legacy_track)->lfo_data.store_data(&legacy_lfo);
+      legacy_track.lfo_data.store_data(&legacy_lfo);
 
       auto *track0 = scratch.load_from_grid_512(0, row, &grids[0]);
       if (track0 == nullptr) {
@@ -692,32 +723,27 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
 
   if (migrate_route_tracks &&
       grid_y_header.track_type[MDROUTE_TRACK_NUM] == MDROUTE_TRACK_TYPE) {
-    auto *route_track =
-        scratch.load_from_grid_512(MDROUTE_TRACK_NUM, row, &grids[1]);
-    if (route_track == nullptr) {
+    LegacyMDRouteTrackStorage legacy_route;
+    if (!grids[1].read(&legacy_route, sizeof(legacy_route), MDROUTE_TRACK_NUM,
+                       row)) {
       return false;
     }
 
-    if (route_track->active == MDROUTE_TRACK_TYPE) {
-      auto *legacy_route = static_cast<LegacyMDRouteTrack *>(route_track);
-      GridLink link = legacy_route->link;
-      uint8_t routing[16];
-      memcpy(routing, legacy_route->routing, sizeof(routing));
-      uint16_t poly_mask = legacy_route->poly_mask;
+    if (legacy_route.active == MDROUTE_TRACK_TYPE) {
+      MDRouteTrack new_route;
+      new_route.link = legacy_route.link;
+      memcpy(new_route.routing, legacy_route.route.routing,
+             sizeof(new_route.routing));
+      new_route.load_legacy_poly_mask(legacy_route.route.poly_mask,
+                                      cfg.uart2_poly_chan);
+      new_route.version[0] = 0;
+      new_route.version[1] = 0;
 
-      auto *new_route = static_cast<MDRouteTrack *>(
-          route_track->init_track_type(MD_ROUTE_TRACK_TYPE));
-      new_route->link = link;
-      memcpy(new_route->routing, routing, sizeof(routing));
-      new_route->load_legacy_poly_mask(poly_mask, cfg.uart2_poly_chan);
-      new_route->version[0] = 0;
-      new_route->version[1] = 0;
-
-      if (!grids[1].write(new_route->_this(), new_route->_sizeof(),
+      if (!grids[1].write(new_route._this(), new_route._sizeof(),
                           MDROUTE_TRACK_NUM, row)) {
         return false;
       }
-      grid_y_header.update_model(MDROUTE_TRACK_NUM, new_route->get_model(),
+      grid_y_header.update_model(MDROUTE_TRACK_NUM, MD_ROUTE_TRACK_TYPE,
                                  MD_ROUTE_TRACK_TYPE);
     }
   }

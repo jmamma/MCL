@@ -45,15 +45,19 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   case MDTEMPO_TRACK_TYPE:
     ::new (this) MDTempoTrack;
     break;
+#if !defined(__AVR__)
   case MDROUTE_TRACK_TYPE:
     ::new (this) LegacyMDRouteTrack;
     break;
+#endif
   case MD_ROUTE_TRACK_TYPE:
     ::new (this) MDRouteTrack;
     break;
+#if !defined(__AVR__)
   case MDLFO_TRACK_TYPE:
     ::new (this) MDLFOTrack;
     break;
+#endif
   case MNM_TRACK_TYPE:
     ::new (this) MNMTrack;
     break;
