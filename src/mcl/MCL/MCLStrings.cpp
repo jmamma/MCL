@@ -25,7 +25,7 @@ MCLSTR_DEFINE(lck, "LCK");
 MCLSTR_DEFINE(load, "LOAD");
 MCLSTR_DEFINE(mode, "MODE");
 MCLSTR_DEFINE(save, "SAVE");
-MCLSTR_DEFINE(voice_select, "VOICE SELECT");
+MCLSTR_DEFINE(channel_select, "CHANNEL SELECT");
 MCLSTR_DEFINE(cond, "COND");
 MCLSTR_DEFINE(hex_prefix, "0x");
 MCLSTR_DEFINE(plen, "PLEN");

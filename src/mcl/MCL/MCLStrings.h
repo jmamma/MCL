@@ -43,7 +43,7 @@ MCLSTR_DECLARE(lck_arrow);
 MCLSTR_DECLARE(load);
 MCLSTR_DECLARE(mode);
 MCLSTR_DECLARE(save);
-MCLSTR_DECLARE(voice_select);
+MCLSTR_DECLARE(channel_select);
 MCLSTR_DECLARE(cond);
 MCLSTR_DECLARE(hex_prefix); // For "0x"
 MCLSTR_DECLARE(plen);
