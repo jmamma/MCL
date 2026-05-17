@@ -14,8 +14,6 @@ static constexpr uint8_t PTC_GROUP_TRACKS = 16;
 
 class PtcGroups {
 public:
-  uint8_t group[PTC_GROUP_TRACKS];
-
   void clear();
   void load(const uint8_t *src);
   void store(uint8_t *dst) const;
@@ -33,6 +31,9 @@ public:
   uint16_t mask_for_midi_channel(uint8_t channel) const;
   uint16_t legacy_poly_mask() const;
   uint8_t first_track(uint16_t mask) const;
+
+private:
+  uint8_t group[PTC_GROUP_TRACKS];
 };
 
 extern PtcGroups ptc_groups;

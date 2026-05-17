@@ -53,7 +53,7 @@ uint8_t PtcGroups::group_for_track(uint8_t track) const {
   if (track >= PTC_GROUP_TRACKS) {
     return PTC_GROUP_OFF;
   }
-  return valid_group_or_off(group[track]);
+  return group[track];
 }
 
 uint8_t PtcGroups::group_for_midi_channel(uint8_t channel) const {
@@ -75,14 +75,13 @@ bool PtcGroups::track_has_group(uint8_t track) const {
 }
 
 uint16_t PtcGroups::mask_for_group(uint8_t value) const {
-  value = valid_group_or_off(value);
   if (value == PTC_GROUP_OFF) {
     return 0;
   }
 
   uint16_t mask = 0;
   for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
-    if (valid_group_or_off(group[i]) == value) {
+    if (group[i] == value) {
       SET_BIT16(mask, i);
     }
   }
