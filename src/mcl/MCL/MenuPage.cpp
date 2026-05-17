@@ -278,7 +278,7 @@ void MenuPageBase::draw_item(MenuBase *m, uint8_t item_n,
 }
 
 void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
-                             uint8_t width) {
+                             uint8_t width, uint8_t scrollbar_width) {
   oled_display.setCursor(x_offset, y_offset);
   MenuBase *m = get_menu();
   uint8_t number_of_items = m->get_number_of_items();
@@ -300,6 +300,22 @@ void MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
       oled_display.setTextColor(WHITE, BLACK);
     }
     draw_item(m, encoders[1]->cur - cur_row + n, number_of_items);
+  }
+
+  if (scrollbar_width > 0 && number_of_items > visible_rows) {
+    uint8_t first_row = encoders[1]->cur - cur_row;
+    uint8_t bar_x = x_offset + width;
+    uint8_t bar_y = y_offset - 6;
+    uint8_t bar_h = visible_rows * 8 - 1;
+    uint8_t thumb_h = ((uint16_t)visible_rows * bar_h) / number_of_items;
+    if (thumb_h < 3) {
+      thumb_h = 3;
+    }
+    uint8_t travel = bar_h - thumb_h;
+    uint8_t max_first = number_of_items - visible_rows;
+    uint8_t thumb_y = bar_y + ((uint16_t)first_row * travel) / max_first;
+    oled_display.fillRect(bar_x, bar_y, scrollbar_width, bar_h, BLACK);
+    oled_display.fillRect(bar_x, thumb_y, scrollbar_width, thumb_h, WHITE);
   }
 
   // draw_item.read(getRow());
