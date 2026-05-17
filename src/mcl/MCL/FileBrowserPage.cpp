@@ -457,7 +457,7 @@ bool FileBrowserPage::_handle_filemenu() {
     return true;
   case FM_RENAME: // rename
     // trim the suffix is present, add back later
-    strcat(buf2, buf1);
+    strcpy(buf2, buf1);
     if (suffix_pos != nullptr) {
       buf2[suffix_pos - buf1] = '\0';
     }
@@ -473,7 +473,7 @@ bool FileBrowserPage::_handle_filemenu() {
     }
     return true;
   case FM_DUPLICATE: // duplicate
-    strcat(buf2, buf1);
+    strcpy(buf2, buf1);
     if (suffix_pos != nullptr) {
       buf2[suffix_pos - buf1] = '\0';
     }
@@ -500,7 +500,7 @@ bool FileBrowserPage::_handle_filemenu() {
     }
     return true;
   case FM_MOVE: // move
-    strcat(buf2, buf1);
+    strcpy(buf2, buf1);
     name_length = max(name_length, strlen(buf2));
     if (mcl_gui.wait_for_input(buf2, "MOVE TO:", name_length)) {
       on_move(buf1, buf2);
