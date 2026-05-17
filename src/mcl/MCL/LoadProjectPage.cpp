@@ -229,7 +229,9 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       return true;
     case MDX_KEY_RIGHT:
       if (!move_destination_mode) {
-        return jump_to_current_project();
+        setup();
+        init();
+        encoders[1]->old = encoders[1]->cur;
       }
       return true;
     }
@@ -547,35 +549,4 @@ void LoadProjectPage::focus_current_project() {
   }
   memcpy(focus_match, focus, len);
   focus_match[len] = '\0';
-}
-
-bool LoadProjectPage::jump_to_current_project() {
-  if (!proj.project_loaded || mcl_cfg.project[0] == '\0') {
-    return false;
-  }
-
-#ifndef __AVR__
-  char root[64];
-  strcpy(lwd, mcl_sd.full_path(PRJ_DIR, root, sizeof(root)));
-#else
-  strcpy(lwd, PRJ_DIR);
-#endif
-
-  const char *slash = strrchr(mcl_cfg.project, '/');
-  if (slash != nullptr) {
-    size_t root_len = strlen(lwd);
-    size_t parent_len = slash - mcl_cfg.project;
-    if (root_len + parent_len + 2 > sizeof(lwd)) {
-      return false;
-    }
-    lwd[root_len++] = '/';
-    memcpy(lwd + root_len, mcl_cfg.project, parent_len);
-    lwd[root_len + parent_len] = '\0';
-  }
-
-  position.reset();
-  cur_row = 0;
-  init();
-  encoders[1]->old = encoders[1]->cur;
-  return true;
 }
