@@ -844,8 +844,6 @@ bool Project::copy_grid_pair(const char *from_project,
 
     ok = dst_grid.write_header();
 
-    EmptyTrack scratch;
-    GridTrack empty_slot;
     for (GridRow row = 0; ok && row < GRID_LENGTH; row++) {
       draw_upgrade_progress(grid_idx, row);
 
@@ -857,21 +855,7 @@ bool Project::copy_grid_pair(const char *from_project,
       }
 
       for (GridColumn col = 0; ok && col < GRID_WIDTH; col++) {
-        if (row_header.track_type[col] == EMPTY_TRACK_TYPE) {
-          empty_slot.active = EMPTY_TRACK_TYPE;
-          empty_slot.link.init(row);
-          ok = dst_grid.write(empty_slot._this(), empty_slot._sizeof(), col,
-                              row);
-          continue;
-        }
-
-        auto *track = scratch.load_from_grid_512(col, row, &src_grid);
-        if (track != nullptr && track->active == row_header.track_type[col]) {
-          ok = dst_grid.write(track->_this(), track->get_track_size(), col,
-                              row);
-        } else {
-          ok = copy_grid_slot_raw(src_grid, dst_grid, col, row);
-        }
+        ok = copy_grid_slot_raw(src_grid, dst_grid, col, row);
       }
     }
 
