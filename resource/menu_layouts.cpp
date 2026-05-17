@@ -58,7 +58,6 @@ menu_t<aux_config_page_N> auxconfig_menu_layout = {
         //           m  r  n  d  p  f  o
 
         {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 120},
-        {"RAM LINK:", 0, 2, 2, 1, NULL_PAGE, 0, 0},
     },
     1
 };
@@ -269,6 +268,7 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
     {
         //              m  r   n  d  p  f  o
         {"IMPORT",      0, 0,  0, 0, MD_IMPORT_PAGE, 0, 0},
+        {"RAM LINK:",   0, 2,  2, 1, NULL_PAGE, 0, 0},
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
     },
     1
