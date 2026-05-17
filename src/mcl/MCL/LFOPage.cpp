@@ -19,13 +19,13 @@ const char *lfo_mode_label(uint8_t mode) NOINLINE();
 const char *lfo_mode_label(uint8_t mode) {
   switch (LFOSeqTrack::mode_base(mode)) {
   case LFO_MODE_TRIG:
-    return "TRIG";
+    return "TRG";
   case LFO_MODE_ONE:
     return "ONE";
   case LFO_MODE_TRACK_TRIG:
     return "TRK";
   default:
-    return "FREE";
+    return "FRE";
   }
 }
 
@@ -55,30 +55,32 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
 void lfo_mult_label(uint8_t multiplier, char *out) {
   out[0] = '1';
   if (multiplier >= LFO_SPEED_MULT_1_2X) {
-    out[1] = '/';
     switch (multiplier) {
     case LFO_SPEED_MULT_1_2X:
-      out[2] = '2';
-      out[3] = 'x';
-      out[4] = '\0';
+      out[0] = '0';
+      out[1] = '.';
+      out[2] = '5';
+      out[3] = '\0';
       return;
     case LFO_SPEED_MULT_1_4X:
-      out[2] = '4';
-      out[3] = 'x';
+      out[0] = '0';
+      out[1] = '.';
+      out[2] = '2';
+      out[3] = '5';
       out[4] = '\0';
       return;
     case LFO_SPEED_MULT_1_10X:
+      out[0] = '0';
+      out[1] = '.';
       out[2] = '1';
-      out[3] = '0';
-      out[4] = 'x';
-      out[5] = '\0';
+      out[3] = '\0';
       return;
     default:
-      out[2] = '1';
-      out[3] = '0';
-      out[4] = '0';
-      out[5] = 'x';
-      out[6] = '\0';
+      out[0] = '0';
+      out[1] = '.';
+      out[2] = '0';
+      out[3] = '1';
+      out[4] = '\0';
       return;
     }
   }
@@ -89,6 +91,19 @@ void lfo_mult_label(uint8_t multiplier, char *out) {
   }
   out[1] = 'x';
   out[2] = '\0';
+}
+
+bool lfo_preview_is_centered(uint8_t wav_type) {
+  switch (wav_type) {
+  case TRI_WAV:
+  case SAW_WAV:
+  case SQU_WAV:
+  case RND_WAV:
+  case SIN_WAV:
+    return true;
+  default:
+    return false;
+  }
 }
 
 void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
@@ -312,7 +327,7 @@ void LFOPage::display() {
   }
   else if (page_mode == LFO_SETTINGS) {
     const uint8_t preview_x = mcl_gui.knob_x0 + 5;
-    const uint8_t preview_y = 11;
+    const uint8_t preview_y = 10;
     const uint8_t preview_height = 7;
     const uint8_t preview_width = 15;
 
@@ -322,15 +337,30 @@ void LFOPage::display() {
     mcl_print_P(mclstr_wav_label);
     oled_display.setFont();
 
+    uint8_t wav_type =
+        lfo_track->wav_type < LFO_SHAPE_COUNT ? lfo_track->wav_type : TRI_WAV;
+    uint8_t ref_sample = lfo_preview_is_centered(wav_type) ? 64 : 0;
+    uint8_t ref_y =
+        preview_y + preview_height -
+        (((uint16_t)ref_sample * (uint16_t)preview_height) / 128);
+    for (uint8_t i = 0; i < preview_width; i += 2) {
+      oled_display.drawPixel(preview_x + i, ref_y, WHITE);
+    }
+
     uint16_t phase = 0;
     const uint16_t phase_step = LFO_PHASE_MASK / (preview_width - 1);
     for (uint8_t i = 0; i < preview_width; ++i, phase += phase_step) {
-      uint8_t out = LFOSeqTrack::get_preview_value(lfo_track->wav_type,
-                                                   phase & LFO_PHASE_MASK);
-      uint8_t sample = ((int16_t)out * (int16_t)preview_height) / 128;
-
-      oled_display.drawPixel(preview_x + i, preview_y + preview_height - sample,
-                             WHITE);
+      uint8_t out =
+          LFOSeqTrack::get_preview_value(wav_type, phase & LFO_PHASE_MASK);
+      uint8_t y;
+      if (wav_type == RND_WAV) {
+        uint8_t band = out & 1;
+        y = out < 64 ? preview_y + preview_height - band : preview_y + band;
+      } else {
+        uint8_t sample = ((int16_t)out * (int16_t)preview_height) / 128;
+        y = preview_y + preview_height - sample;
+      }
+      oled_display.drawPixel(preview_x + i, y, WHITE);
     }
 
     draw_knob(1, encoders[1], mclstr_spd);
@@ -355,7 +385,7 @@ void LFOPage::display() {
   uint8_t base_mode = lfo_track->base_mode();
   const char *mode_label = lfo_mode_label(base_mode);
 
-  panel_info1 = lfo_track->enable ? mode_label : "OFF";
+  panel_info1 = mode_label;
 
   if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
@@ -372,6 +402,10 @@ void LFOPage::display() {
   strncpy(info2, panel_info2, sizeof(info2) - 1);
   info2[sizeof(info2) - 1] = '\0';
   SeqPage::display();
+  oled_display.fillRect(MCLGUI::pane_label_x, MCLGUI::pane_label_md_y,
+                        MCLGUI::pane_label_w, MCLGUI::pane_label_h * 2,
+                        BLACK);
+  mcl_gui.draw_panel_toggle("ON", "OFF", lfo_track->enable);
   draw_page_index(false, lfo_track->step_count / 4);
 
 }
