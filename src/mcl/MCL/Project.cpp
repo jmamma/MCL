@@ -253,7 +253,6 @@ bool Project::project_pair_exists(uint8_t pair, const char *basename) {
   return true;
 }
 
-#ifndef __AVR__
 bool Project::grid_pair_exists(const char *projectname, uint8_t pair) {
   const char *basename = nullptr;
   if (!split_project_path(projectname, &basename)) {
@@ -304,28 +303,17 @@ bool Project::read_active_grid_pair(const char *projectname, uint8_t *pair) {
   }
   return true;
 }
-#endif
 
 bool Project::load_project(const char *projectname) {
-#ifdef __AVR__
-  return load_project_impl(projectname);
-#else
   return load_project_impl(projectname, 0, false);
-#endif
 }
 
-#ifndef __AVR__
 bool Project::load_project_version(const char *projectname, uint8_t pair) {
   return load_project_impl(projectname, pair, true);
 }
-#endif
 
-#ifdef __AVR__
-bool Project::load_project_impl(const char *projectname) {
-#else
 bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
                                 bool use_requested_pair) {
-#endif
 
   bool ret;
 
@@ -388,23 +376,17 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   if (migrate_grid_pairs) {
     active_grid_pair = 0;
   }
-#ifdef __AVR__
-  uint8_t pair = active_grid_pair;
-#else
   uint8_t pair = use_requested_pair ? requested_pair : active_grid_pair;
-#endif
   if (migrate_track_storage || migrate_route_tracks || migrate_grid_pairs ||
       migrate_project_config) {
     draw_wait_popup("UPGRADING PROJECT");
   }
 
   if (pair >= 128 || !project_pair_exists(pair, project_basename)) {
-#ifndef __AVR__
     if (use_requested_pair) {
       DEBUG_PRINTLN(F("requested grid pair missing"));
       return false;
     }
-#endif
     pair = 0;
     active_grid_pair = 0;
     migrate_grid_pairs = true;
@@ -438,11 +420,9 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
-#ifndef __AVR__
   if (use_requested_pair) {
     active_grid_pair = requested_pair;
   }
-#endif
   bool applied_project_config = false;
   if (mcl_cfg.project_config) {
     apply_project_config(&mcl_cfg, cfg);
@@ -451,14 +431,9 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     copy_project_config(&cfg, mcl_cfg);
     applied_project_config = true;
   }
-#ifdef __AVR__
-  bool write_project_header = migrate_track_storage || migrate_route_tracks ||
-                              migrate_grid_pairs || migrate_project_config;
-#else
   bool write_project_header = migrate_track_storage || migrate_route_tracks ||
                               migrate_grid_pairs || migrate_project_config ||
                               use_requested_pair;
-#endif
   if (write_project_header && !write_header()) {
     return false;
   }
@@ -795,7 +770,6 @@ bool Project::store_config_from_system() {
   return write_header();
 }
 
-#ifndef __AVR__
 bool Project::create_backup(const char *projectname) {
   const char *basename = nullptr;
   if (!split_project_path(projectname, &basename)) {
@@ -895,7 +869,6 @@ bool Project::delete_backup(const char *projectname, uint8_t pair) {
   }
   return ok;
 }
-#endif
 
 bool Project::rename_project_files(const char *from_basename,
                                    const char *to_basename) {

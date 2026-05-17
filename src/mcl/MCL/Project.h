@@ -38,9 +38,7 @@ public:
   bool new_project(const char *newprj);
   bool new_project_prompt();
   bool load_project(const char *projectname);
-#ifndef __AVR__
   bool load_project_version(const char *projectname, uint8_t pair);
-#endif
   bool convert_project(const char *projectname);
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
   bool migrate_grid_track_storage_versions(GridIndex grid,
@@ -52,12 +50,10 @@ public:
   bool write_header();
   bool build_grid_filename(const char *basename, uint8_t suffix, char *out,
                            size_t out_len) const;
-#ifndef __AVR__
   bool read_active_grid_pair(const char *projectname, uint8_t *pair);
   bool grid_pair_exists(const char *projectname, uint8_t pair);
   bool create_backup(const char *projectname);
   bool delete_backup(const char *projectname, uint8_t pair);
-#endif
   bool rename_project_files(const char *from_basename, const char *to_basename);
   bool copy_project(const char *from_project, const char *to_project);
   bool move_project(const char *from_project, const char *to_project);
@@ -125,12 +121,8 @@ private:
   void draw_wait_popup(const char *message);
   void draw_upgrade_progress(GridIndex grid, GridRow row);
   bool read_header();
-#ifdef __AVR__
-  bool load_project_impl(const char *projectname);
-#else
   bool load_project_impl(const char *projectname, uint8_t requested_pair,
                          bool use_requested_pair);
-#endif
   bool split_project_path(const char *projectname, const char **basename) const;
   bool project_file_name(const char *basename, char *out, size_t out_len) const;
   bool project_pair_exists(uint8_t pair, const char *basename);

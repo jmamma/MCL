@@ -235,21 +235,15 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       get_entry(encoders[1]->getValue(), entry, entry_type);
       regular_entry = strcmp(entry, "..") != 0;
     }
-#ifndef __AVR__
     bool project_entry = regular_entry && entry_type == FILE_TYPE &&
                          is_project_dir(entry);
-#endif
 
     file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
     file_menu_page.menu.enable_entry(FM_DELETE, regular_entry);
     file_menu_page.menu.enable_entry(FM_RENAME, regular_entry);
     file_menu_page.menu.enable_entry(FM_DUPLICATE, regular_entry);
     file_menu_page.menu.enable_entry(FM_MOVE, regular_entry);
-#ifndef __AVR__
     file_menu_page.menu.enable_entry(FM_VERSIONS, project_entry);
-#else
-    file_menu_page.menu.enable_entry(FM_VERSIONS, false);
-#endif
     file_menu_page.menu.enable_entry(FM_RECVALL, false);
     file_menu_page.menu.enable_entry(FM_SENDALL, false);
     open_filemenu();
@@ -259,7 +253,6 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
 }
 
 bool LoadProjectPage::_handle_filemenu() {
-#ifndef __AVR__
   if (file_menu_page.menu.get_item_index(file_menu_encoder.cur) ==
       FM_VERSIONS) {
     char entry[FILE_ENTRY_SIZE] = {'\0'};
@@ -272,7 +265,6 @@ bool LoadProjectPage::_handle_filemenu() {
     }
     return false;
   }
-#endif
   return FileBrowserPage::_handle_filemenu();
 }
 

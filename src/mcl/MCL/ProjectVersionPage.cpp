@@ -1,5 +1,4 @@
 #include "ProjectVersionPage.h"
-#ifndef __AVR__
 #include "MCLGFX.h"
 #include "MCLGUI.h"
 #include "MCLMenus.h"
@@ -181,4 +180,3 @@ void ProjectVersionPage::on_delete(const char *entry) {
     gfx.alert("ERROR", "Not deleted.");
   }
 }
-#endif
