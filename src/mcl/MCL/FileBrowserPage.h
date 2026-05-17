@@ -114,7 +114,7 @@ public:
 
   static bool call_handle_filemenu;
 
-  static char focus_match[PRJ_NAME_LEN];
+  static char focus_match[FILE_ENTRY_SIZE];
   static FileBrowserFileTypes file_types;
 
   FileSystemPosition position;
@@ -141,6 +141,7 @@ public:
 
   static constexpr uint8_t FILE_TYPE = 0;
   static constexpr uint8_t DIR_TYPE = 1;
+  static constexpr uint8_t SKIP_TYPE = 255;
 
   bool add_entry(const char *entry, uint8_t type = FILE_TYPE);
   void get_entry(uint16_t n, char *entry);
@@ -166,14 +167,16 @@ public:
   virtual void chdir_type() {}
   virtual bool _handle_filemenu();
 #ifdef PLATFORM_TBD
-  bool tbd_can_cd_up() const;
-  bool tbd_cd_up();
+  virtual bool tbd_can_cd_up() const;
+  virtual bool tbd_cd_up();
 #endif
 
 protected:
   void _cd_up();
   bool _cd(const char *);
   void query_filesystem();
+  virtual bool can_show_parent_entry() const;
+  virtual uint8_t entry_type_for_dir(const char *entry);
 
 private:
   void _calcindices(int &);

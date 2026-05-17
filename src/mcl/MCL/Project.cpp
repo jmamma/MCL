@@ -13,9 +13,6 @@
 #include "MDRouteTrack.h"
 #include "EmptyTrack.h"
 
-#define PRJ_NAME_LEN 14
-#define PRJ_DIR "/Projects"
-
 void Project::draw_wait_popup(const char *message) {
   mcl_gui.draw_infobox("PLEASE WAIT", message);
   oled_display.display();
@@ -24,7 +21,7 @@ void Project::draw_wait_popup(const char *message) {
 void Project::draw_upgrade_progress(GridIndex grid, GridRow row) {
 #ifdef OLED_DISPLAY
   uint8_t progress = grid * (GRID_LENGTH / NUM_GRIDS) + row / NUM_GRIDS;
-  mcl_gui.draw_progress_bar(progress, GRID_LENGTH, false, 31, 22);
+  mcl_gui.draw_progress_bar(progress, GRID_LENGTH, false, 31, 21);
 #endif
 }
 
@@ -134,15 +131,27 @@ bool Project::load_project(const char *projectname) {
   file.close();
   project_loaded = false;
 
-  uint8_t l = strlen(projectname);
-  if (l > PRJ_NAME_LEN) { DEBUG_PRINTLN("bad len"); return false; }
+  size_t path_len = strlen(projectname);
+  if (path_len == 0 || path_len >= PRJ_PATH_LEN) {
+    DEBUG_PRINTLN("bad path len");
+    return false;
+  }
+
+  const char *project_basename = strrchr(projectname, '/');
+  project_basename = project_basename == nullptr ? projectname
+                                                 : project_basename + 1;
+  size_t name_len = strlen(project_basename);
+  if (name_len == 0 || name_len > PRJ_NAME_LEN) {
+    DEBUG_PRINTLN("bad name len");
+    return false;
+  }
 
   char proj_filename[PRJ_NAME_LEN  + 5] = {'\0'};
-  memcpy(proj_filename, projectname, sizeof(proj_filename));
+  strncpy(proj_filename, project_basename, PRJ_NAME_LEN);
   strcat(proj_filename, ".mcl");
 
   char grid_name[PRJ_NAME_LEN  + 5] = {'\0'};
-  strcpy(grid_name, projectname);
+  strcpy(grid_name, project_basename);
 
   // Open project parent
   chdir_projects();
@@ -153,7 +162,10 @@ bool Project::load_project(const char *projectname) {
     return false;
   }
 
-  SD.chdir(projectname);
+  if (!SD.chdir(projectname)) {
+    DEBUG_PRINTLN("could not enter project dir");
+    return false;
+  }
 
   if (!SD.exists(proj_filename)) {
     DEBUG_DUMP(proj_filename);
@@ -184,9 +196,9 @@ bool Project::load_project(const char *projectname) {
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     grids[i].close_file();
 
-    grid_name[l] = '.';
-    grid_name[l + 1] = i + '0';
-    grid_name[l + 2] = '\0';
+    grid_name[name_len] = '.';
+    grid_name[name_len + 1] = i + '0';
+    grid_name[name_len + 2] = '\0';
     DEBUG_PRINTLN(F("opening grid"));
     DEBUG_PRINTLN(grid_name);
     if (!grids[i].open_file(grid_name)) {
@@ -206,7 +218,8 @@ bool Project::load_project(const char *projectname) {
     return false;
   }
 
-  strncpy(mcl_cfg.project, projectname, 16);
+  strncpy(mcl_cfg.project, projectname, sizeof(mcl_cfg.project) - 1);
+  mcl_cfg.project[sizeof(mcl_cfg.project) - 1] = '\0';
   if (!mcl_cfg.number_projects) { mcl_cfg.number_projects++; }
 
   ret = mcl_cfg.write_cfg();

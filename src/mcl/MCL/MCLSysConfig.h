@@ -7,7 +7,7 @@
 #include "MCLMemory.h"
 #include "PtcGroups.h"
 
-#define CONFIG_VERSION 4017
+#define CONFIG_VERSION 4018
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -24,7 +24,7 @@ extern void mcl_setup();
 class MCLSysConfigData {
 public:
   uint32_t version;
-  char project[16];
+  char project[PRJ_PATH_LEN];
   uint8_t number_projects;
   uint8_t uart1_turbo_speed;
   uint8_t uart2_turbo_speed;

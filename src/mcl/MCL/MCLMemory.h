@@ -26,6 +26,7 @@ static_assert(GRID_WIDTH * NUM_GRIDS < 255,
               "GridSlot must hold the full logical grid width and 255 sentinel");
 
 constexpr size_t PRJ_NAME_LEN = 14;
+constexpr size_t PRJ_PATH_LEN = 64;
 
 constexpr size_t NUM_SLOTS = GRID_WIDTH * NUM_GRIDS;
 

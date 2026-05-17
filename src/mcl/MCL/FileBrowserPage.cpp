@@ -12,7 +12,7 @@ int FileBrowserPage::numEntries;
 
 char FileBrowserPage::title[12];
 char FileBrowserPage::str_save[12];
-char FileBrowserPage::focus_match[14];
+char FileBrowserPage::focus_match[FILE_ENTRY_SIZE];
 uint8_t FileBrowserPage::cur_file = 0;
 
 bool FileBrowserPage::draw_dirs = false;
@@ -73,6 +73,15 @@ void FileBrowserPage::get_entry(uint16_t n, char *entry, uint8_t &type) {
   strcpy(entry, buf + 1);
 }
 
+bool FileBrowserPage::can_show_parent_entry() const {
+  return show_parent && strcmp(lwd, "/") != 0;
+}
+
+uint8_t FileBrowserPage::entry_type_for_dir(const char *entry) {
+  (void)entry;
+  return DIR_TYPE;
+}
+
 bool FileBrowserPage::add_entry(const char *entry, uint8_t type) {
   if (numEntries >= (int)NUM_FILE_ENTRIES) {
     return false;
@@ -122,8 +131,8 @@ void FileBrowserPage::query_filesystem() {
   // SD.vwd()->getName(temp_entry, FILE_ENTRY_SIZE);
   file.getName(temp_entry, FILE_ENTRY_SIZE);
 
-  if ((show_parent) && !(strcmp(lwd, "/") == 0)) {
-    add_entry("..");
+  if (can_show_parent_entry()) {
+    add_entry("..", DIR_TYPE);
   }
   //  iterate through the files
   while (file.openNext(&d, O_READ) && (numEntries < MAX_ENTRIES)) {
@@ -132,19 +141,21 @@ void FileBrowserPage::query_filesystem() {
     bool is_match_file = false;
     DEBUG_PRINTLN(numEntries);
     DEBUG_PRINTLN(temp_entry);
-    bool is_dir = false;
+    uint8_t entry_type = FILE_TYPE;
     if (temp_entry[0] == '.') {
       is_match_file = false;
     } else if (file.isDirectory() && show_dirs) {
-      is_dir = true;
-      is_match_file = true;
+      entry_type = entry_type_for_dir(temp_entry);
+      is_match_file = entry_type != SKIP_TYPE;
     } else {
       // XXX only 3char suffix
-      is_match_file = file_types.compare(&temp_entry[strlen(temp_entry) - 4]);
+      size_t len = strlen(temp_entry);
+      is_match_file =
+          len >= 4 && file_types.compare(&temp_entry[len - 4]);
     }
     if (is_match_file && (strlen(temp_entry) > 0)) {
       DEBUG_PRINTLN(F("file matched"));
-      if (add_entry(temp_entry, is_dir)) {
+      if (add_entry(temp_entry, entry_type)) {
         if (strlen(focus_match) > 0 && strcmp(temp_entry, focus_match) == 0) {
           DEBUG_DUMP(temp_entry);
           DEBUG_DUMP(mcl_cfg.project);
@@ -579,7 +590,8 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       _calcindices(i_save);
 
       char temp_entry[FILE_ENTRY_SIZE];
-      get_entry(encoders[1]->getValue(), temp_entry);
+      uint8_t entry_type;
+      get_entry(encoders[1]->getValue(), temp_entry, entry_type);
 
       if (!show_samplemgr) {
         file.open(temp_entry, O_READ);
@@ -597,7 +609,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
         }
         //  }
         // chdir to child
-        if (!select_dirs && file.isDirectory()) {
+        if (!select_dirs && entry_type == DIR_TYPE) {
           _cd(temp_entry);
           goto fin;
         }

@@ -212,14 +212,12 @@ bool MCLSysConfig::cfg_init() {
     cfgfile.close();  // Clean up if allocation fails
     return false;
   }
-  char my_string[16] = "/project000.mcl";
-
   memset((uint8_t *)&version, 0, sizeof(MCLSysConfigData)); //<---- flush zero to config
   ptc_groups.clear();
 
   version = CONFIG_VERSION;
   //number_projects = 0;
-  strncpy(project, my_string, 16);
+  project[0] = '\0';
   //clock_send = 0;
   //clock_rec = 0;
   uart1_turbo_speed = DEFAULT_TURBO_SPEED;
