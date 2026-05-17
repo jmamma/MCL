@@ -114,11 +114,7 @@ public:
 
     auto p = init_track_type(this->active);
 #if defined(__AVR__)
-    if (p->get_parent_model() == track_type && p->allow_cast_to_parent()) {
-      p->active = p->get_parent_model();
-      return p;
-    }
-    return nullptr;
+    return p->materialize_as(track_type, col, nullptr);
 #else
     uint16_t source_size = p->get_track_size();
     bool parent_cast = p->get_parent_model() == track_type &&
