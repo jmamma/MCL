@@ -131,6 +131,17 @@ void MDClass::cleanup_listeners() {
   }
 }
 
+bool MDClass::config_menu_entry(DeviceIdx device_idx,
+                                DriverConfigMenuEntry *entry) const {
+  (void)device_idx;
+  if (entry == nullptr) {
+    return false;
+  }
+  entry->name = "MACHINEDRUM";
+  entry->page = MD_CONFIG_PAGE;
+  return true;
+}
+
 #ifdef PLATFORM_TBD
 bool MDClass::supports_capability(MidiDeviceCapability capability) const {
   switch (capability) {

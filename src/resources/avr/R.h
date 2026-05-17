@@ -412,17 +412,17 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_system_menu_layout = 137;
   union {
     menu_t<start_menu_page_N> start_menu_layout[0];
-    char zz__start_menu_layout[53];
+    char zz__start_menu_layout[32];
   };
-  static constexpr size_t countof_start_menu_layout = 53 / sizeof(menu_t<start_menu_page_N>);
-  static constexpr size_t sizeofof_start_menu_layout = 53;
+  static constexpr size_t countof_start_menu_layout = 32 / sizeof(menu_t<start_menu_page_N>);
+  static constexpr size_t sizeofof_start_menu_layout = 32;
   union {
     menu_t<boot_menu_page_N> boot_menu_layout[0];
     char zz__boot_menu_layout[95];
   };
   static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 95;
-  static constexpr size_t __total_size = 2543;
+  static constexpr size_t __total_size = 2522;
 };
 
 extern const unsigned char __R_icons_logo[] PROGMEM;

@@ -20,7 +20,17 @@ extern BootMenuPage<boot_menu_page_N> boot_menu_page;
 
 extern MenuPage<start_menu_page_N> start_menu_page;
 
-extern MenuPage<system_menu_page_N> system_page;
+class SystemMenuPage : public MenuPage<system_menu_page_N> {
+public:
+  SystemMenuPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
+                 Encoder *e3 = NULL, Encoder *e4 = NULL)
+      : MenuPage(e1, e2, e3, e4) {}
+
+protected:
+  virtual void prepare_menu_entries() override;
+};
+
+extern SystemMenuPage system_page;
 
 extern MenuPage<midi_config_page_N> midi_config_page;
 

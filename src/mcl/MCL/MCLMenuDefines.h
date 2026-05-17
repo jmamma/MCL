@@ -6,7 +6,7 @@ constexpr size_t boot_menu_page_N = 4;
 constexpr size_t boot_menu_page_N = 3;
 #endif
 constexpr size_t start_menu_page_N = 1;
-constexpr size_t system_menu_page_N = 5;
+constexpr size_t system_menu_page_N = 6;
 constexpr size_t midi_config_page_N = 7;
 constexpr size_t md_config_page_N = 2;
 constexpr size_t mcl_config_page_N = 2;

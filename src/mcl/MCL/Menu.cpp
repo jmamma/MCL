@@ -18,6 +18,16 @@ bool MenuBase::is_entry_enable(uint8_t entry_index) {
   return !IS_BIT_SET(disabled_entry_mask[midx], bit);
 }
 
+void MenuBase::set_entry_name(uint8_t entry_index, const char *name) {
+  if (layout_base == nullptr || name == nullptr ||
+      entry_index >= get_entry_count()) {
+    return;
+  }
+  auto *item = const_cast<menu_item_t *>(get_entry_address(entry_index));
+  strncpy(item->name, name, sizeof(item->name) - 1);
+  item->name[sizeof(item->name) - 1] = '\0';
+}
+
 menu_function_t MenuBase::get_exit_function() {
     if (layout_base == nullptr) return nullptr;
     menu_function_ptr_t fn;

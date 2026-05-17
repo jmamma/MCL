@@ -92,6 +92,8 @@ public:
   virtual void setup();
   virtual uint8_t register_page_select_entries(PageSelectEntry *entries,
                                                uint8_t max_entries) const override;
+  virtual bool config_menu_entry(DeviceIdx device_idx,
+                                 DriverConfigMenuEntry *entry) const override;
   virtual void page_select_prepare() override;
   virtual void page_select_popup(char *text) override;
   virtual void page_select_cleanup() override;

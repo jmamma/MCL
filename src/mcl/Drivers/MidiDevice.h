@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "../MCL/MCLFeatureConfig.h"
+#include "../MCL/PageIndex.h"
 #include "DeviceCapabilities.h"
 #include "MidiDeviceCapabilities.h"
 #include "MidiID.h"
@@ -19,6 +20,11 @@ class MidiClass;
 class MidiUartClass;
 struct PageSelectEntry;
 class SeqTrack;
+
+struct DriverConfigMenuEntry {
+  const char *name;
+  PageIndex page;
+};
 
 struct MidiDeviceLogoGif {
   MCLGIF *gif;
@@ -179,6 +185,12 @@ public:
     (void)entries;
     (void)max_entries;
     return 0;
+  }
+  virtual bool config_menu_entry(DeviceIdx device_idx,
+                                 DriverConfigMenuEntry *entry) const {
+    (void)device_idx;
+    (void)entry;
+    return false;
   }
   virtual void page_select_prepare() {}
   virtual void page_select_popup(char *text) {

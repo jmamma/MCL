@@ -4,10 +4,13 @@
 #include "SeqPages.h"
 #include "MCLSysConfig.h"
 #include "MCLGUI.h"
+#include "MCL.h"
 #include "GridPages.h"
 #include "CommonPages.h"
 #include "MCLActions.h"
+#include "DeviceManager.h"
 #include "WavDesignerPage.h"
+#include "../Drivers/MidiDevice.h"
 
 static MCLEncoder menu_value_encoder(0, 17, ENCODER_RES_SYS);
 static MCLEncoder menu_entry_encoder(0, 17, ENCODER_RES_SYS);
@@ -15,6 +18,55 @@ static MCLEncoder menu_entry_encoder(0, 17, ENCODER_RES_SYS);
 uint8_t opt_import_src = 0;
 uint8_t opt_import_dest = 0;
 uint8_t opt_import_count = 16;
+
+namespace {
+
+constexpr uint8_t SYSTEM_MENU_DRIVER_PRIMARY = 2;
+constexpr uint8_t SYSTEM_MENU_DRIVER_SECONDARY = 3;
+
+bool driver_config_entry(DeviceIdx device_idx, DriverConfigMenuEntry *entry) {
+  MidiDevice *device = device_manager.device_for_idx(device_idx);
+  return device != nullptr && device != &null_midi_device &&
+         device->config_menu_entry(device_idx, entry);
+}
+
+void open_driver_config(DeviceIdx device_idx) {
+  DriverConfigMenuEntry entry = {nullptr, NULL_PAGE};
+  if (driver_config_entry(device_idx, &entry) && entry.page != NULL_PAGE) {
+    mcl.pushPage(entry.page);
+  }
+}
+
+void open_primary_driver_config() {
+  open_driver_config(DeviceIdx::Primary);
+}
+
+void open_secondary_driver_config() {
+  open_driver_config(DeviceIdx::Secondary);
+}
+
+} // namespace
+
+void SystemMenuPage::prepare_menu_entries() {
+  DriverConfigMenuEntry entry = {nullptr, NULL_PAGE};
+  bool primary =
+      driver_config_entry(DeviceIdx::Primary, &entry) && entry.name != nullptr;
+  menu.enable_entry(SYSTEM_MENU_DRIVER_PRIMARY, primary);
+  if (primary) {
+    menu.set_entry_name(SYSTEM_MENU_DRIVER_PRIMARY, entry.name);
+  }
+
+  MidiDevice *primary_device = device_manager.primary_device();
+  MidiDevice *secondary_device = device_manager.secondary_device();
+  entry = {nullptr, NULL_PAGE};
+  bool secondary = secondary_device != primary_device &&
+                   driver_config_entry(DeviceIdx::Secondary, &entry) &&
+                   entry.name != nullptr;
+  menu.enable_entry(SYSTEM_MENU_DRIVER_SECONDARY, secondary);
+  if (secondary) {
+    menu.set_entry_name(SYSTEM_MENU_DRIVER_SECONDARY, entry.name);
+  }
+}
 
 const uint8_t *const menu_target_param[] PROGMEM = {
     nullptr,
@@ -173,6 +225,10 @@ const menu_function_ptr_t menu_target_functions[] PROGMEM = {
     { .fn = rename_perf },
     // 31
     { .fn = opt_transpose_track_handler },
+    // 32
+    { .fn = open_primary_driver_config },
+    // 33
+    { .fn = open_secondary_driver_config },
 };
 MenuPage<aux_config_page_N> aux_config_page(&menu_value_encoder,
                                             &menu_entry_encoder);
@@ -181,8 +237,7 @@ BootMenuPage<boot_menu_page_N> boot_menu_page(&menu_value_encoder,
                                               &menu_entry_encoder);
 MenuPage<start_menu_page_N> start_menu_page(&menu_value_encoder,
                                             &menu_entry_encoder);
-MenuPage<system_menu_page_N> system_page(&menu_value_encoder,
-                                         &menu_entry_encoder);
+SystemMenuPage system_page(&menu_value_encoder, &menu_entry_encoder);
 MenuPage<midi_config_page_N> midi_config_page(&menu_value_encoder,
                                               &menu_entry_encoder);
 

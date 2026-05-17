@@ -37,6 +37,7 @@ public:
 
   void enable_entry(uint8_t entry_index, bool en);
   bool is_entry_enable(uint8_t entry_index);
+  void set_entry_name(uint8_t entry_index, const char *name);
 
   uint8_t *get_dest_variable(uint8_t item_n);
   uint8_t get_option_min(uint8_t item_n);
