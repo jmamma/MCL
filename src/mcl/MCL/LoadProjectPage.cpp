@@ -193,16 +193,18 @@ void LoadProjectPage::on_copy(const char *from, const char *to) {
            build_project_path(to, to_project_path, sizeof(to_project_path)) &&
            proj.copy_project(from_project_path, to_project_path);
     } else {
-      ok = mcl_sd.copy_dir(from, to);
+      mcl_gui.draw_progress("CLONE", 0, 64);
+      ok = mcl_sd.copy_dir(from, to, 0, 64, 64);
     }
   } else {
-    ok = mcl_sd.copy_file(from, to);
+    mcl_gui.draw_progress("CLONE", 0, 64);
+    ok = mcl_sd.copy_file(from, to, 0, 64, 64);
   }
 
   if (ok) {
-    gfx.alert("SUCCESS", "Duplicated.");
+    gfx.alert("SUCCESS", "Cloned.");
   } else {
-    gfx.alert("ERROR", "Not duplicated.");
+    gfx.alert("ERROR", "Not cloned.");
   }
 }
 
@@ -237,12 +239,17 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
   if (EVENT_BUTTON(event) && EVENT_PRESSED(event, Buttons.BUTTON3) &&
       show_filemenu) {
     char entry[FILE_ENTRY_SIZE] = {'\0'};
-    bool regular_entry = encoders[1]->getValue() < numEntries;
+    uint16_t entry_idx = encoders[1]->getValue();
+    uint8_t entry_type = FILE_TYPE;
+    bool regular_entry = entry_idx < numEntries;
     if (regular_entry) {
-      get_entry(encoders[1]->getValue(), entry);
+      get_entry(entry_idx, entry, entry_type);
       regular_entry = strcmp(entry, "..") != 0;
+      if (regular_entry) {
+        entry_type = resolve_entry_type(entry_idx, entry, entry_type);
+      }
     }
-    bool project_entry = regular_entry && is_project_dir(entry);
+    bool project_entry = regular_entry && entry_type == FILE_TYPE;
 
     file_menu_page.menu.enable_entry(FM_NEW_FOLDER, show_new_folder);
     file_menu_page.menu.enable_entry(FM_DELETE, regular_entry);
@@ -259,8 +266,28 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
 }
 
 bool LoadProjectPage::_handle_filemenu() {
-  if (file_menu_page.menu.get_item_index(file_menu_encoder.cur) ==
-      FM_VERSIONS) {
+  uint8_t item = file_menu_page.menu.get_item_index(file_menu_encoder.cur);
+  if (item == FM_DELETE) {
+    char entry[FILE_ENTRY_SIZE] = {'\0'};
+    char message[32] = {'\0'};
+    uint8_t entry_type;
+    uint16_t entry_idx = encoders[1]->getValue();
+    get_entry(entry_idx, entry, entry_type);
+    if (entry_type == UNKNOWN_DIR_TYPE) {
+      entry_type = resolve_entry_type(entry_idx, entry, entry_type);
+    }
+
+    strcpy_P(message, mclstr_delete_space);
+    strcat(message, entry);
+    strcat(message, "?");
+    if (mcl_gui.wait_for_confirm(entry_type == DIR_TYPE ? "DEL FOLDER"
+                                                        : "DEL PROJECT",
+                                 message)) {
+      on_delete(entry);
+    }
+    return true;
+  }
+  if (item == FM_VERSIONS) {
     char entry[FILE_ENTRY_SIZE] = {'\0'};
     get_entry(encoders[1]->getValue(), entry);
     char project_path[PRJ_PATH_LEN] = {'\0'};

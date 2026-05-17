@@ -46,6 +46,29 @@ bool append_u8(char *out, size_t out_len, uint8_t value) {
   return true;
 }
 
+bool join_project_file(char *out, size_t out_len, const char *project,
+                       const char *filename) {
+  if (out_len == 0) {
+    return false;
+  }
+  out[0] = '\0';
+
+  size_t project_len = strlen(project);
+  size_t filename_len = strlen(filename);
+  bool add_sep = project_len > 0 && project[project_len - 1] != '/';
+  size_t needed = project_len + (add_sep ? 1 : 0) + filename_len + 1;
+  if (needed > out_len) {
+    return false;
+  }
+
+  strcpy(out, project);
+  if (add_sep) {
+    strcat(out, "/");
+  }
+  strcat(out, filename);
+  return true;
+}
+
 bool copy_grid_slot_raw(Grid &src_grid, Grid &dst_grid, GridColumn col,
                         GridRow row) {
   uint8_t buf[256];
@@ -788,31 +811,36 @@ bool Project::store_config_from_system() {
   return write_header();
 }
 
-bool Project::copy_grid_pair(const char *basename, uint8_t source_pair,
-                             uint8_t dest_pair) {
-  char created[NUM_GRIDS][PRJ_NAME_LEN + 5];
-  memset(created, 0, sizeof(created));
-
+bool Project::copy_grid_pair(const char *from_project,
+                             const char *from_basename,
+                             const char *to_project,
+                             const char *to_basename,
+                             uint8_t source_pair, uint8_t dest_pair) {
+  chdir_projects();
   bool ok = true;
   for (uint8_t grid_idx = 0; ok && grid_idx < NUM_GRIDS; grid_idx++) {
     char src_name[PRJ_NAME_LEN + 5] = {'\0'};
     char dst_name[PRJ_NAME_LEN + 5] = {'\0'};
+    char src_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
+    char dst_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
     Grid src_grid;
     Grid dst_grid;
 
-    ok = build_grid_filename(basename, source_pair * NUM_GRIDS + grid_idx,
+    ok = build_grid_filename(from_basename, source_pair * NUM_GRIDS + grid_idx,
                              src_name, sizeof(src_name)) &&
-         build_grid_filename(basename, dest_pair * NUM_GRIDS + grid_idx,
+         build_grid_filename(to_basename, dest_pair * NUM_GRIDS + grid_idx,
                              dst_name, sizeof(dst_name)) &&
-         !SD.exists(dst_name) && src_grid.open_file(src_name) &&
-         dst_grid.new_file(dst_name);
+         join_project_file(src_path, sizeof(src_path), from_project,
+                           src_name) &&
+         join_project_file(dst_path, sizeof(dst_path), to_project, dst_name) &&
+         !SD.exists(dst_path) && src_grid.open_file(src_path) &&
+         dst_grid.new_file(dst_path);
     if (!ok) {
       src_grid.close_file();
       dst_grid.close_file();
       break;
     }
 
-    strcpy(created[grid_idx], dst_name);
     ok = dst_grid.write_header();
 
     EmptyTrack scratch;
@@ -857,8 +885,13 @@ bool Project::copy_grid_pair(const char *basename, uint8_t source_pair,
 
   if (!ok) {
     for (uint8_t i = 0; i < NUM_GRIDS; i++) {
-      if (created[i][0] != '\0') {
-        SD.remove(created[i]);
+      char dst_name[PRJ_NAME_LEN + 5] = {'\0'};
+      char dst_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
+      if (build_grid_filename(to_basename, dest_pair * NUM_GRIDS + i,
+                              dst_name, sizeof(dst_name)) &&
+          join_project_file(dst_path, sizeof(dst_path), to_project,
+                            dst_name)) {
+        SD.remove(dst_path);
       }
     }
   }
@@ -909,7 +942,8 @@ bool Project::create_backup(const char *projectname) {
   }
 
   draw_wait_popup("CREATING BACKUP");
-  return copy_grid_pair(basename, source_pair, dest_pair);
+  return copy_grid_pair(projectname, basename, projectname, basename,
+                        source_pair, dest_pair);
 }
 
 bool Project::delete_backup(const char *projectname, uint8_t pair) {
@@ -982,11 +1016,41 @@ bool Project::copy_project(const char *from_project, const char *to_project) {
   }
 
   chdir_projects();
-  if (!mcl_sd.copy_dir(from_project, to_project)) {
+  if (SD.exists(to_project) || !SD.mkdir(to_project, true)) {
     return false;
   }
-  if (!SD.chdir(to_project) ||
-      !rename_project_files(from_basename, to_basename)) {
+
+  draw_wait_popup("CLONING PROJECT");
+
+  char from_name[PRJ_NAME_LEN + 5] = {'\0'};
+  char to_name[PRJ_NAME_LEN + 5] = {'\0'};
+  char from_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
+  char to_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6] = {'\0'};
+  bool ok = project_file_name(from_basename, from_name, sizeof(from_name)) &&
+            project_file_name(to_basename, to_name, sizeof(to_name)) &&
+            join_project_file(from_path, sizeof(from_path), from_project,
+                              from_name) &&
+            join_project_file(to_path, sizeof(to_path), to_project, to_name) &&
+            mcl_sd.copy_file(from_path, to_path);
+
+  bool copied_pair = false;
+  for (uint8_t pair = 0; ok && pair < 128; pair++) {
+    chdir_projects();
+    bool exists = SD.chdir(from_project) &&
+                  project_pair_exists(pair, from_basename);
+    if (!exists) {
+      continue;
+    }
+    ok = copy_grid_pair(from_project, from_basename, to_project, to_basename,
+                        pair, pair);
+    copied_pair = copied_pair || ok;
+  }
+
+  if (!copied_pair) {
+    ok = false;
+  }
+
+  if (!ok) {
     chdir_projects();
     mcl_sd.remove_dir(to_project);
     return false;

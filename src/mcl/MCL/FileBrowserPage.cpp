@@ -495,7 +495,7 @@ bool FileBrowserPage::_handle_filemenu() {
       strcat(buf2, suffix_pos);
     }
     name_length = max(name_length, strlen(buf2));
-    if (mcl_gui.wait_for_input(buf2, "DUPLICATE:", name_length)) {
+    if (mcl_gui.wait_for_input(buf2, "CLONE:", name_length)) {
       on_copy(buf1, buf2);
     }
     return true;
@@ -566,11 +566,13 @@ void FileBrowserPage::on_copy(const char *from, const char *to) {
   file.open(from, O_READ);
   bool dir = file.isDirectory();
   file.close();
-  bool ok = dir ? mcl_sd.copy_dir(from, to) : mcl_sd.copy_file(from, to);
+  mcl_gui.draw_progress("CLONE", 0, 64);
+  bool ok = dir ? mcl_sd.copy_dir(from, to, 0, 64, 64)
+                : mcl_sd.copy_file(from, to, 0, 64, 64);
   if (ok) {
-    gfx.alert("SUCCESS", "Duplicated.");
+    gfx.alert("SUCCESS", "Cloned.");
   } else {
-    gfx.alert("ERROR", "Not duplicated.");
+    gfx.alert("ERROR", "Not cloned.");
   }
 }
 

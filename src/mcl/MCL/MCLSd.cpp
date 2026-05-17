@@ -239,7 +239,8 @@ bool MCLSd::read_data(void *data, size_t len, File *filep) {
   return false;
 }
 
-bool MCLSd::copy_file(const char *src, const char *dst) {
+bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
+                      uint8_t progress_span, uint8_t progress_max) {
   if (SD.exists(dst)) {
     return false;
   }
@@ -261,6 +262,7 @@ bool MCLSd::copy_file(const char *src, const char *dst) {
   }
 
   uint8_t buf[256];
+  uint32_t copied = 0;
   while (ok) {
     int n = in.read(buf, sizeof(buf));
     if (n < 0) {
@@ -271,6 +273,15 @@ bool MCLSd::copy_file(const char *src, const char *dst) {
       break;
     }
     ok = write_data(buf, (size_t)n, &out);
+    copied += n;
+    if (ok && progress_span > 0 && progress_max > 0 && size > 0) {
+      uint8_t progress =
+          progress_base + ((uint32_t)copied * progress_span) / size;
+      if (progress > progress_base + progress_span) {
+        progress = progress_base + progress_span;
+      }
+      mcl_gui.draw_progress_bar(progress, progress_max, false, 31, 21);
+    }
   }
   if (ok) {
     ok = out.sync();
@@ -326,7 +337,8 @@ bool MCLSd::remove_dir(const char *dir) {
   return ok;
 }
 
-bool MCLSd::copy_dir(const char *src, const char *dst) {
+bool MCLSd::copy_dir(const char *src, const char *dst, uint8_t progress_base,
+                     uint8_t progress_span, uint8_t progress_max) {
   if (SD.exists(dst)) {
     return false;
   }
@@ -361,7 +373,10 @@ bool MCLSd::copy_dir(const char *src, const char *dst) {
       ok = false;
       break;
     }
-    ok = is_dir ? copy_dir(src_path, dst_path) : copy_file(src_path, dst_path);
+    ok = is_dir ? copy_dir(src_path, dst_path, progress_base, progress_span,
+                           progress_max)
+                : copy_file(src_path, dst_path, progress_base, progress_span,
+                            progress_max);
   }
 
   entry_file.close();
