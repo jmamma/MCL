@@ -637,8 +637,6 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
   }
 
   EmptyTrack scratch;
-  GridTrack empty_slot;
-  empty_slot.link.init(row);
   bool clear_lfo_slot = false;
   bool clear_legacy_perf_slot = false;
 
@@ -718,15 +716,13 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
 
   if (clear_lfo_slot &&
       grid_y_header.track_type[MDLFO_TRACK_NUM] == EMPTY_TRACK_TYPE &&
-      !grids[1].write(empty_slot._this(), empty_slot._sizeof(),
-                      MDLFO_TRACK_NUM, row)) {
+      !grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
     return false;
   }
 
   if (clear_legacy_perf_slot &&
       grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == EMPTY_TRACK_TYPE &&
-      !grids[1].write(empty_slot._this(), empty_slot._sizeof(),
-                      LEGACY_PERF_TRACK_NUM, row)) {
+      !grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
     return false;
   }
 
