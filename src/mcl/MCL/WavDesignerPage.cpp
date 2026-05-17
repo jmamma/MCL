@@ -53,16 +53,16 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_DOWN:
         encoders[1]->cur += inc;
-        break;
+        return true;
       case MDX_KEY_UP:
         encoders[1]->cur -= inc;
-        break;
+        return true;
       case MDX_KEY_LEFT:
         encoders[0]->cur -= inc;
-        break;
+        return true;
       case MDX_KEY_RIGHT:
         encoders[0]->cur += inc;
-        break;
+        return true;
       }
       // }
     }
