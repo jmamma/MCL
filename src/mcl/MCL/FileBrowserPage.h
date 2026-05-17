@@ -25,11 +25,11 @@
 
 #define FM_CANCEL 0
 #define FM_NEW_FOLDER 1
-#define FM_DELETE 2
-#define FM_RENAME 3
+#define FM_RENAME 2
+#define FM_MOVE 3
 #define FM_DUPLICATE 4
-#define FM_MOVE 5
-#define FM_VERSIONS 6
+#define FM_VERSIONS 5
+#define FM_DELETE 6
 #define FM_RECVALL 7
 #define FM_SENDALL 8
 

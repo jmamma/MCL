@@ -16,8 +16,6 @@ uint8_t opt_import_src = 0;
 uint8_t opt_import_dest = 0;
 uint8_t opt_import_count = 16;
 
-void new_proj_handler() { proj.new_project_prompt(); }
-
 const uint8_t *const menu_target_param[] PROGMEM = {
     nullptr,
 
@@ -121,8 +119,8 @@ const menu_function_ptr_t menu_target_functions[] PROGMEM = {
     { .fn = nullptr },
     // 1 - mclsys_apply_config
     { .fn = mclsys_apply_config },
-    // 2 - new_proj_handler
-    { .fn = new_proj_handler },
+    // 2 - unused
+    { .fn = nullptr },
     // 3
     { .fn = opt_trackid_handler },
     { .fn = opt_mask_handler },

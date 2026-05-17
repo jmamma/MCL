@@ -16,8 +16,6 @@
 //#include "DiagnosticPage.h"
 #define ENCODER_RES_SYS 2
 
-extern void new_proj_handler();
-
 extern BootMenuPage<boot_menu_page_N> boot_menu_page;
 
 extern MenuPage<start_menu_page_N> start_menu_page;

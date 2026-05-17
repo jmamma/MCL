@@ -33,7 +33,6 @@ menu_t<start_menu_page_N> start_menu_layout = {
     {
         //               m  r  n  d  p  f  o
         {"LOAD PROJECT", 0, 0, 0, 0, LOAD_PROJ_PAGE, 0, 0},
-        {"NEW PROJECT",  0, 0, 0, 0, NULL_PAGE, 2, 0},
     },
     0
 };
@@ -44,7 +43,6 @@ menu_t<system_menu_page_N> system_menu_layout = {
         //               m  r  n  d  p  f  o
         {"LOAD PROJECT", 0, 0, 0, 0, LOAD_PROJ_PAGE, 0, 0},
         //{"CONV PROJECT", 0, 0, 0, 0, 2, 0, 0},
-        {"NEW PROJECT",  0, 0, 0, 0, NULL_PAGE, 2, 0},
         {"MIDI",         0, 0, 0, 0, MIDI_CONFIG_PAGE, 0, 0},
         {"MACHINEDRUM",  0, 0, 0, 0, MD_CONFIG_PAGE, 0, 0},
         {"PAGE SETUP",   0, 0, 0, 0, AUX_CONFIG_PAGE, 0, 0},
@@ -303,11 +301,11 @@ menu_t<file_menu_page_N> file_menu_layout = {
         //            m  r  n  d  p  f  o
         {"CANCEL",    0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"NEW DIR",   0, 0, 0, 0, NULL_PAGE, 0, 0},
-        {"DELETE",    0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"RENAME",    0, 0, 0, 0, NULL_PAGE, 0, 0},
-        {"CLONE",      0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"MOVE",      0, 0, 0, 0, NULL_PAGE, 0, 0},
+        {"CLONE",      0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"VERS",      0, 0, 0, 0, NULL_PAGE, 0, 0},
+        {"DELETE",    0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"RECV ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},
         {"SEND ALL",  0, 0, 0, 0, NULL_PAGE, 0, 0},
     },

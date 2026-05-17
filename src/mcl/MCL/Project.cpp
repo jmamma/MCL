@@ -133,6 +133,12 @@ void Project::draw_upgrade_progress(GridIndex grid, GridRow row) {
 void Project::setup() {}
 
 bool Project::new_project(const char *newprj) {
+  const char *basename = nullptr;
+  if (!split_project_path(newprj, &basename)) {
+    gfx.alert("ERROR", "BAD NAME");
+    return false;
+  }
+
   // Create parent project directory
   //
   chdir_projects();
@@ -146,7 +152,7 @@ bool Project::new_project(const char *newprj) {
 
 
   char proj_filename[PRJ_NAME_LEN  + 5] = {'\0'};
-  if (!project_file_name(newprj, proj_filename, sizeof(proj_filename))) {
+  if (!project_file_name(basename, proj_filename, sizeof(proj_filename))) {
     gfx.alert("ERROR", "BAD NAME");
     return false;
   }
@@ -164,7 +170,7 @@ bool Project::new_project(const char *newprj) {
 
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     char grid_filename[PRJ_NAME_LEN  + 5] = {'\0'};
-    if (!build_grid_filename(newprj, i, grid_filename,
+    if (!build_grid_filename(basename, i, grid_filename,
                              sizeof(grid_filename))) {
       gfx.alert("ERROR", "BAD NAME");
       return false;
@@ -182,7 +188,7 @@ bool Project::new_project(const char *newprj) {
   return ret;
 }
 
-bool Project::new_project_prompt() {
+bool Project::new_project_prompt(const char *parent) {
   char newprj[PRJ_NAME_LEN];
 
   char my_string[PRJ_NAME_LEN] = "project___";
@@ -194,11 +200,25 @@ bool Project::new_project_prompt() {
   strncpy(newprj, my_string, PRJ_NAME_LEN);
 again:
   if (mcl_gui.wait_for_input(newprj, "New Project:", PRJ_NAME_LEN)) {
+    char project_path[PRJ_PATH_LEN] = {'\0'};
+    if (parent != nullptr && parent[0] != '\0') {
+      size_t parent_len = strlen(parent);
+      size_t name_len = strlen(newprj);
+      if (parent_len + name_len + 2 > sizeof(project_path)) {
+        gfx.alert("ERROR", "BAD PATH");
+        goto again;
+      }
+      strcpy(project_path, parent);
+      strcat(project_path, "/");
+      strcat(project_path, newprj);
+    } else {
+      strncpy(project_path, newprj, sizeof(project_path) - 1);
+    }
 
-    if (!new_project(newprj)) {
+    if (!new_project(project_path)) {
       goto again;
     }
-    if (proj.load_project(newprj)) {
+    if (proj.load_project(project_path)) {
       grid_page.reload_slot_models = false;
       DEBUG_PRINTLN("project loaded, setting page to grid");
       mcl.setPage(GRID_PAGE);

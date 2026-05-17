@@ -20,7 +20,8 @@ public:
   virtual void on_delete(const char *entry);
   virtual void on_rename( const char *from, const char *to);
   virtual void on_copy(const char *from, const char *to);
-  virtual void on_move(const char *from, const char *to);
+  virtual void on_new();
+  virtual void on_cancel();
   virtual bool handleEvent(gui_event_t *event);
   virtual void setup();
   virtual void init();
@@ -39,8 +40,12 @@ protected:
 private:
   bool build_project_path(const char *entry, char *out, size_t out_len) const;
   bool current_project_parent(const char **parent) const;
+  bool enter_move_destination(const char *entry);
+  bool move_to_current_folder();
   bool is_project_dir(const char *entry) const;
   void focus_current_project();
+  bool move_destination_mode = false;
+  char move_source_path[PRJ_PATH_LEN] = {'\0'};
 };
 
 #endif /* LOADPROJECTPAGE_H__ */
