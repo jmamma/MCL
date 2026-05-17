@@ -221,7 +221,7 @@ void MidiSDSSysexListenerClass::data_packet() {
     uint8_t byte_count = 0;
 
     uint32_t decode_val = 0;
-    int16_t signed_val = 0;
+    int32_t signed_val = 0;
     for (uint8_t n = 0;
          n <= 120 - midi_sds.midiBytes_per_word &&
          (num_of_samples + midi_sds.samplesSoFar) < midi_sds.sampleLength;

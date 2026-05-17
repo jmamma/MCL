@@ -13,11 +13,7 @@ uint16_t MNMTrack::calc_latency(uint8_t tracknumber) {
 }
 
 void MNMTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t slotnumber) {
-  uint8_t n = slotnumber;
-  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
-  ext_track->is_generic_midi = false;
-  load_seq_data(seq_track);
+  transition_load_device(tracknumber, seq_track, slotnumber);
 }
 
 void MNMTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
@@ -89,4 +85,3 @@ bool MNMTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
   bool ret = write_grid((uint8_t *)(this), len, column, row, grid);
   return ret;
 }
-

@@ -6,6 +6,7 @@
 #include "GridTask.h"
 #include "StackMonitor.h"
 #include "MCLActions.h"
+#include "MidiActivePeering.h"
 
 MCLActionsCallbacks mcl_actions_callbacks;
 MCLActionsMidiEvents mcl_actions_midievents;
@@ -118,8 +119,8 @@ void MCLActionsCallbacks::StopHardCallback() {
   MidiUartParent::handle_midi_lock = 1;
   /*
    ElektronDevice *elektron_devs[2] = {
-       midi_active_peering.get_device(UART1_PORT)->asElektronDevice(),
-       midi_active_peering.get_device(UART2_PORT)->asElektronDevice(),
+       midi_active_peering.dev1->asElektronDevice(),
+       midi_active_peering.dev2->asElektronDevice(),
    };
 
      for (uint8_t i = 0; i < NUM_DEVS; ++i) {
@@ -171,7 +172,7 @@ void MCLActionsMidiEvents::setup_callbacks() {
                                    (midi_callback_ptr_t)&MCLActionsMidiEvents::
                                        onProgramChangeCallback_Midi2);
 
-  Midi2.addOnProgramChangeCallback(this,
+  generic_midi_device.midi->addOnProgramChangeCallback(this,
                                    (midi_callback_ptr_t)&MCLActionsMidiEvents::
                                        onProgramChangeCallback_Midi2);
 
@@ -180,9 +181,9 @@ void MCLActionsMidiEvents::setup_callbacks() {
   MidiUSB.addOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
-  Midi2.addOnNoteOnCallback(
+  generic_midi_device.midi->addOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
-  Midi2.addOnNoteOffCallback(
+  generic_midi_device.midi->addOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
 /*  Midi.addOnControlChangeCallback(
@@ -202,7 +203,7 @@ void MCLActionsMidiEvents::remove_callbacks() {
                 onProgramChangeCallback_Midi2);
 
 
-  Midi2.removeOnProgramChangeCallback(
+  generic_midi_device.midi->removeOnProgramChangeCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::
                 onProgramChangeCallback_Midi2);
   MidiUSB.removeOnNoteOnCallback(
@@ -210,9 +211,9 @@ void MCLActionsMidiEvents::remove_callbacks() {
   MidiUSB.removeOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
-  Midi2.removeOnNoteOnCallback(
+  generic_midi_device.midi->removeOnNoteOnCallback(
       this, (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOnCallback_Midi2);
-  Midi2.removeOnNoteOffCallback(
+  generic_midi_device.midi->removeOnNoteOffCallback(
       this,
       (midi_callback_ptr_t)&MCLActionsMidiEvents::onNoteOffCallback_Midi2);
 /*  Midi.removeOnControlChangeCallback(

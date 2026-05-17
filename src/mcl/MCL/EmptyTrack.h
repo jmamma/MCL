@@ -39,4 +39,3 @@ public:
   bool store_track_in_grid(int track, int32_t column, int32_t row);
 */
 };
-

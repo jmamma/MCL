@@ -3,6 +3,7 @@
 #include "ResourceManager.h"
 #include "MD.h"
 #include "MCLGUI.h"
+#include "MCLStrings.h"
 
 void PerfPageParent::setup() { DEBUG_PRINT_FN(); }
 
@@ -18,16 +19,15 @@ void PerfPageParent::init() {
 
 void PerfPageParent::cleanup() { MD.set_key_repeat(1); remove_callbacks(); }
 
-void PerfPageParent::loop() {}
-
 void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
 
-  char myName[4] = "-- ";
+  char myName[4];
+  mclstr_copy_progmem(myName, mclstr_dash_space, sizeof(myName));
 
   const char *modelname = NULL;
   if (dest == 0) {
     if (param > 1) {
-      strcpy(myName, "LER");
+      strcpy_P(myName, mclstr_ler);
     }
   } else {
     dest = dest - 1;
@@ -43,7 +43,7 @@ void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param) {
       strncpy(myName, modelname, 4);
     }
   }
-  mcl_gui.draw_knob(knob, "PAR", myName);
+  mcl_gui.draw_knob(knob, mclstr_par, myName);
 }
 
 void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest) {
@@ -51,19 +51,19 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest) {
   K[0] = value > 20 ? 'M' : 'T';
   switch (value) {
   case 0:
-    strcpy(K, "--");
+    strcpy_P(K, mclstr_dash);
     break;
   case 17:
-    strcpy(K, "ECH");
+    strcpy_P(K, mclstr_ech);
     break;
   case 18:
-    strcpy(K, "REV");
+    strcpy_P(K, mclstr_rev);
     break;
   case 19:
-    strcpy(K, "EQ");
+    strcpy_P(K, mclstr_eq);
     break;
   case 20:
-    strcpy(K, "DYN");
+    strcpy_P(K, mclstr_dyn);
     break;
   default:
     if (value > 20) {
@@ -72,12 +72,9 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest) {
     mcl_gui.put_value_at(value, K + 1);
     break;
   }
-  const char *str1 = "DEST";
-  if (!dest) { str1 = "SRC"; }
-  mcl_gui.draw_knob(knob, str1, K);
+  const char *label = dest ? mclstr_dest : mclstr_src;
+  mcl_gui.draw_knob(knob, label, K);
 }
-
-void PerfPageParent::display() {}
 
 bool PerfPageParent::handleEvent(gui_event_t *event) {
   /*

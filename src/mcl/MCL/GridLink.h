@@ -26,4 +26,3 @@ public:
   speed = speed_;
   }
 };
-

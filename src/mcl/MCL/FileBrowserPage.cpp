@@ -45,9 +45,7 @@ void FileBrowserPage::setup() {
   oled_display.clearDisplay();
   // char *mcl = ".mcl";
   // strcpy(match, mcl);
-  strcpy(title, "Files");
-  SD.chdir();
-  strcpy(lwd, "/");
+  strcpy_P(lwd, mclstr_root_path);
 
   encoders[1]->cur = 1;
   encoders[2]->cur = 1;
@@ -163,7 +161,8 @@ void FileBrowserPage::init() {
   filemenu_active = false;
   show_samplemgr = false;
   draw_dirs = false;
-  strcpy(focus_match, "");
+  strcpy_P(focus_match, mclstr_empty);
+  strcpy_P(title, mclstr_title_files);
   file_types.reset();
   SD.chdir(lwd);
 }
@@ -205,7 +204,7 @@ void FileBrowserPage::draw_filebrowser() {
     }
     if (encoders[1]->cur - cur_row + n == cur_file) {
       oled_display.setCursor(x_offset - 4, y_pos);
-      oled_display.print(F(">"));
+      mcl_print_P(mclstr_arrow_right);
     }
     uint16_t entry_num = encoders[1]->cur - cur_row + n;
     if (entry_num < numEntries) {
@@ -301,7 +300,7 @@ void FileBrowserPage::_cd_up() {
 
   // in case root is trimmed, add it back
   if (lwd[0] == '\0') {
-    strcpy(lwd, "/");
+    strcpy_P(lwd, mclstr_root_path);
   }
   DEBUG_PRINTLN(lwd);
   if (!SD.chdir(lwd)) {
@@ -378,7 +377,7 @@ bool FileBrowserPage::_handle_filemenu() {
     create_folder();
     return true;
   case FM_DELETE: // delete
-    strcpy(buf2, "Delete ");
+    strcpy_P(buf2, mclstr_delete_space);
     strcat(buf2, buf1);
     strcat(buf2, "?");
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {

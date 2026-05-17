@@ -10,6 +10,7 @@
 #include "MCLGUI.h"
 #include "Project.h"
 #include "StackMonitor.h"
+#include "MCLSeq.h"
 
 #define DIV16_MARGIN 8
 
@@ -76,8 +77,8 @@ void GridTask::run() {
 
 void GridTask::update_transition_details() {
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
   ElektronDevice *elektron_devs[2] = {
       devs[0]->asElektronDevice(),
@@ -85,7 +86,7 @@ void GridTask::update_transition_details() {
   };
 
   GridRowHeader row_header;
-  proj.read_grid_row_header(&row_header, next_active_row);
+  proj.read_grid_row_header(&row_header, next_active_row, 0);
   uint8_t dev_idx = 0;
 
   uint8_t len = elektron_devs[0]->sysex_protocol.kitname_length;
@@ -95,13 +96,13 @@ void GridTask::update_transition_details() {
     m_toupper(kit_names[dev_idx]);
     kit_names[dev_idx][len - 1] = '\0';
   } else {
-    strcpy(kit_names[dev_idx], "NEW_KIT");
+    strcpy_P(kit_names[dev_idx], mclstr_new_kit_underscore);
   }
   send_kit_name = true;
 }
 
 void GridTask::wait_blocking(uint32_t go_step) {
-  float tempo = MidiClock.get_tempo();
+  uint16_t tempo_uint = (uint16_t)MidiClock.get_tempo();
   while (true) {
     // uint32_t counter = atomic_read(&MidiClock.div192th_counter);
     uint32_t counter = MidiClock.div192th_counter;
@@ -114,7 +115,7 @@ void GridTask::wait_blocking(uint32_t go_step) {
 
     handleIncomingMidi();
 
-    if ((float)diff > ceil(tempo * GUI_THRESHOLD_FACTOR)) {
+    if (diff > (uint32_t)((uint32_t)tempo_uint * 64 + 999) / 1000) {
       mcl.loop();
     }
   }
@@ -122,8 +123,8 @@ void GridTask::wait_blocking(uint32_t go_step) {
 
 void GridTask::transition_handler() {
   MidiDevice *devs[2] = {
-      midi_active_peering.get_device(UART1_PORT),
-      midi_active_peering.get_device(UART2_PORT),
+      midi_active_peering.dev1,
+      midi_active_peering.dev2,
   };
 
   bool send_device[2] = {0};
@@ -133,9 +134,10 @@ void GridTask::transition_handler() {
 
   uint8_t div32th_margin = 6;
 
-  while (MidiClock.clock_less_than(
-             MidiClock.div32th_counter + max(2, 0.032f * MidiClock.get_tempo()),
-             (uint32_t)mcl_actions.next_transition * 2) <= 0) {
+  while (!MidiClock.clock_less_than(
+      MidiClock.div32th_counter + max(2u, ((uint16_t)MidiClock.get_tempo() * 32u + 999u) / 1000u),
+      (uint32_t)mcl_actions.next_transition * 2)) {
+    memset(track_select_array, 0, sizeof(track_select_array));
 
 
   // 240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
@@ -175,7 +177,7 @@ void GridTask::transition_handler() {
       if (gdt == nullptr)
         continue;
 
-      uint8_t track_idx = mcl_actions.get_track_idx(n);
+      uint8_t track_idx = n & 0xF;
       uint8_t device_idx = gdt->device_idx;
 
       if (link_load(n, track_idx, slots_changed, track_select_array, gdt)) {
@@ -197,7 +199,7 @@ void GridTask::transition_handler() {
     bool wait;
 
     if (mcl_cfg.uart2_prg_out > 0 && row != 255) {
-      MidiUart2.sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
+      mcl_seq.ext_uart->sendProgramChange(mcl_cfg.uart2_prg_out - 1, row);
     }
     // float div192th_per_second = tempo * 0.8f;
     // float div192th_time = 1.0 / div192th_per_second;
@@ -219,7 +221,7 @@ void GridTask::transition_handler() {
         if (device_idx != c)
           continue;
 
-        uint8_t track_idx = mcl_actions.get_track_idx(n);
+        uint8_t track_idx = n & 0xF;
         // Wait on first track of each device;
 
         if (wait && send_device[c]) {

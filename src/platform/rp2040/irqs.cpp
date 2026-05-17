@@ -45,6 +45,7 @@ void __not_in_flash_func(timer1_handler)() {
 
   MidiUart.tickActiveSense();
   MidiUart2.tickActiveSense();
+  MidiUartUSB.tickActiveSense();
 
   TRIGGER_SW_IRQ3();
   CLEAR_LOCK();

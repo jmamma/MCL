@@ -38,13 +38,13 @@ public:
   void disable_paramupdate_events();
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
-  virtual void setup();
   virtual void init();
   virtual void config();
   virtual void config_encoders();
   virtual void loop();
   virtual void cleanup();
   void send_locks(uint8_t step);
+  bool toggle_mask(uint8_t mask);
 };
 
 #endif /* SEQSTEPPAGE_H__ */

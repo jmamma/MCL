@@ -1,6 +1,7 @@
 #include "ArpPage.h"
 #include "SeqPages.h"
 #include "MCLGUI.h"
+#include "MCLStrings.h"
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 18, ENCODER_RES_SEQ);
@@ -58,8 +59,6 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
   last_arp_track = arp_track;
 }
 
-void ArpPage::cleanup() {}
-
 void ArpPage::loop() {
   uint8_t n = current_track;
 
@@ -79,13 +78,7 @@ void ArpPage::loop() {
   }
 }
 
-typedef char arp_name_t[4];
 
-const arp_name_t arp_names[] PROGMEM = {
-    "UP", "DWN", "UD", "DU", "UND", "DNU", "CNV", "DIV", "CND",
-    "PU", "PD",  "TU", "TD", "UPP", "DP",  "U2",  "D2",  "RND",
-    "RN2",
-};
 
 void ArpPage::display() {
 
@@ -97,7 +90,7 @@ void ArpPage::display() {
   oled_display.setCursor(42, 10);
 
   oled_display.setTextColor(WHITE);
-  oled_display.print(F("ARPEGGIATOR: T"));
+  mcl_print_P(mclstr_arpeggiator);
 
   if (seq_ptc_page.midi_device == &MD) {
     oled_display.print(current_track + 1);
@@ -111,27 +104,27 @@ void ArpPage::display() {
 
   switch (encoders[0]->cur) {
   case ARP_ON:
-    strcpy(str, "ON");
+    strcpy_P(str, mclstr_on);
     break;
   case ARP_OFF:
-    strcpy(str, "--");
+    strcpy_P(str, mclstr_dash);
     break;
   case ARP_LATCH:
-    strcpy(str, "LAT");
+    strcpy_P(str, mclstr_lat);
     break;
   }
 
-  mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, "ARP", str, param_select == 0);
+  mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, mclstr_arp, str, param_select == 0);
 
   strncpy_P(str, arp_names[encoders[1]->cur], 4);
 
-  mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, "MODE", str, param_select == 1);
+  mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, mclstr_mode, str, param_select == 1);
 
   mcl_gui.put_value_at(encoders[2]->cur, str);
-  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, "RATE", str, param_select == 2);
+  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, mclstr_rate, str, param_select == 2);
 
   mcl_gui.put_value_at(encoders[3]->cur, str);
-  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, "RANGE", str, param_select == 3);
+  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, mclstr_range, str, param_select == 3);
 
 }
 

@@ -6,31 +6,32 @@
 #include "MCLSd.h"
 #include "hardware.h"
 #include "platform.h"
+#include "MCLStrings.h"
 
 // Consolidated display function to reduce code duplication
-static void show_message(const char* line1) {
+static void show_message(PGM_P line1) {
   oled_display.clearDisplay();
-  oled_display.textbox(line1, "");
+  oled_display.textbox_P(line1);
   oled_display.display();
 }
 
 // Common wait routine
 static inline void usb_wait() {
-  show_message("PLEASE WAIT");
+  show_message(mclstr_please_wait);
   delay(4000);
 }
 
 // Simplified megacmd check
 static inline bool megacmd_check() {
   if (!IS_MEGACMD()) {
-    show_message("MODE N/A");
+    show_message(mclstr_mode_na);
     return false;
   }
   return true;
 }
 
 // Combined USB mode change function
-static void enter_usb_mode(uint8_t mode, const char* line1) {
+static void enter_usb_mode(uint8_t mode, PGM_P line1) {
   usb_wait();
   show_message(line1);
 
@@ -45,16 +46,16 @@ static void enter_usb_mode(uint8_t mode, const char* line1) {
 
 // Optimized public functions
 void usb_os_update() {
-  enter_usb_mode(USB_SERIAL, "OS UPDATE");
+  enter_usb_mode(USB_SERIAL, mclstr_os_update);
 }
 
 void usb_dfu_mode() {
-  enter_usb_mode(USB_DFU, "DFU MODE");
+  enter_usb_mode(USB_DFU, mclstr_dfu_mode);
 }
 
 void usb_disk_mode() {
   if (megacmd_check()) {
-    enter_usb_mode(USB_STORAGE, "USB DISK");
+    enter_usb_mode(USB_STORAGE, mclstr_usb_disk);
   }
 }
 
@@ -66,6 +67,19 @@ void mclsys_apply_config() {
 }
 
 void mclsys_apply_config_midi() {
+  // USB takes priority over MIDI ports
+  if (mcl_cfg.usb_device == 1 && mcl_cfg.uart1_device == 1)
+    mcl_cfg.uart1_device = 2; // USB=MD wins, PORT1→OFF
+  if (mcl_cfg.usb_device == 2 && mcl_cfg.uart2_device == 1)
+    mcl_cfg.uart2_device = 2; // USB=ELEKT wins, PORT2→OFF
+  if (mcl_cfg.usb_device == 3) {
+    if (mcl_cfg.uart1_device == 0) mcl_cfg.uart1_device = 2; // USB=GENER, PORT1→OFF
+    if (mcl_cfg.uart2_device == 0) mcl_cfg.uart2_device = 2; // USB=GENER, PORT2→OFF
+  }
+  // Between MIDI ports: both GENER → PORT2 wins
+  if (mcl_cfg.uart1_device == 0 && mcl_cfg.uart2_device == 0)
+    mcl_cfg.uart1_device = 2;
+
   mclsys_apply_config();
   midi_setup.cfg_ports();
 }
@@ -99,6 +113,7 @@ bool MCLSysConfig::cfg_init() {
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Initialising cfgfile"));
+  cfgfile.close();
   if (!SD.remove("/config.mcls")) {
     DEBUG_PRINTLN(F("Failed to remove old config file"));
   }
@@ -159,7 +174,7 @@ bool MCLSysConfig::cfg_init() {
   track_type_select = 0b00000011;
   uart1_device = 1;
   //uart2_device = 0;
-  //uart_cc_loopback = 0;
+  //uart_cc_fwd = 0;
   //uart2_prg_mode = 0;
   usb_mode = USB_SERIAL;
   //midi_transport_rec = 0;
@@ -170,6 +185,8 @@ bool MCLSysConfig::cfg_init() {
   uart2_cc_mute = 128;
   uart2_cc_level = 128;
   //grid_page_mode = 0;
+  uart_note_fwd = 1;
+  //usb_device = 0;
   cfgfile.close();
   ret = write_cfg();
   if (!ret) {

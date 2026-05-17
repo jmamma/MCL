@@ -16,11 +16,11 @@ void OscPage::setup() {
 }
 
 float OscPage::get_freq() {
-  float fzero = 440;
-  float a = pow(2.00, 1.00 / 12.00);
+  float fzero = 440.0f;
+  float a = pow(2.00f, 1.00f / 12.00f);
   float n = enc1.cur - 64;
-  float fn = fzero * pow(a, n);
-  float fout = fn * pow(2, (float)(100 - enc2.cur) / (float)1200);
+  float fn = fzero * (float) powf(a, n);
+  float fout = fn * (float) powf(2.0f, (float)(100 - enc2.cur) / (float)1200);
   return fout;
 }
 void OscPage::init() {
@@ -30,7 +30,7 @@ void OscPage::init() {
   oled_display.clearDisplay();
 }
 
-void OscPage::cleanup() { }
+void OscPage::cleanup() {}
 
 bool OscPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
@@ -129,7 +129,7 @@ void OscPage::loop() {
   }
 }
 
-const char wave_names[][4] PROGMEM = {"--", "SIN", "TRI", "PUL", "SAW", "USR"};
+
 
 void OscPage::display() {
   // oled_display.clearDisplay();
@@ -159,13 +159,12 @@ void OscPage::display() {
   draw_wav(osc_waveform);
   strncpy_P(buf1, wave_names[osc_waveform], 4);
   oled_display.print(buf1);
-  oled_display.print(F(" "));
+  mcl_print_P(mclstr_space);
 
-  char str[] = "    ";
   if (show_freq) {
     float freq = get_freq();
     oled_display.print((int)freq);
-    oled_display.print(F("Hz"));
+    mcl_print_P(mclstr_hz);
     // GUI.printf_at(6, "%f", freq);
   } else {
     uint8_t s = enc1.cur - 8;
@@ -173,7 +172,7 @@ void OscPage::display() {
     oled_display.print(number_to_note.notes_upper[note]);
     oled_display.print((uint8_t)(s / 12));
     if (enc2.cur < 0) {
-      oled_display.print(F("+"));
+      mcl_print_P(mclstr_plus);
     }
     if (enc2.cur != 0) {
       oled_display.print(-1 * enc2.cur);
@@ -215,7 +214,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
       if (largest_sine_peak == 0) {
         sample = 0;
       } else {
-        sample = (1.00 / largest_sine_peak) * sample;
+        sample = (1.00f / largest_sine_peak) * sample;
       }
       break;
     case USR_OSC:
@@ -231,7 +230,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
       sample = saw_osc.get_sample((uint32_t)n, 1);
       break;
     }
-    uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
+    uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00f)) + (h / 2) + y);
     if (wav_type != 0) {
        oled_display.drawPixel(x + n, pixel_y, WHITE);
     }
@@ -265,7 +264,7 @@ void OscPage::draw_usr() {
   for (uint8_t i = 0; i < 16; i++) {
     sample = usr_osc.get_sample((uint32_t)i * 4, 1, usr_values);
 
-    uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00)) + (h / 2) + y);
+    uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00f)) + (h / 2) + y);
     if (note_interface.is_note_on(i)) {
 
       // oled_display.fillRect(63 + i * 4, 0, 3, 32, BLACK);

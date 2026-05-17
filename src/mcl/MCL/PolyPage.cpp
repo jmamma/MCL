@@ -3,8 +3,6 @@
 #include "MD.h"
 #include "SeqPages.h"
 #include "MidiActivePeering.h"
-void PolyPage::setup() {}
-
 void PolyPage::init() {
 
   poly_mask = &mcl_cfg.poly_mask;
@@ -50,7 +48,7 @@ void PolyPage::display() {
   oled_display.clearDisplay();
 
   oled_display.setCursor(0, 15);
-  oled_display.println("VOICE SELECT ");
+  mcl_println_P(mclstr_voice_select);
 
   draw_mask();
 

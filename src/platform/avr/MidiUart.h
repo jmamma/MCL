@@ -155,12 +155,18 @@ private:
   volatile uint8_t *ucsra() { return udr - 6; }
 
 public:
+  void enable_tx_irq() { set_tx(); }
+  void disable_tx_irq() { clear_tx(); }
+
   uint8_t mode;
   // Ring buffers with compile-time sizes
   int8_t in_message_tx;
+
   volatile RingBuffer<> *rxRb;
   volatile RingBuffer<> *txRb;
   volatile RingBuffer<> *txRb_sidechannel;
+  volatile RingBuffer<> *txRb_realtime;
+  volatile RingBuffer<> *sysex_rb_cache;  // Cached pointer to sysex rb for fast ISR path
 
 #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
@@ -168,7 +174,7 @@ public:
 #endif
 
   MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb = nullptr,
-                RingBuffer<> *_txRb = nullptr);
+                RingBuffer<> *_txRb = nullptr, RingBuffer<> *_txRb_realtime = nullptr);
 
   ALWAYS_INLINE() bool avail() { return !rxRb->isEmpty(); }
   ALWAYS_INLINE() uint8_t m_getc() { return rxRb->get(); }
@@ -186,34 +192,41 @@ public:
 
   ALWAYS_INLINE() void realtime_isr(uint8_t c);
 
+  // This routines is optimised at the assembly level, for fast execution path.
+
   ALWAYS_INLINE() void rx_isr() {
     uint8_t c = read_char();
+
+    if (!MIDI_IS_STATUS_BYTE(c)) {
+      if (live_state == midi_wait_sysex) {
+        sysex_rb_cache->put_h_isr(c);
+        return;
+      }
+      recvActiveSenseTimer = 0;
+      rxRb->put_h_isr(c);
+      return;
+    }
+    // Status byte - reset active sense timer
     recvActiveSenseTimer = 0;
+
     if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
       realtime_isr(c);
       return;
     }
-
-    switch (midi->live_state) {
+    switch (live_state) {
     case midi_wait_sysex:
-
-      if (MIDI_IS_STATUS_BYTE(c)) {
-        if (c != MIDI_SYSEX_END) {
-          midi->midiSysex->abort();
-          rxRb->put_h_isr(c);
-        } else {
-          midi->midiSysex->end_immediate();
-        }
-        midi->live_state = midi_wait_status;
+      if (c != MIDI_SYSEX_END) {
+        midi->midiSysex->abort();
+        rxRb->put_h_isr(c);
       } else {
-        // record
-        midi->midiSysex->handleByte(c);
+        midi->midiSysex->end_immediate();
       }
+      live_state = midi_wait_status;
       break;
 
     case midi_wait_status:
       if (c == MIDI_SYSEX_START) {
-        midi->live_state = midi_wait_sysex;
+        live_state = midi_wait_sysex;
         midi->midiSysex->reset();
         break;
       }
@@ -227,7 +240,12 @@ public:
     bool rs = 1;
   again:
 #endif
-    if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
+    if (!txRb_realtime->isEmpty_isr()) {
+      sendActiveSenseTimer = sendActiveSenseTimeout;
+      uint8_t c = txRb_realtime->get_h_isr();
+      write_char(c);
+    }
+    else if ((txRb_sidechannel != nullptr) && (in_message_tx == 0)) {
       // sidechannel mounted, and no active messages in normal channel
       // ==> flush the sidechannel now
       if (!txRb_sidechannel->isEmpty_isr()) {
@@ -307,7 +325,7 @@ public:
       goto again;
     }
 #endif
-    if (txRb->isEmpty_isr() && (txRb_sidechannel == nullptr)) {
+    if (txRb_realtime->isEmpty_isr() && txRb->isEmpty_isr() && (txRb_sidechannel == nullptr)) {
       clear_tx();
     }
   }
@@ -325,6 +343,12 @@ public:
     txRb->put_h_isr(c);
     set_tx();
   }
+
+  ALWAYS_INLINE() void m_putc_realtime(uint8_t c) {
+    txRb_realtime->put_h_isr(c);
+    set_tx();
+  }
+
 
 #ifdef DEBUGMODE
   // Stream pure functions

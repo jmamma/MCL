@@ -7,6 +7,7 @@
 #include "GridPages.h"
 #include "AuxPages.h"
 #include "MidiActivePeering.h"
+#include "MCLStrings.h"
 
 #define STATE_NOSTATE 0
 #define STATE_QUEUE 1
@@ -55,7 +56,6 @@ void RAMPage::init() {
   R.use_icons_knob();
 }
 
-void RAMPage::cleanup() { }
 void RAMPage::setup_sequencer(uint8_t track) {
 
   USE_LOCK();
@@ -452,26 +452,26 @@ void RAMPage::display() {
   oled_display.setCursor(28, 24);
   switch (RAMPage::rec_states[page_id]) {
   case STATE_QUEUE:
-    oled_display.print(F(" [Queue]"));
+    mcl_print_P(mclstr_queue_option);
     break;
   case STATE_RECORD:
-    oled_display.print(F(" [Record]"));
+    mcl_print_P(mclstr_record_option);
     break;
   case STATE_PLAY:
-    oled_display.print(F(" [Play]"));
+    mcl_print_P(mclstr_play_option);
     break;
   }
   oled_display.setFont(&TomThumb);
   oled_display.setCursor(0, 32);
 
-  oled_display.print(F("RAM "));
+  mcl_print_P(mclstr_ram_prefix);
   oled_display.print(page_id + 1);
 
   oled_display.setCursor(105, 32);
   if (mcl_cfg.ram_page_mode == 0) {
-    oled_display.print(F("MONO"));
+    mcl_print_P(mclstr_mono_option);
   } else {
-    oled_display.print(F("LINK"));
+    mcl_print_P(mclstr_link);
   }
   oled_display.setFont();
   oled_display.setCursor(0, 24);
@@ -517,24 +517,24 @@ void RAMPage::display() {
   }
   /*
     oled_display.print(encoders[1]->cur);
-    oled_display.print(F(" S:"));
+    mcl_print_P(mclstr_s_colon);
     oled_display.print(1 << encoders[2]->cur);
-    oled_display.print(F(" L:"));
+    mcl_print_P(mclstr_l_colon);
     oled_display.print(encoders[3]->cur * 4);
   */
   mcl_gui.draw_knob_frame();
-  mcl_gui.draw_knob(0, "SRC", source);
+  mcl_gui.draw_knob(0, mclstr_src, source);
 
   char val[4];
 
   mcl_gui.put_value_at(encoders[1]->cur, val);
-  mcl_gui.draw_knob(1, "DICE", val);
+  mcl_gui.draw_knob(1, mclstr_dice, val);
 
   mcl_gui.put_value_at(1 << encoders[2]->cur, val);
-  mcl_gui.draw_knob(2, "SLI", val);
+  mcl_gui.draw_knob(2, mclstr_sli, val);
 
   mcl_gui.put_value_at(encoders[3]->cur * 4, val);
-  mcl_gui.draw_knob(3, "LEN", val);
+  mcl_gui.draw_knob(3, mclstr_len, val);
 
   uint8_t w_x = 0, w_y = 2;
   oled_display.drawPixel(w_x + 24, w_y + 0, WHITE);
@@ -724,7 +724,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     }
 
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-      oled_display.textbox("DICE", "");
+      oled_display.textbox_P(mclstr_dice);
       RAMPage::slice_modes[page_id] = 1;
       if (mcl_cfg.ram_page_mode == MONO) {
         slice(14 + page_id, 255);
@@ -737,7 +737,7 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON4)) {
     no:
       RAMPage::slice_modes[page_id] = 0;
-      oled_display.textbox("SLICE", "");
+      oled_display.textbox_P(mclstr_slice);
       if (mcl_cfg.ram_page_mode == MONO) {
         if (!slice(14 + page_id, 255)) {
           setup_ram_play_mono(14 + page_id);

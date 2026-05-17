@@ -7,6 +7,7 @@
 
 #ifdef PLATFORM_TBD
 #include "Ui.h"
+#include "oled.h"
 #endif
 
 // Pin definitions - keeping original pins
@@ -112,18 +113,17 @@ void EncodersClass::poll(uint16_t sr) {
 
 void EncodersClass::pollTBD(const ui_data_t& ui_data) {
    for (uint8_t i = 0; i < GUI_NUM_ENCODERS && i < 4; i++) {
-        uint16_t current_pos = ui_data.pot_positions[i];
         volatile int8_t *val = &(ENCODER_NORMAL(i));
         volatile int8_t *button = &(ENCODER_BUTTON(i));
         *button = BUTTON_DOWN(i);
 
-        if (current_pos > pot_old_positions[i]) {
-          (*val)++;
+        // rev_c: use pot_states bits (BIT0=fwd, BIT1=bwd)
+        if (ui_data.pot_states[i] & (1 << 0)) {
+          if (*val < 64) (*val)++;
         }
-        if (current_pos < pot_old_positions[i]) {
-          (*val)--;
+        if (ui_data.pot_states[i] & (1 << 1)) {
+          if (*val > -64) (*val)--;
         }
-        pot_old_positions[i] = current_pos;
    }
 }
 
@@ -151,53 +151,37 @@ void ButtonsClass::poll(uint8_t but) {
     }
 }
 void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
-  //MCL Buttons
+  // rev_c button mapping
 
+  STORE_B_CURRENT(FUNC_BUTTON5, !(ui_data.mcl_btns & (1 << 11))); // m:0800 -> NO
+
+  STORE_B_CURRENT(BUTTON1, !(ui_data.mcl_btns & (1 << 7))); // m:0080
+  STORE_B_CURRENT(BUTTON2, !(ui_data.f_btns & (1 << 0))); // f:01
+
+  // f_btns: 2:POT1, 3:POT2, 4:POT3, 5:POT4 -> Encoder buttons
   for (uint8_t i = 0; i < 4; i++) {
-    bool state = ui_data.f_btns & (1 << i);
-    uint8_t button_id = BUTTON1 + i;
-    switch (button_id) {
-      case BUTTON1:
-      case BUTTON2:
-        break;
-      case BUTTON3:
-        button_id = BUTTON4;
-        break;
-      case BUTTON4:
-        button_id = BUTTON3;
-        break;
-    }
-    STORE_B_CURRENT(button_id, !state);
+    STORE_B_CURRENT(ENCODER1 + i, !(ui_data.f_btns & (1 << (i + 2))));
   }
 
-  for(int i=0;i<13;i++){
-    bool state = ui_data.mcl_btns & (1 << i);
-    bool long_press = ui_data.mcl_btns_long_press & (1 << i);
-    //9 Function Buttons
-    if (i < 9) {
-      //Arrow Key
-      uint8_t button_id = i + FUNC_BUTTON1;
-      if (button_id >= FUNC_BUTTON6) {
-          STORE_B_CURRENT(button_id, !state);
-        if (long_press) {
-          SET_B_LONG_CLICK(button_id);
-        }
-      }
-      else {
-        STORE_B_CURRENT(button_id, !state);
-      }
-    }
-    //4 Encoder Buttons
-    else {
-      STORE_B_CURRENT(i - 9 + ENCODER1, !state);
-    }
-  }
-  //Sequencer Buttons
-  for(int i=0;i<16;i++){
-     bool state = ui_data.d_btns & (1 << i);
-     STORE_B_CURRENT(i + TRIG_BUTTON1, !state);
-  }
+  // Direction buttons: LEFT=bit0, DOWN=bit1, RIGHT=bit2, UP=bit3
+  STORE_B_CURRENT(FUNC_BUTTON7, !(ui_data.mcl_btns & (1 << 0))); // LEFT
+  STORE_B_CURRENT(FUNC_BUTTON8, !(ui_data.mcl_btns & (1 << 1))); // DOWN
+  STORE_B_CURRENT(FUNC_BUTTON9, !(ui_data.mcl_btns & (1 << 2))); // RIGHT
+  STORE_B_CURRENT(FUNC_BUTTON6, !(ui_data.mcl_btns & (1 << 3))); // UP
 
+  // PLAY=bit8, REC=bit9, STOP=bit10
+  STORE_B_CURRENT(FUNC_BUTTON2, !(ui_data.mcl_btns & (1 << 8)));  // PLAY
+  STORE_B_CURRENT(FUNC_BUTTON1, !(ui_data.mcl_btns & (1 << 9)));  // REC
+  STORE_B_CURRENT(FUNC_BUTTON3, !(ui_data.mcl_btns & (1 << 10))); // STOP
+
+  STORE_B_CURRENT(BUTTON3, !(ui_data.mcl_btns & (1 << 4)));
+  STORE_B_CURRENT(BUTTON4, !(ui_data.mcl_btns & (1 << 6))); // m:0040
+
+  // Sequencer Buttons
+  for (int i = 0; i < 16; i++) {
+    bool state = ui_data.d_btns & (1 << i);
+    STORE_B_CURRENT(i + TRIG_BUTTON1, !state);
+  }
 }
 
 void GUIHardware::poll() {
@@ -216,7 +200,6 @@ void GUIHardware::poll() {
         GUI.events.pollEvents();
     }
 #else
-    //tbd_ui.Poll();
     if (tbd_ui.UpdateUIInputs()) {
       ui_data_t ui_data_current = tbd_ui.CopyUiData();
       if (ui_data_current.systicks != last_ui_systicks) {
@@ -255,6 +238,14 @@ void GUIHardware::init() {
     tbd_ui.InitLeds();
     tbd_ui.strip.show();
     tbd_ui.strip.setBrightness(5);
+    // Read initial button state to prevent spurious release events on boot
+    if (tbd_ui.UpdateUIInputs()) {
+      ui_data_t ui_data_current = tbd_ui.CopyUiData();
+      Buttons.clear();
+      Buttons.pollTBD(ui_data_current);
+      Encoders.pollTBD(ui_data_current);
+      last_ui_systicks = ui_data_current.systicks;
+    }
 #endif
 }
 

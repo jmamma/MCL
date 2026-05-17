@@ -12,6 +12,7 @@
 #include "A4.h"
 #include "MidiSetup.h"
 #include "Project.h"
+#include "MCLStrings.h"
 
 
 #include "GridPages.h"
@@ -141,7 +142,7 @@ void MCL::setup() {
     char value_str[4];
     mcl_gui.put_value_at(health, value_str);
     oled_display.init_display();
-    oled_display.textbox("HW ERROR:", value_str);
+    oled_display.textbox(mclstr_hw_error, value_str);
     oled_display.display();
     while (1);
   }
@@ -157,7 +158,7 @@ void MCL::setup() {
     }
   }
   if (!ret) {
-    oled_display.print(F("SD CARD ERROR :-("));
+    mcl_print_P(mclstr_sd_card_error);
     oled_display.display();
     delay(2000);
     return;
@@ -182,22 +183,12 @@ void MCL::setup() {
 
   note_interface.setup();
 
-  MD.midi_events.enable_live_kit_update();
+  configure_driver_ports();
 
   mcl_actions.setup();
   mcl_seq.setup();
 
-  MDSysexListener.setup(&Midi);
-
-  key_interface.setup(&Midi);
   key_interface.enable_listener();
-
-  md_track_select.setup(&Midi);
-
-#ifdef EXT_TRACKS
-  A4SysexListener.setup(&Midi2);
-  MNMSysexListener.setup(&Midi2);
-#endif
   perf_page.setup();
 
   grid_task.init();
@@ -211,7 +202,7 @@ void MCL::setup() {
 
   if (mcl_cfg.display_mirror == 1) {
 #ifndef DEBUGMODE
-    oled_display.textbox("DISPLAY ", "MIRROR");
+    oled_display.textbox_P(mclstr_display_mirror, mclstr_mirror);
     GUI.display_mirror = true;
 #endif
   }
@@ -224,13 +215,30 @@ void MCL::loop() {
   GUI.loop();
 }
 
+static bool tbd_rec_held = false;
+
 bool tbd_handleEvent(gui_event_t *event) {
+    // Track physical REC button state (unaffected by key_interface state resets)
+    if (EVENT_BUTTON(event) && event->source == ButtonsClass::FUNC_BUTTON1) {
+        tbd_rec_held = (event->mask == EVENT_BUTTON_PRESSED);
+    }
+
     // If button press is greater than 4, then we need to remap these as CMD
     if (EVENT_BUTTON(event) && event->source > ButtonsClass::BUTTON4) {
         uint8_t key = 255;
         // Handle trigger buttons with range check
         if (event->source >= ButtonsClass::TRIG_BUTTON1) {
             key = event->source - ButtonsClass::TRIG_BUTTON1; // MDX_KEY_TRIG1
+            // In grid page (no bank popup), trig buttons trigger drum sounds
+            if (mcl.currentPage() == GRID_PAGE && !grid_page.bank_popup) {
+                if (event->mask == EVENT_BUTTON_PRESSED && key < NUM_MD_TRACKS) {
+                    MD.triggerTrack(key, 127);
+                    mixer_page.trig(key);
+                    if (SeqPage::recording && MidiClock.state == 2) {
+                        mcl_seq.md_tracks[key].record_track(127);
+                    }
+                }
+            }
         }
         else {
            bool copy_mode = (key_interface.is_key_down(MDX_KEY_NO) ||
@@ -251,24 +259,22 @@ bool tbd_handleEvent(gui_event_t *event) {
                     key = copy_mode ? MDX_KEY_CLEAR : MDX_KEY_PLAY;
                     if (event->mask == EVENT_BUTTON_PRESSED) {
                       if (key == MDX_KEY_PLAY) {
-                         if (MidiClock.state == MidiClockClass::PAUSED) {
-                           MidiClock.handleImmediateMidiStart();
-                         }
-                         else if (MidiClock.state == MidiClockClass::STARTED) {
+                        if (tbd_rec_held) {
+                          // REC + PLAY: enable sequencer record mode, start clock if needed
+                          seq_step_page.enable_record();
+                          if (MidiClock.state != MidiClockClass::STARTED) {
+                            MidiClock.handleImmediateMidiStart();
+                          }
+                          key = 255;
+                        } else if (MidiClock.state == MidiClockClass::PAUSED) {
+                           MidiClock.handleImmediateMidiContinue();
+                        } else if (MidiClock.state == MidiClockClass::STARTED) {
                            MidiClock.handleImmediateMidiStop();
-                         }
+                        }
                       }
                     }
                     break;
                 case ButtonsClass::FUNC_BUTTON3:
-                    key = copy_mode ? MDX_KEY_PASTE : MDX_KEY_STOP;
-                    if (event->mask == EVENT_BUTTON_PRESSED) {
-                      if (key == MDX_KEY_STOP) {
-                         MidiClock.handleImmediateMidiStop();
-                      }
-                    }
-                    break;
-                case ButtonsClass::FUNC_BUTTON4:
                     key = MDX_KEY_YES;
                     break;
                 case ButtonsClass::FUNC_BUTTON5:
@@ -291,7 +297,36 @@ bool tbd_handleEvent(gui_event_t *event) {
             }
         }
         if (key != 255) {
-            key_interface.key_event(key, !(event->mask & 1));
+            bool is_release = !(event->mask & 1);
+            if (MD.connected && (key == MDX_KEY_UP || key == MDX_KEY_DOWN ||
+                                 key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT ||
+                                 key == MDX_KEY_YES || key == MDX_KEY_NO)) {
+                if (!is_release && key_interface.is_key_down(key)) {
+                    return true; // suppress key repeat
+                }
+                if (is_release) {
+                    switch (key) {
+                        case MDX_KEY_UP:    CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_up_arrow();                          break;
+                        case MDX_KEY_DOWN:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_down_arrow();                        break;
+                        case MDX_KEY_LEFT:  CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_left_arrow();                        break;
+                        case MDX_KEY_RIGHT: CLEAR_BIT64(key_interface.cmd_key_state, key); MD.release_right_arrow();                       break;
+                        case MDX_KEY_YES:   MD.release_yes_button(); break;
+                        case MDX_KEY_NO:    MD.release_no_button();  break;
+                        default: break;
+                    }
+                } else {
+                    switch (key) {
+                        case MDX_KEY_UP:    SET_BIT64(key_interface.cmd_key_state, key); MD.hold_up_arrow();    break;
+                        case MDX_KEY_DOWN:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_down_arrow();  break;
+                        case MDX_KEY_LEFT:  SET_BIT64(key_interface.cmd_key_state, key); MD.hold_left_arrow();  break;
+                        case MDX_KEY_RIGHT: SET_BIT64(key_interface.cmd_key_state, key); MD.hold_right_arrow(); break;
+                        case MDX_KEY_YES:   MD.press_yes_button();    break;
+                        case MDX_KEY_NO:    MD.press_no_button();     break;
+                    }
+                }
+                return true;
+            }
+            key_interface.key_event(key, is_release);
             return true;
         }
     }
@@ -393,6 +428,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         } else {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
+            GUI_hardware.led.rec_active = false;
             MD.set_rec_mode(mcl.currentPage() == SEQ_STEP_PAGE);
             clearLed2();
             key_interface.ignoreNextEvent(MDX_KEY_REC);
@@ -458,7 +494,7 @@ bool mcl_handleEvent(gui_event_t *event) {
              key_interface.is_key_down(MDX_KEY_NO)))
           break;
         opt_clear = 2;
-        //  MidiDevice *dev = midi_active_peering.get_device(UART2_PORT);
+        //  MidiDevice *dev = midi_active_peering.dev2;
         if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
         else if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;
@@ -524,7 +560,6 @@ void sdcard_bench() {
   DeviceTrack *ptrack;
   while (1) {
     uint16_t cl = read_clock_ms();
-    proj.select_grid(0);
     for (uint8_t n = 0; n < 16; n++) {
       auto *ptrack = empty_track.load_from_grid_512(n, 0);
       ptrack->init_track_type(MD_TRACK_TYPE);
@@ -533,8 +568,7 @@ void sdcard_bench() {
       if (ptrack) ptrack->store_in_mem(0);
       CLEAR_LOCK();
     }
-    proj.select_grid(1);
-    for (uint8_t n = 0; n < 16; n++) {
+    for (uint8_t n = 16; n < 32; n++) {
       auto *ptrack = empty_track.load_from_grid_512(n, 0);
       ptrack->init_track_type(A4_TRACK_TYPE);
       USE_LOCK();

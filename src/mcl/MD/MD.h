@@ -59,6 +59,8 @@ public:
    **/
   MDGlobalLight global;
 
+  virtual void setup_listeners();
+  virtual void cleanup_listeners();
   virtual bool probe();
   virtual void setup();
   virtual void init_grid_devices(uint8_t device_idx);
@@ -194,7 +196,6 @@ public:
    * as the channel settings and the trigger track settings stored in
    * the global variable.
    **/
-  void sendNoteOn(uint8_t track, uint8_t pitch, uint8_t velocity);
   void parallelTrig(uint16_t mask, MidiUartClass *uart_ = nullptr);
   void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartClass *uart_ = nullptr);
   /**
@@ -381,7 +382,9 @@ public:
   void hold_right_arrow();
   void release_right_arrow();
   void press_yes_button();
+  void release_yes_button();
   void press_no_button();
+  void release_no_button();
   void hold_scale_button();
   void release_scale_button();
   void toggle_scale_window();

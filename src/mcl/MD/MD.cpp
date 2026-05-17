@@ -6,6 +6,8 @@
 #include "MCLGUI.h"
 #include "MDTrackSelect.h"
 #include "SeqPages.h"
+#include "MCLStrings.h"
+#include "MidiActivePeering.h"
 
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
@@ -44,7 +46,7 @@ void MDMidiEvents::enable_live_kit_update() {
   if (kitupdate_state) {
     return;
   }
-  Midi.addOnControlChangeCallback(
+  MD.midi->addOnControlChangeCallback(
       this, (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
   kitupdate_state = true;
 }
@@ -54,7 +56,7 @@ void MDMidiEvents::disable_live_kit_update() {
   if (!kitupdate_state) {
     return;
   }
-  Midi.removeOnControlChangeCallback(
+  MD.midi->removeOnControlChangeCallback(
       this, (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
   kitupdate_state = false;
 }
@@ -89,6 +91,31 @@ const ElektronSysexProtocol md_protocol = {
 };
 
 MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
+
+void MDClass::setup_listeners() {
+  MDSysexListener.setup(midi);
+  key_interface.setup(midi);
+  md_track_select.setup(midi);
+  // MDSysexListener.setup() calls addSysexListener internally,
+  // but key_interface/md_track_select.setup() only set the sysex pointer.
+  // Re-register them here so cleanup_listeners() + setup_listeners() is symmetric.
+  if (midi && midi->midiSysex) {
+    midi->midiSysex->addSysexListener(&key_interface);
+    midi->midiSysex->addSysexListener(&md_track_select);
+  }
+  midi_events.enable_live_kit_update();
+}
+
+void MDClass::cleanup_listeners() {
+  midi_events.disable_live_kit_update();
+  // Remove sysex listeners from the current (old) sysex object
+  // before setPort() reassigns midi to the new port.
+  if (midi && midi->midiSysex) {
+    midi->midiSysex->removeSysexListener(&MDSysexListener);
+    midi->midiSysex->removeSysexListener(&key_interface);
+    midi->midiSysex->removeSysexListener(&md_track_select);
+  }
+}
 
 void MDClass::setup() {
   resetMidiMap();
@@ -209,8 +236,9 @@ bool MDClass::probe() {
   DEBUG_PRINTLN("md probe");
   connected = false;
 
-  // Begin main probe sequence
-  if (uart->device.getBlockingId(DEVICE_MD, UART1_PORT, CALLBACK_TIMEOUT)) {
+  // Begin main probe sequence — derive port from uart pointer
+  uint8_t probe_port = port;
+  if (uart->device.getBlockingId(DEVICE_MD, probe_port, CALLBACK_TIMEOUT)) {
     uint8_t count = 3;
 
     uint32_t fw_caps_mask =
@@ -228,12 +256,13 @@ bool MDClass::probe() {
     }
 
     if (((fw_caps & fw_caps_mask) != fw_caps_mask)) {
-      oled_display.textbox("UPGRADE ", "MACHINEDRUM");
+      oled_display.textbox_P(mclstr_upgrade, mclstr_machinedrum);
       oled_display.display();
       return false;
     }
 
-    turbo_light.set_speed(turbo_light.lookup_speed(mcl_cfg.uart1_turbo_speed), uart);
+    turbo_light.set_speed(turbo_light.lookup_speed(
+        (probe_port == UARTUSB_PORT) ? mcl_cfg.usb_turbo_speed : mcl_cfg.uart1_turbo_speed), uart);
     mcl_gui.delay_progress(100);
 
     //   if (mcl_cfg.clock_rec == 0) {
@@ -335,28 +364,18 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
 
 void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
                            MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
-
   if (global.drumMapping[track] != -1 && global.baseChannel != 127) {
-    uart_->sendNoteOn(global.baseChannel, global.drumMapping[track], velocity);
+    sendNoteOn(global.baseChannel, global.drumMapping[track], velocity, uart_);
   }
 }
 
 void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
                             MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t data[6] = {0x70, 0x3D, length, speed, step_count};
-  sendRequest(data, sizeof(data), uart_);
+  sendRequest(data, sizeof(data), true, uart_);
 }
 
 void MDClass::parallelTrig(uint16_t mask, MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t a;
   uint8_t b;
   uint8_t c;
@@ -366,9 +385,9 @@ void MDClass::parallelTrig(uint16_t mask, MidiUartClass *uart_) {
   c = mask >> 7 & 0xF7;
   b = mask & 0x7F;
 
-  uart_->sendNoteOn(global.baseChannel + 1, a, b);
+  sendNoteOn(global.baseChannel + 1, a, b, uart_);
   if (c > 0) {
-    uart_->sendNoteOn(global.baseChannel + 2, c, 0);
+    sendNoteOn(global.baseChannel + 2, c, 0, uart_);
   }
 }
 
@@ -398,9 +417,6 @@ void MDClass::setTrackParam(uint8_t track, uint8_t param, uint8_t value,
 void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
                                    MidiUartClass *uart_, bool update_kit) {
 
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 0;
@@ -425,9 +441,9 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     return;
   }
   if (update_kit) {
-    uart_->sendCC(channel + global.baseChannel, cc, value);
+    sendCC(channel + global.baseChannel, cc, value, uart_);
   } else {
-    uart_->sendPolyKeyPressure(channel + global.baseChannel, cc, value);
+    sendPolyKeyPressure(channel + global.baseChannel, cc, value, uart_);
   }
 }
 
@@ -476,9 +492,6 @@ uint8_t MDClass::setCompressorParams(uint8_t *values, bool send) {
 void MDClass::setFXParam(uint8_t param, uint8_t value, uint8_t type,
                          bool update_kit, MidiUartClass *uart_) {
 
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t len = 4;
   if (update_kit) {
     switch (type) {
@@ -498,7 +511,7 @@ void MDClass::setFXParam(uint8_t param, uint8_t value, uint8_t type,
     len = 3;
   }
   uint8_t data[4] = {type, param, value, 0x7F};
-  sendRequest(data, len);
+  sendRequest(data, len, true, uart_);
 }
 
 void MDClass::setEchoParam(uint8_t param, uint8_t value) {
@@ -563,19 +576,6 @@ uint8_t MDClass::trackGetPitch(uint8_t track, uint8_t pitch) {
   }
 
   return pgm_read_byte(&tuning->tuning[pitch - base]);
-}
-
-void MDClass::sendNoteOn(uint8_t track, uint8_t pitch, uint8_t velocity) {
-  uint8_t realPitch = trackGetPitch(track, pitch);
-  if (realPitch == 128)
-    return;
-  setTrackParam(track, 0, realPitch);
-  //  setTrackParam(track, 0, realPitch);
-  //  delay(20);
-  triggerTrack(track, velocity);
-  //  delay(20);
-  //  setTrackParam(track, 0, realPitch - 10);
-  //  triggerTrack(track, velocity);
 }
 
 void MDClass::sliceTrack32(uint8_t track, uint8_t from, uint8_t to,
@@ -778,7 +778,7 @@ void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_) {
   uint8_t b = (track_mask >> 7) & 0x7F;
   uint8_t c = (track_mask >> 14) & 0x7F;
   uint8_t data[5] = {0x70, 0x62, a, b, c};
-  sendRequest(data, countof(data), uart_);
+  sendRequest(data, countof(data), true, uart_);
 }
 
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
@@ -853,13 +853,10 @@ uint8_t MDClass::sendMachine(uint8_t track, MDMachine *machine, bool send_level,
 void MDClass::muteTrack(uint8_t track, bool mute, MidiUartClass *uart_) {
   if (global.baseChannel == 127)
     return;
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
   uint8_t channel = track >> 2;
   uint8_t b = track & 3;
   uint8_t cc = 12 + b;
-  uart_->sendCC(channel + global.baseChannel, cc, (uint8_t)mute);
+  sendCC(channel + global.baseChannel, cc, (uint8_t)mute);
 }
 
 void MDClass::setGlobal(uint8_t id) {
@@ -1023,12 +1020,10 @@ void MDClass::release_right_arrow() {
   send_gui_command(MD_GUI_RIGHTARROW, MD_GUI_CMD_OFF);
 }
 
-void MDClass::press_yes_button() {
-
-  send_gui_command(MD_GUI_YES, MD_GUI_CMD_ON);
-}
-
+void MDClass::press_yes_button() { send_gui_command(MD_GUI_YES, MD_GUI_CMD_ON); }
+void MDClass::release_yes_button() { send_gui_command(MD_GUI_YES, MD_GUI_CMD_OFF); }
 void MDClass::press_no_button() { send_gui_command(MD_GUI_NO, MD_GUI_CMD_ON); }
+void MDClass::release_no_button() { send_gui_command(MD_GUI_NO, MD_GUI_CMD_OFF); }
 
 void MDClass::hold_scale_button() {
 

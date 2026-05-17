@@ -6,13 +6,14 @@
 #include "GUI.h"
 #include "MIDISds.h"
 #include "DSP.h"
+#include "MCLStrings.h"
 
 #ifdef WAV_DESIGNER
 #define WAV_NAME "WAVE.wav"
 
 void WavDesigner::prompt_send() {
   //  if (mcl_gui.wait_for_confirm("Send Sample", "Overwrite sample slot?")) {
-  oled_display.textbox("Render", "");
+  oled_display.textbox_P(mclstr_render);
   oled_display.display();
   //Order of statements important for directory switching.
   mcl.pushPage(SAMPLE_BROWSER);
@@ -30,7 +31,7 @@ void WavDesigner::prompt_send() {
   DEBUG_PRINTLN("cleaning up");
   sample_browser.file.close();
   mcl.setPage(WD_MIXER_PAGE);
-  oled_display.textbox("Sending..","");
+  oled_display.textbox_P(mclstr_sending);
   oled_display.display();
   wd.send();
 }
@@ -84,7 +85,7 @@ bool WavDesigner::render() {
   uint16_t buffer[256];
   uint16_t samples_so_far = 0;
 
-  int16_t largest_sample_so_far = 0;
+  int32_t largest_sample_so_far = 0;
   // Render each sample
   uint32_t pos = 0;
   bool write_header = false;
@@ -103,53 +104,46 @@ bool WavDesigner::render() {
 
     // Render each oscillator
     for (uint8_t i = 0; i < 3; i++) {
+      OscPage* page = &pages[i];  // Cache pointer to current page
       float osc_sample = 0;
-      switch (pages[i].get_osc_type()) {
+      switch (page->get_osc_type()) {
       case 0:
-        osc_sample += 0;
+        // osc_sample = 0; // Already initialized
         break;
       // Sine wave with 16 overtones.
-      case 1:
-        for (uint8_t h = 1; h <= 16; h++) {
-          // osc_sample += sine_gain * sine_osc.get_sample(n,
-          // pages[i].get_freq() * (float) h, 0);
-          if (pages[i].sine_levels[h - 1] != 0) {
-            float sine_gain =
-                ((float)pages[i].sine_levels[h - 1]) * max_sine_gain;
-
-            osc_sample +=
-                sine_osc.get_sample(n, pages[i].get_freq() * (float)h) *
-                sine_gain;
+      case 1: {
+        float freq = page->get_freq();  // Cache frequency
+        float largest_peak = page->largest_sine_peak;
+        if (largest_peak != 0) {
+          for (uint8_t h = 1; h <= 16; h++) {
+            uint8_t sine_level = page->sine_levels[h - 1];
+            if (sine_level != 0) {
+              float sine_gain = sine_level * max_sine_gain;
+              osc_sample += sine_osc.get_sample(n, freq * (float)h) * sine_gain;
+            }
           }
+          osc_sample *= (1.00f / largest_peak);
         }
-        if (wd.pages[i].largest_sine_peak == 0) {
-          osc_sample = 0;
-        } else {
-          osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
-        }
-        // DEBUG_PRINTLN(osc_sample);
         break;
+      }
       case 2:
-        tri_osc.width = pages[i].get_width();
-        osc_sample += tri_osc.get_sample(n, pages[i].get_freq());
+        tri_osc.width = page->get_width();
+        osc_sample = tri_osc.get_sample(n, page->get_freq());
         break;
       case 3:
-        pulse_osc.width = pages[i].get_width();
-        osc_sample += pulse_osc.get_sample(n, pages[i].get_freq());
+        pulse_osc.width = page->get_width();
+        osc_sample = pulse_osc.get_sample(n, page->get_freq());
         break;
       case 4:
-        saw_osc.width = pages[i].get_width();
-        osc_sample += saw_osc.get_sample(n, pages[i].get_freq());
+        saw_osc.width = page->get_width();
+        osc_sample = saw_osc.get_sample(n, page->get_freq());
         break;
       case 5:
-        osc_sample +=
-            usr_osc.get_sample(n, pages[i].get_freq(), pages[i].usr_values);
+        osc_sample = usr_osc.get_sample(n, page->get_freq(), page->usr_values);
         break;
       }
       // Sum oscillator samples together
-      sample +=
-          dsp.saturate((osc_sample * mixer.get_gain(i)), mixer.get_max_gain());
-      // DEBUG_PRINTLN(mixer.get_gain(i));
+      sample += dsp.saturate(osc_sample * mixer.get_gain(i), mixer.get_max_gain());
     }
     // Check for overflow outside of int16_t ranges.
     DEBUG_PRINTLN(sample);
@@ -165,9 +159,9 @@ bool WavDesigner::render() {
     // Need to correctly convert from float to int
     int16_t out_sample;
     if (sample > 0) {
-      out_sample = (int16_t)(sample + 0.5);
+      out_sample = (int16_t)(sample + 0.5f);
     } else {
-      out_sample = (int16_t)(sample - 0.5);
+      out_sample = (int16_t)(sample - 0.5f);
     }
     DEBUG_PRINTLN(out_sample);
     buffer[samples_so_far] = out_sample;

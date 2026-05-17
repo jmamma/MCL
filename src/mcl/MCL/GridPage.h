@@ -5,6 +5,7 @@
 #include "GridRowHeader.h"
 #include "GUI.h"
 #include "MCL.h"
+#include "MCLStrings.h"
 
 #define MAX_VISIBLE_ROWS 4
 #define MAX_VISIBLE_COLS 8
@@ -27,7 +28,7 @@ public:
   uint8_t row = 0;
   uint8_t cur_col = 0;
   uint8_t cur_row = 0;
-  uint8_t old_col = 0;
+  uint8_t old_col = 255;
   uint8_t display_name = 0;
   uint8_t bank = 0;
 
@@ -38,7 +39,7 @@ public:
 
   uint8_t active_slots[NUM_SLOTS];
 
-  uint8_t grid_select_apply;
+  uint8_t cur_grid = 0;
   uint8_t slot_clear;
 
   uint8_t slot_apply;
@@ -91,7 +92,6 @@ public:
   void setup();
   void cleanup();
   void init();
-  bool swap_grids();
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
   void load_old_col();

@@ -11,6 +11,7 @@
 
 #define UART1_PORT 1
 #define UART2_PORT 2
+#define UARTUSB_PORT 3
 
 class MidiActivePeering : public Task {
 public:
@@ -24,10 +25,17 @@ public:
   virtual void destroy(){};
 
   /**
-   * Gets the device connected to the port.
+   * Gets the device connected to the physical port.
    * Always return a non-null pointer (could be a NullMidiDevice*).
    **/
   MidiDevice *get_device(uint8_t port);
+
+  /** Cached device pointers for logical driver slots, USB-resolved. */
+  MidiDevice *dev1;
+  MidiDevice *dev2;
+
+  /** Refresh dev1/dev2 from connected_midi_devices + USB routing. */
+  void update_dev_cache();
 };
 
 class GenericMidiDevice : public MidiDevice {

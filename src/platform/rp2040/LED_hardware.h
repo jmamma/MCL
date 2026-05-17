@@ -10,6 +10,7 @@
 #define STRIP_BLACK COLOR(0, 0, 0)
 #define STRIP_LED1 16
 #define STRIP_LED2 17
+#define STRIP_LED3 18  // step-edit indicator
 
 // #define STRIP_LED1 tbd_ui.rgb_led_fbtn_map[2]
 // #define STRIP_LED2 tbd_ui.rgb_led_fbtn_map[1]
@@ -28,14 +29,16 @@ private:
   uint32_t led_flash_start_time[32];
   uint32_t last_render_state;
   uint32_t blink_last_trigger_time;
+  bool last_blink_hint;
 
 public:
   TrigLEDMode current_led_mode;
   bool updateLeds;
+  bool rec_active;
   LEDHardware()
       : led_base_state(0), led_blink_mask(0), led_flash_mask(0),
         last_render_state(0), blink_last_trigger_time(0), updateLeds(true),
-        current_led_mode(TRIGLED_OVERLAY) {
+        current_led_mode(TRIGLED_OVERLAY), last_blink_hint(false), rec_active(false) {
     memset(led_flash_start_time, 0, sizeof(led_flash_start_time));
   }
 
@@ -48,6 +51,8 @@ public:
   void reset_trigleds() {
      clear_trigleds();
      current_led_mode = TRIGLED_OVERLAY;
+     CLEAR_BIT32(led_base_state, STRIP_LED3);
+     updateLeds = true;
   }
   void setPixelColor(uint32_t n, uint32_t c, bool update = true);
   void show();

@@ -120,8 +120,8 @@ void MDTrack::init() {
 
 void MDTrack::load_seq_data(SeqTrack *seq_track) {
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
-
-  memcpy(md_seq_track->data(), seq_data.data(), sizeof(seq_data));
+  uint8_t *dest = md_seq_track->data();
+  memcpy(dest, seq_data.data(), sizeof(seq_data));
   load_link_data(seq_track);
   md_seq_track->clear_mutes();
   md_seq_track->set_length(md_seq_track->length);

@@ -8,19 +8,23 @@
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
 #define TX_SEQBUF_SIZE 0x200UL
+#define RT_BUF_SIZE 0x08UL
 
 #define UART1_RX_BUFFER_LEN RX_BUF_SIZE
 #define UART1_TX_BUFFER_LEN TX_BUF_SIZE
+#define UART1_RT_BUFFER_LEN RT_BUF_SIZE
 
 #define UART2_RX_BUFFER_LEN RX_BUF_SIZE
 #define UART2_TX_BUFFER_LEN TX_BUF_SIZE
+#define UART2_RT_BUFFER_LEN RT_BUF_SIZE
 
 #define UARTUSB_RX_BUFFER_LEN RX_BUF_SIZE
 #define UARTUSB_TX_BUFFER_LEN TX_BUF_SIZE
+#define UARTUSB_RT_BUFFER_LEN RT_BUF_SIZE
 
-#define SYSEX1_DATA_LEN 0x1830UL //6KB
-#define SYSEX2_DATA_LEN 0x1830UL //6KB
-#define SYSEXUSB_DATA_LEN 0x1830UL //6KB
+#define SYSEX1_DATA_LEN 0x1800UL //6KB
+#define SYSEX2_DATA_LEN 0x1800UL //6KB
+#define SYSEXUSB_DATA_LEN 0x1800UL //6KB
 
 #define MCL_MEMORY_USE_ARRAYS 1
 
@@ -48,6 +52,11 @@ FORCED_INLINE() extern inline void memcpy_bank1(volatile void *dst, volatile con
 }
 
 FORCED_INLINE() extern inline void put_byte_bank1(volatile uint8_t *dst, uint8_t byte) {
+  *dst = byte;
+}
+
+// ISR-optimized version (on RP2040, same as regular put_byte_bank1 since no memory banks)
+FORCED_INLINE() extern inline void put_byte_bank1_isr(volatile uint8_t *dst, uint8_t byte) {
   *dst = byte;
 }
 

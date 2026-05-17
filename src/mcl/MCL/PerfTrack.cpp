@@ -4,13 +4,12 @@
 #include "MCLActions.h"
 #include "MDTrack.h"
 
-void PerfTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-  DEBUG_PRINTLN("transition send");
-}
-
 void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                   uint8_t slotnumber) {
   DEBUG_PRINTLN("transition send");
+  if (seq_track) {
+    seq_track->cache_loaded = false;
+  }
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
   if (mcl_actions.send_machine[slotnumber]) {
     load_perf(false, seq_track);
@@ -103,28 +102,7 @@ void PerfTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_perf(true, seq_track);
 }
 
-bool PerfTrack::store_in_grid(uint8_t column, uint16_t row,
-                                 SeqTrack *seq_track, uint8_t merge,
-                                 bool online, Grid *grid) {
-  active = PERF_TRACK_TYPE;
-  bool ret;
-  int b = 0;
-  DEBUG_PRINT_FN();
-  uint32_t len;
-
-  if (column != 255 && online == true) {
-    get_perf();
-    if (merge == SAVE_MD) {
-      link.length = MD.pattern.patternLength;
-      link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-    }
-  }
-
-  ret = write_grid(_this(), _sizeof(), column, row, grid);
-
-  if (!ret) {
-    DEBUG_PRINTLN(F("write failed"));
-    return false;
-  }
-  return true;
+void PerfTrack::get_online_data(uint8_t merge) {
+  get_perf();
+  update_link_from_pattern(merge);
 }

@@ -2,6 +2,7 @@
 #include "LFO.h"
 #include "MidiClock.h"
 #include "MD.h"
+#include "MCLSeq.h"
 
 uint8_t LFOSeqTrack::wav_tables[4][WAV_LENGTH];
 
@@ -163,11 +164,11 @@ void LFOSeqTrack::reset_params() {
     uint8_t wav_value = get_param_offset(dest, i);
     if (dest >= NUM_MD_TRACKS + 4) {
       uint8_t channel = dest - (NUM_MD_TRACKS + 4);
-      MidiUart2.sendCC(channel, param, wav_value);
+      mcl_seq.ext_uart->sendCC(channel, param, wav_value);
     } else if (dest >= NUM_MD_TRACKS) {
-      MD.setFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS, false, &MidiUart);
+      MD.setFXParam(param, wav_value, MD_FX_ECHO + dest - NUM_MD_TRACKS, false, mcl_seq.md_uart);
     } else {
-      MD.setTrackParam(dest, param, wav_value, &MidiUart);
+      MD.setTrackParam(dest, param, wav_value, mcl_seq.md_uart);
     }
   }
 }

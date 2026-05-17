@@ -6,6 +6,10 @@
 #include "GUI.h"
 #include "Menu.h"
 #include "MCLGfx.h"
+#include "MCLStrings.h"
+
+// Forward declaration for mcl_print_P used in template
+void mcl_print_P(const char* str_P);
 
 #ifdef OLED_DISPLAY
 #define MAX_VISIBLE_ROWS 4
@@ -31,13 +35,11 @@ public:
   void draw_menu(uint8_t x_offset, uint8_t y_offset,
                  uint8_t width = MENU_WIDTH);
   void select_item(uint8_t item = 0) {
-  cur_row = 0;
-  encoders[1]->cur = 0;
-  encoders[1]->old = 0;
+    cur_row = 0;
+    encoders[1]->cur = item;
   }
   void loop();
   virtual void display();
-  void setup();
   void init();
   bool enter();
   void exit();
@@ -88,7 +90,7 @@ public:
 #else
     uint16_t checksum_value = firmware_checksum;
 #endif
-    oled_display.print("0x");
+    mcl_print_P(mclstr_hex_prefix);
     oled_display.print(checksum_value,HEX);
   }
 

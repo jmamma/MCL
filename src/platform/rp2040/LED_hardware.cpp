@@ -2,6 +2,7 @@
 #include "global.h"
 #include "helpers.h"
 #include "platform.h"
+#include "MidiClock.h"
 
 #ifdef PLATFORM_TBD
 #include "Ui.h"
@@ -37,6 +38,15 @@ void LEDHardware::show() {
     flash_mask >>= 1;
   }
 
+  // REC button LED blink hint (only when live recording active)
+  if (rec_active) {
+    bool hint = MidiClock.getBlinkHint(true);
+    if (hint != last_blink_hint) {
+      last_blink_hint = hint;
+      updateLeds = true;
+    }
+  }
+
   if (final_render_state != last_render_state) {
     updateLeds = true;
   }
@@ -52,7 +62,7 @@ void LEDHardware::show() {
         id = tbd_ui.rgb_led_fbtn_map[2];
       }
       if (i == STRIP_LED2) {
-        id = tbd_ui.rgb_led_fbtn_map[1];
+        id = tbd_ui.rgb_led_fbtn_map[1]; // restored original mapping
       }
 
       if (id < 255) {
@@ -60,6 +70,11 @@ void LEDHardware::show() {
       }
       final_render_state >>= 1;
     }
+
+    // REC button LED (fbtn_map[0]): live record blink takes priority over step-edit
+    bool rec_led_on = rec_active ? last_blink_hint
+                                 : (bool)((led_base_state >> STRIP_LED3) & 1);
+    setPixelColor(tbd_ui.rgb_led_fbtn_map[0], rec_led_on ? STRIP_RED : STRIP_BLACK, false);
 
     tbd_ui.strip.show();
     updateLeds = false;
@@ -69,6 +84,11 @@ void LEDHardware::show() {
 void LEDHardware::set_trigleds(uint16_t bitmask, TrigLEDMode mode, bool blink,
                         bool update) {
   current_led_mode = mode;
+  if (mode == TRIGLED_STEPEDIT) {
+    SET_BIT32(led_base_state, STRIP_LED3);
+  } else {
+    CLEAR_BIT32(led_base_state, STRIP_LED3);
+  }
   if (blink) {
     led_blink_mask = (led_blink_mask & 0xFFFF0000) | bitmask;
   } else {

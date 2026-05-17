@@ -10,26 +10,40 @@
 #define RX_BUF_SIZE 0x80UL
 #define TX_BUF_SIZE 0x0C00UL
 #define TX_SEQBUF_SIZE 0x200UL
+#define RT_BUF_SIZE 0x08UL
 
+// UART0 (USB) buffers
 #define BANK1_UART0_RX_BUFFER_START 0x2200UL
 #define UART0_RX_BUFFER_LEN (RX_BUF_SIZE)
 
 #define BANK1_UART0_TX_BUFFER_START (BANK1_UART0_RX_BUFFER_START + UART0_RX_BUFFER_LEN)
 #define UART0_TX_BUFFER_LEN (TX_BUF_SIZE)
 
-#define BANK1_UART1_RX_BUFFER_START (BANK1_UART0_TX_BUFFER_START + UART0_TX_BUFFER_LEN)
+#define BANK1_UART0_RT_BUFFER_START (BANK1_UART0_TX_BUFFER_START + UART0_TX_BUFFER_LEN)
+#define UART0_RT_BUFFER_LEN (RT_BUF_SIZE)
+
+// UART1 buffers
+#define BANK1_UART1_RX_BUFFER_START (BANK1_UART0_RT_BUFFER_START + UART0_RT_BUFFER_LEN)
 #define UART1_RX_BUFFER_LEN (RX_BUF_SIZE)
 
 #define BANK1_UART1_TX_BUFFER_START (BANK1_UART1_RX_BUFFER_START + UART1_RX_BUFFER_LEN)
 #define UART1_TX_BUFFER_LEN (TX_BUF_SIZE)
 
-#define BANK1_UART2_RX_BUFFER_START (BANK1_UART1_TX_BUFFER_START + UART1_TX_BUFFER_LEN)
+#define BANK1_UART1_RT_BUFFER_START (BANK1_UART1_TX_BUFFER_START + UART1_TX_BUFFER_LEN)
+#define UART1_RT_BUFFER_LEN (RT_BUF_SIZE)
+
+// UART2 buffers
+#define BANK1_UART2_RX_BUFFER_START (BANK1_UART1_RT_BUFFER_START + UART1_RT_BUFFER_LEN)
 #define UART2_RX_BUFFER_LEN (RX_BUF_SIZE)
 
 #define BANK1_UART2_TX_BUFFER_START (BANK1_UART2_RX_BUFFER_START + UART2_RX_BUFFER_LEN)
 #define UART2_TX_BUFFER_LEN (TX_BUF_SIZE)
 
-#define BANK1_UARTSEQ_TX1_BUFFER_START (BANK1_UART2_TX_BUFFER_START + UART2_TX_BUFFER_LEN)
+#define BANK1_UART2_RT_BUFFER_START (BANK1_UART2_TX_BUFFER_START + UART2_TX_BUFFER_LEN)
+#define UART2_RT_BUFFER_LEN (RT_BUF_SIZE)
+
+// UART sequencer buffers
+#define BANK1_UARTSEQ_TX1_BUFFER_START (BANK1_UART2_RT_BUFFER_START + UART2_RT_BUFFER_LEN)
 #define UART1_UARTSEQ_TX1_BUFFER_LEN (TX_SEQBUF_SIZE)
 
 #define BANK1_UARTSEQ_TX2_BUFFER_START (BANK1_UARTSEQ_TX1_BUFFER_START + TX_SEQBUF_SIZE)
@@ -41,40 +55,18 @@
 #define BANK1_UARTSEQ_TX4_BUFFER_START (BANK1_UARTSEQ_TX3_BUFFER_START + TX_SEQBUF_SIZE)
 #define UART1_UARTSEQ_TX4_BUFFER_LEN (TX_SEQBUF_SIZE)
 
+// Sysex data buffers
 #define BANK1_SYSEX1_DATA_START (BANK1_UARTSEQ_TX4_BUFFER_START + TX_SEQBUF_SIZE)
-#define SYSEX1_DATA_LEN 0x1830UL //6KB
+#define SYSEX1_DATA_LEN 0x1800UL //6KB
 
 #define BANK1_SYSEX2_DATA_START (BANK1_SYSEX1_DATA_START + SYSEX1_DATA_LEN)
-#define SYSEX2_DATA_LEN 0x1830UL //6KB
+#define SYSEX2_DATA_LEN 0x1800UL //6KB
 
 #define BANK1_SYSEX3_DATA_START (BANK1_SYSEX2_DATA_START + SYSEX2_DATA_LEN)
-#define SYSEX3_DATA_LEN 0x1830UL //6KB
+#define SYSEX3_DATA_LEN 0x1800UL //6KB
 
 #define BANK3_START 0x0000
 #define BANK3_END 0x2000
-
-/* definition to expand macro then apply to pragma message */
-#define VALUE_TO_STRING(x) #x
-#define VALUE(x) VALUE_TO_STRING(x)
-#define VAR_NAME_VALUE(var) #var "="  VALUE(var)
-
-/*
-#pragma message (VAR_NAME_VALUE(RX_BUF_SIZE))
-#pragma message (VAR_NAME_VALUE(TX_BUF_SIZE))
-#pragma message (VAR_NAME_VALUE(BANK1_UART1_RX_BUFFER_START))
-#pragma message (VAR_NAME_VALUE(UART1_RX_BUFFER_LEN))
-#pragma message (VAR_NAME_VALUE(BANK1_UART1_TX_BUFFER_START))
-#pragma message (VAR_NAME_VALUE(UART1_TX_BUFFER_LEN))
-#pragma message (VAR_NAME_VALUE(BANK1_UART2_RX_BUFFER_START))
-#pragma message (VAR_NAME_VALUE(UART2_RX_BUFFER_LEN))
-#pragma message (VAR_NAME_VALUE(BANK1_UART2_TX_BUFFER_START))
-#pragma message (VAR_NAME_VALUE(UART2_TX_BUFFER_LEN))
-#pragma message (VAR_NAME_VALUE(BANK1_SYSEX1_DATA_START))
-#pragma message (VAR_NAME_VALUE(SYSEX1_DATA_LEN))
-#pragma message (VAR_NAME_VALUE(BANK1_SYSEX2_DATA_START))
-#pragma message (VAR_NAME_VALUE(SYSEX2_DATA_LEN))
-*/
-
 #include "memorybank.h"
 
 #ifdef __cplusplus
@@ -98,6 +90,14 @@ class RamBankSelector {
   FORCED_INLINE() ~RamBankSelector() { switch_ram_bank_noret(m_oldbank); }
 };
 
+class RamBankSelectorFast {
+  private:
+  uint8_t m_oldbank;
+  public:
+  FORCED_INLINE() RamBankSelectorFast() { m_oldbank = switch_ram_bank_fast(); }
+  FORCED_INLINE() ~RamBankSelectorFast() { switch_ram_bank_noret_fast(m_oldbank); }
+};
+
 class RamAccessFringe {
   uint8_t irqlock_tmp;
   public:
@@ -117,6 +117,7 @@ class RamAccessFringe {
 
 #define ram_access_fringe() RamAccessFringe __ram_access_fringe
 #define select_bank(x) RamBankSelector __bank_selector(x)
+#define select_bank_fast() RamBankSelectorFast __bank_selector_fast
 
 template<typename T>
 FORCED_INLINE() extern inline T get_bank1(volatile T *dst) {
@@ -149,6 +150,13 @@ FORCED_INLINE() extern inline uint8_t get_byte_bank1(volatile uint8_t *dst) {
   select_bank(BANK1);
   uint8_t c = *dst;
   return c;
+}
+
+// Fast ISR-optimized bank1 byte write (assumes currently in BANK0)
+FORCED_INLINE() extern inline void put_byte_bank1_isr(volatile uint8_t *dst, uint8_t byte) {
+  BANK_PORT |= BANK_MASK;  // Switch to BANK1
+  *dst = byte;
+  BANK_PORT &= ~BANK_MASK; // Switch back to BANK0
 }
 
 

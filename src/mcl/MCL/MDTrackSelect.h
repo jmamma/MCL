@@ -6,6 +6,10 @@
 #include "MidiSysex.h"
 class MidiClass;
 
+// Track Select Protocol (F0 7F 0E ... F7)
+// This handles legacy track select messages only.
+// Machine updates and kit loaded now use Elektron sysex format (0x63, 0x54)
+
 class MDTrackSelect : public MidiSysexListenerClass {
 
 public:
@@ -24,6 +28,9 @@ public:
   virtual void start();
   virtual void end();
   void cleanup();
+
+  // Message handlers
+  void handle_track_select_legacy(uint8_t len);
   /* @} */
 };
 

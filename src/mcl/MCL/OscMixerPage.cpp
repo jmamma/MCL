@@ -6,15 +6,13 @@
 
 #ifdef WAV_DESIGNER
 
-void OscMixerPage::setup() {}
-
 void OscMixerPage::init() {
   WavDesignerPage::init();
   key_interface.off();
   wavdesign_menu_page.menu.enable_entry(1, false);
   wavdesign_menu_page.menu.enable_entry(2, true);
 }
-void OscMixerPage::cleanup() { }
+void OscMixerPage::cleanup() {}
 
 bool OscMixerPage::handleEvent(gui_event_t *event) {
   if (WavDesignerPage::handleEvent(event)) {
@@ -39,7 +37,7 @@ void OscMixerPage::display() {
     oled_display.setCursor(0, 0);
     oled_display.fillRect(0, 0, 64, 32, BLACK);
 
-    oled_display.print(F("OSC MIXER"));
+    mcl_print_P(mclstr_osc_mixer);
     draw_levels();
     scanline_width = 4;
     draw_wav();
@@ -114,7 +112,7 @@ void OscMixerPage::draw_wav() {
                 sine_osc.get_sample(n, freqs[i] * (float)f) * sine_gain;
           }
         }
-        osc_sample = (1.00 / wd.pages[i].largest_sine_peak) * osc_sample;
+        osc_sample = (1.00f / wd.pages[i].largest_sine_peak) * osc_sample;
         break;
       case 2:
         tri_osc.width = wd.pages[i].get_width();

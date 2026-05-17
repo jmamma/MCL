@@ -32,10 +32,9 @@ public:
   uint8_t s_progress_cookie = 0b00110011;
   uint8_t s_progress_count = 0;
 
-  void put_value_at(uint8_t value, char *str);
-  void put_value_at2(uint8_t value, char *str);
+  void put_value_at(uint8_t value, char *str, bool fixed = false);
+  void put_value_at2(uint8_t value, char *str) { put_value_at(value, str, true); }
 
-  void draw_textbox(const char *text, const char *text2);
   void wait_for_project();
   bool wait_for_input(char *dst, const char *title, uint8_t len);
   void draw_vertical_dashline(uint8_t x, uint8_t from = 1, uint8_t to = 32);
@@ -75,16 +74,21 @@ public:
 
   bool show_encoder_value(Encoder *encoder, int timeout = SHOW_VALUE_TIMEOUT);
 
+  void draw_cross(uint8_t x, uint8_t y, uint8_t color = WHITE);
+
   void draw_text_encoder(uint8_t x, uint8_t y, const char *name,
-                         const char *value, bool highlight = false);
+                         const char *value, bool highlight = false,
+                         bool name_is_progmem = true);
   void draw_md_encoder(uint8_t x, uint8_t y, Encoder *encoder,
                        const char *name);
   void draw_md_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,
-                       bool show_value);
+                       bool show_value, bool name_is_progmem = true);
   void draw_light_encoder(uint8_t x, uint8_t y, Encoder *encoder,
-                          const char *name, bool highlight = false);
-  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name, bool highlight = false,
-                          bool show_value = false);
+                          const char *name, bool highlight = false,
+                          bool name_is_progmem = true);
+  void draw_light_encoder(uint8_t x, uint8_t y, uint8_t value, const char *name,
+                          bool highlight = false, bool show_value = false,
+                          bool name_is_progmem = true);
   void draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
                      uint8_t note_height, uint8_t num_of_notes,
                      uint64_t *note_mask);
@@ -101,8 +105,10 @@ public:
   void draw_panel_number(uint8_t number);
 
   void draw_knob_frame();
-  void draw_knob(uint8_t i, const char *title, const char *text);
-  void draw_knob(uint8_t i, Encoder *enc, const char *name, bool highlight = false);
+  void draw_knob(uint8_t i, const char *title, const char *text,
+                 bool title_is_progmem = true);
+  void draw_knob(uint8_t i, Encoder *enc, const char *name,
+                 bool highlight = false, bool title_is_progmem = true);
 
   void drawRoundRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t color);
 
@@ -174,6 +180,10 @@ public:
 };
 
 extern MCLGUI mcl_gui;
+
+// Helper function for printing PROGMEM strings
+void mcl_print_P(const char* str_P);
+void mcl_println_P(const char* str_P);
 
 // 'encoder0', 11x11px
 extern const unsigned char encoder_small_0[];

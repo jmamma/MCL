@@ -4,6 +4,26 @@
 
 #define SYSEX_RETRIES 1
 
+void ElektronHelper::beginSysexEncode(ElektronDataToSysexEncoder *encoder,
+                                       uint8_t *hdr, uint8_t hdr_size,
+                                       uint8_t msg_id, uint8_t version,
+                                       uint8_t origPosition) {
+  encoder->stop7Bit();
+  encoder->begin();
+  encoder->pack(hdr, hdr_size);
+  encoder->pack8(msg_id);
+  encoder->pack8(version);
+  encoder->pack8(0x01); // revision
+  encoder->startChecksum();
+  encoder->pack8(origPosition);
+}
+
+uint16_t ElektronHelper::finishSysexEncode(ElektronDataToSysexEncoder *encoder) {
+  uint16_t enclen = encoder->finish();
+  encoder->finishChecksum();
+  return enclen + 5;
+}
+
 void MidiDevice::add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, GridDeviceTrack *gdt) {
   proj.grids[grid_idx].add_track(track_idx, gdt);
 }
@@ -17,9 +37,11 @@ uint8_t *MidiDevice::gif_data() { return R.icons_logo->midi_gif_data; }
 MCLGIF *MidiDevice::gif() { return R.icons_logo->midi_gif; }
 
 uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, MidiUartClass *uart_) {
-   if (!send) {
+    if (!send) {
         return len + sysex_protocol.header_size + 2;
     }
+
+    if (!connected && !in_probe) { return 0; }
 
     uart_ = uart_ ? uart_ : uart;
 
@@ -39,6 +61,38 @@ uint16_t ElektronDevice::sendRequest(uint8_t *data, uint8_t len, bool send, Midi
 
     return i;
 }
+
+void MidiDevice::sendNoteOff(uint8_t channel, uint8_t note, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendNoteOff(channel,note);
+}
+
+void MidiDevice::sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendNoteOn(channel,note,velocity);
+}
+
+void MidiDevice::sendCC(uint8_t channel, uint8_t cc, uint8_t value, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendCC(channel,cc,value);
+}
+
+void MidiDevice::sendPolyKeyPressure(uint8_t channel, uint8_t cc, uint8_t value, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendPolyKeyPressure(channel,cc,value);
+}
+
+void MidiDevice::sendNRPN(uint8_t channel, uint16_t parameter, uint16_t value, MidiUartClass *uart_) {
+    if (!connected) { return; }
+    uart_ = uart_ ? uart_ : uart;
+    uart_->sendNRPN(channel,parameter,value);
+}
+
+
 /*
   if (uart_ == nullptr) { uart_ = uart; }
 
@@ -251,6 +305,25 @@ void ElektronDevice::popup_text(char *str, uint8_t persistent) {
   uint8_t len = strlen(str);
   strcpy((char*) (data + 3), str);
   sendRequest(data, 3 + len + 1);
+  // waitBlocking();
+}
+
+void ElektronDevice::popup_text_P(const char *str_P, uint8_t persistent) {
+  uint8_t data[67] = {0x70, 0x3B, persistent};
+  uint8_t len = strlen_P(str_P);
+  strcpy_P((char*) (data + 3), str_P);
+  sendRequest(data, 3 + len + 1);
+  // waitBlocking();
+}
+
+void ElektronDevice::popup_text_P(const char *str1_P, const char *str2_P, uint8_t persistent) {
+  uint8_t data[67] = {0x70, 0x3B, persistent};
+  uint8_t len1 = strlen_P(str1_P);
+  uint8_t len2 = strlen_P(str2_P);
+  strcpy_P((char*) (data + 3), str1_P);
+  data[3 + len1] = ' ';
+  strcpy_P((char*) (data + 3 + len1 + 1), str2_P);
+  sendRequest(data, 3 + len1 + 1 + len2 + 1);
   // waitBlocking();
 }
 

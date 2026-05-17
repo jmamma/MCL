@@ -113,11 +113,12 @@ void KeyInterface::key_event(uint8_t key, bool key_release) {
     return;
   }
 
+  uint8_t md_port = MD.port;
   if (key < 16) {
     if (key_release) {
-      note_interface.note_off_event(key, UART1_PORT);
+      note_interface.note_off_event(key, md_port);
     } else {
-      note_interface.note_on_event(key, UART1_PORT);
+      note_interface.note_on_event(key, md_port);
     }
     return;
   }
@@ -131,7 +132,7 @@ void KeyInterface::key_event(uint8_t key, bool key_release) {
     event.source = key; // EVENT_CMD
   }
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
-  event.port = UART1_PORT;
+  event.port = md_port;
   GUI.putEvent(&event);
 }
 

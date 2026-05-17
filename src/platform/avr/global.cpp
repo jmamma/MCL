@@ -25,16 +25,19 @@ uint8_t (*seq_tx4_buf)[TX_SEQBUF_SIZE] = (uint8_t(*)[TX_SEQBUF_SIZE])BANK1_UARTS
 // UART1 buffer pointers
 uint8_t (*uart1_rx_buf)[UART1_RX_BUFFER_LEN] = (uint8_t(*)[UART1_RX_BUFFER_LEN])BANK1_UART1_RX_BUFFER_START;
 uint8_t (*uart1_tx_buf)[UART1_TX_BUFFER_LEN] = (uint8_t(*)[UART1_TX_BUFFER_LEN])BANK1_UART1_TX_BUFFER_START;
+uint8_t (*uart1_rt_buf)[UART1_RT_BUFFER_LEN] = (uint8_t(*)[UART1_RT_BUFFER_LEN])BANK1_UART1_RT_BUFFER_START;
 uint8_t (*uart1_sysex_buf)[SYSEX1_DATA_LEN] = (uint8_t(*)[SYSEX1_DATA_LEN])BANK1_SYSEX1_DATA_START;
 
 // UART2 buffer pointers
 uint8_t (*uart2_rx_buf)[UART2_RX_BUFFER_LEN] = (uint8_t(*)[UART2_RX_BUFFER_LEN])BANK1_UART2_RX_BUFFER_START;
 uint8_t (*uart2_tx_buf)[UART2_TX_BUFFER_LEN] = (uint8_t(*)[UART2_TX_BUFFER_LEN])BANK1_UART2_TX_BUFFER_START;
+uint8_t (*uart2_rt_buf)[UART2_RT_BUFFER_LEN] = (uint8_t(*)[UART2_RT_BUFFER_LEN])BANK1_UART2_RT_BUFFER_START;
 uint8_t (*uart2_sysex_buf)[SYSEX2_DATA_LEN] = (uint8_t(*)[SYSEX2_DATA_LEN])BANK1_SYSEX2_DATA_START;
 
 // UART USB buffer pointers
 uint8_t (*uartusb_rx_buf)[UART0_RX_BUFFER_LEN] = (uint8_t(*)[UART0_RX_BUFFER_LEN])BANK1_UART0_RX_BUFFER_START;
 uint8_t (*uartusb_tx_buf)[UART0_TX_BUFFER_LEN] = (uint8_t(*)[UART0_TX_BUFFER_LEN])BANK1_UART0_TX_BUFFER_START;
+uint8_t (*uartusb_rt_buf)[UART0_RT_BUFFER_LEN] = (uint8_t(*)[UART0_RT_BUFFER_LEN])BANK1_UART0_RT_BUFFER_START;
 uint8_t (*uartusb_sysex_buf)[SYSEX3_DATA_LEN] = (uint8_t(*)[SYSEX3_DATA_LEN])BANK1_SYSEX3_DATA_START;
 
 // Sequencer ring buffers
@@ -46,14 +49,17 @@ RingBuffer<uint8_t> seq_tx4_rb(*seq_tx4_buf, TX_SEQBUF_SIZE);
 // UART ring buffers
 RingBuffer<uint8_t> uart1_rx_rb(*uart1_rx_buf, UART1_RX_BUFFER_LEN);
 RingBuffer<uint8_t> uart1_tx_rb(*uart1_tx_buf, UART1_TX_BUFFER_LEN);
+RingBuffer<uint8_t> uart1_rt_rb(*uart1_rt_buf, UART1_RT_BUFFER_LEN);
 RingBuffer<uint8_t> uart1_sysex_rb(*uart1_sysex_buf, SYSEX1_DATA_LEN);
 
 RingBuffer<uint8_t> uart2_rx_rb(*uart2_rx_buf, UART2_RX_BUFFER_LEN);
 RingBuffer<uint8_t> uart2_tx_rb(*uart2_tx_buf, UART2_TX_BUFFER_LEN);
+RingBuffer<uint8_t> uart2_rt_rb(*uart2_rt_buf, UART2_RT_BUFFER_LEN);
 RingBuffer<uint8_t> uart2_sysex_rb(*uart2_sysex_buf, SYSEX2_DATA_LEN);
 
 RingBuffer<uint8_t> uartusb_rx_rb(*uartusb_rx_buf, UART0_RX_BUFFER_LEN);
 RingBuffer<uint8_t> uartusb_tx_rb(*uartusb_tx_buf, UART0_TX_BUFFER_LEN);
+RingBuffer<uint8_t> uartusb_rt_rb(*uartusb_rt_buf, UART0_RT_BUFFER_LEN);
 RingBuffer<uint8_t> uartusb_sysex_rb(*uartusb_sysex_buf, SYSEX3_DATA_LEN);
 
 // MIDI UART instances
@@ -62,9 +68,9 @@ MidiUartClass seq_tx2(nullptr, nullptr, &seq_tx2_rb);
 MidiUartClass seq_tx3(nullptr, nullptr, &seq_tx3_rb);
 MidiUartClass seq_tx4(nullptr, nullptr, &seq_tx4_rb);
 
-MidiUartClass MidiUart(&UDR1, &uart1_rx_rb, &uart1_tx_rb);
-MidiUartClass MidiUart2(&UDR2, &uart2_rx_rb, &uart2_tx_rb);
-MidiUartClass MidiUartUSB(&UDR0, &uartusb_rx_rb, &uartusb_tx_rb);
+MidiUartClass MidiUart(&UDR1, &uart1_rx_rb, &uart1_tx_rb, &uart1_rt_rb);
+MidiUartClass MidiUart2(&UDR2, &uart2_rx_rb, &uart2_tx_rb, &uart2_rt_rb);
+MidiUartClass MidiUartUSB(&UDR0, &uartusb_rx_rb, &uartusb_tx_rb, &uartusb_rt_rb);
 
 // Sysex instances
 MidiSysexClass MidiSysex(&MidiUart, &uart1_sysex_rb);

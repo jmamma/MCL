@@ -22,8 +22,8 @@ void MenuPageBase::init() {
     cur_row = 0;
   }
 
-  ((MCLEncoder *)encoders[0])->max =
-      get_menu()->get_option_range(encoders[1]->cur) - 1;
+  uint8_t range = get_menu()->get_option_range(encoders[1]->cur);
+  ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
   ((MCLEncoder *)encoders[0])->min =
       get_menu()->get_option_min(encoders[1]->cur);
 
@@ -41,9 +41,10 @@ void MenuPageBase::gen_menu_device_names() {
       (menu_option_t *)R.Allocate(sizeof(menu_option_t) * NUM_DEVS);
   m->set_custom_options(p,0);
 
+  MidiDevice *devs[] = { midi_active_peering.dev1, midi_active_peering.dev2 };
   for (uint8_t n = 0; n < NUM_DEVS; n++) {
     p->pos = n + 1;
-    strcpy(p->name, midi_active_peering.get_device(n + 1)->name);
+    strcpy(p->name, devs[n]->name);
     p++;
   }
 }
@@ -105,8 +106,6 @@ void MenuPageBase::gen_menu_row_names() {
   }
 }
 
-void MenuPageBase::setup() {}
-
 void MenuPageBase::cleanup() {
   key_interface.ignoreNextEventClear(MDX_KEY_YES);
   key_interface.ignoreNextEventClear(MDX_KEY_NO);
@@ -115,8 +114,8 @@ void MenuPageBase::cleanup() {
 void MenuPageBase::loop() {
 
   if (encoders[1]->hasChanged()) {
-    ((MCLEncoder *)encoders[0])->max =
-        get_menu()->get_option_range(encoders[1]->cur) - 1;
+    uint8_t range = get_menu()->get_option_range(encoders[1]->cur);
+    ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
     ((MCLEncoder *)encoders[0])->min =
         get_menu()->get_option_min(encoders[1]->cur);
 
@@ -164,7 +163,7 @@ void MenuPageBase::draw_item(uint8_t item_n, uint8_t row) {
   uint8_t number_of_options = get_menu()->get_number_of_options(item_n);
   if (get_menu()->get_option_range(item_n) > 0) {
 
-    oled_display.print(F(" "));
+    mcl_print_P(mclstr_space);
     uint8_t *pdest = get_menu()->get_dest_variable(item_n);
     const char *option_name = get_menu()->get_option_name(item_n, *pdest);
     if (option_name == NULL) {

@@ -23,7 +23,7 @@ class LoadQueue {
   void init() {
     rd = 0;
     wr = 0;
-    bool full = false;
+    full = false;
   }
 
   void put(uint8_t mode, uint8_t *row_select, uint8_t offset = 255) {

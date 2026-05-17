@@ -260,9 +260,9 @@ public:
     clock_last_time = read_clock();
     div192th_countdown = 0;
 
-    if (uart_clock_forward1) { uart_clock_forward1->sendRaw(0xF8); }
-    if (uart_clock_forward2) { uart_clock_forward2->sendRaw(0xF8); }
-    if (uart_clock_forward3) { uart_clock_forward3->sendRaw(0xF8); }
+    if (uart_clock_forward1) { uart_clock_forward1->sendRealtime(0xF8); }
+    if (uart_clock_forward2) { uart_clock_forward2->sendRealtime(0xF8); }
+    if (uart_clock_forward3) { uart_clock_forward3->sendRealtime(0xF8); }
 
     incrementCounters();
     if ((step_counter == 1) && (state == STARTED)) {
@@ -412,6 +412,7 @@ public:
 
     state = STARTING;
     onMidiStartImmediateCallbacks.call(div96th_counter);
+    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_START); }
 
     DEBUG_PRINTLN(F("START"));
   }
@@ -421,6 +422,7 @@ public:
     if (uart_transport_forward1) { uart_transport_forward1->sendRaw(MIDI_STOP); }
     if (uart_transport_forward2) { uart_transport_forward2->sendRaw(MIDI_STOP); }
     if (uart_transport_forward3) { uart_transport_forward3->sendRaw(MIDI_STOP); }
+    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_STOP); }
     //  init();
   }
 
@@ -433,6 +435,7 @@ public:
     state = STARTED;
 
     isInit = false;
+    if (uart_transport_recv1) { uart_transport_recv1->rxRb->put_h_isr(MIDI_CONTINUE); }
     //  init();
   }
 

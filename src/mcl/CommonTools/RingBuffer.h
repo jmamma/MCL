@@ -69,7 +69,12 @@ public:
             return;
         }
 #endif
-        put_bank1(&buf[wr], c);
+        // Use optimized ISR bank switching for byte buffers
+        if constexpr (sizeof(T) == 1) {
+            put_byte_bank1_isr((volatile uint8_t*)&buf[wr], c);
+        } else {
+            put_bank1(&buf[wr], c);
+        }
         wr++;
         if (wr == len) {
             wr = 0;

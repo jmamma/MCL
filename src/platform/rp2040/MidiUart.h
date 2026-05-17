@@ -49,9 +49,11 @@ private:
 public:
   // Ring buffers with compile-time sizes
   int8_t in_message_tx;
+
   volatile RingBuffer<> *rxRb;
   volatile RingBuffer<> *txRb;
   volatile RingBuffer<> *txRb_sidechannel;
+  volatile RingBuffer<> *txRb_realtime;
 
 #ifdef RUNNING_STATUS_OUT
   uint8_t running_status;
@@ -59,7 +61,7 @@ public:
 #endif
 
   MidiUartClass(uart_inst_t *uart_hw, RingBuffer<> *_rxRb = nullptr,
-                RingBuffer<> *_txRb = nullptr);
+                RingBuffer<> *_txRb = nullptr, RingBuffer<> *_txRb_realtime = nullptr);
 
   void realtime_isr(uint8_t c);
   void rx_isr();
@@ -95,6 +97,14 @@ public:
       }
     }
   }
+
+  ALWAYS_INLINE() void m_putc_realtime(uint8_t c) {
+    LOCK();
+    txRb_realtime->put_h_isr(c);
+    tx_flush();
+    CLEAR_LOCK();
+  }
+
   ALWAYS_INLINE() void m_putc(uint8_t *src, uint16_t size) {
     LOCK();
     txRb->put_h_isr(src, size);
@@ -116,12 +126,25 @@ class MidiUartUSBClass : public MidiUartClass {
 public:
   Adafruit_USBD_MIDI usb_midi;
   bool usb_ready;
+  bool in_sysex;
+
+  // TX packetization state
+  bool tx_in_sysex;
+  uint8_t tx_data_cnt;
+  int8_t tx_message_len;
+  uint8_t tx_packet[4];
+
 
   MidiUartUSBClass(uart_inst_t *uart_hw, RingBuffer<> *_rxRb = nullptr,
-                   RingBuffer<> *_txRb = nullptr)
-      : MidiUartClass(uart_hw, _rxRb, _txRb) {
+                   RingBuffer<> *_txRb = nullptr, RingBuffer<> *_txRb_realtime = nullptr)
+      : MidiUartClass(uart_hw, _rxRb, _txRb, _txRb_realtime) {
 
     usb_ready = false;
+    in_sysex = false;
+    tx_in_sysex = false;
+    tx_data_cnt = 0;
+    tx_message_len = -1;
+    memset(tx_packet, 0, 4);
   }
 
   void init() {
@@ -142,11 +165,20 @@ public:
     if (!usb_ready)
       return;
      if (mutex_try_enter(&__usb_mutex, nullptr)) {
-  //     tud_task();
+       if (!__get_current_exception()) { tud_task(); }
        receive();
        flush();
        mutex_exit(&__usb_mutex);
      }
+  }
+
+  void m_putc_immediate(uint8_t c) {
+    // Route through ring buffer to avoid state machine conflicts with flush()
+    m_putc(c);
+  }
+
+  void set_speed(uint32_t speed) {
+    // No-op for USB MIDI — speed is fixed by USB
   }
 
   void receive() {
@@ -154,6 +186,7 @@ public:
     uint8_t packet[4];
 
     while (usb_midi.readPacket(packet)) {
+      recvActiveSenseTimer = 0;
       uint8_t cin = packet[0] & 0x0F;
       uint8_t len;
 
@@ -186,43 +219,201 @@ public:
         continue;
       }
 
-      // Put the actual MIDI bytes into the ring buffer
-      for (uint8_t i = 0; i < len; i++) {
-        if (rxRb)
-          rxRb->put_h_isr(packet[i + 1]);
+      // Handle sysex via CIN codes, non-sysex via rxRb
+      switch (cin) {
+      case 0x4: // SysEx Start or Continue
+        for (uint8_t j = 1; j <= 3; j++) {
+          uint8_t c = packet[j];
+          if (c == MIDI_SYSEX_START) {
+            midi->midiSysex->reset();
+            in_sysex = true;
+          } else {
+            midi->midiSysex->handleByte(c);
+          }
+        }
+        continue;
+      case 0x5: // SysEx ends with 1 byte (F7)
+        if (in_sysex) {
+          midi->midiSysex->end_immediate();
+          in_sysex = false;
+        }
+        continue;
+      case 0x6: // SysEx ends with 2 bytes (data + F7)
+        if (in_sysex) {
+          midi->midiSysex->handleByte(packet[1]);
+          midi->midiSysex->end_immediate();
+          in_sysex = false;
+        }
+        continue;
+      case 0x7: // SysEx ends with 3 bytes (data + data + F7)
+        if (in_sysex) {
+          midi->midiSysex->handleByte(packet[1]);
+          midi->midiSysex->handleByte(packet[2]);
+          midi->midiSysex->end_immediate();
+          in_sysex = false;
+        }
+        continue;
+      case 0xF: // Single Byte — macOS may send mid-sysex data with this CIN
+        if (packet[1] == 0xF0) {
+          midi->midiSysex->reset();
+          in_sysex = true;
+          continue;
+        }
+        if (in_sysex) {
+          if (packet[1] == 0xF7) {
+            midi->midiSysex->end_immediate();
+            in_sysex = false;
+          } else if (!MIDI_IS_STATUS_BYTE(packet[1])) {
+            midi->midiSysex->handleByte(packet[1]);
+          }
+          continue;
+        }
+        break;
+      default:
+        break;
       }
 
-      // Handle realtime messages immediately
-      if (packet[1] >= 0xF8) {
-        handle_realtime_message(packet[1]);
+      // Non-sysex: route to rxRb
+      for (uint8_t i = 0; i < len; i++) {
+        uint8_t c = packet[i + 1];
+        if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+          handle_realtime_message(c);
+        } else {
+          rxRb->put_h_isr(c);
+        }
       }
     }
   }
 
-  void flush() {
+  bool flush_byte(uint8_t c) {
+    // Realtime bytes: send immediately as CIN 0xF
+    if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+      uint8_t pkt[4] = {0x0F, c, 0, 0};
+      return usb_midi.writePacket(pkt);
+    }
 
+    if (MIDI_IS_STATUS_BYTE(c)) {
+      tx_message_len = -1;
+      if (c < 0xF0) {
+        // Channel voice messages
+        tx_in_sysex = false;
+        switch (c & 0xF0) {
+        case 0x80: tx_packet[0] = 0x08; tx_message_len = 2; break; // Note Off
+        case 0x90: tx_packet[0] = 0x09; tx_message_len = 2; break; // Note On
+        case 0xA0: tx_packet[0] = 0x0A; tx_message_len = 2; break; // Poly Aftertouch
+        case 0xB0: tx_packet[0] = 0x0B; tx_message_len = 2; break; // CC
+        case 0xC0: tx_packet[0] = 0x0C; tx_message_len = 1; break; // Program Change
+        case 0xD0: tx_packet[0] = 0x0D; tx_message_len = 1; break; // Channel Pressure
+        case 0xE0: tx_packet[0] = 0x0E; tx_message_len = 2; break; // Pitch Bend
+        }
+      } else {
+        // System common
+        switch (c) {
+        case 0xF0: // SysEx Start
+          tx_packet[0] = 0x04;
+          tx_in_sysex = true;
+          tx_data_cnt = 0;
+          tx_packet[1] = c;
+          tx_data_cnt++;
+          return true;
+        case 0xF7: // SysEx End
+          if (!tx_in_sysex) break;
+          // End packet CIN depends on how many data bytes buffered
+          if (tx_data_cnt == 0) {
+            uint8_t pkt[4] = {0x05, 0xF7, 0, 0};
+            if (!usb_midi.writePacket(pkt)) return false;
+          } else if (tx_data_cnt == 1) {
+            tx_packet[0] = 0x06;
+            tx_packet[2] = 0xF7;
+            tx_packet[3] = 0;
+            if (!usb_midi.writePacket(tx_packet)) return false;
+          } else { // tx_data_cnt == 2
+            tx_packet[0] = 0x07;
+            tx_packet[3] = 0xF7;
+            if (!usb_midi.writePacket(tx_packet)) return false;
+          }
+          tx_in_sysex = false;
+          tx_data_cnt = 0;
+          return true;
+        case 0xF1: // MTC Quarter Frame
+          tx_packet[0] = 0x02; tx_message_len = 1; break;
+        case 0xF2: // Song Position
+          tx_packet[0] = 0x03; tx_message_len = 2; break;
+        case 0xF3: // Song Select
+          tx_packet[0] = 0x02; tx_message_len = 1; break;
+        default:   // Tune Request, etc
+          tx_packet[0] = 0x05;
+          tx_in_sysex = false;
+          tx_data_cnt = 0;
+          tx_message_len = 0;
+          break;
+        }
+      }
+      tx_data_cnt = 0;
+      if (tx_message_len >= 0) {
+        tx_in_sysex = false;
+        tx_packet[1] = c;
+        tx_packet[2] = 0;
+        tx_packet[3] = 0;
+        tx_data_cnt++;
+        if (tx_message_len == 0) {
+          tx_data_cnt = 0;
+          return usb_midi.writePacket(tx_packet);
+        }
+      }
+      return true;
+    }
+
+    // Data byte
+    if (tx_in_sysex) {
+      tx_packet[1 + tx_data_cnt] = c;
+      tx_data_cnt++;
+      if (tx_data_cnt == 3) {
+        tx_packet[0] = 0x04; // SysEx continue
+        if (!usb_midi.writePacket(tx_packet)) {
+          tx_data_cnt--; // undo; byte will be re-peeked
+          return false;
+        }
+        tx_data_cnt = 0;
+      }
+      return true;
+    }
+
+    if (tx_message_len > 0) {
+      tx_packet[1 + tx_data_cnt] = c;
+      tx_data_cnt++;
+      tx_message_len--;
+      if (tx_message_len == 0) {
+        if (!usb_midi.writePacket(tx_packet)) {
+          tx_data_cnt--;
+          tx_message_len++;
+          return false;
+        }
+        tx_data_cnt = 0;
+      }
+    }
+    return true;
+  }
+
+  void flush() {
     // Process side channel first - takes precedence
     if (txRb_sidechannel && in_message_tx == 0) {
       while (!txRb_sidechannel->isEmpty()) {
         uint8_t c = txRb_sidechannel->peek();
-        uint8_t packet[4] = {0x05, c, 0, 0};
-
-        if (!usb_midi.writePacket(packet)) {
+        if (!flush_byte(c)) {
           return;
         }
-        txRb_sidechannel->get(); // Only advance if send succeeded
+        txRb_sidechannel->get();
       }
     }
 
     // Only process main TX buffer if sidechannel is empty
     while (txRb && !txRb->isEmpty()) {
       uint8_t c = txRb->peek();
-      uint8_t packet[4] = {0x05, c, 0, 0};
-
-      if (!usb_midi.writePacket(packet)) {
+      if (!flush_byte(c)) {
         break;
       }
-      txRb->get(); // Only advance if send succeeded
+      txRb->get();
     }
   }
 

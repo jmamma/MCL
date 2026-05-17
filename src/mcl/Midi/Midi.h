@@ -56,8 +56,6 @@ class MidiClass {
 
 public:
   midi_state_t in_state;
-  midi_state_t live_state; // state used for MIDI messages received on UART (not
-                           // processed by loop)
   uint8_t last_status;
   uint8_t running_status;
   uint8_t in_msg_len;

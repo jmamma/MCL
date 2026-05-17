@@ -199,16 +199,16 @@ void LFOPage::display() {
     }
     x = mcl_gui.knob_x0 + 2;
     oled_display.setCursor(x + 5, 6);
-    oled_display.print(F("WAV"));
+    mcl_print_P(mclstr_wav_label);
 
-    draw_knob(1, encoders[1], "SPD");
-    draw_knob(2, encoders[2], "DEP1");
-    draw_knob(3, encoders[3], "DEP2");
+    draw_knob(1, encoders[1], mclstr_spd);
+    draw_knob(2, encoders[2], mclstr_dep1);
+    draw_knob(3, encoders[3], mclstr_dep2);
     info2 = "LFO>MOD";
   }
   else { //if (page_mode == LFO_OFFSET) {
-    draw_knob(2, encoders[2], "OFS1");
-    draw_knob(3, encoders[3], "OFS2");
+    draw_knob(2, encoders[2], mclstr_ofs1);
+    draw_knob(3, encoders[3], mclstr_ofs2);
     info2 = "LFO>OFS";
   }
 

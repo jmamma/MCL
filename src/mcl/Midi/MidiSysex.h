@@ -61,7 +61,7 @@ public:
 
 class MidiSysexClass {
 protected:
-  bool recording;
+  volatile bool recording;
   uint8_t recvIds[3];
   bool sysexLongId;
 
@@ -125,8 +125,20 @@ public:
     ledger[msg_wr].state = SYSEX_STATE_REC;
   }
 
-  ALWAYS_INLINE() void stopRecord() {
+  __attribute__((noinline)) void stopRecord() {
     recording = false;
+
+    // Calculate recordLen from buffer positions (deferred from per-byte increment)
+    volatile uint8_t *start = ledger[msg_wr].ptr;
+    volatile uint8_t *end = rb->buf + rb->wr;
+
+    if (end >= start) {
+      ledger[msg_wr].recordLen = end - start;
+    } else {
+      // Wrapped around the ring buffer
+      ledger[msg_wr].recordLen = (rb->buf + rb->len - start) + (end - rb->buf);
+    }
+
     ledger[msg_wr].state = SYSEX_STATE_FIN;
     msg_wr++;
     if (msg_wr == NUM_SYSEX_MSGS) {
@@ -162,7 +174,8 @@ public:
 
   ALWAYS_INLINE() void recordByte(uint8_t c) {
     putByte(c);
-    ledger[msg_wr].recordLen++;
+    // Removed per-byte recordLen increment - now calculated in stopRecord()
+    // Saves ~40 cycles per byte from avoiding packed 14-bit field manipulation
   }
 
   void initSysexListeners() {

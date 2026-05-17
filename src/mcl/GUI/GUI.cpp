@@ -74,13 +74,17 @@ bool GuiClass::handleTopEvent(gui_event_t *event) {
   return false;
 }
 
+void GuiClass::wake_screen_saver() {
+  if (screen_saver) { oled_display.wake(); screen_saver = false; }
+}
+
 void GuiClass::loop() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
 
   while (!events.isEmpty()) {
     g_clock_minutes = 0;
-    if (screen_saver) { oled_display.wake(); screen_saver = false; }
+    wake_screen_saver();
     gui_event_t event;
     events.getEvent(&event);
 

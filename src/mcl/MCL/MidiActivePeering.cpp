@@ -69,6 +69,8 @@ static MidiUartClass *_getMidiUart(uint8_t port) {
   else if (port == UART2_PORT)
     ret = &MidiUart2;
 #endif
+  else if (port == UARTUSB_PORT)
+    ret = &MidiUartUSB;
   return ret;
 }
 
@@ -81,7 +83,15 @@ static MidiClass *_getMidiClass(uint8_t port) {
   else if (port == UART2_PORT)
     ret = &Midi2;
 #endif
+  else if (port == UARTUSB_PORT)
+    ret = &MidiUSB;
   return ret;
+}
+
+static uint8_t portToLogicalIdx(uint8_t port) {
+  if (port == UARTUSB_PORT)
+    return (mcl_cfg.usb_device >= 2) ? 1 : 0;
+  return port - 1;
 }
 
 static bool resource_loaded = false;
@@ -90,7 +100,7 @@ static void prepare_display(uint8_t *buf) {
   oled_display.clearDisplay();
   oled_display.setFont();
   oled_display.setCursor(60, 10);
-  oled_display.println("Peering...");
+  mcl_println_P(mclstr_peering);
   if (!resource_loaded) {
     R.Clear();
     R.use_icons_device();
@@ -113,7 +123,8 @@ static MidiDevice *generic_drivers[] = {
     &generic_midi_device,
 };
 
-static MidiDevice *connected_midi_devices[2] = {&null_midi_device,
+static MidiDevice *connected_midi_devices[3] = {&null_midi_device,
+                                                &null_midi_device,
                                                 &null_midi_device};
 
 void MidiActivePeering::disconnect(uint8_t port) {
@@ -125,23 +136,43 @@ void MidiActivePeering::disconnect(uint8_t port) {
   }
   MidiDevice **drivers;
   uint8_t nr_drivers = 1;
+  uint8_t device_idx;
   if (port == UART1_PORT) {
     drivers = port1_drivers;
-  } else {
+    device_idx = 0;
+  } else if (port == UART2_PORT) {
     drivers = port2_drivers;
     nr_drivers = 3;
+    device_idx = 1;
+  } else if (port == UARTUSB_PORT) {
+    // USB port can host either port1 or port2 drivers
+    drivers = port1_drivers;
+    nr_drivers = 1;
+    device_idx = portToLogicalIdx(port);
+    // Also try port2 drivers
+    for (size_t i = 0; i < countof(port2_drivers); ++i) {
+      if (port2_drivers[i]->connected) {
+        if (midi_active_peering.get_device(port)->asElektronDevice()) {
+          turbo_light.set_speed(0, pmidi);
+        }
+        port2_drivers[i]->disconnect(device_idx);
+      }
+    }
+  } else {
+    return;
   }
   for (size_t i = 0; i < nr_drivers; ++i) {
     if (drivers[i]->connected) {
       if (midi_active_peering.get_device(port)->asElektronDevice()) {
         turbo_light.set_speed(0, pmidi);
       }
-      drivers[i]->disconnect(port - 1);
+      drivers[i]->disconnect(device_idx);
     }
   }
 }
 
 void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
+  if (port < 1 || port > 3) return;
   MidiDevice **connected_dev;
 
   connected_dev = &connected_midi_devices[port - 1];
@@ -153,9 +184,10 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
     pmidi->device.set_name(driver->name);
     pmidi->device.set_id(driver->id);
   }
-  driver->init_grid_devices(port - 1);
+  driver->init_grid_devices(portToLogicalIdx(port));
 
   *connected_dev = driver;
+  update_dev_cache();
 }
 
 static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
@@ -166,8 +198,8 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
     return;
   uint8_t id = pmidi->device.get_id();
   oled_display.setTextColor(WHITE, BLACK);
-  if (id != DEVICE_NULL && pmidi->recvActiveSenseTimer > 300 &&
-      pmidi->speed > 31250) {
+  if (id != DEVICE_NULL && port != UARTUSB_PORT &&
+      pmidi->recvActiveSenseTimer > 300 && pmidi->speed > 31250) {
 
     if ((port == UART1_PORT && MidiClock.uart_clock_recv == pmidi) ||
         (port == UART2_PORT && MidiClock.uart_clock_recv == pmidi)) {
@@ -179,7 +211,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
     DEBUG_PRINTLN("disconnecting");
     for (size_t i = 0; i < nr_drivers; ++i) {
       if (drivers[i]->connected)
-        drivers[i]->disconnect(port - 1);
+        drivers[i]->disconnect(portToLogicalIdx(port));
     }
     // reset MidiID to none
     pmidi->device.init();
@@ -201,7 +233,9 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       for (uint8_t probe_retry = 0; probe_retry < 6 && !probe_success;
            ++probe_retry) {
         DEBUG_PRINTLN("probing...");
+        drivers[i]->in_probe = true;
         probe_success = drivers[i]->probe();
+        drivers[i]->in_probe = false;
       } // for retries
 
       MidiIDSysexListener.cleanup();
@@ -210,7 +244,7 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
       if (probe_success) {
         pmidi->device.set_id(drivers[i]->id);
         pmidi->device.set_name(drivers[i]->name);
-        drivers[i]->init_grid_devices(port - 1);
+        drivers[i]->init_grid_devices(portToLogicalIdx(port));
         *active_device = drivers[i];
         // Re-enable MidiClock/Transport recv
         midi_setup.cfg_clock_recv();
@@ -221,12 +255,20 @@ static void probePort(uint8_t port, MidiDevice *drivers[], size_t nr_drivers,
 }
 
 MidiDevice *MidiActivePeering::get_device(uint8_t port) {
-  if (port == 1) {
-    return connected_midi_devices[0];
-  } else if (port == 2) {
-    return connected_midi_devices[1];
-  } else {
-    return &null_midi_device;
+  if (port >= 1 && port <= 3) {
+    return connected_midi_devices[port - 1];
+  }
+  return &null_midi_device;
+}
+
+void MidiActivePeering::update_dev_cache() {
+  uint8_t p1 = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
+  uint8_t p2 = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
+  dev1 = get_device(p1);
+  dev2 = get_device(p2);
+  // USB GENER maps to dev2 slot
+  if (mcl_cfg.usb_device == 3) {
+    dev2 = get_device(UARTUSB_PORT);
   }
 }
 
@@ -252,13 +294,18 @@ void MidiActivePeering::run() {
   }
 #endif
 
+  uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
+  uint8_t ext_port = (mcl_cfg.usb_device == 2) ? UARTUSB_PORT : UART2_PORT;
+
   MidiDevice **drivers = port1_drivers;
   uint8_t nr_drivers = countof(port1_drivers);
   if (!mcl_cfg.uart1_device) {
     nr_drivers = 1;
     drivers = generic_drivers;
   }
-  probePort(UART1_PORT, drivers, nr_drivers, &connected_midi_devices[0], resource_buf);
+  if (mcl_cfg.uart1_device != 2) {
+    probePort(md_port, drivers, nr_drivers, &connected_midi_devices[md_port - 1], resource_buf);
+  }
 #ifdef EXT_TRACKS
   drivers = port2_drivers;
   nr_drivers = countof(port2_drivers);
@@ -266,7 +313,9 @@ void MidiActivePeering::run() {
     nr_drivers = 1;
     drivers = generic_drivers;
   }
-  probePort(UART2_PORT, drivers, nr_drivers, &connected_midi_devices[1], resource_buf);
+  if (mcl_cfg.uart2_device != 2) {
+    probePort(ext_port, drivers, nr_drivers, &connected_midi_devices[ext_port - 1], resource_buf);
+  }
   if (resource_loaded) {
     // XXX doesn't work yet
     // R.Restore(resource_buf, resource_size);
@@ -274,4 +323,5 @@ void MidiActivePeering::run() {
     resource_loaded = false;
   }
 #endif
+  update_dev_cache();
 }

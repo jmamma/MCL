@@ -26,7 +26,7 @@ class GridLoadPage : public GridIOPage {
  void display();
  void action() { load(); }
  void init();
- void setup();
 };
+
 
 #endif /* GRIDCHAINPAGE_H__ */

@@ -23,7 +23,7 @@ void SoundBrowserPage::init() {
 
   key_interface.off();
 
-  strcpy(title, "SOUND");
+  strcpy_P(title, mclstr_title_sound);
   show_dirs = true;
   show_save = true;
   show_filemenu = true;
@@ -32,7 +32,7 @@ void SoundBrowserPage::init() {
   SD.chdir(lwd);
   query_filesystem();
 
-  strcpy(str_save, "[ SAVE ]");
+  strcpy_P(str_save, mclstr_action_save_bracket);
 
   R.Clear();
   R.use_machine_names_short();
@@ -108,13 +108,11 @@ void SoundBrowserPage::on_select(const char *__) {
 bool SoundBrowserPage::handleEvent(gui_event_t *event) {
   if (EVENT_BUTTON(event)) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3) && show_filemenu) {
-      FileBrowserPage::handleEvent(event);
       bool state = (param2->cur == 0);
       file_menu_page.menu.enable_entry(FM_NEW_FOLDER, !state);
       file_menu_page.menu.enable_entry(FM_DELETE, !state); // delete
       file_menu_page.menu.enable_entry(FM_RENAME, !state); // rename
-      file_menu_page.menu.enable_entry(FM_RECVALL, state);
-      file_menu_page.menu.enable_entry(FM_SENDALL, state);
+      FileBrowserPage::handleEvent(event);
       return true;
     }
 

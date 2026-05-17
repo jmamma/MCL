@@ -13,9 +13,9 @@ void MCLGfx::draw_evil(unsigned char* evil) {
   oled_display.fillScreen(WHITE);
   oled_display.setCursor(x - 60, 10);
   oled_display.setTextColor(BLACK, WHITE);
-  oled_display.println("THIS PIECE OF");
+  mcl_println_P(mclstr_this_piece_of);
   oled_display.setCursor(x - 60, 20);
-  oled_display.println("MACHINE IS O.K.");
+  mcl_println_P(mclstr_machine_is_ok);
 
   oled_display.drawBitmap(x, 1, evil, 33, 31, BLACK);
   oled_display.display();
@@ -37,7 +37,7 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
    */
   oled_display.setCursor(90, 8);
   oled_display.setTextSize(1);
-  oled_display.print(F("V"));
+  mcl_print_P(mclstr_v_label);
   oled_display.print(VERSION_STR);
   oled_display.display();
 

@@ -143,7 +143,7 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 }
 
 uint16_t MDPattern::toSysex() {
-  ElektronDataToSysexEncoder encoder(&MidiUart);
+  ElektronDataToSysexEncoder encoder(MD.uart);
   return toSysex(&encoder);
 }
 
@@ -187,15 +187,7 @@ uint16_t MDPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
    */
   uint16_t sysexLength = isExtraPattern ? 0x151d : 0xac6;
 
-  encoder->stop7Bit();
-  encoder->begin();
-  encoder->pack(machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr));
-  encoder->pack8(MD_PATTERN_MESSAGE_ID);
-  encoder->pack8(0x03); // version
-  encoder->pack8(0x01);
-
-  encoder->startChecksum();
-  encoder->pack8(origPosition);
+  ElektronHelper::beginSysexEncode(encoder, machinedrum_sysex_hdr, sizeof(machinedrum_sysex_hdr), MD_PATTERN_MESSAGE_ID, 0x03, origPosition);
 
   encoder->start7Bit();
   encoder->pack32(trigPatterns, 16);

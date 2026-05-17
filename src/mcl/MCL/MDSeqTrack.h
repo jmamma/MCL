@@ -7,8 +7,7 @@
 #include "MD.h"
 #include "MDSeqTrackData.h"
 #include "SeqTrack.h"
-
-#define UART1_PORT 1
+#include "MidiClock.h"
 
 #define SEQ_NOTEBUF_SIZE 8
 #define SEQ_MUTE_ON 1
@@ -108,18 +107,32 @@ public:
   void clear_conditional();
   void clear_step_lock(uint8_t step, uint8_t param_id);
   void clear_locks();
-  void clear_track(bool locks = true);
+  virtual void clear_track(bool locks = true) override;
   void clear_param_locks(uint8_t param_id);
   bool is_param(uint8_t param_id);
 
   void merge_from_md(uint8_t track_number, MDPattern *pattern);
 
-  void set_length(uint8_t len, bool expand = false);
+  virtual void set_length(uint8_t len, bool expand = false) override;
   void re_sync();
+  ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
+    if (count_down) {
+      return false;
+    }
+    if (!MidiClock.isStarted()) {
+      if (speed == new_speed && !has_pending_speed_change()) {
+        return false;
+      }
+      clear_pending_speed_change();
+      set_speed(new_speed, speed, true);
+      return true;
+    }
+    return SeqTrack::request_speed_change(new_speed);
+  }
 
-  void rotate_left() { modify_track(DIR_LEFT); }
-  void rotate_right() { modify_track(DIR_RIGHT); }
-  void reverse() { modify_track(DIR_REVERSE); }
+  virtual void rotate_left() override { modify_track(DIR_LEFT); }
+  virtual void rotate_right() override { modify_track(DIR_RIGHT); }
+  virtual void reverse() override { modify_track(DIR_REVERSE); }
 
   void modify_track(uint8_t dir);
 
@@ -142,10 +155,25 @@ public:
   void send_notes(uint8_t first_note = 255, MidiUartClass *uart2_ = nullptr);
   void send_notes_on(MidiUartClass *uart2_ = nullptr);
   void send_notes_off(MidiUartClass *uart2_ = nullptr);
+  void send_slides(volatile uint8_t *locks_params,
+                   uint8_t channel = 0) override;
 
   uint8_t transpose_pitch(uint8_t pitch, int8_t offset);
-  void transpose(int8_t offset);
+  virtual void transpose(int8_t offset) override;
   void onControlChangeCallback_Midi(uint8_t track_param,uint8_t value);
+
+protected:
+  void dispatch_slide_value(uint8_t param, uint8_t value,
+                            uint8_t channel) override;
+
+private:
+  struct SlideDispatchContext {
+    bool is_midi_model;
+    bool send_ccs;
+    uint8_t *ccs;
+  };
+
+  SlideDispatchContext *slide_ctx = nullptr;
 };
 
 #endif /* MDSEQTRACK_H__ */

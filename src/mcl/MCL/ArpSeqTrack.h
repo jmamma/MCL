@@ -4,6 +4,7 @@
 
 #include "MidiUart.h"
 #include "SeqTrack.h"
+#include "MidiClock.h"
 #include "platform.h"
 #include "GridTrack.h"
 
@@ -48,13 +49,13 @@ class ArpSeqData {
 };
 
 //Ephemeral
-class ArpSeqTrack : public ArpSeqData, public SeqTrackBase  {
+class ArpSeqTrack : public ArpSeqData, public SeqTrack  {
 
 public:
   uint8_t last_note_on;
   uint8_t idx;
 
-  ArpSeqTrack() : SeqTrackBase() {
+  ArpSeqTrack() : SeqTrack() {
     active = ARP_TRACK_TYPE;
     init();
   }
@@ -77,7 +78,7 @@ public:
   }
 
   ALWAYS_INLINE() void reset() {
-    SeqTrackBase::reset();
+    SeqTrack::reset();
   }
 
   void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
@@ -85,9 +86,29 @@ public:
   void re_sync();
   void set_speed(uint8_t speed_);
   void set_length(uint8_t length_);
+  ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
+    if (count_down) {
+      return false;
+    }
+    if (!MidiClock.isStarted()) {
+      if (speed == new_speed && !has_pending_speed_change()) {
+        return false;
+      }
+      clear_pending_speed_change();
+      set_speed(new_speed);
+      return true;
+    }
+    return SeqTrack::request_speed_change(new_speed);
+  }
 
   uint8_t get_next_note_up(int8_t cur);
   void render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_t range_, uint64_t *note_mask_);
+
+protected:
+  virtual void on_cycle_midpoint(MidiUartClass *uart_, MidiUartClass *uart2_);
+  virtual void dispatch_note(uint8_t note, MidiUartClass *uart_,
+                             MidiUartClass *uart2_) = 0;
+  virtual void on_render_begin();
 
 };
 
@@ -97,6 +118,9 @@ class MDArpSeqTrack : public ArpSeqTrack {
       ArpSeqTrack::init();
       active = MD_ARP_TRACK_TYPE;
     }
+  protected:
+    void dispatch_note(uint8_t note, MidiUartClass *uart_,
+                       MidiUartClass *uart2_) override;
 };
 
 class ExtArpSeqTrack : public ArpSeqTrack {
@@ -105,4 +129,9 @@ class ExtArpSeqTrack : public ArpSeqTrack {
       ArpSeqTrack::init();
       active = EXT_ARP_TRACK_TYPE;
     }
+  protected:
+    void dispatch_note(uint8_t note, MidiUartClass *uart_,
+                       MidiUartClass *uart2_) override;
+    void on_cycle_midpoint(MidiUartClass *uart_, MidiUartClass *uart2_) override;
+    void on_render_begin() override;
 };

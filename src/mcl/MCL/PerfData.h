@@ -5,6 +5,7 @@
 #include "platform.h"
 #include "MCLMemory.h"
 #include "MD.h"
+#include "MCLStrings.h"
 
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
 
@@ -194,7 +195,7 @@ public:
   }
 
   void scene_autofill(uint8_t scene) {
-     oled_display.textbox("FILL SCENES", "");
+     oled_display.textbox_P(mclstr_fill, mclstr_scenes);
      if (scene >= NUM_SCENES) { return; }
 
      for (uint8_t track = 0; track < 16; track++) {

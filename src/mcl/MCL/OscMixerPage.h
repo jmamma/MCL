@@ -34,7 +34,6 @@ public:
   }
   virtual bool handleEvent(gui_event_t *event);
   virtual void display();
-  virtual void setup();
   virtual void init();
   virtual void loop();
   virtual void cleanup();

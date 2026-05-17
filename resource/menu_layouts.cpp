@@ -6,7 +6,7 @@
   Menu Format:
   Name
   Item of (name min range nropts dstvar_id page_id rowfunc_id opts_offset)
-    - opts_offset >= 128 means custom options table. see MenuBase::set_custom_options
+    - opts_offset >= 192 means custom options table. see MenuBase::set_custom_options
   ExitFunc
   ExitPage
  ***/
@@ -57,7 +57,7 @@ menu_t<aux_config_page_N> auxconfig_menu_layout = {
     {
         //           m  r  n  d  p  f  o
 
-        {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 122},
+        {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 120},
         {"RAM LINK:", 0, 2, 2, 1, NULL_PAGE, 0, 0},
     },
     1
@@ -69,9 +69,9 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
         {"PORT CONFIG", 0, 0, 0, 0, MIDIPORT_MENU_PAGE, 0, 0},
         {"SYNC",  0, 0, 0, 0, MIDICLOCK_MENU_PAGE, 0, 0},
         {"ROUTING", 0, 0, 0, 0, MIDIROUTE_MENU_PAGE, 0, 0},
-        {"PROGRAM", 0, 0, 0, 0, MIDIPROGRAM_MENU_PAGE, 0, 0},
+        {"CONTROLLER", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
         {"MD MIDI", 0, 0, 0, 0, MIDIMACHINEDRUM_MENU_PAGE, 0 ,0},
-        {"GENRAL MIDI", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
+        {"PROGRAM", 0, 0, 0, 0, MIDIPROGRAM_MENU_PAGE, 0, 0},
     },
     0
 };
@@ -85,12 +85,12 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
 menu_t<midiport_menu_page_N> midiport_menu_layout = {
     "PORTS",
     {
-        {"TURBO 1:",  0, TURBO_RANGE, TURBO_RANGE, 2, NULL_PAGE, 0, 54},
-        {"TURBO 2:",  0, TURBO_RANGE, TURBO_RANGE, 3, NULL_PAGE, 0, 54},
-        {"TURBO USB:", 0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE , 0, 54},
-        {"DRIVER 1:", 0, 2, 2, 61, NULL_PAGE, 0, 124},
-        {"DRIVER 2:", 0, 2, 2, 4, NULL_PAGE, 0, 84},
-        {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 100},
+        {"PORT 1:",    0, 3, 3, 61, NULL_PAGE, 0, 123},
+        {"PORT 2:",    0, 3, 3, 4,  NULL_PAGE, 0, 126},
+        {"USB:",       0, 4, 4, 65, NULL_PAGE, 0, 129},
+        {"TURBO 1:",   0, TURBO_RANGE, TURBO_RANGE, 2,  NULL_PAGE, 0, 54},
+        {"TURBO 2:",   0, TURBO_RANGE, TURBO_RANGE, 3,  NULL_PAGE, 0, 54},
+        {"TURBO USB:", 0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE, 0, 54},
     },
     24
 };
@@ -98,9 +98,9 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
 menu_t<midiprogram_menu_page_N> midiprogram_menu_layout = {
     "PROGRAM",
     {
-        {"PRG MODE:", 0, 2, 2, 49, NULL_PAGE, 0, 90},
-        {"PRG IN:", 0, 18, 2, 47, NULL_PAGE, 0, 88},
-        {"PRG OUT:", 0, 17, 2, 48, NULL_PAGE, 0, 88},
+        {"PRG MODE:", 0, 2, 2, 49, NULL_PAGE, 0, 88},
+        {"PRG IN:", 0, 18, 2, 47, NULL_PAGE, 0, 86},
+        {"PRG OUT:", 0, 17, 2, 48, NULL_PAGE, 0, 86},
     },
     24
 };
@@ -111,8 +111,8 @@ menu_t<midiclock_menu_page_N> midiclock_menu_layout = {
     {
         {"CLOCK RECV:",  0, 3, 3, 5, NULL_PAGE, 0, 7},
         {"TRANS RECV:",  0, 3, 3, 53, NULL_PAGE, 0, 7},
-        {"CLOCK SEND:", 0, 4, 4, 6, NULL_PAGE, 0, 100},
-        {"TRANS SEND:",  0, 4, 4, 54, NULL_PAGE, 0, 100},
+        {"CLOCK SEND:", 0, 4, 4, 6, NULL_PAGE, 0, 98},
+        {"TRANS SEND:",  0, 4, 4, 54, NULL_PAGE, 0, 98},
     },
     24
 };
@@ -122,11 +122,9 @@ menu_t<midiroute_menu_page_N> midiroute_menu_layout = {
     {
         //            m  r  n  d  p  f  o
         {"MIDI 1 FWD:", 0, 4, 4, 7, NULL_PAGE, 0, 10},
-        {"MIDI 2 FWD:", 0, 4, 4, 51, NULL_PAGE, 0, 92},
+        {"MIDI 2 FWD:", 0, 4, 4, 51, NULL_PAGE, 0, 90},
+        {"USB FWD:", 0, 4, 4, 52, NULL_PAGE, 0, 94},
 
-        {"USB FWD:", 0, 4, 4, 52, NULL_PAGE, 0, 96},
-
-        {"CC LOOP:", 0, 2, 2, 11, NULL_PAGE, 0, 86},
     },
     24
 };
@@ -136,17 +134,20 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
     {
         //              m  r   n  d  p  f  o
         {"CHRO CHAN:",  0, 17, 2, 9, NULL_PAGE, 0, 18},
-        {"POLY CHAN:",  0, 17, 2, 46, NULL_PAGE, 0, 88},
+        {"POLY CHAN:",  0, 17, 2, 46, NULL_PAGE, 0, 86},
         {"TRIG CHAN:",   0, 17, 2, 57, NULL_PAGE, 0, 18},
     },
     24
 };
 
 menu_t<midigeneric_menu_page_N> midigeneric_menu_layout = {
-    "GEN MIDI",
+    "CONTROL",
     {
         //              m  r   n  d  p  f  o
-        {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 121},
+        {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 98},
+        {"NOTE FWD:",  0, 2, 2, 64, NULL_PAGE, 0, 25},
+        {"CC FWD:", 0, 2, 2, 11, NULL_PAGE, 0, 25},
+        {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 119},
     },
     24
 };
@@ -166,8 +167,8 @@ menu_t<md_import_page_N> mdimport_menu_layout = {
     "MD",
     {
         //         m  r       n  d  p  f  o
-        {"SRC: ",  0, 128, 128, 43, NULL_PAGE, 0, 128},
-        {"DEST: ", 0, 128, 128, 44, NULL_PAGE, 0, 128},
+        {"SRC: ",  0, 128, 128, 43, NULL_PAGE, 0, 192},
+        {"DEST: ", 0, 128, 128, 44, NULL_PAGE, 0, 192},
         {"COUNT:", 1, 129,  0,  45, NULL_PAGE, 0, 0},
         {"RUN",    0,   0,  0,   0, NULL_PAGE, 25, 0},
     },
@@ -202,13 +203,13 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
     {
         //              m  r                    n                    d   p  f   o
         {"TRACK SEL:",  1, 17,                  0,                   14, NULL_PAGE,  3,  0},
-        {"DEVICE:",     1, 3,                   2,                   50, NULL_PAGE,  0,  128},
+        {"DEVICE:",     1, 3,                   2,                   50, NULL_PAGE,  0,  192},
         {"EDIT:",       0, 4,                   4,                   15, NULL_PAGE,  4,  48},
-        {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, NULL_PAGE,  0,  126},
+        {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, NULL_PAGE,  0,  122},
         {"CC:",         0, 133,                 5,                   17, NULL_PAGE,  0,  2},
         {"SLIDE:",      0, 2,                   2,                   18, NULL_PAGE,  0,  25},
         {"ARPEGGIATOR", 0, 0,                   0,                   0,  ARP_PAGE, 0,  0},
-        {"KEY:",        0, 12,                  12,                  19, NULL_PAGE,  0,  104},
+        {"KEY:",        0, 12,                  12,                  19, NULL_PAGE,  0,  102},
         {"VEL:",        0, 128,                 0,                   20, NULL_PAGE,  0,  0},
         {"COND:",       1, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, NULL_PAGE,  0,  60},
         {"SPEED:",      0, 7,                   7,                   22, NULL_PAGE,  5,  41},
@@ -221,7 +222,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"PASTE:",      0, 3,                   3,                   27, NULL_PAGE,  11, 27},
         {"SHIFT:",      0, 5,                   5,                   28, NULL_PAGE,  12, 35},
         {"REVERSE:",    0, 3,                   3,                   29, NULL_PAGE,  13, 27},
-        {"TRAN:",       0, 50,                  51,                  63, NULL_PAGE,  31, 129},
+        {"TRAN:",       0, 50,                  51,                  63, NULL_PAGE,  31, 193},
         {"POLYPHONY",   0, 0,                   0,                   0,  POLY_PAGE,  0,  0},
         {"QUANT:",      0, 2,                   2,                   42, NULL_PAGE,  0,  25},
         {"CC REC:",     0, 2,                   2,                   30, NULL_PAGE,  0,  25},
@@ -241,7 +242,7 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
         {"LEN:   ",   1, 129, 0, 39, NULL_PAGE, 0,  0},
         {"LOOP: ",  0, 64,  0, 33, NULL_PAGE, 0,  0},
         // o=128, generate the table on-demand
-        {"JUMP: ", 0, 128, 128, 34, NULL_PAGE, 0, 128},
+        {"JUMP: ", 0, 128, 128, 34, NULL_PAGE, 0, 192},
         {"CLEAR:",  0, 2,   2, 36, NULL_PAGE, 0,  33},
         {"COPY:  ", 0, 2,   2, 37, NULL_PAGE, 0,  33},
         {"PASTE:",  0, 2,   2, 38, NULL_PAGE, 0,  33},
@@ -266,7 +267,7 @@ menu_t<perf_menu_page_N> perf_menu_layout = {
     {
         //           m  r  n  d   p  f   o
 
-        {"CTRL SEL:",0,  4, 4, 59, NULL_PAGE, 0,  117},
+        {"CTRL SEL:",0,  4, 4, 59, NULL_PAGE, 0,  115},
         {"RENAME",  0, 0,   0, 0,  NULL_PAGE, 30, 0},
       //  {"PARAM:",    0, 17, 1, 58, NULL_PAGE, 0,  116},
     },

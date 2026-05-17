@@ -4,6 +4,7 @@
 #include "TurboLight.h"
 #include "MidiActivePeering.h"
 #include "GridTrack.h"
+#include "MCLStrings.h"
 
 const ElektronSysexProtocol mnm_protocol = {
     monomachine_sysex_hdr,
@@ -35,7 +36,16 @@ const ElektronSysexProtocol mnm_protocol = {
 MNMClass::MNMClass()
     : ElektronDevice(&Midi2, "MM", DEVICE_MNM, mnm_protocol) {
   global.baseChannel = 0;
-  uart = &MidiUart2;
+}
+
+void MNMClass::setup_listeners() {
+  MNMSysexListener.setup(midi);
+}
+
+void MNMClass::cleanup_listeners() {
+  if (midi && midi->midiSysex) {
+    midi->midiSysex->removeSysexListener(&MNMSysexListener);
+  }
 }
 
 void MNMClass::init_grid_devices(uint8_t device_idx) {
@@ -59,7 +69,7 @@ bool MNMClass::probe() {
     mcl_gui.delay_progress(400);
 
     if (!get_fw_caps()) {
-      oled_display.textbox("UPGRADE ", "MONOMACHINE");
+      oled_display.textbox_P(mclstr_upgrade, mclstr_monomachine);
       oled_display.display();
       return false;
     }
@@ -316,12 +326,12 @@ uint16_t MNMClass::sendKitParams(uint8_t *masks) {
   
   kit.origPosition = 0x80;
   // md_setsysex_recpos(4, kit_->origPosition);
-  MNMDataToSysexEncoder encoder(&MidiUart2);
+  MNMDataToSysexEncoder encoder(uart);
   kit.toSysex(&encoder);
   //  mcl_seq.disable();
   // md_set_kit(&MNM.kit);
   uint16_t mnm_latency_ms =
-      10000.0f * ((float)sizeof(MNMKit) / (float)MidiUart.speed);
+      10000.0f * ((float)sizeof(MNMKit) / (float)uart->speed);
   mnm_latency_ms += 10;
   DEBUG_DUMP(mnm_latency_ms);
   

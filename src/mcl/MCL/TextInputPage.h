@@ -31,7 +31,6 @@ public:
   void init();
   void init_text(char *text_, const char *title_, uint8_t len);
   void loop();
-  void setup();
   void update_char();
 };
 

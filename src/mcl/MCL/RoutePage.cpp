@@ -6,14 +6,12 @@
 #include "MidiClock.h"
 #include "MCLActions.h"
 
-void RoutePage::setup() {}
 void RoutePage::init() {
   hasChanged = false;
   R.Clear();
   R.use_icons_page();
   key_interface.on();
 }
-void RoutePage::cleanup() { }
 void RoutePage::set_level(int curtrack, int value) {
   // in_sysex = 1;
   MD.setTrackParam(curtrack, 33, value);
@@ -33,24 +31,17 @@ void RoutePage::draw_routes() {
   /*Display 16 track routes on screen,
    For 16 tracks check to see if there is a route*/
   for (uint8_t i = 0; i < 16; i++) {
+    if (mcl_cfg.routing[i] == 6)
+      continue;
 
-    if (mcl_cfg.routing[i] != 6) {
-      cur = (char)'A' + mcl_cfg.routing[i];
-      auto x = MCLGUI::seq_x0 + i * (MCLGUI::seq_w + 1);
-      oled_display.setCursor(x + 1, MCLGUI::trig_y + 5);
+    const auto x = MCLGUI::seq_x0 + i * (MCLGUI::seq_w + 1);
+    const bool note_on = note_interface.is_note_on(i);
 
-      if (note_interface.is_note_on(i)) {
-        oled_display.fillRect(x, MCLGUI::trig_y, MCLGUI::seq_w, MCLGUI::trig_h,
-                              WHITE);
-        oled_display.setTextColor(BLACK);
-      } else {
-        oled_display.fillRect(x, MCLGUI::trig_y, MCLGUI::seq_w, MCLGUI::trig_h,
-                              BLACK);
-        oled_display.setTextColor(WHITE);
-      }
-
-      oled_display.print(cur);
-    }
+    oled_display.fillRect(x, MCLGUI::trig_y, MCLGUI::seq_w, MCLGUI::trig_h,
+                          note_on ? WHITE : BLACK);
+    oled_display.setTextColor(note_on ? BLACK : WHITE);
+    oled_display.setCursor(x + 1, MCLGUI::trig_y + 5);
+    oled_display.print((char)('A' + mcl_cfg.routing[i]));
   }
 
   oled_display.setTextColor(WHITE);
@@ -109,21 +100,21 @@ void RoutePage::display() {
 
   char str_tmp[2] = "0";
   str_tmp[0] = encoders[0]->cur + 'A';
-  mcl_gui.draw_knob(0, "ROUTE", str_tmp);
+  mcl_gui.draw_knob(0, mclstr_route, str_tmp);
 
   char Q[4] = {'\0'};
   if (encoders[1]->getValue() == 1) {
-    strcpy(Q, "--");
+    strcpy_P(Q, mclstr_dash);
   } else {
     x = encoders[1]->getValue();
     mcl_gui.put_value_at(x, Q);
   }
-  mcl_gui.draw_knob(1, "QUANT", Q);
+  mcl_gui.draw_knob(1, mclstr_quant, Q);
 
   uint8_t step_count = (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) % 64;
 
   mcl_gui.put_value_at(step_count, Q);
-  strcpy(info_line2, "STEP ");
+  strcpy_P(info_line2, mclstr_step_space);
   strcat(info_line2, Q);
   mcl_gui.draw_panel_labels("ROUTE", info_line2);
 

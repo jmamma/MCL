@@ -24,14 +24,17 @@ uint8_t seq_tx4_buf[TX_SEQBUF_SIZE];
 
 uint8_t uart1_rx_buf[UART1_RX_BUFFER_LEN];
 uint8_t uart1_tx_buf[UART1_TX_BUFFER_LEN];
+uint8_t uart1_rt_buf[UART1_RT_BUFFER_LEN];
 uint8_t uart1_sysex_buf[SYSEX1_DATA_LEN];
 
 uint8_t uart2_rx_buf[UART2_RX_BUFFER_LEN];
 uint8_t uart2_tx_buf[UART2_TX_BUFFER_LEN];
+uint8_t uart2_rt_buf[UART2_RT_BUFFER_LEN];
 uint8_t uart2_sysex_buf[SYSEX2_DATA_LEN];
 
 uint8_t uartusb_rx_buf[UARTUSB_RX_BUFFER_LEN];
 uint8_t uartusb_tx_buf[UARTUSB_TX_BUFFER_LEN];
+uint8_t uartusb_rt_buf[UARTUSB_RT_BUFFER_LEN];
 uint8_t uartusb_sysex_buf[SYSEXUSB_DATA_LEN];
 
 // Sequencer ring buffers
@@ -43,14 +46,17 @@ RingBuffer seq_tx4_rb(seq_tx4_buf, TX_SEQBUF_SIZE);
 // UART ring buffers
 RingBuffer uart1_rx_rb(uart1_rx_buf, UART1_RX_BUFFER_LEN);
 RingBuffer uart1_tx_rb(uart1_tx_buf, UART1_TX_BUFFER_LEN);
+RingBuffer uart1_rt_rb(uart1_rt_buf, UART1_RT_BUFFER_LEN);
 RingBuffer uart1_sysex_rb(uart1_sysex_buf, SYSEX1_DATA_LEN);
 
 RingBuffer uart2_rx_rb(uart2_rx_buf, UART2_RX_BUFFER_LEN);
 RingBuffer uart2_tx_rb(uart2_tx_buf, UART2_TX_BUFFER_LEN);
+RingBuffer uart2_rt_rb(uart2_rt_buf, UART2_RT_BUFFER_LEN);
 RingBuffer uart2_sysex_rb(uart2_sysex_buf, SYSEX2_DATA_LEN);
 
 RingBuffer uartusb_rx_rb(uartusb_rx_buf, UARTUSB_RX_BUFFER_LEN);
 RingBuffer uartusb_tx_rb(uartusb_tx_buf, UARTUSB_TX_BUFFER_LEN);
+RingBuffer uartusb_rt_rb(uartusb_rt_buf, UARTUSB_RT_BUFFER_LEN);
 RingBuffer uartusb_sysex_rb(uartusb_sysex_buf, SYSEXUSB_DATA_LEN);
 
 // MIDI UART instances
@@ -59,10 +65,9 @@ MidiUartClass seq_tx2(nullptr, nullptr, &seq_tx2_rb);
 MidiUartClass seq_tx3(nullptr, nullptr, &seq_tx3_rb);
 MidiUartClass seq_tx4(nullptr, nullptr, &seq_tx4_rb);
 
-MidiUartClass MidiUart(uart1, &uart1_rx_rb, &uart1_tx_rb);
-MidiUartClass MidiUart2(uart0, &uart2_rx_rb, &uart2_tx_rb);
-
-MidiUartUSBClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb);
+MidiUartClass MidiUart(uart1, &uart1_rx_rb, &uart1_tx_rb, &uart1_rt_rb);
+MidiUartClass MidiUart2(uart0, &uart2_rx_rb, &uart2_tx_rb, &uart2_rt_rb);
+MidiUartUSBClass MidiUartUSB(nullptr, &uartusb_rx_rb, &uartusb_tx_rb, &uartusb_rt_rb);
 
 // Sysex instances
 MidiSysexClass MidiSysex(&MidiUart, &uart1_sysex_rb);
@@ -118,6 +123,15 @@ MidiSetup midi_setup;
 #endif
 
 SdFat_ SD;
+
+// TinyUSB callback — fires from tud_task() in USB IRQ context (mutex held).
+// Drain the FIFO: realtime bytes (clock, start, stop) get handled immediately
+// for low latency; everything else is routed into MCL's ring buffers for the
+// main loop to process via processSysex()/processMidi().
+extern "C" void tud_midi_rx_cb(uint8_t itf) {
+  (void)itf;
+  MidiUartUSB.receive();
+}
 
 void handleIncomingMidi() {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;

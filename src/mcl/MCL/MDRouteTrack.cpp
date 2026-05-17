@@ -4,11 +4,8 @@
 #include "MD.h"
 #include "MCLActions.h"
 
-void MDRouteTrack::transition_send(uint8_t tracknumber, uint8_t slotnumber) {
-}
-
 void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                              uint8_t slotnumber) {
+                                  uint8_t slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
    if (mcl_actions.send_machine[slotnumber]) {
     load_routes();
@@ -46,28 +43,7 @@ void MDRouteTrack::get_routes() {
   poly_mask = mcl_cfg.poly_mask;
 }
 
-bool MDRouteTrack::store_in_grid(uint8_t column, uint16_t row,
-                                 SeqTrack *seq_track, uint8_t merge,
-                                 bool online, Grid *grid) {
-  active = MDROUTE_TRACK_TYPE;
-  bool ret;
-  int b = 0;
-  DEBUG_PRINT_FN();
-  uint32_t len;
-
-  if (column != 255 && online == true) {
-    get_routes();
-    if (merge == SAVE_MD) {
-      link.length = MD.pattern.patternLength;
-      link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-    }
-  }
-
-  ret = write_grid(_this(), _sizeof(), column, row, grid);
-
-  if (!ret) {
-    DEBUG_PRINTLN(F("write failed"));
-    return false;
-  }
-  return true;
+void MDRouteTrack::get_online_data(uint8_t merge) {
+  get_routes();
+  update_link_from_pattern(merge);
 }

@@ -181,15 +181,7 @@ uint16_t MNMPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
 	cleanupLocks();
 	recalculateLockPatterns();
 
-	encoder->stop7Bit();
-	encoder->begin();
-  encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
-	encoder->pack8(MNM_PATTERN_MESSAGE_ID);
-	encoder->pack8(0x05); // version
-	encoder->pack8(0x01); // revision
-
-	encoder->startChecksum();
-	encoder->pack8(origPosition);
+  ElektronHelper::beginSysexEncode(encoder, monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr), MNM_PATTERN_MESSAGE_ID, 0x05, origPosition);
 	encoder->start7Bit();
 
 	encoder->pack64(ampTrigs, 6 * 13);
@@ -275,11 +267,8 @@ uint16_t MNMPattern::toSysex(ElektronDataToSysexEncoder *encoder) {
   }
 
 	encoder->pack8(0xff);
-	
-  uint16_t enclen = encoder->finish();
-	encoder->finishChecksum();
 
-  return enclen + 5;
+  return ElektronHelper::finishSysexEncode(encoder);
 }
 
 #ifdef HOST_MIDIDUINO

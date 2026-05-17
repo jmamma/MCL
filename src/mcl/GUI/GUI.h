@@ -55,6 +55,7 @@ public:
   void removeTask(Task *task) { tasks.remove(task); }
 
   virtual void loop();
+  void wake_screen_saver();
   void mirror();
   void display();
   void init() {

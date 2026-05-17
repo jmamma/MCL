@@ -6,12 +6,21 @@
 #include "AuxPages.h"
 #include "GridPages.h"
 #include "PageSelectPage.h"
+#include "MCLStrings.h"
 
 #define MIDI_OMNI_MODE 17
 #define NUM_KEYS 24
 #define NOTE_C2 48
 
-void SeqStepPage::setup() { SeqPage::setup(); }
+bool SeqStepPage::toggle_mask(uint8_t mask) {
+  if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+    mask_type = (mask_type == mask) ? MASK_PATTERN : mask;
+    config_mask_info(false);
+    return true;
+  }
+  return false;
+}
+
 void SeqStepPage::config() {
   bool is_midi_model = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL);
 
@@ -68,7 +77,7 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
 
-  SeqPage::midi_device = midi_active_peering.get_device(UART1_PORT);
+  SeqPage::midi_device = midi_active_peering.dev1;
 
   midi_events.setup_callbacks();
   key_interface.on();
@@ -134,15 +143,15 @@ void SeqStepPage::display() {
   mcl_gui.put_value_at(seq_param3.getValue(), K);
   bool is_poly = IS_BIT_SET16(mcl_cfg.poly_mask, last_md_track);
   if ((mcl_cfg.poly_mask > 0) && (is_poly)) {
-    draw_knob(2, "PLEN", K);
+    draw_knob(2, mclstr_plen, K);
   } else {
-    draw_knob(2, "LEN", K);
+    draw_knob(2, mclstr_len, K);
   }
   tuning_t const *tuning = MD.getKitModelTuning(last_md_track);
   bool is_ptc = ((MD.kit.models[last_md_track] & 0xF0) == MID_01_MODEL) || tuning != NULL;
   if (show_pitch) {
     if (is_ptc) {
-      strcpy(K, "--");
+      strcpy_P(K, mclstr_dash);
       if (seq_param4.cur != 0) {
         // uint8_t base = tuning->base;
         uint8_t note_num = seq_param4.cur;
@@ -155,7 +164,7 @@ void SeqStepPage::display() {
         mcl_gui.put_value_at(oct, K + 2);
         K[3] = 0;
       }
-      draw_knob(3, "PTC", K);
+      draw_knob(3, mclstr_ptc, K);
     }
   }
 
@@ -563,40 +572,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
         return true;
       }
-      case MDX_KEY_BANKB: {
-        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-          if (mask_type == MASK_LOCK) {
-            mask_type = MASK_PATTERN;
-          } else {
-            mask_type = MASK_LOCK;
-          }
-          config_mask_info(false);
-        return true;
-        }
-      }
-      case MDX_KEY_BANKC: {
-        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-          if (mask_type == MASK_MUTE) {
-            mask_type = MASK_PATTERN;
-          } else {
-            mask_type = MASK_MUTE;
-          }
-          config_mask_info(false);
-        return true;
-        }
-      }
-
-      case MDX_KEY_BANKD: {
-        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-          if (mask_type == MASK_SLIDE) {
-            mask_type = MASK_PATTERN;
-          } else {
-            mask_type = MASK_SLIDE;
-          }
-          config_mask_info(false);
-        return true;
-        }
-      }
+      case MDX_KEY_BANKB: { if (toggle_mask(MASK_LOCK))  return true; }
+      case MDX_KEY_BANKC: { if (toggle_mask(MASK_MUTE))  return true; }
+      case MDX_KEY_BANKD: { if (toggle_mask(MASK_SLIDE)) return true; }
       }
       if (step != 255) {
         switch (key) {
@@ -634,20 +612,20 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           switch (last_rec_event) {
           case REC_EVENT_TRIG:
             if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox("CLEAR ", "TRACKS");
+              oled_display.textbox(mclstr_clear, mclstr_tracks);
               for (uint8_t n = 0; n < 16; ++n) {
                 mcl_seq.md_tracks[n].clear_track();
               }
             } else {
-              oled_display.textbox("CLEAR ", "TRACK");
+              oled_display.textbox(mclstr_clear, mclstr_track);
               mcl_seq.md_tracks[last_step].clear_track();
             }
             break;
           case REC_EVENT_CC:
-            oled_display.textbox("CLEAR ", "LOCK");
+            oled_display.textbox(mclstr_clear, mclstr_lock);
             active_track.clear_param_locks(last_param_id);
             if (BUTTON_DOWN(Buttons.BUTTON3)) {
-              oled_display.textbox("CLEAR ", "LOCKS");
+              oled_display.textbox(mclstr_clear, mclstr_locks);
               for (uint8_t c = 0; c < NUM_LOCKS; c++) {
                 if (active_track.locks_params[c] > 0) {
                   active_track.clear_param_locks(active_track.locks_params[c] -
@@ -739,8 +717,10 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     }
   }
   if (store_lock == 0) {
-    char str[5] = "--  ";
-    char str2[4] = "-- ";
+    char str[5];
+    mclstr_copy_progmem(str, mclstr_dash_dash_space, sizeof(str));
+    char str2[4];
+    mclstr_copy_progmem(str2, mclstr_dash_space, sizeof(str2));
     const char *modelname =
         model_param_name(MD.kit.get_model(last_md_track), track_param);
     if (modelname != NULL) {
@@ -754,7 +734,7 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     oled_display.textbox(str, str2);
   }
   if (store_lock == 1) {
-    oled_display.textbox("LOCK PARAMS ", "FULL");
+    oled_display.textbox_P(mclstr_lock_params, mclstr_full);
     // seq_step_page.send_locks(step);
   }
 }
@@ -764,7 +744,7 @@ void SeqStepMidiEvents::setup_callbacks() {
     return;
   }
 
-  Midi.addOnControlChangeCallback(
+  MD.midi->addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   state = true;
@@ -775,7 +755,7 @@ void SeqStepMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
-  Midi.removeOnControlChangeCallback(
+  MD.midi->removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   state = false;

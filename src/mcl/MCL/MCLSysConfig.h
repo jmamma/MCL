@@ -5,7 +5,7 @@
 
 #include "MCLSd.h"
 
-#define CONFIG_VERSION 4011
+#define CONFIG_VERSION 4014
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -59,7 +59,7 @@ public:
   uint8_t track_select;
   uint16_t track_type_select;
   uint8_t uart2_device;
-  uint8_t uart_cc_loopback;
+  uint8_t uart_cc_fwd;
   uint8_t usb_mode;
   uint8_t midi_transport_rec;
   uint8_t midi_transport_send;
@@ -70,6 +70,8 @@ public:
   uint8_t uart2_cc_level;
   uint8_t uart1_device;
   uint8_t grid_page_mode;
+  uint8_t uart_note_fwd;
+  uint8_t usb_device;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

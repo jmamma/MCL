@@ -30,7 +30,7 @@ static PageIndex get_page(uint8_t pageidx, char *str) {
     return R.page_entries->Entries[pageidx].Page;
   } else {
     if (str) {
-      strcpy(str, "----");
+      strcpy_P(str, mclstr_four_dashes);
     }
     return NULL_PAGE;
   }
@@ -70,12 +70,11 @@ static void get_category_name(uint8_t page_number, char *str) {
 
 get_category_name_fail:
   if (str) {
-    strcpy(str, "----");
+    strcpy_P(str, mclstr_four_dashes);
   }
   return;
 }
 
-void PageSelectPage::setup() {}
 void PageSelectPage::init() {
   DEBUG_PRINTLN("page select init");
   key_interface.on();
@@ -89,7 +88,7 @@ void PageSelectPage::init() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print(F("PAGE SELECT"));
+  mcl_print_P(mclstr_page_select);
   oled_display.setTextColor(WHITE);
 
   loop_init = true;
@@ -97,6 +96,7 @@ void PageSelectPage::init() {
   // clear trigled so it's always sent on first run
   trigled_mask = 0;
   draw_popup();
+  MidiUartParent::handle_midi_lock = 1;
   md_prepare();
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
@@ -109,11 +109,27 @@ void PageSelectPage::draw_popup() {
 }
 
 void PageSelectPage::md_prepare() {
+  //static uint16_t last_kit_request_time = 0;
+  //uint16_t current_time = read_clock_ms();
+  // Don't request if callback is already waiting for a response
+  if (kit_cb.state) {
+    return;
+  }
+  // Don't request kit while sequencer is running (causes clock problems)
+  if (MidiClock.state == 2) {
+    return;
+  }
+  // Only request kit if more than 2 seconds (2000ms) has passed
+  //if (clock_diff(last_kit_request_time, current_time) < 2000) {
+  //  return;
+  //}
+
   kit_cb.init();
   auto listener = MD.getSysexListener();
   listener->addOnMessageCallback(
       &kit_cb, (sysex_callback_ptr_t)&MDCallback::onReceived);
   MD.requestKit(0x7F);
+  //last_kit_request_time = current_time;
 }
 
 void PageSelectPage::cleanup() {
@@ -218,7 +234,7 @@ void PageSelectPage::display() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print(F("PAGE SELECT"));
+  mcl_print_P(mclstr_page_select);
   oled_display.setTextColor(WHITE);
   uint8_t label_pos[4] = {30, 57, 81, 104};
   for (uint8_t i = 0; i < 4; ++i) {

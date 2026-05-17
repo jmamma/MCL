@@ -13,6 +13,13 @@ void ExtTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, uint8_t
   //load_seq_data(seq_track);
 }
 
+void ExtTrack::transition_load_device(uint8_t tracknumber, SeqTrack *seq_track, uint8_t slotnumber) {
+  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
+  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+  ext_track->is_generic_midi = false;
+  load_seq_data(seq_track);
+}
+
 void ExtTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load immediate, ext");
   load_seq_data(seq_track);
@@ -30,13 +37,10 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
   uint8_t old_mute = seq_track->mute_state;
 
   seq_track->mute_state = SEQ_MUTE_ON;
+  ext_track->notesoff_pending = true;
 
-  seq_tx3.txRb->init();
-  seq_tx4.txRb->init();
-
-  ext_track->buffer_notesoff();
-
-  memcpy(ext_track->data(), &seq_data, sizeof(seq_data));
+  uint8_t *dest = ext_track->data();
+  memcpy(dest, &seq_data, sizeof(seq_data));
   load_link_data(seq_track);
   ext_track->clear_mutes();
   ext_track->pgm_oneshot = 0;
@@ -62,7 +66,8 @@ bool ExtTrack::store_in_grid(uint8_t column, uint16_t row, SeqTrack *seq_track, 
     get_track_from_sysex(column);
     link.length = seq_track->length;
     link.speed = seq_track->speed;
-    memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
+    uint8_t *src = ext_track->data();
+    memcpy(&seq_data, src, sizeof(seq_data));
   }
 #endif
   ret = write_grid(_this(), _sizeof(), column, row, grid);

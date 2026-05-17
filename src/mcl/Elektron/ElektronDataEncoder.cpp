@@ -130,7 +130,6 @@ DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::encode7Bit(uint8_t inb) {
     }
     cnt7 = 0;
   }
-
   DATA_ENCODER_TRUE();
 }
 
@@ -220,31 +219,24 @@ void ElektronSysexDecoder::init(MidiClass *_midi, uint16_t _offset) {
   start7Bit();
 }
 
-DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
+// Add this inline helper method
+uint8_t ElektronSysexDecoder::readByte() {
+  return data ? *(ptr++) : midi->midiSysex->getByte(n++);
+}
 
+DATA_ENCODER_RETURN_TYPE ElektronSysexDecoder::get8(uint8_t *c) {
   if (in7Bit) {
     if ((cnt7 % 8) == 0) {
-      if (data) {
-        bits = *(ptr++);
-      } else {
-        bits = midi->midiSysex->getByte(n++);
-      }
+      bits = readByte();
       cnt7++;
     }
     bits <<= 1;
-    if (data) {
-      *c = *(ptr++) | (bits & 0x80);
-    } else {
-      *c = midi->midiSysex->getByte(n++) | (bits & 0x80);
-    }
+    *c = readByte() | (bits & 0x80);
     cnt7++;
   } else {
-    if (data) {
-      *c = *(ptr++);
-    } else {
-      *c = midi->midiSysex->getByte(n++);
-    }
+    *c = readByte();
   }
-
   DATA_ENCODER_TRUE();
 }
+
+

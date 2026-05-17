@@ -18,135 +18,71 @@
 
 void SeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1) {
   uint8_t c = lock_idx;
-  locks_slide_data[c].steep = abs(y1 - y0) < abs(x1 - x0);
-  locks_slide_data[c].yflip = 255;
-  if (locks_slide_data[c].steep) {
-    /* Disable as this use case will not exist.
-    if (x0 > x1) {
-          _swap_int16_t(x0, x1);
-         _swap_int16_t(y0, y1);
-    }
-    */
-  } else {
-    if (y0 > y1) {
-      _swap_int8_t(y0, y1);
-      _swap_int16_t(x0, x1);
-      locks_slide_data[c].yflip = y0;
-    }
-  }
-  locks_slide_data[c].dx = x1 - x0;
-  locks_slide_data[c].dy = y1 - y0;
-  locks_slide_data[c].inc = 1;
 
-  if (locks_slide_data[c].steep) {
-    if (locks_slide_data[c].dy < 0) {
-      locks_slide_data[c].inc = -1;
-      locks_slide_data[c].dy *= -1;
-    }
-    locks_slide_data[c].dy *= 2;
-    locks_slide_data[c].err = locks_slide_data[c].dy - locks_slide_data[c].dx;
-    locks_slide_data[c].dx *= 2;
-  } else {
-    if (locks_slide_data[c].dx < 0) {
-      locks_slide_data[c].inc = -1;
-      locks_slide_data[c].dx *= -1;
-    }
-
-    locks_slide_data[c].dx *= 2;
-    locks_slide_data[c].err = locks_slide_data[c].dx - locks_slide_data[c].dy;
-    locks_slide_data[c].dy *= 2;
-  }
-  locks_slide_data[c].y0 = y0;
   locks_slide_data[c].x0 = x0;
   locks_slide_data[c].x1 = x1;
+  locks_slide_data[c].y0 = y0;
   locks_slide_data[c].y1 = y1;
-/*
-  DEBUG_DUMP(step);
-  DEBUG_DUMP(locks_slide_data[c].x0);
-  DEBUG_DUMP(locks_slide_data[c].y0);
-  DEBUG_DUMP(x1);
-  DEBUG_DUMP(y1);
-  DEBUG_DUMP(locks_slide_data[c].dx);
-  DEBUG_DUMP(locks_slide_data[c].dy);
-  DEBUG_DUMP(locks_slide_data[c].steep);
-  DEBUG_DUMP(locks_slide_data[c].inc);
-  DEBUG_DUMP(locks_slide_data[c].yflip);
-*/
+  locks_slide_data[c].accum = 0;
+
+  // Calculate delta in 8.8 fixed-point format
+  int16_t steps = x1 - x0;
+  if (steps > 0) {
+    int16_t y_diff = y1 - y0;
+    // delta = (y_diff << 8) / steps
+    // To avoid overflow with 16-bit math, we use: delta = (y_diff * 256) / steps
+    int32_t delta_calc = ((int32_t)y_diff << 8) / steps;
+    locks_slide_data[c].delta = (uint16_t)delta_calc;
+  } else {
+    locks_slide_data[c].delta = 0;
+  }
 }
 
 void SeqSlideTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
-  uint8_t ccs[midi_cc_array_size];
-  bool send_ccs = false;
-  bool is_midi_model = (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
-  if (is_midi_model) {
-    memset(ccs, 255, sizeof(ccs));
-  }
+  on_slide_dispatch_begin(channel);
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    if ((locks_params[c] > 0) && (locks_slide_data[c].dy > 0)) {
+    if (locks_params[c] == 0) continue;
+    if (locks_slide_data[c].x0 >= locks_slide_data[c].x1) continue;
 
-      uint8_t val;
-      val = locks_slide_data[c].y0;
-      if (locks_slide_data[c].steep) {
-        if (locks_slide_data[c].err > 0) {
-          locks_slide_data[c].y0 += locks_slide_data[c].inc;
-          locks_slide_data[c].err -= locks_slide_data[c].dx;
-        }
-        locks_slide_data[c].err += locks_slide_data[c].dy;
-        locks_slide_data[c].x0++;
-        if (locks_slide_data[c].x0 >= locks_slide_data[c].x1) {
-          locks_slide_data[c].init();
-          break;
-        }
-      } else {
-        uint16_t x0_old = locks_slide_data[c].x0;
-        while (locks_slide_data[c].x0 == x0_old) {
-          if (locks_slide_data[c].err > 0) {
-            locks_slide_data[c].x0 += locks_slide_data[c].inc;
-            locks_slide_data[c].err -= locks_slide_data[c].dy;
-          }
-          locks_slide_data[c].err += locks_slide_data[c].dx;
-          locks_slide_data[c].y0++;
-          if (locks_slide_data[c].y0 >= locks_slide_data[c].y1) {
-            locks_slide_data[c].init();
-            break;
-          }
-        }
-        if (locks_slide_data[c].yflip != 255) {
-          val = locks_slide_data[c].y1 - val + locks_slide_data[c].yflip;
-        }
-      }
-      uint8_t param = locks_params[c] - 1;
-      switch (active) {
-      case MD_TRACK_TYPE:
-        if (is_midi_model) {
-          uint8_t p = param;
-          send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
-          mcl_seq.md_tracks[track_number].process_note_locks(p, val, ccs);
-        }
-        else {
-          MD.setTrackParam_inline(track_number, param, val);
-        }
-        break;
-      default:
-        if (param == PARAM_PB) {
-          uart->sendPitchBend(channel, val << 7);
-          break;
-        }
-        if (param == PARAM_CHP) {
-          uart->sendChannelPressure(channel, val);
-          break;
-        }
-        uart->sendCC(channel, param, val);
-        break;
-      }
+    // Calculate current value using fixed-point (8.8 format)
+    // accum is in 8.8 format, so we add 128 (0.5 in 8.8) for rounding, then shift
+    int16_t val_calc = locks_slide_data[c].y0 + ((int16_t)(locks_slide_data[c].accum + 128) >> 8);
+    uint8_t val = (uint8_t)val_calc;
+
+    // Advance the slide
+    locks_slide_data[c].accum += locks_slide_data[c].delta;
+    locks_slide_data[c].x0++;
+
+    // Check if we've reached the end
+    if (locks_slide_data[c].x0 >= locks_slide_data[c].x1) {
+      val = locks_slide_data[c].y1;  // Ensure we hit target exactly
+      locks_slide_data[c].init();    // Mark as finished
     }
+
+    uint8_t param = locks_params[c] - 1;
+    dispatch_slide_value(param, val, channel);
   }
-  if (is_midi_model) {
-    mcl_seq.md_tracks[track_number].send_notes_ccs(ccs, send_ccs);
-  }
+  on_slide_dispatch_end();
 }
 
-uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
+void SeqSlideTrack::on_slide_dispatch_begin(uint8_t) {}
+
+void SeqSlideTrack::dispatch_slide_value(uint8_t param, uint8_t val,
+                                         uint8_t channel) {
+  if (param == PARAM_PB) {
+    uart->sendPitchBend(channel, val << 7);
+    return;
+  }
+  if (param == PARAM_CHP) {
+    uart->sendChannelPressure(channel, val);
+    return;
+  }
+  uart->sendCC(channel, param, val);
+}
+
+void SeqSlideTrack::on_slide_dispatch_end() {}
+
+uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   if (quant == 255) { quant = mcl_cfg.rec_quant; }
 
   uint8_t timing_mid = get_timing_mid();
@@ -175,7 +111,7 @@ uint8_t SeqTrackBase::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   return step;
 }
 
-bool SeqTrack::conditional(uint8_t condition) {
+bool SeqTrackCond::conditional(uint8_t condition) {
   bool send_note = false;
   uint8_t random_byte = 0;
   if (condition >= 9) { random_byte = get_random_byte(); }
@@ -249,7 +185,7 @@ bool SeqTrack::conditional(uint8_t condition) {
   return send_note;
 }
 
-uint8_t SeqTrackBase::get_timing_mid(uint8_t speed_) {
+uint8_t SeqTrack::get_timing_mid(uint8_t speed_) {
   uint8_t timing_mid;
   switch (speed_) {
   default:
@@ -279,76 +215,4 @@ uint8_t SeqTrackBase::get_timing_mid(uint8_t speed_) {
     break;
   }
   return timing_mid;
-}
-
-void SeqTrackBase::get_speed_multiplier(uint8_t speed_, uint8_t &n, uint8_t &d) {
-  n = 1;
-  d = 1;
-  switch (speed_) {
-  default:
-  case SEQ_SPEED_1X:
-    // n = 1;
-    // d = 1;
-    break;
-  case SEQ_SPEED_2X:
-    // n = 1;
-    d = 2;
-    break;
-  case SEQ_SPEED_4X:
-    // n = 1;
-    d = 4;
-    break;
-  case SEQ_SPEED_3_4X:
-    n = 4;
-    d = 3;
-    break;
-  case SEQ_SPEED_3_2X:
-    n = 2;
-    d = 3;
-    break;
-  case SEQ_SPEED_1_2X:
-    n = 2;
-    // d = 1;
-    break;
-  case SEQ_SPEED_1_4X:
-    n = 4;
-    // d = 1;
-    break;
-  case SEQ_SPEED_1_8X:
-    n = 8;
-    // d = 1;
-    break;
-  }
-}
-
-float SeqTrackBase::get_speed_multiplier(uint8_t speed_) {
-  float multi;
-  switch (speed_) {
-  default:
-  case SEQ_SPEED_1X:
-    multi = 1;
-    break;
-  case SEQ_SPEED_2X:
-    multi = 0.5;
-    break;
-  case SEQ_SPEED_4X:
-    multi = 0.25;
-    break;
-  case SEQ_SPEED_3_4X:
-    multi = (4.0 / 3.0);
-    break;
-  case SEQ_SPEED_3_2X:
-    multi = (2.0 / 3.0);
-    break;
-  case SEQ_SPEED_1_2X:
-    multi = 2.0;
-    break;
-  case SEQ_SPEED_1_4X:
-    multi = 4.0;
-    break;
-  case SEQ_SPEED_1_8X:
-    multi = 8.0;
-    break;
-  }
-  return multi;
 }

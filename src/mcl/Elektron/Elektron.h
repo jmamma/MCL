@@ -18,6 +18,8 @@
 
 enum class DataType { Kit, Pattern, Global };
 
+class ElektronDataToSysexEncoder;
+
 /**
  * Class grouping various helper functions to convert elektron sysex
  * data. These are deprecated and should be replaced by the elektron
@@ -56,6 +58,13 @@ public:
   static bool checkSysexChecksumAnalog(MidiClass *midi, uint16_t offset,
                                        uint16_t len);
   static void calculateSysexChecksumAnalog(uint8_t *data, uint16_t len);
+
+  /* Sysex encode helpers: factor out repeated toSysex prologue/epilogue */
+  static void beginSysexEncode(ElektronDataToSysexEncoder *encoder,
+                                uint8_t *hdr, uint8_t hdr_size,
+                                uint8_t msg_id, uint8_t version,
+                                uint8_t origPosition);
+  static uint16_t finishSysexEncode(ElektronDataToSysexEncoder *encoder);
 };
 
 class SysexCallback {
@@ -117,12 +126,14 @@ class ElektronDevice;
 class MidiDevice {
 public:
   bool connected;
+  bool in_probe;
   MidiClass* midi;
   MidiUartClass* uart;
   const char* const name;
   const uint8_t id; // Device identifier
   const bool isElektronDevice;
   uint8_t track_type;
+  uint8_t port; // Physical port number (UART1_PORT, UART2_PORT, UARTUSB_PORT)
 
   MidiDevice(MidiClass* _midi, const char* _name, const uint8_t _id, const bool _isElektronDevice)
     : name(_name), id(_id), isElektronDevice(_isElektronDevice)
@@ -130,7 +141,9 @@ public:
     midi = _midi;
     uart = midi ? midi->uart : nullptr;
     track_type = 0;
+    port = 0;
     connected = false;
+    in_probe = false;
   }
 
   void add_track_to_grid(uint8_t grid_idx, uint8_t track_idx, GridDeviceTrack *gdt);
@@ -141,6 +154,17 @@ public:
     return (ElektronDevice*) this;
   }
 
+  virtual void setup_listeners() {}
+  virtual void cleanup_listeners() {}
+
+  void setPort(MidiClass *_midi, uint8_t _port = 0) {
+    cleanup_listeners();
+    midi = _midi;
+    uart = _midi ? _midi->uart : nullptr;
+    port = _port;
+    setup_listeners();
+  }
+
   virtual void init_grid_devices(uint8_t device_idx) {};
 
   virtual void setup() { };
@@ -149,6 +173,11 @@ public:
   virtual bool probe() = 0;
   virtual uint8_t get_mute_cc() { return 255; }
   virtual void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr) {};
+  void sendNoteOn(uint8_t channel, uint8_t note, uint8_t velocity, MidiUartClass *uart_ = nullptr);
+  void sendNoteOff(uint8_t channel, uint8_t note, MidiUartClass *uart_ = nullptr);
+  void sendCC(uint8_t channel, uint8_t cc, uint8_t value, MidiUartClass *uart_ = nullptr);
+  void sendPolyKeyPressure(uint8_t channel, uint8_t cc, uint8_t value, MidiUartClass *uart_ = nullptr);
+  void sendNRPN(uint8_t channel, uint16_t parameter, uint16_t value, MidiUartClass *uart_ = nullptr);
   // 34x42 bitmap icon of the device
   virtual uint8_t *icon() { return nullptr; }
   virtual MCLGIF *gif();
@@ -360,6 +389,8 @@ public:
 
   void popup_text(uint8_t action_string, uint8_t persistent = 0);
   void popup_text(char *str, uint8_t persistent = 0);
+  void popup_text_P(const char *str_P, uint8_t persistent = 0);
+  void popup_text_P(const char *str1_P, const char *str2_P, uint8_t persistent = 0);
 
   void draw_bank(uint8_t bank);
   void draw_close_bank();
@@ -385,7 +416,8 @@ public:
   void sendCommand(ElektronCommand command, uint8_t param);
   virtual uint16_t sendRequest(uint8_t *data, uint8_t len, bool send = true, MidiUartClass *uart_ = nullptr);
   virtual uint16_t sendRequest(uint8_t type, uint8_t param, bool send = true);
-  /**
+
+ /**
    * Wait for a blocking answer to a status request. Timeout is in clock ticks.
    **/
   uint8_t waitBlocking(uint16_t timeout = 1000);

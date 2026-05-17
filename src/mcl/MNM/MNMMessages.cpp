@@ -64,15 +64,7 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
 }
 
 uint16_t MNMGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
-
-  encoder->stop7Bit();
-  encoder->begin();
-  encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
-  encoder->pack8(MNM_GLOBAL_MESSAGE_ID);
-  encoder->pack8(0x03); // version
-  encoder->pack8(0x01); // revision
-  encoder->startChecksum();
-  encoder->pack8(origPosition);
+  ElektronHelper::beginSysexEncode(encoder, monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr), MNM_GLOBAL_MESSAGE_ID, 0x03, origPosition);
   encoder->start7Bit();
 
   encoder->pack(&autotrackChannel, 5);
@@ -109,10 +101,7 @@ uint16_t MNMGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack(unused, 6);
   encoder->pack32(baseFreq);
 
-  uint16_t enclen = encoder->finish();
-  encoder->finishChecksum();
-
-  return enclen + 5;
+  return ElektronHelper::finishSysexEncode(encoder);
 }
 
 bool MNMKit::fromSysex(MidiClass *midi) {
@@ -180,15 +169,7 @@ uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   //if ((MidiClock.state == 2) && (MNM.midi->uart->speed > 62500)) {
     //encoder->throttle = true;
   //}
-  encoder->stop7Bit();
-  encoder->begin();
-  encoder->pack(monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr));
-  encoder->pack8(MNM_KIT_MESSAGE_ID);
-  encoder->pack8(64); // version
-  encoder->pack8(0x01); // revision
-
-  encoder->startChecksum();
-  encoder->pack8(origPosition);
+  ElektronHelper::beginSysexEncode(encoder, monomachine_sysex_hdr, sizeof(monomachine_sysex_hdr), MNM_KIT_MESSAGE_ID, 64, origPosition);
   encoder->pack8(origPosition > 127);
   encoder->start7Bit();
 
@@ -228,10 +209,7 @@ uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack8(splitKey);
   encoder->pack8(splitRange);
 
-  uint16_t enclen = encoder->finish();
-  encoder->finishChecksum();
-
-  return enclen + 5;
+  return ElektronHelper::finishSysexEncode(encoder);
 }
 
 bool MNMSong::fromSysex(MidiClass *midi) {

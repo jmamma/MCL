@@ -26,7 +26,7 @@ void MDTempoTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 
 void MDTempoTrack::get_tempo() {
   bool tempo_from_clock = true;
-  if (MidiClock.uart_clock_recv == &MidiUart) {
+  if (MidiClock.uart_clock_recv == MD.uart) {
     uint16_t tp;
     if (MD.get_tempo(tp)) {
       tempo = (float)tp * 0.0416667f;
@@ -37,28 +37,7 @@ void MDTempoTrack::get_tempo() {
   tempo = MidiClock.get_tempo();
 }
 
-bool MDTempoTrack::store_in_grid(uint8_t column, uint16_t row,
-                                 SeqTrack *seq_track, uint8_t merge,
-                                 bool online, Grid *grid) {
-  active = MDTEMPO_TRACK_TYPE;
-  bool ret;
-  int b = 0;
-  DEBUG_PRINT_FN();
-  uint32_t len;
-
-  if (column != 255 && online == true) {
-    get_tempo();
-    if (merge == SAVE_MD) {
-      link.length = MD.pattern.patternLength;
-      link.speed = SEQ_SPEED_1X + MD.pattern.doubleTempo;
-    }
-  }
-
-  ret = write_grid(_this(), _sizeof(), column, row, grid);
-
-  if (!ret) {
-    DEBUG_PRINTLN(F("write failed"));
-    return false;
-  }
-  return true;
+void MDTempoTrack::get_online_data(uint8_t merge) {
+  get_tempo();
+  update_link_from_pattern(merge);
 }

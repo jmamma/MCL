@@ -32,6 +32,7 @@
 #include "SeqTrack.h"
 
 class Grid;
+class SeqTrack;
 
 class ATTR_PACKED() GridTrack {
 public:

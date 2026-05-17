@@ -23,6 +23,7 @@ public:
                                uint8_t slotnumber);
   virtual bool transition_cache(uint8_t tracknumber, uint8_t slotnumber) { return true; }
   void load_seq_data(SeqTrack *seq_track);
+  void transition_load_device(uint8_t tracknumber, SeqTrack *seq_track, uint8_t slotnumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(uint8_t column, uint16_t row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
@@ -40,7 +41,7 @@ public:
   virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
-  virtual uint8_t get_parent_model() { return midi_active_peering.get_device(UART2_PORT)->track_type; }
+  virtual uint8_t get_parent_model() { return midi_active_peering.dev2->track_type; }
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };

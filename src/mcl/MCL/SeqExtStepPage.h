@@ -36,7 +36,7 @@ public:
 
   static constexpr uint8_t zoom_max = 32;
 
-  float fov_pixels_per_tick;
+  uint16_t fov_pixels_per_tick; // Q8: actual_value × 256
 
   int16_t cur_x;
   int16_t cur_y;
@@ -62,7 +62,7 @@ public:
 
   void draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2,
                        uint8_t color = WHITE);
-  void draw_note(uint8_t x, uint8_t y, uint8_t w);
+  void draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov);
   void draw_pianoroll();
   void draw_lockeditor();
   void draw_viewport_minimap();

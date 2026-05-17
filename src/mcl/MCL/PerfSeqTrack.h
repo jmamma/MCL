@@ -8,19 +8,19 @@
 #include "GridTrack.h"
 
 //Ephemeral
-class PerfSeqTrack : public SeqTrackBase  {
+class PerfSeqTrack : public SeqTrack  {
 
 public:
 
   uint8_t perf_locks[4];
 
-  PerfSeqTrack() : SeqTrackBase() {
+  PerfSeqTrack() : SeqTrack() {
     active = PERF_TRACK_TYPE;
  //   init();
   }
   void reset() {
     memset(perf_locks,255,sizeof(perf_locks));
-    SeqTrackBase::reset();
+    SeqTrack::reset();
   }
 
   void seq(MidiUartClass *uart_, MidiUartClass *uart2_);

@@ -7,8 +7,7 @@ constexpr auto sz_allowedchar = 69;
 inline char _getchar(uint8_t i) {
   if (i >= sz_allowedchar)
     i = sz_allowedchar - 1;
-  return i
-      ["abcdefghijklmnopqrstuvwxyz ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_&@-=!"];
+  return pgm_read_byte(&mclstr_allowed_chars[i]);
 }
 
 // chr -> idx
@@ -24,8 +23,6 @@ uint8_t _findchar(char chr) {
   // character within the allowed characters list
   return sz_allowedchar - 1;
 }
-
-void TextInputPage::setup() {}
 
 void TextInputPage::init() {
   oled_display.setTextColor(WHITE, BLACK);

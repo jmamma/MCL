@@ -38,7 +38,6 @@ public:
   }
 
   virtual void display();
-  virtual void setup();
   virtual void init();
   virtual void loop();
   virtual void cleanup();

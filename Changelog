@@ -1,3 +1,52 @@
+MCL 4.80 22/12/2025
+
+Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 4.80
+
+- Changes:
+
+  Config -> MIDI -> General has been renamed Config -> MIDI -> Controller
+  and now groups configuration items related to using an External MIDI controller.
+
+   CTRL PORT: [ 2, USB, 2 + USB ]
+   NOTE FWD:  [ OFF, Ctrl->2 ]
+   CC FWD:    [ OFF, Ctrl->2 ]
+   MUTE CC:   [ OFF, 0 .. 127 ]
+
+   The Note FWD and CC FWD options control whether Note and Control Change messages
+   from the Controller are forwarded to the Port 2 output.
+
+- Bug Fixes / Improvements:
+
+- Fixes a bad regression in realtime MIDI message interleaving when forwarding MIDI
+clock between ports.
+
+- Improved performance of MIDI byte reception on AVR.
+
+- The MCL sequencer could lose sync with external MIDI clock when receiving
+sysex messages from the MD.
+
+- Device specific MIDI messages will no longer be sent to a device before
+peering. This manifested in strange parameter resets on the MD.
+
+- Changes to prevent track desynchronization when performing speed change from scale menu.
+
+- Pianoroll / External MIDI tracks:
+
+  Fixe note deletion when notes extend beyond track length.
+
+  Left and Right rotation now correctly handles notes existing beyond track
+  length.
+
+  Better visualising of notes that extend beyond FOV.
+
+  Fixes for encoder 2 speed when switching between Note and Automation
+  editing modes.
+
+  Fix wrap-around edge cases when live recording in to Ext MIDI track beyond
+  track length.
+
+  MIDI notes could be stuck during slot transitions for A4, MNM drivers.
+
 MCL 4.70 01/10/2025
 
 Please upgrade to Machinedrum OS X.12 & Monomachine OS X.01 before using MCL 4.70

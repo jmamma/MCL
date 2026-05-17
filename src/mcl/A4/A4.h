@@ -36,6 +36,8 @@ class A4Class : public ElektronDevice {
 public:
   A4Class();
 
+  virtual void setup_listeners();
+  virtual void cleanup_listeners();
   virtual bool probe();
   virtual void init_grid_devices(uint8_t device_idx);
   virtual uint8_t* icon();
