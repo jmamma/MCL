@@ -334,8 +334,7 @@ bool Project::read_active_grid_pair(const char *projectname, uint8_t *pair) {
             mcl_sd.read_data((uint8_t *)&header_version,
                              sizeof(header_version), &header_file);
   if (ok && header_version >= PROJ_VERSION_GRID_PAIRS) {
-    ok = header_file.seekSet(sizeof(header_version)) &&
-         mcl_sd.read_data(pair, sizeof(*pair), &header_file);
+    ok = mcl_sd.read_data(pair, sizeof(*pair), &header_file);
   } else {
     *pair = 0;
   }
@@ -511,14 +510,11 @@ bool Project::read_header() {
     return false;
   }
 
-  if (!file.seekSet(0)) {
-    DEBUG_PRINTLN(F("Seek failed"));
-    return false;
-  }
-
   if (header_version < PROJ_VERSION_PROJECT_CONFIG) {
     LegacyProjectHeader legacy_header;
-    if (!mcl_sd.read_data((uint8_t *)&legacy_header, sizeof(legacy_header),
+    legacy_header.version = header_version;
+    if (!mcl_sd.read_data((uint8_t *)&legacy_header + sizeof(header_version),
+                          sizeof(legacy_header) - sizeof(header_version),
                           &file)) {
       DEBUG_PRINTLN(F("Could not read legacy project header"));
       return false;
@@ -538,8 +534,11 @@ bool Project::read_header() {
     return true;
   }
 
-  if (!mcl_sd.read_data((uint8_t *)(ProjectHeader *)this,
-                        sizeof(ProjectHeader), &file)) {
+  version = header_version;
+  if (!mcl_sd.read_data((uint8_t *)(ProjectHeader *)this +
+                            sizeof(header_version),
+                        sizeof(ProjectHeader) - sizeof(header_version),
+                        &file)) {
     DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
