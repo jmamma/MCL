@@ -10,7 +10,6 @@
 #include "MCLActions.h"
 #include "DeviceManager.h"
 #include "ExtTrack.h"
-#include "Shared.h"
 #include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
@@ -108,11 +107,11 @@ void remap_lfo_track_destinations(SeqLFOData &lfo, GridColumn source_track,
         lfo.params[i].dest = dest_track + 1;
       }
     } else {
-      int relative_track =
-          (int)dest_track + (int)target_track - (int)source_track;
-      lfo.params[i].dest =
-          range_check(relative_track, 0, track_limit - 1) ? relative_track + 1
-                                                         : 0;
+      int8_t relative_track =
+          (int8_t)dest_track + (int8_t)target_track - (int8_t)source_track;
+      lfo.params[i].dest = (uint8_t)relative_track < track_limit
+                               ? relative_track + 1
+                               : 0;
     }
   }
 }
