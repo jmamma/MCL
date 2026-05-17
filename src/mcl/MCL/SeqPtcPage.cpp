@@ -439,7 +439,6 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
                                    uint8_t channel_event) {
   uint8_t voice = 255;
-  int oldest_val = -1;
   uint16_t voice_mask = 0;
 
   if (channel_event == POLY_EVENT) {
@@ -464,63 +463,52 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
   }
 
   uint8_t track_count = SeqPtcTrackRef::track_count();
+  uint16_t candidate_mask = 0;
+  uint8_t active_same_pitch = 255;
+  uint8_t inactive_same_pitch = 255;
+  uint8_t inactive_voice = 255;
+  uint8_t oldest_voice = 255;
+  uint8_t oldest_val = 0;
 
-  // If track is currently playing this pitch, re-use this track.
+  // Preserve the old allocation order while only scanning the voice group once.
   for (uint8_t x = 0; x < track_count; x++) {
-    if (SeqPtcTrackRef::is_poly_voice_track(x) && IS_BIT_SET16(voice_mask, x) &&
-        voice_active[x] && voice_pitch[x] == pitch) {
-      voice = x;
+    if (!SeqPtcTrackRef::is_poly_voice_track(x) ||
+        !IS_BIT_SET16(voice_mask, x)) {
+      continue;
     }
-  }
-
-  if (voice != 255) {
-    goto end;
-  }
-
-  // Prefer an inactive voice that was last associated with this pitch.
-  for (uint8_t x = 0; x < track_count; x++) {
-    if (SeqPtcTrackRef::is_poly_voice_track(x) && IS_BIT_SET16(voice_mask, x)) {
-      if (!voice_active[x] && voice_pitch[x] == pitch) {
-        voice = x;
+    SET_BIT16(candidate_mask, x);
+    if (voice_active[x]) {
+      if (voice_pitch[x] == pitch) {
+        active_same_pitch = x;
       }
-    }
-  }
-
-  if (voice != 255) {
-    goto end;
-  }
-
-  // Then use any inactive voice.
-  for (uint8_t x = 0; x < track_count; x++) {
-    if (SeqPtcTrackRef::is_poly_voice_track(x) && IS_BIT_SET16(voice_mask, x)) {
-      if (!voice_active[x]) {
-        voice = x;
-      }
-    }
-  }
-
-  if (voice != 255) {
-    goto end;
-  }
-  // Reuse oldest active note.
-
-  for (uint8_t x = 0; x < track_count; x++) {
-    if (SeqPtcTrackRef::is_poly_voice_track(x) && IS_BIT_SET16(voice_mask, x)) {
-      if (voice_order[x] > oldest_val) {
-        voice = x;
+      if (oldest_voice == 255 || voice_order[x] > oldest_val) {
+        oldest_voice = x;
         oldest_val = voice_order[x];
       }
+      continue;
     }
+    if (voice_pitch[x] == pitch) {
+      inactive_same_pitch = x;
+    }
+    inactive_voice = x;
+  }
+
+  if (active_same_pitch != 255) {
+    voice = active_same_pitch;
+  } else if (inactive_same_pitch != 255) {
+    voice = inactive_same_pitch;
+  } else if (inactive_voice != 255) {
+    voice = inactive_voice;
+  } else {
+    voice = oldest_voice;
   }
 
   if (voice == 255) {
     return 255;
   }
 
-end:
-
   for (uint8_t x = 0; x < track_count; x++) {
-    if (SeqPtcTrackRef::is_poly_voice_track(x) && IS_BIT_SET16(voice_mask, x)) {
+    if (IS_BIT_SET16(candidate_mask, x)) {
       if (voice_order[x] <= voice_order[voice] && x != voice) {
         voice_order[x]++;
       }
