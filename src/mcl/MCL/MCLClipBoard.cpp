@@ -29,23 +29,10 @@
 
 namespace {
 
-bool clipboard_track_supported(DeviceTrack *track, GridDeviceTrack *gdt) {
-  if (track == nullptr) {
-    return false;
-  }
-  if (track->active == EMPTY_TRACK_TYPE) {
-    return true;
-  }
-  if (gdt == nullptr) {
-    return false;
-  }
-  return track->can_materialize_as(gdt->track_type);
-}
-
 DeviceTrack *materialize_clipboard_track(DeviceTrack *track,
                                          GridDeviceTrack *gdt,
                                          GridColumn track_idx) {
-  if (!clipboard_track_supported(track, gdt)) {
+  if (track == nullptr || gdt == nullptr) {
     return nullptr;
   }
   if (track->active == EMPTY_TRACK_TYPE) {

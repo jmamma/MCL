@@ -79,10 +79,12 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   return this;
 }
 
+#if !defined(__AVR__)
 bool DeviceTrack::can_materialize_as(uint8_t track_type) {
   return active == track_type ||
          (get_parent_model() == track_type && allow_cast_to_parent());
 }
+#endif
 
 DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
                                          uint8_t tracknumber,

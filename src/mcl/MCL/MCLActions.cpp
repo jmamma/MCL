@@ -41,13 +41,6 @@ void copy_row_name(GridRowHeader &row_header, const char *name) {
 
 } // namespace
 
-inline bool MCLActions::track_supports_type(DeviceTrack *track, uint8_t track_type) {
-  if (track == nullptr) {
-    return false;
-  }
-  return track->can_materialize_as(track_type);
-}
-
 DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
                                                 uint8_t track_type, SeqTrack *seq_track,
                                                 uint8_t seq_track_idx, bool &was_rebuilt,
@@ -59,19 +52,6 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
   }
   if (link_slot >= 0) {
     scratch.link.store_in_mem(link_slot, &(links[0]));
-  }
-
-  if (!track_supports_type(device_track, track_type)) {
-    scratch.clear();
-    if (device_track == nullptr || device_track->active != EMPTY_TRACK_TYPE) {
-      scratch.init();
-    }
-    device_track = scratch.init_track_type(track_type);
-    if (device_track != nullptr && seq_track != nullptr) {
-      device_track->init(seq_track_idx, seq_track);
-    }
-    was_rebuilt = true;
-    return device_track;
   }
 
   device_track = device_track->materialize_as(track_type, seq_track_idx,

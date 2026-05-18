@@ -132,7 +132,6 @@ public:
   void calc_latency();
 
 private:
-  static bool track_supports_type(DeviceTrack *track, uint8_t track_type);
   DeviceTrack *load_and_prepare_track(GridSlot track_idx, GridRow row,
                                       uint8_t track_type, SeqTrack *seq_track,
                                       uint8_t seq_track_idx, bool &was_rebuilt,
