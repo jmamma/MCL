@@ -81,11 +81,11 @@ bool MidiClockClass::clock_less_than(uint16_t a, uint16_t b) {
 }
 
 bool MidiClockClass::clock_less_than(uint32_t a, uint32_t b) {
-  uint32_t a_new = (uint64_t)a;
+  uint32_t a_new = a;
   if (a < MidiClock.div32th_counter) {
     a_new += 0x20000UL;
   }
-  uint32_t b_new = (uint64_t)b;
+  uint32_t b_new = b;
   if (b < MidiClock.div32th_counter) {
     b_new += 0x20000UL;
   }
