@@ -112,7 +112,6 @@ public:
   /* Calibrate data members on slot copy */
   virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) { }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
-  virtual uint8_t get_device_type() { return DEVICE_NULL; }
   virtual uint8_t get_parent_model() { return NULL_TRACK_TYPE; }
   virtual bool allow_cast_to_parent() { return false; }
   virtual uint8_t storage_version() const { return 0; }

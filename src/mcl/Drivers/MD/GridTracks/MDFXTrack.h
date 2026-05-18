@@ -57,8 +57,6 @@ public:
   virtual uintptr_t get_region() { return BANK1_MDFX_TRACK_START; }
 
   virtual uint8_t get_model() { return MDFX_TRACK_TYPE; }
-  virtual uint8_t get_device_type() { return MDFX_TRACK_TYPE; }
-
   virtual void* get_sound_data_ptr() { return &reverb; }
   virtual size_t get_sound_data_size() { return 8 * 4; }
 };

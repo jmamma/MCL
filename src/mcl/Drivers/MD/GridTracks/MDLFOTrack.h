@@ -32,8 +32,6 @@ public:
   virtual uintptr_t get_region() { return BANK1_MDLFO_TRACK_START; }
 
   virtual uint8_t get_model() { return MDLFO_TRACK_TYPE; }
-  virtual uint8_t get_device_type() { return MDLFO_TRACK_TYPE; }
-
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };

@@ -61,7 +61,6 @@ public:
   uint16_t get_region_size() override { return TBD_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_TBD_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }
-  uint8_t get_device_type() override { return TBD_TRACK_TYPE; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
@@ -103,7 +102,6 @@ public:
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }
-  uint8_t get_device_type() override { return TBD_MIDI_TRACK_TYPE; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }

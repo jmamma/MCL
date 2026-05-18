@@ -108,7 +108,6 @@ public:
                                       uint8_t tracknumber,
                                       SeqTrack *seq_track);
   virtual uint8_t get_model() { return machine.get_model(); }
-  virtual uint8_t get_device_type() { return MDSPSX_TRACK_TYPE; }
   virtual uint8_t get_parent_model() { return MD_TRACK_TYPE; }
   virtual bool allow_cast_to_parent() { return true; }
   virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }

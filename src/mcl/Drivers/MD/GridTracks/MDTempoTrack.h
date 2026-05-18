@@ -34,8 +34,6 @@ public:
   virtual uintptr_t get_region() { return BANK1_MDTEMPO_TRACK_START; }
 
   virtual uint8_t get_model() { return MDTEMPO_TRACK_TYPE; }
-  virtual uint8_t get_device_type() { return MDTEMPO_TRACK_TYPE; }
-
   virtual void *get_sound_data_ptr() { return &tempo; }
   virtual size_t get_sound_data_size() { return sizeof(float); }
 };

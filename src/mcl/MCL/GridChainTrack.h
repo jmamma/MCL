@@ -33,8 +33,6 @@ public:
   virtual uintptr_t get_region() { return BANK1_GRIDCHAIN_TRACK_START; }
 
   virtual uint8_t get_model() { return GRIDCHAIN_TRACK_TYPE; }
-  virtual uint8_t get_device_type() { return GRIDCHAIN_TRACK_TYPE; }
-
   virtual void *get_sound_data_ptr() { return this; }
   virtual size_t get_sound_data_size() { return sizeof(GridChain); }
 };

@@ -43,7 +43,6 @@ public:
   virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
-  virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
   virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   virtual uint8_t get_parent_model() { return device_manager.secondary_device()->track_type; }
 #ifdef PLATFORM_TBD
@@ -96,8 +95,6 @@ class ExtTrackChunk : public DeviceTrack {
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return GRID2_TRACK_LEN; }
   virtual uint16_t get_region() { return BANK1_EXT_TRACKS_START; }
-  virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
-
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };
@@ -109,8 +106,6 @@ public:
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return GRID2_TRACK_LEN; }
   virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
-  virtual uint8_t get_device_type() { return EXT_TRACK_TYPE; }
-
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };

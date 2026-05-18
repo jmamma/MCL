@@ -208,8 +208,6 @@ class DeviceTrackChunk : public DeviceTrack {
   virtual uint8_t get_model() = 0;
   virtual uint16_t get_track_size() = 0;
   virtual uintptr_t get_region() = 0;
-  virtual uint8_t get_device_type() = 0;
-
   virtual void *get_sound_data_ptr() = 0;
   virtual size_t get_sound_data_size() = 0;
   virtual size_t get_sound_cmp_size() { return get_sound_data_size(); }

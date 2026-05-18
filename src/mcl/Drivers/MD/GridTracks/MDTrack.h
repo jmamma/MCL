@@ -102,7 +102,6 @@ public:
                                       SeqTrack *seq_track);
 #endif
   virtual uint8_t get_model() { return machine.get_model(); }
-  virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
   virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
 
   virtual void *get_sound_data_ptr() { return &machine; }
@@ -119,8 +118,6 @@ public:
   virtual uint8_t get_model() { return MD_TRACK_TYPE; }
   virtual uint16_t get_track_size() { return GRID1_TRACK_LEN; }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
-  virtual uint8_t get_device_type() { return MD_TRACK_TYPE; }
-
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 };
