@@ -94,16 +94,10 @@ void lfo_mult_label(uint8_t multiplier, char *out) {
 }
 
 bool lfo_preview_is_centered(uint8_t wav_type) {
-  switch (wav_type) {
-  case TRI_WAV:
-  case SAW_WAV:
-  case SQU_WAV:
-  case RND_WAV:
-  case SIN_WAV:
-    return true;
-  default:
-    return false;
-  }
+  constexpr uint16_t centered_mask = (1 << TRI_WAV) | (1 << SAW_WAV) |
+                                     (1 << SQU_WAV) | (1 << RND_WAV) |
+                                     (1 << SIN_WAV);
+  return (centered_mask >> wav_type) & 1;
 }
 
 void update_lfo_offset(Encoder **encoders, LFOSeqTrack *track,
@@ -339,10 +333,9 @@ void LFOPage::display() {
 
     uint8_t wav_type =
         lfo_track->wav_type < LFO_SHAPE_COUNT ? lfo_track->wav_type : TRI_WAV;
-    uint8_t ref_sample = lfo_preview_is_centered(wav_type) ? 64 : 0;
-    uint8_t ref_y =
-        preview_y + preview_height -
-        (((uint16_t)ref_sample * (uint16_t)preview_height) / 128);
+    uint8_t ref_y = lfo_preview_is_centered(wav_type)
+                        ? preview_y + 4
+                        : preview_y + preview_height;
     for (uint8_t i = 0; i < preview_width; i += 2) {
       oled_display.drawPixel(preview_x + i, ref_y, WHITE);
     }
@@ -357,7 +350,7 @@ void LFOPage::display() {
         uint8_t band = out & 1;
         y = out < 64 ? preview_y + preview_height - band : preview_y + band;
       } else {
-        uint8_t sample = ((int16_t)out * (int16_t)preview_height) / 128;
+        uint8_t sample = ((uint16_t)out * preview_height) >> 7;
         y = preview_y + preview_height - sample;
       }
       oled_display.drawPixel(preview_x + i, y, WHITE);
