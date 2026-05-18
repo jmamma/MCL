@@ -162,17 +162,13 @@ int8_t lfo_seed_to_random_value(uint16_t seed) {
   return (int8_t)(((seed & 0x3FFFU) >> 7) - 64);
 }
 
+const int8_t lfo_preview_random_values[16] PROGMEM = {
+    17, 53, 7, -4, -61, 0, 4, -59,
+    10, 15, -39, 41, -61, 45, 48, 30};
+
 int8_t lfo_preview_random(uint16_t phase) {
-  uint16_t seed0 = 0x1234U;
-  uint16_t seed1 = 0x5678U;
-  uint16_t next = seed0;
   uint8_t coarse = (phase & LFO_PHASE_MASK) >> 12;
-  for (uint8_t i = 0; i <= coarse; ++i) {
-    next = seed0 + seed1;
-    seed1 = seed0;
-    seed0 = next;
-  }
-  return lfo_seed_to_random_value(next);
+  return (int8_t)pgm_read_byte(&lfo_preview_random_values[coarse]);
 }
 
 int16_t lfo_terminal_sample(uint8_t wav_type, uint16_t phase) {
