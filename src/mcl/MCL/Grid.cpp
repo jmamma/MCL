@@ -43,7 +43,7 @@ bool Grid::new_file(const char *gridname) {
   // GRID_WIDTH + 1 (because first slot is header)
   // GRID_LENGTH + 2 (first row reserved for header information
   //                 (last row is reserved for tmp space, used by clipboard);
-  ret = file.open(gridname, O_RDWR | O_CREAT | O_TRUNC);
+  ret = file.open(gridname, O_RDWR | O_CREAT | O_EXCL);
   if (ret) {
     // Pre-allocate the file size
     ret = file.preAllocate((uint32_t)GRID_SLOT_BYTES *
