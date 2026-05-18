@@ -25,7 +25,6 @@ public:
   MidiSDSSysexListenerClass() : MidiSysexListenerClass(NULL, 0x7E, 0x00, 0x01) {}
 
   virtual void start();
-  virtual void handleByte(uint8_t byte);
   virtual void end();
   void data_packet(const SysexView &view);
   void dump_request();

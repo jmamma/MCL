@@ -85,13 +85,12 @@ read_wav_packet_channel0(Wav &wav, uint8_t *data, uint8_t num_samples,
   uint8_t full_run =
       ((sizeof(tmp_buf) / channels) / sample_size) * sample_size * channels;
   position += wav.data_offset;
-  while (read_size > 0) {
+  while (frame_read_size > 0) {
     uint8_t current_run = min((uint16_t)full_run, frame_read_size);
     if (!wav.read_data(tmp_buf, current_run, position)) {
       return false;
     }
     position += current_run;
-    read_size -= current_run / channels;
     frame_read_size -= current_run;
     for (uint8_t p = 0; p < current_run; p += frame_size) {
       memcpy(data, tmp_buf + p, sample_size);
@@ -129,7 +128,6 @@ struct SyxReader : SDSFileReader {
 
 struct WavReader : SDSFileReader {
   Wav *wav;
-  uint16_t sample_num;
   bool header_sent;
   uint32_t samples_sent;
   uint32_t total_samples;
@@ -174,8 +172,8 @@ struct WavReader : SDSFileReader {
     buf[1] = 0x7E;
     buf[2] = midi_sds.deviceID;
     buf[3] = 0x01;
-    buf[4] = sample_num & 0x7F;
-    buf[5] = sample_num >> 7;
+    buf[4] = 0;
+    buf[5] = 0;
     buf[6] = sample_format;
 
     uint32_t samplePeriod;
@@ -230,10 +228,14 @@ struct WavReader : SDSFileReader {
       return -1;
     }
 
-    uint8_t n = 0, byte_count = 0;
-    const uint8_t max_n = 120 - midi_bytes_per_word;
+    uint8_t samples_to_send = num_samples_per_packet;
+    uint32_t samples_left = total_samples - samples_sent;
+    if (samples_left < samples_to_send) {
+      samples_to_send = (uint8_t)samples_left;
+    }
 
-    while (n <= max_n && (samples_sent + byte_count / bytes_per_word) < total_samples) {
+    uint8_t n = 0, byte_count = 0;
+    for (uint8_t sample = 0; sample < samples_to_send; sample++) {
       // Assemble multi-byte sample value
       uint32_t sample_val = 0;
       for (uint8_t b = 0; b < bytes_per_word; b++) {
@@ -258,7 +260,7 @@ struct WavReader : SDSFileReader {
       buf[n++] = (sample_val << (7 - remaining_bits)) & 0x7F;
     }
 
-    samples_sent += num_samples_per_packet;
+    samples_sent += samples_to_send;
     return n;
   }
 
@@ -561,7 +563,6 @@ bool MidiSDSClass::sendWav(const char *filename, const char *samplename,
                            uint16_t sample_number, bool show_progress) {
   WavReader reader;
   reader.wav = &wav_file;
-  reader.sample_num = sample_number;
   return sendFile(reader, filename, sample_number, samplename, show_progress);
 }
 

@@ -14,8 +14,6 @@ void MidiSDSSysexListenerClass::start() {
   isSDSMessage = false;
 }
 
-void MidiSDSSysexListenerClass::handleByte(uint8_t byte) {}
-
 #define ELEKTRON_ID 0x3C
 #define MD_ID 0x02
 #define MD_SDS_NAME 0x73

@@ -215,9 +215,7 @@ struct WavHeader {
 class Wav {
 public:
   WavHeader header;
-  bool headerRead = false;
   uint32_t data_offset;
-  uint32_t smpl_offset;
   char filename[16];
   File file;
   Wav() {}

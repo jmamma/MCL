@@ -10,7 +10,6 @@ bool Wav::close(bool write) {
       return false;
     }
   }
-  headerRead = false;
   return file.close();
 }
 
@@ -20,7 +19,6 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
   DEBUG_PRINTLN(filename);
   uint16_t file_mode = write ? (O_RDWR | O_CREAT) : O_RDWR;
   strncpy(filename, file_name, 16);
-  headerRead = false;
 
   if (file.isOpen()) {
     DEBUG_PRINTLN(F("file already open"));
@@ -50,7 +48,6 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
       goto failed;
     }
 
-    headerRead = true;
     DEBUG_DUMP(data_offset);
     DEBUG_DUMP(file.fileSize());
   } else {
@@ -58,7 +55,6 @@ bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
       DEBUG_PRINTLN(F("Could not read header"));
       goto failed;
     }
-    headerRead = true;
   }
   return true;
 failed:
@@ -140,7 +136,6 @@ bool Wav::read_header() {
   header.data.deactivate();
   header.smpl.deactivate();
   data_offset = 0;
-  smpl_offset = 0;
 
   // parse the subchunks
   while (chunk_offset + sizeof(chunk_t) <= riff_end) {
@@ -174,9 +169,7 @@ bool Wav::read_header() {
     } else if (pchunk->is<smplchunk_t>()) {
       if (pchunk->chunk_size >= sizeof(smplchunk_t) - sizeof(chunk_t)) {
         header.smpl = *(smplchunk_t *)pchunk;
-        smpl_offset = chunk_offset + sizeof(smplchunk_t) - sizeof(loop_t);
         DEBUG_PRINTLN("parse smpl");
-        DEBUG_DUMP(smpl_offset);
       }
     }
     chunk_offset += padded_len;
