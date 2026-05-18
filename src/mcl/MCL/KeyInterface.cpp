@@ -44,9 +44,10 @@ void KeyInterface::start() {}
 
 void KeyInterface::send_md_leds(TrigLEDMode mode) {
   uint16_t led_mask = 0;
-  for (uint8_t i = 0; i < 16; i++) {
+  uint16_t bit = 1;
+  for (uint8_t i = 0; i < 16; i++, bit <<= 1) {
     if (note_interface.is_note_on(i)) {
-      SET_BIT16(led_mask, i);
+      led_mask |= bit;
     }
   }
   mcl_gui.set_trigleds(led_mask, mode);
