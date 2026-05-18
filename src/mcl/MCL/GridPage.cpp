@@ -483,7 +483,7 @@ void GridPage::display_grid_info() {
   mcl_print_P(mclstr_space);
   uint8_t b = param2.cur / 16;
   oled_display.print((char)('A' + b));
-  mcl_gui.put_value_at2(param2.cur - b * 16 + 1, val);
+  mcl_gui.put_value_at2((param2.cur & 0x0F) + 1, val);
   oled_display.print(val);
 
   oled_display.setCursor(1, y_offset + 2 * 8);
@@ -547,19 +547,19 @@ void GridPage::display_grid() {
   }
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
 
-    auto cur_posx = x_offset;
-    auto cur_posy = y_offset + y * 8;
-    auto w = grid_width;
+    uint8_t cur_posx = x_offset;
+    uint8_t cur_posy = y_offset + y * 8;
+    GridSpan w = grid_width;
     for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift && x < w;
          x++) {
       oled_display.setCursor(cur_posx, cur_posy);
 
-      auto track_idx = x + base_col;
-      auto row_idx = y + base_row;
+      GridColumn track_idx = x + base_col;
+      GridRow row_idx = y + base_row;
       uint8_t track_type = row_headers[y].track_type[track_idx];
       uint8_t model = row_headers[y].model[track_idx];
 
-      auto active_cue_color = WHITE;
+      uint8_t active_cue_color = WHITE;
 
       str[0] = str[1] = '-';
       str[2] = 0;
@@ -694,7 +694,7 @@ void GridPage::display_row_info() {
     uint8_t b = row / 16;
     oled_display.setCursor(27, (n + 1) * 8);
     oled_display.print((char)('A' + b));
-    mcl_gui.put_value_at2(row - b * 16 + 1, val);
+    mcl_gui.put_value_at2((row & 0x0F) + 1, val);
     oled_display.print(val);
   }
 }
@@ -831,12 +831,6 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   height = param4.cur;
 
   uint8_t slot_update = 0;
-
-  uint16_t target_length =
-      (uint32_t)slot.link.length *
-      SeqTrack::get_speed_multiplier_int(slot.link.speed_value()) * slot.link.loops /
-      12;
-
   bool slot_changed_length = temp_slot.link.length != slot.link.length;
   bool slot_changed_loops = temp_slot.link.loops != slot.link.loops;
   bool slot_changed_row = temp_slot.link.row != slot.link.row;
@@ -913,7 +907,9 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       GridRow ypos = y + getRow();
       proj.read_grid_row_header(&header, ypos, cur_grid);
 
-      memset(track_select_array, 0, sizeof(track_select_array));
+      if (slot_load == 1) {
+        memset(track_select_array, 0, sizeof(track_select_array));
+      }
 
       if (slot_clear && height > 8) {
         mcl_gui.draw_progress("", y, height);
@@ -954,6 +950,10 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
               }
               //User changed loops, check if length of current is an even multiple of src length, if so increase loops to match
               else if (slot_changed_loops && temp_slot_length) {
+                uint16_t target_length =
+                    (uint32_t)slot.link.length *
+                    SeqTrack::get_speed_multiplier_int(slot.link.speed_value()) *
+                    slot.link.loops / 12;
                 if (!(target_length % temp_slot_length) && temp_slot_length <= target_length) {
                   temp_slot.link.loops = target_length / temp_slot_length; //try and match the src track target length
                 }
@@ -1062,14 +1062,13 @@ bool GridPage::handleEvent(gui_event_t *event) {
         }
 
         if (single_load) {
-          uint16_t bit = 1;
           uint8_t n = 0;
-          while ((loadmask & bit) == 0) {
-            bit <<= 1;
+          while ((loadmask & 1) == 0) {
+            loadmask >>= 1;
             n++;
           }
           uint8_t r = grid_page.bank * 16 + n;
-          grid_page.bank_popup_loadmask &= ~bit;
+          grid_page.bank_popup_loadmask = 0;
           // Reload as queue.
           grid_page.load_row(n, r);
         }

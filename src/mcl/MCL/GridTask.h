@@ -14,6 +14,8 @@ class LoadQueueModes {
 
 class LoadQueue {
   public:
+  static_assert((NUM_LINKS & (NUM_LINKS - 1)) == 0,
+                "LoadQueue wrap assumes power-of-two NUM_LINKS");
   GridRow row_selects[NUM_LINKS][NUM_SLOTS];
   LoadQueueModes modes[NUM_LINKS];
   uint8_t rd;
@@ -30,10 +32,8 @@ class LoadQueue {
     if (full) { return; }
     memcpy(row_selects[wr],row_select,NUM_SLOTS);
     modes[wr].mode = mode;
-    modes[wr++].offset = offset;
-    if (wr == NUM_LINKS) {
-       wr = 0;
-    }
+    modes[wr].offset = offset;
+    wr = (wr + 1) & (NUM_LINKS - 1);
     if (wr == rd) {
         full = true;
     }
@@ -49,10 +49,8 @@ class LoadQueue {
        if (track_select_array[n]) { row_selects[wr][n] = row; }
     }
     modes[wr].mode = mode;
-    modes[wr++].offset = offset;
-    if (wr == NUM_LINKS) {
-       wr = 0;
-    }
+    modes[wr].offset = offset;
+    wr = (wr + 1) & (NUM_LINKS - 1);
     if (wr == rd) {
       full = true;
     }
@@ -65,10 +63,8 @@ class LoadQueue {
       track_select[n] = row_select[n] < GRID_LENGTH;
     }
     mode = modes[rd].mode;
-    offset = modes[rd++].offset;
-    if (rd == NUM_LINKS) {
-       rd = 0;
-    }
+    offset = modes[rd].offset;
+    rd = (rd + 1) & (NUM_LINKS - 1);
     full = false;
   }
 

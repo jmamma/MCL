@@ -222,14 +222,13 @@ bool BankPopupPage::handleEvent(gui_event_t *event) {
       }
 
       if (single_load) {
-        uint16_t bit = 1;
         uint8_t n = 0;
-        while ((loadmask & bit) == 0) {
-          bit <<= 1;
+        while ((loadmask & 1) == 0) {
+          loadmask >>= 1;
           n++;
         }
         uint8_t r = grid_page.bank * 16 + n;
-        grid_page.bank_popup_loadmask &= ~bit;
+        grid_page.bank_popup_loadmask = 0;
         grid_page.load_row(n, r);
       }
 

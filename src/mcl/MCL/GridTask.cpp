@@ -125,9 +125,16 @@ void GridTask::transition_handler() {
   GridRow slots_changed[NUM_SLOTS];
   uint8_t track_select_array[NUM_SLOTS];
 
-  while (!MidiClock.clock_less_than(
-      MidiClock.div32th_counter + max(2u, ((uint16_t)MidiClock.get_tempo() * 32u + 999u) / 1000u),
-      (uint32_t)mcl_actions.next_transition * 2)) {
+  while (true) {
+    uint16_t margin =
+        ((uint16_t)MidiClock.get_tempo() * 32u + 999u) / 1000u;
+    if (margin < 2) {
+      margin = 2;
+    }
+    if (MidiClock.clock_less_than(MidiClock.div32th_counter + margin,
+                                  (uint32_t)mcl_actions.next_transition * 2)) {
+      break;
+    }
     memset(send_device, 0, sizeof(send_device));
     memset(track_select_array, 0, sizeof(track_select_array));
 

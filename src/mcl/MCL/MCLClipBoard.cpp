@@ -378,14 +378,13 @@ bool MCLClipBoard::paste(GridSlot col, GridRow row) {
     if ((!headers[0].active) || (headers[0].name[0] == '\0') ||
         (t_w == GRID_WIDTH && col == 0)) {
       grids[src_grid].read_row_header(&header_copy, y + t_row);
-      headers[0].active = true;
-      headers[1].active = true;
-      if (header_copy.active) {
-        strncpy(&(headers[0].name[0]), &(header_copy.name[0]), sizeof(headers[0].name));
-        strncpy(&(headers[1].name[0]), &(header_copy.name[0]), sizeof(headers[0].name));
-      } else {
-        headers[0].name[0] = '\0';
-        headers[1].name[0] = '\0';
+      for (uint8_t grid = 0; grid < NUM_GRIDS; grid++) {
+        headers[grid].active = true;
+        if (header_copy.active) {
+          strncpy(headers[grid].name, header_copy.name, sizeof(headers[grid].name));
+        } else {
+          headers[grid].name[0] = '\0';
+        }
       }
     }
     if (t_h > 8) {
