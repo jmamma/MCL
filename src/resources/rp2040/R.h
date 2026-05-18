@@ -280,10 +280,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_boot_menu_layout = 76;
   union {
     menu_t<start_menu_page_N> start_menu_layout[0];
-    char zz__start_menu_layout[56];
+    char zz__start_menu_layout[32];
   };
-  static constexpr size_t countof_start_menu_layout = 56 / sizeof(menu_t<start_menu_page_N>);
-  static constexpr size_t sizeofof_start_menu_layout = 56;
+  static constexpr size_t countof_start_menu_layout = 32 / sizeof(menu_t<start_menu_page_N>);
+  static constexpr size_t sizeofof_start_menu_layout = 32;
   union {
     menu_t<system_menu_page_N> system_menu_layout[0];
     char zz__system_menu_layout[140];
@@ -292,10 +292,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_system_menu_layout = 140;
   union {
     menu_t<aux_config_page_N> auxconfig_menu_layout[0];
-    char zz__auxconfig_menu_layout[56];
+    char zz__auxconfig_menu_layout[32];
   };
-  static constexpr size_t countof_auxconfig_menu_layout = 56 / sizeof(menu_t<aux_config_page_N>);
-  static constexpr size_t sizeofof_auxconfig_menu_layout = 56;
+  static constexpr size_t countof_auxconfig_menu_layout = 32 / sizeof(menu_t<aux_config_page_N>);
+  static constexpr size_t sizeofof_auxconfig_menu_layout = 32;
   union {
     menu_t<midi_config_page_N> midiconfig_menu_layout[0];
     char zz__midiconfig_menu_layout[160];
@@ -376,10 +376,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_midigeneric_menu_layout = 96;
   union {
     menu_t<md_config_page_N> mdconfig_menu_layout[0];
-    char zz__mdconfig_menu_layout[56];
+    char zz__mdconfig_menu_layout[76];
   };
-  static constexpr size_t countof_mdconfig_menu_layout = 56 / sizeof(menu_t<md_config_page_N>);
-  static constexpr size_t sizeofof_mdconfig_menu_layout = 56;
+  static constexpr size_t countof_mdconfig_menu_layout = 76 / sizeof(menu_t<md_config_page_N>);
+  static constexpr size_t sizeofof_mdconfig_menu_layout = 76;
   union {
     menu_t<md_import_page_N> mdimport_menu_layout[0];
     char zz__mdimport_menu_layout[96];
@@ -422,7 +422,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_perf_menu_layout = 56 / sizeof(menu_t<perf_menu_page_N>);
   static constexpr size_t sizeofof_perf_menu_layout = 56;
-  static constexpr size_t __total_size = 2572;
+  static constexpr size_t __total_size = 2544;
 };
 
 extern const unsigned char __R_icons_logo[] PROGMEM;
