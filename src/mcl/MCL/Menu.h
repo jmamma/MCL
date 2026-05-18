@@ -5,6 +5,8 @@
 
 #define MAX_MENU_ITEMS 32
 
+constexpr uint32_t menu_entry_mask(uint8_t entry) { return 1UL << entry; }
+
 #ifdef PLATFORM_TBD
 typedef bool (*menu_option_name_override_t)(uint8_t entry_index,
                                             uint8_t option_n, char *dst,
@@ -38,6 +40,12 @@ public:
   void enable_entry(uint8_t entry_index, bool en);
   bool is_entry_enable(uint8_t entry_index);
   void set_entry_name(uint8_t entry_index, const char *name);
+  void set_enabled_entry_mask(uint32_t mask) {
+    disabled_entry_mask[0] = ~((uint8_t)mask);
+    disabled_entry_mask[1] = ~((uint8_t)(mask >> 8));
+    disabled_entry_mask[2] = ~((uint8_t)(mask >> 16));
+    disabled_entry_mask[3] = ~((uint8_t)(mask >> 24));
+  }
 
   uint8_t *get_dest_variable(uint8_t item_n);
   uint8_t get_option_min(uint8_t item_n);
