@@ -133,10 +133,11 @@ bool MixerPage::display_mute_mask() {
   seq_step_page.mute_mask = 0;
 
   uint8_t len = mixer_track_count();
-  for (uint8_t i = 0; i < len; i++) {
+  uint16_t bit = 1;
+  for (uint8_t i = 0; i < len; i++, bit <<= 1) {
     SeqTrack *seq_track = mixer_seq_track(i);
     if (seq_track != nullptr && seq_track->mute_state == SEQ_MUTE_OFF) {
-      SET_BIT16(seq_step_page.mute_mask, i);
+      seq_step_page.mute_mask |= bit;
     }
   }
 
@@ -166,7 +167,8 @@ void MixerPage::oled_draw_mutes() {
   if (preview_mute_set != 255 && load_types[preview_mute_set][slot] == 0) {
     draw = false;
   }
-  for (uint8_t i = 0; i < len; ++i) {
+  uint16_t mute_bit = 1;
+  for (uint8_t i = 0; i < len; ++i, mute_bit <<= 1) {
     SeqTrack *seq_track = mixer_seq_track(i);
     if (seq_track == nullptr) {
       fader_x += 8;
@@ -175,7 +177,7 @@ void MixerPage::oled_draw_mutes() {
 
     uint8_t mute_state =
         preview_mute_set != 255
-            ? IS_BIT_SET16(mute_sets[slot].mutes[preview_mute_set], i)
+            ? (mute_sets[slot].mutes[preview_mute_set] & mute_bit) != 0
             : seq_track->mute_state == SEQ_MUTE_OFF;
 
     //   if (note_interface.is_note(i)) {
@@ -387,7 +389,8 @@ void MixerPage::display() {
 
     uint8_t dec = FADE_RATE;
 
-    for (uint8_t i = 0; i < len; i++) {
+    uint16_t redraw_bit = 1;
+    for (uint8_t i = 0; i < len; i++, redraw_bit <<= 1) {
 
       MidiDeviceMixerParam info;
       if (mixer_target.param(i, display_mode, &info)) {
@@ -400,7 +403,7 @@ void MixerPage::display() {
       meter_level = (((uint16_t) levels[i] * FADER_LEN) / 127) + 0;
       meter_level = min(fader_level, meter_level);
 
-      if (IS_BIT_SET16(redraw_mask, i)) {
+      if (redraw_mask & redraw_bit) {
         oled_display.fillRect(fader_x, fader_y - 1, 6, FADER_LEN + 1, BLACK);
         oled_display.drawRect(fader_x, fader_y + (FADER_LEN - fader_level), 6,
                               fader_level + 2, WHITE);
@@ -846,10 +849,11 @@ void MixerPage::onControlChangeCallback_Midi(DeviceIdx device_idx,
   sync_selected_mixer_device();
   SET_BIT16(mixer_page.redraw_mask, track);
   uint8_t len = mixer_page.mixer_track_count();
-  for (uint8_t i = 0; i < len; i++) {
+  uint16_t bit = 1;
+  for (uint8_t i = 0; i < len; i++, bit <<= 1) {
     if (note_interface.is_note_on(i) && (i != track)) {
       if (mixer_target.set_param(i, track_param, value, true)) {
-        SET_BIT16(mixer_page.redraw_mask, i);
+        mixer_page.redraw_mask |= bit;
       }
     }
   }
