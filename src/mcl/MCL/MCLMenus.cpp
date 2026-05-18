@@ -68,6 +68,11 @@ void SystemMenuPage::prepare_menu_entries() {
   }
 }
 
+void SystemMenuPage::init() {
+  prepare_menu_entries();
+  MenuPage<system_menu_page_N>::init();
+}
+
 const uint8_t *const menu_target_param[] PROGMEM = {
     nullptr,
 

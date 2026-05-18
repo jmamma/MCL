@@ -26,8 +26,10 @@ public:
                  Encoder *e3 = NULL, Encoder *e4 = NULL)
       : MenuPage(e1, e2, e3, e4) {}
 
-protected:
-  virtual void prepare_menu_entries() override;
+  virtual void init() override;
+
+private:
+  void prepare_menu_entries();
 };
 
 extern SystemMenuPage system_page;

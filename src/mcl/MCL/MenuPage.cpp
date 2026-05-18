@@ -81,7 +81,6 @@ void MenuPageBase::init(bool generate_row_names) {
   (void)generate_row_names;
 
   MenuBase *m = get_menu();
-  prepare_menu_entries();
   encoders[1]->cur = selected_item;
   ((MCLEncoder *)encoders[1])->max = m->get_number_of_items() - 1;
 

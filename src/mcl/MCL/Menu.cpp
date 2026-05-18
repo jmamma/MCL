@@ -114,7 +114,7 @@ menu_function_t MenuBase::get_row_function(uint8_t item_n) {
 uint8_t MenuBase::get_number_of_items() {
   uint8_t entry_cnt = get_entry_count();
   uint8_t item_cnt = 0;
-  for (auto i = 0; i < entry_cnt; ++i) {
+  for (uint8_t i = 0; i < entry_cnt; ++i) {
     if (is_entry_enable(i))
       ++item_cnt;
   }

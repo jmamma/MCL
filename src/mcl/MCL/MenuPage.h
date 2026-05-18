@@ -53,7 +53,6 @@ protected:
   uint8_t selected_item = 0;
 
   virtual MenuBase *get_menu() = 0;
-  virtual void prepare_menu_entries() {}
 };
 
 template <int N> class MenuPage : public MenuPageBase {
