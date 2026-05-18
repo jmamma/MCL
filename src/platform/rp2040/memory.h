@@ -116,12 +116,20 @@ FORCED_INLINE() extern inline uint8_t get_byte_bank3(volatile uint8_t *dst) {
   return c;
 }
 
-extern volatile uint8_t *rand_ptr;
+extern volatile uint16_t g_random_state_a;
+extern volatile uint16_t g_random_state_b;
 
 FORCED_INLINE() extern inline uint8_t get_random_byte() {
-    // Explicit cast to satisfy pgm_read_byte's const requirement
-    const uint8_t* ptr = const_cast<const uint8_t*>(rand_ptr++);
-    return (pgm_read_byte(ptr) ^ get_byte_bank1(rand_ptr) ^ read_clock_ms());
+    uint16_t a = g_random_state_a;
+    uint16_t b = g_random_state_b;
+    if ((a | b) == 0) {
+        a = read_clock_ms() ^ 0xA5A5U;
+        b = a ^ 0x5A5AU;
+    }
+    uint16_t next = a + b;
+    g_random_state_a = b;
+    g_random_state_b = next;
+    return (uint8_t)(next >> 8);
 }
 
 extern inline uint8_t get_random(uint8_t range) {
