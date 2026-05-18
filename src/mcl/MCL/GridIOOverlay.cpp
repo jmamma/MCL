@@ -339,11 +339,12 @@ uint16_t GridIOOverlay::visible_select_mask() const {
     }
     return mask;
   }
-  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+  uint16_t bit = 1;
+  for (uint8_t n = 0; n < GRID_WIDTH; n++, bit <<= 1) {
     GridSlot slot = n + GridIOPage::old_grid * GRID_WIDTH;
     if (IS_BIT_SET32(GridIOPage::track_select, slot) ||
         note_interface.is_note(slot) || note_interface.is_note(n)) {
-      SET_BIT16(mask, n);
+      mask |= bit;
     }
   }
   return mask;
