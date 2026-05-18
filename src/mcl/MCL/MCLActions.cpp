@@ -627,17 +627,12 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
   return true;
 }
 
-void MCLActions::handle_mute_states(uint8_t *mute_states, bool restore) {
+void MCLActions::restore_mute_states(uint8_t *mute_states) {
   for (uint8_t i = 0; i < NUM_SLOTS; ++i) {
     if (mute_states[i] == 255) { continue; }
     GridDeviceTrack *gdt_dst = get_grid_dev_track(i);
     if (gdt_dst != nullptr) {
-      if (restore) {
-        gdt_dst->seq_track->mute_state = mute_states[i];
-      } else {
-        mute_states[i] = gdt_dst->seq_track->mute_state;
-        gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
-      }
+      gdt_dst->seq_track->mute_state = mute_states[i];
     }
   }
 }
@@ -667,6 +662,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   GridSlot last_slot = 255;
   GridSlot first_slot = 255;
+  GridRow current_row = grid_page.getRow();
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
     if (slot_select_array[i] == 0) { continue; }
@@ -685,12 +681,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       have_row_header_grid = true;
     }
 
-    mute_states[dst] = gdt_dst->seq_track->mute_state;
-
-      row = grid_page.getRow();
-    if (row_array) {
-      row = row_array[i];
-    }
+    row = row_array ? row_array[i] : current_row;
     last_slot = dst;
 
     grid_page.active_slots[dst] = load_offset == 255 ? row : SLOT_OFFSET_LOAD;
@@ -700,9 +691,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
     if (!load_track_immediate(row, i, dst, gdt_dst, send_masks)) {
       slot_select_array[i] = 0;
+    } else {
+      mute_states[dst] = gdt_dst->seq_track->mute_state;
+      gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
     }
   }
-  handle_mute_states(mute_states,false);
 
   /*Send the encoded kit to the devices via sysex*/
   uint16_t myclock = read_clock_ms();
@@ -743,7 +736,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   while (clock_diff(myclock, read_clock_ms()) < latency_ms) {
   }
 
-  handle_mute_states(mute_states,true);
+  restore_mute_states(mute_states);
   /*All the tracks have been sent so clear the write queue*/
   write_original = 0;
 
@@ -786,14 +779,17 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 void MCLActions::update_chain_links(GridSlot n, GridDeviceTrack *gdt) {
 
    if (chains[n].is_mode_queue()) {
-      if (chains[n].get_length() == QUANT_LEN) {
+      uint8_t chain_len = chains[n].get_length();
+      if (chain_len == QUANT_LEN) {
         if (links[n].loops == 0) {
           links[n].loops = 1;
         }
-      } else if (chains[n].get_length() != QUANT_LEN) {
+      } else {
         links[n].loops = 1;
-        links[n].length = max(1,(uint8_t) ((uint16_t)chains[n].get_length() * 12 /
-                          gdt->seq_track->get_speed_multiplier_int()));
+        uint8_t length =
+            (uint16_t)chain_len * 12 /
+            gdt->seq_track->get_speed_multiplier_int();
+        links[n].length = length ? length : 1;
        /* constexpr uint8_t min_steps_before_transition = 2;
         while (links[n].loops * links[n].length < min_steps_before_transition) {
           links[n].loops++;
@@ -992,14 +988,20 @@ void MCLActions::calc_latency() {
 
   bool send_dev[NUM_DEVS] = {0};
 
-  constexpr uint32_t LOAD_DIVISOR = (10 * 1000);
-
   uint16_t dev_load_penalty[NUM_DEVS] = {0};
+
+#if !defined(__AVR__)
+  constexpr uint32_t LOAD_DIVISOR = (10 * 1000);
+#endif
 
   for (uint8_t i = 0; i < NUM_DEVS; i++) {
     if (devs[i] != nullptr && devs[i]->uart != nullptr) {
+#if defined(__AVR__)
+      dev_load_penalty[i] = devs[i]->uart->speed / 2500u;
+#else
       dev_load_penalty[i] =
           (devs[i]->uart->speed * TRACK_MIN_LOAD_TIME) / LOAD_DIVISOR;
+#endif
     }
   }
 
@@ -1038,7 +1040,7 @@ void MCLActions::calc_latency() {
   #if defined(__AVR__)
   /* atmega2560 is not fast enough to pack elektron data at 8x turbo for Analog4 etc..
    * double the latency required */
-  if (send_dev[1] && devs[1] != nullptr && secondary_elektron != nullptr &&
+  if (send_dev[1] && secondary_elektron != nullptr &&
       devs[1]->uart != nullptr && devs[1]->uart->speed >= 250000) {
     dev_latency[1].latency_bytes *= 2;
   }

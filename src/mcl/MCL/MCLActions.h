@@ -141,7 +141,7 @@ private:
                       GridSlot load_offset);
   bool load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
                             GridDeviceTrack *gdt_dst, uint8_t *send_masks);
-  void handle_mute_states(uint8_t *mute_states, bool restore);
+  void restore_mute_states(uint8_t *mute_states);
 };
 
 extern void md_import();
