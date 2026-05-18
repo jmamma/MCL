@@ -11,12 +11,14 @@
 namespace {
 
 bool path_starts_with_dir(const char *path, const char *dir) {
-  size_t dir_len = strlen(dir);
-  if (dir_len == 0) {
+  if (*dir == '\0') {
     return false;
   }
-  return strncmp(path, dir, dir_len) == 0 &&
-         (path[dir_len] == '\0' || path[dir_len] == '/');
+  while (*dir != '\0' && *path == *dir) {
+    path++;
+    dir++;
+  }
+  return *dir == '\0' && (*path == '\0' || *path == '/');
 }
 
 } // namespace
@@ -172,12 +174,18 @@ void LoadProjectPage::on_copy(const char *from, const char *to) {
 
   bool ok = false;
 #ifdef __AVR__
-  bool dir = true;
+  if (is_project_dir(from)) {
+    char from_project_path[PRJ_PATH_LEN];
+    char to_project_path[PRJ_PATH_LEN];
+    ok = build_project_path(from, from_project_path,
+                            sizeof(from_project_path)) &&
+         build_project_path(to, to_project_path, sizeof(to_project_path)) &&
+         proj.copy_project(from_project_path, to_project_path);
+  }
 #else
   file.open(from, O_READ);
   bool dir = file.isDirectory();
   file.close();
-#endif
 
   if (dir) {
     if (is_project_dir(from)) {
@@ -188,13 +196,10 @@ void LoadProjectPage::on_copy(const char *from, const char *to) {
            build_project_path(to, to_project_path, sizeof(to_project_path)) &&
            proj.copy_project(from_project_path, to_project_path);
     } else {
-#ifndef __AVR__
       mcl_gui.draw_progress("CLONE", 0, 64);
       ok = mcl_sd.copy_dir(from, to, 0, 64, 64);
-#endif
     }
   }
-#ifndef __AVR__
   else {
     mcl_gui.draw_progress("CLONE", 0, 64);
     ok = mcl_sd.copy_file(from, to, 0, 64, 64);
@@ -495,11 +500,11 @@ bool LoadProjectPage::build_project_path(const char *entry, char *out,
     return false;
   }
 
-  size_t parent_len = strlen(parent);
   size_t entry_len = strlen(entry);
   if (entry_len == 0 || entry_len > PRJ_NAME_LEN) {
     return false;
   }
+  size_t parent_len = strlen(parent);
   size_t needed = parent_len + (parent_len ? 1 : 0) + entry_len + 1;
   if (needed > out_len) {
     return false;
