@@ -65,8 +65,8 @@ read_wav_packet_channel0(Wav &wav, uint8_t *data, uint8_t num_samples,
 
   uint8_t frame_size = sample_size * channels;
   uint32_t position = sample_index * frame_size;
-  uint16_t read_size = num_samples * sample_size;
-  uint16_t frame_read_size = read_size * channels;
+  uint8_t read_size = num_samples * sample_size;
+  uint8_t frame_read_size = read_size * channels;
 
   if (position >= wav.header.data.chunk_size) {
     return true;
@@ -216,22 +216,22 @@ struct WavReader : SDSFileReader {
     if (samples_sent >= total_samples)
       return 0;
 
-    uint8_t samples[120];
-    bool read_ok;
-#if defined(__AVR__)
-    read_ok = read_wav_packet_channel0(*wav, samples, num_samples_per_packet,
-                                       samples_sent);
-#else
-    read_ok = wav->read_samples(&samples, num_samples_per_packet, samples_sent, 0);
-#endif
-    if (!read_ok) {
-      return -1;
-    }
-
     uint8_t samples_to_send = num_samples_per_packet;
     uint32_t samples_left = total_samples - samples_sent;
     if (samples_left < samples_to_send) {
       samples_to_send = (uint8_t)samples_left;
+    }
+
+    uint8_t samples[120];
+    bool read_ok;
+#if defined(__AVR__)
+    read_ok = read_wav_packet_channel0(*wav, samples, samples_to_send,
+                                       samples_sent);
+#else
+    read_ok = wav->read_samples(&samples, samples_to_send, samples_sent, 0);
+#endif
+    if (!read_ok) {
+      return -1;
     }
 
     uint8_t n = 0, byte_count = 0;
@@ -612,11 +612,7 @@ bool MidiSDSClass::recvWav(const char *filename, uint16_t sample_number) {
         DEBUG_PRINTLN("wav is open");
         goto recv_fail;
       } else {
-        if (SD.exists(filename)) {
-          if (!SD.remove(filename)) {
-            DEBUG_PRINTLN("could not remove");
-          }
-        }
+        SD.remove(filename);
         if (!SD.rename(wav_file.filename, filename)) {
           gfx.alert("wav_file rename", "failed :(");
           goto fin;
