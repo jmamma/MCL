@@ -157,8 +157,7 @@ void MidiSDSSysexListenerClass::dump_header(const SysexView &view) {
     return;
   }
   if (midi_sds.loopType != 0x7F) {
-    midi_sds.wav_file.header.smpl.init(midi_sds.wav_file.header.fmt,
-                                       midi_sds.loopType, midi_sds.loopStart,
+    midi_sds.wav_file.header.smpl.init(midi_sds.loopType, midi_sds.loopStart,
                                        midi_sds.loopEnd);
     //midi_sds.wav_file.file.sync();
   }

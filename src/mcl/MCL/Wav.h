@@ -15,6 +15,7 @@ struct chunk_t {
 
   /// returns total chunk length.
   uint32_t total_len() const { return chunk_size + sizeof(chunk_t); }
+  uint32_t padded_len() const { return total_len() + (chunk_size & 1); }
 
   /// returns extra data length in the chunk.
   template <typename T> uint32_t ex_len() const {
@@ -57,8 +58,9 @@ struct fmtchunk_t : public chunk_t {
     sampleRate = smplrate;
     bitRate = bitrate;
     audioFormat = 1; // PCM
-    byteRate = sampleRate * nchannel * (bitrate / 8);
-    blockAlign = nchannel * (bitrate / 8);
+    uint8_t bytes_per_sample = (bitrate + 7) / 8;
+    byteRate = sampleRate * nchannel * bytes_per_sample;
+    blockAlign = nchannel * bytes_per_sample;
 
     activate<fmtchunk_t>(0);
   }
@@ -100,8 +102,8 @@ struct smplchunk_t : public chunk_t {
   uint32_t cbSamplerData;
   loop_t loops[1]; // keep at least 1 loop in-place
 
-  void init(const fmtchunk_t &fmt, uint8_t SDS_loop_type,
-            uint32_t SDS_loop_start, uint32_t SDS_loop_end) {
+  void init(uint8_t SDS_loop_type, uint32_t SDS_loop_start,
+            uint32_t SDS_loop_end) {
     activate<smplchunk_t>(0);
     dwManufacturer = 0;
     memcpy(&dwProduct, "MCL ", 4);
@@ -115,14 +117,14 @@ struct smplchunk_t : public chunk_t {
 
     loops[0].dwIdentifier = 0;
     loops[0].dwType = SDS_loop_type;
-    loops[0].dwStart = SDS_loop_start * fmt.numChannels * (fmt.bitRate / 8);
-    loops[0].dwEnd = SDS_loop_end * fmt.numChannels * (fmt.bitRate / 8);
+    loops[0].dwStart = SDS_loop_start;
+    loops[0].dwEnd = SDS_loop_end;
     loops[0].dwFraction = 0;
     loops[0].dwPlayCount = 0;
   }
 
-  void to_sds(const fmtchunk_t &fmt, uint8_t &SDS_loop_type,
-              uint32_t &SDS_loop_start, uint32_t &SDS_loop_end) {
+  void to_sds(uint8_t &SDS_loop_type, uint32_t &SDS_loop_start,
+              uint32_t &SDS_loop_end) const {
     // only activate SDS looping if we're not dealing with chain/slices
     if (cSampleLoops != 1) {
       return;
@@ -131,16 +133,8 @@ struct smplchunk_t : public chunk_t {
       return;
     }
     SDS_loop_type = loops[0].dwType;
-    SDS_loop_start = loops[0].dwStart / (fmt.numChannels * (fmt.bitRate / 8));
-    SDS_loop_end = loops[0].dwEnd / (fmt.numChannels * (fmt.bitRate / 8));
-
-    DEBUG_PRINTLN("to_sds");
-    DEBUG_DUMP(loops[0].dwStart);
-    DEBUG_DUMP(loops[0].dwEnd);
-    DEBUG_DUMP(fmt.numChannels);
-    DEBUG_DUMP(fmt.bitRate);
-    DEBUG_PRINTLN(SDS_loop_start);
-    DEBUG_PRINTLN(SDS_loop_end);
+    SDS_loop_start = loops[0].dwStart;
+    SDS_loop_end = loops[0].dwEnd;
   }
 
   static constexpr const char *id = "smpl";
@@ -159,15 +153,15 @@ struct WavHeader {
   smplchunk_t smpl;
 
   uint32_t get_length() {
-     return (data.chunk_size / fmt.numChannels) / (fmt.bitRate / 8);
+     return data.chunk_size / fmt.blockAlign;
   }
 
   uint32_t total_len() const {
     uint32_t sz = 12;
-    sz += fmt.total_len();
-    sz += data.total_len();
+    sz += fmt.padded_len();
+    sz += data.padded_len();
     if (smpl.is_active()) {
-      sz += smpl.total_len();
+      sz += smpl.padded_len();
     }
     return sz;
   }
@@ -184,7 +178,7 @@ struct WavHeader {
     DEBUG_PRINT_FN();
     fmt.init(numChannels, sampleRate, bitRate);
     data.init();
-    smpl.init(fmt, SDS_loop_type, SDS_loop_start, SDS_loop_end);
+    smpl.init(SDS_loop_type, SDS_loop_start, SDS_loop_end);
     _fill_chunkinfo();
   }
 
@@ -210,7 +204,8 @@ struct WavHeader {
     if (memcmp(format, "WAVE", 4)) {
       return false;
     }
-    if (filesize != chunk_size + 8) {
+    if ((filesize < sizeof(chunk_t)) ||
+        (chunk_size > filesize - sizeof(chunk_t))) {
       return false;
     }
     return true;

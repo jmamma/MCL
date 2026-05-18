@@ -210,8 +210,7 @@ bool WavDesigner::render() {
 
   DEBUG_PRINTLN("gain:");
   DEBUG_PRINTLN(largest_sample_so_far);
-  wav_file.header.smpl.init(wav_file.header.fmt, SDS_LOOP_FORWARD, loop_start,
-                            loop_end);
+  wav_file.header.smpl.init(SDS_LOOP_FORWARD, loop_start, loop_end);
   wav_file.file.sync();
   if (largest_sample_so_far > 0) {
 #if defined(__AVR__)

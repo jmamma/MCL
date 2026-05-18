@@ -111,6 +111,12 @@ bool Wav::write_header() {
   chunk_offset += sizeof(datachunk_t);
 
   data_offset = chunk_offset;
+  if (header.data.chunk_size & 1) {
+    uint8_t pad = 0;
+    if (!write_data(&pad, 1, data_offset + header.data.chunk_size)) {
+      return false;
+    }
+  }
   DEBUG_DUMP(data_offset);
   return true;
 }
@@ -129,16 +135,31 @@ bool Wav::read_header() {
   if (!header.check(file_size)) {
     return false;
   }
-  // deactivate all chunks
-  header.init();
+  uint32_t riff_end = header.chunk_size + sizeof(chunk_t);
+  header.fmt.deactivate();
+  header.data.deactivate();
+  header.smpl.deactivate();
+  data_offset = 0;
+  smpl_offset = 0;
 
   // parse the subchunks
-  while (chunk_offset < file_size) {
-    uint32_t read_size = min(sizeof(header_buf), file_size - chunk_offset);
-    if (!read_data(&header_buf, read_size, chunk_offset)) {
+  while (chunk_offset + sizeof(chunk_t) <= riff_end) {
+    uint32_t remaining = riff_end - chunk_offset;
+    uint32_t read_size = min((uint32_t)sizeof(header_buf), remaining);
+    if (!read_data(header_buf, read_size, chunk_offset)) {
+      return false;
+    }
+    if (pchunk->chunk_size > remaining - sizeof(chunk_t)) {
+      return false;
+    }
+    uint32_t padded_len = pchunk->total_len() + (pchunk->chunk_size & 1);
+    if (padded_len > remaining) {
       return false;
     }
     if (pchunk->is<fmtchunk_t>()) {
+      if (pchunk->chunk_size < sizeof(fmtchunk_t) - sizeof(chunk_t)) {
+        return false;
+      }
       header.fmt = *(fmtchunk_t *)pchunk;
       DEBUG_PRINTLN("parse fmt");
       DEBUG_DUMP(header.fmt.audioFormat);
@@ -151,14 +172,14 @@ bool Wav::read_header() {
       DEBUG_PRINTLN("parse data");
       DEBUG_DUMP(data_offset);
     } else if (pchunk->is<smplchunk_t>()) {
-      header.smpl = *(smplchunk_t *)pchunk;
-      smpl_offset = chunk_offset + sizeof(smplchunk_t) - sizeof(loop_t);
-      DEBUG_PRINTLN("parse smpl");
-      DEBUG_DUMP(smpl_offset);
-    } else {
-    //break;
+      if (pchunk->chunk_size >= sizeof(smplchunk_t) - sizeof(chunk_t)) {
+        header.smpl = *(smplchunk_t *)pchunk;
+        smpl_offset = chunk_offset + sizeof(smplchunk_t) - sizeof(loop_t);
+        DEBUG_PRINTLN("parse smpl");
+        DEBUG_DUMP(smpl_offset);
+      }
     }
-    chunk_offset += pchunk->total_len();
+    chunk_offset += padded_len;
   }
 
   // required subchunks
@@ -166,7 +187,9 @@ bool Wav::read_header() {
     return false;
   }
 
-  if ((header.fmt.bitRate > 28) || (header.fmt.bitRate < 8)) {
+  if ((header.fmt.audioFormat != 1) || (header.fmt.numChannels == 0) ||
+      (header.fmt.blockAlign == 0) || (header.fmt.bitRate > 28) ||
+      (header.fmt.bitRate < 8)) {
     DEBUG_PRINTLN(F("header bitRate is not valid:"));
     DEBUG_PRINTLN(header.fmt.bitRate);
     return false;
@@ -221,16 +244,17 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
   //  DEBUG_PRINTLN(channel);
   uint32_t position;
   uint32_t size;
+  uint8_t bytes_per_sample = (header.fmt.bitRate + 7) / 8;
 
   // Write all channels when channel >= numChannels (matches read_samples behavior)
   if (channel >= header.fmt.numChannels) {
-    position = sample_offset * (header.fmt.bitRate / 8) * header.fmt.numChannels;
-    size = num_samples * (header.fmt.bitRate / 8) * header.fmt.numChannels;
+    position = sample_offset * bytes_per_sample * header.fmt.numChannels;
+    size = num_samples * bytes_per_sample * header.fmt.numChannels;
   } else {
     position =
         channel * (header.data.chunk_size / header.fmt.numChannels) +
-        sample_offset * (header.fmt.bitRate / 8);
-    size = num_samples * (header.fmt.bitRate / 8);
+        sample_offset * bytes_per_sample;
+    size = num_samples * bytes_per_sample;
   }
   // DEBUG_PRINTLN(num_samples);
   //  DEBUG_PRINTLN(header.bitRate);
@@ -243,7 +267,10 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
     DEBUG_PRINTLN(F("write failed"));
     return false;
   }
-  uint32_t new_subchunk2Size = (position + size) * header.fmt.numChannels;
+  uint32_t new_subchunk2Size = position + size;
+  if (channel < header.fmt.numChannels) {
+    new_subchunk2Size *= header.fmt.numChannels;
+  }
   // DEBUG_PRINT_FN();
   // DEBUG_PRINTLN(position);
   // DEBUG_PRINTLN(num_samples);
@@ -266,7 +293,7 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
 
 bool Wav::write_mono_samples(void *data, uint32_t num_samples,
                              uint32_t sample_offset, bool writeheader) {
-  uint8_t bytes_per_sample = header.fmt.bitRate / 8;
+  uint8_t bytes_per_sample = (header.fmt.bitRate + 7) / 8;
   uint32_t position = sample_offset * bytes_per_sample;
   uint32_t size = num_samples * bytes_per_sample;
   bool ret = write_data(data, size, position + data_offset);

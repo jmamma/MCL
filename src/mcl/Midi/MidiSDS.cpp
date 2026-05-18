@@ -191,7 +191,12 @@ struct WavReader : SDSFileReader {
     uint32_t loopEnd = 0;
     uint8_t loopType = SDS_LOOP_OFF;
     if (wav->header.smpl.is_active()) {
-      wav->header.smpl.to_sds(wav->header.fmt, loopType, loopStart, loopEnd);
+      wav->header.smpl.to_sds(loopType, loopStart, loopEnd);
+      uint16_t block_align = wav->header.fmt.blockAlign;
+      if ((loopEnd > total_samples) && (block_align > 1)) {
+        loopStart /= block_align;
+        loopEnd /= block_align;
+      }
     }
 
     uint32_t vals[4] = {samplePeriod, total_samples, loopStart, loopEnd};
