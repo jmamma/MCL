@@ -879,8 +879,7 @@ void SeqPage::draw_lock_mask(uint8_t offset, bool show_current_step) {
 
 void SeqPage::draw_mask(const uint8_t offset, const uint64_t &pattern_mask,
                         const uint8_t step_count, const uint8_t length,
-                        const uint64_t &mute_mask, const uint64_t &slide_mask,
-                        const bool show_current_step) {
+                        const uint64_t &mute_mask, const uint64_t &slide_mask) {
   mcl_gui.draw_trigs(MCLGUI::seq_x0, MCLGUI::trig_y, offset, pattern_mask,
                      step_count, length, mute_mask, slide_mask);
 }
@@ -920,8 +919,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
     });
 
     shed_mask(led_mask, length, offset);
-    draw_mask(offset, mask, step_count, length, mute_mask, slide_mask,
-              show_current_step);
+    draw_mask(offset, mask, step_count, length, mute_mask, slide_mask);
 
     if (recording)
       return;
@@ -1072,9 +1070,8 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
         seq_page_step_track_for(i).set_length(length);
       }
     } else if (is_poly) {
-      uint16_t bit = 1;
-      for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++, bit <<= 1) {
-        if (poly_mask & bit) {
+      for (uint8_t c = 0; poly_mask; c++, poly_mask >>= 1) {
+        if (poly_mask & 1) {
           seq_page_step_track_for(c).set_length(length);
         }
       }
@@ -1224,9 +1221,8 @@ void opt_clear_track_handler() {
         opt_copy_track_handler(opt_clear);
       }
       if (is_poly) {
-        uint16_t bit = 1;
-        for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++, bit <<= 1) {
-          if (poly_mask & bit) {
+        for (uint8_t c = 0; poly_mask; c++, poly_mask >>= 1) {
+          if (poly_mask & 1) {
             mcl_clipboard.copy_sequencer_track(c);
             seq_page_step_track_for(c).clear_track();
           }
@@ -1435,9 +1431,8 @@ void opt_paste_track_handler() {
       }
       if (is_poly) {
         uint16_t poly_mask = seq_page_active_poly_mask();
-        uint16_t bit = 1;
-        for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++, bit <<= 1) {
-          if (poly_mask & bit) {
+        for (uint8_t c = 0; poly_mask; c++, poly_mask >>= 1) {
+          if (poly_mask & 1) {
             mcl_clipboard.paste_sequencer_track(c, c);
           }
         }

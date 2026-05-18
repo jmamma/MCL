@@ -52,45 +52,25 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
   }
 }
 
+const char lfo_mult_label_1x[] PROGMEM = "1x";
+const char lfo_mult_label_2x[] PROGMEM = "2x";
+const char lfo_mult_label_4x[] PROGMEM = "4x";
+const char lfo_mult_label_8x[] PROGMEM = "8x";
+const char lfo_mult_label_half[] PROGMEM = "0.5";
+const char lfo_mult_label_quarter[] PROGMEM = "0.25";
+const char lfo_mult_label_tenth[] PROGMEM = "0.1";
+const char lfo_mult_label_hundredth[] PROGMEM = "0.01";
+const char *const lfo_mult_labels[LFO_SPEED_MULT_COUNT] PROGMEM = {
+    lfo_mult_label_1x,      lfo_mult_label_2x,    lfo_mult_label_4x,
+    lfo_mult_label_8x,      lfo_mult_label_half,  lfo_mult_label_quarter,
+    lfo_mult_label_tenth,   lfo_mult_label_hundredth};
+
 void lfo_mult_label(uint8_t multiplier, char *out) {
-  out[0] = '1';
-  if (multiplier >= LFO_SPEED_MULT_1_2X) {
-    switch (multiplier) {
-    case LFO_SPEED_MULT_1_2X:
-      out[0] = '0';
-      out[1] = '.';
-      out[2] = '5';
-      out[3] = '\0';
-      return;
-    case LFO_SPEED_MULT_1_4X:
-      out[0] = '0';
-      out[1] = '.';
-      out[2] = '2';
-      out[3] = '5';
-      out[4] = '\0';
-      return;
-    case LFO_SPEED_MULT_1_10X:
-      out[0] = '0';
-      out[1] = '.';
-      out[2] = '1';
-      out[3] = '\0';
-      return;
-    default:
-      out[0] = '0';
-      out[1] = '.';
-      out[2] = '0';
-      out[3] = '1';
-      out[4] = '\0';
-      return;
-    }
+  if (multiplier >= LFO_SPEED_MULT_COUNT) {
+    multiplier = LFO_SPEED_MULT_1X;
   }
-  if (multiplier == LFO_SPEED_MULT_2X ||
-      multiplier == LFO_SPEED_MULT_4X ||
-      multiplier == LFO_SPEED_MULT_8X) {
-    out[0] = '0' + (1 << multiplier);
-  }
-  out[1] = 'x';
-  out[2] = '\0';
+  PGM_P label = (PGM_P)pgm_read_ptr(&lfo_mult_labels[multiplier]);
+  strcpy_P(out, label);
 }
 
 bool lfo_preview_is_centered(uint8_t wav_type) {
@@ -349,7 +329,7 @@ void LFOPage::display() {
     panel_info2 = "LFO>MOD";
   }
   else { //if (page_mode == LFO_OFFSET) {
-    char mult_label[7];
+    char mult_label[5];
     lfo_mult_label(encoders[1]->cur, mult_label);
     mcl_gui.draw_knob(0, mclstr_mode, lfo_mode_label(encoders[0]->cur));
     mcl_gui.draw_knob(1, mclstr_mult, mult_label);
@@ -370,7 +350,7 @@ void LFOPage::display() {
   if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
     draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
-              lfo_track->length, mute_mask, slide_mask, true);
+              lfo_track->length, mute_mask, slide_mask);
     if ((uint16_t)lfo_track->pattern_mask != trigled_mask) {
       trigled_mask = (uint16_t)lfo_track->pattern_mask;
       mcl_gui.set_trigleds(lfo_track->pattern_mask, TRIGLED_STEPEDIT);

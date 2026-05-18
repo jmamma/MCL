@@ -80,8 +80,7 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
   }
 
   page.shed_mask(led_mask, length, offset);
-  page.draw_mask(offset, mask, step_count, length, mute_mask, slide_mask,
-                 show_current_step);
+  page.draw_mask(offset, mask, step_count, length, mute_mask, slide_mask);
 
   if (SeqPage::recording) {
     return;
@@ -213,17 +212,19 @@ void SeqStepPage::init() {
 }
 
 void SeqStepPage::disable_paramupdate_events() {
-  if (!active_step_track().uses_kit_sound()) {
+  SeqStepTrackRef active_track = active_step_track();
+  if (!active_track.uses_kit_sound()) {
     return;
   }
-  active_step_track().set_live_param_update(false);
+  active_track.set_live_param_update(false);
 }
 
 void SeqStepPage::enable_paramupdate_events() {
-  if (!active_step_track().uses_kit_sound()) {
+  SeqStepTrackRef active_track = active_step_track();
+  if (!active_track.uses_kit_sound()) {
     return;
   }
-  active_step_track().set_live_param_update(true);
+  active_track.set_live_param_update(true);
 }
 
 void SeqStepPage::cleanup() {
@@ -322,9 +323,12 @@ void SeqStepPage::loop() {
     pitch_param = 255;
   }
 
-  if (seq_param1.hasChanged() || seq_param2.hasChanged() ||
-      seq_param4.hasChanged()) {
+  bool seq_param1_changed = seq_param1.hasChanged();
+  bool seq_param2_changed = seq_param2.hasChanged();
+  bool seq_param4_changed = seq_param4.hasChanged();
+  if (seq_param1_changed || seq_param2_changed || seq_param4_changed) {
     bool has_note_pitch = active_track.uses_note_pitch();
+    bool has_kit_sound = active_track.uses_kit_sound();
 
     for (uint8_t n = 0; n < kStepPageVisibleSteps; n++) {
       if (note_interface.is_note_on(n)) {
@@ -337,11 +341,11 @@ void SeqStepPage::loop() {
           active_track.set_conditional(step, condition, cond_plock);
           active_track.set_timing_from_encoder(step, seq_param2.cur);
 
-          if (seq_param2.hasChanged()) {
+          if (seq_param2_changed) {
             set_microtiming_overlay_active(true);
             draw_active_microtiming(active_track, seq_param2.cur);
           }
-          if (seq_param1.hasChanged() && active_track.uses_kit_sound()) {
+          if (seq_param1_changed && has_kit_sound) {
             char str[4];
             if (seq_param1.getValue() > 0) {
               conditional_str(str, seq_param1.getValue(), true);
@@ -356,7 +360,7 @@ void SeqStepPage::loop() {
             active_track.set_step(step, MASK_PATTERN, true);
             break;
           }
-          if (has_note_pitch && seq_param4.hasChanged() && seq_param4.cur > 0) {
+          if (has_note_pitch && seq_param4_changed && seq_param4.cur > 0) {
             uint8_t pitch = active_track.pitch_lock_from_note(seq_param4.cur);
             if (pitch != 255) {
               active_track.set_track_pitch(step, pitch);
@@ -425,6 +429,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
 
   if (EVENT_NOTE(event) && !grid_page.bank_popup) {
     SeqStepTrackRef active_track = active_step_track();
+    uint8_t event_mask = event->mask;
     uint8_t port = event->port;
     uint8_t track = event->source;
     if (!seq_step_tracks_supports_trig_port(port)) {
@@ -448,7 +453,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     step_select = track;
 
     if (recording) {
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (event_mask == EVENT_BUTTON_PRESSED) {
         reset_undo();
         config_encoders();
         seq_step_tracks_trigger(port, track, 127);
@@ -461,13 +466,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         key_interface.send_trig_leds(TRIGLED_OVERLAY);
         return true;
       }
-      if (event->mask == EVENT_BUTTON_RELEASED) {
+      if (event_mask == EVENT_BUTTON_RELEASED) {
         key_interface.send_trig_leds(TRIGLED_OVERLAY);
         return true;
       }
     }
 
-    if (event->mask == EVENT_BUTTON_PRESSED) {
+    if (event_mask == EVENT_BUTTON_PRESSED) {
       update_params_queue = false;
       disable_paramupdate_events();
 
@@ -512,7 +517,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         active_track.set_step(step, mask_type, true);
         SET_BIT16(ignore_release, track);
       }
-    } else if (event->mask == EVENT_BUTTON_RELEASED) {
+    } else if (event_mask == EVENT_BUTTON_RELEASED) {
 #ifdef PLATFORM_TBD
       if (step < length && key_interface.is_key_down(MDX_KEY_FUNC)) {
         CLEAR_BIT16(ignore_release, track);
@@ -551,6 +556,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     SeqStepTrackRef active_track = active_step_track();
     uint8_t key = event->source;
+    uint8_t event_mask = event->mask;
     uint8_t first_note = note_interface.get_first_trig_note();
     uint8_t page_offset = page_step_offset();
     uint8_t step = (first_note == 255) ? 255 : first_note + page_offset;
@@ -575,14 +581,14 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       if (param >= active_track.lock_param_count()) {
         return true;
       }
-      if (event->mask == EVENT_BUTTON_RELEASED) {
+      if (event_mask == EVENT_BUTTON_RELEASED) {
         for (uint8_t n = 0; n < kStepPageVisibleSteps; n++) {
           if (note_interface.is_note_on(n)) {
             active_track.clear_step_lock(n + page_offset, param);
           }
         }
       }
-      if (event->mask == EVENT_BUTTON_PRESSED) {
+      if (event_mask == EVENT_BUTTON_PRESSED) {
         int8_t lock_idx = active_track.find_param(param);
         for (uint8_t n = 0; n < kStepPageVisibleSteps; n++) {
           if (note_interface.is_note_on(n)) {
@@ -600,7 +606,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
     }
 
-    if (event->mask == EVENT_BUTTON_PRESSED) {
+    if (event_mask == EVENT_BUTTON_PRESSED) {
       switch (key) {
       case MDX_KEY_COPY: {
         // Note copy
