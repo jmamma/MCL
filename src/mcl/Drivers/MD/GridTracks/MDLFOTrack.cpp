@@ -13,10 +13,9 @@ void load_legacy_lfo_data(LegacyLFOSeqTrackData &lfo_data) {
   if (!legacy_lfo_slot_enabled()) {
     return;
   }
-  SeqLFOData legacy_data;
   SeqLFOData data;
-  lfo_data.store_data(&legacy_data);
-  LFOSeqTrack::convert_legacy_data(legacy_data, &data);
+  lfo_data.store_data(&data);
+  LFOSeqTrack::convert_legacy_data(data, &data);
   mcl_seq.grid_x_lfo_tracks[0].load_data(data);
 }
 
