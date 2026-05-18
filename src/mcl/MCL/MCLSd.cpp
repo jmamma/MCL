@@ -252,16 +252,12 @@ bool MCLSd::read_data(void *data, size_t len, File *filep) {
 
 bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
                       uint8_t progress_span, uint8_t progress_max) {
-  if (SD.exists(dst)) {
-    return false;
-  }
-
   File in;
   File out;
   if (!in.open(src, O_READ)) {
     return false;
   }
-  if (!out.open(dst, O_RDWR | O_CREAT | O_TRUNC)) {
+  if (!out.open(dst, O_RDWR | O_CREAT | O_EXCL)) {
     in.close();
     return false;
   }
@@ -340,7 +336,6 @@ bool MCLSd::remove_dir(const char *dir) {
     }
   }
 
-  entry_file.close();
   d.close();
   if (!SD.rmdir(dir)) {
     ok = false;
