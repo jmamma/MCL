@@ -17,21 +17,6 @@
 
 namespace {
 
-char *write_u8(char *out, uint8_t value) {
-  if (value >= 100) {
-    *out++ = '0' + value / 100;
-    value %= 100;
-    *out++ = '0' + value / 10;
-    value %= 10;
-  } else if (value >= 10) {
-    *out++ = '0' + value / 10;
-    value %= 10;
-  }
-  *out++ = '0' + value;
-  *out = '\0';
-  return out;
-}
-
 bool join_project_file(char *out, size_t out_len, const char *project,
                        const char *filename) {
   if (out_len == 0) {
@@ -67,17 +52,16 @@ bool join_project_file(char *out, size_t out_len, const char *project,
 bool copy_grid_slot_raw(Grid &src_grid, Grid &dst_grid, GridColumn col,
                         GridRow row) {
   uint8_t buf[256];
+  static_assert(GRID_SLOT_BYTES % sizeof(buf) == 0,
+                "slot copy buffer must divide grid slot size");
   if (!src_grid.seek(col, row) || !dst_grid.seek(col, row)) {
     return false;
   }
 
-  uint16_t remaining = GRID_SLOT_BYTES;
-  while (remaining > 0) {
-    uint16_t n = remaining > sizeof(buf) ? sizeof(buf) : remaining;
-    if (!src_grid.read(buf, n) || !dst_grid.write(buf, n)) {
+  for (uint8_t i = 0; i < GRID_SLOT_BYTES / sizeof(buf); i++) {
+    if (!src_grid.read(buf, sizeof(buf)) || !dst_grid.write(buf, sizeof(buf))) {
       return false;
     }
-    remaining -= n;
   }
   return true;
 }
@@ -128,7 +112,6 @@ static_assert(sizeof(MDRouteTrackStorage) ==
               "MD route storage size changed");
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
-
 class LegacyProjectHeader {
 public:
   uint32_t version;
@@ -332,7 +315,7 @@ bool Project::build_grid_filename(const char *basename, uint8_t suffix,
   }
   memcpy(out, basename, name_len);
   out[name_len] = '.';
-  write_u8(out + name_len + 1, suffix);
+  mcl_gui.put_value_at(suffix, out + name_len + 1);
   return true;
 }
 
@@ -424,7 +407,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   file.close();
   project_loaded = false;
 
-  const char *project_basename = strrchr(projectname, '/');
+  const char *project_basename = nullptr;
   if (!split_project_path(projectname, &project_basename)) {
     return false;
   }
@@ -439,20 +422,8 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   // Open project parent
   chdir_projects();
 
-  // Open project directory.
-  if (!SD.exists(projectname)) {
-    DEBUG_PRINTLN("dir does not exist");
-    return false;
-  }
-
   if (!SD.chdir(projectname)) {
     DEBUG_PRINTLN("could not enter project dir");
-    return false;
-  }
-
-  if (!SD.exists(proj_filename)) {
-    DEBUG_DUMP(proj_filename);
-    DEBUG_PRINTLN(F("does not exist"));
     return false;
   }
 
@@ -637,8 +608,6 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
   }
 
   EmptyTrack scratch;
-  bool clear_lfo_slot = false;
-  bool clear_legacy_perf_slot = false;
 
   if (migrate_legacy_aux_layout &&
       grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
@@ -691,7 +660,9 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     }
 
     grid_y_header.update_model(MDLFO_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
-    clear_lfo_slot = true;
+    if (!grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
+      return false;
+    }
   }
 
   if (migrate_legacy_aux_layout &&
@@ -711,19 +682,9 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
                                  PERF_TRACK_TYPE);
     }
     grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
-    clear_legacy_perf_slot = true;
-  }
-
-  if (clear_lfo_slot &&
-      grid_y_header.track_type[MDLFO_TRACK_NUM] == EMPTY_TRACK_TYPE &&
-      !grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
-    return false;
-  }
-
-  if (clear_legacy_perf_slot &&
-      grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == EMPTY_TRACK_TYPE &&
-      !grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
-    return false;
+    if (!grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
+      return false;
+    }
   }
 
   if (grid_y_header.track_type[MDROUTE_TRACK_NUM] == MDROUTE_TRACK_TYPE) {
@@ -746,10 +707,10 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
                   cfg.uart2_poly_chan <= PTC_MIDI_GROUP_MAX
               ? cfg.uart2_poly_chan
               : PTC_GROUP_LOCAL;
-      for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
+      uint16_t poly_mask = legacy_route.route.poly_mask;
+      for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, poly_mask >>= 1) {
         new_route.route.ptc_group[i] =
-            IS_BIT_SET16(legacy_route.route.poly_mask, i) ? ptc_group
-                                                          : PTC_GROUP_OFF;
+            (poly_mask & 1) ? ptc_group : PTC_GROUP_OFF;
       }
 
       if (!grids[1].write(&new_route, sizeof(new_route),
