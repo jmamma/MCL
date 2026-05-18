@@ -46,16 +46,19 @@ bool clipboard_slot_is_type(GridSlot slot, uint8_t track_type) {
   return gdt != nullptr && gdt->track_type == track_type;
 }
 
-SeqTrackModData *clipboard_track_mod_data(DeviceTrack *track) {
+SeqTrackModData *clipboard_track_mod_data(DeviceTrack *track,
+                                          uint8_t *track_limit) {
   if (track == nullptr) {
     return nullptr;
   }
+  *track_limit = NUM_GRID_X_LFO_TRACKS;
   switch (track->active) {
   case MD_TRACK_TYPE:
     return &static_cast<MDTrack *>(track)->mod_data;
   case EXT_TRACK_TYPE:
   case A4_TRACK_TYPE:
   case MNM_TRACK_TYPE:
+    *track_limit = NUM_GRID_Y_LFO_TRACKS;
     return &static_cast<ExtTrack *>(track)->mod_data;
 #if !defined(__AVR__)
   case MDSPSX_TRACK_TYPE:
@@ -65,6 +68,7 @@ SeqTrackModData *clipboard_track_mod_data(DeviceTrack *track) {
   case TBD_TRACK_TYPE:
     return &static_cast<TBDTrack *>(track)->seq_data.mod();
   case TBD_MIDI_TRACK_TYPE:
+    *track_limit = NUM_GRID_Y_LFO_TRACKS;
     return &static_cast<TBDMidiTrack *>(track)->seq_data.mod();
 #endif
   default:
@@ -107,22 +111,10 @@ void remap_clipboard_lfo_track_destinations(DeviceTrack *track,
                                             GridColumn source_track,
                                             GridColumn dest_track,
                                             bool destination_same) {
-  SeqTrackModData *mod_data = clipboard_track_mod_data(track);
+  uint8_t track_limit = NUM_GRID_X_LFO_TRACKS;
+  SeqTrackModData *mod_data = clipboard_track_mod_data(track, &track_limit);
   if (mod_data == nullptr) {
     return;
-  }
-  uint8_t track_limit = NUM_GRID_X_LFO_TRACKS;
-  switch (track->active) {
-  case EXT_TRACK_TYPE:
-  case A4_TRACK_TYPE:
-  case MNM_TRACK_TYPE:
-#ifdef PLATFORM_TBD
-  case TBD_MIDI_TRACK_TYPE:
-#endif
-    track_limit = NUM_GRID_Y_LFO_TRACKS;
-    break;
-  default:
-    break;
   }
   remap_lfo_track_destinations(mod_data->lfo, source_track, dest_track,
                                destination_same, track_limit);
@@ -383,7 +375,7 @@ bool MCLClipBoard::paste(GridSlot col, GridRow row) {
     GridRow dst_row = y + row;
     proj.read_grid_row_header(headers,     dst_row, 0);
     proj.read_grid_row_header(headers + 1, dst_row, 1);
-    if ((!headers[0].active) || (strlen(headers[0].name) == 0) ||
+    if ((!headers[0].active) || (headers[0].name[0] == '\0') ||
         (t_w == GRID_WIDTH && col == 0)) {
       grids[src_grid].read_row_header(&header_copy, y + t_row);
       headers[0].active = true;

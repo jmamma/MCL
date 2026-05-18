@@ -188,13 +188,17 @@ void FileBrowserPage::query_filesystem() {
   DEBUG_PRINTLN(F("finished list files"));
 }
 
-void FileBrowserPage::init() {
+void FileBrowserPage::reset_browser_options() {
   filemenu_active = false;
   show_samplemgr = false;
   show_copy = false;
   show_move = false;
   show_versions = false;
   draw_dirs = false;
+}
+
+void FileBrowserPage::init() {
+  reset_browser_options();
   focus_match[0] = '\0';
   strcpy_P(title, mclstr_title_files);
   file_types.reset();
@@ -230,6 +234,7 @@ void FileBrowserPage::draw_filebrowser() {
   constexpr uint8_t x_offset = 43, y_offset = 8, width = MENU_WIDTH;
   oled_display.setCursor(x_offset, 8);
   uint8_t max_items = min(MAX_VISIBLE_ROWS, numEntries);
+  uint16_t first_entry = encoders[1]->cur - cur_row;
 
   char temp_entry[FILE_ENTRY_SIZE];
 
@@ -244,11 +249,11 @@ void FileBrowserPage::draw_filebrowser() {
     } else {
       oled_display.setTextColor(WHITE, BLACK);
     }
-    if (encoders[1]->cur - cur_row + n == cur_file) {
+    uint16_t entry_num = first_entry + n;
+    if (entry_num == cur_file) {
       oled_display.setCursor(x_offset - 4, y_pos);
       mcl_print_P(mclstr_arrow_right);
     }
-    uint16_t entry_num = encoders[1]->cur - cur_row + n;
     if (entry_num < (uint16_t)numEntries) {
       uint8_t type;
       get_entry(entry_num, temp_entry, type);

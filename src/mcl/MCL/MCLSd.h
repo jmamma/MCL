@@ -62,6 +62,8 @@ class MCLSd {
                 uint8_t progress_span = 0, uint8_t progress_max = 0);
 #endif
   bool remove_dir(const char *dir);
+  static bool join_path(char *dst, size_t dst_len, const char *dir,
+                        const char *entry);
 
 #ifndef __AVR__
   const char *full_path(const char *path, char *buffer, size_t size);

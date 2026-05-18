@@ -6,9 +6,7 @@ namespace PageRegistry {
 
 void clear(PageSelectEntry *entries, uint8_t max_entries) {
   for (uint8_t i = 0; i < max_entries; ++i) {
-    entries[i].Name = nullptr;
     entries[i].Page = NULL_PAGE;
-    entries[i].IconMeta = 0;
   }
 }
 

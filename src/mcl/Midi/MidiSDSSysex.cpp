@@ -164,11 +164,8 @@ void MidiSDSSysexListenerClass::dump_header(const SysexView &view) {
   midi_sds.packetNumber = 0;
 
   midi_sds.sample_offset = midi_sds_sample_midpoint(midi_sds.sampleFormat);
-  midi_sds.midiBytes_per_word = midi_sds.sampleFormat / 7;
+  midi_sds.midiBytes_per_word = (midi_sds.sampleFormat + 6) / 7;
   midi_sds.bytes_per_word = (midi_sds.sampleFormat + 7) >> 3;
-  if (midi_sds.sampleFormat % 7 > 0) {
-    midi_sds.midiBytes_per_word++;
-  }
   // temp_file.open("temp_file.sds", FILE_WRITE | O_CREAT);
   ///  temp_file.close();
   if (midi_sds.use_hand_shake) {
@@ -177,7 +174,6 @@ void MidiSDSSysexListenerClass::dump_header(const SysexView &view) {
 }
 
 void MidiSDSSysexListenerClass::data_packet(const SysexView &view) {
-  uint8_t checksum = 0;
   uint8_t packetNumber = view.getByte(3);
   uint16_t record_len = view.get_recordLen();
   if (packetNumber != midi_sds.packetNumber) {
@@ -185,11 +181,19 @@ void MidiSDSSysexListenerClass::data_packet(const SysexView &view) {
     midi_sds.sendNakMessage();
     return;
   }
-  for (uint16_t b = 0; b < record_len - 1; b++) {
+  if (record_len != 125) {
+    DEBUG_PRINTLN(F("sds packet checksum error"));
+    DEBUG_PRINTLN(midi_sds.packetNumber);
+    DEBUG_PRINTLN(record_len);
+    midi_sds.sendNakMessage();
+    return;
+  }
+
+  uint8_t checksum = 0;
+  for (uint8_t b = 0; b < 124; b++) {
     checksum ^= view.getByte(b);
   }
-  if ((record_len == 125) &&
-      (view.getByte(record_len - 1) == checksum)) {
+  if (view.getByte(124) == checksum) {
     // 120 byte data stream divided in to m words.
     // 7bits per data midi data byte.
     // For an 8bit sample (smallest bit rate), 2 midi data bytes are required.
@@ -279,7 +283,7 @@ void MidiSDSSysexListenerClass::data_packet(const SysexView &view) {
     DEBUG_PRINTLN(F("sds packet checksum error"));
     DEBUG_PRINTLN(midi_sds.packetNumber);
     DEBUG_PRINTLN(record_len);
-    DEBUG_PRINTLN(view.getByte(record_len - 1));
+    DEBUG_PRINTLN(view.getByte(124));
     DEBUG_PRINT(F(" "));
     DEBUG_PRINT(checksum);
     midi_sds.sendNakMessage();

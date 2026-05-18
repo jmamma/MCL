@@ -44,10 +44,7 @@ public:
   uint8_t last_note_on;
   uint8_t idx;
 
-  ArpSeqTrack() : SeqTrack() {
-    active = ARP_TRACK_TYPE;
-    init();
-  }
+  ArpSeqTrack() : SeqTrack() {}
 
   void clear_notes() {
     len = 0;
@@ -60,11 +57,6 @@ public:
     ArpSeqData::init();
     speed = SEQ_SPEED_2X;
     length = 2;
-    enabled = false;
-    range = 0;
-    oct = 1;
-    mode = 0;
-    fine_tune = 0;
     clear_notes();
   }
 

@@ -145,10 +145,7 @@ struct WavReader : SDSFileReader {
     total_samples = wav->header.get_length();
 
     sample_format = wav->header.fmt.bitRate;
-    midi_bytes_per_word = sample_format / 7;
-    if (sample_format % 7 > 0)
-      midi_bytes_per_word++;
-
+    midi_bytes_per_word = (sample_format + 6) / 7;
     bytes_per_word = (sample_format + 7) >> 3;
 
     sample_offset = midi_sds_sample_midpoint(sample_format);

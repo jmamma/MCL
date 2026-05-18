@@ -31,9 +31,9 @@ public:
       : LightPage(e1, e2, e3, e4) {}
 
   void draw_scrollbar(uint8_t x_offset);
-  void draw_item(MenuBase *menu, uint8_t item_n, uint8_t number_of_items);
-  void draw_menu(uint8_t x_offset, uint8_t y_offset,
-                 uint8_t width = MENU_WIDTH, uint8_t scrollbar_width = 0);
+  void draw_item(MenuBase *menu, uint8_t item_n);
+  uint8_t draw_menu(uint8_t x_offset, uint8_t y_offset,
+                    uint8_t width = MENU_WIDTH, uint8_t scrollbar_width = 0);
   void select_item(uint8_t item = 0) {
     cur_row = 0;
     selected_item = item;
@@ -47,8 +47,6 @@ public:
   void exit();
   void cleanup();
   void gen_menu_device_names();
-  void gen_menu_row_names();
-  void gen_menu_transpose_names();
   virtual bool handleEvent(gui_event_t *event);
 
 protected:

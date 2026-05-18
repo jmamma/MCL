@@ -548,8 +548,7 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t offset, uint8_t param_id,
   return (uint8_t)sample;
 }
 
-void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
-                      bool send_due) {
+void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   uint8_t current_mode = base_mode();
   if (current_mode == LFO_MODE_TRACK_TRIG &&
       mcl_seq.lfo_track_trig_fired(device_idx, track_number)) {
@@ -561,7 +560,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_,
     reset_phase();
   }
 
-  if (enable && send_due) {
+  if (enable) {
     MidiUartClass *output_uart =
         device_idx == DeviceIdx::Secondary ? uart2_ : uart_;
     int16_t lfo_sample = get_sample();

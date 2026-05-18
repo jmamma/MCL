@@ -4,6 +4,7 @@
 #include "Osc.h"
 #include "DSP.h"
 #include "MidiNotes.h"
+#include "SeqPage.h"
 #include "WavDesigner.h"
 
 #ifdef WAV_DESIGNER
@@ -202,9 +203,9 @@ void OscPage::display() {
     // GUI.printf_at(6, "%f", freq);
   } else {
     uint8_t s = enc1.cur - 8;
-    uint8_t note = s - ((s / 12) * 12);
-    oled_display.print(number_to_note.notes_upper[note]);
-    oled_display.print((uint8_t)(s / 12));
+    char note_label[5];
+    seq_copy_note_label(s, note_label);
+    oled_display.print(note_label);
     if (enc2.cur < 0) {
       mcl_print_P(mclstr_plus);
     }

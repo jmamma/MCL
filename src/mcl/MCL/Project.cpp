@@ -17,38 +17,6 @@
 
 namespace {
 
-bool join_project_file(char *out, size_t out_len, const char *project,
-                       const char *filename) {
-  if (out_len == 0) {
-    return false;
-  }
-  char *write = out;
-  char *end = out + out_len - 1;
-  while (*project != '\0') {
-    if (write == end) {
-      *out = '\0';
-      return false;
-    }
-    *write++ = *project++;
-  }
-  if (write != out && write[-1] != '/') {
-    if (write == end) {
-      *out = '\0';
-      return false;
-    }
-    *write++ = '/';
-  }
-  while (*filename != '\0') {
-    if (write == end) {
-      *out = '\0';
-      return false;
-    }
-    *write++ = *filename++;
-  }
-  *write = '\0';
-  return true;
-}
-
 bool copy_grid_slot_raw(Grid &src_grid, Grid &dst_grid, GridColumn col,
                         GridRow row) {
   uint8_t buf[256];
@@ -112,15 +80,6 @@ static_assert(sizeof(MDRouteTrackStorage) ==
               "MD route storage size changed");
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
-class LegacyProjectHeader {
-public:
-  uint32_t version;
-  uint8_t active_grid_pair;
-  uint8_t reserved[15];
-  uint32_t hash;
-  MCLSysConfigData cfg;
-};
-
 constexpr size_t PROJECT_CONFIG_OFFSET =
     offsetof(MCLSysConfigData, uart1_turbo_speed);
 constexpr size_t PROJECT_CONFIG_SIZE =
@@ -139,6 +98,13 @@ void copy_project_config(MCLSysConfigData *dst,
          (const uint8_t *)&source + PROJECT_CONFIG_OFFSET,
          PROJECT_CONFIG_SIZE);
   dst->project_config = 0;
+}
+
+void normalize_project_config(MCLSysConfigData *data) {
+  data->version = CONFIG_VERSION;
+  data->project[0] = '\0';
+  data->number_projects = 0;
+  data->project_config = 0;
 }
 
 void apply_project_config(MCLSysConfigData *dst,
@@ -227,15 +193,17 @@ bool Project::new_project(const char *newprj) {
 bool Project::new_project_prompt(const char *parent) {
   char newprj[PRJ_NAME_LEN] = "project___";
 
-  newprj[7] = (mcl_cfg.number_projects % 1000) / 100 + '0';
-  newprj[7 + 1] = (mcl_cfg.number_projects % 100) / 10 + '0';
-  newprj[7 + 2] = (mcl_cfg.number_projects % 10) + '0';
+  uint8_t project_number = mcl_cfg.number_projects;
+  newprj[7] = project_number / 100 + '0';
+  project_number %= 100;
+  newprj[7 + 1] = project_number / 10 + '0';
+  newprj[7 + 2] = project_number % 10 + '0';
 again:
   if (mcl_gui.wait_for_input(newprj, "New Project:", PRJ_NAME_LEN)) {
     char project_path[PRJ_PATH_LEN];
     if (parent != nullptr && parent[0] != '\0') {
-      if (!join_project_file(project_path, sizeof(project_path), parent,
-                             newprj)) {
+      if (!MCLSd::join_path(project_path, sizeof(project_path), parent,
+                            newprj)) {
         gfx.alert("ERROR", "BAD PATH");
         goto again;
       }
@@ -541,23 +509,21 @@ bool Project::read_header() {
   }
 
   if (header_version < PROJ_VERSION_PROJECT_CONFIG) {
-    LegacyProjectHeader legacy_header;
-    legacy_header.version = header_version;
-    if (!mcl_sd.read_data((uint8_t *)&legacy_header + sizeof(header_version),
-                          sizeof(legacy_header) - sizeof(header_version),
+    version = header_version;
+    if (!mcl_sd.read_data((uint8_t *)(ProjectHeader *)this +
+                              sizeof(header_version),
+                          sizeof(ProjectHeader) - sizeof(header_version),
                           &file)) {
       DEBUG_PRINTLN(F("Could not read legacy project header"));
       return false;
     }
 
-    version = legacy_header.version;
-    active_grid_pair = version >= PROJ_VERSION_GRID_PAIRS
-                           ? legacy_header.active_grid_pair
-                           : 0;
+    if (version < PROJ_VERSION_GRID_PAIRS) {
+      active_grid_pair = 0;
+    }
     memset(reserved, 0, sizeof(reserved));
-    hash = legacy_header.hash;
-    if (project_config_valid(legacy_header.cfg)) {
-      copy_project_config(&cfg, legacy_header.cfg);
+    if (project_config_valid(cfg)) {
+      normalize_project_config(&cfg);
     } else {
       copy_project_config(&cfg, mcl_cfg);
     }
@@ -686,13 +652,11 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
   }
 
   if (clear_lfo_slot &&
-      grid_y_header.track_type[MDLFO_TRACK_NUM] == EMPTY_TRACK_TYPE &&
       !grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
     return false;
   }
 
   if (clear_legacy_perf_slot &&
-      grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == EMPTY_TRACK_TYPE &&
       !grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
     return false;
   }
@@ -852,9 +816,9 @@ bool Project::copy_grid_pair(const char *from_project,
                              src_name, sizeof(src_name)) &&
          build_grid_filename(to_basename, dest_pair * NUM_GRIDS + grid_idx,
                              dst_name, sizeof(dst_name)) &&
-         join_project_file(src_path, sizeof(src_path), from_project,
-                           src_name) &&
-         join_project_file(dst_path, sizeof(dst_path), to_project, dst_name) &&
+         MCLSd::join_path(src_path, sizeof(src_path), from_project,
+                          src_name) &&
+         MCLSd::join_path(dst_path, sizeof(dst_path), to_project, dst_name) &&
          !SD.exists(dst_path) && src_grid.open_file(src_path) &&
          dst_grid.new_file(dst_path);
     if (!ok) {
@@ -895,8 +859,8 @@ bool Project::copy_grid_pair(const char *from_project,
       char dst_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
       if (build_grid_filename(to_basename, dest_pair * NUM_GRIDS + i,
                               dst_name, sizeof(dst_name)) &&
-          join_project_file(dst_path, sizeof(dst_path), to_project,
-                            dst_name)) {
+          MCLSd::join_path(dst_path, sizeof(dst_path), to_project,
+                           dst_name)) {
         SD.remove(dst_path);
       }
     }
@@ -1029,9 +993,9 @@ bool Project::copy_project(const char *from_project, const char *to_project) {
   char to_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
   bool ok = project_file_name(from_basename, from_name, sizeof(from_name)) &&
             project_file_name(to_basename, to_name, sizeof(to_name)) &&
-            join_project_file(from_path, sizeof(from_path), from_project,
-                              from_name) &&
-            join_project_file(to_path, sizeof(to_path), to_project, to_name) &&
+            MCLSd::join_path(from_path, sizeof(from_path), from_project,
+                             from_name) &&
+            MCLSd::join_path(to_path, sizeof(to_path), to_project, to_name) &&
             mcl_sd.copy_file(from_path, to_path);
 
   bool copied_pair = false;

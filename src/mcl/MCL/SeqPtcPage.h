@@ -76,8 +76,6 @@ public:
   uint8_t seq_ext_pitch(uint8_t note_num);
   uint8_t process_ext_event(uint8_t note_num, bool note_type, uint8_t channel,
                             bool primary_event = false);
-  uint8_t get_machine_pitch(uint8_t track, uint8_t note_num,
-                            uint8_t fine_tune = 255);
   uint8_t get_next_voice(uint8_t pitch, uint8_t track_number, uint8_t channel_event);
   uint8_t release_voice(uint8_t pitch, uint8_t track_number,
                         uint8_t channel_event);
@@ -97,8 +95,6 @@ public:
   void buffer_notesoff_ext(uint8_t track_number);
 
   void clear_trig_fromext(uint8_t note_num);
-
-  uint8_t get_note_from_machine_pitch(uint8_t track_number, uint8_t pitch);
 
 #ifdef PLATFORM_TBD
   uint16_t tbd_keyboard_hold_mask = 0;

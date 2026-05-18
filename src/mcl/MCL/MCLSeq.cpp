@@ -186,6 +186,7 @@ void MCLSeq::setup() {
     md_tracks[i].set_length(16);
     md_tracks[i].speed = SEQ_SPEED_1X;
     md_tracks[i].mute_state = SEQ_MUTE_OFF;
+    md_arp_tracks[i].init();
     md_arp_tracks[i].track_number = i;
   }
 #ifdef LFO_TRACKS
@@ -211,6 +212,7 @@ void MCLSeq::setup() {
     ext_tracks[i].clear();
     ext_tracks[i].init_notes_on();
     ext_tracks[i].track_number = i;
+    ext_arp_tracks[i].init();
     ext_arp_tracks[i].track_number = i;
   }
 #endif
@@ -480,9 +482,6 @@ void MCLSeq::seq() {
   if (!state) { return; }
 
   const bool legacy_tick = legacy_tick_due();
-#ifdef LFO_TRACKS
-  const bool lfo_send_due = legacy_tick;
-#endif
   MidiUartClass *uart;
   MidiUartClass *uart2;
   bool engage_sidechannel = true;
@@ -563,7 +562,7 @@ void MCLSeq::seq() {
 
 #ifdef LFO_TRACKS
       for (uint8_t i = 0; i < num_md_tracks; i++) {
-        grid_x_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
+        grid_x_lfo_tracks[i].seq(uart, uart2);
       }
       clear_lfo_track_trigs(DeviceIdx::Primary);
 #endif
@@ -602,7 +601,7 @@ void MCLSeq::seq() {
 
 #ifdef LFO_TRACKS
     for (uint8_t i = 0; i < num_md_tracks; i++) {
-      grid_x_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
+      grid_x_lfo_tracks[i].seq(uart, uart2);
     }
     clear_lfo_track_trigs(DeviceIdx::Primary);
 #endif
@@ -627,7 +626,7 @@ void MCLSeq::seq() {
       for (uint8_t i = 0; i < num_tbd_tracks; i++) {
         md_arp_tracks[i].mute_state = tbd_tracks[i].mute_state;
         md_arp_tracks[i].seq(uart, uart2);
-        grid_x_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
+        grid_x_lfo_tracks[i].seq(uart, uart2);
       }
       clear_lfo_track_trigs(DeviceIdx::Primary);
     }
@@ -640,7 +639,7 @@ void MCLSeq::seq() {
       for (uint8_t i = 0; i < num_midi_tracks; i++) {
         ext_arp_tracks[i].mute_state = midi_tracks[i].mute_state;
         ext_arp_tracks[i].seq(uart, uart2);
-        grid_y_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
+        grid_y_lfo_tracks[i].seq(uart, uart2);
       }
       clear_lfo_track_trigs(DeviceIdx::Secondary);
     }
@@ -653,7 +652,7 @@ void MCLSeq::seq() {
       ext_tracks[i].seq(uart2);
       ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
       ext_arp_tracks[i].seq(uart,uart2);
-      grid_y_lfo_tracks[i].seq(uart, uart2, lfo_send_due);
+      grid_y_lfo_tracks[i].seq(uart, uart2);
     }
     clear_lfo_track_trigs(DeviceIdx::Secondary);
   }

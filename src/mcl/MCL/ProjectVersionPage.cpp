@@ -23,9 +23,7 @@ void ProjectVersionPage::setup() {
 }
 
 void ProjectVersionPage::init() {
-  filemenu_active = false;
-  show_samplemgr = false;
-  draw_dirs = false;
+  reset_browser_options();
   show_dirs = false;
   select_dirs = false;
   show_save = true;
@@ -33,9 +31,6 @@ void ProjectVersionPage::init() {
   show_new_folder = false;
   show_filemenu = true;
   show_overwrite = false;
-  show_copy = false;
-  show_move = false;
-  show_versions = false;
   strcpy(title, "VERSION");
   strcpy(str_save, "BACKUP");
   query_versions();

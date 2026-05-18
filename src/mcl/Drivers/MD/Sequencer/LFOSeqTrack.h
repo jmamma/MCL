@@ -162,7 +162,7 @@ public:
   void set_depth(uint8_t param, uint8_t depth) {
       params[param].depth = depth;
   }
-  void seq(MidiUartClass *uart_, MidiUartClass *uart2_, bool send_due);
+  void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 };
 
 #endif /* LFOSEQTRACK_H__ */

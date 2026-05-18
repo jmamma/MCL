@@ -332,7 +332,23 @@ void SeqExtStepPage::draw_grid() {
      */
   }
 
+  uint8_t beat_counter = 0;
+  uint8_t subdivision_counter = 0;
+  uint8_t visible_step_counter = 0;
   for (uint8_t i = 0; i < active_track.length(); i++) {
+    bool beat_step = beat_counter == 0;
+    bool subdivision_step = subdivision_counter == 0;
+    bool visible_step = visible_step_counter == 0;
+    if (++beat_counter >= n) {
+      beat_counter = 0;
+    }
+    if (++subdivision_counter >= m) {
+      subdivision_counter = 0;
+    }
+    if (++visible_step_counter >= kExtStepVisibleSteps) {
+      visible_step_counter = 0;
+    }
+
     seq_extstep_tick_t grid_tick_x = active_track.step_tick(i);
     if (is_within_fov(grid_tick_x)) {
       seq_extstep_tick_t grid_fov_x =
@@ -346,14 +362,13 @@ void SeqExtStepPage::draw_grid() {
         // grid_fov_x, (k * (fov_h / fov_notes)), WHITE); }
         bool draw = false;
         uint8_t v = draw_y + (k * h);
-        if ((pianoroll_mode > 0 && k == 3) ||
-            i % kExtStepVisibleSteps == 0) {
+        if ((pianoroll_mode > 0 && k == 3) || visible_step) {
           draw = true;
         }
         if (pianoroll_mode == 0) {
           draw = true;
         }
-        if (i % n == 0) {
+        if (beat_step) {
           //if ((fov_y + k + i) % 2 == 0) {
           if (k % 2 == 0) {
             oled_display.drawFastVLine((uint8_t)grid_fov_x, v, 4, WHITE);
@@ -364,7 +379,7 @@ void SeqExtStepPage::draw_grid() {
           oled_display.drawPixel((uint8_t)grid_fov_x, v, WHITE);
         }
 
-        if (i % m == 0) {
+        if (subdivision_step) {
           oled_display.drawPixel((uint8_t)grid_fov_x, v + (h / 2), WHITE);
         }
       }
@@ -978,14 +993,9 @@ void SeqExtStepPage::display() {
   mcl_gui.put_value_at(cur_x/timing_mid + 1,info1);
   epoch = active_track.change_counter();
   if (pianoroll_mode == 0) {
-    uint8_t oct = cur_y / 12;
-    uint8_t note = cur_y - 12 * oct;
-    char str[5] = " ";
-    const char *note_name = number_to_note.notes_upper[note];
-    str[1] = note_name[0];
-    str[2] = note_name[1];
-    str[3] = oct + '0';
-    str[4] = 0;
+    char str[6];
+    str[0] = ' ';
+    seq_copy_note_label(cur_y, str + 1);
     strcat(info1, str);
     strcpy_P(info2, mclstr_note);
     draw_pianoroll();

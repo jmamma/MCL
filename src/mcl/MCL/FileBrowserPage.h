@@ -166,6 +166,7 @@ public:
   virtual void setup();
   virtual void cleanup();
   virtual void init();
+  static void reset_browser_options();
 
   virtual void on_new() {}
   virtual void on_select(const char *) {}

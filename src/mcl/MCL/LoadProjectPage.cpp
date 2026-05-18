@@ -490,11 +490,6 @@ bool LoadProjectPage::is_project_dir(const char *entry) const {
 
 bool LoadProjectPage::build_project_path(const char *entry, char *out,
                                          size_t out_len) const {
-  if (out_len == 0) {
-    return false;
-  }
-  out[0] = '\0';
-
   const char *parent = nullptr;
   if (!current_project_parent(&parent)) {
     return false;
@@ -504,18 +499,7 @@ bool LoadProjectPage::build_project_path(const char *entry, char *out,
   if (entry_len == 0 || entry_len > PRJ_NAME_LEN) {
     return false;
   }
-  size_t parent_len = strlen(parent);
-  size_t needed = parent_len + (parent_len ? 1 : 0) + entry_len + 1;
-  if (needed > out_len) {
-    return false;
-  }
-
-  if (parent_len) {
-    strcpy(out, parent);
-    strcat(out, "/");
-  }
-  strcat(out, entry);
-  return true;
+  return MCLSd::join_path(out, out_len, parent, entry);
 }
 
 void LoadProjectPage::focus_current_project() {

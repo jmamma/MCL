@@ -32,20 +32,13 @@ void ArpSeqTrack::set_length(uint8_t length_) {
 }
 
 void ArpSeqTrack::load_data(const ArpSeqData &data) {
-  enabled = data.enabled;
-  range = data.range;
-  oct = data.oct;
-  mode = data.mode;
-  fine_tune = data.fine_tune;
-  set_length(data.rate ? data.rate : 2);
-  memcpy(note_mask, data.note_mask, sizeof(note_mask));
+  static_cast<ArpSeqData &>(*this) = data;
+  set_length(rate ? rate : 2);
   len = 0;
   idx = 0;
   last_note_on = 255;
   if (enabled && (note_mask[0] || note_mask[1])) {
-    uint64_t render_mask[2];
-    memcpy(render_mask, note_mask, sizeof(render_mask));
-    render(mode, oct, fine_tune, range, render_mask);
+    render(mode, oct, fine_tune, range, note_mask);
   } else {
     clear_notes();
   }
@@ -55,13 +48,8 @@ void ArpSeqTrack::store_data(ArpSeqData *data) const {
   if (data == nullptr) {
     return;
   }
-  data->enabled = enabled;
-  data->range = range;
-  data->oct = oct;
-  data->mode = mode;
-  data->fine_tune = fine_tune;
+  *data = static_cast<const ArpSeqData &>(*this);
   data->rate = length ? length : 2;
-  memcpy(data->note_mask, note_mask, sizeof(data->note_mask));
 }
 
 void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
@@ -132,19 +120,12 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   uint8_t sort_down[ARP_MAX_NOTES];
 
   // Collect notes, sort in ascending order
-  note = get_next_note_up(-1);
-  uint8_t last_note = note;
-  if (note != 255) {
-    num_of_notes++;
-    sort_up[0] = min(127, note);
-  }
-
-  for (int8_t i = 1; i < ARP_MAX_NOTES && note != 255; i++) {
+  int8_t last_note = -1;
+  while (num_of_notes < ARP_MAX_NOTES) {
     note = get_next_note_up(last_note);
     if (note == 255) { break; }
     last_note = note;
-    num_of_notes++;
-    sort_up[i] = min(127, note);
+    sort_up[num_of_notes++] = note;
   }
   if (num_of_notes == 0) {
     return;
@@ -154,7 +135,6 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   for (uint8_t i = 0; i < num_of_notes; i++) {
     sort_down[num_of_notes - i - 1] = sort_up[i];
   }
-  note = 255;
 
   for (uint8_t i = 0; i < num_of_notes; i++) {
     switch (mode) {

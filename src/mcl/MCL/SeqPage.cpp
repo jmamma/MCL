@@ -253,7 +253,22 @@ uint8_t SeqPage::last_step = 255;
 static MCLEncoder *opt_param1_capture = nullptr;
 static MCLEncoder *opt_param2_capture = nullptr;
 
-MusicalNotes number_to_note;
+static const char seq_note_names_upper[] PROGMEM =
+    "C C#D D#E F F#G G#A A#B ";
+
+void seq_copy_note_name(uint8_t note, char *out) {
+  uint8_t offset = note * 2;
+  out[0] = pgm_read_byte(seq_note_names_upper + offset);
+  out[1] = pgm_read_byte(seq_note_names_upper + offset + 1);
+  out[2] = '\0';
+}
+
+void seq_copy_note_label(uint8_t note_num, char *out) {
+  uint8_t oct = note_num / 12;
+  uint8_t note = note_num - 12 * oct;
+  seq_copy_note_name(note, out);
+  mcl_gui.put_value_at(oct, out + 2);
+}
 
 uint8_t copy_mask = 0;
 
@@ -792,7 +807,6 @@ bool SeqPage::handleEvent(gui_event_t *event) {
         encoders[1] = &seq_menu_entry_encoder;
         seq_menu_page.init(false);
         seq_menu_page.gen_menu_device_names();
-        seq_menu_page.gen_menu_transpose_names();
         mcl_cfg.seq_dev = static_cast<uint8_t>(opt_midi_device_idx_capture);
         return true;
       }

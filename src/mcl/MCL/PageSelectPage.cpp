@@ -78,11 +78,11 @@ PageIndex PageSelectPage::get_page(uint8_t page_number, char *str) const {
 }
 
 void PageSelectPage::get_page_icon(uint8_t page_number, uint8_t *&icon,
-                                   uint8_t &w, uint8_t &h) const {
+                                   uint8_t &h) const {
   if (page_number >= PageRegistry::kMaxPageSlots ||
       page_entries[page_number].Page == NULL_PAGE) {
     icon = nullptr;
-    w = h = 0;
+    h = 0;
     return;
   }
 
@@ -90,10 +90,9 @@ void PageSelectPage::get_page_icon(uint8_t page_number, uint8_t *&icon,
   uint16_t meta = entry.IconMeta;
   uint16_t icon_offset = meta & PageRegistry::kIconOffsetMask;
   h = meta >> PageRegistry::kIconHeightShift;
-  w = kPageIconWidth;
   if (icon_offset == 0 || h == 0) {
     icon = nullptr;
-    w = h = 0;
+    h = 0;
     return;
   }
   icon = reinterpret_cast<uint8_t *>(R.icons_page) + icon_offset - 1;
@@ -261,7 +260,7 @@ void PageSelectPage::loop() {
 void PageSelectPage::display() {
   char str[16];
   uint8_t *icon;
-  uint8_t iconw, iconh;
+  uint8_t iconh;
   uint8_t catidx;
 
   oled_display.fillRect(0, 0, 128, 7, WHITE);
@@ -275,7 +274,7 @@ void PageSelectPage::display() {
     oled_display.setCursor(pgm_read_byte(&page_category_label_x[i]), 31);
     print_category_name_by_idx(i);
   }
-  get_page_icon(page_select, icon, iconw, iconh);
+  get_page_icon(page_select, icon, iconh);
   get_page(page_select, str);
 
   catidx = category_for_slot(page_select);
@@ -315,8 +314,8 @@ void PageSelectPage::display() {
   oled_display.print(str);
 
   if (icon != nullptr) {
-    oled_display.drawBitmap(12 - iconw / 2, 19 - iconh / 2, icon, iconw, iconh,
-                            WHITE);
+    oled_display.drawBitmap(12 - kPageIconWidth / 2, 19 - iconh / 2, icon,
+                            kPageIconWidth, iconh, WHITE);
   }
 
   uint16_t led_mask = 1 << page_select;

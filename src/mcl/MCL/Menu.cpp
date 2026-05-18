@@ -1,6 +1,60 @@
 #include "Menu.h"
 #include "ResourceManager.h"
 
+namespace {
+
+char generated_option_name[8];
+
+const char *row_option_name(uint8_t row_id) {
+  if (row_id >= 128) {
+    return nullptr;
+  }
+
+  generated_option_name[0] = 'A' + (row_id >> 4);
+  uint8_t row = (row_id & 0x0F) + 1;
+  if (row < 10) {
+    generated_option_name[1] = '0';
+    generated_option_name[2] = '0' + row;
+  } else {
+    generated_option_name[1] = '1';
+    generated_option_name[2] = '0' + row - 10;
+  }
+  generated_option_name[3] = '\0';
+  return generated_option_name;
+}
+
+const char *transpose_option_name(uint8_t option_id) {
+  if (option_id >= 50) {
+    return nullptr;
+  }
+
+  bool all = option_id >= 25;
+  int8_t semitone = (int8_t)option_id - (all ? 37 : 12);
+  uint8_t idx = 0;
+  if (all) {
+    generated_option_name[idx++] = 'A';
+    generated_option_name[idx++] = 'L';
+    generated_option_name[idx++] = 'L';
+    generated_option_name[idx++] = ' ';
+  }
+  if (semitone < 0) {
+    generated_option_name[idx++] = '-';
+    semitone = -semitone;
+  } else {
+    generated_option_name[idx++] = '+';
+  }
+  uint8_t num = (uint8_t)semitone;
+  if (num >= 10) {
+    generated_option_name[idx++] = '1';
+    num -= 10;
+  }
+  generated_option_name[idx++] = '0' + num;
+  generated_option_name[idx] = '\0';
+  return generated_option_name;
+}
+
+} // namespace
+
 void MenuBase::enable_entry(uint8_t entry_index, bool en) {
   auto midx = entry_index / 8;
   auto bit = entry_index % 8;
@@ -150,8 +204,17 @@ const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
   uint8_t options_offset = get_options_offset(item_n);
   menu_option_t* base = R.menu_options->MENU_OPTIONS;
   if (options_offset >= 192) {
-    base = custom_options[options_offset - 192];
-    if (base == nullptr) { return nullptr; }
+    uint8_t custom_options_idx = options_offset - 192;
+    base = custom_options[custom_options_idx];
+    if (base == nullptr) {
+      if (custom_options_idx == 0 && num_of_options == 128) {
+        return row_option_name(option_n);
+      }
+      if (custom_options_idx == 1 && num_of_options == 51) {
+        return transpose_option_name(option_n);
+      }
+      return nullptr;
+    }
     options_offset = 0;
   }
   for (uint8_t a = 0; a < num_of_options; a++) {

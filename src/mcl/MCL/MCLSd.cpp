@@ -5,9 +5,8 @@
 #include "Project.h"
 #include "PtcGroups.h"
 
-namespace {
-
-bool join_path(char *dst, size_t dst_len, const char *dir, const char *entry) {
+bool MCLSd::join_path(char *dst, size_t dst_len, const char *dir,
+                      const char *entry) {
   if (dst_len == 0) {
     return false;
   }
@@ -37,8 +36,6 @@ bool join_path(char *dst, size_t dst_len, const char *dir, const char *entry) {
   *write = '\0';
   return true;
 }
-
-} // namespace
 
 #ifdef __AVR__
 void mcl_oled_set_sd_dedicated_spi(bool dedicated) {
@@ -270,6 +267,7 @@ bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
 
   uint8_t buf[512];
   uint32_t copied = 0;
+  uint8_t progress_end = progress_base + progress_span;
   while (ok) {
     int n = in.read(buf, sizeof(buf));
     if (n < 0) {
@@ -284,8 +282,8 @@ bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
     if (ok && progress_span > 0 && progress_max > 0 && size > 0) {
       uint8_t progress =
           progress_base + ((uint32_t)copied * progress_span) / size;
-      if (progress > progress_base + progress_span) {
-        progress = progress_base + progress_span;
+      if (progress > progress_end) {
+        progress = progress_end;
       }
       mcl_gui.draw_progress_bar(progress, progress_max, false, 31, 21);
     }

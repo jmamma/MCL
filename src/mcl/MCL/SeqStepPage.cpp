@@ -253,7 +253,7 @@ void SeqStepPage::display() {
   draw_knob_conditional(seq_param1.getValue());
   draw_knob_timing(seq_param2.getValue(), timing_mid);
 
-  char K[4];
+  char K[5];
   mcl_gui.put_value_at(seq_param3.getValue(), K);
   if (ptc_groups.track_has_group(seq_primary_track_index())) {
     draw_knob(2, mclstr_plen, K);
@@ -264,18 +264,7 @@ void SeqStepPage::display() {
   if (show_pitch && is_ptc) {
     strcpy_P(K, mclstr_dash);
     if (seq_param4.cur != 0) {
-      // uint8_t base = tuning->base;
-      uint8_t note_num = seq_param4.cur;
-      // + base;
-
-      uint8_t note = note_num % 12;
-      uint8_t oct = note_num / 12;
-
-      const char *note_name = number_to_note.notes_upper[note];
-      K[0] = note_name[0];
-      K[1] = note_name[1];
-      mcl_gui.put_value_at(oct, K + 2);
-      K[3] = 0;
+      seq_copy_note_label(seq_param4.cur, K);
     }
     draw_knob(3, mclstr_ptc, K);
   }

@@ -71,7 +71,8 @@ extern void opt_clear_step_handler();
 extern void seq_menu_handler();
 extern uint8_t copy_mask;
 
-extern MusicalNotes number_to_note;
+extern void seq_copy_note_label(uint8_t note_num, char *out);
+extern void seq_copy_note_name(uint8_t note, char *out);
 
 class MidiDevice;
 

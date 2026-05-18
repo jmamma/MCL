@@ -180,13 +180,9 @@ void LFOPage::config_encoders() {
   track_update();
   if (page_mode == LFO_DESTINATION) {
     encoders[0]->cur = lfo_track->params[0].dest;
-    ((MCLEncoder *)encoders[0])->max =
-        LFOTrackRef::target_count(lfo_track->device_idx);
     encoders[1]->cur = lfo_track->params[0].param;
     ((MCLEncoder *)encoders[1])->max = 23;
     encoders[2]->cur = lfo_track->params[1].dest;
-    ((MCLEncoder *)encoders[2])->max =
-        LFOTrackRef::target_count(lfo_track->device_idx);
     encoders[3]->cur = lfo_track->params[1].param;
     ((MCLEncoder *)encoders[3])->max = 23;
 

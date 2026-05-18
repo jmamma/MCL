@@ -595,11 +595,12 @@ again:
 }
 
 bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
-                            GridDeviceTrack *gdt, GridDeviceTrack *gdt_dst, uint8_t *send_masks) {
+                                      GridDeviceTrack *gdt_dst,
+                                      uint8_t *send_masks) {
   GridColumn track_idx_dst = dst & 0xF;
   EmptyTrack scratch;
   bool rebuilt = false;
-  auto *ptrack = load_and_prepare_track(i, row, gdt->track_type,
+  auto *ptrack = load_and_prepare_track(i, row, gdt_dst->track_type,
                                         gdt_dst->seq_track, track_idx_dst,
                                         rebuilt, scratch, dst);
 
@@ -697,7 +698,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     // DEBUG_DUMP("here");
     // DEBUG_DUMP(row);
 
-    if (!load_track_immediate(row, i, dst, gdt, gdt_dst, send_masks)) {
+    if (!load_track_immediate(row, i, dst, gdt_dst, send_masks)) {
       slot_select_array[i] = 0;
     }
   }
@@ -838,6 +839,9 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                                    bool gui_update) {
 
   uint16_t tempo_uint = (uint16_t)MidiClock.get_tempo();
+  uint32_t gui_threshold =
+      MidiClock.scale_legacy_div192_to_current(
+          ((uint32_t)tempo_uint * 64 + 999) / 1000);
 
   uint8_t n = NUM_SLOTS;
 
@@ -862,9 +866,6 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
       if (diff == 0 || counter >= next) {
         break;
       }
-      uint32_t gui_threshold =
-          MidiClock.scale_legacy_div192_to_current(
-              ((uint32_t)tempo_uint * 64 + 999) / 1000);
       if (gui_update && diff > gui_threshold) {
          mcl.loop();
       }
@@ -1052,6 +1053,7 @@ void MCLActions::calc_latency() {
   if (mcl_cfg.uart2_prg_out > 0) {
     send_dev[1] = true;
   }
+  const uint32_t min_latency = MidiClock.scale_legacy_div192_to_current(6);
   for (uint8_t a = 0; a < NUM_DEVS; a++) {
     if (send_dev[a]) {
       if (devs[a] == nullptr || devs[a]->uart == nullptr ||
@@ -1068,8 +1070,6 @@ void MCLActions::calc_latency() {
       //We need at least 6 sequencer ticks of latency to account for seq_track load_cache() functions
       //which are splayed over count_down duration
       //if (a == 0) {
-      const uint32_t min_latency =
-          MidiClock.scale_legacy_div192_to_current(6);
       if (latency < min_latency) {
         latency = min_latency;
       }

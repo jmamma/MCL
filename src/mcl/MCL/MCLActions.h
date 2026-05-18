@@ -139,10 +139,8 @@ private:
                                       int8_t link_slot = -1);
   void collect_tracks(uint8_t *slot_select_array, GridRow *row_array,
                       GridSlot load_offset);
-  void cache_track(GridSlot n, GridColumn track_idx, uint8_t dev_idx,
-                   GridDeviceTrack *gdt);
   bool load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
-                  GridDeviceTrack *gdt, GridDeviceTrack *gdt_dst, uint8_t *send_masks);
+                            GridDeviceTrack *gdt_dst, uint8_t *send_masks);
   void handle_mute_states(uint8_t *mute_states, bool restore);
 };
 

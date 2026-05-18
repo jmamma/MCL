@@ -553,15 +553,6 @@ uint8_t SeqPtcPage::release_voice(uint8_t pitch, uint8_t track_number,
   return 255;
 }
 
-uint8_t SeqPtcPage::get_note_from_machine_pitch(uint8_t track_number, uint8_t pitch) {
-  return SeqPtcTrackRef::note_from_pitch(track_number, pitch);
-}
-
-uint8_t SeqPtcPage::get_machine_pitch(uint8_t track, uint8_t note_num,
-                                      uint8_t fine_tune) {
-  return SeqPtcTrackRef::pitch_from_note(track, note_num, fine_tune);
-}
-
 void SeqPtcPage::trig_primary(uint8_t note_num, uint8_t track_number,
                               uint8_t channel_event, uint8_t fine_tune,
                               MidiUartClass *uart_) {
@@ -572,7 +563,8 @@ void SeqPtcPage::trig_primary(uint8_t note_num, uint8_t track_number,
   uint8_t next_track = get_next_voice(note_num, track_number, channel_event);
   if (next_track > 15) { return; }
 
-  uint8_t machine_pitch = get_machine_pitch(next_track, note_num, fine_tune);
+  uint8_t machine_pitch =
+      SeqPtcTrackRef::pitch_from_note(next_track, note_num, fine_tune);
   if (SeqPtcTrackRef::is_midi_voice_track(next_track)) {
     machine_pitch = note_num;
     SeqPtcTrackRef::send_notes_off(next_track);
@@ -642,7 +634,7 @@ void SeqPtcPage::recalc_notemask() {
 void SeqPtcPage::draw_popup_transpose() {
   char str[] = "KEY:   ";
   char empty[] = "";
-  strcpy(str + 5, number_to_note.notes_upper[transpose]);
+  seq_copy_note_name(transpose, str + 5);
   SeqPtcTrackRef::popup_text(str);
   oled_display.textbox(str, empty);
 }
@@ -1038,8 +1030,7 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
         }
       }
     }
-    uint8_t note = note_num - (note_num / 12) * 12;
-    note_num = ((note_num / 12) - (MIDI_NOTE_C4 / 12)) * 12 + note;
+    note_num -= MIDI_NOTE_C4;
 
     pitch = seq_ptc_page.process_ext_event(note_num, note_on, channel, true);
     uint8_t n = seq_ptc_page.find_arp_track(channel_event, channel);
@@ -1090,8 +1081,7 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
     if (note_num < MIDI_NOTE_C4) {
       return;
     }
-    uint8_t note = note_num - (note_num / 12) * 12;
-    note_num = ((note_num / 12) - (MIDI_NOTE_C4 / 12)) * 12 + note;
+    note_num -= MIDI_NOTE_C4;
 
     pitch = seq_ptc_page.process_ext_event(note_num, false, channel, true);
     uint8_t n = seq_ptc_page.find_arp_track(channel_event, channel);

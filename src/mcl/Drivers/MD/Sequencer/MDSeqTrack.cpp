@@ -5,6 +5,7 @@
 #include "MidiClock.h"
 #include "CommonPages.h"
 #include "SeqPages.h"
+#include "SeqPtcTrackRef.h"
 #include "GridTask.h"
 #include "SeqTrackUtil.h"
 
@@ -1175,11 +1176,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     uint16_t l = 0, r = 0;
     // mute_mask = 0; //unimplemented
     //  reverse steps & locks
-    for (uint8_t i = 0; i <= length / 2; ++i) {
-      int j = length - i - 1;
-      if (j < i) {
-        break;
-      }
+    for (uint8_t i = 0; i < (length + 1) / 2; ++i) {
+      uint8_t j = length - i - 1;
       uint8_t ni = popcount(steps[i].locks);
       uint8_t nj = popcount(steps[j].locks);
       memcpy(locks + l, rev_locks + total_nlock - l - nj, nj);
@@ -1244,11 +1242,11 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
 }
 
 uint8_t MDSeqTrack::transpose_pitch(uint8_t pitch, int8_t offset) {
- uint8_t note_num = seq_ptc_page.get_note_from_machine_pitch(track_number,pitch);
+ uint8_t note_num = SeqPtcTrackRef::note_from_pitch(track_number, pitch);
  if (note_num == 255) { return pitch; }
  int16_t new_note = note_num + offset;
  new_note = max(0,min(127,new_note));
- uint8_t new_pitch = seq_ptc_page.get_machine_pitch(track_number, new_note);
+ uint8_t new_pitch = SeqPtcTrackRef::pitch_from_note(track_number, new_note);
  if (new_pitch == 255) { new_pitch = pitch; }
  return new_pitch;
 }
