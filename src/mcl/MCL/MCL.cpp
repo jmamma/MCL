@@ -362,11 +362,8 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REALTIME: {
 #if !defined(__AVR__)
-        // SPSX: REALTIME held = fill mode for SPSX_COND_FILL trigs.
-        // Initial press still bootstraps record; release clears fill.
-        if (mcl_seq.using_spsx_tracks) {
-          mcl_seq.set_fill(true);
-        }
+        // StepSeq engines use REALTIME held as fill mode.
+        mcl_seq.set_fill(true);
 #endif
         seq_step_page.bootstrap_record();
         return true;
@@ -457,9 +454,7 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REALTIME: {
 #if !defined(__AVR__)
-        if (mcl_seq.using_spsx_tracks) {
-          mcl_seq.set_fill(false);
-        }
+        mcl_seq.set_fill(false);
 #endif
         return true;
       }

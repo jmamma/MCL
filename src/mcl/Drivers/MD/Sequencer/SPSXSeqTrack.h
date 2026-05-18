@@ -118,7 +118,7 @@ public:
 
     void send_trig();
     void send_trig_inline(uint8_t velocity = 127);
-    uint8_t trig_conditional(uint8_t condition);
+    uint8_t trig_conditional(uint8_t step, uint8_t condition);
 
     void schedule_retrig(uint8_t velocity, uint8_t rtrg, uint8_t rtim, uint8_t renv);
     void fire_subtrig();

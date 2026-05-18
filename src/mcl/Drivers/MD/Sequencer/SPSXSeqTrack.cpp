@@ -129,7 +129,8 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
             }
 
             auto &step = steps[current_step];
-            uint8_t send_trig_result = trig_conditional(step.cond_id);
+            uint8_t send_trig_result =
+                trig_conditional(current_step, step.cond_id);
 
             bool midi_model = is_midi_model();
             bool step_has_trig = SPSX_IS_BIT_SET64(trig_mask, current_step);
@@ -179,6 +180,8 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
                     }
                 }
             }
+            record_trig_result(send_trig_result == SPSX_TRIG_TRUE &&
+                               step_has_trig);
         }
     }
 
@@ -264,27 +267,20 @@ void SPSXSeqTrack::fire_subtrig() {
     send_trig_inline(retrig.velocity);
 }
 
-uint8_t SPSXSeqTrack::trig_conditional(uint8_t condition) {
-    if (SPSX_IS_BIT_SET64(oneshot_mask, step_count) ||
-        SPSX_IS_BIT_SET64(mute_mask, step_count)) {
-        record_trig_result(false);
+uint8_t SPSXSeqTrack::trig_conditional(uint8_t step, uint8_t condition) {
+    if (SPSX_IS_BIT_SET64(mute_mask, step)) {
         return SPSX_TRIG_ONESHOT;
     }
 
-    bool result;
     if (condition == SPSX_COND_ONESHOT) {
-        if (!SPSX_IS_BIT_SET64(oneshot_mask, step_count)) {
-            SPSX_SET_BIT64(oneshot_mask, step_count);
-            result = true;
-        } else {
-            result = false;
+        if (SPSX_IS_BIT_SET64(oneshot_mask, step)) {
+            return SPSX_TRIG_ONESHOT;
         }
-    } else {
-        result = conditional(condition);
+        SPSX_SET_BIT64(oneshot_mask, step);
+        return SPSX_TRIG_TRUE;
     }
 
-    record_trig_result(result);
-    return result ? SPSX_TRIG_TRUE : SPSX_TRIG_FALSE;
+    return conditional(condition) ? SPSX_TRIG_TRUE : SPSX_TRIG_FALSE;
 }
 
 // ============================================================================
