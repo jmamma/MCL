@@ -64,8 +64,6 @@ public:
 
   void clear_ptc_groups();
   void load_ptc_groups();
-  void load_legacy_poly_mask(uint16_t poly_mask, uint8_t poly_channel);
-  uint16_t legacy_poly_mask() const;
   void get_routes();
   uint16_t calc_latency(uint8_t tracknumber);
   uint16_t send_routes(bool send = true);

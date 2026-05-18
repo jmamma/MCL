@@ -9,26 +9,25 @@
 
 namespace {
 
-void ptc_group_label(uint8_t group, char *out) {
-  if (group == PTC_GROUP_OFF || group == PTC_GROUP_LOCAL) {
-    strcpy(out, "--");
-    return;
-  }
-  mcl_gui.put_value_at(group, out);
+bool is_midi_group(uint8_t group) {
+  return group >= PTC_MIDI_GROUP_MIN && group <= PTC_MIDI_GROUP_MAX;
 }
 
-void ptc_group_box_label(uint8_t group, char *out) {
-  if (group == PTC_GROUP_OFF || group == PTC_GROUP_LOCAL) {
-    strcpy(out, "--");
+void print_ptc_group_label(uint8_t group) {
+  if (!is_midi_group(group)) {
+    oled_display.write('-');
+    oled_display.write('-');
     return;
   }
-  mcl_gui.put_value_at(group, out);
+  oled_display.print(group);
 }
 
-MCLEncoder channel_select_encoder(PTC_MIDI_GROUP_MAX, 0, ENCODER_RES_SEQ);
+uint8_t ptc_group_text_x(uint8_t group, uint8_t x) {
+  return is_midi_group(group) && group < 10 ? x + 6 : x + 4;
+}
 
-uint8_t group_from_encoder_value(int value) {
-  if (value <= 0) {
+uint8_t group_from_encoder_value(uint8_t value) {
+  if (value == 0) {
     return PTC_GROUP_OFF;
   }
   return value <= PTC_MIDI_GROUP_MAX ? value : PTC_MIDI_GROUP_MAX;
@@ -45,6 +44,8 @@ uint8_t editable_group_for_track(uint8_t track) {
   uint8_t group = ptc_groups.group_for_track(track);
   return group == PTC_GROUP_LOCAL ? PTC_GROUP_OFF : group;
 }
+
+MCLEncoder channel_select_encoder(PTC_MIDI_GROUP_MAX, 0, ENCODER_RES_SEQ);
 
 void sync_channel_encoder(Encoder *encoder, uint8_t group) {
   if (encoder != nullptr) {
@@ -79,35 +80,33 @@ void PolyPage::draw_mask() {
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
-  uint16_t selected_bit = 1;
-  for (uint8_t i = 0; i < 16; i++, selected_bit <<= 1) {
-    uint8_t col = i & 0x7;
-    uint8_t row = i >> 3;
-    uint8_t x = col * 16;
-    uint8_t y = 11 + row * 11;
+  uint16_t selected_mask = selected_tracks;
+  uint8_t x = 0;
+  uint8_t y = 11;
+  for (uint8_t i = 0; i < 16; i++, selected_mask >>= 1) {
     uint8_t group = ptc_groups.group_for_track(i);
-    bool is_selected = selected_tracks & selected_bit;
+    bool is_selected = selected_mask & 1;
     bool is_note = note_interface.is_note(i);
+    bool filled = is_note || is_selected;
 
-    if (is_note || is_selected) {
-      oled_display.fillRect(x, y, 15, 10, WHITE);
-    } else {
-      oled_display.fillRect(x, y, 15, 10, BLACK);
-    }
+    oled_display.fillRect(x, y, 15, 10, filled ? WHITE : BLACK);
 
-    if (!is_note && !is_selected) {
+    if (!filled) {
       oled_display.drawRect(x, y, 15, 10, WHITE);
     }
 
-    char label[3];
-    ptc_group_box_label(group, label);
-    uint8_t text_x = label[1] ? x + 4 : x + 6;
-    oled_display.setCursor(text_x, y + 8);
-    oled_display.setTextColor((is_note || is_selected) ? BLACK : WHITE);
-    oled_display.print(label);
+    oled_display.setCursor(ptc_group_text_x(group, x), y + 8);
+    oled_display.setTextColor(filled ? BLACK : WHITE);
+    print_ptc_group_label(group);
 
-    if (group == PTC_GROUP_LOCAL && !is_note && !is_selected) {
+    if (group == PTC_GROUP_LOCAL && !filled) {
       oled_display.drawFastHLine(x + 3, y + 2, 9, WHITE);
+    }
+
+    x += 16;
+    if (x == 128) {
+      x = 0;
+      y += 11;
     }
   }
 
@@ -185,9 +184,8 @@ void PolyPage::display() {
   oled_display.setCursor(0, 2);
   mcl_print_P(mclstr_channel_select);
   oled_display.print(" ");
-  char label[3];
-  ptc_group_label(selected_group, label);
-  oled_display.println(label);
+  print_ptc_group_label(selected_group);
+  oled_display.println();
 
   draw_mask();
 

@@ -1,9 +1,7 @@
 #include "PtcGroups.h"
 
 void PtcGroups::clear() {
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
-    group[i] = PTC_GROUP_OFF;
-  }
+  memset(group, PTC_GROUP_OFF, PTC_GROUP_TRACKS);
 }
 
 void PtcGroups::load(const uint8_t *src) {
@@ -31,23 +29,6 @@ uint8_t PtcGroups::valid_group_or_off(uint8_t value) const {
     return value;
   }
   return PTC_GROUP_OFF;
-}
-
-uint8_t PtcGroups::group_from_legacy_channel(uint8_t poly_channel) const {
-  if (poly_channel >= PTC_MIDI_GROUP_MIN &&
-      poly_channel <= PTC_MIDI_GROUP_MAX) {
-    return poly_channel;
-  }
-  return PTC_GROUP_LOCAL;
-}
-
-void PtcGroups::load_legacy_poly_mask(uint16_t poly_mask,
-                                      uint8_t poly_channel) {
-  uint8_t value = group_from_legacy_channel(poly_channel);
-  uint16_t bit = 1;
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, bit <<= 1) {
-    group[i] = (poly_mask & bit) ? value : PTC_GROUP_OFF;
-  }
 }
 
 uint8_t PtcGroups::group_for_track(uint8_t track) const {
@@ -81,10 +62,10 @@ uint16_t PtcGroups::mask_for_group(uint8_t value) const {
   }
 
   uint16_t mask = 0;
-  uint16_t bit = 1;
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, bit <<= 1) {
+  for (int8_t i = PTC_GROUP_TRACKS - 1; i >= 0; --i) {
+    mask <<= 1;
     if (group[i] == value) {
-      mask |= bit;
+      mask |= 1;
     }
   }
   return mask;
@@ -95,24 +76,15 @@ uint16_t PtcGroups::mask_for_track(uint8_t track) const {
 }
 
 uint16_t PtcGroups::mask_for_midi_channel(uint8_t channel) const {
-  return mask_for_group(group_for_midi_channel(channel));
-}
-
-uint16_t PtcGroups::legacy_poly_mask() const {
-  uint16_t mask = 0;
-  uint16_t bit = 1;
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, bit <<= 1) {
-    if (track_has_group(i)) {
-      mask |= bit;
-    }
+  if (channel >= PTC_GROUP_TRACKS) {
+    return 0;
   }
-  return mask;
+  return mask_for_group(channel + 1);
 }
 
 uint8_t PtcGroups::first_track(uint16_t mask) const {
-  uint16_t bit = 1;
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, bit <<= 1) {
-    if (mask & bit) {
+  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, mask >>= 1) {
+    if (mask & 1) {
       return i;
     }
   }

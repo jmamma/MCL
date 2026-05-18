@@ -57,19 +57,6 @@ void MDRouteTrack::load_ptc_groups() {
   ptc_groups.store(mcl_cfg.ptc_group);
 }
 
-void MDRouteTrack::load_legacy_poly_mask(uint16_t poly_mask,
-                                         uint8_t poly_channel) {
-  PtcGroups groups;
-  groups.load_legacy_poly_mask(poly_mask, poly_channel);
-  groups.store(ptc_group);
-}
-
-uint16_t MDRouteTrack::legacy_poly_mask() const {
-  PtcGroups groups;
-  groups.load(ptc_group);
-  return groups.legacy_poly_mask();
-}
-
 void MDRouteTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                    GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);

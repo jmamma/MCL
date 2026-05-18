@@ -362,20 +362,8 @@ void SeqPtcPage::display() {
   draw_knob(1, mclstr_det, buf1); // detune
 
   // draw LEN
-  if (is_primary) {
-    mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
-    if (is_poly) {
-      draw_knob(2, mclstr_plen, buf1);
-    } else {
-    draw_knob(2, mclstr_len, buf1);
-    }
-  }
-#ifdef EXT_TRACKS
-  else {
-    mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
-    draw_knob(2, mclstr_len, buf1);
-  }
-#endif
+  mcl_gui.put_value_at(ptc_param_len.getValue(), buf1);
+  draw_knob(2, is_primary && is_poly ? mclstr_plen : mclstr_len, buf1);
 
   // draw SCALE
   strncpy_P(buf1, scale_names[ptc_param_scale.getValue()], 4);
@@ -391,12 +379,10 @@ void SeqPtcPage::display() {
     mcl_print_P(mclstr_ply_label);
   }
 
-  uint64_t display_mask[2] = {note_mask[0], note_mask[1]};
-  uint64_t *mask = display_mask;
+  uint64_t *mask = note_mask;
   if (arp.enabled) {
     mcl_print_P(mclstr_arp);
-    display_mask[0] = arp.note_mask[0];
-    display_mask[1] = arp.note_mask[1];
+    mask = arp.note_mask;
   }
 
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, mask);
@@ -462,7 +448,6 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
     return 255;
   }
 
-  uint8_t track_count = SeqPtcTrackRef::track_count();
   uint16_t candidate_mask = 0;
   uint8_t active_same_pitch = 255;
   uint8_t inactive_same_pitch = 255;
@@ -472,9 +457,9 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
 
   // Preserve the old allocation order while only scanning the voice group once.
   uint16_t voice_bit = 1;
-  for (uint8_t x = 0; x < track_count; x++, voice_bit <<= 1) {
-    if (!SeqPtcTrackRef::is_poly_voice_track(x) ||
-        !(voice_mask & voice_bit)) {
+  for (uint8_t x = 0; voice_mask; x++, voice_mask >>= 1, voice_bit <<= 1) {
+    if (!(voice_mask & 1) ||
+        !SeqPtcTrackRef::is_poly_voice_track(x)) {
       continue;
     }
     candidate_mask |= voice_bit;
@@ -508,9 +493,8 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
     return 255;
   }
 
-  uint16_t candidate_bit = 1;
-  for (uint8_t x = 0; x < track_count; x++, candidate_bit <<= 1) {
-    if (candidate_mask & candidate_bit) {
+  for (uint8_t x = 0; candidate_mask; x++, candidate_mask >>= 1) {
+    if (candidate_mask & 1) {
       if (voice_order[x] <= voice_order[voice] && x != voice) {
         voice_order[x]++;
       }
@@ -541,9 +525,8 @@ uint8_t SeqPtcPage::release_voice(uint8_t pitch, uint8_t track_number,
     return 255;
   }
 
-  uint16_t voice_bit = 1;
-  for (uint8_t x = 0; x < SeqPtcTrackRef::track_count(); x++, voice_bit <<= 1) {
-    if (SeqPtcTrackRef::is_poly_voice_track(x) && (voice_mask & voice_bit) &&
+  for (uint8_t x = 0; voice_mask; x++, voice_mask >>= 1) {
+    if ((voice_mask & 1) && SeqPtcTrackRef::is_poly_voice_track(x) &&
         voice_active[x] && voice_pitch[x] == pitch) {
       voice_active[x] = false;
       return x;
@@ -563,14 +546,14 @@ void SeqPtcPage::trig_primary(uint8_t note_num, uint8_t track_number,
   uint8_t next_track = get_next_voice(note_num, track_number, channel_event);
   if (next_track > 15) { return; }
 
-  uint8_t machine_pitch =
-      SeqPtcTrackRef::pitch_from_note(next_track, note_num, fine_tune);
+  uint8_t machine_pitch = note_num;
   if (SeqPtcTrackRef::is_midi_voice_track(next_track)) {
-    machine_pitch = note_num;
     SeqPtcTrackRef::send_notes_off(next_track);
     SeqPtcTrackRef::send_notes(next_track, machine_pitch);
     goto rec;
   }
+  machine_pitch = SeqPtcTrackRef::pitch_from_note(next_track, note_num,
+                                                  fine_tune);
   if (machine_pitch == 255) {
     return;
   }
@@ -893,7 +876,7 @@ uint8_t SeqPtcPage::seq_ext_pitch(uint8_t note_num) {
 uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
                                       uint8_t channel, bool primary_event) {
 
-  uint8_t pitch = seq_ptc_page.seq_ext_pitch(note_num);
+  uint8_t pitch = seq_ext_pitch(note_num);
   DeviceIdx device_idx =
       primary_event ? DeviceIdx::Primary : ptc_active_device_idx();
   uint8_t dev = device_idx == DeviceIdx::Primary ? 0 : 1;
@@ -901,8 +884,8 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
   ArpSeqTrack &arp = ptc_arp_track(device_idx, ptc_selected_track(device_idx));
   dev_note_channels[dev] = channel;
   if (note_type) {
-    bool notes_all_off = seq_ptc_page.dev_note_masks[dev][0] == 0 &&
-                         seq_ptc_page.dev_note_masks[dev][1] == 0;
+    bool notes_all_off = dev_note_masks[dev][0] == 0 &&
+                         dev_note_masks[dev][1] == 0;
 
     if (notes_all_off) {
       arp.idx = 0;
@@ -912,17 +895,17 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
         arp.step_count = arp.length - 1;
       }
       if (arp_enabled.cur == ARP_LATCH) {
-        memset(seq_ptc_page.note_mask, 0, sizeof(seq_ptc_page.note_mask));
+        memset(note_mask, 0, sizeof(note_mask));
       }
     }
-    SET_BIT128_P(seq_ptc_page.dev_note_masks[dev], note_num);
+    SET_BIT128_P(dev_note_masks[dev], note_num);
     if (pitch != 255) {
-      SET_BIT128_P(seq_ptc_page.note_mask, pitch);
+      SET_BIT128_P(note_mask, pitch);
     }
   } else {
-    CLEAR_BIT128_P(seq_ptc_page.dev_note_masks[dev], note_num);
+    CLEAR_BIT128_P(dev_note_masks[dev], note_num);
     if (arp_enabled.cur != ARP_LATCH && pitch != 255) {
-      CLEAR_BIT128_P(seq_ptc_page.note_mask, pitch);
+      CLEAR_BIT128_P(note_mask, pitch);
     }
   }
   if (pitch == 255) {
@@ -986,9 +969,7 @@ void SeqPtcMidiEvents::onNoteOffCallback_Midi2(uint8_t *msg) {
 #endif
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t channel_event = seq_ptc_page.primary_channel_event(channel);
-  if (channel_event) {
-
-  } else {
+  if (!channel_event) {
     uint8_t n = mcl_seq.find_ext_track(channel);
     if (n == 255) {
       return;
@@ -1009,7 +990,6 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
   // pitch - MIDI_NOTE_C4
   //
   uint8_t pitch;
-  bool note_on = true;
 
   if (channel_event) {
     if (channel_event == TRIG_EVENT) {
@@ -1032,7 +1012,7 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
     }
     note_num -= MIDI_NOTE_C4;
 
-    pitch = seq_ptc_page.process_ext_event(note_num, note_on, channel, true);
+    pitch = seq_ptc_page.process_ext_event(note_num, true, channel, true);
     uint8_t n = seq_ptc_page.find_arp_track(channel_event, channel);
     arp_page.track_update(n);
 
@@ -1054,7 +1034,7 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
   }
 #ifdef EXT_TRACKS
   // otherwise, translate the message and send it back to MIDI2.
-  pitch = seq_ptc_page.process_ext_event(note_num, note_on, channel);
+  pitch = seq_ptc_page.process_ext_event(note_num, true, channel);
   seq_ptc_page.config_encoders();
 
   arp_page.track_update();
@@ -1138,6 +1118,7 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     if ((param < 16) || (param > 39)) {
       return;
     }
+    param -= 16;
     // If Midi2 forwarding data to port 1 , ignore this to prevent double
     // messages.
     //
@@ -1147,10 +1128,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     }
     if (channel_event == POLY_EVENT) {
       uint16_t mask = ptc_groups.mask_for_midi_channel(channel);
-      uint16_t bit = 1;
-      for (uint8_t n = 0; n < SeqPtcTrackRef::track_count(); n++, bit <<= 1) {
-        if (mask & bit) {
-          SeqPtcTrackRef::set_param(n, param - 16, value, nullptr, true);
+      for (uint8_t n = 0; mask; n++, mask >>= 1) {
+        if (mask & 1) {
+          SeqPtcTrackRef::set_param(n, param, value, nullptr, true);
         }
       }
     }
@@ -1281,9 +1261,8 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   } // don't process mute
   uint16_t mask = ptc_groups.mask_for_track(track);
   if (mask) {
-    uint16_t bit = 1;
-    for (uint8_t n = 0; n < SeqPtcTrackRef::track_count(); n++, bit <<= 1) {
-      if ((mask & bit) && (n != track)) {
+    for (uint8_t n = 0; mask; n++, mask >>= 1) {
+      if ((mask & 1) && (n != track)) {
         if (SeqPtcTrackRef::can_polylink_param(track, n, track_param)) {
           SeqPtcTrackRef::set_param(n, track_param, value, nullptr, true);
           display_polylink = 1;
