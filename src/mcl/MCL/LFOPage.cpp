@@ -147,20 +147,11 @@ void LFOPage::init() {
   SeqPage::init();
   track_update();
 
-  seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_SPEED, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_COPY, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_PASTE, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_SHIFT, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_REVERSE, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_TRANSPOSE, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_QUANT, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LFO_MULT, true);
+  constexpr uint32_t lfo_menu_entries =
+      menu_entry_mask(SEQ_MENU_TRACK) | menu_entry_mask(SEQ_MENU_DEVICE) |
+      menu_entry_mask(SEQ_MENU_SPEED) | menu_entry_mask(SEQ_MENU_LENGTH_MD) |
+      menu_entry_mask(SEQ_MENU_LFO_MULT);
+  seq_menu_page.menu.set_enabled_entry_mask(lfo_menu_entries);
 
   sync_lfo_track();
   update_lfo_key_interface(lfo_track);
@@ -508,9 +499,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    uint8_t track = event->source;
-    uint8_t page_select = 0;
-    uint8_t step = track + (page_select * 16);
+    uint8_t step = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (!IS_BIT_SET64(lfo_track->pattern_mask, step)) {
 
