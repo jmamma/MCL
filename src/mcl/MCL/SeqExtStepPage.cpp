@@ -817,29 +817,27 @@ void SeqExtStepPage::pos_cur_w(seq_extstep_tick_t diff) {
   }
 }
 void SeqExtStepPage::config_menu_entries() {
-  seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_AUTOMATION, true);
+  constexpr uint32_t common_entries =
+      menu_entry_mask(SEQ_MENU_TRACK) |
+      menu_entry_mask(SEQ_MENU_PIANOROLL) |
+      menu_entry_mask(SEQ_MENU_SPEED) | menu_entry_mask(SEQ_MENU_LENGTH_EXT) |
+      menu_entry_mask(SEQ_MENU_CHANNEL) | menu_entry_mask(SEQ_MENU_COPY) |
+      menu_entry_mask(SEQ_MENU_PASTE) | menu_entry_mask(SEQ_MENU_SHIFT) |
+      menu_entry_mask(SEQ_MENU_REVERSE) |
+      menu_entry_mask(SEQ_MENU_TRANSPOSE) | menu_entry_mask(SEQ_MENU_QUANT) |
+      menu_entry_mask(SEQ_MENU_AUTOMATION);
 
   if (pianoroll_mode == 0) {
-    seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, true);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_PROB, true);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, true);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, false);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
+    seq_menu_page.menu.set_enabled_entry_mask(
+        common_entries | menu_entry_mask(SEQ_MENU_ARP) |
+        menu_entry_mask(SEQ_MENU_VEL) | menu_entry_mask(SEQ_MENU_PROB) |
+        menu_entry_mask(SEQ_MENU_CLEAR_TRACK));
     encoders[1]->rot_res = ENCODER_RES_SEQ;
   } else {
-    seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_PROB, false);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, true);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, false);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
-    seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, true);
+    seq_menu_page.menu.set_enabled_entry_mask(
+        common_entries | menu_entry_mask(SEQ_MENU_PARAMSELECT) |
+        menu_entry_mask(SEQ_MENU_SLIDE) |
+        menu_entry_mask(SEQ_MENU_CLEAR_LOCKS));
     encoders[1]->rot_res = 1;
   }
 
@@ -981,7 +979,7 @@ void SeqExtStepPage::display() {
   epoch = active_track.change_counter();
   if (pianoroll_mode == 0) {
     uint8_t oct = cur_y / 12;
-    uint8_t note = cur_y - 12 * (cur_y / 12);
+    uint8_t note = cur_y - 12 * oct;
     char str[5] = " ";
     const char *note_name = number_to_note.notes_upper[note];
     str[1] = note_name[0];
@@ -1015,10 +1013,9 @@ void SeqExtStepPage::display() {
     const uint16_t chromatic = 0b0000010101001010;
     uint8_t note_h = fov_h / fov_notes;
     uint8_t top_note = fov_y + fov_notes;
+    uint8_t scale_pos = top_note % 12;
     for (uint8_t k = 0; k < fov_notes; k++) {
-      uint8_t note = top_note - k;
-      uint8_t scale_pos = note - ((note / 12) * 12);
-      if (!IS_BIT_SET16(chromatic, scale_pos)) {
+      if (!(chromatic & (1 << scale_pos))) {
         oled_display.fillRect(draw_x - keyboard_w,
                               draw_y + k * note_h + 1,
                               keyboard_w + 1, note_h - 1, WHITE);
@@ -1030,6 +1027,7 @@ void SeqExtStepPage::display() {
         oled_display.fillRect(draw_x, draw_y + k * note_h, 1,
                               note_h + 1, WHITE);
       }
+      scale_pos = scale_pos ? scale_pos - 1 : 11;
     }
   }
   // oled_display.fillRect(draw_x, 0, 1 , fov_h, WHITE);
