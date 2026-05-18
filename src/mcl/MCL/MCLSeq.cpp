@@ -30,8 +30,8 @@ bool seq_grid_x_runs_md_tracks() {
 }
 
 bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
-                     uint8_t cc, uint8_t value, uint8_t *track_out = nullptr,
-                     uint8_t *param_out = nullptr) {
+                     uint8_t cc, uint8_t value, uint8_t *track_out,
+                     uint8_t *param_out) {
   if (device == nullptr || device_idx == DeviceIdx::None) {
     return false;
   }
@@ -48,12 +48,8 @@ bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
   }
 
   mixer->update_from_cc(ctx, track, track_param, value);
-  if (track_out != nullptr) {
-    *track_out = track;
-  }
-  if (param_out != nullptr) {
-    *param_out = track_param;
-  }
+  *track_out = track;
+  *param_out = track_param;
 
   if (mixer->is_mute_param(track_param)) {
     mixer_page.redraw_mutes = true;
@@ -783,7 +779,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
   uint8_t value = msg[2];
 
   MidiDevice *device = device_manager.secondary_device();
-  if (handle_mixer_cc(DeviceIdx::Secondary, device, channel, param, value)) {
+  if (handle_mixer_cc(DeviceIdx::Secondary, device, channel, param, value,
+                      &channel, &param)) {
     return;
   }
 
