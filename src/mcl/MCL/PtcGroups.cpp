@@ -44,8 +44,9 @@ uint8_t PtcGroups::group_from_legacy_channel(uint8_t poly_channel) const {
 void PtcGroups::load_legacy_poly_mask(uint16_t poly_mask,
                                       uint8_t poly_channel) {
   uint8_t value = group_from_legacy_channel(poly_channel);
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
-    group[i] = IS_BIT_SET16(poly_mask, i) ? value : PTC_GROUP_OFF;
+  uint16_t bit = 1;
+  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, bit <<= 1) {
+    group[i] = (poly_mask & bit) ? value : PTC_GROUP_OFF;
   }
 }
 
@@ -109,8 +110,9 @@ uint16_t PtcGroups::legacy_poly_mask() const {
 }
 
 uint8_t PtcGroups::first_track(uint16_t mask) const {
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
-    if (IS_BIT_SET16(mask, i)) {
+  uint16_t bit = 1;
+  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, bit <<= 1) {
+    if (mask & bit) {
       return i;
     }
   }
