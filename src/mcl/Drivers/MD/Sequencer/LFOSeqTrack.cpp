@@ -31,45 +31,20 @@ const uint8_t LFOSeqTrack::wav_tables[LFO_TABLE_COUNT][WAV_LENGTH] PROGMEM = {
 namespace {
 
 bool lfo_wav_is_centered(uint8_t wav_type) {
-  switch (wav_type) {
-  case TRI_WAV:
-  case SQU_WAV:
-  case SAW_WAV:
-  case RND_WAV:
-  case SIN_WAV:
-    return true;
-  default:
-    return false;
-  }
+  constexpr uint16_t centered_mask = (1 << TRI_WAV) | (1 << SAW_WAV) |
+                                     (1 << SQU_WAV) | (1 << RND_WAV) |
+                                     (1 << SIN_WAV);
+  return (centered_mask >> wav_type) & 1;
 }
 
 uint8_t lfo_legacy_shape_to_sps(uint8_t wav_type) {
-  switch (wav_type) {
-  case LFO_LEGACY_SIN_WAV:
-    return SIN_WAV;
-  case LFO_LEGACY_TRI_WAV:
-    return TRI_WAV;
-  case LFO_LEGACY_RAMP_WAV:
-    return LIN_WAV;
-  case LFO_LEGACY_IEXP_WAV:
-    return EXP_WAV;
-  case LFO_LEGACY_IRAMP_WAV:
-    return REV_LIN_WAV;
-  case LFO_LEGACY_EXP_WAV:
-    return REV_EXP_WAV;
-  case LFO_LEGACY_SQU_WAV:
-    return SQU_WAV;
-  case LFO_LEGACY_SAW_WAV:
-    return SAW_WAV;
-  case LFO_LEGACY_RND_WAV:
-    return RND_WAV;
-  case LFO_LEGACY_STEP_WAV:
-    return STEP_WAV;
-  case LFO_LEGACY_LINLIN_WAV:
-    return LINLIN_WAV;
-  default:
+  const uint8_t map[] PROGMEM = {
+      SIN_WAV, TRI_WAV, LIN_WAV, EXP_WAV, REV_LIN_WAV, REV_EXP_WAV,
+      SQU_WAV, SAW_WAV, RND_WAV, STEP_WAV, LINLIN_WAV};
+  if (wav_type > LFO_LEGACY_LINLIN_WAV) {
     return TRI_WAV;
   }
+  return pgm_read_byte(&map[wav_type]);
 }
 
 bool lfo_legacy_shape_is_centered(uint8_t wav_type) {
@@ -77,44 +52,19 @@ bool lfo_legacy_shape_is_centered(uint8_t wav_type) {
 }
 
 bool lfo_legacy_shape_uses_subtract(uint8_t wav_type) {
-  switch (wav_type) {
-  case LFO_LEGACY_RAMP_WAV:
-  case LFO_LEGACY_IEXP_WAV:
-  case LFO_LEGACY_IRAMP_WAV:
-  case LFO_LEGACY_EXP_WAV:
-    return true;
-  default:
-    return false;
-  }
+  return wav_type >= LFO_LEGACY_RAMP_WAV && wav_type <= LFO_LEGACY_EXP_WAV;
 }
 
 uint8_t lfo_sps_shape_to_legacy(uint8_t wav_type) {
-  switch (wav_type) {
-  case TRI_WAV:
-    return LFO_LEGACY_TRI_WAV;
-  case SAW_WAV:
-    return LFO_LEGACY_SAW_WAV;
-  case SQU_WAV:
-    return LFO_LEGACY_SQU_WAV;
-  case LIN_WAV:
-    return LFO_LEGACY_IRAMP_WAV;
-  case EXP_WAV:
-    return LFO_LEGACY_EXP_WAV;
-  case RND_WAV:
-    return LFO_LEGACY_RND_WAV;
-  case REV_LIN_WAV:
-    return LFO_LEGACY_RAMP_WAV;
-  case REV_EXP_WAV:
-    return LFO_LEGACY_IEXP_WAV;
-  case SIN_WAV:
-    return LFO_LEGACY_SIN_WAV;
-  case STEP_WAV:
-    return LFO_LEGACY_STEP_WAV;
-  case LINLIN_WAV:
-    return LFO_LEGACY_LINLIN_WAV;
-  default:
+  const uint8_t map[] PROGMEM = {
+      LFO_LEGACY_TRI_WAV,    LFO_LEGACY_SAW_WAV,  LFO_LEGACY_SQU_WAV,
+      LFO_LEGACY_IRAMP_WAV,  LFO_LEGACY_EXP_WAV,  LFO_LEGACY_RND_WAV,
+      LFO_LEGACY_RAMP_WAV,   LFO_LEGACY_IEXP_WAV, LFO_LEGACY_SIN_WAV,
+      LFO_LEGACY_STEP_WAV,   LFO_LEGACY_LINLIN_WAV};
+  if (wav_type > LINLIN_WAV) {
     return LFO_LEGACY_TRI_WAV;
   }
+  return pgm_read_byte(&map[wav_type]);
 }
 
 uint8_t lfo_phase_index(uint16_t phase) {
@@ -521,24 +471,28 @@ void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
     return;
   }
 
-  *data = legacy_data;
-  data->wav_type = lfo_legacy_shape_to_sps(legacy_data.wav_type);
+  uint8_t legacy_wav_type = legacy_data.wav_type;
+  uint8_t legacy_speed = legacy_data.speed;
+  uint8_t legacy_mode = legacy_data.mode;
 
-  uint8_t base_mode = mode_base(legacy_data.mode);
+  *data = legacy_data;
+  data->wav_type = lfo_legacy_shape_to_sps(legacy_wav_type);
+
+  uint8_t base_mode = mode_base(legacy_mode);
   if (base_mode > LFO_MODE_ONE) {
     base_mode = LFO_MODE_FREE;
   }
 
   uint8_t packed =
-      pgm_read_byte(&lfo_legacy_speed_map[legacy_data.speed & 0x7FU]);
+      pgm_read_byte(&lfo_legacy_speed_map[legacy_speed & 0x7FU]);
   data->speed = packed & 0x3F;
   data->mode = pack_mode(base_mode, lfo_legacy_speed_multiplier(packed));
-  if (lfo_legacy_shape_is_centered(legacy_data.wav_type)) {
+  if (lfo_legacy_shape_is_centered(legacy_wav_type)) {
     data->mode |= LFO_MODE_LEGACY_PHASE;
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
       data->params[i].depth >>= 1;
     }
-  } else if (lfo_legacy_shape_uses_subtract(legacy_data.wav_type)) {
+  } else if (lfo_legacy_shape_uses_subtract(legacy_wav_type)) {
     data->mode |= LFO_MODE_LEGACY_SUBTRACT;
   }
   if (data->length == 0) {
