@@ -267,6 +267,7 @@ void MCL::loop() {
 bool mcl_handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
+    PageIndex current_page = mcl.currentPage();
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
           key != MDX_KEY_PASTE && key != MDX_KEY_SCALE) {
@@ -285,8 +286,8 @@ bool mcl_handleEvent(gui_event_t *event) {
               }
         */
       case MDX_KEY_EXTENDED: {
-        if (MidiClock.state == 2 && mcl.currentPage() != MIXER_PAGE) {
-          mixer_page.last_page = mcl.currentPage();
+        if (MidiClock.state == 2 && current_page != MIXER_PAGE) {
+          mixer_page.last_page = current_page;
           mcl.setPage(MIXER_PAGE);
           mixer_page.ext_key_down = 1;
           mixer_page.mute_toggle = 1;
@@ -298,17 +299,17 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
-        if (mcl.currentPage() == GRID_LOAD_PAGE ||
-            mcl.currentPage() == GRID_SAVE_PAGE ||
-            (mcl.currentPage() == GRID_PAGE && grid_page.show_slot_menu)) { // ||
-//            (mcl.currentPage() == MIXER_PAGE && mixer_page.preview_mute_set != 255))
+        if (current_page == GRID_LOAD_PAGE ||
+            current_page == GRID_SAVE_PAGE ||
+            (current_page == GRID_PAGE && grid_page.show_slot_menu)) { // ||
+//            (current_page == MIXER_PAGE && mixer_page.preview_mute_set != 255))
           return false;
         }
         if (key_interface.is_key_down(MDX_KEY_FUNC)) {
           return false;
         }
         if (grid_page.last_page == 255) {
-          grid_page.last_page = mcl.currentPage();
+          grid_page.last_page = current_page;
         }
         mcl.setPage(GRID_PAGE);
         grid_page.bank_popup = 1;
@@ -326,9 +327,9 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_BANKGROUP: {
-        if (mcl.currentPage() != TEXT_INPUT_PAGE &&
-            mcl.currentPage() != GRID_SAVE_PAGE &&
-            mcl.currentPage() != GRID_LOAD_PAGE &&
+        if (current_page != TEXT_INPUT_PAGE &&
+            current_page != GRID_SAVE_PAGE &&
+            current_page != GRID_LOAD_PAGE &&
             !key_interface.is_key_down(MDX_KEY_PATSONG)) {
           mcl.setPage(PAGE_SELECT_PAGE);
           return true;
@@ -336,23 +337,25 @@ bool mcl_handleEvent(gui_event_t *event) {
         return false;
       }
       case MDX_KEY_REC: {
-       if (mcl.currentPage() != SEQ_STEP_PAGE &&
-          mcl.currentPage() != SEQ_PTC_PAGE &&
-          mcl.currentPage() != SEQ_EXTSTEP_PAGE) {
+        if (current_page != SEQ_STEP_PAGE &&
+            current_page != SEQ_PTC_PAGE &&
+            current_page != SEQ_EXTSTEP_PAGE) {
           seq_step_page.prepare = true;
-          if (mcl.currentPage() != SOUND_BROWSER && mcl.currentPage() != ARP_PAGE && mcl.currentPage() != POLY_PAGE) {
-            seq_step_page.last_page = mcl.currentPage();
+          if (current_page != SOUND_BROWSER &&
+              current_page != ARP_PAGE &&
+              current_page != POLY_PAGE) {
+            seq_step_page.last_page = current_page;
           }
           mcl.setPage(SEQ_STEP_PAGE);
         } else {
           if (seq_step_page.recording) {
             seq_step_page.recording = 0;
             GUI_hardware.led.rec_active = false;
-            MD.set_rec_mode(mcl.currentPage() == SEQ_STEP_PAGE);
+            MD.set_rec_mode(current_page == SEQ_STEP_PAGE);
             clearLed2();
             key_interface.ignoreNextEvent(MDX_KEY_REC);
           } else {
-            if (mcl.currentPage() == SEQ_STEP_PAGE) {
+            if (current_page == SEQ_STEP_PAGE) {
               key_interface.ignoreNextEvent(MDX_KEY_REC);
               mcl.setPage(seq_step_page.last_page);
             }
@@ -369,17 +372,17 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_COPY: {
-        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
+        if (current_page == SEQ_STEP_PAGE || current_page == PERF_PAGE_0)
           break;
-        if (mcl.currentPage() != SEQ_PTC_PAGE &&
+        if (current_page != SEQ_PTC_PAGE &&
             (key_interface.is_key_down(MDX_KEY_SCALE) ||
              key_interface.is_key_down(MDX_KEY_NO))) {
           // Ignore scale + copy if page != seq_step_page
           break;
         }
         opt_copy = 2;
-        if (mcl.currentPage() == SEQ_PTC_PAGE ||
-            mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
+        if (current_page == SEQ_PTC_PAGE ||
+            current_page == SEQ_EXTSTEP_PAGE) {
           opt_copy = SeqPage::recording ? 2 : 1;
         }
         else {
@@ -389,17 +392,17 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_PASTE: {
-        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
+        if (current_page == SEQ_STEP_PAGE || current_page == PERF_PAGE_0)
           break;
-        if (mcl.currentPage() != SEQ_PTC_PAGE &&
+        if (current_page != SEQ_PTC_PAGE &&
             (key_interface.is_key_down(MDX_KEY_SCALE) ||
              key_interface.is_key_down(MDX_KEY_NO))) {
           // Ignore scale + copy if page != seq_step_page
           break;
         }
         opt_paste = 2;
-        if (mcl.currentPage() == SEQ_PTC_PAGE ||
-            mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
+        if (current_page == SEQ_PTC_PAGE ||
+            current_page == SEQ_EXTSTEP_PAGE) {
           opt_paste = SeqPage::recording ? 2 : 1;
         }
         else {
@@ -410,7 +413,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_CLEAR: {
-        if (mcl.currentPage() == SEQ_STEP_PAGE || mcl.currentPage() == PERF_PAGE_0)
+        if (current_page == SEQ_STEP_PAGE || current_page == PERF_PAGE_0)
           break;
         if ((note_interface.notes_count_on() > 0) ||
             (key_interface.is_key_down(MDX_KEY_SCALE) ||
@@ -418,8 +421,8 @@ bool mcl_handleEvent(gui_event_t *event) {
           break;
         opt_clear = 2;
         //  MidiDevice *dev = device_manager.secondary_device();
-        if (mcl.currentPage() == SEQ_PTC_PAGE) { opt_clear = 1; }
-        else if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) {
+        if (current_page == SEQ_PTC_PAGE) { opt_clear = 1; }
+        else if (current_page == SEQ_EXTSTEP_PAGE) {
           opt_clear = 1;
           if (seq_extstep_page.pianoroll_mode > 0) { opt_clear_locks_handler(); break; }
         }
@@ -444,10 +447,10 @@ bool mcl_handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_RELEASED) {
       switch (key) {
        case MDX_KEY_REC: {
-        if (!SeqPage::recording && (mcl.currentPage() == SEQ_PTC_PAGE ||
-                                    mcl.currentPage() == SEQ_EXTSTEP_PAGE)) {
+        if (!SeqPage::recording && (current_page == SEQ_PTC_PAGE ||
+                                    current_page == SEQ_EXTSTEP_PAGE)) {
             seq_step_page.prepare = true;
-            seq_step_page.last_page = mcl.currentPage();
+            seq_step_page.last_page = current_page;
             mcl.setPage(SEQ_STEP_PAGE);
           return true;
         }
