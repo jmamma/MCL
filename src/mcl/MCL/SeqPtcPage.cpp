@@ -380,9 +380,12 @@ void SeqPtcPage::display() {
   }
 
   uint64_t *mask = note_mask;
+  uint64_t display_mask[2];
   if (arp.enabled) {
     mcl_print_P(mclstr_arp);
-    mask = arp.note_mask;
+    display_mask[0] = arp.note_mask[0];
+    display_mask[1] = arp.note_mask[1];
+    mask = display_mask;
   }
 
   mcl_gui.draw_keyboard(32, 23, 6, 9, NUM_KEYS, mask);
