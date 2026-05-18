@@ -220,20 +220,21 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
     merge = 0;
   }
 
-  for (i = 0; i < NUM_DEVS; ++i) {
+  uint8_t device_bit = 1;
+  for (i = 0; i < NUM_DEVS; ++i, device_bit <<= 1) {
     if (elektron_devs[i] != nullptr) {
-      if (save_dev_mask & (uint8_t)(1 << i)) {
+      if (save_dev_mask & device_bit) {
         if (merge > 0) {
           // DEBUG_PRINTLN(F("fetching pattern"));
           // DEBUG_PRINTLN(readpattern);
           if (!elektron_devs[i]->getBlockingPattern(readpattern)) {
             // DEBUG_PRINTLN(F("could not receive pattern"));
-            save_dev_mask &= (uint8_t)~(1 << i);
+            save_dev_mask &= (uint8_t)~device_bit;
             continue;
           }
           ElektronPattern *p = (ElektronPattern*) elektron_devs[i]->getPattern();
           if (p->isEmpty()) {
-            save_dev_mask &= (uint8_t)~(1 << i);
+            save_dev_mask &= (uint8_t)~device_bit;
             continue;
           }
           if (!elektron_devs[i]->getBlockingKit(p->getKit())) {
@@ -244,7 +245,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
           if (elektron_devs[i]->canReadWorkspaceKit()) {
             if (!elektron_devs[i]->getWorkSpaceKit()) {
               // DEBUG_PRINTLN(F("could not receive kit"));
-              save_dev_mask &= (uint8_t)~(1 << i);
+              save_dev_mask &= (uint8_t)~device_bit;
               continue;
             }
           } else if (elektron_devs[i]->canReadKit()) {
@@ -252,7 +253,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
             elektron_devs[i]->saveCurrentKit(kit);
             if (!elektron_devs[i]->getBlockingKit(kit)) {
               // DEBUG_PRINTLN(F("could not receive kit"));
-              save_dev_mask &= (uint8_t)~(1 << i);
+              save_dev_mask &= (uint8_t)~device_bit;
               continue;
             }
           }
@@ -315,12 +316,13 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
   const char *row_name = shared_row_name(elektron_devs, save_dev_mask);
 
   // Only set the shared row name when this row has not already been named.
-  for (uint8_t n = 0; n < NUM_GRIDS; n++) {
-    if (saved_grid_mask & (uint8_t)(1 << n)) {
+  uint8_t grid_bit = 1;
+  for (uint8_t n = 0; n < NUM_GRIDS; n++, grid_bit <<= 1) {
+    if (saved_grid_mask & grid_bit) {
       row_headers[n].active = true;
     }
-    if ((saved_grid_mask & (uint8_t)(1 << n)) &&
-        row_headers[n].name[0] == '\0' && row_name != nullptr) {
+    if ((saved_grid_mask & grid_bit) && row_headers[n].name[0] == '\0' &&
+        row_name != nullptr) {
       copy_row_name(row_headers[n], row_name);
     }
     proj.write_grid_row_header(&row_headers[n], row, n);
