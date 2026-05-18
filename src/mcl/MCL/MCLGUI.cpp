@@ -831,7 +831,7 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
   for (uint8_t n = 0; n < num_of_notes; n++) {
 
     bool pressed = IS_BIT_SET128_P(note_mask, n + offset);
-    bool black = IS_BIT_SET16(chromatic, note_type);
+    bool black = chromatic & (1 << note_type);
 
     if (black) {
       // previous '|' has already filled the center col.
@@ -866,8 +866,9 @@ void MCLGUI::draw_keyboard(uint8_t x, uint8_t y, uint8_t note_width,
 }
 void MCLGUI::draw_trigs(uint8_t x, uint8_t y, const uint16_t &trig_selection) {
 
-  for (uint8_t i = 0; i < 16; i++) {
-    if (IS_BIT_SET16(trig_selection,i)) {
+  uint16_t bit = 1;
+  for (uint8_t i = 0; i < 16; i++, bit <<= 1) {
+    if (trig_selection & bit) {
       oled_display.fillRect(x, y, seq_w, trig_h, WHITE);
     }
     else{
