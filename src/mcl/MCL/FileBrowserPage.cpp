@@ -661,9 +661,6 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
       get_entry(encoders[1]->getValue(), temp_entry, entry_type);
 
       if (!show_samplemgr) {
-        file.open(temp_entry, O_READ);
-        //    if (!dir_only) {
-
         if (encoders[1]->getValue() == i_save) {
           on_new();
           goto fin;
@@ -680,6 +677,7 @@ bool FileBrowserPage::handleEvent(gui_event_t *event) {
           _cd(temp_entry);
           goto fin;
         }
+        file.open(temp_entry, O_READ);
       }
 
       GUI.ignoreNextEvent(event->source);
