@@ -22,8 +22,6 @@ public:
 
 private:
   static constexpr uint8_t VERSION_ENTRY_BASE = 16;
-  char project_path[PRJ_PATH_LEN];
-  char project_name[PRJ_NAME_LEN + 1];
 
   void query_versions();
   bool selected_pair(uint8_t *pair);

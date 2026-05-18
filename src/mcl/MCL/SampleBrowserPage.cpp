@@ -112,7 +112,6 @@ void SampleBrowserPage::init(uint8_t show_samplemgr_) {
   key_interface.off();
   filemenu_active = false;
   select_dirs = false;
-  show_overwrite = false;
   show_samplemgr = show_samplemgr_;
 
   if (show_samplemgr) {
@@ -311,7 +310,6 @@ void SampleBrowserPage::query_sample_slots() {
   cur_file = 255; // XXX why 255?
   cur_row = 0;
   uint8_t data[2] = {0x70, 0x34};
-  call_handle_filemenu = false;
   s_query_returned = false;
 
   sysex->addSysexListener(this);

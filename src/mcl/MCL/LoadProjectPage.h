@@ -12,7 +12,6 @@
 
 class LoadProjectPage : public FileBrowserPage {
 public:
-  const uint8_t f_len = PRJ_NAME_LEN + 5;
   LoadProjectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                   Encoder *e4 = NULL)
       : FileBrowserPage(e1, e2, e3, e4) {}

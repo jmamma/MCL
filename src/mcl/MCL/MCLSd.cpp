@@ -5,7 +5,7 @@
 #include "Project.h"
 #include "PtcGroups.h"
 
-bool MCLSd::join_path(char *dst, size_t dst_len, const char *dir,
+bool MCLSd::join_path(char *dst, uint8_t dst_len, const char *dir,
                       const char *entry) {
   if (dst_len == 0) {
     return false;

@@ -5,20 +5,14 @@
 #include "Project.h"
 
 void ProjectVersionPage::set_project(const char *project) {
-  strncpy(project_path, project, sizeof(project_path) - 1);
-  project_path[sizeof(project_path) - 1] = '\0';
-
-  const char *basename = strrchr(project_path, '/');
-  basename = basename == nullptr ? project_path : basename + 1;
-  strncpy(project_name, basename, sizeof(project_name) - 1);
-  project_name[sizeof(project_name) - 1] = '\0';
+  strncpy(lwd, project, sizeof(lwd) - 1);
+  lwd[sizeof(lwd) - 1] = '\0';
 }
 
 void ProjectVersionPage::setup() {
   oled_display.clearDisplay();
   encoders[1]->cur = 0;
   encoders[1]->old = 0;
-  encoders[2]->cur = 0;
   cur_row = 0;
 }
 
@@ -30,7 +24,6 @@ void ProjectVersionPage::init() {
   show_parent = false;
   show_new_folder = false;
   show_filemenu = true;
-  show_overwrite = false;
   strcpy(title, "VERSION");
   strcpy(str_save, "BACKUP");
   query_versions();
@@ -42,14 +35,17 @@ void ProjectVersionPage::query_versions() {
   add_entry(str_save, FILE_TYPE);
 
   uint8_t active_pair = 0;
-  bool have_active = proj.read_active_grid_pair(project_path, &active_pair);
+  bool have_active = proj.read_active_grid_pair(lwd, &active_pair);
 
   proj.chdir_projects();
-  if (!SD.chdir(project_path)) {
+  if (!SD.chdir(lwd)) {
     add_entry("ERROR", FILE_TYPE);
     ((MCLEncoder *)encoders[1])->max = numEntries - 1;
     return;
   }
+
+  const char *project_name = strrchr(lwd, '/');
+  project_name = project_name == nullptr ? lwd : project_name + 1;
 
   for (uint8_t pair = 0; pair < 128; pair++) {
     if (!proj.project_pair_exists(pair, project_name)) {
@@ -87,7 +83,7 @@ bool ProjectVersionPage::handleEvent(gui_event_t *event) {
     uint8_t pair = 0;
     uint8_t active_pair = 0;
     bool can_delete = selected_pair(&pair) && pair > 0 &&
-                      proj.read_active_grid_pair(project_path, &active_pair) &&
+                      proj.read_active_grid_pair(lwd, &active_pair) &&
                       pair != active_pair;
     uint16_t disabled = FM_MASK(FM_NEW_FOLDER) | FM_MASK(FM_RENAME) |
                         FM_MASK(FM_DUPLICATE) | FM_MASK(FM_MOVE) |
@@ -104,7 +100,7 @@ bool ProjectVersionPage::handleEvent(gui_event_t *event) {
 }
 
 void ProjectVersionPage::on_new() {
-  if (proj.create_backup(project_path)) {
+  if (proj.create_backup(lwd)) {
     gfx.alert("SUCCESS", "Backup made.");
   } else {
     gfx.alert("ERROR", "No backup.");
@@ -118,7 +114,7 @@ void ProjectVersionPage::on_select(const char *entry) {
   if (!selected_pair(&pair)) {
     return;
   }
-  if (proj.load_project_version(project_path, pair)) {
+  if (proj.load_project_version(lwd, pair)) {
     mcl.setPage(GRID_PAGE);
   } else {
     gfx.alert("ERROR", "OPEN VERSION");
@@ -131,7 +127,7 @@ void ProjectVersionPage::on_delete(const char *entry) {
   if (!selected_pair(&pair)) {
     return;
   }
-  if (proj.delete_backup(project_path, pair)) {
+  if (proj.delete_backup(lwd, pair)) {
     gfx.alert("SUCCESS", "Deleted.");
   } else {
     gfx.alert("ERROR", "Not deleted.");

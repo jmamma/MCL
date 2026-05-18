@@ -112,15 +112,12 @@ public:
   static bool show_parent;
   static bool show_new_folder;
   static bool show_filemenu;
-  static bool show_overwrite;
   static bool show_samplemgr;
   static bool show_copy;
   static bool show_move;
   static bool show_versions;
 
   static bool filemenu_active;
-
-  static bool call_handle_filemenu;
 
   static char focus_match[FILE_ENTRY_SIZE];
   static FileBrowserFileTypes file_types;
@@ -177,7 +174,6 @@ public:
   // on cancel, the page will be popped,
   // and there's a last chance to clean up.
   virtual void on_cancel() { mcl.popPage(); }
-  virtual void chdir_type() {}
   virtual uint8_t resolve_entry_type(uint16_t n, const char *entry,
                                      uint8_t type) {
     (void)n;

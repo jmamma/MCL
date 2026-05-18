@@ -19,7 +19,6 @@ void ConvertProjectPage::init() {
   show_parent = false;
   show_new_folder = false;
   show_filemenu = true;
-  show_overwrite = false;
 
   FileBrowserPage::init();
 }

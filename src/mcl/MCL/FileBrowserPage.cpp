@@ -22,7 +22,6 @@ bool FileBrowserPage::show_save = true;
 bool FileBrowserPage::show_parent = true;
 bool FileBrowserPage::show_new_folder = true;
 bool FileBrowserPage::show_filemenu = true;
-bool FileBrowserPage::show_overwrite = false;
 
 bool FileBrowserPage::show_samplemgr = false;
 bool FileBrowserPage::show_copy = false;
@@ -31,13 +30,16 @@ bool FileBrowserPage::show_versions = false;
 
 bool FileBrowserPage::filemenu_active = false;
 
-bool FileBrowserPage::call_handle_filemenu = false;
-
 FileBrowserFileTypes FileBrowserPage::file_types;
 
 bool FileBrowserPage::selection_change = false;
 
 uint16_t FileBrowserPage::selection_change_clock = 0;
+
+static uint8_t filebrowser_name_length(uint8_t min_length, const char *name) {
+  uint8_t len = strlen(name);
+  return len > min_length ? len : min_length;
+}
 
 void FileBrowserPage::cleanup() {
   // always call setup() when entering this page.
@@ -59,7 +61,6 @@ void FileBrowserPage::setup() {
 #endif
 
   encoders[1]->cur = 1;
-  encoders[2]->cur = 1;
 }
 
 void FileBrowserPage::get_entry(uint16_t n, char *entry) {
@@ -109,7 +110,6 @@ bool FileBrowserPage::add_entry(const char *entry, uint8_t type) {
 void FileBrowserPage::query_filesystem() {
 
   char temp_entry[FILE_ENTRY_SIZE];
-  call_handle_filemenu = false;
   // config menu
   file_menu_page.visible_rows = 3;
   uint16_t disabled = FM_MASK(FM_RECVALL) | FM_MASK(FM_SENDALL);
@@ -431,7 +431,6 @@ bool FileBrowserPage::_cd(const char *child) {
   uint8_t row = cur_row;
   init();
   encoders[1]->cur = 1;
-  encoders[2]->cur = 1;
   position.push(pos, row);
   return true;
 }
@@ -443,9 +442,6 @@ bool FileBrowserPage::_handle_filemenu() {
 
   char *suffix_pos = strchr(buf1, '.');
   char buf2[32];
-  for (uint8_t n = 1; n < 32; n++) {
-    buf2[n] = ' ';
-  }
   uint8_t name_length = NAME_LENGTH;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
@@ -468,7 +464,7 @@ bool FileBrowserPage::_handle_filemenu() {
     }
     // default max length = NAME_LENGTH, can extend if buf2 without suffix
     // is longer than NAME_LENGTH.
-    name_length = max(name_length, strlen(buf2));
+    name_length = filebrowser_name_length(name_length, buf2);
     if (mcl_gui.wait_for_input(buf2, "RENAME TO:", name_length)) {
       if (suffix_pos != nullptr) {
         // paste the suffix back
@@ -483,11 +479,11 @@ bool FileBrowserPage::_handle_filemenu() {
       buf2[suffix_pos - buf1] = '\0';
     }
     {
-      size_t suffix_len = suffix_pos == nullptr ? 0 : strlen(suffix_pos);
-      size_t max_base = NAME_LENGTH > suffix_len + 2
-                            ? NAME_LENGTH - suffix_len - 2
-                            : 0;
-      size_t base_len = strlen(buf2);
+      uint8_t suffix_len = suffix_pos == nullptr ? 0 : strlen(suffix_pos);
+      uint8_t max_base = NAME_LENGTH > suffix_len + 2
+                             ? NAME_LENGTH - suffix_len - 2
+                             : 0;
+      uint8_t base_len = strlen(buf2);
       if (base_len > max_base) {
         base_len = max_base;
         buf2[base_len] = '\0';
@@ -499,14 +495,14 @@ bool FileBrowserPage::_handle_filemenu() {
     if (suffix_pos != nullptr) {
       strcat(buf2, suffix_pos);
     }
-    name_length = max(name_length, strlen(buf2));
+    name_length = filebrowser_name_length(name_length, buf2);
     if (mcl_gui.wait_for_input(buf2, "CLONE:", name_length)) {
       on_copy(buf1, buf2);
     }
     return true;
   case FM_MOVE: // move
     strcpy(buf2, buf1);
-    name_length = max(name_length, strlen(buf2));
+    name_length = filebrowser_name_length(name_length, buf2);
     if (mcl_gui.wait_for_input(buf2, "MOVE TO:", name_length)) {
       on_move(buf1, buf2);
     }

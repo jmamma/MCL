@@ -36,7 +36,6 @@ void LoadProjectPage::init() {
   show_parent = true;
   show_new_folder = true;
   show_filemenu = true;
-  show_overwrite = false;
   show_copy = !move_destination_mode;
   show_versions = false;
   draw_dirs = true;
@@ -269,15 +268,17 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       disabled |= FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME) | FM_MASK(FM_MOVE);
     }
 #ifdef __AVR__
-    if (!regular_entry || entry_type != FILE_TYPE) {
+    if (!project_entry) {
+      disabled |= FM_MASK(FM_DUPLICATE) | FM_MASK(FM_VERSIONS);
+    }
 #else
     if (!regular_entry) {
-#endif
       disabled |= FM_MASK(FM_DUPLICATE);
     }
     if (!project_entry) {
       disabled |= FM_MASK(FM_VERSIONS);
     }
+#endif
     set_file_menu_disabled_mask(disabled);
     open_filemenu();
     return true;
@@ -414,9 +415,14 @@ void LoadProjectPage::on_cancel() {
 }
 
 bool LoadProjectPage::current_project_parent(const char **parent) const {
+#ifdef __AVR__
+  const char *root_path = PRJ_DIR;
+  constexpr size_t root_len = sizeof(PRJ_DIR) - 1;
+#else
   char root[64];
   const char *root_path = mcl_sd.full_path(PRJ_DIR, root, sizeof(root));
   size_t root_len = strlen(root_path);
+#endif
 
   if (strcmp(lwd, root_path) == 0) {
     *parent = "";
