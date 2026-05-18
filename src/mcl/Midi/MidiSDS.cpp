@@ -65,8 +65,8 @@ read_wav_packet_channel0(Wav &wav, uint8_t *data, uint8_t num_samples,
 
   uint8_t frame_size = sample_size * channels;
   uint32_t position = sample_index * frame_size;
-  uint8_t read_size = num_samples * sample_size;
-  uint8_t frame_read_size = read_size * channels;
+  uint16_t read_size = num_samples * sample_size;
+  uint16_t frame_read_size = read_size * channels;
 
   if (position >= wav.header.data.chunk_size) {
     return true;
