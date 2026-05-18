@@ -563,19 +563,22 @@ void FileBrowserPage::on_rename(const char *from, const char *to) {
 }
 
 void FileBrowserPage::on_copy(const char *from, const char *to) {
+#ifdef __AVR__
+  mcl_gui.draw_progress("CLONE", 0, 64);
+  bool ok = mcl_sd.copy_file(from, to, 0, 64, 64);
+#else
   file.open(from, O_READ);
   bool dir = file.isDirectory();
   file.close();
   bool ok = false;
   if (dir) {
-#ifndef __AVR__
     mcl_gui.draw_progress("CLONE", 0, 64);
     ok = mcl_sd.copy_dir(from, to, 0, 64, 64);
-#endif
   } else {
     mcl_gui.draw_progress("CLONE", 0, 64);
     ok = mcl_sd.copy_file(from, to, 0, 64, 64);
   }
+#endif
   if (ok) {
     gfx.alert("SUCCESS", "Cloned.");
   } else {
