@@ -143,8 +143,9 @@ void PolyPage::press_track(uint8_t i) {
 }
 
 void PolyPage::apply_selected_group() {
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
-    if (IS_BIT_SET16(selected_tracks, i)) {
+  uint16_t mask = selected_tracks;
+  for (uint8_t i = 0; mask != 0; ++i, mask >>= 1) {
+    if (mask & 1) {
       ptc_groups.set_track_group(i, selected_group);
     }
   }

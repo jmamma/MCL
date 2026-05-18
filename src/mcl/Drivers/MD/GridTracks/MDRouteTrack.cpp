@@ -109,7 +109,7 @@ void MDRouteTrack::load_routes() {
 void MDRouteTrack::get_routes() {
   memcpy(routing, mcl_cfg.routing, sizeof(routing));
   ptc_groups.store(ptc_group);
-  ptc_groups.store(mcl_cfg.ptc_group);
+  memcpy(mcl_cfg.ptc_group, ptc_group, sizeof(ptc_group));
 }
 
 void MDRouteTrack::get_online_data(uint8_t merge) {

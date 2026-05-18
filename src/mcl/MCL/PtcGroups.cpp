@@ -80,9 +80,10 @@ uint16_t PtcGroups::mask_for_group(uint8_t value) const {
   }
 
   uint16_t mask = 0;
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
+  uint16_t bit = 1;
+  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, bit <<= 1) {
     if (group[i] == value) {
-      SET_BIT16(mask, i);
+      mask |= bit;
     }
   }
   return mask;
@@ -98,9 +99,10 @@ uint16_t PtcGroups::mask_for_midi_channel(uint8_t channel) const {
 
 uint16_t PtcGroups::legacy_poly_mask() const {
   uint16_t mask = 0;
-  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
+  uint16_t bit = 1;
+  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, bit <<= 1) {
     if (track_has_group(i)) {
-      SET_BIT16(mask, i);
+      mask |= bit;
     }
   }
   return mask;
