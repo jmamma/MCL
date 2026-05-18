@@ -63,7 +63,7 @@ class FileBrowserFileTypes {
 };
 
 class FileSystemPosition {
-  constexpr static uint8_t size = 12;
+  constexpr static uint8_t size = 8;
   uint16_t last_pos[8];
   uint8_t last_cur_row[8];
   uint8_t depth;
