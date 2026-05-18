@@ -133,17 +133,18 @@ bool ElektronDevice::get_fw_caps() {
 
   fw_caps = 0;
 
-  auto begin = sysex_protocol.header_size + 1;
+  uint8_t begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
   DEBUG_PRINTLN("caps");
   SysexView sysex(listener->sysex, listener->msg_rd);
   uint8_t b = 0;
   if (msgType == 0x72 && sysex.getByte(begin) == 0x30) {
       begin++;
+      uint8_t *caps = (uint8_t *)&fw_caps;
       for (uint8_t n = 0; n < 4; n++) {
-        b = sysex.getByte(begin+n);
+        b = sysex.getByte(begin++);
         if (b == 0xF7) { break; }
-        ((uint8_t *)&(fw_caps))[n] = b;
+        caps[n] = b;
       }
       return true;
   }
