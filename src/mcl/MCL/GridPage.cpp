@@ -1046,9 +1046,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
       if (grid_page.bank_popup > 0) {
 
         uint8_t load_mode_old = mcl_cfg.load_mode;
-        uint8_t load_count = popcount16(grid_page.bank_popup_loadmask);
+        uint16_t loadmask = grid_page.bank_popup_loadmask;
+        bool has_load = loadmask != 0;
+        bool single_load = has_load && ((loadmask & (loadmask - 1)) == 0);
 
-        if (load_count == 0) {
+        if (!has_load) {
           grid_page.jump_to_row(row);
           if (load_mode_old != LOAD_AUTO) {
             mcl_cfg.load_mode = LOAD_MANUAL;
@@ -1059,15 +1061,15 @@ bool GridPage::handleEvent(gui_event_t *event) {
           mcl_cfg.load_mode = LOAD_QUEUE;
         }
 
-        if (load_count == 1) {
-          uint16_t loadmask = grid_page.bank_popup_loadmask;
+        if (single_load) {
+          uint16_t bit = 1;
           uint8_t n = 0;
-          while ((loadmask & 1) == 0) {
-            loadmask >>= 1;
+          while ((loadmask & bit) == 0) {
+            bit <<= 1;
             n++;
           }
           uint8_t r = grid_page.bank * 16 + n;
-          CLEAR_BIT16(grid_page.bank_popup_loadmask, n);
+          grid_page.bank_popup_loadmask &= ~bit;
           // Reload as queue.
           grid_page.load_row(n, r);
         }
