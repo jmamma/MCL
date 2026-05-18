@@ -1008,22 +1008,21 @@ void MDSeqTrack::clear_locks() {
   // Need to buffer this, as we dont want sequencer interrupt
   // to access it whilst we're cleaning up
   DEBUG_DUMP("Clear these locks");
-  for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-    locks_params[c] = 0;
-  }
-
-  memset(locks, 0, sizeof(locks));
+  // locks and locks_params are adjacent in MDSeqTrackData storage.
+  memset(locks, 0, sizeof(locks) + sizeof(locks_params));
   cur_event_idx = 0;
   //notes.first_trig = true;
 }
 
 void MDSeqTrack::clear_track(bool locks) {
-  clear_conditional();
+  // timing and steps are adjacent in MDSeqTrackData storage.
+  memset(timing, 0, sizeof(timing) + sizeof(steps));
+  clear_mutes();
+  ignore_step = 255;
   if (locks) {
     DEBUG_DUMP("clear locks");
     clear_locks();
   }
-  memset(steps, 0, sizeof(steps));
   //notes.first_trig = true;
 }
 

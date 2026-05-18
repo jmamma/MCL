@@ -1181,15 +1181,14 @@ void ExtSeqTrack::clear_ext_conditional() {
 }
 
 void ExtSeqTrack::clear_ext_notes() {
-  event_count = 0;
-  for (uint8_t c = 0; c < NUM_EXT_STEPS; c++) {
-    event_buckets.set(c, 0);
-  }
+  ExtSeqTrackData::clear();
 }
 
 void ExtSeqTrack::clear_track(bool) {
   clear_ext_notes();
-  clear_ext_conditional();
+  // Events are inactive after clear_ext_notes(); only runtime masks need reset.
+  clear_mutes();
+  memset(ignore_notes, 0, sizeof(ignore_notes));
   notesoff_pending = true;
 }
 
