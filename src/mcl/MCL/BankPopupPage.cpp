@@ -206,28 +206,31 @@ bool BankPopupPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t load_mode_old = mcl_cfg.load_mode;
-      uint8_t load_count = popcount16(grid_page.bank_popup_loadmask);
+      uint16_t loadmask = grid_page.bank_popup_loadmask;
+      bool has_load = loadmask != 0;
+      bool single_load = has_load && ((loadmask & (loadmask - 1)) == 0);
 
-      if (load_count == 0) {
+      if (!has_load) {
         grid_page.jump_to_row(row);
         if (load_mode_old != LOAD_AUTO) {
           mcl_cfg.load_mode = LOAD_MANUAL;
         }
         mcl_actions.init_chains();
       }
-      if (load_count > 0) {
+      if (has_load) {
         mcl_cfg.load_mode = LOAD_QUEUE;
       }
 
-      if (load_count == 1) {
-        for (uint8_t n = 0; n < 16; n++) {
-          if (IS_BIT_SET16(grid_page.bank_popup_loadmask, n)) {
-            uint8_t r = grid_page.bank * 16 + n;
-            CLEAR_BIT16(grid_page.bank_popup_loadmask, n);
-            grid_page.load_row(n, r);
-            break;
-          }
+      if (single_load) {
+        uint16_t bit = 1;
+        uint8_t n = 0;
+        while ((loadmask & bit) == 0) {
+          bit <<= 1;
+          n++;
         }
+        uint8_t r = grid_page.bank * 16 + n;
+        grid_page.bank_popup_loadmask &= ~bit;
+        grid_page.load_row(n, r);
       }
 
       grid_page.load_row(track, row);
