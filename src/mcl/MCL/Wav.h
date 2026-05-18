@@ -58,7 +58,7 @@ struct fmtchunk_t : public chunk_t {
     sampleRate = smplrate;
     bitRate = bitrate;
     audioFormat = 1; // PCM
-    uint8_t bytes_per_sample = (bitrate + 7) / 8;
+    uint8_t bytes_per_sample = (bitrate + 7) >> 3;
     byteRate = sampleRate * nchannel * bytes_per_sample;
     blockAlign = nchannel * bytes_per_sample;
 

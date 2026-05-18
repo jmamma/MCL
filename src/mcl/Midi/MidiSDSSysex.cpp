@@ -167,10 +167,7 @@ void MidiSDSSysexListenerClass::dump_header(const SysexView &view) {
 
   midi_sds.sample_offset = midi_sds_sample_midpoint(midi_sds.sampleFormat);
   midi_sds.midiBytes_per_word = midi_sds.sampleFormat / 7;
-  midi_sds.bytes_per_word = midi_sds.sampleFormat / 8;
-  if (midi_sds.sampleFormat % 8 > 0) {
-    midi_sds.bytes_per_word++;
-  }
+  midi_sds.bytes_per_word = (midi_sds.sampleFormat + 7) >> 3;
   if (midi_sds.sampleFormat % 7 > 0) {
     midi_sds.midiBytes_per_word++;
   }

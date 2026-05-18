@@ -56,10 +56,7 @@ inline void update_progress(bool show_progress, uint8_t &counter, uint32_t pos,
 bool __attribute__((noinline))
 read_wav_packet_channel0(Wav &wav, uint8_t *data, uint8_t num_samples,
                          uint32_t sample_index) {
-  uint8_t sample_size = wav.header.fmt.bitRate / 8;
-  if (wav.header.fmt.bitRate % 8 > 0) {
-    sample_size++;
-  }
+  uint8_t sample_size = (wav.header.fmt.bitRate + 7) >> 3;
 
   uint8_t channels = wav.header.fmt.numChannels;
   if (channels == 0) {
@@ -154,9 +151,7 @@ struct WavReader : SDSFileReader {
     if (sample_format % 7 > 0)
       midi_bytes_per_word++;
 
-    bytes_per_word = sample_format / 8;
-    if (sample_format % 8 > 0)
-      bytes_per_word++;
+    bytes_per_word = (sample_format + 7) >> 3;
 
     sample_offset = midi_sds_sample_midpoint(sample_format);
     num_samples_per_packet = 120 / midi_bytes_per_word;

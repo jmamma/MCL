@@ -244,7 +244,7 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
   //  DEBUG_PRINTLN(channel);
   uint32_t position;
   uint32_t size;
-  uint8_t bytes_per_sample = (header.fmt.bitRate + 7) / 8;
+  uint8_t bytes_per_sample = (header.fmt.bitRate + 7) >> 3;
 
   // Write all channels when channel >= numChannels (matches read_samples behavior)
   if (channel >= header.fmt.numChannels) {
@@ -293,7 +293,7 @@ bool Wav::write_samples(void *data, uint32_t num_samples,
 
 bool Wav::write_mono_samples(void *data, uint32_t num_samples,
                              uint32_t sample_offset, bool writeheader) {
-  uint8_t bytes_per_sample = (header.fmt.bitRate + 7) / 8;
+  uint8_t bytes_per_sample = (header.fmt.bitRate + 7) >> 3;
   uint32_t position = sample_offset * bytes_per_sample;
   uint32_t size = num_samples * bytes_per_sample;
   bool ret = write_data(data, size, position + data_offset);
@@ -328,10 +328,7 @@ bool Wav::write_mono_samples(void *data, uint32_t num_samples,
 bool WAV_AVR_NOINLINE Wav::read_samples(void *data, uint32_t num_samples,
                                         uint32_t sample_index,
                                         uint8_t channel) {
-  uint8_t sample_size = header.fmt.bitRate / 8;
-  if (header.fmt.bitRate % 8 > 0) {
-    sample_size++;
-  }
+  uint8_t sample_size = (header.fmt.bitRate + 7) >> 3;
 
   uint8_t nch_sample_size = sample_size * header.fmt.numChannels;
   uint32_t position = sample_index * nch_sample_size;
@@ -444,10 +441,7 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   __int24 sample_val24 = 0;
   int16_t sample_val16 = 0;
 
-  uint8_t sample_size = header.fmt.bitRate / 8;
-  if (header.fmt.bitRate % 8 > 0) {
-    sample_size++;
-  }
+  uint8_t sample_size = (header.fmt.bitRate + 7) >> 3;
   uint32_t num_of_samples;
 
   if (num_samples > 0) {
@@ -617,10 +611,7 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
                      uint32_t sample_index) {
   DEBUG_PRINT_FN();
 
-  uint8_t sample_size = header.fmt.bitRate / 8;
-  if (header.fmt.bitRate % 8 > 0) {
-    sample_size++;
-  }
+  uint8_t sample_size = (header.fmt.bitRate + 7) >> 3;
 
   bool is_stereo = (header.fmt.numChannels == 2);
 
