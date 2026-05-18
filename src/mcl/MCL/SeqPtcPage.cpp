@@ -424,7 +424,7 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
     // pos = note_num - (note_num / (size + 1)) * (size + 1);
     // pos = min(note_num, size);
     const uint16_t chromatic = 0b0000010101001010;
-    if (IS_BIT_SET16(chromatic, note_num)) {
+    if (chromatic & (1 << note_num)) {
       note_num--;
     }
     if (size < 12) {
@@ -471,12 +471,13 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
   uint8_t oldest_val = 0;
 
   // Preserve the old allocation order while only scanning the voice group once.
-  for (uint8_t x = 0; x < track_count; x++) {
+  uint16_t voice_bit = 1;
+  for (uint8_t x = 0; x < track_count; x++, voice_bit <<= 1) {
     if (!SeqPtcTrackRef::is_poly_voice_track(x) ||
-        !IS_BIT_SET16(voice_mask, x)) {
+        !(voice_mask & voice_bit)) {
       continue;
     }
-    SET_BIT16(candidate_mask, x);
+    candidate_mask |= voice_bit;
     if (voice_active[x]) {
       if (voice_pitch[x] == pitch) {
         active_same_pitch = x;
@@ -507,8 +508,9 @@ uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
     return 255;
   }
 
-  for (uint8_t x = 0; x < track_count; x++) {
-    if (IS_BIT_SET16(candidate_mask, x)) {
+  uint16_t candidate_bit = 1;
+  for (uint8_t x = 0; x < track_count; x++, candidate_bit <<= 1) {
+    if (candidate_mask & candidate_bit) {
       if (voice_order[x] <= voice_order[voice] && x != voice) {
         voice_order[x]++;
       }
@@ -539,8 +541,9 @@ uint8_t SeqPtcPage::release_voice(uint8_t pitch, uint8_t track_number,
     return 255;
   }
 
-  for (uint8_t x = 0; x < SeqPtcTrackRef::track_count(); x++) {
-    if (SeqPtcTrackRef::is_poly_voice_track(x) && IS_BIT_SET16(voice_mask, x) &&
+  uint16_t voice_bit = 1;
+  for (uint8_t x = 0; x < SeqPtcTrackRef::track_count(); x++, voice_bit <<= 1) {
+    if (SeqPtcTrackRef::is_poly_voice_track(x) && (voice_mask & voice_bit) &&
         voice_active[x] && voice_pitch[x] == pitch) {
       voice_active[x] = false;
       return x;
@@ -1154,8 +1157,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
     }
     if (channel_event == POLY_EVENT) {
       uint16_t mask = ptc_groups.mask_for_midi_channel(channel);
-      for (uint8_t n = 0; n < SeqPtcTrackRef::track_count(); n++) {
-        if (IS_BIT_SET16(mask, n)) {
+      uint16_t bit = 1;
+      for (uint8_t n = 0; n < SeqPtcTrackRef::track_count(); n++, bit <<= 1) {
+        if (mask & bit) {
           SeqPtcTrackRef::set_param(n, param - 16, value, nullptr, true);
         }
       }
@@ -1287,10 +1291,9 @@ void SeqPtcMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   } // don't process mute
   uint16_t mask = ptc_groups.mask_for_track(track);
   if (mask) {
-
-    for (uint8_t n = 0; n < SeqPtcTrackRef::track_count(); n++) {
-
-      if (IS_BIT_SET16(mask, n) && (n != track)) {
+    uint16_t bit = 1;
+    for (uint8_t n = 0; n < SeqPtcTrackRef::track_count(); n++, bit <<= 1) {
+      if ((mask & bit) && (n != track)) {
         if (SeqPtcTrackRef::can_polylink_param(track, n, track_param)) {
           SeqPtcTrackRef::set_param(n, track_param, value, nullptr, true);
           display_polylink = 1;
