@@ -253,13 +253,8 @@ bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
   bool ret;
   DEBUG_PRINT_FN();
   uint8_t tracknumber = column & 0x0F;
-  if (tracknumber < NUM_MD_TRACKS) {
-    mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
-    mcl_seq.grid_x_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
-  } else {
-    mod_data.arp.init();
-    mod_data.lfo.init();
-  }
+  mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
+  mcl_seq.grid_x_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
 
   MDSeqTrack *md_seq_track =
       seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;
