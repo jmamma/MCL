@@ -17,16 +17,16 @@
 
 namespace {
 
-bool copy_grid_slot_raw(Grid &src_grid, Grid &dst_grid, GridColumn col,
-                        GridRow row) {
+bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
   uint8_t buf[256];
-  static_assert(GRID_SLOT_BYTES % sizeof(buf) == 0,
-                "slot copy buffer must divide grid slot size");
-  if (!src_grid.seek(col, row) || !dst_grid.seek(col, row)) {
+  static_assert((GRID_WIDTH * GRID_SLOT_BYTES) % sizeof(buf) == 0,
+                "row slot copy buffer must divide row slot bytes");
+  if (!src_grid.seek(0, row) || !dst_grid.seek(0, row)) {
     return false;
   }
 
-  for (uint8_t i = 0; i < GRID_SLOT_BYTES / sizeof(buf); i++) {
+  constexpr uint8_t chunks = (GRID_WIDTH * GRID_SLOT_BYTES) / sizeof(buf);
+  for (uint8_t i = 0; i < chunks; i++) {
     if (!src_grid.read(buf, sizeof(buf)) || !dst_grid.write(buf, sizeof(buf))) {
       return false;
     }
@@ -341,8 +341,7 @@ bool Project::read_active_grid_pair(const char *projectname, uint8_t *pair) {
   }
 
   uint32_t header_version = 0;
-  bool ok = header_file.seekSet(0) &&
-            mcl_sd.read_data((uint8_t *)&header_version,
+  bool ok = mcl_sd.read_data((uint8_t *)&header_version,
                              sizeof(header_version), &header_file);
   if (ok && header_version >= PROJ_VERSION_GRID_PAIRS) {
     ok = mcl_sd.read_data(pair, sizeof(*pair), &header_file);
@@ -573,12 +572,9 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     return false;
   }
 
-  EmptyTrack scratch;
-  bool clear_lfo_slot = false;
-  bool clear_legacy_perf_slot = false;
-
   if (migrate_legacy_aux_layout &&
       grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
+    EmptyTrack scratch;
     LegacyMDLFOTrackStorage legacy_track;
     if (!grids[1].read(&legacy_track, sizeof(legacy_track), MDLFO_TRACK_NUM,
                        row)) {
@@ -628,11 +624,14 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     }
 
     grid_y_header.update_model(MDLFO_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
-    clear_lfo_slot = true;
+    if (!grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
+      return false;
+    }
   }
 
   if (migrate_legacy_aux_layout &&
       grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
+    EmptyTrack scratch;
     auto *perf_track =
         scratch.load_from_grid_512(LEGACY_PERF_TRACK_NUM, row, &grids[1]);
     if (perf_track == nullptr) {
@@ -648,17 +647,9 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
                                  PERF_TRACK_TYPE);
     }
     grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
-    clear_legacy_perf_slot = true;
-  }
-
-  if (clear_lfo_slot &&
-      !grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
-    return false;
-  }
-
-  if (clear_legacy_perf_slot &&
-      !grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
-    return false;
+    if (!grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
+      return false;
+    }
   }
 
   if (grid_y_header.track_type[MDROUTE_TRACK_NUM] == MDROUTE_TRACK_TYPE) {
@@ -839,9 +830,7 @@ bool Project::copy_grid_pair(const char *from_project,
         break;
       }
 
-      for (GridColumn col = 0; ok && col < GRID_WIDTH; col++) {
-        ok = copy_grid_slot_raw(src_grid, dst_grid, col, row);
-      }
+      ok = copy_grid_row_slots_raw(src_grid, dst_grid, row);
     }
 
     if (ok) {
@@ -1080,24 +1069,6 @@ bool Project::new_project_master_file(const char *projectname) {
   if (!ret) {
     file.close();
     DEBUG_PRINTLN(F("Could not extend file"));
-    return false;
-  }
-  DEBUG_PRINTLN(F("extension succeeded, trying to close"));
-  file.close();
-
-  ret = file.open(projectname, O_RDWR);
-
-  if (!ret) {
-    file.close();
-
-    DEBUG_PRINTLN(F("Could not open file"));
-    return false;
-  }
-
-  ret = file.seekSet(0);
-
-  if (!ret) {
-    DEBUG_PRINTLN(F("Could not seek"));
     return false;
   }
 
