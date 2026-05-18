@@ -161,39 +161,31 @@ uint8_t lfo_preview_to_u8(uint8_t wav_type, int16_t sample) {
 }
 
 uint16_t lfo_apply_speed_multiplier(uint16_t phase_inc, uint8_t multiplier) {
-  uint16_t value = phase_inc;
+  if (multiplier >= LFO_SPEED_MULT_2X && multiplier <= LFO_SPEED_MULT_8X) {
+    return phase_inc > (LFO_PHASE_MASK >> multiplier)
+               ? LFO_PHASE_MASK
+               : (uint16_t)(phase_inc << multiplier);
+  }
   switch (multiplier) {
-  case LFO_SPEED_MULT_2X:
-    value = phase_inc > (LFO_PHASE_MASK >> 1) ? LFO_PHASE_MASK
-                                               : (uint16_t)(phase_inc << 1);
-    break;
-  case LFO_SPEED_MULT_4X:
-    value = phase_inc > (LFO_PHASE_MASK >> 2) ? LFO_PHASE_MASK
-                                               : (uint16_t)(phase_inc << 2);
-    break;
-  case LFO_SPEED_MULT_8X:
-    value = phase_inc > (LFO_PHASE_MASK >> 3) ? LFO_PHASE_MASK
-                                               : (uint16_t)(phase_inc << 3);
-    break;
   case LFO_SPEED_MULT_1_2X:
-    value = phase_inc >> 1;
+    phase_inc >>= 1;
     break;
   case LFO_SPEED_MULT_1_4X:
-    value = phase_inc >> 2;
+    phase_inc >>= 2;
     break;
   case LFO_SPEED_MULT_1_10X:
-    value = phase_inc / 10;
+    phase_inc /= 10;
     break;
   case LFO_SPEED_MULT_1_100X:
-    value = phase_inc / 100;
+    phase_inc /= 100;
     break;
   default:
     break;
   }
-  if (value == 0) {
-    value = 1;
+  if (phase_inc == 0) {
+    phase_inc = 1;
   }
-  return value;
+  return phase_inc;
 }
 
 // MCL drives LFOs from the MIDI tick scheduler, so use the SPS curve shape at
@@ -218,24 +210,29 @@ const uint16_t lfo_sps_phase_inc_hi_table[64] PROGMEM = {
 
 // Bits 0..5 store the new speed. Bits 6..7 select 1x, 1/2x, 1/4x, 1/10x.
 // Generated from the legacy 96-step curve; worst phase increment error is 1.
-const uint8_t lfo_legacy_speed_map[128] PROGMEM = {
+const uint8_t lfo_legacy_speed_map[54] PROGMEM = {
   0x79, 0x79, 0x79, 0xB9, 0x53, 0x07, 0xF9, 0x93,
   0xE9, 0xE4, 0xE0, 0xDD, 0xDA, 0xD8, 0xD6, 0x02,
   0x02, 0x87, 0xD1, 0xD0, 0x43, 0x43, 0xCE, 0xCE,
   0x85, 0xCC, 0xCC, 0xCB, 0xCB, 0x01, 0x01, 0x01,
   0x01, 0x01, 0xC9, 0xC9, 0xC9, 0x83, 0x83, 0x83,
   0x83, 0x83, 0xC7, 0xC7, 0xC7, 0xC7, 0xC7, 0xC6,
-  0xC6, 0xC6, 0xC6, 0xC6, 0xC6, 0xC6, 0x41, 0x41,
-  0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
-  0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41, 0x41,
-  0x41, 0x41, 0x41, 0x41, 0x41, 0xC4, 0xC4, 0xC4,
-  0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4,
-  0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4, 0xC4,
-  0xC4, 0xC4, 0xC4, 0x81, 0x81, 0x81, 0x81, 0x81,
-  0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81,
-  0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81,
-  0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81, 0x81
+  0xC6, 0xC6, 0xC6, 0xC6, 0xC6, 0xC6
 };
+
+uint8_t lfo_legacy_speed_packed(uint8_t legacy_speed) {
+  legacy_speed &= 0x7FU;
+  if (legacy_speed < 54) {
+    return pgm_read_byte(&lfo_legacy_speed_map[legacy_speed]);
+  }
+  if (legacy_speed < 77) {
+    return 0x41;
+  }
+  if (legacy_speed < 99) {
+    return 0xC4;
+  }
+  return 0x81;
+}
 
 uint8_t lfo_legacy_speed_multiplier(uint8_t packed) {
   switch (packed >> 6) {
@@ -357,9 +354,9 @@ uint8_t LFOSeqTrack::get_wav_table_sample(uint8_t table, uint8_t n) {
   if (table >= LFO_TABLE_COUNT) {
     table = LFO_TABLE_SIN;
   }
-  if (n >= WAV_LENGTH) {
-    n %= WAV_LENGTH;
-  }
+  static_assert((WAV_LENGTH & (WAV_LENGTH - 1)) == 0,
+                "WAV_LENGTH must remain a power of two");
+  n &= WAV_LENGTH - 1;
   return pgm_read_byte(&wav_tables[table][n]);
 }
 
@@ -398,7 +395,7 @@ uint8_t LFOSeqTrack::get_preview_value(uint8_t wav_type, uint16_t phase) {
   return lfo_preview_to_u8(wav, get_preview_sample(wav, phase));
 }
 
-int16_t LFOSeqTrack::get_sample() {
+int16_t LFOSeqTrack::get_sample(uint8_t current_mode) {
   uint16_t render_phase = phase;
   if (mode_legacy_phase(mode) && (wav_type == SIN_WAV || wav_type == TRI_WAV)) {
     render_phase = (render_phase + 0x6000U) & LFO_PHASE_MASK;
@@ -413,7 +410,7 @@ int16_t LFOSeqTrack::get_sample() {
     return random_value;
   }
 
-  if (base_mode() == LFO_MODE_ONE && phase == LFO_PHASE_MASK) {
+  if (current_mode == LFO_MODE_ONE && phase == LFO_PHASE_MASK) {
     return lfo_terminal_sample(wav_type, render_phase);
   }
 
@@ -483,8 +480,7 @@ void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
     base_mode = LFO_MODE_FREE;
   }
 
-  uint8_t packed =
-      pgm_read_byte(&lfo_legacy_speed_map[legacy_speed & 0x7FU]);
+  uint8_t packed = lfo_legacy_speed_packed(legacy_speed);
   data->speed = packed & 0x3F;
   data->mode = pack_mode(base_mode, lfo_legacy_speed_multiplier(packed));
   if (lfo_legacy_shape_is_centered(legacy_wav_type)) {
@@ -500,9 +496,9 @@ void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
   }
 }
 
-void LFOSeqTrack::advance_phase() {
+void LFOSeqTrack::advance_phase(uint8_t current_mode) {
   uint16_t next = phase + phase_inc;
-  if (base_mode() == LFO_MODE_ONE && next >= LFO_PHASE_LENGTH) {
+  if (current_mode == LFO_MODE_ONE && next >= LFO_PHASE_LENGTH) {
     phase = LFO_PHASE_MASK;
     return;
   }
@@ -563,7 +559,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   if (enable) {
     MidiUartClass *output_uart =
         device_idx == DeviceIdx::Secondary ? uart2_ : uart_;
-    int16_t lfo_sample = get_sample();
+    int16_t lfo_sample = get_sample(current_mode);
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       if (params[i].dest == 0) {
         continue;
@@ -583,7 +579,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
     }
   }
 
-  advance_phase();
+  advance_phase(current_mode);
 
   if (MidiClock.mod12_counter == 11) {
     uint8_t seq_length = length ? length : 16;

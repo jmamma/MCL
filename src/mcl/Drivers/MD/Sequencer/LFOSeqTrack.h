@@ -105,7 +105,7 @@ public:
 
   static const uint8_t wav_tables[LFO_TABLE_COUNT][WAV_LENGTH] PROGMEM;
 
-  int16_t get_sample() NOINLINE();
+  int16_t get_sample(uint8_t current_mode) NOINLINE();
   static uint8_t get_wav_table_sample(uint8_t table, uint8_t n);
   static int16_t get_preview_sample(uint8_t wav_type, uint16_t phase);
   static uint8_t get_preview_value(uint8_t wav_type, uint16_t phase);
@@ -122,7 +122,7 @@ public:
   void reset_runtime();
   void reset_phase();
   void reset_shape_state();
-  void advance_phase();
+  void advance_phase(uint8_t current_mode);
   static uint8_t mode_base(uint8_t mode) { return mode & LFO_MODE_MASK; }
   static uint8_t mode_speed_multiplier(uint8_t mode) {
     return (mode >> LFO_SPEED_MULT_SHIFT) & LFO_SPEED_MULT_MASK;
