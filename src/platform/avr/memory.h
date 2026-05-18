@@ -196,20 +196,16 @@ FORCED_INLINE() extern inline void put_bank3(volatile void *dst, volatile const 
 
 
 
-extern volatile uint16_t g_random_state_a;
-extern volatile uint16_t g_random_state_b;
+extern volatile uint16_t g_random_state;
 
 FORCED_INLINE() extern inline uint8_t get_random_byte() {
-    uint16_t a = g_random_state_a;
-    uint16_t b = g_random_state_b;
-    if ((a | b) == 0) {
-        a = read_clock_ms() ^ 0xA5A5U;
-        b = a ^ 0x5A5AU;
+    uint16_t state = g_random_state;
+    if (state == 0) {
+        state = read_clock_ms() | 1;
     }
-    uint16_t next = a + b;
-    g_random_state_a = b;
-    g_random_state_b = next;
-    return (uint8_t)(next >> 8);
+    state = (state >> 1) ^ ((state & 1) ? 0xB400U : 0);
+    g_random_state = state;
+    return (uint8_t)(state >> 8);
 }
 
 extern inline uint8_t get_random(uint8_t range) {

@@ -120,8 +120,7 @@ volatile uint16_t g_clock_minutes = 0;
 volatile uint16_t g_clock_fps = 0;
 volatile uint16_t g_fps = 0;
 
-volatile uint16_t g_random_state_a = 0;
-volatile uint16_t g_random_state_b = 0;
+volatile uint16_t g_random_state = 0;
 
 // GUI object
 GuiClass GUI;
