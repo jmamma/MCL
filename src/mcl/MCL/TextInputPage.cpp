@@ -14,7 +14,7 @@ inline char _getchar(uint8_t i) {
 uint8_t _findchar(char chr) {
   // Check to see that the character chosen is in the list of allowed
   // characters
-  for (auto x = 0; x < sz_allowedchar; ++x) {
+  for (uint8_t x = 0; x < sz_allowedchar; ++x) {
     if (chr == _getchar(x)) {
       return x;
     }
@@ -149,7 +149,7 @@ void TextInputPage::display_normal() {
   oled_display.println(text);
   if (time < FLASH_SPEED) {
     // the default font is 6x8
-    auto tx = s_text_x + 6 * cursor_position;
+    uint8_t tx = s_text_x + 6 * cursor_position;
     oled_display.fillRect(tx, s_text_y, 6, 8, WHITE);
     oled_display.setCursor(s_text_x + 6 * cursor_position, s_text_y);
     oled_display.setTextColor(BLACK);

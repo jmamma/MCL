@@ -130,21 +130,22 @@ bool MixerPage::handle_mixer_encoder_edits(bool use_perf_encoders) {
 
 bool MixerPage::display_mute_mask() {
   uint16_t last_mute_mask = seq_step_page.mute_mask;
-  seq_step_page.mute_mask = 0;
+  uint16_t mute_mask = 0;
 
   uint8_t len = mixer_track_count();
-  uint16_t bit = 1;
-  for (uint8_t i = 0; i < len; i++, bit <<= 1) {
+  for (int8_t i = len - 1; i >= 0; --i) {
+    mute_mask <<= 1;
     SeqTrack *seq_track = mixer_seq_track(i);
     if (seq_track != nullptr && seq_track->mute_state == SEQ_MUTE_OFF) {
-      seq_step_page.mute_mask |= bit;
+      mute_mask |= 1;
     }
   }
 
-  if (last_mute_mask != seq_step_page.mute_mask) {
+  if (last_mute_mask != mute_mask) {
+    seq_step_page.mute_mask = mute_mask;
     TrigLEDMode led_mode =
         mixer_target.is_md_device() ? TRIGLED_MUTE : TRIGLED_EXCLUSIVE;
-    mcl_gui.set_trigleds(seq_step_page.mute_mask, led_mode);
+    mcl_gui.set_trigleds(mute_mask, led_mode);
     return true;
   }
   return false;
@@ -167,8 +168,9 @@ void MixerPage::oled_draw_mutes() {
   if (preview_mute_set != 255 && load_types[preview_mute_set][slot] == 0) {
     draw = false;
   }
-  uint16_t mute_bit = 1;
-  for (uint8_t i = 0; i < len; ++i, mute_bit <<= 1) {
+  uint16_t preview_mutes =
+      preview_mute_set != 255 ? mute_sets[slot].mutes[preview_mute_set] : 0;
+  for (uint8_t i = 0; i < len; ++i, preview_mutes >>= 1) {
     SeqTrack *seq_track = mixer_seq_track(i);
     if (seq_track == nullptr) {
       fader_x += 8;
@@ -177,7 +179,7 @@ void MixerPage::oled_draw_mutes() {
 
     uint8_t mute_state =
         preview_mute_set != 255
-            ? (mute_sets[slot].mutes[preview_mute_set] & mute_bit) != 0
+            ? (preview_mutes & 1) != 0
             : seq_track->mute_state == SEQ_MUTE_OFF;
 
     //   if (note_interface.is_note(i)) {
@@ -389,8 +391,8 @@ void MixerPage::display() {
 
     uint8_t dec = FADE_RATE;
 
-    uint16_t redraw_bit = 1;
-    for (uint8_t i = 0; i < len; i++, redraw_bit <<= 1) {
+    uint16_t redraw = redraw_mask;
+    for (uint8_t i = 0; i < len; i++, redraw >>= 1) {
 
       MidiDeviceMixerParam info;
       if (mixer_target.param(i, display_mode, &info)) {
@@ -399,11 +401,11 @@ void MixerPage::display() {
         fader_level = 127;
       }
 
-      fader_level = (((uint16_t) fader_level * FADER_LEN) / 127) + 0;
-      meter_level = (((uint16_t) levels[i] * FADER_LEN) / 127) + 0;
+      fader_level = ((uint16_t)fader_level * FADER_LEN) / 127;
+      meter_level = ((uint16_t)levels[i] * FADER_LEN) / 127;
       meter_level = min(fader_level, meter_level);
 
-      if (redraw_mask & redraw_bit) {
+      if (redraw & 1) {
         oled_display.fillRect(fader_x, fader_y - 1, 6, FADER_LEN + 1, BLACK);
         oled_display.drawRect(fader_x, fader_y + (FADER_LEN - fader_level), 6,
                               fader_level + 2, WHITE);
@@ -421,8 +423,6 @@ void MixerPage::display() {
                               meter_level + 1, WHITE);
       }
       fader_x += 8;
-
-      CLEAR_BIT16(redraw_mask, i);
 
       if (levels[i] < dec) {
         levels[i] = 0;

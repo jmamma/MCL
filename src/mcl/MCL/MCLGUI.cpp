@@ -781,13 +781,13 @@ void MCLGUI::draw_microtiming_spsx(uint8_t speed, int8_t microtiming) {
   mcl_print_P(mclstr_utiming_label);
   oled_display.print(K);
 
-  oled_display.drawLine(ruler_x, baseline_y, ruler_x + ruler_w, baseline_y, WHITE);
+  oled_display.drawFastHLine(ruler_x, baseline_y, ruler_w + 1, WHITE);
   for (uint16_t n = 0; n <= degrees; n++) {
     uint8_t dist = (n >= timing_mid) ? (n - timing_mid) : (timing_mid - n);
     uint8_t tick_h = h[dist % heights_len];
     uint8_t x = ruler_x + (uint32_t)n * ruler_w / degrees;
 
-    oled_display.drawLine(x, baseline_y, x, baseline_y - tick_h, WHITE);
+    oled_display.drawFastVLine(x, baseline_y - tick_h, tick_h + 1, WHITE);
 
     if (n == (uint16_t)timing) {
       oled_display.fillRect(x - 1, baseline_y + 3, 3, 3, WHITE);
@@ -1108,22 +1108,16 @@ void MCLGUI::draw_leds(uint8_t x, uint8_t y, uint8_t offset,
 void MCLGUI::draw_panel_toggle(const char *s1, const char *s2, bool s1_active) {
   oled_display.setFont(&TomThumb);
 
+  uint8_t active_y = s1_active ? pane_label_md_y : pane_label_ex_y;
+  oled_display.fillRect(pane_label_x, active_y, pane_label_w, pane_label_h,
+                        WHITE);
+
   oled_display.setCursor(pane_label_x + 1, pane_label_md_y + 6);
-  if (s1_active) {
-    oled_display.fillRect(pane_label_x, pane_label_md_y, pane_label_w,
-                          pane_label_h, WHITE);
-    oled_display.setTextColor(BLACK);
-    oled_display.print(s1);
-    oled_display.setTextColor(WHITE);
-  } else {
-    oled_display.setTextColor(WHITE);
-    oled_display.print(s1);
-    oled_display.fillRect(pane_label_x, pane_label_ex_y, pane_label_w,
-                          pane_label_h, WHITE);
-    oled_display.setTextColor(BLACK);
-  }
+  oled_display.setTextColor(s1_active ? BLACK : WHITE);
+  oled_display.print(s1);
 
   oled_display.setCursor(pane_label_x + 1, pane_label_ex_y + 6);
+  oled_display.setTextColor(s1_active ? WHITE : BLACK);
   oled_display.print(s2);
   oled_display.setTextColor(WHITE);
 }

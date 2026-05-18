@@ -267,7 +267,7 @@ void PageSelectPage::display() {
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(BLACK);
   oled_display.setCursor(47, 6);
-  oled_display.print(F("PAGE SELECT"));
+  mcl_print_P(mclstr_page_select);
   oled_display.fillRect(0, 7, 128, 25, BLACK);
   oled_display.setTextColor(WHITE);
   for (uint8_t i = 0; i < 4; ++i) {
