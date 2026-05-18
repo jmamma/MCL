@@ -512,23 +512,13 @@ void SeqPage::init() {
   toggle_device = true;
   DEBUG_PRINTLN("seq page init");
 
-  seq_menu_page.menu.enable_entry(SEQ_MENU_DEVICE, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_MASK, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_KEY, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_VEL, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_PROB, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_PIANOROLL, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_PARAMSELECT, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_SLIDE, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_POLY, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_AUTOMATION, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LFO_MULT, false);
-
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_MD, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_EXT, false);
+  constexpr uint32_t base_seq_menu_entries =
+      menu_entry_mask(SEQ_MENU_TRACK) | menu_entry_mask(SEQ_MENU_SPEED) |
+      menu_entry_mask(SEQ_MENU_COPY) | menu_entry_mask(SEQ_MENU_CLEAR_TRACK) |
+      menu_entry_mask(SEQ_MENU_PASTE) | menu_entry_mask(SEQ_MENU_SHIFT) |
+      menu_entry_mask(SEQ_MENU_REVERSE) |
+      menu_entry_mask(SEQ_MENU_TRANSPOSE) | menu_entry_mask(SEQ_MENU_QUANT);
+  seq_menu_page.menu.set_enabled_entry_mask(base_seq_menu_entries);
   /*
   if (mcl_cfg.track_select == 1) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);
@@ -1068,8 +1058,9 @@ void SeqPage::length_handler(uint8_t length, bool multi) {
         seq_page_step_track_for(i).set_length(length);
       }
     } else if (is_poly) {
-      for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
-        if (IS_BIT_SET16(poly_mask, c)) {
+      uint16_t bit = 1;
+      for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++, bit <<= 1) {
+        if (poly_mask & bit) {
           seq_page_step_track_for(c).set_length(length);
         }
       }
@@ -1219,8 +1210,9 @@ void opt_clear_track_handler() {
         opt_copy_track_handler(opt_clear);
       }
       if (is_poly) {
-        for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
-          if (IS_BIT_SET16(poly_mask, c)) {
+        uint16_t bit = 1;
+        for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++, bit <<= 1) {
+          if (poly_mask & bit) {
             mcl_clipboard.copy_sequencer_track(c);
             seq_page_step_track_for(c).clear_track();
           }
@@ -1429,8 +1421,9 @@ void opt_paste_track_handler() {
       }
       if (is_poly) {
         uint16_t poly_mask = seq_page_active_poly_mask();
-        for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++) {
-          if (IS_BIT_SET16(poly_mask, c)) {
+        uint16_t bit = 1;
+        for (uint8_t c = 0; c < kSeqPageTrackMaskWidth; c++, bit <<= 1) {
+          if (poly_mask & bit) {
             mcl_clipboard.paste_sequencer_track(c, c);
           }
         }
@@ -1666,14 +1659,22 @@ void seq_menu_handler() {}
 
 void SeqPage::config_as_trackedit() {
 
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, false);
+  constexpr uint8_t clear_track_mask = 1 << (SEQ_MENU_CLEAR_TRACK & 7);
+  constexpr uint8_t clear_locks_mask = 1 << (SEQ_MENU_CLEAR_LOCKS & 7);
+  seq_menu_page.menu.disabled_entry_mask[SEQ_MENU_CLEAR_TRACK >> 3] &=
+      ~clear_track_mask;
+  seq_menu_page.menu.disabled_entry_mask[SEQ_MENU_CLEAR_LOCKS >> 3] |=
+      clear_locks_mask;
 }
 
 void SeqPage::config_as_lockedit() {
 
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_TRACK, false);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_CLEAR_LOCKS, true);
+  constexpr uint8_t clear_track_mask = 1 << (SEQ_MENU_CLEAR_TRACK & 7);
+  constexpr uint8_t clear_locks_mask = 1 << (SEQ_MENU_CLEAR_LOCKS & 7);
+  seq_menu_page.menu.disabled_entry_mask[SEQ_MENU_CLEAR_TRACK >> 3] |=
+      clear_track_mask;
+  seq_menu_page.menu.disabled_entry_mask[SEQ_MENU_CLEAR_LOCKS >> 3] &=
+      ~clear_locks_mask;
 }
 
 bool SeqPage::md_track_change_check() {
