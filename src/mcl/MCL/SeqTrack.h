@@ -166,11 +166,11 @@ public:
     return timing_mid;
   }
 
-  static uint16_t get_speed_multiplier_int(uint8_t speed) {
+  static uint8_t get_speed_multiplier_int(uint8_t speed) {
     return get_timing_mid(speed);
   }
 
-  uint16_t get_speed_multiplier_int() { return get_speed_multiplier_int(speed); }
+  uint8_t get_speed_multiplier_int() { return get_speed_multiplier_int(speed); }
 
   uint8_t get_quantized_step() {
     uint8_t u = 0;

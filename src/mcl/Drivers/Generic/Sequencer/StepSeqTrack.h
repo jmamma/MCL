@@ -64,7 +64,7 @@ public:
     }
 
     void update_legacy_progress_counter(uint16_t tps) {
-        uint16_t legacy_tps = SeqTrack::get_speed_multiplier_int(speed);
+        uint8_t legacy_tps = SeqTrack::get_speed_multiplier_int(speed);
         mod12_counter = (tps == 0)
                             ? 0
                             : (uint8_t)(((uint32_t)tick_counter * legacy_tps) / tps);

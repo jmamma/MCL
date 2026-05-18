@@ -72,8 +72,8 @@ void MDSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
   }
   if (timing_adjust) {
     // --- Start of optimized block ---
-    uint16_t new_mult = get_speed_multiplier_int(new_speed);
-    uint16_t old_mult = get_speed_multiplier_int(old_speed);
+    uint8_t new_mult = get_speed_multiplier_int(new_speed);
+    uint8_t old_mult = get_speed_multiplier_int(old_speed);
 
     for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
       // Use a 32-bit intermediate variable to prevent overflow during multiplication

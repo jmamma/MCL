@@ -11,8 +11,8 @@ void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
     old_speed = speed;
   }
   if (timing_adjust) {
-    uint16_t new_mult = get_speed_multiplier_int(new_speed);
-    uint16_t old_mult = get_speed_multiplier_int(old_speed);
+    uint8_t new_mult = get_speed_multiplier_int(new_speed);
+    uint8_t old_mult = get_speed_multiplier_int(old_speed);
 
     for (uint16_t i = 0; i < event_count; i++) {
       // 1. Calculate numerator using 32-bit to prevent any potential overflow
