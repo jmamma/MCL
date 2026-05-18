@@ -79,13 +79,14 @@ void PolyPage::draw_mask() {
   auto oldfont = oled_display.getFont();
   oled_display.setFont(&TomThumb);
 
-  for (uint8_t i = 0; i < 16; i++) {
+  uint16_t selected_bit = 1;
+  for (uint8_t i = 0; i < 16; i++, selected_bit <<= 1) {
     uint8_t col = i & 0x7;
     uint8_t row = i >> 3;
     uint8_t x = col * 16;
     uint8_t y = 11 + row * 11;
     uint8_t group = ptc_groups.group_for_track(i);
-    bool is_selected = IS_BIT_SET16(selected_tracks, i);
+    bool is_selected = selected_tracks & selected_bit;
     bool is_note = note_interface.is_note(i);
 
     if (is_note || is_selected) {
@@ -98,7 +99,7 @@ void PolyPage::draw_mask() {
       oled_display.drawRect(x, y, 15, 10, WHITE);
     }
 
-    char label[3] = {};
+    char label[3];
     ptc_group_box_label(group, label);
     uint8_t text_x = label[1] ? x + 4 : x + 6;
     oled_display.setCursor(text_x, y + 8);
@@ -184,7 +185,7 @@ void PolyPage::display() {
   oled_display.setCursor(0, 2);
   mcl_print_P(mclstr_channel_select);
   oled_display.print(" ");
-  char label[4] = {};
+  char label[3];
   ptc_group_label(selected_group, label);
   oled_display.println(label);
 
