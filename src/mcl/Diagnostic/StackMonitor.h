@@ -21,7 +21,7 @@ public:
     }
 
     static int32_t get_free_stack() {
-        #ifdef AVR
+        #if defined(AVR) || defined(PLATFORM_DESKTOP)
             return 0; //todo
         #else
         uint32_t sp = rp2040.getStackPointer();
@@ -59,7 +59,7 @@ public:
     }
 
     static void print_stack_info() {
-        #ifdef AVR
+        #if defined(AVR) || defined(PLATFORM_DESKTOP)
         #else
         int32_t free_space = get_free_stack();
         uint32_t core = rp2040.cpuid();

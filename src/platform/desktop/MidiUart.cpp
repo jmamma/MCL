@@ -1,0 +1,63 @@
+// MidiUart.cpp — desktop platform MIDI transport. Backed by MCL's own
+// RingBuffer<> over private byte arrays. Single-threaded; the plugin pumps
+// `desktop_ingress` / `desktop_egress` from processBlock against
+// juce::MidiBuffer.
+#include "MidiUart.h"
+
+MidiUartClass::MidiUartClass()
+    : rx_storage_(rx_buf_, RX_RING_SIZE),
+      tx_storage_(tx_buf_, TX_RING_SIZE),
+      rt_storage_(rt_buf_, RT_RING_SIZE) {
+    rxRb             = &rx_storage_;
+    txRb             = &tx_storage_;
+    txRb_realtime    = &rt_storage_;
+    // No sidechannel on desktop; left null. MCL only reads it when set.
+}
+
+void MidiUartClass::init() {
+    rxRb->init();
+    txRb->init();
+    txRb_realtime->init();
+}
+
+bool MidiUartClass::avail() {
+    return !rxRb->isEmpty();
+}
+
+uint8_t MidiUartClass::m_getc() {
+    return rxRb->get();
+}
+
+void MidiUartClass::m_putc(uint8_t c) {
+    txRb->put_h_isr(c);
+}
+
+void MidiUartClass::m_putc(uint8_t* src, uint16_t size) {
+    txRb->put_h_isr(src, size);
+}
+
+void MidiUartClass::m_putc_realtime(uint8_t c) {
+    txRb_realtime->put_h_isr(c);
+}
+
+void MidiUartClass::m_recv(uint8_t* src, uint16_t size) {
+    rxRb->put_h_isr(src, size);
+}
+
+void MidiUartClass::desktop_ingress(const uint8_t* data, size_t len) {
+    for (size_t i = 0; i < len; ++i) {
+        rxRb->put_h_isr(data[i]);
+    }
+}
+
+size_t MidiUartClass::desktop_egress(uint8_t* dst, size_t cap) {
+    size_t n = 0;
+    // Drain realtime ring first; then main tx ring.
+    while (n < cap && !txRb_realtime->isEmpty()) {
+        dst[n++] = txRb_realtime->get();
+    }
+    while (n < cap && !txRb->isEmpty()) {
+        dst[n++] = txRb->get();
+    }
+    return n;
+}

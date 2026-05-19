@@ -93,8 +93,10 @@ constexpr size_t NUM_LOCKS = 8;
 #endif
 
 constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(588); // MDTrack + SeqTrackModData
-#if defined(PLATFORM_TBD)
-// TBD/RP2040 grid-2 cache slots can carry enhanced MIDI/TBD tracks.
+#if defined(PLATFORM_TBD) || defined(PLATFORM_DESKTOP)
+// TBD/RP2040 grid-2 cache slots can carry enhanced MIDI/TBD tracks. Desktop
+// uses the same enlarged slot because 64-bit pointers grow several MCL
+// structs past the 2128-byte budget that AVR/non-TBD assumes.
 constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(GRID_SLOT_BYTES);
 #else
 constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2128);

@@ -1,7 +1,8 @@
 #pragma once
+#include <stdint.h>
 #include "MCLDefines.h"
 
-enum PageIndex {
+enum PageIndex : uint8_t {
     // Core pages
     GRID_PAGE = 0,
     PAGE_SELECT_PAGE,
