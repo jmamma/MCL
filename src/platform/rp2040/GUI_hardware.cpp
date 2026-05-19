@@ -166,8 +166,8 @@ bool ButtonsClass::handle_encoder_tap(uint8_t encoder_idx, bool is_press,
 }
 #endif
 
-// TBD physical button -> active-low bit extraction.
-// Each macro evaluates true when the named button is pressed.
+// TBD ui_data bits are set when the physical button is pressed. MCL's
+// button store is active-low, so these helpers return true when released.
 #define TBD_BUTTON_TOP_LEFT(ui)   (!((ui).f_btns   & (1 << 0)))
 #define TBD_BUTTON_TOP_RIGHT(ui)  (!((ui).f_btns   & (1 << 1)))
 #define TBD_BUTTON_ENC(ui, n)     (!((ui).f_btns   & (1 << ((n) + 2)))) // n=0..3
@@ -192,8 +192,8 @@ void ButtonsClass::pollTBD(const ui_data_t& ui_data) {
   // release for tbd_handleEvent to honor the tap. Must run BEFORE
   // STORE_B_CURRENT so B_OLD still reflects last cycle.
   // f_btns_long_press bit (n+2) for ENCn; pot_states[n] for rotation.
-  // TBD_BUTTON_ENC follows AVR convention (1 = not pressed, 0 = pressed),
-  // so a "pressed" predicate negates it. B_OLD likewise: !B_OLD == pressed.
+  // TBD_BUTTON_ENC follows MCL's stored convention (1 = released, 0 = pressed),
+  // so a pressed predicate negates it. B_OLD likewise: !B_OLD == pressed.
   {
     bool *long_seen[4]  = {&enc1_long_press_seen,    &enc2_long_press_seen,
                            &enc3_long_press_seen,    &enc4_long_press_seen};
