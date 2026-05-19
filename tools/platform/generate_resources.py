@@ -205,25 +205,51 @@ def build_assets_platform(env, resource_dir, build_dir, gen_dir, platform):
 # Main Dispatcher & Entry Point
 # =============================================================================
 
-def compute_resource_hash(env, resource_dir, compress_script_path):
+def hash_file_into(h, fpath, label):
+    h.update(label.encode())
+    with open(fpath, "rb") as f:
+        h.update(f.read())
+
+def hash_tree_into(h, root, extensions):
+    if not os.path.isdir(root):
+        return
+    for dirpath, _, filenames in os.walk(root):
+        for fname in sorted(filenames):
+            if not fname.endswith(extensions):
+                continue
+            fpath = os.path.join(dirpath, fname)
+            hash_file_into(h, fpath, os.path.relpath(fpath, root))
+
+def compute_resource_hash(env, resource_dir, compress_script_path,
+                          platform_subdir):
     """Compute a combined hash of all resource files and the build scripts."""
     h = hashlib.sha256()
     # Hash the generate_resources.py script itself
     script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools", "platform", "generate_resources.py")
     if os.path.exists(script_path):
-        with open(script_path, "rb") as f:
-            h.update(f.read())
+        hash_file_into(h, script_path, "generate_resources.py")
+    platformio_path = os.path.join(env.subst("$PROJECT_DIR"), "platformio.ini")
+    if os.path.exists(platformio_path):
+        hash_file_into(h, platformio_path, "platformio.ini")
     # Hash the compress script
     if os.path.exists(compress_script_path):
-        with open(compress_script_path, "rb") as f:
-            h.update(f.read())
+        hash_file_into(h, compress_script_path, "compress.py")
     # Hash all resource files sorted by name for determinism
     for fname in sorted(os.listdir(resource_dir)):
         fpath = os.path.join(resource_dir, fname)
         if os.path.isfile(fpath):
-            h.update(fname.encode())
-            with open(fpath, "rb") as f:
-                h.update(f.read())
+            hash_file_into(h, fpath, os.path.join("resource", fname))
+
+    project_dir = env.subst("$PROJECT_DIR")
+    header_roots = [
+        os.path.join(project_dir, "src", "mcl", "MCL"),
+        os.path.join(project_dir, "src", "mcl", "Drivers"),
+        os.path.join(project_dir, "src", "mcl", "GUI"),
+        os.path.join(project_dir, "src", "mcl", "Midi"),
+        os.path.join(project_dir, "src", "platform", platform_subdir),
+    ]
+    for root in header_roots:
+        hash_tree_into(h, root, (".h", ".hpp"))
     return h.hexdigest()
 
 def build_assets(env):
@@ -241,7 +267,9 @@ def build_assets(env):
 
     # Check if resources have changed since last build
     compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools/platform/", "compress.py")
-    current_hash = compute_resource_hash(env, resource_dir, compress_script_path)
+    current_hash = compute_resource_hash(env, resource_dir,
+                                         compress_script_path,
+                                         platform_subdir)
     hash_file = os.path.join(resource_build_dir, f".resource_hash_{platform_subdir}")
     if os.path.exists(hash_file):
         with open(hash_file, "r") as f:
