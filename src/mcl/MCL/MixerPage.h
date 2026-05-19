@@ -46,7 +46,6 @@ public:
   bool set_param(uint8_t track, uint8_t param_idx, MidiDeviceMixerValue value,
                  bool send = true) const;
   bool set_seq_mute_state(uint8_t track, bool mute) const;
-  bool toggle_seq_mute_state(uint8_t track) const;
   void mute_track(uint8_t track, bool mute) const;
   void set_record_mutes(uint8_t track, bool state, bool clear = false) const;
   uint8_t trig_group(uint8_t track) const;

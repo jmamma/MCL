@@ -537,7 +537,7 @@ void MixerPage::toggle_or_solo(bool solo) {
     } else if (note_on) {
       // TOGGLE
       bool mute_state = !seq_track->mute_state;
-      if (mixer_target.toggle_seq_mute_state(i)) {
+      if (mixer_target.set_seq_mute_state(i, mute_state)) {
         mixer_target.mute_track(i, mute_state);
       }
     }
@@ -579,7 +579,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           // Toggle active mutes
           if (mute_set == 255) {
             bool mute_state = !seq_track->mute_state;
-            if (mixer_target.toggle_seq_mute_state(track)) {
+            if (mixer_target.set_seq_mute_state(track, mute_state)) {
               mixer_target.mute_track(track, mute_state);
             }
             return true;

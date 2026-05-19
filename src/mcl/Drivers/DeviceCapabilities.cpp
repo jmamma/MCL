@@ -64,12 +64,6 @@ bool DeviceMixerCapability::set_seq_mute_state(const DeviceContext &ctx,
   return true;
 }
 
-bool DeviceMixerCapability::toggle_seq_mute_state(const DeviceContext &ctx,
-                                                  uint8_t track) {
-  SeqTrack *seq = seq_track(ctx, track);
-  return seq != nullptr && set_seq_mute_state(ctx, track, !seq->mute_state);
-}
-
 void DeviceMixerCapability::mute_track(const DeviceContext &ctx, uint8_t track,
                                        bool mute, MidiUartClass *uart_) {
   (void)ctx;

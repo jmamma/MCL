@@ -49,7 +49,6 @@ public:
                          bool send = true) = 0;
   virtual bool set_seq_mute_state(const DeviceContext &ctx, uint8_t track,
                                   bool mute);
-  bool toggle_seq_mute_state(const DeviceContext &ctx, uint8_t track);
   virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr);
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
