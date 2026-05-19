@@ -59,6 +59,13 @@ bool MixerTarget::bind_selected(DeviceIdx &device_idx) {
     return true;
   }
 
+  device_idx = DeviceIdx::Secondary;
+  bind(device_idx);
+  if (!is_null()) {
+    return true;
+  }
+
+  device_idx = DeviceIdx::Primary;
   bind(fallback_primary_mixer_device(), DeviceIdx::Primary);
   return !is_null();
 }
