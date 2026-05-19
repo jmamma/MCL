@@ -64,6 +64,20 @@ public:
     return generic_midi_seq_track(track);
   }
 
+  virtual bool set_seq_mute_state(const DeviceContext &ctx, uint8_t track,
+                                  bool mute) override {
+    (void)ctx;
+    if (track >= mcl_seq.num_midi_tracks) {
+      return false;
+    }
+    if (mute) {
+      mcl_seq.midi_tracks[track].mute_on();
+    } else {
+      mcl_seq.midi_tracks[track].mute_state = SEQ_MUTE_OFF;
+    }
+    return true;
+  }
+
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override {
     (void)ctx;

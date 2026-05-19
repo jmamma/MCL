@@ -76,6 +76,40 @@ public:
     return static_cast<SeqTrackCond &>(mcl_seq.md_tracks[index]);
   }
 
+  static inline bool set_mute_state(bool is_md_device, uint8_t index,
+                                    bool mute) {
+#ifdef EXT_TRACKS
+    if (!is_md_device) {
+#if !defined(__AVR__)
+      if (use_midi_tracks_for_ext()) {
+        if (index >= mcl_seq.num_midi_tracks) return false;
+        if (mute) {
+          mcl_seq.midi_tracks[index].mute_on();
+        } else {
+          mcl_seq.midi_tracks[index].mute_state = SEQ_MUTE_OFF;
+        }
+        return true;
+      }
+#endif
+      if (index >= mcl_seq.num_ext_tracks) return false;
+      if (mute) {
+        mcl_seq.ext_tracks[index].mute_on();
+      } else {
+        mcl_seq.ext_tracks[index].mute_state = SEQ_MUTE_OFF;
+      }
+      return true;
+    }
+#endif
+    if (index >= mcl_seq.num_md_tracks) return false;
+    get_seq_track(true, index).mute_state = mute ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
+    return true;
+  }
+
+  static inline bool toggle_mute(bool is_md_device, uint8_t index) {
+    SeqTrack &seq_track = get_seq_track(is_md_device, index);
+    return set_mute_state(is_md_device, index, !seq_track.mute_state);
+  }
+
 #ifdef EXT_TRACKS
   static inline SeqExtStepTrackApi get_ext_step_track(uint8_t index) {
 #if !defined(__AVR__)

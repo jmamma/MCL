@@ -54,6 +54,22 @@ uint8_t DeviceMixerCapability::default_param() const {
   return default_param_;
 }
 
+bool DeviceMixerCapability::set_seq_mute_state(const DeviceContext &ctx,
+                                               uint8_t track, bool mute) {
+  SeqTrack *seq = seq_track(ctx, track);
+  if (seq == nullptr) {
+    return false;
+  }
+  seq->mute_state = mute ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
+  return true;
+}
+
+bool DeviceMixerCapability::toggle_seq_mute_state(const DeviceContext &ctx,
+                                                  uint8_t track) {
+  SeqTrack *seq = seq_track(ctx, track);
+  return seq != nullptr && set_seq_mute_state(ctx, track, !seq->mute_state);
+}
+
 void DeviceMixerCapability::mute_track(const DeviceContext &ctx, uint8_t track,
                                        bool mute, MidiUartClass *uart_) {
   (void)ctx;
@@ -196,6 +212,20 @@ bool ExtMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
     return false;
   }
   send_level(track, level, send);
+  return true;
+}
+
+bool ExtMixerCapability::set_seq_mute_state(const DeviceContext &ctx,
+                                            uint8_t track, bool mute) {
+  (void)ctx;
+  if (track >= mcl_seq.num_ext_tracks) {
+    return false;
+  }
+  if (mute) {
+    mcl_seq.ext_tracks[track].mute_on();
+  } else {
+    mcl_seq.ext_tracks[track].mute_state = SEQ_MUTE_OFF;
+  }
   return true;
 }
 

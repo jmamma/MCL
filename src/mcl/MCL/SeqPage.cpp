@@ -607,7 +607,7 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
     if (track >= ext_tracks) {
       return;
     }
-    SeqTrackUtil::get_track(false, track).toggle_mute();
+    SeqTrackUtil::toggle_mute(false, track);
   } else {
     if (track >= ext_tracks) {
       return;

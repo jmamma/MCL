@@ -163,6 +163,14 @@ bool MixerTarget::set_param(uint8_t track, uint8_t param_idx,
          mixer_->set_param(ctx_, track, param_idx, value, send);
 }
 
+bool MixerTarget::set_seq_mute_state(uint8_t track, bool mute) const {
+  return mixer_ != nullptr && mixer_->set_seq_mute_state(ctx_, track, mute);
+}
+
+bool MixerTarget::toggle_seq_mute_state(uint8_t track) const {
+  return mixer_ != nullptr && mixer_->toggle_seq_mute_state(ctx_, track);
+}
+
 void MixerTarget::mute_track(uint8_t track, bool mute) const {
   if (mixer_ != nullptr) {
     mixer_->mute_track(ctx_, track, mute);

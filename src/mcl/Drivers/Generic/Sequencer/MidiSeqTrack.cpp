@@ -103,6 +103,7 @@ void MidiSeqTrack::reset() {
   SeqTrackCond::reset();
   tick_counter = 0;
   mod12_counter = 0;
+  memset(ignore_notes, 0, sizeof(ignore_notes));
   memset(oneshot_mask, 0, sizeof(oneshot_mask));
   cache_loaded = true;
   pending_cache_track_type_ = EMPTY_TRACK_TYPE;
@@ -621,6 +622,23 @@ void MidiSeqTrack::note_off(uint8_t note, uint8_t, MidiUartClass *uart_) {
   CLEAR_BIT128_P(note_buffer, note);
 }
 
+void MidiSeqTrack::mute_on() {
+  mute_state = SEQ_MUTE_ON;
+  if (MidiClock.state == 2) {
+    notesoff_pending = true;
+  } else {
+    buffer_notesoff();
+  }
+}
+
+void MidiSeqTrack::toggle_mute() {
+  if (mute_state == SEQ_MUTE_ON) {
+    mute_state = SEQ_MUTE_OFF;
+  } else {
+    mute_on();
+  }
+}
+
 void MidiSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_) {
   if (uart_ == nullptr) uart_ = port_;
   if (uart_ == nullptr) uart_ = uart;
@@ -667,6 +685,7 @@ void MidiSeqTrack::record_track_noteon(uint8_t note, uint8_t velocity) {
   uint8_t step = step_count;
 
   ignore_step = step;
+  SET_BIT128_P(ignore_notes, note);
   add_notes_on(step, timing, note, velocity);
 }
 
@@ -684,6 +703,7 @@ void MidiSeqTrack::record_track_noteoff(uint8_t note) {
     uint32_t end_x = (uint32_t)step * tps + (uint16_t)timing;
 
     ignore_step = step;
+    SET_BIT128_P(ignore_notes, note);
 
     if (start_x >= roll_length) start_x %= roll_length;
     if (end_x >= roll_length) end_x %= roll_length;
@@ -970,6 +990,9 @@ void MidiSeqTrack::recalc_slides() {
 void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
                                 uint16_t bucket_start) {
   if (event.type == MIDI_SEQ_EVENT_NOTE_ON) {
+    if (step == ignore_step && IS_BIT_SET128_P(ignore_notes, event.target)) {
+      return;
+    }
     if (IS_BIT_SET128_P(mute_mask, step)) {
       return;
     }
@@ -977,6 +1000,9 @@ void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
       note_on(event.target, (uint8_t)event.value);
     }
   } else if (event.type == MIDI_SEQ_EVENT_NOTE_OFF) {
+    if (step == ignore_step && IS_BIT_SET128_P(ignore_notes, event.target)) {
+      return;
+    }
     note_off(event.target);
   } else if (event.type == MIDI_SEQ_EVENT_LOCK &&
              event.target < MIDI_SEQ_NUM_LOCKS) {
@@ -1018,7 +1044,10 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
     cur_event_idx += seq_data.event_buckets[step_count];
     tick_counter = 0;
     mod12_counter = 0;
-    if (ignore_step == step_count) ignore_step = 255;
+    if (ignore_step == step_count) {
+      ignore_step = 255;
+      memset(ignore_notes, 0, sizeof(ignore_notes));
+    }
     step_count_inc();
   }
 
@@ -1052,7 +1081,7 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
     SET_BIT128_P(mute_mask, step);
   }
 
-  if (mute_state == SEQ_MUTE_ON || ignore_step == step_count) {
+  if (mute_state == SEQ_MUTE_ON) {
     return;
   }
 
@@ -1091,6 +1120,7 @@ void MidiSeqTrack::clear_track(bool) {
   seq_data.length = len;
   seq_data.speed = spd;
   memset(oneshot_mask, 0, sizeof(oneshot_mask));
+  memset(ignore_notes, 0, sizeof(ignore_notes));
   memset(mute_mask, 0, sizeof(mute_mask));
   length = len;
   speed = spd;

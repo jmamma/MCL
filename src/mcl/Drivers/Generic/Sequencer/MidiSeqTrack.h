@@ -37,6 +37,7 @@ public:
 
   uint16_t tick_counter = 0;
   uint64_t note_buffer[2] = {0};
+  uint64_t ignore_notes[2] = {0};
   uint64_t oneshot_mask[2] = {0};
   uint64_t mute_mask[2] = {0};
   NoteVector notes_on[NUM_NOTES_ON];
@@ -83,6 +84,8 @@ public:
                MidiUartClass *uart_ = nullptr);
   void note_off(uint8_t note, uint8_t velocity = 0,
                 MidiUartClass *uart_ = nullptr);
+  void mute_on();
+  void toggle_mute();
   void buffer_notesoff();
   void reset_params();
   void send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_ = nullptr);

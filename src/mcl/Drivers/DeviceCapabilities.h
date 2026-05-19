@@ -47,6 +47,9 @@ public:
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, MidiDeviceMixerValue value,
                          bool send = true) = 0;
+  virtual bool set_seq_mute_state(const DeviceContext &ctx, uint8_t track,
+                                  bool mute);
+  bool toggle_seq_mute_state(const DeviceContext &ctx, uint8_t track);
   virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr);
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
@@ -81,6 +84,8 @@ public:
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, MidiDeviceMixerValue value,
                          bool send = true) override;
+  virtual bool set_seq_mute_state(const DeviceContext &ctx, uint8_t track,
+                                  bool mute) override;
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
   virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,

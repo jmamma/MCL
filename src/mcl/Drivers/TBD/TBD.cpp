@@ -73,6 +73,8 @@ public:
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, MidiDeviceMixerValue value,
                          bool send = true) override;
+  virtual bool set_seq_mute_state(const DeviceContext &ctx, uint8_t track,
+                                  bool mute) override;
   virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr) override;
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
@@ -1780,6 +1782,28 @@ bool TbdMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
     tbd_p4_send_param_value(port, sound->midi_channel, desc, value);
   } else if (desc.ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
     tbd_p4_send_param_value(port, sound->midi_channel, desc, value);
+  }
+  return true;
+}
+
+bool TbdMixerCapability::set_seq_mute_state(const DeviceContext &ctx,
+                                            uint8_t track, bool mute) {
+  DeviceIdx grid_idx = ctx.device_idx();
+  SeqTrack *seq_track = seq_track_for_mixer(grid_idx, track);
+  if (seq_track == nullptr) {
+    return false;
+  }
+  if (grid_idx == DeviceIdx::Secondary) {
+    if (mute) {
+      mcl_seq.midi_tracks[track].mute_on();
+    } else {
+      mcl_seq.midi_tracks[track].mute_state = SEQ_MUTE_OFF;
+    }
+    return true;
+  }
+  seq_track->mute_state = mute ? STEPSEQ_MUTE_ON : STEPSEQ_MUTE_OFF;
+  if (mute) {
+    mcl_seq.tbd_tracks[track].send_notes_off();
   }
   return true;
 }

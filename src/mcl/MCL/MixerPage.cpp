@@ -531,13 +531,15 @@ void MixerPage::toggle_or_solo(bool solo) {
     if (solo) {
       bool mute_state = !note_on;
       if (seq_track->mute_state != mute_state) {
-        seq_track->mute_state = mute_state;
+        mixer_target.set_seq_mute_state(i, mute_state);
         mixer_target.mute_track(i, mute_state);
       }
     } else if (note_on) {
       // TOGGLE
-      seq_track->toggle_mute();
-      mixer_target.mute_track(i, seq_track->mute_state);
+      bool mute_state = !seq_track->mute_state;
+      if (mixer_target.toggle_seq_mute_state(i)) {
+        mixer_target.mute_track(i, mute_state);
+      }
     }
   }
   oled_draw_mutes();
@@ -576,8 +578,10 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
           // Toggle active mutes
           if (mute_set == 255) {
-            seq_track->toggle_mute();
-            mixer_target.mute_track(track, seq_track->mute_state);
+            bool mute_state = !seq_track->mute_state;
+            if (mixer_target.toggle_seq_mute_state(track)) {
+              mixer_target.mute_track(track, mute_state);
+            }
             return true;
           }
 
