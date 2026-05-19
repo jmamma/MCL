@@ -446,7 +446,8 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
 
     const bool load_sound = !rebuilt && device_track->link.load_sound();
     if (!load_sound) {
-      device_track->restore_sound_from_mem(gdt_dst->mem_slot_idx);
+      device_track->restore_sound_from_mem_if_type(gdt_dst->mem_slot_idx,
+                                                   gdt_dst->track_type);
       send_machine[dst] = 0;
     } else {
       if (load_offset != 255) {
@@ -612,7 +613,8 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
 
   const bool load_sound = !rebuilt && ptrack->link.load_sound();
   if (!load_sound) {
-    ptrack->restore_sound_from_mem(gdt_dst->mem_slot_idx);
+    ptrack->restore_sound_from_mem_if_type(gdt_dst->mem_slot_idx,
+                                           gdt_dst->track_type);
     ptrack->load_immediate_cleared(track_idx_dst, gdt_dst->seq_track);
   } else {
     send_masks[dst] = 1;
@@ -817,7 +819,8 @@ void MCLActions::cache_track(GridSlot n, GridDeviceTrack* gdt, GridColumn track_
 
   const bool load_sound = !rebuilt && ptrack->link.load_sound();
   if (!load_sound) {
-    ptrack->restore_sound_from_mem(gdt->mem_slot_idx);
+    ptrack->restore_sound_from_mem_if_type(gdt->mem_slot_idx,
+                                           gdt->track_type);
   } else if (ptrack->get_sound_data_ptr() && ptrack->get_sound_data_size()) {
     DEBUG_PRINTLN("comparing sound");
     if (ptrack->memcmp_sound(gdt->mem_slot_idx) != 0) {
