@@ -68,7 +68,8 @@ void __not_in_flash_func(timer2_handler)() {
   MidiClock.div192th_countdown++;
   if (!emitted_internal_clock &&
       MidiClock.state == MidiClockClass::STARTED) {
-    if (MidiClock.div192th_countdown >= MidiClock.div192_time) {
+    if (MidiClock.div192_time > 0 &&
+        MidiClock.div192th_countdown >= MidiClock.div192_time) {
       if (MidiClock.interp_budget > 0) {
         MidiClock.increment192Counter();
         MidiClock.div192th_countdown = 0;

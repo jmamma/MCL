@@ -251,6 +251,36 @@ public:
 #endif
   }
 
+#if !defined(__AVR__)
+  ALWAYS_INLINE() void refreshClockInterpolationInterval() {
+#ifdef PLATFORM_TBD
+    if (mode == INTERNAL_MIDI) {
+      updateInternalClockInterval();
+      return;
+    }
+#endif
+    uint8_t interpolation = clock_interpolation;
+    if (interpolation == 0) {
+      interpolation = 2;
+    }
+    uint16_t ticks = diff_clock8 / (8u * interpolation);
+    div192_time = ticks ? ticks : 1;
+  }
+
+  ALWAYS_INLINE() void set_clock_interpolation(uint8_t interpolation) {
+    if (interpolation == 0) {
+      interpolation = 2;
+    }
+    if (clock_interpolation != interpolation) {
+      clock_interpolation = interpolation;
+      interp_budget = 0;
+      div192th_countdown = 0;
+      reset_clock_phase = true;
+    }
+    refreshClockInterpolationInterval();
+  }
+#endif
+
   ALWAYS_INLINE() uint32_t div16th_to_div192(uint32_t div16th,
                                              uint8_t q12_offset = 0) const {
 #if defined(__AVR__)

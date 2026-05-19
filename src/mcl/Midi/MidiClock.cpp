@@ -55,6 +55,10 @@ void MidiClockClass::init() {
   isInit = false;
 #if !defined(__AVR__)
   interp_budget = 0;
+  div192th_countdown = 0;
+  if (div192_time == 0) {
+    div192_time = 1;
+  }
 #endif
   clearLed();
 }

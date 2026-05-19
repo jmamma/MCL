@@ -306,18 +306,19 @@ void MCLSeq::update_params() {
 
 void MCLSeq::configure_clock_interpolation() {
 #if !defined(__AVR__)
+  uint8_t interpolation = LEGACY_SEQ_INTERPOLATION;
 #if defined(PLATFORM_TBD)
   // RP2040/TBD can host legacy and high-resolution engines together. Keep the
   // global scheduler at the highest engine resolution and gate legacy engines
   // in seq() so they still observe their historical 48 PPQN cadence.
-  MidiClock.clock_interpolation = STEPSEQ_SEQ_INTERPOLATION;
+  interpolation = STEPSEQ_SEQ_INTERPOLATION;
 #else
-  MidiClock.clock_interpolation = seq_grid_y_runs_midi_tracks()
-                                      ? STEPSEQ_SEQ_INTERPOLATION
-                                      : using_spsx_tracks
-                                            ? SPSX_SEQ_INTERPOLATION
-                                            : LEGACY_SEQ_INTERPOLATION;
+  interpolation = seq_grid_y_runs_midi_tracks()
+                      ? STEPSEQ_SEQ_INTERPOLATION
+                      : using_spsx_tracks ? SPSX_SEQ_INTERPOLATION
+                                           : LEGACY_SEQ_INTERPOLATION;
 #endif
+  MidiClock.set_clock_interpolation(interpolation);
   legacy_tick_counter = 0;
 #endif
 }
