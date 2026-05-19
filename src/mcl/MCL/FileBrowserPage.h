@@ -40,7 +40,7 @@
 class FileBrowserFileTypes {
   constexpr static uint8_t size = 2;
   char types[size][5];
-  uint8_t count = 0;
+  uint8_t count;
   public:
   void add(const char *str) {
     if (count < size) {

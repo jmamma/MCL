@@ -17,7 +17,7 @@ public:
 
   uint8_t page_select;
   PageSelectEntry page_entries[16];
-  MidiDevice *page_select_ui_device = nullptr;
+  MidiDevice *page_select_ui_device;
   PageSelectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
                  Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {

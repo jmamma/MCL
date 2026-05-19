@@ -11,7 +11,7 @@ namespace {
 
 class MDPageSelectKitCallback : public SysexCallback {
 public:
-  bool state = false;
+  bool state;
 
   void init() { state = true; }
 

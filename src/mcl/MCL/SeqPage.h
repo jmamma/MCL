@@ -117,9 +117,9 @@ public:
   }
 
   bool display_page_index = true;
-  char info1[8] = { '\0' };
-  char info2[8] = { '\0' };
-  uint8_t timeout_values[4] = { 0 }; // 255 == highlight
+  char info1[8];
+  char info2[8];
+  uint8_t timeout_values[4]; // 255 == highlight
 
   SeqPageMidiEvents seqpage_midi_events;
   SeqPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,

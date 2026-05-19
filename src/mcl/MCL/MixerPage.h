@@ -65,7 +65,7 @@ public:
   uint8_t ext_disp_levels[16];
   bool mute_toggle;
   uint8_t ext_key_down;
-  DeviceIdx mixer_device_idx = DeviceIdx::Primary;
+  DeviceIdx mixer_device_idx;
   MixerTarget mixer_target;
 
   uint8_t display_mode;
