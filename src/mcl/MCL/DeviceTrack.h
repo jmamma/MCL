@@ -24,6 +24,8 @@ class GridChainTrack;
 class SPSXTrack;
 #if !defined(__AVR__)
 class MidiTrack;
+class A4MidiTrack;
+class MNMMidiTrack;
 #endif
 #ifdef PLATFORM_TBD
 class TBDTrack;
@@ -67,6 +69,8 @@ private:
   __IMPL_DYNAMIK_KAST(GridChainTrack, GRIDCHAIN_TRACK_TYPE, GRIDCHAIN_TRACK_TYPE)
 #if !defined(__AVR__)
   __IMPL_DYNAMIK_KAST(MidiTrack, MIDI_TRACK_TYPE, MIDI_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(A4MidiTrack, A4_MIDI_TRACK_TYPE, A4_MIDI_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(MNMMidiTrack, MNM_MIDI_TRACK_TYPE, MNM_MIDI_TRACK_TYPE)
 #endif
 #ifdef PLATFORM_TBD
   __IMPL_DYNAMIK_KAST(TBDTrack, TBD_TRACK_TYPE, TBD_TRACK_TYPE)

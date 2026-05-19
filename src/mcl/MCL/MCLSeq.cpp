@@ -81,22 +81,29 @@ bool seq_grid_x_runs_tbd_tracks() {
 
 #if !defined(__AVR__)
 bool seq_grid_y_runs_midi_tracks() {
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_OFF) {
+    return false;
+  }
 #if defined(PLATFORM_TBD)
-  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD ||
-         mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER;
-#else
-  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER;
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+    return true;
+  }
 #endif
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) {
+    return true;
+  }
+  MidiDevice *secondary = device_manager.secondary_device();
+  return secondary != nullptr &&
+         (secondary->id == DEVICE_A4 || secondary->id == DEVICE_MNM);
 }
 #endif
 
 bool seq_grid_y_runs_legacy_ext_tracks() {
 #if defined(__AVR__)
   return true;
-#elif defined(PLATFORM_TBD)
-  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT;
 #else
-  return !seq_grid_y_runs_midi_tracks();
+  return mcl_cfg.grid_y_device != GRID_Y_DEVICE_OFF &&
+         !seq_grid_y_runs_midi_tracks();
 #endif
 }
 

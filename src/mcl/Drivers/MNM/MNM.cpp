@@ -7,6 +7,9 @@
 #include "MidiSetup.h"
 #include "GridTrack.h"
 #include "MCLStrings.h"
+#if !defined(__AVR__)
+#include "SeqExtStepTrackApi.h"
+#endif
 
 class MNMMixerCapability final : public ExtMixerCapability {
 public:
@@ -18,6 +21,43 @@ protected:
     static_cast<MNMClass &>(device_).setTrackLevel(track, level, send);
   }
 };
+
+#if !defined(__AVR__)
+class MNMExtStepTrackCapability final : public DeviceExtStepTrackCapability {
+public:
+  explicit MNMExtStepTrackCapability(MNMClass &device)
+      : DeviceExtStepTrackCapability(device) {}
+
+  uint8_t track_count(const DeviceContext &ctx) const override {
+    (void)ctx;
+    return NUM_EXT_TRACKS;
+  }
+
+  SeqExtStepTrackApi track(const DeviceContext &ctx, uint8_t i) const override {
+    (void)ctx;
+    if (i >= NUM_EXT_TRACKS) {
+      i = 0;
+    }
+    return SeqExtStepTrackApi(mcl_seq.midi_tracks[i]);
+  }
+
+  bool track_for_channel(const DeviceContext &ctx, uint8_t channel,
+                         uint8_t *track_index) const override {
+    (void)ctx;
+    if (track_index == nullptr) {
+      return false;
+    }
+    for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+      if (mcl_seq.midi_tracks[i].channel() == channel) {
+        *track_index = i;
+        return true;
+      }
+    }
+    *track_index = 255;
+    return false;
+  }
+};
+#endif
 
 const ElektronSysexProtocol mnm_protocol = {
     monomachine_sysex_hdr,
@@ -65,8 +105,14 @@ void MNMClass::init_grid_devices(DeviceIdx device_idx) {
   GridDeviceTrack gdt;
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+#if !defined(__AVR__)
+    mcl_seq.midi_tracks[i].active = MNM_MIDI_TRACK_TYPE;
+    gdt.init(MNM_MIDI_TRACK_TYPE, GROUP_DEV, static_cast<uint8_t>(device_idx),
+             &(mcl_seq.midi_tracks[i]));
+#else
     gdt.init(MNM_TRACK_TYPE, GROUP_DEV, static_cast<uint8_t>(device_idx),
              &(mcl_seq.ext_tracks[i]));
+#endif
     add_track_to_grid(GridIdx::Y, i, &gdt);
   }
 }
@@ -75,6 +121,13 @@ DeviceMixerCapability *MNMClass::mixer() {
   static MNMMixerCapability capability(*this);
   return &capability;
 }
+
+#if !defined(__AVR__)
+DeviceExtStepTrackCapability *MNMClass::ext_step_tracks() {
+  static MNMExtStepTrackCapability capability(*this);
+  return &capability;
+}
+#endif
 
 bool MNMClass::probe() {
   connected = false;

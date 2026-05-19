@@ -21,6 +21,9 @@ public:
   virtual void cleanup_listeners();
   virtual bool probe();
   virtual void init_grid_devices(DeviceIdx device_idx);
+#if !defined(__AVR__)
+  virtual DeviceExtStepTrackCapability *ext_step_tracks() override;
+#endif
   virtual bool canReadWorkspaceKit() { return true; }
   virtual bool getWorkSpaceKit() {
     return getBlockingKit(0x80);

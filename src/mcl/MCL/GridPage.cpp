@@ -573,6 +573,9 @@ void GridPage::display_grid() {
         break;
       }
       case A4_TRACK_TYPE:
+#if !defined(__AVR__)
+      case A4_MIDI_TRACK_TYPE:
+#endif
         str[0] = 'A';
         str[1] = track_idx + '1';
         break;
@@ -606,7 +609,11 @@ void GridPage::display_grid() {
         str[0] = 'P';
         str[1] = 'F';
         break;
-      case MNM_TRACK_TYPE: {
+      case MNM_TRACK_TYPE:
+#if !defined(__AVR__)
+      case MNM_MIDI_TRACK_TYPE:
+#endif
+      {
         auto tmp = getMNMMachineNameShort(model, 2);
         if (tmp) {
           copyMachineNameShort(tmp, str);

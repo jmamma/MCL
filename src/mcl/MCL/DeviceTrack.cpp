@@ -65,6 +65,12 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   case MIDI_TRACK_TYPE:
     ::new (this) MidiTrack;
     break;
+  case A4_MIDI_TRACK_TYPE:
+    ::new (this) A4MidiTrack;
+    break;
+  case MNM_MIDI_TRACK_TYPE:
+    ::new (this) MNMMidiTrack;
+    break;
 #endif
 #ifdef PLATFORM_TBD
   case TBD_TRACK_TYPE:

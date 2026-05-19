@@ -43,6 +43,9 @@ public:
   virtual void cleanup_listeners();
   virtual bool probe();
   virtual void init_grid_devices(DeviceIdx device_idx);
+#if !defined(__AVR__)
+  virtual DeviceExtStepTrackCapability *ext_step_tracks() override;
+#endif
   virtual uint16_t sendKitParams(uint8_t* masks);
 
   // Overriden for A4 proto version and footer injection

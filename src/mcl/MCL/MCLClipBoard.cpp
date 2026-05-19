@@ -18,6 +18,7 @@
 #endif
 #if !defined(__AVR__)
 #include "../Drivers/Generic/GridTracks/MidiTrack.h"
+#include "../Drivers/Generic/GridTracks/MidiBackedDeviceTrack.h"
 #endif
 #ifdef PLATFORM_TBD
 #include "../Drivers/TBD/TBDTrack.h"
@@ -71,6 +72,10 @@ SeqTrackModData *clipboard_track_mod_data(DeviceTrack *track,
   case MIDI_TRACK_TYPE:
     *track_limit = NUM_GRID_Y_LFO_TRACKS;
     return &static_cast<MidiTrack *>(track)->seq_data.mod();
+  case A4_MIDI_TRACK_TYPE:
+  case MNM_MIDI_TRACK_TYPE:
+    *track_limit = NUM_GRID_Y_LFO_TRACKS;
+    return &static_cast<MidiBackedDeviceTrack *>(track)->seq_data.mod();
 #endif
 #ifdef PLATFORM_TBD
   case TBD_TRACK_TYPE:

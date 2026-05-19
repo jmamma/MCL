@@ -4,6 +4,7 @@
 
 #include "MCLSeq.h"
 #if !defined(__AVR__)
+#include "DeviceManager.h"
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #endif
@@ -28,12 +29,20 @@ public:
 
   static inline bool use_midi_tracks_for_ext() {
 #if !defined(__AVR__)
+    if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_OFF) {
+      return false;
+    }
 #if defined(PLATFORM_TBD)
-    return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD ||
-           mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER;
-#else
-    return mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER;
+    if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD) {
+      return true;
+    }
 #endif
+    if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) {
+      return true;
+    }
+    MidiDevice *secondary = device_manager.secondary_device();
+    return secondary != nullptr &&
+           (secondary->id == DEVICE_A4 || secondary->id == DEVICE_MNM);
 #else
     return false;
 #endif

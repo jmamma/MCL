@@ -6,6 +6,9 @@
 #include "MCLGUI.h"
 #include "MidiSetup.h"
 #include "TurboLight.h"
+#if !defined(__AVR__)
+#include "SeqExtStepTrackApi.h"
+#endif
 #include <string.h>
 
 class A4MixerCapability final : public ExtMixerCapability {
@@ -20,6 +23,43 @@ protected:
     }
   }
 };
+
+#if !defined(__AVR__)
+class A4ExtStepTrackCapability final : public DeviceExtStepTrackCapability {
+public:
+  explicit A4ExtStepTrackCapability(A4Class &device)
+      : DeviceExtStepTrackCapability(device) {}
+
+  uint8_t track_count(const DeviceContext &ctx) const override {
+    (void)ctx;
+    return NUM_EXT_TRACKS;
+  }
+
+  SeqExtStepTrackApi track(const DeviceContext &ctx, uint8_t i) const override {
+    (void)ctx;
+    if (i >= NUM_EXT_TRACKS) {
+      i = 0;
+    }
+    return SeqExtStepTrackApi(mcl_seq.midi_tracks[i]);
+  }
+
+  bool track_for_channel(const DeviceContext &ctx, uint8_t channel,
+                         uint8_t *track_index) const override {
+    (void)ctx;
+    if (track_index == nullptr) {
+      return false;
+    }
+    for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+      if (mcl_seq.midi_tracks[i].channel() == channel) {
+        *track_index = i;
+        return true;
+      }
+    }
+    *track_index = 255;
+    return false;
+  }
+};
+#endif
 
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
 
@@ -75,13 +115,25 @@ void A4Class::cleanup_listeners() {
 void A4Class::init_grid_devices(DeviceIdx device_idx) {
   GridDeviceTrack gdt;
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+#if !defined(__AVR__)
+    uint8_t track_type = MIDI_TRACK_TYPE;
+    SeqTrack *seq_track = &(mcl_seq.midi_tracks[i]);
+    mcl_seq.midi_tracks[i].active = track_type;
+#else
     uint8_t track_type = EXT_TRACK_TYPE;
+    SeqTrack *seq_track = &(mcl_seq.ext_tracks[i]);
+#endif
 
     if (i < NUM_A4_SOUND_TRACKS) {
+#if !defined(__AVR__)
+      track_type = A4_MIDI_TRACK_TYPE;
+      mcl_seq.midi_tracks[i].active = track_type;
+#else
       track_type = A4_TRACK_TYPE;
+#endif
     }
     gdt.init(track_type, GROUP_DEV, static_cast<uint8_t>(device_idx),
-             &(mcl_seq.ext_tracks[i]));
+             seq_track);
     add_track_to_grid(GridIdx::Y, i, &gdt);
   }
 }
@@ -91,11 +143,23 @@ DeviceMixerCapability *A4Class::mixer() {
   return &capability;
 }
 
+#if !defined(__AVR__)
+DeviceExtStepTrackCapability *A4Class::ext_step_tracks() {
+  static A4ExtStepTrackCapability capability(*this);
+  return &capability;
+}
+#endif
+
 uint16_t A4Class::sendKitParams(uint8_t *masks) {
   EmptyTrack empty_track;
   for (uint8_t i = 0; i < NUM_A4_SOUND_TRACKS; i++) {
     if (masks[i] == 1) {
+#if !defined(__AVR__)
+      auto *device_track = empty_track.load_from_mem(i, A4_MIDI_TRACK_TYPE);
+      auto *a4_track = device_track ? device_track->as<A4MidiTrack>() : nullptr;
+#else
       auto a4_track = empty_track.load_from_mem<A4Track>(i);
+#endif
       if (a4_track) {
         a4_track->sound.origPosition = i;
         a4_track->sound.soundpool = true;

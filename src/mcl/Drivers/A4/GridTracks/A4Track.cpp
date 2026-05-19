@@ -63,6 +63,92 @@ bool A4Track::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, u
   return true;
 }
 
+#if !defined(__AVR__)
+bool A4Track::can_materialize_as(uint8_t track_type) {
+  if (track_type == A4_MIDI_TRACK_TYPE) {
+    return true;
+  }
+  return ExtTrack::can_materialize_as(track_type);
+}
+
+DeviceTrack *A4Track::materialize_as(uint8_t track_type,
+                                     uint8_t tracknumber,
+                                     SeqTrack *seq_track) {
+  (void)seq_track;
+  if (track_type == A4_MIDI_TRACK_TYPE) {
+    GridLink old_link = link;
+    ExtSeqTrackData old_seq_data;
+    SeqTrackModData old_mod_data = mod_data;
+    A4Sound old_sound = sound;
+    memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
+
+    auto *midi_track =
+        static_cast<A4MidiTrack *>(init_track_type(A4_MIDI_TRACK_TYPE));
+    midi_track->import_legacy(old_link, old_seq_data, old_mod_data, old_sound,
+                              tracknumber);
+    return midi_track;
+  }
+  return ExtTrack::materialize_as(track_type, tracknumber, seq_track);
+}
+
+void A4MidiTrack::import_legacy(const GridLink &old_link,
+                                const ExtSeqTrackData &old_seq_data,
+                                const SeqTrackModData &old_mod_data,
+                                const A4Sound &old_sound,
+                                uint8_t tracknumber) {
+  sound = old_sound;
+  import_legacy_ext_storage(old_link, old_seq_data, old_mod_data, tracknumber);
+}
+
+uint16_t A4MidiTrack::calc_latency(uint8_t tracknumber) {
+  return A4_SOUND_LENGTH;
+}
+
+void A4MidiTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
+  DEBUG_PRINTLN(F("here"));
+  DEBUG_PRINTLN(F("send a4 sound"));
+  sound.origPosition = tracknumber;
+  sound.soundpool = true;
+  sound.toSysex();
+}
+
+void A4MidiTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                                  GridSlot slotnumber) {
+  MidiBackedDeviceTrack::transition_load(tracknumber, seq_track, slotnumber);
+}
+
+bool A4MidiTrack::get_track_from_sysex(uint8_t tracknumber) {
+  DEBUG_DUMP("get blocking");
+  auto ret = Analog4.getBlockingSoundX(tracknumber);
+  DEBUG_DUMP("finished");
+  if (ret) {
+    sound.fromSysex(Analog4.midi);
+  }
+  return ret;
+}
+
+void A4MidiTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
+  load_seq_data(seq_track);
+}
+
+bool A4MidiTrack::store_in_grid(GridSlot column, GridRow row,
+                                SeqTrack *seq_track, uint8_t merge,
+                                bool online, Grid *grid) {
+  (void)merge;
+  active = A4_MIDI_TRACK_TYPE;
+
+  DEBUG_PRINT_FN();
+  DEBUG_PRINTLN(F("storing a4 midi track"));
+
+  if (column != 255 && online) {
+    get_track_from_sysex(column & 0x0F);
+  }
+  store_midi_seq_data(column, seq_track);
+
+  return write_grid(_this(), _sizeof(), column, row, grid);
+}
+#endif
+
 // !! Note do not rely on editor code lint errors -- these are for 32bit/64bit x86 sizes!
 // Do compile with avr-gcc and observe the error messages
 
