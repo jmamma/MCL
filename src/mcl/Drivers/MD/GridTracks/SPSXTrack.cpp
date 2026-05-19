@@ -296,7 +296,8 @@ DeviceTrack *SPSXTrack::materialize_as(uint8_t track_type,
              sizeof(old_legacy_seq_data));
     }
 
-    auto *md_track = static_cast<MDTrack *>(init_track_type(MD_TRACK_TYPE));
+    auto *md_track =
+        static_cast<MDTrack *>(init_materialized_track_type(MD_TRACK_TYPE));
     md_track->link = old_link;
     md_track->mod_data = old_mod_data;
     copy_spsx_machine_to_md(old_machine, md_track->machine);

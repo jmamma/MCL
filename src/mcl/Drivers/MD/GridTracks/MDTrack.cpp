@@ -65,7 +65,8 @@ DeviceTrack *MDTrack::materialize_as(uint8_t track_type, uint8_t tracknumber,
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     auto *spsx_track =
-        static_cast<SPSXTrack *>(init_track_type(MDSPSX_TRACK_TYPE));
+        static_cast<SPSXTrack *>(
+            init_materialized_track_type(MDSPSX_TRACK_TYPE));
     spsx_track->link = old_link;
     spsx_track->seq_storage.mod() = old_mod_data;
     spsx_track->seq_storage.seq_version = SPSX_SEQ_VERSION_LEGACY;
