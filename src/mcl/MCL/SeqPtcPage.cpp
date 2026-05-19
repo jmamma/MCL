@@ -546,15 +546,18 @@ void SeqPtcPage::trig_primary(uint8_t note_num, uint8_t track_number,
     track_number = last_primary_track;
   }
 
+  if (SeqPtcTrackRef::is_midi_voice_track(track_number)) {
+    uint8_t machine_pitch = note_num;
+    SeqPtcTrackRef::send_notes_off(track_number);
+    SeqPtcTrackRef::send_notes(track_number, machine_pitch);
+    record(machine_pitch, track_number);
+    return;
+  }
+
   uint8_t next_track = get_next_voice(note_num, track_number, channel_event);
   if (next_track > 15) { return; }
 
   uint8_t machine_pitch = note_num;
-  if (SeqPtcTrackRef::is_midi_voice_track(next_track)) {
-    SeqPtcTrackRef::send_notes_off(next_track);
-    SeqPtcTrackRef::send_notes(next_track, machine_pitch);
-    goto rec;
-  }
   machine_pitch = SeqPtcTrackRef::pitch_from_note(next_track, note_num,
                                                   fine_tune);
   if (machine_pitch == 255) {
@@ -564,7 +567,6 @@ void SeqPtcPage::trig_primary(uint8_t note_num, uint8_t track_number,
   SeqPtcTrackRef::set_pitch(next_track, machine_pitch, uart_);
   SeqPtcTrackRef::trigger(next_track, 127, uart_);
   mixer_page.trig(next_track);
-  rec:
   record(machine_pitch, next_track);
 }
 
