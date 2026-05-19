@@ -8,6 +8,7 @@
 #include "SeqPtcTrackRef.h"
 #include "GridTask.h"
 #include "SeqTrackUtil.h"
+#include "SeqTrackTransition.h"
 
 uint16_t MDSeqTrack::gui_update = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
@@ -159,11 +160,11 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       reset();
       mod12_counter = 0;
       SET_BIT16(gui_update, track_number);
-    } else if (count_down <= track_number / 4 + 1) {
-      if (!cache_loaded) {
-        load_cache();
-        cache_loaded = true;
-      }
+    } else if (SeqTrackTransition::cache_due(
+                   SEQ_TRANSITION_CACHE_MD_MACHINE, count_down, cache_loaded,
+                   track_number)) {
+      load_cache();
+      cache_loaded = true;
       goto end;
     }
   }

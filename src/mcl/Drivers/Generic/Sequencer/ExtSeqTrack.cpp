@@ -1,6 +1,7 @@
 #include "ExtTrack.h"
 #include "CommonPages.h"
 #include "MCLSysConfig.h"
+#include "SeqTrackTransition.h"
 
 uint8_t ExtSeqTrack::epoch = 0;
 
@@ -695,11 +696,12 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     if (count_down == 0) {
       reset();
       mod12_counter = 0;
-    } else if (is_generic_midi && count_down <= (track_number + 5)) {
-      if (!cache_loaded) {
-        load_cache();
-        cache_loaded = true;
-      }
+    } else if (is_generic_midi &&
+               SeqTrackTransition::cache_due(
+                   SEQ_TRANSITION_CACHE_MIDI_LINEAR, count_down, cache_loaded,
+                   track_number)) {
+      load_cache();
+      cache_loaded = true;
       goto end;
     }
   }

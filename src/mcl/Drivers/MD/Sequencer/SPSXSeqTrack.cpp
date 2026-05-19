@@ -11,6 +11,7 @@
 #include "MidiUart.h"
 #include "CommonPages.h"
 #include "MCLSysConfig.h"
+#include "SeqTrackTransition.h"
 
 // SPSX tracks share MDSeqTrack::md_trig_mask and MDSeqTrack::gui_update statics
 
@@ -71,11 +72,11 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
             tick_counter = 0;
             mod12_counter = 0;
             SPSX_SET_BIT16(MDSeqTrack::gui_update, track_number);
-        } else if (count_down <= track_number / 4 + 1) {
-            if (!cache_loaded) {
-                load_cache();
-                cache_loaded = true;
-            }
+        } else if (SeqTrackTransition::cache_due(
+                       SEQ_TRANSITION_CACHE_MD_MACHINE, count_down,
+                       cache_loaded, track_number)) {
+            load_cache();
+            cache_loaded = true;
             goto end;
         }
     }

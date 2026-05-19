@@ -9,6 +9,7 @@
 #include "MidiClock.h"
 #include "MCLSysConfig.h"
 #include "SeqPage.h"
+#include "SeqTrackTransition.h"
 #include "mcl.h"
 #include <string.h>
 
@@ -1029,7 +1030,9 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
         cache_loaded = true;
       }
       reset();
-    } else if (!cache_loaded && count_down <= (track_number + 5)) {
+    } else if (SeqTrackTransition::cache_due(
+                   SEQ_TRANSITION_CACHE_MIDI_LINEAR, count_down, cache_loaded,
+                   track_number)) {
       load_cache();
       cache_loaded = true;
     }
