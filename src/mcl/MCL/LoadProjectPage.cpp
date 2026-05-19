@@ -296,37 +296,35 @@ bool LoadProjectPage::_handle_filemenu() {
     return false;
   }
 
-  if (item == FM_DELETE) {
+  if (item == FM_DELETE || item == FM_VERSIONS || item == FM_MOVE) {
     char entry[FILE_ENTRY_SIZE];
-    char message[32];
-    uint8_t entry_type;
+    uint8_t entry_type = FILE_TYPE;
     uint16_t entry_idx = encoders[1]->getValue();
     get_entry(entry_idx, entry, entry_type);
 
-    strcpy_P(message, mclstr_delete_space);
-    strcat(message, entry);
-    strcat(message, "?");
-    if (mcl_gui.wait_for_confirm(entry_type == DIR_TYPE ? "DEL FOLDER"
-                                                        : "DEL PROJECT",
-                                 message)) {
-      on_delete(entry);
+    if (item == FM_DELETE) {
+      char message[32];
+      strcpy_P(message, mclstr_delete_space);
+      strcat(message, entry);
+      strcat(message, "?");
+      if (mcl_gui.wait_for_confirm(entry_type == DIR_TYPE ? "DEL FOLDER"
+                                                          : "DEL PROJECT",
+                                   message)) {
+        on_delete(entry);
+      }
+      return true;
     }
-    return true;
-  }
-  if (item == FM_VERSIONS) {
-    char entry[FILE_ENTRY_SIZE];
-    get_entry(encoders[1]->getValue(), entry);
-    char project_path[PRJ_PATH_LEN];
-    if (is_project_dir(entry) &&
-        build_project_path(entry, project_path, sizeof(project_path))) {
-      project_version_page.set_project(project_path);
-      mcl.pushPage(PROJECT_VERSION_PAGE);
+
+    if (item == FM_VERSIONS) {
+      char project_path[PRJ_PATH_LEN];
+      if (is_project_dir(entry) &&
+          build_project_path(entry, project_path, sizeof(project_path))) {
+        project_version_page.set_project(project_path);
+        mcl.pushPage(PROJECT_VERSION_PAGE);
+      }
+      return false;
     }
-    return false;
-  }
-  if (item == FM_MOVE) {
-    char entry[FILE_ENTRY_SIZE];
-    get_entry(encoders[1]->getValue(), entry);
+
     enter_move_destination(entry);
     return false;
   }
