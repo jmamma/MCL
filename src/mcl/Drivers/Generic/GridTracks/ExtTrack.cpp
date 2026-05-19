@@ -71,7 +71,8 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
     SeqTrackModData old_mod_data = mod_data;
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
-    auto *ext_track = static_cast<ExtTrack *>(init_track_type(EXT_TRACK_TYPE));
+    auto *ext_track =
+        static_cast<ExtTrack *>(init_materialized_track_type(EXT_TRACK_TYPE));
     ext_track->link = old_link;
     ext_track->mod_data = old_mod_data;
     memcpy(&ext_track->seq_data, &old_seq_data, sizeof(old_seq_data));

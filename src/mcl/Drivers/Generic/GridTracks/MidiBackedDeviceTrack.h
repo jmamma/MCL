@@ -15,6 +15,7 @@ public:
   MidiBackedDeviceTrack();
 
   void init(uint8_t tracknumber, SeqTrack *seq_track) override;
+  uint8_t transition_countdown_resolution() override;
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                        GridSlot slotnumber) override;
   bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override {

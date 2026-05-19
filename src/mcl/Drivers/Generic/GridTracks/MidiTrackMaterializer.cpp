@@ -43,7 +43,8 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
 
   if (track_type == MIDI_TRACK_TYPE) {
     auto *midi_track =
-        static_cast<MidiTrack *>(storage->init_track_type(MIDI_TRACK_TYPE));
+        static_cast<MidiTrack *>(
+            storage->init_materialized_track_type(MIDI_TRACK_TYPE));
     midi_track->link = target_link;
     midi_track->seq_data = stored_seq;
     return midi_track;
@@ -51,7 +52,8 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
 
   if (track_type == A4_MIDI_TRACK_TYPE) {
     auto *a4_track =
-        static_cast<A4MidiTrack *>(storage->init_track_type(A4_MIDI_TRACK_TYPE));
+        static_cast<A4MidiTrack *>(
+            storage->init_materialized_track_type(A4_MIDI_TRACK_TYPE));
     memset(&a4_track->sound, 0, sizeof(a4_track->sound));
     a4_track->sound.origPosition = tracknumber;
     a4_track->sound.soundpool = true;
@@ -62,7 +64,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
 
   if (track_type == MNM_MIDI_TRACK_TYPE) {
     auto *mnm_track = static_cast<MNMMidiTrack *>(
-        storage->init_track_type(MNM_MIDI_TRACK_TYPE));
+        storage->init_materialized_track_type(MNM_MIDI_TRACK_TYPE));
     mnm_track->machine.init(tracknumber);
     mnm_track->link = target_link;
     mnm_track->seq_data = stored_seq;
@@ -72,7 +74,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
 #ifdef PLATFORM_TBD
   if (track_type == TBD_MIDI_TRACK_TYPE) {
     auto *tbd_midi_track = static_cast<TBDMidiTrack *>(
-        storage->init_track_type(TBD_MIDI_TRACK_TYPE));
+        storage->init_materialized_track_type(TBD_MIDI_TRACK_TYPE));
     tbd_midi_track->init(tracknumber, nullptr);
     tbd_midi_track->link = target_link;
     tbd_midi_track->seq_data = stored_seq;

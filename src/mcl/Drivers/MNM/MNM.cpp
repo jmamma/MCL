@@ -70,6 +70,7 @@ void MNMClass::init_grid_devices(DeviceIdx device_idx) {
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
 #if !defined(__AVR__)
     mcl_seq.midi_tracks[i].active = MNM_MIDI_TRACK_TYPE;
+    mcl_seq.midi_tracks[i].set_channel(i);
     gdt.init(MNM_MIDI_TRACK_TYPE, GROUP_DEV, static_cast<uint8_t>(device_idx),
              &(mcl_seq.midi_tracks[i]));
 #else

@@ -83,7 +83,8 @@ DeviceTrack *A4Track::materialize_as(uint8_t track_type,
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     auto *midi_track =
-        static_cast<A4MidiTrack *>(init_track_type(A4_MIDI_TRACK_TYPE));
+        static_cast<A4MidiTrack *>(
+            init_materialized_track_type(A4_MIDI_TRACK_TYPE));
     midi_track->import_legacy(old_link, old_seq_data, old_mod_data, old_sound,
                               tracknumber);
     return midi_track;

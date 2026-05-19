@@ -4,6 +4,7 @@
 
 #include "MidiTrack.h"
 #include "MidiTrackMaterializer.h"
+#include "../Sequencer/StepSeqDefines.h"
 #include <string.h>
 
 namespace {
@@ -50,6 +51,10 @@ void MidiBackedDeviceTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
   link.length = 16;
   seq_data.channel = tracknumber;
   apply_seq_defaults(tracknumber, seq_track);
+}
+
+uint8_t MidiBackedDeviceTrack::transition_countdown_resolution() {
+  return STEPSEQ_SEQ_INTERPOLATION;
 }
 
 void MidiBackedDeviceTrack::transition_load(uint8_t tracknumber,

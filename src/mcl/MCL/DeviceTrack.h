@@ -92,6 +92,13 @@ public:
   virtual DeviceTrack *materialize_as(uint8_t track_type,
                                       uint8_t tracknumber,
                                       SeqTrack *seq_track);
+  DeviceTrack *init_materialized_track_type(uint8_t track_type) {
+    uint8_t old_version[2] = {version[0], version[1]};
+    DeviceTrack *track = init_track_type(track_type);
+    track->version[0] = old_version[0];
+    track->version[1] = old_version[1];
+    return track;
+  }
   template <class T> DeviceTrack *init_track_type() {
     T *p;
     _init_track_type_impl(&p);

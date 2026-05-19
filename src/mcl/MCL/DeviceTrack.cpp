@@ -106,7 +106,7 @@ DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
     return this;
   }
   if (get_parent_model() == track_type && allow_cast_to_parent()) {
-    return init_track_type(track_type);
+    return init_materialized_track_type(track_type);
   }
   return nullptr;
 }
