@@ -31,6 +31,19 @@ bool GridTrack::storage_version_at_least(uint8_t min_version) const {
          version[0] >= min_version;
 }
 
+void GridTrack::repair_loaded_header() {
+  uint8_t tmp_version[2] = {version[0], version[1]};
+  uint8_t tmp_active = active;
+  ::new (this) GridTrack;
+  version[0] = tmp_version[0];
+  version[1] = tmp_version[1];
+  active = tmp_active;
+
+  if (active == 255) {
+    init();
+  }
+}
+
 void GridTrack::load_link_data(SeqTrack *seq_track) {
   seq_track->speed = link.speed_value();
   seq_track->length = link.length;
@@ -98,17 +111,7 @@ bool GridTrack::load_from_grid_512(GridSlot column, GridRow row, Grid *grid) {
       return false;
     }
   }
-  uint8_t tmp_version[2] = {version[0], version[1]};
-  auto tmp = this->active;
-  ::new (this) GridTrack;
-  version[0] = tmp_version[0];
-  version[1] = tmp_version[1];
-  this->active = tmp;
-
-  if ((active == 255)) {
-    init();
-  }
-
+  repair_loaded_header();
   return true;
 }
 
@@ -119,17 +122,7 @@ bool GridTrack::load_from_grid(GridSlot column, GridRow row) {
     return false;
   }
 
-  uint8_t tmp_version[2] = {version[0], version[1]};
-  auto tmp = this->active;
-  ::new (this) GridTrack;
-  version[0] = tmp_version[0];
-  version[1] = tmp_version[1];
-  this->active = tmp;
-
-  if ((active == 255)) {
-    init();
-  }
-
+  repair_loaded_header();
   return true;
 }
 

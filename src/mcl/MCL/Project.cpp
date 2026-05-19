@@ -25,8 +25,8 @@ bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
     return false;
   }
 
-  constexpr uint16_t chunks = (GRID_WIDTH * GRID_SLOT_BYTES) / sizeof(buf);
-  for (uint16_t i = 0; i < chunks; i++) {
+  constexpr uint8_t chunks = (GRID_WIDTH * GRID_SLOT_BYTES) / sizeof(buf);
+  for (uint8_t i = 0; i < chunks; i++) {
     if (!src_grid.read(buf, sizeof(buf)) || !dst_grid.write(buf, sizeof(buf))) {
       return false;
     }
@@ -572,83 +572,84 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     return false;
   }
 
-  if (migrate_legacy_aux_layout &&
-      grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
+  if (migrate_legacy_aux_layout) {
     EmptyTrack scratch;
-    LegacyMDLFOTrackStorage legacy_track;
-    if (!grids[1].read(&legacy_track, sizeof(legacy_track), MDLFO_TRACK_NUM,
-                       row)) {
-      return false;
-    }
-
-    if (legacy_track.active == MDLFO_TRACK_TYPE &&
-        (grid_x_header->track_type[0] == MD_TRACK_TYPE ||
-         grid_x_header->track_type[0] == EMPTY_TRACK_TYPE)) {
-      SeqLFOData legacy_lfo;
-      legacy_track.lfo_data.store_data(&legacy_lfo);
-
-      auto *track0 = scratch.load_from_grid_512(0, row, &grids[0]);
-      if (track0 == nullptr) {
+    if (grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
+      LegacyMDLFOTrackStorage legacy_track;
+      if (!grids[1].read(&legacy_track, sizeof(legacy_track), MDLFO_TRACK_NUM,
+                         row)) {
         return false;
       }
 
-      MDTrack *md_track = nullptr;
-      if (track0->active == MD_TRACK_TYPE) {
-        md_track = static_cast<MDTrack *>(track0);
-      } else if (track0->active == EMPTY_TRACK_TYPE) {
-        md_track = static_cast<MDTrack *>(track0->init_track_type(MD_TRACK_TYPE));
-        md_track->init();
-        md_track->link.init(row);
-        md_track->machine.track = 0;
-        md_track->machine.lfo.init(0);
-      }
+      if (legacy_track.active == MDLFO_TRACK_TYPE &&
+          (grid_x_header->track_type[0] == MD_TRACK_TYPE ||
+           grid_x_header->track_type[0] == EMPTY_TRACK_TYPE)) {
+        SeqLFOData legacy_lfo;
+        legacy_track.lfo_data.store_data(&legacy_lfo);
 
-      if (md_track != nullptr) {
-        md_track->mod_data.init();
-        LFOSeqTrack::convert_legacy_data(legacy_lfo, &md_track->mod_data.lfo);
-
-        md_track->version[0] = SEQ_TRACK_MOD_STORAGE_VERSION;
-        md_track->version[1] = 0;
-        if (!grids[0].write(md_track->_this(), md_track->_sizeof(), 0, row)) {
+        auto *track0 = scratch.load_from_grid_512(0, row, &grids[0]);
+        if (track0 == nullptr) {
           return false;
         }
-        if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
-          grid_x_header->active = true;
-          grid_x_header->update_model(0, md_track->get_model(), MD_TRACK_TYPE);
-          if (!grids[0].write_row_header(grid_x_header, row)) {
+
+        MDTrack *md_track = nullptr;
+        if (track0->active == MD_TRACK_TYPE) {
+          md_track = static_cast<MDTrack *>(track0);
+        } else if (track0->active == EMPTY_TRACK_TYPE) {
+          md_track =
+              static_cast<MDTrack *>(track0->init_track_type(MD_TRACK_TYPE));
+          md_track->init();
+          md_track->link.init(row);
+          md_track->machine.track = 0;
+          md_track->machine.lfo.init(0);
+        }
+
+        if (md_track != nullptr) {
+          md_track->mod_data.init();
+          LFOSeqTrack::convert_legacy_data(legacy_lfo, &md_track->mod_data.lfo);
+
+          md_track->version[0] = SEQ_TRACK_MOD_STORAGE_VERSION;
+          md_track->version[1] = 0;
+          if (!grids[0].write(md_track->_this(), md_track->_sizeof(), 0, row)) {
             return false;
           }
+          if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
+            grid_x_header->active = true;
+            grid_x_header->update_model(0, md_track->get_model(),
+                                        MD_TRACK_TYPE);
+            if (!grids[0].write_row_header(grid_x_header, row)) {
+              return false;
+            }
+          }
+          *converted_track0_lfo = true;
         }
-        *converted_track0_lfo = true;
       }
-    }
 
-    grid_y_header.update_model(MDLFO_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
-    if (!grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
-      return false;
-    }
-  }
-
-  if (migrate_legacy_aux_layout &&
-      grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
-    EmptyTrack scratch;
-    auto *perf_track =
-        scratch.load_from_grid_512(LEGACY_PERF_TRACK_NUM, row, &grids[1]);
-    if (perf_track == nullptr) {
-      return false;
-    }
-
-    if (perf_track->active == PERF_TRACK_TYPE) {
-      if (!perf_track->store_in_grid(PERF_TRACK_NUM, row, nullptr, 0, false,
-                                     &grids[1])) {
+      grid_y_header.update_model(MDLFO_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
+      if (!grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
         return false;
       }
-      grid_y_header.update_model(PERF_TRACK_NUM, PERF_TRACK_TYPE,
-                                 PERF_TRACK_TYPE);
     }
-    grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
-    if (!grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
-      return false;
+
+    if (grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
+      auto *perf_track =
+          scratch.load_from_grid_512(LEGACY_PERF_TRACK_NUM, row, &grids[1]);
+      if (perf_track == nullptr) {
+        return false;
+      }
+
+      if (perf_track->active == PERF_TRACK_TYPE) {
+        if (!perf_track->store_in_grid(PERF_TRACK_NUM, row, nullptr, 0, false,
+                                       &grids[1])) {
+          return false;
+        }
+        grid_y_header.update_model(PERF_TRACK_NUM, PERF_TRACK_TYPE,
+                                   PERF_TRACK_TYPE);
+      }
+      grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
+      if (!grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
+        return false;
+      }
     }
   }
 
@@ -878,20 +879,17 @@ bool Project::create_backup(const char *projectname) {
     return false;
   }
 
-  uint8_t dest_pair = 0;
-  bool found = false;
-  for (uint8_t pair = 1; pair < 128; pair++) {
-    uint8_t mask = project_pair_file_mask(pair, basename);
+  uint8_t dest_pair = 1;
+  for (; dest_pair < 128; dest_pair++) {
+    uint8_t mask = project_pair_file_mask(dest_pair, basename);
     if (mask == 0xFF) {
       return false;
     }
     if (mask == 0) {
-      dest_pair = pair;
-      found = true;
       break;
     }
   }
-  if (!found) {
+  if (dest_pair >= 128) {
     return false;
   }
 

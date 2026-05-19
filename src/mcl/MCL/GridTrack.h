@@ -129,6 +129,7 @@ public:
 
 private:
   void stamp_storage_version();
+  void repair_loaded_header();
 };
 
 #endif /* GRIDTRACK_H__ */
