@@ -132,4 +132,5 @@ void ProjectVersionPage::on_delete(const char *entry) {
   } else {
     gfx.alert("ERROR", "Not deleted.");
   }
+  init();
 }
