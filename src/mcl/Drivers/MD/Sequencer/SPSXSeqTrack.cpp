@@ -11,6 +11,7 @@
 #include "MidiUart.h"
 #include "CommonPages.h"
 #include "MCLSysConfig.h"
+#include "MixerPage.h"
 #include "SeqTrackTransition.h"
 
 // SPSX tracks share MDSeqTrack::md_trig_mask and MDSeqTrack::gui_update statics
@@ -44,6 +45,7 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
     port2 = uart2_;
 
     uint16_t tps = get_ticks_per_step();
+    bool retrig_scheduled_this_call = false;
 
     tick_counter++;
 
@@ -178,6 +180,7 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
 
                     if (rtrg > 0) {
                         schedule_retrig(velocity, rtrg, rtim, renv);
+                        retrig_scheduled_this_call = true;
                     } else {
                         retrig.clear();
                     }
@@ -189,7 +192,7 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
     }
 
     // Process retrig countdown
-    if (retrig.remaining > 0) {
+    if (!retrig_scheduled_this_call && retrig.remaining > 0) {
         if (retrig.ticks_countdown > 0) {
             retrig.ticks_countdown--;
         }
@@ -296,6 +299,7 @@ void SPSXSeqTrack::send_notes_on(MidiUartClass *uart2_) {
     if (!out) return;
     uint8_t channel = get_midi_channel();
     if (notes.note1 != 255) {
+        mixer_page.trig(track_number);
         out->sendNoteOn(channel, notes.note1, notes.vel);
         if (notes.note2 != 64) {
             out->sendNoteOn(channel, notes.note1 + notes.note2 - 64, notes.vel);
