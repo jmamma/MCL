@@ -139,7 +139,9 @@ bool GridTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
 
   DEBUG_PRINT_FN();
 
-  if (!write_grid(_this(), _sizeof(), column, row, grid)) {
+  bool ret = grid == nullptr ? proj.write_grid(_this(), _sizeof(), column, row)
+                             : grid->write(_this(), _sizeof(), column, row);
+  if (!ret) {
     DEBUG_PRINTLN(F("write failed"));
     return false;
   }
