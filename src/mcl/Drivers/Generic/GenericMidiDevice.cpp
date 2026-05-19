@@ -14,6 +14,7 @@ uint8_t generic_midi_channel(uint8_t track) {
   return GenericMidiTrackRef::channel(track);
 }
 
+#if !defined(__AVR__)
 SeqTrack *generic_midi_seq_track(uint8_t track) {
   return GenericMidiTrackRef::seq_track(track);
 }
@@ -42,6 +43,7 @@ bool generic_midi_track_for_channel(uint8_t channel, uint8_t *track_index) {
   *track_index = 255;
   return false;
 }
+#endif
 
 } // namespace
 
@@ -50,6 +52,7 @@ public:
   explicit GenericMidiMixerCapability(GenericMidiDevice &device)
       : ExtMixerCapability(device, device.mixer_levels, true) {}
 
+#if !defined(__AVR__)
   virtual uint8_t track_count(const DeviceContext &ctx) const override {
     (void)ctx;
     return NUM_EXT_TRACKS;
@@ -105,6 +108,7 @@ public:
           (uint8_t)value;
     }
   }
+#endif
 
 protected:
   void send_level(uint8_t track, uint8_t level, bool send) override {
