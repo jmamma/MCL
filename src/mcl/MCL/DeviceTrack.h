@@ -192,12 +192,6 @@ public:
   }
 
   bool restore_sound_from_mem_if_type(GridSlot column, uint8_t expected_type) {
-    void *sound = get_sound_data_ptr();
-    size_t sound_size = get_sound_data_size();
-    if (sound == nullptr || sound_size == 0) {
-      return true;
-    }
-
     uintptr_t region_base = get_region();
     uintptr_t slot_base =
         region_base +
