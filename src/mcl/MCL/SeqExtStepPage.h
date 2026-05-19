@@ -69,6 +69,7 @@ public:
 
   bool note_selection_active;
   bool note_selection_editing;
+  uint8_t note_selection_track;
   seq_extstep_tick_t note_selection_anchor_x;
   seq_extstep_tick_t note_selection_x;
   int16_t note_selection_anchor_y;

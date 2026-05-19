@@ -30,13 +30,13 @@ class ExtNoteClip {
 public:
   uint8_t mode;
   uint8_t count;
-  seq_extstep_tick_t width_ticks;
+  uint16_t ticks_per_step;
   ExtNoteClipEvent notes[EXT_NOTE_CLIP_MAX_NOTES];
 
   void clear(uint8_t mode_ = EXT_NOTE_CLIP_NONE) {
     mode = mode_;
     count = 0;
-    width_ticks = 0;
+    ticks_per_step = 0;
   }
 
   bool add(const ExtNoteClipEvent &note) {

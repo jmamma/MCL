@@ -105,14 +105,70 @@ bool note_range_for_current_page(const SeqExtStepPage &page,
   return true;
 }
 
+seq_extstep_tick_t scale_clip_tick(seq_extstep_tick_t value,
+                                   uint16_t source_ticks_per_step,
+                                   uint16_t dest_ticks_per_step) {
+  if (source_ticks_per_step == 0 ||
+      source_ticks_per_step == dest_ticks_per_step) {
+    return value;
+  }
+  int32_t scaled = (int32_t)value * dest_ticks_per_step;
+  if (value >= 0) {
+    scaled += source_ticks_per_step / 2;
+  } else {
+    scaled -= source_ticks_per_step / 2;
+  }
+  return (seq_extstep_tick_t)(scaled / source_ticks_per_step);
+}
+
+bool note_selection_matches_active_track(const SeqExtStepPage &page) {
+  return !page.note_selection_active ||
+         page.note_selection_track == SeqExtStepTrackRef::active_track_index();
+}
+
+bool add_note_to_clip(ExtNoteClip &clip,
+                      seq_extstep_tick_t tick_offset,
+                      seq_extstep_tick_t note_length,
+                      uint8_t pitch_offset,
+                      uint8_t velocity,
+                      uint8_t condition) {
+  if (note_length <= 0) {
+    return true;
+  }
+  ExtNoteClipEvent out;
+  out.tick_offset = tick_offset;
+  out.note_length = note_length;
+  out.pitch_offset = pitch_offset;
+  out.velocity = velocity;
+  out.condition = condition;
+  return clip.add(out);
+}
+
+bool add_clipped_note_to_clip(ExtNoteClip &clip,
+                              const ExtNoteRange &range,
+                              seq_extstep_tick_t note_start,
+                              seq_extstep_tick_t note_end,
+                              uint8_t pitch,
+                              uint8_t velocity,
+                              uint8_t condition) {
+  seq_extstep_tick_t copy_start =
+      note_start < range.start_tick ? range.start_tick : note_start;
+  seq_extstep_tick_t copy_end =
+      note_end > range.end_tick ? range.end_tick : note_end;
+  if (copy_end <= copy_start) {
+    return true;
+  }
+  return add_note_to_clip(clip, copy_start - range.start_tick,
+                          copy_end - copy_start, pitch, velocity, condition);
+}
+
 bool copy_note_range_to_clip(SeqExtStepTrackApi track,
                              const ExtNoteRange &range,
                              seq_extstep_tick_t roll_length,
                              uint8_t mode) {
   ExtNoteClip &clip = mcl_clipboard.ext_note_clip;
-  clip.mode = mode;
-  clip.count = 0;
-  clip.width_ticks = range.end_tick - range.start_tick;
+  clip.clear(mode);
+  clip.ticks_per_step = track.ticks_per_step();
   bool rectangle_clip = mode == EXT_NOTE_CLIP_RECTANGLE;
 
   uint16_t ev_idx = 0;
@@ -131,9 +187,6 @@ bool copy_note_range_to_clip(SeqExtStepTrackApi track,
 
       seq_extstep_tick_t note_start = track.event_tick(step, ev);
       if (note_start < 0) note_start += roll_length;
-      if (note_start < range.start_tick || note_start >= range.end_tick) {
-        continue;
-      }
 
       uint16_t note_off_idx = ev_idx;
       uint8_t off_step = track.search_note_off(pitch, step, note_off_idx,
@@ -146,18 +199,30 @@ bool copy_note_range_to_clip(SeqExtStepTrackApi track,
       seq_extstep_tick_t note_end = track.event_tick(off_step, ev_off);
       if (note_end < 0) note_end += roll_length;
       if (note_end <= note_start) note_end += roll_length;
-      seq_extstep_tick_t note_length = note_end - note_start;
-      if (note_length <= 0) {
+      uint8_t note_velocity = track.note_velocity(step, ev_idx);
+      if (rectangle_clip) {
+        if (note_start < range.start_tick || note_start >= range.end_tick) {
+          continue;
+        }
+        if (!add_note_to_clip(clip, note_start - range.start_tick,
+                              note_end - note_start, pitch - range.note_min,
+                              note_velocity, ev.cond_id)) {
+          return true;
+        }
         continue;
       }
-
-      ExtNoteClipEvent out;
-      out.tick_offset = note_start - range.start_tick;
-      out.note_length = note_length;
-      out.pitch_offset = rectangle_clip ? pitch - range.note_min : pitch;
-      out.velocity = track.note_velocity(step, ev_idx);
-      out.condition = ev.cond_id;
-      if (!clip.add(out)) {
+      if (note_end > roll_length) {
+        if (!add_clipped_note_to_clip(clip, range, note_start, roll_length,
+                                      pitch, note_velocity, ev.cond_id)) {
+          return true;
+        }
+        if (!add_clipped_note_to_clip(clip, range, 0,
+                                      note_end - roll_length, pitch,
+                                      note_velocity, ev.cond_id)) {
+          return true;
+        }
+      } else if (!add_clipped_note_to_clip(clip, range, note_start, note_end,
+                                           pitch, note_velocity, ev.cond_id)) {
         return true;
       }
     }
@@ -368,6 +433,7 @@ void SeqExtStepPage::init() {
   key_interface.on();
   key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
+  clear_note_selection();
   last_cur_x = -1;
   config_menu_entries();
   config_encoders();
@@ -381,6 +447,7 @@ void SeqExtStepPage::init() {
 }
 
 void SeqExtStepPage::cleanup() {
+  clear_note_selection();
   SeqPage::cleanup();
   SeqExtStepTrackRef::set_panel_rec_mode(0);
 #ifdef PLATFORM_TBD
@@ -665,6 +732,7 @@ void SeqExtStepPage::draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond
 
 void SeqExtStepPage::draw_note_selection() {
   if (!note_selection_active || pianoroll_mode != 0) return;
+  if (!note_selection_matches_active_track(*this)) return;
 
   ExtNoteRange range;
   if (!normalize_note_selection(*this, range)) return;
@@ -992,6 +1060,9 @@ void SeqExtStepPage::pos_cur_w(seq_extstep_tick_t diff) {
 
 void SeqExtStepPage::begin_note_selection() {
   if (pianoroll_mode != 0) return;
+  if (!note_selection_matches_active_track(*this)) {
+    clear_note_selection();
+  }
   if (!note_selection_active) {
     note_selection_anchor_x = cur_x;
     note_selection_x = cur_x + cur_w;
@@ -1000,8 +1071,11 @@ void SeqExtStepPage::begin_note_selection() {
     }
     note_selection_anchor_y = cur_y;
     note_selection_y = cur_y;
-    note_selection_saved_w = cur_w;
+    note_selection_track = SeqExtStepTrackRef::active_track_index();
     note_selection_active = true;
+  }
+  if (!note_selection_editing) {
+    note_selection_saved_w = cur_w;
   }
   note_selection_editing = true;
 }
@@ -1041,7 +1115,11 @@ void SeqExtStepPage::clear_note_selection() {
 }
 
 bool SeqExtStepPage::copy_note_selection() {
-  if (!note_selection_active || pianoroll_mode != 0) return false;
+  if (!note_selection_active || pianoroll_mode != 0 ||
+      !note_selection_matches_active_track(*this)) {
+    clear_note_selection();
+    return false;
+  }
   ExtNoteRange range;
   if (!normalize_note_selection(*this, range)) return false;
   return copy_note_range_to_clip(active_ext_step_track(), range, roll_length,
@@ -1061,7 +1139,11 @@ bool SeqExtStepPage::copy_note_page() {
 }
 
 bool SeqExtStepPage::clear_note_selection_notes() {
-  if (!note_selection_active || pianoroll_mode != 0) return false;
+  if (!note_selection_active || pianoroll_mode != 0 ||
+      !note_selection_matches_active_track(*this)) {
+    clear_note_selection();
+    return false;
+  }
   ExtNoteRange range;
   if (!normalize_note_selection(*this, range)) return false;
   auto active_track = active_ext_step_track();
@@ -1098,15 +1180,20 @@ bool SeqExtStepPage::paste_note_clip() {
   if (!clip.valid() || pianoroll_mode != 0) return false;
 
   auto active_track = active_ext_step_track();
+  uint16_t dest_ticks_per_step = active_track.ticks_per_step();
+  uint16_t source_ticks_per_step =
+      clip.ticks_per_step ? clip.ticks_per_step : dest_ticks_per_step;
   seq_extstep_tick_t paste_tick = cur_x;
   int16_t paste_pitch = cur_y;
   bool rectangle_clip = clip.mode == EXT_NOTE_CLIP_RECTANGLE;
   if (clip.mode == EXT_NOTE_CLIP_PAGE) {
-    paste_tick = page_start_for_cursor(cur_x, active_track.ticks_per_step());
-    seq_extstep_tick_t clear_end = paste_tick + clip.width_ticks;
-    if (clear_end > roll_length) clear_end = roll_length;
-    if (clear_end > paste_tick) {
-      seq_extstep_tick_t width = clear_end - paste_tick;
+    ExtNoteRange dest_range;
+    if (!note_range_for_current_page(*this, dest_ticks_per_step, dest_range)) {
+      return false;
+    }
+    paste_tick = dest_range.start_tick;
+    if (dest_range.end_tick > paste_tick) {
+      seq_extstep_tick_t width = dest_range.end_tick - paste_tick;
       for (uint8_t note = 0; note < 128; note++) {
         active_track.delete_note(paste_tick, width - 1, note);
       }
@@ -1116,10 +1203,15 @@ bool SeqExtStepPage::paste_note_clip() {
   bool pasted = false;
   for (uint8_t i = 0; i < clip.count; i++) {
     const ExtNoteClipEvent &note = clip.notes[i];
-    seq_extstep_tick_t dst_tick = paste_tick + note.tick_offset;
+    seq_extstep_tick_t dst_tick =
+        paste_tick + scale_clip_tick(note.tick_offset, source_ticks_per_step,
+                                     dest_ticks_per_step);
     if (dst_tick < 0 || dst_tick >= roll_length) continue;
 
-    seq_extstep_tick_t note_length = note.note_length;
+    seq_extstep_tick_t note_length =
+        scale_clip_tick(note.note_length, source_ticks_per_step,
+                        dest_ticks_per_step);
+    if (note_length <= 0) note_length = 1;
     if (dst_tick + note_length >= roll_length) {
       note_length = roll_length - dst_tick - 1;
     }
@@ -1176,6 +1268,7 @@ void SeqExtStepPage::loop() {
   if (show_seq_menu) {
     display_mute_mask(SeqExtStepTrackRef::mute_mask_device(), 8);
     if (last_pianoroll_mode != pianoroll_mode) {
+      clear_note_selection();
 
       if (is_lockeditor) {
         auto active_locks = active_track.locks();
@@ -1477,14 +1570,16 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         switch (key) {
         case MDX_KEY_COPY: {
           if (scale_down) {
-            copy_note_page();
-            oled_display.textbox_P(mclstr_copy, mclstr_page);
+            if (copy_note_page()) {
+              oled_display.textbox_P(mclstr_copy, mclstr_page);
+            }
             key_interface.ignoreNextEvent(MDX_KEY_SCALE);
             return true;
           }
           if (note_selection_active) {
-            copy_note_selection();
-            oled_display.textbox_P(mclstr_copy, mclstr_note);
+            if (copy_note_selection()) {
+              oled_display.textbox_P(mclstr_copy, mclstr_note);
+            }
             return true;
           }
           break;
@@ -1492,29 +1587,33 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_PASTE: {
           if (scale_down) {
             if (mcl_clipboard.ext_note_clip.mode == EXT_NOTE_CLIP_PAGE) {
-              paste_note_clip();
-              oled_display.textbox_P(mclstr_paste, mclstr_page);
+              if (paste_note_clip()) {
+                oled_display.textbox_P(mclstr_paste, mclstr_page);
+              }
             }
             key_interface.ignoreNextEvent(MDX_KEY_SCALE);
             return true;
           }
           if (mcl_clipboard.ext_note_clip.mode == EXT_NOTE_CLIP_RECTANGLE) {
-            paste_note_clip();
-            oled_display.textbox_P(mclstr_paste, mclstr_note);
+            if (paste_note_clip()) {
+              oled_display.textbox_P(mclstr_paste, mclstr_note);
+            }
             return true;
           }
           break;
         }
         case MDX_KEY_CLEAR: {
           if (scale_down) {
-            clear_note_page();
-            oled_display.textbox_P(mclstr_clear, mclstr_page);
+            if (clear_note_page()) {
+              oled_display.textbox_P(mclstr_clear, mclstr_page);
+            }
             key_interface.ignoreNextEvent(MDX_KEY_SCALE);
             return true;
           }
           if (note_selection_active) {
-            clear_note_selection_notes();
-            oled_display.textbox_P(mclstr_clear, mclstr_note);
+            if (clear_note_selection_notes()) {
+              oled_display.textbox_P(mclstr_clear, mclstr_note);
+            }
             return true;
           }
           break;
