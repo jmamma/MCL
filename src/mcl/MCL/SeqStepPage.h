@@ -16,11 +16,11 @@ public:
 class SeqStepPage : public SeqPage {
 
 public:
-  bool show_pitch = false;
-  bool reset_on_release = false;
+  bool show_pitch;
+  bool reset_on_release;
   bool update_params_queue;
-  bool prepare = false;
-  bool page_copy = 0;
+  bool prepare;
+  bool page_copy;
 
   uint8_t pitch_param;
   uint16_t ignore_release;

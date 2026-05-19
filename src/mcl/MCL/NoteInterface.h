@@ -18,7 +18,7 @@ class MidiClass;
 
 class NoteInterfaceMidiEvents : public MidiCallback {
 public:
-  bool state = false;
+  bool state;
   void setup_callbacks();
   void remove_callbacks();
 
@@ -39,7 +39,7 @@ public:
   uint32_t notes_ignore;
   uint8_t last_note;
   uint16_t note_hold[MIDI_PORT_COUNT + 1];
-  bool note_proceed = false;
+  bool note_proceed;
   bool state = true;
   void init_notes();
   void setup();

@@ -20,8 +20,8 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
                   Encoder *e4 = NULL) : FileBrowserPage(e1, e2, e3, e4),
                                         MidiSysexListenerClass(NULL, 0, 0x20, 0x3c) {}
 
-  uint8_t pending_action = 0;
-  bool show_ram_slots = false;
+  uint8_t pending_action;
+  bool show_ram_slots;
 
   uint8_t old_cur_row = 255;
 

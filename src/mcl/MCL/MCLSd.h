@@ -46,9 +46,9 @@ public:
 
 class MCLSd {
   public:
-  uint16_t write_fail = 0;
-  uint16_t read_fail = 0;
-  bool sd_state = false;
+  uint16_t write_fail;
+  uint16_t read_fail;
+  bool sd_state;
   char mcl_root[32];
   bool sd_init();
   bool load_init();

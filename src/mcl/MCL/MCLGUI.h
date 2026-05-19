@@ -30,7 +30,7 @@ public:
   */
 
   uint8_t s_progress_cookie = 0b00110011;
-  uint8_t s_progress_count = 0;
+  uint8_t s_progress_count;
 
   void put_value_at(uint8_t value, char *str, bool fixed = false);
   void put_value_at2(uint8_t value, char *str) { put_value_at(value, str, true); }

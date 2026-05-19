@@ -70,7 +70,7 @@ class MidiClass;
 class KeyInterface : public MidiSysexListenerClass {
 
 public:
-  bool state = false;
+  bool state;
   uint64_t cmd_key_state;
   uint64_t ignore_next_mask;
   uint16_t last_clock;

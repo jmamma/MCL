@@ -36,7 +36,7 @@ public:
   MidiDeviceGrid grids[NUM_GRIDS];
 
   void chdir_projects();
-  bool project_loaded = false;
+  bool project_loaded;
   void setup();
   bool new_project(const char *newprj);
   bool new_project_prompt(const char *parent = nullptr) NOINLINE();
@@ -136,7 +136,7 @@ private:
                                    GridRowHeader *grid_x_header,
                                    bool *converted_track0_lfo,
                                    bool migrate_legacy_aux_layout);
-  GridIndex last_grid_ = 0;
+  GridIndex last_grid_;
 };
 
 extern Project proj;

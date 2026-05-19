@@ -77,7 +77,7 @@ class LoadQueue {
 class GridTask : public Task {
 
 public:
-  bool stop_hard_callback = false;
+  bool stop_hard_callback;
 
   char kit_names[NUM_DEVS][16];
   bool send_kit_name;
@@ -85,7 +85,7 @@ public:
   GridRow last_active_row;
   GridRow next_active_row;
   bool chain_behaviour;
-  bool update = false;
+  bool update;
 
   GridRow load_row_midi = 255;
   GridRow load_row = 255;

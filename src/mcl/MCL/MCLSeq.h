@@ -37,7 +37,7 @@
 
 class MCLSeqMidiEvents : public MidiCallback {
 public:
-  bool state = false;
+  bool state;
   void setup_callbacks();
   void remove_callbacks();
 
@@ -108,8 +108,8 @@ public:
   LFOSeqTrack grid_y_lfo_tracks[NUM_GRID_Y_LFO_TRACKS];
   static constexpr uint8_t num_grid_y_lfo_tracks = NUM_GRID_Y_LFO_TRACKS;
 #endif
-  uint16_t lfo_track_trig_mask_primary = 0;
-  uint16_t lfo_track_trig_mask_secondary = 0;
+  uint16_t lfo_track_trig_mask_primary;
+  uint16_t lfo_track_trig_mask_secondary;
 
   void set_lfo_track_trig(DeviceIdx device_idx, uint8_t track) {
     if (track >= 16) {
@@ -149,7 +149,7 @@ public:
 
   MCLSeqMidiEvents midi_events;
 
-  bool state = false;
+  bool state;
 #if !defined(__AVR__)
   uint8_t legacy_tick_counter = 0;
 #endif

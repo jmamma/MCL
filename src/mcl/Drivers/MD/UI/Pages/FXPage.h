@@ -29,7 +29,7 @@ public:
   static PageIndex last_page;
 
   bool handleEvent(gui_event_t *event);
-  bool midi_state = false;
+  bool midi_state;
 
   const char *fx_page_title;
   fx_param_t *params;

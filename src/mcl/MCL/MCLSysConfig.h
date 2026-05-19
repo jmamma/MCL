@@ -85,7 +85,7 @@ public:
 
 class MCLSysConfig : public MCLSysConfigData {
 public:
-  uint16_t cfg_save_lastclock = 0;
+  uint16_t cfg_save_lastclock;
   File cfgfile;
   bool write_cfg();
   bool cfg_init();

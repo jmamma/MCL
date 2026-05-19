@@ -60,10 +60,10 @@ private:
 
 class MixerPage : public LightPage {
 public:
-  uint8_t level_pressmode = 0;
+  uint8_t level_pressmode;
   uint8_t disp_levels[16];
   uint8_t ext_disp_levels[16];
-  bool mute_toggle = 0;
+  bool mute_toggle;
   uint8_t ext_key_down;
   DeviceIdx mixer_device_idx = DeviceIdx::Primary;
   MixerTarget mixer_target;

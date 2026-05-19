@@ -13,7 +13,7 @@ class MidiClass;
 class MDTrackSelect : public MidiSysexListenerClass {
 
 public:
-  bool state = false;
+  bool state;
 
   MDTrackSelect() : MidiSysexListenerClass(NULL, 0x7F, 0x0E) {}
   void setup(MidiClass *_midi);

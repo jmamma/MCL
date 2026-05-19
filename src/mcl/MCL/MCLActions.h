@@ -70,13 +70,13 @@ class MCLActions : public LinkModeData {
 public:
   uint8_t do_kit_reload;
   int writepattern;
-  uint8_t write_original = 0;
+  uint8_t write_original;
 
   uint8_t patternswitch = PATTERN_UDEF;
 
-  uint16_t start_clock16th = 0;
-  uint32_t start_clock32th = 0;
-  uint32_t start_clock96th = 0;
+  uint16_t start_clock16th;
+  uint32_t start_clock32th;
+  uint32_t start_clock96th;
   uint8_t store_behaviour;
 
   MCLActions() {}

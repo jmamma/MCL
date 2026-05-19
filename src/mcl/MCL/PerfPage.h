@@ -21,16 +21,16 @@ public:
 
   uint8_t undo = 255;
 
-  uint8_t learn = 0;
+  uint8_t learn;
   uint8_t last_page_mode;
 
-  uint8_t page_mode = 0;
-  uint8_t perf_id = 0;
+  uint8_t page_mode;
+  uint8_t perf_id;
 
-  uint16_t last_mask = 0;
-  uint16_t last_blink_mask = 0;
+  uint16_t last_mask;
+  uint16_t last_blink_mask;
 
-  bool show_menu = false;
+  bool show_menu;
 
   PerfEncoder *perf_encoders[4];
 

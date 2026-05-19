@@ -43,8 +43,8 @@ private:
   bool move_to_current_folder();
   bool is_project_dir(const char *entry) const;
   void focus_current_project();
-  bool move_destination_mode = false;
-  char move_source_path[PRJ_PATH_LEN] = {'\0'};
+  bool move_destination_mode;
+  char move_source_path[PRJ_PATH_LEN];
 };
 
 #endif /* LOADPROJECTPAGE_H__ */

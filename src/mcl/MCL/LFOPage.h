@@ -23,7 +23,7 @@ public:
   }
 
   bool handleEvent(gui_event_t *event);
-  bool midi_state = false;
+  bool midi_state;
 
   uint8_t page_mode;
   uint8_t page_id;

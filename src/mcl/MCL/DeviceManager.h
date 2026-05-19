@@ -57,10 +57,10 @@ public:
 private:
   void set_device_for_port(uint8_t port, MidiDevice *device);
 
-  MidiDevice *physical_[MIDI_PORT_COUNT] = {};
+  MidiDevice *physical_[MIDI_PORT_COUNT];
   uint8_t logical_idx_[MIDI_PORT_COUNT];
-  MidiDevice *primary_ = nullptr;
-  MidiDevice *secondary_ = nullptr;
+  MidiDevice *primary_;
+  MidiDevice *secondary_;
 #ifdef PLATFORM_TBD
   MidiDevice *active_ui_device_ = nullptr;
   uint8_t active_ui_slot_ = UI_SLOT_NONE;

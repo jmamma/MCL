@@ -11,7 +11,7 @@ class PolyPage : public LightPage {
 public:
   uint8_t selected_group = PTC_GROUP_OFF;
   uint8_t first_held_track = 255;
-  uint16_t selected_tracks = 0;
+  uint16_t selected_tracks;
 
   PolyPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)

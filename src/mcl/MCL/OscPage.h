@@ -19,10 +19,10 @@ public:
   MCLEncoder enc2;
   MCLEncoder enc3;
   MCLEncoder enc4;
-  bool show_freq = false;
+  bool show_freq;
   uint8_t osc_waveform;
 
-  uint8_t sample_number = 0;
+  uint8_t sample_number;
   uint8_t scanline_width;
   uint8_t sine_levels[16];
   uint8_t usr_values[16];

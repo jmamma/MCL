@@ -22,7 +22,7 @@ extern const scale_t * const scales[24] PROGMEM;
 
 class SeqPtcMidiEvents : public MidiCallback {
 public:
-  bool state = false;
+  bool state;
 #ifdef PLATFORM_TBD
   SeqExtMidiControlState control_state;
 #endif
@@ -49,8 +49,8 @@ public:
 class SeqPtcPage : public SeqPage, public ClockCallback {
 
 public:
-  bool re_init = false;
-  uint8_t transpose = 0;
+  bool re_init;
+  uint8_t transpose;
   int8_t voice_pitch[MAX_POLY_NOTES];
   uint8_t voice_order[MAX_POLY_NOTES];
   bool voice_active[MAX_POLY_NOTES];

@@ -25,20 +25,20 @@ public:
   char slot_labels[MAX_VISIBLE_ROWS][GRID_WIDTH][3];
 #endif
 
-  GridColumn col = 0;
-  GridRow row = 0;
-  GridColumn cur_col = 0;
-  GridRow cur_row = 0;
+  GridColumn col;
+  GridRow row;
+  GridColumn cur_col;
+  GridRow cur_row;
   GridColumn old_col = 255;
-  uint8_t bank = 0;
+  uint8_t bank;
 
   bool reload_slot_models;
-  bool show_slot_menu = false;
-  bool write_cfg = false;
+  bool show_slot_menu;
+  bool write_cfg;
 
   GridRow active_slots[NUM_SLOTS];
 
-  GridIndex cur_grid = 0;
+  GridIndex cur_grid;
   uint8_t slot_clear;
 
   uint8_t slot_apply;
@@ -52,7 +52,7 @@ public:
 
   uint16_t grid_lastclock;
 
-  GridRow row_scan = 0;
+  GridRow row_scan;
   uint64_t row_states[2];
 
   PageIndex last_page = NULL_PAGE;
@@ -61,7 +61,7 @@ public:
   //   0 = closed
   //   1 = bank held (preview, MD-bank-key entry)
   //   2 = pattern stage (trig press loads/chains in current bank)
-  uint8_t bank_popup = 0;
+  uint8_t bank_popup;
   uint16_t bank_popup_lastclock;
   uint16_t bank_popup_loadmask;
 #ifdef PLATFORM_TBD

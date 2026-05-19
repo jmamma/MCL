@@ -17,7 +17,7 @@ public:
   void display();
   void setup() {}
 
-  bool return_state = false;
+  bool return_state;
 };
 
 extern QuestionDialogPage questiondialog_page;

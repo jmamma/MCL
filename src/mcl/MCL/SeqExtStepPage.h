@@ -16,8 +16,8 @@ class MidiClass;
 void ext_pattern_len_handler(Encoder *enc);
 class SeqExtStepMidiEvents : public MidiCallback {
 public:
-  bool state = false;
-  MidiClass *bound_midi = nullptr;
+  bool state;
+  MidiClass *bound_midi;
   SeqExtMidiControlState control_state;
 
   void setup_callbacks();
@@ -40,7 +40,7 @@ public:
   static constexpr uint8_t fov_h = 28;
   int16_t fov_y;
 
-  seq_extstep_tick_t fov_offset = 0;
+  seq_extstep_tick_t fov_offset;
   seq_extstep_tick_t fov_length;
 
   static constexpr uint8_t draw_y = 2;
