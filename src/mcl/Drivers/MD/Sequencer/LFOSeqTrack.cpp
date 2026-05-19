@@ -304,6 +304,7 @@ void LFOSeqTrack::reset_runtime() {
   phase = 0;
   phase_inc = speed_to_phase_increment(speed, speed_multiplier());
   step_count = 0;
+  legacy_tick_counter = 0;
   uint16_t seed_base = ((uint16_t)static_cast<uint8_t>(device_idx) * 0x0101U) +
                        ((uint16_t)track_number * 0x0031U);
   random_state[0] = seed_base + 0x1234U;
@@ -549,7 +550,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   if (current_mode == LFO_MODE_TRACK_TRIG &&
       mcl_seq.lfo_track_trig_fired(device_idx, track_number)) {
     reset_phase();
-  } else if ((MidiClock.mod12_counter == 0) &&
+  } else if ((legacy_tick_counter == 0) &&
              (current_mode != LFO_MODE_FREE) &&
              current_mode != LFO_MODE_TRACK_TRIG &&
              IS_BIT_SET64(pattern_mask, step_count)) {
@@ -581,18 +582,21 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
 
   advance_phase(current_mode);
 
-  if (MidiClock.mod12_counter == 11) {
+  if (legacy_tick_counter >= 11) {
+    legacy_tick_counter = 0;
     uint8_t seq_length = length ? length : 16;
     if (step_count >= seq_length - 1) {
       step_count = 0;
     } else {
       step_count++;
     }
+  } else {
+    legacy_tick_counter++;
   }
 }
 
 void LFOSeqTrack::reset_params() {
-//  while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {}; 
+//  while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {};
 
   MidiUartClass *output_uart = device_idx == DeviceIdx::Secondary
                                    ? mcl_seq.secondary_output

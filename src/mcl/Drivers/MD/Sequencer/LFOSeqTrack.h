@@ -101,6 +101,7 @@ public:
   uint16_t random_state[2];
   int8_t state_phase;
   int8_t random_value;
+  uint8_t legacy_tick_counter;
   uint8_t last_wav_value[NUM_LFO_PARAMS];
 
   static const uint8_t wav_tables[LFO_TABLE_COUNT][WAV_LENGTH] PROGMEM;
