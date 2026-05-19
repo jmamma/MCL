@@ -153,7 +153,8 @@ echo "[mcl-wasm] compiling → ${WASM}"
     -Wl,--no-entry \
     -Wl,--export-dynamic \
     -Wl,--export=mcl_setup \
-    -Wl,--export=mcl_tick \
+    -Wl,--export=mcl_tick_audio \
+    -Wl,--export=mcl_tick_gui \
     -Wl,--export=mcl_framebuffer_offset \
     -Wl,--export=mcl_framebuffer_stride \
     -Wl,--export=mcl_framebuffer_width \

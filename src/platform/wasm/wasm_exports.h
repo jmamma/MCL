@@ -17,15 +17,34 @@
 extern "C" {
 #endif
 
-// Run MCL's Arduino-style setup() once. Idempotent. Host must call this
-// before mcl_tick(). Runs on the host's UI/timer thread; never on the
-// audio thread.
+// Run MCL's Arduino-style setup() once. Idempotent. Host calls before
+// any mcl_tick_*. May run on either the audio or the message thread.
 void mcl_setup(void);
 
-// Run one iteration of MCL's Arduino-style loop(). Drive at ~60 Hz from
-// a juce::Timer on the host's UI thread. Single-threaded — never call
-// concurrently with mcl_setup() or another mcl_tick().
-void mcl_tick(void);
+// Audio-thread entry. Called once per audio block from
+// PluginProcessor::processBlock. `elapsed_us` is the wall-clock
+// microseconds since the previous call.
+//
+// Replaces what timer1 (1 kHz) and timer2 (5 kHz) ISRs do on hardware:
+//   - Advances g_clock_ms/g_clock_fast by the elapsed time.
+//   - Fires MidiClock.handleInternalTimerTick / increment192Counter
+//     for each 200us slice that elapsed (gated by interp_budget).
+//   - Calls mcl_seq.seq() whenever a div192 tick interpolates (softirq1).
+//   - Drains incoming MIDI via handleIncomingMidi() (softirq2).
+//
+// Real-time-safe. No file I/O, no allocations beyond what MCL's
+// sequencer already does.
+void mcl_tick_audio(uint32_t elapsed_us);
+
+// GUI-rate entry. Audio thread calls this every Nth block (rate-
+// limited internally to ~60 Hz). Runs encoder/key polling, page
+// display(), framebuffer rasterisation. Runs in the same thread as
+// mcl_tick_audio — single-threaded wasm, no locks.
+//
+// May allocate / touch the SD shim / be slow. The audio thread budget
+// must accommodate the worst frame, otherwise occasional dropouts.
+// Typical MCL display update is well under 1 ms on a desktop CPU.
+void mcl_tick_gui(void);
 
 // Linear-memory offset of MCL's framebuffer (128 × oled_height × 1bpp,
 // Adafruit_GFX layout). Host translates the offset into a wasm-linear-

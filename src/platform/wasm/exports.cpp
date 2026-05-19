@@ -15,6 +15,9 @@
 #include "oled.h"
 #include "MidiUart.h"
 #include "GUI_hardware.h"
+#include "MidiClock.h"
+#include "MCL.h"
+#include "MCLSeq.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -26,6 +29,15 @@ extern MidiUartClass    MidiUart2;
 extern MidiUartUSBClass MidiUartUSB;
 extern EncodersClass    Encoders;
 extern ButtonsClass     Buttons;
+extern MidiClockClass   MidiClock;
+extern MCLSeq           mcl_seq;
+extern MCL              mcl;
+extern void handleIncomingMidi();
+
+extern volatile uint16_t g_clock_ms;
+extern volatile uint16_t g_clock_fast;
+extern volatile uint16_t g_clock_ticks;
+extern volatile uint16_t g_clock_minutes;
 
 // ABI version. Bump major when removing/renaming/changing signatures.
 static constexpr uint16_t MCL_ABI_MAJOR = 1;
@@ -34,7 +46,70 @@ static constexpr uint16_t MCL_ABI_MINOR = 0;
 // ---- Lifecycle -----------------------------------------------------------
 
 extern "C" void mcl_setup(void) { mcl_desktop_setup(); }
-extern "C" void mcl_tick (void) { mcl_desktop_tick();  }
+
+// Audio-thread entry. Catches up MCL's timer-ISR equivalents for the
+// elapsed period, then dispatches the softirq-equivalent work
+// (sequencer step firing + incoming MIDI handling). Replicates the
+// rp2040/irqs.cpp:timer1_handler + timer2_handler + softirq1 + softirq2
+// behaviour without an actual ISR.
+extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
+    if (elapsed_us == 0) return;
+
+    // timer2 work (5 kHz on hardware → one tick per 200 µs).
+    constexpr uint32_t kTimer2PeriodUs = 200;
+    uint32_t fast_ticks = elapsed_us / kTimer2PeriodUs;
+    bool fired_step = false;
+    while (fast_ticks--) {
+        g_clock_fast++;
+
+        // handleInternalTimerTick is PLATFORM_TBD-only on hardware (master
+        // clock generation). Skipped here — desktop/wasm follow external
+        // clock or run unsynchronised.
+
+        MidiClock.div192th_countdown++;
+        if (MidiClock.state == MidiClockClass::STARTED &&
+            MidiClock.div192_time > 0 &&
+            MidiClock.div192th_countdown >= MidiClock.div192_time &&
+            MidiClock.interp_budget > 0) {
+            MidiClock.increment192Counter();
+            MidiClock.div192th_countdown = 0;
+            MidiClock.interp_budget--;
+            fired_step = true;
+        }
+    }
+
+    // timer1 work (1 kHz on hardware → one tick per 1000 µs).
+    uint32_t ms_ticks = elapsed_us / 1000;
+    while (ms_ticks--) {
+        g_clock_ms++;
+        g_clock_ticks++;
+        if (g_clock_ticks == 60000) {
+            g_clock_ticks = 0;
+            g_clock_minutes++;
+        }
+    }
+
+    // softirq1 — sequencer step firing, dispatched once if any div192
+    // tick interpolated during catch-up. (Hardware fires softirq1 per
+    // tick; calling once at end coalesces multiple step boundaries
+    // into one sweep.)
+    if (fired_step) {
+        mcl_seq.seq();
+    }
+
+    // softirq2 — drain incoming MIDI byte streams through the per-port
+    // parsers. Cheap; runs unconditionally so byte arrivals from this
+    // audio block are visible to MCL's sequencer next tick.
+    handleIncomingMidi();
+}
+
+// GUI-rate entry. Host audio thread calls this every Nth block (rate
+// limit to ~60 Hz). Mirrors what MCL::loop() does on hardware: UI
+// polling + page display + framebuffer rasterisation.
+extern "C" void mcl_tick_gui(void) {
+    GUI_hardware.poll();
+    mcl.loop();
+}
 
 // ---- Framebuffer ---------------------------------------------------------
 //
