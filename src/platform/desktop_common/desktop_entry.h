@@ -31,11 +31,13 @@ void mcl_inject_midi(const uint8_t* data, size_t len);
 size_t mcl_drain_midi_out(uint8_t* dst, size_t cap);
 
 // Pointer to MCL's monochrome framebuffer. Layout is Adafruit_GFX's internal
-// format (row-major, vertically-packed bytes). 128 x oled-height pixels.
-// May return null before mcl_desktop_setup() runs.
+// format (row-major, vertically-packed bytes). 128 × oled-height pixels.
+// May return null before mcl_desktop_setup() runs. Returns uint32 sizes
+// to share a return-type signature with the wasm-ABI mcl_framebuffer_*
+// exports (see ../wasm/wasm_exports.h).
 const uint8_t* mcl_framebuffer(void);
-uint16_t       mcl_framebuffer_width(void);
-uint16_t       mcl_framebuffer_height(void);
+uint32_t       mcl_framebuffer_width(void);
+uint32_t       mcl_framebuffer_height(void);
 
 #ifdef __cplusplus
 }

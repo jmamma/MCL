@@ -88,10 +88,14 @@ size_t mcl_drain_midi_out(uint8_t* /*dst*/, size_t /*cap*/) {
     return 0;
 }
 
+// Framebuffer pointer is meaningful only on the desktop static-link
+// path; wasm uses the mcl_framebuffer_offset export in exports.cpp.
+#ifndef PLATFORM_WASM
 const uint8_t* mcl_framebuffer(void) {
     // TODO(step 5+): return oled_display.getBuffer() once oled is wired up.
     return nullptr;
 }
 
-uint16_t mcl_framebuffer_width(void)  { return 128; }
-uint16_t mcl_framebuffer_height(void) { return 64;  }
+uint32_t mcl_framebuffer_width(void)  { return 128; }
+uint32_t mcl_framebuffer_height(void) { return 64;  }
+#endif

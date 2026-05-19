@@ -152,6 +152,18 @@ echo "[mcl-wasm] compiling → ${WASM}"
     "${INCLUDES[@]}" \
     -Wl,--no-entry \
     -Wl,--export-dynamic \
+    -Wl,--export=mcl_setup \
+    -Wl,--export=mcl_tick \
+    -Wl,--export=mcl_framebuffer_offset \
+    -Wl,--export=mcl_framebuffer_stride \
+    -Wl,--export=mcl_framebuffer_width \
+    -Wl,--export=mcl_framebuffer_height \
+    -Wl,--export=mcl_midi_in_push \
+    -Wl,--export=mcl_midi_out_pop \
+    -Wl,--export=mcl_input_set_button_mask \
+    -Wl,--export=mcl_input_add_encoder_delta \
+    -Wl,--export=mcl_input_set_encoder_button \
+    -Wl,--export=mcl_abi_version \
     -Wl,--allow-undefined \
     -o "${WASM}" \
     "${MCL_CPP[@]}" \
