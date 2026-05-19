@@ -1,0 +1,8 @@
+// cmath — C++ wrapper.
+#pragma once
+#include <math.h>
+namespace std {
+    using ::sin; using ::cos; using ::tan; using ::sqrt; using ::fabs;
+    using ::floor; using ::ceil; using ::pow; using ::exp; using ::log;
+    using ::sinf; using ::cosf; using ::sqrtf;
+}

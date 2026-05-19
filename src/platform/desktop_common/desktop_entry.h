@@ -3,8 +3,8 @@
 // else stays inside the mcl_desktop static lib.
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -3,7 +3,7 @@
 // platform-agnostic but lives outside our include path.
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 #if !defined(__AVR__) && !defined(__int24)
 class __int24 {

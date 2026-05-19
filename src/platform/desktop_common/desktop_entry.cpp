@@ -9,9 +9,13 @@
 #include "SdFat.h"
 #include "Arduino.h"
 
+#include <string.h>
+// std::atomic requires libc++. wasm32 runs single-threaded — a plain bool
+// is enough. Desktop is also fine: setup is called once on the message
+// thread, tick from a single timer.
+#if !defined(PLATFORM_WASM)
 #include <atomic>
-#include <cstring>
-#include <mutex>
+#endif
 
 // MCL's logical clocks. On hardware these are bumped from timer ISRs;
 // on desktop nothing increments them unless we do it ourselves. The
@@ -28,7 +32,11 @@ extern void setup();
 extern void loop();
 
 namespace {
+#if defined(PLATFORM_WASM)
+bool g_setup_done = false;
+#else
 std::atomic<bool> g_setup_done{false};
+#endif
 
 void desktop_advance_clocks() {
     const unsigned long now_ms = millis();
@@ -38,10 +46,15 @@ void desktop_advance_clocks() {
 } // namespace
 
 void mcl_desktop_setup(void) {
+#if defined(PLATFORM_WASM)
+    if (g_setup_done) return;
+    g_setup_done = true;
+#else
     bool expected = false;
     if (!g_setup_done.compare_exchange_strong(expected, true)) {
         return;
     }
+#endif
     desktop_advance_clocks();
 #ifdef MCL_DESKTOP_LINK_MCL_CORE
     setup();
@@ -49,9 +62,11 @@ void mcl_desktop_setup(void) {
 }
 
 void mcl_desktop_tick(void) {
-    if (!g_setup_done.load(std::memory_order_acquire)) {
-        return;
-    }
+#if defined(PLATFORM_WASM)
+    if (!g_setup_done) return;
+#else
+    if (!g_setup_done.load(std::memory_order_acquire)) return;
+#endif
     desktop_advance_clocks();
 #ifdef MCL_DESKTOP_LINK_MCL_CORE
     loop();

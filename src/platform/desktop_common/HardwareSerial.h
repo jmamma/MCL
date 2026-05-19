@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Stream.h"
-#include <cstdio>
+#include <stdio.h>
 
 class HardwareSerial : public Stream {
 public:
@@ -14,11 +14,12 @@ public:
     int read()      override { return -1; }
     int peek()      override { return -1; }
     size_t write(uint8_t b) override {
-        std::fputc(b, stderr);
+        fputc(b, stderr);
         return 1;
     }
     size_t write(const uint8_t* buf, size_t n) override {
-        return std::fwrite(buf, 1, n, stderr);
+        for (size_t i = 0; i < n; ++i) fputc(buf[i], stderr);
+        return n;
     }
     operator bool() const { return true; }
 };

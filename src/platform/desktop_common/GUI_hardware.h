@@ -11,7 +11,7 @@
 #include "platform.h"
 #include "LED_hardware.h"
 
-#include <cstdint>
+#include <stdint.h>
 
 class SR165Class {
 public:

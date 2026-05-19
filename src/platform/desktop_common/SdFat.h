@@ -1,17 +1,17 @@
-// SdFat.h — desktop shim. Matches the subset of SdFat MCL actually uses
-// (see grep over src/mcl/MCL/MCLSd.cpp, Project.cpp). Backed by std::filesystem
-// and std::fstream. The "SD root" is the directory all "/foo" paths resolve
-// against — set via mcl_desktop_set_sd_root(); defaults to "./mcl_sd".
+// SdFat.h — desktop_common shim. Matches the subset of SdFat MCL actually
+// uses (see grep over src/mcl/MCL/MCLSd.cpp, Project.cpp).
+//
+// The interface stores opaque int32_t handles; the .cpp implementation in
+// either platform/desktop/ (std::filesystem-backed) or platform/wasm/
+// (host-import-backed) translates them. Keeping the header free of std::
+// types lets the same SdFat.h compile under wasm32 where libc++ isn't
+// available.
 #pragma once
 
 #include "Arduino.h"
 
-#include <cstdint>
-#include <cstddef>
-#include <filesystem>
-#include <fstream>
-#include <memory>
-#include <string>
+#include <stdint.h>
+#include <stddef.h>
 
 // File-open mode flags. Match SdFat values where MCL passes them around as
 // integers (MCLSd.cpp:122 O_RDWR, 254 O_READ, 257 O_RDWR | O_CREAT | O_EXCL).
@@ -43,13 +43,11 @@
 #define SDFAT_FILE_TYPE 2
 #endif
 
+#ifdef __cplusplus
+
 // Set the directory that MCL's "/" paths resolve against. Called from JUCE
 // host code (via mcl_set_sd_root in desktop_entry.h). Idempotent.
 void mcl_desktop_set_sd_root(const char* abs_path);
-
-// Internal helper: resolve an MCL-relative path (starting with '/' or a
-// relative name) against the current SD root + chdir state.
-std::filesystem::path mcl_desktop_resolve_sd_path(const char* path);
 
 class SdCard {
 public:
@@ -57,7 +55,9 @@ public:
 };
 
 // FsFile (typedef'd to File in MCLSd.h) — both a file handle and a directory
-// iterator depending on what was opened.
+// iterator depending on what was opened. The private state is just two
+// platform-opaque int32 handles plus state bits; the .cpp implementation
+// is responsible for mapping handle → file/directory.
 class FsFile {
 public:
     FsFile()  = default;
@@ -66,7 +66,7 @@ public:
     // Non-copyable; movable so APIs that return FsFile-by-value work.
     FsFile(const FsFile&)            = delete;
     FsFile& operator=(const FsFile&) = delete;
-    FsFile(FsFile&&) noexcept;
+    FsFile(FsFile&& other) noexcept            { *this = (FsFile&&)other; }
     FsFile& operator=(FsFile&&) noexcept;
 
     // Returns true on success. Mode is OR-of O_* flags. Defaults to O_READ
@@ -108,14 +108,12 @@ public:
 
     explicit operator bool() const { return open_; }
 
-private:
-    std::filesystem::path        path_;
-    std::unique_ptr<std::fstream> stream_;
-
-    bool                         open_   = false;
-    bool                         is_dir_ = false;
-    bool                         dir_iter_initialised_ = false;
-    std::filesystem::directory_iterator dir_it_;
+    // The implementation accesses these directly. Public so the per-platform
+    // .cpp doesn't need friend declarations across translation units.
+    int32_t handle_  = -1;   // file fd OR directory iterator handle
+    char    name_[64] = {0}; // last seen filename (for getName)
+    bool    open_    = false;
+    bool    is_dir_  = false;
 };
 
 class SdFat {
@@ -132,3 +130,5 @@ public:
 private:
     SdCard card_;
 };
+
+#endif  // __cplusplus

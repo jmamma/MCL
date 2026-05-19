@@ -12,7 +12,7 @@
 #include "platform.h"
 #include "helpers.h"
 
-#include <cstring>
+#include <string.h>
 
 #define NUM_DEVS 2
 
@@ -55,10 +55,10 @@ template <typename T>
 FORCED_INLINE() inline void put_bank1(volatile T* dst, T data) { *dst = data; }
 
 FORCED_INLINE() inline int memcmp_bank1(volatile void* dst, volatile const void* src, uint16_t len) {
-    return std::memcmp((void*)dst, (void*)src, len);
+    return memcmp((void*)dst, (void*)src, len);
 }
 FORCED_INLINE() inline void memcpy_bank1(volatile void* dst, volatile const void* src, uint16_t len) {
-    std::memcpy((void*)dst, (void*)src, len);
+    memcpy((void*)dst, (void*)src, len);
 }
 FORCED_INLINE() inline void put_byte_bank1(volatile uint8_t* dst, uint8_t b)      { *dst = b; }
 FORCED_INLINE() inline void put_byte_bank1_isr(volatile uint8_t* dst, uint8_t b)  { *dst = b; }
@@ -68,18 +68,18 @@ FORCED_INLINE() inline uint8_t get_byte_bank1(volatile uint8_t* dst)            
 template <typename T>
 FORCED_INLINE() inline T get_bank3(volatile T* src) { return *src; }
 FORCED_INLINE() inline void get_bank3(void* dst, volatile const void* src, uint16_t len) {
-    std::memcpy(dst, (const void*)src, len);
+    memcpy(dst, (const void*)src, len);
 }
 FORCED_INLINE() inline void put_bank3(volatile void* dst, const void* src, uint16_t len) {
-    std::memcpy((void*)dst, src, len);
+    memcpy((void*)dst, src, len);
 }
 template <typename T>
 FORCED_INLINE() inline void put_bank3(volatile T* dst, T data) { *dst = data; }
 FORCED_INLINE() inline int memcmp_bank3(volatile void* dst, volatile const void* src, uint16_t len) {
-    return std::memcmp((void*)dst, (void*)src, len);
+    return memcmp((void*)dst, (void*)src, len);
 }
 FORCED_INLINE() inline void memcpy_bank3(volatile void* dst, volatile const void* src, uint16_t len) {
-    std::memcpy((void*)dst, (void*)src, len);
+    memcpy((void*)dst, (void*)src, len);
 }
 FORCED_INLINE() inline void put_byte_bank3(volatile uint8_t* dst, uint8_t b)  { *dst = b; }
 FORCED_INLINE() inline uint8_t get_byte_bank3(volatile uint8_t* dst)          { return *dst; }

@@ -24,8 +24,17 @@
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
-#ifdef __cplusplus
+#include <ctype.h>
+// std::algorithm only needed for callers using std::min/std::max. The
+// min/max templates below are at global scope. wasm32 build doesn't have
+// libc++ available.
+#if defined(__cplusplus) && !defined(PLATFORM_WASM)
 #include <algorithm>
+#endif
+// <new> for placement-new (MCL/src/mcl/MCL/DeviceTrack.cpp:26 etc.).
+// Pulled in unconditionally on C++ so source doesn't need to include it.
+#ifdef __cplusplus
+#include <new>
 #endif
 
 // PROGMEM / flash-string family — empty on desktop. ~520 callsites across
@@ -73,19 +82,19 @@ typedef const void* PGM_VOID_P;
 #endif
 
 #ifndef memcpy_P
-#define memcpy_P(dst, src, n)  std::memcpy((dst), (src), (n))
+#define memcpy_P(dst, src, n)  memcpy((dst), (src), (n))
 #endif
 #ifndef strcpy_P
-#define strcpy_P(dst, src)     std::strcpy((dst), (src))
+#define strcpy_P(dst, src)     strcpy((dst), (src))
 #endif
 #ifndef strncpy_P
-#define strncpy_P(dst, src, n) std::strncpy((dst), (src), (n))
+#define strncpy_P(dst, src, n) strncpy((dst), (src), (n))
 #endif
 #ifndef strlen_P
-#define strlen_P(s)            std::strlen(s)
+#define strlen_P(s)            strlen(s)
 #endif
 #ifndef strcmp_P
-#define strcmp_P(a, b)         std::strcmp((a), (b))
+#define strcmp_P(a, b)         strcmp((a), (b))
 #endif
 
 // Bit helpers — AVR-flavoured names MCL uses.

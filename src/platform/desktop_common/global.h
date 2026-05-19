@@ -6,7 +6,7 @@
 // unchanged against this static lib.
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 extern const uint16_t firmware_checksum;
 

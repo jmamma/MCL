@@ -3,7 +3,7 @@
 
 #if !defined(__AVR__)
 
-#include <cstdint>
+#include <stdint.h>
 #include "platform.h"
 
 extern uint8_t get_random_byte();

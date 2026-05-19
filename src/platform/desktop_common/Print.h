@@ -7,10 +7,10 @@
 // a ring buffer; etc).
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
-#include <cstdio>
-#include <cstring>
+#include <stdint.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 
 class Print {
 public:
@@ -22,7 +22,7 @@ public:
         return n;
     }
     size_t write(const char* str) {
-        return str ? write(reinterpret_cast<const uint8_t*>(str), std::strlen(str)) : 0;
+        return str ? write(reinterpret_cast<const uint8_t*>(str), strlen(str)) : 0;
     }
     size_t write(const char* buf, size_t size) {
         return write(reinterpret_cast<const uint8_t*>(buf), size);
@@ -33,27 +33,27 @@ public:
 
     size_t print(int n, int base = 10) {
         char buf[16];
-        std::snprintf(buf, sizeof(buf), base == 16 ? "%x" : "%d", n);
+        snprintf(buf, sizeof(buf), base == 16 ? "%x" : "%d", n);
         return write(buf);
     }
     size_t print(unsigned int n, int base = 10) {
         char buf[16];
-        std::snprintf(buf, sizeof(buf), base == 16 ? "%x" : "%u", n);
+        snprintf(buf, sizeof(buf), base == 16 ? "%x" : "%u", n);
         return write(buf);
     }
     size_t print(long n, int base = 10) {
         char buf[24];
-        std::snprintf(buf, sizeof(buf), base == 16 ? "%lx" : "%ld", n);
+        snprintf(buf, sizeof(buf), base == 16 ? "%lx" : "%ld", n);
         return write(buf);
     }
     size_t print(unsigned long n, int base = 10) {
         char buf[24];
-        std::snprintf(buf, sizeof(buf), base == 16 ? "%lx" : "%lu", n);
+        snprintf(buf, sizeof(buf), base == 16 ? "%lx" : "%lu", n);
         return write(buf);
     }
     size_t print(double n, int digits = 2) {
         char buf[32];
-        std::snprintf(buf, sizeof(buf), "%.*f", digits, n);
+        snprintf(buf, sizeof(buf), "%.*f", digits, n);
         return write(buf);
     }
 

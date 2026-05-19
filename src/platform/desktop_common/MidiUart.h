@@ -13,8 +13,8 @@
 #include "MidiUartParent.h"
 #include "RingBuffer.h"
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 
 class MidiUartClass : public MidiUartParent {
 public:
