@@ -347,17 +347,19 @@ void SPSXSeqTrack::onControlChangeCallback_Midi(uint8_t track_param, uint8_t val
 }
 
 void SPSXSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
-    if (!port2 || !send_ccs) return;
+    if (!send_ccs) return;
+    MidiUartClass *out = port2 ? port2 : mcl_seq.secondary_output;
+    if (!out) return;
     uint8_t channel = get_midi_channel();
     for (uint8_t n = 0; n < spsx_number_midi_cc; n++) {
         if (ccs[n] == 255) continue;
         switch (n) {
-        case 1: port2->sendPitchBend(channel, (int16_t)(ccs[1] << 7)); break;
-        case 2: port2->sendCC(channel, 0x01, ccs[2]); break;
-        case 3: port2->sendChannelPressure(channel, ccs[3]); break;
+        case 1: out->sendPitchBend(channel, (int16_t)(ccs[1] << 7)); break;
+        case 2: out->sendCC(channel, 0x01, ccs[2]); break;
+        case 3: out->sendChannelPressure(channel, ccs[3]); break;
         case 0:
             notes.ccs[0] = ccs[0];
-            port2->sendProgramChange(channel, ccs[0]);
+            out->sendProgramChange(channel, ccs[0]);
             break;
         default:
             if (!(n & 1)) continue;
@@ -365,7 +367,7 @@ void SPSXSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
               if (cc_dest > 0 && cc_dest != 255) {
                 uint8_t cc_val = ccs[n];
                 if (cc_dest == 1) cc_dest = 0;
-                port2->sendCC(channel, cc_dest, cc_val);
+                out->sendCC(channel, cc_dest, cc_val);
                 notes.ccs[n] = cc_val;
               }
             }

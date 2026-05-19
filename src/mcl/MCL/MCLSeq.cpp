@@ -365,12 +365,10 @@ void MCLSeq::onMidiStartImmediateCallback() {
   if (using_spsx_tracks) {
     neighbor_trig_mask = 0;
     fill_mask = 0;
-  } else
+  }
 #endif
-  {
-    for (uint8_t i = 0; i < num_md_tracks; i++) {
-      md_arp_tracks[i].reset();
-    }
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    md_arp_tracks[i].reset();
   }
 
   for (uint8_t i = 0; i < num_ext_tracks; i++) {
