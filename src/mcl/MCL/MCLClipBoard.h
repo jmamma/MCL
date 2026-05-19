@@ -5,11 +5,55 @@
 #include "Grid.h"
 #include "Shared.h"
 #include "MDSeqTrackData.h"
+#include "SeqExtStepTypes.h"
 #if !defined(__AVR__)
 #include "SPSXSeqTrackData.h"
 #endif
 #include "PerfData.h"
 #define FILENAME_CLIPBOARD "clipboard.tmp"
+
+enum ExtNoteClipMode : uint8_t {
+  EXT_NOTE_CLIP_NONE = 0,
+  EXT_NOTE_CLIP_RECTANGLE = 1,
+  EXT_NOTE_CLIP_PAGE = 2,
+};
+
+struct ATTR_PACKED() ExtNoteClipEvent {
+  seq_extstep_tick_t tick_offset;
+  seq_extstep_tick_t note_length;
+  uint8_t pitch_offset;
+  uint8_t velocity;
+  uint8_t condition;
+};
+
+class ExtNoteClip {
+public:
+  uint8_t mode;
+  uint8_t count;
+  seq_extstep_tick_t width_ticks;
+  ExtNoteClipEvent notes[EXT_NOTE_CLIP_MAX_NOTES];
+
+  void clear(uint8_t mode_ = EXT_NOTE_CLIP_NONE) {
+    mode = mode_;
+    count = 0;
+    width_ticks = 0;
+  }
+
+  bool add(const ExtNoteClipEvent &note) {
+    if (count >= EXT_NOTE_CLIP_MAX_NOTES) {
+      return false;
+    }
+    notes[count++] = note;
+    return true;
+  }
+
+  bool valid() const { return mode != EXT_NOTE_CLIP_NONE && count > 0; }
+};
+
+#if defined(__AVR__)
+static_assert(sizeof(ExtNoteClip) <= 1024,
+              "AVR ext note clipboard must stay under 1KB");
+#endif
 
 class MCLClipBoard {
 public:
@@ -27,6 +71,7 @@ public:
 #if !defined(__AVR__)
   SPSXSeqStep spsx_steps[16];
 #endif
+  ExtNoteClip ext_note_clip;
   PerfScene scene;
 
   bool init();

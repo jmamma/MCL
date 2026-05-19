@@ -67,6 +67,14 @@ public:
 
   bool encoder_init;
 
+  bool note_selection_active;
+  bool note_selection_editing;
+  seq_extstep_tick_t note_selection_anchor_x;
+  seq_extstep_tick_t note_selection_x;
+  int16_t note_selection_anchor_y;
+  int16_t note_selection_y;
+  seq_extstep_tick_t note_selection_saved_w;
+
 #ifdef PLATFORM_TBD
   SeqExtStepMidiEvents midi_events;
 #endif
@@ -79,6 +87,7 @@ public:
   void draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov);
   void draw_pianoroll();
   void draw_lockeditor();
+  void draw_note_selection();
   void draw_viewport_minimap();
   void draw_seq_pos();
   void draw_grid();
@@ -88,6 +97,15 @@ public:
   void pos_cur_x(seq_extstep_tick_t diff);
   void pos_cur_y(int16_t diff);
   void pos_cur_w(seq_extstep_tick_t diff);
+  void begin_note_selection();
+  void finish_note_selection();
+  void move_note_selection(seq_extstep_tick_t x_diff, int16_t y_diff);
+  void clear_note_selection();
+  bool copy_note_selection();
+  bool copy_note_page();
+  bool paste_note_clip();
+  bool clear_note_selection_notes();
+  bool clear_note_page();
 
   inline bool is_within_fov(seq_extstep_tick_t x) {
     return (x - fov_offset) < fov_length;

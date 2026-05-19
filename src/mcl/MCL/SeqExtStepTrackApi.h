@@ -145,6 +145,16 @@ public:
             event.event_value, event.micro_timing};
   }
 
+  uint8_t note_velocity(uint8_t step, uint16_t event_idx) const {
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
+    if (midi_track_) {
+      const auto &event = midi_track_->seq_data.events[event_idx];
+      return event.type == MIDI_SEQ_EVENT_NOTE_ON ? (uint8_t)event.value : 0;
+    }
+#endif
+    return ext_track_->velocities[step];
+  }
+
   uint8_t search_note_off(uint8_t note, uint8_t step, uint16_t &event_idx,
                           uint16_t event_end) {
 #ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK

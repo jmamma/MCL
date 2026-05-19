@@ -63,6 +63,12 @@ constexpr size_t MDTEMPO_TRACK_NUM = 15; //position of MDTEMPO track in grid
 constexpr size_t NUM_GRID_X_LFO_TRACKS = NUM_MD_TRACKS;
 constexpr size_t NUM_GRID_Y_LFO_TRACKS = NUM_EXT_TRACKS;
 
+#if defined(__AVR__)
+constexpr uint8_t EXT_NOTE_CLIP_MAX_NOTES = 128;
+#else
+constexpr uint8_t EXT_NOTE_CLIP_MAX_NOTES = 255;
+#endif
+
 constexpr size_t NUM_PERF_PARAMS = 16;
 constexpr size_t NUM_SCENES = 8;
 
