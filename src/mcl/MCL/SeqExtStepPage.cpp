@@ -126,6 +126,28 @@ bool note_selection_matches_active_track(const SeqExtStepPage &page) {
          page.note_selection_track == SeqExtStepTrackRef::active_track_index();
 }
 
+bool tick_ranges_overlap(seq_extstep_tick_t a_start,
+                         seq_extstep_tick_t a_end,
+                         seq_extstep_tick_t b_start,
+                         seq_extstep_tick_t b_end) {
+  return a_start < b_end && a_end > b_start;
+}
+
+bool note_overlaps_range(const ExtNoteRange &range,
+                         seq_extstep_tick_t note_start,
+                         seq_extstep_tick_t note_end,
+                         seq_extstep_tick_t roll_length) {
+  if (tick_ranges_overlap(note_start, note_end, range.start_tick,
+                          range.end_tick)) {
+    return true;
+  }
+  if (note_end > roll_length) {
+    return tick_ranges_overlap(0, note_end - roll_length, range.start_tick,
+                               range.end_tick);
+  }
+  return false;
+}
+
 bool add_note_to_clip(ExtNoteClip &clip,
                       seq_extstep_tick_t tick_offset,
                       seq_extstep_tick_t note_length,
@@ -200,10 +222,12 @@ bool copy_note_range_to_clip(SeqExtStepTrackApi track,
       if (note_end < 0) note_end += roll_length;
       if (note_end <= note_start) note_end += roll_length;
       uint8_t note_velocity = track.note_velocity(step, ev_idx);
+      if (!note_overlaps_range(range, note_start, note_end, roll_length)) {
+        continue;
+      }
       if (rectangle_clip) {
-        if (note_start < range.start_tick || note_start >= range.end_tick) {
-          continue;
-        }
+        // Preserve the whole note for rectangle selections; left-overlapping
+        // notes intentionally keep a negative offset from the selection anchor.
         if (!add_note_to_clip(clip, note_start - range.start_tick,
                               note_end - note_start, pitch - range.note_min,
                               note_velocity, ev.cond_id)) {
@@ -1212,10 +1236,6 @@ bool SeqExtStepPage::paste_note_clip() {
         scale_clip_tick(note.note_length, source_ticks_per_step,
                         dest_ticks_per_step);
     if (note_length <= 0) note_length = 1;
-    if (dst_tick + note_length >= roll_length) {
-      note_length = roll_length - dst_tick - 1;
-    }
-    if (note_length <= 0) continue;
 
     int16_t dst_pitch =
         rectangle_clip ? paste_pitch + note.pitch_offset : note.pitch_offset;
