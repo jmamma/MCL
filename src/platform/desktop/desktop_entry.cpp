@@ -7,10 +7,20 @@
 #include "desktop_entry.h"
 
 #include "SdFat.h"
+#include "Arduino.h"
 
 #include <atomic>
 #include <cstring>
 #include <mutex>
+
+// MCL's logical clocks. On hardware these are bumped from timer ISRs;
+// on desktop nothing increments them unless we do it ourselves. The
+// `read_clock_ms()` macro in helpers.h:222 reads g_clock_ms directly,
+// so MidiClock, sysex timeouts, scheduler timing etc. all stall if it
+// never advances. Update them lazily at every tick boundary from
+// millis().
+extern volatile uint16_t g_clock_ms;
+extern volatile uint16_t g_clock_fast;
 
 // Forward-declared so this TU doesn't depend on Arduino.h. MCL itself defines
 // setup()/loop() in src/mcl/main.cpp.
@@ -19,6 +29,12 @@ extern void loop();
 
 namespace {
 std::atomic<bool> g_setup_done{false};
+
+void desktop_advance_clocks() {
+    const unsigned long now_ms = millis();
+    g_clock_ms   = (uint16_t)(now_ms);
+    g_clock_fast = (uint16_t)(now_ms);
+}
 } // namespace
 
 void mcl_desktop_setup(void) {
@@ -26,6 +42,7 @@ void mcl_desktop_setup(void) {
     if (!g_setup_done.compare_exchange_strong(expected, true)) {
         return;
     }
+    desktop_advance_clocks();
 #ifdef MCL_DESKTOP_LINK_MCL_CORE
     setup();
 #endif
@@ -35,6 +52,7 @@ void mcl_desktop_tick(void) {
     if (!g_setup_done.load(std::memory_order_acquire)) {
         return;
     }
+    desktop_advance_clocks();
 #ifdef MCL_DESKTOP_LINK_MCL_CORE
     loop();
 #endif

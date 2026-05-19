@@ -87,6 +87,11 @@ menu_function_t MenuBase::get_exit_function() {
     menu_function_ptr_t fn;
     #if defined(__AVR__)
         fn.word = pgm_read_word(&menu_target_functions[exit_fn_id].word);
+    #elif defined(PLATFORM_DESKTOP) || (UINTPTR_MAX > 0xFFFFFFFFu)
+        // 64-bit hosts: read the full pointer via the .fn slot. The
+        // {low, high} word reads on 32-bit only cover the bottom 4 bytes
+        // and would truncate.
+        fn.fn = menu_target_functions[exit_fn_id].fn;
     #else
         fn.words.low = pgm_read_word(&menu_target_functions[exit_fn_id].words.low);
         fn.words.high = pgm_read_word(&menu_target_functions[exit_fn_id].words.high);
@@ -102,6 +107,9 @@ menu_function_t MenuBase::get_row_function(uint8_t item_n) {
     #if defined(__AVR__)
         // On AVR, single 16-bit read
         fn.word = pgm_read_word(&menu_target_functions[item->row_function_id].word);
+    #elif defined(PLATFORM_DESKTOP) || (UINTPTR_MAX > 0xFFFFFFFFu)
+        // 64-bit hosts: read the full pointer directly.
+        fn.fn = menu_target_functions[item->row_function_id].fn;
     #else
         // On 32-bit architectures, read both words
         fn.words.low = pgm_read_word(&menu_target_functions[item->row_function_id].words.low);
@@ -161,6 +169,11 @@ uint8_t *MenuBase::get_dest_variable(uint8_t item_n) {
     uint8_ptr_t p;
     #if defined(__AVR__)
         p.word = pgm_read_word(&menu_target_param[item->destination_var_id]);
+    #elif defined(PLATFORM_DESKTOP) || (UINTPTR_MAX > 0xFFFFFFFFu)
+        // 64-bit hosts: read full pointer via the .ptr slot. The {low,
+        // high} word reads on 32-bit only cover the bottom 4 bytes and
+        // would truncate.
+        p.ptr = const_cast<uint8_t*>(menu_target_param[item->destination_var_id]);
     #else
         p.words.low = pgm_read_word(&menu_target_param[item->destination_var_id]);
         p.words.high = pgm_read_word(((uint16_t*)&menu_target_param[item->destination_var_id]) + 1);

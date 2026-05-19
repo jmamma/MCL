@@ -10,7 +10,10 @@
 # Arduino shim is proven to compile against it.
 
 cmake_minimum_required(VERSION 3.22)
-project(mcl_desktop CXX)
+# C is required because src/mcl/CommonTools/helpers.c provides clock_diff/
+# popcount/limit_value/m_toupper/masks for the .cpp tree. Without C enabled,
+# CMake silently drops .c sources from add_library.
+project(mcl_desktop C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -25,9 +28,12 @@ file(GLOB DESKTOP_SRC CONFIGURE_DEPENDS
 # MCL application code. Mirror the TBD env's build_src_filter:
 # +<mcl/*> -<mcl/tools/*>. Drivers/TBD is RP2350-specific — excluded.
 # Also strip out PlatformIO build artefacts (src/mcl/.pio/, src/mcl/build/)
-# and IDE/asset directories the glob would otherwise pick up.
+# and IDE/asset directories the glob would otherwise pick up. Glob both
+# .cpp and .c — src/mcl/CommonTools/helpers.c provides clock_diff/popcount/
+# limit_value/m_toupper/masks that MCL's .cpp code links against.
 file(GLOB_RECURSE MCL_CORE_SRC CONFIGURE_DEPENDS
-    "src/mcl/*.cpp")
+    "src/mcl/*.cpp"
+    "src/mcl/*.c")
 list(FILTER MCL_CORE_SRC EXCLUDE REGEX ".*/\\.pio/.*")
 list(FILTER MCL_CORE_SRC EXCLUDE REGEX ".*/build/.*")
 list(FILTER MCL_CORE_SRC EXCLUDE REGEX ".*/tools/.*")
@@ -60,7 +66,12 @@ target_compile_definitions(mcl_desktop PUBLIC
     ARDUINO=10800
     PLATFORM_DESKTOP=1
     VERSION=4080
-    VERSION_STR="R4.80-desktop")
+    VERSION_STR="R4.80-desktop"
+    # Switch the desktop_entry trampolines from no-ops to calling MCL's
+    # Arduino-style setup()/loop(). The guard existed during step 1 (before
+    # src/mcl/**/*.cpp was in the glob); kept as a public macro so anyone
+    # consuming the lib can confirm MCL really runs.
+    MCL_DESKTOP_LINK_MCL_CORE=1)
 
 # IMPORTANT: src/platform/desktop must come BEFORE any other include path
 # so MCL source's `#include "Arduino.h"` resolves to OUR shim, not whatever
@@ -120,3 +131,13 @@ target_compile_options(mcl_desktop PRIVATE
     -Wno-unused-function
     -Wno-sign-compare
     -fpermissive)
+
+# Smoke-test executable: links libmcl_desktop.a into a tiny main() that calls
+# mcl_desktop_setup()/tick() once. Surfaces missing-symbol errors that ar
+# wouldn't catch (Midi, MidiSysex*, GUI, MD, MNM, Analog4, SD, g_clock_ms,
+# g_clock_fast, g_random_state, listeners — anything the rp2040 global.cpp
+# instantiates and the desktop shim hasn't filled in yet). Build with
+# `cmake --build BUILD_DIR --target mcl_desktop_linktest`.
+add_executable(mcl_desktop_linktest EXCLUDE_FROM_ALL
+    src/platform/desktop/linktest_main.cpp)
+target_link_libraries(mcl_desktop_linktest PRIVATE mcl_desktop)

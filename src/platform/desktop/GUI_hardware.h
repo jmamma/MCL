@@ -107,7 +107,15 @@ typedef struct button_s {
 
 class ButtonsClass {
 public:
+    // MCL's button scheme is ACTIVE-LOW: BUTTON_DOWN(b) == !B_CURRENT(b).
+    // A button with status=0 reads as pressed, which on boot makes
+    // MCL.cpp:178 (BUTTON2 held at startup → boot menu) trigger immediately.
+    // Initialise each button's status with the B_BIT_CURRENT bit set so
+    // every button reads as released until input plumbing arrives.
     button_t buttons[GUI_NUM_BUTTONS] = {};
+    ButtonsClass() {
+        for (auto& b : buttons) b.status = (uint8_t)(1u << B_BIT_CURRENT);
+    }
 
     static constexpr uint8_t ENCODER1 = 0;
     static constexpr uint8_t ENCODER2 = 1;
@@ -127,10 +135,9 @@ public:
     static constexpr uint16_t BUTTON3_MASK  = _BV(BUTTON3);
     static constexpr uint16_t BUTTON4_MASK  = _BV(BUTTON4);
 
-    ButtonsClass() = default;
-
     ALWAYS_INLINE() void clear() {
-        for (auto& b : buttons) b.status = 0;
+        // Active-low: B_BIT_CURRENT set == button released.
+        for (auto& b : buttons) b.status = (uint8_t)(1u << B_BIT_CURRENT);
     }
     ALWAYS_INLINE() void poll(uint8_t /*sr*/) {}
 };

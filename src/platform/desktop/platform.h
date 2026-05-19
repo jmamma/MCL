@@ -10,12 +10,15 @@
 // platform.h includes it via the same name; we match that contract so
 // MCL source can rely on platform.h pulling helpers in.
 #include "helpers.h"
-#include <cstdio>
+#include <stdio.h>
 
 // time_us_32() / time_us_64() are Pico SDK names that MCL's Diagnostic code
-// uses for ISR timing. Map to micros() on desktop.
-inline uint32_t time_us_32() { return static_cast<uint32_t>(micros()); }
+// uses for ISR timing. Map to micros() on desktop. Defined as inline on the
+// C++ side; helpers.c doesn't reference them.
+#ifdef __cplusplus
+inline uint32_t time_us_32() { return (uint32_t)micros(); }
 inline uint64_t time_us_64() { return micros(); }
+#endif
 
 #ifdef __cplusplus
 #include "int24.h"

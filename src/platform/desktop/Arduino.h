@@ -16,13 +16,17 @@
 //   - Wire (I2C) isn't used by MCL's core paths; provided as an empty header.
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-#include <cstdlib>
-#include <cstring>
-#include <cstdio>
-#include <cmath>
+// C-and-C++ compatible headers. MCL has helpers.c which includes Arduino.h,
+// so we can't use <c*> variants unconditionally.
+#include <stddef.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <math.h>
+#ifdef __cplusplus
 #include <algorithm>
+#endif
 
 // PROGMEM / flash-string family — empty on desktop. ~520 callsites across
 // MCL collapse to plain memory access.
@@ -38,31 +42,34 @@
 // __FlashStringHelper is normally an opaque forward-declared class on Arduino
 // so overloads like `put(const char*)` and `put(const __FlashStringHelper*)`
 // remain distinct. Don't typedef it to char — that would collapse the
-// overloads (see MCL/src/mcl/Diagnostic/DebugBuffer.h:27-28).
+// overloads (see MCL/src/mcl/Diagnostic/DebugBuffer.h:27-28). C++ only.
+#ifdef __cplusplus
 class __FlashStringHelper;
+#endif
 typedef const char* PGM_P;
 typedef const void* PGM_VOID_P;
 
+// C-cast (not reinterpret_cast) so helpers.c can use the same macros.
 #ifndef pgm_read_byte
-#define pgm_read_byte(p)       (*reinterpret_cast<const uint8_t*>(p))
+#define pgm_read_byte(p)       (*(const uint8_t*)(p))
 #endif
 #ifndef pgm_read_byte_near
-#define pgm_read_byte_near(p)  (*reinterpret_cast<const uint8_t*>(p))
+#define pgm_read_byte_near(p)  (*(const uint8_t*)(p))
 #endif
 #ifndef pgm_read_word
-#define pgm_read_word(p)       (*reinterpret_cast<const uint16_t*>(p))
+#define pgm_read_word(p)       (*(const uint16_t*)(p))
 #endif
 #ifndef pgm_read_word_near
-#define pgm_read_word_near(p)  (*reinterpret_cast<const uint16_t*>(p))
+#define pgm_read_word_near(p)  (*(const uint16_t*)(p))
 #endif
 #ifndef pgm_read_dword
-#define pgm_read_dword(p)      (*reinterpret_cast<const uint32_t*>(p))
+#define pgm_read_dword(p)      (*(const uint32_t*)(p))
 #endif
 #ifndef pgm_read_dword_near
-#define pgm_read_dword_near(p) (*reinterpret_cast<const uint32_t*>(p))
+#define pgm_read_dword_near(p) (*(const uint32_t*)(p))
 #endif
 #ifndef pgm_read_ptr
-#define pgm_read_ptr(p)        (*reinterpret_cast<const void* const*>(p))
+#define pgm_read_ptr(p)        (*(const void* const*)(p))
 #endif
 
 #ifndef memcpy_P
@@ -135,31 +142,53 @@ typedef const void* PGM_VOID_P;
 #define BIN 2
 #endif
 
-// boolean / byte typedefs Arduino code expects.
+// boolean / byte typedefs Arduino code expects. C doesn't define `bool`
+// without <stdbool.h>; pull it in unconditionally to make `boolean` work
+// in both .c and .cpp.
+#include <stdbool.h>
 typedef uint8_t byte;
-typedef bool boolean;
+typedef bool    boolean;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // Time
-unsigned long millis();
-unsigned long micros();
-void delay(unsigned long ms);
-void delayMicroseconds(unsigned int us);
-inline void yield() {}
+unsigned long millis(void);
+unsigned long micros(void);
+void          delay(unsigned long ms);
+void          delayMicroseconds(unsigned int us);
 
 // GPIO mock surface — backed by desktop_gpio_state[] in hardware.cpp.
 void pinMode(uint8_t pin, uint8_t mode);
 void digitalWrite(uint8_t pin, uint8_t val);
 int  digitalRead(uint8_t pin);
+
+#ifdef __cplusplus
+}  // extern "C"
+#endif
+
+#ifdef __cplusplus
+inline void yield() {}
 inline int  analogRead(uint8_t /*pin*/)            { return 0; }
 inline void analogWrite(uint8_t /*pin*/, int /*v*/) {}
 inline void analogReference(uint8_t /*mode*/)       {}
 
-// Interrupt control — desktop platform has no ISRs to disable. The macros
-// match what MCL's platform.h expects; LOCK()/CLEAR_LOCK() expand to noop.
+// Interrupt control — desktop platform has no ISRs to disable.
 inline void sei()           {}
 inline void cli()           {}
 inline void interrupts()    {}
 inline void noInterrupts()  {}
+#else
+#define yield()              ((void)0)
+#define analogRead(pin)      (0)
+#define analogWrite(pin, v)  ((void)0)
+#define analogReference(m)   ((void)0)
+#define sei()                ((void)0)
+#define cli()                ((void)0)
+#define interrupts()         ((void)0)
+#define noInterrupts()       ((void)0)
+#endif
 #ifndef attachInterrupt
 #define attachInterrupt(...) ((void)0)
 #endif
@@ -177,10 +206,17 @@ inline void noInterrupts()  {}
 #ifdef max
 #undef max
 #endif
+#ifdef __cplusplus
 template <typename A, typename B>
 inline auto min(const A& a, const B& b) -> decltype(a < b ? a : b) { return a < b ? a : b; }
 template <typename A, typename B>
 inline auto max(const A& a, const B& b) -> decltype(a > b ? a : b) { return a > b ? a : b; }
+#else
+// C-side fallback: macros (Arduino's classic shape). C code that uses
+// these on side-effecting expressions is rare in MCL's helpers.c.
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#define max(a, b) ((a) > (b) ? (b) : (b))
+#endif
 
 #ifndef abs
 #define abs(x) ((x) < 0 ? -(x) : (x))
@@ -216,21 +252,23 @@ inline auto max(const A& a, const B& b) -> decltype(a > b ? a : b) { return a > 
 #define word(h, l) (((uint16_t)(h) << 8) | (uint8_t)(l))
 #endif
 
+#ifdef __cplusplus
 // Random — Arduino's random(min, max) is half-open; std::rand wrapper is
 // fine for MCL's purposes (UI animation seeds).
 inline long random(long howbig) {
     if (howbig <= 0) return 0;
-    return std::rand() % howbig;
+    return rand() % howbig;
 }
 inline long random(long howsmall, long howbig) {
     if (howsmall >= howbig) return howsmall;
-    return howsmall + (std::rand() % (howbig - howsmall));
+    return howsmall + (rand() % (howbig - howsmall));
 }
-inline void randomSeed(unsigned long seed) { std::srand(static_cast<unsigned int>(seed)); }
+inline void randomSeed(unsigned long seed) { srand((unsigned int)seed); }
 
 // Print / Stream / Serial / WString — pulled in so user code that includes
-// just <Arduino.h> sees the full surface.
+// just <Arduino.h> sees the full surface. C++ only.
 #include "WString.h"
 #include "Print.h"
 #include "Stream.h"
 #include "HardwareSerial.h"
+#endif  // __cplusplus
