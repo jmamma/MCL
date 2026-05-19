@@ -31,6 +31,11 @@ bool SeqPtcTrackRef::is_poly_voice_track(uint8_t track) {
   if (track >= track_count()) {
     return false;
   }
+#if defined(PLATFORM_TBD)
+  if (ptc_tbd_track_available(track)) {
+    return true;
+  }
+#endif
 #if !defined(__AVR__)
   MidiDevice *device = device_manager.primary_device();
   return device != nullptr &&
@@ -201,6 +206,64 @@ void SeqPtcTrackRef::trigger(uint8_t track, uint8_t velocity,
 #else
   MD.triggerTrack(track, velocity, uart_);
 #endif
+}
+
+bool SeqPtcTrackRef::trigger_voice(uint8_t track, uint8_t note,
+                                   uint8_t fine_tune,
+                                   MidiUartClass *uart_,
+                                   uint8_t *record_pitch) {
+  if (track >= track_count()) {
+    return false;
+  }
+
+  if (is_midi_voice_track(track)) {
+    send_notes_off(track);
+    send_notes(track, note);
+    if (record_pitch != nullptr) {
+      *record_pitch = note;
+    }
+    return true;
+  }
+
+#if defined(PLATFORM_TBD)
+  if (ptc_tbd_track_available(track)) {
+    (void)fine_tune;
+    (void)uart_;
+    send_notes(track, note);
+    if (record_pitch != nullptr) {
+      *record_pitch = note;
+    }
+    return true;
+  }
+#endif
+
+  uint8_t machine_pitch = pitch_from_note(track, note, fine_tune);
+  if (machine_pitch == 255) {
+    return false;
+  }
+  set_pitch(track, machine_pitch, uart_);
+  trigger(track, 127, uart_);
+  if (record_pitch != nullptr) {
+    *record_pitch = machine_pitch;
+  }
+  return true;
+}
+
+bool SeqPtcTrackRef::release_voice(uint8_t track) {
+  if (track >= track_count()) {
+    return false;
+  }
+  if (is_midi_voice_track(track)) {
+    send_notes_off(track);
+    return true;
+  }
+#if defined(PLATFORM_TBD)
+  if (ptc_tbd_track_available(track)) {
+    send_notes_off(track);
+    return true;
+  }
+#endif
+  return false;
 }
 
 void SeqPtcTrackRef::send_notes_on(uint8_t track) {

@@ -27,6 +27,11 @@ public:
                         MidiUartClass *uart_ = nullptr);
   static void trigger(uint8_t track, uint8_t velocity,
                       MidiUartClass *uart_ = nullptr);
+  static bool trigger_voice(uint8_t track, uint8_t note,
+                            uint8_t fine_tune = 255,
+                            MidiUartClass *uart_ = nullptr,
+                            uint8_t *record_pitch = nullptr);
+  static bool release_voice(uint8_t track);
 
   static void send_notes_on(uint8_t track);
   static void send_notes_off(uint8_t track);

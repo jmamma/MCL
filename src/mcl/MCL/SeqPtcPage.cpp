@@ -547,27 +547,25 @@ void SeqPtcPage::trig_primary(uint8_t note_num, uint8_t track_number,
   }
 
   if (SeqPtcTrackRef::is_midi_voice_track(track_number)) {
-    uint8_t machine_pitch = note_num;
-    SeqPtcTrackRef::send_notes_off(track_number);
-    SeqPtcTrackRef::send_notes(track_number, machine_pitch);
-    record(machine_pitch, track_number);
+    uint8_t record_pitch = note_num;
+    if (SeqPtcTrackRef::trigger_voice(track_number, note_num, fine_tune,
+                                      uart_, &record_pitch)) {
+      record(record_pitch, track_number);
+    }
     return;
   }
 
   uint8_t next_track = get_next_voice(note_num, track_number, channel_event);
   if (next_track > 15) { return; }
 
-  uint8_t machine_pitch = note_num;
-  machine_pitch = SeqPtcTrackRef::pitch_from_note(next_track, note_num,
-                                                  fine_tune);
-  if (machine_pitch == 255) {
+  uint8_t record_pitch = note_num;
+  if (!SeqPtcTrackRef::trigger_voice(next_track, note_num, fine_tune, uart_,
+                                     &record_pitch)) {
     return;
   }
 
-  SeqPtcTrackRef::set_pitch(next_track, machine_pitch, uart_);
-  SeqPtcTrackRef::trigger(next_track, 127, uart_);
   mixer_page.trig(next_track);
-  record(machine_pitch, next_track);
+  record(record_pitch, next_track);
 }
 
 void SeqPtcPage::record(uint8_t pitch, uint8_t track) {
@@ -661,15 +659,13 @@ bool SeqPtcPage::handle_tbd_note_event(uint8_t note, uint8_t mask,
 
   if (mask == EVENT_BUTTON_PRESSED) {
     if (!arp_running) {
-      SeqPtcTrackRef::send_notes(last_primary_track, pitch);
+      SeqPtcTrackRef::trigger_voice(last_primary_track, pitch);
     }
     if (!arp_running && recording && MidiClock.state == 2) {
-      reset_undo();
-      SeqPtcTrackRef::record_track(last_primary_track, 127);
-      SeqPtcTrackRef::record_pitch(last_primary_track, pitch);
+      record(pitch, last_primary_track);
     }
   } else if (!arp_running) {
-    SeqPtcTrackRef::send_notes_off(last_primary_track);
+    SeqPtcTrackRef::release_voice(last_primary_track);
   }
   return true;
 }
@@ -1075,10 +1071,8 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
     uint8_t voice = seq_ptc_page.release_voice(pitch, n, channel_event);
     if (voice == 255) { return; }
     ArpSeqTrack &arp_track = SeqTrackUtil::arp_track(DeviceIdx::Primary, n);
-    if (SeqPtcTrackRef::is_midi_voice_track(voice)) {
-      if (!arp_track.enabled || (MidiClock.state != 2)) {
-        SeqPtcTrackRef::send_notes_off(voice);
-      }
+    if (!arp_track.enabled || (MidiClock.state != 2)) {
+      SeqPtcTrackRef::release_voice(voice);
     }
     return;
   }
