@@ -35,6 +35,7 @@ public:
   virtual bool handleEvent(gui_event_t *event);
 
   // get a page in the current category.
+  uint8_t first_valid_category_page(uint8_t cat_id) const;
   uint8_t get_category_page(uint8_t offset);
   uint8_t get_nextpage_down();
   uint8_t get_nextpage_up();

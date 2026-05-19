@@ -168,33 +168,59 @@ uint8_t PageSelectPage::get_nextpage_up() {
   return page_select;
 }
 
+uint8_t PageSelectPage::first_valid_category_page(uint8_t cat_id) const {
+  uint8_t cat_start = category_first_page(cat_id);
+  uint8_t cat_size = category_page_count(cat_id);
+  for (uint8_t i = 0; i < cat_size; i++) {
+    uint8_t slot = cat_start + i;
+    if (slot < PageRegistry::kMaxPageSlots &&
+        get_page(slot, nullptr) != NULL_PAGE) {
+      return slot;
+    }
+  }
+  return page_select;
+}
+
 uint8_t PageSelectPage::get_nextpage_catdown() {
   auto cat_id = category_for_slot(page_select);
-  if (cat_id > 0) {
-    return category_first_page(cat_id - 1);
-  } else {
-    return page_select;
+  while (cat_id > 0) {
+    cat_id--;
+    uint8_t slot = first_valid_category_page(cat_id);
+    if (slot != page_select) {
+      return slot;
+    }
   }
+  return page_select;
 }
 
 uint8_t PageSelectPage::get_nextpage_catup() {
   auto cat_id = category_for_slot(page_select);
-  if (cat_id < n_category - 1) {
-    return category_first_page(cat_id + 1);
-  } else {
-    return page_select;
+  while (cat_id < n_category - 1) {
+    cat_id++;
+    uint8_t slot = first_valid_category_page(cat_id);
+    if (slot != page_select) {
+      return slot;
+    }
   }
+  return page_select;
 }
 
 uint8_t PageSelectPage::get_category_page(uint8_t offset) {
   auto cat_id = category_for_slot(page_select);
   auto cat_start = category_first_page(cat_id);
   auto cat_size = category_page_count(cat_id);
-  if (offset >= cat_size) {
-    return page_select;
-  } else {
-    return cat_start + offset;
+  for (uint8_t i = 0; i < cat_size; i++) {
+    uint8_t slot = cat_start + i;
+    if (slot >= PageRegistry::kMaxPageSlots ||
+        get_page(slot, nullptr) == NULL_PAGE) {
+      continue;
+    }
+    if (offset == 0) {
+      return slot;
+    }
+    offset--;
   }
+  return page_select;
 }
 
 void PageSelectPage::rebuild_entries() {
