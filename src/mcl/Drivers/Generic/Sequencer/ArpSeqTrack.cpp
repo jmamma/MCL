@@ -295,7 +295,8 @@ void MDArpSeqTrack::dispatch_note(uint8_t note, MidiUartClass *uart_,
   bool is_midi_model =
       ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
   if (is_midi_model) {
-    SeqTrackUtil::with_md_track(track_number, [&](auto &t) { t.send_notes(note); });
+    SeqTrackUtil::with_md_track(track_number,
+                                [&](auto &t) { t.send_notes(note, uart2_); });
     seq_ptc_page.record(note, track_number);
   } else {
     seq_ptc_page.trig_primary(note, track_number, CTRL_EVENT, fine_tune, uart_);

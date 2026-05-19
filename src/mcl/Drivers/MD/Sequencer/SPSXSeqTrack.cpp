@@ -76,8 +76,8 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
                 load_cache();
                 cache_loaded = true;
             }
+            goto end;
         }
-        goto end;
     }
 
     if (record_mutes) {
@@ -287,38 +287,42 @@ uint8_t SPSXSeqTrack::trig_conditional(uint8_t step, uint8_t condition) {
 // MID Machine Note Methods
 // ============================================================================
 
-void SPSXSeqTrack::send_notes_on() {
-    if (!port2) return;
+void SPSXSeqTrack::send_notes_on(MidiUartClass *uart2_) {
+    MidiUartClass *out = uart2_ ? uart2_ : port2;
+    if (!out) out = mcl_seq.secondary_output;
+    if (!out) return;
     uint8_t channel = get_midi_channel();
     if (notes.note1 != 255) {
-        port2->sendNoteOn(channel, notes.note1, notes.vel);
+        out->sendNoteOn(channel, notes.note1, notes.vel);
         if (notes.note2 != 64) {
-            port2->sendNoteOn(channel, notes.note1 + notes.note2 - 64, notes.vel);
+            out->sendNoteOn(channel, notes.note1 + notes.note2 - 64, notes.vel);
         }
         if (notes.note3 != 64) {
-            port2->sendNoteOn(channel, notes.note1 + notes.note3 - 64, notes.vel);
+            out->sendNoteOn(channel, notes.note1 + notes.note3 - 64, notes.vel);
         }
     }
 }
 
-void SPSXSeqTrack::send_notes_off() {
-    if (!port2) return;
+void SPSXSeqTrack::send_notes_off(MidiUartClass *uart2_) {
+    MidiUartClass *out = uart2_ ? uart2_ : port2;
+    if (!out) out = mcl_seq.secondary_output;
+    if (!out) return;
     uint8_t channel = get_midi_channel();
     if (notes.note1 != 255) {
-        port2->sendNoteOff(channel, notes.note1);
+        out->sendNoteOff(channel, notes.note1);
         if (notes.note2 != 64) {
-            port2->sendNoteOff(channel, notes.note1 + notes.note2 - 64);
+            out->sendNoteOff(channel, notes.note1 + notes.note2 - 64);
         }
         if (notes.note3 != 64) {
-            port2->sendNoteOff(channel, notes.note1 + notes.note3 - 64);
+            out->sendNoteOff(channel, notes.note1 + notes.note3 - 64);
         }
         notes.note1 = 255;
     }
     notes.count_down = 0;
 }
 
-void SPSXSeqTrack::send_notes(uint8_t first_note) {
-    if (notes.count_down) send_notes_off();
+void SPSXSeqTrack::send_notes(uint8_t first_note, MidiUartClass *uart2_) {
+    if (notes.count_down) send_notes_off(uart2_);
     init_notes();
     if (first_note != 255) notes.note1 = first_note;
     if (notes.first_trig) {
@@ -327,7 +331,7 @@ void SPSXSeqTrack::send_notes(uint8_t first_note) {
     }
     uint16_t tps = get_ticks_per_step();
     notes.count_down = notes.len == 0 ? tps / 4 : (notes.len * tps / 2);
-    send_notes_on();
+    send_notes_on(uart2_);
 }
 
 void SPSXSeqTrack::onControlChangeCallback_Midi(uint8_t track_param, uint8_t value) {
