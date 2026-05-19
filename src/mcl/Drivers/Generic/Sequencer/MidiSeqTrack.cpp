@@ -3,6 +3,7 @@
 #if !defined(__AVR__)
 
 #include "CommonPages.h"
+#include "EmptyTrack.h"
 #include "ExtSeqTrack.h"
 #include "GridLink.h"
 #include "MidiClock.h"
@@ -103,11 +104,36 @@ void MidiSeqTrack::reset() {
   mod12_counter = 0;
   memset(oneshot_mask, 0, sizeof(oneshot_mask));
   cache_loaded = true;
+  pending_cache_track_type_ = EMPTY_TRACK_TYPE;
+  pending_cache_slot_ = 255;
   locks_slides_recalc = 255;
   locks_slides_idx = 0;
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     locks_slide_data[i].init();
   }
+}
+
+void MidiSeqTrack::defer_cache_load(uint8_t track_type, GridSlot slot) {
+  pending_cache_track_type_ = track_type;
+  pending_cache_slot_ = slot;
+  cache_loaded = false;
+}
+
+void MidiSeqTrack::load_cache() {
+  if (pending_cache_track_type_ == EMPTY_TRACK_TYPE ||
+      pending_cache_slot_ == 255) {
+    return;
+  }
+
+  buffer_notesoff();
+  EmptyTrack scratch;
+  DeviceTrack *track =
+      scratch.load_from_mem(pending_cache_slot_, pending_cache_track_type_);
+  if (track != nullptr) {
+    track->load_seq_data(this);
+  }
+  pending_cache_track_type_ = EMPTY_TRACK_TYPE;
+  pending_cache_slot_ = 255;
 }
 
 uint16_t MidiSeqTrack::ticks_per_step() const {
@@ -998,7 +1024,14 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
   if (count_down) {
     count_down--;
     if (count_down == 0) {
+      if (!cache_loaded) {
+        load_cache();
+        cache_loaded = true;
+      }
       reset();
+    } else if (!cache_loaded && count_down <= (track_number + 5)) {
+      load_cache();
+      cache_loaded = true;
     }
     return;
   }

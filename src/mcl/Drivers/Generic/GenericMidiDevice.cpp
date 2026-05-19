@@ -1,6 +1,7 @@
 #include "GenericMidiDevice.h"
 
 #include "GenericMidiTrackRef.h"
+#include "MidiSeqExtStepTrackCapability.h"
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
 #include "ResourceManager.h"
@@ -114,33 +115,6 @@ protected:
 };
 
 #if !defined(__AVR__)
-class GenericMidiExtStepTrackCapability final
-    : public DeviceExtStepTrackCapability {
-public:
-  explicit GenericMidiExtStepTrackCapability(GenericMidiDevice &device)
-      : DeviceExtStepTrackCapability(device) {}
-
-  virtual uint8_t track_count(const DeviceContext &ctx) const override {
-    (void)ctx;
-    return NUM_EXT_TRACKS;
-  }
-
-  virtual SeqExtStepTrackApi track(const DeviceContext &ctx,
-                                   uint8_t i) const override {
-    (void)ctx;
-    if (i >= NUM_EXT_TRACKS) {
-      i = 0;
-    }
-    return GenericMidiTrackRef::step_track(i);
-  }
-
-  virtual bool track_for_channel(const DeviceContext &ctx, uint8_t channel,
-                                 uint8_t *track_index) const override {
-    (void)ctx;
-    return generic_midi_track_for_channel(channel, track_index);
-  }
-};
-
 class GenericMidiParamCapability : public DeviceParamCapability {
 public:
   explicit GenericMidiParamCapability(GenericMidiDevice &device)
@@ -205,7 +179,7 @@ DeviceMixerCapability *GenericMidiDevice::mixer() {
 
 #if !defined(__AVR__)
 DeviceExtStepTrackCapability *GenericMidiDevice::ext_step_tracks() {
-  static GenericMidiExtStepTrackCapability capability(*this);
+  static MidiSeqExtStepTrackCapability capability(*this);
   return &capability;
 }
 

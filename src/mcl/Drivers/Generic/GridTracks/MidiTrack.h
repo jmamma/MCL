@@ -25,6 +25,10 @@ public:
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
   void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
   void load_seq_data(SeqTrack *seq_track) override;
+  bool can_materialize_as(uint8_t track_type) override;
+  DeviceTrack *materialize_as(uint8_t track_type,
+                              uint8_t tracknumber,
+                              SeqTrack *seq_track) override;
   bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;

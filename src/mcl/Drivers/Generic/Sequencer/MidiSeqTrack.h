@@ -53,6 +53,8 @@ public:
 
   void reset();
   void seq(MidiUartClass *uart_);
+  void defer_cache_load(uint8_t track_type, GridSlot slot);
+  void load_cache();
   void recalc_slides();
 
   uint16_t ticks_per_step() const;
@@ -131,6 +133,8 @@ public:
 
 private:
   MidiUartClass *port_ = nullptr;
+  uint8_t pending_cache_track_type_ = EMPTY_TRACK_TYPE;
+  GridSlot pending_cache_slot_ = 255;
 
   void update_legacy_progress_counter();
   uint16_t add_event(uint8_t step, const MidiSeqEvent &event);

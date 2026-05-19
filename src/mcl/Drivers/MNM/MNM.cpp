@@ -8,7 +8,7 @@
 #include "GridTrack.h"
 #include "MCLStrings.h"
 #if !defined(__AVR__)
-#include "SeqExtStepTrackApi.h"
+#include "../Generic/MidiSeqExtStepTrackCapability.h"
 #endif
 
 class MNMMixerCapability final : public ExtMixerCapability {
@@ -21,43 +21,6 @@ protected:
     static_cast<MNMClass &>(device_).setTrackLevel(track, level, send);
   }
 };
-
-#if !defined(__AVR__)
-class MNMExtStepTrackCapability final : public DeviceExtStepTrackCapability {
-public:
-  explicit MNMExtStepTrackCapability(MNMClass &device)
-      : DeviceExtStepTrackCapability(device) {}
-
-  uint8_t track_count(const DeviceContext &ctx) const override {
-    (void)ctx;
-    return NUM_EXT_TRACKS;
-  }
-
-  SeqExtStepTrackApi track(const DeviceContext &ctx, uint8_t i) const override {
-    (void)ctx;
-    if (i >= NUM_EXT_TRACKS) {
-      i = 0;
-    }
-    return SeqExtStepTrackApi(mcl_seq.midi_tracks[i]);
-  }
-
-  bool track_for_channel(const DeviceContext &ctx, uint8_t channel,
-                         uint8_t *track_index) const override {
-    (void)ctx;
-    if (track_index == nullptr) {
-      return false;
-    }
-    for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-      if (mcl_seq.midi_tracks[i].channel() == channel) {
-        *track_index = i;
-        return true;
-      }
-    }
-    *track_index = 255;
-    return false;
-  }
-};
-#endif
 
 const ElektronSysexProtocol mnm_protocol = {
     monomachine_sysex_hdr,
@@ -124,7 +87,7 @@ DeviceMixerCapability *MNMClass::mixer() {
 
 #if !defined(__AVR__)
 DeviceExtStepTrackCapability *MNMClass::ext_step_tracks() {
-  static MNMExtStepTrackCapability capability(*this);
+  static MidiSeqExtStepTrackCapability capability(*this);
   return &capability;
 }
 #endif

@@ -7,6 +7,7 @@
 #include "MCLSeq.h"
 #include "TbdP4Command.h"
 #include "TbdP4Realtime.h"
+#include "../Generic/GridTracks/MidiTrackMaterializer.h"
 #include <string.h>
 
 namespace {
@@ -687,8 +688,12 @@ void TBDMidiTrack::apply_preset(uint8_t fallback_tracknumber,
 void TBDMidiTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                    GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  load_seq_data(seq_track);
-  apply_seq_defaults(tracknumber, seq_track);
+  if (seq_track == nullptr || seq_track->count_down == 0) {
+    load_seq_data(seq_track);
+    apply_seq_defaults(tracknumber, seq_track);
+    return;
+  }
+  static_cast<MidiSeqTrack *>(seq_track)->defer_cache_load(active, tracknumber);
 }
 
 void TBDMidiTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
@@ -722,6 +727,13 @@ void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
     seq_data.clear();
     seq_data.speed = fallback_speed;
   }
+  if (seq_data.length == 0) {
+    seq_data.length = link.length ? link.length : 16;
+  }
+  seq_data.speed = midi_seq_valid_speed(seq_data.speed);
+  if (seq_data.channel >= 16) {
+    seq_data.channel = midi_track->track_number;
+  }
   load_link_data(seq_track);
   midi_track->active = TBD_MIDI_TRACK_TYPE;
   midi_track->seq_data = static_cast<const MidiSeqTrackData &>(seq_data);
@@ -737,6 +749,27 @@ void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
   SeqTrack::load_mod_data(
       seq_track, seq_data.mod(), false,
       storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+}
+
+bool TBDMidiTrack::can_materialize_as(uint8_t track_type) {
+  if (midi_track_type_is_storage_family(track_type)) {
+    return true;
+  }
+  return DeviceTrack::can_materialize_as(track_type);
+}
+
+DeviceTrack *TBDMidiTrack::materialize_as(uint8_t track_type,
+                                          uint8_t tracknumber,
+                                          SeqTrack *seq_track) {
+  (void)seq_track;
+  if (active == track_type) {
+    return this;
+  }
+  if (midi_track_type_is_storage_family(track_type)) {
+    return materialize_midi_storage_track(this, track_type, link, seq_data,
+                                          tracknumber);
+  }
+  return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }
 
 bool TBDMidiTrack::store_in_grid(GridSlot column, GridRow row,

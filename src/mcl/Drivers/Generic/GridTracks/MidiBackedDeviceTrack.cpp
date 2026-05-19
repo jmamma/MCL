@@ -3,9 +3,7 @@
 #if !defined(__AVR__)
 
 #include "MidiTrack.h"
-#ifdef PLATFORM_TBD
-#include "../../TBD/TBDTrack.h"
-#endif
+#include "MidiTrackMaterializer.h"
 #include <string.h>
 
 namespace {
@@ -58,8 +56,12 @@ void MidiBackedDeviceTrack::transition_load(uint8_t tracknumber,
                                             SeqTrack *seq_track,
                                             GridSlot slotnumber) {
   GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  load_seq_data(seq_track);
-  apply_seq_defaults(tracknumber, seq_track);
+  if (seq_track == nullptr || seq_track->count_down == 0) {
+    load_seq_data(seq_track);
+    apply_seq_defaults(tracknumber, seq_track);
+    return;
+  }
+  static_cast<MidiSeqTrack *>(seq_track)->defer_cache_load(active, tracknumber);
 }
 
 void MidiBackedDeviceTrack::load_immediate(uint8_t tracknumber,
@@ -88,6 +90,14 @@ void MidiBackedDeviceTrack::load_seq_data(SeqTrack *seq_track) {
     uint8_t fallback_speed = midi_device_track_valid_speed(link.speed_value());
     seq_data.clear();
     seq_data.speed = fallback_speed;
+    seq_data.channel = midi_track->track_number;
+  }
+  if (seq_data.length == 0) {
+    seq_data.length = link.length ? link.length : 16;
+  }
+  seq_data.speed = midi_device_track_valid_speed(seq_data.speed);
+  if (seq_data.channel >= 16) {
+    seq_data.channel = midi_track->track_number;
   }
 
   load_link_data(seq_track);
@@ -114,14 +124,9 @@ void MidiBackedDeviceTrack::import_legacy_ext_storage(
 }
 
 bool MidiBackedDeviceTrack::can_materialize_as(uint8_t track_type) {
-  if (track_type == MIDI_TRACK_TYPE) {
+  if (midi_track_type_is_storage_family(track_type)) {
     return true;
   }
-#ifdef PLATFORM_TBD
-  if (track_type == TBD_MIDI_TRACK_TYPE) {
-    return true;
-  }
-#endif
   return DeviceTrack::can_materialize_as(track_type);
 }
 
@@ -139,25 +144,10 @@ DeviceTrack *MidiBackedDeviceTrack::materialize_as(uint8_t track_type,
     old_seq_data.channel = tracknumber;
   }
 
-  if (track_type == MIDI_TRACK_TYPE) {
-    auto *midi_track =
-        static_cast<MidiTrack *>(init_track_type(MIDI_TRACK_TYPE));
-    midi_track->link = old_link;
-    midi_track->seq_data = old_seq_data;
-    return midi_track;
+  if (midi_track_type_is_storage_family(track_type)) {
+    return materialize_midi_storage_track(this, track_type, old_link,
+                                          old_seq_data, tracknumber);
   }
-
-#ifdef PLATFORM_TBD
-  if (track_type == TBD_MIDI_TRACK_TYPE) {
-    auto *tbd_midi_track =
-        static_cast<TBDMidiTrack *>(init_track_type(TBD_MIDI_TRACK_TYPE));
-    tbd_midi_track->init(tracknumber, nullptr);
-    tbd_midi_track->link = old_link;
-    tbd_midi_track->seq_data = old_seq_data;
-    tbd_midi_track->p4_sound.midi_channel = old_seq_data.channel;
-    return tbd_midi_track;
-  }
-#endif
 
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }
