@@ -22,8 +22,8 @@ extern "C" {
 void mcl_setup(void);
 
 // Audio-thread entry. Called once per audio block from
-// PluginProcessor::processBlock. `elapsed_us` is the wall-clock
-// microseconds since the previous call.
+// PluginProcessor::processBlock. `elapsed_us` is derived from the host
+// audio sample clock, not wall clock.
 //
 // Replaces what timer1 (1 kHz) and timer2 (5 kHz) ISRs do on hardware:
 //   - Advances g_clock_ms/g_clock_fast by the elapsed time.
@@ -36,10 +36,9 @@ void mcl_setup(void);
 // sequencer already does.
 void mcl_tick_audio(uint32_t elapsed_us);
 
-// GUI-rate entry. Audio thread calls this every Nth block (rate-
-// limited internally to ~60 Hz). Runs encoder/key polling, page
-// display(), framebuffer rasterisation. Runs in the same thread as
-// mcl_tick_audio — single-threaded wasm, no locks.
+// GUI-rate entry. Runs encoder/key polling, page display(), framebuffer
+// rasterisation. Must not run concurrently with mcl_tick_audio —
+// single-threaded wasm, no locks.
 //
 // May allocate / touch the SD shim / be slow. The audio thread budget
 // must accommodate the worst frame, otherwise occasional dropouts.

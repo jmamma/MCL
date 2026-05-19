@@ -68,7 +68,7 @@ int32_t host_fs_dir_rewind(int32_t handle);
 // `port` tags MCL's logical UARTs: 0 = MidiUart (DIN A), 1 = MidiUart2
 // (DIN B), 2 = MidiUartUSB. Defined in mcl_midi_port_t in this header.
 // The host's bridge moves bytes between these ports and juce::MidiBuffer
-// at processBlock time, drained on the message thread before mcl_tick.
+// around mcl_tick_audio().
 //
 // host_midi_in_pop returns -1 if empty, 0..255 otherwise.
 // host_midi_out_push always accepts; ring overflow drops oldest.

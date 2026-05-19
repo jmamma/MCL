@@ -43,9 +43,16 @@ extern volatile uint16_t g_clock_minutes;
 static constexpr uint16_t MCL_ABI_MAJOR = 1;
 static constexpr uint16_t MCL_ABI_MINOR = 0;
 
+static uint32_t s_timer1_remainder_us = 0;
+static uint32_t s_timer2_remainder_us = 0;
+
 // ---- Lifecycle -----------------------------------------------------------
 
-extern "C" void mcl_setup(void) { mcl_desktop_setup(); }
+extern "C" void mcl_setup(void) {
+    s_timer1_remainder_us = 0;
+    s_timer2_remainder_us = 0;
+    mcl_desktop_setup();
+}
 
 // Audio-thread entry. Catches up MCL's timer-ISR equivalents for the
 // elapsed period, then dispatches the softirq-equivalent work
@@ -55,10 +62,17 @@ extern "C" void mcl_setup(void) { mcl_desktop_setup(); }
 extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
     if (elapsed_us == 0) return;
 
+    // Bytes are pushed by the host before this call, so drain them before
+    // the virtual timer advances. This lets MIDI clock/start/note input
+    // affect the same block's sequencer work instead of landing one block
+    // late.
+    handleIncomingMidi();
+
     // timer2 work (5 kHz on hardware → one tick per 200 µs).
     constexpr uint32_t kTimer2PeriodUs = 200;
-    uint32_t fast_ticks = elapsed_us / kTimer2PeriodUs;
-    bool fired_step = false;
+    uint64_t fast_total_us = (uint64_t)elapsed_us + s_timer2_remainder_us;
+    uint32_t fast_ticks = (uint32_t)(fast_total_us / kTimer2PeriodUs);
+    s_timer2_remainder_us = (uint32_t)(fast_total_us % kTimer2PeriodUs);
     while (fast_ticks--) {
         g_clock_fast++;
 
@@ -74,12 +88,15 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
             MidiClock.increment192Counter();
             MidiClock.div192th_countdown = 0;
             MidiClock.interp_budget--;
-            fired_step = true;
+            mcl_seq.seq();
         }
     }
 
     // timer1 work (1 kHz on hardware → one tick per 1000 µs).
-    uint32_t ms_ticks = elapsed_us / 1000;
+    constexpr uint32_t kTimer1PeriodUs = 1000;
+    uint64_t ms_total_us = (uint64_t)elapsed_us + s_timer1_remainder_us;
+    uint32_t ms_ticks = (uint32_t)(ms_total_us / kTimer1PeriodUs);
+    s_timer1_remainder_us = (uint32_t)(ms_total_us % kTimer1PeriodUs);
     while (ms_ticks--) {
         g_clock_ms++;
         g_clock_ticks++;
@@ -87,19 +104,12 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
             g_clock_ticks = 0;
             g_clock_minutes++;
         }
+        MidiUart.tickActiveSense();
+        MidiUart2.tickActiveSense();
+        MidiUartUSB.tickActiveSense();
     }
 
-    // softirq1 — sequencer step firing, dispatched once if any div192
-    // tick interpolated during catch-up. (Hardware fires softirq1 per
-    // tick; calling once at end coalesces multiple step boundaries
-    // into one sweep.)
-    if (fired_step) {
-        mcl_seq.seq();
-    }
-
-    // softirq2 — drain incoming MIDI byte streams through the per-port
-    // parsers. Cheap; runs unconditionally so byte arrivals from this
-    // audio block are visible to MCL's sequencer next tick.
+    // softirq2 — catch any bytes produced while the virtual timers ran.
     handleIncomingMidi();
 }
 
