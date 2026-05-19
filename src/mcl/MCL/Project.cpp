@@ -25,8 +25,8 @@ bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
     return false;
   }
 
-  constexpr uint8_t chunks = (GRID_WIDTH * GRID_SLOT_BYTES) / sizeof(buf);
-  for (uint8_t i = 0; i < chunks; i++) {
+  constexpr uint16_t chunks = (GRID_WIDTH * GRID_SLOT_BYTES) / sizeof(buf);
+  for (uint16_t i = 0; i < chunks; i++) {
     if (!src_grid.read(buf, sizeof(buf)) || !dst_grid.write(buf, sizeof(buf))) {
       return false;
     }
