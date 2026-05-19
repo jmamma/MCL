@@ -348,11 +348,8 @@ bool mcl_handleEvent(gui_event_t *event) {
           }
           mcl.setPage(SEQ_STEP_PAGE);
         } else {
-          if (seq_step_page.recording) {
-            seq_step_page.recording = 0;
-            GUI_hardware.led.rec_active = false;
-            MD.set_rec_mode(current_page == SEQ_STEP_PAGE);
-            clearLed2();
+          if (SeqPage::recording) {
+            seq_step_page.disable_record();
             key_interface.ignoreNextEvent(MDX_KEY_REC);
           } else {
             if (current_page == SEQ_STEP_PAGE) {
