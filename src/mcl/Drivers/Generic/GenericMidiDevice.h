@@ -16,6 +16,7 @@ public:
                          MidiUartClass *uart_ = nullptr) override;
   virtual DeviceMixerCapability *mixer() override;
 #if !defined(__AVR__)
+  virtual DeviceExtStepTrackCapability *ext_step_tracks() override;
   virtual DeviceParamCapability *params() override;
 #endif
   virtual void setLevel(uint8_t track, uint8_t value,

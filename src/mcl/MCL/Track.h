@@ -12,6 +12,9 @@
 #include "MNMTrack.h"
 #include "PerfTrack.h"
 #include "SPSXTrack.h"
+#if !defined(__AVR__)
+#include "../Drivers/Generic/GridTracks/MidiTrack.h"
+#endif
 #ifdef PLATFORM_TBD
 #include "../Drivers/TBD/TBDTrack.h"
 #endif

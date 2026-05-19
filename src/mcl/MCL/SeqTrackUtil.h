@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MCLSeq.h"
-#if defined(PLATFORM_TBD)
+#if !defined(__AVR__)
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #endif
@@ -27,8 +27,13 @@ public:
   }
 
   static inline bool use_midi_tracks_for_ext() {
+#if !defined(__AVR__)
 #if defined(PLATFORM_TBD)
-    return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
+    return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD ||
+           mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER;
+#else
+    return mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER;
+#endif
 #else
     return false;
 #endif
@@ -36,7 +41,7 @@ public:
 
   static inline uint8_t track_count(bool is_md_device) {
 #ifdef EXT_TRACKS
-#if defined(PLATFORM_TBD)
+#if !defined(__AVR__)
     if (!is_md_device && use_midi_tracks_for_ext()) {
       return mcl_seq.num_midi_tracks;
     }
@@ -51,7 +56,7 @@ public:
   static inline SeqTrackCond &get_track(bool is_md_device, uint8_t index) {
 #ifdef EXT_TRACKS
     if (!is_md_device) {
-#if defined(PLATFORM_TBD)
+#if !defined(__AVR__)
       if (use_midi_tracks_for_ext()) {
         return static_cast<SeqTrackCond &>(mcl_seq.midi_tracks[index]);
       }
@@ -64,7 +69,7 @@ public:
 
 #ifdef EXT_TRACKS
   static inline SeqExtStepTrackApi get_ext_step_track(uint8_t index) {
-#if defined(PLATFORM_TBD)
+#if !defined(__AVR__)
     if (use_midi_tracks_for_ext()) {
       return SeqExtStepTrackApi(mcl_seq.midi_tracks[index]);
     }
@@ -83,7 +88,7 @@ public:
   static inline SeqTrack &get_seq_track(bool is_md_device, uint8_t index) {
 #ifdef EXT_TRACKS
     if (!is_md_device) {
-#if defined(PLATFORM_TBD)
+#if !defined(__AVR__)
       if (use_midi_tracks_for_ext()) {
         return static_cast<SeqTrack &>(mcl_seq.midi_tracks[index]);
       }

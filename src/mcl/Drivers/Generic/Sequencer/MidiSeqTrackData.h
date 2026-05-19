@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 
 #define MIDI_SEQ_DATA_VERSION 1
 
@@ -47,7 +47,6 @@ enum MidiSeqEventFlag : uint8_t {
 
 enum MidiSeqLockFlag : uint8_t {
   MIDI_SEQ_LOCK_FLAG_14BIT = 1 << 0,
-  MIDI_SEQ_LOCK_FLAG_P4_PARAM = 1 << 1,
 };
 
 #pragma pack(push, 1)
@@ -228,4 +227,4 @@ static_assert(sizeof(MidiSeqLockDefinition) == 5,
 static_assert(sizeof(MidiSeqTrackData) <= GRID_SLOT_BYTES,
               "MidiSeqTrackData must fit in one grid slot");
 
-#endif // PLATFORM_TBD
+#endif // !defined(__AVR__)

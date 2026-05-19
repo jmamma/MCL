@@ -450,7 +450,7 @@ TbdP4SoundData *TbdUiMode::active_sound() const {
   if (device_idx_ == DeviceIdx::Secondary) {
     if (mcl_cfg.grid_y_device != GRID_Y_DEVICE_TBD) return nullptr;
     if (last_ext_track >= NUM_EXT_TRACKS) return nullptr;
-    return &mcl_seq.midi_tracks[last_ext_track].p4_sound;
+    return tbd_midi_runtime_sound(last_ext_track);
   }
   return nullptr;
 }

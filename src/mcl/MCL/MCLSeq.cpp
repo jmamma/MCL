@@ -13,8 +13,10 @@
 #include "DeviceParamResolver.h"
 #include "global.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
-#if defined(PLATFORM_TBD)
+#if !defined(__AVR__)
 #include "../Drivers/Generic/Sequencer/StepSeqDefines.h"
+#endif
+#if defined(PLATFORM_TBD)
 #include "../Drivers/TBD/TBDTrack.h"
 #endif
 #include "../Drivers/MD/MD.h"
@@ -75,18 +77,26 @@ bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
 bool seq_grid_x_runs_tbd_tracks() {
   return mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD;
 }
+#endif
 
-bool seq_grid_y_runs_tbd_midi_tracks() {
-  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD;
+#if !defined(__AVR__)
+bool seq_grid_y_runs_midi_tracks() {
+#if defined(PLATFORM_TBD)
+  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD ||
+         mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER;
+#else
+  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER;
+#endif
 }
 #endif
 
 bool seq_grid_y_runs_legacy_ext_tracks() {
-#ifdef PLATFORM_TBD
-  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER ||
-         mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT;
-#else
+#if defined(__AVR__)
   return true;
+#elif defined(PLATFORM_TBD)
+  return mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT;
+#else
+  return !seq_grid_y_runs_midi_tracks();
 #endif
 }
 
@@ -167,6 +177,8 @@ void MCLSeq::set_outputs(MidiUartClass *primary_output_,
     tbd_tracks[i].uart = primary_output;
     tbd_tracks[i].uart2 = secondary_output;
   }
+#endif
+#if !defined(__AVR__)
   for (uint8_t i = 0; i < num_midi_tracks; i++) {
     midi_tracks[i].uart = secondary_output;
     midi_tracks[i].uart2 = primary_output;
@@ -230,10 +242,19 @@ void MCLSeq::setup() {
     tbd_tracks[i].seq_class = this;
     tbd_set_step_sound_default(tbd_tracks[i].p4_sound, i);
   }
+#endif
+#if !defined(__AVR__)
   for (uint8_t i = 0; i < num_midi_tracks; i++) {
     midi_tracks[i].seq_data.clear();
-    tbd_set_midi_sound_default(midi_tracks[i].p4_sound, i);
-    midi_tracks[i].set_channel(midi_tracks[i].p4_sound.midi_channel);
+#if defined(PLATFORM_TBD)
+    TbdP4SoundData *sound = tbd_midi_runtime_sound(i);
+    if (sound != nullptr) {
+      tbd_set_midi_sound_default(*sound, i);
+      midi_tracks[i].set_channel(sound->midi_channel);
+    }
+#else
+    midi_tracks[i].set_channel(i);
+#endif
     midi_tracks[i].set_length(16);
     midi_tracks[i].set_speed(SEQ_SPEED_1X);
     midi_tracks[i].mute_state = SEQ_MUTE_OFF;
@@ -284,8 +305,11 @@ void MCLSeq::configure_clock_interpolation() {
   // in seq() so they still observe their historical 48 PPQN cadence.
   MidiClock.clock_interpolation = STEPSEQ_SEQ_INTERPOLATION;
 #else
-  MidiClock.clock_interpolation =
-      using_spsx_tracks ? SPSX_SEQ_INTERPOLATION : LEGACY_SEQ_INTERPOLATION;
+  MidiClock.clock_interpolation = seq_grid_y_runs_midi_tracks()
+                                      ? STEPSEQ_SEQ_INTERPOLATION
+                                      : using_spsx_tracks
+                                            ? SPSX_SEQ_INTERPOLATION
+                                            : LEGACY_SEQ_INTERPOLATION;
 #endif
   legacy_tick_counter = 0;
 #endif
@@ -325,8 +349,8 @@ void seq_rec_play() {
 
 uint8_t MCLSeq::find_ext_track(uint8_t channel) {
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
-#if defined(PLATFORM_TBD)
-    if (seq_grid_y_runs_tbd_midi_tracks()) {
+#if !defined(__AVR__)
+    if (seq_grid_y_runs_midi_tracks()) {
       if (midi_tracks[n].channel() == channel) {
         return n;
       }
@@ -380,6 +404,8 @@ void MCLSeq::onMidiStartImmediateCallback() {
   for (uint8_t i = 0; i < num_tbd_tracks; i++) {
     tbd_tracks[i].reset();
   }
+#endif
+#if !defined(__AVR__)
   for (uint8_t i = 0; i < num_midi_tracks; i++) {
     midi_tracks[i].reset();
   }
@@ -451,7 +477,9 @@ void MCLSeq::onMidiStopCallback() {
       for (auto &sd : tbd_tracks[i].locks_slide_data) { sd.init(); }
     }
   }
-  if (seq_grid_y_runs_tbd_midi_tracks()) {
+#endif
+#if !defined(__AVR__)
+  if (seq_grid_y_runs_midi_tracks()) {
     for (uint8_t i = 0; i < num_midi_tracks; i++) {
       midi_tracks[i].buffer_notesoff();
       midi_tracks[i].reset_params();
@@ -625,7 +653,9 @@ void MCLSeq::seq() {
       clear_lfo_track_trigs(DeviceIdx::Primary);
     }
   }
-  if (seq_grid_y_runs_tbd_midi_tracks()) {
+#endif
+#if !defined(__AVR__)
+  if (seq_grid_y_runs_midi_tracks()) {
     for (uint8_t i = 0; i < num_midi_tracks; i++) {
       midi_tracks[i].seq(uart2);
     }
@@ -677,7 +707,9 @@ void MCLSeq::seq() {
       tbd_tracks[i].recalc_slides();
     }
   }
-  if (seq_grid_y_runs_tbd_midi_tracks()) {
+#endif
+#if !defined(__AVR__)
+  if (seq_grid_y_runs_midi_tracks()) {
     for (uint8_t i = 0; i < num_midi_tracks; i++) {
       midi_tracks[i].recalc_slides();
     }

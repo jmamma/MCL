@@ -2,13 +2,122 @@
 
 #include "SeqExtStepLockApi.h"
 #include "ExtSeqTrack.h"
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 #include "../Drivers/Generic/Sequencer/MidiSeqTrack.h"
+#endif
+#ifdef PLATFORM_TBD
+#include "../Drivers/TBD/TBDTrack.h"
+#endif
+
+#ifdef PLATFORM_TBD
+namespace {
+
+TbdP4SoundData *p4_sound_for_midi_track(MidiSeqTrack *track) {
+  return track == nullptr ? nullptr : tbd_midi_runtime_sound(track->track_number);
+}
+
+const TbdP4SoundData *p4_sound_for_midi_track(const MidiSeqTrack *track) {
+  return track == nullptr ? nullptr
+                          : tbd_midi_runtime_sound_const(track->track_number);
+}
+
+uint8_t seq_ctrl_type_from_p4(uint8_t p4_ctrl_type) {
+  return p4_ctrl_type == TBD_P4_CTRLTYPE_NRPM
+             ? SEQ_EXT_LOCK_CTRL_NRPN
+             : p4_ctrl_type == TBD_P4_CTRLTYPE_CC ? SEQ_EXT_LOCK_CTRL_CC
+                                                  : SEQ_EXT_LOCK_CTRL_OFF;
+}
+
+uint8_t midi_lock_type_from_p4(uint8_t p4_ctrl_type) {
+  return p4_ctrl_type == TBD_P4_CTRLTYPE_NRPM
+             ? MIDI_SEQ_LOCK_NRPN
+             : p4_ctrl_type == TBD_P4_CTRLTYPE_CC ? MIDI_SEQ_LOCK_CC
+                                                  : MIDI_SEQ_LOCK_OFF;
+}
+
+uint16_t value14_from_u7(uint8_t value) {
+  if (value > 127) value = 127;
+  return (uint16_t)(((uint32_t)value * 0x3FFFu + 63u) / 127u);
+}
+
+uint8_t u7_from_value14(uint16_t value) {
+  if (value > 0x3FFF) value = 0x3FFF;
+  return (uint8_t)(((uint32_t)value * 127u + 0x1FFFu) / 0x3FFFu);
+}
+
+int16_t p4_actual_from_ui_value(const SeqExtStepLockParamInfo &info,
+                                uint8_t value) {
+  if (info.max_value <= info.min_value) return info.min_value;
+  uint16_t value14 = value14_from_u7(value);
+  int32_t range = (int32_t)info.max_value - (int32_t)info.min_value;
+  int32_t scaled = (int32_t)info.min_value +
+                   ((range * (int32_t)value14 + 0x1FFF) / 0x3FFF);
+  if (scaled < info.min_value) scaled = info.min_value;
+  if (scaled > info.max_value) scaled = info.max_value;
+  return (int16_t)scaled;
+}
+
+uint8_t p4_ui_value_from_actual(const SeqExtStepLockParamInfo &info,
+                                int16_t value) {
+  if (info.max_value <= info.min_value) return 0;
+  if (value < info.min_value) value = info.min_value;
+  if (value > info.max_value) value = info.max_value;
+  uint16_t range = (uint16_t)(info.max_value - info.min_value);
+  uint16_t offset = (uint16_t)(value - info.min_value);
+  return (uint8_t)(((uint32_t)offset * 127u + (range / 2u)) / range);
+}
+
+uint16_t p4_midi_value14_from_actual(const TbdP4ParamDescriptor &desc,
+                                     int16_t value) {
+  if (desc.ctrl_type == TBD_P4_CTRLTYPE_CC) {
+    if (value < 0) value = 0;
+    if (value > 127) value = 127;
+    return value14_from_u7((uint8_t)value);
+  }
+  if (value < 0) value = 0;
+  if (value > 0x3FFF) value = 0x3FFF;
+  return (uint16_t)value;
+}
+
+uint8_t p4_ui_value_from_midi_value14(const SeqExtStepLockParamInfo &info,
+                                      const TbdP4ParamDescriptor &desc,
+                                      uint16_t value14) {
+  int16_t actual = desc.ctrl_type == TBD_P4_CTRLTYPE_CC
+                       ? (int16_t)u7_from_value14(value14)
+                       : (int16_t)(value14 > 0x3FFF ? 0x3FFF : value14);
+  return p4_ui_value_from_actual(info, actual);
+}
+
+bool lock_matches_p4_desc(const MidiSeqLockDefinition &lock,
+                          const TbdP4ParamDescriptor &desc) {
+  return lock.is_active() && lock.type == midi_lock_type_from_p4(desc.ctrl_type) &&
+         lock.parameter == desc.ctrl;
+}
+
+const TbdP4ParamDescriptor *p4_param_for_lock(const TbdP4SoundData *sound,
+                                              const MidiSeqLockDefinition &lock,
+                                              uint8_t *param_idx = nullptr) {
+  if (sound == nullptr) {
+    return nullptr;
+  }
+  for (uint8_t i = 0; i < TBD_P4_LOCK_PARAM_COUNT; i++) {
+    const TbdP4ParamDescriptor *desc = tbd_p4_sound_param_for_lock(*sound, i);
+    if (desc != nullptr && desc->is_visible() && lock_matches_p4_desc(lock, *desc)) {
+      if (param_idx != nullptr) {
+        *param_idx = i;
+      }
+      return desc;
+    }
+  }
+  return nullptr;
+}
+
+} // namespace
 #endif
 
 bool SeqExtStepLockApi::delete_lock(seq_extstep_tick_t tick, uint8_t lock_idx,
                                     uint8_t value) {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) return midi_track_->del_lock(tick, lock_idx, value);
 #endif
   return ext_track_->del_track_locks((uint16_t)tick, lock_idx, value);
@@ -17,7 +126,7 @@ bool SeqExtStepLockApi::delete_lock(seq_extstep_tick_t tick, uint8_t lock_idx,
 bool SeqExtStepLockApi::add_lock(uint8_t step, uint16_t timing, uint8_t param,
                                  uint8_t value, bool slide,
                                  uint8_t lock_idx) {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) {
     return midi_track_->add_lock(step, timing, param, value, slide, lock_idx);
   }
@@ -29,7 +138,7 @@ bool SeqExtStepLockApi::add_lock(uint8_t step, uint16_t timing, uint8_t param,
 bool SeqExtStepLockApi::replace_param_lock(uint8_t step, uint16_t timing,
                                            uint8_t param, uint8_t value,
                                            bool slide) {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) {
     uint8_t lock_idx = selected_lock_slot_for_param(param);
     if (lock_idx == 255) {
@@ -55,7 +164,26 @@ bool SeqExtStepLockApi::set_p4_param_lock(uint8_t step, uint16_t timing,
                                           bool slide) {
 #ifdef PLATFORM_TBD
   if (midi_track_) {
-    return midi_track_->set_p4_lock(step, timing, param, value, slide);
+    const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
+    const TbdP4ParamDescriptor *desc =
+        sound == nullptr ? nullptr : tbd_p4_sound_param_for_lock(*sound, param);
+    if (desc == nullptr || !desc->is_sendable()) {
+      return false;
+    }
+    SeqExtStepLockParamInfo info;
+    if (!lock_menu_value_info(param, info)) {
+      return false;
+    }
+    uint8_t type = midi_lock_type_from_p4(desc->ctrl_type);
+    if (type == MIDI_SEQ_LOCK_OFF) {
+      return false;
+    }
+    int16_t actual = p4_actual_from_ui_value(info, value);
+    return midi_track_->set_lock_event(
+        step, timing, type, desc->ctrl,
+        p4_midi_value14_from_actual(*desc, actual), slide,
+        p4_midi_value14_from_actual(*desc, desc->value),
+        MIDI_SEQ_LOCK_FLAG_14BIT);
   }
 #endif
   (void)step;
@@ -70,7 +198,25 @@ bool SeqExtStepLockApi::record_p4_param_lock(uint8_t param, uint8_t value,
                                              bool slide) {
 #ifdef PLATFORM_TBD
   if (midi_track_) {
-    return midi_track_->record_p4_lock(param, value, slide);
+    const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
+    const TbdP4ParamDescriptor *desc =
+        sound == nullptr ? nullptr : tbd_p4_sound_param_for_lock(*sound, param);
+    if (desc == nullptr || !desc->is_sendable()) {
+      return false;
+    }
+    SeqExtStepLockParamInfo info;
+    if (!lock_menu_value_info(param, info)) {
+      return false;
+    }
+    uint8_t type = midi_lock_type_from_p4(desc->ctrl_type);
+    if (type == MIDI_SEQ_LOCK_OFF) {
+      return false;
+    }
+    int16_t actual = p4_actual_from_ui_value(info, value);
+    return midi_track_->record_lock(
+        type, desc->ctrl, p4_midi_value14_from_actual(*desc, actual), slide,
+        MIDI_SEQ_LOCK_FLAG_14BIT,
+        p4_midi_value14_from_actual(*desc, desc->value));
   }
 #endif
   (void)param;
@@ -83,12 +229,16 @@ bool SeqExtStepLockApi::p4_param_lock_value(uint8_t step, uint8_t param,
                                             uint8_t &value) const {
 #ifdef PLATFORM_TBD
   if (midi_track_) {
+    const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
+    const TbdP4ParamDescriptor *desc =
+        sound == nullptr ? nullptr : tbd_p4_sound_param_for_lock(*sound, param);
+    if (desc == nullptr || !desc->is_sendable()) {
+      return false;
+    }
     uint8_t lock_idx = 255;
     for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
       const auto &lock = midi_track_->seq_data.locks[i];
-      if (lock.is_active() && lock.type == MIDI_SEQ_LOCK_CC &&
-          lock.parameter == param &&
-          (lock.flags & MIDI_SEQ_LOCK_FLAG_P4_PARAM)) {
+      if (lock_matches_p4_desc(lock, *desc)) {
         lock_idx = i;
         break;
       }
@@ -98,10 +248,14 @@ bool SeqExtStepLockApi::p4_param_lock_value(uint8_t step, uint8_t param,
     uint16_t start = 0;
     uint16_t end = 0;
     midi_track_->seq_data.locate(step, start, end);
+    SeqExtStepLockParamInfo info;
+    if (!lock_menu_value_info(param, info)) {
+      return false;
+    }
     for (uint16_t i = start; i < end; i++) {
       const auto &event = midi_track_->seq_data.events[i];
       if (event.type == MIDI_SEQ_EVENT_LOCK && event.target == lock_idx) {
-        value = value7_from_14(event.value);
+        value = p4_ui_value_from_midi_value14(info, *desc, event.value);
         return true;
       }
     }
@@ -115,14 +269,14 @@ bool SeqExtStepLockApi::p4_param_lock_value(uint8_t step, uint8_t param,
 }
 
 uint8_t SeqExtStepLockApi::count_lock_event(uint8_t step, uint8_t lock_idx) {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) return midi_track_->count_lock_event(step, lock_idx);
 #endif
   return ext_track_->count_lock_event(step, lock_idx);
 }
 
 uint8_t SeqExtStepLockApi::selected_lock_param(uint8_t slot) const {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) return midi_track_->selected_lock_param(slot);
 #endif
   return ext_track_->locks_params[slot];
@@ -139,6 +293,14 @@ bool SeqExtStepLockApi::selected_lock_param_id(uint8_t slot,
 }
 
 uint8_t SeqExtStepLockApi::selected_lock_menu_value(uint8_t slot) const {
+#if !defined(__AVR__)
+  if (midi_track_) {
+    SeqExtStepLockParamInfo info;
+    return selected_lock_param_info(slot, info) && info.active
+               ? (uint8_t)info.param_id
+               : PARAM_OFF;
+  }
+#endif
   uint8_t param_id = 0;
   return selected_lock_param_id(slot, param_id) ? param_id : PARAM_OFF;
 }
@@ -158,7 +320,8 @@ bool SeqExtStepLockApi::selected_lock_menu_editable(uint8_t slot) const {
 
 uint8_t SeqExtStepLockApi::lock_param_menu_max() const {
 #ifdef PLATFORM_TBD
-  if (midi_track_ && midi_track_->p4_sound.has_sendable_params()) {
+  const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
+  if (sound != nullptr && sound->has_sendable_params()) {
     return PARAM_OFF;
   }
 #endif
@@ -199,9 +362,10 @@ bool SeqExtStepLockApi::lock_menu_value_info(
   }
 
 #ifdef PLATFORM_TBD
-  if (midi_track_ && midi_track_->p4_sound.has_sendable_params()) {
+  const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
+  if (sound != nullptr && sound->has_sendable_params()) {
     const TbdP4ParamDescriptor *desc =
-        tbd_p4_sound_param_for_lock(midi_track_->p4_sound, menu_value);
+        tbd_p4_sound_param_for_lock(*sound, menu_value);
     if (!desc || !desc->is_visible()) return false;
     info.active = true;
     info.p4_param = true;
@@ -210,7 +374,7 @@ bool SeqExtStepLockApi::lock_menu_value_info(
     info.macro = desc->is_macro();
     info.type = desc->type;
     info.ctrl = desc->ctrl;
-    info.ctrl_type = desc->ctrl_type;
+    info.ctrl_type = seq_ctrl_type_from_p4(desc->ctrl_type);
     info.param_id = menu_value;
     info.resolution = desc->resolution;
     info.min_value = desc->min_value;
@@ -237,7 +401,8 @@ bool SeqExtStepLockApi::lock_menu_value_info(
 uint8_t SeqExtStepLockApi::normalize_lock_menu_value(uint8_t menu_value,
                                                      uint8_t old_value) const {
 #ifdef PLATFORM_TBD
-  if (midi_track_ && midi_track_->p4_sound.has_sendable_params()) {
+  const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
+  if (sound != nullptr && sound->has_sendable_params()) {
     if (menu_value >= PARAM_OFF) return PARAM_OFF;
 
     SeqExtStepLockParamInfo info;
@@ -261,7 +426,7 @@ uint8_t SeqExtStepLockApi::normalize_lock_menu_value(uint8_t menu_value,
 }
 
 void SeqExtStepLockApi::set_selected_lock_param(uint8_t slot, uint8_t param) {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) {
     midi_track_->set_selected_lock_param(slot, param);
     return;
@@ -274,33 +439,39 @@ void SeqExtStepLockApi::set_selected_lock_menu_value(uint8_t slot,
                                                      uint8_t menu_value) {
   if (menu_value == PARAM_OFF) {
     set_selected_lock_param(slot, 0);
+    return;
+  }
 #ifdef PLATFORM_TBD
-  } else if (midi_track_ && midi_track_->p4_sound.has_sendable_params()) {
+  if (midi_track_) {
     SeqExtStepLockParamInfo info;
     if (lock_menu_value_info(menu_value, info) && info.p4_param) {
-      set_selected_lock_param(slot, menu_value + 1);
+      set_selected_lock_control(slot, info.ctrl_type, info.ctrl,
+                                info.current_value);
+      return;
     }
-#endif
-  } else {
-    set_selected_lock_param(slot, menu_value + 1);
   }
+#endif
+  set_selected_lock_param(slot, menu_value + 1);
 }
 
 bool SeqExtStepLockApi::set_selected_lock_control(uint8_t slot,
                                                   uint8_t ctrl_type,
                                                   uint16_t ctrl,
                                                   uint16_t default_value) {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) {
+#ifdef PLATFORM_TBD
     uint8_t p4_lock_param = 255;
     uint16_t p4_value14 = 0;
     uint16_t p4_default_value14 = 0;
     if (find_p4_control(ctrl_type, ctrl, default_value, p4_lock_param,
                         p4_value14, p4_default_value14)) {
+      (void)p4_lock_param;
       return midi_track_->set_selected_lock_control(
-          slot, MIDI_SEQ_LOCK_CC, p4_lock_param, p4_default_value14,
-          MIDI_SEQ_LOCK_FLAG_P4_PARAM | MIDI_SEQ_LOCK_FLAG_14BIT);
+          slot, ctrl_type_to_midi_lock_type(ctrl_type), ctrl,
+          p4_default_value14, MIDI_SEQ_LOCK_FLAG_14BIT);
     }
+#endif
 
     uint8_t type = ctrl_type_to_midi_lock_type(ctrl_type);
     if (type == MIDI_SEQ_LOCK_OFF) return false;
@@ -330,7 +501,7 @@ bool SeqExtStepLockApi::selected_lock_param_info(
 #else
   info = SeqExtStepLockParamInfo();
 #endif
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) {
     if (slot >= MIDI_SEQ_NUM_LOCKS) return false;
     const auto &lock = midi_track_->seq_data.locks[slot];
@@ -341,18 +512,20 @@ bool SeqExtStepLockApi::selected_lock_param_info(
     info.current_value = lock.default_value;
     info.resolution = (lock.flags & MIDI_SEQ_LOCK_FLAG_14BIT) ? 0x4000 : 128;
 
-    if (lock.flags & MIDI_SEQ_LOCK_FLAG_P4_PARAM) {
-      const TbdP4ParamDescriptor *desc =
-          tbd_p4_sound_param_for_lock(midi_track_->p4_sound,
-                                      (uint8_t)lock.parameter);
-      if (!desc || !desc->is_visible()) return info.active;
+#ifdef PLATFORM_TBD
+    uint8_t p4_param = 255;
+    const TbdP4ParamDescriptor *desc =
+        p4_param_for_lock(p4_sound_for_midi_track(midi_track_), lock,
+                          &p4_param);
+    if (desc != nullptr) {
       info.p4_param = true;
       info.sendable = desc->is_sendable();
       info.nrpn = desc->ctrl_type == TBD_P4_CTRLTYPE_NRPM;
       info.macro = desc->is_macro();
       info.type = desc->type;
       info.ctrl = desc->ctrl;
-      info.ctrl_type = desc->ctrl_type;
+      info.ctrl_type = seq_ctrl_type_from_p4(desc->ctrl_type);
+      info.param_id = p4_param;
       info.resolution = desc->resolution;
       info.min_value = desc->min_value;
       info.max_value = desc->max_value;
@@ -360,6 +533,7 @@ bool SeqExtStepLockApi::selected_lock_param_info(
       info.current_value = desc->value;
       return true;
     }
+#endif
 
     info.sendable = true;
     info.nrpn = lock.type == MIDI_SEQ_LOCK_NRPN;
@@ -403,9 +577,11 @@ bool SeqExtStepLockApi::copy_selected_lock_label(uint8_t slot, char *dst,
 
 #ifdef PLATFORM_TBD
   if (midi_track_ && info.p4_param) {
+    const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
     const TbdP4ParamDescriptor *desc =
-        tbd_p4_sound_param_for_lock(midi_track_->p4_sound,
-                                    (uint8_t)info.param_id);
+        sound == nullptr
+            ? nullptr
+            : tbd_p4_sound_param_for_lock(*sound, (uint8_t)info.param_id);
     if (desc && desc->shortname[0] != '\0') {
       tbd_p4_copy_param_label(*desc, dst, dst_len);
       if (dst[0] != '\0') return true;
@@ -459,9 +635,11 @@ bool SeqExtStepLockApi::copy_lock_menu_value_label(uint8_t menu_value,
   }
 #ifdef PLATFORM_TBD
   if (midi_track_ && info.p4_param) {
+    const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
     const TbdP4ParamDescriptor *desc =
-        tbd_p4_sound_param_for_lock(midi_track_->p4_sound,
-                                    (uint8_t)info.param_id);
+        sound == nullptr
+            ? nullptr
+            : tbd_p4_sound_param_for_lock(*sound, (uint8_t)info.param_id);
     if (desc && desc->shortname[0] != '\0') {
       tbd_p4_copy_param_label(*desc, dst, dst_len);
       if (dst[0] != '\0') return true;
@@ -538,7 +716,7 @@ bool SeqExtStepLockApi::selected_lock_matches_control(uint8_t slot,
 }
 
 uint8_t SeqExtStepLockApi::selected_lock_slot_for_param(uint8_t param) const {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) {
     for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
       SeqExtStepLockParamInfo info;
@@ -581,18 +759,23 @@ bool SeqExtStepLockApi::copy_lock_value_label(uint8_t slot, uint8_t value,
 
 bool SeqExtStepLockApi::record_control_lock(uint8_t ctrl_type, uint16_t ctrl,
                                             uint16_t value, bool slide) {
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   if (midi_track_) {
     uint8_t lock_param = 255;
     uint16_t value14 = value;
     uint16_t default_value14 = 0;
-    uint8_t lock_flags = 0;
+#ifdef PLATFORM_TBD
     if (find_p4_control(ctrl_type, ctrl, value, lock_param, value14,
                         default_value14)) {
-      lock_flags = MIDI_SEQ_LOCK_FLAG_P4_PARAM | MIDI_SEQ_LOCK_FLAG_14BIT;
-      return midi_track_->record_lock(MIDI_SEQ_LOCK_CC, lock_param, value14,
-                                      slide, lock_flags, default_value14);
+      (void)lock_param;
+      return midi_track_->record_lock(
+          ctrl_type_to_midi_lock_type(ctrl_type), ctrl, value14, slide,
+          MIDI_SEQ_LOCK_FLAG_14BIT, default_value14);
     }
+#else
+    (void)lock_param;
+    (void)default_value14;
+#endif
     uint8_t midi_type = ctrl_type_to_midi_lock_type(ctrl_type);
     if (midi_type == MIDI_SEQ_LOCK_OFF) return false;
     if (midi_type == MIDI_SEQ_LOCK_CC ||
@@ -765,7 +948,7 @@ uint8_t SeqExtStepLockApi::value7_from_param_value(
 }
 #endif
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 uint8_t SeqExtStepLockApi::ctrl_type_to_midi_lock_type(uint8_t ctrl_type) {
   switch (ctrl_type) {
   case SEQ_EXT_LOCK_CTRL_CC:
@@ -786,12 +969,16 @@ uint8_t SeqExtStepLockApi::ctrl_type_to_midi_lock_type(uint8_t ctrl_type) {
     return MIDI_SEQ_LOCK_OFF;
   }
 }
+#endif
 
+#ifdef PLATFORM_TBD
 bool SeqExtStepLockApi::find_p4_control(uint8_t ctrl_type, uint16_t ctrl,
                                         uint16_t value, uint8_t &lock_param,
                                         uint16_t &value14,
                                         uint16_t &default_value14) const {
   if (!midi_track_) return false;
+  const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
+  if (sound == nullptr) return false;
   uint8_t p4_ctrl_type = ctrl_type == SEQ_EXT_LOCK_CTRL_NRPN
                              ? TBD_P4_CTRLTYPE_NRPM
                              : ctrl_type == SEQ_EXT_LOCK_CTRL_CC
@@ -801,29 +988,20 @@ bool SeqExtStepLockApi::find_p4_control(uint8_t ctrl_type, uint16_t ctrl,
 
   for (uint8_t i = 0; i < TBD_P4_LOCK_PARAM_COUNT; i++) {
     const TbdP4ParamDescriptor *desc =
-        tbd_p4_sound_param_for_lock(midi_track_->p4_sound, i);
+        tbd_p4_sound_param_for_lock(*sound, i);
     if (!desc || !desc->is_sendable()) continue;
     if (desc->ctrl_type != p4_ctrl_type || desc->ctrl != ctrl) continue;
 
     SeqExtStepLockParamInfo info;
     lock_menu_value_info(i, info);
     lock_param = i;
-    value14 = value14_from_param_actual(info, (int16_t)value);
-    default_value14 = value14_from_param_actual(info, info.current_value);
+    value14 = p4_midi_value14_from_actual(*desc, (int16_t)value);
+    default_value14 = p4_midi_value14_from_actual(*desc, info.current_value);
     return true;
   }
   return false;
 }
 
-uint16_t SeqExtStepLockApi::value14_from_param_actual(
-    const SeqExtStepLockParamInfo &info, int16_t value) {
-  if (info.max_value <= info.min_value) return 0;
-  if (value < info.min_value) value = info.min_value;
-  if (value > info.max_value) value = info.max_value;
-  uint32_t range = (uint16_t)(info.max_value - info.min_value);
-  uint32_t offset = (uint16_t)(value - info.min_value);
-  return (uint16_t)((offset * 0x3FFFu + (range / 2u)) / range);
-}
 #endif
 
 uint8_t SeqExtStepLockApi::value7_from_14(uint16_t value14) {

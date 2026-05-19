@@ -383,7 +383,7 @@ TbdP4SoundData *p4_sound_for_mixer(DeviceIdx device_idx, uint8_t track) {
         track >= mcl_seq.num_midi_tracks) {
       return nullptr;
     }
-    return &mcl_seq.midi_tracks[track].p4_sound;
+    return tbd_midi_runtime_sound(track);
   }
   return nullptr;
 }
@@ -477,7 +477,7 @@ TbdP4SoundData *active_p4_sound_for_note() {
 #ifdef EXT_TRACKS
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD &&
       last_ext_track < mcl_seq.num_midi_tracks) {
-    return &mcl_seq.midi_tracks[last_ext_track].p4_sound;
+    return tbd_midi_runtime_sound(last_ext_track);
   }
 #endif
 
@@ -2068,9 +2068,12 @@ void TbdDevice::init_grid_devices(DeviceIdx device_idx) {
 
   if (device_idx == DeviceIdx::Secondary) {
     for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-      tbd_ensure_midi_sound_default(mcl_seq.midi_tracks[i].p4_sound, i);
-      mcl_seq.midi_tracks[i].set_channel(
-          mcl_seq.midi_tracks[i].p4_sound.midi_channel);
+      mcl_seq.midi_tracks[i].active = TBD_MIDI_TRACK_TYPE;
+      TbdP4SoundData *sound = tbd_midi_runtime_sound(i);
+      if (sound != nullptr) {
+        tbd_ensure_midi_sound_default(*sound, i);
+        mcl_seq.midi_tracks[i].set_channel(sound->midi_channel);
+      }
       gdt.init(TBD_MIDI_TRACK_TYPE, GROUP_DEV, idx,
                &(mcl_seq.midi_tracks[i]));
       add_track_to_grid(GridIdx::Y, i, &gdt);
@@ -2121,18 +2124,17 @@ void TbdDevice::apply_runtime_p4_defaults() {
     DEBUG_PRINT("tbd_init runtime_midi slot=");
     DEBUG_PRINTLN((unsigned)i);
 #endif
-    debug_p4_sound_summary("runtime_midi_before",
-                           mcl_seq.midi_tracks[i].p4_sound);
-    tbd_ensure_midi_sound_default(mcl_seq.midi_tracks[i].p4_sound, i);
-    tbd_p4_set_track_length(
-        mcl_seq.midi_tracks[i].p4_sound,
-        mcl_seq.midi_tracks[i].seq_data.length
-            ? mcl_seq.midi_tracks[i].seq_data.length
-            : TBD_P4_DEFAULT_TRACK_LENGTH);
-    mcl_seq.midi_tracks[i].set_channel(
-        mcl_seq.midi_tracks[i].p4_sound.midi_channel);
-    debug_p4_sound_summary("runtime_midi_after",
-                           mcl_seq.midi_tracks[i].p4_sound);
+    TbdP4SoundData *sound = tbd_midi_runtime_sound(i);
+    if (sound == nullptr) {
+      continue;
+    }
+    debug_p4_sound_summary("runtime_midi_before", *sound);
+    tbd_ensure_midi_sound_default(*sound, i);
+    tbd_p4_set_track_length(*sound, mcl_seq.midi_tracks[i].seq_data.length
+                                        ? mcl_seq.midi_tracks[i].seq_data.length
+                                        : TBD_P4_DEFAULT_TRACK_LENGTH);
+    mcl_seq.midi_tracks[i].set_channel(sound->midi_channel);
+    debug_p4_sound_summary("runtime_midi_after", *sound);
   }
 #ifdef DEBUGMODE
   DEBUG_PRINTLN("tbd_init apply_runtime_defaults end");
@@ -2150,8 +2152,9 @@ void TbdDevice::sync_active_p4_track() {
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE &&
       mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD &&
       last_ext_track < mcl_seq.num_midi_tracks) {
-    tbd_p4_realtime.set_active_track(
-        mcl_seq.midi_tracks[last_ext_track].p4_sound.p4_track_index);
+    if (TbdP4SoundData *sound = tbd_midi_runtime_sound(last_ext_track)) {
+      tbd_p4_realtime.set_active_track(sound->p4_track_index);
+    }
     return;
   }
 #endif
@@ -2166,8 +2169,9 @@ void TbdDevice::sync_active_p4_track() {
 #ifdef EXT_TRACKS
   if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_TBD &&
       last_ext_track < mcl_seq.num_midi_tracks) {
-    tbd_p4_realtime.set_active_track(
-        mcl_seq.midi_tracks[last_ext_track].p4_sound.p4_track_index);
+    if (TbdP4SoundData *sound = tbd_midi_runtime_sound(last_ext_track)) {
+      tbd_p4_realtime.set_active_track(sound->p4_track_index);
+    }
   }
 #endif
 }

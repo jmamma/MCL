@@ -4,10 +4,9 @@
 #include "GridTrack.h"
 #include "ExtSeqTrack.h"
 #include "SeqTrack.h"
-#include "../../TBD/TbdP4SoundData.h"
 #include "platform.h"
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 
 class GridLink;
 
@@ -33,7 +32,6 @@ public:
 class MidiSeqTrack : public SeqTrackCond {
 public:
   MidiSeqTrackData seq_data;
-  TbdP4SoundData p4_sound;
 
   static uint8_t epoch;
 
@@ -108,9 +106,9 @@ public:
                                  uint8_t flags = 0);
   bool add_lock(uint8_t step, uint16_t timing, uint8_t param, uint8_t value,
                 bool slide, uint8_t lock_idx);
-  bool set_p4_lock(uint8_t step, uint16_t timing, uint8_t param,
-                   uint8_t value, bool slide);
-  bool record_p4_lock(uint8_t param, uint8_t value, bool slide);
+  bool set_lock_event(uint8_t step, uint16_t timing, uint8_t type,
+                      uint16_t parameter, uint16_t value14, bool slide,
+                      uint16_t default_value = 0, uint8_t flags = 0);
   bool del_lock(uint32_t tick, uint8_t lock_idx, uint8_t value);
   uint8_t count_lock_event(uint8_t step, uint8_t lock_idx) const;
   uint8_t search_lock_idx(uint8_t lock_idx, uint8_t step, uint16_t &event_idx,
@@ -142,7 +140,6 @@ private:
   bool conditional_for_event(uint8_t condition, uint8_t step);
   void send_lock_value(const MidiSeqLockDefinition &lock,
                        const MidiSeqEvent &event);
-  void send_p4_lock_value(uint8_t param, uint16_t value14);
   void prepare_slide(uint8_t lock_idx, int32_t x0, int32_t x1, uint16_t y0,
                      uint16_t y1);
   void send_slides();
@@ -152,4 +149,4 @@ private:
                            uint16_t &start_idx) const;
 };
 
-#endif // PLATFORM_TBD
+#endif // !defined(__AVR__)

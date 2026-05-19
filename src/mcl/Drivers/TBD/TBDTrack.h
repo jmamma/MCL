@@ -26,6 +26,8 @@ void tbd_set_midi_sound_default(TbdP4SoundData &sound, uint8_t slot);
 void tbd_ensure_step_sound_default(TbdP4SoundData &sound, uint8_t slot);
 void tbd_ensure_midi_sound_default(TbdP4SoundData &sound, uint8_t slot);
 void tbd_init_p4_sound_runtime_defaults(TbdP4SoundData &sound);
+TbdP4SoundData *tbd_midi_runtime_sound(uint8_t track);
+const TbdP4SoundData *tbd_midi_runtime_sound_const(uint8_t track);
 void tbd_update_track_default_from_p4(uint8_t p4_track_index,
                                       const char *preset_id,
                                       uint8_t rom_bank,

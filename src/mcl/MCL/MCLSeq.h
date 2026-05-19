@@ -15,8 +15,10 @@
 #if !defined(__AVR__)
 #include "SPSXSeqTrack.h"
 #endif
-#if defined(PLATFORM_TBD)
+#if !defined(__AVR__)
 #include "../Drivers/Generic/Sequencer/MidiSeqTrack.h"
+#endif
+#if defined(PLATFORM_TBD)
 #include "../Drivers/TBD/TBDSeqTrack.h"
 #endif
 
@@ -86,6 +88,8 @@ public:
 #if defined(PLATFORM_TBD)
   static constexpr uint8_t num_tbd_tracks = TBD_P4_SOUND_TRACK_COUNT;
   TBDSeqTrack tbd_tracks[TBD_P4_SOUND_TRACK_COUNT];
+#endif
+#if !defined(__AVR__)
   static constexpr uint8_t num_midi_tracks = NUM_EXT_TRACKS;
   MidiSeqTrack midi_tracks[NUM_EXT_TRACKS];
 #endif

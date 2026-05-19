@@ -45,7 +45,7 @@ public:
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   virtual uint8_t get_parent_model() { return device_manager.secondary_device()->track_type; }
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   virtual bool can_materialize_as(uint8_t track_type);
 #endif
   virtual DeviceTrack *materialize_as(uint8_t track_type,

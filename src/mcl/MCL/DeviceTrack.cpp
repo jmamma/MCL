@@ -61,6 +61,11 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   case MNM_TRACK_TYPE:
     ::new (this) MNMTrack;
     break;
+#if !defined(__AVR__)
+  case MIDI_TRACK_TYPE:
+    ::new (this) MidiTrack;
+    break;
+#endif
 #ifdef PLATFORM_TBD
   case TBD_TRACK_TYPE:
     ::new (this) TBDTrack;

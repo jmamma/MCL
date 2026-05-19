@@ -1,6 +1,6 @@
 #include "MidiSeqTrackData.h"
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 
 #include "ExtSeqTrack.h"
 #include "GridLink.h"
@@ -309,4 +309,4 @@ void MidiSeqTrackData::import_legacy_ext(const ExtSeqTrackData &legacy,
   clean_locks();
 }
 
-#endif // PLATFORM_TBD
+#endif // !defined(__AVR__)

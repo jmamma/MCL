@@ -3,13 +3,17 @@
 #ifndef SEQEXTSTEPTRACKAPI_H__
 #define SEQEXTSTEPTRACKAPI_H__
 
+#if !defined(__AVR__)
+#define SEQ_EXTSTEP_HAS_MIDI_TRACK 1
+#endif
+
 #include "ExtSeqTrack.h"
 #include "SeqExtStepLockApi.h"
 #ifdef PLATFORM_TBD
 #include "SeqExtMidiControl.h"
 #endif
 #include "SeqExtStepTypes.h"
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
 #include "../Drivers/Generic/Sequencer/MidiSeqTrack.h"
 #endif
 #include <stdint.h>
@@ -27,12 +31,12 @@ struct SeqExtStepEvent {
 class SeqExtStepTrackApi {
 public:
   explicit SeqExtStepTrackApi(ExtSeqTrack &track) : ext_track_(&track) {}
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
   explicit SeqExtStepTrackApi(MidiSeqTrack &track) : midi_track_(&track) {}
 #endif
 
   SeqExtStepLockApi locks() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return SeqExtStepLockApi(*midi_track_);
 #endif
     return SeqExtStepLockApi(*ext_track_);
@@ -48,42 +52,42 @@ public:
 #endif
 
   uint8_t length() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->length;
 #endif
     return ext_track_->length;
   }
 
   uint8_t speed() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->speed;
 #endif
     return ext_track_->speed;
   }
 
   uint8_t step_count() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->step_count;
 #endif
     return ext_track_->step_count;
   }
 
   uint16_t mod_ticks() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->tick_counter;
 #endif
     return ext_track_->mod12_counter;
   }
 
   uint16_t ticks_per_step() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->ticks_per_step();
 #endif
     return ext_track_->get_timing_mid();
   }
 
   uint16_t speed_multiplier_int() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->speed_multiplier_int();
 #endif
     return ext_track_->get_speed_multiplier_int();
@@ -100,14 +104,14 @@ public:
   }
 
   uint8_t step_from_tick(seq_extstep_tick_t tick) const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->step_from_tick(tick);
 #endif
     return tick / ticks_per_step();
   }
 
   uint16_t timing_from_tick(seq_extstep_tick_t tick) const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->timing_from_tick(tick);
 #endif
     uint8_t step = step_from_tick(tick);
@@ -115,14 +119,14 @@ public:
   }
 
   uint8_t event_bucket_size(uint8_t step) const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->seq_data.event_buckets[step];
 #endif
     return ext_track_->event_buckets.get(step);
   }
 
   SeqExtStepEvent event(uint16_t idx) const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       const auto &event = midi_track_->seq_data.events[idx];
       return {event.type == MIDI_SEQ_EVENT_LOCK,
@@ -143,7 +147,7 @@ public:
 
   uint8_t search_note_off(uint8_t note, uint8_t step, uint16_t &event_idx,
                           uint16_t event_end) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       return midi_track_->search_note_off(note, step, event_idx, event_end);
     }
@@ -153,7 +157,7 @@ public:
 
   uint8_t search_lock(uint8_t lock_idx, uint8_t step, uint16_t &event_idx,
                       uint16_t &event_end) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       return midi_track_->search_lock_idx(lock_idx, step, event_idx, event_end);
     }
@@ -163,7 +167,7 @@ public:
 
   bool delete_note(seq_extstep_tick_t tick, seq_extstep_tick_t width,
                    uint8_t note) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->del_note(tick, width, note);
 #endif
     return ext_track_->del_note((uint16_t)tick, (uint16_t)width, note);
@@ -171,7 +175,7 @@ public:
 
   void add_note(seq_extstep_tick_t tick, seq_extstep_tick_t width,
                 uint8_t note, uint8_t velocity, uint8_t condition) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->add_note(tick, width, note, velocity, condition);
       return;
@@ -182,14 +186,14 @@ public:
   }
 
   uint8_t notes_on_count() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->notes_on_count;
 #endif
     return ext_track_->notes_on_count;
   }
 
   bool note_on_at(uint8_t idx, NoteVector &note) const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->note_on_at(idx, note);
 #endif
     if (idx >= NUM_NOTES_ON || ext_track_->notes_on[idx].value == 255) return false;
@@ -198,14 +202,14 @@ public:
   }
 
   uint8_t change_counter() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return MidiSeqTrack::epoch;
 #endif
     return ExtSeqTrack::epoch;
   }
 
   static uint8_t global_change_counter() {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     return MidiSeqTrack::epoch;
 #else
     return ExtSeqTrack::epoch;
@@ -213,14 +217,14 @@ public:
   }
 
   uint8_t channel() const {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->channel();
 #endif
     return ext_track_->channel;
   }
 
   void set_channel(uint8_t channel) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       if (midi_track_->channel() != channel) {
         midi_track_->buffer_notesoff();
@@ -236,7 +240,7 @@ public:
   }
 
   void clear_track() {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->clear_track();
       return;
@@ -246,7 +250,7 @@ public:
   }
 
   void clear_track_locks() {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->clear_track_locks();
       return;
@@ -256,7 +260,7 @@ public:
   }
 
   void clear_track_locks(uint8_t lock_idx) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->clear_track_locks(lock_idx);
       return;
@@ -267,7 +271,7 @@ public:
 
   void note_on(uint8_t note, uint8_t velocity,
                MidiUartClass *uart_ = nullptr) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->note_on(note, velocity, uart_);
       return;
@@ -278,7 +282,7 @@ public:
 
   void note_off(uint8_t note, uint8_t velocity = 0,
                 MidiUartClass *uart_ = nullptr) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->note_off(note, velocity, uart_);
       return;
@@ -288,7 +292,7 @@ public:
   }
 
   void send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_ = nullptr) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->send_cc(cc, value, uart_);
       return;
@@ -298,7 +302,7 @@ public:
   }
 
   void pitch_bend(uint16_t value, MidiUartClass *uart_ = nullptr) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->pitch_bend(value, uart_);
       return;
@@ -308,7 +312,7 @@ public:
   }
 
   void channel_pressure(uint8_t pressure, MidiUartClass *uart_ = nullptr) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->channel_pressure(pressure, uart_);
       return;
@@ -319,7 +323,7 @@ public:
 
   void after_touch(uint8_t note, uint8_t pressure,
                    MidiUartClass *uart_ = nullptr) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->after_touch(note, pressure, uart_);
       return;
@@ -329,7 +333,7 @@ public:
   }
 
   void buffer_notesoff() {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->buffer_notesoff();
       return;
@@ -339,7 +343,7 @@ public:
   }
 
   void init_notes_on() {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->init_notes_on();
       return;
@@ -349,7 +353,7 @@ public:
   }
 
   void update_param(uint8_t param_id, uint8_t value) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       (void)param_id;
       (void)value;
@@ -360,7 +364,7 @@ public:
   }
 
   void record_note_on(uint8_t note, uint8_t velocity) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->record_track_noteon(note, velocity);
       return;
@@ -370,7 +374,7 @@ public:
   }
 
   void record_note_off(uint8_t note) {
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {
       midi_track_->record_track_noteoff(note);
       return;
@@ -417,9 +421,11 @@ private:
   }
 
   ExtSeqTrack *ext_track_ = nullptr;
-#ifdef PLATFORM_TBD
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
   MidiSeqTrack *midi_track_ = nullptr;
 #endif
 };
+
+#undef SEQ_EXTSTEP_HAS_MIDI_TRACK
 
 #endif /* SEQEXTSTEPTRACKAPI_H__ */

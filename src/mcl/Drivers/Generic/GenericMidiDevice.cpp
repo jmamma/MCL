@@ -1,16 +1,109 @@
 #include "GenericMidiDevice.h"
 
+#include "GenericMidiTrackRef.h"
 #include "MCLGUI.h"
-#include "MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "ResourceManager.h"
 #include "TurboLight.h"
 #include <string.h>
 
+namespace {
+
+uint8_t generic_midi_channel(uint8_t track) {
+  return GenericMidiTrackRef::channel(track);
+}
+
+SeqTrack *generic_midi_seq_track(uint8_t track) {
+  return GenericMidiTrackRef::seq_track(track);
+}
+
+void generic_midi_set_record_mute(uint8_t track, bool state, bool clear) {
+  SeqTrack *seq_track = generic_midi_seq_track(track);
+  if (seq_track == nullptr) {
+    return;
+  }
+  seq_track->record_mutes = state;
+  if (clear) {
+    GenericMidiTrackRef::clear_mute(track);
+  }
+}
+
+bool generic_midi_track_for_channel(uint8_t channel, uint8_t *track_index) {
+  if (track_index == nullptr) {
+    return false;
+  }
+  for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
+    if (generic_midi_channel(i) == channel) {
+      *track_index = i;
+      return true;
+    }
+  }
+  *track_index = 255;
+  return false;
+}
+
+} // namespace
+
 class GenericMidiMixerCapability final : public ExtMixerCapability {
 public:
   explicit GenericMidiMixerCapability(GenericMidiDevice &device)
       : ExtMixerCapability(device, device.mixer_levels, true) {}
+
+  virtual uint8_t track_count(const DeviceContext &ctx) const override {
+    (void)ctx;
+    return NUM_EXT_TRACKS;
+  }
+
+  virtual SeqTrack *seq_track(const DeviceContext &ctx,
+                              uint8_t track) override {
+    (void)ctx;
+    return generic_midi_seq_track(track);
+  }
+
+  virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
+                                bool state, bool clear = false) override {
+    (void)ctx;
+    generic_midi_set_record_mute(track, state, clear);
+  }
+
+  virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
+                        uint8_t *track, uint8_t *param) const override {
+    (void)ctx;
+    if (!generic_midi_track_for_channel(channel, track) || param == nullptr) {
+      return false;
+    }
+    if (cc == mcl_cfg.uart2_cc_level && mcl_cfg.uart2_cc_level <= 127) {
+      *param = 0;
+      return true;
+    }
+    if (cc == device_.get_mute_cc()) {
+      *param = DeviceMixerCapability::MUTE_PARAM;
+      return true;
+    }
+    return false;
+  }
+
+  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
+                              uint8_t param,
+                              MidiDeviceMixerValue value) override {
+    (void)ctx;
+    if (track >= NUM_EXT_TRACKS) {
+      return;
+    }
+    if (param == DeviceMixerCapability::MUTE_PARAM) {
+      SeqTrack *seq_track = generic_midi_seq_track(track);
+      if (seq_track != nullptr) {
+        seq_track->mute_state = value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
+      }
+      return;
+    }
+    if (param == 0) {
+      if (value < 0) value = 0;
+      if (value > 127) value = 127;
+      static_cast<GenericMidiDevice &>(device_).mixer_levels[track] =
+          (uint8_t)value;
+    }
+  }
 
 protected:
   void send_level(uint8_t track, uint8_t level, bool send) override {
@@ -21,6 +114,33 @@ protected:
 };
 
 #if !defined(__AVR__)
+class GenericMidiExtStepTrackCapability final
+    : public DeviceExtStepTrackCapability {
+public:
+  explicit GenericMidiExtStepTrackCapability(GenericMidiDevice &device)
+      : DeviceExtStepTrackCapability(device) {}
+
+  virtual uint8_t track_count(const DeviceContext &ctx) const override {
+    (void)ctx;
+    return NUM_EXT_TRACKS;
+  }
+
+  virtual SeqExtStepTrackApi track(const DeviceContext &ctx,
+                                   uint8_t i) const override {
+    (void)ctx;
+    if (i >= NUM_EXT_TRACKS) {
+      i = 0;
+    }
+    return GenericMidiTrackRef::step_track(i);
+  }
+
+  virtual bool track_for_channel(const DeviceContext &ctx, uint8_t channel,
+                                 uint8_t *track_index) const override {
+    (void)ctx;
+    return generic_midi_track_for_channel(channel, track_index);
+  }
+};
+
 class GenericMidiParamCapability : public DeviceParamCapability {
 public:
   explicit GenericMidiParamCapability(GenericMidiDevice &device)
@@ -62,7 +182,7 @@ void GenericMidiDevice::muteTrack(uint8_t track, bool mute,
   if (uart_ == nullptr) {
     uart_ = uart;
   }
-  uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_mute,
+  uart_->sendCC(generic_midi_channel(track), mcl_cfg.uart2_cc_mute,
                 mute ? 127 : 0);
 }
 
@@ -74,7 +194,7 @@ void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
   if (uart_ == nullptr) {
     uart_ = uart;
   }
-  uart_->sendCC(mcl_seq.ext_tracks[track].channel, mcl_cfg.uart2_cc_level,
+  uart_->sendCC(generic_midi_channel(track), mcl_cfg.uart2_cc_level,
                 value);
 }
 
@@ -84,6 +204,11 @@ DeviceMixerCapability *GenericMidiDevice::mixer() {
 }
 
 #if !defined(__AVR__)
+DeviceExtStepTrackCapability *GenericMidiDevice::ext_step_tracks() {
+  static GenericMidiExtStepTrackCapability capability(*this);
+  return &capability;
+}
+
 DeviceParamCapability *GenericMidiDevice::params() {
   static GenericMidiParamCapability capability(*this);
   return &capability;
@@ -111,7 +236,7 @@ bool GenericMidiParamCapability::set_param(const DeviceContext &ctx,
   if (target >= NUM_EXT_TRACKS || param >= 128) {
     return false;
   }
-  mcl_seq.ext_tracks[target].send_cc(param, value, uart_);
+  GenericMidiTrackRef::send_cc(target, param, value, uart_);
   return true;
 }
 #endif
@@ -120,8 +245,10 @@ void GenericMidiDevice::init_grid_devices(DeviceIdx device_idx) {
   GridDeviceTrack gdt;
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    gdt.init(EXT_TRACK_TYPE, GROUP_DEV, static_cast<uint8_t>(device_idx),
-             &(mcl_seq.ext_tracks[i]));
+    GenericMidiTrackRef::init_runtime_track(i);
+    gdt.init(GenericMidiTrackRef::grid_track_type(), GROUP_DEV,
+             static_cast<uint8_t>(device_idx),
+             GenericMidiTrackRef::seq_track(i));
     add_track_to_grid(GridIdx::Y, i, &gdt);
   }
 }

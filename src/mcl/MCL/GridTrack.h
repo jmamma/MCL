@@ -27,6 +27,7 @@
 #define TBD_TRACK_TYPE 18
 #define TBD_MIDI_TRACK_TYPE 19
 #define MD_ROUTE_TRACK_TYPE 20
+#define MIDI_TRACK_TYPE 21
 
 #define NULL_TRACK_TYPE 128
 #define EMPTY_TRACK_TYPE 0
@@ -50,7 +51,7 @@ public:
   void* _this() { return &version; }
 
   bool is_active() { return (active != EMPTY_TRACK_TYPE) && (active != 255); }
-  bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE || active == TBD_MIDI_TRACK_TYPE); }
+  bool is_ext_track() { return (active == EXT_TRACK_TYPE || active == MNM_TRACK_TYPE || active == A4_TRACK_TYPE || active == TBD_MIDI_TRACK_TYPE || active == MIDI_TRACK_TYPE); }
 
   // load header without data from grid
   bool load_from_grid_512(GridSlot column, GridRow row, Grid *grid = nullptr);

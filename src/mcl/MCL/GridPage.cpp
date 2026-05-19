@@ -577,6 +577,7 @@ void GridPage::display_grid() {
         str[1] = track_idx + '1';
         break;
       case EXT_TRACK_TYPE:
+      case MIDI_TRACK_TYPE:
         str[0] = 'M';
         str[1] = track_idx + '1';
         break;

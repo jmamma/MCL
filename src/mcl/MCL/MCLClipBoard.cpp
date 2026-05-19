@@ -16,6 +16,9 @@
 #if !defined(__AVR__)
 #include "SPSXTrack.h"
 #endif
+#if !defined(__AVR__)
+#include "../Drivers/Generic/GridTracks/MidiTrack.h"
+#endif
 #ifdef PLATFORM_TBD
 #include "../Drivers/TBD/TBDTrack.h"
 #endif
@@ -63,6 +66,11 @@ SeqTrackModData *clipboard_track_mod_data(DeviceTrack *track,
 #if !defined(__AVR__)
   case MDSPSX_TRACK_TYPE:
     return &static_cast<SPSXTrack *>(track)->seq_storage.mod();
+#endif
+#if !defined(__AVR__)
+  case MIDI_TRACK_TYPE:
+    *track_limit = NUM_GRID_Y_LFO_TRACKS;
+    return &static_cast<MidiTrack *>(track)->seq_data.mod();
 #endif
 #ifdef PLATFORM_TBD
   case TBD_TRACK_TYPE:

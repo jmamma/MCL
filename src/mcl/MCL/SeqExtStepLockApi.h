@@ -8,7 +8,7 @@
 #include <stddef.h>
 
 class ExtSeqTrack;
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 class MidiSeqTrack;
 #endif
 
@@ -48,7 +48,7 @@ enum SeqExtStepLockCtrlType : uint8_t {
 class SeqExtStepLockApi {
 public:
   explicit SeqExtStepLockApi(ExtSeqTrack &track) : ext_track_(&track) {}
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   explicit SeqExtStepLockApi(MidiSeqTrack &track) : midi_track_(&track) {}
 #endif
 
@@ -111,18 +111,18 @@ private:
   static uint8_t value7_from_param_value(const SeqExtStepLockParamInfo &info,
                                          int16_t value);
 #endif
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   static uint8_t ctrl_type_to_midi_lock_type(uint8_t ctrl_type);
+#endif
+#ifdef PLATFORM_TBD
   bool find_p4_control(uint8_t ctrl_type, uint16_t ctrl, uint16_t value,
                        uint8_t &lock_param, uint16_t &value14,
                        uint16_t &default_value14) const;
-  static uint16_t value14_from_param_actual(
-      const SeqExtStepLockParamInfo &info, int16_t value);
 #endif
   static uint8_t value7_from_14(uint16_t value14);
 
   ExtSeqTrack *ext_track_ = nullptr;
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
   MidiSeqTrack *midi_track_ = nullptr;
 #endif
 };

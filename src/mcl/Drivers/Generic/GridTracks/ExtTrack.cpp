@@ -1,6 +1,9 @@
 #include "ExtTrack.h"
 #include "Global.h"
 #include "MCLSeq.h"
+#if !defined(__AVR__)
+#include "MidiTrack.h"
+#endif
 #ifdef PLATFORM_TBD
 #include "../../TBD/TBDTrack.h"
 #endif
@@ -45,12 +48,16 @@ bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
   return true;
 }
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 bool ExtTrack::can_materialize_as(uint8_t track_type) {
-  if (track_type == TBD_MIDI_TRACK_TYPE &&
-      is_legacy_ext_sequence_type(active)) {
+  if (track_type == MIDI_TRACK_TYPE && is_legacy_ext_sequence_type(active)) {
     return true;
   }
+#ifdef PLATFORM_TBD
+  if (track_type == TBD_MIDI_TRACK_TYPE && is_legacy_ext_sequence_type(active)) {
+    return true;
+  }
+#endif
   return DeviceTrack::can_materialize_as(track_type);
 }
 #endif
@@ -75,6 +82,25 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
   }
 #endif
 
+#if !defined(__AVR__)
+  if (track_type == MIDI_TRACK_TYPE &&
+      is_legacy_ext_sequence_type(active)) {
+    GridLink old_link = link;
+    ExtSeqTrackData old_seq_data;
+    SeqTrackModData old_mod_data = mod_data;
+    memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
+
+    auto *midi_track =
+        static_cast<MidiTrack *>(init_track_type(MIDI_TRACK_TYPE));
+    midi_track->init(tracknumber, nullptr);
+    midi_track->link = old_link;
+    midi_track->seq_data.mod() = old_mod_data;
+    midi_track->seq_data.import_legacy_ext(old_seq_data, old_link);
+    midi_track->seq_data.channel = old_seq_data.channel;
+    return midi_track;
+  }
+#endif
+
 #ifdef PLATFORM_TBD
   if (track_type == TBD_MIDI_TRACK_TYPE &&
       is_legacy_ext_sequence_type(active)) {
@@ -83,15 +109,15 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
     SeqTrackModData old_mod_data = mod_data;
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
-    auto *midi_track =
+    auto *tbd_midi_track =
         static_cast<TBDMidiTrack *>(init_track_type(TBD_MIDI_TRACK_TYPE));
-    midi_track->init(tracknumber, nullptr);
-    midi_track->link = old_link;
-    midi_track->seq_data.mod() = old_mod_data;
-    midi_track->seq_data.import_legacy_ext(old_seq_data, old_link);
-    midi_track->p4_sound.midi_channel = old_seq_data.channel;
-    midi_track->seq_data.channel = old_seq_data.channel;
-    return midi_track;
+    tbd_midi_track->init(tracknumber, nullptr);
+    tbd_midi_track->link = old_link;
+    tbd_midi_track->seq_data.mod() = old_mod_data;
+    tbd_midi_track->seq_data.import_legacy_ext(old_seq_data, old_link);
+    tbd_midi_track->p4_sound.midi_channel = old_seq_data.channel;
+    tbd_midi_track->seq_data.channel = old_seq_data.channel;
+    return tbd_midi_track;
   }
 #endif
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);

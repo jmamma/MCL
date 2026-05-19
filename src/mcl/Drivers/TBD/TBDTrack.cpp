@@ -228,6 +228,7 @@ void ensure_sound_default(TbdP4SoundData &sound,
 
 TbdP4SoundData g_last_applied_sounds[TBD_P4_SOUND_TRACK_COUNT];
 bool g_last_applied_valid[TBD_P4_SOUND_TRACK_COUNT] = {};
+TbdP4SoundData g_tbd_midi_runtime_sounds[NUM_EXT_TRACKS];
 
 bool p4_sound_same_command(const TbdP4SoundData &a,
                            const TbdP4SoundData &b) {
@@ -396,6 +397,17 @@ void apply_p4_sound(const TbdP4SoundData &sound, const char *source,
 }
 
 } // namespace
+
+TbdP4SoundData *tbd_midi_runtime_sound(uint8_t track) {
+  if (track >= NUM_EXT_TRACKS) {
+    return nullptr;
+  }
+  return &g_tbd_midi_runtime_sounds[track];
+}
+
+const TbdP4SoundData *tbd_midi_runtime_sound_const(uint8_t track) {
+  return tbd_midi_runtime_sound(track);
+}
 
 void tbd_mark_p4_sound_applied(const TbdP4SoundData &sound) {
   if (sound.p4_track_index >= TBD_P4_SOUND_TRACK_COUNT) {
@@ -642,7 +654,10 @@ void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,
 
   if (seq_track != nullptr) {
     auto *midi_track = static_cast<MidiSeqTrack *>(seq_track);
-    midi_track->p4_sound = p4_sound;
+    if (TbdP4SoundData *runtime_sound = tbd_midi_runtime_sound(tracknumber)) {
+      *runtime_sound = p4_sound;
+    }
+    midi_track->active = TBD_MIDI_TRACK_TYPE;
     midi_track->seq_data.channel = p4_sound.midi_channel;
     midi_track->set_channel(p4_sound.midi_channel);
     midi_track->set_length(seq_data.length ? seq_data.length : link.length);
@@ -708,8 +723,12 @@ void TBDMidiTrack::load_seq_data(SeqTrack *seq_track) {
     seq_data.speed = fallback_speed;
   }
   load_link_data(seq_track);
+  midi_track->active = TBD_MIDI_TRACK_TYPE;
   midi_track->seq_data = static_cast<const MidiSeqTrackData &>(seq_data);
-  midi_track->p4_sound = p4_sound;
+  if (TbdP4SoundData *runtime_sound =
+          tbd_midi_runtime_sound(midi_track->track_number)) {
+    *runtime_sound = p4_sound;
+  }
   midi_track->set_channel(p4_sound.midi_channel);
   midi_track->set_length(seq_data.length ? seq_data.length : link.length);
   midi_track->set_speed(midi_seq_valid_speed(seq_data.speed));
@@ -745,9 +764,11 @@ bool TBDMidiTrack::store_in_grid(GridSlot column, GridRow row,
     link.length = seq_track->length;
     link.set_speed(seq_track->speed);
     auto *midi_track = static_cast<MidiSeqTrack *>(seq_track);
-    if (p4_sound_should_replace(midi_track->p4_sound, p4_sound,
-                                p4_track_index)) {
-      p4_sound = midi_track->p4_sound;
+    TbdP4SoundData *runtime_sound =
+        tbd_midi_runtime_sound(midi_track->track_number);
+    if (runtime_sound != nullptr &&
+        p4_sound_should_replace(*runtime_sound, p4_sound, p4_track_index)) {
+      p4_sound = *runtime_sound;
     }
     static_cast<MidiSeqTrackData &>(seq_data) = midi_track->seq_data;
     seq_data.length = seq_track->length;

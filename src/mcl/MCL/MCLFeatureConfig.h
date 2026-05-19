@@ -53,18 +53,17 @@
 #endif
 
 /*
- * TBD driver: P4 sound integration, multi-page UI overlays,
- * MidiSeqTrack-backed grid Y. Platform-only.
+ * TBD driver: P4 sound integration and multi-page UI overlays. Platform-only.
  */
 #ifdef PLATFORM_TBD
 #define MCL_HAS_TBD_DRIVER 1
 #endif
 
 /*
- * MidiSeqTrack (TBD's enhanced ext sequencer with 14-bit locks and P4
- * sound integration) — only the TBD driver provides one.
+ * MidiSeqTrack (enhanced generic MIDI sequencer with 14-bit locks) —
+ * available on non-AVR builds. TBD layers P4 sound integration on top.
  */
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 #define MCL_HAS_MIDI_SEQ_TRACKS 1
 #endif
 

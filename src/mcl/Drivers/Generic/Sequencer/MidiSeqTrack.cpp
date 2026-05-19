@@ -1,6 +1,6 @@
 #include "MidiSeqTrack.h"
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 
 #include "CommonPages.h"
 #include "ExtSeqTrack.h"
@@ -9,7 +9,6 @@
 #include "MCLSysConfig.h"
 #include "SeqPage.h"
 #include "mcl.h"
-#include "../../TBD/TBD.h"
 #include <string.h>
 
 uint8_t MidiSeqTrack::epoch = 0;
@@ -63,16 +62,6 @@ uint16_t value14_from_value7(uint8_t value7) {
   return (uint16_t)(((uint32_t)value7 * 0x3FFFu + 63u) / 127u);
 }
 
-uint16_t value14_from_p4_param(const TbdP4ParamDescriptor &param,
-                               int16_t value) {
-  if (param.max_value <= param.min_value) return 0;
-  if (value < param.min_value) value = param.min_value;
-  if (value > param.max_value) value = param.max_value;
-  uint32_t range = (uint16_t)(param.max_value - param.min_value);
-  uint32_t offset = (uint16_t)(value - param.min_value);
-  return (uint16_t)((offset * 0x3FFFu + (range / 2u)) / range);
-}
-
 uint16_t clamp_value14(int32_t value) {
   if (value < 0) return 0;
   if (value > 0x3FFF) return 0x3FFF;
@@ -98,9 +87,8 @@ bool next_event_due(uint16_t timing, uint16_t tps, uint16_t tick_counter) {
 } // namespace
 
 MidiSeqTrack::MidiSeqTrack() : SeqTrackCond() {
-  active = TBD_MIDI_TRACK_TYPE;
+  active = MIDI_TRACK_TYPE;
   seq_data.clear();
-  p4_sound.clear();
   length = seq_data.length;
   speed = seq_data.speed;
   init_notes_on();
@@ -168,13 +156,10 @@ int32_t MidiSeqTrack::event_tick(uint8_t step,
 
 void MidiSeqTrack::set_channel(uint8_t channel_) {
   seq_data.channel = channel_ & 0x0F;
-  p4_sound.midi_channel = seq_data.channel;
 }
 
 uint8_t MidiSeqTrack::channel() const {
-  return p4_sound.version == TBD_P4_SOUND_DATA_VERSION
-             ? p4_sound.midi_channel
-             : seq_data.channel;
+  return seq_data.channel;
 }
 
 void MidiSeqTrack::set_speed(uint8_t new_speed, bool) {
@@ -202,13 +187,6 @@ void MidiSeqTrack::set_length(uint8_t len, bool) {
     locks_slide_data[i].init();
   }
 
-  tbd_p4_set_track_length(p4_sound, length);
-  const auto &param =
-      p4_sound.mixer_params.params[TBD_P4_MIXER_TRACK_LENGTH_PARAM];
-  MidiUartClass *target = port_ ? port_ : TBD.uart;
-  if (target != nullptr && p4_sound.midi_channel < 16 && param.is_sendable()) {
-    tbd_p4_send_param_value(target, p4_sound.midi_channel, param, param.value);
-  }
 }
 
 uint16_t MidiSeqTrack::add_event(uint8_t step, const MidiSeqEvent &event) {
@@ -373,14 +351,8 @@ void MidiSeqTrack::set_selected_lock_param(uint8_t slot, uint8_t param) {
     return;
   }
   uint16_t parameter = param - 1;
-  uint8_t type = lock_type_for_legacy_param((uint8_t)parameter);
-  uint8_t flags = 0;
-  if (p4_sound.has_sendable_params() &&
-      parameter < TBD_P4_LOCK_PARAM_COUNT) {
-    type = MIDI_SEQ_LOCK_CC;
-    flags = MIDI_SEQ_LOCK_FLAG_P4_PARAM | MIDI_SEQ_LOCK_FLAG_14BIT;
-  }
-  seq_data.locks[slot].init(type, parameter, 0, flags);
+  seq_data.locks[slot].init(lock_type_for_legacy_param((uint8_t)parameter),
+                            parameter);
   epoch++;
 }
 
@@ -409,13 +381,7 @@ bool MidiSeqTrack::add_lock(uint8_t step, uint16_t timing, uint8_t param,
     return false;
   }
   if (!seq_data.locks[lock_idx].is_active()) {
-    uint8_t type = lock_type_for_legacy_param(param);
-    uint8_t flags = 0;
-    if (p4_sound.has_sendable_params() && param < TBD_P4_LOCK_PARAM_COUNT) {
-      type = MIDI_SEQ_LOCK_CC;
-      flags = MIDI_SEQ_LOCK_FLAG_P4_PARAM | MIDI_SEQ_LOCK_FLAG_14BIT;
-    }
-    seq_data.locks[lock_idx].init(type, param, 0, flags);
+    seq_data.locks[lock_idx].init(lock_type_for_legacy_param(param), param);
   }
   MidiSeqEvent event;
   uint8_t flags = slide ? MIDI_SEQ_EVENT_FLAG_SLIDE : 0;
@@ -424,27 +390,19 @@ bool MidiSeqTrack::add_lock(uint8_t step, uint16_t timing, uint8_t param,
   return add_event(step, event) != 0xFFFF;
 }
 
-bool MidiSeqTrack::set_p4_lock(uint8_t step, uint16_t timing, uint8_t param,
-                               uint8_t value, bool slide) {
-  if (step >= length || param >= TBD_P4_LOCK_PARAM_COUNT) {
+bool MidiSeqTrack::set_lock_event(uint8_t step, uint16_t timing, uint8_t type,
+                                  uint16_t parameter, uint16_t value14,
+                                  bool slide, uint16_t default_value,
+                                  uint8_t flags) {
+  if (step >= length) {
     return false;
   }
 
-  const TbdP4ParamDescriptor *desc =
-      tbd_p4_sound_param_for_lock(p4_sound, param);
-  if (!desc || !desc->is_sendable()) {
-    return false;
-  }
-
-  constexpr uint8_t lock_type = MIDI_SEQ_LOCK_CC;
-  constexpr uint8_t lock_flags =
-      MIDI_SEQ_LOCK_FLAG_P4_PARAM | MIDI_SEQ_LOCK_FLAG_14BIT;
   uint8_t lock_idx = 255;
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     const auto &lock = seq_data.locks[i];
-    if (lock.is_active() && lock.type == lock_type &&
-        lock.parameter == param &&
-        (lock.flags & MIDI_SEQ_LOCK_FLAG_P4_PARAM)) {
+    if (lock.is_active() && lock.type == type &&
+        lock.parameter == parameter && lock.flags == flags) {
       lock_idx = i;
       break;
     }
@@ -452,9 +410,7 @@ bool MidiSeqTrack::set_p4_lock(uint8_t step, uint16_t timing, uint8_t param,
   if (lock_idx == 255) {
     for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
       if (!seq_data.locks[i].is_active()) {
-        seq_data.locks[i].init(lock_type, param,
-                               value14_from_p4_param(*desc, desc->value),
-                               lock_flags);
+        seq_data.locks[i].init(type, parameter, default_value, flags);
         seq_data.lock_count++;
         lock_idx = i;
         break;
@@ -479,20 +435,9 @@ bool MidiSeqTrack::set_p4_lock(uint8_t step, uint16_t timing, uint8_t param,
   }
 
   MidiSeqEvent event;
-  event.init(MIDI_SEQ_EVENT_LOCK, lock_idx, value14_from_value7(value),
-             event_timing, 0, slide ? MIDI_SEQ_EVENT_FLAG_SLIDE : 0);
+  event.init(MIDI_SEQ_EVENT_LOCK, lock_idx, value14, event_timing, 0,
+             slide ? MIDI_SEQ_EVENT_FLAG_SLIDE : 0);
   return add_event(step, event) != 0xFFFF;
-}
-
-bool MidiSeqTrack::record_p4_lock(uint8_t param, uint8_t value, bool slide) {
-  if (param >= TBD_P4_LOCK_PARAM_COUNT) return false;
-  const TbdP4ParamDescriptor *desc =
-      tbd_p4_sound_param_for_lock(p4_sound, param);
-  if (!desc || !desc->is_sendable()) return false;
-  return record_lock(MIDI_SEQ_LOCK_CC, param, value14_from_value7(value),
-                     slide,
-                     MIDI_SEQ_LOCK_FLAG_P4_PARAM | MIDI_SEQ_LOCK_FLAG_14BIT,
-                     value14_from_p4_param(*desc, desc->value));
 }
 
 bool MidiSeqTrack::del_lock(uint32_t tick, uint8_t lock_idx, uint8_t) {
@@ -800,26 +745,9 @@ void MidiSeqTrack::reset_params() {
   }
 }
 
-void MidiSeqTrack::send_p4_lock_value(uint8_t param, uint16_t value14) {
-  if (!port_) return;
-  const TbdP4ParamDescriptor *desc =
-      tbd_p4_sound_param_for_lock(p4_sound, param);
-  if (!desc || !desc->is_sendable()) return;
-  int16_t scaled = tbd_p4_scale_lock_value(*desc, value14);
-  if (desc->ctrl_type == TBD_P4_CTRLTYPE_CC) {
-    tbd_p4_send_param_value(port_, channel(), *desc, scaled);
-  } else if (desc->ctrl_type == TBD_P4_CTRLTYPE_NRPM) {
-    tbd_p4_send_param_value(port_, channel(), *desc, scaled);
-  }
-}
-
 void MidiSeqTrack::send_lock_value(const MidiSeqLockDefinition &lock,
                                    const MidiSeqEvent &event) {
   if (!port_ || !lock.is_active()) return;
-  if (lock.flags & MIDI_SEQ_LOCK_FLAG_P4_PARAM) {
-    send_p4_lock_value((uint8_t)lock.parameter, event.value);
-    return;
-  }
 
   uint8_t value7 = value7_from_value14(event.value);
   switch (lock.type) {
@@ -1211,4 +1139,4 @@ void MidiSeqTrack::import_legacy_ext(const ExtSeqTrackData &legacy,
   epoch++;
 }
 
-#endif // PLATFORM_TBD
+#endif // !defined(__AVR__)
