@@ -83,7 +83,6 @@ bool MNMTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, 
     }
   }
   // Write data to sd
-  uint32_t len = sizeof(MNMTrack);
-  bool ret = write_grid((uint8_t *)(this), len, column, row, grid);
+  bool ret = write_grid(_this(), _sizeof(), column, row, grid);
   return ret;
 }
