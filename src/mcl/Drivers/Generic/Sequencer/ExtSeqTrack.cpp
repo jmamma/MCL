@@ -697,11 +697,13 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
       reset();
       mod12_counter = 0;
     } else if (is_generic_midi &&
-               SeqTrackTransition::cache_due(
-                   SEQ_TRANSITION_CACHE_MIDI_LINEAR, count_down, cache_loaded,
+               SeqTrackTransition::in_cache_window(
+                   SEQ_TRANSITION_CACHE_MIDI_LINEAR, count_down,
                    track_number)) {
-      load_cache();
-      cache_loaded = true;
+      if (!cache_loaded) {
+        load_cache();
+        cache_loaded = true;
+      }
       goto end;
     }
   }

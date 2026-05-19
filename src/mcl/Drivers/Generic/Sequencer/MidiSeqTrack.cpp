@@ -1030,8 +1030,9 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
         cache_loaded = true;
       }
       reset();
-    } else if (SeqTrackTransition::cache_due(
-                   SEQ_TRANSITION_CACHE_MIDI_LINEAR, count_down, cache_loaded,
+    } else if (!cache_loaded &&
+               SeqTrackTransition::in_cache_window(
+                   SEQ_TRANSITION_CACHE_MIDI_LINEAR, count_down,
                    track_number)) {
       load_cache();
       cache_loaded = true;

@@ -72,11 +72,13 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
             tick_counter = 0;
             mod12_counter = 0;
             SPSX_SET_BIT16(MDSeqTrack::gui_update, track_number);
-        } else if (SeqTrackTransition::cache_due(
+        } else if (SeqTrackTransition::in_cache_window(
                        SEQ_TRANSITION_CACHE_MD_MACHINE, count_down,
-                       cache_loaded, track_number)) {
-            load_cache();
-            cache_loaded = true;
+                       track_number)) {
+            if (!cache_loaded) {
+                load_cache();
+                cache_loaded = true;
+            }
             goto end;
         }
     }

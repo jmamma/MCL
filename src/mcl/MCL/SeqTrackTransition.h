@@ -33,11 +33,9 @@ public:
   }
 
   template <typename CountDown>
-  static ALWAYS_INLINE() bool cache_due(SeqTransitionCacheSplay splay,
-                                        CountDown count_down,
-                                        bool cache_loaded,
-                                        uint8_t track_number) {
-    return !cache_loaded &&
-           count_down <= cache_lead_ticks(splay, track_number);
+  static ALWAYS_INLINE() bool in_cache_window(SeqTransitionCacheSplay splay,
+                                              CountDown count_down,
+                                              uint8_t track_number) {
+    return count_down <= cache_lead_ticks(splay, track_number);
   }
 };
