@@ -243,7 +243,7 @@ void MCL::setup() {
 }
 
 void MCL::loop() {
-  mcl_platform_before_loop();
+  platform_poll();
 
 #ifndef __AVR__
   MidiUartUSB.service_background();

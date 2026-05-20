@@ -11,6 +11,13 @@ MidiUartClass::MidiUartClass()
     txRb             = &tx_storage_;
     txRb_realtime    = &rt_storage_;
     // No sidechannel on desktop; left null. MCL only reads it when set.
+    speed = 31250;
+    sendActiveSenseTimer = 0;
+    sendActiveSenseTimeout = 0;
+    recvActiveSenseTimer = 0;
+    activeSenseEnabled = false;
+    mode = 0;
+    midi = nullptr;
 }
 
 void MidiUartClass::init() {

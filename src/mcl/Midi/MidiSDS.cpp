@@ -5,6 +5,7 @@
 #include "MidiSysexFile.h"
 #include "MidiUart.h"
 #include "MCLGUI.h"
+#include "platform.h"
 #include "../Drivers/MD/MD.h"
 
 namespace {
@@ -17,6 +18,7 @@ inline void wait_for_latency(uint16_t latency_ms) {
   }
   uint16_t start = read_clock_ms();
   while (clock_diff(start, read_clock_ms()) < latency_ms) {
+    platform_wait_poll();
   }
 }
 
@@ -389,6 +391,7 @@ uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
   volatile uint16_t start_clock = read_clock_ms();
   MidiSDSSysexListener.msgType = 255;
   do {
+    platform_wait_poll();
     handleIncomingMidi();
   } while ((clock_diff(start_clock, read_clock_ms()) < timeout) &&
            (MidiSDSSysexListener.msgType == 255));

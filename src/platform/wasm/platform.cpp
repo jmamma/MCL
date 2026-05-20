@@ -4,11 +4,13 @@
 // route through host imports instead of std::chrono. The wasm runtime
 // can't read host wall-clock without the host's help.
 #include "platform.h"
+#include "desktop_entry.h"
 #include "host_imports.h"
 #include "wasm_exports.h"
 #include "GUI_hardware.h"
 
 extern uint64_t mcl_desktop_button_mask;
+extern volatile uint16_t g_clock_ms;
 
 namespace {
 
@@ -28,6 +30,17 @@ void pump_host_midi_output() {
     }
 }
 
+void drain_pending_audio_time() {
+    if (!mcl_desktop_is_setup_done()) {
+        g_clock_ms = (uint16_t)millis();
+        return;
+    }
+
+    const uint32_t elapsed_us = host_audio_pending_us();
+    if (elapsed_us != 0)
+        mcl_tick_audio(elapsed_us);
+}
+
 }  // namespace
 
 unsigned long millis() {
@@ -43,8 +56,16 @@ unsigned long micros() {
 void delay(unsigned long /*ms*/) {}
 void delayMicroseconds(unsigned int /*us*/) {}
 
-void mcl_platform_before_loop() {
+void platform_poll() {
     GUI_hardware.poll();
+    pump_host_midi_input();
+    drain_pending_audio_time();
+    pump_host_midi_output();
+    host_yield();
+}
+
+void platform_wait_poll() {
+    g_clock_ms = (uint16_t)millis();
     pump_host_midi_input();
     pump_host_midi_output();
     host_yield();

@@ -4,6 +4,7 @@
 #include "Project.h"
 #include "DeviceManager.h"
 #include "GUI_hardware.h"
+#include "platform.h"
 #include "../Drivers/MD/MD.h"
 #ifdef PLATFORM_TBD
 #include "../Drivers/TBD/TBD.h"
@@ -286,6 +287,7 @@ void MCLGUI::delay_progress(uint16_t clock_) {
   uint16_t myclock = read_clock_ms();
   while (clock_diff(myclock, read_clock_ms()) < clock_) {
     mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
+    platform_wait_poll();
   }
 }
 

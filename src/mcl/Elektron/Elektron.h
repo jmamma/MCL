@@ -90,6 +90,7 @@ public:
     uint16_t start_clock = read_slowclock();
     uint16_t current_clock = start_clock;
     do {
+      platform_wait_poll();
       // MCl Code, trying to replicate main loop
 
       //    if ((MidiClock.mode == MidiClock.EXTERNAL_UART1 ||

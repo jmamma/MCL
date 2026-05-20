@@ -30,7 +30,8 @@ unsigned long micros() {
 void delay(unsigned long /*ms*/) {}
 void delayMicroseconds(unsigned int /*us*/) {}
 
-void mcl_platform_before_loop() {}
+void platform_poll() {}
+void platform_wait_poll() {}
 
 extern uint64_t mcl_desktop_button_mask;
 

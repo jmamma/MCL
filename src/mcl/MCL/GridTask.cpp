@@ -12,6 +12,7 @@
 #include "Project.h"
 #include "StackMonitor.h"
 #include "MCLSeq.h"
+#include "platform.h"
 
 #define DIV16_MARGIN 8
 
@@ -112,6 +113,7 @@ void GridTask::wait_blocking(uint32_t go_step) {
     }
 
     handleIncomingMidi();
+    platform_poll();
 
     if (diff > gui_threshold) {
       mcl.loop();

@@ -6,6 +6,7 @@
 #include "../../../MidiDevice.h"
 #include "MidiClock.h"
 #include "MCLActions.h"
+#include "platform.h"
 
 void RoutePage::init() {
   hasChanged = false;
@@ -64,6 +65,7 @@ void RoutePage::toggle_routes_batch(bool solo) {
     while (((((MidiClock.div32th_counter - mcl_actions.start_clock32th) + 3) %
              (quantize_mute * 2)) != 0) &&
            (MidiClock.state == 2)) {
+      platform_poll();
       GUI.display();
     }
   }

@@ -5,6 +5,7 @@
 #include "MidiSDS.h"
 #include "../Drivers/MD/MD.h"
 #include "MCLStrings.h"
+#include "platform.h"
 
 const char *c_wav_root = "/Samples/WAV";
 const char *c_syx_root = "/Samples/SYX";
@@ -317,6 +318,7 @@ void SampleBrowserPage::query_sample_slots() {
   auto time_start = read_clock_ms();
   auto time_now = time_start;
   do {
+    platform_wait_poll();
     handleIncomingMidi();
     time_now = read_clock_ms();
   } while (!s_query_returned && clock_diff(time_start, time_now) < 1000);

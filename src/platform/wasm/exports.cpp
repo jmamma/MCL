@@ -47,6 +47,33 @@ static constexpr uint16_t MCL_ABI_MINOR = 3;
 
 static uint32_t s_timer1_remainder_us = 0;
 static uint32_t s_timer2_remainder_us = 0;
+static constexpr uint32_t kMaxHostMidiPumpBytesPerPort = 4096;
+
+static void pump_host_midi_input_for_audio() {
+    for (int32_t port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
+        uint32_t count = 0;
+        while (count < kMaxHostMidiPumpBytesPerPort) {
+            int32_t byte_val = host_midi_in_pop(port);
+            if (byte_val < 0)
+                break;
+            mcl_midi_in_push(port, (uint8_t)byte_val);
+            ++count;
+        }
+    }
+}
+
+static void pump_host_midi_output_for_audio() {
+    for (int32_t port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
+        uint32_t count = 0;
+        while (count < kMaxHostMidiPumpBytesPerPort) {
+            int32_t byte_val = mcl_midi_out_pop(port);
+            if (byte_val < 0)
+                break;
+            host_midi_out_push(port, (uint8_t)byte_val);
+            ++count;
+        }
+    }
+}
 
 // ---- Lifecycle -----------------------------------------------------------
 
@@ -65,10 +92,11 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
     if (!mcl_desktop_is_setup_done()) return;
     if (elapsed_us == 0) return;
 
-    // Bytes are pushed by the host before this call, so drain them before
-    // the virtual timer advances. This lets MIDI clock/start/note input
-    // affect the same block's sequencer work instead of landing one block
-    // late.
+    // Pull host-queued MIDI bytes while already inside this wasm export. The
+    // host audio thread only queues bytes; it does not make one WAMR export
+    // call per byte.
+    pump_host_midi_input_for_audio();
+
     handleIncomingMidi();
 
     // timer2 work (5 kHz on hardware → one tick per 200 µs).
@@ -114,6 +142,7 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
 
     // softirq2 — catch any bytes produced while the virtual timers ran.
     handleIncomingMidi();
+    pump_host_midi_output_for_audio();
 }
 
 // GUI-rate entry. The first GUI tick enters the Arduino setup() body; later

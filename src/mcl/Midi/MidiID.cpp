@@ -1,5 +1,5 @@
 #include "MidiID.h"
-//#include "platform.h"
+#include "platform.h"
 #include "MidiIDSysex.h"
 #include "helpers.h"
 #include "global.h"
@@ -81,6 +81,7 @@ uint8_t MidiID::waitForId(uint8_t id, uint8_t port, uint16_t timeout) {
   uint8_t _midi_lock_tmp = MidiUartParent::handle_midi_lock;
   MidiUartParent::handle_midi_lock = 1;
   do {
+    platform_wait_poll();
     current_clock = read_slowclock();
     handleIncomingMidi();
     // GUI.display();

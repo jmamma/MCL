@@ -11,6 +11,7 @@
 #include "EmptyTrack.h"
 #include "MDTrack.h"
 #include "GridTask.h"
+#include "platform.h"
 
 #define MD_KIT_LENGTH 0x4D0
 
@@ -736,6 +737,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   // note, do not re-enter grid_task -- stackoverflow
 
   while (clock_diff(myclock, read_clock_ms()) < latency_ms) {
+    platform_wait_poll();
   }
 
   restore_mute_states(mute_states);
@@ -859,6 +861,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                     1u;
 
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
+      platform_poll();
       handleIncomingMidi();
       uint32_t counter = MidiClock.div192th_counter;
       uint32_t diff = MidiClock.clock_diff_div192(counter, next);

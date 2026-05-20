@@ -33,6 +33,19 @@ void TurboLight::send_header(uint8_t cmd, MidiUartClass *uart) {
 }
 
 void TurboLight::set_speed(uint8_t speed, MidiUartClass *uart) {
+  if (uart == nullptr) {
+    return;
+  }
+#if defined(PLATFORM_WASM)
+  // The hosted wasm module has virtual MIDI queues, not physical UARTs.
+  // TurboMIDI negotiation is hardware-only; emitting the sysex preamble during
+  // setup can stall the hosted UI before the normal GUI loop starts.
+  if (speed < 12) {
+    uart->set_speed(tmSpeeds[speed]);
+  }
+  uart->activeSenseEnabled = false;
+  return;
+#endif
   if (uart->speed == tmSpeeds[speed]) {
     DEBUG_PRINTLN(F("same speed"));
     return;

@@ -112,7 +112,8 @@ inline bool isInInterrupt() {
     return ipsr != 0;  // Non-zero value means we're in an exception/interrupt handler
 }
 
-inline void mcl_platform_before_loop() {}
+inline void platform_poll() {}
+inline void platform_wait_poll() {}
 
 // Debug macros - only active when DEBUGMODE is defined
 #ifdef DEBUGMODE

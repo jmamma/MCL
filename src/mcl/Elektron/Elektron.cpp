@@ -349,6 +349,7 @@ uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
   auto listener = getSysexListener();
   listener->start();
   do {
+    platform_wait_poll();
     current_clock = read_slowclock();
     handleIncomingMidi();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
@@ -414,8 +415,9 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
     bool ret = false;
 
     while ((MidiClock.state == 2) &&
-           ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0)))
-        ;
+           ((MidiClock.mod12_counter > 6) || (MidiClock.mod12_counter == 0))) {
+        platform_poll();
+    }
 
     while (count--) {
 
