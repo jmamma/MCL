@@ -1,4 +1,4 @@
-#include "MCLSD.h"
+#include "MCLSd.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "StackMonitor.h"

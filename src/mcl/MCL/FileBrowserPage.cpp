@@ -2,8 +2,8 @@
 #include "NoteInterface.h"
 #include "helpers.h"
 #include "FileBrowserPage.h"
-#include "MCLSD.h"
-#include "MCLGFX.h"
+#include "MCLSd.h"
+#include "MCLGfx.h"
 #include "MCLMenus.h"
 #include "MCLGUI.h"
 

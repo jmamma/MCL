@@ -38,6 +38,7 @@ SPEC_SRC="${MCL_ROOT}/src/platform/wasm/sps/module.json"
 PACKAGE_DIR="${OUT}/package/mcl"
 PACKAGE_AOT="${PACKAGE_DIR}/mcl.aot"
 PACKAGE_SPEC="${PACKAGE_DIR}/module.json"
+INSTALL_DIR="${SPS_X_MCL_DIR:-${HOME}/Library/Application Support/SPS-X/modules/mcl}"
 mkdir -p "${PACKAGE_DIR}"
 
 # Per-platform include paths. Mirror MCL/CMakeLists.txt (desktop_common +
@@ -192,6 +193,7 @@ echo "[mcl-wasm] compiling → ${WASM}"
     -Wl,--export=mcl_abi_version \
     -Wl,--allow-undefined \
     -o "${WASM}" \
+    -x c++ \
     "${MCL_CPP[@]}" \
     "${MCL_C[@]}" \
     "${DESKTOP_COMMON_CPP[@]}" \
@@ -208,5 +210,9 @@ echo "[mcl-wasm] AOT compile → ${AOT}"
 
 cp "${AOT}" "${PACKAGE_AOT}"
 cp "${SPEC_SRC}" "${PACKAGE_SPEC}"
+mkdir -p "${INSTALL_DIR}"
+cp "${AOT}" "${INSTALL_DIR}/mcl.aot"
+cp "${SPEC_SRC}" "${INSTALL_DIR}/module.json"
+mkdir -p "${INSTALL_DIR}/data"
 
-echo "[mcl-wasm] done. wasm=$(wc -c < "${WASM}") aot=$(wc -c < "${AOT}") package=${PACKAGE_DIR}"
+echo "[mcl-wasm] done. wasm=$(wc -c < "${WASM}") aot=$(wc -c < "${AOT}") package=${PACKAGE_DIR} installed=${INSTALL_DIR}"

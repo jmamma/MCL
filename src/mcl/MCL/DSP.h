@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "mcl.h"
+#include "MCL.h"
 #include "math.h"
 
 #define FULL_SCALE 0xFFFF

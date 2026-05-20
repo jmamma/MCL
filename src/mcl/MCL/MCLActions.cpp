@@ -1009,7 +1009,7 @@ void MCLActions::calc_latency() {
   }
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if ((grid_page.active_slots[n] == SLOT_DISABLED))
+    if (grid_page.active_slots[n] == SLOT_DISABLED)
       continue;
     if (next_transitions[n] == next_transition) {
       GridDeviceTrack *gdt = get_grid_dev_track(n);

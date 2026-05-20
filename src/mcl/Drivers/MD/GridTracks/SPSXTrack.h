@@ -72,48 +72,48 @@ public:
   void init();
   void clear_track();
 
-  uint16_t calc_latency(uint8_t tracknumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
   uint8_t transition_countdown_resolution() override;
-  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber);
-  void transition_send(uint8_t tracknumber, GridSlot slotnumber);
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override;
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber) override;
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       GridSlot slotnumber);
-  void load_seq_data(SeqTrack *seq_track);
+                       GridSlot slotnumber) override;
+  void load_seq_data(SeqTrack *seq_track) override;
   void get_machine_from_kit(uint8_t tracknumber);
 
   bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                     bool online = false, Grid *grid = nullptr);
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
-  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
+                     bool online = false, Grid *grid = nullptr) override;
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
 
-  void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track);
+  void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track) override;
 
   void scale_vol(float scale);
   void scale_seq_vol(float scale);
   void normalize();
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uint16_t get_region_size() {
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uint16_t get_region_size() override {
     // Region must fit the largest possible variant
     return MEMORY_ALIGN(sizeof(SPSXTrack) - sizeof(void*));
   }
 #ifdef MCL_MEMORY_USE_ARRAYS
-  virtual uintptr_t get_region() { return BANK1_SPSX_TRACKS_START; }
+  virtual uintptr_t get_region() override { return BANK1_SPSX_TRACKS_START; }
 #else
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
 #endif
-  virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same);
+  virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) override;
   virtual DeviceTrack *materialize_as(uint8_t track_type,
                                       uint8_t tracknumber,
-                                      SeqTrack *seq_track);
-  virtual uint8_t get_model() { return machine.get_model(); }
-  virtual uint8_t get_parent_model() { return MD_TRACK_TYPE; }
-  virtual bool allow_cast_to_parent() { return true; }
-  virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+                                      SeqTrack *seq_track) override;
+  virtual uint8_t get_model() override { return machine.get_model(); }
+  virtual uint8_t get_parent_model() override { return MD_TRACK_TYPE; }
+  virtual bool allow_cast_to_parent() override { return true; }
+  virtual uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
 
-  virtual void *get_sound_data_ptr() { return &machine; }
-  virtual size_t get_sound_data_size() { return sizeof(SPSMachine); }
+  virtual void *get_sound_data_ptr() override { return &machine; }
+  virtual size_t get_sound_data_size() override { return sizeof(SPSMachine); }
   virtual size_t get_sound_cmp_size() { return 27; }
 
 private:

@@ -4,7 +4,7 @@
 #include "Osc.h"
 #include "SampleBrowserPage.h"
 #include "GUI.h"
-#include "MIDISds.h"
+#include "MidiSDS.h"
 #include "DSP.h"
 #include "MCLStrings.h"
 

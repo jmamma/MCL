@@ -1,6 +1,6 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
-#include "Oled.h"
+#include "oled.h"
 #include "Project.h"
 #include "DeviceManager.h"
 #include "GUI_hardware.h"

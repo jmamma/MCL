@@ -26,27 +26,27 @@ public:
   size_t _sizeof() const {
      return sizeof(LegacyMDRouteTrack) - sizeof(void*);
   }
-  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) override {
     memset(routing, 6, sizeof(routing));
     poly_mask = 0;
   }
 
   void get_routes();
-  uint16_t calc_latency(uint8_t tracknumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
   uint16_t send_routes(bool send = true);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       GridSlot slotnumber);
+                       GridSlot slotnumber) override;
   virtual void get_online_data(uint8_t merge) override;
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
   void load_routes();
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uintptr_t get_region() { return BANK1_MDROUTE_TRACK_START; }
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uintptr_t get_region() override { return BANK1_MDROUTE_TRACK_START; }
 
-  virtual uint8_t get_model() { return MDROUTE_TRACK_TYPE; }
-  virtual void *get_sound_data_ptr() { return &routing; }
-  virtual size_t get_sound_data_size() { return sizeof(LegacyMDRouteData); }
+  virtual uint8_t get_model() override { return MDROUTE_TRACK_TYPE; }
+  virtual void *get_sound_data_ptr() override { return &routing; }
+  virtual size_t get_sound_data_size() override { return sizeof(LegacyMDRouteData); }
 };
 
 class ATTR_PACKED() MDRouteTrack : public AUXTrack, public MDRouteData {
@@ -57,7 +57,7 @@ public:
   size_t _sizeof() const {
      return sizeof(MDRouteTrack) - sizeof(void*);
   }
-  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) override {
     memset(routing, 6, sizeof(routing));
     clear_ptc_groups();
   }
@@ -65,21 +65,21 @@ public:
   void clear_ptc_groups();
   void load_ptc_groups();
   void get_routes();
-  uint16_t calc_latency(uint8_t tracknumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
   uint16_t send_routes(bool send = true);
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       GridSlot slotnumber);
+                       GridSlot slotnumber) override;
   virtual void get_online_data(uint8_t merge) override;
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
   void load_routes();
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uintptr_t get_region() { return BANK1_MDROUTE_TRACK_START; }
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uintptr_t get_region() override { return BANK1_MDROUTE_TRACK_START; }
 
-  virtual uint8_t get_model() { return MD_ROUTE_TRACK_TYPE; }
-  virtual void *get_sound_data_ptr() { return &routing; }
-  virtual size_t get_sound_data_size() { return sizeof(MDRouteData); }
+  virtual uint8_t get_model() override { return MD_ROUTE_TRACK_TYPE; }
+  virtual void *get_sound_data_ptr() override { return &routing; }
+  virtual size_t get_sound_data_size() override { return sizeof(MDRouteData); }
 };
 
 static_assert(sizeof(LegacyMDRouteData) == 18,

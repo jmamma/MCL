@@ -6,7 +6,7 @@
 #include "GUI.h"
 #include "midi-common.h"
 #include "Elektron.h"
-#include "shared.h"
+#include "Shared.h"
 #include "MidiClock.h"
 #include "Midi.h"
 #include "../Drivers/DeviceContext.h"

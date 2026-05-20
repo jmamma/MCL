@@ -10,7 +10,7 @@
 #include "MCLSysConfig.h"
 #include "SeqPage.h"
 #include "SeqTrackTransition.h"
-#include "mcl.h"
+#include "MCL.h"
 #include <string.h>
 
 uint8_t MidiSeqTrack::epoch = 0;

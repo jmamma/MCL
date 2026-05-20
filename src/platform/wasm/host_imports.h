@@ -40,9 +40,9 @@ void host_yield(void);
 // File handles are positive int32. Negative = error. Mode bits match
 // SdFat.h O_* (O_READ/O_WRITE/O_RDWR/O_CREAT/O_EXCL/O_APPEND/O_TRUNC).
 // Paths are wasm-linear-memory cstring pointers. Path semantics: absolute
-// paths starting with '/' resolve under the host-configured MCL SD root
-// (default: ${userApplicationDataDirectory}/mcl_sd/); relative paths
-// resolve under the host-tracked virtual cwd modified by host_fs_chdir.
+// paths starting with '/' resolve under the host-configured module storage
+// root (normally <app-data>/modules/<module-id>/data); relative paths resolve
+// under the host-tracked virtual cwd modified by host_fs_chdir.
 int32_t host_fs_open  (const char* path, int32_t mode);
 int32_t host_fs_close (int32_t fd);
 int32_t host_fs_read  (int32_t fd, void* buf, int32_t len);

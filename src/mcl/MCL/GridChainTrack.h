@@ -3,7 +3,7 @@
 #pragma once
 
 #include "AUXTrack.h"
-#include "GridCHain.h"
+#include "GridChain.h"
 
 class ATTR_PACKED() GridChainTrack : public AUXTrack {
 public:
@@ -25,14 +25,14 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false);
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
   void get_chains();
   void place_chains();
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uintptr_t get_region() { return BANK1_GRIDCHAIN_TRACK_START; }
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uintptr_t get_region() override { return BANK1_GRIDCHAIN_TRACK_START; }
 
-  virtual uint8_t get_model() { return GRIDCHAIN_TRACK_TYPE; }
-  virtual void *get_sound_data_ptr() { return this; }
-  virtual size_t get_sound_data_size() { return sizeof(GridChain); }
+  virtual uint8_t get_model() override { return GRIDCHAIN_TRACK_TYPE; }
+  virtual void *get_sound_data_ptr() override { return this; }
+  virtual size_t get_sound_data_size() override { return sizeof(GridChain); }
 };

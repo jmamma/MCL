@@ -1,5 +1,5 @@
 #include "ExtTrack.h"
-#include "Global.h"
+#include "global.h"
 #include "MCLSeq.h"
 #if !defined(__AVR__)
 #include "MidiTrack.h"

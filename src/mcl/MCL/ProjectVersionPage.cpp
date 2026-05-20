@@ -1,5 +1,5 @@
 #include "ProjectVersionPage.h"
-#include "MCLGFX.h"
+#include "MCLGfx.h"
 #include "MCLGUI.h"
 #include "MCLMenus.h"
 #include "Project.h"

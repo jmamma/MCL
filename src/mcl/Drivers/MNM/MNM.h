@@ -17,39 +17,39 @@ public:
   MNMKit kit;
   // MNMPattern pattern;
 
-  virtual void setup_listeners();
-  virtual void cleanup_listeners();
-  virtual bool probe();
-  virtual void init_grid_devices(DeviceIdx device_idx);
+  virtual void setup_listeners() override;
+  virtual void cleanup_listeners() override;
+  virtual bool probe() override;
+  virtual void init_grid_devices(DeviceIdx device_idx) override;
 #if !defined(__AVR__)
   virtual DeviceExtStepTrackCapability *ext_step_tracks() override;
 #endif
-  virtual bool canReadWorkspaceKit() { return true; }
-  virtual bool getWorkSpaceKit() {
+  virtual bool canReadWorkspaceKit() override { return true; }
+  virtual bool getWorkSpaceKit() override {
     return getBlockingKit(0x80);
   }
-  virtual void requestKit(uint8_t kit);
-  virtual ElektronSysexObject *getKit() { return &kit; }
-  virtual char *getKitName() { return kit.name; }
-  virtual ElektronSysexObject *getPattern() { return nullptr; }
-  virtual ElektronSysexObject *getGlobal() { return &global; }
-  virtual ElektronSysexListenerClass *getSysexListener() {
+  virtual void requestKit(uint8_t kit) override;
+  virtual ElektronSysexObject *getKit() override { return &kit; }
+  virtual char *getKitName() override { return kit.name; }
+  virtual ElektronSysexObject *getPattern() override { return nullptr; }
+  virtual ElektronSysexObject *getGlobal() override { return &global; }
+  virtual ElektronSysexListenerClass *getSysexListener() override {
     return &MNMSysexListener;
   }
 
-  virtual uint8_t get_mute_cc() { return 0x03; }
+  virtual uint8_t get_mute_cc() override { return 0x03; }
   virtual DeviceMixerCapability *mixer() override;
-  virtual void updateKitParams();
-  virtual uint16_t sendKitParams(uint8_t *mask);
-  virtual const char* getMachineName(uint8_t machine);
+  virtual void updateKitParams() override;
+  virtual uint16_t sendKitParams(uint8_t *mask) override;
+  virtual const char* getMachineName(uint8_t machine) override;
 
-  virtual bool canReadKit() {
+  virtual bool canReadKit() override {
     // TODO fw cap for live kit access
     //return fw_caps & FW_CAP
     return true;
   }
 
-  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) {
+  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) override {
     // TODO MNM does not get the pattern but reports success.
     return true;
   }
@@ -113,7 +113,7 @@ public:
   uint8_t setMachine(uint8_t idx) { return setMachine(currentTrack, idx); }
   uint8_t setMachine(uint8_t track, uint8_t idx, bool send = true);
 
-  void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr) override;
   /*
   void muteTrack() { muteTrack(currentTrack); }
   void muteTrack(uint8_t track) { setMute(track, true); }

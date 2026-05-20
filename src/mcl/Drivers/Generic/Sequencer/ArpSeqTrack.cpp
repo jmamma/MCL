@@ -87,7 +87,7 @@ void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
 
 uint8_t ArpSeqTrack::get_next_note_up(int8_t cur) {
 
-  for (int8_t i = cur + 1; i < 128 && i >= 0; i++) {
+  for (uint8_t i = (uint8_t)(cur + 1); i != NOTE_RANGE; i++) {
     if (IS_BIT_SET128_P(note_mask, i)) {
       return i;
     }

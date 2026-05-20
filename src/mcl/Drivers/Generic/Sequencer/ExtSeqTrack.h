@@ -7,7 +7,7 @@
 #include "MidiUart.h"
 #include "NibbleArray.h"
 #include "GridTrack.h"
-#include "mcl.h"
+#include "MCL.h"
 #include "SeqTrack.h"
 #include "MidiClock.h"
 #include "platform.h"

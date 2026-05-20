@@ -4,7 +4,7 @@
 
 #include "helpers.h"
 #include "oled.h"
-#include "MCLGif.h"
+#include "MCLGIF.h"
 
 #include "TomThumb.h"
 #include "Elektrothic.h"

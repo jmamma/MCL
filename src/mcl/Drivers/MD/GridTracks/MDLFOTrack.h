@@ -16,22 +16,22 @@ public:
   }
   void init() {};
 
-  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) override {
      lfo_data.init();
   }
 
   void get_lfos();
-  uint16_t calc_latency(uint8_t tracknumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       GridSlot slotnumber);
+                       GridSlot slotnumber) override;
   virtual void get_online_data(uint8_t merge) override;
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uintptr_t get_region() { return BANK1_MDLFO_TRACK_START; }
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uintptr_t get_region() override { return BANK1_MDLFO_TRACK_START; }
 
-  virtual uint8_t get_model() { return MDLFO_TRACK_TYPE; }
-  virtual void *get_sound_data_ptr() { return nullptr; }
-  virtual size_t get_sound_data_size() { return 0; }
+  virtual uint8_t get_model() override { return MDLFO_TRACK_TYPE; }
+  virtual void *get_sound_data_ptr() override { return nullptr; }
+  virtual size_t get_sound_data_size() override { return 0; }
 };

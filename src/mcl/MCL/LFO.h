@@ -4,7 +4,7 @@
 #define LFOOSC_H__
 
 #include "LFOShapes.h"
-#include "mcl.h"
+#include "MCL.h"
 #include "math.h"
 
 #define EXP_LFO 1

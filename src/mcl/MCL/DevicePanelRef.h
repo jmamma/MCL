@@ -12,7 +12,13 @@
 
 namespace DevicePanelRef {
 
-ALWAYS_INLINE() static inline void set_primary_key_repeat(uint8_t enabled) {
+#if defined(PLATFORM_DESKTOP) || defined(PLATFORM_WASM)
+#define DEVICE_PANEL_REF_INLINE static ALWAYS_INLINE()
+#else
+#define DEVICE_PANEL_REF_INLINE ALWAYS_INLINE() static inline
+#endif
+
+DEVICE_PANEL_REF_INLINE void set_primary_key_repeat(uint8_t enabled) {
 #if defined(__AVR__)
   MD.set_key_repeat(enabled);
 #else
@@ -20,8 +26,8 @@ ALWAYS_INLINE() static inline void set_primary_key_repeat(uint8_t enabled) {
 #endif
 }
 
-ALWAYS_INLINE() static inline void popup_text(uint8_t action_string,
-                                              uint8_t persistent = 0) {
+DEVICE_PANEL_REF_INLINE void popup_text(uint8_t action_string,
+                                        uint8_t persistent = 0) {
 #if defined(__AVR__)
   MD.popup_text(action_string, persistent);
 #else
@@ -30,8 +36,8 @@ ALWAYS_INLINE() static inline void popup_text(uint8_t action_string,
 #endif
 }
 
-ALWAYS_INLINE() static inline void popup_text(char *text,
-                                              uint8_t persistent = 0) {
+DEVICE_PANEL_REF_INLINE void popup_text(char *text,
+                                        uint8_t persistent = 0) {
 #if defined(__AVR__)
   MD.popup_text(text, persistent);
 #else
@@ -39,8 +45,8 @@ ALWAYS_INLINE() static inline void popup_text(char *text,
 #endif
 }
 
-ALWAYS_INLINE() static inline void popup_text_P(const char *text_P,
-                                                uint8_t persistent = 0) {
+DEVICE_PANEL_REF_INLINE void popup_text_P(const char *text_P,
+                                          uint8_t persistent = 0) {
 #if defined(__AVR__)
   MD.popup_text_P(text_P, persistent);
 #else
@@ -48,9 +54,9 @@ ALWAYS_INLINE() static inline void popup_text_P(const char *text_P,
 #endif
 }
 
-ALWAYS_INLINE() static inline void popup_text_P(const char *text1_P,
-                                                const char *text2_P,
-                                                uint8_t persistent = 0) {
+DEVICE_PANEL_REF_INLINE void popup_text_P(const char *text1_P,
+                                          const char *text2_P,
+                                          uint8_t persistent = 0) {
 #if defined(__AVR__)
   MD.popup_text_P(text1_P, text2_P, persistent);
 #else
@@ -58,5 +64,7 @@ ALWAYS_INLINE() static inline void popup_text_P(const char *text1_P,
                                                          persistent);
 #endif
 }
+
+#undef DEVICE_PANEL_REF_INLINE
 
 } // namespace DevicePanelRef

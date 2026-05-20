@@ -49,44 +49,44 @@
 // Flat-memory bank helpers. RP2040 had no banking either; copy-paste the same
 // trivial inlines so MCL's `get_bank1(...)` etc. resolve.
 template <typename T>
-FORCED_INLINE() inline T get_bank1(volatile T* dst) { return *dst; }
+FORCED_INLINE() T get_bank1(volatile T* dst) { return *dst; }
 
 template <typename T>
-FORCED_INLINE() inline void put_bank1(volatile T* dst, T data) { *dst = data; }
+FORCED_INLINE() void put_bank1(volatile T* dst, T data) { *dst = data; }
 
-FORCED_INLINE() inline int memcmp_bank1(volatile void* dst, volatile const void* src, uint16_t len) {
+FORCED_INLINE() int memcmp_bank1(volatile void* dst, volatile const void* src, uint16_t len) {
     return memcmp((void*)dst, (void*)src, len);
 }
-FORCED_INLINE() inline void memcpy_bank1(volatile void* dst, volatile const void* src, uint16_t len) {
+FORCED_INLINE() void memcpy_bank1(volatile void* dst, volatile const void* src, uint16_t len) {
     memcpy((void*)dst, (void*)src, len);
 }
-FORCED_INLINE() inline void put_byte_bank1(volatile uint8_t* dst, uint8_t b)      { *dst = b; }
-FORCED_INLINE() inline void put_byte_bank1_isr(volatile uint8_t* dst, uint8_t b)  { *dst = b; }
-FORCED_INLINE() inline uint8_t get_byte_bank1_isr(volatile uint8_t* src)          { return *src; }
-FORCED_INLINE() inline uint8_t get_byte_bank1(volatile uint8_t* dst)              { return *dst; }
+FORCED_INLINE() void put_byte_bank1(volatile uint8_t* dst, uint8_t b)      { *dst = b; }
+FORCED_INLINE() void put_byte_bank1_isr(volatile uint8_t* dst, uint8_t b)  { *dst = b; }
+FORCED_INLINE() uint8_t get_byte_bank1_isr(volatile uint8_t* src)          { return *src; }
+FORCED_INLINE() uint8_t get_byte_bank1(volatile uint8_t* dst)              { return *dst; }
 
 template <typename T>
-FORCED_INLINE() inline T get_bank3(volatile T* src) { return *src; }
-FORCED_INLINE() inline void get_bank3(void* dst, volatile const void* src, uint16_t len) {
+FORCED_INLINE() T get_bank3(volatile T* src) { return *src; }
+FORCED_INLINE() void get_bank3(void* dst, volatile const void* src, uint16_t len) {
     memcpy(dst, (const void*)src, len);
 }
-FORCED_INLINE() inline void put_bank3(volatile void* dst, const void* src, uint16_t len) {
+FORCED_INLINE() void put_bank3(volatile void* dst, const void* src, uint16_t len) {
     memcpy((void*)dst, src, len);
 }
 template <typename T>
-FORCED_INLINE() inline void put_bank3(volatile T* dst, T data) { *dst = data; }
-FORCED_INLINE() inline int memcmp_bank3(volatile void* dst, volatile const void* src, uint16_t len) {
+FORCED_INLINE() void put_bank3(volatile T* dst, T data) { *dst = data; }
+FORCED_INLINE() int memcmp_bank3(volatile void* dst, volatile const void* src, uint16_t len) {
     return memcmp((void*)dst, (void*)src, len);
 }
-FORCED_INLINE() inline void memcpy_bank3(volatile void* dst, volatile const void* src, uint16_t len) {
+FORCED_INLINE() void memcpy_bank3(volatile void* dst, volatile const void* src, uint16_t len) {
     memcpy((void*)dst, (void*)src, len);
 }
-FORCED_INLINE() inline void put_byte_bank3(volatile uint8_t* dst, uint8_t b)  { *dst = b; }
-FORCED_INLINE() inline uint8_t get_byte_bank3(volatile uint8_t* dst)          { return *dst; }
+FORCED_INLINE() void put_byte_bank3(volatile uint8_t* dst, uint8_t b)  { *dst = b; }
+FORCED_INLINE() uint8_t get_byte_bank3(volatile uint8_t* dst)          { return *dst; }
 
 extern volatile uint16_t g_random_state;
 
-FORCED_INLINE() inline uint8_t get_random_byte() {
+FORCED_INLINE() uint8_t get_random_byte() {
     uint16_t state = g_random_state;
     if (state == 0) {
         state = read_clock_ms() | 1;

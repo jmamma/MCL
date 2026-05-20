@@ -163,7 +163,9 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
     md_track.machine.trigGroup = 255;
   }
 
-  memcpy(&(md_track.seq_data), &md_seq_track, sizeof(MDSeqTrackData));
+  memcpy(&(md_track.seq_data),
+         static_cast<const MDSeqTrackData *>(&md_seq_track),
+         sizeof(MDSeqTrackData));
 
   md_track.machine.muteGroup = 127;
   md_track.link.init(mcl_actions.links[track].row, 0, steps, SEQ_SPEED_1X);
@@ -407,7 +409,9 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
     md_track.machine.trigGroup = 255;
   }
 
-  memcpy(&(md_track.seq_data), &md_seq_track, sizeof(MDSeqTrackData));
+  memcpy(&(md_track.seq_data),
+         static_cast<const MDSeqTrackData *>(&md_seq_track),
+         sizeof(MDSeqTrackData));
 
   md_track.machine.muteGroup = 127;
 

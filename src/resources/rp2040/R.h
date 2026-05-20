@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ElektronModelTypes.h"
-#include "MCLGif.h"
+#include "MCLGIF.h"
 #include "MCLMemory.h"
 #include "MCLMenuDefines.h"
 #include "MenuTypes.h"

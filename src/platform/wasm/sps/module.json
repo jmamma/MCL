@@ -15,6 +15,9 @@
   "service": {
     "gui_hz": 60
   },
+  "storage": {
+    "root": "data"
+  },
   "build": {
     "script": "tools/build_mcl_wasm.sh",
     "package": "build_wasm/package/mcl"

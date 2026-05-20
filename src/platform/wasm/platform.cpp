@@ -46,9 +46,6 @@ void delayMicroseconds(unsigned int /*us*/) {}
 void mcl_platform_before_loop() {
     GUI_hardware.poll();
     pump_host_midi_input();
-    uint32_t elapsed_us = host_audio_pending_us();
-    if (elapsed_us)
-        mcl_tick_audio(elapsed_us);
     pump_host_midi_output();
     host_yield();
 }

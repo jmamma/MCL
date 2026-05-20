@@ -19,25 +19,25 @@ public:
      return sizeof(MNMTrack) - sizeof(void*);
   }
   void init();
-  uint16_t calc_latency(uint8_t tracknumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
 
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       GridSlot slotnumber);
-  void transition_send(uint8_t tracknumber, GridSlot slotnumber);
-  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) { return false; }
+                       GridSlot slotnumber) override;
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber) override;
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override { return false; }
 
-  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
-  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
+  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
+  virtual void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
   void get_machine_from_kit(uint8_t tracknumber);
   virtual bool store_in_grid(GridSlot column, GridRow row,
                              SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                             bool online = false, Grid *grid = nullptr);
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uint8_t get_model() { return machine.model; }
-  virtual uint8_t get_parent_model() { return EXT_TRACK_TYPE; }
-  virtual bool allow_cast_to_parent() { return true; }
-  virtual void *get_sound_data_ptr() { return &machine; }
-  virtual size_t get_sound_data_size() { return sizeof(MNMMachine); }
+                             bool online = false, Grid *grid = nullptr) override;
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uint8_t get_model() override { return machine.model; }
+  virtual uint8_t get_parent_model() override { return EXT_TRACK_TYPE; }
+  virtual bool allow_cast_to_parent() override { return true; }
+  virtual void *get_sound_data_ptr() override { return &machine; }
+  virtual size_t get_sound_data_size() override { return sizeof(MNMMachine); }
 #if !defined(__AVR__)
   bool can_materialize_as(uint8_t track_type) override;
   DeviceTrack *materialize_as(uint8_t track_type,

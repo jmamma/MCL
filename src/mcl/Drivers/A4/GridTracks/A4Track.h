@@ -20,24 +20,24 @@ public:
   size_t _sizeof() const {
     return sizeof(A4Track) - sizeof(void*);
   }
-  uint16_t calc_latency(uint8_t tracknumber);
-  void transition_send(uint8_t tracknumber, GridSlot slotnumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber) override;
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       GridSlot slotnumber);
-  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) {
+                       GridSlot slotnumber) override;
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override {
     return false;
   }
-  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
-  bool get_track_from_sysex(uint8_t tracknumber);
+  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
+  bool get_track_from_sysex(uint8_t tracknumber) override;
   bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                     bool online = false, Grid *grid = nullptr);
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uint8_t get_model() { return A4_TRACK_TYPE; } // TODO
-  virtual uint8_t get_parent_model() { return EXT_TRACK_TYPE; }
-  virtual bool allow_cast_to_parent() { return true; }
-  virtual void *get_sound_data_ptr() { return &sound; }
-  virtual size_t get_sound_data_size() { return sizeof(A4Sound); }
+                     bool online = false, Grid *grid = nullptr) override;
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uint8_t get_model() override { return A4_TRACK_TYPE; } // TODO
+  virtual uint8_t get_parent_model() override { return EXT_TRACK_TYPE; }
+  virtual bool allow_cast_to_parent() override { return true; }
+  virtual void *get_sound_data_ptr() override { return &sound; }
+  virtual size_t get_sound_data_size() override { return sizeof(A4Sound); }
 #if !defined(__AVR__)
   bool can_materialize_as(uint8_t track_type) override;
   DeviceTrack *materialize_as(uint8_t track_type,

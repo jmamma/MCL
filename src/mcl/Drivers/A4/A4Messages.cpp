@@ -2,7 +2,7 @@
 #include "A4Messages.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
-#include "Oled.h"
+#include "oled.h"
 
 uint16_t A4Global::toSysex(ElektronDataToSysexEncoder &encoder) {
   encoder.stop7Bit();

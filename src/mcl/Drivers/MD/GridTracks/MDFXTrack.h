@@ -42,21 +42,21 @@ public:
   void get_fx_from_kit();
   void get_fx_from_kit_extra(KitExtra *kit_extra);
 
-  uint16_t calc_latency(uint8_t tracknumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
   uint16_t send_fx(bool send = true);
-  void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track);
+  void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track) override;
   virtual void get_online_data(uint8_t merge) override;
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                              GridSlot slotnumber);
-  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber);
+                              GridSlot slotnumber) override;
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override;
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
-  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uintptr_t get_region() { return BANK1_MDFX_TRACK_START; }
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uintptr_t get_region() override { return BANK1_MDFX_TRACK_START; }
 
-  virtual uint8_t get_model() { return MDFX_TRACK_TYPE; }
-  virtual void* get_sound_data_ptr() { return &reverb; }
-  virtual size_t get_sound_data_size() { return 8 * 4; }
+  virtual uint8_t get_model() override { return MDFX_TRACK_TYPE; }
+  virtual void* get_sound_data_ptr() override { return &reverb; }
+  virtual size_t get_sound_data_size() override { return 8 * 4; }
 };

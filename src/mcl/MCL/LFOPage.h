@@ -22,7 +22,7 @@ public:
   lfo_track = lfo_track_;
   }
 
-  bool handleEvent(gui_event_t *event);
+  bool handleEvent(gui_event_t *event) override;
   bool midi_state;
 
   uint8_t page_mode;
@@ -33,13 +33,13 @@ public:
   uint8_t depth;
   uint8_t depth2;
 
-  void display();
-  void setup();
+  void display() override;
+  void setup() override;
 //  void draw_pattern_mask();
-  void init();
-  void loop();
-  void cleanup();
-  virtual void config_encoders();
+  void init() override;
+  void loop() override;
+  void cleanup() override;
+  virtual void config_encoders() override;
   virtual bool moveEncoderFocusPage(int8_t direction) override;
 
   void track_update();

@@ -3,7 +3,7 @@
 #ifndef SHARED_H__
 #define SHARED_H__
 
-#include "mcl.h"
+#include "MCL.h"
 #include "math.h"
 
 inline int range_limit(int val, int min, int max) {

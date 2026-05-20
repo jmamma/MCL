@@ -1,5 +1,5 @@
 #include "LoadProjectPage.h"
-#include "MCLGFX.h"
+#include "MCLGfx.h"
 #include "MCLGUI.h"
 #include "MCLSd.h"
 #include "MCLSysConfig.h"

@@ -10,7 +10,7 @@
 #include "LFOSeqTrack.h"
 #include "ArpSeqTrack.h"
 #include "ExtSeqTrack.h"
-#include "MDFXseqTrack.h"
+#include "MDFXSeqTrack.h"
 #include "PerfSeqTrack.h"
 #if !defined(__AVR__)
 #include "SPSXSeqTrack.h"

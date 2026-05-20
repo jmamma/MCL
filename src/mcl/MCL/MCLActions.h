@@ -85,7 +85,7 @@ public:
 
   uint8_t get_quant() {
     uint8_t q;
-    if ((mcl_cfg.chain_load_quant == 1)) {
+    if (mcl_cfg.chain_load_quant == 1) {
       q = QUANT_LEN; // use slot settings
     } else {
       q = mcl_cfg.chain_load_quant; // override

@@ -39,26 +39,26 @@ class A4Class : public ElektronDevice {
 public:
   A4Class();
 
-  virtual void setup_listeners();
-  virtual void cleanup_listeners();
-  virtual bool probe();
-  virtual void init_grid_devices(DeviceIdx device_idx);
+  virtual void setup_listeners() override;
+  virtual void cleanup_listeners() override;
+  virtual bool probe() override;
+  virtual void init_grid_devices(DeviceIdx device_idx) override;
 #if !defined(__AVR__)
   virtual DeviceExtStepTrackCapability *ext_step_tracks() override;
 #endif
-  virtual uint16_t sendKitParams(uint8_t* masks);
+  virtual uint16_t sendKitParams(uint8_t* masks) override;
 
   // Overriden for A4 proto version and footer injection
-  virtual uint16_t sendRequest(uint8_t, uint8_t, bool send = true);
+  virtual uint16_t sendRequest(uint8_t, uint8_t, bool send = true) override;
 
-  virtual ElektronSysexListenerClass* getSysexListener() { return &A4SysexListener; }
+  virtual ElektronSysexListenerClass* getSysexListener() override { return &A4SysexListener; }
   // TODO A4 kit not placed in class
-  virtual ElektronSysexObject* getKit() { return nullptr; }
-  virtual char *getKitName() { return nullptr; }
+  virtual ElektronSysexObject* getKit() override { return nullptr; }
+  virtual char *getKitName() override { return nullptr; }
   // TODO A4 pattern not placed in class
-  virtual ElektronSysexObject* getPattern() { return nullptr; }
+  virtual ElektronSysexObject* getPattern() override { return nullptr; }
   // TODO A4 global not placed in class
-  virtual ElektronSysexObject* getGlobal() { return nullptr; }
+  virtual ElektronSysexObject* getGlobal() override { return nullptr; }
 
   void requestKitX(uint8_t kit);
 
@@ -77,17 +77,17 @@ public:
   bool getBlockingSound(uint8_t pattern, uint16_t timeout = 3000);
   bool getBlockingSettings(uint8_t global, uint16_t timeout = 3000);
 
-  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) {
+  virtual bool getBlockingPattern(uint8_t pattern, uint16_t timeout) override {
     // TODO A4 get pattern is disabled, but reports success.
     return true;
   }
 
-  virtual bool getBlockingKit(uint8_t kit, uint16_t timeout) {
+  virtual bool getBlockingKit(uint8_t kit, uint16_t timeout) override {
     // TODO A4 get kit is disabled, but reports success.
     return true;
   }
 
-  virtual uint8_t get_mute_cc() { return 0x5E; }
+  virtual uint8_t get_mute_cc() override { return 0x5E; }
   virtual DeviceMixerCapability *mixer() override;
   bool getBlockingGeneric(uint16_t timeout);
   /*X denotes get from RAM/unsaved  */
@@ -97,7 +97,7 @@ public:
   bool getBlockingSoundX(uint8_t pattern, uint16_t timeout = 3000);
   bool getBlockingSettingsX(uint8_t global, uint16_t timeout = 3000);
 
-  void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr) override;
   void unmuteTrack(uint8_t track) { muteTrack(track, false); }
   void setLevel(uint8_t track, uint8_t value);
 

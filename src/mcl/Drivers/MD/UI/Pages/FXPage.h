@@ -28,7 +28,7 @@ public:
 
   static PageIndex last_page;
 
-  bool handleEvent(gui_event_t *event);
+  bool handleEvent(gui_event_t *event) override;
   bool midi_state;
 
   const char *fx_page_title;
@@ -38,11 +38,11 @@ public:
   bool page_mode;
   uint8_t page_id;
 
-  void display();
-  void setup();
-  void init();
-  void loop();
-  void cleanup();
+  void display() override;
+  void setup() override;
+  void init() override;
+  void loop() override;
+  void cleanup() override;
 
   void update_encoders();
   virtual bool moveEncoderFocusPage(int8_t direction) override;

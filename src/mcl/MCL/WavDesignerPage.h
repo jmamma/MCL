@@ -3,7 +3,7 @@
 #ifndef WAVDESIGNERPAGE_H__
 #define WAVDESIGNERPAGE_H__
 
-#include "mcl.h"
+#include "MCL.h"
 #include "MCLGUI.h"
 #include "SeqPages.h"
 

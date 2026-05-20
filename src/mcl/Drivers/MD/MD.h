@@ -86,10 +86,10 @@ public:
   bool is_spsx = false;
 #endif
 
-  virtual void setup_listeners();
-  virtual void cleanup_listeners();
-  virtual bool probe();
-  virtual void setup();
+  virtual void setup_listeners() override;
+  virtual void cleanup_listeners() override;
+  virtual bool probe() override;
+  virtual void setup() override;
   virtual uint8_t register_page_select_entries(PageSelectEntry *entries,
                                                uint8_t max_entries) const override;
   virtual bool config_menu_entry(DeviceIdx device_idx,
@@ -97,10 +97,10 @@ public:
   virtual void page_select_prepare() override;
   virtual void page_select_popup(char *text) override;
   virtual void page_select_cleanup() override;
-  virtual void requestKit(uint8_t kit);
-  virtual void requestPattern(uint8_t pattern);
-  virtual void requestGlobal(uint8_t global);
-  virtual void init_grid_devices(DeviceIdx device_idx);
+  virtual void requestKit(uint8_t kit) override;
+  virtual void requestPattern(uint8_t pattern) override;
+  virtual void requestGlobal(uint8_t global) override;
+  virtual void init_grid_devices(DeviceIdx device_idx) override;
 #ifdef PLATFORM_TBD
   virtual bool supports_capability(MidiDeviceCapability capability) const override;
 #endif
@@ -113,14 +113,14 @@ public:
   virtual DevicePanelCapability *panel() override;
 #endif
   // TODO not necessary if we have FW_CAP_READ_LIVE_KIT
-  virtual bool canReadWorkspaceKit() { return true; }
-  virtual bool canReadKit() { return true; }
+  virtual bool canReadWorkspaceKit() override { return true; }
+  virtual bool canReadKit() override { return true; }
 
-  virtual ElektronSysexObject *getKit() { return &kit; }
-  virtual char *getKitName() { return kit.name; }
-  virtual ElektronSysexObject *getPattern() { return &pattern; }
-  virtual ElektronSysexObject *getGlobal() { return nullptr; }
-  virtual ElektronSysexListenerClass *getSysexListener() {
+  virtual ElektronSysexObject *getKit() override { return &kit; }
+  virtual char *getKitName() override { return kit.name; }
+  virtual ElektronSysexObject *getPattern() override { return &pattern; }
+  virtual ElektronSysexObject *getGlobal() override { return nullptr; }
+  virtual ElektronSysexListenerClass *getSysexListener() override {
     return &MDSysexListener;
   }
 
@@ -131,9 +131,9 @@ public:
   void setExternalSync();
   void setChannelMode(uint8_t mode);
   //---
-  virtual void updateKitParams();
-  virtual uint16_t sendKitParams(uint8_t *mask);
-  virtual const char* getMachineName(uint8_t machine);
+  virtual void updateKitParams() override;
+  virtual uint16_t sendKitParams(uint8_t *mask) override;
+  virtual const char* getMachineName(uint8_t machine) override;
 
   void get_mutes();
 
@@ -349,7 +349,7 @@ public:
    * Mute/unmute the given track (0 to 15) by sending a CC
    * message. This uses the global channel settings.
    **/
-  void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr);
+  void muteTrack(uint8_t track, bool mute = true, MidiUartClass *uart_ = nullptr) override;
   /** Unmute the given track. **/
   void unmuteTrack(uint8_t track) { muteTrack(track, false); }
 

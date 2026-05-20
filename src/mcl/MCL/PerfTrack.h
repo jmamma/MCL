@@ -48,7 +48,7 @@ public:
     active = PERF_TRACK_TYPE;
   }
 
-  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) override {
     init();
   }
 
@@ -67,17 +67,17 @@ public:
   void load_perf(bool immediate, SeqTrack *seq_track);
   void get_perf();
 
-  uint16_t calc_latency(uint8_t tracknumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
 
-  void transition_load(uint8_t tracknumber, SeqTrack *seq_track, GridSlot slotnumber);
+  void transition_load(uint8_t tracknumber, SeqTrack *seq_track, GridSlot slotnumber) override;
   virtual void get_online_data(uint8_t merge) override;
 
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uintptr_t get_region() { return BANK1_PERF_TRACK_START; }
+  virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uintptr_t get_region() override { return BANK1_PERF_TRACK_START; }
 
-  virtual uint8_t get_model() { return PERF_TRACK_TYPE; }
-  virtual void *get_sound_data_ptr() { return &encs; }
-  virtual size_t get_sound_data_size() { return sizeof(PerfTrackData); }
+  virtual uint8_t get_model() override { return PERF_TRACK_TYPE; }
+  virtual void *get_sound_data_ptr() override { return &encs; }
+  virtual size_t get_sound_data_size() override { return sizeof(PerfTrackData); }
 };
