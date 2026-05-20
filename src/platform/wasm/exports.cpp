@@ -1,7 +1,7 @@
 // exports.cpp — wasm-side implementations of the mcl_* exports the host
-// (SPS plugin via WAMR) calls. Wraps desktop_entry.cpp's mcl_desktop_*
-// trampolines so the host doesn't need to know about the "desktop_" name
-// (kept for source-shared compatibility with the static-link path).
+// calls through WAMR. Wraps desktop_entry.cpp's mcl_desktop_* trampolines
+// so the host doesn't need to know about the "desktop_" name (kept for
+// source-shared compatibility with the static-link path).
 //
 // Input state (encoder/button) is push-model: host invokes
 // mcl_input_set_*; the desktop hardware shim applies button state during
@@ -61,6 +61,7 @@ extern "C" void mcl_setup(void) {
 // rp2040/irqs.cpp:timer1_handler + timer2_handler + softirq1 + softirq2
 // behaviour without an actual ISR.
 extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
+    if (!mcl_desktop_is_setup_done()) return;
     if (elapsed_us == 0) return;
 
     // Bytes are pushed by the host before this call, so drain them before
@@ -114,12 +115,16 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
     handleIncomingMidi();
 }
 
-// GUI-rate entry. Host audio thread calls this every Nth block (rate
-// limit to ~60 Hz). Mirrors what MCL::loop() does on hardware: UI
-// polling + page display + framebuffer rasterisation.
+// GUI-rate entry. Mirrors what MCL::loop() does on hardware: UI polling,
+// page logic, and framebuffer rasterisation. The first GUI tick enters the
+// Arduino setup() body; later ticks run loop().
 extern "C" void mcl_tick_gui(void) {
+    if (!mcl_desktop_is_setup_done()) {
+        mcl_desktop_tick();
+        return;
+    }
     GUI_hardware.poll();
-    mcl.loop();
+    mcl_desktop_tick();
 }
 
 // ---- Framebuffer ---------------------------------------------------------

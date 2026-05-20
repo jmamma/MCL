@@ -9,7 +9,7 @@
 #   build_wasm/package/mcl/module.json
 #   build_wasm/package/mcl/mcl.aot
 #
-# The package directory is the runtime-installable module shape for SPS.
+# The package directory is the runtime-installable module bundle.
 
 set -euo pipefail
 

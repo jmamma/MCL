@@ -118,11 +118,10 @@ bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
 
 void MCLGUI::wait_for_project() {
 #if defined(PLATFORM_WASM)
-  // Non-blocking on the wasm/plugin platform. Setup is called synchronously
-  // from the host (MCLModule::init); if we blocked here the host's audio
-  // thread would deadlock waiting for input. Just arm the start menu and
-  // return — mcl_tick_gui() drives mcl.loop() per host frame, so the user
-  // navigates the menu interactively after setup completes.
+  // Non-blocking on the wasm platform. setup() runs from the cooperative
+  // GUI/service tick; blocking here would prevent later ticks from
+  // delivering the input needed to leave this page. Arm the start menu and
+  // return so subsequent mcl_tick_gui() calls can drive mcl.loop().
   mcl.setPage(START_MENU_PAGE);
   return;
 #else

@@ -1,21 +1,20 @@
 // host_imports.h — declarations for the wasm host-import ABI.
 //
-// MCL compiled to wasm32 calls these to reach the JUCE host for things the
-// desktop build does inline with std:: facilities. The plugin side
-// (loading the .aot via WAMR) registers a native-symbol table that resolves
-// each name. See ABI.md for full semantics + threading rules.
+// MCL compiled to wasm32 calls these to reach the host for things the desktop
+// build does inline with std:: facilities. The host registers a native-symbol
+// table that resolves each name. See ABI.md for full semantics + threading
+// rules.
 //
 // Conventions:
 //   - All names start with `host_`.
-//   - C linkage (so wamrc's mangling matches the plugin-side
-//     NativeSymbol[] table).
+//   - C linkage (so wamrc's mangling matches the host NativeSymbol[] table).
 //   - Pass-by-value primitives + opaque int handles, never C++ types.
 //   - File descriptors are int32. Negative return = error.
 //   - Strings are wasm-linear-memory pointers; host translates via
 //     wasm_runtime_addr_app_to_native() and must not retain.
 //
 // Keep this header in sync with:
-//   - src/host/modules/mcl/MCLHostImports.cpp on the plugin side (NativeSymbol[]).
+//   - src/host/modules/mcl/MCLHostImports.cpp on the host side (NativeSymbol[]).
 //   - tools/build_mcl_wasm.sh (-Wl,--allow-undefined flag).
 #pragma once
 

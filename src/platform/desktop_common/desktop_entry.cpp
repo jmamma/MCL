@@ -1,18 +1,12 @@
-// desktop_entry.cpp — C-linkage entry points exposed to the SPS plugin.
-//
-// Step 1 of the integration deliberately keeps these as stubs: MCL's setup()
-// and loop() haven't been compiled in yet. Once src/mcl is glob-compiled into
-// the static lib (step 2) we'll route through to the Arduino-style functions
-// that MCL/src/mcl/main.cpp defines.
+// desktop_entry.cpp — C-linkage entry points exposed to a host.
 #include "desktop_entry.h"
 
 #include "SdFat.h"
 #include "Arduino.h"
 
 #include <string.h>
-// std::atomic requires libc++. wasm32 runs single-threaded — a plain bool
-// is enough. Desktop is also fine: setup is called once on the message
-// thread, tick from a single timer.
+// std::atomic requires libc++. wasm32 runs single-threaded — plain bools
+// are enough there.
 #if !defined(PLATFORM_WASM)
 #include <atomic>
 #endif
@@ -33,6 +27,7 @@ extern void loop();
 
 namespace {
 #if defined(PLATFORM_WASM)
+bool g_setup_requested = false;
 bool g_setup_done = false;
 #else
 std::atomic<bool> g_setup_done{false};
@@ -47,8 +42,9 @@ void desktop_advance_clocks() {
 
 void mcl_desktop_setup(void) {
 #if defined(PLATFORM_WASM)
-    if (g_setup_done) return;
-    g_setup_done = true;
+    g_setup_requested = true;
+    desktop_advance_clocks();
+    return;
 #else
     bool expected = false;
     if (!g_setup_done.compare_exchange_strong(expected, true)) {
@@ -63,13 +59,31 @@ void mcl_desktop_setup(void) {
 
 void mcl_desktop_tick(void) {
 #if defined(PLATFORM_WASM)
-    if (!g_setup_done) return;
+    if (!g_setup_requested) return;
+    desktop_advance_clocks();
+#ifdef MCL_DESKTOP_LINK_MCL_CORE
+    if (!g_setup_done) {
+        setup();
+        g_setup_done = true;
+        return;
+    }
+    loop();
+#endif
+    return;
 #else
     if (!g_setup_done.load(std::memory_order_acquire)) return;
-#endif
     desktop_advance_clocks();
 #ifdef MCL_DESKTOP_LINK_MCL_CORE
     loop();
+#endif
+#endif
+}
+
+bool mcl_desktop_is_setup_done(void) {
+#if defined(PLATFORM_WASM)
+    return g_setup_done;
+#else
+    return g_setup_done.load(std::memory_order_acquire);
 #endif
 }
 

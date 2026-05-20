@@ -1,0 +1,65 @@
+{
+  "id": "mcl",
+  "name": "MCL",
+  "runtime": "wamr-aot",
+  "artifact": "mcl.aot",
+  "build": {
+    "script": "tools/build_mcl_wasm.sh",
+    "package": "build_wasm/package/mcl"
+  },
+  "framebuffer": {
+    "source": "mcl",
+    "packing": "row_major_msb_1bpp"
+  },
+  "exports": {
+    "setup": "mcl_setup",
+    "tick_audio": "mcl_tick_audio",
+    "tick_gui": "mcl_tick_gui",
+    "abi_version": "mcl_abi_version",
+    "framebuffer_offset": "mcl_framebuffer_offset",
+    "framebuffer_width": "mcl_framebuffer_width",
+    "framebuffer_height": "mcl_framebuffer_height",
+    "framebuffer_stride": "mcl_framebuffer_stride",
+    "midi_in_push": "mcl_midi_in_push",
+    "midi_out_pop": "mcl_midi_out_pop",
+    "set_button_mask": "mcl_input_set_button_mask",
+    "set_button_mask64": "mcl_input_set_button_mask64",
+    "add_encoder_delta": "mcl_input_add_encoder_delta",
+    "set_encoder_button": "mcl_input_set_encoder_button"
+  },
+  "midi": {
+    "sps_port": 0,
+    "daw_port": 1
+  },
+  "controls": {
+    "buttons": {
+      "button1": 4,
+      "button4": 7,
+      "record": 8,
+      "play": 9,
+      "stop": 10,
+      "func": 12,
+      "up": 13,
+      "left": 14,
+      "down": 15,
+      "right": 16,
+      "trig_1": 17,
+      "scale": 36
+    },
+    "mappings": {
+      "record": "record",
+      "play": "play",
+      "stop": "stop",
+      "func": "func",
+      "up": "up",
+      "left": "left",
+      "down": "down",
+      "right": "right",
+      "enter": "button4",
+      "escape": "button1",
+      "scale": "scale",
+      "trig_1..16": "trig_1..16",
+      "func_trig_1..16": "trig_1..16"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 // SdFat.cpp — wasm implementation of the SdFat shim declared in
 // desktop_common/SdFat.h. Every file/dir op goes through a host import;
-// the host (the JUCE plugin) decides where MCL's logical "SD card" lives.
+// the host decides where MCL's logical "SD card" lives.
 //
 // FsFile::handle_ is the int32 returned by host_fs_open / host_fs_dir_open.
 // The host owns the actual fd table; we just shuttle bytes.

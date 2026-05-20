@@ -76,7 +76,7 @@ inline bool isInInterrupt() { return false; }
 
 // MCL's per-platform DEBUG_INIT/DEBUG_PRINT* macros. When DEBUGMODE is set,
 // route the existing callsites to a stdio sink. In wasm, stdio forwards to the
-// host_log import, so the plugin prints the same stream to stderr.
+// host_log import, so the host receives the same stream on stderr/log output.
 #ifdef DEBUGMODE
     #include "DebugOutput.h"
     #define DEBUG_INIT()             do {} while (0)

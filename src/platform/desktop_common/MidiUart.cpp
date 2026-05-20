@@ -1,7 +1,6 @@
 // MidiUart.cpp — desktop platform MIDI transport. Backed by MCL's own
-// RingBuffer<> over private byte arrays. Single-threaded; the plugin pumps
-// `desktop_ingress` / `desktop_egress` from processBlock against
-// juce::MidiBuffer.
+// RingBuffer<> over private byte arrays. Single-threaded; the host pumps
+// `desktop_ingress` / `desktop_egress` against its MIDI buffers.
 #include "MidiUart.h"
 
 MidiUartClass::MidiUartClass()

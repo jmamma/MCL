@@ -1,7 +1,6 @@
 # MCL-on-WAMR ABI
 
-Contract between MCL compiled as `mcl.aot` and the JUCE host (SPS plugin)
-that loads it via WAMR.
+Contract between MCL compiled as `mcl.aot` and a host that loads it via WAMR.
 
 ## Threading model
 
@@ -9,9 +8,9 @@ MCL is **single-threaded inside the wasm instance**. The host must serialise
 all entry points (`mcl_setup`, `mcl_tick_audio`, `mcl_tick_gui`,
 `mcl_midi_*`, `mcl_input_*`) so the instance is never entered concurrently.
 
-The host audio thread drives `mcl_tick_audio()` from audio sample time, not
-wall clock. That entry point owns the virtual 1 kHz / 5 kHz timer catch-up,
-sequencer work, and MIDI byte dispatch needed by the audio callback.
+The host audio side drives `mcl_tick_audio()` from audio sample time, not
+wall clock. The host GUI/service side drives `mcl_tick_gui()` from a
+cooperative timer. The host must never enter both exports concurrently.
 
 Host-import callbacks (`host_fs_*`, `host_midi_*`, `host_log`, etc.)
 execute on whatever thread called the wasm export that invoked them.
@@ -20,12 +19,12 @@ heavily, or touch the filesystem.
 
 ## Lifetime
 
-- One WAMR runtime per host process, refcounted across plugin instances
-  (mirrors `usr_runtime.cpp`'s pattern).
+- One WAMR runtime per host process, refcounted across host instances.
 - One `wasm_module_inst_t` per engine. MCL's globals (Midi, GUI, MD, …)
   live in that instance's linear memory and are naturally per-engine.
-- Host calls `mcl_setup()` exactly once after instantiation; subsequent
-  calls are no-ops.
+- Host calls `mcl_setup()` exactly once after instantiation. On wasm this is
+  a fast prepare step; the Arduino `setup()` body runs from the first
+  `mcl_tick_gui()` call, before normal `loop()` ticks.
 - Teardown: host calls `wasm_runtime_deinstantiate` on engine shutdown.
   Destructors inside wasm run only if the .aot was built with whole-module
   finalisation enabled (it isn't for the first cut — engine shutdown is
@@ -72,10 +71,10 @@ Adding new host-imports / exports is a minor bump.
 | `SdFat.cpp`       | Wasm-side SdFat backend (routes to `host_fs_*`)     |
 | `exports.cpp`     | Wasm-side impl of `mcl_*` exports (TODO)            |
 | `libc/`           | Freestanding libc stubs + a tiny C++ wrapper layer  |
-| `sps/module.json` | SPS host manifest: artifact path, exports, ports, controls |
+| `sps/module.json` | Host manifest: artifact path, exports, ports, controls     |
 
 `tools/build_mcl_wasm.sh` copies `sps/module.json` and `mcl.aot` into the
-runtime package layout expected by SPS:
+runtime package layout:
 
 ```text
 build_wasm/package/mcl/
@@ -83,16 +82,16 @@ build_wasm/package/mcl/
   mcl.aot
 ```
 
-## Plugin side
+## Host side
 
-The plugin side lives in `src/host/modules/mcl/` (in the SPS dsp56k_emu repo).
+The reference host side lives in `src/host/modules/mcl/`.
 Files there mirror the .h files in this directory:
 
-| Plugin file               | Implements                                       |
+| Host file                 | Implements                                       |
 |---------------------------|--------------------------------------------------|
 | `MCLRuntime.{h,cpp}`      | WAMR init, instantiation, lifetime               |
 | `MCLHostImports.{h,cpp}`  | `NativeSymbol[]` + every `host_*` impl           |
-| `MCLModule.{h,cpp}`       | Module-system entry (parallel to MdModule)       |
+| `MCLModule.{h,cpp}`       | Module-system entry                              |
 | `LcdModuleDisplayElement` | LCD element that renders the module framebuffer  |
 
 `MCLHostImports.cpp` and `host_imports.h` must stay in sync. If a function

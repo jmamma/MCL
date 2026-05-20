@@ -1,6 +1,6 @@
-// desktop_entry.h — C-linkage interface the SPS JUCE plugin uses to drive
-// MCL. These are the only symbols the plugin should call directly; everything
-// else stays inside the mcl_desktop static lib.
+// desktop_entry.h — C-linkage interface a host uses to drive MCL. These are
+// the only symbols the host should call directly; everything else stays inside
+// the mcl_desktop static lib.
 #pragma once
 
 #include <stddef.h>
@@ -10,12 +10,17 @@
 extern "C" {
 #endif
 
-// Run MCL's Arduino-style setup() once. Idempotent; calling twice is a no-op.
+// Prepare MCL's Arduino-style runtime. On wasm this is intentionally fast:
+// the actual setup() body is entered from mcl_desktop_tick(), in the same
+// cooperative driver path as loop().
 void mcl_desktop_setup(void);
 
 // Run one iteration of MCL's Arduino-style loop(). Drive from a juce::Timer
 // at the desired refresh rate (e.g. 60 Hz) or from PluginProcessor::processBlock.
 void mcl_desktop_tick(void);
+
+// True after the Arduino setup() body has completed.
+bool mcl_desktop_is_setup_done(void);
 
 // Configure the directory MCL's SdFat shim resolves "/foo" paths against.
 // Defaults to "./mcl_sd" relative to the host process working directory.

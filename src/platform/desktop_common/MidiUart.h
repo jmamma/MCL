@@ -4,7 +4,7 @@
 // and backs the pure-virtual `m_getc / m_putc / m_putc_realtime / m_recv` with
 // MCL's own RingBuffer<> templates over internal byte arrays. Exposes `rxRb`
 // publicly because MCL's MidiClock.h reads it directly to inject realtime
-// bytes (MidiClock.h:567,580,601). The plugin pumps bytes in/out via the
+// bytes (MidiClock.h:567,580,601). The host pumps bytes in/out via the
 // desktop_entry.h C API (`mcl_inject_midi`, `mcl_drain_midi_out`).
 #pragma once
 
@@ -33,7 +33,7 @@ public:
     void    m_recv(uint8_t* src, uint16_t size) override;
     bool    avail() override;
 
-    // Desktop-only: bridge to the plugin's MidiBuffer.
+    // Desktop-only: bridge to the host's MIDI buffers.
     void   desktop_ingress(const uint8_t* data, size_t len);
     size_t desktop_egress(uint8_t* dst, size_t cap);
 

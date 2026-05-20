@@ -1,9 +1,8 @@
 // wasm_exports.h — wasm-side exports the JUCE host calls into.
 //
-// These are the symbols a host (the SPS plugin) looks up via
-// wasm_runtime_lookup_function() on the mcl.aot module. The wasm side
-// must export them with C linkage and matching signatures, otherwise the
-// host can't drive MCL.
+// These are the symbols a host looks up via wasm_runtime_lookup_function()
+// on the mcl.aot module. The wasm side must export them with C linkage and
+// matching signatures, otherwise the host can't drive MCL.
 //
 // Kept in sync with:
 //   - host_imports.h          (what wasm calls back into the host)
@@ -17,13 +16,12 @@
 extern "C" {
 #endif
 
-// Run MCL's Arduino-style setup() once. Idempotent. Host calls before
-// any mcl_tick_*. May run on either the audio or the message thread.
+// Fast prepare step. Host calls once before any mcl_tick_*. The Arduino
+// setup() body runs from the first mcl_tick_gui() call.
 void mcl_setup(void);
 
-// Audio-thread entry. Called once per audio block from
-// PluginProcessor::processBlock. `elapsed_us` is derived from the host
-// audio sample clock, not wall clock.
+// Audio-side entry. `elapsed_us` is derived from the host audio sample
+// clock, not wall clock.
 //
 // Replaces what timer1 (1 kHz) and timer2 (5 kHz) ISRs do on hardware:
 //   - Advances g_clock_ms/g_clock_fast by the elapsed time.
@@ -36,13 +34,12 @@ void mcl_setup(void);
 // sequencer already does.
 void mcl_tick_audio(uint32_t elapsed_us);
 
-// GUI-rate entry. Runs encoder/key polling, page display(), framebuffer
-// rasterisation. Must not run concurrently with mcl_tick_audio —
-// single-threaded wasm, no locks.
+// GUI-rate entry. The first call runs Arduino setup(); later calls run
+// encoder/key polling, page display(), and framebuffer rasterisation. Must
+// not run concurrently with mcl_tick_audio — single-threaded wasm, no locks.
 //
-// May allocate / touch the SD shim / be slow. The audio thread budget
-// must accommodate the worst frame, otherwise occasional dropouts.
-// Typical MCL display update is well under 1 ms on a desktop CPU.
+// May allocate / touch the SD shim / be slow. Do not call from the audio
+// callback.
 void mcl_tick_gui(void);
 
 // Linear-memory offset of MCL's framebuffer (128 × oled_height × 1bpp,
