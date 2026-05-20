@@ -22,6 +22,13 @@ heavily, or touch the filesystem.
 imports. MCL calls them from `MCL::loop()` / `GUI_hardware.poll()` on wasm
 so normal blocking UI loops remain cooperative and can receive panel input
 without changing MCL's page code. Audio-thread exports must not call them.
+`host_audio_pending_us()` is also consumed from that hook: if the host audio
+callback cannot enter the single-threaded wasm instance, it accumulates elapsed
+sample time and the GUI/service thread advances the virtual timer from inside
+the already-active wasm call.
+The same hook pumps `host_midi_in_pop()` / `host_midi_out_push()` around the
+virtual timer tick, so modal pages do not strand host-side MIDI queues while
+the service thread owns the wasm runtime.
 
 ## Lifetime
 

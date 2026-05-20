@@ -66,6 +66,8 @@ inline bool isInInterrupt() {
     return !(SREG & (1 << SREG_I));  // Return true if Global Interrupt Enable bit is cleared
 }
 
+inline void mcl_platform_before_loop() {}
+
 // Debug macros - only active when DEBUGMODE is defined
 #ifdef DEBUGMODE
 
@@ -132,4 +134,3 @@ inline bool isInInterrupt() {
 #define DEBUG_PRINT_FN(fmt)
 
 #endif // __cplusplus
-

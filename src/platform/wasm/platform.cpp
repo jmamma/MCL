@@ -5,9 +5,30 @@
 // can't read host wall-clock without the host's help.
 #include "platform.h"
 #include "host_imports.h"
+#include "wasm_exports.h"
 #include "GUI_hardware.h"
 
 extern uint64_t mcl_desktop_button_mask;
+
+namespace {
+
+void pump_host_midi_input() {
+    for (int port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
+        int32_t byte_val = 0;
+        while ((byte_val = host_midi_in_pop(port)) >= 0)
+            mcl_midi_in_push(port, (uint8_t)byte_val);
+    }
+}
+
+void pump_host_midi_output() {
+    for (int port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
+        int32_t byte_val = 0;
+        while ((byte_val = mcl_midi_out_pop(port)) >= 0)
+            host_midi_out_push(port, (uint8_t)byte_val);
+    }
+}
+
+}  // namespace
 
 unsigned long millis() {
     return host_millis();
@@ -24,6 +45,11 @@ void delayMicroseconds(unsigned int /*us*/) {}
 
 void mcl_platform_before_loop() {
     GUI_hardware.poll();
+    pump_host_midi_input();
+    uint32_t elapsed_us = host_audio_pending_us();
+    if (elapsed_us)
+        mcl_tick_audio(elapsed_us);
+    pump_host_midi_output();
     host_yield();
 }
 

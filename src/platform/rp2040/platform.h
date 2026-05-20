@@ -112,6 +112,8 @@ inline bool isInInterrupt() {
     return ipsr != 0;  // Non-zero value means we're in an exception/interrupt handler
 }
 
+inline void mcl_platform_before_loop() {}
+
 // Debug macros - only active when DEBUGMODE is defined
 #ifdef DEBUGMODE
     // Initialize debug serial port

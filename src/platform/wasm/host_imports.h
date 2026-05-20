@@ -93,6 +93,11 @@ uint64_t host_input_button_mask(void);
 int32_t  host_input_encoder_delta(int32_t encoder_id);
 uint32_t host_input_encoder_button_mask(void);
 
+// Audio time accumulated by the host while the non-realtime GUI loop owns the
+// wasm instance. The wasm platform consumes this from MCL::loop() so modal
+// pages can keep timer/MIDI-clock work advancing without host re-entry.
+uint32_t host_audio_pending_us(void);
+
 // ---- Display -------------------------------------------------------------
 //
 // The Oled framebuffer lives in wasm linear memory at a stable offset
