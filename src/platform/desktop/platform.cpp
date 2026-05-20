@@ -30,6 +30,22 @@ unsigned long micros() {
 void delay(unsigned long /*ms*/) {}
 void delayMicroseconds(unsigned int /*us*/) {}
 
+void mcl_platform_yield() {}
+
+extern uint64_t mcl_desktop_button_mask;
+
+uint64_t mcl_platform_button_mask() {
+    return mcl_desktop_button_mask;
+}
+
+int mcl_platform_encoder_delta(uint8_t /*encoder_id*/) {
+    return 0;
+}
+
+uint32_t mcl_platform_encoder_button_mask() {
+    return 0;
+}
+
 // SW_IRQ definitions to satisfy the externs in platform.h. Their values
 // are irrelevant — TRIGGER_SW_IRQ*/CLEAR_SW_IRQ* macros are no-ops.
 uint8_t SW_IRQ1 = 0;

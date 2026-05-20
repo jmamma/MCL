@@ -74,6 +74,16 @@ extern DebugBuffer debugBuffer;
 
 inline bool isInInterrupt() { return false; }
 
+// Cooperative host yield point used by the wasm host when MCL enters one of
+// its normal blocking UI loops. Desktop/rp2040 implementations may no-op.
+void mcl_platform_yield();
+
+// Platform-owned panel input source for the shared desktop GUI hardware shim.
+// The native desktop path uses local mock state; wasm forwards to host imports.
+uint64_t mcl_platform_button_mask();
+int      mcl_platform_encoder_delta(uint8_t encoder_id);
+uint32_t mcl_platform_encoder_button_mask();
+
 // MCL's per-platform DEBUG_INIT/DEBUG_PRINT* macros. When DEBUGMODE is set,
 // route the existing callsites to a stdio sink. In wasm, stdio forwards to the
 // host_log import, so the host receives the same stream on stderr/log output.

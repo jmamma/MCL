@@ -3,9 +3,10 @@
 // so the host doesn't need to know about the "desktop_" name (kept for
 // source-shared compatibility with the static-link path).
 //
-// Input state (encoder/button) is push-model: host invokes
-// mcl_input_set_*; the desktop hardware shim applies button state during
-// GUI_hardware.poll() so MCL's normal edge detection stays intact.
+// Input state (encoder/button) is normally pull-model: GUI_hardware.poll()
+// asks the host via host_input_* so modal loops can receive events while
+// wasm is already executing. mcl_input_set_* remains as a compatibility
+// export for non-modal hosts.
 //
 // Single-threaded — see ABI.md.
 #include "wasm_exports.h"
@@ -42,7 +43,7 @@ extern volatile uint16_t g_clock_minutes;
 
 // ABI version. Bump major when removing/renaming/changing signatures.
 static constexpr uint16_t MCL_ABI_MAJOR = 1;
-static constexpr uint16_t MCL_ABI_MINOR = 1;
+static constexpr uint16_t MCL_ABI_MINOR = 2;
 
 static uint32_t s_timer1_remainder_us = 0;
 static uint32_t s_timer2_remainder_us = 0;
@@ -115,15 +116,14 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
     handleIncomingMidi();
 }
 
-// GUI-rate entry. Mirrors what MCL::loop() does on hardware: UI polling,
-// page logic, and framebuffer rasterisation. The first GUI tick enters the
-// Arduino setup() body; later ticks run loop().
+// GUI-rate entry. The first GUI tick enters the Arduino setup() body; later
+// ticks run loop(). MCL::loop() itself polls input on wasm so nested modal
+// loops receive button/encoder events too.
 extern "C" void mcl_tick_gui(void) {
     if (!mcl_desktop_is_setup_done()) {
         mcl_desktop_tick();
         return;
     }
-    GUI_hardware.poll();
     mcl_desktop_tick();
 }
 
@@ -168,10 +168,9 @@ extern "C" int32_t mcl_midi_out_pop(int32_t port) {
 
 // ---- Input -------------------------------------------------------------
 //
-// Push-model: host writes; MCL reads via its normal accessors. Encoder
-// `normal` is the rotational delta and is consumed by MCL's poll/event
-// loop — we *add* deltas so multiple host pushes within a tick coalesce.
-// Buttons use MCL's button ids; bit set means host says "pressed".
+// Compatibility push-model exports. The SPS host uses the host_input_*
+// imports instead; these remain useful for small harnesses that only call
+// mcl_tick_gui() after setting input.
 
 extern "C" void mcl_input_set_button_mask(uint32_t mask) {
     mcl_desktop_button_mask = (uint64_t)mask;

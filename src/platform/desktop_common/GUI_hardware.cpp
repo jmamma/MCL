@@ -17,10 +17,20 @@ void ButtonsClass::clear() {
 }
 
 void ButtonsClass::poll(uint8_t /*sr*/) {
-    const uint64_t mask = mcl_desktop_button_mask;
+    const uint64_t mask = mcl_platform_button_mask();
     for (uint8_t i = 0; i < GUI_NUM_BUTTONS; i++) {
         const bool pressed = (mask & (1ULL << i)) != 0;
         STORE_B_CURRENT(i, pressed ? 0 : 1);
+    }
+}
+
+void EncodersClass::poll(uint16_t /*sr*/) {
+    const uint32_t button_mask = mcl_platform_encoder_button_mask();
+    for (uint8_t i = 0; i < GUI_NUM_ENCODERS; ++i) {
+        int delta = (int)encoders[i].normal + mcl_platform_encoder_delta(i);
+        delta = delta > 127 ? 127 : (delta < -128 ? -128 : delta);
+        encoders[i].normal = (int8_t)delta;
+        encoders[i].button = (button_mask & (1u << i)) != 0 ? 1 : 0;
     }
 }
 

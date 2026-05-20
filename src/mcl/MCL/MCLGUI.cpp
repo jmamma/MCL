@@ -117,14 +117,6 @@ bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
 }
 
 void MCLGUI::wait_for_project() {
-#if defined(PLATFORM_WASM)
-  // Non-blocking on the wasm platform. setup() runs from the cooperative
-  // GUI/service tick; blocking here would prevent later ticks from
-  // delivering the input needed to leave this page. Arm the start menu and
-  // return so subsequent mcl_tick_gui() calls can drive mcl.loop().
-  mcl.setPage(START_MENU_PAGE);
-  return;
-#else
   again:
   mcl.setPage(START_MENU_PAGE);
   while (mcl.currentPage() == START_MENU_PAGE || mcl.currentPage() == TEXT_INPUT_PAGE || mcl.currentPage() == LOAD_PROJ_PAGE) {
@@ -132,7 +124,6 @@ void MCLGUI::wait_for_project() {
   }
   if (!proj.project_loaded) { goto again; }
   DEBUG_PRINTLN("finished");
-#endif
 }
 
 void MCLGUI::draw_cross(uint8_t x, uint8_t y, uint8_t color) {

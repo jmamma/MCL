@@ -60,9 +60,9 @@ int32_t mcl_midi_in_push(int32_t port, uint8_t byte_val);
 // the ring is empty, 0..255 otherwise.
 int32_t mcl_midi_out_pop(int32_t port);
 
-// Encoder/button state-injection. Host sets values; MCL's next tick
-// reads them through host_encoder_delta()/host_encoder_button()/
-// host_button_mask() (which forward to these accumulators).
+// Compatibility encoder/button state-injection for simple harnesses. The
+// full host uses host_input_* imports so blocking modal loops can receive
+// input while mcl_tick_gui() is already executing.
 void mcl_input_set_button_mask(uint32_t mask);
 void mcl_input_set_button_mask64(uint32_t mask_lo, uint32_t mask_hi);
 void mcl_input_add_encoder_delta(int32_t idx, int8_t delta);

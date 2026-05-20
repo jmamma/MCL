@@ -30,6 +30,10 @@ extern "C" {
 uint32_t host_millis(void);
 uint32_t host_micros(void);
 
+// Cooperative yield point for MCL's normal blocking UI loops. The host
+// sleeps/yields a little so a modal page does not spin a CPU core.
+void host_yield(void);
+
 // ---- File I/O (back the SdFat shim) --------------------------------------
 //
 // File handles are positive int32. Negative = error. Mode bits match
@@ -81,10 +85,12 @@ void    host_midi_out_push(int32_t port, uint8_t byte_val);
 
 // ---- Input ---------------------------------------------------------------
 //
-// Push-model: the host calls mcl_input_set_*() exports (see wasm_exports.h)
-// to populate encoder/button state; MCL's GUI_hardware reads from that
-// state directly. No host_input_* imports — keeping the pump on the host
-// side avoids a per-poll wasm→host crossing.
+// Pull-model: GUI_hardware.poll() calls these from inside MCL's own loop.
+// That lets normal blocking modal pages receive input while wasm is already
+// executing and the host cannot enter a setter export.
+uint64_t host_input_button_mask(void);
+int32_t  host_input_encoder_delta(int32_t encoder_id);
+uint32_t host_input_encoder_button_mask(void);
 
 // ---- Display -------------------------------------------------------------
 //

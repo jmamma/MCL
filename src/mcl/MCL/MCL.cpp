@@ -30,6 +30,11 @@
 #include "MixerPage.h"
 #include "GridSavePage.h"
 #include "GridLoadPage.h"
+#include "platform.h"
+
+#ifdef PLATFORM_WASM
+#include "GUI_hardware.h"
+#endif
 
 #ifdef WAV_DESIGNER
 #include "OscMixerPage.h"
@@ -207,13 +212,7 @@ void MCL::setup() {
   // so it can preempt the active page on cluster overrides.
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
 
-  // GRID_PAGE assumes proj.project_loaded == true. Blocking platforms reach
-  // that state before returning from wait_for_project(). The wasm platform
-  // returns immediately with START_MENU_PAGE active, so leave that page in
-  // place until the user loads or creates a project.
-  if (proj.project_loaded) {
-    mcl.setPage(GRID_PAGE);
-  }
+  mcl.setPage(GRID_PAGE);
 
   DEBUG_PRINTLN(F("tempo:"));
   DEBUG_PRINTLN(mcl_cfg.tempo);
@@ -248,6 +247,10 @@ void MCL::setup() {
 }
 
 void MCL::loop() {
+#ifdef PLATFORM_WASM
+  GUI_hardware.poll();
+#endif
+
 #ifndef __AVR__
   MidiUartUSB.service_background();
 #endif
@@ -267,6 +270,10 @@ void MCL::loop() {
 
 #ifdef PLATFORM_TBD
   tbd_panel.loop();
+#endif
+
+#ifdef PLATFORM_WASM
+  mcl_platform_yield();
 #endif
 }
 

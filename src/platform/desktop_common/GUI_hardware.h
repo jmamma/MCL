@@ -29,7 +29,7 @@ public:
     encoder_t encoders[GUI_NUM_ENCODERS] = {};
 
     EncodersClass() = default;
-    void poll(uint16_t /*sr*/) {}
+    void poll(uint16_t sr);
     void clearEncoders() {
         for (auto& e : encoders) { e.normal = 0; e.button = 0; }
     }

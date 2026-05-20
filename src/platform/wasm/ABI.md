@@ -10,12 +10,18 @@ all entry points (`mcl_setup`, `mcl_tick_audio`, `mcl_tick_gui`,
 
 The host audio side drives `mcl_tick_audio()` from audio sample time, not
 wall clock. The host GUI/service side drives `mcl_tick_gui()` from a
-cooperative timer. The host must never enter both exports concurrently.
+module-owned non-realtime thread. The host must never enter both exports
+concurrently.
 
 Host-import callbacks (`host_fs_*`, `host_midi_*`, `host_log`, etc.)
 execute on whatever thread called the wasm export that invoked them.
 Audio-thread exports must not enter import paths that can block, allocate
 heavily, or touch the filesystem.
+
+`host_yield()` and `host_input_*()` are intentionally GUI/service-thread
+imports. MCL calls them from `MCL::loop()` / `GUI_hardware.poll()` on wasm
+so normal blocking UI loops remain cooperative and can receive panel input
+without changing MCL's page code. Audio-thread exports must not call them.
 
 ## Lifetime
 
