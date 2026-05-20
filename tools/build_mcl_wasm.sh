@@ -3,8 +3,13 @@
 # clang++ + wamrc toolchain that scripts/build_usr_example.sh in the
 # parent dsp56k_emu repo uses for USR machines.
 #
-# Output: build_wasm/mcl.wasm and build_wasm/mcl.aot. The .aot is what
-# the SPS plugin would load via WAMR.
+# Output:
+#   build_wasm/mcl.wasm
+#   build_wasm/mcl.aot
+#   build_wasm/package/mcl/module.json
+#   build_wasm/package/mcl/mcl.aot
+#
+# The package directory is the runtime-installable module shape for SPS.
 
 set -euo pipefail
 
@@ -29,6 +34,11 @@ mkdir -p "${OUT}"
 
 WASM="${OUT}/mcl.wasm"
 AOT="${OUT}/mcl.aot"
+SPEC_SRC="${MCL_ROOT}/src/platform/wasm/sps/module.json"
+PACKAGE_DIR="${OUT}/package/mcl"
+PACKAGE_AOT="${PACKAGE_DIR}/mcl.aot"
+PACKAGE_SPEC="${PACKAGE_DIR}/module.json"
+mkdir -p "${PACKAGE_DIR}"
 
 # Per-platform include paths. Mirror MCL/CMakeLists.txt (desktop_common +
 # wasm BEFORE the MCL tree includes), plus MCL's tbd-env -I list.
@@ -83,6 +93,11 @@ DEFINES=(
     -DMCL_DESKTOP_LINK_MCL_CORE=1
 )
 
+if [ "${MCL_WASM_DEBUG:-0}" != "0" ]; then
+    DEFINES+=(-DDEBUGMODE=1)
+    echo "[mcl-wasm] DEBUGMODE enabled; DEBUG_PRINT* routes through stdio/host_log"
+fi
+
 # Common flags for both C and C++. USR example uses -nostdlib -ffreestanding;
 # MCL is bigger and uses libc++ templates / std::string-style code via the
 # WString shim, so for the first cut we leave stdlib alone and see what
@@ -105,7 +120,16 @@ COMMON_FLAGS=(
     -fpermissive
 )
 
-CXX_FLAGS=(-std=c++17)
+CXX_FLAGS=(
+    -std=c++17
+    # Don't emit __cxa_atexit calls for static-storage dtors. We never
+    # tear the wasm instance down via exit(), so global dtors don't
+    # matter; and clang otherwise inserts __cxa_atexit as an unresolved
+    # import even when a definition is present in the same link.
+    -fno-use-cxa-atexit
+    # No threadsafe-static guards (already in COMMON_FLAGS, but be loud).
+    -fno-threadsafe-statics
+)
 C_FLAGS=()
 
 # Collect MCL source files (mirror CMakeLists.txt filter).
@@ -162,6 +186,7 @@ echo "[mcl-wasm] compiling → ${WASM}"
     -Wl,--export=mcl_midi_in_push \
     -Wl,--export=mcl_midi_out_pop \
     -Wl,--export=mcl_input_set_button_mask \
+    -Wl,--export=mcl_input_set_button_mask64 \
     -Wl,--export=mcl_input_add_encoder_delta \
     -Wl,--export=mcl_input_set_encoder_button \
     -Wl,--export=mcl_abi_version \
@@ -181,4 +206,7 @@ echo "[mcl-wasm] AOT compile → ${AOT}"
     --disable-ref-types \
     -o "${AOT}" "${WASM}"
 
-echo "[mcl-wasm] done. wasm=$(wc -c < "${WASM}") aot=$(wc -c < "${AOT}")"
+cp "${AOT}" "${PACKAGE_AOT}"
+cp "${SPEC_SRC}" "${PACKAGE_SPEC}"
+
+echo "[mcl-wasm] done. wasm=$(wc -c < "${WASM}") aot=$(wc -c < "${AOT}") package=${PACKAGE_DIR}"

@@ -4,8 +4,8 @@
 // (kept for source-shared compatibility with the static-link path).
 //
 // Input state (encoder/button) is push-model: host invokes
-// mcl_input_set_*; this file writes directly into MCL's Encoders/Buttons
-// globals. MCL reads from those without a wasm→host crossing.
+// mcl_input_set_*; the desktop hardware shim applies button state during
+// GUI_hardware.poll() so MCL's normal edge detection stays intact.
 //
 // Single-threaded — see ABI.md.
 #include "wasm_exports.h"
@@ -29,6 +29,7 @@ extern MidiUartClass    MidiUart2;
 extern MidiUartUSBClass MidiUartUSB;
 extern EncodersClass    Encoders;
 extern ButtonsClass     Buttons;
+extern uint64_t         mcl_desktop_button_mask;
 extern MidiClockClass   MidiClock;
 extern MCLSeq           mcl_seq;
 extern MCL              mcl;
@@ -41,7 +42,7 @@ extern volatile uint16_t g_clock_minutes;
 
 // ABI version. Bump major when removing/renaming/changing signatures.
 static constexpr uint16_t MCL_ABI_MAJOR = 1;
-static constexpr uint16_t MCL_ABI_MINOR = 0;
+static constexpr uint16_t MCL_ABI_MINOR = 1;
 
 static uint32_t s_timer1_remainder_us = 0;
 static uint32_t s_timer2_remainder_us = 0;
@@ -165,21 +166,14 @@ extern "C" int32_t mcl_midi_out_pop(int32_t port) {
 // Push-model: host writes; MCL reads via its normal accessors. Encoder
 // `normal` is the rotational delta and is consumed by MCL's poll/event
 // loop — we *add* deltas so multiple host pushes within a tick coalesce.
-//
-// Button mask: low bit per button index. Maps directly into
-// ButtonsClass::buttons[i].status's B_BIT_CURRENT (active-low: bit set
-// means released). So we invert: host's "pressed" bit → status bit
-// cleared.
+// Buttons use MCL's button ids; bit set means host says "pressed".
 
 extern "C" void mcl_input_set_button_mask(uint32_t mask) {
-    for (uint8_t i = 0; i < GUI_NUM_BUTTONS; ++i) {
-        bool pressed = (mask >> i) & 1u;
-        if (pressed) {
-            Buttons.buttons[i].status &= (uint8_t)~(1u << B_BIT_CURRENT);
-        } else {
-            Buttons.buttons[i].status |= (uint8_t)(1u << B_BIT_CURRENT);
-        }
-    }
+    mcl_desktop_button_mask = (uint64_t)mask;
+}
+
+extern "C" void mcl_input_set_button_mask64(uint32_t mask_lo, uint32_t mask_hi) {
+    mcl_desktop_button_mask = ((uint64_t)mask_hi << 32) | (uint64_t)mask_lo;
 }
 
 extern "C" void mcl_input_add_encoder_delta(int32_t idx, int8_t delta) {

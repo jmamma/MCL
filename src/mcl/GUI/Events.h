@@ -14,7 +14,7 @@
 #define MAX_BUTTONS GUI_NUM_BUTTONS
 #define MAX_EVENTS 32
 
-#if defined(PLATFORM_TBD)
+#if defined(PLATFORM_TBD) || defined(PLATFORM_DESKTOP)
 typedef uint64_t event_ignore_mask_t;
 #else
 typedef uint8_t event_ignore_mask_t;

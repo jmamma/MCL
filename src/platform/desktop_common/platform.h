@@ -74,14 +74,16 @@ extern DebugBuffer debugBuffer;
 
 inline bool isInInterrupt() { return false; }
 
-// MCL's per-platform DEBUG_INIT/DEBUG_PRINT* macros — empty when DEBUGMODE is
-// not defined. The desktop build doesn't define DEBUGMODE.
+// MCL's per-platform DEBUG_INIT/DEBUG_PRINT* macros. When DEBUGMODE is set,
+// route the existing callsites to a stdio sink. In wasm, stdio forwards to the
+// host_log import, so the plugin prints the same stream to stderr.
 #ifdef DEBUGMODE
+    #include "DebugOutput.h"
     #define DEBUG_INIT()             do {} while (0)
-    #define DEBUG_PRINTLN(x)         do { std::fprintf(stderr, "%s\n", (x)); } while (0)
-    #define DEBUG_PRINT(x)           do { std::fprintf(stderr, "%s",   (x)); } while (0)
-    #define DEBUG_PRINT_FN(fmt, ...) do { std::fprintf(stderr, "%s: " fmt "\n", __func__, ##__VA_ARGS__); } while (0)
-    #define DEBUG_DUMP(x)            do {} while (0)
+    #define DEBUG_PRINTLN(...)       do { mcl_debug::println(__VA_ARGS__); } while (0)
+    #define DEBUG_PRINT(...)         do { mcl_debug::print(__VA_ARGS__); } while (0)
+    #define DEBUG_PRINT_FN(...)      do { mcl_debug::function(__func__, ##__VA_ARGS__); } while (0)
+    #define DEBUG_DUMP(x)
 #else
     #define DEBUG_INIT()
     #define DEBUG_PRINT(x)

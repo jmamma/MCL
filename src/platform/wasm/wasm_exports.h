@@ -67,6 +67,7 @@ int32_t mcl_midi_out_pop(int32_t port);
 // reads them through host_encoder_delta()/host_encoder_button()/
 // host_button_mask() (which forward to these accumulators).
 void mcl_input_set_button_mask(uint32_t mask);
+void mcl_input_set_button_mask64(uint32_t mask_lo, uint32_t mask_hi);
 void mcl_input_add_encoder_delta(int32_t idx, int8_t delta);
 void mcl_input_set_encoder_button(int32_t idx, uint8_t pressed);
 

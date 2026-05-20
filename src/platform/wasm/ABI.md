@@ -6,18 +6,17 @@ that loads it via WAMR.
 ## Threading model
 
 MCL is **single-threaded inside the wasm instance**. The host must serialise
-all entry points (`mcl_setup`, `mcl_tick`, `mcl_midi_*`, `mcl_input_*`) onto
-a single thread — in practice the JUCE message thread, driven by a
-`juce::Timer` at ~60 Hz.
+all entry points (`mcl_setup`, `mcl_tick_audio`, `mcl_tick_gui`,
+`mcl_midi_*`, `mcl_input_*`) so the instance is never entered concurrently.
 
-The host's audio thread **never** calls into wasm. MIDI bytes received on
-the audio thread must be queued in a lock-free SPSC ring on the host side
-and drained from the message thread before the next `mcl_tick`.
+The host audio thread drives `mcl_tick_audio()` from audio sample time, not
+wall clock. That entry point owns the virtual 1 kHz / 5 kHz timer catch-up,
+sequencer work, and MIDI byte dispatch needed by the audio callback.
 
 Host-import callbacks (`host_fs_*`, `host_midi_*`, `host_log`, etc.)
-execute on whatever thread called the wasm export that invoked them — by
-the above, that's always the message thread. Implementations therefore
-don't need internal locking.
+execute on whatever thread called the wasm export that invoked them.
+Audio-thread exports must not enter import paths that can block, allocate
+heavily, or touch the filesystem.
 
 ## Lifetime
 
@@ -58,7 +57,8 @@ Adding new host-imports / exports is a minor bump.
 ## Naming convention
 
 - Host → wasm (imports MCL calls): `host_*`. Registered with WAMR under
-  module name `"mcl"`.
+  module name `"env"` because the wasm objects use LLVM's default import
+  module unless a symbol explicitly overrides it.
 - Wasm → host (exports the host calls): `mcl_*`. Looked up by name on the
   `wasm_module_inst_t`.
 
@@ -72,19 +72,29 @@ Adding new host-imports / exports is a minor bump.
 | `SdFat.cpp`       | Wasm-side SdFat backend (routes to `host_fs_*`)     |
 | `exports.cpp`     | Wasm-side impl of `mcl_*` exports (TODO)            |
 | `libc/`           | Freestanding libc stubs + a tiny C++ wrapper layer  |
+| `sps/module.json` | SPS host manifest: artifact path, exports, ports, controls |
+
+`tools/build_mcl_wasm.sh` copies `sps/module.json` and `mcl.aot` into the
+runtime package layout expected by SPS:
+
+```text
+build_wasm/package/mcl/
+  module.json
+  mcl.aot
+```
 
 ## Plugin side
 
-The plugin side lives in `src/host/Mcl/` (in the SPS dsp56k_emu repo).
+The plugin side lives in `src/host/modules/mcl/` (in the SPS dsp56k_emu repo).
 Files there mirror the .h files in this directory:
 
 | Plugin file               | Implements                                       |
 |---------------------------|--------------------------------------------------|
-| `McuRuntime.{h,cpp}`      | WAMR init, instantiation, lifetime               |
-| `McuHostImports.{h,cpp}`  | `NativeSymbol[]` + every `host_*` impl           |
-| `McuModule.{h,cpp}`       | Module-system entry (parallel to MdModule)       |
-| `McuPage.{h,cpp}`         | LCD page that renders the framebuffer            |
+| `MCLRuntime.{h,cpp}`      | WAMR init, instantiation, lifetime               |
+| `MCLHostImports.{h,cpp}`  | `NativeSymbol[]` + every `host_*` impl           |
+| `MCLModule.{h,cpp}`       | Module-system entry (parallel to MdModule)       |
+| `LcdModuleDisplayElement` | LCD element that renders the module framebuffer  |
 
-`McuHostImports.cpp` and `host_imports.h` must stay in sync. If a function
+`MCLHostImports.cpp` and `host_imports.h` must stay in sync. If a function
 is added in one, it must be added in the other, and the `NativeSymbol[]`
 array updated.

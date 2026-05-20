@@ -5,7 +5,9 @@
 #include "platform.h"
 #include "irqs.h"
 #include "StackMonitor.h"
+#if !defined(PLATFORM_WASM)
 #include "MidiTest.h"
+#endif
 #include "ISRTiming.h"
 #include "oled.h"
 #include "SdFat.h"
@@ -37,7 +39,7 @@ void setup() {
 }
 
 void loop() {
-#if defined(DEBUGMODE) && !defined(__AVR__)
+#if defined(DEBUGMODE) && !defined(__AVR__) && !defined(PLATFORM_WASM)
    debugBuffer.transmit();
    ISRTiming::print_stats();
 #endif

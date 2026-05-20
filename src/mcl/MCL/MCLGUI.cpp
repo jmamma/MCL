@@ -117,6 +117,15 @@ bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
 }
 
 void MCLGUI::wait_for_project() {
+#if defined(PLATFORM_WASM)
+  // Non-blocking on the wasm/plugin platform. Setup is called synchronously
+  // from the host (MCLModule::init); if we blocked here the host's audio
+  // thread would deadlock waiting for input. Just arm the start menu and
+  // return — mcl_tick_gui() drives mcl.loop() per host frame, so the user
+  // navigates the menu interactively after setup completes.
+  mcl.setPage(START_MENU_PAGE);
+  return;
+#else
   again:
   mcl.setPage(START_MENU_PAGE);
   while (mcl.currentPage() == START_MENU_PAGE || mcl.currentPage() == TEXT_INPUT_PAGE || mcl.currentPage() == LOAD_PROJ_PAGE) {
@@ -124,6 +133,7 @@ void MCLGUI::wait_for_project() {
   }
   if (!proj.project_loaded) { goto again; }
   DEBUG_PRINTLN("finished");
+#endif
 }
 
 void MCLGUI::draw_cross(uint8_t x, uint8_t y, uint8_t color) {

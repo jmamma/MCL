@@ -320,3 +320,65 @@ float fabsf(float x) { return x < 0 ? -x : x; }
 float floorf(float x) { return (float)floor((double)x); }
 float expf(float x) { return (float)host_math_exp((double)x); }
 float logf(float x) { return (float)host_math_log((double)x); }
+
+// --------- C++ ABI + compiler-rt stubs ------------------------------------
+//
+// clang on wasm32 emits these as undefined imports whenever MCL's C++ code
+// uses pure virtuals, static-storage objects with non-trivial destructors,
+// or 128-bit integer arithmetic. Stubbing them in this TU resolves the
+// link-time symbols so they ship inside mcl.wasm instead of becoming
+// `(env)` imports the host has to provide.
+//
+//   * __cxa_atexit       — registers a global-dtor for process exit.
+//                          We never tear the wasm instance down via
+//                          exit(), so dropping the registration is
+//                          harmless. Return 0 = "registered successfully".
+//   * __cxa_pure_virtual — only reachable if a constructor calls a pure
+//                          virtual on a half-built object. Trap so the
+//                          bug surfaces loudly instead of executing
+//                          garbage.
+//   * __multi3           — signed 128-bit multiply (returns the low 128
+//                          bits of a*b). clang lowers some 64-bit signed
+//                          multiplications and divisions to this on
+//                          targets without an i128 mul instruction.
+
+int __cxa_atexit(void (*func)(void*), void* arg, void* dso) {
+    (void)func; (void)arg; (void)dso;
+    return 0;
+}
+
+void __cxa_pure_virtual(void) {
+    host_log("[mcl] __cxa_pure_virtual called\n");
+    __builtin_trap();
+}
+
+// Signed 128-bit multiply. The wasm-sysv ABI returns 128-bit values via
+// a hidden sret pointer in the first parameter slot, written as two i64
+// halves (low, high). We compute the low half exactly via 64x64->128
+// expansion and the high half from the cross-products including
+// sign-extension of both operands.
+void __multi3(unsigned long long* sret_lo,
+              unsigned long long* sret_hi,
+              long long a, long long b) {
+    typedef unsigned long long u64;
+    u64 a_lo = (u64)a;
+    u64 b_lo = (u64)b;
+    u64 a_hi_sext = (u64)(a >> 63);
+    u64 b_hi_sext = (u64)(b >> 63);
+
+    u64 a0 = a_lo & 0xffffffffULL, a1 = a_lo >> 32;
+    u64 b0 = b_lo & 0xffffffffULL, b1 = b_lo >> 32;
+
+    u64 p00 = a0 * b0;
+    u64 p01 = a0 * b1;
+    u64 p10 = a1 * b0;
+    u64 p11 = a1 * b1;
+
+    u64 mid = (p00 >> 32) + (p01 & 0xffffffffULL) + (p10 & 0xffffffffULL);
+    u64 lo  = (p00 & 0xffffffffULL) | (mid << 32);
+    u64 hi  = p11 + (p01 >> 32) + (p10 >> 32) + (mid >> 32);
+    hi += a_hi_sext * b_lo + a_lo * b_hi_sext;
+
+    if (sret_lo) *sret_lo = lo;
+    if (sret_hi) *sret_hi = hi;
+}

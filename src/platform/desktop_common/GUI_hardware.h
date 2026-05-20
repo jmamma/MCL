@@ -22,7 +22,7 @@ public:
 };
 
 #define GUI_NUM_ENCODERS 4
-#define GUI_NUM_BUTTONS  8
+#define GUI_NUM_BUTTONS  38
 
 class EncodersClass {
 public:
@@ -125,6 +125,19 @@ public:
     static constexpr uint8_t BUTTON2  = 5;
     static constexpr uint8_t BUTTON3  = 6;
     static constexpr uint8_t BUTTON4  = 7;
+    static constexpr uint8_t FUNC_BUTTON1 = 8;
+    static constexpr uint8_t FUNC_BUTTON2 = 9;
+    static constexpr uint8_t FUNC_BUTTON3 = 10;
+    static constexpr uint8_t FUNC_BUTTON4 = 11;
+    static constexpr uint8_t FUNC_BUTTON5 = 12;
+    static constexpr uint8_t FUNC_BUTTON6 = 13;
+    static constexpr uint8_t FUNC_BUTTON7 = 14;
+    static constexpr uint8_t FUNC_BUTTON8 = 15;
+    static constexpr uint8_t FUNC_BUTTON9 = 16;
+    static constexpr uint8_t TRIG_BUTTON1 = 17;
+    static constexpr uint8_t TBD_BUTTON_B  = 36;
+    static constexpr uint8_t TBD_BUTTON_TR = 37;
+    static constexpr uint16_t TBD_TAP_MAX_MS = 200;
 
     static constexpr uint16_t ENCODER1_MASK = _BV(ENCODER1);
     static constexpr uint16_t ENCODER2_MASK = _BV(ENCODER2);
@@ -135,11 +148,8 @@ public:
     static constexpr uint16_t BUTTON3_MASK  = _BV(BUTTON3);
     static constexpr uint16_t BUTTON4_MASK  = _BV(BUTTON4);
 
-    ALWAYS_INLINE() void clear() {
-        // Active-low: B_BIT_CURRENT set == button released.
-        for (auto& b : buttons) b.status = (uint8_t)(1u << B_BIT_CURRENT);
-    }
-    ALWAYS_INLINE() void poll(uint8_t /*sr*/) {}
+    void clear();
+    void poll(uint8_t sr);
 };
 
 class GUIHardware {
@@ -152,9 +162,9 @@ public:
     LEDHardware  led;
 
     GUIHardware() = default;
-    void init()  {}
-    void poll()  {}
-    void clear() {}
+    void init();
+    void poll();
+    void clear();
 
     friend class GuiClass;
 };
@@ -163,3 +173,8 @@ extern GUIHardware GUI_hardware;
 extern SR165Class  SR165;
 extern EncodersClass Encoders;
 extern ButtonsClass Buttons;
+
+// Host-pushed physical button state. Low bit per ButtonsClass id; bit set
+// means pressed. Applied by ButtonsClass::poll() so B_OLD/B_CURRENT edge
+// detection remains consistent with hardware platforms.
+extern uint64_t mcl_desktop_button_mask;

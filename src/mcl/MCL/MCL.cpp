@@ -207,7 +207,14 @@ void MCL::setup() {
   // so it can preempt the active page on cluster overrides.
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
 
-  mcl.setPage(GRID_PAGE);
+  // GRID_PAGE assumes proj.project_loaded == true. On hardware the SD load
+  // path always reaches that state before returning (wait_for_project
+  // loops until the user picks a project). On wasm the host calls setup
+  // synchronously, so wait_for_project just arms START_MENU_PAGE and
+  // returns; honour that selection here instead of clobbering it.
+  if (proj.project_loaded) {
+    mcl.setPage(GRID_PAGE);
+  }
 
   DEBUG_PRINTLN(F("tempo:"));
   DEBUG_PRINTLN(mcl_cfg.tempo);

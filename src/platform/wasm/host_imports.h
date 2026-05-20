@@ -15,7 +15,7 @@
 //     wasm_runtime_addr_app_to_native() and must not retain.
 //
 // Keep this header in sync with:
-//   - src/host/Mcl/McuHostImports.cpp on the plugin side (NativeSymbol[]).
+//   - src/host/modules/mcl/MCLHostImports.cpp on the plugin side (NativeSymbol[]).
 //   - tools/build_mcl_wasm.sh (-Wl,--allow-undefined flag).
 #pragma once
 
