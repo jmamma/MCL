@@ -1,8 +1,20 @@
 {
   "id": "mcl",
   "name": "MCL",
-  "runtime": "wamr-aot",
-  "artifact": "mcl.aot",
+  "runtime": {
+    "type": "wamr-aot",
+    "artifact": "mcl.aot",
+    "stack_bytes": 65536,
+    "heap_bytes": 1048576
+  },
+  "abi": {
+    "id": "sps.panel_device.v1",
+    "version": 1,
+    "import_module": "env"
+  },
+  "service": {
+    "gui_hz": 60
+  },
   "build": {
     "script": "tools/build_mcl_wasm.sh",
     "package": "build_wasm/package/mcl"

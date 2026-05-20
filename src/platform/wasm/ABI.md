@@ -90,16 +90,16 @@ build_wasm/package/mcl/
 
 ## Host side
 
-The reference host side lives in `src/host/modules/mcl/`.
+The reference host side lives in `src/host/modules/wasm_panel/`.
 Files there mirror the .h files in this directory:
 
 | Host file                 | Implements                                       |
 |---------------------------|--------------------------------------------------|
-| `MCLRuntime.{h,cpp}`      | WAMR init, instantiation, lifetime               |
-| `MCLHostImports.{h,cpp}`  | `NativeSymbol[]` + every `host_*` impl           |
-| `MCLModule.{h,cpp}`       | Module-system entry                              |
+| `WamrAotRuntime.{h,cpp}`  | WAMR init, instantiation, lifetime               |
+| `PanelDeviceHostImports.{h,cpp}` | `NativeSymbol[]` + every `host_*` impl    |
+| `WasmPanelModule.{h,cpp}` | Module-system entry                              |
 | `LcdModuleDisplayElement` | LCD element that renders the module framebuffer  |
 
-`MCLHostImports.cpp` and `host_imports.h` must stay in sync. If a function
-is added in one, it must be added in the other, and the `NativeSymbol[]`
-array updated.
+`PanelDeviceHostImports.cpp` and `host_imports.h` must stay in sync. If a
+function is added in one, it must be added in the other, and the
+`NativeSymbol[]` array updated.

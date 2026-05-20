@@ -22,7 +22,8 @@ unsigned long micros() {
 void delay(unsigned long /*ms*/) {}
 void delayMicroseconds(unsigned int /*us*/) {}
 
-void mcl_platform_yield() {
+void mcl_platform_before_loop() {
+    GUI_hardware.poll();
     host_yield();
 }
 

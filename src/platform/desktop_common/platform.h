@@ -74,9 +74,10 @@ extern DebugBuffer debugBuffer;
 
 inline bool isInInterrupt() { return false; }
 
-// Cooperative host yield point used by the wasm host when MCL enters one of
-// its normal blocking UI loops. Desktop/rp2040 implementations may no-op.
-void mcl_platform_yield();
+// Platform hook at the start of MCL::loop(). Wasm uses this as a cooperative
+// hardware-service point while modal page loops are running; native desktop
+// and hardware implementations may no-op or use their real platform services.
+void mcl_platform_before_loop();
 
 // Platform-owned panel input source for the shared desktop GUI hardware shim.
 // The native desktop path uses local mock state; wasm forwards to host imports.

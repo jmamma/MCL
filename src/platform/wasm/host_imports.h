@@ -14,7 +14,8 @@
 //     wasm_runtime_addr_app_to_native() and must not retain.
 //
 // Keep this header in sync with:
-//   - src/host/modules/mcl/MCLHostImports.cpp on the host side (NativeSymbol[]).
+//   - src/host/modules/wasm_panel/PanelDeviceHostImports.cpp on the host side
+//     (NativeSymbol[]).
 //   - tools/build_mcl_wasm.sh (-Wl,--allow-undefined flag).
 #pragma once
 

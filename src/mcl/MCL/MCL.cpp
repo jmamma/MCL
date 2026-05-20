@@ -32,10 +32,6 @@
 #include "GridLoadPage.h"
 #include "platform.h"
 
-#ifdef PLATFORM_WASM
-#include "GUI_hardware.h"
-#endif
-
 #ifdef WAV_DESIGNER
 #include "OscMixerPage.h"
 #include "WavDesignerPage.h"
@@ -247,9 +243,7 @@ void MCL::setup() {
 }
 
 void MCL::loop() {
-#ifdef PLATFORM_WASM
-  GUI_hardware.poll();
-#endif
+  mcl_platform_before_loop();
 
 #ifndef __AVR__
   MidiUartUSB.service_background();
@@ -270,10 +264,6 @@ void MCL::loop() {
 
 #ifdef PLATFORM_TBD
   tbd_panel.loop();
-#endif
-
-#ifdef PLATFORM_WASM
-  mcl_platform_yield();
 #endif
 }
 
