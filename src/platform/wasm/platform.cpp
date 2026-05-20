@@ -67,6 +67,7 @@ void platform_poll() {
 void platform_wait_poll() {
     g_clock_ms = (uint16_t)millis();
     pump_host_midi_input();
+    drain_pending_audio_time();
     pump_host_midi_output();
     host_yield();
 }

@@ -177,6 +177,7 @@ echo "[mcl-wasm] compiling → ${WASM}"
     "${INCLUDES[@]}" \
     -Wl,--no-entry \
     -Wl,--export-dynamic \
+    -Wl,--export=__wasm_call_ctors \
     -Wl,--export=mcl_setup \
     -Wl,--export=mcl_tick_audio \
     -Wl,--export=mcl_tick_gui \
