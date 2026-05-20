@@ -33,6 +33,7 @@ menu_t<start_menu_page_N> start_menu_layout = {
     {
         //               m  r  n  d  p  f  o
         {"LOAD PROJECT", 0, 0, 0, 0, LOAD_PROJ_PAGE, 0, 0},
+        {"NEW PROJECT",  0, 0, 0, 0, NULL_PAGE, 2, 0},
     },
     0
 };

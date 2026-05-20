@@ -45,6 +45,10 @@ void open_secondary_driver_config() {
   open_driver_config(DeviceIdx::Secondary);
 }
 
+void new_project_from_menu() {
+  proj.new_project_prompt();
+}
+
 } // namespace
 
 void SystemMenuPage::prepare_menu_entries() {
@@ -176,8 +180,8 @@ const menu_function_ptr_t menu_target_functions[] PROGMEM = {
     { .fn = nullptr },
     // 1 - mclsys_apply_config
     { .fn = mclsys_apply_config },
-    // 2 - unused
-    { .fn = nullptr },
+    // 2
+    { .fn = new_project_from_menu },
     // 3
     { .fn = opt_trackid_handler },
     { .fn = opt_mask_handler },
