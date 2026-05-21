@@ -92,6 +92,15 @@ uint8_t MidiID::waitForId(uint8_t id, uint8_t port, uint16_t timeout) {
     // GUI.display();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (!MidiIDSysexListener.isIDMessage));
+#if !defined(__AVR__)
+  // The hosted wasm/desktop path receives replies through a host-owned virtual
+  // cable. If a reply lands as the timeout boundary is crossed, drain one last
+  // time before reporting no ID so the next probe does not consume this reply.
+  if (!MidiIDSysexListener.isIDMessage) {
+    platform_wait_poll();
+    handleIncomingMidi();
+  }
+#endif
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
   return get_id();
 }

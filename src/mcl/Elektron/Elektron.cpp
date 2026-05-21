@@ -23,6 +23,52 @@ void send_request_value(ElektronDevice *device, uint8_t request,
   device->sendRequest(data, sizeof(data));
 }
 
+#if !defined(__AVR__) && defined(DEBUGMODE)
+const char *blocking_data_type_name(DataType type) {
+  switch (type) {
+  case DataType::Kit:     return "kit";
+  case DataType::Pattern: return "pattern";
+  case DataType::Global:  return "global";
+  }
+  return "?";
+}
+
+void trace_blocking_data(const char *stage, DataType type, uint8_t index) {
+  DEBUG_PRINT("[mcl-blocking] ");
+  DEBUG_PRINT(stage);
+  DEBUG_PRINT(" type=");
+  DEBUG_PRINT(blocking_data_type_name(type));
+  DEBUG_PRINT(" index=");
+  DEBUG_PRINTLN((unsigned)index);
+}
+
+void trace_blocking_listener(const char *stage,
+                             ElektronSysexListenerClass *listener) {
+  DEBUG_PRINT("[mcl-blocking] ");
+  DEBUG_PRINT(stage);
+  if (!listener) {
+    DEBUG_PRINTLN(" listener=null");
+    return;
+  }
+
+  DEBUG_PRINT(" msgType=");
+  DEBUG_PRINT((unsigned)listener->msgType);
+  DEBUG_PRINT(" msg_rd=");
+  DEBUG_PRINT((unsigned)listener->msg_rd);
+  if (listener->sysex && listener->msg_rd < NUM_SYSEX_MSGS) {
+    const uint8_t msg_rd = listener->msg_rd;
+    DEBUG_PRINT(" state=");
+    DEBUG_PRINT((unsigned)listener->sysex->ledger[msg_rd].state);
+    DEBUG_PRINT(" len=");
+    DEBUG_PRINT((unsigned)listener->sysex->ledger[msg_rd].recordLen);
+  }
+  DEBUG_PRINTLN();
+}
+#else
+void trace_blocking_data(const char *, DataType, uint8_t) {}
+void trace_blocking_listener(const char *, ElektronSysexListenerClass *) {}
+#endif
+
 } // namespace
 
 ElektronSysexListenerClass::ElektronSysexListenerClass()
@@ -371,6 +417,16 @@ uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
     handleIncomingMidi();
   } while ((clock_diff(start_clock, current_clock) < timeout) &&
            (listener->msgType == 255));
+#if !defined(__AVR__)
+  // The hosted wasm/desktop path uses a virtual cable with a host-side MIDI
+  // worker. A reply can be queued just as the timeout expires; drain once more
+  // before reporting failure so the next UI loop does not consume a reply that
+  // belonged to this blocking request.
+  if (listener->msgType == 255) {
+    platform_wait_poll();
+    handleIncomingMidi();
+  }
+#endif
   DEBUG_PRINTLN(listener->msgType);
   return listener->msgType;
 }
@@ -439,6 +495,7 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
     while (count--) {
 
         listener->addOnMessageCallback(&cb, (sysex_callback_ptr_t)&SysexCallback::onSysexReceived);
+        trace_blocking_data("request", type, index);
         switch (type) {
             case DataType::Kit:
                 requestKit(index);
@@ -452,6 +509,7 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
         }
 
         ret = cb.waitBlocking(timeout);
+        trace_blocking_listener(ret ? "received" : "timeout", listener);
 
         listener->removeOnMessageCallback(&cb);
 
@@ -471,10 +529,13 @@ bool ElektronDevice::getBlockingData(DataType type, uint8_t index, uint16_t time
             }
             if (data != nullptr && ((ElektronSysexObject*)data)->fromSysex(midi)) {
                 if (type == DataType::Global) connected = true;
+                trace_blocking_data("parse-ok", type, index);
                 return true;
             }
+            trace_blocking_data("parse-failed", type, index);
         }
     }
+    trace_blocking_data("failed", type, index);
     return false;
 }
 
