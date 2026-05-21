@@ -192,6 +192,7 @@ echo "[mcl-wasm] compiling → ${WASM}"
     -Wl,--export=mcl_input_add_encoder_delta \
     -Wl,--export=mcl_input_set_encoder_button \
     -Wl,--export=mcl_abi_version \
+    -Wl,--export=mcl_debug_tempo_x100 \
     -Wl,--allow-undefined \
     -o "${WASM}" \
     -x c++ \

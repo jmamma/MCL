@@ -93,13 +93,6 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
     if (!mcl_desktop_is_setup_done()) return;
     if (elapsed_us == 0) return;
 
-    // Pull host-queued MIDI bytes while already inside this wasm export. The
-    // host audio thread only queues bytes; it does not make one WAMR export
-    // call per byte.
-    pump_host_midi_input_for_audio();
-
-    handleIncomingMidi();
-
     // timer2 work (5 kHz on hardware → one tick per 200 µs).
     constexpr uint32_t kTimer2PeriodUs = 200;
     uint64_t fast_total_us = (uint64_t)elapsed_us + s_timer2_remainder_us;
@@ -141,7 +134,11 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
         MidiUartUSB.tickActiveSense();
     }
 
-    // softirq2 — catch any bytes produced while the virtual timers ran.
+    // softirq2 — consume host MIDI after advancing the logical timer clocks.
+    // MCL derives external tempo from read_clock()/g_clock_fast when 0xF8 is
+    // handled, so draining MIDI before this catch-up timestamps clock pulses
+    // against stale time and makes the displayed BPM jump high.
+    pump_host_midi_input_for_audio();
     handleIncomingMidi();
     pump_host_midi_output_for_audio();
 }
@@ -233,4 +230,11 @@ extern "C" void mcl_input_set_encoder_button(int32_t idx, uint8_t pressed) {
 
 extern "C" uint32_t mcl_abi_version(void) {
     return ((uint32_t)MCL_ABI_MAJOR << 16) | MCL_ABI_MINOR;
+}
+
+extern "C" uint32_t mcl_debug_tempo_x100(void) {
+    float bpm = MidiClock.get_tempo();
+    if (bpm < 0.0f || bpm > 2000.0f)
+        return 0;
+    return (uint32_t)(bpm * 100.0f + 0.5f);
 }

@@ -74,6 +74,10 @@ void mcl_input_set_encoder_button(int32_t idx, uint8_t pressed);
 // Layout: low 16 = minor (additions), high 16 = major (breaks).
 uint32_t mcl_abi_version(void);
 
+// Optional diagnostic export. Returns MCL's currently measured MIDI clock
+// tempo as BPM * 100 for host-side SPS-vs-MCL clock comparisons.
+uint32_t mcl_debug_tempo_x100(void);
+
 #ifdef __cplusplus
 }
 #endif

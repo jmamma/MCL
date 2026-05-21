@@ -36,7 +36,9 @@ std::atomic<bool> g_setup_done{false};
 void desktop_advance_clocks() {
     const unsigned long now_ms = millis();
     g_clock_ms   = (uint16_t)(now_ms);
+#if !defined(PLATFORM_WASM)
     g_clock_fast = (uint16_t)(now_ms);
+#endif
 }
 } // namespace
 

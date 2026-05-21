@@ -58,8 +58,8 @@ void delayMicroseconds(unsigned int /*us*/) {}
 
 void platform_poll() {
     GUI_hardware.poll();
-    pump_host_midi_input();
     drain_pending_audio_time();
+    pump_host_midi_input();
     pump_host_midi_output();
 #ifdef DEBUGMODE
     mcl_debug::flush();
@@ -69,8 +69,8 @@ void platform_poll() {
 
 void platform_wait_poll() {
     g_clock_ms = (uint16_t)millis();
-    pump_host_midi_input();
     drain_pending_audio_time();
+    pump_host_midi_input();
     pump_host_midi_output();
 #ifdef DEBUGMODE
     mcl_debug::flush();
