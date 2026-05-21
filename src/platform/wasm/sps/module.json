@@ -49,7 +49,13 @@
   "controls": {
     "buttons": {
       "button1": 4,
+      "button2": 5,
+      "button3": 6,
       "button4": 7,
+      "page": 5,
+      "bank_group": 5,
+      "patsong": 6,
+      "global": 6,
       "record": 8,
       "play": 9,
       "stop": 10,
@@ -73,6 +79,11 @@
       "enter": "button4",
       "escape": "button1",
       "scale": "scale",
+      "bank_group": "page",
+      "bankgroup": "page",
+      "page": "page",
+      "global": "global",
+      "patsong": "patsong",
       "trig_1..16": "trig_1..16",
       "func_trig_1..16": "trig_1..16"
     }
