@@ -6,6 +6,32 @@
 
 uint8_t ExtSeqTrack::epoch = 0;
 
+namespace {
+
+static inline bool ext_delete_marked(const uint8_t *mask, uint16_t idx) {
+  return mask[idx >> 3] & (1 << (idx & 7));
+}
+
+static inline void ext_delete_mark(uint8_t *mask, uint16_t idx) {
+  mask[idx >> 3] |= (1 << (idx & 7));
+}
+
+static inline bool ext_note_overlaps_range(int16_t note_start,
+                                           int16_t note_end,
+                                           int16_t range_start,
+                                           int16_t range_end,
+                                           int16_t roll_length) {
+  if (note_start <= range_end && note_end > range_start) {
+    return true;
+  }
+  if (note_end > roll_length) {
+    return note_end - roll_length > range_start;
+  }
+  return false;
+}
+
+} // namespace
+
 
 void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
                             bool timing_adjust) {
@@ -595,6 +621,69 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   }
 
   return ret;
+}
+
+bool ExtSeqTrack::del_notes(uint16_t cur_x, uint16_t cur_w,
+                            uint8_t note_min, uint8_t note_max) {
+  if (note_min > note_max || length == 0 || event_count == 0) {
+    return false;
+  }
+
+  uint8_t timing_mid = get_timing_mid();
+  if (timing_mid == 0) {
+    return false;
+  }
+
+  uint8_t note_mask[16];
+  memset(note_mask, 0, sizeof(note_mask));
+
+  const int16_t range_start = (int16_t)cur_x;
+  const int16_t range_end = (int16_t)(cur_x + cur_w);
+  const int16_t roll_ticks = (int16_t)length * timing_mid;
+
+  uint16_t ev_idx = 0;
+  uint16_t ev_end = 0;
+  for (uint8_t step = 0; step < length; step++) {
+    ev_end += event_buckets.get(step);
+    for (; ev_idx != ev_end; ++ev_idx) {
+      ext_event_t &ev = events[ev_idx];
+      if (ev.is_lock || !ev.event_on || ev.event_value < note_min ||
+          ev.event_value > note_max ||
+          ext_delete_marked(note_mask, ev.event_value)) {
+        continue;
+      }
+
+      uint16_t note_off_idx = ev_idx;
+      uint8_t off_step = search_note_off(ev.event_value, step, note_off_idx,
+                                         ev_end);
+      if (note_off_idx == 0xFFFF) {
+        continue;
+      }
+
+      ext_event_t &ev_off = events[note_off_idx];
+      int16_t note_start =
+          (int16_t)step * timing_mid + ev.micro_timing - timing_mid;
+      int16_t note_end =
+          (int16_t)off_step * timing_mid + ev_off.micro_timing - timing_mid;
+      if (note_end < note_start) {
+        note_end += roll_ticks;
+      }
+
+      if (ext_note_overlaps_range(note_start, note_end, range_start,
+                                  range_end, roll_ticks)) {
+        ext_delete_mark(note_mask, ev.event_value);
+      }
+    }
+  }
+
+  bool changed = false;
+  for (uint8_t note = note_min; note <= note_max; note++) {
+    if (ext_delete_marked(note_mask, note)) {
+      changed |= del_note(cur_x, cur_w, note);
+    }
+    if (note == note_max) break;
+  }
+  return changed;
 }
 
 void ExtSeqTrack::reset_params() {

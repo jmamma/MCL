@@ -183,6 +183,22 @@ public:
     return ext_track_->del_note((uint16_t)tick, (uint16_t)width, note);
   }
 
+  bool delete_notes(seq_extstep_tick_t tick, seq_extstep_tick_t width,
+                    uint8_t note_min = 0, uint8_t note_max = 127) {
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
+    if (midi_track_) {
+      bool changed = false;
+      for (uint8_t note = note_min; note <= note_max; note++) {
+        changed |= midi_track_->del_note(tick, width, note);
+        if (note == note_max) break;
+      }
+      return changed;
+    }
+#endif
+    return ext_track_->del_notes((uint16_t)tick, (uint16_t)width, note_min,
+                                 note_max);
+  }
+
   void add_note(seq_extstep_tick_t tick, seq_extstep_tick_t width,
                 uint8_t note, uint8_t velocity, uint8_t condition) {
 #ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK

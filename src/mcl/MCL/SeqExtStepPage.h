@@ -69,12 +69,15 @@ public:
 
   bool note_selection_active;
   bool note_selection_editing;
+  bool note_selection_width_saved;
   uint8_t note_selection_track;
   seq_extstep_tick_t note_selection_anchor_x;
   seq_extstep_tick_t note_selection_x;
   int16_t note_selection_anchor_y;
   int16_t note_selection_y;
   seq_extstep_tick_t note_selection_saved_w;
+  seq_extstep_tick_t note_selection_saved_fov_offset;
+  int16_t note_selection_saved_fov_y;
 
 #ifdef PLATFORM_TBD
   SeqExtStepMidiEvents midi_events;
@@ -109,7 +112,7 @@ public:
   bool clear_note_page();
 
   inline bool is_within_fov(seq_extstep_tick_t x) {
-    return (x - fov_offset) < fov_length;
+    return x >= fov_offset && x < fov_offset + fov_length;
   }
 
   bool is_within_fov(seq_extstep_tick_t start_x, seq_extstep_tick_t end_x) {

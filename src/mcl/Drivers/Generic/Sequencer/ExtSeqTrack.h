@@ -196,6 +196,8 @@ public:
   void remove_notes_on(uint8_t value);
 
   bool del_note(uint16_t cur_x, uint16_t cur_w = 0, uint8_t cur_y = 0);
+  bool del_notes(uint16_t cur_x, uint16_t cur_w, uint8_t note_min = 0,
+                 uint8_t note_max = 127);
   void add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y, uint8_t velocity,
                 uint8_t cond = 0);
 
