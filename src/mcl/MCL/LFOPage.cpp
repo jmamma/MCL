@@ -56,14 +56,15 @@ const char lfo_mult_label_1x[] PROGMEM = "1x";
 const char lfo_mult_label_2x[] PROGMEM = "2x";
 const char lfo_mult_label_4x[] PROGMEM = "4x";
 const char lfo_mult_label_8x[] PROGMEM = "8x";
-const char lfo_mult_label_half[] PROGMEM = "0.5";
-const char lfo_mult_label_quarter[] PROGMEM = "0.25";
-const char lfo_mult_label_tenth[] PROGMEM = "0.1";
-const char lfo_mult_label_hundredth[] PROGMEM = "0.01";
+const char lfo_mult_label_half[] PROGMEM = ".5";
+const char lfo_mult_label_quarter[] PROGMEM = ".25";
+const char lfo_mult_label_tenth[] PROGMEM = ".1";
+const char lfo_mult_label_hundredth[] PROGMEM = ".01";
 const char *const lfo_mult_labels[LFO_SPEED_MULT_COUNT] PROGMEM = {
-    lfo_mult_label_1x,      lfo_mult_label_2x,    lfo_mult_label_4x,
-    lfo_mult_label_8x,      lfo_mult_label_half,  lfo_mult_label_quarter,
-    lfo_mult_label_tenth,   lfo_mult_label_hundredth};
+    lfo_mult_label_hundredth, lfo_mult_label_tenth,
+    lfo_mult_label_quarter,   lfo_mult_label_half,
+    lfo_mult_label_1x,        lfo_mult_label_2x,
+    lfo_mult_label_4x,        lfo_mult_label_8x};
 
 void lfo_mult_label(uint8_t multiplier, char *out) {
   if (multiplier >= LFO_SPEED_MULT_COUNT) {

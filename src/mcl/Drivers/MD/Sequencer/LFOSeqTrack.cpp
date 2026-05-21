@@ -38,7 +38,7 @@ bool lfo_wav_is_centered(uint8_t wav_type) {
 }
 
 uint8_t lfo_legacy_shape_to_sps(uint8_t wav_type) {
-  const uint8_t map[] PROGMEM = {
+  static const uint8_t map[] PROGMEM = {
       SIN_WAV, TRI_WAV, LIN_WAV, EXP_WAV, REV_LIN_WAV, REV_EXP_WAV,
       SQU_WAV, SAW_WAV, RND_WAV, STEP_WAV, LINLIN_WAV};
   if (wav_type > LFO_LEGACY_LINLIN_WAV) {
@@ -56,7 +56,7 @@ bool lfo_legacy_shape_uses_subtract(uint8_t wav_type) {
 }
 
 uint8_t lfo_sps_shape_to_legacy(uint8_t wav_type) {
-  const uint8_t map[] PROGMEM = {
+  static const uint8_t map[] PROGMEM = {
       LFO_LEGACY_TRI_WAV,    LFO_LEGACY_SAW_WAV,  LFO_LEGACY_SQU_WAV,
       LFO_LEGACY_IRAMP_WAV,  LFO_LEGACY_EXP_WAV,  LFO_LEGACY_RND_WAV,
       LFO_LEGACY_RAMP_WAV,   LFO_LEGACY_IEXP_WAV, LFO_LEGACY_SIN_WAV,
@@ -161,10 +161,11 @@ uint8_t lfo_preview_to_u8(uint8_t wav_type, int16_t sample) {
 }
 
 uint16_t lfo_apply_speed_multiplier(uint16_t phase_inc, uint8_t multiplier) {
-  if (multiplier >= LFO_SPEED_MULT_2X && multiplier <= LFO_SPEED_MULT_8X) {
-    return phase_inc > (LFO_PHASE_MASK >> multiplier)
+  if (multiplier > LFO_SPEED_MULT_1X) {
+    uint8_t shift = multiplier - LFO_SPEED_MULT_1X;
+    return phase_inc > (LFO_PHASE_MASK >> shift)
                ? LFO_PHASE_MASK
-               : (uint16_t)(phase_inc << multiplier);
+               : (uint16_t)(phase_inc << shift);
   }
   switch (multiplier) {
   case LFO_SPEED_MULT_1_2X:
