@@ -6,6 +6,7 @@ import subprocess
 import shutil
 import re
 import hashlib
+import tempfile
 Import("env")
 
 # =============================================================================
@@ -54,6 +55,34 @@ def run_command(cmd, **kwargs):
         env.Exit(1)
     return result
 
+def write_text_if_changed(path, content):
+    """Atomically replace generated text files, leaving readers a complete file."""
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            if f.read() == content:
+                return
+    except FileNotFoundError:
+        pass
+
+    directory = os.path.dirname(path) or "."
+    os.makedirs(directory, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(
+        prefix=f".{os.path.basename(path)}.",
+        suffix=".tmp",
+        dir=directory,
+        text=True,
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+            f.write(content)
+        os.replace(tmp_path, path)
+    except Exception:
+        try:
+            os.unlink(tmp_path)
+        except FileNotFoundError:
+            pass
+        raise
+
 # =============================================================================
 # Consolidated Asset Builder for All Platforms
 # =============================================================================
@@ -86,7 +115,7 @@ def build_assets_platform(env, resource_dir, build_dir, gen_dir, platform):
     # --- Initial Scan and Setup ---
     print("\n--- Scanning resource files for includes ---")
     all_includes = set()
-    resource_cpp_files = [f for f in os.listdir(resource_dir) if f.endswith(".cpp")]
+    resource_cpp_files = sorted(f for f in os.listdir(resource_dir) if f.endswith(".cpp"))
     for cpp_file in resource_cpp_files:
         with open(os.path.join(resource_dir, cpp_file), 'r', encoding='utf-8') as f_in:
             all_includes.update(line.strip() for line in f_in if line.strip().startswith("#include"))
@@ -124,27 +153,39 @@ def build_assets_platform(env, resource_dir, build_dir, gen_dir, platform):
         else:
             with open(bin_path, "wb") as f_bin:
                 for section in data_sections:
-                    tmp_path = os.path.join(build_dir, f"{base_name}{section}.tmp")
-                    run_command([objcopy, "-O", "binary", "-j", section, obj_path, tmp_path])
-                    with open(tmp_path, "rb") as f_tmp:
-                        data = f_tmp.read()
-                        f_bin.write(data)
-                        if platform == "rp2040":
-                            # Add padding for 4-byte alignment on RP2040
-                            f_bin.write(b'\0' * ((4 - len(data) % 4) % 4))
-                    os.remove(tmp_path)
+                    fd, tmp_path = tempfile.mkstemp(
+                        prefix=f"{base_name}{section}.",
+                        suffix=".tmp",
+                        dir=build_dir,
+                    )
+                    os.close(fd)
+                    try:
+                        run_command([objcopy, "-O", "binary", "-j", section, obj_path, tmp_path])
+                        with open(tmp_path, "rb") as f_tmp:
+                            data = f_tmp.read()
+                            f_bin.write(data)
+                            if platform == "rp2040":
+                                # Add padding for 4-byte alignment on RP2040
+                                f_bin.write(b'\0' * ((4 - len(data) % 4) % 4))
+                    finally:
+                        try:
+                            os.remove(tmp_path)
+                        except FileNotFoundError:
+                            pass
 
         # 3. Compress the binary data
         compress_script_path = os.path.join(env.subst("$PROJECT_DIR"), "tools/platform/", "compress.py")
         run_command(["python3", compress_script_path, os.path.abspath(bin_path), os.path.abspath(ez_path)])
 
         # 4. Generate C++ source from compressed data
-        with open(gen_cpp_path, "w", encoding="utf-8") as f:
-            f.write(f'#include "R.h"\n\nconst unsigned char __R_{base_name}[] PROGMEM = {{\n')
-            with open(ez_path, "rb") as f_ez:
-                byte_data = f_ez.read()
-                f.write(",\n".join(f"  {b}" for b in byte_data))
-            f.write('\n};\n')
+        with open(ez_path, "rb") as f_ez:
+            byte_data = f_ez.read()
+        gen_cpp_content = (
+            f'#include "R.h"\n\nconst unsigned char __R_{base_name}[] PROGMEM = {{\n'
+            + ",\n".join(f"  {b}" for b in byte_data)
+            + "\n};\n"
+        )
+        write_text_if_changed(gen_cpp_path, gen_cpp_content)
 
         # 5. Parse symbols and types for header generation
         h_content.append(f"extern const unsigned char __R_{base_name}[] PROGMEM;")
@@ -198,8 +239,8 @@ def build_assets_platform(env, resource_dir, build_dir, gen_dir, platform):
 
     # --- Finalize and Write Header Files ---
     print(f"\n--- Writing final header files for {platform.upper()} ---")
-    with open(os.path.join(gen_dir, "R.h"), "w") as f: f.write("\n".join(h_content))
-    with open(os.path.join(gen_dir, "ResMan.h"), "w") as f: f.write("\n".join(resman_content))
+    write_text_if_changed(os.path.join(gen_dir, "R.h"), "\n".join(h_content) + "\n")
+    write_text_if_changed(os.path.join(gen_dir, "ResMan.h"), "\n".join(resman_content) + "\n")
 
 # =============================================================================
 # Main Dispatcher & Entry Point
@@ -282,13 +323,20 @@ def build_assets(env):
     print(f"Detected environment: {env.subst('$PIOENV')} -> Using platform: {platform_subdir}")
 
     if platform_subdir in ["avr", "rp2040"]:
-        build_assets_platform(env, resource_dir, resource_build_dir, generated_src_dir, platform_subdir)
+        resource_work_dir = os.path.join(
+            resource_build_dir,
+            f"work_{platform_subdir}_{os.getpid()}",
+        )
+        os.makedirs(resource_work_dir, exist_ok=True)
+        try:
+            build_assets_platform(env, resource_dir, resource_work_dir, generated_src_dir, platform_subdir)
+        finally:
+            shutil.rmtree(resource_work_dir, ignore_errors=True)
     else:
         print(f"Warning: No asset build pipeline defined for platform '{platform_subdir}'.")
 
     # Cache the hash after successful generation
-    with open(hash_file, "w") as f:
-        f.write(current_hash)
+    write_text_if_changed(hash_file, current_hash)
 
     print("--- Custom Asset Build Script Finished ---\n")
 
