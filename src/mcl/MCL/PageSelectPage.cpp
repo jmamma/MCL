@@ -1,5 +1,6 @@
 #include "PageSelectPage.h"
 #include "ResourceManager.h"
+#include "MCLFeatureConfig.h"
 #include "MCLGUI.h"
 #include "DeviceManager.h"
 #include "MCLStrings.h"
@@ -431,7 +432,7 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       page_select = get_category_page(event->source - Buttons.ENCODER1);
       return true;
     }
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
     // Trig N (0..15) highlights page slot N. Commit happens via the
     // usual close path (ENC1 tap or BUTTON2 release).
     if (event->mask == EVENT_BUTTON_PRESSED &&

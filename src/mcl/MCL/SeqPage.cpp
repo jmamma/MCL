@@ -8,6 +8,7 @@
 #endif
 #include "DeviceParamResolver.h"
 #include "MCLClipBoard.h"
+#include "MCLFeatureConfig.h"
 #include "MCLGUI.h"
 #include "MCLSeq.h"
 #include "MCLStrings.h"
@@ -746,7 +747,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   }
 
   if (EVENT_CMD(event)) {
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
     if (show_seq_menu) {
       return seq_menu_page.handleEvent(event);
     }
@@ -783,7 +784,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_BUTTON(event)) {
-#ifndef PLATFORM_TBD
+#ifndef MCL_HAS_EXTENDED_PANEL_INPUT
     // A not-ignored WRITE (BUTTON4) release event triggers sequence page select
     if (EVENT_RELEASED(event, Buttons.BUTTON4)) {
       page_select += 1;

@@ -8,6 +8,7 @@
 #include "Task.h"
 #include "Vector.h"
 #include "platform.h"
+#include "MCLFeatureConfig.h"
 #include "Stack.h"
 
 #include "Encoders.h"
@@ -28,7 +29,7 @@ public:
   Vector<Task *, 4> tasks;
   Stack<LightPage *, 8> pageStack;
 
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_TBD_DRIVER
   // Render-on-top overlay — independent of pageStack. Drawn after the
   // active page's display() and ticked via its loop() each frame, but
   // does NOT affect currentPage() or event dispatch. Lets transient UI

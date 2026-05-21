@@ -60,6 +60,15 @@
 #endif
 
 /*
+ * Extended panel input: a platform supplies the TBD-style physical button
+ * surface (cluster buttons, transport row, arrows, trigs), and MCL maps it
+ * into MDX command / note events before the active page handles input.
+ */
+#if defined(PLATFORM_TBD) || defined(PLATFORM_DESKTOP) || defined(PLATFORM_WASM)
+#define MCL_HAS_EXTENDED_PANEL_INPUT 1
+#endif
+
+/*
  * MidiSeqTrack (enhanced generic MIDI sequencer with 14-bit locks) —
  * available on non-AVR builds. TBD layers P4 sound integration on top.
  */

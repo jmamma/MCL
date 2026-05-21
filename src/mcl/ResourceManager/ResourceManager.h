@@ -2,10 +2,10 @@
 #include "unpack.h"
 #include "R.h"
 
-#if defined(PLATFORM_TBD)
-#define RM_BUFSIZE 32768
-#else
+#if defined(__AVR__)
 #define RM_BUFSIZE 6500
+#else
+#define RM_BUFSIZE 32768
 #endif
 
 class ResourceManager {

@@ -1,6 +1,7 @@
 #include "SeqStepPage.h"
 #include "GUI_hardware.h"
 #include "GridPages.h"
+#include "MCLFeatureConfig.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
 #include "MCLSysConfig.h"
@@ -30,7 +31,7 @@ SeqStepTrackRef step_track_for(uint8_t track) {
 SeqStepTrackRef active_step_track() NOINLINE();
 SeqStepTrackRef active_step_track() { return seq_step_active_track(); }
 
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
 void retain_shift_step_selection(SeqStepPage &page, uint8_t track) {
   SET_BIT16(page.shift_select_latch, track);
   SET_BIT32(note_interface.notes_on, track);
@@ -198,7 +199,7 @@ void SeqStepPage::init() {
 
   reset_on_release = false;
   ignore_release = 0;
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
   clear_shift_step_selection(*this);
 #endif
   update_params_queue = false;
@@ -230,7 +231,7 @@ void SeqStepPage::enable_paramupdate_events() {
 void SeqStepPage::cleanup() {
   SeqStepTrackRef active_track = active_step_track();
   midi_events.remove_callbacks();
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
   clear_shift_step_selection(*this);
 #endif
   enable_paramupdate_events();
@@ -413,7 +414,7 @@ void SeqStepPage::disable_microtiming_overlay() {
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
 
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
   if (EVENT_CMD(event) && event->source == MDX_KEY_FUNC &&
       event->mask == EVENT_BUTTON_RELEASED && shift_select_latch != 0) {
     clear_shift_step_selection(*this);
@@ -518,7 +519,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         SET_BIT16(ignore_release, track);
       }
     } else if (event_mask == EVENT_BUTTON_RELEASED) {
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
       if (step < length && key_interface.is_key_down(MDX_KEY_FUNC)) {
         CLEAR_BIT16(ignore_release, track);
         retain_shift_step_selection(*this, track);
@@ -720,7 +721,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
   }
   if (EVENT_BUTTON(event)) {
-#ifndef PLATFORM_TBD
+#ifndef MCL_HAS_EXTENDED_PANEL_INPUT
     if (EVENT_RELEASED(event, Buttons.BUTTON1)) {
       toggle_record();
       return true;

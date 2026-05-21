@@ -21,7 +21,7 @@ public:
     }
 
     static int32_t get_free_stack() {
-        #if defined(AVR) || defined(PLATFORM_DESKTOP)
+        #if defined(__AVR__) || defined(PLATFORM_DESKTOP)
             return 0; //todo
         #else
         uint32_t sp = rp2040.getStackPointer();

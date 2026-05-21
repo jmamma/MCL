@@ -3,6 +3,7 @@
 #include "MidiUart.h"
 #include "global.h"
 #include "oled.h"
+#include "PlatformPanel.h"
 
 void GuiClass::setPage(LightPage *page) {
   if (currentPage() != NULL) {
@@ -66,17 +67,14 @@ LightPage *GuiClass::currentPage() {
   return page;
 }
 
-#ifdef PLATFORM_TBD
-extern bool tbd_handleEvent(gui_event_t *event);
-#endif
-
 bool GuiClass::handleTopEvent(gui_event_t *event) {
-#ifdef PLATFORM_TBD
-  // TBD overrides (SPS-mode cluster, FUNC chords, encoder taps, etc.)
-  // need to preempt the active page — pages otherwise consume BUTTON1-4
-  // for their local NO/YES/save/load actions before any registered
-  // event handler gets a chance to override.
-  if (tbd_handleEvent(event)) return true;
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
+  // Extended panel input (TBD hardware or wasm host buttons) preempts the
+  // active page so raw physical buttons can become MCL/MDX commands first.
+  if (platform_panel_handleEvent(event)) return true;
+#endif
+#ifdef MCL_HAS_TBD_DRIVER
+  // TBD overlays still get a first pass after the physical panel router.
   if (overlay && overlay->handleEvent(event)) return true;
 #endif
   LightPage *page = currentPage();

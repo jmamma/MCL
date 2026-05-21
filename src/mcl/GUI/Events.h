@@ -4,6 +4,7 @@
 #include "RingBuffer.h"
 #include "helpers.h"
 #include "platform.h"
+#include "MCLFeatureConfig.h"
 #include "GUI_hardware.h"
 
 // Event type definitions
@@ -14,11 +15,13 @@
 #define MAX_BUTTONS GUI_NUM_BUTTONS
 #define MAX_EVENTS 32
 
-#if defined(PLATFORM_TBD) || defined(PLATFORM_DESKTOP)
+#if GUI_NUM_BUTTONS > 8
 typedef uint64_t event_ignore_mask_t;
 #else
 typedef uint8_t event_ignore_mask_t;
 #endif
+static_assert(GUI_NUM_BUTTONS <= sizeof(event_ignore_mask_t) * 8,
+              "event_ignore_mask_t cannot represent all GUI buttons");
 
 #define EVENT_PRESSED(event, button) ((event)->mask & EVENT_BUTTON_PRESSED && (event)->source == button)
 #define EVENT_RELEASED(event, button) ((event)->mask & EVENT_BUTTON_RELEASED && (event)->source == button)
@@ -74,13 +77,12 @@ private:
       }
     }
   }
-#if defined(PLATFORM_TBD)
-  // --- State variables needed only for the TBD platform ---
+#if defined(MCL_HAS_EXTENDED_PANEL_INPUT)
+  // --- State variables needed for extended panel arrow repeat ---
   uint16_t long_press_start_time[NUM_ARROW_KEYS];
   uint16_t last_repeat_clock[NUM_ARROW_KEYS];
   bool is_repeating[NUM_ARROW_KEYS];
-  // --- Platform-specific implementation for TBD with key repeats ---
-  void pollEventsTBD() {
+  void pollEventsExtendedPanel() {
     // Poll for standard button presses and releases
     for (uint8_t i = 0; i < MAX_BUTTONS; i++) {
       bool pressed = BUTTON_PRESSED(i);
@@ -157,7 +159,7 @@ public:
 
   void init() {
     eventBuffer.init();
-#if defined(PLATFORM_TBD)
+#if defined(MCL_HAS_EXTENDED_PANEL_INPUT)
     for (int i = 0; i < NUM_ARROW_KEYS; i++) {
       long_press_start_time[i] = 0;
       is_repeating[i] = false;
@@ -185,8 +187,8 @@ public:
   // --- Public dispatcher function ---
   // Calls the correct underlying implementation at compile time.
   void pollEvents() {
-#if defined(PLATFORM_TBD)
-    pollEventsTBD();
+#if defined(MCL_HAS_EXTENDED_PANEL_INPUT)
+    pollEventsExtendedPanel();
 #else
     pollEvents_();
 #endif

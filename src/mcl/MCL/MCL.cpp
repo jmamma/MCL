@@ -1,4 +1,5 @@
 #include "MCL.h"
+#include "MCLFeatureConfig.h"
 #include "ResourceManager.h"
 #include "MCLSd.h"
 #include "MCLGfx.h"
@@ -48,9 +49,11 @@
 #include "../Drivers/MD/UI/Pages/RAMPage.h"
 #include "SoundBrowserPage.h"
 #include "PerfPage.h"
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
+#include "PlatformPanel.h"
+#endif
 #ifdef PLATFORM_TBD
 #include "BankPopupPage.h"
-#include "TbdPanel.h"
 #endif
 
 // In MCL.cpp:
@@ -204,8 +207,8 @@ void MCL::setup() {
 
   load_persistent_resources();
 
-  // tbd_handleEvent runs from GuiClass::handleTopEvent (under PLATFORM_TBD)
-  // so it can preempt the active page on cluster overrides.
+  // Platform panel input runs from GuiClass::handleTopEvent so it can
+  // preempt the active page on cluster / physical-button overrides.
   GUI.addEventHandler((event_handler_t)&mcl_handleEvent);
 
   mcl.setPage(GRID_PAGE);
@@ -262,8 +265,8 @@ void MCL::loop() {
   key_interface.check_key_throttle();
   GUI.loop();
 
-#ifdef PLATFORM_TBD
-  tbd_panel.loop();
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
+  platform_panel.loop();
 #endif
 }
 
