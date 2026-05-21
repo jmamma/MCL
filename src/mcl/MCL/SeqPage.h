@@ -20,7 +20,7 @@ class SeqPageMidiEvents : public MidiCallback, public ClockCallback {
 public:
   void setup_callbacks();
   void remove_callbacks();
-  void onMidiStartCallback();
+  void onMidiStartCallback(uint32_t clock_count);
 };
 
 extern MidiDevice *opt_midi_device_capture;

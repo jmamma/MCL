@@ -26,8 +26,8 @@ public:
 class MCLActionsCallbacks : public ClockCallback {
 public:
   bool state;
-  void onMidiStartCallback();
-  void onMidiStopCallback();
+  void onMidiStartCallback(uint32_t clock_count);
+  void onMidiStopCallback(uint32_t clock_count);
   void StopHardCallback();
   void setup_callbacks();
   void remove_callbacks();

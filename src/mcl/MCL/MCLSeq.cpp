@@ -376,13 +376,15 @@ uint8_t MCLSeq::find_ext_track(uint8_t channel) {
   return 255;
 }
 
-void MCLSeq::onMidiContinueCallback() {
+void MCLSeq::onMidiContinueCallback(uint32_t clock_count) {
+  (void)clock_count;
   update_params();
   seq_rec_play();
   SET_BIT16(MDSeqTrack::gui_update, last_primary_track); //force cursor resync
 }
 
-void MCLSeq::onMidiStartImmediateCallback() {
+void MCLSeq::onMidiStartImmediateCallback(uint32_t clock_count) {
+  (void)clock_count;
   realtime = true;
 #if !defined(__AVR__)
   legacy_tick_counter = 0;
@@ -452,9 +454,12 @@ void MCLSeq::onMidiStartImmediateCallback() {
   }
 }
 
-void MCLSeq::onMidiStartCallback() {}
+void MCLSeq::onMidiStartCallback(uint32_t clock_count) {
+  (void)clock_count;
+}
 
-void MCLSeq::onMidiStopCallback() {
+void MCLSeq::onMidiStopCallback(uint32_t clock_count) {
+  (void)clock_count;
 #ifdef EXT_TRACKS
   if (seq_grid_y_runs_legacy_ext_tracks()) {
     for (uint8_t i = 0; i < num_ext_tracks; i++) {

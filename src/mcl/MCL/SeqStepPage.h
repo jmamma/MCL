@@ -3,6 +3,7 @@
 #ifndef SEQSTEPPAGE_H__
 #define SEQSTEPPAGE_H__
 
+#include "MCLFeatureConfig.h"
 #include "SeqPage.h"
 
 class SeqStepMidiEvents : public MidiCallback {
@@ -24,7 +25,7 @@ public:
 
   uint8_t pitch_param;
   uint16_t ignore_release;
-#ifdef PLATFORM_TBD
+#ifdef MCL_HAS_EXTENDED_PANEL_INPUT
   uint16_t shift_select_latch;
 #endif
   uint16_t update_params_clock;

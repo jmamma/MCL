@@ -1813,7 +1813,8 @@ void SeqPage::draw_knob(uint8_t i, Encoder *enc, const char *title) {
   mcl_gui.draw_knob(i, enc, title);
 }
 
-void SeqPageMidiEvents::onMidiStartCallback() {
+void SeqPageMidiEvents::onMidiStartCallback(uint32_t clock_count) {
+  (void)clock_count;
   if (SeqPage::recording) {
     oled_display.textbox_P(mclstr_rec);
   }

@@ -173,7 +173,8 @@ end:
   return;
 }
 
-void MCLActionsCallbacks::onMidiStartCallback() {
+void MCLActionsCallbacks::onMidiStartCallback(uint32_t clock_count) {
+  (void)clock_count;
   DEBUG_PRINTLN("BEGIN on midi start");
   //StackMonitor::print_stack_info();
   mcl_actions.start_clock32th = 0;

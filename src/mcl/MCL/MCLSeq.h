@@ -165,10 +165,10 @@ public:
 
   void update_kit_params();
   void update_params();
-  void onMidiStartCallback();
-  void onMidiStartImmediateCallback();
-  void onMidiContinueCallback();
-  void onMidiStopCallback();
+  void onMidiStartCallback(uint32_t clock_count);
+  void onMidiStartImmediateCallback(uint32_t clock_count);
+  void onMidiContinueCallback(uint32_t clock_count);
+  void onMidiStopCallback(uint32_t clock_count);
   void configure_clock_interpolation();
   bool legacy_tick_due();
   void seq();
