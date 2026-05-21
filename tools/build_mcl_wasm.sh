@@ -96,7 +96,7 @@ DEFINES=(
 
 if [ "${MCL_WASM_DEBUG:-0}" != "0" ]; then
     DEFINES+=(-DDEBUGMODE=1)
-    echo "[mcl-wasm] DEBUGMODE enabled; DEBUG_PRINT* routes through stdio/host_log"
+    echo "[mcl-wasm] DEBUGMODE enabled; DEBUG_PRINT* routes through bounded DebugBuffer"
 fi
 
 # Common flags for both C and C++. USR example uses -nostdlib -ffreestanding;

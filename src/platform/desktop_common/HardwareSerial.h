@@ -4,6 +4,7 @@
 
 #include "Stream.h"
 #include <stdio.h>
+#include <string.h>
 
 class HardwareSerial : public Stream {
 public:
@@ -18,7 +19,21 @@ public:
         return 1;
     }
     size_t write(const uint8_t* buf, size_t n) override {
+#if defined(PLATFORM_WASM)
+        char chunk[129];
+        size_t pos = 0;
+        while (pos < n) {
+            size_t take = n - pos;
+            if (take >= sizeof(chunk))
+                take = sizeof(chunk) - 1;
+            memcpy(chunk, buf + pos, take);
+            chunk[take] = '\0';
+            fputs(chunk, stderr);
+            pos += take;
+        }
+#else
         for (size_t i = 0; i < n; ++i) fputc(buf[i], stderr);
+#endif
         return n;
     }
     operator bool() const { return true; }

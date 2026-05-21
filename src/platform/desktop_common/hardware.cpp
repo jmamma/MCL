@@ -8,6 +8,7 @@
 #include "Wire.h"
 #include "SPI.h"
 #include "HardwareSerial.h"
+#include "DebugBuffer.h"
 
 extern "C" {
 uint8_t desktop_gpio_state[256] = {0};
@@ -32,6 +33,7 @@ HardwareSerial Serial2;
 TwoWire        Wire;
 SPIClass       SPI;
 SPIClass       SPI1;
+DebugBuffer    debugBuffer(&Serial);
 
 // Hardware noop stubs declared in hardware.h. picow_init is the rp2040 WiFi
 // chip init — irrelevant on desktop. change_usb_mode is the USB DFU/storage

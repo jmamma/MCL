@@ -87,8 +87,8 @@ int      mcl_platform_encoder_delta(uint8_t encoder_id);
 uint32_t mcl_platform_encoder_button_mask();
 
 // MCL's per-platform DEBUG_INIT/DEBUG_PRINT* macros. When DEBUGMODE is set,
-// route the existing callsites to a stdio sink. In wasm, stdio forwards to the
-// host_log import, so the host receives the same stream on stderr/log output.
+// route the existing callsites through DebugBuffer and flush from platform
+// poll points so wasm/desktop debug spam is bounded.
 #ifdef DEBUGMODE
     #include "DebugOutput.h"
     #define DEBUG_INIT()             do {} while (0)

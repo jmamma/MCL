@@ -61,6 +61,9 @@ void platform_poll() {
     pump_host_midi_input();
     drain_pending_audio_time();
     pump_host_midi_output();
+#ifdef DEBUGMODE
+    mcl_debug::flush();
+#endif
     host_yield();
 }
 
@@ -69,6 +72,9 @@ void platform_wait_poll() {
     pump_host_midi_input();
     drain_pending_audio_time();
     pump_host_midi_output();
+#ifdef DEBUGMODE
+    mcl_debug::flush();
+#endif
     host_yield();
 }
 

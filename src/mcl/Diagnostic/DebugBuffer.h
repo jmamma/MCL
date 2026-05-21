@@ -35,5 +35,6 @@ public:
   int read() override { return 0; }
   int peek() override { return 0; }
   void transmit();
+  void transmit(size_t maxBytes);
   void flush() override { return; }
 };

@@ -136,17 +136,34 @@ bool ElektronDevice::get_fw_caps() {
   uint8_t begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
   DEBUG_PRINTLN("caps");
-  SysexView sysex(listener->sysex, listener->msg_rd);
+  if (!listener || !listener->sysex || listener->msg_rd >= NUM_SYSEX_MSGS) {
+    return false;
+  }
+
+  const uint8_t msg_rd = listener->msg_rd;
+  if (!listener->sysex->ledger[msg_rd].ptr) {
+    return false;
+  }
+  const uint16_t record_len = listener->sysex->ledger[msg_rd].recordLen;
+  if (listener->sysex->ledger[msg_rd].state != SYSEX_STATE_FIN ||
+      record_len <= begin) {
+    return false;
+  }
+
+  SysexView sysex(listener->sysex, msg_rd);
   uint8_t b = 0;
   if (msgType == 0x72 && sysex.getByte(begin) == 0x30) {
-      begin++;
-      uint8_t *caps = (uint8_t *)&fw_caps;
-      for (uint8_t n = 0; n < 4; n++) {
-        b = sysex.getByte(begin++);
-        if (b == 0xF7) { break; }
-        caps[n] = b;
-      }
-      return true;
+    if (record_len < begin + 5) {
+      return false;
+    }
+    begin++;
+    uint8_t *caps = (uint8_t *)&fw_caps;
+    for (uint8_t n = 0; n < 4; n++) {
+      b = sysex.getByte(begin++);
+      if (b == 0xF7) { break; }
+      caps[n] = b;
+    }
+    return true;
   }
   return false;
 }

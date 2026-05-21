@@ -3,8 +3,10 @@
 // `desktop_ingress` / `desktop_egress` against its MIDI buffers.
 #include "MidiUart.h"
 #include "Midi.h"
+#include "MidiClock.h"
 #include "MidiSysex.h"
 #include "midi-common.h"
+#include "../../mcl/MCL/MCLSeq.h"
 
 MidiUartClass::MidiUartClass()
     : rx_storage_(rx_buf_, RX_RING_SIZE),
@@ -59,6 +61,36 @@ void MidiUartClass::desktop_ingress(const uint8_t* data, size_t len) {
         recvActiveSenseTimer = 0;
 
         if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+            if (c == MIDI_CLOCK) {
+                if (MidiClock.uart_clock_recv == this) {
+                    MidiClock.handleClock();
+                    if (MidiClock.state == MidiClockClass::STARTED &&
+                        !MidiClock.inCallback) {
+                        MidiClock.inCallback = true;
+                        uint8_t old_lock = MidiUartParent::handle_midi_lock;
+                        MidiUartParent::handle_midi_lock = 1;
+                        mcl_seq.seq();
+                        MidiUartParent::handle_midi_lock = old_lock;
+                        MidiClock.inCallback = false;
+                    }
+                }
+                continue;
+            }
+
+            if (MidiClock.uart_transport_recv1 == this ||
+                MidiClock.uart_transport_recv2 == this) {
+                switch (c) {
+                case MIDI_START:
+                    MidiClock.handleImmediateMidiStart();
+                    break;
+                case MIDI_STOP:
+                    MidiClock.handleImmediateMidiStop();
+                    break;
+                case MIDI_CONTINUE:
+                    MidiClock.handleImmediateMidiContinue();
+                    break;
+                }
+            }
             rxRb->put_h_isr(c);
             continue;
         }

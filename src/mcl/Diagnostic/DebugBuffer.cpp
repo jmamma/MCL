@@ -85,9 +85,19 @@ bool DebugBuffer::put(const __FlashStringHelper *fstr) {
 }
 
 void DebugBuffer::transmit() {
+  transmit((size_t)-1);
+}
+
+void DebugBuffer::transmit(size_t maxBytes) {
+  if (maxBytes == 0)
+    return;
+
   char out_buf[64];
-  while (get(out_buf, sizeof(out_buf))) {
-    output_stream->write(out_buf, strlen(out_buf));
+  size_t written = 0;
+  while (written < maxBytes && get(out_buf, sizeof(out_buf))) {
+    size_t len = strlen(out_buf);
+    output_stream->write(out_buf, len);
+    written += len;
   }
 }
 

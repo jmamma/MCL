@@ -19,6 +19,7 @@
 #include "MidiClock.h"
 #include "MCL.h"
 #include "MCLSeq.h"
+#include "platform.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -151,9 +152,15 @@ extern "C" void mcl_tick_audio(uint32_t elapsed_us) {
 extern "C" void mcl_tick_gui(void) {
     if (!mcl_desktop_is_setup_done()) {
         mcl_desktop_tick();
+#ifdef DEBUGMODE
+        mcl_debug::flush();
+#endif
         return;
     }
     mcl_desktop_tick();
+#ifdef DEBUGMODE
+    mcl_debug::flush();
+#endif
 }
 
 // ---- Framebuffer ---------------------------------------------------------

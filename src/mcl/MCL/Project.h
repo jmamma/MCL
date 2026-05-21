@@ -98,8 +98,6 @@ public:
 
   bool read_grid_row_header(GridRowHeader *row_header, GridRow row,
                             GridIndex grid) {
-    DEBUG_PRINT_FN();
-    DEBUG_DUMP(grid);
     return grids[grid].read_row_header(row_header, row);
   }
 

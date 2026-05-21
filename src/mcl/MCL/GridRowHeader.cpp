@@ -7,13 +7,11 @@ void GridRowHeader::update_model(GridColumn column, uint8_t model_, uint8_t trac
 }
 
 bool GridRowHeader::is_empty() {
-  DEBUG_PRINT_FN();
   uint8_t count = 0;
   for (uint8_t x = 0; x < GRID_WIDTH; x++) {
     if (track_type[x] == EMPTY_TRACK_TYPE) {
-    count++;
+      count++;
     }
-    DEBUG_DUMP(track_type[x]);
   }
   return (count == GRID_WIDTH);
 }
