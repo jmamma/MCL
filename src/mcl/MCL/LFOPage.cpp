@@ -74,6 +74,25 @@ void lfo_mult_label(uint8_t multiplier, char *out) {
   strcpy_P(out, label);
 }
 
+void draw_lfo_enable_info_label(bool enabled) {
+  const uint8_t split_x = MCLGUI::pane_w / 2;
+  oled_display.setFont(&TomThumb);
+
+  oled_display.fillRect(0, MCLGUI::pane_info1_y, MCLGUI::pane_w,
+                        MCLGUI::pane_info_h, BLACK);
+  oled_display.fillRect(enabled ? 0 : split_x, MCLGUI::pane_info1_y,
+                        enabled ? split_x : MCLGUI::pane_w - split_x,
+                        MCLGUI::pane_info_h, WHITE);
+
+  oled_display.setTextColor(enabled ? BLACK : WHITE);
+  oled_display.setCursor(3, MCLGUI::pane_info1_y + 6);
+  oled_display.print("ON");
+  oled_display.setTextColor(enabled ? WHITE : BLACK);
+  oled_display.setCursor(split_x + 2, MCLGUI::pane_info1_y + 6);
+  oled_display.print("OFF");
+  oled_display.setTextColor(WHITE);
+}
+
 bool lfo_preview_is_centered(uint8_t wav_type) {
   constexpr uint16_t centered_mask = (1 << TRI_WAV) | (1 << SAW_WAV) |
                                      (1 << SQU_WAV) | (1 << RND_WAV) |
@@ -344,9 +363,7 @@ void LFOPage::display() {
   const uint64_t slide_mask = 0;
   const uint64_t mute_mask = 0;
   uint8_t base_mode = lfo_track->base_mode();
-  const char *mode_label = lfo_mode_label(base_mode);
-
-  panel_info1 = mode_label;
+  panel_info1 = "";
 
   if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
     draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
@@ -363,10 +380,7 @@ void LFOPage::display() {
   strncpy(info2, panel_info2, sizeof(info2) - 1);
   info2[sizeof(info2) - 1] = '\0';
   SeqPage::display();
-  oled_display.fillRect(MCLGUI::pane_label_x, MCLGUI::pane_label_md_y,
-                        MCLGUI::pane_label_w, MCLGUI::pane_label_h * 2,
-                        BLACK);
-  mcl_gui.draw_panel_toggle("ON", "OFF", lfo_track->enable);
+  draw_lfo_enable_info_label(lfo_track->enable);
   draw_page_index(false, lfo_track->step_count / 4);
 
 }
