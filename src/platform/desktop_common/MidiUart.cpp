@@ -2,6 +2,9 @@
 // RingBuffer<> over private byte arrays. Single-threaded; the host pumps
 // `desktop_ingress` / `desktop_egress` against its MIDI buffers.
 #include "MidiUart.h"
+#include "Midi.h"
+#include "MidiSysex.h"
+#include "midi-common.h"
 
 MidiUartClass::MidiUartClass()
     : rx_storage_(rx_buf_, RX_RING_SIZE),
@@ -52,7 +55,44 @@ void MidiUartClass::m_recv(uint8_t* src, uint16_t size) {
 
 void MidiUartClass::desktop_ingress(const uint8_t* data, size_t len) {
     for (size_t i = 0; i < len; ++i) {
-        rxRb->put_h_isr(data[i]);
+        const uint8_t c = data[i];
+        recvActiveSenseTimer = 0;
+
+        if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+            rxRb->put_h_isr(c);
+            continue;
+        }
+
+        if (midi && midi->midiSysex) {
+            switch (live_state) {
+            case midi_wait_sysex:
+                if (MIDI_IS_STATUS_BYTE(c)) {
+                    if (c != MIDI_SYSEX_END) {
+                        midi->midiSysex->abort();
+                        rxRb->put_h_isr(c);
+                    } else {
+                        midi->midiSysex->end_immediate();
+                    }
+                    live_state = midi_wait_status;
+                } else {
+                    midi->midiSysex->handleByte(c);
+                }
+                continue;
+
+            case midi_wait_status:
+                if (c == MIDI_SYSEX_START) {
+                    live_state = midi_wait_sysex;
+                    midi->midiSysex->reset();
+                    continue;
+                }
+                break;
+
+            default:
+                break;
+            }
+        }
+
+        rxRb->put_h_isr(c);
     }
 }
 

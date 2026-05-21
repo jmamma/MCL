@@ -5,6 +5,7 @@
 #define DEVICE_MD 0x02
 #define DEVICE_MNM 0x03
 #define DEVICE_A4 0x06
+#define DEVICE_SPS 0x7D
 #define DEVICE_NULL 0xFF
 #define DEVICE_MIDI 0xFE
 
@@ -19,6 +20,8 @@ public:
   void init();
   void send_id_request(uint8_t id, uint8_t port);
   bool getBlockingId(uint8_t id, uint8_t port, uint16_t timeout);
+  bool getBlockingId(uint8_t id, uint8_t alternate_id, uint8_t port,
+                     uint16_t timeout);
   uint8_t waitForId(uint8_t id, uint8_t port, uint16_t timeout);
   uint8_t get_id();
   void set_id(uint8_t id);
