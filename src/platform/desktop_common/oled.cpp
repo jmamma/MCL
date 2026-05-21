@@ -164,8 +164,15 @@ void Oled::clearDisplay() {
 }
 
 void Oled::fillScreen(uint16_t color) {
-    uint8_t v = (color == BLACK) ? 0x00 : 0xFF;
-    memset(buffer_, v, sizeof(buffer_));
+    if (color == BLACK) {
+        memset(buffer_, 0x00, sizeof(buffer_));
+    } else if (color == INVERT) {
+        for (size_t i = 0; i < sizeof(buffer_); ++i) {
+            buffer_[i] ^= 0xFF;
+        }
+    } else {
+        memset(buffer_, 0xFF, sizeof(buffer_));
+    }
 }
 
 void Oled::drawPixel(int16_t x, int16_t y, uint16_t color) {
@@ -296,27 +303,29 @@ void Oled::fillTriangle(int16_t x0, int16_t y0,
 }
 
 void Oled::fillTriangle_3px(int16_t x0, int16_t y0, uint16_t color) {
-    // Tiny down-pointing triangle used by MCL UI for nav indicators.
-    set_pixel(buffer_, x0,     y0,     color);
-    set_pixel(buffer_, x0 - 1, y0,     color);
-    set_pixel(buffer_, x0 + 1, y0,     color);
-    set_pixel(buffer_, x0,     y0 + 1, color);
+    // Hardware-compatible right-facing 3-column wedge used by play markers.
+    drawFastVLine(x0, y0, 5, color);
+    drawFastVLine(x0 + 1, y0 + 1, 3, color);
+    drawPixel(x0 + 2, y0 + 2, color);
 }
 
 // ── Bitmaps ──────────────────────────────────────────────────────────────
 
+// Keep rp2040 Oled's historical parameter semantics: flip_vert mirrors X
+// and flip_horiz mirrors Y.
 void Oled::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
                       int16_t w, int16_t h, uint16_t color,
                       bool flip_vert, bool flip_horiz) {
     if (w <= 0 || h <= 0) return;
     const int byteWidth = (w + 7) / 8;
     for (int j = 0; j < h; ++j) {
-        const int srcY = flip_vert ? (h - 1 - j) : j;
         for (int i = 0; i < w; ++i) {
-            const int srcX = flip_horiz ? (w - 1 - i) : i;
-            uint8_t b = bitmap[srcY * byteWidth + (srcX >> 3)];
-            if (b & (uint8_t)(0x80 >> (srcX & 7)))
-                set_pixel(buffer_, x + i, y + j, color);
+            uint8_t b = bitmap[j * byteWidth + (i >> 3)];
+            if (b & (uint8_t)(0x80 >> (i & 7))) {
+                int16_t dstX = flip_vert ? (int16_t)(x + w - i - 1) : (int16_t)(x + i);
+                int16_t dstY = flip_horiz ? (int16_t)(y + h - j - 1) : (int16_t)(y + j);
+                set_pixel(buffer_, dstX, dstY, color);
+            }
         }
     }
 }
@@ -327,12 +336,12 @@ void Oled::drawBitmap(int16_t x, int16_t y, const uint8_t bitmap[],
     if (w <= 0 || h <= 0) return;
     const int byteWidth = (w + 7) / 8;
     for (int j = 0; j < h; ++j) {
-        const int srcY = flip_vert ? (h - 1 - j) : j;
         for (int i = 0; i < w; ++i) {
-            const int srcX = flip_horiz ? (w - 1 - i) : i;
-            uint8_t b = bitmap[srcY * byteWidth + (srcX >> 3)];
-            uint16_t c = (b & (uint8_t)(0x80 >> (srcX & 7))) ? color : bg;
-            set_pixel(buffer_, x + i, y + j, c);
+            uint8_t b = bitmap[j * byteWidth + (i >> 3)];
+            uint16_t c = (b & (uint8_t)(0x80 >> (i & 7))) ? color : bg;
+            int16_t dstX = flip_vert ? (int16_t)(x + w - i - 1) : (int16_t)(x + i);
+            int16_t dstY = flip_horiz ? (int16_t)(y + h - j - 1) : (int16_t)(y + j);
+            set_pixel(buffer_, dstX, dstY, c);
         }
     }
 }
