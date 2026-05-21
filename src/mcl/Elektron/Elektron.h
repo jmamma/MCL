@@ -266,8 +266,9 @@ public:
   bool encoder_interface;
   ElektronDevice(
       MidiClass* _midi, const char* _name, const uint8_t _id,
-      const ElektronSysexProtocol& protocol)
-    : MidiDevice(_midi, _name, _id, true), sysex_protocol(protocol) {
+      const ElektronSysexProtocol& protocol, const char *_full_name = nullptr)
+    : MidiDevice(_midi, _name, _id, true, _full_name),
+      sysex_protocol(protocol) {
 
       currentGlobal = -1;
       currentKit = -1;

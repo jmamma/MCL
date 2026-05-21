@@ -148,7 +148,7 @@ public:
 #endif
 
 GenericMidiDevice::GenericMidiDevice()
-    : MidiDevice(&Midi2, "MI", DEVICE_MIDI, false) {
+    : MidiDevice(&Midi2, "MI", DEVICE_MIDI, false, "GENERIC MIDI") {
   memset(mixer_levels, 127, sizeof(mixer_levels));
 }
 

@@ -1619,7 +1619,7 @@ void tbd_p4_send_driver_params() {
   }
 }
 
-TbdDevice::TbdDevice() : MidiDevice(&MidiP4, "TBD", DEVICE_MIDI, false) {
+TbdDevice::TbdDevice() : MidiDevice(&MidiP4, "TBD", DEVICE_MIDI, false, "TBD") {
   port = UARTP4_PORT;
 }
 

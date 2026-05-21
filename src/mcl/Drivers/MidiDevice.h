@@ -98,6 +98,7 @@ public:
   MidiClass *midi;
   MidiUartClass *uart;
   const char *const name;
+  const char *const full_name;
   const uint8_t id; // Device identifier
   const bool isElektronDevice;
   uint8_t track_type;
@@ -115,7 +116,8 @@ protected:
 
 public:
   MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
-             const bool _isElektronDevice) NOINLINE();
+             const bool _isElektronDevice,
+             const char *_full_name = nullptr) NOINLINE();
 
   void add_track_to_grid(GridIdx grid_idx, uint8_t track_idx,
                          GridDeviceTrack *gdt);

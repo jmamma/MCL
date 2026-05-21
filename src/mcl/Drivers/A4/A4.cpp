@@ -61,7 +61,7 @@ const ElektronSysexProtocol a4_protocol = {
 };
 
 A4Class::A4Class()
-    : ElektronDevice(&Midi2, "A4", DEVICE_A4, a4_protocol) {
+    : ElektronDevice(&Midi2, "A4", DEVICE_A4, a4_protocol, "ANALOG FOUR") {
   memset(mixer_levels, 127, sizeof(mixer_levels));
 }
 

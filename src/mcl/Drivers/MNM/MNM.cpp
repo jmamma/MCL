@@ -50,7 +50,7 @@ const ElektronSysexProtocol mnm_protocol = {
 };
 
 MNMClass::MNMClass()
-    : ElektronDevice(&Midi2, "MM", DEVICE_MNM, mnm_protocol) {
+    : ElektronDevice(&Midi2, "MM", DEVICE_MNM, mnm_protocol, "MONOMACHINE") {
   global.baseChannel = 0;
 }
 

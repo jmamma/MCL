@@ -7,8 +7,9 @@
 #include "ResourceManager.h"
 
 MidiDevice::MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,
-                       const bool _isElektronDevice)
-    : name(_name), id(_id), isElektronDevice(_isElektronDevice)
+                       const bool _isElektronDevice, const char *_full_name)
+    : name(_name), full_name(_full_name != nullptr ? _full_name : _name),
+      id(_id), isElektronDevice(_isElektronDevice)
 #ifdef MCL_HAS_DEVICE_CAPABILITIES
       ,
       step_track_capability_(*this),

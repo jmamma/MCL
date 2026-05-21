@@ -30,6 +30,13 @@ bool driver_config_entry(DeviceIdx device_idx, DriverConfigMenuEntry *entry) {
          device->config_menu_entry(device_idx, entry);
 }
 
+const char *driver_entry_name(MidiDevice *device) {
+  if (device != nullptr && device != &null_midi_device) {
+    return device->full_name;
+  }
+  return nullptr;
+}
+
 void open_driver_config(DeviceIdx device_idx) {
   DriverConfigMenuEntry entry = {nullptr, NULL_PAGE};
   if (driver_config_entry(device_idx, &entry) && entry.page != NULL_PAGE) {
@@ -52,6 +59,20 @@ void new_project_from_menu() {
 } // namespace
 
 void SystemMenuPage::prepare_menu_entries() {
+  MidiDevice *primary_device = device_manager.primary_device();
+  MidiDevice *secondary_device = device_manager.secondary_device();
+
+  const char *primary_name = driver_entry_name(primary_device);
+  if (primary_name != nullptr) {
+    menu.set_entry_name(SYSTEM_MENU_DRIVER_PRIMARY, primary_name);
+  }
+  if (secondary_device != primary_device) {
+    const char *secondary_name = driver_entry_name(secondary_device);
+    if (secondary_name != nullptr) {
+      menu.set_entry_name(SYSTEM_MENU_DRIVER_SECONDARY, secondary_name);
+    }
+  }
+
   DriverConfigMenuEntry entry = {nullptr, NULL_PAGE};
   bool primary =
       driver_config_entry(DeviceIdx::Primary, &entry) && entry.name != nullptr;
@@ -60,8 +81,6 @@ void SystemMenuPage::prepare_menu_entries() {
     menu.set_entry_name(SYSTEM_MENU_DRIVER_PRIMARY, entry.name);
   }
 
-  MidiDevice *primary_device = device_manager.primary_device();
-  MidiDevice *secondary_device = device_manager.secondary_device();
   entry = {nullptr, NULL_PAGE};
   bool secondary = secondary_device != primary_device &&
                    driver_config_entry(DeviceIdx::Secondary, &entry) &&
@@ -73,8 +92,8 @@ void SystemMenuPage::prepare_menu_entries() {
 }
 
 void SystemMenuPage::init() {
-  prepare_menu_entries();
   MenuPage<system_menu_page_N>::init();
+  prepare_menu_entries();
 }
 
 const uint8_t *const menu_target_param[] PROGMEM = {

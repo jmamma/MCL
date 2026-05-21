@@ -91,9 +91,11 @@ const ElektronSysexProtocol md_protocol = {
 
 #ifdef PLATFORM_TBD
 MDClass::MDClass()
-    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol), ui(*this) {}
+    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol, "MACHINEDRUM"),
+      ui(*this) {}
 #else
-MDClass::MDClass() : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol) {}
+MDClass::MDClass()
+    : ElektronDevice(&Midi, "MD", DEVICE_MD, md_protocol, "MACHINEDRUM") {}
 #endif
 
 namespace {
@@ -137,7 +139,7 @@ bool MDClass::config_menu_entry(DeviceIdx device_idx,
   if (entry == nullptr) {
     return false;
   }
-  entry->name = "MACHINEDRUM";
+  entry->name = full_name;
   entry->page = MD_CONFIG_PAGE;
   return true;
 }
