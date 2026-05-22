@@ -1910,6 +1910,9 @@ bool TbdParamCapability::set_param(const DeviceContext &ctx, uint8_t target,
     return false;
   }
   int16_t scaled = p4_u7_to_value(*desc, value);
+  if (update_kit) {
+    desc->value = scaled;
+  }
   MidiUartClass *port = uart_ ? uart_ : device_.uart;
   tbd_p4_send_param_value(port, sound->midi_channel, *desc, scaled);
   return true;

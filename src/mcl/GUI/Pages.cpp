@@ -135,14 +135,22 @@ bool LightPage::handleEncoderKeyControls(gui_event_t *event) {
     return false;
   }
 
-  if (key_interface.is_key_down(MDX_KEY_FUNC) ||
+  const bool func_down = key_interface.is_key_down(MDX_KEY_FUNC);
+  const bool other_modifier_down =
       key_interface.is_key_down(MDX_KEY_YES) ||
       key_interface.is_key_down(MDX_KEY_NO) ||
-      key_interface.is_key_down(MDX_KEY_PATSONG)) {
-    return false;
-  }
+      key_interface.is_key_down(MDX_KEY_PATSONG);
+  const bool focus_active =
+      encoder_focus < GUI_NUM_ENCODERS && encoders[encoder_focus] != NULL &&
+      (encoder_key_control_mask & (1 << encoder_focus));
 
-  if (encoder_focus >= GUI_NUM_ENCODERS || encoders[encoder_focus] == NULL ||
+  if (move != 0 && focus_active && func_down && !other_modifier_down) {
+    if (!moveEncoderFocusPage(move)) {
+      return false;
+    }
+  } else if (func_down || other_modifier_down) {
+    return false;
+  } else if (encoder_focus >= GUI_NUM_ENCODERS || encoders[encoder_focus] == NULL ||
       !(encoder_key_control_mask & (1 << encoder_focus))) {
     encoder_focus = ENCODER_FOCUS_NONE;
     if (!selectEncoderFocus(0, 1)) {

@@ -127,6 +127,38 @@ bool DeviceParamTarget::get_param(uint8_t param, uint8_t *value) const {
 
 bool DeviceParamTarget::set_param(uint8_t param, uint8_t value,
                                   MidiUartClass *uart_) const {
+  return send_modulated_param(param, value, uart_);
+}
+
+bool DeviceParamTarget::get_base_param(uint8_t param, uint8_t *value) const {
+  return get_param(param, value);
+}
+
+bool DeviceParamTarget::set_base_param(uint8_t param, uint8_t value,
+                                       MidiUartClass *uart_) const {
+  if (!valid()) {
+    return false;
+  }
+  if (device_idx == DeviceIdx::Secondary) {
+    if (target >= NUM_EXT_TRACKS) {
+      return false;
+    }
+    mcl_seq.ext_tracks[target].send_cc(param, value, uart_);
+    return true;
+  }
+  if (param >= md_param_count(target)) {
+    return false;
+  }
+  if (target < NUM_MD_TRACKS) {
+    MD.setTrackParam(target, param, value, uart_, true);
+  } else {
+    MD.setFXParam(param, value, md_fx_type(target), true, uart_);
+  }
+  return true;
+}
+
+bool DeviceParamTarget::send_modulated_param(uint8_t param, uint8_t value,
+                                             MidiUartClass *uart_) const {
   if (!valid()) {
     return false;
   }

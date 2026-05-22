@@ -762,6 +762,10 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED &&
         key_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (encoder_focus != ENCODER_FOCUS_NONE &&
+          (key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT)) {
+        return false;
+      }
       SeqTrackMenuOp op;
       if (seq_track_menu_op_for_key(key, op)) {
         bool is_md_device = opt_capture_is_md_device();

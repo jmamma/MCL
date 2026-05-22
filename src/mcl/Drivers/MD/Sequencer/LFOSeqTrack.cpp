@@ -533,8 +533,8 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t offset, uint8_t param_id,
                                    int16_t lfo_sample) {
   int16_t depth = params[param_id].depth;
   int16_t delta = (lfo_sample * depth) / 128;
-  int16_t sample = mode_legacy_subtract(mode) ? offset - delta
-                                              : offset + delta;
+  bool offset_max = mode_legacy_subtract(mode) || !lfo_wav_is_centered(wav_type);
+  int16_t sample = offset_max ? offset - delta : offset + delta;
 
   if (sample > 127) {
     return 127;
@@ -571,10 +571,9 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       DeviceParamTarget target =
           DeviceParamResolver::target_for_idx(device_idx, dest);
       uint8_t offset = params[i].offset;
-      target.get_param(param, &offset);
       uint8_t wav_value = get_wav_value(offset, i, lfo_sample);
       if (last_wav_value[i] != wav_value) {
-        target.set_param(param, wav_value, output_uart);
+        target.send_modulated_param(param, wav_value, output_uart);
 
         last_wav_value[i] = wav_value;
       }
@@ -611,8 +610,7 @@ void LFOSeqTrack::reset_params() {
     DeviceParamTarget target =
         DeviceParamResolver::target_for_idx(device_idx, dest);
     uint8_t wav_value = params[i].offset;
-    target.get_param(param, &wav_value);
-    target.set_param(param, wav_value, output_uart);
+    target.send_modulated_param(param, wav_value, output_uart);
     last_wav_value[i] = 255;
   }
 }

@@ -62,10 +62,29 @@ bool DeviceParamTarget::get_param(uint8_t param, uint8_t *value) const {
 
 bool DeviceParamTarget::set_param(uint8_t param, uint8_t value,
                                   MidiUartClass *uart_) const {
+  return send_modulated_param(param, value, uart_);
+}
+
+bool DeviceParamTarget::get_base_param(uint8_t param, uint8_t *value) const {
+  return get_param(param, value);
+}
+
+bool DeviceParamTarget::set_base_param(uint8_t param, uint8_t value,
+                                       MidiUartClass *uart_) const {
   if (!valid()) {
     return false;
   }
-  return device->params()->set_param(context(), target, param, value, uart_);
+  return device->params()->set_param(context(), target, param, value, uart_,
+                                     true);
+}
+
+bool DeviceParamTarget::send_modulated_param(uint8_t param, uint8_t value,
+                                             MidiUartClass *uart_) const {
+  if (!valid()) {
+    return false;
+  }
+  return device->params()->set_param(context(), target, param, value, uart_,
+                                     false);
 }
 
 uint8_t DeviceParamTarget::lock_param_count() const {

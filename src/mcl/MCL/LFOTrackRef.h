@@ -12,10 +12,13 @@ public:
 
   static uint8_t target_count(DeviceIdx device_idx);
   static uint8_t param_count(DeviceIdx device_idx, uint8_t dest);
-  static bool get_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
-                        uint8_t *value);
+  static bool param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
+                          char *out, uint8_t len);
+  static bool get_base_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
+                             uint8_t *value);
+  static bool set_base_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
+                             uint8_t value);
 
-  static void set_key_repeat(uint8_t enabled);
   static void sync_panel(const LFOSeqTrack &track);
   static bool supports_trig_port(uint8_t port);
 };

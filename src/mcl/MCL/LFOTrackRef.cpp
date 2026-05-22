@@ -58,17 +58,22 @@ uint8_t LFOTrackRef::param_count(DeviceIdx device_idx, uint8_t dest) {
   return DeviceParamResolver::target_for_idx(device_idx, dest).param_count();
 }
 
-bool LFOTrackRef::get_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
-                            uint8_t *value) {
-  return DeviceParamResolver::target_for_idx(device_idx, dest).get_param(param, value);
+bool LFOTrackRef::param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
+                              char *out, uint8_t len) {
+  return DeviceParamResolver::target_for_idx(device_idx, dest)
+      .param_label(param, out, len);
 }
 
-void LFOTrackRef::set_key_repeat(uint8_t enabled) {
-#if defined(__AVR__)
-  MD.set_key_repeat(enabled);
-#else
-  device_manager.primary_device()->panel()->set_key_repeat(enabled);
-#endif
+bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
+                                 uint8_t param, uint8_t *value) {
+  return DeviceParamResolver::target_for_idx(device_idx, dest)
+      .get_base_param(param, value);
+}
+
+bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
+                                 uint8_t param, uint8_t value) {
+  return DeviceParamResolver::target_for_idx(device_idx, dest)
+      .set_base_param(param, value);
 }
 
 void LFOTrackRef::sync_panel(const LFOSeqTrack &track) {

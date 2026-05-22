@@ -56,6 +56,7 @@ protected:
 
 private:
   void select_menu_track(uint8_t track);
+  bool refresh_track_selection();
   void sync_lfo_track();
 };
 

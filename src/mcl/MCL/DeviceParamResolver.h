@@ -34,6 +34,11 @@ struct DeviceParamTarget {
   bool get_param(uint8_t param, uint8_t *value) const;
   bool set_param(uint8_t param, uint8_t value,
                  MidiUartClass *uart_ = nullptr) const;
+  bool get_base_param(uint8_t param, uint8_t *value) const;
+  bool set_base_param(uint8_t param, uint8_t value,
+                      MidiUartClass *uart_ = nullptr) const;
+  bool send_modulated_param(uint8_t param, uint8_t value,
+                            MidiUartClass *uart_ = nullptr) const;
 
   uint8_t lock_param_count() const;
   bool lock_param_info(uint8_t param, MidiDeviceParamInfo *info) const;
