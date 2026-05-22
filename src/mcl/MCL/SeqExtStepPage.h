@@ -107,7 +107,10 @@ public:
   void clear_note_selection();
   bool copy_note_selection();
   bool copy_note_page();
+  bool copy_lock_page() NOINLINE();
   bool paste_note_clip();
+  bool paste_lock_clip() NOINLINE();
+  bool clear_lock_page() NOINLINE();
   bool clear_note_selection_notes();
   bool clear_note_page();
 

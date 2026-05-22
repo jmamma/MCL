@@ -123,6 +123,16 @@ bool SeqExtStepLockApi::delete_lock(seq_extstep_tick_t tick, uint8_t lock_idx,
   return ext_track_->del_track_locks((uint16_t)tick, lock_idx, value);
 }
 
+void SeqExtStepLockApi::clear_step_locks(uint8_t step, uint8_t lock_idx) {
+#if !defined(__AVR__)
+  if (midi_track_) {
+    midi_track_->clear_lock_step(step, lock_idx);
+    return;
+  }
+#endif
+  ext_track_->clear_track_locks_idx(step, lock_idx);
+}
+
 bool SeqExtStepLockApi::add_lock(uint8_t step, uint16_t timing, uint8_t param,
                                  uint8_t value, bool slide,
                                  uint8_t lock_idx) {

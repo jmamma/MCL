@@ -16,6 +16,8 @@ enum ExtNoteClipMode : uint8_t {
   EXT_NOTE_CLIP_NONE = 0,
   EXT_NOTE_CLIP_RECTANGLE = 1,
   EXT_NOTE_CLIP_PAGE = 2,
+  // Reuses the note clip storage for one automation lane page.
+  EXT_NOTE_CLIP_LOCK_PAGE = 3,
 };
 
 struct ATTR_PACKED() ExtNoteClipEvent {

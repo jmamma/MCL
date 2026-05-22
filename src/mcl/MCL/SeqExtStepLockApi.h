@@ -53,6 +53,7 @@ public:
 #endif
 
   bool delete_lock(seq_extstep_tick_t tick, uint8_t lock_idx, uint8_t value);
+  void clear_step_locks(uint8_t step, uint8_t lock_idx);
   bool add_lock(uint8_t step, uint16_t timing, uint8_t param, uint8_t value,
                 bool slide, uint8_t lock_idx);
   bool replace_param_lock(uint8_t step, uint16_t timing, uint8_t param,

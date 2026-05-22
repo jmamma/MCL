@@ -123,6 +123,7 @@ public:
 
   void clear_track_locks();
   void clear_track_locks(uint8_t lock_idx);
+  void clear_lock_step(uint8_t step, uint8_t lock_idx);
   void clear_mute();
 
   void import_legacy_ext(const ExtSeqTrackData &legacy, const GridLink &link);

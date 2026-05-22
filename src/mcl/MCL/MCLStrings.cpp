@@ -63,6 +63,7 @@ MCLSTR_DEFINE(chromat, "CHROMAT");
 MCLSTR_DEFINE(zero, "0");
 MCLSTR_DEFINE(minus, "-");
 MCLSTR_DEFINE(lock_space, "LOCK  ");
+MCLSTR_DEFINE(lock_page, "LOCK PAGE");
 MCLSTR_DEFINE(step_prefix, "S");
 
 // Common labels

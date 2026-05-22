@@ -107,6 +107,7 @@ MCLSTR_DECLARE(chromat);
 MCLSTR_DECLARE(zero);
 MCLSTR_DECLARE(minus);
 MCLSTR_DECLARE(lock_space);
+MCLSTR_DECLARE(lock_page);
 
 // Browser page titles
 MCLSTR_DECLARE(title_md_rom);

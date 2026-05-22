@@ -559,6 +559,20 @@ void MidiSeqTrack::clear_track_locks(uint8_t lock_idx) {
   seq_data.clean_locks();
 }
 
+void MidiSeqTrack::clear_lock_step(uint8_t step, uint8_t lock_idx) {
+  uint16_t start = 0, end = 0;
+  seq_data.locate(step, start, end);
+  for (uint16_t i = start; i < end;) {
+    const auto &event = seq_data.events[i];
+    if (event.type == MIDI_SEQ_EVENT_LOCK && event.target == lock_idx) {
+      remove_event(i);
+      end--;
+    } else {
+      i++;
+    }
+  }
+}
+
 void MidiSeqTrack::init_notes_on() {
   notes_on_count = 0;
   for (uint8_t i = 0; i < NUM_NOTES_ON; i++) {
