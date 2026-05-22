@@ -171,8 +171,12 @@ void FileBrowserPage::query_filesystem() {
         if (focus_match[0] != '\0' && strcmp(temp_entry, focus_match) == 0) {
           DEBUG_DUMP(temp_entry);
           DEBUG_DUMP(mcl_cfg.project);
-          cur_file = numEntries - 1;
-          encoders[1]->cur = numEntries - 1;
+          uint16_t focused_entry = numEntries - 1;
+          cur_file = focused_entry;
+          encoders[1]->cur = focused_entry;
+          if ((uint16_t)cur_row > focused_entry) {
+            cur_row = focused_entry;
+          }
         }
       }
     }

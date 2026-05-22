@@ -141,23 +141,29 @@ bool Project::new_project(const char *newprj) {
     return false;
   }
 
+  char proj_filename[PRJ_NAME_LEN  + 5];
+  if (!project_file_name(basename, proj_filename, sizeof(proj_filename))) {
+    gfx.alert("ERROR", "BAD NAME");
+    return false;
+  }
+
   // Create parent project directory
   //
   chdir_projects();
   DEBUG_PRINTLN(newprj);
   DEBUG_PRINTLN(strlen(newprj));
   // Create project directory
+  if (SD.exists(newprj)) {
+    bool existing_project = SD.chdir(newprj) && SD.exists(proj_filename);
+    chdir_projects();
+    gfx.alert("ERROR", existing_project ? "PROJECT EXISTS" : "DIR EXISTS");
+    return false;
+  }
   if (!SD.mkdir(newprj, true) || !SD.chdir(newprj)) {
     gfx.alert("ERROR", "DIR");
     return false;
   }
 
-
-  char proj_filename[PRJ_NAME_LEN  + 5];
-  if (!project_file_name(basename, proj_filename, sizeof(proj_filename))) {
-    gfx.alert("ERROR", "BAD NAME");
-    return false;
-  }
 
   draw_wait_popup("CREATING PROJECT");
 

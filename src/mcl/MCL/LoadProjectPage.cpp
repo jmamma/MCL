@@ -446,15 +446,19 @@ bool LoadProjectPage::tbd_can_cd_up() const {
 
 uint8_t LoadProjectPage::entry_type_for_dir(const char *entry) {
   if (move_destination_mode) {
-    if (is_project_dir(entry)) {
-      return SKIP_TYPE;
-    }
     char project_path[PRJ_PATH_LEN];
     if (!build_project_path(entry, project_path, sizeof(project_path)) ||
         path_starts_with_dir(project_path, move_source_path)) {
       return SKIP_TYPE;
     }
+#ifdef __AVR__
+    return UNKNOWN_DIR_TYPE;
+#else
+    if (is_project_dir(entry)) {
+      return SKIP_TYPE;
+    }
     return DIR_TYPE;
+#endif
   }
 #ifdef __AVR__
   (void)entry;
