@@ -15,6 +15,41 @@
 
 namespace {
 
+LFOSeqTrackData lfo_clipboard;
+bool lfo_clipboard_valid = false;
+
+constexpr uint8_t kLfoMaskPageSteps = 16;
+
+uint8_t lfo_mask_page_count(uint8_t length) {
+  if (length == 0) {
+    length = kLfoMaskPageSteps;
+  }
+  if (length > 64) {
+    length = 64;
+  }
+  return (length + kLfoMaskPageSteps - 1) / kLfoMaskPageSteps;
+}
+
+uint8_t lfo_mask_page_offset() {
+  return SeqPage::page_select * kLfoMaskPageSteps;
+}
+
+void clamp_lfo_mask_page(const LFOSeqTrack *track) {
+  SeqPage::page_count = lfo_mask_page_count(track->length);
+  if (SeqPage::page_select >= SeqPage::page_count) {
+    SeqPage::page_select = 0;
+  }
+}
+
+uint16_t lfo_visible_mask(const LFOSeqTrack *track, uint8_t offset) {
+  uint64_t mask = track->pattern_mask;
+  uint8_t length = track->length ? track->length : kLfoMaskPageSteps;
+  if (length < 64) {
+    mask &= (1ULL << length) - 1;
+  }
+  return (uint16_t)(mask >> offset);
+}
+
 const char *lfo_mode_label(uint8_t mode) NOINLINE();
 const char *lfo_mode_label(uint8_t mode) {
   switch (LFOSeqTrack::mode_base(mode)) {
@@ -64,7 +99,9 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
 
   uint8_t param_count =
       LFOTrackRef::param_count(track->device_idx, track->params[param_idx].dest);
-  param_encoder->max = param_count ? param_count - 1 : 0;
+  param_encoder->max = track->params[param_idx].dest == 0
+                           ? 2
+                           : (param_count ? param_count - 1 : 0);
   if (param_encoder->cur > param_encoder->max) {
     param_encoder->setValue(param_encoder->max);
     track->params[param_idx].param = param_encoder->cur;
@@ -217,7 +254,7 @@ void draw_lfo_wave_preview(uint8_t knob, uint8_t wav_type) {
 
   LightPage *page = GUI.currentPage();
   if (page != nullptr && page->isEncoderFocused(knob)) {
-    oled_display.fillRect(knob_x, 0, 23, 16, INVERT);
+    oled_display.fillRect(knob_x, 0, mcl_gui.knob_w, 16, INVERT);
   }
 }
 
@@ -241,6 +278,7 @@ bool LFOPage::refresh_track_selection() {
   }
   sync_lfo_track();
   update_lfo_key_interface(lfo_track);
+  clamp_lfo_mask_page(lfo_track);
   config_encoders();
   return true;
 }
@@ -262,11 +300,11 @@ void LFOPage::init() {
   display_page_index = false;
   SeqPage::init();
   track_update();
+  clamp_lfo_mask_page(lfo_track);
 
   constexpr uint32_t lfo_menu_entries =
       menu_entry_mask(SEQ_MENU_TRACK) | menu_entry_mask(SEQ_MENU_DEVICE) |
-      menu_entry_mask(SEQ_MENU_SPEED) | menu_entry_mask(SEQ_MENU_LENGTH_MD) |
-      menu_entry_mask(SEQ_MENU_LFO_MULT);
+      menu_entry_mask(SEQ_MENU_SPEED) | menu_entry_mask(SEQ_MENU_LENGTH_MD);
   seq_menu_page.menu.set_enabled_entry_mask(lfo_menu_entries);
 
   sync_lfo_track();
@@ -286,7 +324,10 @@ void LFOPage::config_encoder_range(uint8_t i) {
       LFOTrackRef::target_count(lfo_track->device_idx);
   uint8_t param_count =
       LFOTrackRef::param_count(lfo_track->device_idx, encoders[i]->cur);
-  ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
+  ((MCLEncoder *)encoders[i + 1])->max = encoders[i]->cur == 0
+                                             ? 2
+                                             : (param_count ? param_count - 1
+                                                            : 0);
 }
 
 void LFOPage::config_encoders() {
@@ -445,12 +486,15 @@ void LFOPage::display() {
   panel_info1 = "";
 
   if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
-    draw_lock_mask(0, 0, lfo_track->step_count, lfo_track->length, true);
-    draw_mask(0, lfo_track->pattern_mask, lfo_track->step_count,
+    clamp_lfo_mask_page(lfo_track);
+    uint8_t offset = lfo_mask_page_offset();
+    draw_lock_mask(offset, 0, lfo_track->step_count, lfo_track->length, true);
+    draw_mask(offset, lfo_track->pattern_mask, lfo_track->step_count,
               lfo_track->length, mute_mask, slide_mask);
-    if ((uint16_t)lfo_track->pattern_mask != trigled_mask) {
-      trigled_mask = (uint16_t)lfo_track->pattern_mask;
-      mcl_gui.set_trigleds(lfo_track->pattern_mask, TRIGLED_STEPEDIT);
+    uint16_t visible_mask = lfo_visible_mask(lfo_track, offset);
+    if (visible_mask != trigled_mask) {
+      trigled_mask = visible_mask;
+      mcl_gui.set_trigleds(visible_mask, TRIGLED_STEPEDIT);
     }
   }
 
@@ -460,7 +504,9 @@ void LFOPage::display() {
   info2[sizeof(info2) - 1] = '\0';
   SeqPage::display();
   draw_lfo_enable_info_label(lfo_track->enable);
-  draw_page_index(false, lfo_track->step_count / 4);
+  if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
+    draw_page_index(true, lfo_track->step_count / kLfoMaskPageSteps);
+  }
 
 }
 
@@ -479,12 +525,7 @@ void LFOPage::apply_seq_menu_values(bool same_slot) {
   if (!same_slot) {
     return;
   }
-  lfo_track->speed = opt_speed;
-  lfo_track->mode = (lfo_track->mode & LFO_MODE_LEGACY_FLAGS) |
-                    LFOSeqTrack::pack_mode(lfo_track->base_mode(),
-                                           opt_lfo_mult);
-  lfo_track->phase_inc =
-      LFOSeqTrack::speed_to_phase_increment(opt_speed, opt_lfo_mult);
+  lfo_track->set_speed(opt_speed);
   if (opt_length == 0) {
     opt_length = 1;
   }
@@ -492,6 +533,10 @@ void LFOPage::apply_seq_menu_values(bool same_slot) {
     opt_length = 64;
   }
   lfo_track->length = opt_length;
+  if (lfo_track->step_count >= lfo_track->length) {
+    lfo_track->step_count = 0;
+  }
+  clamp_lfo_mask_page(lfo_track);
   sync_lfo_track();
 }
 
@@ -502,7 +547,6 @@ bool LFOPage::apply_seq_menu_row(uint8_t row_entry, void (*row_func)()) {
     return true;
   case SEQ_MENU_DEVICE:
   case SEQ_MENU_SPEED:
-  case SEQ_MENU_LFO_MULT:
   case SEQ_MENU_LENGTH_MD:
   case SEQ_MENU_LENGTH_EXT:
     return true;
@@ -547,6 +591,50 @@ void LFOPage::learn_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
   if (on_lfo_page && reconfig) { config_encoders(); }
 }
 
+void LFOPage::clear_lfo_track() {
+  DeviceIdx device_idx = lfo_track->device_idx;
+  uint8_t track_number = lfo_track->track_number;
+  if (lfo_track->enable) {
+    lfo_track->reset_params();
+  }
+  lfo_track->LFOSeqTrackData::init();
+  lfo_track->device_idx = device_idx;
+  lfo_track->track_number = track_number;
+  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+    lfo_track->last_wav_value[i] = 255;
+  }
+  lfo_track->reset_runtime();
+  clamp_lfo_mask_page(lfo_track);
+  sync_lfo_track();
+  update_lfo_key_interface(lfo_track);
+  config_encoders();
+  oled_display.textbox_P(mclstr_clear, mclstr_track);
+}
+
+void LFOPage::copy_lfo_track() {
+  lfo_clipboard = *lfo_track;
+  lfo_clipboard_valid = true;
+  oled_display.textbox_P(mclstr_copy, mclstr_track);
+}
+
+void LFOPage::paste_lfo_track() {
+  if (!lfo_clipboard_valid) {
+    return;
+  }
+  if (lfo_track->enable) {
+    lfo_track->reset_params();
+  }
+  lfo_track->LFOSeqTrackData::operator=(lfo_clipboard);
+  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+    lfo_track->last_wav_value[i] = 255;
+  }
+  lfo_track->reset_runtime();
+  clamp_lfo_mask_page(lfo_track);
+  sync_lfo_track();
+  update_lfo_key_interface(lfo_track);
+  config_encoders();
+  oled_display.textbox_P(mclstr_paste, mclstr_track);
+}
 
 bool LFOPage::handleEvent(gui_event_t *event) {
   bool seq_menu_button = EVENT_BUTTON(event) &&
@@ -569,7 +657,12 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       return true;
     }
 
-    uint8_t step = event->source;
+    uint8_t length = lfo_track->length ? lfo_track->length
+                                       : kLfoMaskPageSteps;
+    uint8_t step = event->source + lfo_mask_page_offset();
+    if (step >= length) {
+      return true;
+    }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (!IS_BIT_SET64(lfo_track->pattern_mask, step)) {
 
@@ -586,18 +679,31 @@ bool LFOPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
-      if (!key_interface.is_key_down(MDX_KEY_FUNC) && key == MDX_KEY_SCALE) {
-        select_device_idx(current_device_idx() == DeviceIdx::Primary
-                              ? DeviceIdx::Secondary
-                              : DeviceIdx::Primary);
-        refresh_track_selection();
-        return true;
+      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+        switch (key) {
+        case MDX_KEY_CLEAR:
+          clear_lfo_track();
+          return true;
+        case MDX_KEY_COPY:
+          copy_lfo_track();
+          return true;
+        case MDX_KEY_PASTE:
+          paste_lfo_track();
+          return true;
+        default:
+          break;
+        }
       }
       switch (key) {
       case MDX_KEY_YES: {
         goto lfo_enable;
       }
       }
+    } else if (event->mask == EVENT_BUTTON_RELEASED && key == MDX_KEY_SCALE) {
+      page_select++;
+      clamp_lfo_mask_page(lfo_track);
+      trigled_mask = 0xFFFF;
+      return true;
     }
   }
   if (EVENT_BUTTON(event)) {

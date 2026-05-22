@@ -58,6 +58,9 @@ private:
   void select_menu_track(uint8_t track);
   bool refresh_track_selection();
   void sync_lfo_track();
+  void clear_lfo_track();
+  void copy_lfo_track();
+  void paste_lfo_track();
 };
 
 extern MCLEncoder lfo_page_param1;

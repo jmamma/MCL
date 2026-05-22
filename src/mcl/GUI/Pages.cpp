@@ -144,14 +144,34 @@ bool LightPage::handleEncoderKeyControls(gui_event_t *event) {
       encoder_focus < GUI_NUM_ENCODERS && encoders[encoder_focus] != NULL &&
       (encoder_key_control_mask & (1 << encoder_focus));
 
-  if (move != 0 && focus_active && func_down && !other_modifier_down) {
-    if (!moveEncoderFocusPage(move)) {
-      return false;
+  if (func_down && !other_modifier_down) {
+    if (!focus_active) {
+      encoder_focus = ENCODER_FOCUS_NONE;
+      int8_t start = move < 0 ? GUI_NUM_ENCODERS - 1 : 0;
+      int8_t step = move < 0 ? -1 : 1;
+      if (!selectEncoderFocus(start, step)) {
+        return false;
+      }
+    }
+    if (move != 0) {
+      moveEncoderFocusPage(move);
+      if (encoder_focus >= GUI_NUM_ENCODERS || encoders[encoder_focus] == NULL ||
+          !(encoder_key_control_mask & (1 << encoder_focus))) {
+        encoder_focus = ENCODER_FOCUS_NONE;
+        selectEncoderFocus(move > 0 ? 0 : GUI_NUM_ENCODERS - 1,
+                           move > 0 ? 1 : -1);
+      }
+    } else if (nudge != 0) {
+      Encoder *encoder = encoders[encoder_focus];
+      encoder_t key_encoder = {};
+      key_encoder.normal =
+          nudge * (encoder->rot_res * ENCODER_RES_MULTIPLIER + 1);
+      key_encoder.button = true;
+      encoder->update(&key_encoder);
     }
   } else if (func_down || other_modifier_down) {
     return false;
-  } else if (encoder_focus >= GUI_NUM_ENCODERS || encoders[encoder_focus] == NULL ||
-      !(encoder_key_control_mask & (1 << encoder_focus))) {
+  } else if (!focus_active) {
     encoder_focus = ENCODER_FOCUS_NONE;
     if (!selectEncoderFocus(0, 1)) {
       return false;

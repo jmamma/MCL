@@ -102,7 +102,10 @@ void PerfPage::config_encoder_range(uint8_t i) {
 
   uint8_t param_count =
       PerfPageTargetRef::target(encoders[i]->cur).param_count();
-  ((MCLEncoder *)encoders[i + 1])->max = param_count ? param_count - 1 : 0;
+  ((MCLEncoder *)encoders[i + 1])->max = encoders[i]->cur == 0
+                                             ? 2
+                                             : (param_count ? param_count - 1
+                                                            : 0);
 }
 
 void PerfPage::config_encoders(uint8_t show_val) {
