@@ -93,7 +93,11 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
 namespace {
 
 bool read_remaining_from_grid_512(DeviceTrack *track, GridSlot column,
-                                  GridRow row, Grid *grid) {
+                                  GridRow row, Grid *grid,
+                                  const uint8_t *first_sector) {
+#if !defined(__AVR__)
+  (void)first_sector;
+#endif
   if (track->active == EMPTY_TRACK_TYPE) {
     return true;
   }
@@ -109,6 +113,8 @@ bool read_remaining_from_grid_512(DeviceTrack *track, GridSlot column,
   }
 
 #if defined(__AVR__)
+  uint16_t first_len = len < 512 ? len : 512;
+  memcpy(track->_this(), first_sector, first_len);
   if (len <= 512) {
     return true;
   }
@@ -158,11 +164,17 @@ DeviceTrack *DeviceTrack::load_from_grid_512(GridSlot column, GridRow row,
   if (!GridTrack::load_from_grid_512(column, row, grid)) {
     return nullptr;
   }
+#if defined(__AVR__)
+  uint8_t first_sector[512];
+  memcpy(first_sector, _this(), sizeof(first_sector));
+#else
+  const uint8_t *first_sector = nullptr;
+#endif
 
   // header read successfully. now reconstruct the object.
   auto ptrack = init_loaded_track_type(active);
 
-  if (!read_remaining_from_grid_512(ptrack, column, row, grid)) {
+  if (!read_remaining_from_grid_512(ptrack, column, row, grid, first_sector)) {
     DEBUG_PRINTLN(F("read failed"));
     return nullptr;
   }
@@ -181,6 +193,12 @@ DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
   if (!GridTrack::load_from_grid_512(column, row, grid)) {
     return nullptr;
   }
+#if defined(__AVR__)
+  uint8_t first_sector[512];
+  memcpy(first_sector, _this(), sizeof(first_sector));
+#else
+  const uint8_t *first_sector = nullptr;
+#endif
   if (loaded_header != nullptr) {
     *loaded_header = true;
   }
@@ -197,7 +215,7 @@ DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
     }
   }
 
-  if (!read_remaining_from_grid_512(ptrack, column, row, grid)) {
+  if (!read_remaining_from_grid_512(ptrack, column, row, grid, first_sector)) {
     DEBUG_PRINTLN(F("read failed"));
     return nullptr;
   }
