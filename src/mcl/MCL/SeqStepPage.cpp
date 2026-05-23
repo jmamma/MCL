@@ -54,7 +54,7 @@ void clear_shift_step_selection(SeqStepPage &page) {
 
 void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
                             uint8_t offset, bool show_current_step = true) {
-  uint64_t mask = 0, lock_mask = 0, mute_mask = 0, slide_mask = 0;
+  uint64_t mask = 0, mute_mask = 0, slide_mask = 0;
   uint64_t led_mask = 0;
   uint8_t step_count = active_track.step_count();
   uint8_t length = active_track.length();
@@ -64,11 +64,6 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
   case MASK_PATTERN:
     led_mask = mask;
     mute_mask = active_track.mute_mask();
-    break;
-  case MASK_LOCK:
-    active_track.get_mask(&lock_mask, MASK_LOCK);
-    led_mask = lock_mask;
-    mask = lock_mask;
     break;
   case MASK_MUTE:
     mute_mask = active_track.mute_mask();
@@ -365,9 +360,6 @@ void SeqStepPage::loop() {
             }
           }
           switch (mask_type) {
-          case MASK_LOCK:
-            active_track.enable_step_locks(step);
-            break;
           case MASK_PATTERN:
             active_track.set_step(step, MASK_PATTERN, true);
             break;
@@ -788,7 +780,6 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
           store_lock = 1;
         }
 
-        active_track.enable_step_locks(step);
         if (seq_step_page.mask_type == MASK_PATTERN) {
           active_track.set_pattern_step_from_edit(step, seq_param1.cur,
                                                   seq_param2.cur);

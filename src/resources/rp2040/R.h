@@ -24,6 +24,7 @@ struct __T_icons_boot {
   static constexpr size_t sizeofof_evilknievel_bitmap = 156;
   static constexpr size_t __total_size = 308;
 };
+
 extern const unsigned char __R_icons_device[] PROGMEM;
 struct __T_icons_device {
   union {
@@ -506,9 +507,9 @@ extern const unsigned char __R_menu_options[] PROGMEM;
 struct __T_menu_options {
   union {
     menu_option_t MENU_OPTIONS[0];
-    char zz__MENU_OPTIONS[1468];
+    char zz__MENU_OPTIONS[1460];
   };
-  static constexpr size_t countof_MENU_OPTIONS = 1468 / sizeof(menu_option_t);
-  static constexpr size_t sizeofof_MENU_OPTIONS = 1468;
-  static constexpr size_t __total_size = 1468;
+  static constexpr size_t countof_MENU_OPTIONS = 1460 / sizeof(menu_option_t);
+  static constexpr size_t sizeofof_MENU_OPTIONS = 1460;
+  static constexpr size_t __total_size = 1460;
 };

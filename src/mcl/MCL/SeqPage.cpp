@@ -29,10 +29,10 @@ constexpr uint8_t kSeqPageVisibleSteps = 16;
 constexpr uint8_t kSeqPageTrackMaskWidth = 16;
 const char *const kMaskInfoLabels[] PROGMEM = {
     mclstr_trig,
-    mclstr_lock,
-    mclstr_slide,
     mclstr_mute,
     mclstr_swing,
+    mclstr_slide,
+    mclstr_lock,
 };
 
 #if defined(__AVR__)
@@ -589,9 +589,9 @@ void SeqPage::bootstrap_record() {
 }
 
 void SeqPage::config_mask_info(bool silent) {
-  if (mask_type == MASK_LOCK) {
+  if (mask_type == MASK_LOCK || mask_type == MASK_LOCKS_ON_STEP) {
     mask_type = MASK_SWING;
-  } else if (mask_type > MASK_SWING) {
+  } else if (mask_type > MASK_LOCKS_ON_STEP) {
     mask_type = MASK_PATTERN;
   }
   const char *label =
@@ -904,7 +904,7 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
                         bool show_current_step) {
 
   if (device == DEVICE_MD) {
-    uint64_t mask, lock_mask, mute_mask = 0, slide_mask = 0;
+    uint64_t mask, mute_mask = 0, slide_mask = 0;
     uint64_t led_mask = 0;
     uint8_t step_count, length;
 
@@ -917,11 +917,6 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       case MASK_PATTERN:
         led_mask = mask;
         mute_mask = track.mute_mask;
-        break;
-      case MASK_LOCK:
-        track.get_mask(&lock_mask, MASK_LOCK);
-        led_mask = lock_mask;
-        mask = lock_mask;
         break;
       case MASK_MUTE:
         mute_mask = track.mute_mask;
@@ -1136,7 +1131,8 @@ void opt_channel_handler() {
 }
 
 void opt_mask_handler() {
-  if (SeqPage::mask_type == MASK_LOCK) {
+  if (SeqPage::mask_type == MASK_LOCK ||
+      SeqPage::mask_type == MASK_LOCKS_ON_STEP) {
     SeqPage::mask_type = MASK_SWING;
   }
   seq_step_page.config_mask_info(false);

@@ -35,7 +35,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 41: SEQ SPEED
   {SEQ_SPEED_1X, "1x"}, {SEQ_SPEED_2X , "2x"}, {SEQ_SPEED_3_2X, "3/2x"}, {SEQ_SPEED_3_4X,"3/4x"}, { SEQ_SPEED_1_2X, "1/2x"}, {SEQ_SPEED_1_4X, "1/4x"}, {SEQ_SPEED_1_8X, "1/8x"},
   // 48: SEQ EDIT
-  {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"}, {MASK_MUTE,"MUTE"},
+  {MASK_PATTERN,"TRIG"}, {MASK_MUTE,"MUTE"}, {MASK_SWING,"SWING"}, {MASK_SLIDE,"SLIDE"},
   // 52: GRID
   {0, "X"}, {1, "Y"},
   // 54: MIDI TURBO 1/
@@ -105,6 +105,6 @@ menu_option_t MENU_OPTIONS[] = {
   {0, ".01"}, {1, ".1"}, {2, ".25"}, {3, ".5"},
   {4, "1x"}, {5, "2x"}, {6, "4x"}, {7, "8x"},
   // 150 AVR / 158 TBD: SEQ EDIT
-  {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"},
-  {MASK_MUTE,"MUTE"}, {MASK_SWING,"SWING"},
+  {MASK_PATTERN,"TRIG"}, {MASK_MUTE,"MUTE"},
+  {MASK_SWING,"SWING"}, {MASK_SLIDE,"SLIDE"},
 };

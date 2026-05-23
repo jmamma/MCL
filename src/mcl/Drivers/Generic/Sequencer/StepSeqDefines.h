@@ -40,10 +40,10 @@ extern uint8_t get_random_byte();
 // Mask types
 // ============================================================================
 #define STEPSEQ_MASK_PATTERN 0
-#define STEPSEQ_MASK_LOCK 1
-#define STEPSEQ_MASK_SLIDE 2
-#define STEPSEQ_MASK_MUTE 3
-#define STEPSEQ_MASK_SWING 4
+#define STEPSEQ_MASK_MUTE 1
+#define STEPSEQ_MASK_SWING 2
+#define STEPSEQ_MASK_SLIDE 3
+#define STEPSEQ_MASK_LOCK 4
 #define STEPSEQ_MASK_LOCKS_ON_STEP 5
 
 // ============================================================================
