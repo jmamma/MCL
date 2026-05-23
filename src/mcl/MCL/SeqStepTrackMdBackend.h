@@ -32,11 +32,11 @@ public:
   void set_step_edit_rec_mode(uint8_t mode) const { MD.set_rec_mode(mode); }
 
   void sync_step_edit() const {
-    MD.sync_seqtrack(length(), speed(), step_count());
+    MD.sync_seqtrack(length(), speed(), step_count(), swing_amount());
   }
 
   void sync_step_edit(uint8_t length, uint8_t speed, uint8_t step_count) const {
-    MD.sync_seqtrack(length, speed, step_count);
+    MD.sync_seqtrack(length, speed, step_count, swing_amount());
   }
 
   void set_step_edit_trig_leds(uint16_t mask, uint8_t mode,

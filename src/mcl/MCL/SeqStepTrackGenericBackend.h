@@ -69,13 +69,14 @@ public:
   void sync_step_edit() const {
     if (uses_kit_sound()) {
       step_edit()->sync_track(param_context(), length(), speed(),
-                              step_count());
+                              step_count(), swing_amount());
     }
   }
 
   void sync_step_edit(uint8_t length, uint8_t speed, uint8_t step_count) const {
     if (uses_kit_sound()) {
-      step_edit()->sync_track(param_context(), length, speed, step_count);
+      step_edit()->sync_track(param_context(), length, speed, step_count,
+                              swing_amount());
     }
   }
 

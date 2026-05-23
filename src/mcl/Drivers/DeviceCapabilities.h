@@ -185,7 +185,8 @@ public:
   virtual bool available(const DeviceContext &ctx) const;
   virtual void set_rec_mode(const DeviceContext &ctx, uint8_t mode);
   virtual void sync_track(const DeviceContext &ctx, uint8_t length,
-                          uint8_t speed, uint8_t step_count);
+                          uint8_t speed, uint8_t step_count,
+                          uint8_t swing_amount = 0x7F);
   virtual void set_trig_leds(const DeviceContext &ctx, uint16_t mask,
                              uint8_t mode, uint8_t blink = 0);
   virtual void set_live_param_update(const DeviceContext &ctx, bool enabled);
@@ -227,7 +228,8 @@ public:
   virtual void set_key_repeat(uint8_t enabled);
   virtual void set_rec_mode(uint8_t mode);
   virtual void sync_seqtrack(uint8_t length, uint8_t speed,
-                             uint8_t step_count);
+                             uint8_t step_count,
+                             uint8_t swing_amount = 0x7F);
   virtual void popup_text(uint8_t action_string, uint8_t persistent = 0);
   virtual void popup_text(char *text, uint8_t persistent = 0);
   virtual void popup_text_P(const char *text_P, uint8_t persistent = 0);

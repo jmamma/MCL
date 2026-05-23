@@ -244,7 +244,10 @@ public:
    * the global variable.
    **/
   void parallelTrig(uint16_t mask, MidiUartClass *uart_ = nullptr);
-  void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count, MidiUartClass *uart_ = nullptr);
+  void sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
+                     uint8_t swing_amount = 0x7F,
+                     uint8_t swing_mode = 0x7F,
+                     MidiUartClass *uart_ = nullptr);
   /**
    * Slice the track (assuming it's a ROM or RAM-P machine) on the
    * given 32th, assuming that the loaded sample is 2 bars long.

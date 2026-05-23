@@ -252,7 +252,8 @@ public:
   virtual bool available(const DeviceContext &ctx) const override;
   virtual void set_rec_mode(const DeviceContext &ctx, uint8_t mode) override;
   virtual void sync_track(const DeviceContext &ctx, uint8_t length,
-                          uint8_t speed, uint8_t step_count) override;
+                          uint8_t speed, uint8_t step_count,
+                          uint8_t swing_amount = 0x7F) override;
   virtual void set_trig_leds(const DeviceContext &ctx, uint16_t mask,
                              uint8_t mode, uint8_t blink = 0) override;
   virtual void set_live_param_update(const DeviceContext &ctx,
@@ -299,7 +300,8 @@ public:
   virtual void set_key_repeat(uint8_t enabled) override;
   virtual void set_rec_mode(uint8_t mode) override;
   virtual void sync_seqtrack(uint8_t length, uint8_t speed,
-                             uint8_t step_count) override;
+                             uint8_t step_count,
+                             uint8_t swing_amount = 0x7F) override;
   virtual void popup_text(uint8_t action_string,
                           uint8_t persistent = 0) override;
   virtual void popup_text(char *text, uint8_t persistent = 0) override;
@@ -548,8 +550,9 @@ void MDPanelCapability::set_rec_mode(uint8_t mode) {
 }
 
 void MDPanelCapability::sync_seqtrack(uint8_t length, uint8_t speed,
-                                      uint8_t step_count) {
-  device_.sync_seqtrack(length, speed, step_count);
+                                      uint8_t step_count,
+                                      uint8_t swing_amount) {
+  device_.sync_seqtrack(length, speed, step_count, swing_amount);
 }
 
 void MDPanelCapability::popup_text(uint8_t action_string, uint8_t persistent) {
@@ -583,9 +586,10 @@ void MDStepEditCapability::set_rec_mode(const DeviceContext &ctx,
 }
 
 void MDStepEditCapability::sync_track(const DeviceContext &ctx, uint8_t length,
-                                      uint8_t speed, uint8_t step_count) {
+                                      uint8_t speed, uint8_t step_count,
+                                      uint8_t swing_amount) {
   (void)ctx;
-  md().sync_seqtrack(length, speed, step_count);
+  md().sync_seqtrack(length, speed, step_count, swing_amount);
 }
 
 void MDStepEditCapability::set_trig_leds(const DeviceContext &ctx,
@@ -1369,8 +1373,10 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
 }
 
 void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
+                            uint8_t swing_amount, uint8_t swing_mode,
                             MidiUartClass *uart_) {
-  uint8_t data[6] = {0x70, 0x3D, length, speed, step_count};
+  uint8_t data[7] = {0x70, 0x3D, length, speed, step_count, swing_amount,
+                     swing_mode};
   sendRequest(data, sizeof(data), true, uart_);
 }
 

@@ -556,11 +556,13 @@ void DeviceStepEditCapability::set_rec_mode(const DeviceContext &ctx,
 
 void DeviceStepEditCapability::sync_track(const DeviceContext &ctx,
                                           uint8_t length, uint8_t speed,
-                                          uint8_t step_count) {
+                                          uint8_t step_count,
+                                          uint8_t swing_amount) {
   (void)ctx;
   (void)length;
   (void)speed;
   (void)step_count;
+  (void)swing_amount;
 }
 
 void DeviceStepEditCapability::set_trig_leds(const DeviceContext &ctx,
@@ -702,10 +704,12 @@ void DevicePanelCapability::set_rec_mode(uint8_t mode) {
 }
 
 void DevicePanelCapability::sync_seqtrack(uint8_t length, uint8_t speed,
-                                          uint8_t step_count) {
+                                          uint8_t step_count,
+                                          uint8_t swing_amount) {
   (void)length;
   (void)speed;
   (void)step_count;
+  (void)swing_amount;
 }
 
 void DevicePanelCapability::popup_text(uint8_t action_string,

@@ -37,9 +37,29 @@ bool MDTrackSelect::off() {
   return true;
 }
 
+static void set_md_swing_amount(uint8_t track, uint8_t swing_amount) {
+  SeqTrackUtil::with_md_track(
+      track, [swing_amount](auto &t) { t.swing_amount = swing_amount; });
+}
+
+static void apply_md_swing_amount(uint8_t track_count, uint8_t track,
+                                  uint8_t swing_amount,
+                                  uint8_t swing_mode) {
+  if (swing_amount > 30) {
+    return;
+  }
+  if (swing_mode == 1) {
+    for (uint8_t n = 0; n < track_count; n++) {
+      set_md_swing_amount(n, swing_amount);
+    }
+  } else if (swing_mode == 0 && track < track_count) {
+    set_md_swing_amount(track, swing_amount);
+  }
+}
+
 void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
                                                uint8_t len) {
-  if (len == 8) {
+  if (len >= 8) {
     bool is_md_device =
         SeqPage::active_device_is_md() &&
         (mcl.currentPage() != SEQ_EXTSTEP_PAGE);
@@ -48,6 +68,27 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
     reset_undo();
     uint8_t length = view.getByte(6);
     uint8_t new_speed = view.getByte(7);
+    uint8_t swing_amount = len >= 9 ? view.getByte(8) : 0x7F;
+    uint8_t swing_mode = len >= 10 ? view.getByte(9) : 0x7F;
+    uint8_t packet_track = view.getByte(3) & 0xF;
+    if (len >= 9 && swing_amount <= 30) {
+      if (is_md_device) {
+        uint8_t apply_mode = swing_mode;
+        if (apply_mode == 0x7F) {
+          apply_mode = (is_seq_page && !SeqPage::recording) ? 0 : 1;
+        }
+        if (is_seq_page && !SeqPage::recording) {
+          MD.currentTrack = packet_track;
+        }
+        apply_md_swing_amount(SeqTrackUtil::track_count(true), packet_track,
+                              swing_amount, apply_mode);
+      }
+      if (is_seq_page) {
+        SeqPage *seq_page = (SeqPage*) GUI.currentPage();
+        seq_page->config_encoders();
+      }
+      return;
+    }
     if (is_seq_page) {
       if (SeqPage::recording) {
         goto update_pattern;
@@ -68,8 +109,6 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
         track.request_speed_change(new_speed);
       }
       if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) { seq_extparam4.cur = length; }
-      SeqPage *seq_page = (SeqPage*) GUI.currentPage();
-      seq_page->config_encoders();
     } else {
     update_pattern:
       uint8_t track_len = SeqTrackUtil::track_count(is_md_device);
@@ -93,10 +132,10 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
       if (!is_md_device && last_ext_track < track_len) {
         seq_extparam4.cur = length;
       }
-      if (is_seq_page) {
-        SeqPage *seq_page = (SeqPage*) GUI.currentPage();
-        seq_page->config_encoders();
-      }
+    }
+    if (is_seq_page) {
+      SeqPage *seq_page = (SeqPage*) GUI.currentPage();
+      seq_page->config_encoders();
     }
   } else {
 
