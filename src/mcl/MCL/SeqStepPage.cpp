@@ -277,7 +277,8 @@ void SeqStepPage::display() {
     draw_knob(3, mclstr_ptc, K);
   }
 
-  if (mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
+  if (mask_type == MASK_PATTERN &&
+      mcl_gui.show_encoder_value(&seq_param4) && (seq_param4.cur > 0) &&
       (note_interface.notes_count_on() > 0) && (!show_seq_menu) && (is_ptc) &&
       !(recording)) {
     uint64_t note_mask[2] = {};
@@ -485,7 +486,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
 
       send_locks(step);
-      show_pitch = active_track.uses_step_pitch();
+      show_pitch = (mask_type == MASK_PATTERN) && active_track.uses_step_pitch();
 
       // Cond
       uint8_t condition = active_track.knob_conditional_from_step(

@@ -489,6 +489,16 @@ static inline void close_enhanced_swing_window() {
   }
 }
 
+static inline bool should_show_enhanced_swing_window() {
+  return mcl.currentPage() == SEQ_STEP_PAGE && SeqPage::mask_type == MASK_SWING;
+}
+
+static inline void restore_enhanced_swing_window() {
+  if (should_show_enhanced_swing_window()) {
+    open_enhanced_swing_window();
+  }
+}
+
 void SeqPage::setup() {}
 
 void SeqPage::check_and_set_page_select() {
@@ -830,6 +840,9 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
       // If MD trig is held and BUTTON3 is pressed, launch note menu
       if (!show_seq_menu) {
+        if (should_show_enhanced_swing_window()) {
+          close_enhanced_swing_window();
+        }
         show_seq_menu = true;
         opt_midi_device_capture = midi_device;
         opt_midi_device_idx_capture = current_device_idx();
@@ -873,16 +886,19 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (apply_seq_menu_row(row_entry, row_func)) {
         show_seq_menu = false;
         init();
+        restore_enhanced_swing_window();
         return true;
       }
       if (show_seq_menu && seq_menu_page.enter()) {
         show_seq_menu = false;
+        restore_enhanced_swing_window();
         return true;
       }
 
       show_seq_menu = false;
       init_encoders_used_clock();
       init();
+      restore_enhanced_swing_window();
       return true;
     }
   }
