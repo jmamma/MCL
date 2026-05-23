@@ -333,6 +333,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"SPEED:",      0, 7,                   7,                   22, NULL_PAGE,  5,  41},
         {"LENGTH:",     1, 65,                 0,                   23, NULL_PAGE,  6,  0},
         {"LENGTH:",     2, 129,                 0,                   23, NULL_PAGE,  6,  0},
+        {"SWING:",      50, 81,                 0,                   73, NULL_PAGE,  34, 0},
         {"CHANNEL:",    1, 17,                  0,                   24, NULL_PAGE,  7,  0},
         {"COPY:  ",     0, 3,                   3,                   25, NULL_PAGE,  8,  27},
         {"CLEAR:",      0, 3,                   3,                   26, NULL_PAGE,  9,  27},
@@ -346,7 +347,6 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"CC REC:",     0, 2,                   2,                   30, NULL_PAGE,  0,  25},
         {"SOUND",       0, 0,                   0,                   0,  SOUND_BROWSER, 0,  0},
         {"LFO MULT:",   0, 8,                   8,                   70, NULL_PAGE,  0,  LFO_MULT_OPTIONS_OFFSET},
-        {"SWING:",      50, 31,                 0,                   73, NULL_PAGE,  34, 0},
     },
     14
 };
