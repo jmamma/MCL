@@ -39,7 +39,7 @@ public:
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t get_model() override { return MIDI_TRACK_TYPE; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
-  void init_storage_defaults() override { seq_data.clear_storage(); }
+  void init_defaults() override { seq_data.clear_storage(); }
   void *get_sound_data_ptr() override { return nullptr; }
   size_t get_sound_data_size() override { return 0; }
 

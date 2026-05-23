@@ -36,7 +36,7 @@ public:
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
-  void init_storage_defaults() override { midi_seq_storage().clear_storage(); }
+  void init_defaults() override { midi_seq_storage().clear_storage(); }
 
 protected:
   virtual MidiSeqTrackStorage &midi_seq_storage() = 0;

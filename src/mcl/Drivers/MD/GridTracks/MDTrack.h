@@ -59,7 +59,7 @@ public:
     return sizeof(MDTrack) - sizeof(void*);
   }
   void init();
-  void init_storage_defaults() override {
+  void init_defaults() override {
     machine.init();
     mod_data.init();
     seq_data.init();

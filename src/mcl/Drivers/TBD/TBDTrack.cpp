@@ -506,8 +506,6 @@ void tbd_update_track_default_from_p4(uint8_t p4_track_index,
 
 TBDTrack::TBDTrack() {
   active = TBD_TRACK_TYPE;
-  seq_data.init_storage();
-  set_step_sound_default(p4_sound, 0);
   static_assert(MEMORY_ALIGN(sizeof(TBDTrack) - sizeof(void *)) <= TBD_TRACK_LEN);
 }
 
@@ -631,8 +629,6 @@ bool TBDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
 
 TBDMidiTrack::TBDMidiTrack() {
   active = TBD_MIDI_TRACK_TYPE;
-  seq_data.clear_storage();
-  set_midi_sound_default(p4_sound, 0);
   static_assert(MEMORY_ALIGN(sizeof(TBDMidiTrack) - sizeof(void *)) <=
                 GRID2_TRACK_LEN);
 }

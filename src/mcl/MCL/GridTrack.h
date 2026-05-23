@@ -138,7 +138,7 @@ public:
   virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) { }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
   virtual uint8_t storage_version() const { return 0; }
-  virtual void init_storage_defaults() {}
+  virtual void init_defaults() {}
 
 private:
   void stamp_storage_version(size_t len);

@@ -19,6 +19,7 @@ public:
   virtual void init(uint8_t tracknumber, SeqTrack *seq_track) override {
      lfo_data.init();
   }
+  void init_defaults() override { lfo_data.init(); }
 
   void get_lfos();
   uint16_t calc_latency(uint8_t tracknumber) override;

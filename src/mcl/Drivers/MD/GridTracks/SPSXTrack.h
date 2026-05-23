@@ -71,7 +71,7 @@ public:
   }
 
   void init();
-  void init_storage_defaults() override {
+  void init_defaults() override {
     machine.init();
     seq_storage.init_storage();
   }

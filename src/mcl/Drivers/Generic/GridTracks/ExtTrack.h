@@ -40,7 +40,7 @@ public:
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
-  void init_storage_defaults() override {
+  void init_defaults() override {
     mod_data.init();
     seq_data.clear();
   }

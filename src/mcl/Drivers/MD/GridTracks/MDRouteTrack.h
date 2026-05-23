@@ -30,6 +30,7 @@ public:
     memset(routing, 6, sizeof(routing));
     poly_mask = 0;
   }
+  void init_defaults() override { init(0, nullptr); }
 
   void get_routes();
   uint16_t calc_latency(uint8_t tracknumber) override;
@@ -61,6 +62,7 @@ public:
     memset(routing, 6, sizeof(routing));
     clear_ptc_groups();
   }
+  void init_defaults() override { init(0, nullptr); }
 
   void clear_ptc_groups();
   void load_ptc_groups();

@@ -168,7 +168,7 @@ bool migrate_ext_track_storage(Grid &grid, GridColumn column, GridRow row) {
     return false;
   }
   ExtTrack upgraded;
-  upgraded.init_storage_defaults();
+  upgraded.init_defaults();
   copy_legacy_header(upgraded, legacy_header);
   upgraded.active = EXT_TRACK_TYPE;
   if (!grid.read(&upgraded.seq_data, sizeof(upgraded.seq_data))) {
@@ -184,7 +184,7 @@ bool migrate_a4_track_storage(Grid &grid, GridColumn column, GridRow row) {
     return false;
   }
   A4Track upgraded;
-  upgraded.init_storage_defaults();
+  upgraded.init_defaults();
   copy_legacy_header(upgraded, legacy_header);
   upgraded.active = A4_TRACK_TYPE;
   if (!grid.read(&upgraded.seq_data, sizeof(upgraded.seq_data)) ||
@@ -201,7 +201,7 @@ bool migrate_mnm_track_storage(Grid &grid, GridColumn column, GridRow row) {
     return false;
   }
   MNMTrack upgraded;
-  upgraded.init_storage_defaults();
+  upgraded.init_defaults();
   copy_legacy_header(upgraded, legacy_header);
   upgraded.active = MNM_TRACK_TYPE;
   if (!grid.read(&upgraded.seq_data, sizeof(upgraded.seq_data)) ||

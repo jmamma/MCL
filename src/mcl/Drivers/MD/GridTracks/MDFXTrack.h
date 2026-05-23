@@ -37,6 +37,7 @@ public:
      enable_eq = false;
      enable_dynamics = false;
   }
+  void init_defaults() override { init(); }
 
   void place_fx_in_kit();
   void get_fx_from_kit();

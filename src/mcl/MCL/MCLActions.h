@@ -79,7 +79,11 @@ public:
   uint32_t start_clock96th;
   uint8_t store_behaviour;
 
-  MCLActions() {}
+  MCLActions() {
+    for (GridSlot n = 0; n < NUM_SLOTS; n++) {
+      chains[n].init();
+    }
+  }
 
   void setup();
 

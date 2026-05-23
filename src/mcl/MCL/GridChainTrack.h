@@ -18,7 +18,8 @@ public:
     static_assert(sizeof(GridChainTrack) <= GRIDCHAIN_TRACK_LEN);
   }
 
-  void init() {}
+  void init() { chains.init(); }
+  void init_defaults() override { init(); }
 
   virtual void get_online_data(uint8_t merge) override;
   bool store_in_grid(GridSlot column, GridRow row,

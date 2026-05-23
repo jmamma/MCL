@@ -9,7 +9,7 @@
 
 class ATTR_PACKED() GridChain {
 public:
-  GridChain() { init(); };
+  GridChain() {};
   uint8_t w;
   uint8_t r;
   uint8_t num_of_links;

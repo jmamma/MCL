@@ -17,7 +17,6 @@ uint8_t midi_track_valid_speed(uint8_t speed) {
 
 MidiTrack::MidiTrack() {
   active = MIDI_TRACK_TYPE;
-  seq_data.clear_storage();
   static_assert(MEMORY_ALIGN(sizeof(MidiTrack) - sizeof(void *)) <=
                 GRID2_TRACK_LEN);
 }

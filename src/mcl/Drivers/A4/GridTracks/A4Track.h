@@ -40,7 +40,7 @@ public:
   virtual uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   virtual uint8_t get_model() override { return A4_TRACK_TYPE; } // TODO
   virtual uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
-  void init_storage_defaults() override {
+  void init_defaults() override {
     mod_data.init();
     seq_data.clear();
   }
@@ -66,7 +66,6 @@ public:
 
   A4MidiTrack() {
     active = A4_MIDI_TRACK_TYPE;
-    seq_data.clear_storage();
   }
 
   size_t _sizeof() const {

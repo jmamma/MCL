@@ -97,11 +97,7 @@ bool DeviceTrack::can_materialize_as(uint8_t track_type) {
 #endif
 
 bool DeviceTrack::read_remaining_from_grid_512(GridSlot column, GridRow row,
-                                               Grid *grid,
-                                               const uint8_t *first_sector) {
-#if !defined(__AVR__)
-  (void)first_sector;
-#endif
+                                               Grid *grid) {
   if (active == EMPTY_TRACK_TYPE) {
     return true;
   }
@@ -109,16 +105,13 @@ bool DeviceTrack::read_remaining_from_grid_512(GridSlot column, GridRow row,
   const uint16_t current_len = get_track_size();
   uint16_t len = stored_track_size(current_len);
   if (len < current_len) {
-    init_storage_defaults();
+    init_defaults();
     if (grid) {
       return grid->read(_this(), len, column, row);
     }
     return proj.read_grid(_this(), len, column, row);
   }
 
-#if defined(__AVR__)
-  uint16_t first_len = len < 512 ? len : 512;
-  memcpy(_this(), first_sector, first_len);
   if (len <= 512) {
     return true;
   }
@@ -128,12 +121,6 @@ bool DeviceTrack::read_remaining_from_grid_512(GridSlot column, GridRow row,
     return grid->read(dst, len);
   }
   return proj.read_grid(dst, len);
-#else
-  if (grid) {
-    return grid->read(_this(), len, column, row);
-  }
-  return proj.read_grid(_this(), len, column, row);
-#endif
 }
 
 DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
@@ -161,19 +148,12 @@ DeviceTrack *DeviceTrack::load_from_grid_512(GridSlot column, GridRow row,
     return nullptr;
   }
 
-#if defined(__AVR__)
-  uint8_t first_sector[512];
-  memcpy(first_sector, _this(), sizeof(first_sector));
-#else
-  const uint8_t *first_sector = nullptr;
-#endif
-
   // header read successfully. now reconstruct the object.
   auto ptrack = init_loaded_track_type(active);
 
   // virtual functions are ready
 
-  if (!ptrack->read_remaining_from_grid_512(column, row, grid, first_sector)) {
+  if (!ptrack->read_remaining_from_grid_512(column, row, grid)) {
     DEBUG_PRINTLN(F("read failed"));
     return nullptr;
   }
@@ -193,12 +173,6 @@ DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
     return nullptr;
   }
 
-#if defined(__AVR__)
-  uint8_t first_sector[512];
-  memcpy(first_sector, _this(), sizeof(first_sector));
-#else
-  const uint8_t *first_sector = nullptr;
-#endif
   if (loaded_header != nullptr) {
     *loaded_header = true;
   }
@@ -215,7 +189,7 @@ DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
     }
   }
 
-  if (!ptrack->read_remaining_from_grid_512(column, row, grid, first_sector)) {
+  if (!ptrack->read_remaining_from_grid_512(column, row, grid)) {
     DEBUG_PRINTLN(F("read failed"));
     return nullptr;
   }
@@ -296,7 +270,7 @@ DeviceTrack *DeviceTrack::load_from_grid(GridSlot column, GridRow row) {
     const uint16_t current_len = ptrack->get_track_size();
     uint16_t len = ptrack->stored_track_size(current_len);
     if (len < current_len) {
-      ptrack->init_storage_defaults();
+      ptrack->init_defaults();
     }
 
     if (!proj.read_grid((uint8_t*)_this(), len, column, row)) {

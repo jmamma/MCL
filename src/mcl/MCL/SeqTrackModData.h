@@ -85,8 +85,6 @@ public:
   ArpSeqData arp;
   SeqLFOData lfo;
 
-  SeqTrackModData() { init(); }
-
   void init() {
     for (uint8_t i = 0; i < sizeof(reserved); ++i) {
       reserved[i] = 0;
