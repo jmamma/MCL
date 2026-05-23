@@ -270,26 +270,6 @@ void MCL::loop() {
 #endif
 }
 
-bool mcl_handle_mdx_swing_shortcut(uint8_t key, bool key_release) {
-  if (key_release ||
-      key != MDX_KEY_BANKB ||
-      !key_interface.is_key_down(MDX_KEY_FUNC) ||
-      mcl.currentPage() == SEQ_STEP_PAGE) {
-    return false;
-  }
-
-  PageIndex current_page = mcl.currentPage();
-  SeqPage::mask_type = MASK_SWING;
-  seq_step_page.prepare = true;
-  if (current_page != SOUND_BROWSER &&
-      current_page != ARP_PAGE &&
-      current_page != POLY_PAGE) {
-    seq_step_page.last_page = current_page;
-  }
-  mcl.setPage(SEQ_STEP_PAGE);
-  return true;
-}
-
 bool mcl_handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
@@ -325,7 +305,17 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
-        if (mcl_handle_mdx_swing_shortcut(key, false)) {
+        if (key_interface.is_key_down(MDX_KEY_FUNC) &&
+            key == MDX_KEY_BANKB &&
+            current_page != SEQ_STEP_PAGE) {
+          SeqPage::mask_type = MASK_SWING;
+          seq_step_page.prepare = true;
+          if (current_page != SOUND_BROWSER &&
+              current_page != ARP_PAGE &&
+              current_page != POLY_PAGE) {
+            seq_step_page.last_page = current_page;
+          }
+          mcl.setPage(SEQ_STEP_PAGE);
           return true;
         }
         if (current_page == GRID_LOAD_PAGE ||

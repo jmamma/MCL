@@ -92,6 +92,5 @@ bool tbd_handleEvent(gui_event_t *event);
 #endif
 
 bool mcl_handleEvent(gui_event_t *event);
-bool mcl_handle_mdx_swing_shortcut(uint8_t key, bool key_release);
 
 health_status health_check();
