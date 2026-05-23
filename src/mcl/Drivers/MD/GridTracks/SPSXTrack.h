@@ -14,7 +14,8 @@
 
 // Seq data format stored in the track
 #define SPSX_SEQ_VERSION_LEGACY 0  // MDSeqTrackData (AVR + rp2040)
-#define SPSX_SEQ_VERSION_SPSX   1  // SPSXSeqTrackData (rp2040 only)
+#define SPSX_SEQ_VERSION_SPSX_V1 1  // SPSXSeqTrackData without swing amount
+#define SPSX_SEQ_VERSION_SPSX   2  // SPSXSeqTrackData (rp2040 only)
 
 #if !defined(__AVR__)
 
@@ -110,7 +111,7 @@ public:
   virtual uint8_t get_model() override { return machine.get_model(); }
   virtual uint8_t get_parent_model() override { return MD_TRACK_TYPE; }
   virtual bool allow_cast_to_parent() override { return true; }
-  virtual uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  virtual uint8_t storage_version() const override { return SEQ_TRACK_SWING_STORAGE_VERSION; }
 
   virtual void *get_sound_data_ptr() override { return &machine; }
   virtual size_t get_sound_data_size() override { return sizeof(SPSMachine); }

@@ -32,6 +32,7 @@ const char *const kMaskInfoLabels[] PROGMEM = {
     mclstr_lock,
     mclstr_slide,
     mclstr_mute,
+    mclstr_swing,
 };
 
 #if defined(__AVR__)
@@ -229,6 +230,7 @@ static inline const char *seq_device_idx_name(DeviceIdx device_idx) {
 }
 
 uint8_t opt_speed = 1;
+uint8_t opt_swing = 50;
 uint8_t opt_trackid = 1;
 uint8_t opt_copy = 0;
 uint8_t opt_paste = 0;
@@ -638,6 +640,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     last_primary_track = track;
     SeqStepTrackRef base_track = seq_page_active_step_track();
     opt_speed = base_track.speed();
+    opt_swing = base_track.swing_amount() + 50;
     opt_length = base_track.length();
     check_and_set_page_select();
     GUI.currentPage()->config();
@@ -654,6 +657,7 @@ void SeqPage::select_track(MidiDevice *device, uint8_t track, bool send) {
     last_primary_track = track;
     is_midi_model = ((MD.kit.models[last_primary_track] & 0xF0) == MID_01_MODEL);
     auto &base_track = SeqTrackUtil::get_seq_track(true, last_primary_track);
+    opt_swing = seq_page_active_step_track().swing_amount() + 50;
     seq_page_active_step_track().sync_step_edit(
         base_track.length, base_track.speed, base_track.step_count);
     check_and_set_page_select();
@@ -714,6 +718,7 @@ void SeqPage::capture_seq_menu_values(bool is_md_device) {
     SeqStepTrackRef bt = seq_page_active_step_track();
     opt_trackid = last_primary_track + 1;
     opt_speed = bt.speed();
+    opt_swing = bt.swing_amount() + 50;
     opt_length = bt.length();
   } else {
     auto &active_track = SeqTrackUtil::get_seq_track(false, last_ext_track);
@@ -727,6 +732,7 @@ void SeqPage::capture_seq_menu_values(bool is_md_device) {
 void SeqPage::apply_seq_menu_values(bool same_slot) {
   if (same_slot) {
     opt_speed_handler();
+    opt_swing_handler();
     opt_length_handler();
     opt_channel_handler();
   }
@@ -918,6 +924,10 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
         break;
       case MASK_SLIDE:
         track.get_mask(&slide_mask, MASK_SLIDE);
+        led_mask = slide_mask;
+        break;
+      case MASK_SWING:
+        track.get_mask(&slide_mask, MASK_SWING);
         led_mask = slide_mask;
         break;
       }
@@ -1164,6 +1174,25 @@ void opt_speed_handler() {
 #ifdef EXT_TRACKS
   seq_extstep_page.config_encoders();
 #endif
+}
+
+void opt_swing_handler() {
+  bool is_md_device = opt_capture_is_md_device();
+  if (!seq_page_uses_step_track_ops(is_md_device)) {
+    return;
+  }
+  uint8_t amount = opt_swing > 50 ? (uint8_t)(opt_swing - 50) : 0;
+  if (amount > 30) {
+    amount = 30;
+  }
+  if (BUTTON_DOWN(Buttons.BUTTON4)) {
+    for (uint8_t i = 0; i < seq_page_step_track_count(); i++) {
+      seq_page_step_track_for(i).set_swing_amount(amount);
+    }
+    GUI.ignoreNextEvent(Buttons.BUTTON4);
+  } else {
+    seq_page_active_step_track().set_swing_amount(amount);
+  }
 }
 
 void opt_clear_track_handler() {

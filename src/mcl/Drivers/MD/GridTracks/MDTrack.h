@@ -102,7 +102,7 @@ public:
                                       SeqTrack *seq_track);
 #endif
   virtual uint8_t get_model() { return machine.get_model(); }
-  virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  virtual uint8_t storage_version() const { return SEQ_TRACK_SWING_STORAGE_VERSION; }
 
   virtual void *get_sound_data_ptr() { return &machine; }
   virtual size_t get_sound_data_size() { return sizeof(MDMachine); }

@@ -192,7 +192,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 71
     &grid_page.slot_load_sound,
     // 72
-    &mcl_cfg.project_config
+    &mcl_cfg.project_config,
+    // 73
+    &opt_swing
 };
 
 const menu_function_ptr_t menu_target_functions[] PROGMEM = {
@@ -257,6 +259,8 @@ const menu_function_ptr_t menu_target_functions[] PROGMEM = {
     { .fn = open_primary_driver_config },
     // 33
     { .fn = open_secondary_driver_config },
+    // 34
+    { .fn = opt_swing_handler },
 };
 MenuPage<aux_config_page_N> aux_config_page(&menu_value_encoder,
                                             &menu_entry_encoder);

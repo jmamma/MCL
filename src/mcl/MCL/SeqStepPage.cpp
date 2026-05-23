@@ -78,6 +78,10 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
     active_track.get_mask(&slide_mask, MASK_SLIDE);
     led_mask = slide_mask;
     break;
+  case MASK_SWING:
+    active_track.get_mask(&slide_mask, MASK_SWING);
+    led_mask = slide_mask;
+    break;
   }
 
   page.shed_mask(led_mask, length, offset);
@@ -184,6 +188,7 @@ void SeqStepPage::init() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_SOUND,
                                   active_track.uses_kit_sound());
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_PRIMARY, true);
+  seq_menu_page.menu.enable_entry(SEQ_MENU_SWING, true);
 
   midi_events.setup_callbacks();
   key_interface.on();

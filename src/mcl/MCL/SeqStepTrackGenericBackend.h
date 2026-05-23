@@ -175,6 +175,10 @@ public:
   uint8_t speed() const {
     return kind_ == KIND_MD ? tracks_.md->speed : tracks_.stepseq->speed;
   }
+  uint8_t swing_amount() const {
+    return kind_ == KIND_MD ? tracks_.md->swing_amount
+                            : tracks_.stepseq->swing_amount;
+  }
   uint8_t step_count() const {
     return kind_ == KIND_MD ? tracks_.md->step_count
                             : tracks_.stepseq->step_count;
@@ -202,6 +206,14 @@ public:
     }
   }
   bool request_speed_change(uint8_t new_speed);
+
+  void set_swing_amount(uint8_t amount) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->swing_amount = amount;
+    } else {
+      tracks_.stepseq->swing_amount = amount;
+    }
+  }
 
   uint8_t condition_count() const {
     return kind_ == KIND_MD ? NUM_TRIG_CONDITIONS

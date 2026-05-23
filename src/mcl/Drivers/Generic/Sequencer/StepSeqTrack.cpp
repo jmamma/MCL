@@ -216,6 +216,16 @@ void StepSeqDataTrack::on_modify_track_begin() {}
 // StepSeqDataTrack - Slide Scan
 // ============================================================================
 
+int16_t StepSeqDataTrack::effective_timing_offset(uint8_t step,
+                                                  uint16_t tps) const {
+    int8_t mt = microtiming[step];
+    if (mt == 0 && swing_amount &&
+        STEPSEQ_IS_BIT_SET64(swing_mask, step)) {
+        return (int16_t)(((uint16_t)swing_amount * tps + 50) / 100);
+    }
+    return stepseq_microtiming_to_ticks(mt, tps);
+}
+
 void StepSeqDataTrack::recalc_slides() {
     if (locks_slides_recalc == 255) return;
 
@@ -255,9 +265,8 @@ void StepSeqDataTrack::recalc_slides() {
             continue;
         }
 
-        int16_t mt_offset = stepseq_microtiming_to_ticks(microtiming[step], tps);
-        int16_t mt_next_offset =
-            stepseq_microtiming_to_ticks(microtiming[next_lockstep], tps);
+        int16_t mt_offset = effective_timing_offset(step, tps);
+        int16_t mt_next_offset = effective_timing_offset(next_lockstep, tps);
 
         x0 = (int16_t)(step * tps + mt_offset + 1);
         if (next_lockstep < step) {
@@ -330,6 +339,7 @@ void StepSeqDataTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
     case STEPSEQ_MASK_PATTERN: *_pmask = trig_mask; return;
     case STEPSEQ_MASK_SLIDE:   *_pmask = slide_mask; return;
     case STEPSEQ_MASK_MUTE:    *_pmask = mute_mask; return;
+    case STEPSEQ_MASK_SWING:   *_pmask = swing_mask; return;
     default: break;
     }
     *_pmask = 0;
@@ -350,6 +360,7 @@ bool StepSeqDataTrack::get_step(uint8_t step, uint8_t mask_type) const {
     case STEPSEQ_MASK_LOCK:    return steps[step].locks_enabled;
     case STEPSEQ_MASK_MUTE:    return STEPSEQ_IS_BIT_SET64(mute_mask, step);
     case STEPSEQ_MASK_SLIDE:   return STEPSEQ_IS_BIT_SET64(slide_mask, step);
+    case STEPSEQ_MASK_SWING:   return STEPSEQ_IS_BIT_SET64(swing_mask, step);
     default: return false;
     }
 }
@@ -370,6 +381,10 @@ void StepSeqDataTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
     case STEPSEQ_MASK_SLIDE:
         if (val) STEPSEQ_SET_BIT64(slide_mask, step);
         else STEPSEQ_CLEAR_BIT64(slide_mask, step);
+        break;
+    case STEPSEQ_MASK_SWING:
+        if (val) STEPSEQ_SET_BIT64(swing_mask, step);
+        else STEPSEQ_CLEAR_BIT64(swing_mask, step);
         break;
     default:
         break;
@@ -593,6 +608,7 @@ void StepSeqDataTrack::clear_track(bool clear_locks_too) {
     slide_mask = 0;
     accent_mask = 0;
     swing_mask = 0;
+    swing_amount = 0;
     memset(microtiming, 0, sizeof(microtiming));
 }
 

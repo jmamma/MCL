@@ -126,6 +126,7 @@ public:
 
   uint8_t length() const { return track_->length; }
   uint8_t speed() const { return track_->speed; }
+  uint8_t swing_amount() const { return track_->swing_amount; }
   uint8_t step_count() const { return track_->step_count; }
   uint8_t track_index() const { return track_->track_number; }
   uint8_t mute_state() const { return track_->mute_state; }
@@ -138,6 +139,8 @@ public:
   bool request_speed_change(uint8_t new_speed) {
     return track_->request_speed_change(new_speed);
   }
+
+  void set_swing_amount(uint8_t amount) { track_->swing_amount = amount; }
 
   uint8_t condition_count() const { return NUM_TRIG_CONDITIONS; }
 

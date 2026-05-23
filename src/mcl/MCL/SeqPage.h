@@ -28,6 +28,7 @@ extern void pattern_len_handler(EncoderParent *enc);
 
 extern uint8_t opt_trackid;
 extern uint8_t opt_speed;
+extern uint8_t opt_swing;
 extern uint8_t opt_copy;
 extern uint8_t opt_paste;
 extern uint8_t opt_clear;
@@ -46,6 +47,7 @@ extern uint16_t locks_on_step_mask;
 
 extern void opt_trackid_handler();
 extern void opt_speed_handler();
+extern void opt_swing_handler();
 extern void opt_clear_track_handler();
 extern void opt_clear_locks_handler();
 extern void opt_copy_track_handler_cb();

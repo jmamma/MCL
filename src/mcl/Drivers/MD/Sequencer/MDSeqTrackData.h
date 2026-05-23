@@ -10,6 +10,7 @@
 
 #define NUM_MD_LOCK_SLOTS 256
 #define NUM_MD_STEPS 64
+#define MDSEQ_DEFAULT_SWING_MASK 0xAAAAAAAAAAAAAAAAULL
 
 
 class ATTR_PACKED() MDSeqStepDescriptor {
@@ -33,10 +34,11 @@ public:
   bool active;
   uint8_t locks[NUM_LOCKS];
   uint8_t timing;
+  bool swing;
   MDSeqStepDescriptor data;
 };
 
-class ATTR_PACKED() MDSeqTrackData {
+class ATTR_PACKED() MDSeqTrackDataV1 {
 public:
   uint8_t locks[NUM_MD_LOCK_SLOTS];
   uint8_t locks_params[NUM_LOCKS];
@@ -102,7 +104,22 @@ public:
     }
   }
 
-  void init() { memset(this, 0, sizeof(MDSeqTrackData)); }
+  void init() { memset(this, 0, sizeof(MDSeqTrackDataV1)); }
 };
+
+class ATTR_PACKED() MDSeqTrackData : public MDSeqTrackDataV1 {
+public:
+  uint64_t swing_mask;
+  uint8_t swing_amount;
+
+  void init() {
+    memset(this, 0, sizeof(MDSeqTrackData));
+    swing_mask = MDSEQ_DEFAULT_SWING_MASK;
+  }
+};
+
+static_assert(sizeof(MDSeqTrackData) ==
+                  sizeof(MDSeqTrackDataV1) + sizeof(uint64_t) + sizeof(uint8_t),
+              "MDSeqTrackData storage size changed unexpectedly");
 
 #endif /* MDSEQTRACKDATA_H__ */

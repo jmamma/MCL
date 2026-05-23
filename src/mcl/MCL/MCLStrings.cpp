@@ -250,6 +250,7 @@ MCLSTR_DEFINE(groups, "GROUPS");
 MCLSTR_DEFINE(trig, "TRIG");
 MCLSTR_DEFINE(slide, "SLIDE");
 MCLSTR_DEFINE(mute, "MUTE");
+MCLSTR_DEFINE(swing, "SWING");
 
 // =============================================================================
 // LOAD/SAVE MODES

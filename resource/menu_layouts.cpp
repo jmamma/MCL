@@ -104,6 +104,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDY_PORT_OPTIONS_OFFSET 143
   #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 146
   #define LFO_MULT_OPTIONS_OFFSET 150
+  #define SEQ_EDIT_OPTIONS_OFFSET 158
 #else
   #define GRIDX_DEVICE_RANGE 2
   #define GRIDX_DEVICE_OPTIONS 2
@@ -121,6 +122,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDY_PORT_OPTIONS_OFFSET 140
   #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 7
   #define LFO_MULT_OPTIONS_OFFSET 142
+  #define SEQ_EDIT_OPTIONS_OFFSET 150
 #endif
 
 menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
@@ -320,7 +322,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         //              m  r                    n                    d   p  f   o
         {"TRACK SEL:",  1, 17,                  0,                   14, NULL_PAGE,  3,  0},
         {"DEVICE:",     0, 2,                   2,                   50, NULL_PAGE,  0,  192},
-        {"EDIT:",       0, 4,                   4,                   15, NULL_PAGE,  4,  48},
+        {"EDIT:",       0, 5,                   5,                   15, NULL_PAGE,  4,  SEQ_EDIT_OPTIONS_OFFSET},
         {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, NULL_PAGE,  0,  122},
         {"CC:",         0, 133,                 5,                   17, NULL_PAGE,  0,  2},
         {"SLIDE:",      0, 2,                   2,                   18, NULL_PAGE,  0,  25},
@@ -344,6 +346,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"CC REC:",     0, 2,                   2,                   30, NULL_PAGE,  0,  25},
         {"SOUND",       0, 0,                   0,                   0,  SOUND_BROWSER, 0,  0},
         {"LFO MULT:",   0, 8,                   8,                   70, NULL_PAGE,  0,  LFO_MULT_OPTIONS_OFFSET},
+        {"SWING:",      50, 31,                 0,                   73, NULL_PAGE,  34, 0},
     },
     14
 };

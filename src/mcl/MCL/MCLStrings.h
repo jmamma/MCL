@@ -255,6 +255,7 @@ MCLSTR_DECLARE(groups);
 MCLSTR_DECLARE(trig);
 MCLSTR_DECLARE(slide);
 MCLSTR_DECLARE(mute);
+MCLSTR_DECLARE(swing);
 
 // =============================================================================
 // LOAD/SAVE MODES

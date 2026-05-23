@@ -5,6 +5,7 @@
 #include <stddef.h>
 
 #define SEQ_TRACK_MOD_STORAGE_VERSION 1
+#define SEQ_TRACK_SWING_STORAGE_VERSION 2
 
 class ATTR_PACKED() SeqLFODataV1 {
 public:

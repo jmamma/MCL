@@ -57,7 +57,7 @@ public:
 // ============================================================================
 
 #pragma pack(push, 1)
-class StepSeqTrackData {
+class StepSeqTrackDataV1 {
 public:
     uint8_t locks[STEPSEQ_NUM_LOCK_SLOTS];
     uint8_t locks_params[STEPSEQ_NUM_LOCKS];
@@ -74,10 +74,10 @@ public:
 
     const uint8_t* data() const { return reinterpret_cast<const uint8_t*>(this); }
     uint8_t* data() { return reinterpret_cast<uint8_t*>(this); }
-    static constexpr size_t dataSize() { return sizeof(StepSeqTrackData); }
+    static constexpr size_t dataSize() { return sizeof(StepSeqTrackDataV1); }
 
     void init() {
-        memset(this, 0, sizeof(StepSeqTrackData));
+        memset(this, 0, sizeof(StepSeqTrackDataV1));
         swing_mask = STEPSEQ_DEFAULT_SWING_MASK;
         track_speed = 0xFF;
     }
@@ -131,6 +131,25 @@ public:
         return trig_mask != 0;
     }
 };
+
+class StepSeqTrackData : public StepSeqTrackDataV1 {
+public:
+    uint8_t swing_amount;
+
+    const uint8_t* data() const { return reinterpret_cast<const uint8_t*>(this); }
+    uint8_t* data() { return reinterpret_cast<uint8_t*>(this); }
+    static constexpr size_t dataSize() { return sizeof(StepSeqTrackData); }
+
+    void init() {
+        memset(this, 0, sizeof(StepSeqTrackData));
+        swing_mask = STEPSEQ_DEFAULT_SWING_MASK;
+        track_speed = 0xFF;
+    }
+};
+
+static_assert(sizeof(StepSeqTrackData) ==
+                  sizeof(StepSeqTrackDataV1) + sizeof(uint8_t),
+              "StepSeqTrackData storage size changed unexpectedly");
 #pragma pack(pop)
 
 class ATTR_PACKED() StepSeqTrackStorage : public StepSeqTrackData,

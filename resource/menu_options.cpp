@@ -104,4 +104,7 @@ menu_option_t MENU_OPTIONS[] = {
   // 142 AVR / 150 TBD: LFO SPEED MULT
   {0, ".01"}, {1, ".1"}, {2, ".25"}, {3, ".5"},
   {4, "1x"}, {5, "2x"}, {6, "4x"}, {7, "8x"},
+  // 150 AVR / 158 TBD: SEQ EDIT
+  {MASK_PATTERN,"TRIG"}, {MASK_SLIDE,"SLIDE"}, {MASK_LOCK,"LOCK"},
+  {MASK_MUTE,"MUTE"}, {MASK_SWING,"SWING"},
 };

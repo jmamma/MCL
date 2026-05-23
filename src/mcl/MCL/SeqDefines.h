@@ -4,7 +4,8 @@
 #define MASK_LOCK 1
 #define MASK_SLIDE 2
 #define MASK_MUTE 3
-#define MASK_LOCKS_ON_STEP 4
+#define MASK_SWING 4
+#define MASK_LOCKS_ON_STEP 5
 
 #define SEQ_SPEED_1X 0
 #define SEQ_SPEED_2X 1

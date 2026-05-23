@@ -81,6 +81,8 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
                                 SPSXSeqTrack &dest) {
   uint8_t speed = dest.speed;
   dest.SPSXSeqTrackData::init();
+  dest.swing_mask = src.swing_mask;
+  dest.swing_amount = src.swing_amount;
 
   memcpy(dest.locks, src.locks, sizeof(src.locks));
   memset(dest.locks_params, 0, sizeof(dest.locks_params));
@@ -224,6 +226,11 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
       memcpy(spsx_seq_track->SPSXSeqTrackData::data(),
              seq_storage.seq_data.spsx.data(),
              sizeof(SPSXSeqTrackData));
+    } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX_V1) {
+      spsx_seq_track->SPSXSeqTrackData::init();
+      memcpy(spsx_seq_track->SPSXSeqTrackData::data(),
+             seq_storage.seq_data.spsx.data(),
+             sizeof(StepSeqTrackDataV1));
     } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
       convert_legacy_seq_to_spsx(seq_storage.seq_data.legacy,
                                  *spsx_seq_track);

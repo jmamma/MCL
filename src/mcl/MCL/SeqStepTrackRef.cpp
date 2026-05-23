@@ -21,6 +21,8 @@ uint8_t stepseq_mask_for(uint8_t ui_mask) {
     return STEPSEQ_MASK_MUTE;
   case MASK_SLIDE:
     return STEPSEQ_MASK_SLIDE;
+  case MASK_SWING:
+    return STEPSEQ_MASK_SWING;
   case MASK_LOCKS_ON_STEP:
     return STEPSEQ_MASK_LOCKS_ON_STEP;
   case MASK_PATTERN:

@@ -16,6 +16,15 @@
 
 // SPSX tracks share MDSeqTrack::md_trig_mask and MDSeqTrack::gui_update statics
 
+namespace {
+
+uint8_t spsx_swing_q14_to_amount(uint32_t swing_q14) {
+    uint32_t amount = (swing_q14 * 30UL + 8192UL) >> 14;
+    return amount > 30 ? 30 : (uint8_t)amount;
+}
+
+} // namespace
+
 // ============================================================================
 // SPSXSeqTrack — MID Machine Helpers
 // ============================================================================
@@ -104,7 +113,7 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
 
         // Current step: fires at tick_offset + 1 (positive or zero microtiming)
         if (mt_current >= 0) {
-            int16_t tick_offset = spsx_microtiming_to_ticks(mt_current, tps);
+            int16_t tick_offset = effective_timing_offset(step_count, tps);
             if (tick_counter == (uint16_t)(tick_offset + 1)) {
                 current_step = step_count;
             }
@@ -606,35 +615,12 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
     } else {
         swing_mask = pattern->swingPatterns[trk];
     }
+    swing_amount = spsx_swing_q14_to_amount(pattern->swingAmount);
 
     // Use pattern length as default, SPSX extension overrides below
     if (pattern->patternLength > 0 && pattern->patternLength <= 64) {
         length = pattern->patternLength;
         track_length = length;
-    }
-
-    // Convert V3 swing amount to SPSX microtiming for swung steps.
-    // swingAmount is Q14 format (50<<14 = neutral). The legacy formula adds
-    // (swingAmount * timing_mid + 8192) >> 14 ticks of offset at the legacy
-    // resolution. We convert that offset into the SPSX -127..+127 range.
-    // Only applies to V3 patterns (version < 0x40); SPSX patterns have
-    // their own microtiming data that gets copied directly below.
-    if (pattern->version < 0x40) {
-        uint32_t swing_q14 = pattern->swingAmount;
-        // timing_mid at 1x legacy speed = 12 (ticks per half-step)
-        uint16_t timing_mid = 12;
-        int32_t swing_offset = (int32_t)((swing_q14 * timing_mid + 8192) >> 14);
-        // Convert to SPSX: offset relative to timing_mid, scaled to -127..+127
-        // At 1x: quarter-step = timing_mid/2 = 6 ticks = microtiming ±127
-        if (swing_offset > 0 && timing_mid > 0) {
-            int8_t mt = (int8_t)((int32_t)swing_offset * 127 / (timing_mid / 2));
-            if (mt > 127) mt = 127;
-            for (uint8_t s = 0; s < 64; s++) {
-                if (SPSX_IS_BIT_SET64(swing_mask, s)) {
-                    microtiming[s] = mt;
-                }
-            }
-        }
     }
 
     // Import lock values from pattern rows. Row indices are int16_t now and
@@ -654,8 +640,8 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
 
     // SPSX extension data (overrides V3 defaults above)
     if (pattern->version >= 0x40) {
-        // Direct copy: microtiming (both are signed int8_t)
-        // This replaces any V3 swing conversion above
+        // Direct copy: microtiming (both are signed int8_t).
+        // Native swing is kept separate and only applies to neutral steps.
         memcpy(microtiming, pattern->ext_microtiming[trk], 64);
 
         // Unpack step flags

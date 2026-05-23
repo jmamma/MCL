@@ -58,6 +58,15 @@ public:
   MDRouteData route;
 };
 
+class ATTR_PACKED() LegacyOriginDevMDTrackStorage {
+public:
+  uint8_t version[2];
+  uint8_t active;
+  GridLink link;
+  MDSeqTrackDataV1 seq_data;
+  MDMachine machine;
+};
+
 static_assert(offsetof(LegacyMDLFOTrackStorage, lfo_data) ==
                   sizeof(GridTrack) - sizeof(void *),
               "Legacy MD LFO storage prefix changed");
@@ -78,6 +87,14 @@ static_assert(offsetof(MDRouteTrackStorage, route) ==
 static_assert(sizeof(MDRouteTrackStorage) ==
                   sizeof(GridTrack) - sizeof(void *) + sizeof(MDRouteData),
               "MD route storage size changed");
+static_assert(offsetof(LegacyOriginDevMDTrackStorage, seq_data) ==
+                  sizeof(GridTrack) - sizeof(void *),
+              "origin/dev MDTrack seq offset changed");
+static_assert(offsetof(LegacyOriginDevMDTrackStorage, machine) ==
+                  sizeof(GridTrack) - sizeof(void *) + sizeof(MDSeqTrackDataV1),
+              "origin/dev MDTrack machine offset changed");
+static_assert(sizeof(LegacyOriginDevMDTrackStorage) == 534,
+              "origin/dev MDTrack storage size changed");
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
 constexpr size_t PROJECT_CONFIG_OFFSET =
@@ -87,6 +104,46 @@ constexpr size_t PROJECT_CONFIG_SIZE =
 
 bool project_config_valid(const MCLSysConfigData &source) {
   return source.version == CONFIG_VERSION;
+}
+
+void copy_legacy_md_seq(MDSeqTrackData &dst, const MDSeqTrackDataV1 &src) {
+  dst.init();
+  memcpy(dst.data(), src.data(), sizeof(MDSeqTrackDataV1));
+  dst.swing_mask = MDSEQ_DEFAULT_SWING_MASK;
+  dst.swing_amount = 0;
+}
+
+void init_upgraded_md_track(MDTrack &dst, const GridLink &link,
+                            const MDSeqTrackDataV1 &seq,
+                            const MDMachine &machine) {
+  dst.init();
+  dst.version[0] = SEQ_TRACK_SWING_STORAGE_VERSION;
+  dst.version[1] = 0;
+  dst.active = MD_TRACK_TYPE;
+  dst.link = link;
+  copy_legacy_md_seq(dst.seq_data, seq);
+  dst.machine = machine;
+}
+
+bool read_upgraded_md_track(Grid &grid, GridColumn column, GridRow row,
+                            MDTrack &dst) {
+  LegacyOriginDevMDTrackStorage legacy;
+  if (!grid.read(&legacy, sizeof(legacy), column, row)) {
+    return false;
+  }
+  if (legacy.active != MD_TRACK_TYPE) {
+    return false;
+  }
+  init_upgraded_md_track(dst, legacy.link, legacy.seq_data, legacy.machine);
+  return true;
+}
+
+bool migrate_md_track_native_swing(Grid &grid, GridColumn column, GridRow row) {
+  MDTrack upgraded;
+  if (!read_upgraded_md_track(grid, column, row, upgraded)) {
+    return false;
+  }
+  return grid.write(upgraded._this(), upgraded._sizeof(), column, row);
 }
 
 void copy_project_config(MCLSysConfigData *dst,
@@ -593,15 +650,18 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
         SeqLFOData legacy_lfo;
         legacy_track.lfo_data.store_data(&legacy_lfo);
 
-        auto *track0 = scratch.load_from_grid_512(0, row, &grids[0]);
-        if (track0 == nullptr) {
-          return false;
-        }
-
+        MDTrack upgraded_md_track;
         MDTrack *md_track = nullptr;
-        if (track0->active == MD_TRACK_TYPE) {
-          md_track = static_cast<MDTrack *>(track0);
-        } else if (track0->active == EMPTY_TRACK_TYPE) {
+        if (grid_x_header->track_type[0] == MD_TRACK_TYPE) {
+          if (!read_upgraded_md_track(grids[0], 0, row, upgraded_md_track)) {
+            return false;
+          }
+          md_track = &upgraded_md_track;
+        } else if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
+          auto *track0 = scratch.load_from_grid_512(0, row, &grids[0]);
+          if (track0 == nullptr) {
+            return false;
+          }
           md_track =
               static_cast<MDTrack *>(track0->init_track_type(MD_TRACK_TYPE));
           md_track->init();
@@ -614,7 +674,7 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
           md_track->mod_data.init();
           LFOSeqTrack::convert_legacy_data(legacy_lfo, &md_track->mod_data.lfo);
 
-          md_track->version[0] = SEQ_TRACK_MOD_STORAGE_VERSION;
+          md_track->version[0] = SEQ_TRACK_SWING_STORAGE_VERSION;
           md_track->version[1] = 0;
           if (!grids[0].write(md_track->_this(), md_track->_sizeof(), 0, row)) {
             return false;
@@ -740,6 +800,12 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid,
         continue;
       }
       if (grid == 0 && column == 0 && converted_track0_lfo) {
+        continue;
+      }
+      if (grid == 0 && row_header.track_type[column] == MD_TRACK_TYPE) {
+        if (!migrate_md_track_native_swing(grids[grid], column, row)) {
+          return false;
+        }
         continue;
       }
       if (!grids[grid].seek(column, row)) {

@@ -253,6 +253,7 @@ public:
 
     void get_step_locks(uint8_t step, uint8_t *params,
                         bool ignore_locks_enabled = false);
+    int16_t effective_timing_offset(uint8_t step, uint16_t tps) const;
     void recalc_slides();
     void find_next_locks(uint8_t curidx, uint8_t step, uint64_t &mask);
 

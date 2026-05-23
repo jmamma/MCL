@@ -43,7 +43,8 @@ extern uint8_t get_random_byte();
 #define STEPSEQ_MASK_LOCK 1
 #define STEPSEQ_MASK_SLIDE 2
 #define STEPSEQ_MASK_MUTE 3
-#define STEPSEQ_MASK_LOCKS_ON_STEP 4
+#define STEPSEQ_MASK_SWING 4
+#define STEPSEQ_MASK_LOCKS_ON_STEP 5
 
 // ============================================================================
 // Mute state

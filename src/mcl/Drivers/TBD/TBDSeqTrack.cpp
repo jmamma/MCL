@@ -80,7 +80,7 @@ void TBDSeqTrack::seq(MidiUartClass *uart_) {
 
   int8_t mt_current = microtiming[step_count];
   if (mt_current >= 0) {
-    int16_t tick_offset = stepseq_microtiming_to_ticks(mt_current, tps);
+    int16_t tick_offset = effective_timing_offset(step_count, tps);
     if (tick_counter == (uint16_t)(tick_offset + 1)) {
       current_step = step_count;
     }
