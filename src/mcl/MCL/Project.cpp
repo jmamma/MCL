@@ -88,6 +88,15 @@ public:
   uint8_t channel;
 };
 
+class ATTR_PACKED() LegacyExtSeqFixedTail {
+public:
+  uint8_t locks_params[NUM_LOCKS];
+  uint16_t event_count;
+  uint8_t velocities[NUM_EXT_STEPS];
+  uint8_t locks_params_orig[NUM_LOCKS];
+  uint8_t channel;
+};
+
 static_assert(sizeof(LegacyGridTrackHeader) == LEGACY_GRID_TRACK_HEADER_SIZE,
               "origin/dev track header size changed");
 static_assert(sizeof(LegacyMDSeqStepDescriptor) ==
@@ -97,6 +106,14 @@ static_assert(sizeof(LegacyMDSeqTrackData) == sizeof(MDSeqTrackDataV1),
               "Legacy MD seq data size changed");
 static_assert(sizeof(LegacyExtSeqTrackData) == sizeof(ExtSeqTrackData),
               "Legacy Ext seq data size changed");
+static_assert(offsetof(LegacyExtSeqTrackData, locks_params) ==
+                  sizeof(NibbleArray<NUM_EXT_STEPS>) +
+                      sizeof(ext_event_t) * NUM_EXT_EVENTS,
+              "Legacy Ext fixed tail offset changed");
+static_assert(sizeof(LegacyExtSeqFixedTail) ==
+                  sizeof(LegacyExtSeqTrackData) -
+                      offsetof(LegacyExtSeqTrackData, locks_params),
+              "Legacy Ext fixed tail size changed");
 static_assert(offsetof(LegacyMDLFOTrackStorage, lfo_data) ==
                   LEGACY_GRID_TRACK_HEADER_SIZE,
               "Legacy MD LFO storage prefix changed");
@@ -165,25 +182,29 @@ void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src) {
   dst.sync_swing_steps_from_mask();
 }
 
-void copy_legacy_ext_seq(ExtSeqTrackData &dst,
-                         const LegacyExtSeqTrackData &src) {
-  memcpy(&dst.event_buckets, &src.event_buckets, sizeof(dst.event_buckets));
-  memcpy(dst.locks_params, src.locks_params, sizeof(dst.locks_params));
-  dst.event_count =
-      src.event_count > NUM_EXT_EVENTS ? NUM_EXT_EVENTS : src.event_count;
-  memcpy(dst.velocities, src.velocities, sizeof(dst.velocities));
-  memcpy(dst.locks_params_orig, src.locks_params_orig,
-         sizeof(dst.locks_params_orig));
-  dst.channel = src.channel;
-  memcpy(dst.events, src.events, dst.event_count * sizeof(ext_event_t));
-}
-
 bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst) {
-  LegacyExtSeqTrackData legacy_seq;
-  if (!grid.read(&legacy_seq, sizeof(legacy_seq))) {
+  if (!grid.read(&dst, sizeof(LegacyExtSeqTrackData))) {
     return false;
   }
-  copy_legacy_ext_seq(dst, legacy_seq);
+
+  uint8_t *raw = reinterpret_cast<uint8_t *>(&dst);
+  LegacyExtSeqFixedTail fixed_tail;
+  memcpy(&fixed_tail, raw + offsetof(LegacyExtSeqTrackData, locks_params),
+         sizeof(fixed_tail));
+
+  uint16_t used_events = fixed_tail.event_count;
+  if (used_events > NUM_EXT_EVENTS) {
+    used_events = NUM_EXT_EVENTS;
+  }
+  memmove(dst.events, raw + offsetof(LegacyExtSeqTrackData, events),
+          used_events * sizeof(ext_event_t));
+
+  memcpy(dst.locks_params, fixed_tail.locks_params, sizeof(dst.locks_params));
+  dst.event_count = used_events;
+  memcpy(dst.velocities, fixed_tail.velocities, sizeof(dst.velocities));
+  memcpy(dst.locks_params_orig, fixed_tail.locks_params_orig,
+         sizeof(dst.locks_params_orig));
+  dst.channel = fixed_tail.channel;
   return true;
 }
 
