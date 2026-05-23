@@ -183,6 +183,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
   uint8_t *dest = md_seq_track->data();
   memcpy(dest, seq_data.data(), sizeof(seq_data));
+  md_seq_track->sync_swing_steps_from_mask();
   load_link_data(seq_track);
   md_seq_track->clear_mutes();
   md_seq_track->set_length(md_seq_track->length);
@@ -261,6 +262,7 @@ bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
       seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;
   if (md_seq_track) {
     md_seq_track->store_mute_state();
+    md_seq_track->sync_swing_mask_from_steps();
   }
 
   if (column != 255 && online && md_seq_track) {

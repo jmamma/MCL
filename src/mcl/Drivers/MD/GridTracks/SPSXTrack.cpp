@@ -93,7 +93,7 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
     SPSXSeqStepDescriptor &dest_step = dest.steps[step];
 
     dest_step.locks = src_step.locks;
-    dest_step.locks_enabled = src_step.locks_enabled;
+    dest_step.locks_enabled = src_step.locks != 0;
     dest_step.cond_plock = src_step.cond_plock;
     dest_step.cond_id = legacy_cond_to_spsx(src_step.cond_id);
     dest.microtiming[step] = legacy_timing_to_spsx(src.timing[step], speed);
@@ -243,6 +243,7 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
     MDSeqTrack *md_seq_track = static_cast<MDSeqTrack *>(seq_track);
     memcpy(md_seq_track->data(), seq_storage.seq_data.legacy.data(),
            sizeof(MDSeqTrackData));
+    md_seq_track->sync_swing_steps_from_mask();
     load_link_data(seq_track);
     md_seq_track->clear_mutes();
     md_seq_track->set_length(md_seq_track->length);
@@ -379,6 +380,7 @@ bool SPSXTrack::store_in_grid(GridSlot column, GridRow row,
         seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;
     if (md_seq_track) {
       md_seq_track->store_mute_state();
+      md_seq_track->sync_swing_mask_from_steps();
     }
 
     if (column != 255 && online && md_seq_track) {

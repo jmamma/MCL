@@ -589,6 +589,11 @@ void SeqPage::bootstrap_record() {
 }
 
 void SeqPage::config_mask_info(bool silent) {
+  if (mask_type == MASK_LOCK) {
+    mask_type = MASK_SWING;
+  } else if (mask_type > MASK_SWING) {
+    mask_type = MASK_PATTERN;
+  }
   const char *label =
       reinterpret_cast<const char *>(pgm_read_ptr(&kMaskInfoLabels[mask_type]));
   mclstr_copy_progmem(info2, label, sizeof(info2));
@@ -1130,7 +1135,12 @@ void opt_channel_handler() {
   }
 }
 
-void opt_mask_handler() { seq_step_page.config_mask_info(false); }
+void opt_mask_handler() {
+  if (SeqPage::mask_type == MASK_LOCK) {
+    SeqPage::mask_type = MASK_SWING;
+  }
+  seq_step_page.config_mask_info(false);
+}
 
 void opt_trackid_handler() {
   seq_step_page.select_track(opt_midi_device_capture, opt_trackid - 1);

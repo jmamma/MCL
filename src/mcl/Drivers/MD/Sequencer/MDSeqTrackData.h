@@ -17,16 +17,13 @@ class ATTR_PACKED() MDSeqStepDescriptor {
 public:
   uint8_t
       locks; // <-- bitfield of 8 locks in the current step, first lock is lsb
-  bool locks_enabled : 1; // true: locks are enabled. false: locks are disabled,
-                          // but still occupy lock slots
+  bool swing : 1; // Former editable lock-enable bit.
   bool trig : 1;
   bool slide : 1;
   bool cond_plock : 1;
   uint8_t cond_id : 4;
   bool is_lock_bit(const uint8_t idx) const { return locks & (1 << idx); }
-  bool is_lock(const uint8_t idx) const {
-    return is_lock_bit(idx) && locks_enabled;
-  }
+  bool is_lock(const uint8_t idx) const { return is_lock_bit(idx); }
 };
 
 class MDSeqStep {
@@ -109,12 +106,29 @@ public:
 
 class ATTR_PACKED() MDSeqTrackData : public MDSeqTrackDataV1 {
 public:
+  // Storage/sysex mirror for the per-step swing bits above.
   uint64_t swing_mask;
   uint8_t swing_amount;
+
+  void sync_swing_steps_from_mask() {
+    for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
+      steps[n].swing = IS_BIT_SET64(swing_mask, n);
+    }
+  }
+
+  void sync_swing_mask_from_steps() {
+    swing_mask = 0;
+    for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
+      if (steps[n].swing) {
+        SET_BIT64(swing_mask, n);
+      }
+    }
+  }
 
   void init() {
     memset(this, 0, sizeof(MDSeqTrackData));
     swing_mask = MDSEQ_DEFAULT_SWING_MASK;
+    sync_swing_steps_from_mask();
   }
 };
 

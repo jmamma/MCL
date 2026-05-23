@@ -136,6 +136,12 @@ void draw_active_microtiming(SeqStepTrackRef active_track,
 
 bool SeqStepPage::toggle_mask(uint8_t mask) {
   if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+    if (mask == MASK_LOCK) {
+      mask = MASK_SWING;
+    }
+    if (mask_type == MASK_LOCK) {
+      mask_type = MASK_SWING;
+    }
     mask_type = (mask_type == mask) ? MASK_PATTERN : mask;
     config_mask_info(false);
     return true;
@@ -685,7 +691,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_BANKB: {
-        if (toggle_mask(MASK_LOCK))
+        if (toggle_mask(MASK_SWING))
           return true;
       }
       case MDX_KEY_BANKC: {

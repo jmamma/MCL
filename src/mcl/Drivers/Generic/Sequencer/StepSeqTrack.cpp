@@ -718,7 +718,6 @@ void StepSeqDataTrack::store_mute_state() {
     for (uint8_t n = 0; n < STEPSEQ_NUM_STEPS; n++) {
         if (STEPSEQ_IS_BIT_SET64(mute_mask, n)) {
             set_step(n, STEPSEQ_MASK_PATTERN, false);
-            set_step(n, STEPSEQ_MASK_LOCK, false);
         }
     }
     clear_mutes();
