@@ -1,6 +1,7 @@
 #include "KeyInterface.h"
 #include "../Drivers/MD/MD.h"
 #include "DeviceManager.h"
+#include "MCL.h"
 #include "Midi.h"
 #include "MCLGUI.h"
 /*
@@ -125,6 +126,10 @@ uint8_t trig_interface_port() {
 void KeyInterface::post_key_event(uint8_t key, bool key_release) {
   if (IS_BIT_SET64(ignore_next_mask, key)) {
     CLEAR_BIT64(ignore_next_mask, key);
+    return;
+  }
+
+  if (mcl_handle_mdx_swing_shortcut(key, key_release)) {
     return;
   }
 
