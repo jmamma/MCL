@@ -132,6 +132,9 @@ public:
   }
 
   virtual uint16_t get_track_size() { return _sizeof(); }
+#if !defined(__AVR__)
+  virtual uint16_t get_store_size() { return get_track_size(); }
+#endif
   virtual uint16_t get_region_size() { return MEMORY_ALIGN(get_track_size()); }
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */

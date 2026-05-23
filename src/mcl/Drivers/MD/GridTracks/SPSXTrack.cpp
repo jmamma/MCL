@@ -9,6 +9,32 @@
 
 namespace {
 
+class ATTR_PACKED() LegacySPSXSeqTrackDataV1 {
+public:
+  uint8_t locks[STEPSEQ_NUM_LOCK_SLOTS];
+  uint8_t locks_params[STEPSEQ_NUM_LOCKS];
+  int8_t microtiming[STEPSEQ_NUM_STEPS];
+  StepSeqStepDescriptor steps[STEPSEQ_NUM_STEPS];
+
+  uint64_t trig_mask;
+  uint64_t slide_mask;
+  uint64_t accent_mask;
+  uint64_t swing_mask;
+
+  uint8_t track_length;
+  uint8_t track_speed;
+};
+
+class ATTR_PACKED() LegacySPSXSeqTrackData : public LegacySPSXSeqTrackDataV1 {
+public:
+  uint8_t swing_amount;
+};
+
+static_assert(sizeof(LegacySPSXSeqTrackDataV1) == sizeof(StepSeqTrackDataV1),
+              "Legacy SPSX V1 storage size changed");
+static_assert(sizeof(LegacySPSXSeqTrackData) == sizeof(SPSXSeqTrackData),
+              "Legacy SPSX storage size changed");
+
 uint8_t legacy_cond_to_spsx(uint8_t condition) {
   switch (condition) {
   case 0:
@@ -93,7 +119,6 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
     SPSXSeqStepDescriptor &dest_step = dest.steps[step];
 
     dest_step.locks = src_step.locks;
-    dest_step.locks_enabled = src_step.locks != 0;
     dest_step.cond_plock = src_step.cond_plock;
     dest_step.cond_id = legacy_cond_to_spsx(src_step.cond_id);
     dest.microtiming[step] = legacy_timing_to_spsx(src.timing[step], speed);
@@ -105,6 +130,28 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
       SPSX_SET_BIT64(dest.slide_mask, step);
     }
   }
+}
+
+void convert_old_order_spsx_seq(const LegacySPSXSeqTrackDataV1 &src,
+                                SPSXSeqTrackData &dest) {
+  dest.init();
+  memcpy(dest.steps, src.steps, sizeof(dest.steps));
+  memcpy(dest.microtiming, src.microtiming, sizeof(dest.microtiming));
+  dest.trig_mask = src.trig_mask;
+  dest.slide_mask = src.slide_mask;
+  dest.accent_mask = src.accent_mask;
+  dest.swing_mask = src.swing_mask;
+  dest.track_length = src.track_length;
+  dest.track_speed = src.track_speed;
+  memcpy(dest.locks_params, src.locks_params, sizeof(dest.locks_params));
+  memcpy(dest.locks, src.locks, sizeof(dest.locks));
+}
+
+void convert_old_order_spsx_seq(const LegacySPSXSeqTrackData &src,
+                                SPSXSeqTrackData &dest) {
+  convert_old_order_spsx_seq(
+      static_cast<const LegacySPSXSeqTrackDataV1 &>(src), dest);
+  dest.swing_amount = src.swing_amount;
 }
 
 void finalize_spsx_seq_load(SPSXSeqTrack &track) {
@@ -129,6 +176,19 @@ void SPSXTrack::init() {
 
 void SPSXTrack::clear_track() {
   init();
+}
+
+uint16_t SPSXTrack::get_store_size() {
+  const uintptr_t base = reinterpret_cast<uintptr_t>(_this());
+  if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX) {
+    return reinterpret_cast<uintptr_t>(&seq_storage.seq_data.spsx) - base +
+           seq_storage.seq_data.spsx.store_size();
+  }
+  if (seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
+    return reinterpret_cast<uintptr_t>(&seq_storage.seq_data.legacy) - base +
+           sizeof(MDSeqTrackData);
+  }
+  return _sizeof();
 }
 
 void SPSXTrack::get_machine_from_kit(uint8_t tracknumber) {
@@ -226,11 +286,24 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
       memcpy(spsx_seq_track->SPSXSeqTrackData::data(),
              seq_storage.seq_data.spsx.data(),
              sizeof(SPSXSeqTrackData));
+    } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX_V2) {
+      convert_old_order_spsx_seq(
+          *reinterpret_cast<const LegacySPSXSeqTrackData *>(
+              &seq_storage.seq_data.spsx),
+          *spsx_seq_track);
+      memcpy(seq_storage.seq_data.spsx.data(),
+             spsx_seq_track->SPSXSeqTrackData::data(),
+             sizeof(SPSXSeqTrackData));
+      seq_storage.seq_version = SPSX_SEQ_VERSION_SPSX;
     } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX_V1) {
-      spsx_seq_track->SPSXSeqTrackData::init();
-      memcpy(spsx_seq_track->SPSXSeqTrackData::data(),
-             seq_storage.seq_data.spsx.data(),
-             sizeof(StepSeqTrackDataV1));
+      convert_old_order_spsx_seq(
+          *reinterpret_cast<const LegacySPSXSeqTrackDataV1 *>(
+              &seq_storage.seq_data.spsx),
+          *spsx_seq_track);
+      memcpy(seq_storage.seq_data.spsx.data(),
+             spsx_seq_track->SPSXSeqTrackData::data(),
+             sizeof(SPSXSeqTrackData));
+      seq_storage.seq_version = SPSX_SEQ_VERSION_SPSX;
     } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
       convert_legacy_seq_to_spsx(seq_storage.seq_data.legacy,
                                  *spsx_seq_track);
@@ -414,7 +487,7 @@ bool SPSXTrack::store_in_grid(GridSlot column, GridRow row,
     }
   }
 
-  bool ret = write_grid(_this(), _sizeof(), column, row, grid);
+  bool ret = write_grid(_this(), get_store_size(), column, row, grid);
   if (!ret) {
     DEBUG_PRINTLN(F("SPSX write failed"));
     return false;

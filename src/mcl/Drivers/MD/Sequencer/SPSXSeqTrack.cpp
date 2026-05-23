@@ -563,7 +563,7 @@ bool SPSXSeqTrack::preview_step(uint8_t step) {
     uint16_t lock_idx = get_lockidx(step);
     for (uint8_t c = 0; c < SPSX_NUM_LOCKS; c++) {
         bool lock_bit = steps[step].is_lock_bit(c);
-        if (lock_bit && locks_params[c] && steps[step].locks_enabled) {
+        if (lock_bit && locks_params[c]) {
             uint8_t p = locks_params[c] - 1;
             MD.setTrackParam(track_number, p, locks[lock_idx]);
         }
@@ -649,7 +649,6 @@ void SPSXSeqTrack::merge_from_md(uint8_t trk, MDPattern *pattern) {
             uint8_t flags = pattern->ext_step_flags[trk][s];
             steps[s].cond_id = flags >> 2;
             steps[s].cond_plock = (flags >> 1) & 1;
-            steps[s].locks_enabled = flags & 1;
         }
 
         // Copy full lock-params mapping. MD_PATTERN_LOCK_SLOTS is sized to match

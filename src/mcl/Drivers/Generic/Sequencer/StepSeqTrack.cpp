@@ -252,7 +252,6 @@ void StepSeqDataTrack::recalc_slides() {
         if (!locks_params[c] || !steps[step].is_lock_bit(c)) continue;
 
         auto cur_lockidx = lockidx++;
-        if (!steps[step].locks_enabled) continue;
 
         if (find_mask & (1ULL << c)) {
             locks_slide_data[c].init();
@@ -294,11 +293,10 @@ void StepSeqDataTrack::find_next_locks(uint8_t curidx, uint8_t step,
 again:
     for (; next_step < max_len; next_step++) {
         uint64_t cur_mask = 1ULL;
-        auto raw_locks = steps[next_step].locks;
-        auto lcks = steps[next_step].locks_enabled ? raw_locks : (uint64_t)0;
+        auto lcks = steps[next_step].locks;
         bool next_step_has_trig = STEPSEQ_IS_BIT_SET64(trig_mask, next_step);
 
-        if (!raw_locks && !next_step_has_trig) continue;
+        if (!lcks && !next_step_has_trig) continue;
 
         for (uint8_t i = 0; i < STEPSEQ_NUM_LOCKS; ++i) {
             if (mask & cur_mask) {
@@ -317,7 +315,7 @@ again:
                 }
                 if (!mask) return;
             }
-            if (raw_locks & cur_mask) curidx++;
+            if (lcks & cur_mask) curidx++;
             cur_mask <<= 1;
         }
     }
@@ -347,7 +345,7 @@ void StepSeqDataTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
         bool set_bit = false;
         switch (mask_type) {
         case STEPSEQ_MASK_LOCKS_ON_STEP: if (steps[i].locks) set_bit = true; break;
-        case STEPSEQ_MASK_LOCK: if (steps[i].locks_enabled) set_bit = true; break;
+        case STEPSEQ_MASK_LOCK: if (steps[i].locks) set_bit = true; break;
         default: break;
         }
         if (set_bit) *_pmask |= (1ULL << i);
@@ -357,7 +355,7 @@ void StepSeqDataTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
 bool StepSeqDataTrack::get_step(uint8_t step, uint8_t mask_type) const {
     switch (mask_type) {
     case STEPSEQ_MASK_PATTERN: return STEPSEQ_IS_BIT_SET64(trig_mask, step);
-    case STEPSEQ_MASK_LOCK:    return steps[step].locks_enabled;
+    case STEPSEQ_MASK_LOCK:    return steps[step].locks != 0;
     case STEPSEQ_MASK_MUTE:    return STEPSEQ_IS_BIT_SET64(mute_mask, step);
     case STEPSEQ_MASK_SLIDE:   return STEPSEQ_IS_BIT_SET64(slide_mask, step);
     case STEPSEQ_MASK_SWING:   return STEPSEQ_IS_BIT_SET64(swing_mask, step);
@@ -372,7 +370,6 @@ void StepSeqDataTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
         else STEPSEQ_CLEAR_BIT64(trig_mask, step);
         break;
     case STEPSEQ_MASK_LOCK:
-        steps[step].locks_enabled = val;
         break;
     case STEPSEQ_MASK_MUTE:
         if (val) STEPSEQ_SET_BIT64(mute_mask, step);
@@ -396,15 +393,14 @@ void StepSeqDataTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
 // ============================================================================
 
 void StepSeqDataTrack::get_step_locks(uint8_t step, uint8_t *params,
-                                      bool ignore_locks_enabled) {
+                                      bool include_all_locks) {
+    (void)include_all_locks;
     uint16_t lock_idx = get_lockidx(step);
     for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
         bool lock_bit = steps[step].is_lock_bit(c);
-        bool lock_present =
-            lock_bit & (steps[step].locks_enabled || ignore_locks_enabled);
         if (locks_params[c]) {
             uint8_t param = locks_params[c] - 1;
-            if (lock_present) {
+            if (lock_bit) {
                 params[param] = locks[lock_idx];
             }
         }
@@ -421,7 +417,7 @@ uint8_t StepSeqDataTrack::get_track_lock_implicit(uint8_t step,
 
 uint8_t StepSeqDataTrack::get_track_lock(uint8_t step, uint8_t lock_idx) {
     auto idx = get_lockidx(step, lock_idx);
-    if (idx < STEPSEQ_NUM_LOCK_SLOTS && steps[step].locks_enabled) {
+    if (idx < STEPSEQ_NUM_LOCK_SLOTS) {
         return locks[idx];
     }
     return 255;
@@ -455,7 +451,6 @@ bool StepSeqDataTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
         steps[step].locks |= (1ULL << lockidx);
     }
     locks[lock_slot] = (value > 127) ? 127 : value;
-    steps[step].locks_enabled = true;
     return true;
 }
 
@@ -531,7 +526,6 @@ void StepSeqDataTrack::clear_step(uint8_t step) {
         if (step < step_count) cur_event_idx -= cnt;
     }
     steps[step].locks = 0;
-    steps[step].locks_enabled = false;
     steps[step].cond_id = 0;
     steps[step].cond_plock = 0;
     microtiming[step] = 0;
@@ -552,20 +546,19 @@ void StepSeqDataTrack::clear_step_locks(uint8_t step) {
             STEPSEQ_NUM_LOCK_SLOTS - idx - cnt);
     if (step < step_count) cur_event_idx -= cnt;
     steps[step].locks = 0;
-    steps[step].locks_enabled = false;
     clean_params();
 }
 
 void StepSeqDataTrack::disable_step_locks(uint8_t step) {
-    steps[step].locks_enabled = false;
+    (void)step;
 }
 
 void StepSeqDataTrack::enable_step_locks(uint8_t step) {
-    steps[step].locks_enabled = true;
+    (void)step;
 }
 
 uint64_t StepSeqDataTrack::get_step_locks_mask(uint8_t step) {
-    return steps[step].locks_enabled ? steps[step].locks : 0;
+    return steps[step].locks;
 }
 
 void StepSeqDataTrack::clear_conditional() {
@@ -588,7 +581,6 @@ void StepSeqDataTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
     memmove(locks + idx + offset, locks + idx + offset + 1,
             STEPSEQ_NUM_LOCK_SLOTS - idx - offset - 1);
     steps[step].locks &= ~mask;
-    if (steps[step].locks == 0) steps[step].locks_enabled = false;
     locks_slide_data[match].init();
     cur_event_idx = get_lockidx(step_count);
     clean_params();
@@ -624,7 +616,6 @@ void StepSeqDataTrack::clear_param_locks(uint8_t param_id) {
     for (uint8_t x = 0; x < STEPSEQ_NUM_STEPS; x++) {
         remove[x] = (steps[x].locks & mask) != 0;
         steps[x].locks &= nmask;
-        if (steps[x].locks == 0) steps[x].locks_enabled = false;
     }
 
     uint16_t rd = 0, wr = 0;
@@ -673,7 +664,7 @@ void StepSeqDataTrack::set_length(uint8_t len, bool expand) {
         for (uint8_t n = old_length; n < length && n < STEPSEQ_NUM_STEPS; n++) {
             if (get_step(n, STEPSEQ_MASK_PATTERN) ||
                 get_step(n, STEPSEQ_MASK_LOCK) ||
-                steps[n].locks != 0 || steps[n].locks_enabled) {
+                steps[n].locks != 0) {
                 has_existing_data = true;
                 break;
             }
@@ -851,7 +842,6 @@ void StepSeqDataTrack::paste_step(uint8_t n, StepSeqStep *step,
             set_track_locks(n, lp[a] - 1, step->locks[a] - 1);
         }
     }
-    steps[n].locks_enabled = step->data.locks_enabled;
     steps[n].cond_plock = step->data.cond_plock;
     steps[n].cond_id = step->data.cond_id;
     set_step(n, STEPSEQ_MASK_PATTERN, step->trig);

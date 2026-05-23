@@ -308,7 +308,7 @@ void TBDSeqTrack::send_parameter_locks(uint8_t step, uint16_t lock_idx,
   uint64_t mask = 1ULL;
   for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
     const bool lock_bit = (steps[step].locks & mask) != 0;
-    const bool lock_present = lock_bit && steps[step].locks_enabled;
+    const bool lock_present = lock_bit;
     if (locks_params[c] != 0) {
       const uint8_t param = locks_params[c] - 1;
       uint8_t value = 0;

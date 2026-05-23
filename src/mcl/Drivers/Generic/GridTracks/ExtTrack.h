@@ -45,6 +45,10 @@ public:
     seq_data.clear();
   }
   virtual uint16_t get_track_size() { return _sizeof(); }
+  uint16_t write_size() {
+    return DEVICE_TRACK_LEN + sizeof(SeqTrackModData) +
+           seq_data.store_size();
+  }
   virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }

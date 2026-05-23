@@ -36,6 +36,10 @@ public:
                              SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                              bool online = false, Grid *grid = nullptr) override;
   virtual uint16_t get_track_size() override { return _sizeof(); }
+  uint16_t write_size() {
+    return DEVICE_TRACK_LEN + sizeof(MNMMachine) + sizeof(SeqTrackModData) +
+           seq_data.store_size();
+  }
   virtual uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   virtual uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   virtual uint8_t get_model() override { return machine.model; }

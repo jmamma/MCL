@@ -11,6 +11,7 @@
 #include "SeqTrack.h"
 #include "MidiClock.h"
 #include "platform.h"
+#include <stddef.h>
 
 #define NUM_EXT_STEPS 128
 #define NUM_EXT_EVENTS 512
@@ -87,14 +88,22 @@ public:
 class ATTR_PACKED() ExtSeqTrackData {
 public:
   NibbleArray<NUM_EXT_STEPS> event_buckets;
-  ext_event_t events[NUM_EXT_EVENTS];
   uint8_t locks_params[NUM_LOCKS];
   uint16_t event_count;
   uint8_t velocities[NUM_EXT_STEPS];
   uint8_t locks_params_orig[NUM_LOCKS];
   uint8_t channel;
+  ext_event_t events[NUM_EXT_EVENTS];
   void set_channel(uint8_t channel_) { channel = channel_; }
   uint8_t *data() const { return (uint8_t *)&event_buckets; }
+  uint16_t store_size() const {
+    uint16_t used_events = event_count;
+    if (used_events > NUM_EXT_EVENTS) {
+      used_events = NUM_EXT_EVENTS;
+    }
+    return offsetof(ExtSeqTrackData, events) +
+           used_events * sizeof(ext_event_t);
+  }
   void clear() {
     event_count = 0;
     event_buckets.clear();

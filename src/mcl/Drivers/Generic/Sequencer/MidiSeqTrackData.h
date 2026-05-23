@@ -3,6 +3,7 @@
 #include "MCLMemory.h"
 #include "SeqTrackModData.h"
 #include "platform.h"
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -149,6 +150,15 @@ public:
   uint8_t *data() { return reinterpret_cast<uint8_t *>(this); }
   static constexpr size_t dataSize() { return sizeof(MidiSeqTrackData); }
 
+  uint16_t used_event_count() const {
+    return event_count > MIDI_SEQ_NUM_EVENTS ? MIDI_SEQ_NUM_EVENTS : event_count;
+  }
+
+  uint16_t store_size() const {
+    return offsetof(MidiSeqTrackData, events) +
+           used_event_count() * sizeof(MidiSeqEvent);
+  }
+
   void clear() {
     memset(this, 0, sizeof(MidiSeqTrackData));
     version = MIDI_SEQ_DATA_VERSION;
@@ -213,6 +223,10 @@ public:
   void clear_storage() {
     SeqTrackModStorage::init_mod();
     MidiSeqTrackData::clear();
+  }
+
+  uint16_t store_size() const {
+    return sizeof(SeqTrackModStorage) + MidiSeqTrackData::store_size();
   }
 };
 

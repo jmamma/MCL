@@ -37,10 +37,10 @@ public:
 
 class ATTR_PACKED() MDSeqTrackDataV1 {
 public:
-  uint8_t locks[NUM_MD_LOCK_SLOTS];
-  uint8_t locks_params[NUM_LOCKS];
-  uint8_t timing[NUM_MD_STEPS];
   MDSeqStepDescriptor steps[NUM_MD_STEPS];
+  uint8_t timing[NUM_MD_STEPS];
+  uint8_t locks_params[NUM_LOCKS];
+  uint8_t locks[NUM_MD_LOCK_SLOTS];
 
   // !! Note lockidx is lock index, not param id
   bool set_track_locks_i(uint8_t step, uint8_t lockidx, uint8_t velocity);
@@ -52,7 +52,7 @@ public:
   // get the pointer to the data chunk.
   // useful to skip the vtable
 
-  uint8_t *data() const { return (uint8_t *)&locks; }
+  uint8_t *data() const { return (uint8_t *)&steps; }
 
   void clean_params() {
     uint8_t _locks = 0;

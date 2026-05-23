@@ -168,7 +168,6 @@ void SpsMode::send_param(uint8_t i) {
         const uint16_t step = n + (SeqPage::page_select * 16);
         if (step >= st.length) continue;
         st.set_track_locks(step, param, v);
-        st.enable_step_locks(step);
         if (first_step == 0xFFFF) first_step = step;
       }
       if (first_step != 0xFFFF) {

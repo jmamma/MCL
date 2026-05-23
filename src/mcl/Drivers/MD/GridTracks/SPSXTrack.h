@@ -14,8 +14,9 @@
 
 // Seq data format stored in the track
 #define SPSX_SEQ_VERSION_LEGACY 0  // MDSeqTrackData (AVR + rp2040)
-#define SPSX_SEQ_VERSION_SPSX_V1 1  // SPSXSeqTrackData without swing amount
-#define SPSX_SEQ_VERSION_SPSX   2  // SPSXSeqTrackData (rp2040 only)
+#define SPSX_SEQ_VERSION_SPSX_V1 1  // Old-order SPSXSeqTrackData without swing amount
+#define SPSX_SEQ_VERSION_SPSX_V2 2  // Old-order SPSXSeqTrackData
+#define SPSX_SEQ_VERSION_SPSX   3  // Tail-lock SPSXSeqTrackData (rp2040 only)
 
 #if !defined(__AVR__)
 
@@ -99,6 +100,7 @@ public:
   void normalize();
 
   virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uint16_t get_store_size() override;
   virtual uint16_t get_region_size() override {
     // Region must fit the largest possible variant
     return MEMORY_ALIGN(sizeof(SPSXTrack) - sizeof(void*));

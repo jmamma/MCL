@@ -60,6 +60,10 @@ public:
                      bool online = false, Grid *grid = nullptr) override;
 
   uint16_t get_track_size() override { return _sizeof(); }
+  uint16_t get_store_size() override {
+    return reinterpret_cast<uintptr_t>(&seq_data) -
+           reinterpret_cast<uintptr_t>(_this()) + seq_data.store_size();
+  }
   uint16_t get_region_size() override { return TBD_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_TBD_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }
@@ -113,6 +117,10 @@ public:
                      bool online = false, Grid *grid = nullptr) override;
 
   uint16_t get_track_size() override { return _sizeof(); }
+  uint16_t get_store_size() override {
+    return reinterpret_cast<uintptr_t>(&seq_data) -
+           reinterpret_cast<uintptr_t>(_this()) + seq_data.store_size();
+  }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }

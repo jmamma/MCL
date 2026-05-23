@@ -1037,15 +1037,15 @@ void MDSeqTrack::clear_locks() {
   // Need to buffer this, as we dont want sequencer interrupt
   // to access it whilst we're cleaning up
   DEBUG_DUMP("Clear these locks");
-  // locks and locks_params are adjacent in MDSeqTrackData storage.
-  memset(locks, 0, sizeof(locks) + sizeof(locks_params));
+  // locks_params and locks are adjacent in MDSeqTrackData storage.
+  memset(locks_params, 0, sizeof(locks_params) + sizeof(locks));
   cur_event_idx = 0;
   //notes.first_trig = true;
 }
 
 void MDSeqTrack::clear_track(bool locks) {
-  // timing and steps are adjacent in MDSeqTrackData storage.
-  memset(timing, 0, sizeof(timing) + sizeof(steps));
+  // steps and timing are adjacent in MDSeqTrackData storage.
+  memset(steps, 0, sizeof(steps) + sizeof(timing));
   swing_mask = 0;
   swing_amount = 0;
   clear_mutes();

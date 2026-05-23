@@ -18,7 +18,7 @@ class StepSeqStepDescriptor {
 public:
     uint64_t locks;
 
-    bool locks_enabled : 1;
+    uint8_t reserved : 1;
     bool cond_plock : 1;
     uint8_t cond_id : 6;
 
@@ -29,9 +29,7 @@ public:
         return (locks & (1ULL << idx)) != 0;
     }
 
-    bool is_lock(uint8_t idx) const {
-        return is_lock_bit(idx) && locks_enabled;
-    }
+    bool is_lock(uint8_t idx) const { return is_lock_bit(idx); }
 };
 #pragma pack(pop)
 
@@ -57,12 +55,10 @@ public:
 // ============================================================================
 
 #pragma pack(push, 1)
-class StepSeqTrackDataV1 {
+class StepSeqTrackFixedData {
 public:
-    uint8_t locks[STEPSEQ_NUM_LOCK_SLOTS];
-    uint8_t locks_params[STEPSEQ_NUM_LOCKS];
-    int8_t microtiming[STEPSEQ_NUM_STEPS];
     StepSeqStepDescriptor steps[STEPSEQ_NUM_STEPS];
+    int8_t microtiming[STEPSEQ_NUM_STEPS];
 
     uint64_t trig_mask;
     uint64_t slide_mask;
@@ -71,16 +67,7 @@ public:
 
     uint8_t track_length;
     uint8_t track_speed;
-
-    const uint8_t* data() const { return reinterpret_cast<const uint8_t*>(this); }
-    uint8_t* data() { return reinterpret_cast<uint8_t*>(this); }
-    static constexpr size_t dataSize() { return sizeof(StepSeqTrackDataV1); }
-
-    void init() {
-        memset(this, 0, sizeof(StepSeqTrackDataV1));
-        swing_mask = STEPSEQ_DEFAULT_SWING_MASK;
-        track_speed = 0xFF;
-    }
+    uint8_t locks_params[STEPSEQ_NUM_LOCKS];
 
     void clean_params() {
         uint64_t used_locks = 0;
@@ -132,9 +119,38 @@ public:
     }
 };
 
-class StepSeqTrackData : public StepSeqTrackDataV1 {
+class StepSeqTrackDataV1 : public StepSeqTrackFixedData {
+public:
+    uint8_t locks[STEPSEQ_NUM_LOCK_SLOTS];
+
+    const uint8_t* data() const { return reinterpret_cast<const uint8_t*>(this); }
+    uint8_t* data() { return reinterpret_cast<uint8_t*>(this); }
+    static constexpr size_t dataSize() { return sizeof(StepSeqTrackDataV1); }
+
+    void init() {
+        memset(this, 0, sizeof(StepSeqTrackDataV1));
+        swing_mask = STEPSEQ_DEFAULT_SWING_MASK;
+        track_speed = 0xFF;
+    }
+
+    uint16_t used_lock_slots() const {
+        uint16_t used = 0;
+        for (uint8_t step = 0; step < STEPSEQ_NUM_STEPS; ++step) {
+            used += stepseq_popcount(steps[step].locks);
+        }
+        return used > STEPSEQ_NUM_LOCK_SLOTS ? STEPSEQ_NUM_LOCK_SLOTS : used;
+    }
+
+    uint16_t store_size() const {
+        return reinterpret_cast<const uint8_t *>(locks) -
+               reinterpret_cast<const uint8_t *>(this) + used_lock_slots();
+    }
+};
+
+class StepSeqTrackData : public StepSeqTrackFixedData {
 public:
     uint8_t swing_amount;
+    uint8_t locks[STEPSEQ_NUM_LOCK_SLOTS];
 
     const uint8_t* data() const { return reinterpret_cast<const uint8_t*>(this); }
     uint8_t* data() { return reinterpret_cast<uint8_t*>(this); }
@@ -145,10 +161,27 @@ public:
         swing_mask = STEPSEQ_DEFAULT_SWING_MASK;
         track_speed = 0xFF;
     }
+
+    uint16_t used_lock_slots() const {
+        uint16_t used = 0;
+        for (uint8_t step = 0; step < STEPSEQ_NUM_STEPS; ++step) {
+            used += stepseq_popcount(steps[step].locks);
+        }
+        return used > STEPSEQ_NUM_LOCK_SLOTS ? STEPSEQ_NUM_LOCK_SLOTS : used;
+    }
+
+    uint16_t store_size() const {
+        return reinterpret_cast<const uint8_t *>(locks) -
+               reinterpret_cast<const uint8_t *>(this) + used_lock_slots();
+    }
 };
 
+static_assert(sizeof(StepSeqTrackDataV1) ==
+                  sizeof(StepSeqTrackFixedData) + STEPSEQ_NUM_LOCK_SLOTS,
+              "StepSeqTrackDataV1 storage size changed unexpectedly");
 static_assert(sizeof(StepSeqTrackData) ==
-                  sizeof(StepSeqTrackDataV1) + sizeof(uint8_t),
+                  sizeof(StepSeqTrackFixedData) + sizeof(uint8_t) +
+                      STEPSEQ_NUM_LOCK_SLOTS,
               "StepSeqTrackData storage size changed unexpectedly");
 #pragma pack(pop)
 
@@ -158,6 +191,10 @@ public:
     void init_storage() {
         SeqTrackModStorage::init_mod();
         StepSeqTrackData::init();
+    }
+
+    uint16_t store_size() const {
+        return sizeof(SeqTrackModStorage) + StepSeqTrackData::store_size();
     }
 };
 

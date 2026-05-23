@@ -624,7 +624,7 @@ bool TBDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
 
   apply_seq_defaults(slot, seq_track);
 
-  return write_grid(_this(), _sizeof(), column, row, grid);
+  return write_grid(_this(), get_store_size(), column, row, grid);
 }
 
 TBDMidiTrack::TBDMidiTrack() {
@@ -821,7 +821,7 @@ bool TBDMidiTrack::store_in_grid(GridSlot column, GridRow row,
 
   apply_seq_defaults(slot, seq_track);
 
-  return write_grid(_this(), _sizeof(), column, row, grid);
+  return write_grid(_this(), get_store_size(), column, row, grid);
 }
 
 #endif // PLATFORM_TBD

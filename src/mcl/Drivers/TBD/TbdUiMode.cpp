@@ -1290,7 +1290,6 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
         uint8_t step = n + (SeqPage::page_select * 16);
         if (step >= track.length()) continue;
         if (track.set_track_locks(step, slot.lock_param, value)) {
-          track.enable_step_locks(step);
           if (SeqPage::mask_type == MASK_PATTERN) {
             bool cond_plock = false;
             uint8_t condition =
