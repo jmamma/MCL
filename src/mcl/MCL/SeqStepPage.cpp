@@ -682,12 +682,13 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
         return true;
       }
-      case MDX_KEY_BANKB: {
-        if (toggle_mask(MASK_SWING))
+      case MDX_KEY_MUTE:
+      case MDX_KEY_BANKA: {
+        if (toggle_mask(MASK_MUTE))
           return true;
       }
       case MDX_KEY_BANKC: {
-        if (toggle_mask(MASK_MUTE))
+        if (toggle_mask(MASK_SWING))
           return true;
       }
       case MDX_KEY_BANKD: {

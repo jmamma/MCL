@@ -306,7 +306,7 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
         if (key_interface.is_key_down(MDX_KEY_FUNC) &&
-            key == MDX_KEY_BANKB &&
+            key == MDX_KEY_BANKC &&
             current_page != SEQ_STEP_PAGE) {
           SeqPage::mask_type = MASK_SWING;
           seq_step_page.prepare = true;
