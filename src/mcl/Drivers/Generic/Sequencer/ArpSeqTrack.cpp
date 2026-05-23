@@ -107,6 +107,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   oct = oct_;
 
   if (!enabled) {
+    mute_state = mute_state_old;
     return;
   }
   on_render_begin();
@@ -127,6 +128,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
     sort_up[num_of_notes++] = note;
   }
   if (num_of_notes == 0) {
+    mute_state = mute_state_old;
     return;
   }
   uint8_t top_note = sort_up[num_of_notes - 1];
