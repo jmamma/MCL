@@ -477,6 +477,12 @@ static inline void display_popup(const char *str1_P, const char *str2_P) {
   seq_panel_popup_text_P(str1_P, str2_P);
 }
 
+static inline void open_enhanced_swing_window() {
+  if (MD.connected && MD.global.extendedMode == 2) {
+    MD.toggle_swing_window();
+  }
+}
+
 void SeqPage::setup() {}
 
 void SeqPage::check_and_set_page_select() {
@@ -604,6 +610,9 @@ void SeqPage::config_mask_info(bool silent) {
       seq_panel_popup_text((uint8_t)-1, 2);
     } else {
       seq_page_active_step_track().popup_text(str, 1);
+      if (mask_type == MASK_SWING) {
+        open_enhanced_swing_window();
+      }
     }
   }
 }
