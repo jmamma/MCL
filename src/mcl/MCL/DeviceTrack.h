@@ -47,6 +47,8 @@ class TBDMidiTrack;
 class ATTR_PACKED() DeviceTrack : public GridTrack {
 
 private:
+  bool read_remaining_from_grid_512(GridSlot column, GridRow row, Grid *grid,
+                                    const uint8_t *first_sector);
   template <class T> T *_dynamik_kast(DeviceTrack *p) {
     T *ret;
     _dynamik_kast_impl(p, &ret);
