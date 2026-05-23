@@ -15,7 +15,7 @@ uint16_t MDSeqTrack::md_trig_mask = 0;
 uint32_t MDSeqTrack::load_machine_cache = 0;
 
 static uint8_t md_swing_q14_to_amount(uint32_t swing_q14) {
-  uint32_t amount = (swing_q14 * 30UL + 8192UL) >> 14;
+  uint32_t amount = (swing_q14 * 50UL + 8192UL) >> 14;
   return amount > 30 ? 30 : (uint8_t)amount;
 }
 
@@ -23,7 +23,7 @@ uint8_t MDSeqTrack::effective_timing(uint8_t step, uint8_t timing_mid) const {
   uint8_t value = timing[step];
   if (value == timing_mid && swing_amount && steps[step].swing) {
     uint16_t swung = (uint16_t)timing_mid +
-                     (((uint16_t)swing_amount * timing_mid + 50) / 100);
+                     (((uint16_t)swing_amount * timing_mid + 25) / 50);
     value = swung > 255 ? 255 : (uint8_t)swung;
   }
   return value;

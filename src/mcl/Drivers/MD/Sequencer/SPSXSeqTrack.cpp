@@ -19,7 +19,7 @@
 namespace {
 
 uint8_t spsx_swing_q14_to_amount(uint32_t swing_q14) {
-    uint32_t amount = (swing_q14 * 30UL + 8192UL) >> 14;
+    uint32_t amount = (swing_q14 * 50UL + 8192UL) >> 14;
     return amount > 30 ? 30 : (uint8_t)amount;
 }
 

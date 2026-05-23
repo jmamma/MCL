@@ -221,7 +221,7 @@ int16_t StepSeqDataTrack::effective_timing_offset(uint8_t step,
     int8_t mt = microtiming[step];
     if (mt == 0 && swing_amount &&
         STEPSEQ_IS_BIT_SET64(swing_mask, step)) {
-        return (int16_t)(((uint16_t)swing_amount * tps + 50) / 100);
+        return (int16_t)(((uint16_t)swing_amount * tps + 25) / 50);
     }
     return stepseq_microtiming_to_ticks(mt, tps);
 }
