@@ -65,23 +65,23 @@ public:
     seq_data.init();
   }
   void clear_track();
-  uint16_t calc_latency(uint8_t tracknumber);
-  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber);
-  void transition_send(uint8_t tracknumber, GridSlot slotnumber);
+  uint16_t calc_latency(uint8_t tracknumber) override;
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override;
+  void transition_send(uint8_t tracknumber, GridSlot slotnumber) override;
   void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                       GridSlot slotnumber);
-  void load_seq_data(SeqTrack *seq_track);
+                       GridSlot slotnumber) override;
+  void load_seq_data(SeqTrack *seq_track) override;
   void get_machine_from_kit(uint8_t tracknumber);
   bool get_track_from_sysex(uint8_t tracknumber);
 
   bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                     bool online = false, Grid *grid = nullptr);
-  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+                     bool online = false, Grid *grid = nullptr) override;
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
 
-  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
 
-  void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track);
+  void paste_track(uint8_t src_track, uint8_t dest_track, SeqTrack *seq_track) override;
 #if !defined(__AVR__)
   // scale machine track vol by percentage
   void scale_vol(float scale);
@@ -97,20 +97,20 @@ public:
   // normalize track level
   void normalize();
 
-  virtual uint16_t get_track_size() { return _sizeof(); }
-  virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
-  virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same);
+  uint16_t get_track_size() override { return _sizeof(); }
+  uintptr_t get_region() override { return BANK1_MD_TRACKS_START; }
+  void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) override;
 #if !defined(__AVR__)
-  virtual bool can_materialize_as(uint8_t track_type);
-  virtual DeviceTrack *materialize_as(uint8_t track_type,
-                                      uint8_t tracknumber,
-                                      SeqTrack *seq_track);
+  bool can_materialize_as(uint8_t track_type) override;
+  DeviceTrack *materialize_as(uint8_t track_type,
+                              uint8_t tracknumber,
+                              SeqTrack *seq_track) override;
 #endif
-  virtual uint8_t get_model() { return machine.get_model(); }
-  virtual uint8_t storage_version() const { return SEQ_TRACK_SWING_STORAGE_VERSION; }
+  uint8_t get_model() override { return machine.get_model(); }
+  uint8_t storage_version() const override { return SEQ_TRACK_SWING_STORAGE_VERSION; }
 
-  virtual void *get_sound_data_ptr() { return &machine; }
-  virtual size_t get_sound_data_size() { return sizeof(MDMachine); }
+  void *get_sound_data_ptr() override { return &machine; }
+  size_t get_sound_data_size() override { return sizeof(MDMachine); }
   virtual size_t get_sound_cmp_size() { return 27; } //params,track,level,model
 
 private:
@@ -119,12 +119,12 @@ private:
 class MDTrackChunk : public DeviceTrackChunk {
 public:
 
-  virtual uint16_t get_seq_data_size() { return sizeof(MDSeqTrackData); }
-  virtual uint8_t get_model() { return MD_TRACK_TYPE; }
-  virtual uint16_t get_track_size() { return GRID1_TRACK_LEN; }
-  virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
-  virtual void *get_sound_data_ptr() { return nullptr; }
-  virtual size_t get_sound_data_size() { return 0; }
+  uint16_t get_seq_data_size() override { return sizeof(MDSeqTrackData); }
+  uint8_t get_model() override { return MD_TRACK_TYPE; }
+  uint16_t get_track_size() override { return GRID1_TRACK_LEN; }
+  uintptr_t get_region() override { return BANK1_MD_TRACKS_START; }
+  void *get_sound_data_ptr() override { return nullptr; }
+  size_t get_sound_data_size() override { return 0; }
 };
 
 static_assert(MEMORY_ALIGN(sizeof(MDTrack) - sizeof(void*)) <= GRID1_TRACK_LEN,

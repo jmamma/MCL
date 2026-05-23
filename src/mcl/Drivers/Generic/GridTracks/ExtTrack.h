@@ -22,44 +22,44 @@ public:
   size_t _sizeof() const {
      return sizeof(ExtTrack) - sizeof(void*);
   }
-  virtual void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
-                               GridSlot slotnumber);
-  virtual bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) { return true; }
-  void load_seq_data(SeqTrack *seq_track);
+  void transition_load(uint8_t tracknumber, SeqTrack *seq_track,
+                       GridSlot slotnumber) override;
+  bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override { return true; }
+  void load_seq_data(SeqTrack *seq_track) override;
   void transition_load_device(uint8_t tracknumber, SeqTrack *seq_track, GridSlot slotnumber);
   virtual bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
-                     bool online = false, Grid *grid = nullptr);
+                     bool online = false, Grid *grid = nullptr) override;
 
-  virtual void init(uint8_t tracknumber, SeqTrack *seq_track) {
+  void init(uint8_t tracknumber, SeqTrack *seq_track) override {
     ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
     seq_data.channel = ext_seq_track->channel;
     link.set_speed(SEQ_SPEED_1X);
   }
-  virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
+  void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
 
-  virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
+  uint8_t get_model() override { return EXT_TRACK_TYPE; }
   void init_defaults() override {
     mod_data.init();
     seq_data.clear();
   }
-  virtual uint16_t get_track_size() { return _sizeof(); }
+  uint16_t get_track_size() override { return _sizeof(); }
   uint16_t write_size() {
     return DEVICE_TRACK_LEN + sizeof(SeqTrackModData) +
            seq_data.store_size();
   }
-  virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
-  virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
-  virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
+  uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
+  uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
 #if !defined(__AVR__)
-  virtual bool can_materialize_as(uint8_t track_type);
+  bool can_materialize_as(uint8_t track_type) override;
 #endif
-  virtual DeviceTrack *materialize_as(uint8_t track_type,
-                                      uint8_t tracknumber,
-                                      SeqTrack *seq_track);
-  virtual void *get_sound_data_ptr() { return nullptr; }
-  virtual size_t get_sound_data_size() { return 0; }
+  DeviceTrack *materialize_as(uint8_t track_type,
+                              uint8_t tracknumber,
+                              SeqTrack *seq_track) override;
+  void *get_sound_data_ptr() override { return nullptr; }
+  size_t get_sound_data_size() override { return 0; }
 
   static void load_ext_seq_data(DeviceTrack &track, GridLink &link,
                                 ExtSeqTrackData &seq_data,
@@ -129,11 +129,11 @@ class ExtTrackChunk : public DeviceTrack {
 
 class ExtTrackChunk : public DeviceTrackChunk {
 public:
-  virtual uint16_t get_seq_data_size() { return sizeof(ExtSeqTrackData); }
-  virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
-  virtual uint16_t get_track_size() { return GRID2_TRACK_LEN; }
-  virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
-  virtual void *get_sound_data_ptr() { return nullptr; }
-  virtual size_t get_sound_data_size() { return 0; }
+  uint16_t get_seq_data_size() override { return sizeof(ExtSeqTrackData); }
+  uint8_t get_model() override { return EXT_TRACK_TYPE; }
+  uint16_t get_track_size() override { return GRID2_TRACK_LEN; }
+  uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
+  void *get_sound_data_ptr() override { return nullptr; }
+  size_t get_sound_data_size() override { return 0; }
 };
 #endif /* EXTTRACK_H__ */
