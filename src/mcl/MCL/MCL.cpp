@@ -305,6 +305,19 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
+        if (key_interface.is_key_down(MDX_KEY_FUNC) &&
+            key == MDX_KEY_BANKB &&
+            current_page != SEQ_STEP_PAGE) {
+          SeqPage::mask_type = MASK_SWING;
+          seq_step_page.prepare = true;
+          if (current_page != SOUND_BROWSER &&
+              current_page != ARP_PAGE &&
+              current_page != POLY_PAGE) {
+            seq_step_page.last_page = current_page;
+          }
+          mcl.setPage(SEQ_STEP_PAGE);
+          return true;
+        }
         if (current_page == GRID_LOAD_PAGE ||
             current_page == GRID_SAVE_PAGE ||
             (current_page == GRID_PAGE && grid_page.show_slot_menu)) { // ||
@@ -331,6 +344,14 @@ bool mcl_handleEvent(gui_event_t *event) {
         // uint8_t row = grid_page.bank * 16;
         // grid_page.jump_to_row(row);
         return true;
+      }
+      case MDX_KEY_NO: {
+        if (current_page != SEQ_STEP_PAGE && SeqPage::mask_type == MASK_SWING) {
+          SeqPage::mask_type = MASK_PATTERN;
+          seq_step_page.config_mask_info(false);
+          return true;
+        }
+        break;
       }
       case MDX_KEY_BANKGROUP: {
         if (current_page != TEXT_INPUT_PAGE &&
