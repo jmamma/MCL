@@ -15,12 +15,11 @@ uint8_t midi_device_track_valid_speed(uint8_t speed) {
 
 } // namespace
 
-MidiBackedDeviceTrack::MidiBackedDeviceTrack() {
-  seq_data.clear_storage();
-}
+MidiBackedDeviceTrack::MidiBackedDeviceTrack() {}
 
 void MidiBackedDeviceTrack::apply_seq_defaults(uint8_t tracknumber,
                                                SeqTrack *seq_track) {
+  MidiSeqTrackStorage &seq_data = midi_seq_storage();
   if (seq_data.version != MIDI_SEQ_DATA_VERSION) {
     uint8_t fallback_speed = midi_device_track_valid_speed(link.speed_value());
     seq_data.clear();
@@ -46,6 +45,7 @@ void MidiBackedDeviceTrack::apply_seq_defaults(uint8_t tracknumber,
 }
 
 void MidiBackedDeviceTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
+  MidiSeqTrackStorage &seq_data = midi_seq_storage();
   seq_data.clear_storage();
   link.set_speed(SEQ_SPEED_1X);
   link.length = 16;
@@ -87,6 +87,7 @@ void MidiBackedDeviceTrack::load_seq_data(SeqTrack *seq_track) {
   }
 
   auto *midi_track = static_cast<MidiSeqTrack *>(seq_track);
+  MidiSeqTrackStorage &seq_data = midi_seq_storage();
   uint8_t old_mute = midi_track->mute_state;
   midi_track->mute_state = SEQ_MUTE_ON;
   midi_track->notesoff_pending = true;
@@ -121,11 +122,13 @@ void MidiBackedDeviceTrack::load_seq_data(SeqTrack *seq_track) {
 void MidiBackedDeviceTrack::import_legacy_ext_storage(
     const GridLink &old_link, const ExtSeqTrackData &old_seq_data,
     const SeqTrackModData &old_mod_data, uint8_t tracknumber) {
+  MidiSeqTrackStorage &seq_data = midi_seq_storage();
   link = old_link;
   seq_data.clear_storage();
   seq_data.mod() = old_mod_data;
   seq_data.import_legacy_ext(old_seq_data, old_link);
-  seq_data.channel = old_seq_data.channel < 16 ? old_seq_data.channel : tracknumber;
+  seq_data.channel =
+      old_seq_data.channel < 16 ? old_seq_data.channel : tracknumber;
 }
 
 bool MidiBackedDeviceTrack::can_materialize_as(uint8_t track_type) {
@@ -133,6 +136,20 @@ bool MidiBackedDeviceTrack::can_materialize_as(uint8_t track_type) {
     return true;
   }
   return DeviceTrack::can_materialize_as(track_type);
+}
+
+bool MidiBackedDeviceTrack::materialized_storage_range(
+    uint8_t track_type, uint16_t &source_offset, uint16_t &target_offset,
+    uint16_t &len) {
+  if (track_type != MIDI_TRACK_TYPE) {
+    return false;
+  }
+  source_offset =
+      reinterpret_cast<uintptr_t>(&midi_seq_storage()) -
+      reinterpret_cast<uintptr_t>(_this());
+  target_offset = DEVICE_TRACK_LEN;
+  len = sizeof(MidiSeqTrackStorage);
+  return true;
 }
 
 DeviceTrack *MidiBackedDeviceTrack::materialize_as(uint8_t track_type,
@@ -144,7 +161,7 @@ DeviceTrack *MidiBackedDeviceTrack::materialize_as(uint8_t track_type,
   }
 
   GridLink old_link = link;
-  MidiSeqTrackStorage old_seq_data = seq_data;
+  MidiSeqTrackStorage old_seq_data = midi_seq_storage();
   if (old_seq_data.channel >= 16) {
     old_seq_data.channel = tracknumber;
   }
@@ -159,6 +176,7 @@ DeviceTrack *MidiBackedDeviceTrack::materialize_as(uint8_t track_type,
 
 void MidiBackedDeviceTrack::store_midi_seq_data(GridSlot column,
                                                 SeqTrack *seq_track) {
+  MidiSeqTrackStorage &seq_data = midi_seq_storage();
   const GridColumn slot = column & 0x0F;
   SeqTrack::store_mod_data(seq_data.mod(), false, slot);
 

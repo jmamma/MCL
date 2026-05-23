@@ -13,8 +13,8 @@
 
 class ATTR_PACKED() ExtTrack : public DeviceTrack {
 public:
-  ExtSeqTrackData seq_data;
   SeqTrackModData mod_data;
+  ExtSeqTrackData seq_data;
   ExtTrack() {
     active = EXT_TRACK_TYPE;
     static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
@@ -40,11 +40,14 @@ public:
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track);
 
   virtual uint8_t get_model() { return EXT_TRACK_TYPE; }
+  void init_storage_defaults() override {
+    mod_data.init();
+    seq_data.clear();
+  }
   virtual uint16_t get_track_size() { return _sizeof(); }
   virtual uintptr_t get_region() { return BANK1_EXT_TRACKS_START; }
   virtual uint16_t get_region_size() { return GRID2_TRACK_LEN; }
   virtual uint8_t storage_version() const { return SEQ_TRACK_MOD_STORAGE_VERSION; }
-  virtual uint8_t get_parent_model() { return device_manager.secondary_device()->track_type; }
 #if !defined(__AVR__)
   virtual bool can_materialize_as(uint8_t track_type);
 #endif
@@ -54,6 +57,26 @@ public:
   virtual void *get_sound_data_ptr() { return nullptr; }
   virtual size_t get_sound_data_size() { return 0; }
 
+  static void load_ext_seq_data(DeviceTrack &track, GridLink &link,
+                                ExtSeqTrackData &seq_data,
+                                SeqTrackModData &mod_data,
+                                SeqTrack *seq_track);
+  static constexpr uint16_t seq_payload_storage_offset() {
+    return DEVICE_TRACK_LEN;
+  }
+  static constexpr uint16_t seq_payload_storage_size() {
+    return sizeof(SeqTrackModData) + sizeof(ExtSeqTrackData);
+  }
+#if !defined(__AVR__)
+  static bool can_materialize_legacy_ext(uint8_t active,
+                                         uint8_t track_type);
+  static DeviceTrack *materialize_legacy_ext(DeviceTrack &track,
+                                             GridLink &link,
+                                             ExtSeqTrackData &seq_data,
+                                             SeqTrackModData &mod_data,
+                                             uint8_t track_type,
+                                             uint8_t tracknumber);
+#endif
 };
 /*
 class ExtTrackChunk : public DeviceTrack {

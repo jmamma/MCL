@@ -758,6 +758,21 @@ bool TBDMidiTrack::can_materialize_as(uint8_t track_type) {
   return DeviceTrack::can_materialize_as(track_type);
 }
 
+bool TBDMidiTrack::materialized_storage_range(uint8_t track_type,
+                                              uint16_t &source_offset,
+                                              uint16_t &target_offset,
+                                              uint16_t &len) {
+  if (track_type != MIDI_TRACK_TYPE) {
+    return false;
+  }
+  source_offset =
+      reinterpret_cast<uintptr_t>(&seq_data) -
+      reinterpret_cast<uintptr_t>(_this());
+  target_offset = DEVICE_TRACK_LEN;
+  len = sizeof(MidiSeqTrackStorage);
+  return true;
+}
+
 DeviceTrack *TBDMidiTrack::materialize_as(uint8_t track_type,
                                           uint8_t tracknumber,
                                           SeqTrack *seq_track) {

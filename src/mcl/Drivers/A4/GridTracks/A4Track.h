@@ -11,9 +11,11 @@
 
 // Use a more specific name to avoid conflict with Arduino's Print class
 
-class ATTR_PACKED() A4Track : public ExtTrack {
+class ATTR_PACKED() A4Track : public DeviceTrack {
 public:
   A4Sound sound;
+  SeqTrackModData mod_data;
+  ExtSeqTrackData seq_data;
   A4Track() {
     active = A4_TRACK_TYPE;
   }
@@ -27,32 +29,44 @@ public:
   bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override {
     return false;
   }
+  void load_seq_data(SeqTrack *seq_track) override;
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
-  bool get_track_from_sysex(uint8_t tracknumber) override;
+  bool get_track_from_sysex(uint8_t tracknumber);
   bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   virtual uint16_t get_track_size() override { return _sizeof(); }
+  virtual uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
+  virtual uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   virtual uint8_t get_model() override { return A4_TRACK_TYPE; } // TODO
-  virtual uint8_t get_parent_model() override { return EXT_TRACK_TYPE; }
-  virtual bool allow_cast_to_parent() override { return true; }
+  virtual uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  void init_storage_defaults() override {
+    mod_data.init();
+    seq_data.clear();
+  }
   virtual void *get_sound_data_ptr() override { return &sound; }
   virtual size_t get_sound_data_size() override { return sizeof(A4Sound); }
 #if !defined(__AVR__)
   bool can_materialize_as(uint8_t track_type) override;
+#endif
+  bool materialized_storage_range(uint8_t track_type,
+                                  uint16_t &source_offset,
+                                  uint16_t &target_offset,
+                                  uint16_t &len) override;
   DeviceTrack *materialize_as(uint8_t track_type,
                               uint8_t tracknumber,
                               SeqTrack *seq_track) override;
-#endif
 };
 
 #if !defined(__AVR__)
 class ATTR_PACKED() A4MidiTrack : public MidiBackedDeviceTrack {
 public:
   A4Sound sound;
+  MidiSeqTrackStorage seq_data;
 
   A4MidiTrack() {
     active = A4_MIDI_TRACK_TYPE;
+    seq_data.clear_storage();
   }
 
   size_t _sizeof() const {
@@ -81,6 +95,9 @@ public:
                      const SeqTrackModData &old_mod_data,
                      const A4Sound &old_sound,
                      uint8_t tracknumber);
+
+protected:
+  MidiSeqTrackStorage &midi_seq_storage() override { return seq_data; }
 };
 
 static_assert(MEMORY_ALIGN(sizeof(A4MidiTrack) - sizeof(void *)) <=

@@ -10,6 +10,8 @@
 #include "MCLActions.h"
 #include "DeviceManager.h"
 #include "ExtTrack.h"
+#include "../Drivers/A4/GridTracks/A4Track.h"
+#include "../Drivers/MNM/GridTracks/MNMTrack.h"
 #include "../Drivers/MidiDevice.h"
 #include "SeqPages.h"
 #include "SeqTrackUtil.h"
@@ -60,10 +62,14 @@ SeqTrackModData *clipboard_track_mod_data(DeviceTrack *track,
   case MD_TRACK_TYPE:
     return &static_cast<MDTrack *>(track)->mod_data;
   case EXT_TRACK_TYPE:
-  case A4_TRACK_TYPE:
-  case MNM_TRACK_TYPE:
     *track_limit = NUM_GRID_Y_LFO_TRACKS;
     return &static_cast<ExtTrack *>(track)->mod_data;
+  case A4_TRACK_TYPE:
+    *track_limit = NUM_GRID_Y_LFO_TRACKS;
+    return &static_cast<A4Track *>(track)->mod_data;
+  case MNM_TRACK_TYPE:
+    *track_limit = NUM_GRID_Y_LFO_TRACKS;
+    return &static_cast<MNMTrack *>(track)->mod_data;
 #if !defined(__AVR__)
   case MDSPSX_TRACK_TYPE:
     return &static_cast<SPSXTrack *>(track)->seq_storage.mod();
@@ -73,9 +79,11 @@ SeqTrackModData *clipboard_track_mod_data(DeviceTrack *track,
     *track_limit = NUM_GRID_Y_LFO_TRACKS;
     return &static_cast<MidiTrack *>(track)->seq_data.mod();
   case A4_MIDI_TRACK_TYPE:
+    *track_limit = NUM_GRID_Y_LFO_TRACKS;
+    return &static_cast<A4MidiTrack *>(track)->seq_data.mod();
   case MNM_MIDI_TRACK_TYPE:
     *track_limit = NUM_GRID_Y_LFO_TRACKS;
-    return &static_cast<MidiBackedDeviceTrack *>(track)->seq_data.mod();
+    return &static_cast<MNMMidiTrack *>(track)->seq_data.mod();
 #endif
 #ifdef PLATFORM_TBD
   case TBD_TRACK_TYPE:

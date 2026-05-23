@@ -31,18 +31,18 @@ public:
   } seq_data;
 };
 
-class ATTR_PACKED() SPSXTrackStorage : public SPSXTrackSeqStorage,
-                                       public SeqTrackModStorage {
+class ATTR_PACKED() SPSXTrackStorage : public SeqTrackModStorage,
+                                       public SPSXTrackSeqStorage {
 public:
   void init_storage() {
+    SeqTrackModStorage::init_mod();
     seq_version = SPSX_SEQ_VERSION_LEGACY;
     seq_data.legacy.init();
-    SeqTrackModStorage::init_mod();
   }
 };
 
 static_assert(sizeof(SPSXTrackStorage) ==
-                  sizeof(SPSXTrackSeqStorage) + sizeof(SeqTrackModStorage),
+                  sizeof(SeqTrackModStorage) + sizeof(SPSXTrackSeqStorage),
               "SPSXTrackStorage storage size changed");
 
 class ATTR_PACKED() SPSXTrack : public DeviceTrack {
@@ -71,6 +71,10 @@ public:
   }
 
   void init();
+  void init_storage_defaults() override {
+    machine.init();
+    seq_storage.init_storage();
+  }
   void clear_track();
 
   uint16_t calc_latency(uint8_t tracknumber) override;
@@ -109,8 +113,6 @@ public:
                                       uint8_t tracknumber,
                                       SeqTrack *seq_track) override;
   virtual uint8_t get_model() override { return machine.get_model(); }
-  virtual uint8_t get_parent_model() override { return MD_TRACK_TYPE; }
-  virtual bool allow_cast_to_parent() override { return true; }
   virtual uint8_t storage_version() const override { return SEQ_TRACK_SWING_STORAGE_VERSION; }
 
   virtual void *get_sound_data_ptr() override { return &machine; }

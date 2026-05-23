@@ -51,11 +51,20 @@ bool ExtTrack::get_track_from_sysex(uint8_t tracknumber) {
 
 #if !defined(__AVR__)
 bool ExtTrack::can_materialize_as(uint8_t track_type) {
-  if (midi_track_type_is_storage_family(track_type) &&
-      is_legacy_ext_sequence_type(active)) {
+  if (can_materialize_legacy_ext(active, track_type)) {
     return true;
   }
   return DeviceTrack::can_materialize_as(track_type);
+}
+
+bool ExtTrack::can_materialize_legacy_ext(uint8_t active,
+                                          uint8_t track_type) {
+  if (track_type == EXT_TRACK_TYPE && active != EXT_TRACK_TYPE &&
+      is_legacy_ext_sequence_type(active)) {
+    return true;
+  }
+  return midi_track_type_is_storage_family(track_type) &&
+         is_legacy_ext_sequence_type(active);
 }
 #endif
 
@@ -64,25 +73,68 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
                                       SeqTrack *seq_track) {
   (void)seq_track;
 #if !defined(__AVR__)
-  if (track_type == EXT_TRACK_TYPE && active != EXT_TRACK_TYPE &&
-      is_legacy_ext_sequence_type(active)) {
+  if (can_materialize_legacy_ext(active, track_type)) {
+    return materialize_legacy_ext(*this, link, seq_data, mod_data, track_type,
+                                  tracknumber);
+  }
+#endif
+  return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
+}
+
+void ExtTrack::load_ext_seq_data(DeviceTrack &track, GridLink &link,
+                                 ExtSeqTrackData &seq_data,
+                                 SeqTrackModData &mod_data,
+                                 SeqTrack *seq_track) {
+#ifdef EXT_TRACKS
+  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
+
+  uint8_t old_mute = seq_track->mute_state;
+
+  seq_track->mute_state = SEQ_MUTE_ON;
+  ext_track->notesoff_pending = true;
+
+  uint8_t *dest = ext_track->data();
+  memcpy(dest, &seq_data, sizeof(seq_data));
+  track.load_link_data(seq_track);
+  ext_track->clear_mutes();
+  ext_track->pgm_oneshot = 0;
+  ext_track->set_length(seq_track->length);
+  seq_track->mute_state = old_mute;
+
+  SeqTrack::load_mod_data(
+      seq_track, mod_data, false,
+      track.storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+#endif
+}
+
+void ExtTrack::load_seq_data(SeqTrack *seq_track) {
+  load_ext_seq_data(*this, link, seq_data, mod_data, seq_track);
+}
+
+#if !defined(__AVR__)
+DeviceTrack *ExtTrack::materialize_legacy_ext(DeviceTrack &track,
+                                              GridLink &link,
+                                              ExtSeqTrackData &seq_data,
+                                              SeqTrackModData &mod_data,
+                                              uint8_t track_type,
+                                              uint8_t tracknumber) {
+  if (track_type == EXT_TRACK_TYPE && track.active != EXT_TRACK_TYPE &&
+      is_legacy_ext_sequence_type(track.active)) {
     GridLink old_link = link;
     ExtSeqTrackData old_seq_data;
     SeqTrackModData old_mod_data = mod_data;
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
-    auto *ext_track =
-        static_cast<ExtTrack *>(init_materialized_track_type(EXT_TRACK_TYPE));
+    auto *ext_track = static_cast<ExtTrack *>(
+        track.init_materialized_track_type(EXT_TRACK_TYPE));
     ext_track->link = old_link;
     ext_track->mod_data = old_mod_data;
     memcpy(&ext_track->seq_data, &old_seq_data, sizeof(old_seq_data));
     return ext_track;
   }
-#endif
 
-#if !defined(__AVR__)
   if (midi_track_type_is_storage_family(track_type) &&
-      is_legacy_ext_sequence_type(active)) {
+      is_legacy_ext_sequence_type(track.active)) {
     GridLink old_link = link;
     ExtSeqTrackData old_seq_data;
     SeqTrackModData old_mod_data = mod_data;
@@ -94,35 +146,12 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
     midi_seq_data.import_legacy_ext(old_seq_data, old_link);
     midi_seq_data.channel =
         old_seq_data.channel < 16 ? old_seq_data.channel : tracknumber;
-    return materialize_midi_storage_track(this, track_type, old_link,
+    return materialize_midi_storage_track(&track, track_type, old_link,
                                           midi_seq_data, tracknumber);
   }
-#endif
-  return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
+  return nullptr;
 }
-
-void ExtTrack::load_seq_data(SeqTrack *seq_track) {
-#ifdef EXT_TRACKS
-  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
-
-  uint8_t old_mute = seq_track->mute_state;
-
-  seq_track->mute_state = SEQ_MUTE_ON;
-  ext_track->notesoff_pending = true;
-
-  uint8_t *dest = ext_track->data();
-  memcpy(dest, &seq_data, sizeof(seq_data));
-  load_link_data(seq_track);
-  ext_track->clear_mutes();
-  ext_track->pgm_oneshot = 0;
-  ext_track->set_length(seq_track->length);
-  seq_track->mute_state = old_mute;
-
-  SeqTrack::load_mod_data(
-      seq_track, mod_data, false,
-      storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
 #endif
-}
 
 bool ExtTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, uint8_t merge,
                              bool online, Grid *grid) {

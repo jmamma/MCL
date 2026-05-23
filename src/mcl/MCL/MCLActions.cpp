@@ -47,16 +47,17 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
                                                 uint8_t seq_track_idx, bool &was_rebuilt,
                                                 EmptyTrack &scratch,
                                                 int8_t link_slot) {
-  auto *device_track = scratch.load_from_grid_512(track_idx, row);
-  if (device_track == nullptr) {
+  bool loaded_header = false;
+  auto *device_track =
+      scratch.load_from_grid_512_as(track_idx, row, track_type, seq_track_idx,
+                                    seq_track, nullptr, &loaded_header);
+  if (!loaded_header) {
     return nullptr;
   }
   if (link_slot >= 0) {
     scratch.link.store_in_mem(link_slot, &(links[0]));
   }
 
-  device_track = device_track->materialize_as(track_type, seq_track_idx,
-                                              seq_track);
   if (device_track == nullptr) {
     scratch.clear();
     scratch.init();
@@ -445,7 +446,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       continue;
     }
 
-    const bool load_sound = !rebuilt && device_track->link.load_sound();
+    const bool load_sound = !rebuilt && device_track->load_sound();
     if (!load_sound) {
       device_track->restore_sound_from_mem_if_type(gdt_dst->mem_slot_idx,
                                                    gdt_dst->track_type);
@@ -612,7 +613,7 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
   } // read failure
 
 
-  const bool load_sound = !rebuilt && ptrack->link.load_sound();
+  const bool load_sound = !rebuilt && ptrack->load_sound();
   if (!load_sound) {
     ptrack->restore_sound_from_mem_if_type(gdt_dst->mem_slot_idx,
                                            gdt_dst->track_type);
@@ -819,7 +820,7 @@ void MCLActions::cache_track(GridSlot n, GridDeviceTrack* gdt, GridColumn track_
     return;
   }
 
-  const bool load_sound = !rebuilt && ptrack->link.load_sound();
+  const bool load_sound = !rebuilt && ptrack->load_sound();
   if (!load_sound) {
     ptrack->restore_sound_from_mem_if_type(gdt->mem_slot_idx,
                                            gdt->track_type);

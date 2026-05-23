@@ -64,6 +64,10 @@ public:
   uintptr_t get_region() override { return BANK1_TBD_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  void init_storage_defaults() override {
+    tbd_init_p4_sound_runtime_defaults(p4_sound);
+    seq_data.init_storage();
+  }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
 
@@ -97,6 +101,10 @@ public:
   void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
   void load_seq_data(SeqTrack *seq_track) override;
   bool can_materialize_as(uint8_t track_type) override;
+  bool materialized_storage_range(uint8_t track_type,
+                                  uint16_t &source_offset,
+                                  uint16_t &target_offset,
+                                  uint16_t &len) override;
   DeviceTrack *materialize_as(uint8_t track_type,
                               uint8_t tracknumber,
                               SeqTrack *seq_track) override;
@@ -109,6 +117,10 @@ public:
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t get_model() override { return p4_sound.p4_track_index; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  void init_storage_defaults() override {
+    tbd_init_p4_sound_runtime_defaults(p4_sound);
+    seq_data.clear_storage();
+  }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
 

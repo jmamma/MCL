@@ -44,6 +44,10 @@ public:
     return mcl_sd.seek(get_slot_offset(col, row), &file);
   }
 
+  bool seek(GridColumn col, GridRow row, uint16_t offset) {
+    return mcl_sd.seek(get_slot_offset(col, row) + offset, &file);
+  }
+
   bool seek_row_header(GridRow row) {
     return mcl_sd.seek(get_row_header_offset(row), &file);
   }

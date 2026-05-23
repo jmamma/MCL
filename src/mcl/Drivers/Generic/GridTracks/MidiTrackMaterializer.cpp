@@ -37,15 +37,14 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
     stored_seq.channel = tracknumber;
   }
   GridLink target_link = link;
-  if (track_type != MIDI_TRACK_TYPE) {
-    target_link.set_load_sound(false);
-  }
+  bool target_loads_sound = track_type == MIDI_TRACK_TYPE;
 
   if (track_type == MIDI_TRACK_TYPE) {
     auto *midi_track =
         static_cast<MidiTrack *>(
             storage->init_materialized_track_type(MIDI_TRACK_TYPE));
     midi_track->link = target_link;
+    midi_track->set_load_sound(target_loads_sound);
     midi_track->seq_data = stored_seq;
     return midi_track;
   }
@@ -58,6 +57,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
     a4_track->sound.origPosition = tracknumber;
     a4_track->sound.soundpool = true;
     a4_track->link = target_link;
+    a4_track->set_load_sound(target_loads_sound);
     a4_track->seq_data = stored_seq;
     return a4_track;
   }
@@ -67,6 +67,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
         storage->init_materialized_track_type(MNM_MIDI_TRACK_TYPE));
     mnm_track->machine.init(tracknumber);
     mnm_track->link = target_link;
+    mnm_track->set_load_sound(target_loads_sound);
     mnm_track->seq_data = stored_seq;
     return mnm_track;
   }
@@ -77,6 +78,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
         storage->init_materialized_track_type(TBD_MIDI_TRACK_TYPE));
     tbd_midi_track->init(tracknumber, nullptr);
     tbd_midi_track->link = target_link;
+    tbd_midi_track->set_load_sound(target_loads_sound);
     tbd_midi_track->seq_data = stored_seq;
     tbd_midi_track->p4_sound.midi_channel = stored_seq.channel;
     return tbd_midi_track;

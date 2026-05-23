@@ -152,17 +152,17 @@ static_assert(sizeof(StepSeqTrackData) ==
               "StepSeqTrackData storage size changed unexpectedly");
 #pragma pack(pop)
 
-class ATTR_PACKED() StepSeqTrackStorage : public StepSeqTrackData,
-                                          public SeqTrackModStorage {
+class ATTR_PACKED() StepSeqTrackStorage : public SeqTrackModStorage,
+                                          public StepSeqTrackData {
 public:
     void init_storage() {
-        StepSeqTrackData::init();
         SeqTrackModStorage::init_mod();
+        StepSeqTrackData::init();
     }
 };
 
 static_assert(sizeof(StepSeqTrackStorage) ==
-                  sizeof(StepSeqTrackData) + sizeof(SeqTrackModStorage),
+                  sizeof(SeqTrackModStorage) + sizeof(StepSeqTrackData),
               "StepSeqTrackStorage storage size changed");
 
 #endif // !defined(__AVR__)

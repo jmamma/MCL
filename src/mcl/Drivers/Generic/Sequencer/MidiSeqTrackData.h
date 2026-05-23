@@ -207,17 +207,17 @@ public:
 
 #pragma pack(pop)
 
-class ATTR_PACKED() MidiSeqTrackStorage : public MidiSeqTrackData,
-                                          public SeqTrackModStorage {
+class ATTR_PACKED() MidiSeqTrackStorage : public SeqTrackModStorage,
+                                          public MidiSeqTrackData {
 public:
   void clear_storage() {
-    MidiSeqTrackData::clear();
     SeqTrackModStorage::init_mod();
+    MidiSeqTrackData::clear();
   }
 };
 
 static_assert(sizeof(MidiSeqTrackStorage) ==
-                  sizeof(MidiSeqTrackData) + sizeof(SeqTrackModStorage),
+                  sizeof(SeqTrackModStorage) + sizeof(MidiSeqTrackData),
               "MidiSeqTrackStorage storage size changed");
 
 static_assert(sizeof(MidiSeqEvent) == 5,

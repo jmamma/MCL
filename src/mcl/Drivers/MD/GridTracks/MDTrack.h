@@ -49,9 +49,9 @@ public:
 
 class ATTR_PACKED() MDTrack : public DeviceTrack {
 public:
-  MDSeqTrackData seq_data;
   MDMachine machine;
   SeqTrackModData mod_data;
+  MDSeqTrackData seq_data;
   MDTrack() {
     active = MD_TRACK_TYPE;
   }
@@ -59,6 +59,11 @@ public:
     return sizeof(MDTrack) - sizeof(void*);
   }
   void init();
+  void init_storage_defaults() override {
+    machine.init();
+    mod_data.init();
+    seq_data.init();
+  }
   void clear_track();
   uint16_t calc_latency(uint8_t tracknumber);
   bool transition_cache(uint8_t tracknumber, GridSlot slotnumber);

@@ -10,8 +10,6 @@
 
 class ATTR_PACKED() MidiBackedDeviceTrack : public DeviceTrack {
 public:
-  MidiSeqTrackStorage seq_data;
-
   MidiBackedDeviceTrack();
 
   void init(uint8_t tracknumber, SeqTrack *seq_track) override;
@@ -27,6 +25,10 @@ public:
   void load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) override;
   void load_seq_data(SeqTrack *seq_track) override;
   bool can_materialize_as(uint8_t track_type) override;
+  bool materialized_storage_range(uint8_t track_type,
+                                  uint16_t &source_offset,
+                                  uint16_t &target_offset,
+                                  uint16_t &len) override;
   DeviceTrack *materialize_as(uint8_t track_type,
                               uint8_t tracknumber,
                               SeqTrack *seq_track) override;
@@ -34,8 +36,10 @@ public:
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  void init_storage_defaults() override { midi_seq_storage().clear_storage(); }
 
 protected:
+  virtual MidiSeqTrackStorage &midi_seq_storage() = 0;
   void import_legacy_ext_storage(const GridLink &old_link,
                                  const ExtSeqTrackData &old_seq_data,
                                  const SeqTrackModData &old_mod_data,

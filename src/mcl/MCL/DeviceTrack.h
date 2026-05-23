@@ -54,8 +54,7 @@ private:
   }
   __IMPL_DYNAMIK_KAST(EmptyTrack, EMPTY_TRACK_TYPE || p->active == 255,
                       EMPTY_TRACK_TYPE)
-  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE || p->active == A4_TRACK_TYPE || p->active == MNM_TRACK_TYPE,
-                      EXT_TRACK_TYPE)
+  __IMPL_DYNAMIK_KAST(ExtTrack, EXT_TRACK_TYPE, EXT_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(A4Track, A4_TRACK_TYPE, A4_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(SPSXTrack, MDSPSX_TRACK_TYPE, MDSPSX_TRACK_TYPE)
   __IMPL_DYNAMIK_KAST(MDTrack, MD_TRACK_TYPE, MD_TRACK_TYPE)
@@ -92,11 +91,31 @@ public:
   virtual DeviceTrack *materialize_as(uint8_t track_type,
                                       uint8_t tracknumber,
                                       SeqTrack *seq_track);
+  virtual bool materialized_storage_range(uint8_t track_type,
+                                          uint16_t &source_offset,
+                                          uint16_t &target_offset,
+                                          uint16_t &len) {
+    (void)track_type;
+    (void)source_offset;
+    (void)target_offset;
+    (void)len;
+    return false;
+  }
   DeviceTrack *init_materialized_track_type(uint8_t track_type) {
-    uint8_t old_version[2] = {version[0], version[1]};
+    uint8_t old_version = version;
+    uint16_t old_storage_size = storage_size;
+    uint8_t old_flags = flags;
     DeviceTrack *track = init_track_type(track_type);
-    track->version[0] = old_version[0];
-    track->version[1] = old_version[1];
+    track->version = old_version;
+    track->storage_size = old_storage_size;
+    track->flags = old_flags;
+    return track;
+  }
+  DeviceTrack *init_loaded_track_type(uint8_t track_type) {
+    uint8_t loaded_header[DEVICE_TRACK_LEN];
+    memcpy(loaded_header, _this(), DEVICE_TRACK_LEN);
+    DeviceTrack *track = init_track_type(track_type);
+    memcpy(track->_this(), loaded_header, DEVICE_TRACK_LEN);
     return track;
   }
   template <class T> DeviceTrack *init_track_type() {
@@ -106,6 +125,12 @@ public:
   }
 
   DeviceTrack *load_from_grid_512(GridSlot column, GridRow row, Grid *grid = nullptr);
+  DeviceTrack *load_from_grid_512_as(GridSlot column, GridRow row,
+                                     uint8_t track_type,
+                                     uint8_t tracknumber,
+                                     SeqTrack *seq_track,
+                                     Grid *grid = nullptr,
+                                     bool *loaded_header = nullptr);
   DeviceTrack *load_from_grid(GridSlot column, GridRow row);
   template <class T> T *load_from_grid(GridSlot col, GridRow row) {
     auto *p = load_from_grid(col, row);
@@ -131,14 +156,19 @@ public:
       return that;
     }
 
-    auto p = init_track_type(this->active);
+    auto p = init_loaded_track_type(this->active);
+    uint16_t source_offset;
+    uint16_t target_offset;
+    uint16_t len;
+    if (p->materialized_storage_range(track_type, source_offset, target_offset,
+                                      len)) {
+      return p->load_materialized_mem_storage_range(
+          col, track_type, source_offset, target_offset, len);
+    }
 #if defined(__AVR__)
     return p->materialize_as(track_type, col, nullptr);
 #else
     uint16_t source_size = p->get_track_size();
-    bool parent_cast = p->get_parent_model() == track_type &&
-                       p->allow_cast_to_parent();
-
     uintptr_t pos = load_region +
                     static_cast<uintptr_t>(load_region_size *
                                            static_cast<uint32_t>(col));
@@ -149,9 +179,6 @@ public:
       return nullptr;
     }
     if (load_bytes < source_size) {
-      if (parent_cast) {
-        return p->materialize_as(track_type, col, nullptr);
-      }
       if (source_size > load_region_size) {
         return nullptr;
       }
@@ -160,6 +187,25 @@ public:
     return p->materialize_as(track_type, col, nullptr);
 #endif
   }
+
+  bool read_grid_storage_range(GridSlot column, GridRow row, Grid *grid,
+                               uint16_t source_offset, void *dst,
+                               uint16_t len);
+  DeviceTrack *materialize_storage_range(uint8_t track_type,
+                                         uint16_t source_offset,
+                                         uint16_t target_offset,
+                                         uint16_t len);
+  DeviceTrack *load_materialized_mem_storage_range(GridSlot column,
+                                                   uint8_t track_type,
+                                                   uint16_t source_offset,
+                                                   uint16_t target_offset,
+                                                   uint16_t len);
+  DeviceTrack *load_materialized_storage_range(uint8_t track_type,
+                                               GridSlot column, GridRow row,
+                                               Grid *grid,
+                                               uint16_t source_offset,
+                                               uint16_t target_offset,
+                                               uint16_t len);
 
   int memcmp_sound(GridSlot column) {
     // 1. Get the base address. It doesn't matter if it's from the constexpr or linker world.

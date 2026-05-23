@@ -11,7 +11,10 @@
 #include "MNMTrack.h"
 #include "MDFXTrack.h"
 #include "MDRouteTrack.h"
+#include "MDTempoTrack.h"
 #include "EmptyTrack.h"
+#include "PerfTrack.h"
+#include "GridChainTrack.h"
 #include "LFOSeqTrack.h"
 #include <stddef.h>
 
@@ -34,66 +37,45 @@ bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
   return true;
 }
 
-class ATTR_PACKED() LegacyMDLFOTrackStorage {
+constexpr size_t LEGACY_GRID_TRACK_HEADER_SIZE =
+    sizeof(uint8_t) * 3 + sizeof(GridLink);
+
+class ATTR_PACKED() LegacyGridTrackHeader {
 public:
   uint8_t version[2];
   uint8_t active;
   GridLink link;
+};
+
+class ATTR_PACKED() LegacyMDLFOTrackStorage {
+public:
+  LegacyGridTrackHeader header;
   LegacyLFOSeqTrackData lfo_data;
 };
 
 class ATTR_PACKED() LegacyMDRouteTrackStorage {
 public:
-  uint8_t version[2];
-  uint8_t active;
-  GridLink link;
+  LegacyGridTrackHeader header;
   LegacyMDRouteData route;
 };
 
-class ATTR_PACKED() MDRouteTrackStorage {
-public:
-  uint8_t version[2];
-  uint8_t active;
-  GridLink link;
-  MDRouteData route;
-};
-
-class ATTR_PACKED() LegacyOriginDevMDTrackStorage {
-public:
-  uint8_t version[2];
-  uint8_t active;
-  GridLink link;
-  MDSeqTrackDataV1 seq_data;
-  MDMachine machine;
-};
-
+static_assert(sizeof(LegacyGridTrackHeader) == LEGACY_GRID_TRACK_HEADER_SIZE,
+              "origin/dev track header size changed");
 static_assert(offsetof(LegacyMDLFOTrackStorage, lfo_data) ==
-                  sizeof(GridTrack) - sizeof(void *),
+                  LEGACY_GRID_TRACK_HEADER_SIZE,
               "Legacy MD LFO storage prefix changed");
 static_assert(sizeof(LegacyMDLFOTrackStorage) ==
-                  sizeof(GridTrack) - sizeof(void *) +
-                      sizeof(LegacyLFOSeqTrackData),
+                  LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(LegacyLFOSeqTrackData),
               "Legacy MD LFO storage size changed");
 static_assert(offsetof(LegacyMDRouteTrackStorage, route) ==
-                  sizeof(GridTrack) - sizeof(void *),
+                  LEGACY_GRID_TRACK_HEADER_SIZE,
               "Legacy MD route storage prefix changed");
 static_assert(sizeof(LegacyMDRouteTrackStorage) ==
-                  sizeof(GridTrack) - sizeof(void *) +
-                      sizeof(LegacyMDRouteData),
+                  LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(LegacyMDRouteData),
               "Legacy MD route storage size changed");
-static_assert(offsetof(MDRouteTrackStorage, route) ==
-                  sizeof(GridTrack) - sizeof(void *),
-              "MD route storage prefix changed");
-static_assert(sizeof(MDRouteTrackStorage) ==
-                  sizeof(GridTrack) - sizeof(void *) + sizeof(MDRouteData),
-              "MD route storage size changed");
-static_assert(offsetof(LegacyOriginDevMDTrackStorage, seq_data) ==
-                  sizeof(GridTrack) - sizeof(void *),
-              "origin/dev MDTrack seq offset changed");
-static_assert(offsetof(LegacyOriginDevMDTrackStorage, machine) ==
-                  sizeof(GridTrack) - sizeof(void *) + sizeof(MDSeqTrackDataV1),
-              "origin/dev MDTrack machine offset changed");
-static_assert(sizeof(LegacyOriginDevMDTrackStorage) == 534,
+static_assert(LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(MDSeqTrackDataV1) +
+                      sizeof(MDMachine) ==
+                  534,
               "origin/dev MDTrack storage size changed");
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
@@ -106,35 +88,68 @@ bool project_config_valid(const MCLSysConfigData &source) {
   return source.version == CONFIG_VERSION;
 }
 
+void copy_legacy_header(GridTrack &dst, const LegacyGridTrackHeader &src) {
+  dst.version = 0;
+  dst.storage_size = 0;
+  dst.flags = 0;
+  dst.link = src.link;
+  dst.link.speed &= 0x7F;
+  dst.set_load_sound((src.link.speed & 0x80) == 0);
+}
+
+bool read_legacy_header(Grid &grid, GridColumn column, GridRow row,
+                        uint8_t expected_type,
+                        LegacyGridTrackHeader *header) {
+  if (header == nullptr || !grid.seek(column, row) ||
+      !grid.read(header, sizeof(*header))) {
+    return false;
+  }
+  return header->active == expected_type;
+}
+
 void copy_legacy_md_seq(MDSeqTrackData &dst, const MDSeqTrackDataV1 &src) {
-  dst.init();
   memcpy(dst.data(), src.data(), sizeof(MDSeqTrackDataV1));
   dst.swing_mask = MDSEQ_DEFAULT_SWING_MASK;
   dst.swing_amount = 0;
 }
 
+void stamp_migrated_track(DeviceTrack &track) {
+  track.version = track.storage_version();
+  track.storage_size = track.get_track_size();
+}
+
+bool write_migrated_track(Grid &grid, GridColumn column, GridRow row,
+                          DeviceTrack &track) {
+  stamp_migrated_track(track);
+  return grid.write(track._this(), track.get_track_size(), column, row);
+}
+
 void init_upgraded_md_track(MDTrack &dst, const GridLink &link,
                             const MDSeqTrackDataV1 &seq,
                             const MDMachine &machine) {
-  dst.init();
-  dst.version[0] = SEQ_TRACK_SWING_STORAGE_VERSION;
-  dst.version[1] = 0;
   dst.active = MD_TRACK_TYPE;
   dst.link = link;
+  dst.mod_data.init();
   copy_legacy_md_seq(dst.seq_data, seq);
   dst.machine = machine;
 }
 
 bool read_upgraded_md_track(Grid &grid, GridColumn column, GridRow row,
                             MDTrack &dst) {
-  LegacyOriginDevMDTrackStorage legacy;
-  if (!grid.read(&legacy, sizeof(legacy), column, row)) {
+  LegacyGridTrackHeader legacy_header;
+  if (!read_legacy_header(grid, column, row, MD_TRACK_TYPE,
+                          &legacy_header)) {
     return false;
   }
-  if (legacy.active != MD_TRACK_TYPE) {
+  MDSeqTrackDataV1 legacy_seq;
+  MDMachine legacy_machine;
+  if (!grid.read(&legacy_seq, sizeof(legacy_seq)) ||
+      !grid.read(&legacy_machine, sizeof(legacy_machine))) {
     return false;
   }
-  init_upgraded_md_track(dst, legacy.link, legacy.seq_data, legacy.machine);
+  init_upgraded_md_track(dst, legacy_header.link, legacy_seq, legacy_machine);
+  copy_legacy_header(dst, legacy_header);
+  dst.active = MD_TRACK_TYPE;
   return true;
 }
 
@@ -143,7 +158,103 @@ bool migrate_md_track_native_swing(Grid &grid, GridColumn column, GridRow row) {
   if (!read_upgraded_md_track(grid, column, row, upgraded)) {
     return false;
   }
-  return grid.write(upgraded._this(), upgraded._sizeof(), column, row);
+  return write_migrated_track(grid, column, row, upgraded);
+}
+
+bool migrate_ext_track_storage(Grid &grid, GridColumn column, GridRow row) {
+  LegacyGridTrackHeader legacy_header;
+  if (!read_legacy_header(grid, column, row, EXT_TRACK_TYPE,
+                          &legacy_header)) {
+    return false;
+  }
+  ExtTrack upgraded;
+  upgraded.init_storage_defaults();
+  copy_legacy_header(upgraded, legacy_header);
+  upgraded.active = EXT_TRACK_TYPE;
+  if (!grid.read(&upgraded.seq_data, sizeof(upgraded.seq_data))) {
+    return false;
+  }
+  return write_migrated_track(grid, column, row, upgraded);
+}
+
+bool migrate_a4_track_storage(Grid &grid, GridColumn column, GridRow row) {
+  LegacyGridTrackHeader legacy_header;
+  if (!read_legacy_header(grid, column, row, A4_TRACK_TYPE,
+                          &legacy_header)) {
+    return false;
+  }
+  A4Track upgraded;
+  upgraded.init_storage_defaults();
+  copy_legacy_header(upgraded, legacy_header);
+  upgraded.active = A4_TRACK_TYPE;
+  if (!grid.read(&upgraded.seq_data, sizeof(upgraded.seq_data)) ||
+      !grid.read(&upgraded.sound, sizeof(upgraded.sound))) {
+    return false;
+  }
+  return write_migrated_track(grid, column, row, upgraded);
+}
+
+bool migrate_mnm_track_storage(Grid &grid, GridColumn column, GridRow row) {
+  LegacyGridTrackHeader legacy_header;
+  if (!read_legacy_header(grid, column, row, MNM_TRACK_TYPE,
+                          &legacy_header)) {
+    return false;
+  }
+  MNMTrack upgraded;
+  upgraded.init_storage_defaults();
+  copy_legacy_header(upgraded, legacy_header);
+  upgraded.active = MNM_TRACK_TYPE;
+  if (!grid.read(&upgraded.seq_data, sizeof(upgraded.seq_data)) ||
+      !grid.read(&upgraded.machine, sizeof(upgraded.machine))) {
+    return false;
+  }
+  return write_migrated_track(grid, column, row, upgraded);
+}
+
+bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
+                                 GridColumn dst_column, uint8_t track_type,
+                                 DeviceTrack &upgraded, void *payload,
+                                 size_t payload_size) {
+  LegacyGridTrackHeader legacy_header;
+  if (!read_legacy_header(grid, column, row, track_type, &legacy_header)) {
+    return false;
+  }
+  copy_legacy_header(upgraded, legacy_header);
+  upgraded.active = track_type;
+  if (!grid.read(payload, payload_size)) {
+    return false;
+  }
+  return write_migrated_track(grid, dst_column, row, upgraded);
+}
+
+bool migrate_mdfx_track_storage(Grid &grid, GridColumn column, GridRow row) {
+  MDFXTrack upgraded;
+  return migrate_fixed_payload_track(
+      grid, column, row, column, MDFX_TRACK_TYPE, upgraded,
+      static_cast<MDFXData *>(&upgraded), sizeof(MDFXData));
+}
+
+bool migrate_mdtempo_track_storage(Grid &grid, GridColumn column, GridRow row) {
+  MDTempoTrack upgraded;
+  return migrate_fixed_payload_track(
+      grid, column, row, column, MDTEMPO_TRACK_TYPE, upgraded,
+      static_cast<TempoData *>(&upgraded), sizeof(TempoData));
+}
+
+bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
+                                GridColumn dst_column) {
+  PerfTrack upgraded;
+  return migrate_fixed_payload_track(
+      grid, column, row, dst_column, PERF_TRACK_TYPE, upgraded,
+      static_cast<PerfTrackData *>(&upgraded), sizeof(PerfTrackData));
+}
+
+bool migrate_gridchain_track_storage(Grid &grid, GridColumn column,
+                                     GridRow row) {
+  GridChainTrack upgraded;
+  return migrate_fixed_payload_track(
+      grid, column, row, column, GRIDCHAIN_TRACK_TYPE, upgraded,
+      &upgraded.chains, sizeof(GridChain));
 }
 
 void copy_project_config(MCLSysConfigData *dst,
@@ -471,16 +582,15 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     return false;
   }
 
-  bool migrate_track_storage = version < PROJ_VERSION_TRACK_STORAGE_VERSION;
-  bool migrate_route_tracks = version < PROJ_VERSION_ROUTE_TRACK_TYPE;
+  bool migrate_track_storage =
+      version < PROJ_VERSION_DYNAMIC_TRACK_STORAGE;
   bool migrate_grid_pairs = version < PROJ_VERSION_GRID_PAIRS;
   bool migrate_project_config = version < PROJ_VERSION_PROJECT_CONFIG;
   if (migrate_grid_pairs) {
     active_grid_pair = 0;
   }
   uint8_t pair = use_requested_pair ? requested_pair : active_grid_pair;
-  if (migrate_track_storage || migrate_route_tracks || migrate_grid_pairs ||
-      migrate_project_config) {
+  if (migrate_track_storage || migrate_grid_pairs || migrate_project_config) {
     draw_wait_popup("UPGRADING PROJECT");
   }
 
@@ -516,8 +626,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     }
   }
 
-  if ((migrate_track_storage || migrate_route_tracks) &&
-      !migrate_track_storage_versions(migrate_track_storage)) {
+  if (migrate_track_storage && !migrate_track_storage_versions()) {
     DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
@@ -532,8 +641,8 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     copy_project_config(&cfg, mcl_cfg);
     applied_project_config = true;
   }
-  bool write_project_header = migrate_track_storage || migrate_route_tracks ||
-                              migrate_grid_pairs || migrate_project_config ||
+  bool write_project_header = migrate_track_storage || migrate_grid_pairs ||
+                              migrate_project_config ||
                               use_requested_pair;
   if (write_project_header && !write_header()) {
     return false;
@@ -623,8 +732,7 @@ bool Project::check_project_version(uint16_t min_version) {
 
 bool Project::migrate_legacy_md_aux_slots(GridRow row,
                                           GridRowHeader *grid_x_header,
-                                          bool *converted_track0_lfo,
-                                          bool migrate_legacy_aux_layout) {
+                                          bool *converted_track0_lfo) {
   *converted_track0_lfo = false;
   if (grid_x_header == nullptr) {
     return false;
@@ -635,16 +743,14 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
     return false;
   }
 
-  if (migrate_legacy_aux_layout) {
-    EmptyTrack scratch;
-    if (grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
+  if (grid_y_header.track_type[MDLFO_TRACK_NUM] == MDLFO_TRACK_TYPE) {
       LegacyMDLFOTrackStorage legacy_track;
       if (!grids[1].read(&legacy_track, sizeof(legacy_track), MDLFO_TRACK_NUM,
                          row)) {
         return false;
       }
 
-      if (legacy_track.active == MDLFO_TRACK_TYPE &&
+      if (legacy_track.header.active == MDLFO_TRACK_TYPE &&
           (grid_x_header->track_type[0] == MD_TRACK_TYPE ||
            grid_x_header->track_type[0] == EMPTY_TRACK_TYPE)) {
         SeqLFOData legacy_lfo;
@@ -658,12 +764,7 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
           }
           md_track = &upgraded_md_track;
         } else if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
-          auto *track0 = scratch.load_from_grid_512(0, row, &grids[0]);
-          if (track0 == nullptr) {
-            return false;
-          }
-          md_track =
-              static_cast<MDTrack *>(track0->init_track_type(MD_TRACK_TYPE));
+          md_track = &upgraded_md_track;
           md_track->init();
           md_track->link.init(row);
           md_track->machine.track = 0;
@@ -674,9 +775,7 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
           md_track->mod_data.init();
           LFOSeqTrack::convert_legacy_data(legacy_lfo, &md_track->mod_data.lfo);
 
-          md_track->version[0] = SEQ_TRACK_SWING_STORAGE_VERSION;
-          md_track->version[1] = 0;
-          if (!grids[0].write(md_track->_this(), md_track->_sizeof(), 0, row)) {
+          if (!write_migrated_track(grids[0], 0, row, *md_track)) {
             return false;
           }
           if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
@@ -695,27 +794,18 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
       if (!grids[1].clear_slot(MDLFO_TRACK_NUM, row, false)) {
         return false;
       }
+  }
+
+  if (grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
+    if (!migrate_perf_track_storage(grids[1], LEGACY_PERF_TRACK_NUM, row,
+                                    PERF_TRACK_NUM)) {
+      return false;
     }
-
-    if (grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
-      auto *perf_track =
-          scratch.load_from_grid_512(LEGACY_PERF_TRACK_NUM, row, &grids[1]);
-      if (perf_track == nullptr) {
-        return false;
-      }
-
-      if (perf_track->active == PERF_TRACK_TYPE) {
-        if (!perf_track->store_in_grid(PERF_TRACK_NUM, row, nullptr, 0, false,
-                                       &grids[1])) {
-          return false;
-        }
-        grid_y_header.update_model(PERF_TRACK_NUM, PERF_TRACK_TYPE,
-                                   PERF_TRACK_TYPE);
-      }
-      grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
-      if (!grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
-        return false;
-      }
+    grid_y_header.update_model(PERF_TRACK_NUM, PERF_TRACK_TYPE,
+                               PERF_TRACK_TYPE);
+    grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
+    if (!grids[1].clear_slot(LEGACY_PERF_TRACK_NUM, row, false)) {
+      return false;
     }
   }
 
@@ -726,14 +816,12 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
       return false;
     }
 
-    if (legacy_route.active == MDROUTE_TRACK_TYPE) {
-      MDRouteTrackStorage new_route;
-      new_route.version[0] = 0;
-      new_route.version[1] = 0;
+    if (legacy_route.header.active == MDROUTE_TRACK_TYPE) {
+      MDRouteTrack new_route;
+      copy_legacy_header(new_route, legacy_route.header);
       new_route.active = MD_ROUTE_TRACK_TYPE;
-      new_route.link = legacy_route.link;
-      memcpy(new_route.route.routing, legacy_route.route.routing,
-             sizeof(new_route.route.routing));
+      memcpy(new_route.routing, legacy_route.route.routing,
+             sizeof(new_route.routing));
       uint8_t ptc_group =
           cfg.uart2_poly_chan >= PTC_MIDI_GROUP_MIN &&
                   cfg.uart2_poly_chan <= PTC_MIDI_GROUP_MAX
@@ -741,12 +829,12 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
               : PTC_GROUP_LOCAL;
       uint16_t poly_mask = legacy_route.route.poly_mask;
       for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, poly_mask >>= 1) {
-        new_route.route.ptc_group[i] =
+        new_route.ptc_group[i] =
             (poly_mask & 1) ? ptc_group : PTC_GROUP_OFF;
       }
 
-      if (!grids[1].write(&new_route, sizeof(new_route),
-                          MDROUTE_TRACK_NUM, row)) {
+      if (!write_migrated_track(grids[1], MDROUTE_TRACK_NUM, row,
+                                new_route)) {
         return false;
       }
       grid_y_header.update_model(MDROUTE_TRACK_NUM, MD_ROUTE_TRACK_TYPE,
@@ -760,22 +848,19 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
   return true;
 }
 
-bool Project::migrate_track_storage_versions(bool stamp_track_versions) {
-  GridIndex grid_count = stamp_track_versions ? NUM_GRIDS : 1;
-  for (GridIndex grid = 0; grid < grid_count; grid++) {
-    if (!migrate_grid_track_storage_versions(grid, stamp_track_versions)) {
+bool Project::migrate_track_storage_versions() {
+  for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
+    if (!migrate_grid_track_storage_versions(grid)) {
       return false;
     }
   }
-  if (!grids[1].sync()) {
+  if (!grids[0].sync() || !grids[1].sync()) {
     return false;
   }
   return true;
 }
 
-bool Project::migrate_grid_track_storage_versions(GridIndex grid,
-                                                  bool stamp_track_versions) {
-  uint16_t legacy_version = 0;
+bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
 
@@ -786,13 +871,8 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid,
 
     bool converted_track0_lfo = false;
     if (grid == 0 &&
-        !migrate_legacy_md_aux_slots(row, &row_header, &converted_track0_lfo,
-                                     stamp_track_versions)) {
+        !migrate_legacy_md_aux_slots(row, &row_header, &converted_track0_lfo)) {
       return false;
-    }
-
-    if (!stamp_track_versions) {
-      continue;
     }
 
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
@@ -802,18 +882,55 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid,
       if (grid == 0 && column == 0 && converted_track0_lfo) {
         continue;
       }
-      if (grid == 0 && row_header.track_type[column] == MD_TRACK_TYPE) {
-        if (!migrate_md_track_native_swing(grids[grid], column, row)) {
+      switch (row_header.track_type[column]) {
+      case MD_TRACK_TYPE:
+        if (grid == 0 &&
+            !migrate_md_track_native_swing(grids[grid], column, row)) {
           return false;
         }
-        continue;
-      }
-      if (!grids[grid].seek(column, row)) {
-        return false;
-      }
-      if (!grids[grid].write((uint8_t *)&legacy_version,
-                             sizeof(legacy_version))) {
-        return false;
+        break;
+      case EXT_TRACK_TYPE:
+        if (!migrate_ext_track_storage(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+      case A4_TRACK_TYPE:
+        if (!migrate_a4_track_storage(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+      case MNM_TRACK_TYPE:
+        if (!migrate_mnm_track_storage(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+      case MDFX_TRACK_TYPE:
+        if (!migrate_mdfx_track_storage(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+      case MDTEMPO_TRACK_TYPE:
+        if (!migrate_mdtempo_track_storage(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+      case PERF_TRACK_TYPE:
+        if (grid == 1 && column == PERF_TRACK_NUM) {
+          break;
+        }
+        if (!migrate_perf_track_storage(grids[grid], column, row, column)) {
+          return false;
+        }
+        break;
+      case GRIDCHAIN_TRACK_TYPE:
+        if (!migrate_gridchain_track_storage(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+      case MD_ROUTE_TRACK_TYPE:
+        break;
+      default:
+        break;
       }
     }
   }

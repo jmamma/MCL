@@ -7,7 +7,7 @@
 #endif
 
 bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row, Grid *grid) {
-  stamp_storage_version();
+  stamp_storage_version(len);
   if (grid == nullptr) {
     return proj.write_grid(data, len, column, row);
   }
@@ -16,27 +16,40 @@ bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row,
   }
 }
 
-void GridTrack::stamp_storage_version() {
+void GridTrack::stamp_storage_version(size_t len) {
   if (proj.version >= PROJ_VERSION_TRACK_STORAGE_VERSION) {
-    version[0] = storage_version();
-    version[1] = 0;
+    version = storage_version();
   } else {
-    version[0] = 0;
-    version[1] = 0;
+    version = 0;
   }
+  storage_size =
+      proj.version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE && len <= UINT16_MAX
+          ? (uint16_t)len
+          : 0;
 }
 
 bool GridTrack::storage_version_at_least(uint8_t min_version) const {
   return proj.version >= PROJ_VERSION_TRACK_STORAGE_VERSION &&
-         version[0] >= min_version;
+         version >= min_version;
+}
+
+uint16_t GridTrack::stored_track_size(uint16_t current_size) const {
+  if (proj.version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
+      storage_size > 0 && storage_size <= GRID_SLOT_BYTES) {
+    return storage_size < current_size ? storage_size : current_size;
+  }
+  return current_size;
 }
 
 void GridTrack::repair_loaded_header() {
-  uint8_t tmp_version[2] = {version[0], version[1]};
+  uint8_t tmp_version = version;
+  uint16_t tmp_storage_size = storage_size;
+  uint8_t tmp_flags = flags;
   uint8_t tmp_active = active;
   ::new (this) GridTrack;
-  version[0] = tmp_version[0];
-  version[1] = tmp_version[1];
+  version = tmp_version;
+  storage_size = tmp_storage_size;
+  flags = tmp_flags;
   active = tmp_active;
 
   if (active == 255) {

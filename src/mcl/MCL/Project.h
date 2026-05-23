@@ -15,7 +15,8 @@
 #define PROJ_VERSION_GRID_PAIRS 3004
 #define PROJ_VERSION_PROJECT_CONFIG 3005
 #define PROJ_VERSION_NATIVE_SWING_TRACKS 3006
-#define PROJ_VERSION 3006
+#define PROJ_VERSION_DYNAMIC_TRACK_STORAGE 3007
+#define PROJ_VERSION 3007
 #define PRJ_DIR "/Projects"
 
 static_assert(PROJ_VERSION_TRACK_STORAGE_VERSION < PROJ_VERSION_ROUTE_TRACK_TYPE,
@@ -45,9 +46,8 @@ public:
   bool load_project_version(const char *projectname, uint8_t pair);
   bool convert_project(const char *projectname);
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
-  bool migrate_grid_track_storage_versions(GridIndex grid,
-                                           bool stamp_track_versions);
-  bool migrate_track_storage_versions(bool stamp_track_versions);
+  bool migrate_grid_track_storage_versions(GridIndex grid);
+  bool migrate_track_storage_versions();
   bool new_project_master_file(const char *projectname);
   bool write_header();
   bool build_grid_filename(const char *basename, uint8_t suffix, char *out,
@@ -133,8 +133,7 @@ private:
   uint8_t project_pair_file_mask(uint8_t pair, const char *basename);
   bool migrate_legacy_md_aux_slots(GridRow row,
                                    GridRowHeader *grid_x_header,
-                                   bool *converted_track0_lfo,
-                                   bool migrate_legacy_aux_layout);
+                                   bool *converted_track0_lfo);
   GridIndex last_grid_;
 };
 
