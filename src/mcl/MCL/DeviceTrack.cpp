@@ -121,7 +121,25 @@ DeviceTrack *DeviceTrack::load_from_grid_512(GridSlot column, GridRow row,
   auto ptrack = init_track_type(active);
 
   if (active != EMPTY_TRACK_TYPE) {
-    size_t len = ptrack->get_track_size();
+    uint16_t len = ptrack->get_track_size();
+#if defined(__AVR__)
+    if (len <= 512) {
+      return ptrack;
+    }
+    len -= 512;
+    uint8_t *dst = static_cast<uint8_t *>(_this()) + 512;
+    if (grid) {
+      if (!grid->read(dst, len)) {
+        DEBUG_PRINTLN(F("read failed"));
+        return nullptr;
+      }
+    } else {
+      if (!proj.read_grid(dst, len)) {
+        DEBUG_PRINTLN(F("read failed"));
+        return nullptr;
+      }
+    }
+#else
     if (grid) {
       if (!grid->read(_this(), len, column, row)) {
         DEBUG_PRINTLN(F("read failed"));
@@ -133,6 +151,7 @@ DeviceTrack *DeviceTrack::load_from_grid_512(GridSlot column, GridRow row,
         return nullptr;
       }
     }
+#endif
   }
   return ptrack;
 }
