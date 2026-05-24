@@ -311,7 +311,8 @@ DeviceParamTarget target_for_idx(DeviceIdx device_idx, uint8_t dest) {
 }
 
 uint8_t perf_target_count() {
-  return NUM_MD_TRACKS + 4 + NUM_EXT_TRACKS;
+  return target_slot_count_for_idx(DeviceIdx::Primary) +
+         target_slot_count_for_idx(DeviceIdx::Secondary);
 }
 
 DevicePerfTarget perf(uint8_t dest) {

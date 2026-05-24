@@ -176,10 +176,8 @@ DeviceParamTarget target_for_idx(DeviceIdx device_idx, uint8_t dest) {
 }
 
 uint8_t perf_target_count() {
-  DeviceContext primary_ctx = device_manager.primary_context();
-  DeviceContext secondary_ctx = device_manager.secondary_context();
-  uint8_t count = primary_ctx.device()->params()->target_count(primary_ctx);
-  return count + secondary_ctx.device()->params()->target_count(secondary_ctx);
+  return target_slot_count_for_idx(DeviceIdx::Primary) +
+         target_slot_count_for_idx(DeviceIdx::Secondary);
 }
 
 DevicePerfTarget perf(uint8_t dest) {
@@ -225,7 +223,7 @@ bool perf_scene_autofill(PerfData *data, uint8_t scene) {
     DeviceContext ctx = device_manager.context_for_device(device_idx);
     filled |=
         ctx.device()->perf()->perf_scene_autofill(ctx, offset, data, scene);
-    offset += target_count_for_idx(device_idx);
+    offset += target_slot_count_for_idx(device_idx);
   }
   return filled;
 }

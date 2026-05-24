@@ -1,5 +1,5 @@
 #include "LFOSeqTrack.h"
-#include "DeviceParamResolver.h"
+#include "LFOTrackRef.h"
 #include "MidiClock.h"
 #include "MCLSeq.h"
 #include <string.h>
@@ -559,8 +559,6 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   }
 
   if (enable) {
-    MidiUartClass *output_uart =
-        device_idx == DeviceIdx::Secondary ? uart2_ : uart_;
     int16_t lfo_sample = get_sample(current_mode);
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       if (params[i].dest == 0) {
@@ -568,12 +566,11 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       }
       uint8_t dest = params[i].dest;
       uint8_t param = params[i].param;
-      DeviceParamTarget target =
-          DeviceParamResolver::target_for_idx(device_idx, dest);
       uint8_t offset = params[i].offset;
       uint8_t wav_value = get_wav_value(offset, i, lfo_sample);
       if (last_wav_value[i] != wav_value) {
-        target.send_modulated_param(param, wav_value, output_uart);
+        LFOTrackRef::send_modulated_param(device_idx, dest, param, wav_value,
+                                          uart_, uart2_);
 
         last_wav_value[i] = wav_value;
       }
@@ -598,19 +595,16 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
 void LFOSeqTrack::reset_params() {
 //  while (MidiClock.state == 2 && mod12_counter == MidiClock.mod12_counter) {};
 
-  MidiUartClass *output_uart = device_idx == DeviceIdx::Secondary
-                                   ? mcl_seq.secondary_output
-                                   : mcl_seq.primary_output;
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
     if (params[i].dest == 0) {
       continue;
     }
     uint8_t dest = params[i].dest;
     uint8_t param = params[i].param;
-    DeviceParamTarget target =
-        DeviceParamResolver::target_for_idx(device_idx, dest);
     uint8_t wav_value = params[i].offset;
-    target.send_modulated_param(param, wav_value, output_uart);
+    LFOTrackRef::send_modulated_param(device_idx, dest, param, wav_value,
+                                      mcl_seq.primary_output,
+                                      mcl_seq.secondary_output);
     last_wav_value[i] = 255;
   }
 }

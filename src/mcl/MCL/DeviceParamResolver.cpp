@@ -16,13 +16,22 @@ MidiDevice *device_for_idx(DeviceIdx device_idx) {
   return device_manager.device_for_idx(device_idx);
 }
 
+uint8_t target_slot_count_for_idx(DeviceIdx device_idx) {
+  uint8_t count = target_count_for_idx(device_idx);
+  if (device_idx == DeviceIdx::Secondary &&
+      count < RESERVED_SECONDARY_TARGETS) {
+    return RESERVED_SECONDARY_TARGETS;
+  }
+  return count;
+}
+
 uint8_t perf_data_dest_for_target(DeviceIdx device_idx, uint8_t target) {
   if (device_idx == DeviceIdx::None ||
       target >= target_count_for_idx(device_idx)) {
     return INVALID_PERF_DATA_DEST;
   }
   uint8_t offset = device_idx == DeviceIdx::Secondary
-                       ? target_count_for_idx(DeviceIdx::Primary)
+                       ? target_slot_count_for_idx(DeviceIdx::Primary)
                        : 0;
   return offset + target;
 }
@@ -39,7 +48,7 @@ bool perf_dest_to_target(uint8_t perf_dest, DeviceIdx *device_idx,
   }
 
   uint8_t data_dest = perf_dest - 1;
-  uint8_t primary_count = target_count_for_idx(DeviceIdx::Primary);
+  uint8_t primary_count = target_slot_count_for_idx(DeviceIdx::Primary);
   if (data_dest < primary_count) {
     *device_idx = DeviceIdx::Primary;
     *target = data_dest;
@@ -47,7 +56,7 @@ bool perf_dest_to_target(uint8_t perf_dest, DeviceIdx *device_idx,
   }
 
   data_dest -= primary_count;
-  if (data_dest < target_count_for_idx(DeviceIdx::Secondary)) {
+  if (data_dest < target_slot_count_for_idx(DeviceIdx::Secondary)) {
     *device_idx = DeviceIdx::Secondary;
     *target = data_dest;
     return true;

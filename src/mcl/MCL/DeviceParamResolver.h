@@ -77,9 +77,11 @@ struct DevicePerfTarget {
 namespace DeviceParamResolver {
 
 static constexpr uint8_t INVALID_PERF_DATA_DEST = 255;
+static constexpr uint8_t RESERVED_SECONDARY_TARGETS = 16;
 
 MidiDevice *device_for_idx(DeviceIdx device_idx);
 uint8_t target_count_for_idx(DeviceIdx device_idx);
+uint8_t target_slot_count_for_idx(DeviceIdx device_idx);
 DeviceParamTarget target_for_idx(DeviceIdx device_idx, uint8_t dest);
 
 uint8_t perf_target_count();
