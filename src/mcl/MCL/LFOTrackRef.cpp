@@ -27,24 +27,16 @@ constexpr uint8_t LFO_TRACK_PARAM_READ = 0;
 constexpr uint8_t LFO_TRACK_PARAM_SET_BASE = 1;
 constexpr uint8_t LFO_TRACK_PARAM_SET_MODULATED = 2;
 
+constexpr uint8_t LFO_DEST_DEVICE = 0;
+constexpr uint8_t LFO_DEST_PERF = 1;
+constexpr uint8_t LFO_DEST_TRACK = 2;
+
 uint8_t lfo_perf_dest_base() {
 #if defined(__AVR__)
   return NUM_MD_TRACKS + 4 + DeviceParamResolver::RESERVED_SECONDARY_TARGETS;
 #else
   return DeviceParamResolver::perf_target_count();
 #endif
-}
-
-bool lfo_perf_dest_index(DeviceIdx device_idx, uint8_t dest, uint8_t *idx) {
-  (void)device_idx;
-  uint8_t base = lfo_perf_dest_base();
-  if (dest <= base || dest > base + NUM_PERF_CONTROLS) {
-    return false;
-  }
-  if (idx != nullptr) {
-    *idx = dest - base - 1;
-  }
-  return true;
 }
 
 uint8_t lfo_track_dest_base() {
@@ -55,15 +47,26 @@ constexpr uint8_t lfo_track_dest_count() {
   return NUM_GRID_X_LFO_TRACKS + NUM_GRID_Y_LFO_TRACKS;
 }
 
-bool lfo_track_dest_index(uint8_t dest, uint8_t *idx) {
-  uint8_t base = lfo_track_dest_base();
-  if (dest <= base || dest > base + lfo_track_dest_count()) {
-    return false;
+uint8_t lfo_custom_dest_index(uint8_t dest, uint8_t *idx) {
+  uint8_t base = lfo_perf_dest_base();
+  if (dest <= base) {
+    return LFO_DEST_DEVICE;
+  }
+  dest -= base + 1;
+  if (dest < NUM_PERF_CONTROLS) {
+    if (idx != nullptr) {
+      *idx = dest;
+    }
+    return LFO_DEST_PERF;
+  }
+  dest -= NUM_PERF_CONTROLS;
+  if (dest >= lfo_track_dest_count()) {
+    return LFO_DEST_DEVICE;
   }
   if (idx != nullptr) {
-    *idx = dest - base - 1;
+    *idx = dest;
   }
-  return true;
+  return LFO_DEST_TRACK;
 }
 
 LFOSeqTrack *lfo_track_for_index(uint8_t idx) {
@@ -201,23 +204,27 @@ uint8_t LFOTrackRef::track_lfo_dest_for_index(uint8_t idx) {
 bool LFOTrackRef::target_label(DeviceIdx device_idx, uint8_t dest, char *out,
                                uint8_t len) {
   (void)device_idx;
-  uint8_t perf_idx = 0;
-  if (lfo_perf_dest_index(device_idx, dest, &perf_idx)) {
+  uint8_t idx = 0;
+  uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
+  if (dest_type == LFO_DEST_PERF) {
+    uint8_t perf_idx = idx;
     return copy_lfo_perf_target_label(perf_idx, out, len);
   }
-  uint8_t lfo_idx = 0;
-  if (lfo_track_dest_index(dest, &lfo_idx)) {
+  if (dest_type == LFO_DEST_TRACK) {
+    uint8_t lfo_idx = idx;
     return copy_lfo_track_target_label(lfo_idx, out, len);
   }
   return DeviceParamResolver::perf(dest).target_label(out, len);
 }
 
 uint8_t LFOTrackRef::param_count(DeviceIdx device_idx, uint8_t dest) {
-  if (lfo_perf_dest_index(device_idx, dest, nullptr)) {
+  (void)device_idx;
+  uint8_t lfo_idx = 0;
+  uint8_t dest_type = lfo_custom_dest_index(dest, &lfo_idx);
+  if (dest_type == LFO_DEST_PERF) {
     return 1;
   }
-  uint8_t lfo_idx = 0;
-  if (lfo_track_dest_index(dest, &lfo_idx)) {
+  if (dest_type == LFO_DEST_TRACK) {
     return lfo_track_for_index(lfo_idx) != nullptr ? LFO_TRACK_PARAM_COUNT : 0;
   }
   return DeviceParamResolver::perf(dest).param_count();
@@ -225,11 +232,13 @@ uint8_t LFOTrackRef::param_count(DeviceIdx device_idx, uint8_t dest) {
 
 bool LFOTrackRef::param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
                               char *out, uint8_t len) {
-  if (lfo_perf_dest_index(device_idx, dest, nullptr)) {
+  (void)device_idx;
+  uint8_t lfo_idx = 0;
+  uint8_t dest_type = lfo_custom_dest_index(dest, &lfo_idx);
+  if (dest_type == LFO_DEST_PERF) {
     return copy_lfo_perf_param_label(param, out, len);
   }
-  uint8_t lfo_idx = 0;
-  if (lfo_track_dest_index(dest, &lfo_idx)) {
+  if (dest_type == LFO_DEST_TRACK) {
     return lfo_track_for_index(lfo_idx) != nullptr &&
            copy_lfo_track_param_label(param, out, len);
   }
@@ -238,8 +247,11 @@ bool LFOTrackRef::param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
 
 bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
                                  uint8_t param, uint8_t *value) {
-  uint8_t perf_idx = 0;
-  if (lfo_perf_dest_index(device_idx, dest, &perf_idx)) {
+  (void)device_idx;
+  uint8_t idx = 0;
+  uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
+  if (dest_type == LFO_DEST_PERF) {
+    uint8_t perf_idx = idx;
     PerfEncoder *encoder = lfo_perf_encoder(perf_idx);
     if (encoder == nullptr || param != 0 || value == nullptr) {
       return false;
@@ -247,8 +259,8 @@ bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
     *value = encoder->cur;
     return true;
   }
-  uint8_t lfo_idx = 0;
-  if (lfo_track_dest_index(dest, &lfo_idx)) {
+  if (dest_type == LFO_DEST_TRACK) {
+    uint8_t lfo_idx = idx;
     LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
     return track != nullptr &&
            lfo_track_param(*track, param, value, LFO_TRACK_PARAM_READ);
@@ -258,8 +270,11 @@ bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
 
 bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
                                  uint8_t param, uint8_t value) {
-  uint8_t perf_idx = 0;
-  if (lfo_perf_dest_index(device_idx, dest, &perf_idx)) {
+  (void)device_idx;
+  uint8_t idx = 0;
+  uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
+  if (dest_type == LFO_DEST_PERF) {
+    uint8_t perf_idx = idx;
     PerfEncoder *encoder = lfo_perf_encoder(perf_idx);
     if (encoder == nullptr || param != 0) {
       return false;
@@ -268,8 +283,8 @@ bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
     perf_page.send_perf_encoder(perf_idx);
     return true;
   }
-  uint8_t lfo_idx = 0;
-  if (lfo_track_dest_index(dest, &lfo_idx)) {
+  if (dest_type == LFO_DEST_TRACK) {
+    uint8_t lfo_idx = idx;
     LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
     return track != nullptr &&
            lfo_track_param(*track, param, &value, LFO_TRACK_PARAM_SET_BASE);
@@ -281,8 +296,11 @@ bool LFOTrackRef::send_modulated_param(DeviceIdx device_idx, uint8_t dest,
                                        uint8_t param, uint8_t value,
                                        MidiUartClass *uart_,
                                        MidiUartClass *uart2_, uint8_t offset) {
-  uint8_t perf_idx = 0;
-  if (lfo_perf_dest_index(device_idx, dest, &perf_idx)) {
+  (void)device_idx;
+  uint8_t idx = 0;
+  uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
+  if (dest_type == LFO_DEST_PERF) {
+    uint8_t perf_idx = idx;
     PerfEncoder *encoder = lfo_perf_encoder(perf_idx);
     if (encoder == nullptr || param != 0) {
       return false;
@@ -290,8 +308,8 @@ bool LFOTrackRef::send_modulated_param(DeviceIdx device_idx, uint8_t dest,
     perf_page.set_lfo_mod(perf_idx, (int8_t)((int16_t)value - (int16_t)offset));
     return true;
   }
-  uint8_t lfo_idx = 0;
-  if (lfo_track_dest_index(dest, &lfo_idx)) {
+  if (dest_type == LFO_DEST_TRACK) {
+    uint8_t lfo_idx = idx;
     LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
     return track != nullptr &&
            lfo_track_param(*track, param, &value,

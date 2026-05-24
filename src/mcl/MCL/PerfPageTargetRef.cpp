@@ -4,8 +4,20 @@
 #include "NoteInterface.h"
 #include "SeqPages.h"
 
+namespace {
+
+uint8_t perf_lfo_dest_base() {
+#if defined(__AVR__)
+  return NUM_MD_TRACKS + 4 + DeviceParamResolver::RESERVED_SECONDARY_TARGETS;
+#else
+  return DeviceParamResolver::perf_target_count();
+#endif
+}
+
+} // namespace
+
 uint8_t PerfPageTarget::lfo_dest() const {
-  uint8_t base = DeviceParamResolver::perf_target_count();
+  uint8_t base = perf_lfo_dest_base();
   if (dest <= base) {
     return 0;
   }
@@ -86,8 +98,7 @@ bool PerfPageTarget::begin_param_editor(uint8_t *params,
 }
 
 uint8_t PerfPageTargetRef::target_count() {
-  return DeviceParamResolver::perf_target_count() +
-         LFOTrackRef::track_lfo_target_count();
+  return perf_lfo_dest_base() + LFOTrackRef::track_lfo_target_count();
 }
 
 PerfPageTarget PerfPageTargetRef::target(uint8_t dest) {
