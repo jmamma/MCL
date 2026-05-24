@@ -99,12 +99,11 @@ bool copy_lfo_perf_param_label(uint8_t param, char *out, uint8_t len) {
 }
 
 bool copy_lfo_track_target_label(uint8_t idx, char *out, uint8_t len) {
-  if (out == nullptr || len < 4 || (idx >= 9 && len < 5)) {
+  if (out == nullptr || len < 3 || (idx >= 9 && len < 4)) {
     return false;
   }
   out[0] = 'L';
-  out[1] = 'F';
-  mcl_gui.put_value_at(idx + 1, out + 2);
+  mcl_gui.put_value_at(idx + 1, out + 1);
   return true;
 }
 
