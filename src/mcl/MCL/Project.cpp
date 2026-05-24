@@ -855,14 +855,6 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   if (version < PROJ_VERSION_DYNAMIC_TRACK_STORAGE) {
     migration_flags |= MIGRATE_TRACK_STORAGE;
   }
-  if (version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
-      version < PROJ_VERSION_SIGNED_MICROTIMING) {
-    migration_flags |= MIGRATE_SIGNED_MICROTIMING;
-  }
-  if (version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
-      version < PROJ_VERSION_PERF_TRACK_LAYOUT) {
-    migration_flags |= MIGRATE_PERF_TRACK_LAYOUT;
-  }
   if (version < PROJ_VERSION_GRID_PAIRS) {
     migration_flags |= MIGRATE_GRID_PAIRS;
     active_grid_pair = 0;
@@ -909,14 +901,6 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
 
   if ((migration_flags & MIGRATE_TRACK_STORAGE) &&
       !migrate_track_storage_versions()) {
-    DEBUG_PRINTLN(F("Could not migrate project tracks"));
-    return false;
-  }
-  uint8_t post_storage_migrations =
-      migration_flags & (MIGRATE_SIGNED_MICROTIMING |
-                         MIGRATE_PERF_TRACK_LAYOUT);
-  if (post_storage_migrations &&
-      !migrate_post_storage_tracks(post_storage_migrations)) {
     DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
