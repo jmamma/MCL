@@ -21,6 +21,18 @@ static uint8_t md_swing_q14_to_amount(uint32_t swing_q14) {
   return amount > 30 ? 30 : (uint8_t)amount;
 }
 
+static void md_swap_mask_bits(uint64_t &mask, uint8_t i, uint8_t j) {
+  uint8_t *bytes = reinterpret_cast<uint8_t *>(&mask);
+  uint8_t ib = i >> 3;
+  uint8_t jb = j >> 3;
+  uint8_t im = _bvmasks[i & 7];
+  uint8_t jm = _bvmasks[j & 7];
+  if ((bytes[ib] & im) != (bytes[jb] & jm)) {
+    bytes[ib] ^= im;
+    bytes[jb] ^= jm;
+  }
+}
+
 #if !defined(__AVR__)
 static int16_t md_div_round_closest(int32_t numerator, int32_t denominator) {
   if (denominator == 0) {
@@ -49,13 +61,14 @@ static int8_t spsx_microtiming_to_md_microtiming(int8_t microtiming,
 
 uint8_t MDSeqTrack::effective_timing(uint8_t step, uint8_t timing_mid) const {
   int8_t mt = microtiming[step];
-  uint16_t value = SeqTrack::microtiming_to_timing(mt, timing_mid);
-  if (mt == 0 && swing_amount && steps[step].swing) {
-    uint16_t swung = (uint16_t)timing_mid +
-                     (((uint16_t)swing_amount * timing_mid + 25) / 50);
-    value = swung;
+  if (mt == 0) {
+    if (swing_amount && steps[step].swing) {
+      return timing_mid +
+             (((uint16_t)swing_amount * timing_mid + 25) / 50);
+    }
+    return timing_mid;
   }
-  return value > 255 ? 255 : (uint8_t)value;
+  return SeqTrack::microtiming_to_timing(mt, timing_mid);
 }
 
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
@@ -439,6 +452,14 @@ again:
 }
 
 void MDSeqTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
+  if (mask_type == MASK_MUTE) {
+    *_pmask = mute_mask;
+    return;
+  }
+  if (mask_type == MASK_SWING) {
+    *_pmask = swing_mask;
+    return;
+  }
   *_pmask = 0;
   for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
     bool set_bit = false;
@@ -460,16 +481,6 @@ void MDSeqTrack::get_mask(uint64_t *_pmask, uint8_t mask_type) const {
       break;
     case MASK_SLIDE:
       if (steps[i].slide) {
-        set_bit = true;
-      }
-      break;
-    case MASK_MUTE:
-      if (IS_BIT_SET64(mute_mask, i)) {
-        set_bit = true;
-      }
-      break;
-    case MASK_SWING:
-      if (steps[i].swing) {
         set_bit = true;
       }
       break;
@@ -1263,30 +1274,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
       microtiming_buf = microtiming[i];
       microtiming[i] = microtiming[j];
       microtiming[j] = microtiming_buf;
-      bool a = IS_BIT_SET64(mute_mask, i);
-      bool b = IS_BIT_SET64(mute_mask, j);
-      if (a) {
-        SET_BIT64(mute_mask, j);
-      } else {
-        CLEAR_BIT64(mute_mask, j);
-      }
-      if (b) {
-        SET_BIT64(mute_mask, i);
-      } else {
-        CLEAR_BIT64(mute_mask, i);
-      }
-      a = IS_BIT_SET64(swing_mask, i);
-      b = IS_BIT_SET64(swing_mask, j);
-      if (a) {
-        SET_BIT64(swing_mask, j);
-      } else {
-        CLEAR_BIT64(swing_mask, j);
-      }
-      if (b) {
-        SET_BIT64(swing_mask, i);
-      } else {
-        CLEAR_BIT64(swing_mask, i);
-      }
+      md_swap_mask_bits(mute_mask, i, j);
+      md_swap_mask_bits(swing_mask, i, j);
     }
     break;
   }

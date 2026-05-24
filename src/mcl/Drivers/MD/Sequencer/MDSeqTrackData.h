@@ -111,17 +111,28 @@ public:
   uint8_t swing_amount;
 
   void sync_swing_steps_from_mask() {
-    for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
-      steps[n].swing = IS_BIT_SET64(swing_mask, n);
+    const uint8_t *mask = reinterpret_cast<const uint8_t *>(&swing_mask);
+    uint8_t step = 0;
+    for (uint8_t byte = 0; byte < sizeof(swing_mask); byte++) {
+      uint8_t bits = mask[byte];
+      for (uint8_t bit = 0; bit < 8; bit++, step++) {
+        steps[step].swing = bits & 1;
+        bits >>= 1;
+      }
     }
   }
 
   void sync_swing_mask_from_steps() {
-    swing_mask = 0;
-    for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
-      if (steps[n].swing) {
-        SET_BIT64(swing_mask, n);
+    uint8_t *mask = reinterpret_cast<uint8_t *>(&swing_mask);
+    uint8_t step = 0;
+    for (uint8_t byte = 0; byte < sizeof(swing_mask); byte++) {
+      uint8_t bits = 0;
+      for (uint8_t bit = 0; bit < 8; bit++, step++) {
+        if (steps[step].swing) {
+          bits |= _bvmasks[bit];
+        }
       }
+      mask[byte] = bits;
     }
   }
 
