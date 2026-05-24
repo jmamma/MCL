@@ -60,7 +60,7 @@ public:
   bool project_pair_exists(uint8_t pair, const char *basename);
   bool read_active_grid_pair(const char *projectname, uint8_t *pair);
   bool grid_pair_exists(const char *projectname, uint8_t pair);
-  bool create_backup(const char *projectname);
+  bool create_backup(const char *projectname, uint8_t *created_pair = nullptr);
   bool delete_backup(const char *projectname, uint8_t pair);
   bool rename_project_files(const char *from_basename, const char *to_basename);
   bool copy_project(const char *from_project, const char *to_project);

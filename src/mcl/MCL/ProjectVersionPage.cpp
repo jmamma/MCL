@@ -25,7 +25,7 @@ void ProjectVersionPage::init() {
   show_new_folder = false;
   show_filemenu = true;
   strcpy(title, "VERSION");
-  strcpy(str_save, "BACKUP");
+  strcpy(str_save, "[ BACKUP ]");
   query_versions();
 }
 
@@ -100,12 +100,18 @@ bool ProjectVersionPage::handleEvent(gui_event_t *event) {
 }
 
 void ProjectVersionPage::on_new() {
-  if (proj.create_backup(lwd)) {
-    gfx.alert("SUCCESS", "Backup made.");
-  } else {
+  uint8_t pair = 0;
+  if (!proj.create_backup(lwd, &pair)) {
     gfx.alert("ERROR", "No backup.");
+    init();
+    return;
   }
-  init();
+  if (proj.load_project_version(lwd, pair)) {
+    mcl.setPage(GRID_PAGE);
+  } else {
+    gfx.alert("ERROR", "OPEN VERSION");
+    init();
+  }
 }
 
 void ProjectVersionPage::on_select(const char *entry) {

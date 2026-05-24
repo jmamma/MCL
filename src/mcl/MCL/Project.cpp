@@ -1435,7 +1435,7 @@ bool Project::copy_grid_pair(const char *from_project,
   return ok;
 }
 
-bool Project::create_backup(const char *projectname) {
+bool Project::create_backup(const char *projectname, uint8_t *created_pair) {
   const char *basename = nullptr;
   if (!split_project_path(projectname, &basename)) {
     return false;
@@ -1471,8 +1471,14 @@ bool Project::create_backup(const char *projectname) {
   }
 
   draw_wait_popup("CREATING BACKUP");
-  return copy_grid_pair(projectname, basename, projectname, basename,
-                        source_pair, dest_pair);
+  if (!copy_grid_pair(projectname, basename, projectname, basename,
+                      source_pair, dest_pair)) {
+    return false;
+  }
+  if (created_pair != nullptr) {
+    *created_pair = dest_pair;
+  }
+  return true;
 }
 
 bool Project::delete_backup(const char *projectname, uint8_t pair) {
