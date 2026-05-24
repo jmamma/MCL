@@ -28,7 +28,11 @@ constexpr uint8_t LFO_TRACK_PARAM_SET_BASE = 1;
 constexpr uint8_t LFO_TRACK_PARAM_SET_MODULATED = 2;
 
 uint8_t lfo_perf_dest_base() {
+#if defined(__AVR__)
+  return NUM_MD_TRACKS + 4 + DeviceParamResolver::RESERVED_SECONDARY_TARGETS;
+#else
   return DeviceParamResolver::perf_target_count();
+#endif
 }
 
 bool lfo_perf_dest_index(DeviceIdx device_idx, uint8_t dest, uint8_t *idx) {
@@ -48,7 +52,7 @@ uint8_t lfo_track_dest_base() {
 }
 
 constexpr uint8_t lfo_track_dest_count() {
-  return NUM_GRID_X_LFO_TRACKS + DeviceParamResolver::RESERVED_SECONDARY_TARGETS;
+  return NUM_GRID_X_LFO_TRACKS + NUM_GRID_Y_LFO_TRACKS;
 }
 
 bool lfo_track_dest_index(uint8_t dest, uint8_t *idx) {
