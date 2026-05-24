@@ -17,15 +17,16 @@ bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row,
 }
 
 void GridTrack::stamp_storage_version(size_t len) {
-  if (proj.version >= PROJ_VERSION_TRACK_STORAGE_VERSION) {
+  version = 0;
+  storage_size = 0;
+  uint16_t project_version = proj.version;
+  if (project_version >= PROJ_VERSION_TRACK_STORAGE_VERSION) {
     version = storage_version();
-  } else {
-    version = 0;
+    if (project_version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
+        len <= UINT16_MAX) {
+      storage_size = (uint16_t)len;
+    }
   }
-  storage_size =
-      proj.version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE && len <= UINT16_MAX
-          ? (uint16_t)len
-          : 0;
 }
 
 bool GridTrack::storage_version_at_least(uint8_t min_version) const {
