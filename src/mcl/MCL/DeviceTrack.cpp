@@ -147,14 +147,18 @@ bool DeviceTrack::read_remaining_from_grid_512(GridSlot column, GridRow row,
     return true;
   }
 
+  Grid *source_grid = grid;
+  GridColumn source_column = column;
+  if (source_grid == nullptr) {
+    source_grid = &proj.grids[column >> 4];
+    source_column = column & 0x0F;
+  }
+
   const uint16_t current_len = get_track_size();
   uint16_t len = stored_track_size(current_len);
   if (len < current_len) {
     init_defaults();
-    if (grid) {
-      return grid->read(_this(), len, column, row);
-    }
-    return proj.read_grid(_this(), len, column, row);
+    return source_grid->read(_this(), len, source_column, row);
   }
 
   if (len <= 512) {
@@ -162,10 +166,7 @@ bool DeviceTrack::read_remaining_from_grid_512(GridSlot column, GridRow row,
   }
   len -= 512;
   uint8_t *dst = static_cast<uint8_t *>(_this()) + 512;
-  if (grid) {
-    return grid->read(dst, len);
-  }
-  return proj.read_grid(dst, len);
+  return source_grid->read(dst, len);
 }
 
 DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
