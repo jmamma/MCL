@@ -82,10 +82,6 @@ LFOSeqTrack *lfo_track_for_index(uint8_t idx) {
   return nullptr;
 }
 
-PerfEncoder *lfo_perf_encoder(uint8_t idx) {
-  return idx < NUM_PERF_CONTROLS ? perf_page.perf_encoders[idx] : nullptr;
-}
-
 bool copy_lfo_perf_target_label(uint8_t idx, char *out, uint8_t len) {
   if (out == nullptr || len < 4 || idx >= NUM_PERF_CONTROLS) {
     return false;
@@ -252,7 +248,7 @@ bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
   uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
   if (dest_type == LFO_DEST_PERF) {
     uint8_t perf_idx = idx;
-    PerfEncoder *encoder = lfo_perf_encoder(perf_idx);
+    PerfEncoder *encoder = perf_page.perf_encoders[perf_idx];
     if (encoder == nullptr || param != 0 || value == nullptr) {
       return false;
     }
@@ -275,7 +271,7 @@ bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
   uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
   if (dest_type == LFO_DEST_PERF) {
     uint8_t perf_idx = idx;
-    PerfEncoder *encoder = lfo_perf_encoder(perf_idx);
+    PerfEncoder *encoder = perf_page.perf_encoders[perf_idx];
     if (encoder == nullptr || param != 0) {
       return false;
     }
@@ -301,7 +297,7 @@ bool LFOTrackRef::send_modulated_param(DeviceIdx device_idx, uint8_t dest,
   uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
   if (dest_type == LFO_DEST_PERF) {
     uint8_t perf_idx = idx;
-    PerfEncoder *encoder = lfo_perf_encoder(perf_idx);
+    PerfEncoder *encoder = perf_page.perf_encoders[perf_idx];
     if (encoder == nullptr || param != 0) {
       return false;
     }

@@ -11,7 +11,6 @@ public:
   explicit PerfPageTarget(uint8_t dest_) : dest(dest_) {}
 
   uint8_t lfo_dest() const;
-  DevicePerfTarget device_target() const;
   bool valid() const;
   DeviceIdx device_index() const;
   uint8_t param_count() const;
