@@ -218,7 +218,11 @@ public:
     if (cached_active != expected_type) {
       return false;
     }
-    restore_sound_from_mem(column);
+    uintptr_t sound_data_offset =
+        reinterpret_cast<uintptr_t>(sound) - reinterpret_cast<uintptr_t>(this);
+    uintptr_t pos = slot_base + sound_data_offset;
+    volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
+    memcpy_bank1(sound, ptr, sound_size);
     return true;
   }
 
