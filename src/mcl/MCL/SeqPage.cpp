@@ -493,7 +493,21 @@ static inline bool should_show_enhanced_swing_window() {
   return mcl.currentPage() == SEQ_STEP_PAGE && SeqPage::mask_type == MASK_SWING;
 }
 
+bool enhanced_swing_window_suspended = false;
+
+static inline void suspend_enhanced_swing_window() {
+  if (!enhanced_swing_window_suspended &&
+      should_show_enhanced_swing_window()) {
+    close_enhanced_swing_window();
+    enhanced_swing_window_suspended = true;
+  }
+}
+
 static inline void restore_enhanced_swing_window() {
+  if (!enhanced_swing_window_suspended) {
+    return;
+  }
+  enhanced_swing_window_suspended = false;
   if (should_show_enhanced_swing_window()) {
     open_enhanced_swing_window();
   }
@@ -580,6 +594,7 @@ void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   close_enhanced_swing_window();
+  enhanced_swing_window_suspended = false;
   disable_record();
   GUI_hardware.led.reset_trigleds();
   if (show_seq_menu) {
@@ -625,13 +640,20 @@ void SeqPage::config_mask_info(bool silent) {
     strcat(str, info2);
     if (mask_type == MASK_PATTERN) {
       close_enhanced_swing_window();
+      enhanced_swing_window_suspended = false;
       seq_panel_popup_text((uint8_t)-1, 2);
     } else {
       seq_page_active_step_track().popup_text(str, 1);
       if (mask_type == MASK_SWING) {
-        open_enhanced_swing_window();
+        if (show_seq_menu) {
+          suspend_enhanced_swing_window();
+        } else {
+          enhanced_swing_window_suspended = false;
+          open_enhanced_swing_window();
+        }
       } else {
         close_enhanced_swing_window();
+        enhanced_swing_window_suspended = false;
       }
     }
   }
@@ -789,10 +811,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
 #ifdef MCL_HAS_EXTENDED_PANEL_INPUT
     if (show_seq_menu) {
+      suspend_enhanced_swing_window();
       return seq_menu_page.handleEvent(event);
     }
 #endif
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
+      suspend_enhanced_swing_window();
       return seq_menu_page.handleEvent(event);
     }
     uint8_t key = event->source;
@@ -840,9 +864,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
       // If MD trig is held and BUTTON3 is pressed, launch note menu
       if (!show_seq_menu) {
-        if (should_show_enhanced_swing_window()) {
-          close_enhanced_swing_window();
-        }
+        suspend_enhanced_swing_window();
         show_seq_menu = true;
         opt_midi_device_capture = midi_device;
         opt_midi_device_idx_capture = current_device_idx();
@@ -1784,6 +1806,7 @@ void SeqPage::loop() {
   //  md_track_change_check();
 
   if (show_seq_menu) {
+    suspend_enhanced_swing_window();
     seq_menu_page.loop();
     if (!seq_page_uses_non_md_primary_step_tracks() &&
         !opt_capture_is_md_device() && opt_trackid > NUM_EXT_TRACKS) {
