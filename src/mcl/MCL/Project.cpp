@@ -1249,6 +1249,8 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
 
 bool NOINLINE() Project::migrate_grid_post_storage_tracks(
     GridIndex grid, uint8_t migration_flags) {
+  bool migrate_perf_layout = migration_flags & MIGRATE_PERF_TRACK_LAYOUT;
+  bool migrate_signed_timing = migration_flags & MIGRATE_SIGNED_MICROTIMING;
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
 
@@ -1262,12 +1264,11 @@ bool NOINLINE() Project::migrate_grid_post_storage_tracks(
       if (track_type == EMPTY_TRACK_TYPE) {
         continue;
       }
-      if ((migration_flags & MIGRATE_PERF_TRACK_LAYOUT) &&
-          track_type == PERF_TRACK_TYPE &&
+      if (migrate_perf_layout && track_type == PERF_TRACK_TYPE &&
           !migrate_perf_track_clean_layout(grids[grid], column, row)) {
         return false;
       }
-      if (!(migration_flags & MIGRATE_SIGNED_MICROTIMING)) {
+      if (!migrate_signed_timing) {
         continue;
       }
       switch (track_type) {
