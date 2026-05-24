@@ -222,7 +222,7 @@ uint8_t LFOTrackRef::param_count(DeviceIdx device_idx, uint8_t dest) {
     return 1;
   }
   if (dest_type == LFO_DEST_TRACK) {
-    return lfo_track_for_index(lfo_idx) != nullptr ? LFO_TRACK_PARAM_COUNT : 0;
+    return LFO_TRACK_PARAM_COUNT;
   }
   return DeviceParamResolver::perf(dest).param_count();
 }
@@ -236,8 +236,7 @@ bool LFOTrackRef::param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
     return copy_lfo_perf_param_label(param, out, len);
   }
   if (dest_type == LFO_DEST_TRACK) {
-    return lfo_track_for_index(lfo_idx) != nullptr &&
-           copy_lfo_track_param_label(param, out, len);
+    return copy_lfo_track_param_label(param, out, len);
   }
   return DeviceParamResolver::perf(dest).param_label(param, out, len);
 }
@@ -259,8 +258,7 @@ bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
   if (dest_type == LFO_DEST_TRACK) {
     uint8_t lfo_idx = idx;
     LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
-    return track != nullptr &&
-           lfo_track_param(*track, param, value, LFO_TRACK_PARAM_READ);
+    return lfo_track_param(*track, param, value, LFO_TRACK_PARAM_READ);
   }
   return DeviceParamResolver::perf(dest).params.get_base_param(param, value);
 }
@@ -283,8 +281,7 @@ bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
   if (dest_type == LFO_DEST_TRACK) {
     uint8_t lfo_idx = idx;
     LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
-    return track != nullptr &&
-           lfo_track_param(*track, param, &value, LFO_TRACK_PARAM_SET_BASE);
+    return lfo_track_param(*track, param, &value, LFO_TRACK_PARAM_SET_BASE);
   }
   return DeviceParamResolver::perf(dest).params.set_base_param(param, value);
 }
@@ -308,8 +305,7 @@ bool LFOTrackRef::send_modulated_param(DeviceIdx device_idx, uint8_t dest,
   if (dest_type == LFO_DEST_TRACK) {
     uint8_t lfo_idx = idx;
     LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
-    return track != nullptr &&
-           lfo_track_param(*track, param, &value,
+    return lfo_track_param(*track, param, &value,
                            LFO_TRACK_PARAM_SET_MODULATED);
   }
 
