@@ -205,9 +205,33 @@ echo "[mcl-wasm] compiling → ${WASM}"
     "${ADAFRUIT_CPP[@]}"
 
 echo "[mcl-wasm] AOT compile → ${AOT}"
+WAMRC_FLAGS=(
+    --disable-simd
+    --disable-ref-types
+    --bounds-checks=1
+    --stack-bounds-checks=1
+)
+
+# Darwin/arm64 reserves x18 as a platform register. WAMR's default AOT target
+# triple on macOS is still ELF/Linux-shaped, so LLVM may otherwise allocate x18
+# as a general register and the hosted plugin can crash inside AOT code.
+if [ "$(uname -s)" = "Darwin" ] && { [ "$(uname -m)" = "arm64" ] || [ "$(uname -m)" = "aarch64" ]; }; then
+    WAMRC_FLAGS+=(
+        --target=aarch64v8
+        --cpu=apple-m1
+        --cpu-features=+reserve-x18
+    )
+fi
+
+if [ "${MCL_WASM_DUMP_CALL_STACK:-0}" != "0" ]; then
+    WAMRC_FLAGS+=(
+        --enable-dump-call-stack
+        --call-stack-features=bounds-checks,ip,func-idx,trap-ip,values
+        --emit-custom-sections=name
+    )
+fi
 "${WAMRC}" \
-    --disable-simd \
-    --disable-ref-types \
+    "${WAMRC_FLAGS[@]}" \
     -o "${AOT}" "${WASM}"
 
 cp "${AOT}" "${PACKAGE_AOT}"
