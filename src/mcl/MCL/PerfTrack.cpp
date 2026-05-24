@@ -4,6 +4,26 @@
 #include "MCLActions.h"
 #include "MDTrack.h"
 
+void PerfTrack::convert_legacy_load_settings() {
+  load_mute_set = 255;
+  load_type_mask = 0;
+
+  for (uint8_t n = 0; n < 4; n++) {
+    uint16_t mutes = mute_sets[1].mutes[n];
+    if ((mutes & 0x8000) == 0) {
+      load_mute_set = n;
+    }
+    if (mutes & 0x2000) {
+      load_type_mask |= 1 << n;
+    }
+    if (mutes & 0x4000) {
+      load_type_mask |= 1 << (n + 4);
+    }
+    mute_sets[1].mutes[n] = mutes | 0xE000;
+  }
+  version = PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT;
+}
+
 void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                   GridSlot slotnumber) {
   DEBUG_PRINTLN("transition send");
@@ -17,20 +37,26 @@ void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 
 uint16_t PerfTrack::calc_latency(uint8_t tracknumber) {
-  uint8_t load_mute_set = 255;
+  uint8_t stored_load_mute_set = load_mute_set;
 
-  for (uint8_t n = 0; n < 4; n++) {
-    if ((mute_sets[1].mutes[n] & 0b1000000000000000) == 0) {
-      load_mute_set = n;
+  if (version < PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT) {
+    stored_load_mute_set = 255;
+    for (uint8_t n = 0; n < 4; n++) {
+      if ((mute_sets[1].mutes[n] & 0x8000) == 0) {
+        stored_load_mute_set = n;
+      }
     }
   }
 
-  return load_mute_set == 255 ? 0 : 32 * 3 * 4; // Worst case estimate, 32 parameters, 3 bytes each, 4 perf controllers.
+  return stored_load_mute_set == 255 ? 0 : 32 * 3 * 4; // Worst case estimate, 32 parameters, 3 bytes each, 4 perf controllers.
 }
 
 void PerfTrack::get_perf() {
   memcpy(scenes, PerfData::scenes, sizeof(PerfScene) * NUM_SCENES);
   memcpy(mute_sets,mixer_page.mute_sets, sizeof(mute_sets) + sizeof(perf_locks));
+  version = PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT;
+  load_mute_set = mixer_page.load_mute_set;
+  load_type_mask = 0;
   for (uint8_t n = 0; n < 4; n++) {
     PerfEncoder *e = perf_page.perf_encoders[n];
     PerfData *d = &e->perf_data;
@@ -42,27 +68,27 @@ void PerfTrack::get_perf() {
     encs[n].cur = e->cur;
     memcpy(encs[n].name,e->name, PERF_NAME_LENGTH);
 
-    if (!mixer_page.load_types[n][0]) {
-      CLEAR_BIT16(mute_sets[1].mutes[n],13);
+    if (mixer_page.load_types[n][0]) {
+      load_type_mask |= 1 << n;
     }
-    if (!mixer_page.load_types[n][1]) {
-      CLEAR_BIT16(mute_sets[1].mutes[n],14);
+    if (mixer_page.load_types[n][1]) {
+      load_type_mask |= 1 << (n + 4);
     }
 
   }
   DEBUG_PRINTLN("get perf");
   DEBUG_PRINTLN(sizeof(scenes));
- //Encode the load_mute_set value into the high bit of the corresponding ext mutes.
-  if (mixer_page.load_mute_set < 4) {
-    mute_sets[1].mutes[mixer_page.load_mute_set] &= 0b0111111111111111;
-  }
 }
 
 
 void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load perf");
   DEBUG_PRINTLN( sizeof(scenes));
-  mixer_page.load_mute_set = 255;
+  if (version < PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT) {
+    convert_legacy_load_settings();
+  }
+
+  mixer_page.load_mute_set = load_mute_set < 4 ? load_mute_set : 255;
 
   for (uint8_t n = 0; n < 4; n++) {
     PerfEncoder *e = perf_page.perf_encoders[n];
@@ -76,12 +102,8 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
     e->old = encs[n].cur;
     memcpy(e->name,encs[n].name, PERF_NAME_LENGTH);
 
-    if ((mute_sets[1].mutes[n] & 0b1000000000000000) == 0) {
-      mixer_page.load_mute_set = n;
-    }
-    mixer_page.load_types[n][0] = mute_sets[1].mutes[n] & 0b0010000000000000;
-    mixer_page.load_types[n][1] = mute_sets[1].mutes[n] & 0b0100000000000000;
-    mute_sets[1].mutes[n] |= 0b1110000000000000;
+    mixer_page.load_types[n][0] = (load_type_mask & (1 << n)) != 0;
+    mixer_page.load_types[n][1] = (load_type_mask & (1 << (n + 4))) != 0;
 
   }
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);

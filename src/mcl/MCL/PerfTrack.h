@@ -6,6 +6,8 @@
 #include "PerfEncoder.h"
 #include "MixerPage.h"
 
+#define PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT 1
+
 class ATTR_PACKED() PerfTrackEncoderData {
 public:
   char name[PERF_NAME_LENGTH];
@@ -32,10 +34,10 @@ class ATTR_PACKED() PerfTrackData {
 public:
   PerfTrackEncoderData encs[4];
   PerfScene scenes[NUM_SCENES];
-  //Don't change order
   MuteSet mute_sets[2];
   uint8_t perf_locks[4][4];
-  //
+  uint8_t load_mute_set;
+  uint8_t load_type_mask;
 };
 
 class ATTR_PACKED() PerfTrack : public AUXTrack, public PerfTrackData {
@@ -62,11 +64,14 @@ public:
     //memset(mute_sets, 0xFF, sizeof(mute_sets));
     //memset(perf_locks, 255, sizeof(perf_locks));
     memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
+    load_mute_set = 255;
+    load_type_mask = 0xFF;
   }
   void init_defaults() override { init(); }
 
   void load_perf(bool immediate, SeqTrack *seq_track);
   void get_perf();
+  void convert_legacy_load_settings();
 
   uint16_t calc_latency(uint8_t tracknumber) override;
 
@@ -90,6 +95,12 @@ public:
     return true;
   }
   virtual uint8_t get_model() override { return PERF_TRACK_TYPE; }
+  virtual uint8_t storage_version() const override {
+    return PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT;
+  }
   virtual void *get_sound_data_ptr() override { return &encs; }
   virtual size_t get_sound_data_size() override { return sizeof(PerfTrackData); }
 };
+
+static_assert(MEMORY_ALIGN(sizeof(PerfTrack) - sizeof(void *)) <= PERF_TRACK_LEN,
+              "PerfTrack exceeds storage");
