@@ -58,7 +58,6 @@ public:
   void encoder_check();
   void encoder_send();
   void set_lfo_mod(uint8_t perf_idx, int8_t delta);
-  uint8_t lfo_mod_value(uint8_t perf_idx, uint8_t base) const;
   void send_perf_encoder(uint8_t perf_idx, MidiUartClass *uart_ = nullptr,
                          MidiUartClass *uart2_ = nullptr);
 };

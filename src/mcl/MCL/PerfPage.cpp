@@ -303,27 +303,19 @@ void PerfPage::set_lfo_mod(uint8_t perf_idx, int8_t delta) {
   lfo_mod_dirty_mask |= (uint8_t)(1 << perf_idx);
 }
 
-uint8_t PerfPage::lfo_mod_value(uint8_t perf_idx, uint8_t base) const {
-  if (perf_idx >= NUM_PERF_CONTROLS) {
-    return base;
-  }
-  int16_t value = (int16_t)base + (int16_t)lfo_mod_delta[perf_idx];
-  if (value < 0) {
-    return 0;
-  }
-  if (value > 127) {
-    return 127;
-  }
-  return (uint8_t)value;
-}
-
 void PerfPage::send_perf_encoder(uint8_t perf_idx, MidiUartClass *uart_,
                                  MidiUartClass *uart2_) {
   if (perf_idx >= NUM_PERF_CONTROLS || perf_encoders[perf_idx] == nullptr) {
     return;
   }
   PerfEncoder *e = perf_encoders[perf_idx];
-  e->send_value(lfo_mod_value(perf_idx, e->cur), uart_, uart2_);
+  int16_t value = (int16_t)e->cur + (int16_t)lfo_mod_delta[perf_idx];
+  if (value < 0) {
+    value = 0;
+  } else if (value > 127) {
+    value = 127;
+  }
+  e->send_value((uint8_t)value, uart_, uart2_);
   lfo_mod_dirty_mask &= (uint8_t)~(1 << perf_idx);
 }
 
