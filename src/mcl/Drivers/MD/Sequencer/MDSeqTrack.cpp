@@ -101,10 +101,18 @@ void MDSeqTrack::set_length(uint8_t len, bool expand) {
 }
 
 void MDSeqTrack::store_mute_state() {
+  bool cleared_locks = false;
   for (uint8_t n = 0; n < NUM_MD_STEPS; n++) {
     if (IS_BIT_SET64(mute_mask, n)) {
       set_step(n, MASK_PATTERN, 0);
+      if (steps[n].locks) {
+        clear_step_locks(n);
+        cleared_locks = true;
+      }
     }
+  }
+  if (cleared_locks) {
+    clean_params();
   }
   clear_mutes();
 }
