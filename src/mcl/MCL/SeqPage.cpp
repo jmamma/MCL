@@ -992,12 +992,14 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
   if (device == DEVICE_MD) {
     uint64_t mask, mute_mask = 0, slide_mask = 0;
     uint64_t led_mask = 0;
+    uint64_t display_mask = 0;
     uint8_t step_count, length;
 
     SeqTrackUtil::with_md_track(last_primary_track, [&](auto &track) {
       step_count = track.step_count;
       length = track.length;
       track.get_mask(&mask, MASK_PATTERN);
+      display_mask = mask;
 
       switch (mask_type) {
       case MASK_PATTERN:
@@ -1015,12 +1017,13 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
       case MASK_SWING:
         track.get_mask(&slide_mask, MASK_SWING);
         led_mask = slide_mask;
+        display_mask = 0;
         break;
       }
     });
 
     shed_mask(led_mask, length, offset);
-    draw_mask(offset, mask, step_count, length, mute_mask, slide_mask);
+    draw_mask(offset, display_mask, step_count, length, mute_mask, slide_mask);
 
     if (recording)
       return;

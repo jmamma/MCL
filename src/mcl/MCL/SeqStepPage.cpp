@@ -56,10 +56,12 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
                             uint8_t offset, bool show_current_step = true) {
   uint64_t mask = 0, mute_mask = 0, slide_mask = 0;
   uint64_t led_mask = 0;
+  uint64_t display_mask = 0;
   uint8_t step_count = active_track.step_count();
   uint8_t length = active_track.length();
 
   active_track.get_mask(&mask, MASK_PATTERN);
+  display_mask = mask;
   switch (SeqPage::mask_type) {
   case MASK_PATTERN:
     led_mask = mask;
@@ -76,11 +78,13 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
   case MASK_SWING:
     active_track.get_mask(&slide_mask, MASK_SWING);
     led_mask = slide_mask;
+    display_mask = 0;
     break;
   }
 
   page.shed_mask(led_mask, length, offset);
-  page.draw_mask(offset, mask, step_count, length, mute_mask, slide_mask);
+  page.draw_mask(offset, display_mask, step_count, length, mute_mask,
+                 slide_mask);
 
   if (SeqPage::recording) {
     return;
