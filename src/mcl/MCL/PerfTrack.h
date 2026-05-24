@@ -21,11 +21,9 @@ public:
   uint8_t cur;
   void init(uint8_t n) {
     src = param = min = 0;
-    uint8_t c = n * 2;
-    active_scene_a = 0 + c;
-    active_scene_b = 1 + c;
-    const char *str = "CONTROL";
-    strcpy(name, str);
+    active_scene_a = n << 1;
+    active_scene_b = active_scene_a + 1;
+    strcpy(name, "CONTROL");
   }
 
 };
@@ -55,10 +53,10 @@ public:
   }
 
   void init() {
+    for (uint8_t n = 0; n < 4; n++) {
+      encs[n].init(n);
+    }
     for (uint8_t n = 0; n < NUM_SCENES; n++) {
-      if (n < 4) {
-        encs[n].init(n);
-      }
       scenes[n].init();
     }
     //memset(mute_sets, 0xFF, sizeof(mute_sets));

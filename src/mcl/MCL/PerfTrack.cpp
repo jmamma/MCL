@@ -9,7 +9,8 @@ void PerfTrack::convert_legacy_load_settings() {
   load_type_mask = 0;
 
   uint8_t bit = 1;
-  for (uint8_t n = 0; n < 4; n++, bit <<= 1) {
+  uint8_t load_bit = 0x10;
+  for (uint8_t n = 0; n < 4; n++, bit <<= 1, load_bit <<= 1) {
     uint16_t mutes = mute_sets[1].mutes[n];
     if ((mutes & 0x8000) == 0) {
       load_mute_set = n;
@@ -18,7 +19,7 @@ void PerfTrack::convert_legacy_load_settings() {
       load_type_mask |= bit;
     }
     if (mutes & 0x4000) {
-      load_type_mask |= bit << 4;
+      load_type_mask |= load_bit;
     }
     mute_sets[1].mutes[n] = mutes | 0xE000;
   }
@@ -52,7 +53,8 @@ void PerfTrack::get_perf() {
   load_mute_set = mixer_page.load_mute_set;
   load_type_mask = 0;
   uint8_t bit = 1;
-  for (uint8_t n = 0; n < 4; n++, bit <<= 1) {
+  uint8_t load_bit = 0x10;
+  for (uint8_t n = 0; n < 4; n++, bit <<= 1, load_bit <<= 1) {
     PerfEncoder *e = perf_page.perf_encoders[n];
     PerfData *d = &e->perf_data;
     encs[n].src = d->src;
@@ -67,7 +69,7 @@ void PerfTrack::get_perf() {
       load_type_mask |= bit;
     }
     if (mixer_page.load_types[n][1]) {
-      load_type_mask |= bit << 4;
+      load_type_mask |= load_bit;
     }
 
   }
@@ -86,7 +88,8 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
   mixer_page.load_mute_set = load_mute_set < 4 ? load_mute_set : 255;
 
   uint8_t bit = 1;
-  for (uint8_t n = 0; n < 4; n++, bit <<= 1) {
+  uint8_t load_bit = 0x10;
+  for (uint8_t n = 0; n < 4; n++, bit <<= 1, load_bit <<= 1) {
     PerfEncoder *e = perf_page.perf_encoders[n];
     PerfData *d = &e->perf_data;
     d->src = encs[n].src;
@@ -99,17 +102,18 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
     memcpy(e->name,encs[n].name, PERF_NAME_LENGTH);
 
     mixer_page.load_types[n][0] = (load_type_mask & bit) != 0;
-    mixer_page.load_types[n][1] = (load_type_mask & (bit << 4)) != 0;
+    mixer_page.load_types[n][1] = (load_type_mask & load_bit) != 0;
 
   }
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);
 
  memcpy(mixer_page.mute_sets, mute_sets, sizeof(mute_sets) + sizeof(perf_locks));
- if (mixer_page.load_mute_set < 4) {
-   mixer_page.switch_mute_set(mixer_page.load_mute_set, immediate, mixer_page.load_types[mixer_page.load_mute_set]); //Mute change is applied outside of sequencer runtime.
+ uint8_t mute_set = mixer_page.load_mute_set;
+ if (mute_set < 4) {
+   mixer_page.switch_mute_set(mute_set, immediate, mixer_page.load_types[mute_set]); //Mute change is applied outside of sequencer runtime.
    if (!immediate) {
      PerfSeqTrack *p = (PerfSeqTrack*) seq_track;
-     memcpy(p->perf_locks, &perf_locks[mixer_page.load_mute_set],4); //Perf change is pre-empted at sequencer runtime.
+     memcpy(p->perf_locks, &perf_locks[mute_set],4); //Perf change is pre-empted at sequencer runtime.
    }
  }
 }
