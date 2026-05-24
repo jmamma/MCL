@@ -127,9 +127,10 @@ public:
     uint8_t step = 0;
     for (uint8_t byte = 0; byte < sizeof(swing_mask); byte++) {
       uint8_t bits = 0;
-      for (uint8_t bit = 0; bit < 8; bit++, step++) {
+      uint8_t bit_mask = 1;
+      for (uint8_t bit = 0; bit < 8; bit++, step++, bit_mask <<= 1) {
         if (steps[step].swing) {
-          bits |= _bvmasks[bit];
+          bits |= bit_mask;
         }
       }
       mask[byte] = bits;
