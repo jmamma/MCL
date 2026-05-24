@@ -234,12 +234,10 @@ bool MCLClipBoard::copy_sequencer_track(GridSlot track) {
             ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
   bool merge = false;
   bool online = true;
-  if (device_track == nullptr) { goto end; }
 
   ret = device_track->store_in_grid(track_idx, GRID_LENGTH, gdt->seq_track, merge,
                                      online, &grids[grid_idx]);
 
-  end:
   close();
   if (!ret) {
     DEBUG_PRINTLN(F("failed write"));

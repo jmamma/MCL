@@ -62,7 +62,7 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
     scratch.clear();
     scratch.init();
     device_track = scratch.init_track_type(track_type);
-    if (device_track != nullptr && seq_track != nullptr) {
+    if (seq_track != nullptr) {
       device_track->init(seq_track_idx, seq_track);
     }
     was_rebuilt = true;
@@ -305,8 +305,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
       }
       auto pdevice_track =
           ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
-      if (pdevice_track != nullptr &&
-          pdevice_track->store_in_grid(i, row, gdt->seq_track, merge,
+      if (pdevice_track->store_in_grid(i, row, gdt->seq_track, merge,
                                        online)) {
         row_headers[grid_idx].update_model(
             track_idx, pdevice_track->get_model(), gdt->track_type);

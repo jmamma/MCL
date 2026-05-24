@@ -35,9 +35,6 @@ bool copy_grid_slot_label(uint8_t track_type, uint8_t model, GridColumn column,
                           GridSlot slot, GridRow row, char label[3]) {
   EmptyTrack scratch;
   auto *track = ((DeviceTrack *)&scratch)->init_track_type(track_type);
-  if (track == nullptr) {
-    return false;
-  }
   return track->copy_grid_slot_label(model, column, slot, row, label);
 }
 
