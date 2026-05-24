@@ -509,15 +509,13 @@ TBDTrack::TBDTrack() {
   static_assert(MEMORY_ALIGN(sizeof(TBDTrack) - sizeof(void *)) <= TBD_TRACK_LEN);
 }
 
-bool TBDTrack::copy_grid_slot_label(uint8_t model, GridColumn column,
-                                    GridSlot slot, GridRow row, char label[3]) {
-  (void)model;
-  (void)column;
+bool TBDTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                                    char label[3]) {
   label[0] = 'T';
   label[1] = 'B';
   label[2] = '\0';
   EmptyTrack scratch;
-  if (auto *track = scratch.load_from_grid<TBDTrack>(slot, row)) {
+  if (auto *track = scratch.load_from_grid<TBDTrack>(ctx.slot, ctx.row)) {
     if (tbd_p4_copy_sound_label(track->p4_sound, label, 3, 2) &&
         label[1] == '\0') {
       label[1] = ' ';
@@ -651,16 +649,13 @@ TBDMidiTrack::TBDMidiTrack() {
                 GRID2_TRACK_LEN);
 }
 
-bool TBDMidiTrack::copy_grid_slot_label(uint8_t model, GridColumn column,
-                                        GridSlot slot, GridRow row,
+bool TBDMidiTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
                                         char label[3]) {
-  (void)model;
-  (void)column;
   label[0] = 'T';
   label[1] = 'M';
   label[2] = '\0';
   EmptyTrack scratch;
-  if (auto *track = scratch.load_from_grid<TBDMidiTrack>(slot, row)) {
+  if (auto *track = scratch.load_from_grid<TBDMidiTrack>(ctx.slot, ctx.row)) {
     if (tbd_p4_copy_sound_label(track->p4_sound, label, 3, 2) &&
         label[1] == '\0') {
       label[1] = ' ';

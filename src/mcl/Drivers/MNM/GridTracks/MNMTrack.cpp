@@ -8,12 +8,9 @@ void MNMTrack::init() {
   //seq_data.init();
 }
 
-bool MNMTrack::copy_grid_slot_label(uint8_t model, GridColumn column,
-                                    GridSlot slot, GridRow row, char label[3]) {
-  (void)column;
-  (void)slot;
-  (void)row;
-  auto tmp = getMNMMachineNameShort(model, 2);
+bool MNMTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                                    char label[3]) {
+  auto tmp = getMNMMachineNameShort(ctx.model, 2);
   if (!tmp) {
     return false;
   }
@@ -23,13 +20,9 @@ bool MNMTrack::copy_grid_slot_label(uint8_t model, GridColumn column,
 }
 
 #if !defined(__AVR__)
-bool MNMMidiTrack::copy_grid_slot_label(uint8_t model, GridColumn column,
-                                        GridSlot slot, GridRow row,
+bool MNMMidiTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
                                         char label[3]) {
-  (void)column;
-  (void)slot;
-  (void)row;
-  auto tmp = getMNMMachineNameShort(model, 2);
+  auto tmp = getMNMMachineNameShort(ctx.model, 2);
   if (!tmp) {
     return false;
   }

@@ -50,13 +50,10 @@ public:
            seq_data.store_size();
   }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
-  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
-                            GridRow row, char label[3]) override {
-    (void)model;
-    (void)slot;
-    (void)row;
+  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                            char label[3]) override {
     label[0] = 'M';
-    label[1] = column + '1';
+    label[1] = ctx.column + '1';
     label[2] = '\0';
     return true;
   }

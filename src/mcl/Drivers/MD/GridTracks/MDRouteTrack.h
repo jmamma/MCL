@@ -45,12 +45,9 @@ public:
   virtual uint16_t get_track_size() override { return _sizeof(); }
   virtual uintptr_t get_region() override { return BANK1_MDROUTE_TRACK_START; }
 
-  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
-                            GridRow row, char label[3]) override {
-    (void)model;
-    (void)column;
-    (void)slot;
-    (void)row;
+  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                            char label[3]) override {
+    (void)ctx;
     label[0] = 'R';
     label[1] = 'T';
     label[2] = '\0';
@@ -90,12 +87,9 @@ public:
   virtual uint16_t get_track_size() override { return _sizeof(); }
   virtual uintptr_t get_region() override { return BANK1_MDROUTE_TRACK_START; }
 
-  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
-                            GridRow row, char label[3]) override {
-    (void)model;
-    (void)column;
-    (void)slot;
-    (void)row;
+  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                            char label[3]) override {
+    (void)ctx;
     label[0] = 'R';
     label[1] = 'T';
     label[2] = '\0';

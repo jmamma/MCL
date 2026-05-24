@@ -42,8 +42,8 @@ public:
   }
   virtual uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   virtual uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
-  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
-                            GridRow row, char label[3]) override;
+  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                            char label[3]) override;
   virtual uint8_t get_model() override { return machine.model; }
   virtual uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
   void init_defaults() override {
@@ -97,8 +97,8 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   uint16_t get_track_size() override { return _sizeof(); }
-  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
-                            GridRow row, char label[3]) override;
+  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                            char label[3]) override;
   uint8_t get_model() override { return machine.model; }
   void *get_sound_data_ptr() override { return &machine; }
   size_t get_sound_data_size() override { return sizeof(MNMMachine); }

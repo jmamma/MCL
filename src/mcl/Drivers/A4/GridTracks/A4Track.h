@@ -42,13 +42,10 @@ public:
   }
   virtual uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   virtual uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
-  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
-                            GridRow row, char label[3]) override {
-    (void)model;
-    (void)slot;
-    (void)row;
+  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                            char label[3]) override {
     label[0] = 'A';
-    label[1] = column + '1';
+    label[1] = ctx.column + '1';
     label[2] = '\0';
     return true;
   }
@@ -99,13 +96,10 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   uint16_t get_track_size() override { return _sizeof(); }
-  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
-                            GridRow row, char label[3]) override {
-    (void)model;
-    (void)slot;
-    (void)row;
+  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
+                            char label[3]) override {
     label[0] = 'A';
-    label[1] = column + '1';
+    label[1] = ctx.column + '1';
     label[2] = '\0';
     return true;
   }
