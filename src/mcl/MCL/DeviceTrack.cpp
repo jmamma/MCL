@@ -260,10 +260,8 @@ DeviceTrack *DeviceTrack::materialize_storage_range(uint8_t track_type,
                                                     uint16_t source_offset,
                                                     uint16_t target_offset,
                                                     uint16_t len) {
-  GridLink old_link = link;
   uint8_t *base = static_cast<uint8_t *>(_this());
   DeviceTrack *target = init_materialized_track_type(track_type);
-  target->link = old_link;
   memmove(static_cast<uint8_t *>(target->_this()) + target_offset,
           base + source_offset, len);
   return target;
@@ -272,7 +270,6 @@ DeviceTrack *DeviceTrack::materialize_storage_range(uint8_t track_type,
 DeviceTrack *DeviceTrack::load_materialized_mem_storage_range(
     GridSlot column, uint8_t track_type, uint16_t source_offset,
     uint16_t target_offset, uint16_t len) {
-  GridLink old_link = link;
   uintptr_t pos = get_region() +
                   static_cast<uintptr_t>(get_region_size() *
                                          static_cast<uint32_t>(column)) +
@@ -280,7 +277,6 @@ DeviceTrack *DeviceTrack::load_materialized_mem_storage_range(
   volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
 
   DeviceTrack *target = init_materialized_track_type(track_type);
-  target->link = old_link;
   memcpy_bank1(static_cast<uint8_t *>(target->_this()) + target_offset, ptr,
                len);
   return target;
@@ -289,9 +285,7 @@ DeviceTrack *DeviceTrack::load_materialized_mem_storage_range(
 DeviceTrack *DeviceTrack::load_materialized_storage_range(
     uint8_t track_type, GridSlot column, GridRow row, Grid *grid,
     uint16_t source_offset, uint16_t target_offset, uint16_t len) {
-  GridLink old_link = link;
   DeviceTrack *target = init_materialized_track_type(track_type);
-  target->link = old_link;
 
   uint8_t *dst = static_cast<uint8_t *>(target->_this()) + target_offset;
   if (!target->read_grid_storage_range(column, row, grid, source_offset, dst,

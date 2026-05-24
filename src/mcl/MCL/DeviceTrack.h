@@ -107,10 +107,12 @@ public:
     uint8_t old_version = version;
     uint16_t old_storage_size = storage_size;
     uint8_t old_flags = flags;
+    GridLink old_link = link;
     DeviceTrack *track = init_track_type(track_type);
     track->version = old_version;
     track->storage_size = old_storage_size;
     track->flags = old_flags;
+    track->link = old_link;
     return track;
   }
   DeviceTrack *init_loaded_track_type(uint8_t track_type) {
