@@ -156,17 +156,16 @@ void GridTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 bool GridTrack::load_from_grid_512(GridSlot column, GridRow row, Grid *grid) {
 
-  if (grid) {
-    if (!grid->read(_this(), 512, column, row)) {
-      DEBUG_PRINTLN(F("read failed"));
-      return false;
-    }
+  Grid *source_grid = grid;
+  GridColumn source_column = column;
+  if (source_grid == nullptr) {
+    source_grid = &proj.grids[column >> 4];
+    source_column = column & 0x0F;
   }
-  else {
-    if (!proj.read_grid(_this(), 512, column, row)) {
-      DEBUG_PRINTLN(F("read failed"));
-      return false;
-    }
+
+  if (!source_grid->read(_this(), 512, source_column, row)) {
+    DEBUG_PRINTLN(F("read failed"));
+    return false;
   }
   repair_loaded_header();
   return true;
