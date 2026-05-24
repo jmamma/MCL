@@ -13,6 +13,8 @@
 uint16_t MDSeqTrack::gui_update = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
 uint32_t MDSeqTrack::load_machine_cache = 0;
+volatile uint16_t MDSeqTrack::pending_swing_change_mask = 0;
+volatile uint8_t MDSeqTrack::pending_swing_amount = 0;
 
 static uint8_t md_swing_q14_to_amount(uint32_t swing_q14) {
   uint32_t amount = (swing_q14 * 50UL + 8192UL) >> 14;
@@ -120,6 +122,24 @@ void MDSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
   re_sync();
 }
 
+void MDSeqTrack::request_swing_amount_change(uint8_t amount) {
+  if (amount > 30) {
+    amount = 30;
+  }
+
+  if (!MidiClock.isStarted()) {
+    swing_amount = amount;
+    pending_swing_change_mask = 0;
+    return;
+  }
+
+  if (pending_swing_amount != amount) {
+    pending_swing_change_mask = 0;
+    pending_swing_amount = amount;
+  }
+  SET_BIT16(pending_swing_change_mask, track_number);
+}
+
 void MDSeqTrack::re_sync() {
   //  uint32_t q = length * 12;
   //  count_down = (MidiClock.div192th_counter / q) * q + q;
@@ -168,6 +188,10 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       ignore_step = 255;
     }
     step_count_inc();
+    if (IS_BIT_SET16(pending_swing_change_mask, track_number)) {
+      swing_amount = pending_swing_amount;
+      CLEAR_BIT16(pending_swing_change_mask, track_number);
+    }
   }
 
   if (notes.count_down) {

@@ -65,6 +65,7 @@ void SPSXSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
             ignore_step = 255;
         }
         step_count_inc();
+        apply_pending_swing_amount();
     }
     update_legacy_progress_counter(tps);
 

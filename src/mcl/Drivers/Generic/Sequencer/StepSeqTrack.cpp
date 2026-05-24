@@ -3,6 +3,7 @@
 #include "StepSeqTrack.h"
 #include "MCLSeq.h"
 #include "MCLSysConfig.h"
+#include "MidiClock.h"
 
 namespace {
 
@@ -703,6 +704,31 @@ void StepSeqDataTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
     track_speed = new_speed;
     uint16_t tps = get_ticks_per_step();
     if (tick_counter > tps) tick_counter = tick_counter % tps;
+}
+
+void StepSeqDataTrack::request_swing_amount_change(uint8_t amount) {
+    if (amount > 30) amount = 30;
+    if (MidiClock.state != MidiClockClass::STARTED) {
+        swing_amount = amount;
+        pending_swing_amount = NO_PENDING_SWING_AMOUNT;
+        return;
+    }
+
+    USE_LOCK();
+    SET_LOCK();
+    pending_swing_amount = amount;
+    CLEAR_LOCK();
+}
+
+void StepSeqDataTrack::apply_pending_swing_amount() {
+    if (pending_swing_amount == NO_PENDING_SWING_AMOUNT) return;
+
+    USE_LOCK();
+    SET_LOCK();
+    uint8_t amount = pending_swing_amount;
+    pending_swing_amount = NO_PENDING_SWING_AMOUNT;
+    CLEAR_LOCK();
+    swing_amount = amount;
 }
 
 void StepSeqDataTrack::store_mute_state() {

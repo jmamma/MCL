@@ -143,7 +143,9 @@ public:
     return track_->request_speed_change(new_speed);
   }
 
-  void set_swing_amount(uint8_t amount) { track_->swing_amount = amount; }
+  void set_swing_amount(uint8_t amount) {
+    track_->request_swing_amount_change(amount);
+  }
 
   uint8_t condition_count() const { return NUM_TRIG_CONDITIONS; }
 

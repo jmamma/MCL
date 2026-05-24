@@ -39,6 +39,8 @@ public:
   static uint16_t gui_update;
   static uint16_t md_trig_mask;
   static uint32_t load_machine_cache;
+  static volatile uint16_t pending_swing_change_mask;
+  static volatile uint8_t pending_swing_amount;
 
   TrigNotes notes;
 
@@ -130,6 +132,7 @@ public:
     }
     return SeqTrack::request_speed_change(new_speed);
   }
+  void request_swing_amount_change(uint8_t amount);
 
   virtual void rotate_left() override { modify_track(DIR_LEFT); }
   virtual void rotate_right() override { modify_track(DIR_RIGHT); }

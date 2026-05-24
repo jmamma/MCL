@@ -38,8 +38,16 @@ bool MDTrackSelect::off() {
 }
 
 static void set_md_swing_amount(uint8_t track, uint8_t swing_amount) {
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    mcl_seq.spsx_tracks[track].request_swing_amount_change(swing_amount);
+    return;
+  }
+#endif
   SeqTrackUtil::with_md_track(
-      track, [swing_amount](auto &t) { t.swing_amount = swing_amount; });
+      track, [swing_amount](auto &t) {
+        t.request_swing_amount_change(swing_amount);
+      });
 }
 
 static void apply_md_swing_amount(uint8_t track_count, uint8_t track,

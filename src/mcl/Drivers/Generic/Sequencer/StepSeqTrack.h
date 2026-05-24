@@ -235,16 +235,21 @@ protected:
 
 class StepSeqDataTrack : public StepSeqTrackData, public StepSeqSlideTrack {
 public:
+    static constexpr uint8_t NO_PENDING_SWING_AMOUNT = 0xFF;
+
     uint64_t mute_mask;
+    volatile uint8_t pending_swing_amount;
 
     StepSeqDataTrack() : StepSeqSlideTrack() {
         StepSeqTrackData::init();
         mute_mask = 0;
+        pending_swing_amount = NO_PENDING_SWING_AMOUNT;
     }
 
     void reset() {
         StepSeqSlideTrack::reset();
         record_mutes = false;
+        pending_swing_amount = NO_PENDING_SWING_AMOUNT;
     }
 
     void get_mask(uint64_t *_pmask, uint8_t mask_type) const;
@@ -297,6 +302,8 @@ public:
 
     void set_speed(uint8_t new_speed, uint8_t old_speed = 255,
                    bool timing_adjust = true);
+    void request_swing_amount_change(uint8_t amount);
+    void apply_pending_swing_amount();
     void store_mute_state();
 
     void copy_step(uint8_t n, StepSeqStep *step);

@@ -221,9 +221,9 @@ public:
 
   void set_swing_amount(uint8_t amount) {
     if (kind_ == KIND_MD) {
-      tracks_.md->swing_amount = amount;
+      tracks_.md->request_swing_amount_change(amount);
     } else {
-      tracks_.stepseq->swing_amount = amount;
+      tracks_.stepseq->request_swing_amount_change(amount);
     }
   }
 
