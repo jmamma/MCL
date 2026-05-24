@@ -8,6 +8,51 @@
 #include "midi-common.h"
 #include "../../mcl/MCL/MCLSeq.h"
 
+namespace {
+
+void update_tx_message_state(int8_t& in_message_tx, uint8_t c) {
+    if ((in_message_tx > 0) && (c < 128)) {
+        in_message_tx--;
+        return;
+    }
+    if (c < 0xF0) {
+        int8_t data_len = 0;
+        switch (c & 0xF0) {
+        case MIDI_CHANNEL_PRESSURE:
+        case MIDI_PROGRAM_CHANGE:
+            data_len = 1;
+            break;
+        case MIDI_NOTE_OFF:
+        case MIDI_NOTE_ON:
+        case MIDI_AFTER_TOUCH:
+        case MIDI_CONTROL_CHANGE:
+        case MIDI_PITCH_WHEEL:
+            data_len = 2;
+            break;
+        }
+        if (data_len > 0)
+            in_message_tx = data_len;
+    } else {
+        switch (c) {
+        case MIDI_SYSEX_START:
+            in_message_tx = -1;
+            break;
+        case MIDI_SYSEX_END:
+            in_message_tx = 0;
+            break;
+        case MIDI_MTC_QUARTER_FRAME:
+        case MIDI_SONG_SELECT:
+            in_message_tx = 1;
+            break;
+        case MIDI_SONG_POSITION_PTR:
+            in_message_tx = 2;
+            break;
+        }
+    }
+}
+
+}
+
 MidiUartClass::MidiUartClass()
     : rx_storage_(rx_buf_, RX_RING_SIZE),
       tx_storage_(tx_buf_, TX_RING_SIZE),
@@ -29,6 +74,8 @@ void MidiUartClass::init() {
     rxRb->init();
     txRb->init();
     txRb_realtime->init();
+    txRb_sidechannel = nullptr;
+    in_message_tx_ = 0;
 }
 
 bool MidiUartClass::avail() {
@@ -130,12 +177,33 @@ void MidiUartClass::desktop_ingress(const uint8_t* data, size_t len) {
 
 size_t MidiUartClass::desktop_egress(uint8_t* dst, size_t cap) {
     size_t n = 0;
-    // Drain realtime ring first; then main tx ring.
-    while (n < cap && !txRb_realtime->isEmpty()) {
-        dst[n++] = txRb_realtime->get();
-    }
-    while (n < cap && !txRb->isEmpty()) {
-        dst[n++] = txRb->get();
+    // Match the hardware UART ISR priority:
+    //   realtime can interrupt any stream,
+    //   side-channel can start only between normal MIDI messages,
+    //   normal TX advances the message-boundary tracker.
+    while (n < cap) {
+        if (!txRb_realtime->isEmpty()) {
+            dst[n++] = txRb_realtime->get();
+            continue;
+        }
+
+        if (txRb_sidechannel && in_message_tx_ == 0) {
+            if (!txRb_sidechannel->isEmpty()) {
+                const uint8_t c = txRb_sidechannel->get();
+                dst[n++] = c;
+                continue;
+            }
+            txRb_sidechannel = nullptr;
+        }
+
+        if (!txRb->isEmpty()) {
+            const uint8_t c = txRb->get();
+            dst[n++] = c;
+            update_tx_message_state(in_message_tx_, c);
+            continue;
+        }
+
+        break;
     }
     return n;
 }

@@ -21,11 +21,13 @@ FsFile& FsFile::operator=(FsFile&& other) noexcept {
         close();
         handle_ = other.handle_;
         memcpy(name_, other.name_, sizeof(name_));
+        memcpy(path_, other.path_, sizeof(path_));
         open_   = other.open_;
         is_dir_ = other.is_dir_;
         other.handle_ = -1;
         other.open_   = false;
         other.is_dir_ = false;
+        other.path_[0] = '\0';
     }
     return *this;
 }
@@ -34,6 +36,14 @@ static void store_name(char dst[64], const char* src) {
     if (!src) { dst[0] = '\0'; return; }
     size_t n = strlen(src);
     if (n > 63) n = 63;
+    memcpy(dst, src, n);
+    dst[n] = '\0';
+}
+
+static void store_path(char dst[128], const char* src) {
+    if (!src) { dst[0] = '\0'; return; }
+    size_t n = strlen(src);
+    if (n > 127) n = 127;
     memcpy(dst, src, n);
     dst[n] = '\0';
 }
@@ -58,6 +68,7 @@ bool FsFile::open(const char* path, uint8_t mode) {
         is_dir_ = true;
         open_   = true;
         store_name(name_, basename_of(path));
+        store_path(path_, path);
         return true;
     }
 
@@ -67,6 +78,7 @@ bool FsFile::open(const char* path, uint8_t mode) {
     is_dir_ = false;
     open_   = true;
     store_name(name_, basename_of(path));
+    store_path(path_, path);
     return true;
 }
 
@@ -78,18 +90,41 @@ bool FsFile::openNext(FsFile* dir, uint8_t mode) {
     if (got <= 0) return false;
 
     close();
-    // The host returns just the filename, not the full path. To open it we
-    // need the parent dir's path — but we don't keep that around. The host
-    // is expected to interpret subsequent host_fs_open()s with paths it
-    // already knows. As a simple convention, the host can prefix-track
-    // openNext children, OR we cache the parent path in the dir entry
-    // (TBD). For now, attempt to open by filename relative to the dir.
-    int32_t fd = host_fs_open(child, mode);
+    char child_path[192];
+    if (dir->path_[0]) {
+        size_t parent_len = strlen(dir->path_);
+        if (parent_len >= sizeof(child_path)) return false;
+        memcpy(child_path, dir->path_, parent_len);
+        size_t pos = parent_len;
+        if (pos > 0 && child_path[pos - 1] != '/') {
+            if (pos + 1 >= sizeof(child_path)) return false;
+            child_path[pos++] = '/';
+        }
+        size_t child_len = strlen(child);
+        if (pos + child_len >= sizeof(child_path)) return false;
+        memcpy(child_path + pos, child, child_len + 1);
+    } else {
+        store_path(child_path, child);
+    }
+
+    if (host_fs_is_dir(child_path)) {
+        int32_t h = host_fs_dir_open(child_path);
+        if (h < 0) return false;
+        handle_ = h;
+        is_dir_ = true;
+        open_   = true;
+        store_name(name_, child);
+        store_path(path_, child_path);
+        return true;
+    }
+
+    int32_t fd = host_fs_open(child_path, mode);
     if (fd >= 0) {
         handle_ = fd;
         is_dir_ = false;
         open_   = true;
         store_name(name_, child);
+        store_path(path_, child_path);
         return true;
     }
     return false;
@@ -104,6 +139,7 @@ bool FsFile::close() {
     open_   = false;
     is_dir_ = false;
     name_[0] = '\0';
+    path_[0] = '\0';
     return true;
 }
 
@@ -149,10 +185,22 @@ size_t FsFile::getName(char* dst, size_t cap) const {
     return n;
 }
 
-bool FsFile::sync()                    { return true; }  // host writes are synchronous
-bool FsFile::truncate(uint32_t)        { return false; } // not exposed; rare
+bool FsFile::sync() {
+    if (!open_ || is_dir_) return false;
+    return host_fs_sync(handle_) >= 0;
+}
+
+bool FsFile::truncate(uint32_t length) {
+    if (!open_ || is_dir_) return false;
+    return host_fs_truncate(handle_, (int32_t)length) >= 0;
+}
+
 bool FsFile::remove()                  { return false; } // require host_fs_remove via SdFat::remove
-bool FsFile::preAllocate(uint32_t)     { return true; }  // best-effort no-op
+
+bool FsFile::preAllocate(uint32_t length) {
+    if (!open_ || is_dir_) return false;
+    return host_fs_truncate(handle_, (int32_t)length) >= 0;
+}
 
 // ---------------- SdFat --------------------------------------------------
 

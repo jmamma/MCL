@@ -4,12 +4,13 @@
   "runtime": {
     "type": "wamr-aot",
     "artifact": "mcl.aot",
-    "stack_bytes": 65536,
+    "stack_bytes": 2097152,
     "heap_bytes": 1048576
   },
   "abi": {
     "id": "sps.panel_device.v1",
     "version": 1,
+    "min_minor": 5,
     "import_module": "env"
   },
   "service": {

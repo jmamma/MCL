@@ -63,6 +63,7 @@ public:
     volatile RingBuffer<>* txRb_sidechannel = nullptr;
 
 private:
+    int8_t           in_message_tx_ = 0;
     uint8_t          rx_buf_[RX_RING_SIZE];
     uint8_t          tx_buf_[TX_RING_SIZE];
     uint8_t          rt_buf_[RT_RING_SIZE];

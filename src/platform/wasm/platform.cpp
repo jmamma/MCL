@@ -11,8 +11,20 @@
 
 extern uint64_t mcl_desktop_button_mask;
 extern volatile uint16_t g_clock_ms;
+extern void handleIncomingMidi();
 
 namespace {
+
+constexpr uint8_t kMidiSysexStart = 0xF0;
+constexpr uint8_t kMidiSysexEnd = 0xF7;
+constexpr uint16_t kMaxMidiOutputBytesPerPoll = 256;
+constexpr uint16_t kMaxMidiOutputBytesPerWaitPoll = 4096;
+
+struct MidiOutputPumpState {
+    bool in_sysex = false;
+};
+
+MidiOutputPumpState midi_output_pump_state[3];
 
 void pump_host_midi_input() {
     for (int port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
@@ -22,11 +34,39 @@ void pump_host_midi_input() {
     }
 }
 
+void pump_host_midi_output_port(int port, uint16_t max_bytes,
+                                bool stop_after_sysex) {
+    MidiOutputPumpState& state = midi_output_pump_state[port - MCL_MIDI_UART];
+    uint16_t count = 0;
+
+    while (count < max_bytes) {
+        int32_t byte_val = mcl_midi_out_pop(port);
+        if (byte_val < 0)
+            break;
+
+        uint8_t byte = (uint8_t)byte_val;
+        host_midi_out_push(port, byte);
+        ++count;
+
+        if (byte == kMidiSysexStart) {
+            state.in_sysex = true;
+        } else if (byte == kMidiSysexEnd && state.in_sysex) {
+            state.in_sysex = false;
+            if (stop_after_sysex)
+                break;
+        }
+    }
+}
+
 void pump_host_midi_output() {
     for (int port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
-        int32_t byte_val = 0;
-        while ((byte_val = mcl_midi_out_pop(port)) >= 0)
-            host_midi_out_push(port, (uint8_t)byte_val);
+        pump_host_midi_output_port(port, kMaxMidiOutputBytesPerPoll, true);
+    }
+}
+
+void pump_host_midi_output_for_wait() {
+    for (int port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
+        pump_host_midi_output_port(port, kMaxMidiOutputBytesPerWaitPoll, false);
     }
 }
 
@@ -36,9 +76,14 @@ void drain_pending_audio_time() {
         return;
     }
 
+#ifdef MCL_WASM_DISABLE_SOFTWARE_IRQ
+    g_clock_ms = (uint16_t)millis();
+    return;
+#else
     const uint32_t elapsed_us = host_audio_pending_us();
     if (elapsed_us != 0)
         mcl_tick_audio(elapsed_us);
+#endif
 }
 
 }  // namespace
@@ -60,6 +105,9 @@ void platform_poll() {
     GUI_hardware.poll();
     drain_pending_audio_time();
     pump_host_midi_input();
+#ifdef MCL_WASM_DISABLE_SOFTWARE_IRQ
+    handleIncomingMidi();
+#endif
     pump_host_midi_output();
 #ifdef DEBUGMODE
     mcl_debug::flush();
@@ -69,9 +117,18 @@ void platform_poll() {
 
 void platform_wait_poll() {
     g_clock_ms = (uint16_t)millis();
-    drain_pending_audio_time();
+    // Blocking sysex waits often enter with a request already queued in the
+    // MCL UART TX ring. Drain the whole bounded pending batch, not just the
+    // first sysex: older status exchanges can otherwise sit in front of the
+    // request this wait is actually waiting for.
+    pump_host_midi_output_for_wait();
     pump_host_midi_input();
-    pump_host_midi_output();
+    // handleIncomingMidi() dispatches already-recorded sysex before it drains
+    // UART bytes into the sysex recorder. Prime that first stage here so the
+    // caller's normal handleIncomingMidi() can dispatch replies before it checks
+    // the blocking timeout.
+    handleIncomingMidi();
+    pump_host_midi_output_for_wait();
 #ifdef DEBUGMODE
     mcl_debug::flush();
 #endif

@@ -78,6 +78,26 @@ uint32_t mcl_abi_version(void);
 // tempo as BPM * 100 for host-side SPS-vs-MCL clock comparisons.
 uint32_t mcl_debug_tempo_x100(void);
 
+// Optional diagnostic export for SPS integration tests. Returns 0 until MCL
+// setup has completed, then exposes read-only state packed so the host can
+// wait for readiness without changing MCL behavior:
+//   bits  0..7   current PageIndex, or 255 if invalid
+//   bits  8..15  current grid row
+//   bit   16     current grid half
+//   bit   17     GridPage slot menu visible
+//   bit   18     key interface active
+//   bit   19     note interface accepting notes
+//   bit   20     MD.connected
+//   bit   21     primary device connected
+//   bit   22     secondary device connected
+//   bit   23     setup complete
+//   bit   24     note_interface has notes_on bits
+//   bit   25     note_interface has notes_off bits
+//   bit   26     GridIOPage::track_select nonzero
+//   bit   27     GridIOPage::show_offset
+//   bit   28     GridIOPage::show_track_type
+uint32_t mcl_debug_state(void);
+
 #ifdef __cplusplus
 }
 #endif

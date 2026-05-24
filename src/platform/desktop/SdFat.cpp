@@ -85,11 +85,13 @@ FsFile& FsFile::operator=(FsFile&& other) noexcept {
         close();
         handle_ = other.handle_;
         std::memcpy(name_, other.name_, sizeof(name_));
+        std::memcpy(path_, other.path_, sizeof(path_));
         open_   = other.open_;
         is_dir_ = other.is_dir_;
         other.handle_ = -1;
         other.open_   = false;
         other.is_dir_ = false;
+        other.path_[0] = '\0';
     }
     return *this;
 }
@@ -111,6 +113,9 @@ bool FsFile::open(const char* path, uint8_t mode) {
         auto name = resolved.filename().string();
         std::strncpy(name_, name.c_str(), sizeof(name_) - 1);
         name_[sizeof(name_) - 1] = '\0';
+        auto path_string = resolved.string();
+        std::strncpy(path_, path_string.c_str(), sizeof(path_) - 1);
+        path_[sizeof(path_) - 1] = '\0';
         return true;
     }
 
@@ -148,6 +153,9 @@ bool FsFile::open(const char* path, uint8_t mode) {
     auto name = resolved.filename().string();
     std::strncpy(name_, name.c_str(), sizeof(name_) - 1);
     name_[sizeof(name_) - 1] = '\0';
+    auto path_string = resolved.string();
+    std::strncpy(path_, path_string.c_str(), sizeof(path_) - 1);
+    path_[sizeof(path_) - 1] = '\0';
     return true;
 }
 
@@ -182,6 +190,9 @@ bool FsFile::openNext(FsFile* dir, uint8_t mode) {
         auto name = entry.filename().string();
         std::strncpy(name_, name.c_str(), sizeof(name_) - 1);
         name_[sizeof(name_) - 1] = '\0';
+        auto path_string = entry.string();
+        std::strncpy(path_, path_string.c_str(), sizeof(path_) - 1);
+        path_[sizeof(path_) - 1] = '\0';
         return true;
     }
 
@@ -201,6 +212,9 @@ bool FsFile::openNext(FsFile* dir, uint8_t mode) {
     auto name = entry.filename().string();
     std::strncpy(name_, name.c_str(), sizeof(name_) - 1);
     name_[sizeof(name_) - 1] = '\0';
+    auto path_string = entry.string();
+    std::strncpy(path_, path_string.c_str(), sizeof(path_) - 1);
+    path_[sizeof(path_) - 1] = '\0';
     return true;
 }
 
@@ -213,6 +227,7 @@ bool FsFile::close() {
     open_   = false;
     is_dir_ = false;
     name_[0] = '\0';
+    path_[0] = '\0';
     return true;
 }
 

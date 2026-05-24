@@ -513,3 +513,4 @@ struct __T_menu_options {
   static constexpr size_t sizeofof_MENU_OPTIONS = 1460;
   static constexpr size_t __total_size = 1460;
 };
+

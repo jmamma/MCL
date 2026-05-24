@@ -47,6 +47,8 @@ int32_t host_fs_open  (const char* path, int32_t mode);
 int32_t host_fs_close (int32_t fd);
 int32_t host_fs_read  (int32_t fd, void* buf, int32_t len);
 int32_t host_fs_write (int32_t fd, const void* buf, int32_t len);
+int32_t host_fs_sync  (int32_t fd);
+int32_t host_fs_truncate(int32_t fd, int32_t len);
 int32_t host_fs_seek  (int32_t fd, int32_t pos);
 int32_t host_fs_tell  (int32_t fd);
 int32_t host_fs_size  (int32_t fd);
@@ -93,9 +95,9 @@ uint64_t host_input_button_mask(void);
 int32_t  host_input_encoder_delta(int32_t encoder_id);
 uint32_t host_input_encoder_button_mask(void);
 
-// Audio time accumulated by the host while the non-realtime GUI loop owns the
-// wasm instance. The wasm platform consumes this from MCL::loop() so modal
-// pages can keep timer/MIDI-clock work advancing without host re-entry.
+// Retained for ABI compatibility. SPS returns 0 by default; timer/audio
+// advancement is normally driven by the host audio side via mcl_tick_audio(),
+// not from the GUI/service-thread poll path.
 uint32_t host_audio_pending_us(void);
 
 // ---- Display -------------------------------------------------------------

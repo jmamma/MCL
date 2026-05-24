@@ -36,10 +36,12 @@ WASM="${OUT}/mcl.wasm"
 AOT="${OUT}/mcl.aot"
 SPEC_SRC="${MCL_ROOT}/src/platform/wasm/sps/module.json"
 PACKAGE_DIR="${OUT}/package/mcl"
+PACKAGE_WASM="${PACKAGE_DIR}/mcl.wasm"
 PACKAGE_AOT="${PACKAGE_DIR}/mcl.aot"
 PACKAGE_SPEC="${PACKAGE_DIR}/module.json"
 INSTALL_DIR="${SPS_X_MCL_DIR:-${HOME}/Library/Application Support/SPS-X/modules/mcl}"
 mkdir -p "${PACKAGE_DIR}"
+WASM_STACK_SIZE="${MCL_WASM_STACK_SIZE:-1048576}"
 
 # Per-platform include paths. Mirror MCL/CMakeLists.txt (desktop_common +
 # wasm BEFORE the MCL tree includes), plus MCL's tbd-env -I list.
@@ -99,6 +101,20 @@ if [ "${MCL_WASM_DEBUG:-0}" != "0" ]; then
     echo "[mcl-wasm] DEBUGMODE enabled; DEBUG_PRINT* routes through bounded DebugBuffer"
 fi
 
+if [ "${MCL_WASM_GUI_TRACE:-0}" != "0" ]; then
+    DEFINES+=(-DMCL_WASM_GUI_TRACE=1)
+    echo "[mcl-wasm] GUI tick tracing enabled"
+fi
+
+if [ "${MCL_WASM_DISABLE_SOFTWARE_IRQ:-0}" != "0" ]; then
+    DEFINES+=(-DMCL_WASM_DISABLE_SOFTWARE_IRQ=1)
+    echo "[mcl-wasm] software IRQ/audio catch-up disabled"
+fi
+
+if [ "${MCL_WASM_DEBUG_SYMBOLS:-0}" != "0" ] || [ "${MCL_WASM_DUMP_CALL_STACK:-0}" != "0" ]; then
+    echo "[mcl-wasm] debug symbols/custom names enabled"
+fi
+
 # Common flags for both C and C++. USR example uses -nostdlib -ffreestanding;
 # MCL is bigger and uses libc++ templates / std::string-style code via the
 # WString shim, so for the first cut we leave stdlib alone and see what
@@ -120,6 +136,10 @@ COMMON_FLAGS=(
     -Wno-sign-compare
     -fpermissive
 )
+
+if [ "${MCL_WASM_DEBUG_SYMBOLS:-0}" != "0" ] || [ "${MCL_WASM_DUMP_CALL_STACK:-0}" != "0" ]; then
+    COMMON_FLAGS+=(-g)
+fi
 
 CXX_FLAGS=(
     -std=c++17
@@ -169,6 +189,7 @@ ADAFRUIT_CPP=(
 
 echo "[mcl-wasm] sources: ${#MCL_CPP[@]} cpp, ${#MCL_C[@]} c, ${#DESKTOP_COMMON_CPP[@]} desktop_common, ${#WASM_CPP[@]} wasm, ${#RESOURCE_CPP[@]} resources"
 echo "[mcl-wasm] compiling → ${WASM}"
+echo "[mcl-wasm] wasm aux stack: ${WASM_STACK_SIZE} bytes"
 
 "${CXX}" \
     "${COMMON_FLAGS[@]}" \
@@ -177,6 +198,7 @@ echo "[mcl-wasm] compiling → ${WASM}"
     "${INCLUDES[@]}" \
     -Wl,--no-entry \
     -Wl,--export-dynamic \
+    -Wl,-z,stack-size="${WASM_STACK_SIZE}" \
     -Wl,--export=__wasm_call_ctors \
     -Wl,--export=mcl_setup \
     -Wl,--export=mcl_tick_audio \
@@ -193,6 +215,7 @@ echo "[mcl-wasm] compiling → ${WASM}"
     -Wl,--export=mcl_input_set_encoder_button \
     -Wl,--export=mcl_abi_version \
     -Wl,--export=mcl_debug_tempo_x100 \
+    -Wl,--export=mcl_debug_state \
     -Wl,--allow-undefined \
     -o "${WASM}" \
     -x c++ \
@@ -234,9 +257,11 @@ fi
     "${WAMRC_FLAGS[@]}" \
     -o "${AOT}" "${WASM}"
 
+cp "${WASM}" "${PACKAGE_WASM}"
 cp "${AOT}" "${PACKAGE_AOT}"
 cp "${SPEC_SRC}" "${PACKAGE_SPEC}"
 mkdir -p "${INSTALL_DIR}"
+cp "${WASM}" "${INSTALL_DIR}/mcl.wasm"
 cp "${AOT}" "${INSTALL_DIR}/mcl.aot"
 cp "${SPEC_SRC}" "${INSTALL_DIR}/module.json"
 mkdir -p "${INSTALL_DIR}/data"

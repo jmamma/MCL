@@ -112,6 +112,7 @@ public:
     // .cpp doesn't need friend declarations across translation units.
     int32_t handle_  = -1;   // file fd OR directory iterator handle
     char    name_[64] = {0}; // last seen filename (for getName)
+    char    path_[128] = {0}; // logical path for directory-relative openNext
     bool    open_    = false;
     bool    is_dir_  = false;
 };

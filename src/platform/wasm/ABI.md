@@ -22,13 +22,15 @@ heavily, or touch the filesystem.
 imports. MCL calls them from `MCL::loop()` / `GUI_hardware.poll()` on wasm
 so normal blocking UI loops remain cooperative and can receive panel input
 without changing MCL's page code. Audio-thread exports must not call them.
-`host_audio_pending_us()` is also consumed from that hook: if the host audio
-callback cannot enter the single-threaded wasm instance, it accumulates elapsed
-sample time and the GUI/service thread advances the virtual timer from inside
-the already-active wasm call.
-The same hook pumps `host_midi_in_pop()` / `host_midi_out_push()` around the
-virtual timer tick, so modal pages do not strand host-side MIDI queues while
-the service thread owns the wasm runtime.
+The same hook pumps `host_midi_in_pop()` / `host_midi_out_push()`, so modal
+pages do not strand host-side MIDI queues while the service thread owns the
+wasm runtime.
+
+`host_audio_pending_us()` is retained for ABI compatibility, but SPS returns
+0 by default. Timer/audio advancement belongs to `mcl_tick_audio()` on the
+host audio side; advancing it from inside `mcl_tick_gui()` makes the MCL
+instance reenter its sequencer/timer path while UI code is walking grid/page
+state.
 
 ## Lifetime
 
@@ -51,6 +53,9 @@ the service thread owns the wasm runtime.
   buffer on the next entry).
 - Buffers passed to `host_fs_read` / `host_fs_write` are wasm-linear-memory
   pointers, same rule.
+- `host_fs_sync` and `host_fs_truncate` back SdFat `sync()`,
+  `truncate()`, and `preAllocate()`. MCL project/grid files depend on
+  those calls having real SD-card semantics.
 - The framebuffer (returned by `mcl_framebuffer_offset()`) is **stable**
   — it lives in wasm-side BSS, never moves. The host gets the offset
   once and may keep the native pointer for the runtime's lifetime.
