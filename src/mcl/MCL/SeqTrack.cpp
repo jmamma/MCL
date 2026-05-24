@@ -293,14 +293,15 @@ uint8_t SeqTrack::get_timing_mid(uint8_t speed_) {
   return timing_mid;
 }
 
-static int16_t seq_div_round_closest(int32_t numerator, int32_t denominator) {
+static int16_t seq_div_round_closest(int16_t numerator, uint16_t denominator) {
   if (denominator == 0) {
     return 0;
   }
+  uint16_t half = denominator >> 1;
   if (numerator >= 0) {
-    return (int16_t)((numerator + denominator / 2) / denominator);
+    return (int16_t)((uint16_t)(numerator + half) / denominator);
   }
-  return (int16_t)(-(((-numerator) + denominator / 2) / denominator));
+  return (int16_t)-(((uint16_t)(-numerator) + half) / denominator);
 }
 
 int16_t SeqTrack::microtiming_to_ticks(int8_t microtiming,
@@ -309,7 +310,7 @@ int16_t SeqTrack::microtiming_to_ticks(int8_t microtiming,
     return 0;
   }
   int16_t ticks =
-      seq_div_round_closest((int32_t)microtiming * ticks_per_step, 128);
+      seq_div_round_closest((int16_t)microtiming * ticks_per_step, 128);
   if (ticks < -(int16_t)ticks_per_step) {
     ticks = -(int16_t)ticks_per_step;
   } else if (ticks >= (int16_t)ticks_per_step) {
@@ -324,7 +325,7 @@ int8_t SeqTrack::ticks_to_microtiming(int16_t ticks,
     return 0;
   }
   int16_t value =
-      seq_div_round_closest((int32_t)ticks * 128, ticks_per_step);
+      seq_div_round_closest(ticks * 128, ticks_per_step);
   if (value < -128) {
     value = -128;
   } else if (value > 127) {
@@ -335,14 +336,14 @@ int8_t SeqTrack::ticks_to_microtiming(int16_t ticks,
 
 uint16_t SeqTrack::microtiming_to_timing(int8_t microtiming,
                                          uint16_t ticks_per_step) {
-  int32_t timing = (int32_t)ticks_per_step +
+  int16_t timing = (int16_t)ticks_per_step +
                    microtiming_to_ticks(microtiming, ticks_per_step);
   if (timing < 0) {
     return 0;
   }
   uint16_t max_timing =
       ticks_per_step == 0 ? 0 : (uint16_t)(ticks_per_step * 2 - 1);
-  if (timing > max_timing) {
+  if ((uint16_t)timing > max_timing) {
     return max_timing;
   }
   return (uint16_t)timing;
