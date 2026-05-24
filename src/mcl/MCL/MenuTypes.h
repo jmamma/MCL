@@ -58,6 +58,8 @@ union uint8_ptr_t {
 extern const menu_function_ptr_t menu_target_functions[] PROGMEM;
 extern const uint8_t* const menu_target_param[] PROGMEM;
 
+#define MENU_OPTIONS_PERCENT 191
+
 struct menu_option_t {
   uint8_t pos;
   char name[8];

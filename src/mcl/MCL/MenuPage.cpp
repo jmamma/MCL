@@ -207,7 +207,11 @@ void MenuPageBase::draw_item(MenuBase *m, uint8_t item_n) {
 #endif
     const char *option_name = m->get_option_name(item_n, option_value);
     if (option_name == NULL) {
-      oled_display.println(option_value);
+      oled_display.print(option_value);
+      if (m->get_options_offset(item_n) == MENU_OPTIONS_PERCENT) {
+        oled_display.print('%');
+      }
+      oled_display.println();
     } else {
       oled_display.println(option_name);
     }
