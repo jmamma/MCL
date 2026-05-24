@@ -146,7 +146,7 @@ bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
       return false;
     }
     encoder->setValue(value);
-    encoder->send();
+    perf_page.send_perf_encoder(perf_idx);
     return true;
   }
   return DeviceParamResolver::perf(dest).params.set_base_param(param, value);
@@ -155,15 +155,14 @@ bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
 bool LFOTrackRef::send_modulated_param(DeviceIdx device_idx, uint8_t dest,
                                        uint8_t param, uint8_t value,
                                        MidiUartClass *uart_,
-                                       MidiUartClass *uart2_) {
+                                       MidiUartClass *uart2_, uint8_t offset) {
   uint8_t perf_idx = 0;
   if (lfo_perf_dest_index(device_idx, dest, &perf_idx)) {
     PerfEncoder *encoder = lfo_perf_encoder(perf_idx);
     if (encoder == nullptr || param != 0) {
       return false;
     }
-    encoder->setValue(value);
-    encoder->send(uart_, uart2_);
+    perf_page.set_lfo_mod(perf_idx, (int8_t)((int16_t)value - (int16_t)offset));
     return true;
   }
 

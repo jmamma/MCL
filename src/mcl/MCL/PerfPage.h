@@ -33,6 +33,8 @@ public:
   bool show_menu;
 
   PerfEncoder *perf_encoders[4];
+  int8_t lfo_mod_delta[NUM_PERF_CONTROLS];
+  uint8_t lfo_mod_dirty_mask;
 
   bool handleEvent(gui_event_t *event);
   void update_params();
@@ -55,6 +57,10 @@ public:
 
   void encoder_check();
   void encoder_send();
+  void set_lfo_mod(uint8_t perf_idx, int8_t delta);
+  uint8_t lfo_mod_value(uint8_t perf_idx, uint8_t base) const;
+  void send_perf_encoder(uint8_t perf_idx, MidiUartClass *uart_ = nullptr,
+                         MidiUartClass *uart2_ = nullptr);
 };
 extern void rename_perf();
 

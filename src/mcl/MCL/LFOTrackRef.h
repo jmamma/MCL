@@ -23,7 +23,8 @@ public:
   static bool send_modulated_param(DeviceIdx device_idx, uint8_t dest,
                                    uint8_t param, uint8_t value,
                                    MidiUartClass *uart_ = nullptr,
-                                   MidiUartClass *uart2_ = nullptr);
+                                   MidiUartClass *uart2_ = nullptr,
+                                   uint8_t offset = 0);
 
   static void sync_panel(const LFOSeqTrack &track);
   static bool supports_trig_port(uint8_t port);

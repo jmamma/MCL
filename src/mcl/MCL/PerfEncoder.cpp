@@ -115,9 +115,13 @@ void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUa
   }
 }
 void PerfEncoder::send(MidiUartClass *uart_,MidiUartClass *uart2_) {
+    send_value(cur, uart_, uart2_);
+}
+
+void PerfEncoder::send_value(uint8_t value, MidiUartClass *uart_,MidiUartClass *uart2_) {
     PerfScene *s1 = active_scene_a == 255 ? nullptr :  &perf_data.scenes[active_scene_a];
     PerfScene *s2 = active_scene_b == 255 ? nullptr :  &perf_data.scenes[active_scene_b];
-    send_params(cur, s1, s2, uart_, uart2_);
+    send_params(value, s1, s2, uart_, uart2_);
     resend = false;
 }
 

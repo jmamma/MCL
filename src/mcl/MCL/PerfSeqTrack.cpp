@@ -16,7 +16,7 @@ void PerfSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
           if (perf_locks[n] != 255) {
             perf_page.perf_encoders[n]->cur = perf_locks[n];
             perf_page.perf_encoders[n]->old = perf_locks[n];
-            perf_page.perf_encoders[n]->send(uart_,uart2_);
+            perf_page.send_perf_encoder(n, uart_, uart2_);
             //perf_page.perf_encoders[n]->resend = true;
           }
           perf_locks[n] = 255;

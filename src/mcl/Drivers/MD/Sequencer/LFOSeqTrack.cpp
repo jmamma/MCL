@@ -570,7 +570,7 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       uint8_t wav_value = get_wav_value(offset, i, lfo_sample);
       if (last_wav_value[i] != wav_value) {
         LFOTrackRef::send_modulated_param(device_idx, dest, param, wav_value,
-                                          uart_, uart2_);
+                                          uart_, uart2_, offset);
 
         last_wav_value[i] = wav_value;
       }
@@ -604,7 +604,7 @@ void LFOSeqTrack::reset_params() {
     uint8_t wav_value = params[i].offset;
     LFOTrackRef::send_modulated_param(device_idx, dest, param, wav_value,
                                       mcl_seq.primary_output,
-                                      mcl_seq.secondary_output);
+                                      mcl_seq.secondary_output, wav_value);
     last_wav_value[i] = 255;
   }
 }
