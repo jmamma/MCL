@@ -321,11 +321,11 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
   uint8_t grid_bit = 1;
   for (uint8_t n = 0; n < NUM_GRIDS; n++, grid_bit <<= 1) {
     if (saved_grid_mask & grid_bit) {
-      row_headers[n].active = true;
-    }
-    if ((saved_grid_mask & grid_bit) && row_headers[n].name[0] == '\0' &&
-        row_name != nullptr) {
-      copy_row_name(row_headers[n], row_name);
+      if (row_headers[n].name[0] == '\0' && row_name != nullptr) {
+        copy_row_name(row_headers[n], row_name);
+      } else {
+        row_headers[n].active = true;
+      }
     }
     proj.write_grid_row_header(&row_headers[n], row, n);
     proj.sync_grid(n);
