@@ -23,6 +23,23 @@
 
 namespace {
 
+bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
+  uint8_t buf[256];
+  static_assert((GRID_WIDTH * GRID_SLOT_BYTES) % sizeof(buf) == 0,
+                "row slot copy buffer must divide row slot bytes");
+  if (!src_grid.seek(0, row) || !dst_grid.seek(0, row)) {
+    return false;
+  }
+
+  constexpr uint16_t chunks = (GRID_WIDTH * GRID_SLOT_BYTES) / sizeof(buf);
+  for (uint16_t i = 0; i < chunks; i++) {
+    if (!src_grid.read(buf, sizeof(buf)) || !dst_grid.write(buf, sizeof(buf))) {
+      return false;
+    }
+  }
+  return true;
+}
+
 constexpr size_t LEGACY_GRID_TRACK_HEADER_SIZE =
     sizeof(uint8_t) * 3 + sizeof(GridLink);
 constexpr size_t STORED_GRID_TRACK_HEADER_SIZE =
@@ -1351,6 +1368,8 @@ bool Project::copy_grid_pair(const char *from_project,
     char dst_name[PRJ_NAME_LEN + 5];
     char src_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
     char dst_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
+    Grid src_grid;
+    Grid dst_grid;
 
     ok = build_grid_filename(from_basename, source_pair * NUM_GRIDS + grid_idx,
                              src_name, sizeof(src_name)) &&
@@ -1359,9 +1378,36 @@ bool Project::copy_grid_pair(const char *from_project,
          MCLSd::join_path(src_path, sizeof(src_path), from_project,
                           src_name) &&
          MCLSd::join_path(dst_path, sizeof(dst_path), to_project, dst_name) &&
-         mcl_sd.copy_file(src_path, dst_path,
-                          grid_idx * (GRID_LENGTH / NUM_GRIDS),
-                          GRID_LENGTH / NUM_GRIDS, GRID_LENGTH);
+         !SD.exists(dst_path) && src_grid.open_file(src_path) &&
+         dst_grid.new_file(dst_path);
+    if (!ok) {
+      src_grid.close_file();
+      dst_grid.close_file();
+      break;
+    }
+
+    ok = dst_grid.write_header();
+
+    for (GridRow row = 0; ok && row < GRID_LENGTH; row++) {
+      draw_upgrade_progress(grid_idx, row);
+
+      GridRowHeader row_header;
+      ok = src_grid.read_row_header(&row_header, row) &&
+           dst_grid.write_row_header(&row_header, row);
+      if (!ok) {
+        break;
+      }
+
+      ok = copy_grid_row_slots_raw(src_grid, dst_grid, row);
+    }
+
+    if (ok) {
+      draw_upgrade_progress(grid_idx, GRID_LENGTH);
+      ok = dst_grid.sync();
+    }
+
+    src_grid.close_file();
+    dst_grid.close_file();
   }
 
   if (!ok) {
