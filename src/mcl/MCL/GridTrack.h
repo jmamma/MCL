@@ -87,22 +87,11 @@ public:
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  uploads from the runtime object to BANK1
-  bool store_in_mem(GridSlot column) {
-    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column));
-    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(ptr, _this(), get_track_size());
-    return true;
-  }
+  bool store_in_mem(GridSlot column);
 
   ///  caller guarantees that the type is reconstructed correctly
   ///  downloads from BANK1 to the runtime object
-  bool load_from_mem(GridSlot column, size_t size = 0) {
-          uint16_t bytes = size ? size : get_track_size();
-    uintptr_t pos = get_region() + static_cast<uintptr_t>(get_region_size() * static_cast<uint32_t>(column));
-    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(_this(), ptr, bytes);
-    return true;
-  }
+  bool load_from_mem(GridSlot column, size_t size = 0);
 
  void init() {
     link.length = 16;
@@ -154,6 +143,7 @@ public:
   virtual void init_defaults() {}
 
 private:
+  uint16_t cached_track_size(uint16_t current_size) const;
   void stamp_storage_version(size_t len);
   void repair_loaded_header();
 };

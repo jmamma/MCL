@@ -96,6 +96,51 @@ bool DeviceTrack::can_materialize_as(uint8_t track_type) {
 }
 #endif
 
+bool DeviceTrack::stored_bytes_cover_range(uint16_t source_offset,
+                                           uint16_t len) {
+  uint16_t stored_len = stored_track_size(get_track_size());
+  if (stored_len < DEVICE_TRACK_LEN) {
+    stored_len = DEVICE_TRACK_LEN;
+  }
+  return source_offset <= stored_len && len <= stored_len - source_offset;
+}
+
+DeviceTrack *DeviceTrack::load_from_mem(GridSlot col, uint8_t track_type,
+                                        size_t size) {
+  DeviceTrack *that = init_track_type(track_type);
+  if (!that->GridTrack::load_from_mem(col, size)) {
+    return nullptr;
+  }
+  if (that->active == track_type) {
+    return that;
+  }
+
+  uint8_t source_active = that->active;
+  if (size) {
+    return nullptr;
+  }
+
+  auto p = init_loaded_track_type(source_active);
+  uint16_t source_offset;
+  uint16_t target_offset;
+  uint16_t len;
+  if (p->materialized_storage_range(track_type, source_offset, target_offset,
+                                    len) &&
+      p->stored_bytes_cover_range(source_offset, len)) {
+    return p->load_materialized_mem_storage_range(
+        col, track_type, source_offset, target_offset, len);
+  }
+
+#if defined(__AVR__)
+  return p->materialize_as(track_type, col, nullptr);
+#else
+  if (!p->GridTrack::load_from_mem(col, size) || p->active != source_active) {
+    return nullptr;
+  }
+  return p->materialize_as(track_type, col, nullptr);
+#endif
+}
+
 bool DeviceTrack::read_remaining_from_grid_512(GridSlot column, GridRow row,
                                                Grid *grid) {
   if (active == EMPTY_TRACK_TYPE) {
@@ -183,7 +228,8 @@ DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
     uint16_t target_offset;
     uint16_t len;
     if (ptrack->materialized_storage_range(track_type, source_offset,
-                                           target_offset, len)) {
+                                           target_offset, len) &&
+        ptrack->stored_bytes_cover_range(source_offset, len)) {
       return ptrack->load_materialized_storage_range(
           track_type, column, row, grid, source_offset, target_offset, len);
     }

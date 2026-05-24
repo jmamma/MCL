@@ -41,6 +41,49 @@ uint16_t GridTrack::stored_track_size(uint16_t current_size) const {
   return current_size;
 }
 
+uint16_t GridTrack::cached_track_size(uint16_t current_size) const {
+  uint16_t bytes = stored_track_size(current_size);
+  uint16_t header_size = _sizeof();
+  return bytes < header_size ? header_size : bytes;
+}
+
+bool GridTrack::store_in_mem(GridSlot column) {
+  uintptr_t pos = get_region() +
+                  static_cast<uintptr_t>(get_region_size() *
+                                         static_cast<uint32_t>(column));
+  volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
+  memcpy_bank1(ptr, _this(), cached_track_size(get_track_size()));
+  return true;
+}
+
+bool GridTrack::load_from_mem(GridSlot column, size_t size) {
+  uintptr_t pos = get_region() +
+                  static_cast<uintptr_t>(get_region_size() *
+                                         static_cast<uint32_t>(column));
+  volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
+
+  if (size) {
+    memcpy_bank1(_this(), ptr, size);
+    return true;
+  }
+
+  uint8_t expected_active = active;
+  uint16_t header_size = _sizeof();
+  memcpy_bank1(_this(), ptr, header_size);
+
+  if (active != expected_active) {
+    return true;
+  }
+
+  uint16_t current_size = get_track_size();
+  uint16_t bytes = cached_track_size(current_size);
+  if (bytes < current_size) {
+    init_defaults();
+  }
+  memcpy_bank1(_this(), ptr, bytes);
+  return true;
+}
+
 void GridTrack::repair_loaded_header() {
   uint8_t tmp_version = version;
   uint16_t tmp_storage_size = storage_size;

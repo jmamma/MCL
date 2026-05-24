@@ -102,6 +102,7 @@ public:
     (void)len;
     return false;
   }
+  bool stored_bytes_cover_range(uint16_t source_offset, uint16_t len);
   DeviceTrack *init_materialized_track_type(uint8_t track_type) {
     uint8_t old_version = version;
     uint16_t old_storage_size = storage_size;
@@ -143,51 +144,7 @@ public:
   template <class T> bool is() { return _dynamik_kast<T>(this) != nullptr; }
   template <class T> T *as() { return _dynamik_kast<T>(this); }
   ///  downloads from BANK1 to the runtime object
-  DeviceTrack* load_from_mem(GridSlot col, uint8_t track_type, size_t size = 0) {
-    DeviceTrack *that = init_track_type(track_type);
-#if !defined(__AVR__)
-    uintptr_t load_region = that->get_region();
-    uint16_t load_region_size = that->get_region_size();
-    uint16_t load_bytes = size ? size : that->get_track_size();
-#endif
-    if (!that->GridTrack::load_from_mem(col, size)) {
-      return nullptr;
-    }
-    if (that->active == track_type) {
-      return that;
-    }
-
-    auto p = init_loaded_track_type(this->active);
-    uint16_t source_offset;
-    uint16_t target_offset;
-    uint16_t len;
-    if (p->materialized_storage_range(track_type, source_offset, target_offset,
-                                      len)) {
-      return p->load_materialized_mem_storage_range(
-          col, track_type, source_offset, target_offset, len);
-    }
-#if defined(__AVR__)
-    return p->materialize_as(track_type, col, nullptr);
-#else
-    uint16_t source_size = p->get_track_size();
-    uintptr_t pos = load_region +
-                    static_cast<uintptr_t>(load_region_size *
-                                           static_cast<uint32_t>(col));
-    volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-    memcpy_bank1(_this(), ptr, load_bytes);
-
-    if (!p->can_materialize_as(track_type)) {
-      return nullptr;
-    }
-    if (load_bytes < source_size) {
-      if (source_size > load_region_size) {
-        return nullptr;
-      }
-      memcpy_bank1(_this(), ptr, source_size);
-    }
-    return p->materialize_as(track_type, col, nullptr);
-#endif
-  }
+  DeviceTrack *load_from_mem(GridSlot col, uint8_t track_type, size_t size = 0);
 
   bool read_grid_storage_range(GridSlot column, GridRow row, Grid *grid,
                                uint16_t source_offset, void *dst,
