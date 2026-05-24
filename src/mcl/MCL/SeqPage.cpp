@@ -477,23 +477,30 @@ static inline void display_popup(const char *str1_P, const char *str2_P) {
   seq_panel_popup_text_P(str1_P, str2_P);
 }
 
+bool enhanced_swing_window_requested = false;
+bool enhanced_swing_window_suspended = false;
+
+static inline bool enhanced_swing_window_available() {
+  return MD.connected && MD.global.extendedMode == 2;
+}
+
 static inline void open_enhanced_swing_window() {
-  if (MD.connected && MD.global.extendedMode == 2) {
+  if (enhanced_swing_window_available()) {
     MD.draw_open_swing();
   }
 }
 
 static inline void close_enhanced_swing_window() {
-  if (MD.connected && MD.global.extendedMode == 2) {
+  if (enhanced_swing_window_available()) {
     MD.draw_close_swing();
   }
 }
 
 static inline bool should_show_enhanced_swing_window() {
-  return mcl.currentPage() == SEQ_STEP_PAGE && SeqPage::mask_type == MASK_SWING;
+  return enhanced_swing_window_requested &&
+         mcl.currentPage() == SEQ_STEP_PAGE &&
+         SeqPage::mask_type == MASK_SWING;
 }
-
-bool enhanced_swing_window_suspended = false;
 
 static inline void suspend_enhanced_swing_window() {
   if (!enhanced_swing_window_suspended &&
@@ -510,7 +517,27 @@ static inline void restore_enhanced_swing_window() {
   enhanced_swing_window_suspended = false;
   if (should_show_enhanced_swing_window()) {
     open_enhanced_swing_window();
+  } else {
+    enhanced_swing_window_requested = false;
   }
+}
+
+void SeqPage::request_enhanced_swing_window() {
+  enhanced_swing_window_requested = true;
+  enhanced_swing_window_suspended = false;
+  if (should_show_enhanced_swing_window()) {
+    open_enhanced_swing_window();
+  }
+}
+
+bool SeqPage::consume_enhanced_swing_window_exit() {
+  if (!should_show_enhanced_swing_window()) {
+    return false;
+  }
+  close_enhanced_swing_window();
+  enhanced_swing_window_requested = false;
+  enhanced_swing_window_suspended = false;
+  return true;
 }
 
 void SeqPage::setup() {}
@@ -594,6 +621,7 @@ void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
   close_enhanced_swing_window();
+  enhanced_swing_window_requested = false;
   enhanced_swing_window_suspended = false;
   disable_record();
   GUI_hardware.led.reset_trigleds();
@@ -640,6 +668,7 @@ void SeqPage::config_mask_info(bool silent) {
     strcat(str, info2);
     if (mask_type == MASK_PATTERN) {
       close_enhanced_swing_window();
+      enhanced_swing_window_requested = false;
       enhanced_swing_window_suspended = false;
       seq_panel_popup_text((uint8_t)-1, 2);
     } else {
@@ -647,12 +676,10 @@ void SeqPage::config_mask_info(bool silent) {
       if (mask_type == MASK_SWING) {
         if (show_seq_menu) {
           suspend_enhanced_swing_window();
-        } else {
-          enhanced_swing_window_suspended = false;
-          open_enhanced_swing_window();
         }
       } else {
         close_enhanced_swing_window();
+        enhanced_swing_window_requested = false;
         enhanced_swing_window_suspended = false;
       }
     }

@@ -678,6 +678,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_NO: {
+        if (SeqPage::consume_enhanced_swing_window_exit()) {
+          return true;
+        }
         if (mask_type != MASK_PATTERN) {
           mask_type = MASK_PATTERN;
           config_mask_info(false);

@@ -317,6 +317,7 @@ bool mcl_handleEvent(gui_event_t *event) {
           mcl.setPage(SEQ_STEP_PAGE);
           SeqPage::mask_type = MASK_SWING;
           seq_step_page.config_mask_info(false);
+          SeqPage::request_enhanced_swing_window();
           return true;
         }
         if (current_page == GRID_LOAD_PAGE ||
