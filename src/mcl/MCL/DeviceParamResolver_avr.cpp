@@ -90,6 +90,28 @@ bool md_get_param(uint8_t target, uint8_t param, uint8_t *value) {
   return true;
 }
 
+bool md_set_param(uint8_t target, uint8_t param, uint8_t value,
+                  MidiUartClass *uart_, bool base) {
+  if (param >= md_param_count(target)) {
+    return false;
+  }
+  if (target < NUM_MD_TRACKS) {
+    MD.setTrackParam(target, param, value, uart_, base);
+  } else {
+    MD.setFXParam(param, value, md_fx_type(target), base, uart_);
+  }
+  return true;
+}
+
+bool ext_set_param(uint8_t target, uint8_t param, uint8_t value,
+                   MidiUartClass *uart_) {
+  if (target >= NUM_EXT_TRACKS) {
+    return false;
+  }
+  mcl_seq.ext_tracks[target].send_cc(param, value, uart_);
+  return true;
+}
+
 } // namespace
 
 uint8_t DeviceParamTarget::param_count() const {
@@ -140,21 +162,9 @@ bool DeviceParamTarget::set_base_param(uint8_t param, uint8_t value,
     return false;
   }
   if (device_idx == DeviceIdx::Secondary) {
-    if (target >= NUM_EXT_TRACKS) {
-      return false;
-    }
-    mcl_seq.ext_tracks[target].send_cc(param, value, uart_);
-    return true;
+    return ext_set_param(target, param, value, uart_);
   }
-  if (param >= md_param_count(target)) {
-    return false;
-  }
-  if (target < NUM_MD_TRACKS) {
-    MD.setTrackParam(target, param, value, uart_, true);
-  } else {
-    MD.setFXParam(param, value, md_fx_type(target), true, uart_);
-  }
-  return true;
+  return md_set_param(target, param, value, uart_, true);
 }
 
 bool DeviceParamTarget::send_modulated_param(uint8_t param, uint8_t value,
@@ -163,21 +173,9 @@ bool DeviceParamTarget::send_modulated_param(uint8_t param, uint8_t value,
     return false;
   }
   if (device_idx == DeviceIdx::Secondary) {
-    if (target >= NUM_EXT_TRACKS) {
-      return false;
-    }
-    mcl_seq.ext_tracks[target].send_cc(param, value, uart_);
-    return true;
+    return ext_set_param(target, param, value, uart_);
   }
-  if (param >= md_param_count(target)) {
-    return false;
-  }
-  if (target < NUM_MD_TRACKS) {
-    MD.setTrackParam(target, param, value, uart_);
-  } else {
-    MD.setFXParam(param, value, md_fx_type(target), false, uart_);
-  }
-  return true;
+  return md_set_param(target, param, value, uart_, false);
 }
 
 uint8_t DeviceParamTarget::lock_param_count() const {
