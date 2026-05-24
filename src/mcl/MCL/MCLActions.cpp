@@ -98,13 +98,14 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
 
 void MCLActions::setup() {
   // DEBUG_PRINTLN(F("mcl actions setup"));
+  init_chains();
   mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
 }
 
 void MCLActions::init_chains() {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    mcl_actions.chains[n].init();
+    chains[n].init();
   }
 }
 
