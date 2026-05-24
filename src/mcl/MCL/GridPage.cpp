@@ -349,15 +349,12 @@ void GridPage::load_slot_models() {
   }
   GridRow base_row = getRow() - cur_row + row_shift;
 
-  for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
-    for (uint8_t x = 0; x < GRID_WIDTH; x++) {
-      set_slot_label(slot_labels[y][x], '-', '-');
-    }
-  }
-
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
+    for (uint8_t x = 0; x < GRID_WIDTH; x++) {
+      set_slot_label(slot_labels[n][x], '-', '-');
+    }
     GridRow row = base_row + n;
-    if (row >= GRID_LENGTH) { return; }
+    if (row >= GRID_LENGTH) { continue; }
     proj.read_grid_row_header(&row_headers[n], row, cur_grid);
     update_row_state(row, row_headers[n].active);
     for (uint8_t x = 0; x < GRID_WIDTH; x++) {
