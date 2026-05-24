@@ -236,16 +236,19 @@ void draw_lfo_value_knob(uint8_t knob, Encoder *encoder, LFOSeqTrack *track,
                          uint8_t param_idx) {
   char label[5];
   lfo_param_label(track, param_idx, label, sizeof(label));
-  bool show_base = mcl_gui.show_encoder_value(encoder);
   uint8_t value = encoder->cur;
+  uint8_t x = mcl_gui.knob_x0 + knob * mcl_gui.knob_w;
+  LightPage *page = GUI.currentPage();
+  bool highlight = page != nullptr && page->isEncoderFocused(knob);
+  bool show_base = mcl_gui.show_encoder_value(encoder);
+  if (highlight && !encoder->hasChanged()) {
+    show_base = false;
+  }
   if (!show_base) {
     value = track->last_wav_value[param_idx] == 255
                 ? track->params[param_idx].offset
                 : track->last_wav_value[param_idx];
   }
-  uint8_t x = mcl_gui.knob_x0 + knob * mcl_gui.knob_w;
-  LightPage *page = GUI.currentPage();
-  bool highlight = page != nullptr && page->isEncoderFocused(knob);
   mcl_gui.draw_light_encoder(x + 7, 6, value, label, highlight, show_base,
                              false);
 }
