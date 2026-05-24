@@ -47,7 +47,8 @@ constexpr uint8_t lfo_track_dest_count() {
   return NUM_GRID_X_LFO_TRACKS + NUM_GRID_Y_LFO_TRACKS;
 }
 
-uint8_t lfo_custom_dest_index(uint8_t dest, uint8_t *idx) {
+inline __attribute__((always_inline)) uint8_t
+lfo_custom_dest_index(uint8_t dest, uint8_t *idx) {
   uint8_t base = lfo_perf_dest_base();
   if (dest <= base) {
     return LFO_DEST_DEVICE;
