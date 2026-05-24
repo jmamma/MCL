@@ -679,6 +679,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_NO: {
         if (SeqPage::consume_enhanced_swing_window_exit()) {
+          mcl.setPage(last_page);
           return true;
         }
         if (mask_type != MASK_PATTERN) {
