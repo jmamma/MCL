@@ -5,6 +5,7 @@
 #include "MidiUart.h"
 #include "MCLStrings.h"
 #include "MCLSeq.h"
+#include "PerfPageTargetRef.h"
 
 #define DIV_1_127 (1.00f / 127.0f)
 
@@ -27,8 +28,8 @@ void PerfMorph::populate(PerfScene *s1, PerfScene *s2) {
       f->dest = p->dest;
       f->param = p->param;
       uint8_t v = 0;
-      bool has_current =
-          DeviceParamResolver::perf(p->dest).get_param(p->param, &v);
+      bool has_current = PerfPageTargetRef::target(p->dest)
+                             .get_param(p->param, &v);
       if (!has_current && p->val == 255) {
         continue;
       }
@@ -51,8 +52,8 @@ void PerfMorph::populate(PerfScene *s1, PerfScene *s2) {
     if (p->dest != 0) {
       uint8_t m = find_existing(p->dest, p->param);
       uint8_t v = 0;
-      bool has_current =
-          DeviceParamResolver::perf(p->dest).get_param(p->param, &v);
+      bool has_current = PerfPageTargetRef::target(p->dest)
+                             .get_param(p->param, &v);
       if (!has_current && p->val == 255) {
         continue;
       }
@@ -79,10 +80,7 @@ void PerfMorph::populate(PerfScene *s1, PerfScene *s2) {
 }
 
 void PerfEncoder::send_param(uint8_t dest, uint8_t param, uint8_t val, MidiUartClass *uart_,MidiUartClass *uart2_) {
-  DevicePerfTarget target = DeviceParamResolver::perf(dest);
-  target.set_param(param, val,
-                   target.device_index() == DeviceIdx::Secondary ? uart2_
-                                                                 : uart_);
+  PerfPageTargetRef::target(dest).set_param(param, val, uart_, uart2_);
 }
 
 void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUartClass *uart_,MidiUartClass *uart2_) {

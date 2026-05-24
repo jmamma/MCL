@@ -11,6 +11,8 @@ public:
   static uint8_t track_count(DeviceIdx device_idx);
 
   static uint8_t target_count(DeviceIdx device_idx);
+  static uint8_t track_lfo_target_count();
+  static uint8_t track_lfo_dest_for_index(uint8_t idx);
   static bool target_label(DeviceIdx device_idx, uint8_t dest, char *out,
                            uint8_t len);
   static uint8_t param_count(DeviceIdx device_idx, uint8_t dest);

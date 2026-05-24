@@ -1,36 +1,38 @@
 #pragma once
 
 #include "DeviceParamResolver.h"
-#include "NoteInterface.h"
-#include "SeqPages.h"
 #include <inttypes.h>
+
+class PerfPageTarget {
+public:
+  uint8_t dest = 0;
+
+  PerfPageTarget() = default;
+  explicit PerfPageTarget(uint8_t dest_) : dest(dest_) {}
+
+  uint8_t lfo_dest() const;
+  DevicePerfTarget device_target() const;
+  bool valid() const;
+  DeviceIdx device_index() const;
+  uint8_t param_count() const;
+  bool target_label(char *out, uint8_t len) const;
+  bool param_label(uint8_t param, char *out, uint8_t len) const;
+  bool get_param(uint8_t param, uint8_t *value) const;
+  bool set_param(uint8_t param, uint8_t value,
+                 MidiUartClass *uart_ = nullptr,
+                 MidiUartClass *uart2_ = nullptr) const;
+  bool param_from_key(uint8_t key, uint8_t *param) const;
+  bool key_for_param(uint8_t param, uint8_t *key) const;
+  bool begin_param_editor(uint8_t *params, uint8_t count) const;
+};
 
 class PerfPageTargetRef {
 public:
-  static uint8_t target_count() {
-    return DeviceParamResolver::perf_target_count();
-  }
-
-  static DevicePerfTarget target(uint8_t dest) {
-    return DeviceParamResolver::perf(dest);
-  }
-
-  static uint8_t active_editor_dest() {
-    return DeviceParamResolver::primary_perf_editor_dest(
-        seq_primary_track_index());
-  }
-
-  static bool begin_editor(uint8_t dest, uint8_t *params, uint8_t count) {
-    return target(dest).begin_param_editor(params, count);
-  }
-
-  static void end_editor() { DeviceParamResolver::end_perf_param_editor(); }
-
-  static void set_rec_mode(uint8_t mode) {
-    DeviceParamResolver::set_perf_rec_mode(mode);
-  }
-
-  static uint8_t pressed_scene() {
-    return note_interface.get_first_trig_note();
-  }
+  static uint8_t target_count();
+  static PerfPageTarget target(uint8_t dest);
+  static uint8_t active_editor_dest();
+  static bool begin_editor(uint8_t dest, uint8_t *params, uint8_t count);
+  static void end_editor();
+  static void set_rec_mode(uint8_t mode);
+  static uint8_t pressed_scene();
 };

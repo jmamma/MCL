@@ -187,6 +187,14 @@ uint8_t LFOTrackRef::target_count(DeviceIdx device_idx) {
   return lfo_track_dest_base() + lfo_track_dest_count();
 }
 
+uint8_t LFOTrackRef::track_lfo_target_count() {
+  return lfo_track_dest_count();
+}
+
+uint8_t LFOTrackRef::track_lfo_dest_for_index(uint8_t idx) {
+  return idx < lfo_track_dest_count() ? lfo_track_dest_base() + idx + 1 : 0;
+}
+
 bool LFOTrackRef::target_label(DeviceIdx device_idx, uint8_t dest, char *out,
                                uint8_t len) {
   (void)device_idx;

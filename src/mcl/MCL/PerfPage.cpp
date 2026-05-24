@@ -339,7 +339,7 @@ void PerfPage::encoder_send() {
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   uint8_t perf_dest = dest + 1;
-  DevicePerfTarget target = PerfPageTargetRef::target(perf_dest);
+  PerfPageTarget target = PerfPageTargetRef::target(perf_dest);
   if (!target.valid() || param >= target.param_count()) {
     return;
   }
@@ -492,7 +492,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
 
       uint8_t param = 0;
-      DevicePerfTarget editor_target = PerfPageTargetRef::target(editor_dest);
+      PerfPageTarget editor_target = PerfPageTargetRef::target(editor_dest);
       if (!editor_target.param_from_key(key, &param)) {
         return true;
       }
