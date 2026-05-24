@@ -377,10 +377,8 @@ void LFOPage::config_encoders() {
   if (page_mode == LFO_DESTINATION) {
     encoders[0]->cur = lfo_track->params[0].dest;
     encoders[1]->cur = lfo_track->params[0].param;
-    ((MCLEncoder *)encoders[1])->max = 23;
     encoders[2]->cur = lfo_track->params[1].dest;
     encoders[3]->cur = lfo_track->params[1].param;
-    ((MCLEncoder *)encoders[3])->max = 23;
 
     config_encoder_range(0);
     config_encoder_range(2);
@@ -443,9 +441,6 @@ void LFOPage::loop() {
     return;
   }
   if (page_mode == LFO_DESTINATION) {
-    config_encoder_range(0);
-    config_encoder_range(2);
-
     update_lfo_param_pair(encoders, lfo_track, 0, 0);
     update_lfo_param_pair(encoders, lfo_track, 2, 1);
   }
@@ -488,17 +483,13 @@ void LFOPage::display() {
 
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   SeqPage::draw_knob_frame();
-  const char *panel_info1;
-  const char *panel_info2;
-
-
   if (page_mode == LFO_DESTINATION) {
     DeviceIdx device_idx = lfo_track->device_idx;
     draw_lfo_dest(0, encoders[0]->cur, device_idx);
     draw_lfo_param(1, encoders[0]->cur, encoders[1]->cur, device_idx);
     draw_lfo_dest(2, encoders[2]->cur, device_idx);
     draw_lfo_param(3, encoders[2]->cur, encoders[3]->cur, device_idx);
-    panel_info2 = "LFO>DST";
+    strcpy(info2, "LFO>DST");
   }
   else if (page_mode == LFO_GLOBAL) {
     char mult_label[5];
@@ -507,29 +498,29 @@ void LFOPage::display() {
     draw_lfo_wave_preview(1, encoders[1]->cur);
     draw_knob(2, encoders[2], mclstr_spd);
     mcl_gui.draw_knob(3, mclstr_mult, mult_label);
-    panel_info2 = "LFO>SET";
+    strcpy(info2, "LFO>SET");
   }
   else {
     draw_knob(0, encoders[0], mclstr_dep1);
     draw_lfo_value_knob(1, encoders[1], lfo_track, 0);
     draw_knob(2, encoders[2], mclstr_dep2);
     draw_lfo_value_knob(3, encoders[3], lfo_track, 1);
-    panel_info2 = "LFO>DEP";
+    strcpy(info2, "LFO>DEP");
   }
 
   oled_display.setFont(&TomThumb);
 
-  const uint64_t slide_mask = 0;
-  const uint64_t mute_mask = 0;
   uint8_t base_mode = lfo_track->base_mode();
-  panel_info1 = "";
+  bool show_lfo_mask = base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE;
 
-  if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
+  if (show_lfo_mask) {
+    const uint64_t empty_mask = 0;
     clamp_lfo_mask_page(lfo_track);
     uint8_t offset = lfo_mask_page_offset();
-    draw_lock_mask(offset, 0, lfo_track->step_count, lfo_track->length, true);
+    draw_lock_mask(offset, empty_mask, lfo_track->step_count, lfo_track->length,
+                   true);
     draw_mask(offset, lfo_track->pattern_mask, lfo_track->step_count,
-              lfo_track->length, mute_mask, slide_mask);
+              lfo_track->length, empty_mask, empty_mask);
     uint16_t visible_mask = lfo_visible_mask(lfo_track, offset);
     if (visible_mask != trigled_mask) {
       trigled_mask = visible_mask;
@@ -537,13 +528,10 @@ void LFOPage::display() {
     }
   }
 
-  strncpy(info1, panel_info1, sizeof(info1) - 1);
-  info1[sizeof(info1) - 1] = '\0';
-  strncpy(info2, panel_info2, sizeof(info2) - 1);
-  info2[sizeof(info2) - 1] = '\0';
+  info1[0] = '\0';
   SeqPage::display();
   draw_lfo_enable_info_label(lfo_track->enable);
-  if (base_mode == LFO_MODE_TRIG || base_mode == LFO_MODE_ONE) {
+  if (show_lfo_mask) {
     draw_page_index(true, lfo_track->step_count / kLfoMaskPageSteps);
   }
 
