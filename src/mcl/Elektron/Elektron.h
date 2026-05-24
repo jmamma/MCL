@@ -324,7 +324,7 @@ public:
   bool get_mute_state(uint16_t &mute_state);
   bool get_fw_caps();
 
-  void activate_encoder_interface(uint8_t *params);
+  void activate_encoder_interface(uint8_t *params, uint8_t count = 24);
   void deactivate_encoder_interface();
 
   void activate_enhanced_gui();

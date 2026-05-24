@@ -214,16 +214,29 @@ bool ElektronDevice::get_fw_caps() {
   return false;
 }
 
-void ElektronDevice::activate_encoder_interface(uint8_t *params) {
+void ElektronDevice::activate_encoder_interface(uint8_t *params, uint8_t count) {
+  static constexpr uint8_t kLegacyParamCount = 24;
+  static constexpr uint8_t kMaxParamCount = 34;
+  if (params == nullptr) {
+    return;
+  }
+  if (count < kLegacyParamCount) {
+    count = kLegacyParamCount;
+  }
+  if (count > kMaxParamCount) {
+    count = kMaxParamCount;
+  }
+
   encoder_interface = true;
-  uint8_t data[3 + 4 + 24] = {0x70, 0x36, 0x01};
+  const uint8_t mask_count = (uint8_t)((count + 6) / 7);
+  uint8_t data[3 + 5 + kMaxParamCount] = {0x70, 0x36, 0x01};
   uint8_t mod7 = 0;
   uint8_t cnt = 0;
 
-  for (uint8_t n = 0; n < 24; n++) {
+  for (uint8_t n = 0; n < count; n++) {
     if (params[n] != 255) {
       data[3 + cnt] |= (1 << mod7);
-      data[3 + 4 + n] = params[n];
+      data[3 + mask_count + n] = params[n];
     }
     mod7++;
     if (mod7 == 7) {
@@ -231,7 +244,7 @@ void ElektronDevice::activate_encoder_interface(uint8_t *params) {
       cnt++;
     }
   }
-  sendRequest(data, sizeof(data));
+  sendRequest(data, (uint8_t)(3 + mask_count + count));
   //waitBlocking();
 }
 

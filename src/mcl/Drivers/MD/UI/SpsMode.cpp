@@ -174,7 +174,7 @@ void SpsMode::send_param(uint8_t i) {
         uint8_t params[SPS_PARAMS_PER_TRACK];
         memset(params, 255, sizeof(params));
         st.get_step_locks(first_step, params, true);
-        MD.activate_encoder_interface(params);
+        MD.activate_encoder_interface(params, SPS_PARAMS_PER_TRACK);
       }
       return;
     }
@@ -194,7 +194,7 @@ void SpsMode::send_param(uint8_t i) {
       uint8_t params[SPS_PARAMS_PER_TRACK];
       memset(params, 255, sizeof(params));
       active.get_step_locks(first_step, params, true);
-      MD.activate_encoder_interface(params);
+      MD.activate_encoder_interface(params, MD_PARAMS_PER_TRACK);
     }
     return;
   }

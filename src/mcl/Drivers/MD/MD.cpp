@@ -773,11 +773,12 @@ bool MDStepEditCapability::begin_param_editor(const DeviceContext &ctx,
                                               uint8_t *params,
                                               uint8_t count) {
   (void)ctx;
-  if (target >= NUM_MD_TRACKS || params == nullptr ||
-      count < MD_PARAMS_PER_TRACK) {
+  uint8_t param_count =
+      md().is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
+  if (target >= NUM_MD_TRACKS || params == nullptr || count < param_count) {
     return false;
   }
-  md().activate_encoder_interface(params);
+  md().activate_encoder_interface(params, param_count);
   return true;
 }
 
