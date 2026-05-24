@@ -13,7 +13,8 @@ PerfScene PerfData::scenes[NUM_SCENES];
 
 namespace {
 
-bool perf_param_value_or_stored(PerfParam *param, uint8_t *value) {
+inline __attribute__((always_inline)) bool
+perf_param_value_or_stored(PerfParam *param, uint8_t *value) {
   uint8_t current = 0;
   bool has_current =
       PerfPageTargetRef::target(param->dest).get_param(param->param, &current);
