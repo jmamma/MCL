@@ -20,7 +20,7 @@ inline __attribute__((always_inline)) uint8_t perf_page_lfo_dest(uint8_t dest) {
     return 0;
   }
   uint8_t idx = dest - base - 1;
-  return idx < LFOTrackRef::track_lfo_target_count() ? dest : 0;
+  return LFOTrackRef::track_lfo_dest_for_index(idx);
 }
 
 } // namespace
