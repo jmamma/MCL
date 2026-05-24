@@ -6,6 +6,13 @@
 #include "../Drivers/Generic/Sequencer/StepSeqDefines.h"
 #endif
 
+bool copy_fixed_grid_slot_label(char label[3], char a, char b) {
+  label[0] = a;
+  label[1] = b;
+  label[2] = '\0';
+  return true;
+}
+
 bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row, Grid *grid) {
   stamp_storage_version(len);
   Grid *target_grid = grid;

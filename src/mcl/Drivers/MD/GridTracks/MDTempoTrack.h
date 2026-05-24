@@ -36,10 +36,7 @@ public:
   bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
                             char label[3]) override {
     (void)ctx;
-    label[0] = 'T';
-    label[1] = 'P';
-    label[2] = '\0';
-    return true;
+    return copy_fixed_grid_slot_label(label, 'T', 'P');
   }
   virtual uint8_t get_model() override { return MDTEMPO_TRACK_TYPE; }
   virtual void *get_sound_data_ptr() override { return &tempo; }

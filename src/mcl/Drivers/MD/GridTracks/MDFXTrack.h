@@ -60,10 +60,7 @@ public:
   bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
                             char label[3]) override {
     (void)ctx;
-    label[0] = 'F';
-    label[1] = 'X';
-    label[2] = '\0';
-    return true;
+    return copy_fixed_grid_slot_label(label, 'F', 'X');
   }
   virtual uint8_t get_model() override { return MDFX_TRACK_TYPE; }
   virtual void* get_sound_data_ptr() override { return &reverb; }

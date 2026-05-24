@@ -44,10 +44,7 @@ public:
   virtual uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
                             char label[3]) override {
-    label[0] = 'A';
-    label[1] = ctx.column + '1';
-    label[2] = '\0';
-    return true;
+    return copy_fixed_grid_slot_label(label, 'A', ctx.column + '1');
   }
   virtual uint8_t get_model() override { return A4_TRACK_TYPE; } // TODO
   virtual uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
@@ -98,10 +95,7 @@ public:
   uint16_t get_track_size() override { return _sizeof(); }
   bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
                             char label[3]) override {
-    label[0] = 'A';
-    label[1] = ctx.column + '1';
-    label[2] = '\0';
-    return true;
+    return copy_fixed_grid_slot_label(label, 'A', ctx.column + '1');
   }
   uint8_t get_model() override { return A4_TRACK_TYPE; }
   void *get_sound_data_ptr() override { return &sound; }

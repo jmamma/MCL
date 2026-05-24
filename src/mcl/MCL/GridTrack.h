@@ -48,6 +48,8 @@ struct GridSlotLabelContext {
   GridRow row;
 };
 
+bool copy_fixed_grid_slot_label(char label[3], char a, char b) NOINLINE();
+
 class ATTR_PACKED() GridTrack {
 public:
   static constexpr uint8_t FLAG_SKIP_SOUND = 1 << 0;

@@ -84,10 +84,7 @@ public:
   bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
                             char label[3]) override {
     (void)ctx;
-    label[0] = 'P';
-    label[1] = 'F';
-    label[2] = '\0';
-    return true;
+    return copy_fixed_grid_slot_label(label, 'P', 'F');
   }
   virtual uint8_t get_model() override { return PERF_TRACK_TYPE; }
   virtual uint8_t storage_version() const override {
