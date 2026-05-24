@@ -218,6 +218,18 @@ bool read_stored_header(Grid &grid, GridColumn column, GridRow row,
   return header->active == expected_type;
 }
 
+void init_migrated_header(StoredGridTrackHeader &dst,
+                          const LegacyGridTrackHeader &src,
+                          uint8_t track_type, uint8_t version,
+                          uint16_t storage_size) {
+  dst.version = version;
+  dst.flags = (src.link.speed & 0x80) ? GridTrack::FLAG_SKIP_SOUND : 0;
+  dst.storage_size = storage_size;
+  dst.active = track_type;
+  dst.link = src.link;
+  dst.link.speed &= 0x7F;
+}
+
 void copy_stored_header(GridTrack &dst, const StoredGridTrackHeader &src) {
   dst.version = src.version;
   dst.flags = src.flags;
@@ -292,9 +304,6 @@ void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src,
     dst_step.cond_id = src_step.cond_id;
   }
   dst.clean_params();
-  dst.swing_mask = MDSEQ_DEFAULT_SWING_MASK;
-  dst.swing_amount = 0;
-  dst.sync_swing_steps_from_mask();
 }
 
 bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst, uint8_t speed) {
@@ -331,6 +340,14 @@ bool write_migrated_track(Grid &grid, GridColumn column, GridRow row,
   return grid.write(track._this(), write_size, column, row);
 }
 
+bool write_migrated_payload_track(Grid &grid, GridColumn column, GridRow row,
+                                  StoredGridTrackHeader &header,
+                                  void *payload, size_t payload_size) {
+  return grid.seek(column, row) &&
+         grid.write(&header, sizeof(header)) &&
+         grid.write(payload, payload_size);
+}
+
 void init_upgraded_md_track(MDTrack &dst, const GridLink &link,
                             const LegacyMDSeqTrackData &seq,
                             const MDMachine &machine) {
@@ -356,7 +373,6 @@ bool read_upgraded_md_track(Grid &grid, GridColumn column, GridRow row,
   }
   init_upgraded_md_track(dst, legacy_header.link, legacy_seq, legacy_machine);
   copy_legacy_header(dst, legacy_header);
-  dst.active = MD_TRACK_TYPE;
   return true;
 }
 
@@ -398,53 +414,26 @@ bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
                               ext_like_write_size(seq_data, payload_size));
 }
 
-bool migrate_ext_track_storage(Grid &grid, GridColumn column, GridRow row) {
-  ExtTrack upgraded;
-  return migrate_ext_like_track_storage(grid, column, row, EXT_TRACK_TYPE,
-                                        upgraded, upgraded.seq_data);
-}
-
-bool migrate_a4_track_storage(Grid &grid, GridColumn column, GridRow row) {
-  A4Track upgraded;
-  return migrate_ext_like_track_storage(grid, column, row, A4_TRACK_TYPE,
-                                        upgraded, upgraded.seq_data);
-}
-
-bool migrate_mnm_track_storage(Grid &grid, GridColumn column, GridRow row) {
-  MNMTrack upgraded;
-  return migrate_ext_like_track_storage(grid, column, row, MNM_TRACK_TYPE,
-                                        upgraded, upgraded.seq_data);
-}
-
 bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
                                  GridColumn dst_column, uint8_t track_type,
-                                 DeviceTrack &upgraded, void *payload,
-                                 size_t payload_size) {
+                                 uint8_t payload_size) {
+  static_assert(sizeof(MDFXData) >= sizeof(TempoData),
+                "fixed payload scratch too small for tempo");
+  static_assert(sizeof(MDFXData) >= sizeof(GridChain),
+                "fixed payload scratch too small for grid chain");
+  uint8_t payload[sizeof(MDFXData)];
   LegacyGridTrackHeader legacy_header;
   if (!read_legacy_header(grid, column, row, track_type, &legacy_header)) {
     return false;
   }
-  copy_legacy_header(upgraded, legacy_header);
-  upgraded.active = track_type;
   if (!grid.read(payload, payload_size)) {
     return false;
   }
-  return write_migrated_track(grid, dst_column, row, upgraded,
-                              upgraded.get_track_size());
-}
-
-bool migrate_mdfx_track_storage(Grid &grid, GridColumn column, GridRow row) {
-  MDFXTrack upgraded;
-  return migrate_fixed_payload_track(
-      grid, column, row, column, MDFX_TRACK_TYPE, upgraded,
-      static_cast<MDFXData *>(&upgraded), sizeof(MDFXData));
-}
-
-bool migrate_mdtempo_track_storage(Grid &grid, GridColumn column, GridRow row) {
-  MDTempoTrack upgraded;
-  return migrate_fixed_payload_track(
-      grid, column, row, column, MDTEMPO_TRACK_TYPE, upgraded,
-      static_cast<TempoData *>(&upgraded), sizeof(TempoData));
+  StoredGridTrackHeader header;
+  init_migrated_header(header, legacy_header, track_type, 0,
+                       sizeof(header) + payload_size);
+  return write_migrated_payload_track(grid, dst_column, row, header, payload,
+                                      payload_size);
 }
 
 bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
@@ -494,28 +483,6 @@ bool migrate_perf_track_clean_layout(Grid &grid, GridColumn column,
                               upgraded.get_track_size());
 }
 
-bool migrate_gridchain_track_storage(Grid &grid, GridColumn column,
-                                     GridRow row) {
-  GridChainTrack upgraded;
-  return migrate_fixed_payload_track(
-      grid, column, row, column, GRIDCHAIN_TRACK_TYPE, upgraded,
-      &upgraded.chains, sizeof(GridChain));
-}
-
-bool migrate_md_track_signed_microtiming(Grid &grid, GridColumn column,
-                                         GridRow row) {
-  MDTrack track;
-  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
-    return false;
-  }
-  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
-    return true;
-  }
-  convert_md_seq_unsigned_timing(track.seq_data,
-                                 project_seq_speed_value(track.link));
-  return write_migrated_track(grid, column, row, track, track.get_track_size());
-}
-
 #if !defined(__AVR__)
 bool migrate_spsx_track_signed_microtiming(Grid &grid, GridColumn column,
                                            GridRow row) {
@@ -535,6 +502,20 @@ bool migrate_spsx_track_signed_microtiming(Grid &grid, GridColumn column,
 }
 #endif
 
+bool migrate_md_track_signed_microtiming(Grid &grid, GridColumn column,
+                                         GridRow row) {
+  MDTrack track;
+  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
+    return false;
+  }
+  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
+    return true;
+  }
+  convert_md_seq_unsigned_timing(track.seq_data,
+                                 project_seq_speed_value(track.link));
+  return write_migrated_track(grid, column, row, track, track.get_track_size());
+}
+
 bool migrate_ext_like_signed_microtiming(Grid &grid, GridColumn column,
                                          GridRow row, DeviceTrack &track,
                                          ExtSeqTrackData &seq_data) {
@@ -548,27 +529,6 @@ bool migrate_ext_like_signed_microtiming(Grid &grid, GridColumn column,
   return write_migrated_track(grid, column, row, track,
                               ext_like_write_size(seq_data,
                                                   track.get_sound_data_size()));
-}
-
-bool migrate_ext_track_signed_microtiming(Grid &grid, GridColumn column,
-                                          GridRow row) {
-  ExtTrack track;
-  return migrate_ext_like_signed_microtiming(grid, column, row, track,
-                                             track.seq_data);
-}
-
-bool migrate_a4_track_signed_microtiming(Grid &grid, GridColumn column,
-                                         GridRow row) {
-  A4Track track;
-  return migrate_ext_like_signed_microtiming(grid, column, row, track,
-                                             track.seq_data);
-}
-
-bool migrate_mnm_track_signed_microtiming(Grid &grid, GridColumn column,
-                                          GridRow row) {
-  MNMTrack track;
-  return migrate_ext_like_signed_microtiming(grid, column, row, track,
-                                             track.seq_data);
 }
 
 void copy_project_config(MCLSysConfigData *dst,
@@ -1062,8 +1022,8 @@ bool Project::check_project_version(uint16_t min_version) {
   return version >= min_version;
 }
 
-bool Project::migrate_legacy_md_aux_slots(GridRow row,
-                                          GridRowHeader *grid_x_header) {
+bool NOINLINE() Project::migrate_legacy_md_aux_slots(
+    GridRow row, GridRowHeader *grid_x_header) {
   if (grid_x_header == nullptr) {
     return false;
   }
@@ -1179,7 +1139,7 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
   return true;
 }
 
-bool Project::migrate_track_storage_versions() {
+bool NOINLINE() Project::migrate_track_storage_versions() {
   for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
     if (!migrate_grid_track_storage_versions(grid)) {
       return false;
@@ -1188,7 +1148,7 @@ bool Project::migrate_track_storage_versions() {
   return true;
 }
 
-bool Project::migrate_post_storage_tracks(uint8_t migration_flags) {
+bool NOINLINE() Project::migrate_post_storage_tracks(uint8_t migration_flags) {
   for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
     if (!migrate_grid_post_storage_tracks(grid, migration_flags)) {
       return false;
@@ -1197,7 +1157,7 @@ bool Project::migrate_post_storage_tracks(uint8_t migration_flags) {
   return true;
 }
 
-bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
+bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
 
@@ -1222,27 +1182,45 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
         }
         break;
       case EXT_TRACK_TYPE:
-        if (!migrate_ext_track_storage(grids[grid], column, row)) {
+      {
+        ExtTrack upgraded;
+        if (!migrate_ext_like_track_storage(grids[grid], column, row,
+                                            EXT_TRACK_TYPE, upgraded,
+                                            upgraded.seq_data)) {
           return false;
         }
         break;
+      }
       case A4_TRACK_TYPE:
-        if (!migrate_a4_track_storage(grids[grid], column, row)) {
+      {
+        A4Track upgraded;
+        if (!migrate_ext_like_track_storage(grids[grid], column, row,
+                                            A4_TRACK_TYPE, upgraded,
+                                            upgraded.seq_data)) {
           return false;
         }
         break;
+      }
       case MNM_TRACK_TYPE:
-        if (!migrate_mnm_track_storage(grids[grid], column, row)) {
+      {
+        MNMTrack upgraded;
+        if (!migrate_ext_like_track_storage(grids[grid], column, row,
+                                            MNM_TRACK_TYPE, upgraded,
+                                            upgraded.seq_data)) {
           return false;
         }
         break;
+      }
       case MDFX_TRACK_TYPE:
-        if (!migrate_mdfx_track_storage(grids[grid], column, row)) {
+        if (!migrate_fixed_payload_track(grids[grid], column, row, column,
+                                         MDFX_TRACK_TYPE, sizeof(MDFXData))) {
           return false;
         }
         break;
       case MDTEMPO_TRACK_TYPE:
-        if (!migrate_mdtempo_track_storage(grids[grid], column, row)) {
+        if (!migrate_fixed_payload_track(grids[grid], column, row, column,
+                                         MDTEMPO_TRACK_TYPE,
+                                         sizeof(TempoData))) {
           return false;
         }
         break;
@@ -1256,7 +1234,9 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
         }
         break;
       case GRIDCHAIN_TRACK_TYPE:
-        if (!migrate_gridchain_track_storage(grids[grid], column, row)) {
+        if (!migrate_fixed_payload_track(grids[grid], column, row, column,
+                                         GRIDCHAIN_TRACK_TYPE,
+                                         sizeof(GridChain))) {
           return false;
         }
         break;
@@ -1272,8 +1252,8 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
   return grids[grid].sync();
 }
 
-bool Project::migrate_grid_post_storage_tracks(GridIndex grid,
-                                               uint8_t migration_flags) {
+bool NOINLINE() Project::migrate_grid_post_storage_tracks(
+    GridIndex grid, uint8_t migration_flags) {
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
 
@@ -1311,20 +1291,32 @@ bool Project::migrate_grid_post_storage_tracks(GridIndex grid,
         break;
 #endif
       case EXT_TRACK_TYPE:
-        if (!migrate_ext_track_signed_microtiming(grids[grid], column, row)) {
+      {
+        ExtTrack track;
+        if (!migrate_ext_like_signed_microtiming(grids[grid], column, row,
+                                                track, track.seq_data)) {
           return false;
         }
         break;
+      }
       case A4_TRACK_TYPE:
-        if (!migrate_a4_track_signed_microtiming(grids[grid], column, row)) {
+      {
+        A4Track track;
+        if (!migrate_ext_like_signed_microtiming(grids[grid], column, row,
+                                                track, track.seq_data)) {
           return false;
         }
         break;
+      }
       case MNM_TRACK_TYPE:
-        if (!migrate_mnm_track_signed_microtiming(grids[grid], column, row)) {
+      {
+        MNMTrack track;
+        if (!migrate_ext_like_signed_microtiming(grids[grid], column, row,
+                                                track, track.seq_data)) {
           return false;
         }
         break;
+      }
       default:
         break;
       }
