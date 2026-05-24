@@ -148,9 +148,6 @@ public:
   ///  downloads from BANK1 to the runtime object
   DeviceTrack *load_from_mem(GridSlot col, uint8_t track_type, size_t size = 0);
 
-  bool read_grid_storage_range(GridSlot column, GridRow row, Grid *grid,
-                               uint16_t source_offset, void *dst,
-                               uint16_t len);
   DeviceTrack *materialize_storage_range(uint8_t track_type,
                                          uint16_t source_offset,
                                          uint16_t target_offset,

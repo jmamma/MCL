@@ -242,20 +242,6 @@ DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
   return ptrack->materialize_as(track_type, tracknumber, seq_track);
 }
 
-bool DeviceTrack::read_grid_storage_range(GridSlot column, GridRow row,
-                                          Grid *grid,
-                                          uint16_t source_offset, void *dst,
-                                          uint16_t len) {
-  Grid *source_grid = grid;
-  GridColumn source_column = column;
-  if (source_grid == nullptr) {
-    source_grid = &proj.grids[column >> 4];
-    source_column = column & 0x0F;
-  }
-  return source_grid->seek(source_column, row, source_offset) &&
-         source_grid->read(dst, len);
-}
-
 DeviceTrack *DeviceTrack::materialize_storage_range(uint8_t track_type,
                                                     uint16_t source_offset,
                                                     uint16_t target_offset,
@@ -288,8 +274,14 @@ DeviceTrack *DeviceTrack::load_materialized_storage_range(
   DeviceTrack *target = init_materialized_track_type(track_type);
 
   uint8_t *dst = static_cast<uint8_t *>(target->_this()) + target_offset;
-  if (!target->read_grid_storage_range(column, row, grid, source_offset, dst,
-                                       len)) {
+  Grid *source_grid = grid;
+  GridColumn source_column = column;
+  if (source_grid == nullptr) {
+    source_grid = &proj.grids[column >> 4];
+    source_column = column & 0x0F;
+  }
+  if (!source_grid->seek(source_column, row, source_offset) ||
+      !source_grid->read(dst, len)) {
     DEBUG_PRINTLN(F("read failed"));
     return nullptr;
   }
