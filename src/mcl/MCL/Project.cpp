@@ -1166,9 +1166,6 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
     }
 
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
-      if (row_header.track_type[column] == EMPTY_TRACK_TYPE) {
-        continue;
-      }
       switch (row_header.track_type[column]) {
       case MD_TRACK_TYPE:
         if (grid == 0 &&
@@ -1261,9 +1258,6 @@ bool NOINLINE() Project::migrate_grid_post_storage_tracks(
 
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
       uint8_t track_type = row_header.track_type[column];
-      if (track_type == EMPTY_TRACK_TYPE) {
-        continue;
-      }
       if (migrate_perf_layout && track_type == PERF_TRACK_TYPE &&
           !migrate_perf_track_clean_layout(grids[grid], column, row)) {
         return false;
