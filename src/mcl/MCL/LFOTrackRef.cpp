@@ -2,6 +2,7 @@
 
 #include "DeviceParamResolver.h"
 #include "DeviceManager.h"
+#include "MCLGUI.h"
 #include "MCLSeq.h"
 #include "PerfPage.h"
 #include "SeqPage.h"
@@ -17,16 +18,61 @@ extern PerfPage perf_page;
 
 namespace {
 
+constexpr uint8_t LFO_TRACK_PARAM_SPEED = 0;
+constexpr uint8_t LFO_TRACK_PARAM_DEPTH1 = 1;
+constexpr uint8_t LFO_TRACK_PARAM_DEPTH2 = 2;
+constexpr uint8_t LFO_TRACK_PARAM_COUNT = 3;
+
+constexpr uint8_t LFO_TRACK_PARAM_READ = 0;
+constexpr uint8_t LFO_TRACK_PARAM_SET_BASE = 1;
+constexpr uint8_t LFO_TRACK_PARAM_SET_MODULATED = 2;
+
+uint8_t lfo_perf_dest_base() {
+  return DeviceParamResolver::perf_target_count();
+}
+
 bool lfo_perf_dest_index(DeviceIdx device_idx, uint8_t dest, uint8_t *idx) {
   (void)device_idx;
-  uint8_t device_slots = DeviceParamResolver::perf_target_count();
-  if (dest <= device_slots || dest > device_slots + NUM_PERF_CONTROLS) {
+  uint8_t base = lfo_perf_dest_base();
+  if (dest <= base || dest > base + NUM_PERF_CONTROLS) {
     return false;
   }
   if (idx != nullptr) {
-    *idx = dest - device_slots - 1;
+    *idx = dest - base - 1;
   }
   return true;
+}
+
+uint8_t lfo_track_dest_base() {
+  return lfo_perf_dest_base() + NUM_PERF_CONTROLS;
+}
+
+constexpr uint8_t lfo_track_dest_count() {
+  return NUM_GRID_X_LFO_TRACKS + DeviceParamResolver::RESERVED_SECONDARY_TARGETS;
+}
+
+bool lfo_track_dest_index(uint8_t dest, uint8_t *idx) {
+  uint8_t base = lfo_track_dest_base();
+  if (dest <= base || dest > base + lfo_track_dest_count()) {
+    return false;
+  }
+  if (idx != nullptr) {
+    *idx = dest - base - 1;
+  }
+  return true;
+}
+
+LFOSeqTrack *lfo_track_for_index(uint8_t idx) {
+  if (idx < NUM_GRID_X_LFO_TRACKS) {
+    return &mcl_seq.grid_x_lfo_tracks[idx];
+  }
+#ifdef EXT_TRACKS
+  idx -= NUM_GRID_X_LFO_TRACKS;
+  if (idx < NUM_GRID_Y_LFO_TRACKS) {
+    return &mcl_seq.grid_y_lfo_tracks[idx];
+  }
+#endif
+  return nullptr;
 }
 
 PerfEncoder *lfo_perf_encoder(uint8_t idx) {
@@ -49,6 +95,49 @@ bool copy_lfo_perf_param_label(uint8_t param, char *out, uint8_t len) {
     return false;
   }
   strcpy(out, "VAL");
+  return true;
+}
+
+bool copy_lfo_track_target_label(uint8_t idx, char *out, uint8_t len) {
+  if (out == nullptr || len < 4 || (idx >= 9 && len < 5)) {
+    return false;
+  }
+  out[0] = 'L';
+  out[1] = 'F';
+  mcl_gui.put_value_at(idx + 1, out + 2);
+  return true;
+}
+
+bool copy_lfo_track_param_label(uint8_t param, char *out, uint8_t len) {
+  if (out == nullptr || len < 4 || param >= LFO_TRACK_PARAM_COUNT) {
+    return false;
+  }
+  out[0] = param == LFO_TRACK_PARAM_SPEED ? 'S' : 'D';
+  out[1] = 'P';
+  out[2] = param == LFO_TRACK_PARAM_SPEED ? 'D' : '0' + param;
+  out[3] = '\0';
+  return true;
+}
+
+bool lfo_track_param(LFOSeqTrack &track, uint8_t param, uint8_t *value,
+                     uint8_t op) {
+  if (value == nullptr || param >= LFO_TRACK_PARAM_COUNT) {
+    return false;
+  }
+  if (op == LFO_TRACK_PARAM_READ) {
+    *value = param == LFO_TRACK_PARAM_SPEED ? track.speed
+                                            : track.params[param - 1].depth;
+  } else if (param == LFO_TRACK_PARAM_SPEED) {
+    if (op == LFO_TRACK_PARAM_SET_BASE) {
+      track.set_speed(*value);
+    } else {
+      track.set_modulated_speed(*value);
+    }
+  } else if (op == LFO_TRACK_PARAM_SET_BASE) {
+    track.set_depth(param - 1, *value);
+  } else {
+    track.set_modulated_depth(param - 1, *value);
+  }
   return true;
 }
 
@@ -95,7 +184,7 @@ uint8_t LFOTrackRef::track_count(DeviceIdx device_idx) {
 
 uint8_t LFOTrackRef::target_count(DeviceIdx device_idx) {
   (void)device_idx;
-  return DeviceParamResolver::perf_target_count() + NUM_PERF_CONTROLS;
+  return lfo_track_dest_base() + lfo_track_dest_count();
 }
 
 bool LFOTrackRef::target_label(DeviceIdx device_idx, uint8_t dest, char *out,
@@ -105,12 +194,20 @@ bool LFOTrackRef::target_label(DeviceIdx device_idx, uint8_t dest, char *out,
   if (lfo_perf_dest_index(device_idx, dest, &perf_idx)) {
     return copy_lfo_perf_target_label(perf_idx, out, len);
   }
+  uint8_t lfo_idx = 0;
+  if (lfo_track_dest_index(dest, &lfo_idx)) {
+    return copy_lfo_track_target_label(lfo_idx, out, len);
+  }
   return DeviceParamResolver::perf(dest).target_label(out, len);
 }
 
 uint8_t LFOTrackRef::param_count(DeviceIdx device_idx, uint8_t dest) {
   if (lfo_perf_dest_index(device_idx, dest, nullptr)) {
     return 1;
+  }
+  uint8_t lfo_idx = 0;
+  if (lfo_track_dest_index(dest, &lfo_idx)) {
+    return lfo_track_for_index(lfo_idx) != nullptr ? LFO_TRACK_PARAM_COUNT : 0;
   }
   return DeviceParamResolver::perf(dest).param_count();
 }
@@ -119,6 +216,11 @@ bool LFOTrackRef::param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
                               char *out, uint8_t len) {
   if (lfo_perf_dest_index(device_idx, dest, nullptr)) {
     return copy_lfo_perf_param_label(param, out, len);
+  }
+  uint8_t lfo_idx = 0;
+  if (lfo_track_dest_index(dest, &lfo_idx)) {
+    return lfo_track_for_index(lfo_idx) != nullptr &&
+           copy_lfo_track_param_label(param, out, len);
   }
   return DeviceParamResolver::perf(dest).param_label(param, out, len);
 }
@@ -133,6 +235,12 @@ bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
     }
     *value = encoder->cur;
     return true;
+  }
+  uint8_t lfo_idx = 0;
+  if (lfo_track_dest_index(dest, &lfo_idx)) {
+    LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
+    return track != nullptr &&
+           lfo_track_param(*track, param, value, LFO_TRACK_PARAM_READ);
   }
   return DeviceParamResolver::perf(dest).params.get_base_param(param, value);
 }
@@ -149,6 +257,12 @@ bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
     perf_page.send_perf_encoder(perf_idx);
     return true;
   }
+  uint8_t lfo_idx = 0;
+  if (lfo_track_dest_index(dest, &lfo_idx)) {
+    LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
+    return track != nullptr &&
+           lfo_track_param(*track, param, &value, LFO_TRACK_PARAM_SET_BASE);
+  }
   return DeviceParamResolver::perf(dest).params.set_base_param(param, value);
 }
 
@@ -164,6 +278,13 @@ bool LFOTrackRef::send_modulated_param(DeviceIdx device_idx, uint8_t dest,
     }
     perf_page.set_lfo_mod(perf_idx, (int8_t)((int16_t)value - (int16_t)offset));
     return true;
+  }
+  uint8_t lfo_idx = 0;
+  if (lfo_track_dest_index(dest, &lfo_idx)) {
+    LFOSeqTrack *track = lfo_track_for_index(lfo_idx);
+    return track != nullptr &&
+           lfo_track_param(*track, param, &value,
+                           LFO_TRACK_PARAM_SET_MODULATED);
   }
 
   DevicePerfTarget target = DeviceParamResolver::perf(dest);

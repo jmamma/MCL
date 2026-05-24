@@ -103,6 +103,8 @@ public:
   int8_t random_value;
   uint8_t legacy_tick_counter;
   uint8_t last_wav_value[NUM_LFO_PARAMS];
+  uint8_t modulated_speed;
+  uint8_t modulated_depth[NUM_LFO_PARAMS];
 
   static const uint8_t wav_tables[LFO_TABLE_COUNT][WAV_LENGTH] PROGMEM;
 
@@ -160,9 +162,9 @@ public:
 
   void set_wav_type(uint8_t _wav_type);
   void set_speed(uint8_t _speed);
-  void set_depth(uint8_t param, uint8_t depth) {
-      params[param].depth = depth;
-  }
+  void set_depth(uint8_t param, uint8_t depth);
+  void set_modulated_speed(uint8_t _speed);
+  void set_modulated_depth(uint8_t param, uint8_t depth);
   void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 };
 

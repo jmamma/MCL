@@ -303,7 +303,11 @@ void LFOSeqTrack::reset_phase() {
 
 void LFOSeqTrack::reset_runtime() {
   phase = 0;
-  phase_inc = speed_to_phase_increment(speed, speed_multiplier());
+  modulated_speed = speed;
+  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+    modulated_depth[i] = params[i].depth;
+  }
+  phase_inc = speed_to_phase_increment(modulated_speed, speed_multiplier());
   step_count = 0;
   legacy_tick_counter = 0;
   uint16_t seed_base = ((uint16_t)static_cast<uint8_t>(device_idx) * 0x0101U) +
@@ -521,17 +525,37 @@ void LFOSeqTrack::set_wav_type(uint8_t _wav_type) {
 
 void LFOSeqTrack::set_speed(uint8_t _speed) {
   speed = _speed;
-  phase_inc = speed_to_phase_increment(speed, speed_multiplier());
+  set_modulated_speed(speed);
 }
 
 void LFOSeqTrack::set_speed_multiplier(uint8_t multiplier) {
   mode = (mode & LFO_MODE_LEGACY_FLAGS) | pack_mode(base_mode(), multiplier);
-  phase_inc = speed_to_phase_increment(speed, speed_multiplier());
+  phase_inc = speed_to_phase_increment(modulated_speed, speed_multiplier());
+}
+
+void LFOSeqTrack::set_depth(uint8_t param, uint8_t depth) {
+  if (param >= NUM_LFO_PARAMS) {
+    return;
+  }
+  params[param].depth = depth;
+  set_modulated_depth(param, depth);
+}
+
+void LFOSeqTrack::set_modulated_speed(uint8_t _speed) {
+  modulated_speed = _speed;
+  phase_inc = speed_to_phase_increment(modulated_speed, speed_multiplier());
+}
+
+void LFOSeqTrack::set_modulated_depth(uint8_t param, uint8_t depth) {
+  if (param >= NUM_LFO_PARAMS) {
+    return;
+  }
+  modulated_depth[param] = depth;
 }
 
 uint8_t LFOSeqTrack::get_wav_value(uint8_t offset, uint8_t param_id,
                                    int16_t lfo_sample) {
-  int16_t depth = params[param_id].depth;
+  int16_t depth = param_id < NUM_LFO_PARAMS ? modulated_depth[param_id] : 0;
   int16_t delta = (lfo_sample * depth) / 128;
   bool offset_max = mode_legacy_subtract(mode) || !lfo_wav_is_centered(wav_type);
   int16_t sample = offset_max ? offset - delta : offset + delta;
