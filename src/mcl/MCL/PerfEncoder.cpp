@@ -11,6 +11,21 @@
 
 PerfScene PerfData::scenes[NUM_SCENES];
 
+namespace {
+
+bool perf_param_value_or_stored(PerfParam *param, uint8_t *value) {
+  uint8_t current = 0;
+  bool has_current =
+      PerfPageTargetRef::target(param->dest).get_param(param->param, &current);
+  if (!has_current && param->val == 255) {
+    return false;
+  }
+  *value = has_current ? current : param->val;
+  return true;
+}
+
+} // namespace
+
 PerfEncoder::PerfEncoder(int _max, int _min, int _res, uint8_t _speed)
     : MCLEncoder(_max, _min, _res, _speed) {}
 
@@ -28,13 +43,8 @@ void PerfMorph::populate(PerfScene *s1, PerfScene *s2) {
       f->dest = p->dest;
       f->param = p->param;
       uint8_t v = 0;
-      bool has_current = PerfPageTargetRef::target(p->dest)
-                             .get_param(p->param, &v);
-      if (!has_current && p->val == 255) {
+      if (!perf_param_value_or_stored(p, &v)) {
         continue;
-      }
-      if (!has_current) {
-        v = p->val;
       }
       f->min = p->val == 255 ? v : p->val;
       f->max = v;
@@ -52,13 +62,8 @@ void PerfMorph::populate(PerfScene *s1, PerfScene *s2) {
     if (p->dest != 0) {
       uint8_t m = find_existing(p->dest, p->param);
       uint8_t v = 0;
-      bool has_current = PerfPageTargetRef::target(p->dest)
-                             .get_param(p->param, &v);
-      if (!has_current && p->val == 255) {
+      if (!perf_param_value_or_stored(p, &v)) {
         continue;
-      }
-      if (!has_current) {
-        v = p->val;
       }
       if (m != 255) {
         f = &fades[m];

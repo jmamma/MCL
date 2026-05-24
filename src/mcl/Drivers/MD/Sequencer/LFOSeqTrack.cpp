@@ -529,8 +529,9 @@ void LFOSeqTrack::set_speed(uint8_t _speed) {
 }
 
 void LFOSeqTrack::set_speed_multiplier(uint8_t multiplier) {
+  multiplier &= LFO_SPEED_MULT_MASK;
   mode = (mode & LFO_MODE_LEGACY_FLAGS) | pack_mode(base_mode(), multiplier);
-  phase_inc = speed_to_phase_increment(modulated_speed, speed_multiplier());
+  phase_inc = speed_to_phase_increment(modulated_speed, multiplier);
 }
 
 void LFOSeqTrack::set_depth(uint8_t param, uint8_t depth) {
