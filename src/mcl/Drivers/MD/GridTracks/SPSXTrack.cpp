@@ -179,6 +179,21 @@ void SPSXTrack::clear_track() {
   init();
 }
 
+bool SPSXTrack::copy_grid_slot_label(uint8_t model, GridColumn column,
+                                     GridSlot slot, GridRow row,
+                                     char label[3]) {
+  (void)column;
+  (void)slot;
+  (void)row;
+  auto tmp = getMDMachineNameShort(model, 2);
+  if (!tmp) {
+    return false;
+  }
+  copyMachineNameShort(tmp, label);
+  label[2] = '\0';
+  return true;
+}
+
 uint16_t SPSXTrack::get_store_size() {
   const uintptr_t base = reinterpret_cast<uintptr_t>(_this());
   if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX) {

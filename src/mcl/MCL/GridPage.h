@@ -21,9 +21,7 @@ class GridTrack;
 class GridPage : public LightPage {
 public:
   GridRowHeader row_headers[MAX_VISIBLE_ROWS];
-#ifdef PLATFORM_TBD
   char slot_labels[MAX_VISIBLE_ROWS][GRID_WIDTH][3];
-#endif
 
   GridColumn col;
   GridRow row;

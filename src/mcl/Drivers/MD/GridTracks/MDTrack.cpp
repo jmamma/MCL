@@ -45,6 +45,20 @@ void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
   MD.sendMachine(dest_track, &(machine), send_level, send_machine);
 }
 
+bool MDTrack::copy_grid_slot_label(uint8_t model, GridColumn column,
+                                   GridSlot slot, GridRow row, char label[3]) {
+  (void)column;
+  (void)slot;
+  (void)row;
+  auto tmp = getMDMachineNameShort(model, 2);
+  if (!tmp) {
+    return false;
+  }
+  copyMachineNameShort(tmp, label);
+  label[2] = '\0';
+  return true;
+}
+
 #if !defined(__AVR__)
 bool MDTrack::can_materialize_as(uint8_t track_type) {
   if (track_type == MDSPSX_TRACK_TYPE) {

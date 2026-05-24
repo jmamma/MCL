@@ -80,9 +80,9 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
     ::new (this) TBDMidiTrack;
     break;
 #endif
-    //  case GRIDCHAIN_TRACK_TYPE:
-    //    ::new (this) GridChainTrack;
-    //    break;
+  case GRIDCHAIN_TRACK_TYPE:
+    ::new (this) GridChainTrack;
+    break;
   case PERF_TRACK_TYPE:
     ::new (this) PerfTrack;
     break;

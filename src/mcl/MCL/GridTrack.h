@@ -139,6 +139,16 @@ public:
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
   virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) { }
+  virtual bool copy_grid_slot_label(uint8_t model, GridColumn column,
+                                    GridSlot slot, GridRow row,
+                                    char label[3]) {
+    (void)model;
+    (void)column;
+    (void)slot;
+    (void)row;
+    (void)label;
+    return false;
+  }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
   virtual uint8_t storage_version() const { return 0; }
   virtual void init_defaults() {}

@@ -66,6 +66,8 @@ public:
   }
   uint16_t get_region_size() override { return TBD_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_TBD_TRACKS_START; }
+  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
+                            GridRow row, char label[3]) override;
   uint8_t get_model() override { return p4_sound.p4_track_index; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   void init_defaults() override {
@@ -123,6 +125,8 @@ public:
   }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
+  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
+                            GridRow row, char label[3]) override;
   uint8_t get_model() override { return p4_sound.p4_track_index; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
   void init_defaults() override {

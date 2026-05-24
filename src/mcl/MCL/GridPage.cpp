@@ -8,6 +8,7 @@
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
 #include "GridTask.h"
+#include "EmptyTrack.h"
 #include "Project.h"
 #include "DeviceManager.h"
 #include "../Drivers/MidiDevice.h"
@@ -15,47 +16,30 @@
 #include "../Drivers/MD/MD.h"
 #ifdef PLATFORM_TBD
 #include "GridIOOverlay.h"
-#include "EmptyTrack.h"
-#include "../Drivers/TBD/TBDTrack.h"
 #endif
 #include "MCLActions.h"
 #include "MCLClipBoard.h"
-#include "../Drivers/MNM/MNMParams.h"
 #include "MCLStrings.h"
 
 #define PERF_ENC 1
 
 namespace {
 
-#ifdef PLATFORM_TBD
 void set_slot_label(char label[3], char a, char b) {
   label[0] = a;
   label[1] = b;
   label[2] = '\0';
 }
 
-bool copy_tbd_grid_label(uint8_t track_type, GridSlot column, GridRow row,
-                         char label[3]) {
+bool copy_grid_slot_label(uint8_t track_type, uint8_t model, GridColumn column,
+                          GridSlot slot, GridRow row, char label[3]) {
   EmptyTrack scratch;
-  bool ok = false;
-
-  if (track_type == TBD_TRACK_TYPE) {
-    if (auto *track = scratch.load_from_grid<TBDTrack>(column, row)) {
-      ok = tbd_p4_copy_sound_label(track->p4_sound, label, 3, 2);
-    }
-  } else if (track_type == TBD_MIDI_TRACK_TYPE) {
-    if (auto *track = scratch.load_from_grid<TBDMidiTrack>(column, row)) {
-      ok = tbd_p4_copy_sound_label(track->p4_sound, label, 3, 2);
-    }
+  auto *track = ((DeviceTrack *)&scratch)->init_track_type(track_type);
+  if (track == nullptr) {
+    return false;
   }
-
-  if (ok && label[1] == '\0') {
-    label[1] = ' ';
-    label[2] = '\0';
-  }
-  return ok;
+  return track->copy_grid_slot_label(model, column, slot, row, label);
 }
-#endif
 
 } // namespace
 
@@ -368,33 +352,24 @@ void GridPage::load_slot_models() {
   }
   GridRow base_row = getRow() - cur_row + row_shift;
 
-#ifdef PLATFORM_TBD
   for (uint8_t y = 0; y < MAX_VISIBLE_ROWS; y++) {
     for (uint8_t x = 0; x < GRID_WIDTH; x++) {
       set_slot_label(slot_labels[y][x], '-', '-');
     }
   }
-#endif
 
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
     GridRow row = base_row + n;
     if (row >= GRID_LENGTH) { return; }
     proj.read_grid_row_header(&row_headers[n], row, cur_grid);
     update_row_state(row, row_headers[n].active);
-#ifdef PLATFORM_TBD
     for (uint8_t x = 0; x < GRID_WIDTH; x++) {
       uint8_t track_type = row_headers[n].track_type[x];
-      if (track_type == TBD_TRACK_TYPE) {
-        set_slot_label(slot_labels[n][x], 'T', 'B');
-      } else if (track_type == TBD_MIDI_TRACK_TYPE) {
-        set_slot_label(slot_labels[n][x], 'T', 'M');
-      } else {
-        continue;
-      }
-      copy_tbd_grid_label(track_type, (uint8_t)(x + cur_grid * GRID_WIDTH),
-                          row, slot_labels[n][x]);
+      uint8_t model = row_headers[n].model[x];
+      copy_grid_slot_label(track_type, model, x,
+                           (GridSlot)(x + cur_grid * GRID_WIDTH), row,
+                           slot_labels[n][x]);
     }
-#endif
   }
 }
 
@@ -556,81 +531,12 @@ void GridPage::display_grid() {
 
       GridColumn track_idx = x + base_col;
       GridRow row_idx = y + base_row;
-      uint8_t track_type = row_headers[y].track_type[track_idx];
-      uint8_t model = row_headers[y].model[track_idx];
 
       uint8_t active_cue_color = WHITE;
 
-      str[0] = str[1] = '-';
-      str[2] = 0;
-      //  Set cell label
-      switch (track_type) {
-      case MD_TRACK_TYPE: {
-        auto tmp = getMDMachineNameShort(model, 2);
-        if (tmp) {
-          copyMachineNameShort(tmp, str);
-        }
-        break;
-      }
-      case A4_TRACK_TYPE:
-#if !defined(__AVR__)
-      case A4_MIDI_TRACK_TYPE:
-#endif
-        str[0] = 'A';
-        str[1] = track_idx + '1';
-        break;
-      case EXT_TRACK_TYPE:
-      case MIDI_TRACK_TYPE:
-        str[0] = 'M';
-        str[1] = track_idx + '1';
-        break;
-      case MDFX_TRACK_TYPE:
-        str[0] = 'F';
-        str[1] = 'X';
-        break;
-      case MDROUTE_TRACK_TYPE:
-      case MD_ROUTE_TRACK_TYPE:
-        str[0] = 'R';
-        str[1] = 'T';
-        break;
-      case MDTEMPO_TRACK_TYPE:
-        str[0] = 'T';
-        str[1] = 'P';
-        break;
-      case MDLFO_TRACK_TYPE:
-        str[0] = 'L';
-        str[1] = 'F';
-        break;
-      case GRIDCHAIN_TRACK_TYPE:
-        str[0] = 'C';
-        str[1] = 'N';
-        break;
-      case PERF_TRACK_TYPE:
-        str[0] = 'P';
-        str[1] = 'F';
-        break;
-      case MNM_TRACK_TYPE:
-#if !defined(__AVR__)
-      case MNM_MIDI_TRACK_TYPE:
-#endif
-      {
-        auto tmp = getMNMMachineNameShort(model, 2);
-        if (tmp) {
-          copyMachineNameShort(tmp, str);
-        }
-        break;
-      }
-#ifdef PLATFORM_TBD
-      case TBD_TRACK_TYPE:
-        str[0] = slot_labels[y][track_idx][0];
-        str[1] = slot_labels[y][track_idx][1];
-        break;
-      case TBD_MIDI_TRACK_TYPE:
-        str[0] = slot_labels[y][track_idx][0];
-        str[1] = slot_labels[y][track_idx][1];
-        break;
-#endif
-      }
+      str[0] = slot_labels[y][track_idx][0];
+      str[1] = slot_labels[y][track_idx][1];
+      str[2] = '\0';
       //  Highlight the current cursor position + slot menu apply range
       bool a = in_area(x, y + row_shift, cur_col, cur_row, param3.cur - 1,
                        param4.cur - 1);

@@ -50,6 +50,16 @@ public:
            seq_data.store_size();
   }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
+  bool copy_grid_slot_label(uint8_t model, GridColumn column, GridSlot slot,
+                            GridRow row, char label[3]) override {
+    (void)model;
+    (void)slot;
+    (void)row;
+    label[0] = 'M';
+    label[1] = column + '1';
+    label[2] = '\0';
+    return true;
+  }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
 #if !defined(__AVR__)
