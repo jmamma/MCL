@@ -496,6 +496,13 @@ static inline void close_enhanced_swing_window() {
   }
 }
 
+static void clear_enhanced_swing_window() NOINLINE();
+static void clear_enhanced_swing_window() {
+  close_enhanced_swing_window();
+  enhanced_swing_window_requested = false;
+  enhanced_swing_window_suspended = false;
+}
+
 static inline bool should_show_enhanced_swing_window() {
   return enhanced_swing_window_requested &&
          mcl.currentPage() == SEQ_STEP_PAGE &&
@@ -534,9 +541,7 @@ bool SeqPage::consume_enhanced_swing_window_exit() {
   if (!should_show_enhanced_swing_window()) {
     return false;
   }
-  close_enhanced_swing_window();
-  enhanced_swing_window_requested = false;
-  enhanced_swing_window_suspended = false;
+  clear_enhanced_swing_window();
   return true;
 }
 
@@ -620,9 +625,7 @@ void SeqPage::init() {
 void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
-  close_enhanced_swing_window();
-  enhanced_swing_window_requested = false;
-  enhanced_swing_window_suspended = false;
+  clear_enhanced_swing_window();
   disable_record();
   GUI_hardware.led.reset_trigleds();
   if (show_seq_menu) {
@@ -667,9 +670,7 @@ void SeqPage::config_mask_info(bool silent) {
     char str[16] = "EDIT ";
     strcat(str, info2);
     if (mask_type == MASK_PATTERN) {
-      close_enhanced_swing_window();
-      enhanced_swing_window_requested = false;
-      enhanced_swing_window_suspended = false;
+      clear_enhanced_swing_window();
       seq_panel_popup_text((uint8_t)-1, 2);
     } else {
       seq_page_active_step_track().popup_text(str, 1);
@@ -680,9 +681,7 @@ void SeqPage::config_mask_info(bool silent) {
           request_enhanced_swing_window();
         }
       } else {
-        close_enhanced_swing_window();
-        enhanced_swing_window_requested = false;
-        enhanced_swing_window_suspended = false;
+        clear_enhanced_swing_window();
       }
     }
   }
