@@ -114,17 +114,23 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
   }
 }
 
-void draw_active_microtiming(SeqStepTrackRef active_track,
-                             uint8_t encoder_value) {
+void draw_active_microtiming(SeqStepTrackRef active_track, uint8_t encoder_value,
+                             bool notify_remote) {
 #if !defined(__AVR__)
   if (active_track.uses_signed_microtiming()) {
     mcl_gui.draw_microtiming_spsx(
         active_track.speed(),
         active_track.microtiming_from_encoder(encoder_value));
+    if (notify_remote) {
+      active_track.draw_microtiming(encoder_value);
+    }
     return;
   }
 #endif
   mcl_gui.draw_microtiming(active_track.speed(), encoder_value);
+  if (notify_remote) {
+    active_track.draw_microtiming(encoder_value);
+  }
 }
 
 } // namespace
@@ -302,7 +308,7 @@ void SeqStepPage::display() {
         mcl_gui.show_encoder_value(&seq_param2) &&
         (note_interface.notes_count_on() > 0) && (!show_seq_menu) &&
         (!recording)) {
-      draw_active_microtiming(active_track, seq_param2.cur);
+      draw_active_microtiming(active_track, seq_param2.cur, false);
     }
   }
   if (prepare) {
@@ -352,7 +358,7 @@ void SeqStepPage::loop() {
 
           if (seq_param2_changed) {
             set_microtiming_overlay_active(true);
-            draw_active_microtiming(active_track, seq_param2.cur);
+            draw_active_microtiming(active_track, seq_param2.cur, true);
           }
           if (seq_param1_changed && has_kit_sound) {
             char str[4];

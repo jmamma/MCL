@@ -136,6 +136,17 @@ public:
       step_edit()->close_microtiming(param_context());
     }
   }
+  void draw_microtiming(uint8_t encoder_value) const {
+    if (!uses_kit_sound()) {
+      return;
+    }
+    if (uses_signed_microtiming()) {
+      step_edit()->draw_microtiming_signed(
+          param_context(), speed(), microtiming_from_encoder(encoder_value));
+    } else {
+      step_edit()->draw_microtiming(param_context(), speed(), encoder_value);
+    }
+  }
   void clear_step_edit_popup() const {
     if (uses_kit_sound()) {
       step_edit()->clear_popup(param_context());

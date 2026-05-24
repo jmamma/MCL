@@ -213,6 +213,10 @@ public:
   virtual bool begin_param_editor(const DeviceContext &ctx, uint8_t target,
                                   uint8_t *params, uint8_t count);
   virtual void end_param_editor(const DeviceContext &ctx);
+  virtual void draw_microtiming(const DeviceContext &ctx, uint8_t speed,
+                                uint8_t timing);
+  virtual void draw_microtiming_signed(const DeviceContext &ctx, uint8_t speed,
+                                       int8_t microtiming);
   virtual void close_microtiming(const DeviceContext &ctx);
   virtual void clear_popup(const DeviceContext &ctx);
   virtual void popup_text(const DeviceContext &ctx, char *text,

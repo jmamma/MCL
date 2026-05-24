@@ -314,6 +314,21 @@ void ElektronDevice::draw_microtiming(uint8_t speed, uint8_t timing) {
   // waitBlocking();
 }
 
+void ElektronDevice::draw_microtiming_signed(uint8_t speed,
+                                             int8_t microtiming) {
+  int16_t encoded = (int16_t)microtiming + 127;
+  if (encoded < 0) {
+    encoded = 0;
+  } else if (encoded > 254) {
+    encoded = 254;
+  }
+  uint8_t a = (uint8_t)encoded >> 7;
+  uint8_t b = (uint8_t)encoded & 0x7F;
+  uint8_t data[6] = {0x70, 0x3C, 0x27, speed, a, b};
+  sendRequest(data, 6);
+  // waitBlocking();
+}
+
 void ElektronDevice::draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask) {
   uint8_t data[6] = {0x70, 0x3C, 0x24, idx, idx_other, chain_mask };
   sendRequest(data, 6);

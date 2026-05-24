@@ -281,6 +281,10 @@ public:
   virtual bool begin_param_editor(const DeviceContext &ctx, uint8_t target,
                                   uint8_t *params, uint8_t count) override;
   virtual void end_param_editor(const DeviceContext &ctx) override;
+  virtual void draw_microtiming(const DeviceContext &ctx, uint8_t speed,
+                                uint8_t timing) override;
+  virtual void draw_microtiming_signed(const DeviceContext &ctx, uint8_t speed,
+                                       int8_t microtiming) override;
   virtual void close_microtiming(const DeviceContext &ctx) override;
   virtual void clear_popup(const DeviceContext &ctx) override;
   virtual void popup_text(const DeviceContext &ctx, char *text,
@@ -782,6 +786,19 @@ void MDStepEditCapability::end_param_editor(const DeviceContext &ctx) {
   if (md().encoder_interface) {
     md().deactivate_encoder_interface();
   }
+}
+
+void MDStepEditCapability::draw_microtiming(const DeviceContext &ctx,
+                                            uint8_t speed, uint8_t timing) {
+  (void)ctx;
+  md().draw_microtiming(speed, timing);
+}
+
+void MDStepEditCapability::draw_microtiming_signed(const DeviceContext &ctx,
+                                                   uint8_t speed,
+                                                   int8_t microtiming) {
+  (void)ctx;
+  md().draw_microtiming_signed(speed, microtiming);
 }
 
 void MDStepEditCapability::close_microtiming(const DeviceContext &ctx) {

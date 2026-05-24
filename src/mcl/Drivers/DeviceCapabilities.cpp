@@ -666,6 +666,21 @@ void DeviceStepEditCapability::end_param_editor(const DeviceContext &ctx) {
   (void)ctx;
 }
 
+void DeviceStepEditCapability::draw_microtiming(const DeviceContext &ctx,
+                                                uint8_t speed,
+                                                uint8_t timing) {
+  (void)ctx;
+  (void)speed;
+  (void)timing;
+}
+
+void DeviceStepEditCapability::draw_microtiming_signed(
+    const DeviceContext &ctx, uint8_t speed, int8_t microtiming) {
+  (void)ctx;
+  (void)speed;
+  (void)microtiming;
+}
+
 void DeviceStepEditCapability::close_microtiming(const DeviceContext &ctx) {
   (void)ctx;
 }

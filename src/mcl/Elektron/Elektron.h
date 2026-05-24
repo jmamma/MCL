@@ -347,6 +347,7 @@ public:
 
   void draw_close_microtiming();
   void draw_microtiming(uint8_t speed, uint8_t timing);
+  void draw_microtiming_signed(uint8_t speed, int8_t microtiming);
   void draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask);
   void draw_open_swing();
   void draw_close_swing();

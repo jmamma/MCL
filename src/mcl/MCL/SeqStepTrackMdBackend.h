@@ -84,6 +84,9 @@ public:
     }
   }
 
+  void draw_microtiming(uint8_t encoder_value) const {
+    MD.draw_microtiming(speed(), encoder_value);
+  }
   void close_microtiming() const { MD.draw_close_microtiming(); }
   void clear_step_edit_popup() const { MD.popup_text(127, 2); }
   void popup_text(char *text, uint8_t persistent = 0) const {
