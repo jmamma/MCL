@@ -676,6 +676,8 @@ void SeqPage::config_mask_info(bool silent) {
       if (mask_type == MASK_SWING) {
         if (show_seq_menu) {
           suspend_enhanced_swing_window();
+        } else {
+          request_enhanced_swing_window();
         }
       } else {
         close_enhanced_swing_window();
