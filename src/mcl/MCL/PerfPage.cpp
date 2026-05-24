@@ -320,9 +320,10 @@ void PerfPage::send_perf_encoder(uint8_t perf_idx, MidiUartClass *uart_,
 }
 
 void PerfPage::encoder_send() {
-  for (uint8_t i = 0; i < 4; i++) {
+  uint8_t lfo_mask = lfo_mod_dirty_mask;
+  for (uint8_t i = 0; i < 4; i++, lfo_mask >>= 1) {
     if (perf_encoders[i]->hasChanged() || perf_encoders[i]->resend ||
-        (lfo_mod_dirty_mask & (1 << i))) {
+        (lfo_mask & 1)) {
       send_perf_encoder(i);
     }
   }
