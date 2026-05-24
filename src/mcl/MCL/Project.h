@@ -16,7 +16,8 @@
 #define PROJ_VERSION_PROJECT_CONFIG 3005
 #define PROJ_VERSION_NATIVE_SWING_TRACKS 3006
 #define PROJ_VERSION_DYNAMIC_TRACK_STORAGE 3007
-#define PROJ_VERSION 3007
+#define PROJ_VERSION_SIGNED_MICROTIMING 3008
+#define PROJ_VERSION 3008
 #define PRJ_DIR "/Projects"
 
 static_assert(PROJ_VERSION_TRACK_STORAGE_VERSION < PROJ_VERSION_ROUTE_TRACK_TYPE,
@@ -48,6 +49,8 @@ public:
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
   bool migrate_grid_track_storage_versions(GridIndex grid);
   bool migrate_track_storage_versions();
+  bool migrate_grid_signed_microtiming(GridIndex grid);
+  bool migrate_signed_microtiming();
   bool new_project_master_file(const char *projectname);
   bool write_header();
   bool build_grid_filename(const char *basename, uint8_t suffix, char *out,

@@ -276,7 +276,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
     if ((linked_track < track) || (linked_track == 255)) {
       trk.steps[n].trig = true;
     }
-    trk.timing[n] = trk.get_timing_mid();
+    trk.microtiming[n] = 0;
     if (linked_track < track) {
       trk.set_track_locks_i(n, 0, ln_trk.get_track_lock(n, 0));
       trk.set_track_locks_i(n, 1, ln_trk.get_track_lock(n, 1));

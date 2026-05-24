@@ -54,7 +54,7 @@ struct ATTR_PACKED() ext_event_t {
   /// for plock & lock disengage: ignored
   uint8_t event_value : 7;
   /// micro timing value
-  uint8_t micro_timing;
+  int8_t micro_timing;
 
   bool operator<(const ext_event_t &that) {
     // order by micro_timing
@@ -128,7 +128,7 @@ public:
   volatile bool mute_state_pending;
   volatile bool notesoff_pending;
 
-  uint8_t locks_slide_next_lock_utiming[NUM_LOCKS];
+  int8_t locks_slide_next_lock_utiming[NUM_LOCKS];
 
   ExtSeqTrack() : SeqSlideTrack() { active = EXT_TRACK_TYPE; }
 

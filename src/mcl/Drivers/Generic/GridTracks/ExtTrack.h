@@ -51,7 +51,7 @@ public:
   }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
-  uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
 #if !defined(__AVR__)
   bool can_materialize_as(uint8_t track_type) override;
 #endif

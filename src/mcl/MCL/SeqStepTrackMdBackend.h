@@ -194,8 +194,8 @@ public:
   uint8_t timing_display_mid() const { return timing_mid(); }
 
   uint8_t timing_encoder_for_step(uint8_t step) const {
-    uint8_t timing = track_->timing[step];
-    return timing == 0 ? timing_mid() : timing;
+    return (uint8_t)SeqTrack::microtiming_to_timing(
+        track_->microtiming[step], timing_mid());
   }
 
   int8_t microtiming_from_encoder(uint8_t encoder_value) const {
@@ -234,7 +234,8 @@ public:
   void clear_conditional(uint8_t step) { set_conditional(step, 0, false); }
 
   void set_timing_from_encoder(uint8_t step, uint8_t encoder_value) {
-    track_->timing[step] = encoder_value;
+    track_->microtiming[step] =
+        SeqTrack::timing_to_microtiming(encoder_value, timing_mid());
   }
 
   void set_pattern_step_from_edit(uint8_t step, uint8_t condition_knob,
@@ -244,10 +245,11 @@ public:
     track_->steps[step].trig = true;
     track_->steps[step].cond_id = condition;
     track_->steps[step].cond_plock = cond_plock;
-    track_->timing[step] = timing_encoder;
+    track_->microtiming[step] =
+        SeqTrack::timing_to_microtiming(timing_encoder, timing_mid());
   }
 
-  void reset_timing(uint8_t step) { track_->timing[step] = timing_mid(); }
+  void reset_timing(uint8_t step) { track_->microtiming[step] = 0; }
   void clear_mute(uint8_t step) { track_->mute_mask &= ~(1ULL << step); }
   void toggle_mute(uint8_t step) { track_->mute_mask ^= (1ULL << step); }
   uint64_t mute_mask() const { return track_->mute_mask; }

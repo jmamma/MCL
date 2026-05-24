@@ -30,7 +30,7 @@ class MDSeqStep {
 public:
   bool active;
   uint8_t locks[NUM_LOCKS];
-  uint8_t timing;
+  int8_t microtiming;
   bool swing;
   MDSeqStepDescriptor data;
 };
@@ -38,7 +38,7 @@ public:
 class ATTR_PACKED() MDSeqTrackDataV1 {
 public:
   MDSeqStepDescriptor steps[NUM_MD_STEPS];
-  uint8_t timing[NUM_MD_STEPS];
+  int8_t microtiming[NUM_MD_STEPS];
   uint8_t locks_params[NUM_LOCKS];
   uint8_t locks[NUM_MD_LOCK_SLOTS];
 

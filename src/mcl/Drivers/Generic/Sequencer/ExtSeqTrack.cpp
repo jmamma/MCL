@@ -30,31 +30,33 @@ static inline bool ext_note_overlaps_range(int16_t note_start,
   return false;
 }
 
+static inline int16_t ext_microtiming_ticks(int8_t microtiming,
+                                            uint16_t ticks_per_step) {
+  return SeqTrack::microtiming_to_ticks(microtiming, ticks_per_step);
+}
+
+static inline int16_t ext_event_tick(uint8_t step, int8_t microtiming,
+                                     uint16_t ticks_per_step) {
+  return (int16_t)step * ticks_per_step +
+         ext_microtiming_ticks(microtiming, ticks_per_step);
+}
+
+static inline int8_t ext_page_timing_to_microtiming(uint16_t timing,
+                                                    uint16_t ticks_per_step) {
+  return SeqTrack::timing_to_microtiming(timing, ticks_per_step);
+}
+
+static inline int8_t ext_reverse_microtiming(int8_t microtiming) {
+  return microtiming == -128 ? 127 : (int8_t)-microtiming;
+}
+
 } // namespace
 
 
 void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
                             bool timing_adjust) {
-  if (old_speed == 255) {
-    old_speed = speed;
-  }
-  if (timing_adjust) {
-    uint8_t new_mult = get_speed_multiplier_int(new_speed);
-    uint8_t old_mult = get_speed_multiplier_int(old_speed);
-
-    for (uint16_t i = 0; i < event_count; i++) {
-      // 1. Calculate numerator using 32-bit to prevent any potential overflow
-      // before division (e.g., if timing is 255 and new_mult is 96, result is 24480,
-      // which fits in uint16_t, but uint32_t is safer if timing is larger).
-      uint32_t numerator = (uint32_t)events[i].micro_timing * new_mult;
-
-      // 2. Add half of the denominator for rounding
-      numerator += (old_mult / 2);
-
-      // 3. Perform division
-      events[i].micro_timing = (uint8_t)(numerator / old_mult);
-    }
-  }
+  (void)old_speed;
+  (void)timing_adjust;
   speed = new_speed;
   uint8_t timing_mid = get_timing_mid();
   if (timing_mid && mod12_counter >= timing_mid) {
@@ -226,13 +228,17 @@ void ExtSeqTrack::recalc_slides() {
       locks_slide_data[c].init();
       continue;
     }
-    x0 = step * timing_mid + e->micro_timing - timing_mid + 1;
+    x0 = ext_event_tick(step, e->micro_timing, timing_mid) + 1;
     if (next_lockstep < step) {
       x1 = (length + next_lockstep) * timing_mid +
-           locks_slide_next_lock_utiming[c] - timing_mid - 1;
+           ext_microtiming_ticks(locks_slide_next_lock_utiming[c],
+                                 timing_mid) -
+           1;
     } else {
-      x1 = next_lockstep * timing_mid + locks_slide_next_lock_utiming[c] -
-           timing_mid - 1;
+      x1 = next_lockstep * timing_mid +
+           ext_microtiming_ticks(locks_slide_next_lock_utiming[c],
+                                 timing_mid) -
+           1;
     }
     y0 = e->event_value;
     y1 = locks_slide_next_lock_val[c];
@@ -580,8 +586,8 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
       if (note_idx_off != 0xFFFF) {
         auto &ev = events[note_idx_on];
         auto &ev_j = events[note_idx_off];
-        note_start = i * timing_mid + ev.micro_timing - timing_mid;
-        note_end = j * timing_mid + ev_j.micro_timing - timing_mid;
+        note_start = ext_event_tick(i, ev.micro_timing, timing_mid);
+        note_end = ext_event_tick(j, ev_j.micro_timing, timing_mid);
         if (note_end < note_start) {
           note_end += length * timing_mid;
         }
@@ -603,7 +609,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
     if (note_idx_off != 0xFFFF) {
       // Remove wrap around notes
       auto &ev = events[note_idx_off];
-      int32_t note_end = i * timing_mid + ev.micro_timing - timing_mid;
+      int32_t note_end = ext_event_tick(i, ev.micro_timing, timing_mid);
       if (note_end > selection_start) {
         remove_event(note_idx_off);
         for (uint8_t j = length - 1; j > i; j--) {
@@ -661,10 +667,9 @@ bool ExtSeqTrack::del_notes(uint16_t cur_x, uint16_t cur_w,
       }
 
       ext_event_t &ev_off = events[note_off_idx];
-      int16_t note_start =
-          (int16_t)step * timing_mid + ev.micro_timing - timing_mid;
+      int16_t note_start = ext_event_tick(step, ev.micro_timing, timing_mid);
       int16_t note_end =
-          (int16_t)off_step * timing_mid + ev_off.micro_timing - timing_mid;
+          ext_event_tick(off_step, ev_off.micro_timing, timing_mid);
       if (note_end < note_start) {
         note_end += roll_ticks;
       }
@@ -832,8 +837,9 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
 
     // Go over CURRENT
     for (; ev_idx != ev_end; ++ev_idx) {
-      auto u = events[ev_idx].micro_timing;
-      if (u >= timing_mid && u - timing_mid == mod12_counter) {
+      int16_t timing_offset =
+          ext_microtiming_ticks(events[ev_idx].micro_timing, timing_mid);
+      if (timing_offset >= 0 && timing_offset == mod12_counter) {
         handle_event(ev_idx, step_count);
       }
     }
@@ -850,8 +856,10 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
 
     // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
-      auto u = events[ev_idx].micro_timing;
-      if (u < timing_mid && u == mod12_counter) {
+      int16_t timing_offset =
+          ext_microtiming_ticks(events[ev_idx].micro_timing, timing_mid);
+      int16_t trigger_tick = (int16_t)timing_mid + timing_offset;
+      if (timing_offset < 0 && trigger_tick == mod12_counter) {
         handle_event(ev_idx, next_step);
       }
     }
@@ -999,7 +1007,7 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
         ++start_idx;
         continue;
       }
-      int16_t event_x = n * timing_mid + events[i].micro_timing - timing_mid;
+      int16_t event_x = ext_event_tick(n, events[i].micro_timing, timing_mid);
       if (event_x == cur_x || (event_x <= cur_x + r && event_x >= cur_x - r)) {
         uint8_t param = locks_params[lock_idx] - 1;
         if (param == PARAM_PRG) {
@@ -1128,7 +1136,8 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     e->lock_idx = lock_idx;
     e->event_value = value;
     e->event_on = event_on;
-    e->micro_timing = utiming;
+    e->micro_timing = ext_page_timing_to_microtiming(utiming,
+                                                     get_timing_mid());
 
     if (add_event(step, e) == 0xFFFF) {
       return false;
@@ -1148,7 +1157,8 @@ bool ExtSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
   e.cond_id = cond;
   e.event_value = note_num;
   e.event_on = event_on;
-  e.micro_timing = utiming;
+  e.micro_timing = ext_page_timing_to_microtiming(utiming,
+                                                  get_timing_mid());
 
   DEBUG_PRINTLN("adding step");
   DEBUG_DUMP(event_on);
@@ -1172,7 +1182,7 @@ void ExtSeqTrack::store_mute_state() {
       locate(n, ev_idx, ev_end);
       for (uint8_t m = ev_idx; m < ev_end; m++) {
         if (!events[m].is_lock && events[m].event_on) {
-          if (del_note(n * timing_mid + events[m].micro_timing - timing_mid,
+          if (del_note(ext_event_tick(n, events[m].micro_timing, timing_mid),
                        timing_mid, events[m].event_value)) {
             goto loc;
           }
@@ -1268,7 +1278,7 @@ void ExtSeqTrack::clear_mutes() {
 void ExtSeqTrack::clear_ext_conditional() {
   for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
     events[x].cond_id = 0;
-    events[x].micro_timing = 0; // XXX zero or mid?
+    events[x].micro_timing = 0;
   }
   clear_mutes();
   memset(ignore_notes, 0, sizeof(ignore_notes));
@@ -1394,7 +1404,6 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
     break;
   case DIR_REVERSE:
     uint16_t end = ev_end / 2;
-    uint8_t timing_mid = get_timing_mid();
     for (uint16_t i = 0; i < end; ++i) {
       auto tmp = events[i];
       auto j = ev_end - i - 1;
@@ -1409,8 +1418,8 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
         events[j].event_on = !events[j].event_on;
       }
 
-      events[i].micro_timing = timing_mid * 2 - events[i].micro_timing;
-      events[j].micro_timing = timing_mid * 2 - events[j].micro_timing;
+      events[i].micro_timing = ext_reverse_microtiming(events[i].micro_timing);
+      events[j].micro_timing = ext_reverse_microtiming(events[j].micro_timing);
     }
     for (uint8_t n = 0; n < length / 2; n++) {
       uint8_t vel_tmp = velocities[n];

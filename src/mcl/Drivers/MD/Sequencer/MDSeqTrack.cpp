@@ -19,14 +19,41 @@ static uint8_t md_swing_q14_to_amount(uint32_t swing_q14) {
   return amount > 30 ? 30 : (uint8_t)amount;
 }
 
+#if !defined(__AVR__)
+static int16_t md_div_round_closest(int32_t numerator, int32_t denominator) {
+  if (denominator == 0) {
+    return 0;
+  }
+  if (numerator >= 0) {
+    return (int16_t)((numerator + denominator / 2) / denominator);
+  }
+  return (int16_t)(-(((-numerator) + denominator / 2) / denominator));
+}
+
+static int8_t spsx_microtiming_to_md_microtiming(int8_t microtiming,
+                                                 uint16_t timing_mid) {
+  if (microtiming == 0) {
+    return 0;
+  }
+  uint16_t timing_quarter = timing_mid / 2;
+  if (timing_quarter == 0) {
+    timing_quarter = 1;
+  }
+  int16_t ticks =
+      md_div_round_closest((int32_t)microtiming * timing_quarter, 127);
+  return SeqTrack::ticks_to_microtiming(ticks, timing_mid);
+}
+#endif
+
 uint8_t MDSeqTrack::effective_timing(uint8_t step, uint8_t timing_mid) const {
-  uint8_t value = timing[step];
-  if (value == timing_mid && swing_amount && steps[step].swing) {
+  int8_t mt = microtiming[step];
+  uint16_t value = SeqTrack::microtiming_to_timing(mt, timing_mid);
+  if (mt == 0 && swing_amount && steps[step].swing) {
     uint16_t swung = (uint16_t)timing_mid +
                      (((uint16_t)swing_amount * timing_mid + 25) / 50);
-    value = swung > 255 ? 255 : (uint8_t)swung;
+    value = swung;
   }
-  return value;
+  return value > 255 ? 255 : (uint8_t)value;
 }
 
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
@@ -82,26 +109,8 @@ void MDSeqTrack::store_mute_state() {
 
 void MDSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
                            bool timing_adjust) {
-  if (old_speed == 255) {
-    old_speed = speed;
-  }
-  if (timing_adjust) {
-    // --- Start of optimized block ---
-    uint8_t new_mult = get_speed_multiplier_int(new_speed);
-    uint8_t old_mult = get_speed_multiplier_int(old_speed);
-
-    for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
-      // Use a 32-bit intermediate variable to prevent overflow during multiplication
-      uint32_t numerator = (uint32_t)timing[i] * new_mult;
-
-      // Add half of the denominator before dividing for proper rounding
-      numerator += (old_mult / 2);
-
-      // Perform the final division to get the new timing value
-      timing[i] = (uint8_t)(numerator / old_mult);
-    }
-    // --- End of optimized block ---
-  }
+  (void)old_speed;
+  (void)timing_adjust;
   speed = new_speed;
   uint8_t timing_mid = get_timing_mid();
   if (timing_mid && mod12_counter >= timing_mid) {
@@ -337,7 +346,7 @@ void MDSeqTrack::recalc_slides() {
       x1 = next_lockstep * timing_mid +
            effective_timing(next_lockstep, timing_mid) - timing_mid - 1;
     }
-    DEBUG_DUMP(timing[step]);
+    DEBUG_DUMP(microtiming[step]);
     DEBUG_DUMP(timing_mid);
     y0 = locks[cur_lockidx];
     y1 = locks_slide_next_lock_val[c];
@@ -905,7 +914,8 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
   // TODO cond value?
   steps[step].cond_id = 0;
   steps[step].cond_plock = false;
-  timing[step] = utiming;
+  microtiming[step] =
+      SeqTrack::timing_to_microtiming(utiming, get_timing_mid());
   if (velocity < 127) {
     set_track_locks(step, MODEL_VOL, velocity);
   }
@@ -1027,7 +1037,7 @@ void MDSeqTrack::clear_conditional() {
   for (uint8_t c = 0; c < NUM_MD_STEPS; c++) {
     steps[c].cond_id = 0;
     steps[c].cond_plock = 0;
-    timing[c] = 0;
+    microtiming[c] = 0;
   }
   clear_mutes();
   ignore_step = 255;
@@ -1044,8 +1054,8 @@ void MDSeqTrack::clear_locks() {
 }
 
 void MDSeqTrack::clear_track(bool locks) {
-  // steps and timing are adjacent in MDSeqTrackData storage.
-  memset(steps, 0, sizeof(steps) + sizeof(timing));
+  // steps and microtiming are adjacent in MDSeqTrackData storage.
+  memset(steps, 0, sizeof(steps) + sizeof(microtiming));
   swing_mask = 0;
   swing_amount = 0;
   clear_mutes();
@@ -1112,7 +1122,6 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   uint32_t swing_q14 = pattern->swingAmount;
 
   uint8_t *pswingpattern;
-  uint8_t timing_mid = get_timing_mid();
   if (pattern->swingEditAll > 0) {
     pswingpattern = (uint8_t *)&pattern->swingPattern;
   } else {
@@ -1130,13 +1139,14 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
       steps[a].trig = true;
       steps[a].cond_id = 0;
       steps[a].cond_plock = false;
-      timing[a] = timing_mid;
+      microtiming[a] = 0;
     }
   }
 
 #if !defined(__AVR__)
   // Apply SPSX step flags (conditionals) and microtiming
   if (pattern->version >= 0x40) {
+    uint8_t timing_mid = get_timing_mid();
     for (uint8_t a = 0; a < length; a++) {
       if (steps[a].trig) {
         uint8_t flags = pattern->ext_step_flags[track_number][a];
@@ -1144,7 +1154,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
         steps[a].cond_plock = (flags >> 1) & 1;
         int8_t mt = pattern->ext_microtiming[track_number][a];
         if (mt != 0) {
-          timing[a] = (uint8_t)((int16_t)timing[a] + mt);
+          microtiming[a] = spsx_microtiming_to_md_microtiming(mt, timing_mid);
         }
       }
     }
@@ -1160,7 +1170,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
   constexpr size_t ncopy = sizeof(steps) - sizeof(MDSeqStepDescriptor);
   uint8_t lock_buf[NUM_LOCKS];
   MDSeqStepDescriptor step_buf;
-  uint8_t timing_buf;
+  int8_t microtiming_buf;
   uint16_t total_nlock = get_lockidx(length);
 
   mute_state = SEQ_MUTE_ON;
@@ -1174,11 +1184,11 @@ void MDSeqTrack::modify_track(uint8_t dir) {
 
     // shift steps
     step_buf = steps[0];
-    timing_buf = timing[0];
+    microtiming_buf = microtiming[0];
     memmove(steps, steps + 1, ncopy);
-    memmove(timing, timing + 1, length - 1);
+    memmove(microtiming, microtiming + 1, length - 1);
     steps[length - 1] = step_buf;
-    timing[length - 1] = timing_buf;
+    microtiming[length - 1] = microtiming_buf;
     ROTATE_LEFT(mute_mask, length);
     ROTATE_LEFT(swing_mask, length);
     break;
@@ -1192,11 +1202,11 @@ void MDSeqTrack::modify_track(uint8_t dir) {
 
     // shift steps
     step_buf = steps[length - 1];
-    timing_buf = timing[length - 1];
+    microtiming_buf = microtiming[length - 1];
     memmove(steps + 1, steps, ncopy);
-    memmove(timing + 1, timing, length - 1);
+    memmove(microtiming + 1, microtiming, length - 1);
     steps[0] = step_buf;
-    timing[0] = timing_buf;
+    microtiming[0] = microtiming_buf;
     ROTATE_RIGHT(mute_mask, length);
     ROTATE_RIGHT(swing_mask, length);
     break;
@@ -1218,9 +1228,9 @@ void MDSeqTrack::modify_track(uint8_t dir) {
       step_buf = steps[i];
       steps[i] = steps[j];
       steps[j] = step_buf;
-      timing_buf = timing[i];
-      timing[i] = timing[j];
-      timing[j] = timing_buf;
+      microtiming_buf = microtiming[i];
+      microtiming[i] = microtiming[j];
+      microtiming[j] = microtiming_buf;
       bool a = IS_BIT_SET64(mute_mask, i);
       bool b = IS_BIT_SET64(mute_mask, j);
       if (a) {
@@ -1255,7 +1265,7 @@ void MDSeqTrack::modify_track(uint8_t dir) {
 
 void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   step->active = true;
-  step->timing = timing[n];
+  step->microtiming = microtiming[n];
   step->swing = steps[n].swing;
 
   uint8_t idx = get_lockidx(n);
@@ -1275,7 +1285,7 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
 
 void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
   clear_step_locks(n);
-  timing[n] = step->timing;
+  microtiming[n] = step->microtiming;
   if (step->swing) {
     SET_BIT64(swing_mask, n);
   } else {

@@ -107,7 +107,7 @@ public:
                               SeqTrack *seq_track) override;
 #endif
   uint8_t get_model() override { return machine.get_model(); }
-  uint8_t storage_version() const override { return SEQ_TRACK_SWING_STORAGE_VERSION; }
+  uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
 
   void *get_sound_data_ptr() override { return &machine; }
   size_t get_sound_data_size() override { return sizeof(MDMachine); }

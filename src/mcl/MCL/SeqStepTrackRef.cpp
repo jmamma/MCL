@@ -158,7 +158,8 @@ void SeqStepTrackGenericBackend::set_pattern_step_from_edit(
     t->steps[step].trig = true;
     t->steps[step].cond_id = condition;
     t->steps[step].cond_plock = cond_plock;
-    t->timing[step] = timing_encoder;
+    t->microtiming[step] =
+        SeqTrack::timing_to_microtiming(timing_encoder, t->get_timing_mid());
   } else {
     StepSeqDataTrack *t = tracks_.stepseq;
     t->set_step(step, STEPSEQ_MASK_PATTERN, true);

@@ -1187,7 +1187,9 @@ void MidiSeqTrack::import_legacy_ext(const ExtSeqTrackData &legacy,
     uint8_t bucket = const_cast<ExtSeqTrackData &>(legacy).event_buckets.get(step);
     for (uint8_t i = 0; i < bucket; i++, idx++) {
       const auto &legacy_event = legacy.events[idx];
-      int16_t legacy_offset = (int16_t)legacy_event.micro_timing - legacy_tps;
+      int16_t legacy_offset =
+          SeqTrack::microtiming_to_ticks(legacy_event.micro_timing,
+                                         legacy_tps);
       int16_t data_offset =
           ((int32_t)legacy_offset * MIDI_SEQ_TIMING_CENTER) / legacy_tps;
 

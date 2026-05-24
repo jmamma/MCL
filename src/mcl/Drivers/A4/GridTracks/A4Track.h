@@ -43,7 +43,7 @@ public:
   virtual uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   virtual uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   virtual uint8_t get_model() override { return A4_TRACK_TYPE; } // TODO
-  virtual uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  virtual uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
   void init_defaults() override {
     mod_data.init();
     seq_data.clear();

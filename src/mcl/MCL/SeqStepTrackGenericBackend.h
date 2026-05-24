@@ -250,8 +250,9 @@ public:
   }
   uint8_t timing_encoder_for_step(uint8_t step) const {
     if (kind_ == KIND_MD) {
-      uint8_t timing = tracks_.md->timing[step];
-      return timing == 0 ? SeqTrack::get_timing_mid(tracks_.md->speed) : timing;
+      uint8_t timing_mid = SeqTrack::get_timing_mid(tracks_.md->speed);
+      return (uint8_t)SeqTrack::microtiming_to_timing(
+          tracks_.md->microtiming[step], timing_mid);
     }
     return (uint8_t)(tracks_.stepseq->microtiming[step] + 127);
   }
@@ -314,7 +315,8 @@ public:
   void clear_conditional(uint8_t step) { set_conditional(step, 0, false); }
   void set_timing_from_encoder(uint8_t step, uint8_t encoder_value) {
     if (kind_ == KIND_MD) {
-      tracks_.md->timing[step] = encoder_value;
+      tracks_.md->microtiming[step] = SeqTrack::timing_to_microtiming(
+          encoder_value, tracks_.md->get_timing_mid());
     } else {
       tracks_.stepseq->microtiming[step] =
           (int8_t)(encoder_value - 127);
@@ -324,7 +326,7 @@ public:
                                   uint8_t timing_encoder);
   void reset_timing(uint8_t step) {
     if (kind_ == KIND_MD) {
-      tracks_.md->timing[step] = tracks_.md->get_timing_mid();
+      tracks_.md->microtiming[step] = 0;
     } else {
       tracks_.stepseq->microtiming[step] = 0;
     }

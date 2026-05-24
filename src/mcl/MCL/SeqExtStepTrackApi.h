@@ -142,7 +142,9 @@ public:
 #endif
     const auto &event = ext_track_->events[idx];
     return {event.is_lock, event.event_on, event.lock_idx, event.cond_id,
-            event.event_value, event.micro_timing};
+            event.event_value,
+            (int16_t)SeqTrack::microtiming_to_timing(event.micro_timing,
+                                                     ticks_per_step())};
   }
 
   uint8_t note_velocity(uint8_t step, uint16_t event_idx) const {

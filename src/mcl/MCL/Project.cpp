@@ -16,6 +16,9 @@
 #include "PerfTrack.h"
 #include "GridChainTrack.h"
 #include "LFOSeqTrack.h"
+#if !defined(__AVR__)
+#include "SPSXTrack.h"
+#endif
 #include <stddef.h>
 
 namespace {
@@ -77,10 +80,19 @@ public:
   LegacyMDSeqStepDescriptor steps[NUM_MD_STEPS];
 };
 
+struct ATTR_PACKED() LegacyExtEvent {
+  bool is_lock : 1;
+  uint8_t lock_idx : 3;
+  uint8_t cond_id : 4;
+  bool event_on : 1;
+  uint8_t event_value : 7;
+  uint8_t micro_timing;
+};
+
 class ATTR_PACKED() LegacyExtSeqTrackData {
 public:
   NibbleArray<NUM_EXT_STEPS> event_buckets;
-  ext_event_t events[NUM_EXT_EVENTS];
+  LegacyExtEvent events[NUM_EXT_EVENTS];
   uint8_t locks_params[NUM_LOCKS];
   uint16_t event_count;
   uint8_t velocities[NUM_EXT_STEPS];
@@ -104,11 +116,13 @@ static_assert(sizeof(LegacyMDSeqStepDescriptor) ==
               "Legacy MD step descriptor size changed");
 static_assert(sizeof(LegacyMDSeqTrackData) == sizeof(MDSeqTrackDataV1),
               "Legacy MD seq data size changed");
+static_assert(sizeof(LegacyExtEvent) == sizeof(ext_event_t),
+              "Legacy Ext event size changed");
 static_assert(sizeof(LegacyExtSeqTrackData) == sizeof(ExtSeqTrackData),
               "Legacy Ext seq data size changed");
 static_assert(offsetof(LegacyExtSeqTrackData, locks_params) ==
                   sizeof(NibbleArray<NUM_EXT_STEPS>) +
-                      sizeof(ext_event_t) * NUM_EXT_EVENTS,
+                      sizeof(LegacyExtEvent) * NUM_EXT_EVENTS,
               "Legacy Ext fixed tail offset changed");
 static_assert(sizeof(LegacyExtSeqFixedTail) ==
                   sizeof(LegacyExtSeqTrackData) -
@@ -160,11 +174,44 @@ bool read_legacy_header(Grid &grid, GridColumn column, GridRow row,
   return header->active == expected_type;
 }
 
-void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src) {
+uint8_t project_seq_speed_value(const GridLink &link) {
+  return link.speed_value() & 0x7F;
+}
+
+void convert_md_seq_unsigned_timing(MDSeqTrackData &data, uint8_t speed) {
+  uint16_t timing_mid = SeqTrack::get_timing_mid(speed);
+  uint8_t *legacy_timing = reinterpret_cast<uint8_t *>(data.microtiming);
+  for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
+    uint8_t timing = legacy_timing[step];
+    if (timing == 0) {
+      timing = timing_mid;
+    }
+    data.microtiming[step] =
+        SeqTrack::timing_to_microtiming(timing, timing_mid);
+  }
+}
+
+void convert_ext_seq_unsigned_timing(ExtSeqTrackData &data, uint8_t speed) {
+  uint16_t timing_mid = SeqTrack::get_timing_mid(speed);
+  uint16_t used_events = data.event_count;
+  if (used_events > NUM_EXT_EVENTS) {
+    used_events = NUM_EXT_EVENTS;
+  }
+  for (uint16_t i = 0; i < used_events; i++) {
+    uint8_t timing =
+        *reinterpret_cast<uint8_t *>(&data.events[i].micro_timing);
+    data.events[i].micro_timing =
+        SeqTrack::timing_to_microtiming(timing, timing_mid);
+  }
+}
+
+void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src,
+                        uint8_t speed) {
   dst.init();
   memcpy(dst.locks, src.locks, sizeof(dst.locks));
   memcpy(dst.locks_params, src.locks_params, sizeof(dst.locks_params));
-  memcpy(dst.timing, src.timing, sizeof(dst.timing));
+  memcpy(dst.microtiming, src.timing, sizeof(dst.microtiming));
+  convert_md_seq_unsigned_timing(dst, speed);
 
   for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
     const LegacyMDSeqStepDescriptor &src_step = src.steps[step];
@@ -182,7 +229,7 @@ void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src) {
   dst.sync_swing_steps_from_mask();
 }
 
-bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst) {
+bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst, uint8_t speed) {
   if (!grid.read(&dst, sizeof(LegacyExtSeqTrackData))) {
     return false;
   }
@@ -197,7 +244,7 @@ bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst) {
     used_events = NUM_EXT_EVENTS;
   }
   memmove(dst.events, raw + offsetof(LegacyExtSeqTrackData, events),
-          used_events * sizeof(ext_event_t));
+          used_events * sizeof(LegacyExtEvent));
 
   memcpy(dst.locks_params, fixed_tail.locks_params, sizeof(dst.locks_params));
   dst.event_count = used_events;
@@ -205,6 +252,7 @@ bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst) {
   memcpy(dst.locks_params_orig, fixed_tail.locks_params_orig,
          sizeof(dst.locks_params_orig));
   dst.channel = fixed_tail.channel;
+  convert_ext_seq_unsigned_timing(dst, speed);
   return true;
 }
 
@@ -221,7 +269,7 @@ void init_upgraded_md_track(MDTrack &dst, const GridLink &link,
   dst.active = MD_TRACK_TYPE;
   dst.link = link;
   dst.mod_data.init();
-  copy_legacy_md_seq(dst.seq_data, seq);
+  copy_legacy_md_seq(dst.seq_data, seq, project_seq_speed_value(link));
   dst.machine = machine;
 }
 
@@ -263,7 +311,8 @@ bool migrate_ext_track_storage(Grid &grid, GridColumn column, GridRow row) {
   upgraded.init_defaults();
   copy_legacy_header(upgraded, legacy_header);
   upgraded.active = EXT_TRACK_TYPE;
-  if (!read_legacy_ext_seq(grid, upgraded.seq_data)) {
+  if (!read_legacy_ext_seq(grid, upgraded.seq_data,
+                           project_seq_speed_value(upgraded.link))) {
     return false;
   }
   return write_migrated_track(grid, column, row, upgraded,
@@ -280,7 +329,8 @@ bool migrate_a4_track_storage(Grid &grid, GridColumn column, GridRow row) {
   upgraded.init_defaults();
   copy_legacy_header(upgraded, legacy_header);
   upgraded.active = A4_TRACK_TYPE;
-  if (!read_legacy_ext_seq(grid, upgraded.seq_data) ||
+  if (!read_legacy_ext_seq(grid, upgraded.seq_data,
+                           project_seq_speed_value(upgraded.link)) ||
       !grid.read(&upgraded.sound, sizeof(upgraded.sound))) {
     return false;
   }
@@ -298,7 +348,8 @@ bool migrate_mnm_track_storage(Grid &grid, GridColumn column, GridRow row) {
   upgraded.init_defaults();
   copy_legacy_header(upgraded, legacy_header);
   upgraded.active = MNM_TRACK_TYPE;
-  if (!read_legacy_ext_seq(grid, upgraded.seq_data) ||
+  if (!read_legacy_ext_seq(grid, upgraded.seq_data,
+                           project_seq_speed_value(upgraded.link)) ||
       !grid.read(&upgraded.machine, sizeof(upgraded.machine))) {
     return false;
   }
@@ -351,6 +402,81 @@ bool migrate_gridchain_track_storage(Grid &grid, GridColumn column,
   return migrate_fixed_payload_track(
       grid, column, row, column, GRIDCHAIN_TRACK_TYPE, upgraded,
       &upgraded.chains, sizeof(GridChain));
+}
+
+bool migrate_md_track_signed_microtiming(Grid &grid, GridColumn column,
+                                         GridRow row) {
+  MDTrack track;
+  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
+    return false;
+  }
+  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
+    return true;
+  }
+  convert_md_seq_unsigned_timing(track.seq_data,
+                                 project_seq_speed_value(track.link));
+  return write_migrated_track(grid, column, row, track, track.get_track_size());
+}
+
+#if !defined(__AVR__)
+bool migrate_spsx_track_signed_microtiming(Grid &grid, GridColumn column,
+                                           GridRow row) {
+  SPSXTrack track;
+  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
+    return false;
+  }
+  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
+    return true;
+  }
+  if (track.seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
+    convert_md_seq_unsigned_timing(track.seq_storage.seq_data.legacy,
+                                   project_seq_speed_value(track.link));
+  }
+  return write_migrated_track(grid, column, row, track,
+                              track.get_store_size());
+}
+#endif
+
+bool migrate_ext_track_signed_microtiming(Grid &grid, GridColumn column,
+                                          GridRow row) {
+  ExtTrack track;
+  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
+    return false;
+  }
+  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
+    return true;
+  }
+  convert_ext_seq_unsigned_timing(track.seq_data,
+                                  project_seq_speed_value(track.link));
+  return write_migrated_track(grid, column, row, track, track.write_size());
+}
+
+bool migrate_a4_track_signed_microtiming(Grid &grid, GridColumn column,
+                                         GridRow row) {
+  A4Track track;
+  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
+    return false;
+  }
+  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
+    return true;
+  }
+  convert_ext_seq_unsigned_timing(track.seq_data,
+                                  project_seq_speed_value(track.link));
+  return write_migrated_track(grid, column, row, track, track.write_size());
+}
+
+bool migrate_mnm_track_signed_microtiming(Grid &grid, GridColumn column,
+                                          GridRow row) {
+  MNMTrack track;
+  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
+    return false;
+  }
+  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
+    return true;
+  }
+  convert_ext_seq_unsigned_timing(track.seq_data,
+                                  project_seq_speed_value(track.link));
+  return write_migrated_track(grid, column, row, track, track.write_size());
 }
 
 void copy_project_config(MCLSysConfigData *dst,
@@ -680,13 +806,17 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
 
   bool migrate_track_storage =
       version < PROJ_VERSION_DYNAMIC_TRACK_STORAGE;
+  bool migrate_signed_microtiming_storage =
+      version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
+      version < PROJ_VERSION_SIGNED_MICROTIMING;
   bool migrate_grid_pairs = version < PROJ_VERSION_GRID_PAIRS;
   bool migrate_project_config = version < PROJ_VERSION_PROJECT_CONFIG;
   if (migrate_grid_pairs) {
     active_grid_pair = 0;
   }
   uint8_t pair = use_requested_pair ? requested_pair : active_grid_pair;
-  if (migrate_track_storage || migrate_grid_pairs || migrate_project_config) {
+  if (migrate_track_storage || migrate_signed_microtiming_storage ||
+      migrate_grid_pairs || migrate_project_config) {
     draw_wait_popup("UPGRADING PROJECT");
   }
 
@@ -726,6 +856,10 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
+  if (migrate_signed_microtiming_storage && !migrate_signed_microtiming()) {
+    DEBUG_PRINTLN(F("Could not migrate project microtiming"));
+    return false;
+  }
   if (use_requested_pair) {
     active_grid_pair = requested_pair;
   }
@@ -737,8 +871,9 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     copy_project_config(&cfg, mcl_cfg);
     applied_project_config = true;
   }
-  bool write_project_header = migrate_track_storage || migrate_grid_pairs ||
-                              migrate_project_config ||
+  bool write_project_header = migrate_track_storage ||
+                              migrate_signed_microtiming_storage ||
+                              migrate_grid_pairs || migrate_project_config ||
                               use_requested_pair;
   if (write_project_header && !write_header()) {
     return false;
@@ -957,6 +1092,18 @@ bool Project::migrate_track_storage_versions() {
   return true;
 }
 
+bool Project::migrate_signed_microtiming() {
+  for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
+    if (!migrate_grid_signed_microtiming(grid)) {
+      return false;
+    }
+  }
+  if (!grids[0].sync() || !grids[1].sync()) {
+    return false;
+  }
+  return true;
+}
+
 bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
@@ -1025,6 +1172,59 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
         }
         break;
       case MD_ROUTE_TRACK_TYPE:
+        break;
+      default:
+        break;
+      }
+    }
+  }
+
+  draw_upgrade_progress(grid, GRID_LENGTH);
+  return grids[grid].sync();
+}
+
+bool Project::migrate_grid_signed_microtiming(GridIndex grid) {
+  for (GridRow row = 0; row < GRID_LENGTH; row++) {
+    draw_upgrade_progress(grid, row);
+
+    GridRowHeader row_header;
+    if (!grids[grid].read_row_header(&row_header, row)) {
+      return false;
+    }
+
+    for (GridColumn column = 0; column < GRID_WIDTH; column++) {
+      if (row_header.track_type[column] == EMPTY_TRACK_TYPE) {
+        continue;
+      }
+      switch (row_header.track_type[column]) {
+      case MD_TRACK_TYPE:
+        if (grid == 0 &&
+            !migrate_md_track_signed_microtiming(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+#if !defined(__AVR__)
+      case MDSPSX_TRACK_TYPE:
+        if (grid == 0 &&
+            !migrate_spsx_track_signed_microtiming(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+#endif
+      case EXT_TRACK_TYPE:
+        if (!migrate_ext_track_signed_microtiming(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+      case A4_TRACK_TYPE:
+        if (!migrate_a4_track_signed_microtiming(grids[grid], column, row)) {
+          return false;
+        }
+        break;
+      case MNM_TRACK_TYPE:
+        if (!migrate_mnm_track_signed_microtiming(grids[grid], column, row)) {
+          return false;
+        }
         break;
       default:
         break;

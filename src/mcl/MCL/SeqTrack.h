@@ -132,6 +132,14 @@ public:
   static void store_mod_data(SeqTrackModData &mod_data, bool grid_x_tracks,
                              uint8_t tracknumber);
   static uint8_t get_timing_mid(uint8_t speed_);
+  static int16_t microtiming_to_ticks(int8_t microtiming,
+                                      uint16_t ticks_per_step);
+  static int8_t ticks_to_microtiming(int16_t ticks,
+                                     uint16_t ticks_per_step);
+  static uint16_t microtiming_to_timing(int8_t microtiming,
+                                        uint16_t ticks_per_step);
+  static int8_t timing_to_microtiming(uint16_t timing,
+                                      uint16_t ticks_per_step);
   uint8_t get_timing_mid() { return get_timing_mid(speed); }
 
   FORCED_INLINE() uint8_t get_timing_mid_inline() {
