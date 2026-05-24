@@ -179,6 +179,11 @@ constexpr size_t PROJECT_CONFIG_OFFSET =
     offsetof(MCLSysConfigData, uart1_turbo_speed);
 constexpr size_t PROJECT_CONFIG_SIZE =
     offsetof(MCLSysConfigData, project_config) - PROJECT_CONFIG_OFFSET;
+constexpr uint8_t MIGRATE_TRACK_STORAGE = 1 << 0;
+constexpr uint8_t MIGRATE_SIGNED_MICROTIMING = 1 << 1;
+constexpr uint8_t MIGRATE_PERF_TRACK_LAYOUT = 1 << 2;
+constexpr uint8_t MIGRATE_GRID_PAIRS = 1 << 3;
+constexpr uint8_t MIGRATE_PROJECT_CONFIG = 1 << 4;
 
 bool project_config_valid(const MCLSysConfigData &source) {
   return source.version == CONFIG_VERSION;
@@ -364,60 +369,51 @@ bool migrate_md_track_native_swing(Grid &grid, GridColumn column, GridRow row) {
                               upgraded.get_track_size());
 }
 
-bool migrate_ext_track_storage(Grid &grid, GridColumn column, GridRow row) {
+uint16_t ext_like_write_size(const ExtSeqTrackData &seq_data,
+                             uint16_t payload_size) {
+  return DEVICE_TRACK_LEN + payload_size + sizeof(SeqTrackModData) +
+         seq_data.store_size();
+}
+
+bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
+                                    uint8_t track_type,
+                                    DeviceTrack &upgraded,
+                                    ExtSeqTrackData &seq_data) {
   LegacyGridTrackHeader legacy_header;
-  if (!read_legacy_header(grid, column, row, EXT_TRACK_TYPE,
-                          &legacy_header)) {
+  if (!read_legacy_header(grid, column, row, track_type, &legacy_header)) {
     return false;
   }
-  ExtTrack upgraded;
   upgraded.init_defaults();
   copy_legacy_header(upgraded, legacy_header);
-  upgraded.active = EXT_TRACK_TYPE;
-  if (!read_legacy_ext_seq(grid, upgraded.seq_data,
-                           project_seq_speed_value(upgraded.link))) {
+  upgraded.active = track_type;
+  if (!read_legacy_ext_seq(grid, seq_data, project_seq_speed_value(upgraded.link))) {
+    return false;
+  }
+  uint16_t payload_size = upgraded.get_sound_data_size();
+  if (payload_size != 0 &&
+      !grid.read(upgraded.get_sound_data_ptr(), payload_size)) {
     return false;
   }
   return write_migrated_track(grid, column, row, upgraded,
-                              upgraded.write_size());
+                              ext_like_write_size(seq_data, payload_size));
+}
+
+bool migrate_ext_track_storage(Grid &grid, GridColumn column, GridRow row) {
+  ExtTrack upgraded;
+  return migrate_ext_like_track_storage(grid, column, row, EXT_TRACK_TYPE,
+                                        upgraded, upgraded.seq_data);
 }
 
 bool migrate_a4_track_storage(Grid &grid, GridColumn column, GridRow row) {
-  LegacyGridTrackHeader legacy_header;
-  if (!read_legacy_header(grid, column, row, A4_TRACK_TYPE,
-                          &legacy_header)) {
-    return false;
-  }
   A4Track upgraded;
-  upgraded.init_defaults();
-  copy_legacy_header(upgraded, legacy_header);
-  upgraded.active = A4_TRACK_TYPE;
-  if (!read_legacy_ext_seq(grid, upgraded.seq_data,
-                           project_seq_speed_value(upgraded.link)) ||
-      !grid.read(&upgraded.sound, sizeof(upgraded.sound))) {
-    return false;
-  }
-  return write_migrated_track(grid, column, row, upgraded,
-                              upgraded.write_size());
+  return migrate_ext_like_track_storage(grid, column, row, A4_TRACK_TYPE,
+                                        upgraded, upgraded.seq_data);
 }
 
 bool migrate_mnm_track_storage(Grid &grid, GridColumn column, GridRow row) {
-  LegacyGridTrackHeader legacy_header;
-  if (!read_legacy_header(grid, column, row, MNM_TRACK_TYPE,
-                          &legacy_header)) {
-    return false;
-  }
   MNMTrack upgraded;
-  upgraded.init_defaults();
-  copy_legacy_header(upgraded, legacy_header);
-  upgraded.active = MNM_TRACK_TYPE;
-  if (!read_legacy_ext_seq(grid, upgraded.seq_data,
-                           project_seq_speed_value(upgraded.link)) ||
-      !grid.read(&upgraded.machine, sizeof(upgraded.machine))) {
-    return false;
-  }
-  return write_migrated_track(grid, column, row, upgraded,
-                              upgraded.write_size());
+  return migrate_ext_like_track_storage(grid, column, row, MNM_TRACK_TYPE,
+                                        upgraded, upgraded.seq_data);
 }
 
 bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
@@ -479,7 +475,9 @@ bool migrate_perf_track_clean_layout(Grid &grid, GridColumn column,
   if (!read_stored_header(grid, column, row, PERF_TRACK_TYPE, &header)) {
     return false;
   }
-  if (perf_track_has_clean_header(grid, column, row)) {
+  if (header.version >= PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT &&
+      header.storage_size == sizeof(StoredGridTrackHeader) +
+                                 sizeof(PerfTrackData)) {
     return true;
   }
 
@@ -537,46 +535,40 @@ bool migrate_spsx_track_signed_microtiming(Grid &grid, GridColumn column,
 }
 #endif
 
-bool migrate_ext_track_signed_microtiming(Grid &grid, GridColumn column,
-                                          GridRow row) {
-  ExtTrack track;
+bool migrate_ext_like_signed_microtiming(Grid &grid, GridColumn column,
+                                         GridRow row, DeviceTrack &track,
+                                         ExtSeqTrackData &seq_data) {
   if (!grid.read(track._this(), track.get_track_size(), column, row)) {
     return false;
   }
   if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
     return true;
   }
-  convert_ext_seq_unsigned_timing(track.seq_data,
-                                  project_seq_speed_value(track.link));
-  return write_migrated_track(grid, column, row, track, track.write_size());
+  convert_ext_seq_unsigned_timing(seq_data, project_seq_speed_value(track.link));
+  return write_migrated_track(grid, column, row, track,
+                              ext_like_write_size(seq_data,
+                                                  track.get_sound_data_size()));
+}
+
+bool migrate_ext_track_signed_microtiming(Grid &grid, GridColumn column,
+                                          GridRow row) {
+  ExtTrack track;
+  return migrate_ext_like_signed_microtiming(grid, column, row, track,
+                                             track.seq_data);
 }
 
 bool migrate_a4_track_signed_microtiming(Grid &grid, GridColumn column,
                                          GridRow row) {
   A4Track track;
-  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
-    return false;
-  }
-  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
-    return true;
-  }
-  convert_ext_seq_unsigned_timing(track.seq_data,
-                                  project_seq_speed_value(track.link));
-  return write_migrated_track(grid, column, row, track, track.write_size());
+  return migrate_ext_like_signed_microtiming(grid, column, row, track,
+                                             track.seq_data);
 }
 
 bool migrate_mnm_track_signed_microtiming(Grid &grid, GridColumn column,
                                           GridRow row) {
   MNMTrack track;
-  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
-    return false;
-  }
-  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
-    return true;
-  }
-  convert_ext_seq_unsigned_timing(track.seq_data,
-                                  project_seq_speed_value(track.link));
-  return write_migrated_track(grid, column, row, track, track.write_size());
+  return migrate_ext_like_signed_microtiming(grid, column, row, track,
+                                             track.seq_data);
 }
 
 void copy_project_config(MCLSysConfigData *dst,
@@ -904,23 +896,27 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     return false;
   }
 
-  bool migrate_track_storage =
-      version < PROJ_VERSION_DYNAMIC_TRACK_STORAGE;
-  bool migrate_signed_microtiming_storage =
-      version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
-      version < PROJ_VERSION_SIGNED_MICROTIMING;
-  bool migrate_perf_track_layout_storage =
-      version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
-      version < PROJ_VERSION_PERF_TRACK_LAYOUT;
-  bool migrate_grid_pairs = version < PROJ_VERSION_GRID_PAIRS;
-  bool migrate_project_config = version < PROJ_VERSION_PROJECT_CONFIG;
-  if (migrate_grid_pairs) {
+  uint8_t migration_flags = 0;
+  if (version < PROJ_VERSION_DYNAMIC_TRACK_STORAGE) {
+    migration_flags |= MIGRATE_TRACK_STORAGE;
+  }
+  if (version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
+      version < PROJ_VERSION_SIGNED_MICROTIMING) {
+    migration_flags |= MIGRATE_SIGNED_MICROTIMING;
+  }
+  if (version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
+      version < PROJ_VERSION_PERF_TRACK_LAYOUT) {
+    migration_flags |= MIGRATE_PERF_TRACK_LAYOUT;
+  }
+  if (version < PROJ_VERSION_GRID_PAIRS) {
+    migration_flags |= MIGRATE_GRID_PAIRS;
     active_grid_pair = 0;
   }
+  if (version < PROJ_VERSION_PROJECT_CONFIG) {
+    migration_flags |= MIGRATE_PROJECT_CONFIG;
+  }
   uint8_t pair = use_requested_pair ? requested_pair : active_grid_pair;
-  if (migrate_track_storage || migrate_signed_microtiming_storage ||
-      migrate_perf_track_layout_storage || migrate_grid_pairs ||
-      migrate_project_config) {
+  if (migration_flags) {
     draw_wait_popup("UPGRADING PROJECT");
   }
 
@@ -931,7 +927,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     }
     pair = 0;
     active_grid_pair = 0;
-    migrate_grid_pairs = true;
+    migration_flags |= MIGRATE_GRID_PAIRS;
     if (!project_pair_exists(pair, project_basename)) {
       DEBUG_PRINTLN(F("default grid pair missing"));
       return false;
@@ -956,16 +952,17 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     }
   }
 
-  if (migrate_track_storage && !migrate_track_storage_versions()) {
+  if ((migration_flags & MIGRATE_TRACK_STORAGE) &&
+      !migrate_track_storage_versions()) {
     DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
-  if (migrate_signed_microtiming_storage && !migrate_signed_microtiming()) {
-    DEBUG_PRINTLN(F("Could not migrate project microtiming"));
-    return false;
-  }
-  if (migrate_perf_track_layout_storage && !migrate_perf_track_layout()) {
-    DEBUG_PRINTLN(F("Could not migrate project perf tracks"));
+  uint8_t post_storage_migrations =
+      migration_flags & (MIGRATE_SIGNED_MICROTIMING |
+                         MIGRATE_PERF_TRACK_LAYOUT);
+  if (post_storage_migrations &&
+      !migrate_post_storage_tracks(post_storage_migrations)) {
+    DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
   if (use_requested_pair) {
@@ -979,12 +976,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     copy_project_config(&cfg, mcl_cfg);
     applied_project_config = true;
   }
-  bool write_project_header = migrate_track_storage ||
-                              migrate_signed_microtiming_storage ||
-                              migrate_perf_track_layout_storage ||
-                              migrate_grid_pairs || migrate_project_config ||
-                              use_requested_pair;
-  if (write_project_header && !write_header()) {
+  if ((migration_flags || use_requested_pair) && !write_header()) {
     return false;
   }
 
@@ -1071,9 +1063,7 @@ bool Project::check_project_version(uint16_t min_version) {
 }
 
 bool Project::migrate_legacy_md_aux_slots(GridRow row,
-                                          GridRowHeader *grid_x_header,
-                                          bool *converted_track0_lfo) {
-  *converted_track0_lfo = false;
+                                          GridRowHeader *grid_x_header) {
   if (grid_x_header == nullptr) {
     return false;
   }
@@ -1127,7 +1117,7 @@ bool Project::migrate_legacy_md_aux_slots(GridRow row,
               return false;
             }
           }
-          *converted_track0_lfo = true;
+          grid_x_header->track_type[0] = EMPTY_TRACK_TYPE;
         }
       }
 
@@ -1195,32 +1185,14 @@ bool Project::migrate_track_storage_versions() {
       return false;
     }
   }
-  if (!grids[0].sync() || !grids[1].sync()) {
-    return false;
-  }
   return true;
 }
 
-bool Project::migrate_perf_track_layout() {
+bool Project::migrate_post_storage_tracks(uint8_t migration_flags) {
   for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
-    if (!migrate_grid_perf_track_layout(grid)) {
+    if (!migrate_grid_post_storage_tracks(grid, migration_flags)) {
       return false;
     }
-  }
-  if (!grids[0].sync() || !grids[1].sync()) {
-    return false;
-  }
-  return true;
-}
-
-bool Project::migrate_signed_microtiming() {
-  for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
-    if (!migrate_grid_signed_microtiming(grid)) {
-      return false;
-    }
-  }
-  if (!grids[0].sync() || !grids[1].sync()) {
-    return false;
   }
   return true;
 }
@@ -1234,17 +1206,12 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
       return false;
     }
 
-    bool converted_track0_lfo = false;
-    if (grid == 0 &&
-        !migrate_legacy_md_aux_slots(row, &row_header, &converted_track0_lfo)) {
+    if (grid == 0 && !migrate_legacy_md_aux_slots(row, &row_header)) {
       return false;
     }
 
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
       if (row_header.track_type[column] == EMPTY_TRACK_TYPE) {
-        continue;
-      }
-      if (grid == 0 && column == 0 && converted_track0_lfo) {
         continue;
       }
       switch (row_header.track_type[column]) {
@@ -1305,7 +1272,8 @@ bool Project::migrate_grid_track_storage_versions(GridIndex grid) {
   return grids[grid].sync();
 }
 
-bool Project::migrate_grid_perf_track_layout(GridIndex grid) {
+bool Project::migrate_grid_post_storage_tracks(GridIndex grid,
+                                               uint8_t migration_flags) {
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
 
@@ -1315,33 +1283,19 @@ bool Project::migrate_grid_perf_track_layout(GridIndex grid) {
     }
 
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
-      if (row_header.track_type[column] != PERF_TRACK_TYPE) {
+      uint8_t track_type = row_header.track_type[column];
+      if (track_type == EMPTY_TRACK_TYPE) {
         continue;
       }
-      if (!migrate_perf_track_clean_layout(grids[grid], column, row)) {
+      if ((migration_flags & MIGRATE_PERF_TRACK_LAYOUT) &&
+          track_type == PERF_TRACK_TYPE &&
+          !migrate_perf_track_clean_layout(grids[grid], column, row)) {
         return false;
       }
-    }
-  }
-
-  draw_upgrade_progress(grid, GRID_LENGTH);
-  return grids[grid].sync();
-}
-
-bool Project::migrate_grid_signed_microtiming(GridIndex grid) {
-  for (GridRow row = 0; row < GRID_LENGTH; row++) {
-    draw_upgrade_progress(grid, row);
-
-    GridRowHeader row_header;
-    if (!grids[grid].read_row_header(&row_header, row)) {
-      return false;
-    }
-
-    for (GridColumn column = 0; column < GRID_WIDTH; column++) {
-      if (row_header.track_type[column] == EMPTY_TRACK_TYPE) {
+      if (!(migration_flags & MIGRATE_SIGNED_MICROTIMING)) {
         continue;
       }
-      switch (row_header.track_type[column]) {
+      switch (track_type) {
       case MD_TRACK_TYPE:
         if (grid == 0 &&
             !migrate_md_track_signed_microtiming(grids[grid], column, row)) {

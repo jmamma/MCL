@@ -50,10 +50,8 @@ public:
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
   bool migrate_grid_track_storage_versions(GridIndex grid);
   bool migrate_track_storage_versions();
-  bool migrate_grid_perf_track_layout(GridIndex grid);
-  bool migrate_perf_track_layout();
-  bool migrate_grid_signed_microtiming(GridIndex grid);
-  bool migrate_signed_microtiming();
+  bool migrate_grid_post_storage_tracks(GridIndex grid, uint8_t migration_flags);
+  bool migrate_post_storage_tracks(uint8_t migration_flags);
   bool new_project_master_file(const char *projectname);
   bool write_header();
   bool build_grid_filename(const char *basename, uint8_t suffix, char *out,
@@ -137,9 +135,7 @@ private:
   bool split_project_path(const char *projectname, const char **basename) const;
   bool project_file_name(const char *basename, char *out, size_t out_len) const;
   uint8_t project_pair_file_mask(uint8_t pair, const char *basename);
-  bool migrate_legacy_md_aux_slots(GridRow row,
-                                   GridRowHeader *grid_x_header,
-                                   bool *converted_track0_lfo);
+  bool migrate_legacy_md_aux_slots(GridRow row, GridRowHeader *grid_x_header);
   GridIndex last_grid_;
 };
 
