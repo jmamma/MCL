@@ -494,7 +494,6 @@ void GridPage::display_grid() {
 
   oled_display.setFont(&TomThumb);
 
-  char str[3];
   GridColumn base_col = getCol() - cur_col;
   GridRow base_row = getRow() - cur_row;
   GridSpan grid_width = getWidth();
@@ -531,9 +530,7 @@ void GridPage::display_grid() {
 
       uint8_t active_cue_color = WHITE;
 
-      str[0] = slot_labels[y][track_idx][0];
-      str[1] = slot_labels[y][track_idx][1];
-      str[2] = '\0';
+      char *label = slot_labels[y][track_idx];
       //  Highlight the current cursor position + slot menu apply range
       bool a = in_area(x, y + row_shift, cur_col, cur_row, param3.cur - 1,
                        param4.cur - 1);
@@ -558,7 +555,7 @@ void GridPage::display_grid() {
       if (blink_hint && active) {
         // blink, don't print
       } else {
-        oled_display.print(str);
+        oled_display.print(label);
         if (active) {
           // a gentle visual cue for active slots
           oled_display.drawPixel(cur_posx - 1, cur_posy - 6, active_cue_color);
