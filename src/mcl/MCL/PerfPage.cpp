@@ -21,22 +21,21 @@ void PerfPage::setup() {
   page_mode = PERF_DESTINATION;
   lfo_mod_dirty_mask = 0;
   memset(lfo_mod_delta, 0, sizeof(lfo_mod_delta));
-  perf_param1.init();
-  perf_param2.init();
-  perf_param3.init();
-  perf_param4.init();
-
   perf_encoders[0] = &perf_param1;
   perf_encoders[1] = &perf_param2;
   perf_encoders[2] = &perf_param3;
   perf_encoders[3] = &perf_param4;
 
-  perf_param2.active_scene_a = 2;
-  perf_param2.active_scene_b = 3;
-  perf_param3.active_scene_a = 4;
-  perf_param3.active_scene_b = 5;
-  perf_param4.active_scene_a = 6;
-  perf_param4.active_scene_b = 7;
+  for (uint8_t n = 0; n < NUM_PERF_CONTROLS; n++) {
+    PerfEncoder *e = perf_encoders[n];
+    e->perf_data.src = 0;
+    e->perf_data.param = 0;
+    e->perf_data.min = 0;
+    e->active_scene_a = n << 1;
+    e->active_scene_b = e->active_scene_a + 1;
+    strcpy(e->name, "CONTROL");
+  }
+  perf_param1.perf_data.init_params();
 
   isSetup = true;
 }

@@ -15,14 +15,14 @@ class PerfEncoder : public MCLEncoder {
      **/
 
   public:
-  char name[PERF_NAME_LENGTH] = "CONTROL";
+  char name[PERF_NAME_LENGTH];
 
   PerfData perf_data;
 
-  uint8_t active_scene_a = 0;
-  uint8_t active_scene_b = 1;
+  uint8_t active_scene_a;
+  uint8_t active_scene_b;
 
-  bool resend = false;
+  bool resend;
 
   void init() { perf_data.init(); }
   void send(MidiUartClass *uart_ = nullptr,MidiUartClass *uart2_ = nullptr);
