@@ -8,12 +8,13 @@
 
 bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row, Grid *grid) {
   stamp_storage_version(len);
-  if (grid == nullptr) {
-    return proj.write_grid(data, len, column, row);
+  Grid *target_grid = grid;
+  GridColumn target_column = column;
+  if (target_grid == nullptr) {
+    target_grid = &proj.grids[column >> 4];
+    target_column = column & 0x0F;
   }
-  else {
-    return grid->write(data, len, column, row);
-  }
+  return target_grid->write(data, len, target_column, row);
 }
 
 void GridTrack::stamp_storage_version(size_t len) {
@@ -188,8 +189,13 @@ bool GridTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
 
   DEBUG_PRINT_FN();
 
-  bool ret = grid == nullptr ? proj.write_grid(_this(), _sizeof(), column, row)
-                             : grid->write(_this(), _sizeof(), column, row);
+  Grid *target_grid = grid;
+  GridColumn target_column = column;
+  if (target_grid == nullptr) {
+    target_grid = &proj.grids[column >> 4];
+    target_column = column & 0x0F;
+  }
+  bool ret = target_grid->write(_this(), _sizeof(), target_column, row);
   if (!ret) {
     DEBUG_PRINTLN(F("write failed"));
     return false;
