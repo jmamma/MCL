@@ -14,9 +14,7 @@ uint8_t perf_lfo_dest_base() {
 #endif
 }
 
-} // namespace
-
-uint8_t PerfPageTarget::lfo_dest() const {
+inline __attribute__((always_inline)) uint8_t perf_page_lfo_dest(uint8_t dest) {
   uint8_t base = perf_lfo_dest_base();
   if (dest <= base) {
     return 0;
@@ -24,8 +22,10 @@ uint8_t PerfPageTarget::lfo_dest() const {
   return LFOTrackRef::track_lfo_dest_for_index(dest - base - 1);
 }
 
+} // namespace
+
 bool PerfPageTarget::valid() const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   if (lfo != 0) {
     return true;
   }
@@ -33,32 +33,32 @@ bool PerfPageTarget::valid() const {
 }
 
 DeviceIdx PerfPageTarget::device_index() const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo != 0 ? DeviceIdx::None
                   : DeviceParamResolver::perf(dest).device_index();
 }
 
 uint8_t PerfPageTarget::param_count() const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo != 0 ? LFOTrackRef::param_count(DeviceIdx::None, lfo)
                   : DeviceParamResolver::perf(dest).param_count();
 }
 
 bool PerfPageTarget::target_label(char *out, uint8_t len) const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo != 0 ? LFOTrackRef::target_label(DeviceIdx::None, lfo, out, len)
                   : DeviceParamResolver::perf(dest).target_label(out, len);
 }
 
 bool PerfPageTarget::param_label(uint8_t param, char *out, uint8_t len) const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo != 0
              ? LFOTrackRef::param_label(DeviceIdx::None, lfo, param, out, len)
              : DeviceParamResolver::perf(dest).param_label(param, out, len);
 }
 
 bool PerfPageTarget::get_param(uint8_t param, uint8_t *value) const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo != 0 ? LFOTrackRef::get_base_param(DeviceIdx::None, lfo, param,
                                                 value)
                   : DeviceParamResolver::perf(dest).get_param(param, value);
@@ -67,7 +67,7 @@ bool PerfPageTarget::get_param(uint8_t param, uint8_t *value) const {
 bool PerfPageTarget::set_param(uint8_t param, uint8_t value,
                                MidiUartClass *uart_,
                                MidiUartClass *uart2_) const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   if (lfo != 0) {
     return LFOTrackRef::send_modulated_param(DeviceIdx::None, lfo, param,
                                              value, uart_, uart2_, value);
@@ -79,18 +79,18 @@ bool PerfPageTarget::set_param(uint8_t param, uint8_t value,
 }
 
 bool PerfPageTarget::param_from_key(uint8_t key, uint8_t *param) const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo == 0 && DeviceParamResolver::perf(dest).param_from_key(key, param);
 }
 
 bool PerfPageTarget::key_for_param(uint8_t param, uint8_t *key) const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo == 0 && DeviceParamResolver::perf(dest).key_for_param(param, key);
 }
 
 bool PerfPageTarget::begin_param_editor(uint8_t *params,
                                         uint8_t count) const {
-  uint8_t lfo = lfo_dest();
+  uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo == 0 &&
          DeviceParamResolver::perf(dest).begin_param_editor(params, count);
 }
