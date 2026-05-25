@@ -320,6 +320,9 @@ void convert_ext_seq_unsigned_timing(ExtSeqTrackData &data, uint8_t speed) {
   for (uint16_t i = 0; i < used_events; i++) {
     uint8_t timing =
         *reinterpret_cast<uint8_t *>(&data.events[i].micro_timing);
+    if (timing == 0) {
+      timing = ticks_per_step;
+    }
     data.events[i].micro_timing =
         SeqTrack::timing_to_microtiming(timing, ticks_per_step);
   }
@@ -910,6 +913,11 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       grid_version = grids[i].version;
     } else {
       write_grid_headers = true;
+      if (project_version >= PROJ_VERSION_GRID_HEADERS) {
+        // A latest master file with a headerless grid can happen when a
+        // supported origin/dev grid file is copied over a project slot.
+        grid_version = PROJ_MIN_READABLE_VERSION;
+      }
     }
     if (!PROJECT_VERSION_CAN_OPEN(grid_version)) {
       DEBUG_PRINTLN(F("Grid version incompatible"));
