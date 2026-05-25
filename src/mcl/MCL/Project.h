@@ -17,7 +17,8 @@
 #define PROJ_VERSION_NATIVE_SWING_TRACKS 3006
 #define PROJ_VERSION_SIGNED_MICROTIMING 3008
 #define PROJ_VERSION_PERF_TRACK_LAYOUT 3009
-#define PROJ_VERSION 3009
+#define PROJ_VERSION_GRID_HEADERS 3010
+#define PROJ_VERSION 3010
 #define PRJ_DIR "/Projects"
 
 static_assert(PROJ_VERSION_TRACK_STORAGE_VERSION < PROJ_VERSION_ROUTE_TRACK_TYPE,
@@ -128,6 +129,8 @@ private:
   bool read_header();
   bool load_project_impl(const char *projectname, uint8_t requested_pair,
                          bool use_requested_pair);
+  bool stamp_existing_grid_headers(const char *basename,
+                                   uint32_t grid_version);
   bool copy_grid_pair(const char *from_project, const char *from_basename,
                       const char *to_project, const char *to_basename,
                       uint8_t source_pair, uint8_t dest_pair);

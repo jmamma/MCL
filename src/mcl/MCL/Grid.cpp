@@ -6,16 +6,41 @@
 
 void Grid::setup() {}
 
-bool Grid::write_header() {
+bool Grid::read_header() {
+  bool ret;
+
+  ret = file.seekSet(GRID_HEADER_OFFSET);
+
+  if (!ret) {
+    return false;
+  }
+
+  ret = mcl_sd.read_data((uint8_t *)(GridHeader *)this, sizeof(GridHeader),
+                         &file);
+
+  if (!ret || magic != GRID_HEADER_MAGIC ||
+      header_version != GRID_FILE_HEADER_VERSION ||
+      header_size != sizeof(GridHeader)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool Grid::write_header(uint32_t grid_version, uint8_t grid_id) {
   bool ret;
 
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Writing grid header"));
 
-  version = GRID_VERSION;
-  hash = 0;
+  magic = GRID_HEADER_MAGIC;
+  header_version = GRID_FILE_HEADER_VERSION;
+  header_size = sizeof(GridHeader);
+  version = grid_version;
+  id = grid_id;
+  reserved = 0;
 
-  ret = file.seekSet(0);
+  ret = file.seekSet(GRID_HEADER_OFFSET);
 
   if (!ret) {
 
@@ -69,7 +94,8 @@ bool Grid::new_file(const char *gridname) {
   return true;
 }
 
-bool Grid::new_grid(const char *gridname) {
+bool Grid::new_grid(const char *gridname, uint32_t grid_version,
+                    uint8_t grid_id) {
 
   bool ret = false;
   uint8_t ledstatus = 0;
@@ -78,7 +104,7 @@ bool Grid::new_grid(const char *gridname) {
   if (!new_file(gridname)) {
     goto end;
   }
-  if (!write_header()) {
+  if (!write_header(grid_version, grid_id)) {
     goto end;
   }
   DEBUG_PRINTLN(F("Initializing grid.. please wait"));

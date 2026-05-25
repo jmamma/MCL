@@ -176,6 +176,10 @@ constexpr uint8_t MIGRATE_PERF_TRACK_LAYOUT = 1 << 2;
 constexpr uint8_t MIGRATE_GRID_PAIRS = 1 << 3;
 constexpr uint8_t MIGRATE_PROJECT_CONFIG = 1 << 4;
 
+#define PROJECT_VERSION_CAN_OPEN(v)                                           \
+  ((v) == PROJ_MIN_READABLE_VERSION ||                                        \
+   ((v) >= PROJ_VERSION_PERF_TRACK_LAYOUT && (v) <= PROJ_VERSION))
+
 bool project_config_valid(const MCLSysConfigData &source) {
   return source.version == CONFIG_VERSION;
 }
@@ -565,7 +569,7 @@ bool Project::new_project(const char *newprj) {
       return false;
     }
     if (!SD.exists(grid_filename)) {
-      if (!grids[i].new_grid(grid_filename)) {
+      if (!grids[i].new_grid(grid_filename, PROJ_VERSION, i)) {
         gfx.alert("ERROR", "SD ERROR");
         return false;
       }
@@ -795,17 +799,20 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     return false;
   }
 
+  uint32_t project_version = version;
   uint8_t migration_flags = 0;
-  if (version == PROJ_MIN_READABLE_VERSION) {
-    migration_flags |= MIGRATE_TRACK_STORAGE;
-    migration_flags |= MIGRATE_GRID_PAIRS;
-    active_grid_pair = 0;
-    migration_flags |= MIGRATE_PROJECT_CONFIG;
+  if (project_version == PROJ_MIN_READABLE_VERSION) {
+    migration_flags = MIGRATE_TRACK_STORAGE | MIGRATE_GRID_PAIRS |
+                      MIGRATE_PROJECT_CONFIG;
   }
+
+  if (project_version < PROJ_VERSION_GRID_HEADERS &&
+      !stamp_existing_grid_headers(project_basename, project_version)) {
+    DEBUG_PRINTLN(F("Could not stamp grid headers"));
+    return false;
+  }
+
   uint8_t pair = use_requested_pair ? requested_pair : active_grid_pair;
-  if (migration_flags) {
-    draw_wait_popup("UPGRADING PROJECT");
-  }
 
   if (pair >= 128 || !project_pair_exists(pair, project_basename)) {
     if (use_requested_pair) {
@@ -821,6 +828,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     }
   }
 
+  bool write_grid_headers = project_version < PROJ_VERSION_GRID_HEADERS;
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     char grid_name[PRJ_NAME_LEN  + 5];
     grids[i].close_file();
@@ -837,12 +845,43 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       gfx.alert("ERROR", "OPEN GRID");
       return false;
     }
+
+    uint32_t grid_version = project_version;
+    if (grids[i].read_header()) {
+      grid_version = grids[i].version;
+    } else {
+      write_grid_headers = true;
+    }
+    if (!PROJECT_VERSION_CAN_OPEN(grid_version)) {
+      DEBUG_PRINTLN(F("Grid version incompatible"));
+      return false;
+    }
+    if (grid_version == PROJ_MIN_READABLE_VERSION) {
+      migration_flags |= MIGRATE_TRACK_STORAGE;
+    }
+    if (grid_version < PROJ_VERSION) {
+      write_grid_headers = true;
+    }
+  }
+
+  if (migration_flags) {
+    draw_wait_popup("UPGRADING PROJECT");
   }
 
   if ((migration_flags & MIGRATE_TRACK_STORAGE) &&
       !migrate_track_storage_versions()) {
     DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
+  }
+  if (write_grid_headers) {
+    for (uint8_t i = 0; i < NUM_GRIDS; i++) {
+      uint8_t grid_id = pair * NUM_GRIDS + i;
+      if (!grids[i].write_header(PROJ_VERSION, grid_id) ||
+          !grids[i].sync()) {
+        DEBUG_PRINTLN(F("Could not write grid headers"));
+        return false;
+      }
+    }
   }
   if (use_requested_pair) {
     active_grid_pair = requested_pair;
@@ -855,7 +894,9 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     copy_project_config(&cfg, mcl_cfg);
     applied_project_config = true;
   }
-  if ((migration_flags || use_requested_pair) && !write_header()) {
+  if ((migration_flags || use_requested_pair || write_grid_headers ||
+       project_version < PROJ_VERSION) &&
+      !write_header()) {
     return false;
   }
 
@@ -937,7 +978,7 @@ bool Project::check_project_version(uint16_t min_version) {
     return false;
   }
   (void)min_version;
-  return version == PROJ_MIN_READABLE_VERSION || version >= PROJ_VERSION;
+  return PROJECT_VERSION_CAN_OPEN(version);
 }
 
 bool NOINLINE() Project::migrate_legacy_md_aux_slots(
@@ -1274,12 +1315,61 @@ bool Project::store_config_from_system() {
   return write_header();
 }
 
+bool Project::stamp_existing_grid_headers(const char *basename,
+                                          uint32_t grid_version) {
+  for (uint8_t pair = 0; pair < 128; pair++) {
+    uint8_t mask = project_pair_file_mask(pair, basename);
+    if (mask == 0xFF) {
+      return false;
+    }
+    if (mask != ((1 << NUM_GRIDS) - 1)) {
+      continue;
+    }
+
+    for (uint8_t grid_idx = 0; grid_idx < NUM_GRIDS; grid_idx++) {
+      char grid_name[PRJ_NAME_LEN + 5];
+      Grid grid;
+      uint8_t grid_id = pair * NUM_GRIDS + grid_idx;
+      if (!build_grid_filename(basename, grid_id, grid_name,
+                               sizeof(grid_name)) ||
+          !grid.open_file(grid_name)) {
+        grid.close_file();
+        return false;
+      }
+
+      bool ok = true;
+      if (!grid.read_header()) {
+        ok = grid.write_header(grid_version, grid_id);
+      }
+      grid.close_file();
+      if (!ok) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 bool Project::copy_grid_pair(const char *from_project,
                              const char *from_basename,
                              const char *to_project,
                              const char *to_basename,
                              uint8_t source_pair, uint8_t dest_pair) {
   chdir_projects();
+  uint32_t fallback_grid_version = version;
+  char src_project_name[PRJ_NAME_LEN + 5];
+  char src_project_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
+  File src_project_file;
+  if (project_file_name(from_basename, src_project_name,
+                        sizeof(src_project_name)) &&
+      MCLSd::join_path(src_project_path, sizeof(src_project_path),
+                       from_project, src_project_name) &&
+      src_project_file.open(src_project_path, O_READ)) {
+    mcl_sd.read_data((uint8_t *)&fallback_grid_version,
+                     sizeof(fallback_grid_version), &src_project_file);
+  }
+  src_project_file.close();
+
   bool ok = true;
   for (uint8_t grid_idx = 0; ok && grid_idx < NUM_GRIDS; grid_idx++) {
     char src_name[PRJ_NAME_LEN + 5];
@@ -1304,7 +1394,13 @@ bool Project::copy_grid_pair(const char *from_project,
       break;
     }
 
-    ok = dst_grid.write_header();
+    uint32_t grid_version = fallback_grid_version;
+    if (src_grid.read_header()) {
+      grid_version = src_grid.version;
+    }
+    ok = PROJECT_VERSION_CAN_OPEN(grid_version) &&
+         dst_grid.write_header(grid_version,
+                               dest_pair * NUM_GRIDS + grid_idx);
 
     for (GridRow row = 0; ok && row < GRID_LENGTH; row++) {
       draw_upgrade_progress(grid_idx, row);

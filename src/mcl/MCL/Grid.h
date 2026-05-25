@@ -6,13 +6,27 @@
 #include "MCLSd.h"
 
 #define GRID_VERSION 3000
+#define GRID_HEADER_MAGIC 0x4D434C47UL
+#define GRID_FILE_HEADER_VERSION 1
+#define GRID_HEADER_BYTES 32
 
 class ATTR_PACKED() GridHeader {
 public:
+  uint32_t magic;
   uint32_t version;
   uint8_t id;
-  uint32_t hash;
+  uint8_t header_version;
+  uint8_t header_size;
+  uint8_t reserved;
 };
+
+constexpr size_t GRID_HEADER_OFFSET = GRID_SLOT_BYTES - GRID_HEADER_BYTES;
+
+static_assert(sizeof(GridHeader) == 12, "grid header size changed");
+static_assert(sizeof(GridHeader) <= GRID_HEADER_BYTES,
+              "grid header exceeds reserved bytes");
+static_assert(sizeof(GridRowHeader) <= GRID_HEADER_OFFSET,
+              "grid header overlaps row header");
 
 class Grid : public GridHeader {
 public:
@@ -21,8 +35,11 @@ public:
   void setup();
 
   bool new_file(const char *gridname);
-  bool new_grid(const char *gridname);
-  bool write_header();
+  bool new_grid(const char *gridname, uint32_t grid_version = GRID_VERSION,
+                uint8_t grid_id = 0);
+  bool read_header();
+  bool write_header(uint32_t grid_version = GRID_VERSION,
+                    uint8_t grid_id = 0);
 
   bool open_file(const char *gridname) { return file.open(gridname, O_RDWR); }
 
