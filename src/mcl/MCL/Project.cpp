@@ -913,6 +913,12 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       grid_version = grids[i].version;
     } else {
       write_grid_headers = true;
+      if (project_version >= PROJ_VERSION_GRID_HEADERS) {
+        // Older backup pairs can be headerless even after the master project
+        // file has been upgraded. Treat the selected grid pair as supported
+        // legacy storage so loading that backup upgrades it in place.
+        grid_version = PROJ_MIN_READABLE_VERSION;
+      }
     }
     if (!PROJECT_VERSION_CAN_OPEN(grid_version)) {
       DEBUG_PRINTLN(F("Grid version incompatible"));
