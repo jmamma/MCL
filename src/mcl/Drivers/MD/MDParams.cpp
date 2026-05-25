@@ -129,8 +129,6 @@ model_to_param_names_t model_param_names[] = {
   { INP_EB_MODEL, 439},
   { INP_CB_MODEL, 609},
 
-  { MID_MODEL,    448},
-
   { CTR_AL_MODEL, 473},
   { CTR_8P_MODEL, 482},
 
@@ -138,12 +136,6 @@ model_to_param_names_t model_param_names[] = {
   { CTR_GB_MODEL, 515},
   { CTR_EQ_MODEL, 523},
   { CTR_DX_MODEL, 531},
-
-  { ROM_MODEL,    539},
-  { RAM_R1_MODEL, 548},
-  { RAM_R2_MODEL, 548},
-  { RAM_R3_MODEL, 548},
-  { RAM_R4_MODEL, 548}
 };
 
 #if defined(__AVR__)
