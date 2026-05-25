@@ -130,6 +130,7 @@ public:
 
   virtual void setup_listeners() {}
   virtual void cleanup_listeners() {}
+  virtual void on_forwarded_cc(uint8_t *msg) { (void)msg; }
 
   void setPort(MidiClass *_midi, uint8_t _port = 0);
 

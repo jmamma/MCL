@@ -43,8 +43,11 @@ DeviceManager device_manager;
 
 DeviceManager::DeviceManager() {
   for (uint8_t i = 0; i < MIDI_PORT_COUNT; ++i) {
+    physical_[i] = nullptr;
     logical_idx_[i] = LOGICAL_SLOT_NONE;
   }
+  primary_ = nullptr;
+  secondary_ = nullptr;
 }
 
 MidiDevice *DeviceManager::device_for_port(uint8_t port) const {
@@ -95,6 +98,34 @@ void DeviceManager::attach_port(uint8_t port, MidiDevice *device,
 
 void DeviceManager::detach_port(uint8_t port) {
   attach_port(port, &null_midi_device, LOGICAL_SLOT_NONE);
+}
+
+void DeviceManager::on_forwarded_cc(MidiUartClass *uart, uint8_t *msg) {
+  if (uart == nullptr) {
+    return;
+  }
+#if defined(__AVR__)
+  MidiDevice *primary = nonnull(primary_);
+  if (primary != &null_midi_device && primary->uart == uart) {
+    primary->on_forwarded_cc(msg);
+    return;
+  }
+
+  MidiDevice *secondary = nonnull(secondary_);
+  if (secondary != &null_midi_device && secondary != primary &&
+      secondary->uart == uart) {
+    secondary->on_forwarded_cc(msg);
+    return;
+  }
+#else
+  for (uint8_t i = 0; i < MIDI_PORT_COUNT; ++i) {
+    MidiDevice *device = nonnull(physical_[i]);
+    if (device != &null_midi_device && device->uart == uart) {
+      device->on_forwarded_cc(msg);
+      return;
+    }
+  }
+#endif
 }
 
 void DeviceManager::update_active_slots() {

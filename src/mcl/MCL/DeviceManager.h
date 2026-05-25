@@ -11,6 +11,7 @@
 #endif
 
 class MidiDevice;
+class MidiUartClass;
 
 class DeviceManager {
 public:
@@ -25,6 +26,7 @@ public:
   void attach_port(uint8_t port, MidiDevice *device,
                    uint8_t logical_idx = LOGICAL_SLOT_NONE);
   void detach_port(uint8_t port);
+  void on_forwarded_cc(MidiUartClass *uart, uint8_t *msg);
   void update_active_slots();
   MidiDevice *primary_device() const;
   MidiDevice *secondary_device() const;

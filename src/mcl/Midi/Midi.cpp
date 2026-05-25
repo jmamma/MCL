@@ -6,6 +6,7 @@
 #include "MidiUart.h"
 #include "MidiSysex.h"
 #include "MidiClock.h"
+#include "../MCL/DeviceManager.h"
 
 const midi_parse_t midi_parse[] = {
     {MIDI_NOTE_OFF, midi_wait_byte_2},
@@ -172,6 +173,9 @@ again:
     for (uint8_t n = 0; n < NUM_FORWARD_PORTS; n++) {
       if (uart_forward[n]) {
         uart_forward[n]->m_putc(buf, in_msg_len);
+        if (callback == MIDI_CC_CB) {
+          device_manager.on_forwarded_cc(uart_forward[n], buf);
+        }
       }
     }
 

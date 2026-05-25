@@ -27,6 +27,7 @@ public:
 
   uint8_t last_md_param;
   uint16_t mute_mask_track;
+  void track_cc(uint8_t *msg);
   void onControlChangeCallback_Midi(uint8_t *msg);
   void onControlChangeCallback_Midi2(uint8_t *msg);
   void onNoteOnCallback_Midi(uint8_t *msg);
@@ -88,6 +89,7 @@ public:
 
   virtual void setup_listeners() override;
   virtual void cleanup_listeners() override;
+  virtual void on_forwarded_cc(uint8_t *msg) override;
   virtual bool probe() override;
   virtual void setup() override;
   virtual uint8_t register_page_select_entries(PageSelectEntry *entries,
