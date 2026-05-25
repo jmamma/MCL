@@ -70,6 +70,18 @@ public:
   uint8_t perf_locks[4][4];
 };
 
+class ATTR_PACKED() LegacyPerfTrackStorage {
+public:
+  LegacyGridTrackHeader header;
+  LegacyPerfTrackData data;
+};
+
+class ATTR_PACKED() LegacyFixedPayloadTrackStorage {
+public:
+  LegacyGridTrackHeader header;
+  uint8_t payload[sizeof(MDFXData)];
+};
+
 class ATTR_PACKED() LegacyMDSeqStepDescriptor {
 public:
   uint8_t locks;
@@ -86,6 +98,13 @@ public:
   uint8_t locks_params[NUM_LOCKS];
   uint8_t timing[NUM_MD_STEPS];
   LegacyMDSeqStepDescriptor steps[NUM_MD_STEPS];
+};
+
+class ATTR_PACKED() LegacyMDTrackStorage {
+public:
+  LegacyGridTrackHeader header;
+  LegacyMDSeqTrackData seq;
+  MDMachine machine;
 };
 
 struct ATTR_PACKED() LegacyExtEvent {
@@ -119,10 +138,14 @@ public:
 
 static_assert(sizeof(LegacyGridTrackHeader) == LEGACY_GRID_TRACK_HEADER_SIZE,
               "origin/dev track header size changed");
+static_assert(sizeof(GridTrack) - sizeof(void *) == LEGACY_GRID_TRACK_HEADER_SIZE,
+              "current track header prefix changed");
 static_assert(sizeof(LegacyPerfTrackData) + 2 == sizeof(PerfTrackData),
               "legacy PerfTrack payload is not a prefix");
 static_assert(sizeof(LegacyGridTrackHeader) + sizeof(LegacyPerfTrackData) ==
                   491,
+              "origin/dev PerfTrack storage size changed");
+static_assert(sizeof(LegacyPerfTrackStorage) == 491,
               "origin/dev PerfTrack storage size changed");
 static_assert(sizeof(LegacyMDSeqStepDescriptor) ==
                   sizeof(MDSeqStepDescriptor),
@@ -160,9 +183,14 @@ static_assert(offsetof(LegacyMDRouteTrackStorage, route) ==
 static_assert(sizeof(LegacyMDRouteTrackStorage) ==
                   LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(LegacyMDRouteData),
               "Legacy MD route storage size changed");
+static_assert(sizeof(LegacyFixedPayloadTrackStorage) ==
+                  LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(MDFXData),
+              "fixed payload migration scratch size changed");
 static_assert(LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(LegacyMDSeqTrackData) +
                       sizeof(MDMachine) ==
                   534,
+              "origin/dev MDTrack storage size changed");
+static_assert(sizeof(LegacyMDTrackStorage) == 534,
               "origin/dev MDTrack storage size changed");
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
@@ -261,11 +289,7 @@ void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src,
   dst.clean_params();
 }
 
-bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst, uint8_t speed) {
-  if (!grid.read(&dst, sizeof(LegacyExtSeqTrackData))) {
-    return false;
-  }
-
+void convert_legacy_ext_seq(ExtSeqTrackData &dst, uint8_t speed) {
   uint8_t *raw = reinterpret_cast<uint8_t *>(&dst);
   LegacyExtSeqFixedTail fixed_tail;
   memcpy(&fixed_tail, raw + offsetof(LegacyExtSeqTrackData, locks_params),
@@ -281,6 +305,19 @@ bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst, uint8_t speed) {
   memcpy(dst.locks_params, &fixed_tail, sizeof(fixed_tail));
   dst.event_count = used_events;
   convert_ext_seq_unsigned_timing(dst, speed);
+}
+
+bool read_legacy_ext_track(Grid &grid, GridColumn column, GridRow row,
+                           uint8_t track_type, DeviceTrack &upgraded,
+                           ExtSeqTrackData &seq_data) {
+  if (!grid.read(upgraded._this(),
+                 LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(LegacyExtSeqTrackData),
+                 column, row) ||
+      upgraded.active != track_type) {
+    return false;
+  }
+  upgraded.active = track_type;
+  convert_legacy_ext_seq(seq_data, project_seq_speed_value(upgraded.link));
   return true;
 }
 
@@ -289,14 +326,6 @@ bool write_migrated_track(Grid &grid, GridColumn column, GridRow row,
   track.version = track.storage_version();
   track.reserved = 0;
   return grid.write(track._this(), write_size, column, row);
-}
-
-bool write_migrated_payload_track(Grid &grid, GridColumn column, GridRow row,
-                                  LegacyGridTrackHeader &header,
-                                  void *payload, size_t payload_size) {
-  return grid.seek(column, row) &&
-         grid.write(&header, sizeof(header)) &&
-         grid.write(payload, payload_size);
 }
 
 void init_upgraded_md_track(MDTrack &dst, const GridLink &link,
@@ -311,18 +340,13 @@ void init_upgraded_md_track(MDTrack &dst, const GridLink &link,
 
 bool read_upgraded_md_track(Grid &grid, GridColumn column, GridRow row,
                             MDTrack &dst) {
-  LegacyGridTrackHeader legacy_header;
-  if (!read_legacy_header(grid, column, row, MD_TRACK_TYPE,
-                          &legacy_header)) {
+  LegacyMDTrackStorage legacy_track;
+  if (!grid.read(&legacy_track, sizeof(legacy_track), column, row) ||
+      legacy_track.header.active != MD_TRACK_TYPE) {
     return false;
   }
-  LegacyMDSeqTrackData legacy_seq;
-  MDMachine legacy_machine;
-  if (!grid.read(&legacy_seq, sizeof(legacy_seq)) ||
-      !grid.read(&legacy_machine, sizeof(legacy_machine))) {
-    return false;
-  }
-  init_upgraded_md_track(dst, legacy_header.link, legacy_seq, legacy_machine);
+  init_upgraded_md_track(dst, legacy_track.header.link, legacy_track.seq,
+                         legacy_track.machine);
   return true;
 }
 
@@ -339,14 +363,9 @@ bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
                                     uint8_t track_type,
                                     DeviceTrack &upgraded,
                                     ExtSeqTrackData &seq_data) {
-  LegacyGridTrackHeader legacy_header;
-  if (!read_legacy_header(grid, column, row, track_type, &legacy_header)) {
-    return false;
-  }
   upgraded.init_defaults();
-  copy_legacy_header(upgraded, legacy_header);
-  upgraded.active = track_type;
-  if (!read_legacy_ext_seq(grid, seq_data, project_seq_speed_value(upgraded.link))) {
+  if (!read_legacy_ext_track(grid, column, row, track_type, upgraded,
+                             seq_data)) {
     return false;
   }
   uint16_t payload_size = upgraded.get_sound_data_size();
@@ -365,37 +384,29 @@ bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
                 "fixed payload scratch too small for tempo");
   static_assert(sizeof(MDFXData) >= sizeof(GridChain),
                 "fixed payload scratch too small for grid chain");
-  uint8_t payload[sizeof(MDFXData)];
-  LegacyGridTrackHeader legacy_header;
-  if (!read_legacy_header(grid, column, row, track_type, &legacy_header)) {
+  LegacyFixedPayloadTrackStorage storage;
+  uint8_t storage_size = sizeof(storage.header) + payload_size;
+  if (!grid.read(&storage, storage_size, column, row) ||
+      storage.header.active != track_type) {
     return false;
   }
-  if (!grid.read(payload, payload_size)) {
-    return false;
-  }
-  init_migrated_header(legacy_header, legacy_header, track_type, 0);
-  return write_migrated_payload_track(grid, dst_column, row, legacy_header,
-                                      payload, payload_size);
+  init_migrated_header(storage.header, storage.header, track_type, 0);
+  return grid.write(&storage, storage_size, dst_column, row);
 }
 
 bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
                                 GridColumn dst_column) {
-  LegacyGridTrackHeader legacy_header;
-  if (!read_legacy_header(grid, column, row, PERF_TRACK_TYPE,
-                          &legacy_header)) {
-    return false;
-  }
-
-  LegacyPerfTrackData legacy_perf;
-  if (!grid.read(&legacy_perf, sizeof(legacy_perf))) {
+  LegacyPerfTrackStorage legacy_track;
+  if (!grid.read(&legacy_track, sizeof(legacy_track), column, row) ||
+      legacy_track.header.active != PERF_TRACK_TYPE) {
     return false;
   }
 
   PerfTrack upgraded;
   upgraded.init_defaults();
-  copy_legacy_header(upgraded, legacy_header);
+  copy_legacy_header(upgraded, legacy_track.header);
   upgraded.active = PERF_TRACK_TYPE;
-  copy_legacy_perf_track_data(upgraded, legacy_perf);
+  copy_legacy_perf_track_data(upgraded, legacy_track.data);
   return write_migrated_track(grid, dst_column, row, upgraded,
                               upgraded.get_track_size());
 }
