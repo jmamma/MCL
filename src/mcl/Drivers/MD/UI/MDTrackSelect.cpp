@@ -55,9 +55,6 @@ static void set_md_swing_amount(uint8_t track, uint8_t swing_amount) {
 static void apply_md_swing_amount(uint8_t track_count, uint8_t track,
                                   uint8_t swing_amount,
                                   uint8_t swing_mode) {
-  if (swing_amount > 30) {
-    return;
-  }
   if (swing_mode == 1) {
     for (uint8_t n = 0; n < track_count; n++) {
       set_md_swing_amount(n, swing_amount);
@@ -76,6 +73,7 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
     bool expand = true;
     bool is_seq_page = mcl.isSeqPage();
     reset_undo();
+    bool is_single_track_edit = is_seq_page && !SeqPage::recording;
     uint8_t length = view.getByte(6);
     uint8_t new_speed = view.getByte(7);
     uint8_t packet_track = view.getByte(3) & 0xF;
@@ -87,9 +85,9 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
       if (is_md_device) {
         uint8_t apply_mode = len >= 10 ? view.getByte(9) : 0x7F;
         if (apply_mode == 0x7F) {
-          apply_mode = (is_seq_page && !SeqPage::recording) ? 0 : 1;
+          apply_mode = is_single_track_edit ? 0 : 1;
         }
-        if (is_seq_page && !SeqPage::recording) {
+        if (is_single_track_edit) {
           MD.currentTrack = packet_track;
         }
         apply_md_swing_amount(SeqTrackUtil::track_count(true), packet_track,
@@ -103,7 +101,7 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
     }
   update_length_speed:
     if (is_seq_page) {
-      if (SeqPage::recording) {
+      if (!is_single_track_edit) {
         goto update_pattern;
       }
       uint8_t b = view.getByte(3);
