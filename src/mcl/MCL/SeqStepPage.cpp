@@ -189,7 +189,6 @@ void SeqStepPage::config_encoders() {
 void SeqStepPage::init() {
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("init seqstep"));
-  mask_type = MASK_PATTERN;
   SeqPage::init();
 
   pitch_param = 255;
