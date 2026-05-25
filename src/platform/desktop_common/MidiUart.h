@@ -10,6 +10,7 @@
 
 #include "Arduino.h"
 #include "platform.h"
+#include "memory.h"
 #include "MidiUartParent.h"
 #include "RingBuffer.h"
 
@@ -18,9 +19,9 @@
 
 class MidiUartClass : public MidiUartParent {
 public:
-    static constexpr uint16_t RX_RING_SIZE = 1024;
-    static constexpr uint16_t TX_RING_SIZE = 1024;
-    static constexpr uint16_t RT_RING_SIZE = 64;
+    static constexpr uint16_t RX_RING_SIZE = UART1_RX_BUFFER_LEN;
+    static constexpr uint16_t TX_RING_SIZE = UART1_TX_BUFFER_LEN;
+    static constexpr uint16_t RT_RING_SIZE = UART1_RT_BUFFER_LEN;
 
     MidiUartClass();
 
