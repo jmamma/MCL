@@ -43,12 +43,27 @@ void clamp_lfo_mask_page(const LFOSeqTrack *track) {
 }
 
 uint16_t lfo_visible_mask(const LFOSeqTrack *track, uint8_t offset) {
+#if defined(__AVR__)
+  uint8_t length = track->length ? track->length : kLfoMaskPageSteps;
+  const uint8_t *mask = (const uint8_t *)&track->pattern_mask;
+  uint8_t byte_offset = offset >> 3;
+  uint16_t visible = mask[byte_offset] | ((uint16_t)mask[byte_offset + 1] << 8);
+  if (length <= offset) {
+    return 0;
+  }
+  uint8_t visible_len = length - offset;
+  if (visible_len < kLfoMaskPageSteps) {
+    visible &= (1u << visible_len) - 1;
+  }
+  return visible;
+#else
   uint64_t mask = track->pattern_mask;
   uint8_t length = track->length ? track->length : kLfoMaskPageSteps;
   if (length < 64) {
     mask &= (1ULL << length) - 1;
   }
   return (uint16_t)(mask >> offset);
+#endif
 }
 
 const char *lfo_mode_label(uint8_t mode) {
