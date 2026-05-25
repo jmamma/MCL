@@ -65,7 +65,7 @@ public:
   void *get_sound_data_ptr() override { return nullptr; }
   size_t get_sound_data_size() override { return 0; }
 
-  static void load_ext_seq_data(DeviceTrack &track, GridLink &link,
+  static void load_ext_seq_data(DeviceTrack &track,
                                 ExtSeqTrackData &seq_data,
                                 SeqTrackModData &mod_data,
                                 SeqTrack *seq_track);

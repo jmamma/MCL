@@ -64,7 +64,7 @@ void MNMTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) 
 }
 
 void MNMTrack::load_seq_data(SeqTrack *seq_track) {
-  ExtTrack::load_ext_seq_data(*this, link, seq_data, mod_data, seq_track);
+  ExtTrack::load_ext_seq_data(*this, seq_data, mod_data, seq_track);
 }
 
 void MNMTrack::get_machine_from_kit(uint8_t tracknumber) {

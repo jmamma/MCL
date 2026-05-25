@@ -157,6 +157,13 @@ static_assert(sizeof(LegacyExtSeqFixedTail) ==
                   sizeof(LegacyExtSeqTrackData) -
                       offsetof(LegacyExtSeqTrackData, locks_params),
               "Legacy Ext fixed tail size changed");
+static_assert(offsetof(ExtSeqTrackData, locks_params) ==
+                  sizeof(NibbleArray<NUM_EXT_STEPS>),
+              "Ext fixed tail offset changed");
+static_assert(offsetof(ExtSeqTrackData, events) -
+                      offsetof(ExtSeqTrackData, locks_params) ==
+                  sizeof(LegacyExtSeqFixedTail),
+              "Ext fixed tail size changed");
 static_assert(offsetof(LegacyMDLFOTrackStorage, lfo_data) ==
                   LEGACY_GRID_TRACK_HEADER_SIZE,
               "Legacy MD LFO storage prefix changed");
@@ -308,12 +315,8 @@ bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst, uint8_t speed) {
   memmove(dst.events, raw + offsetof(LegacyExtSeqTrackData, events),
           used_events * sizeof(LegacyExtEvent));
 
-  memcpy(dst.locks_params, fixed_tail.locks_params, sizeof(dst.locks_params));
+  memcpy(dst.locks_params, &fixed_tail, sizeof(fixed_tail));
   dst.event_count = used_events;
-  memcpy(dst.velocities, fixed_tail.velocities, sizeof(dst.velocities));
-  memcpy(dst.locks_params_orig, fixed_tail.locks_params_orig,
-         sizeof(dst.locks_params_orig));
-  dst.channel = fixed_tail.channel;
   convert_ext_seq_unsigned_timing(dst, speed);
   return true;
 }
@@ -1011,38 +1014,34 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
         legacy_track.lfo_data.store_data(&legacy_lfo);
 
         MDTrack upgraded_md_track;
-        MDTrack *md_track = nullptr;
         if (grid_x_header->track_type[0] == MD_TRACK_TYPE) {
           if (!read_upgraded_md_track(grids[0], 0, row, upgraded_md_track)) {
             return false;
           }
-          md_track = &upgraded_md_track;
         } else if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
-          md_track = &upgraded_md_track;
-          md_track->init();
-          md_track->link.init(row);
-          md_track->machine.track = 0;
-          md_track->machine.lfo.init(0);
+          upgraded_md_track.init();
+          upgraded_md_track.link.init(row);
+          upgraded_md_track.machine.track = 0;
+          upgraded_md_track.machine.lfo.init(0);
         }
 
-        if (md_track != nullptr) {
-          md_track->mod_data.init();
-          LFOSeqTrack::convert_legacy_data(legacy_lfo, &md_track->mod_data.lfo);
+        upgraded_md_track.mod_data.init();
+        LFOSeqTrack::convert_legacy_data(legacy_lfo,
+                                         &upgraded_md_track.mod_data.lfo);
 
-          if (!write_migrated_track(grids[0], 0, row, *md_track,
-                                    md_track->get_track_size())) {
+        if (!write_migrated_track(grids[0], 0, row, upgraded_md_track,
+                                  upgraded_md_track.get_track_size())) {
+          return false;
+        }
+        if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
+          grid_x_header->active = true;
+          grid_x_header->update_model(0, upgraded_md_track.get_model(),
+                                      MD_TRACK_TYPE);
+          if (!grids[0].write_row_header(grid_x_header, row)) {
             return false;
           }
-          if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
-            grid_x_header->active = true;
-            grid_x_header->update_model(0, md_track->get_model(),
-                                        MD_TRACK_TYPE);
-            if (!grids[0].write_row_header(grid_x_header, row)) {
-              return false;
-            }
-          }
-          grid_x_header->track_type[0] = EMPTY_TRACK_TYPE;
         }
+        grid_x_header->track_type[0] = EMPTY_TRACK_TYPE;
       }
 
       grid_y_header.update_model(MDLFO_TRACK_NUM, 0, EMPTY_TRACK_TYPE);

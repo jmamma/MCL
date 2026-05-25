@@ -38,7 +38,7 @@ void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 }
 
 void A4Track::load_seq_data(SeqTrack *seq_track) {
-  ExtTrack::load_ext_seq_data(*this, link, seq_data, mod_data, seq_track);
+  ExtTrack::load_ext_seq_data(*this, seq_data, mod_data, seq_track);
 }
 
 bool A4Track::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, uint8_t merge,

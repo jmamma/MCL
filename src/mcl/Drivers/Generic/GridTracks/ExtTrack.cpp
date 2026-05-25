@@ -81,7 +81,7 @@ DeviceTrack *ExtTrack::materialize_as(uint8_t track_type,
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }
 
-void ExtTrack::load_ext_seq_data(DeviceTrack &track, GridLink &link,
+void ExtTrack::load_ext_seq_data(DeviceTrack &track,
                                  ExtSeqTrackData &seq_data,
                                  SeqTrackModData &mod_data,
                                  SeqTrack *seq_track) {
@@ -108,7 +108,7 @@ void ExtTrack::load_ext_seq_data(DeviceTrack &track, GridLink &link,
 }
 
 void ExtTrack::load_seq_data(SeqTrack *seq_track) {
-  load_ext_seq_data(*this, link, seq_data, mod_data, seq_track);
+  load_ext_seq_data(*this, seq_data, mod_data, seq_track);
 }
 
 #if !defined(__AVR__)
