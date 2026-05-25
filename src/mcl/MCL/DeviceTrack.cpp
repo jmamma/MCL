@@ -3,6 +3,42 @@
 #include "Track.h"
 #include "platform.h"
 
+namespace {
+
+DeviceTrack *load_grid_512(DeviceTrack *track, GridSlot column, GridRow row,
+                           Grid *grid, bool *loaded_header) {
+  if (loaded_header != nullptr) {
+    *loaded_header = false;
+  }
+  if (!track->GridTrack::load_from_grid_512(column, row, grid)) {
+    return nullptr;
+  }
+
+  if (loaded_header != nullptr) {
+    *loaded_header = true;
+  }
+
+  auto ptrack = track->init_loaded_track_type(track->active);
+  if (track->active != EMPTY_TRACK_TYPE) {
+    uint16_t len = ptrack->get_track_size();
+    if (len > 512) {
+      len -= 512;
+      uint8_t *dst = static_cast<uint8_t *>(track->_this()) + 512;
+      Grid *source_grid = grid;
+      if (source_grid == nullptr) {
+        source_grid = &proj.grids[column >> 4];
+      }
+      if (!source_grid->read(dst, len)) {
+        DEBUG_PRINTLN(F("read failed"));
+        return nullptr;
+      }
+    }
+  }
+  return ptrack;
+}
+
+} // namespace
+
 // Uncomment to show class sizes at compile time
 template<int N> struct ShowSize;
 /*
@@ -128,31 +164,7 @@ DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
 
 DeviceTrack *DeviceTrack::load_from_grid_512(GridSlot column, GridRow row,
                                              Grid *grid) {
-  if (!GridTrack::load_from_grid_512(column, row, grid)) {
-    return nullptr;
-  }
-
-  // header read successfully. now reconstruct the object.
-  auto ptrack = init_loaded_track_type(active);
-
-  // virtual functions are ready
-
-  if (active != EMPTY_TRACK_TYPE) {
-    uint16_t len = ptrack->get_track_size();
-    if (len > 512) {
-      len -= 512;
-      uint8_t *dst = static_cast<uint8_t *>(_this()) + 512;
-      Grid *source_grid = grid;
-      if (source_grid == nullptr) {
-        source_grid = &proj.grids[column >> 4];
-      }
-      if (!source_grid->read(dst, len)) {
-        DEBUG_PRINTLN(F("read failed"));
-        return nullptr;
-      }
-    }
-  }
-  return ptrack;
+  return load_grid_512(this, column, row, grid, nullptr);
 }
 
 DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
@@ -161,32 +173,9 @@ DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
                                                 SeqTrack *seq_track,
                                                 Grid *grid,
                                                 bool *loaded_header) {
-  if (loaded_header != nullptr) {
-    *loaded_header = false;
-  }
-  if (!GridTrack::load_from_grid_512(column, row, grid)) {
+  auto *ptrack = load_grid_512(this, column, row, grid, loaded_header);
+  if (ptrack == nullptr) {
     return nullptr;
-  }
-
-  if (loaded_header != nullptr) {
-    *loaded_header = true;
-  }
-
-  auto *ptrack = init_loaded_track_type(active);
-  if (active != EMPTY_TRACK_TYPE) {
-    uint16_t len = ptrack->get_track_size();
-    if (len > 512) {
-      len -= 512;
-      uint8_t *dst = static_cast<uint8_t *>(_this()) + 512;
-      Grid *source_grid = grid;
-      if (source_grid == nullptr) {
-        source_grid = &proj.grids[column >> 4];
-      }
-      if (!source_grid->read(dst, len)) {
-        DEBUG_PRINTLN(F("read failed"));
-        return nullptr;
-      }
-    }
   }
   return ptrack->materialize_as(track_type, tracknumber, seq_track);
 }
