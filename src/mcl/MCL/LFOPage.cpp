@@ -51,7 +51,6 @@ uint16_t lfo_visible_mask(const LFOSeqTrack *track, uint8_t offset) {
   return (uint16_t)(mask >> offset);
 }
 
-const char *lfo_mode_label(uint8_t mode) NOINLINE();
 const char *lfo_mode_label(uint8_t mode) {
   switch (LFOSeqTrack::mode_base(mode)) {
   case LFO_MODE_TRIG:
