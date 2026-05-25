@@ -610,8 +610,8 @@ void LFOPage::learn_perf_dest(uint8_t global_dest, uint8_t param,
   }
   bool reconfig = false;
   bool on_lfo_page = mcl.currentPage() == LFO_PAGE;
-  if (on_lfo_page && page_mode == LFO_DESTINATION) {
-    for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+    if (on_lfo_page && page_mode == LFO_DESTINATION) {
       uint8_t encoder_idx = i << 1;
       if (encoders[encoder_idx]->cur == 0 &&
           encoders[encoder_idx + 1]->cur > 0) {
@@ -620,8 +620,6 @@ void LFOPage::learn_perf_dest(uint8_t global_dest, uint8_t param,
         reconfig = true;
       }
     }
-  }
-  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
     if (lfo_track->params[i].dest == global_dest &&
         lfo_track->params[i].param == param) {
       lfo_track->params[i].offset = value;
