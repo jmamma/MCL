@@ -383,8 +383,7 @@ uint16_t MNMClass::sendKitParams(uint8_t *masks) {
   //  mcl_seq.disable();
   // md_set_kit(&MNM.kit);
   uint16_t mnm_latency_ms =
-      10000.0f * ((float)sizeof(MNMKit) / (float)uart->speed);
-  mnm_latency_ms += 10;
+      ((uint32_t)sizeof(MNMKit) * 10000UL) / uart->speed + 10;
   DEBUG_DUMP(mnm_latency_ms);
   
   /*
