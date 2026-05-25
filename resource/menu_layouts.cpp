@@ -58,7 +58,7 @@ menu_t<aux_config_page_N> auxconfig_menu_layout = {
     {
         //           m  r  n  d  p  f  o
 
-        {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 120},
+        {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 114},
     },
     1
 };
@@ -93,36 +93,36 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDX_PORT_MIN 0
   #define GRIDX_PORT_RANGE 3
   #define GRIDX_PORT_OPTIONS 3
-  #define GRIDX_PORT_OPTIONS_OFFSET 136
+  #define GRIDX_PORT_OPTIONS_OFFSET 130
   #define GRIDY_DEVICE_MIN 0
   #define GRIDY_DEVICE_RANGE 4
   #define GRIDY_DEVICE_OPTIONS 4
-  #define GRIDY_DEVICE_OPTIONS_OFFSET 139
+  #define GRIDY_DEVICE_OPTIONS_OFFSET 133
   #define GRIDY_PORT_MIN 0
   #define GRIDY_PORT_RANGE 3
   #define GRIDY_PORT_OPTIONS 3
-  #define GRIDY_PORT_OPTIONS_OFFSET 143
-  #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 146
-  #define LFO_MULT_OPTIONS_OFFSET 150
-  #define SEQ_EDIT_OPTIONS_OFFSET 158
+  #define GRIDY_PORT_OPTIONS_OFFSET 137
+  #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 140
+  #define LFO_MULT_OPTIONS_OFFSET 144
+  #define SEQ_EDIT_OPTIONS_OFFSET 48
 #else
   #define GRIDX_DEVICE_RANGE 2
   #define GRIDX_DEVICE_OPTIONS 2
   #define GRIDX_PORT_MIN 0
   #define GRIDX_PORT_RANGE 2
   #define GRIDX_PORT_OPTIONS 2
-  #define GRIDX_PORT_OPTIONS_OFFSET 135
+  #define GRIDX_PORT_OPTIONS_OFFSET 129
   #define GRIDY_DEVICE_MIN 1
   #define GRIDY_DEVICE_RANGE 4
   #define GRIDY_DEVICE_OPTIONS 3
-  #define GRIDY_DEVICE_OPTIONS_OFFSET 137
+  #define GRIDY_DEVICE_OPTIONS_OFFSET 131
   #define GRIDY_PORT_MIN 1
   #define GRIDY_PORT_RANGE 3
   #define GRIDY_PORT_OPTIONS 2
-  #define GRIDY_PORT_OPTIONS_OFFSET 140
+  #define GRIDY_PORT_OPTIONS_OFFSET 134
   #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 7
-  #define LFO_MULT_OPTIONS_OFFSET 142
-  #define SEQ_EDIT_OPTIONS_OFFSET 150
+  #define LFO_MULT_OPTIONS_OFFSET 136
+  #define SEQ_EDIT_OPTIONS_OFFSET 48
 #endif
 
 menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
@@ -138,7 +138,7 @@ menu_t<gridx_menu_page_N> gridx_menu_layout = {
     "GRID X",
     {
         {"DEVICE:", 0, GRIDX_DEVICE_RANGE, GRIDX_DEVICE_OPTIONS,
-         66, NULL_PAGE, 0, 133},
+         66, NULL_PAGE, 0, 127},
         {"PORT:", GRIDX_PORT_MIN, GRIDX_PORT_RANGE, GRIDX_PORT_OPTIONS,
          67, NULL_PAGE, 0, GRIDX_PORT_OPTIONS_OFFSET},
     },
@@ -202,9 +202,9 @@ menu_t<usbport_menu_page_N> usbport_menu_layout = {
 menu_t<midiprogram_menu_page_N> midiprogram_menu_layout = {
     "PROGRAM",
     {
-        {"PRG MODE:", 0, 2, 2, 49, NULL_PAGE, 0, 88},
-        {"PRG IN:", 0, 18, 2, 47, NULL_PAGE, 0, 86},
-        {"PRG OUT:", 0, 17, 2, 48, NULL_PAGE, 0, 86},
+        {"PRG MODE:", 0, 2, 2, 49, NULL_PAGE, 0, 86},
+        {"PRG IN:", 0, 18, 2, 47, NULL_PAGE, 0, 18},
+        {"PRG OUT:", 0, 17, 2, 48, NULL_PAGE, 0, 18},
     },
     24
 };
@@ -224,8 +224,8 @@ menu_t<midiclock_menu_page_N> midiclock_menu_layout = {
         {"TRANS RECV:",  0, MIDI_CLOCK_SOURCE_COUNT, MIDI_CLOCK_SOURCE_COUNT,
          53, NULL_PAGE, 0, MIDI_CLOCK_SOURCE_OPTIONS_OFFSET},
 #endif
-        {"CLOCK SEND:", 0, 4, 4, 6, NULL_PAGE, 0, 98},
-        {"TRANS SEND:",  0, 4, 4, 54, NULL_PAGE, 0, 98},
+        {"CLOCK SEND:", 0, 4, 4, 6, NULL_PAGE, 0, 10},
+        {"TRANS SEND:",  0, 4, 4, 54, NULL_PAGE, 0, 10},
     },
     24
 };
@@ -235,8 +235,8 @@ menu_t<midiroute_menu_page_N> midiroute_menu_layout = {
     {
         //            m  r  n  d  p  f  o
         {"MIDI 1 FWD:", 0, 4, 4, 7, NULL_PAGE, 0, 10},
-        {"MIDI 2 FWD:", 0, 4, 4, 51, NULL_PAGE, 0, 90},
-        {"USB FWD:", 0, 4, 4, 52, NULL_PAGE, 0, 94},
+        {"MIDI 2 FWD:", 0, 4, 4, 51, NULL_PAGE, 0, 88},
+        {"USB FWD:", 0, 4, 4, 52, NULL_PAGE, 0, 92},
 
     },
     24
@@ -247,7 +247,7 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
     {
         //              m  r   n  d  p  f  o
         {"CHRO CHAN:",  0, 17, 2, 9, NULL_PAGE, 0, 18},
-        {"POLY CHAN:",  0, 17, 2, 46, NULL_PAGE, 0, 86},
+        {"POLY CHAN:",  0, 17, 2, 46, NULL_PAGE, 0, 18},
         {"TRIG CHAN:",   0, 17, 2, 57, NULL_PAGE, 0, 18},
     },
     24
@@ -257,10 +257,10 @@ menu_t<midigeneric_menu_page_N> midigeneric_menu_layout = {
     "CONTROL",
     {
         //              m  r   n  d  p  f  o
-        {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 98},
+        {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 10},
         {"NOTE FWD:",  0, 2, 2, 64, NULL_PAGE, 0, 25},
         {"CC FWD:", 0, 2, 2, 11, NULL_PAGE, 0, 25},
-        {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 119},
+        {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 113},
     },
     24
 };
@@ -323,11 +323,11 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"TRACK SEL:",  1, 17,                  0,                   14, NULL_PAGE,  3,  0},
         {"DEVICE:",     0, 2,                   2,                   50, NULL_PAGE,  0,  192},
         {"EDIT:",       0, 4,                   4,                   15, NULL_PAGE,  4,  SEQ_EDIT_OPTIONS_OFFSET},
-        {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, NULL_PAGE,  0,  122},
+        {"EDIT:",       0, 1 + NUM_LOCKS,       1,                   16, NULL_PAGE,  0,  116},
         {"CC:",         0, 133,                 5,                   17, NULL_PAGE,  0,  2},
         {"SLIDE:",      0, 2,                   2,                   18, NULL_PAGE,  0,  25},
         {"ARPEGGIATOR", 0, 0,                   0,                   0,  ARP_PAGE, 0,  0},
-        {"KEY:",        0, 12,                  12,                  19, NULL_PAGE,  0,  102},
+        {"KEY:",        0, 12,                  12,                  19, NULL_PAGE,  0,  96},
         {"VEL:",        0, 128,                 0,                   20, NULL_PAGE,  0,  0},
         {"COND:",       1, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, NULL_PAGE,  0,  60},
         {"SPEED:",      0, 7,                   7,                   22, NULL_PAGE,  5,  41},
@@ -388,9 +388,9 @@ menu_t<perf_menu_page_N> perf_menu_layout = {
     {
         //           m  r  n  d   p  f   o
 
-        {"CTRL SEL:",0,  4, 4, 59, NULL_PAGE, 0,  115},
+        {"CTRL SEL:",0,  4, 4, 59, NULL_PAGE, 0,  109},
         {"RENAME",  0, 0,   0, 0,  NULL_PAGE, 30, 0},
-      //  {"PARAM:",    0, 17, 1, 58, NULL_PAGE, 0,  116},
+      //  {"PARAM:",    0, 17, 1, 58, NULL_PAGE, 0,  110},
     },
     0
 };

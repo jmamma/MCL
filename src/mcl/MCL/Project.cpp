@@ -62,6 +62,12 @@ public:
   LegacyMDRouteData route;
 };
 
+class ATTR_PACKED() MigratedMDRouteTrackStorage {
+public:
+  LegacyGridTrackHeader header;
+  MDRouteData route;
+};
+
 class ATTR_PACKED() LegacyPerfTrackData {
 public:
   PerfTrackEncoderData encs[4];
@@ -183,6 +189,12 @@ static_assert(offsetof(LegacyMDRouteTrackStorage, route) ==
 static_assert(sizeof(LegacyMDRouteTrackStorage) ==
                   LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(LegacyMDRouteData),
               "Legacy MD route storage size changed");
+static_assert(sizeof(MigratedMDRouteTrackStorage) ==
+                  LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(MDRouteData),
+              "migrated MD route storage size changed");
+static_assert(sizeof(MigratedMDRouteTrackStorage) ==
+                  sizeof(MDRouteTrack) - sizeof(void *),
+              "MD route migration storage layout changed");
 static_assert(sizeof(LegacyFixedPayloadTrackStorage) ==
                   LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(MDFXData),
               "fixed payload migration scratch size changed");
@@ -1060,11 +1072,11 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
     }
 
     if (legacy_route.header.active == MDROUTE_TRACK_TYPE) {
-      MDRouteTrack new_route;
-      copy_legacy_header(new_route, legacy_route.header);
-      new_route.active = MD_ROUTE_TRACK_TYPE;
-      memcpy(new_route.routing, legacy_route.route.routing,
-             sizeof(new_route.routing));
+      MigratedMDRouteTrackStorage new_route;
+      init_migrated_header(new_route.header, legacy_route.header,
+                           MD_ROUTE_TRACK_TYPE, 0);
+      memcpy(new_route.route.routing, legacy_route.route.routing,
+             sizeof(new_route.route.routing));
       uint8_t ptc_group =
           cfg.uart2_poly_chan >= PTC_MIDI_GROUP_MIN &&
                   cfg.uart2_poly_chan <= PTC_MIDI_GROUP_MAX
@@ -1072,12 +1084,12 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
               : PTC_GROUP_LOCAL;
       uint16_t poly_mask = legacy_route.route.poly_mask;
       for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, poly_mask >>= 1) {
-        new_route.ptc_group[i] =
+        new_route.route.ptc_group[i] =
             (poly_mask & 1) ? ptc_group : PTC_GROUP_OFF;
       }
 
-      if (!write_migrated_track(grids[1], MDROUTE_TRACK_NUM, row,
-                                new_route, new_route.get_track_size())) {
+      if (!grids[1].write(&new_route, sizeof(new_route), MDROUTE_TRACK_NUM,
+                          row)) {
         return false;
       }
       grid_y_header.update_model(MDROUTE_TRACK_NUM, MD_ROUTE_TRACK_TYPE,
