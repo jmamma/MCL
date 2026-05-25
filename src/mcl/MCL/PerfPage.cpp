@@ -331,7 +331,7 @@ void PerfPage::encoder_send() {
 
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   uint8_t perf_dest = dest + 1;
-  PerfPageTarget target = PerfPageTargetRef::target(perf_dest);
+  DevicePerfTarget target = DeviceParamResolver::perf(perf_dest);
   if (param >= target.param_count()) {
     return;
   }
