@@ -43,9 +43,9 @@ static constexpr size_t a4sound_encoding_startidx = a4sound_checksum_startidx + 
 bool A4Sound::fromSysex_impl(ElektronSysexDecoder *decoder) {
   decoder->start7Bit();
   decoder->skip(1); // skip sound header 0x05
-  decoder->get(tags);
-  decoder->get(name);
-  decoder->get(sound);
+  decoder->get(tags, sizeof(tags));
+  decoder->get((uint8_t *)name, sizeof(name));
+  decoder->get((uint8_t *)&sound, sizeof(sound));
   decoder->skip(sizeof(a4sound_footer));
   decoder->stop7Bit();
 
@@ -59,13 +59,13 @@ bool A4Sound::fromSysex_impl(ElektronSysexDecoder *decoder) {
 // when this routine exits, condition 1) and 2) hold.
 void A4Sound::toSysex_impl(ElektronDataToSysexEncoder *encoder)
 {
-  encoder->pack(a4sound_header);
+  encoder->pack(a4sound_header, sizeof(a4sound_header));
   encoder->start7Bit();
   encoder->pack8(0x05);
-  encoder->pack(tags);
-  encoder->pack(name);
-  encoder->pack(sound);
-  encoder->pack(a4sound_footer);
+  encoder->pack(tags, sizeof(tags));
+  encoder->pack((const uint8_t *)name, sizeof(name));
+  encoder->pack((const uint8_t *)&sound, sizeof(sound));
+  encoder->pack(a4sound_footer, sizeof(a4sound_footer));
   encoder->stop7Bit();
 }
 
@@ -100,9 +100,9 @@ uint16_t A4Sound::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->stop7Bit();
   encoder->begin();
   if (!soundpool) {
-    encoder->pack(a4sound_prologue);
+    encoder->pack(a4sound_prologue, sizeof(a4sound_prologue));
   } else {
-    encoder->pack(a4soundx_prologue);
+    encoder->pack(a4soundx_prologue, sizeof(a4soundx_prologue));
   }
   encoder->pack8(origPosition);
   encoder->startChecksum();

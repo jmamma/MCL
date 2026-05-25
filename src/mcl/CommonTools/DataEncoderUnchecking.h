@@ -74,7 +74,7 @@ public:
 		}
 	}
   
-	DATA_ENCODER_RETURN_TYPE pack(uint8_t *inb, uint16_t len) {
+		DATA_ENCODER_RETURN_TYPE pack(const uint8_t *inb, uint16_t len) {
 		for (uint16_t i = 0; i < len; i++)
 		{
 			pack8(inb[i]);
