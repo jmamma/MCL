@@ -331,9 +331,14 @@ private:
 
 } // namespace
 
+static uint16_t send_md_request3(MDClass &md, uint8_t command, uint8_t param,
+                                 uint8_t value, bool send = true) {
+  uint8_t data[3] = {command, param, value};
+  return md.sendRequest(data, sizeof(data), send);
+}
+
 static void send_global_setting(MDClass &md, uint8_t setting, uint8_t value) {
-  uint8_t data[3] = {0x70, setting, value};
-  md.sendRequest(data, sizeof(data));
+  send_md_request3(md, 0x70, setting, value);
 }
 
 DeviceMixerCapability *MDClass::mixer() {
@@ -1655,8 +1660,7 @@ bool MDClass::isMelodicTrack(uint8_t track) {
 }
 
 void MDClass::setLFOParam(uint8_t track, uint8_t param, uint8_t value) {
-  uint8_t data[3] = {0x62, (uint8_t)(track << 3 | param), value};
-  sendRequest(data, countof(data));
+  send_md_request3(*this, 0x62, (uint8_t)(track << 3 | param), value);
 }
 
 void MDClass::setLFO(uint8_t track, MDLFO *lfo, bool extra) {
@@ -1673,8 +1677,7 @@ void MDClass::setLFO(uint8_t track, MDLFO *lfo, bool extra) {
 }
 
 void MDClass::mapMidiNote(uint8_t pitch, uint8_t track) {
-  uint8_t data[3] = {0x5a, pitch, track};
-  sendRequest(data, countof(data));
+  send_md_request3(*this, 0x5a, pitch, track);
 }
 
 void MDClass::resetMidiMap() {
@@ -1689,18 +1692,15 @@ uint8_t MDClass::setTrackRoutings(uint8_t *values, bool send) {
 }
 
 uint8_t MDClass::setTrackRouting(uint8_t track, uint8_t output, bool send) {
-  uint8_t data[3] = {0x5c, track, output};
-  return sendRequest(data, countof(data), send);
+  return send_md_request3(*this, 0x5c, track, output, send);
 }
 
 void MDClass::setTrigGroup(uint8_t srcTrack, uint8_t trigTrack) {
-  uint8_t data[3] = {0x65, srcTrack, trigTrack};
-  sendRequest(data, countof(data));
+  send_md_request3(*this, 0x65, srcTrack, trigTrack);
 }
 
 void MDClass::setMuteGroup(uint8_t srcTrack, uint8_t muteTrack) {
-  uint8_t data[3] = {0x66, srcTrack, muteTrack};
-  sendRequest(data, countof(data));
+  send_md_request3(*this, 0x66, srcTrack, muteTrack);
 }
 
 void MDClass::assignMachine(uint8_t track, uint8_t model, uint8_t init) {
