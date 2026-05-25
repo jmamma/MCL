@@ -122,26 +122,13 @@ float UsrOsc::get_sample(uint32_t sample_number, float freq,
 
   float partition_size_n = n_cycle / (float)16;
 
-  int start = (int)(n / partition_size_n);
-  float n_start = start * partition_size_n;
-  int end;
-  float n_end;
-  if (start < 15) {
-    end = start + 1;
-    n_end = end * partition_size_n;
+  uint8_t start = (uint8_t)(n / partition_size_n);
+  uint8_t end = (start + 1) & 0x0F;
+  float v_start = (float)(64 - usr_values[start]) / (float)64;
+  float v_end = (float)(64 - usr_values[end]) / (float)64;
+  float phase = (n - start * partition_size_n) / partition_size_n;
 
-  } else {
-    end = 0;
-    n_end = n_cycle;
-  }
-  float v_start = -1 * (float)(usr_values[start] - 64) / (float)64;
-  float v_end = -1 * (float)(usr_values[end] - 64) / (float)64;
-
-  float m = ((v_end - v_start) / (n_end - n_start));
-  float b = v_start - m * n_start;
-  float y = m * n + b;
-
-  return y;
+  return v_start + (v_end - v_start) * phase;
 }
 
 float render_osc_sample(uint8_t osc_type, float width,
