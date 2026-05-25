@@ -913,11 +913,6 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       grid_version = grids[i].version;
     } else {
       write_grid_headers = true;
-      if (project_version >= PROJ_VERSION_GRID_HEADERS) {
-        // A latest master file with a headerless grid can happen when a
-        // supported origin/dev grid file is copied over a project slot.
-        grid_version = PROJ_MIN_READABLE_VERSION;
-      }
     }
     if (!PROJECT_VERSION_CAN_OPEN(grid_version)) {
       DEBUG_PRINTLN(F("Grid version incompatible"));
