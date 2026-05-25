@@ -667,8 +667,13 @@ void SeqPage::config_mask_info(bool silent) {
       reinterpret_cast<const char *>(pgm_read_ptr(&kMaskInfoLabels[mask_type]));
   mclstr_copy_progmem(info2, label, sizeof(info2));
   if (!silent && seq_page_active_step_track().uses_kit_sound()) {
-    char str[16] = "EDIT ";
-    strcat(str, info2);
+    char str[16];
+    str[0] = 'E';
+    str[1] = 'D';
+    str[2] = 'I';
+    str[3] = 'T';
+    str[4] = ' ';
+    strcpy(str + 5, info2);
     if (mask_type == MASK_PATTERN) {
       clear_enhanced_swing_window();
       seq_panel_popup_text((uint8_t)-1, 2);
