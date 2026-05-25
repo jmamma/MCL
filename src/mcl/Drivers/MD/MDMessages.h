@@ -334,6 +334,7 @@ public:
 
   void init_eq();
   void init_dynamix();
+  uint8_t *fx_params(uint8_t fx);
 
   virtual uint8_t getPosition() { return origPosition; }
   virtual void setPosition(uint8_t pos) { origPosition = pos; }
@@ -341,21 +342,8 @@ public:
   uint8_t get_model(uint8_t track);
   bool get_tonal(uint8_t track);
   uint8_t get_fx_param(uint8_t fx, uint8_t param) {
-    uint8_t ret = 255;
-    switch (fx) {
-    case MD_FX_ECHO:
-      ret = delay[param];
-      break;
-    case MD_FX_DYN:
-      ret = dynamics[param];
-      break;
-    case MD_FX_REV:
-      ret = reverb[param];
-      break;
-    case MD_FX_EQ:
-      ret = eq[param];
-    }
-    return ret;
+    uint8_t *params = fx_params(fx);
+    return params == nullptr ? 255 : params[param];
   }
   /* @} */
 };

@@ -1543,19 +1543,9 @@ void MDClass::setFXParam(uint8_t param, uint8_t value, uint8_t type,
 
   uint8_t len = 4;
   if (update_kit) {
-    switch (type) {
-    case MD_FX_ECHO:
-      MD.kit.delay[param] = value;
-      break;
-    case MD_FX_DYN:
-      MD.kit.dynamics[param] = value;
-      break;
-    case MD_FX_REV:
-      MD.kit.reverb[param] = value;
-      break;
-    case MD_FX_EQ:
-      MD.kit.eq[param] = value;
-      break;
+    uint8_t *fx_params = MD.kit.fx_params(type);
+    if (fx_params != nullptr) {
+      fx_params[param] = value;
     }
     len = 3;
   }

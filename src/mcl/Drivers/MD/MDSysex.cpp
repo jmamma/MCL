@@ -51,19 +51,11 @@ void MDSysexListenerClass::end() {
 
     if (param > 7) { return; }
 
-    switch (msgType) {
-      case MD_SET_RHYTHM_ECHO_PARAM_ID:
-        MD.kit.delay[param] = value;
-      break;
-      case MD_SET_GATE_BOX_PARAM_ID:
-        MD.kit.reverb[param] = value;
-      break;
-      case MD_SET_EQ_PARAM_ID:
-        MD.kit.eq[param] = value;
-      break;
-      case MD_SET_DYNAMIX_PARAM_ID:
-        MD.kit.dynamics[param] = value;
-      break;
+    {
+      uint8_t *fx_params = MD.kit.fx_params(msgType);
+      if (fx_params != nullptr) {
+        fx_params[param] = value;
+      }
     }
 
     perf_page.learn_param(fx_type + 16, param, value);

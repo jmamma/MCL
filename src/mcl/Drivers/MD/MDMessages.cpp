@@ -301,6 +301,21 @@ bool MDKit::get_tonal(uint8_t track) {
   return false;
 }
 
+uint8_t *MDKit::fx_params(uint8_t fx) {
+  switch (fx) {
+  case MD_FX_ECHO:
+    return delay;
+  case MD_FX_DYN:
+    return dynamics;
+  case MD_FX_REV:
+    return reverb;
+  case MD_FX_EQ:
+    return eq;
+  default:
+    return nullptr;
+  }
+}
+
 bool MDKit::fromSysex(MidiClass *midi) {
   SysexView sysex(midi->midiSysex);
   uint16_t len = sysex.get_recordLen() - 5;
