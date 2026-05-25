@@ -282,7 +282,7 @@ bool SampleBrowserPage::handleEvent(gui_event_t *event) {
         clone_entry = clone_entry && entry_type == FILE_TYPE;
 #endif
       }
-      uint16_t disabled = FM_MASK(FM_VERSIONS);
+      uint16_t disabled = FM_MASK(FM_MOVE) | FM_MASK(FM_VERSIONS);
       if (action_entry) {
         disabled |= FM_MASK(FM_NEW_FOLDER);
       } else {

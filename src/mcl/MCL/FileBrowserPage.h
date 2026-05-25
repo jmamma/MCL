@@ -118,6 +118,8 @@ public:
   static bool show_versions;
 
   static bool filemenu_active;
+  static bool move_destination_mode;
+  static char move_source_path[PRJ_PATH_LEN];
 
   static char focus_match[FILE_ENTRY_SIZE];
   static FileBrowserFileTypes file_types;
@@ -165,12 +167,15 @@ public:
   virtual void init();
   static void reset_browser_options();
 
-  virtual void on_new() {}
+  virtual void on_new() {
+    if (move_destination_mode) {
+      move_to_current_folder();
+    }
+  }
   virtual void on_select(const char *) {}
   virtual void on_delete(const char *);
   virtual void on_rename(const char *from, const char *to);
   virtual void on_copy(const char *from, const char *to);
-  virtual void on_move(const char *from, const char *to);
   // on cancel, the page will be popped,
   // and there's a last chance to clean up.
   virtual void on_cancel() { mcl.popPage(); }
@@ -192,6 +197,12 @@ protected:
   void query_filesystem();
   virtual bool can_show_parent_entry() const;
   virtual uint8_t entry_type_for_dir(const char *entry);
+  bool enter_move_destination(const char *entry);
+  bool start_move_destination(const char *source_path);
+  bool move_to_current_folder();
+  bool finish_move_to_path(const char *dest_path);
+  void cancel_move_destination();
+  static bool path_starts_with_dir(const char *path, const char *dir);
 
 private:
   void _calcindices(int &);

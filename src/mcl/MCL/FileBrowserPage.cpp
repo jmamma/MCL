@@ -29,6 +29,8 @@ bool FileBrowserPage::show_move = false;
 bool FileBrowserPage::show_versions = false;
 
 bool FileBrowserPage::filemenu_active = false;
+bool FileBrowserPage::move_destination_mode = false;
+char FileBrowserPage::move_source_path[PRJ_PATH_LEN];
 
 FileBrowserFileTypes FileBrowserPage::file_types;
 
@@ -39,6 +41,17 @@ uint16_t FileBrowserPage::selection_change_clock = 0;
 static uint8_t filebrowser_name_length(uint8_t min_length, const char *name) {
   uint8_t len = strlen(name);
   return len > min_length ? len : min_length;
+}
+
+bool FileBrowserPage::path_starts_with_dir(const char *path, const char *dir) {
+  if (*dir == '\0') {
+    return false;
+  }
+  while (*dir != '\0' && *path == *dir) {
+    path++;
+    dir++;
+  }
+  return *dir == '\0' && (*path == '\0' || *path == '/');
 }
 
 void FileBrowserPage::cleanup() {
@@ -113,6 +126,9 @@ void FileBrowserPage::query_filesystem() {
   // config menu
   file_menu_page.visible_rows = 3;
   uint16_t disabled = FM_MASK(FM_RECVALL) | FM_MASK(FM_SENDALL);
+  if (move_destination_mode) {
+    disabled |= FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME);
+  }
   if (!show_new_folder) {
     disabled |= FM_MASK(FM_NEW_FOLDER);
   }
@@ -207,6 +223,17 @@ void FileBrowserPage::init() {
   strcpy_P(title, mclstr_title_files);
   file_types.reset();
   SD.chdir(lwd);
+  if (move_destination_mode) {
+    show_dirs = true;
+    select_dirs = false;
+    show_save = true;
+    show_parent = true;
+    show_new_folder = true;
+    show_filemenu = true;
+    draw_dirs = true;
+    strcpy(title, "DEST");
+    strcpy(str_save, "[ MOVE ]");
+  }
 }
 
 void FileBrowserPage::draw_menu() {
@@ -505,14 +532,73 @@ bool FileBrowserPage::_handle_filemenu() {
     }
     return true;
   case FM_MOVE: // move
-    strcpy(buf2, buf1);
-    name_length = filebrowser_name_length(name_length, buf2);
-    if (mcl_gui.wait_for_input(buf2, "MOVE TO:", name_length)) {
-      on_move(buf1, buf2);
-    }
-    return true;
+    enter_move_destination(buf1);
+    return false;
   }
   return false;
+}
+
+bool FileBrowserPage::start_move_destination(const char *source_path) {
+  if (source_path[0] == '\0') {
+    gfx.alert("ERROR", "BAD PATH");
+    return false;
+  }
+  strncpy(move_source_path, source_path, sizeof(move_source_path) - 1);
+  move_source_path[sizeof(move_source_path) - 1] = '\0';
+  move_destination_mode = true;
+  position.reset();
+  init();
+  return true;
+}
+
+bool FileBrowserPage::enter_move_destination(const char *entry) {
+  char source_path[PRJ_PATH_LEN];
+  if (!MCLSd::join_path(source_path, sizeof(source_path), lwd, entry)) {
+    gfx.alert("ERROR", "BAD PATH");
+    return false;
+  }
+  return start_move_destination(source_path);
+}
+
+bool FileBrowserPage::finish_move_to_path(const char *dest_path) {
+  if (!move_destination_mode) {
+    return false;
+  }
+  if (path_starts_with_dir(dest_path, move_source_path)) {
+    gfx.alert("ERROR", "BAD DEST");
+    return false;
+  }
+  if (SD.exists(dest_path)) {
+    gfx.alert("ERROR", "EXISTS");
+    return false;
+  }
+  if (!SD.rename(move_source_path, dest_path)) {
+    gfx.alert("ERROR", "Not moved.");
+    return false;
+  }
+  move_destination_mode = false;
+  move_source_path[0] = '\0';
+  gfx.alert("SUCCESS", "Moved.");
+  init();
+  return true;
+}
+
+bool FileBrowserPage::move_to_current_folder() {
+  const char *name = strrchr(move_source_path, '/');
+  name = name == nullptr ? move_source_path : name + 1;
+
+  char dest_path[PRJ_PATH_LEN];
+  if (!MCLSd::join_path(dest_path, sizeof(dest_path), lwd, name)) {
+    gfx.alert("ERROR", "BAD PATH");
+    return false;
+  }
+  return finish_move_to_path(dest_path);
+}
+
+void FileBrowserPage::cancel_move_destination() {
+  move_destination_mode = false;
+  move_source_path[0] = '\0';
+  init();
 }
 
 #ifdef PLATFORM_TBD
@@ -589,10 +675,6 @@ void FileBrowserPage::on_copy(const char *from, const char *to) {
   } else {
     gfx.alert("ERROR", "Not cloned.");
   }
-}
-
-void FileBrowserPage::on_move(const char *from, const char *to) {
-  on_rename(from, to);
 }
 
 bool FileBrowserPage::handleEvent(gui_event_t *event) {

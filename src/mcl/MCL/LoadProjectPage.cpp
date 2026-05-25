@@ -8,21 +8,6 @@
 #include "KeyInterface.h"
 #include "MCLMenus.h"
 
-namespace {
-
-bool path_starts_with_dir(const char *path, const char *dir) {
-  if (*dir == '\0') {
-    return false;
-  }
-  while (*dir != '\0' && *path == *dir) {
-    path++;
-    dir++;
-  }
-  return *dir == '\0' && (*path == '\0' || *path == '/');
-}
-
-} // namespace
-
 void LoadProjectPage::init() {
 
   DEBUG_PRINTLN("load project page init");
@@ -30,19 +15,18 @@ void LoadProjectPage::init() {
   DevicePanelRef::set_primary_key_repeat(1);
   FileBrowserPage::init();
 
-  show_dirs = true;
-  select_dirs = !move_destination_mode;
-  show_save = true;
-  show_parent = true;
-  show_new_folder = true;
-  show_filemenu = true;
-  show_copy = !move_destination_mode;
-  show_versions = false;
-  draw_dirs = true;
-  strcpy(title, move_destination_mode ? "DEST" : "PROJECT");
-  strcpy(str_save, move_destination_mode ? "[ MOVE ]" : "[ NEW PROJECT ]");
-
   if (!move_destination_mode) {
+    show_dirs = true;
+    select_dirs = true;
+    show_save = true;
+    show_parent = true;
+    show_new_folder = true;
+    show_filemenu = true;
+    show_copy = true;
+    show_versions = false;
+    draw_dirs = true;
+    strcpy(title, "PROJECT");
+    strcpy(str_save, "[ NEW PROJECT ]");
     focus_current_project();
   }
   query_filesystem();
@@ -231,21 +215,12 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     }
   }
 
+  if (move_destination_mode) {
+    return FileBrowserPage::handleEvent(event);
+  }
+
   if (EVENT_BUTTON(event) && EVENT_PRESSED(event, Buttons.BUTTON3) &&
       show_filemenu) {
-    if (move_destination_mode) {
-      uint16_t disabled = FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME) |
-                          FM_MASK(FM_DUPLICATE) | FM_MASK(FM_MOVE) |
-                          FM_MASK(FM_VERSIONS) | FM_MASK(FM_RECVALL) |
-                          FM_MASK(FM_SENDALL);
-      if (!show_new_folder) {
-        disabled |= FM_MASK(FM_NEW_FOLDER);
-      }
-      set_file_menu_disabled_mask(disabled);
-      open_filemenu();
-      return true;
-    }
-
     char entry[FILE_ENTRY_SIZE];
     uint16_t entry_idx = encoders[1]->getValue();
     uint8_t entry_type = FILE_TYPE;
@@ -259,7 +234,6 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       }
     }
     bool project_entry = regular_entry && entry_type == FILE_TYPE;
-
     uint16_t disabled = FM_MASK(FM_RECVALL) | FM_MASK(FM_SENDALL);
     if (!show_new_folder) {
       disabled |= FM_MASK(FM_NEW_FOLDER);
@@ -289,11 +263,7 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
 bool LoadProjectPage::_handle_filemenu() {
   uint8_t item = file_menu_page.menu.get_item_index(file_menu_encoder.cur);
   if (move_destination_mode) {
-    if (item == FM_NEW_FOLDER) {
-      create_folder();
-      return true;
-    }
-    return false;
+    return FileBrowserPage::_handle_filemenu();
   }
 
   if (item == FM_DELETE || item == FM_VERSIONS || item == FM_MOVE) {
@@ -325,34 +295,27 @@ bool LoadProjectPage::_handle_filemenu() {
       return false;
     }
 
-    enter_move_destination(entry);
+    enter_project_move_destination(entry);
     return false;
   }
   return FileBrowserPage::_handle_filemenu();
 }
 
-bool LoadProjectPage::enter_move_destination(const char *entry) {
-  if (!build_project_path(entry, move_source_path, sizeof(move_source_path))) {
+bool LoadProjectPage::enter_project_move_destination(const char *entry) {
+  char source_path[PRJ_PATH_LEN];
+  if (!build_project_path(entry, source_path, sizeof(source_path))) {
     gfx.alert("ERROR", "BAD PATH");
     return false;
   }
-  if (path_starts_with_dir(mcl_cfg.project, move_source_path)) {
+  if (path_starts_with_dir(mcl_cfg.project, source_path)) {
     gfx.alert("ERROR", "CURRENT PROJECT");
-    move_source_path[0] = '\0';
     return false;
   }
 
-  move_destination_mode = true;
-  position.reset();
-  init();
-  return true;
+  return start_move_destination(source_path);
 }
 
 bool LoadProjectPage::move_to_current_folder() {
-  if (!move_destination_mode || move_source_path[0] == '\0') {
-    return false;
-  }
-
   const char *name = strrchr(move_source_path, '/');
   name = name == nullptr ? move_source_path : name + 1;
 
@@ -361,31 +324,12 @@ bool LoadProjectPage::move_to_current_folder() {
     gfx.alert("ERROR", "BAD PATH");
     return false;
   }
-  if (path_starts_with_dir(dest_path, move_source_path)) {
-    gfx.alert("ERROR", "BAD DEST");
-    return false;
-  }
-
   proj.chdir_projects();
-  if (SD.exists(dest_path)) {
-    SD.chdir(lwd);
-    gfx.alert("ERROR", "EXISTS");
-    return false;
-  }
-
-  bool ok = SD.rename(move_source_path, dest_path);
-  SD.chdir(lwd);
-
+  bool ok = finish_move_to_path(dest_path);
   if (!ok) {
-    gfx.alert("ERROR", "Not moved.");
-    return false;
+    SD.chdir(lwd);
   }
-
-  move_destination_mode = false;
-  move_source_path[0] = '\0';
-  gfx.alert("SUCCESS", "Moved.");
-  init();
-  return true;
+  return ok;
 }
 
 void LoadProjectPage::on_new() {
@@ -404,9 +348,7 @@ void LoadProjectPage::on_new() {
 
 void LoadProjectPage::on_cancel() {
   if (move_destination_mode) {
-    move_destination_mode = false;
-    move_source_path[0] = '\0';
-    init();
+    cancel_move_destination();
     return;
   }
   mcl.popPage();
@@ -451,14 +393,10 @@ uint8_t LoadProjectPage::entry_type_for_dir(const char *entry) {
         path_starts_with_dir(project_path, move_source_path)) {
       return SKIP_TYPE;
     }
-#ifdef __AVR__
-    return UNKNOWN_DIR_TYPE;
-#else
     if (is_project_dir(entry)) {
       return SKIP_TYPE;
     }
     return DIR_TYPE;
-#endif
   }
 #ifdef __AVR__
   (void)entry;
