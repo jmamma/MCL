@@ -59,7 +59,9 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
       loaded_track->materialize_as(track_type, seq_track_idx, seq_track);
   if (device_track == nullptr) {
     scratch.clear();
-    scratch.init();
+    if (loaded_track->active != EMPTY_TRACK_TYPE) {
+      scratch.init();
+    }
     device_track = scratch.init_track_type(track_type);
     if (seq_track != nullptr) {
       device_track->init(seq_track_idx, seq_track);
