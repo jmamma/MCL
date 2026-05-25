@@ -126,11 +126,12 @@ again:
                      : midi_wait_byte_2;
     } else if (status >= MIDI_MTC_QUARTER_FRAME &&
                status <= MIDI_SONG_SELECT) {
-      callback = status - (MIDI_MTC_QUARTER_FRAME - 7);
+      // F1-F3 are contiguous and keep the old midi_parse[] callback order.
+      callback = MIDI_MTC_QUARTER_FRAME_CB + (status - MIDI_MTC_QUARTER_FRAME);
       in_state = status == MIDI_SONG_POSITION_PTR ? midi_wait_byte_2
                                                   : midi_wait_byte_1;
     } else if (status == MIDI_TUNE_REQUEST) {
-      callback = 10;
+      callback = MIDI_TUNE_REQUEST_CB;
       in_state = midi_wait_status;
     } else {
       in_state = midi_ignore_message;
