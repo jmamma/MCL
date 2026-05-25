@@ -332,7 +332,7 @@ void PerfPage::encoder_send() {
 void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   uint8_t perf_dest = dest + 1;
   PerfPageTarget target = PerfPageTargetRef::target(perf_dest);
-  if (!target.valid() || param >= target.param_count()) {
+  if (param >= target.param_count()) {
     return;
   }
   bool on_perf_page = mcl.currentPage() == PERF_PAGE_0;

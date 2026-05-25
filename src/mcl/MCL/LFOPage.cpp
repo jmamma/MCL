@@ -594,8 +594,7 @@ void LFOPage::learn_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
   }
   uint8_t global_dest =
       DeviceParamResolver::perf_dest_for_target(device_idx, dest - 1);
-  if (global_dest == 0 ||
-      LFOTrackRef::param_count(lfo_track->device_idx, global_dest) <= param) {
+  if (LFOTrackRef::param_count(DeviceIdx::None, global_dest) <= param) {
     return;
   }
   bool reconfig = false;

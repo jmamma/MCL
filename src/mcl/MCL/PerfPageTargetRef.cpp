@@ -25,14 +25,6 @@ inline __attribute__((always_inline)) uint8_t perf_page_lfo_dest(uint8_t dest) {
 
 } // namespace
 
-bool PerfPageTarget::valid() const {
-  uint8_t lfo = perf_page_lfo_dest(dest);
-  if (lfo != 0) {
-    return true;
-  }
-  return DeviceParamResolver::perf(dest).valid();
-}
-
 DeviceIdx PerfPageTarget::device_index() const {
   uint8_t lfo = perf_page_lfo_dest(dest);
   return lfo != 0 ? DeviceIdx::None
