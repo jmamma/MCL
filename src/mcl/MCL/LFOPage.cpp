@@ -149,10 +149,10 @@ void draw_lfo_enable_info_label(bool enabled) {
 
   oled_display.setTextColor(enabled ? BLACK : WHITE);
   oled_display.setCursor(3, MCLGUI::pane_info1_y + 6);
-  oled_display.print("ON");
+  mcl_print_P(mclstr_on);
   oled_display.setTextColor(enabled ? WHITE : BLACK);
   oled_display.setCursor(split_x + 2, MCLGUI::pane_info1_y + 6);
-  oled_display.print("OFF");
+  mcl_print_P(mclstr_off);
   oled_display.setTextColor(WHITE);
 }
 
