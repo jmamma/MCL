@@ -128,8 +128,7 @@ uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
 
 bool ElektronDevice::get_tempo(uint16_t &tempo) {
 
-  uint8_t data[2] = {0x70, 0x3F};
-  sendRequest(data, sizeof(data));
+  send_system_command(this, 0x3F);
 
   uint8_t msgType = waitBlocking();
 
@@ -150,8 +149,7 @@ bool ElektronDevice::get_tempo(uint16_t &tempo) {
 
 bool ElektronDevice::get_mute_state(uint16_t &mute_state) {
 
-  uint8_t data[2] = {0x70, 0x33};
-  sendRequest(data, sizeof(data));
+  send_system_command(this, 0x33);
 
   uint8_t msgType = waitBlocking();
 
@@ -172,8 +170,7 @@ bool ElektronDevice::get_mute_state(uint16_t &mute_state) {
 
 bool ElektronDevice::get_fw_caps() {
 
-  uint8_t data[2] = {0x70, 0x30};
-  sendRequest(data, sizeof(data));
+  send_system_command(this, 0x30);
 
   uint8_t msgType = waitBlocking();
 
