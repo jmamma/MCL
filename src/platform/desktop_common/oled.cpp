@@ -18,6 +18,7 @@
 #include "oled.h"
 
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -309,6 +310,12 @@ void Oled::fillTriangle_3px(int16_t x0, int16_t y0, uint16_t color) {
     drawPixel(x0 + 2, y0 + 2, color);
 }
 
+void Oled::setCursor(int16_t x, int16_t y) {
+    cursor_x_ = x;
+    cursor_y_ = y;
+    debug_capture_segment_active_ = false;
+}
+
 // ── Bitmaps ──────────────────────────────────────────────────────────────
 
 // Keep rp2040 Oled's historical parameter semantics: flip_vert mirrors X
@@ -426,6 +433,7 @@ size_t Oled::write(uint8_t c) {
 
     if (!gfx_font_) {
         if (c == '\n') {
+            debugCaptureEndSegment();
             cursor_x_ = 0;
             cursor_y_ += 8 * text_size_;
             return 1;
@@ -433,7 +441,9 @@ size_t Oled::write(uint8_t c) {
         if (text_wrap_ && cursor_x_ + 6 * text_size_ > OLED_WIDTH) {
             cursor_x_ = 0;
             cursor_y_ += 8 * text_size_;
+            debug_capture_segment_active_ = false;
         }
+        debugCaptureWrite(c);
         drawCharImpl(cursor_x_, cursor_y_, c, text_fg_, text_bg_,
                      !text_transparent_bg_, text_size_);
         cursor_x_ += 6 * text_size_;
@@ -442,6 +452,7 @@ size_t Oled::write(uint8_t c) {
 
     // GFXfont path — variable advance per glyph.
     if (c == '\n') {
+        debugCaptureEndSegment();
         cursor_x_ = 0;
         cursor_y_ += (int16_t)text_size_ * (int16_t)gfx_font_->yAdvance;
         return 1;
@@ -454,12 +465,63 @@ size_t Oled::write(uint8_t c) {
             (cursor_x_ + (int16_t)text_size_ * (xo + glyph->width)) > OLED_WIDTH) {
             cursor_x_ = 0;
             cursor_y_ += (int16_t)text_size_ * (int16_t)gfx_font_->yAdvance;
+            debug_capture_segment_active_ = false;
         }
+        debugCaptureWrite(c);
         drawCharImpl(cursor_x_, cursor_y_, c, text_fg_, text_bg_,
                      !text_transparent_bg_, text_size_);
     }
     cursor_x_ += (int16_t)glyph->xAdvance * (int16_t)text_size_;
     return 1;
+}
+
+void Oled::debugCaptureTextBegin() {
+    debug_capture_text_ = true;
+    debug_capture_segment_active_ = false;
+    debug_capture_text_len_ = 0;
+    debug_capture_text_buf_[0] = '\0';
+}
+
+const char* Oled::debugCaptureTextEnd() {
+    debug_capture_text_ = false;
+    debug_capture_segment_active_ = false;
+    debug_capture_text_buf_[debug_capture_text_len_] = '\0';
+    return debug_capture_text_buf_;
+}
+
+void Oled::debugCaptureEndSegment() {
+    debug_capture_segment_active_ = false;
+}
+
+void Oled::debugCaptureWrite(uint8_t c) {
+    if (!debug_capture_text_)
+        return;
+    if (c < 0x20 || c >= 0x7f)
+        return;
+
+    if (!debug_capture_segment_active_) {
+        if (debug_capture_text_len_ > 0)
+            debugCaptureAppendChar('\n');
+        char prefix[16];
+        snprintf(prefix, sizeof(prefix), "%d,%d:", cursor_x_, cursor_y_);
+        debugCaptureAppendString(prefix);
+        debug_capture_segment_active_ = true;
+    }
+    debugCaptureAppendChar((char)c);
+}
+
+void Oled::debugCaptureAppendChar(char c) {
+    if (debug_capture_text_len_ + 1 >= sizeof(debug_capture_text_buf_))
+        return;
+    debug_capture_text_buf_[debug_capture_text_len_++] = c;
+    debug_capture_text_buf_[debug_capture_text_len_] = '\0';
+}
+
+void Oled::debugCaptureAppendString(const char* s) {
+    if (!s)
+        return;
+    while (*s)
+        debugCaptureAppendChar(*s++);
 }
 
 void Oled::print(const char* s) {

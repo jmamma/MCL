@@ -94,6 +94,14 @@ void SystemMenuPage::prepare_menu_entries() {
 void SystemMenuPage::init() {
   MenuPage<system_menu_page_N>::init();
   prepare_menu_entries();
+  uint8_t max_item = menu.get_number_of_items() - 1;
+  ((MCLEncoder *)encoders[1])->max = max_item;
+  if (encoders[1]->cur > max_item) {
+    encoders[1]->cur = max_item;
+    cur_row = max_item < visible_rows ? max_item : visible_rows - 1;
+  }
+  selected_item = encoders[1]->cur;
+  encoders[1]->old = encoders[1]->cur;
 }
 
 const uint8_t *const menu_target_param[] PROGMEM = {

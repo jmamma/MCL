@@ -95,7 +95,7 @@ public:
     }
 
     // Text --------------------------------------------------------------
-    void setCursor(int16_t x, int16_t y) { cursor_x_ = x; cursor_y_ = y; }
+    void setCursor(int16_t x, int16_t y);
     int16_t getCursorX() const { return cursor_x_; }
     int16_t getCursorY() const { return cursor_y_; }
     void setTextSize(uint8_t s)                    { text_size_ = s ? s : 1; }
@@ -142,10 +142,17 @@ public:
     void draw_textbox(char* text, char* text2);
     void draw_textbox(const char* text1, const char* text2);
 
+    void debugCaptureTextBegin();
+    const char* debugCaptureTextEnd();
+
 private:
     // Renders one glyph using whatever font is currently selected.
     void drawCharImpl(int16_t x, int16_t y, uint8_t c, uint16_t fg, uint16_t bg,
                       bool opaque_bg, uint8_t size);
+    void debugCaptureEndSegment();
+    void debugCaptureWrite(uint8_t c);
+    void debugCaptureAppendChar(char c);
+    void debugCaptureAppendString(const char* s);
 
     uint8_t  buffer_[OLED_WIDTH * OLED_HEIGHT / 8] = {0};
 
@@ -157,6 +164,11 @@ private:
     uint8_t  text_size_ = 1;
     bool     text_wrap_ = true;
     const GFXfont* gfx_font_ = nullptr;  // nullptr = built-in classic 5x7
+
+    bool     debug_capture_text_ = false;
+    bool     debug_capture_segment_active_ = false;
+    char     debug_capture_text_buf_[512] = {0};
+    size_t   debug_capture_text_len_ = 0;
 };
 
 extern Oled oled_display;

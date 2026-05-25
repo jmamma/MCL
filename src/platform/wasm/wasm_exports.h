@@ -104,6 +104,10 @@ uint32_t mcl_debug_state(void);
 //   3 note_interface.notes_off
 //   4 mcl_debug_state()
 //   5 mcl_cfg.track_type_select
+//   200 MCL config menu display text snapshot byte length
+//   201..264 menu display text snapshot bytes, packed little-endian 4 chars/value
+//   265 top-level system menu display text snapshot byte length
+//   266 top-level system menu display text snapshot after detaching devices
 uint32_t mcl_debug_value(int32_t id);
 
 #ifdef __cplusplus

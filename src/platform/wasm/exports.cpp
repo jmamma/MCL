@@ -26,6 +26,7 @@
 #include "NoteInterface.h"
 #include "DeviceManager.h"
 #include "MCLSysConfig.h"
+#include "MCLMenus.h"
 #include "MD.h"
 #include "MDSysex.h"
 #include "platform.h"
@@ -73,6 +74,9 @@ static constexpr uint8_t kMidiSysexStart = 0xF0;
 static constexpr uint8_t kMidiSysexEnd = 0xF7;
 static constexpr uint8_t kMaxSysexIngressTraceLines = 32;
 static uint8_t s_sysex_ingress_trace_lines = 0;
+static constexpr uint16_t kDebugMenuSnapshotMaxBytes = 255;
+static char s_debug_menu_snapshot[kDebugMenuSnapshotMaxBytes + 1];
+static uint16_t s_debug_menu_snapshot_len = 0;
 
 static MidiUartClass* uart_for_port(int32_t port) {
     switch (port) {
@@ -88,6 +92,63 @@ static int32_t port_for_uart(MidiUartClass* uart) {
     if (uart == &MidiUart2) return MCL_MIDI_UART2;
     if (uart == (MidiUartClass*)&MidiUartUSB) return MCL_MIDI_USB;
     return -1;
+}
+
+static void debug_menu_copy_snapshot(const char* text) {
+    s_debug_menu_snapshot_len = 0;
+    s_debug_menu_snapshot[0] = '\0';
+    if (!text)
+        return;
+    while (*text && s_debug_menu_snapshot_len < kDebugMenuSnapshotMaxBytes) {
+        s_debug_menu_snapshot[s_debug_menu_snapshot_len++] = *text++;
+    }
+    s_debug_menu_snapshot[s_debug_menu_snapshot_len] = '\0';
+}
+
+static uint16_t debug_menu_build_page_snapshot(PageIndex page,
+                                               uint8_t selected_item) {
+    const PageIndex previous_page = mcl.currentPage();
+
+    if (page == MCL_CONFIG_PAGE)
+        mcl_config_page.select_item(selected_item);
+    else if (page == SYSTEM_PAGE)
+        system_page.select_item(selected_item);
+
+    mcl.setPage(page);
+    oled_display.debugCaptureTextBegin();
+    GUI.display();
+    debug_menu_copy_snapshot(oled_display.debugCaptureTextEnd());
+
+    if (previous_page < NUM_PAGES && previous_page != page)
+        mcl.setPage(previous_page);
+
+    return s_debug_menu_snapshot_len;
+}
+
+static uint16_t debug_menu_build_mcl_config_snapshot() {
+    return debug_menu_build_page_snapshot(MCL_CONFIG_PAGE, 0);
+}
+
+static uint16_t debug_menu_build_system_snapshot() {
+    return debug_menu_build_page_snapshot(SYSTEM_PAGE, 0);
+}
+
+static uint16_t debug_menu_build_system_no_devices_snapshot() {
+    for (uint8_t port = UART1_PORT; port <= MIDI_PORT_COUNT; ++port)
+        device_manager.detach_port(port);
+    return debug_menu_build_page_snapshot(SYSTEM_PAGE, 5);
+}
+
+static uint32_t debug_menu_snapshot_chunk(uint16_t offset) {
+    uint32_t out = 0;
+    for (uint8_t i = 0; i < 4; ++i) {
+        const uint16_t pos = offset + i;
+        const uint8_t c = pos < s_debug_menu_snapshot_len
+            ? (uint8_t)s_debug_menu_snapshot[pos]
+            : 0;
+        out |= ((uint32_t)c) << (8u * i);
+    }
+    return out;
 }
 
 static void pump_host_midi_input_for_audio() {
@@ -491,7 +552,18 @@ extern "C" uint32_t mcl_debug_value(int32_t id) {
         return mcl_debug_state();
     case 5:
         return mcl_cfg.track_type_select;
+    case 200:
+        return debug_menu_build_mcl_config_snapshot();
+    case 265:
+        return debug_menu_build_system_snapshot();
+    case 266:
+        return debug_menu_build_system_no_devices_snapshot();
     default:
+        if (id >= 201 && id <= 264) {
+            if (s_debug_menu_snapshot_len == 0)
+                debug_menu_build_mcl_config_snapshot();
+            return debug_menu_snapshot_chunk((uint16_t)(id - 201) * 4u);
+        }
         return 0;
     }
 }
