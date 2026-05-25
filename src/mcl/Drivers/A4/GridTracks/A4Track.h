@@ -11,11 +11,9 @@
 
 // Use a more specific name to avoid conflict with Arduino's Print class
 
-class ATTR_PACKED() A4Track : public DeviceTrack {
+class ATTR_PACKED() A4Track : public ExtTrack {
 public:
   A4Sound sound;
-  SeqTrackModData mod_data;
-  ExtSeqTrackData seq_data;
   A4Track() {
     active = A4_TRACK_TYPE;
   }
@@ -29,25 +27,17 @@ public:
   bool transition_cache(uint8_t tracknumber, GridSlot slotnumber) override {
     return false;
   }
-  void load_seq_data(SeqTrack *seq_track) override;
   virtual void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
-  bool get_track_from_sysex(uint8_t tracknumber);
+  bool get_track_from_sysex(uint8_t tracknumber) override;
   bool store_in_grid(GridSlot column, GridRow row,
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   virtual uint16_t get_track_size() override { return _sizeof(); }
-  virtual uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
-  virtual uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
                             char label[3]) override {
     return copy_fixed_grid_slot_label(label, 'A', ctx.column + '1');
   }
   virtual uint8_t get_model() override { return A4_TRACK_TYPE; } // TODO
-  virtual uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
-  void init_defaults() override {
-    mod_data.init();
-    seq_data.clear();
-  }
   virtual void *get_sound_data_ptr() override { return &sound; }
   virtual size_t get_sound_data_size() override { return sizeof(A4Sound); }
 #if !defined(__AVR__)

@@ -17,10 +17,7 @@ void A4Track::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
 }
 
 void A4Track::transition_load(uint8_t tracknumber, SeqTrack* seq_track, GridSlot slotnumber) {
-  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
-  ext_track->is_generic_midi = false;
-  load_seq_data(seq_track);
+  transition_load_device(tracknumber, seq_track, slotnumber);
 }
 
 bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
@@ -35,10 +32,6 @@ bool A4Track::get_track_from_sysex(uint8_t tracknumber) {
 
 void A4Track::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
   load_seq_data(seq_track);
-}
-
-void A4Track::load_seq_data(SeqTrack *seq_track) {
-  ExtTrack::load_ext_seq_data(*this, seq_data, mod_data, seq_track);
 }
 
 bool A4Track::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, uint8_t merge,
@@ -90,7 +83,7 @@ bool A4Track::materialized_storage_range(uint8_t track_type,
     return false;
   }
   source_offset =
-      reinterpret_cast<uintptr_t>(&mod_data) -
+      reinterpret_cast<uintptr_t>(&seq_data) -
       reinterpret_cast<uintptr_t>(_this());
   target_offset = ExtTrack::seq_payload_storage_offset();
   len = ExtTrack::seq_payload_storage_size();

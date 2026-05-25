@@ -9,32 +9,6 @@
 
 namespace {
 
-class ATTR_PACKED() LegacySPSXSeqTrackDataV1 {
-public:
-  uint8_t locks[STEPSEQ_NUM_LOCK_SLOTS];
-  uint8_t locks_params[STEPSEQ_NUM_LOCKS];
-  int8_t microtiming[STEPSEQ_NUM_STEPS];
-  StepSeqStepDescriptor steps[STEPSEQ_NUM_STEPS];
-
-  uint64_t trig_mask;
-  uint64_t slide_mask;
-  uint64_t accent_mask;
-  uint64_t swing_mask;
-
-  uint8_t track_length;
-  uint8_t track_speed;
-};
-
-class ATTR_PACKED() LegacySPSXSeqTrackData : public LegacySPSXSeqTrackDataV1 {
-public:
-  uint8_t swing_amount;
-};
-
-static_assert(sizeof(LegacySPSXSeqTrackDataV1) == sizeof(StepSeqTrackDataV1),
-              "Legacy SPSX V1 storage size changed");
-static_assert(sizeof(LegacySPSXSeqTrackData) == sizeof(SPSXSeqTrackData),
-              "Legacy SPSX storage size changed");
-
 uint8_t legacy_cond_to_spsx(uint8_t condition) {
   switch (condition) {
   case 0:
@@ -133,28 +107,6 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
   }
 }
 
-void convert_old_order_spsx_seq(const LegacySPSXSeqTrackDataV1 &src,
-                                SPSXSeqTrackData &dest) {
-  dest.init();
-  memcpy(dest.steps, src.steps, sizeof(dest.steps));
-  memcpy(dest.microtiming, src.microtiming, sizeof(dest.microtiming));
-  dest.trig_mask = src.trig_mask;
-  dest.slide_mask = src.slide_mask;
-  dest.accent_mask = src.accent_mask;
-  dest.swing_mask = src.swing_mask;
-  dest.track_length = src.track_length;
-  dest.track_speed = src.track_speed;
-  memcpy(dest.locks_params, src.locks_params, sizeof(dest.locks_params));
-  memcpy(dest.locks, src.locks, sizeof(dest.locks));
-}
-
-void convert_old_order_spsx_seq(const LegacySPSXSeqTrackData &src,
-                                SPSXSeqTrackData &dest) {
-  convert_old_order_spsx_seq(
-      static_cast<const LegacySPSXSeqTrackDataV1 &>(src), dest);
-  dest.swing_amount = src.swing_amount;
-}
-
 void finalize_spsx_seq_load(SPSXSeqTrack &track) {
   if (track.track_length != 0) {
     track.length = track.track_length;
@@ -188,10 +140,6 @@ bool SPSXTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
   copyMachineNameShort(tmp, label);
   label[2] = '\0';
   return true;
-}
-
-uint16_t SPSXTrack::get_store_size() {
-  return get_track_size();
 }
 
 void SPSXTrack::get_machine_from_kit(uint8_t tracknumber) {
@@ -289,24 +237,6 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
       memcpy(spsx_seq_track->SPSXSeqTrackData::data(),
              seq_storage.seq_data.spsx.data(),
              sizeof(SPSXSeqTrackData));
-    } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX_V2) {
-      convert_old_order_spsx_seq(
-          *reinterpret_cast<const LegacySPSXSeqTrackData *>(
-              &seq_storage.seq_data.spsx),
-          *spsx_seq_track);
-      memcpy(seq_storage.seq_data.spsx.data(),
-             spsx_seq_track->SPSXSeqTrackData::data(),
-             sizeof(SPSXSeqTrackData));
-      seq_storage.seq_version = SPSX_SEQ_VERSION_SPSX;
-    } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX_V1) {
-      convert_old_order_spsx_seq(
-          *reinterpret_cast<const LegacySPSXSeqTrackDataV1 *>(
-              &seq_storage.seq_data.spsx),
-          *spsx_seq_track);
-      memcpy(seq_storage.seq_data.spsx.data(),
-             spsx_seq_track->SPSXSeqTrackData::data(),
-             sizeof(SPSXSeqTrackData));
-      seq_storage.seq_version = SPSX_SEQ_VERSION_SPSX;
     } else if (seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
       convert_legacy_seq_to_spsx(seq_storage.seq_data.legacy,
                                  *spsx_seq_track);

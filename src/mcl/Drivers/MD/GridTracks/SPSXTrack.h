@@ -14,9 +14,7 @@
 
 // Seq data format stored in the track
 #define SPSX_SEQ_VERSION_LEGACY 0  // MDSeqTrackData (AVR + rp2040)
-#define SPSX_SEQ_VERSION_SPSX_V1 1  // Old-order SPSXSeqTrackData without swing amount
-#define SPSX_SEQ_VERSION_SPSX_V2 2  // Old-order SPSXSeqTrackData
-#define SPSX_SEQ_VERSION_SPSX   3  // Tail-lock SPSXSeqTrackData (rp2040 only)
+#define SPSX_SEQ_VERSION_SPSX   1  // SPSXSeqTrackData (rp2040 only)
 
 #if !defined(__AVR__)
 
@@ -32,18 +30,18 @@ public:
   } seq_data;
 };
 
-class ATTR_PACKED() SPSXTrackStorage : public SeqTrackModStorage,
-                                       public SPSXTrackSeqStorage {
+class ATTR_PACKED() SPSXTrackStorage : public SPSXTrackSeqStorage,
+                                       public SeqTrackModStorage {
 public:
   void init_storage() {
-    SeqTrackModStorage::init_mod();
     seq_version = SPSX_SEQ_VERSION_LEGACY;
     seq_data.legacy.init();
+    SeqTrackModStorage::init_mod();
   }
 };
 
 static_assert(sizeof(SPSXTrackStorage) ==
-                  sizeof(SeqTrackModStorage) + sizeof(SPSXTrackSeqStorage),
+                  sizeof(SPSXTrackSeqStorage) + sizeof(SeqTrackModStorage),
               "SPSXTrackStorage storage size changed");
 
 class ATTR_PACKED() SPSXTrack : public DeviceTrack {
@@ -100,7 +98,6 @@ public:
   void normalize();
 
   virtual uint16_t get_track_size() override { return _sizeof(); }
-  virtual uint16_t get_store_size() override;
   virtual uint16_t get_region_size() override {
     // Region must fit the largest possible variant
     return MEMORY_ALIGN(sizeof(SPSXTrack) - sizeof(void*));

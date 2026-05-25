@@ -13,8 +13,8 @@
 
 class ATTR_PACKED() ExtTrack : public DeviceTrack {
 public:
-  SeqTrackModData mod_data;
   ExtSeqTrackData seq_data;
+  SeqTrackModData mod_data;
   ExtTrack() {
     active = EXT_TRACK_TYPE;
     static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
@@ -41,8 +41,8 @@ public:
 
   uint8_t get_model() override { return EXT_TRACK_TYPE; }
   void init_defaults() override {
-    mod_data.init();
     seq_data.clear();
+    mod_data.init();
   }
   uint16_t get_track_size() override { return _sizeof(); }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
@@ -69,7 +69,7 @@ public:
     return DEVICE_TRACK_LEN;
   }
   static constexpr uint16_t seq_payload_storage_size() {
-    return sizeof(SeqTrackModData) + sizeof(ExtSeqTrackData);
+    return sizeof(ExtSeqTrackData) + sizeof(SeqTrackModData);
   }
 #if !defined(__AVR__)
   static bool can_materialize_legacy_ext(uint8_t active,

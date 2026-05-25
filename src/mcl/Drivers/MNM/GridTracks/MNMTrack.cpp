@@ -38,10 +38,7 @@ uint16_t MNMTrack::calc_latency(uint8_t tracknumber) {
 }
 
 void MNMTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, GridSlot slotnumber) {
-  GridTrack::transition_load(tracknumber, seq_track, slotnumber);
-  ExtSeqTrack *ext_track = (ExtSeqTrack *) seq_track;
-  ext_track->is_generic_midi = false;
-  load_seq_data(seq_track);
+  transition_load_device(tracknumber, seq_track, slotnumber);
 }
 
 void MNMTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
@@ -61,10 +58,6 @@ void MNMTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
 void MNMTrack::load_immediate_cleared(uint8_t tracknumber, SeqTrack *seq_track) {
   DEBUG_PRINT_FN();
   load_seq_data(seq_track);
-}
-
-void MNMTrack::load_seq_data(SeqTrack *seq_track) {
-  ExtTrack::load_ext_seq_data(*this, seq_data, mod_data, seq_track);
 }
 
 void MNMTrack::get_machine_from_kit(uint8_t tracknumber) {
@@ -138,7 +131,7 @@ bool MNMTrack::materialized_storage_range(uint8_t track_type,
     return false;
   }
   source_offset =
-      reinterpret_cast<uintptr_t>(&mod_data) -
+      reinterpret_cast<uintptr_t>(&seq_data) -
       reinterpret_cast<uintptr_t>(_this());
   target_offset = ExtTrack::seq_payload_storage_offset();
   len = ExtTrack::seq_payload_storage_size();
