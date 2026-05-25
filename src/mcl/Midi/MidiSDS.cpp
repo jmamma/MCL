@@ -362,10 +362,7 @@ bool MidiSDSClass::sendData(uint8_t *buf, uint8_t len) {
 }
 
 void MidiSDSClass::incPacketNumber() {
-  packetNumber++;
-  if (packetNumber > 0x7F) {
-    packetNumber = 0;
-  }
+  packetNumber = (packetNumber + 1) & 0x7F;
 }
 
 // ============================================================================
