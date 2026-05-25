@@ -112,6 +112,17 @@ bool ext_set_param(uint8_t target, uint8_t param, uint8_t value,
   return true;
 }
 
+bool set_resolved_param(DeviceParamTarget target, uint8_t param,
+                        uint8_t value, MidiUartClass *uart_, bool base) {
+  if (!target.valid()) {
+    return false;
+  }
+  if (target.device_idx == DeviceIdx::Secondary) {
+    return ext_set_param(target.target, param, value, uart_);
+  }
+  return md_set_param(target.target, param, value, uart_, base);
+}
+
 } // namespace
 
 uint8_t DeviceParamTarget::param_count() const {
@@ -158,24 +169,12 @@ bool DeviceParamTarget::get_base_param(uint8_t param, uint8_t *value) const {
 
 bool DeviceParamTarget::set_base_param(uint8_t param, uint8_t value,
                                        MidiUartClass *uart_) const {
-  if (!valid()) {
-    return false;
-  }
-  if (device_idx == DeviceIdx::Secondary) {
-    return ext_set_param(target, param, value, uart_);
-  }
-  return md_set_param(target, param, value, uart_, true);
+  return set_resolved_param(*this, param, value, uart_, true);
 }
 
 bool DeviceParamTarget::send_modulated_param(uint8_t param, uint8_t value,
                                              MidiUartClass *uart_) const {
-  if (!valid()) {
-    return false;
-  }
-  if (device_idx == DeviceIdx::Secondary) {
-    return ext_set_param(target, param, value, uart_);
-  }
-  return md_set_param(target, param, value, uart_, false);
+  return set_resolved_param(*this, param, value, uart_, false);
 }
 
 uint8_t DeviceParamTarget::lock_param_count() const {
