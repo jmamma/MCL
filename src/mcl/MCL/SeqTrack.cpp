@@ -84,32 +84,8 @@ void SeqSlideTrack::dispatch_slide_value(uint8_t param, uint8_t val,
 
 void SeqSlideTrack::on_slide_dispatch_end() {}
 
-void SeqTrack::load_arp_data(ArpSeqTrack &arp_track,
-                             const ArpSeqData &stored_data,
-                             bool use_stored_data) {
-  if (use_stored_data) {
-    arp_track.load_data(stored_data);
-    return;
-  }
-  ArpSeqData empty;
-  empty.init();
-  arp_track.load_data(empty);
-}
-
-void SeqTrack::load_lfo_data(LFOSeqTrack &lfo_track,
-                             const SeqLFOData &stored_data,
-                             bool use_stored_data) {
-  if (use_stored_data) {
-    lfo_track.load_data(stored_data);
-    return;
-  }
-  SeqLFOData empty;
-  empty.init();
-  lfo_track.load_data(empty);
-}
-
 void SeqTrack::load_mod_data(SeqTrack *seq_track, SeqTrackModData &mod_data,
-                             bool grid_x_tracks, bool use_stored_mod_data) {
+                             bool grid_x_tracks) {
   if (seq_track == nullptr) {
     return;
   }
@@ -118,18 +94,14 @@ void SeqTrack::load_mod_data(SeqTrack *seq_track, SeqTrackModData &mod_data,
     if (tracknumber >= NUM_GRID_X_LFO_TRACKS) {
       return;
     }
-    load_arp_data(mcl_seq.md_arp_tracks[tracknumber], mod_data.arp,
-                  use_stored_mod_data);
-    load_lfo_data(mcl_seq.grid_x_lfo_tracks[tracknumber], mod_data.lfo,
-                  use_stored_mod_data);
+    mcl_seq.md_arp_tracks[tracknumber].load_data(mod_data.arp);
+    mcl_seq.grid_x_lfo_tracks[tracknumber].load_data(mod_data.lfo);
     return;
   }
 #ifdef EXT_TRACKS
   if (tracknumber < NUM_GRID_Y_LFO_TRACKS) {
-    load_arp_data(mcl_seq.ext_arp_tracks[tracknumber], mod_data.arp,
-                  use_stored_mod_data);
-    load_lfo_data(mcl_seq.grid_y_lfo_tracks[tracknumber], mod_data.lfo,
-                  use_stored_mod_data);
+    mcl_seq.ext_arp_tracks[tracknumber].load_data(mod_data.arp);
+    mcl_seq.grid_y_lfo_tracks[tracknumber].load_data(mod_data.lfo);
   }
 #endif
 }

@@ -200,9 +200,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
   md_seq_track->set_length(md_seq_track->length);
   md_seq_track->notes.first_trig = true;
 
-  SeqTrack::load_mod_data(
-      seq_track, mod_data, true,
-      storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+  SeqTrack::load_mod_data(seq_track, mod_data, true);
 }
 
 #if defined(__AVR__)

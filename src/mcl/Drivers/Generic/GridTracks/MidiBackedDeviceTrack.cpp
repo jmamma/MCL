@@ -114,9 +114,7 @@ void MidiBackedDeviceTrack::load_seq_data(SeqTrack *seq_track) {
   midi_track->set_speed(midi_device_track_valid_speed(seq_data.speed));
   midi_track->mute_state = old_mute;
 
-  SeqTrack::load_mod_data(
-      seq_track, seq_data.mod(), false,
-      storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+  SeqTrack::load_mod_data(seq_track, seq_data.mod(), false);
 }
 
 void MidiBackedDeviceTrack::import_legacy_ext_storage(

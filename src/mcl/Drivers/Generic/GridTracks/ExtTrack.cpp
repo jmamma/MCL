@@ -101,9 +101,7 @@ void ExtTrack::load_ext_seq_data(DeviceTrack &track,
   ext_track->set_length(seq_track->length);
   seq_track->mute_state = old_mute;
 
-  SeqTrack::load_mod_data(
-      seq_track, mod_data, false,
-      track.storage_version_at_least(SEQ_TRACK_MOD_STORAGE_VERSION));
+  SeqTrack::load_mod_data(seq_track, mod_data, false);
 #endif
 }
 

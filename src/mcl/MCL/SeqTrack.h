@@ -121,14 +121,8 @@ public:
 
   void toggle_mute() { mute_state = !mute_state; }
 
-  static void load_arp_data(ArpSeqTrack &arp_track,
-                            const ArpSeqData &stored_data,
-                            bool use_stored_data);
-  static void load_lfo_data(LFOSeqTrack &lfo_track,
-                            const SeqLFOData &stored_data,
-                            bool use_stored_data);
   static void load_mod_data(SeqTrack *seq_track, SeqTrackModData &mod_data,
-                            bool grid_x_tracks, bool use_stored_mod_data);
+                            bool grid_x_tracks);
   static void store_mod_data(SeqTrackModData &mod_data, bool grid_x_tracks,
                              uint8_t tracknumber);
   static uint8_t get_timing_mid(uint8_t speed_);
