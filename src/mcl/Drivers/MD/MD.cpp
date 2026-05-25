@@ -331,6 +331,11 @@ private:
 
 } // namespace
 
+static void send_global_setting(MDClass &md, uint8_t setting, uint8_t value) {
+  uint8_t data[3] = {0x70, setting, value};
+  md.sendRequest(data, sizeof(data));
+}
+
 DeviceMixerCapability *MDClass::mixer() {
   static MDMixerCapability capability(*this);
   return &capability;
@@ -1071,18 +1076,15 @@ void MDClass::setup() {
 }
 
 void MDClass::setBaseChannel(uint8_t channel) {
-  uint8_t data[3] = {0x70, 0x4A, channel};
-  sendRequest(data, sizeof(data));
+  send_global_setting(*this, 0x4A, channel);
 }
 
 void MDClass::setLocalOn(bool localOn) {
-  uint8_t data[3] = {0x70, 0x4B, localOn};
-  sendRequest(data, sizeof(data));
+  send_global_setting(*this, 0x4B, localOn);
 }
 
 void MDClass::setProgramChange(uint8_t val) {
-  uint8_t data[3] = {0x70, 0x4C, val};
-  sendRequest(data, sizeof(data));
+  send_global_setting(*this, 0x4C, val);
 }
 
 void MDClass::requestKit(uint8_t kit) {
@@ -1116,8 +1118,7 @@ void MDClass::requestGlobal(uint8_t global) {
 }
 
 void MDClass::setChannelMode(uint8_t mode) {
-  uint8_t data[3] = {0x70, 0x4F, mode};
-  sendRequest(data, sizeof(data));
+  send_global_setting(*this, 0x4F, mode);
   global.channelMode = mode;
 }
 
@@ -1142,8 +1143,7 @@ void MDClass::setExternalSync() {
     b |= 1 << 6;
   }
 
-  uint8_t data[3] = {0x70, 0x4D, b};
-  sendRequest(data, sizeof(data));
+  send_global_setting(*this, 0x4D, b);
 }
 
 #ifdef PLATFORM_TBD
