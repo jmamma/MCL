@@ -479,10 +479,12 @@ void LFOPage::display() {
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   SeqPage::draw_knob_frame();
   if (page_mode == LFO_DESTINATION) {
-    draw_lfo_dest(0, encoders[0]->cur);
-    draw_lfo_param(1, encoders[0]->cur, encoders[1]->cur);
-    draw_lfo_dest(2, encoders[2]->cur);
-    draw_lfo_param(3, encoders[2]->cur, encoders[3]->cur);
+    for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
+      uint8_t encoder_idx = i << 1;
+      draw_lfo_dest(encoder_idx, encoders[encoder_idx]->cur);
+      draw_lfo_param(encoder_idx + 1, encoders[encoder_idx]->cur,
+                     encoders[encoder_idx + 1]->cur);
+    }
     strcpy(info2, "LFO>DST");
   }
   else if (page_mode == LFO_GLOBAL) {
