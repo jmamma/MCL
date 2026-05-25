@@ -9,6 +9,10 @@
 
 #define MDX_KIT_VERSION 64
 
+const int8_t md_standard_drum_mapping[16] PROGMEM = {
+    36, 38, 40, 41, 43, 45, 47, 48,
+    50, 52, 53, 55, 57, 59, 60, 62};
+
 #if defined(__AVR__)
 static uint8_t scale_7bit(uint8_t value, uint8_t scale) {
   return ((uint16_t)value * scale) / 127;

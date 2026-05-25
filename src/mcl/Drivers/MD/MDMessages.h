@@ -3,10 +3,12 @@
 #ifndef MDMESSAGES_H__
 #define MDMESSAGES_H__
 
+#include "platform.h"
 #include "MDPattern.h"
 #include "MDParams.h"
 
 extern uint8_t machinedrum_sysex_hdr[5];
+extern const int8_t md_standard_drum_mapping[16] PROGMEM;
 
 /**
  * \addtogroup MD Elektron MachineDrum
@@ -39,9 +41,7 @@ public:
   }
 
   void init() {
-    uint8_t standardDrumMapping[16] = {36, 38, 40, 41, 43, 45, 47, 48,
-                                     50, 52, 53, 55, 57, 59, 60, 62}; 
-    memcpy(drumMapping, standardDrumMapping, 16);
+    memcpy_P(drumMapping, md_standard_drum_mapping, sizeof(drumMapping));
   }
 
   uint8_t drumRouting[16];
