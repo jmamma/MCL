@@ -39,10 +39,6 @@ void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 
 uint16_t PerfTrack::calc_latency(uint8_t tracknumber) {
-  if (version < PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT) {
-    convert_legacy_load_settings();
-  }
-
   return load_mute_set == 255 ? 0 : 32 * 3 * 4; // Worst case estimate, 32 parameters, 3 bytes each, 4 perf controllers.
 }
 
@@ -81,10 +77,6 @@ void PerfTrack::get_perf() {
 void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load perf");
   DEBUG_PRINTLN( sizeof(scenes));
-  if (version < PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT) {
-    convert_legacy_load_settings();
-  }
-
   mixer_page.load_mute_set = load_mute_set < 4 ? load_mute_set : 255;
 
   uint8_t bit = 1;
