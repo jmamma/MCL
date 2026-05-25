@@ -17,24 +17,25 @@ public:
 
 	/** Add a new element t to the vector, in the first empty place. **/
   bool add(T t) {
-    for (int i = 0; i < N; i++) {
+    uint8_t empty = N;
+    for (uint8_t i = 0; i < N; i++) {
       if (arr[i] == t) {
-		 arr[i] = t;
-		 return true;
+        return true;
+      }
+      if (arr[i] == (T)0 && empty == N) {
+        empty = i;
       }
     }
-    for (int i = 0; i < N; i++) {
-      if (arr[i] == (T)0) {
-		 arr[i] = t;
-		 return true;
-      }
+    if (empty != N) {
+      arr[empty] = t;
+      return true;
     }
     return false;
   }
 
 	/** Remove the element t from the vector. **/
   bool remove(T t) {
-    for (int i = 0; i < N; i++) {
+    for (uint8_t i = 0; i < N; i++) {
       if (arr[i] == t) {
 				arr[i] = (T)0;
 				return true;
@@ -46,7 +47,7 @@ public:
 	/** Returns the size of the vector. **/
   int length() {
     int res = 0;
-    for (int i = 0; i < N; i++) {
+    for (uint8_t i = 0; i < N; i++) {
       if (arr[i] != 0)
 				res++;
     }
