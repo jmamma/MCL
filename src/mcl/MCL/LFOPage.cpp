@@ -579,17 +579,18 @@ bool LFOPage::apply_seq_menu_row(uint8_t row_entry, void (*row_func)()) {
 }
 
 void LFOPage::learn_param(uint8_t track, uint8_t param, uint8_t value) {
-  learn_param(DeviceIdx::Primary, track + 1, param, value);
+  learn_param(DeviceIdx::Primary, track, param, value);
 }
 
-void LFOPage::learn_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
+void LFOPage::learn_param(DeviceIdx device_idx, uint8_t target, uint8_t param,
                           uint8_t value) {
+  learn_perf_dest(DeviceParamResolver::perf_dest_for_target(device_idx, target),
+                  param, value);
+}
+
+void LFOPage::learn_perf_dest(uint8_t global_dest, uint8_t param,
+                              uint8_t value) {
   track_update();
-  if (dest == 0) {
-    return;
-  }
-  uint8_t global_dest =
-      DeviceParamResolver::perf_dest_for_target(device_idx, dest - 1);
   if (LFOTrackRef::param_count(global_dest) <= param) {
     return;
   }

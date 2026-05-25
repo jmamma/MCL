@@ -386,10 +386,12 @@ void MDSeqTrack::recalc_slides() {
          1;
     if (next_lockstep < step) {
       x1 = (length + next_lockstep) * ticks_per_step +
-           effective_timing(next_lockstep, ticks_per_step) - ticks_per_step - 1;
+           effective_timing(next_lockstep, ticks_per_step) - ticks_per_step -
+           1;
     } else {
       x1 = next_lockstep * ticks_per_step +
-           effective_timing(next_lockstep, ticks_per_step) - ticks_per_step - 1;
+           effective_timing(next_lockstep, ticks_per_step) - ticks_per_step -
+           1;
     }
     DEBUG_DUMP(microtiming[step]);
     DEBUG_DUMP(ticks_per_step);

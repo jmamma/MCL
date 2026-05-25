@@ -156,7 +156,7 @@ again:
       goto again;
   } break;
 
-  case midi_wait_byte_1:
+  case midi_wait_byte_1: {
     // trying to fix bug that causes midi messages to overlap
     // if a midicallback triggered another midi event then the status was not
     // update in time and collision occured between data streamss
@@ -170,11 +170,13 @@ again:
     uint8_t buf[3];
     memcpy(buf, msg, 3);
 
+    bool forwarded_cc = callback == MIDI_CC_CB;
     for (uint8_t n = 0; n < NUM_FORWARD_PORTS; n++) {
-      if (uart_forward[n]) {
-        uart_forward[n]->m_putc(buf, in_msg_len);
-        if (callback == MIDI_CC_CB) {
-          device_manager.on_forwarded_cc(uart_forward[n], buf);
+      MidiUartClass *forward_uart = uart_forward[n];
+      if (forward_uart) {
+        forward_uart->m_putc(buf, in_msg_len);
+        if (forwarded_cc) {
+          device_manager.on_forwarded_cc(forward_uart, buf);
         }
       }
     }
@@ -193,6 +195,7 @@ again:
 
     in_state = midi_wait_status;
     break;
+  }
 
   case midi_wait_byte_2:
     msg[in_msg_len++] = byte;

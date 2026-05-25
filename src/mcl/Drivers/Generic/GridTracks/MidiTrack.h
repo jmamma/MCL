@@ -40,7 +40,7 @@ public:
   }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
-  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
+  uint16_t grid_slot_label(GridSlotLabelContext ctx) override {
     return make_grid_slot_label('M', ctx.column + '1');
   }
   uint8_t get_model() override { return MIDI_TRACK_TYPE; }

@@ -149,7 +149,7 @@ public:
   void set_speed_multiplier(uint8_t multiplier);
   static uint16_t speed_to_phase_increment(uint8_t speed);
   static uint16_t speed_to_phase_increment(uint8_t speed, uint8_t multiplier);
-  static void convert_legacy_data(const SeqLFOData &legacy_data,
+  static void convert_legacy_data(const LegacyLFOSeqTrackData &legacy_data,
                                   SeqLFOData *data);
   void load_data(const SeqLFOData &data);
   void store_data(SeqLFOData *data) const;

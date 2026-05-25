@@ -45,7 +45,7 @@ void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
   MD.sendMachine(dest_track, &(machine), send_level, send_machine);
 }
 
-uint16_t MDTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
+uint16_t MDTrack::grid_slot_label(GridSlotLabelContext ctx) {
   auto tmp = getMDMachineNameShort(ctx.model, 2);
   if (!tmp) {
     return 0;

@@ -140,27 +140,18 @@ uint8_t DeviceParamTarget::param_count() const {
 }
 
 bool DeviceParamTarget::target_label(char *out, uint8_t len) const {
-  if (!valid()) {
-    return false;
-  }
-  return device_idx != DeviceIdx::Secondary &&
+  return device_idx == DeviceIdx::Primary &&
          md_target_label(target, out, len);
 }
 
 bool DeviceParamTarget::param_label(uint8_t param, char *out,
                                     uint8_t len) const {
-  if (!valid()) {
-    return false;
-  }
-  return device_idx != DeviceIdx::Secondary &&
+  return device_idx == DeviceIdx::Primary &&
          md_param_label(target, param, out, len);
 }
 
 bool DeviceParamTarget::get_param(uint8_t param, uint8_t *value) const {
-  if (!valid()) {
-    return false;
-  }
-  return device_idx != DeviceIdx::Secondary &&
+  return device_idx == DeviceIdx::Primary &&
          md_get_param(target, param, value);
 }
 
@@ -245,15 +236,12 @@ uint8_t DeviceParamTarget::pitch_lock_param() const {
 }
 
 bool DevicePerfTarget::param_from_key(uint8_t key, uint8_t *param) const {
-  if (!valid()) {
-    return false;
-  }
-  if (param == nullptr || params.device_idx == DeviceIdx::Secondary ||
+  if (param == nullptr || params.device_idx != DeviceIdx::Primary ||
       params.target >= NUM_MD_TRACKS || key < 0x10 || key > 0x17) {
     return false;
   }
   uint8_t value = MD.currentSynthPage * 8 + key - 0x10;
-  if (value >= param_count()) {
+  if (value >= MD_PARAMS_PER_TRACK) {
     return false;
   }
   *param = value;
@@ -261,11 +249,8 @@ bool DevicePerfTarget::param_from_key(uint8_t key, uint8_t *param) const {
 }
 
 bool DevicePerfTarget::key_for_param(uint8_t param, uint8_t *key) const {
-  if (!valid()) {
-    return false;
-  }
-  if (key == nullptr || params.device_idx == DeviceIdx::Secondary ||
-      params.target >= NUM_MD_TRACKS || param >= param_count()) {
+  if (key == nullptr || params.device_idx != DeviceIdx::Primary ||
+      params.target >= NUM_MD_TRACKS || param >= MD_PARAMS_PER_TRACK) {
     return false;
   }
   int8_t value = (int8_t)param - (int8_t)MD.currentSynthPage * 8 + 0x10;
@@ -278,10 +263,7 @@ bool DevicePerfTarget::key_for_param(uint8_t param, uint8_t *key) const {
 
 bool DevicePerfTarget::begin_param_editor(uint8_t *editor_params,
                                           uint8_t count) const {
-  if (!valid()) {
-    return false;
-  }
-  if (params.device_idx == DeviceIdx::Secondary ||
+  if (params.device_idx != DeviceIdx::Primary ||
       params.target >= NUM_MD_TRACKS || editor_params == nullptr ||
       count < MD_PARAMS_PER_TRACK) {
     return false;

@@ -67,7 +67,7 @@ void MDSysexListenerClass::end() {
     }
 
     perf_page.learn_param(fx_type + 16, param, value);
-    lfo_page.learn_param(DeviceIdx::Primary, fx_type + NUM_MD_TRACKS + 1, param, value);
+    lfo_page.learn_perf_dest(fx_type + NUM_MD_TRACKS + 1, param, value);
     if (GUI.currentPage() == &fx_page_a) { fx_page_a.update_encoders(); }
     if (GUI.currentPage() == &fx_page_b) { fx_page_b.update_encoders(); }
 
@@ -90,7 +90,7 @@ void MDSysexListenerClass::end() {
       if (4 < param && param < 8) {
         MD.kit.params[track][param + 16] = value;
         perf_page.learn_param(track, param + 16, value);
-        lfo_page.learn_param(DeviceIdx::Primary, track + 1, param + 16, value);
+        lfo_page.learn_perf_dest(track + 1, param + 16, value);
       }
     }
 

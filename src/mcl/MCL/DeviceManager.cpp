@@ -105,15 +105,14 @@ void DeviceManager::on_forwarded_cc(MidiUartClass *uart, uint8_t *msg) {
     return;
   }
 #if defined(__AVR__)
-  MidiDevice *primary = nonnull(primary_);
-  if (primary != &null_midi_device && primary->uart == uart) {
+  MidiDevice *primary = primary_;
+  if (primary != nullptr && primary->uart == uart) {
     primary->on_forwarded_cc(msg);
     return;
   }
 
-  MidiDevice *secondary = nonnull(secondary_);
-  if (secondary != &null_midi_device && secondary != primary &&
-      secondary->uart == uart) {
+  MidiDevice *secondary = secondary_;
+  if (secondary != nullptr && secondary->uart == uart) {
     secondary->on_forwarded_cc(msg);
     return;
   }

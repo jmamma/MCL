@@ -45,7 +45,8 @@ public:
   void track_update();
   void config_encoder_range(uint8_t i);
   void learn_param(uint8_t track, uint8_t param, uint8_t value);
-  void learn_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
+  void learn_perf_dest(uint8_t global_dest, uint8_t param, uint8_t value);
+  void learn_param(DeviceIdx device_idx, uint8_t target, uint8_t param,
                    uint8_t value);
 
 protected:

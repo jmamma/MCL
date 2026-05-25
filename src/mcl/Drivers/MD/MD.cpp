@@ -29,13 +29,13 @@ void MDMidiEvents::track_cc(uint8_t *msg) {
   }
 
   uint8_t param_limit = MD.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-  if (track_param < param_limit && track < 16) {
+  if (track_param == MODEL_LEVEL) {
+    MD.kit.levels[track] = value;
+  } else if (track_param == MODEL_MUTE) {
+    SeqTrackUtil::set_mute_state(true, track, value > 0);
+  } else if (track_param < param_limit) {
     MD.kit.params[track][track_param] = value;
     last_md_param = track_param;
-  } else if (track_param == MODEL_LEVEL && track < 16) {
-    MD.kit.levels[track] = value;
-  } else if (track_param == MODEL_MUTE && track < 16) {
-    SeqTrackUtil::set_mute_state(true, track, value > 0);
   }
 }
 

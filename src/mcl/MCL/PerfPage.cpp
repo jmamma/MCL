@@ -335,7 +335,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
   if (param >= target.param_count()) {
     return;
   }
-  bool on_perf_page = mcl.currentPage() == PERF_PAGE_0;
+  bool updated_controller = false;
 
   for (uint8_t i = 0; i < 4; i++) {
     PerfEncoder *e = perf_encoders[i];
@@ -349,14 +349,15 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
         uint8_t val = range == 0 ? 127 : ((uint16_t)cur * 127) / range;
         e->cur = val;
         //perf_encoders[i]->send();
-        if (on_perf_page) {
-          update_params();
-        }
+        updated_controller = true;
       }
     }
   }
 
-  if (on_perf_page) {
+  if (mcl.currentPage() == PERF_PAGE_0) {
+    if (updated_controller) {
+      update_params();
+    }
     if (learn) {
       PerfData *d = &perf_encoders[perf_id]->perf_data;
       uint8_t scene = learn - 1;

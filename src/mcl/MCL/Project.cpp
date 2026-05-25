@@ -308,8 +308,8 @@ void convert_legacy_ext_seq(ExtSeqTrackData &dst, uint8_t speed) {
 }
 
 bool read_legacy_ext_track(Grid &grid, GridColumn column, GridRow row,
-                           uint8_t track_type, DeviceTrack &upgraded,
-                           ExtSeqTrackData &seq_data) {
+                           DeviceTrack &upgraded, ExtSeqTrackData &seq_data) {
+  uint8_t track_type = upgraded.active;
   if (!grid.read(upgraded._this(),
                  LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(LegacyExtSeqTrackData),
                  column, row) ||
@@ -360,12 +360,10 @@ bool migrate_md_track_native_swing(Grid &grid, GridColumn column, GridRow row) {
 }
 
 bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
-                                    uint8_t track_type,
                                     DeviceTrack &upgraded,
                                     ExtSeqTrackData &seq_data) {
   upgraded.init_defaults();
-  if (!read_legacy_ext_track(grid, column, row, track_type, upgraded,
-                             seq_data)) {
+  if (!read_legacy_ext_track(grid, column, row, upgraded, seq_data)) {
     return false;
   }
   uint16_t payload_size = upgraded.get_sound_data_size();
@@ -378,8 +376,7 @@ bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
 }
 
 bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
-                                 GridColumn dst_column, uint8_t track_type,
-                                 uint8_t payload_size) {
+                                 uint8_t track_type, uint8_t payload_size) {
   static_assert(sizeof(MDFXData) >= sizeof(TempoData),
                 "fixed payload scratch too small for tempo");
   static_assert(sizeof(MDFXData) >= sizeof(GridChain),
@@ -391,7 +388,7 @@ bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
     return false;
   }
   init_migrated_header(storage.header, storage.header, track_type, 0);
-  return grid.write(&storage, storage_size, dst_column, row);
+  return grid.write(&storage, storage_size, column, row);
 }
 
 bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
@@ -403,7 +400,6 @@ bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
   }
 
   PerfTrack upgraded;
-  upgraded.init_defaults();
   copy_legacy_header(upgraded, legacy_track.header);
   upgraded.active = PERF_TRACK_TYPE;
   copy_legacy_perf_track_data(upgraded, legacy_track.data);
@@ -427,7 +423,6 @@ bool migrate_perf_track_clean_layout(Grid &grid, GridColumn column,
   }
 
   PerfTrack upgraded;
-  upgraded.init_defaults();
   copy_legacy_header(upgraded, header);
   copy_legacy_perf_track_data(upgraded, legacy_perf);
   return write_migrated_track(grid, column, row, upgraded,
@@ -1009,9 +1004,6 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
       if (legacy_track.header.active == MDLFO_TRACK_TYPE &&
           (grid_x_header->track_type[0] == MD_TRACK_TYPE ||
            grid_x_header->track_type[0] == EMPTY_TRACK_TYPE)) {
-        SeqLFOData legacy_lfo;
-        legacy_track.lfo_data.store_data(&legacy_lfo);
-
         MDTrack upgraded_md_track;
         if (grid_x_header->track_type[0] == MD_TRACK_TYPE) {
           if (!read_upgraded_md_track(grids[0], 0, row, upgraded_md_track)) {
@@ -1023,7 +1015,7 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
           upgraded_md_track.link.init(row);
         }
 
-        LFOSeqTrack::convert_legacy_data(legacy_lfo,
+        LFOSeqTrack::convert_legacy_data(legacy_track.lfo_data,
                                          &upgraded_md_track.mod_data.lfo);
 
         if (!write_migrated_track(grids[0], 0, row, upgraded_md_track,
@@ -1141,8 +1133,7 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
       case EXT_TRACK_TYPE:
       {
         ExtTrack upgraded;
-        if (!migrate_ext_like_track_storage(grids[grid], column, row,
-                                            EXT_TRACK_TYPE, upgraded,
+        if (!migrate_ext_like_track_storage(grids[grid], column, row, upgraded,
                                             upgraded.seq_data)) {
           return false;
         }
@@ -1151,8 +1142,7 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
       case A4_TRACK_TYPE:
       {
         A4Track upgraded;
-        if (!migrate_ext_like_track_storage(grids[grid], column, row,
-                                            A4_TRACK_TYPE, upgraded,
+        if (!migrate_ext_like_track_storage(grids[grid], column, row, upgraded,
                                             upgraded.seq_data)) {
           return false;
         }
@@ -1161,21 +1151,20 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
       case MNM_TRACK_TYPE:
       {
         MNMTrack upgraded;
-        if (!migrate_ext_like_track_storage(grids[grid], column, row,
-                                            MNM_TRACK_TYPE, upgraded,
+        if (!migrate_ext_like_track_storage(grids[grid], column, row, upgraded,
                                             upgraded.seq_data)) {
           return false;
         }
         break;
       }
       case MDFX_TRACK_TYPE:
-        if (!migrate_fixed_payload_track(grids[grid], column, row, column,
+        if (!migrate_fixed_payload_track(grids[grid], column, row,
                                          MDFX_TRACK_TYPE, sizeof(MDFXData))) {
           return false;
         }
         break;
       case MDTEMPO_TRACK_TYPE:
-        if (!migrate_fixed_payload_track(grids[grid], column, row, column,
+        if (!migrate_fixed_payload_track(grids[grid], column, row,
                                          MDTEMPO_TRACK_TYPE,
                                          sizeof(TempoData))) {
           return false;
@@ -1190,7 +1179,7 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
         }
         break;
       case GRIDCHAIN_TRACK_TYPE:
-        if (!migrate_fixed_payload_track(grids[grid], column, row, column,
+        if (!migrate_fixed_payload_track(grids[grid], column, row,
                                          GRIDCHAIN_TRACK_TYPE,
                                          sizeof(GridChain))) {
           return false;

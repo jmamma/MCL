@@ -31,18 +31,17 @@ void set_slot_label(char label[3], char a, char b) {
   label[2] = '\0';
 }
 
-bool copy_grid_slot_label(uint8_t track_type,
-                          const GridSlotLabelContext &ctx, char label[3]) {
+void copy_grid_slot_label(uint8_t track_type,
+                          GridSlotLabelContext ctx, char label[3]) {
   EmptyTrack scratch;
   auto *track = ((DeviceTrack *)&scratch)->init_track_type(track_type);
   uint16_t packed = track->grid_slot_label(ctx);
   if (packed == 0) {
-    return false;
+    return;
   }
   label[0] = packed >> 8;
   label[1] = packed;
   label[2] = '\0';
-  return true;
 }
 
 } // namespace
@@ -366,9 +365,11 @@ void GridPage::load_slot_models() {
     update_row_state(row, row_headers[n].active);
     for (uint8_t x = 0; x < GRID_WIDTH; x++) {
       uint8_t track_type = row_headers[n].track_type[x];
-      GridSlotLabelContext ctx = {
-          row_headers[n].model[x], x, (GridSlot)(x + cur_grid * GRID_WIDTH),
-          row};
+      GridSlotLabelContext ctx = {row_headers[n].model[x], x};
+#if defined(PLATFORM_TBD)
+      ctx.slot = (GridSlot)(x + cur_grid * GRID_WIDTH);
+      ctx.row = row;
+#endif
       copy_grid_slot_label(track_type, ctx, slot_labels[n][x]);
     }
   }

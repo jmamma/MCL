@@ -44,8 +44,10 @@ class SeqTrack;
 struct GridSlotLabelContext {
   uint8_t model;
   GridColumn column;
+#if defined(PLATFORM_TBD)
   GridSlot slot;
   GridRow row;
+#endif
 };
 
 constexpr uint16_t make_grid_slot_label(char a, char b) {
@@ -136,7 +138,7 @@ public:
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
   virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) { }
-  virtual uint16_t grid_slot_label(const GridSlotLabelContext &ctx) {
+  virtual uint16_t grid_slot_label(GridSlotLabelContext ctx) {
     (void)ctx;
     return 0;
   }

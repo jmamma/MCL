@@ -509,7 +509,7 @@ TBDTrack::TBDTrack() {
   static_assert(MEMORY_ALIGN(sizeof(TBDTrack) - sizeof(void *)) <= TBD_TRACK_LEN);
 }
 
-uint16_t TBDTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
+uint16_t TBDTrack::grid_slot_label(GridSlotLabelContext ctx) {
   char label[3];
   label[0] = 'T';
   label[1] = 'B';
@@ -647,7 +647,7 @@ TBDMidiTrack::TBDMidiTrack() {
                 GRID2_TRACK_LEN);
 }
 
-uint16_t TBDMidiTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
+uint16_t TBDMidiTrack::grid_slot_label(GridSlotLabelContext ctx) {
   char label[3];
   label[0] = 'T';
   label[1] = 'M';

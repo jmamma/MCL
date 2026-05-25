@@ -131,7 +131,7 @@ void SPSXTrack::clear_track() {
   init();
 }
 
-uint16_t SPSXTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
+uint16_t SPSXTrack::grid_slot_label(GridSlotLabelContext ctx) {
   auto tmp = getMDMachineNameShort(ctx.model, 2);
   if (!tmp) {
     return 0;

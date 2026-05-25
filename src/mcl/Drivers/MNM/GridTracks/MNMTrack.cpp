@@ -8,7 +8,7 @@ void MNMTrack::init() {
   //seq_data.init();
 }
 
-uint16_t MNMTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
+uint16_t MNMTrack::grid_slot_label(GridSlotLabelContext ctx) {
   auto tmp = getMNMMachineNameShort(ctx.model, 2);
   if (!tmp) {
     return 0;
@@ -17,7 +17,7 @@ uint16_t MNMTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
 }
 
 #if !defined(__AVR__)
-uint16_t MNMMidiTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
+uint16_t MNMMidiTrack::grid_slot_label(GridSlotLabelContext ctx) {
   auto tmp = getMNMMachineNameShort(ctx.model, 2);
   if (!tmp) {
     return 0;

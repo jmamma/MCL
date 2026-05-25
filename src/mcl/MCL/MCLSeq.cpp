@@ -63,13 +63,12 @@ bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
                                             value);
   }
 
-  uint8_t dest = track + 1;
   uint8_t perf_dest =
       DeviceParamResolver::perf_data_dest_for_target(device_idx, track);
   if (perf_dest != DeviceParamResolver::INVALID_PERF_DATA_DEST) {
     perf_page.learn_param(perf_dest, track_param, value);
+    lfo_page.learn_perf_dest(perf_dest + 1, track_param, value);
   }
-  lfo_page.learn_param(device_idx, dest, track_param, value);
   return true;
 }
 
@@ -829,14 +828,13 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi2(uint8_t *msg) {
 
   uint8_t track = mcl_seq.find_ext_track(channel);
   if (track != 255) {
-    uint8_t dest = track + 1;
     uint8_t perf_dest =
         DeviceParamResolver::perf_data_dest_for_target(DeviceIdx::Secondary,
                                                        track);
     if (perf_dest != DeviceParamResolver::INVALID_PERF_DATA_DEST) {
       perf_page.learn_param(perf_dest, param, value);
+      lfo_page.learn_perf_dest(perf_dest + 1, param, value);
     }
-    lfo_page.learn_param(DeviceIdx::Secondary, dest, param, value);
   }
 
 }

@@ -72,7 +72,7 @@ void MNMClass::on_forwarded_cc(uint8_t *msg) {
   uint8_t cc = msg[1];
   uint8_t value = msg[2];
 
-  if (!parseCC(channel, cc, &track, &param) || track >= sizeof(kit.levels)) {
+  if (!parseCC(channel, cc, &track, &param)) {
     return;
   }
 

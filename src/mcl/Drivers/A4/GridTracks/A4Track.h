@@ -33,7 +33,7 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   virtual uint16_t get_track_size() override { return _sizeof(); }
-  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
+  uint16_t grid_slot_label(GridSlotLabelContext ctx) override {
     return make_grid_slot_label('A', ctx.column + '1');
   }
   virtual uint8_t get_model() override { return A4_TRACK_TYPE; } // TODO
@@ -78,7 +78,7 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   uint16_t get_track_size() override { return _sizeof(); }
-  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
+  uint16_t grid_slot_label(GridSlotLabelContext ctx) override {
     return make_grid_slot_label('A', ctx.column + '1');
   }
   uint8_t get_model() override { return A4_TRACK_TYPE; }

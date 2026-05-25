@@ -78,12 +78,14 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
     reset_undo();
     uint8_t length = view.getByte(6);
     uint8_t new_speed = view.getByte(7);
-    uint8_t swing_amount = len >= 9 ? view.getByte(8) : 0x7F;
-    uint8_t swing_mode = len >= 10 ? view.getByte(9) : 0x7F;
     uint8_t packet_track = view.getByte(3) & 0xF;
-    if (len >= 9 && swing_amount <= 30) {
+    if (len >= 9) {
+      uint8_t swing_amount = view.getByte(8);
+      if (swing_amount > 30) {
+        goto update_length_speed;
+      }
       if (is_md_device) {
-        uint8_t apply_mode = swing_mode;
+        uint8_t apply_mode = len >= 10 ? view.getByte(9) : 0x7F;
         if (apply_mode == 0x7F) {
           apply_mode = (is_seq_page && !SeqPage::recording) ? 0 : 1;
         }
@@ -99,6 +101,7 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
       }
       return;
     }
+  update_length_speed:
     if (is_seq_page) {
       if (SeqPage::recording) {
         goto update_pattern;

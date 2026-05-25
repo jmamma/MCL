@@ -100,7 +100,7 @@ public:
   uint16_t get_track_size() override { return _sizeof(); }
   uintptr_t get_region() override { return BANK1_MD_TRACKS_START; }
   void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) override;
-  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override;
+  uint16_t grid_slot_label(GridSlotLabelContext ctx) override;
 #if !defined(__AVR__)
   bool can_materialize_as(uint8_t track_type) override;
   DeviceTrack *materialize_as(uint8_t track_type,

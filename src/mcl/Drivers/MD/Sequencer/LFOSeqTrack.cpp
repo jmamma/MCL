@@ -236,16 +236,7 @@ uint8_t lfo_legacy_speed_packed(uint8_t legacy_speed) {
 }
 
 uint8_t lfo_legacy_speed_multiplier(uint8_t packed) {
-  switch (packed >> 6) {
-  case 1:
-    return LFO_SPEED_MULT_1_2X;
-  case 2:
-    return LFO_SPEED_MULT_1_4X;
-  case 3:
-    return LFO_SPEED_MULT_1_10X;
-  default:
-    return LFO_SPEED_MULT_1X;
-  }
+  return LFO_SPEED_MULT_1X - (packed >> 6);
 }
 
 } // namespace
@@ -468,7 +459,7 @@ uint16_t LFOSeqTrack::speed_to_phase_increment(uint8_t speed_,
 #endif
 }
 
-void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
+void LFOSeqTrack::convert_legacy_data(const LegacyLFOSeqTrackData &legacy_data,
                                       SeqLFOData *data) {
   if (data == nullptr) {
     return;
@@ -478,8 +469,13 @@ void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
   uint8_t legacy_speed = legacy_data.speed;
   uint8_t legacy_mode = legacy_data.mode;
 
-  *data = legacy_data;
   data->wav_type = lfo_legacy_shape_to_sps(legacy_wav_type);
+  data->pattern_mask = legacy_data.pattern_mask;
+  data->enable = legacy_data.enable;
+  data->length = legacy_data.length ? legacy_data.length : 16;
+  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+    data->params[i] = legacy_data.params[i];
+  }
 
   uint8_t base_mode = mode_base(legacy_mode);
   if (base_mode > LFO_MODE_ONE) {
@@ -496,9 +492,6 @@ void LFOSeqTrack::convert_legacy_data(const SeqLFOData &legacy_data,
     }
   } else if (lfo_legacy_shape_uses_subtract(legacy_wav_type)) {
     data->mode |= LFO_MODE_LEGACY_SUBTRACT;
-  }
-  if (data->length == 0) {
-    data->length = 16;
   }
 }
 
