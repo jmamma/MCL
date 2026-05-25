@@ -1352,19 +1352,6 @@ bool Project::copy_grid_pair(const char *from_project,
                              const char *to_basename,
                              uint8_t source_pair, uint8_t dest_pair) {
   chdir_projects();
-  uint32_t fallback_grid_version = version;
-  char src_project_name[PRJ_NAME_LEN + 5];
-  char src_project_path[PRJ_PATH_LEN + PRJ_NAME_LEN + 6];
-  File src_project_file;
-  if (project_file_name(from_basename, src_project_name,
-                        sizeof(src_project_name)) &&
-      MCLSd::join_path(src_project_path, sizeof(src_project_path),
-                       from_project, src_project_name) &&
-      src_project_file.open(src_project_path, O_READ)) {
-    mcl_sd.read_data((uint8_t *)&fallback_grid_version,
-                     sizeof(fallback_grid_version), &src_project_file);
-  }
-  src_project_file.close();
 
   bool ok = true;
   for (uint8_t grid_idx = 0; ok && grid_idx < NUM_GRIDS; grid_idx++) {
@@ -1390,7 +1377,7 @@ bool Project::copy_grid_pair(const char *from_project,
       break;
     }
 
-    uint32_t grid_version = fallback_grid_version;
+    uint32_t grid_version = PROJ_MIN_READABLE_VERSION;
     if (src_grid.read_header()) {
       grid_version = src_grid.version;
     }
