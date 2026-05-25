@@ -7,12 +7,26 @@
 #include "MDTrackSelect.h"
 #include "SeqPages.h"
 
+// Ports we mirror MD-bound CCs into MD.kit from. Includes MidiUSB and Midi2
+// so external controllers / DAWs whose CCs are forwarded to the MD keep
+// MCL's kit cache in sync, otherwise reset_params() on transport stop will
+// overwrite the live MD state with stale cache.
+static MidiClass *const kit_update_ports[] = {&Midi, &MidiUSB, &Midi2};
+static constexpr uint8_t kit_update_port_count =
+    sizeof(kit_update_ports) / sizeof(kit_update_ports[0]);
+
 void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
   uint8_t value = msg[2];
   uint8_t track;
   uint8_t track_param;
+
+  // Only mirror CCs that land on one of the MD's four base channels.
+  uint8_t md_channel_offset = channel - MD.global.baseChannel;
+  if (md_channel_offset >= 4) {
+    return;
+  }
 
   MD.parseCC(channel, param, &track, &track_param);
   if (track == 255) {
@@ -30,7 +44,10 @@ void MDMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
     last_md_param = track_param;
   } else {
     if (param > 7 && param < 12) {
-      track = param - 8 + (channel - MD.global.baseChannel) * 4;
+      track = (param - 8) + md_channel_offset * 4;
+      if (track > 15) {
+        return;
+      }
       MD.kit.levels[track] = value;
     }
   }
@@ -44,8 +61,11 @@ void MDMidiEvents::enable_live_kit_update() {
   if (kitupdate_state) {
     return;
   }
-  Midi.addOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
+  for (uint8_t i = 0; i < kit_update_port_count; ++i) {
+    kit_update_ports[i]->addOnControlChangeCallback(
+        this,
+        (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
+  }
   kitupdate_state = true;
 }
 
@@ -54,8 +74,11 @@ void MDMidiEvents::disable_live_kit_update() {
   if (!kitupdate_state) {
     return;
   }
-  Midi.removeOnControlChangeCallback(
-      this, (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
+  for (uint8_t i = 0; i < kit_update_port_count; ++i) {
+    kit_update_ports[i]->removeOnControlChangeCallback(
+        this,
+        (midi_callback_ptr_t)&MDMidiEvents::onControlChangeCallback_Midi);
+  }
   kitupdate_state = false;
 }
 
