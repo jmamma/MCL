@@ -295,9 +295,7 @@ static void _setName(const char *filename, uint16_t slot) {
     name[4] = 0;
   }
 
-  for (int i = 0; i < 4; ++i) {
-    name[i] = toupper(name[i]);
-  }
+  m_toupper(name);
 
   MD.setSampleName(slot, name);
 }
