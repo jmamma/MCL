@@ -32,31 +32,34 @@ public:
 		memset(data, 0, N / 2);
 	}
 
-	void shift_left(uint8_t len) {
+private:
+	__attribute__((noinline)) void shift(uint8_t len, int8_t delta) {
 		if (len == 0) return;
-		NibbleArray<N> that = *this;
-		--len;
-		for(uint8_t i = 0; i < len; ++i) {
-			set(i, that.get(i+1));
+		uint8_t i = delta > 0 ? len - 1 : 0;
+		uint8_t saved = get(i);
+		for(uint8_t count = len - 1; count > 0; --count) {
+			uint8_t next = i - delta;
+			set(i, get(next));
+			i = next;
 		}
-		set(len, that.get(0));
+		set(i, saved);
+	}
+
+public:
+	void shift_left(uint8_t len) {
+		shift(len, -1);
 	}
 
 	void shift_right(uint8_t len) {
-		if (len == 0) return;
-		NibbleArray<N> that = *this;
-		for(uint8_t i = 1; i < len; ++i) {
-			set(i, that.get(i-1));
-		}
-		set(0, that.get(len-1));
+		shift(len, 1);
 	}
 
 	void reverse(uint8_t len) {
 		if (len == 0) return;
-		NibbleArray<N> that = *this;
-		for(uint8_t i = 0; i < len; ++i) {
-			set(i, that.get(len-1-i));
+		for(uint8_t i = 0, j = len - 1; i < j; ++i, --j) {
+			uint8_t tmp = get(i);
+			set(i, get(j));
+			set(j, tmp);
 		}
 	}
 };
-
