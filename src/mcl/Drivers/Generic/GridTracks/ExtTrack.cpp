@@ -175,7 +175,7 @@ bool ExtTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, 
     memcpy(&seq_data, src, sizeof(seq_data));
   }
 #endif
-  ret = write_grid(_this(), write_size(), column, row, grid);
+  ret = write_grid(_this(), get_track_size(), column, row, grid);
   if (!ret) {
     DEBUG_PRINTLN(F("Write failed"));
     return false;

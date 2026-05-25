@@ -35,8 +35,7 @@ public:
 
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uint16_t get_store_size() override {
-    return reinterpret_cast<uintptr_t>(&midi_seq_storage()) -
-           reinterpret_cast<uintptr_t>(_this()) + midi_seq_storage().store_size();
+    return get_track_size();
   }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }

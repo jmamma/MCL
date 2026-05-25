@@ -47,7 +47,6 @@ class TBDMidiTrack;
 class ATTR_PACKED() DeviceTrack : public GridTrack {
 
 private:
-  bool read_remaining_from_grid_512(GridSlot column, GridRow row, Grid *grid);
   template <class T> T *_dynamik_kast(DeviceTrack *p) {
     T *ret;
     _dynamik_kast_impl(p, &ret);
@@ -102,16 +101,13 @@ public:
     (void)len;
     return false;
   }
-  bool stored_bytes_cover_range(uint16_t source_offset, uint16_t len);
   DeviceTrack *init_materialized_track_type(uint8_t track_type) {
     uint8_t old_version = version;
-    uint16_t old_storage_size = storage_size;
-    uint8_t old_flags = flags;
+    uint8_t old_reserved = reserved;
     GridLink old_link = link;
     DeviceTrack *track = init_track_type(track_type);
     track->version = old_version;
-    track->storage_size = old_storage_size;
-    track->flags = old_flags;
+    track->reserved = old_reserved;
     track->link = old_link;
     return track;
   }
@@ -152,17 +148,6 @@ public:
                                          uint16_t source_offset,
                                          uint16_t target_offset,
                                          uint16_t len);
-  DeviceTrack *load_materialized_mem_storage_range(GridSlot column,
-                                                   uint8_t track_type,
-                                                   uint16_t source_offset,
-                                                   uint16_t target_offset,
-                                                   uint16_t len);
-  DeviceTrack *load_materialized_storage_range(uint8_t track_type,
-                                               GridSlot column, GridRow row,
-                                               Grid *grid,
-                                               uint16_t source_offset,
-                                               uint16_t target_offset,
-                                               uint16_t len);
 
   int memcmp_sound(GridSlot column) {
     // 1. Get the base address. It doesn't matter if it's from the constexpr or linker world.

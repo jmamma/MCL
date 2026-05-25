@@ -62,7 +62,7 @@ bool A4Track::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, u
     memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
   }
 #endif
-  ret = write_grid(_this(), write_size(), column, row, grid);
+  ret = write_grid(_this(), get_track_size(), column, row, grid);
 
   if (!ret) {
     return false;

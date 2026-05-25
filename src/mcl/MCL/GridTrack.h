@@ -55,8 +55,7 @@ public:
   static constexpr uint8_t FLAG_SKIP_SOUND = 1 << 0;
 
   uint8_t version = 0;
-  uint8_t flags = 0;
-  uint16_t storage_size = 0;
+  uint8_t reserved = 0;
   uint8_t active = EMPTY_TRACK_TYPE;
   GridLink link;
 
@@ -82,13 +81,12 @@ public:
   // save header without data to grid
   bool write_grid(void *data, size_t len, GridSlot column, GridRow row, Grid *grid = nullptr);
   bool storage_version_at_least(uint8_t min_version) const;
-  uint16_t stored_track_size(uint16_t current_size) const;
-  bool load_sound() const { return (flags & FLAG_SKIP_SOUND) == 0; }
+  bool load_sound() const { return (link.speed & 0x80) == 0; }
   void set_load_sound(bool enabled) {
     if (enabled) {
-      flags &= ~FLAG_SKIP_SOUND;
+      link.speed &= 0x7F;
     } else {
-      flags |= FLAG_SKIP_SOUND;
+      link.speed |= 0x80;
     }
   }
 
@@ -106,7 +104,6 @@ public:
     link.length = 16;
     link.set_speed(SEQ_SPEED_1X);
     link.loops = 0;
-    flags = 0;
  }
 
   /* Load track from Grid in to sequencer, place in payload to be transmitted to device*/
@@ -148,8 +145,7 @@ public:
   virtual void init_defaults() {}
 
 private:
-  uint16_t cached_track_size(uint16_t current_size) const;
-  void stamp_storage_version(size_t len);
+  void stamp_storage_version();
   void repair_loaded_header();
 };
 

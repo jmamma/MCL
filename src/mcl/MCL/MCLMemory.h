@@ -92,7 +92,7 @@ constexpr size_t NUM_LOCKS = 8;
 #define MEMORY_ALIGN(size) (size)  // for avr, dont align
 #endif
 
-constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(599); // MDTrack + storage size/flags
+constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(597); // MDTrack + SeqTrackModData + swing
 #if !defined(__AVR__)
 // Non-AVR grid-2 cache slots can carry enhanced MIDI/TBD tracks. Hosted
 // builds also need the enlarged slot because native pointers grow several
@@ -102,13 +102,13 @@ constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(GRID_SLOT_BYTES);
 constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2128);
 #endif
 
-constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(9);
-constexpr size_t MDLFO_TRACK_LEN = MEMORY_ALIGN(228);
-constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(41);
-constexpr size_t MDFX_TRACK_LEN = MEMORY_ALIGN(45);
-constexpr size_t MDTEMPO_TRACK_LEN = MEMORY_ALIGN(13);
-constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(495);
-constexpr size_t GRIDCHAIN_TRACK_LEN = MEMORY_ALIGN(553);
+constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);
+constexpr size_t MDLFO_TRACK_LEN = MEMORY_ALIGN(226);
+constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(39);
+constexpr size_t MDFX_TRACK_LEN = MEMORY_ALIGN(43);
+constexpr size_t MDTEMPO_TRACK_LEN = MEMORY_ALIGN(11);
+constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(493);
+constexpr size_t GRIDCHAIN_TRACK_LEN = MEMORY_ALIGN(551);
 
 #ifdef EXT_TRACKS
 constexpr size_t EMPTY_TRACK_LEN = GRID2_TRACK_LEN - DEVICE_TRACK_LEN;

@@ -45,10 +45,6 @@ public:
     seq_data.clear();
   }
   uint16_t get_track_size() override { return _sizeof(); }
-  uint16_t write_size() {
-    return DEVICE_TRACK_LEN + sizeof(SeqTrackModData) +
-           seq_data.store_size();
-  }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
                             char label[3]) override {

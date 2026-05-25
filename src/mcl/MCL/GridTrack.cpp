@@ -14,7 +14,7 @@ bool copy_fixed_grid_slot_label(char label[3], char a, char b) {
 }
 
 bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row, Grid *grid) {
-  stamp_storage_version(len);
+  stamp_storage_version();
   Grid *target_grid = grid;
   GridColumn target_column = column;
   if (target_grid == nullptr) {
@@ -24,16 +24,12 @@ bool GridTrack::write_grid(void *data, size_t len, GridSlot column, GridRow row,
   return target_grid->write(data, len, target_column, row);
 }
 
-void GridTrack::stamp_storage_version(size_t len) {
+void GridTrack::stamp_storage_version() {
   version = 0;
-  storage_size = 0;
+  reserved = 0;
   uint16_t project_version = proj.version;
   if (project_version >= PROJ_VERSION_TRACK_STORAGE_VERSION) {
     version = storage_version();
-    if (project_version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
-        len <= UINT16_MAX) {
-      storage_size = (uint16_t)len;
-    }
   }
 }
 
@@ -42,66 +38,32 @@ bool GridTrack::storage_version_at_least(uint8_t min_version) const {
          version >= min_version;
 }
 
-uint16_t GridTrack::stored_track_size(uint16_t current_size) const {
-  if (proj.version >= PROJ_VERSION_DYNAMIC_TRACK_STORAGE &&
-      storage_size > 0 && storage_size <= GRID_SLOT_BYTES) {
-    return storage_size < current_size ? storage_size : current_size;
-  }
-  return current_size;
-}
-
-uint16_t GridTrack::cached_track_size(uint16_t current_size) const {
-  uint16_t bytes = stored_track_size(current_size);
-  uint16_t header_size = _sizeof();
-  return bytes < header_size ? header_size : bytes;
-}
-
 bool GridTrack::store_in_mem(GridSlot column) {
   uintptr_t pos = get_region() +
                   static_cast<uintptr_t>(get_region_size() *
                                          static_cast<uint32_t>(column));
   volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-  memcpy_bank1(ptr, _this(), cached_track_size(get_track_size()));
+  memcpy_bank1(ptr, _this(), get_track_size());
   return true;
 }
 
 bool GridTrack::load_from_mem(GridSlot column, size_t size) {
+  uint16_t bytes = size ? size : get_track_size();
   uintptr_t pos = get_region() +
                   static_cast<uintptr_t>(get_region_size() *
                                          static_cast<uint32_t>(column));
   volatile uint8_t *ptr = reinterpret_cast<uint8_t *>(pos);
-
-  if (size) {
-    memcpy_bank1(_this(), ptr, size);
-    return true;
-  }
-
-  uint8_t expected_active = active;
-  uint16_t header_size = _sizeof();
-  memcpy_bank1(_this(), ptr, header_size);
-
-  if (active != expected_active) {
-    return true;
-  }
-
-  uint16_t current_size = get_track_size();
-  uint16_t bytes = cached_track_size(current_size);
-  if (bytes < current_size) {
-    init_defaults();
-  }
   memcpy_bank1(_this(), ptr, bytes);
   return true;
 }
 
 void GridTrack::repair_loaded_header() {
   uint8_t tmp_version = version;
-  uint16_t tmp_storage_size = storage_size;
-  uint8_t tmp_flags = flags;
+  uint8_t tmp_reserved = reserved;
   uint8_t tmp_active = active;
   ::new (this) GridTrack;
   version = tmp_version;
-  storage_size = tmp_storage_size;
-  flags = tmp_flags;
+  reserved = tmp_reserved;
   active = tmp_active;
 
   if (active == 255) {

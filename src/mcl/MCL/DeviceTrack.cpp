@@ -96,15 +96,6 @@ bool DeviceTrack::can_materialize_as(uint8_t track_type) {
 }
 #endif
 
-bool DeviceTrack::stored_bytes_cover_range(uint16_t source_offset,
-                                           uint16_t len) {
-  uint16_t stored_len = stored_track_size(get_track_size());
-  if (stored_len < DEVICE_TRACK_LEN) {
-    stored_len = DEVICE_TRACK_LEN;
-  }
-  return source_offset <= stored_len && len <= stored_len - source_offset;
-}
-
 DeviceTrack *DeviceTrack::load_from_mem(GridSlot col, uint8_t track_type,
                                         size_t size) {
   DeviceTrack *that = init_track_type(track_type);
@@ -121,52 +112,10 @@ DeviceTrack *DeviceTrack::load_from_mem(GridSlot col, uint8_t track_type,
   }
 
   auto p = init_loaded_track_type(source_active);
-  uint16_t source_offset;
-  uint16_t target_offset;
-  uint16_t len;
-  if (p->materialized_storage_range(track_type, source_offset, target_offset,
-                                    len) &&
-      p->stored_bytes_cover_range(source_offset, len)) {
-    return p->load_materialized_mem_storage_range(
-        col, track_type, source_offset, target_offset, len);
-  }
-
-#if defined(__AVR__)
-  return p->materialize_as(track_type, col, nullptr);
-#else
-  if (!p->GridTrack::load_from_mem(col, size) || p->active != source_active) {
+  if (!p->GridTrack::load_from_mem(col) || p->active != source_active) {
     return nullptr;
   }
   return p->materialize_as(track_type, col, nullptr);
-#endif
-}
-
-bool DeviceTrack::read_remaining_from_grid_512(GridSlot column, GridRow row,
-                                               Grid *grid) {
-  if (active == EMPTY_TRACK_TYPE) {
-    return true;
-  }
-
-  Grid *source_grid = grid;
-  GridColumn source_column = column;
-  if (source_grid == nullptr) {
-    source_grid = &proj.grids[column >> 4];
-    source_column = column & 0x0F;
-  }
-
-  const uint16_t current_len = get_track_size();
-  uint16_t len = stored_track_size(current_len);
-  if (len < current_len) {
-    init_defaults();
-    return source_grid->read(_this(), len, source_column, row);
-  }
-
-  if (len <= 512) {
-    return true;
-  }
-  len -= 512;
-  uint8_t *dst = static_cast<uint8_t *>(_this()) + 512;
-  return source_grid->read(dst, len);
 }
 
 DeviceTrack *DeviceTrack::materialize_as(uint8_t track_type,
@@ -199,9 +148,20 @@ DeviceTrack *DeviceTrack::load_from_grid_512(GridSlot column, GridRow row,
 
   // virtual functions are ready
 
-  if (!ptrack->read_remaining_from_grid_512(column, row, grid)) {
-    DEBUG_PRINTLN(F("read failed"));
-    return nullptr;
+  if (active != EMPTY_TRACK_TYPE) {
+    uint16_t len = ptrack->get_track_size();
+    if (len > 512) {
+      len -= 512;
+      uint8_t *dst = static_cast<uint8_t *>(_this()) + 512;
+      Grid *source_grid = grid;
+      if (source_grid == nullptr) {
+        source_grid = &proj.grids[column >> 4];
+      }
+      if (!source_grid->read(dst, len)) {
+        DEBUG_PRINTLN(F("read failed"));
+        return nullptr;
+      }
+    }
   }
   return ptrack;
 }
@@ -224,21 +184,20 @@ DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
   }
 
   auto *ptrack = init_loaded_track_type(active);
-  if (active != EMPTY_TRACK_TYPE && active != track_type) {
-    uint16_t source_offset;
-    uint16_t target_offset;
-    uint16_t len;
-    if (ptrack->materialized_storage_range(track_type, source_offset,
-                                           target_offset, len) &&
-        ptrack->stored_bytes_cover_range(source_offset, len)) {
-      return ptrack->load_materialized_storage_range(
-          track_type, column, row, grid, source_offset, target_offset, len);
+  if (active != EMPTY_TRACK_TYPE) {
+    uint16_t len = ptrack->get_track_size();
+    if (len > 512) {
+      len -= 512;
+      uint8_t *dst = static_cast<uint8_t *>(_this()) + 512;
+      Grid *source_grid = grid;
+      if (source_grid == nullptr) {
+        source_grid = &proj.grids[column >> 4];
+      }
+      if (!source_grid->read(dst, len)) {
+        DEBUG_PRINTLN(F("read failed"));
+        return nullptr;
+      }
     }
-  }
-
-  if (!ptrack->read_remaining_from_grid_512(column, row, grid)) {
-    DEBUG_PRINTLN(F("read failed"));
-    return nullptr;
   }
   return ptrack->materialize_as(track_type, tracknumber, seq_track);
 }
@@ -254,41 +213,6 @@ DeviceTrack *DeviceTrack::materialize_storage_range(uint8_t track_type,
   return target;
 }
 
-DeviceTrack *DeviceTrack::load_materialized_mem_storage_range(
-    GridSlot column, uint8_t track_type, uint16_t source_offset,
-    uint16_t target_offset, uint16_t len) {
-  uintptr_t pos = get_region() +
-                  static_cast<uintptr_t>(get_region_size() *
-                                         static_cast<uint32_t>(column)) +
-                  source_offset;
-  volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
-
-  DeviceTrack *target = init_materialized_track_type(track_type);
-  memcpy_bank1(static_cast<uint8_t *>(target->_this()) + target_offset, ptr,
-               len);
-  return target;
-}
-
-DeviceTrack *DeviceTrack::load_materialized_storage_range(
-    uint8_t track_type, GridSlot column, GridRow row, Grid *grid,
-    uint16_t source_offset, uint16_t target_offset, uint16_t len) {
-  DeviceTrack *target = init_materialized_track_type(track_type);
-
-  uint8_t *dst = static_cast<uint8_t *>(target->_this()) + target_offset;
-  Grid *source_grid = grid;
-  GridColumn source_column = column;
-  if (source_grid == nullptr) {
-    source_grid = &proj.grids[column >> 4];
-    source_column = column & 0x0F;
-  }
-  if (!source_grid->seek(source_column, row, source_offset) ||
-      !source_grid->read(dst, len)) {
-    DEBUG_PRINTLN(F("read failed"));
-    return nullptr;
-  }
-  return target;
-}
-
 DeviceTrack *DeviceTrack::load_from_grid(GridSlot column, GridRow row) {
   if (!GridTrack::load_from_grid(column, row)) {
     return nullptr;
@@ -300,12 +224,7 @@ DeviceTrack *DeviceTrack::load_from_grid(GridSlot column, GridRow row) {
   // virtual functions are ready
 
   if (active != EMPTY_TRACK_TYPE) {
-    const uint16_t current_len = ptrack->get_track_size();
-    uint16_t len = ptrack->stored_track_size(current_len);
-    if (len < current_len) {
-      ptrack->init_defaults();
-    }
-
+    uint16_t len = ptrack->get_track_size();
     if (!proj.read_grid((uint8_t*)_this(), len, column, row)) {
       DEBUG_PRINTLN(F("read failed"));
       return nullptr;

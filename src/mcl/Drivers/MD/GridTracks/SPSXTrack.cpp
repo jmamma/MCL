@@ -191,16 +191,7 @@ bool SPSXTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
 }
 
 uint16_t SPSXTrack::get_store_size() {
-  const uintptr_t base = reinterpret_cast<uintptr_t>(_this());
-  if (seq_storage.seq_version == SPSX_SEQ_VERSION_SPSX) {
-    return reinterpret_cast<uintptr_t>(&seq_storage.seq_data.spsx) - base +
-           seq_storage.seq_data.spsx.store_size();
-  }
-  if (seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
-    return reinterpret_cast<uintptr_t>(&seq_storage.seq_data.legacy) - base +
-           sizeof(MDSeqTrackData);
-  }
-  return _sizeof();
+  return get_track_size();
 }
 
 void SPSXTrack::get_machine_from_kit(uint8_t tracknumber) {

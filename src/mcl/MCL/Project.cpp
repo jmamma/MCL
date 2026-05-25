@@ -42,21 +42,10 @@ bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
 
 constexpr size_t LEGACY_GRID_TRACK_HEADER_SIZE =
     sizeof(uint8_t) * 3 + sizeof(GridLink);
-constexpr size_t STORED_GRID_TRACK_HEADER_SIZE =
-    sizeof(uint8_t) * 3 + sizeof(uint16_t) + sizeof(GridLink);
 
 class ATTR_PACKED() LegacyGridTrackHeader {
 public:
   uint8_t version[2];
-  uint8_t active;
-  GridLink link;
-};
-
-class ATTR_PACKED() StoredGridTrackHeader {
-public:
-  uint8_t version;
-  uint8_t flags;
-  uint16_t storage_size;
   uint8_t active;
   GridLink link;
 };
@@ -130,16 +119,11 @@ public:
 
 static_assert(sizeof(LegacyGridTrackHeader) == LEGACY_GRID_TRACK_HEADER_SIZE,
               "origin/dev track header size changed");
-static_assert(sizeof(StoredGridTrackHeader) == STORED_GRID_TRACK_HEADER_SIZE,
-              "grid track storage header size changed");
 static_assert(sizeof(LegacyPerfTrackData) + 2 == sizeof(PerfTrackData),
               "legacy PerfTrack payload is not a prefix");
 static_assert(sizeof(LegacyGridTrackHeader) + sizeof(LegacyPerfTrackData) ==
                   491,
               "origin/dev PerfTrack storage size changed");
-static_assert(sizeof(StoredGridTrackHeader) + sizeof(LegacyPerfTrackData) ==
-                  493,
-              "pre-clean-layout PerfTrack storage size changed");
 static_assert(sizeof(LegacyMDSeqStepDescriptor) ==
                   sizeof(MDSeqStepDescriptor),
               "Legacy MD step descriptor size changed");
@@ -198,11 +182,9 @@ bool project_config_valid(const MCLSysConfigData &source) {
 
 void copy_legacy_header(GridTrack &dst, const LegacyGridTrackHeader &src) {
   dst.version = 0;
-  dst.storage_size = 0;
-  dst.flags = 0;
+  dst.reserved = 0;
+  dst.active = src.active;
   dst.link = src.link;
-  dst.link.speed &= 0x7F;
-  dst.set_load_sound((src.link.speed & 0x80) == 0);
 }
 
 bool read_legacy_header(Grid &grid, GridColumn column, GridRow row,
@@ -215,33 +197,12 @@ bool read_legacy_header(Grid &grid, GridColumn column, GridRow row,
   return header->active == expected_type;
 }
 
-bool read_stored_header(Grid &grid, GridColumn column, GridRow row,
-                        uint8_t expected_type,
-                        StoredGridTrackHeader *header) {
-  if (header == nullptr || !grid.seek(column, row) ||
-      !grid.read(header, sizeof(*header))) {
-    return false;
-  }
-  return header->active == expected_type;
-}
-
-void init_migrated_header(StoredGridTrackHeader &dst,
+void init_migrated_header(LegacyGridTrackHeader &dst,
                           const LegacyGridTrackHeader &src,
-                          uint8_t track_type, uint8_t version,
-                          uint16_t storage_size) {
-  dst.version = version;
-  dst.flags = (src.link.speed & 0x80) ? GridTrack::FLAG_SKIP_SOUND : 0;
-  dst.storage_size = storage_size;
+                          uint8_t track_type, uint8_t version) {
+  dst.version[0] = version;
+  dst.version[1] = 0;
   dst.active = track_type;
-  dst.link = src.link;
-  dst.link.speed &= 0x7F;
-}
-
-void copy_stored_header(GridTrack &dst, const StoredGridTrackHeader &src) {
-  dst.version = src.version;
-  dst.flags = src.flags;
-  dst.storage_size = src.storage_size;
-  dst.active = src.active;
   dst.link = src.link;
 }
 
@@ -324,12 +285,12 @@ bool read_legacy_ext_seq(Grid &grid, ExtSeqTrackData &dst, uint8_t speed) {
 bool write_migrated_track(Grid &grid, GridColumn column, GridRow row,
                           DeviceTrack &track, uint16_t write_size) {
   track.version = track.storage_version();
-  track.storage_size = write_size;
+  track.reserved = 0;
   return grid.write(track._this(), write_size, column, row);
 }
 
 bool write_migrated_payload_track(Grid &grid, GridColumn column, GridRow row,
-                                  StoredGridTrackHeader &header,
+                                  LegacyGridTrackHeader &header,
                                   void *payload, size_t payload_size) {
   return grid.seek(column, row) &&
          grid.write(&header, sizeof(header)) &&
@@ -373,12 +334,6 @@ bool migrate_md_track_native_swing(Grid &grid, GridColumn column, GridRow row) {
                               upgraded.get_track_size());
 }
 
-uint16_t ext_like_write_size(const ExtSeqTrackData &seq_data,
-                             uint16_t payload_size) {
-  return DEVICE_TRACK_LEN + payload_size + sizeof(SeqTrackModData) +
-         seq_data.store_size();
-}
-
 bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
                                     uint8_t track_type,
                                     DeviceTrack &upgraded,
@@ -399,7 +354,7 @@ bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
     return false;
   }
   return write_migrated_track(grid, column, row, upgraded,
-                              ext_like_write_size(seq_data, payload_size));
+                              upgraded.get_track_size());
 }
 
 bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
@@ -417,9 +372,8 @@ bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
   if (!grid.read(payload, payload_size)) {
     return false;
   }
-  StoredGridTrackHeader header;
-  init_migrated_header(header, legacy_header, track_type, 0,
-                       sizeof(header) + payload_size);
+  LegacyGridTrackHeader header;
+  init_migrated_header(header, legacy_header, track_type, 0);
   return write_migrated_payload_track(grid, dst_column, row, header, payload,
                                       payload_size);
 }
@@ -448,13 +402,11 @@ bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
 
 bool migrate_perf_track_clean_layout(Grid &grid, GridColumn column,
                                      GridRow row) {
-  StoredGridTrackHeader header;
-  if (!read_stored_header(grid, column, row, PERF_TRACK_TYPE, &header)) {
+  LegacyGridTrackHeader header;
+  if (!read_legacy_header(grid, column, row, PERF_TRACK_TYPE, &header)) {
     return false;
   }
-  if (header.version >= PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT &&
-      header.storage_size == sizeof(StoredGridTrackHeader) +
-                                 sizeof(PerfTrackData)) {
+  if (header.version[0] >= PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT) {
     return true;
   }
 
@@ -465,7 +417,7 @@ bool migrate_perf_track_clean_layout(Grid &grid, GridColumn column,
 
   PerfTrack upgraded;
   upgraded.init_defaults();
-  copy_stored_header(upgraded, header);
+  copy_legacy_header(upgraded, header);
   copy_legacy_perf_track_data(upgraded, legacy_perf);
   return write_migrated_track(grid, column, row, upgraded,
                               upgraded.get_track_size());
@@ -486,7 +438,7 @@ bool migrate_spsx_track_signed_microtiming(Grid &grid, GridColumn column,
                                    project_seq_speed_value(track.link));
   }
   return write_migrated_track(grid, column, row, track,
-                              track.get_store_size());
+                              track.get_track_size());
 }
 #endif
 
@@ -515,8 +467,7 @@ bool migrate_ext_like_signed_microtiming(Grid &grid, GridColumn column,
   }
   convert_ext_seq_unsigned_timing(seq_data, project_seq_speed_value(track.link));
   return write_migrated_track(grid, column, row, track,
-                              ext_like_write_size(seq_data,
-                                                  track.get_sound_data_size()));
+                              track.get_track_size());
 }
 
 void copy_project_config(MCLSysConfigData *dst,
