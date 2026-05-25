@@ -4,6 +4,7 @@
 #define PROJECT_H__
 
 #include "Grid.h"
+#include "MCLFeatureConfig.h"
 #include "MidiDeviceGrid.h"
 #include "MCLMemory.h"
 #include "MCLSysConfig.h"
@@ -45,7 +46,9 @@ public:
   bool new_project(const char *newprj);
   bool new_project_prompt(const char *parent = nullptr) NOINLINE();
   bool load_project(const char *projectname);
+#ifdef MCL_HAS_PROJECT_BACKUP
   bool load_project_version(const char *projectname, uint8_t pair);
+#endif
   bool convert_project(const char *projectname);
   bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
   bool migrate_grid_track_storage_versions(GridIndex grid);
@@ -60,11 +63,15 @@ public:
   bool project_pair_exists(uint8_t pair, const char *basename);
   bool read_active_grid_pair(const char *projectname, uint8_t *pair);
   bool grid_pair_exists(const char *projectname, uint8_t pair);
+#ifdef MCL_HAS_PROJECT_BACKUP
   bool create_backup(const char *projectname, uint8_t *created_pair = nullptr);
   bool delete_backup(const char *projectname, uint8_t pair);
+#endif
   bool rename_project_files(const char *from_basename, const char *to_basename);
   bool copy_project(const char *from_project, const char *to_project);
+#ifdef MCL_HAS_FILE_MOVE
   bool move_project(const char *from_project, const char *to_project);
+#endif
   bool store_config_from_system();
 
   // Write data — col is logical 0–31, routed to physical grid/col

@@ -1,3 +1,4 @@
+#include "MCLFeatureConfig.h"
 #include "Project.h"
 #include "MCLSd.h"
 #include "MCLGUI.h"
@@ -812,9 +813,11 @@ bool Project::load_project(const char *projectname) {
   return load_project_impl(projectname, 0, false);
 }
 
+#ifdef MCL_HAS_PROJECT_BACKUP
 bool Project::load_project_version(const char *projectname, uint8_t pair) {
   return load_project_impl(projectname, pair, true);
 }
+#endif
 
 bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
                                 bool use_requested_pair) {
@@ -1492,6 +1495,7 @@ bool Project::copy_grid_pair(const char *from_project,
   return ok;
 }
 
+#ifdef MCL_HAS_PROJECT_BACKUP
 bool Project::create_backup(const char *projectname, uint8_t *created_pair) {
   const char *basename = nullptr;
   if (!split_project_path(projectname, &basename)) {
@@ -1569,6 +1573,7 @@ bool Project::delete_backup(const char *projectname, uint8_t pair) {
   }
   return ok;
 }
+#endif
 
 bool Project::rename_project_files(const char *from_basename,
                                    const char *to_basename) {
@@ -1651,6 +1656,7 @@ bool Project::copy_project(const char *from_project, const char *to_project) {
   return true;
 }
 
+#ifdef MCL_HAS_FILE_MOVE
 bool Project::move_project(const char *from_project, const char *to_project) {
   if (strcmp(from_project, to_project) == 0) {
     return false;
@@ -1682,6 +1688,7 @@ bool Project::move_project(const char *from_project, const char *to_project) {
   }
   return true;
 }
+#endif
 
 bool Project::new_project_master_file(const char *projectname) {
 

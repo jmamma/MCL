@@ -39,8 +39,10 @@ protected:
 private:
   bool build_project_path(const char *entry, char *out, size_t out_len) const;
   bool current_project_parent(const char **parent) const;
+#ifdef MCL_HAS_FILE_MOVE
   bool enter_project_move_destination(const char *entry);
   bool move_to_current_folder();
+#endif
   bool is_project_dir(const char *entry) const;
   void focus_current_project();
 };

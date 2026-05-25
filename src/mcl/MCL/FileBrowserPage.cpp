@@ -29,8 +29,10 @@ bool FileBrowserPage::show_move = false;
 bool FileBrowserPage::show_versions = false;
 
 bool FileBrowserPage::filemenu_active = false;
+#ifdef MCL_HAS_FILE_MOVE
 bool FileBrowserPage::move_destination_mode = false;
 char FileBrowserPage::move_source_path[PRJ_PATH_LEN];
+#endif
 
 FileBrowserFileTypes FileBrowserPage::file_types;
 
@@ -126,9 +128,13 @@ void FileBrowserPage::query_filesystem() {
   // config menu
   file_menu_page.visible_rows = 3;
   uint16_t disabled = FM_MASK(FM_RECVALL) | FM_MASK(FM_SENDALL);
+#ifdef MCL_HAS_FILE_MOVE
   if (move_destination_mode) {
     disabled |= FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME);
   }
+#else
+  disabled |= FM_MASK(FM_MOVE);
+#endif
   if (!show_new_folder) {
     disabled |= FM_MASK(FM_NEW_FOLDER);
   }
@@ -223,6 +229,7 @@ void FileBrowserPage::init() {
   strcpy_P(title, mclstr_title_files);
   file_types.reset();
   SD.chdir(lwd);
+#ifdef MCL_HAS_FILE_MOVE
   if (move_destination_mode) {
     show_dirs = true;
     select_dirs = false;
@@ -234,6 +241,7 @@ void FileBrowserPage::init() {
     strcpy(title, "DEST");
     strcpy(str_save, "[ MOVE ]");
   }
+#endif
 }
 
 void FileBrowserPage::draw_menu() {
@@ -531,13 +539,16 @@ bool FileBrowserPage::_handle_filemenu() {
       on_copy(buf1, buf2);
     }
     return true;
+#ifdef MCL_HAS_FILE_MOVE
   case FM_MOVE: // move
     enter_move_destination(buf1);
     return false;
+#endif
   }
   return false;
 }
 
+#ifdef MCL_HAS_FILE_MOVE
 bool FileBrowserPage::start_move_destination(const char *source_path) {
   if (source_path[0] == '\0') {
     gfx.alert("ERROR", "BAD PATH");
@@ -600,6 +611,7 @@ void FileBrowserPage::cancel_move_destination() {
   move_source_path[0] = '\0';
   init();
 }
+#endif
 
 #ifdef PLATFORM_TBD
 bool FileBrowserPage::tbd_can_cd_up() const {

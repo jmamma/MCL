@@ -4,6 +4,8 @@
 #include "MCLMenus.h"
 #include "Project.h"
 
+#ifdef MCL_HAS_PROJECT_BACKUP
+
 void ProjectVersionPage::set_project(const char *project) {
   strncpy(lwd, project, sizeof(lwd) - 1);
   lwd[sizeof(lwd) - 1] = '\0';
@@ -140,3 +142,5 @@ void ProjectVersionPage::on_delete(const char *entry) {
   }
   init();
 }
+
+#endif

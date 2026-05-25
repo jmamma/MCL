@@ -15,7 +15,9 @@ void LoadProjectPage::init() {
   DevicePanelRef::set_primary_key_repeat(1);
   FileBrowserPage::init();
 
+#ifdef MCL_HAS_FILE_MOVE
   if (!move_destination_mode) {
+#endif
     show_dirs = true;
     select_dirs = true;
     show_save = true;
@@ -28,7 +30,9 @@ void LoadProjectPage::init() {
     strcpy(title, "PROJECT");
     strcpy(str_save, "[ NEW PROJECT ]");
     focus_current_project();
+#ifdef MCL_HAS_FILE_MOVE
   }
+#endif
   query_filesystem();
 }
 
@@ -53,9 +57,9 @@ void LoadProjectPage::on_select(const char *entry) {
   DEBUG_PRINT_FN();
   DEBUG_DUMP(entry);
 
-  if (move_destination_mode) {
-    return;
-  }
+#ifdef MCL_HAS_FILE_MOVE
+  if (move_destination_mode) { return; }
+#endif
 
   file.close();
   if (!is_project_dir(entry)) {
@@ -206,18 +210,24 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
       selection_change = true;
       return true;
     case MDX_KEY_RIGHT:
+#ifdef MCL_HAS_FILE_MOVE
       if (!move_destination_mode) {
+#endif
         setup();
         init();
         encoders[1]->old = encoders[1]->cur;
+#ifdef MCL_HAS_FILE_MOVE
       }
+#endif
       return true;
     }
   }
 
+#ifdef MCL_HAS_FILE_MOVE
   if (move_destination_mode) {
     return FileBrowserPage::handleEvent(event);
   }
+#endif
 
   if (EVENT_BUTTON(event) && EVENT_PRESSED(event, Buttons.BUTTON3) &&
       show_filemenu) {
@@ -238,6 +248,12 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     if (!show_new_folder) {
       disabled |= FM_MASK(FM_NEW_FOLDER);
     }
+#ifndef MCL_HAS_FILE_MOVE
+    disabled |= FM_MASK(FM_MOVE);
+#endif
+#ifndef MCL_HAS_PROJECT_BACKUP
+    disabled |= FM_MASK(FM_VERSIONS);
+#endif
     if (!regular_entry) {
       disabled |= FM_MASK(FM_DELETE) | FM_MASK(FM_RENAME) | FM_MASK(FM_MOVE);
     }
@@ -249,9 +265,11 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
     if (!regular_entry) {
       disabled |= FM_MASK(FM_DUPLICATE);
     }
+#ifdef MCL_HAS_PROJECT_BACKUP
     if (!project_entry) {
       disabled |= FM_MASK(FM_VERSIONS);
     }
+#endif
 #endif
     set_file_menu_disabled_mask(disabled);
     open_filemenu();
@@ -262,11 +280,20 @@ bool LoadProjectPage::handleEvent(gui_event_t *event) {
 
 bool LoadProjectPage::_handle_filemenu() {
   uint8_t item = file_menu_page.menu.get_item_index(file_menu_encoder.cur);
+#ifdef MCL_HAS_FILE_MOVE
   if (move_destination_mode) {
     return FileBrowserPage::_handle_filemenu();
   }
+#endif
 
-  if (item == FM_DELETE || item == FM_VERSIONS || item == FM_MOVE) {
+  if (item == FM_DELETE
+#ifdef MCL_HAS_PROJECT_BACKUP
+      || item == FM_VERSIONS
+#endif
+#ifdef MCL_HAS_FILE_MOVE
+      || item == FM_MOVE
+#endif
+  ) {
     char entry[FILE_ENTRY_SIZE];
     uint8_t entry_type = FILE_TYPE;
     uint16_t entry_idx = encoders[1]->getValue();
@@ -285,6 +312,7 @@ bool LoadProjectPage::_handle_filemenu() {
       return true;
     }
 
+#ifdef MCL_HAS_PROJECT_BACKUP
     if (item == FM_VERSIONS) {
       char project_path[PRJ_PATH_LEN];
       if (is_project_dir(entry) &&
@@ -294,13 +322,17 @@ bool LoadProjectPage::_handle_filemenu() {
       }
       return false;
     }
+#endif
 
+#ifdef MCL_HAS_FILE_MOVE
     enter_project_move_destination(entry);
     return false;
+#endif
   }
   return FileBrowserPage::_handle_filemenu();
 }
 
+#ifdef MCL_HAS_FILE_MOVE
 bool LoadProjectPage::enter_project_move_destination(const char *entry) {
   char source_path[PRJ_PATH_LEN];
   if (!build_project_path(entry, source_path, sizeof(source_path))) {
@@ -331,13 +363,16 @@ bool LoadProjectPage::move_to_current_folder() {
   }
   return ok;
 }
+#endif
 
 void LoadProjectPage::on_new() {
   file.close();
+#ifdef MCL_HAS_FILE_MOVE
   if (move_destination_mode) {
     move_to_current_folder();
     return;
   }
+#endif
   const char *parent = nullptr;
   if (!current_project_parent(&parent)) {
     gfx.alert("ERROR", "BAD PATH");
@@ -347,10 +382,12 @@ void LoadProjectPage::on_new() {
 }
 
 void LoadProjectPage::on_cancel() {
+#ifdef MCL_HAS_FILE_MOVE
   if (move_destination_mode) {
     cancel_move_destination();
     return;
   }
+#endif
   mcl.popPage();
 }
 
@@ -387,6 +424,7 @@ bool LoadProjectPage::tbd_can_cd_up() const {
 #endif
 
 uint8_t LoadProjectPage::entry_type_for_dir(const char *entry) {
+#ifdef MCL_HAS_FILE_MOVE
   if (move_destination_mode) {
     char project_path[PRJ_PATH_LEN];
     if (!build_project_path(entry, project_path, sizeof(project_path)) ||
@@ -398,6 +436,7 @@ uint8_t LoadProjectPage::entry_type_for_dir(const char *entry) {
     }
     return DIR_TYPE;
   }
+#endif
 #ifdef __AVR__
   (void)entry;
   return UNKNOWN_DIR_TYPE;

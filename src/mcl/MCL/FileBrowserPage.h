@@ -7,6 +7,7 @@
 #include "MCLEncoder.h"
 #include "Menu.h"
 #include "MenuPage.h"
+#include "MCLFeatureConfig.h"
 #include "SeqPage.h"
 #include "MCLSd.h"
 
@@ -118,8 +119,12 @@ public:
   static bool show_versions;
 
   static bool filemenu_active;
+#ifdef MCL_HAS_FILE_MOVE
   static bool move_destination_mode;
   static char move_source_path[PRJ_PATH_LEN];
+#else
+  static constexpr bool move_destination_mode = false;
+#endif
 
   static char focus_match[FILE_ENTRY_SIZE];
   static FileBrowserFileTypes file_types;
@@ -168,9 +173,11 @@ public:
   static void reset_browser_options();
 
   virtual void on_new() {
+#ifdef MCL_HAS_FILE_MOVE
     if (move_destination_mode) {
       move_to_current_folder();
     }
+#endif
   }
   virtual void on_select(const char *) {}
   virtual void on_delete(const char *);
@@ -197,11 +204,13 @@ protected:
   void query_filesystem();
   virtual bool can_show_parent_entry() const;
   virtual uint8_t entry_type_for_dir(const char *entry);
+#ifdef MCL_HAS_FILE_MOVE
   bool enter_move_destination(const char *entry);
   bool start_move_destination(const char *source_path);
   bool move_to_current_folder();
   bool finish_move_to_path(const char *dest_path);
   void cancel_move_destination();
+#endif
   static bool path_starts_with_dir(const char *path, const char *dir);
 
 private:

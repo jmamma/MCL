@@ -83,3 +83,20 @@
 #ifdef PLATFORM_TBD
 #define MCL_HAS_P4_SOUND 1
 #endif
+
+/*
+ * Project backup/version browser. Define MCL_DISABLE_PROJECT_BACKUP to remove
+ * backup creation/deletion and the project version page from size-constrained
+ * builds.
+ */
+#ifndef MCL_DISABLE_PROJECT_BACKUP
+#define MCL_HAS_PROJECT_BACKUP 1
+#endif
+
+/*
+ * File/project move mode in the file browser. Define MCL_DISABLE_FILE_MOVE to
+ * keep rename/copy/delete but remove the move-destination workflow.
+ */
+#ifndef MCL_DISABLE_FILE_MOVE
+#define MCL_HAS_FILE_MOVE 1
+#endif

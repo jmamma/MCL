@@ -4,8 +4,10 @@
 #define PROJECTVERSIONPAGE_H__
 
 #include "FileBrowserPage.h"
+#include "MCLFeatureConfig.h"
 #include "MCLMemory.h"
 
+#ifdef MCL_HAS_PROJECT_BACKUP
 class ProjectVersionPage : public FileBrowserPage {
 public:
   ProjectVersionPage(Encoder *e1 = NULL, Encoder *e2 = NULL,
@@ -26,5 +28,6 @@ private:
   void query_versions();
   bool selected_pair(uint8_t *pair);
 };
+#endif
 
 #endif /* PROJECTVERSIONPAGE_H__ */
