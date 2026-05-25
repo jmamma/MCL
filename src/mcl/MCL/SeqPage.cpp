@@ -1128,12 +1128,12 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
   s[i] = '\0';
 }
 
-void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
+void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_center) {
   char K[5];
   mclstr_copy_progmem(K, mclstr_dash, sizeof(K));
 
 #if !defined(__AVR__)
-  if (seq_page_uses_signed_microtiming() || timing_mid == 0) {
+  if (seq_page_uses_signed_microtiming() || timing_center == 0) {
     // SPSX: timing param is microtiming mapped to 0..254 (center=127)
     int8_t mt = (int8_t)(timing - 127);
     if (mt < 0) {
@@ -1152,11 +1152,11 @@ void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_mid) {
 
   // Legacy MD timing display
   if (timing != 0) {
-    if (timing < timing_mid) {
-      mcl_gui.put_value_at(timing_mid - timing, K + 1);
+    if (timing < timing_center) {
+      mcl_gui.put_value_at(timing_center - timing, K + 1);
     } else {
       K[0] = '+';
-      mcl_gui.put_value_at(timing - timing_mid, K + 1);
+      mcl_gui.put_value_at(timing - timing_center, K + 1);
     }
   }
   draw_knob(1, mclstr_utim, K);

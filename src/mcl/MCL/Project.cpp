@@ -247,20 +247,20 @@ uint8_t project_seq_speed_value(const GridLink &link) {
 }
 
 void convert_md_seq_unsigned_timing(MDSeqTrackData &data, uint8_t speed) {
-  uint16_t timing_mid = SeqTrack::get_timing_mid(speed);
+  uint16_t ticks_per_step = SeqTrack::get_ticks_per_step(speed);
   uint8_t *legacy_timing = reinterpret_cast<uint8_t *>(data.microtiming);
   for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
     uint8_t timing = legacy_timing[step];
     if (timing == 0) {
-      timing = timing_mid;
+      timing = ticks_per_step;
     }
     data.microtiming[step] =
-        SeqTrack::timing_to_microtiming(timing, timing_mid);
+        SeqTrack::timing_to_microtiming(timing, ticks_per_step);
   }
 }
 
 void convert_ext_seq_unsigned_timing(ExtSeqTrackData &data, uint8_t speed) {
-  uint16_t timing_mid = SeqTrack::get_timing_mid(speed);
+  uint16_t ticks_per_step = SeqTrack::get_ticks_per_step(speed);
   uint16_t used_events = data.event_count;
   if (used_events > NUM_EXT_EVENTS) {
     used_events = NUM_EXT_EVENTS;
@@ -269,7 +269,7 @@ void convert_ext_seq_unsigned_timing(ExtSeqTrackData &data, uint8_t speed) {
     uint8_t timing =
         *reinterpret_cast<uint8_t *>(&data.events[i].micro_timing);
     data.events[i].micro_timing =
-        SeqTrack::timing_to_microtiming(timing, timing_mid);
+        SeqTrack::timing_to_microtiming(timing, ticks_per_step);
   }
 }
 

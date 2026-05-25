@@ -149,7 +149,7 @@ public:
   void draw_knob(uint8_t i, Encoder* enc, const char* name);
   void conditional_str(char *str, uint8_t cond, bool is_md = false);
   void draw_knob_conditional(uint8_t cond);
-  void draw_knob_timing(uint8_t timing, uint8_t timing_mid);
+  void draw_knob_timing(uint8_t timing, uint8_t timing_center);
 
   static MidiDevice *device_for_seq_idx(DeviceIdx device_idx);
   static bool devices_share_physical();

@@ -133,7 +133,7 @@ void SeqTrack::store_mod_data(SeqTrackModData &mod_data, bool grid_x_tracks,
 uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   if (quant == 255) { quant = mcl_cfg.rec_quant; }
 
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
 
   int8_t mod12 = mod12_counter - 1;
 
@@ -141,20 +141,20 @@ uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   uint8_t step = step_count;
 /*
   if ((step == 0) && (mod12 < 0)) {
-    mod12 += timing_mid;
+    mod12 += ticks_per_step;
     step = length - 1;
   }
 */
-  utiming = mod12 + timing_mid;
+  utiming = mod12 + ticks_per_step;
 
   if (quant) {
-    if (mod12 > timing_mid / 2) {
+    if (mod12 > ticks_per_step / 2) {
       step++;
       if (step == length) {
         step = 0;
       }
     }
-    utiming = timing_mid;
+    utiming = ticks_per_step;
   }
   return step;
 }
@@ -233,36 +233,36 @@ bool SeqTrackCond::conditional(uint8_t condition) {
   return send_note;
 }
 
-uint8_t SeqTrack::get_timing_mid(uint8_t speed_) {
-  uint8_t timing_mid;
+uint8_t SeqTrack::get_ticks_per_step(uint8_t speed_) {
+  uint8_t ticks_per_step;
   switch (speed_) {
   default:
   case SEQ_SPEED_1X:
-    timing_mid = 12;
+    ticks_per_step = 12;
     break;
   case SEQ_SPEED_2X:
-    timing_mid = 6;
+    ticks_per_step = 6;
     break;
   case SEQ_SPEED_4X:
-    timing_mid = 3;
+    ticks_per_step = 3;
     break;
   case SEQ_SPEED_3_4X:
-    timing_mid = 16; // 12 * (4.0/3.0);
+    ticks_per_step = 16; // 12 * (4.0/3.0);
     break;
   case SEQ_SPEED_3_2X:
-    timing_mid = 8; // 12 * (2.0/3.0);
+    ticks_per_step = 8; // 12 * (2.0/3.0);
     break;
   case SEQ_SPEED_1_2X:
-    timing_mid = 24;
+    ticks_per_step = 24;
     break;
   case SEQ_SPEED_1_4X:
-    timing_mid = 48;
+    ticks_per_step = 48;
     break;
   case SEQ_SPEED_1_8X:
-    timing_mid = 96;
+    ticks_per_step = 96;
     break;
   }
-  return timing_mid;
+  return ticks_per_step;
 }
 
 int16_t SeqTrack::microtiming_to_ticks(int8_t microtiming,

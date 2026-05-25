@@ -2,9 +2,9 @@
 #include "CommonPages.h"
 
 void PerfSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
   mod12_counter++;
-  if (mod12_counter == timing_mid) {
+  if (mod12_counter == ticks_per_step) {
     mod12_counter = 0;
     step_count_inc();
   }

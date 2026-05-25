@@ -248,22 +248,22 @@ public:
 
   uint8_t timing_encoder_min() const { return kind_ == KIND_MD ? 1 : 0; }
   uint8_t timing_encoder_center() const {
-    return kind_ == KIND_MD ? SeqTrack::get_timing_mid(tracks_.md->speed)
+    return kind_ == KIND_MD ? SeqTrack::get_ticks_per_step(tracks_.md->speed)
                             : 127;
   }
   uint8_t timing_encoder_max() const {
     return kind_ == KIND_MD
-               ? (uint8_t)(SeqTrack::get_timing_mid(tracks_.md->speed) * 2 - 1)
+               ? (uint8_t)(SeqTrack::get_ticks_per_step(tracks_.md->speed) * 2 - 1)
                : 254;
   }
-  uint8_t timing_display_mid() const {
-    return kind_ == KIND_MD ? SeqTrack::get_timing_mid(tracks_.md->speed) : 0;
+  uint8_t timing_display_center() const {
+    return kind_ == KIND_MD ? SeqTrack::get_ticks_per_step(tracks_.md->speed) : 0;
   }
   uint8_t timing_encoder_for_step(uint8_t step) const {
     if (kind_ == KIND_MD) {
-      uint8_t timing_mid = SeqTrack::get_timing_mid(tracks_.md->speed);
+      uint8_t ticks_per_step = SeqTrack::get_ticks_per_step(tracks_.md->speed);
       return (uint8_t)SeqTrack::microtiming_to_timing(
-          tracks_.md->microtiming[step], timing_mid);
+          tracks_.md->microtiming[step], ticks_per_step);
     }
     return (uint8_t)(tracks_.stepseq->microtiming[step] + 127);
   }
@@ -327,7 +327,7 @@ public:
   void set_timing_from_encoder(uint8_t step, uint8_t encoder_value) {
     if (kind_ == KIND_MD) {
       tracks_.md->microtiming[step] = SeqTrack::timing_to_microtiming(
-          encoder_value, tracks_.md->get_timing_mid());
+          encoder_value, tracks_.md->get_ticks_per_step());
     } else {
       tracks_.stepseq->microtiming[step] =
           (int8_t)(encoder_value - 127);

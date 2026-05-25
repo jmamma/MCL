@@ -17,9 +17,9 @@ bool md_arp_targets_tbd() {
 
 void ArpSeqTrack::set_speed(uint8_t speed_) {
   speed = speed_;
-  uint8_t timing_mid = get_timing_mid();
-  if (timing_mid && mod12_counter >= timing_mid) {
-    mod12_counter = mod12_counter % timing_mid;
+  uint8_t ticks_per_step = get_ticks_per_step();
+  if (ticks_per_step && mod12_counter >= ticks_per_step) {
+    mod12_counter = mod12_counter % ticks_per_step;
   }
 }
 
@@ -58,10 +58,10 @@ void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   uart = uart_;
   uart2 = uart2_;
 
-  uint8_t timing_mid = get_timing_mid_inline();
+  uint8_t ticks_per_step = get_ticks_per_step_inline();
 
   mod12_counter++;
-  if (mod12_counter == timing_mid) {
+  if (mod12_counter == ticks_per_step) {
     step_count_inc();
     on_cycle_midpoint(uart_, uart2_);
     mod12_counter = 0;

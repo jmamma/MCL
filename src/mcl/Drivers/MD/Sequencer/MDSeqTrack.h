@@ -79,7 +79,7 @@ public:
                       bool ignore_locks_disabled = false);
 
   void recalc_slides();
-  uint8_t effective_timing(uint8_t step, uint8_t timing_mid) const;
+  uint8_t effective_timing(uint8_t step, uint8_t ticks_per_step) const;
   void find_next_locks(uint8_t curidx, uint8_t step, uint8_t &mask);
 
   void set_track_pitch(uint8_t step, uint8_t pitch);

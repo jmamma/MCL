@@ -93,7 +93,7 @@ public:
   }
 
   ALWAYS_INLINE() void seq() {
-    uint8_t timing_mid = get_timing_mid();
+    uint8_t ticks_per_step = get_ticks_per_step();
     mod12_counter++;
     if (count_down) {
       count_down--;
@@ -102,7 +102,7 @@ public:
         mod12_counter = 0;
       }
     }
-    if (mod12_counter == timing_mid) {
+    if (mod12_counter == ticks_per_step) {
       count_down = 0;
       mod12_counter = 0;
       step_count_inc();
@@ -125,7 +125,7 @@ public:
                             bool grid_x_tracks);
   static void store_mod_data(SeqTrackModData &mod_data, bool grid_x_tracks,
                              uint8_t tracknumber);
-  static uint8_t get_timing_mid(uint8_t speed_);
+  static uint8_t get_ticks_per_step(uint8_t speed_);
   static int16_t microtiming_to_ticks(int8_t microtiming,
                                       uint16_t ticks_per_step);
   static int8_t ticks_to_microtiming(int16_t ticks,
@@ -134,42 +134,42 @@ public:
                                         uint16_t ticks_per_step);
   static int8_t timing_to_microtiming(uint16_t timing,
                                       uint16_t ticks_per_step);
-  uint8_t get_timing_mid() { return get_timing_mid(speed); }
+  uint8_t get_ticks_per_step() { return get_ticks_per_step(speed); }
 
-  FORCED_INLINE() uint8_t get_timing_mid_inline() {
-    uint8_t timing_mid;
+  FORCED_INLINE() uint8_t get_ticks_per_step_inline() {
+    uint8_t ticks_per_step;
     switch (speed) {
     default:
     case SEQ_SPEED_1X:
-      timing_mid = 12;
+      ticks_per_step = 12;
       break;
     case SEQ_SPEED_2X:
-      timing_mid = 6;
+      ticks_per_step = 6;
       break;
     case SEQ_SPEED_4X:
-      timing_mid = 3;
+      ticks_per_step = 3;
       break;
     case SEQ_SPEED_3_4X:
-      timing_mid = 16; // 12 * (4.0/3.0);
+      ticks_per_step = 16; // 12 * (4.0/3.0);
       break;
     case SEQ_SPEED_3_2X:
-      timing_mid = 8; // 12 * (2.0/3.0);
+      ticks_per_step = 8; // 12 * (2.0/3.0);
       break;
     case SEQ_SPEED_1_2X:
-      timing_mid = 24;
+      ticks_per_step = 24;
       break;
     case SEQ_SPEED_1_4X:
-      timing_mid = 48;
+      ticks_per_step = 48;
       break;
     case SEQ_SPEED_1_8X:
-      timing_mid = 96;
+      ticks_per_step = 96;
       break;
     }
-    return timing_mid;
+    return ticks_per_step;
   }
 
   static uint8_t get_speed_multiplier_int(uint8_t speed) {
-    return get_timing_mid(speed);
+    return get_ticks_per_step(speed);
   }
 
   uint8_t get_speed_multiplier_int() { return get_speed_multiplier_int(speed); }
@@ -240,7 +240,7 @@ public:
   }
 
   ALWAYS_INLINE() void seq() {
-    uint8_t timing_mid = get_timing_mid();
+    uint8_t ticks_per_step = get_ticks_per_step();
     mod12_counter++;
     if (count_down) {
       count_down--;
@@ -249,7 +249,7 @@ public:
         mod12_counter = 0;
       }
     }
-    if (mod12_counter == timing_mid) {
+    if (mod12_counter == ticks_per_step) {
       count_down = 0;
       mod12_counter = 0;
       step_count_inc();

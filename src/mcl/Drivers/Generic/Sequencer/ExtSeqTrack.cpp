@@ -58,9 +58,9 @@ void ExtSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
   (void)old_speed;
   (void)timing_adjust;
   speed = new_speed;
-  uint8_t timing_mid = get_timing_mid();
-  if (timing_mid && mod12_counter >= timing_mid) {
-    mod12_counter = mod12_counter % timing_mid;
+  uint8_t ticks_per_step = get_ticks_per_step();
+  if (ticks_per_step && mod12_counter >= ticks_per_step) {
+    mod12_counter = mod12_counter % ticks_per_step;
     // step_count_inc();
   }
 }
@@ -183,7 +183,7 @@ void ExtSeqTrack::recalc_slides() {
   int16_t x0, x1;
   int8_t y0, y1;
   uint8_t step = locks_slides_recalc;
-  uint8_t timing_mid = get_timing_mid_inline();
+  uint8_t ticks_per_step = get_ticks_per_step_inline();
 
   uint8_t find_array[NUM_LOCKS] = {0};
 
@@ -228,16 +228,16 @@ void ExtSeqTrack::recalc_slides() {
       locks_slide_data[c].init();
       continue;
     }
-    x0 = ext_event_tick(step, e->micro_timing, timing_mid) + 1;
+    x0 = ext_event_tick(step, e->micro_timing, ticks_per_step) + 1;
     if (next_lockstep < step) {
-      x1 = (length + next_lockstep) * timing_mid +
+      x1 = (length + next_lockstep) * ticks_per_step +
            ext_microtiming_ticks(locks_slide_next_lock_utiming[c],
-                                 timing_mid) -
+                                 ticks_per_step) -
            1;
     } else {
-      x1 = next_lockstep * timing_mid +
+      x1 = next_lockstep * ticks_per_step +
            ext_microtiming_ticks(locks_slide_next_lock_utiming[c],
-                                 timing_mid) -
+                                 ticks_per_step) -
            1;
     }
     y0 = e->event_value;
@@ -516,22 +516,22 @@ void ExtSeqTrack::remove_notes_on(uint8_t value) {
 void ExtSeqTrack::add_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y,
                            uint8_t velocity, uint8_t cond) {
 
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
 
-  uint8_t step = (cur_x / timing_mid);
-  uint8_t start_utiming = timing_mid + cur_x - (step * timing_mid);
+  uint8_t step = (cur_x / ticks_per_step);
+  uint8_t start_utiming = ticks_per_step + cur_x - (step * ticks_per_step);
 
   DEBUG_DUMP(step);
   DEBUG_DUMP(start_utiming);
 
-  uint8_t end_step = ((cur_x + cur_w) / timing_mid);
+  uint8_t end_step = ((cur_x + cur_w) / ticks_per_step);
   DEBUG_DUMP(end_step);
 
   if (end_step == step) {
     DEBUG_PRINTLN(F("ALERT start == end"));
     end_step = end_step + 1;
   }
-  uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step * timing_mid);
+  uint8_t end_utiming = ticks_per_step + (cur_x + cur_w) - (end_step * ticks_per_step);
   DEBUG_DUMP(end_utiming);
 
   if (end_step >= length) {
@@ -559,11 +559,11 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
   DEBUG_DUMP(F("del_note"));
   DEBUG_DUMP(cur_x);
   DEBUG_DUMP(cur_w);
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
 
-  // uint8_t end_step = ((cur_x + cur_w) / timing_mid);
-  // uint8_t end_utiming = timing_mid + (cur_x + cur_w) - (end_step *
-  // timing_mid);
+  // uint8_t end_step = ((cur_x + cur_w) / ticks_per_step);
+  // uint8_t end_utiming = ticks_per_step + (cur_x + cur_w) - (end_step *
+  // ticks_per_step);
 
   uint16_t note_idx_off, note_idx_on;
   bool note_on_found = false;
@@ -586,10 +586,10 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
       if (note_idx_off != 0xFFFF) {
         auto &ev = events[note_idx_on];
         auto &ev_j = events[note_idx_off];
-        note_start = ext_event_tick(i, ev.micro_timing, timing_mid);
-        note_end = ext_event_tick(j, ev_j.micro_timing, timing_mid);
+        note_start = ext_event_tick(i, ev.micro_timing, ticks_per_step);
+        note_end = ext_event_tick(j, ev_j.micro_timing, ticks_per_step);
         if (note_end < note_start) {
-          note_end += length * timing_mid;
+          note_end += length * ticks_per_step;
         }
         if ((note_start <= selection_end) && (note_end > selection_start)) {
           remove_event(note_idx_off);
@@ -609,7 +609,7 @@ bool ExtSeqTrack::del_note(uint16_t cur_x, uint16_t cur_w, uint8_t cur_y) {
     if (note_idx_off != 0xFFFF) {
       // Remove wrap around notes
       auto &ev = events[note_idx_off];
-      int32_t note_end = ext_event_tick(i, ev.micro_timing, timing_mid);
+      int32_t note_end = ext_event_tick(i, ev.micro_timing, ticks_per_step);
       if (note_end > selection_start) {
         remove_event(note_idx_off);
         for (uint8_t j = length - 1; j > i; j--) {
@@ -635,8 +635,8 @@ bool ExtSeqTrack::del_notes(uint16_t cur_x, uint16_t cur_w,
     return false;
   }
 
-  uint8_t timing_mid = get_timing_mid();
-  if (timing_mid == 0) {
+  uint8_t ticks_per_step = get_ticks_per_step();
+  if (ticks_per_step == 0) {
     return false;
   }
 
@@ -645,7 +645,7 @@ bool ExtSeqTrack::del_notes(uint16_t cur_x, uint16_t cur_w,
 
   const int16_t range_start = (int16_t)cur_x;
   const int16_t range_end = (int16_t)(cur_x + cur_w);
-  const int16_t roll_ticks = (int16_t)length * timing_mid;
+  const int16_t roll_ticks = (int16_t)length * ticks_per_step;
 
   uint16_t ev_idx = 0;
   uint16_t ev_end = 0;
@@ -667,9 +667,9 @@ bool ExtSeqTrack::del_notes(uint16_t cur_x, uint16_t cur_w,
       }
 
       ext_event_t &ev_off = events[note_off_idx];
-      int16_t note_start = ext_event_tick(step, ev.micro_timing, timing_mid);
+      int16_t note_start = ext_event_tick(step, ev.micro_timing, ticks_per_step);
       int16_t note_end =
-          ext_event_tick(off_step, ev_off.micro_timing, timing_mid);
+          ext_event_tick(off_step, ev_off.micro_timing, ticks_per_step);
       if (note_end < note_start) {
         note_end += roll_ticks;
       }
@@ -772,11 +772,11 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     }
   }
 
-  uint8_t timing_mid = get_timing_mid_inline();
+  uint8_t ticks_per_step = get_ticks_per_step_inline();
 
   mod12_counter++;
 
-  if (mod12_counter == timing_mid) {
+  if (mod12_counter == ticks_per_step) {
     cur_event_idx += event_buckets.get(step_count);
     mod12_counter = 0;
     if (ignore_step == step_count) {
@@ -827,8 +827,8 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
       (mute_state == SEQ_MUTE_OFF)) {
     // SEQ_MUTE_OFF)) {
     // the range we're interested in:
-    // [current timing bucket, micro >= timing_mid ... next timing bucket, micro
-    // < timing_mid]
+    // [current timing bucket, micro >= ticks_per_step ... next timing bucket, micro
+    // < ticks_per_step]
 
     ev_idx = cur_event_idx;
     ev_end = cur_event_idx + event_buckets.get(step_count);
@@ -838,7 +838,7 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     // Go over CURRENT
     for (; ev_idx != ev_end; ++ev_idx) {
       int16_t timing_offset =
-          ext_microtiming_ticks(events[ev_idx].micro_timing, timing_mid);
+          ext_microtiming_ticks(events[ev_idx].micro_timing, ticks_per_step);
       if (timing_offset >= 0 && timing_offset == mod12_counter) {
         handle_event(ev_idx, step_count);
       }
@@ -857,8 +857,8 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
       int16_t timing_offset =
-          ext_microtiming_ticks(events[ev_idx].micro_timing, timing_mid);
-      int16_t trigger_tick = (int16_t)timing_mid + timing_offset;
+          ext_microtiming_ticks(events[ev_idx].micro_timing, ticks_per_step);
+      int16_t trigger_tick = (int16_t)ticks_per_step + timing_offset;
       if (timing_offset < 0 && trigger_tick == mod12_counter) {
         handle_event(ev_idx, next_step);
       }
@@ -982,8 +982,8 @@ void ExtSeqTrack::record_track_locks(uint8_t track_param, uint8_t value,
 
 bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
                                   uint8_t value) {
-  uint8_t timing_mid = get_timing_mid();
-  uint8_t step = (cur_x / timing_mid);
+  uint8_t ticks_per_step = get_ticks_per_step();
+  uint8_t step = (cur_x / ticks_per_step);
 
   if (step != 0) {
     --step;
@@ -1007,7 +1007,7 @@ bool ExtSeqTrack::del_track_locks(int16_t cur_x, uint8_t lock_idx,
         ++start_idx;
         continue;
       }
-      int16_t event_x = ext_event_tick(n, events[i].micro_timing, timing_mid);
+      int16_t event_x = ext_event_tick(n, events[i].micro_timing, ticks_per_step);
       if (event_x == cur_x || (event_x <= cur_x + r && event_x >= cur_x - r)) {
         uint8_t param = locks_params[lock_idx] - 1;
         if (param == PARAM_PRG) {
@@ -1137,7 +1137,7 @@ bool ExtSeqTrack::set_track_locks(uint8_t step, uint8_t utiming,
     e->event_value = value;
     e->event_on = event_on;
     e->micro_timing = ext_page_timing_to_microtiming(utiming,
-                                                     get_timing_mid());
+                                                     get_ticks_per_step());
 
     if (add_event(step, e) == 0xFFFF) {
       return false;
@@ -1158,7 +1158,7 @@ bool ExtSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
   e.event_value = note_num;
   e.event_on = event_on;
   e.micro_timing = ext_page_timing_to_microtiming(utiming,
-                                                  get_timing_mid());
+                                                  get_ticks_per_step());
 
   DEBUG_PRINTLN("adding step");
   DEBUG_DUMP(event_on);
@@ -1174,7 +1174,7 @@ bool ExtSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
 }
 
 void ExtSeqTrack::store_mute_state() {
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
   for (uint8_t n = 0; n < NUM_EXT_STEPS; n++) {
     if (IS_BIT_SET128_P(mute_mask, n)) {
       uint16_t ev_idx, ev_end;
@@ -1182,8 +1182,8 @@ void ExtSeqTrack::store_mute_state() {
       locate(n, ev_idx, ev_end);
       for (uint8_t m = ev_idx; m < ev_end; m++) {
         if (!events[m].is_lock && events[m].event_on) {
-          if (del_note(ext_event_tick(n, events[m].micro_timing, timing_mid),
-                       timing_mid, events[m].event_value)) {
+          if (del_note(ext_event_tick(n, events[m].micro_timing, ticks_per_step),
+                       ticks_per_step, events[m].event_value)) {
             goto loc;
           }
         }
@@ -1195,7 +1195,7 @@ void ExtSeqTrack::store_mute_state() {
 
 void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
 
   uint8_t n = find_notes_on(note_num);
   if (n == 255)
@@ -1211,9 +1211,9 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
     uint16_t w = 0;
 
-    int16_t start_x = notes_on[n].step * timing_mid + notes_on[n].utiming;
-    int16_t end_x = step * timing_mid + utiming;
-    int16_t roll_length = length * timing_mid;
+    int16_t start_x = notes_on[n].step * ticks_per_step + notes_on[n].utiming;
+    int16_t end_x = step * ticks_per_step + utiming;
+    int16_t roll_length = length * ticks_per_step;
 
     if (start_x < 0) {
       start_x += roll_length;
@@ -1230,14 +1230,14 @@ void ExtSeqTrack::record_track_noteoff(uint8_t note_num) {
 
       int8_t u = notes_on[n].utiming;
       uint8_t s = notes_on[n].step;
-      if (u > timing_mid / 2) {
+      if (u > ticks_per_step / 2) {
         s++;
         if (s == length) {
           s = 0;
         }
       }
       u = 0;
-      start_x = s * timing_mid + u;
+      start_x = s * ticks_per_step + u;
       end_x = start_x + w;
       if (end_x > roll_length) {
         del_note(0, end_x - roll_length, note_num);
@@ -1338,7 +1338,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   mute_state = SEQ_MUTE_ON;
   notesoff_pending = true;
 
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
   uint16_t step_idx = 0, ev_end = 0;
 
   // Collect orphaned notes first (don't modify events yet)
@@ -1372,7 +1372,7 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
 
   //event_count = ev_end;
   for (uint8_t i = 0; i < orphaned_count; i++) {
-    set_track_step(length - 1, (timing_mid * 2) - 1, orphaned_notes[i], false, 0, 0);
+    set_track_step(length - 1, (ticks_per_step * 2) - 1, orphaned_notes[i], false, 0, 0);
   }
   ev_end = event_count;
   //locate(length - 1, step_idx, ev_end);

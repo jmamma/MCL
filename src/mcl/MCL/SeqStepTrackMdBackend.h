@@ -194,13 +194,13 @@ public:
   }
 
   uint8_t timing_encoder_min() const { return 1; }
-  uint8_t timing_encoder_center() const { return timing_mid(); }
-  uint8_t timing_encoder_max() const { return timing_mid() * 2 - 1; }
-  uint8_t timing_display_mid() const { return timing_mid(); }
+  uint8_t timing_encoder_center() const { return ticks_per_step(); }
+  uint8_t timing_encoder_max() const { return ticks_per_step() * 2 - 1; }
+  uint8_t timing_display_center() const { return ticks_per_step(); }
 
   uint8_t timing_encoder_for_step(uint8_t step) const {
     return (uint8_t)SeqTrack::microtiming_to_timing(
-        track_->microtiming[step], timing_mid());
+        track_->microtiming[step], ticks_per_step());
   }
 
   int8_t microtiming_from_encoder(uint8_t encoder_value) const {
@@ -240,7 +240,7 @@ public:
 
   void set_timing_from_encoder(uint8_t step, uint8_t encoder_value) {
     track_->microtiming[step] =
-        SeqTrack::timing_to_microtiming(encoder_value, timing_mid());
+        SeqTrack::timing_to_microtiming(encoder_value, ticks_per_step());
   }
 
   void set_pattern_step_from_edit(uint8_t step, uint8_t condition_knob,
@@ -251,7 +251,7 @@ public:
     track_->steps[step].cond_id = condition;
     track_->steps[step].cond_plock = cond_plock;
     track_->microtiming[step] =
-        SeqTrack::timing_to_microtiming(timing_encoder, timing_mid());
+        SeqTrack::timing_to_microtiming(timing_encoder, ticks_per_step());
   }
 
   void reset_timing(uint8_t step) { track_->microtiming[step] = 0; }
@@ -315,7 +315,7 @@ public:
   }
 
 private:
-  uint8_t timing_mid() const { return SeqTrack::get_timing_mid(track_->speed); }
+  uint8_t ticks_per_step() const { return SeqTrack::get_ticks_per_step(track_->speed); }
 
   bool copy_short_label(const char *label, char *out, uint8_t len,
                         uint8_t max_chars) const {

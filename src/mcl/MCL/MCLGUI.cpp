@@ -638,8 +638,8 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   oled_display.setFont(&TomThumb);
 
   oled_display.setTextColor(WHITE);
-  uint8_t timing_mid = SeqTrack::get_timing_mid(speed);
-  uint8_t degrees = timing_mid * 2;
+  uint8_t timing_center = SeqTrack::get_ticks_per_step(speed);
+  uint8_t degrees = timing_center * 2;
   // Triplets
 
   static const uint8_t heights_lowres[] PROGMEM = {11, 4, 6, 10, 4, 8};
@@ -674,11 +674,11 @@ void MCLGUI::draw_microtiming(uint8_t speed, uint8_t timing) {
   mclstr_copy_progmem(K, mclstr_dash, sizeof(K));
 
   if (timing != 0) {
-    if (timing < timing_mid) {
-      put_value_at(timing_mid - timing, K + 1);
+    if (timing < timing_center) {
+      put_value_at(timing_center - timing, K + 1);
     } else {
       K[0] = '+';
-      put_value_at(timing - timing_mid, K + 1);
+      put_value_at(timing - timing_center, K + 1);
     }
   }
 
@@ -729,13 +729,13 @@ void MCLGUI::draw_microtiming_spsx(uint8_t speed, int8_t microtiming) {
   case SPSX_SPEED_1_8X: tps = SPSX_TICKS_PER_STEP_1X * 8; break;
   }
 
-  uint16_t timing_mid = tps / 4;
-  if (timing_mid < 1) timing_mid = 1;
-  if (timing_mid > 96) timing_mid = 96;
-  uint16_t degrees = timing_mid * 2;
+  uint16_t timing_center = tps / 4;
+  if (timing_center < 1) timing_center = 1;
+  if (timing_center > 96) timing_center = 96;
+  uint16_t degrees = timing_center * 2;
 
   // Convert microtiming (-127..+127) to visual position (0..degrees)
-  int timing = timing_mid + (int)microtiming * (int)timing_mid / 127;
+  int timing = timing_center + (int)microtiming * (int)timing_center / 127;
   if (timing < 0) timing = 0;
   if (timing > degrees) timing = degrees;
 
@@ -785,7 +785,8 @@ void MCLGUI::draw_microtiming_spsx(uint8_t speed, int8_t microtiming) {
 
   oled_display.drawFastHLine(ruler_x, baseline_y, ruler_w + 1, WHITE);
   for (uint16_t n = 0; n <= degrees; n++) {
-    uint8_t dist = (n >= timing_mid) ? (n - timing_mid) : (timing_mid - n);
+    uint8_t dist =
+        (n >= timing_center) ? (n - timing_center) : (timing_center - n);
     uint8_t tick_h = h[dist % heights_len];
     uint8_t x = ruler_x + (uint32_t)n * ruler_w / degrees;
 

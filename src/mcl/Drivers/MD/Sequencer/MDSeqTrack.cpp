@@ -45,30 +45,30 @@ static int16_t md_div_round_closest(int32_t numerator, int32_t denominator) {
 }
 
 static int8_t spsx_microtiming_to_md_microtiming(int8_t microtiming,
-                                                 uint16_t timing_mid) {
+                                                 uint16_t ticks_per_step) {
   if (microtiming == 0) {
     return 0;
   }
-  uint16_t timing_quarter = timing_mid / 2;
+  uint16_t timing_quarter = ticks_per_step / 2;
   if (timing_quarter == 0) {
     timing_quarter = 1;
   }
   int16_t ticks =
       md_div_round_closest((int32_t)microtiming * timing_quarter, 127);
-  return SeqTrack::ticks_to_microtiming(ticks, timing_mid);
+  return SeqTrack::ticks_to_microtiming(ticks, ticks_per_step);
 }
 #endif
 
-uint8_t MDSeqTrack::effective_timing(uint8_t step, uint8_t timing_mid) const {
+uint8_t MDSeqTrack::effective_timing(uint8_t step, uint8_t ticks_per_step) const {
   int8_t mt = microtiming[step];
   if (mt == 0) {
     if (swing_amount && steps[step].swing) {
-      return timing_mid +
-             (((uint16_t)swing_amount * timing_mid + 25) / 50);
+      return ticks_per_step +
+             (((uint16_t)swing_amount * ticks_per_step + 25) / 50);
     }
-    return timing_mid;
+    return ticks_per_step;
   }
-  return SeqTrack::microtiming_to_timing(mt, timing_mid);
+  return SeqTrack::microtiming_to_timing(mt, ticks_per_step);
 }
 
 void MDSeqTrack::set_length(uint8_t len, bool expand) {
@@ -135,9 +135,9 @@ void MDSeqTrack::set_speed(uint8_t new_speed, uint8_t old_speed,
   (void)old_speed;
   (void)timing_adjust;
   speed = new_speed;
-  uint8_t timing_mid = get_timing_mid();
-  if (timing_mid && mod12_counter >= timing_mid) {
-    mod12_counter = mod12_counter % timing_mid;
+  uint8_t ticks_per_step = get_ticks_per_step();
+  if (ticks_per_step && mod12_counter >= ticks_per_step) {
+    mod12_counter = mod12_counter % ticks_per_step;
     // step_count_inc();
   }
   re_sync();
@@ -198,11 +198,11 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
     }
   }
 
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
 
   mod12_counter++;
 
-  if (mod12_counter == timing_mid) {
+  if (mod12_counter == ticks_per_step) {
     mod12_counter = 0;
     cur_event_idx += popcount(steps[step_count].locks);
     if (ignore_step == step_count) {
@@ -257,12 +257,12 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
 
     send_slides(locks_params);
 
-    uint8_t timing_current = effective_timing(step_count, timing_mid);
-    uint8_t timing_next = effective_timing(next_step, timing_mid);
+    uint8_t timing_current = effective_timing(step_count, ticks_per_step);
+    uint8_t timing_next = effective_timing(next_step, ticks_per_step);
 
-    bool current_due = (timing_current >= timing_mid) &&
-                       (timing_current - timing_mid == mod12_counter);
-    bool next_due = (timing_next < timing_mid) &&
+    bool current_due = (timing_current >= ticks_per_step) &&
+                       (timing_current - ticks_per_step == mod12_counter);
+    bool next_due = (timing_next < ticks_per_step) &&
                     (timing_next == mod12_counter);
     if (current_due || next_due) {
       current_step = current_due ? step_count : next_step;
@@ -292,7 +292,7 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
         }
         if (send_trig == TRIG_TRUE && step.trig) {
           if (is_midi_model) {
-            notes.count_down = notes.len == 0 ? timing_mid / 4 : (notes.len * timing_mid / 2);
+            notes.count_down = notes.len == 0 ? ticks_per_step / 4 : (notes.len * ticks_per_step / 2);
             send_notes_on();
           }
           send_trig_inline();
@@ -350,7 +350,7 @@ void MDSeqTrack::recalc_slides() {
   int16_t x0, x1;
   int8_t y0, y1;
   uint8_t step = locks_slides_recalc;
-  uint8_t timing_mid = get_timing_mid();
+  uint8_t ticks_per_step = get_ticks_per_step();
 
   // Build mask of active lock params, then AND with step's locks
   uint8_t find_mask = 0;
@@ -382,17 +382,17 @@ void MDSeqTrack::recalc_slides() {
       locks_slide_data[c].init();
       continue;
     }
-    x0 = step * timing_mid + effective_timing(step, timing_mid) - timing_mid +
+    x0 = step * ticks_per_step + effective_timing(step, ticks_per_step) - ticks_per_step +
          1;
     if (next_lockstep < step) {
-      x1 = (length + next_lockstep) * timing_mid +
-           effective_timing(next_lockstep, timing_mid) - timing_mid - 1;
+      x1 = (length + next_lockstep) * ticks_per_step +
+           effective_timing(next_lockstep, ticks_per_step) - ticks_per_step - 1;
     } else {
-      x1 = next_lockstep * timing_mid +
-           effective_timing(next_lockstep, timing_mid) - timing_mid - 1;
+      x1 = next_lockstep * ticks_per_step +
+           effective_timing(next_lockstep, ticks_per_step) - ticks_per_step - 1;
     }
     DEBUG_DUMP(microtiming[step]);
-    DEBUG_DUMP(timing_mid);
+    DEBUG_DUMP(ticks_per_step);
     y0 = locks[cur_lockidx];
     y1 = locks_slide_next_lock_val[c];
     prepare_slide(c, x0, x1, y0, y1);
@@ -722,8 +722,8 @@ void MDSeqTrack::send_notes(uint8_t note1, MidiUartClass *uart2_) {
   init_notes();
   if (note1 != 255) { notes.note1 = note1; }
   if (notes.first_trig) { reset_params(); notes.first_trig = false; }
-  uint8_t timing_mid = get_timing_mid();
-  notes.count_down = notes.len == 0 ? timing_mid / 4 : (notes.len * timing_mid / 2);
+  uint8_t ticks_per_step = get_ticks_per_step();
+  notes.count_down = notes.len == 0 ? ticks_per_step / 4 : (notes.len * ticks_per_step / 2);
   send_notes_on(uart2_);
 }
 
@@ -958,7 +958,7 @@ void MDSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
   steps[step].cond_id = 0;
   steps[step].cond_plock = false;
   microtiming[step] =
-      SeqTrack::timing_to_microtiming(utiming, get_timing_mid());
+      SeqTrack::timing_to_microtiming(utiming, get_ticks_per_step());
   if (velocity < 127) {
     set_track_locks(step, MODEL_VOL, velocity);
   }
@@ -1189,7 +1189,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
 #if !defined(__AVR__)
   // Apply SPSX step flags (conditionals) and microtiming
   if (pattern->version >= 0x40) {
-    uint8_t timing_mid = get_timing_mid();
+    uint8_t ticks_per_step = get_ticks_per_step();
     for (uint8_t a = 0; a < length; a++) {
       if (steps[a].trig) {
         uint8_t flags = pattern->ext_step_flags[track_number][a];
@@ -1197,7 +1197,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
         steps[a].cond_plock = (flags >> 1) & 1;
         int8_t mt = pattern->ext_microtiming[track_number][a];
         if (mt != 0) {
-          microtiming[a] = spsx_microtiming_to_md_microtiming(mt, timing_mid);
+          microtiming[a] = spsx_microtiming_to_md_microtiming(mt, ticks_per_step);
         }
       }
     }

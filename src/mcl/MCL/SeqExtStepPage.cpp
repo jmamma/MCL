@@ -359,7 +359,7 @@ bool seq_ext_step_lock_held_steps(SeqExtStepTrackApi &track,
                                   uint16_t value,
                                   bool update_param_select) {
   auto locks = track.locks();
-  uint16_t timing_mid = track.ticks_per_step();
+  uint16_t ticks_per_step = track.ticks_per_step();
   uint8_t lock_idx = SeqPage::pianoroll_mode - 1;
   SeqExtStepLockParamInfo info;
   if (!locks.selected_lock_param_info(lock_idx, info)) {
@@ -387,9 +387,9 @@ bool seq_ext_step_lock_held_steps(SeqExtStepTrackApi &track,
 
   for (uint8_t i = 0; i < kExtStepVisibleSteps; i++) {
     if (!note_interface.is_note_on(i)) continue;
-    uint8_t step = seq_ext_step_at_key(seq_extstep_page.cur_x, timing_mid, i);
+    uint8_t step = seq_ext_step_at_key(seq_extstep_page.cur_x, ticks_per_step, i);
     if (step >= track.length()) continue;
-    locks.add_lock(step, timing_mid, lock_param, lock_value, SeqPage::slide,
+    locks.add_lock(step, ticks_per_step, lock_param, lock_value, SeqPage::slide,
                    lock_idx);
   }
   return true;
@@ -437,24 +437,24 @@ void SeqExtStepPage::config_encoders() {
   if (encoder_init) {
     encoder_init = false;
     auto active_track = active_ext_step_track();
-    uint16_t timing_mid = active_track.ticks_per_step();
+    uint16_t ticks_per_step = active_track.ticks_per_step();
     seq_extparam4.cur = kExtStepDefaultZoomSteps;
     fov_offset = 0;
     cur_x = 0;
     fov_y = MIDI_NOTE_C3 - 1;
     cur_y = fov_y + 1;
-    cur_w = timing_mid;
+    cur_w = ticks_per_step;
     uint8_t track_length = active_track.length();
     if (track_length == 0) {
       track_length = 1;
     }
     roll_length =
-        (seq_extstep_tick_t)track_length * (seq_extstep_tick_t)timing_mid;
+        (seq_extstep_tick_t)track_length * (seq_extstep_tick_t)ticks_per_step;
     seq_extstep_tick_t requested_fov =
-        (seq_extstep_tick_t)seq_extparam4.cur * (seq_extstep_tick_t)timing_mid;
+        (seq_extstep_tick_t)seq_extparam4.cur * (seq_extstep_tick_t)ticks_per_step;
     fov_length = requested_fov < roll_length ? requested_fov : roll_length;
     if (fov_length <= 0) {
-      fov_length = timing_mid ? timing_mid : 1;
+      fov_length = ticks_per_step ? ticks_per_step : 1;
     }
     fov_pixels_per_tick = ((seq_extstep_tick_t)fov_w << 8) / fov_length;
 
@@ -494,13 +494,13 @@ bool SeqExtStepPage::handle_cc_lock_learn(uint8_t track_index, uint8_t param,
     return true;
   }
 
-  uint16_t timing_mid = track.ticks_per_step();
-  uint16_t page_width = seq_ext_step_page_width(timing_mid);
+  uint16_t ticks_per_step = track.ticks_per_step();
+  uint16_t page_width = seq_ext_step_page_width(ticks_per_step);
   for (uint8_t i = 0; i < kExtStepVisibleSteps; i++) {
     if (!note_interface.is_note_on(i)) continue;
     uint8_t step = ((cur_x / page_width) * kExtStepVisibleSteps) + i;
     if (step >= track.length()) continue;
-    locks.replace_param_lock(step, timing_mid, param, value, SeqPage::slide);
+    locks.replace_param_lock(step, ticks_per_step, param, value, SeqPage::slide);
     if (SeqPage::pianoroll_mode == 0) {
       char str[] = "CC:";
       char str2[] = "--  ";
@@ -865,7 +865,7 @@ void SeqExtStepPage::draw_note_selection() {
 
 void SeqExtStepPage::draw_pianoroll() {
   auto active_track = active_ext_step_track();
-  uint16_t timing_mid = active_track.ticks_per_step();
+  uint16_t ticks_per_step = active_track.ticks_per_step();
   uint8_t note_h = fov_h / fov_notes;
 
   // Absolute piano roll dimensions
@@ -900,7 +900,7 @@ void SeqExtStepPage::draw_pianoroll() {
       seq_extstep_tick_t note_start = active_track.event_tick(i, ev);
       seq_extstep_tick_t note_end = active_track.event_tick(j, ev_j);
 
-      if (i > j && j == 0) { note_end += timing_mid * active_track.length(); }
+      if (i > j && j == 0) { note_end += ticks_per_step * active_track.length(); }
 
       if (is_within_fov(note_start, note_end)) {
         uint8_t note_fov_start, note_fov_end;
@@ -1002,16 +1002,16 @@ void SeqExtStepPage::draw_pianoroll() {
 
 void SeqExtStepPage::draw_viewport_minimap() {
   auto active_track = active_ext_step_track();
-  uint16_t timing_mid = active_track.ticks_per_step();
+  uint16_t ticks_per_step = active_track.ticks_per_step();
 
   constexpr uint16_t width = pidx_w * 4 + 3;
 
   seq_extstep_tick_t pattern_end =
       (seq_extstep_tick_t)max(kExtStepVisibleSteps, active_track.length()) *
-      timing_mid;
+      ticks_per_step;
 
   seq_extstep_tick_t cur_tick_x =
-      (seq_extstep_tick_t)active_track.step_count() * timing_mid +
+      (seq_extstep_tick_t)active_track.step_count() * ticks_per_step +
       active_track.mod_ticks();
 
   oled_display.drawRect(pidx_x0, pidx_y, width, pidx_h, WHITE);
@@ -1086,10 +1086,10 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
   for (uint8_t n = 0; n < kExtStepVisibleSteps; n++) {
     if (note_interface.is_note_on(n)) {
       auto active_track = active_ext_step_track();
-      uint16_t timing_mid = active_track.ticks_per_step();
+      uint16_t ticks_per_step = active_track.ticks_per_step();
 
       seq_extstep_tick_t pos =
-          fov_offset + (seq_extstep_tick_t)timing_mid * n;
+          fov_offset + (seq_extstep_tick_t)ticks_per_step * n;
       seq_extstep_tick_t w = cur_w;
       if (pos < 0 || pos >= roll_length) continue;
       if (pos + w >= roll_length) { w = roll_length - pos - 1; }
@@ -1482,7 +1482,7 @@ void SeqExtStepPage::config_menu_entries() {
 void SeqExtStepPage::loop() {
   config_menu_entries();
   auto active_track = active_ext_step_track();
-  uint16_t timing_mid = active_track.ticks_per_step();
+  uint16_t ticks_per_step = active_track.ticks_per_step();
   SeqPage::loop();
 
   bool is_lockeditor = (pianoroll_mode > 0);
@@ -1531,9 +1531,9 @@ void SeqExtStepPage::loop() {
     // Horizontal translation
 
     if (seq_extparam4.cur == zoom_max && BUTTON_DOWN(Buttons.ENCODER1)) {
-      diff *= (timing_mid / 3);
+      diff *= (ticks_per_step / 3);
     }
-    else if (!BUTTON_DOWN(Buttons.ENCODER1)) { diff = diff * timing_mid; }
+    else if (!BUTTON_DOWN(Buttons.ENCODER1)) { diff = diff * ticks_per_step; }
     pos_cur_x(diff);
   }
   diff = seq_extparam2.getValue();
@@ -1553,7 +1553,7 @@ void SeqExtStepPage::loop() {
     pos_cur_w(diff);
   }
 
-  roll_length = active_track.length() * timing_mid; // in ticks
+  roll_length = active_track.length() * ticks_per_step; // in ticks
 
   if (seq_extparam4.cur > zoom_max) {
       seq_extparam4.cur = zoom_max;
@@ -1562,7 +1562,7 @@ void SeqExtStepPage::loop() {
   if (cur_w > roll_length) { cur_w = roll_length / 2; }
 
   int32_t fov_length_new =
-      ((int32_t)active_track.length() * timing_mid * fov_pixels_per_tick) >> 8;
+      ((int32_t)active_track.length() * ticks_per_step * fov_pixels_per_tick) >> 8;
   if (fov_length_new < fov_w) {
       seq_extparam4.cur = (uint16_t)active_track.length() * active_track.speed_multiplier_int() / 12;
       if (seq_extparam4.cur > zoom_max) {
@@ -1578,7 +1578,7 @@ void SeqExtStepPage::loop() {
     change:
     uint8_t fov_zoom = seq_extparam4.cur;
 
-    fov_length = fov_zoom * timing_mid; // how many ticks to display on screen.
+    fov_length = fov_zoom * ticks_per_step; // how many ticks to display on screen.
     if (fov_length > roll_length) { fov_length = roll_length; }
 
     seq_extstep_tick_t x = cur_x - fov_offset;
@@ -1610,13 +1610,13 @@ void SeqExtStepPage::loop() {
 void SeqExtStepPage::display() {
   #ifdef EXT_TRACKS
   auto active_track = active_ext_step_track();
-  uint16_t timing_mid = active_track.ticks_per_step();
+  uint16_t ticks_per_step = active_track.ticks_per_step();
   uint8_t epoch = 0;
   do {
   oled_display.clearDisplay();
   draw_viewport_minimap();
   draw_grid();
-  mcl_gui.put_value_at(cur_x/timing_mid + 1,info1);
+  mcl_gui.put_value_at(cur_x/ticks_per_step + 1,info1);
   epoch = active_track.change_counter();
   if (pianoroll_mode == 0) {
     char str[6];
@@ -1700,7 +1700,7 @@ void SeqExtStepPage::param_select_update() {
 bool SeqExtStepPage::handleEvent(gui_event_t *event) {
 
   auto active_track = active_ext_step_track();
-  uint16_t timing_mid = active_track.ticks_per_step();
+  uint16_t ticks_per_step = active_track.ticks_per_step();
 
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
@@ -1721,11 +1721,11 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
     key_interface.send_md_leds(TRIGLED_EXCLUSIVE);
 
     if (mask == EVENT_BUTTON_PRESSED) {
-      seq_extstep_tick_t a = seq_ext_step_page_width(timing_mid);
+      seq_extstep_tick_t a = seq_ext_step_page_width(ticks_per_step);
       seq_extstep_tick_t new_x =
-          ((cur_x / a) * a + timing_mid * track) - cur_x;
+          ((cur_x / a) * a + ticks_per_step * track) - cur_x;
       pos_cur_x(new_x);
-      new_x = ((cur_x / a) * a + timing_mid * track) - cur_x;
+      new_x = ((cur_x / a) * a + ticks_per_step * track) - cur_x;
       pos_cur_x(new_x);
       note_interface.last_note = track;
     }
@@ -1747,7 +1747,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       return seq_menu_page.handleEvent(event);
     }
     uint8_t inc = 1;
-    seq_extstep_tick_t w = timing_mid;
+    seq_extstep_tick_t w = ticks_per_step;
     if (key_interface.is_key_down(MDX_KEY_FUNC)) {
       inc = 4;
       w = w * 2;
@@ -1785,7 +1785,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
       switch (key) {
       case MDX_KEY_SCALE: {
-        seq_extstep_tick_t a = seq_ext_step_page_width(timing_mid);
+        seq_extstep_tick_t a = seq_ext_step_page_width(ticks_per_step);
         cur_x += a;
         if (cur_x > fov_offset + fov_length) {
           fov_offset += a;
@@ -1978,13 +1978,13 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_LEFT: {
           pos_cur_w(-1 * w);
           if (cur_w == cur_w_min && w > 1) {
-            cur_w = (seq_extstep_tick_t)(timing_mid / 2);
+            cur_w = (seq_extstep_tick_t)(ticks_per_step / 2);
           }
           return true;
         }
         case MDX_KEY_RIGHT: {
-          if (cur_w == (seq_extstep_tick_t)(timing_mid / 2) && w > 1) {
-            w = (seq_extstep_tick_t)(timing_mid / 2);
+          if (cur_w == (seq_extstep_tick_t)(ticks_per_step / 2) && w > 1) {
+            w = (seq_extstep_tick_t)(ticks_per_step / 2);
           }
           pos_cur_w(w);
           return true;

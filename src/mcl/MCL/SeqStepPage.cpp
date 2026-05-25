@@ -267,10 +267,10 @@ void SeqStepPage::display() {
   oled_display.clearDisplay();
   draw_knob_frame();
 
-  uint8_t timing_mid = active_track.timing_display_mid();
+  uint8_t timing_center = active_track.timing_display_center();
 
   draw_knob_conditional(seq_param1.getValue());
-  draw_knob_timing(seq_param2.getValue(), timing_mid);
+  draw_knob_timing(seq_param2.getValue(), timing_center);
 
   char K[5];
   mcl_gui.put_value_at(seq_param3.getValue(), K);

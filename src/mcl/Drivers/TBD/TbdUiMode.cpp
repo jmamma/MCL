@@ -876,9 +876,9 @@ bool TbdUiMode::active_step_lock(uint8_t window, uint8_t encoder_idx,
     }
 
     SeqExtStepTrackApi track(mcl_seq.midi_tracks[last_ext_track]);
-    uint16_t timing_mid = track.ticks_per_step();
-    if (timing_mid == 0) return false;
-    uint16_t page_width = 16 * timing_mid;
+    uint16_t ticks_per_step = track.ticks_per_step();
+    if (ticks_per_step == 0) return false;
+    uint16_t page_width = 16 * ticks_per_step;
     if (page_width == 0) return false;
 
     for (uint8_t i = 0; i < 16; i++) {
@@ -1319,19 +1319,19 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
     }
 
     SeqExtStepTrackApi track(mcl_seq.midi_tracks[last_ext_track]);
-    uint16_t timing_mid = track.ticks_per_step();
-    if (timing_mid == 0) return false;
+    uint16_t ticks_per_step = track.ticks_per_step();
+    if (ticks_per_step == 0) return false;
 
     bool wrote = false;
     if (mcl.currentPage() == SEQ_EXTSTEP_PAGE &&
         note_interface.notes_count_on() > 0) {
-      uint16_t page_width = 16 * timing_mid;
+      uint16_t page_width = 16 * ticks_per_step;
       if (page_width == 0) return false;
       for (uint8_t n = 0; n < 16; n++) {
         if (!note_interface.is_note_on(n)) continue;
         uint8_t step = ((seq_extstep_page.cur_x / page_width) * 16) + n;
         if (step >= track.length()) continue;
-        if (track.locks().set_p4_param_lock(step, timing_mid, slot.lock_param,
+        if (track.locks().set_p4_param_lock(step, ticks_per_step, slot.lock_param,
                                             value, SeqPage::slide)) {
           wrote = true;
         }

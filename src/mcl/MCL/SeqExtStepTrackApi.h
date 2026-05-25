@@ -83,7 +83,7 @@ public:
 #ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->ticks_per_step();
 #endif
-    return ext_track_->get_timing_mid();
+    return ext_track_->get_ticks_per_step();
   }
 
   uint16_t speed_multiplier_int() const {

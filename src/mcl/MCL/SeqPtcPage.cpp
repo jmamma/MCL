@@ -892,7 +892,7 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
       arp.idx = 0;
 
       if (mcl_cfg.rec_quant == 0) {
-        arp.mod12_counter = arp.get_timing_mid() - 2;
+        arp.mod12_counter = arp.get_ticks_per_step() - 2;
         arp.step_count = arp.length - 1;
       }
       if (arp_enabled.cur == ARP_LATCH) {
