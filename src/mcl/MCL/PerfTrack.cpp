@@ -4,28 +4,6 @@
 #include "MCLActions.h"
 #include "MDTrack.h"
 
-void PerfTrack::convert_legacy_load_settings() {
-  load_mute_set = 255;
-  load_type_mask = 0;
-
-  uint8_t bit = 1;
-  uint8_t load_bit = 0x10;
-  for (uint8_t n = 0; n < 4; n++, bit <<= 1, load_bit <<= 1) {
-    uint16_t mutes = mute_sets[1].mutes[n];
-    if ((mutes & 0x8000) == 0) {
-      load_mute_set = n;
-    }
-    if (mutes & 0x2000) {
-      load_type_mask |= bit;
-    }
-    if (mutes & 0x4000) {
-      load_type_mask |= load_bit;
-    }
-    mute_sets[1].mutes[n] = mutes | 0xE000;
-  }
-  version = PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT;
-}
-
 void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
                                   GridSlot slotnumber) {
   DEBUG_PRINTLN("transition send");

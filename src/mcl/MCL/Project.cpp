@@ -82,6 +82,12 @@ public:
   LegacyPerfTrackData data;
 };
 
+class ATTR_PACKED() MigratedPerfTrackStorage {
+public:
+  LegacyGridTrackHeader header;
+  PerfTrackData data;
+};
+
 class ATTR_PACKED() LegacyFixedPayloadTrackStorage {
 public:
   LegacyGridTrackHeader header;
@@ -111,6 +117,14 @@ public:
   LegacyGridTrackHeader header;
   LegacyMDSeqTrackData seq;
   MDMachine machine;
+};
+
+class ATTR_PACKED() MigratedMDTrackStorage {
+public:
+  LegacyGridTrackHeader header;
+  MDMachine machine;
+  SeqTrackModData mod_data;
+  MDSeqTrackData seq_data;
 };
 
 struct ATTR_PACKED() LegacyExtEvent {
@@ -153,6 +167,12 @@ static_assert(sizeof(LegacyGridTrackHeader) + sizeof(LegacyPerfTrackData) ==
               "origin/dev PerfTrack storage size changed");
 static_assert(sizeof(LegacyPerfTrackStorage) == 491,
               "origin/dev PerfTrack storage size changed");
+static_assert(sizeof(MigratedPerfTrackStorage) ==
+                  LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(PerfTrackData),
+              "migrated PerfTrack storage size changed");
+static_assert(sizeof(MigratedPerfTrackStorage) ==
+                  sizeof(PerfTrack) - sizeof(void *),
+              "PerfTrack migration storage layout changed");
 static_assert(sizeof(LegacyMDSeqStepDescriptor) ==
                   sizeof(MDSeqStepDescriptor),
               "Legacy MD step descriptor size changed");
@@ -204,6 +224,9 @@ static_assert(LEGACY_GRID_TRACK_HEADER_SIZE + sizeof(LegacyMDSeqTrackData) +
               "origin/dev MDTrack storage size changed");
 static_assert(sizeof(LegacyMDTrackStorage) == 534,
               "origin/dev MDTrack storage size changed");
+static_assert(sizeof(MigratedMDTrackStorage) ==
+                  sizeof(MDTrack) - sizeof(void *),
+              "MDTrack migration storage layout changed");
 constexpr uint16_t PROJECT_RENAME_SUFFIXES =
     256;
 constexpr size_t PROJECT_CONFIG_OFFSET =
@@ -248,10 +271,27 @@ void init_migrated_header(LegacyGridTrackHeader &dst,
   dst.link = src.link;
 }
 
-void copy_legacy_perf_track_data(PerfTrack &dst,
+void copy_legacy_perf_track_data(PerfTrackData &dst,
                                  const LegacyPerfTrackData &src) {
-  memcpy(static_cast<PerfTrackData *>(&dst), &src, sizeof(src));
-  dst.convert_legacy_load_settings();
+  memcpy(&dst, &src, sizeof(src));
+  dst.load_mute_set = 255;
+  dst.load_type_mask = 0;
+
+  uint8_t bit = 1;
+  uint8_t load_bit = 0x10;
+  for (uint8_t n = 0; n < 4; n++, bit <<= 1, load_bit <<= 1) {
+    uint16_t mutes = dst.mute_sets[1].mutes[n];
+    if ((mutes & 0x8000) == 0) {
+      dst.load_mute_set = n;
+    }
+    if (mutes & 0x2000) {
+      dst.load_type_mask |= bit;
+    }
+    if (mutes & 0x4000) {
+      dst.load_type_mask |= load_bit;
+    }
+    dst.mute_sets[1].mutes[n] = mutes | 0xE000;
+  }
 }
 
 uint8_t project_seq_speed_value(const GridLink &link) {
@@ -340,18 +380,20 @@ bool write_migrated_track(Grid &grid, GridColumn column, GridRow row,
   return grid.write(track._this(), write_size, column, row);
 }
 
-void init_upgraded_md_track(MDTrack &dst, const GridLink &link,
+void init_upgraded_md_track(MigratedMDTrackStorage &dst, const GridLink &link,
                             const LegacyMDSeqTrackData &seq,
                             const MDMachine &machine) {
-  dst.active = MD_TRACK_TYPE;
-  dst.link = link;
+  dst.header.version[0] = SEQ_TRACK_MICROTIMING_STORAGE_VERSION;
+  dst.header.version[1] = 0;
+  dst.header.active = MD_TRACK_TYPE;
+  dst.header.link = link;
   dst.mod_data.init();
-  copy_legacy_md_seq(dst.seq_data, seq, project_seq_speed_value(link));
   dst.machine = machine;
+  copy_legacy_md_seq(dst.seq_data, seq, project_seq_speed_value(link));
 }
 
 bool read_upgraded_md_track(Grid &grid, GridColumn column, GridRow row,
-                            MDTrack &dst) {
+                            MigratedMDTrackStorage &dst) {
   LegacyMDTrackStorage legacy_track;
   if (!grid.read(&legacy_track, sizeof(legacy_track), column, row) ||
       legacy_track.header.active != MD_TRACK_TYPE) {
@@ -363,12 +405,11 @@ bool read_upgraded_md_track(Grid &grid, GridColumn column, GridRow row,
 }
 
 bool migrate_md_track_native_swing(Grid &grid, GridColumn column, GridRow row) {
-  MDTrack upgraded;
+  MigratedMDTrackStorage upgraded;
   if (!read_upgraded_md_track(grid, column, row, upgraded)) {
     return false;
   }
-  return write_migrated_track(grid, column, row, upgraded,
-                              upgraded.get_track_size());
+  return grid.write(&upgraded, sizeof(upgraded), column, row);
 }
 
 bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
@@ -411,12 +452,11 @@ bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
     return false;
   }
 
-  PerfTrack upgraded;
-  copy_legacy_header(upgraded, legacy_track.header);
-  upgraded.active = PERF_TRACK_TYPE;
-  copy_legacy_perf_track_data(upgraded, legacy_track.data);
-  return write_migrated_track(grid, dst_column, row, upgraded,
-                              upgraded.get_track_size());
+  MigratedPerfTrackStorage upgraded;
+  init_migrated_header(upgraded.header, legacy_track.header, PERF_TRACK_TYPE,
+                       PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT);
+  copy_legacy_perf_track_data(upgraded.data, legacy_track.data);
+  return grid.write(&upgraded, sizeof(upgraded), dst_column, row);
 }
 
 bool migrate_perf_track_clean_layout(Grid &grid, GridColumn column,
@@ -1016,27 +1056,33 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
       if (legacy_track.header.active == MDLFO_TRACK_TYPE &&
           (grid_x_header->track_type[0] == MD_TRACK_TYPE ||
            grid_x_header->track_type[0] == EMPTY_TRACK_TYPE)) {
-        MDTrack upgraded_md_track;
+        MigratedMDTrackStorage upgraded_md_track;
         if (grid_x_header->track_type[0] == MD_TRACK_TYPE) {
           if (!read_upgraded_md_track(grids[0], 0, row, upgraded_md_track)) {
             return false;
           }
         } else if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
+          upgraded_md_track.header.version[0] =
+              SEQ_TRACK_MICROTIMING_STORAGE_VERSION;
+          upgraded_md_track.header.version[1] = 0;
+          upgraded_md_track.header.active = MD_TRACK_TYPE;
+          upgraded_md_track.header.link.init(row);
           upgraded_md_track.machine.track = 0;
-          upgraded_md_track.init();
-          upgraded_md_track.link.init(row);
+          upgraded_md_track.machine.init();
+          upgraded_md_track.mod_data.init();
+          upgraded_md_track.seq_data.init();
         }
 
         LFOSeqTrack::convert_legacy_data(legacy_track.lfo_data,
                                          &upgraded_md_track.mod_data.lfo);
 
-        if (!write_migrated_track(grids[0], 0, row, upgraded_md_track,
-                                  upgraded_md_track.get_track_size())) {
+        if (!grids[0].write(&upgraded_md_track, sizeof(upgraded_md_track), 0,
+                            row)) {
           return false;
         }
         if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
           grid_x_header->active = true;
-          grid_x_header->update_model(0, upgraded_md_track.get_model(),
+          grid_x_header->update_model(0, upgraded_md_track.machine.get_model(),
                                       MD_TRACK_TYPE);
           if (!grids[0].write_row_header(grid_x_header, row)) {
             return false;

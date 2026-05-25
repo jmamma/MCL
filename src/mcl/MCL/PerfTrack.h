@@ -69,7 +69,6 @@ public:
 
   void load_perf(bool immediate, SeqTrack *seq_track);
   void get_perf();
-  void convert_legacy_load_settings();
 
   uint16_t calc_latency(uint8_t tracknumber) override;
 
