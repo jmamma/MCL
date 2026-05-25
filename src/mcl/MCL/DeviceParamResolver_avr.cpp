@@ -53,21 +53,27 @@ uint8_t md_param_count(uint8_t target) {
 }
 
 bool md_target_label(uint8_t target, char *out, uint8_t len) {
-  if (target < NUM_MD_TRACKS) {
+  target -= NUM_MD_TRACKS;
+  if (target >= 4) {
     return false;
   }
-  switch (target - NUM_MD_TRACKS) {
+  const char *label = "ECH";
+  switch (target) {
   case 0:
-    return copy_label("ECH", out, len);
+    break;
   case 1:
-    return copy_label("REV", out, len);
+    label = "REV";
+    break;
   case 2:
-    return copy_label("EQ", out, len);
+    label = "EQ";
+    break;
   case 3:
-    return copy_label("DYN", out, len);
+    label = "DYN";
+    break;
   default:
     return false;
   }
+  return copy_label(label, out, len);
 }
 
 bool md_param_label(uint8_t target, uint8_t param, char *out, uint8_t len) {
