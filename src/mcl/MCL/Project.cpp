@@ -373,10 +373,9 @@ bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
   if (!grid.read(payload, payload_size)) {
     return false;
   }
-  LegacyGridTrackHeader header;
-  init_migrated_header(header, legacy_header, track_type, 0);
-  return write_migrated_payload_track(grid, dst_column, row, header, payload,
-                                      payload_size);
+  init_migrated_header(legacy_header, legacy_header, track_type, 0);
+  return write_migrated_payload_track(grid, dst_column, row, legacy_header,
+                                      payload, payload_size);
 }
 
 bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
