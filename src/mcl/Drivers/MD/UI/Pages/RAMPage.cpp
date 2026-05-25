@@ -28,6 +28,13 @@ uint8_t RAMPage::rec_states[NUM_RAM_PAGES];
 uint8_t RAMPage::slice_modes[NUM_RAM_PAGES];
 bool RAMPage::cc_link_enable;
 
+static void set_ram_rec_state(uint8_t page_id, uint8_t state) {
+  RAMPage::rec_states[page_id] = state;
+  if (mcl_cfg.ram_page_mode == LINK) {
+    RAMPage::rec_states[0] = RAMPage::rec_states[1] = state;
+  }
+}
+
 void RAMPage::setup() {
   DEBUG_PRINT_FN();
   encoders[3]->cur = 4;
@@ -100,10 +107,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   md_track.machine.init();
 
   uint16_t steps = encoders[3]->cur * 4;
-  RAMPage::rec_states[page_id] = STATE_QUEUE;
-  if (mcl_cfg.ram_page_mode == LINK) {
-    RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_QUEUE;
-  }
+  set_ram_rec_state(page_id, STATE_QUEUE);
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
 
@@ -359,10 +363,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   uint8_t steps = encoders[3]->cur * 4;
 
-  RAMPage::rec_states[page_id] = STATE_QUEUE;
-  if (mcl_cfg.ram_page_mode == LINK) {
-    RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_QUEUE;
-  }
+  set_ram_rec_state(page_id, STATE_QUEUE);
 
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
@@ -491,22 +492,14 @@ void RAMPage::loop() {
   if (grid_page.active_slots[n] == SLOT_RAM_RECORD) {
     if ((RAMPage::rec_states[page_id] == STATE_QUEUE) &&
         (MidiClock.div16th_counter == transition_step)) {
-      if (mcl_cfg.ram_page_mode == LINK) {
-        RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_RECORD;
-      } else {
-        RAMPage::rec_states[page_id] = STATE_RECORD;
-      }
+      set_ram_rec_state(page_id, STATE_RECORD);
       // else if ((RAMPage::rec_states[page_id] == STATE_RECORD) &&
       // (MidiClock.div16th_counter >= transition_step + record_len +
       // record_len)) {
     }
   } else if ((grid_page.active_slots[n] == SLOT_RAM_PLAY) &&
              (MidiClock.div16th_counter >= transition_step)) {
-    if (mcl_cfg.ram_page_mode == LINK) {
-      RAMPage::rec_states[0] = RAMPage::rec_states[1] = STATE_PLAY;
-    } else {
-      RAMPage::rec_states[page_id] = STATE_PLAY;
-    }
+    set_ram_rec_state(page_id, STATE_PLAY);
   }
 }
 
