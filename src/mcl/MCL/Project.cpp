@@ -244,16 +244,6 @@ void copy_legacy_perf_track_data(PerfTrack &dst,
   dst.convert_legacy_load_settings();
 }
 
-bool perf_track_has_clean_header(Grid &grid, GridColumn column, GridRow row) {
-  StoredGridTrackHeader header;
-  if (!read_stored_header(grid, column, row, PERF_TRACK_TYPE, &header)) {
-    return false;
-  }
-  return header.version >= PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT &&
-         header.storage_size == sizeof(StoredGridTrackHeader) +
-                                    sizeof(PerfTrackData);
-}
-
 uint8_t project_seq_speed_value(const GridLink &link) {
   return link.speed_value() & 0x7F;
 }
@@ -1196,8 +1186,7 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
         }
         break;
       case PERF_TRACK_TYPE:
-        if (grid == 1 && column == PERF_TRACK_NUM &&
-            perf_track_has_clean_header(grids[grid], column, row)) {
+        if (grid == 1 && column == PERF_TRACK_NUM) {
           break;
         }
         if (!migrate_perf_track_storage(grids[grid], column, row, column)) {
