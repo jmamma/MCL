@@ -131,15 +131,12 @@ void SPSXTrack::clear_track() {
   init();
 }
 
-bool SPSXTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                                     char label[3]) {
+uint16_t SPSXTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
   auto tmp = getMDMachineNameShort(ctx.model, 2);
   if (!tmp) {
-    return false;
+    return 0;
   }
-  copyMachineNameShort(tmp, label);
-  label[2] = '\0';
-  return true;
+  return make_grid_slot_label(tmp[0], tmp[1]);
 }
 
 void SPSXTrack::get_machine_from_kit(uint8_t tracknumber) {

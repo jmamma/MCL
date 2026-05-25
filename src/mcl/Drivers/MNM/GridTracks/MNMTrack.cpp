@@ -8,27 +8,21 @@ void MNMTrack::init() {
   //seq_data.init();
 }
 
-bool MNMTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                                    char label[3]) {
+uint16_t MNMTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
   auto tmp = getMNMMachineNameShort(ctx.model, 2);
   if (!tmp) {
-    return false;
+    return 0;
   }
-  copyMachineNameShort(tmp, label);
-  label[2] = '\0';
-  return true;
+  return make_grid_slot_label(tmp[0], tmp[1]);
 }
 
 #if !defined(__AVR__)
-bool MNMMidiTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                                        char label[3]) {
+uint16_t MNMMidiTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
   auto tmp = getMNMMachineNameShort(ctx.model, 2);
   if (!tmp) {
-    return false;
+    return 0;
   }
-  copyMachineNameShort(tmp, label);
-  label[2] = '\0';
-  return true;
+  return make_grid_slot_label(tmp[0], tmp[1]);
 }
 #endif
 

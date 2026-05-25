@@ -57,10 +57,9 @@ public:
   virtual uint16_t get_track_size() override { return _sizeof(); }
   virtual uintptr_t get_region() override { return BANK1_MDFX_TRACK_START; }
 
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override {
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
     (void)ctx;
-    return copy_fixed_grid_slot_label(label, 'F', 'X');
+    return make_grid_slot_label('F', 'X');
   }
   virtual uint8_t get_model() override { return MDFX_TRACK_TYPE; }
   virtual void* get_sound_data_ptr() override { return &reverb; }

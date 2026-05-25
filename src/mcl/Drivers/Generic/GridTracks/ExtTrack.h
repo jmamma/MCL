@@ -46,9 +46,8 @@ public:
   }
   uint16_t get_track_size() override { return _sizeof(); }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override {
-    return copy_fixed_grid_slot_label(label, 'M', ctx.column + '1');
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
+    return make_grid_slot_label('M', ctx.column + '1');
   }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }

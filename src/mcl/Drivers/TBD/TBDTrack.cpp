@@ -509,8 +509,8 @@ TBDTrack::TBDTrack() {
   static_assert(MEMORY_ALIGN(sizeof(TBDTrack) - sizeof(void *)) <= TBD_TRACK_LEN);
 }
 
-bool TBDTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                                    char label[3]) {
+uint16_t TBDTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
+  char label[3];
   label[0] = 'T';
   label[1] = 'B';
   label[2] = '\0';
@@ -522,7 +522,7 @@ bool TBDTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
       label[2] = '\0';
     }
   }
-  return true;
+  return make_grid_slot_label(label[0], label[1]);
 }
 
 void TBDTrack::apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track) {
@@ -647,8 +647,8 @@ TBDMidiTrack::TBDMidiTrack() {
                 GRID2_TRACK_LEN);
 }
 
-bool TBDMidiTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                                        char label[3]) {
+uint16_t TBDMidiTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
+  char label[3];
   label[0] = 'T';
   label[1] = 'M';
   label[2] = '\0';
@@ -660,7 +660,7 @@ bool TBDMidiTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
       label[2] = '\0';
     }
   }
-  return true;
+  return make_grid_slot_label(label[0], label[1]);
 }
 
 void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,

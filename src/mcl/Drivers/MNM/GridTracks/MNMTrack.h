@@ -33,8 +33,7 @@ public:
                              SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                              bool online = false, Grid *grid = nullptr) override;
   virtual uint16_t get_track_size() override { return _sizeof(); }
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override;
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override;
   virtual uint8_t get_model() override { return machine.model; }
   virtual void *get_sound_data_ptr() override { return &machine; }
   virtual size_t get_sound_data_size() override { return sizeof(MNMMachine); }
@@ -82,8 +81,7 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   uint16_t get_track_size() override { return _sizeof(); }
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override;
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override;
   uint8_t get_model() override { return machine.model; }
   void *get_sound_data_ptr() override { return &machine; }
   size_t get_sound_data_size() override { return sizeof(MNMMachine); }

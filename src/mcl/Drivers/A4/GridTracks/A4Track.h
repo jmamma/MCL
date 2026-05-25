@@ -33,9 +33,8 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   virtual uint16_t get_track_size() override { return _sizeof(); }
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override {
-    return copy_fixed_grid_slot_label(label, 'A', ctx.column + '1');
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
+    return make_grid_slot_label('A', ctx.column + '1');
   }
   virtual uint8_t get_model() override { return A4_TRACK_TYPE; } // TODO
   virtual void *get_sound_data_ptr() override { return &sound; }
@@ -79,9 +78,8 @@ public:
                      SeqTrack *seq_track = nullptr, uint8_t merge = 0,
                      bool online = false, Grid *grid = nullptr) override;
   uint16_t get_track_size() override { return _sizeof(); }
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override {
-    return copy_fixed_grid_slot_label(label, 'A', ctx.column + '1');
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
+    return make_grid_slot_label('A', ctx.column + '1');
   }
   uint8_t get_model() override { return A4_TRACK_TYPE; }
   void *get_sound_data_ptr() override { return &sound; }

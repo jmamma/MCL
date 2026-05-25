@@ -40,12 +40,8 @@ public:
   }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override {
-    label[0] = 'M';
-    label[1] = ctx.column + '1';
-    label[2] = '\0';
-    return true;
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
+    return make_grid_slot_label('M', ctx.column + '1');
   }
   uint8_t get_model() override { return MIDI_TRACK_TYPE; }
   uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }

@@ -81,10 +81,9 @@ public:
   virtual uint16_t get_track_size() override { return _sizeof(); }
   virtual uintptr_t get_region() override { return BANK1_PERF_TRACK_START; }
 
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override {
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override {
     (void)ctx;
-    return copy_fixed_grid_slot_label(label, 'P', 'F');
+    return make_grid_slot_label('P', 'F');
   }
   virtual uint8_t get_model() override { return PERF_TRACK_TYPE; }
   virtual uint8_t storage_version() const override {

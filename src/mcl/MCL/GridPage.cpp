@@ -35,7 +35,14 @@ bool copy_grid_slot_label(uint8_t track_type,
                           const GridSlotLabelContext &ctx, char label[3]) {
   EmptyTrack scratch;
   auto *track = ((DeviceTrack *)&scratch)->init_track_type(track_type);
-  return track->copy_grid_slot_label(ctx, label);
+  uint16_t packed = track->grid_slot_label(ctx);
+  if (packed == 0) {
+    return false;
+  }
+  label[0] = packed >> 8;
+  label[1] = packed;
+  label[2] = '\0';
+  return true;
 }
 
 } // namespace

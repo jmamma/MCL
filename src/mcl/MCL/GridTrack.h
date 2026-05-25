@@ -48,7 +48,9 @@ struct GridSlotLabelContext {
   GridRow row;
 };
 
-bool copy_fixed_grid_slot_label(char label[3], char a, char b) NOINLINE();
+constexpr uint16_t make_grid_slot_label(char a, char b) {
+  return ((uint16_t)(uint8_t)a << 8) | (uint8_t)b;
+}
 
 class ATTR_PACKED() GridTrack {
 public:
@@ -134,11 +136,9 @@ public:
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
   /* Calibrate data members on slot copy */
   virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) { }
-  virtual bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                                    char label[3]) {
+  virtual uint16_t grid_slot_label(const GridSlotLabelContext &ctx) {
     (void)ctx;
-    (void)label;
-    return false;
+    return 0;
   }
   virtual uint8_t get_model() { return EMPTY_TRACK_TYPE; }
   virtual uint8_t storage_version() const { return 0; }

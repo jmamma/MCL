@@ -45,15 +45,12 @@ void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
   MD.sendMachine(dest_track, &(machine), send_level, send_machine);
 }
 
-bool MDTrack::copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                                   char label[3]) {
+uint16_t MDTrack::grid_slot_label(const GridSlotLabelContext &ctx) {
   auto tmp = getMDMachineNameShort(ctx.model, 2);
   if (!tmp) {
-    return false;
+    return 0;
   }
-  copyMachineNameShort(tmp, label);
-  label[2] = '\0';
-  return true;
+  return make_grid_slot_label(tmp[0], tmp[1]);
 }
 
 #if !defined(__AVR__)

@@ -108,8 +108,7 @@ public:
   virtual uintptr_t get_region() { return BANK1_MD_TRACKS_START; }
 #endif
   virtual void on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) override;
-  bool copy_grid_slot_label(const GridSlotLabelContext &ctx,
-                            char label[3]) override;
+  uint16_t grid_slot_label(const GridSlotLabelContext &ctx) override;
   virtual DeviceTrack *materialize_as(uint8_t track_type,
                                       uint8_t tracknumber,
                                       SeqTrack *seq_track) override;
