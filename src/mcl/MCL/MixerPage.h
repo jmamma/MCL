@@ -52,6 +52,7 @@ public:
   void select_track(uint8_t track) const;
   void restore_track_params(uint8_t track) const;
   bool is_mute_param(uint8_t param) const;
+  PageIndex driver_mixer_page() const;
 
 private:
   DeviceContext ctx_;

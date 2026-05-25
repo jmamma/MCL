@@ -99,6 +99,7 @@ public:
   virtual void page_select_prepare() override;
   virtual void page_select_popup(char *text) override;
   virtual void page_select_cleanup() override;
+  PageIndex mixer_fx_page() const;
   virtual void requestKit(uint8_t kit) override;
   virtual void requestPattern(uint8_t pattern) override;
   virtual void requestGlobal(uint8_t global) override;

@@ -2,6 +2,7 @@
 
 #include "MCLStrings.h"
 #include "MCLSeq.h"
+#include "Pages/FXPage.h"
 #include "MidiClock.h"
 #include "PageRegistry.h"
 #include "ResourceManager.h"
@@ -79,4 +80,8 @@ void MDClass::page_select_popup(char *text) {
 void MDClass::page_select_cleanup() {
   set_trigleds(0, TRIGLED_OVERLAY);
   popup_text(127, 2);
+}
+
+PageIndex MDClass::mixer_fx_page() const {
+  return FXPage::last_page;
 }

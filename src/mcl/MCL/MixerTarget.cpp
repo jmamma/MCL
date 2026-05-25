@@ -199,3 +199,7 @@ void MixerTarget::restore_track_params(uint8_t track) const {
 bool MixerTarget::is_mute_param(uint8_t param) const {
   return mixer_ != nullptr && mixer_->is_mute_param(param);
 }
+
+PageIndex MixerTarget::driver_mixer_page() const {
+  return device() == &MD ? MD.mixer_fx_page() : NULL_PAGE;
+}

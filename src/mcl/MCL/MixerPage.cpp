@@ -654,7 +654,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_NO: {
         if (!mixer_arrow_key_down()) {
           if (note_interface.notes_count_on() == 0) {
-            mcl.setPage(mixer_return_page(last_page));
+            PageIndex page = mixer_target.driver_mixer_page();
+            if (page == NULL_PAGE) { page = mixer_return_page(last_page); }
+            mcl.setPage(page);
             return true;
           }
           toggle_or_solo(true);
