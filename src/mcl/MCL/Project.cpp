@@ -325,7 +325,6 @@ bool read_upgraded_md_track(Grid &grid, GridColumn column, GridRow row,
     return false;
   }
   init_upgraded_md_track(dst, legacy_header.link, legacy_seq, legacy_machine);
-  copy_legacy_header(dst, legacy_header);
   return true;
 }
 
