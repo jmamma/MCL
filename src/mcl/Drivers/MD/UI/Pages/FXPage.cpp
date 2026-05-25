@@ -117,7 +117,7 @@ bool FXPage::handleEvent(gui_event_t *event) {
       switch (key) {
       case MDX_KEY_NO:
         mcl.setPage(MIXER_PAGE);
-        break;
+        return true;
       }
     }
     if (event->mask == EVENT_BUTTON_PRESSED) {
@@ -129,6 +129,18 @@ bool FXPage::handleEvent(gui_event_t *event) {
           mcl.setPage(FX_PAGE_B);
         }
         break;
+      case MDX_KEY_DOWN:
+      case MDX_KEY_LEFT: {
+        if (!key_interface.is_key_down(MDX_KEY_NO)) {
+          break;
+        }
+        key = key == MDX_KEY_DOWN ? FX_PAGE_B : FX_PAGE_A;
+        if (mcl.currentPage() == key) {
+          goto toggle_mode;
+        }
+        mcl.setPage((PageIndex)key);
+        return true;
+      }
       }
     }
   }
