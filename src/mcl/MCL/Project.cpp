@@ -185,8 +185,6 @@ bool project_config_valid(const MCLSysConfigData &source) {
 }
 
 void copy_legacy_header(GridTrack &dst, const LegacyGridTrackHeader &src) {
-  dst.version = 0;
-  dst.reserved = 0;
   dst.active = src.active;
   dst.link = src.link;
 }
