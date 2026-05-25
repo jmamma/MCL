@@ -61,9 +61,10 @@ bool WavDesigner::render() {
   // Work out lowest base frequency.
   float fund_freq = 20000;
   for (uint8_t i = 0; i < 3; i++) {
-    DEBUG_PRINTLN(pages[i].get_freq());
-    if ((pages[i].get_osc_type() > 0) && (pages[i].get_freq() < fund_freq)) {
-      fund_freq = pages[i].get_freq();
+    float freq = pages[i].get_freq();
+    DEBUG_PRINTLN(freq);
+    if ((pages[i].get_osc_type() > 0) && (freq < fund_freq)) {
+      fund_freq = freq;
     }
   }
   // Determine sample lenght for 1 cycle.
