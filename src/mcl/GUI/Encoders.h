@@ -28,7 +28,8 @@ public:
     uint8_t rot_res = 1;
     encoder_handle_t handler;
 
-    EncoderParent(encoder_handle_t _handler = nullptr);
+    constexpr EncoderParent(encoder_handle_t _handler = nullptr)
+        : old(0), cur(0), handler(_handler) {}
     void clear();
     void checkHandle();
     bool hasChanged();
@@ -45,9 +46,11 @@ public:
 
 class Encoder : public EncoderParent {
 public:
-    uint8_t fast_speed;
+    uint8_t fast_speed = 0;
 
-    Encoder(const char *_name = nullptr, encoder_handle_t _handler = nullptr);
+    constexpr Encoder(const char *_name = nullptr,
+                      encoder_handle_t _handler = nullptr)
+        : EncoderParent(_handler) {}
     int update_rotations(encoder_t *enc);
     int update(encoder_t *enc) override;
 };

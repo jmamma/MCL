@@ -22,8 +22,11 @@ class MCLEncoder : public Encoder {
        name, initial value, and handling function. The initRangeEncoder
        will be called with the constructor arguments.
      **/
-    MCLEncoder(uint8_t _max = 127, uint8_t _min = 0, uint8_t res = 1, uint8_t _speed = 4) : Encoder() {
-      initMCLEncoder(_max, _min, (int) 0, res, (encoder_handle_t) nullptr);
+    constexpr MCLEncoder(uint8_t _max = 127, uint8_t _min = 0,
+                         uint8_t res = 1, uint8_t _speed = 4)
+        : Encoder(), min(_min > _max ? _max : _min),
+          max(_min > _max ? _min : _max) {
+      rot_res = res;
       fast_speed = _speed;
     }
 
@@ -63,13 +66,17 @@ class MCLEncoder : public Encoder {
 
 class MCLExpEncoder : public MCLEncoder {
   public:
-  MCLExpEncoder(uint8_t _max = 127, uint8_t _min = 0, uint8_t res = 1) : MCLEncoder(_max,_min,res) { }
+  constexpr MCLExpEncoder(uint8_t _max = 127, uint8_t _min = 0,
+                          uint8_t res = 1)
+      : MCLEncoder(_max, _min, res) {}
   int update(encoder_t *enc) override;
 };
 
 class MCLRelativeEncoder : public MCLEncoder {
   public:
-  MCLRelativeEncoder(uint8_t _max = 127, uint8_t _min = 0, uint8_t res = 1) : MCLEncoder(_max,_min,res) { }
+  constexpr MCLRelativeEncoder(uint8_t _max = 127, uint8_t _min = 0,
+                               uint8_t res = 1)
+      : MCLEncoder(_max, _min, res) {}
   int update(encoder_t *enc) override;
 };
 
