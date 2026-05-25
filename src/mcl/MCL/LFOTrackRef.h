@@ -10,20 +10,16 @@ public:
 
   static uint8_t track_count(DeviceIdx device_idx);
 
-  static uint8_t target_count(DeviceIdx device_idx);
+  static uint8_t target_count();
   static uint8_t track_lfo_target_count();
   static uint8_t track_lfo_dest_for_index(uint8_t idx);
-  static bool target_label(DeviceIdx device_idx, uint8_t dest, char *out,
-                           uint8_t len);
-  static uint8_t param_count(DeviceIdx device_idx, uint8_t dest);
-  static bool param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
-                          char *out, uint8_t len);
-  static bool get_base_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
-                             uint8_t *value);
-  static bool set_base_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
-                             uint8_t value);
-  static bool send_modulated_param(DeviceIdx device_idx, uint8_t dest,
-                                   uint8_t param, uint8_t value,
+  static bool target_label(uint8_t dest, char *out, uint8_t len);
+  static uint8_t param_count(uint8_t dest);
+  static bool param_label(uint8_t dest, uint8_t param, char *out,
+                          uint8_t len);
+  static bool get_base_param(uint8_t dest, uint8_t param, uint8_t *value);
+  static bool set_base_param(uint8_t dest, uint8_t param, uint8_t value);
+  static bool send_modulated_param(uint8_t dest, uint8_t param, uint8_t value,
                                    MidiUartClass *uart_ = nullptr,
                                    MidiUartClass *uart2_ = nullptr,
                                    uint8_t offset = 0);

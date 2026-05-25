@@ -185,8 +185,7 @@ uint8_t LFOTrackRef::track_count(DeviceIdx device_idx) {
 #endif
 }
 
-uint8_t LFOTrackRef::target_count(DeviceIdx device_idx) {
-  (void)device_idx;
+uint8_t LFOTrackRef::target_count() {
   return lfo_track_dest_base() + lfo_track_dest_count();
 }
 
@@ -198,9 +197,7 @@ uint8_t LFOTrackRef::track_lfo_dest_for_index(uint8_t idx) {
   return idx < lfo_track_dest_count() ? lfo_track_dest_base() + idx + 1 : 0;
 }
 
-bool LFOTrackRef::target_label(DeviceIdx device_idx, uint8_t dest, char *out,
-                               uint8_t len) {
-  (void)device_idx;
+bool LFOTrackRef::target_label(uint8_t dest, char *out, uint8_t len) {
   uint8_t idx = 0;
   uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
   if (dest_type == LFO_DEST_PERF) {
@@ -214,8 +211,7 @@ bool LFOTrackRef::target_label(DeviceIdx device_idx, uint8_t dest, char *out,
   return DeviceParamResolver::perf(dest).target_label(out, len);
 }
 
-uint8_t LFOTrackRef::param_count(DeviceIdx device_idx, uint8_t dest) {
-  (void)device_idx;
+uint8_t LFOTrackRef::param_count(uint8_t dest) {
   uint8_t lfo_idx = 0;
   uint8_t dest_type = lfo_custom_dest_index(dest, &lfo_idx);
   if (dest_type == LFO_DEST_PERF) {
@@ -227,9 +223,8 @@ uint8_t LFOTrackRef::param_count(DeviceIdx device_idx, uint8_t dest) {
   return DeviceParamResolver::perf(dest).param_count();
 }
 
-bool LFOTrackRef::param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
-                              char *out, uint8_t len) {
-  (void)device_idx;
+bool LFOTrackRef::param_label(uint8_t dest, uint8_t param, char *out,
+                              uint8_t len) {
   uint8_t lfo_idx = 0;
   uint8_t dest_type = lfo_custom_dest_index(dest, &lfo_idx);
   if (dest_type == LFO_DEST_PERF) {
@@ -241,9 +236,8 @@ bool LFOTrackRef::param_label(DeviceIdx device_idx, uint8_t dest, uint8_t param,
   return DeviceParamResolver::perf(dest).param_label(param, out, len);
 }
 
-bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
-                                 uint8_t param, uint8_t *value) {
-  (void)device_idx;
+bool LFOTrackRef::get_base_param(uint8_t dest, uint8_t param,
+                                 uint8_t *value) {
   uint8_t idx = 0;
   uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
   if (dest_type == LFO_DEST_PERF) {
@@ -263,9 +257,8 @@ bool LFOTrackRef::get_base_param(DeviceIdx device_idx, uint8_t dest,
   return DeviceParamResolver::perf(dest).params.get_base_param(param, value);
 }
 
-bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
-                                 uint8_t param, uint8_t value) {
-  (void)device_idx;
+bool LFOTrackRef::set_base_param(uint8_t dest, uint8_t param,
+                                 uint8_t value) {
   uint8_t idx = 0;
   uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
   if (dest_type == LFO_DEST_PERF) {
@@ -286,11 +279,10 @@ bool LFOTrackRef::set_base_param(DeviceIdx device_idx, uint8_t dest,
   return DeviceParamResolver::perf(dest).params.set_base_param(param, value);
 }
 
-bool LFOTrackRef::send_modulated_param(DeviceIdx device_idx, uint8_t dest,
-                                       uint8_t param, uint8_t value,
+bool LFOTrackRef::send_modulated_param(uint8_t dest, uint8_t param,
+                                       uint8_t value,
                                        MidiUartClass *uart_,
                                        MidiUartClass *uart2_, uint8_t offset) {
-  (void)device_idx;
   uint8_t idx = 0;
   uint8_t dest_type = lfo_custom_dest_index(dest, &idx);
   if (dest_type == LFO_DEST_PERF) {

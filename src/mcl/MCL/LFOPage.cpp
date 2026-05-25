@@ -76,8 +76,7 @@ void update_lfo_key_interface(LFOSeqTrack *track) {
 
 void refresh_lfo_offset_from_target(LFOSeqTrack *track, uint8_t param_idx) {
   uint8_t value = 0;
-  if (LFOTrackRef::get_base_param(track->device_idx,
-                                  track->params[param_idx].dest,
+  if (LFOTrackRef::get_base_param(track->params[param_idx].dest,
                                   track->params[param_idx].param, &value)) {
     track->params[param_idx].offset = value;
   }
@@ -90,7 +89,7 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
                            uint8_t encoder_idx, uint8_t param_idx) {
   MCLEncoder *dest_encoder = (MCLEncoder *)encoders[encoder_idx];
   MCLEncoder *param_encoder = (MCLEncoder *)encoders[encoder_idx + 1];
-  dest_encoder->max = LFOTrackRef::target_count(track->device_idx);
+  dest_encoder->max = LFOTrackRef::target_count();
 
   bool changed = false;
   if (dest_encoder->hasChanged()) {
@@ -99,7 +98,7 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
   }
 
   uint8_t param_count =
-      LFOTrackRef::param_count(track->device_idx, track->params[param_idx].dest);
+      LFOTrackRef::param_count(track->params[param_idx].dest);
   param_encoder->max = track->params[param_idx].dest == 0
                            ? 2
                            : (param_count ? param_count - 1 : 0);
@@ -175,8 +174,7 @@ void update_lfo_base_param(Encoder **encoders, LFOSeqTrack *track,
   uint8_t value = encoders[encoder_idx]->cur;
   track->params[param_idx].offset = value;
   if (track->params[param_idx].dest != 0 &&
-      LFOTrackRef::set_base_param(track->device_idx,
-                                  track->params[param_idx].dest,
+      LFOTrackRef::set_base_param(track->params[param_idx].dest,
                                   track->params[param_idx].param, value)) {
     track->last_wav_value[param_idx] = value;
   }
@@ -192,18 +190,17 @@ void lfo_param_label(LFOSeqTrack *track, uint8_t param_idx, char *out,
     out[len - 1] = '\0';
     return;
   }
-  if (!LFOTrackRef::param_label(track->device_idx, track->params[param_idx].dest,
+  if (!LFOTrackRef::param_label(track->params[param_idx].dest,
                                 track->params[param_idx].param, out, len)) {
     mcl_gui.put_value_at(track->params[param_idx].param, out);
   }
 }
 
-void draw_lfo_dest(uint8_t knob, uint8_t value, DeviceIdx device_idx) {
+void draw_lfo_dest(uint8_t knob, uint8_t value) {
   char label[5];
   if (value == 0) {
     strcpy_P(label, mclstr_dash);
-  } else if (!LFOTrackRef::target_label(device_idx, value, label,
-                                        sizeof(label))) {
+  } else if (!LFOTrackRef::target_label(value, label, sizeof(label))) {
     DeviceIdx target_device = DeviceIdx::None;
     uint8_t target = 0;
     if (DeviceParamResolver::perf_dest_to_target(value, &target_device,
@@ -217,16 +214,14 @@ void draw_lfo_dest(uint8_t knob, uint8_t value, DeviceIdx device_idx) {
   mcl_gui.draw_knob(knob, mclstr_dest, label);
 }
 
-void draw_lfo_param(uint8_t knob, uint8_t dest, uint8_t param,
-                    DeviceIdx device_idx) {
+void draw_lfo_param(uint8_t knob, uint8_t dest, uint8_t param) {
   char label[4];
   mclstr_copy_progmem(label, mclstr_dash_space, sizeof(label));
   if (dest == 0) {
     if (param > 1) {
       strcpy_P(label, mclstr_ler);
     }
-  } else if (!LFOTrackRef::param_label(device_idx, dest, param, label,
-                                       sizeof(label))) {
+  } else if (!LFOTrackRef::param_label(dest, param, label, sizeof(label))) {
     mcl_gui.put_value_at(param, label);
   }
   mcl_gui.draw_knob(knob, mclstr_par, label);
@@ -360,9 +355,9 @@ void LFOPage::cleanup() {
 
 void LFOPage::config_encoder_range(uint8_t i) {
   ((MCLEncoder *)encoders[i])->max =
-      LFOTrackRef::target_count(lfo_track->device_idx);
+      LFOTrackRef::target_count();
   uint8_t param_count =
-      LFOTrackRef::param_count(lfo_track->device_idx, encoders[i]->cur);
+      LFOTrackRef::param_count(encoders[i]->cur);
   ((MCLEncoder *)encoders[i + 1])->max = encoders[i]->cur == 0
                                              ? 2
                                              : (param_count ? param_count - 1
@@ -484,11 +479,10 @@ void LFOPage::display() {
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   SeqPage::draw_knob_frame();
   if (page_mode == LFO_DESTINATION) {
-    DeviceIdx device_idx = lfo_track->device_idx;
-    draw_lfo_dest(0, encoders[0]->cur, device_idx);
-    draw_lfo_param(1, encoders[0]->cur, encoders[1]->cur, device_idx);
-    draw_lfo_dest(2, encoders[2]->cur, device_idx);
-    draw_lfo_param(3, encoders[2]->cur, encoders[3]->cur, device_idx);
+    draw_lfo_dest(0, encoders[0]->cur);
+    draw_lfo_param(1, encoders[0]->cur, encoders[1]->cur);
+    draw_lfo_dest(2, encoders[2]->cur);
+    draw_lfo_param(3, encoders[2]->cur, encoders[3]->cur);
     strcpy(info2, "LFO>DST");
   }
   else if (page_mode == LFO_GLOBAL) {
@@ -594,7 +588,7 @@ void LFOPage::learn_param(DeviceIdx device_idx, uint8_t dest, uint8_t param,
   }
   uint8_t global_dest =
       DeviceParamResolver::perf_dest_for_target(device_idx, dest - 1);
-  if (LFOTrackRef::param_count(DeviceIdx::None, global_dest) <= param) {
+  if (LFOTrackRef::param_count(global_dest) <= param) {
     return;
   }
   bool reconfig = false;
