@@ -852,14 +852,10 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   }
 
   uint8_t migration_flags = 0;
-  if (version < PROJ_VERSION_DYNAMIC_TRACK_STORAGE) {
+  if (version == PROJ_MIN_READABLE_VERSION) {
     migration_flags |= MIGRATE_TRACK_STORAGE;
-  }
-  if (version < PROJ_VERSION_GRID_PAIRS) {
     migration_flags |= MIGRATE_GRID_PAIRS;
     active_grid_pair = 0;
-  }
-  if (version < PROJ_VERSION_PROJECT_CONFIG) {
     migration_flags |= MIGRATE_PROJECT_CONFIG;
   }
   uint8_t pair = use_requested_pair ? requested_pair : active_grid_pair;
@@ -950,7 +946,7 @@ bool Project::read_header() {
     return false;
   }
 
-  if (header_version < PROJ_VERSION_PROJECT_CONFIG) {
+  if (header_version == PROJ_MIN_READABLE_VERSION) {
     version = header_version;
     if (!mcl_sd.read_data((uint8_t *)(ProjectHeader *)this +
                               sizeof(header_version),
@@ -960,9 +956,7 @@ bool Project::read_header() {
       return false;
     }
 
-    if (version < PROJ_VERSION_GRID_PAIRS) {
-      active_grid_pair = 0;
-    }
+    active_grid_pair = 0;
     memset(reserved, 0, sizeof(reserved));
     if (project_config_valid(cfg)) {
       normalize_project_config(&cfg);
@@ -998,7 +992,8 @@ bool Project::check_project_version(uint16_t min_version) {
     DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
-  return version >= min_version;
+  (void)min_version;
+  return version == PROJ_MIN_READABLE_VERSION || version >= PROJ_VERSION;
 }
 
 bool NOINLINE() Project::migrate_legacy_md_aux_slots(
