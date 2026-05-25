@@ -277,7 +277,7 @@ void MixerPage::loop() {
       const bool check = mixer_arrow_or_yes_key_down();
       for (uint8_t n = 0; n < 4; n++) {
         if (MixerPerf::should_show_encoder(encoders[n], encoders_used_clock[n],
-                                           notes_on || check, timeout)) {
+                                           check, timeout)) {
           draw_encoders = true;
         }
       }
