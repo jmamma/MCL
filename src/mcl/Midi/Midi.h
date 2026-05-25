@@ -41,11 +41,6 @@ extern "C" {
 #define NUM_MIDI_CALLBACKS 8
 #endif
 
-typedef struct {
-  uint8_t midi_status;
-  midi_state_t next_state;
-} midi_parse_t;
-
 typedef void (MidiCallback::*midi_callback_ptr_t)(uint8_t *msg);
 typedef void (MidiCallback::*midi_callback_ptr2_t)(uint8_t *msg, uint8_t len);
 

@@ -8,22 +8,6 @@
 #include "MidiClock.h"
 #include "../MCL/DeviceManager.h"
 
-const midi_parse_t midi_parse[] = {
-    {MIDI_NOTE_OFF, midi_wait_byte_2},
-    {MIDI_NOTE_ON, midi_wait_byte_2},
-    {MIDI_AFTER_TOUCH, midi_wait_byte_2},
-    {MIDI_CONTROL_CHANGE, midi_wait_byte_2},
-    {MIDI_PROGRAM_CHANGE, midi_wait_byte_1},
-    {MIDI_CHANNEL_PRESSURE, midi_wait_byte_1},
-    {MIDI_PITCH_WHEEL, midi_wait_byte_2},
-    /* special handling for SYSEX */
-    {MIDI_MTC_QUARTER_FRAME, midi_wait_byte_1},
-    {MIDI_SONG_POSITION_PTR, midi_wait_byte_2},
-    {MIDI_SONG_SELECT, midi_wait_byte_1},
-    {MIDI_TUNE_REQUEST, midi_wait_status},
-    {0, midi_ignore_message}
-};
-
 MidiClass::MidiClass(MidiUartClass *_uart, MidiSysexClass *_sysex) {
   midiActive = true;
   uart = _uart;
@@ -135,23 +119,26 @@ again:
     uint8_t status = last_status;
     if (MIDI_IS_VOICE_STATUS_BYTE(status)) {
       status = MIDI_VOICE_TYPE_NIBBLE(status);
-    }
-
-    uint8_t i;
-    for (i = 0; midi_parse[i].midi_status != 0; i++) {
-      if (midi_parse[i].midi_status == status) {
-        in_state = midi_parse[i].next_state;
-        msg[0] = last_status;
-        in_msg_len = 1;
-        break;
-      }
-    }
-    callback = i;
-
-    if (midi_parse[i].midi_status == 0) {
+      callback = (status >> 4) - 8;
+      in_state = (status == MIDI_PROGRAM_CHANGE ||
+                  status == MIDI_CHANNEL_PRESSURE)
+                     ? midi_wait_byte_1
+                     : midi_wait_byte_2;
+    } else if (status >= MIDI_MTC_QUARTER_FRAME &&
+               status <= MIDI_SONG_SELECT) {
+      callback = status - (MIDI_MTC_QUARTER_FRAME - 7);
+      in_state = status == MIDI_SONG_POSITION_PTR ? midi_wait_byte_2
+                                                  : midi_wait_byte_1;
+    } else if (status == MIDI_TUNE_REQUEST) {
+      callback = 10;
+      in_state = midi_wait_status;
+    } else {
       in_state = midi_ignore_message;
       return;
     }
+    msg[0] = last_status;
+    in_msg_len = 1;
+
     if (running_status)
       goto again;
   } break;
@@ -163,7 +150,7 @@ again:
     in_state = midi_wait_status;
 
     msg[in_msg_len++] = byte;
-    if (midi_parse[callback].midi_status == MIDI_NOTE_ON && msg[2] == 0) {
+    if (callback == MIDI_NOTE_ON_CB && msg[2] == 0) {
       callback = 0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
     }
 
