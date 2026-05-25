@@ -258,19 +258,26 @@ bool MNMClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
                        uint8_t *param) {
   if ((channel >= global.baseChannel) && (channel < (global.baseChannel + 6))) {
     *track = channel - global.baseChannel;
-    if ((cc >= 0x30) && (cc <= 0x3f)) {
+    uint8_t offset = cc - 0x30;
+    if (offset <= 0x0f) {
       *param = cc - 0x30;
       return true;
-    } else if ((cc >= 0x48) && (cc <= 0x5f)) {
+    }
+    offset = cc - 0x48;
+    if (offset <= 0x17) {
       *param = cc - 0x38;
       return true;
-    } else if ((cc >= 0x68) && (cc <= 0x77)) {
+    }
+    offset = cc - 0x68;
+    if (offset <= 0x0f) {
       *param = cc - 0x40;
       return true;
-    } else if (cc == 0x3) {
+    }
+    if (cc == 0x3) {
       *param = 100; // MUTE
       return true;
-    } else if (cc == 0x07) {
+    }
+    if (cc == 0x07) {
       *param = 101; // LEV
       return true;
     }
@@ -321,8 +328,6 @@ uint8_t MNMClass::assignMachine(uint8_t track, uint8_t model, bool initAll,
     data[3] = 0x01;
   } else if (initSynth) {
     data[3] = 0x02;
-  } else {
-    data[3] = 0x00;
   }
   return sendRequest(data, countof(data), send);
 }
@@ -359,7 +364,7 @@ uint8_t MNMClass::setMachine(uint8_t track, uint8_t idx, bool send) {
   uint8_t size = assignMachine(track, kit.models[idx], false, false, send);
   DEBUG_PRINTLN("Setting model");
   DEBUG_PRINTLN( kit.models[idx]);
-  for (int i = 0; i < 56; i++) {
+  for (uint8_t i = 0; i < 56; i++) {
     size += setParam(track, i, kit.parameters[idx][i], send);
   }
   size += setTrackLevel(track, kit.levels[idx], send);

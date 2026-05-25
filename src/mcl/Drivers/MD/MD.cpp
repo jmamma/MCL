@@ -1300,12 +1300,9 @@ bool MDClass::probe() {
     MD.save_kit_params();
     setup();
 
-    uint8_t y = 0;
     for (uint8_t i = 0; i < 32; i++) {
       mcl_gui.draw_progress_bar(60, 60, false, 60, 25);
-      setStatus(0x22, y);
-      y++;
-      if (y == 16) y = 0;
+      setStatus(0x22, i & 0x0F);
     }
     setStatus(0x22, currentTrack);
 
@@ -1342,9 +1339,9 @@ uint8_t MDClass::noteToTrack(uint8_t pitch) {
 void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
                       uint8_t *param) {
 
-  int control_ch = (int)channel - (int)global.baseChannel;
+  uint8_t control_ch = channel - global.baseChannel;
 
-  if (control_ch < 0 || control_ch >= (is_spsx ? 8 : 4)) {
+  if (control_ch >= (is_spsx ? 8 : 4)) {
     *track = 255;
     return;
   }
