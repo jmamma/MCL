@@ -18,7 +18,7 @@ void FXPage::init() {
   DEBUG_PRINT_FN();
   key_interface.off();
   update_encoders();
-  MD.set_key_repeat(0);
+  MD.set_key_repeat(1);
   R.Clear();
   R.use_icons_page();
   R.use_machine_param_names();

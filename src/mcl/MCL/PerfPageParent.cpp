@@ -13,7 +13,7 @@ void PerfPageParent::setup() { DEBUG_PRINT_FN(); }
 
 void PerfPageParent::init() {
   DEBUG_PRINT_FN();
-  DevicePanelRef::set_primary_key_repeat(0);
+  DevicePanelRef::set_primary_key_repeat(1);
   config_encoders();
   R.Clear();
   R.use_machine_param_names();
