@@ -19,6 +19,7 @@ public:
 
   virtual void setup_listeners() override;
   virtual void cleanup_listeners() override;
+  virtual void on_forwarded_cc(uint8_t *msg) override;
   virtual bool probe() override;
   virtual void init_grid_devices(DeviceIdx device_idx) override;
 #if !defined(__AVR__)

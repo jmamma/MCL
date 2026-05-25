@@ -7,6 +7,7 @@
 #include "MidiSetup.h"
 #include "GridTrack.h"
 #include "MCLStrings.h"
+#include "SeqTrackUtil.h"
 #if !defined(__AVR__)
 #include "../Generic/MidiSeqExtStepTrackCapability.h"
 #endif
@@ -61,6 +62,26 @@ void MNMClass::setup_listeners() {
 void MNMClass::cleanup_listeners() {
   if (midi && midi->midiSysex) {
     midi->midiSysex->removeSysexListener(&MNMSysexListener);
+  }
+}
+
+void MNMClass::on_forwarded_cc(uint8_t *msg) {
+  uint8_t track;
+  uint8_t param;
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  uint8_t cc = msg[1];
+  uint8_t value = msg[2];
+
+  if (!parseCC(channel, cc, &track, &param) || track >= sizeof(kit.levels)) {
+    return;
+  }
+
+  if (param < sizeof(kit.parameters[track])) {
+    kit.parameters[track][param] = value;
+  } else if (param == 100) {
+    SeqTrackUtil::set_mute_state(false, track, value == 0);
+  } else if (param == 101) {
+    kit.levels[track] = value;
   }
 }
 

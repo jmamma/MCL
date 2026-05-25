@@ -34,6 +34,8 @@ void MDMidiEvents::track_cc(uint8_t *msg) {
     last_md_param = track_param;
   } else if (track_param == MODEL_LEVEL && track < 16) {
     MD.kit.levels[track] = value;
+  } else if (track_param == MODEL_MUTE && track < 16) {
+    SeqTrackUtil::set_mute_state(true, track, value > 0);
   }
 }
 
