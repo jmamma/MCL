@@ -167,19 +167,6 @@ DeviceTrack *DeviceTrack::load_from_grid_512(GridSlot column, GridRow row,
   return load_grid_512(this, column, row, grid, nullptr);
 }
 
-DeviceTrack *DeviceTrack::load_from_grid_512_as(GridSlot column, GridRow row,
-                                                uint8_t track_type,
-                                                uint8_t tracknumber,
-                                                SeqTrack *seq_track,
-                                                Grid *grid,
-                                                bool *loaded_header) {
-  auto *ptrack = load_grid_512(this, column, row, grid, loaded_header);
-  if (ptrack == nullptr) {
-    return nullptr;
-  }
-  return ptrack->materialize_as(track_type, tracknumber, seq_track);
-}
-
 DeviceTrack *DeviceTrack::materialize_storage_range(uint8_t track_type,
                                                     uint16_t source_offset,
                                                     uint16_t target_offset,

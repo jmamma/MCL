@@ -47,17 +47,16 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
                                                 uint8_t seq_track_idx, bool &was_rebuilt,
                                                 EmptyTrack &scratch,
                                                 int8_t link_slot) {
-  bool loaded_header = false;
-  auto *device_track =
-      scratch.load_from_grid_512_as(track_idx, row, track_type, seq_track_idx,
-                                    seq_track, nullptr, &loaded_header);
-  if (!loaded_header) {
+  auto *loaded_track = scratch.load_from_grid_512(track_idx, row);
+  if (loaded_track == nullptr) {
     return nullptr;
   }
   if (link_slot >= 0) {
     scratch.link.store_in_mem(link_slot, &(links[0]));
   }
 
+  auto *device_track =
+      loaded_track->materialize_as(track_type, seq_track_idx, seq_track);
   if (device_track == nullptr) {
     scratch.clear();
     scratch.init();

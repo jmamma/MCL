@@ -121,12 +121,6 @@ public:
   }
 
   DeviceTrack *load_from_grid_512(GridSlot column, GridRow row, Grid *grid = nullptr);
-  DeviceTrack *load_from_grid_512_as(GridSlot column, GridRow row,
-                                     uint8_t track_type,
-                                     uint8_t tracknumber,
-                                     SeqTrack *seq_track,
-                                     Grid *grid = nullptr,
-                                     bool *loaded_header = nullptr);
   DeviceTrack *load_from_grid(GridSlot column, GridRow row);
   template <class T> T *load_from_grid(GridSlot col, GridRow row) {
     auto *p = load_from_grid(col, row);
