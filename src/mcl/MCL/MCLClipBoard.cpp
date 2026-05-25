@@ -159,7 +159,7 @@ bool MCLClipBoard::open() {
     if (!SD.exists(grid_filename)) {
       DEBUG_PRINTLN(F("Creating clipboard"));
       if (!grids[i].new_file(grid_filename)) {
-        gfx.alert("ERROR", "SD ERROR");
+        gfx.alert_error("SD ERROR");
         return false;
       }
     } else {

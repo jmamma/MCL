@@ -83,4 +83,12 @@ void MCLGfx::alert(const char *str1, const char *str2) {
   DEBUG_PRINTLN(str2);
 }
 
+void MCLGfx::alert_error(const char *str2) {
+  alert("ERROR", str2);
+}
+
+void MCLGfx::alert_success(const char *str2) {
+  alert("SUCCESS", str2);
+}
+
 MCLGfx gfx;

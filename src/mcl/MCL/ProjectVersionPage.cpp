@@ -104,14 +104,14 @@ bool ProjectVersionPage::handleEvent(gui_event_t *event) {
 void ProjectVersionPage::on_new() {
   uint8_t pair = 0;
   if (!proj.create_backup(lwd, &pair)) {
-    gfx.alert("ERROR", "No backup.");
+    gfx.alert_error("No backup.");
     init();
     return;
   }
   if (proj.load_project_version(lwd, pair)) {
     mcl.setPage(GRID_PAGE);
   } else {
-    gfx.alert("ERROR", "OPEN VERSION");
+    gfx.alert_error("OPEN VERSION");
     init();
   }
 }
@@ -125,7 +125,7 @@ void ProjectVersionPage::on_select(const char *entry) {
   if (proj.load_project_version(lwd, pair)) {
     mcl.setPage(GRID_PAGE);
   } else {
-    gfx.alert("ERROR", "OPEN VERSION");
+    gfx.alert_error("OPEN VERSION");
   }
 }
 
@@ -136,9 +136,9 @@ void ProjectVersionPage::on_delete(const char *entry) {
     return;
   }
   if (proj.delete_backup(lwd, pair)) {
-    gfx.alert("SUCCESS", "Deleted.");
+    gfx.alert_success("Deleted.");
   } else {
-    gfx.alert("ERROR", "Not deleted.");
+    gfx.alert_error("Not deleted.");
   }
   init();
 }

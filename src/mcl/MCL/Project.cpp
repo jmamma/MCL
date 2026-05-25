@@ -585,13 +585,13 @@ void Project::setup() {}
 bool Project::new_project(const char *newprj) {
   const char *basename = nullptr;
   if (!split_project_path(newprj, &basename)) {
-    gfx.alert("ERROR", "BAD NAME");
+    gfx.alert_error("BAD NAME");
     return false;
   }
 
   char proj_filename[PRJ_NAME_LEN  + 5];
   if (!project_file_name(basename, proj_filename, sizeof(proj_filename))) {
-    gfx.alert("ERROR", "BAD NAME");
+    gfx.alert_error("BAD NAME");
     return false;
   }
 
@@ -604,11 +604,11 @@ bool Project::new_project(const char *newprj) {
   if (SD.exists(newprj)) {
     bool existing_project = SD.chdir(newprj) && SD.exists(proj_filename);
     chdir_projects();
-    gfx.alert("ERROR", existing_project ? "PROJECT EXISTS" : "DIR EXISTS");
+    gfx.alert_error(existing_project ? "PROJECT EXISTS" : "DIR EXISTS");
     return false;
   }
   if (!SD.mkdir(newprj, true) || !SD.chdir(newprj)) {
-    gfx.alert("ERROR", "DIR");
+    gfx.alert_error("DIR");
     return false;
   }
 
@@ -617,7 +617,7 @@ bool Project::new_project(const char *newprj) {
 
   DEBUG_PRINTLN(proj_filename);
   if (SD.exists(proj_filename)) {
-    gfx.alert("ERROR", "PROJECT EXISTS");
+    gfx.alert_error("PROJECT EXISTS");
     return false;
   }
 
@@ -628,12 +628,12 @@ bool Project::new_project(const char *newprj) {
     char grid_filename[PRJ_NAME_LEN  + 5];
     if (!build_grid_filename(basename, i, grid_filename,
                              sizeof(grid_filename))) {
-      gfx.alert("ERROR", "BAD NAME");
+      gfx.alert_error("BAD NAME");
       return false;
     }
     if (!SD.exists(grid_filename)) {
       if (!grids[i].new_grid(grid_filename, PROJ_VERSION, i)) {
-        gfx.alert("ERROR", "SD ERROR");
+        gfx.alert_error("SD ERROR");
         return false;
       }
     }
@@ -658,7 +658,7 @@ again:
     if (parent != nullptr && parent[0] != '\0') {
       if (!MCLSd::join_path(project_path, sizeof(project_path), parent,
                             newprj)) {
-        gfx.alert("ERROR", "BAD PATH");
+        gfx.alert_error("BAD PATH");
         goto again;
       }
     } else {
@@ -674,7 +674,7 @@ again:
       mcl.setPage(GRID_PAGE);
       return true;
     } else {
-      gfx.alert("ERROR", "SD ERROR");
+      gfx.alert_error("SD ERROR");
       goto again;
     }
   }
@@ -907,7 +907,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     DEBUG_PRINTLN(grid_name);
     if (!grids[i].open_file(grid_name)) {
       DEBUG_PRINTLN(F("could not open grid"));
-      gfx.alert("ERROR", "OPEN GRID");
+      gfx.alert_error("OPEN GRID");
       return false;
     }
 

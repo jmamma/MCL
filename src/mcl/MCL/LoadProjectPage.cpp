@@ -69,7 +69,7 @@ void LoadProjectPage::on_select(const char *entry) {
 
   char proj_filename[PRJ_PATH_LEN];
   if (!build_project_path(entry, proj_filename, sizeof(proj_filename))) {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return;
   }
   uint8_t count = 2;
@@ -90,7 +90,7 @@ void LoadProjectPage::on_delete(const char *entry) {
   char project_path[PRJ_PATH_LEN];
   if (build_project_path(entry, project_path, sizeof(project_path)) &&
       path_starts_with_dir(mcl_cfg.project, project_path)) {
-    gfx.alert("ERROR", "CURRENT PROJECT");
+    gfx.alert_error("CURRENT PROJECT");
     return;
   }
   rm_dir(entry);
@@ -107,13 +107,13 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
   bool project_dir = is_project_dir(from);
   char from_project_path[PRJ_PATH_LEN];
   if (!build_project_path(from, from_project_path, sizeof(from_project_path))) {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return;
   }
 
   if (!project_dir) {
     if (path_starts_with_dir(mcl_cfg.project, from_project_path)) {
-      gfx.alert("ERROR", "CURRENT PROJECT");
+      gfx.alert_error("CURRENT PROJECT");
       return;
     }
     FileBrowserPage::on_rename(from, to);
@@ -122,7 +122,7 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
 
   char to_project_path[PRJ_PATH_LEN];
   if (!build_project_path(to, to_project_path, sizeof(to_project_path))) {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return;
   }
 
@@ -145,13 +145,13 @@ void LoadProjectPage::on_rename(const char *from, const char *to) {
     if (reload_current) {
       proj.load_project(to_project_path);
     }
-    gfx.alert("SUCCESS", "Project renamed.");
+    gfx.alert_success("Project renamed.");
     return;
   }
 error:
   SD.chdir(lwd);
   DEBUG_PRINTLN("error");
-  gfx.alert("ERROR", "Not renamed.");
+  gfx.alert_error("Not renamed.");
 }
 
 void LoadProjectPage::on_copy(const char *from, const char *to) {
@@ -194,9 +194,9 @@ void LoadProjectPage::on_copy(const char *from, const char *to) {
 #endif
 
   if (ok) {
-    gfx.alert("SUCCESS", "Cloned.");
+    gfx.alert_success("Cloned.");
   } else {
-    gfx.alert("ERROR", "Not cloned.");
+    gfx.alert_error("Not cloned.");
   }
 }
 
@@ -336,11 +336,11 @@ bool LoadProjectPage::_handle_filemenu() {
 bool LoadProjectPage::enter_project_move_destination(const char *entry) {
   char source_path[PRJ_PATH_LEN];
   if (!build_project_path(entry, source_path, sizeof(source_path))) {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return false;
   }
   if (path_starts_with_dir(mcl_cfg.project, source_path)) {
-    gfx.alert("ERROR", "CURRENT PROJECT");
+    gfx.alert_error("CURRENT PROJECT");
     return false;
   }
 
@@ -353,7 +353,7 @@ bool LoadProjectPage::move_to_current_folder() {
 
   char dest_path[PRJ_PATH_LEN];
   if (!build_project_path(name, dest_path, sizeof(dest_path))) {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return false;
   }
   proj.chdir_projects();
@@ -375,7 +375,7 @@ void LoadProjectPage::on_new() {
 #endif
   const char *parent = nullptr;
   if (!current_project_parent(&parent)) {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return;
   }
   proj.new_project_prompt(parent);

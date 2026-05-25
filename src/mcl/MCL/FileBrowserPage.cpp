@@ -551,7 +551,7 @@ bool FileBrowserPage::_handle_filemenu() {
 #ifdef MCL_HAS_FILE_MOVE
 bool FileBrowserPage::start_move_destination(const char *source_path) {
   if (source_path[0] == '\0') {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return false;
   }
   strncpy(move_source_path, source_path, sizeof(move_source_path) - 1);
@@ -565,7 +565,7 @@ bool FileBrowserPage::start_move_destination(const char *source_path) {
 bool FileBrowserPage::enter_move_destination(const char *entry) {
   char source_path[PRJ_PATH_LEN];
   if (!MCLSd::join_path(source_path, sizeof(source_path), lwd, entry)) {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return false;
   }
   return start_move_destination(source_path);
@@ -576,20 +576,20 @@ bool FileBrowserPage::finish_move_to_path(const char *dest_path) {
     return false;
   }
   if (path_starts_with_dir(dest_path, move_source_path)) {
-    gfx.alert("ERROR", "BAD DEST");
+    gfx.alert_error("BAD DEST");
     return false;
   }
   if (SD.exists(dest_path)) {
-    gfx.alert("ERROR", "EXISTS");
+    gfx.alert_error("EXISTS");
     return false;
   }
   if (!SD.rename(move_source_path, dest_path)) {
-    gfx.alert("ERROR", "Not moved.");
+    gfx.alert_error("Not moved.");
     return false;
   }
   move_destination_mode = false;
   move_source_path[0] = '\0';
-  gfx.alert("SUCCESS", "Moved.");
+  gfx.alert_success("Moved.");
   init();
   return true;
 }
@@ -600,7 +600,7 @@ bool FileBrowserPage::move_to_current_folder() {
 
   char dest_path[PRJ_PATH_LEN];
   if (!MCLSd::join_path(dest_path, sizeof(dest_path), lwd, name)) {
-    gfx.alert("ERROR", "BAD PATH");
+    gfx.alert_error("BAD PATH");
     return false;
   }
   return finish_move_to_path(dest_path);
@@ -644,24 +644,24 @@ void FileBrowserPage::on_delete(const char *entry) {
   file.close();
   if (dir) {
     if (rm_dir(entry)) {
-      gfx.alert("SUCCESS", "Folder removed.");
+      gfx.alert_success("Folder removed.");
     } else {
-      gfx.alert("ERROR", "Folder not removed.");
+      gfx.alert_error("Folder not removed.");
     }
   } else {
     if (SD.remove(entry)) {
-      gfx.alert("SUCCESS", "File removed.");
+      gfx.alert_success("File removed.");
     } else {
-      gfx.alert("ERROR", "File not removed.");
+      gfx.alert_error("File not removed.");
     }
   }
 }
 
 void FileBrowserPage::on_rename(const char *from, const char *to) {
   if (SD.rename(from, to)) {
-    gfx.alert("SUCCESS", "File renamed.");
+    gfx.alert_success("File renamed.");
   } else {
-    gfx.alert("ERROR", "File not renamed.");
+    gfx.alert_error("File not renamed.");
   }
 }
 
@@ -683,9 +683,9 @@ void FileBrowserPage::on_copy(const char *from, const char *to) {
   }
 #endif
   if (ok) {
-    gfx.alert("SUCCESS", "Cloned.");
+    gfx.alert_success("Cloned.");
   } else {
-    gfx.alert("ERROR", "Not cloned.");
+    gfx.alert_error("Not cloned.");
   }
 }
 
