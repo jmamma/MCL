@@ -101,6 +101,8 @@ public:
     }
   }
 
+  uint8_t remove_step_locks(uint8_t step);
+
   void init() { memset(this, 0, sizeof(MDSeqTrackDataV1)); }
 };
 

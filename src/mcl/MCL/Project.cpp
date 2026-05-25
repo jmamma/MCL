@@ -327,8 +327,8 @@ void convert_ext_seq_unsigned_timing(ExtSeqTrackData &data, uint8_t speed) {
 
 void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src,
                         uint8_t speed) {
-  // Every MDSeqTrackDataV1 field is populated here; the legacy lock-enable
-  // bit occupies the current swing bit and is cleared after the bulk copy.
+  // Every MDSeqTrackData field is populated here; the legacy lock-enable bit
+  // occupies the current swing bit and is overwritten after the bulk copy.
   memcpy(dst.locks, src.locks, sizeof(dst.locks));
   memcpy(dst.locks_params, src.locks_params, sizeof(dst.locks_params));
   memcpy(dst.microtiming, src.timing, sizeof(dst.microtiming));
@@ -336,9 +336,14 @@ void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src,
 
   memcpy(dst.steps, src.steps, sizeof(dst.steps));
   for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
-    dst.steps[step].swing = false;
+    if (!src.steps[step].locks_enabled) {
+      dst.remove_step_locks(step);
+    }
   }
   dst.clean_params();
+  dst.swing_mask = MDSEQ_DEFAULT_SWING_MASK;
+  dst.swing_amount = 0;
+  dst.sync_swing_steps_from_mask();
 }
 
 void convert_legacy_ext_seq(ExtSeqTrackData &dst, uint8_t speed) {

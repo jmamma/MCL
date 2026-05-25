@@ -59,6 +59,16 @@ static int8_t spsx_microtiming_to_md_microtiming(int8_t microtiming,
 }
 #endif
 
+uint8_t MDSeqTrackDataV1::remove_step_locks(uint8_t step) {
+  uint8_t idx = get_lockidx(step);
+  uint8_t cnt = popcount(steps[step].locks);
+  if (cnt != 0) {
+    memmove(locks + idx, locks + idx + cnt, NUM_MD_LOCK_SLOTS - idx - cnt);
+  }
+  steps[step].locks = 0;
+  return cnt;
+}
+
 uint8_t MDSeqTrack::effective_timing(uint8_t step, uint8_t ticks_per_step) const {
   int8_t mt = microtiming[step];
   if (mt == 0) {
@@ -1048,15 +1058,10 @@ void MDSeqTrack::clear_param_locks(uint8_t param_id) {
 }
 
 void MDSeqTrack::clear_step_locks(uint8_t step) {
-  uint8_t idx = get_lockidx(step);
-  uint8_t cnt = popcount(steps[step].locks);
-  if (cnt != 0) {
-    memmove(locks + idx, locks + idx + cnt, NUM_MD_LOCK_SLOTS - idx - cnt);
-    if (step < step_count) {
-      cur_event_idx -= cnt;
-    }
+  uint8_t cnt = remove_step_locks(step);
+  if (cnt != 0 && step < step_count) {
+    cur_event_idx -= cnt;
   }
-  steps[step].locks = 0;
 }
 
 void MDSeqTrack::disable_step_locks(uint8_t step) {
