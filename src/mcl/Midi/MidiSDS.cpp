@@ -39,6 +39,12 @@ inline bool packet_requires_data_ack(const uint8_t *buf, uint16_t len) {
   return len > 4 && buf[1] == 0x7E && buf[3] == 0x02;
 }
 
+inline void write_sds_21(uint8_t *buf, uint32_t value) {
+  buf[0] = value & 0x7F;
+  buf[1] = (value >> 7) & 0x7F;
+  buf[2] = (value >> 14) & 0x7F;
+}
+
 inline void update_progress(bool show_progress, uint8_t &counter, uint32_t pos,
                             uint32_t total) {
   if (++counter <= kProgressUpdateInterval) {
@@ -191,14 +197,10 @@ struct WavReader : SDSFileReader {
       }
     }
 
-    uint32_t vals[4] = {samplePeriod, total_samples, loopStart, loopEnd};
-    uint8_t idx = 7;
-    for (uint8_t i = 0; i < 4; ++i) {
-      uint32_t v = vals[i];
-      buf[idx++] = v & 0x7F;
-      buf[idx++] = (v >> 7) & 0x7F;
-      buf[idx++] = (v >> 14) & 0x7F;
-    }
+    write_sds_21(buf + 7, samplePeriod);
+    write_sds_21(buf + 10, total_samples);
+    write_sds_21(buf + 13, loopStart);
+    write_sds_21(buf + 16, loopEnd);
     buf[19] = loopType;
     buf[20] = 0xF7;
     return 21;
