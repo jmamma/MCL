@@ -13,7 +13,6 @@ ShowSize<sizeof(ExtTrack)> show_ext_size;
 ShowSize<sizeof(MDFXTrack)> show_mdfx_size;
 ShowSize<sizeof(MDTempoTrack)> show_mdtempo_size;
 ShowSize<sizeof(MDRouteTrack)> show_mdroute_size;
-ShowSize<sizeof(MDLFOTrack)> show_mdlfo_size;
 ShowSize<sizeof(MNMTrack)> show_mnm_size;
 ShowSize<sizeof(PerfTrack)> show_perf_size;
 ShowSize<sizeof(GridRowHeader)> show_perf_size;
@@ -45,19 +44,9 @@ DeviceTrack *DeviceTrack::init_track_type(uint8_t track_type) {
   case MDTEMPO_TRACK_TYPE:
     ::new (this) MDTempoTrack;
     break;
-#if !defined(__AVR__)
-  case MDROUTE_TRACK_TYPE:
-    ::new (this) LegacyMDRouteTrack;
-    break;
-#endif
   case MD_ROUTE_TRACK_TYPE:
     ::new (this) MDRouteTrack;
     break;
-#if !defined(__AVR__)
-  case MDLFO_TRACK_TYPE:
-    ::new (this) MDLFOTrack;
-    break;
-#endif
   case MNM_TRACK_TYPE:
     ::new (this) MNMTrack;
     break;

@@ -146,7 +146,6 @@ void MCL::setup() {
   DEBUG_DUMP(sizeof(ExtTrack));
   DEBUG_DUMP(sizeof(EmptyTrack));
 
-  DEBUG_DUMP(sizeof(MDLFOTrack));
   DEBUG_DUMP(sizeof(MDRouteTrack));
   DEBUG_DUMP(sizeof(MDFXTrack));
   DEBUG_DUMP(sizeof(MDTempoTrack));
