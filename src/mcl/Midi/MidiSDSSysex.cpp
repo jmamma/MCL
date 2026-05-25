@@ -27,14 +27,13 @@ static uint32_t read_sds_u21(const SysexView &view, uint8_t &idx) {
 
 void MidiSDSSysexListenerClass::end() {
   SysexView view(sysex);
-  if (view.getByte(0) == 0x7E) {
-    isSDSMessage = true;
-  } else {
-    isSDSMessage = false;
+  isSDSMessage = view.getByte(0) == 0x7E;
+  if (!isSDSMessage) {
     return;
   }
 
-  if ((view.getByte(2) == ELEKTRON_ID) && (view.getByte(3) == MD_ID) &&
+  msgType = view.getByte(2);
+  if ((msgType == ELEKTRON_ID) && (view.getByte(3) == MD_ID) &&
       (view.getByte(5) == MD_SDS_NAME)) {
     sds_slot = view.getByte(6);
     for (uint8_t i = 0; i < sizeof(sds_name); ++i) {
@@ -45,7 +44,6 @@ void MidiSDSSysexListenerClass::end() {
 
     return;
   }
-  msgType = view.getByte(2);
   //DEBUG_PRINTLN(msgType);
   switch (msgType) {
 
@@ -63,14 +61,6 @@ void MidiSDSSysexListenerClass::end() {
     DEBUG_PRINTLN(view.getByte(3));
     break;
 
-  case MIDI_SDS_CANCEL:
-    break;
-
-  case MIDI_SDS_WAIT:
-    break;
-
-  case MIDI_SDS_EOF:
-    break;
   case MIDI_SDS_DUMPHEADER:
 
     if (midi_sds.state != SDS_READY) {
@@ -138,17 +128,16 @@ void MidiSDSSysexListenerClass::dump_header(const SysexView &view) {
   DEBUG_PRINTLN(midi_sds.loopType);
   DEBUG_PRINTLN(midi_sds.loopStart);
   DEBUG_PRINTLN(midi_sds.loopEnd);
-  char my_string[16] = "___.wav";
+  char my_string[] = "___.wav";
   my_string[0] = (midi_sds.sampleNumber % 1000) / 100 + '0';
   my_string[1] = (midi_sds.sampleNumber % 100) / 10 + '0';
   my_string[2] = (midi_sds.sampleNumber % 10) + '0';
 
-  bool overwrite = true;
-  bool validFormat = (midi_sds.sampleFormat == 8) ||
-                  (midi_sds.sampleFormat == 16) ||
-                  (midi_sds.sampleFormat == 24);
-  if ((!validFormat) || (!midi_sds.wav_file.open(my_string, overwrite, 1, sampleRate,
-                              midi_sds.sampleFormat, midi_sds.loopType != 0x7F))) {
+  if ((midi_sds.sampleFormat != 8 && midi_sds.sampleFormat != 16 &&
+       midi_sds.sampleFormat != 24) ||
+      !midi_sds.wav_file.open(my_string, true, 1, sampleRate,
+                              midi_sds.sampleFormat,
+                              midi_sds.loopType != 0x7F)) {
     midi_sds.sendCancelMessage();
     midi_sds.cancel();
     midi_sds.state = SDS_READY;
@@ -216,14 +205,13 @@ void MidiSDSSysexListenerClass::data_packet(const SysexView &view) {
     uint8_t num_of_samples = 0;
     uint8_t byte_count = 0;
 
-    uint32_t decode_val = 0;
-    int32_t signed_val = 0;
+    uint32_t decode_val;
+    int32_t signed_val;
     for (uint8_t n = 0;
          n <= 120 - midi_sds.midiBytes_per_word &&
          (num_of_samples + midi_sds.samplesSoFar) < midi_sds.sampleLength;
          n = n + midi_sds.midiBytes_per_word) {
       decode_val = 0;
-      signed_val = 0;
       // Decode 7 bit midiBytes in to value
       uint8_t shift;
       //  DEBUG_PRINTLN(F("MIDI_BIN"));
