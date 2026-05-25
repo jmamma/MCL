@@ -1106,8 +1106,9 @@ void MDSeqTrack::clear_locks() {
 void MDSeqTrack::clear_track(bool locks) {
   // steps and microtiming are adjacent in MDSeqTrackData storage.
   memset(steps, 0, sizeof(steps) + sizeof(microtiming));
-  swing_mask = 0;
+  swing_mask = MDSEQ_DEFAULT_SWING_MASK;
   swing_amount = 0;
+  sync_swing_steps_from_mask();
   clear_mutes();
   ignore_step = 255;
   if (locks) {

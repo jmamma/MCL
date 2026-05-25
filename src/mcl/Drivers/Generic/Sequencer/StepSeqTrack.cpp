@@ -600,7 +600,7 @@ void StepSeqDataTrack::clear_track(bool clear_locks_too) {
     trig_mask = 0;
     slide_mask = 0;
     accent_mask = 0;
-    swing_mask = 0;
+    swing_mask = STEPSEQ_DEFAULT_SWING_MASK;
     swing_amount = 0;
     memset(microtiming, 0, sizeof(microtiming));
 }
