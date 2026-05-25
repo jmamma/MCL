@@ -199,18 +199,18 @@ public:
   float normalize_level();
 #endif
   void init() {
-  uint8_t init_params[MD_PARAMS_PER_TRACK] = { 0, 0, 0, 0,
-             0, 0, 0, 0,
-             0, 0, 64, 64,
-             0, 127, 0, 0,
-             0, 127, 64, 0,
-             0, 64, 0, 0 };
-  memcpy(params, init_params, MD_PARAMS_PER_TRACK);
-  level = 127;
-  model = GND_MODEL;
-  trigGroup = 127;
-  muteGroup = 127;
-  lfo.init(track);
+    memset(params, 0, MD_PARAMS_PER_TRACK);
+    params[10] = 64;
+    params[11] = 64;
+    params[13] = 127;
+    params[17] = 127;
+    params[18] = 64;
+    params[21] = 64;
+    level = 127;
+    model = GND_MODEL;
+    trigGroup = 127;
+    muteGroup = 127;
+    lfo.init(track);
   }
 
   uint8_t get_model();
