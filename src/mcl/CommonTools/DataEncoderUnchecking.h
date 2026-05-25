@@ -81,7 +81,7 @@ public:
 		}
 	}
 
-	virtual DATA_ENCODER_RETURN_TYPE packb(bool inb) {
+		DATA_ENCODER_RETURN_TYPE packb(bool inb) {
 		pack8((uint8_t)inb);
 	}
 
@@ -199,18 +199,18 @@ public:
 		return ptr - data;
 	}
 
-	virtual DATA_ENCODER_RETURN_TYPE getb(bool *b) {
+		DATA_ENCODER_RETURN_TYPE getb(bool *b) {
 		uint8_t c;
 		get8(&c);
 		*b = c;
 	}
 		
-	virtual DATA_ENCODER_RETURN_TYPE skip8() {
+		DATA_ENCODER_RETURN_TYPE skip8() {
 		uint8_t b;
 		get8(&b);
 	}
 
-	virtual DATA_ENCODER_RETURN_TYPE skip(uint16_t cnt) {
+		DATA_ENCODER_RETURN_TYPE skip(uint16_t cnt) {
 		for (uint16_t i = 0; i < cnt; i++) {
 			skip8();
 		}
