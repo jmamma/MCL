@@ -95,9 +95,10 @@ uint64_t host_input_button_mask(void);
 int32_t  host_input_encoder_delta(int32_t encoder_id);
 uint32_t host_input_encoder_button_mask(void);
 
-// Retained for ABI compatibility. SPS returns 0 by default; timer/audio
-// advancement is normally driven by the host audio side via mcl_tick_audio(),
-// not from the GUI/service-thread poll path.
+// During normal playback the host audio side drives mcl_tick_audio(). During
+// modal/blocking MCL code, the wasm runtime is already executing and the host
+// cannot enter another export, so this returns a bounded pending-time slice for
+// the platform layer to catch up in-module.
 uint32_t host_audio_pending_us(void);
 
 // ---- Display -------------------------------------------------------------

@@ -26,11 +26,11 @@ The same hook pumps `host_midi_in_pop()` / `host_midi_out_push()`, so modal
 pages do not strand host-side MIDI queues while the service thread owns the
 wasm runtime.
 
-`host_audio_pending_us()` is retained for ABI compatibility, but SPS returns
-0 by default. Timer/audio advancement belongs to `mcl_tick_audio()` on the
-host audio side; advancing it from inside `mcl_tick_gui()` makes the MCL
-instance reenter its sequencer/timer path while UI code is walking grid/page
-state.
+`host_audio_pending_us()` lets the platform layer catch up a bounded amount of
+sample-clock time while MCL is already inside a GUI/service-thread call. This
+models the hardware timer IRQs that keep MIDI clock phase and blocking sysex
+waits moving while foreground UI code spins. The catch-up call stays inside the
+same wasm entry; the host must not re-enter WAMR concurrently.
 
 ## Lifetime
 
@@ -78,6 +78,10 @@ Adding new host-imports / exports is a minor bump.
   module unless a symbol explicitly overrides it.
 - Wasm → host (exports the host calls): `mcl_*`. Looked up by name on the
   `wasm_module_inst_t`.
+- `mcl_debug_value(id)` is an optional read-only diagnostic export for SPS
+  integration tests. Current IDs are: `1=GridIOPage::track_select`,
+  `2=note_interface.notes_on`, `3=note_interface.notes_off`,
+  `4=mcl_debug_state()`, `5=mcl_cfg.track_type_select`.
 
 ## Files in this directory
 

@@ -25,6 +25,7 @@
 #include "KeyInterface.h"
 #include "NoteInterface.h"
 #include "DeviceManager.h"
+#include "MCLSysConfig.h"
 #include "MD.h"
 #include "MDSysex.h"
 #include "platform.h"
@@ -60,7 +61,7 @@ extern volatile uint16_t g_clock_minutes;
 
 // ABI version. Bump major when removing/renaming/changing signatures.
 static constexpr uint16_t MCL_ABI_MAJOR = 1;
-static constexpr uint16_t MCL_ABI_MINOR = 5;
+static constexpr uint16_t MCL_ABI_MINOR = 6;
 
 static uint32_t s_timer1_remainder_us = 0;
 static uint32_t s_timer2_remainder_us = 0;
@@ -473,4 +474,24 @@ extern "C" uint32_t mcl_debug_state(void) {
     if (device_manager.is_ui_collapsed()) state |= (1u << 31);
 #endif
     return state;
+}
+
+extern "C" uint32_t mcl_debug_value(int32_t id) {
+    if (!mcl_desktop_is_setup_done())
+        return 0;
+
+    switch (id) {
+    case 1:
+        return GridIOPage::track_select;
+    case 2:
+        return note_interface.notes_on;
+    case 3:
+        return note_interface.notes_off;
+    case 4:
+        return mcl_debug_state();
+    case 5:
+        return mcl_cfg.track_type_select;
+    default:
+        return 0;
+    }
 }

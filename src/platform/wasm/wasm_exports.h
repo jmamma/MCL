@@ -98,6 +98,14 @@ uint32_t mcl_debug_tempo_x100(void);
 //   bit   28     GridIOPage::show_track_type
 uint32_t mcl_debug_state(void);
 
+// Optional diagnostic values for SPS integration tests:
+//   1 GridIOPage::track_select
+//   2 note_interface.notes_on
+//   3 note_interface.notes_off
+//   4 mcl_debug_state()
+//   5 mcl_cfg.track_type_select
+uint32_t mcl_debug_value(int32_t id);
+
 #ifdef __cplusplus
 }
 #endif

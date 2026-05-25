@@ -216,6 +216,7 @@ echo "[mcl-wasm] wasm aux stack: ${WASM_STACK_SIZE} bytes"
     -Wl,--export=mcl_abi_version \
     -Wl,--export=mcl_debug_tempo_x100 \
     -Wl,--export=mcl_debug_state \
+    -Wl,--export=mcl_debug_value \
     -Wl,--allow-undefined \
     -o "${WASM}" \
     -x c++ \
