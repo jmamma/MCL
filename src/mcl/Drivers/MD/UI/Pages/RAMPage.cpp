@@ -149,9 +149,10 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   */
   md_track.machine.lfo.destinationTrack = track;
 
-  uint8_t params[] = { 0, 0, 64, 64, 0, 127, 0, 0, 0, 127, pan, 0, 0, 64, 0, 0};
-
-  memcpy(md_track.machine.params + MODEL_AMD, params, sizeof(params));
+  static const uint8_t params[] PROGMEM = {0, 0, 64, 64, 0, 127, 0, 0,
+                                           0, 127, 0, 0, 0, 64, 0, 0};
+  memcpy_P(md_track.machine.params + MODEL_AMD, params, sizeof(params));
+  md_track.machine.params[MODEL_PAN] = pan;
 
   uint8_t ticks_per_step = md_seq_track.get_ticks_per_step();
   if (linked_track == 255) {
@@ -395,9 +396,11 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   md_track.machine.params[MODEL_LFOM] = 0;
   */
 
-  uint8_t params[] = {64, 64, 127, 0, 0, 127, 0, 127, 0, 0, 64, 64, 0, 127, 0, 0, 0, 127, pan, 0, 0, 64, 0, 0};
-
-  memcpy(md_track.machine.params, params, sizeof(params));
+  static const uint8_t params[] PROGMEM = {
+      64, 64, 127, 0, 0, 127, 0, 127, 0, 0, 64, 64,
+      0,  127, 0,   0, 0, 127, 0, 0,   0, 64, 0,  0};
+  memcpy_P(md_track.machine.params, params, sizeof(params));
+  md_track.machine.params[MODEL_PAN] = pan;
 
   uint8_t ticks_per_step = md_seq_track.get_ticks_per_step();
   if (linked_track == 255) {
