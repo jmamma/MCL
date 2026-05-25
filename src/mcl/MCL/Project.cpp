@@ -1018,13 +1018,11 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
             return false;
           }
         } else if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
+          upgraded_md_track.machine.track = 0;
           upgraded_md_track.init();
           upgraded_md_track.link.init(row);
-          upgraded_md_track.machine.track = 0;
-          upgraded_md_track.machine.lfo.init(0);
         }
 
-        upgraded_md_track.mod_data.init();
         LFOSeqTrack::convert_legacy_data(legacy_lfo,
                                          &upgraded_md_track.mod_data.lfo);
 
