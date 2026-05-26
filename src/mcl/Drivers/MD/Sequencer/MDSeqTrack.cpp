@@ -21,6 +21,7 @@ static uint8_t md_swing_q14_to_amount(uint32_t swing_q14) {
   return amount > 30 ? 30 : (uint8_t)amount;
 }
 
+#if defined(__AVR__)
 static void md_swap_mask_bits(uint64_t &mask, uint8_t i, uint8_t j) {
   uint8_t *bytes = reinterpret_cast<uint8_t *>(&mask);
   uint8_t ib = i >> 3;
@@ -42,6 +43,41 @@ static void md_rotate_mask(uint64_t &mask, uint8_t length, uint8_t dir) {
     ROTATE_RIGHT(mask, length);
   }
 }
+#define MD_ROTATE_MASK(mask, length, dir) md_rotate_mask(mask, length, dir)
+#define MD_SWAP_MASK_BITS(mask, i, j) md_swap_mask_bits(mask, i, j)
+#else
+static uint64_t md_swap_mask_bits(uint64_t mask, uint8_t i, uint8_t j) {
+  uint8_t *bytes = reinterpret_cast<uint8_t *>(&mask);
+  uint8_t ib = i >> 3;
+  uint8_t jb = j >> 3;
+  uint8_t im = _bvmasks[i & 7];
+  uint8_t jm = _bvmasks[j & 7];
+  if ((bytes[ib] & im) != (bytes[jb] & jm)) {
+    bytes[ib] ^= im;
+    bytes[jb] ^= jm;
+  }
+  return mask;
+}
+
+static uint64_t md_rotate_mask(uint64_t mask, uint8_t length, uint8_t dir)
+    NOINLINE();
+static uint64_t md_rotate_mask(uint64_t mask, uint8_t length, uint8_t dir) {
+  if (dir == DIR_LEFT) {
+    ROTATE_LEFT(mask, length);
+  } else {
+    ROTATE_RIGHT(mask, length);
+  }
+  return mask;
+}
+#define MD_ROTATE_MASK(mask, length, dir)                                      \
+  do {                                                                         \
+    mask = md_rotate_mask(mask, length, dir);                                  \
+  } while (false)
+#define MD_SWAP_MASK_BITS(mask, i, j)                                          \
+  do {                                                                         \
+    mask = md_swap_mask_bits(mask, i, j);                                      \
+  } while (false)
+#endif
 
 #if !defined(__AVR__)
 static int16_t md_div_round_closest(int32_t numerator, int32_t denominator) {
@@ -1259,8 +1295,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     memmove(microtiming, microtiming + 1, length - 1);
     steps[length - 1] = step_buf;
     microtiming[length - 1] = microtiming_buf;
-    md_rotate_mask(mute_mask, length, DIR_LEFT);
-    md_rotate_mask(swing_mask, length, DIR_LEFT);
+    MD_ROTATE_MASK(mute_mask, length, DIR_LEFT);
+    MD_ROTATE_MASK(swing_mask, length, DIR_LEFT);
     break;
   }
   case DIR_RIGHT: {
@@ -1277,8 +1313,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     memmove(microtiming + 1, microtiming, length - 1);
     steps[0] = step_buf;
     microtiming[0] = microtiming_buf;
-    md_rotate_mask(mute_mask, length, DIR_RIGHT);
-    md_rotate_mask(swing_mask, length, DIR_RIGHT);
+    MD_ROTATE_MASK(mute_mask, length, DIR_RIGHT);
+    MD_ROTATE_MASK(swing_mask, length, DIR_RIGHT);
     break;
   }
   case DIR_REVERSE: {
@@ -1301,8 +1337,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
       microtiming_buf = microtiming[i];
       microtiming[i] = microtiming[j];
       microtiming[j] = microtiming_buf;
-      md_swap_mask_bits(mute_mask, i, j);
-      md_swap_mask_bits(swing_mask, i, j);
+      MD_SWAP_MASK_BITS(mute_mask, i, j);
+      MD_SWAP_MASK_BITS(swing_mask, i, j);
     }
     break;
   }
