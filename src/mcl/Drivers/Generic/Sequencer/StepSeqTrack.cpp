@@ -11,26 +11,24 @@ uint64_t stepseq_mask_for_len(uint8_t len) {
     return len >= 64 ? ~0ULL : ((1ULL << len) - 1);
 }
 
-void stepseq_rotate_left_mask(uint64_t &mask, uint8_t len) {
-    if (len == 0) return;
+uint64_t stepseq_rotate_left_mask(uint64_t mask, uint8_t len) {
+    if (len == 0) return mask;
     if (len >= 64) {
         uint64_t msb = (mask >> 63) & 1ULL;
-        mask = (mask << 1) | msb;
-        return;
+        return (mask << 1) | msb;
     }
     uint64_t msb = (mask >> (len - 1)) & 1ULL;
-    mask = ((mask << 1) | msb) & stepseq_mask_for_len(len);
+    return ((mask << 1) | msb) & stepseq_mask_for_len(len);
 }
 
-void stepseq_rotate_right_mask(uint64_t &mask, uint8_t len) {
-    if (len == 0) return;
+uint64_t stepseq_rotate_right_mask(uint64_t mask, uint8_t len) {
+    if (len == 0) return mask;
     if (len >= 64) {
         uint64_t lsb = mask & 1ULL;
-        mask = (mask >> 1) | (lsb << 63);
-        return;
+        return (mask >> 1) | (lsb << 63);
     }
     uint64_t lsb = mask & 1ULL;
-    mask = ((mask >> 1) | (lsb << (len - 1))) & stepseq_mask_for_len(len);
+    return ((mask >> 1) | (lsb << (len - 1))) & stepseq_mask_for_len(len);
 }
 
 } // namespace
@@ -766,11 +764,11 @@ void StepSeqDataTrack::modify_track(uint8_t dir) {
         memmove(microtiming, microtiming + 1, length - 1);
         steps[length - 1] = step_buf;
         microtiming[length - 1] = mt_buf;
-        stepseq_rotate_left_mask(mute_mask, length);
-        stepseq_rotate_left_mask(trig_mask, length);
-        stepseq_rotate_left_mask(slide_mask, length);
-        stepseq_rotate_left_mask(accent_mask, length);
-        stepseq_rotate_left_mask(swing_mask, length);
+        mute_mask = stepseq_rotate_left_mask(mute_mask, length);
+        trig_mask = stepseq_rotate_left_mask(trig_mask, length);
+        slide_mask = stepseq_rotate_left_mask(slide_mask, length);
+        accent_mask = stepseq_rotate_left_mask(accent_mask, length);
+        swing_mask = stepseq_rotate_left_mask(swing_mask, length);
         break;
     }
     case STEPSEQ_DIR_RIGHT: {
@@ -785,11 +783,11 @@ void StepSeqDataTrack::modify_track(uint8_t dir) {
         memmove(microtiming + 1, microtiming, length - 1);
         steps[0] = step_buf;
         microtiming[0] = mt_buf;
-        stepseq_rotate_right_mask(mute_mask, length);
-        stepseq_rotate_right_mask(trig_mask, length);
-        stepseq_rotate_right_mask(slide_mask, length);
-        stepseq_rotate_right_mask(accent_mask, length);
-        stepseq_rotate_right_mask(swing_mask, length);
+        mute_mask = stepseq_rotate_right_mask(mute_mask, length);
+        trig_mask = stepseq_rotate_right_mask(trig_mask, length);
+        slide_mask = stepseq_rotate_right_mask(slide_mask, length);
+        accent_mask = stepseq_rotate_right_mask(accent_mask, length);
+        swing_mask = stepseq_rotate_right_mask(swing_mask, length);
         break;
     }
     case STEPSEQ_DIR_REVERSE: {
