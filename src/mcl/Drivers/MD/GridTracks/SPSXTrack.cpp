@@ -84,15 +84,16 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
   dest.swing_mask = src.swing_mask;
   dest.swing_amount = src.swing_amount;
 
-  memcpy(dest.locks, src.locks, sizeof(src.locks));
   memset(dest.locks_params, 0, sizeof(dest.locks_params));
   memcpy(dest.locks_params, src.locks_params, sizeof(src.locks_params));
 
+  uint16_t src_lock = 0;
   for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
     const MDSeqStepDescriptor &src_step = src.steps[step];
     SPSXSeqStepDescriptor &dest_step = dest.steps[step];
 
-    dest_step.locks = src_step.locks;
+    uint8_t legacy_locks = src_step.locks;
+    dest_step.locks = 0;
     dest_step.cond_plock = src_step.cond_plock;
     dest_step.cond_id = legacy_cond_to_spsx(src_step.cond_id);
     dest.microtiming[step] =
@@ -104,7 +105,19 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
     if (src_step.slide) {
       SPSX_SET_BIT64(dest.slide_mask, step);
     }
+
+    for (uint8_t lock = 0; lock < NUM_LOCKS; lock++) {
+      uint8_t lock_mask = 1 << lock;
+      if (!(legacy_locks & lock_mask)) {
+        continue;
+      }
+      if (src_lock < NUM_MD_LOCK_SLOTS && src.locks_params[lock]) {
+        dest.set_track_locks_i(step, lock, src.locks[src_lock]);
+      }
+      src_lock++;
+    }
   }
+  dest.clean_params();
 }
 
 void finalize_spsx_seq_load(SPSXSeqTrack &track) {
