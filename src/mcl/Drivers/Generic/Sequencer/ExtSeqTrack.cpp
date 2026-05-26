@@ -50,6 +50,37 @@ static inline int8_t ext_reverse_microtiming(int8_t microtiming) {
   return microtiming == -128 ? 127 : (int8_t)-microtiming;
 }
 
+static void ext_rotate_events(ext_event_t *events, uint16_t ev_end,
+                              uint8_t n_cur, uint8_t dir) NOINLINE();
+static void ext_rotate_events(ext_event_t *events, uint16_t ev_end,
+                              uint8_t n_cur, uint8_t dir) {
+  ext_event_t ev_cur[16];
+  if (dir == DIR_LEFT) {
+    memcpy(ev_cur, events, sizeof(ext_event_t) * n_cur);
+    memmove(events, events + n_cur, sizeof(ext_event_t) * (ev_end - n_cur));
+    memcpy(events + ev_end - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
+  } else {
+    memcpy(ev_cur, events + ev_end - n_cur, sizeof(ext_event_t) * n_cur);
+    memmove(events + n_cur, events, sizeof(ext_event_t) * (ev_end - n_cur));
+    memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
+  }
+}
+
+static void ext_rotate_bytes(uint8_t *values, uint8_t length, uint8_t dir)
+    NOINLINE();
+static void ext_rotate_bytes(uint8_t *values, uint8_t length, uint8_t dir) {
+  uint8_t vel_tmp;
+  if (dir == DIR_LEFT) {
+    vel_tmp = values[0];
+    memmove(values, values + 1, length - 1);
+    values[length - 1] = vel_tmp;
+  } else {
+    vel_tmp = values[length - 1];
+    memmove(values + 1, values, length - 1);
+    values[0] = vel_tmp;
+  }
+}
+
 } // namespace
 
 
@@ -1333,8 +1364,6 @@ void ExtSeqTrack::clear_step(uint8_t step) {
 void ExtSeqTrack::modify_track(uint8_t dir) {
   uint8_t old_mute_state = mute_state;
   uint8_t n_cur;
-  ext_event_t ev_cur[16];
-  uint8_t vel_tmp;
   mute_state = SEQ_MUTE_ON;
   notesoff_pending = true;
 
@@ -1379,27 +1408,14 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   switch (dir) {
   case DIR_LEFT:
     n_cur = event_buckets.get(0);
-    memcpy(ev_cur, events, sizeof(ext_event_t) * n_cur);
-
-    memmove(events, events + n_cur, sizeof(ext_event_t) * (ev_end - n_cur));
-
-    memcpy(events + ev_end - n_cur, ev_cur, sizeof(ext_event_t) * n_cur);
-
-    vel_tmp = velocities[0];
-    memmove(velocities, velocities + 1, length - 1);
-    velocities[length - 1] = vel_tmp;
-
+    ext_rotate_events(events, ev_end, n_cur, DIR_LEFT);
+    ext_rotate_bytes(velocities, length, DIR_LEFT);
     event_buckets.shift_left(length);
     break;
   case DIR_RIGHT:
     n_cur = event_buckets.get(length - 1);
-    memcpy(ev_cur, events + ev_end - n_cur, sizeof(ext_event_t) * n_cur);
-    memmove(events + n_cur, events, sizeof(ext_event_t) * (ev_end - n_cur));
-    memcpy(events, ev_cur, sizeof(ext_event_t) * n_cur);
-    vel_tmp = velocities[length - 1];
-    memmove(velocities + 1, velocities, length - 1);
-    velocities[0] = vel_tmp;
-
+    ext_rotate_events(events, ev_end, n_cur, DIR_RIGHT);
+    ext_rotate_bytes(velocities, length, DIR_RIGHT);
     event_buckets.shift_right(length);
     break;
   case DIR_REVERSE:
