@@ -107,6 +107,67 @@ MDClass::MDClass()
 namespace {
 
 #if !defined(__AVR__)
+class MDGlobalLightSysex : public ElektronSysexObject {
+public:
+  uint8_t getPosition() override { return global_.getPosition(); }
+  void setPosition(uint8_t pos) override { global_.setPosition(pos); }
+
+  bool fromSysex(MidiClass *midi) override {
+    if (!global_.fromSysex(midi)) {
+      return false;
+    }
+    copy_to_light();
+    return true;
+  }
+
+  uint16_t toSysex(ElektronDataToSysexEncoder *encoder) override {
+    copy_from_light();
+    return global_.toSysex(encoder);
+  }
+
+private:
+  void copy_to_light() {
+    memcpy(MD.global.drumRouting, global_.drumRouting,
+           sizeof(MD.global.drumRouting));
+    memcpy(MD.global.drumMapping, global_.drumMapping,
+           sizeof(MD.global.drumMapping));
+    MD.global.baseChannel = global_.baseChannel;
+    MD.global.tempo = global_.tempo;
+    MD.global.extendedMode = global_.extendedMode;
+    MD.global.clockIn = global_.clockIn;
+    MD.global.clockOut = global_.clockOut;
+    MD.global.transportIn = global_.transportIn;
+    MD.global.transportOut = global_.transportOut;
+    MD.global.localOn = global_.localOn;
+    MD.global.programChange = global_.programChange;
+    MD.global.trigMode = global_.trigMode;
+    MD.global.channelMode = global_.channelMode;
+  }
+
+  void copy_from_light() {
+    memcpy(global_.drumRouting, MD.global.drumRouting,
+           sizeof(global_.drumRouting));
+    global_.baseChannel = MD.global.baseChannel;
+    global_.tempo = MD.global.tempo;
+    global_.extendedMode = MD.global.extendedMode;
+    global_.clockIn = MD.global.clockIn;
+    global_.clockOut = MD.global.clockOut;
+    global_.transportIn = MD.global.transportIn;
+    global_.transportOut = MD.global.transportOut;
+    global_.localOn = MD.global.localOn;
+    global_.programChange = MD.global.programChange;
+    global_.trigMode = MD.global.trigMode;
+    global_.channelMode = MD.global.channelMode;
+  }
+
+  MDGlobal global_;
+};
+
+ElektronSysexObject *md_global_sysex() {
+  static MDGlobalLightSysex global_sysex;
+  return &global_sysex;
+}
+
 uint8_t md_target_fx_type(uint8_t target) {
   return MD_FX_ECHO + target - NUM_MD_TRACKS;
 }
@@ -330,6 +391,12 @@ private:
 #endif
 
 } // namespace
+
+#if !defined(__AVR__)
+ElektronSysexObject *MDClass::getGlobal() {
+  return md_global_sysex();
+}
+#endif
 
 static uint16_t send_md_request3(MDClass &md, uint8_t command, uint8_t param,
                                  uint8_t value, bool send = true) {
@@ -1075,9 +1142,6 @@ void MDClass::setup() {
   setExternalSync();
   setProgramChange(2);
   setLocalOn(true);
-  if (is_spsx) {
-    setChannelMode(1); // EXPANDED mode for extended CC
-  }
 }
 
 void MDClass::setBaseChannel(uint8_t channel) {
@@ -1296,6 +1360,14 @@ bool MDClass::probe() {
     //   }
     mcl_gui.delay_progress(300);
     getCurrentTrack(CALLBACK_TIMEOUT);
+#if !defined(__AVR__)
+    if (is_spsx) {
+      uint8_t active_global = getCurrentGlobal(CALLBACK_TIMEOUT);
+      if (active_global != 255) {
+        getBlockingGlobal(active_global, CALLBACK_TIMEOUT);
+      }
+    }
+#endif
     getBlockingKit(0x7F);
     MD.save_kit_params();
     setup();
@@ -1341,13 +1413,15 @@ void MDClass::parseCC(uint8_t channel, uint8_t cc, uint8_t *track,
 
   uint8_t control_ch = channel - global.baseChannel;
 
-  if (control_ch >= (is_spsx ? 8 : 4)) {
+  const bool expanded_channel_mode = is_spsx && global.channelMode;
+
+  if (control_ch >= (expanded_channel_mode ? 8 : 4)) {
     *track = 255;
     return;
   }
 
   // Extended channels (base+4..+7): params 24-33
-  if (is_spsx && control_ch >= 4) {
+  if (expanded_channel_mode && control_ch >= 4) {
     *track = (control_ch - 4) * 4;
     if (cc > 39) { *track = 255; return; }
     *track += cc % 4;
@@ -1465,7 +1539,8 @@ void MDClass::setTrackParam_inline(uint8_t track, uint8_t param, uint8_t value,
     if (update_kit) {
       kit.params[track][param] = value;
     }
-  } else if (param >= MD_PARAMS_PER_TRACK && param < SPS_PARAMS_PER_TRACK && is_spsx) {
+  } else if (param >= MD_PARAMS_PER_TRACK && param < SPS_PARAMS_PER_TRACK &&
+             is_spsx && global.channelMode) {
     // Extended params on extended channels (base+4..+7)
     uint8_t ext_channel = channel + 4 + global.baseChannel;
     cc = (param - MD_PARAMS_PER_TRACK) * 4 + b;

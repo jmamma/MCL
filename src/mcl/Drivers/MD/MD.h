@@ -122,7 +122,11 @@ public:
   virtual ElektronSysexObject *getKit() override { return &kit; }
   virtual char *getKitName() override { return kit.name; }
   virtual ElektronSysexObject *getPattern() override { return &pattern; }
+#if defined(__AVR__)
   virtual ElektronSysexObject *getGlobal() override { return nullptr; }
+#else
+  virtual ElektronSysexObject *getGlobal() override;
+#endif
   virtual ElektronSysexListenerClass *getSysexListener() override {
     return &MDSysexListener;
   }
