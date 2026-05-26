@@ -79,6 +79,26 @@ uint8_t MDSeqTrackDataV1::remove_step_locks(uint8_t step) {
   return cnt;
 }
 
+bool MDSeqTrackDataV1::set_track_locks_i(uint8_t step, uint8_t lockidx,
+                                         uint8_t value) {
+  auto lock_slot = get_lockidx(step, lockidx);
+  if (lock_slot == NUM_MD_LOCK_SLOTS) {
+    auto idx = get_lockidx(step);
+    auto nlock = popcount(steps[step].locks & ((1 << lockidx) - 1));
+    lock_slot = idx + nlock;
+
+    if (lock_slot >= NUM_MD_LOCK_SLOTS) {
+      return false; // memory full!
+    }
+
+    memmove(locks + lock_slot + 1, locks + lock_slot,
+            NUM_MD_LOCK_SLOTS - lock_slot - 1);
+    steps[step].locks |= (1 << lockidx);
+  }
+  locks[lock_slot] = min(127, value);
+  return true;
+}
+
 uint8_t MDSeqTrack::effective_timing(uint8_t step, uint8_t ticks_per_step) const {
   int8_t mt = microtiming[step];
   if (mt == 0) {
@@ -911,25 +931,14 @@ bool MDSeqTrack::set_track_locks(uint8_t step, uint8_t track_param,
 
 bool MDSeqTrack::set_track_locks_i(uint8_t step, uint8_t lockidx,
                                    uint8_t value) {
-  auto lock_slot = get_lockidx(step, lockidx);
-  if (lock_slot == NUM_MD_LOCK_SLOTS) {
-    auto idx = get_lockidx(step);
-    auto nlock = popcount(steps[step].locks & ((1 << lockidx) - 1));
-    lock_slot = idx + nlock;
-
-    if (lock_slot >= NUM_MD_LOCK_SLOTS) {
-      return false; // memory full!
-    }
-
-    memmove(locks + lock_slot + 1, locks + lock_slot,
-            NUM_MD_LOCK_SLOTS - lock_slot - 1);
+  bool inserted = !steps[step].is_lock_bit(lockidx);
+  bool ret = MDSeqTrackDataV1::set_track_locks_i(step, lockidx, value);
+  if (ret && inserted) {
     if (step < step_count) {
       cur_event_idx++;
     }
-    steps[step].locks |= (1 << lockidx);
   }
-  locks[lock_slot] = min(127, value);
-  return true;
+  return ret;
 }
 
 void MDSeqTrack::record_track_locks(uint8_t track_param, uint8_t value) {
