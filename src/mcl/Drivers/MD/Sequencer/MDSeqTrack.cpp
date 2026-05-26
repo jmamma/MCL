@@ -33,6 +33,16 @@ static void md_swap_mask_bits(uint64_t &mask, uint8_t i, uint8_t j) {
   }
 }
 
+static void md_rotate_mask(uint64_t &mask, uint8_t length, uint8_t dir)
+    NOINLINE();
+static void md_rotate_mask(uint64_t &mask, uint8_t length, uint8_t dir) {
+  if (dir == DIR_LEFT) {
+    ROTATE_LEFT(mask, length);
+  } else {
+    ROTATE_RIGHT(mask, length);
+  }
+}
+
 #if !defined(__AVR__)
 static int16_t md_div_round_closest(int32_t numerator, int32_t denominator) {
   if (denominator == 0) {
@@ -1240,8 +1250,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     memmove(microtiming, microtiming + 1, length - 1);
     steps[length - 1] = step_buf;
     microtiming[length - 1] = microtiming_buf;
-    ROTATE_LEFT(mute_mask, length);
-    ROTATE_LEFT(swing_mask, length);
+    md_rotate_mask(mute_mask, length, DIR_LEFT);
+    md_rotate_mask(swing_mask, length, DIR_LEFT);
     break;
   }
   case DIR_RIGHT: {
@@ -1258,8 +1268,8 @@ void MDSeqTrack::modify_track(uint8_t dir) {
     memmove(microtiming + 1, microtiming, length - 1);
     steps[0] = step_buf;
     microtiming[0] = microtiming_buf;
-    ROTATE_RIGHT(mute_mask, length);
-    ROTATE_RIGHT(swing_mask, length);
+    md_rotate_mask(mute_mask, length, DIR_RIGHT);
+    md_rotate_mask(swing_mask, length, DIR_RIGHT);
     break;
   }
   case DIR_REVERSE: {
