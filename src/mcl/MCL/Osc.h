@@ -90,10 +90,10 @@ public:
 
 float render_osc_sample(uint8_t osc_type, float width,
                         const uint8_t *sine_levels,
-                        const uint8_t *usr_values, float largest_sine_peak,
+                        const uint8_t *usr_values, uint16_t sine_level_sum,
                         uint32_t sample_number, float freq,
                         SineOsc &sine_osc, TriOsc &tri_osc,
                         PulseOsc &pulse_osc, SawOsc &saw_osc,
-                        UsrOsc &usr_osc, bool guard_zero_peak = true);
+                        UsrOsc &usr_osc);
 
 #endif /* OSC_H__ */

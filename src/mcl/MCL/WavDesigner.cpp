@@ -123,7 +123,7 @@ bool WavDesigner::render() {
       if (osc_type != 0) {
         osc_sample =
             render_osc_sample(osc_type, page->get_width(), page->sine_levels,
-                              page->usr_values, page->largest_sine_peak, n,
+                              page->usr_values, page->sine_level_sum, n,
                               page->get_freq(), sine_osc, tri_osc, pulse_osc,
                               saw_osc, usr_osc);
       }

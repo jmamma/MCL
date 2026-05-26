@@ -90,9 +90,8 @@ void OscMixerPage::draw_wav() {
       osc_sample =
           render_osc_sample(wd.pages[i].get_osc_type(), wd.pages[i].get_width(),
                             wd.pages[i].sine_levels, wd.pages[i].usr_values,
-                            wd.pages[i].largest_sine_peak, n, freqs[i],
-                            sine_osc, tri_osc, pul_osc, saw_osc, usr_osc,
-                            false);
+                            wd.pages[i].sine_level_sum, n, freqs[i],
+                            sine_osc, tri_osc, pul_osc, saw_osc, usr_osc);
       // Sum oscillator samples together
       sample += osc_sample * wd.mixer.get_gain(i);
       // DEBUG_PRINTLN(mixer.get_gain(i));

@@ -26,7 +26,7 @@ public:
   uint8_t scanline_width;
   uint8_t sine_levels[16];
   uint8_t usr_values[16];
-  float largest_sine_peak;
+  uint16_t sine_level_sum;
   static uint32_t exploit_delay_clock;
   OscPage() {
     enc1.initMCLEncoder(8,118, 0, ENCODER_RES_SEQ);
@@ -56,7 +56,7 @@ public:
   void draw_saw();
   void draw_pul();
   void draw_wav(uint8_t wav_type);
-  void calc_largest_sine_peak();
+  void calc_sine_level_sum();
   float get_freq();
   float get_width();
   float get_phase();

@@ -102,11 +102,10 @@ bool OscPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
-void OscPage::calc_largest_sine_peak() {
-  float max_sine_gain = 0.0004921259843f; // ((float)1 / (float)16) / 127;
-  largest_sine_peak = 0;
+void OscPage::calc_sine_level_sum() {
+  sine_level_sum = 0;
   for (uint8_t f = 0; f < 16; f++) {
-    largest_sine_peak += max_sine_gain * (float)sine_levels[f];
+    sine_level_sum += sine_levels[f];
   }
 }
 
@@ -114,7 +113,7 @@ void OscPage::loop() {
   WavDesignerPage::loop();
   MCLEncoder *enc_ = &enc4;
   // largest_sine_peak = 1.0 / 16.00;
-  calc_largest_sine_peak();
+  calc_sine_level_sum();
 
   if (show_menu == false) {
     if (encoders[0]->hasChanged()) {
@@ -235,7 +234,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
     //  oled_display.drawLine(n + x, 0, n + x, 32, BLACK);
     // }
     sample = render_osc_sample(wav_type, osc_width, sine_levels, usr_values,
-                               largest_sine_peak, n, 1.0f, sine_osc, tri_osc,
+                               sine_level_sum, n, 1.0f, sine_osc, tri_osc,
                                pul_osc, saw_osc, usr_osc);
     uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00f)) + (h / 2) + y);
     if (wav_type != 0) {

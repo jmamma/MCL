@@ -133,24 +133,25 @@ float UsrOsc::get_sample(uint32_t sample_number, float freq,
 
 float render_osc_sample(uint8_t osc_type, float width,
                         const uint8_t *sine_levels,
-                        const uint8_t *usr_values, float largest_sine_peak,
+                        const uint8_t *usr_values, uint16_t sine_level_sum,
                         uint32_t sample_number, float freq,
                         SineOsc &sine_osc, TriOsc &tri_osc,
                         PulseOsc &pulse_osc, SawOsc &saw_osc,
-                        UsrOsc &usr_osc, bool guard_zero_peak) {
+                        UsrOsc &usr_osc) {
   float osc_sample = 0;
   switch (osc_type) {
   case SIN_OSC:
-    if (!guard_zero_peak || largest_sine_peak != 0) {
-      constexpr float max_sine_gain = 0.0004921259843f;
+    if (sine_level_sum != 0) {
+      // The old per-harmonic gain constant cancels with peak normalization, so
+      // the normalized sine blend is just each harmonic weighted by level / sum.
       for (uint8_t h = 1; h <= 16; h++) {
         uint8_t sine_level = sine_levels[h - 1];
         if (sine_level != 0) {
           osc_sample += sine_osc.get_sample(sample_number, freq * (float)h) *
-                        (sine_level * max_sine_gain);
+                        (float)sine_level;
         }
       }
-      osc_sample *= 1.00f / largest_sine_peak;
+      osc_sample /= (float)sine_level_sum;
     }
     break;
   case TRI_OSC:
