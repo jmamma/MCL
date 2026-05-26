@@ -163,12 +163,19 @@ public:
   /** The LFO mix setting. **/
   uint8_t mix;
 
+  void ensure_lfsr_magic() {
+    uint8_t *lfo_state = state + 5 + 18;
+    if (!(lfo_state[0] | lfo_state[1] | lfo_state[2] | lfo_state[3])) {
+      lfo_state[2] = 0x9a;
+      lfo_state[3] = 0x02;
+    }
+  }
+
   void init(uint8_t track) {
     memset(&destinationTrack,0,sizeof(MDLFO));
     destinationTrack = track;
     speed = 64;
-    uint16_t *lfo_states2 = (uint16_t *) &state[5 + 18];
-    lfo_states2[1] = 0x29a; //666
+    ensure_lfsr_magic();
   }
   /* @} */
 };

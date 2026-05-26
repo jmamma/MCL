@@ -21,6 +21,11 @@ static uint8_t md_swing_q14_to_amount(uint32_t swing_q14) {
   return amount > 30 ? 30 : (uint8_t)amount;
 }
 
+static bool md_step_descriptor_has_data(const MDSeqStepDescriptor &step) {
+  const uint8_t *bytes = reinterpret_cast<const uint8_t *>(&step);
+  return (bytes[0] | bytes[1]) != 0;
+}
+
 #if defined(__AVR__)
 static void md_swap_mask_bits(uint64_t &mask, uint8_t i, uint8_t j) {
   uint8_t *bytes = reinterpret_cast<uint8_t *>(&mask);
@@ -171,7 +176,7 @@ void MDSeqTrack::set_length(uint8_t len, bool expand) {
   CLEAR_LOCK();
   if (expand && old_length <= 16 && length >= 16) {
     for (uint8_t n = old_length; n < 64; n++) {
-      if ((*(uint16_t *)&(steps[n])) != 0) {
+      if (md_step_descriptor_has_data(steps[n])) {
         expand = false;
         return;
       }

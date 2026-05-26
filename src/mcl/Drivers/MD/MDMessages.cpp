@@ -512,8 +512,7 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
     encoder->start7Bit();
     for (uint8_t i = 0; i < 16; i++) {
       // Ensure LFSR magic marker is set for firmware compat
-      uint16_t *lfo_states2 = (uint16_t *) &lfos[i].state[5 + 18];
-      if (!lfo_states2[0] && !lfo_states2[1]) { lfo_states2[1] = 0x29a; } // 666
+      lfos[i].ensure_lfsr_magic();
       encoder->pack((uint8_t *)&lfos[i], 5 + 31);
     }
     encoder->stop7Bit();
