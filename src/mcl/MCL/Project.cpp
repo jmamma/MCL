@@ -1255,7 +1255,22 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
     }
 
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
-      switch (row_header.track_type[column]) {
+      uint8_t track_type = row_header.track_type[column];
+      if ((track_type >= MD_TRACK_TYPE && track_type <= EXT_TRACK_TYPE) ||
+          track_type == MNM_TRACK_TYPE) {
+        LegacyGridTrackHeader header;
+        header.active = track_type;
+        if (!read_legacy_header(grids[grid], column, row, track_type,
+                                &header)) {
+          if (header.active != track_type &&
+              grids[grid].clear_slot(column, row, true)) {
+            continue;
+          }
+          return false;
+        }
+      }
+
+      switch (track_type) {
       case MD_TRACK_TYPE:
         if (grid == 0 &&
             !migrate_md_track_native_swing(grids[grid], column, row)) {
