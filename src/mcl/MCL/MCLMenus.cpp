@@ -206,68 +206,63 @@ const uint8_t *const menu_target_param[] PROGMEM = {
 };
 
 const menu_function_ptr_t menu_target_functions[] PROGMEM = {
-    { .fn = nullptr },
     // 1 - mclsys_apply_config
     { .fn = mclsys_apply_config },
-    // 2
+    // 2 - new_project_from_menu
     { .fn = new_project_from_menu },
-    // 3
+    // 3 - opt_trackid_handler
     { .fn = opt_trackid_handler },
+    // 4 - opt_mask_handler
     { .fn = opt_mask_handler },
+    // 5 - opt_speed_handler
     { .fn = opt_speed_handler },
+    // 6 - opt_length_handler
     { .fn = opt_length_handler },
+    // 7 - opt_channel_handler
     { .fn = opt_channel_handler },
+    // 8 - opt_copy_track_handler_cb
     { .fn = opt_copy_track_handler_cb },
+    // 9 - opt_clear_track_handler
     { .fn = opt_clear_track_handler },
+    // 10 - opt_clear_locks_handler
     { .fn = opt_clear_locks_handler },
+    // 11 - opt_paste_track_handler
     { .fn = opt_paste_track_handler },
+    // 12 - opt_shift_track_handler
     { .fn = opt_shift_track_handler },
+    // 13 - opt_reverse_track_handler
     { .fn = opt_reverse_track_handler },
-    // 14
+    // 14 - seq_menu_handler
     { .fn = seq_menu_handler },
-    // 15
-    { .fn = nullptr },
-    { .fn = nullptr },
-    { .fn = nullptr },
-    { .fn = nullptr },
-    // 19
-    { .fn = nullptr },
-    // 20
+    // 15 - rename_row
     { .fn = rename_row },
-    // 21
+    // 16 - apply_slot_changes_cb
     { .fn = apply_slot_changes_cb },
-#ifdef WAV_DESIGNER
-    // 22
+    // 17 - wav_render
     { .fn = wav_render },
-    // 23
+    // 18 - wavdesign_menu_handler
     { .fn = wavdesign_menu_handler },
-#else
-    // 22
-    { .fn = nullptr },
-    // 23
-    { .fn = nullptr },
-#endif
-    // 24
+    // 19 - mclsys_apply_config_midi
     { .fn = mclsys_apply_config_midi },
-    // 25
+    // 20 - md_import
     { .fn = md_import },
-    // 26
+    // 21 - usb_dfu_mode
     { .fn = usb_dfu_mode },
-    // 27
+    // 22 - usb_os_update
     { .fn = usb_os_update },
-    // 28
+    // 23 - usb_disk_mode
     { .fn = usb_disk_mode },
-    // 29
+    // 24 - mcl_setup
     { .fn = mcl_setup },
-    // 30
+    // 25 - rename_perf
     { .fn = rename_perf },
-    // 31
+    // 26 - opt_transpose_track_handler
     { .fn = opt_transpose_track_handler },
-    // 32
+    // 27 - open_primary_driver_config
     { .fn = open_primary_driver_config },
-    // 33
+    // 28 - open_secondary_driver_config
     { .fn = open_secondary_driver_config },
-    // 34
+    // 29 - opt_swing_handler
     { .fn = opt_swing_handler },
 };
 MenuPage<aux_config_page_N> aux_config_page(&menu_value_encoder,

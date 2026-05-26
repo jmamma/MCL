@@ -17,12 +17,12 @@ menu_t<boot_menu_page_N> boot_menu_layout = {
     "BOOT",
     {
         //               m  r  n  d  p  f  o
-        {"OS UPGRADE",  0, 0, 0, 0, NULL_PAGE, 27, 0},
+        {"OS UPGRADE",  0, 0, 0, 0, NULL_PAGE, 22, 0},
 #if defined(__AVR__)
-        {"DFU MODE",    0, 0, 0, 0, NULL_PAGE, 26, 0},
+        {"DFU MODE",    0, 0, 0, 0, NULL_PAGE, 21, 0},
 #endif
-        {"USB DISK",    0, 0, 0, 0, NULL_PAGE, 28, 0},
-        {"EXIT",        0, 0, 0, 0, NULL_PAGE, 29, 0},
+        {"USB DISK",    0, 0, 0, 0, NULL_PAGE, 23, 0},
+        {"EXIT",        0, 0, 0, 0, NULL_PAGE, 24, 0},
     },
     0
 };
@@ -45,8 +45,8 @@ menu_t<system_menu_page_N> system_menu_layout = {
         {"LOAD PROJECT", 0, 0, 0, 0, LOAD_PROJ_PAGE, 0, 0},
         //{"CONV PROJECT", 0, 0, 0, 0, 2, 0, 0},
         {"MIDI",         0, 0, 0, 0, MIDI_CONFIG_PAGE, 0, 0},
-        {"DRIVER 1",     0, 0, 0, 0, NULL_PAGE, 32, 0},
-        {"DRIVER 2",     0, 0, 0, 0, NULL_PAGE, 33, 0},
+        {"DRIVER 1",     0, 0, 0, 0, NULL_PAGE, 27, 0},
+        {"DRIVER 2",     0, 0, 0, 0, NULL_PAGE, 28, 0},
         {"PAGE SETUP",   0, 0, 0, 0, AUX_CONFIG_PAGE, 0, 0},
         {"SYSTEM",       0, 0, 0, 0, MCL_CONFIG_PAGE, 0, 0},
     },
@@ -131,7 +131,7 @@ menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
         {"GRID X", 0, 0, 0, 0, GRIDX_MENU_PAGE, 0, 0},
         {"GRID Y", 0, 0, 0, 0, GRIDY_MENU_PAGE, 0, 0},
     },
-    24
+    19
 };
 
 menu_t<gridx_menu_page_N> gridx_menu_layout = {
@@ -142,7 +142,7 @@ menu_t<gridx_menu_page_N> gridx_menu_layout = {
         {"PORT:", GRIDX_PORT_MIN, GRIDX_PORT_RANGE, GRIDX_PORT_OPTIONS,
          67, NULL_PAGE, 0, GRIDX_PORT_OPTIONS_OFFSET},
     },
-    24
+    19
 };
 
 menu_t<gridy_menu_page_N> gridy_menu_layout = {
@@ -153,7 +153,7 @@ menu_t<gridy_menu_page_N> gridy_menu_layout = {
         {"PORT:", GRIDY_PORT_MIN, GRIDY_PORT_RANGE, GRIDY_PORT_OPTIONS,
          69, NULL_PAGE, 0, GRIDY_PORT_OPTIONS_OFFSET},
     },
-    24
+    19
 };
 
 menu_t<midiport_menu_page_N> midiport_menu_layout = {
@@ -172,7 +172,7 @@ menu_t<midiport_menu_page_N> midiport_menu_layout = {
         {"USB",    0, 0, 0, 0, USBPORT_MENU_PAGE, 0, 0},
     },
 #endif
-    24
+    19
 };
 
 menu_t<port1_menu_page_N> port1_menu_layout = {
@@ -180,7 +180,7 @@ menu_t<port1_menu_page_N> port1_menu_layout = {
     {
         {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 2, NULL_PAGE, 0, 54},
     },
-    24
+    19
 };
 
 menu_t<port2_menu_page_N> port2_menu_layout = {
@@ -188,7 +188,7 @@ menu_t<port2_menu_page_N> port2_menu_layout = {
     {
         {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 3, NULL_PAGE, 0, 54},
     },
-    24
+    19
 };
 
 menu_t<usbport_menu_page_N> usbport_menu_layout = {
@@ -196,7 +196,7 @@ menu_t<usbport_menu_page_N> usbport_menu_layout = {
     {
         {"TURBO:",  0, TURBO_RANGE, TURBO_RANGE, 55, NULL_PAGE, 0, 54},
     },
-    24
+    19
 };
 
 menu_t<midiprogram_menu_page_N> midiprogram_menu_layout = {
@@ -206,7 +206,7 @@ menu_t<midiprogram_menu_page_N> midiprogram_menu_layout = {
         {"PRG IN:", 0, 18, 2, 47, NULL_PAGE, 0, 18},
         {"PRG OUT:", 0, 17, 2, 48, NULL_PAGE, 0, 18},
     },
-    24
+    19
 };
 
 
@@ -227,7 +227,7 @@ menu_t<midiclock_menu_page_N> midiclock_menu_layout = {
         {"CLOCK SEND:", 0, 4, 4, 6, NULL_PAGE, 0, 10},
         {"TRANS SEND:",  0, 4, 4, 54, NULL_PAGE, 0, 10},
     },
-    24
+    19
 };
 
 menu_t<midiroute_menu_page_N> midiroute_menu_layout = {
@@ -239,7 +239,7 @@ menu_t<midiroute_menu_page_N> midiroute_menu_layout = {
         {"USB FWD:", 0, 4, 4, 52, NULL_PAGE, 0, 92},
 
     },
-    24
+    19
 };
 
 menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
@@ -250,7 +250,7 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
         {"POLY CHAN:",  0, 17, 2, 46, NULL_PAGE, 0, 18},
         {"TRIG CHAN:",   0, 17, 2, 57, NULL_PAGE, 0, 18},
     },
-    24
+    19
 };
 
 menu_t<midigeneric_menu_page_N> midigeneric_menu_layout = {
@@ -262,7 +262,7 @@ menu_t<midigeneric_menu_page_N> midigeneric_menu_layout = {
         {"CC FWD:", 0, 2, 2, 11, NULL_PAGE, 0, 25},
         {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 113},
     },
-    24
+    19
 };
 
 
@@ -284,7 +284,7 @@ menu_t<md_import_page_N> mdimport_menu_layout = {
         {"SRC: ",  0, 128, 128, 43, NULL_PAGE, 0, 192},
         {"DEST: ", 0, 128, 128, 44, NULL_PAGE, 0, 192},
         {"COUNT:", 1, 129,  0,  45, NULL_PAGE, 0, 0},
-        {"RUN",    0,   0,  0,   0, NULL_PAGE, 25, 0},
+        {"RUN",    0,   0,  0,   0, NULL_PAGE, 20, 0},
     },
     0
 };
@@ -333,7 +333,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"SPEED:",      0, 7,                   7,                   22, NULL_PAGE,  5,  41},
         {"LENGTH:",     1, 65,                 0,                   23, NULL_PAGE,  6,  0},
         {"LENGTH:",     2, 129,                 0,                   23, NULL_PAGE,  6,  0},
-        {"SWING:",      50, 81,                 0,                   73, NULL_PAGE,  34, MENU_OPTIONS_PERCENT},
+        {"SWING:",      50, 81,                 0,                   73, NULL_PAGE,  29, MENU_OPTIONS_PERCENT},
         {"CHANNEL:",    1, 17,                  0,                   24, NULL_PAGE,  7,  0},
         {"COPY:  ",     0, 3,                   3,                   25, NULL_PAGE,  8,  27},
         {"CLEAR:",      0, 3,                   3,                   26, NULL_PAGE,  9,  27},
@@ -341,7 +341,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"PASTE:",      0, 3,                   3,                   27, NULL_PAGE,  11, 27},
         {"SHIFT:",      0, 5,                   5,                   28, NULL_PAGE,  12, 35},
         {"REVERSE:",    0, 3,                   3,                   29, NULL_PAGE,  13, 27},
-        {"TRAN:",       0, 50,                  51,                  63, NULL_PAGE,  31, 193},
+        {"TRAN:",       0, 50,                  51,                  63, NULL_PAGE,  26, 193},
         {"POLYPHONY",   0, 0,                   0,                   0,  POLY_PAGE,  0,  0},
         {"QUANT:",      0, 2,                   2,                   42, NULL_PAGE,  0,  25},
         {"CC REC:",     0, 2,                   2,                   30, NULL_PAGE,  0,  25},
@@ -367,9 +367,9 @@ menu_t<grid_slot_page_N> slot_menu_layout = {
         {"CLEAR:",  0, 2,   2, 36, NULL_PAGE, 0,  33},
         {"COPY:  ", 0, 2,   2, 37, NULL_PAGE, 0,  33},
         {"PASTE:",  0, 2,   2, 38, NULL_PAGE, 0,  33},
-        {"RENAME",  0, 0,   0, 0,  NULL_PAGE, 20, 0},
+        {"RENAME",  0, 0,   0, 0,  NULL_PAGE, 15, 0},
     },
-    21
+    16
 };
 
 menu_t<wavdesign_menu_page_N> wavdesign_menu_layout = {
@@ -378,9 +378,9 @@ menu_t<wavdesign_menu_page_N> wavdesign_menu_layout = {
         //           m  r  n  d   p  f   o
         {"EDIT:",    0, 4, 4, 40, NULL_PAGE, 0,  80},
         {"WAV:",     0, 6, 6, 41, NULL_PAGE, 0,  74},
-        {"TRANSFER", 0, 0, 0, 0,  NULL_PAGE, 22, 0},
+        {"TRANSFER", 0, 0, 0, 0,  NULL_PAGE, 17, 0},
     },
-    23
+    18
 };
 
 menu_t<perf_menu_page_N> perf_menu_layout = {
@@ -389,7 +389,7 @@ menu_t<perf_menu_page_N> perf_menu_layout = {
         //           m  r  n  d   p  f   o
 
         {"CTRL SEL:",0,  4, 4, 59, NULL_PAGE, 0,  109},
-        {"RENAME",  0, 0,   0, 0,  NULL_PAGE, 30, 0},
+        {"RENAME",  0, 0,   0, 0,  NULL_PAGE, 25, 0},
       //  {"PARAM:",    0, 17, 1, 58, NULL_PAGE, 0,  110},
     },
     0
