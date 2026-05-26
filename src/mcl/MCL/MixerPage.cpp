@@ -322,7 +322,7 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
   sync_selected_mixer_device();
   set_display_mode(param);
 
-  int8_t dir = (int8_t)(enc->getValue() - enc->old);
+  int8_t dir = consume_centered_encoder_delta(enc);
   MidiDeviceMixerValue newval;
 
   uint8_t len = mixer_track_count();
@@ -337,8 +337,6 @@ void MixerPage::adjust_param(EncoderParent *enc, uint8_t param) {
       }
     }
   }
-  enc->cur = 64 + dir;
-  enc->old = 64;
 }
 
 void MixerPage::display() {

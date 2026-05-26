@@ -124,7 +124,7 @@ void OscPage::loop() {
   }
 
   int16_t newval;
-  int8_t diff = enc_->cur - enc_->old;
+  int8_t diff = consume_centered_encoder_delta(enc_);
   for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
       if (osc_waveform == SIN_OSC) {
@@ -151,8 +151,6 @@ void OscPage::loop() {
       }
     }
   }
-  enc_->cur = 64 + diff;
-  enc_->old = 64;
   if ((osc_waveform == SIN_OSC) || (osc_waveform == USR_OSC)) {
     if (!key_interface.state) {
       key_interface.on();

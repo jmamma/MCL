@@ -32,16 +32,22 @@ int MCLExpEncoder::update(encoder_t *enc) {
   return cur;
 }
 
+int8_t consume_centered_encoder_delta(EncoderParent *enc) {
+  int8_t diff = (int8_t)(enc->cur - enc->old);
+  enc->cur = 64 + diff;
+  enc->old = 64;
+  return diff;
+}
+
 
 int MCLRelativeEncoder::update(encoder_t *enc) {
-  if (cur == old) {
-   int inc = 0;
-   if (enc) {
-     inc = update_rotations(enc);
-     inc = enc->button ? inc * fast_speed : inc;
-   }
-   cur = inc;
+  old = 0;
+  cur = 0;
+  if (enc) {
+    cur = update_rotations(enc);
+    if (enc->button) {
+      cur *= fast_speed;
+    }
   }
   return cur;
 }
-

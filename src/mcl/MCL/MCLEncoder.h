@@ -80,4 +80,6 @@ class MCLRelativeEncoder : public MCLEncoder {
   int update(encoder_t *enc) override;
 };
 
+int8_t consume_centered_encoder_delta(EncoderParent *enc);
+
 #endif /* MCLENCODER_H__ */
