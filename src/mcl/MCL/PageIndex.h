@@ -32,9 +32,7 @@ enum PageIndex : uint8_t {
     RAM_PAGE_B,
     // Configuration pages
     LOAD_PROJ_PAGE,
-#ifdef MCL_HAS_PROJECT_BACKUP
     PROJECT_VERSION_PAGE,
-#endif
     MIDI_CONFIG_PAGE,
     MD_CONFIG_PAGE,
     CHAIN_CONFIG_PAGE,

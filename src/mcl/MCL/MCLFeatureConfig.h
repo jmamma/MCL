@@ -100,3 +100,12 @@
 #ifndef MCL_DISABLE_FILE_MOVE
 #define MCL_HAS_FILE_MOVE 1
 #endif
+
+/*
+ * Legacy project conversion/migration. Define MCL_DISABLE_PROJECT_CONVERSION
+ * to keep project version checks but remove automatic conversion of older
+ * readable project formats.
+ */
+#ifndef MCL_DISABLE_PROJECT_CONVERSION
+#define MCL_HAS_PROJECT_CONVERSION 1
+#endif

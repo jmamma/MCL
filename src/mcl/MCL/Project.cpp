@@ -240,14 +240,19 @@ constexpr uint8_t MIGRATE_PERF_TRACK_LAYOUT = 1 << 2;
 constexpr uint8_t MIGRATE_GRID_PAIRS = 1 << 3;
 constexpr uint8_t MIGRATE_PROJECT_CONFIG = 1 << 4;
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
 #define PROJECT_VERSION_CAN_OPEN(v)                                           \
   ((v) == PROJ_MIN_READABLE_VERSION ||                                        \
    ((v) >= PROJ_VERSION_PERF_TRACK_LAYOUT && (v) <= PROJ_VERSION))
+#else
+#define PROJECT_VERSION_CAN_OPEN(v) ((v) == PROJ_VERSION)
+#endif
 
 bool project_config_valid(const MCLSysConfigData &source) {
   return source.version == CONFIG_VERSION;
 }
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
 void copy_legacy_header(GridTrack &dst, const LegacyGridTrackHeader &src) {
   dst.active = src.active;
   dst.link = src.link;
@@ -536,6 +541,7 @@ bool migrate_ext_like_signed_microtiming(Grid &grid, GridColumn column,
   return write_migrated_track(grid, column, row, track,
                               track.get_track_size());
 }
+#endif
 
 void copy_project_config(MCLSysConfigData *dst,
                          const MCLSysConfigData &source) {
@@ -548,12 +554,14 @@ void copy_project_config(MCLSysConfigData *dst,
   dst->project_config = 0;
 }
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
 void normalize_project_config(MCLSysConfigData *data) {
   data->version = CONFIG_VERSION;
   data->project[0] = '\0';
   data->number_projects = 0;
   data->project_config = 0;
 }
+#endif
 
 void apply_project_config(MCLSysConfigData *dst,
                           const MCLSysConfigData &source) {
@@ -694,7 +702,9 @@ void Project::chdir_projects() {
 
 #define OLD_PROJ_VERSION 2025
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
 bool Project::convert_project(const char *projectname) { return true; }
+#endif
 
 bool Project::split_project_path(const char *projectname,
                                  const char **basename) const {
@@ -803,7 +813,7 @@ bool Project::read_active_grid_pair(const char *projectname, uint8_t *pair) {
     *pair = 0;
   }
   header_file.close();
-  if (!ok || header_version < PROJ_MIN_READABLE_VERSION) {
+  if (!ok || !PROJECT_VERSION_CAN_OPEN(header_version)) {
     return false;
   }
   return true;
@@ -865,6 +875,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   }
 
   uint32_t project_version = version;
+#ifdef MCL_HAS_PROJECT_CONVERSION
   uint8_t migration_flags = 0;
   if (project_version == PROJ_MIN_READABLE_VERSION) {
     migration_flags = MIGRATE_TRACK_STORAGE | MIGRATE_GRID_PAIRS |
@@ -876,6 +887,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     DEBUG_PRINTLN(F("Could not stamp grid headers"));
     return false;
   }
+#endif
 
   uint8_t pair = use_requested_pair ? requested_pair : active_grid_pair;
 
@@ -886,14 +898,18 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     }
     pair = 0;
     active_grid_pair = 0;
+#ifdef MCL_HAS_PROJECT_CONVERSION
     migration_flags |= MIGRATE_GRID_PAIRS;
+#endif
     if (!project_pair_exists(pair, project_basename)) {
       DEBUG_PRINTLN(F("default grid pair missing"));
       return false;
     }
   }
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
   bool write_grid_headers = project_version < PROJ_VERSION_GRID_HEADERS;
+#endif
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     char grid_name[PRJ_NAME_LEN  + 5];
     grids[i].close_file();
@@ -915,6 +931,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     if (grids[i].read_header()) {
       grid_version = grids[i].version;
     } else {
+#ifdef MCL_HAS_PROJECT_CONVERSION
       write_grid_headers = true;
       if (project_version >= PROJ_VERSION_GRID_HEADERS) {
         // Older backup pairs can be headerless even after the master project
@@ -922,19 +939,26 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
         // legacy storage so loading that backup upgrades it in place.
         grid_version = PROJ_MIN_READABLE_VERSION;
       }
+#else
+      DEBUG_PRINTLN(F("Grid header missing"));
+      return false;
+#endif
     }
     if (!PROJECT_VERSION_CAN_OPEN(grid_version)) {
       DEBUG_PRINTLN(F("Grid version incompatible"));
       return false;
     }
+#ifdef MCL_HAS_PROJECT_CONVERSION
     if (grid_version == PROJ_MIN_READABLE_VERSION) {
       migration_flags |= MIGRATE_TRACK_STORAGE;
     }
     if (grid_version < PROJ_VERSION) {
       write_grid_headers = true;
     }
+#endif
   }
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
   if (migration_flags) {
     draw_wait_popup("UPGRADING PROJECT");
   }
@@ -954,6 +978,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       }
     }
   }
+#endif
   if (use_requested_pair) {
     active_grid_pair = requested_pair;
   }
@@ -965,9 +990,12 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     copy_project_config(&cfg, mcl_cfg);
     applied_project_config = true;
   }
-  if ((migration_flags || use_requested_pair || write_grid_headers ||
-       project_version < PROJ_VERSION) &&
-      !write_header()) {
+  bool update_header = use_requested_pair;
+#ifdef MCL_HAS_PROJECT_CONVERSION
+  update_header = update_header || migration_flags || write_grid_headers ||
+                  project_version < PROJ_VERSION;
+#endif
+  if (update_header && !write_header()) {
     return false;
   }
 
@@ -1002,6 +1030,14 @@ bool Project::read_header() {
     return false;
   }
 
+#ifndef MCL_HAS_PROJECT_CONVERSION
+  if (header_version != PROJ_VERSION) {
+    version = header_version;
+    return true;
+  }
+#endif
+
+#ifdef MCL_HAS_PROJECT_CONVERSION
   if (header_version == PROJ_MIN_READABLE_VERSION) {
     version = header_version;
     if (!mcl_sd.read_data((uint8_t *)(ProjectHeader *)this +
@@ -1021,6 +1057,7 @@ bool Project::read_header() {
     }
     return true;
   }
+#endif
 
   version = header_version;
   if (!mcl_sd.read_data((uint8_t *)(ProjectHeader *)this +
@@ -1052,6 +1089,7 @@ bool Project::check_project_version(uint16_t min_version) {
   return PROJECT_VERSION_CAN_OPEN(version);
 }
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
 bool NOINLINE() Project::migrate_legacy_md_aux_slots(
     GridRow row, GridRowHeader *grid_x_header) {
   if (grid_x_header == nullptr) {
@@ -1344,6 +1382,7 @@ bool NOINLINE() Project::migrate_grid_post_storage_tracks(
   draw_upgrade_progress(grid, GRID_LENGTH);
   return grids[grid].sync();
 }
+#endif
 
 bool Project::write_header() {
 
@@ -1384,6 +1423,7 @@ bool Project::store_config_from_system() {
   return write_header();
 }
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
 bool Project::stamp_existing_grid_headers(const char *basename,
                                           uint32_t grid_version) {
   for (uint8_t pair = 0; pair < 128; pair++) {
@@ -1418,6 +1458,7 @@ bool Project::stamp_existing_grid_headers(const char *basename,
   }
   return true;
 }
+#endif
 
 bool Project::copy_grid_pair(const char *from_project,
                              const char *from_basename,

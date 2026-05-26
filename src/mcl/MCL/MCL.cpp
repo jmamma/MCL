@@ -93,6 +93,8 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
     { .ptr = &load_proj_page },
 #ifdef MCL_HAS_PROJECT_BACKUP
     { .ptr = &project_version_page },
+#else
+    { .ptr = &load_proj_page },
 #endif
     { .ptr = &midi_config_page },
     { .ptr = &md_config_page },

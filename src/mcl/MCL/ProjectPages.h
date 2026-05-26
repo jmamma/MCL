@@ -9,7 +9,9 @@
 #ifdef MCL_HAS_PROJECT_BACKUP
 #include "ProjectVersionPage.h"
 #endif
+#ifdef MCL_HAS_PROJECT_CONVERSION
 #include "ConvertProjectPage.h"
+#endif
 
 extern MCLEncoder loadproj_param1;
 

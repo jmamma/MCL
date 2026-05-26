@@ -3,6 +3,9 @@
 #ifndef CONVERTPROJECTPAGE_H__
 #define CONVERTPROJECTPAGE_H__
 
+#include "MCLFeatureConfig.h"
+
+#ifdef MCL_HAS_PROJECT_CONVERSION
 #include "GUI.h"
 #include "FileBrowserPage.h"
 
@@ -18,5 +21,6 @@ public:
   virtual void on_select(const char* entry);
   void init();
 };
+#endif
 
 #endif /* CONVERTPROJECTPAGE_H__ */

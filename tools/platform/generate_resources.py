@@ -100,7 +100,7 @@ def build_assets_platform(env, resource_dir, build_dir, gen_dir, platform):
             "-DARDUINO_ARCH_AVR", "-D__AVR_ATmega2560__", "-DAVR", "-std=gnu++1z",
             "-Os", "--short-enums", "-fpermissive", "-fshort-enums",
             "-fdata-sections"
-        ] + env.subst("$_CPPINCFLAGS").split()
+        ] + env.subst("$_CPPDEFFLAGS $_CPPINCFLAGS").split()
     elif platform == "rp2040":
         compiler_flags = env.subst("$CCFLAGS $CXXFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS").split()
     else:

@@ -1,4 +1,6 @@
 #include "ConvertProjectPage.h"
+
+#ifdef MCL_HAS_PROJECT_CONVERSION
 #include "Project.h"
 
 void ConvertProjectPage::init() {
@@ -33,3 +35,4 @@ void ConvertProjectPage::on_select(const char *entry) {
 //    gfx.alert("PROJECT ERROR", "NOT COMPATIBLE");
   }
 }
+#endif
