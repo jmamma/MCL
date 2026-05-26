@@ -467,6 +467,32 @@ static inline void paste_step_from_clipboard(SeqStepTrackRef track,
 #endif
 }
 
+enum SeqPageStepTransfer : uint8_t {
+  SEQ_PAGE_STEP_COPY,
+  SEQ_PAGE_STEP_PASTE,
+  SEQ_PAGE_STEP_CLEAR,
+};
+
+static void transfer_page_steps(SeqStepTrackRef track,
+                                SeqPageStepTransfer transfer) NOINLINE();
+static void transfer_page_steps(SeqStepTrackRef track,
+                                SeqPageStepTransfer transfer) {
+  uint8_t track_len = track.length();
+  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
+    uint8_t step = seq_page_visible_step(n);
+    if (step >= track_len) {
+      return;
+    }
+    if (transfer == SEQ_PAGE_STEP_PASTE) {
+      paste_step_from_clipboard(track, step, n);
+    } else if (transfer == SEQ_PAGE_STEP_CLEAR) {
+      track.clear_step(step);
+    } else {
+      copy_step_to_clipboard(track, step, n);
+    }
+  }
+}
+
 static inline void display_popup(const char *str_P) {
   oled_display.textbox_P(str_P);
   seq_panel_popup_text_P(str_P);
@@ -475,6 +501,40 @@ static inline void display_popup(const char *str_P) {
 static inline void display_popup(const char *str1_P, const char *str2_P) {
   oled_display.textbox_P(str1_P, str2_P);
   seq_panel_popup_text_P(str1_P, str2_P);
+}
+
+static void display_step_popup(SeqStepTrackRef track,
+                               const char *str_P) NOINLINE();
+static void display_step_popup(SeqStepTrackRef track, const char *str_P) {
+  oled_display.textbox_P(str_P);
+  if (track.uses_kit_sound()) {
+    seq_panel_popup_text_P(str_P);
+  }
+}
+
+static void display_step_popup(SeqStepTrackRef track, const char *str1_P,
+                               const char *str2_P,
+                               uint8_t popup_id) NOINLINE();
+static void display_step_popup(SeqStepTrackRef track, const char *str1_P,
+                               const char *str2_P, uint8_t popup_id) {
+  oled_display.textbox_P(str1_P, str2_P);
+  if (track.uses_kit_sound()) {
+    seq_panel_popup_text(popup_id);
+  }
+}
+
+static void display_step_popup(SeqStepTrackRef track, const char *kit_str1_P,
+                               const char *str1_P, const char *str2_P,
+                               uint8_t popup_id) NOINLINE();
+static void display_step_popup(SeqStepTrackRef track, const char *kit_str1_P,
+                               const char *str1_P, const char *str2_P,
+                               uint8_t popup_id) {
+  if (track.uses_kit_sound()) {
+    oled_display.textbox_P(kit_str1_P, str2_P);
+    seq_panel_popup_text(popup_id);
+  } else {
+    oled_display.textbox_P(str1_P, str2_P);
+  }
 }
 
 bool enhanced_swing_window_requested = false;
@@ -1316,12 +1376,8 @@ void opt_clear_track_handler() {
     if (opt_clear == 2) {
 
       SeqStepTrackRef active_track = seq_page_active_step_track();
-      if (active_track.uses_kit_sound()) {
-        seq_panel_popup_text(2);
-        oled_display.textbox_P(mclstr_clear_md, mclstr_tracks);
-      } else {
-        oled_display.textbox_P(mclstr_clear, mclstr_tracks);
-      }
+      display_step_popup(active_track, mclstr_clear_md, mclstr_clear,
+                         mclstr_tracks, 2);
       oled_display.display();
       uint8_t old_mutes[16];
       for (uint8_t n = 0; n < seq_page_step_track_count(); n++) {
@@ -1459,12 +1515,8 @@ void opt_copy_track_handler(uint8_t op) {
 
     if (use_step_tracks) {
       if (!silent) {
-        if (seq_page_active_step_track().uses_kit_sound()) {
-          oled_display.textbox_P(mclstr_copy_md, mclstr_tracks);
-          seq_panel_popup_text(1);
-        } else {
-          oled_display.textbox_P(mclstr_copy, mclstr_tracks);
-        }
+        display_step_popup(seq_page_active_step_track(), mclstr_copy_md,
+                           mclstr_copy, mclstr_tracks, 1);
         oled_display.display();
       }
       mcl_clipboard.copy_sequencer();
@@ -1482,10 +1534,8 @@ void opt_copy_track_handler(uint8_t op) {
   if (opt_copy == 1) {
     if (use_step_tracks) {
       if (!silent) {
-        oled_display.textbox_P(mclstr_copy, mclstr_track);
-        if (seq_page_active_step_track().uses_kit_sound()) {
-          seq_panel_popup_text(4);
-        }
+        display_step_popup(seq_page_active_step_track(), mclstr_copy,
+                           mclstr_track, 4);
       }
       mcl_clipboard.copy_track = last_primary_track;
       mcl_clipboard.copy_sequencer_track(last_primary_track);
@@ -1520,19 +1570,13 @@ void opt_paste_track_handler() {
 
     if (use_step_tracks) {
       if (!undo) {
-        if (seq_page_active_step_track().uses_kit_sound()) {
-          oled_display.textbox_P(mclstr_paste_md, mclstr_tracks);
-          seq_panel_popup_text(3);
-        } else {
-          oled_display.textbox_P(mclstr_paste, mclstr_tracks);
-        }
+        display_step_popup(seq_page_active_step_track(), mclstr_paste_md,
+                           mclstr_paste, mclstr_tracks, 3);
         oled_display.display();
       } else {
-        oled_display.textbox_P(mclstr_undo, mclstr_tracks);
+        display_step_popup(seq_page_active_step_track(), mclstr_undo,
+                           mclstr_tracks, 22);
         oled_display.display();
-        if (seq_page_active_step_track().uses_kit_sound()) {
-          seq_panel_popup_text(22);
-        }
       }
       mcl_clipboard.paste_sequencer();
     } else {
@@ -1548,19 +1592,14 @@ void opt_paste_track_handler() {
   if (opt_paste == 1) {
     if (use_step_tracks) {
       bool is_poly = false;
+      SeqStepTrackRef active_track = seq_page_active_step_track();
       if (!undo) {
-        oled_display.textbox_P(mclstr_paste, mclstr_track);
-        if (seq_page_active_step_track().uses_kit_sound()) {
-          seq_panel_popup_text(6);
-        }
+        display_step_popup(active_track, mclstr_paste, mclstr_track, 6);
       } else {
-        oled_display.textbox_P(mclstr_undo, mclstr_track);
         uint16_t poly_mask = seq_page_active_poly_mask();
         is_poly = seq_page_active_step_track_uses_poly_mask() &&
                   poly_mask;
-        if (seq_page_active_step_track().uses_kit_sound()) {
-          seq_panel_popup_text(23);
-        }
+        display_step_popup(active_track, mclstr_undo, mclstr_track, 23);
       }
       if (is_poly) {
         uint16_t poly_mask = seq_page_active_poly_mask();
@@ -1600,16 +1639,8 @@ void opt_clear_page_handler() {
     opt_copy_page_handler(PAGE_UNDO);
   }
   SeqStepTrackRef track = seq_page_active_step_track();
-  oled_display.textbox_P(mclstr_clear, mclstr_page);
-  if (track.uses_kit_sound()) {
-    seq_panel_popup_text(57);
-  }
-  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
-    uint8_t step = seq_page_visible_step(n);
-    if (step >= track.length())
-      return;
-    track.clear_step(step);
-  }
+  display_step_popup(track, mclstr_clear, mclstr_page, 57);
+  transfer_page_steps(track, SEQ_PAGE_STEP_CLEAR);
   track.clean_params();
 }
 
@@ -1625,41 +1656,20 @@ void opt_copy_page_handler(uint8_t op) {
 
   SeqStepTrackRef track = seq_page_active_step_track();
   if (!silent) {
-    oled_display.textbox_P(mclstr_copy, mclstr_page);
-    if (track.uses_kit_sound()) {
-      seq_panel_popup_text(54);
-    }
+    display_step_popup(track, mclstr_copy, mclstr_page, 54);
   }
-  uint8_t track_len = track.length();
-  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
-    uint8_t step = seq_page_visible_step(n);
-    if (step >= track_len)
-      return;
-    copy_step_to_clipboard(track, step, n);
-  }
+  transfer_page_steps(track, SEQ_PAGE_STEP_COPY);
 }
 
 void opt_paste_page_handler() {
   SeqStepTrackRef track = seq_page_active_step_track();
   if (opt_undo == PAGE_UNDO) {
     opt_undo = 255;
-    oled_display.textbox_P(mclstr_undo, mclstr_page);
-    if (track.uses_kit_sound()) {
-      seq_panel_popup_text(55);
-    }
+    display_step_popup(track, mclstr_undo, mclstr_page, 55);
   } else {
-    oled_display.textbox_P(mclstr_paste, mclstr_page);
-    if (track.uses_kit_sound()) {
-      seq_panel_popup_text(56);
-    }
+    display_step_popup(track, mclstr_paste, mclstr_page, 56);
   }
-  uint8_t track_len = track.length();
-  for (uint8_t n = 0; n < kSeqPageVisibleSteps; n++) {
-    uint8_t step = seq_page_visible_step(n);
-    if (step >= track_len)
-      return;
-    paste_step_from_clipboard(track, step, n);
-  }
+  transfer_page_steps(track, SEQ_PAGE_STEP_PASTE);
 }
 
 void opt_clear_step_handler() {
@@ -1676,10 +1686,7 @@ void opt_clear_step_handler() {
   }
   uint8_t step = seq_page_visible_step(SeqPage::step_select);
   SeqStepTrackRef track = seq_page_active_step_track();
-  oled_display.textbox_P(mclstr_clear_step);
-  if (track.uses_kit_sound()) {
-    seq_panel_popup_text_P(mclstr_clear_step);
-  }
+  display_step_popup(track, mclstr_clear_step);
   track.clear_step(step);
   track.clean_params();
 }
@@ -1695,10 +1702,7 @@ void opt_copy_step_handler(uint8_t op) {
   }
   SeqStepTrackRef track = seq_page_active_step_track();
   if (!silent) {
-    oled_display.textbox_P(mclstr_copy_step);
-    if (track.uses_kit_sound()) {
-      seq_panel_popup_text_P(mclstr_copy_step);
-    }
+    display_step_popup(track, mclstr_copy_step);
   }
   uint8_t step = seq_page_visible_step(SeqPage::step_select);
   copy_step_to_clipboard(track, step, 0);
@@ -1708,15 +1712,9 @@ void opt_paste_step_handler() {
   SeqStepTrackRef track = seq_page_active_step_track();
   if (opt_undo == STEP_UNDO) {
     opt_undo = 255;
-    oled_display.textbox_P(mclstr_undo_step);
-    if (track.uses_kit_sound()) {
-      seq_panel_popup_text_P(mclstr_undo_step);
-    }
+    display_step_popup(track, mclstr_undo_step);
   } else {
-    oled_display.textbox_P(mclstr_paste_step);
-    if (track.uses_kit_sound()) {
-      seq_panel_popup_text_P(mclstr_paste_step);
-    }
+    display_step_popup(track, mclstr_paste_step);
   }
   uint8_t step = seq_page_visible_step(SeqPage::step_select);
   paste_step_from_clipboard(track, step, 0);
