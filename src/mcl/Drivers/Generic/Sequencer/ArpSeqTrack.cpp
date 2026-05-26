@@ -37,11 +37,20 @@ void ArpSeqTrack::load_data(const ArpSeqData &data) {
   len = 0;
   idx = 0;
   last_note_on = 255;
+#if defined(__AVR__)
   if (enabled && (note_mask[0] || note_mask[1])) {
     render(mode, oct, fine_tune, range, note_mask);
   } else {
     clear_notes();
   }
+#else
+  uint64_t loaded_note_mask[2] = {note_mask[0], note_mask[1]};
+  if (enabled && (loaded_note_mask[0] || loaded_note_mask[1])) {
+    render(mode, oct, fine_tune, range, loaded_note_mask);
+  } else {
+    clear_notes();
+  }
+#endif
 }
 
 void ArpSeqTrack::store_data(ArpSeqData *data) const {

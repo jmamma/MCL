@@ -18,11 +18,13 @@
 
 #if !defined(__AVR__)
 
-class ATTR_PACKED() SPSXTrackSeqStorage {
+#pragma pack(push, 1)
+
+class SPSXTrackSeqStorage {
 public:
   uint8_t seq_version;
 
-  union ATTR_PACKED() SeqDataUnion {
+  union SeqDataUnion {
     MDSeqTrackData legacy;
 #if !defined(__AVR__)
     SPSXSeqTrackData spsx;
@@ -30,8 +32,8 @@ public:
   } seq_data;
 };
 
-class ATTR_PACKED() SPSXTrackStorage : public SPSXTrackSeqStorage,
-                                       public SeqTrackModStorage {
+class SPSXTrackStorage : public SPSXTrackSeqStorage,
+                         public SeqTrackModStorage {
 public:
   void init_storage() {
     seq_version = SPSX_SEQ_VERSION_LEGACY;
@@ -40,11 +42,14 @@ public:
   }
 };
 
+static_assert(sizeof(SPSXTrackSeqStorage) ==
+                  sizeof(uint8_t) + sizeof(SPSXTrackSeqStorage::SeqDataUnion),
+              "SPSXTrackSeqStorage storage size changed");
 static_assert(sizeof(SPSXTrackStorage) ==
                   sizeof(SPSXTrackSeqStorage) + sizeof(SeqTrackModStorage),
               "SPSXTrackStorage storage size changed");
 
-class ATTR_PACKED() SPSXTrack : public DeviceTrack {
+class SPSXTrack : public DeviceTrack {
 public:
   // Machine data first — fixed offset for memcmp_sound / get_sound_data_ptr
   SPSMachine machine;
@@ -121,6 +126,8 @@ public:
 
 private:
 };
+
+#pragma pack(pop)
 
 static_assert(MEMORY_ALIGN(sizeof(SPSXTrack) - sizeof(void*)) <= SPSX_TRACK_LEN,
               "SPSXTrack outgrew SPSX_TRACK_LEN — bump SPSX_TRACK_LEN or shrink");
