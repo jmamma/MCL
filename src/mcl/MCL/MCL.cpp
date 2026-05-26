@@ -398,45 +398,32 @@ bool mcl_handleEvent(gui_event_t *event) {
         seq_step_page.bootstrap_record();
         return true;
       }
-      case MDX_KEY_COPY: {
-        if (current_page == SEQ_STEP_PAGE || current_page == PERF_PAGE_0)
-          break;
-        if (current_page != SEQ_PTC_PAGE &&
-            (key_interface.is_key_down(MDX_KEY_SCALE) ||
-             key_interface.is_key_down(MDX_KEY_NO))) {
-          // Ignore scale + copy if page != seq_step_page
-          break;
-        }
-        opt_copy = 2;
-        if (current_page == SEQ_PTC_PAGE ||
-            current_page == SEQ_EXTSTEP_PAGE) {
-          opt_copy = SeqPage::recording ? 2 : 1;
-        }
-        else {
-          opt_midi_device_capture = &MD;
-        }
-        opt_copy_track_handler_cb();
-        break;
-      }
+      case MDX_KEY_COPY:
       case MDX_KEY_PASTE: {
         if (current_page == SEQ_STEP_PAGE || current_page == PERF_PAGE_0)
           break;
         if (current_page != SEQ_PTC_PAGE &&
             (key_interface.is_key_down(MDX_KEY_SCALE) ||
              key_interface.is_key_down(MDX_KEY_NO))) {
-          // Ignore scale + copy if page != seq_step_page
+          // Ignore scale + copy/paste if page != seq_step_page
           break;
         }
-        opt_paste = 2;
+        uint8_t opt = 2;
         if (current_page == SEQ_PTC_PAGE ||
             current_page == SEQ_EXTSTEP_PAGE) {
-          opt_paste = SeqPage::recording ? 2 : 1;
+          opt = SeqPage::recording ? 2 : 1;
         }
         else {
           opt_midi_device_capture = &MD;
         }
-        reset_undo();
-        opt_paste_track_handler();
+        if (key == MDX_KEY_COPY) {
+          opt_copy = opt;
+          opt_copy_track_handler_cb();
+        } else {
+          opt_paste = opt;
+          reset_undo();
+          opt_paste_track_handler();
+        }
         break;
       }
       case MDX_KEY_CLEAR: {
