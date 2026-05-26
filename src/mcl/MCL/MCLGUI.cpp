@@ -484,20 +484,20 @@ void MCLGUI::draw_encoder_strip(uint8_t y_top, Encoder *const encoders[4],
 
 bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
   uint8_t match = 255;
+  LightPage *page = (LightPage *)GUI.currentPage();
 
   for (uint8_t i = 0; i < GUI_NUM_ENCODERS && match == 255; i++) {
-    if (((LightPage *)GUI.currentPage())->encoders[i] == encoder) {
+    if (page->encoders[i] == encoder) {
       match = i;
     }
   }
 
   if (match != 255) {
-    if (clock_diff(((LightPage *)GUI.currentPage())->encoders_used_clock[match],
+    if (clock_diff(page->encoders_used_clock[match],
                    read_clock_ms()) < (uint16_t)timeout || BUTTON_DOWN(Buttons.ENCODER1 + match)) {
       return true;
     } else {
-      ((LightPage *)GUI.currentPage())->encoders_used_clock[match] =
-          read_clock_ms() + timeout + 1;
+      page->encoders_used_clock[match] = read_clock_ms() + timeout + 1;
     }
   }
 
