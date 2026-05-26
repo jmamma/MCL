@@ -1,7 +1,7 @@
 #pragma once
 
 #include "platform.h"
-#include "../MCL/MCLFeatureConfig.h"
+#include "../MCL/MCLDefines.h"
 #include "../MCL/PageIndex.h"
 #include "DeviceCapabilities.h"
 #include "MidiDeviceCapabilities.h"

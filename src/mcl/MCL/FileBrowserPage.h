@@ -7,7 +7,7 @@
 #include "MCLEncoder.h"
 #include "Menu.h"
 #include "MenuPage.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "SeqPage.h"
 #include "MCLSd.h"
 

@@ -1,7 +1,6 @@
 #pragma once
 #include <stdint.h>
 #include "MCLDefines.h"
-#include "MCLFeatureConfig.h"
 
 enum PageIndex : uint8_t {
     // Core pages

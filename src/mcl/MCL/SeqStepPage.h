@@ -3,7 +3,7 @@
 #ifndef SEQSTEPPAGE_H__
 #define SEQSTEPPAGE_H__
 
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "SeqPage.h"
 
 class SeqStepMidiEvents : public MidiCallback {

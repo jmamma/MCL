@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 
 #ifdef MCL_HAS_EXTENDED_PANEL_INPUT
 

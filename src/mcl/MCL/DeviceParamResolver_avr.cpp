@@ -1,4 +1,4 @@
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 
 #if defined(__AVR__)
 

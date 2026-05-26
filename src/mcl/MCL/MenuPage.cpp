@@ -6,7 +6,7 @@
 #include "ResourceManager.h"
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 
 namespace {
 

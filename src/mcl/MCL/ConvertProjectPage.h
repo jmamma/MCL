@@ -3,7 +3,7 @@
 #ifndef CONVERTPROJECTPAGE_H__
 #define CONVERTPROJECTPAGE_H__
 
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
 #include "GUI.h"

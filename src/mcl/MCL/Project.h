@@ -4,7 +4,7 @@
 #define PROJECT_H__
 
 #include "Grid.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "MidiDeviceGrid.h"
 #include "MCLMemory.h"
 #include "MCLSysConfig.h"

@@ -8,7 +8,7 @@
 #endif
 #include "DeviceParamResolver.h"
 #include "MCLClipBoard.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "MCLGUI.h"
 #include "MCLSeq.h"
 #include "MCLStrings.h"

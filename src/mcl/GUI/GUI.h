@@ -8,7 +8,7 @@
 #include "Task.h"
 #include "Vector.h"
 #include "platform.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "Stack.h"
 
 #include "Encoders.h"

@@ -1,6 +1,6 @@
 #include "PageSelectPage.h"
 #include "ResourceManager.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "MCLGUI.h"
 #include "DeviceManager.h"
 #include "MCLStrings.h"

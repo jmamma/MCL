@@ -4,7 +4,7 @@
 
 #include "Arduino.h"
 #include "memory.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 
 #define EXT_TRACKS
 #define LFO_TRACKS

@@ -1,5 +1,5 @@
 #include "MCL.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "ResourceManager.h"
 #include "MCLSd.h"
 #include "MCLGfx.h"

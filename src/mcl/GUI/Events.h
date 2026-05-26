@@ -4,7 +4,7 @@
 #include "RingBuffer.h"
 #include "helpers.h"
 #include "platform.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "GUI_hardware.h"
 
 // Event type definitions

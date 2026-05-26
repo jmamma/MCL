@@ -1,4 +1,4 @@
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 
 #ifdef MCL_HAS_DEVICE_CAPABILITIES
 

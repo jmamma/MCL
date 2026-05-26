@@ -4,7 +4,7 @@
 #define PROJECTPAGES_H__
 
 #include "MCLEncoder.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "LoadProjectPage.h"
 #ifdef MCL_HAS_PROJECT_BACKUP
 #include "ProjectVersionPage.h"

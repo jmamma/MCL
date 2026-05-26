@@ -4,7 +4,7 @@
 #define PROJECTVERSIONPAGE_H__
 
 #include "FileBrowserPage.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "MCLMemory.h"
 
 #ifdef MCL_HAS_PROJECT_BACKUP

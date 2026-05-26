@@ -1,7 +1,7 @@
 #include "SeqStepPage.h"
 #include "GUI_hardware.h"
 #include "GridPages.h"
-#include "MCLFeatureConfig.h"
+#include "MCLDefines.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
 #include "MCLSysConfig.h"
