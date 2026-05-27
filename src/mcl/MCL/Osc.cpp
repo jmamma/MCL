@@ -8,6 +8,16 @@ float Osc::get_sample(uint32_t sample_number, float freq) {
 }
 void Osc::set_sample_rate(float hz) { sample_rate = hz; }
 
+/* Position of sample_number within one cycle of n_cycle samples: the
+   fractional remainder sample_number mod n_cycle, in floating point. Shared
+   by the pulse/saw/tri/usr oscillators below. Kept out-of-line so the float
+   division is emitted once instead of in every oscillator. */
+static __attribute__((noinline)) float osc_cycle_pos(uint32_t sample_number,
+                                                      float n_cycle) {
+  float cycle = (uint32_t)((float)sample_number / n_cycle);
+  return (float)sample_number - cycle * n_cycle;
+}
+
 float Osc::poly_blep(float t, float freq) {
 
     const float two_pi = 2.0f * (float)PI;
@@ -42,8 +52,7 @@ float PulseOsc::get_sample(uint32_t sample_number, float freq) {
   float n_cycle = (uint16_t)(sample_rate / freq);
 
   sample_number = sample_number + (n_cycle);
-  float cycle_pos = (uint32_t)((float)sample_number / n_cycle);
-  float n = (float)sample_number - cycle_pos * n_cycle;
+  float n = osc_cycle_pos(sample_number, n_cycle);
   float n_edge = (uint16_t)(n_cycle * width);
 
   float out = 0.0;
@@ -72,8 +81,7 @@ float SawOsc::get_sample(uint32_t sample_number, float freq) {
 
   float n_cycle = (uint16_t)(sample_rate / freq);
   sample_number = sample_number + (n_cycle * 0.5f);
-  float cycle_pos = (uint32_t)((float)sample_number / n_cycle);
-  float n = (float)sample_number - cycle_pos * n_cycle;
+  float n = osc_cycle_pos(sample_number, n_cycle);
 
   float n_edge = (uint16_t)(n_cycle * (width + 0.5f));
   float a = ((vmin - vmax) / n_edge);
@@ -95,8 +103,7 @@ float TriOsc::get_sample(uint32_t sample_number, float freq) {
   float n_cycle = (uint16_t)(sample_rate / freq);
   sample_number = sample_number + (n_cycle * 0.75f);
 
-  float cycle_pos = (uint32_t)((float)sample_number / n_cycle);
-  float n = (float)sample_number - cycle_pos * n_cycle;
+  float n = osc_cycle_pos(sample_number, n_cycle);
   float n_edge = (uint16_t)(n_cycle * width);
 
   if (n < n_edge) {
@@ -117,8 +124,7 @@ float UsrOsc::get_sample(uint32_t sample_number, float freq,
 
   float n_cycle = (uint16_t)(sample_rate / freq);
 
-  float cycle_pos = (uint32_t)((float)sample_number / n_cycle);
-  float n = (float)sample_number - cycle_pos * n_cycle;
+  float n = osc_cycle_pos(sample_number, n_cycle);
 
   float partition_size_n = n_cycle / (float)16;
 
