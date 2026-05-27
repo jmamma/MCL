@@ -51,13 +51,12 @@ int8_t legacy_md_microtiming_to_spsx(int8_t microtiming, uint8_t speed) {
   }
 
   uint16_t ticks_per_step = SeqTrack::get_speed_multiplier_int(speed);
-  uint16_t timing_quarter = ticks_per_step / 2;
-  if (timing_quarter == 0) {
-    timing_quarter = 1;
-  }
-
   int16_t ticks = SeqTrack::microtiming_to_ticks(microtiming, ticks_per_step);
-  int16_t spsx_microtiming = (int16_t)((int32_t)ticks * 127 / timing_quarter);
+  int32_t numerator = (int32_t)ticks * 512;
+  int16_t spsx_microtiming =
+      numerator >= 0
+          ? (int16_t)((numerator + ticks_per_step / 2) / ticks_per_step)
+          : (int16_t)-(((-numerator) + ticks_per_step / 2) / ticks_per_step);
   if (spsx_microtiming < -127) {
     spsx_microtiming = -127;
   } else if (spsx_microtiming > 127) {

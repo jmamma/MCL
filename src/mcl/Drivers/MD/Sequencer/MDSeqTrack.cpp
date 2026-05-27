@@ -100,12 +100,8 @@ static int8_t spsx_microtiming_to_md_microtiming(int8_t microtiming,
   if (microtiming == 0) {
     return 0;
   }
-  uint16_t timing_quarter = ticks_per_step / 2;
-  if (timing_quarter == 0) {
-    timing_quarter = 1;
-  }
   int16_t ticks =
-      md_div_round_closest((int32_t)microtiming * timing_quarter, 127);
+      md_div_round_closest((int32_t)microtiming * ticks_per_step, 512);
   return SeqTrack::ticks_to_microtiming(ticks, ticks_per_step);
 }
 #endif
