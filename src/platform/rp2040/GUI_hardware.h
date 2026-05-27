@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include "hardware.h"
 #include "platform.h"
-#include "LED_Hardware.h"
+#include "LED_hardware.h"
 
 #ifdef PLATFORM_TBD
 #include "Ui.h"

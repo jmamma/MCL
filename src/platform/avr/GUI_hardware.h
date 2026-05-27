@@ -3,7 +3,7 @@
 #include <inttypes.h>
 #include "platform.h"
 #include "hardware.h"
-#include "LED_Hardware.h"
+#include "LED_hardware.h"
 
 class SR165Class {
   inline void rst();
