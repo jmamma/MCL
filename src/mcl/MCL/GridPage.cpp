@@ -765,23 +765,17 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   }
 
   if (slot_copy == 1 || (slot_clear == 1 && !undo)) {
+    const char *verb;
     if (slot_clear == 1) {
       slot_undo_x = _col;
       slot_undo_y = getRow();
-      if (width > 0) {
-        oled_display.textbox_P(mclstr_clear, mclstr_slots);
-      } else {
-        oled_display.textbox_P(mclstr_clear, mclstr_slot);
-      }
+      verb = mclstr_clear;
       slot_undo = 1;
     } else {
       slot_undo = 0;
-      if (width > 0) {
-        oled_display.textbox_P(mclstr_copy, mclstr_slots);
-      } else {
-        oled_display.textbox_P(mclstr_copy, mclstr_slot);
-      }
+      verb = mclstr_copy;
     }
+    oled_display.textbox_P(verb, width > 0 ? mclstr_slots : mclstr_slot);
     uint8_t copy_w = (old_col != 255) ? width + param3.cur : width;
     mcl_clipboard.copy(_col + GRID_WIDTH * cur_grid, getRow(), copy_w, height);
   }

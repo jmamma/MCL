@@ -23,6 +23,15 @@ SeqExtStepTrackApi active_ext_step_track() {
   return SeqExtStepTrackRef::active_track();
 }
 
+// Verb to show for a paste/clear popup: "undo" when a page-level undo of the
+// given clip mode is pending, otherwise the supplied verb.
+const char *ext_step_undo_or(uint8_t clip_mode, const char *verb) NOINLINE();
+const char *ext_step_undo_or(uint8_t clip_mode, const char *verb) {
+  bool undo = opt_undo == PAGE_UNDO &&
+              mcl_clipboard.ext_note_clip.mode == clip_mode;
+  return undo ? mclstr_undo : verb;
+}
+
 #ifdef PLATFORM_TBD
 bool seq_ext_step_param_menu_label(uint8_t entry_index, uint8_t option_n,
                                    char *dst, uint8_t dst_len) {
@@ -1822,24 +1831,20 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           key_interface.ignoreNextEvent(MDX_KEY_SCALE);
           return true;
         case MDX_KEY_PASTE: {
-          bool undo =
-              opt_undo == PAGE_UNDO &&
-              mcl_clipboard.ext_note_clip.mode == EXT_NOTE_CLIP_LOCK_PAGE;
           if (paste_lock_clip()) {
-            oled_display.textbox_P(undo ? mclstr_undo : mclstr_paste,
-                                   mclstr_lock_page);
+            oled_display.textbox_P(
+                ext_step_undo_or(EXT_NOTE_CLIP_LOCK_PAGE, mclstr_paste),
+                mclstr_lock_page);
           }
           reset_undo();
           key_interface.ignoreNextEvent(MDX_KEY_SCALE);
           return true;
         }
         case MDX_KEY_CLEAR: {
-          bool undo =
-              opt_undo == PAGE_UNDO &&
-              mcl_clipboard.ext_note_clip.mode == EXT_NOTE_CLIP_LOCK_PAGE;
           if (clear_lock_page()) {
-            oled_display.textbox_P(undo ? mclstr_undo : mclstr_clear,
-                                   mclstr_lock_page);
+            oled_display.textbox_P(
+                ext_step_undo_or(EXT_NOTE_CLIP_LOCK_PAGE, mclstr_clear),
+                mclstr_lock_page);
           }
           key_interface.ignoreNextEvent(MDX_KEY_SCALE);
           return true;
@@ -1875,10 +1880,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_PASTE: {
           if (scale_down) {
             if (mcl_clipboard.ext_note_clip.mode == EXT_NOTE_CLIP_PAGE) {
-              bool undo = opt_undo == PAGE_UNDO;
               if (paste_note_clip()) {
-                oled_display.textbox_P(undo ? mclstr_undo : mclstr_paste,
-                                       mclstr_page);
+                oled_display.textbox_P(
+                    ext_step_undo_or(EXT_NOTE_CLIP_PAGE, mclstr_paste),
+                    mclstr_page);
               }
             }
             reset_undo();
@@ -1896,11 +1901,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_CLEAR: {
           if (scale_down) {
-            bool undo = opt_undo == PAGE_UNDO &&
-                        mcl_clipboard.ext_note_clip.mode == EXT_NOTE_CLIP_PAGE;
             if (clear_note_page()) {
-              oled_display.textbox_P(undo ? mclstr_undo : mclstr_clear,
-                                     mclstr_page);
+              oled_display.textbox_P(
+                  ext_step_undo_or(EXT_NOTE_CLIP_PAGE, mclstr_clear),
+                  mclstr_page);
             }
             key_interface.ignoreNextEvent(MDX_KEY_SCALE);
             return true;
