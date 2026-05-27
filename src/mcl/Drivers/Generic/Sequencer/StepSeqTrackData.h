@@ -64,6 +64,7 @@ public:
     uint64_t slide_mask;
     uint64_t accent_mask;
     uint64_t swing_mask;
+    uint64_t mute_mask;
 
     uint8_t track_length;
     uint8_t track_speed;

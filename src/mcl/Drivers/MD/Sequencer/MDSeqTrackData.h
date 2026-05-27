@@ -108,41 +108,21 @@ public:
 
 class ATTR_PACKED() MDSeqTrackData : public MDSeqTrackDataV1 {
 public:
-  // Storage/sysex mirror for the per-step swing bits above.
-  uint64_t swing_mask;
+  uint64_t mute_mask;
   uint8_t swing_amount;
 
-  void sync_swing_steps_from_mask() {
-    const uint8_t *mask = reinterpret_cast<const uint8_t *>(&swing_mask);
-    uint8_t step = 0;
-    for (uint8_t byte = 0; byte < sizeof(swing_mask); byte++) {
-      uint8_t bits = mask[byte];
-      for (uint8_t bit = 0; bit < 8; bit++, step++) {
-        steps[step].swing = bits & 1;
-        bits >>= 1;
-      }
-    }
-  }
-
-  void sync_swing_mask_from_steps() {
-    uint8_t *mask = reinterpret_cast<uint8_t *>(&swing_mask);
-    uint8_t step = 0;
-    for (uint8_t byte = 0; byte < sizeof(swing_mask); byte++) {
-      uint8_t bits = 0;
-      uint8_t bit_mask = 1;
-      for (uint8_t bit = 0; bit < 8; bit++, step++, bit_mask <<= 1) {
-        if (steps[step].swing) {
-          bits |= bit_mask;
-        }
-      }
-      mask[byte] = bits;
+  // Swing is stored per-step in steps[].swing. This expands a contiguous mask
+  // (bit n -> step n), as used for the default pattern, MD pattern import and
+  // sysex, into those per-step bits.
+  void set_swing_from_mask(uint64_t mask) {
+    for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
+      steps[step].swing = (mask >> step) & 1ULL;
     }
   }
 
   void init() {
     memset(this, 0, sizeof(MDSeqTrackData));
-    swing_mask = MDSEQ_DEFAULT_SWING_MASK;
-    sync_swing_steps_from_mask();
+    set_swing_from_mask(MDSEQ_DEFAULT_SWING_MASK);
   }
 };
 

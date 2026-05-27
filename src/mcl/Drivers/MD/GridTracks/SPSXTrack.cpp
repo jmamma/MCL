@@ -80,7 +80,7 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
                                 SPSXSeqTrack &dest) {
   uint8_t speed = dest.speed;
   dest.SPSXSeqTrackData::init();
-  dest.swing_mask = src.swing_mask;
+  dest.swing_mask = 0;
   dest.swing_amount = src.swing_amount;
 
   memset(dest.locks_params, 0, sizeof(dest.locks_params));
@@ -103,6 +103,9 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
     }
     if (src_step.slide) {
       SPSX_SET_BIT64(dest.slide_mask, step);
+    }
+    if (src_step.swing) {
+      SPSX_SET_BIT64(dest.swing_mask, step);
     }
 
     for (uint8_t lock = 0; lock < NUM_LOCKS; lock++) {
@@ -258,9 +261,8 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
     MDSeqTrack *md_seq_track = static_cast<MDSeqTrack *>(seq_track);
     memcpy(md_seq_track->data(), seq_storage.seq_data.legacy.data(),
            sizeof(MDSeqTrackData));
-    md_seq_track->sync_swing_steps_from_mask();
     load_link_data(seq_track);
-    md_seq_track->clear_mutes();
+    md_seq_track->clear_oneshot();
     md_seq_track->set_length(md_seq_track->length);
     md_seq_track->notes.first_trig = true;
   } else {
@@ -391,10 +393,6 @@ bool SPSXTrack::store_in_grid(GridSlot column, GridRow row,
 
     MDSeqTrack *md_seq_track =
         seq_track ? static_cast<MDSeqTrack *>(seq_track) : nullptr;
-    if (md_seq_track) {
-      md_seq_track->store_mute_state();
-      md_seq_track->sync_swing_mask_from_steps();
-    }
 
     if (column != 255 && online && md_seq_track) {
       get_machine_from_kit(tracknumber);

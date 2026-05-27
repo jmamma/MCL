@@ -237,7 +237,6 @@ class StepSeqDataTrack : public StepSeqTrackData, public StepSeqSlideTrack {
 public:
     static constexpr uint8_t NO_PENDING_SWING_AMOUNT = 0xFF;
 
-    uint64_t mute_mask;
     volatile uint8_t pending_swing_amount;
 
     StepSeqDataTrack() : StepSeqSlideTrack() {
