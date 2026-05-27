@@ -14,8 +14,13 @@ void Osc::set_sample_rate(float hz) { sample_rate = hz; }
    division is emitted once instead of in every oscillator. */
 static __attribute__((noinline)) float osc_cycle_pos(uint32_t sample_number,
                                                       float n_cycle) {
-  float cycle = (uint32_t)((float)sample_number / n_cycle);
-  return (float)sample_number - cycle * n_cycle;
+  // n_cycle is an integer value carried in a float. For the value range the
+  // wavetable renderer uses (sample_number < 2^16, guaranteed by the render
+  // loop's uint16_t counter), the float floor (uint32_t)(sn / nc) equals the
+  // integer floor sn / nc, so the position within the cycle is exactly an
+  // integer modulo. Computing it with integer math drops the per-call float
+  // divide/multiply/subtract while staying bit-identical.
+  return (float)(sample_number % (uint16_t)n_cycle);
 }
 
 float Osc::poly_blep(float t, float freq) {
