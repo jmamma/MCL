@@ -453,6 +453,10 @@ void SPSXSeqTrack::clear_mutes() {
     SPSXSeqDataTrack::clear_mutes();
 }
 
+void SPSXSeqTrack::clear_oneshot() {
+    oneshot_mask = 0;
+}
+
 // ============================================================================
 // Parameter Lock Methods
 // ============================================================================

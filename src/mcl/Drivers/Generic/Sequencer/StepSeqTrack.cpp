@@ -729,16 +729,6 @@ void StepSeqDataTrack::apply_pending_swing_amount() {
     swing_amount = amount;
 }
 
-void StepSeqDataTrack::store_mute_state() {
-    for (uint8_t n = 0; n < STEPSEQ_NUM_STEPS; n++) {
-        if (STEPSEQ_IS_BIT_SET64(mute_mask, n)) {
-            set_step(n, STEPSEQ_MASK_PATTERN, false);
-            clear_step_locks(n);
-        }
-    }
-    clear_mutes();
-}
-
 void StepSeqDataTrack::modify_track(uint8_t dir) {
     uint8_t old_mute_state = mute_state;
     on_modify_track_begin();

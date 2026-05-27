@@ -158,6 +158,7 @@ public:
     // ========================================================================
 
     void clear_mutes() override;
+    void clear_oneshot();
 
     bool preview_step(uint8_t step) override;
 

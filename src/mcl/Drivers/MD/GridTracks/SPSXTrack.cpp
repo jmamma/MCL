@@ -81,6 +81,7 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
   uint8_t speed = dest.speed;
   dest.SPSXSeqTrackData::init();
   dest.swing_mask = 0;
+  dest.mute_mask = src.mute_mask;
   dest.swing_amount = src.swing_amount;
 
   memset(dest.locks_params, 0, sizeof(dest.locks_params));
@@ -129,7 +130,7 @@ void finalize_spsx_seq_load(SPSXSeqTrack &track) {
   if (track.track_speed != 0xFF) {
     track.speed = track.track_speed;
   }
-  track.clear_mutes();
+  track.clear_oneshot();
   track.set_length(track.length);
   track.set_speed(track.speed, track.speed, false);
   track.notes.init();
@@ -349,10 +350,6 @@ bool SPSXTrack::store_in_grid(GridSlot column, GridRow row,
 
     SPSXSeqTrack *spsx_seq_track =
         seq_track ? static_cast<SPSXSeqTrack *>(seq_track) : nullptr;
-    if (spsx_seq_track) {
-      spsx_seq_track->store_mute_state();
-    }
-
     if (column != 255 && online && spsx_seq_track) {
       get_machine_from_kit(tracknumber);
       link.length = seq_track->length;

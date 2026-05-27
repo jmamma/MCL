@@ -1330,6 +1330,7 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   step->active = true;
   step->microtiming = microtiming[n];
   step->swing = steps[n].swing;
+  step->mute = IS_BIT_SET64(mute_mask, n);
 
   uint8_t idx = get_lockidx(n);
   uint8_t lcks = steps[n].locks;
@@ -1357,6 +1358,11 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
   }
   memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
   steps[n].swing = step->swing;
+  if (step->mute) {
+    SET_BIT64(mute_mask, n);
+  } else {
+    CLEAR_BIT64(mute_mask, n);
+  }
 }
 
 uint8_t MDSeqTrack::transpose_pitch(uint8_t pitch, int8_t offset) {

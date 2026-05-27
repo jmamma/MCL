@@ -303,7 +303,6 @@ public:
                    bool timing_adjust = true);
     void request_swing_amount_change(uint8_t amount);
     void apply_pending_swing_amount();
-    void store_mute_state();
 
     void copy_step(uint8_t n, StepSeqStep *step);
     void paste_step(uint8_t n, StepSeqStep *step,

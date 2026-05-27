@@ -32,6 +32,7 @@ public:
   uint8_t locks[NUM_LOCKS];
   int8_t microtiming;
   bool swing;
+  bool mute;
   MDSeqStepDescriptor data;
 };
 
