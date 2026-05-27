@@ -95,6 +95,30 @@ void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row,
   mcl_actions.calc_latency();
 }
 
+// Common trig-group / sequencer-data finalisation shared by the RAM record
+// and play setup paths.
+static void ram_finalize_seq(MDTrack &md_track, MDSeqTrack &md_seq_track,
+                             uint8_t track, uint8_t linked_track,
+                             uint16_t steps) {
+  uint8_t ticks_per_step = md_seq_track.get_ticks_per_step();
+  if (linked_track == 255) {
+    md_track.machine.trigGroup = 255;
+    md_seq_track.set_track_step(0, ticks_per_step);
+  } else if (track > linked_track) {
+    md_track.machine.trigGroup = linked_track;
+    md_seq_track.set_track_step(0, ticks_per_step);
+  } else {
+    md_track.machine.trigGroup = 255;
+  }
+
+  memcpy(&(md_track.seq_data),
+         static_cast<const MDSeqTrackData *>(&md_seq_track),
+         sizeof(MDSeqTrackData));
+
+  md_track.machine.muteGroup = 127;
+  md_track.link.init(mcl_actions.links[track].row, 0, steps, SEQ_SPEED_1X);
+}
+
 void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
                             uint8_t source, uint8_t len, uint8_t rate,
                             uint8_t pan, uint8_t linked_track) {
@@ -154,26 +178,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   memcpy_P(md_track.machine.params + MODEL_AMD, params, sizeof(params));
   md_track.machine.params[MODEL_PAN] = pan;
 
-  uint8_t ticks_per_step = md_seq_track.get_ticks_per_step();
-  if (linked_track == 255) {
-    md_track.machine.trigGroup = 255;
-    md_seq_track.set_track_step(0, ticks_per_step);
-    // md_track.seq_data.conditional[0] = 14;
-  } else if (track > linked_track) {
-    md_track.machine.trigGroup = linked_track;
-    md_seq_track.set_track_step(0, ticks_per_step);
-    // oneshot
-    // md_track.seq_data.conditional[0] = 14;
-  } else {
-    md_track.machine.trigGroup = 255;
-  }
-
-  memcpy(&(md_track.seq_data),
-         static_cast<const MDSeqTrackData *>(&md_seq_track),
-         sizeof(MDSeqTrackData));
-
-  md_track.machine.muteGroup = 127;
-  md_track.link.init(mcl_actions.links[track].row, 0, steps, SEQ_SPEED_1X);
+  ram_finalize_seq(md_track, md_seq_track, track, linked_track, steps);
 
   mcl_actions.dev_sync_slot[0] = track;
 
@@ -402,24 +407,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   memcpy_P(md_track.machine.params, params, sizeof(params));
   md_track.machine.params[MODEL_PAN] = pan;
 
-  uint8_t ticks_per_step = md_seq_track.get_ticks_per_step();
-  if (linked_track == 255) {
-    md_track.machine.trigGroup = 255;
-    md_seq_track.set_track_step(0, ticks_per_step);
-  } else if (track > linked_track) {
-    md_track.machine.trigGroup = linked_track;
-    md_seq_track.set_track_step(0, ticks_per_step);
-  } else {
-    md_track.machine.trigGroup = 255;
-  }
-
-  memcpy(&(md_track.seq_data),
-         static_cast<const MDSeqTrackData *>(&md_seq_track),
-         sizeof(MDSeqTrackData));
-
-  md_track.machine.muteGroup = 127;
-
-  md_track.link.init(mcl_actions.links[track].row, 0, steps, SEQ_SPEED_1X);
+  ram_finalize_seq(md_track, md_seq_track, track, linked_track, steps);
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.lfo.destinationTrack = track;
 
