@@ -326,6 +326,14 @@ bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
   return true;
 }
 
+// Shift a track-referencing column field when a slot is copied to a new
+// column, clamping out-of-range references to 255 (unset).
+static uint8_t remap_grid_col(uint8_t field, GridColumn s_col,
+                              GridColumn d_col) {
+  int dest = (int)d_col + (int)field - (int)s_col;
+  return range_check(dest, 0, 15) ? (uint8_t)dest : 255;
+}
+
 void MDTrack::on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) {
   // bit of a hack to keep lfos modulating the same track.
   if (destination_same) {
@@ -339,23 +347,9 @@ void MDTrack::on_copy(GridColumn s_col, GridColumn d_col, bool destination_same)
       machine.lfo.destinationTrack = d_col;
     }
   } else {
-    int lfo_dest = machine.lfo.destinationTrack - s_col;
-    int trig_dest = machine.trigGroup - s_col;
-    int mute_dest = machine.muteGroup - s_col;
-    if (range_check(d_col + lfo_dest, 0, 15)) {
-      machine.lfo.destinationTrack = d_col + lfo_dest;
-    } else {
-      machine.lfo.destinationTrack = 255;
-    }
-    if (range_check(d_col + trig_dest, 0, 15)) {
-      machine.trigGroup = d_col + trig_dest;
-    } else {
-      machine.trigGroup = 255;
-    }
-    if (range_check(d_col + mute_dest, 0, 15)) {
-      machine.muteGroup = d_col + mute_dest;
-    } else {
-      machine.muteGroup = 255;
-    }
+    machine.lfo.destinationTrack =
+        remap_grid_col(machine.lfo.destinationTrack, s_col, d_col);
+    machine.trigGroup = remap_grid_col(machine.trigGroup, s_col, d_col);
+    machine.muteGroup = remap_grid_col(machine.muteGroup, s_col, d_col);
   }
 }

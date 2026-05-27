@@ -82,11 +82,12 @@ void MenuBase::set_entry_name(uint8_t entry_index, const char *name) {
   item->name[sizeof(item->name) - 1] = '\0';
 }
 
-menu_function_t MenuBase::get_exit_function() {
-    if (layout_base == nullptr || exit_fn_id == 0) return nullptr;
-    uint8_t function_index = exit_fn_id - 1;
+// Read a target function pointer out of the PROGMEM table. The layout of
+// menu_function_ptr_t differs by pointer width, hence the per-arch reads.
+static menu_function_t read_menu_target_function(uint8_t function_index) {
     menu_function_ptr_t fn;
     #if defined(__AVR__)
+        // On AVR, single 16-bit read
         fn.word = pgm_read_word(&menu_target_functions[function_index].word);
     #elif defined(PLATFORM_DESKTOP) || (UINTPTR_MAX > 0xFFFFFFFFu)
         // 64-bit hosts: read the full pointer via the .fn slot. The
@@ -94,30 +95,22 @@ menu_function_t MenuBase::get_exit_function() {
         // and would truncate.
         fn.fn = menu_target_functions[function_index].fn;
     #else
+        // On 32-bit architectures, read both words
         fn.words.low = pgm_read_word(&menu_target_functions[function_index].words.low);
         fn.words.high = pgm_read_word(&menu_target_functions[function_index].words.high);
     #endif
     return fn.fn;
 }
 
+menu_function_t MenuBase::get_exit_function() {
+    if (layout_base == nullptr || exit_fn_id == 0) return nullptr;
+    return read_menu_target_function(exit_fn_id - 1);
+}
+
 menu_function_t MenuBase::get_row_function(uint8_t item_n) {
     const menu_item_t *item = get_item(item_n);
     if (item == nullptr || item->row_function_id == 0) { return nullptr; }
-    uint8_t function_index = item->row_function_id - 1;
-
-    menu_function_ptr_t fn;
-    #if defined(__AVR__)
-        // On AVR, single 16-bit read
-        fn.word = pgm_read_word(&menu_target_functions[function_index].word);
-    #elif defined(PLATFORM_DESKTOP) || (UINTPTR_MAX > 0xFFFFFFFFu)
-        // 64-bit hosts: read the full pointer directly.
-        fn.fn = menu_target_functions[function_index].fn;
-    #else
-        // On 32-bit architectures, read both words
-        fn.words.low = pgm_read_word(&menu_target_functions[function_index].words.low);
-        fn.words.high = pgm_read_word(&menu_target_functions[function_index].words.high);
-    #endif
-    return fn.fn;
+    return read_menu_target_function(item->row_function_id - 1);
 }
 
 
