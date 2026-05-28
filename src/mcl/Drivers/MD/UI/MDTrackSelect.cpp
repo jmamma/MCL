@@ -83,7 +83,13 @@ void MDTrackSelect::handle_track_select_legacy(const SysexView &view,
         goto update_length_speed;
       }
       if (is_md_device) {
-        uint8_t apply_mode = len >= 10 ? view.getByte(9) : 0x7F;
+        uint8_t apply_mode = 0x7F;
+        if (len >= 10) {
+          apply_mode = view.getByte(9);
+          if (apply_mode <= 1) {
+            MD.pattern.swingEditAll = apply_mode;
+          }
+        }
         if (apply_mode == 0x7F) {
           apply_mode = is_single_track_edit ? 0 : 1;
         }

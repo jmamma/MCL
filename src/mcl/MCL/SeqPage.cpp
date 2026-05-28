@@ -35,6 +35,11 @@ const char *const kMaskInfoLabels[] PROGMEM = {
     mclstr_lock,
 };
 
+bool swing_mask_edit_disabled() {
+  return SeqPage::mask_type == MASK_SWING && SeqPage::active_device_is_md() &&
+         MD.pattern.swingEditAll > 0;
+}
+
 #if defined(__AVR__)
 #define seq_panel_popup_text(...) MD.popup_text(__VA_ARGS__)
 #define seq_panel_popup_text_P(...) MD.popup_text_P(__VA_ARGS__)
@@ -1103,9 +1108,11 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
         led_mask = slide_mask;
         break;
       case MASK_SWING:
-        track.get_mask(&slide_mask, MASK_SWING);
-        led_mask = slide_mask;
         display_mask = 0;
+        if (!swing_mask_edit_disabled()) {
+          track.get_mask(&slide_mask, MASK_SWING);
+          led_mask = slide_mask;
+        }
         break;
       }
     });
