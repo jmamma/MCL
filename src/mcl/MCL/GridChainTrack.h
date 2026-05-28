@@ -38,6 +38,6 @@ public:
     return make_grid_slot_label('C', 'N');
   }
   virtual uint8_t get_model() override { return GRIDCHAIN_TRACK_TYPE; }
-  virtual void *get_sound_data_ptr() override { return this; }
+  virtual void *get_sound_data_ptr() override { return &chains; }
   virtual size_t get_sound_data_size() override { return sizeof(GridChain); }
 };

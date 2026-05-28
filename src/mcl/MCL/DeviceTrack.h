@@ -145,7 +145,9 @@ public:
     uintptr_t region_base = get_region();
 
     // 2. Calculate offsets using safe, portable uintptr_t arithmetic.
-    uintptr_t sound_data_offset = (reinterpret_cast<uintptr_t>(get_sound_data_ptr()) - reinterpret_cast<uintptr_t>(this));
+    uintptr_t sound_data_offset =
+        reinterpret_cast<uintptr_t>(get_sound_data_ptr()) -
+        reinterpret_cast<uintptr_t>(_this());
     uintptr_t pos = region_base + (static_cast<uintptr_t>(get_region_size()) * column) + sound_data_offset;
     // 3. Convert the final calculated address back to a pointer.
     volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
@@ -161,7 +163,7 @@ public:
 
     uintptr_t region_base = get_region();
     uintptr_t sound_data_offset =
-        reinterpret_cast<uintptr_t>(sound) - reinterpret_cast<uintptr_t>(this);
+        reinterpret_cast<uintptr_t>(sound) - reinterpret_cast<uintptr_t>(_this());
     uintptr_t pos = region_base +
                     (static_cast<uintptr_t>(get_region_size()) * column) +
                     sound_data_offset;
@@ -191,7 +193,7 @@ public:
       return false;
     }
     uintptr_t sound_data_offset =
-        reinterpret_cast<uintptr_t>(sound) - reinterpret_cast<uintptr_t>(this);
+        reinterpret_cast<uintptr_t>(sound) - reinterpret_cast<uintptr_t>(_this());
     uintptr_t pos = slot_base + sound_data_offset;
     volatile uint8_t *ptr = reinterpret_cast<volatile uint8_t *>(pos);
     memcpy_bank1(sound, ptr, sound_size);
