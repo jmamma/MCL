@@ -8,11 +8,13 @@ uint8_t ExtSeqTrack::epoch = 0;
 
 namespace {
 
-static inline bool ext_delete_marked(const uint8_t *mask, uint16_t idx) {
+static bool ext_delete_marked(const uint8_t *mask, uint16_t idx) NOINLINE();
+static bool ext_delete_marked(const uint8_t *mask, uint16_t idx) {
   return mask[idx >> 3] & (1 << (idx & 7));
 }
 
-static inline void ext_delete_mark(uint8_t *mask, uint16_t idx) {
+static void ext_delete_mark(uint8_t *mask, uint16_t idx) NOINLINE();
+static void ext_delete_mark(uint8_t *mask, uint16_t idx) {
   mask[idx >> 3] |= (1 << (idx & 7));
 }
 
@@ -35,18 +37,24 @@ static inline int16_t ext_microtiming_ticks(int8_t microtiming,
   return SeqTrack::microtiming_to_ticks(microtiming, ticks_per_step);
 }
 
-static inline int16_t ext_event_tick(uint8_t step, int8_t microtiming,
-                                     uint16_t ticks_per_step) {
+static int16_t ext_event_tick(uint8_t step, int8_t microtiming,
+                              uint16_t ticks_per_step) NOINLINE();
+static int16_t ext_event_tick(uint8_t step, int8_t microtiming,
+                              uint16_t ticks_per_step) {
   return (int16_t)step * ticks_per_step +
          ext_microtiming_ticks(microtiming, ticks_per_step);
 }
 
-static inline int8_t ext_page_timing_to_microtiming(uint16_t timing,
-                                                    uint16_t ticks_per_step) {
+static int8_t ext_page_timing_to_microtiming(uint16_t timing,
+                                             uint16_t ticks_per_step)
+    NOINLINE();
+static int8_t ext_page_timing_to_microtiming(uint16_t timing,
+                                             uint16_t ticks_per_step) {
   return SeqTrack::timing_to_microtiming(timing, ticks_per_step);
 }
 
-static inline int8_t ext_reverse_microtiming(int8_t microtiming) {
+static int8_t ext_reverse_microtiming(int8_t microtiming) NOINLINE();
+static int8_t ext_reverse_microtiming(int8_t microtiming) {
   return microtiming == -128 ? 127 : (int8_t)-microtiming;
 }
 

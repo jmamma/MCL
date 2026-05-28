@@ -116,6 +116,9 @@ bool note_range_for_current_page(const SeqExtStepPage &page,
 
 seq_extstep_tick_t scale_clip_tick(seq_extstep_tick_t value,
                                    uint16_t source_ticks_per_step,
+                                   uint16_t dest_ticks_per_step) NOINLINE();
+seq_extstep_tick_t scale_clip_tick(seq_extstep_tick_t value,
+                                   uint16_t source_ticks_per_step,
                                    uint16_t dest_ticks_per_step) {
   if (source_ticks_per_step == 0 ||
       source_ticks_per_step == dest_ticks_per_step) {
@@ -157,6 +160,12 @@ bool note_overlaps_range(const ExtNoteRange &range,
   return false;
 }
 
+bool add_note_to_clip(ExtNoteClip &clip,
+                      seq_extstep_tick_t tick_offset,
+                      seq_extstep_tick_t note_length,
+                      uint8_t pitch_offset,
+                      uint8_t velocity,
+                      uint8_t condition) NOINLINE();
 bool add_note_to_clip(ExtNoteClip &clip,
                       seq_extstep_tick_t tick_offset,
                       seq_extstep_tick_t note_length,
