@@ -736,12 +736,6 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_YES: {
         goto lfo_enable;
       }
-      case MDX_KEY_UP:
-        moveEncoderFocusPage(1);
-        return true;
-      case MDX_KEY_DOWN:
-        moveEncoderFocusPage(-1);
-        return true;
       }
     } else if (event->mask == EVENT_BUTTON_RELEASED && key == MDX_KEY_SCALE) {
       page_select++;
