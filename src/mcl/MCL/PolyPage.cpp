@@ -41,8 +41,7 @@ uint8_t encoder_value_from_group(uint8_t group) {
 }
 
 uint8_t editable_group_for_track(uint8_t track) {
-  uint8_t group = ptc_groups.group_for_track(track);
-  return group == PTC_GROUP_LOCAL ? PTC_GROUP_OFF : group;
+  return ptc_groups.group_for_track(track);
 }
 
 MCLEncoder channel_select_encoder(PTC_MIDI_GROUP_MAX, 0, ENCODER_RES_SEQ);
@@ -98,10 +97,6 @@ void PolyPage::draw_mask() {
     oled_display.setCursor(ptc_group_text_x(group, x), y + 8);
     oled_display.setTextColor(filled ? BLACK : WHITE);
     print_ptc_group_label(group);
-
-    if (group == PTC_GROUP_LOCAL && !filled) {
-      oled_display.drawFastHLine(x + 3, y + 2, 9, WHITE);
-    }
 
     x += 16;
     if (x == 128) {

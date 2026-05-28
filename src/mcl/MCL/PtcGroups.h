@@ -7,6 +7,8 @@
 #include <string.h>
 
 static constexpr uint8_t PTC_GROUP_OFF = 0;
+// Legacy route tracks used 255 for poly voices without a dedicated external
+// channel. It is normalized to group 1 on load.
 static constexpr uint8_t PTC_GROUP_LOCAL = 255;
 static constexpr uint8_t PTC_MIDI_GROUP_MIN = 1;
 static constexpr uint8_t PTC_MIDI_GROUP_MAX = 16;

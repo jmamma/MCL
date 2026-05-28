@@ -10,6 +10,20 @@
 
 namespace {
 
+bool is_md_poly_mode_value(uint8_t *dest_var) {
+  return dest_var == &mcl_cfg.uart2_poly_chan;
+}
+
+uint8_t md_poly_mode_to_menu_value(uint8_t stored_value) {
+  return stored_value == MIDI_LOCAL_MODE ? MD_POLY_MODE_INT
+                                         : MD_POLY_MODE_INT_EXT;
+}
+
+uint8_t md_poly_mode_from_menu_value(uint8_t menu_value) {
+  return menu_value == MD_POLY_MODE_INT_EXT ? MD_POLY_MODE_INT_EXT
+                                            : MD_POLY_MODE_INT;
+}
+
 #ifdef MCL_HAS_TBD_DRIVER
 bool is_grid_y_device_value(uint8_t *dest_var) {
   return dest_var == &mcl_cfg.grid_y_device;
@@ -46,21 +60,29 @@ uint8_t grid_y_device_from_menu_value(uint8_t menu_value) {
 }
 #endif
 
-#ifdef MCL_HAS_TBD_DRIVER
 uint8_t menu_value_from_stored(uint8_t *dest_var, uint8_t stored_value) {
+  if (is_md_poly_mode_value(dest_var)) {
+    return md_poly_mode_to_menu_value(stored_value);
+  }
+#ifdef MCL_HAS_TBD_DRIVER
   if (is_grid_y_device_value(dest_var)) {
     return grid_y_device_to_menu_value(stored_value);
   }
+#endif
   return stored_value;
 }
 
 uint8_t stored_value_from_menu(uint8_t *dest_var, uint8_t menu_value) {
+  if (is_md_poly_mode_value(dest_var)) {
+    return md_poly_mode_from_menu_value(menu_value);
+  }
+#ifdef MCL_HAS_TBD_DRIVER
   if (is_grid_y_device_value(dest_var)) {
     return grid_y_device_from_menu_value(menu_value);
   }
+#endif
   return menu_value;
 }
-#endif
 
 } // namespace
 
@@ -98,11 +120,7 @@ void MenuPageBase::init(bool generate_row_names) {
 
   uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
   if (dest_var != NULL) {
-#ifdef MCL_HAS_TBD_DRIVER
     encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
-#else
-    encoders[0]->setValue(*dest_var);
-#endif
   }
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
@@ -165,11 +183,7 @@ void MenuPageBase::loop() {
     selected_item = encoders[1]->cur;
     uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
-#ifdef MCL_HAS_TBD_DRIVER
       encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
-#else
-      encoders[0]->setValue(*dest_var);
-#endif
     } else {
       encoders[0]->setValue(0);
     }
@@ -177,11 +191,7 @@ void MenuPageBase::loop() {
   if (encoders[0]->hasChanged()) {
     uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
     if (dest_var != NULL) {
-#ifdef MCL_HAS_TBD_DRIVER
       *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
-#else
-      *dest_var = encoders[0]->cur;
-#endif
     }
   }
 }
@@ -202,9 +212,7 @@ void MenuPageBase::draw_item(MenuBase *m, uint8_t item_n) {
     mcl_print_P(mclstr_space);
     uint8_t *pdest = m->get_dest_variable(item_n);
     uint8_t option_value = *pdest;
-#ifdef MCL_HAS_TBD_DRIVER
     option_value = menu_value_from_stored(pdest, option_value);
-#endif
     const char *option_name = m->get_option_name(item_n, option_value);
     if (option_name == NULL) {
       oled_display.print(option_value);

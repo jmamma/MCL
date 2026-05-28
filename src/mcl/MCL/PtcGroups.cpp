@@ -26,7 +26,7 @@ uint8_t PtcGroups::valid_group_or_off(uint8_t value) const {
     return value;
   }
   if (value == PTC_GROUP_LOCAL) {
-    return value;
+    return PTC_MIDI_GROUP_MIN;
   }
   return PTC_GROUP_OFF;
 }

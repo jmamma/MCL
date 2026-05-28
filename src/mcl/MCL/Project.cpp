@@ -1198,11 +1198,12 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
                            MD_ROUTE_TRACK_TYPE, 0);
       memcpy(new_route.route.routing, legacy_route.route.routing,
              sizeof(new_route.route.routing));
+      uint8_t legacy_poly_channel = cfg.uart2_poly_chan;
       uint8_t ptc_group =
-          cfg.uart2_poly_chan >= PTC_MIDI_GROUP_MIN &&
-                  cfg.uart2_poly_chan <= PTC_MIDI_GROUP_MAX
-              ? cfg.uart2_poly_chan
-              : PTC_GROUP_LOCAL;
+          legacy_poly_channel >= PTC_MIDI_GROUP_MIN &&
+                  legacy_poly_channel <= PTC_MIDI_GROUP_MAX
+              ? legacy_poly_channel
+              : PTC_MIDI_GROUP_MIN;
       uint16_t poly_mask = legacy_route.route.poly_mask;
       for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, poly_mask >>= 1) {
         new_route.route.ptc_group[i] =

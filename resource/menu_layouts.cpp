@@ -75,7 +75,6 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
         {"SYNC",  0, 0, 0, 0, MIDICLOCK_MENU_PAGE, 0, 0},
         {"ROUTING", 0, 0, 0, 0, MIDIROUTE_MENU_PAGE, 0, 0},
         {"CONTROLLER", 0, 0, 0, 0, MIDIGENERIC_MENU_PAGE, 0 ,0},
-        {"MD MIDI", 0, 0, 0, 0, MIDIMACHINEDRUM_MENU_PAGE, 0 ,0},
         {"PROGRAM", 0, 0, 0, 0, MIDIPROGRAM_MENU_PAGE, 0, 0},
     },
     0
@@ -247,8 +246,8 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
     {
         //              m  r   n  d  p  f  o
         {"CHRO CHAN:",  0, 17, 2, 9, NULL_PAGE, 0, 18},
-        {"POLY CHAN:",  0, 17, 2, 46, NULL_PAGE, 0, 18},
         {"TRIG CHAN:",   0, 17, 2, 57, NULL_PAGE, 0, 18},
+        {"POLY MODE:",  0, 2, 2, 46, NULL_PAGE, 0, 23},
     },
     19
 };
@@ -271,6 +270,7 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
     {
         //              m  r   n  d  p  f  o
         {"IMPORT",      0, 0,  0, 0, MD_IMPORT_PAGE, 0, 0},
+        {"MIDI",        0, 0,  0, 0, MIDIMACHINEDRUM_MENU_PAGE, 0, 0},
         {"RAM LINK:",   0, 2,  2, 1, NULL_PAGE, 0, 0},
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
     },

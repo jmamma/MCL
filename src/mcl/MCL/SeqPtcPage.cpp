@@ -917,7 +917,8 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
 }
 
 uint8_t SeqPtcPage::primary_channel_event(uint8_t channel) {
-  if (ptc_groups.group_for_midi_channel(channel) != PTC_GROUP_OFF) {
+  if (mcl_cfg.uart2_poly_chan != MD_POLY_MODE_INT &&
+      ptc_groups.group_for_midi_channel(channel) != PTC_GROUP_OFF) {
     return POLY_EVENT;
   }
   if (mcl_cfg.uart2_ctrl_chan - 1 == channel) {

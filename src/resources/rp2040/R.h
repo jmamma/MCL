@@ -376,10 +376,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_auxconfig_menu_layout = 32;
   union {
     menu_t<midi_config_page_N> midiconfig_menu_layout[0];
-    char zz__midiconfig_menu_layout[160];
+    char zz__midiconfig_menu_layout[140];
   };
-  static constexpr size_t countof_midiconfig_menu_layout = 160 / sizeof(menu_t<midi_config_page_N>);
-  static constexpr size_t sizeofof_midiconfig_menu_layout = 160;
+  static constexpr size_t countof_midiconfig_menu_layout = 140 / sizeof(menu_t<midi_config_page_N>);
+  static constexpr size_t sizeofof_midiconfig_menu_layout = 140;
   union {
     menu_t<mididevice_menu_page_N> mididevice_menu_layout[0];
     char zz__mididevice_menu_layout[56];
@@ -454,10 +454,10 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_midigeneric_menu_layout = 96;
   union {
     menu_t<md_config_page_N> mdconfig_menu_layout[0];
-    char zz__mdconfig_menu_layout[76];
+    char zz__mdconfig_menu_layout[96];
   };
-  static constexpr size_t countof_mdconfig_menu_layout = 76 / sizeof(menu_t<md_config_page_N>);
-  static constexpr size_t sizeofof_mdconfig_menu_layout = 76;
+  static constexpr size_t countof_mdconfig_menu_layout = 96 / sizeof(menu_t<md_config_page_N>);
+  static constexpr size_t sizeofof_mdconfig_menu_layout = 96;
   union {
     menu_t<md_import_page_N> mdimport_menu_layout[0];
     char zz__mdimport_menu_layout[96];

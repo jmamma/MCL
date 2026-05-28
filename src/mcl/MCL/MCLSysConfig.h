@@ -11,6 +11,8 @@
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
+#define MD_POLY_MODE_INT 0
+#define MD_POLY_MODE_INT_EXT 1
 
 extern void mclsys_apply_config();
 extern void mclsys_apply_config_midi();
@@ -39,6 +41,7 @@ public:
   GridColumn cur_col;
   uint16_t poly_mask;
   uint8_t uart2_ctrl_chan;
+  // Legacy poly-channel byte: 0 = INT; nonzero legacy channel/1 = INT+EXT.
   uint8_t uart2_poly_chan;
   uint8_t uart2_prg_in;
   uint8_t uart2_prg_out;
