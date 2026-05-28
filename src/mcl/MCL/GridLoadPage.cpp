@@ -71,13 +71,14 @@ void GridLoadPage::draw_popup() {
 }
 
 void GridLoadPage::display_load() {
-  const char *str2 = " SLOTS";
+  const char *str2 = "SLOTS";
   const char *str1 = "LOAD";
   if (mcl_cfg.load_mode == LOAD_QUEUE) {
     str1 = "QUEUE";
   }
   char str3[16];
   strcpy(str3, str1);
+  strcat(str3, " ");
   strcat(str3, str2);
   MD.popup_text(str3);
   oled_display.textbox(str1, str2);
