@@ -302,6 +302,12 @@ bool mcl_handleEvent(gui_event_t *event) {
     if (key == MDX_KEY_FUNC && event->mask == EVENT_BUTTON_RELEASED) {
       seq_step_page.clear_mask_shortcut_suppress();
     }
+    if (event->mask == EVENT_BUTTON_RELEASED) {
+      uint8_t shortcut_mask = MASK_PATTERN;
+      if (mask_shortcut_for_key(key, shortcut_mask)) {
+        seq_step_page.clear_mask_shortcut_suppress();
+      }
+    }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
           key != MDX_KEY_PASTE && key != MDX_KEY_SCALE) {
