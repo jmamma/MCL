@@ -108,10 +108,10 @@ public:
     return track;
   }
   DeviceTrack *init_loaded_track_type(uint8_t track_type) {
-    uint8_t loaded_header[DEVICE_TRACK_LEN];
-    memcpy(loaded_header, _this(), DEVICE_TRACK_LEN);
+    uint8_t loaded_header[GridTrack::STORAGE_HEADER_SIZE];
+    memcpy(loaded_header, _this(), sizeof(loaded_header));
     DeviceTrack *track = init_track_type(track_type);
-    memcpy(track->_this(), loaded_header, DEVICE_TRACK_LEN);
+    memcpy(track->_this(), loaded_header, sizeof(loaded_header));
     return track;
   }
   template <class T> DeviceTrack *init_track_type() {

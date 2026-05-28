@@ -792,7 +792,7 @@ bool TBDMidiTrack::materialized_storage_range(uint8_t track_type,
   source_offset =
       reinterpret_cast<uintptr_t>(&seq_data) -
       reinterpret_cast<uintptr_t>(_this());
-  target_offset = DEVICE_TRACK_LEN;
+  target_offset = GridTrack::STORAGE_HEADER_SIZE;
   len = sizeof(MidiSeqTrackStorage);
   return true;
 }

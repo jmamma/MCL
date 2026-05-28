@@ -159,7 +159,7 @@ public:
 
 static_assert(sizeof(LegacyGridTrackHeader) == LEGACY_GRID_TRACK_HEADER_SIZE,
               "origin/dev track header size changed");
-static_assert(sizeof(GridTrack) - sizeof(void *) == LEGACY_GRID_TRACK_HEADER_SIZE,
+static_assert(GridTrack::STORAGE_HEADER_SIZE == LEGACY_GRID_TRACK_HEADER_SIZE,
               "current track header prefix changed");
 static_assert(sizeof(LegacyPerfTrackData) + 2 == sizeof(PerfTrackData),
               "legacy PerfTrack payload is not a prefix");

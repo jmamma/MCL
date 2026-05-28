@@ -145,7 +145,7 @@ bool MidiBackedDeviceTrack::materialized_storage_range(
   source_offset =
       reinterpret_cast<uintptr_t>(&midi_seq_storage()) -
       reinterpret_cast<uintptr_t>(_this());
-  target_offset = DEVICE_TRACK_LEN;
+  target_offset = GridTrack::STORAGE_HEADER_SIZE;
   len = sizeof(MidiSeqTrackStorage);
   return true;
 }

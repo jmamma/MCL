@@ -1040,7 +1040,7 @@ void MCLActions::calc_latency() {
         // Optimised, assume we dont need to read the entire object to calculate
         // latency.
         auto *ptrack = empty_track.load_from_mem(
-            gdt->mem_slot_idx, gdt->track_type, sizeof(GridTrack));
+            gdt->mem_slot_idx, gdt->track_type, GridTrack::STORAGE_HEADER_SIZE);
         //   uint16_t diff = clock_diff(old_clock, clock);
         if (ptrack == nullptr || !ptrack->is_active() ||
             gdt->track_type != ptrack->active) {

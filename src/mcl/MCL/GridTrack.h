@@ -54,9 +54,22 @@ constexpr uint16_t make_grid_slot_label(char a, char b) {
   return ((uint16_t)(uint8_t)a << 8) | (uint8_t)b;
 }
 
+class ATTR_PACKED() GridTrackStorageHeader {
+public:
+  uint8_t version = 0;
+  uint8_t reserved = 0;
+  uint8_t active = EMPTY_TRACK_TYPE;
+  GridLink link;
+};
+
+static_assert(sizeof(GridTrackStorageHeader) == 7,
+              "GridTrack storage header layout changed");
+
 class ATTR_PACKED() GridTrack {
 public:
   static constexpr uint8_t FLAG_SKIP_SOUND = 1 << 0;
+  static constexpr uint16_t STORAGE_HEADER_SIZE =
+      sizeof(GridTrackStorageHeader);
 
   uint8_t version = 0;
   uint8_t reserved = 0;
@@ -64,7 +77,7 @@ public:
   GridLink link;
 
   size_t _sizeof() const {
-        return sizeof(GridTrack) - sizeof(void*);
+        return STORAGE_HEADER_SIZE;
   }
   void* _this() { return &version; }
 

@@ -65,7 +65,7 @@ public:
                                 SeqTrackModData &mod_data,
                                 SeqTrack *seq_track);
   static constexpr uint16_t seq_payload_storage_offset() {
-    return DEVICE_TRACK_LEN;
+    return GridTrack::STORAGE_HEADER_SIZE;
   }
   static constexpr uint16_t seq_payload_storage_size() {
     return sizeof(ExtSeqTrackData) + sizeof(SeqTrackModData);
