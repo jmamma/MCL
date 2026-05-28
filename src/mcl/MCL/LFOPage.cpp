@@ -194,6 +194,14 @@ void update_lfo_base_param(Encoder **encoders, LFOSeqTrack *track,
   }
 }
 
+void acknowledge_lfo_encoder_changes(Encoder **encoders) {
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; ++i) {
+    if (encoders[i] != nullptr) {
+      encoders[i]->old = encoders[i]->cur;
+    }
+  }
+}
+
 void lfo_param_label(LFOSeqTrack *track, uint8_t param_idx, char *out,
                      uint8_t len) {
   if (out == nullptr || len == 0) {
@@ -440,13 +448,16 @@ bool LFOPage::moveEncoderFocusPage(int8_t direction) {
 
 void LFOPage::loop() {
   refresh_track_selection();
-  if (show_seq_menu) {
-    SeqPage::loop();
-    uint8_t max_track = LFOTrackRef::track_count(lfo_track->device_idx);
-    if (opt_trackid > max_track) {
-      opt_trackid = max_track;
-      seq_menu_value_encoder.cur = opt_trackid;
+  if (show_seq_menu || BUTTON_DOWN(Buttons.BUTTON3)) {
+    if (show_seq_menu) {
+      SeqPage::loop();
+      uint8_t max_track = LFOTrackRef::track_count(lfo_track->device_idx);
+      if (opt_trackid > max_track) {
+        opt_trackid = max_track;
+        seq_menu_value_encoder.cur = opt_trackid;
+      }
     }
+    acknowledge_lfo_encoder_changes(encoders);
     return;
   }
   if (page_mode == LFO_DESTINATION) {
