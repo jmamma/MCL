@@ -741,6 +741,9 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_MUTE:
+        if (key_interface.event_func_down(event)) {
+          return false;
+        }
       case MDX_KEY_BANKA: {
         if (toggle_mask(MASK_MUTE, key_interface.event_func_down(event)))
           return true;

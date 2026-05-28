@@ -60,7 +60,6 @@ namespace {
 
 bool mask_shortcut_for_key(uint8_t key, uint8_t &mask) {
   switch (key) {
-  case MDX_KEY_MUTE:
   case MDX_KEY_BANKA:
   case MDX_KEY_BANKB:
     mask = MASK_MUTE;
