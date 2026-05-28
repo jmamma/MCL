@@ -84,6 +84,21 @@ uint8_t stored_value_from_menu(uint8_t *dest_var, uint8_t menu_value) {
   return menu_value;
 }
 
+void nudge_menu_encoder(Encoder *encoder, int8_t delta) {
+  if (encoder == nullptr) {
+    return;
+  }
+  auto *range_encoder = (MCLEncoder *)encoder;
+  int next = range_encoder->cur + delta;
+  if (next < range_encoder->min) {
+    next = range_encoder->min;
+  }
+  if (next > range_encoder->max) {
+    next = range_encoder->max;
+  }
+  range_encoder->cur = next;
+}
+
 } // namespace
 
 void MenuPageBase::init() {
@@ -347,16 +362,16 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
         key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto NO;
       case MDX_KEY_UP:
-        encoders[1]->cur -= inc;
+        nudge_menu_encoder(encoders[1], -inc);
         break;
       case MDX_KEY_DOWN:
-        encoders[1]->cur += inc;
+        nudge_menu_encoder(encoders[1], inc);
         break;
       case MDX_KEY_LEFT:
-        encoders[0]->cur -= inc;
+        nudge_menu_encoder(encoders[0], -inc);
         break;
       case MDX_KEY_RIGHT:
-        encoders[0]->cur += inc;
+        nudge_menu_encoder(encoders[0], inc);
         break;
       }
     }
