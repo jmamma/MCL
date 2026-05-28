@@ -718,6 +718,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         if (toggle_mask(MASK_MUTE))
           return true;
       }
+      case MDX_KEY_BANKB: {
+        if (toggle_mask(MASK_MUTE))
+          return true;
+      }
       case MDX_KEY_BANKC: {
         if (toggle_mask(MASK_SWING))
           return true;

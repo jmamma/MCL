@@ -309,7 +309,8 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
         if (key_interface.is_key_down(MDX_KEY_FUNC) &&
-            (key == MDX_KEY_BANKC || key == MDX_KEY_BANKD) &&
+            (key == MDX_KEY_BANKB || key == MDX_KEY_BANKC ||
+             key == MDX_KEY_BANKD) &&
             current_page != SEQ_STEP_PAGE) {
           seq_step_page.prepare = true;
           if (current_page != SOUND_BROWSER &&
@@ -317,7 +318,9 @@ bool mcl_handleEvent(gui_event_t *event) {
               current_page != POLY_PAGE) {
             seq_step_page.last_page = current_page;
           }
-          SeqPage::mask_type = (key == MDX_KEY_BANKC) ? MASK_SWING : MASK_SLIDE;
+          SeqPage::mask_type = (key == MDX_KEY_BANKB) ? MASK_MUTE :
+                               (key == MDX_KEY_BANKC) ? MASK_SWING :
+                                                        MASK_SLIDE;
           mcl.setPage(SEQ_STEP_PAGE);
           return true;
         }
