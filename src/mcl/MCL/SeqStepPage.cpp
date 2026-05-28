@@ -170,6 +170,7 @@ bool SeqStepPage::toggle_mask(uint8_t mask, bool func_down) {
       mask_type = MASK_SWING;
     }
     if (mask_type == mask) {
+      suppress_mask_shortcut_mask = mask;
       close_mask_mode();
     } else {
       mask_type = mask;
@@ -178,6 +179,18 @@ bool SeqStepPage::toggle_mask(uint8_t mask, bool func_down) {
     return true;
   }
   return false;
+}
+
+bool SeqStepPage::should_suppress_mask_shortcut(uint8_t mask, bool func_down) {
+  if (!func_down) {
+    clear_mask_shortcut_suppress();
+    return false;
+  }
+  return suppress_mask_shortcut_mask == mask;
+}
+
+void SeqStepPage::clear_mask_shortcut_suppress() {
+  suppress_mask_shortcut_mask = 255;
 }
 
 void SeqStepPage::config() {
@@ -454,6 +467,11 @@ void SeqStepPage::disable_microtiming_overlay() {
 }
 
 bool SeqStepPage::handleEvent(gui_event_t *event) {
+
+  if (EVENT_CMD(event) && event->source == MDX_KEY_FUNC &&
+      event->mask == EVENT_BUTTON_RELEASED) {
+    clear_mask_shortcut_suppress();
+  }
 
 #ifdef MCL_HAS_EXTENDED_PANEL_INPUT
   if (EVENT_CMD(event) && event->source == MDX_KEY_FUNC &&

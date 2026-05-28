@@ -56,6 +56,28 @@
 #include "BankPopupPage.h"
 #endif
 
+namespace {
+
+bool mask_shortcut_for_key(uint8_t key, uint8_t &mask) {
+  switch (key) {
+  case MDX_KEY_MUTE:
+  case MDX_KEY_BANKA:
+  case MDX_KEY_BANKB:
+    mask = MASK_MUTE;
+    return true;
+  case MDX_KEY_BANKC:
+    mask = MASK_SWING;
+    return true;
+  case MDX_KEY_BANKD:
+    mask = MASK_SLIDE;
+    return true;
+  default:
+    return false;
+  }
+}
+
+} // namespace
+
 // In MCL.cpp:
 const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
     // Core pages
@@ -277,6 +299,9 @@ bool mcl_handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
     uint8_t key = event->source;
     PageIndex current_page = mcl.currentPage();
+    if (key == MDX_KEY_FUNC && event->mask == EVENT_BUTTON_RELEASED) {
+      seq_step_page.clear_mask_shortcut_suppress();
+    }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (key != MDX_KEY_FUNC && key != MDX_KEY_COPY && key != MDX_KEY_CLEAR &&
           key != MDX_KEY_PASTE && key != MDX_KEY_SCALE) {
@@ -304,27 +329,33 @@ bool mcl_handleEvent(gui_event_t *event) {
         }
         break;
       }
+      case MDX_KEY_MUTE:
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
         bool func_down = key_interface.event_func_down(event);
-        if (func_down &&
-            (key == MDX_KEY_BANKB || key == MDX_KEY_BANKC ||
-             key == MDX_KEY_BANKD) &&
-            current_page != SEQ_STEP_PAGE) {
-          seq_step_page.prepare = true;
-          seq_step_page.return_to_grid_on_mask_close = true;
-          if (current_page != SOUND_BROWSER &&
-              current_page != ARP_PAGE &&
-              current_page != POLY_PAGE) {
-            seq_step_page.last_page = current_page;
+        uint8_t shortcut_mask = MASK_PATTERN;
+        if (func_down && mask_shortcut_for_key(key, shortcut_mask)) {
+          if (seq_step_page.should_suppress_mask_shortcut(shortcut_mask,
+                                                         func_down)) {
+            return true;
           }
-          SeqPage::mask_type = (key == MDX_KEY_BANKB) ? MASK_MUTE :
-                               (key == MDX_KEY_BANKC) ? MASK_SWING :
-                                                        MASK_SLIDE;
-          mcl.setPage(SEQ_STEP_PAGE);
+          if (current_page != SEQ_STEP_PAGE) {
+            seq_step_page.prepare = true;
+            seq_step_page.return_to_grid_on_mask_close = true;
+            if (current_page != SOUND_BROWSER &&
+                current_page != ARP_PAGE &&
+                current_page != POLY_PAGE) {
+              seq_step_page.last_page = current_page;
+            }
+            SeqPage::mask_type = shortcut_mask;
+            mcl.setPage(SEQ_STEP_PAGE);
+          }
           return true;
+        }
+        if (key == MDX_KEY_MUTE) {
+          return false;
         }
         if (current_page == GRID_LOAD_PAGE ||
             current_page == GRID_SAVE_PAGE ||

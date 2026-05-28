@@ -23,6 +23,7 @@ public:
   bool prepare;
   bool page_copy;
   bool return_to_grid_on_mask_close;
+  uint8_t suppress_mask_shortcut_mask;
 
   uint8_t pitch_param;
   uint16_t ignore_release;
@@ -37,7 +38,8 @@ public:
   SeqStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4),
-        return_to_grid_on_mask_close(false) {
+        return_to_grid_on_mask_close(false),
+        suppress_mask_shortcut_mask(255) {
       }
   void disable_microtiming_overlay();
   void enable_paramupdate_events();
@@ -52,6 +54,8 @@ public:
   void send_locks(uint8_t step);
   bool close_mask_mode();
   bool toggle_mask(uint8_t mask, bool func_down);
+  bool should_suppress_mask_shortcut(uint8_t mask, bool func_down);
+  void clear_mask_shortcut_suppress();
 };
 
 #endif /* SEQSTEPPAGE_H__ */
