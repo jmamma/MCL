@@ -19,7 +19,11 @@ public:
   LFOPage(LFOSeqTrack *lfo_track_, Encoder *e1 = NULL, Encoder *e2 = NULL,
           Encoder *e3 = NULL, Encoder *e4 = NULL)
       : SeqPage(e1, e2, e3, e4) {
-  lfo_track = lfo_track_;
+    lfo_track = lfo_track_;
+    lfo_encoders[0] = e1;
+    lfo_encoders[1] = e2;
+    lfo_encoders[2] = e3;
+    lfo_encoders[3] = e4;
   }
 
   bool handleEvent(gui_event_t *event) override;
@@ -56,6 +60,8 @@ protected:
                                   void (*row_func)()) override;
 
 private:
+  Encoder *lfo_encoders[GUI_NUM_ENCODERS];
+
   void select_menu_track(uint8_t track);
   bool refresh_track_selection();
   void sync_lfo_track();

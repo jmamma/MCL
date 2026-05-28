@@ -194,14 +194,6 @@ void update_lfo_base_param(Encoder **encoders, LFOSeqTrack *track,
   }
 }
 
-void acknowledge_lfo_encoder_changes(Encoder **encoders) {
-  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; ++i) {
-    if (encoders[i] != nullptr) {
-      encoders[i]->old = encoders[i]->cur;
-    }
-  }
-}
-
 void lfo_param_label(LFOSeqTrack *track, uint8_t param_idx, char *out,
                      uint8_t len) {
   if (out == nullptr || len == 0) {
@@ -448,16 +440,13 @@ bool LFOPage::moveEncoderFocusPage(int8_t direction) {
 
 void LFOPage::loop() {
   refresh_track_selection();
-  if (show_seq_menu || BUTTON_DOWN(Buttons.BUTTON3)) {
-    if (show_seq_menu) {
-      SeqPage::loop();
-      uint8_t max_track = LFOTrackRef::track_count(lfo_track->device_idx);
-      if (opt_trackid > max_track) {
-        opt_trackid = max_track;
-        seq_menu_value_encoder.cur = opt_trackid;
-      }
+  if (show_seq_menu) {
+    SeqPage::loop();
+    uint8_t max_track = LFOTrackRef::track_count(lfo_track->device_idx);
+    if (opt_trackid > max_track) {
+      opt_trackid = max_track;
+      seq_menu_value_encoder.cur = opt_trackid;
     }
-    acknowledge_lfo_encoder_changes(encoders);
     return;
   }
   if (page_mode == LFO_DESTINATION) {
@@ -506,26 +495,26 @@ void LFOPage::display() {
   if (page_mode == LFO_DESTINATION) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       uint8_t encoder_idx = i << 1;
-      draw_lfo_dest(encoder_idx, encoders[encoder_idx]->cur);
-      draw_lfo_param(encoder_idx + 1, encoders[encoder_idx]->cur,
-                     encoders[encoder_idx + 1]->cur);
+      draw_lfo_dest(encoder_idx, lfo_encoders[encoder_idx]->cur);
+      draw_lfo_param(encoder_idx + 1, lfo_encoders[encoder_idx]->cur,
+                     lfo_encoders[encoder_idx + 1]->cur);
     }
     strcpy(info2, "LFO>DST");
   }
   else if (page_mode == LFO_GLOBAL) {
     char mult_label[5];
-    lfo_mult_label(encoders[3]->cur, mult_label);
-    mcl_gui.draw_knob(0, mclstr_mode, lfo_mode_label(encoders[0]->cur));
-    draw_lfo_wave_preview(1, encoders[1]->cur);
-    draw_knob(2, encoders[2], mclstr_spd);
+    lfo_mult_label(lfo_encoders[3]->cur, mult_label);
+    mcl_gui.draw_knob(0, mclstr_mode, lfo_mode_label(lfo_encoders[0]->cur));
+    draw_lfo_wave_preview(1, lfo_encoders[1]->cur);
+    draw_knob(2, lfo_encoders[2], mclstr_spd);
     mcl_gui.draw_knob(3, mclstr_mult, mult_label);
     strcpy(info2, "LFO>SET");
   }
   else {
-    draw_knob(0, encoders[0], mclstr_dep1);
-    draw_lfo_value_knob(1, encoders[1], lfo_track, 0);
-    draw_knob(2, encoders[2], mclstr_dep2);
-    draw_lfo_value_knob(3, encoders[3], lfo_track, 1);
+    draw_knob(0, lfo_encoders[0], mclstr_dep1);
+    draw_lfo_value_knob(1, lfo_encoders[1], lfo_track, 0);
+    draw_knob(2, lfo_encoders[2], mclstr_dep2);
+    draw_lfo_value_knob(3, lfo_encoders[3], lfo_track, 1);
     strcpy(info2, "LFO>DEP");
   }
 
