@@ -351,6 +351,8 @@ public:
   void draw_pattern_idx(uint8_t idx, uint8_t idx_other, uint8_t chain_mask);
   void draw_open_swing();
   void draw_close_swing();
+  void draw_open_slide();
+  void draw_close_slide();
   void activate_key_interface();
   void deactivate_key_interface();
 

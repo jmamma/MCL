@@ -537,71 +537,94 @@ static void display_step_popup(SeqStepTrackRef track, const char *kit_str1_P,
   }
 }
 
-bool enhanced_swing_window_requested = false;
-bool enhanced_swing_window_suspended = false;
+static const uint8_t ENHANCED_MASK_WINDOW_NONE = 255;
+uint8_t enhanced_mask_window_requested = ENHANCED_MASK_WINDOW_NONE;
+bool enhanced_mask_window_suspended = false;
 
-static inline bool enhanced_swing_window_available() {
+static inline bool enhanced_mask_window_available() {
   return MD.connected && MD.global.extendedMode == 2;
 }
 
-static inline void open_enhanced_swing_window() {
-  if (enhanced_swing_window_available()) {
-    MD.draw_open_swing();
-  }
+static inline bool enhanced_mask_window_supported(uint8_t mask) {
+  return mask == MASK_SWING || mask == MASK_SLIDE;
 }
 
-static inline void close_enhanced_swing_window() {
-  if (enhanced_swing_window_available()) {
-    MD.draw_close_swing();
-  }
-}
-
-static void clear_enhanced_swing_window() NOINLINE();
-static void clear_enhanced_swing_window() {
-  close_enhanced_swing_window();
-  enhanced_swing_window_requested = false;
-  enhanced_swing_window_suspended = false;
-}
-
-static inline bool should_show_enhanced_swing_window() {
-  return enhanced_swing_window_requested &&
-         mcl.currentPage() == SEQ_STEP_PAGE &&
-         SeqPage::mask_type == MASK_SWING;
-}
-
-static inline void suspend_enhanced_swing_window() {
-  if (!enhanced_swing_window_suspended &&
-      should_show_enhanced_swing_window()) {
-    close_enhanced_swing_window();
-    enhanced_swing_window_suspended = true;
-  }
-}
-
-static inline void restore_enhanced_swing_window() {
-  if (!enhanced_swing_window_suspended) {
+static inline void open_enhanced_mask_window(uint8_t mask) {
+  if (!enhanced_mask_window_available()) {
     return;
   }
-  enhanced_swing_window_suspended = false;
-  if (should_show_enhanced_swing_window()) {
-    open_enhanced_swing_window();
+  if (mask == MASK_SWING) {
+    MD.draw_open_swing();
+  } else if (mask == MASK_SLIDE) {
+    MD.draw_open_slide();
+  }
+}
+
+static inline void close_enhanced_mask_window(uint8_t mask) {
+  if (!enhanced_mask_window_available()) {
+    return;
+  }
+  if (mask == MASK_SWING) {
+    MD.draw_close_swing();
+  } else if (mask == MASK_SLIDE) {
+    MD.draw_close_slide();
+  }
+}
+
+static void clear_enhanced_mask_window() NOINLINE();
+static void clear_enhanced_mask_window() {
+  close_enhanced_mask_window(MASK_SWING);
+  close_enhanced_mask_window(MASK_SLIDE);
+  enhanced_mask_window_requested = ENHANCED_MASK_WINDOW_NONE;
+  enhanced_mask_window_suspended = false;
+}
+
+static inline bool should_show_enhanced_mask_window() {
+  return enhanced_mask_window_supported(enhanced_mask_window_requested) &&
+         mcl.currentPage() == SEQ_STEP_PAGE &&
+         SeqPage::mask_type == enhanced_mask_window_requested;
+}
+
+static inline void suspend_enhanced_mask_window() {
+  if (!enhanced_mask_window_suspended &&
+      should_show_enhanced_mask_window()) {
+    close_enhanced_mask_window(enhanced_mask_window_requested);
+    enhanced_mask_window_suspended = true;
+  }
+}
+
+static inline void restore_enhanced_mask_window() {
+  if (!enhanced_mask_window_suspended) {
+    return;
+  }
+  enhanced_mask_window_suspended = false;
+  if (should_show_enhanced_mask_window()) {
+    open_enhanced_mask_window(enhanced_mask_window_requested);
   } else {
-    enhanced_swing_window_requested = false;
+    enhanced_mask_window_requested = ENHANCED_MASK_WINDOW_NONE;
   }
 }
 
-void SeqPage::request_enhanced_swing_window() {
-  enhanced_swing_window_requested = true;
-  enhanced_swing_window_suspended = false;
-  if (should_show_enhanced_swing_window()) {
-    open_enhanced_swing_window();
+void SeqPage::request_enhanced_mask_window(uint8_t mask) {
+  if (!enhanced_mask_window_supported(mask)) {
+    clear_enhanced_mask_window();
+    return;
+  }
+  if (enhanced_mask_window_requested != mask) {
+    close_enhanced_mask_window(enhanced_mask_window_requested);
+  }
+  enhanced_mask_window_requested = mask;
+  enhanced_mask_window_suspended = false;
+  if (should_show_enhanced_mask_window()) {
+    open_enhanced_mask_window(mask);
   }
 }
 
-bool SeqPage::consume_enhanced_swing_window_exit() {
-  if (!should_show_enhanced_swing_window()) {
+bool SeqPage::consume_enhanced_mask_window_exit() {
+  if (!should_show_enhanced_mask_window()) {
     return false;
   }
-  clear_enhanced_swing_window();
+  clear_enhanced_mask_window();
   return true;
 }
 
@@ -685,7 +708,7 @@ void SeqPage::init() {
 void SeqPage::cleanup() {
   seqpage_midi_events.remove_callbacks();
   note_interface.init_notes();
-  clear_enhanced_swing_window();
+  clear_enhanced_mask_window();
   disable_record();
   GUI_hardware.led.reset_trigleds();
   if (show_seq_menu) {
@@ -711,6 +734,7 @@ void SeqPage::bootstrap_record() {
   if (mcl.currentPage() != SEQ_STEP_PAGE &&
       mcl.currentPage() != SEQ_EXTSTEP_PAGE &&
       mcl.currentPage() != SEQ_PTC_PAGE) {
+    mask_type = MASK_PATTERN;
     mcl.setPage(SEQ_STEP_PAGE);
   }
   key_interface.send_md_leds(TRIGLED_OVERLAY);
@@ -735,18 +759,18 @@ void SeqPage::config_mask_info(bool silent) {
     str[4] = ' ';
     strcpy(str + 5, info2);
     if (mask_type == MASK_PATTERN) {
-      clear_enhanced_swing_window();
+      clear_enhanced_mask_window();
       seq_panel_popup_text((uint8_t)-1, 2);
     } else {
       seq_page_active_step_track().popup_text(str, 1);
-      if (mask_type == MASK_SWING) {
+      if (mask_type == MASK_SWING || mask_type == MASK_SLIDE) {
         if (show_seq_menu) {
-          suspend_enhanced_swing_window();
+          suspend_enhanced_mask_window();
         } else {
-          request_enhanced_swing_window();
+          request_enhanced_mask_window(mask_type);
         }
       } else {
-        clear_enhanced_swing_window();
+        clear_enhanced_mask_window();
       }
     }
   }
@@ -904,12 +928,12 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   if (EVENT_CMD(event)) {
 #ifdef MCL_HAS_EXTENDED_PANEL_INPUT
     if (show_seq_menu) {
-      suspend_enhanced_swing_window();
+      suspend_enhanced_mask_window();
       return seq_menu_page.handleEvent(event);
     }
 #endif
     if (key_interface.is_key_down(MDX_KEY_PATSONG)) {
-      suspend_enhanced_swing_window();
+      suspend_enhanced_mask_window();
       return seq_menu_page.handleEvent(event);
     }
     uint8_t key = event->source;
@@ -957,7 +981,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
       // If MD trig is held and BUTTON3 is pressed, launch note menu
       if (!show_seq_menu) {
-        suspend_enhanced_swing_window();
+        suspend_enhanced_mask_window();
         show_seq_menu = true;
         opt_midi_device_capture = midi_device;
         opt_midi_device_idx_capture = current_device_idx();
@@ -1001,19 +1025,19 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       if (apply_seq_menu_row(row_entry, row_func)) {
         show_seq_menu = false;
         init();
-        restore_enhanced_swing_window();
+        restore_enhanced_mask_window();
         return true;
       }
       if (show_seq_menu && seq_menu_page.enter()) {
         show_seq_menu = false;
-        restore_enhanced_swing_window();
+        restore_enhanced_mask_window();
         return true;
       }
 
       show_seq_menu = false;
       init_encoders_used_clock();
       init();
-      restore_enhanced_swing_window();
+      restore_enhanced_mask_window();
       return true;
     }
   }
@@ -1840,7 +1864,7 @@ void SeqPage::loop() {
   //  md_track_change_check();
 
   if (show_seq_menu) {
-    suspend_enhanced_swing_window();
+    suspend_enhanced_mask_window();
     seq_menu_page.loop();
     if (!seq_page_uses_non_md_primary_step_tracks() &&
         !opt_capture_is_md_device() && opt_trackid > NUM_EXT_TRACKS) {

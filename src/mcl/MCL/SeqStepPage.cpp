@@ -147,7 +147,11 @@ bool SeqStepPage::toggle_mask(uint8_t mask) {
     if (mask_type == MASK_LOCK) {
       mask_type = MASK_SWING;
     }
-    mask_type = (mask_type == mask) ? MASK_PATTERN : mask;
+    if (mask == MASK_SWING || mask == MASK_SLIDE) {
+      mask_type = mask;
+    } else {
+      mask_type = (mask_type == mask) ? MASK_PATTERN : mask;
+    }
     config_mask_info(false);
     return true;
   }
@@ -681,7 +685,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_NO: {
-        if (SeqPage::consume_enhanced_swing_window_exit()) {
+        if (SeqPage::consume_enhanced_mask_window_exit()) {
           mcl.setPage(last_page);
           return true;
         }

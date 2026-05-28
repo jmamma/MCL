@@ -417,6 +417,8 @@ void ElektronDevice::draw_close_bank() { send_system_command(this, 0x3C, 0x23); 
 void ElektronDevice::draw_close_microtiming() { send_system_command(this, 0x3C, 0x21); }
 void ElektronDevice::draw_open_swing() { send_system_command(this, 0x3C, 0x25); }
 void ElektronDevice::draw_close_swing() { send_system_command(this, 0x3C, 0x26); }
+void ElektronDevice::draw_open_slide() { send_system_command(this, 0x3C, 0x28); }
+void ElektronDevice::draw_close_slide() { send_system_command(this, 0x3C, 0x29); }
 
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,

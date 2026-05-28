@@ -158,8 +158,8 @@ public:
   static bool device_is_md(MidiDevice *device);
   static bool active_device_is_md();
   static void select_device_idx(DeviceIdx device_idx);
-  static void request_enhanced_swing_window();
-  static bool consume_enhanced_swing_window_exit();
+  static void request_enhanced_mask_window(uint8_t mask);
+  static bool consume_enhanced_mask_window_exit();
 
   void draw_page_index(bool show_page_index = true, uint8_t _playing_idx = 255);
   void select_track(MidiDevice* device, uint8_t track, bool send = true);
