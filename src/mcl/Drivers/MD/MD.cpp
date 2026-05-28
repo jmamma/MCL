@@ -201,6 +201,9 @@ void MDClass::cleanup_listeners() {
 }
 
 void MDClass::on_forwarded_cc(uint8_t *msg) {
+  if (!midi_events.kitupdate_state) {
+    return;
+  }
   midi_events.track_cc(msg);
 }
 
