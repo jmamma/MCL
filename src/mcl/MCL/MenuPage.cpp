@@ -10,20 +10,6 @@
 
 namespace {
 
-bool is_md_poly_mode_value(uint8_t *dest_var) {
-  return dest_var == &mcl_cfg.uart2_poly_chan;
-}
-
-uint8_t md_poly_mode_to_menu_value(uint8_t stored_value) {
-  return stored_value == MIDI_LOCAL_MODE ? MD_POLY_MODE_INT
-                                         : MD_POLY_MODE_INT_EXT;
-}
-
-uint8_t md_poly_mode_from_menu_value(uint8_t menu_value) {
-  return menu_value == MD_POLY_MODE_INT_EXT ? MD_POLY_MODE_INT_EXT
-                                            : MD_POLY_MODE_INT;
-}
-
 #ifdef MCL_HAS_TBD_DRIVER
 bool is_grid_y_device_value(uint8_t *dest_var) {
   return dest_var == &mcl_cfg.grid_y_device;
@@ -61,8 +47,9 @@ uint8_t grid_y_device_from_menu_value(uint8_t menu_value) {
 #endif
 
 uint8_t menu_value_from_stored(uint8_t *dest_var, uint8_t stored_value) {
-  if (is_md_poly_mode_value(dest_var)) {
-    return md_poly_mode_to_menu_value(stored_value);
+  if (dest_var == &mcl_cfg.uart2_poly_chan) {
+    return stored_value == MIDI_LOCAL_MODE ? MD_POLY_MODE_INT
+                                           : MD_POLY_MODE_INT_EXT;
   }
 #ifdef MCL_HAS_TBD_DRIVER
   if (is_grid_y_device_value(dest_var)) {
@@ -73,8 +60,8 @@ uint8_t menu_value_from_stored(uint8_t *dest_var, uint8_t stored_value) {
 }
 
 uint8_t stored_value_from_menu(uint8_t *dest_var, uint8_t menu_value) {
-  if (is_md_poly_mode_value(dest_var)) {
-    return md_poly_mode_from_menu_value(menu_value);
+  if (dest_var == &mcl_cfg.uart2_poly_chan) {
+    return menu_value == MD_POLY_MODE_INT_EXT;
   }
 #ifdef MCL_HAS_TBD_DRIVER
   if (is_grid_y_device_value(dest_var)) {

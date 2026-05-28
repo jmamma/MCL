@@ -54,7 +54,7 @@ public:
   void send_locks(uint8_t step);
   bool close_mask_mode();
   bool toggle_mask(uint8_t mask, bool func_down);
-  bool should_suppress_mask_shortcut(uint8_t mask, bool func_down);
+  bool should_suppress_mask_shortcut(uint8_t mask);
   void clear_mask_shortcut_suppress();
 };
 

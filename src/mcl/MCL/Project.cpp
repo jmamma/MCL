@@ -371,7 +371,7 @@ void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src,
   // Keep stale legacy lock params. Legacy playback used nonzero params with
   // no step lock bit to send kit-value resets on trig steps.
   dst.swing_amount = 0;
-  dst.set_swing_from_mask(MDSEQ_DEFAULT_SWING_MASK);
+  dst.set_default_swing();
   dst.mute_mask = 0;
 }
 

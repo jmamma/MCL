@@ -1,5 +1,4 @@
 #include "SeqStepPage.h"
-#include "../Drivers/MD/MD.h"
 #include "GUI_hardware.h"
 #include "GridPages.h"
 #include "MCLDefines.h"
@@ -31,11 +30,6 @@ SeqStepTrackRef step_track_for(uint8_t track) {
 
 SeqStepTrackRef active_step_track() NOINLINE();
 SeqStepTrackRef active_step_track() { return seq_step_active_track(); }
-
-bool swing_mask_edit_disabled() {
-  return SeqPage::mask_type == MASK_SWING && SeqPage::active_device_is_md() &&
-         MD.pattern.swingEditAll > 0;
-}
 
 #ifdef MCL_HAS_EXTENDED_PANEL_INPUT
 void retain_shift_step_selection(SeqStepPage &page, uint8_t track) {
@@ -83,7 +77,7 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
     break;
   case MASK_SWING:
     display_mask = 0;
-    if (!swing_mask_edit_disabled()) {
+    if (!SeqPage::swing_mask_edit_disabled()) {
       active_track.get_mask(&slide_mask, MASK_SWING);
       led_mask = slide_mask;
     }
@@ -181,11 +175,7 @@ bool SeqStepPage::toggle_mask(uint8_t mask, bool func_down) {
   return false;
 }
 
-bool SeqStepPage::should_suppress_mask_shortcut(uint8_t mask, bool func_down) {
-  if (!func_down) {
-    clear_mask_shortcut_suppress();
-    return false;
-  }
+bool SeqStepPage::should_suppress_mask_shortcut(uint8_t mask) {
   return suppress_mask_shortcut_mask == mask;
 }
 
@@ -508,7 +498,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       return true;
     }
     uint8_t step = track + page_step_offset();
-    if (swing_mask_edit_disabled()) {
+    if (SeqPage::swing_mask_edit_disabled()) {
       note_interface.clear_note(track);
       return true;
     }
@@ -671,6 +661,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
     }
 
     if (event_mask == EVENT_BUTTON_PRESSED) {
+      const bool func_down = key_interface.event_func_down(event);
       switch (key) {
       case MDX_KEY_COPY: {
         // Note copy
@@ -741,23 +732,23 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_MUTE:
-        if (key_interface.event_func_down(event)) {
+        if (func_down) {
           return false;
         }
       case MDX_KEY_BANKA: {
-        if (toggle_mask(MASK_MUTE, key_interface.event_func_down(event)))
+        if (toggle_mask(MASK_MUTE, func_down))
           return true;
       }
       case MDX_KEY_BANKB: {
-        if (toggle_mask(MASK_MUTE, key_interface.event_func_down(event)))
+        if (toggle_mask(MASK_MUTE, func_down))
           return true;
       }
       case MDX_KEY_BANKC: {
-        if (toggle_mask(MASK_SWING, key_interface.event_func_down(event)))
+        if (toggle_mask(MASK_SWING, func_down))
           return true;
       }
       case MDX_KEY_BANKD: {
-        if (toggle_mask(MASK_SLIDE, key_interface.event_func_down(event)))
+        if (toggle_mask(MASK_SLIDE, func_down))
           return true;
       }
       }

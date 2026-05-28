@@ -157,6 +157,7 @@ public:
   static bool idx_is_md_device(DeviceIdx device_idx);
   static bool device_is_md(MidiDevice *device);
   static bool active_device_is_md();
+  static bool swing_mask_edit_disabled();
   static void select_device_idx(DeviceIdx device_idx);
   static void request_enhanced_mask_window(uint8_t mask);
   static bool consume_enhanced_mask_window_exit();

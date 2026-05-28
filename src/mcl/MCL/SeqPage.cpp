@@ -35,11 +35,6 @@ const char *const kMaskInfoLabels[] PROGMEM = {
     mclstr_lock,
 };
 
-bool swing_mask_edit_disabled() {
-  return SeqPage::mask_type == MASK_SWING && SeqPage::active_device_is_md() &&
-         MD.pattern.swingEditAll > 0;
-}
-
 #if defined(__AVR__)
 #define seq_panel_popup_text(...) MD.popup_text(__VA_ARGS__)
 #define seq_panel_popup_text_P(...) MD.popup_text_P(__VA_ARGS__)
@@ -198,6 +193,11 @@ bool SeqPage::device_is_md(MidiDevice *device) {
 
 bool SeqPage::active_device_is_md() {
   return idx_is_md_device(current_device_idx());
+}
+
+bool SeqPage::swing_mask_edit_disabled() {
+  return mask_type == MASK_SWING && active_device_is_md() &&
+         MD.pattern.swingEditAll > 0;
 }
 
 void SeqPage::select_device_idx(DeviceIdx device_idx) {
@@ -551,7 +551,8 @@ static inline bool enhanced_mask_window_available() {
 }
 
 static inline bool enhanced_mask_window_supported(uint8_t mask) {
-  return mask == MASK_SWING || mask == MASK_SLIDE;
+  mask -= MASK_SWING;
+  return mask <= MASK_SLIDE - MASK_SWING;
 }
 
 static inline void open_enhanced_mask_window(uint8_t mask) {

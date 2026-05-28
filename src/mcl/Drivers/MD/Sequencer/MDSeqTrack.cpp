@@ -1144,7 +1144,7 @@ void MDSeqTrack::clear_track(bool locks) {
   // steps and microtiming are adjacent in MDSeqTrackData storage.
   memset(steps, 0, sizeof(steps) + sizeof(microtiming));
   swing_amount = 0;
-  set_swing_from_mask(MDSEQ_DEFAULT_SWING_MASK);
+  set_default_swing();
   clear_mutes();
   ignore_step = 255;
   if (locks) {
@@ -1214,9 +1214,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   } else {
     pswingpattern = (uint8_t *)&pattern->swingPatterns[track_number];
   }
-  uint64_t swing_bits;
-  memcpy(&swing_bits, pswingpattern, sizeof(swing_bits));
-  set_swing_from_mask(swing_bits);
+  set_swing_from_mask(pswingpattern);
   swing_amount = md_swing_q14_to_amount(swing_q14);
 
   for (uint8_t a = 0; a < length; a++) {
@@ -1330,7 +1328,8 @@ void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   step->active = true;
   step->microtiming = microtiming[n];
   step->swing = steps[n].swing;
-  step->mute = IS_BIT_SET64(mute_mask, n);
+  step->mute =
+      reinterpret_cast<const uint8_t *>(&mute_mask)[n >> 3] & (1 << (n & 7));
 
   uint8_t idx = get_lockidx(n);
   uint8_t lcks = steps[n].locks;
@@ -1358,10 +1357,12 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
   }
   memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
   steps[n].swing = step->swing;
+  uint8_t *mute_bytes = reinterpret_cast<uint8_t *>(&mute_mask);
+  uint8_t mute_bit = 1 << (n & 7);
   if (step->mute) {
-    SET_BIT64(mute_mask, n);
+    mute_bytes[n >> 3] |= mute_bit;
   } else {
-    CLEAR_BIT64(mute_mask, n);
+    mute_bytes[n >> 3] &= ~mute_bit;
   }
 }
 

@@ -58,21 +58,12 @@
 
 namespace {
 
-bool mask_shortcut_for_key(uint8_t key, uint8_t &mask) {
-  switch (key) {
-  case MDX_KEY_BANKA:
-  case MDX_KEY_BANKB:
-    mask = MASK_MUTE;
-    return true;
-  case MDX_KEY_BANKC:
-    mask = MASK_SWING;
-    return true;
-  case MDX_KEY_BANKD:
-    mask = MASK_SLIDE;
-    return true;
-  default:
-    return false;
+uint8_t mask_shortcut_for_key(uint8_t key) {
+  uint8_t bank = key - MDX_KEY_BANKA;
+  if (bank > MDX_KEY_BANKD - MDX_KEY_BANKA) {
+    return MASK_PATTERN;
   }
+  return bank < MASK_SWING ? MASK_MUTE : bank;
 }
 
 } // namespace
@@ -302,8 +293,7 @@ bool mcl_handleEvent(gui_event_t *event) {
       seq_step_page.clear_mask_shortcut_suppress();
     }
     if (event->mask == EVENT_BUTTON_RELEASED) {
-      uint8_t shortcut_mask = MASK_PATTERN;
-      if (mask_shortcut_for_key(key, shortcut_mask)) {
+      if (mask_shortcut_for_key(key) != MASK_PATTERN) {
         seq_step_page.clear_mask_shortcut_suppress();
       }
     }
@@ -340,10 +330,9 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
         bool func_down = key_interface.event_func_down(event);
-        uint8_t shortcut_mask = MASK_PATTERN;
-        if (func_down && mask_shortcut_for_key(key, shortcut_mask)) {
-          if (seq_step_page.should_suppress_mask_shortcut(shortcut_mask,
-                                                         func_down)) {
+        uint8_t shortcut_mask = mask_shortcut_for_key(key);
+        if (func_down && shortcut_mask != MASK_PATTERN) {
+          if (seq_step_page.should_suppress_mask_shortcut(shortcut_mask)) {
             return true;
           }
           if (current_page != SEQ_STEP_PAGE) {

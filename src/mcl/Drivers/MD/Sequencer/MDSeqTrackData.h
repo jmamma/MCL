@@ -115,15 +115,26 @@ public:
   // Swing is stored per-step in steps[].swing. This expands a contiguous mask
   // (bit n -> step n), as used for the default pattern, MD pattern import and
   // sysex, into those per-step bits.
-  void set_swing_from_mask(uint64_t mask) {
+  void set_swing_from_mask(const uint8_t *mask_bytes) {
+    uint8_t step = 0;
+    for (uint8_t byte = 0; byte < sizeof(uint64_t); byte++) {
+      uint8_t bits = mask_bytes[byte];
+      for (uint8_t bit = 0; bit < 8; bit++, step++) {
+        steps[step].swing = bits & 1;
+        bits >>= 1;
+      }
+    }
+  }
+
+  void set_default_swing() {
     for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
-      steps[step].swing = (mask >> step) & 1ULL;
+      steps[step].swing = step & 1;
     }
   }
 
   void init() {
     memset(this, 0, sizeof(MDSeqTrackData));
-    set_swing_from_mask(MDSEQ_DEFAULT_SWING_MASK);
+    set_default_swing();
   }
 };
 
