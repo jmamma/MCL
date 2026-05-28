@@ -63,7 +63,9 @@ void KeyInterface::disable_listener() { sysex->removeSysexListener(this); }
 bool KeyInterface::on(bool clear_states) {
   note_interface.init_notes();
   if (clear_states) {
+    uint64_t func_state = cmd_key_state & (1ULL << MDX_KEY_FUNC);
     cmd_key_state = 0;
+    cmd_key_state |= func_state;
   }
   note_interface.note_proceed = true;
   if (state) {
