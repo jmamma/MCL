@@ -700,8 +700,7 @@ void rename_row() {
     gfx.alert("Error", "Row not active");
   }
   grid_page.load_slot_models();
-  grid_slot_param2.cur = 0;
-  grid_slot_page.cur_row = 0;
+  grid_slot_page.select_item(0);
 }
 
 void apply_slot_changes_cb() { grid_page.apply_slot_changes(); }
