@@ -34,10 +34,24 @@ const char *shared_row_name(ElektronDevice **devs,
   return nullptr;
 }
 
-void copy_row_name(GridRowHeader &row_header, const char *name) {
+void copy_row_name_text(GridRowHeader &row_header, const char *name) {
+  if (name == nullptr) {
+    row_header.name[0] = '\0';
+    return;
+  }
   strncpy(row_header.name, name, sizeof(row_header.name));
   row_header.name[sizeof(row_header.name) - 1] = '\0';
+}
+
+void copy_row_name(GridRowHeader &row_header, const char *name) {
+  copy_row_name_text(row_header, name);
   row_header.active = true;
+}
+
+void inherit_grid_x_row_name(GridRowHeader row_headers[NUM_GRIDS]) {
+  for (uint8_t n = 1; n < NUM_GRIDS; n++) {
+    copy_row_name_text(row_headers[n], row_headers[0].name);
+  }
 }
 
 } // namespace
@@ -318,15 +332,16 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
 
   const char *row_name = shared_row_name(elektron_devs, save_dev_mask);
 
-  // Only set the shared row name when this row has not already been named.
+  if (saved_grid_mask && row_headers[0].name[0] == '\0' &&
+      row_name != nullptr) {
+    copy_row_name(row_headers[0], row_name);
+  }
+  inherit_grid_x_row_name(row_headers);
+
   uint8_t grid_bit = 1;
   for (uint8_t n = 0; n < NUM_GRIDS; n++, grid_bit <<= 1) {
     if (saved_grid_mask & grid_bit) {
-      if (row_headers[n].name[0] == '\0' && row_name != nullptr) {
-        copy_row_name(row_headers[n], row_name);
-      } else {
-        row_headers[n].active = true;
-      }
+      row_headers[n].active = true;
     }
     proj.write_grid_row_header(&row_headers[n], row, n);
     proj.sync_grid(n);
@@ -658,8 +673,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   memset(mute_states, 255, sizeof(mute_states));
 
   GridRow row = 0;
-  GridIndex row_header_grid = grid_page.cur_grid;
-  bool have_row_header_grid = false;
 
   // DEBUG_PRINTLN("send tracks 1");
   // DEBUG_PRINTLN((int)SP);
@@ -680,11 +693,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
 
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { slot_select_array[i] = 0; continue; }
-
-    if (!have_row_header_grid) {
-      row_header_grid = i >> 4;
-      have_row_header_grid = true;
-    }
 
     row = row_array ? row_array[i] : current_row;
     last_slot = dst;
@@ -708,7 +716,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   GridRowHeader row_header;
 
-  proj.read_grid_row_header(&row_header, row, row_header_grid);
+  proj.read_grid_row_header(&row_header, row, 0);
 
   if (mcl_cfg.uart2_prg_out > 0) {
     mcl_seq.secondary_output->sendProgramChange(mcl_cfg.uart2_prg_out - 1,

@@ -44,6 +44,18 @@ void copy_grid_slot_label(uint8_t track_type,
   label[2] = '\0';
 }
 
+void inherit_grid_x_row_name(GridRowHeader &row_header, GridRow row) {
+  GridRowHeader grid_x_header;
+  if (!proj.read_grid_row_header(&grid_x_header, row, 0) ||
+      !grid_x_header.active || grid_x_header.name[0] == '\0') {
+    row_header.name[0] = '\0';
+    return;
+  }
+
+  strncpy(row_header.name, grid_x_header.name, sizeof(row_header.name));
+  row_header.name[sizeof(row_header.name) - 1] = '\0';
+}
+
 } // namespace
 
 void GridPage::init() {
@@ -362,6 +374,9 @@ void GridPage::load_slot_models() {
     GridRow row = base_row + n;
     if (row >= GRID_LENGTH) { continue; }
     proj.read_grid_row_header(&row_headers[n], row, cur_grid);
+    if (cur_grid != 0) {
+      inherit_grid_x_row_name(row_headers[n], row);
+    }
     update_row_state(row, row_headers[n].active);
     for (uint8_t x = 0; x < GRID_WIDTH; x++) {
       uint8_t track_type = row_headers[n].track_type[x];
@@ -468,7 +483,7 @@ void GridPage::display_grid_info() {
                         oled_display.getCursorY() - 6, 37, 7, WHITE);
 
   oled_display.setTextColor(BLACK, WHITE);
-  if (row_headers[cur_row].active) {
+  if (row_headers[cur_row].name[0] != '\0') {
     char rowname[10];
     strncpy(rowname, row_headers[cur_row].name, 9);
     rowname[9] = '\0';
