@@ -681,7 +681,7 @@ void GridPage::display() {
 }
 
 void rename_row() {
-  const char *my_title = "Row Name:";
+  const char *my_title = "ROW NAME:";
   GridRowHeader row_headers[NUM_GRIDS];
 
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
