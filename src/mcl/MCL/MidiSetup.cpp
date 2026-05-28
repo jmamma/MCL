@@ -283,6 +283,9 @@ void MidiSetup::cfg_clock_recv() {
 #ifdef PLATFORM_TBD
   cfg_p4_clock_forward();
 #endif
+  if (MidiClock.uart_clock_recv) {
+    MidiClock.reset_clock_phase = true;
+  }
 }
 
 void MidiSetup::cfg_ports(bool boot) {
