@@ -12,6 +12,8 @@
 #define EVENT_BUTTON_RELEASED _BV(1)
 #define EVENT_BUTTON_LONG_PRESS _BV(2)
 
+#define EVENT_MODIFIER_FUNC _BV(0)
+
 #define MAX_BUTTONS GUI_NUM_BUTTONS
 #define MAX_EVENTS 32
 
@@ -45,6 +47,7 @@ typedef struct gui_event_s {
   uint8_t mask;
   uint8_t source;
   uint8_t port;
+  uint8_t modifiers;
   EventType type;
 } gui_event_t;
 
@@ -70,6 +73,7 @@ private:
           event.source = i;
           event.type = BUTTON;
           event.mask = pressed ? EVENT_BUTTON_PRESSED : EVENT_BUTTON_RELEASED;
+          event.modifiers = 0;
           eventBuffer.putp(&event);
         } else {
           clearIgnoreMask(i);
@@ -95,6 +99,7 @@ private:
           event.source = i;
           event.type = BUTTON;
           event.mask = pressed ? EVENT_BUTTON_PRESSED : EVENT_BUTTON_RELEASED;
+          event.modifiers = 0;
           eventBuffer.putp(&event);
         } else {
           clearIgnoreMask(i);
@@ -147,6 +152,7 @@ private:
           event.source = button_id;
           event.type = BUTTON;
           event.mask = EVENT_BUTTON_PRESSED;
+          event.modifiers = 0;
           eventBuffer.putp(&event);
           last_repeat_clock[i] = current_time;
         }

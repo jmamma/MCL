@@ -148,6 +148,7 @@ void KeyInterface::post_key_event(uint8_t key, bool key_release) {
   }
   event.mask = key_release ? EVENT_BUTTON_RELEASED : EVENT_BUTTON_PRESSED;
   event.port = md_port;
+  event.modifiers = is_key_down(MDX_KEY_FUNC) ? EVENT_MODIFIER_FUNC : 0;
   GUI.putEvent(&event);
 }
 

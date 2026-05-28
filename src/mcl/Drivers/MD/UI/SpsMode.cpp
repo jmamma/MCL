@@ -403,6 +403,7 @@ bool SpsMode::handle_sps_key_tap(gui_event_t *event) {
         e.source = ButtonsClass::BUTTON4;
         e.mask = EVENT_BUTTON_RELEASED;
         e.port = 0;
+        e.modifiers = 0;
         GUI.putEvent(&e);
       }
     }

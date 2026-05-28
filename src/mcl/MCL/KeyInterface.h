@@ -87,6 +87,10 @@ public:
   void set_key_state(uint8_t key, bool down);
   void post_key_event(uint8_t key, bool key_release);
   void key_event(uint8_t key, bool key_release);
+  bool event_func_down(const gui_event_t *event) {
+    return is_key_down(MDX_KEY_FUNC) ||
+           (event != NULL && (event->modifiers & EVENT_MODIFIER_FUNC));
+  }
 
   bool on(bool clear_states = true);
   bool off();

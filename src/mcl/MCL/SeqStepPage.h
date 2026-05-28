@@ -22,6 +22,7 @@ public:
   bool update_params_queue;
   bool prepare;
   bool page_copy;
+  bool return_to_grid_on_mask_close;
 
   uint8_t pitch_param;
   uint16_t ignore_release;
@@ -35,7 +36,8 @@ public:
   SeqStepMidiEvents midi_events;
   SeqStepPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
               Encoder *e4 = NULL)
-      : SeqPage(e1, e2, e3, e4) {
+      : SeqPage(e1, e2, e3, e4),
+        return_to_grid_on_mask_close(false) {
       }
   void disable_microtiming_overlay();
   void enable_paramupdate_events();
@@ -48,7 +50,8 @@ public:
   virtual void loop();
   virtual void cleanup();
   void send_locks(uint8_t step);
-  bool toggle_mask(uint8_t mask);
+  bool close_mask_mode();
+  bool toggle_mask(uint8_t mask, bool func_down);
 };
 
 #endif /* SEQSTEPPAGE_H__ */

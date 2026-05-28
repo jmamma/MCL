@@ -308,11 +308,13 @@ bool mcl_handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKB:
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
-        if (key_interface.is_key_down(MDX_KEY_FUNC) &&
+        bool func_down = key_interface.event_func_down(event);
+        if (func_down &&
             (key == MDX_KEY_BANKB || key == MDX_KEY_BANKC ||
              key == MDX_KEY_BANKD) &&
             current_page != SEQ_STEP_PAGE) {
           seq_step_page.prepare = true;
+          seq_step_page.return_to_grid_on_mask_close = true;
           if (current_page != SOUND_BROWSER &&
               current_page != ARP_PAGE &&
               current_page != POLY_PAGE) {
@@ -330,7 +332,7 @@ bool mcl_handleEvent(gui_event_t *event) {
 //            (current_page == MIXER_PAGE && mixer_page.preview_mute_set != 255))
           return false;
         }
-        if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+        if (func_down) {
           return false;
         }
         if (grid_page.last_page == 255) {
