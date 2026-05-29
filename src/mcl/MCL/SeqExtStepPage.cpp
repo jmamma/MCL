@@ -1959,11 +1959,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
             move_note_selection(0, inc);
             return true;
           case MDX_KEY_DOWN:
-            if (note_selection_editing) {
-              move_note_selection(0, -1 * inc);
-            } else {
-              begin_note_selection();
-            }
+            move_note_selection(0, -1 * inc);
             return true;
           }
         }
