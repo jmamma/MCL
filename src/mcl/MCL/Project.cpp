@@ -234,16 +234,10 @@ constexpr size_t PROJECT_CONFIG_OFFSET =
     offsetof(MCLSysConfigData, uart1_turbo_speed);
 constexpr size_t PROJECT_CONFIG_SIZE =
     offsetof(MCLSysConfigData, project_config) - PROJECT_CONFIG_OFFSET;
-constexpr uint8_t MIGRATE_TRACK_STORAGE = 1 << 0;
-constexpr uint8_t MIGRATE_SIGNED_MICROTIMING = 1 << 1;
-constexpr uint8_t MIGRATE_PERF_TRACK_LAYOUT = 1 << 2;
-constexpr uint8_t MIGRATE_GRID_PAIRS = 1 << 3;
-constexpr uint8_t MIGRATE_PROJECT_CONFIG = 1 << 4;
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
 #define PROJECT_VERSION_CAN_OPEN(v)                                           \
-  ((v) == PROJ_MIN_READABLE_VERSION ||                                        \
-   ((v) >= PROJ_VERSION_PERF_TRACK_LAYOUT && (v) <= PROJ_VERSION))
+  ((v) == PROJ_MIN_READABLE_VERSION || (v) == PROJ_VERSION)
 #else
 #define PROJECT_VERSION_CAN_OPEN(v) ((v) == PROJ_VERSION)
 #endif
@@ -492,75 +486,6 @@ bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
   copy_legacy_perf_track_data(upgraded.data, legacy_track.data);
   return grid.write(&upgraded, sizeof(upgraded), dst_column, row);
 }
-
-bool migrate_perf_track_clean_layout(Grid &grid, GridColumn column,
-                                     GridRow row) {
-  LegacyGridTrackHeader header;
-  if (!read_legacy_header(grid, column, row, PERF_TRACK_TYPE, &header)) {
-    return false;
-  }
-  if (header.version[0] >= PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT) {
-    return true;
-  }
-
-  LegacyPerfTrackData legacy_perf;
-  if (!grid.read(&legacy_perf, sizeof(legacy_perf))) {
-    return false;
-  }
-
-  PerfTrack upgraded;
-  copy_legacy_header(upgraded, header);
-  copy_legacy_perf_track_data(upgraded, legacy_perf);
-  return write_migrated_track(grid, column, row, upgraded,
-                              upgraded.get_track_size());
-}
-
-#if !defined(__AVR__)
-bool migrate_spsx_track_signed_microtiming(Grid &grid, GridColumn column,
-                                           GridRow row) {
-  SPSXTrack track;
-  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
-    return false;
-  }
-  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
-    return true;
-  }
-  if (track.seq_storage.seq_version == SPSX_SEQ_VERSION_LEGACY) {
-    convert_md_seq_unsigned_timing(track.seq_storage.seq_data.legacy,
-                                   project_seq_speed_value(track.link));
-  }
-  return write_migrated_track(grid, column, row, track,
-                              track.get_track_size());
-}
-#endif
-
-bool migrate_md_track_signed_microtiming(Grid &grid, GridColumn column,
-                                         GridRow row) {
-  MDTrack track;
-  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
-    return false;
-  }
-  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
-    return true;
-  }
-  convert_md_seq_unsigned_timing(track.seq_data,
-                                 project_seq_speed_value(track.link));
-  return write_migrated_track(grid, column, row, track, track.get_track_size());
-}
-
-bool migrate_ext_like_signed_microtiming(Grid &grid, GridColumn column,
-                                         GridRow row, DeviceTrack &track,
-                                         ExtSeqTrackData &seq_data) {
-  if (!grid.read(track._this(), track.get_track_size(), column, row)) {
-    return false;
-  }
-  if (track.storage_version_at_least(SEQ_TRACK_MICROTIMING_STORAGE_VERSION)) {
-    return true;
-  }
-  convert_ext_seq_unsigned_timing(seq_data, project_seq_speed_value(track.link));
-  return write_migrated_track(grid, column, row, track,
-                              track.get_track_size());
-}
 #endif
 
 void copy_project_config(MCLSysConfigData *dst,
@@ -720,8 +645,6 @@ void Project::chdir_projects() {
   SD.chdir(c_project_root);
 }
 
-#define OLD_PROJ_VERSION 2025
-
 #ifdef MCL_HAS_PROJECT_CONVERSION
 bool Project::convert_project(const char *projectname) { return true; }
 #endif
@@ -827,7 +750,7 @@ bool Project::read_active_grid_pair(const char *projectname, uint8_t *pair) {
   uint32_t header_version = 0;
   bool ok = mcl_sd.read_data((uint8_t *)&header_version,
                              sizeof(header_version), &header_file);
-  if (ok && header_version >= PROJ_VERSION_GRID_PAIRS) {
+  if (ok && header_version == PROJ_VERSION) {
     ok = mcl_sd.read_data(pair, sizeof(*pair), &header_file);
   } else {
     *pair = 0;
@@ -896,13 +819,10 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
 
   uint32_t project_version = version;
 #ifdef MCL_HAS_PROJECT_CONVERSION
-  uint8_t migration_flags = 0;
-  if (project_version == PROJ_MIN_READABLE_VERSION) {
-    migration_flags = MIGRATE_TRACK_STORAGE | MIGRATE_GRID_PAIRS |
-                      MIGRATE_PROJECT_CONFIG;
-  }
+  bool migrate_track_storage = project_version == PROJ_MIN_READABLE_VERSION;
+  bool project_needs_update = migrate_track_storage;
 
-  if (project_version < PROJ_VERSION_GRID_HEADERS &&
+  if (project_version == PROJ_MIN_READABLE_VERSION &&
       !stamp_existing_grid_headers(project_basename, project_version)) {
     DEBUG_PRINTLN(F("Could not stamp grid headers"));
     return false;
@@ -919,7 +839,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     pair = 0;
     active_grid_pair = 0;
 #ifdef MCL_HAS_PROJECT_CONVERSION
-    migration_flags |= MIGRATE_GRID_PAIRS;
+    project_needs_update = true;
 #endif
     if (!project_pair_exists(pair, project_basename)) {
       DEBUG_PRINTLN(F("default grid pair missing"));
@@ -928,7 +848,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
-  bool write_grid_headers = project_version < PROJ_VERSION_GRID_HEADERS;
+  bool write_grid_headers = project_version == PROJ_MIN_READABLE_VERSION;
 #endif
   for (uint8_t i = 0; i < NUM_GRIDS; i++) {
     char grid_name[PRJ_NAME_LEN  + 5];
@@ -951,18 +871,8 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     if (grids[i].read_header()) {
       grid_version = grids[i].version;
     } else {
-#ifdef MCL_HAS_PROJECT_CONVERSION
-      write_grid_headers = true;
-      if (project_version >= PROJ_VERSION_GRID_HEADERS) {
-        // Older backup pairs can be headerless even after the master project
-        // file has been upgraded. Treat the selected grid pair as supported
-        // legacy storage so loading that backup upgrades it in place.
-        grid_version = PROJ_MIN_READABLE_VERSION;
-      }
-#else
       DEBUG_PRINTLN(F("Grid header missing"));
       return false;
-#endif
     }
     if (!PROJECT_VERSION_CAN_OPEN(grid_version)) {
       DEBUG_PRINTLN(F("Grid version incompatible"));
@@ -970,7 +880,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     }
 #ifdef MCL_HAS_PROJECT_CONVERSION
     if (grid_version == PROJ_MIN_READABLE_VERSION) {
-      migration_flags |= MIGRATE_TRACK_STORAGE;
+      migrate_track_storage = true;
     }
     if (grid_version < PROJ_VERSION) {
       write_grid_headers = true;
@@ -979,12 +889,11 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
-  if (migration_flags) {
+  if (migrate_track_storage || project_needs_update || write_grid_headers) {
     draw_wait_popup("UPGRADING PROJECT");
   }
 
-  if ((migration_flags & MIGRATE_TRACK_STORAGE) &&
-      !migrate_track_storage_versions()) {
+  if (migrate_track_storage && !migrate_track_storage_versions()) {
     DEBUG_PRINTLN(F("Could not migrate project tracks"));
     return false;
   }
@@ -1012,7 +921,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   }
   bool update_header = use_requested_pair;
 #ifdef MCL_HAS_PROJECT_CONVERSION
-  update_header = update_header || migration_flags || write_grid_headers ||
+  update_header = update_header || project_needs_update || write_grid_headers ||
                   project_version < PROJ_VERSION;
 #endif
   if (update_header && !write_header()) {
@@ -1093,7 +1002,7 @@ bool Project::read_header() {
   return true;
 }
 
-bool Project::check_project_version(uint16_t min_version) {
+bool Project::check_project_version() {
   bool ret;
 
   DEBUG_PRINT_FN();
@@ -1105,7 +1014,6 @@ bool Project::check_project_version(uint16_t min_version) {
     DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
-  (void)min_version;
   return PROJECT_VERSION_CAN_OPEN(version);
 }
 
@@ -1234,15 +1142,6 @@ bool NOINLINE() Project::migrate_track_storage_versions() {
   return true;
 }
 
-bool NOINLINE() Project::migrate_post_storage_tracks(uint8_t migration_flags) {
-  for (GridIndex grid = 0; grid < NUM_GRIDS; grid++) {
-    if (!migrate_grid_post_storage_tracks(grid, migration_flags)) {
-      return false;
-    }
-  }
-  return true;
-}
-
 bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
@@ -1336,79 +1235,6 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
         break;
       case MD_ROUTE_TRACK_TYPE:
         break;
-      default:
-        break;
-      }
-    }
-  }
-
-  draw_upgrade_progress(grid, GRID_LENGTH);
-  return grids[grid].sync();
-}
-
-bool NOINLINE() Project::migrate_grid_post_storage_tracks(
-    GridIndex grid, uint8_t migration_flags) {
-  bool migrate_perf_layout = migration_flags & MIGRATE_PERF_TRACK_LAYOUT;
-  bool migrate_signed_timing = migration_flags & MIGRATE_SIGNED_MICROTIMING;
-  for (GridRow row = 0; row < GRID_LENGTH; row++) {
-    draw_upgrade_progress(grid, row);
-
-    GridRowHeader row_header;
-    if (!grids[grid].read_row_header(&row_header, row)) {
-      return false;
-    }
-
-    for (GridColumn column = 0; column < GRID_WIDTH; column++) {
-      uint8_t track_type = row_header.track_type[column];
-      if (migrate_perf_layout && track_type == PERF_TRACK_TYPE &&
-          !migrate_perf_track_clean_layout(grids[grid], column, row)) {
-        return false;
-      }
-      if (!migrate_signed_timing) {
-        continue;
-      }
-      switch (track_type) {
-      case MD_TRACK_TYPE:
-        if (grid == 0 &&
-            !migrate_md_track_signed_microtiming(grids[grid], column, row)) {
-          return false;
-        }
-        break;
-#if !defined(__AVR__)
-      case MDSPSX_TRACK_TYPE:
-        if (grid == 0 &&
-            !migrate_spsx_track_signed_microtiming(grids[grid], column, row)) {
-          return false;
-        }
-        break;
-#endif
-      case EXT_TRACK_TYPE:
-      {
-        ExtTrack track;
-        if (!migrate_ext_like_signed_microtiming(grids[grid], column, row,
-                                                track, track.seq_data)) {
-          return false;
-        }
-        break;
-      }
-      case A4_TRACK_TYPE:
-      {
-        A4Track track;
-        if (!migrate_ext_like_signed_microtiming(grids[grid], column, row,
-                                                track, track.seq_data)) {
-          return false;
-        }
-        break;
-      }
-      case MNM_TRACK_TYPE:
-      {
-        MNMTrack track;
-        if (!migrate_ext_like_signed_microtiming(grids[grid], column, row,
-                                                track, track.seq_data)) {
-          return false;
-        }
-        break;
-      }
       default:
         break;
       }

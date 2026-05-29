@@ -11,19 +11,8 @@
 #include "ProjectPages.h"
 
 #define PROJ_MIN_READABLE_VERSION 3000
-#define PROJ_VERSION_TRACK_STORAGE_VERSION 3001
-#define PROJ_VERSION_ROUTE_TRACK_TYPE 3003
-#define PROJ_VERSION_GRID_PAIRS 3004
-#define PROJ_VERSION_PROJECT_CONFIG 3005
-#define PROJ_VERSION_NATIVE_SWING_TRACKS 3006
-#define PROJ_VERSION_SIGNED_MICROTIMING 3008
-#define PROJ_VERSION_PERF_TRACK_LAYOUT 3009
-#define PROJ_VERSION_GRID_HEADERS 3010
 #define PROJ_VERSION 3010
 #define PRJ_DIR "/Projects"
-
-static_assert(PROJ_VERSION_TRACK_STORAGE_VERSION < PROJ_VERSION_ROUTE_TRACK_TYPE,
-              "route migration must cover legacy track-storage projects");
 
 class ProjectHeader {
 public:
@@ -53,10 +42,8 @@ public:
   bool convert_project(const char *projectname);
   bool migrate_grid_track_storage_versions(GridIndex grid);
   bool migrate_track_storage_versions();
-  bool migrate_grid_post_storage_tracks(GridIndex grid, uint8_t migration_flags);
-  bool migrate_post_storage_tracks(uint8_t migration_flags);
 #endif
-  bool check_project_version(uint16_t min_version = PROJ_MIN_READABLE_VERSION);
+  bool check_project_version();
   bool new_project_master_file(const char *projectname);
   bool write_header();
   bool build_grid_filename(const char *basename, uint8_t suffix, char *out,
