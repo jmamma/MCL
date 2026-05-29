@@ -27,18 +27,27 @@ void copy_md_machine_to_spsx(const MDMachine &src, SPSMachine &dest) {
 } // namespace
 #endif
 
+// Remap group/lfo references that point at src: trig/mute groups become
+// unset (255), lfo destination follows to dest. Shared by paste_track and the
+// destination_same branch of on_copy.
+static void remap_groups_same(MDMachine &machine, uint8_t src, uint8_t dest)
+    NOINLINE();
+static void remap_groups_same(MDMachine &machine, uint8_t src, uint8_t dest) {
+  if (machine.trigGroup == src) {
+    machine.trigGroup = 255;
+  }
+  if (machine.muteGroup == src) {
+    machine.muteGroup = 255;
+  }
+  if (machine.lfo.destinationTrack == src) {
+    machine.lfo.destinationTrack = dest;
+  }
+}
+
 void MDTrack::paste_track(uint8_t src_track, uint8_t dest_track,
                           SeqTrack *seq_track) {
   DEBUG_PRINTLN(F("paste seq track"));
-  if (machine.trigGroup == src_track) {
-    machine.trigGroup = 255;
-  }
-  if (machine.muteGroup == src_track) {
-    machine.muteGroup = 255;
-  }
-  if (machine.lfo.destinationTrack == src_track) {
-    machine.lfo.destinationTrack = dest_track;
-  }
+  remap_groups_same(machine, src_track, dest_track);
   load_immediate(dest_track, seq_track);
   bool send_machine = true;
   bool send_level = true;
@@ -332,15 +341,7 @@ static uint8_t remap_grid_col(uint8_t field, GridColumn s_col,
 void MDTrack::on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) {
   // bit of a hack to keep lfos modulating the same track.
   if (destination_same) {
-    if (machine.trigGroup == s_col) {
-      machine.trigGroup = 255;
-    }
-    if (machine.muteGroup == s_col) {
-      machine.muteGroup = 255;
-    }
-    if (machine.lfo.destinationTrack == s_col) {
-      machine.lfo.destinationTrack = d_col;
-    }
+    remap_groups_same(machine, s_col, d_col);
   } else {
     machine.lfo.destinationTrack =
         remap_grid_col(machine.lfo.destinationTrack, s_col, d_col);
