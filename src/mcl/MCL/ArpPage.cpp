@@ -10,6 +10,12 @@ namespace {
 DeviceIdx arp_device_idx() {
   return SeqPage::current_device_idx();
 }
+
+void set_arp_encoder(Encoder &e, int value) NOINLINE();
+void set_arp_encoder(Encoder &e, int value) {
+  e.cur = value;
+  e.old = value;
+}
 } // namespace
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
@@ -43,17 +49,10 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
 
   current_track = n;
 
-  arp_rate.cur = arp_track->length;
-  arp_rate.old = arp_rate.cur;
-
-  arp_range.cur = arp_track->range;
-  arp_range.old = arp_range.cur;
-
-  arp_mode.cur = arp_track->mode;
-  arp_mode.old = arp_mode.cur;
-
-  arp_enabled.cur = arp_track->enabled;
-  arp_enabled.old = arp_enabled.cur;
+  set_arp_encoder(arp_rate, arp_track->length);
+  set_arp_encoder(arp_range, arp_track->range);
+  set_arp_encoder(arp_mode, arp_track->mode);
+  set_arp_encoder(arp_enabled, arp_track->enabled);
 
   if (re_render) {
     if (last_arp_track && arp_track != last_arp_track) {

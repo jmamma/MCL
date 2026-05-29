@@ -131,6 +131,12 @@ void refresh_lfo_offset_from_target(LFOSeqTrack *track, uint8_t param_idx) {
   }
 }
 
+uint8_t lfo_param_encoder_max(uint8_t dest) NOINLINE();
+uint8_t lfo_param_encoder_max(uint8_t dest) {
+  uint8_t param_count = LFOTrackRef::param_count(dest);
+  return dest == 0 ? 2 : (param_count ? param_count - 1 : 0);
+}
+
 void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
                            uint8_t encoder_idx,
                            uint8_t param_idx) NOINLINE();
@@ -146,11 +152,7 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
     changed = true;
   }
 
-  uint8_t param_count =
-      LFOTrackRef::param_count(track->params[param_idx].dest);
-  param_encoder->max = track->params[param_idx].dest == 0
-                           ? 2
-                           : (param_count ? param_count - 1 : 0);
+  param_encoder->max = lfo_param_encoder_max(track->params[param_idx].dest);
   if (param_encoder->cur > param_encoder->max) {
     param_encoder->setValue(param_encoder->max);
     track->params[param_idx].param = param_encoder->cur;
@@ -403,15 +405,15 @@ void LFOPage::cleanup() {
   key_interface.off();
 }
 
+static void set_lfo_encoder(Encoder *e, int cur, int max) NOINLINE();
+static void set_lfo_encoder(Encoder *e, int cur, int max) {
+  e->cur = cur;
+  ((MCLEncoder *)e)->max = max;
+}
+
 void LFOPage::config_encoder_range(uint8_t i) {
-  ((MCLEncoder *)encoders[i])->max =
-      LFOTrackRef::target_count();
-  uint8_t param_count =
-      LFOTrackRef::param_count(encoders[i]->cur);
-  ((MCLEncoder *)encoders[i + 1])->max = encoders[i]->cur == 0
-                                             ? 2
-                                             : (param_count ? param_count - 1
-                                                            : 0);
+  ((MCLEncoder *)encoders[i])->max = LFOTrackRef::target_count();
+  ((MCLEncoder *)encoders[i + 1])->max = lfo_param_encoder_max(encoders[i]->cur);
 }
 
 void LFOPage::config_encoders() {
@@ -429,30 +431,17 @@ void LFOPage::config_encoders() {
     config_encoder_range(2);
   }
   else if (page_mode == LFO_GLOBAL) {
-    encoders[0]->cur = lfo_track->base_mode();
-    ((MCLEncoder *)encoders[0])->max = LFO_MODE_TRACK_TRIG;
-
-    encoders[1]->cur = lfo_track->wav_type;
-    ((MCLEncoder *)encoders[1])->max = LFO_WAV_COUNT - 1;
-
-    encoders[2]->cur = lfo_track->speed;
-    ((MCLEncoder *)encoders[2])->max = 127;
-
-    encoders[3]->cur = lfo_track->speed_multiplier();
-    ((MCLEncoder *)encoders[3])->max = LFO_SPEED_MULT_COUNT - 1;
+    set_lfo_encoder(encoders[0], lfo_track->base_mode(), LFO_MODE_TRACK_TRIG);
+    set_lfo_encoder(encoders[1], lfo_track->wav_type, LFO_WAV_COUNT - 1);
+    set_lfo_encoder(encoders[2], lfo_track->speed, 127);
+    set_lfo_encoder(encoders[3], lfo_track->speed_multiplier(),
+                    LFO_SPEED_MULT_COUNT - 1);
   }
   else if (page_mode == LFO_MODULATION) {
-    encoders[0]->cur = lfo_track->params[0].depth;
-    ((MCLEncoder *)encoders[0])->max = 127;
-
-    encoders[1]->cur = lfo_track->params[0].offset;
-    ((MCLEncoder *)encoders[1])->max = 127;
-
-    encoders[2]->cur = lfo_track->params[1].depth;
-    ((MCLEncoder *)encoders[2])->max = 127;
-
-    encoders[3]->cur = lfo_track->params[1].offset;
-    ((MCLEncoder *)encoders[3])->max = 127;
+    set_lfo_encoder(encoders[0], lfo_track->params[0].depth, 127);
+    set_lfo_encoder(encoders[1], lfo_track->params[0].offset, 127);
+    set_lfo_encoder(encoders[2], lfo_track->params[1].depth, 127);
+    set_lfo_encoder(encoders[3], lfo_track->params[1].offset, 127);
   }
 
   //  loop();
