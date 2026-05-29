@@ -793,7 +793,7 @@ void MCLSeqMidiEvents::onNoteCallback_Midi(uint8_t *msg) {
         else if (MidiClock.state != 2) { track.send_notes_off(); }
       });
     }
-    if (msg[0] != 153 && msg[2]) {
+    if ((msg[0] & 0x10) && msg[2]) {
       mixer_page.track_trig(DeviceIdx::Primary, n, MD.kit.levels[n]);
     }
 

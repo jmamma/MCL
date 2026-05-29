@@ -94,7 +94,7 @@ const char *lfo_mode_label(uint8_t mode) {
 
 void update_lfo_key_interface(LFOSeqTrack *track) {
   uint8_t mode = track->base_mode();
-  if (mode == LFO_MODE_TRIG || mode == LFO_MODE_ONE) {
+  if ((uint8_t)(mode - LFO_MODE_TRIG) <= (LFO_MODE_ONE - LFO_MODE_TRIG)) {
     key_interface.on();
   } else {
     key_interface.off();
@@ -376,6 +376,7 @@ void LFOPage::select_menu_track(uint8_t track) {
   }
   track_update();
   sync_lfo_track();
+  update_lfo_key_interface(lfo_track);
   config_encoders();
 }
 
