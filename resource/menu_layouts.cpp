@@ -52,16 +52,6 @@ menu_t<system_menu_page_N> system_menu_layout = {
     0
 };
 
-menu_t<aux_config_page_N> auxconfig_menu_layout = {
-    "PAGE",
-    {
-        //           m  r  n  d  p  f  o
-
-        {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 114},
-    },
-    1
-};
-
 menu_t<midi_config_page_N> midiconfig_menu_layout = {
     "MIDI",
     {

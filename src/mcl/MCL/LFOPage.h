@@ -65,6 +65,7 @@ private:
   void select_menu_track(uint8_t track);
   bool refresh_track_selection();
   void sync_lfo_track();
+  void finish_lfo_track_edit() NOINLINE();
   void clear_lfo_track();
   void copy_lfo_track();
   void paste_lfo_track();

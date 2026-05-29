@@ -42,8 +42,6 @@ extern MenuPage<mcl_config_page_N> mcl_config_page;
 
 extern MenuPage<chain_config_page_N> chain_config_page;
 
-extern MenuPage<aux_config_page_N> aux_config_page;
-
 extern MenuPage<md_import_page_N> md_import_page;
 
 extern MenuPage<mididevice_menu_page_N> mididevice_menu_page;

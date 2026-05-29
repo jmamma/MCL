@@ -69,7 +69,6 @@ size_t ResourceManager::Size() {
 }
 
 void ResourceManager::restore_menu_layout_deps() {
-  aux_config_page.set_layout(R.menu_layouts->auxconfig_menu_layout);
   system_page.set_layout(R.menu_layouts->system_menu_layout);
   midi_config_page.set_layout(R.menu_layouts->midiconfig_menu_layout);
   md_config_page.set_layout(R.menu_layouts->mdconfig_menu_layout);

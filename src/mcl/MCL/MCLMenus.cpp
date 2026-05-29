@@ -265,9 +265,6 @@ const menu_function_ptr_t menu_target_functions[] PROGMEM = {
     // 29 - opt_swing_handler
     { .fn = opt_swing_handler },
 };
-MenuPage<aux_config_page_N> aux_config_page(&menu_value_encoder,
-                                            &menu_entry_encoder);
-
 BootMenuPage<boot_menu_page_N> boot_menu_page(&menu_value_encoder,
                                               &menu_entry_encoder);
 MenuPage<start_menu_page_N> start_menu_page(&menu_value_encoder,

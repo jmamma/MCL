@@ -410,7 +410,7 @@ int16_t LFOSeqTrack::get_sample(uint8_t current_mode) {
     return random_value;
   }
 
-  if (current_mode == LFO_MODE_ONE && phase == LFO_PHASE_MASK) {
+  if (current_mode >= LFO_MODE_ONE && phase == LFO_PHASE_MASK) {
     return lfo_terminal_sample(wav_type, render_phase);
   }
 
@@ -500,7 +500,7 @@ void LFOSeqTrack::convert_legacy_data(const LegacyLFOSeqTrackData &legacy_data,
 
 void LFOSeqTrack::advance_phase(uint8_t current_mode) {
   uint16_t next = phase + phase_inc;
-  if (current_mode == LFO_MODE_ONE && next >= LFO_PHASE_LENGTH) {
+  if (current_mode >= LFO_MODE_ONE && next >= LFO_PHASE_LENGTH) {
     phase = LFO_PHASE_MASK;
     return;
   }

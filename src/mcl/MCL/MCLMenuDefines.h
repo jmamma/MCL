@@ -11,7 +11,6 @@ constexpr size_t midi_config_page_N = 6;
 constexpr size_t md_config_page_N = 3;
 constexpr size_t mcl_config_page_N = 3;
 constexpr size_t chain_config_page_N = 3;
-constexpr size_t aux_config_page_N = 1;
 constexpr size_t md_import_page_N = 4;
 constexpr size_t mididevice_menu_page_N = 2;
 constexpr size_t gridx_menu_page_N = 2;

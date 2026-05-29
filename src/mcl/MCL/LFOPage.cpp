@@ -688,6 +688,14 @@ void LFOPage::learn_perf_dest(uint8_t global_dest, uint8_t param,
   if (on_lfo_page && reconfig) { config_encoders(); }
 }
 
+void LFOPage::finish_lfo_track_edit() {
+  reset_lfo_runtime(lfo_track);
+  clamp_lfo_mask_page(lfo_track);
+  sync_lfo_track();
+  update_lfo_key_interface(lfo_track);
+  config_encoders();
+}
+
 void LFOPage::clear_lfo_track() {
   if (lfo_clear_undo_owner == lfo_track) {
     if (lfo_track->enable) {
@@ -695,11 +703,7 @@ void LFOPage::clear_lfo_track() {
     }
     lfo_track->LFOSeqTrackData::operator=(lfo_clear_undo);
     lfo_clear_undo_owner = nullptr;
-    reset_lfo_runtime(lfo_track);
-    clamp_lfo_mask_page(lfo_track);
-    sync_lfo_track();
-    update_lfo_key_interface(lfo_track);
-    config_encoders();
+    finish_lfo_track_edit();
     oled_display.textbox_P(mclstr_undo, mclstr_clear);
     return;
   }
@@ -707,19 +711,11 @@ void LFOPage::clear_lfo_track() {
   lfo_clear_undo = *lfo_track;
   lfo_clear_undo_owner = lfo_track;
 
-  DeviceIdx device_idx = lfo_track->device_idx;
-  uint8_t track_number = lfo_track->track_number;
   if (lfo_track->enable) {
     lfo_track->reset_params();
   }
   lfo_track->LFOSeqTrackData::init();
-  lfo_track->device_idx = device_idx;
-  lfo_track->track_number = track_number;
-  reset_lfo_runtime(lfo_track);
-  clamp_lfo_mask_page(lfo_track);
-  sync_lfo_track();
-  update_lfo_key_interface(lfo_track);
-  config_encoders();
+  finish_lfo_track_edit();
   oled_display.textbox_P(mclstr_clear, mclstr_track);
 }
 
@@ -738,11 +734,7 @@ void LFOPage::paste_lfo_track() {
     lfo_track->reset_params();
   }
   lfo_track->LFOSeqTrackData::operator=(lfo_clipboard);
-  reset_lfo_runtime(lfo_track);
-  clamp_lfo_mask_page(lfo_track);
-  sync_lfo_track();
-  update_lfo_key_interface(lfo_track);
-  config_encoders();
+  finish_lfo_track_edit();
   oled_display.textbox_P(mclstr_paste, mclstr_track);
 }
 

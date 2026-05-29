@@ -111,7 +111,7 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
     { .ptr = &midi_config_page },
     { .ptr = &md_config_page },
     { .ptr = &chain_config_page },
-    { .ptr = &aux_config_page },
+    { .ptr = &mcl_config_page },
     { .ptr = &mcl_config_page },
 
     // Additional feature pages

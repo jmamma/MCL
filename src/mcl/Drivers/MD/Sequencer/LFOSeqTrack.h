@@ -16,7 +16,7 @@
 #define LFO_MODE_TRIG 1
 // LFO resets on trig but only plays 1 cycle
 #define LFO_MODE_ONE 2
-// LFO resets when the paired sequencer track fires a trig.
+// LFO resets when the paired sequencer track fires a trig and plays 1 cycle.
 #define LFO_MODE_TRACK_TRIG 3
 #define LFO_MODE_MASK 0x03
 #define LFO_SPEED_MULT_SHIFT 2

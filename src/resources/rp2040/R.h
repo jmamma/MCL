@@ -369,12 +369,6 @@ struct __T_menu_layouts {
   static constexpr size_t countof_system_menu_layout = 116 / sizeof(menu_t<system_menu_page_N>);
   static constexpr size_t sizeofof_system_menu_layout = 116;
   union {
-    menu_t<aux_config_page_N> auxconfig_menu_layout[0];
-    char zz__auxconfig_menu_layout[32];
-  };
-  static constexpr size_t countof_auxconfig_menu_layout = 32 / sizeof(menu_t<aux_config_page_N>);
-  static constexpr size_t sizeofof_auxconfig_menu_layout = 32;
-  union {
     menu_t<midi_config_page_N> midiconfig_menu_layout[0];
     char zz__midiconfig_menu_layout[140];
   };
@@ -512,7 +506,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_perf_menu_layout = 56 / sizeof(menu_t<perf_menu_page_N>);
   static constexpr size_t sizeofof_perf_menu_layout = 56;
-  static constexpr size_t __total_size = 2696;
+  static constexpr size_t __total_size = 2664;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;
