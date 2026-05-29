@@ -18,6 +18,8 @@ namespace {
 
 LFOSeqTrackData lfo_clipboard;
 bool lfo_clipboard_valid = false;
+LFOSeqTrackData lfo_clear_undo;
+LFOSeqTrack *lfo_clear_undo_owner = nullptr;
 
 constexpr uint8_t kLfoMaskPageSteps = 16;
 
@@ -96,6 +98,28 @@ void update_lfo_key_interface(LFOSeqTrack *track) {
   } else {
     key_interface.off();
   }
+}
+
+void reset_lfo_runtime(LFOSeqTrack *track) {
+  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
+    track->last_wav_value[i] = 255;
+  }
+  track->reset_runtime();
+}
+
+void reset_lfo_clear_undo(LFOSeqTrack *track) {
+  if (lfo_clear_undo_owner == track) {
+    lfo_clear_undo_owner = nullptr;
+  }
+}
+
+bool lfo_encoder_changed(Encoder **encoders) {
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; ++i) {
+    if (encoders[i]->hasChanged()) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void refresh_lfo_offset_from_target(LFOSeqTrack *track, uint8_t param_idx) {
@@ -459,6 +483,9 @@ void LFOPage::loop() {
     }
     return;
   }
+  if (lfo_encoder_changed(encoders)) {
+    reset_lfo_clear_undo(lfo_track);
+  }
   if (page_mode == LFO_DESTINATION) {
     update_lfo_param_pair(encoders, lfo_track, 0, 0);
     update_lfo_param_pair(encoders, lfo_track, 2, 1);
@@ -590,6 +617,7 @@ void LFOPage::apply_seq_menu_values(bool same_slot) {
   if (!same_slot) {
     return;
   }
+  reset_lfo_clear_undo(lfo_track);
   lfo_track->set_speed(opt_speed);
   if (opt_length == 0) {
     opt_length = 1;
@@ -654,10 +682,31 @@ void LFOPage::learn_perf_dest(uint8_t global_dest, uint8_t param,
       reconfig = true;
     }
   }
+  if (reconfig) {
+    reset_lfo_clear_undo(lfo_track);
+  }
   if (on_lfo_page && reconfig) { config_encoders(); }
 }
 
 void LFOPage::clear_lfo_track() {
+  if (lfo_clear_undo_owner == lfo_track) {
+    if (lfo_track->enable) {
+      lfo_track->reset_params();
+    }
+    lfo_track->LFOSeqTrackData::operator=(lfo_clear_undo);
+    lfo_clear_undo_owner = nullptr;
+    reset_lfo_runtime(lfo_track);
+    clamp_lfo_mask_page(lfo_track);
+    sync_lfo_track();
+    update_lfo_key_interface(lfo_track);
+    config_encoders();
+    oled_display.textbox_P(mclstr_undo, mclstr_clear);
+    return;
+  }
+
+  lfo_clear_undo = *lfo_track;
+  lfo_clear_undo_owner = lfo_track;
+
   DeviceIdx device_idx = lfo_track->device_idx;
   uint8_t track_number = lfo_track->track_number;
   if (lfo_track->enable) {
@@ -666,10 +715,7 @@ void LFOPage::clear_lfo_track() {
   lfo_track->LFOSeqTrackData::init();
   lfo_track->device_idx = device_idx;
   lfo_track->track_number = track_number;
-  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
-    lfo_track->last_wav_value[i] = 255;
-  }
-  lfo_track->reset_runtime();
+  reset_lfo_runtime(lfo_track);
   clamp_lfo_mask_page(lfo_track);
   sync_lfo_track();
   update_lfo_key_interface(lfo_track);
@@ -687,14 +733,12 @@ void LFOPage::paste_lfo_track() {
   if (!lfo_clipboard_valid) {
     return;
   }
+  reset_lfo_clear_undo(lfo_track);
   if (lfo_track->enable) {
     lfo_track->reset_params();
   }
   lfo_track->LFOSeqTrackData::operator=(lfo_clipboard);
-  for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
-    lfo_track->last_wav_value[i] = 255;
-  }
-  lfo_track->reset_runtime();
+  reset_lfo_runtime(lfo_track);
   clamp_lfo_mask_page(lfo_track);
   sync_lfo_track();
   update_lfo_key_interface(lfo_track);
@@ -731,12 +775,13 @@ bool LFOPage::handleEvent(gui_event_t *event) {
     }
     if (event->mask == EVENT_BUTTON_PRESSED) {
       if (!IS_BIT_SET64(lfo_track->pattern_mask, step)) {
-
+        reset_lfo_clear_undo(lfo_track);
         SET_BIT64(lfo_track->pattern_mask, step);
       } else {
         DEBUG_PRINTLN(F("Trying to clear"));
         if (clock_diff(note_interface.note_hold[port], read_clock_ms()) <
             TRIG_HOLD_TIME) {
+          reset_lfo_clear_undo(lfo_track);
           CLEAR_BIT64(lfo_track->pattern_mask, step);
         }
       }
@@ -781,6 +826,7 @@ bool LFOPage::handleEvent(gui_event_t *event) {
 
     if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
       lfo_enable:
+      reset_lfo_clear_undo(lfo_track);
       lfo_track->enable = !(lfo_track->enable);
       if (!lfo_track->enable) { lfo_track->reset_params(); }
     }

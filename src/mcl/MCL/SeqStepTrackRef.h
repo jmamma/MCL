@@ -113,6 +113,16 @@ inline void seq_step_tracks_trigger(uint8_t port, uint8_t track,
                                     uint8_t velocity) {
   MidiDevice *device = seq_step_tracks_device_for_port(port);
   if (device != nullptr) {
+#ifdef LFO_TRACKS
+    uint8_t slot = device_manager.logical_idx_for_port(port);
+    DeviceIdx device_idx =
+        (slot == SLOT_ELEKT || slot == SLOT_GENER ||
+         (slot == DeviceManager::LOGICAL_SLOT_NONE &&
+          device == device_manager.secondary_device()))
+            ? DeviceIdx::Secondary
+            : DeviceIdx::Primary;
+    mcl_seq.set_lfo_track_trig(device_idx, track);
+#endif
     device->triggerTrack(track, velocity);
   }
 }

@@ -1,5 +1,6 @@
 #include "ExtTrack.h"
 #include "CommonPages.h"
+#include "MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "SeqTrackTransition.h"
 #include "platform.h"
@@ -914,6 +915,9 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
   if (uart_ == nullptr) {
     uart_ = uart;
   }
+#ifdef LFO_TRACKS
+  mcl_seq.set_lfo_track_trig(DeviceIdx::Secondary, track_number);
+#endif
   mixer_page.track_trig(DeviceIdx::Secondary, track_number, 127);
   uart_->sendNoteOn(channel, note, velocity);
   SET_BIT128_P(note_buffer, note);

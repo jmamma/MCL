@@ -208,6 +208,9 @@ bool SeqStepTrackGenericBackend::preview_step(uint8_t step) {
   if (kind_ == KIND_MD) {
     MDSeqTrack *t = tracks_.md;
     t->send_parameter_locks(step, true);
+#ifdef LFO_TRACKS
+    mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, t->track_number);
+#endif
     MD.triggerTrack(t->track_number, 127);
     return true;
   }

@@ -7,6 +7,7 @@
 #include "SeqPages.h"
 #include "SeqPtcTrackRef.h"
 #include "GridTask.h"
+#include "MCLSeq.h"
 #include "SeqTrackUtil.h"
 #include "SeqTrackTransition.h"
 
@@ -791,6 +792,9 @@ void MDSeqTrack::send_notes_on(MidiUartClass *uart2_) {
   uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
 
   if (n->note1 != 255) {
+#ifdef LFO_TRACKS
+    mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track_number);
+#endif
     mixer_page.trig(track_number);
     uart2_->sendNoteOn(channel, n->note1, n->vel);
     if (n->note2 != 64) {
@@ -880,6 +884,9 @@ void MDSeqTrack::dispatch_slide_value(uint8_t param, uint8_t val, uint8_t channe
 void MDSeqTrack::send_trig() { send_trig_inline(); }
 
 void MDSeqTrack::send_trig_inline() {
+#ifdef LFO_TRACKS
+  mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track_number);
+#endif
   mixer_page.trig(track_number);
   // MD.triggerTrack(track_number, 127, uart);
   // Parallel trig:
