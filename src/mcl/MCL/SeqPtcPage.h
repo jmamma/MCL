@@ -107,6 +107,7 @@ public:
 
   uint8_t primary_channel_event(uint8_t channel);
   virtual void config_encoders();
+  void reset_poly_voices();
   void init_poly();
 
   void render_arp(bool recalc_notemask_, DeviceIdx device_idx, uint8_t track);

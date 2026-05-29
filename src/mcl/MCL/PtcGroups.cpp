@@ -1,7 +1,9 @@
 #include "PtcGroups.h"
+#include "SeqPages.h"
 
 void PtcGroups::clear() {
   memset(group, PTC_GROUP_OFF, PTC_GROUP_TRACKS);
+  seq_ptc_page.reset_poly_voices();
 }
 
 void PtcGroups::load(const uint8_t *src) {
@@ -12,6 +14,7 @@ void PtcGroups::load(const uint8_t *src) {
   for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i) {
     group[i] = valid_group_or_off(src[i]);
   }
+  seq_ptc_page.reset_poly_voices();
 }
 
 void PtcGroups::store(uint8_t *dst) const {
@@ -49,6 +52,7 @@ uint8_t PtcGroups::group_for_midi_channel(uint8_t channel) const {
 void PtcGroups::set_track_group(uint8_t track, uint8_t value) {
   if (track < PTC_GROUP_TRACKS) {
     group[track] = valid_group_or_off(value);
+    seq_ptc_page.reset_poly_voices();
   }
 }
 

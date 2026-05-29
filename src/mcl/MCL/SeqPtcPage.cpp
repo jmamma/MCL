@@ -186,12 +186,16 @@ void SeqPtcPage::config_encoders() {
   seq_menu_page.menu.enable_entry(SEQ_MENU_CHANNEL, show_chan);
 }
 
-void SeqPtcPage::init_poly() {
+void SeqPtcPage::reset_poly_voices() {
   for (uint8_t x = 0; x < 16; x++) {
     voice_pitch[x] = -1;
     voice_order[x] = 0;
     voice_active[x] = false;
   }
+}
+
+void SeqPtcPage::init_poly() {
+  reset_poly_voices();
   cc_link_enable = true;
 }
 

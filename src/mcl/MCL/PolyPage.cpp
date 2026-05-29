@@ -191,26 +191,6 @@ void PolyPage::display() {
 }
 
 bool PolyPage::handleEvent(gui_event_t *event) {
-  if (EVENT_CMD(event)) {
-    uint8_t key = event->source;
-    if (event->mask == EVENT_BUTTON_PRESSED) {
-      switch (key) {
-      case MDX_KEY_YES:
-      case MDX_KEY_NO:
-        goto exit;
-      }
-    }
-  }
-
-  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
-    cycle_group(-1);
-    return true;
-  }
-  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
-    cycle_group(1);
-    return true;
-  }
-
   if (EVENT_NOTE(event)) {
     uint8_t track = event->source;
     if (!device_manager.port_supports(
@@ -227,17 +207,43 @@ bool PolyPage::handleEvent(gui_event_t *event) {
     }
     return true;
   }
+
+  if (EVENT_CMD(event)) {
+    if (event->mask == EVENT_BUTTON_PRESSED) {
+      switch (event->source) {
+      case MDX_KEY_YES:
+      case MDX_KEY_NO:
+        goto exit;
+      case MDX_KEY_CLEAR:
+        selected_group = PTC_GROUP_OFF;
+        sync_channel_encoder(encoders[0], selected_group);
+        apply_selected_group();
+        return true;
+      }
+    }
+  }
+
+  if (EVENT_PRESSED(event, Buttons.BUTTON2)) {
+    cycle_group(-1);
+    return true;
+  }
+  if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
+    cycle_group(1);
+    return true;
+  }
   if (EVENT_PRESSED(event, Buttons.BUTTON1) ||
       EVENT_PRESSED(event, Buttons.BUTTON4)) {
     GUI.ignoreNextEvent(event->source);
-  exit:
-    save_ptc_groups();
-    mcl.popPage();
-    GUI.currentPage()->init();
-    return true;
+    goto exit;
   }
 
   return false;
+
+exit:
+  save_ptc_groups();
+  mcl.popPage();
+  GUI.currentPage()->init();
+  return true;
 }
 
 PolyPage poly_page(&channel_select_encoder);
