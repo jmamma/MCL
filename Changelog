@@ -1,51 +1,146 @@
-MCL 4.80 22/12/2025
+MCL 5.00 01/06/2026
 
-Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 4.80
+**** IMPORTANT ****
+
+Backup all of your Projects before installing MCL 5.00.
+
+Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 5.00
+
+*******************
+
+- Changes
+
+- Project
+
+  MCL 5.00 uses a new project format, old projects are automatically upgraded
+  on first load. Upgraded projects are not compatible with older version of MCL. Please backup your projects!
+
+  The Load Project page now supports folder creation, allowing projects to be
+  grouped/nested into folders for better organisation.
+
+  Projects can be duplicated or moved between folders from the Load Project Page
+  using the shift menu.
+
+  A new project "Backup" feature has been added which allows users to retain
+  multiple versions of the same project without needing to create individual
+  copies.
+
+  The MCL System configuration can now be stored/loaded on a per-project
+  basis, or globaly using the PROJ CFG option in System Settings.
+
+- UI
+
+  The MD's [ Left ] and [ Right ] arrow keys can be used to cycle through parameters on most pages.
+  [ Up ] and [ Down ] can be used to modify the selected parameter.
+
+- Grid Page:
+
+  A new SOUND on/off option in the grid slot menu lets a saved slot be loaded as
+  sequence-only without overwriting the destination sound. The SOUND option is
+  listed below JUMP.
+
+- Sequencer Swing
+
+  StepEdit Sequencer Tracks now have a Swing % parameter.
+
+  On the MD [ Func ] + [ Swing ] can be used to open the Swing edit menu and adjust
+  the per track, or all-track Swing %.
+
+- Sequencer Mute
+
+  [ Func ] + [ Accent ] can be used to open the Mute edit mode.
+
+  Mute mask is now stored with Sequencer tracks.
+
+- ARP per-track:
+
+  Each track already had a dedicated Arpegiator but the arp settings were
+  never retained on save.
+
+  Arpegiator settings are now stored with the corresponding Sequencer track.
+
+- LFO per-track:
+
+  Each track now has its own dedicated LFO.
+
+  The lfo data is stored alongside the track when saving and loading.
+
+  The LFO Page is now used to edit per-track lfo parameters.
+
+  Each LFO has a speed multiplier 0.01x 0.1x 1x 2x 4x
+
+  New LFO wave shapes that match MDX are now available.
+
+  LFOs can now modulate Perf Controllers and Perf Controllers can modulate
+  LFO depth and speed.
+
+  LFO Trig mode, the lfo will re-trigger at same time as the related track.
+
+  The legacy LF slot is no longer used in MCL 5.00, any existing LFO data is
+  copied to Grid X, Track 1.
+
+- Polyphony / Voice Select
+
+  MCL Polyphony mode now makes the MD fully multi-timberal.
+
+  Tracks can be assigned a MIDI channel. Tracks sharing the same MIDI channel
+  become part of the same voice group.
+
+  POLY MODE, replaces the old "POLY CHAN" configuration option. POLY MODE can
+  be configured to respond to either Internal or External note data.
+
+  As before Voice Select options are stored with the RT track on Grid Y
+
+- PianoRoll
+
+  Added note selection rectangle using [ NO ] + [ Down/Right ] for
+  clear/copy/paste operations.
+
+  [ YES ] + [ NO ] + [ Up/Down ] is now zoom control
+
+  Added page clear/copy/paste for sequencer notes and automation lanes.
 
 - Changes:
 
-  Config -> MIDI -> General has been renamed Config -> MIDI -> Controller
-  and now groups configuration items related to using an External MIDI controller.
+  Config -> MIDI -> General has been renamed Config -> MIDI -> Controller.
+  Controller settings are grouped into Input and Output menus:
 
-   CTRL PORT: [ 2, USB, 2 + USB ]
-   NOTE FWD:  [ OFF, Ctrl->2 ]
-   CC FWD:    [ OFF, Ctrl->2 ]
-   MUTE CC:   [ OFF, 0 .. 127 ]
+   INPUT ->  PORT:       [ 2, USB, 2 + USB ]
+             CHRO CHAN:  [ --, 1 .. 16, OMNI ]
+             TRIG CHAN:  [ --, 1 .. 16, OMNI ]
+             POLY MODE:  [ INT, INT+EXT ]
 
-   The Note FWD and CC FWD options control whether Note and Control Change messages
-   from the Controller are forwarded to the Port 2 output.
+   OUTPUT -> NOTE FWD:   [ OFF, Ctrl->2 ]
+             CC FWD:     [ OFF, Ctrl->2 ]
+             MUTE CC:    [ OFF, 0 .. 127 ]
+
+   PORT selects which MIDI input is used for Controller input. CHRO CHAN and
+   TRIG CHAN select the channels used for Chromatic playing and external drum
+   pad triggering. POLY MODE controls whether polyphonic voice groups respond
+   only to internal input or also to external Controller input.
+
+   The Note FWD and CC FWD options control whether Note and Control Change
+   messages from the Controller are forwarded to the Port 2 output.
 
 - Bug Fixes / Improvements:
 
-- Fixes a bad regression in realtime MIDI message interleaving when forwarding MIDI
-clock between ports.
+  Fixes a bad regression in realtime MIDI message interleaving when forwarding MIDI clock between ports.
 
-- Improved performance of MIDI byte reception on AVR.
+  Improved performance of MIDI byte reception on AVR.
 
-- The MCL sequencer could lose sync with external MIDI clock when receiving
-sysex messages from the MD.
+  The MCL sequencer could lose sync with external MIDI clock when receiving sysex messages from the MD.
 
-- Device specific MIDI messages will no longer be sent to a device before
-peering. This manifested in strange parameter resets on the MD.
+  Unexpected parameter resets now fixed when stopping and starting the sequencer.
 
-- Changes to prevent track desynchronization when performing speed change from scale menu.
-
-- Pianoroll / External MIDI tracks:
-
-  Fixe note deletion when notes extend beyond track length.
-
-  Left and Right rotation now correctly handles notes existing beyond track
-  length.
-
-  Better visualising of notes that extend beyond FOV.
-
-  Fixes for encoder 2 speed when switching between Note and Automation
-  editing modes.
-
-  Fix wrap-around edge cases when live recording in to Ext MIDI track beyond
-  track length.
+  Pianoroll / External MIDI tracks fixes to note rendering, deletion and rotation behaviour
 
   MIDI notes could be stuck during slot transitions for A4, MNM drivers.
+
+- Cross Platform Support
+
+  MCL can now run on multiple hardware platforms including the RP2350 compatible boards such as the TBD-16.
+  WASM support has been added for Desktop runtime.
+
 
 MCL 4.70 01/10/2025
 
