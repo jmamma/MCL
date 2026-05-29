@@ -47,7 +47,6 @@ menu_t<system_menu_page_N> system_menu_layout = {
         {"MIDI",         0, 0, 0, 0, MIDI_CONFIG_PAGE, 0, 0},
         {"DRIVER 1",     0, 0, 0, 0, NULL_PAGE, 27, 0},
         {"DRIVER 2",     0, 0, 0, 0, NULL_PAGE, 28, 0},
-        {"PAGE SETUP",   0, 0, 0, 0, AUX_CONFIG_PAGE, 0, 0},
         {"SYSTEM",       0, 0, 0, 0, MCL_CONFIG_PAGE, 0, 0},
     },
     0
@@ -314,6 +313,7 @@ menu_t<mcl_config_page_N> mclconfig_menu_layout = {
         //           m  r  n  d   p  f  o
         {"DISPLAY:", 0, 2, 2, 13, NULL_PAGE, 0, 23},
         {"PROJ CFG:", 0, 2, 2, 72, NULL_PAGE, 0, 25},
+        {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 114},
     },
     1
 };
