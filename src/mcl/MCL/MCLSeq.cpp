@@ -1,6 +1,9 @@
 #include "DiagnosticPage.h"
 #include "MCLSeq.h"
 #include "SeqTrackUtil.h"
+#if !defined(__AVR__)
+#include "SpsHostSeqBridge.h"  // SPS<->MCL seq control listener
+#endif
 #include "MCLGUI.h"
 #include "SeqPages.h"
 #include "MCL.h"
@@ -194,6 +197,9 @@ void MCLSeq::set_outputs(MidiUartClass *primary_output_,
 
 void MCLSeq::setup() {
   configure_clock_interpolation();
+#if !defined(__AVR__)
+  sps_host_seq_bridge.setup();  // register SPS host sequencer-control listener
+#endif
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_tracks[i].track_number = i;
