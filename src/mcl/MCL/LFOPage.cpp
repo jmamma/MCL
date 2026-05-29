@@ -20,6 +20,7 @@ LFOSeqTrackData lfo_clipboard;
 bool lfo_clipboard_valid = false;
 LFOSeqTrackData lfo_clear_undo;
 LFOSeqTrack *lfo_clear_undo_owner = nullptr;
+const char lfo_popup_label[] PROGMEM = "LFO";
 
 constexpr uint8_t kLfoMaskPageSteps = 16;
 
@@ -716,13 +717,13 @@ void LFOPage::clear_lfo_track() {
   }
   lfo_track->LFOSeqTrackData::init();
   finish_lfo_track_edit();
-  oled_display.textbox_P(mclstr_clear, mclstr_track);
+  oled_display.textbox_P(mclstr_clear, lfo_popup_label);
 }
 
 void LFOPage::copy_lfo_track() {
   lfo_clipboard = *lfo_track;
   lfo_clipboard_valid = true;
-  oled_display.textbox_P(mclstr_copy, mclstr_track);
+  oled_display.textbox_P(mclstr_copy, lfo_popup_label);
 }
 
 void LFOPage::paste_lfo_track() {
@@ -735,7 +736,7 @@ void LFOPage::paste_lfo_track() {
   }
   lfo_track->LFOSeqTrackData::operator=(lfo_clipboard);
   finish_lfo_track_edit();
-  oled_display.textbox_P(mclstr_paste, mclstr_track);
+  oled_display.textbox_P(mclstr_paste, lfo_popup_label);
 }
 
 bool LFOPage::handleEvent(gui_event_t *event) {
