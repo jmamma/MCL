@@ -8,6 +8,14 @@ float Osc::get_sample(uint32_t sample_number, float freq) {
 }
 void Osc::set_sample_rate(float hz) { sample_rate = hz; }
 
+/* Samples per oscillator cycle: (uint16_t)(sample_rate / freq), carried in a
+   float. Shared by the pulse/saw/tri/usr oscillators below; kept out-of-line so
+   the float divide + cast is emitted once instead of in every oscillator. */
+static float osc_n_cycle(float sample_rate, float freq) NOINLINE();
+static float osc_n_cycle(float sample_rate, float freq) {
+  return (uint16_t)(sample_rate / freq);
+}
+
 /* Position of sample_number within one cycle of n_cycle samples: the
    fractional remainder sample_number mod n_cycle, in floating point. Shared
    by the pulse/saw/tri/usr oscillators below. Kept out-of-line so the float
@@ -54,7 +62,7 @@ float SineOsc::get_sample(uint32_t sample_number, float freq) {
 
 float PulseOsc::get_sample(uint32_t sample_number, float freq) {
 
-  float n_cycle = (uint16_t)(sample_rate / freq);
+  float n_cycle = osc_n_cycle(sample_rate, freq);
 
   sample_number = sample_number + (n_cycle);
   float n = osc_cycle_pos(sample_number, n_cycle);
@@ -84,7 +92,7 @@ void PulseOsc::set_skew(float skew_) { skew = skew_; }
 
 float SawOsc::get_sample(uint32_t sample_number, float freq) {
 
-  float n_cycle = (uint16_t)(sample_rate / freq);
+  float n_cycle = osc_n_cycle(sample_rate, freq);
   sample_number = sample_number + (n_cycle * 0.5f);
   float n = osc_cycle_pos(sample_number, n_cycle);
 
@@ -105,7 +113,7 @@ float SawOsc::get_sample(uint32_t sample_number, float freq) {
 }
 
 float TriOsc::get_sample(uint32_t sample_number, float freq) {
-  float n_cycle = (uint16_t)(sample_rate / freq);
+  float n_cycle = osc_n_cycle(sample_rate, freq);
   sample_number = sample_number + (n_cycle * 0.75f);
 
   float n = osc_cycle_pos(sample_number, n_cycle);
@@ -127,7 +135,7 @@ float TriOsc::get_sample(uint32_t sample_number, float freq) {
 float UsrOsc::get_sample(uint32_t sample_number, float freq,
                          const uint8_t *usr_values) {
 
-  float n_cycle = (uint16_t)(sample_rate / freq);
+  float n_cycle = osc_n_cycle(sample_rate, freq);
 
   float n = osc_cycle_pos(sample_number, n_cycle);
 
