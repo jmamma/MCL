@@ -1180,13 +1180,41 @@ void SeqExtStepPage::begin_note_selection() {
   }
   if (!note_selection_editing) {
     if (!note_selection_width_saved) {
-      note_selection_saved_w = cur_w;
-      note_selection_saved_fov_offset = fov_offset;
-      note_selection_saved_fov_y = fov_y;
-      note_selection_width_saved = true;
+      save_note_selection_view();
     }
   }
   note_selection_editing = true;
+}
+
+void SeqExtStepPage::save_note_selection_view() {
+  note_selection_saved_w = cur_w;
+  note_selection_saved_fov_offset = fov_offset;
+  note_selection_saved_fov_y = fov_y;
+  note_selection_width_saved = true;
+}
+
+bool SeqExtStepPage::is_within_fov(seq_extstep_tick_t x) {
+  return x >= fov_offset && x < fov_offset + fov_length;
+}
+
+bool SeqExtStepPage::is_within_fov(seq_extstep_tick_t start_x,
+                                   seq_extstep_tick_t end_x) {
+  seq_extstep_tick_t fov_end = fov_offset + fov_length;
+  // Handle wrap-around case
+  if (end_x < start_x) {
+    return (start_x < fov_end) || (end_x >= fov_offset);
+  }
+  // Normal case
+  return (start_x < fov_end) && (end_x >= fov_offset);
+}
+
+void SeqExtStepPage::clamp_fov_offset() {
+  if (fov_offset + fov_length > roll_length) {
+    fov_offset = roll_length - fov_length;
+  }
+  if (fov_offset < 0) {
+    fov_offset = 0;
+  }
 }
 
 void SeqExtStepPage::finish_note_selection() {
@@ -1221,12 +1249,7 @@ void SeqExtStepPage::move_note_selection(seq_extstep_tick_t x_diff,
       fov_offset = note_selection_x > fov_length ? note_selection_x - fov_length
                                                  : 0;
     }
-    if (fov_offset + fov_length > roll_length) {
-      fov_offset = roll_length - fov_length;
-    }
-    if (fov_offset < 0) {
-      fov_offset = 0;
-    }
+    clamp_fov_offset();
   }
   if (y_diff != 0) {
     int16_t y = note_selection_y + y_diff;
@@ -1599,16 +1622,10 @@ void SeqExtStepPage::loop() {
 
     fov_offset += offset;
 
-    if (fov_length + fov_offset > roll_length) {
-      fov_offset = roll_length - fov_length;
-    }
-    fov_offset = max(0,fov_offset);
+    clamp_fov_offset();
 
   }
-  if (fov_offset + fov_length > roll_length) {
-    fov_offset = roll_length - fov_length;
-  }
-  fov_offset = max(0, fov_offset);
+  clamp_fov_offset();
 
 }
 
@@ -1862,10 +1879,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       }
       if (pianoroll_mode == 0) {
         if (key == MDX_KEY_NO) {
-          note_selection_saved_w = cur_w;
-          note_selection_saved_fov_offset = fov_offset;
-          note_selection_saved_fov_y = fov_y;
-          note_selection_width_saved = true;
+          save_note_selection_view();
         }
         switch (key) {
         case MDX_KEY_COPY: {

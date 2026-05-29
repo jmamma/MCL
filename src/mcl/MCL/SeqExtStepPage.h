@@ -101,6 +101,8 @@ public:
   void pos_cur_x(seq_extstep_tick_t diff);
   void pos_cur_y(int16_t diff);
   void pos_cur_w(seq_extstep_tick_t diff);
+  void save_note_selection_view() NOINLINE();
+  void clamp_fov_offset() NOINLINE();
   void begin_note_selection();
   void finish_note_selection();
   void move_note_selection(seq_extstep_tick_t x_diff, int16_t y_diff);
@@ -114,19 +116,9 @@ public:
   bool clear_note_selection_notes();
   bool clear_note_page();
 
-  inline bool is_within_fov(seq_extstep_tick_t x) {
-    return x >= fov_offset && x < fov_offset + fov_length;
-  }
+  bool is_within_fov(seq_extstep_tick_t x) NOINLINE();
 
-  bool is_within_fov(seq_extstep_tick_t start_x, seq_extstep_tick_t end_x) {
-    seq_extstep_tick_t fov_end = fov_offset + fov_length;
-    // Handle wrap-around case
-    if (end_x < start_x) {
-        return (start_x < fov_end) || (end_x >= fov_offset);
-    }
-    // Normal case
-    return (start_x < fov_end) && (end_x >= fov_offset);
-  }
+  bool is_within_fov(seq_extstep_tick_t start_x, seq_extstep_tick_t end_x) NOINLINE();
 
   void param_select_update();
   void enter_notes();
