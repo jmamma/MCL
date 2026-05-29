@@ -101,6 +101,16 @@ SeqTrack &ptc_active_track() {
   return ptc_seq_track(device_idx, ptc_selected_track(device_idx));
 }
 
+void ptc_note_bit_set(uint64_t *mask, uint8_t bit) NOINLINE();
+void ptc_note_bit_set(uint64_t *mask, uint8_t bit) {
+  SET_BIT128_P(mask, bit);
+}
+
+void ptc_note_bit_clear(uint64_t *mask, uint8_t bit) NOINLINE();
+void ptc_note_bit_clear(uint64_t *mask, uint8_t bit) {
+  CLEAR_BIT128_P(mask, bit);
+}
+
 uint16_t ptc_mask_for_event(uint8_t track, uint8_t channel_event,
                             uint8_t channel) {
   if (channel_event == POLY_EVENT) {
@@ -616,7 +626,7 @@ void SeqPtcPage::recalc_notemask() {
       uint8_t pitch = calc_scale_note(i, scale_padding);
       if (pitch > 127)
         continue;
-      SET_BIT128_P(note_mask, pitch);
+      ptc_note_bit_set(note_mask, pitch);
     }
   }
 }
@@ -903,14 +913,14 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
         memset(note_mask, 0, sizeof(note_mask));
       }
     }
-    SET_BIT128_P(dev_note_masks[dev], note_num);
+    ptc_note_bit_set(dev_note_masks[dev], note_num);
     if (pitch != 255) {
-      SET_BIT128_P(note_mask, pitch);
+      ptc_note_bit_set(note_mask, pitch);
     }
   } else {
-    CLEAR_BIT128_P(dev_note_masks[dev], note_num);
+    ptc_note_bit_clear(dev_note_masks[dev], note_num);
     if (arp_enabled.cur != ARP_LATCH && pitch != 255) {
-      CLEAR_BIT128_P(note_mask, pitch);
+      ptc_note_bit_clear(note_mask, pitch);
     }
   }
   if (pitch == 255) {
