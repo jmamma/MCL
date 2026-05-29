@@ -174,6 +174,11 @@ MidiDevice *DeviceManager::secondary_device() const {
   return nonnull(secondary_);
 }
 
+void DeviceManager::get_devices(MidiDevice **devs) const {
+  devs[0] = primary_device();
+  devs[1] = secondary_device();
+}
+
 MidiDevice *DeviceManager::device_for_idx(DeviceIdx device_idx) const {
   if (device_idx == DeviceIdx::Secondary) {
     return secondary_device();

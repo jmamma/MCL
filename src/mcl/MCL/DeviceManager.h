@@ -30,6 +30,9 @@ public:
   void update_active_slots();
   MidiDevice *primary_device() const;
   MidiDevice *secondary_device() const;
+  // Fill devs[0]/devs[1] with the primary/secondary devices. Outlined to avoid
+  // duplicating the paired accessor calls at every call site.
+  void get_devices(MidiDevice **devs) const NOINLINE();
   MidiDevice *device_for_idx(DeviceIdx device_idx) const;
   DeviceContext primary_context() const;
   DeviceContext secondary_context() const;

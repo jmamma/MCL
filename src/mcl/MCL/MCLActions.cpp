@@ -166,10 +166,8 @@ void md_import() {
 
   uint8_t track_select_array[NUM_SLOTS] = {0};
 
-  MidiDevice *devs[2] = {
-      device_manager.primary_device(),
-      device_manager.secondary_device(),
-  };
+  MidiDevice *devs[2];
+  device_manager.get_devices(devs);
 
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     GridDeviceTrack *gdt =
@@ -213,10 +211,8 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
 
   uint8_t save_dev_mask = 0;
   uint8_t saved_grid_mask = 0;
-  MidiDevice *devs[NUM_DEVS] = {
-      device_manager.primary_device(),
-      device_manager.secondary_device(),
-  };
+  MidiDevice *devs[NUM_DEVS];
+  device_manager.get_devices(devs);
   ElektronDevice *elektron_devs[NUM_DEVS] = {
       devs[0]->asElektronDevice(),
       devs[1]->asElektronDevice(),
@@ -663,10 +659,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   DEBUG_PRINTLN("send tracks to devices");
   // Unsupported slots are cleared from slot_select_array before cache refresh.
 
-  MidiDevice *devs[2] = {
-      device_manager.primary_device(),
-      device_manager.secondary_device(),
-  };
+  MidiDevice *devs[2];
+  device_manager.get_devices(devs);
 
   uint8_t send_masks[NUM_SLOTS] = {0};
   uint8_t mute_states[NUM_SLOTS];
@@ -990,10 +984,8 @@ void MCLActions::calc_next_transition() {
 void MCLActions::calc_latency() {
   EmptyTrack empty_track;
 
-  MidiDevice *devs[2] = {
-      device_manager.primary_device(),
-      device_manager.secondary_device(),
-  };
+  MidiDevice *devs[2];
+  device_manager.get_devices(devs);
 
 #if defined(__AVR__)
   ElektronDevice *secondary_elektron =

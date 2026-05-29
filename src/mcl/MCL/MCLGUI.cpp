@@ -27,6 +27,20 @@ uint8_t pgm_height_at(const uint8_t *heights, uint8_t idx) {
 }
 #endif
 
+// Print a numeric value right-shifted so 1/2/3 digit values stay centered.
+// Outlined to avoid duplicating the cursor/print sequence at each call site.
+void draw_centered_value(uint8_t x, uint8_t y, uint8_t value) NOINLINE();
+void draw_centered_value(uint8_t x, uint8_t y, uint8_t value) {
+  if (value < 10) {
+    x += 2;
+  }
+  if (value < 100) {
+    x += 2;
+  }
+  oled_display.setCursor(x, y);
+  oled_display.print(value);
+}
+
 } // namespace
 
 // Helper function for printing PROGMEM strings
@@ -565,18 +579,8 @@ void MCLGUI::draw_md_encoder(uint8_t x, uint8_t y, uint8_t value,
   oled_display.drawPixel(x, y + image_h + 2, WHITE);
   oled_display.drawPixel(x + image_w - 1, y + image_h + 2, WHITE);
 
-  x_offset = x;
   if (show_value) {
-    if (value < 10) {
-      x_offset += 2;
-    }
-    if (value < 100) {
-      x_offset += 2;
-    }
-
-    oled_display.setCursor(x_offset, y + image_h + 1 + 8);
-
-    oled_display.print(value);
+    draw_centered_value(x, y + image_h + 1 + 8, value);
   }
 
   oled_display.setFont(oldfont);
@@ -607,16 +611,7 @@ void MCLGUI::draw_light_encoder(uint8_t x, uint8_t y, uint8_t value,
   }
 
   if (show_value) {
-    if (value < 10) {
-      x_offset += 2;
-    }
-    if (value < 100) {
-      x_offset += 2;
-    }
-
-    oled_display.setCursor(x_offset, y);
-
-    oled_display.print(value);
+    draw_centered_value(x, y, value);
   } else {
 
     if (strlen(label) == 2) {
