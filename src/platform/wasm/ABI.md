@@ -20,11 +20,11 @@ heavily, or touch the filesystem.
 
 `host_yield()` and `host_input_*()` are intentionally GUI/service-thread
 imports. MCL calls them from `MCL::loop()` / `GUI_hardware.poll()` on wasm
-so normal blocking UI loops remain cooperative and can receive panel input
-without changing MCL's page code. Audio-thread exports must not call them.
-The same hook pumps `host_midi_in_pop()` / `host_midi_out_push()`, so modal
-pages do not strand host-side MIDI queues while the service thread owns the
-wasm runtime.
+so normal blocking UI loops remain cooperative and can receive panel and
+desktop pointer input without changing the hardware event path. Audio-thread
+exports must not call them. The same hook pumps `host_midi_in_pop()` /
+`host_midi_out_push()`, so modal pages do not strand host-side MIDI queues
+while the service thread owns the wasm runtime.
 
 `host_audio_pending_us()` lets the platform layer catch up a bounded amount of
 sample-clock time while MCL is already inside a GUI/service-thread call. This
@@ -70,6 +70,11 @@ its compiled-in major doesn't match. Bump major on:
 - Changing the `mcl_*` export surface.
 
 Adding new host-imports / exports is a minor bump.
+
+Minor 7 adds `host_input_pointer_pop(void* out, int32_t len)`. The host writes
+a 12-byte desktop pointer event (`type/buttons/modifiers/reserved/x/y/dx/dy`)
+into `out` and returns the number of bytes written, or `0` when no event is
+queued.
 
 ## Naming convention
 

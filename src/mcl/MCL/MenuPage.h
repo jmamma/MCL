@@ -39,15 +39,18 @@ public:
     selected_item = item;
     encoders[1]->cur = item;
   }
-  void loop();
-  virtual void display();
-  void init();
+  void loop() override;
+  void display() override;
+  void init() override;
   void init(bool generate_row_names);
   bool enter();
   void exit();
-  void cleanup();
+  void cleanup() override;
   void gen_menu_device_names();
-  virtual bool handleEvent(gui_event_t *event);
+  bool handleEvent(gui_event_t *event) override;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  virtual bool handleMouseEvent(mcl_mouse_event_t *event) override;
+#endif
 
 protected:
   uint8_t selected_item = 0;

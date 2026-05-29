@@ -152,6 +152,18 @@ uint32_t mcl_platform_encoder_button_mask() {
     return mask;
 }
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+static_assert(sizeof(mcl_mouse_event_t) == 12,
+              "mcl_mouse_event_t must match the SPS host ABI");
+
+bool mcl_platform_mouse_pop(mcl_mouse_event_t* out) {
+    if (!out)
+        return false;
+    return host_input_pointer_pop(out, (int32_t)sizeof(*out)) ==
+           (int32_t)sizeof(*out);
+}
+#endif
+
 // SW_IRQ storage — referenced via extern in platform.h. Values are
 // irrelevant; the TRIGGER_SW_IRQ*/CLEAR_SW_IRQ* macros are no-ops.
 uint8_t SW_IRQ1 = 0;

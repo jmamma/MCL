@@ -94,6 +94,7 @@ DEFINES=(
     -DVERSION=4080
     -DVERSION_STR='"R4.80-wasm"'
     -DMCL_DESKTOP_LINK_MCL_CORE=1
+    -DMCL_HAS_DESKTOP_MOUSE=1
 )
 
 if [ "${MCL_WASM_DEBUG:-0}" != "0" ]; then

@@ -76,7 +76,12 @@ public:
   GridPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
            Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
-  virtual bool handleEvent(gui_event_t *event);
+  bool handleEvent(gui_event_t *event) override;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  bool mouse_button3_slot_menu = false;
+
+  virtual bool handleMouseEvent(mcl_mouse_event_t *event) override;
+#endif
   GridSpan getWidth();
   GridColumn getCol();
   GridRow getRow();
@@ -94,17 +99,17 @@ public:
   void display_grid_info();
   void display_grid();
   void display_row_info();
-  void display();
+  void display() override;
   void display_oled();
-  void setup();
-  void cleanup();
-  void init();
+  void setup() override;
+  void cleanup() override;
+  void init() override;
   void apply_slot_changes(bool ignore_undo = false, bool ignore_func = false);
 
   void load_old_col();
   void close_bank_popup();
 
-  void loop();
+  void loop() override;
   void send_row_led();
 };
 

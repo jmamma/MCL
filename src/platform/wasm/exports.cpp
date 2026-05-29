@@ -62,7 +62,7 @@ extern volatile uint16_t g_clock_minutes;
 
 // ABI version. Bump major when removing/renaming/changing signatures.
 static constexpr uint16_t MCL_ABI_MAJOR = 1;
-static constexpr uint16_t MCL_ABI_MINOR = 6;
+static constexpr uint16_t MCL_ABI_MINOR = 7;
 
 static uint32_t s_timer1_remainder_us = 0;
 static uint32_t s_timer2_remainder_us = 0;

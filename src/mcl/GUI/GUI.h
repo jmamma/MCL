@@ -56,6 +56,11 @@ public:
   void popPage(bool re_init = true);
   void popPage(LightPage *page);
   bool handleTopEvent(gui_event_t *event);
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  bool handleMouseEvent(mcl_mouse_event_t *event);
+  void pollMouseEvents();
+  void queueVirtualButton(uint8_t button, bool pressed);
+#endif
 
   // Event and task management
   void putEvent(gui_event_t* event) {

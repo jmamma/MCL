@@ -74,6 +74,9 @@ void GridPage::init() {
   }
   param1.max = getWidth() - 1;
   show_slot_menu = false;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  mouse_button3_slot_menu = false;
+#endif
   old_col = 255;
   reload_slot_models = false;
   draw_encoders = false;
@@ -1339,3 +1342,107 @@ bool GridPage::handleEvent(gui_event_t *event) {
   }
   return false;
 }
+
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool GridPage::handleMouseEvent(mcl_mouse_event_t *event) {
+  if (event == NULL) {
+    return false;
+  }
+
+  if (mouse_button3_slot_menu &&
+      (event->type == MCL_MOUSE_UP || event->type == MCL_MOUSE_EXIT)) {
+    mouse_button3_slot_menu = false;
+    GUI.queueVirtualButton(Buttons.BUTTON3, false);
+    return true;
+  }
+
+  if (show_slot_menu && event->x < 40 &&
+      grid_slot_page.handleMouseEvent(event)) {
+    return true;
+  }
+
+  if (event->type == MCL_MOUSE_WHEEL && event->deltaY != 0) {
+    int step = event->deltaY > 0 ? -1 : 1;
+    if (show_slot_menu) {
+      param4.cur += step;
+    } else {
+      param2.cur += step;
+      reset_undo();
+    }
+    return true;
+  }
+
+  if (event->type != MCL_MOUSE_DOWN &&
+      event->type != MCL_MOUSE_DOUBLE_CLICK) {
+    return false;
+  }
+  const bool left_button = (event->buttons & MCL_MOUSE_BUTTON_LEFT) != 0;
+  const bool right_button = (event->buttons & MCL_MOUSE_BUTTON_RIGHT) != 0;
+  if (!left_button && !right_button) {
+    return false;
+  }
+
+  constexpr int x_offset = 43;
+  constexpr int y_offset = 8;
+  constexpr int row_top = y_offset - 6;
+  int row = (event->y - row_top) / 8;
+  if (event->y < row_top || row < 0 || row >= MAX_VISIBLE_ROWS) {
+    return false;
+  }
+
+  GridColumn base_col = getCol() - cur_col;
+  GridRow base_row = getRow() - cur_row;
+  GridSpan grid_width = getWidth();
+  GridSpan col_shift = 0;
+  if (show_slot_menu) {
+    if (cur_col + param3.cur > MAX_VISIBLE_COLS - 1) {
+      col_shift = cur_col + param3.cur - MAX_VISIBLE_COLS;
+    }
+  }
+
+  int cur_posx = x_offset;
+  int hit_x = -1;
+  for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift && x < grid_width;
+       x++) {
+    GridColumn track_idx = x + base_col;
+    if (event->x >= cur_posx - 1 && event->x < cur_posx + 9) {
+      hit_x = x;
+      break;
+    }
+    if (track_idx % 4 == 3 && grid_width >= 8) {
+      cur_posx += 12;
+    } else {
+      cur_posx += 10;
+    }
+  }
+
+  if (hit_x < 0) {
+    return false;
+  }
+
+  GridColumn track_idx = hit_x + base_col;
+  GridRow row_idx = row + base_row;
+  if (track_idx >= GRID_WIDTH || row_idx >= GRID_LENGTH) {
+    return false;
+  }
+
+  param1.cur = track_idx;
+  param2.cur = row_idx;
+  reset_undo();
+
+  if (right_button) {
+    mouse_button3_slot_menu = true;
+    GUI.queueVirtualButton(Buttons.BUTTON3, true);
+    return true;
+  }
+
+  if (event->type == MCL_MOUSE_DOUBLE_CLICK && !show_slot_menu) {
+#ifdef PLATFORM_TBD
+    grid_io_overlay.begin(GridIOOverlay::MODE_LOAD);
+#else
+    mcl.setPage(GRID_LOAD_PAGE);
+#endif
+  }
+  return true;
+}
+#endif

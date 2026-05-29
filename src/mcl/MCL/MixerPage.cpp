@@ -309,6 +309,9 @@ void MixerPage::draw_encs() {
   oled_display.fillRect(0, fader_y, 128, 21, BLACK);
   for (uint8_t n = 0; n < 4; n++) {
     uint8_t pos = n * 24;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+    registerPageEncoderHit(n, 14 + pos, fader_y, 24, 21);
+#endif
     bool highlight = false;
     uint8_t val = MixerPerf::display_value(encoders[n], perf_locks,
                                            preview_mute_set, n, highlight);

@@ -56,6 +56,12 @@ uint32_t mcl_platform_encoder_button_mask() {
     return 0;
 }
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool mcl_platform_mouse_pop(mcl_mouse_event_t* /*out*/) {
+    return false;
+}
+#endif
+
 // SW_IRQ definitions to satisfy the externs in platform.h. Their values
 // are irrelevant — TRIGGER_SW_IRQ*/CLEAR_SW_IRQ* macros are no-ops.
 uint8_t SW_IRQ1 = 0;

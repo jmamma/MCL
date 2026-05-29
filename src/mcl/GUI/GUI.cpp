@@ -87,6 +87,44 @@ bool GuiClass::handleTopEvent(gui_event_t *event) {
   return false;
 }
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool GuiClass::handleMouseEvent(mcl_mouse_event_t *event) {
+  if (event == NULL) {
+    return false;
+  }
+  wake_screen_saver();
+#ifdef MCL_HAS_TBD_DRIVER
+  if (overlay && overlay->handleEncoderMouseEvent(event)) return true;
+  if (overlay && overlay->handleMouseEvent(event)) return true;
+#endif
+  LightPage *page = currentPage();
+  if (page != NULL) {
+    if (page->handleEncoderMouseEvent(event)) {
+      return true;
+    }
+    return page->handleMouseEvent(event);
+  }
+  return false;
+}
+
+void GuiClass::queueVirtualButton(uint8_t button, bool pressed) {
+  gui_event_t event = {};
+  event.source = button;
+  event.type = BUTTON;
+  event.mask = pressed ? EVENT_BUTTON_PRESSED : EVENT_BUTTON_RELEASED;
+  event.modifiers = 0;
+  putEvent(&event);
+}
+
+void GuiClass::pollMouseEvents() {
+  mcl_mouse_event_t event;
+  uint8_t limit = 16;
+  while (limit-- > 0 && mcl_platform_mouse_pop(&event)) {
+    handleMouseEvent(&event);
+  }
+}
+#endif
+
 void GuiClass::wake_screen_saver() {
   if (screen_saver) { oled_display.wake(); screen_saver = false; }
 }
@@ -111,6 +149,10 @@ void GuiClass::loop() {
       }
     }
   }
+
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  pollMouseEvents();
+#endif
 
   for (uint8_t i = 0; i < tasks.size; i++) {
     if (tasks.arr[i] != NULL) {
@@ -197,6 +239,9 @@ void GuiClass::display() {
   LightPage *page = currentPage();
   if (page != NULL) {
     oled_display.setFont();
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+    page->clearPageEncoderHits();
+#endif
     page->display();
   }
 
@@ -205,6 +250,9 @@ void GuiClass::display() {
   // setOverlay / clearOverlay — single render hook here, no state.
   if (overlay) {
     oled_display.setFont();
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+    overlay->clearPageEncoderHits();
+#endif
     overlay->display();
   }
 #endif

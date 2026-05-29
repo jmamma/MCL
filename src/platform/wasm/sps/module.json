@@ -10,7 +10,7 @@
   "abi": {
     "id": "sps.panel_device.v1",
     "version": 1,
-    "min_minor": 5,
+    "min_minor": 7,
     "import_module": "env"
   },
   "service": {

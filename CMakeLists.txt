@@ -74,7 +74,8 @@ target_compile_definitions(mcl_desktop PUBLIC
     PLATFORM_DESKTOP=1
     VERSION=4080
     VERSION_STR="R4.80-desktop"
-    MCL_DESKTOP_LINK_MCL_CORE=1)
+    MCL_DESKTOP_LINK_MCL_CORE=1
+    MCL_HAS_DESKTOP_MOUSE=1)
 
 # IMPORTANT: desktop_common BEFORE desktop BEFORE other includes so MCL's
 # `#include "Arduino.h"` resolves to OUR shim first. desktop/ paths win for

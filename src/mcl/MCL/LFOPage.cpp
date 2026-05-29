@@ -21,6 +21,16 @@ bool lfo_clipboard_valid = false;
 
 constexpr uint8_t kLfoMaskPageSteps = 16;
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+void register_top_encoder_hit(LightPage *page, uint8_t knob) {
+  if (page == nullptr) {
+    return;
+  }
+  page->registerPageEncoderHit(knob, MCLGUI::knob_x0 + knob * MCLGUI::knob_w,
+                               0, MCLGUI::knob_w, MCLGUI::knob_y + 2);
+}
+#endif
+
 uint8_t lfo_mask_page_count(uint8_t length) {
   if (length == 0) {
     length = kLfoMaskPageSteps;
@@ -492,9 +502,18 @@ void LFOPage::display() {
 
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   SeqPage::draw_knob_frame();
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  auto register_knob = [this](uint8_t knob) {
+    register_top_encoder_hit(this, knob);
+  };
+#endif
   if (page_mode == LFO_DESTINATION) {
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; i++) {
       uint8_t encoder_idx = i << 1;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+      register_knob(encoder_idx);
+      register_knob(encoder_idx + 1);
+#endif
       draw_lfo_dest(encoder_idx, lfo_encoders[encoder_idx]->cur);
       draw_lfo_param(encoder_idx + 1, lfo_encoders[encoder_idx]->cur,
                      lfo_encoders[encoder_idx + 1]->cur);
@@ -504,6 +523,11 @@ void LFOPage::display() {
   else if (page_mode == LFO_GLOBAL) {
     char mult_label[5];
     lfo_mult_label(lfo_encoders[3]->cur, mult_label);
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+    register_knob(0);
+    register_knob(1);
+    register_knob(3);
+#endif
     mcl_gui.draw_knob(0, mclstr_mode, lfo_mode_label(lfo_encoders[0]->cur));
     draw_lfo_wave_preview(1, lfo_encoders[1]->cur);
     draw_knob(2, lfo_encoders[2], mclstr_spd);
@@ -511,6 +535,10 @@ void LFOPage::display() {
     strcpy(info2, "LFO>SET");
   }
   else {
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+    register_knob(1);
+    register_knob(3);
+#endif
     draw_knob(0, lfo_encoders[0], mclstr_dep1);
     draw_lfo_value_knob(1, lfo_encoders[1], lfo_track, 0);
     draw_knob(2, lfo_encoders[2], mclstr_dep2);

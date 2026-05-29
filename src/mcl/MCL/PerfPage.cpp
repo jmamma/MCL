@@ -16,6 +16,20 @@ static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT = 34;
 #endif
 static constexpr uint8_t PERF_LEARN_OFF = 0;
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+namespace {
+
+void register_top_encoder_hit(LightPage *page, uint8_t knob) {
+  if (page == nullptr) {
+    return;
+  }
+  page->registerPageEncoderHit(knob, MCLGUI::knob_x0 + knob * MCLGUI::knob_w,
+                               0, MCLGUI::knob_w, MCLGUI::knob_y + 2);
+}
+
+} // namespace
+#endif
+
 void PerfPage::setup() {
   DEBUG_PRINT_FN();
   page_mode = PERF_DESTINATION;
@@ -218,6 +232,11 @@ void PerfPage::display() {
 
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);
   mcl_gui.draw_knob_frame();
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  for (uint8_t i = 0; i < GUI_NUM_ENCODERS; i++) {
+    register_top_encoder_hit(this, i);
+  }
+#endif
 
   char info1[8] = ""; // Use an appropriate size for your needs
   char info2[12]; // Use an appropriate size for your needs

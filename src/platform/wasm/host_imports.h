@@ -94,6 +94,7 @@ void    host_midi_out_push(int32_t port, uint8_t byte_val);
 uint64_t host_input_button_mask(void);
 int32_t  host_input_encoder_delta(int32_t encoder_id);
 uint32_t host_input_encoder_button_mask(void);
+int32_t  host_input_pointer_pop(void* out, int32_t len);
 
 // During normal playback the host audio side drives mcl_tick_audio(). During
 // modal/blocking MCL code, the wasm runtime is already executing and the host

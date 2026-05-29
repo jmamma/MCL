@@ -1969,10 +1969,18 @@ void SeqPage::draw_knob_frame() {
 }
 
 void SeqPage::draw_knob(uint8_t i, const char *title, const char *text) {
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  registerPageEncoderHit(i, MCLGUI::knob_x0 + i * MCLGUI::knob_w, 0,
+                         MCLGUI::knob_w, MCLGUI::knob_y + 2);
+#endif
   mcl_gui.draw_knob(i, title, text);
 }
 
 void SeqPage::draw_knob(uint8_t i, Encoder *enc, const char *title) {
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  registerPageEncoderHit(i, MCLGUI::knob_x0 + i * MCLGUI::knob_w, 0,
+                         MCLGUI::knob_w, MCLGUI::knob_y + 2);
+#endif
   mcl_gui.draw_knob(i, enc, title);
 }
 

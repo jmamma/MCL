@@ -86,6 +86,44 @@ uint64_t mcl_platform_button_mask();
 int      mcl_platform_encoder_delta(uint8_t encoder_id);
 uint32_t mcl_platform_encoder_button_mask();
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+enum mcl_mouse_event_type_t : uint8_t {
+    MCL_MOUSE_MOVE = 0,
+    MCL_MOUSE_DOWN = 1,
+    MCL_MOUSE_UP = 2,
+    MCL_MOUSE_DRAG = 3,
+    MCL_MOUSE_DOUBLE_CLICK = 4,
+    MCL_MOUSE_WHEEL = 5,
+    MCL_MOUSE_EXIT = 6
+};
+
+enum mcl_mouse_button_t : uint8_t {
+    MCL_MOUSE_BUTTON_LEFT = 1u << 0,
+    MCL_MOUSE_BUTTON_RIGHT = 1u << 1,
+    MCL_MOUSE_BUTTON_MIDDLE = 1u << 2
+};
+
+enum mcl_mouse_modifier_t : uint8_t {
+    MCL_MOUSE_MODIFIER_SHIFT = 1u << 0,
+    MCL_MOUSE_MODIFIER_CTRL = 1u << 1,
+    MCL_MOUSE_MODIFIER_ALT = 1u << 2,
+    MCL_MOUSE_MODIFIER_COMMAND = 1u << 3
+};
+
+typedef struct mcl_mouse_event_s {
+    uint8_t type;
+    uint8_t buttons;
+    uint8_t modifiers;
+    uint8_t reserved;
+    int16_t x;
+    int16_t y;
+    int16_t deltaX;
+    int16_t deltaY;
+} mcl_mouse_event_t;
+
+bool mcl_platform_mouse_pop(mcl_mouse_event_t* out);
+#endif
+
 // MCL's per-platform DEBUG_INIT/DEBUG_PRINT* macros. When DEBUGMODE is set,
 // route the existing callsites through DebugBuffer and flush from platform
 // poll points so wasm/desktop debug spam is bounded.

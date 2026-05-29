@@ -381,3 +381,49 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
   }
   return false;
 }
+
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool MenuPageBase::handleMouseEvent(mcl_mouse_event_t *event) {
+  if (event == NULL) {
+    return false;
+  }
+
+  if (event->type == MCL_MOUSE_WHEEL && event->deltaY != 0) {
+    nudge_menu_encoder(encoders[1], event->deltaY > 0 ? -1 : 1);
+    return true;
+  }
+
+  if (event->type != MCL_MOUSE_DOWN &&
+      event->type != MCL_MOUSE_DOUBLE_CLICK) {
+    return false;
+  }
+  if ((event->buttons & MCL_MOUSE_BUTTON_LEFT) == 0) {
+    return false;
+  }
+
+  constexpr int x_offset = 43;
+  constexpr int y_offset = 8;
+  constexpr int row_top = y_offset - 6;
+  if (event->x < x_offset - 6 || event->y < row_top) {
+    return false;
+  }
+
+  int row = (event->y - row_top) / 8;
+  if (row < 0 || row >= visible_rows) {
+    return false;
+  }
+
+  MenuBase *m = get_menu();
+  int first_item = encoders[1]->cur - cur_row;
+  int item = first_item + row;
+  if (item < 0 || item >= m->get_number_of_items()) {
+    return false;
+  }
+
+  encoders[1]->cur = item;
+  selected_item = item;
+  cur_row = row;
+  enter();
+  return true;
+}
+#endif
