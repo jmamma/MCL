@@ -438,6 +438,13 @@ static void draw_grid_device_label(uint8_t x, uint8_t y,
   oled_display.print(label);
 }
 
+static void draw_bank_row_label(uint8_t row, char *val) NOINLINE();
+static void draw_bank_row_label(uint8_t row, char *val) {
+  oled_display.print((char)('A' + row / 16));
+  mcl_gui.put_value_at2((row & 0x0F) + 1, val);
+  oled_display.print(val);
+}
+
 void GridPage::display_grid_info() {
   uint8_t y_offset = 8;
 
@@ -476,10 +483,7 @@ void GridPage::display_grid_info() {
   val[2] = '\0';
   oled_display.print(val);
   mcl_print_P(mclstr_space);
-  uint8_t b = param2.cur / 16;
-  oled_display.print((char)('A' + b));
-  mcl_gui.put_value_at2((param2.cur & 0x0F) + 1, val);
-  oled_display.print(val);
+  draw_bank_row_label(param2.cur, val);
 
   oled_display.setCursor(1, y_offset + 2 * 8);
   oled_display.fillRect(oled_display.getCursorX() - 1,
@@ -622,11 +626,8 @@ void GridPage::display_row_info() {
   for (uint8_t n = 0; n < MAX_VISIBLE_ROWS; n++) {
     GridRow row = base_row + n;
     if (row >= GRID_LENGTH) { return; }
-    uint8_t b = row / 16;
     oled_display.setCursor(27, (n + 1) * 8);
-    oled_display.print((char)('A' + b));
-    mcl_gui.put_value_at2((row & 0x0F) + 1, val);
-    oled_display.print(val);
+    draw_bank_row_label(row, val);
   }
 }
 #ifdef FPS
