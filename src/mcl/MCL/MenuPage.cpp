@@ -350,16 +350,16 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
         goto NO;
       case MDX_KEY_UP:
         nudge_menu_encoder(encoders[1], -inc);
-        break;
+        return true;
       case MDX_KEY_DOWN:
         nudge_menu_encoder(encoders[1], inc);
-        break;
+        return true;
       case MDX_KEY_LEFT:
         nudge_menu_encoder(encoders[0], -inc);
-        break;
+        return true;
       case MDX_KEY_RIGHT:
         nudge_menu_encoder(encoders[0], inc);
-        break;
+        return true;
       }
     }
   }
