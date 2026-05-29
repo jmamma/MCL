@@ -394,16 +394,28 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_mdimport_menu_layout = 95;
   union {
     menu_t<md_config_page_N> mdconfig_menu_layout[0];
-    char zz__mdconfig_menu_layout[95];
+    char zz__mdconfig_menu_layout[74];
   };
-  static constexpr size_t countof_mdconfig_menu_layout = 95 / sizeof(menu_t<md_config_page_N>);
-  static constexpr size_t sizeofof_mdconfig_menu_layout = 95;
+  static constexpr size_t countof_mdconfig_menu_layout = 74 / sizeof(menu_t<md_config_page_N>);
+  static constexpr size_t sizeofof_mdconfig_menu_layout = 74;
+  union {
+    menu_t<midicontroloutput_menu_page_N> midicontroloutput_menu_layout[0];
+    char zz__midicontroloutput_menu_layout[74];
+  };
+  static constexpr size_t countof_midicontroloutput_menu_layout = 74 / sizeof(menu_t<midicontroloutput_menu_page_N>);
+  static constexpr size_t sizeofof_midicontroloutput_menu_layout = 74;
+  union {
+    menu_t<midicontrolinput_menu_page_N> midicontrolinput_menu_layout[0];
+    char zz__midicontrolinput_menu_layout[95];
+  };
+  static constexpr size_t countof_midicontrolinput_menu_layout = 95 / sizeof(menu_t<midicontrolinput_menu_page_N>);
+  static constexpr size_t sizeofof_midicontrolinput_menu_layout = 95;
   union {
     menu_t<midigeneric_menu_page_N> midigeneric_menu_layout[0];
-    char zz__midigeneric_menu_layout[95];
+    char zz__midigeneric_menu_layout[53];
   };
-  static constexpr size_t countof_midigeneric_menu_layout = 95 / sizeof(menu_t<midigeneric_menu_page_N>);
-  static constexpr size_t sizeofof_midigeneric_menu_layout = 95;
+  static constexpr size_t countof_midigeneric_menu_layout = 53 / sizeof(menu_t<midigeneric_menu_page_N>);
+  static constexpr size_t sizeofof_midigeneric_menu_layout = 53;
   union {
     menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout[0];
     char zz__midimachinedrum_menu_layout[74];
@@ -500,7 +512,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_boot_menu_layout = 95 / sizeof(menu_t<boot_menu_page_N>);
   static constexpr size_t sizeofof_boot_menu_layout = 95;
-  static constexpr size_t __total_size = 2564;
+  static constexpr size_t __total_size = 2670;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;

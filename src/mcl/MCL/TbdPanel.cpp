@@ -80,7 +80,9 @@ static bool is_tbd_menu_page(PageIndex pg) {
          pg == PORT2_MENU_PAGE || pg == USBPORT_MENU_PAGE ||
          pg == MIDIPROGRAM_MENU_PAGE || pg == MIDICLOCK_MENU_PAGE ||
          pg == MIDIROUTE_MENU_PAGE || pg == MIDIMACHINEDRUM_MENU_PAGE ||
-         pg == MIDIGENERIC_MENU_PAGE;
+         pg == MIDIGENERIC_MENU_PAGE ||
+         pg == MIDICONTROLINPUT_MENU_PAGE ||
+         pg == MIDICONTROLOUTPUT_MENU_PAGE;
 }
 
 static bool is_tbd_file_browser_page(PageIndex pg) {

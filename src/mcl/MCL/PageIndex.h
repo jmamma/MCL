@@ -53,6 +53,8 @@ enum PageIndex : uint8_t {
     MIDIROUTE_MENU_PAGE,
     MIDIMACHINEDRUM_MENU_PAGE,
     MIDIGENERIC_MENU_PAGE,
+    MIDICONTROLINPUT_MENU_PAGE,
+    MIDICONTROLOUTPUT_MENU_PAGE,
     // Browser pages
     SOUND_BROWSER,
     // Performance page

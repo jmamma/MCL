@@ -448,16 +448,28 @@ struct __T_menu_layouts {
   static constexpr size_t sizeofof_midimachinedrum_menu_layout = 76;
   union {
     menu_t<midigeneric_menu_page_N> midigeneric_menu_layout[0];
-    char zz__midigeneric_menu_layout[96];
+    char zz__midigeneric_menu_layout[56];
   };
-  static constexpr size_t countof_midigeneric_menu_layout = 96 / sizeof(menu_t<midigeneric_menu_page_N>);
-  static constexpr size_t sizeofof_midigeneric_menu_layout = 96;
+  static constexpr size_t countof_midigeneric_menu_layout = 56 / sizeof(menu_t<midigeneric_menu_page_N>);
+  static constexpr size_t sizeofof_midigeneric_menu_layout = 56;
+  union {
+    menu_t<midicontrolinput_menu_page_N> midicontrolinput_menu_layout[0];
+    char zz__midicontrolinput_menu_layout[96];
+  };
+  static constexpr size_t countof_midicontrolinput_menu_layout = 96 / sizeof(menu_t<midicontrolinput_menu_page_N>);
+  static constexpr size_t sizeofof_midicontrolinput_menu_layout = 96;
+  union {
+    menu_t<midicontroloutput_menu_page_N> midicontroloutput_menu_layout[0];
+    char zz__midicontroloutput_menu_layout[76];
+  };
+  static constexpr size_t countof_midicontroloutput_menu_layout = 76 / sizeof(menu_t<midicontroloutput_menu_page_N>);
+  static constexpr size_t sizeofof_midicontroloutput_menu_layout = 76;
   union {
     menu_t<md_config_page_N> mdconfig_menu_layout[0];
-    char zz__mdconfig_menu_layout[96];
+    char zz__mdconfig_menu_layout[76];
   };
-  static constexpr size_t countof_mdconfig_menu_layout = 96 / sizeof(menu_t<md_config_page_N>);
-  static constexpr size_t sizeofof_mdconfig_menu_layout = 96;
+  static constexpr size_t countof_mdconfig_menu_layout = 76 / sizeof(menu_t<md_config_page_N>);
+  static constexpr size_t sizeofof_mdconfig_menu_layout = 76;
   union {
     menu_t<md_import_page_N> mdimport_menu_layout[0];
     char zz__mdimport_menu_layout[96];
@@ -500,7 +512,7 @@ struct __T_menu_layouts {
   };
   static constexpr size_t countof_perf_menu_layout = 56 / sizeof(menu_t<perf_menu_page_N>);
   static constexpr size_t sizeofof_perf_menu_layout = 56;
-  static constexpr size_t __total_size = 2588;
+  static constexpr size_t __total_size = 2700;
 };
 
 extern const unsigned char __R_menu_options[] PROGMEM;

@@ -309,6 +309,10 @@ MenuPage<midimachinedrum_menu_page_N> midimachinedrum_menu_page(
     &menu_value_encoder, &menu_entry_encoder);
 MenuPage<midigeneric_menu_page_N> midigeneric_menu_page(&menu_value_encoder,
                                                         &menu_entry_encoder);
+MenuPage<midicontrolinput_menu_page_N> midicontrolinput_menu_page(
+    &menu_value_encoder, &menu_entry_encoder);
+MenuPage<midicontroloutput_menu_page_N> midicontroloutput_menu_page(
+    &menu_value_encoder, &menu_entry_encoder);
 
 MCLEncoder input_encoder1(0, 127, ENCODER_RES_SYS);
 MCLEncoder input_encoder2(0, 127, ENCODER_RES_SYS);

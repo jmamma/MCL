@@ -93,6 +93,8 @@ void ResourceManager::restore_menu_layout_deps() {
   midiroute_menu_page.set_layout(R.menu_layouts->midiroute_menu_layout);
   midimachinedrum_menu_page.set_layout(R.menu_layouts->midimachinedrum_menu_layout);
   midigeneric_menu_page.set_layout(R.menu_layouts->midigeneric_menu_layout);
+  midicontrolinput_menu_page.set_layout(R.menu_layouts->midicontrolinput_menu_layout);
+  midicontroloutput_menu_page.set_layout(R.menu_layouts->midicontroloutput_menu_layout);
   perf_menu_page.set_layout(R.menu_layouts->perf_menu_layout);
 }
 

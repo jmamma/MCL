@@ -69,6 +69,8 @@ extern MenuPage<midiroute_menu_page_N> midiroute_menu_page;
 extern MenuPage<midimachinedrum_menu_page_N> midimachinedrum_menu_page;
 
 extern MenuPage<midigeneric_menu_page_N> midigeneric_menu_page;
+extern MenuPage<midicontrolinput_menu_page_N> midicontrolinput_menu_page;
+extern MenuPage<midicontroloutput_menu_page_N> midicontroloutput_menu_page;
 
 extern MCLEncoder input_encoder1;
 extern MCLEncoder input_encoder2;

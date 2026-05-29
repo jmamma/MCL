@@ -131,6 +131,8 @@ const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
     { .ptr = &midiroute_menu_page },
     { .ptr = &midimachinedrum_menu_page },
     { .ptr = &midigeneric_menu_page },
+    { .ptr = &midicontrolinput_menu_page },
+    { .ptr = &midicontroloutput_menu_page },
 
     // Browser pages
     { .ptr = &sound_browser },

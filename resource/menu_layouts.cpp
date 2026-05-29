@@ -255,10 +255,30 @@ menu_t<midimachinedrum_menu_page_N> midimachinedrum_menu_layout = {
 menu_t<midigeneric_menu_page_N> midigeneric_menu_layout = {
     "CONTROL",
     {
+        {"INPUT",  0, 0, 0, 0, MIDICONTROLINPUT_MENU_PAGE, 0, 0},
+        {"OUTPUT", 0, 0, 0, 0, MIDICONTROLOUTPUT_MENU_PAGE, 0, 0},
+    },
+    19
+};
+
+menu_t<midicontrolinput_menu_page_N> midicontrolinput_menu_layout = {
+    "INPUT",
+    {
         //              m  r   n  d  p  f  o
-        {"CTRL PORT:", 1, 4, 4, 56, NULL_PAGE, 0, 10},
+        {"PORT:",      1, 4, 4, 56, NULL_PAGE, 0, 10},
+        {"CHRO CHAN:", 0, 17, 2, 9, NULL_PAGE, 0, 18},
+        {"TRIG CHAN:", 0, 17, 2, 57, NULL_PAGE, 0, 18},
+        {"POLY MODE:", 0, 2, 2, 46, NULL_PAGE, 0, 23},
+    },
+    19
+};
+
+menu_t<midicontroloutput_menu_page_N> midicontroloutput_menu_layout = {
+    "OUTPUT",
+    {
+        //              m  r   n  d  p  f  o
         {"NOTE FWD:",  0, 2, 2, 64, NULL_PAGE, 0, 25},
-        {"CC FWD:", 0, 2, 2, 11, NULL_PAGE, 0, 25},
+        {"CC FWD:",    0, 2, 2, 11, NULL_PAGE, 0, 25},
         {"MUTE CC:",  0, 129, 1, 60, NULL_PAGE, 0, 113},
     },
     19
@@ -270,7 +290,6 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
     {
         //              m  r   n  d  p  f  o
         {"IMPORT",      0, 0,  0, 0, MD_IMPORT_PAGE, 0, 0},
-        {"MIDI",        0, 0,  0, 0, MIDIMACHINEDRUM_MENU_PAGE, 0, 0},
         {"RAM LINK:",   0, 2,  2, 1, NULL_PAGE, 0, 0},
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
     },
