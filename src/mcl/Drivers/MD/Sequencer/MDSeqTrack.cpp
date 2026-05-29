@@ -27,6 +27,22 @@ static bool md_step_descriptor_has_data(const MDSeqStepDescriptor &step) {
   return (bytes[0] | bytes[1]) != 0;
 }
 
+static bool md_track_is_midi_model(uint8_t track_number) NOINLINE();
+static bool md_track_is_midi_model(uint8_t track_number) {
+  return (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
+}
+
+static uint8_t md_track_midi_channel(uint8_t track_number) NOINLINE();
+static uint8_t md_track_midi_channel(uint8_t track_number) {
+  return MD.kit.models[track_number] - MID_01_MODEL;
+}
+
+static uint16_t md_note_count_down(uint8_t len, uint8_t ticks_per_step)
+    NOINLINE();
+static uint16_t md_note_count_down(uint8_t len, uint8_t ticks_per_step) {
+  return len == 0 ? ticks_per_step / 4 : (len * ticks_per_step / 2);
+}
+
 #if defined(__AVR__)
 static void md_swap_mask_bits(uint64_t &mask, uint8_t i, uint8_t j) {
   uint8_t *bytes = reinterpret_cast<uint8_t *>(&mask);
@@ -338,8 +354,7 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       }
       auto &step = steps[current_step];
       uint8_t send_trig = trig_conditional(step.cond_id);
-      bool is_midi_model =
-          ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+      bool is_midi_model = md_track_is_midi_model(track_number);
       if (send_trig == TRIG_TRUE ||
           (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
         if (is_midi_model && send_trig == TRIG_TRUE && step.trig) {
@@ -353,7 +368,7 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
         }
         if (send_trig == TRIG_TRUE && step.trig) {
           if (is_midi_model) {
-            notes.count_down = notes.len == 0 ? ticks_per_step / 4 : (notes.len * ticks_per_step / 2);
+            notes.count_down = md_note_count_down(notes.len, ticks_per_step);
             send_notes_on();
           }
           send_trig_inline();
@@ -607,7 +622,7 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
 }
 
 void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
-  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+  uint8_t channel = md_track_midi_channel(track_number);
   if (send_ccs) {
     for (uint8_t n = 0; n < number_midi_cc; n++) {
     if (ccs[n] == 255) continue;
@@ -696,7 +711,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
 
   uint8_t ccs[midi_cc_array_size];
   bool send_ccs = false;
-  bool is_midi_model = (MD.kit.models[track_number] & 0xF0) == MID_01_MODEL;
+  bool is_midi_model = md_track_is_midi_model(track_number);
 
   if (is_midi_model) {
     if (notes.first_trig) {
@@ -745,7 +760,7 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
 }
 
 void MDSeqTrack::reset_params() {
-  bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  bool is_midi_model = md_track_is_midi_model(track_number);
   if (is_midi_model) {
     uint8_t ccs[midi_cc_array_size];
     bool send_ccs = true;
@@ -782,14 +797,14 @@ void MDSeqTrack::send_notes(uint8_t note1, MidiUartClass *uart2_) {
   if (note1 != 255) { notes.note1 = note1; }
   if (notes.first_trig) { reset_params(); notes.first_trig = false; }
   uint8_t ticks_per_step = get_ticks_per_step();
-  notes.count_down = notes.len == 0 ? ticks_per_step / 4 : (notes.len * ticks_per_step / 2);
+  notes.count_down = md_note_count_down(notes.len, ticks_per_step);
   send_notes_on(uart2_);
 }
 
 void MDSeqTrack::send_notes_on(MidiUartClass *uart2_) {
   if (!uart2_) { uart2_ = uart2; }
   TrigNotes *n = &notes;
-  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+  uint8_t channel = md_track_midi_channel(track_number);
 
   if (n->note1 != 255) {
 #ifdef LFO_TRACKS
@@ -809,7 +824,7 @@ void MDSeqTrack::send_notes_on(MidiUartClass *uart2_) {
 void MDSeqTrack::send_notes_off(MidiUartClass *uart2_) {
   if (!uart2_) { uart2_ = uart2; }
   TrigNotes *n = &notes;
-  uint8_t channel = MD.kit.models[track_number] - MID_01_MODEL;
+  uint8_t channel = md_track_midi_channel(track_number);
 
   if (n->note1 != 255) {
     uart2_->sendNoteOff(channel, n->note1);
@@ -826,7 +841,7 @@ void MDSeqTrack::send_notes_off(MidiUartClass *uart2_) {
 
 void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
                                               uint8_t value) {
-  bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  bool is_midi_model = md_track_is_midi_model(track_number);
   if (!is_midi_model || MD.encoder_interface) {
     return;
   }
@@ -846,7 +861,7 @@ void MDSeqTrack::onControlChangeCallback_Midi(uint8_t track_param,
 
 void MDSeqTrack::send_slides(volatile uint8_t *locks_params, uint8_t channel) {
   SlideDispatchContext ctx{};
-  ctx.is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+  ctx.is_midi_model = md_track_is_midi_model(track_number);
   uint8_t ccs[midi_cc_array_size];
   if (ctx.is_midi_model) {
     ctx.ccs = ccs;
@@ -1384,7 +1399,7 @@ uint8_t MDSeqTrack::transpose_pitch(uint8_t pitch, int8_t offset) {
 }
 
 void MDSeqTrack::transpose(int8_t offset) {
- bool is_midi_model = ((MD.kit.models[track_number] & 0xF0) == MID_01_MODEL);
+ bool is_midi_model = md_track_is_midi_model(track_number);
  tuning_t const *tuning = MD.getKitModelTuning(track_number);
  if (!tuning && !is_midi_model) { return; }
  for (uint8_t n = 0; n < 64; n++) {
