@@ -269,17 +269,11 @@ void ExtSeqTrack::recalc_slides() {
       continue;
     }
     x0 = ext_event_tick(step, e->micro_timing, ticks_per_step) + 1;
-    if (next_lockstep < step) {
-      x1 = (length + next_lockstep) * ticks_per_step +
-           ext_microtiming_ticks(locks_slide_next_lock_utiming[c],
-                                 ticks_per_step) -
-           1;
-    } else {
-      x1 = next_lockstep * ticks_per_step +
-           ext_microtiming_ticks(locks_slide_next_lock_utiming[c],
-                                 ticks_per_step) -
-           1;
-    }
+    uint8_t x1_step = next_lockstep + (next_lockstep < step ? length : 0);
+    x1 = x1_step * ticks_per_step +
+         ext_microtiming_ticks(locks_slide_next_lock_utiming[c],
+                               ticks_per_step) -
+         1;
     y0 = e->event_value;
     y1 = locks_slide_next_lock_val[c];
     /*
