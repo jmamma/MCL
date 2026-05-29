@@ -22,8 +22,7 @@
 #define LFO_SPEED_MULT_SHIFT 2
 #define LFO_SPEED_MULT_MASK 0x07
 #define LFO_MODE_LEGACY_PHASE 0x20
-#define LFO_MODE_LEGACY_SUBTRACT 0x40
-#define LFO_MODE_LEGACY_FLAGS (LFO_MODE_LEGACY_PHASE | LFO_MODE_LEGACY_SUBTRACT)
+#define LFO_MODE_LEGACY_FLAGS LFO_MODE_LEGACY_PHASE
 
 #define LFO_SPEED_MULT_1_100X 0
 #define LFO_SPEED_MULT_1_10X 1
@@ -132,9 +131,6 @@ public:
   }
   static bool mode_legacy_phase(uint8_t mode) {
     return (mode & LFO_MODE_LEGACY_PHASE) != 0;
-  }
-  static bool mode_legacy_subtract(uint8_t mode) {
-    return (mode & LFO_MODE_LEGACY_SUBTRACT) != 0;
   }
   static uint8_t pack_mode(uint8_t base_mode, uint8_t speed_multiplier) {
     return (base_mode & LFO_MODE_MASK) |

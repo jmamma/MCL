@@ -39,7 +39,7 @@ bool lfo_wav_is_centered(uint8_t wav_type) {
 
 uint8_t lfo_legacy_shape_to_sps(uint8_t wav_type) {
   static const uint8_t map[] PROGMEM = {
-      SIN_WAV, TRI_WAV, LIN_WAV, EXP_WAV, REV_LIN_WAV, REV_EXP_WAV,
+      SIN_WAV, TRI_WAV, REV_LIN_WAV, REV_EXP_WAV, LIN_WAV, EXP_WAV,
       SQU_WAV, SAW_WAV, RND_WAV, STEP_WAV, LINLIN_WAV};
   if (wav_type > LFO_LEGACY_LINLIN_WAV) {
     return TRI_WAV;
@@ -49,10 +49,6 @@ uint8_t lfo_legacy_shape_to_sps(uint8_t wav_type) {
 
 bool lfo_legacy_shape_is_centered(uint8_t wav_type) {
   return wav_type == LFO_LEGACY_SIN_WAV || wav_type == LFO_LEGACY_TRI_WAV;
-}
-
-bool lfo_legacy_shape_uses_subtract(uint8_t wav_type) {
-  return wav_type >= LFO_LEGACY_RAMP_WAV && wav_type <= LFO_LEGACY_EXP_WAV;
 }
 
 uint8_t lfo_sps_shape_to_legacy(uint8_t wav_type) {
@@ -493,8 +489,6 @@ void LFOSeqTrack::convert_legacy_data(const LegacyLFOSeqTrackData &legacy_data,
     for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
       data->params[i].depth >>= 1;
     }
-  } else if (lfo_legacy_shape_uses_subtract(legacy_wav_type)) {
-    data->mode |= LFO_MODE_LEGACY_SUBTRACT;
   }
 }
 
@@ -554,8 +548,10 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t offset, uint8_t param_id,
                                    int16_t lfo_sample) {
   int16_t depth = param_id < NUM_LFO_PARAMS ? modulated_depth[param_id] : 0;
   int16_t delta = (lfo_sample * depth) / 128;
-  bool offset_max = mode_legacy_subtract(mode) || !lfo_wav_is_centered(wav_type);
-  int16_t sample = offset_max ? offset - delta : offset + delta;
+  int16_t sample = offset + delta;
+  if (!lfo_wav_is_centered(wav_type)) {
+    sample -= depth;
+  }
 
   if (sample > 127) {
     return 127;
