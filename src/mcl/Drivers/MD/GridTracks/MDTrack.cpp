@@ -126,19 +126,25 @@ bool MDTrack::transition_cache(uint8_t tracknumber, GridSlot slotnumber) {
   return true;
 }
 
+static void md_apply_mute(uint8_t tracknumber, uint8_t n, bool mute,
+                          uint8_t state) NOINLINE();
+static void md_apply_mute(uint8_t tracknumber, uint8_t n, bool mute,
+                          uint8_t state) {
+  MD.muteTrack(tracknumber, mute);
+  SeqTrackUtil::with_md_track(n, [state](auto &t) { t.mute_state = state; });
+}
+
 void MDTrack::transition_send(uint8_t tracknumber, GridSlot slotnumber) {
   uint8_t n = slotnumber;
   DEBUG_PRINTLN("transition send");
   switch (mcl_actions.transition_level[n]) {
   case TRANSITION_UNMUTE:
     DEBUG_PRINTLN(F("unmuting"));
-    MD.muteTrack(tracknumber, false);
-    SeqTrackUtil::with_md_track(n, [](auto &t) { t.mute_state = SEQ_MUTE_OFF; });
+    md_apply_mute(tracknumber, n, false, SEQ_MUTE_OFF);
     break;
   case TRANSITION_MUTE:
     DEBUG_PRINTLN(F("muting"));
-    MD.muteTrack(tracknumber, true);
-    SeqTrackUtil::with_md_track(n, [](auto &t) { t.mute_state = SEQ_MUTE_ON; });
+    md_apply_mute(tracknumber, n, true, SEQ_MUTE_ON);
     break;
   default:
     break;
@@ -188,6 +194,11 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
 }
 
+static void copy_md_seqdata(uint8_t *dst, const uint8_t *src) NOINLINE();
+static void copy_md_seqdata(uint8_t *dst, const uint8_t *src) {
+  memcpy(dst, src, sizeof(MDSeqTrackData));
+}
+
 void MDTrack::init() {
   machine.init();
   seq_data.init();
@@ -202,7 +213,7 @@ void MDTrack::load_seq_data(SeqTrack *seq_track) {
 
   MDSeqTrack *md_seq_track = (MDSeqTrack *)seq_track;
   uint8_t *dest = md_seq_track->data();
-  memcpy(dest, seq_data.data(), sizeof(seq_data));
+  copy_md_seqdata(dest, seq_data.data());
   load_link_data(seq_track);
   md_seq_track->clear_oneshot();
   md_seq_track->set_length(md_seq_track->length);
@@ -290,8 +301,7 @@ bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
       temp_seq_track.init();
       if (merge == SAVE_MERGE) {
         // Load up internal sequencer data
-        memcpy(temp_seq_track.data(), md_seq_track->data(),
-               sizeof(MDSeqTrackData));
+        copy_md_seqdata(temp_seq_track.data(), md_seq_track->data());
       }
       if (merge == SAVE_MD_PATTERN_IMPORT) {
         link.length = MD.pattern.patternLength;
@@ -304,11 +314,9 @@ bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
       // merge md pattern data with seq_data
       temp_seq_track.merge_from_md(tracknumber, &(MD.pattern));
       // copy merged data in to this track object's seq data for writing to SD
-      memcpy(this->seq_data.data(), temp_seq_track.data(),
-             sizeof(MDSeqTrackData));
+      copy_md_seqdata(this->seq_data.data(), temp_seq_track.data());
     } else {
-      memcpy(this->seq_data.data(), md_seq_track->data(),
-             sizeof(MDSeqTrackData));
+      copy_md_seqdata(this->seq_data.data(), md_seq_track->data());
     }
     // Normalise track levels
     if (mcl_cfg.auto_normalize == 1) {
