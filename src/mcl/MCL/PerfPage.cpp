@@ -76,11 +76,11 @@ void PerfPage::set_led_mask() {
   if (show_menu) {
     SET_BIT16(mask, perf_id);
   } else {
-    if (e->active_scene_a < NUM_SCENES) {
-      SET_BIT16(mask, e->active_scene_a);
-    }
-    if (e->active_scene_b < NUM_SCENES) {
-      SET_BIT16(mask, e->active_scene_b);
+    for (uint8_t i = 0; i < 2; i++) {
+      uint8_t scene = (&e->active_scene_a)[i];
+      if (scene < NUM_SCENES) {
+        SET_BIT16(mask, scene);
+      }
     }
   }
   if (last_mask != mask) {
@@ -579,46 +579,28 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         }
         case MDX_KEY_YES: {
           PerfEncoder *e = cur_enc(this);
-          if (t >= NUM_SCENES) {
-            return true;
-          }
-          PerfScene *s1 = &e->perf_data.scenes[t], *s2 = nullptr;
-          e->send_params(0, s1, s2);
+          e->send_params(0, &e->perf_data.scenes[t], nullptr);
           return true;
         }
-        case MDX_KEY_LEFT: {
-          PerfEncoder *e = cur_enc(this);
-          e->active_scene_a = e->active_scene_a == t ? 255 : t;
-          return true;
-        }
+        case MDX_KEY_LEFT:
         case MDX_KEY_RIGHT: {
           PerfEncoder *e = cur_enc(this);
-          e->active_scene_b = e->active_scene_b == t ? 255 : t;
+          uint8_t *slot =
+              key == MDX_KEY_LEFT ? &e->active_scene_a : &e->active_scene_b;
+          *slot = *slot == t ? 255 : t;
           return true;
         }
         }
       }
-      switch (key) {
-      case MDX_KEY_UP: {
+      if (key == MDX_KEY_UP || key == MDX_KEY_DOWN) {
         if (learn) {
-          if (page_mode < NUM_PERF_PARAMS) {
-            page_mode++;
+          bool up = key == MDX_KEY_UP;
+          if (up ? page_mode < NUM_PERF_PARAMS : page_mode > 1) {
+            page_mode += up ? 1 : -1;
             config_encoders();
           }
           return true;
         }
-        break;
-      }
-      case MDX_KEY_DOWN: {
-        if (learn) {
-          if (page_mode > 1) {
-            page_mode--;
-            config_encoders();
-          }
-          return true;
-        }
-        break;
-      }
       }
     }
     return false;
