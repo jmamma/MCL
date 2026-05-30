@@ -16,6 +16,7 @@
 #include "DeviceParamResolver.h"
 #include "global.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
+#include "../Drivers/Generic/Sequencer/TrackLoadFadeRunner.h"
 #if !defined(__AVR__)
 #include "../Drivers/Generic/Sequencer/StepSeqDefines.h"
 #endif
@@ -443,7 +444,7 @@ void MCLSeq::set_outputs(MidiUartClass *primary_output_,
 
 void MCLSeq::setup() {
   configure_clock_interpolation();
-  LFOSeqTrack::clear_load_fades();
+  TrackLoadFadeRunner::clear();
 #if !defined(__AVR__)
   sps_host_seq_bridge.setup();  // register SPS host sequencer-control listener
 #endif
@@ -801,7 +802,7 @@ void MCLSeq::seq() {
     realtime = false;
     engage_sidechannel = false;
   }
-  LFOSeqTrack::tick_load_fades(uart, uart2);
+  TrackLoadFadeRunner::tick(uart, uart2);
 }
 
 #if !defined(__AVR__)

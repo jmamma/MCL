@@ -11,6 +11,8 @@
 #include "EmptyTrack.h"
 #include "MDTrack.h"
 #include "GridTask.h"
+#include "TrackLoadFadeTarget.h"
+#include "../Drivers/Generic/Sequencer/TrackLoadFadeRunner.h"
 #include "platform.h"
 
 #define MD_KIT_LENGTH 0x4D0
@@ -126,7 +128,7 @@ void MCLActions::init_chains() {
 }
 
 void MCLActions::clear_load_fades() {
-  LFOSeqTrack::clear_load_fades();
+  TrackLoadFadeRunner::clear();
 }
 
 void MCLActions::start_load_fade_at(GridSlot slot,
@@ -137,16 +139,11 @@ void MCLActions::start_load_fade_at(GridSlot slot,
   }
 
   GridDeviceTrack *gdt = get_grid_dev_track(slot);
-  if (gdt == nullptr ||
-      (gdt->track_type != MD_TRACK_TYPE &&
-       gdt->track_type != MDSPSX_TRACK_TYPE) ||
-      gdt->device_idx >= NUM_DEVS) {
-    LFOSeqTrack::start_md_load_fade(slot & 0x0F, 0, nullptr, start_clock);
-    return;
-  }
-
-  LFOSeqTrack::start_md_load_fade(slot & 0x0F, gdt->device_idx, fade,
-                                  start_clock);
+  TrackLoadFadeTarget target;
+  const bool ok = resolve_track_load_fade_target(slot, gdt, fade, &target);
+  // The runner always clears the slot on entry, so an unresolved target still
+  // wipes any prior fade for this slot — matches the pre-refactor behavior.
+  TrackLoadFadeRunner::start(slot, target, ok ? fade : nullptr, start_clock);
 }
 
 void MCLActions::kit_reload(uint8_t pattern) {
