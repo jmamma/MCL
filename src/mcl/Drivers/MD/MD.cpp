@@ -1584,16 +1584,21 @@ void MDClass::setSampleName(uint8_t slot, char *name) {
   sendRequest(data, 6);
 }
 
-uint8_t MDClass::assignFXParamsBulk(uint8_t *values, bool send) {
-  uint8_t data[2 + 8 * 4] = {0x70, 0x5a};
+static uint8_t md_send_fx_bulk(MDClass &md, uint8_t cmd, uint8_t *values,
+                               bool send) NOINLINE();
+static uint8_t md_send_fx_bulk(MDClass &md, uint8_t cmd, uint8_t *values,
+                               bool send) {
+  uint8_t data[2 + 8 * 4] = {0x70, cmd};
   memcpy(&data[2], values, 8 * 4);
-  return sendRequest(data, sizeof(data), send);
+  return md.sendRequest(data, sizeof(data), send);
+}
+
+uint8_t MDClass::assignFXParamsBulk(uint8_t *values, bool send) {
+  return md_send_fx_bulk(*this, 0x5a, values, send);
 }
 
 uint8_t MDClass::sendFXParamsBulk(uint8_t *values, bool send) {
-  uint8_t data[2 + 8 * 4] = {0x70, 0x61};
-  memcpy(&data[2], values, 8 * 4);
-  return sendRequest(data, sizeof(data), send);
+  return md_send_fx_bulk(*this, 0x61, values, send);
 }
 
 uint8_t MDClass::sendFXParams(uint8_t *values, uint8_t type, bool send) {
