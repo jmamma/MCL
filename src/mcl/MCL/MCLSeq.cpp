@@ -164,6 +164,22 @@ void reset_slide_track_locks(SeqSlideTrack &track) {
   }
 }
 
+#if !defined(__AVR__)
+// SPSXSeqTrack derives from StepSeqSlideTrack, not SeqSlideTrack, so the
+// SeqSlideTrack& overload above doesn't accept it. Both bases expose the same
+// {locks_slides_recalc, locks_slide_data[].init()} surface, so the body is
+// identical — this overload exists purely so for_each_md_track's SPSX-branch
+// lambda instantiation type-checks. AVR has no SPSX engine so it stays at one
+// function and the dedup commit's flash savings are preserved there.
+void reset_slide_track_locks(StepSeqSlideTrack &track) NOINLINE();
+void reset_slide_track_locks(StepSeqSlideTrack &track) {
+  track.locks_slides_recalc = 255;
+  for (auto &sd : track.locks_slide_data) {
+    sd.init();
+  }
+}
+#endif
+
 void cleanup_mcl_seq_all_midi(MCLSeqMidiEvents *events) {
   cleanup_mcl_seq_midi(events, &Midi);
   cleanup_mcl_seq_midi(events, &Midi2);
