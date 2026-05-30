@@ -75,10 +75,16 @@ void MCLGfx::splashscreen(unsigned char* bitmap) {
 }
 
 void MCLGfx::alert(const char *str1, const char *str2) {
+#if defined(PLATFORM_WASM)
+  mcl_gui.show_async_infobox(str1, str2);
+  mcl_gui.draw_async_infobox();
+  oled_display.display();
+#else
   mcl_gui.draw_infobox(str1, str2);
   oled_display.display();
   delay(700);
   oled_display.clearDisplay();
+#endif
   DEBUG_PRINTLN(str1);
   DEBUG_PRINTLN(str2);
 }

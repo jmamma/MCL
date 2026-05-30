@@ -43,6 +43,12 @@ public:
   bool wait_for_confirm(const char *title, const char *text);
   void draw_infobox(const char *line1, const char *line2,
                     const int line2_offset = 0);
+#if defined(PLATFORM_WASM)
+  void show_async_infobox(const char *line1, const char *line2,
+                          uint16_t duration_ms = 700,
+                          const int line2_offset = 0);
+  void draw_async_infobox();
+#endif
   void draw_vertical_separator(uint8_t x);
   void draw_vertical_scrollbar(uint8_t x, uint8_t n_items, uint8_t n_window,
                                uint8_t n_current);
@@ -200,6 +206,16 @@ public:
   static constexpr uint8_t s_progress_h = 5;
 
   static constexpr uint8_t s_progress_speed = 2;
+
+#if defined(PLATFORM_WASM)
+  static constexpr uint8_t async_infobox_text_len = 32;
+  bool async_infobox_active = false;
+  uint16_t async_infobox_started = 0;
+  uint16_t async_infobox_duration = 0;
+  int async_infobox_line2_offset = 0;
+  char async_infobox_line1[async_infobox_text_len] = {0};
+  char async_infobox_line2[async_infobox_text_len] = {0};
+#endif
 };
 
 extern MCLGUI mcl_gui;

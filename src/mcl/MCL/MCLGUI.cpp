@@ -389,6 +389,36 @@ void MCLGUI::draw_infobox(const char *line1, const char *line2,
   oled_display.setFont(oldfont);
 }
 
+#if defined(PLATFORM_WASM)
+void MCLGUI::show_async_infobox(const char *line1, const char *line2,
+                                uint16_t duration_ms,
+                                const int line2_offset) {
+  strncpy(async_infobox_line1, line1 ? line1 : "",
+          sizeof(async_infobox_line1) - 1);
+  async_infobox_line1[sizeof(async_infobox_line1) - 1] = '\0';
+  strncpy(async_infobox_line2, line2 ? line2 : "",
+          sizeof(async_infobox_line2) - 1);
+  async_infobox_line2[sizeof(async_infobox_line2) - 1] = '\0';
+  async_infobox_started = read_clock_ms();
+  async_infobox_duration = duration_ms;
+  async_infobox_line2_offset = line2_offset;
+  async_infobox_active = true;
+}
+
+void MCLGUI::draw_async_infobox() {
+  if (!async_infobox_active) {
+    return;
+  }
+  if (clock_diff(async_infobox_started, read_clock_ms()) >=
+      async_infobox_duration) {
+    async_infobox_active = false;
+    return;
+  }
+  draw_infobox(async_infobox_line1, async_infobox_line2,
+               async_infobox_line2_offset);
+}
+#endif
+
 void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value, bool highlight) {
   bool vert_flip = false;
   bool horiz_flip = false;

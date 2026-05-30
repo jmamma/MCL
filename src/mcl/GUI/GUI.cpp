@@ -4,6 +4,9 @@
 #include "global.h"
 #include "oled.h"
 #include "PlatformPanel.h"
+#if defined(PLATFORM_WASM)
+#include "MCLGUI.h"
+#endif
 
 void GuiClass::setPage(LightPage *page) {
   if (currentPage() != NULL) {
@@ -284,6 +287,9 @@ void GuiClass::display() {
     }
   }
 #endif
+#endif
+#if defined(PLATFORM_WASM)
+  mcl_gui.draw_async_infobox();
 #endif
   oled_display.display();
 }
