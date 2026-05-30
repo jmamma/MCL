@@ -147,11 +147,7 @@ public:
   void paste_step(uint8_t n, MDSeqStep *step);
   void load_cache();
 
-  void init_notes() {
-    // Copy 3 notes, len and vel from kit to notes structure;
-    memcpy(&notes.note1, MD.kit.params[track_number], 5);
-    notes.count_down = 0;
-  }
+  void init_notes() NOINLINE();
   void process_note_locks(uint8_t param, uint8_t val, uint8_t *ccs);
   void send_notes_ccs(uint8_t *ccs, bool send_ccs);
   void send_notes(uint8_t first_note = 255, MidiUartClass *uart2_ = nullptr);
