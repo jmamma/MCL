@@ -1913,18 +1913,13 @@ void SeqPage::draw_page_index(bool show_page_index, uint8_t _playing_idx) {
   for (uint8_t i = 0; i < page_count; ++i) {
     oled_display.drawRect(pidx_x, pidx_y, w, pidx_h, WHITE);
 
-    // highlight page_select
-    if ((page_select == i) && (show_page_index)) {
+    // highlight page_select; blink playing_idx inverts it
+    bool sel = (page_select == i) && show_page_index;
+    bool play = (playing_idx == i) && blink;
+    if (sel != play) {
       oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
-    }
-
-    // blink playing_idx
-    if (playing_idx == i && blink) {
-      if ((page_select == i) && (show_page_index)) {
-        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, BLACK);
-      } else {
-        oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, WHITE);
-      }
+    } else if (sel) {
+      oled_display.drawFastHLine(pidx_x + 1, pidx_y + 1, w - 2, BLACK);
     }
 
     pidx_x += w + 1;
