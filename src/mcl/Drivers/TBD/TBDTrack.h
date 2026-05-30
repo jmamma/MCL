@@ -38,6 +38,7 @@ class ATTR_PACKED() TBDTrack : public DeviceTrack {
 public:
   TbdP4SoundData p4_sound;
   StepSeqTrackStorage seq_data;
+  TrackLoadFadeData load_fade;
 
   TBDTrack();
 
@@ -67,10 +68,15 @@ public:
   uintptr_t get_region() override { return BANK1_TBD_TRACKS_START; }
   uint16_t grid_slot_label(GridSlotLabelContext ctx) override;
   uint8_t get_model() override { return p4_sound.p4_track_index; }
-  uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  uint8_t storage_version() const override { return SEQ_TRACK_LOAD_FADE_STORAGE_VERSION; }
   void init_defaults() override {
     tbd_init_p4_sound_runtime_defaults(p4_sound);
     seq_data.init_storage();
+    load_fade.init();
+  }
+  TrackLoadFadeData *load_fade_data() override { return &load_fade; }
+  const TrackLoadFadeData *load_fade_data() const override {
+    return &load_fade;
   }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
@@ -87,6 +93,7 @@ class ATTR_PACKED() TBDMidiTrack : public DeviceTrack {
 public:
   TbdP4SoundData p4_sound;
   MidiSeqTrackStorage seq_data;
+  TrackLoadFadeData load_fade;
 
   TBDMidiTrack();
 
@@ -124,10 +131,15 @@ public:
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
   uint16_t grid_slot_label(GridSlotLabelContext ctx) override;
   uint8_t get_model() override { return p4_sound.p4_track_index; }
-  uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
+  uint8_t storage_version() const override { return SEQ_TRACK_LOAD_FADE_STORAGE_VERSION; }
   void init_defaults() override {
     tbd_init_p4_sound_runtime_defaults(p4_sound);
     seq_data.clear_storage();
+    load_fade.init();
+  }
+  TrackLoadFadeData *load_fade_data() override { return &load_fade; }
+  const TrackLoadFadeData *load_fade_data() const override {
+    return &load_fade;
   }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }

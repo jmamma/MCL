@@ -47,6 +47,7 @@ void MidiBackedDeviceTrack::apply_seq_defaults(uint8_t tracknumber,
 void MidiBackedDeviceTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
   MidiSeqTrackStorage &seq_data = midi_seq_storage();
   seq_data.clear_storage();
+  load_fade.init();
   link.set_speed(SEQ_SPEED_1X);
   link.length = 16;
   seq_data.channel = tracknumber;
@@ -160,13 +161,15 @@ DeviceTrack *MidiBackedDeviceTrack::materialize_as(uint8_t track_type,
 
   GridLink old_link = link;
   MidiSeqTrackStorage old_seq_data = midi_seq_storage();
+  TrackLoadFadeData old_load_fade = load_fade;
   if (old_seq_data.channel >= 16) {
     old_seq_data.channel = tracknumber;
   }
 
   if (midi_track_type_is_storage_family(track_type)) {
     return materialize_midi_storage_track(this, track_type, old_link,
-                                          old_seq_data, tracknumber);
+                                          old_seq_data, &old_load_fade,
+                                          tracknumber);
   }
 
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);

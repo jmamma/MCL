@@ -197,6 +197,7 @@ void MCLSeq::set_outputs(MidiUartClass *primary_output_,
 
 void MCLSeq::setup() {
   configure_clock_interpolation();
+  LFOSeqTrack::clear_load_fades();
 #if !defined(__AVR__)
   sps_host_seq_bridge.setup();  // register SPS host sequencer-control listener
 #endif
@@ -739,6 +740,7 @@ void MCLSeq::seq() {
     engage_sidechannel = false;
     goto again;
   }
+  LFOSeqTrack::tick_load_fades(uart, uart2);
 }
 
 #if !defined(__AVR__)

@@ -44,6 +44,8 @@
 
 using LFOSeqParam = SeqLFOParamData;
 
+class TrackLoadFadeData;
+
 class LFOSeqTrackData {
 public:
   uint64_t pattern_mask;
@@ -161,6 +163,11 @@ public:
   void set_depth(uint8_t param, uint8_t depth);
   void set_modulated_speed(uint8_t _speed);
   void set_modulated_depth(uint8_t param, uint8_t depth);
+  static void clear_load_fades();
+  static void start_md_load_fade(uint8_t track, uint8_t device_idx,
+                                 const TrackLoadFadeData *fade,
+                                 uint32_t start_clock);
+  static void tick_load_fades(MidiUartClass *uart_, MidiUartClass *uart2_);
   void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 };
 

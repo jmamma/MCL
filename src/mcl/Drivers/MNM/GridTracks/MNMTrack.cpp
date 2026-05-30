@@ -5,6 +5,7 @@
 
 void MNMTrack::init() {
   machine.init(255);
+  load_fade.init();
   //seq_data.init();
 }
 
@@ -142,13 +143,14 @@ DeviceTrack *MNMTrack::materialize_as(uint8_t track_type,
     ExtSeqTrackData old_seq_data;
     SeqTrackModData old_mod_data = mod_data;
     MNMMachine old_machine = machine;
+    TrackLoadFadeData old_load_fade = load_fade;
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     auto *midi_track =
         static_cast<MNMMidiTrack *>(
             init_materialized_track_type(MNM_MIDI_TRACK_TYPE));
     midi_track->import_legacy(old_link, old_seq_data, old_mod_data,
-                              old_machine, tracknumber);
+                              old_machine, old_load_fade, tracknumber);
     return midi_track;
   }
   if (ExtTrack::can_materialize_legacy_ext(active, track_type)) {
@@ -164,8 +166,10 @@ void MNMMidiTrack::import_legacy(const GridLink &old_link,
                                  const ExtSeqTrackData &old_seq_data,
                                  const SeqTrackModData &old_mod_data,
                                  const MNMMachine &old_machine,
+                                 const TrackLoadFadeData &old_load_fade,
                                  uint8_t tracknumber) {
   machine = old_machine;
+  load_fade = old_load_fade;
   import_legacy_ext_storage(old_link, old_seq_data, old_mod_data, tracknumber);
 }
 

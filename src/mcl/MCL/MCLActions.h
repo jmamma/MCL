@@ -7,9 +7,11 @@
 #include "MidiDeviceGrid.h"
 #include "MCLSysConfig.h"
 #include "GridLink.h"
+#include "TrackLoadFade.h"
 
 class DeviceTrack;
 class EmptyTrack;
+class MidiUartClass;
 class SeqTrack;
 
 #define PATTERN_STORE 0
@@ -130,6 +132,9 @@ public:
                                  bool ignore_overflow = false);
   void calc_next_transition();
   void calc_latency();
+  void clear_load_fades();
+  void start_load_fade_at(GridSlot slot, const TrackLoadFadeData *fade,
+                          uint32_t start_clock);
 
 private:
   DeviceTrack *load_and_prepare_track(GridSlot track_idx, GridRow row,

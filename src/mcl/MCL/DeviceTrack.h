@@ -4,6 +4,7 @@
 
 #include "DiagnosticPage.h"
 #include "GridTrack.h"
+#include "TrackLoadFade.h"
 
 #define A4_TRACK_TYPE_270 2
 #define MD_TRACK_TYPE_270 1
@@ -79,6 +80,8 @@ public:
   virtual size_t get_sound_data_size() = 0;
 
   virtual uint16_t calc_latency(uint8_t tracknumber) { return 0; }
+  virtual TrackLoadFadeData *load_fade_data() { return nullptr; }
+  virtual const TrackLoadFadeData *load_fade_data() const { return nullptr; }
 
   DeviceTrack *init_track_type(uint8_t track_type);
 #if !defined(__AVR__)

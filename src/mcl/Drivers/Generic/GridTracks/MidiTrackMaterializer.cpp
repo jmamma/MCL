@@ -10,6 +10,22 @@
 #endif
 #include <string.h>
 
+namespace {
+
+void copy_load_fade(DeviceTrack *track, const TrackLoadFadeData *load_fade) {
+  TrackLoadFadeData *dest = track != nullptr ? track->load_fade_data() : nullptr;
+  if (dest == nullptr) {
+    return;
+  }
+  if (load_fade != nullptr) {
+    *dest = *load_fade;
+  } else {
+    dest->init();
+  }
+}
+
+} // namespace
+
 bool midi_track_type_is_storage_family(uint8_t track_type) {
   if (track_type == MIDI_TRACK_TYPE || track_type == A4_MIDI_TRACK_TYPE ||
       track_type == MNM_MIDI_TRACK_TYPE) {
@@ -27,6 +43,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
                                             uint8_t track_type,
                                             const GridLink &link,
                                             const MidiSeqTrackStorage &seq_data,
+                                            const TrackLoadFadeData *load_fade,
                                             uint8_t tracknumber) {
   if (storage == nullptr) {
     return nullptr;
@@ -46,6 +63,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
     midi_track->link = target_link;
     midi_track->set_load_sound(target_loads_sound);
     midi_track->seq_data = stored_seq;
+    copy_load_fade(midi_track, load_fade);
     return midi_track;
   }
 
@@ -59,6 +77,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
     a4_track->link = target_link;
     a4_track->set_load_sound(target_loads_sound);
     a4_track->seq_data = stored_seq;
+    copy_load_fade(a4_track, load_fade);
     return a4_track;
   }
 
@@ -69,6 +88,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
     mnm_track->link = target_link;
     mnm_track->set_load_sound(target_loads_sound);
     mnm_track->seq_data = stored_seq;
+    copy_load_fade(mnm_track, load_fade);
     return mnm_track;
   }
 
@@ -81,6 +101,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
     tbd_midi_track->set_load_sound(target_loads_sound);
     tbd_midi_track->seq_data = stored_seq;
     tbd_midi_track->p4_sound.midi_channel = stored_seq.channel;
+    copy_load_fade(tbd_midi_track, load_fade);
     return tbd_midi_track;
   }
 #endif

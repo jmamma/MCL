@@ -55,6 +55,7 @@ public:
   SPSMachine machine;
 
   SPSXTrackStorage seq_storage;
+  TrackLoadFadeData load_fade;
 
   SPSXTrack() {
     active = MDSPSX_TRACK_TYPE;
@@ -78,6 +79,7 @@ public:
   void init_defaults() override {
     machine.init();
     seq_storage.init_storage();
+    load_fade.init();
   }
   void clear_track();
 
@@ -118,7 +120,9 @@ public:
                                       uint8_t tracknumber,
                                       SeqTrack *seq_track) override;
   virtual uint8_t get_model() override { return machine.get_model(); }
-  virtual uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
+  virtual uint8_t storage_version() const override { return SEQ_TRACK_LOAD_FADE_STORAGE_VERSION; }
+  TrackLoadFadeData *load_fade_data() override { return &load_fade; }
+  const TrackLoadFadeData *load_fade_data() const override { return &load_fade; }
 
   virtual void *get_sound_data_ptr() override { return &machine; }
   virtual size_t get_sound_data_size() override { return sizeof(SPSMachine); }

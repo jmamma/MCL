@@ -544,6 +544,7 @@ void TBDTrack::apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track) {
 
 void TBDTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
   seq_data.init_storage();
+  load_fade.init();
   set_step_sound_default(p4_sound, tracknumber);
   link.set_speed(STEPSEQ_SPEED_1X);
   link.length = 16;
@@ -694,6 +695,7 @@ void TBDMidiTrack::apply_seq_defaults(uint8_t tracknumber,
 
 void TBDMidiTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
   seq_data.clear_storage();
+  load_fade.init();
   set_midi_sound_default(p4_sound, tracknumber);
   link.set_speed(SEQ_SPEED_1X);
   link.length = 16;
@@ -806,7 +808,7 @@ DeviceTrack *TBDMidiTrack::materialize_as(uint8_t track_type,
   }
   if (midi_track_type_is_storage_family(track_type)) {
     return materialize_midi_storage_track(this, track_type, link, seq_data,
-                                          tracknumber);
+                                          &load_fade, tracknumber);
   }
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }

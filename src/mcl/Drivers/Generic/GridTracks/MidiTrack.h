@@ -11,6 +11,7 @@
 class ATTR_PACKED() MidiTrack : public DeviceTrack {
 public:
   MidiSeqTrackStorage seq_data;
+  TrackLoadFadeData load_fade;
 
   MidiTrack();
 
@@ -44,8 +45,15 @@ public:
     return make_grid_slot_label('M', ctx.column + '1');
   }
   uint8_t get_model() override { return MIDI_TRACK_TYPE; }
-  uint8_t storage_version() const override { return SEQ_TRACK_MOD_STORAGE_VERSION; }
-  void init_defaults() override { seq_data.clear_storage(); }
+  uint8_t storage_version() const override { return SEQ_TRACK_LOAD_FADE_STORAGE_VERSION; }
+  void init_defaults() override {
+    seq_data.clear_storage();
+    load_fade.init();
+  }
+  TrackLoadFadeData *load_fade_data() override { return &load_fade; }
+  const TrackLoadFadeData *load_fade_data() const override {
+    return &load_fade;
+  }
   void *get_sound_data_ptr() override { return nullptr; }
   size_t get_sound_data_size() override { return 0; }
 

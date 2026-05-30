@@ -121,12 +121,20 @@ DeviceTrack *ExtTrack::materialize_legacy_ext(DeviceTrack &track,
     GridLink old_link = link;
     ExtSeqTrackData old_seq_data;
     SeqTrackModData old_mod_data = mod_data;
+    TrackLoadFadeData old_load_fade;
+    const TrackLoadFadeData *source_load_fade = track.load_fade_data();
+    if (source_load_fade != nullptr) {
+      old_load_fade = *source_load_fade;
+    } else {
+      old_load_fade.init();
+    }
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     auto *ext_track = static_cast<ExtTrack *>(
         track.init_materialized_track_type(EXT_TRACK_TYPE));
     ext_track->link = old_link;
     ext_track->mod_data = old_mod_data;
+    ext_track->load_fade = old_load_fade;
     memcpy(&ext_track->seq_data, &old_seq_data, sizeof(old_seq_data));
     return ext_track;
   }
@@ -136,6 +144,13 @@ DeviceTrack *ExtTrack::materialize_legacy_ext(DeviceTrack &track,
     GridLink old_link = link;
     ExtSeqTrackData old_seq_data;
     SeqTrackModData old_mod_data = mod_data;
+    TrackLoadFadeData old_load_fade;
+    const TrackLoadFadeData *source_load_fade = track.load_fade_data();
+    if (source_load_fade != nullptr) {
+      old_load_fade = *source_load_fade;
+    } else {
+      old_load_fade.init();
+    }
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     MidiSeqTrackStorage midi_seq_data;
@@ -145,7 +160,8 @@ DeviceTrack *ExtTrack::materialize_legacy_ext(DeviceTrack &track,
     midi_seq_data.channel =
         old_seq_data.channel < 16 ? old_seq_data.channel : tracknumber;
     return materialize_midi_storage_track(&track, track_type, old_link,
-                                          midi_seq_data, tracknumber);
+                                          midi_seq_data, &old_load_fade,
+                                          tracknumber);
   }
   return nullptr;
 }

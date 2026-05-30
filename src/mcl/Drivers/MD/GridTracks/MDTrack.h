@@ -52,6 +52,7 @@ public:
   MDMachine machine;
   SeqTrackModData mod_data;
   MDSeqTrackData seq_data;
+  TrackLoadFadeData load_fade;
   MDTrack() {
     active = MD_TRACK_TYPE;
   }
@@ -63,6 +64,7 @@ public:
     machine.init();
     mod_data.init();
     seq_data.init();
+    load_fade.init();
   }
   void clear_track();
   uint16_t calc_latency(uint8_t tracknumber) override;
@@ -108,7 +110,9 @@ public:
                               SeqTrack *seq_track) override;
 #endif
   uint8_t get_model() override { return machine.get_model(); }
-  uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
+  uint8_t storage_version() const override { return SEQ_TRACK_LOAD_FADE_STORAGE_VERSION; }
+  TrackLoadFadeData *load_fade_data() override { return &load_fade; }
+  const TrackLoadFadeData *load_fade_data() const override { return &load_fade; }
 
   void *get_sound_data_ptr() override { return &machine; }
   size_t get_sound_data_size() override { return sizeof(MDMachine); }

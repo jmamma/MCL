@@ -141,6 +141,7 @@ void finalize_spsx_seq_load(SPSXSeqTrack &track) {
 void SPSXTrack::init() {
   machine.init();
   seq_storage.init_storage();
+  load_fade.init();
 }
 
 void SPSXTrack::clear_track() {
@@ -313,6 +314,7 @@ DeviceTrack *SPSXTrack::materialize_as(uint8_t track_type,
     GridLink old_link = link;
     SPSMachine old_machine = machine;
     SeqTrackModData old_mod_data = seq_storage.mod();
+    TrackLoadFadeData old_load_fade = load_fade;
     uint8_t old_seq_version = seq_storage.seq_version;
     MDSeqTrackData old_legacy_seq_data;
     if (old_seq_version == SPSX_SEQ_VERSION_LEGACY) {
@@ -324,6 +326,7 @@ DeviceTrack *SPSXTrack::materialize_as(uint8_t track_type,
         static_cast<MDTrack *>(init_materialized_track_type(MD_TRACK_TYPE));
     md_track->link = old_link;
     md_track->mod_data = old_mod_data;
+    md_track->load_fade = old_load_fade;
     copy_spsx_machine_to_md(old_machine, md_track->machine);
 
     if (old_seq_version == SPSX_SEQ_VERSION_LEGACY) {

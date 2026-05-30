@@ -78,7 +78,8 @@ constexpr size_t NUM_LOCKS = 8;
 // the track sizes are:
 // GridTrack 7
 // DeviceTrack 7
-// MDTrack 534, plus SeqTrackModData 51, plus native swing storage 9
+// MDTrack 534, plus SeqTrackModData 51, native swing storage 9,
+// plus TrackLoadFadeData 6
 // ExtTrack 1754
 // A4Track 2094
 // EmptyTrack 2094
@@ -92,7 +93,7 @@ constexpr size_t NUM_LOCKS = 8;
 #define MEMORY_ALIGN(size) (size)  // for avr, dont align
 #endif
 
-constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(597); // MDTrack + SeqTrackModData + swing
+constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(603); // MDTrack + SeqTrackModData + swing + load fade
 #if !defined(__AVR__)
 // Non-AVR grid-2 cache slots can carry enhanced MIDI/TBD tracks. Hosted
 // builds also need the enlarged slot because native pointers grow several
@@ -122,7 +123,7 @@ constexpr size_t MD_CACHE_LEN = GRID1_TRACK_LEN * NUM_MD_TRACKS;
 #ifdef MCL_HAS_SPSX_TRACKS
 // SPSX tracks carry SPSMachine (34 params + 2 LFOs) + SeqDataUnion + extras.
 // Sized with headroom; static_assert in SPSXTrack.h enforces fit.
-constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1152);
+constexpr size_t SPSX_TRACK_LEN = MEMORY_ALIGN(1160);
 constexpr size_t SPSX_CACHE_LEN = SPSX_TRACK_LEN * NUM_MD_TRACKS;
 #endif
 

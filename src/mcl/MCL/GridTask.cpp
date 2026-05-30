@@ -349,6 +349,10 @@ bool GridTask::transition_load(GridSlot n, GridColumn track_idx,
   }
 
   pmem_track->transition_load(track_idx, gdt->seq_track, n);
+  mcl_actions.start_load_fade_at(
+      n, pmem_track->load_fade_data(),
+      MidiClock.div16th_to_div192(mcl_actions.next_transition,
+                                  mcl_actions.transition_offsets[n]));
   return true;
 }
 

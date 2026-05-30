@@ -123,6 +123,7 @@ void MCLActionsMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {}
 
 void MCLActionsCallbacks::StopHardCallback() {
   DEBUG_PRINTLN("BEGIN stop hard");
+  mcl_actions.clear_load_fades();
   GridRow row_array[NUM_SLOTS];
   uint8_t slot_select_array[NUM_SLOTS] = {};
   bool proceed = false;
@@ -177,6 +178,7 @@ void MCLActionsCallbacks::onMidiStartCallback(uint32_t clock_count) {
   (void)clock_count;
   DEBUG_PRINTLN("BEGIN on midi start");
   //StackMonitor::print_stack_info();
+  mcl_actions.clear_load_fades();
   mcl_actions.start_clock32th = 0;
   mcl_actions.start_clock16th = 0;
   mcl_actions.next_transition = -1;

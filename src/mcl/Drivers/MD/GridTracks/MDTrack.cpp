@@ -79,6 +79,7 @@ DeviceTrack *MDTrack::materialize_as(uint8_t track_type, uint8_t tracknumber,
     MDSeqTrackData old_seq_data;
     MDMachine old_machine = machine;
     SeqTrackModData old_mod_data = mod_data;
+    TrackLoadFadeData old_load_fade = load_fade;
     memcpy(&old_seq_data, &seq_data, sizeof(old_seq_data));
 
     auto *spsx_track =
@@ -86,6 +87,7 @@ DeviceTrack *MDTrack::materialize_as(uint8_t track_type, uint8_t tracknumber,
             init_materialized_track_type(MDSPSX_TRACK_TYPE));
     spsx_track->link = old_link;
     spsx_track->seq_storage.mod() = old_mod_data;
+    spsx_track->load_fade = old_load_fade;
     spsx_track->seq_storage.seq_version = SPSX_SEQ_VERSION_LEGACY;
     copy_md_machine_to_spsx(old_machine, spsx_track->machine);
     memcpy(spsx_track->seq_storage.seq_data.legacy.data(), old_seq_data.data(),
@@ -190,6 +192,7 @@ void MDTrack::init() {
   machine.init();
   seq_data.init();
   mod_data.init();
+  load_fade.init();
 }
 
 void MDTrack::load_seq_data(SeqTrack *seq_track) {

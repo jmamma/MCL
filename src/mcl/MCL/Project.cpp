@@ -128,6 +128,7 @@ public:
   MDMachine machine;
   SeqTrackModData mod_data;
   MDSeqTrackData seq_data;
+  TrackLoadFadeData load_fade;
 };
 
 struct ATTR_PACKED() LegacyExtEvent {
@@ -479,11 +480,12 @@ bool write_migrated_track(Grid &grid, GridColumn column, GridRow row,
 void init_upgraded_md_track(MigratedMDTrackStorage &dst, const GridLink &link,
                             const LegacyMDSeqTrackData &seq,
                             const MDMachine &machine) {
-  dst.header.version[0] = SEQ_TRACK_MICROTIMING_STORAGE_VERSION;
+  dst.header.version[0] = SEQ_TRACK_LOAD_FADE_STORAGE_VERSION;
   dst.header.version[1] = 0;
   dst.header.active = MD_TRACK_TYPE;
   dst.header.link = link;
   dst.mod_data.init();
+  dst.load_fade.init();
   dst.machine = machine;
   copy_legacy_md_seq(dst.seq_data, seq, project_seq_speed_value(link));
 }
@@ -1158,7 +1160,7 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
           }
         } else if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
           upgraded_md_track.header.version[0] =
-              SEQ_TRACK_MICROTIMING_STORAGE_VERSION;
+              SEQ_TRACK_LOAD_FADE_STORAGE_VERSION;
           upgraded_md_track.header.version[1] = 0;
           upgraded_md_track.header.active = MD_TRACK_TYPE;
           upgraded_md_track.header.link.init(row);
@@ -1166,6 +1168,7 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
           upgraded_md_track.machine.init();
           upgraded_md_track.mod_data.init();
           upgraded_md_track.seq_data.init();
+          upgraded_md_track.load_fade.init();
         }
 
         LFOSeqTrack::convert_legacy_data(legacy_track.lfo_data,

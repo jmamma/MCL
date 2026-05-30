@@ -48,6 +48,7 @@ void MidiTrack::apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track) {
 
 void MidiTrack::init(uint8_t tracknumber, SeqTrack *seq_track) {
   seq_data.clear_storage();
+  load_fade.init();
   link.set_speed(SEQ_SPEED_1X);
   link.length = 16;
   seq_data.channel = tracknumber;
@@ -131,7 +132,7 @@ DeviceTrack *MidiTrack::materialize_as(uint8_t track_type,
   }
   if (midi_track_type_is_storage_family(track_type)) {
     return materialize_midi_storage_track(this, track_type, link, seq_data,
-                                          tracknumber);
+                                          &load_fade, tracknumber);
   }
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }

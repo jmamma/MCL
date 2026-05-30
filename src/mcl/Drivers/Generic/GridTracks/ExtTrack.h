@@ -15,6 +15,7 @@ class ATTR_PACKED() ExtTrack : public DeviceTrack {
 public:
   ExtSeqTrackData seq_data;
   SeqTrackModData mod_data;
+  TrackLoadFadeData load_fade;
   ExtTrack() {
     active = EXT_TRACK_TYPE;
     static_assert(sizeof(ExtTrack) <= GRID2_TRACK_LEN);
@@ -35,6 +36,7 @@ public:
   void init(uint8_t tracknumber, SeqTrack *seq_track) override {
     ExtSeqTrack *ext_seq_track = (ExtSeqTrack *)seq_track;
     seq_data.channel = ext_seq_track->channel;
+    load_fade.init();
     link.set_speed(SEQ_SPEED_1X);
   }
   void load_immediate(uint8_t tracknumber, SeqTrack *seq_track) override;
@@ -43,6 +45,7 @@ public:
   void init_defaults() override {
     seq_data.clear();
     mod_data.init();
+    load_fade.init();
   }
   uint16_t get_track_size() override { return _sizeof(); }
   uintptr_t get_region() override { return BANK1_EXT_TRACKS_START; }
@@ -50,7 +53,9 @@ public:
     return make_grid_slot_label('M', ctx.column + '1');
   }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
-  uint8_t storage_version() const override { return SEQ_TRACK_MICROTIMING_STORAGE_VERSION; }
+  uint8_t storage_version() const override { return SEQ_TRACK_LOAD_FADE_STORAGE_VERSION; }
+  TrackLoadFadeData *load_fade_data() override { return &load_fade; }
+  const TrackLoadFadeData *load_fade_data() const override { return &load_fade; }
 #if !defined(__AVR__)
   bool can_materialize_as(uint8_t track_type) override;
 #endif

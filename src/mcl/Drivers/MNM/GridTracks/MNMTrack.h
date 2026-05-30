@@ -90,6 +90,7 @@ public:
                      const ExtSeqTrackData &old_seq_data,
                      const SeqTrackModData &old_mod_data,
                      const MNMMachine &old_machine,
+                     const TrackLoadFadeData &old_load_fade,
                      uint8_t tracknumber);
 
 protected:

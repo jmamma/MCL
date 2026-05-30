@@ -113,6 +113,7 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
 
 void MCLActions::setup() {
   // DEBUG_PRINTLN(F("mcl actions setup"));
+  clear_load_fades();
   init_chains();
   mcl_actions_callbacks.setup_callbacks();
   mcl_actions_midievents.setup_callbacks();
@@ -122,6 +123,30 @@ void MCLActions::init_chains() {
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     chains[n].init();
   }
+}
+
+void MCLActions::clear_load_fades() {
+  LFOSeqTrack::clear_load_fades();
+}
+
+void MCLActions::start_load_fade_at(GridSlot slot,
+                                    const TrackLoadFadeData *fade,
+                                    uint32_t start_clock) {
+  if (slot >= GRID_WIDTH) {
+    return;
+  }
+
+  GridDeviceTrack *gdt = get_grid_dev_track(slot);
+  if (gdt == nullptr ||
+      (gdt->track_type != MD_TRACK_TYPE &&
+       gdt->track_type != MDSPSX_TRACK_TYPE) ||
+      gdt->device_idx >= NUM_DEVS) {
+    LFOSeqTrack::start_md_load_fade(slot & 0x0F, 0, nullptr, start_clock);
+    return;
+  }
+
+  LFOSeqTrack::start_md_load_fade(slot & 0x0F, gdt->device_idx, fade,
+                                  start_clock);
 }
 
 void MCLActions::kit_reload(uint8_t pattern) {
@@ -282,8 +307,6 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
   }
 
   GridRowHeader row_headers[NUM_GRIDS];
-  GridTrack grid_track;
-
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
     proj.read_grid_row_header(&row_headers[n], row, n);
   }
@@ -307,16 +330,29 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
       }
 
       // Preserve existing link settings before save.
+      TrackLoadFadeData saved_load_fade;
+      saved_load_fade.init();
       if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
-        // DEBUG_PRINTLN(F("tl"));
-        if (!grid_track.load_from_grid(i, row))
+        EmptyTrack existing_track;
+        auto *loaded_existing = existing_track.load_from_grid_512(i, row);
+        if (loaded_existing == nullptr) {
           continue;
-        memcpy(&empty_track.link, &grid_track.link, sizeof(GridLink));
+        }
+        memcpy(&empty_track.link, &loaded_existing->link, sizeof(GridLink));
+        const TrackLoadFadeData *existing_load_fade =
+            loaded_existing->load_fade_data();
+        if (existing_load_fade != nullptr) {
+          saved_load_fade = *existing_load_fade;
+        }
       } else {
         empty_track.link.init(row);
       }
       auto pdevice_track =
           ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
+      TrackLoadFadeData *load_fade = pdevice_track->load_fade_data();
+      if (load_fade != nullptr) {
+        *load_fade = saved_load_fade;
+      }
       if (pdevice_track->store_in_grid(i, row, gdt->seq_track, merge,
                                        online)) {
         row_headers[grid_idx].update_model(
@@ -624,7 +660,6 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
     return false;
   } // read failure
 
-
   const bool load_sound = !rebuilt && ptrack->load_sound();
   if (!load_sound) {
     ptrack->restore_sound_from_mem_if_type(gdt_dst->mem_slot_idx,
@@ -639,6 +674,7 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
   }
 
   ptrack->store_in_mem(gdt_dst->mem_slot_idx);
+  start_load_fade_at(dst, ptrack->load_fade_data(), MidiClock.div192th_counter);
 
   return true;
 }
