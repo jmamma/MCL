@@ -16,6 +16,29 @@ uint32_t OscPage::exploit_delay_clock = 0;
 static constexpr int16_t WD_OSC_NOTE_OFFSET = 8;
 static constexpr uint8_t WD_OSC_FREQ_FRAC_BITS = 3;
 
+// Add a signed encoder delta to a 0..127 level and clamp back into range.
+// Shared by the sine-level and usr-value edit paths in loop() so the clamp
+// is emitted once instead of inline at both sites.
+static uint8_t osc_clamp_level(uint8_t cur, int8_t diff) NOINLINE();
+static uint8_t osc_clamp_level(uint8_t cur, int8_t diff) {
+  int16_t newval = (int16_t)cur + diff;
+  if (newval < 0) {
+    newval = 0;
+  }
+  if (newval > 127) {
+    newval = 127;
+  }
+  return (uint8_t)newval;
+}
+
+// Map a [-1,1] oscillator sample to a y pixel for the 30px-high preview area
+// (h=30, y=0): centre at 15, +/-15 swing. Shared by draw_wav() and draw_usr()
+// so the float multiply-add + cast is emitted once.
+static uint8_t osc_sample_to_y(float sample) NOINLINE();
+static uint8_t osc_sample_to_y(float sample) {
+  return (uint8_t)((sample * ((float)30 / 2.00f)) + (30 / 2));
+}
+
 void OscPage::setup() {
   for (uint8_t i = 0; i < 16; i++) {
     usr_values[i] = get_random(127);
@@ -122,31 +145,14 @@ void OscPage::loop() {
     }
   }
 
-  int16_t newval;
   int8_t diff = consume_centered_encoder_delta(enc_);
   for (uint8_t i = 0; i < 16; i++) {
     if (note_interface.is_note_on(i)) {
       if (osc_waveform == SIN_OSC) {
-        newval = sine_levels[i] + diff;
-
-        if (newval < 0) {
-          newval = 0;
-        }
-        if (newval > 127) {
-          newval = 127;
-        }
-
-        sine_levels[i] = newval;
+        sine_levels[i] = osc_clamp_level(sine_levels[i], diff);
       }
       if (osc_waveform == USR_OSC) {
-        newval = usr_values[i] + diff;
-        if (newval < 0) {
-          newval = 0;
-        }
-        if (newval > 127) {
-          newval = 127;
-        }
-        usr_values[i] = newval;
+        usr_values[i] = osc_clamp_level(usr_values[i], diff);
       }
     }
   }
@@ -236,7 +242,7 @@ void OscPage::draw_wav(uint8_t wav_type) {
     sample = render_osc_sample(wav_type, osc_width, sine_levels, usr_values,
                                sine_level_sum, n, 1.0f, sine_osc, tri_osc,
                                pul_osc, saw_osc, usr_osc);
-    uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00f)) + (h / 2) + y);
+    uint8_t pixel_y = osc_sample_to_y(sample);
     if (wav_type != 0) {
        oled_display.drawPixel(x + n, pixel_y, WHITE);
     }
@@ -260,16 +266,14 @@ void OscPage::draw_wav(uint8_t wav_type) {
 }
 
 void OscPage::draw_usr() {
-  uint8_t h = 30;
   float sample;
   uint8_t w = 128 - 64;
-  uint8_t y = 0;
   UsrOsc usr_osc(w);
 
   for (uint8_t i = 0; i < 16; i++) {
     sample = usr_osc.get_sample((uint32_t)i * 4, 1, usr_values);
 
-    uint8_t pixel_y = (uint8_t)((sample * ((float)h / 2.00f)) + (h / 2) + y);
+    uint8_t pixel_y = osc_sample_to_y(sample);
     if (note_interface.is_note_on(i)) {
 
       // oled_display.fillRect(63 + i * 4, 0, 3, 32, BLACK);
