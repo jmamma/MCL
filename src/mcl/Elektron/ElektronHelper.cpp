@@ -186,6 +186,12 @@ bool ElektronHelper::checkSysexChecksum(uint8_t *data, uint16_t len) {
 }
 
 bool ElektronHelper::checkSysexChecksum(const SysexView &sysex, uint16_t offset, uint16_t len) {
+#if defined(__AVR__)
+  // The only difference from the Analog variant is that the running sum
+  // starts 3 bytes later. Shifting offset/len reproduces the exact same
+  // summed range and trailer-byte reads, so reuse that one body on AVR.
+  return checkSysexChecksumAnalog(sysex, offset + 3, len - 3);
+#else
   uint16_t cksum = 0;
   for (uint16_t i = 9 - 6; i < len - 4; i++) {
     cksum += sysex.getByte(i + offset);
@@ -205,6 +211,7 @@ bool ElektronHelper::checkSysexChecksum(const SysexView &sysex, uint16_t offset,
     return false;
   }
 	return true;
+#endif
 }
 
 void ElektronHelper::calculateSysexChecksum(uint8_t *data, uint16_t len) {
