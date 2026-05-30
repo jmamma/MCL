@@ -78,8 +78,6 @@ public:
       : LightPage(e1, e2, e3, e4) {}
   bool handleEvent(gui_event_t *event) override;
 #if defined(MCL_HAS_DESKTOP_MOUSE)
-  bool mouse_button3_slot_menu = false;
-
   virtual bool handleMouseEvent(mcl_mouse_event_t *event) override;
 #endif
   GridSpan getWidth();

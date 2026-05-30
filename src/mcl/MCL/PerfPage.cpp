@@ -665,3 +665,13 @@ bool PerfPage::handleEvent(gui_event_t *event) {
 
   return false;
 }
+
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool PerfPage::handleMouseEvent(mcl_mouse_event_t *event) {
+  if (!show_menu) {
+    return false;
+  }
+  constexpr uint8_t width = 52;
+  return perf_menu_page.handleMouseEventAt(event, 128 - width, 8, width);
+}
+#endif

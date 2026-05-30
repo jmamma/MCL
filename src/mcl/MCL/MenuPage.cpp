@@ -393,7 +393,33 @@ bool MenuPageBase::handleEvent(gui_event_t *event) {
 }
 
 #if defined(MCL_HAS_DESKTOP_MOUSE)
-bool MenuPageBase::handleMouseEvent(mcl_mouse_event_t *event) {
+bool MenuPageBase::selectMouseItem(uint8_t item, uint8_t row) {
+  MenuBase *m = get_menu();
+  if (encoders[0] == nullptr || encoders[1] == nullptr ||
+      item >= m->get_number_of_items() || row >= visible_rows) {
+    return false;
+  }
+
+  bool changed = encoders[1]->cur != item || cur_row != row;
+  encoders[1]->cur = item;
+  encoders[1]->old = item;
+  selected_item = item;
+  cur_row = row;
+
+  uint8_t range = m->get_option_range(item);
+  ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
+  ((MCLEncoder *)encoders[0])->min = m->get_option_min(item);
+
+  uint8_t *dest_var = m->get_dest_variable(item);
+  encoders[0]->setValue(dest_var != NULL
+                            ? menu_value_from_stored(dest_var, *dest_var)
+                            : 0);
+  return changed;
+}
+
+bool MenuPageBase::handleMouseEventAt(mcl_mouse_event_t *event,
+                                      int16_t x_offset, int16_t y_offset,
+                                      int16_t width) {
   if (event == NULL) {
     return false;
   }
@@ -403,18 +429,20 @@ bool MenuPageBase::handleMouseEvent(mcl_mouse_event_t *event) {
     return true;
   }
 
-  if (event->type != MCL_MOUSE_DOWN &&
-      event->type != MCL_MOUSE_DOUBLE_CLICK) {
+  bool hover_event = event->type == MCL_MOUSE_MOVE ||
+                     event->type == MCL_MOUSE_DRAG;
+  bool click_event = event->type == MCL_MOUSE_DOWN ||
+                     event->type == MCL_MOUSE_DOUBLE_CLICK;
+  if (!hover_event && !click_event) {
     return false;
   }
-  if ((event->buttons & MCL_MOUSE_BUTTON_LEFT) == 0) {
+  if (click_event && (event->buttons & MCL_MOUSE_BUTTON_LEFT) == 0) {
     return false;
   }
 
-  constexpr int x_offset = 43;
-  constexpr int y_offset = 8;
-  constexpr int row_top = y_offset - 6;
-  if (event->x < x_offset - 6 || event->y < row_top) {
+  int16_t row_top = y_offset - 6;
+  if (event->x < x_offset - 6 || event->x >= x_offset + width ||
+      event->y < row_top) {
     return false;
   }
 
@@ -430,10 +458,14 @@ bool MenuPageBase::handleMouseEvent(mcl_mouse_event_t *event) {
     return false;
   }
 
-  encoders[1]->cur = item;
-  selected_item = item;
-  cur_row = row;
-  enter();
-  return true;
+  bool changed = selectMouseItem((uint8_t)item, (uint8_t)row);
+  if (click_event) {
+    enter();
+  }
+  return changed || click_event;
+}
+
+bool MenuPageBase::handleMouseEvent(mcl_mouse_event_t *event) {
+  return handleMouseEventAt(event, 43, 8, MENU_WIDTH);
 }
 #endif

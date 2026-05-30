@@ -36,16 +36,19 @@ public:
   int8_t lfo_mod_delta[NUM_PERF_CONTROLS];
   uint8_t lfo_mod_dirty_mask;
 
-  bool handleEvent(gui_event_t *event);
+  bool handleEvent(gui_event_t *event) override;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  bool handleMouseEvent(mcl_mouse_event_t *event) override;
+#endif
   void update_params();
   void learn_param(uint8_t dest, uint8_t param, uint8_t value);
 
-  void display();
-  void setup();
+  void display() override;
+  void setup() override;
 
-  void init();
-  void loop();
-  void cleanup();
+  void init() override;
+  void loop() override;
+  void cleanup() override;
 
   void func_enc_check();
   void set_led_mask();

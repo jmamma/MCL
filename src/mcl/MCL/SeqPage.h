@@ -179,12 +179,15 @@ public:
 
   bool display_mute_mask(MidiDevice *device, uint8_t offset = 0);
 
-  virtual bool handleEvent(gui_event_t *event);
-  virtual void loop();
-  virtual void display();
-  virtual void setup();
-  virtual void init();
-  virtual void cleanup();
+  bool handleEvent(gui_event_t *event) override;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  bool handleMouseEvent(mcl_mouse_event_t *event) override;
+#endif
+  void loop() override;
+  void display() override;
+  void setup() override;
+  void init() override;
+  void cleanup() override;
   virtual void config_encoders() = 0;
   static constexpr uint8_t pidx_x0 = 0;
   static constexpr uint8_t pidx_y = 15;

@@ -25,16 +25,19 @@ public:
                   Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {}
 
-  virtual void init() {
+  void init() override {
     if (WavDesignerPage::opt_mode < 3) {
       wavdesign_menu_page.menu.enable_entry(2, false);
     }
     show_menu = false;
   }
-  virtual void cleanup() = 0;
-  virtual void loop() = 0;
-  virtual void display() = 0;
-  virtual bool handleEvent(gui_event_t *event);
+  void cleanup() override = 0;
+  void loop() override = 0;
+  void display() override = 0;
+  bool handleEvent(gui_event_t *event) override;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  bool handleMouseEvent(mcl_mouse_event_t *event) override;
+#endif
 };
 
 #endif /* WAVDESIGNER_H__ */

@@ -74,9 +74,6 @@ void GridPage::init() {
   }
   param1.max = getWidth() - 1;
   show_slot_menu = false;
-#if defined(MCL_HAS_DESKTOP_MOUSE)
-  mouse_button3_slot_menu = false;
-#endif
   old_col = 255;
   reload_slot_models = false;
   draw_encoders = false;
@@ -1350,15 +1347,8 @@ bool GridPage::handleMouseEvent(mcl_mouse_event_t *event) {
     return false;
   }
 
-  if (mouse_button3_slot_menu &&
-      (event->type == MCL_MOUSE_UP || event->type == MCL_MOUSE_EXIT)) {
-    mouse_button3_slot_menu = false;
-    GUI.queueVirtualButton(Buttons.BUTTON3, false);
-    return true;
-  }
-
   if (show_slot_menu && event->x < 40 &&
-      grid_slot_page.handleMouseEvent(event)) {
+      grid_slot_page.handleMouseEventAt(event, 1, 8, 39)) {
     return true;
   }
 
@@ -1432,7 +1422,6 @@ bool GridPage::handleMouseEvent(mcl_mouse_event_t *event) {
   reset_undo();
 
   if (right_button) {
-    mouse_button3_slot_menu = true;
     GUI.queueVirtualButton(Buttons.BUTTON3, true);
     return true;
   }

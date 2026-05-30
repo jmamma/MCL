@@ -50,12 +50,17 @@ public:
   bool handleEvent(gui_event_t *event) override;
 #if defined(MCL_HAS_DESKTOP_MOUSE)
   virtual bool handleMouseEvent(mcl_mouse_event_t *event) override;
+  bool handleMouseEventAt(mcl_mouse_event_t *event, int16_t x_offset,
+                          int16_t y_offset, int16_t width = MENU_WIDTH);
 #endif
 
 protected:
   uint8_t selected_item = 0;
 
   virtual MenuBase *get_menu() = 0;
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+  bool selectMouseItem(uint8_t item, uint8_t row);
+#endif
 };
 
 template <int N> class MenuPage : public MenuPageBase {

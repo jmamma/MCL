@@ -1051,6 +1051,16 @@ bool SeqPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool SeqPage::handleMouseEvent(mcl_mouse_event_t *event) {
+  if (!show_seq_menu) {
+    return false;
+  }
+  constexpr uint8_t width = 52;
+  return seq_menu_page.handleMouseEventAt(event, 128 - width, 8, width);
+}
+#endif
+
 void SeqPage::draw_lock_mask(const uint8_t offset, const uint64_t &lock_mask,
                              const uint8_t step_count, const uint8_t length,
                              const bool show_current_step) {
