@@ -535,14 +535,26 @@ bool migrate_ext_like_track_storage(Grid &grid, GridColumn column, GridRow row,
                               upgraded.get_track_size());
 }
 
+uint8_t fixed_payload_track_size(uint8_t track_type) {
+  switch (track_type) {
+  case MDTEMPO_TRACK_TYPE:
+    return sizeof(TempoData);
+  case GRIDCHAIN_TRACK_TYPE:
+    return sizeof(GridChain);
+  default:
+    return sizeof(MDFXData);
+  }
+}
+
 bool migrate_fixed_payload_track(Grid &grid, GridColumn column, GridRow row,
-                                 uint8_t track_type, uint8_t payload_size) {
+                                 uint8_t track_type) {
   static_assert(sizeof(MDFXData) >= sizeof(TempoData),
                 "fixed payload scratch too small for tempo");
   static_assert(sizeof(MDFXData) >= sizeof(GridChain),
                 "fixed payload scratch too small for grid chain");
   LegacyFixedPayloadTrackStorage storage;
-  uint8_t storage_size = sizeof(storage.header) + payload_size;
+  uint8_t storage_size =
+      sizeof(storage.header) + fixed_payload_track_size(track_type);
   if (!grid.read(&storage, storage_size, column, row) ||
       storage.header.active != track_type) {
     return false;
@@ -1320,15 +1332,10 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
         break;
       }
       case MDFX_TRACK_TYPE:
-        if (!migrate_fixed_payload_track(grids[grid], column, row,
-                                         MDFX_TRACK_TYPE, sizeof(MDFXData))) {
-          return false;
-        }
-        break;
       case MDTEMPO_TRACK_TYPE:
+      case GRIDCHAIN_TRACK_TYPE:
         if (!migrate_fixed_payload_track(grids[grid], column, row,
-                                         MDTEMPO_TRACK_TYPE,
-                                         sizeof(TempoData))) {
+                                         track_type)) {
           return false;
         }
         break;
@@ -1337,13 +1344,6 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid) {
           break;
         }
         if (!migrate_perf_track_storage(grids[grid], column, row, column)) {
-          return false;
-        }
-        break;
-      case GRIDCHAIN_TRACK_TYPE:
-        if (!migrate_fixed_payload_track(grids[grid], column, row,
-                                         GRIDCHAIN_TRACK_TYPE,
-                                         sizeof(GridChain))) {
           return false;
         }
         break;
