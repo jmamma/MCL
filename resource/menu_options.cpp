@@ -101,5 +101,5 @@ menu_option_t MENU_OPTIONS[] = {
   {0, ".01"}, {1, ".1"}, {2, ".25"}, {3, ".5"},
   {4, "1x"}, {5, "2x"}, {6, "4x"}, {7, "8x"},
   // 144 AVR / 152 TBD: MD sample bank project link
-  {0, "OFF"},
+  {0, "OFF"}, {1, "AUTO"},
 };

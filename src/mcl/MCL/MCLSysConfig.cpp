@@ -279,6 +279,7 @@ bool MCLSysConfig::cfg_init() {
 #endif
   project_config = 0;
   md_sample_bank = 0;
+  md_sample_bank_capture = 0;
   mclsys_normalize_midi_config();
   cfgfile.close();
   ret = write_cfg();

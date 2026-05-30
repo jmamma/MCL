@@ -9,7 +9,14 @@
 
 #define CONFIG_VERSION_PRE_SAMPLE_BANK 4018
 #define CONFIG_VERSION_SAMPLE_BANK 4019
-#define CONFIG_VERSION CONFIG_VERSION_SAMPLE_BANK
+#define CONFIG_VERSION_PRE_SAMPLE_BANK_AUTO CONFIG_VERSION_SAMPLE_BANK
+#define CONFIG_VERSION_SAMPLE_BANK_AUTO 4020
+#define CONFIG_VERSION CONFIG_VERSION_SAMPLE_BANK_AUTO
+
+#define MD_SAMPLE_BANK_OFF 0
+#define MD_SAMPLE_BANK_AUTO 1
+#define MD_SAMPLE_BANK_FIXED_FIRST 2
+#define MD_SAMPLE_BANK_FIXED_LAST 129
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -87,6 +94,7 @@ public:
   uint8_t ptc_group[PTC_GROUP_TRACKS];
   uint8_t project_config;
   uint8_t md_sample_bank;
+  uint8_t md_sample_bank_capture;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

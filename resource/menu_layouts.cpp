@@ -283,7 +283,7 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
         {"IMPORT",      0, 0,  0, 0, MD_IMPORT_PAGE, 0, 0},
         {"RAM LINK:",   0, 2,  2, 1, NULL_PAGE, 0, 0},
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
-        {"SAMPLEBANK:", 0, 129, 1, 74, NULL_PAGE, 0,
+        {"SAMPLEBANK:", 0, 130, 2, 74, NULL_PAGE, 0,
          SAMPLE_BANK_OPTIONS_OFFSET},
     },
     1
