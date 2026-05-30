@@ -407,6 +407,8 @@ static uint16_t send_md_request3(MDClass &md, uint8_t command, uint8_t param,
   return md.sendRequest(data, sizeof(data), send);
 }
 
+static constexpr uint8_t MD_GATEWAY_LOAD_SAMPLE_BANK = 0x63;
+
 static void send_global_setting(MDClass &md, uint8_t setting, uint8_t value) {
   send_md_request3(md, 0x70, setting, value);
 }
@@ -1969,6 +1971,15 @@ void MDClass::loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_) {
   uint8_t c = (track_mask >> 14) & 0x7F;
   uint8_t data[5] = {0x70, 0x62, a, b, c};
   sendRequest(data, countof(data), true, uart_);
+}
+
+bool MDClass::loadSampleBank(uint8_t bank, bool send) {
+  if (bank >= 128 || !connected || !(fw_caps & FW_CAP_SAMPLE_BANK)) {
+    return false;
+  }
+
+  uint8_t data[3] = {0x70, MD_GATEWAY_LOAD_SAMPLE_BANK, bank};
+  return sendRequest(data, sizeof(data), send) != 0;
 }
 
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {

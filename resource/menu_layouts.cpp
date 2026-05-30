@@ -92,6 +92,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDY_PORT_OPTIONS_OFFSET 137
   #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 140
   #define LFO_MULT_OPTIONS_OFFSET 144
+  #define SAMPLE_BANK_OPTIONS_OFFSET 152
   #define SEQ_EDIT_OPTIONS_OFFSET 48
 #else
   #define GRIDX_DEVICE_RANGE 2
@@ -110,6 +111,7 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define GRIDY_PORT_OPTIONS_OFFSET 134
   #define MIDI_CLOCK_SOURCE_OPTIONS_OFFSET 7
   #define LFO_MULT_OPTIONS_OFFSET 136
+  #define SAMPLE_BANK_OPTIONS_OFFSET 144
   #define SEQ_EDIT_OPTIONS_OFFSET 48
 #endif
 
@@ -303,6 +305,8 @@ menu_t<mcl_config_page_N> mclconfig_menu_layout = {
         //           m  r  n  d   p  f  o
         {"DISPLAY:", 0, 2, 2, 13, NULL_PAGE, 0, 23},
         {"PROJ CFG:", 0, 2, 2, 72, NULL_PAGE, 0, 25},
+        {"MD SMPLBNK:", 0, 129, 1, 74, NULL_PAGE, 0,
+         SAMPLE_BANK_OPTIONS_OFFSET},
         {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 114},
     },
     1

@@ -243,6 +243,7 @@ public:
 
 #define FW_CAPS_LENGTH_CHECK  FW_CAP_HIGHER(0)
 #define FW_CAP_SPSX           FW_CAP_HIGHER(1)
+#define FW_CAP_SAMPLE_BANK    FW_CAP_HIGHER(2)
 
 /// Base class for Elektron MidiDevice
 class ElektronDevice : public MidiDevice {

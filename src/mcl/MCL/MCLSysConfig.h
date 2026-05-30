@@ -7,7 +7,9 @@
 #include "MCLMemory.h"
 #include "PtcGroups.h"
 
-#define CONFIG_VERSION 4018
+#define CONFIG_VERSION_PRE_SAMPLE_BANK 4018
+#define CONFIG_VERSION_SAMPLE_BANK 4019
+#define CONFIG_VERSION CONFIG_VERSION_SAMPLE_BANK
 
 #define MIDI_OMNI_MODE 17
 #define MIDI_LOCAL_MODE 0
@@ -84,6 +86,7 @@ public:
   uint8_t grid_y_port;
   uint8_t ptc_group[PTC_GROUP_TRACKS];
   uint8_t project_config;
+  uint8_t md_sample_bank;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

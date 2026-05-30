@@ -126,7 +126,11 @@ bool MCLSd::load_init() {
                     &mcl_cfg.cfgfile)) {
         DEBUG_PRINTLN(F("Config file read: success"));
 
-        if (mcl_cfg.version != CONFIG_VERSION) {
+        if (mcl_cfg.version == CONFIG_VERSION_PRE_SAMPLE_BANK) {
+          mcl_cfg.md_sample_bank = 0;
+          mcl_cfg.version = CONFIG_VERSION;
+          mcl_cfg.write_cfg();
+        } else if (mcl_cfg.version != CONFIG_VERSION) {
           DEBUG_PRINTLN(F("Incompatible config version"));
           if (!mcl_cfg.cfg_init()) {
             DEBUG_PRINTLN(F("Could not init cfg"));
@@ -141,6 +145,9 @@ bool MCLSd::load_init() {
 
         if (mcl_cfg.project_config > 1) {
           mcl_cfg.project_config = 0;
+        }
+        if (mcl_cfg.md_sample_bank > 128) {
+          mcl_cfg.md_sample_bank = 0;
         }
         ptc_groups.load(mcl_cfg.ptc_group);
 

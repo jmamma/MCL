@@ -202,7 +202,9 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     // 72
     &mcl_cfg.project_config,
     // 73
-    &opt_swing
+    &opt_swing,
+    // 74
+    &mcl_cfg.md_sample_bank
 };
 
 const menu_function_ptr_t menu_target_functions[] PROGMEM = {

@@ -278,6 +278,7 @@ bool MCLSysConfig::cfg_init() {
   grid_y_port = GRID_Y_PORT_2;
 #endif
   project_config = 0;
+  md_sample_bank = 0;
   mclsys_normalize_midi_config();
   cfgfile.close();
   ret = write_cfg();

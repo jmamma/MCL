@@ -5,8 +5,10 @@
 #include "GridPages.h"
 #include "MidiSetup.h"
 #include "oled.h"
+#include "DeviceManager.h"
 
 #include "MDTrack.h"
+#include "../Drivers/MD/MD.h"
 #include "ExtTrack.h"
 #include "A4Track.h"
 #include "MNMTrack.h"
@@ -242,8 +244,27 @@ constexpr size_t PROJECT_CONFIG_SIZE =
 #define PROJECT_VERSION_CAN_OPEN(v) ((v) == PROJ_VERSION)
 #endif
 
+bool project_config_version_valid(uint32_t version) {
+  return version == CONFIG_VERSION ||
+         version == CONFIG_VERSION_PRE_SAMPLE_BANK;
+}
+
 bool project_config_valid(const MCLSysConfigData &source) {
+  return project_config_version_valid(source.version);
+}
+
+bool project_config_has_sample_bank(const MCLSysConfigData &source) {
   return source.version == CONFIG_VERSION;
+}
+
+uint8_t normalized_sample_bank(uint8_t sample_bank) {
+  return sample_bank <= 128 ? sample_bank : 0;
+}
+
+uint8_t project_config_sample_bank(const MCLSysConfigData &source) {
+  return project_config_has_sample_bank(source)
+             ? normalized_sample_bank(source.md_sample_bank)
+             : 0;
 }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
@@ -497,14 +518,17 @@ void copy_project_config(MCLSysConfigData *dst,
          (const uint8_t *)&source + PROJECT_CONFIG_OFFSET,
          PROJECT_CONFIG_SIZE);
   dst->project_config = 0;
+  dst->md_sample_bank = normalized_sample_bank(source.md_sample_bank);
 }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
 void normalize_project_config(MCLSysConfigData *data) {
+  uint8_t sample_bank = project_config_sample_bank(*data);
   data->version = CONFIG_VERSION;
   data->project[0] = '\0';
   data->number_projects = 0;
   data->project_config = 0;
+  data->md_sample_bank = sample_bank;
 }
 #endif
 
@@ -516,6 +540,17 @@ void apply_project_config(MCLSysConfigData *dst,
   memcpy((uint8_t *)dst + PROJECT_CONFIG_OFFSET,
          (const uint8_t *)&source + PROJECT_CONFIG_OFFSET,
          PROJECT_CONFIG_SIZE);
+  dst->md_sample_bank = project_config_sample_bank(source);
+}
+
+void load_project_sample_bank(uint8_t sample_bank) {
+  if (sample_bank == 0) {
+    return;
+  }
+  if (device_manager.primary_device() != &MD) {
+    return;
+  }
+  MD.loadSampleBank(sample_bank - 1);
 }
 
 } // namespace
@@ -912,12 +947,16 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     active_grid_pair = requested_pair;
   }
   bool applied_project_config = false;
+  uint8_t project_sample_bank = project_config_sample_bank(cfg);
   if (mcl_cfg.project_config) {
     apply_project_config(&mcl_cfg, cfg);
     ptc_groups.load(mcl_cfg.ptc_group);
     mclsys_normalize_midi_config();
     copy_project_config(&cfg, mcl_cfg);
+    project_sample_bank = mcl_cfg.md_sample_bank;
     applied_project_config = true;
+  } else {
+    mcl_cfg.md_sample_bank = project_sample_bank;
   }
   bool update_header = use_requested_pair;
 #ifdef MCL_HAS_PROJECT_CONVERSION
@@ -941,6 +980,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   if (applied_project_config) {
     midi_setup.cfg_ports();
   }
+  load_project_sample_bank(project_sample_bank);
   grid_page.row_scan = GRID_LENGTH;
   project_loaded = true;
   return true;
@@ -1278,7 +1318,7 @@ bool Project::write_header() {
 }
 
 bool Project::store_config_from_system() {
-  if (!project_loaded || !mcl_cfg.project_config) {
+  if (!project_loaded) {
     return true;
   }
   copy_project_config(&cfg, mcl_cfg);

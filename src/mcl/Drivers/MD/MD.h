@@ -341,6 +341,7 @@ public:
 #endif
 
   void loadMachinesCache(uint32_t track_mask, MidiUartClass *uart_ = nullptr);
+  bool loadSampleBank(uint8_t bank, bool send = true);
 
   /**
    * Inserts a machine in to the MDKit object
