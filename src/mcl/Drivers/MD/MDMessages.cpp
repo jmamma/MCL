@@ -402,14 +402,14 @@ bool MDKit::fromSysex(MidiClass *midi) {
     decoder.stop7Bit();
   }
 
-  decoder.get(reverb, 8);
-  decoder.get(delay, 8);
-  decoder.get(eq, 8);
-  decoder.get(dynamics, 8);
+  // reverb/delay/eq/dynamics are four consecutive uint8_t[8] members; read the
+  // 32-byte run in one call (identical bytes, fewer call sites).
+  decoder.get(reverb, 32);
 
+  // trigGroups/muteGroups are two consecutive uint8_t[16] members; read the
+  // 32-byte run in one call (stream-based 7-bit, identical bytes).
   decoder.start7Bit();
-  decoder.get(trigGroups, 16);
-  decoder.get(muteGroups, 16);
+  decoder.get(trigGroups, 32);
   decoder.stop7Bit();
 
 #if !defined(__AVR__)
@@ -518,14 +518,15 @@ uint16_t MDKit::toSysex(ElektronDataToSysexEncoder *encoder) {
     encoder->stop7Bit();
   }
 
-  encoder->pack(reverb, 8);
-  encoder->pack(delay, 8);
-  encoder->pack(eq, 8);
-  encoder->pack(dynamics, 8);
+  // reverb/delay/eq/dynamics are four consecutive uint8_t[8] members; pack the
+  // 32-byte run in one call (identical bytes, fewer call sites).
+  encoder->pack(reverb, 32);
 
+  // trigGroups/muteGroups are two consecutive uint8_t[16] members; pack the
+  // 32-byte run in one call. 7-bit packing is stream-based, so the emitted
+  // bytes are identical to two separate pack calls.
   encoder->start7Bit();
-  encoder->pack(trigGroups, 16);
-  encoder->pack(muteGroups, 16);
+  encoder->pack(trigGroups, 32);
   encoder->stop7Bit();
 
 #if !defined(__AVR__)

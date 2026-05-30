@@ -125,12 +125,13 @@ void MDSysexListenerClass::end() {
       }
 
       // LFO (5 bytes: destTrack, destParam, shape1, shape2, type)
+      // These five MDLFO members are consecutive uint8_t fields; read them
+      // through a pointer in a loop (identical byte/field mapping).
       if (data_flags & 0x02) {
-        MD.kit.lfos[track].destinationTrack = view.getByte(offset++);
-        MD.kit.lfos[track].destinationParam = view.getByte(offset++);
-        MD.kit.lfos[track].shape1 = view.getByte(offset++);
-        MD.kit.lfos[track].shape2 = view.getByte(offset++);
-        MD.kit.lfos[track].type = view.getByte(offset++);
+        uint8_t *lfo = &MD.kit.lfos[track].destinationTrack;
+        for (uint8_t i = 0; i < 5; i++) {
+          lfo[i] = view.getByte(offset++);
+        }
       }
 
       // Level (1 byte)
