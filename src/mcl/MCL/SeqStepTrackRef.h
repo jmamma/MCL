@@ -121,7 +121,7 @@ inline void seq_step_tracks_trigger(uint8_t port, uint8_t track,
           device == device_manager.secondary_device()))
             ? DeviceIdx::Secondary
             : DeviceIdx::Primary;
-    mcl_seq.set_lfo_track_trig(device_idx, track);
+    mcl_seq.report_track_trig(device_idx, track);
 #endif
     device->triggerTrack(track, velocity);
   }

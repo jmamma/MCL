@@ -818,7 +818,7 @@ void MDSeqTrack::send_notes_on(MidiUartClass *uart2_) {
 
   if (n->note1 != 255) {
 #ifdef LFO_TRACKS
-    mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track_number);
+    mcl_seq.report_track_trig(DeviceIdx::Primary, track_number);
 #endif
     mixer_page.trig(track_number);
     uart2_->sendNoteOn(channel, n->note1, n->vel);
@@ -910,7 +910,7 @@ void MDSeqTrack::send_trig() { send_trig_inline(); }
 
 void MDSeqTrack::send_trig_inline() {
 #ifdef LFO_TRACKS
-  mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track_number);
+  mcl_seq.report_track_trig(DeviceIdx::Primary, track_number);
 #endif
   mixer_page.trig(track_number);
   // MD.triggerTrack(track_number, 127, uart);

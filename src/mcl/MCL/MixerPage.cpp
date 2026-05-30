@@ -82,7 +82,7 @@ void MixerPage::track_trig(DeviceIdx device_idx, uint8_t track_number,
     disp_levels[track_number] = level;
   }
 #ifdef LFO_TRACKS
-  mcl_seq.set_lfo_track_trig(device_idx, track_number);
+  mcl_seq.report_track_trig(device_idx, track_number);
 #endif
 }
 

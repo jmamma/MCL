@@ -198,7 +198,7 @@ void SeqPtcTrackRef::trigger(uint8_t track, uint8_t velocity,
     return;
   }
 #ifdef LFO_TRACKS
-  mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track);
+  mcl_seq.report_track_trig(DeviceIdx::Primary, track);
 #endif
 #if !defined(__AVR__)
   MidiDevice *device = device_manager.primary_device();

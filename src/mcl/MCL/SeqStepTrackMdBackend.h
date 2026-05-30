@@ -311,7 +311,7 @@ public:
   bool preview_step(uint8_t step) {
     track_->send_parameter_locks(step, true);
 #ifdef LFO_TRACKS
-    mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track_->track_number);
+    mcl_seq.report_track_trig(DeviceIdx::Primary, track_->track_number);
 #endif
     MD.triggerTrack(track_->track_number, 127);
     return true;

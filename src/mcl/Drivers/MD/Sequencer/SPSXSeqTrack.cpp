@@ -257,7 +257,7 @@ void SPSXSeqTrack::send_trig() {
 
 void SPSXSeqTrack::send_trig_inline(uint8_t velocity) {
 #ifdef LFO_TRACKS
-    mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track_number);
+    mcl_seq.report_track_trig(DeviceIdx::Primary, track_number);
 #endif
     mixer_page.trig(track_number);
     if (velocity >= 127) {
@@ -313,7 +313,7 @@ void SPSXSeqTrack::send_notes_on(MidiUartClass *uart2_) {
     uint8_t channel = get_midi_channel();
     if (notes.note1 != 255) {
 #ifdef LFO_TRACKS
-        mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track_number);
+        mcl_seq.report_track_trig(DeviceIdx::Primary, track_number);
 #endif
         mixer_page.trig(track_number);
         out->sendNoteOn(channel, notes.note1, notes.vel);
@@ -595,7 +595,7 @@ bool SPSXSeqTrack::preview_step(uint8_t step) {
     uint8_t velocity = SPSX_IS_BIT_SET64(accent_mask, step) ? 0x7F : 0x60;
     MD.triggerTrack(track_number, velocity);
 #ifdef LFO_TRACKS
-    mcl_seq.set_lfo_track_trig(DeviceIdx::Primary, track_number);
+    mcl_seq.report_track_trig(DeviceIdx::Primary, track_number);
 #endif
     mixer_page.trig(track_number);
     return true;

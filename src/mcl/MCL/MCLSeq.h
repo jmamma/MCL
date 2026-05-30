@@ -108,36 +108,36 @@ public:
   LFOSeqTrack grid_y_lfo_tracks[NUM_GRID_Y_LFO_TRACKS];
   static constexpr uint8_t num_grid_y_lfo_tracks = NUM_GRID_Y_LFO_TRACKS;
 #endif
-  uint16_t lfo_track_trig_mask_primary;
-  uint16_t lfo_track_trig_mask_secondary;
+  uint16_t track_trig_mask_primary;
+  uint16_t track_trig_mask_secondary;
 
-  void set_lfo_track_trig(DeviceIdx device_idx, uint8_t track) {
+  void report_track_trig(DeviceIdx device_idx, uint8_t track) {
     if (track >= 16) {
       return;
     }
     uint16_t bit = (uint16_t)1 << track;
     if (device_idx == DeviceIdx::Secondary) {
-      lfo_track_trig_mask_secondary |= bit;
+      track_trig_mask_secondary |= bit;
     } else {
-      lfo_track_trig_mask_primary |= bit;
+      track_trig_mask_primary |= bit;
     }
   }
 
-  bool lfo_track_trig_fired(DeviceIdx device_idx, uint8_t track) const {
+  bool track_trig_fired(DeviceIdx device_idx, uint8_t track) const {
     if (track >= 16) {
       return false;
     }
     uint16_t mask = device_idx == DeviceIdx::Secondary
-                        ? lfo_track_trig_mask_secondary
-                        : lfo_track_trig_mask_primary;
+                        ? track_trig_mask_secondary
+                        : track_trig_mask_primary;
     return (mask & ((uint16_t)1 << track)) != 0;
   }
 
-  void clear_lfo_track_trigs(DeviceIdx device_idx) {
+  void clear_track_trigs(DeviceIdx device_idx) {
     if (device_idx == DeviceIdx::Secondary) {
-      lfo_track_trig_mask_secondary = 0;
+      track_trig_mask_secondary = 0;
     } else {
-      lfo_track_trig_mask_primary = 0;
+      track_trig_mask_primary = 0;
     }
   }
 #endif

@@ -910,7 +910,7 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
     uart_ = uart;
   }
 #ifdef LFO_TRACKS
-  mcl_seq.set_lfo_track_trig(DeviceIdx::Secondary, track_number);
+  mcl_seq.report_track_trig(DeviceIdx::Secondary, track_number);
 #endif
   mixer_page.track_trig(DeviceIdx::Secondary, track_number, 127);
   uart_->sendNoteOn(channel, note, velocity);

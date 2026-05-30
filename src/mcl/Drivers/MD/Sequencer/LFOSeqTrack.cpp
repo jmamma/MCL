@@ -745,7 +745,7 @@ uint8_t LFOSeqTrack::get_wav_value(uint8_t offset, uint8_t param_id,
 void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   uint8_t current_mode = base_mode();
   if (current_mode == LFO_MODE_TRACK_TRIG &&
-      mcl_seq.lfo_track_trig_fired(device_idx, track_number)) {
+      mcl_seq.track_trig_fired(device_idx, track_number)) {
     reset_phase();
   } else if ((legacy_tick_counter == 0) &&
              (current_mode != LFO_MODE_FREE) &&

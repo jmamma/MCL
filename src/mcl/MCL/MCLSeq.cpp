@@ -433,8 +433,8 @@ void MCLSeq::onMidiStartImmediateCallback(uint32_t clock_count) {
   mdfx_track.reset();
   perf_track.reset();
 #ifdef LFO_TRACKS
-  clear_lfo_track_trigs(DeviceIdx::Primary);
-  clear_lfo_track_trigs(DeviceIdx::Secondary);
+  clear_track_trigs(DeviceIdx::Primary);
+  clear_track_trigs(DeviceIdx::Secondary);
   for (uint8_t i = 0; i < num_grid_x_lfo_tracks; i++) {
     grid_x_lfo_tracks[i].reset_runtime();
   }
@@ -605,7 +605,7 @@ void MCLSeq::seq() {
       for (uint8_t i = 0; i < num_md_tracks; i++) {
         grid_x_lfo_tracks[i].seq(uart, uart2);
       }
-      clear_lfo_track_trigs(DeviceIdx::Primary);
+      clear_track_trigs(DeviceIdx::Primary);
 #endif
 
       perf_track.seq(uart, uart2);
@@ -644,7 +644,7 @@ void MCLSeq::seq() {
     for (uint8_t i = 0; i < num_md_tracks; i++) {
       grid_x_lfo_tracks[i].seq(uart, uart2);
     }
-    clear_lfo_track_trigs(DeviceIdx::Primary);
+    clear_track_trigs(DeviceIdx::Primary);
 #endif
 
     perf_track.seq(uart, uart2);
@@ -669,7 +669,7 @@ void MCLSeq::seq() {
         md_arp_tracks[i].seq(uart, uart2);
         grid_x_lfo_tracks[i].seq(uart, uart2);
       }
-      clear_lfo_track_trigs(DeviceIdx::Primary);
+      clear_track_trigs(DeviceIdx::Primary);
     }
   }
 #endif
@@ -684,7 +684,7 @@ void MCLSeq::seq() {
         ext_arp_tracks[i].seq(uart, uart2);
         grid_y_lfo_tracks[i].seq(uart, uart2);
       }
-      clear_lfo_track_trigs(DeviceIdx::Secondary);
+      clear_track_trigs(DeviceIdx::Secondary);
     }
   }
 #endif
@@ -697,7 +697,7 @@ void MCLSeq::seq() {
       ext_arp_tracks[i].seq(uart,uart2);
       grid_y_lfo_tracks[i].seq(uart, uart2);
     }
-    clear_lfo_track_trigs(DeviceIdx::Secondary);
+    clear_track_trigs(DeviceIdx::Secondary);
   }
 #endif
 

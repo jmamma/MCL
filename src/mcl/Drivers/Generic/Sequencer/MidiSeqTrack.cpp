@@ -625,7 +625,7 @@ void MidiSeqTrack::note_on(uint8_t note, uint8_t velocity,
   if (uart_ == nullptr) uart_ = uart;
   if (!uart_) return;
 #ifdef LFO_TRACKS
-  mcl_seq.set_lfo_track_trig(DeviceIdx::Secondary, track_number);
+  mcl_seq.report_track_trig(DeviceIdx::Secondary, track_number);
 #endif
   mixer_page.track_trig(DeviceIdx::Secondary, track_number, velocity);
   uart_->sendNoteOn(channel(), note, velocity);
