@@ -38,6 +38,11 @@ bool mixer_arrow_or_yes_key_down() {
   return mixer_arrow_key_down() || key_interface.is_key_down(MDX_KEY_YES);
 }
 
+uint8_t scale_to_fader(uint8_t val) NOINLINE();
+uint8_t scale_to_fader(uint8_t val) {
+  return ((uint16_t)val * FADER_LEN) / 127;
+}
+
 } // namespace
 
 void MixerPage::sync_selected_mixer_device() {
@@ -92,22 +97,18 @@ void MixerPage::trig(uint8_t track_number) {
   }
   MixerTarget target;
   target.bind(DeviceIdx::Primary);
-  MidiDeviceMixerParam info;
-  uint8_t level = 127;
-  if (target.param(track_number, target.default_param(), &info)) {
-    level = target.param_value_7bit(info);
-  }
-  track_trig(DeviceIdx::Primary, track_number, level);
-  GUI_hardware.led.set_flashled(track_number);
 
-  uint8_t trig_group = target.trig_group(track_number);
-  if (trig_group < NUM_MD_TRACKS) {
-    level = 127;
-    if (target.param(trig_group, target.default_param(), &info)) {
+  uint8_t tracks[2] = {track_number, target.trig_group(track_number)};
+  uint8_t count = tracks[1] < NUM_MD_TRACKS ? 2 : 1;
+  for (uint8_t k = 0; k < count; k++) {
+    uint8_t t = tracks[k];
+    MidiDeviceMixerParam info;
+    uint8_t level = 127;
+    if (target.param(t, target.default_param(), &info)) {
       level = target.param_value_7bit(info);
     }
-    track_trig(DeviceIdx::Primary, trig_group, level);
-    GUI_hardware.led.set_flashled(trig_group);
+    track_trig(DeviceIdx::Primary, t, level);
+    GUI_hardware.led.set_flashled(t);
   }
 }
 
@@ -404,8 +405,8 @@ void MixerPage::display() {
         fader_level = 127;
       }
 
-      fader_level = ((uint16_t)fader_level * FADER_LEN) / 127;
-      meter_level = ((uint16_t)levels[i] * FADER_LEN) / 127;
+      fader_level = scale_to_fader(fader_level);
+      meter_level = scale_to_fader(levels[i]);
       meter_level = min(fader_level, meter_level);
 
       if (redraw & 1) {
