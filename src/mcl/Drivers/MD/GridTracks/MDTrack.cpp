@@ -185,10 +185,9 @@ void MDTrack::get_machine_from_kit(uint8_t tracknumber) {
   /*Copies Lfo data from the kit object into the machine object*/
   memcpy(&machine.lfo, &MD.kit.lfos[tracknumber], sizeof(machine.lfo));
 
-  if (MD.kit.lfos[tracknumber].destinationTrack == tracknumber) {
-    machine.lfo.destinationTrack = tracknumber;
-    machine.track = tracknumber;
-  }
+  // The memcpy above already copies destinationTrack, and machine.track was
+  // assigned tracknumber above; when destinationTrack == tracknumber the
+  // explicit re-assignments are no-ops, so they are omitted.
 
   machine.trigGroup = MD.kit.trigGroups[tracknumber];
   machine.muteGroup = MD.kit.muteGroups[tracknumber];
