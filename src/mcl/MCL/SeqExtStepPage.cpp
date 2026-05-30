@@ -1841,10 +1841,8 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       if (cmd_no_down && cmd_yes_down) {
         switch (key) {
         case MDX_KEY_UP:
-          seq_extparam4.cur -= 2;
-          return true;
         case MDX_KEY_DOWN:
-          seq_extparam4.cur += 2;
+          seq_extparam4.cur += (key == MDX_KEY_DOWN) ? 2 : -2;
           return true;
         case MDX_KEY_YES:
         case MDX_KEY_NO:
@@ -1952,12 +1950,9 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         if (no_down) {
           switch (key) {
           case MDX_KEY_LEFT:
-            if (!note_selection_editing) break;
-            move_note_selection(-1 * w, 0);
-            return true;
           case MDX_KEY_RIGHT:
             if (!note_selection_editing) break;
-            move_note_selection(w, 0);
+            move_note_selection(key == MDX_KEY_LEFT ? -1 * w : w, 0);
             return true;
           case MDX_KEY_UP:
             if (!note_selection_editing) return true;
@@ -1978,15 +1973,10 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
       bool notes_down = note_interface.notes_count_on();
       if (no_down || notes_down) {
         switch (key) {
-        case MDX_KEY_UP: {
-          if (notes_down) {
-            seq_extparam4.cur -= 2;
-          }
-          return true;
-        }
+        case MDX_KEY_UP:
         case MDX_KEY_DOWN: {
           if (notes_down) {
-            seq_extparam4.cur += 2;
+            seq_extparam4.cur += (key == MDX_KEY_DOWN) ? 2 : -2;
           }
           return true;
         }
@@ -2017,26 +2007,17 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         }
         switch (key) {
 
-        case MDX_KEY_LEFT: {
-          pos_cur_x(-1 * w);
-          if (key_interface.is_key_down(MDX_KEY_YES)) {
-            key_interface.ignoreNextEvent(MDX_KEY_YES);
-          }
-          return true;
-        }
+        case MDX_KEY_LEFT:
         case MDX_KEY_RIGHT: {
-          pos_cur_x(w);
+          pos_cur_x(key == MDX_KEY_LEFT ? -1 * w : w);
           if (key_interface.is_key_down(MDX_KEY_YES)) {
             key_interface.ignoreNextEvent(MDX_KEY_YES);
           }
           return true;
         }
-        case MDX_KEY_UP: {
-          pos_cur_y(inc);
-          return true;
-        }
+        case MDX_KEY_UP:
         case MDX_KEY_DOWN: {
-          pos_cur_y(-1 * inc);
+          pos_cur_y(key == MDX_KEY_UP ? inc : -1 * inc);
           return true;
         }
           // case MDX_KEY_YES: {
