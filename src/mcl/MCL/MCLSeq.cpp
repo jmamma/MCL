@@ -165,6 +165,228 @@ void cleanup_mcl_seq_all_midi(MCLSeqMidiEvents *events) {
 #endif
 }
 
+// All seq() block helpers below have a single call site in MCLSeq::seq().
+// always_inline + one caller costs ~0 flash under -Os/LTO (measured: +14 B on
+// AVR megacommand vs pre-refactor). Plain inline regresses ~240 B because the
+// compiler declines to inline a couple of the larger helpers. If you add a
+// second caller, re-measure; double-inlining will blow the budget.
+#define MCL_SEQ_INLINE inline __attribute__((always_inline))
+
+MCL_SEQ_INLINE void prepare_tx_buffers(MidiUartClass *primary_output,
+                                       MidiUartClass *secondary_output,
+                                       bool shared_output,
+                                       bool engage_sidechannel,
+                                       bool &uart_sidechannel,
+                                       MidiUartClass *&uart,
+                                       MidiUartClass *&uart2) {
+  primary_output->disable_tx_irq();
+  secondary_output->disable_tx_irq();
+
+  MidiUartClass *primary_active = uart_sidechannel ? &seq_tx2 : &seq_tx1;
+  MidiUartClass *secondary_active = uart_sidechannel ? &seq_tx4 : &seq_tx3;
+  MidiUartClass *primary_side = uart_sidechannel ? &seq_tx1 : &seq_tx2;
+  MidiUartClass *secondary_side = uart_sidechannel ? &seq_tx3 : &seq_tx4;
+
+  uart = primary_active;
+  uart2 = shared_output ? primary_active : secondary_active;
+
+  // If the side channel ring buffer is not empty, it means it did not finish
+  // transmitting before the next seq() call. Drain it through the new buffer.
+  if (engage_sidechannel) {
+    primary_output->txRb_sidechannel = primary_side->txRb;
+    if (shared_output) {
+      seq_tx3.txRb->init();
+      seq_tx4.txRb->init();
+    } else {
+      secondary_output->txRb_sidechannel = secondary_side->txRb;
+    }
+  } else {
+    // Purge stale buffers (from MIDI CONTINUE).
+    primary_active->txRb->init();
+    secondary_active->txRb->init();
+  }
+#if defined(__AVR__)
+  primary_output->enable_tx_irq();
+  secondary_output->enable_tx_irq();
+#else
+  // Have to flush the first byte to re-trigger the uart tx isr.
+  LOCK();
+  primary_output->tx_flush();
+  secondary_output->tx_flush();
+  CLEAR_LOCK();
+#endif
+  uart_sidechannel = !uart_sidechannel;
+}
+
+MCL_SEQ_INLINE void run_md_tick(MCLSeq &self, MidiUartClass *uart,
+                                MidiUartClass *uart2, bool legacy_tick) {
+  if (!seq_grid_x_runs_md_tracks()) return;
+#if !defined(__AVR__)
+  if (self.using_spsx_tracks) {
+    self.spsx_tracks[0].pre_seq(uart);
+
+    for (uint8_t i = 0; i < self.num_md_tracks; i++) {
+      self.spsx_tracks[i].seq(uart, uart2);
+    }
+
+    self.spsx_tracks[0].post_seq(uart);
+
+    if (legacy_tick) {
+      for (uint8_t i = 0; i < self.num_md_tracks; i++) {
+        self.md_arp_tracks[i].mute_state = self.spsx_tracks[i].mute_state;
+        self.md_arp_tracks[i].seq(uart, uart2);
+      }
+
+      self.mdfx_track.seq();
+
+      for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+        self.aux_tracks[i].seq();
+      }
+
+#ifdef LFO_TRACKS
+      for (uint8_t i = 0; i < self.num_md_tracks; i++) {
+        self.grid_x_lfo_tracks[i].seq(uart, uart2);
+      }
+      self.clear_track_trigs(DeviceIdx::Primary);
+#endif
+
+      self.perf_track.seq(uart, uart2);
+    }
+
+    // SPSX full-velocity trigs share the legacy parallel trigger mask.
+    // Lower-velocity SPSX trigs are sent inline because parallelTrig has no
+    // velocity lane.
+    if (MDSeqTrack::md_trig_mask > 0) {
+      MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+    }
+
+    for (uint8_t i = 0; i < self.num_md_tracks; i++) {
+      self.spsx_tracks[i].recalc_slides();
+    }
+    return;
+  }
+#endif
+  if (!legacy_tick) return;
+
+  MDSeqTrack::pre_seq(uart);
+
+  for (uint8_t i = 0; i < self.num_md_tracks; i++) {
+    self.md_tracks[i].seq(uart, uart2);
+    self.md_arp_tracks[i].mute_state = self.md_tracks[i].mute_state;
+    self.md_arp_tracks[i].seq(uart, uart2);
+  }
+
+  self.mdfx_track.seq();
+
+  MDSeqTrack::post_seq(uart);
+
+  for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+    self.aux_tracks[i].seq();
+  }
+
+#ifdef LFO_TRACKS
+  for (uint8_t i = 0; i < self.num_md_tracks; i++) {
+    self.grid_x_lfo_tracks[i].seq(uart, uart2);
+  }
+  self.clear_track_trigs(DeviceIdx::Primary);
+#endif
+
+  self.perf_track.seq(uart, uart2);
+
+  if (MDSeqTrack::md_trig_mask > 0) {
+    MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
+  }
+}
+
+#if defined(PLATFORM_TBD)
+MCL_SEQ_INLINE void run_tbd_tick(MCLSeq &self, MidiUartClass *uart,
+                                 MidiUartClass *uart2, bool legacy_tick) {
+  if (!seq_grid_x_runs_tbd_tracks()) return;
+  for (uint8_t i = 0; i < self.num_tbd_tracks; i++) {
+    self.tbd_tracks[i].seq(uart);
+  }
+  if (legacy_tick) {
+    for (uint8_t i = 0; i < self.num_tbd_tracks; i++) {
+      self.md_arp_tracks[i].mute_state = self.tbd_tracks[i].mute_state;
+      self.md_arp_tracks[i].seq(uart, uart2);
+      self.grid_x_lfo_tracks[i].seq(uart, uart2);
+    }
+    self.clear_track_trigs(DeviceIdx::Primary);
+  }
+}
+#endif
+
+#if !defined(__AVR__)
+MCL_SEQ_INLINE void run_midi_tick(MCLSeq &self, MidiUartClass *uart,
+                                  MidiUartClass *uart2, bool legacy_tick) {
+  if (!seq_grid_y_runs_midi_tracks()) return;
+  for (uint8_t i = 0; i < self.num_midi_tracks; i++) {
+    self.midi_tracks[i].seq(uart2);
+  }
+  if (legacy_tick) {
+    for (uint8_t i = 0; i < self.num_midi_tracks; i++) {
+      self.ext_arp_tracks[i].mute_state = self.midi_tracks[i].mute_state;
+      self.ext_arp_tracks[i].seq(uart, uart2);
+      self.grid_y_lfo_tracks[i].seq(uart, uart2);
+    }
+    self.clear_track_trigs(DeviceIdx::Secondary);
+  }
+}
+#endif
+
+#if defined(EXT_TRACKS)
+MCL_SEQ_INLINE void run_legacy_ext_tick(MCLSeq &self, MidiUartClass *uart,
+                                        MidiUartClass *uart2) {
+  for (uint8_t i = 0; i < self.num_ext_tracks; i++) {
+    self.ext_tracks[i].seq(uart2);
+    self.ext_arp_tracks[i].mute_state = self.ext_tracks[i].mute_state;
+    self.ext_arp_tracks[i].seq(uart, uart2);
+    self.grid_y_lfo_tracks[i].seq(uart, uart2);
+  }
+  self.clear_track_trigs(DeviceIdx::Secondary);
+}
+#endif
+
+// Ordering of recalc passes is preserved verbatim from the pre-refactor seq():
+// legacy MD, legacy EXT, TBD, MIDI. Do not reorder without proving no engine
+// observes the order.
+MCL_SEQ_INLINE void recalc_all_slides(MCLSeq &self, bool legacy_tick) {
+  (void)legacy_tick;
+  if (seq_grid_x_runs_md_tracks()) {
+#if !defined(__AVR__)
+    if (!self.using_spsx_tracks && legacy_tick)
+#endif
+    {
+      for (uint8_t i = 0; i < self.num_md_tracks; i++) {
+        self.md_tracks[i].recalc_slides();
+      }
+    }
+  }
+#if defined(EXT_TRACKS)
+  if (seq_grid_y_runs_legacy_ext_tracks() && legacy_tick) {
+    for (uint8_t i = 0; i < self.num_ext_tracks; i++) {
+      self.ext_tracks[i].recalc_slides();
+    }
+  }
+#endif
+#if defined(PLATFORM_TBD)
+  if (seq_grid_x_runs_tbd_tracks()) {
+    for (uint8_t i = 0; i < self.num_tbd_tracks; i++) {
+      self.tbd_tracks[i].recalc_slides();
+    }
+  }
+#endif
+#if !defined(__AVR__)
+  if (seq_grid_y_runs_midi_tracks()) {
+    for (uint8_t i = 0; i < self.num_midi_tracks; i++) {
+      self.midi_tracks[i].recalc_slides();
+    }
+  }
+#endif
+}
+
+#undef MCL_SEQ_INLINE
+
 } // namespace
 
 void MCLSeq::set_outputs(MidiUartClass *primary_output_,
@@ -523,222 +745,41 @@ void MCLSeq::seq() {
   if (!state) { return; }
 
   const bool legacy_tick = legacy_tick_due();
+  const bool shared_output = primary_output == secondary_output;
+  bool engage_sidechannel = true;
   MidiUartClass *uart;
   MidiUartClass *uart2;
-  bool engage_sidechannel = true;
-  const bool shared_output = primary_output == secondary_output;
 
-  // If realtime, render the first tick immediately and defer later ticks.
-
-  if (!realtime) {
-  again:
-
-    primary_output->disable_tx_irq();
-    secondary_output->disable_tx_irq();
-
-    MidiUartClass *primary_active = uart_sidechannel ? &seq_tx2 : &seq_tx1;
-    MidiUartClass *secondary_active = uart_sidechannel ? &seq_tx4 : &seq_tx3;
-    MidiUartClass *primary_side = uart_sidechannel ? &seq_tx1 : &seq_tx2;
-    MidiUartClass *secondary_side = uart_sidechannel ? &seq_tx3 : &seq_tx4;
-
-    uart = primary_active;
-    uart2 = shared_output ? primary_active : secondary_active;
-
-    // If the side channel ring buffer is not empty, it means it did not finish
-    // transmitting before the next seq() call. Drain it through the new buffer.
-    if (engage_sidechannel) {
-      primary_output->txRb_sidechannel = primary_side->txRb;
-      if (shared_output) {
-        seq_tx3.txRb->init();
-        seq_tx4.txRb->init();
-      } else {
-        secondary_output->txRb_sidechannel = secondary_side->txRb;
-      }
+  // Realtime first pass writes direct to outputs for low latency, then loops
+  // with realtime=false and engage_sidechannel=false so the second pass drains
+  // engines through swapped tx buffers and purges any stale MIDI CONTINUE
+  // bytes instead of streaming them. Non-realtime is a single pass.
+  for (;;) {
+    if (!realtime) {
+      prepare_tx_buffers(primary_output, secondary_output, shared_output,
+                         engage_sidechannel, uart_sidechannel, uart, uart2);
     } else {
-      // Purge stale buffers (from MIDI CONTINUE).
-      primary_active->txRb->init();
-      secondary_active->txRb->init();
-    }
-    // clearLed2();
-#if defined(__AVR__)
-    primary_output->enable_tx_irq();
-    secondary_output->enable_tx_irq();
-#else
-    //Have to flush the first byte to re-trigger the uart tx isr.
-    LOCK();
-    primary_output->tx_flush();
-    secondary_output->tx_flush();
-    CLEAR_LOCK();
-#endif
-    // Flip uart / side_channel buffer for next run
-    uart_sidechannel = !uart_sidechannel;
-  } else {
-    uart = primary_output;
-    uart2 = secondary_output;
-  }
-  //  Stopwatch sw;
-
-  if (seq_grid_x_runs_md_tracks()) {
-#if !defined(__AVR__)
-  if (using_spsx_tracks) {
-    spsx_tracks[0].pre_seq(uart);
-
-    for (uint8_t i = 0; i < num_md_tracks; i++) {
-      spsx_tracks[i].seq(uart, uart2);
+      uart = primary_output;
+      uart2 = secondary_output;
     }
 
-    spsx_tracks[0].post_seq(uart);
-
-    if (legacy_tick) {
-      for (uint8_t i = 0; i < num_md_tracks; i++) {
-        md_arp_tracks[i].mute_state = spsx_tracks[i].mute_state;
-        md_arp_tracks[i].seq(uart, uart2);
-      }
-
-      mdfx_track.seq();
-
-      for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-        aux_tracks[i].seq();
-      }
-
-#ifdef LFO_TRACKS
-      for (uint8_t i = 0; i < num_md_tracks; i++) {
-        grid_x_lfo_tracks[i].seq(uart, uart2);
-      }
-      clear_track_trigs(DeviceIdx::Primary);
-#endif
-
-      perf_track.seq(uart, uart2);
-    }
-
-    // SPSX full-velocity trigs share the legacy parallel trigger mask.
-    // Lower-velocity SPSX trigs are sent inline because parallelTrig has no
-    // velocity lane.
-    if (MDSeqTrack::md_trig_mask > 0) {
-      MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
-    }
-
-    for (uint8_t i = 0; i < num_md_tracks; i++) {
-      spsx_tracks[i].recalc_slides();
-    }
-  } else {
-#endif
-  if (legacy_tick) {
-    MDSeqTrack::pre_seq(uart);
-
-    for (uint8_t i = 0; i < num_md_tracks; i++) {
-      md_tracks[i].seq(uart,uart2);
-      md_arp_tracks[i].mute_state = md_tracks[i].mute_state;
-      md_arp_tracks[i].seq(uart,uart2);
-    }
-
-    mdfx_track.seq();
-
-    MDSeqTrack::post_seq(uart);
-
-    for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
-      aux_tracks[i].seq();
-    }
-
-#ifdef LFO_TRACKS
-    for (uint8_t i = 0; i < num_md_tracks; i++) {
-      grid_x_lfo_tracks[i].seq(uart, uart2);
-    }
-    clear_track_trigs(DeviceIdx::Primary);
-#endif
-
-    perf_track.seq(uart, uart2);
-
-    if (MDSeqTrack::md_trig_mask > 0) {
-      MD.parallelTrig(MDSeqTrack::md_trig_mask, uart);
-    }
-  }
-#if !defined(__AVR__)
-  }
-#endif
-  }
-
+    run_md_tick(*this, uart, uart2, legacy_tick);
 #if defined(PLATFORM_TBD)
-  if (seq_grid_x_runs_tbd_tracks()) {
-    for (uint8_t i = 0; i < num_tbd_tracks; i++) {
-      tbd_tracks[i].seq(uart);
-    }
-    if (legacy_tick) {
-      for (uint8_t i = 0; i < num_tbd_tracks; i++) {
-        md_arp_tracks[i].mute_state = tbd_tracks[i].mute_state;
-        md_arp_tracks[i].seq(uart, uart2);
-        grid_x_lfo_tracks[i].seq(uart, uart2);
-      }
-      clear_track_trigs(DeviceIdx::Primary);
-    }
-  }
+    run_tbd_tick(*this, uart, uart2, legacy_tick);
 #endif
 #if !defined(__AVR__)
-  if (seq_grid_y_runs_midi_tracks()) {
-    for (uint8_t i = 0; i < num_midi_tracks; i++) {
-      midi_tracks[i].seq(uart2);
-    }
-    if (legacy_tick) {
-      for (uint8_t i = 0; i < num_midi_tracks; i++) {
-        ext_arp_tracks[i].mute_state = midi_tracks[i].mute_state;
-        ext_arp_tracks[i].seq(uart, uart2);
-        grid_y_lfo_tracks[i].seq(uart, uart2);
-      }
-      clear_track_trigs(DeviceIdx::Secondary);
-    }
-  }
+    run_midi_tick(*this, uart, uart2, legacy_tick);
 #endif
-
 #if defined(EXT_TRACKS)
-  if (seq_grid_y_runs_legacy_ext_tracks() && legacy_tick) {
-    for (uint8_t i = 0; i < num_ext_tracks; i++) {
-      ext_tracks[i].seq(uart2);
-      ext_arp_tracks[i].mute_state = ext_tracks[i].mute_state;
-      ext_arp_tracks[i].seq(uart,uart2);
-      grid_y_lfo_tracks[i].seq(uart, uart2);
+    if (seq_grid_y_runs_legacy_ext_tracks() && legacy_tick) {
+      run_legacy_ext_tick(*this, uart, uart2);
     }
-    clear_track_trigs(DeviceIdx::Secondary);
-  }
 #endif
+    recalc_all_slides(*this, legacy_tick);
 
-  if (seq_grid_x_runs_md_tracks()) {
-#if !defined(__AVR__)
-  if (!using_spsx_tracks && legacy_tick) {
-#endif
-    for (uint8_t i = 0; i < num_md_tracks; i++) {
-      md_tracks[i].recalc_slides();
-    }
-#if !defined(__AVR__)
-  }
-#endif
-  }
-
-#if defined(EXT_TRACKS)
-  if (seq_grid_y_runs_legacy_ext_tracks() && legacy_tick) {
-    for (uint8_t i = 0; i < num_ext_tracks; i++) {
-      ext_tracks[i].recalc_slides();
-    }
-  }
-#endif
-#if defined(PLATFORM_TBD)
-  if (seq_grid_x_runs_tbd_tracks()) {
-    for (uint8_t i = 0; i < num_tbd_tracks; i++) {
-      tbd_tracks[i].recalc_slides();
-    }
-  }
-#endif
-#if !defined(__AVR__)
-  if (seq_grid_y_runs_midi_tracks()) {
-    for (uint8_t i = 0; i < num_midi_tracks; i++) {
-      midi_tracks[i].recalc_slides();
-    }
-  }
-#endif
-
-  if (realtime) {
+    if (!realtime) break;
     realtime = false;
     engage_sidechannel = false;
-    goto again;
   }
   LFOSeqTrack::tick_load_fades(uart, uart2);
 }
