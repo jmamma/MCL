@@ -53,7 +53,10 @@ void clear_shift_step_selection(SeqStepPage &page) {
 #endif
 
 void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
-                            uint8_t offset, bool show_current_step = true) {
+                            uint8_t offset,
+                            bool show_current_step = true) NOINLINE();
+void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
+                            uint8_t offset, bool show_current_step) {
   uint64_t mask = 0, mute_mask = 0, slide_mask = 0;
   uint64_t led_mask = 0;
   uint64_t display_mask = 0;
@@ -120,6 +123,8 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
   }
 }
 
+void draw_active_microtiming(SeqStepTrackRef active_track, uint8_t encoder_value,
+                             bool notify_remote) NOINLINE();
 void draw_active_microtiming(SeqStepTrackRef active_track, uint8_t encoder_value,
                              bool notify_remote) {
 #if !defined(__AVR__)
