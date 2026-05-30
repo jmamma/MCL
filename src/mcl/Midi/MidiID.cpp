@@ -32,41 +32,30 @@ bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   return getBlockingId(id, DEVICE_NULL, port, timeout);
 }
 
+static MidiSysexClass *sysex_for_port(uint8_t port) NOINLINE();
+static MidiSysexClass *sysex_for_port(uint8_t port) {
+  if (port == UART1_PORT) {
+    return &MidiSysex;
+  }
+  if (port == UARTUSB_PORT) {
+    return &MidiSysexUSB;
+  }
+#ifdef PLATFORM_TBD
+  if (port == UARTP4_PORT) {
+    return &MidiSysexP4;
+  }
+#endif
+  return &MidiSysex2;
+}
+
 bool MidiID::getBlockingId(uint8_t id, uint8_t alternate_id, uint8_t port,
                            uint16_t timeout) {
 
-  if (port == UART1_PORT) {
-    DEBUG_PRINTLN("adding listener port1");
-    MidiSysex.addSysexListener(&MidiIDSysexListener);
-  }
-  else if (port == UARTUSB_PORT) {
-    MidiSysexUSB.addSysexListener(&MidiIDSysexListener);
-  }
-#ifdef PLATFORM_TBD
-  else if (port == UARTP4_PORT) {
-    MidiSysexP4.addSysexListener(&MidiIDSysexListener);
-  }
-#endif
-  else {
-    MidiSysex2.addSysexListener(&MidiIDSysexListener);
-  }
+  MidiSysexClass *sysex = sysex_for_port(port);
+  sysex->addSysexListener(&MidiIDSysexListener);
 
   uint8_t ret = waitForId(id, port, timeout);
-  if (port == UART1_PORT) {
-    DEBUG_PRINTLN("removing listener port1");
-    MidiSysex.removeSysexListener(&MidiIDSysexListener);
-  }
-  else if (port == UARTUSB_PORT) {
-    MidiSysexUSB.removeSysexListener(&MidiIDSysexListener);
-  }
-#ifdef PLATFORM_TBD
-  else if (port == UARTP4_PORT) {
-    MidiSysexP4.removeSysexListener(&MidiIDSysexListener);
-  }
-#endif
-  else {
-    MidiSysex2.removeSysexListener(&MidiIDSysexListener);
-  }
+  sysex->removeSysexListener(&MidiIDSysexListener);
 
   if (id == ret || alternate_id == ret) {
     return true;
