@@ -119,21 +119,14 @@ DATA_ENCODER_RETURN_TYPE ElektronDataToSysexEncoder::encode7Bit(uint8_t inb) {
   ptr[0] |= msb << (6 - cnt7);
   ptr[cnt7 + 1] = c;
   if (++cnt7 == 7) {
-    retLen += 8;
-    if (inChecksum) {
-      for (uint8_t i = 0; i < 8; i++) {
-        checksum += ptr[i];
-      }
-    }
-    if (uart != NULL) {
-      for (uint8_t i = 0; i < 8; i++) {
-        uart_send(data[i]);
-      }
-      ptr = data;
-    } else {
-      ptr += 8;
-    }
-    cnt7 = 0;
+    // A full 7-byte group occupies 8 sysex bytes (1 MSB byte + 7 payload).
+    // finish() flushes exactly cnt7+1 == 8 bytes here: it sums them into the
+    // checksum, sends them over uart (or advances ptr), bumps retLen and
+    // resets cnt7 -- identical to the inlined flush this replaces. (In uart
+    // mode ptr is always reset to data after every flush, so summing/sending
+    // ptr[i] equals the former data[i] reads.) Cold: only reached while
+    // building/transmitting a sysex dump on save, never on the per-tick path.
+    finish();
   }
   DATA_ENCODER_TRUE();
 }
