@@ -373,14 +373,19 @@ void SeqPtcPage::display() {
   draw_knob(0, mclstr_oct, buf1);
 
   // draw FREQ
-  if (ptc_param_fine_tune.getValue() < 32) {
-    strcpy_P(buf1, mclstr_minus);
-    mcl_gui.put_value_at(32 - ptc_param_fine_tune.getValue(), buf1 + 1);
-  } else if (ptc_param_fine_tune.getValue() > 32) {
-    strcpy_P(buf1, mclstr_plus);
-    mcl_gui.put_value_at(ptc_param_fine_tune.getValue() - 32, buf1 + 1);
-  } else {
+  uint8_t det = ptc_param_fine_tune.getValue();
+  if (det == 32) {
     strcpy_P(buf1, mclstr_zero);
+  } else {
+    uint8_t mag;
+    if (det < 32) {
+      buf1[0] = '-';
+      mag = 32 - det;
+    } else {
+      buf1[0] = '+';
+      mag = det - 32;
+    }
+    mcl_gui.put_value_at(mag, buf1 + 1);
   }
   draw_knob(1, mclstr_det, buf1); // detune
 
