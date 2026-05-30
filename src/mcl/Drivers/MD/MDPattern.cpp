@@ -99,21 +99,20 @@ bool MDPattern::fromSysex(MidiClass *midi) {
 
   decoder.start7Bit();
 
-  decoder.get32(&accentPattern);
-
-  decoder.get32(&slidePattern);
-  decoder.get32(&swingPattern);
+  // accentPattern, slidePattern, swingPattern are 3 consecutive uint64_t
+  // members in wire order; coalesce the per-field get32(uint64_t*) calls into
+  // one array read (byte-identical 7-bit stream). swingAmount is uint32_t so
+  // it stays a separate overload.
+  decoder.get32(&accentPattern, 3);
 
   decoder.get32(&swingAmount);
 
   decoder.stop7Bit();
 
-  accentAmount = decoder.gget8();
-  patternLength = decoder.gget8();
-  doubleTempo = decoder.gget8();
-  scale = decoder.gget8();
-  kit = decoder.gget8();
-  numLockedRows = decoder.gget8();
+  // accentAmount, patternLength, doubleTempo, scale, kit, numLockedRows are
+  // 6 consecutive uint8_t members (no padding); coalesce the 6 gget8() reads
+  // into one bulk get() over the contiguous run (identical byte stream).
+  decoder.get(&accentAmount, 6);
 
 #if !defined(__AVR__)
   if (is_spsx_pat) {
@@ -127,12 +126,12 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   }
 
   decoder.start7Bit();
-  decoder.get32(&accentEditAll);
-  decoder.get32(&slideEditAll);
-  decoder.get32(&swingEditAll);
-  decoder.get32(accentPatterns, 16);
-  decoder.get32(slidePatterns, 16);
-  decoder.get32(swingPatterns, 16);
+  // accentEditAll, slideEditAll, swingEditAll are 3 consecutive uint32_t
+  // members; accentPatterns/slidePatterns/swingPatterns are 3 consecutive
+  // uint64_t[16] arrays. Both runs are contiguous and in wire order, so
+  // coalescing the per-field get32 calls is byte-identical.
+  decoder.get32(&accentEditAll, 3);
+  decoder.get32(accentPatterns, 48);
 
   // Build lock tracking for V3 (params 0-23 only)
   // SPSX defers until extension is decoded so high bits are available
@@ -157,17 +156,16 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   if (isExtraPattern) {
     decoder.start7Bit();
     decoder.get32hi(trigPatterns, 16);
-    decoder.get32hi(&accentPattern);
-
-    decoder.get32hi(&slidePattern);
-    decoder.get32hi(&swingPattern);
+    // accentPattern, slidePattern, swingPattern are 3 consecutive uint64_t
+    // members; coalesce their get32hi reads (byte-identical 7-bit stream).
+    decoder.get32hi(&accentPattern, 3);
 
     for (uint8_t i = 0; i < 64; i++) {
       decoder.get(locks[i] + 32, 32);
     }
-    decoder.get32hi(accentPatterns, 16);
-    decoder.get32hi(slidePatterns, 16);
-    decoder.get32hi(swingPatterns, 16);
+    // accentPatterns/slidePatterns/swingPatterns are 3 contiguous uint64_t[16]
+    // arrays in wire order; coalesce into one get32hi over the 48-elem run.
+    decoder.get32hi(accentPatterns, 48);
   }
 
 #if !defined(__AVR__)
