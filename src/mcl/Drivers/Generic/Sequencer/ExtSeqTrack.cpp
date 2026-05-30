@@ -904,11 +904,13 @@ end:
   uart = uart_old;
 }
 
+MidiUartClass *ExtSeqTrack::resolve_uart(MidiUartClass *uart_) {
+  return uart_ == nullptr ? uart : uart_;
+}
+
 void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
                           MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
+  uart_ = resolve_uart(uart_);
 #ifdef LFO_TRACKS
   mcl_seq.report_track_trig(DeviceIdx::Secondary, track_number);
 #endif
@@ -919,9 +921,7 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
 
 void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity,
                            MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
+  uart_ = resolve_uart(uart_);
   uart_->sendNoteOff(channel, note);
   CLEAR_BIT128_P(note_buffer, note);
 }
@@ -952,32 +952,20 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
 }
 
 void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
-  uart_->sendPitchBend(channel, value);
+  resolve_uart(uart_)->sendPitchBend(channel, value);
 }
 
 void ExtSeqTrack::channel_pressure(uint8_t pressure, MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
-  uart_->sendChannelPressure(channel, pressure);
+  resolve_uart(uart_)->sendChannelPressure(channel, pressure);
 }
 
 void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure,
                               MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
-  uart_->sendPolyKeyPressure(channel, note, pressure);
+  resolve_uart(uart_)->sendPolyKeyPressure(channel, note, pressure);
 }
 
 void ExtSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_) {
-  if (uart_ == nullptr) {
-    uart_ = uart;
-  }
-  uart_->sendCC(channel, cc, value);
+  resolve_uart(uart_)->sendCC(channel, cc, value);
 }
 
 void ExtSeqTrack::update_param(uint8_t param_id, uint8_t value) {

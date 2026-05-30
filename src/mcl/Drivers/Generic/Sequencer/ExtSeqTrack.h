@@ -143,6 +143,7 @@ public:
 
   void seq(MidiUartClass *uart_);
 
+  MidiUartClass *resolve_uart(MidiUartClass *uart_) NOINLINE();
   ALWAYS_INLINE() void set_step(uint8_t step, uint8_t note_num, uint8_t velocity);
   void note_on(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
   void note_off(uint8_t note, uint8_t velocity = 100, MidiUartClass *uart_ = nullptr);
