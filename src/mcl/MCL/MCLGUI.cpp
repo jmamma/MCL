@@ -167,14 +167,12 @@ void MCLGUI::draw_horizontal_arrow(uint8_t x, uint8_t y, uint8_t w) {
 }
 
 void MCLGUI::draw_vertical_separator(uint8_t x) {
-  auto x_ = x + 2;
+  // 3-column dithered line: columns x and x+2 on even rows, column x+1 on the
+  // odd row between them. Drawn in a single pass over the 16 row-pairs.
   for (uint8_t y = 0; y < 32; y += 2) {
     oled_display.drawPixel(x, y, WHITE);
-    oled_display.drawPixel(x_, y, WHITE);
-  }
-  x_ = x + 1;
-  for (uint8_t y = 1; y < 32; y += 2) {
-    oled_display.drawPixel(x_, y, WHITE);
+    oled_display.drawPixel(x + 2, y, WHITE);
+    oled_display.drawPixel(x + 1, y + 1, WHITE);
   }
 }
 
@@ -452,21 +450,17 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value, bool highlight) {
     value = 32 - (value - 96);
   }
 
-  uint8_t *icon = R.icons_knob->encoder_small_0;
-  if (value < 4) {
-  } else if (value < 9) {
-    icon =  R.icons_knob->encoder_small_1;
-  } else if (value < 14) {
-    icon = R.icons_knob->encoder_small_2;
-  } else if (value < 19) {
-    icon = R.icons_knob->encoder_small_3;
-  } else if (value < 24) {
-    icon = R.icons_knob->encoder_small_4;
-  } else if (value < 30) {
-    icon = R.icons_knob->encoder_small_5;
-  } else {
-    icon = R.icons_knob->encoder_small_6;
+  // Map the folded value to one of seven encoder_small_N frames. The frames
+  // are laid out at a fixed stride in the resource struct, so a threshold
+  // table + arithmetic offset replaces the if/else chain.
+  static const uint8_t frame_thresholds[6] = {4, 9, 14, 19, 24, 30};
+  uint8_t frame = 0;
+  while (frame < 6 && value >= frame_thresholds[frame]) {
+    frame++;
   }
+  const ptrdiff_t frame_stride =
+      R.icons_knob->encoder_small_1 - R.icons_knob->encoder_small_0;
+  uint8_t *icon = R.icons_knob->encoder_small_0 + frame_stride * frame;
 
   oled_display.drawBitmap(x, y, icon, image_w, image_h, WHITE,
                             vert_flip, horiz_flip);
