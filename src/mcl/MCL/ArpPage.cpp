@@ -16,6 +16,13 @@ void set_arp_encoder(Encoder &e, int value) {
   e.cur = value;
   e.old = value;
 }
+
+// Indexed by encoders[0]->cur: ARP_OFF=0, ARP_ON=1, ARP_LATCH=2.
+const char *const arp_state_labels[] PROGMEM = {mclstr_dash, mclstr_on,
+                                                mclstr_lat};
+// Knob caption per encoder slot 0..3.
+const char *const arp_knob_labels[] PROGMEM = {mclstr_arp, mclstr_mode,
+                                               mclstr_rate, mclstr_range};
 } // namespace
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
@@ -111,30 +118,19 @@ void ArpPage::display() {
   uint8_t y = 12;
   uint8_t x = 16;
 
-  switch (encoders[0]->cur) {
-  case ARP_ON:
-    strcpy_P(str, mclstr_on);
-    break;
-  case ARP_OFF:
-    strcpy_P(str, mclstr_dash);
-    break;
-  case ARP_LATCH:
-    strcpy_P(str, mclstr_lat);
-    break;
+  for (uint8_t i = 0; i < 4; ++i) {
+    uint8_t cur = encoders[i]->cur;
+    if (i == 0) {
+      strcpy_P(str, (PGM_P)pgm_read_ptr(&arp_state_labels[cur]));
+    } else if (i == 1) {
+      strncpy_P(str, arp_names[cur], 4);
+    } else {
+      mcl_gui.put_value_at(cur, str);
+    }
+    mcl_gui.draw_text_encoder(x + i * mcl_gui.knob_w, y,
+                              (PGM_P)pgm_read_ptr(&arp_knob_labels[i]), str,
+                              isEncoderFocused(i));
   }
-
-  mcl_gui.draw_text_encoder(x + 0 * mcl_gui.knob_w, y, mclstr_arp, str, isEncoderFocused(0));
-
-  strncpy_P(str, arp_names[encoders[1]->cur], 4);
-
-  mcl_gui.draw_text_encoder(x + 1 * mcl_gui.knob_w, y, mclstr_mode, str, isEncoderFocused(1));
-
-  mcl_gui.put_value_at(encoders[2]->cur, str);
-  mcl_gui.draw_text_encoder(x + 2 * mcl_gui.knob_w, y, mclstr_rate, str, isEncoderFocused(2));
-
-  mcl_gui.put_value_at(encoders[3]->cur, str);
-  mcl_gui.draw_text_encoder(x + 3 * mcl_gui.knob_w, y, mclstr_range, str, isEncoderFocused(3));
-
 }
 
 bool ArpPage::handleEvent(gui_event_t *event) {
