@@ -4,6 +4,7 @@
 #include "MCLGUI.h"
 #include "GridPages.h"
 #include "MidiSetup.h"
+#include "SeqTrackUtil.h"
 #include "oled.h"
 #include "DeviceManager.h"
 
@@ -286,10 +287,6 @@ uint8_t normalized_sample_bank_setting(uint8_t sample_bank) {
                                                   : MD_SAMPLE_BANK_OFF;
 }
 
-uint8_t normalized_sample_bank_capture(uint8_t sample_bank) {
-  return sample_bank <= 128 ? sample_bank : 0;
-}
-
 uint8_t project_config_sample_bank_setting(const MCLSysConfigData &source) {
   if (!project_config_has_sample_bank(source)) {
     return MD_SAMPLE_BANK_OFF;
@@ -297,21 +294,11 @@ uint8_t project_config_sample_bank_setting(const MCLSysConfigData &source) {
   return normalized_sample_bank_setting(source.md_sample_bank);
 }
 
-uint8_t project_config_sample_bank_capture(const MCLSysConfigData &source) {
-  if (!project_config_has_sample_bank(source)) {
-    return 0;
-  }
-  return normalized_sample_bank_capture(source.md_sample_bank_capture);
-}
-
 uint8_t project_config_sample_bank_to_load(const MCLSysConfigData &source) {
   uint8_t setting = project_config_sample_bank_setting(source);
-  if (setting == MD_SAMPLE_BANK_AUTO) {
-    return project_config_sample_bank_capture(source);
-  }
   if (setting >= MD_SAMPLE_BANK_FIXED_FIRST &&
       setting <= MD_SAMPLE_BANK_FIXED_LAST) {
-    return setting - 1;
+    return setting;
   }
   return 0;
 }
@@ -589,20 +576,18 @@ void copy_project_config(MCLSysConfigData *dst,
          PROJECT_CONFIG_SIZE);
   dst->project_config = 0;
   dst->md_sample_bank = normalized_sample_bank_setting(source.md_sample_bank);
-  dst->md_sample_bank_capture =
-      normalized_sample_bank_capture(source.md_sample_bank_capture);
+  dst->md_sample_bank_capture = 0;
 }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
 void normalize_project_config(MCLSysConfigData *data) {
   uint8_t sample_bank = project_config_sample_bank_setting(*data);
-  uint8_t sample_bank_capture = project_config_sample_bank_capture(*data);
   data->version = CONFIG_VERSION;
   data->project[0] = '\0';
   data->number_projects = 0;
   data->project_config = 0;
   data->md_sample_bank = sample_bank;
-  data->md_sample_bank_capture = sample_bank_capture;
+  data->md_sample_bank_capture = 0;
 }
 #endif
 
@@ -615,30 +600,18 @@ void apply_project_config(MCLSysConfigData *dst,
          (const uint8_t *)&source + PROJECT_CONFIG_OFFSET,
          PROJECT_CONFIG_SIZE);
   dst->md_sample_bank = project_config_sample_bank_setting(source);
-  dst->md_sample_bank_capture = project_config_sample_bank_capture(source);
+  dst->md_sample_bank_capture = 0;
 }
 
 void load_project_sample_bank(uint8_t sample_bank) {
   if (sample_bank == 0) {
     return;
   }
-  if (device_manager.primary_device() != &MD) {
+  MidiDevice *primary = device_manager.primary_device();
+  if (primary != &MD && !SeqTrackUtil::is_md_device(primary)) {
     return;
   }
   MD.loadSampleBank(sample_bank - 1);
-}
-
-void capture_auto_sample_bank(MCLSysConfigData *data) {
-  if (data == nullptr || data->md_sample_bank != MD_SAMPLE_BANK_AUTO) {
-    return;
-  }
-  if (device_manager.primary_device() != &MD) {
-    return;
-  }
-  uint8_t bank = 0;
-  if (MD.querySampleBank(bank)) {
-    data->md_sample_bank_capture = bank + 1;
-  }
 }
 
 } // namespace
@@ -1045,7 +1018,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     applied_project_config = true;
   } else {
     mcl_cfg.md_sample_bank = project_config_sample_bank_setting(cfg);
-    mcl_cfg.md_sample_bank_capture = project_config_sample_bank_capture(cfg);
+    mcl_cfg.md_sample_bank_capture = 0;
   }
   bool update_header = use_requested_pair;
 #ifdef MCL_HAS_PROJECT_CONVERSION
@@ -1395,7 +1368,6 @@ bool Project::store_config_from_system() {
   if (!project_loaded) {
     return true;
   }
-  capture_auto_sample_bank(&mcl_cfg);
   copy_project_config(&cfg, mcl_cfg);
   return write_header();
 }

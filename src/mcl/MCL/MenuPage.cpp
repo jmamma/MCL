@@ -71,12 +71,6 @@ uint8_t stored_value_from_menu(uint8_t *dest_var, uint8_t menu_value) {
   return menu_value;
 }
 
-bool is_sample_bank_fixed_value(uint8_t *dest_var, uint8_t menu_value) {
-  return dest_var == &mcl_cfg.md_sample_bank &&
-         menu_value >= MD_SAMPLE_BANK_FIXED_FIRST &&
-         menu_value <= MD_SAMPLE_BANK_FIXED_LAST;
-}
-
 void nudge_menu_encoder(Encoder *encoder, int8_t delta) {
   if (encoder == nullptr) {
     return;
@@ -223,11 +217,7 @@ void MenuPageBase::draw_item(MenuBase *m, uint8_t item_n) {
     option_value = menu_value_from_stored(pdest, option_value);
     const char *option_name = m->get_option_name(item_n, option_value);
     if (option_name == NULL) {
-      if (is_sample_bank_fixed_value(pdest, option_value)) {
-        oled_display.print(option_value - 1);
-      } else {
-        oled_display.print(option_value);
-      }
+      oled_display.print(option_value);
       if (m->get_options_offset(item_n) == MENU_OPTIONS_PERCENT) {
         oled_display.print('%');
       }

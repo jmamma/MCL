@@ -409,6 +409,38 @@ static uint16_t send_md_request3(MDClass &md, uint8_t command, uint8_t param,
 
 static constexpr uint8_t MD_GATEWAY_LOAD_SAMPLE_BANK = 0x63;
 
+static bool read_md_sample_bank_response(MDClass &md, uint8_t msgType,
+                                         uint8_t &bank) {
+  uint8_t begin = md.sysex_protocol.header_size + 1;
+  auto listener = md.getSysexListener();
+  if (!listener || !listener->sysex || listener->msg_rd >= NUM_SYSEX_MSGS) {
+    return false;
+  }
+  const uint8_t msg_rd = listener->msg_rd;
+  if (!listener->sysex->ledger[msg_rd].ptr) {
+    return false;
+  }
+  const uint16_t record_len = listener->sysex->ledger[msg_rd].recordLen;
+  if (listener->sysex->ledger[msg_rd].state != SYSEX_STATE_FIN ||
+      record_len < (uint16_t)(begin + 3)) {
+    return false;
+  }
+
+  SysexView sysex(listener->sysex, msg_rd);
+  if (msgType != 0x72 ||
+      sysex.getByte(begin) != MD_GATEWAY_LOAD_SAMPLE_BANK ||
+      sysex.getByte(begin + 1) == 0) {
+    return false;
+  }
+
+  uint8_t current_bank = sysex.getByte(begin + 2);
+  if (current_bank >= 128) {
+    return false;
+  }
+  bank = current_bank;
+  return true;
+}
+
 static void send_global_setting(MDClass &md, uint8_t setting, uint8_t value) {
   send_md_request3(md, 0x70, setting, value);
 }
@@ -1995,35 +2027,7 @@ bool MDClass::querySampleBank(uint8_t &bank) {
   uint8_t data[2] = {0x70, MD_GATEWAY_LOAD_SAMPLE_BANK};
   sendRequest(data, sizeof(data));
 
-  uint8_t msgType = waitBlocking();
-  uint8_t begin = sysex_protocol.header_size + 1;
-  auto listener = getSysexListener();
-  if (!listener || !listener->sysex || listener->msg_rd >= NUM_SYSEX_MSGS) {
-    return false;
-  }
-  const uint8_t msg_rd = listener->msg_rd;
-  if (!listener->sysex->ledger[msg_rd].ptr) {
-    return false;
-  }
-  const uint16_t record_len = listener->sysex->ledger[msg_rd].recordLen;
-  if (listener->sysex->ledger[msg_rd].state != SYSEX_STATE_FIN ||
-      record_len < (uint16_t)(begin + 3)) {
-    return false;
-  }
-
-  SysexView sysex(listener->sysex, msg_rd);
-  if (msgType != 0x72 ||
-      sysex.getByte(begin) != MD_GATEWAY_LOAD_SAMPLE_BANK ||
-      sysex.getByte(begin + 1) == 0) {
-    return false;
-  }
-
-  uint8_t current_bank = sysex.getByte(begin + 2);
-  if (current_bank >= 128) {
-    return false;
-  }
-  bank = current_bank;
-  return true;
+  return read_md_sample_bank_response(*this, waitBlocking(), bank);
 }
 
 void MDClass::setOrigParams(uint8_t track, MDMachine *machine) {
