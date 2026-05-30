@@ -15,6 +15,7 @@ public:
   uint16_t duration_q12;
   uint8_t amount;
   int8_t curve;
+  uint8_t reserved[2];
 
   void init() {
     flags = 0;
@@ -22,6 +23,8 @@ public:
     duration_q12 = TRACK_LOAD_FADE_DEFAULT_DURATION_Q12;
     amount = 127;
     curve = 0;
+    reserved[0] = 0;
+    reserved[1] = 0;
   }
 
   bool enabled() const {
@@ -32,5 +35,5 @@ public:
   bool fade_out() const { return flags & TRACK_LOAD_FADE_FLAG_OUT; }
 };
 
-static_assert(sizeof(TrackLoadFadeData) == 6,
+static_assert(sizeof(TrackLoadFadeData) == 8,
               "TrackLoadFadeData storage size changed");

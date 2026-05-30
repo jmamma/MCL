@@ -79,7 +79,7 @@ constexpr size_t NUM_LOCKS = 8;
 // GridTrack 7
 // DeviceTrack 7
 // MDTrack 534, plus SeqTrackModData 51, native swing storage 9,
-// plus TrackLoadFadeData 6
+// plus TrackLoadFadeData 8
 // ExtTrack 1754
 // A4Track 2094
 // EmptyTrack 2094
