@@ -268,6 +268,15 @@ size_t project_header_read_size(File &file) {
   return sizeof(ProjectHeader);
 }
 
+bool read_project_header_body(ProjectHeader *self, File &file) NOINLINE();
+bool read_project_header_body(ProjectHeader *self, File &file) {
+  size_t header_size = project_header_read_size(file);
+  memset((uint8_t *)self + sizeof(self->version), 0,
+         sizeof(ProjectHeader) - sizeof(self->version));
+  return mcl_sd.read_data((uint8_t *)self + sizeof(self->version),
+                          header_size - sizeof(self->version), &file);
+}
+
 bool project_config_has_sample_bank(const MCLSysConfigData &source) {
   return source.version == CONFIG_VERSION;
 }
@@ -1077,12 +1086,7 @@ bool Project::read_header() {
 #ifdef MCL_HAS_PROJECT_CONVERSION
   if (header_version == PROJ_MIN_READABLE_VERSION) {
     version = header_version;
-    size_t header_size = project_header_read_size(file);
-    memset((uint8_t *)(ProjectHeader *)this + sizeof(header_version), 0,
-           sizeof(ProjectHeader) - sizeof(header_version));
-    if (!mcl_sd.read_data((uint8_t *)(ProjectHeader *)this +
-                              sizeof(header_version),
-                          header_size - sizeof(header_version), &file)) {
+    if (!read_project_header_body(this, file)) {
       DEBUG_PRINTLN(F("Could not read legacy project header"));
       return false;
     }
@@ -1100,12 +1104,7 @@ bool Project::read_header() {
 #endif
 
   version = header_version;
-  size_t header_size = project_header_read_size(file);
-  memset((uint8_t *)(ProjectHeader *)this + sizeof(header_version), 0,
-         sizeof(ProjectHeader) - sizeof(header_version));
-  if (!mcl_sd.read_data((uint8_t *)(ProjectHeader *)this +
-                            sizeof(header_version),
-                        header_size - sizeof(header_version), &file)) {
+  if (!read_project_header_body(this, file)) {
     DEBUG_PRINTLN(F("Could not read project header"));
     return false;
   }
