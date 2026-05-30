@@ -13,6 +13,9 @@
 #include "StackMonitor.h"
 #include "MCLSeq.h"
 #include "platform.h"
+#if !defined(__AVR__)
+#include "SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
+#endif
 
 #define DIV16_MARGIN 8
 
@@ -51,6 +54,13 @@ void GridTask::load_queue_handler() {
     }
     mcl_actions.write_original = 1;
     mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
+#if !defined(__AVR__)
+    // Static/immediate load (also runs when stopped): the gui_update->post_seq
+    // path only fires on the running loop-boundary transition, so notify the SPS
+    // host here too. Broad change -> one all-tracks dirty (host re-fetches).
+    sps_host_seq_bridge.notifyDirty(0xFF,
+        (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
+#endif
   }
 }
 void GridTask::run() {
