@@ -583,6 +583,10 @@ uint8_t SeqExtStepPage::lock_y_for_value(uint8_t value) const {
   return fov_h - ((uint16_t)value * fov_h) / 128;
 }
 
+uint8_t SeqExtStepPage::note_y_for_value(int16_t value) const {
+  return fov_h - ((value - fov_y) * (fov_h / fov_notes));
+}
+
 void SeqExtStepPage::draw_seq_pos() {
   auto active_track = active_ext_step_track();
   seq_extstep_tick_t cur_tick_x =
@@ -864,8 +868,8 @@ void SeqExtStepPage::draw_note_selection() {
   uint8_t note_max =
       range.note_max > visible_note_max ? visible_note_max : range.note_max;
   uint8_t note_h = fov_h / fov_notes;
-  uint8_t y1 = fov_h - ((note_max - fov_y) * note_h);
-  uint8_t y2 = fov_h - ((note_min - fov_y) * note_h) + note_h;
+  uint8_t y1 = note_y_for_value(note_max);
+  uint8_t y2 = note_y_for_value(note_min) + note_h;
   if (y2 <= y1) y2 = y1 + 1;
 
   oled_display.fillRect(draw_x + x1, draw_y + y1, x2 - x1, y2 - y1,
@@ -930,7 +934,7 @@ void SeqExtStepPage::draw_pianoroll() {
         //On screen notes to be no less than 2 pixels, regardless of zoom
         if (i < j && note_fov_end - note_fov_start < 2) { note_fov_end = note_fov_start + 2; }
         //if (note_fov_end <= note_fov_start) { note_fov_end = note_fov_start + 1; }
-        uint8_t note_fov_y = fov_h - ((note_val - fov_y) * note_h);
+        uint8_t note_fov_y = note_y_for_value(note_val);
         // Draw vertical projection
         uint8_t proj_y = 255;
         if (note_val > fov_y + fov_notes) {
@@ -989,7 +993,7 @@ void SeqExtStepPage::draw_pianoroll() {
   if (cur_y <= fov_y || cur_y > fov_y + fov_notes) return;
 
   // Draw interactive cursor after the selection overlay so it remains visible.
-  uint8_t fov_cur_y = fov_h - ((cur_y - fov_y) * note_h);
+  uint8_t fov_cur_y = note_y_for_value(cur_y);
   uint8_t fov_cur_x = fov_x_for_tick(cur_x);
   uint16_t fov_cur_w =
       ((seq_extstep_tick_t)cur_w *
@@ -1619,8 +1623,6 @@ void SeqExtStepPage::loop() {
         ((int32_t)(fov_cur_x - fov_old_x) << 8) / fov_pixels_per_tick;
 
     fov_offset += offset;
-
-    clamp_fov_offset();
 
   }
   clamp_fov_offset();

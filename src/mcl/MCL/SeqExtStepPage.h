@@ -97,6 +97,7 @@ public:
   void draw_grid();
   uint8_t fov_x_for_tick(seq_extstep_tick_t tick) const NOINLINE();
   uint8_t lock_y_for_value(uint8_t value) const NOINLINE();
+  uint8_t note_y_for_value(int16_t value) const NOINLINE();
   void set_cur_y(uint8_t cur_y_);
   void pos_cur_x(seq_extstep_tick_t diff);
   void pos_cur_y(int16_t diff);
