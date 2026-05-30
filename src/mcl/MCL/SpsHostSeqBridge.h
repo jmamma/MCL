@@ -31,6 +31,7 @@ public:
 
     // Emit hooks — call from MCL when state changes (see .cpp for guidance):
     void notifyDirty(int track, uint8_t regions);   // track 0xFF = all
+    void notifyTracksDirty(uint16_t track_mask, uint8_t regions);  // per-bit; coalesces broad masks
     void notifyTransport(bool running, uint8_t masterStep);
     void notifyActive();
 

@@ -10,6 +10,9 @@
 #include "MCLSeq.h"
 #include "SeqTrackUtil.h"
 #include "SeqTrackTransition.h"
+#if !defined(__AVR__)
+#include "SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
+#endif
 
 uint16_t MDSeqTrack::gui_update = 0;
 uint16_t MDSeqTrack::md_trig_mask = 0;
@@ -401,6 +404,13 @@ void MDSeqTrack::post_seq(MidiUartClass *uart_) {
                          0x7F, uart_);
       });
     }
+#if !defined(__AVR__)
+    // Reuse the per-track gui_update dirty mask to tell the SPS host which
+    // tracks changed (grid loads, length/speed edits, ...) — ungated by page,
+    // unlike the MD.sync_seqtrack call above which is active-track + step-page.
+    sps_host_seq_bridge.notifyTracksDirty(MDSeqTrack::gui_update,
+        (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
+#endif
     MDSeqTrack::gui_update = 0;
     grid_task.update = true;
   }
