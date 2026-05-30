@@ -111,6 +111,15 @@ void ptc_note_bit_clear(uint64_t *mask, uint8_t bit) {
   CLEAR_BIT128_P(mask, bit);
 }
 
+uint8_t ptc_ext_track_for_msg(uint8_t *msg) NOINLINE();
+uint8_t ptc_ext_track_for_msg(uint8_t *msg) {
+  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
+  if (seq_ptc_page.primary_channel_event(channel)) {
+    return 255;
+  }
+  return mcl_seq.find_ext_track(channel);
+}
+
 uint16_t ptc_mask_for_event(uint8_t track, uint8_t channel_event,
                             uint8_t channel) {
   if (channel_event == POLY_EVENT) {
@@ -1193,12 +1202,7 @@ void SeqPtcMidiEvents::onPitchWheelCallback_Midi2(uint8_t *msg) {
 #ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
 #endif
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  if (seq_ptc_page.primary_channel_event(channel)) {
-    return;
-  }
-
-  uint8_t n = mcl_seq.find_ext_track(channel);
+  uint8_t n = ptc_ext_track_for_msg(msg);
   if (n == 255) {
     return;
   }
@@ -1215,11 +1219,7 @@ void SeqPtcMidiEvents::onChannelPressureCallback_Midi2(uint8_t *msg) {
 #ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
 #endif
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  if (seq_ptc_page.primary_channel_event(channel)) {
-    return;
-  }
-  uint8_t n = mcl_seq.find_ext_track(channel);
+  uint8_t n = ptc_ext_track_for_msg(msg);
   if (n == 255) {
     return;
   }
@@ -1234,11 +1234,7 @@ void SeqPtcMidiEvents::onAfterTouchCallback_Midi2(uint8_t *msg) {
 #ifdef PLATFORM_TBD
   if (mcl.currentPage() == SEQ_EXTSTEP_PAGE) return;
 #endif
-  uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
-  if (seq_ptc_page.primary_channel_event(channel)) {
-    return;
-  }
-  uint8_t n = mcl_seq.find_ext_track(channel);
+  uint8_t n = ptc_ext_track_for_msg(msg);
   if (n == 255) {
     return;
   }
