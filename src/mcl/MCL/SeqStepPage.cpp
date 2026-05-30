@@ -740,21 +740,22 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         if (func_down) {
           return false;
         }
-      case MDX_KEY_BANKA: {
-        if (toggle_mask(MASK_MUTE, func_down))
-          return true;
-      }
-      case MDX_KEY_BANKB: {
-        if (toggle_mask(MASK_MUTE, func_down))
-          return true;
-      }
-      case MDX_KEY_BANKC: {
-        if (toggle_mask(MASK_SWING, func_down))
-          return true;
-      }
+        // fallthrough: MUTE (released) behaves like BANKA
+      case MDX_KEY_BANKA:
+      case MDX_KEY_BANKB:
+      case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
-        if (toggle_mask(MASK_SLIDE, func_down))
+        // BANKA/BANKB -> MUTE, BANKC -> SWING, BANKD -> SLIDE; MUTE -> MUTE.
+        // toggle_mask() is a no-op returning false when !func_down, so the
+        // original fall-through chain only ever acted on the first mask for
+        // the entered key; this lookup reproduces that mapping exactly.
+        static const uint8_t bank_masks[] = {MASK_MUTE, MASK_MUTE, MASK_SWING,
+                                             MASK_SLIDE};
+        uint8_t bank_mask =
+            (key == MDX_KEY_MUTE) ? MASK_MUTE : bank_masks[key - MDX_KEY_BANKA];
+        if (toggle_mask(bank_mask, func_down))
           return true;
+        break;
       }
       }
       if (step != 255) {
