@@ -4,14 +4,6 @@
 #include "StackMonitor.h"
 #include "Project.h"
 #include "PtcGroups.h"
-#include <stddef.h>
-
-namespace {
-
-constexpr size_t CONFIG_SIZE_PRE_SAMPLE_BANK_AUTO =
-    offsetof(MCLSysConfigData, md_sample_bank_capture);
-
-} // namespace
 
 bool MCLSd::join_path(char *dst, uint8_t dst_len, const char *dir,
                       const char *entry) {
@@ -130,42 +122,11 @@ bool MCLSd::load_init() {
     if (mcl_cfg.cfgfile.open(full_path("/config.mcls", path, sizeof(path)), O_RDWR)) {
       DEBUG_PRINTLN(F("Config file open: success"));
 
-      uint32_t stored_version = 0;
-      bool config_read = false;
-      uint32_t config_pos = mcl_cfg.cfgfile.curPosition();
-      if (read_data(&stored_version, sizeof(stored_version),
+      if (read_data((uint8_t *)&mcl_cfg, sizeof(MCLSysConfigData),
                     &mcl_cfg.cfgfile)) {
-        mcl_cfg.cfgfile.seekSet(config_pos);
-        MCLSysConfigData *config_data = &mcl_cfg;
-        memset(config_data, 0, sizeof(*config_data));
-        size_t config_size = sizeof(MCLSysConfigData);
-        if (stored_version == CONFIG_VERSION_PRE_SAMPLE_BANK ||
-            stored_version == CONFIG_VERSION_PRE_SAMPLE_BANK_AUTO) {
-          config_size = CONFIG_SIZE_PRE_SAMPLE_BANK_AUTO;
-        }
-        config_read =
-            read_data((uint8_t *)&mcl_cfg, config_size, &mcl_cfg.cfgfile);
-      }
-
-      if (config_read) {
         DEBUG_PRINTLN(F("Config file read: success"));
 
-        if (mcl_cfg.version == CONFIG_VERSION_PRE_SAMPLE_BANK) {
-          mcl_cfg.md_sample_bank = 0;
-          mcl_cfg.md_sample_bank_capture = 0;
-          mcl_cfg.version = CONFIG_VERSION;
-          mcl_cfg.write_cfg();
-        } else if (mcl_cfg.version == CONFIG_VERSION_PRE_SAMPLE_BANK_AUTO) {
-          uint8_t old_sample_bank = mcl_cfg.md_sample_bank;
-          if (old_sample_bank > 128) {
-            old_sample_bank = 0;
-          }
-          mcl_cfg.md_sample_bank =
-              old_sample_bank ? old_sample_bank + 1 : MD_SAMPLE_BANK_OFF;
-          mcl_cfg.md_sample_bank_capture = old_sample_bank;
-          mcl_cfg.version = CONFIG_VERSION;
-          mcl_cfg.write_cfg();
-        } else if (mcl_cfg.version != CONFIG_VERSION) {
+        if (mcl_cfg.version != CONFIG_VERSION) {
           DEBUG_PRINTLN(F("Incompatible config version"));
           if (!mcl_cfg.cfg_init()) {
             DEBUG_PRINTLN(F("Could not init cfg"));

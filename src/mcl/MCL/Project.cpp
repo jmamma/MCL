@@ -236,10 +236,10 @@ constexpr size_t PROJECT_CONFIG_OFFSET =
     offsetof(MCLSysConfigData, uart1_turbo_speed);
 constexpr size_t PROJECT_CONFIG_SIZE =
     offsetof(MCLSysConfigData, project_config) - PROJECT_CONFIG_OFFSET;
-constexpr size_t PROJECT_CONFIG_SIZE_PRE_SAMPLE_BANK_AUTO =
+constexpr size_t PROJECT_CONFIG_SIZE_LEGACY =
     offsetof(MCLSysConfigData, md_sample_bank_capture);
-constexpr size_t PROJECT_HEADER_SIZE_PRE_SAMPLE_BANK_AUTO =
-    offsetof(ProjectHeader, cfg) + PROJECT_CONFIG_SIZE_PRE_SAMPLE_BANK_AUTO;
+constexpr size_t PROJECT_HEADER_SIZE_LEGACY_CONFIG =
+    offsetof(ProjectHeader, cfg) + PROJECT_CONFIG_SIZE_LEGACY;
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
 #define PROJECT_VERSION_CAN_OPEN(v)                                           \
@@ -249,9 +249,7 @@ constexpr size_t PROJECT_HEADER_SIZE_PRE_SAMPLE_BANK_AUTO =
 #endif
 
 bool project_config_version_valid(uint32_t version) {
-  return version == CONFIG_VERSION ||
-         version == CONFIG_VERSION_PRE_SAMPLE_BANK ||
-         version == CONFIG_VERSION_PRE_SAMPLE_BANK_AUTO;
+  return version == CONFIG_VERSION;
 }
 
 bool project_config_valid(const MCLSysConfigData &source) {
@@ -263,18 +261,13 @@ size_t project_header_read_size(File &file) {
   if (file_size >= sizeof(ProjectHeader)) {
     return sizeof(ProjectHeader);
   }
-  if (file_size >= PROJECT_HEADER_SIZE_PRE_SAMPLE_BANK_AUTO) {
-    return PROJECT_HEADER_SIZE_PRE_SAMPLE_BANK_AUTO;
+  if (file_size >= PROJECT_HEADER_SIZE_LEGACY_CONFIG) {
+    return PROJECT_HEADER_SIZE_LEGACY_CONFIG;
   }
   return sizeof(ProjectHeader);
 }
 
 bool project_config_has_sample_bank(const MCLSysConfigData &source) {
-  return source.version == CONFIG_VERSION ||
-         source.version == CONFIG_VERSION_PRE_SAMPLE_BANK_AUTO;
-}
-
-bool project_config_has_sample_bank_auto(const MCLSysConfigData &source) {
   return source.version == CONFIG_VERSION;
 }
 
@@ -291,19 +284,12 @@ uint8_t project_config_sample_bank_setting(const MCLSysConfigData &source) {
   if (!project_config_has_sample_bank(source)) {
     return MD_SAMPLE_BANK_OFF;
   }
-  if (!project_config_has_sample_bank_auto(source)) {
-    uint8_t legacy_bank = normalized_sample_bank_capture(source.md_sample_bank);
-    return legacy_bank ? legacy_bank + 1 : MD_SAMPLE_BANK_OFF;
-  }
   return normalized_sample_bank_setting(source.md_sample_bank);
 }
 
 uint8_t project_config_sample_bank_capture(const MCLSysConfigData &source) {
   if (!project_config_has_sample_bank(source)) {
     return 0;
-  }
-  if (!project_config_has_sample_bank_auto(source)) {
-    return normalized_sample_bank_capture(source.md_sample_bank);
   }
   return normalized_sample_bank_capture(source.md_sample_bank_capture);
 }
