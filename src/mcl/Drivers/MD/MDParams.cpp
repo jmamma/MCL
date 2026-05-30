@@ -159,6 +159,7 @@ static const char* get_param_name(const model_param_name_t *names, uint8_t param
   return NULL;
 }
 
+static uint16_t get_model_param_names(uint8_t model) NOINLINE();
 static uint16_t get_model_param_names(uint8_t model) {
   for (uint16_t i = 0; i < countof(model_param_names); i++) {
     if (model == model_param_names[i].model) {
