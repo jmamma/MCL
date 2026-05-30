@@ -88,19 +88,20 @@ void ElektronDataToSysexEncoder::begin() {
 uint16_t ElektronDataToSysexEncoder::finish() {
   uint8_t inc = ((cnt7 > 0) ? (cnt7 + 1) : 0);
   cnt7 = 0;
-  if (inChecksum) {
-    for (uint8_t i = 0; i < inc; i++) {
-      checksum += ptr[i];
+  // Single pass over the pending group: the former two loops (checksum sum and
+  // uart send) covered the same [0,inc) range, so fold the per-byte work into
+  // one loop. Both inner conditionals are loop-invariant and inc<=8, so the
+  // extra per-iteration tests are negligible (cold flush-on-save path).
+  for (uint8_t i = 0; i < inc; i++) {
+    uint8_t b = ptr[i];
+    if (inChecksum) {
+      checksum += b;
+    }
+    if (uart != NULL) {
+      uart_send(b);
     }
   }
-  if (uart != NULL) {
-    for (uint8_t i = 0; i < inc; i++) {
-      uart_send(ptr[i]);
-    }
-    ptr = data;
-  } else {
-    ptr += inc;
-  }
+  ptr = (uart != NULL) ? data : (ptr + inc);
   retLen += inc;
   return retLen;
 }
