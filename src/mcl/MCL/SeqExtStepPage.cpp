@@ -1095,9 +1095,7 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
 
       seq_extstep_tick_t pos =
           fov_offset + (seq_extstep_tick_t)ticks_per_step * n;
-      seq_extstep_tick_t w = cur_w;
-      if (pos < 0 || pos >= roll_length) continue;
-      if (pos + w >= roll_length) { w = roll_length - pos - 1; }
+      seq_extstep_tick_t w = clamp_width_at(pos);
       if (w <= 0) continue;
 
       active_track.delete_note(pos, w - 1, cur_y);
@@ -1693,11 +1691,16 @@ void SeqExtStepPage::display() {
 #endif
 }
 
+seq_extstep_tick_t SeqExtStepPage::clamp_width_at(seq_extstep_tick_t x) {
+  seq_extstep_tick_t w = cur_w;
+  if (x < 0 || x >= roll_length) return 0;
+  if (x + w >= roll_length) { w = roll_length - x - 1; }
+  return w;
+}
+
 void SeqExtStepPage::enter_notes() {
   auto active_track = active_ext_step_track();
-  seq_extstep_tick_t w = cur_w;
-  if (cur_x < 0 || cur_x >= roll_length) return;
-  if (cur_x + w >= roll_length) { w = roll_length - cur_x - 1; }
+  seq_extstep_tick_t w = clamp_width_at(cur_x);
   if (w <= 0) return;
 
   for (uint8_t n = 0; n < NUM_NOTES_ON; n++) {
@@ -2080,11 +2083,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
         if (active_track.notes_on_count() > 0) {
           enter_notes();
         } else {
-          seq_extstep_tick_t w = cur_w;
-          if (cur_x < 0 || cur_x >= roll_length) return true;
-          if (cur_x + w >= roll_length) {
-            w = roll_length - cur_x - 1;
-          }
+          seq_extstep_tick_t w = clamp_width_at(cur_x);
           if (w <= 0) return true;
 
           if (!active_track.delete_note(cur_x, w - 1, cur_y)) {

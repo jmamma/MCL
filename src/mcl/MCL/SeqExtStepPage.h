@@ -120,6 +120,7 @@ public:
 
   bool is_within_fov(seq_extstep_tick_t start_x, seq_extstep_tick_t end_x) NOINLINE();
 
+  seq_extstep_tick_t clamp_width_at(seq_extstep_tick_t x) NOINLINE();
   void param_select_update();
   void enter_notes();
   void config_menu_entries();
