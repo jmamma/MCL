@@ -43,9 +43,9 @@ static constexpr size_t a4sound_encoding_startidx = a4sound_checksum_startidx + 
 bool A4Sound::fromSysex_impl(ElektronSysexDecoder *decoder) {
   decoder->start7Bit();
   decoder->skip(1); // skip sound header 0x05
-  decoder->get(tags, sizeof(tags));
-  decoder->get((uint8_t *)name, sizeof(name));
-  decoder->get((uint8_t *)&sound, sizeof(sound));
+  // tags, name and sound are contiguous packed members; one bulk get is
+  // byte-identical to three sequential gets.
+  decoder->get(tags, sizeof(tags) + sizeof(name) + sizeof(sound));
   decoder->skip(sizeof(a4sound_footer));
   decoder->stop7Bit();
 
@@ -62,9 +62,9 @@ void A4Sound::toSysex_impl(ElektronDataToSysexEncoder *encoder)
   encoder->pack(a4sound_header, sizeof(a4sound_header));
   encoder->start7Bit();
   encoder->pack8(0x05);
-  encoder->pack(tags, sizeof(tags));
-  encoder->pack((const uint8_t *)name, sizeof(name));
-  encoder->pack((const uint8_t *)&sound, sizeof(sound));
+  // tags, name and sound are contiguous packed members; one bulk pack is
+  // byte-identical to three sequential packs.
+  encoder->pack(tags, sizeof(tags) + sizeof(name) + sizeof(sound));
   encoder->pack(a4sound_footer, sizeof(a4sound_footer));
   encoder->stop7Bit();
 }
