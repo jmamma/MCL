@@ -436,6 +436,15 @@ static inline uint8_t ext_track_channel(uint8_t track) {
   return SeqExtStepTrackRef::track(track).channel();
 }
 
+static void capture_ext_track_opts() NOINLINE();
+static void capture_ext_track_opts() {
+  auto &active_track = SeqTrackUtil::get_seq_track(false, last_ext_track);
+  opt_trackid = last_ext_track + 1;
+  opt_speed = active_track.speed;
+  opt_length = active_track.length;
+  opt_channel = ext_track_channel(last_ext_track) + 1;
+}
+
 static inline void set_ext_track_channel(uint8_t track, uint8_t channel) {
   SeqExtStepTrackRef::track(track).set_channel(channel);
 }
@@ -797,11 +806,7 @@ void SeqPage::toggle_ext_mask(uint8_t track) {
     select_device_idx(DeviceIdx::Secondary);
     MidiDevice *dev = device_for_seq_idx(DeviceIdx::Secondary);
     select_track(dev, track);
-    opt_trackid = last_ext_track + 1;
-    auto &active_track = SeqTrackUtil::get_seq_track(false, last_ext_track);
-    opt_speed = active_track.speed;
-    opt_length = active_track.length;
-    opt_channel = ext_track_channel(last_ext_track) + 1;
+    capture_ext_track_opts();
   }
 }
 
@@ -900,11 +905,7 @@ void SeqPage::capture_seq_menu_values(bool is_md_device) {
     opt_swing = bt.swing_amount() + 50;
     opt_length = bt.length();
   } else {
-    auto &active_track = SeqTrackUtil::get_seq_track(false, last_ext_track);
-    opt_trackid = last_ext_track + 1;
-    opt_speed = active_track.speed;
-    opt_length = active_track.length;
-    opt_channel = ext_track_channel(last_ext_track) + 1;
+    capture_ext_track_opts();
   }
 }
 
@@ -1785,21 +1786,13 @@ void opt_clear_step_locks_handler() {
 }
 
 void opt_shift_track_handler() {
-  bool is_md_device = opt_capture_is_md_device();
-  switch (opt_shift) {
-  case 1:
-    apply_track_menu_op(is_md_device, false, SEQ_TRACK_OP_ROTATE_LEFT);
-    break;
-  case 2:
-    apply_track_menu_op(is_md_device, false, SEQ_TRACK_OP_ROTATE_RIGHT);
-    break;
-  case 3:
-    apply_track_menu_op(is_md_device, true, SEQ_TRACK_OP_ROTATE_LEFT);
-    break;
-  case 4:
-    apply_track_menu_op(is_md_device, true, SEQ_TRACK_OP_ROTATE_RIGHT);
-    break;
+  if (opt_shift < 1 || opt_shift > 4) {
+    return;
   }
+  bool is_md_device = opt_capture_is_md_device();
+  SeqTrackMenuOp op =
+      (opt_shift & 1) ? SEQ_TRACK_OP_ROTATE_LEFT : SEQ_TRACK_OP_ROTATE_RIGHT;
+  apply_track_menu_op(is_md_device, opt_shift > 2, op);
 }
 void opt_reverse_track_handler() {
 
