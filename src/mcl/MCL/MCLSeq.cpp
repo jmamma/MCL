@@ -156,6 +156,14 @@ void cleanup_mcl_seq_midi(MCLSeqMidiEvents *events, MidiClass *midi) {
       (midi_callback_ptr_t)&MCLSeqMidiEvents::onControlChangeCallback_Midi2);
 }
 
+void reset_slide_track_locks(SeqSlideTrack &track) NOINLINE();
+void reset_slide_track_locks(SeqSlideTrack &track) {
+  track.locks_slides_recalc = 255;
+  for (auto &sd : track.locks_slide_data) {
+    sd.init();
+  }
+}
+
 void cleanup_mcl_seq_all_midi(MCLSeqMidiEvents *events) {
   cleanup_mcl_seq_midi(events, &Midi);
   cleanup_mcl_seq_midi(events, &Midi2);
@@ -693,10 +701,7 @@ void MCLSeq::onMidiStopCallback(uint32_t clock_count) {
     for (uint8_t i = 0; i < num_ext_tracks; i++) {
       ext_tracks[i].buffer_notesoff();
       ext_tracks[i].reset_params();
-      ext_tracks[i].locks_slides_recalc = 255;
-      for (uint8_t c = 0; c < NUM_LOCKS; c++) {
-        ext_tracks[i].locks_slide_data[c].init();
-      }
+      reset_slide_track_locks(ext_tracks[i]);
     }
   }
 #endif
@@ -706,8 +711,7 @@ void MCLSeq::onMidiStopCallback(uint32_t clock_count) {
     SeqTrackUtil::for_each_md_track([](auto &track, uint8_t) {
       track.reset_params();
       track.send_notes_off();
-      track.locks_slides_recalc = 255;
-      for (auto &sd : track.locks_slide_data) { sd.init(); }
+      reset_slide_track_locks(track);
     });
   }
 #if defined(PLATFORM_TBD)
