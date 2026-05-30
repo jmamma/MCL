@@ -283,6 +283,8 @@ menu_t<md_config_page_N> mdconfig_menu_layout = {
         {"IMPORT",      0, 0,  0, 0, MD_IMPORT_PAGE, 0, 0},
         {"RAM LINK:",   0, 2,  2, 1, NULL_PAGE, 0, 0},
         {"NORMALIZE:",  0, 2,  2, 8, NULL_PAGE, 0, 16},
+        {"SAMPLEBANK:", 0, 129, 1, 74, NULL_PAGE, 0,
+         SAMPLE_BANK_OPTIONS_OFFSET},
     },
     1
 };
@@ -305,8 +307,6 @@ menu_t<mcl_config_page_N> mclconfig_menu_layout = {
         //           m  r  n  d   p  f  o
         {"DISPLAY:", 0, 2, 2, 13, NULL_PAGE, 0, 23},
         {"PROJ CFG:", 0, 2, 2, 72, NULL_PAGE, 0, 25},
-        {"MD SMPLBNK:", 0, 129, 1, 74, NULL_PAGE, 0,
-         SAMPLE_BANK_OPTIONS_OFFSET},
         {"GRID ENCOD:", 0, 2, 2, 62, NULL_PAGE, 0, 114},
     },
     1
