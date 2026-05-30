@@ -40,9 +40,12 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
   ctrlIn = IS_BIT_SET(byte, 4);
   ctrlOut = IS_BIT_SET(byte, 6);
 
-  decoder.get8(&transportIn);
-  decoder.get8(&sequencerOut);
-  decoder.get8(&arpOut);
+  // transportIn, sequencerOut, arpOut are contiguous in memory and on the
+  // wire; read as one block.
+  decoder.get(&transportIn, 3);
+  // NOTE: wire order here is keyboardOut before transportOut, which differs
+  // from the struct's member order (transportOut before keyboardOut), so
+  // these must stay as individual reads.
   decoder.get8(&keyboardOut);
   decoder.get8(&transportOut);
   decoder.get8(&midiClockOut);
@@ -52,8 +55,8 @@ bool MNMGlobal::fromSysex(MidiClass *midi) {
 
   decoder.get(midiMachineChannels, 6);
   decoder.get((uint8_t *)ccDestinations, 6 * 4);
-  decoder.get(midiSeqLegato, 6);
-  decoder.get(legato, 6);
+  // midiSeqLegato, legato are contiguous (6 + 6 = 12 bytes).
+  decoder.get(midiSeqLegato, 6 + 6);
 
   decoder.get(mapRange, 32 * 6);
   decoder.get8(&globalRouting);
@@ -81,9 +84,11 @@ uint16_t MNMGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
     SET_BIT(byte, 6);
   encoder->pack8(byte);
 
-  encoder->pack8(transportIn);
-  encoder->pack8(sequencerOut);
-  encoder->pack8(arpOut);
+  // transportIn, sequencerOut, arpOut are contiguous in memory and on the
+  // wire; pack as one block.
+  encoder->pack(&transportIn, 3);
+  // NOTE: wire order here is keyboardOut before transportOut, which differs
+  // from the struct's member order, so these must stay individual.
   encoder->pack8(keyboardOut);
   encoder->pack8(transportOut);
   encoder->pack8(midiClockOut);
@@ -93,8 +98,8 @@ uint16_t MNMGlobal::toSysex(ElektronDataToSysexEncoder *encoder) {
 
   encoder->pack(midiMachineChannels, 6);
   encoder->pack((uint8_t *)ccDestinations, 6 * 4);
-  encoder->pack(midiSeqLegato, 6);
-  encoder->pack(legato, 6);
+  // midiSeqLegato, legato are contiguous (6 + 6 = 12 bytes).
+  encoder->pack(midiSeqLegato, 6 + 6);
 
   encoder->pack(mapRange, 32 * 6);
   encoder->pack8(globalRouting);
@@ -132,26 +137,21 @@ bool MNMKit::fromSysex(MidiClass *midi) {
   decoder.get((uint8_t *)name, 11);
   name[11] = '\0';
 
-  decoder.get(levels, 6);
-  decoder.get((uint8_t *)parameters, 6 * 72);
-  decoder.get(models, 6);
-  decoder.get(types, 6);
+  // levels, parameters, models, types are contiguous in memory and on the
+  // wire; read as one block (6 + 6*72 + 6 + 6 = 450 bytes).
+  decoder.get(levels, 6 + 6 * 72 + 6 + 6);
   decoder.get8((uint8_t*)&patchBusIn); // unused byte
   decoder.get16(&patchBusIn);
   decoder.get8(&mirrorLR);
   decoder.get8(&mirrorUD);
 
-  decoder.get((uint8_t *)destPages, 6 * 6 * 2);
-  decoder.get((uint8_t *)destParams, 6 * 6 * 2);
-  decoder.get((uint8_t *)destRanges, 6 * 6 * 2);
-  decoder.get8(&lpKeyTrack);
-  decoder.get8(&hpKeyTrack);
+  // destPages, destParams, destRanges are contiguous (3 * 6*6*2 = 216 bytes).
+  decoder.get((uint8_t *)destPages, 3 * 6 * 6 * 2);
+  // lpKeyTrack, hpKeyTrack adjacent.
+  decoder.get(&lpKeyTrack, 2);
 
-  decoder.get8(&trigPortamento);
-  decoder.get(trigTracks, 6);
-  decoder.get8(&trigLegatoAmp);
-  decoder.get8(&trigLegatoFilter);
-  decoder.get8(&trigLegatoLFO);
+  // trigPortamento, trigTracks[6], trigLegatoAmp/Filter/LFO are contiguous.
+  decoder.get(&trigPortamento, 1 + 6 + 1 + 1 + 1);
 
   decoder.get8(&commonMultimode);
   uint8_t byte;
@@ -178,26 +178,21 @@ uint16_t MNMKit::toSysex(ElektronDataToSysexEncoder *encoder) {
   encoder->pack((uint8_t *)name, 11);
   name[11] = '\0';
 
-  encoder->pack(levels, 6);
-  encoder->pack((uint8_t *)parameters, 6 * 72);
-  encoder->pack(models, 6);
-  encoder->pack(types, 6);
+  // levels, parameters, models, types are contiguous in memory and on the
+  // wire; pack as one block (6 + 6*72 + 6 + 6 = 450 bytes).
+  encoder->pack(levels, 6 + 6 * 72 + 6 + 6);
   encoder->pack8(0); // unused
   encoder->pack16(patchBusIn);
   encoder->pack8(mirrorLR);
   encoder->pack8(mirrorUD);
 
-  encoder->pack((uint8_t *)destPages, 6 * 6 * 2);
-  encoder->pack((uint8_t *)destParams, 6 * 6 * 2);
-  encoder->pack((uint8_t *)destRanges, 6 * 6 * 2);
-  encoder->pack8(lpKeyTrack);
-  encoder->pack8(hpKeyTrack);
+  // destPages, destParams, destRanges are contiguous (3 * 6*6*2 = 216 bytes).
+  encoder->pack((uint8_t *)destPages, 3 * 6 * 6 * 2);
+  // lpKeyTrack, hpKeyTrack adjacent.
+  encoder->pack(&lpKeyTrack, 2);
 
-  encoder->pack8(trigPortamento);
-  encoder->pack(trigTracks, 6);
-  encoder->pack8(trigLegatoAmp);
-  encoder->pack8(trigLegatoFilter);
-  encoder->pack8(trigLegatoLFO);
+  // trigPortamento, trigTracks[6], trigLegatoAmp/Filter/LFO are contiguous.
+  encoder->pack(&trigPortamento, 1 + 6 + 1 + 1 + 1);
 
   encoder->pack8(commonMultimode);
   uint8_t byte = 0;
