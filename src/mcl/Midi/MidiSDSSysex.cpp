@@ -129,9 +129,14 @@ void MidiSDSSysexListenerClass::dump_header(const SysexView &view) {
   DEBUG_PRINTLN(midi_sds.loopStart);
   DEBUG_PRINTLN(midi_sds.loopEnd);
   char my_string[] = "___.wav";
-  my_string[0] = (midi_sds.sampleNumber % 1000) / 100 + '0';
-  my_string[1] = (midi_sds.sampleNumber % 100) / 10 + '0';
-  my_string[2] = (midi_sds.sampleNumber % 10) + '0';
+  // Take the 3 decimal digits once, then peel each digit off the remainder
+  // (one modulo + two divides) instead of three independent modulo operations.
+  uint16_t digits = (uint16_t)(midi_sds.sampleNumber % 1000);
+  my_string[2] = digits % 10 + '0';
+  digits /= 10;
+  my_string[1] = digits % 10 + '0';
+  digits /= 10;
+  my_string[0] = digits + '0';
 
   if ((midi_sds.sampleFormat != 8 && midi_sds.sampleFormat != 16 &&
        midi_sds.sampleFormat != 24) ||

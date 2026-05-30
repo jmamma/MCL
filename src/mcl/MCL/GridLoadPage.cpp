@@ -57,10 +57,8 @@ void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
 }
 void GridLoadPage::md_popup_title(uint8_t mode, bool persistent) {
   char modestr[16];
-  modestr[0] = 'L';
-  modestr[1] = 'O';
-  modestr[2] = 'A';
-  modestr[3] = 'D';
+  // Reuse the existing "LOAD" PROGMEM string instead of storing each character.
+  strcpy_P(modestr, mclstr_load);
   modestr[4] = ' ';
   get_mode_str(modestr + 5, mode);
   MD.popup_text(modestr, persistent);
