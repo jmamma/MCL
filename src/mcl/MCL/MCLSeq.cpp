@@ -190,14 +190,7 @@ void cleanup_mcl_seq_all_midi(MCLSeqMidiEvents *events) {
 #endif
 }
 
-// All seq() block helpers below have a single call site in MCLSeq::seq().
-// always_inline + one caller costs ~0 flash under -Os/LTO (measured: +14 B on
-// AVR megacommand vs pre-refactor). Plain inline regresses ~240 B because the
-// compiler declines to inline a couple of the larger helpers. If you add a
-// second caller, re-measure; double-inlining will blow the budget.
-#define MCL_SEQ_INLINE inline __attribute__((always_inline))
-
-MCL_SEQ_INLINE void prepare_tx_buffers(MidiUartClass *primary_output,
+inline __attribute__((always_inline)) void prepare_tx_buffers(MidiUartClass *primary_output,
                                        MidiUartClass *secondary_output,
                                        bool shared_output,
                                        bool engage_sidechannel,
@@ -243,7 +236,7 @@ MCL_SEQ_INLINE void prepare_tx_buffers(MidiUartClass *primary_output,
   uart_sidechannel = !uart_sidechannel;
 }
 
-MCL_SEQ_INLINE void run_md_tick(MCLSeq &self, MidiUartClass *uart,
+inline __attribute__((always_inline)) void run_md_tick(MCLSeq &self, MidiUartClass *uart,
                                 MidiUartClass *uart2, bool legacy_tick) {
   if (!seq_grid_x_runs_md_tracks()) return;
 #if !defined(__AVR__)
@@ -324,7 +317,7 @@ MCL_SEQ_INLINE void run_md_tick(MCLSeq &self, MidiUartClass *uart,
 }
 
 #if defined(PLATFORM_TBD)
-MCL_SEQ_INLINE void run_tbd_tick(MCLSeq &self, MidiUartClass *uart,
+inline __attribute__((always_inline)) void run_tbd_tick(MCLSeq &self, MidiUartClass *uart,
                                  MidiUartClass *uart2, bool legacy_tick) {
   if (!seq_grid_x_runs_tbd_tracks()) return;
   for (uint8_t i = 0; i < self.num_tbd_tracks; i++) {
@@ -342,7 +335,7 @@ MCL_SEQ_INLINE void run_tbd_tick(MCLSeq &self, MidiUartClass *uart,
 #endif
 
 #if !defined(__AVR__)
-MCL_SEQ_INLINE void run_midi_tick(MCLSeq &self, MidiUartClass *uart,
+inline __attribute__((always_inline)) void run_midi_tick(MCLSeq &self, MidiUartClass *uart,
                                   MidiUartClass *uart2, bool legacy_tick) {
   if (!seq_grid_y_runs_midi_tracks()) return;
   for (uint8_t i = 0; i < self.num_midi_tracks; i++) {
@@ -360,7 +353,7 @@ MCL_SEQ_INLINE void run_midi_tick(MCLSeq &self, MidiUartClass *uart,
 #endif
 
 #if defined(EXT_TRACKS)
-MCL_SEQ_INLINE void run_legacy_ext_tick(MCLSeq &self, MidiUartClass *uart,
+inline __attribute__((always_inline)) void run_legacy_ext_tick(MCLSeq &self, MidiUartClass *uart,
                                         MidiUartClass *uart2) {
   for (uint8_t i = 0; i < self.num_ext_tracks; i++) {
     self.ext_tracks[i].seq(uart2);
@@ -375,7 +368,7 @@ MCL_SEQ_INLINE void run_legacy_ext_tick(MCLSeq &self, MidiUartClass *uart,
 // Ordering of recalc passes is preserved verbatim from the pre-refactor seq():
 // legacy MD, legacy EXT, TBD, MIDI. Do not reorder without proving no engine
 // observes the order.
-MCL_SEQ_INLINE void recalc_all_slides(MCLSeq &self, bool legacy_tick) {
+inline __attribute__((always_inline)) void recalc_all_slides(MCLSeq &self, bool legacy_tick) {
   (void)legacy_tick;
   if (seq_grid_x_runs_md_tracks()) {
 #if !defined(__AVR__)
@@ -409,8 +402,6 @@ MCL_SEQ_INLINE void recalc_all_slides(MCLSeq &self, bool legacy_tick) {
   }
 #endif
 }
-
-#undef MCL_SEQ_INLINE
 
 } // namespace
 
