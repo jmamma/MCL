@@ -328,15 +328,10 @@ void SampleBrowserPage::query_sample_slots() {
   } else if (numEntries == 0) {
     add_entry("NON-UW MODEL");
   } else if (show_ram_slots) {
-    bool mk1 = numEntries < 48;
+    uint8_t count = numEntries < 48 ? 2 : 4;
     char ram[] = "R1";
-    add_entry(ram);
-    ram[1]++;
-    add_entry(ram);
-    if (!mk1) {
-      ram[1]++;
-      add_entry(ram);
-      ram[1]++;
+    for (uint8_t i = 0; i < count; i++) {
+      ram[1] = '1' + i;
       add_entry(ram);
     }
   }
