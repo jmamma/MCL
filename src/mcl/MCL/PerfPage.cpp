@@ -16,6 +16,9 @@ static constexpr uint8_t PERF_PARAM_EDITOR_PARAM_COUNT = 34;
 #endif
 static constexpr uint8_t PERF_LEARN_OFF = 0;
 
+static PerfEncoder *cur_enc(PerfPage *p) NOINLINE();
+static PerfEncoder *cur_enc(PerfPage *p) { return p->perf_encoders[p->perf_id]; }
+
 #if defined(MCL_HAS_DESKTOP_MOUSE)
 namespace {
 
@@ -68,7 +71,7 @@ void PerfPage::init() {
 void PerfPage::set_led_mask() {
   uint16_t mask = 0;
 
-  PerfEncoder *e = perf_encoders[perf_id];
+  PerfEncoder *e = cur_enc(this);
 
   if (show_menu) {
     SET_BIT16(mask, perf_id);
@@ -131,14 +134,14 @@ void PerfPage::config_encoder_range(uint8_t i) {
 
 void PerfPage::config_encoders(uint8_t show_val) {
 
-  encoders[0] = perf_encoders[perf_id];
+  encoders[0] = cur_enc(this);
   encoders[1] = &fx_param2;
   encoders[2] = &fx_param3;
   encoders[3] = &fx_param4;
 
   if (page_mode == PERF_DESTINATION) {
 
-    PerfData *d = &perf_encoders[perf_id]->perf_data;
+    PerfData *d = &cur_enc(this)->perf_data;
     encoders[1]->cur = d->src;
     encoders[2]->cur = d->param;
     config_encoder_range(1);
@@ -151,7 +154,7 @@ void PerfPage::config_encoders(uint8_t show_val) {
 
     uint8_t c = page_mode - 1;
 
-    PerfEncoder *e = perf_encoders[perf_id];
+    PerfEncoder *e = cur_enc(this);
     PerfParam *p = &e->perf_data.scenes[scene].params[c];
 
     encoders[1]->cur = p->dest;
@@ -191,18 +194,18 @@ void PerfPage::update_params() {
       uint8_t c = page_mode - 1;
       uint8_t scene = learn - 1;
 
-      PerfParam *p = &perf_encoders[perf_id]->perf_data.scenes[scene].params[c];
+      PerfParam *p = &PerfData::scenes[scene].params[c];
       p->dest = encoders[1]->cur;
       p->param = encoders[2]->cur;
       if (encoders[3]->hasChanged() && BUTTON_DOWN(Buttons.ENCODER4)) { GUI.ignoreNextEvent(Buttons.ENCODER4); }
       if (encoders[3]->cur > 0) {
-        if (p->val == 255) { perf_encoders[perf_id]->perf_data.scenes[scene].count++; }
+        if (p->val == 255) { PerfData::scenes[scene].count++; }
         p->val = encoders[3]->cur - 1;
       }
     }
   } else {
     if (encoders[1]->hasChanged() || encoders[2]->hasChanged() || encoders[3]->hasChanged()) {
-      PerfData *d = &perf_encoders[perf_id]->perf_data;
+      PerfData *d = &cur_enc(this)->perf_data;
       d->update_src(encoders[1]->cur, encoders[2]->cur, encoders[3]->cur);
     }
   }
@@ -242,7 +245,7 @@ void PerfPage::display() {
   char info2[12]; // Use an appropriate size for your needs
   mclstr_copy_progmem(info2, mclstr_parameter, sizeof(info2));
 
-  PerfEncoder *e = perf_encoders[perf_id];
+  PerfEncoder *e = cur_enc(this);
 
   static char perf_label[4] = " A";
   perf_label[1] = 'A' + perf_id;
@@ -260,7 +263,7 @@ void PerfPage::display() {
     if (!is_lock) {
       lock_label = mclstr_off;
       // Show the "non-lock" value
-      v = 0; //perf_encoders[perf_id]->perf_data.scenes[scene].params[c].val;
+      v = 0; //cur_enc(this)->perf_data.scenes[scene].params[c].val;
     } else {
       v -= 1;
     }
@@ -378,7 +381,7 @@ void PerfPage::learn_param(uint8_t dest, uint8_t param, uint8_t value) {
       update_params();
     }
     if (learn) {
-      PerfData *d = &perf_encoders[perf_id]->perf_data;
+      PerfData *d = &cur_enc(this)->perf_data;
       uint8_t scene = learn - 1;
       uint8_t n = d->add_param(dest, param, scene, value);
       if (n < 255) {
@@ -422,7 +425,7 @@ void PerfPage::send_locks(uint8_t scene) {
   memset(params, 255, sizeof(params));
 
   for (uint8_t n = 0; n < NUM_PERF_PARAMS; n++) {
-    PerfParam *p = &perf_encoders[perf_id]->perf_data.scenes[scene].params[n];
+    PerfParam *p = &PerfData::scenes[scene].params[n];
     uint8_t dest = p->dest;
     uint8_t param = p->param;
 
@@ -510,7 +513,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
       }
       uint8_t data_dest = editor_dest - 1;
 
-      PerfData *d = &perf_encoders[perf_id]->perf_data;
+      PerfData *d = &cur_enc(this)->perf_data;
       if (event->mask == EVENT_BUTTON_RELEASED) {
         d->clear_param_scene(data_dest, param, scene);
       }
@@ -536,7 +539,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_COPY: {
           oled_display.textbox_P(mclstr_copy, mclstr_scene);
           mcl_clipboard.copy_scene(
-              &perf_encoders[perf_id]->perf_data.scenes[t]);
+              &PerfData::scenes[t]);
           undo = 255;
           return true;
         }
@@ -545,7 +548,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
             return true;
           }
           if (mcl_clipboard.paste_scene(
-                  &perf_encoders[perf_id]->perf_data.scenes[t])) {
+                  &PerfData::scenes[t])) {
             oled_display.textbox_P(mclstr_paste, mclstr_scene);
             config_encoders();
             send_locks(t);
@@ -555,7 +558,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         case MDX_KEY_CLEAR: {
           if (t == undo) {
             if (mcl_clipboard.paste_scene(
-                    &perf_encoders[perf_id]->perf_data.scenes[undo])) {
+                    &PerfData::scenes[undo])) {
               oled_display.textbox_P(mclstr_undo, mclstr_clear);
               undo = 255;
               goto end_clear;
@@ -565,17 +568,17 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           } else {
             undo = t;
             mcl_clipboard.copy_scene(
-                &perf_encoders[perf_id]->perf_data.scenes[t]);
+                &PerfData::scenes[t]);
           }
           oled_display.textbox_P(mclstr_clear, mclstr_scene);
-          perf_encoders[perf_id]->perf_data.clear_scene(t);
+          cur_enc(this)->perf_data.clear_scene(t);
         end_clear:
           config_encoders();
           send_locks(t);
           return true;
         }
         case MDX_KEY_YES: {
-          PerfEncoder *e = perf_encoders[perf_id];
+          PerfEncoder *e = cur_enc(this);
           if (t >= NUM_SCENES) {
             return true;
           }
@@ -584,12 +587,12 @@ bool PerfPage::handleEvent(gui_event_t *event) {
           return true;
         }
         case MDX_KEY_LEFT: {
-          PerfEncoder *e = perf_encoders[perf_id];
+          PerfEncoder *e = cur_enc(this);
           e->active_scene_a = e->active_scene_a == t ? 255 : t;
           return true;
         }
         case MDX_KEY_RIGHT: {
-          PerfEncoder *e = perf_encoders[perf_id];
+          PerfEncoder *e = cur_enc(this);
           e->active_scene_b = e->active_scene_b == t ? 255 : t;
           return true;
         }
@@ -624,7 +627,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
     if (EVENT_RELEASED(event, Buttons.ENCODER4)) {
       // if (EVENT_PRESSED(event, Buttons.ENCODER4)) {
       if (learn) {
-        PerfData *d = &perf_encoders[perf_id]->perf_data;
+        PerfData *d = &cur_enc(this)->perf_data;
         uint8_t scene = learn - 1;
         if (encoders[1]->cur != 0 && encoders[2]->cur != 255) {
           d->clear_param_scene(encoders[1]->cur - 1, encoders[2]->cur, scene);
