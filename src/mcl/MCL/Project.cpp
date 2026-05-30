@@ -306,6 +306,14 @@ uint8_t project_config_sample_bank_to_load(const MCLSysConfigData &source) {
   return 0;
 }
 
+void clear_project_sample_bank(MCLSysConfigData *data) {
+  if (data == nullptr) {
+    return;
+  }
+  data->md_sample_bank = MD_SAMPLE_BANK_OFF;
+  data->md_sample_bank_capture = 0;
+}
+
 #ifdef MCL_HAS_PROJECT_CONVERSION
 void copy_legacy_header(GridTrack &dst, const LegacyGridTrackHeader &src) {
   dst.active = src.active;
@@ -1083,6 +1091,7 @@ bool Project::read_header() {
       normalize_project_config(&cfg);
     } else {
       copy_project_config(&cfg, mcl_cfg);
+      clear_project_sample_bank(&cfg);
     }
     return true;
   }
@@ -1100,6 +1109,7 @@ bool Project::read_header() {
   }
   if (!project_config_valid(cfg)) {
     copy_project_config(&cfg, mcl_cfg);
+    clear_project_sample_bank(&cfg);
   }
   return true;
 }

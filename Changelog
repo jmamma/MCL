@@ -30,7 +30,8 @@ Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 5.0
   Config is saved and reloads that bank when the project is loaded.
 
   Existing configuration files are initialized for MCL 5.00 rather than
-  migrated into the new sample-bank setting.
+  migrated into the new sample-bank setting. Projects without a current
+  project config version default SAMPLEBANK to OFF.
 
 - UI
 
