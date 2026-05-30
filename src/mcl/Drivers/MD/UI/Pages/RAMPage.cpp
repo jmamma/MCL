@@ -526,42 +526,19 @@ void RAMPage::display() {
 
   const char *source;
 
-  switch (encoders[0]->cur) {
-  case SOURCE_MAIN:
+  if (encoders[0]->cur == SOURCE_MAIN) {
     if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        source = "L ";
-      }
-      if (page_id == 1) {
-        source = "R";
-      }
+      source = page_id == 0 ? "L " : "R";
     } else {
       source = "INT";
     }
-    break;
-  case SOURCE_INPA:
+  } else {
+    // SOURCE_INPA / SOURCE_INPB: LINK picks A/B by page; otherwise by source.
     if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        source = "A ";
-      } else {
-        source = "B ";
-      }
+      source = page_id == 0 ? "A " : "B ";
     } else {
-      source = "A ";
+      source = encoders[0]->cur == SOURCE_INPA ? "A " : "B ";
     }
-
-    break;
-  case SOURCE_INPB:
-    if (mcl_cfg.ram_page_mode == LINK) {
-      if (page_id == 0) {
-        source = "A ";
-      } else {
-        source = "B ";
-      }
-    } else {
-      source = "B ";
-    }
-    break;
   }
   /*
     oled_display.print(encoders[1]->cur);
@@ -615,33 +592,16 @@ void RAMPage::display() {
     oled_display.fillRect(progress_x + 1, progress_y, width, 4, WHITE);
   }
 
-  bool flip_hor = false, flip_vert = false;
-  uint8_t *icon = R.icons_knob->wheel_top;
-  switch (wheel_spin) {
-  case 0:
-    break;
-  case 1:
-    icon = R.icons_knob->wheel_angle;
-    break;
-  case 2:
-    icon = R.icons_knob->wheel_side;
-    break;
-  case 3:
-    icon = R.icons_knob->wheel_angle; flip_hor = false; flip_vert = true;
-    break;
-  case 4:
-    icon = R.icons_knob->wheel_top; flip_hor = false; flip_vert = true;
-    break;
-  case 5:
-    icon = R.icons_knob->wheel_angle; flip_hor = true; flip_vert = true;
-    break;
-  case 6:
-    icon = R.icons_knob->wheel_side; flip_hor = true; flip_vert = false;
-    break;
-  case 7:
-    icon = R.icons_knob->wheel_angle; flip_hor = true; flip_vert = false;
-    break;
-  }
+  // Packed wheel-spin frame table: bits[1:0]=icon (0=side,1=angle,2=top),
+  // bit2=flip_hor, bit3=flip_vert. wheel_side/angle/top are contiguous in
+  // __T_icons_knob (57 bytes each), so the icon index scales the base pointer.
+  static const uint8_t wheel_frames[8] PROGMEM = {
+      0x02, 0x01, 0x00, 0x09, 0x0A, 0x0D, 0x04, 0x05};
+  uint8_t frame = pgm_read_byte(&wheel_frames[wheel_spin & 7]);
+  uint8_t *icon = R.icons_knob->wheel_side +
+                  __T_icons_knob::sizeofof_wheel_side * (frame & 3);
+  bool flip_hor = frame & 4;
+  bool flip_vert = frame & 8;
   oled_display.drawBitmap(w_x, w_y, icon, 19, 19, WHITE, flip_hor, flip_vert);
 
   if ((wheel_spin_last_clock != MidiClock.div16th_counter) &&

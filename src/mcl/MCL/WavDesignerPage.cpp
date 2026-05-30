@@ -49,22 +49,18 @@ bool WavDesignerPage::handleEvent(gui_event_t *event) {
     uint8_t key = event->source;
     if (event->mask == EVENT_BUTTON_PRESSED) {
       uint8_t inc = 1;
-      //  if (show_menu) {
-      switch (key) {
-      case MDX_KEY_DOWN:
-        encoders[1]->cur += inc;
-        return true;
-      case MDX_KEY_UP:
-        encoders[1]->cur -= inc;
-        return true;
-      case MDX_KEY_LEFT:
-        encoders[0]->cur -= inc;
-        return true;
-      case MDX_KEY_RIGHT:
-        encoders[0]->cur += inc;
+      // Arrow keys map to encoder steps: LEFT/RIGHT drive encoder 0, UP/DOWN
+      // drive encoder 1; odd keycodes increment, even decrement.
+      if (key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT || key == MDX_KEY_UP ||
+          key == MDX_KEY_DOWN) {
+        Encoder *enc = encoders[key >= MDX_KEY_UP ? 1 : 0];
+        if (key & 1) {
+          enc->cur += inc;
+        } else {
+          enc->cur -= inc;
+        }
         return true;
       }
-      // }
     }
   }
   if (EVENT_BUTTON(event)) {
