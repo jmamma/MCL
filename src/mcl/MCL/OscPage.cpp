@@ -283,20 +283,15 @@ void OscPage::draw_usr() {
 }
 
 void OscPage::draw_levels() {
-  uint8_t scaled_level;
-  uint8_t x = 64;
-  uint8_t w = 128 - x;
-  UsrOsc usr_osc(w);
-
   for (uint8_t i = 0; i < 16; i++) {
-
-    scaled_level = (((uint16_t) sine_levels[i] * 15) / 127) + 0;
+    uint8_t scaled_level = ((uint16_t)sine_levels[i] * 15) / 127;
+    uint8_t bx = i * 4;
+    uint8_t by = 12 + (15 - scaled_level);
+    uint8_t bh = scaled_level + 1;
     if (note_interface.is_note_on(i)) {
-      oled_display.fillRect(0 + i * 4, 12 + (15 - scaled_level), 3,
-                            scaled_level + 1, WHITE);
+      oled_display.fillRect(bx, by, 3, bh, WHITE);
     } else {
-      oled_display.drawRect(0 + i * 4, 12 + (15 - scaled_level), 3,
-                            scaled_level + 1, WHITE);
+      oled_display.drawRect(bx, by, 3, bh, WHITE);
     }
   }
 }

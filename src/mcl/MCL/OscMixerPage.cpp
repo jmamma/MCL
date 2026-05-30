@@ -82,12 +82,12 @@ void OscMixerPage::draw_wav() {
   }
   // float buffer[w];
   oled_display.fillRect(sample_number + x, 0, scanline_width, 32, BLACK);
-  for (uint32_t n = sample_number; n < scanline_width + sample_number; n++) {
+  uint8_t n_end = sample_number + scanline_width;
+  for (uint8_t n = sample_number; n < n_end; n++) {
     float sample = 0;
     // Render each oscillator
     for (i = 0; i < 3; i++) {
-      float osc_sample = 0;
-      osc_sample =
+      float osc_sample =
           render_osc_sample(wd.pages[i].get_osc_type(), wd.pages[i].get_width(),
                             wd.pages[i].sine_levels, wd.pages[i].usr_values,
                             wd.pages[i].sine_level_sum, n, freqs[i],
