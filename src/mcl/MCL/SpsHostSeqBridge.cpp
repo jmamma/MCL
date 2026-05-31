@@ -303,8 +303,10 @@ bool SpsHostSeqBridge::applySetTrackProp(const uint8_t* b, uint16_t n) {
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr) return false;
     switch (b[1]) {
-        case TPROP_LENGTH: tr->track_length = b[2]; break;
-        case TPROP_SPEED:  tr->track_speed = b[2];  break;
+        // Set the stored override AND apply via the canonical setters so the
+        // effective length/speed and runtime timing update live.
+        case TPROP_LENGTH: tr->track_length = b[2]; tr->set_length(b[2]); break;
+        case TPROP_SPEED:  tr->track_speed  = b[2]; tr->set_speed(b[2]);  break;
         default: return false;  // scale/swing/mute: TODO
     }
     return true;
