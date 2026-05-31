@@ -11,6 +11,7 @@
 #include "MidiUart.h"              // MidiUart (host-facing port)
 #include "MidiClock.h"
 #include "MidiSysex.h"             // MidiSysex dispatcher
+#include "MCLSysConfig.h"
 
 using namespace spsseq;
 
@@ -32,6 +33,25 @@ static uint8_t spsxLongestTrackLength() {
         if (length > longest) longest = length;
     }
     return longest > 0 ? longest : 16;
+}
+
+static uint16_t mclLiveTempoRaw() {
+    float bpm = MidiClock.get_tempo();
+    if (bpm < 1.0f)
+        bpm = mcl_cfg.tempo;
+    int tenths = (int)(bpm * 10.0f + 0.5f);
+    if (tenths < 300) tenths = 300;
+    if (tenths > 3000) tenths = 3000;
+    return (uint16_t)((tenths * 24 + 5) / 10);
+}
+
+static void setMclLiveTempoRaw(uint16_t raw) {
+    if (raw < 720) raw = 720;
+    if (raw > 7200) raw = 7200;
+    int tenths = (raw * 10 + 12) / 24;
+    float bpm = (float)tenths / 10.0f;
+    mcl_cfg.tempo = bpm;
+    MidiClock.setTempo(bpm);
 }
 
 int SpsHostSeqBridge::wireToMclMask(int w) {
@@ -255,7 +275,7 @@ void SpsHostSeqBridge::sendPatternMeta(uint8_t cmd, uint8_t tag) {
     body[3] = spsxLongestTrackLength();              // fake master length
     body[4] = 0;                                     // scale          (TODO)
     body[5] = 0;                                     // doubleTempo    (TODO)
-    putU16le(body + 6, 0);                           // tempo          (TODO)
+    putU16le(body + 6, mclLiveTempoRaw());           // live tempo slot source
     body[8] = 0;                                     // scaleMode      (TODO)
     body[9] = 0;                                     // chainChange    (TODO)
     if (cmd == CMD_NOTIFY_ACTIVE) {
@@ -321,8 +341,14 @@ bool SpsHostSeqBridge::applySetTrackProp(const uint8_t* b, uint16_t n) {
     return true;
 }
 bool SpsHostSeqBridge::applySetPatternProp(const uint8_t* b, uint16_t n) {
-    (void)b; (void)n;
-    return false;  // TODO: wire to MD pattern globals
+    if (n < 3) return false;
+    switch (b[0]) {
+        case PPROP_TEMPO:
+            setMclLiveTempoRaw(getU16le(b + 1));
+            return true;
+        default:
+            return false;  // length/scale/etc.: TODO
+    }
 }
 
 // ============================================================================
