@@ -593,13 +593,20 @@ void RAMPage::display() {
   }
 
   // Packed wheel-spin frame table: bits[1:0]=icon (0=side,1=angle,2=top),
-  // bit2=flip_hor, bit3=flip_vert. wheel_side/angle/top are contiguous in
-  // __T_icons_knob (57 bytes each), so the icon index scales the base pointer.
+  // bit2=flip_hor, bit3=flip_vert. Select resource members explicitly:
+  // generated resource order differs between AVR and RP2040.
   static const uint8_t wheel_frames[8] PROGMEM = {
       0x02, 0x01, 0x00, 0x09, 0x0A, 0x0D, 0x04, 0x05};
   uint8_t frame = pgm_read_byte(&wheel_frames[wheel_spin & 7]);
-  uint8_t *icon = R.icons_knob->wheel_side +
-                  __T_icons_knob::sizeofof_wheel_side * (frame & 3);
+  uint8_t *icon = R.icons_knob->wheel_top;
+  switch (frame & 3) {
+  case 0:
+    icon = R.icons_knob->wheel_side;
+    break;
+  case 1:
+    icon = R.icons_knob->wheel_angle;
+    break;
+  }
   bool flip_hor = frame & 4;
   bool flip_vert = frame & 8;
   oled_display.drawBitmap(w_x, w_y, icon, 19, 19, WHITE, flip_hor, flip_vert);
