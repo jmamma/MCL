@@ -86,6 +86,16 @@ void nudge_menu_encoder(Encoder *encoder, int8_t delta) {
   range_encoder->cur = next;
 }
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool mouse_in_menu_value_area(int16_t x, int16_t x_offset, int16_t width) {
+  int16_t value_width = width < 36 ? width / 2 : 18;
+  if (value_width < 10) {
+    value_width = 10;
+  }
+  return x >= x_offset + width - value_width;
+}
+#endif
+
 } // namespace
 
 void MenuPageBase::init() {
@@ -414,16 +424,12 @@ bool MenuPageBase::handleMouseEventAt(mcl_mouse_event_t *event,
     return false;
   }
 
-  if (event->type == MCL_MOUSE_WHEEL && event->deltaY != 0) {
-    nudge_menu_encoder(encoders[1], event->deltaY > 0 ? -1 : 1);
-    return true;
-  }
-
   bool hover_event = event->type == MCL_MOUSE_MOVE ||
                      event->type == MCL_MOUSE_DRAG;
   bool click_event = event->type == MCL_MOUSE_DOWN ||
                      event->type == MCL_MOUSE_DOUBLE_CLICK;
-  if (!hover_event && !click_event) {
+  bool wheel_event = event->type == MCL_MOUSE_WHEEL && event->deltaY != 0;
+  if (!hover_event && !click_event && !wheel_event) {
     return false;
   }
   if (click_event && (event->buttons & MCL_MOUSE_BUTTON_LEFT) == 0) {
@@ -448,8 +454,56 @@ bool MenuPageBase::handleMouseEventAt(mcl_mouse_event_t *event,
     return false;
   }
 
+  bool value_hit = encoders[0] != NULL && encoders[1] != NULL &&
+                   m->get_option_range((uint8_t)item) > 0 &&
+                   mouse_in_menu_value_area(event->x, x_offset, width);
+
+  if (wheel_event) {
+    if (value_hit) {
+      selectMouseItem((uint8_t)item, (uint8_t)row);
+      nudge_menu_encoder(encoders[0], event->deltaY > 0 ? 1 : -1);
+      uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
+      if (dest_var != NULL) {
+        *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
+      }
+      encoders[0]->old = encoders[0]->cur;
+    } else {
+      nudge_menu_encoder(encoders[1], event->deltaY > 0 ? -1 : 1);
+    }
+    return true;
+  }
+
   bool changed = selectMouseItem((uint8_t)item, (uint8_t)row);
+  if (value_hit && event->type == MCL_MOUSE_DRAG &&
+      (event->buttons & MCL_MOUSE_BUTTON_LEFT) != 0 &&
+      (event->deltaY != 0 || event->deltaX != 0)) {
+    int8_t delta = 0;
+    if (event->deltaY != 0) {
+      delta = event->deltaY > 0 ? 1 : -1;
+    } else {
+      delta = event->deltaX > 0 ? 1 : -1;
+    }
+    nudge_menu_encoder(encoders[0], delta);
+    uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
+    if (dest_var != NULL) {
+      *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
+    }
+    encoders[0]->old = encoders[0]->cur;
+    return true;
+  }
+
   if (click_event) {
+    if (value_hit) {
+      bool reverse =
+          (event->modifiers & MCL_MOUSE_MODIFIER_SHIFT) != 0;
+      nudge_menu_encoder(encoders[0], reverse ? -1 : 1);
+      uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
+      if (dest_var != NULL) {
+        *dest_var = stored_value_from_menu(dest_var, encoders[0]->cur);
+      }
+      encoders[0]->old = encoders[0]->cur;
+      return true;
+    }
     enter();
   }
   return changed || click_event;

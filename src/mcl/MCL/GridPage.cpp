@@ -56,6 +56,113 @@ void inherit_grid_x_row_name(GridRowHeader &row_header, GridRow row) {
   row_header.name[sizeof(row_header.name) - 1] = '\0';
 }
 
+#if defined(MCL_HAS_DESKTOP_MOUSE)
+bool grid_mouse_hit_visible_cell(GridPage &page, const mcl_mouse_event_t *event,
+                                 uint8_t *visible_col, uint8_t *visible_row,
+                                 GridColumn *track_idx, GridRow *row_idx) {
+  constexpr int16_t x_offset = 43;
+  constexpr int16_t y_offset = 8;
+  constexpr int16_t row_top = y_offset - 6;
+
+  int row = (event->y - row_top) / 8;
+  if (event->y < row_top || row < 0 || row >= MAX_VISIBLE_ROWS) {
+    return false;
+  }
+
+  int base_col = (int)page.getCol() - page.cur_col;
+  int base_row = (int)page.getRow() - page.cur_row;
+  GridSpan grid_width = page.getWidth();
+  GridSpan col_shift = 0;
+  if (page.show_slot_menu) {
+    if (page.cur_col + param3.cur > MAX_VISIBLE_COLS - 1) {
+      col_shift = page.cur_col + param3.cur - MAX_VISIBLE_COLS;
+    }
+  }
+
+  int cur_posx = x_offset;
+  int hit_x = -1;
+  for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift && x < grid_width;
+       x++) {
+    int track = x + base_col;
+    if (event->x >= cur_posx - 1 && event->x < cur_posx + 9) {
+      hit_x = x;
+      break;
+    }
+    if (track >= 0 && track % 4 == 3 && grid_width >= 8) {
+      cur_posx += 12;
+    } else {
+      cur_posx += 10;
+    }
+  }
+
+  if (hit_x < 0) {
+    return false;
+  }
+
+  int track = hit_x + base_col;
+  int grid_row = row + base_row;
+  if (track < 0 || track >= GRID_WIDTH || grid_row < 0 ||
+      grid_row >= GRID_LENGTH) {
+    return false;
+  }
+
+  *visible_col = (uint8_t)hit_x;
+  *visible_row = (uint8_t)row;
+  *track_idx = (GridColumn)track;
+  *row_idx = (GridRow)grid_row;
+  return true;
+}
+
+void set_slot_menu_range_to_cell(GridPage &page, uint8_t visible_col,
+                                 uint8_t visible_row) {
+  GridSpan row_shift = 0;
+  if (page.cur_row + param4.cur > MAX_VISIBLE_ROWS - 1) {
+    row_shift = page.cur_row + param4.cur - MAX_VISIBLE_ROWS;
+  }
+
+  int width = (int)visible_col - page.cur_col + 1;
+  int height = (int)visible_row + row_shift - page.cur_row + 1;
+  if (width < 1) {
+    width = 1;
+  }
+  if (height < 1) {
+    height = 1;
+  }
+  if (width > page.getWidth()) {
+    width = page.getWidth();
+  }
+  int max_height = GRID_LENGTH - page.getRow();
+  if (height > max_height) {
+    height = max_height;
+  }
+
+  param3.cur = width;
+  param4.cur = height;
+}
+
+void close_slot_menu_from_mouse(GridPage &page) {
+  if (!page.show_slot_menu) {
+    return;
+  }
+
+  uint8_t old_undo = page.slot_undo;
+  bool restore_undo = false;
+  if (!(page.slot_copy || page.slot_paste || page.slot_clear ||
+        page.slot_load)) {
+    page.slot_undo = 0;
+    restore_undo = true;
+  }
+
+  page.apply_slot_changes(false, true);
+
+  if (restore_undo) {
+    page.slot_undo = old_undo;
+  }
+
+  page.init();
+}
+#endif
+
 } // namespace
 
 void GridPage::init() {
@@ -1347,19 +1454,56 @@ bool GridPage::handleMouseEvent(mcl_mouse_event_t *event) {
     return false;
   }
 
-  if (show_slot_menu && event->x < 40 &&
-      grid_slot_page.handleMouseEventAt(event, 1, 8, 39)) {
+  const bool left_button = (event->buttons & MCL_MOUSE_BUTTON_LEFT) != 0;
+  const bool right_button = (event->buttons & MCL_MOUSE_BUTTON_RIGHT) != 0;
+
+  if (show_slot_menu) {
+    if (right_button && (event->type == MCL_MOUSE_DOWN ||
+                         event->type == MCL_MOUSE_DOUBLE_CLICK)) {
+      close_slot_menu_from_mouse(*this);
+      return true;
+    }
+
+    if (event->x < 40 &&
+        grid_slot_page.handleMouseEventAt(event, 1, 8, 39)) {
+      return true;
+    }
+
+    if (event->type == MCL_MOUSE_WHEEL && event->deltaY != 0) {
+      int step = event->deltaY > 0 ? -1 : 1;
+      if ((event->modifiers & MCL_MOUSE_MODIFIER_SHIFT) != 0) {
+        param3.cur += step;
+      } else {
+        param4.cur += step;
+      }
+      return true;
+    }
+
+    if (event->type != MCL_MOUSE_DOWN &&
+        event->type != MCL_MOUSE_DOUBLE_CLICK &&
+        event->type != MCL_MOUSE_DRAG) {
+      return false;
+    }
+    if (!left_button) {
+      return false;
+    }
+
+    uint8_t visible_col = 0;
+    uint8_t visible_row = 0;
+    GridColumn track_idx = 0;
+    GridRow row_idx = 0;
+    if (!grid_mouse_hit_visible_cell(*this, event, &visible_col, &visible_row,
+                                     &track_idx, &row_idx)) {
+      return false;
+    }
+
+    set_slot_menu_range_to_cell(*this, visible_col, visible_row);
     return true;
   }
 
   if (event->type == MCL_MOUSE_WHEEL && event->deltaY != 0) {
-    int step = event->deltaY > 0 ? -1 : 1;
-    if (show_slot_menu) {
-      param4.cur += step;
-    } else {
-      param2.cur += step;
-      reset_undo();
-    }
+    param2.cur += event->deltaY > 0 ? -1 : 1;
+    reset_undo();
     return true;
   }
 
@@ -1367,58 +1511,16 @@ bool GridPage::handleMouseEvent(mcl_mouse_event_t *event) {
       event->type != MCL_MOUSE_DOUBLE_CLICK) {
     return false;
   }
-  const bool left_button = (event->buttons & MCL_MOUSE_BUTTON_LEFT) != 0;
-  const bool right_button = (event->buttons & MCL_MOUSE_BUTTON_RIGHT) != 0;
   if (!left_button && !right_button) {
     return false;
   }
 
-  if (show_slot_menu && right_button) {
-    GUI.queueVirtualButton(Buttons.BUTTON3, false);
-    return true;
-  }
-
-  constexpr int x_offset = 43;
-  constexpr int y_offset = 8;
-  constexpr int row_top = y_offset - 6;
-  int row = (event->y - row_top) / 8;
-  if (event->y < row_top || row < 0 || row >= MAX_VISIBLE_ROWS) {
-    return false;
-  }
-
-  GridColumn base_col = getCol() - cur_col;
-  GridRow base_row = getRow() - cur_row;
-  GridSpan grid_width = getWidth();
-  GridSpan col_shift = 0;
-  if (show_slot_menu) {
-    if (cur_col + param3.cur > MAX_VISIBLE_COLS - 1) {
-      col_shift = cur_col + param3.cur - MAX_VISIBLE_COLS;
-    }
-  }
-
-  int cur_posx = x_offset;
-  int hit_x = -1;
-  for (uint8_t x = col_shift; x < MAX_VISIBLE_COLS + col_shift && x < grid_width;
-       x++) {
-    GridColumn track_idx = x + base_col;
-    if (event->x >= cur_posx - 1 && event->x < cur_posx + 9) {
-      hit_x = x;
-      break;
-    }
-    if (track_idx % 4 == 3 && grid_width >= 8) {
-      cur_posx += 12;
-    } else {
-      cur_posx += 10;
-    }
-  }
-
-  if (hit_x < 0) {
-    return false;
-  }
-
-  GridColumn track_idx = hit_x + base_col;
-  GridRow row_idx = row + base_row;
-  if (track_idx >= GRID_WIDTH || row_idx >= GRID_LENGTH) {
+  uint8_t visible_col = 0;
+  uint8_t visible_row = 0;
+  GridColumn track_idx = 0;
+  GridRow row_idx = 0;
+  if (!grid_mouse_hit_visible_cell(*this, event, &visible_col, &visible_row,
+                                   &track_idx, &row_idx)) {
     return false;
   }
 
