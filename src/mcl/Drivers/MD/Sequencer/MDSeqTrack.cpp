@@ -1145,9 +1145,17 @@ void MDSeqTrack::clear_locks() {
   // Need to buffer this, as we dont want sequencer interrupt
   // to access it whilst we're cleaning up
   DEBUG_DUMP("Clear these locks");
+  for (uint8_t i = 0; i < NUM_MD_STEPS; i++) {
+    steps[i].locks = 0;
+  }
   // locks_params and locks are adjacent in MDSeqTrackData storage.
   memset(locks_params, 0, sizeof(locks_params) + sizeof(locks));
+  for (uint8_t i = 0; i < NUM_LOCKS; i++) {
+    locks_slide_data[i].init();
+  }
   cur_event_idx = 0;
+  locks_slides_recalc = 255;
+  locks_slides_idx = 0;
   //notes.first_trig = true;
 }
 

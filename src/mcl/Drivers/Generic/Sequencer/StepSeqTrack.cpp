@@ -586,9 +586,17 @@ void StepSeqDataTrack::clear_step_lock(uint8_t step, uint8_t param_id) {
 }
 
 void StepSeqDataTrack::clear_locks() {
-    for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) locks_params[c] = 0;
+    for (uint8_t step = 0; step < STEPSEQ_NUM_STEPS; step++) {
+        steps[step].locks = 0;
+    }
+    for (uint8_t c = 0; c < STEPSEQ_NUM_LOCKS; c++) {
+        locks_params[c] = 0;
+        locks_slide_data[c].init();
+    }
     memset(locks, 0, sizeof(locks));
     cur_event_idx = 0;
+    locks_slides_recalc = 255;
+    locks_slides_idx = 0;
 }
 
 void StepSeqDataTrack::clear_track(bool clear_locks_too) {
