@@ -25,6 +25,15 @@ static inline SPSXSeqTrack* spsxTrack(int t) {
     return &mcl_seq.spsx_tracks[t];
 }
 
+static uint8_t spsxLongestTrackLength() {
+    uint8_t longest = 0;
+    for (int t = 0; t < NUM_MD_TRACKS; t++) {
+        uint8_t length = mcl_seq.spsx_tracks[t].length;
+        if (length > longest) longest = length;
+    }
+    return longest > 0 ? longest : 16;
+}
+
 int SpsHostSeqBridge::wireToMclMask(int w) {
     switch (w) {
         case WMASK_TRIG:          return STEPSEQ_MASK_PATTERN;
@@ -243,7 +252,7 @@ void SpsHostSeqBridge::sendPatternMeta(uint8_t cmd, uint8_t tag) {
     body[0] = 0x40;                                  // version
     body[1] = 0;                                     // currentPattern (TODO: MD globals)
     body[2] = 0;                                     // kit            (TODO)
-    body[3] = mcl_seq.spsx_tracks[0].length;         // pattern length proxy
+    body[3] = spsxLongestTrackLength();              // fake master length
     body[4] = 0;                                     // scale          (TODO)
     body[5] = 0;                                     // doubleTempo    (TODO)
     putU16le(body + 6, 0);                           // tempo          (TODO)

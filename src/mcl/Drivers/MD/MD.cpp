@@ -16,6 +16,38 @@
 #include "KeyInterface.h"
 #include <string.h>
 
+#if !defined(__AVR__)
+namespace {
+
+void use_spsx_longest_track_sync(uint8_t &length, uint8_t &speed,
+                                 uint8_t &step_count) {
+  if (!mcl_seq.using_spsx_tracks) {
+    return;
+  }
+
+  uint8_t best_length = 0;
+  uint8_t best_speed = speed;
+  uint8_t best_step = step_count;
+  for (uint8_t i = 0; i < mcl_seq.num_md_tracks; i++) {
+    SPSXSeqTrack &track = mcl_seq.spsx_tracks[i];
+    if (track.length == 0 || track.length <= best_length) {
+      continue;
+    }
+    best_length = track.length;
+    best_speed = track.speed;
+    best_step = track.step_count;
+  }
+
+  if (best_length > 0) {
+    length = best_length;
+    speed = best_speed;
+    step_count = best_step;
+  }
+}
+
+} // namespace
+#endif
+
 void MDMidiEvents::track_cc(uint8_t *msg) {
   uint8_t channel = MIDI_VOICE_CHANNEL(msg[0]);
   uint8_t param = msg[1];
@@ -1516,6 +1548,9 @@ void MDClass::triggerTrack(uint8_t track, uint8_t velocity,
 void MDClass::sync_seqtrack(uint8_t length, uint8_t speed, uint8_t step_count,
                             uint8_t swing_amount, uint8_t swing_mode,
                             MidiUartClass *uart_) {
+#if !defined(__AVR__)
+  use_spsx_longest_track_sync(length, speed, step_count);
+#endif
   uint8_t data[7] = {0x70, 0x3D, length, speed, step_count, swing_amount,
                      swing_mode};
   sendRequest(data, sizeof(data), true, uart_);
