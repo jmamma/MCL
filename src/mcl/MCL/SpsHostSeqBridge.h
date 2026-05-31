@@ -15,7 +15,7 @@
 
 #if !defined(__AVR__)
 
-#include "Midi/MidiSysex.h"
+#include "MidiSysex.h"
 #include "SpsSeqProtocol.h"  // same directory (src/mcl/MCL)
 
 class SpsHostSeqBridge : public MidiSysexListenerClass {

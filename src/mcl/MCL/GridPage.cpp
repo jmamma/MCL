@@ -1373,6 +1373,11 @@ bool GridPage::handleMouseEvent(mcl_mouse_event_t *event) {
     return false;
   }
 
+  if (show_slot_menu && right_button) {
+    GUI.queueVirtualButton(Buttons.BUTTON3, false);
+    return true;
+  }
+
   constexpr int x_offset = 43;
   constexpr int y_offset = 8;
   constexpr int row_top = y_offset - 6;
