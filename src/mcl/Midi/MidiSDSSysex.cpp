@@ -36,9 +36,10 @@ void MidiSDSSysexListenerClass::end() {
   if ((msgType == ELEKTRON_ID) && (view.getByte(3) == MD_ID) &&
       (view.getByte(5) == MD_SDS_NAME)) {
     sds_slot = view.getByte(6);
-    for (uint8_t i = 0; i < sizeof(sds_name); ++i) {
+    for (uint8_t i = 0; i < sizeof(sds_name) - 1; ++i) {
       sds_name[i] = view.getByte(7 + i);
     }
+    sds_name[sizeof(sds_name) - 1] = '\0';
     sds_name_rec = true;
     DEBUG_PRINTLN(F("sample name received"));
 

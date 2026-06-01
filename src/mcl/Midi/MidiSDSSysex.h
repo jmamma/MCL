@@ -20,7 +20,7 @@ public:
   bool isSDSMessage;
   uint8_t packetNumber;
   uint8_t sds_slot;
-  char sds_name[4];
+  char sds_name[5];
   bool sds_name_rec = false;
   MidiSDSSysexListenerClass() : MidiSysexListenerClass(NULL, 0x7E, 0x00, 0x01) {}
 
