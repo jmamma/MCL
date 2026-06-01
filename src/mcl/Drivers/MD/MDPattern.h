@@ -161,13 +161,11 @@ public:
   virtual void setKit(uint8_t _kit) { kit = _kit; }
 
   virtual bool isEmpty() {
-    uint8_t count = 15;
-    do {
-      if (trigPatterns[count]) {
+    for (uint8_t track = 0; track < 16; ++track) {
+      if (trigPatterns[track]) {
         return false;
       }
-      count--;
-    } while (count);
+    }
     return true;
   }
   virtual bool isTrackEmpty(uint8_t track);
