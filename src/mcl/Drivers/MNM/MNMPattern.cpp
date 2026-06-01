@@ -158,10 +158,14 @@ bool MNMPattern::fromSysex(MidiClass *midi) {
     for (uint8_t j = 0; j < 64; j++) {
       if (IS_BIT_SET64(lockPatterns[i], j)) {
 				//				printf("lock track %d param %d to lock idx %d\n", i, j, numRows);
-				paramLocks[i][j] = numRows;
-				lockTracks[numRows] = i;
-				lockParams[numRows] = j;
-				numRows++;
+				if (numRows < maxLocks) {
+					paramLocks[i][j] = numRows;
+					lockTracks[numRows] = i;
+					lockParams[numRows] = j;
+					numRows++;
+				} else {
+					paramLocks[i][j] = -1;
+				}
       } else {
 				paramLocks[i][j] = -1;
 			}
