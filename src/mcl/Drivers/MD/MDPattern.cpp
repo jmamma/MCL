@@ -142,10 +142,14 @@ bool MDPattern::fromSysex(MidiClass *midi) {
     for (int i = 0; i < 16; i++) {
       for (int j = 0; j < 24; j++) {
         if (IS_BIT_SET32(lockPatterns[i], j)) {
-          paramLocks[i][j] = numRows;
-          lockTracks[numRows] = i;
-          lockParams[numRows] = j;
-          numRows++;
+          if (numRows < 64) {
+            paramLocks[i][j] = numRows;
+            lockTracks[numRows] = i;
+            lockParams[numRows] = j;
+            numRows++;
+          } else {
+            paramLocks[i][j] = -1;
+          }
         }
       }
     }
