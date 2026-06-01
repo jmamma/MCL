@@ -276,7 +276,9 @@ void SeqPtcPage::config() {
   }
 #ifdef EXT_TRACKS
   else {
-    strcpy(str_first, device_manager.secondary_device()->name);
+    strncpy(str_first, device_manager.secondary_device()->name,
+            sizeof(str_first) - 1);
+    str_first[sizeof(str_first) - 1] = '\0';
     str_second[0] = 'T';
     str_second[1] = last_ext_track + '1';
   }
