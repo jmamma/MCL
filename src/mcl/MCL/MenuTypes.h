@@ -30,19 +30,6 @@ struct PageSelectEntry {
 
 typedef void (*menu_function_t)();
 
-// Union to safely handle function pointers in PROGMEM
-union menu_function_ptr_t {
-    menu_function_t fn;
-    #if defined(__AVR__)
-        uint16_t word;  // AVR uses 16-bit function pointers
-    #else
-        struct {
-            uint16_t low;
-            uint16_t high;
-        } words;        // 32-bit architectures
-    #endif
-};
-
 union uint8_ptr_t {
     uint8_t* ptr;
     #if defined(__AVR__)
@@ -57,7 +44,7 @@ union uint8_ptr_t {
 
 // Menu function id 0 means no callback. Non-zero ids are one-based indexes
 // into menu_target_functions.
-extern const menu_function_ptr_t menu_target_functions[] PROGMEM;
+extern const menu_function_t menu_target_functions[] PROGMEM;
 extern const uint8_t* const menu_target_param[] PROGMEM;
 
 #define MENU_OPTIONS_PERCENT 191

@@ -207,65 +207,65 @@ const uint8_t *const menu_target_param[] PROGMEM = {
     &mcl_cfg.md_sample_bank
 };
 
-const menu_function_ptr_t menu_target_functions[] PROGMEM = {
+const menu_function_t menu_target_functions[] PROGMEM = {
     // 1 - mclsys_apply_config
-    { .fn = mclsys_apply_config },
+    mclsys_apply_config,
     // 2 - new_project_from_menu
-    { .fn = new_project_from_menu },
+    new_project_from_menu,
     // 3 - opt_trackid_handler
-    { .fn = opt_trackid_handler },
+    opt_trackid_handler,
     // 4 - opt_mask_handler
-    { .fn = opt_mask_handler },
+    opt_mask_handler,
     // 5 - opt_speed_handler
-    { .fn = opt_speed_handler },
+    opt_speed_handler,
     // 6 - opt_length_handler
-    { .fn = opt_length_handler },
+    opt_length_handler,
     // 7 - opt_channel_handler
-    { .fn = opt_channel_handler },
+    opt_channel_handler,
     // 8 - opt_copy_track_handler_cb
-    { .fn = opt_copy_track_handler_cb },
+    opt_copy_track_handler_cb,
     // 9 - opt_clear_track_handler
-    { .fn = opt_clear_track_handler },
+    opt_clear_track_handler,
     // 10 - opt_clear_locks_handler
-    { .fn = opt_clear_locks_handler },
+    opt_clear_locks_handler,
     // 11 - opt_paste_track_handler
-    { .fn = opt_paste_track_handler },
+    opt_paste_track_handler,
     // 12 - opt_shift_track_handler
-    { .fn = opt_shift_track_handler },
+    opt_shift_track_handler,
     // 13 - opt_reverse_track_handler
-    { .fn = opt_reverse_track_handler },
+    opt_reverse_track_handler,
     // 14 - seq_menu_handler
-    { .fn = seq_menu_handler },
+    seq_menu_handler,
     // 15 - rename_row
-    { .fn = rename_row },
+    rename_row,
     // 16 - apply_slot_changes_cb
-    { .fn = apply_slot_changes_cb },
+    apply_slot_changes_cb,
     // 17 - wav_render
-    { .fn = wav_render },
+    wav_render,
     // 18 - wavdesign_menu_handler
-    { .fn = wavdesign_menu_handler },
+    wavdesign_menu_handler,
     // 19 - mclsys_apply_config_midi
-    { .fn = mclsys_apply_config_midi },
+    mclsys_apply_config_midi,
     // 20 - md_import
-    { .fn = md_import },
+    md_import,
     // 21 - usb_dfu_mode
-    { .fn = usb_dfu_mode },
+    usb_dfu_mode,
     // 22 - usb_os_update
-    { .fn = usb_os_update },
+    usb_os_update,
     // 23 - usb_disk_mode
-    { .fn = usb_disk_mode },
+    usb_disk_mode,
     // 24 - mcl_setup
-    { .fn = mcl_setup },
+    mcl_setup,
     // 25 - rename_perf
-    { .fn = rename_perf },
+    rename_perf,
     // 26 - opt_transpose_track_handler
-    { .fn = opt_transpose_track_handler },
+    opt_transpose_track_handler,
     // 27 - open_primary_driver_config
-    { .fn = open_primary_driver_config },
+    open_primary_driver_config,
     // 28 - open_secondary_driver_config
-    { .fn = open_secondary_driver_config },
+    open_secondary_driver_config,
     // 29 - opt_swing_handler
-    { .fn = opt_swing_handler },
+    opt_swing_handler,
 };
 BootMenuPage<boot_menu_page_N> boot_menu_page(&menu_value_encoder,
                                               &menu_entry_encoder);

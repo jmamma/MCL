@@ -82,24 +82,13 @@ void MenuBase::set_entry_name(uint8_t entry_index, const char *name) {
   item->name[sizeof(item->name) - 1] = '\0';
 }
 
-// Read a target function pointer out of the PROGMEM table. The layout of
-// menu_function_ptr_t differs by pointer width, hence the per-arch reads.
 static menu_function_t read_menu_target_function(uint8_t function_index) {
-    menu_function_ptr_t fn;
     #if defined(__AVR__)
-        // On AVR, single 16-bit read
-        fn.word = pgm_read_word(&menu_target_functions[function_index].word);
-    #elif defined(PLATFORM_DESKTOP) || (UINTPTR_MAX > 0xFFFFFFFFu)
-        // 64-bit hosts: read the full pointer via the .fn slot. The
-        // {low, high} word reads on 32-bit only cover the bottom 4 bytes
-        // and would truncate.
-        fn.fn = menu_target_functions[function_index].fn;
+        uintptr_t p = pgm_read_word(&menu_target_functions[function_index]);
+        return (menu_function_t)p;
     #else
-        // On 32-bit architectures, read both words
-        fn.words.low = pgm_read_word(&menu_target_functions[function_index].words.low);
-        fn.words.high = pgm_read_word(&menu_target_functions[function_index].words.high);
+        return menu_target_functions[function_index];
     #endif
-    return fn.fn;
 }
 
 menu_function_t MenuBase::get_exit_function() {
