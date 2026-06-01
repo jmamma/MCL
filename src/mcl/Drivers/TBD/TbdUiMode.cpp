@@ -66,8 +66,15 @@ bool is_tbd_param_visible(const TbdP4ParamDescriptor *param) {
 }
 
 static void invert_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
-  for (uint8_t yy = y; yy < y + h; yy++) {
-    for (uint8_t xx = x; xx < x + w; xx++) {
+  int x0 = x;
+  int y0 = y;
+  int x1 = x0 + w;
+  int y1 = y0 + h;
+  if (x0 >= 128 || y0 >= 64) return;
+  if (x1 > 128) x1 = 128;
+  if (y1 > 64) y1 = 64;
+  for (int yy = y0; yy < y1; yy++) {
+    for (int xx = x0; xx < x1; xx++) {
       oled_display.drawPixel(xx, yy, 2);
     }
   }
@@ -425,9 +432,14 @@ void render_window(uint8_t y_top, uint8_t window, bool active,
     if (locked[i]) {
       uint8_t text_w = (uint8_t)strlen(text) * 6;
       uint8_t inner_w = (text_w > kDialW) ? text_w : kDialW;
-      uint8_t inv_x = cx + (kCellW - inner_w) / 2 - 2;
-      invert_rect(inv_x, dial_y - 1, inner_w + 4,
-                  (uint8_t)(text_y + 8 - (dial_y - 1)));
+      int16_t inv_x = (int16_t)cx + ((int16_t)kCellW - inner_w) / 2 - 2;
+      if (inv_x < 0) inv_x = 0;
+      int16_t inv_w = (int16_t)inner_w + 4;
+      if (inv_x + inv_w > 128) inv_w = 128 - inv_x;
+      if (inv_w > 0) {
+        invert_rect((uint8_t)inv_x, dial_y - 1, (uint8_t)inv_w,
+                    (uint8_t)(text_y + 8 - (dial_y - 1)));
+      }
     }
   }
 
