@@ -316,11 +316,7 @@ bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
     ok = false;
   }
 
-#ifdef __AVR__
-  static uint8_t buf[512];
-#else
   uint8_t buf[512];
-#endif
   uint32_t copied = 0;
   uint8_t progress_end = progress_base + progress_span;
   while (ok) {
