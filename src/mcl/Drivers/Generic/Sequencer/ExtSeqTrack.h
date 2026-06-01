@@ -237,28 +237,14 @@ public:
 
   void buffer_notesoff() {
     init_notes_on();
-    buffer_notesoff64(&(note_buffer[0]), 0);
-    buffer_notesoff64(&(note_buffer[1]), 64);
-  }
-
-  void buffer_notesoff64(uint64_t *buf, uint8_t offset) {
-    buffer_notesoff32(&(((uint32_t *)buf)[0]), offset);
-    buffer_notesoff32(&(((uint32_t *)buf)[1]), offset + 32);
-  }
-
-  void buffer_notesoff32(uint32_t *buf, uint8_t offset) {
-    buffer_notesoff16(&(((uint16_t *)buf)[0]), offset);
-    buffer_notesoff16(&(((uint16_t *)buf)[1]), offset + 16);
-  }
-
-  void buffer_notesoff16(uint16_t *buf, uint8_t offset) {
-    if (((uint8_t *)buf)[0]) {
-      buffer_notesoff8(&(((uint8_t *)buf)[0]), offset);
-    }
-    if (((uint8_t *)buf)[1]) {
-      buffer_notesoff8(&(((uint8_t *)buf)[1]), offset + 8);
+    uint8_t *buf = (uint8_t *)note_buffer;
+    for (uint8_t i = 0; i < sizeof(note_buffer); ++i) {
+      if (buf[i]) {
+        buffer_notesoff8(&buf[i], i << 3);
+      }
     }
   }
+
   void buffer_notesoff8(uint8_t *buf, uint8_t offset) {
     uint8_t count = 0;
     while (*buf) {
