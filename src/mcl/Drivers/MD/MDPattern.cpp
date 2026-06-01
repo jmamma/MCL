@@ -113,6 +113,9 @@ bool MDPattern::fromSysex(MidiClass *midi) {
   // 6 consecutive uint8_t members (no padding); coalesce the 6 gget8() reads
   // into one bulk get() over the contiguous run (identical byte stream).
   decoder.get(&accentAmount, 6);
+  if (patternLength == 0 || patternLength > maxSteps) {
+    return false;
+  }
 
 #if !defined(__AVR__)
   if (is_spsx_pat) {
