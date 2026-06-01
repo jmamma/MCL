@@ -13,7 +13,8 @@ void Osc::set_sample_rate(float hz) { sample_rate = hz; }
    the float divide + cast is emitted once instead of in every oscillator. */
 static float osc_n_cycle(float sample_rate, float freq) NOINLINE();
 static float osc_n_cycle(float sample_rate, float freq) {
-  return (uint16_t)(sample_rate / freq);
+  uint16_t n_cycle = (uint16_t)(sample_rate / freq);
+  return n_cycle ? n_cycle : 1;
 }
 
 /* Position of sample_number within one cycle of n_cycle samples: the
