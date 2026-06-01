@@ -1644,7 +1644,10 @@ void SeqExtStepPage::display() {
     char str[6];
     str[0] = ' ';
     seq_copy_note_label(cur_y, str + 1);
-    strcat(info1, str);
+    size_t info_len = strlen(info1);
+    if (info_len < sizeof(info1) - 1) {
+      strncat(info1, str, sizeof(info1) - info_len - 1);
+    }
     strcpy_P(info2, mclstr_note);
     draw_pianoroll();
   } else {
