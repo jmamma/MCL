@@ -301,9 +301,7 @@ bool LoadProjectPage::_handle_filemenu() {
 
     if (item == FM_DELETE) {
       char message[32];
-      strcpy_P(message, mclstr_delete_space);
-      strcat(message, entry);
-      strcat(message, "?");
+      build_delete_message(message, sizeof(message), entry);
       if (mcl_gui.wait_for_confirm(entry_type == DIR_TYPE ? "DEL FOLDER"
                                                           : "DEL PROJECT",
                                    message)) {

@@ -45,6 +45,24 @@ static uint8_t filebrowser_name_length(uint8_t min_length, const char *name) {
   return len > min_length ? len : min_length;
 }
 
+void FileBrowserPage::build_delete_message(char *dst, uint8_t dst_len,
+                                           const char *entry) {
+  if (dst_len == 0) {
+    return;
+  }
+  strncpy_P(dst, mclstr_delete_space, dst_len);
+  dst[dst_len - 1] = '\0';
+  uint8_t used = strlen(dst);
+  if (used >= dst_len - 1) {
+    dst[dst_len - 1] = '\0';
+    return;
+  }
+  strncat(dst, entry, dst_len - used - 2);
+  used = strlen(dst);
+  dst[used++] = '?';
+  dst[used] = '\0';
+}
+
 bool FileBrowserPage::path_starts_with_dir(const char *path, const char *dir) {
   if (*dir == '\0') {
     return false;
@@ -432,11 +450,26 @@ bool FileBrowserPage::_cd(const char *child) {
 
   file.close();
 #ifndef __AVR__
-  char rooted_child[64];
+  char rooted_child[sizeof(lwd)];
   if (mcl_sd.mcl_root[0] != '\0' && child[0] == '/') {
     child = mcl_sd.full_path(child, rooted_child, sizeof(rooted_child));
   }
 #endif
+  size_t len_lwd = strlen(lwd);
+  size_t child_len = strlen(child);
+  bool absolute_child = child[0] == '/';
+  size_t new_len = child_len;
+  if (!absolute_child) {
+    new_len += len_lwd;
+    if (len_lwd > 0 && lwd[len_lwd - 1] != '/') {
+      new_len++;
+    }
+  }
+  if (new_len >= sizeof(lwd)) {
+    DEBUG_PRINTLN(F("path too long"));
+    gfx.alert_error("BAD PATH");
+    return false;
+  }
   const char *ptr = child;
 
   if (child[0] == '/' && child[1] != '\0') {
@@ -450,21 +483,15 @@ bool FileBrowserPage::_cd(const char *child) {
     return false;
   }
 
-  uint8_t len_lwd = strlen(lwd);
-
-  if (len_lwd == 1) {
-    lwd[0] = '\0';
-  }
-
-  if (child[0] != '/') {
-    if (lwd[len_lwd] != '/') {
-      strcat(lwd, "/");
-      len_lwd++;
-    }
+  if (absolute_child) {
+    strcpy(lwd, child);
   } else {
-    lwd[0] = '\0';
+    if (len_lwd > 0 && lwd[len_lwd - 1] != '/') {
+      lwd[len_lwd++] = '/';
+      lwd[len_lwd] = '\0';
+    }
+    strcpy(lwd + len_lwd, child);
   }
-  strcat(lwd, child);
   DEBUG_PRINTLN(lwd);
   uint16_t pos = encoders[1]->getValue();
   uint8_t row = cur_row;
@@ -488,9 +515,7 @@ bool FileBrowserPage::_handle_filemenu() {
     create_folder();
     return true;
   case FM_DELETE: // delete
-    strcpy_P(buf2, mclstr_delete_space);
-    strcat(buf2, buf1);
-    strcat(buf2, "?");
+    build_delete_message(buf2, sizeof(buf2), buf1);
     if (mcl_gui.wait_for_confirm("CONFIRM", buf2)) {
       on_delete(buf1);
     }

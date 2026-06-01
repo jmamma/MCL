@@ -199,6 +199,8 @@ public:
 #endif
 
 protected:
+  static void build_delete_message(char *dst, uint8_t dst_len,
+                                   const char *entry);
   void _cd_up();
   bool _cd(const char *);
   void query_filesystem();
