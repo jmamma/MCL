@@ -336,7 +336,7 @@ void PageSelectPage::display() {
                             kPageIconWidth, iconh, WHITE);
   }
 
-  uint16_t led_mask = 1 << page_select;
+  uint16_t led_mask = (uint16_t)1 << page_select;
   if (trigled_mask != led_mask) {
     trigled_mask = led_mask;
     mcl_gui.set_trigleds(trigled_mask, TRIGLED_EXCLUSIVE);
