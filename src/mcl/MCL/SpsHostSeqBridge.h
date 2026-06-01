@@ -36,6 +36,8 @@ public:
     void notifyActive();
 
 private:
+    bool ready_ = false;
+
     void handle(const spsseq::Parsed& p, const uint8_t* b, uint16_t n);
 
     void sendFrame(uint8_t cmd, uint8_t tag, const uint8_t* body, uint16_t bodyLen);

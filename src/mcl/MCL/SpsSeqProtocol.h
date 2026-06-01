@@ -27,6 +27,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "SpsWireProtocol.h"
+
 namespace spsseq {
 
 // ---- header / identity ----
@@ -35,8 +37,8 @@ static const uint8_t  kSubId0  = 0x53;   // 'S'
 static const uint8_t  kSubId1  = 0x51;   // 'Q'
 static const uint8_t  kProtoVersion = 1;
 
-static const uint8_t  kSysexStart = 0xF0;
-static const uint8_t  kSysexEnd   = 0xF7;
+static const uint8_t  kSysexStart = spswire::kSysexStart;
+static const uint8_t  kSysexEnd   = spswire::kSysexEnd;
 
 // ---- dimensions ----
 static const int kNumTracks     = 16;
@@ -131,140 +133,41 @@ enum PatternProp {
     PPROP_KIT = 3, PPROP_SCALE_MODE = 4
 };
 
-// ============================================================================
-// 8->7 bit packing (byte-identical to ElektronHelper::ElektronDataToSysex /
-// ElektronSysexToData). Self-contained so the header has no link dependency.
-// ============================================================================
+// Shared SPS wire helpers with step-protocol names kept for compatibility.
+static const uint16_t kFrameMinLen = spswire::kFrameMinLen;
+using Parsed = spswire::Parsed;
 
-// Pack `n` 8-bit bytes from `in` into 7-bit `out`. Returns encoded byte count.
 inline uint16_t spsSeqPack7(const uint8_t* in, uint16_t n, uint8_t* out) {
-    uint16_t retlen = 0;
-    uint16_t cnt7 = 0;
-    out[0] = 0;
-    for (uint16_t cnt = 0; cnt < n; cnt++) {
-        uint8_t c   = in[cnt] & 0x7F;
-        uint8_t msb = (uint8_t)(in[cnt] >> 7);
-        out[0] |= (uint8_t)(msb << (6 - cnt7));
-        out[1 + cnt7] = c;
-        if (cnt7++ == 6) {
-            out += 8;
-            retlen += 8;
-            out[0] = 0;
-            cnt7 = 0;
-        }
-    }
-    return (uint16_t)(retlen + cnt7 + (cnt7 != 0 ? 1 : 0));
+    return spswire::pack7(in, n, out);
 }
-
-// Unpack `encLen` 7-bit bytes from `in` into 8-bit `out` (cap `outCap` bytes —
-// never writes past it). Returns bytes actually written (<= outCap).
-inline uint16_t spsSeqUnpack7(const uint8_t* in, uint16_t encLen, uint8_t* out, uint16_t outCap) {
-    uint16_t cnt2 = 0;
-    uint16_t bits = 0;
-    for (uint16_t cnt = 0; cnt < encLen; cnt++) {
-        if ((cnt % 8) == 0) {
-            bits = in[cnt];
-        } else {
-            bits <<= 1;
-            if (cnt2 < outCap) out[cnt2] = (uint8_t)(in[cnt] | (bits & 0x80));
-            cnt2++;
-        }
-    }
-    return cnt2 < outCap ? cnt2 : outCap;
+inline uint16_t spsSeqUnpack7(const uint8_t* in, uint16_t encLen,
+                              uint8_t* out, uint16_t outCap) {
+    return spswire::unpack7(in, encLen, out, outCap);
 }
-
-// Worst-case encoded size for `n` raw bytes (ceil(n/7)*8).
 inline uint16_t spsSeqPack7Size(uint16_t n) {
-    return (uint16_t)(((n + 6) / 7) * 8);
+    return spswire::pack7Size(n);
 }
-
-// Exact decoded size for `encLen` 7-bit bytes (each group of 8 -> 7; a partial
-// group of r bytes -> r-1). Lets callers reject oversized frames before decoding.
 inline uint16_t spsSeqUnpack7Size(uint16_t encLen) {
-    uint16_t full = (uint16_t)((encLen / 8) * 7);
-    uint16_t rem  = (uint16_t)(encLen % 8);
-    return (uint16_t)(full + (rem ? (rem - 1) : 0));
+    return spswire::unpack7Size(encLen);
 }
-
-// ---- checksum: 14-bit sum, masked ----
 inline uint16_t spsSeqChecksum(const uint8_t* p, uint16_t n) {
-    uint16_t s = 0;
-    for (uint16_t i = 0; i < n; i++) s = (uint16_t)(s + p[i]);
-    return (uint16_t)(s & 0x3FFF);
+    return spswire::checksum(p, n);
 }
-
-// ============================================================================
-// Frame build / parse
-// ============================================================================
-
-// Minimum recorded length (excl F0/F7): hdr(3)+cmd(1)+tag(1)+cks(2) = 7.
-static const uint16_t kFrameMinLen = 7;
-
-// Build a full SysEx frame (incl F0..F7) into `out` (cap `outcap`).
-// `body8`/`body8len` is the logical body (may be null/0). Returns total bytes,
-// or 0 on overflow.
 inline uint16_t spsSeqBuildFrame(uint8_t cmd, uint8_t tag,
                                  const uint8_t* body8, uint16_t body8len,
                                  uint8_t* out, uint16_t outcap) {
-    uint16_t need = (uint16_t)(1 + 3 + 2 + spsSeqPack7Size(body8len) + 2 + 1);
-    if (need > outcap) return 0;
-    uint16_t i = 0;
-    out[i++] = kSysexStart;
-    out[i++] = kMfrId;
-    out[i++] = kSubId0;
-    out[i++] = kSubId1;
-    out[i++] = cmd;
-    out[i++] = tag;
-    uint16_t enc = (body8 && body8len) ? spsSeqPack7(body8, body8len, out + i) : 0;
-    i = (uint16_t)(i + enc);
-    // checksum over cmd,tag,body7 == out[4 .. 4+2+enc)
-    uint16_t cks = spsSeqChecksum(out + 4, (uint16_t)(2 + enc));
-    out[i++] = (uint8_t)((cks >> 7) & 0x7F);
-    out[i++] = (uint8_t)(cks & 0x7F);
-    out[i++] = kSysexEnd;
-    return i;
+    return spswire::buildFrame(kMfrId, kSubId0, kSubId1, cmd, tag, body8,
+                               body8len, out, outcap);
 }
-
-struct Parsed {
-    uint8_t        cmd;
-    uint8_t        tag;
-    const uint8_t* body7;     // points into msg
-    uint16_t       body7len;
-};
-
-// Parse a recorded message that EXCLUDES F0 and F7 (host getByte / MCL view
-// semantics). Verifies the 53 51 sub-id and the checksum. Returns false on any
-// mismatch (including foreign 0x7D traffic). `msg[0]` must be 0x7D.
 inline bool spsSeqParseFrame(const uint8_t* msg, uint16_t len, Parsed& out) {
-    if (len < kFrameMinLen) return false;
-    if (msg[0] != kMfrId || msg[1] != kSubId0 || msg[2] != kSubId1) return false;
-    uint16_t cks = (uint16_t)(((uint16_t)msg[len - 2] << 7) | msg[len - 1]);
-    // checksum covers cmd,tag,body7 == msg[3 .. len-2)
-    if (spsSeqChecksum(msg + 3, (uint16_t)(len - 2 - 3)) != cks) return false;
-    out.cmd      = msg[3];
-    out.tag      = msg[4];
-    out.body7    = msg + 5;
-    out.body7len = (uint16_t)(len - 7);  // len - hdr(3) - cmd - tag - cks(2)
-    return true;
+    return spswire::parseFrame(kMfrId, kSubId0, kSubId1, msg, len, out);
 }
-
-// Decode body7 into an 8-bit buffer of `cap` bytes. Cap-safe (no overflow).
-// Returns decoded byte count (<= cap). A frame whose body would exceed cap is
-// malformed for this protocol (bodies are bounded by kMaxBodyRaw); callers
-// further validate the decoded length per command.
-inline uint16_t spsSeqDecodeBody(const Parsed& p, uint8_t* body8, uint16_t cap) {
-    return spsSeqUnpack7(p.body7, p.body7len, body8, cap);
+inline uint16_t spsSeqDecodeBody(const Parsed& p, uint8_t* body8,
+                                 uint16_t cap) {
+    return spswire::decodeBody(p, body8, cap);
 }
-
-// ---- little-endian 64-bit mask helpers (step 0 = bit 0) ----
-inline void spsSeqPutU64(uint8_t* p, uint64_t v) {
-    for (int i = 0; i < 8; i++) p[i] = (uint8_t)((v >> (8 * i)) & 0xFF);
-}
-inline uint64_t spsSeqGetU64(const uint8_t* p) {
-    uint64_t v = 0;
-    for (int i = 0; i < 8; i++) v |= ((uint64_t)p[i]) << (8 * i);
-    return v;
-}
+inline void spsSeqPutU64(uint8_t* p, uint64_t v) { spswire::putU64(p, v); }
+inline uint64_t spsSeqGetU64(const uint8_t* p) { return spswire::getU64(p); }
 
 } // namespace spsseq
 

@@ -237,7 +237,8 @@ void ExtSeqTrack::recalc_slides() {
   bool find = false;
   for (int8_t n = event_buckets.get(step) - 1; n >= 0; n--) {
     auto &e = events[curidx + n];
-    if (e.is_lock && e.event_on) {
+    if (e.is_lock && e.event_on && e.lock_idx < NUM_LOCKS &&
+        locks_params[e.lock_idx]) {
       find_array[e.lock_idx] = 1;
       find = true;
     }
@@ -251,11 +252,13 @@ void ExtSeqTrack::recalc_slides() {
   ext_event_t *e;
   for (int8_t n = event_buckets.get(step) - 1; n >= 0; n--) {
     e = &events[curidx + n];
+    if (!e->is_lock || !e->event_on || e->lock_idx >= NUM_LOCKS ||
+        !locks_params[e->lock_idx]) {
+      continue;
+    }
     uint8_t c = e->lock_idx;
     uint8_t param = locks_params[c] - 1;
-    if (!e->is_lock || !e->event_on || !locks_params[c] || param == PARAM_PRG ||
-        param > PARAM_CHP)
-      continue;
+    if (param == PARAM_PRG || param > PARAM_CHP) continue;
 
     // Skip params where find_next_locks found no target
     if (find_array[c]) {
@@ -347,7 +350,7 @@ again:
         return;
       }
       auto &e = events[curidx];
-      if (!e.is_lock)
+      if (!e.is_lock || e.lock_idx >= NUM_LOCKS || !locks_params[e.lock_idx])
         continue;
 
       uint8_t i = e.lock_idx;
@@ -745,6 +748,9 @@ void ExtSeqTrack::reset_params() {
 void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   auto &ev = events[index];
   if (ev.is_lock) {
+    if (ev.lock_idx >= NUM_LOCKS || !locks_params[ev.lock_idx]) {
+      return;
+    }
     // plock
     uint8_t param = locks_params[ev.lock_idx] - 1;
     if (param == PARAM_PRG) {
