@@ -339,6 +339,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
             m--;
           }
         }
+        if (m == 0) { m = 1; }
         if (s % m == 0) {
           trk.set_track_locks_i(n, 1, sample_inc * s + 0);
           uint8_t val = (sample_inc) * (s + 1) + 0;
