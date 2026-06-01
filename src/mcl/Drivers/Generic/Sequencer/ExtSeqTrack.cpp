@@ -1205,7 +1205,7 @@ void ExtSeqTrack::store_mute_state() {
       uint16_t ev_idx, ev_end;
     loc:
       locate(n, ev_idx, ev_end);
-      for (uint8_t m = ev_idx; m < ev_end; m++) {
+      for (uint16_t m = ev_idx; m < ev_end; m++) {
         if (!events[m].is_lock && events[m].event_on) {
           if (del_note(ext_event_tick(n, events[m].micro_timing, ticks_per_step),
                        ticks_per_step, events[m].event_value)) {
