@@ -50,7 +50,7 @@ void SoundBrowserPage::save_sound() {
   sound_name[l+3] = '\0';
   sound_name[l] = '_';
 
-  if (mcl_gui.wait_for_input(sound_name, "Sound Name", 8)) {
+  if (mcl_gui.wait_for_input(sound_name, "Sound Name", sizeof(sound_name) - 1)) {
     char temp_entry[FILE_ENTRY_SIZE];
     strcpy(temp_entry, sound_name);
     strcat(temp_entry, ".snd");

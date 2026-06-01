@@ -702,7 +702,7 @@ bool Project::new_project_prompt(const char *parent) {
   newprj[7 + 1] = project_number / 10 + '0';
   newprj[7 + 2] = project_number % 10 + '0';
 again:
-  if (mcl_gui.wait_for_input(newprj, "New Project:", PRJ_NAME_LEN)) {
+  if (mcl_gui.wait_for_input(newprj, "New Project:", PRJ_NAME_LEN - 1)) {
     char project_path[PRJ_PATH_LEN];
     if (parent != nullptr && parent[0] != '\0') {
       if (!MCLSd::join_path(project_path, sizeof(project_path), parent,
