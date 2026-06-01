@@ -104,11 +104,14 @@ bool MDGlobal::fromSysex(MidiClass *midi) {
   transportOut = IS_BIT_SET(byte, 6);
   decoder.getb(&localOn);
 
-  decoder.get(&drumLeft, 12);
+  decoder.get(&drumLeft, 10);
 
   if (version >= 5) {
     decoder.get8(&programChange);
     decoder.get8(&trigMode);
+  } else {
+    programChange = 0;
+    trigMode = 0;
   }
 
   if (version >= 7) {
