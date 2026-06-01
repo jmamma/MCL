@@ -31,7 +31,7 @@ struct chunk_t {
 
   /// clear the chunk id and length, mark the current chunk inactive.
   void deactivate() {
-    *(uint32_t *)chunk_id = 0;
+    chunk_id[0] = 0;
     chunk_size = 0;
   }
 
@@ -40,7 +40,7 @@ struct chunk_t {
     return 0 == memcmp(chunk_id, T::id, sizeof(chunkid_t));
   }
 
-  bool is_active() const { return *(uint32_t *)chunk_id != 0; }
+  bool is_active() const { return chunk_id[0] != 0; }
 };
 
 struct fmtchunk_t : public chunk_t {

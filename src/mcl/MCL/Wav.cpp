@@ -121,10 +121,10 @@ bool Wav::write_header() {
 
 bool Wav::read_header() {
   DEBUG_PRINT_FN();
-  char header_buf[72];
+  uint8_t header_buf[72];
+  chunk_t chunk;
   uint32_t file_size = file.fileSize();
   uint32_t chunk_offset = 12;
-  chunk_t *pchunk = (chunk_t *)header_buf;
 
   if (!read_data(&header, chunk_offset, 0)) {
     return false;
@@ -146,31 +146,32 @@ bool Wav::read_header() {
     if (!read_data(header_buf, read_size, chunk_offset)) {
       return false;
     }
-    if (pchunk->chunk_size > remaining - sizeof(chunk_t)) {
+    memcpy(&chunk, header_buf, sizeof(chunk));
+    if (chunk.chunk_size > remaining - sizeof(chunk_t)) {
       return false;
     }
-    uint32_t padded_len = pchunk->total_len() + (pchunk->chunk_size & 1);
+    uint32_t padded_len = chunk.total_len() + (chunk.chunk_size & 1);
     if (padded_len > remaining) {
       return false;
     }
-    if (pchunk->is<fmtchunk_t>()) {
-      if (pchunk->chunk_size < sizeof(fmtchunk_t) - sizeof(chunk_t)) {
+    if (chunk.is<fmtchunk_t>()) {
+      if (chunk.chunk_size < sizeof(fmtchunk_t) - sizeof(chunk_t)) {
         return false;
       }
-      header.fmt = *(fmtchunk_t *)pchunk;
+      memcpy(&header.fmt, header_buf, sizeof(header.fmt));
       DEBUG_PRINTLN("parse fmt");
       DEBUG_DUMP(header.fmt.audioFormat);
       DEBUG_DUMP(header.fmt.sampleRate);
       DEBUG_DUMP(header.fmt.bitRate);
       DEBUG_DUMP(header.fmt.numChannels);
-    } else if (pchunk->is<datachunk_t>()) {
-      header.data = *(datachunk_t *)pchunk;
+    } else if (chunk.is<datachunk_t>()) {
+      memcpy(&header.data, header_buf, sizeof(header.data));
       data_offset = chunk_offset + sizeof(datachunk_t);
       DEBUG_PRINTLN("parse data");
       DEBUG_DUMP(data_offset);
-    } else if (pchunk->is<smplchunk_t>()) {
-      if (pchunk->chunk_size >= sizeof(smplchunk_t) - sizeof(chunk_t)) {
-        header.smpl = *(smplchunk_t *)pchunk;
+    } else if (chunk.is<smplchunk_t>()) {
+      if (chunk.chunk_size >= sizeof(smplchunk_t) - sizeof(chunk_t)) {
+        memcpy(&header.smpl, header_buf, sizeof(header.smpl));
         DEBUG_PRINTLN("parse smpl");
       }
     }
