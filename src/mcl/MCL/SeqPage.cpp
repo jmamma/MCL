@@ -950,8 +950,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
 
     if (event->mask == EVENT_BUTTON_PRESSED &&
         key_interface.is_key_down(MDX_KEY_FUNC)) {
-      if (key == MDX_KEY_LEFT || key == MDX_KEY_RIGHT ||
-          key == MDX_KEY_UP || key == MDX_KEY_DOWN) {
+      if (key == MDX_KEY_DOWN) {
         return false;
       }
       SeqTrackMenuOp op;
