@@ -421,15 +421,15 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
   c0_max_sample->val = 0;
   c0_min_sample->val = 0;
 
-  int16_t c0_min_sample16;
-  int16_t c0_max_sample16;
+  int16_t c0_min_sample16 = 0;
+  int16_t c0_max_sample16 = 0;
 
   if (!ignore_second_chan) {
     c1_max_sample->val = 0;
     c1_min_sample->val = 0;
   }
-  int16_t c1_min_sample16;
-  int16_t c1_max_sample16;
+  int16_t c1_min_sample16 = 0;
+  int16_t c1_max_sample16 = 0;
 
   __int24 sample_val24 = 0;
   int16_t sample_val16 = 0;
