@@ -158,8 +158,10 @@ bool MNMKit::fromSysex(MidiClass *midi) {
   decoder.get8(&byte);
   if (byte == 0) {
     commonTiming = 0;
+  } else if (byte <= 6) {
+    commonTiming = 1 << (byte - 1);
   } else {
-    commonTiming = 1 << (1 - byte);
+    commonTiming = 0;
   }
   decoder.get8(&splitKey);
   decoder.get8(&splitRange);
