@@ -22,6 +22,9 @@
 #include "LFOSeqTrack.h"
 #if !defined(__AVR__)
 #include "SPSXTrack.h"
+#include "MCLArrangementFormat.h"
+#include "SpsHostArrBridge.h"
+#include "SpsHostSeqBridge.h"
 #endif
 #include <stddef.h>
 
@@ -43,6 +46,138 @@ bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
   }
   return true;
 }
+
+#if !defined(__AVR__)
+bool build_arrangement_leaf(uint8_t idx, char *out, size_t out_len) {
+  if (out == nullptr || out_len < 8) {
+    return false;
+  }
+  out[0] = (char)('0' + idx / 100);
+  out[1] = (char)('0' + (idx / 10) % 10);
+  out[2] = (char)('0' + idx % 10);
+  out[3] = '.';
+  out[4] = 'a';
+  out[5] = 'r';
+  out[6] = 'r';
+  out[7] = '\0';
+  return true;
+}
+
+bool build_arrangement_relative_path(uint8_t idx, char *out, size_t out_len) {
+  char leaf[8];
+  return build_arrangement_leaf(idx, leaf, sizeof(leaf)) &&
+         MCLSd::join_path(out, (uint8_t)out_len, mclarrfile::kDirName, leaf);
+}
+
+bool build_project_arrangement_path(const char *project, uint8_t idx,
+                                    char *out, size_t out_len) {
+  char rel[16];
+  return build_arrangement_relative_path(idx, rel, sizeof(rel)) &&
+         MCLSd::join_path(out, (uint8_t)out_len, project, rel);
+}
+
+bool arrangement_exists_current_project(uint8_t idx) {
+  char path[16];
+  return build_arrangement_relative_path(idx, path, sizeof(path)) &&
+         SD.exists(path);
+}
+
+bool ensure_arrangement_dir_current_project() {
+  if (SD.exists(mclarrfile::kDirName)) {
+    return true;
+  }
+  return SD.mkdir(mclarrfile::kDirName, true);
+}
+
+bool write_default_arrangement_current_project() {
+  if (!ensure_arrangement_dir_current_project()) {
+    return false;
+  }
+  char path[16];
+  if (!build_arrangement_relative_path(0, path, sizeof(path))) {
+    return false;
+  }
+  if (SD.exists(path)) {
+    return true;
+  }
+
+  File arr_file;
+  if (!arr_file.open(path, O_RDWR | O_CREAT)) {
+    return false;
+  }
+  mclarrfile::Header header;
+  mclarrfile::initHeader(header, "main");
+  bool ok = mcl_sd.write_data(&header, sizeof(header), &arr_file);
+  ok = ok && arr_file.truncate(sizeof(header));
+  ok = ok && arr_file.sync();
+  arr_file.close();
+  return ok;
+}
+
+bool ensure_arrangements_current_project(uint8_t *active_idx) {
+  if (!write_default_arrangement_current_project()) {
+    return false;
+  }
+  if (active_idx != nullptr && !arrangement_exists_current_project(*active_idx)) {
+    *active_idx = 0;
+  }
+  return true;
+}
+
+bool copy_arrangement_files(const char *from_project, const char *to_project) {
+  char to_dir[PRJ_PATH_LEN + 5];
+  if (!MCLSd::join_path(to_dir, sizeof(to_dir), to_project,
+                        mclarrfile::kDirName)) {
+    return false;
+  }
+  if (!SD.exists(to_dir) && !SD.mkdir(to_dir, true)) {
+    return false;
+  }
+
+  bool copied_any = false;
+  for (uint16_t idx = 0; idx <= mclarrfile::kMaxArrangementIndex; ++idx) {
+    char src_path[PRJ_PATH_LEN + 16];
+    char dst_path[PRJ_PATH_LEN + 16];
+    if (!build_project_arrangement_path(from_project, (uint8_t)idx,
+                                        src_path, sizeof(src_path)) ||
+        !build_project_arrangement_path(to_project, (uint8_t)idx,
+                                        dst_path, sizeof(dst_path))) {
+      return false;
+    }
+    if (!SD.exists(src_path)) {
+      continue;
+    }
+    if (!mcl_sd.copy_file(src_path, dst_path)) {
+      return false;
+    }
+    copied_any = true;
+  }
+
+  if (copied_any) {
+    return true;
+  }
+
+  char default_path[PRJ_PATH_LEN + 16];
+  if (!build_project_arrangement_path(to_project, 0, default_path,
+                                      sizeof(default_path))) {
+    return false;
+  }
+  if (SD.exists(default_path)) {
+    return true;
+  }
+  File arr_file;
+  if (!arr_file.open(default_path, O_RDWR | O_CREAT)) {
+    return false;
+  }
+  mclarrfile::Header header;
+  mclarrfile::initHeader(header, "main");
+  bool ok = mcl_sd.write_data(&header, sizeof(header), &arr_file);
+  ok = ok && arr_file.truncate(sizeof(header));
+  ok = ok && arr_file.sync();
+  arr_file.close();
+  return ok;
+}
+#endif
 
 constexpr size_t LEGACY_GRID_TRACK_HEADER_SIZE =
     sizeof(uint8_t) * 3 + sizeof(GridLink);
@@ -577,6 +712,7 @@ void copy_project_config(MCLSysConfigData *dst,
   dst->project_config = 0;
   dst->md_sample_bank = normalized_sample_bank_setting(source.md_sample_bank);
   dst->md_sample_bank_capture = 0;
+  dst->active_arrangement_idx = source.active_arrangement_idx;
 }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
@@ -588,6 +724,7 @@ void normalize_project_config(MCLSysConfigData *data) {
   data->project_config = 0;
   data->md_sample_bank = sample_bank;
   data->md_sample_bank_capture = 0;
+  data->active_arrangement_idx = 0;
 }
 #endif
 
@@ -601,6 +738,7 @@ void apply_project_config(MCLSysConfigData *dst,
          PROJECT_CONFIG_SIZE);
   dst->md_sample_bank = project_config_sample_bank_setting(source);
   dst->md_sample_bank_capture = 0;
+  dst->active_arrangement_idx = source.active_arrangement_idx;
 }
 
 void load_project_sample_bank(uint8_t sample_bank) {
@@ -661,8 +799,15 @@ bool Project::new_project(const char *newprj) {
     return false;
   }
 
-
   draw_wait_popup("CREATING PROJECT");
+
+#if !defined(__AVR__)
+  uint8_t new_active_arrangement_idx = 0;
+  if (!ensure_arrangements_current_project(&new_active_arrangement_idx)) {
+    gfx.alert_error("SD ERROR");
+    return false;
+  }
+#endif
 
   DEBUG_PRINTLN(proj_filename);
   if (SD.exists(proj_filename)) {
@@ -689,7 +834,14 @@ bool Project::new_project(const char *newprj) {
   }
   // Initialiase Project Master File.
   //
+#if !defined(__AVR__)
+  uint8_t previous_active_arrangement_idx = mcl_cfg.active_arrangement_idx;
+  mcl_cfg.active_arrangement_idx = new_active_arrangement_idx;
+#endif
   bool ret = proj.new_project_master_file(proj_filename);
+#if !defined(__AVR__)
+  mcl_cfg.active_arrangement_idx = previous_active_arrangement_idx;
+#endif
   return ret;
 }
 
@@ -1008,6 +1160,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     active_grid_pair = requested_pair;
   }
   bool applied_project_config = false;
+  bool update_header = use_requested_pair;
   uint8_t project_sample_bank = project_config_sample_bank_to_load(cfg);
   if (mcl_cfg.project_config) {
     apply_project_config(&mcl_cfg, cfg);
@@ -1020,7 +1173,22 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     mcl_cfg.md_sample_bank = project_config_sample_bank_setting(cfg);
     mcl_cfg.md_sample_bank_capture = 0;
   }
-  bool update_header = use_requested_pair;
+
+#if !defined(__AVR__)
+  uint8_t active_arrangement_idx = cfg.active_arrangement_idx;
+  if (!ensure_arrangements_current_project(&active_arrangement_idx)) {
+    DEBUG_PRINTLN(F("Could not initialise arrangements"));
+    active_arrangement_idx = 0;
+  }
+  mcl_cfg.active_arrangement_idx = active_arrangement_idx;
+  if (cfg.active_arrangement_idx != active_arrangement_idx) {
+    cfg.active_arrangement_idx = active_arrangement_idx;
+    update_header = true;
+  }
+#else
+  mcl_cfg.active_arrangement_idx = cfg.active_arrangement_idx;
+#endif
+
 #ifdef MCL_HAS_PROJECT_CONVERSION
   update_header = update_header || project_needs_update || write_grid_headers ||
                   project_version < PROJ_VERSION;
@@ -1045,6 +1213,14 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   load_project_sample_bank(project_sample_bank);
   grid_page.row_scan = GRID_LENGTH;
   project_loaded = true;
+#if !defined(__AVR__)
+  sps_host_arr_bridge.notifyDirty(
+      0xFF, (uint8_t)(spsarr::DIRTY_CELLS | spsarr::DIRTY_ACTIVE));
+  sps_host_seq_bridge.notifyDirty(
+      0xFF, (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL |
+                      spsseq::DIRTY_LOCKS | spsseq::DIRTY_META));
+  sps_host_seq_bridge.notifyActive();
+#endif
   return true;
 }
 
@@ -1632,6 +1808,13 @@ bool Project::copy_project(const char *from_project, const char *to_project) {
                         pair, pair);
     copied_pair = copied_pair || ok;
   }
+
+#if !defined(__AVR__)
+  if (ok) {
+    chdir_projects();
+    ok = copy_arrangement_files(from_project, to_project);
+  }
+#endif
 
   if (!copied_pair) {
     ok = false;

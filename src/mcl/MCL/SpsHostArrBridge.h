@@ -1,0 +1,50 @@
+/**
+ * SpsHostArrBridge - MCL side of the SPS arranger cell protocol.
+ */
+#ifndef SPS_HOST_ARR_BRIDGE_H
+#define SPS_HOST_ARR_BRIDGE_H
+
+#if !defined(__AVR__)
+
+#include "MidiSysex.h"
+#include "SpsArrProtocol.h"
+
+class SpsHostArrBridge : public MidiSysexListenerClass {
+public:
+    SpsHostArrBridge()
+        : MidiSysexListenerClass(nullptr, spsarr::kMfrId, spsarr::kSubId0,
+                                 spsarr::kSubId1) {}
+
+    void setup();
+    void end() override;
+
+    void notifyDirty(int track, uint8_t regions);
+
+private:
+    bool ready_ = false;
+
+    void handle(const spsarr::Parsed& p, const uint8_t* b, uint16_t n);
+    void sendFrame(uint8_t cmd, uint8_t tag, const uint8_t* body,
+                   uint16_t bodyLen);
+    void sendErr(uint8_t tag, uint8_t code, uint8_t detail);
+
+    void onHello(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqActive(uint8_t tag);
+    void onReqCells(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqArrMeta(uint8_t tag);
+    void onReqArrClips(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onArrClear(uint8_t tag);
+    void onArrImportGrid(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onArrSelect(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onArrNew(uint8_t tag);
+    void onArrSave(uint8_t tag);
+
+    bool applySetLink(const uint8_t* b, uint16_t n);
+    bool applySetFade(const uint8_t* b, uint16_t n);
+};
+
+extern SpsHostArrBridge sps_host_arr_bridge;
+
+#endif  // !defined(__AVR__)
+#endif  // SPS_HOST_ARR_BRIDGE_H

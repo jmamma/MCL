@@ -91,6 +91,7 @@ public:
   uint8_t project_config;
   uint8_t md_sample_bank;
   uint8_t md_sample_bank_capture;
+  uint8_t active_arrangement_idx;
 };
 
 class MCLSysConfig : public MCLSysConfigData {

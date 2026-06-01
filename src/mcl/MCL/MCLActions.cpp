@@ -56,6 +56,21 @@ void inherit_grid_x_row_name(GridRowHeader row_headers[NUM_GRIDS]) {
   }
 }
 
+bool md_import_can_capture_slot(const GridDeviceTrack &gdt) {
+  if (gdt.group_type != GROUP_DEV) {
+    return false;
+  }
+
+  switch (gdt.track_type) {
+  case MD_TRACK_TYPE:
+  case MDSPSX_TRACK_TYPE:
+  case MDFX_TRACK_TYPE:
+    return true;
+  default:
+    return false;
+  }
+}
+
 } // namespace
 
 DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
@@ -199,6 +214,9 @@ void md_import() {
       continue;
 
     if (gdt->device_idx >= NUM_DEVS)
+      continue;
+
+    if (!md_import_can_capture_slot(*gdt))
       continue;
 
     if (devs[gdt->device_idx] != nullptr &&

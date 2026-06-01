@@ -14,6 +14,8 @@
 #include "MCLSeq.h"
 #include "platform.h"
 #if !defined(__AVR__)
+#include "MCLArrangement.h"
+#include "SpsHostArrBridge.h"  // SPS host arranger dirty notifications
 #include "SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
 #endif
 
@@ -55,9 +57,10 @@ void GridTask::load_queue_handler() {
     mcl_actions.write_original = 1;
     mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
 #if !defined(__AVR__)
-    // Static/immediate load (also runs when stopped): the gui_update->post_seq
-    // path only fires on the running loop-boundary transition, so notify the SPS
-    // host here too. Broad change -> one all-tracks dirty (host re-fetches).
+    // A load changes the active slot state, but not the source grid cell/link
+    // data used by the arranger import. Avoid forcing arranger cell re-fetches
+    // on every playback load boundary.
+    sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
     sps_host_seq_bridge.notifyDirty(0xFF,
         (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
 #endif
@@ -75,9 +78,15 @@ void GridTask::run() {
     mcl_actions_callbacks.StopHardCallback();
     stop_hard_callback = false;
     load_queue.init();
+#if !defined(__AVR__)
+    mcl_arrangement.resetPlayback();
+#endif
   }
   else {
     gui_update();
+#if !defined(__AVR__)
+    mcl_arrangement.tick();
+#endif
     load_queue_handler();
     GridTask::transition_handler();
   }
