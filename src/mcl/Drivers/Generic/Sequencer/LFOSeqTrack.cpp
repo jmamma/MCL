@@ -204,6 +204,13 @@ const uint16_t lfo_sps_phase_inc_hi_table[64] PROGMEM = {
 };
 #endif
 
+uint8_t lfo_stored_length(uint8_t length) {
+  if (length == 0) {
+    return 16;
+  }
+  return length > 64 ? 64 : length;
+}
+
 struct LfoLegacySpeed {
   uint8_t speed;
   uint8_t multiplier;
@@ -259,7 +266,7 @@ void LegacyLFOSeqTrackData::load_data(const SeqLFOData &data) {
   mode = LFOSeqTrack::mode_base(data.mode);
   pattern_mask = data.pattern_mask;
   enable = data.enable;
-  length = data.length;
+  length = lfo_stored_length(data.length);
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
     params[i] = data.params[i];
   }
@@ -315,7 +322,7 @@ void LFOSeqTrack::load_data(const SeqLFOData &data) {
   mode = data.mode;
   pattern_mask = data.pattern_mask;
   enable = data.enable;
-  length = data.length ? data.length : 16;
+  length = lfo_stored_length(data.length);
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
     params[i] = data.params[i];
     last_wav_value[i] = 255;
@@ -470,7 +477,7 @@ void LFOSeqTrack::convert_legacy_data(const LegacyLFOSeqTrackData &legacy_data,
   data->wav_type = lfo_legacy_shape_to_sps(legacy_wav_type);
   data->pattern_mask = legacy_data.pattern_mask;
   data->enable = legacy_data.enable;
-  data->length = legacy_data.length ? legacy_data.length : 16;
+  data->length = lfo_stored_length(legacy_data.length);
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
     data->params[i] = legacy_data.params[i];
   }
