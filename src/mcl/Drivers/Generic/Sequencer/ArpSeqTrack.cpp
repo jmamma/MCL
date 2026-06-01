@@ -206,6 +206,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
       default:
         goto next1;
     }
+    if (len >= ARP_MAX_NOTES) { break; }
     notes[len] = note;
     len++;
   }
@@ -221,6 +222,7 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
       default:
         goto next2;
     }
+    if (len >= ARP_MAX_NOTES) { break; }
     notes[len++] = note;
   }
   next2:
@@ -228,12 +230,15 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   case ARP_PINKUP:
   case ARP_THUMBUP:
     if (num_of_notes == 1) {
+      if (len >= ARP_MAX_NOTES) { break; }
       notes[len++] = sort_up[0];
     }
     for (uint8_t i = 0; i < num_of_notes - 1; i++) {
       note = sort_up[i];
+      if (len >= ARP_MAX_NOTES) { break; }
       notes[len++] = note;
       note = top_note;
+      if (len >= ARP_MAX_NOTES) { break; }
       notes[len++] = note;
     }
 
@@ -243,8 +248,10 @@ void ArpSeqTrack::render(uint8_t mode_, uint8_t oct_, uint8_t fine_tune_, uint8_
   case ARP_THUMBDOWN:
     for (uint8_t i = 1; i < num_of_notes; i++) {
       note = sort_up[num_of_notes - i - 1];
+      if (len >= ARP_MAX_NOTES) { break; }
       notes[len++] = note;
       note = mode == ARP_PINKDOWN ? sort_up[0] : top_note;
+      if (len >= ARP_MAX_NOTES) { break; }
       notes[len++] = note;
     }
     break;
