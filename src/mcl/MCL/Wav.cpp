@@ -1,5 +1,17 @@
 #include "Wav.h"
 #include "MidiSDS.h"
+
+static inline __int24 wav_abs_peak(__int24 sample) {
+  int32_t value = (int32_t)sample;
+  if (value >= 0) {
+    return sample;
+  }
+  if (value <= -8388607L) {
+    return (__int24)8388607L;
+  }
+  return (__int24)-value;
+}
+
 bool Wav::close(bool write) {
   DEBUG_PRINT_FN();
   bool ret;
@@ -401,14 +413,16 @@ __int24 Wav::find_peak(uint8_t channel, uint32_t num_samples,
              &c1_max_sample, &c1_min_sample);
   if (channel == 0) {
 
-    if (abs(c0_min_sample.val) > c0_max_sample.val) {
-      return abs(c0_min_sample.val);
+    __int24 c0_min_abs = wav_abs_peak(c0_min_sample.val);
+    if (c0_min_abs > c0_max_sample.val) {
+      return c0_min_abs;
     }
     return c0_max_sample.val;
   }
 
-  if (abs(c1_min_sample.val) > c1_max_sample.val) {
-    return abs(c1_min_sample.val);
+  __int24 c1_min_abs = wav_abs_peak(c1_min_sample.val);
+  if (c1_min_abs > c1_max_sample.val) {
+    return c1_min_abs;
   }
   return c1_max_sample.val;
 }
@@ -482,7 +496,8 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
       // 16bit - fast mode.
       case 2:
 
-        sample_val16 = ((int16_t *)&buffer)[buf_index++];
+        memcpy(&sample_val16, buffer + ((uint16_t)buf_index++ << 1),
+               sizeof(sample_val16));
 
         if (sample_val16 < c0_min_sample16) {
           c0_min_sample16 = sample_val16;
@@ -494,7 +509,8 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
           c0_max_sample->pos = sample + sample_index;
         }
         if (!ignore_second_chan) {
-          sample_val16 = ((int16_t *)&buffer)[buf_index++];
+          memcpy(&sample_val16, buffer + ((uint16_t)buf_index++ << 1),
+                 sizeof(sample_val16));
           if (sample_val16 < c1_min_sample16) {
             c1_min_sample16 = sample_val16;
             c1_min_sample->pos = sample + sample_index;
@@ -512,7 +528,9 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
       case 3:
         // 24bit
 
-        sample_val24 = ((__int24 *)&buffer)[buf_index++];
+        memcpy(&sample_val24,
+               buffer + ((uint16_t)buf_index++ * sizeof(sample_val24)),
+               sizeof(sample_val24));
 
         if (sample_val24 < c0_min_sample->val) {
           c0_min_sample->val = sample_val24;
@@ -524,7 +542,9 @@ void Wav::find_peaks(uint32_t num_samples, uint32_t sample_index,
           c0_max_sample->pos = sample + sample_index;
         }
         if (!ignore_second_chan) {
-          sample_val24 = ((__int24 *)&buffer)[buf_index++];
+          memcpy(&sample_val24,
+                 buffer + ((uint16_t)buf_index++ * sizeof(sample_val24)),
+                 sizeof(sample_val24));
           if (sample_val24 < c1_min_sample->val) {
             c1_min_sample->val = sample_val24;
             c1_min_sample->pos = sample + sample_index;
@@ -643,8 +663,8 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
   DEBUG_PRINTLN(buffer_size);
   DEBUG_PRINTLN(gain);
 
-  bool is_signed;
-
+  float sample_hi = (float)(sample_max - 1);
+  float sample_lo = -(float)sample_max;
   uint32_t sample_end = sample_index + num_of_samples;
   for (uint32_t n = 0; n < sample_end; n += read_size) {
     // Adjust read size if too large
@@ -667,32 +687,39 @@ bool Wav::apply_gain(float gain, uint8_t channel, uint32_t num_samples,
         switch (sample_size) {
         case 2:
           //16bit
-          sample_val16 = ((int16_t *)&buffer)[buf_index];
-          sample_val16 = (int16_t)((float)sample_val16 * (float)gain);
-          is_signed = (sample_val16 < 0);
-          if ((uint32_t)abs(sample_val16) > sample_max) {
-            sample_val16 = sample_max;
-            if (is_signed) {
-              sample_val16 *= -1;
-              sample_val16 -= 1;
+          memcpy(&sample_val16, buffer + ((uint16_t)buf_index << 1),
+                 sizeof(sample_val16));
+          {
+            float scaled = (float)sample_val16 * gain;
+            if (scaled > sample_hi) {
+              sample_val16 = (int16_t)(sample_max - 1);
+            } else if (scaled < sample_lo) {
+              sample_val16 = (int16_t)-((int32_t)sample_max);
+            } else {
+              sample_val16 = (int16_t)scaled;
             }
           }
 
-          ((int16_t *)&buffer)[buf_index] = sample_val16;
+          memcpy(buffer + ((uint16_t)buf_index << 1), &sample_val16,
+                 sizeof(sample_val16));
           break;
         case 3:
           //24bit
-          sample_val24 = ((__int24 *)&buffer)[buf_index];
-          sample_val24 = (__int24)((float)sample_val24 * (float)gain);
-          is_signed = ((int32_t)sample_val24 < 0);
-          if ((uint32_t)abs(sample_val24) > sample_max) {
-            sample_val24 = sample_max;
-            if (is_signed) {
-              sample_val24 *= -1;
-              sample_val24 -= 1;
+          memcpy(&sample_val24,
+                 buffer + ((uint16_t)buf_index * sizeof(sample_val24)),
+                 sizeof(sample_val24));
+          {
+            float scaled = (float)(int32_t)sample_val24 * gain;
+            if (scaled > sample_hi) {
+              sample_val24 = (__int24)(int32_t)(sample_max - 1);
+            } else if (scaled < sample_lo) {
+              sample_val24 = (__int24)-((int32_t)sample_max);
+            } else {
+              sample_val24 = (__int24)(int32_t)scaled;
             }
           }
-          ((__int24 *)&buffer)[buf_index] = sample_val24;
+          memcpy(buffer + ((uint16_t)buf_index * sizeof(sample_val24)),
+                 &sample_val24, sizeof(sample_val24));
           break;
         }
       }
