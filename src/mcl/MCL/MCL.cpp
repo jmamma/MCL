@@ -501,6 +501,7 @@ bool mcl_handleEvent(gui_event_t *event) {
             mcl.setPage(SEQ_STEP_PAGE);
           return true;
         }
+        break;
       }
       case MDX_KEY_REALTIME: {
 #if !defined(__AVR__)
