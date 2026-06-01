@@ -367,6 +367,9 @@ bool WAV_AVR_NOINLINE Wav::read_samples(void *data, uint32_t num_samples,
   uint32_t full_run =
       ((sizeof(tmp_buf) / header.fmt.numChannels) / sample_size) * sample_size *
       header.fmt.numChannels;
+  if (full_run == 0) {
+    return false;
+  }
   while (read_size > 0) {
     uint32_t current_run = min(full_run, read_size * header.fmt.numChannels);
     bool ret = read_data(tmp_buf, current_run, position);

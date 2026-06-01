@@ -92,6 +92,9 @@ read_wav_packet_channel0(Wav &wav, uint8_t *data, uint8_t num_samples,
   char tmp_buf[80];
   uint8_t full_run =
       ((sizeof(tmp_buf) / channels) / sample_size) * sample_size * channels;
+  if (full_run == 0) {
+    return false;
+  }
   position += wav.data_offset;
   while (frame_read_size > 0) {
     uint8_t current_run = min((uint16_t)full_run, frame_read_size);
