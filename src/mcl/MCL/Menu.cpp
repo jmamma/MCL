@@ -161,19 +161,15 @@ uint8_t *MenuBase::get_dest_variable(uint8_t item_n) {
     const menu_item_t *item = get_item(item_n);
     if (item == nullptr) { return nullptr; }
 
-    uint8_ptr_t p;
+    uintptr_t p;
     #if defined(__AVR__)
-        p.word = pgm_read_word(&menu_target_param[item->destination_var_id]);
+        p = pgm_read_word(&menu_target_param[item->destination_var_id]);
     #elif defined(PLATFORM_DESKTOP) || (UINTPTR_MAX > 0xFFFFFFFFu)
-        // 64-bit hosts: read full pointer via the .ptr slot. The {low,
-        // high} word reads on 32-bit only cover the bottom 4 bytes and
-        // would truncate.
-        p.ptr = const_cast<uint8_t*>(menu_target_param[item->destination_var_id]);
+        p = (uintptr_t)menu_target_param[item->destination_var_id];
     #else
-        p.words.low = pgm_read_word(&menu_target_param[item->destination_var_id]);
-        p.words.high = pgm_read_word(((uint16_t*)&menu_target_param[item->destination_var_id]) + 1);
+        memcpy(&p, &menu_target_param[item->destination_var_id], sizeof(p));
     #endif
-    return p.ptr;
+    return (uint8_t *)p;
 }
 
 uint8_t MenuBase::get_option_range(uint8_t item_n) {
