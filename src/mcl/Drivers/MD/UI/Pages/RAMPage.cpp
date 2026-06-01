@@ -256,6 +256,7 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
           uint8_t m = mode;
           if (m == 4) { m = (get_random_byte() > 64) ? s : s + 1; }
           else { while (m > slices) m--; }
+          if (m == 0) { m = 1; }
           if (s % m == 0) {
             trk.set_track_locks_i(n, 1, sample_inc * s);
             trk.set_track_locks_i(n, 0, sample_inc * (s + 1));
