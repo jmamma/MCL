@@ -30,6 +30,9 @@ void TextInputPage::init() {
 }
 
 void TextInputPage::init_text(char *text_, const char *title_, uint8_t len) {
+  if (len >= sizeof(text)) {
+    len = sizeof(text) - 1;
+  }
   textp = text_;
   title = title_;
   length = len;
