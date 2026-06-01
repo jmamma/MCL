@@ -118,6 +118,12 @@ void MidiSDSSysexListenerClass::dump_header(const SysexView &view) {
   midi_sds.loopType = view.getByte(i++);
 
   DEBUG_PRINTLN(midi_sds.sampleLength);
+  if (midi_sds.samplePeriod == 0) {
+    midi_sds.sendCancelMessage();
+    midi_sds.cancel();
+    midi_sds.state = SDS_READY;
+    return;
+  }
   uint32_t sampleRate = 1000000000 / midi_sds.samplePeriod + 1;
 
   DEBUG_PRINTLN(F("MidiSDS DumpHeader Received"));
