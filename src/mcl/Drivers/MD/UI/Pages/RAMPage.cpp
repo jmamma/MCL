@@ -35,11 +35,13 @@ static void set_ram_rec_state(uint8_t page_id, uint8_t state) {
   }
 }
 
+static uint8_t ram_steps_from_length_encoder(uint8_t length_encoder) NOINLINE();
 static uint8_t ram_steps_from_length_encoder(uint8_t length_encoder) {
   uint8_t steps = length_encoder * 4;
   return steps == 0 ? 4 : steps;
 }
 
+static uint8_t ram_slices_from_slice_encoder(uint8_t slice_encoder) NOINLINE();
 static uint8_t ram_slices_from_slice_encoder(uint8_t slice_encoder) {
   return slice_encoder >= 7 ? 128 : (uint8_t)(1u << slice_encoder);
 }
