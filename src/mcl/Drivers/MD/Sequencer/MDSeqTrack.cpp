@@ -734,7 +734,8 @@ void MDSeqTrack::send_parameter_locks_inline(uint8_t step, bool trig,
     if (send) {
       if (is_midi_model && p < 21) {
         process_note_locks(p, val, ccs);
-        send_ccs |= (p > 4 && p < 8) | (p > 8) && (p & 1) | (p == 20);
+        send_ccs |= (p > 4 && p < 8) || ((p > 8) && (p & 1)) ||
+                    (p == 20);
       }
 
       else {
