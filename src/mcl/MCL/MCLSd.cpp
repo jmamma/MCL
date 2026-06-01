@@ -10,6 +10,19 @@ namespace {
 
 constexpr uint8_t kSdPathLen = 128;
 
+#ifdef __AVR__
+constexpr uint8_t kRemoveDirMaxDepth = 8;
+
+bool is_root_path(const char *path) {
+  if (path == nullptr || path[0] == '\0') {
+    return true;
+  }
+  while (*path == '/') {
+    path++;
+  }
+  return *path == '\0';
+}
+#else
 bool copy_sd_path(char *dst, uint8_t dst_len, const char *src) {
   if (dst_len == 0) {
     return false;
@@ -47,6 +60,7 @@ bool parent_path(char *path) {
   }
   return true;
 }
+#endif
 
 } // namespace
 
@@ -352,6 +366,59 @@ bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
 }
 
 bool MCLSd::remove_dir(const char *dir) {
+#ifdef __AVR__
+  if (is_root_path(dir)) {
+    return false;
+  }
+
+  struct Remover {
+    static bool remove(const char *path, uint8_t depth) {
+      if (depth > kRemoveDirMaxDepth) {
+        return false;
+      }
+
+      File d;
+      if (!d.open(path, O_READ) || !d.isDirectory()) {
+        d.close();
+        return false;
+      }
+      d.rewind();
+
+      File entry_file;
+      char entry[FILE_ENTRY_SIZE];
+      char child[kSdPathLen];
+
+      while (entry_file.openNext(&d, O_READ)) {
+        entry_file.getName(entry, sizeof(entry));
+        bool is_dir = entry_file.isDirectory();
+        entry_file.close();
+
+        if (entry[0] == '\0' || entry[0] == '.') {
+          continue;
+        }
+        if (!MCLSd::join_path(child, sizeof(child), path, entry)) {
+          d.close();
+          return false;
+        }
+        if (is_dir) {
+          if (!remove(child, depth + 1)) {
+            d.close();
+            return false;
+          }
+        } else if (!SD.remove(child)) {
+          d.close();
+          return false;
+        }
+      }
+
+      entry_file.close();
+      d.close();
+      return SD.rmdir(path);
+    }
+  };
+
+  return Remover::remove(dir, 0);
+#else
   char root[kSdPathLen];
   char path[kSdPathLen];
   if (!copy_sd_path(root, sizeof(root), dir)) {
@@ -421,6 +488,7 @@ bool MCLSd::remove_dir(const char *dir) {
       return false;
     }
   }
+#endif
 }
 
 #ifndef __AVR__
