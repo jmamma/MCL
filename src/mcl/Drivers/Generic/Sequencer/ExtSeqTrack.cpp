@@ -846,11 +846,7 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     SET_BIT128_P(mute_mask, s);
   }
 
-  if (mute_state_pending) {
-    mute_state = SEQ_MUTE_ON;
-    mute_state_pending = false;
-    buffer_notesoff();
-  }
+  apply_pending_mute();
 
   if (notesoff_pending) {
     notesoff_pending = false;
@@ -1448,6 +1444,16 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   mute_state = old_mute_state;
 }
 
+void ExtSeqTrack::apply_pending_mute() {
+  if (!mute_state_pending) {
+    return;
+  }
+
+  mute_state = SEQ_MUTE_ON;
+  mute_state_pending = false;
+  buffer_notesoff();
+}
+
 void ExtSeqTrack::mute_on() {
   if (MidiClock.state == 2) {
     mute_state_pending = true;
@@ -1466,18 +1472,16 @@ void ExtSeqTrack::toggle_mute() {
 }
 
 void ExtSeqTrack::transpose(int8_t offset) {
-    uint8_t old_mute_state = mute_state;
-    mute_on();
-    while (mute_state_pending && MidiClock.state == 2) {
-      platform_poll();
+  uint8_t old_mute_state = mute_state;
+  mute_on();
+  apply_pending_mute();
+  for (uint16_t ev_idx = 0; ev_idx < event_count; ++ev_idx) {
+    auto &ev = events[ev_idx];
+    if (!ev.is_lock) {
+      int16_t note = ev.event_value + offset;
+      uint8_t new_note = min(max(0, note), 127);
+      ev.event_value = new_note;
     }
-    for (uint16_t ev_idx = 0; ev_idx < event_count; ++ev_idx) {
-      auto &ev = events[ev_idx];
-      if (!ev.is_lock) {
-        int16_t note = ev.event_value + offset;
-        uint8_t new_note = min(max(0,note),127);
-        ev.event_value = new_note;
-      }
-    }
-    mute_state = old_mute_state;
+  }
+  mute_state = old_mute_state;
 }

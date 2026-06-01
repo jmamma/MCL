@@ -327,25 +327,26 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
       }
 
       // Preserve existing link settings before save.
+      GridLink saved_link;
       TrackLoadFadeData saved_load_fade;
       saved_load_fade.init();
       if (row_headers[grid_idx].track_type[track_idx] != EMPTY_TRACK_TYPE) {
-        EmptyTrack existing_track;
-        auto *loaded_existing = existing_track.load_from_grid_512(i, row);
+        auto *loaded_existing = empty_track.load_from_grid_512(i, row);
         if (loaded_existing == nullptr) {
           continue;
         }
-        memcpy(&empty_track.link, &loaded_existing->link, sizeof(GridLink));
+        saved_link = loaded_existing->link;
         const TrackLoadFadeData *existing_load_fade =
             loaded_existing->load_fade_data();
         if (existing_load_fade != nullptr) {
           saved_load_fade = *existing_load_fade;
         }
       } else {
-        empty_track.link.init(row);
+        saved_link.init(row);
       }
       auto pdevice_track =
           ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);
+      pdevice_track->link = saved_link;
       TrackLoadFadeData *load_fade = pdevice_track->load_fade_data();
       if (load_fade != nullptr) {
         *load_fade = saved_load_fade;

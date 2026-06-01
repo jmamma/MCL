@@ -51,6 +51,10 @@ public:
                               SeqTrack *seq_track) override;
 };
 
+static_assert(MEMORY_ALIGN(sizeof(A4Track) - sizeof(void *)) <=
+              GRID2_TRACK_LEN,
+              "A4Track outgrew GRID2_TRACK_LEN");
+
 #if !defined(__AVR__)
 class ATTR_PACKED() A4MidiTrack : public MidiBackedDeviceTrack {
 public:

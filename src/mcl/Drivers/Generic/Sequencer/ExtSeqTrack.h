@@ -277,6 +277,7 @@ public:
     }
     return SeqTrack::request_speed_change(new_speed);
   }
+  void apply_pending_mute();
   void mute_on();
   virtual void transpose(int8_t offset) override;
 };

@@ -81,8 +81,8 @@ constexpr size_t NUM_LOCKS = 8;
 // MDTrack 534, plus SeqTrackModData 51, native swing storage 9,
 // plus TrackLoadFadeData 8
 // ExtTrack 1754
-// A4Track 2094
-// EmptyTrack 2094
+// A4Track 2153
+// EmptyTrack matches GRID2_TRACK_LEN storage
 //
 // MDLFOTrack 226
 // MDRouteTrack 39
@@ -100,7 +100,7 @@ constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(603); // MDTrack + SeqTrackModDa
 // MCL structs past the 2128-byte budget that AVR assumes.
 constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(GRID_SLOT_BYTES);
 #else
-constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2128);
+constexpr size_t GRID2_TRACK_LEN = MEMORY_ALIGN(2160);
 #endif
 
 constexpr size_t DEVICE_TRACK_LEN = MEMORY_ALIGN(7);

@@ -19,7 +19,7 @@ public:
   active = EMPTY_TRACK_TYPE;
   }
 
-  virtual uint16_t get_track_size() { return sizeof(EmptyTrack); }
+  virtual uint16_t get_track_size() { return _sizeof(); }
   virtual bool store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track = nullptr, uint8_t merge = 0, bool online = false) {
     // should not reach here
     DEBUG_PRINT_FN();
@@ -39,3 +39,13 @@ public:
   bool store_track_in_grid(int track, int32_t column, int32_t row);
 */
 };
+
+#ifdef EXT_TRACKS
+static_assert(MEMORY_ALIGN(sizeof(EmptyTrack) - sizeof(void *)) <=
+              GRID2_TRACK_LEN,
+              "EmptyTrack outgrew GRID2_TRACK_LEN");
+#else
+static_assert(MEMORY_ALIGN(sizeof(EmptyTrack) - sizeof(void *)) <=
+              GRID1_TRACK_LEN,
+              "EmptyTrack outgrew GRID1_TRACK_LEN");
+#endif
