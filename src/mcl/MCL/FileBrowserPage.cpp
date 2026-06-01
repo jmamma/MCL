@@ -50,16 +50,21 @@ void FileBrowserPage::build_delete_message(char *dst, uint8_t dst_len,
   if (dst_len == 0) {
     return;
   }
-  strncpy_P(dst, mclstr_delete_space, dst_len);
-  dst[dst_len - 1] = '\0';
-  uint8_t used = strlen(dst);
-  if (used >= dst_len - 1) {
-    dst[dst_len - 1] = '\0';
-    return;
+  uint8_t used = 0;
+  const char *prefix = mclstr_delete_space;
+  while (used + 1 < dst_len) {
+    char c = pgm_read_byte(prefix++);
+    if (c == '\0') {
+      break;
+    }
+    dst[used++] = c;
   }
-  strncat(dst, entry, dst_len - used - 2);
-  used = strlen(dst);
-  dst[used++] = '?';
+  while (used + 2 < dst_len && *entry != '\0') {
+    dst[used++] = *entry++;
+  }
+  if (used + 1 < dst_len) {
+    dst[used++] = '?';
+  }
   dst[used] = '\0';
 }
 
