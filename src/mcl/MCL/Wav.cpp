@@ -183,8 +183,8 @@ bool Wav::read_header() {
   }
 
   if ((header.fmt.audioFormat != 1) || (header.fmt.numChannels == 0) ||
-      (header.fmt.blockAlign == 0) || (header.fmt.bitRate > 28) ||
-      (header.fmt.bitRate < 8)) {
+      (header.fmt.sampleRate == 0) || (header.fmt.blockAlign == 0) ||
+      (header.fmt.bitRate > 28) || (header.fmt.bitRate < 8)) {
     DEBUG_PRINTLN(F("header bitRate is not valid:"));
     DEBUG_PRINTLN(header.fmt.bitRate);
     return false;
