@@ -2,6 +2,7 @@
 #include "MCLSeq.h"
 #include "SeqTrackUtil.h"
 #if !defined(__AVR__)
+#include "SpsHostArrBridge.h"  // SPS<->MCL arranger cell listener
 #include "SpsHostSeqBridge.h"  // SPS<->MCL seq control listener
 #endif
 #include "MCLGUI.h"
@@ -34,6 +35,81 @@ bool seq_grid_x_runs_md_tracks() {
   return true;
 #endif
 }
+
+#if !defined(__AVR__)
+uint32_t legacy_tick_count_from_div192(uint32_t div192) {
+  uint32_t divider = MidiClock.clock_interpolation / LEGACY_SEQ_INTERPOLATION;
+  if (divider == 0) {
+    divider = 1;
+  }
+  return (div192 + divider - 1u) / divider;
+}
+
+template <typename Track>
+void sync_seq_track_phase(Track &track, uint32_t track_ticks) {
+  track.reset();
+  const uint16_t ticks_per_step = track.get_ticks_per_step();
+  const uint16_t length = track.length ? track.length : 1;
+  if (ticks_per_step == 0) {
+    return;
+  }
+
+  const uint32_t total_steps = track_ticks / ticks_per_step;
+  const uint16_t tick_in_step = track_ticks % ticks_per_step;
+  track.step_count = (uint8_t)(total_steps % length);
+  track.mod12_counter = tick_in_step == 0
+                            ? (uint8_t)0xffu
+                            : (uint8_t)(tick_in_step - 1u);
+  track.count_down = 0;
+  track.cache_loaded = true;
+}
+
+void sync_md_track_phase(MDSeqTrack &track, uint32_t track_ticks) {
+  sync_seq_track_phase(track, track_ticks);
+  track.cur_event_idx = track.get_lockidx(track.step_count);
+}
+
+#ifdef EXT_TRACKS
+void sync_ext_track_phase(ExtSeqTrack &track, uint32_t track_ticks) {
+  sync_seq_track_phase(track, track_ticks);
+  uint16_t end = 0;
+  track.locate(track.step_count, track.cur_event_idx, end);
+}
+#endif
+
+void sync_midi_track_phase(MidiSeqTrack &track, uint32_t div192) {
+  track.reset();
+  const uint16_t ticks_per_step = track.ticks_per_step();
+  const uint16_t length = track.length ? track.length : 1;
+  if (ticks_per_step == 0) {
+    return;
+  }
+
+  const uint32_t total_steps = div192 / ticks_per_step;
+  track.step_count = (uint8_t)(total_steps % length);
+  track.tick_counter = (uint16_t)(div192 % ticks_per_step);
+  const uint8_t legacy_tps = SeqTrack::get_speed_multiplier_int(track.speed);
+  track.mod12_counter = (uint8_t)(((uint32_t)track.tick_counter * legacy_tps) /
+                                  ticks_per_step);
+  track.cur_event_idx = track.seq_data.locate_start(track.step_count);
+}
+
+void sync_spsx_track_phase(SPSXSeqTrack &track, uint32_t div192) {
+  track.reset();
+  const uint16_t ticks_per_step = track.get_ticks_per_step();
+  const uint16_t length = track.length ? track.length : 1;
+  if (ticks_per_step == 0) {
+    return;
+  }
+
+  const uint32_t total_steps = div192 / ticks_per_step;
+  track.step_count = (uint8_t)(total_steps % length);
+  track.tick_counter = (uint16_t)(div192 % ticks_per_step);
+  track.update_legacy_progress_counter(ticks_per_step);
+  track.cur_event_idx = track.get_lockidx(track.step_count);
+  track.first_run = total_steps < length;
+}
+#endif
 
 bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
                      uint8_t cc, uint8_t value, uint8_t *track_out,
@@ -437,6 +513,7 @@ void MCLSeq::setup() {
   configure_clock_interpolation();
   TrackLoadFadeRunner::clear();
 #if !defined(__AVR__)
+  sps_host_arr_bridge.setup();  // register SPS host arranger cell listener
   sps_host_seq_bridge.setup();  // register SPS host sequencer-control listener
 #endif
 
@@ -697,6 +774,66 @@ void MCLSeq::onMidiStartImmediateCallback(uint32_t clock_count) {
     oled_display.textbox_P(mclstr_rec);
   }
 }
+
+#if !defined(__AVR__)
+void MCLSeq::set_transport_position(uint32_t host_tick96) {
+  const uint32_t div192 = MidiClock.host_transport_tick96_to_div192(host_tick96);
+  uint32_t divider = MidiClock.clock_interpolation / LEGACY_SEQ_INTERPOLATION;
+  if (divider == 0) {
+    divider = 1;
+  }
+  legacy_tick_counter = (uint8_t)(div192 % divider);
+  MDSeqTrack::md_trig_mask = 0;
+  MDSeqTrack::load_machine_cache = 0;
+  clear_track_trigs(DeviceIdx::Primary);
+  clear_track_trigs(DeviceIdx::Secondary);
+#ifdef LFO_TRACKS
+  for (uint8_t i = 0; i < num_grid_x_lfo_tracks; i++) {
+    grid_x_lfo_tracks[i].reset_runtime();
+  }
+#ifdef EXT_TRACKS
+  for (uint8_t i = 0; i < num_grid_y_lfo_tracks; i++) {
+    grid_y_lfo_tracks[i].reset_runtime();
+  }
+#endif
+#endif
+
+  const uint32_t legacy_ticks = legacy_tick_count_from_div192(div192);
+
+  if (using_spsx_tracks) {
+    neighbor_trig_mask = 0;
+    fill_mask = 0;
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
+      sync_spsx_track_phase(spsx_tracks[i], div192);
+    }
+  } else {
+    for (uint8_t i = 0; i < num_md_tracks; i++) {
+      sync_md_track_phase(md_tracks[i], legacy_ticks);
+    }
+  }
+
+  for (uint8_t i = 0; i < num_md_tracks; i++) {
+    sync_seq_track_phase(md_arp_tracks[i], legacy_ticks);
+  }
+
+#ifdef EXT_TRACKS
+  for (uint8_t i = 0; i < num_ext_tracks; i++) {
+    sync_ext_track_phase(ext_tracks[i], legacy_ticks);
+    sync_seq_track_phase(ext_arp_tracks[i], legacy_ticks);
+  }
+#endif
+
+  for (uint8_t i = 0; i < num_midi_tracks; i++) {
+    sync_midi_track_phase(midi_tracks[i], div192);
+  }
+
+  for (uint8_t i = 0; i < NUM_AUX_TRACKS; i++) {
+    sync_seq_track_phase(aux_tracks[i], legacy_ticks);
+  }
+  sync_seq_track_phase(mdfx_track, legacy_ticks);
+  sync_seq_track_phase(perf_track, legacy_ticks);
+}
+#endif
 
 void MCLSeq::onMidiStartCallback(uint32_t clock_count) {
   (void)clock_count;

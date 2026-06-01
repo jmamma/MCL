@@ -76,6 +76,11 @@ a 12-byte desktop pointer event (`type/buttons/modifiers/reserved/x/y/dx/dy`)
 into `out` and returns the number of bytes written, or `0` when no event is
 queued.
 
+Minor 8 adds `mcl_set_transport_position(uint32_t tick96)`, letting the host
+apply absolute SPS tick96 transport positions after DAW seek/loop/start
+discontinuities. It also adds diagnostic clock IDs `300..303` for headless
+sync probes.
+
 ## Naming convention
 
 - Host → wasm (imports MCL calls): `host_*`. Registered with WAMR under
@@ -86,7 +91,9 @@ queued.
 - `mcl_debug_value(id)` is an optional read-only diagnostic export for SPS
   integration tests. Current IDs are: `1=GridIOPage::track_select`,
   `2=note_interface.notes_on`, `3=note_interface.notes_off`,
-  `4=mcl_debug_state()`, `5=mcl_cfg.track_type_select`.
+  `4=mcl_debug_state()`, `5=mcl_cfg.track_type_select`,
+  `300=MidiClock.div16th_counter`, `301=MidiClock.div96th_counter`,
+  `302=MidiClock.div192th_counter`, `303=packed clock state/phase`.
 
 ## Files in this directory
 

@@ -279,6 +279,9 @@ public:
     }
     refreshClockInterpolationInterval();
   }
+
+  uint32_t host_transport_tick96_to_div192(uint32_t host_tick96) const;
+  void set_transport_position(uint32_t host_tick96);
 #endif
 
   ALWAYS_INLINE() uint32_t div16th_to_div192(uint32_t div16th,

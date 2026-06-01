@@ -170,6 +170,9 @@ public:
   void onMidiContinueCallback(uint32_t clock_count);
   void onMidiStopCallback(uint32_t clock_count);
   void configure_clock_interpolation();
+#if !defined(__AVR__)
+  void set_transport_position(uint32_t host_tick96);
+#endif
   bool legacy_tick_due();
   void seq();
 };

@@ -233,6 +233,54 @@ void MidiClockClass::setSongPositionPtr(uint16_t pos) {
   */
 }
 
+#if !defined(__AVR__)
+uint32_t MidiClockClass::host_transport_tick96_to_div192(
+    uint32_t host_tick96) const {
+  static constexpr uint32_t kHostTicksPer16th = 6u * 16u;
+  const uint32_t div16th = host_tick96 / kHostTicksPer16th;
+  const uint32_t host_subtick = host_tick96 % kHostTicksPer16th;
+  uint32_t ticks_per_16th = div192th_ticks_per_16th();
+  if (ticks_per_16th == 0) {
+    ticks_per_16th = 12;
+  }
+  return div16th * ticks_per_16th +
+         (host_subtick * ticks_per_16th) / kHostTicksPer16th;
+}
+
+void MidiClockClass::set_transport_position(uint32_t host_tick96) {
+  static constexpr uint32_t kHostTicksPer16th = 6u * 16u;
+  const uint32_t div16th = host_tick96 / kHostTicksPer16th;
+  const uint32_t host_subtick = host_tick96 % kHostTicksPer16th;
+  const uint32_t div192 = host_transport_tick96_to_div192(host_tick96);
+  uint32_t ticks_per_16th = div192th_ticks_per_16th();
+  if (ticks_per_16th == 0) {
+    ticks_per_16th = 12;
+  }
+  uint8_t interpolation = clock_interpolation;
+  if (interpolation == 0) {
+    interpolation = 2;
+  }
+
+  div192th_counter = div192;
+  div96th_counter = div192 / interpolation;
+  div32th_counter = div16th * 2u +
+                    ((host_subtick >= (kHostTicksPer16th / 2u)) ? 1u : 0u);
+  div16th_counter = (uint16_t)div16th;
+  mod6_counter = (uint8_t)(div96th_counter % 6u);
+  inmod6_counter = mod6_counter;
+  mod12_counter = (uint8_t)(div192 % ticks_per_16th);
+  step_counter = (uint8_t)((div16th % 4u) + 1u);
+  beat_counter = (uint8_t)(((div16th / 4u) % 4u) + 1u);
+  bar_counter = (uint8_t)(((div16th / 16u) % 100u) + 1u);
+  div192th_counter_last = div192 == 0 ? (uint32_t)-1 : div192 - 1u;
+  div96th_counter_last =
+      div96th_counter == 0 ? (uint32_t)-1 : div96th_counter - 1u;
+  interp_budget = 0;
+  div192th_countdown = 0;
+  reset_clock_phase = true;
+}
+#endif
+
 void MidiClockClass::updateClockInterval() {
   if (useImmediateClock)
     return;

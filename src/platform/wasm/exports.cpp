@@ -19,6 +19,7 @@
 #include "GUI_hardware.h"
 #include "MidiClock.h"
 #include "MCL.h"
+#include "MCLArrangement.h"
 #include "MCLSeq.h"
 #include "GridPages.h"
 #include "GridIOPage.h"
@@ -62,7 +63,7 @@ extern volatile uint16_t g_clock_minutes;
 
 // ABI version. Bump major when removing/renaming/changing signatures.
 static constexpr uint16_t MCL_ABI_MAJOR = 1;
-static constexpr uint16_t MCL_ABI_MINOR = 7;
+static constexpr uint16_t MCL_ABI_MINOR = 8;
 
 static uint32_t s_timer1_remainder_us = 0;
 static uint32_t s_timer2_remainder_us = 0;
@@ -466,6 +467,12 @@ extern "C" int32_t mcl_midi_out_pop(int32_t port) {
     return n ? (int32_t)b : -1;
 }
 
+extern "C" void mcl_set_transport_position(uint32_t tick96) {
+    MidiClock.set_transport_position(tick96);
+    mcl_seq.set_transport_position(tick96);
+    mcl_arrangement.resetPlayback();
+}
+
 // ---- Input -------------------------------------------------------------
 //
 // Compatibility push-model exports. The SPS host uses the host_input_*
@@ -552,6 +559,17 @@ extern "C" uint32_t mcl_debug_value(int32_t id) {
         return mcl_debug_state();
     case 5:
         return mcl_cfg.track_type_select;
+    case 300:
+        return MidiClock.div16th_counter;
+    case 301:
+        return MidiClock.div96th_counter;
+    case 302:
+        return MidiClock.div192th_counter;
+    case 303:
+        return (uint32_t)MidiClock.state |
+               ((uint32_t)MidiClock.mod6_counter << 8) |
+               ((uint32_t)MidiClock.mod12_counter << 16) |
+               ((uint32_t)MidiClock.clock_interpolation << 24);
     case 200:
         return debug_menu_build_mcl_config_snapshot();
     case 265:

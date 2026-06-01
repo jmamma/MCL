@@ -10,7 +10,7 @@
   "abi": {
     "id": "sps.panel_device.v1",
     "version": 1,
-    "min_minor": 7,
+    "min_minor": 8,
     "import_module": "env"
   },
   "service": {
@@ -38,6 +38,7 @@
     "framebuffer_stride": "mcl_framebuffer_stride",
     "midi_in_push": "mcl_midi_in_push",
     "midi_out_pop": "mcl_midi_out_pop",
+    "set_transport_position": "mcl_set_transport_position",
     "set_button_mask": "mcl_input_set_button_mask",
     "set_button_mask64": "mcl_input_set_button_mask64",
     "add_encoder_delta": "mcl_input_add_encoder_delta",

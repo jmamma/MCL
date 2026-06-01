@@ -60,6 +60,10 @@ int32_t mcl_midi_in_push(int32_t port, uint8_t byte_val);
 // the ring is empty, 0..255 otherwise.
 int32_t mcl_midi_out_pop(int32_t port);
 
+// Set the module transport position from the SPS host clock domain. tick96 uses
+// 24 MIDI clocks * 16 interpolation ticks per quarter note.
+void mcl_set_transport_position(uint32_t tick96);
+
 // Compatibility encoder/button state-injection for simple harnesses. The
 // full host uses host_input_* imports so blocking modal loops can receive
 // input while mcl_tick_gui() is already executing.
@@ -108,6 +112,10 @@ uint32_t mcl_debug_state(void);
 //   201..264 menu display text snapshot bytes, packed little-endian 4 chars/value
 //   265 top-level system menu display text snapshot byte length
 //   266 top-level system menu display text snapshot after detaching devices
+//   300 MidiClock.div16th_counter
+//   301 MidiClock.div96th_counter
+//   302 MidiClock.div192th_counter
+//   303 packed clock state/mod6/mod12/interpolation
 uint32_t mcl_debug_value(int32_t id);
 
 #ifdef __cplusplus

@@ -210,6 +210,7 @@ echo "[mcl-wasm] wasm aux stack: ${WASM_STACK_SIZE} bytes"
     -Wl,--export=mcl_framebuffer_height \
     -Wl,--export=mcl_midi_in_push \
     -Wl,--export=mcl_midi_out_pop \
+    -Wl,--export=mcl_set_transport_position \
     -Wl,--export=mcl_input_set_button_mask \
     -Wl,--export=mcl_input_set_button_mask64 \
     -Wl,--export=mcl_input_add_encoder_delta \
