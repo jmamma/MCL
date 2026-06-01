@@ -149,7 +149,8 @@ void StepSeqSlideTrack::dispatch_slide_value(uint8_t param, uint8_t value, uint8
     }
 }
 
-void StepSeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1) {
+void StepSeqSlideTrack::prepare_slide(uint8_t lock_idx, int32_t x0,
+                                      int32_t x1, int8_t y0, int8_t y1) {
     uint8_t c = lock_idx;
     locks_slide_data[c].x0 = x0;
     locks_slide_data[c].x1 = x1;
@@ -157,7 +158,7 @@ void StepSeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, 
     locks_slide_data[c].y1 = y1;
     locks_slide_data[c].accum = 0;
 
-    int16_t steps = x1 - x0;
+    int32_t steps = x1 - x0;
     if (steps > 0) {
         int16_t y_diff = y1 - y0;
         int32_t delta_calc = ((int32_t)y_diff << 8) / steps;
@@ -228,7 +229,7 @@ int16_t StepSeqDataTrack::effective_timing_offset(uint8_t step,
 void StepSeqDataTrack::recalc_slides() {
     if (locks_slides_recalc == 255) return;
 
-    int16_t x0, x1;
+    int32_t x0, x1;
     int8_t y0, y1;
     uint8_t step = locks_slides_recalc;
     uint16_t tps = get_ticks_per_step();
@@ -266,12 +267,12 @@ void StepSeqDataTrack::recalc_slides() {
         int16_t mt_offset = effective_timing_offset(step, tps);
         int16_t mt_next_offset = effective_timing_offset(next_lockstep, tps);
 
-        x0 = (int16_t)(step * tps + mt_offset + 1);
+        x0 = (int32_t)step * tps + mt_offset + 1;
         if (next_lockstep < step) {
-            x1 = (int16_t)((length + next_lockstep) * tps +
-                           mt_next_offset - 1);
+            x1 = (int32_t)(length + next_lockstep) * tps +
+                 mt_next_offset - 1;
         } else {
-            x1 = (int16_t)(next_lockstep * tps + mt_next_offset - 1);
+            x1 = (int32_t)next_lockstep * tps + mt_next_offset - 1;
         }
 
         y0 = (int8_t)locks[cur_lockidx];

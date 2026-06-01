@@ -16,8 +16,8 @@ class MCLSeq;
 
 class StepSeqSlideData {
 public:
-    int16_t x0;
-    int16_t x1;
+    int32_t x0;
+    int32_t x1;
     uint16_t accum;
     uint16_t delta;
     int8_t y0;
@@ -220,7 +220,8 @@ public:
         StepSeqTrackCond::reset();
     }
 
-    void prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1);
+    void prepare_slide(uint8_t lock_idx, int32_t x0, int32_t x1, int8_t y0,
+                       int8_t y1);
     virtual void send_slides(volatile uint8_t *locks_params, uint8_t channel = 0);
 
 protected:
