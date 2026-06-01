@@ -1180,6 +1180,10 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   // out-of-range track_number reads adjacent memory and crashes
   // (seen during sysex processing when track lookup returned 0xFF).
   if (track_number >= 16 || pattern == nullptr) return;
+  uint8_t merge_length = length;
+  if (merge_length > NUM_MD_STEPS) {
+    merge_length = NUM_MD_STEPS;
+  }
 
 #if !defined(__AVR__)
   uint8_t num_params = pattern->version >= 0x40 ? SPS_PARAMS_PER_TRACK : 24;
@@ -1237,7 +1241,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   set_swing_from_mask(pswingpattern);
   swing_amount = md_swing_q14_to_amount(swing_q14);
 
-  for (uint8_t a = 0; a < length; a++) {
+  for (uint8_t a = 0; a < merge_length; a++) {
     if (IS_BIT_SET64_P(pslide, a)) {
       steps[a].slide = true;
     }
@@ -1253,7 +1257,7 @@ void MDSeqTrack::merge_from_md(uint8_t track_number, MDPattern *pattern) {
   // Apply SPSX step flags (conditionals) and microtiming
   if (pattern->version >= 0x40) {
     uint8_t ticks_per_step = get_ticks_per_step();
-    for (uint8_t a = 0; a < length; a++) {
+    for (uint8_t a = 0; a < merge_length; a++) {
       if (steps[a].trig) {
         uint8_t flags = pattern->ext_step_flags[track_number][a];
         steps[a].cond_id = flags >> 2;
