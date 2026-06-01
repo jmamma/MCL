@@ -195,7 +195,8 @@ void SampleBrowserPage::recv_wav(int slot, bool silent) {
     }
   }
   char temp_entry[FILE_ENTRY_SIZE];
-  strncpy(temp_entry, wav_name, sizeof(wav_name) - 1);
+  strncpy(temp_entry, wav_name, sizeof(temp_entry) - sizeof(".wav"));
+  temp_entry[sizeof(temp_entry) - sizeof(".wav")] = '\0';
   strcat(temp_entry, ".wav");
   if (SD.exists(temp_entry)) { gfx.alert("File exists!", temp_entry); return; }
   DEBUG_PRINTLN("bulk recv");

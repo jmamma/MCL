@@ -16,9 +16,10 @@ bool Wav::close(bool write) {
 bool Wav::open(const char *file_name, bool write, uint16_t numChannels,
                uint32_t sampleRate, uint8_t bitRate, bool loop) {
   DEBUG_PRINT_FN();
-  DEBUG_PRINTLN(filename);
+  DEBUG_PRINTLN(file_name);
   uint16_t file_mode = write ? (O_RDWR | O_CREAT) : O_RDWR;
-  strncpy(filename, file_name, 16);
+  strncpy(filename, file_name, sizeof(filename) - 1);
+  filename[sizeof(filename) - 1] = '\0';
 
   if (file.isOpen()) {
     DEBUG_PRINTLN(F("file already open"));
@@ -70,7 +71,8 @@ bool Wav::rename(char *new_name) {
     DEBUG_PRINTLN(F("rename failed"));
     return false;
   } else {
-    strncpy(filename, new_name, 16);
+    strncpy(filename, new_name, sizeof(filename) - 1);
+    filename[sizeof(filename) - 1] = '\0';
     return true;
   }
 }
