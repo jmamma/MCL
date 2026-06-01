@@ -14,6 +14,7 @@
 #include "../Drivers/MidiDevice.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
+#include "../Drivers/MNM/MNMParams.h"
 #ifdef PLATFORM_TBD
 #include "GridIOOverlay.h"
 #endif
@@ -31,11 +32,48 @@ void set_slot_label(char label[3], char a, char b) {
   label[2] = '\0';
 }
 
+#if defined(__AVR__)
+uint16_t grid_slot_label_for_type(uint8_t track_type,
+                                  GridSlotLabelContext ctx) {
+  const char *machine_name = nullptr;
+  switch (track_type) {
+  case MD_TRACK_TYPE:
+    machine_name = getMDMachineNameShort(ctx.model, 2);
+    return machine_name ? make_grid_slot_label(machine_name[0], machine_name[1])
+                        : 0;
+  case MNM_TRACK_TYPE:
+    machine_name = getMNMMachineNameShort(ctx.model, 2);
+    return machine_name ? make_grid_slot_label(machine_name[0], machine_name[1])
+                        : 0;
+  case A4_TRACK_TYPE:
+    return make_grid_slot_label('A', ctx.column + '1');
+  case EXT_TRACK_TYPE:
+    return make_grid_slot_label('M', ctx.column + '1');
+  case MDFX_TRACK_TYPE:
+    return make_grid_slot_label('F', 'X');
+  case MDTEMPO_TRACK_TYPE:
+    return make_grid_slot_label('T', 'P');
+  case MD_ROUTE_TRACK_TYPE:
+    return make_grid_slot_label('R', 'T');
+  case GRIDCHAIN_TRACK_TYPE:
+    return make_grid_slot_label('C', 'N');
+  case PERF_TRACK_TYPE:
+    return make_grid_slot_label('P', 'F');
+  default:
+    return 0;
+  }
+}
+#endif
+
 void copy_grid_slot_label(uint8_t track_type,
                           GridSlotLabelContext ctx, char label[3]) {
+#if defined(__AVR__)
+  uint16_t packed = grid_slot_label_for_type(track_type, ctx);
+#else
   EmptyTrack scratch;
   auto *track = ((DeviceTrack *)&scratch)->init_track_type(track_type);
   uint16_t packed = track->grid_slot_label(ctx);
+#endif
   if (packed == 0) {
     return;
   }

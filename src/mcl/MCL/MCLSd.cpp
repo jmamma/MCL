@@ -4,6 +4,51 @@
 #include "StackMonitor.h"
 #include "Project.h"
 #include "PtcGroups.h"
+#include <string.h>
+
+namespace {
+
+constexpr uint8_t kSdPathLen = 128;
+
+bool copy_sd_path(char *dst, uint8_t dst_len, const char *src) {
+  if (dst_len == 0) {
+    return false;
+  }
+  char *write = dst;
+  char *end = dst + dst_len - 1;
+  while (*src != '\0') {
+    if (write == end) {
+      *dst = '\0';
+      return false;
+    }
+    *write++ = *src++;
+  }
+  *write = '\0';
+  return true;
+}
+
+void trim_trailing_slashes(char *path) {
+  size_t len = strlen(path);
+  while (len > 1 && path[len - 1] == '/') {
+    path[--len] = '\0';
+  }
+}
+
+bool parent_path(char *path) {
+  trim_trailing_slashes(path);
+  char *slash = strrchr(path, '/');
+  if (slash == nullptr) {
+    return false;
+  }
+  if (slash == path) {
+    path[1] = '\0';
+  } else {
+    *slash = '\0';
+  }
+  return true;
+}
+
+} // namespace
 
 bool MCLSd::join_path(char *dst, uint8_t dst_len, const char *dir,
                       const char *entry) {
@@ -271,7 +316,11 @@ bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
     ok = false;
   }
 
+#ifdef __AVR__
+  static uint8_t buf[512];
+#else
   uint8_t buf[512];
+#endif
   uint32_t copied = 0;
   uint8_t progress_end = progress_base + progress_span;
   while (ok) {
@@ -307,44 +356,75 @@ bool MCLSd::copy_file(const char *src, const char *dst, uint8_t progress_base,
 }
 
 bool MCLSd::remove_dir(const char *dir) {
-  File d;
-  if (!d.open(dir, O_READ) || !d.isDirectory()) {
-    d.close();
+  char root[kSdPathLen];
+  char path[kSdPathLen];
+  if (!copy_sd_path(root, sizeof(root), dir)) {
     return false;
   }
-  d.rewind();
+  trim_trailing_slashes(root);
+  if (root[0] == '\0' || strcmp(root, "/") == 0) {
+    return false;
+  }
+  if (!copy_sd_path(path, sizeof(path), root)) {
+    return false;
+  }
 
-  File entry_file;
-  char entry[FILE_ENTRY_SIZE];
-  char path[128];
-  bool ok = true;
-
-  while (entry_file.openNext(&d, O_READ)) {
-    entry_file.getName(entry, sizeof(entry));
-    bool is_dir = entry_file.isDirectory();
-    entry_file.close();
-
-    if (entry[0] == '\0' || entry[0] == '.') {
-      continue;
+  while (true) {
+    File d;
+    if (!d.open(path, O_READ) || !d.isDirectory()) {
+      d.close();
+      return false;
     }
-    if (!join_path(path, sizeof(path), dir, entry)) {
-      ok = false;
-      continue;
-    }
-    if (is_dir) {
-      if (!remove_dir(path)) {
-        ok = false;
+    d.rewind();
+
+    File entry_file;
+    char entry[FILE_ENTRY_SIZE];
+    char child[kSdPathLen];
+    bool found_child = false;
+
+    while (entry_file.openNext(&d, O_READ)) {
+      entry_file.getName(entry, sizeof(entry));
+      bool is_dir = entry_file.isDirectory();
+      entry_file.close();
+
+      if (entry[0] == '\0' || entry[0] == '.') {
+        continue;
       }
-    } else if (!SD.remove(path)) {
-      ok = false;
+      if (!join_path(child, sizeof(child), path, entry)) {
+        d.close();
+        return false;
+      }
+      if (is_dir) {
+        if (!copy_sd_path(path, sizeof(path), child)) {
+          d.close();
+          return false;
+        }
+        found_child = true;
+        break;
+      }
+      if (!SD.remove(child)) {
+        d.close();
+        return false;
+      }
+      found_child = true;
+      break;
+    }
+
+    entry_file.close();
+    d.close();
+    if (found_child) {
+      continue;
+    }
+    if (!SD.rmdir(path)) {
+      return false;
+    }
+    if (strcmp(path, root) == 0) {
+      return true;
+    }
+    if (!parent_path(path)) {
+      return false;
     }
   }
-
-  d.close();
-  if (!SD.rmdir(dir)) {
-    ok = false;
-  }
-  return ok;
 }
 
 #ifndef __AVR__

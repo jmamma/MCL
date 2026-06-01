@@ -807,8 +807,12 @@ DeviceTrack *TBDMidiTrack::materialize_as(uint8_t track_type,
     return this;
   }
   if (midi_track_type_is_storage_family(track_type)) {
-    return materialize_midi_storage_track(this, track_type, link, seq_data,
-                                          &load_fade, tracknumber);
+    GridLink old_link = link;
+    MidiSeqTrackStorage old_seq_data = seq_data;
+    TrackLoadFadeData old_load_fade = load_fade;
+    return materialize_midi_storage_track(this, track_type, old_link,
+                                          old_seq_data, &old_load_fade,
+                                          tracknumber);
   }
   return DeviceTrack::materialize_as(track_type, tracknumber, seq_track);
 }

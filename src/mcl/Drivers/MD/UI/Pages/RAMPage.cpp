@@ -35,6 +35,15 @@ static void set_ram_rec_state(uint8_t page_id, uint8_t state) {
   }
 }
 
+static uint8_t ram_steps_from_length_encoder(uint8_t length_encoder) {
+  uint8_t steps = length_encoder * 4;
+  return steps == 0 ? 4 : steps;
+}
+
+static uint8_t ram_slices_from_slice_encoder(uint8_t slice_encoder) {
+  return slice_encoder >= 7 ? 128 : (uint8_t)(1u << slice_encoder);
+}
+
 void RAMPage::setup() {
   DEBUG_PRINT_FN();
   encoders[3]->cur = 4;
@@ -72,13 +81,16 @@ void RAMPage::setup_sequencer(uint8_t track) {
   SeqTrackUtil::with_md_track(track, [&](auto &t) {
     t.clear_track();
     t.set_step(0, MASK_PATTERN, true);
-    t.length = encoders[3]->cur * 4;
+    t.length = ram_steps_from_length_encoder(encoders[3]->cur);
   });
   CLEAR_LOCK();
 }
 
 void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row,
                            uint8_t transition) {
+  if (steps == 0) {
+    steps = 1;
+  }
 
   mcl_actions.links[track].row = row;
   mcl_actions.links[track].loops = 1;
@@ -130,7 +142,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 
   md_track.machine.init();
 
-  uint16_t steps = encoders[3]->cur * 4;
+  uint16_t steps = ram_steps_from_length_encoder(encoders[3]->cur);
   set_ram_rec_state(page_id, STATE_QUEUE);
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
@@ -209,10 +221,14 @@ bool RAMPage::slice(uint8_t track, uint8_t linked_track) {
   if (grid_page.active_slots[track] != SLOT_RAM_PLAY) {
     return false;
   }
-  uint8_t slices = 1 << encoders[2]->cur;
+  uint8_t slices = ram_slices_from_slice_encoder(encoders[2]->cur);
 
   uint8_t sample_inc = 128 / slices;
-  uint8_t track_length = encoders[3]->cur * 4;
+  uint8_t track_length = ram_steps_from_length_encoder(encoders[3]->cur);
+  while (slices > track_length && encoders[2]->cur > 0) {
+    encoders[2]->cur--;
+    slices = ram_slices_from_slice_encoder(encoders[2]->cur);
+  }
   uint8_t step_inc = track_length / slices;
   bool clear_locks = true;
 
@@ -369,7 +385,7 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
 
   md_track.machine.init();
 
-  uint8_t steps = encoders[3]->cur * 4;
+  uint8_t steps = ram_steps_from_length_encoder(encoders[3]->cur);
 
   set_ram_rec_state(page_id, STATE_QUEUE);
 
@@ -472,13 +488,13 @@ void RAMPage::setup_ram_rec_stereo(uint8_t track, uint8_t lev, uint8_t source,
 void RAMPage::loop() {
 
   // Prevent number of slices exceeding number of steps.
-  uint8_t steps = encoders[3]->cur * 4;
-  uint8_t slices = 1 << encoders[2]->cur;
+  uint8_t steps = ram_steps_from_length_encoder(encoders[3]->cur);
+  uint8_t slices = ram_slices_from_slice_encoder(encoders[2]->cur);
 
-  while (slices > steps) {
+  while (slices > steps && encoders[2]->cur > 0) {
     encoders[2]->cur--;
     // encoders[2]->old = encoders[2]->cur;
-    slices = 1 << encoders[2]->cur;
+    slices = ram_slices_from_slice_encoder(encoders[2]->cur);
   }
 
   uint8_t n = 14 + page_id;
@@ -557,10 +573,10 @@ void RAMPage::display() {
   mcl_gui.put_value_at(encoders[1]->cur, val);
   mcl_gui.draw_knob(1, mclstr_dice, val);
 
-  mcl_gui.put_value_at(1 << encoders[2]->cur, val);
+  mcl_gui.put_value_at(ram_slices_from_slice_encoder(encoders[2]->cur), val);
   mcl_gui.draw_knob(2, mclstr_sli, val);
 
-  mcl_gui.put_value_at(encoders[3]->cur * 4, val);
+  mcl_gui.put_value_at(ram_steps_from_length_encoder(encoders[3]->cur), val);
   mcl_gui.draw_knob(3, mclstr_len, val);
 
   uint8_t w_x = 0, w_y = 2;
@@ -590,8 +606,10 @@ void RAMPage::display() {
     }
 
     // Fixed-point arithmetic: multiply first to maintain precision
-    uint8_t width = ((uint32_t)numerator * (progress_w - 1)) / denominator;
-    oled_display.fillRect(progress_x + 1, progress_y, width, 4, WHITE);
+    if (denominator > 0) {
+      uint8_t width = ((uint32_t)numerator * (progress_w - 1)) / denominator;
+      oled_display.fillRect(progress_x + 1, progress_y, width, 4, WHITE);
+    }
   }
 
   // Packed wheel-spin frame table: bits[1:0]=icon (0=side,1=angle,2=top),
@@ -725,19 +743,23 @@ bool RAMPage::handleEvent(gui_event_t *event) {
         }
         if (page_id == 0) {
           setup_ram_rec_mono(14, lev, encoders[0]->cur,
-                             4 * encoders[3]->cur - 1, 128);
+                             ram_steps_from_length_encoder(encoders[3]->cur) - 1,
+                             128);
         } else {
           setup_ram_rec_mono(15, lev, encoders[0]->cur,
-                             4 * encoders[3]->cur - 1, 128);
+                             ram_steps_from_length_encoder(encoders[3]->cur) - 1,
+                             128);
         }
       } else {
         if (encoders[0]->cur == SOURCE_MAIN) {
           setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
-                               4 * encoders[3]->cur - 1, 128);
+                               ram_steps_from_length_encoder(encoders[3]->cur) - 1,
+                               128);
         }
         if (encoders[0]->cur == SOURCE_INP) {
           setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
-                               4 * encoders[3]->cur - 1, 128);
+                               ram_steps_from_length_encoder(encoders[3]->cur) - 1,
+                               128);
         }
       }
       return true;
