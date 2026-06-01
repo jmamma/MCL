@@ -102,7 +102,7 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
   if (!state) {
     return;
   }
-  if (note_num > NI_MAX_NOTES) {
+  if (note_num >= NI_MAX_NOTES) {
     return;
   }
   if (IS_BIT_SET32(notes_ignore, note_num)) {
@@ -119,6 +119,9 @@ void NoteInterface::note_on_event(uint8_t note_num, uint8_t port) {
 }
 void NoteInterface::note_off_event(uint8_t note_num, uint8_t port) {
   if (!state) {
+    return;
+  }
+  if (note_num >= NI_MAX_NOTES) {
     return;
   }
   if (IS_BIT_SET32(notes_ignore, note_num)) {
