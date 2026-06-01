@@ -111,5 +111,11 @@ public:
   void send_row_led();
 };
 
+static inline uint16_t grid_row_bank_mask(const uint64_t *row_states,
+                                          uint8_t bank) {
+  const uint8_t *mask = (const uint8_t *)row_states + ((uint8_t)(bank << 1));
+  return (uint16_t)mask[0] | ((uint16_t)mask[1] << 8);
+}
+
 extern void apply_slot_changes_cb();
 extern void rename_row();

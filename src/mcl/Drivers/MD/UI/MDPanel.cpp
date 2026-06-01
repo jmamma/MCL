@@ -47,8 +47,8 @@ bool MDPanel::handle_bank_arrow_cycle(gui_event_t *event) {
                          : (uint8_t)((grid_page.bank + 8 + letter_delta) % 8);
   if (new_bank != grid_page.bank) {
     grid_page.bank = new_bank;
-    uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-    mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+    mcl_gui.set_trigleds(grid_row_bank_mask(grid_page.row_states, grid_page.bank),
+                         TRIGLED_EXCLUSIVENDYNAMIC);
     grid_page.send_row_led();
     uint8_t new_group = grid_page.bank / 4;
     if (new_group != old_group) {

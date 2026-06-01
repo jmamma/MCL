@@ -371,8 +371,8 @@ bool mcl_handleEvent(gui_event_t *event) {
         bool clear_states = false;
         key_interface.on(clear_states);
         grid_page.bank = key - MDX_KEY_BANKA + MD.currentBank * 4;
-        uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-        mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+        mcl_gui.set_trigleds(grid_row_bank_mask(grid_page.row_states, grid_page.bank),
+                             TRIGLED_EXCLUSIVENDYNAMIC);
 
         grid_page.send_row_led();
 

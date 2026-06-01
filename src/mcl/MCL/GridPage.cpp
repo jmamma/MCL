@@ -1117,11 +1117,11 @@ bool GridPage::handleEvent(gui_event_t *event) {
           // Layer order matters — later calls overwrite earlier per-trig
           // colours. Populated rows first as a dim red baseline, then the
           // chained set in yellow, then the head in bright red.
-          uint16_t *populated = (uint16_t *)&grid_page.row_states[0];
           constexpr uint32_t kRedDim    = ((uint32_t)48  << 16);
           constexpr uint32_t kYellow    = ((uint32_t)255 << 16) | ((uint32_t)200 << 8);
           constexpr uint32_t kRedBright = ((uint32_t)255 << 16);
-          mcl_gui.set_trigleds_color(populated[grid_page.bank], kRedDim);
+          mcl_gui.set_trigleds_color(grid_row_bank_mask(grid_page.row_states, grid_page.bank),
+                                     kRedDim);
           mcl_gui.set_trigleds_color(chained_mask, kYellow);
           mcl_gui.set_trigleds_color(head_mask, kRedBright);
         }

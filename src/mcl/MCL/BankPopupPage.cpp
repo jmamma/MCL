@@ -57,8 +57,8 @@ void BankPopupPage::init() {
     MD.currentBank = group;
     if (MD.connected) MD.press_bankgroup_button();
   }
-  uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-  mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+  mcl_gui.set_trigleds(grid_row_bank_mask(grid_page.row_states, grid_page.bank),
+                       TRIGLED_EXCLUSIVENDYNAMIC);
   grid_page.send_row_led();
 }
 
@@ -149,8 +149,8 @@ void BankPopupPage::step_bank(int8_t letter_delta, bool group_toggle) {
                        : (uint8_t)((grid_page.bank + 8 + letter_delta) % 8);
   if (new_bank == grid_page.bank) return;
   grid_page.bank = new_bank;
-  uint16_t *mask = (uint16_t *)&grid_page.row_states[0];
-  mcl_gui.set_trigleds(mask[grid_page.bank], TRIGLED_EXCLUSIVENDYNAMIC);
+  mcl_gui.set_trigleds(grid_row_bank_mask(grid_page.row_states, grid_page.bank),
+                       TRIGLED_EXCLUSIVENDYNAMIC);
   grid_page.send_row_led();
   uint8_t new_group = grid_page.bank / 4;
   if (new_group != old_group) {
@@ -169,8 +169,8 @@ void BankPopupPage::repaint_chain_leds() {
   constexpr uint32_t kRedDim    = ((uint32_t)48  << 16);
   constexpr uint32_t kYellow    = ((uint32_t)255 << 16) | ((uint32_t)200 << 8);
   constexpr uint32_t kRedBright = ((uint32_t)255 << 16);
-  uint16_t *populated = (uint16_t *)&grid_page.row_states[0];
-  mcl_gui.set_trigleds_color(populated[grid_page.bank], kRedDim);
+  mcl_gui.set_trigleds_color(grid_row_bank_mask(grid_page.row_states, grid_page.bank),
+                             kRedDim);
   mcl_gui.set_trigleds_color(chained_mask, kYellow);
   mcl_gui.set_trigleds_color(head_mask, kRedBright);
 }
