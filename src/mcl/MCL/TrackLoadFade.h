@@ -33,6 +33,15 @@ public:
   }
 
   bool fade_out() const { return flags & TRACK_LOAD_FADE_FLAG_OUT; }
+
+  uint16_t elapsed_q12() const {
+    return (uint16_t)reserved[0] | ((uint16_t)reserved[1] << 8);
+  }
+
+  void set_elapsed_q12(uint16_t elapsed) {
+    reserved[0] = (uint8_t)(elapsed & 0xFF);
+    reserved[1] = (uint8_t)(elapsed >> 8);
+  }
 };
 
 static_assert(sizeof(TrackLoadFadeData) == 8,

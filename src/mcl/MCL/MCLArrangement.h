@@ -6,7 +6,11 @@
 #if !defined(__AVR__)
 
 #include "MCLArrangementFormat.h"
+#include "MCLMemory.h"
+#include "TrackLoadFade.h"
 #include <stdint.h>
+
+class DeviceTrack;
 
 class MCLArrangement {
 public:
@@ -20,21 +24,59 @@ public:
   bool importGrid(uint16_t trackMask, uint8_t startRow);
   void tick();
   void resetPlayback();
+  bool seekLoad(uint32_t positionQ12, bool immediate,
+                bool allowPrestartFade = false);
+  bool armRuntimeForHostLoad(uint32_t positionQ12,
+                             const GridRow rows[NUM_SLOTS],
+                             uint16_t trackMask, GridSlot loadOffset);
+  void armRuntimeFade(uint8_t dst, const TrackLoadFadeData &fade);
+  bool applyClipRuntime(uint8_t dst, DeviceTrack *track);
 
   uint16_t readClips(uint32_t startQ12, uint32_t endQ12, uint16_t skip,
                      uint8_t maxClips, mclarrfile::Clip *out,
                      uint32_t *totalMatches = nullptr,
                      bool *more = nullptr);
+  uint16_t readMarkers(uint32_t startQ12, uint32_t endQ12, uint16_t skip,
+                       uint8_t maxMarkers, mclarrfile::Marker *out,
+                       uint32_t *totalMatches = nullptr,
+                       bool *more = nullptr);
+  bool readTrackLabels(
+      char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes]);
+  bool setTrackLabel(uint8_t track, const char *label);
+  bool setMarkerLabel(uint32_t startQ12, uint8_t track, const char *label);
+  bool setClipFade(uint32_t startQ12, uint32_t durationQ12, uint8_t track,
+                   uint8_t row, bool fadeOut, bool overrideFade,
+                   const TrackLoadFadeData &fade);
 
 private:
   bool openActive(class FsFile *file, uint8_t mode);
   bool openIndex(class FsFile *file, uint8_t idx, uint8_t mode);
-  bool queueClipStarts(uint32_t startQ12, uint32_t endQ12);
+  void armClipRuntime(uint8_t dst, const mclarrfile::Clip &clip,
+                      uint16_t elapsedQ12 = 0);
+  bool queueClipStarts(uint32_t startQ12, uint32_t endQ12,
+                       bool loadActiveAtPosition,
+                       bool clearInactiveTracks,
+                       uint8_t loadQueueFlags);
   bool rewriteActive(const mclarrfile::Header &header,
                      const mclarrfile::Clip *clips, uint32_t clipCount);
+  bool rewriteActiveWithMarkers(const mclarrfile::Header &header,
+                                const mclarrfile::Clip *clips,
+                                uint32_t clipCount,
+                                const mclarrfile::Marker *markers,
+                                uint16_t markerCount);
+  bool rewriteActiveWithMetadata(
+      const mclarrfile::Header &header, const mclarrfile::Clip *clips,
+      uint32_t clipCount, const mclarrfile::Marker *markers,
+      uint16_t markerCount,
+      const char trackLabels[mclarrfile::kTrackLabelCount]
+                            [mclarrfile::kTrackLabelBytes]);
 
   uint8_t playback_arrangement_idx_ = 0xFF;
   uint32_t last_tick_q12_ = 0;
+  uint16_t playback_active_mask_ = 0;
+  static const uint8_t kRuntimeSlots = 16;
+  TrackLoadFadeData clip_runtime_fades_[kRuntimeSlots];
+  uint16_t clip_runtime_fade_mask_ = 0;
   bool playback_active_ = false;
 };
 

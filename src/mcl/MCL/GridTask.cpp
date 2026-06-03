@@ -44,25 +44,59 @@ void GridTask::load_queue_handler() {
     GridSlot offset;
     GridRow row_select_array[NUM_SLOTS];
     uint8_t track_select[NUM_SLOTS];
+#if !defined(__AVR__)
+    uint8_t clear_select[NUM_SLOTS];
+#endif
     load_queue.get(mode, offset, row_select_array, track_select);
+#if !defined(__AVR__)
+    bool immediate_load = (mode & LOAD_QUEUE_FLAG_IMMEDIATE) != 0;
+    bool allow_prestart_fades = (mode & LOAD_QUEUE_FLAG_PRESTART_FADE) != 0;
+    mode &= (uint8_t)~(LOAD_QUEUE_FLAG_IMMEDIATE |
+                       LOAD_QUEUE_FLAG_PRESTART_FADE);
+    memset(clear_select, 0, sizeof(clear_select));
+#endif
+#if !defined(__AVR__)
+    bool any_load = false;
+    bool any_clear = false;
+#endif
     DEBUG_PRINTLN("load queue get");
     DEBUG_PRINTLN(mode);
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+#if !defined(__AVR__)
+      if (track_select[n]) {
+        any_load = true;
+      }
+      if (row_select_array[n] == LOAD_QUEUE_CLEAR_ROW) {
+        clear_select[n] = 1;
+        any_clear = true;
+      }
+#endif
       DEBUG_PRINT(n);
       DEBUG_PRINT(" ");
       DEBUG_PRINT(track_select[n]);
       DEBUG_PRINT(" ");
       DEBUG_PRINTLN(row_select_array[n]);
     }
+#if defined(__AVR__)
     mcl_actions.write_original = 1;
     mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
-#if !defined(__AVR__)
+#else
+    if (any_load) {
+      mcl_actions.write_original = 1;
+      mcl_actions.load_tracks(track_select, row_select_array, mode, offset,
+                              immediate_load, allow_prestart_fades);
+    }
+    if (any_clear) {
+      mcl_actions.clear_tracks(clear_select);
+    }
     // A load changes the active slot state, but not the source grid cell/link
     // data used by the arranger import. Avoid forcing arranger cell re-fetches
     // on every playback load boundary.
-    sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
-    sps_host_seq_bridge.notifyDirty(0xFF,
-        (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
+    if (any_load || any_clear) {
+      sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
+      sps_host_seq_bridge.notifyDirty(0xFF,
+          (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
+    }
 #endif
   }
 }
@@ -145,6 +179,9 @@ void GridTask::transition_handler() {
 
   GridRow slots_changed[NUM_SLOTS];
   uint8_t track_select_array[NUM_SLOTS];
+#if !defined(__AVR__)
+  bool active_state_changed = false;
+#endif
 
   while (true) {
     uint16_t margin =
@@ -268,6 +305,11 @@ void GridTask::transition_handler() {
         wait = false;
         if (transition_load(n, track_idx, gdt)) {
           if (grid_page.active_slots[n] != SLOT_OFFSET_LOAD) {
+            if (grid_page.active_slots[n] != slots_changed[n]) {
+#if !defined(__AVR__)
+              active_state_changed = true;
+#endif
+            }
             grid_page.active_slots[n] = slots_changed[n];
           }
         }
@@ -311,11 +353,25 @@ void GridTask::transition_handler() {
     }
 
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
+      bool row_changed = grid_task.last_active_row != slots_changed[last_slot] ||
+                         grid_task.chain_behaviour != (mcl_actions.chains[last_slot].mode > 1);
       last_active_row = slots_changed[last_slot];
       chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
       next_active_row = chain_behaviour ? mcl_actions.links[last_slot].row : last_active_row;
       row_update();
+#if !defined(__AVR__)
+      if (row_changed) {
+        active_state_changed = true;
+      }
+#endif
     }
+
+#if !defined(__AVR__)
+    if (active_state_changed) {
+      sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
+      active_state_changed = false;
+    }
+#endif
 
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency();

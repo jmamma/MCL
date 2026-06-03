@@ -33,12 +33,24 @@ private:
     void onReqCells(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrMeta(uint8_t tag);
     void onReqArrClips(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqArrMarkers(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqArrTrackLabels(uint8_t tag);
     void onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSaveSlots(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrClear(uint8_t tag);
     void onArrImportGrid(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSelect(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrNew(uint8_t tag);
     void onArrSave(uint8_t tag);
+    void onGridCopy(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onGridClear(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onGridPaste(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onGridApplySlotEdit(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSetRowName(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSetArrMarker(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSetArrTrackLabel(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSetArrClipFade(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onArrSeekLoad(uint8_t tag, const uint8_t* b, uint16_t n);
 
     bool applySetLink(const uint8_t* b, uint16_t n);
     bool applySetFade(const uint8_t* b, uint16_t n);

@@ -119,10 +119,24 @@ public:
 
   void load_tracks(uint8_t *slot_select_array,
                    GridRow *_row_array = nullptr, uint8_t load_mode = 255,
-                   GridSlot load_offset = 255);
+                   GridSlot load_offset = 255
+#if !defined(__AVR__)
+                   ,
+                   bool immediate = false,
+                   bool allow_prestart_fades = false
+#endif
+                   );
+#if !defined(__AVR__)
+  void clear_tracks(uint8_t *slot_select_array);
+#endif
   void send_tracks_to_devices(uint8_t *slot_select_array,
                               GridRow *row_array = nullptr,
-                              GridSlot load_offset = 255);
+                              GridSlot load_offset = 255
+#if !defined(__AVR__)
+                              ,
+                              bool allow_prestart_fades = false
+#endif
+                              );
   void manual_transition(uint8_t *slot_select_array, GridRow *row_array,
                          GridSlot load_offset);
   void update_chain_links(GridSlot n, GridDeviceTrack *gdt);
@@ -132,9 +146,10 @@ public:
                                  bool ignore_overflow = false);
   void calc_next_transition();
   void calc_latency();
-  void clear_load_fades();
+  void clear_load_fades(bool preserve_armed_prestart = false);
   void start_load_fade_at(GridSlot slot, const TrackLoadFadeData *fade,
-                          uint32_t start_clock);
+                          uint32_t start_clock,
+                          bool allow_prestart = false);
 
 private:
   DeviceTrack *load_and_prepare_track(GridSlot track_idx, GridRow row,
@@ -145,7 +160,8 @@ private:
   void collect_tracks(uint8_t *slot_select_array, GridRow *row_array,
                       GridSlot load_offset);
   bool load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
-                            GridDeviceTrack *gdt_dst, uint8_t *send_masks);
+                            GridDeviceTrack *gdt_dst, uint8_t *send_masks,
+                            bool allow_prestart_fade = false);
   void restore_mute_states(uint8_t *mute_states);
 };
 

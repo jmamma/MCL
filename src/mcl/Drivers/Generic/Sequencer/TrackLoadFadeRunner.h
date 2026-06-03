@@ -17,7 +17,7 @@ class TrackLoadFadeData;
 class TrackLoadFadeRunner {
 public:
   // Clears every active fade. Call on transport reset/stop.
-  static void clear();
+  static void clear(bool preserve_armed_prestart = false);
 
   // Always clears any state previously held for `slot`. If `fade` is null,
   // transport isn't STARTED, or the fade is disabled, returns after clearing
@@ -26,7 +26,10 @@ public:
   static void start(GridSlot slot,
                     const TrackLoadFadeTarget &target,
                     const TrackLoadFadeData *fade,
-                    uint32_t start_clock);
+                    uint32_t start_clock,
+                    bool allow_prestart = false,
+                    MidiUartClass *uart = nullptr,
+                    MidiUartClass *uart2 = nullptr);
 
   // Advances every active fade by one tick. Output is written through the
   // TrackLoadFadeTarget bridge.

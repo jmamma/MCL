@@ -32,8 +32,9 @@ static const uint8_t kSysexEnd = spswire::kSysexEnd;
 
 static const int kNumTracks = 16;
 static const int kNumRows = 128;
-static const int kRowsPerCellPage = 32;
-static const int kRowsPerLabelCellPage = 24;
+static const int kRowsPerCellPage = 29;
+static const int kRowsPerLabelCellPage = 22;
+static const int kRowsPerNamedCellPage = 13;
 static const int kMaxBodyRaw = 512;
 
 enum Cmd {
@@ -44,11 +45,15 @@ enum Cmd {
     CMD_REQ_ACTIVE = 0x11,
     CMD_REQ_ARR_META = 0x12,
     CMD_REQ_ARR_CLIPS = 0x13,
+    CMD_REQ_ARR_MARKERS = 0x14,
+    CMD_REQ_ARR_TRACK_LABELS = 0x15,
 
     CMD_CELLS = 0x30,
     CMD_ACTIVE = 0x31,
     CMD_ARR_META = 0x32,
     CMD_ARR_CLIPS = 0x33,
+    CMD_ARR_MARKERS = 0x34,
+    CMD_ARR_TRACK_LABELS = 0x35,
 
     CMD_SET_LINK = 0x50,
     CMD_SET_FADE = 0x51,
@@ -59,6 +64,16 @@ enum Cmd {
     CMD_ARR_NEW = 0x56,
     CMD_BATCH = 0x57,
     CMD_ARR_SAVE = 0x58,
+    CMD_GRID_COPY = 0x59,
+    CMD_GRID_CLEAR = 0x5A,
+    CMD_GRID_PASTE = 0x5B,
+    CMD_SET_ROW_NAME = 0x5C,
+    CMD_SET_ARR_MARKER = 0x5D,
+    CMD_SET_ARR_TRACK_LABEL = 0x5E,
+    CMD_SAVE_SLOTS = 0x5F,
+    CMD_GRID_APPLY_SLOT = 0x60,
+    CMD_SET_ARR_CLIP_FADE = 0x61,
+    CMD_ARR_SEEK_LOAD = 0x62,
 
     CMD_NOTIFY_ACTIVE = 0x70,
     CMD_NOTIFY_DIRTY = 0x71,
@@ -72,7 +87,17 @@ enum Caps {
     CAP_CHAIN = 1 << 2,
     CAP_BATCH = 1 << 3,
     CAP_ARRANGER_LOAD = 1 << 4,
-    CAP_ARRANGEMENT_STORE = 1 << 5
+    CAP_ARRANGEMENT_STORE = 1 << 5,
+    CAP_ARRANGER_CLEAR = 1 << 6,
+    CAP_GRID_CLIPBOARD = 1 << 7,
+    CAP_GRID_ROW_NAMES = 1 << 8,
+    CAP_ARRANGEMENT_MARKERS = 1 << 9,
+    CAP_ACTIVE_SLOTS = 1 << 10,
+    CAP_ARRANGEMENT_TRACK_LABELS = 1 << 11,
+    CAP_GRID_SAVE = 1 << 12,
+    CAP_GRID_SLOT_EDIT = 1 << 13,
+    CAP_ARRANGER_LOAD_SEEK = 1 << 14,
+    CAP_ARRANGER_CLIP_FADES = 1 << 15
 };
 
 enum Mode {
@@ -96,19 +121,38 @@ enum CellFlags {
 };
 
 enum CellRequestFlags {
-    REQ_CELL_LABELS = 1 << 0
+    REQ_CELL_LABELS = 1 << 0,
+    REQ_ROW_NAMES = 1 << 1
 };
 
 enum CellFormatFlags {
-    CELL_FORMAT_LABELS = 1 << 0
+    CELL_FORMAT_LABELS = 1 << 0,
+    CELL_FORMAT_ROW_NAMES = 1 << 1,
+    CELL_FORMAT_DEPENDENCIES = 1 << 2
 };
 
 static const int kCellRecordBaseBytes = 15;
 static const int kCellRecordLabelBytes = 6;
+static const int kCellRecordRowNameBytes = 16;
+static const int kCellRecordDependencyBytes = 2;
+static const int kActiveSlotBytes = kNumTracks;
+static const int kRowNameBytes = 16;
 static const int kArrNameBytes = 16;
-static const int kArrClipRecordBytes = 16;
+static const int kArrClipFadeBytes = 8;
+static const int kArrClipRecordBaseBytes = 16;
+static const int kArrClipRecordLegacyFadeBytes =
+    kArrClipRecordBaseBytes + kArrClipFadeBytes;
+static const int kArrClipRecordBytes =
+    kArrClipRecordBaseBytes + kArrClipFadeBytes * 2;
+static const int kArrMarkerLabelBytes = 16;
+static const int kArrMarkerRecordBytes = 24;
+static const int kArrMarkerGlobalTrack = 255;
+static const int kArrTrackLabelBytes = 16;
+static const int kArrTrackLabelCount = 16;
 static const int kMaxArrClipRecordsPerFrame =
     (kMaxBodyRaw - 16) / kArrClipRecordBytes;
+static const int kMaxArrMarkerRecordsPerFrame =
+    (kMaxBodyRaw - 16) / kArrMarkerRecordBytes;
 
 enum DirtyRegion {
     DIRTY_CELLS = 1 << 0,
@@ -117,11 +161,29 @@ enum DirtyRegion {
 };
 
 enum ArrangerLoadMode {
-    ARR_LOAD_MANUAL = 1
+    ARR_LOAD_MANUAL = 1,
+    ARR_LOAD_AUTO = 2,
+    ARR_LOAD_QUEUE = 3
 };
 
 enum ArrangerLoadFlags {
-    ARR_LOAD_START_TRANSPORT = 1 << 0
+    ARR_LOAD_START_TRANSPORT = 1 << 0,
+    ARR_LOAD_CLEAR_EMPTY = 1 << 1,
+    ARR_LOAD_GROUP_SELECT = 1 << 2,
+    ARR_LOAD_SEEK_POSITION = 1 << 3,
+    ARR_LOAD_IMMEDIATE = 1 << 4,
+    ARR_LOAD_RUNTIME_FADES = 1 << 5
+};
+
+enum GridSaveFlags {
+    GRID_SAVE_GROUP_SELECT = 1 << 0
+};
+
+enum GridSlotApplyFields {
+    GRID_SLOT_APPLY_ROW = 1 << 0,
+    GRID_SLOT_APPLY_LOOPS = 1 << 1,
+    GRID_SLOT_APPLY_LENGTH = 1 << 2,
+    GRID_SLOT_APPLY_LOAD_SOUND = 1 << 3
 };
 
 enum ErrCode {

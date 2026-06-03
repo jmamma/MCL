@@ -12,6 +12,12 @@ class LoadQueueModes {
   GridSlot offset;
 };
 
+#if !defined(__AVR__)
+#define LOAD_QUEUE_CLEAR_ROW 254
+#define LOAD_QUEUE_FLAG_IMMEDIATE 0x80
+#define LOAD_QUEUE_FLAG_PRESTART_FADE 0x40
+#endif
+
 class LoadQueue {
   public:
   static_assert((NUM_LINKS & (NUM_LINKS - 1)) == 0,
@@ -30,7 +36,7 @@ class LoadQueue {
 
   void put(uint8_t mode, GridRow *row_select, GridSlot offset = 255) {
     if (full) { return; }
-    memcpy(row_selects[wr],row_select,NUM_SLOTS);
+    memcpy(row_selects[wr], row_select, NUM_SLOTS);
     modes[wr].mode = mode;
     modes[wr].offset = offset;
     wr = (wr + 1) & (NUM_LINKS - 1);
