@@ -46,14 +46,18 @@ void GridTask::load_queue_handler() {
     uint8_t track_select[NUM_SLOTS];
 #if !defined(__AVR__)
     uint8_t clear_select[NUM_SLOTS];
+    uint32_t private_source_ids[NUM_SLOTS];
 #endif
-    load_queue.get(mode, offset, row_select_array, track_select);
 #if !defined(__AVR__)
+    load_queue.get(mode, offset, row_select_array, track_select,
+                   private_source_ids);
     bool immediate_load = (mode & LOAD_QUEUE_FLAG_IMMEDIATE) != 0;
     bool allow_prestart_fades = (mode & LOAD_QUEUE_FLAG_PRESTART_FADE) != 0;
     mode &= (uint8_t)~(LOAD_QUEUE_FLAG_IMMEDIATE |
                        LOAD_QUEUE_FLAG_PRESTART_FADE);
     memset(clear_select, 0, sizeof(clear_select));
+#else
+    load_queue.get(mode, offset, row_select_array, track_select);
 #endif
 #if !defined(__AVR__)
     bool any_load = false;
@@ -83,8 +87,10 @@ void GridTask::load_queue_handler() {
 #else
     if (any_load) {
       mcl_actions.write_original = 1;
+      mcl_arrangement.beginQueuedPrivateLoads(private_source_ids);
       mcl_actions.load_tracks(track_select, row_select_array, mode, offset,
                               immediate_load, allow_prestart_fades);
+      mcl_arrangement.endQueuedPrivateLoads();
     }
     if (any_clear) {
       mcl_actions.clear_tracks(clear_select);

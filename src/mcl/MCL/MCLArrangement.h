@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 class DeviceTrack;
+class EmptyTrack;
 
 class MCLArrangement {
 public:
@@ -28,7 +29,9 @@ public:
                 bool allowPrestartFade = false);
   bool armRuntimeForHostLoad(uint32_t positionQ12,
                              const GridRow rows[NUM_SLOTS],
-                             uint16_t trackMask, GridSlot loadOffset);
+                             uint16_t trackMask, GridSlot loadOffset,
+                             const uint32_t privateSourceIds[NUM_SLOTS] =
+                                 nullptr);
   void armRuntimeFade(uint8_t dst, const TrackLoadFadeData &fade);
   bool applyClipRuntime(uint8_t dst, DeviceTrack *track);
 
@@ -47,6 +50,15 @@ public:
   bool setClipFade(uint32_t startQ12, uint32_t durationQ12, uint8_t track,
                    uint8_t row, bool fadeOut, bool overrideFade,
                    const TrackLoadFadeData &fade);
+  bool makeClipLocal(uint32_t startQ12, uint32_t durationQ12, uint8_t track,
+                     uint8_t row, GridSlot expectedSourceSlot);
+  bool exportPrivateSourceToGrid(uint32_t sourceId, GridSlot sourceSlot,
+                                 GridRow sourceRow, GridSlot targetSlot,
+                                 GridRow targetRow);
+  void beginQueuedPrivateLoads(const uint32_t sourceIds[NUM_SLOTS]);
+  void endQueuedPrivateLoads();
+  bool loadQueuedPrivateSource(GridSlot sourceSlot, GridRow row,
+                               EmptyTrack &scratch, DeviceTrack **out);
 
 private:
   bool openActive(class FsFile *file, uint8_t mode);
@@ -77,6 +89,7 @@ private:
   static const uint8_t kRuntimeSlots = 16;
   TrackLoadFadeData clip_runtime_fades_[kRuntimeSlots];
   uint16_t clip_runtime_fade_mask_ = 0;
+  uint32_t queued_private_source_ids_[NUM_SLOTS] = {};
   bool playback_active_ = false;
 };
 

@@ -51,6 +51,8 @@ private:
     void onSetArrTrackLabel(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrClipFade(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSeekLoad(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onArrMakeLocal(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onArrLocalToGrid(uint8_t tag, const uint8_t* b, uint16_t n);
 
     bool applySetLink(const uint8_t* b, uint16_t n);
     bool applySetFade(const uint8_t* b, uint16_t n);

@@ -7,7 +7,8 @@
  *   /Projects/<project>/Arr/NNN.arr
  *
  * The file stores an explicit per-track timeline. Timing is frozen at import
- * time; clip track/row still references live grid slot content.
+ * time; clip sources may reference live grid slot content or arranger-private
+ * material.
  */
 #ifndef MCL_ARRANGEMENT_FORMAT_H
 #define MCL_ARRANGEMENT_FORMAT_H
@@ -17,10 +18,12 @@
 
 namespace mclarrfile {
 
-static const uint16_t kVersion = 4;
+static const uint16_t kVersion = 5;
 static const uint16_t kMinVersion = 1;
 static const uint16_t kClipBytesV1 = 16;
 static const uint16_t kClipBytesV2 = 24;
+static const uint16_t kClipBytesV4 = 32;
+static const uint16_t kClipBytesV5 = 40;
 static const uint8_t kNameBytes = 16;
 static const uint8_t kMarkerLabelBytes = 16;
 static const uint8_t kTrackLabelBytes = 16;
@@ -28,6 +31,7 @@ static const uint8_t kTrackLabelCount = 16;
 static const uint8_t kFilenameDigits = 3;
 static const uint8_t kMaxArrangementIndex = 255;
 static const uint16_t kMaxMarkers = 128;
+static const uint8_t kGridSourceSlotCount = 32;
 
 static const char kDirName[] = "Arr";
 static const char kExtension[] = ".arr";
@@ -37,6 +41,11 @@ enum ClipFlags {
     CLIP_MUTED = 1 << 1,
     CLIP_LOAD_SOUND = 1 << 2,
     CLIP_FADE_OVERRIDE = 1 << 3
+};
+
+enum ClipSourceKind {
+    CLIP_SOURCE_GRID = 0,
+    CLIP_SOURCE_PRIVATE = 1
 };
 
 enum HeaderFlags {
@@ -85,6 +94,11 @@ struct Clip {
     uint8_t endFadeAmount;
     int8_t endFadeCurve;
     uint16_t endFadeReserved;
+    uint8_t sourceKind;
+    uint8_t sourceTrack;     // Absolute source GridSlot 0..31; kept named for V5 compatibility.
+    uint8_t sourceFlags;
+    uint8_t sourceReserved;
+    uint32_t sourceId;
 };
 
 struct Marker {
@@ -97,7 +111,7 @@ struct Marker {
 
 static_assert(sizeof(Header) == 32, "MCL arrangement header layout changed");
 static_assert(sizeof(HeaderExtraV2) == 8, "MCL arrangement header extra layout changed");
-static_assert(sizeof(Clip) == 32, "MCL arrangement clip layout changed");
+static_assert(sizeof(Clip) == 40, "MCL arrangement clip layout changed");
 static_assert(sizeof(Marker) == 24, "MCL arrangement marker layout changed");
 
 inline void initHeader(Header& h, const char* name) {
@@ -123,14 +137,30 @@ inline void initHeader(Header& h, const char* name) {
     }
 }
 
+inline void initGridSource(Clip& clip, uint8_t sourceSlot) {
+    clip.sourceKind = CLIP_SOURCE_GRID;
+    clip.sourceTrack = sourceSlot;
+    clip.sourceFlags = 0;
+    clip.sourceReserved = 0;
+    clip.sourceId = 0;
+}
+
+inline uint8_t clipSourceSlot(const Clip& clip) {
+    return clip.sourceTrack < kGridSourceSlotCount ? clip.sourceTrack : clip.track;
+}
+
+inline uint8_t clipSourceTrack(const Clip& clip) {
+    return clipSourceSlot(clip);
+}
+
 inline bool validHeader(const Header& h) {
     return h.magic[0] == 'S' && h.magic[1] == 'P' &&
            h.magic[2] == 'A' && h.magic[3] == 'R' &&
            h.version >= kMinVersion &&
            h.version <= kVersion &&
            h.headerBytes >= sizeof(Header) &&
-           (h.clipBytes == sizeof(Clip) || h.clipBytes == kClipBytesV2 ||
-            h.clipBytes == kClipBytesV1);
+           (h.clipBytes == sizeof(Clip) || h.clipBytes == kClipBytesV4 ||
+            h.clipBytes == kClipBytesV2 || h.clipBytes == kClipBytesV1);
 }
 
 } // namespace mclarrfile

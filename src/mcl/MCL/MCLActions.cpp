@@ -111,7 +111,15 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
                                                 uint8_t seq_track_idx, bool &was_rebuilt,
                                                 EmptyTrack &scratch,
                                                 int8_t link_slot) {
-  auto *loaded_track = scratch.load_from_grid_512(track_idx, row);
+  DeviceTrack *loaded_track = nullptr;
+#if !defined(__AVR__)
+  if (!mcl_arrangement.loadQueuedPrivateSource(track_idx, row, scratch,
+                                               &loaded_track)) {
+    loaded_track = scratch.load_from_grid_512(track_idx, row);
+  }
+#else
+  loaded_track = scratch.load_from_grid_512(track_idx, row);
+#endif
   if (loaded_track == nullptr) {
     return nullptr;
   }

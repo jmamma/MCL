@@ -300,6 +300,11 @@ static void putArrClip(uint8_t* dst, const mclarrfile::Clip& clip) {
     dst[28] = clip.endFadeAmount;
     dst[29] = (uint8_t)clip.endFadeCurve;
     spsArrPutU16(dst + 30, clip.endFadeReserved);
+    dst[32] = clip.sourceKind;
+    dst[33] = clip.sourceTrack;
+    dst[34] = clip.sourceFlags;
+    dst[35] = clip.sourceReserved;
+    spsArrPutU32(dst + 36, clip.sourceId);
 }
 
 static void putArrMarker(uint8_t* dst, const mclarrfile::Marker& marker) {
@@ -424,6 +429,8 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_SET_ARR_TRACK_LABEL: onSetArrTrackLabel(p.tag, b, n); break;
         case CMD_SET_ARR_CLIP_FADE: onSetArrClipFade(p.tag, b, n); break;
         case CMD_ARR_SEEK_LOAD: onArrSeekLoad(p.tag, b, n); break;
+        case CMD_ARR_MAKE_LOCAL: onArrMakeLocal(p.tag, b, n); break;
+        case CMD_ARR_LOCAL_TO_GRID: onArrLocalToGrid(p.tag, b, n); break;
         default: sendErr(p.tag, ERR_UNKNOWN_CMD, 0); break;
     }
 }
@@ -1321,6 +1328,75 @@ void SpsHostArrBridge::onSetArrClipFade(uint8_t tag, const uint8_t* b,
     uint8_t ack[2] = {CMD_SET_ARR_CLIP_FADE, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
     notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+}
+
+void SpsHostArrBridge::onArrMakeLocal(uint8_t tag, const uint8_t* b,
+                                      uint16_t n) {
+    if (n < 11) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint32_t startQ12 = spsArrGetU32(b + 0);
+    uint32_t durationQ12 = spsArrGetU32(b + 4);
+    uint8_t track = b[8];
+    uint8_t row = b[9];
+    uint8_t sourceSlot = b[10];
+    if (track >= spsarr::kNumTracks || row >= GRID_LENGTH ||
+        sourceSlot >= NUM_SLOTS || durationQ12 == 0) {
+        sendErr(tag, ERR_RANGE, track);
+        return;
+    }
+
+    if (!mcl_arrangement.makeClipLocal(startQ12, durationQ12, track, row,
+                                       sourceSlot)) {
+        sendErr(tag, ERR_BUSY, track);
+        return;
+    }
+
+    uint8_t ack[2] = {CMD_ARR_MAKE_LOCAL, 1};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+}
+
+void SpsHostArrBridge::onArrLocalToGrid(uint8_t tag, const uint8_t* b,
+                                        uint16_t n) {
+    if (n < 8) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint32_t sourceId = spsArrGetU32(b + 0);
+    GridSlot sourceSlot = b[4];
+    GridRow sourceRow = b[5];
+    GridSlot targetSlot = b[6];
+    GridRow targetRow = b[7];
+    if (sourceId == 0 || sourceSlot >= NUM_SLOTS ||
+        sourceRow >= GRID_LENGTH || targetSlot >= spsarr::kNumTracks ||
+        targetRow >= GRID_LENGTH) {
+        sendErr(tag, ERR_RANGE, targetSlot);
+        return;
+    }
+
+    ArrCell targetCell = readCell(targetSlot, targetRow);
+    if (mcl_clipboard.copy(targetSlot, targetRow, 1, 1)) {
+        grid_page.slot_undo = 0;
+    } else if (targetCell.active) {
+        sendErr(tag, ERR_BUSY, 2);
+        return;
+    }
+
+    if (!mcl_arrangement.exportPrivateSourceToGrid(sourceId, sourceSlot,
+                                                   sourceRow, targetSlot,
+                                                   targetRow)) {
+        sendErr(tag, ERR_BUSY, 1);
+        return;
+    }
+
+    grid_page.load_slot_models();
+    uint8_t ack[2] = {CMD_ARR_LOCAL_TO_GRID, 1};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    notifyDirty(0xFF, DIRTY_CELLS);
 }
 
 void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,

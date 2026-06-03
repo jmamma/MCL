@@ -74,6 +74,8 @@ enum Cmd {
     CMD_GRID_APPLY_SLOT = 0x60,
     CMD_SET_ARR_CLIP_FADE = 0x61,
     CMD_ARR_SEEK_LOAD = 0x62,
+    CMD_ARR_MAKE_LOCAL = 0x63,
+    CMD_ARR_LOCAL_TO_GRID = 0x64,
 
     CMD_NOTIFY_ACTIVE = 0x70,
     CMD_NOTIFY_DIRTY = 0x71,
@@ -142,8 +144,11 @@ static const int kArrClipFadeBytes = 8;
 static const int kArrClipRecordBaseBytes = 16;
 static const int kArrClipRecordLegacyFadeBytes =
     kArrClipRecordBaseBytes + kArrClipFadeBytes;
-static const int kArrClipRecordBytes =
+static const int kArrClipRecordV4Bytes =
     kArrClipRecordBaseBytes + kArrClipFadeBytes * 2;
+static const int kArrClipRecordSourceBytes = 8;
+static const int kArrClipRecordBytes =
+    kArrClipRecordV4Bytes + kArrClipRecordSourceBytes;
 static const int kArrMarkerLabelBytes = 16;
 static const int kArrMarkerRecordBytes = 24;
 static const int kArrMarkerGlobalTrack = 255;
