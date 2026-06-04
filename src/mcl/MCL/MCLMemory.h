@@ -108,7 +108,7 @@ constexpr size_t MDLFO_TRACK_LEN = MEMORY_ALIGN(226);
 constexpr size_t MDROUTE_TRACK_LEN = MEMORY_ALIGN(39);
 constexpr size_t MDFX_TRACK_LEN = MEMORY_ALIGN(43);
 constexpr size_t MDTEMPO_TRACK_LEN = MEMORY_ALIGN(11);
-constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(493);
+constexpr size_t PERF_TRACK_LEN = MEMORY_ALIGN(494);
 constexpr size_t GRIDCHAIN_TRACK_LEN = MEMORY_ALIGN(551);
 
 #ifdef EXT_TRACKS

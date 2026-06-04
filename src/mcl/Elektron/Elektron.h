@@ -354,6 +354,9 @@ public:
   void draw_close_swing();
   void draw_open_slide();
   void draw_close_slide();
+  void draw_open_fill(uint16_t mask);
+  void draw_fill_state(uint16_t mask);
+  void draw_close_fill();
   void activate_key_interface();
   void deactivate_key_interface();
 

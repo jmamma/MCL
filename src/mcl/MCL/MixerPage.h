@@ -81,6 +81,7 @@ public:
 
   uint8_t preview_mute_set = 255;
   uint8_t load_mute_set = 255;
+  uint8_t fill_set_mode_mask = 0;
 
   // Don't change order
   MuteSet mute_sets[2];
@@ -117,6 +118,9 @@ public:
   void disable_record_mutes(bool clear = false);
   void oled_draw_mutes();
   void switch_mute_set(uint8_t state, bool load_perf = false, bool *load_types = nullptr);
+  bool fill_set_mode(uint8_t state) const;
+  void set_fill_set_mode(uint8_t state, bool fill);
+  void switch_fill_set(uint8_t state);
 
   void load_perf_locks(uint8_t state);
   void toggle_or_solo(bool solo = false);

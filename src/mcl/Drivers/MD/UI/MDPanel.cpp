@@ -124,6 +124,7 @@ bool MDPanel::handle_event(gui_event_t *event) {
     if (!md_.ui.sps_mode.is_active()) return false; // Let MCL handle normal taps.
 
     const bool func_held = key_interface.is_key_down(MDX_KEY_FUNC);
+    mcl_remote_func_window_replaced();
     switch (event->source) {
       case ButtonsClass::ENCODER2: // TEMPO
         if (func_held) md_.tap_tempo();

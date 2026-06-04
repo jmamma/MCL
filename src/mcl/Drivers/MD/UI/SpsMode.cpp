@@ -209,10 +209,21 @@ bool SpsMode::handle_func_arrow_chord(gui_event_t *event) {
   if (!key_interface.is_key_down(MDX_KEY_FUNC)) return false;
   if (MD.connected && is_press(event)) {
     switch (event->source) {
-      case ButtonsClass::FUNC_BUTTON6: MD.toggle_accent_window(); break; // UP
-      case ButtonsClass::FUNC_BUTTON9: MD.toggle_swing_window();  break; // RIGHT
-      case ButtonsClass::FUNC_BUTTON8: MD.toggle_slide_window();  break; // DOWN
-      case ButtonsClass::FUNC_BUTTON7: MD.toggle_mute_window();   break; // LEFT
+      case ButtonsClass::FUNC_BUTTON6:
+        mcl_remote_func_window_replaced();
+        MD.toggle_accent_window();
+        break; // UP
+      case ButtonsClass::FUNC_BUTTON9:
+        mcl_remote_func_window_replaced();
+        MD.toggle_swing_window();
+        break; // RIGHT
+      case ButtonsClass::FUNC_BUTTON8:
+        mcl_remote_func_window_replaced();
+        MD.toggle_slide_window();
+        break; // DOWN
+      case ButtonsClass::FUNC_BUTTON7:
+        mcl_toggle_remote_mute_window();
+        break; // LEFT
       default: break;
     }
   }
@@ -252,6 +263,7 @@ bool SpsMode::handle_cluster_menus(gui_event_t *event) {
     if (scale_key) {
       if (key_interface.is_key_down(MDX_KEY_FUNC) ||
           BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
+        mcl_remote_func_window_replaced();
         MD.toggle_scale_window();
         scale_key_held_ = false;
       } else {

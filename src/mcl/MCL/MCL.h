@@ -92,5 +92,9 @@ bool tbd_handleEvent(gui_event_t *event);
 #endif
 
 bool mcl_handleEvent(gui_event_t *event);
+#ifdef PLATFORM_TBD
+void mcl_remote_func_window_replaced();
+void mcl_toggle_remote_mute_window();
+#endif
 
 health_status health_check();

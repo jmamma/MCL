@@ -71,7 +71,7 @@ void trace_blocking_listener(const char *stage,
     DEBUG_PRINT(" len=");
     DEBUG_PRINT((unsigned)listener->sysex->ledger[msg_rd].recordLen);
   }
-  DEBUG_PRINTLN();
+  DEBUG_PRINTLN("");
 }
 #else
 void trace_blocking_data(const char *, DataType, uint8_t) {}
@@ -415,6 +415,28 @@ void ElektronDevice::draw_open_swing() { send_system_command(this, 0x3C, 0x25); 
 void ElektronDevice::draw_close_swing() { send_system_command(this, 0x3C, 0x26); }
 void ElektronDevice::draw_open_slide() { send_system_command(this, 0x3C, 0x28); }
 void ElektronDevice::draw_close_slide() { send_system_command(this, 0x3C, 0x29); }
+
+static void send_fill_draw(ElektronDevice *device, uint8_t subcmd,
+                           uint16_t mask) {
+  static uint8_t data[6] = {0x70, 0x3C};
+  data[2] = subcmd;
+  data[3] = (uint8_t)(mask & 0x7F);
+  data[4] = (uint8_t)((mask >> 7) & 0x7F);
+  data[5] = (uint8_t)((mask >> 14) & 0x03);
+  device->sendRequest(data, sizeof(data));
+}
+
+void ElektronDevice::draw_open_fill(uint16_t mask) {
+  send_fill_draw(this, 0x2A, mask);
+}
+
+void ElektronDevice::draw_fill_state(uint16_t mask) {
+  send_fill_draw(this, 0x2C, mask);
+}
+
+void ElektronDevice::draw_close_fill() {
+  send_system_command(this, 0x3C, 0x2B);
+}
 
 
 void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,

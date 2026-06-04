@@ -8,6 +8,7 @@
 #include "MCLSeq.h"
 #include "MixerPerf.h"
 #include "SeqPages.h"
+#include "../Drivers/MD/MD.h"
 
 #define FADER_LEN 18
 #define FADE_RATE 8
@@ -74,6 +75,37 @@ TrigLEDMode MixerPage::mixer_led_mode() const {
 
 uint8_t *MixerPage::mixer_meter_levels() {
   return mixer_device_idx == DeviceIdx::Primary ? disp_levels : ext_disp_levels;
+}
+
+bool MixerPage::fill_set_mode(uint8_t state) const {
+  return state < 4 && (fill_set_mode_mask & (uint8_t)(1u << state)) != 0;
+}
+
+void MixerPage::set_fill_set_mode(uint8_t state, bool fill) {
+  if (state >= 4) {
+    return;
+  }
+  if (fill) {
+    fill_set_mode_mask |= (uint8_t)(1u << state);
+    mute_sets[0].mutes[state] = mcl_seq.fill_mask;
+  } else {
+    fill_set_mode_mask &= (uint8_t)~(1u << state);
+    const uint16_t mask = track_mask_for_len(16);
+    mute_sets[0].mutes[state] = mask;
+    mute_sets[1].mutes[state] = mask;
+  }
+  seq_step_page.mute_mask++;
+  redraw_mutes = true;
+}
+
+void MixerPage::switch_fill_set(uint8_t state) {
+  if (state >= 4) {
+    return;
+  }
+  mcl_seq.fill_mask = mute_sets[0].mutes[state] & track_mask_for_len(16);
+  if (MD.connected) {
+    MD.draw_fill_state(mcl_seq.fill_mask);
+  }
 }
 
 void MixerPage::track_trig(DeviceIdx device_idx, uint8_t track_number,
@@ -164,13 +196,18 @@ void MixerPage::oled_draw_mutes() {
   uint8_t len = mixer_track_count();
   uint8_t fader_x = 0;
   uint8_t slot = static_cast<uint8_t>(mixer_device_idx);
+  const bool fill_preview = fill_set_mode(preview_mute_set);
 
   bool draw = true;
-  if (preview_mute_set != 255 && load_types[preview_mute_set][slot] == 0) {
+  if (preview_mute_set != 255 && !fill_preview &&
+      load_types[preview_mute_set][slot] == 0) {
     draw = false;
   }
   uint16_t preview_mutes =
-      preview_mute_set != 255 ? mute_sets[slot].mutes[preview_mute_set] : 0;
+      preview_mute_set != 255
+          ? (fill_preview ? mute_sets[0].mutes[preview_mute_set]
+                          : mute_sets[slot].mutes[preview_mute_set])
+          : 0;
   for (uint8_t i = 0; i < len; ++i, preview_mutes >>= 1) {
     SeqTrack *seq_track = mixer_seq_track(i);
     if (seq_track == nullptr) {
@@ -189,7 +226,16 @@ void MixerPage::oled_draw_mutes() {
     // No Mute (SEQ_MUTE_OFF)
     oled_display.fillRect(fader_x, 2, 6, 6, BLACK);
     if (draw) {
-      if (mute_state) {
+      if (fill_preview) {
+        if (mute_state) {
+          oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
+          oled_display.drawFastVLine(fader_x + 2, 3, 4, WHITE);
+          oled_display.drawFastVLine(fader_x + 3, 3, 4, WHITE);
+        } else {
+          oled_display.drawPixel(fader_x + 2, 5, WHITE);
+          oled_display.drawPixel(fader_x + 3, 5, WHITE);
+        }
+      } else if (mute_state) {
         oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
       } else {
         oled_display.drawFastHLine(fader_x, 5, 6, WHITE);
@@ -363,6 +409,13 @@ void MixerPage::display() {
   if (((ext_key_down && mute_set == 255) || show_mixer_menu) &&
       display_mute_mask()) {
     oled_draw_mutes();
+  } else if (fill_set_mode(mute_set)) {
+    uint16_t mask = mute_sets[0].mutes[mute_set] & track_mask_for_len(16);
+    if (seq_step_page.mute_mask != mask) {
+      mcl_gui.set_trigleds(mask, TRIGLED_EXCLUSIVE);
+      seq_step_page.mute_mask = mask;
+      oled_draw_mutes();
+    }
   } else if (mute_set != 255 && mute_sets[slot].mutes[mute_set] !=
                                     seq_step_page.mute_mask) {
 
@@ -467,7 +520,9 @@ void MixerPage::disable_record_mutes(bool clear) {
 }
 
 void MixerPage::switch_mute_set(uint8_t state, bool load_perf, bool *load_type) {
-  if (load_type != nullptr && state < 255) {
+  if (fill_set_mode(state)) {
+    switch_fill_set(state);
+  } else if (load_type != nullptr && state < 255) {
     for (uint8_t dev = 0; dev < 2; dev++) {
       if (!load_type[dev]) continue;
       MixerTarget target;
@@ -567,9 +622,10 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     uint8_t len = mixer_target.track_count();
     if (event->mask == EVENT_BUTTON_PRESSED && track < len) {
       if (note_interface.is_note(track)) {
+        const bool fill_preview = fill_set_mode(preview_mute_set);
         if (show_mixer_menu || ext_key_down ||
             (preview_mute_set != 255 &&
-             load_types[preview_mute_set][slot])) {
+             (fill_preview || load_types[preview_mute_set][slot]))) {
           if (ext_key_down) {
             mute_toggle = 1;
           }
@@ -586,6 +642,12 @@ bool MixerPage::handleEvent(gui_event_t *event) {
             if (mixer_target.set_seq_mute_state(track, mute_state)) {
               mixer_target.mute_track(track, mute_state);
             }
+            return true;
+          }
+
+          if (fill_preview) {
+            TOGGLE_BIT16(mute_sets[0].mutes[mute_set], track);
+            oled_draw_mutes();
             return true;
           }
 
@@ -744,6 +806,14 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_SCALE: {
+        if (preview_mute_set != 255) {
+          set_fill_set_mode(preview_mute_set,
+                            !fill_set_mode(preview_mute_set));
+          key_interface.send_md_leds(fill_set_mode(preview_mute_set)
+                                         ? TRIGLED_EXCLUSIVE
+                                         : mixer_led_mode());
+          return true;
+        }
         select_mixer_device(mixer_device_idx == DeviceIdx::Primary
                                 ? DeviceIdx::Secondary
                                 : DeviceIdx::Primary);

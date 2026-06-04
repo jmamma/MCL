@@ -301,7 +301,7 @@ static_assert(sizeof(LegacyGridTrackHeader) == LEGACY_GRID_TRACK_HEADER_SIZE,
               "origin/dev track header size changed");
 static_assert(GridTrack::STORAGE_HEADER_SIZE == LEGACY_GRID_TRACK_HEADER_SIZE,
               "current track header prefix changed");
-static_assert(sizeof(LegacyPerfTrackData) + 2 == sizeof(PerfTrackData),
+static_assert(sizeof(LegacyPerfTrackData) + 3 == sizeof(PerfTrackData),
               "legacy PerfTrack payload is not a prefix");
 static_assert(sizeof(LegacyGridTrackHeader) + sizeof(LegacyPerfTrackData) ==
                   491,
@@ -477,6 +477,7 @@ void copy_legacy_perf_track_data(PerfTrackData &dst,
   memcpy(&dst, &src, sizeof(src));
   dst.load_mute_set = 255;
   dst.load_type_mask = 0;
+  dst.fill_set_mode_mask = 0;
 
   uint8_t bit = 1;
   uint8_t load_bit = 0x10;
@@ -708,7 +709,7 @@ bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
 
   MigratedPerfTrackStorage upgraded;
   init_migrated_header(upgraded.header, legacy_track.header, PERF_TRACK_TYPE,
-                       PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT);
+                       PERF_TRACK_STORAGE_VERSION_FILL_SETS);
   copy_legacy_perf_track_data(upgraded.data, legacy_track.data);
   return grid.write(&upgraded, sizeof(upgraded), dst_column, row);
 }

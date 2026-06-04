@@ -6,7 +6,7 @@
 #include "PerfEncoder.h"
 #include "MixerPage.h"
 
-#define PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT 1
+#define PERF_TRACK_STORAGE_VERSION_FILL_SETS 2
 
 class ATTR_PACKED() PerfTrackEncoderData {
 public:
@@ -36,6 +36,7 @@ public:
   uint8_t perf_locks[4][4];
   uint8_t load_mute_set;
   uint8_t load_type_mask;
+  uint8_t fill_set_mode_mask;
 };
 
 class ATTR_PACKED() PerfTrack : public AUXTrack, public PerfTrackData {
@@ -64,6 +65,7 @@ public:
     memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
     load_mute_set = 255;
     load_type_mask = 0xFF;
+    fill_set_mode_mask = 0;
   }
   void init_defaults() override { init(); }
 
@@ -86,7 +88,7 @@ public:
   }
   virtual uint8_t get_model() override { return PERF_TRACK_TYPE; }
   virtual uint8_t storage_version() const override {
-    return PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT;
+    return PERF_TRACK_STORAGE_VERSION_FILL_SETS;
   }
   virtual void *get_sound_data_ptr() override { return &encs; }
   virtual size_t get_sound_data_size() override { return sizeof(PerfTrackData); }

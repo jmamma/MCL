@@ -23,8 +23,9 @@ uint16_t PerfTrack::calc_latency(uint8_t tracknumber) {
 void PerfTrack::get_perf() {
   memcpy(scenes, PerfData::scenes, sizeof(PerfScene) * NUM_SCENES);
   memcpy(mute_sets,mixer_page.mute_sets, sizeof(mute_sets) + sizeof(perf_locks));
-  version = PERF_TRACK_STORAGE_VERSION_CLEAN_LAYOUT;
+  version = PERF_TRACK_STORAGE_VERSION_FILL_SETS;
   load_mute_set = mixer_page.load_mute_set;
+  fill_set_mode_mask = mixer_page.fill_set_mode_mask;
   load_type_mask = 0;
   uint8_t bit = 1;
   uint8_t load_bit = 0x10;
@@ -78,6 +79,7 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);
 
  memcpy(mixer_page.mute_sets, mute_sets, sizeof(mute_sets) + sizeof(perf_locks));
+ mixer_page.fill_set_mode_mask = fill_set_mode_mask;
  uint8_t mute_set = mixer_page.load_mute_set;
  if (mute_set < 4) {
    mixer_page.switch_mute_set(mute_set, immediate, mixer_page.load_types[mute_set]); //Mute change is applied outside of sequencer runtime.

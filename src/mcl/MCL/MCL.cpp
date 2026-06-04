@@ -58,6 +58,12 @@
 
 namespace {
 
+bool remote_fill_window_open = false;
+#ifdef PLATFORM_TBD
+bool remote_mute_window_open = false;
+bool remote_fill_scale_down = false;
+#endif
+
 uint8_t mask_shortcut_for_key(uint8_t key) {
   uint8_t bank = key - MDX_KEY_BANKA;
   if (bank > MDX_KEY_BANKD - MDX_KEY_BANKA) {
@@ -66,7 +72,78 @@ uint8_t mask_shortcut_for_key(uint8_t key) {
   return bank < MASK_SWING ? MASK_MUTE : bank;
 }
 
+bool bank_key_down() {
+  return ((uint8_t *)&key_interface.cmd_key_state)[MDX_KEY_BANKA >> 3] & 0x3C;
+}
+
+#ifdef PLATFORM_TBD
+void clear_remote_func_window() {
+  remote_fill_window_open = false;
+  remote_mute_window_open = false;
+}
+#endif
+
+void open_remote_fill_window() {
+  if (grid_page.bank_popup) {
+    grid_page.close_bank_popup();
+  }
+  MD.draw_open_fill(mcl_seq.fill_mask);
+  remote_fill_window_open = true;
+#ifdef PLATFORM_TBD
+  remote_mute_window_open = false;
+#endif
+}
+
+void close_remote_fill_window() {
+  MD.draw_close_fill();
+  remote_fill_window_open = false;
+}
+
+void toggle_remote_fill_window() {
+  if (remote_fill_window_open) {
+    close_remote_fill_window();
+  } else {
+    open_remote_fill_window();
+  }
+}
+
+#ifdef PLATFORM_TBD
+bool switch_remote_mute_fill_window() {
+  if (!MD.connected) {
+    return false;
+  }
+  if (remote_fill_window_open) {
+    close_remote_fill_window();
+    MD.toggle_mute_window();
+    remote_mute_window_open = true;
+    return true;
+  }
+  if (remote_mute_window_open) {
+    open_remote_fill_window();
+    return true;
+  }
+  return false;
+}
+#endif
+
 } // namespace
+
+#ifdef PLATFORM_TBD
+void mcl_remote_func_window_replaced() {
+  clear_remote_func_window();
+}
+
+void mcl_toggle_remote_mute_window() {
+  if (!MD.connected) {
+    return;
+  }
+  if (remote_fill_window_open) {
+    close_remote_fill_window();
+  }
+  MD.toggle_mute_window();
+  remote_mute_window_open = !remote_mute_window_open;
+}
+#endif
 
 // In MCL.cpp:
 const lightpage_ptr_t MCL::pages_table[NUM_PAGES] PROGMEM = {
@@ -326,6 +403,24 @@ bool mcl_handleEvent(gui_event_t *event) {
         }
         break;
       }
+      case MDX_KEY_SCALE: {
+        if (!key_interface.event_func_down(event)) {
+          if (bank_key_down()) {
+            toggle_remote_fill_window();
+#ifdef PLATFORM_TBD
+            remote_fill_scale_down = true;
+#endif
+            return true;
+          }
+#ifdef PLATFORM_TBD
+          if (switch_remote_mute_fill_window()) {
+            remote_fill_scale_down = true;
+            return true;
+          }
+#endif
+        }
+        break;
+      }
       case MDX_KEY_MUTE:
       case MDX_KEY_BANKA:
       case MDX_KEY_BANKB:
@@ -425,6 +520,7 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REALTIME: {
         mcl_seq.set_fill(true);
+        MD.draw_fill_state(mcl_seq.fill_mask);
         seq_step_page.bootstrap_record();
         return true;
       }
@@ -502,7 +598,20 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REALTIME: {
         mcl_seq.set_fill(false);
+        MD.draw_fill_state(mcl_seq.fill_mask);
         return true;
+      }
+      case MDX_KEY_SCALE: {
+#ifdef PLATFORM_TBD
+        if (remote_fill_scale_down) {
+          remote_fill_scale_down = false;
+          return true;
+        }
+#endif
+        if (bank_key_down()) {
+          return true;
+        }
+        break;
       }
       case MDX_KEY_FUNCEXTENDED: {
         key_interface.ignoreNextEventClear(MDX_KEY_EXTENDED);
