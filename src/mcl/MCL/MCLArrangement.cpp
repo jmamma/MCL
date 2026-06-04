@@ -1477,6 +1477,11 @@ void MCLArrangement::resetPlayback() {
   playback_active_ = false;
 }
 
+void MCLArrangement::resetPlaybackForTransport() {
+  resetPlayback();
+  grid_task.load_queue.init();
+}
+
 void MCLArrangement::armClipRuntime(uint8_t dst, const mclarrfile::Clip &clip,
                                     uint16_t elapsedQ12) {
   if (dst >= 16) {

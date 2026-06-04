@@ -470,7 +470,7 @@ extern "C" int32_t mcl_midi_out_pop(int32_t port) {
 extern "C" void mcl_set_transport_position(uint32_t tick96) {
     MidiClock.set_transport_position(tick96);
     mcl_seq.set_transport_position(tick96);
-    mcl_arrangement.resetPlayback();
+    mcl_arrangement.resetPlaybackForTransport();
 }
 
 // ---- Input -------------------------------------------------------------

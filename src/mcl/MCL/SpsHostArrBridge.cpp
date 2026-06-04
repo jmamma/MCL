@@ -749,7 +749,7 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                               : startStep * kHostTicksPer16th;
         MidiClock.set_transport_position(tick96);
         mcl_seq.set_transport_position(tick96);
-        mcl_arrangement.resetPlayback();
+        mcl_arrangement.resetPlaybackForTransport();
     }
 
     uint32_t positionQ12 = startStep > 0xFFFFFFFFu / 12u
@@ -1417,6 +1417,7 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
         MidiClock.set_transport_position(tick96);
         mcl_seq.set_transport_position(tick96);
     }
+    mcl_arrangement.resetPlaybackForTransport();
 
     bool queued = mcl_arrangement.seekLoad(
         positionQ12, (flags & ARR_LOAD_IMMEDIATE) != 0,

@@ -27,6 +27,7 @@ public:
   bool importGrid(uint16_t trackMask, uint8_t startRow);
   void tick();
   void resetPlayback();
+  void resetPlaybackForTransport();
   bool seekLoad(uint32_t positionQ12, bool immediate,
                 bool allowPrestartFade = false);
   bool armRuntimeForHostLoad(uint32_t positionQ12,
