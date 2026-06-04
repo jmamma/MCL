@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include "platform.h"
+#include "SeqDefines.h"
 
 extern uint8_t get_random_byte();
 
@@ -59,32 +60,30 @@ extern uint8_t get_random_byte();
 #define STEPSEQ_TRIG_TRUE 1
 #define STEPSEQ_TRIG_ONESHOT 3
 
-// ============================================================================
-// Conditional Types (6-bit field = 0-63)
-// ============================================================================
-#define STEPSEQ_COND_100PCT     0
-#define STEPSEQ_COND_90PCT      1
-#define STEPSEQ_COND_75PCT      2
-#define STEPSEQ_COND_66PCT      3
-#define STEPSEQ_COND_50PCT      4
-#define STEPSEQ_COND_33PCT      5
-#define STEPSEQ_COND_25PCT      6
-#define STEPSEQ_COND_10PCT      7
+// Conditional IDs are shared with the compact MCL/MD encoding.
+#define STEPSEQ_COND_100PCT     SEQ_COND_100PCT
+#define STEPSEQ_COND_90PCT      SEQ_COND_90PCT
+#define STEPSEQ_COND_75PCT      SEQ_COND_75PCT
+#define STEPSEQ_COND_66PCT      SEQ_COND_66PCT
+#define STEPSEQ_COND_50PCT      SEQ_COND_50PCT
+#define STEPSEQ_COND_33PCT      SEQ_COND_33PCT
+#define STEPSEQ_COND_25PCT      SEQ_COND_25PCT
+#define STEPSEQ_COND_10PCT      SEQ_COND_10PCT
 
-#define STEPSEQ_COND_ONESHOT    8
-#define STEPSEQ_COND_FIRST      9
-#define STEPSEQ_COND_NOT_FIRST  10
-#define STEPSEQ_COND_FILL       11
-#define STEPSEQ_COND_NOT_FILL   12
-#define STEPSEQ_COND_PRE        13
-#define STEPSEQ_COND_NOT_PRE    14
-#define STEPSEQ_COND_NEI        15
-#define STEPSEQ_COND_NOT_NEI    16
+#define STEPSEQ_COND_ONESHOT    SEQ_COND_ONESHOT
+#define STEPSEQ_COND_FIRST      SEQ_COND_FIRST
+#define STEPSEQ_COND_NOT_FIRST  SEQ_COND_NOT_FIRST
+#define STEPSEQ_COND_FILL       SEQ_COND_FILL
+#define STEPSEQ_COND_NOT_FILL   SEQ_COND_NOT_FILL
+#define STEPSEQ_COND_PRE        SEQ_COND_PRE
+#define STEPSEQ_COND_NOT_PRE    SEQ_COND_NOT_PRE
+#define STEPSEQ_COND_NEI        SEQ_COND_NEI
+#define STEPSEQ_COND_NOT_NEI    SEQ_COND_NOT_NEI
 
-#define STEPSEQ_COND_ITER_BASE  17
-#define STEPSEQ_COND_ITER_MAX   51
+#define STEPSEQ_COND_ITER_BASE  SEQ_COND_ITER_BASE
+#define STEPSEQ_COND_ITER_MAX   SEQ_COND_ITER_MAX
 
-#define STEPSEQ_NUM_TRIG_CONDITIONS 52
+#define STEPSEQ_NUM_TRIG_CONDITIONS SEQ_NUM_TRIG_CONDITIONS
 
 // Retrig infinite sentinel.
 #define STEPSEQ_RETRIG_INFINITE 255
@@ -159,23 +158,11 @@ inline int16_t stepseq_microtiming_to_ticks(int8_t mt, uint16_t tps) {
 }
 
 inline uint8_t stepseq_cond_iter_encode(uint8_t x, uint8_t y) {
-    if (y < 2 || y > 8 || x < 1 || x > y) return STEPSEQ_COND_100PCT;
-    uint8_t offset = (uint8_t)((y - 2) * (y - 1) / 2 + (y - 2));
-    return (uint8_t)(STEPSEQ_COND_ITER_BASE + offset + (x - 1));
+    return seq_cond_iter_encode(x, y);
 }
 
 inline bool stepseq_cond_iter_decode(uint8_t cond, uint8_t &x, uint8_t &y) {
-    if (cond < STEPSEQ_COND_ITER_BASE || cond > STEPSEQ_COND_ITER_MAX) return false;
-    uint8_t offset = cond - STEPSEQ_COND_ITER_BASE;
-    static const uint8_t y_starts[] = {0, 2, 5, 9, 14, 20, 27, 35};
-    for (uint8_t i = 0; i < 7; i++) {
-        if (offset < y_starts[i + 1]) {
-            y = i + 2;
-            x = (uint8_t)(offset - y_starts[i] + 1);
-            return true;
-        }
-    }
-    return false;
+    return seq_cond_iter_decode(cond, x, y);
 }
 
 inline uint8_t stepseq_get_random_byte() {

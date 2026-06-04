@@ -87,53 +87,24 @@ uint8_t StepSeqTrack::get_quantized_step(int8_t &microtiming_out, uint8_t quant)
 // ============================================================================
 
 void StepSeqTrackCond::record_trig_result(bool fired) {
-    prev_trig_fired = fired;
+    seq_condition_set_prev_trig(conditional_flags, fired);
     if (seq_class) {
-        if (fired) {
-            STEPSEQ_SET_BIT16(seq_class->neighbor_trig_mask, track_number);
-        } else {
-            STEPSEQ_CLEAR_BIT16(seq_class->neighbor_trig_mask, track_number);
-        }
+        seq_condition_record_neighbor(seq_class->neighbor_trig_mask,
+                                      track_number, fired);
     }
 }
 
 bool StepSeqTrackCond::neighbor_fired() const {
     if (!seq_class || track_number == 0) return false;
-    return STEPSEQ_IS_BIT_SET16(seq_class->neighbor_trig_mask, track_number - 1);
+    return seq_condition_neighbor_fired(seq_class->neighbor_trig_mask,
+                                        track_number);
 }
 
 bool StepSeqTrackCond::conditional(uint8_t condition) {
-    if (condition <= STEPSEQ_COND_10PCT) {
-        static const uint8_t pct_thresholds[] = {
-            255, 230, 192, 169, 128, 84, 64, 26
-        };
-        if (condition == STEPSEQ_COND_100PCT) return true;
-        return stepseq_get_random_byte() <= pct_thresholds[condition];
-    }
-
-    switch (condition) {
-    case STEPSEQ_COND_ONESHOT:   return true;
-    case STEPSEQ_COND_FIRST:     return first_run;
-    case STEPSEQ_COND_NOT_FIRST: return !first_run;
-    case STEPSEQ_COND_FILL:
-        return seq_class && STEPSEQ_IS_BIT_SET16(seq_class->fill_mask, track_number);
-    case STEPSEQ_COND_NOT_FILL:
-        return !seq_class || !STEPSEQ_IS_BIT_SET16(seq_class->fill_mask, track_number);
-    case STEPSEQ_COND_PRE:       return prev_trig_fired;
-    case STEPSEQ_COND_NOT_PRE:   return !prev_trig_fired;
-    case STEPSEQ_COND_NEI:       return neighbor_fired();
-    case STEPSEQ_COND_NOT_NEI:   return !neighbor_fired();
-    default: break;
-    }
-
-    if (condition >= STEPSEQ_COND_ITER_BASE && condition <= STEPSEQ_COND_ITER_MAX) {
-        uint8_t x, y;
-        if (stepseq_cond_iter_decode(condition, x, y)) {
-            return get_iteration(y) == x;
-        }
-    }
-
-    return true;
+    return seq_condition_match(condition, iterations, conditional_flags,
+                               track_number,
+                               seq_class ? seq_class->fill_mask : 0,
+                               seq_class ? seq_class->neighbor_trig_mask : 0);
 }
 
 // ============================================================================

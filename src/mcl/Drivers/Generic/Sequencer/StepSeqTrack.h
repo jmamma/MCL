@@ -7,6 +7,7 @@
 #include "StepSeqTrackData.h"
 #include "MidiUart.h"
 #include "SeqTrack.h"
+#include "SeqCondition.h"
 
 class MCLSeq;
 
@@ -126,12 +127,16 @@ public:
 
 class StepSeqTrackCond : public StepSeqTrack {
 public:
-    uint8_t iterations[8];
+    uint8_t iterations[7];
     uint16_t cur_event_idx;
     uint8_t ignore_step;
 
-    bool prev_trig_fired;
-    bool first_run;
+    uint8_t conditional_flags;
+
+    enum {
+        CONDITIONAL_FIRST_RUN = SEQ_CONDITIONAL_FIRST_RUN,
+        CONDITIONAL_PREV_TRIG = SEQ_CONDITIONAL_PREV_TRIG,
+    };
 
     // Shared sequencer state for fill and neighbor trigger conditions.
     MCLSeq* seq_class = nullptr;
@@ -142,11 +147,7 @@ public:
 
     void reset() {
         cur_event_idx = 0;
-        for (uint8_t i = 0; i < 8; i++) {
-            iterations[i] = 1;
-        }
-        prev_trig_fired = false;
-        first_run = true;
+        seq_condition_reset(iterations, conditional_flags);
         StepSeqTrack::reset();
         ignore_step = 255;
     }
@@ -172,19 +173,22 @@ public:
         if (step_count == length - 1) {
             step_count = 0;
             cur_event_idx = 0;
-            first_run = false;
-            for (uint8_t i = 1; i < 8; i++) {
-                uint8_t cycle_len = i + 1;
-                iterations[i] = (iterations[i] >= cycle_len) ? 1 : iterations[i] + 1;
-            }
+            seq_condition_advance_cycle(iterations, conditional_flags);
         } else {
             step_count++;
         }
     }
 
     uint8_t get_iteration(uint8_t y) const {
-        if (y < 2 || y > 8) return 1;
-        return iterations[y - 1];
+        return seq_condition_get_iteration(iterations, y);
+    }
+
+    bool first_run() const {
+        return seq_condition_first_run(conditional_flags);
+    }
+
+    void set_first_run(bool value) {
+        seq_condition_set_first_run(conditional_flags, value);
     }
 
     virtual void set_length(uint8_t len, bool expand = false) = 0;

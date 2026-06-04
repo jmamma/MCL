@@ -1,4 +1,5 @@
 #include "SeqTrack.h"
+#include "SeqCondition.h"
 #include "ArpSeqTrack.h"
 #include "LFOSeqTrack.h"
 #include "MCLSeq.h"
@@ -174,59 +175,19 @@ bool seq_cond_iter_decode(uint8_t cond, uint8_t &x, uint8_t &y) {
 }
 
 void SeqTrackCond::record_trig_result(bool fired) {
-  if (fired) {
-    conditional_flags |= CONDITIONAL_PREV_TRIG;
-    if (track_number < 16) {
-      mcl_seq.neighbor_trig_mask |= (uint16_t)(1u << track_number);
-    }
-  } else {
-    conditional_flags &= ~CONDITIONAL_PREV_TRIG;
-    if (track_number < 16) {
-      mcl_seq.neighbor_trig_mask &= (uint16_t)~(1u << track_number);
-    }
-  }
+  seq_condition_set_prev_trig(conditional_flags, fired);
+  seq_condition_record_neighbor(mcl_seq.neighbor_trig_mask, track_number,
+                                fired);
 }
 
 bool SeqTrackCond::neighbor_fired() const {
-  return track_number != 0 &&
-         (mcl_seq.neighbor_trig_mask & (uint16_t)(1u << (track_number - 1))) !=
-             0;
+  return seq_condition_neighbor_fired(mcl_seq.neighbor_trig_mask, track_number);
 }
 
 bool SeqTrackCond::conditional(uint8_t condition) {
-  if (condition <= SEQ_COND_10PCT) {
-    if (condition == SEQ_COND_100PCT) {
-      return true;
-    }
-    static const uint8_t thresholds[] PROGMEM = {
-        255, 230, 192, 169, 128, 84, 64, 26,
-    };
-    return get_random_byte() <= pgm_read_byte_near(thresholds + condition);
-  }
-
-  if (condition >= SEQ_COND_FIRST && condition <= SEQ_COND_NOT_NEI) {
-    bool value = false;
-    if (condition < SEQ_COND_FILL) {
-      value = first_run();
-    } else if (condition < SEQ_COND_PRE) {
-      value = track_number < 16 &&
-              (mcl_seq.fill_mask & ((uint16_t)1 << track_number)) != 0;
-    } else if (condition < SEQ_COND_NEI) {
-      value = (conditional_flags & CONDITIONAL_PREV_TRIG) != 0;
-    } else {
-      value = neighbor_fired();
-    }
-    return (condition & 1) ? value : !value;
-  }
-
-  if (condition >= SEQ_COND_ITER_BASE && condition <= SEQ_COND_ITER_MAX) {
-    uint8_t x, y;
-    if (seq_cond_iter_decode(condition, x, y)) {
-      return iterations[y - 2] == x;
-    }
-  }
-
-  return true;
+  return seq_condition_match(condition, iterations, conditional_flags,
+                             track_number, mcl_seq.fill_mask,
+                             mcl_seq.neighbor_trig_mask);
 }
 
 void seq_condition_label(uint8_t condition, bool plock, bool marker,

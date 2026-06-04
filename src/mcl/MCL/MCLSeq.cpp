@@ -126,7 +126,7 @@ void sync_spsx_track_phase(SPSXSeqTrack &track, uint32_t div192) {
   track.tick_counter = (uint16_t)(div192 % ticks_per_step);
   track.update_legacy_progress_counter(ticks_per_step);
   track.cur_event_idx = track.get_lockidx(track.step_count);
-  track.first_run = total_steps < length;
+  track.set_first_run(total_steps < length);
 }
 #endif
 
