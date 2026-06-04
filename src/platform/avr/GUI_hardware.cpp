@@ -200,8 +200,9 @@ void GUIHardware::poll() {
 
   uint16_t sr = SR165.read16();
   if (sr != oldsr) {
-    Buttons.clear();
-    Buttons.poll(sr >> 8);
+    // Button state is consumed through the global Buttons object/macros.
+    ::Buttons.clear();
+    ::Buttons.poll(sr >> 8);
     Encoders.poll(sr);
     oldsr = sr;
     GUI.events.pollEvents();
@@ -212,14 +213,14 @@ void GUIHardware::poll() {
 void GUIHardware::init() {
   SR165.init();
   uint16_t sr = SR165.read16();
-  Buttons.clear();
-  Buttons.poll(sr >> 8);
+  ::Buttons.clear();
+  ::Buttons.poll(sr >> 8);
   Encoders.poll(sr);
   oldsr = sr;
 }
 
 void GUIHardware::clear() {
-   Buttons.clear();
+   ::Buttons.clear();
    Encoders.clearEncoders();
 }
 

@@ -150,7 +150,6 @@ private:
     bool inGui;
     uint16_t oldsr;
 public:
-    ButtonsClass Buttons;  // Made public for macro access
     LEDHardware led;
     GUIHardware() = default;
     void init();
