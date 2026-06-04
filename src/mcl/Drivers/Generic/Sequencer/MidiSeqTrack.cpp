@@ -71,7 +71,7 @@ uint16_t clamp_value14(int32_t value) {
   return (uint16_t)value;
 }
 
-constexpr uint8_t MIDI_SEQ_COND_ONESHOT = 14;
+constexpr uint8_t MIDI_SEQ_COND_ONESHOT = SEQ_COND_ONESHOT;
 
 bool current_event_due(uint16_t timing, uint16_t tps, uint16_t tick_counter) {
   if (timing < tps) return false;
@@ -1209,14 +1209,15 @@ void MidiSeqTrack::import_legacy_ext(const ExtSeqTrackData &legacy,
                                       0, 0);
         event.init(MIDI_SEQ_EVENT_LOCK, lock_idx,
                    value14_from_value7(legacy_event.event_value),
-                   MIDI_SEQ_TIMING_CENTER, legacy_event.cond_id,
+                   MIDI_SEQ_TIMING_CENTER, SEQ_COND_100PCT,
                    legacy_event.event_on ? MIDI_SEQ_EVENT_FLAG_SLIDE : 0);
       } else {
         event.init(legacy_event.event_on ? MIDI_SEQ_EVENT_NOTE_ON
                                          : MIDI_SEQ_EVENT_NOTE_OFF,
                    legacy_event.event_value,
                    legacy_event.event_on ? legacy.velocities[step] : 0,
-                   MIDI_SEQ_TIMING_CENTER, legacy_event.cond_id);
+                   MIDI_SEQ_TIMING_CENTER,
+                   ext_event_condition(legacy_event));
       }
       event.set_microtiming(data_offset);
       add_event(step, event);

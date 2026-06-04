@@ -424,10 +424,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         return true;
       }
       case MDX_KEY_REALTIME: {
-#if !defined(__AVR__)
-        // StepSeq engines use REALTIME held as fill mode.
         mcl_seq.set_fill(true);
-#endif
         seq_step_page.bootstrap_record();
         return true;
       }
@@ -504,9 +501,7 @@ bool mcl_handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_REALTIME: {
-#if !defined(__AVR__)
         mcl_seq.set_fill(false);
-#endif
         return true;
       }
       case MDX_KEY_FUNCEXTENDED: {

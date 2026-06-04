@@ -72,13 +72,13 @@ constexpr uint8_t EXT_NOTE_CLIP_MAX_NOTES = 255;
 constexpr size_t NUM_PERF_PARAMS = 16;
 constexpr size_t NUM_SCENES = 8;
 
-constexpr size_t NUM_TRIG_CONDITIONS = 14;
+constexpr size_t NUM_TRIG_CONDITIONS = 47;
 constexpr size_t NUM_LOCKS = 8;
 // as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
 // the track sizes are:
 // GridTrack 7
 // DeviceTrack 7
-// MDTrack 534, plus SeqTrackModData 51, native swing storage 9,
+// MDTrack 534, plus SeqTrackModData 51, native swing/slide storage 16,
 // plus TrackLoadFadeData 8
 // ExtTrack 1754
 // A4Track 2153
@@ -93,7 +93,7 @@ constexpr size_t NUM_LOCKS = 8;
 #define MEMORY_ALIGN(size) (size)  // for avr, dont align
 #endif
 
-constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(603); // MDTrack + SeqTrackModData + swing + load fade
+constexpr size_t GRID1_TRACK_LEN = MEMORY_ALIGN(619); // MDTrack + SeqTrackModData + masks + load fade
 #if !defined(__AVR__)
 // Non-AVR grid-2 cache slots can carry enhanced MIDI/TBD tracks. Hosted
 // builds also need the enlarged slot because native pointers grow several

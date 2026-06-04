@@ -77,6 +77,21 @@ struct ATTR_PACKED() ext_event_t {
   }
 };
 
+inline uint8_t ext_event_condition(const ext_event_t &event) {
+  uint8_t condition = event.cond_id;
+  if (!event.is_lock) {
+    condition |= (event.lock_idx & 0x03) << 4;
+  }
+  return condition;
+}
+
+inline void ext_event_set_condition(ext_event_t &event, uint8_t condition) {
+  event.cond_id = condition & 0x0F;
+  if (!event.is_lock) {
+    event.lock_idx = (condition >> 4) & 0x03;
+  }
+}
+
 class NoteVector {
 public:
   uint8_t step;

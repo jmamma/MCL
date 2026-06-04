@@ -533,13 +533,19 @@ void copy_legacy_md_locks(MDSeqTrackData &dst,
                           const LegacyMDSeqTrackData &src) {
   memset(dst.locks, 0, sizeof(dst.locks));
   memcpy(dst.locks_params, src.locks_params, sizeof(dst.locks_params));
-  memcpy(dst.steps, src.steps, sizeof(dst.steps));
+  memset(dst.steps, 0, sizeof(dst.steps));
+  dst.slide_mask = 0;
 
   uint16_t src_lock = 0;
   for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
     uint8_t legacy_locks = src.steps[step].locks;
     bool locks_enabled = src.steps[step].locks_enabled;
-    dst.steps[step].locks = 0;
+    dst.steps[step].trig = src.steps[step].trig;
+    dst.steps[step].cond_plock = src.steps[step].cond_plock;
+    dst.steps[step].cond_id = seq_legacy_cond_to_stepseq(src.steps[step].cond_id);
+    if (src.steps[step].slide) {
+      SET_BIT64(dst.slide_mask, step);
+    }
     for (uint8_t lock = 0; lock < NUM_LOCKS; lock++) {
       uint8_t lock_mask = 1 << lock;
       if (!(legacy_locks & lock_mask)) {
@@ -557,8 +563,8 @@ void copy_legacy_md_locks(MDSeqTrackData &dst,
 
 void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src,
                         uint8_t speed) {
-  // Every MDSeqTrackData field is populated here; legacy lock-enable shares the
-  // current swing bit and is overwritten after copying the step descriptors.
+  // Every MDSeqTrackData field is populated here; legacy lock-enable is folded
+  // into the migrated packed lock data below.
   memcpy(dst.microtiming, src.timing, sizeof(dst.microtiming));
   convert_md_seq_unsigned_timing(dst, speed);
 
@@ -585,6 +591,12 @@ void convert_legacy_ext_seq(ExtSeqTrackData &dst, uint8_t speed) {
 
   memcpy(dst.locks_params, &fixed_tail, sizeof(fixed_tail));
   dst.event_count = used_events;
+  for (uint16_t i = 0; i < used_events; i++) {
+    if (!dst.events[i].is_lock) {
+      uint8_t condition = seq_legacy_cond_to_stepseq(dst.events[i].cond_id);
+      ext_event_set_condition(dst.events[i], condition);
+    }
+  }
   convert_ext_seq_unsigned_timing(dst, speed);
 }
 

@@ -17,11 +17,9 @@ class ATTR_PACKED() MDSeqStepDescriptor {
 public:
   uint8_t
       locks; // <-- bitfield of 8 locks in the current step, first lock is lsb
-  bool swing : 1; // Former editable lock-enable bit.
   bool trig : 1;
-  bool slide : 1;
   bool cond_plock : 1;
-  uint8_t cond_id : 4;
+  uint8_t cond_id : 6;
   bool is_lock_bit(const uint8_t idx) const { return locks & (1 << idx); }
   bool is_lock(const uint8_t idx) const { return is_lock_bit(idx); }
 };
@@ -32,6 +30,7 @@ public:
   uint8_t locks[NUM_LOCKS];
   int8_t microtiming;
   bool swing;
+  bool slide;
   bool mute;
   MDSeqStepDescriptor data;
 };
@@ -110,26 +109,16 @@ public:
 class ATTR_PACKED() MDSeqTrackData : public MDSeqTrackDataV1 {
 public:
   uint64_t mute_mask;
+  uint64_t slide_mask;
+  uint64_t swing_mask;
   uint8_t swing_amount;
 
-  // Swing is stored per-step in steps[].swing. This expands a contiguous mask
-  // (bit n -> step n), as used for the default pattern, MD pattern import and
-  // sysex, into those per-step bits.
   void set_swing_from_mask(const uint8_t *mask_bytes) {
-    uint8_t step = 0;
-    for (uint8_t byte = 0; byte < sizeof(uint64_t); byte++) {
-      uint8_t bits = mask_bytes[byte];
-      for (uint8_t bit = 0; bit < 8; bit++, step++) {
-        steps[step].swing = bits & 1;
-        bits >>= 1;
-      }
-    }
+    memcpy(&swing_mask, mask_bytes, sizeof(swing_mask));
   }
 
   void set_default_swing() {
-    for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
-      steps[step].swing = step & 1;
-    }
+    swing_mask = MDSEQ_DEFAULT_SWING_MASK;
   }
 
   void init() {
@@ -139,7 +128,8 @@ public:
 };
 
 static_assert(sizeof(MDSeqTrackData) ==
-                  sizeof(MDSeqTrackDataV1) + sizeof(uint64_t) + sizeof(uint8_t),
+                  sizeof(MDSeqTrackDataV1) + sizeof(uint64_t) * 3 +
+                      sizeof(uint8_t),
               "MDSeqTrackData storage size changed unexpectedly");
 
 #endif /* MDSEQTRACKDATA_H__ */

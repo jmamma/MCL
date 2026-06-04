@@ -159,78 +159,84 @@ uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   return step;
 }
 
-bool SeqTrackCond::conditional(uint8_t condition) {
-  bool send_note = false;
-  uint8_t random_byte = 0;
-  if (condition >= 9) { random_byte = get_random_byte(); }
-
-  switch (condition) {
-  case 0:
-  case 1:
-    send_note = true;
-    break;
-  case 2:
-    if (!IS_BIT_SET(iterations_8, 0)) {
-      send_note = true;
+bool seq_cond_iter_decode(uint8_t cond, uint8_t &x, uint8_t &y) {
+  if (cond < SEQ_COND_ITER_BASE || cond > SEQ_COND_ITER_MAX) return false;
+  uint8_t offset = cond - SEQ_COND_ITER_BASE;
+  for (uint8_t i = 2; i <= 8; i++) {
+    if (offset < i) {
+      y = i;
+      x = offset + 1;
+      return true;
     }
-    break;
-  case 3:
-    if ((iterations_6 == 3) || (iterations_6 == 6)) {
-      send_note = true;
-    }
-    break;
-  case 6:
-    if (iterations_6 == 6) {
-      send_note = true;
-    }
-    break;
-  case 4:
-    if ((iterations_8 == 4) || (iterations_8 == 8)) {
-      send_note = true;
-    }
-    break;
-  case 8:
-    if (iterations_8 == 8) {
-      send_note = true;
-    }
-    break;
-  case 5:
-    if (iterations_5 == 5) {
-      send_note = true;
-    }
-    break;
-  case 7:
-    if (iterations_7 == 7) {
-      send_note = true;
-    }
-    break;
-  case 9:
-    if (random_byte <= 26) {
-      send_note = true;
-    }
-    break;
-  case 10:
-    if (random_byte <= 64) {
-      send_note = true;
-    }
-    break;
-  case 11:
-    if (random_byte <= 128) {
-      send_note = true;
-    }
-    break;
-  case 12:
-    if (random_byte <= 192) {
-      send_note = true;
-    }
-    break;
-  case 13:
-    if (random_byte <= 230) {
-      send_note = true;
-    }
-    break;
+    offset -= i;
   }
-  return send_note;
+  return false;
+}
+
+bool SeqTrackCond::conditional(uint8_t condition) {
+  if (condition <= SEQ_COND_10PCT) {
+    if (condition == SEQ_COND_100PCT) {
+      return true;
+    }
+    static const uint8_t thresholds[] PROGMEM = {
+        255, 230, 192, 169, 128, 84, 64, 26,
+    };
+    return get_random_byte() <= pgm_read_byte_near(thresholds + condition);
+  }
+
+  if (condition >= SEQ_COND_FIRST && condition <= SEQ_COND_NOT_FILL) {
+    bool value = condition < SEQ_COND_FILL
+                     ? first_run()
+                     : track_number < 16 &&
+                           (mcl_seq.fill_mask &
+                            ((uint16_t)1 << track_number)) != 0;
+    return (condition & 1) ? value : !value;
+  }
+
+  if (condition >= SEQ_COND_ITER_BASE && condition <= SEQ_COND_ITER_MAX) {
+    uint8_t x, y;
+    if (seq_cond_iter_decode(condition, x, y)) {
+      return get_iteration(y) == x;
+    }
+  }
+
+  return true;
+}
+
+void seq_condition_label(uint8_t condition, bool plock, bool marker,
+                         char *out) {
+  if (out == nullptr) {
+    return;
+  }
+
+  char a = '-';
+  char b = '-';
+  char d = '-';
+
+  if (condition <= SEQ_COND_NOT_FILL) {
+    static const char labels[] PROGMEM =
+        "---90%75%66%50%33%25%10%1SH1ST!1SFIL!FL";
+    uint8_t idx = condition + condition + condition;
+    a = (char)pgm_read_byte_near(labels + idx);
+    b = (char)pgm_read_byte_near(labels + idx + 1);
+    d = (char)pgm_read_byte_near(labels + idx + 2);
+  } else {
+    uint8_t x, y;
+    if (seq_cond_iter_decode(condition, x, y)) {
+      a = (char)('0' + x);
+      b = ':';
+      d = (char)('0' + y);
+    }
+  }
+
+  out[0] = a;
+  out[1] = b;
+  out[2] = d;
+  uint8_t i = 3;
+  if (plock) {
+    out[i++] = marker ? '+' : '^';
+  }
+  out[i] = '\0';
 }
 
 uint8_t SeqTrack::get_ticks_per_step(uint8_t speed_) {

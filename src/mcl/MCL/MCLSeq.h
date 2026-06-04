@@ -33,7 +33,7 @@
 #define SEQ_SCALE_1_4X 5
 #define SEQ_SCALE_1_8X 6
 
-#define NUM_TRIG_CONDITIONS 14
+#define NUM_TRIG_CONDITIONS 47
 
 class MCLSeqMidiEvents : public MidiCallback {
 public:
@@ -70,20 +70,21 @@ public:
   // store?" should test this, not MD.is_spsx.
   bool using_spsx_tracks = false;
   uint16_t neighbor_trig_mask = 0;
-  uint16_t fill_mask = 0;
   // Mode switch — only safe when MidiClock is PAUSED. Returns false if
   // refused (transport playing). Callers must stop transport first.
   bool switch_to_spsx();
   bool switch_to_legacy();
+#else
+  // AVR has no SPSX engine. Provide a constant so portable readers compile.
+  static constexpr bool using_spsx_tracks = false;
+#endif
+
+  uint16_t fill_mask = 0;
   void set_fill(bool held) { fill_mask = held ? 0xFFFF : 0; }
   void set_fill_track(uint8_t track, bool held) {
     if (held) fill_mask |= (uint16_t)(1u << track);
     else fill_mask &= (uint16_t)~(1u << track);
   }
-#else
-  // AVR has no SPSX engine. Provide a constant so portable readers compile.
-  static constexpr bool using_spsx_tracks = false;
-#endif
 
 #if defined(PLATFORM_TBD)
   static constexpr uint8_t num_tbd_tracks = TBD_P4_SOUND_TRACK_COUNT;

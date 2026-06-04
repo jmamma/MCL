@@ -151,32 +151,7 @@ public:
 
   void condition_label(uint8_t condition, bool plock, bool marker,
                        char *out) const NOINLINE() {
-    if (out == nullptr) {
-      return;
-    }
-    static const char PROGMEM ptab[] = "12579";
-
-    char a = 'L';
-    char b = '1';
-    if (condition != 0) {
-      if (condition <= 8) {
-        b = '0' + condition;
-      } else if (condition <= 13) {
-        a = 'P';
-        b = pgm_read_byte(&ptab[condition - 9]);
-      } else if (condition == 14) {
-        a = '1';
-        b = 'S';
-      }
-    }
-
-    out[0] = a;
-    out[1] = b;
-    uint8_t i = 2;
-    if (plock) {
-      out[i++] = marker ? '+' : '^';
-    }
-    out[i] = '\0';
+    seq_condition_label(condition, plock, marker, out);
   }
 
   uint8_t step_conditional_from_knob(uint8_t condition, bool *plock) const {

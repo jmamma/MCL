@@ -778,7 +778,8 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
       return;
 
     if (ev.event_on) {
-      noteon_conditional(ev.cond_id, ev.event_value, velocities[step]);
+      noteon_conditional(ext_event_condition(ev), ev.event_value,
+                         velocities[step]);
     } else {
       note_off(ev.event_value, 0);
     }
@@ -934,16 +935,10 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
       IS_BIT_SET128_P(mute_mask, step_count)) {
     return;
   }
-  if (condition > 64) {
-    condition -= 64;
-  }
-
   bool send_note = false;
-  if (condition == 14) {
-    if (!IS_BIT_SET128_P(oneshot_mask, step_count)) {
-      SET_BIT128_P(oneshot_mask, step_count);
-      send_note = true;
-    }
+  if (condition == SEQ_COND_ONESHOT) {
+    SET_BIT128_P(oneshot_mask, step_count);
+    send_note = true;
   } else {
     send_note = conditional(condition);
   }
@@ -1181,7 +1176,8 @@ bool ExtSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
   ext_event_t e;
 
   e.is_lock = false;
-  e.cond_id = cond;
+  e.lock_idx = 0;
+  ext_event_set_condition(e, cond);
   e.event_value = note_num;
   e.event_on = event_on;
   e.micro_timing = ext_page_timing_to_microtiming(utiming,
@@ -1304,7 +1300,7 @@ void ExtSeqTrack::clear_mutes() {
 
 void ExtSeqTrack::clear_ext_conditional() {
   for (uint16_t x = 0; x < NUM_EXT_EVENTS; x++) {
-    events[x].cond_id = 0;
+    ext_event_set_condition(events[x], 0);
     events[x].micro_timing = 0;
   }
   clear_mutes();

@@ -218,23 +218,25 @@ class SeqTrackCond : public SeqTrack {
 
 public:
   // Conditional counters
-  uint8_t iterations_5;
-  uint8_t iterations_6;
-  uint8_t iterations_7;
-  uint8_t iterations_8;
+  uint8_t iterations[7];
 
   uint16_t cur_event_idx;
 
   uint8_t ignore_step;
+  uint8_t conditional_flags;
+
+  enum {
+    CONDITIONAL_FIRST_RUN = 1 << 0,
+  };
 
   SeqTrackCond() { reset(); }
 
   ALWAYS_INLINE() void reset() {
     cur_event_idx = 0;
-    iterations_5 = 1;
-    iterations_6 = 1;
-    iterations_7 = 1;
-    iterations_8 = 1;
+    for (uint8_t i = 0; i < 7; i++) {
+      iterations[i] = 1;
+    }
+    conditional_flags = CONDITIONAL_FIRST_RUN;
     SeqTrack::reset();
     ignore_step = 255;
   }
@@ -260,15 +262,15 @@ public:
     if (step_count == length - 1) {
       step_count = 0;
       cur_event_idx = 0;
+      conditional_flags &= ~CONDITIONAL_FIRST_RUN;
 
-      // Iteration counters are contiguous uint8_t members, so walk them as an array to save code size.
-      uint8_t *iteration = &iterations_5;
-      for (uint8_t max = 5; max <= 8; max++, iteration++) {
-        uint8_t value = *iteration + 1;
+      for (uint8_t i = 0; i < 7; i++) {
+        uint8_t max = i + 2;
+        uint8_t value = iterations[i] + 1;
         if (value > max) {
           value = 1;
         }
-        *iteration = value;
+        iterations[i] = value;
       }
     } else {
       step_count++;
@@ -280,6 +282,15 @@ public:
   virtual void rotate_right() = 0;
   virtual void reverse() = 0;
   virtual void transpose(int8_t offset) = 0;
+
+  uint8_t get_iteration(uint8_t y) const {
+    if (y < 2 || y > 8) return 1;
+    return iterations[y - 2];
+  }
+
+  bool first_run() const {
+    return (conditional_flags & CONDITIONAL_FIRST_RUN) != 0;
+  }
 
   bool conditional(uint8_t condition);
 };
@@ -313,5 +324,7 @@ protected:
                                     uint8_t channel);
   virtual void on_slide_dispatch_end();
 };
+
+void seq_condition_label(uint8_t condition, bool plock, bool marker, char *out);
 
 #endif /* SEQTRACK_H__ */

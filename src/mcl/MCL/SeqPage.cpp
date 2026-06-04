@@ -1189,7 +1189,7 @@ uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition,
 }
 
 void SeqPage::draw_knob_conditional(uint8_t cond) {
-  char K[4];
+  char K[5];
   conditional_str(K, cond);
   // draw_knob(0, PRG_TO_RAM("COND"), K);
   draw_knob(0, mclstr_cond, K);
@@ -1209,30 +1209,7 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
     return;
   }
 
-  // Legacy MD condition names
-  static const char PROGMEM ptab[] = "12579"; // probability digits
-
-  char a = 'L', b = '1';
-  if (c) {
-    if (c <= 8) {
-      b = '0' + c; // L2..L8
-    } else if (c <= 13) {
-      a = 'P'; // P1..P9
-      b = pgm_read_byte(&ptab[c - 9]);
-    } else if (c == 14) {
-      a = '1';
-      b = 'S'; // 1S
-    }
-  }
-
-  s[0] = a;
-  s[1] = b;
-  uint8_t i = 2;
-
-  if (plock)
-    s[i++] = m ? '+' : '^';
-
-  s[i] = '\0';
+  seq_condition_label(c, plock, m, s);
 }
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_center) {

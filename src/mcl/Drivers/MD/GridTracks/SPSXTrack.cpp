@@ -9,42 +9,6 @@
 
 namespace {
 
-uint8_t legacy_cond_to_spsx(uint8_t condition) {
-  switch (condition) {
-  case 0:
-  case 1:
-    return SPSX_COND_100PCT;
-  case 2:
-    return spsx_cond_iter_encode(2, 2);
-  case 3:
-    return spsx_cond_iter_encode(3, 3);
-  case 4:
-    return spsx_cond_iter_encode(4, 4);
-  case 5:
-    return spsx_cond_iter_encode(5, 5);
-  case 6:
-    return spsx_cond_iter_encode(6, 6);
-  case 7:
-    return spsx_cond_iter_encode(7, 7);
-  case 8:
-    return spsx_cond_iter_encode(8, 8);
-  case 9:
-    return SPSX_COND_10PCT;
-  case 10:
-    return SPSX_COND_25PCT;
-  case 11:
-    return SPSX_COND_50PCT;
-  case 12:
-    return SPSX_COND_75PCT;
-  case 13:
-    return SPSX_COND_90PCT;
-  case 14:
-    return SPSX_COND_ONESHOT;
-  default:
-    return SPSX_COND_100PCT;
-  }
-}
-
 int8_t legacy_md_microtiming_to_spsx(int8_t microtiming, uint8_t speed) {
   if (microtiming == 0) {
     return 0;
@@ -80,8 +44,9 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
                                 SPSXSeqTrack &dest) {
   uint8_t speed = dest.speed;
   dest.SPSXSeqTrackData::init();
-  dest.swing_mask = 0;
   dest.mute_mask = src.mute_mask;
+  dest.slide_mask = src.slide_mask;
+  dest.swing_mask = src.swing_mask;
   dest.swing_amount = src.swing_amount;
 
   memset(dest.locks_params, 0, sizeof(dest.locks_params));
@@ -95,18 +60,12 @@ void convert_legacy_seq_to_spsx(const MDSeqTrackData &src,
     uint8_t legacy_locks = src_step.locks;
     dest_step.locks = 0;
     dest_step.cond_plock = src_step.cond_plock;
-    dest_step.cond_id = legacy_cond_to_spsx(src_step.cond_id);
+    dest_step.cond_id = src_step.cond_id;
     dest.microtiming[step] =
         legacy_md_microtiming_to_spsx(src.microtiming[step], speed);
 
     if (src_step.trig) {
       SPSX_SET_BIT64(dest.trig_mask, step);
-    }
-    if (src_step.slide) {
-      SPSX_SET_BIT64(dest.slide_mask, step);
-    }
-    if (src_step.swing) {
-      SPSX_SET_BIT64(dest.swing_mask, step);
     }
 
     for (uint8_t lock = 0; lock < NUM_LOCKS; lock++) {

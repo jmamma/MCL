@@ -67,6 +67,13 @@ void sync_seq_track_phase(Track &track, uint32_t track_ticks) {
 void sync_md_track_phase(MDSeqTrack &track, uint32_t track_ticks) {
   sync_seq_track_phase(track, track_ticks);
   track.cur_event_idx = track.get_lockidx(track.step_count);
+  uint8_t tps = track.get_ticks_per_step();
+  uint8_t len = track.length ? track.length : 1;
+  if (tps && track_ticks / tps < len) {
+    track.conditional_flags |= SeqTrackCond::CONDITIONAL_FIRST_RUN;
+  } else {
+    track.conditional_flags &= ~SeqTrackCond::CONDITIONAL_FIRST_RUN;
+  }
 }
 
 #ifdef EXT_TRACKS
@@ -74,6 +81,13 @@ void sync_ext_track_phase(ExtSeqTrack &track, uint32_t track_ticks) {
   sync_seq_track_phase(track, track_ticks);
   uint16_t end = 0;
   track.locate(track.step_count, track.cur_event_idx, end);
+  uint8_t tps = track.get_ticks_per_step();
+  uint8_t len = track.length ? track.length : 1;
+  if (tps && track_ticks / tps < len) {
+    track.conditional_flags |= SeqTrackCond::CONDITIONAL_FIRST_RUN;
+  } else {
+    track.conditional_flags &= ~SeqTrackCond::CONDITIONAL_FIRST_RUN;
+  }
 }
 #endif
 
@@ -92,6 +106,11 @@ void sync_midi_track_phase(MidiSeqTrack &track, uint32_t div192) {
   track.mod12_counter = (uint8_t)(((uint32_t)track.tick_counter * legacy_tps) /
                                   ticks_per_step);
   track.cur_event_idx = track.seq_data.locate_start(track.step_count);
+  if (total_steps < length) {
+    track.conditional_flags |= SeqTrackCond::CONDITIONAL_FIRST_RUN;
+  } else {
+    track.conditional_flags &= ~SeqTrackCond::CONDITIONAL_FIRST_RUN;
+  }
 }
 
 void sync_spsx_track_phase(SPSXSeqTrack &track, uint32_t div192) {
@@ -716,10 +735,10 @@ void MCLSeq::onMidiStartImmediateCallback(uint32_t clock_count) {
   seq_tx4.txRb->init();
 
   SeqTrackUtil::for_each_md_track([](auto &track, uint8_t) { track.reset(); });
+  fill_mask = 0;
 #if !defined(__AVR__)
   if (using_spsx_tracks) {
     neighbor_trig_mask = 0;
-    fill_mask = 0;
   }
 #endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {

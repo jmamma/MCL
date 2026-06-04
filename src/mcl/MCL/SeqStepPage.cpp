@@ -399,7 +399,7 @@ void SeqStepPage::loop() {
             draw_active_microtiming(active_track, seq_param2.cur, true);
           }
           if (seq_param1_changed && has_kit_sound) {
-            char str[4];
+            char str[5];
             if (seq_param1.getValue() > 0) {
               conditional_str(str, seq_param1.getValue(), true);
               active_track.popup_text(str);
