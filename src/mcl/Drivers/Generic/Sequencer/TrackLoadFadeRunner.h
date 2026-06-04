@@ -3,6 +3,7 @@
 #pragma once
 
 #include "../../../MCL/MCLMemory.h"
+#include "../../../MCL/MCLPlatformFeatures.h"
 #include "../../../MCL/TrackLoadFadeTarget.h"
 #include "platform.h"
 #include <inttypes.h>
@@ -17,7 +18,11 @@ class TrackLoadFadeData;
 class TrackLoadFadeRunner {
 public:
   // Clears every active fade. Call on transport reset/stop.
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   static void clear(bool preserve_armed_prestart = false);
+#else
+  static void clear();
+#endif
 
   // Always clears any state previously held for `slot`. If `fade` is null,
   // transport isn't STARTED, or the fade is disabled, returns after clearing
@@ -26,10 +31,14 @@ public:
   static void start(GridSlot slot,
                     const TrackLoadFadeTarget &target,
                     const TrackLoadFadeData *fade,
-                    uint32_t start_clock,
+                    uint32_t start_clock
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+                    ,
                     bool allow_prestart = false,
                     MidiUartClass *uart = nullptr,
-                    MidiUartClass *uart2 = nullptr);
+                    MidiUartClass *uart2 = nullptr
+#endif
+                    );
 
   // Advances every active fade by one tick. Output is written through the
   // TrackLoadFadeTarget bridge.

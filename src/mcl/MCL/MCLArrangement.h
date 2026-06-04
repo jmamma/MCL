@@ -3,7 +3,9 @@
  */
 #pragma once
 
-#if !defined(__AVR__)
+#include "MCLPlatformFeatures.h"
+
+#if MCL_FEATURE_HOST_ARRANGER
 
 #include "MCLArrangementFormat.h"
 #include "MCLMemory.h"
@@ -95,4 +97,4 @@ private:
 
 extern MCLArrangement mcl_arrangement;
 
-#endif // !defined(__AVR__)
+#endif // MCL_FEATURE_HOST_ARRANGER

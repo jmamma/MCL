@@ -445,9 +445,11 @@ void SeqExtStepLockApi::set_selected_lock_param(uint8_t slot, uint8_t param) {
   if (slot >= NUM_LOCKS) return;
   if (ext_track_->locks_params[slot] == param) return;
   ext_track_->locks_params[slot] = param;
+#if MCL_FEATURE_HOST_EXTSTEP_SYNC
   ext_track_->locks_slide_data[slot].init();
   ext_track_->locks_slides_recalc = 255;
   ExtSeqTrack::epoch++;
+#endif
 }
 
 void SeqExtStepLockApi::set_selected_lock_menu_value(uint8_t slot,

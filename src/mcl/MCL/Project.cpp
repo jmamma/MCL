@@ -1,4 +1,5 @@
 #include "MCLDefines.h"
+#include "MCLPlatformFeatures.h"
 #include "Project.h"
 #include "MCLSd.h"
 #include "MCLGUI.h"
@@ -20,7 +21,7 @@
 #include "PerfTrack.h"
 #include "GridChainTrack.h"
 #include "LFOSeqTrack.h"
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_ARRANGER
 #include "SPSXTrack.h"
 #include "MCLArrangementFormat.h"
 #include "SpsHostArrBridge.h"
@@ -47,7 +48,7 @@ bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
   return true;
 }
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_ARRANGER
 bool build_arrangement_leaf(uint8_t idx, char *out, size_t out_len) {
   if (out == nullptr || out_len < 8) {
     return false;
@@ -801,7 +802,7 @@ bool Project::new_project(const char *newprj) {
 
   draw_wait_popup("CREATING PROJECT");
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_ARRANGER
   uint8_t new_active_arrangement_idx = 0;
   if (!ensure_arrangements_current_project(&new_active_arrangement_idx)) {
     gfx.alert_error("SD ERROR");
@@ -834,12 +835,12 @@ bool Project::new_project(const char *newprj) {
   }
   // Initialiase Project Master File.
   //
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_ARRANGER
   uint8_t previous_active_arrangement_idx = mcl_cfg.active_arrangement_idx;
   mcl_cfg.active_arrangement_idx = new_active_arrangement_idx;
 #endif
   bool ret = proj.new_project_master_file(proj_filename);
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_ARRANGER
   mcl_cfg.active_arrangement_idx = previous_active_arrangement_idx;
 #endif
   return ret;
@@ -1174,7 +1175,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     mcl_cfg.md_sample_bank_capture = 0;
   }
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_ARRANGER
   uint8_t active_arrangement_idx = cfg.active_arrangement_idx;
   if (!ensure_arrangements_current_project(&active_arrangement_idx)) {
     DEBUG_PRINTLN(F("Could not initialise arrangements"));
@@ -1213,7 +1214,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   load_project_sample_bank(project_sample_bank);
   grid_page.row_scan = GRID_LENGTH;
   project_loaded = true;
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_ARRANGER
   sps_host_arr_bridge.notifyDirty(
       0xFF, (uint8_t)(spsarr::DIRTY_CELLS | spsarr::DIRTY_ACTIVE));
   sps_host_seq_bridge.notifyDirty(
@@ -1809,7 +1810,7 @@ bool Project::copy_project(const char *from_project, const char *to_project) {
     copied_pair = copied_pair || ok;
   }
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_ARRANGER
   if (ok) {
     chdir_projects();
     ok = copy_arrangement_files(from_project, to_project);

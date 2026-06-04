@@ -4,7 +4,9 @@
 #ifndef SPS_HOST_ARR_BRIDGE_H
 #define SPS_HOST_ARR_BRIDGE_H
 
-#if !defined(__AVR__)
+#include "MCLPlatformFeatures.h"
+
+#if MCL_FEATURE_HOST_ARRANGER
 
 #include "MidiSysex.h"
 #include "SpsArrProtocol.h"
@@ -60,5 +62,5 @@ private:
 
 extern SpsHostArrBridge sps_host_arr_bridge;
 
-#endif  // !defined(__AVR__)
+#endif  // MCL_FEATURE_HOST_ARRANGER
 #endif  // SPS_HOST_ARR_BRIDGE_H

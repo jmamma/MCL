@@ -1,7 +1,9 @@
 /**
  * MCLArrangement - project-local arrangement storage.
  */
-#if !defined(__AVR__)
+#include "MCLPlatformFeatures.h"
+
+#if MCL_FEATURE_HOST_ARRANGER
 
 #include "MCLArrangement.h"
 
@@ -1847,4 +1849,4 @@ void MCLArrangement::tick() {
                   LOAD_QUEUE_FLAG_IMMEDIATE);
 }
 
-#endif // !defined(__AVR__)
+#endif // MCL_FEATURE_HOST_ARRANGER

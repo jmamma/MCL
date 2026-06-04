@@ -4,6 +4,7 @@
 #define SEQEXTSTEPLOCKAPI_H__
 
 #include "SeqExtStepTypes.h"
+#include "MCLPlatformFeatures.h"
 #include <stdint.h>
 #include <stddef.h>
 

@@ -28,6 +28,7 @@
 
 namespace {
 
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
 uint16_t clear_runtime_fade_elapsed(DeviceTrack *track) {
   if (track == nullptr) {
     return 0;
@@ -51,6 +52,10 @@ void restore_runtime_fade_elapsed(DeviceTrack *track, uint16_t elapsed) {
   }
   fade->set_elapsed_q12(elapsed);
 }
+#else
+uint16_t clear_runtime_fade_elapsed(DeviceTrack *) { return 0; }
+void restore_runtime_fade_elapsed(DeviceTrack *, uint16_t) {}
+#endif
 
 const char *shared_row_name(ElektronDevice **devs,
                             uint8_t save_dev_mask) {
@@ -183,8 +188,13 @@ void MCLActions::init_chains() {
   }
 }
 
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
 void MCLActions::clear_load_fades(bool preserve_armed_prestart) {
   TrackLoadFadeRunner::clear(preserve_armed_prestart);
+#else
+void MCLActions::clear_load_fades() {
+  TrackLoadFadeRunner::clear();
+#endif
 }
 
 #if !defined(__AVR__)
@@ -239,8 +249,12 @@ void MCLActions::clear_tracks(uint8_t *slot_select_array) {
 
 void MCLActions::start_load_fade_at(GridSlot slot,
                                     const TrackLoadFadeData *fade,
-                                    uint32_t start_clock,
-                                    bool allow_prestart) {
+                                    uint32_t start_clock
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+                                    ,
+                                    bool allow_prestart
+#endif
+                                    ) {
   if (slot >= GRID_WIDTH) {
     return;
   }
@@ -266,9 +280,13 @@ void MCLActions::start_load_fade_at(GridSlot slot,
 #endif
   // The runner always clears the slot on entry, so an unresolved target still
   // wipes any prior fade for this slot — matches the pre-refactor behavior.
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   TrackLoadFadeRunner::start(slot, target, ok ? fade : nullptr, start_clock,
                              allow_prestart, mcl_seq.primary_output,
                              mcl_seq.secondary_output);
+#else
+  TrackLoadFadeRunner::start(slot, target, ok ? fade : nullptr, start_clock);
+#endif
 }
 
 void MCLActions::kit_reload(uint8_t pattern) {
@@ -519,7 +537,7 @@ void MCLActions::row_update(GridSlot last_slot) {
 void MCLActions::load_tracks(uint8_t *slot_select_array,
                              GridRow *_row_array, uint8_t load_mode,
                              GridSlot load_offset
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
                              ,
                              bool immediate,
                              bool allow_prestart_fades
@@ -533,7 +551,7 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
   if (load_mode == 255) {
     load_mode = mcl_cfg.load_mode;
   }
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   if (immediate) {
     load_mode = LOAD_MANUAL;
   }
@@ -576,21 +594,17 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
   }
 
   if (MidiClock.state == 2
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
       && !immediate
 #endif
       ) {
-#if !defined(__AVR__)
     manual_transition(slot_select_array, row_array, load_offset);
-#else
-    manual_transition(slot_select_array, row_array, load_offset);
-#endif
     return;
   }
 
   if (load_offset != 255) { recache = false; }
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   if (!immediate) {
 #endif
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {
@@ -599,7 +613,7 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
       elektron_devs[i]->getBlockingKit(0x7F);
     }
   }
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   }
 #endif
   if (recache) {
@@ -608,7 +622,7 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
     row_update(last_slot);
   } else {
     send_tracks_to_devices(slot_select_array, row_array, load_offset
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
                            ,
                            allow_prestart_fades
 #endif
@@ -808,8 +822,12 @@ again:
 
 bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
                                       GridDeviceTrack *gdt_dst,
-                                      uint8_t *send_masks,
-                                      bool allow_prestart_fade) {
+                                      uint8_t *send_masks
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+                                      ,
+                                      bool allow_prestart_fade
+#endif
+                                      ) {
   GridColumn track_idx_dst = dst & 0xF;
   EmptyTrack scratch;
   bool rebuilt = false;
@@ -851,8 +869,12 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
                     i, row, dst, gdt_dst->track_type);
   }
 #endif
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   start_load_fade_at(dst, ptrack->load_fade_data(), MidiClock.div192th_counter,
                      allow_prestart_fade);
+#else
+  start_load_fade_at(dst, ptrack->load_fade_data(), MidiClock.div192th_counter);
+#endif
 
   return true;
 }
@@ -869,7 +891,7 @@ void MCLActions::restore_mute_states(uint8_t *mute_states) {
 
 void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
                                         GridRow *row_array, GridSlot load_offset
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
                                         ,
                                         bool allow_prestart_fades
 #endif
@@ -916,7 +938,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     // DEBUG_DUMP(row);
 
     if (!load_track_immediate(row, i, dst, gdt_dst, send_masks
-#if !defined(__AVR__)
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
                               ,
                               allow_prestart_fades
 #endif

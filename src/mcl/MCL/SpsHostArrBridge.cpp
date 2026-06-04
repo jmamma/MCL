@@ -1,7 +1,9 @@
 /**
  * SpsHostArrBridge - implementation. See SpsHostArrBridge.h.
  */
-#if !defined(__AVR__)
+#include "MCLPlatformFeatures.h"
+
+#if MCL_FEATURE_HOST_ARRANGER
 
 #include "SpsHostArrBridge.h"
 
@@ -1461,4 +1463,4 @@ void SpsHostArrBridge::notifyDirty(int track, uint8_t regions) {
     sendFrame(CMD_NOTIFY_DIRTY, 0, b, 2);
 }
 
-#endif  // !defined(__AVR__)
+#endif  // MCL_FEATURE_HOST_ARRANGER
