@@ -94,12 +94,6 @@ void SoundBrowserPage::on_new() {
  init();
 }
 
-void SoundBrowserPage::on_cancel() {
-  //if (strcmp(lwd, "/") == 0) { mcl.popPage(); return; }
-  //_cd_up();
-   mcl.popPage();
-}
-
 void SoundBrowserPage::on_select(const char *__) {
   load_sound();
 }

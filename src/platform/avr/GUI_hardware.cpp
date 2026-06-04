@@ -133,10 +133,13 @@ void EncodersClass::poll(uint16_t sr) {
 
 void ButtonsClass::clear() {
   for (uint8_t i = 0; i < GUI_NUM_BUTTONS; i++) {
-    CLEAR_B_DOUBLE_CLICK(i);
-    CLEAR_B_CLICK(i);
-    CLEAR_B_LONG_CLICK(i);
-    STORE_B_OLD(i, B_CURRENT(i));
+    uint8_t status = buttons[i].status;
+    status &= ~(_BV(B_BIT_OLD) | _BV(B_BIT_DOUBLE_CLICK) |
+                _BV(B_BIT_CLICK) | _BV(B_BIT_LONG_CLICK));
+    if (status & _BV(B_BIT_CURRENT)) {
+      status |= _BV(B_BIT_OLD);
+    }
+    buttons[i].status = status;
   }
 }
 
@@ -144,7 +147,8 @@ void ButtonsClass::poll(uint8_t but) {
   uint8_t but_tmp = but;
 
   for (uint8_t i = 0; i < GUI_NUM_BUTTONS; i++) {
-    STORE_B_CURRENT(i, IS_BIT_SET8(but_tmp, 0));
+    buttons[i].status = (buttons[i].status & ~_BV(B_BIT_CURRENT)) |
+                        (but_tmp & _BV(B_BIT_CURRENT));
 
     // disable button stuff for now
     /*
@@ -223,4 +227,3 @@ GUIHardware GUI_hardware;
 SR165Class SR165;
 EncodersClass Encoders;
 ButtonsClass Buttons;
-

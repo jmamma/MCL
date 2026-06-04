@@ -37,7 +37,6 @@ class SampleBrowserPage : public FileBrowserPage, public MidiSysexListenerClass 
   void send_sample(int slot, char *newname = nullptr, bool silent = false);
   void recv_wav(int slot, bool silent = false);
 
-  virtual void start();
   virtual void end();
   virtual bool _handle_filemenu();
   protected:

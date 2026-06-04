@@ -746,13 +746,10 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_BANKC:
       case MDX_KEY_BANKD: {
         // BANKA/BANKB -> MUTE, BANKC -> SWING, BANKD -> SLIDE; MUTE -> MUTE.
-        // toggle_mask() is a no-op returning false when !func_down, so the
-        // original fall-through chain only ever acted on the first mask for
-        // the entered key; this lookup reproduces that mapping exactly.
-        static const uint8_t bank_masks[] = {MASK_MUTE, MASK_MUTE, MASK_SWING,
-                                             MASK_SLIDE};
-        uint8_t bank_mask =
-            (key == MDX_KEY_MUTE) ? MASK_MUTE : bank_masks[key - MDX_KEY_BANKA];
+        uint8_t bank_mask = MASK_MUTE;
+        if (key != MDX_KEY_MUTE && key >= MDX_KEY_BANKC) {
+          bank_mask = key - MDX_KEY_BANKA;
+        }
         if (toggle_mask(bank_mask, func_down))
           return true;
         break;

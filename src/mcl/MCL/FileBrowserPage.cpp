@@ -79,11 +79,6 @@ bool FileBrowserPage::path_starts_with_dir(const char *path, const char *dir) {
   return *dir == '\0' && (*path == '\0' || *path == '/');
 }
 
-void FileBrowserPage::cleanup() {
-  // always call setup() when entering this page.
-  //  this->isSetup = false;
-}
-
 void FileBrowserPage::setup() {
   oled_display.clearDisplay();
   // char *mcl = ".mcl";

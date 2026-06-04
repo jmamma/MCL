@@ -261,21 +261,11 @@ static const uint8_t efm_cp_tuning[] PROGMEM = {
   68, 70, 72, 74, 76, 78, 80, 82, 84, 86, 88, 90, 92, 94, 95, 97, 99, 101,
   103, 105, 107, 109, 111, 113, 115, 117, 119, 121, 123, 125, 127};
 
-static const uint8_t efm_sd_tuning[] PROGMEM = {
-  1, 5, 9, 14, 18, 22, 27, 31, 35, 39, 44, 48, 52, 56, 61, 65, 69, 73, 78, 82, 
-86, 91, 95, 99, 103, 108, 112, 116, 120, 125, 
-};
-
 static const uint8_t efm_xt_tuning[] PROGMEM = {
   1, 7, 12, 17, 23, 28, 33, 39, 44, 49, 55, 60, 65, 71, 76, 81, 87, 92, 97, 102, 
   108, 113, 118, 124, 
 };
 
-static const uint8_t efm_bd_tuning[] PROGMEM = {
-  1, 3, 6, 9, 11, 14, 17, 19, 22, 25, 27, 30, 33, 35, 38, 41, 43, 46, 49, 51, 54, 
-  57, 59, 62, 65, 67, 70, 73, 75, 78, 81, 83, 86, 89, 91, 94, 97, 99, 102, 105, 107, 
-  110, 113, 115, 118, 121, 123, 126, 
-};
 static const uint8_t trx_cl_tuning[] PROGMEM = {
   5, 11, 17, 23, 29, 36, 42, 48, 54, 60, 66, 72, 78, 84, 91, 97, 103, 109, 115, 121, 
   127, 
@@ -391,9 +381,9 @@ static const tuning_t tunings[] = {
   { EFM_RS_MODEL, MIDI_NOTE_B4, sizeof(efm_rs_tuning), 4, efm_rs_tuning },
   { EFM_HH_MODEL, MIDI_NOTE_B4, sizeof(efm_hh_tuning), 8, efm_hh_tuning },
   { EFM_CP_MODEL, MIDI_NOTE_B3, sizeof(efm_cp_tuning), 3, efm_cp_tuning },
-  { EFM_SD_MODEL, MIDI_NOTE_B3, sizeof(efm_sd_tuning), 5, efm_sd_tuning },
+  { EFM_SD_MODEL, MIDI_NOTE_B3, sizeof(efm_hh_tuning), 5, efm_hh_tuning },
   { EFM_XT_MODEL, MIDI_NOTE_F2, sizeof(efm_xt_tuning), 7, efm_xt_tuning },
-  { EFM_BD_MODEL, MIDI_NOTE_AB1, sizeof(efm_bd_tuning), 4, efm_bd_tuning },
+  { EFM_BD_MODEL, MIDI_NOTE_AB1, sizeof(efm_rs_tuning), 4, efm_rs_tuning },
   { TRX_CL_MODEL, MIDI_NOTE_B6, sizeof(trx_cl_tuning), 7, trx_cl_tuning },
   { TRX_SD_MODEL, MIDI_NOTE_F4, sizeof(trx_sd_tuning), 12, trx_sd_tuning },
   { TRX_XC_MODEL, MIDI_NOTE_F3, sizeof(trx_xc_tuning), 6, trx_xc_tuning },

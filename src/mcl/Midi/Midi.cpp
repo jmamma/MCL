@@ -155,16 +155,13 @@ again:
       callback = 0; // XXX ugly hack to recgnize NOTE on with velocity 0 as Note Off
     }
 
-    uint8_t buf[3];
-    memcpy(buf, msg, 3);
-
     bool forwarded_cc = callback == MIDI_CC_CB;
     for (uint8_t n = 0; n < NUM_FORWARD_PORTS; n++) {
       MidiUartClass *forward_uart = uart_forward[n];
       if (forward_uart) {
-        forward_uart->m_putc(buf, in_msg_len);
+        forward_uart->m_putc(msg, in_msg_len);
         if (forwarded_cc) {
-          device_manager.on_forwarded_cc(forward_uart, buf);
+          device_manager.on_forwarded_cc(forward_uart, msg);
         }
       }
     }

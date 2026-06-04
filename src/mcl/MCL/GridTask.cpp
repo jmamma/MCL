@@ -23,8 +23,6 @@
 
 void GridTask::setup(uint16_t _interval) { interval = _interval; }
 
-void GridTask::destroy() {}
-
 void GridTask::row_update() {
   if (last_active_row < GRID_LENGTH) {
     grid_page.set_active_row(last_active_row); // send led update

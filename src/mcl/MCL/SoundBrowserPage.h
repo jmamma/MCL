@@ -17,7 +17,6 @@ class SoundBrowserPage : public FileBrowserPage {
 
   virtual void on_new();
   virtual void on_select(const char*);
-  virtual void on_cancel();
 
   void save_sound();
   void load_sound();

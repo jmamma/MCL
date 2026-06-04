@@ -66,9 +66,9 @@ void OscMixerPage::draw_wav() {
   uint8_t lowest_osc_freq = 0;
   uint8_t i = 0;
   for (i = 0; i < 3; i++) {
-    if ((wd.pages[i].get_osc_type() > 0) &&
-        (wd.pages[i].get_freq() < fund_freq)) {
-      fund_freq = wd.pages[i].get_freq();
+    float freq = wd.pages[i].get_freq();
+    if ((wd.pages[i].get_osc_type() > 0) && (freq < fund_freq)) {
+      fund_freq = freq;
       lowest_osc_freq = i;
     }
   }
@@ -77,7 +77,7 @@ void OscMixerPage::draw_wav() {
     if (lowest_osc_freq == i) {
       freqs[i] = 1;
     } else {
-      freqs[i] = wd.pages[i].get_freq() / wd.pages[lowest_osc_freq].get_freq();
+      freqs[i] = wd.pages[i].get_freq() / fund_freq;
     }
   }
   // float buffer[w];

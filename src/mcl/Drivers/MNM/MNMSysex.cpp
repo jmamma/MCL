@@ -9,8 +9,6 @@ void MNMSysexListenerClass::start() {
   isMNMMessage = false;
 }
 
-void MNMSysexListenerClass::handleByte(uint8_t byte) { }
-
 void MNMSysexListenerClass::end() {
 
   if (sysex->getByte(3) == 0x03) {

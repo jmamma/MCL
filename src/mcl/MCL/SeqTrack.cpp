@@ -222,7 +222,7 @@ bool SeqTrackCond::conditional(uint8_t condition) {
   if (condition >= SEQ_COND_ITER_BASE && condition <= SEQ_COND_ITER_MAX) {
     uint8_t x, y;
     if (seq_cond_iter_decode(condition, x, y)) {
-      return get_iteration(y) == x;
+      return iterations[y - 2] == x;
     }
   }
 

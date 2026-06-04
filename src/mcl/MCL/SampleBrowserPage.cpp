@@ -399,8 +399,6 @@ bool SampleBrowserPage::_handle_filemenu() {
   }
   return true;
 }
-void SampleBrowserPage::start() {}
-
 void SampleBrowserPage::end() {
   SysexView view(sysex);
   if (view.getByte(3) != 0x02)

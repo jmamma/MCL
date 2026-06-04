@@ -168,7 +168,6 @@ public:
 
   virtual void loop();
   virtual void setup();
-  virtual void cleanup();
   virtual void init();
   static void reset_browser_options();
 

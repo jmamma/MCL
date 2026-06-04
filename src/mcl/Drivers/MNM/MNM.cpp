@@ -23,6 +23,8 @@ protected:
   }
 };
 
+static MNMMixerCapability mnm_mixer_capability(MNM);
+
 const ElektronSysexProtocol mnm_protocol = {
     monomachine_sysex_hdr,
     sizeof(monomachine_sysex_hdr),
@@ -103,8 +105,7 @@ void MNMClass::init_grid_devices(DeviceIdx device_idx) {
 }
 
 DeviceMixerCapability *MNMClass::mixer() {
-  static MNMMixerCapability capability(*this);
-  return &capability;
+  return &mnm_mixer_capability;
 }
 
 #if !defined(__AVR__)

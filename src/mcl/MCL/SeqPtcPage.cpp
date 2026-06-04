@@ -259,10 +259,8 @@ void SeqPtcPage::config() {
   // config info labels
   constexpr uint8_t len1 = sizeof(info1);
 
-  char str_first[3];
-  mclstr_copy_progmem(str_first, mclstr_dash, sizeof(str_first));
-  char str_second[3];
-  mclstr_copy_progmem(str_second, mclstr_dash, sizeof(str_second));
+  char str_first[3] = "--";
+  char str_second[3] = "--";
   info1[0] = '\0';
 #ifdef PLATFORM_TBD
   if (mcl_cfg.grid_x_device == GRID_X_DEVICE_TBD &&
@@ -284,12 +282,12 @@ void SeqPtcPage::config() {
   }
 #endif
   if (info1[0] == '\0') {
-    // Use strncat but leave room for subsequent concatenations
-    strncpy(info1, str_first,
-            len1 - 3);           // -3 for ">" and str_second and null
-    strncat(info1, ">", len1 - 2); // -2 for str_second and null
-    strncat(info1, str_second,
-            len1 - 1); // -1 for null terminator
+    info1[0] = str_first[0];
+    info1[1] = str_first[1];
+    info1[2] = '>';
+    info1[3] = str_second[0];
+    info1[4] = str_second[1];
+    info1[5] = '\0';
   }
 
   strcpy_P(info2, mclstr_chromat);

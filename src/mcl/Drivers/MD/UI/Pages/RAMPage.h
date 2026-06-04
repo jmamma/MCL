@@ -15,10 +15,6 @@ public:
           Encoder *e3 = NULL, Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
     page_id = _page_id;
-    if (page_id == 0) {
-      track1 = 15;
-      track2 = 14;
-    }
   }
 
   bool handleEvent(gui_event_t *event);
@@ -28,9 +24,6 @@ public:
   static uint8_t rec_states[NUM_RAM_PAGES];
   static uint8_t slice_modes[NUM_RAM_PAGES];
 
-  uint8_t rec_state;
-  uint8_t track1;
-  uint8_t track2;
   uint8_t page_id;
   uint16_t transition_step;
   uint8_t record_len;

@@ -11,30 +11,6 @@ void A4SysexListenerClass::start() {
   isA4Message = false;
 }
 
-void A4SysexListenerClass::handleByte(uint8_t byte) {
-
-  if (isA4Message && MidiSysex2.get_recordLen() == sizeof(a4_sysex_hdr)) {
-    msgType = byte;
-    switch (byte) {
-    case A4_GLOBAL_MESSAGE_ID:
-      //      MidiSysex2.startRecord();
-      break;
-
-    case A4_KIT_MESSAGE_ID:
-      //      MidiSysex2.startRecord();
-      break;
-
-    case A4_PATTERN_MESSAGE_ID:
-      //      MidiSysex2.startRecord();
-      break;
-
-    case A4_SONG_MESSAGE_ID:
-      //      MidiSysex2.startRecord();
-      break;
-    }
-  }
-}
-
 void A4SysexListenerClass::end() {
   if (sysex->getByte(3) == 0x06) {
     isA4Message = true;

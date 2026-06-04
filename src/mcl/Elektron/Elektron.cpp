@@ -7,20 +7,29 @@
 namespace {
 
 void send_system_command(ElektronDevice *device, uint8_t command,
-                         uint8_t value) {
+                         uint8_t value, uint8_t len = 3) {
   uint8_t data[3] = {0x70, command, value};
-  device->sendRequest(data, sizeof(data));
+  device->sendRequest(data, len);
 }
 
 void send_system_command(ElektronDevice *device, uint8_t command) {
-  uint8_t data[2] = {0x70, command};
-  device->sendRequest(data, sizeof(data));
+  send_system_command(device, command, 0, 2);
 }
 
 void send_request_value(ElektronDevice *device, uint8_t request,
                         uint8_t value) {
   uint8_t data[2] = {request, (uint8_t)(value & 0x7F)};
   device->sendRequest(data, sizeof(data));
+}
+
+bool read_system_response(ElektronDevice *device, uint8_t command,
+                          SysexView &sysex, uint8_t &begin) {
+  send_system_command(device, command);
+  uint8_t msgType = device->waitBlocking();
+  begin = device->sysex_protocol.header_size + 1;
+  auto listener = device->getSysexListener();
+  sysex.init(listener->sysex, listener->msg_rd);
+  return msgType == 0x72 && sysex.getByte(begin) == command;
 }
 
 #if !defined(__AVR__) && defined(DEBUGMODE)
@@ -127,17 +136,10 @@ uint16_t ElektronDevice::sendRequest(uint8_t type, uint8_t param, bool send) {
 }
 
 bool ElektronDevice::get_tempo(uint16_t &tempo) {
-
-  send_system_command(this, 0x3F);
-
-  uint8_t msgType = waitBlocking();
-
-  auto begin = sysex_protocol.header_size + 1;
-  auto listener = getSysexListener();
-  SysexView sysex(listener->sysex, listener->msg_rd);
-
+  uint8_t begin;
+  SysexView sysex;
   tempo = 0;
-  if (msgType == 0x72 && sysex.getByte(begin) == 0x3F) {
+  if (read_system_response(this, 0x3F, sysex, begin)) {
       tempo = sysex.getByte(begin+1) << 7;
       tempo |= (sysex.getByte(begin+2));
       return true;
@@ -148,16 +150,10 @@ bool ElektronDevice::get_tempo(uint16_t &tempo) {
 
 
 bool ElektronDevice::get_mute_state(uint16_t &mute_state) {
-
-  send_system_command(this, 0x33);
-
-  uint8_t msgType = waitBlocking();
-
-  auto begin = sysex_protocol.header_size + 1;
-  auto listener = getSysexListener();
-  SysexView sysex(listener->sysex, listener->msg_rd);
+  uint8_t begin;
+  SysexView sysex;
   mute_state = 0;
-  if (msgType == 0x72 && sysex.getByte(begin) == 0x33) {
+  if (read_system_response(this, 0x33, sysex, begin)) {
       mute_state = sysex.getByte(begin+1);
       mute_state |= (sysex.getByte(begin+2) << 7);
       mute_state |= (sysex.getByte(begin+3) << 14);

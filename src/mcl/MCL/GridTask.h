@@ -159,7 +159,6 @@ public:
   void setup(uint16_t interval = 0);
 
   virtual void run();
-  virtual void destroy();
   void init() {
      reset_midi_states();
      load_queue.init();

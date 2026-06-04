@@ -450,13 +450,9 @@ void MCLGUI::draw_encoder(uint8_t x, uint8_t y, uint8_t value, bool highlight) {
     value = 32 - (value - 96);
   }
 
-  // Map the folded value to one of seven encoder_small_N frames. The frames
-  // are laid out at a fixed stride in the resource struct, so a threshold
-  // table + arithmetic offset replaces the if/else chain.
-  static const uint8_t frame_thresholds[6] = {4, 9, 14, 19, 24, 30};
-  uint8_t frame = 0;
-  while (frame < 6 && value >= frame_thresholds[frame]) {
-    frame++;
+  uint8_t frame = (value + 1) / 5;
+  if (value == 29) {
+    frame = 5;
   }
   const ptrdiff_t frame_stride =
       R.icons_knob->encoder_small_1 - R.icons_knob->encoder_small_0;

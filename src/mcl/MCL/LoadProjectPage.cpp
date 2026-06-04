@@ -37,7 +37,6 @@ void LoadProjectPage::init() {
 }
 
 void LoadProjectPage::cleanup() {
-  FileBrowserPage::cleanup();
   key_interface.ignoreNextEventClear(MDX_KEY_YES);
   key_interface.ignoreNextEventClear(MDX_KEY_NO);
 }
@@ -399,11 +398,14 @@ bool LoadProjectPage::current_project_parent(const char **parent) const {
   size_t root_len = strlen(root_path);
 #endif
 
-  if (strcmp(lwd, root_path) == 0) {
+  if (strncmp(lwd, root_path, root_len) != 0) {
+    return false;
+  }
+  if (lwd[root_len] == '\0') {
     *parent = "";
     return true;
   }
-  if (strncmp(lwd, root_path, root_len) == 0 && lwd[root_len] == '/') {
+  if (lwd[root_len] == '/') {
     *parent = lwd + root_len + 1;
     return true;
   }
@@ -464,9 +466,9 @@ bool LoadProjectPage::is_project_dir(const char *entry) const {
   }
 
   char project_file[PRJ_NAME_LEN * 2 + 6];
-  strcpy(project_file, entry);
-  strcat(project_file, "/");
-  strcat(project_file, entry);
+  if (!MCLSd::join_path(project_file, sizeof(project_file), entry, entry)) {
+    return false;
+  }
   strcat(project_file, ".mcl");
   return SD.exists(project_file);
 }
