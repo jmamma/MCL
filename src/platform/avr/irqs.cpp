@@ -58,9 +58,6 @@ ISR(TIMER3_COMPA_vect) {
 }
 
 void setup_timers() {
-  TCCR1A = _BV(WGM10);              //  | _BV(COM1A1) | _BV(COM1B1);
-  TCCR1B |= _BV(CS10) | _BV(WGM12); // every cycle
-
   // http://www.arduinoslovakia.eu/application/timer-calculator
   // Microcontroller: ATmega2560
   // Created: 2017-10-28T08:18:15.310Z
@@ -72,10 +69,8 @@ void setup_timers() {
 
   // 5000 Hz (16000000/((49+1)*64))
   OCR1A = 49;
-  // CTC
-  TCCR1B |= (1 << WGM12);
-  // Prescaler 64
-  TCCR1B |= (1 << CS11) | (1 << CS10);
+  // CTC, prescaler 64
+  TCCR1B = _BV(WGM12) | _BV(CS11) | _BV(CS10);
 // Output Compare Match A Interrupt Enable
 #ifdef MEGACOMMAND
   TIMSK1 |= (1 << OCIE1A);
@@ -90,10 +85,8 @@ void setup_timers() {
   TCNT3 = 0;
   // 1000 Hz (16000000/((249+1)*64))
   OCR3A = 249;
-  // CTC
-  TCCR3B |= (1 << WGM32);
-  // Prescaler 64
-  TCCR3B |= (1 << CS31) | (1 << CS30);
+  // CTC, prescaler 64
+  TCCR3B = _BV(WGM32) | _BV(CS31) | _BV(CS30);
 // Output Compare Match A Interrupt Enable
 #ifdef MEGACOMMAND
   TIMSK3 |= (1 << OCIE3A);
@@ -104,5 +97,4 @@ void setup_timers() {
 
 void setup_irqs() {
 }
-
 

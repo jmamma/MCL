@@ -18,7 +18,6 @@ public:
   void display_at(uint8_t y_offset);
   void display();
   void init();
-  void draw_popup();
 };
 
 #endif /* GRIDSAVEPAGE_H__ */

@@ -662,14 +662,8 @@ void SeqExtStepPage::draw_grid() {
         // draw crisscross
         // if ((fov_y + k + i) % 2 == 0) { oled_display.drawPixel(
         // grid_fov_x, (k * (fov_h / fov_notes)), WHITE); }
-        bool draw = false;
+        bool draw = pianoroll_mode == 0 || visible_step || k == 3;
         uint8_t v = draw_y + (k * h);
-        if ((pianoroll_mode > 0 && k == 3) || visible_step) {
-          draw = true;
-        }
-        if (pianoroll_mode == 0) {
-          draw = true;
-        }
         if (beat_step) {
           //if ((fov_y + k + i) % 2 == 0) {
           if (k % 2 == 0) {

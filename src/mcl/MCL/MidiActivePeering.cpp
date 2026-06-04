@@ -4,6 +4,7 @@
 #include "MidiClock.h"
 #include "MidiID.h"
 #include "MidiIDSysex.h"
+#include "Midi.h"
 #include "MidiUart.h"
 #include "MidiSetup.h"
 #include "DeviceManager.h"
@@ -16,42 +17,6 @@ using DriverList = DriverRegistry::DriverList;
 using DriverRegistry::elektron_drivers;
 using DriverRegistry::generic_drivers;
 using DriverRegistry::md_drivers;
-
-/// It is the caller's responsibility to check for null MidiUart device
-static MidiUartClass *_getMidiUart(uint8_t port) {
-  MidiUartClass *ret = nullptr;
-  if (port == UART1_PORT)
-    ret = &MidiUart;
-#ifdef EXT_TRACKS
-  else if (port == UART2_PORT)
-    ret = &MidiUart2;
-#endif
-  else if (port == UARTUSB_PORT)
-    ret = &MidiUartUSB;
-#ifdef PLATFORM_TBD
-  else if (port == UARTP4_PORT)
-    ret = &MidiUartP4;
-#endif
-  return ret;
-}
-
-/// It is the caller's responsibility to check for null MidiClass device
-static MidiClass *_getMidiClass(uint8_t port) {
-  MidiClass *ret = nullptr;
-  if (port == UART1_PORT)
-    ret = &Midi;
-#ifdef EXT_TRACKS
-  else if (port == UART2_PORT)
-    ret = &Midi2;
-#endif
-  else if (port == UARTUSB_PORT)
-    ret = &MidiUSB;
-#ifdef PLATFORM_TBD
-  else if (port == UARTP4_PORT)
-    ret = &MidiP4;
-#endif
-  return ret;
-}
 
 static uint8_t portToLogicalIdx(uint8_t port) {
 #ifdef PLATFORM_TBD
@@ -100,7 +65,11 @@ static DriverList drivers_for_slot(uint8_t slot_idx, bool force_generic) {
 void MidiActivePeering::disconnect(uint8_t port) {
   DEBUG_PRINTLN("disconnect");
   DEBUG_PRINTLN(port);
-  MidiUartClass *pmidi = _getMidiUart(port);
+  MidiClass *pmidi_class = midi_class_for_port(port);
+  if (!pmidi_class) {
+    return;
+  }
+  MidiUartClass *pmidi = pmidi_class->uart;
   if (!pmidi) {
     return;
   }
@@ -151,7 +120,8 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   if (!driver) driver = &null_midi_device;
 
   disconnect(port);
-  auto *pmidi = _getMidiUart(port);
+  MidiClass *pmidi_class = midi_class_for_port(port);
+  MidiUartClass *pmidi = pmidi_class ? pmidi_class->uart : nullptr;
   if (pmidi) {
     pmidi->device.init();
     pmidi->device.set_name(driver->name);
@@ -163,9 +133,11 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
 }
 
 static void probePort(uint8_t port, DriverList drivers) {
-  MidiUartClass *pmidi = _getMidiUart(port);
-  auto *pmidi_class = _getMidiClass(port);
-  if (!pmidi || !pmidi_class)
+  auto *pmidi_class = midi_class_for_port(port);
+  if (!pmidi_class)
+    return;
+  MidiUartClass *pmidi = pmidi_class->uart;
+  if (!pmidi)
     return;
   uint8_t id = pmidi->device.get_id();
   oled_display.setTextColor(WHITE, BLACK);

@@ -46,10 +46,6 @@ void GridSavePage::init() {
   key_interface.on();
   grid_page.reload_slot_models = false;
   MD.popup_text_P(mclstr_save_slots, true);
-  draw_popup();
-}
-
-void GridSavePage::draw_popup() {
   draw_popup_P(mclstr_save_tracks);
 }
 

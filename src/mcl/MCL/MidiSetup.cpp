@@ -8,6 +8,7 @@
 #include "DeviceManager.h"
 #include "NoteInterface.h"
 #include "MCLActions.h"
+#include "global.h"
 #include "../Drivers/Generic/GenericMidiDevice.h"
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MNM/MNM.h"
@@ -16,6 +17,18 @@
 #include "../Drivers/TBD/TBD.h"
 #endif
 #include "MCLSeq.h"
+
+MidiClass *midi_class_for_port(uint8_t port) {
+  if (port == UART1_PORT) return &Midi;
+#ifdef EXT_TRACKS
+  if (port == UART2_PORT) return &Midi2;
+#endif
+  if (port == UARTUSB_PORT) return &MidiUSB;
+#ifdef PLATFORM_TBD
+  if (port == UARTP4_PORT) return &MidiP4;
+#endif
+  return nullptr;
+}
 
 namespace {
 

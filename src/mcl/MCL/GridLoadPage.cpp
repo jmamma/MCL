@@ -34,7 +34,7 @@ void GridLoadPage::init() {
   encoders[3]->cur = mcl_cfg.chain_load_quant;
 
   md_popup_title(mcl_cfg.load_mode);
-  draw_popup();
+  draw_popup_P(mclstr_load_tracks);
 }
 
 void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
@@ -62,10 +62,6 @@ void GridLoadPage::md_popup_title(uint8_t mode, bool persistent) {
   modestr[4] = ' ';
   get_mode_str(modestr + 5, mode);
   MD.popup_text(modestr, persistent);
-}
-
-void GridLoadPage::draw_popup() {
-  draw_popup_P(mclstr_load_tracks);
 }
 
 void GridLoadPage::display_load() {

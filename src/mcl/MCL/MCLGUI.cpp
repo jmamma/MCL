@@ -1021,8 +1021,6 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
     x += 26;
   }
 #else
-  MCLGIF *gif;
-
   for (uint8_t i = 0; i < 5; i++) {
 
     bool select = IS_BIT_SET(track_type_select, i);
@@ -1030,25 +1028,51 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
     uint8_t *icon = nullptr;
     uint8_t offset = 3;
     int8_t icon_y_offset = 0;
+#if defined(__AVR__)
+    uint8_t icon_w = 18;
+    uint8_t icon_h = 9;
+#else
+    MCLGIF *gif;
+#endif
     if (i < 2) {
       MidiDeviceLogoGif logo = devs[i]->logo_gif();
+#if defined(__AVR__)
+      icon = logo.data;
+#else
       gif = logo.gif;
       icon = logo.data;
+#endif
       offset = i + 3;
     } else {
       switch (i) {
       case 2:
+#if defined(__AVR__)
+        icon = R.icons_logo->perf_gif_data;
+#else
         gif = R.icons_logo->perf_gif;
         icon = R.icons_logo->perf_gif_data;
+#endif
         break;
       case 3:
+#if defined(__AVR__)
+        icon = R.icons_logo->route_gif_data;
+        icon_w = 14;
+        icon_h = 10;
+#else
         gif = R.icons_logo->route_gif;
         icon = R.icons_logo->route_gif_data;
+#endif
         offset = 5;
         break;
       case 4:
+#if defined(__AVR__)
+        icon = R.icons_logo->metronome_gif_data;
+        icon_w = 17;
+        icon_h = 15;
+#else
         gif = R.icons_logo->metronome_gif;
         icon = R.icons_logo->metronome_gif_data;
+#endif
         offset = 4;
         icon_y_offset = -3;
         break;
@@ -1065,7 +1089,11 @@ void MCLGUI::draw_track_type_select(uint8_t track_type_select,
 
     if (icon) {
       oled_display.drawBitmap(x + offset, 15 + y_base + icon_y_offset, icon,
+#if defined(__AVR__)
+                              icon_w, icon_h, WHITE);
+#else
                               gif->w, gif->h, WHITE);
+#endif
     }
 
 #if !defined(__AVR__)

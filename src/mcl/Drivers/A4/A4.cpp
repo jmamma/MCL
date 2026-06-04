@@ -24,6 +24,8 @@ protected:
   }
 };
 
+static A4MixerCapability a4_mixer_capability(Analog4);
+
 uint8_t a4_sysex_hdr[5] = {0x00, 0x20, 0x3c, 0x06, 0x00};
 
 uint8_t a4_sysex_proto_version[2] = {0x01, 0x01};
@@ -104,8 +106,7 @@ void A4Class::init_grid_devices(DeviceIdx device_idx) {
 }
 
 DeviceMixerCapability *A4Class::mixer() {
-  static A4MixerCapability capability(*this);
-  return &capability;
+  return &a4_mixer_capability;
 }
 
 #if !defined(__AVR__)

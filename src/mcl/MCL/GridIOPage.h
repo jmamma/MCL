@@ -32,7 +32,6 @@ class GridIOPage : public LightPage {
   static bool slot_matches_track_type_select(GridSlot slot);
   virtual void init();
  virtual void cleanup();
- virtual void draw_popup() = 0;
  virtual void group_select() = 0;
  virtual void action() = 0;
  virtual bool handleEvent(gui_event_t *event);

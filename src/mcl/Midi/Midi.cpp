@@ -19,7 +19,7 @@ MidiClass::MidiClass(MidiUartClass *_uart, MidiSysexClass *_sysex) {
 }
 
 void MidiClass::init() {
-  last_status = running_status = 0;
+  last_status = 0;
   in_state = midi_ignore_message;
   in_state = midi_wait_status;
   // live_state now lives in MidiUartClass for ISR performance
@@ -107,13 +107,13 @@ again:
     break;
 
   case midi_wait_status: {
+    bool running_status = false;
     if (MIDI_IS_STATUS_BYTE(byte)) {
       last_status = byte;
-      running_status = 0;
     } else {
       if (last_status == 0)
         break;
-      running_status = 1;
+      running_status = true;
     }
 
     uint8_t status = last_status;

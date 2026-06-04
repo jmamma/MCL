@@ -378,10 +378,11 @@ bool SeqPtcTrackRef::copy_track_label(uint8_t track, char *out, uint8_t len) {
   return device->step_edit()->configure_kit_sound_panel(
       ctx, track, out, len, &pitch_max, &is_midi_model);
 #else
-  const char *str = getMDMachineNameShort(MD.kit.get_model(track), 1);
+  uint8_t model = MD.kit.get_model(track);
+  const char *str = getMDMachineNameShort(model, 1);
   copyMachineNameShort(str, out);
   out[2] = '>';
-  str = getMDMachineNameShort(MD.kit.get_model(track), 2);
+  str = getMDMachineNameShort(model, 2);
   copyMachineNameShort(str, out + 3);
   out[5] = '\0';
   return true;

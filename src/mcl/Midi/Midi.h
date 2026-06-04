@@ -61,7 +61,6 @@ class MidiClass {
 public:
   midi_state_t in_state;
   uint8_t last_status;
-  uint8_t running_status;
   uint8_t in_msg_len;
   uint8_t msg[3];
 

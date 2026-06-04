@@ -59,6 +59,7 @@ class MidiSetup {
 extern MidiSetup midi_setup;
 
 void configure_driver_ports();
+MidiClass *midi_class_for_port(uint8_t port);
 
 enum SlotIdx : uint8_t {
   SLOT_MD = 0,

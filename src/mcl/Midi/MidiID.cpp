@@ -1,6 +1,7 @@
 #include "MidiID.h"
 #include "platform.h"
 #include "MidiIDSysex.h"
+#include "Midi.h"
 #include "helpers.h"
 #include "global.h"
 #include "MidiUart.h"
@@ -8,19 +9,9 @@
 
 void MidiID::send_id_request(uint8_t id, uint8_t port) {
   uint8_t data[6] = {0xF0, 0x7E, id, 0x06, 0x01, 0xF7};
-  MidiUartClass *uart;
-  if (port == UART1_PORT) {
-    uart = &MidiUart;
-  } else if (port == UARTUSB_PORT) {
-    uart = &MidiUartUSB;
-#ifdef PLATFORM_TBD
-  } else if (port == UARTP4_PORT) {
-    uart = &MidiUartP4;
-#endif
-  } else {
-    uart = &MidiUart2;
-  }
-  uart->sendRaw(data, sizeof(data));
+  MidiClass *midi = midi_class_for_port(port);
+  if (midi == nullptr || midi->uart == nullptr) return;
+  midi->uart->sendRaw(data, sizeof(data));
 }
 
 void MidiID::init() {
@@ -32,30 +23,21 @@ bool MidiID::getBlockingId(uint8_t id, uint8_t port, uint16_t timeout) {
   return getBlockingId(id, DEVICE_NULL, port, timeout);
 }
 
-static MidiSysexClass *sysex_for_port(uint8_t port) NOINLINE();
-static MidiSysexClass *sysex_for_port(uint8_t port) {
-  if (port == UART1_PORT) {
-    return &MidiSysex;
-  }
-  if (port == UARTUSB_PORT) {
-    return &MidiSysexUSB;
-  }
-#ifdef PLATFORM_TBD
-  if (port == UARTP4_PORT) {
-    return &MidiSysexP4;
-  }
-#endif
-  return &MidiSysex2;
-}
-
 bool MidiID::getBlockingId(uint8_t id, uint8_t alternate_id, uint8_t port,
                            uint16_t timeout) {
 
-  MidiSysexClass *sysex = sysex_for_port(port);
-  sysex->addSysexListener(&MidiIDSysexListener);
+  MidiClass *midi = midi_class_for_port(port);
+  if (midi == nullptr || midi->midiSysex == nullptr) return false;
+  if (port == UART1_PORT) {
+    DEBUG_PRINTLN("adding listener port1");
+  }
+  midi->midiSysex->addSysexListener(&MidiIDSysexListener);
 
   uint8_t ret = waitForId(id, port, timeout);
-  sysex->removeSysexListener(&MidiIDSysexListener);
+  if (port == UART1_PORT) {
+    DEBUG_PRINTLN("removing listener port1");
+  }
+  midi->midiSysex->removeSysexListener(&MidiIDSysexListener);
 
   if (id == ret || alternate_id == ret) {
     return true;

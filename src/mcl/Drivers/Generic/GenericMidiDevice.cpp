@@ -132,6 +132,9 @@ protected:
   }
 };
 
+static GenericMidiMixerCapability generic_midi_mixer_capability(
+    generic_midi_device);
+
 #if !defined(__AVR__)
 class GenericMidiParamCapability : public DeviceParamCapability {
 public:
@@ -191,8 +194,7 @@ void GenericMidiDevice::setLevel(uint8_t track, uint8_t value,
 }
 
 DeviceMixerCapability *GenericMidiDevice::mixer() {
-  static GenericMidiMixerCapability capability(*this);
-  return &capability;
+  return &generic_midi_mixer_capability;
 }
 
 #if !defined(__AVR__)
