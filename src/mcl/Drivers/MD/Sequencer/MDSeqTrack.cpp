@@ -1368,7 +1368,6 @@ void MDSeqTrack::modify_track(uint8_t dir) {
 }
 
 void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
-  step->active = true;
   step->microtiming = microtiming[n];
   step->swing = IS_BIT_SET64(swing_mask, n);
   step->slide = IS_BIT_SET64(slide_mask, n);
