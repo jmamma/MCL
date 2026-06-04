@@ -33,7 +33,7 @@
 #define SEQ_SCALE_1_4X 5
 #define SEQ_SCALE_1_8X 6
 
-#define NUM_TRIG_CONDITIONS 49
+#define NUM_TRIG_CONDITIONS 51
 
 class MCLSeqMidiEvents : public MidiCallback {
 public:
@@ -69,7 +69,6 @@ public:
   // MD.is_spsx (firmware capability) — readers asking "what does the engine
   // store?" should test this, not MD.is_spsx.
   bool using_spsx_tracks = false;
-  uint16_t neighbor_trig_mask = 0;
   // Mode switch — only safe when MidiClock is PAUSED. Returns false if
   // refused (transport playing). Callers must stop transport first.
   bool switch_to_spsx();
@@ -79,6 +78,7 @@ public:
   static constexpr bool using_spsx_tracks = false;
 #endif
 
+  uint16_t neighbor_trig_mask = 0;
   uint16_t fill_mask = 0;
   void set_fill(bool held) { fill_mask = held ? 0xFFFF : 0; }
   void set_fill_track(uint8_t track, bool held) {

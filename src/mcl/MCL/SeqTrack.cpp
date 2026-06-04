@@ -173,6 +173,26 @@ bool seq_cond_iter_decode(uint8_t cond, uint8_t &x, uint8_t &y) {
   return false;
 }
 
+void SeqTrackCond::record_trig_result(bool fired) {
+  if (fired) {
+    conditional_flags |= CONDITIONAL_PREV_TRIG;
+    if (track_number < 16) {
+      mcl_seq.neighbor_trig_mask |= (uint16_t)(1u << track_number);
+    }
+  } else {
+    conditional_flags &= ~CONDITIONAL_PREV_TRIG;
+    if (track_number < 16) {
+      mcl_seq.neighbor_trig_mask &= (uint16_t)~(1u << track_number);
+    }
+  }
+}
+
+bool SeqTrackCond::neighbor_fired() const {
+  return track_number != 0 &&
+         (mcl_seq.neighbor_trig_mask & (uint16_t)(1u << (track_number - 1))) !=
+             0;
+}
+
 bool SeqTrackCond::conditional(uint8_t condition) {
   if (condition <= SEQ_COND_10PCT) {
     if (condition == SEQ_COND_100PCT) {
@@ -184,15 +204,17 @@ bool SeqTrackCond::conditional(uint8_t condition) {
     return get_random_byte() <= pgm_read_byte_near(thresholds + condition);
   }
 
-  if (condition >= SEQ_COND_FIRST && condition <= SEQ_COND_NOT_PRE) {
+  if (condition >= SEQ_COND_FIRST && condition <= SEQ_COND_NOT_NEI) {
     bool value = false;
     if (condition < SEQ_COND_FILL) {
       value = first_run();
     } else if (condition < SEQ_COND_PRE) {
       value = track_number < 16 &&
               (mcl_seq.fill_mask & ((uint16_t)1 << track_number)) != 0;
-    } else {
+    } else if (condition < SEQ_COND_NEI) {
       value = (conditional_flags & CONDITIONAL_PREV_TRIG) != 0;
+    } else {
+      value = neighbor_fired();
     }
     return (condition & 1) ? value : !value;
   }
@@ -217,9 +239,9 @@ void seq_condition_label(uint8_t condition, bool plock, bool marker,
   char b = '-';
   char d = '-';
 
-  if (condition <= SEQ_COND_NOT_PRE) {
+  if (condition <= SEQ_COND_NOT_NEI) {
     static const char labels[] PROGMEM =
-        "---90%75%66%50%33%25%10%1SH1ST!1SFIL!FLPRE!PR";
+        "---90%75%66%50%33%25%10%1SH1ST!1SFIL!FLPRE!PRNEI!NE";
     uint8_t idx = condition + condition + condition;
     a = (char)pgm_read_byte_near(labels + idx);
     b = (char)pgm_read_byte_near(labels + idx + 1);

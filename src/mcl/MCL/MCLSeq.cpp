@@ -735,12 +735,8 @@ void MCLSeq::onMidiStartImmediateCallback(uint32_t clock_count) {
   seq_tx4.txRb->init();
 
   SeqTrackUtil::for_each_md_track([](auto &track, uint8_t) { track.reset(); });
+  neighbor_trig_mask = 0;
   fill_mask = 0;
-#if !defined(__AVR__)
-  if (using_spsx_tracks) {
-    neighbor_trig_mask = 0;
-  }
-#endif
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_arp_tracks[i].reset();
   }
@@ -819,9 +815,9 @@ void MCLSeq::set_transport_position(uint32_t host_tick96) {
 
   const uint32_t legacy_ticks = legacy_tick_count_from_div192(div192);
 
+  neighbor_trig_mask = 0;
+  fill_mask = 0;
   if (using_spsx_tracks) {
-    neighbor_trig_mask = 0;
-    fill_mask = 0;
     for (uint8_t i = 0; i < num_md_tracks; i++) {
       sync_spsx_track_phase(spsx_tracks[i], div192);
     }

@@ -293,11 +293,8 @@ public:
     return (conditional_flags & CONDITIONAL_FIRST_RUN) != 0;
   }
 
-  void record_trig_result(bool fired) {
-    if (fired) conditional_flags |= CONDITIONAL_PREV_TRIG;
-    else conditional_flags &= ~CONDITIONAL_PREV_TRIG;
-  }
-
+  void record_trig_result(bool fired);
+  bool neighbor_fired() const;
   bool conditional(uint8_t condition);
 };
 

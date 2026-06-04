@@ -36,11 +36,13 @@
 #define SEQ_COND_NOT_FILL   12
 #define SEQ_COND_PRE        13
 #define SEQ_COND_NOT_PRE    14
+#define SEQ_COND_NEI        15
+#define SEQ_COND_NOT_NEI    16
 
-#define SEQ_COND_ITER_BASE  15
-#define SEQ_COND_ITER_MAX   49
+#define SEQ_COND_ITER_BASE  17
+#define SEQ_COND_ITER_MAX   51
 #define SEQ_COND_MAX        SEQ_COND_ITER_MAX
-#define SEQ_NUM_TRIG_CONDITIONS 50
+#define SEQ_NUM_TRIG_CONDITIONS 52
 
 #define SEQ_LEGACY_COND_MAX 14
 
@@ -59,17 +61,17 @@ inline uint8_t seq_legacy_cond_to_stepseq(uint8_t condition) {
   case 1:
     return SEQ_COND_100PCT;
   case 2:
-    return 16; // 2:2
+    return 18; // 2:2
   case 3:
-    return 19; // 3:3
+    return 21; // 3:3
   case 4:
-    return 23; // 4:4
+    return 25; // 4:4
   case 5:
-    return 28; // 5:5
+    return 30; // 5:5
   case 6:
-    return 34; // 6:6
+    return 36; // 6:6
   case 7:
-    return 41; // 7:7
+    return 43; // 7:7
   case 8:
     return SEQ_COND_ITER_MAX; // 8:8
   case 9:
