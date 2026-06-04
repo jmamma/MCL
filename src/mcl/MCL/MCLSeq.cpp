@@ -1013,6 +1013,13 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t track = 255;
   uint8_t track_param = 255;
 
+  uint8_t fill_track = param - 68;
+  uint8_t control_ch = channel - MD.global.baseChannel;
+  if (fill_track < 4 && control_ch < 4) {
+    mcl_seq.set_fill_track((control_ch << 2) + fill_track, value);
+    return;
+  }
+
   MidiDevice *device = device_manager.primary_device();
   if (!handle_mixer_cc(DeviceIdx::Primary, device, channel, param, value, &track,
                        &track_param) ||
