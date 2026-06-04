@@ -72,7 +72,7 @@ constexpr uint8_t EXT_NOTE_CLIP_MAX_NOTES = 255;
 constexpr size_t NUM_PERF_PARAMS = 16;
 constexpr size_t NUM_SCENES = 8;
 
-constexpr size_t NUM_TRIG_CONDITIONS = 47;
+constexpr size_t NUM_TRIG_CONDITIONS = 49;
 constexpr size_t NUM_LOCKS = 8;
 // as of commit  33e243afc758081dc6eb244e42ae61e1e0de09c0
 // the track sizes are:

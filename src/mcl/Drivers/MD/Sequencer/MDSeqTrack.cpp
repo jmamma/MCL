@@ -365,9 +365,10 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
       auto &step = steps[current_step];
       uint8_t send_trig = trig_conditional(step.cond_id);
       bool is_midi_model = md_track_is_midi_model(track_number);
+      bool step_fired = send_trig == TRIG_TRUE && step.trig;
       if (send_trig == TRIG_TRUE ||
           (!step.cond_plock && send_trig != TRIG_ONESHOT)) {
-        if (is_midi_model && send_trig == TRIG_TRUE && step.trig) {
+        if (is_midi_model && step_fired) {
           send_notes_off();
           init_notes();
         }
@@ -376,7 +377,7 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
           locks_slides_recalc = current_step;
           locks_slides_idx = lock_idx;
         }
-        if (send_trig == TRIG_TRUE && step.trig) {
+        if (step_fired) {
           if (is_midi_model) {
             notes.count_down = md_note_count_down(notes.len, ticks_per_step);
             send_notes_on();
@@ -384,6 +385,7 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
           send_trig_inline();
         }
       }
+      record_trig_result(step_fired);
     }
   }
 end:

@@ -184,12 +184,16 @@ bool SeqTrackCond::conditional(uint8_t condition) {
     return get_random_byte() <= pgm_read_byte_near(thresholds + condition);
   }
 
-  if (condition >= SEQ_COND_FIRST && condition <= SEQ_COND_NOT_FILL) {
-    bool value = condition < SEQ_COND_FILL
-                     ? first_run()
-                     : track_number < 16 &&
-                           (mcl_seq.fill_mask &
-                            ((uint16_t)1 << track_number)) != 0;
+  if (condition >= SEQ_COND_FIRST && condition <= SEQ_COND_NOT_PRE) {
+    bool value = false;
+    if (condition < SEQ_COND_FILL) {
+      value = first_run();
+    } else if (condition < SEQ_COND_PRE) {
+      value = track_number < 16 &&
+              (mcl_seq.fill_mask & ((uint16_t)1 << track_number)) != 0;
+    } else {
+      value = (conditional_flags & CONDITIONAL_PREV_TRIG) != 0;
+    }
     return (condition & 1) ? value : !value;
   }
 
@@ -213,9 +217,9 @@ void seq_condition_label(uint8_t condition, bool plock, bool marker,
   char b = '-';
   char d = '-';
 
-  if (condition <= SEQ_COND_NOT_FILL) {
+  if (condition <= SEQ_COND_NOT_PRE) {
     static const char labels[] PROGMEM =
-        "---90%75%66%50%33%25%10%1SH1ST!1SFIL!FL";
+        "---90%75%66%50%33%25%10%1SH1ST!1SFIL!FLPRE!PR";
     uint8_t idx = condition + condition + condition;
     a = (char)pgm_read_byte_near(labels + idx);
     b = (char)pgm_read_byte_near(labels + idx + 1);

@@ -933,6 +933,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
                                      uint8_t velocity) {
   if (IS_BIT_SET128_P(oneshot_mask, step_count) ||
       IS_BIT_SET128_P(mute_mask, step_count)) {
+    record_trig_result(false);
     return;
   }
   bool send_note = false;
@@ -946,6 +947,7 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   if (send_note) {
     note_on(note, velocity);
   }
+  record_trig_result(send_note);
 }
 
 void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartClass *uart_) {

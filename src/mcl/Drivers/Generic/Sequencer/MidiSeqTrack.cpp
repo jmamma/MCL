@@ -1009,9 +1009,11 @@ void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
                                 uint16_t bucket_start) {
   if (event.type == MIDI_SEQ_EVENT_NOTE_ON) {
     if (step == ignore_step && IS_BIT_SET128_P(ignore_notes, event.target)) {
+      record_trig_result(false);
       return;
     }
     if (IS_BIT_SET128_P(mute_mask, step)) {
+      record_trig_result(false);
       return;
     }
     if (conditional_for_event(event.condition, step)) {
@@ -1035,14 +1037,19 @@ void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
 }
 
 bool MidiSeqTrack::conditional_for_event(uint8_t condition, uint8_t step) {
+  bool result = false;
   if (condition == MIDI_SEQ_COND_ONESHOT) {
     if (IS_BIT_SET128_P(oneshot_mask, step)) {
+      record_trig_result(false);
       return false;
     }
     SET_BIT128_P(oneshot_mask, step);
-    return true;
+    result = true;
+  } else {
+    result = conditional(condition);
   }
-  return conditional(condition);
+  record_trig_result(result);
+  return result;
 }
 
 void MidiSeqTrack::seq(MidiUartClass *uart_) {

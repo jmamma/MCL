@@ -227,6 +227,7 @@ public:
 
   enum {
     CONDITIONAL_FIRST_RUN = 1 << 0,
+    CONDITIONAL_PREV_TRIG = 1 << 1,
   };
 
   SeqTrackCond() { reset(); }
@@ -290,6 +291,11 @@ public:
 
   bool first_run() const {
     return (conditional_flags & CONDITIONAL_FIRST_RUN) != 0;
+  }
+
+  void record_trig_result(bool fired) {
+    if (fired) conditional_flags |= CONDITIONAL_PREV_TRIG;
+    else conditional_flags &= ~CONDITIONAL_PREV_TRIG;
   }
 
   bool conditional(uint8_t condition);
