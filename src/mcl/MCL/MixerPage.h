@@ -74,6 +74,7 @@ public:
   uint16_t redraw_mask;
   bool redraw_mutes;
   bool show_mixer_menu;
+  bool fill_edit_mode = false;
 
   bool draw_encoders;
 
@@ -96,6 +97,7 @@ public:
   uint8_t mixer_track_count() const;
   SeqTrack *mixer_seq_track(uint8_t track) const;
   bool display_mute_mask();
+  bool display_fill_mask();
   TrigLEDMode mixer_led_mode() const;
   uint8_t *mixer_meter_levels();
   bool handle_mixer_encoder_edits(bool use_perf_encoders);
@@ -119,7 +121,6 @@ public:
   void oled_draw_mutes();
   void switch_mute_set(uint8_t state, bool load_perf = false, bool *load_types = nullptr);
   bool fill_set_mode(uint8_t state) const;
-  void set_fill_set_mode(uint8_t state, bool fill);
   void switch_fill_set(uint8_t state);
 
   void load_perf_locks(uint8_t state);

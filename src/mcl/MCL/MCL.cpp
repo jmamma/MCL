@@ -87,7 +87,6 @@ void open_remote_fill_window() {
   if (grid_page.bank_popup) {
     grid_page.close_bank_popup();
   }
-  MD.draw_open_fill(mcl_seq.fill_mask);
   remote_fill_window_open = true;
 #ifdef PLATFORM_TBD
   remote_mute_window_open = false;
@@ -95,7 +94,6 @@ void open_remote_fill_window() {
 }
 
 void close_remote_fill_window() {
-  MD.draw_close_fill();
   remote_fill_window_open = false;
 }
 
@@ -520,7 +518,6 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REALTIME: {
         mcl_seq.set_fill(true);
-        MD.draw_fill_state(mcl_seq.fill_mask);
         seq_step_page.bootstrap_record();
         return true;
       }
@@ -598,7 +595,6 @@ bool mcl_handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_REALTIME: {
         mcl_seq.set_fill(false);
-        MD.draw_fill_state(mcl_seq.fill_mask);
         return true;
       }
       case MDX_KEY_SCALE: {
