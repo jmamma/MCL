@@ -224,16 +224,24 @@ void MixerPage::oled_draw_mutes() {
     //   oled_display.fillRect(fader_x, 2, 6, 6, WHITE);
     // } else if (mute_state) {
     // No Mute (SEQ_MUTE_OFF)
-    oled_display.fillRect(fader_x, 2, 6, 6, BLACK);
+    oled_display.fillRect(fader_x, 1, 7, 7, BLACK);
     if (draw) {
       if (fill_preview) {
         if (mute_state) {
-          oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
-          oled_display.drawFastVLine(fader_x + 2, 3, 4, WHITE);
-          oled_display.drawFastVLine(fader_x + 3, 3, 4, WHITE);
+          oled_display.drawPixel(fader_x + 3, 1, WHITE);
+          oled_display.drawPixel(fader_x + 2, 2, WHITE);
+          oled_display.drawPixel(fader_x + 4, 2, WHITE);
+          oled_display.drawPixel(fader_x + 1, 3, WHITE);
+          oled_display.drawPixel(fader_x + 5, 3, WHITE);
+          oled_display.drawPixel(fader_x, 4, WHITE);
+          oled_display.drawPixel(fader_x + 6, 4, WHITE);
+          oled_display.drawPixel(fader_x + 1, 5, WHITE);
+          oled_display.drawPixel(fader_x + 5, 5, WHITE);
+          oled_display.drawPixel(fader_x + 2, 6, WHITE);
+          oled_display.drawPixel(fader_x + 4, 6, WHITE);
+          oled_display.drawPixel(fader_x + 3, 7, WHITE);
         } else {
-          oled_display.drawPixel(fader_x + 2, 5, WHITE);
-          oled_display.drawPixel(fader_x + 3, 5, WHITE);
+          oled_display.drawFastHLine(fader_x, 5, 6, WHITE);
         }
       } else if (mute_state) {
         oled_display.drawRect(fader_x, 2, 6, 6, WHITE);
