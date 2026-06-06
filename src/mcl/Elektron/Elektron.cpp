@@ -32,6 +32,13 @@ bool read_system_response(ElektronDevice *device, uint8_t command,
   return msgType == 0x72 && sysex.getByte(begin) == command;
 }
 
+uint16_t read_packed_u16_7bit(const SysexView &sysex, uint8_t offset) {
+  uint16_t value = sysex.getByte(offset);
+  value |= (uint16_t)sysex.getByte(offset + 1) << 7;
+  value |= (uint16_t)sysex.getByte(offset + 2) << 14;
+  return value;
+}
+
 #if !defined(__AVR__) && defined(DEBUGMODE)
 const char *blocking_data_type_name(DataType type) {
   switch (type) {
@@ -150,17 +157,26 @@ bool ElektronDevice::get_tempo(uint16_t &tempo) {
 
 
 bool ElektronDevice::get_mute_state(uint16_t &mute_state) {
+  uint16_t fill_state;
+  return get_track_state(mute_state, fill_state) != 0;
+}
+
+uint8_t ElektronDevice::get_track_state(uint16_t &mute_state,
+                                        uint16_t &fill_state) {
   uint8_t begin;
   SysexView sysex;
   mute_state = 0;
-  if (read_system_response(this, 0x33, sysex, begin)) {
-      mute_state = sysex.getByte(begin+1);
-      mute_state |= (sysex.getByte(begin+2) << 7);
-      mute_state |= (sysex.getByte(begin+3) << 14);
-      return true;
+  fill_state = 0;
+  if (!read_system_response(this, 0x33, sysex, begin) ||
+      sysex.get_recordLen() < (uint16_t)(begin + 4)) {
+    return 0;
   }
-
-  return false;
+  mute_state = read_packed_u16_7bit(sysex, begin + 1);
+  if (sysex.get_recordLen() < (uint16_t)(begin + 7)) {
+    return 1;
+  }
+  fill_state = read_packed_u16_7bit(sysex, begin + 4);
+  return 3;
 }
 
 

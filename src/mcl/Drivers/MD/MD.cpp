@@ -1368,11 +1368,16 @@ void MDClass::init_grid_devices(DeviceIdx device_idx) {
 
 void MDClass::get_mutes() {
   uint16_t mutes;
-  if (get_mute_state(mutes)) {
+  uint16_t fill_state;
+  uint8_t state = get_track_state(mutes, fill_state);
+  if (state) {
     for (uint8_t n = 0; n < 16; n++, mutes >>= 1) {
       uint8_t m = mutes & 1;
       SeqTrackUtil::with_md_track(n, [m](auto &t) { t.mute_state = m; });
       DEBUG_PRINTLN(m);
+    }
+    if (state & 2) {
+      mcl_seq.set_fill_mask(DeviceIdx::Primary, fill_state);
     }
   } else {
     DEBUG_PRINTLN("mute state failed");

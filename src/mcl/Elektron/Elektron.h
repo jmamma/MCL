@@ -323,6 +323,7 @@ public:
 
   bool get_tempo(uint16_t &tempo);
   bool get_mute_state(uint16_t &mute_state);
+  uint8_t get_track_state(uint16_t &mute_state, uint16_t &fill_state);
   bool get_fw_caps();
 
   void activate_encoder_interface(uint8_t *params, uint8_t count = 24);
