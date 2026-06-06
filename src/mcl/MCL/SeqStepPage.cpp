@@ -212,6 +212,10 @@ void SeqStepPage::config_encoders() {
   }
 
   SeqStepTrackRef active_track = active_step_track();
+  uint8_t condition_count = active_track.condition_count();
+  seq_param1.max = condition_count * 2;
+  seq_param1.cur = condition_count;
+  seq_param1.old = seq_param1.cur;
   seq_param3.cur = active_track.length();
   seq_param3.old = seq_param3.cur;
   seq_param2.cur = active_track.timing_encoder_center();
@@ -433,6 +437,7 @@ void SeqStepPage::loop() {
   }
 
   if (note_interface.trig_notes_all_released() && !grid_page.bank_popup) {
+    config_encoders();
     init_encoders_used_clock();
     active_track.end_param_editor();
 
