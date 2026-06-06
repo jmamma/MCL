@@ -257,7 +257,8 @@ void SeqStepPage::init() {
   seq_param1.max = active_track.condition_count() * 2;
   seq_param2.min = active_track.timing_encoder_min();
   seq_param2.old = active_track.timing_encoder_center();
-  seq_param1.cur = 0;
+  seq_param1.cur = active_track.condition_count();
+  seq_param1.old = seq_param1.cur;
   seq_param3.max = 64;
   seq_param3.min = 1;
 }
@@ -400,7 +401,7 @@ void SeqStepPage::loop() {
           }
           if (seq_param1_changed && has_kit_sound) {
             char str[5];
-            if (seq_param1.getValue() > 0) {
+            if (condition > 0) {
               conditional_str(str, seq_param1.getValue(), true);
               active_track.popup_text(str);
             }
@@ -764,11 +765,25 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         }
 
         case MDX_KEY_UP: {
-          seq_param1.cur += 1;
+          uint8_t num_cond = active_track.condition_count();
+          if (func_down) {
+            if (seq_param1.cur != num_cond) {
+              seq_param1.cur = num_cond * 2 - seq_param1.cur;
+            }
+          } else if (seq_param1.cur < num_cond * 2) {
+            seq_param1.cur += 1;
+          }
           return true;
         }
         case MDX_KEY_DOWN: {
-          seq_param1.cur -= 1;
+          uint8_t num_cond = active_track.condition_count();
+          if (func_down) {
+            if (seq_param1.cur != num_cond) {
+              seq_param1.cur = num_cond * 2 - seq_param1.cur;
+            }
+          } else if (seq_param1.cur > 0) {
+            seq_param1.cur -= 1;
+          }
           return true;
         }
         case MDX_KEY_LEFT: {

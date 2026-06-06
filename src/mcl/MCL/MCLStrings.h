@@ -45,6 +45,7 @@ MCLSTR_DECLARE(mode);
 MCLSTR_DECLARE(save);
 MCLSTR_DECLARE(channel_select);
 MCLSTR_DECLARE(cond);
+MCLSTR_DECLARE(cond_caret);
 MCLSTR_DECLARE(hex_prefix); // For "0x"
 MCLSTR_DECLARE(plen);
 MCLSTR_DECLARE(quant);

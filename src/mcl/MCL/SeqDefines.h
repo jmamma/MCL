@@ -18,16 +18,16 @@
 #define SEQ_SPEED_1_8X 6
 #define SEQ_SPEED_4X 7
 
-// Canonical conditional ids. These match the StepSeq/SPSX encoding and fit in
-// the 6-bit condition fields used by the newer sequencers.
+// Canonical conditional ids. These match the step-edit UI order and fit in the
+// 6-bit condition fields used by the newer sequencers.
 #define SEQ_COND_100PCT     0
-#define SEQ_COND_90PCT      1
-#define SEQ_COND_75PCT      2
-#define SEQ_COND_66PCT      3
+#define SEQ_COND_10PCT      1
+#define SEQ_COND_25PCT      2
+#define SEQ_COND_33PCT      3
 #define SEQ_COND_50PCT      4
-#define SEQ_COND_33PCT      5
-#define SEQ_COND_25PCT      6
-#define SEQ_COND_10PCT      7
+#define SEQ_COND_66PCT      5
+#define SEQ_COND_75PCT      6
+#define SEQ_COND_90PCT      7
 
 #define SEQ_COND_ONESHOT    8
 #define SEQ_COND_FIRST      9
@@ -45,6 +45,29 @@
 #define SEQ_NUM_TRIG_CONDITIONS 52
 
 #define SEQ_LEGACY_COND_MAX 14
+
+inline uint8_t seq_cond_knob_to_step(uint8_t knob, uint8_t max_condition,
+                                     bool *plock) {
+  if (knob == max_condition) {
+    *plock = false;
+    return SEQ_COND_100PCT;
+  }
+  if (knob > max_condition) {
+    *plock = false;
+    return (uint8_t)(knob - max_condition);
+  }
+  *plock = true;
+  return (uint8_t)(max_condition - knob);
+}
+
+inline uint8_t seq_cond_step_to_knob(uint8_t condition, bool plock,
+                                     uint8_t max_condition) {
+  if (condition == SEQ_COND_100PCT) {
+    return max_condition;
+  }
+  return plock ? (uint8_t)(max_condition - condition)
+               : (uint8_t)(max_condition + condition);
+}
 
 inline uint8_t seq_cond_iter_encode(uint8_t x, uint8_t y) {
   if (y < 2 || y > 8 || x < 1 || x > y) return SEQ_COND_100PCT;

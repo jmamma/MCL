@@ -1168,31 +1168,23 @@ void SeqPage::draw_mask(uint8_t offset, uint8_t device,
 // from knob value to step value
 uint8_t SeqPage::translate_to_step_conditional(uint8_t condition,
                                                /*OUT*/ bool *plock) {
-  uint8_t num_cond = seq_page_condition_count();
-  if (condition > num_cond) {
-    condition = condition - num_cond;
-    *plock = true;
-  } else {
-    *plock = false;
-  }
-  return condition;
+  return seq_cond_knob_to_step(condition, seq_page_condition_count(), plock);
 }
 
 // from step value to knob value
 uint8_t SeqPage::translate_to_knob_conditional(uint8_t condition,
                                                /*IN*/ bool plock) {
-  uint8_t num_cond = seq_page_condition_count();
-  if (plock) {
-    condition = condition + num_cond;
-  }
-  return condition;
+  return seq_cond_step_to_knob(condition, plock, seq_page_condition_count());
 }
 
 void SeqPage::draw_knob_conditional(uint8_t cond) {
   char K[5];
   conditional_str(K, cond);
-  // draw_knob(0, PRG_TO_RAM("COND"), K);
-  draw_knob(0, mclstr_cond, K);
+  bool marker = K[3] != '\0';
+  if (marker) {
+    K[3] = '\0';
+  }
+  draw_knob(0, marker ? mclstr_cond_caret : mclstr_cond, K);
 }
 
 void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
@@ -1200,10 +1192,8 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
     return;
 
   uint8_t num_cond = seq_page_condition_count();
-  bool plock = c > num_cond;
-
-  if (plock)
-    c -= num_cond;
+  bool plock = false;
+  c = seq_cond_knob_to_step(c, num_cond, &plock);
 
   if (seq_page_condition_label(c, plock, m, s)) {
     return;

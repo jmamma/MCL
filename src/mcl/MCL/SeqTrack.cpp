@@ -206,7 +206,7 @@ void seq_condition_label(uint8_t condition, bool plock, bool marker,
 
   if (condition <= SEQ_COND_NOT_NEI) {
     static const char labels[] PROGMEM =
-        "---90%75%66%50%33%25%10%1SH1ST!1SFIL!FLPRE!PRNEI!NE";
+        "---10%25%33%50%66%75%90%1SH1ST!1SFIL!FLPRE!PRNEI!NE";
     uint8_t idx = condition + condition + condition;
     a = (char)pgm_read_byte_near(labels + idx);
     b = (char)pgm_read_byte_near(labels + idx + 1);

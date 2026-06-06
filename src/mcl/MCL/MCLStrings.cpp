@@ -27,6 +27,7 @@ MCLSTR_DEFINE(mode, "MODE");
 MCLSTR_DEFINE(save, "SAVE");
 MCLSTR_DEFINE(channel_select, "CHANNEL SELECT");
 MCLSTR_DEFINE(cond, "COND");
+MCLSTR_DEFINE(cond_caret, "COND^");
 MCLSTR_DEFINE(hex_prefix, "0x");
 MCLSTR_DEFINE(plen, "PLEN");
 MCLSTR_DEFINE(quant, "QUANT");

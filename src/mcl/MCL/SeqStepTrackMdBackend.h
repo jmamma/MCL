@@ -155,17 +155,11 @@ public:
   }
 
   uint8_t step_conditional_from_knob(uint8_t condition, bool *plock) const {
-    uint8_t num_cond = condition_count();
-    if (condition > num_cond) {
-      *plock = true;
-      return condition - num_cond;
-    }
-    *plock = false;
-    return condition;
+    return seq_cond_knob_to_step(condition, condition_count(), plock);
   }
 
   uint8_t knob_conditional_from_step(uint8_t condition, bool plock) const {
-    return plock ? condition + condition_count() : condition;
+    return seq_cond_step_to_knob(condition, plock, condition_count());
   }
 
   uint8_t timing_encoder_min() const { return 1; }

@@ -95,12 +95,12 @@ SEQ_CONDITION_INLINE bool seq_condition_match(uint8_t condition,
                                               uint8_t track_number,
                                               uint16_t fill_mask,
                                               uint16_t neighbor_mask) {
-  if (condition <= SEQ_COND_10PCT) {
+  if (condition <= SEQ_COND_90PCT) {
     if (condition == SEQ_COND_100PCT) {
       return true;
     }
     static const uint8_t thresholds[] PROGMEM = {
-        255, 230, 192, 169, 128, 84, 64, 26,
+        255, 26, 64, 84, 128, 169, 192, 230,
     };
     return get_random_byte() <= pgm_read_byte_near(thresholds + condition);
   }
