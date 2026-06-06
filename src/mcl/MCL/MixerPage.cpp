@@ -331,7 +331,7 @@ void MixerPage::loop() {
       }
     }
   } else if (use_perf_encoders && notes_on) {
-    draw_encoders = true;
+    draw_encoders = false;
   } else {
     draw_encoders = false;
   }
