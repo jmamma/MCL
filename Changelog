@@ -56,6 +56,53 @@ Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 5.0
 
   The mute mask is now stored with Sequencer tracks.
 
+- Sequencer Conditional Trigs
+
+  The conditional trig modes have been expanded to the following options:
+
+   --- = always plays, no condition.
+   10%, 25%, 33%, 50%, 66%, 75%, 90% = probability that the trig plays.
+   1SH = one-shot; plays once, then needs to be rearmed.
+   1ST = first cycle/pass only.
+   !1S = not first cycle/pass.
+   FIL = fill active for that track.
+   !FL = fill not active for that track.
+   PRE = previous trig condition fired.
+   !PR = previous trig condition did not fire.
+   NEI = neighbouring previous track fired.
+   !NE = neighbouring previous track did not fire.
+   x:y = iterator condition, for example 2:4 plays on the 2nd pass of a
+   4-pass cycle.
+
+  Older projects are updated automatically to use the new conditions.
+
+- Track Fill
+
+  Sequencer trigs can now use Fill conditions (FIL, !FL).
+
+  Similar to track mutes, MCL stores a fill state for each track. Fill states
+  can be edited from the Mixer Page or, in enhanced mode, from the MD's Mute
+  Menu by switching to Fill mode.
+
+  When a track's fill state is active, shown as a diamond, steps assigned a
+  Fill condition will be triggered when the sequencer plays.
+
+- Mixer Page
+
+  From MCL's Mixer Page, hold [ Global ] and press [ Scale ] to toggle between
+  Mute and Fill modes.
+
+  Each of the four Performance States now stores Track Fill settings in
+  addition to Track Mute settings.
+
+  Holding an arrow key displays and edits that Performance State's Track Fill
+  or Track Mute settings, depending on the active mode.
+
+- Mute Menu
+
+  In enhanced mode, press [ Scale ] from the MD's Mute Menu to toggle between
+  Mute and Fill modes.
+
 - Arpeggiator per-track
 
   Each track has always had its own Arpeggiator, but the settings were not
