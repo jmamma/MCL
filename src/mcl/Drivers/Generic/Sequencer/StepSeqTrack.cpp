@@ -101,9 +101,15 @@ bool StepSeqTrackCond::neighbor_fired() const {
 }
 
 bool StepSeqTrackCond::conditional(uint8_t condition) {
+    return conditional(condition,
+                       seq_class ? seq_class->fill_mask_for(DeviceIdx::Primary)
+                                 : 0);
+}
+
+bool StepSeqTrackCond::conditional(uint8_t condition, uint16_t fill_mask) {
     return seq_condition_match(condition, iterations, conditional_flags,
                                track_number,
-                               seq_class ? seq_class->fill_mask : 0,
+                               fill_mask,
                                seq_class ? seq_class->neighbor_trig_mask : 0);
 }
 

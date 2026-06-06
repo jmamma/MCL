@@ -301,8 +301,8 @@ static_assert(sizeof(LegacyGridTrackHeader) == LEGACY_GRID_TRACK_HEADER_SIZE,
               "origin/dev track header size changed");
 static_assert(GridTrack::STORAGE_HEADER_SIZE == LEGACY_GRID_TRACK_HEADER_SIZE,
               "current track header prefix changed");
-static_assert(sizeof(LegacyPerfTrackData) + 3 == sizeof(PerfTrackData),
-              "legacy PerfTrack payload is not a prefix");
+static_assert(sizeof(LegacyPerfTrackData) + 18 == sizeof(PerfTrackData),
+              "legacy PerfTrack payload conversion size changed");
 static_assert(sizeof(LegacyGridTrackHeader) + sizeof(LegacyPerfTrackData) ==
                   491,
               "origin/dev PerfTrack storage size changed");
@@ -474,17 +474,22 @@ void init_migrated_header(LegacyGridTrackHeader &dst,
 
 void copy_legacy_perf_track_data(PerfTrackData &dst,
                                  const LegacyPerfTrackData &src) {
-  memcpy(&dst, &src, sizeof(src));
-  dst.load_mute_set = 255;
+  memcpy(dst.encs, src.encs, sizeof(dst.encs));
+  memcpy(dst.scenes, src.scenes, sizeof(dst.scenes));
+  memcpy(dst.perf_locks, src.perf_locks, sizeof(dst.perf_locks));
+  dst.load_perf_state = 255;
   dst.load_type_mask = 0;
-  dst.fill_set_mode_mask = 0;
 
   uint8_t bit = 1;
   uint8_t load_bit = 0x10;
   for (uint8_t n = 0; n < 4; n++, bit <<= 1, load_bit <<= 1) {
-    uint16_t mutes = dst.mute_sets[1].mutes[n];
+    dst.perf_states[n].mute_mask[0] = src.mute_sets[0].mutes[n];
+    dst.perf_states[n].fill_mask[0] = 0;
+    dst.perf_states[n].fill_mask[1] = 0;
+
+    uint16_t mutes = src.mute_sets[1].mutes[n];
     if ((mutes & 0x8000) == 0) {
-      dst.load_mute_set = n;
+      dst.load_perf_state = n;
     }
     if (mutes & 0x2000) {
       dst.load_type_mask |= bit;
@@ -492,7 +497,7 @@ void copy_legacy_perf_track_data(PerfTrackData &dst,
     if (mutes & 0x4000) {
       dst.load_type_mask |= load_bit;
     }
-    dst.mute_sets[1].mutes[n] = mutes | 0xE000;
+    dst.perf_states[n].mute_mask[1] = mutes | 0xE000;
   }
 }
 
@@ -709,7 +714,7 @@ bool migrate_perf_track_storage(Grid &grid, GridColumn column, GridRow row,
 
   MigratedPerfTrackStorage upgraded;
   init_migrated_header(upgraded.header, legacy_track.header, PERF_TRACK_TYPE,
-                       PERF_TRACK_STORAGE_VERSION_FILL_SETS);
+                       PERF_TRACK_STORAGE_VERSION_PERF_STATES);
   copy_legacy_perf_track_data(upgraded.data, legacy_track.data);
   return grid.write(&upgraded, sizeof(upgraded), dst_column, row);
 }

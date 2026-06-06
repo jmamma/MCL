@@ -1046,7 +1046,8 @@ bool MidiSeqTrack::conditional_for_event(uint8_t condition, uint8_t step) {
     SET_BIT128_P(oneshot_mask, step);
     result = true;
   } else {
-    result = conditional(condition);
+    result = conditional(condition,
+                         mcl_seq.fill_mask_for(DeviceIdx::Secondary));
   }
   record_trig_result(result);
   return result;

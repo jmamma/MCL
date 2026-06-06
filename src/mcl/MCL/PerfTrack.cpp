@@ -17,15 +17,15 @@ void PerfTrack::transition_load(uint8_t tracknumber, SeqTrack *seq_track,
 }
 
 uint16_t PerfTrack::calc_latency(uint8_t tracknumber) {
-  return load_mute_set == 255 ? 0 : 32 * 3 * 4; // Worst case estimate, 32 parameters, 3 bytes each, 4 perf controllers.
+  return load_perf_state == 255 ? 0 : 32 * 3 * 4; // Worst case estimate, 32 parameters, 3 bytes each, 4 perf controllers.
 }
 
 void PerfTrack::get_perf() {
   memcpy(scenes, PerfData::scenes, sizeof(PerfScene) * NUM_SCENES);
-  memcpy(mute_sets,mixer_page.mute_sets, sizeof(mute_sets) + sizeof(perf_locks));
-  version = PERF_TRACK_STORAGE_VERSION_FILL_SETS;
-  load_mute_set = mixer_page.load_mute_set;
-  fill_set_mode_mask = mixer_page.fill_set_mode_mask;
+  memcpy(perf_states, mixer_page.perf_states, sizeof(perf_states));
+  memcpy(perf_locks, mixer_page.perf_locks, sizeof(perf_locks));
+  version = PERF_TRACK_STORAGE_VERSION_PERF_STATES;
+  load_perf_state = mixer_page.load_perf_state;
   load_type_mask = 0;
   uint8_t bit = 1;
   uint8_t load_bit = 0x10;
@@ -56,7 +56,7 @@ void PerfTrack::get_perf() {
 void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
   DEBUG_PRINTLN("load perf");
   DEBUG_PRINTLN( sizeof(scenes));
-  mixer_page.load_mute_set = load_mute_set < 4 ? load_mute_set : 255;
+  mixer_page.load_perf_state = load_perf_state < 4 ? load_perf_state : 255;
 
   uint8_t bit = 1;
   uint8_t load_bit = 0x10;
@@ -78,14 +78,14 @@ void PerfTrack::load_perf(bool immediate, SeqTrack *seq_track) {
   }
  memcpy(PerfData::scenes, scenes, sizeof(PerfScene) * NUM_SCENES);
 
- memcpy(mixer_page.mute_sets, mute_sets, sizeof(mute_sets) + sizeof(perf_locks));
- mixer_page.fill_set_mode_mask = fill_set_mode_mask;
- uint8_t mute_set = mixer_page.load_mute_set;
- if (mute_set < 4) {
-   mixer_page.switch_mute_set(mute_set, immediate, mixer_page.load_types[mute_set]); //Mute change is applied outside of sequencer runtime.
+ memcpy(mixer_page.perf_states, perf_states, sizeof(perf_states));
+ memcpy(mixer_page.perf_locks, perf_locks, sizeof(perf_locks));
+ uint8_t perf_state = mixer_page.load_perf_state;
+ if (perf_state < 4) {
+   mixer_page.switch_perf_state(perf_state, immediate, mixer_page.load_types[perf_state]); //Mute/fill change is applied outside of sequencer runtime.
    if (!immediate) {
      PerfSeqTrack *p = (PerfSeqTrack*) seq_track;
-     memcpy(p->perf_locks, &perf_locks[mute_set],4); //Perf change is pre-empted at sequencer runtime.
+     memcpy(p->perf_locks, &perf_locks[perf_state],4); //Perf change is pre-empted at sequencer runtime.
    }
  }
 }

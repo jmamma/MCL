@@ -185,8 +185,12 @@ bool SeqTrackCond::neighbor_fired() const {
 }
 
 bool SeqTrackCond::conditional(uint8_t condition) {
+  return conditional(condition, mcl_seq.fill_mask_for(DeviceIdx::Primary));
+}
+
+bool SeqTrackCond::conditional(uint8_t condition, uint16_t fill_mask) {
   return seq_condition_match(condition, iterations, conditional_flags,
-                             track_number, mcl_seq.fill_mask,
+                             track_number, fill_mask,
                              mcl_seq.neighbor_trig_mask);
 }
 

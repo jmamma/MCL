@@ -941,7 +941,8 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
     SET_BIT128_P(oneshot_mask, step_count);
     send_note = true;
   } else {
-    send_note = conditional(condition);
+    send_note = conditional(condition,
+                            mcl_seq.fill_mask_for(DeviceIdx::Secondary));
   }
 
   if (send_note) {

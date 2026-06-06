@@ -199,6 +199,7 @@ public:
     virtual void transpose(int8_t offset) = 0;
 
     bool conditional(uint8_t condition);
+    bool conditional(uint8_t condition, uint16_t fill_mask);
     void record_trig_result(bool fired);
     bool neighbor_fired() const;
 };

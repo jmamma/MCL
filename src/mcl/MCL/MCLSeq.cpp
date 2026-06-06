@@ -736,7 +736,7 @@ void MCLSeq::onMidiStartImmediateCallback(uint32_t clock_count) {
 
   SeqTrackUtil::for_each_md_track([](auto &track, uint8_t) { track.reset(); });
   neighbor_trig_mask = 0;
-  fill_mask = 0;
+  set_fill(false);
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     md_arp_tracks[i].reset();
   }
@@ -816,7 +816,7 @@ void MCLSeq::set_transport_position(uint32_t host_tick96) {
   const uint32_t legacy_ticks = legacy_tick_count_from_div192(div192);
 
   neighbor_trig_mask = 0;
-  fill_mask = 0;
+  set_fill(false);
   if (using_spsx_tracks) {
     for (uint8_t i = 0; i < num_md_tracks; i++) {
       sync_spsx_track_phase(spsx_tracks[i], div192);
@@ -967,7 +967,7 @@ bool MCLSeq::switch_to_spsx() {
   using_spsx_tracks = true;
   configure_clock_interpolation();
   neighbor_trig_mask = 0;
-  fill_mask = 0;
+  set_fill(false);
   return true;
 }
 
@@ -982,7 +982,7 @@ bool MCLSeq::switch_to_legacy() {
   // Drop any trig bits SPSX accumulated; legacy pre_seq won't run until next
   // tick and we don't want a parallelTrig drain seeing stale SPSX state.
   MDSeqTrack::md_trig_mask = 0;
-  fill_mask = 0;
+  set_fill(false);
   neighbor_trig_mask = 0;
   using_spsx_tracks = false;
   configure_clock_interpolation();
@@ -1016,7 +1016,8 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t fill_track = param - 68;
   uint8_t control_ch = channel - MD.global.baseChannel;
   if (fill_track < 4 && control_ch < 4) {
-    mcl_seq.set_fill_track((control_ch << 2) + fill_track, value);
+    mcl_seq.set_fill_track(DeviceIdx::Primary,
+                           (control_ch << 2) + fill_track, value);
     return;
   }
 

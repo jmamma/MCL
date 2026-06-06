@@ -20,6 +20,19 @@ public:
   uint16_t mutes[4];
 };
 
+class ATTR_PACKED() PerfState {
+public:
+  uint16_t mute_mask[2];
+  uint16_t fill_mask[2];
+
+  void init() {
+    mute_mask[0] = 0xFFFF;
+    mute_mask[1] = 0xFFFF;
+    fill_mask[0] = 0;
+    fill_mask[1] = 0;
+  }
+};
+
 void encoder_level_handle(EncoderParent *enc);
 
 class MixerTarget {
@@ -81,11 +94,10 @@ public:
   PageIndex last_page = NULL_PAGE;
 
   uint8_t preview_mute_set = 255;
-  uint8_t load_mute_set = 255;
-  uint8_t fill_set_mode_mask = 0;
+  uint8_t load_perf_state = 255;
 
   // Don't change order
-  MuteSet mute_sets[2];
+  PerfState perf_states[4];
   uint8_t perf_locks[4][4];
   bool load_types[4][2];
   //
@@ -105,10 +117,11 @@ public:
   MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
             Encoder *e4 = NULL)
       : LightPage(e1, e2, e3, e4) {
-    memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
-    //memset(perf_locks, 0xFF, sizeof(perf_locks));
+    init_perf_states();
+    memset(perf_locks, 0xFF, sizeof(perf_locks));
     memset(load_types, 1, sizeof(load_types));
   }
+  void init_perf_states();
   void adjust_param(EncoderParent *enc, uint8_t param);
   void draw_levels();
   void draw_encs();
@@ -119,9 +132,8 @@ public:
   void record_mutes_set(bool state);
   void disable_record_mutes(bool clear = false);
   void oled_draw_mutes();
-  void switch_mute_set(uint8_t state, bool load_perf = false, bool *load_types = nullptr);
+  void switch_perf_state(uint8_t state, bool load_perf = false, bool *load_types = nullptr);
   bool fill_set_mode(uint8_t state) const;
-  void switch_fill_set(uint8_t state);
 
   void load_perf_locks(uint8_t state);
   void toggle_or_solo(bool solo = false);

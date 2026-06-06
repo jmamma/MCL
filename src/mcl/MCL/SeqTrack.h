@@ -296,6 +296,7 @@ public:
   void record_trig_result(bool fired);
   bool neighbor_fired() const;
   bool conditional(uint8_t condition);
+  bool conditional(uint8_t condition, uint16_t fill_mask);
 };
 
 class SeqSlideTrack : public SeqTrackCond {

@@ -5,6 +5,7 @@
 #include "MCLMemory.h"
 #include "MidiClock.h"
 #include "Midi.h"
+#include "../Drivers/DeviceContext.h"
 
 #include "MDSeqTrack.h"
 #include "LFOSeqTrack.h"
@@ -79,11 +80,32 @@ public:
 #endif
 
   uint16_t neighbor_trig_mask = 0;
-  uint16_t fill_mask = 0;
-  void set_fill(bool held) { fill_mask = held ? 0xFFFF : 0; }
-  void set_fill_track(uint8_t track, bool held) {
-    if (held) fill_mask |= (uint16_t)(1u << track);
-    else fill_mask &= (uint16_t)~(1u << track);
+  uint16_t fill_mask[2] = {0, 0};
+  static uint8_t fill_slot(DeviceIdx device_idx) {
+    return device_idx == DeviceIdx::Secondary ? 1 : 0;
+  }
+  uint16_t &fill_mask_for(DeviceIdx device_idx) {
+    return fill_mask[fill_slot(device_idx)];
+  }
+  uint16_t fill_mask_for(DeviceIdx device_idx) const {
+    return fill_mask[fill_slot(device_idx)];
+  }
+  void set_fill_mask(DeviceIdx device_idx, uint16_t mask) {
+    fill_mask_for(device_idx) = mask;
+  }
+  void set_fill(bool held) {
+    uint16_t mask = held ? 0xFFFF : 0;
+    fill_mask[0] = mask;
+    fill_mask[1] = mask;
+  }
+  void set_fill_track(DeviceIdx device_idx, uint8_t track, bool held) {
+    if (track >= 16) {
+      return;
+    }
+    uint16_t bit = (uint16_t)(1u << track);
+    uint16_t &mask = fill_mask_for(device_idx);
+    if (held) mask |= bit;
+    else mask &= (uint16_t)~bit;
   }
 
 #if defined(PLATFORM_TBD)

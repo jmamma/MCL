@@ -6,7 +6,7 @@
 #include "PerfEncoder.h"
 #include "MixerPage.h"
 
-#define PERF_TRACK_STORAGE_VERSION_FILL_SETS 2
+#define PERF_TRACK_STORAGE_VERSION_PERF_STATES 3
 
 class ATTR_PACKED() PerfTrackEncoderData {
 public:
@@ -32,11 +32,10 @@ class ATTR_PACKED() PerfTrackData {
 public:
   PerfTrackEncoderData encs[4];
   PerfScene scenes[NUM_SCENES];
-  MuteSet mute_sets[2];
+  PerfState perf_states[4];
   uint8_t perf_locks[4][4];
-  uint8_t load_mute_set;
+  uint8_t load_perf_state;
   uint8_t load_type_mask;
-  uint8_t fill_set_mode_mask;
 };
 
 class ATTR_PACKED() PerfTrack : public AUXTrack, public PerfTrackData {
@@ -60,12 +59,12 @@ public:
     for (uint8_t n = 0; n < NUM_SCENES; n++) {
       scenes[n].init();
     }
-    //memset(mute_sets, 0xFF, sizeof(mute_sets));
-    //memset(perf_locks, 255, sizeof(perf_locks));
-    memset(mute_sets, 0xFF, sizeof(mute_sets) + sizeof(perf_locks));
-    load_mute_set = 255;
+    for (uint8_t n = 0; n < 4; n++) {
+      perf_states[n].init();
+    }
+    memset(perf_locks, 0xFF, sizeof(perf_locks));
+    load_perf_state = 255;
     load_type_mask = 0xFF;
-    fill_set_mode_mask = 0;
   }
   void init_defaults() override { init(); }
 
@@ -88,7 +87,7 @@ public:
   }
   virtual uint8_t get_model() override { return PERF_TRACK_TYPE; }
   virtual uint8_t storage_version() const override {
-    return PERF_TRACK_STORAGE_VERSION_FILL_SETS;
+    return PERF_TRACK_STORAGE_VERSION_PERF_STATES;
   }
   virtual void *get_sound_data_ptr() override { return &encs; }
   virtual size_t get_sound_data_size() override { return sizeof(PerfTrackData); }
