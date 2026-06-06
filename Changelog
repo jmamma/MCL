@@ -80,8 +80,8 @@ Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 5.0
 
   Sequencer trigs can now use Fill conditions (FIL, !FL).
 
-  Similar to track mutes, MCL stores a fill state for each track. Fill states
-  can be edited from the Mixer Page or, in enhanced mode, from the MD's Mute
+  Similar to track mutes, the MCL sequencer stores a fill state for each track.
+  Fill states can be edited from the Mixer Page or, in enhanced mode, from the MD's Mute
   Menu by switching to Fill mode.
 
   When a track's fill state is active, shown as a diamond, steps assigned a
