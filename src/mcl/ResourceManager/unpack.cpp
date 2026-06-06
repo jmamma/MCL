@@ -17,7 +17,7 @@ static byte shift(uint16_t &state, byte *&src) {
   return HI_BIT0(state);
 }
 
-int32_t shift_len(uint16_t &state, byte *&src) {
+static int32_t shift_len(uint16_t &state, byte *&src) {
   int32_t len = 1;
   while (!HI_BIT0(state)) {
     auto bit = shift(state, src);
