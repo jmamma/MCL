@@ -46,7 +46,7 @@ uint8_t lfo_legacy_shape_to_sps(uint8_t wav_type) {
   return pgm_read_byte(&map[wav_type]);
 }
 
-bool lfo_legacy_shape_is_centered(uint8_t wav_type) {
+bool lfo_legacy_shape_uses_phase_offset(uint8_t wav_type) {
   return wav_type == LFO_LEGACY_SIN_WAV || wav_type == LFO_LEGACY_TRI_WAV;
 }
 
@@ -130,7 +130,7 @@ int16_t lfo_terminal_sample(uint8_t wav_type, uint16_t phase) {
     return 128;
   case SAW_WAV:
   case SQU_WAV:
-    return -128;
+    return -64;
   default:
     return 0;
   }
@@ -366,11 +366,11 @@ int16_t LFOSeqTrack::get_preview_sample(uint8_t wav_type, uint16_t phase) {
   uint8_t wav = wav_type < LFO_SHAPE_COUNT ? wav_type : TRI_WAV;
   switch (wav) {
   case TRI_WAV:
-    return lfo_signed_tri(phase);
+    return lfo_signed_tri(phase) / 2;
   case SAW_WAV:
-    return lfo_signed_saw(phase);
+    return lfo_signed_saw(phase) / 2;
   case SQU_WAV:
-    return (phase & 0x4000U) ? -128 : 128;
+    return (phase & 0x4000U) ? -64 : 64;
   case LIN_WAV:
     return lfo_unipolar_decay(phase);
   case EXP_WAV:
@@ -382,7 +382,7 @@ int16_t LFOSeqTrack::get_preview_sample(uint8_t wav_type, uint16_t phase) {
   case REV_EXP_WAV:
     return 128 - lfo_table_sample_phase(LFO_TABLE_EXP, phase);
   case SIN_WAV:
-    return (int16_t)lfo_table_sample_phase(LFO_TABLE_SIN, phase) - 128;
+    return ((int16_t)lfo_table_sample_phase(LFO_TABLE_SIN, phase) - 128) / 2;
   case STEP_WAV:
     return (phase & 0x4000U) ? 128 : 0;
   case LINLIN_WAV:
@@ -490,11 +490,8 @@ void LFOSeqTrack::convert_legacy_data(const LegacyLFOSeqTrackData &legacy_data,
   LfoLegacySpeed converted_speed = lfo_legacy_speed_for_period(legacy_speed);
   data->speed = converted_speed.speed;
   data->mode = pack_mode(base_mode, converted_speed.multiplier);
-  if (lfo_legacy_shape_is_centered(legacy_wav_type)) {
+  if (lfo_legacy_shape_uses_phase_offset(legacy_wav_type)) {
     data->mode |= LFO_MODE_LEGACY_PHASE;
-    for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
-      data->params[i].depth >>= 1;
-    }
   }
 }
 
