@@ -5,7 +5,7 @@
 #include "GridRowHeader.h"
 #include "MCLSd.h"
 
-#define GRID_VERSION 3012
+#define GRID_VERSION 3013
 #define GRID_HEADER_MAGIC 0x4D434C47UL
 #define GRID_FILE_HEADER_VERSION 1
 #define GRID_HEADER_BYTES 32

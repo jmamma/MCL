@@ -11,7 +11,7 @@
 #include "ProjectPages.h"
 
 #define PROJ_MIN_READABLE_VERSION 3000
-#define PROJ_VERSION 3012
+#define PROJ_VERSION 3013
 #define PRJ_DIR "/Projects"
 
 class ProjectHeader {
