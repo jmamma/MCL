@@ -839,8 +839,9 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         break;
       }
       case MDX_KEY_SCALE: {
-        if (BUTTON_DOWN(Buttons.BUTTON3) ||
-            key_interface.is_key_down(MDX_KEY_PATSONG)) {
+        if (note_interface.notes_on == 0 &&
+            (BUTTON_DOWN(Buttons.BUTTON3) ||
+             key_interface.is_key_down(MDX_KEY_PATSONG))) {
           fill_edit_mode = !fill_edit_mode;
           preview_mute_set = 255;
           seq_step_page.mute_mask++;
