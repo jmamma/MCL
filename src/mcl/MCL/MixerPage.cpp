@@ -309,10 +309,11 @@ void MixerPage::loop() {
   sync_selected_mixer_device();
   const bool use_perf_encoders = mixer_target.perf_available();
   const bool notes_on = note_interface.notes_on;
-  bool mixer_encoder_edit = notes_on &&
-                            handle_mixer_encoder_edits(use_perf_encoders);
 
-  if (use_perf_encoders && !mixer_encoder_edit) {
+  if (notes_on) {
+    handle_mixer_encoder_edits(use_perf_encoders);
+    draw_encoders = false;
+  } else if (use_perf_encoders) {
     MixerPerf::func_enc_check();
 
     MixerPerf::handle_preview_lock_edits(encoders, perf_locks,
@@ -330,8 +331,6 @@ void MixerPage::loop() {
         }
       }
     }
-  } else if (use_perf_encoders && notes_on) {
-    draw_encoders = false;
   } else {
     draw_encoders = false;
   }
