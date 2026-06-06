@@ -70,6 +70,9 @@ public:
   void send_trig();
   void send_trig_inline();
   uint8_t trig_conditional(uint8_t condition);
+  ALWAYS_INLINE() void clear_step_oneshot(uint8_t step) {
+    CLEAR_BIT64(oneshot_mask, step);
+  }
   void send_parameter_locks(uint8_t step, bool trig,
                             uint16_t lock_idx = 0xFFFF);
   void send_parameter_locks_inline(uint8_t step, bool trig, uint16_t lock_idx);

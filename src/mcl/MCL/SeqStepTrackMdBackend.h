@@ -224,6 +224,7 @@ public:
   }
 
   void reset_timing(uint8_t step) { track_->microtiming[step] = 0; }
+  void clear_step_oneshot(uint8_t step) { track_->clear_step_oneshot(step); }
   void clear_mute(uint8_t step) { track_->mute_mask &= ~(1ULL << step); }
   void toggle_mute(uint8_t step) { track_->mute_mask ^= (1ULL << step); }
   uint64_t mute_mask() const { return track_->mute_mask; }

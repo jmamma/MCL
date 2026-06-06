@@ -396,6 +396,9 @@ void SeqStepPage::loop() {
           uint8_t condition = active_track.step_conditional_from_knob(
               seq_param1.cur, &cond_plock);
 
+          if (seq_param1_changed || seq_param2_changed) {
+            active_track.clear_step_oneshot(step);
+          }
           active_track.set_conditional(step, condition, cond_plock);
           active_track.set_timing_from_encoder(step, seq_param2.cur);
 
@@ -576,6 +579,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
         bool cond_plock;
         uint8_t step_condition =
             active_track.step_conditional_from_knob(condition, &cond_plock);
+        active_track.clear_step_oneshot(step);
         active_track.set_conditional(step, step_condition, cond_plock);
         active_track.set_timing_from_encoder(step, seq_param2.cur);
         active_track.clear_mute(step);
@@ -605,6 +609,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
             TRIG_HOLD_TIME) {
           reset_undo();
           active_track.set_step(step, mask_type, false);
+          active_track.clear_step_oneshot(step);
           active_track.clear_conditional(step);
           active_track.reset_timing(step);
           if (active_track.clears_mute_on_pattern_clear() &&
@@ -861,6 +866,9 @@ void SeqStepMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
         }
 
         if (seq_step_page.mask_type == MASK_PATTERN) {
+          if (!active_track.get_step(step, MASK_PATTERN)) {
+            active_track.clear_step_oneshot(step);
+          }
           active_track.set_pattern_step_from_edit(step, seq_param1.cur,
                                                   seq_param2.cur);
         }

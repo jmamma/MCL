@@ -1178,6 +1178,9 @@ bool ExtSeqTrack::set_track_step(uint8_t step, uint8_t utiming,
                                  uint8_t velocity, uint8_t cond) {
   ext_event_t e;
 
+  if (event_on) {
+    CLEAR_BIT128_P(oneshot_mask, step);
+  }
   e.is_lock = false;
   e.lock_idx = 0;
   ext_event_set_condition(e, cond);

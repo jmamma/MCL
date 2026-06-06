@@ -310,30 +310,58 @@ public:
   }
   void set_conditional(uint8_t step, uint8_t condition, bool plock) {
     if (kind_ == KIND_MD) {
-      tracks_.md->steps[step].cond_id = condition;
-      tracks_.md->steps[step].cond_plock = plock;
+      auto &s = tracks_.md->steps[step];
+      if (s.cond_id != condition || s.cond_plock != plock) {
+        tracks_.md->clear_step_oneshot(step);
+      }
+      s.cond_id = condition;
+      s.cond_plock = plock;
     } else {
-      tracks_.stepseq->steps[step].cond_id = condition;
-      tracks_.stepseq->steps[step].cond_plock = plock;
+      auto &s = tracks_.stepseq->steps[step];
+      if (s.cond_id != condition || s.cond_plock != plock) {
+        tracks_.stepseq->clear_step_oneshot_state(step);
+      }
+      s.cond_id = condition;
+      s.cond_plock = plock;
     }
   }
   void clear_conditional(uint8_t step) { set_conditional(step, 0, false); }
   void set_timing_from_encoder(uint8_t step, uint8_t encoder_value) {
     if (kind_ == KIND_MD) {
-      tracks_.md->microtiming[step] = SeqTrack::timing_to_microtiming(
+      int8_t mt = SeqTrack::timing_to_microtiming(
           encoder_value, tracks_.md->get_ticks_per_step());
+      if (tracks_.md->microtiming[step] != mt) {
+        tracks_.md->clear_step_oneshot(step);
+        tracks_.md->microtiming[step] = mt;
+      }
     } else {
-      tracks_.stepseq->microtiming[step] =
-          (int8_t)(encoder_value - 127);
+      int8_t mt = (int8_t)(encoder_value - 127);
+      if (tracks_.stepseq->microtiming[step] != mt) {
+        tracks_.stepseq->clear_step_oneshot_state(step);
+        tracks_.stepseq->microtiming[step] = mt;
+      }
     }
   }
   void set_pattern_step_from_edit(uint8_t step, uint8_t condition_knob,
                                   uint8_t timing_encoder);
   void reset_timing(uint8_t step) {
     if (kind_ == KIND_MD) {
-      tracks_.md->microtiming[step] = 0;
+      if (tracks_.md->microtiming[step] != 0) {
+        tracks_.md->clear_step_oneshot(step);
+        tracks_.md->microtiming[step] = 0;
+      }
     } else {
-      tracks_.stepseq->microtiming[step] = 0;
+      if (tracks_.stepseq->microtiming[step] != 0) {
+        tracks_.stepseq->clear_step_oneshot_state(step);
+        tracks_.stepseq->microtiming[step] = 0;
+      }
+    }
+  }
+  void clear_step_oneshot(uint8_t step) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->clear_step_oneshot(step);
+    } else {
+      tracks_.stepseq->clear_step_oneshot_state(step);
     }
   }
   void clear_mute(uint8_t step) {

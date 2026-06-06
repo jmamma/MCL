@@ -315,6 +315,7 @@ public:
                     const uint8_t *source_locks_params = nullptr);
 
     void transpose(int8_t offset) override;
+    void clear_step_oneshot_state(uint8_t step) { clear_step_oneshot(step); }
 
 protected:
     virtual bool get_default_lock_value(uint8_t param_id, uint8_t &value) const;

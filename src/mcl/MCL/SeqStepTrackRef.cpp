@@ -66,16 +66,13 @@ void SeqStepTrackGenericBackend::set_pattern_step_from_edit(
   if (kind_ == KIND_MD) {
     MDSeqTrack *t = tracks_.md;
     t->steps[step].trig = true;
-    t->steps[step].cond_id = condition;
-    t->steps[step].cond_plock = cond_plock;
-    t->microtiming[step] =
-        SeqTrack::timing_to_microtiming(timing_encoder, t->get_ticks_per_step());
+    set_conditional(step, condition, cond_plock);
+    set_timing_from_encoder(step, timing_encoder);
   } else {
     StepSeqDataTrack *t = tracks_.stepseq;
     t->set_step(step, STEPSEQ_MASK_PATTERN, true);
-    t->steps[step].cond_id = condition;
-    t->steps[step].cond_plock = cond_plock;
-    t->microtiming[step] = (int8_t)(timing_encoder - 127);
+    set_conditional(step, condition, cond_plock);
+    set_timing_from_encoder(step, timing_encoder);
   }
 }
 

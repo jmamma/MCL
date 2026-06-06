@@ -303,15 +303,25 @@ bool SpsHostSeqBridge::applySetMicroTiming(const uint8_t* b, uint16_t n) {
     if (n < 3) return false;
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr || b[1] >= kNumSteps) return false;
-    tr->microtiming[b[1]] = (int8_t)b[2];
+    int8_t mt = (int8_t)b[2];
+    if (tr->microtiming[b[1]] != mt) {
+        tr->clear_step_oneshot_state(b[1]);
+        tr->microtiming[b[1]] = mt;
+    }
     return true;
 }
 bool SpsHostSeqBridge::applySetCondition(const uint8_t* b, uint16_t n) {
     if (n < 3) return false;
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr || b[1] >= kNumSteps) return false;
-    tr->steps[b[1]].cond_id = (uint8_t)(b[2] & 0x3F);
-    tr->steps[b[1]].cond_plock = (b[2] & 0x80) != 0;
+    uint8_t cond = (uint8_t)(b[2] & 0x3F);
+    bool plock = (b[2] & 0x80) != 0;
+    if (tr->steps[b[1]].cond_id != cond ||
+        tr->steps[b[1]].cond_plock != plock) {
+        tr->clear_step_oneshot_state(b[1]);
+    }
+    tr->steps[b[1]].cond_id = cond;
+    tr->steps[b[1]].cond_plock = plock;
     return true;
 }
 bool SpsHostSeqBridge::applySetLock(const uint8_t* b, uint16_t n) {
