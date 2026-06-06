@@ -144,8 +144,7 @@ int8_t lfo_next_random(uint16_t *state) {
 }
 
 uint8_t lfo_preview_to_u8(uint8_t wav_type, int16_t sample) {
-  int16_t value = lfo_wav_is_centered(wav_type) ? ((sample + 128) >> 1)
-                                                : sample;
+  int16_t value = lfo_wav_is_centered(wav_type) ? sample + 64 : sample;
   if (value < 0) {
     return 0;
   }
