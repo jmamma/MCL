@@ -78,7 +78,8 @@ uint8_t *MixerPage::mixer_meter_levels() {
 }
 
 bool MixerPage::fill_set_mode(uint8_t state) const {
-  return state < 4 && (fill_set_mode_mask & (uint8_t)(1u << state)) != 0;
+  return state < 4 &&
+         (fill_edit_mode || (fill_set_mode_mask & (uint8_t)(1u << state)) != 0);
 }
 
 void MixerPage::switch_fill_set(uint8_t state) {
