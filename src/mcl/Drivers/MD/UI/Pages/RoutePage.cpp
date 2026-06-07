@@ -9,7 +9,6 @@
 #include "platform.h"
 
 void RoutePage::init() {
-  hasChanged = false;
   R.Clear();
   R.use_icons_page();
   key_interface.on();
@@ -60,7 +59,6 @@ void RoutePage::toggle_routes_batch(bool solo) {
   uint16_t quantize_mute;
   quantize_mute = encoders[1]->getValue();
   uint8_t i;
-  hasChanged = true;
   if ((quantize_mute <= 64) && (quantize_mute > 1)) {
     while (((((MidiClock.div32th_counter - mcl_actions.start_clock32th) + 3) %
              (quantize_mute * 2)) != 0) &&

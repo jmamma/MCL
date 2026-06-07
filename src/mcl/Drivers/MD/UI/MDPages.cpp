@@ -29,7 +29,7 @@ fx_param_t fx_reverb_params[8] = {
     {MD_FX_REV, MD_REV_LEV}};
 
 FXPage fx_page_a(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
-                 (fx_param_t *)&fx_echo_params, 8, "ECHO", 0);
+                 (fx_param_t *)&fx_echo_params, "ECHO", 0);
 
 FXPage fx_page_b(&fx_param1, &fx_param2, &fx_param3, &fx_param4,
-                 (fx_param_t *)&fx_reverb_params, 8, "REVERB", 1);
+                 (fx_param_t *)&fx_reverb_params, "REVERB", 1);
