@@ -8,12 +8,9 @@
 #include "platform.h"
 
 const char *c_wav_root = "/Samples/WAV";
-const char *c_syx_root = "/Samples/SYX";
-const char *c_wav_suffix = ".wav";
-const char *c_syx_suffix = ".syx";
-
-const char *c_wav_name = "WAV";
-const char *c_syx_name = "SYSEX";
+static const char *const c_syx_root = "/Samples/SYX";
+static const char *const c_wav_suffix = ".wav";
+static const char *const c_syx_suffix = ".syx";
 
 static bool s_query_returned = false;
 

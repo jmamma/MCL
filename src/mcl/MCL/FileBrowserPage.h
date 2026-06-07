@@ -40,18 +40,17 @@
 
 class FileBrowserFileTypes {
   constexpr static uint8_t size = 2;
-  char types[size][5];
+  const char *types[size];
   uint8_t count;
   public:
   void add(const char *str) {
     if (count < size) {
-      strcpy(types[count], str);
-      count++;
+      types[count++] = str;
     }
   }
   void reset() { count = 0; }
 
-  bool compare(char *str) {
+  bool compare(const char *str) {
     for (uint8_t n = 0; n < count; n++) {
       DEBUG_PRINT("Comparing "); DEBUG_PRINT(str); DEBUG_PRINT(" "); DEBUG_PRINTLN(types[n]);
       if (strcmp(str, types[n]) == 0) {
