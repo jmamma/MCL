@@ -630,40 +630,36 @@ void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
 }
 
 void MDSeqTrack::send_notes_ccs(uint8_t *ccs, bool send_ccs) {
+  if (!send_ccs) {
+    return;
+  }
   uint8_t channel = md_track_midi_channel(track_number);
-  if (send_ccs) {
-    for (uint8_t n = 0; n < number_midi_cc; n++) {
-    if (ccs[n] == 255) continue;
-    switch (n) {
-      case 1:
-          uart2->sendPitchBend(channel, ccs[1] << 7);
-        break;
-      case 2:
-          uart2->sendCC(channel, 0x1, ccs[2]);
-        break;
-      case 3:
-          uart2->sendChannelPressure(channel, ccs[3]);
-        break;
-      case 0:
-          notes.ccs[0] = ccs[0];
-          uart2->sendProgramChange(channel, ccs[0]);
-        break;
-      default:
-        if (!(n & 1)) continue;
-        uint8_t a = ccs[n - 1];
-        if (a > 0 && a != 255) {
-          uint8_t v = ccs[n];
-          // 0 = off
-          // 1 = bank (0)
-          // 2 = 2
-          if (a == 1) {
-            a = 0;
-          }
-          uart2->sendCC(channel, a, v);
-          notes.ccs[n] = v;
-          break;
-        }
+  if (ccs[0] != 255) {
+    notes.ccs[0] = ccs[0];
+    uart2->sendProgramChange(channel, ccs[0]);
+  }
+  if (ccs[1] != 255) {
+    uart2->sendPitchBend(channel, ccs[1] << 7);
+  }
+  if (ccs[2] != 255) {
+    uart2->sendCC(channel, 0x1, ccs[2]);
+  }
+  if (ccs[3] != 255) {
+    uart2->sendChannelPressure(channel, ccs[3]);
+  }
+  for (uint8_t n = 5; n < number_midi_cc; n += 2) {
+    if (ccs[n] == 255) {
+      continue;
+    }
+    uint8_t a = ccs[n - 1];
+    if (a > 0 && a != 255) {
+      uint8_t v = ccs[n];
+      // 0 = off; 1 = bank (0); 2 = 2
+      if (a == 1) {
+        a = 0;
       }
+      uart2->sendCC(channel, a, v);
+      notes.ccs[n] = v;
     }
   }
 }
@@ -1369,10 +1365,9 @@ void MDSeqTrack::modify_track(uint8_t dir) {
 
 void MDSeqTrack::copy_step(uint8_t n, MDSeqStep *step) {
   step->microtiming = microtiming[n];
-  step->swing = IS_BIT_SET64(swing_mask, n);
-  step->slide = IS_BIT_SET64(slide_mask, n);
-  step->mute =
-      reinterpret_cast<const uint8_t *>(&mute_mask)[n >> 3] & (1 << (n & 7));
+  step->swing = get_step(n, MASK_SWING);
+  step->slide = get_step(n, MASK_SLIDE);
+  step->mute = get_step(n, MASK_MUTE);
 
   uint8_t idx = get_lockidx(n);
   uint8_t lcks = steps[n].locks;
@@ -1399,30 +1394,20 @@ void MDSeqTrack::paste_step(uint8_t n, MDSeqStep *step) {
     }
   }
   memcpy(&(steps[n]), &step->data, sizeof(MDSeqStepDescriptor));
-  if (step->swing) {
-    SET_BIT64(swing_mask, n);
-  } else {
-    CLEAR_BIT64(swing_mask, n);
-  }
-  if (step->slide) {
-    SET_BIT64(slide_mask, n);
-  } else {
-    CLEAR_BIT64(slide_mask, n);
-  }
-  uint8_t *mute_bytes = reinterpret_cast<uint8_t *>(&mute_mask);
-  uint8_t mute_bit = 1 << (n & 7);
-  if (step->mute) {
-    mute_bytes[n >> 3] |= mute_bit;
-  } else {
-    mute_bytes[n >> 3] &= ~mute_bit;
-  }
+  set_step(n, MASK_SWING, step->swing);
+  set_step(n, MASK_SLIDE, step->slide);
+  set_step(n, MASK_MUTE, step->mute);
 }
 
 uint8_t MDSeqTrack::transpose_pitch(uint8_t pitch, int8_t offset) {
  uint8_t note_num = SeqPtcTrackRef::note_from_pitch(track_number, pitch);
  if (note_num == 255) { return pitch; }
  int16_t new_note = note_num + offset;
- new_note = max(0,min(127,new_note));
+ if (new_note < 0) {
+   new_note = 0;
+ } else if (new_note > 127) {
+   new_note = 127;
+ }
  uint8_t new_pitch = SeqPtcTrackRef::pitch_from_note(track_number, new_note);
  if (new_pitch == 255) { new_pitch = pitch; }
  return new_pitch;

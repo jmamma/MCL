@@ -1487,8 +1487,13 @@ void ExtSeqTrack::transpose(int8_t offset) {
     auto &ev = events[ev_idx];
     if (!ev.is_lock) {
       int16_t note = ev.event_value + offset;
-      uint8_t new_note = min(max(0, note), 127);
-      ev.event_value = new_note;
+      if (note < 0) {
+        ev.event_value = 0;
+      } else if (note > 127) {
+        ev.event_value = 127;
+      } else {
+        ev.event_value = note;
+      }
     }
   }
   mute_state = old_mute_state;
