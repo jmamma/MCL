@@ -19,7 +19,7 @@ void set_arp_encoder(Encoder &e, int value) {
 
 // Indexed by encoders[0]->cur: ARP_OFF=0, ARP_ON=1, ARP_LATCH=2, ARP_LOCK=3.
 const char *const arp_state_labels[] PROGMEM = {mclstr_dash, mclstr_on,
-                                                mclstr_lat, mclstr_loc};
+                                                mclstr_lat, mclstr_lck};
 // Knob caption per encoder slot 0..3.
 const char *const arp_knob_labels[] PROGMEM = {mclstr_arp, mclstr_mode,
                                                mclstr_rate, mclstr_range};
