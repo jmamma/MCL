@@ -690,13 +690,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           }
 
           // Toggle preview mutes
-          bool state =
-              IS_BIT_SET16(perf_states[mute_set].mute_mask[slot], track);
-          if (state == SEQ_MUTE_ON) {
-            CLEAR_BIT16(perf_states[mute_set].mute_mask[slot], track);
-          } else {
-            SET_BIT16(perf_states[mute_set].mute_mask[slot], track);
-          }
+          TOGGLE_BIT16(perf_states[mute_set].mute_mask[slot], track);
 
           // oled_draw_mutes();
         } else if (first_track == 255 && use_perf) {
