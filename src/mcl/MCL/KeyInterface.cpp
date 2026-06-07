@@ -43,14 +43,7 @@ void KeyInterface::setup(MidiClass *_midi) {
 void KeyInterface::start() {}
 
 void KeyInterface::send_md_leds(TrigLEDMode mode) {
-  uint16_t led_mask = 0;
-  uint16_t bit = 1;
-  for (uint8_t i = 0; i < 16; i++, bit <<= 1) {
-    if (note_interface.is_note_on(i)) {
-      led_mask |= bit;
-    }
-  }
-  mcl_gui.set_trigleds(led_mask, mode);
+  mcl_gui.set_trigleds((uint16_t)note_interface.notes_on, mode);
 }
 
 void KeyInterface::enable_listener() {
