@@ -134,6 +134,8 @@ Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 5.0
   The legacy LF slot is no longer used in MCL 5.00; any existing LFO data is
   copied to Grid X, Track 1.
 
+  LFO Mode "one" has been replaced with 1SH, for true one-shot playback.
+
 - Polyphony / Voice Select
 
   MCL Polyphony mode now makes the MD fully multi-timbral.
