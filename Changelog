@@ -109,8 +109,6 @@ Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 5.0
   retained on save. Arpeggiator settings are now stored alongside the
   corresponding Sequencer track.
 
-  The Arpeggiator is now accessible from the Step Edit shift menu.
-
   The Arpeggiator now has a LCK mode for locking the current note set against
   accidental note selection, and a TRG rate that advances the arpeggiator only
   when the sequencer track fires a trig.
