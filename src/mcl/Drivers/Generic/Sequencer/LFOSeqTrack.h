@@ -141,9 +141,6 @@ public:
   uint8_t speed_multiplier() const { return mode_speed_multiplier(mode); }
   void rearm_oneshot() { mode &= (uint8_t)~LFO_MODE_ONESHOT_FIRED; }
   void set_mode(uint8_t base_mode) {
-    if (this->base_mode() != (base_mode & LFO_MODE_MASK)) {
-      rearm_oneshot();
-    }
     mode = (mode & LFO_MODE_LEGACY_FLAGS) |
            pack_mode(base_mode, speed_multiplier());
   }
