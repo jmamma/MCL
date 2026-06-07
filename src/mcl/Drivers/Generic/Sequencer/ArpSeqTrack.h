@@ -69,8 +69,11 @@ public:
   void re_sync();
   void set_speed(uint8_t speed_);
   void set_length(uint8_t length_);
-  void load_data(const ArpSeqData &data);
+  static uint8_t speed_for_parent_speed(uint8_t parent_speed);
+  void load_data(const ArpSeqData &data, const ArpSeqPhaseData &phase,
+                 uint8_t parent_speed);
   void store_data(ArpSeqData *data) const;
+  void store_phase_data(ArpSeqPhaseData &phase) const;
   ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
     if (count_down) {
       return false;

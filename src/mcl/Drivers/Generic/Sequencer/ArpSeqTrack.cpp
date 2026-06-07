@@ -31,9 +31,19 @@ void ArpSeqTrack::set_length(uint8_t length_) {
   }
 }
 
-void ArpSeqTrack::load_data(const ArpSeqData &data) {
+uint8_t ArpSeqTrack::speed_for_parent_speed(uint8_t parent_speed) {
+  return parent_speed == SEQ_SPEED_3_4X || parent_speed == SEQ_SPEED_3_2X
+             ? SEQ_SPEED_3_2X
+             : SEQ_SPEED_2X;
+}
+
+void ArpSeqTrack::load_data(const ArpSeqData &data,
+                            const ArpSeqPhaseData &phase,
+                            uint8_t parent_speed) {
+  reset();
   static_cast<ArpSeqData &>(*this) = data;
-  set_length(rate ? rate : 2);
+  speed = speed_for_parent_speed(parent_speed);
+  length = rate ? rate : 2;
   len = 0;
   idx = 0;
   last_note_on = 255;
@@ -51,6 +61,17 @@ void ArpSeqTrack::load_data(const ArpSeqData &data) {
     clear_notes();
   }
 #endif
+
+  if (phase.valid() && len > 0) {
+    idx = phase.idx < len ? phase.idx : 0;
+    step_count = phase.step_count < length ? phase.step_count : 0;
+    uint8_t ticks_per_step = speed == SEQ_SPEED_3_2X ? 8 : 6;
+    uint8_t saved_mod12 = phase.mod12_counter;
+    if (saved_mod12 != 255 && saved_mod12 >= ticks_per_step) {
+      saved_mod12 = 0;
+    }
+    mod12_counter = saved_mod12;
+  }
 }
 
 void ArpSeqTrack::store_data(ArpSeqData *data) const {
@@ -61,11 +82,31 @@ void ArpSeqTrack::store_data(ArpSeqData *data) const {
   data->rate = length ? length : 2;
 }
 
+void ArpSeqTrack::store_phase_data(ArpSeqPhaseData &phase) const {
+  phase.init();
+  if (!enabled || len == 0 || (note_mask[0] == 0 && note_mask[1] == 0)) {
+    return;
+  }
+  phase.idx = idx;
+  phase.step_count = step_count;
+  phase.mod12_counter = mod12_counter;
+  phase.set_valid();
+}
+
 void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   MidiUartClass *uart_old = uart;
   MidiUartClass *uart2_old = uart2;
   uart = uart_;
   uart2 = uart2_;
+
+  if (count_down) {
+    count_down--;
+    if (count_down) {
+      uart = uart_old;
+      uart2 = uart2_old;
+      return;
+    }
+  }
 
   uint8_t ticks_per_step = get_ticks_per_step_inline();
 

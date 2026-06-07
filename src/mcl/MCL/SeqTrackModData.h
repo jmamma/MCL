@@ -8,6 +8,7 @@
 #define SEQ_TRACK_SWING_STORAGE_VERSION 2
 #define SEQ_TRACK_MICROTIMING_STORAGE_VERSION 3
 #define SEQ_TRACK_LOAD_FADE_STORAGE_VERSION 5
+#define ARP_SEQ_PHASE_MAGIC 0xA6
 
 class ATTR_PACKED() SeqLFODataV1 {
 public:
@@ -81,6 +82,23 @@ public:
   }
 };
 
+class ATTR_PACKED() ArpSeqPhaseData {
+public:
+  uint8_t magic;
+  uint8_t idx;
+  uint8_t step_count;
+  uint8_t mod12_counter;
+
+  void init() {
+    magic = 0;
+  }
+
+  bool valid() const { return magic == ARP_SEQ_PHASE_MAGIC; }
+  void set_valid() {
+    magic = ARP_SEQ_PHASE_MAGIC;
+  }
+};
+
 class ATTR_PACKED() SeqTrackModData {
 public:
   uint8_t reserved[sizeof(SeqLFODataV1)];
@@ -93,6 +111,14 @@ public:
     }
     lfo.init();
     arp.init();
+  }
+
+  ArpSeqPhaseData &arp_phase() {
+    return *reinterpret_cast<ArpSeqPhaseData *>(reserved);
+  }
+
+  const ArpSeqPhaseData &arp_phase() const {
+    return *reinterpret_cast<const ArpSeqPhaseData *>(reserved);
   }
 };
 
@@ -108,6 +134,8 @@ static_assert(sizeof(SeqLFOParamData) == 4,
               "SeqLFOParamData storage size changed");
 static_assert(sizeof(SeqLFOData) == 21, "SeqLFOData storage size changed");
 static_assert(sizeof(ArpSeqData) == 21, "ArpSeqData storage size changed");
+static_assert(sizeof(ArpSeqPhaseData) <= sizeof(SeqLFODataV1),
+              "ArpSeqPhaseData no longer fits reserved storage");
 static_assert(offsetof(SeqTrackModData, arp) == sizeof(SeqLFODataV1),
               "SeqTrackModData arp offset changed");
 static_assert(offsetof(SeqTrackModData, lfo) ==

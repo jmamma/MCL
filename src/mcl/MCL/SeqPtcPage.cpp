@@ -315,6 +315,9 @@ void SeqPtcPage::loop() {
       track = last_ext_track;
       buffer_notesoff_ext(last_ext_track);
     }
+    ArpSeqTrack &arp = ptc_arp_track(ptc_active_device_idx(), track);
+    arp.oct = ptc_param_oct.cur;
+    arp.fine_tune = ptc_param_fine_tune.cur;
     render_arp(scale_changed, ptc_active_device_idx(), track);
   }
   SeqPage::loop();
@@ -350,13 +353,8 @@ void SeqPtcPage::render_arp(bool recalc_notemask_, DeviceIdx device_idx,
   SeqTrack &seq = ptc_seq_track(device_idx, track);
   ArpSeqTrack &arp = ptc_arp_track(device_idx, track);
 
-  if (seq.speed == SEQ_SPEED_3_4X || seq.speed == SEQ_SPEED_3_2X) {
-    arp.speed = SEQ_SPEED_3_2X;
-  } else {
-    arp.speed = SEQ_SPEED_2X;
-  }
-  arp.render(arp_mode.cur, ptc_param_oct.cur, ptc_param_fine_tune.cur,
-             arp_range.cur, note_mask);
+  arp.speed = ArpSeqTrack::speed_for_parent_speed(seq.speed);
+  arp.render(arp.mode, arp.oct, arp.fine_tune, arp.range, note_mask);
 }
 
 void SeqPtcPage::display() {

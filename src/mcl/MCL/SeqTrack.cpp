@@ -19,6 +19,28 @@
     b = t;                                                                     \
   }
 
+static void load_arp_mod_data(ArpSeqTrack &arp, SeqTrack *seq_track,
+                              SeqTrackModData &mod_data) NOINLINE();
+static void load_arp_mod_data(ArpSeqTrack &arp, SeqTrack *seq_track,
+                              SeqTrackModData &mod_data) {
+  arp.load_data(mod_data.arp, mod_data.arp_phase(), seq_track->speed);
+  if (seq_track->count_down) {
+#if defined(__AVR__)
+    arp.count_down =
+        seq_track->count_down == 255 ? 255 : seq_track->count_down + 1;
+#else
+    arp.count_down = seq_track->count_down + 1;
+#endif
+  }
+}
+
+static void store_arp_mod_data(ArpSeqTrack &arp,
+                               SeqTrackModData &mod_data) NOINLINE();
+static void store_arp_mod_data(ArpSeqTrack &arp, SeqTrackModData &mod_data) {
+  arp.store_data(&mod_data.arp);
+  arp.store_phase_data(mod_data.arp_phase());
+}
+
 void SeqSlideTrack::prepare_slide(uint8_t lock_idx, int16_t x0, int16_t x1, int8_t y0, int8_t y1) {
   uint8_t c = lock_idx;
 
@@ -95,13 +117,15 @@ void SeqTrack::load_mod_data(SeqTrack *seq_track, SeqTrackModData &mod_data,
     if (tracknumber >= NUM_GRID_X_LFO_TRACKS) {
       return;
     }
-    mcl_seq.md_arp_tracks[tracknumber].load_data(mod_data.arp);
+    load_arp_mod_data(mcl_seq.md_arp_tracks[tracknumber], seq_track,
+                      mod_data);
     mcl_seq.grid_x_lfo_tracks[tracknumber].load_data(mod_data.lfo);
     return;
   }
 #ifdef EXT_TRACKS
   if (tracknumber < NUM_GRID_Y_LFO_TRACKS) {
-    mcl_seq.ext_arp_tracks[tracknumber].load_data(mod_data.arp);
+    load_arp_mod_data(mcl_seq.ext_arp_tracks[tracknumber], seq_track,
+                      mod_data);
     mcl_seq.grid_y_lfo_tracks[tracknumber].load_data(mod_data.lfo);
   }
 #endif
@@ -111,22 +135,24 @@ void SeqTrack::store_mod_data(SeqTrackModData &mod_data, bool grid_x_tracks,
                               uint8_t tracknumber) {
   if (grid_x_tracks) {
     if (tracknumber < NUM_GRID_X_LFO_TRACKS) {
-      mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
+      store_arp_mod_data(mcl_seq.md_arp_tracks[tracknumber], mod_data);
       mcl_seq.grid_x_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
     } else {
       mod_data.arp.init();
+      mod_data.arp_phase().init();
       mod_data.lfo.init();
     }
     return;
   }
 #ifdef EXT_TRACKS
   if (tracknumber < NUM_GRID_Y_LFO_TRACKS) {
-    mcl_seq.ext_arp_tracks[tracknumber].store_data(&mod_data.arp);
+    store_arp_mod_data(mcl_seq.ext_arp_tracks[tracknumber], mod_data);
     mcl_seq.grid_y_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
   } else
 #endif
   {
     mod_data.arp.init();
+    mod_data.arp_phase().init();
     mod_data.lfo.init();
   }
 }

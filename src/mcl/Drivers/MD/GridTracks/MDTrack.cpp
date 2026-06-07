@@ -283,6 +283,7 @@ bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
   DEBUG_PRINT_FN();
   uint8_t tracknumber = column & 0x0F;
   mcl_seq.md_arp_tracks[tracknumber].store_data(&mod_data.arp);
+  mcl_seq.md_arp_tracks[tracknumber].store_phase_data(mod_data.arp_phase());
   mcl_seq.grid_x_lfo_tracks[tracknumber].store_data(&mod_data.lfo);
 
   MDSeqTrack *md_seq_track =
