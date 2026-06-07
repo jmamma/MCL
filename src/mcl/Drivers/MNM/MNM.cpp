@@ -156,10 +156,12 @@ bool MNMClass::probe() {
 
     auto currentAudioMidiMode = getBlockingStatus(0x21);
     setStatus(0x21, 1);
-    for (uint8_t x = 0; x < 2; x++) {
-      for (uint8_t y = 0; y < 6; y++) {
-        mcl_gui.delay_progress(50);
-        setStatus(0x22, y);
+    uint8_t audio_track = 0;
+    for (uint8_t remaining = 12; remaining; remaining--) {
+      mcl_gui.delay_progress(50);
+      setStatus(0x22, audio_track);
+      if (++audio_track == 6) {
+        audio_track = 0;
       }
     }
     setStatus(0x21, currentAudioMidiMode);
