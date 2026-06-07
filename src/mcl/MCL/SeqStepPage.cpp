@@ -238,7 +238,6 @@ void SeqStepPage::init() {
                                   active_track.uses_kit_sound());
   seq_menu_page.menu.enable_entry(SEQ_MENU_LENGTH_PRIMARY, true);
   seq_menu_page.menu.enable_entry(SEQ_MENU_SWING, true);
-  seq_menu_page.menu.enable_entry(SEQ_MENU_ARP, true);
 
   midi_events.setup_callbacks();
   key_interface.on();
