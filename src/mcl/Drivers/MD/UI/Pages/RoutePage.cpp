@@ -92,23 +92,22 @@ void RoutePage::toggle_routes_batch(bool solo) {
 }
 
 void RoutePage::display() {
-  uint8_t x;
-
   oled_display.clearDisplay();
   oled_display.drawBitmap(0, 0, R.icons_page->icon_route, 24, 14, WHITE);
 
   mcl_gui.draw_knob_frame();
 
-  char str_tmp[2] = "0";
+  char str_tmp[2];
   str_tmp[0] = encoders[0]->cur + 'A';
+  str_tmp[1] = '\0';
   mcl_gui.draw_knob(0, mclstr_route, str_tmp);
 
   char Q[4];
-  if (encoders[1]->getValue() == 1) {
+  uint8_t quantize = encoders[1]->getValue();
+  if (quantize == 1) {
     strcpy_P(Q, mclstr_dash);
   } else {
-    x = encoders[1]->getValue();
-    mcl_gui.put_value_at(x, Q);
+    mcl_gui.put_value_at(quantize, Q);
   }
   mcl_gui.draw_knob(1, mclstr_quant, Q);
 

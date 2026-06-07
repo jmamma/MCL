@@ -117,7 +117,7 @@ void RAMPage::prepare_link(uint8_t track, uint8_t steps, uint8_t row,
 // and play setup paths.
 static void ram_finalize_seq(MDTrack &md_track, MDSeqTrack &md_seq_track,
                              uint8_t track, uint8_t linked_track,
-                             uint16_t steps) {
+                             uint8_t steps) {
   uint8_t ticks_per_step = md_seq_track.get_ticks_per_step();
   if (linked_track == 255) {
     md_track.machine.trigGroup = 255;
@@ -137,6 +137,21 @@ static void ram_finalize_seq(MDTrack &md_track, MDSeqTrack &md_seq_track,
   md_track.link.init(mcl_actions.links[track].row, 0, steps, SEQ_SPEED_1X);
 }
 
+static void ram_store_and_link(RAMPage &page, MDTrack &md_track,
+                               MDSeqTrack &md_seq_track, uint8_t track,
+                               uint8_t linked_track, uint8_t steps,
+                               uint8_t row, uint8_t transition) NOINLINE();
+static void ram_store_and_link(RAMPage &page, MDTrack &md_track,
+                               MDSeqTrack &md_seq_track, uint8_t track,
+                               uint8_t linked_track, uint8_t steps,
+                               uint8_t row, uint8_t transition) {
+  ram_finalize_seq(md_track, md_seq_track, track, linked_track, steps);
+  mcl_actions.dev_sync_slot[0] = track;
+  md_track.transition_cache(track,track);
+  md_track.store_in_mem(track);
+  page.prepare_link(track, steps, row, transition);
+}
+
 void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
                             uint8_t source, uint8_t pan,
                             uint8_t linked_track) {
@@ -148,7 +163,7 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
 
   md_track.machine.init();
 
-  uint16_t steps = ram_steps_from_length_encoder(encoders[3]->cur);
+  uint8_t steps = ram_steps_from_length_encoder(encoders[3]->cur);
   set_ram_rec_state(page_id, STATE_QUEUE);
   md_track.active = MD_TRACK_TYPE;
   md_track.machine.model = model;
@@ -196,13 +211,8 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
            sizeof(ram_play_default_params) - MODEL_AMD);
   md_track.machine.params[MODEL_PAN] = pan;
 
-  ram_finalize_seq(md_track, md_seq_track, track, linked_track, steps);
-
-  mcl_actions.dev_sync_slot[0] = track;
-
-  md_track.transition_cache(track,track);
-  md_track.store_in_mem(track);
-  prepare_link(track, steps, SLOT_RAM_RECORD, TRANSITION_UNMUTE);
+  ram_store_and_link(*this, md_track, md_seq_track, track, linked_track, steps,
+                     SLOT_RAM_RECORD, TRANSITION_UNMUTE);
 }
 
 void RAMPage::reverse(uint8_t track) {
@@ -429,14 +439,10 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
            sizeof(ram_play_default_params));
   md_track.machine.params[MODEL_PAN] = pan;
 
-  ram_finalize_seq(md_track, md_seq_track, track, linked_track, steps);
   md_track.machine.params[MODEL_LFOD] = 0;
   md_track.machine.lfo.destinationTrack = track;
-
-  mcl_actions.dev_sync_slot[0] = track;
-  md_track.transition_cache(track,track);
-  md_track.store_in_mem(track);
-  prepare_link(track, steps, SLOT_RAM_PLAY);
+  ram_store_and_link(*this, md_track, md_seq_track, track, linked_track, steps,
+                     SLOT_RAM_PLAY, TRANSITION_NORMAL);
 }
 
 void RAMPage::setup_ram_play_mono(uint8_t track) {
