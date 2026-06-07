@@ -125,12 +125,13 @@ void MenuPageBase::init(bool generate_row_names) {
   }
   selected_item = encoders[1]->cur;
 
-  uint8_t range = m->get_option_range(encoders[1]->cur);
+  const menu_item_t *item = m->get_item(encoders[1]->cur);
+  uint8_t range = item != nullptr ? item->range : 0;
   ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
   ((MCLEncoder *)encoders[0])->min =
-      m->get_option_min(encoders[1]->cur);
+      item != nullptr ? item->min : 0;
 
-  uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
+  uint8_t *dest_var = m->get_dest_variable(item);
   if (dest_var != NULL) {
     encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
   }
@@ -177,10 +178,11 @@ void MenuPageBase::loop() {
   MenuBase *m = get_menu();
 
   if (encoders[1]->hasChanged()) {
-    uint8_t range = m->get_option_range(encoders[1]->cur);
+    const menu_item_t *item = m->get_item(encoders[1]->cur);
+    uint8_t range = item != nullptr ? item->range : 0;
     ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
     ((MCLEncoder *)encoders[0])->min =
-        m->get_option_min(encoders[1]->cur);
+        item != nullptr ? item->min : 0;
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
@@ -193,7 +195,7 @@ void MenuPageBase::loop() {
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
     selected_item = encoders[1]->cur;
-    uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);
+    uint8_t *dest_var = m->get_dest_variable(item);
     if (dest_var != NULL) {
       encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
     } else {
@@ -214,21 +216,23 @@ void MenuPageBase::draw_scrollbar(uint8_t x_offset) {
 }
 
 void MenuPageBase::draw_item(MenuBase *m, uint8_t item_n) {
-  const char *name = m->get_item_name(item_n);
-  if (name != nullptr) {
-    oled_display.print(name);
+  const menu_item_t *item = m->get_item(item_n);
+  if (item == nullptr) {
+    return;
   }
 
-  if (m->get_option_range(item_n) > 0) {
+  oled_display.print(item->name);
+
+  if (item->range > 0) {
 
     mcl_print_P(mclstr_space);
-    uint8_t *pdest = m->get_dest_variable(item_n);
+    uint8_t *pdest = m->get_dest_variable(item);
     uint8_t option_value = *pdest;
     option_value = menu_value_from_stored(pdest, option_value);
-    const char *option_name = m->get_option_name(item_n, option_value);
+    const char *option_name = m->get_option_name(item, option_value);
     if (option_name == NULL) {
       oled_display.print(option_value);
-      if (m->get_options_offset(item_n) == MENU_OPTIONS_PERCENT) {
+      if (item->options_begin == MENU_OPTIONS_PERCENT) {
         oled_display.print('%');
       }
       oled_display.println();

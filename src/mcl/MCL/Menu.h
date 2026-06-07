@@ -48,6 +48,7 @@ public:
   }
 
   uint8_t *get_dest_variable(uint8_t item_n);
+  uint8_t *get_dest_variable(const menu_item_t *item);
   uint8_t get_option_min(uint8_t item_n);
   uint8_t get_option_range(uint8_t item_n);
   uint8_t get_number_of_options(uint8_t item_n);
@@ -58,6 +59,7 @@ public:
   const char* get_item_name(uint8_t item_n);
   uint8_t get_item_index(uint8_t item_n);
   const char* get_option_name(uint8_t item_n, uint8_t option_n);
+  const char* get_option_name(const menu_item_t *item, uint8_t option_n);
   menu_function_t get_row_function(uint8_t item_n);
 
   // Non-virtual: implemented once using layout_base/entry_count/exit_fn_id.

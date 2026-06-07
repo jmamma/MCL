@@ -148,6 +148,10 @@ PageIndex MenuBase::get_page_callback(uint8_t item_n) {
 
 uint8_t *MenuBase::get_dest_variable(uint8_t item_n) {
     const menu_item_t *item = get_item(item_n);
+    return get_dest_variable(item);
+}
+
+uint8_t *MenuBase::get_dest_variable(const menu_item_t *item) {
     if (item == nullptr) { return nullptr; }
 
     uintptr_t p;
@@ -183,9 +187,17 @@ uint8_t MenuBase::get_options_offset(uint8_t item_n) {
 
 // caller ensures menu_options is loaded in ResMan
 const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
+  return get_option_name(get_item(item_n), option_n);
+}
+
+const char* MenuBase::get_option_name(const menu_item_t *item,
+                                      uint8_t option_n) {
+  if (item == nullptr) {
+    return nullptr;
+  }
 #ifdef PLATFORM_TBD
   if (option_name_override != nullptr) {
-    uint8_t entry_index = get_item_index(item_n);
+    uint8_t entry_index = item - get_entry_address(0);
     if (option_name_override(entry_index, option_n, option_name_override_buf,
                              sizeof(option_name_override_buf))) {
       return option_name_override_buf;
@@ -193,8 +205,8 @@ const char* MenuBase::get_option_name(uint8_t item_n, uint8_t option_n) {
   }
 #endif
 
-  uint8_t num_of_options = get_number_of_options(item_n);
-  uint8_t options_offset = get_options_offset(item_n);
+  uint8_t num_of_options = item->number_of_options;
+  uint8_t options_offset = item->options_begin;
   menu_option_t* base = R.menu_options->MENU_OPTIONS;
   if (options_offset >= 192) {
     uint8_t custom_options_idx = options_offset - 192;
