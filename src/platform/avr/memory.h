@@ -203,16 +203,9 @@ FORCED_INLINE() extern inline uint8_t get_random_byte() {
     if (state == 0) {
         state = read_clock_ms() | 1;
     }
-    uint8_t lo = (uint8_t)state;
-    uint8_t hi = (uint8_t)(state >> 8);
-    uint8_t feedback = hi & 0x80;
-    hi = (uint8_t)((hi << 1) | (lo & 1));
-    lo >>= 1;
-    if (feedback) {
-        lo ^= 0xB4;
-    }
-    g_random_state = ((uint16_t)hi << 8) | lo;
-    return lo ^ hi;
+    state = (state >> 1) ^ ((state & 1) ? 0xB400U : 0);
+    g_random_state = state;
+    return (uint8_t)(state >> 8);
 }
 
 extern inline uint8_t get_random(uint8_t range) {
