@@ -5,9 +5,10 @@
 #include "../../../MCL/TrackLoadFade.h"
 #include <string.h>
 
-static_assert(GRID_WIDTH <= 32,
-              "TrackLoadFadeRunner active_mask is uint32_t; widen it if "
-              "GRID_WIDTH grows past 32");
+using LoadFadeMask = uint16_t;
+
+static_assert(GRID_WIDTH <= sizeof(LoadFadeMask) * 8,
+              "TrackLoadFadeRunner active_mask is too narrow for GRID_WIDTH");
 
 namespace {
 
@@ -61,7 +62,7 @@ public:
 };
 
 LoadFadeState fade_states[GRID_WIDTH];
-uint32_t active_mask = 0;
+LoadFadeMask active_mask = 0;
 
 #if defined(PLATFORM_WASM) && defined(DEBUGMODE)
 #define FADE_RUN_TRACE(fmt, ...) DEBUG_PRINT_FN("[fade-run] " fmt, ##__VA_ARGS__)
@@ -152,13 +153,14 @@ uint16_t load_fade_delay_q12(uint32_t start_clock) {
 }
 #endif
 
-void clear_slot(GridSlot slot) {
+LoadFadeMask clear_slot(GridSlot slot) {
   if (slot >= GRID_WIDTH) {
-    return;
+    return 0;
   }
-  uint32_t bit = (uint32_t)1 << slot;
+  LoadFadeMask bit = (LoadFadeMask)1 << slot;
   active_mask &= ~bit;
   fade_states[slot].clear();
+  return bit;
 }
 
 bool begin_slot(GridSlot slot, LoadFadeState &state) {
@@ -257,15 +259,6 @@ bool write_slot_value(GridSlot slot,
 }
 
 void tick_slot(GridSlot slot, MidiUartClass *uart, MidiUartClass *uart2) {
-  if (slot >= GRID_WIDTH) {
-    return;
-  }
-
-  uint32_t bit = (uint32_t)1 << slot;
-  if ((active_mask & bit) == 0) {
-    return;
-  }
-
   LoadFadeState &state = fade_states[slot];
   if ((state.flags & TRACK_LOAD_FADE_FLAG_ENABLED) == 0 ||
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
@@ -330,7 +323,7 @@ void TrackLoadFadeRunner::clear() {
   }
 
   for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    uint32_t bit = (uint32_t)1 << n;
+    LoadFadeMask bit = (LoadFadeMask)1 << n;
     if ((active_mask & bit) != 0 &&
         (fade_states[n].flags & LOAD_FADE_RUNTIME_WAIT_START) != 0) {
       continue;
@@ -361,7 +354,7 @@ void TrackLoadFadeRunner::start(GridSlot slot,
     return;
   }
 
-  clear_slot(slot);
+  LoadFadeMask bit = clear_slot(slot);
 
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   const bool transport_started = MidiClock.state == MidiClockClass::STARTED;
@@ -403,7 +396,7 @@ void TrackLoadFadeRunner::start(GridSlot slot,
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   state.curve = fade->curve;
 #endif
-  active_mask |= (uint32_t)1 << slot;
+  active_mask |= bit;
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   FADE_RUN_TRACE("start slot=%u type=%u dev=%u track=%u flags=%u countDown=%u elapsed=%u durTicks=%u amount=%u curve=%d prestart=%u",
                  slot, target.track_type, target.device_idx,
@@ -433,7 +426,10 @@ void TrackLoadFadeRunner::tick(MidiUartClass *uart, MidiUartClass *uart2) {
 #endif
     return;
   }
-  for (uint8_t slot = 0; slot < GRID_WIDTH; slot++) {
-    tick_slot(slot, uart, uart2);
+  LoadFadeMask bit = 1;
+  for (uint8_t slot = 0; slot < GRID_WIDTH; slot++, bit <<= 1) {
+    if ((active_mask & bit) != 0) {
+      tick_slot(slot, uart, uart2);
+    }
   }
 }
