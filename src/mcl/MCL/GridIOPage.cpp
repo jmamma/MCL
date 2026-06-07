@@ -232,11 +232,8 @@ bool GridIOPage::handleEvent(gui_event_t *event) {
 
         if (note_interface.notes_all_off()) {
           if (show_offset) {
-            show_offset = !show_offset;
+            show_offset = false;
             note_interface.init_notes();
-            if (show_offset) {
-              offset = 255;
-            }
             paint_track_select_leds();
           } else if (BUTTON_DOWN(Buttons.BUTTON2)) {
             return true;

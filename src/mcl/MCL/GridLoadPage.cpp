@@ -18,6 +18,11 @@ static constexpr uint8_t kLoadModeEncoder = 0;
 static constexpr uint8_t kLoadLenEncoder = 1;
 #endif
 
+static void set_dash_value(char *str) {
+  str[0] = '-';
+  str[1] = '\0';
+}
+
 void GridLoadPage::init() {
   GridIOPage::init();
   note_interface.init_notes();
@@ -148,7 +153,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
         if (offset < NUM_SLOTS) {
           mcl_gui.put_value_at(offset + 1, K);
         } else {
-          strcpy_P(K, mclstr_dash);
+          set_dash_value(K);
         }
         mcl_gui.draw_text_encoder(42, y_offset + 15, "DST", K, false, false);
       } else {
@@ -156,7 +161,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
 
         if (mcl_cfg.load_mode == LOAD_QUEUE) {
           if (mcl_cfg.chain_queue_length == 1) {
-            strcpy_P(K, mclstr_dash);
+            set_dash_value(K);
           } else {
             mcl_gui.put_value_at(mcl_cfg.chain_queue_length, K);
           }
@@ -164,7 +169,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
         }
 
         if (mcl_cfg.chain_load_quant == 1) {
-          strcpy_P(K, mclstr_dash);
+          set_dash_value(K);
         } else {
           mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
         }
@@ -202,7 +207,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
 
       if (mcl_cfg.load_mode == LOAD_QUEUE) {
         if (mcl_cfg.chain_queue_length == 1) {
-          strcpy_P(K, mclstr_dash);
+          set_dash_value(K);
         } else {
           mcl_gui.put_value_at(mcl_cfg.chain_queue_length, K);
         }
@@ -211,7 +216,7 @@ void GridLoadPage::display_at(uint8_t y_offset) {
       }
       // draw quantize
       if (mcl_cfg.chain_load_quant == 1) {
-        strcpy_P(K, mclstr_dash);
+        set_dash_value(K);
       } else {
         mcl_gui.put_value_at(mcl_cfg.chain_load_quant, K);
       }
