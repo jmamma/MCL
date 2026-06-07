@@ -684,12 +684,12 @@ bool SeqExtStepLockApi::copy_lock_menu_value_label(uint8_t menu_value,
 }
 
 uint8_t SeqExtStepLockApi::selected_lock_current_ui_value(uint8_t slot) const {
+#if defined(__AVR__)
+  uint8_t param_id = 0;
+  return selected_lock_param_id(slot, param_id) ? 0 : 64;
+#else
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return 64;
-#if defined(__AVR__)
-  (void)info;
-  return 0;
-#else
   return value7_from_param_value(info, info.current_value);
 #endif
 }
@@ -698,16 +698,20 @@ uint8_t SeqExtStepLockApi::lock_ui_value_from_control(uint8_t slot,
                                                       uint8_t ctrl_type,
                                                       uint16_t ctrl,
                                                       uint16_t value) const {
+#if defined(__AVR__)
+  uint8_t param_id = 0;
+  if (!selected_lock_param_id(slot, param_id)) {
+    return value7_from_14(value);
+  }
+  (void)ctrl;
+#else
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) {
     return value7_from_14(value);
   }
-#if !defined(__AVR__)
   if (info.p4_param && info.ctrl == ctrl && info.ctrl_type == ctrl_type) {
     return value7_from_param_value(info, value);
   }
-#else
-  (void)ctrl;
 #endif
   if (ctrl_type == SEQ_EXT_LOCK_CTRL_CC ||
       ctrl_type == SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE ||
@@ -721,15 +725,25 @@ uint8_t SeqExtStepLockApi::lock_ui_value_from_control(uint8_t slot,
 bool SeqExtStepLockApi::selected_lock_matches_control(uint8_t slot,
                                                       uint8_t ctrl_type,
                                                       uint16_t ctrl) const {
+#if defined(__AVR__)
+  uint8_t param_id = 0;
+  if (!selected_lock_param_id(slot, param_id)) return false;
+  if (param_id == PARAM_LEARN) return true;
+  uint8_t selected_ctrl_type =
+      param_id == PARAM_PB    ? SEQ_EXT_LOCK_CTRL_PITCH_BEND
+      : param_id == PARAM_CHP ? SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE
+      : param_id == PARAM_PRG ? SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE
+                              : SEQ_EXT_LOCK_CTRL_CC;
+  return selected_ctrl_type == ctrl_type && param_id == ctrl;
+#else
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return false;
   if (info.learn) return true;
-#if !defined(__AVR__)
   if (info.p4_param) {
     return info.ctrl == ctrl && info.ctrl_type == ctrl_type;
   }
-#endif
   return info.ctrl_type == ctrl_type && info.ctrl == ctrl;
+#endif
 }
 
 uint8_t SeqExtStepLockApi::selected_lock_slot_for_param(uint8_t param) const {
@@ -759,19 +773,21 @@ bool SeqExtStepLockApi::copy_lock_value_label(uint8_t slot, uint8_t value,
                                               char *dst,
                                               size_t dst_len) const {
   if (dst == nullptr || dst_len == 0) return false;
+#if defined(__AVR__)
+  (void)slot;
+  put_int16(value, dst, dst_len);
+  return true;
+#else
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active || info.learn) {
     put_int16(value, dst, dst_len);
     return true;
   }
-#if !defined(__AVR__)
   int16_t display_value = info.p4_param ? param_value_from_value7(info, value)
                                         : (int16_t)value;
-#else
-  int16_t display_value = (int16_t)value;
-#endif
   put_int16(display_value, dst, dst_len);
   return true;
+#endif
 }
 
 bool SeqExtStepLockApi::record_control_lock(uint8_t ctrl_type, uint16_t ctrl,
