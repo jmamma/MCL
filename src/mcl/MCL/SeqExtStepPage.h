@@ -89,8 +89,8 @@ public:
 
   void draw_thick_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
   void draw_note(uint8_t x, uint8_t y, uint8_t w, bool note_beyond_fov);
-  void draw_pianoroll();
-  void draw_lockeditor();
+  void draw_pianoroll() NOINLINE();
+  void draw_lockeditor() NOINLINE();
   void draw_note_selection();
   void draw_viewport_minimap();
   void draw_seq_pos();

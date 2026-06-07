@@ -15,6 +15,7 @@
 
 namespace {
 
+uint16_t track_mask_for_len(uint8_t len) NOINLINE();
 uint16_t track_mask_for_len(uint8_t len) {
   if (len >= 16) {
     return 0xFFFF;
@@ -42,6 +43,15 @@ bool mixer_arrow_or_yes_key_down() {
 uint8_t scale_to_fader(uint8_t val) NOINLINE();
 uint8_t scale_to_fader(uint8_t val) {
   return ((uint16_t)val * FADER_LEN) / 127;
+}
+
+void show_live_mute_leds(MixerPage &page) NOINLINE();
+void show_live_mute_leds(MixerPage &page) {
+  if (page.fill_edit_mode) {
+    page.display_fill_mask();
+  } else {
+    key_interface.send_md_leds(page.mixer_led_mode());
+  }
 }
 
 } // namespace
@@ -636,11 +646,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       return false;
     }
     if (!ext_key_down && !show_mixer_menu && preview_mute_set == 255) {
-      if (fill_edit_mode) {
-        display_fill_mask();
-      } else {
-        key_interface.send_md_leds(mixer_led_mode());
-      }
+      show_live_mute_leds(*this);
     }
 
     uint8_t len = mixer_target.track_count();
@@ -878,11 +884,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
         }
         mute_toggle = 0;
         if (!show_mixer_menu && preview_mute_set == 255) {
-          if (fill_edit_mode) {
-            display_fill_mask();
-          } else {
-            key_interface.send_md_leds(mixer_led_mode());
-          }
+          show_live_mute_leds(*this);
         }
         return true;
       }
@@ -891,11 +893,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       case MDX_KEY_RIGHT:
       case MDX_KEY_DOWN: {
         if (!mixer_arrow_or_yes_key_down()) {
-          if (fill_edit_mode) {
-            display_fill_mask();
-          } else {
-            key_interface.send_md_leds(mixer_led_mode());
-          }
+          show_live_mute_leds(*this);
           preview_mute_set = 255;
           redraw();
         }

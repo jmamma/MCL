@@ -721,9 +721,7 @@ void GridPage::display_grid() {
       GridSlot track_grid_idx = track_idx + GRID_WIDTH * cur_grid;
       GridRow active_slot = active_slots[track_grid_idx];
       bool active = row_idx == active_slot;
-      if (blink_hint && active) {
-        // blink, don't print
-      } else {
+      if (!active || !blink_hint) {
         oled_display.print(label);
         if (active) {
           // a gentle visual cue for active slots

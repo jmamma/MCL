@@ -55,12 +55,11 @@ void SampleBrowserPage::display() {
         if (!wav_file.open(temp_entry, false)) { goto end; }
         oled_display.setCursor(0, 23);
 
-        uint16_t sample_rate = wav_file.header.fmt.sampleRate / 1000;
-        oled_display.print(sample_rate);
+        uint16_t sample_rate_k10 = wav_file.header.fmt.sampleRate / 100;
+        oled_display.print(sample_rate_k10 / 10);
         oled_display.print('.');
 
-        uint8_t decimal = (wav_file.header.fmt.sampleRate % 1000) / 100;
-        oled_display.print(decimal);
+        oled_display.print(sample_rate_k10 % 10);
         mcl_print_P(mclstr_k_space);
 
         oled_display.print(wav_file.header.fmt.bitRate);
@@ -93,7 +92,7 @@ void SampleBrowserPage::display() {
        oled_display.print('B');
       }
       else {
-       oled_display.print(size / 1024);
+       oled_display.print(size >> 10);
        mcl_print_P(mclstr_kb);
       }
     }

@@ -80,8 +80,8 @@ public:
   bool open();
   bool close();
 
-  void copy_scene(PerfScene *s1);
-  bool paste_scene(PerfScene *s1);
+  void copy_scene(PerfScene *s1) NOINLINE();
+  bool paste_scene(PerfScene *s1) NOINLINE();
 
   bool copy_sequencer(GridSlot offset = 0);
   bool copy_sequencer_track(GridSlot track);
