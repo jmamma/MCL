@@ -236,6 +236,10 @@ bool GenericMidiParamCapability::set_param(const DeviceContext &ctx,
 #endif
 
 void GenericMidiDevice::init_grid_devices(DeviceIdx device_idx) {
+#if defined(__AVR__)
+  init_ext_grid_devices(device_idx, EXT_TRACK_TYPE, NUM_EXT_TRACKS,
+                        EXT_TRACK_TYPE);
+#else
   GridDeviceTrack gdt;
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
@@ -245,4 +249,5 @@ void GenericMidiDevice::init_grid_devices(DeviceIdx device_idx) {
              GenericMidiTrackRef::seq_track(i));
     add_track_to_grid(GridIdx::Y, i, &gdt);
   }
+#endif
 }

@@ -88,20 +88,20 @@ void MNMClass::on_forwarded_cc(uint8_t *msg) {
 }
 
 void MNMClass::init_grid_devices(DeviceIdx device_idx) {
+#if defined(__AVR__)
+  init_ext_grid_devices(device_idx, MNM_TRACK_TYPE, NUM_EXT_TRACKS,
+                        MNM_TRACK_TYPE);
+#else
   GridDeviceTrack gdt;
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-#if !defined(__AVR__)
     mcl_seq.midi_tracks[i].active = MNM_MIDI_TRACK_TYPE;
     mcl_seq.midi_tracks[i].set_channel(i);
     gdt.init(MNM_MIDI_TRACK_TYPE, GROUP_DEV, static_cast<uint8_t>(device_idx),
              &(mcl_seq.midi_tracks[i]));
-#else
-    gdt.init(MNM_TRACK_TYPE, GROUP_DEV, static_cast<uint8_t>(device_idx),
-             &(mcl_seq.ext_tracks[i]));
-#endif
     add_track_to_grid(GridIdx::Y, i, &gdt);
   }
+#endif
 }
 
 DeviceMixerCapability *MNMClass::mixer() {

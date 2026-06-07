@@ -113,6 +113,10 @@ protected:
   DevicePerfCapability perf_capability_;
   DevicePanelCapability panel_capability_;
 #endif
+#if defined(__AVR__)
+  void init_ext_grid_devices(DeviceIdx device_idx, uint8_t first_track_type,
+                             uint8_t first_count, uint8_t rest_track_type);
+#endif
 
 public:
   MidiDevice(MidiClass *_midi, const char *_name, const uint8_t _id,

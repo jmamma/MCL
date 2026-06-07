@@ -78,31 +78,25 @@ void A4Class::cleanup_listeners() {
 }
 
 void A4Class::init_grid_devices(DeviceIdx device_idx) {
+#if defined(__AVR__)
+  init_ext_grid_devices(device_idx, A4_TRACK_TYPE, NUM_A4_SOUND_TRACKS,
+                        EXT_TRACK_TYPE);
+#else
   GridDeviceTrack gdt;
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-#if !defined(__AVR__)
     uint8_t track_type = MIDI_TRACK_TYPE;
     SeqTrack *seq_track = &(mcl_seq.midi_tracks[i]);
-#else
-    uint8_t track_type = EXT_TRACK_TYPE;
-    SeqTrack *seq_track = &(mcl_seq.ext_tracks[i]);
-#endif
 
     if (i < NUM_A4_SOUND_TRACKS) {
-#if !defined(__AVR__)
       track_type = A4_MIDI_TRACK_TYPE;
-#else
-      track_type = A4_TRACK_TYPE;
-#endif
     }
-#if !defined(__AVR__)
     mcl_seq.midi_tracks[i].active = track_type;
     mcl_seq.midi_tracks[i].set_channel(i);
-#endif
     gdt.init(track_type, GROUP_DEV, static_cast<uint8_t>(device_idx),
              seq_track);
     add_track_to_grid(GridIdx::Y, i, &gdt);
   }
+#endif
 }
 
 DeviceMixerCapability *A4Class::mixer() {
