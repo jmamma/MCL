@@ -277,7 +277,7 @@ void LegacyLFOSeqTrackData::store_data(SeqLFOData *data) const {
   }
   data->wav_type = wav_type;
   data->speed = speed;
-  data->mode = mode;
+  data->mode = mode & (uint8_t)~LFO_MODE_ONESHOT_FIRED;
   data->pattern_mask = pattern_mask;
   data->enable = enable;
   data->length = length;
@@ -298,6 +298,7 @@ void LFOSeqTrack::reset_phase() {
 
 void LFOSeqTrack::reset_runtime() {
   phase = 0;
+  rearm_oneshot();
   modulated_speed = speed;
   for (uint8_t i = 0; i < NUM_LFO_PARAMS; ++i) {
     modulated_depth[i] = params[i].depth;
@@ -335,7 +336,7 @@ void LFOSeqTrack::store_data(SeqLFOData *data) const {
   }
   data->wav_type = wav_type;
   data->speed = speed;
-  data->mode = mode;
+  data->mode = mode & (uint8_t)~LFO_MODE_ONESHOT_FIRED;
   data->pattern_mask = pattern_mask;
   data->enable = enable;
   data->length = length;
@@ -574,7 +575,14 @@ void LFOSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
              (current_mode != LFO_MODE_FREE) &&
              current_mode != LFO_MODE_TRACK_TRIG &&
              IS_BIT_SET64(pattern_mask, step_count)) {
-    reset_phase();
+    if (current_mode == LFO_MODE_ONE) {
+      if ((mode & LFO_MODE_ONESHOT_FIRED) == 0) {
+        mode |= LFO_MODE_ONESHOT_FIRED;
+        reset_phase();
+      }
+    } else {
+      reset_phase();
+    }
   }
 
   if (enable) {

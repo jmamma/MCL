@@ -14,7 +14,7 @@
 #define LFO_MODE_FREE 0
 // LFO resets on trig but plays continously.
 #define LFO_MODE_TRIG 1
-// LFO resets on trig but only plays 1 cycle
+// LFO resets on trig, plays one cycle, then ignores that trig until rearmed.
 #define LFO_MODE_ONE 2
 // LFO resets when the paired sequencer track fires a trig and plays 1 cycle.
 #define LFO_MODE_TRACK_TRIG 3
@@ -23,6 +23,7 @@
 #define LFO_SPEED_MULT_MASK 0x07
 #define LFO_MODE_LEGACY_PHASE 0x20
 #define LFO_MODE_LEGACY_FLAGS LFO_MODE_LEGACY_PHASE
+#define LFO_MODE_ONESHOT_FIRED 0x80
 
 #define LFO_SPEED_MULT_1_100X 0
 #define LFO_SPEED_MULT_1_10X 1
@@ -138,7 +139,11 @@ public:
   }
   uint8_t base_mode() const { return mode_base(mode); }
   uint8_t speed_multiplier() const { return mode_speed_multiplier(mode); }
+  void rearm_oneshot() { mode &= (uint8_t)~LFO_MODE_ONESHOT_FIRED; }
   void set_mode(uint8_t base_mode) {
+    if (this->base_mode() != (base_mode & LFO_MODE_MASK)) {
+      rearm_oneshot();
+    }
     mode = (mode & LFO_MODE_LEGACY_FLAGS) |
            pack_mode(base_mode, speed_multiplier());
   }

@@ -84,7 +84,7 @@ const char *lfo_mode_label(uint8_t mode) {
   case LFO_MODE_TRIG:
     return "TRG";
   case LFO_MODE_ONE:
-    return "ONE";
+    return "1SH";
   case LFO_MODE_TRACK_TRIG:
     return "TRK";
   default:
@@ -109,6 +109,7 @@ void reset_lfo_runtime(LFOSeqTrack *track) {
 }
 
 void reset_lfo_clear_undo(LFOSeqTrack *track) {
+  track->rearm_oneshot();
   if (lfo_clear_undo_owner == track) {
     lfo_clear_undo_owner = nullptr;
   }
@@ -811,7 +812,9 @@ bool LFOPage::handleEvent(gui_event_t *event) {
       lfo_enable:
       reset_lfo_clear_undo(lfo_track);
       lfo_track->enable = !(lfo_track->enable);
-      if (!lfo_track->enable) { lfo_track->reset_params(); }
+      if (!lfo_track->enable) {
+        lfo_track->reset_params();
+      }
     }
   }
   return false;
