@@ -173,11 +173,12 @@ bool begin_slot(GridSlot slot, LoadFadeState &state) {
     return false;
   }
 
+  uint8_t floor = current > state.amount ? current - state.amount : 0;
   if (state.flags & TRACK_LOAD_FADE_FLAG_OUT) {
     state.start_value = current;
-    state.end_value = current > state.amount ? current - state.amount : 0;
+    state.end_value = floor;
   } else {
-    state.start_value = current > state.amount ? current - state.amount : 0;
+    state.start_value = floor;
     state.end_value = current;
   }
   state.last_value = 255;

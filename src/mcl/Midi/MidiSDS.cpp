@@ -90,8 +90,7 @@ read_wav_packet_channel0(Wav &wav, uint8_t *data, uint8_t num_samples,
   }
 
   char tmp_buf[80];
-  uint8_t full_run =
-      ((sizeof(tmp_buf) / channels) / sample_size) * sample_size * channels;
+  uint8_t full_run = (sizeof(tmp_buf) / frame_size) * frame_size;
   if (full_run == 0) {
     return false;
   }
