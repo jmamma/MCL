@@ -115,6 +115,55 @@ const TbdP4ParamDescriptor *p4_param_for_lock(const TbdP4SoundData *sound,
 } // namespace
 #endif
 
+namespace {
+
+bool ext_lock_control_from_param(uint8_t param_id, uint8_t &ctrl_type,
+                                 uint16_t &ctrl) {
+  if (param_id < 128) {
+    ctrl_type = SEQ_EXT_LOCK_CTRL_CC;
+    ctrl = param_id;
+    return true;
+  }
+  ctrl = 0;
+  if (param_id == PARAM_PRG) {
+    ctrl_type = SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE;
+    return true;
+  }
+  if (param_id == PARAM_PB) {
+    ctrl_type = SEQ_EXT_LOCK_CTRL_PITCH_BEND;
+    return true;
+  }
+  if (param_id == PARAM_CHP) {
+    ctrl_type = SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE;
+    return true;
+  }
+  return false;
+}
+
+bool ext_lock_param_from_control(uint8_t ctrl_type, uint16_t ctrl,
+                                 uint8_t &param_id) {
+  if (ctrl_type == SEQ_EXT_LOCK_CTRL_CC && ctrl <= 127) {
+    param_id = (uint8_t)ctrl;
+    return true;
+  }
+  if (ctrl != 0) return false;
+  if (ctrl_type == SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE) {
+    param_id = PARAM_PRG;
+    return true;
+  }
+  if (ctrl_type == SEQ_EXT_LOCK_CTRL_PITCH_BEND) {
+    param_id = PARAM_PB;
+    return true;
+  }
+  if (ctrl_type == SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE) {
+    param_id = PARAM_CHP;
+    return true;
+  }
+  return false;
+}
+
+} // namespace
+
 bool SeqExtStepLockApi::delete_lock(seq_extstep_tick_t tick, uint8_t lock_idx,
                                     uint8_t value) {
 #if !defined(__AVR__)
@@ -355,13 +404,7 @@ bool SeqExtStepLockApi::lock_menu_value_info(
 
   info.active = true;
   info.param_id = menu_value;
-  info.ctrl = menu_value;
-  info.ctrl_type =
-      menu_value == PARAM_PB    ? SEQ_EXT_LOCK_CTRL_PITCH_BEND
-      : menu_value == PARAM_CHP ? SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE
-      : menu_value == PARAM_PRG ? SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE
-                                : SEQ_EXT_LOCK_CTRL_CC;
-  return true;
+  return ext_lock_control_from_param(menu_value, info.ctrl_type, info.ctrl);
 #else
   info = SeqExtStepLockParamInfo();
   if (menu_value == PARAM_OFF) return false;
@@ -398,13 +441,7 @@ bool SeqExtStepLockApi::lock_menu_value_info(
   info.active = true;
   info.param_id = menu_value;
   info.sendable = menu_value <= PARAM_CHP;
-  info.ctrl = menu_value;
-  info.ctrl_type =
-      menu_value == PARAM_PB    ? SEQ_EXT_LOCK_CTRL_PITCH_BEND
-      : menu_value == PARAM_CHP ? SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE
-      : menu_value == PARAM_PRG ? SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE
-                                : SEQ_EXT_LOCK_CTRL_CC;
-  return true;
+  return ext_lock_control_from_param(menu_value, info.ctrl_type, info.ctrl);
 #endif
 }
 
@@ -503,11 +540,10 @@ bool SeqExtStepLockApi::set_selected_lock_control(uint8_t slot,
                                                   lock_default);
   }
 #endif
-  if (ctrl_type == SEQ_EXT_LOCK_CTRL_CC && ctrl <= 127) {
-    set_selected_lock_param(slot, (uint8_t)ctrl + 1);
-    return true;
-  }
-  return false;
+  uint8_t param_id = 0;
+  if (!ext_lock_param_from_control(ctrl_type, ctrl, param_id)) return false;
+  set_selected_lock_param(slot, param_id + 1);
+  return true;
 }
 
 bool SeqExtStepLockApi::selected_lock_param_info(
@@ -572,13 +608,7 @@ bool SeqExtStepLockApi::selected_lock_param_info(
 #if !defined(__AVR__)
   info.sendable = param_id <= PARAM_CHP;
 #endif
-  info.ctrl = param_id;
-  info.ctrl_type =
-      param_id == PARAM_PB    ? SEQ_EXT_LOCK_CTRL_PITCH_BEND
-      : param_id == PARAM_CHP ? SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE
-      : param_id == PARAM_PRG ? SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE
-                              : SEQ_EXT_LOCK_CTRL_CC;
-  return true;
+  return ext_lock_control_from_param(param_id, info.ctrl_type, info.ctrl);
 }
 
 bool SeqExtStepLockApi::copy_selected_lock_label(uint8_t slot, char *dst,
@@ -729,12 +759,13 @@ bool SeqExtStepLockApi::selected_lock_matches_control(uint8_t slot,
   uint8_t param_id = 0;
   if (!selected_lock_param_id(slot, param_id)) return false;
   if (param_id == PARAM_LEARN) return true;
-  uint8_t selected_ctrl_type =
-      param_id == PARAM_PB    ? SEQ_EXT_LOCK_CTRL_PITCH_BEND
-      : param_id == PARAM_CHP ? SEQ_EXT_LOCK_CTRL_CHANNEL_PRESSURE
-      : param_id == PARAM_PRG ? SEQ_EXT_LOCK_CTRL_PROGRAM_CHANGE
-                              : SEQ_EXT_LOCK_CTRL_CC;
-  return selected_ctrl_type == ctrl_type && param_id == ctrl;
+  uint8_t selected_ctrl_type = 0;
+  uint16_t selected_ctrl = 0;
+  if (!ext_lock_control_from_param(param_id, selected_ctrl_type,
+                                   selected_ctrl)) {
+    return false;
+  }
+  return selected_ctrl_type == ctrl_type && selected_ctrl == ctrl;
 #else
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return false;

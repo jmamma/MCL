@@ -364,7 +364,9 @@ void seq_ext_step_update_lock_cursor(SeqExtStepLockApi &locks,
         ctrl <= 127) {
       SeqPage::param_select = (uint8_t)ctrl;
     }
-    locks.set_selected_lock_control(lock_idx, ctrl_type, ctrl, value);
+    if (!locks.set_selected_lock_control(lock_idx, ctrl_type, ctrl, value)) {
+      return;
+    }
   }
   if (locks.selected_lock_matches_control(lock_idx, ctrl_type, ctrl)) {
     seq_extstep_page.lock_cur_y =
@@ -389,7 +391,9 @@ bool seq_ext_step_lock_held_steps(SeqExtStepTrackApi &track,
         ctrl <= 127) {
       SeqPage::param_select = (uint8_t)ctrl;
     }
-    locks.set_selected_lock_control(lock_idx, ctrl_type, ctrl, value);
+    if (!locks.set_selected_lock_control(lock_idx, ctrl_type, ctrl, value)) {
+      return false;
+    }
     if (!locks.selected_lock_param_info(lock_idx, info)) {
       return false;
     }
@@ -399,7 +403,8 @@ bool seq_ext_step_lock_held_steps(SeqExtStepTrackApi &track,
   }
 
   uint8_t lock_param =
-      info.param_id <= 127 ? (uint8_t)info.param_id : kExtStepLockParamFallback;
+      info.param_id <= PARAM_CHP ? (uint8_t)info.param_id
+                                 : kExtStepLockParamFallback;
   uint8_t lock_value =
       locks.lock_ui_value_from_control(lock_idx, ctrl_type, ctrl, value);
 
