@@ -168,26 +168,14 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
   }
 }
 
-const char lfo_mult_label_1x[] PROGMEM = "1x";
-const char lfo_mult_label_2x[] PROGMEM = "2x";
-const char lfo_mult_label_4x[] PROGMEM = "4x";
-const char lfo_mult_label_8x[] PROGMEM = "8x";
-const char lfo_mult_label_half[] PROGMEM = ".5";
-const char lfo_mult_label_quarter[] PROGMEM = ".25";
-const char lfo_mult_label_tenth[] PROGMEM = ".1";
-const char lfo_mult_label_hundredth[] PROGMEM = ".01";
-const char *const lfo_mult_labels[LFO_SPEED_MULT_COUNT] PROGMEM = {
-    lfo_mult_label_hundredth, lfo_mult_label_tenth,
-    lfo_mult_label_quarter,   lfo_mult_label_half,
-    lfo_mult_label_1x,        lfo_mult_label_2x,
-    lfo_mult_label_4x,        lfo_mult_label_8x};
+const char lfo_mult_labels[LFO_SPEED_MULT_COUNT][4] PROGMEM = {
+    ".01", ".1", ".25", ".5", "1x", "2x", "4x", "8x"};
 
 void lfo_mult_label(uint8_t multiplier, char *out) {
   if (multiplier >= LFO_SPEED_MULT_COUNT) {
     multiplier = LFO_SPEED_MULT_1X;
   }
-  PGM_P label = (PGM_P)pgm_read_ptr(&lfo_mult_labels[multiplier]);
-  strcpy_P(out, label);
+  strcpy_P(out, lfo_mult_labels[multiplier]);
 }
 
 void draw_lfo_enable_info_label(bool enabled) {
