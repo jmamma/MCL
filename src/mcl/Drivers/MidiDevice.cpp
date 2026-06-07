@@ -3,7 +3,6 @@
 #include "Midi.h"
 #include "MidiID.h"
 #include "MidiUart.h"
-#include "MCLSeq.h"
 #include "Project.h"
 #include "ResourceManager.h"
 
@@ -34,20 +33,6 @@ void MidiDevice::add_track_to_grid(GridIdx grid_idx, uint8_t track_idx,
                                    GridDeviceTrack *gdt) {
   proj.grids[static_cast<uint8_t>(grid_idx)].add_track(track_idx, gdt);
 }
-
-#if defined(__AVR__)
-void MidiDevice::init_ext_grid_devices(DeviceIdx device_idx,
-                                       uint8_t first_track_type,
-                                       uint8_t first_count,
-                                       uint8_t rest_track_type) {
-  GridDeviceTrack gdt;
-  for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
-    gdt.init(i < first_count ? first_track_type : rest_track_type, GROUP_DEV,
-             static_cast<uint8_t>(device_idx), &mcl_seq.ext_tracks[i]);
-    add_track_to_grid(GridIdx::Y, i, &gdt);
-  }
-}
-#endif
 
 void MidiDevice::cleanup(DeviceIdx device_idx) {
   for (uint8_t n = 0; n < NUM_GRIDS; n++) {
