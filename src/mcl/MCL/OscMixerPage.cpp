@@ -46,8 +46,8 @@ void OscMixerPage::display() {
 
 float OscMixerPage::get_gain(uint8_t channel) {
   MCLEncoder *enc_ = (MCLEncoder *)(encoders[channel]);
-  float max_gain = (float)MAX_HEADROOM / (float)NUM_CHANNELS;
-  return ((float)enc_->cur / (float)127) * max_gain;
+  return (float)enc_->cur *
+         ((float)MAX_HEADROOM / ((float)NUM_CHANNELS * 127.0f));
 }
 
 void OscMixerPage::draw_wav() {
@@ -81,6 +81,7 @@ void OscMixerPage::draw_wav() {
     }
   }
   // float buffer[w];
+  const float preview_scale = (float)(30 / 2) / (float)MAX_HEADROOM;
   oled_display.fillRect(sample_number + x, 0, scanline_width, 32, BLACK);
   uint8_t n_end = sample_number + scanline_width;
   for (uint8_t n = sample_number; n < n_end; n++) {
@@ -98,13 +99,12 @@ void OscMixerPage::draw_wav() {
     }
     // Check for overflow outside of int16_t ranges.
     //dsp.saturate(sample, (float)MAX_HEADROOM);
-    sample = sample / MAX_HEADROOM;
 
     //  buffer[n] = sample;
     //  if (abs(buffer[n]) > largest_sample_so_far) {
     //  largest_sample_so_far = abs(buffer[n]);
     //  }
-    uint8_t pixel_y = (uint8_t)(((sample) * (float)(h / 2)) + (h / 2));
+    uint8_t pixel_y = (uint8_t)(sample * preview_scale + (h / 2));
     oled_display.drawPixel(n + x, pixel_y + y, WHITE);
     // oled_display.drawPixel(i + x, buffer[i] + normalize_inc + y, WHITE);
     if (n % 2 == 0) {
