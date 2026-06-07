@@ -781,7 +781,9 @@ void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
       noteon_conditional(ext_event_condition(ev), ev.event_value,
                          velocities[step]);
     } else {
-      note_off(ev.event_value, 0);
+      if (!mcl_seq.ext_arp_tracks[track_number].consumes_seq_trig()) {
+        note_off(ev.event_value, 0);
+      }
     }
   }
 }
@@ -946,7 +948,9 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
   }
 
   if (send_note) {
-    note_on(note, velocity);
+    if (!mcl_seq.ext_arp_tracks[track_number].trigger()) {
+      note_on(note, velocity);
+    }
   }
   record_trig_result(send_note);
 }

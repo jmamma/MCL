@@ -110,7 +110,8 @@ public:
   void reset_poly_voices();
   void init_poly();
 
-  void render_arp(bool recalc_notemask_, DeviceIdx device_idx, uint8_t track);
+  void render_arp(bool recalc_notemask_, DeviceIdx device_idx, uint8_t track,
+                  bool force_locked = false);
 
   void recalc_notemask();
   void draw_popup_octave();

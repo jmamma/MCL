@@ -94,6 +94,8 @@ MCLSTR_DECLARE(off);
 // Common two-character display strings
 MCLSTR_DECLARE(on);
 MCLSTR_DECLARE(lat);
+MCLSTR_DECLARE(loc);
+MCLSTR_DECLARE(trg);
 MCLSTR_DECLARE(ech);
 MCLSTR_DECLARE(rev);
 MCLSTR_DECLARE(eq);

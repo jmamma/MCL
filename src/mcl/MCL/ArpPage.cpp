@@ -17,9 +17,9 @@ void set_arp_encoder(Encoder &e, int value) {
   e.old = value;
 }
 
-// Indexed by encoders[0]->cur: ARP_OFF=0, ARP_ON=1, ARP_LATCH=2.
+// Indexed by encoders[0]->cur: ARP_OFF=0, ARP_ON=1, ARP_LATCH=2, ARP_LOCK=3.
 const char *const arp_state_labels[] PROGMEM = {mclstr_dash, mclstr_on,
-                                                mclstr_lat};
+                                                mclstr_lat, mclstr_loc};
 // Knob caption per encoder slot 0..3.
 const char *const arp_knob_labels[] PROGMEM = {mclstr_arp, mclstr_mode,
                                                mclstr_rate, mclstr_range};
@@ -27,8 +27,8 @@ const char *const arp_knob_labels[] PROGMEM = {mclstr_arp, mclstr_mode,
 
 MCLEncoder arp_range(0, 4, ENCODER_RES_SEQ);
 MCLEncoder arp_mode(0, 18, ENCODER_RES_SEQ);
-MCLEncoder arp_rate(1, 16, ENCODER_RES_SEQ);
-MCLEncoder arp_enabled(0, 2, ENCODER_RES_SEQ);
+MCLEncoder arp_rate(0, 16, ENCODER_RES_SEQ);
+MCLEncoder arp_enabled(0, 3, ENCODER_RES_SEQ);
 
 void ArpPage::init() {
   DEBUG_PRINT_FN();
@@ -63,12 +63,12 @@ void ArpPage::track_update(uint8_t n, bool re_render) {
 
   if (re_render) {
     if (last_arp_track && arp_track != last_arp_track) {
-      if (last_arp_track->enabled != ARP_LATCH) {
+      if (!last_arp_track->preserves_note_set()) {
         DEBUG_PRINTLN("clear");
         last_arp_track->clear_notes();
       }
     }
-    if (arp_track->enabled != ARP_LATCH) {
+    if (!arp_track->preserves_note_set()) {
       seq_ptc_page.render_arp(true, arp_device_idx(), n);
     }
   }
@@ -80,13 +80,15 @@ void ArpPage::loop() {
 
   if (encoders[0]->hasChanged()) {
     arp_track->enabled = encoders[0]->cur;
-    seq_ptc_page.render_arp(encoders[0]->old != 1, arp_device_idx(), n);
+    if (!arp_track->locks_note_set()) {
+      seq_ptc_page.render_arp(encoders[0]->old != ARP_ON, arp_device_idx(), n);
+    }
   }
   if (encoders[1]->hasChanged() || encoders[3]->hasChanged()) {
     arp_track->range = arp_range.cur;
     arp_track->mode = arp_mode.cur;
-    seq_ptc_page.render_arp(arp_track->enabled != ARP_LATCH,
-                            arp_device_idx(), n);
+    seq_ptc_page.render_arp(!arp_track->preserves_note_set(),
+                            arp_device_idx(), n, true);
   }
 
   if (encoders[2]->hasChanged()) {
@@ -124,6 +126,8 @@ void ArpPage::display() {
       strcpy_P(str, (PGM_P)pgm_read_ptr(&arp_state_labels[cur]));
     } else if (i == 1) {
       strncpy_P(str, arp_names[cur], 4);
+    } else if (i == 2 && cur == ARP_RATE_TRIG) {
+      strcpy_P(str, mclstr_trg);
     } else {
       mcl_gui.put_value_at(cur, str);
     }

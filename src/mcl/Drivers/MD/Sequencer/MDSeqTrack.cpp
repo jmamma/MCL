@@ -378,11 +378,14 @@ void MDSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
           locks_slides_idx = lock_idx;
         }
         if (step_fired) {
-          if (is_midi_model) {
+          bool arp_triggered = mcl_seq.md_arp_tracks[track_number].trigger();
+          if (!arp_triggered && is_midi_model) {
             notes.count_down = md_note_count_down(notes.len, ticks_per_step);
             send_notes_on();
           }
-          send_trig_inline();
+          if (!arp_triggered) {
+            send_trig_inline();
+          }
         }
       }
       record_trig_result(step_fired);

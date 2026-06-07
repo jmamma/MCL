@@ -31,7 +31,10 @@
 
 #define ARP_ON 1
 #define ARP_LATCH 2
+#define ARP_LOCK 3
 #define ARP_OFF 0
+
+#define ARP_RATE_TRIG 0
 
 #define ARP_MAX_NOTES 16 * 3
 
@@ -74,6 +77,22 @@ public:
                  uint8_t parent_speed);
   void store_data(ArpSeqData *data) const;
   void store_phase_data(ArpSeqPhaseData &phase) const;
+  ALWAYS_INLINE() bool trigger() {
+    if (!consumes_seq_trig()) {
+      return false;
+    }
+    if (!count_down) {
+      mod12_counter = 0;
+    }
+    return true;
+  }
+  bool consumes_seq_trig() const {
+    return enabled && length == ARP_RATE_TRIG;
+  }
+  bool locks_note_set() const { return enabled == ARP_LOCK; }
+  bool preserves_note_set() const {
+    return enabled == ARP_LATCH || enabled == ARP_LOCK;
+  }
   ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
     if (count_down) {
       return false;
@@ -96,6 +115,7 @@ protected:
   virtual void on_cycle_midpoint(MidiUartClass *uart_, MidiUartClass *uart2_);
   virtual void dispatch_note(uint8_t note, MidiUartClass *uart_,
                              MidiUartClass *uart2_) = 0;
+  void dispatch_next_note(MidiUartClass *uart_, MidiUartClass *uart2_);
   virtual void on_render_begin();
 
 };

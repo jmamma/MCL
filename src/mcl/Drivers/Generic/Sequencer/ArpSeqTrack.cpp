@@ -43,7 +43,7 @@ void ArpSeqTrack::load_data(const ArpSeqData &data,
   reset();
   static_cast<ArpSeqData &>(*this) = data;
   speed = speed_for_parent_speed(parent_speed);
-  length = rate ? rate : 2;
+  length = rate;
   len = 0;
   idx = 0;
   last_note_on = 255;
@@ -79,7 +79,7 @@ void ArpSeqTrack::store_data(ArpSeqData *data) const {
     return;
   }
   *data = static_cast<const ArpSeqData &>(*this);
-  data->rate = length ? length : 2;
+  data->rate = length;
 }
 
 void ArpSeqTrack::store_phase_data(ArpSeqPhaseData &phase) const {
@@ -91,6 +91,17 @@ void ArpSeqTrack::store_phase_data(ArpSeqPhaseData &phase) const {
   phase.step_count = step_count;
   phase.mod12_counter = mod12_counter;
   phase.set_valid();
+}
+
+void ArpSeqTrack::dispatch_next_note(MidiUartClass *uart_,
+                                     MidiUartClass *uart2_) {
+  uint8_t note = mode == ARP_RND2 ? notes[get_random(len)] : notes[idx];
+  note += oct * 12;
+  dispatch_note(note, uart_, uart2_);
+  idx++;
+  if (idx == len) {
+    idx = 0;
+  }
 }
 
 void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
@@ -108,6 +119,27 @@ void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
     }
   }
 
+  if (length == ARP_RATE_TRIG) {
+    if (mod12_counter == 0) {
+      if (enabled && mute_state == SEQ_MUTE_OFF && len > 0) {
+        on_render_begin();
+        dispatch_next_note(uart_, uart2_);
+        mod12_counter = 1;
+      } else {
+        mod12_counter = 255;
+      }
+    } else if (mod12_counter != 255) {
+      mod12_counter++;
+      if (mod12_counter == (speed == SEQ_SPEED_3_2X ? 4 : 3)) {
+        on_render_begin();
+        mod12_counter = 255;
+      }
+    }
+    uart = uart_old;
+    uart2 = uart2_old;
+    return;
+  }
+
   uint8_t ticks_per_step = get_ticks_per_step_inline();
 
   mod12_counter++;
@@ -119,13 +151,7 @@ void ArpSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   if (mod12_counter == 0 && enabled && mute_state == SEQ_MUTE_OFF) {
    if (step_count == 0) {
       if (len > 0) {
-        uint8_t note = mode == ARP_RND2 ? notes[get_random(len)] : notes[idx];
-        note += oct*12;
-        dispatch_note(note, uart_, uart2_);
-        idx++;
-        if (idx == len) {
-          idx = 0;
-        }
+        dispatch_next_note(uart_, uart2_);
       }
     }
   }

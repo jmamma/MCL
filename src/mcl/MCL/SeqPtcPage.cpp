@@ -88,10 +88,6 @@ ArpSeqTrack &ptc_arp_track(DeviceIdx device_idx, uint8_t track) {
   return SeqTrackUtil::arp_track(device_idx, track);
 }
 
-bool ptc_ext_arp_enabled(uint8_t track) {
-  return ptc_arp_track(DeviceIdx::Secondary, track).enabled;
-}
-
 bool ptc_uses_grid_x_tracks() {
   return ptc_active_device_idx() == DeviceIdx::Primary;
 }
@@ -318,7 +314,7 @@ void SeqPtcPage::loop() {
     ArpSeqTrack &arp = ptc_arp_track(ptc_active_device_idx(), track);
     arp.oct = ptc_param_oct.cur;
     arp.fine_tune = ptc_param_fine_tune.cur;
-    render_arp(scale_changed, ptc_active_device_idx(), track);
+    render_arp(scale_changed, ptc_active_device_idx(), track, true);
   }
   SeqPage::loop();
 #ifdef PLATFORM_TBD
@@ -342,7 +338,7 @@ uint8_t SeqPtcPage::find_arp_track(uint8_t channel_event, uint8_t channel) {
 }
 
 void SeqPtcPage::render_arp(bool recalc_notemask_, DeviceIdx device_idx,
-                            uint8_t track) {
+                            uint8_t track, bool force_locked) {
   if (recalc_notemask_) {
     recalc_notemask();
   }
@@ -353,8 +349,13 @@ void SeqPtcPage::render_arp(bool recalc_notemask_, DeviceIdx device_idx,
   SeqTrack &seq = ptc_seq_track(device_idx, track);
   ArpSeqTrack &arp = ptc_arp_track(device_idx, track);
 
+  bool locked = arp.locks_note_set();
+  if (locked && !force_locked) {
+    return;
+  }
   arp.speed = ArpSeqTrack::speed_for_parent_speed(seq.speed);
-  arp.render(arp.mode, arp.oct, arp.fine_tune, arp.range, note_mask);
+  const uint64_t *render_mask = locked ? arp.note_mask : note_mask;
+  arp.render(arp.mode, arp.oct, arp.fine_tune, arp.range, render_mask);
 }
 
 void SeqPtcPage::display() {
@@ -910,6 +911,14 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
 
   ArpSeqTrack &arp = ptc_arp_track(device_idx, ptc_selected_track(device_idx));
   dev_note_channels[dev] = channel;
+  if (arp.locks_note_set()) {
+    if (note_type) {
+      ptc_note_bit_set(dev_note_masks[dev], note_num);
+    } else {
+      ptc_note_bit_clear(dev_note_masks[dev], note_num);
+    }
+    goto pitch_out;
+  }
   if (note_type) {
     bool notes_all_off = dev_note_masks[dev][0] == 0 &&
                          dev_note_masks[dev][1] == 0;
@@ -931,10 +940,11 @@ uint8_t SeqPtcPage::process_ext_event(uint8_t note_num, bool note_type,
     }
   } else {
     ptc_note_bit_clear(dev_note_masks[dev], note_num);
-    if (arp_enabled.cur != ARP_LATCH && pitch != 255) {
+    if (arp.enabled != ARP_LATCH && pitch != 255) {
       ptc_note_bit_clear(note_mask, pitch);
     }
   }
+pitch_out:
   if (pitch == 255) {
     return 255;
   }
@@ -1043,7 +1053,6 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
     pitch = seq_ptc_page.process_ext_event(note_num, true, channel, true);
     uint8_t n = seq_ptc_page.find_arp_track(channel_event, channel);
     arp_page.track_update(n);
-
     seq_ptc_page.render_arp(false, DeviceIdx::Primary, n);
 
     if (pitch == 255)
@@ -1072,7 +1081,9 @@ void SeqPtcMidiEvents::note_on(uint8_t *msg, uint8_t channel_event) {
 
   seq_extstep_page.set_cur_y(pitch);
 
-  if (!ptc_ext_arp_enabled(last_ext_track) || (MidiClock.state != 2)) {
+  ArpSeqTrack &arp_track =
+      SeqTrackUtil::arp_track(DeviceIdx::Secondary, last_ext_track);
+  if (!arp_track.enabled || (MidiClock.state != 2)) {
     seq_ptc_page.note_on_ext(pitch, msg[2]);
   }
 #endif
@@ -1108,13 +1119,15 @@ void SeqPtcMidiEvents::note_off(uint8_t *msg, uint8_t channel_event) {
   pitch = seq_ptc_page.process_ext_event(note_num, false, channel);
 
   seq_ptc_page.config_encoders();
-  seq_ptc_page.render_arp(false, DeviceIdx::Secondary, last_ext_track);
   arp_page.track_update();
+  seq_ptc_page.render_arp(false, DeviceIdx::Secondary, last_ext_track);
 
   if (pitch == 255)
     return;
 
-  if (!ptc_ext_arp_enabled(last_ext_track)) {
+  ArpSeqTrack &arp_track =
+      SeqTrackUtil::arp_track(DeviceIdx::Secondary, last_ext_track);
+  if (!arp_track.enabled) {
     seq_ptc_page.note_off_ext(pitch, msg[2]);
   }
 
