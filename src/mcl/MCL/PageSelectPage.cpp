@@ -60,6 +60,31 @@ static MidiDevice *nonnull_device(MidiDevice *device) {
   return (device == nullptr || device == &null_midi_device) ? nullptr : device;
 }
 
+uint8_t next_page(const PageSelectPage *page, int8_t step) NOINLINE();
+uint8_t next_page(const PageSelectPage *page, int8_t step) {
+  int8_t slot = (int8_t)page->page_select + step;
+  while (slot >= 0 && slot < (int8_t)PageRegistry::kMaxPageSlots) {
+    if (page->get_page((uint8_t)slot, nullptr) != NULL_PAGE) {
+      return (uint8_t)slot;
+    }
+    slot += step;
+  }
+  return page->page_select;
+}
+
+uint8_t next_category_page(const PageSelectPage *page, int8_t step) NOINLINE();
+uint8_t next_category_page(const PageSelectPage *page, int8_t step) {
+  int8_t cat = (int8_t)category_for_slot(page->page_select) + step;
+  while (cat >= 0 && cat < (int8_t)n_category) {
+    uint8_t slot = page->category_page_in((uint8_t)cat, 0);
+    if (slot != page->page_select) {
+      return slot;
+    }
+    cat += step;
+  }
+  return page->page_select;
+}
+
 } // namespace
 
 PageIndex PageSelectPage::get_page(uint8_t page_number, char *str) const {
@@ -151,24 +176,6 @@ void PageSelectPage::cleanup() {
   mcl_gui.reset_trigleds();
 }
 
-uint8_t PageSelectPage::get_nextpage_down() {
-  for (int8_t i = page_select - 1; i >= 0; i--) {
-    if (get_page(i, nullptr) != NULL_PAGE) {
-      return i;
-    }
-  }
-  return page_select;
-}
-
-uint8_t PageSelectPage::get_nextpage_up() {
-  for (uint8_t i = page_select + 1; i < PageRegistry::kMaxPageSlots; i++) {
-    if (get_page(i, nullptr) != NULL_PAGE) {
-      return i;
-    }
-  }
-  return page_select;
-}
-
 uint8_t PageSelectPage::category_page_in(uint8_t cat_id,
                                          uint8_t offset) const {
   uint8_t cat_start = category_first_page(cat_id);
@@ -181,30 +188,6 @@ uint8_t PageSelectPage::category_page_in(uint8_t cat_id,
         return slot;
       }
       offset--;
-    }
-  }
-  return page_select;
-}
-
-uint8_t PageSelectPage::get_nextpage_catdown() {
-  auto cat_id = category_for_slot(page_select);
-  while (cat_id > 0) {
-    cat_id--;
-    uint8_t slot = category_page_in(cat_id, 0);
-    if (slot != page_select) {
-      return slot;
-    }
-  }
-  return page_select;
-}
-
-uint8_t PageSelectPage::get_nextpage_catup() {
-  auto cat_id = category_for_slot(page_select);
-  while (cat_id < n_category - 1) {
-    cat_id++;
-    uint8_t slot = category_page_in(cat_id, 0);
-    if (slot != page_select) {
-      return slot;
     }
   }
   return page_select;
@@ -254,20 +237,14 @@ void PageSelectPage::loop() {
   uint8_t last_page_select = page_select;
   auto enc_ = (MCLEncoder *)encoders[0];
   int8_t diff = enc_->cur;
-  if (diff > 0) {
-    page_select = get_nextpage_up();
-  }
-  if (diff < 0) {
-    page_select = get_nextpage_down();
+  if (diff != 0) {
+    page_select = next_page(this, diff > 0 ? 1 : -1);
   }
 
   enc_ = (MCLEncoder *)encoders[1];
   diff = enc_->cur;
-  if (diff > 0) {
-    page_select = get_nextpage_catup();
-  }
-  if (diff < 0) {
-    page_select = get_nextpage_catdown();
+  if (diff != 0) {
+    page_select = next_category_page(this, diff > 0 ? 1 : -1);
   }
 
   if (last_page_select != page_select) {
@@ -346,29 +323,20 @@ void PageSelectPage::display() {
 bool PageSelectPage::handleEvent(gui_event_t *event) {
   if (EVENT_NOTE(event)) {
     uint8_t mask = event->mask;
-    uint8_t port = event->port;
-    const bool is_md_port = device_manager.port_supports(
-        port, MidiDeviceCapability::MdTrigInterface);
-
-    uint8_t track = event->source;
-    // note interface presses select corresponding page
-    if (mask == EVENT_BUTTON_PRESSED) {
-      if (!is_md_port) {
+    if (mask == EVENT_BUTTON_PRESSED || mask == EVENT_BUTTON_RELEASED) {
+      if (!device_manager.port_supports(
+              event->port, MidiDeviceCapability::MdTrigInterface)) {
         return false;
       }
-      if (page_select != track) {
-        page_select = track;
-        draw_popup();
+      if (mask == EVENT_BUTTON_PRESSED) {
+        uint8_t track = event->source;
+        if (page_select != track) {
+          page_select = track;
+          draw_popup();
+        }
       }
       return true;
     }
-    if (mask == EVENT_BUTTON_RELEASED) {
-      if (!is_md_port) {
-        return false;
-      }
-      return true;
-    }
-
     return true;
   }
   if (EVENT_CMD(event)) {

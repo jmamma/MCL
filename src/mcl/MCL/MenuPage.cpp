@@ -86,6 +86,22 @@ void nudge_menu_encoder(Encoder *encoder, int8_t delta) {
   range_encoder->cur = next;
 }
 
+void sync_menu_value_encoder(Encoder *encoder, MenuBase *menu,
+                             const menu_item_t *item,
+                             bool reset_on_null) {
+  auto *value_encoder = (MCLEncoder *)encoder;
+  uint8_t range = item != nullptr ? item->range : 0;
+  value_encoder->max = range > 0 ? range - 1 : 0;
+  value_encoder->min = item != nullptr ? item->min : 0;
+
+  uint8_t *dest_var = menu->get_dest_variable(item);
+  if (dest_var != NULL) {
+    encoder->setValue(menu_value_from_stored(dest_var, *dest_var));
+  } else if (reset_on_null) {
+    encoder->setValue(0);
+  }
+}
+
 #if defined(MCL_HAS_DESKTOP_MOUSE)
 bool mouse_in_menu_value_area(int16_t x, int16_t x_offset, int16_t width) {
   int16_t value_width = width < 36 ? width / 2 : 18;
@@ -126,15 +142,7 @@ void MenuPageBase::init(bool generate_row_names) {
   selected_item = encoders[1]->cur;
 
   const menu_item_t *item = m->get_item(encoders[1]->cur);
-  uint8_t range = item != nullptr ? item->range : 0;
-  ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
-  ((MCLEncoder *)encoders[0])->min =
-      item != nullptr ? item->min : 0;
-
-  uint8_t *dest_var = m->get_dest_variable(item);
-  if (dest_var != NULL) {
-    encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
-  }
+  sync_menu_value_encoder(encoders[0], m, item, false);
   encoders[0]->old = encoders[0]->cur;
   encoders[1]->old = encoders[1]->cur;
 }
@@ -179,10 +187,6 @@ void MenuPageBase::loop() {
 
   if (encoders[1]->hasChanged()) {
     const menu_item_t *item = m->get_item(encoders[1]->cur);
-    uint8_t range = item != nullptr ? item->range : 0;
-    ((MCLEncoder *)encoders[0])->max = range > 0 ? range - 1 : 0;
-    ((MCLEncoder *)encoders[0])->min =
-        item != nullptr ? item->min : 0;
 
     uint8_t diff = encoders[1]->cur - encoders[1]->old;
     int8_t new_val = cur_row + diff;
@@ -195,12 +199,7 @@ void MenuPageBase::loop() {
     // MD.assignMachine(0, encoders[1]->cur);
     cur_row = new_val;
     selected_item = encoders[1]->cur;
-    uint8_t *dest_var = m->get_dest_variable(item);
-    if (dest_var != NULL) {
-      encoders[0]->setValue(menu_value_from_stored(dest_var, *dest_var));
-    } else {
-      encoders[0]->setValue(0);
-    }
+    sync_menu_value_encoder(encoders[0], m, item, true);
   }
   if (encoders[0]->hasChanged()) {
     uint8_t *dest_var = m->get_dest_variable(encoders[1]->cur);

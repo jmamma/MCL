@@ -37,10 +37,6 @@ public:
   // get a page in the current category.
   uint8_t category_page_in(uint8_t cat_id, uint8_t offset) const NOINLINE();
   uint8_t get_category_page(uint8_t offset);
-  uint8_t get_nextpage_down();
-  uint8_t get_nextpage_up();
-  uint8_t get_nextpage_catup();
-  uint8_t get_nextpage_catdown();
   void rebuild_entries();
   PageIndex get_page(uint8_t page_number, char *str) const;
   void get_page_icon(uint8_t page_number, uint8_t *&icon, uint8_t &h) const;
