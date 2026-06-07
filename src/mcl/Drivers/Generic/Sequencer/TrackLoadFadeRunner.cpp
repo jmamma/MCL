@@ -159,7 +159,7 @@ LoadFadeMask clear_slot(GridSlot slot) {
   }
   LoadFadeMask bit = (LoadFadeMask)1 << slot;
   active_mask &= ~bit;
-  fade_states[slot].clear();
+  memset(&fade_states[slot], 0, sizeof(fade_states[slot]));
   return bit;
 }
 
@@ -333,9 +333,7 @@ void TrackLoadFadeRunner::clear() {
   }
 #else
   active_mask = 0;
-  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
-    fade_states[n].clear();
-  }
+  memset(fade_states, 0, sizeof(fade_states));
 #endif
 }
 
