@@ -509,6 +509,8 @@ bool FileBrowserPage::_handle_filemenu() {
   char *suffix_pos = strchr(buf1, '.');
   char buf2[32];
   uint8_t name_length = NAME_LENGTH;
+  bool copy_entry = false;
+  const char *input_prompt = nullptr;
 
   switch (file_menu_page.menu.get_item_index(file_menu_encoder.cur)) {
   case FM_NEW_FOLDER: // new folder
@@ -526,17 +528,8 @@ bool FileBrowserPage::_handle_filemenu() {
     if (suffix_pos != nullptr) {
       buf2[suffix_pos - buf1] = '\0';
     }
-    // default max length = NAME_LENGTH, can extend if buf2 without suffix
-    // is longer than NAME_LENGTH.
-    name_length = filebrowser_name_length(name_length, buf2);
-    if (mcl_gui.wait_for_input(buf2, "RENAME TO:", name_length)) {
-      if (suffix_pos != nullptr) {
-        // paste the suffix back
-        strcat(buf2, suffix_pos);
-      }
-      on_rename(buf1, buf2);
-    }
-    return true;
+    input_prompt = "RENAME TO:";
+    break;
   case FM_DUPLICATE: // duplicate
     strcpy(buf2, buf1);
     if (suffix_pos != nullptr) {
@@ -559,18 +552,32 @@ bool FileBrowserPage::_handle_filemenu() {
     if (suffix_pos != nullptr) {
       strcat(buf2, suffix_pos);
     }
-    name_length = filebrowser_name_length(name_length, buf2);
-    if (mcl_gui.wait_for_input(buf2, "CLONE:", name_length)) {
-      on_copy(buf1, buf2);
-    }
-    return true;
+    copy_entry = true;
+    input_prompt = "CLONE:";
+    break;
 #ifdef MCL_HAS_FILE_MOVE
   case FM_MOVE: // move
     enter_move_destination(buf1);
     return false;
 #endif
+  default:
+    return false;
   }
-  return false;
+
+  // default max length = NAME_LENGTH, can extend if the default is longer.
+  name_length = filebrowser_name_length(name_length, buf2);
+  if (mcl_gui.wait_for_input(buf2, input_prompt, name_length)) {
+    if (!copy_entry && suffix_pos != nullptr) {
+      // paste the suffix back
+      strcat(buf2, suffix_pos);
+    }
+    if (copy_entry) {
+      on_copy(buf1, buf2);
+    } else {
+      on_rename(buf1, buf2);
+    }
+  }
+  return true;
 }
 
 #ifdef MCL_HAS_FILE_MOVE
