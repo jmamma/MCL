@@ -46,6 +46,10 @@ static uint8_t ram_slices_from_slice_encoder(uint8_t slice_encoder) {
   return slice_encoder >= 7 ? 128 : (uint8_t)(1u << slice_encoder);
 }
 
+static const uint8_t ram_play_default_params[] PROGMEM = {
+    64, 64, 127, 0, 0, 127, 0, 127, 0, 0, 64, 64,
+    0,  127, 0,   0, 0, 127, 0, 0,   0, 64, 0,  0};
+
 void RAMPage::setup() {
   DEBUG_PRINT_FN();
   encoders[3]->cur = 4;
@@ -134,8 +138,8 @@ static void ram_finalize_seq(MDTrack &md_track, MDSeqTrack &md_seq_track,
 }
 
 void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
-                            uint8_t source, uint8_t len, uint8_t rate,
-                            uint8_t pan, uint8_t linked_track) {
+                            uint8_t source, uint8_t pan,
+                            uint8_t linked_track) {
   MDTrack md_track;
   MDSeqTrack md_seq_track;
   bool clear_locks = true;
@@ -187,9 +191,9 @@ void RAMPage::setup_ram_rec(uint8_t track, uint8_t model, uint8_t lev,
   */
   md_track.machine.lfo.destinationTrack = track;
 
-  static const uint8_t params[] PROGMEM = {0, 0, 64, 64, 0, 127, 0, 0,
-                                           0, 127, 0, 0, 0, 64, 0, 0};
-  memcpy_P(md_track.machine.params + MODEL_AMD, params, sizeof(params));
+  memcpy_P(md_track.machine.params + MODEL_AMD,
+           ram_play_default_params + MODEL_AMD,
+           sizeof(ram_play_default_params) - MODEL_AMD);
   md_track.machine.params[MODEL_PAN] = pan;
 
   ram_finalize_seq(md_track, md_seq_track, track, linked_track, steps);
@@ -421,10 +425,8 @@ void RAMPage::setup_ram_play(uint8_t track, uint8_t model, uint8_t pan,
   md_track.machine.params[MODEL_LFOM] = 0;
   */
 
-  static const uint8_t params[] PROGMEM = {
-      64, 64, 127, 0, 0, 127, 0, 127, 0, 0, 64, 64,
-      0,  127, 0,   0, 0, 127, 0, 0,   0, 64, 0,  0};
-  memcpy_P(md_track.machine.params, params, sizeof(params));
+  memcpy_P(md_track.machine.params, ram_play_default_params,
+           sizeof(ram_play_default_params));
   md_track.machine.params[MODEL_PAN] = pan;
 
   ram_finalize_seq(md_track, md_seq_track, track, linked_track, steps);
@@ -456,8 +458,7 @@ void RAMPage::setup_ram_play_stereo(uint8_t track) {
   setup_ram_play(track + 1, RAM_P2_MODEL, 127, track);
 }
 
-void RAMPage::setup_ram_rec_mono(uint8_t track, uint8_t lev, uint8_t source,
-                                 uint8_t len, uint8_t rate) {
+void RAMPage::setup_ram_rec_mono(uint8_t track, uint8_t lev, uint8_t source) {
   uint8_t model = RAM_R1_MODEL;
   if (page_id == 1) {
     model = RAM_R2_MODEL;
@@ -469,22 +470,21 @@ void RAMPage::setup_ram_rec_mono(uint8_t track, uint8_t lev, uint8_t source,
   if (source == SOURCE_INPB) {
     pan = 127;
   }
-  setup_ram_rec(track, model, lev, source, len, rate, pan);
+  setup_ram_rec(track, model, lev, source, pan);
 }
 
-void RAMPage::setup_ram_rec_stereo(uint8_t track, uint8_t lev, uint8_t source,
-                                   uint8_t len, uint8_t rate) {
+void RAMPage::setup_ram_rec_stereo(uint8_t track, uint8_t lev,
+                                   uint8_t source) {
   if (track == 15) {
     return;
   }
 
-  setup_ram_rec(track, RAM_R1_MODEL, lev, source, len, rate, 0, track + 1);
+  setup_ram_rec(track, RAM_R1_MODEL, lev, source, 0, track + 1);
   uint8_t source_link_track = source;
   if (source >= SOURCE_INPA) {
     source_link_track = SOURCE_INPB;
   }
-  setup_ram_rec(track + 1, RAM_R2_MODEL, lev, source_link_track, len, rate, 127,
-                track);
+  setup_ram_rec(track + 1, RAM_R2_MODEL, lev, source_link_track, 127, track);
 }
 
 void RAMPage::loop() {
@@ -738,30 +738,16 @@ bool RAMPage::handleEvent(gui_event_t *event) {
     }
     if (EVENT_PRESSED(event, Buttons.BUTTON1)) {
     yes:
+      uint8_t source = encoders[0]->cur;
       if (mcl_cfg.ram_page_mode == MONO) {
-        uint8_t lev = 64;
-        if (encoders[0]->cur == SOURCE_MAIN) {
-          lev = 64;
-        }
         if (page_id == 0) {
-          setup_ram_rec_mono(14, lev, encoders[0]->cur,
-                             ram_steps_from_length_encoder(encoders[3]->cur) - 1,
-                             128);
+          setup_ram_rec_mono(14, 64, source);
         } else {
-          setup_ram_rec_mono(15, lev, encoders[0]->cur,
-                             ram_steps_from_length_encoder(encoders[3]->cur) - 1,
-                             128);
+          setup_ram_rec_mono(15, 64, source);
         }
       } else {
-        if (encoders[0]->cur == SOURCE_MAIN) {
-          setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
-                               ram_steps_from_length_encoder(encoders[3]->cur) - 1,
-                               128);
-        }
-        if (encoders[0]->cur == SOURCE_INP) {
-          setup_ram_rec_stereo(14, 64 - 16, encoders[0]->cur,
-                               ram_steps_from_length_encoder(encoders[3]->cur) - 1,
-                               128);
+        if (source == SOURCE_MAIN || source == SOURCE_INP) {
+          setup_ram_rec_stereo(14, 64 - 16, source);
         }
       }
       return true;
