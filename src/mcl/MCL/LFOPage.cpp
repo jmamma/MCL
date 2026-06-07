@@ -339,7 +339,8 @@ void draw_lfo_wave_preview(uint8_t knob, uint8_t wav_type) {
 
   LightPage *page = GUI.currentPage();
   if (page != nullptr && page->isEncoderFocused(knob)) {
-    oled_display.fillRect(knob_x, 0, 23, 20, INVERT);
+    oled_display.fillRect(knob_x, 0, mcl_gui.knob_w,
+                          preview_y + preview_height + 1, INVERT);
   }
 }
 
