@@ -11,6 +11,7 @@
 #include "EmptyTrack.h"
 #if !defined(__AVR__)
 #include "MCLArrangement.h"
+#include "SpsHostArrBridge.h"
 #endif
 #include "MDTrack.h"
 #include "GridTask.h"
@@ -613,8 +614,10 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
   }
 #if MCL_FEATURE_HOST_ARRANGER
   if (load_mode != LOAD_ARRANG) {
-    mcl_arrangement.releasePlaybackTracks(
-        selected_destination_mask(slot_select_array, load_offset));
+    if (mcl_arrangement.releasePlaybackTracks(
+            selected_destination_mask(slot_select_array, load_offset))) {
+      sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
+    }
   }
 #endif
   GridRow row_array[NUM_SLOTS];

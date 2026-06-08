@@ -139,6 +139,7 @@ static const int kCellRecordLabelBytes = 6;
 static const int kCellRecordRowNameBytes = 16;
 static const int kCellRecordDependencyBytes = 2;
 static const int kActiveSlotBytes = kNumTracks;
+static const int kActiveReleasedMaskBytes = 2;
 static const int kRowNameBytes = 16;
 static const int kArrNameBytes = 16;
 static const int kArrClipFadeBytes = 8;

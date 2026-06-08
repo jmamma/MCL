@@ -475,7 +475,8 @@ void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
 }
 
 void SpsHostArrBridge::onReqActive(uint8_t tag) {
-    uint8_t body[4 + spsarr::kActiveSlotBytes];
+    uint8_t body[4 + spsarr::kActiveSlotBytes +
+                 spsarr::kActiveReleasedMaskBytes];
     body[0] = activeRowOrZero();
     body[1] = grid_task.next_active_row < GRID_LENGTH ? grid_task.next_active_row
                                                        : body[0];
@@ -483,6 +484,8 @@ void SpsHostArrBridge::onReqActive(uint8_t tag) {
     body[3] = MidiClock.isStarted() ? 1 : 0;
     for (uint8_t slot = 0; slot < spsarr::kActiveSlotBytes; slot++)
         body[4 + slot] = slot < NUM_SLOTS ? grid_page.active_slots[slot] : 255;
+    spsArrPutU16(body + 4 + spsarr::kActiveSlotBytes,
+                 mcl_arrangement.playbackReleasedMask());
     sendFrame(CMD_ACTIVE, tag, body, (uint16_t)sizeof body);
 }
 
@@ -1427,6 +1430,7 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
     bool queued = mcl_arrangement.seekLoad(
         positionQ12, (flags & ARR_LOAD_IMMEDIATE) != 0,
         (flags & ARR_LOAD_START_TRANSPORT) != 0);
+    notifyDirty(0xFF, DIRTY_ACTIVE);
 
     uint8_t ack[2] = {CMD_ARR_SEEK_LOAD, queued ? (uint8_t)1 : (uint8_t)0};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);

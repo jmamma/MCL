@@ -117,7 +117,11 @@ void GridTask::load_queue_handler() {
     }
     if (any_clear) {
       if (mode != LOAD_ARRANG) {
-        mcl_arrangement.releasePlaybackTracks(selected_track_mask(clear_select));
+        if (mcl_arrangement.releasePlaybackTracks(
+                selected_track_mask(clear_select))) {
+          sps_host_arr_bridge.notifyDirty(0xFF,
+                                          (uint8_t)spsarr::DIRTY_ACTIVE);
+        }
       }
       mcl_actions.clear_tracks(clear_select);
     }

@@ -1676,13 +1676,15 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   return armed;
 }
 
-void MCLArrangement::releasePlaybackTracks(uint16_t trackMask) {
+bool MCLArrangement::releasePlaybackTracks(uint16_t trackMask) {
   if (!playback_active_ || trackMask == 0) {
-    return;
+    return false;
   }
+  uint16_t oldMask = playback_released_mask_;
   playback_released_mask_ |= trackMask;
   playback_active_mask_ &= (uint16_t)~trackMask;
   clip_runtime_fade_mask_ &= (uint16_t)~trackMask;
+  return playback_released_mask_ != oldMask;
 }
 
 void MCLArrangement::armRuntimeFade(uint8_t dst,

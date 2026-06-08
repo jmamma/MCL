@@ -37,7 +37,8 @@ public:
                              uint16_t trackMask, GridSlot loadOffset,
                              const uint32_t privateSourceIds[NUM_SLOTS] =
                                  nullptr);
-  void releasePlaybackTracks(uint16_t trackMask);
+  bool releasePlaybackTracks(uint16_t trackMask);
+  uint16_t playbackReleasedMask() const { return playback_released_mask_; }
   void armRuntimeFade(uint8_t dst, const TrackLoadFadeData &fade);
   bool applyClipRuntime(uint8_t dst, DeviceTrack *track);
 
