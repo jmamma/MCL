@@ -6,6 +6,7 @@
 #define LOAD_MANUAL 1
 #define LOAD_AUTO 2
 #define LOAD_QUEUE 3
+#define LOAD_ARRANG 4
 
 class ATTR_PACKED() GridChain {
 public:

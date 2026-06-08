@@ -12,6 +12,7 @@
 #include "Grid.h"
 #include "GridTask.h"
 #include "MCLSd.h"
+#include "MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
 #include "Project.h"
@@ -27,6 +28,10 @@ namespace {
 
 constexpr uint16_t kMaxImportClips = 2048;
 constexpr uint32_t kMaxPlaybackCatchupQ12 = 64u * 12u;
+
+uint32_t q12ToHostTick96(uint32_t q12) {
+  return q12 > 0xFFFFFFFFu / 8u ? 0xFFFFFFFFu : q12 * 8u;
+}
 
 bool enterProjectDir() {
   if (!proj.project_loaded || mcl_cfg.project[0] == '\0') {
@@ -826,6 +831,7 @@ bool MCLArrangement::select(uint8_t idx) {
   bool ok = proj.store_config_from_system();
   if (ok) {
     resetPlayback();
+    clearLoopRegion();
   }
   return ok;
 }
@@ -967,6 +973,7 @@ bool MCLArrangement::clearActive() {
   bool ok = rewriteActiveWithMetadata(header, nullptr, 0, nullptr, 0, labels);
   if (ok) {
     resetPlayback();
+    clearLoopRegion();
   }
   return ok;
 }
@@ -1465,6 +1472,7 @@ bool MCLArrangement::importGrid(uint16_t trackMask, uint8_t startRow) {
   bool ok = rewriteActive(header, clips, count);
   if (ok) {
     resetPlayback();
+    clearLoopRegion();
   }
   return ok;
 }
@@ -1473,13 +1481,33 @@ void MCLArrangement::resetPlayback() {
   playback_arrangement_idx_ = 0xFF;
   last_tick_q12_ = 0;
   playback_active_mask_ = 0;
+  playback_released_mask_ = 0;
   clip_runtime_fade_mask_ = 0;
   playback_active_ = false;
+  loop_entered_ = false;
 }
 
 void MCLArrangement::resetPlaybackForTransport() {
   resetPlayback();
   grid_task.load_queue.init();
+}
+
+void MCLArrangement::setLoopRegion(uint32_t startQ12, uint32_t endQ12) {
+  if (endQ12 <= startQ12) {
+    clearLoopRegion();
+    return;
+  }
+  loop_enabled_ = true;
+  loop_start_q12_ = startQ12;
+  loop_end_q12_ = endQ12;
+  loop_entered_ = false;
+}
+
+void MCLArrangement::clearLoopRegion() {
+  loop_enabled_ = false;
+  loop_entered_ = false;
+  loop_start_q12_ = 0;
+  loop_end_q12_ = 0;
 }
 
 void MCLArrangement::armClipRuntime(uint8_t dst, const mclarrfile::Clip &clip,
@@ -1569,6 +1597,7 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
 
   const uint16_t touchedMask = (uint16_t)(loadMask | clearMask);
   clip_runtime_fade_mask_ &= (uint16_t)~touchedMask;
+  playback_released_mask_ &= (uint16_t)~touchedMask;
   if (touchedMask == 0) {
     return false;
   }
@@ -1647,6 +1676,15 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   return armed;
 }
 
+void MCLArrangement::releasePlaybackTracks(uint16_t trackMask) {
+  if (!playback_active_ || trackMask == 0) {
+    return;
+  }
+  playback_released_mask_ |= trackMask;
+  playback_active_mask_ &= (uint16_t)~trackMask;
+  clip_runtime_fade_mask_ &= (uint16_t)~trackMask;
+}
+
 void MCLArrangement::armRuntimeFade(uint8_t dst,
                                     const TrackLoadFadeData &fade) {
   if (dst >= 16) {
@@ -1684,6 +1722,9 @@ bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
   playback_active_ = true;
   last_tick_q12_ = positionQ12;
   clip_runtime_fade_mask_ = 0;
+  playback_released_mask_ = 0;
+  loop_entered_ = loop_enabled_ && positionQ12 >= loop_start_q12_ &&
+                  positionQ12 < loop_end_q12_;
   uint32_t endQ12 = positionQ12 == 0xFFFFFFFFu ? positionQ12
                                                 : positionQ12 + 1u;
   uint8_t queueFlags = immediate ? LOAD_QUEUE_FLAG_IMMEDIATE : 0;
@@ -1720,6 +1761,7 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
   uint16_t currentActiveMask = 0;
   uint16_t startMask = 0;
   uint32_t nowQ12 = endQ12 > startQ12 ? endQ12 - 1u : startQ12;
+  bool honorReleasedTracks = !loadActiveAtPosition;
   for (uint32_t i = 0; i < header.clipCount; ++i) {
     mclarrfile::Clip clip;
     if (!readClipRecord(file, header, clip)) {
@@ -1735,6 +1777,10 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       continue;
     }
     hasPlayableClip = true;
+    uint16_t trackBit = (uint16_t)(1u << clip.track);
+    if (honorReleasedTracks && (playback_released_mask_ & trackBit) != 0) {
+      continue;
+    }
     uint64_t clipStart = clip.startQ12;
     uint64_t clipEnd = clipStart + clip.durationQ12;
     if (clipEnd < clipStart) {
@@ -1805,7 +1851,7 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
   playback_active_mask_ = currentActiveMask;
 
   if (any) {
-    uint8_t queueMode = LOAD_MANUAL | loadQueueFlags;
+    uint8_t queueMode = LOAD_ARRANG | loadQueueFlags;
     loadGroups.flush(queueMode);
     bool hasClear = false;
     for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
@@ -1834,6 +1880,30 @@ void MCLArrangement::tick() {
 
   bool sameArrangement =
       playback_active_ && playback_arrangement_idx_ == activeIdx;
+  if (loop_enabled_ && loop_end_q12_ > loop_start_q12_) {
+    bool insideLoop = nowQ12 >= loop_start_q12_ && nowQ12 < loop_end_q12_;
+    if (insideLoop) {
+      loop_entered_ = true;
+    }
+    bool forward = sameArrangement && nowQ12 >= last_tick_q12_;
+    bool crossedEnd = forward && last_tick_q12_ < loop_end_q12_ &&
+                      nowQ12 >= loop_end_q12_ &&
+                      (loop_entered_ || last_tick_q12_ >= loop_start_q12_ ||
+                       nowQ12 >= loop_start_q12_);
+    bool reachedEnd = loop_entered_ && nowQ12 >= loop_end_q12_;
+    if (crossedEnd || reachedEnd) {
+      uint32_t tick96 = q12ToHostTick96(loop_start_q12_);
+      MidiClock.set_transport_position(tick96);
+      mcl_seq.set_transport_position(tick96);
+      resetPlaybackForTransport();
+      seekLoad(loop_start_q12_, true, false);
+      return;
+    }
+    if (!insideLoop && (nowQ12 < loop_start_q12_ || nowQ12 >= loop_end_q12_)) {
+      loop_entered_ = false;
+    }
+  }
+
   if (sameArrangement) {
     if (nowQ12 == last_tick_q12_) {
       return;

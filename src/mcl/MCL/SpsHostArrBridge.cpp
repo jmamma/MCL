@@ -433,6 +433,7 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_ARR_SEEK_LOAD: onArrSeekLoad(p.tag, b, n); break;
         case CMD_ARR_MAKE_LOCAL: onArrMakeLocal(p.tag, b, n); break;
         case CMD_ARR_LOCAL_TO_GRID: onArrLocalToGrid(p.tag, b, n); break;
+        case CMD_ARR_SET_LOOP: onArrSetLoop(p.tag, b, n); break;
         default: sendErr(p.tag, ERR_UNKNOWN_CMD, 0); break;
     }
 }
@@ -695,7 +696,7 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
     uint16_t trackMask = spsArrGetU16(b + 6);
     GridSlot loadOffset =
         (n >= 25 && b[24] < NUM_SLOTS) ? (GridSlot)b[24] : (GridSlot)255;
-    if (mode < ARR_LOAD_MANUAL || mode > ARR_LOAD_QUEUE) {
+    if (mode < ARR_LOAD_MANUAL || mode > ARR_LOAD_ARRANG) {
         sendErr(tag, ERR_UNSUPPORTED, mode);
         return;
     }
@@ -755,10 +756,14 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
     uint32_t positionQ12 = startStep > 0xFFFFFFFFu / 12u
                                ? 0xFFFFFFFFu
                                : startStep * 12u;
-    bool armedRuntimeFade = mcl_arrangement.armRuntimeForHostLoad(
-        positionQ12, rowSelect, trackMask, loadOffset);
+    bool isArrangerLoad = mode == ARR_LOAD_ARRANG;
+    bool armedRuntimeFade = false;
+    if (isArrangerLoad) {
+        armedRuntimeFade = mcl_arrangement.armRuntimeForHostLoad(
+            positionQ12, rowSelect, trackMask, loadOffset);
+    }
 
-    if ((flags & ARR_LOAD_RUNTIME_FADES) != 0) {
+    if (isArrangerLoad && (flags & ARR_LOAD_RUNTIME_FADES) != 0) {
         uint16_t off = n >= 25 ? 25 : 24;
         if (off + 2 <= n) {
             uint16_t fadeMask = spsArrGetU16(b + off) & trackMask;
@@ -1424,6 +1429,25 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
         (flags & ARR_LOAD_START_TRANSPORT) != 0);
 
     uint8_t ack[2] = {CMD_ARR_SEEK_LOAD, queued ? (uint8_t)1 : (uint8_t)0};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+}
+
+void SpsHostArrBridge::onArrSetLoop(uint8_t tag, const uint8_t* b,
+                                    uint16_t n) {
+    if (n < 9) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+    bool enabled = (b[0] & 1u) != 0;
+    uint32_t startQ12 = spsArrGetU32(b + 1);
+    uint32_t endQ12 = spsArrGetU32(b + 5);
+    bool active = enabled && endQ12 > startQ12;
+    if (active) {
+        mcl_arrangement.setLoopRegion(startQ12, endQ12);
+    } else {
+        mcl_arrangement.clearLoopRegion();
+    }
+    uint8_t ack[2] = {CMD_ARR_SET_LOOP, active ? (uint8_t)1 : (uint8_t)0};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
 }
 

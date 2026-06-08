@@ -28,6 +28,8 @@ public:
   void tick();
   void resetPlayback();
   void resetPlaybackForTransport();
+  void setLoopRegion(uint32_t startQ12, uint32_t endQ12);
+  void clearLoopRegion();
   bool seekLoad(uint32_t positionQ12, bool immediate,
                 bool allowPrestartFade = false);
   bool armRuntimeForHostLoad(uint32_t positionQ12,
@@ -35,6 +37,7 @@ public:
                              uint16_t trackMask, GridSlot loadOffset,
                              const uint32_t privateSourceIds[NUM_SLOTS] =
                                  nullptr);
+  void releasePlaybackTracks(uint16_t trackMask);
   void armRuntimeFade(uint8_t dst, const TrackLoadFadeData &fade);
   bool applyClipRuntime(uint8_t dst, DeviceTrack *track);
 
@@ -89,11 +92,16 @@ private:
   uint8_t playback_arrangement_idx_ = 0xFF;
   uint32_t last_tick_q12_ = 0;
   uint16_t playback_active_mask_ = 0;
+  uint16_t playback_released_mask_ = 0;
   static const uint8_t kRuntimeSlots = 16;
   TrackLoadFadeData clip_runtime_fades_[kRuntimeSlots];
   uint16_t clip_runtime_fade_mask_ = 0;
   uint32_t queued_private_source_ids_[NUM_SLOTS] = {};
   bool playback_active_ = false;
+  bool loop_enabled_ = false;
+  bool loop_entered_ = false;
+  uint32_t loop_start_q12_ = 0;
+  uint32_t loop_end_q12_ = 0;
 };
 
 extern MCLArrangement mcl_arrangement;

@@ -76,6 +76,7 @@ enum Cmd {
     CMD_ARR_SEEK_LOAD = 0x62,
     CMD_ARR_MAKE_LOCAL = 0x63,
     CMD_ARR_LOCAL_TO_GRID = 0x64,
+    CMD_ARR_SET_LOOP = 0x65,
 
     CMD_NOTIFY_ACTIVE = 0x70,
     CMD_NOTIFY_DIRTY = 0x71,
@@ -168,7 +169,8 @@ enum DirtyRegion {
 enum ArrangerLoadMode {
     ARR_LOAD_MANUAL = 1,
     ARR_LOAD_AUTO = 2,
-    ARR_LOAD_QUEUE = 3
+    ARR_LOAD_QUEUE = 3,
+    ARR_LOAD_ARRANG = 4
 };
 
 enum ArrangerLoadFlags {

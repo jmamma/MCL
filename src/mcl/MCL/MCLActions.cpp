@@ -109,6 +109,52 @@ bool md_import_can_capture_slot(const GridDeviceTrack &gdt) {
   }
 }
 
+bool is_grid_chain_load_mode(uint8_t mode) {
+  return mode == LOAD_QUEUE || mode == LOAD_AUTO;
+}
+
+#if MCL_FEATURE_HOST_ARRANGER
+uint16_t selected_destination_mask(const uint8_t *slot_select_array,
+                                   GridSlot load_offset) {
+  if (slot_select_array == nullptr) {
+    return 0;
+  }
+
+  GridSlot first_slot = 255;
+  if (load_offset < NUM_SLOTS) {
+    for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
+      if (slot_select_array[n] != 0) {
+        first_slot = n;
+        break;
+      }
+    }
+  }
+
+  uint16_t mask = 0;
+  for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
+    if (slot_select_array[n] == 0) {
+      continue;
+    }
+
+    GridSlot dst = n;
+    if (load_offset < NUM_SLOTS) {
+      if (first_slot == 255) {
+        continue;
+      }
+      int mapped = (int)n - (int)first_slot + (int)load_offset;
+      if (mapped < 0 || mapped >= 16) {
+        continue;
+      }
+      dst = (GridSlot)mapped;
+    }
+    if (dst < 16) {
+      mask |= (uint16_t)(1u << dst);
+    }
+  }
+  return mask;
+}
+#endif
+
 } // namespace
 
 DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
@@ -528,8 +574,10 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
 void MCLActions::row_update(GridSlot last_slot) {
   if (last_slot != 255) {
     //grid_task.last_active_row = grid_task.last_active_row;
-    grid_task.next_active_row = chains[last_slot].mode > 1 ? links[last_slot].row : grid_task.last_active_row;
-    grid_task.chain_behaviour = chains[last_slot].mode > 1;
+    bool chain_behaviour = is_grid_chain_load_mode(chains[last_slot].mode);
+    grid_task.next_active_row =
+        chain_behaviour ? links[last_slot].row : grid_task.last_active_row;
+    grid_task.chain_behaviour = chain_behaviour;
     grid_task.row_update();
   }
 }
@@ -552,13 +600,23 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
     load_mode = mcl_cfg.load_mode;
   }
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
-  if (immediate) {
+  if (immediate && load_mode != LOAD_ARRANG) {
     load_mode = LOAD_MANUAL;
   }
 #endif
-  if (load_mode != LOAD_MANUAL) {
+  if (load_mode != LOAD_MANUAL
+#if MCL_FEATURE_HOST_ARRANGER
+      && load_mode != LOAD_ARRANG
+#endif
+      ) {
     load_offset = 255;
   }
+#if MCL_FEATURE_HOST_ARRANGER
+  if (load_mode != LOAD_ARRANG) {
+    mcl_arrangement.releasePlaybackTracks(
+        selected_destination_mask(slot_select_array, load_offset));
+  }
+#endif
   GridRow row_array[NUM_SLOTS];
   uint8_t cache_track_array[NUM_SLOTS];
   if (load_mode == LOAD_QUEUE) {
@@ -1153,6 +1211,12 @@ void MCLActions::calc_next_slot_transition(GridSlot n,
       next_transitions[n] = -1;
       return;
     }
+#if MCL_FEATURE_HOST_ARRANGER
+    case LOAD_ARRANG: {
+      next_transitions[n] = -1;
+      return;
+    }
+#endif
     }
   }
 

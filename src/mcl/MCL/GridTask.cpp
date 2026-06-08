@@ -8,6 +8,7 @@
 #include "MDSeqTrack.h"
 #include "SeqPages.h"
 #include "MCLGUI.h"
+#include "MCLPlatformFeatures.h"
 #include "MCLSysConfig.h"
 #include "Project.h"
 #include "StackMonitor.h"
@@ -20,6 +21,30 @@
 #endif
 
 #define DIV16_MARGIN 8
+#define GRIDTASK_PRE_CACHE_UI_MS 80
+
+namespace {
+
+bool is_grid_chain_load_mode(uint8_t mode) {
+  return mode == LOAD_QUEUE || mode == LOAD_AUTO;
+}
+
+#if MCL_FEATURE_HOST_ARRANGER
+uint16_t selected_track_mask(const uint8_t *track_select) {
+  if (track_select == nullptr) {
+    return 0;
+  }
+  uint16_t mask = 0;
+  for (uint8_t n = 0; n < 16; ++n) {
+    if (track_select[n] != 0) {
+      mask |= (uint16_t)(1u << n);
+    }
+  }
+  return mask;
+}
+#endif
+
+} // namespace
 
 void GridTask::setup(uint16_t _interval) { interval = _interval; }
 
@@ -91,6 +116,9 @@ void GridTask::load_queue_handler() {
       mcl_arrangement.endQueuedPrivateLoads();
     }
     if (any_clear) {
+      if (mode != LOAD_ARRANG) {
+        mcl_arrangement.releasePlaybackTracks(selected_track_mask(clear_select));
+      }
       mcl_actions.clear_tracks(clear_select);
     }
     // A load changes the active slot state, but not the source grid cell/link
@@ -333,6 +361,16 @@ void GridTask::transition_handler() {
 #ifdef DEBUGMODE
     uint32_t clk = read_clock_ms();
 #endif
+#if defined(__AVR__)
+    static uint8_t last_pre_cache_ui_ms = 0;
+    uint8_t pre_cache_ui_ms = (uint8_t)read_clock_ms();
+    if ((uint8_t)(pre_cache_ui_ms - last_pre_cache_ui_ms) >=
+        GRIDTASK_PRE_CACHE_UI_MS) {
+      last_pre_cache_ui_ms = pre_cache_ui_ms;
+      GUI.deferDisplayOnce();
+      mcl.loop();
+    }
+#endif
     mcl_actions.cache_next_tracks(track_select_array, update_gui);
     gui_update();
 #ifdef DEBUGMODE
@@ -352,15 +390,20 @@ void GridTask::transition_handler() {
       if (track_select_array[n]) {
         last_slot = n;
       }
-      if (!track_select_array[n] && mcl_actions.chains[n].mode == LOAD_MANUAL) continue;
+      if (!track_select_array[n] &&
+          !is_grid_chain_load_mode(mcl_actions.chains[n].mode)) {
+        continue;
+      }
       mcl_actions.calc_next_slot_transition(n, ignore_chain_settings);
     }
 
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
+      bool last_slot_chain =
+          is_grid_chain_load_mode(mcl_actions.chains[last_slot].mode);
       bool row_changed = grid_task.last_active_row != slots_changed[last_slot] ||
-                         grid_task.chain_behaviour != (mcl_actions.chains[last_slot].mode > 1);
+                         grid_task.chain_behaviour != last_slot_chain;
       last_active_row = slots_changed[last_slot];
-      chain_behaviour = mcl_actions.chains[last_slot].mode > 1;
+      chain_behaviour = last_slot_chain;
       next_active_row = chain_behaviour ? mcl_actions.links[last_slot].row : last_active_row;
       row_update();
 #if !defined(__AVR__)
