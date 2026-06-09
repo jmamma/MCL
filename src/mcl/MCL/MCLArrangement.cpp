@@ -17,6 +17,7 @@
 #include "MidiClock.h"
 #include "Project.h"
 #include "SeqTrack.h"
+#include "SpsHostArrBridge.h"
 #include "SpsArrProtocol.h"
 #include "TrackLoadFade.h"
 
@@ -587,6 +588,15 @@ bool markerInRange(const mclarrfile::Marker &marker, uint32_t startQ12,
   return q12InRange(marker.startQ12, startQ12, endQ12);
 }
 
+bool loopRegionInRange(const mclarrfile::LoopRegion &region,
+                       uint32_t startQ12, uint32_t endQ12) {
+  if (region.endQ12 <= region.startQ12) {
+    return false;
+  }
+  return region.endQ12 > startQ12 &&
+         region.startQ12 < (endQ12 > startQ12 ? endQ12 : 0xFFFFFFFFu);
+}
+
 void sortMarkers(mclarrfile::Marker *markers, uint16_t count) {
   for (uint16_t i = 1; i < count; ++i) {
     mclarrfile::Marker key = markers[i];
@@ -602,6 +612,23 @@ void sortMarkers(mclarrfile::Marker *markers, uint16_t count) {
       --j;
     }
     markers[j] = key;
+  }
+}
+
+void sortLoopRegions(mclarrfile::LoopRegion *regions, uint16_t count) {
+  for (uint16_t i = 1; i < count; ++i) {
+    mclarrfile::LoopRegion key = regions[i];
+    int j = i;
+    while (j > 0) {
+      const mclarrfile::LoopRegion &prev = regions[j - 1];
+      if (prev.startQ12 < key.startQ12 ||
+          (prev.startQ12 == key.startQ12 && prev.id <= key.id)) {
+        break;
+      }
+      regions[j] = prev;
+      --j;
+    }
+    regions[j] = key;
   }
 }
 
@@ -646,7 +673,7 @@ void sanitizeLabel(const char *src, char *dst, uint8_t len) {
 }
 
 bool readHeaderExtra(File &file, const mclarrfile::Header &header,
-                     mclarrfile::HeaderExtraV2 *extra) {
+                     mclarrfile::HeaderExtraV6 *extra) {
   if (extra == nullptr) {
     return false;
   }
@@ -655,20 +682,39 @@ bool readHeaderExtra(File &file, const mclarrfile::Header &header,
                                sizeof(mclarrfile::HeaderExtraV2)) {
     return true;
   }
-  return file.seekSet(sizeof(mclarrfile::Header)) &&
-         mcl_sd.read_data(extra, sizeof(*extra), &file);
+  if (!file.seekSet(sizeof(mclarrfile::Header))) {
+    return false;
+  }
+  if (header.headerBytes >= sizeof(mclarrfile::Header) +
+                              sizeof(mclarrfile::HeaderExtraV6)) {
+    return mcl_sd.read_data(extra, sizeof(*extra), &file);
+  }
+  mclarrfile::HeaderExtraV2 extraV2;
+  if (!mcl_sd.read_data(&extraV2, sizeof(extraV2), &file)) {
+    return false;
+  }
+  extra->markerBytes = extraV2.markerBytes;
+  extra->markerCount = extraV2.markerCount;
+  extra->trackLabelBytes = extraV2.trackLabelBytes;
+  extra->trackLabelCount = extraV2.trackLabelCount;
+  return true;
 }
 
 bool readActiveData(
     const mclarrfile::Header &header, mclarrfile::Clip *clips,
     uint32_t *clipCount, mclarrfile::Marker *markers, uint16_t *markerCount,
     char trackLabels[mclarrfile::kTrackLabelCount]
-                    [mclarrfile::kTrackLabelBytes]) {
+                    [mclarrfile::kTrackLabelBytes],
+    mclarrfile::LoopRegion *loopRegions = nullptr,
+    uint16_t *loopRegionCount = nullptr) {
   if (clipCount != nullptr) {
     *clipCount = header.clipCount;
   }
   if (markerCount != nullptr) {
     *markerCount = 0;
+  }
+  if (loopRegionCount != nullptr) {
+    *loopRegionCount = 0;
   }
   clearTrackLabels(trackLabels);
 
@@ -694,7 +740,7 @@ bool readActiveData(
     }
   }
 
-  mclarrfile::HeaderExtraV2 extra;
+  mclarrfile::HeaderExtraV6 extra;
   ok = ok && readHeaderExtra(file, header, &extra);
   uint16_t readMarkerCount = 0;
   if (ok && (header.flags & mclarrfile::HEADER_HAS_MARKERS) != 0 &&
@@ -728,6 +774,30 @@ bool readActiveData(
       ok = mcl_sd.read_data(trackLabels[i], mclarrfile::kTrackLabelBytes,
                             &file);
     }
+  }
+
+  uint16_t readLoopRegionCount = 0;
+  if (ok && (header.flags & mclarrfile::HEADER_HAS_LOOP_REGIONS) != 0 &&
+      extra.loopRegionBytes == sizeof(mclarrfile::LoopRegion) &&
+      extra.loopRegionCount <= mclarrfile::kMaxLoopRegions) {
+    uint32_t loopOffset =
+        header.headerBytes + header.clipCount * header.clipBytes +
+        (uint32_t)readMarkerCount * extra.markerBytes +
+        ((header.flags & mclarrfile::HEADER_HAS_TRACK_LABELS) != 0
+             ? (uint32_t)extra.trackLabelCount * extra.trackLabelBytes
+             : 0u);
+    ok = file.seekSet(loopOffset);
+    readLoopRegionCount = extra.loopRegionCount;
+    for (uint16_t i = 0; ok && i < readLoopRegionCount; ++i) {
+      mclarrfile::LoopRegion tmp;
+      ok = mcl_sd.read_data(&tmp, sizeof(tmp), &file);
+      if (ok && loopRegions != nullptr) {
+        loopRegions[i] = tmp;
+      }
+    }
+  }
+  if (loopRegionCount != nullptr) {
+    *loopRegionCount = readLoopRegionCount;
   }
 
   file.close();
@@ -875,11 +945,15 @@ bool MCLArrangement::rewriteActive(const mclarrfile::Header &header,
                                    const mclarrfile::Clip *clips,
                                    uint32_t clipCount) {
   static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
+  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint16_t markerCount = 0;
-  readActiveData(header, nullptr, nullptr, markers, &markerCount, labels);
+  uint16_t loopRegionCount = 0;
+  readActiveData(header, nullptr, nullptr, markers, &markerCount, labels,
+                 loopRegions, &loopRegionCount);
   return rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                   markerCount, labels);
+                                   markerCount, labels, loopRegions,
+                                   loopRegionCount);
 }
 
 bool MCLArrangement::rewriteActiveWithMarkers(
@@ -887,10 +961,14 @@ bool MCLArrangement::rewriteActiveWithMarkers(
     uint32_t clipCount, const mclarrfile::Marker *markers,
     uint16_t markerCount) {
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
+  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
   clearTrackLabels(labels);
-  readActiveData(header, nullptr, nullptr, nullptr, nullptr, labels);
+  uint16_t loopRegionCount = 0;
+  readActiveData(header, nullptr, nullptr, nullptr, nullptr, labels,
+                 loopRegions, &loopRegionCount);
   return rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                   markerCount, labels);
+                                   markerCount, labels, loopRegions,
+                                   loopRegionCount);
 }
 
 bool MCLArrangement::rewriteActiveWithMetadata(
@@ -898,7 +976,8 @@ bool MCLArrangement::rewriteActiveWithMetadata(
     uint32_t clipCount, const mclarrfile::Marker *markers,
     uint16_t markerCount,
     const char trackLabels[mclarrfile::kTrackLabelCount]
-                          [mclarrfile::kTrackLabelBytes]) {
+                          [mclarrfile::kTrackLabelBytes],
+    const mclarrfile::LoopRegion *loopRegions, uint16_t loopRegionCount) {
   if (!ensureArrangementDir()) {
     return false;
   }
@@ -909,10 +988,11 @@ bool MCLArrangement::rewriteActiveWithMetadata(
   mclarrfile::Header outHeader = header;
   outHeader.version = mclarrfile::kVersion;
   bool haveLabels = trackLabelsHaveAny(trackLabels);
-  bool haveExtra = markerCount > 0 || haveLabels;
+  bool haveLoops = loopRegions != nullptr && loopRegionCount > 0;
+  bool haveExtra = markerCount > 0 || haveLabels || haveLoops;
   outHeader.headerBytes = haveExtra
                               ? (uint16_t)(sizeof(mclarrfile::Header) +
-                                           sizeof(mclarrfile::HeaderExtraV2))
+                                           sizeof(mclarrfile::HeaderExtraV6))
                               : (uint16_t)sizeof(mclarrfile::Header);
   outHeader.clipBytes = sizeof(mclarrfile::Clip);
   outHeader.clipCount = clipCount;
@@ -926,16 +1006,24 @@ bool MCLArrangement::rewriteActiveWithMetadata(
   } else {
     outHeader.flags &= (uint16_t)~mclarrfile::HEADER_HAS_TRACK_LABELS;
   }
+  if (haveLoops) {
+    outHeader.flags |= mclarrfile::HEADER_HAS_LOOP_REGIONS;
+  } else {
+    outHeader.flags &= (uint16_t)~mclarrfile::HEADER_HAS_LOOP_REGIONS;
+  }
   bool ok = file.seekSet(0) &&
             mcl_sd.write_data(&outHeader, sizeof(outHeader), &file);
   if (ok && haveExtra) {
-    mclarrfile::HeaderExtraV2 extra;
+    mclarrfile::HeaderExtraV6 extra;
     extra.markerBytes = markerCount > 0 ? sizeof(mclarrfile::Marker) : 0;
     extra.markerCount = markerCount;
     extra.trackLabelBytes =
         haveLabels ? mclarrfile::kTrackLabelBytes : (uint16_t)0;
     extra.trackLabelCount =
         haveLabels ? mclarrfile::kTrackLabelCount : (uint16_t)0;
+    extra.loopRegionBytes =
+        haveLoops ? sizeof(mclarrfile::LoopRegion) : (uint16_t)0;
+    extra.loopRegionCount = haveLoops ? loopRegionCount : (uint16_t)0;
     ok = mcl_sd.write_data(&extra, sizeof(extra), &file);
   }
   for (uint32_t i = 0; ok && i < clipCount; ++i) {
@@ -949,13 +1037,20 @@ bool MCLArrangement::rewriteActiveWithMetadata(
     ok = mcl_sd.write_data((void *)trackLabels[i],
                            mclarrfile::kTrackLabelBytes, &file);
   }
+  for (uint16_t i = 0; ok && haveLoops && i < loopRegionCount; ++i) {
+    ok = mcl_sd.write_data((void *)&loopRegions[i],
+                           sizeof(loopRegions[i]), &file);
+  }
   uint32_t fileSize = sizeof(mclarrfile::Header) +
-                      (haveExtra ? sizeof(mclarrfile::HeaderExtraV2) : 0) +
+                      (haveExtra ? sizeof(mclarrfile::HeaderExtraV6) : 0) +
                       clipCount * sizeof(mclarrfile::Clip) +
                       markerCount * sizeof(mclarrfile::Marker) +
                       (haveLabels ? (uint32_t)mclarrfile::kTrackLabelCount *
                                         mclarrfile::kTrackLabelBytes
-                                  : 0);
+                                  : 0) +
+                      (haveLoops ? (uint32_t)loopRegionCount *
+                                       sizeof(mclarrfile::LoopRegion)
+                                 : 0);
   ok = ok && file.truncate(fileSize);
   ok = ok && file.sync();
   file.close();
@@ -1070,9 +1165,9 @@ uint16_t MCLArrangement::readMarkers(uint32_t startQ12, uint32_t endQ12,
     return 0;
   }
 
-  mclarrfile::HeaderExtraV2 extra;
+  mclarrfile::HeaderExtraV6 extra;
   bool ok = file.seekSet(sizeof(mclarrfile::Header)) &&
-            mcl_sd.read_data(&extra, sizeof(extra), &file) &&
+            readHeaderExtra(file, header, &extra) &&
             extra.markerBytes == sizeof(mclarrfile::Marker);
   if (!ok) {
     file.close();
@@ -1112,6 +1207,82 @@ uint16_t MCLArrangement::readMarkers(uint32_t startQ12, uint32_t endQ12,
   return returned;
 }
 
+uint16_t MCLArrangement::readLoopRegions(uint32_t startQ12, uint32_t endQ12,
+                                         uint16_t skip,
+                                         uint8_t maxLoopRegions,
+                                         mclarrfile::LoopRegion *out,
+                                         uint32_t *totalMatches,
+                                         bool *more) {
+  if (totalMatches != nullptr) {
+    *totalMatches = 0;
+  }
+  if (more != nullptr) {
+    *more = false;
+  }
+  if (out == nullptr || maxLoopRegions == 0) {
+    return 0;
+  }
+
+  mclarrfile::Header header;
+  if (!readMeta(&header)) {
+    return 0;
+  }
+  if ((header.flags & mclarrfile::HEADER_HAS_LOOP_REGIONS) == 0 ||
+      header.headerBytes < sizeof(mclarrfile::Header) +
+                               sizeof(mclarrfile::HeaderExtraV2)) {
+    return 0;
+  }
+
+  File file;
+  if (!openActive(&file, O_READ)) {
+    return 0;
+  }
+
+  mclarrfile::HeaderExtraV6 extra;
+  bool ok = readHeaderExtra(file, header, &extra) &&
+            extra.loopRegionBytes == sizeof(mclarrfile::LoopRegion);
+  if (!ok) {
+    file.close();
+    return 0;
+  }
+
+  uint32_t loopOffset =
+      header.headerBytes + header.clipCount * header.clipBytes +
+      (uint32_t)extra.markerCount * extra.markerBytes +
+      ((header.flags & mclarrfile::HEADER_HAS_TRACK_LABELS) != 0
+           ? (uint32_t)extra.trackLabelCount * extra.trackLabelBytes
+           : 0u);
+  if (!file.seekSet(loopOffset)) {
+    file.close();
+    return 0;
+  }
+
+  uint16_t returned = 0;
+  uint32_t matched = 0;
+  for (uint16_t i = 0; i < extra.loopRegionCount; ++i) {
+    mclarrfile::LoopRegion region;
+    if (!mcl_sd.read_data(&region, sizeof(region), &file)) {
+      break;
+    }
+    if (!loopRegionInRange(region, startQ12, endQ12)) {
+      continue;
+    }
+    if (matched++ < skip) {
+      continue;
+    }
+    if (returned < maxLoopRegions) {
+      out[returned++] = region;
+    } else if (more != nullptr) {
+      *more = true;
+    }
+  }
+  file.close();
+  if (totalMatches != nullptr) {
+    *totalMatches = matched;
+  }
+  return returned;
+}
+
 bool MCLArrangement::readTrackLabels(
     char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes]) {
   clearTrackLabels(labels);
@@ -1135,22 +1306,25 @@ bool MCLArrangement::setTrackLabel(uint8_t track, const char *label) {
 
   static mclarrfile::Clip clips[kMaxImportClips];
   static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
+  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
+  uint16_t loopRegionCount = 0;
 
   mclarrfile::Header header;
   if (!readMeta(&header)) {
     return false;
   }
   if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels)) {
+                      labels, loopRegions, &loopRegionCount)) {
     return false;
   }
 
   sanitizeLabel(label, labels[track], mclarrfile::kTrackLabelBytes);
   bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels);
+                                      markerCount, labels, loopRegions,
+                                      loopRegionCount);
   if (ok) {
     resetPlayback();
   }
@@ -1160,7 +1334,7 @@ bool MCLArrangement::setTrackLabel(uint8_t track, const char *label) {
 bool MCLArrangement::setMarkerLabel(uint32_t startQ12, uint8_t track,
                                     const char *label) {
   if (track != spsarr::kArrMarkerGlobalTrack &&
-      (track >= NUM_SLOTS || track >= 16)) {
+      track >= NUM_SLOTS) {
     return false;
   }
   if (!ensureActive()) {
@@ -1169,16 +1343,18 @@ bool MCLArrangement::setMarkerLabel(uint32_t startQ12, uint8_t track,
 
   static mclarrfile::Clip clips[kMaxImportClips];
   static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
+  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
+  uint16_t loopRegionCount = 0;
 
   mclarrfile::Header header;
   if (!readMeta(&header)) {
     return false;
   }
   if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels)) {
+                      labels, loopRegions, &loopRegionCount)) {
     return false;
   }
 
@@ -1218,7 +1394,100 @@ bool MCLArrangement::setMarkerLabel(uint32_t startQ12, uint8_t track,
 
   sortMarkers(markers, markerCount);
   bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels);
+                                      markerCount, labels, loopRegions,
+                                      loopRegionCount);
+  if (ok) {
+    resetPlayback();
+  }
+  return ok;
+}
+
+bool MCLArrangement::setLoopRegionRecord(
+    const mclarrfile::LoopRegion &region) {
+  if (!ensureActive()) {
+    return false;
+  }
+
+  static mclarrfile::Clip clips[kMaxImportClips];
+  static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
+  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
+  char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
+  uint32_t clipCount = 0;
+  uint16_t markerCount = 0;
+  uint16_t loopRegionCount = 0;
+
+  mclarrfile::Header header;
+  if (!readMeta(&header)) {
+    return false;
+  }
+  if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
+                      labels, loopRegions, &loopRegionCount)) {
+    return false;
+  }
+
+  int existing = -1;
+  if (region.id != 0) {
+    for (uint16_t i = 0; i < loopRegionCount; ++i) {
+      if (loopRegions[i].id == region.id) {
+        existing = i;
+        break;
+      }
+    }
+  }
+  if (existing < 0) {
+    for (uint16_t i = 0; i < loopRegionCount; ++i) {
+      if (loopRegions[i].startQ12 == region.startQ12) {
+        existing = i;
+        break;
+      }
+    }
+  }
+
+  bool enabled = (region.flags & mclarrfile::LOOP_REGION_ENABLED) != 0 &&
+                 region.endQ12 > region.startQ12 &&
+                 region.endQ12 - region.startQ12 >= spsarr::kMinArrLoopQ12;
+  if (!enabled) {
+    if (existing >= 0) {
+      for (uint16_t i = (uint16_t)existing; i + 1 < loopRegionCount; ++i) {
+        loopRegions[i] = loopRegions[i + 1];
+      }
+      --loopRegionCount;
+    }
+  } else {
+    mclarrfile::LoopRegion clean;
+    memset(&clean, 0, sizeof(clean));
+    clean.startQ12 = region.startQ12;
+    clean.endQ12 = region.endQ12;
+    clean.repeatCount = region.repeatCount;
+    clean.id = region.id;
+    if (clean.id == 0) {
+      uint16_t maxId = 0;
+      for (uint16_t i = 0; i < loopRegionCount; ++i) {
+        if (loopRegions[i].id > maxId) {
+          maxId = loopRegions[i].id;
+        }
+      }
+      clean.id = (uint16_t)(maxId + 1);
+      if (clean.id == 0) {
+        clean.id = 1;
+      }
+    }
+    clean.flags = mclarrfile::LOOP_REGION_ENABLED;
+    sanitizeLabel(region.label, clean.label, sizeof(clean.label));
+    if (existing >= 0) {
+      loopRegions[existing] = clean;
+    } else {
+      if (loopRegionCount >= mclarrfile::kMaxLoopRegions) {
+        return false;
+      }
+      loopRegions[loopRegionCount++] = clean;
+    }
+  }
+
+  sortLoopRegions(loopRegions, loopRegionCount);
+  bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
+                                      markerCount, labels, loopRegions,
+                                      loopRegionCount);
   if (ok) {
     resetPlayback();
   }
@@ -1235,16 +1504,18 @@ bool MCLArrangement::setClipFade(uint32_t startQ12, uint32_t durationQ12,
 
   static mclarrfile::Clip clips[kMaxImportClips];
   static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
+  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
+  uint16_t loopRegionCount = 0;
 
   mclarrfile::Header header;
   if (!readMeta(&header)) {
     return false;
   }
   if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels)) {
+                      labels, loopRegions, &loopRegionCount)) {
     return false;
   }
 
@@ -1264,7 +1535,8 @@ bool MCLArrangement::setClipFade(uint32_t startQ12, uint32_t durationQ12,
   }
 
   bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels);
+                                      markerCount, labels, loopRegions,
+                                      loopRegionCount);
   if (ok) {
     resetPlayback();
   }
@@ -1274,23 +1546,25 @@ bool MCLArrangement::setClipFade(uint32_t startQ12, uint32_t durationQ12,
 bool MCLArrangement::makeClipLocal(uint32_t startQ12, uint32_t durationQ12,
                                    uint8_t track, uint8_t row,
                                    GridSlot expectedSourceSlot) {
-  if (track >= 16 || row >= GRID_LENGTH || durationQ12 == 0 ||
+  if (track >= NUM_SLOTS || row >= GRID_LENGTH || durationQ12 == 0 ||
       !ensureActive()) {
     return false;
   }
 
   static mclarrfile::Clip clips[kMaxImportClips];
   static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
+  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
+  uint16_t loopRegionCount = 0;
 
   mclarrfile::Header header;
   if (!readMeta(&header)) {
     return false;
   }
   if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels)) {
+                      labels, loopRegions, &loopRegionCount)) {
     return false;
   }
 
@@ -1348,7 +1622,8 @@ bool MCLArrangement::makeClipLocal(uint32_t startQ12, uint32_t durationQ12,
   clip.sourceId = sourceId;
 
   bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels);
+                                      markerCount, labels, loopRegions,
+                                      loopRegionCount);
   if (ok) {
     resetPlayback();
   }
@@ -1485,6 +1760,11 @@ void MCLArrangement::resetPlayback() {
   clip_runtime_fade_mask_ = 0;
   playback_active_ = false;
   loop_entered_ = false;
+  stored_loop_active_id_ = 0;
+  stored_loop_repeats_done_ = 0;
+  stored_loop_start_q12_ = 0;
+  stored_loop_end_q12_ = 0;
+  stored_loop_count_ = 0;
 }
 
 void MCLArrangement::resetPlaybackForTransport() {
@@ -1493,7 +1773,8 @@ void MCLArrangement::resetPlaybackForTransport() {
 }
 
 void MCLArrangement::setLoopRegion(uint32_t startQ12, uint32_t endQ12) {
-  if (endQ12 <= startQ12) {
+  if (endQ12 <= startQ12 ||
+      endQ12 - startQ12 < spsarr::kMinArrLoopQ12) {
     clearLoopRegion();
     return;
   }
@@ -1512,12 +1793,12 @@ void MCLArrangement::clearLoopRegion() {
 
 void MCLArrangement::armClipRuntime(uint8_t dst, const mclarrfile::Clip &clip,
                                     uint16_t elapsedQ12) {
-  if (dst >= 16) {
+  if (dst >= NUM_SLOTS) {
     return;
   }
-  uint16_t bit = (uint16_t)(1u << dst);
+  uint32_t bit = (uint32_t)(1ul << dst);
   if ((clip.flags & mclarrfile::CLIP_FADE_OVERRIDE) == 0) {
-    clip_runtime_fade_mask_ &= (uint16_t)~bit;
+    clip_runtime_fade_mask_ &= ~bit;
     return;
   }
   TrackLoadFadeData fade = clipFadeData(clip, false);
@@ -1525,7 +1806,7 @@ void MCLArrangement::armClipRuntime(uint8_t dst, const mclarrfile::Clip &clip,
     fade = clipFadeData(clip, true);
   }
   if (!fade.enabled()) {
-    clip_runtime_fade_mask_ &= (uint16_t)~bit;
+    clip_runtime_fade_mask_ &= ~bit;
     return;
   }
   fade.set_elapsed_q12(elapsedQ12);
@@ -1537,10 +1818,14 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
                                            const GridRow rows[NUM_SLOTS],
                                            uint16_t trackMask,
                                            GridSlot loadOffset,
+                                           GridIndex sourceGridBank,
                                            const uint32_t
                                                privateSourceIds[NUM_SLOTS]) {
   if (rows == nullptr || !ensureActive()) {
     return false;
+  }
+  if (sourceGridBank >= NUM_GRIDS) {
+    sourceGridBank = 0;
   }
 
   GridRow loadedRows[NUM_SLOTS];
@@ -1549,55 +1834,63 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   memset(loadedSources, 255, sizeof(loadedSources));
   uint32_t loadedPrivateIds[NUM_SLOTS];
   memset(loadedPrivateIds, 0, sizeof(loadedPrivateIds));
-  uint16_t loadMask = 0;
-  uint16_t clearMask = 0;
+  uint32_t loadMask = 0;
+  uint32_t clearMask = 0;
 
   GridSlot firstSource = 255;
-  for (uint8_t src = 0; src < NUM_SLOTS && src < 16; ++src) {
-    if (((trackMask >> src) & 1u) == 0 || rows[src] >= GRID_LENGTH) {
+  GridSlot sourceBase = (GridSlot)(sourceGridBank * GRID_WIDTH);
+  for (uint8_t src = 0; src < GRID_WIDTH && src < 16; ++src) {
+    GridSlot sourceSlot = (GridSlot)(sourceBase + src);
+    if (sourceSlot >= NUM_SLOTS || ((trackMask >> src) & 1u) == 0 ||
+        rows[sourceSlot] >= GRID_LENGTH) {
       continue;
     }
-    firstSource = src;
+    firstSource = sourceSlot;
     break;
   }
 
-  for (uint8_t src = 0; src < NUM_SLOTS && src < 16; ++src) {
+  for (uint8_t src = 0; src < GRID_WIDTH && src < 16; ++src) {
     if (((trackMask >> src) & 1u) == 0) {
       continue;
     }
-    bool privateLoad = rows[src] == LOAD_QUEUE_PRIVATE_ROW &&
+    GridSlot sourceSlot = (GridSlot)(sourceBase + src);
+    if (sourceSlot >= NUM_SLOTS) {
+      continue;
+    }
+    GridRow row = rows[sourceSlot];
+    bool privateLoad = row == LOAD_QUEUE_PRIVATE_ROW &&
                        privateSourceIds != nullptr &&
-                       privateSourceIds[src] != 0;
-    if (rows[src] < GRID_LENGTH || privateLoad) {
-      GridSlot dst = src;
+                       privateSourceIds[sourceSlot] != 0;
+    if (row < GRID_LENGTH || privateLoad) {
+      GridSlot dst = sourceSlot;
       if (!privateLoad && loadOffset < NUM_SLOTS) {
         if (firstSource == 255) {
           continue;
         }
-        int mapped = (int)src - (int)firstSource + (int)loadOffset;
+        int mapped = (int)sourceSlot - (int)firstSource + (int)loadOffset;
         if (mapped < 0 || mapped >= (int)NUM_SLOTS) {
           continue;
         }
         dst = (GridSlot)mapped;
       }
-      if (dst < 16) {
-        loadedRows[dst] = rows[src];
-        loadedSources[dst] = src;
+      if (dst < NUM_SLOTS) {
+        loadedRows[dst] = row;
+        loadedSources[dst] = sourceSlot;
         if (privateLoad) {
-          loadedPrivateIds[dst] = privateSourceIds[src];
+          loadedPrivateIds[dst] = privateSourceIds[sourceSlot];
         }
-        loadMask |= (uint16_t)(1u << dst);
+        loadMask |= (uint32_t)(1ul << dst);
       }
       continue;
     }
-    if (rows[src] == LOAD_QUEUE_CLEAR_ROW) {
-      clearMask |= (uint16_t)(1u << src);
+    if (row == LOAD_QUEUE_CLEAR_ROW) {
+      clearMask |= (uint32_t)(1ul << sourceSlot);
     }
   }
 
-  const uint16_t touchedMask = (uint16_t)(loadMask | clearMask);
-  clip_runtime_fade_mask_ &= (uint16_t)~touchedMask;
-  playback_released_mask_ &= (uint16_t)~touchedMask;
+  const uint32_t touchedMask = loadMask | clearMask;
+  clip_runtime_fade_mask_ &= ~touchedMask;
+  playback_released_mask_ &= ~touchedMask;
   if (touchedMask == 0) {
     return false;
   }
@@ -1623,7 +1916,7 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
       break;
     }
     if ((clip.flags & mclarrfile::CLIP_MUTED) != 0 ||
-        clip.durationQ12 == 0 || clip.track >= 16 ||
+        clip.durationQ12 == 0 || clip.track >= NUM_SLOTS ||
         clip.row >= GRID_LENGTH) {
       continue;
     }
@@ -1638,7 +1931,7 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
       clipEnd = 0xFFFFFFFFull;
     }
 
-    const uint16_t bit = (uint16_t)(1u << clip.track);
+    const uint32_t bit = (uint32_t)(1ul << clip.track);
     bool matchedLoadedClip =
         clip.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE
             ? loadedRows[clip.track] == LOAD_QUEUE_PRIVATE_ROW &&
@@ -1671,30 +1964,29 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   playback_arrangement_idx_ = mcl_cfg.active_arrangement_idx;
   playback_active_ = true;
   last_tick_q12_ = positionQ12;
-  playback_active_mask_ =
-      (uint16_t)((playback_active_mask_ & (uint16_t)~clearMask) | loadMask);
+  playback_active_mask_ = (playback_active_mask_ & ~clearMask) | loadMask;
   return armed;
 }
 
-bool MCLArrangement::releasePlaybackTracks(uint16_t trackMask) {
+bool MCLArrangement::releasePlaybackTracks(uint32_t trackMask) {
   if (!playback_active_ || trackMask == 0) {
     return false;
   }
-  uint16_t oldMask = playback_released_mask_;
+  uint32_t oldMask = playback_released_mask_;
   playback_released_mask_ |= trackMask;
-  playback_active_mask_ &= (uint16_t)~trackMask;
-  clip_runtime_fade_mask_ &= (uint16_t)~trackMask;
+  playback_active_mask_ &= ~trackMask;
+  clip_runtime_fade_mask_ &= ~trackMask;
   return playback_released_mask_ != oldMask;
 }
 
 void MCLArrangement::armRuntimeFade(uint8_t dst,
                                     const TrackLoadFadeData &fade) {
-  if (dst >= 16) {
+  if (dst >= NUM_SLOTS) {
     return;
   }
-  uint16_t bit = (uint16_t)(1u << dst);
+  uint32_t bit = (uint32_t)(1ul << dst);
   if (!fade.enabled()) {
-    clip_runtime_fade_mask_ &= (uint16_t)~bit;
+    clip_runtime_fade_mask_ &= ~bit;
     return;
   }
   clip_runtime_fades_[dst] = fade;
@@ -1702,14 +1994,14 @@ void MCLArrangement::armRuntimeFade(uint8_t dst,
 }
 
 bool MCLArrangement::applyClipRuntime(uint8_t dst, DeviceTrack *track) {
-  if (dst >= 16 || track == nullptr) {
+  if (dst >= NUM_SLOTS || track == nullptr) {
     return false;
   }
-  uint16_t bit = (uint16_t)(1u << dst);
+  uint32_t bit = (uint32_t)(1ul << dst);
   if ((clip_runtime_fade_mask_ & bit) == 0) {
     return false;
   }
-  clip_runtime_fade_mask_ &= (uint16_t)~bit;
+  clip_runtime_fade_mask_ &= ~bit;
   TrackLoadFadeData *fade = track->load_fade_data();
   if (fade == nullptr) {
     return false;
@@ -1760,8 +2052,8 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
   memset(clearRows, 255, sizeof(clearRows));
   bool any = false;
   bool hasPlayableClip = false;
-  uint16_t currentActiveMask = 0;
-  uint16_t startMask = 0;
+  uint32_t currentActiveMask = 0;
+  uint32_t startMask = 0;
   uint32_t nowQ12 = endQ12 > startQ12 ? endQ12 - 1u : startQ12;
   bool honorReleasedTracks = !loadActiveAtPosition;
   for (uint32_t i = 0; i < header.clipCount; ++i) {
@@ -1770,7 +2062,7 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       break;
     }
     if ((clip.flags & mclarrfile::CLIP_MUTED) != 0 ||
-        clip.durationQ12 == 0 || clip.track >= 16 ||
+        clip.durationQ12 == 0 || clip.track >= NUM_SLOTS ||
         clip.row >= GRID_LENGTH) {
       continue;
     }
@@ -1779,7 +2071,7 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       continue;
     }
     hasPlayableClip = true;
-    uint16_t trackBit = (uint16_t)(1u << clip.track);
+    uint32_t trackBit = (uint32_t)(1ul << clip.track);
     if (honorReleasedTracks && (playback_released_mask_ & trackBit) != 0) {
       continue;
     }
@@ -1789,10 +2081,10 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       clipEnd = 0xFFFFFFFFull;
     }
     if ((uint64_t)nowQ12 >= clipStart && (uint64_t)nowQ12 < clipEnd) {
-      currentActiveMask |= (uint16_t)(1u << clip.track);
+      currentActiveMask |= (uint32_t)(1ul << clip.track);
       if (loadActiveAtPosition) {
         if (addClipLoad(loadGroups, clip)) {
-          startMask |= (uint16_t)(1u << clip.track);
+          startMask |= (uint32_t)(1ul << clip.track);
           TrackLoadFadeData fade;
           if (clipFadeAtPosition(clip, nowQ12, fade)) {
             armRuntimeFade(clip.track, fade);
@@ -1803,7 +2095,7 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     }
     if (q12InRange(clip.startQ12, startQ12, endQ12)) {
       if (addClipLoad(loadGroups, clip)) {
-        startMask |= (uint16_t)(1u << clip.track);
+        startMask |= (uint32_t)(1ul << clip.track);
         TrackLoadFadeData fade;
         if (clipFadeAtPosition(clip, clip.startQ12, false, fade)) {
           armRuntimeFade(clip.track, fade);
@@ -1824,7 +2116,7 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
             q12InRange((uint32_t)fadeStart, startQ12, endQ12) &&
             clipFadeAtPosition(clip, (uint32_t)fadeStart, fade)) {
           if (addClipLoad(loadGroups, clip)) {
-            startMask |= (uint16_t)(1u << clip.track);
+            startMask |= (uint32_t)(1ul << clip.track);
             armRuntimeFade(clip.track, fade);
             any = true;
           }
@@ -1839,10 +2131,10 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     return false;
   }
 
-  uint16_t clearBaseMask =
-      clearInactiveTracks ? (uint16_t)0xFFFF : playback_active_mask_;
-  uint16_t clearMask = clearBaseMask & (uint16_t)~currentActiveMask;
-  clearMask &= (uint16_t)~startMask;
+  uint32_t clearBaseMask =
+      clearInactiveTracks ? (uint32_t)0xFFFFFFFFul : playback_active_mask_;
+  uint32_t clearMask = clearBaseMask & ~currentActiveMask;
+  clearMask &= ~startMask;
   for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
     if (((clearMask >> track) & 1u) == 0) {
       continue;
@@ -1882,6 +2174,125 @@ void MCLArrangement::tick() {
 
   bool sameArrangement =
       playback_active_ && playback_arrangement_idx_ == activeIdx;
+  // Stored arrangement loops remain active under the temporary UI loop.
+  // Check them first so persistent loop wraps are not masked.
+  {
+    mclarrfile::LoopRegion regions[4];
+    uint32_t queryStart = sameArrangement && nowQ12 >= last_tick_q12_
+                              ? last_tick_q12_
+                              : nowQ12;
+    uint32_t queryEnd = nowQ12 + 1u;
+    uint16_t regionCount =
+        readLoopRegions(queryStart, queryEnd, 0, 4, regions, nullptr, nullptr);
+    int activeRegion = -1;
+    uint32_t activeWidth = 0xFFFFFFFFu;
+    for (uint16_t i = 0; i < regionCount; ++i) {
+      const mclarrfile::LoopRegion &region = regions[i];
+      if ((region.flags & mclarrfile::LOOP_REGION_ENABLED) == 0 ||
+          region.endQ12 <= region.startQ12) {
+        continue;
+      }
+      bool forward = sameArrangement && nowQ12 >= last_tick_q12_;
+      bool inside = nowQ12 >= region.startQ12 && nowQ12 < region.endQ12;
+      bool crossed = forward && last_tick_q12_ < region.endQ12 &&
+                     nowQ12 >= region.endQ12 &&
+                     (last_tick_q12_ >= region.startQ12 ||
+                      nowQ12 >= region.startQ12);
+      if (!inside && !crossed) {
+        continue;
+      }
+      uint32_t width = region.endQ12 - region.startQ12;
+      if (activeRegion < 0 || width < activeWidth) {
+        activeRegion = i;
+        activeWidth = width;
+      }
+    }
+
+    if (activeRegion >= 0) {
+      const mclarrfile::LoopRegion &region = regions[activeRegion];
+      uint16_t regionId = region.id != 0 ? region.id : (uint16_t)1;
+      if (stored_loop_active_id_ != regionId) {
+        stored_loop_active_id_ = regionId;
+        stored_loop_repeats_done_ = 0;
+      }
+      stored_loop_start_q12_ = region.startQ12;
+      stored_loop_end_q12_ = region.endQ12;
+      stored_loop_count_ = region.repeatCount;
+      bool forward = sameArrangement && nowQ12 >= last_tick_q12_;
+      bool crossedEnd = forward && last_tick_q12_ < region.endQ12 &&
+                        nowQ12 >= region.endQ12;
+      bool reachedEnd = nowQ12 >= region.endQ12;
+      bool infinite =
+          region.repeatCount == mclarrfile::kLoopRegionRepeatInfinite;
+      if ((crossedEnd || reachedEnd) &&
+          (infinite || stored_loop_repeats_done_ < region.repeatCount)) {
+        uint16_t nextRepeatsDone =
+            infinite ? stored_loop_repeats_done_
+                     : (uint16_t)(stored_loop_repeats_done_ + 1);
+        uint32_t tick96 = q12ToHostTick96(region.startQ12);
+        MidiClock.set_transport_position(tick96);
+        mcl_seq.set_transport_position(tick96);
+        sps_host_arr_bridge.notifyArrangementPosition(
+            region.startQ12, spsarr::POSITION_NOTIFY_LOOP);
+        resetPlaybackForTransport();
+        stored_loop_active_id_ = regionId;
+        stored_loop_repeats_done_ = nextRepeatsDone;
+        stored_loop_start_q12_ = region.startQ12;
+        stored_loop_end_q12_ = region.endQ12;
+        stored_loop_count_ = region.repeatCount;
+        seekLoad(region.startQ12, true, false);
+        return;
+      }
+    } else if (stored_loop_active_id_ != 0 &&
+               stored_loop_end_q12_ > stored_loop_start_q12_) {
+      bool forward = sameArrangement && nowQ12 >= last_tick_q12_;
+      bool inside = nowQ12 >= stored_loop_start_q12_ &&
+                    nowQ12 < stored_loop_end_q12_;
+      bool crossedEnd = forward && last_tick_q12_ < stored_loop_end_q12_ &&
+                        nowQ12 >= stored_loop_end_q12_;
+      bool reachedEnd = nowQ12 >= stored_loop_end_q12_;
+      bool infinite =
+          stored_loop_count_ == mclarrfile::kLoopRegionRepeatInfinite;
+      if ((crossedEnd || reachedEnd) &&
+          (infinite || stored_loop_repeats_done_ < stored_loop_count_)) {
+        uint16_t nextRepeatsDone =
+            infinite ? stored_loop_repeats_done_
+                     : (uint16_t)(stored_loop_repeats_done_ + 1);
+        uint16_t regionId = stored_loop_active_id_;
+        uint32_t startQ12ForLoop = stored_loop_start_q12_;
+        uint32_t endQ12ForLoop = stored_loop_end_q12_;
+        uint16_t loopCount = stored_loop_count_;
+        uint32_t tick96 = q12ToHostTick96(startQ12ForLoop);
+        MidiClock.set_transport_position(tick96);
+        mcl_seq.set_transport_position(tick96);
+        sps_host_arr_bridge.notifyArrangementPosition(
+            startQ12ForLoop, spsarr::POSITION_NOTIFY_LOOP);
+        resetPlaybackForTransport();
+        stored_loop_active_id_ = regionId;
+        stored_loop_repeats_done_ = nextRepeatsDone;
+        stored_loop_start_q12_ = startQ12ForLoop;
+        stored_loop_end_q12_ = endQ12ForLoop;
+        stored_loop_count_ = loopCount;
+        seekLoad(startQ12ForLoop, true, false);
+        return;
+      }
+      if (!inside && (nowQ12 < stored_loop_start_q12_ ||
+                      nowQ12 >= stored_loop_end_q12_)) {
+        stored_loop_active_id_ = 0;
+        stored_loop_repeats_done_ = 0;
+        stored_loop_start_q12_ = 0;
+        stored_loop_end_q12_ = 0;
+        stored_loop_count_ = 0;
+      }
+    } else if (stored_loop_active_id_ != 0) {
+      stored_loop_active_id_ = 0;
+      stored_loop_repeats_done_ = 0;
+      stored_loop_start_q12_ = 0;
+      stored_loop_end_q12_ = 0;
+      stored_loop_count_ = 0;
+    }
+  }
+
   if (loop_enabled_ && loop_end_q12_ > loop_start_q12_) {
     bool insideLoop = nowQ12 >= loop_start_q12_ && nowQ12 < loop_end_q12_;
     if (insideLoop) {

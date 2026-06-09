@@ -21,6 +21,7 @@ public:
     void end() override;
 
     void notifyDirty(int track, uint8_t regions);
+    void notifyArrangementPosition(uint32_t positionQ12, uint8_t flags);
 
 private:
     bool ready_ = false;
@@ -36,7 +37,10 @@ private:
     void onReqArrMeta(uint8_t tag);
     void onReqArrClips(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrMarkers(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqArrLoopRegions(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrTrackLabels(uint8_t tag);
+    void onReqProjectList(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqProjectVersions(uint8_t tag, const uint8_t* b, uint16_t n);
     void onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSaveSlots(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrClear(uint8_t tag);
@@ -50,12 +54,16 @@ private:
     void onGridApplySlotEdit(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetRowName(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrMarker(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSetArrLoopRegion(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrTrackLabel(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrClipFade(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSeekLoad(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrMakeLocal(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrLocalToGrid(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSetLoop(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSetLoadSettings(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onProjectOp(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onProjectVersionOp(uint8_t tag, const uint8_t* b, uint16_t n);
 
     bool applySetLink(const uint8_t* b, uint16_t n);
     bool applySetFade(const uint8_t* b, uint16_t n);

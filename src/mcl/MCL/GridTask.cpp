@@ -30,18 +30,18 @@ bool is_grid_chain_load_mode(uint8_t mode) {
 }
 
 #if MCL_FEATURE_HOST_ARRANGER
-uint16_t selected_track_mask(const uint8_t *track_select) {
-  if (track_select == nullptr) {
-    return 0;
-  }
-  uint16_t mask = 0;
-  for (uint8_t n = 0; n < 16; ++n) {
-    if (track_select[n] != 0) {
-      mask |= (uint16_t)(1u << n);
+    uint32_t selected_track_mask(const uint8_t *track_select) {
+      if (track_select == nullptr) {
+        return 0;
+      }
+      uint32_t mask = 0;
+      for (uint8_t n = 0; n < NUM_SLOTS && n < 32; ++n) {
+        if (track_select[n] != 0) {
+          mask |= (uint32_t)(1ul << n);
+        }
+      }
+      return mask;
     }
-  }
-  return mask;
-}
 #endif
 
 } // namespace

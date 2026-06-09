@@ -14,6 +14,7 @@
 #include "MCLActions.h"
 #include "MCLClipBoard.h"
 #include "MCLSeq.h"
+#include "MCLSd.h"
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
 #include "MidiSysex.h"
@@ -85,14 +86,34 @@ static void copyLabelPair(const char* src, char* dst) {
     dst[1] = src && src[1] ? labelChar(src[1]) : ' ';
 }
 
-static void copyRowName(GridRow row, uint8_t* dst) {
+static GridIndex sanitizeGridBank(uint8_t gridBank) {
+    return gridBank < NUM_GRIDS ? (GridIndex)gridBank : (GridIndex)0;
+}
+
+static GridSlot visibleSlotToGridSlot(uint8_t visibleSlot, GridIndex gridBank) {
+    return (GridSlot)(visibleSlot + gridBank * GRID_WIDTH);
+}
+
+static void copyRowName(GridRow row, GridIndex gridBank, uint8_t* dst) {
     if (!dst)
         return;
     for (uint8_t i = 0; i < spsarr::kRowNameBytes; i++)
         dst[i] = 0;
 
     GridRowHeader header;
-    if (!proj.read_grid_row_header(&header, row, 0) || !header.active)
+    if (!proj.read_grid_row_header(&header, row, gridBank))
+        return;
+    if (gridBank == 0 && !header.active)
+        return;
+    if (gridBank != 0 && (!header.active || header.name[0] == '\0')) {
+        GridRowHeader gridXHeader;
+        if (proj.read_grid_row_header(&gridXHeader, row, 0) &&
+            gridXHeader.active && gridXHeader.name[0] != '\0') {
+            strncpy(header.name, gridXHeader.name, sizeof(header.name));
+            header.name[sizeof(header.name) - 1] = '\0';
+        }
+    }
+    if (header.name[0] == '\0')
         return;
 
     for (uint8_t i = 0; i < spsarr::kRowNameBytes && header.name[i] != '\0';
@@ -117,7 +138,7 @@ static const char* shortNamePart(uint8_t trackType, uint8_t model,
 }
 
 static void populateCellLabels(ArrCell& cell, DeviceTrack* tr,
-                               uint8_t track, GridRow row) {
+                               GridSlot slot, GridRow row) {
     setLabel2(cell.label2, '-', '-');
     cell.label4[0] = '-';
     cell.label4[1] = '-';
@@ -128,9 +149,10 @@ static void populateCellLabels(ArrCell& cell, DeviceTrack* tr,
     if (!tr || !tr->is_active())
         return;
 
-    GridSlotLabelContext ctx = {tr->get_model(), track};
+    uint8_t visibleTrack = slot % GRID_WIDTH;
+    GridSlotLabelContext ctx = {tr->get_model(), visibleTrack};
 #if defined(PLATFORM_TBD)
-    ctx.slot = track;
+    ctx.slot = slot;
     ctx.row = row;
 #else
     (void)row;
@@ -178,6 +200,7 @@ static uint16_t directCellDependencyMask(DeviceTrack* tr) {
 }
 
 static uint16_t cellDependencyMask(uint8_t track, GridRow row,
+                                   GridIndex gridBank,
                                    DeviceTrack* tr) {
     uint16_t mask = directCellDependencyMask(tr);
     uint16_t visited = track < spsarr::kNumTracks
@@ -197,7 +220,8 @@ static uint16_t cellDependencyMask(uint8_t track, GridRow row,
 
             visited |= bit;
             EmptyTrack scratch;
-            DeviceTrack* depTrack = scratch.load_from_grid_512(dep, row);
+            DeviceTrack* depTrack = scratch.load_from_grid_512(
+                visibleSlotToGridSlot(dep, gridBank), row);
             uint16_t next =
                 (uint16_t)(mask | directCellDependencyMask(depTrack));
             if (next != mask) {
@@ -212,13 +236,17 @@ static uint16_t cellDependencyMask(uint8_t track, GridRow row,
     return mask;
 }
 
-static ArrCell readCell(uint8_t track, GridRow row) {
+static ArrCell readCell(uint8_t track, GridRow row, GridIndex gridBank) {
     ArrCell cell;
     if (track >= spsarr::kNumTracks || row >= GRID_LENGTH)
         return cell;
 
+    GridSlot slot = visibleSlotToGridSlot(track, gridBank);
+    if (slot >= NUM_SLOTS)
+        return cell;
+
     EmptyTrack scratch;
-    DeviceTrack* tr = scratch.load_from_grid_512(track, row);
+    DeviceTrack* tr = scratch.load_from_grid_512(slot, row);
     if (!tr)
         return cell;
 
@@ -227,8 +255,8 @@ static ArrCell readCell(uint8_t track, GridRow row) {
     cell.loadSound = tr->load_sound();
     cell.link = tr->link;
     cell.durationQ12 = linkDurationQ12(cell.link);
-    populateCellLabels(cell, tr, track, row);
-    cell.dependencyMask = cellDependencyMask(track, row, tr);
+    populateCellLabels(cell, tr, slot, row);
+    cell.dependencyMask = cellDependencyMask(track, row, gridBank, tr);
     if (const TrackLoadFadeData* fade = tr->load_fade_data()) {
         cell.fade = *fade;
         cell.hasFade = fade->enabled();
@@ -319,18 +347,35 @@ static void putArrMarker(uint8_t* dst, const mclarrfile::Marker& marker) {
     dst[23] = 0;
 }
 
+static void putArrLoopRegion(uint8_t* dst,
+                             const mclarrfile::LoopRegion& region) {
+    spsArrPutU32(dst + 0, region.startQ12);
+    spsArrPutU32(dst + 4, region.endQ12);
+    spsArrPutU16(dst + 8, region.repeatCount);
+    spsArrPutU16(dst + 10, region.id);
+    dst[12] = region.flags;
+    dst[13] = region.reserved[0];
+    dst[14] = region.reserved[1];
+    dst[15] = region.reserved[2];
+    for (uint8_t i = 0; i < spsarr::kArrLoopRegionLabelBytes; ++i)
+        dst[16 + i] = (uint8_t)region.label[i];
+}
+
 static bool parseGridRect(const uint8_t* b, uint16_t n, GridSlot& col,
                           GridRow& row, GridSpan& w, GridSpan& h) {
     if (n < 4)
         return false;
-    col = b[0];
+    GridIndex gridBank = n >= 5 ? sanitizeGridBank(b[4]) : (GridIndex)0;
+    col = visibleSlotToGridSlot(b[0], gridBank);
     row = b[1];
     w = b[2];
     h = b[3];
-    if (col >= spsarr::kNumTracks || row >= GRID_LENGTH || w == 0 || h == 0)
+    if (b[0] >= spsarr::kNumTracks || col >= NUM_SLOTS ||
+        row >= GRID_LENGTH || w == 0 || h == 0)
         return false;
-    if ((uint16_t)col + w > spsarr::kNumTracks)
-        w = (GridSpan)(spsarr::kNumTracks - col);
+    GridSpan bankRemaining = (GridSpan)(GRID_WIDTH - (col % GRID_WIDTH));
+    if (w > bankRemaining)
+        w = bankRemaining;
     if ((uint16_t)row + h > GRID_LENGTH)
         h = (GridSpan)(GRID_LENGTH - row);
     return w > 0 && h > 0;
@@ -340,22 +385,30 @@ static bool clearGridRect(GridSlot col, GridRow row, GridSpan w, GridSpan h) {
     bool ok = true;
     for (GridSpan y = 0; y < h && (uint16_t)row + y < GRID_LENGTH; y++) {
         GridRow dstRow = (GridRow)(row + y);
-        for (GridSpan x = 0; x < w && (uint16_t)col + x < spsarr::kNumTracks; x++) {
-            if (!proj.clear_slot_grid((GridSlot)(col + x), dstRow))
+        uint8_t touchedGrids = 0;
+        for (GridSpan x = 0; x < w && (uint16_t)col + x < NUM_SLOTS; x++) {
+            GridSlot dstCol = (GridSlot)(col + x);
+            touchedGrids |= (uint8_t)(1u << (dstCol / GRID_WIDTH));
+            if (!proj.clear_slot_grid(dstCol, dstRow))
                 ok = false;
         }
 
-        GridRowHeader header;
-        if (proj.read_grid_row_header(&header, dstRow, 0) &&
-            header.is_empty()) {
-            header.active = false;
-            header.name[0] = '\0';
-            if (!proj.write_grid_row_header(&header, dstRow, 0))
-                ok = false;
+        for (uint8_t grid = 0; grid < NUM_GRIDS; grid++) {
+            if ((touchedGrids & (uint8_t)(1u << grid)) == 0)
+                continue;
+            GridRowHeader header;
+            if (proj.read_grid_row_header(&header, dstRow, grid) &&
+                header.is_empty()) {
+                header.active = false;
+                header.name[0] = '\0';
+                if (!proj.write_grid_row_header(&header, dstRow, grid))
+                    ok = false;
+            }
         }
     }
 
-    proj.sync_grid(0);
+    for (uint8_t grid = 0; grid < NUM_GRIDS; grid++)
+        proj.sync_grid(grid);
     grid_page.slot_undo = 1;
     grid_page.slot_undo_x = (GridColumn)(col & 0x0F);
     grid_page.slot_undo_y = row;
@@ -371,6 +424,278 @@ static bool saveNeedsMdCurrentPattern() {
 #else
     return true;
 #endif
+}
+
+static void copyBounded(char* dst, size_t dstLen, const char* src) {
+    if (!dst || dstLen == 0)
+        return;
+    if (!src)
+        src = "";
+    strncpy(dst, src, dstLen - 1);
+    dst[dstLen - 1] = '\0';
+}
+
+static bool validProjectRelPath(const char* path, bool allowEmpty) {
+    if (!path)
+        return false;
+    if (path[0] == '\0')
+        return allowEmpty;
+    if (path[0] == '/' || strlen(path) >= PRJ_PATH_LEN)
+        return false;
+
+    uint8_t componentLen = 0;
+    const char* componentStart = path;
+    for (const char* p = path; ; ++p) {
+        unsigned char c = (unsigned char)*p;
+        bool end = c == '\0';
+        bool slash = c == '/';
+        if (end || slash) {
+            if (componentLen == 0 || componentLen > PRJ_NAME_LEN)
+                return false;
+            if (componentLen == 1 && componentStart[0] == '.')
+                return false;
+            if (componentLen == 2 && componentStart[0] == '.' &&
+                componentStart[1] == '.')
+                return false;
+            if (end)
+                return true;
+            componentLen = 0;
+            componentStart = p + 1;
+            continue;
+        }
+        if (c < 32 || c > 126 || c == ':' || c == '\\')
+            return false;
+        componentLen++;
+    }
+}
+
+static bool readProjectBodyString(const uint8_t* b, uint16_t n,
+                                  uint16_t& off, char* out, size_t outLen,
+                                  bool allowEmpty) {
+    if (!out || outLen == 0 || off >= n)
+        return false;
+    uint8_t len = b[off++];
+    if (len >= outLen || len > spsarr::kProjectPathBytes || off + len > n)
+        return false;
+    for (uint8_t i = 0; i < len; ++i) {
+        unsigned char c = b[off + i];
+        if (c < 32 || c > 126)
+            return false;
+        out[i] = (char)c;
+    }
+    out[len] = '\0';
+    off = (uint16_t)(off + len);
+    return validProjectRelPath(out, allowEmpty);
+}
+
+static bool simpleProjectName(const char* name) {
+    return validProjectRelPath(name, false) && strchr(name, '/') == nullptr;
+}
+
+static bool splitProjectRelPath(const char* path, char* parent,
+                                size_t parentLen, char* base,
+                                size_t baseLen) {
+    if (!validProjectRelPath(path, false) || !parent || !base ||
+        parentLen == 0 || baseLen == 0)
+        return false;
+    const char* slash = strrchr(path, '/');
+    const char* name = slash ? slash + 1 : path;
+    if (strlen(name) == 0 || strlen(name) >= baseLen)
+        return false;
+    copyBounded(base, baseLen, name);
+    if (!slash) {
+        parent[0] = '\0';
+        return true;
+    }
+    size_t len = (size_t)(slash - path);
+    if (len >= parentLen)
+        return false;
+    memcpy(parent, path, len);
+    parent[len] = '\0';
+    return true;
+}
+
+static bool joinProjectRelPath(const char* parent, const char* entry,
+                               char* out, size_t outLen) {
+    if (!out || outLen == 0 || !simpleProjectName(entry))
+        return false;
+    if (!parent || parent[0] == '\0') {
+        if (strlen(entry) >= outLen)
+            return false;
+        strcpy(out, entry);
+        return true;
+    }
+    return validProjectRelPath(parent, true) &&
+           MCLSd::join_path(out, (uint8_t)outLen, parent, entry) &&
+           validProjectRelPath(out, false);
+}
+
+static bool buildProjectRootedPath(const char* rel, char* out, size_t outLen) {
+    if (!validProjectRelPath(rel, true) || !out || outLen == 0)
+        return false;
+    char root[64];
+    const char* rootPath = mcl_sd.full_path(PRJ_DIR, root, sizeof(root));
+    if (!rel || rel[0] == '\0') {
+        copyBounded(out, outLen, rootPath);
+        return true;
+    }
+    return MCLSd::join_path(out, (uint8_t)outLen, rootPath, rel);
+}
+
+static bool chdirProjectParent(const char* rel, char* base, size_t baseLen) {
+    char parent[PRJ_PATH_LEN];
+    if (!splitProjectRelPath(rel, parent, sizeof(parent), base, baseLen))
+        return false;
+    char parentRoot[128];
+    if (!buildProjectRootedPath(parent, parentRoot, sizeof(parentRoot)))
+        return false;
+    return SD.chdir(parentRoot);
+}
+
+static bool pathStartsWithProjectDir(const char* path, const char* dir) {
+    if (!path || !dir || dir[0] == '\0')
+        return false;
+    while (*dir != '\0' && *path == *dir) {
+        path++;
+        dir++;
+    }
+    return *dir == '\0' && (*path == '\0' || *path == '/');
+}
+
+static bool currentProjectUnder(const char* path) {
+    return proj.project_loaded && pathStartsWithProjectDir(mcl_cfg.project,
+                                                           path);
+}
+
+static bool isProjectDirNameAtCwd(const char* entry) {
+    size_t len = strlen(entry);
+    if (len == 0 || len > PRJ_NAME_LEN || strchr(entry, '/') != nullptr)
+        return false;
+
+    char projectFile[PRJ_NAME_LEN * 2 + 6];
+    if (!MCLSd::join_path(projectFile, sizeof(projectFile), entry, entry))
+        return false;
+    strcat(projectFile, ".mcl");
+    return SD.exists(projectFile);
+}
+
+static bool projectRelPathIsProject(const char* rel) {
+    char base[PRJ_NAME_LEN + 1];
+    if (!chdirProjectParent(rel, base, sizeof(base)))
+        return false;
+    return isProjectDirNameAtCwd(base);
+}
+
+static bool currentProjectChildForCwd(const char* cwd, char* out,
+                                      size_t outLen) {
+    if (!proj.project_loaded || !out || outLen == 0)
+        return false;
+    const char* focus = nullptr;
+    if (!cwd || cwd[0] == '\0') {
+        focus = mcl_cfg.project;
+    } else {
+        size_t cwdLen = strlen(cwd);
+        if (strncmp(mcl_cfg.project, cwd, cwdLen) != 0 ||
+            mcl_cfg.project[cwdLen] != '/')
+            return false;
+        focus = mcl_cfg.project + cwdLen + 1;
+    }
+    const char* slash = strchr(focus, '/');
+    size_t len = slash ? (size_t)(slash - focus) : strlen(focus);
+    if (len == 0 || len >= outLen)
+        return false;
+    memcpy(out, focus, len);
+    out[len] = '\0';
+    return true;
+}
+
+static uint8_t projectEntryFlags(uint8_t type, const char* path) {
+    uint8_t flags = 0;
+    bool currentExact =
+        proj.project_loaded && strcmp(mcl_cfg.project, path) == 0;
+    bool currentUnderPath = currentProjectUnder(path);
+    if (currentExact || (type == PROJECT_ENTRY_DIR && currentUnderPath))
+        flags |= PROJECT_ENTRY_CURRENT;
+    if (!currentUnderPath)
+        flags |= PROJECT_ENTRY_CAN_DELETE | PROJECT_ENTRY_CAN_MOVE;
+    if (!currentUnderPath ||
+        (type == PROJECT_ENTRY_PROJECT && currentExact))
+        flags |= PROJECT_ENTRY_CAN_RENAME;
+    if (type == PROJECT_ENTRY_PROJECT || type == PROJECT_ENTRY_DIR)
+        flags |= PROJECT_ENTRY_CAN_COPY;
+#ifndef MCL_HAS_FILE_MOVE
+    flags &= (uint8_t)~PROJECT_ENTRY_CAN_MOVE;
+#endif
+#ifdef MCL_HAS_PROJECT_BACKUP
+    if (type == PROJECT_ENTRY_PROJECT)
+        flags |= PROJECT_ENTRY_HAS_VERSIONS;
+#endif
+    return flags;
+}
+
+static void writeProjectEntry(uint8_t* dst, uint8_t type, uint8_t flags,
+                              const char* name) {
+    dst[0] = type;
+    dst[1] = flags;
+    memset(dst + 2, 0, spsarr::kProjectEntryNameBytes);
+    for (uint8_t i = 0; i < spsarr::kProjectEntryNameBytes &&
+                        name && name[i] != '\0';
+         ++i) {
+        dst[2 + i] = (uint8_t)labelChar(name[i]);
+    }
+}
+
+static bool appendProjectEntry(uint8_t* body, uint16_t logicalIndex,
+                               uint16_t offset, uint8_t maxEntries,
+                               uint8_t& count, uint8_t type,
+                               uint8_t flags, const char* name) {
+    if (logicalIndex < offset || count >= maxEntries)
+        return false;
+    uint16_t recordOff =
+        (uint16_t)(spsarr::kProjectListHeaderBytes +
+                   count * spsarr::kProjectEntryRecordBytes);
+    writeProjectEntry(body + recordOff, type, flags, name);
+    count++;
+    return true;
+}
+
+static void fillProjectListHeader(uint8_t* body, uint8_t flags,
+                                  uint16_t offset, uint8_t count,
+                                  uint16_t total, uint16_t currentIndex,
+                                  const char* cwd) {
+    body[0] = flags;
+    spsArrPutU16(body + 1, offset);
+    body[3] = count;
+    spsArrPutU16(body + 4, total);
+    spsArrPutU16(body + 6, currentIndex);
+    uint8_t cwdLen = (uint8_t)strlen(cwd ? cwd : "");
+    uint8_t currentLen = (uint8_t)strlen(proj.project_loaded ? mcl_cfg.project
+                                                             : "");
+    body[8] = cwdLen;
+    body[9] = currentLen;
+    memset(body + 10, 0, spsarr::kProjectPathBytes * 2);
+    memcpy(body + 10, cwd ? cwd : "", cwdLen);
+    memcpy(body + 10 + spsarr::kProjectPathBytes,
+           proj.project_loaded ? mcl_cfg.project : "", currentLen);
+}
+
+static uint16_t fillProjectListError(uint8_t* body, const char* cwd) {
+    fillProjectListHeader(body, 0, 0, 1, 1, 0xFFFF, cwd ? cwd : "");
+    writeProjectEntry(body + spsarr::kProjectListHeaderBytes,
+                      PROJECT_ENTRY_ERROR, 0, "ERROR");
+    return (uint16_t)(spsarr::kProjectListHeaderBytes +
+                      spsarr::kProjectEntryRecordBytes);
+}
+
+static bool sameProjectParent(const char* a, const char* b) {
+    char parentA[PRJ_PATH_LEN];
+    char parentB[PRJ_PATH_LEN];
+    char base[PRJ_NAME_LEN + 1];
+    return splitProjectRelPath(a, parentA, sizeof(parentA), base,
+                               sizeof(base)) &&
+           splitProjectRelPath(b, parentB, sizeof(parentB), base,
+                               sizeof(base)) &&
+           strcmp(parentA, parentB) == 0;
 }
 
 }  // namespace
@@ -406,7 +731,10 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_REQ_ARR_META: onReqArrMeta(p.tag); break;
         case CMD_REQ_ARR_CLIPS: onReqArrClips(p.tag, b, n); break;
         case CMD_REQ_ARR_MARKERS: onReqArrMarkers(p.tag, b, n); break;
+        case CMD_REQ_ARR_LOOP_REGIONS: onReqArrLoopRegions(p.tag, b, n); break;
         case CMD_REQ_ARR_TRACK_LABELS: onReqArrTrackLabels(p.tag); break;
+        case CMD_REQ_PROJECT_LIST: onReqProjectList(p.tag, b, n); break;
+        case CMD_REQ_PROJECT_VERSIONS: onReqProjectVersions(p.tag, b, n); break;
         case CMD_SET_LINK:
             if (applySetLink(b, n) && n >= 2)
                 notifyDirty(b[0], DIRTY_CELLS);
@@ -428,12 +756,16 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_GRID_APPLY_SLOT: onGridApplySlotEdit(p.tag, b, n); break;
         case CMD_SET_ROW_NAME: onSetRowName(p.tag, b, n); break;
         case CMD_SET_ARR_MARKER: onSetArrMarker(p.tag, b, n); break;
+        case CMD_SET_ARR_LOOP_REGION: onSetArrLoopRegion(p.tag, b, n); break;
         case CMD_SET_ARR_TRACK_LABEL: onSetArrTrackLabel(p.tag, b, n); break;
         case CMD_SET_ARR_CLIP_FADE: onSetArrClipFade(p.tag, b, n); break;
         case CMD_ARR_SEEK_LOAD: onArrSeekLoad(p.tag, b, n); break;
         case CMD_ARR_MAKE_LOCAL: onArrMakeLocal(p.tag, b, n); break;
         case CMD_ARR_LOCAL_TO_GRID: onArrLocalToGrid(p.tag, b, n); break;
         case CMD_ARR_SET_LOOP: onArrSetLoop(p.tag, b, n); break;
+        case CMD_SET_LOAD_SETTINGS: onSetLoadSettings(p.tag, b, n); break;
+        case CMD_PROJECT_OP: onProjectOp(p.tag, b, n); break;
+        case CMD_PROJECT_VERSION_OP: onProjectVersionOp(p.tag, b, n); break;
         default: sendErr(p.tag, ERR_UNKNOWN_CMD, 0); break;
     }
 }
@@ -455,7 +787,7 @@ void SpsHostArrBridge::sendErr(uint8_t tag, uint8_t code, uint8_t detail) {
 void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n >= 1 && b[0] == 0)
         return;
-    uint8_t body[4];
+    uint8_t body[6];
     body[0] = kProtoVersion;
     spsArrPutU16(body + 1, (uint16_t)(CAP_AUTO | CAP_FADE | CAP_BATCH |
                                       CAP_ARRANGER_LOAD |
@@ -471,12 +803,25 @@ void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
                                       CAP_ARRANGER_LOAD_SEEK |
                                       CAP_ARRANGER_CLIP_FADES));
     body[3] = (uint8_t)spsarr::kNumTracks;
+    uint16_t caps2 = (uint16_t)(CAP2_GRID_BANKS | CAP2_SLOT_OWNERSHIP |
+                                CAP2_ARRANGEMENT_LOOP_REGIONS |
+                                CAP2_PROJECT_BROWSER);
+#ifdef MCL_HAS_PROJECT_BACKUP
+    caps2 |= CAP2_PROJECT_BACKUP;
+#endif
+#ifdef MCL_HAS_FILE_MOVE
+    caps2 |= CAP2_PROJECT_MOVE;
+#endif
+    spsArrPutU16(body + 4, caps2);
     sendFrame(CMD_HELLO_ACK, tag, body, (uint16_t)sizeof body);
 }
 
 void SpsHostArrBridge::onReqActive(uint8_t tag) {
     uint8_t body[4 + spsarr::kActiveSlotBytes +
-                 spsarr::kActiveReleasedMaskBytes];
+                 spsarr::kActiveReleasedMaskBytes +
+                 spsarr::kActiveExtraGridSlotBytes +
+                 spsarr::kActiveLoadSettingsBytes +
+                 spsarr::kActiveSlotOwnershipBytes];
     body[0] = activeRowOrZero();
     body[1] = grid_task.next_active_row < GRID_LENGTH ? grid_task.next_active_row
                                                        : body[0];
@@ -484,8 +829,26 @@ void SpsHostArrBridge::onReqActive(uint8_t tag) {
     body[3] = MidiClock.isStarted() ? 1 : 0;
     for (uint8_t slot = 0; slot < spsarr::kActiveSlotBytes; slot++)
         body[4 + slot] = slot < NUM_SLOTS ? grid_page.active_slots[slot] : 255;
-    spsArrPutU16(body + 4 + spsarr::kActiveSlotBytes,
+    spsArrPutU32(body + 4 + spsarr::kActiveSlotBytes,
                  mcl_arrangement.playbackReleasedMask());
+    uint16_t extraOff =
+        4 + spsarr::kActiveSlotBytes + spsarr::kActiveReleasedMaskBytes;
+    for (uint8_t slot = 0; slot < spsarr::kActiveExtraGridSlotBytes; slot++) {
+        uint8_t absoluteSlot = (uint8_t)(spsarr::kNumTracks + slot);
+        body[extraOff + slot] =
+            absoluteSlot < NUM_SLOTS ? grid_page.active_slots[absoluteSlot]
+                                     : 255;
+    }
+    uint16_t settingsOff = extraOff + spsarr::kActiveExtraGridSlotBytes;
+    body[settingsOff] = mcl_cfg.load_mode;
+    body[settingsOff + 1] = mcl_cfg.chain_load_quant;
+    uint32_t ownershipMask = 0;
+    for (uint8_t slot = 0; slot < NUM_SLOTS && slot < 32; ++slot) {
+        if (mcl_actions.get_grid_dev_track(slot) != nullptr)
+            ownershipMask |= (uint32_t)(1ul << slot);
+    }
+    spsArrPutU32(body + settingsOff + spsarr::kActiveLoadSettingsBytes,
+                 ownershipMask);
     sendFrame(CMD_ACTIVE, tag, body, (uint16_t)sizeof body);
 }
 
@@ -496,6 +859,7 @@ void SpsHostArrBridge::onReqCells(uint8_t tag, const uint8_t* b, uint16_t n) {
     uint8_t rowCount = b[1];
     uint16_t trackMask = spsArrGetU16(b + 2);
     uint8_t flags = b[4];
+    GridIndex gridBank = n >= 6 ? sanitizeGridBank(b[5]) : (GridIndex)0;
     bool sendLabels = (flags & REQ_CELL_LABELS) != 0;
     bool sendRowNames = (flags & REQ_ROW_NAMES) != 0;
 
@@ -521,14 +885,17 @@ void SpsHostArrBridge::onReqCells(uint8_t tag, const uint8_t* b, uint16_t n) {
         body[off++] = rowCount;
         body[off++] = (uint8_t)((sendLabels ? CELL_FORMAT_LABELS : 0) |
                                 (sendRowNames ? CELL_FORMAT_ROW_NAMES : 0) |
-                                CELL_FORMAT_DEPENDENCIES);
+                                CELL_FORMAT_DEPENDENCIES |
+                                (n >= 6 ? CELL_FORMAT_GRID_BANK : 0));
+        if (n >= 6)
+            body[off++] = gridBank;
 
         uint16_t recordBytes = (uint16_t)(kCellRecordBaseBytes +
             kCellRecordDependencyBytes +
             (sendLabels ? kCellRecordLabelBytes : 0) +
             (sendRowNames ? kCellRecordRowNameBytes : 0));
         for (uint8_t i = 0; i < rowCount && off + recordBytes <= kMaxBodyRaw; i++) {
-            ArrCell cell = readCell(track, (GridRow)(startRow + i));
+            ArrCell cell = readCell(track, (GridRow)(startRow + i), gridBank);
             uint8_t cellFlags = 0;
             if (cell.ok && cell.active)
                 cellFlags |= CELL_ACTIVE;
@@ -562,7 +929,7 @@ void SpsHostArrBridge::onReqCells(uint8_t tag, const uint8_t* b, uint16_t n) {
                 body[off++] = (uint8_t)cell.label4[3];
             }
             if (sendRowNames) {
-                copyRowName((GridRow)(startRow + i), body + off);
+                copyRowName((GridRow)(startRow + i), gridBank, body + off);
                 off = (uint16_t)(off + kCellRecordRowNameBytes);
             }
         }
@@ -666,6 +1033,45 @@ void SpsHostArrBridge::onReqArrMarkers(uint8_t tag, const uint8_t* b,
     sendFrame(CMD_ARR_MARKERS, tag, body, off);
 }
 
+void SpsHostArrBridge::onReqArrLoopRegions(uint8_t tag, const uint8_t* b,
+                                           uint16_t n) {
+    if (n < 11) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint32_t startQ12 = spsArrGetU32(b + 0);
+    uint32_t endQ12 = spsArrGetU32(b + 4);
+    uint16_t skip = spsArrGetU16(b + 8);
+    uint8_t maxRegions = b[10];
+    if (maxRegions == 0 ||
+        maxRegions > (uint8_t)spsarr::kMaxArrLoopRegionRecordsPerFrame) {
+        maxRegions = (uint8_t)spsarr::kMaxArrLoopRegionRecordsPerFrame;
+    }
+
+    mclarrfile::LoopRegion regions[spsarr::kMaxArrLoopRegionRecordsPerFrame];
+    uint32_t total = 0;
+    bool more = false;
+    uint16_t count =
+        mcl_arrangement.readLoopRegions(startQ12, endQ12, skip, maxRegions,
+                                        regions, &total, &more);
+
+    uint8_t body[16 + spsarr::kMaxArrLoopRegionRecordsPerFrame *
+                     spsarr::kArrLoopRegionRecordBytes];
+    body[0] = mcl_cfg.active_arrangement_idx;
+    body[1] = more ? 1 : 0;
+    spsArrPutU16(body + 2, skip);
+    spsArrPutU32(body + 4, total);
+    spsArrPutU32(body + 8, startQ12);
+    spsArrPutU32(body + 12, endQ12);
+    uint16_t off = 16;
+    for (uint16_t i = 0; i < count; ++i) {
+        putArrLoopRegion(body + off, regions[i]);
+        off = (uint16_t)(off + spsarr::kArrLoopRegionRecordBytes);
+    }
+    sendFrame(CMD_ARR_LOOP_REGIONS, tag, body, off);
+}
+
 void SpsHostArrBridge::onReqArrTrackLabels(uint8_t tag) {
     char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
     if (!mcl_arrangement.readTrackLabels(labels)) {
@@ -687,6 +1093,173 @@ void SpsHostArrBridge::onReqArrTrackLabels(uint8_t tag) {
     sendFrame(CMD_ARR_TRACK_LABELS, tag, body, off);
 }
 
+void SpsHostArrBridge::onReqProjectList(uint8_t tag, const uint8_t* b,
+                                        uint16_t n) {
+    if (n < 4) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint16_t offset = spsArrGetU16(b + 0);
+    uint8_t maxEntries = b[2];
+    if (maxEntries == 0 ||
+        maxEntries > (uint8_t)spsarr::kMaxProjectEntriesPerFrame) {
+        maxEntries = (uint8_t)spsarr::kMaxProjectEntriesPerFrame;
+    }
+
+    uint16_t off = 3;
+    char cwd[PRJ_PATH_LEN];
+    if (!readProjectBodyString(b, n, off, cwd, sizeof(cwd), true)) {
+        sendErr(tag, ERR_RANGE, 1);
+        return;
+    }
+
+    uint8_t body[spsarr::kProjectListHeaderBytes +
+                 spsarr::kMaxProjectEntriesPerFrame *
+                     spsarr::kProjectEntryRecordBytes] = {};
+    char rooted[128];
+    if (!buildProjectRootedPath(cwd, rooted, sizeof(rooted)) ||
+        !SD.chdir(rooted)) {
+        uint16_t len = fillProjectListError(body, cwd);
+        sendFrame(CMD_PROJECT_LIST, tag, body, len);
+        return;
+    }
+
+    File dir;
+    if (!dir.open(rooted, O_READ) || !dir.isDirectory()) {
+        dir.close();
+        uint16_t len = fillProjectListError(body, cwd);
+        sendFrame(CMD_PROJECT_LIST, tag, body, len);
+        return;
+    }
+    dir.rewind();
+
+    char currentChild[PRJ_NAME_LEN + 1];
+    bool haveCurrentChild =
+        currentProjectChildForCwd(cwd, currentChild, sizeof(currentChild));
+    uint16_t currentIndex = 0xFFFF;
+    uint16_t total = 0;
+    uint8_t count = 0;
+
+    appendProjectEntry(body, total, offset, maxEntries, count,
+                       PROJECT_ENTRY_NEW, 0, "[ NEW PROJECT ]");
+    total++;
+    if (cwd[0] != '\0') {
+        appendProjectEntry(body, total, offset, maxEntries, count,
+                           PROJECT_ENTRY_PARENT, 0, "..");
+        total++;
+    }
+
+    File entryFile;
+    char entry[64];
+    char entryPath[PRJ_PATH_LEN];
+    while (entryFile.openNext(&dir, O_READ)) {
+        entryFile.getName(entry, sizeof(entry));
+        bool isDir = entryFile.isDirectory();
+        entryFile.close();
+
+        if (!isDir || entry[0] == '\0' || entry[0] == '.')
+            continue;
+        if (!simpleProjectName(entry))
+            continue;
+        uint8_t type = isProjectDirNameAtCwd(entry)
+                           ? PROJECT_ENTRY_PROJECT
+                           : PROJECT_ENTRY_DIR;
+        if (!joinProjectRelPath(cwd, entry, entryPath, sizeof(entryPath)))
+            continue;
+        uint8_t flags = projectEntryFlags(type, entryPath);
+        if (haveCurrentChild && strcmp(entry, currentChild) == 0) {
+            currentIndex = total;
+            flags |= PROJECT_ENTRY_CURRENT;
+        }
+        appendProjectEntry(body, total, offset, maxEntries, count, type,
+                           flags, entry);
+        total++;
+    }
+    entryFile.close();
+    dir.close();
+
+    uint8_t flags = 0;
+    if ((uint16_t)(offset + count) < total)
+        flags |= PROJECT_LIST_MORE;
+#ifdef MCL_HAS_PROJECT_BACKUP
+    flags |= PROJECT_LIST_BACKUP;
+#endif
+#ifdef MCL_HAS_FILE_MOVE
+    flags |= PROJECT_LIST_MOVE;
+#endif
+    if (proj.project_loaded)
+        flags |= PROJECT_LIST_PROJECT_LOADED;
+
+    fillProjectListHeader(body, flags, offset, count, total, currentIndex,
+                          cwd);
+    uint16_t bodyLen =
+        (uint16_t)(spsarr::kProjectListHeaderBytes +
+                   count * spsarr::kProjectEntryRecordBytes);
+    sendFrame(CMD_PROJECT_LIST, tag, body, bodyLen);
+}
+
+void SpsHostArrBridge::onReqProjectVersions(uint8_t tag, const uint8_t* b,
+                                            uint16_t n) {
+#ifndef MCL_HAS_PROJECT_BACKUP
+    (void)b;
+    (void)n;
+    sendErr(tag, ERR_UNSUPPORTED, 0);
+#else
+    uint16_t off = 0;
+    char project[PRJ_PATH_LEN];
+    if (!readProjectBodyString(b, n, off, project, sizeof(project), false) ||
+        !projectRelPathIsProject(project)) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint8_t activePair = 0;
+    bool haveActive = proj.read_active_grid_pair(project, &activePair);
+    char base[PRJ_NAME_LEN + 1];
+    if (!chdirProjectParent(project, base, sizeof(base)) ||
+        !SD.chdir(base)) {
+        sendErr(tag, ERR_RANGE, 1);
+        return;
+    }
+
+    uint8_t body[spsarr::kProjectVersionHeaderBytes +
+                 128 * spsarr::kProjectVersionRecordBytes] = {};
+    uint16_t total = 0;
+    uint8_t count = 0;
+    for (uint8_t pair = 0; pair < 128; ++pair) {
+        if (!proj.project_pair_exists(pair, base))
+            continue;
+        uint16_t recordOff =
+            (uint16_t)(spsarr::kProjectVersionHeaderBytes +
+                       count * spsarr::kProjectVersionRecordBytes);
+        body[recordOff] = pair;
+        body[recordOff + 1] =
+            (uint8_t)((haveActive && pair == activePair
+                           ? PROJECT_VERSION_ACTIVE
+                           : 0) |
+                      (pair > 0 && (!haveActive || pair != activePair)
+                           ? PROJECT_VERSION_CAN_DELETE
+                           : 0));
+        count++;
+        total++;
+    }
+
+    body[0] = 0;
+    body[1] = haveActive ? activePair : 0;
+    spsArrPutU16(body + 2, total);
+    body[4] = count;
+    body[5] = (uint8_t)strlen(project);
+    body[6] = 0;
+    body[7] = 0;
+    memset(body + 8, 0, spsarr::kProjectPathBytes);
+    memcpy(body + 8, project, strlen(project));
+    sendFrame(CMD_PROJECT_VERSIONS, tag, body,
+              (uint16_t)(spsarr::kProjectVersionHeaderBytes +
+                         count * spsarr::kProjectVersionRecordBytes));
+#endif
+}
+
 void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n < 24) {
         sendErr(tag, ERR_RANGE, 0);
@@ -697,8 +1270,16 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
     uint8_t flags = b[1];
     uint32_t startStep = spsArrGetU32(b + 2);
     uint16_t trackMask = spsArrGetU16(b + 6);
+    GridIndex gridBank = 0;
     GridSlot loadOffset =
         (n >= 25 && b[24] < NUM_SLOTS) ? (GridSlot)b[24] : (GridSlot)255;
+    if ((flags & ARR_LOAD_GRID_BANK) != 0) {
+        if (n < 26 || b[25] >= NUM_GRIDS) {
+            sendErr(tag, ERR_RANGE, n);
+            return;
+        }
+        gridBank = (GridIndex)b[25];
+    }
     if (mode < ARR_LOAD_MANUAL || mode > ARR_LOAD_ARRANG) {
         sendErr(tag, ERR_UNSUPPORTED, mode);
         return;
@@ -730,13 +1311,16 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
         if (((trackMask >> slot) & 1u) == 0)
             continue;
         uint8_t row = b[8 + slot];
+        GridSlot sourceSlot = visibleSlotToGridSlot(slot, gridBank);
+        if (sourceSlot >= NUM_SLOTS)
+            continue;
         if (row < GRID_LENGTH) {
-            rowSelect[slot] = row;
+            rowSelect[sourceSlot] = row;
             any = true;
             continue;
         }
         if (allowClear && row == 255) {
-            rowSelect[slot] = LOAD_QUEUE_CLEAR_ROW;
+            rowSelect[sourceSlot] = LOAD_QUEUE_CLEAR_ROW;
             any = true;
         }
     }
@@ -763,26 +1347,33 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
     bool armedRuntimeFade = false;
     if (isArrangerLoad) {
         armedRuntimeFade = mcl_arrangement.armRuntimeForHostLoad(
-            positionQ12, rowSelect, trackMask, loadOffset);
+            positionQ12, rowSelect, trackMask, loadOffset, gridBank);
     }
 
     if (isArrangerLoad && (flags & ARR_LOAD_RUNTIME_FADES) != 0) {
-        uint16_t off = n >= 25 ? 25 : 24;
+        uint16_t off = (flags & ARR_LOAD_GRID_BANK) != 0
+                           ? 26
+                           : (n >= 25 ? 25 : 24);
         if (off + 2 <= n) {
             uint16_t fadeMask = spsArrGetU16(b + off) & trackMask;
             off += 2;
             GridSlot firstSource = 255;
-            for (uint8_t src = 0; src < NUM_SLOTS && src < spsarr::kNumTracks;
+            for (uint8_t src = 0; src < GRID_WIDTH && src < spsarr::kNumTracks;
                  ++src) {
-                if (((trackMask >> src) & 1u) != 0 &&
-                    rowSelect[src] < GRID_LENGTH) {
-                    firstSource = src;
+                GridSlot sourceSlot = visibleSlotToGridSlot(src, gridBank);
+                if (sourceSlot < NUM_SLOTS &&
+                    ((trackMask >> src) & 1u) != 0 &&
+                    rowSelect[sourceSlot] < GRID_LENGTH) {
+                    firstSource = sourceSlot;
                     break;
                 }
             }
-            for (uint8_t src = 0; src < NUM_SLOTS && src < spsarr::kNumTracks;
+            for (uint8_t src = 0; src < GRID_WIDTH && src < spsarr::kNumTracks;
                  ++src) {
                 if (((fadeMask >> src) & 1u) == 0)
+                    continue;
+                GridSlot sourceSlot = visibleSlotToGridSlot(src, gridBank);
+                if (sourceSlot >= NUM_SLOTS)
                     continue;
                 if (off + spsarr::kArrClipFadeBytes > n)
                     break;
@@ -796,22 +1387,22 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                 fade.reserved[1] = b[off + 7];
                 off += spsarr::kArrClipFadeBytes;
 
-                GridSlot dst = src;
-                if (rowSelect[src] < GRID_LENGTH && loadOffset < NUM_SLOTS) {
+                GridSlot dst = sourceSlot;
+                if (rowSelect[sourceSlot] < GRID_LENGTH &&
+                    loadOffset < NUM_SLOTS) {
                     if (firstSource == 255)
                         continue;
                     int mapped =
-                        (int)src - (int)firstSource + (int)loadOffset;
+                        (int)sourceSlot - (int)firstSource + (int)loadOffset;
                     if (mapped < 0 || mapped >= (int)NUM_SLOTS)
                         continue;
                     dst = (GridSlot)mapped;
                 }
-                if (dst >= 16)
-                    continue;
                 mcl_arrangement.armRuntimeFade(dst, fade);
                 armedRuntimeFade = armedRuntimeFade || fade.enabled();
                 ARR_FADE_TRACE("payload fade src=%u dst=%u flags=%u dur=%u amount=%u curve=%d enabled=%u",
-                               src, dst, fade.flags, fade.duration_q12,
+                               sourceSlot, dst, fade.flags,
+                               fade.duration_q12,
                                fade.amount, (int)fade.curve,
                                fade.enabled() ? 1 : 0);
             }
@@ -848,6 +1439,7 @@ void SpsHostArrBridge::onSaveSlots(uint8_t tag, const uint8_t* b,
     uint8_t flags = b[0];
     GridRow row = b[1];
     uint16_t mask = spsArrGetU16(b + 2);
+    GridIndex gridBank = n >= 5 ? sanitizeGridBank(b[4]) : (GridIndex)0;
     if (row >= GRID_LENGTH || !mask) {
         sendErr(tag, ERR_RANGE, row);
         return;
@@ -863,8 +1455,11 @@ void SpsHostArrBridge::onSaveSlots(uint8_t tag, const uint8_t* b,
     } else {
         for (uint8_t slot = 0;
              slot < NUM_SLOTS && slot < spsarr::kNumTracks; ++slot) {
-            if ((mask & (uint16_t)(1u << slot)) != 0)
-                trackSelect[slot] = 1;
+            if ((mask & (uint16_t)(1u << slot)) != 0) {
+                GridSlot targetSlot = visibleSlotToGridSlot(slot, gridBank);
+                if (targetSlot < NUM_SLOTS)
+                    trackSelect[targetSlot] = 1;
+            }
         }
     }
 
@@ -1041,14 +1636,22 @@ void SpsHostArrBridge::onGridApplySlotEdit(uint8_t tag, const uint8_t* b,
                              GRID_SLOT_APPLY_LOOPS |
                              GRID_SLOT_APPLY_LENGTH |
                              GRID_SLOT_APPLY_LOAD_SOUND);
-    if (sourceCol >= spsarr::kNumTracks || sourceRow >= GRID_LENGTH ||
-        targetCol >= spsarr::kNumTracks || targetRow >= GRID_LENGTH ||
+    GridIndex sourceGridBank =
+        n >= 13 ? sanitizeGridBank(b[11]) : (GridIndex)0;
+    GridIndex targetGridBank =
+        n >= 13 ? sanitizeGridBank(b[12]) : (GridIndex)0;
+    sourceCol = visibleSlotToGridSlot(sourceCol, sourceGridBank);
+    targetCol = visibleSlotToGridSlot(targetCol, targetGridBank);
+    if (sourceCol >= NUM_SLOTS || sourceRow >= GRID_LENGTH ||
+        targetCol >= NUM_SLOTS || targetRow >= GRID_LENGTH ||
         width == 0 || height == 0 || fields == 0) {
         sendErr(tag, ERR_RANGE, 1);
         return;
     }
-    if ((uint16_t)targetCol + width > spsarr::kNumTracks)
-        width = (GridSpan)(spsarr::kNumTracks - targetCol);
+    GridSpan targetBankRemaining =
+        (GridSpan)(GRID_WIDTH - (targetCol % GRID_WIDTH));
+    if (width > targetBankRemaining)
+        width = targetBankRemaining;
     if ((uint16_t)targetRow + height > GRID_LENGTH)
         height = (GridSpan)(GRID_LENGTH - targetRow);
 
@@ -1085,7 +1688,7 @@ void SpsHostArrBridge::onGridApplySlotEdit(uint8_t tag, const uint8_t* b,
         GridRow row = (GridRow)(targetRow + y);
         bool rowStored = false;
         for (GridSpan x = 0;
-             x < width && (uint16_t)targetCol + x < spsarr::kNumTracks;
+             x < width && (uint16_t)targetCol + x < NUM_SLOTS;
              x++) {
             GridSlot col = (GridSlot)(targetCol + x);
             EmptyTrack scratch;
@@ -1157,10 +1760,11 @@ void SpsHostArrBridge::onGridApplySlotEdit(uint8_t tag, const uint8_t* b,
 
         if (rowStored) {
             GridRowHeader header;
-            if (proj.read_grid_row_header(&header, row, 0)) {
+            GridIndex grid = (GridIndex)(targetCol / GRID_WIDTH);
+            if (proj.read_grid_row_header(&header, row, grid)) {
                 header.active = true;
                 header.name[0] = '\0';
-                proj.write_grid_row_header(&header, row, 0);
+                proj.write_grid_row_header(&header, row, grid);
             }
         }
     }
@@ -1170,7 +1774,7 @@ void SpsHostArrBridge::onGridApplySlotEdit(uint8_t tag, const uint8_t* b,
         return;
     }
 
-    proj.sync_grid(0);
+    proj.sync_grid((GridIndex)(targetCol / GRID_WIDTH));
     grid_page.load_slot_models();
     uint8_t ack[2] = {CMD_GRID_APPLY_SLOT, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
@@ -1246,7 +1850,7 @@ void SpsHostArrBridge::onSetArrMarker(uint8_t tag, const uint8_t* b,
     uint8_t track = b[4];
     uint8_t flags = b[5];
     if (track != spsarr::kArrMarkerGlobalTrack &&
-        track >= spsarr::kNumTracks) {
+        track >= spsarr::kNumGridSlots) {
         sendErr(tag, ERR_BAD_TRACK, track);
         return;
     }
@@ -1267,6 +1871,46 @@ void SpsHostArrBridge::onSetArrMarker(uint8_t tag, const uint8_t* b,
     }
 
     uint8_t ack[2] = {CMD_SET_ARR_MARKER, 1};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+}
+
+void SpsHostArrBridge::onSetArrLoopRegion(uint8_t tag, const uint8_t* b,
+                                          uint16_t n) {
+    if (n < spsarr::kArrLoopRegionRecordBytes) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    mclarrfile::LoopRegion region;
+    memset(&region, 0, sizeof(region));
+    region.startQ12 = spsArrGetU32(b + 0);
+    region.endQ12 = spsArrGetU32(b + 4);
+    region.repeatCount = spsArrGetU16(b + 8);
+    region.id = spsArrGetU16(b + 10);
+    region.flags = b[12];
+    for (uint8_t i = 0; i < spsarr::kArrLoopRegionLabelBytes; i++) {
+        uint8_t c = b[16 + i];
+        if (c == 0)
+            break;
+        region.label[i] = labelChar((char)c);
+    }
+
+    bool enabled =
+        (region.flags & mclarrfile::LOOP_REGION_ENABLED) != 0;
+    if (enabled &&
+        (region.endQ12 <= region.startQ12 ||
+         region.endQ12 - region.startQ12 < spsarr::kMinArrLoopQ12)) {
+        sendErr(tag, ERR_RANGE, 1);
+        return;
+    }
+
+    if (!mcl_arrangement.setLoopRegionRecord(region)) {
+        sendErr(tag, ERR_BUSY, 0);
+        return;
+    }
+
+    uint8_t ack[2] = {CMD_SET_ARR_LOOP_REGION, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
     notifyDirty(0xFF, DIRTY_ARRANGEMENT);
 }
@@ -1313,7 +1957,7 @@ void SpsHostArrBridge::onSetArrClipFade(uint8_t tag, const uint8_t* b,
     uint8_t track = b[8];
     uint8_t row = b[9];
     bool overrideFade = b[10] != 0;
-    if (track >= spsarr::kNumTracks || row >= GRID_LENGTH ||
+    if (track >= spsarr::kNumGridSlots || row >= GRID_LENGTH ||
         durationQ12 == 0) {
         sendErr(tag, ERR_RANGE, track);
         return;
@@ -1352,7 +1996,7 @@ void SpsHostArrBridge::onArrMakeLocal(uint8_t tag, const uint8_t* b,
     uint8_t track = b[8];
     uint8_t row = b[9];
     uint8_t sourceSlot = b[10];
-    if (track >= spsarr::kNumTracks || row >= GRID_LENGTH ||
+    if (track >= spsarr::kNumGridSlots || row >= GRID_LENGTH ||
         sourceSlot >= NUM_SLOTS || durationQ12 == 0) {
         sendErr(tag, ERR_RANGE, track);
         return;
@@ -1382,13 +2026,15 @@ void SpsHostArrBridge::onArrLocalToGrid(uint8_t tag, const uint8_t* b,
     GridSlot targetSlot = b[6];
     GridRow targetRow = b[7];
     if (sourceId == 0 || sourceSlot >= NUM_SLOTS ||
-        sourceRow >= GRID_LENGTH || targetSlot >= spsarr::kNumTracks ||
+        sourceRow >= GRID_LENGTH || targetSlot >= NUM_SLOTS ||
         targetRow >= GRID_LENGTH) {
         sendErr(tag, ERR_RANGE, targetSlot);
         return;
     }
 
-    ArrCell targetCell = readCell(targetSlot, targetRow);
+    ArrCell targetCell = readCell((uint8_t)(targetSlot % GRID_WIDTH),
+                                  targetRow,
+                                  (GridIndex)(targetSlot / GRID_WIDTH));
     if (mcl_clipboard.copy(targetSlot, targetRow, 1, 1)) {
         grid_page.slot_undo = 0;
     } else if (targetCell.active) {
@@ -1445,7 +2091,8 @@ void SpsHostArrBridge::onArrSetLoop(uint8_t tag, const uint8_t* b,
     bool enabled = (b[0] & 1u) != 0;
     uint32_t startQ12 = spsArrGetU32(b + 1);
     uint32_t endQ12 = spsArrGetU32(b + 5);
-    bool active = enabled && endQ12 > startQ12;
+    bool active = enabled && endQ12 > startQ12 &&
+                  endQ12 - startQ12 >= spsarr::kMinArrLoopQ12;
     if (active) {
         mcl_arrangement.setLoopRegion(startQ12, endQ12);
     } else {
@@ -1453,6 +2100,258 @@ void SpsHostArrBridge::onArrSetLoop(uint8_t tag, const uint8_t* b,
     }
     uint8_t ack[2] = {CMD_ARR_SET_LOOP, active ? (uint8_t)1 : (uint8_t)0};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+}
+
+void SpsHostArrBridge::onSetLoadSettings(uint8_t tag, const uint8_t* b,
+                                         uint16_t n) {
+    if (n < 3) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint8_t fields = b[0];
+    if ((fields & LOAD_SETTINGS_MODE) != 0) {
+        uint8_t mode = b[1];
+        if (mode < ARR_LOAD_MANUAL || mode > ARR_LOAD_QUEUE) {
+            sendErr(tag, ERR_RANGE, mode);
+            return;
+        }
+        mcl_cfg.load_mode = mode;
+    }
+    if ((fields & LOAD_SETTINGS_QUANT) != 0) {
+        uint8_t quant = b[2];
+        if (quant < 1)
+            quant = 1;
+        if (quant > 64)
+            quant = 64;
+        mcl_cfg.chain_load_quant = quant;
+    }
+
+    uint8_t ack[2] = {CMD_SET_LOAD_SETTINGS, 1};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+}
+
+void SpsHostArrBridge::onProjectOp(uint8_t tag, const uint8_t* b,
+                                   uint16_t n) {
+    if (n < 3) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint8_t op = b[0];
+    uint16_t off = 1;
+    char path[PRJ_PATH_LEN];
+    char arg[PRJ_PATH_LEN];
+    if (!readProjectBodyString(b, n, off, path, sizeof(path), true) ||
+        !readProjectBodyString(b, n, off, arg, sizeof(arg), true)) {
+        sendErr(tag, ERR_RANGE, op);
+        return;
+    }
+
+    bool ok = false;
+    bool loadedProject = false;
+
+    switch (op) {
+        case PROJECT_OP_LOAD:
+            ok = path[0] != '\0' && projectRelPathIsProject(path) &&
+                 proj.load_project(path);
+            if (ok) {
+                grid_page.reload_slot_models = false;
+                loadedProject = true;
+            }
+            break;
+
+        case PROJECT_OP_NEW_PROJECT: {
+            char newPath[PRJ_PATH_LEN];
+            ok = simpleProjectName(arg) &&
+                 joinProjectRelPath(path, arg, newPath, sizeof(newPath)) &&
+                 proj.new_project(newPath) && proj.load_project(newPath);
+            if (ok) {
+                grid_page.reload_slot_models = false;
+                loadedProject = true;
+            }
+            break;
+        }
+
+        case PROJECT_OP_NEW_FOLDER: {
+            char newPath[PRJ_PATH_LEN];
+            ok = simpleProjectName(arg) &&
+                 joinProjectRelPath(path, arg, newPath, sizeof(newPath));
+            if (ok) {
+                proj.chdir_projects();
+                ok = !SD.exists(newPath) && SD.mkdir(newPath, true);
+            }
+            break;
+        }
+
+        case PROJECT_OP_DELETE:
+            ok = path[0] != '\0' && !currentProjectUnder(path);
+            if (ok) {
+                proj.chdir_projects();
+                ok = mcl_sd.remove_dir(path);
+            }
+            break;
+
+        case PROJECT_OP_RENAME: {
+            ok = path[0] != '\0' && arg[0] != '\0' &&
+                 sameProjectParent(path, arg);
+            if (!ok)
+                break;
+
+            char baseFrom[PRJ_NAME_LEN + 1];
+            char baseTo[PRJ_NAME_LEN + 1];
+            char parent[PRJ_PATH_LEN];
+            if (!splitProjectRelPath(path, parent, sizeof(parent), baseFrom,
+                                     sizeof(baseFrom)) ||
+                !splitProjectRelPath(arg, parent, sizeof(parent), baseTo,
+                                     sizeof(baseTo)) ||
+                !simpleProjectName(baseTo)) {
+                ok = false;
+                break;
+            }
+
+            char parentRoot[128];
+            ok = buildProjectRootedPath(parent, parentRoot,
+                                        sizeof(parentRoot)) &&
+                 SD.chdir(parentRoot);
+            if (!ok)
+                break;
+
+            bool isProject = isProjectDirNameAtCwd(baseFrom);
+            bool reloadCurrent =
+                isProject && proj.project_loaded &&
+                strcmp(mcl_cfg.project, path) == 0;
+            if (!isProject && currentProjectUnder(path)) {
+                ok = false;
+                break;
+            }
+            if (isProject) {
+                ok = SD.chdir(baseFrom) &&
+                     proj.rename_project_files(baseFrom, baseTo);
+                SD.chdir(parentRoot);
+                ok = ok && SD.rename(baseFrom, baseTo);
+                if (ok && reloadCurrent) {
+                    ok = proj.load_project(arg);
+                    loadedProject = ok;
+                }
+            } else {
+                ok = SD.rename(baseFrom, baseTo);
+            }
+            break;
+        }
+
+        case PROJECT_OP_COPY:
+            ok = path[0] != '\0' && arg[0] != '\0';
+            if (ok) {
+                bool isProject = projectRelPathIsProject(path);
+                if (isProject) {
+                    ok = proj.copy_project(path, arg);
+                } else {
+                    proj.chdir_projects();
+                    ok = mcl_sd.copy_dir(path, arg, 0, 64, 64);
+                }
+            }
+            break;
+
+        case PROJECT_OP_MOVE:
+#ifndef MCL_HAS_FILE_MOVE
+            sendErr(tag, ERR_UNSUPPORTED, op);
+            return;
+#else
+            ok = path[0] != '\0' && arg[0] != '\0' &&
+                 strcmp(path, arg) != 0 &&
+                 !pathStartsWithProjectDir(arg, path) &&
+                 !currentProjectUnder(path);
+            if (ok) {
+                bool isProject = projectRelPathIsProject(path);
+                if (isProject) {
+                    ok = proj.move_project(path, arg);
+                } else {
+                    proj.chdir_projects();
+                    ok = SD.rename(path, arg);
+                }
+            }
+            break;
+#endif
+
+        default:
+            sendErr(tag, ERR_UNSUPPORTED, op);
+            return;
+    }
+
+    if (!ok) {
+        sendErr(tag, ERR_RANGE, op);
+        return;
+    }
+
+    uint8_t ack[2] = {CMD_PROJECT_OP, op};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    uint8_t dirty = DIRTY_PROJECTS;
+    if (loadedProject) {
+        dirty |= (uint8_t)(DIRTY_CELLS | DIRTY_ACTIVE |
+                           DIRTY_ARRANGEMENT);
+    }
+    notifyDirty(0xFF, dirty);
+}
+
+void SpsHostArrBridge::onProjectVersionOp(uint8_t tag, const uint8_t* b,
+                                          uint16_t n) {
+#ifndef MCL_HAS_PROJECT_BACKUP
+    (void)b;
+    (void)n;
+    sendErr(tag, ERR_UNSUPPORTED, 0);
+#else
+    if (n < 3) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint8_t op = b[0];
+    uint8_t pair = b[1];
+    uint16_t off = 2;
+    char project[PRJ_PATH_LEN];
+    if (!readProjectBodyString(b, n, off, project, sizeof(project), false) ||
+        !projectRelPathIsProject(project)) {
+        sendErr(tag, ERR_RANGE, op);
+        return;
+    }
+
+    bool ok = false;
+    bool loadedProject = false;
+    switch (op) {
+        case PROJECT_VERSION_CREATE_BACKUP: {
+            uint8_t createdPair = 0;
+            ok = proj.create_backup(project, &createdPair) &&
+                 proj.load_project_version(project, createdPair);
+            loadedProject = ok;
+            break;
+        }
+        case PROJECT_VERSION_LOAD:
+            ok = pair < 128 && proj.load_project_version(project, pair);
+            loadedProject = ok;
+            break;
+        case PROJECT_VERSION_DELETE:
+            ok = pair > 0 && proj.delete_backup(project, pair);
+            break;
+        default:
+            sendErr(tag, ERR_UNSUPPORTED, op);
+            return;
+    }
+
+    if (!ok) {
+        sendErr(tag, ERR_RANGE, op);
+        return;
+    }
+
+    uint8_t ack[2] = {CMD_PROJECT_VERSION_OP, op};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    uint8_t dirty = DIRTY_PROJECTS;
+    if (loadedProject) {
+        dirty |= (uint8_t)(DIRTY_CELLS | DIRTY_ACTIVE |
+                           DIRTY_ARRANGEMENT);
+    }
+    notifyDirty(0xFF, dirty);
+#endif
 }
 
 bool SpsHostArrBridge::applySetLink(const uint8_t* b, uint16_t n) {
@@ -1490,6 +2389,16 @@ void SpsHostArrBridge::notifyDirty(int track, uint8_t regions) {
         return;
     uint8_t b[2] = {(uint8_t)track, regions};
     sendFrame(CMD_NOTIFY_DIRTY, 0, b, 2);
+}
+
+void SpsHostArrBridge::notifyArrangementPosition(uint32_t positionQ12,
+                                                 uint8_t flags) {
+    if (!ready_)
+        return;
+    uint8_t b[5] = {};
+    spsArrPutU32(b + 0, positionQ12);
+    b[4] = flags;
+    sendFrame(CMD_NOTIFY_ARR_POSITION, 0, b, (uint16_t)sizeof b);
 }
 
 #endif  // MCL_FEATURE_HOST_ARRANGER

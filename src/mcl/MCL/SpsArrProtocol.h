@@ -31,6 +31,8 @@ static const uint8_t kSysexStart = spswire::kSysexStart;
 static const uint8_t kSysexEnd = spswire::kSysexEnd;
 
 static const int kNumTracks = 16;
+static const int kNumGridBanks = 2;
+static const int kNumGridSlots = kNumTracks * kNumGridBanks;
 static const int kNumRows = 128;
 static const int kRowsPerCellPage = 29;
 static const int kRowsPerLabelCellPage = 22;
@@ -47,6 +49,9 @@ enum Cmd {
     CMD_REQ_ARR_CLIPS = 0x13,
     CMD_REQ_ARR_MARKERS = 0x14,
     CMD_REQ_ARR_TRACK_LABELS = 0x15,
+    CMD_REQ_ARR_LOOP_REGIONS = 0x16,
+    CMD_REQ_PROJECT_LIST = 0x17,
+    CMD_REQ_PROJECT_VERSIONS = 0x18,
 
     CMD_CELLS = 0x30,
     CMD_ACTIVE = 0x31,
@@ -54,6 +59,9 @@ enum Cmd {
     CMD_ARR_CLIPS = 0x33,
     CMD_ARR_MARKERS = 0x34,
     CMD_ARR_TRACK_LABELS = 0x35,
+    CMD_ARR_LOOP_REGIONS = 0x36,
+    CMD_PROJECT_LIST = 0x37,
+    CMD_PROJECT_VERSIONS = 0x38,
 
     CMD_SET_LINK = 0x50,
     CMD_SET_FADE = 0x51,
@@ -77,9 +85,14 @@ enum Cmd {
     CMD_ARR_MAKE_LOCAL = 0x63,
     CMD_ARR_LOCAL_TO_GRID = 0x64,
     CMD_ARR_SET_LOOP = 0x65,
+    CMD_SET_LOAD_SETTINGS = 0x66,
+    CMD_SET_ARR_LOOP_REGION = 0x67,
+    CMD_PROJECT_OP = 0x68,
+    CMD_PROJECT_VERSION_OP = 0x69,
 
     CMD_NOTIFY_ACTIVE = 0x70,
     CMD_NOTIFY_DIRTY = 0x71,
+    CMD_NOTIFY_ARR_POSITION = 0x72,
     CMD_ACK = 0x7E,
     CMD_ERR = 0x7F
 };
@@ -101,6 +114,15 @@ enum Caps {
     CAP_GRID_SLOT_EDIT = 1 << 13,
     CAP_ARRANGER_LOAD_SEEK = 1 << 14,
     CAP_ARRANGER_CLIP_FADES = 1 << 15
+};
+
+enum Caps2 {
+    CAP2_GRID_BANKS = 1 << 0,
+    CAP2_SLOT_OWNERSHIP = 1 << 1,
+    CAP2_ARRANGEMENT_LOOP_REGIONS = 1 << 2,
+    CAP2_PROJECT_BROWSER = 1 << 3,
+    CAP2_PROJECT_BACKUP = 1 << 4,
+    CAP2_PROJECT_MOVE = 1 << 5
 };
 
 enum Mode {
@@ -131,7 +153,8 @@ enum CellRequestFlags {
 enum CellFormatFlags {
     CELL_FORMAT_LABELS = 1 << 0,
     CELL_FORMAT_ROW_NAMES = 1 << 1,
-    CELL_FORMAT_DEPENDENCIES = 1 << 2
+    CELL_FORMAT_DEPENDENCIES = 1 << 2,
+    CELL_FORMAT_GRID_BANK = 1 << 3
 };
 
 static const int kCellRecordBaseBytes = 15;
@@ -139,7 +162,10 @@ static const int kCellRecordLabelBytes = 6;
 static const int kCellRecordRowNameBytes = 16;
 static const int kCellRecordDependencyBytes = 2;
 static const int kActiveSlotBytes = kNumTracks;
-static const int kActiveReleasedMaskBytes = 2;
+static const int kActiveExtraGridSlotBytes = kNumTracks;
+static const int kActiveReleasedMaskBytes = 4;
+static const int kActiveLoadSettingsBytes = 2;
+static const int kActiveSlotOwnershipBytes = 4;
 static const int kRowNameBytes = 16;
 static const int kArrNameBytes = 16;
 static const int kArrClipFadeBytes = 8;
@@ -154,17 +180,83 @@ static const int kArrClipRecordBytes =
 static const int kArrMarkerLabelBytes = 16;
 static const int kArrMarkerRecordBytes = 24;
 static const int kArrMarkerGlobalTrack = 255;
+static const int kArrLoopRegionLabelBytes = 16;
+static const int kArrLoopRegionRecordBytes = 32;
 static const int kArrTrackLabelBytes = 16;
 static const int kArrTrackLabelCount = 16;
+static const int kProjectPathBytes = 64;
+static const int kProjectEntryNameBytes = 32;
+static const int kProjectEntryRecordBytes = 2 + kProjectEntryNameBytes;
+static const int kProjectListHeaderBytes =
+    10 + kProjectPathBytes + kProjectPathBytes;
+static const int kProjectVersionHeaderBytes = 8 + kProjectPathBytes;
+static const int kProjectVersionRecordBytes = 2;
 static const int kMaxArrClipRecordsPerFrame =
     (kMaxBodyRaw - 16) / kArrClipRecordBytes;
 static const int kMaxArrMarkerRecordsPerFrame =
     (kMaxBodyRaw - 16) / kArrMarkerRecordBytes;
+static const int kMaxArrLoopRegionRecordsPerFrame =
+    (kMaxBodyRaw - 16) / kArrLoopRegionRecordBytes;
+static const int kMaxProjectEntriesPerFrame =
+    (kMaxBodyRaw - kProjectListHeaderBytes) / kProjectEntryRecordBytes;
+static const int kMaxProjectVersionRecordsPerFrame =
+    (kMaxBodyRaw - kProjectVersionHeaderBytes) / kProjectVersionRecordBytes;
+static const uint32_t kMinArrLoopQ12 = 2u * 12u;
 
 enum DirtyRegion {
     DIRTY_CELLS = 1 << 0,
     DIRTY_ACTIVE = 1 << 1,
-    DIRTY_ARRANGEMENT = 1 << 2
+    DIRTY_ARRANGEMENT = 1 << 2,
+    DIRTY_PROJECTS = 1 << 3
+};
+
+enum ProjectEntryType {
+    PROJECT_ENTRY_NEW = 0,
+    PROJECT_ENTRY_PARENT = 1,
+    PROJECT_ENTRY_DIR = 2,
+    PROJECT_ENTRY_PROJECT = 3,
+    PROJECT_ENTRY_ERROR = 4
+};
+
+enum ProjectEntryFlags {
+    PROJECT_ENTRY_CURRENT = 1 << 0,
+    PROJECT_ENTRY_CAN_DELETE = 1 << 1,
+    PROJECT_ENTRY_CAN_RENAME = 1 << 2,
+    PROJECT_ENTRY_CAN_COPY = 1 << 3,
+    PROJECT_ENTRY_CAN_MOVE = 1 << 4,
+    PROJECT_ENTRY_HAS_VERSIONS = 1 << 5
+};
+
+enum ProjectListFlags {
+    PROJECT_LIST_MORE = 1 << 0,
+    PROJECT_LIST_BACKUP = 1 << 1,
+    PROJECT_LIST_MOVE = 1 << 2,
+    PROJECT_LIST_PROJECT_LOADED = 1 << 3
+};
+
+enum ProjectOp {
+    PROJECT_OP_LOAD = 1,
+    PROJECT_OP_NEW_PROJECT = 2,
+    PROJECT_OP_NEW_FOLDER = 3,
+    PROJECT_OP_DELETE = 4,
+    PROJECT_OP_RENAME = 5,
+    PROJECT_OP_COPY = 6,
+    PROJECT_OP_MOVE = 7
+};
+
+enum ProjectVersionOp {
+    PROJECT_VERSION_CREATE_BACKUP = 1,
+    PROJECT_VERSION_LOAD = 2,
+    PROJECT_VERSION_DELETE = 3
+};
+
+enum ProjectVersionFlags {
+    PROJECT_VERSION_ACTIVE = 1 << 0,
+    PROJECT_VERSION_CAN_DELETE = 1 << 1
+};
+
+enum PositionNotifyFlags {
+    POSITION_NOTIFY_LOOP = 1 << 0
 };
 
 enum ArrangerLoadMode {
@@ -180,11 +272,17 @@ enum ArrangerLoadFlags {
     ARR_LOAD_GROUP_SELECT = 1 << 2,
     ARR_LOAD_SEEK_POSITION = 1 << 3,
     ARR_LOAD_IMMEDIATE = 1 << 4,
-    ARR_LOAD_RUNTIME_FADES = 1 << 5
+    ARR_LOAD_RUNTIME_FADES = 1 << 5,
+    ARR_LOAD_GRID_BANK = 1 << 6
 };
 
 enum GridSaveFlags {
     GRID_SAVE_GROUP_SELECT = 1 << 0
+};
+
+enum LoadSettingsFlags {
+    LOAD_SETTINGS_MODE = 1 << 0,
+    LOAD_SETTINGS_QUANT = 1 << 1
 };
 
 enum GridSlotApplyFields {

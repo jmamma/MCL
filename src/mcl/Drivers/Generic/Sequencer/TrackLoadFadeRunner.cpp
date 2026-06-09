@@ -5,10 +5,10 @@
 #include "../../../MCL/TrackLoadFade.h"
 #include <string.h>
 
-using LoadFadeMask = uint16_t;
+using LoadFadeMask = uint32_t;
 
-static_assert(GRID_WIDTH <= sizeof(LoadFadeMask) * 8,
-              "TrackLoadFadeRunner active_mask is too narrow for GRID_WIDTH");
+static_assert(NUM_SLOTS <= sizeof(LoadFadeMask) * 8,
+              "TrackLoadFadeRunner active_mask is too narrow for NUM_SLOTS");
 
 namespace {
 
@@ -61,7 +61,7 @@ public:
   }
 };
 
-LoadFadeState fade_states[GRID_WIDTH];
+LoadFadeState fade_states[NUM_SLOTS];
 LoadFadeMask active_mask = 0;
 
 #if defined(PLATFORM_WASM) && defined(DEBUGMODE)
@@ -154,7 +154,7 @@ uint16_t load_fade_delay_q12(uint32_t start_clock) {
 #endif
 
 LoadFadeMask clear_slot(GridSlot slot) {
-  if (slot >= GRID_WIDTH) {
+  if (slot >= NUM_SLOTS) {
     return 0;
   }
   LoadFadeMask bit = (LoadFadeMask)1 << slot;
@@ -317,13 +317,13 @@ void TrackLoadFadeRunner::clear() {
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   if (!preserve_armed_prestart) {
     active_mask = 0;
-    for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
       fade_states[n].clear();
     }
     return;
   }
 
-  for (uint8_t n = 0; n < GRID_WIDTH; n++) {
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     LoadFadeMask bit = (LoadFadeMask)1 << n;
     if ((active_mask & bit) != 0 &&
         (fade_states[n].flags & LOAD_FADE_RUNTIME_WAIT_START) != 0) {
@@ -349,7 +349,7 @@ void TrackLoadFadeRunner::start(GridSlot slot,
                                 MidiUartClass *uart2
 #endif
                                 ) {
-  if (slot >= GRID_WIDTH) {
+  if (slot >= NUM_SLOTS) {
     return;
   }
 
@@ -426,7 +426,7 @@ void TrackLoadFadeRunner::tick(MidiUartClass *uart, MidiUartClass *uart2) {
     return;
   }
   LoadFadeMask bit = 1;
-  for (uint8_t slot = 0; slot < GRID_WIDTH; slot++, bit <<= 1) {
+  for (uint8_t slot = 0; slot < NUM_SLOTS; slot++, bit <<= 1) {
     if ((active_mask & bit) != 0) {
       tick_slot(slot, uart, uart2);
     }

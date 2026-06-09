@@ -115,7 +115,7 @@ bool is_grid_chain_load_mode(uint8_t mode) {
 }
 
 #if MCL_FEATURE_HOST_ARRANGER
-uint16_t selected_destination_mask(const uint8_t *slot_select_array,
+uint32_t selected_destination_mask(const uint8_t *slot_select_array,
                                    GridSlot load_offset) {
   if (slot_select_array == nullptr) {
     return 0;
@@ -131,7 +131,7 @@ uint16_t selected_destination_mask(const uint8_t *slot_select_array,
     }
   }
 
-  uint16_t mask = 0;
+  uint32_t mask = 0;
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
     if (slot_select_array[n] == 0) {
       continue;
@@ -143,13 +143,13 @@ uint16_t selected_destination_mask(const uint8_t *slot_select_array,
         continue;
       }
       int mapped = (int)n - (int)first_slot + (int)load_offset;
-      if (mapped < 0 || mapped >= 16) {
+      if (mapped < 0 || mapped >= NUM_SLOTS) {
         continue;
       }
       dst = (GridSlot)mapped;
     }
-    if (dst < 16) {
-      mask |= (uint16_t)(1u << dst);
+    if (dst < NUM_SLOTS) {
+      mask |= (uint32_t)(1ul << dst);
     }
   }
   return mask;
@@ -302,7 +302,7 @@ void MCLActions::start_load_fade_at(GridSlot slot,
                                     bool allow_prestart
 #endif
                                     ) {
-  if (slot >= GRID_WIDTH) {
+  if (slot >= NUM_SLOTS) {
     return;
   }
 
@@ -700,7 +700,15 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
     if (slot_select_array[n] == 0) { continue; }
     if (first_slot == 255) { first_slot = n; }
 
-    GridSlot dst = load_offset == 255 ? n : (n - first_slot) + load_offset;
+    GridSlot dst = n;
+    if (load_offset != 255) {
+      int mapped = (int)n - (int)first_slot + (int)load_offset;
+      if (mapped < 0 || mapped >= NUM_SLOTS) {
+        slot_select_array[n] = 0;
+        continue;
+      }
+      dst = (GridSlot)mapped;
+    }
 
     GridDeviceTrack *gdt = get_grid_dev_track(n);
     GridColumn track_idx_dst = dst & 0xF;
@@ -775,7 +783,15 @@ again:
 
       if (first_slot == 255) { first_slot = n; }
 
-      GridSlot dst = load_offset == 255 ? n : (n - first_slot) + load_offset;
+      GridSlot dst = n;
+      if (load_offset != 255) {
+        int mapped = (int)n - (int)first_slot + (int)load_offset;
+        if (mapped < 0 || mapped >= NUM_SLOTS) {
+          slot_select_array[n] = 0;
+          continue;
+        }
+        dst = (GridSlot)mapped;
+      }
       row = row_array[n];
       if (q == 255) {
 
@@ -985,7 +1001,15 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
     GridDeviceTrack *gdt = get_grid_dev_track(i);
 
-    GridSlot dst = load_offset == 255 ? i : (i - first_slot) + load_offset;
+    GridSlot dst = i;
+    if (load_offset != 255) {
+      int mapped = (int)i - (int)first_slot + (int)load_offset;
+      if (mapped < 0 || mapped >= NUM_SLOTS) {
+        slot_select_array[i] = 0;
+        continue;
+      }
+      dst = (GridSlot)mapped;
+    }
     GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
 
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { slot_select_array[i] = 0; continue; }

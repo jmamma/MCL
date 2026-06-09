@@ -23,6 +23,7 @@ protected:
 public:
   EventManager events;
   bool display_mirror = false;
+  bool skip_display_once = false;
   bool use_screen_saver = true;
   bool screen_saver = false;
   Vector<event_handler_t, 4> eventHandlers;
@@ -74,6 +75,7 @@ public:
   void removeTask(Task *task) { tasks.remove(task); }
 
   void loop();
+  void deferDisplayOnce() { skip_display_once = true; }
   void wake_screen_saver();
   void mirror();
   void display();

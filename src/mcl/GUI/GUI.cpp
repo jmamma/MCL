@@ -205,7 +205,10 @@ void GuiClass::loop() {
   }
   MidiUartParent::handle_midi_lock = 0;
 
-  display();
+  if (!skip_display_once) {
+    display();
+  }
+  skip_display_once = false;
   MidiUartParent::handle_midi_lock = _midi_lock_tmp;
 }
 

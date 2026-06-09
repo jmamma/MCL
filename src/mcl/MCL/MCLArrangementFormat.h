@@ -18,7 +18,7 @@
 
 namespace mclarrfile {
 
-static const uint16_t kVersion = 5;
+static const uint16_t kVersion = 6;
 static const uint16_t kMinVersion = 1;
 static const uint16_t kClipBytesV1 = 16;
 static const uint16_t kClipBytesV2 = 24;
@@ -28,9 +28,13 @@ static const uint8_t kNameBytes = 16;
 static const uint8_t kMarkerLabelBytes = 16;
 static const uint8_t kTrackLabelBytes = 16;
 static const uint8_t kTrackLabelCount = 16;
+static const uint8_t kLoopRegionLabelBytes = 16;
 static const uint8_t kFilenameDigits = 3;
 static const uint8_t kMaxArrangementIndex = 255;
 static const uint16_t kMaxMarkers = 128;
+static const uint16_t kMaxLoopRegions = 64;
+// Arrangement loop repeatCount: 0 means infinite, matching song loop rows.
+static const uint16_t kLoopRegionRepeatInfinite = 0;
 static const uint8_t kGridSourceSlotCount = 32;
 
 static const char kDirName[] = "Arr";
@@ -50,11 +54,16 @@ enum ClipSourceKind {
 
 enum HeaderFlags {
     HEADER_HAS_MARKERS = 1 << 0,
-    HEADER_HAS_TRACK_LABELS = 1 << 1
+    HEADER_HAS_TRACK_LABELS = 1 << 1,
+    HEADER_HAS_LOOP_REGIONS = 1 << 2
 };
 
 enum MarkerFlags {
     MARKER_LABEL = 1 << 0
+};
+
+enum LoopRegionFlags {
+    LOOP_REGION_ENABLED = 1 << 0
 };
 
 struct Header {
@@ -72,6 +81,15 @@ struct HeaderExtraV2 {
     uint16_t markerCount;
     uint16_t trackLabelBytes;
     uint16_t trackLabelCount;
+};
+
+struct HeaderExtraV6 {
+    uint16_t markerBytes;
+    uint16_t markerCount;
+    uint16_t trackLabelBytes;
+    uint16_t trackLabelCount;
+    uint16_t loopRegionBytes;
+    uint16_t loopRegionCount;
 };
 
 struct Clip {
@@ -109,10 +127,22 @@ struct Marker {
     uint16_t reserved;
 };
 
+struct LoopRegion {
+    uint32_t startQ12;
+    uint32_t endQ12;
+    uint16_t repeatCount;
+    uint16_t id;
+    uint8_t flags;
+    uint8_t reserved[3];
+    char label[kLoopRegionLabelBytes];
+};
+
 static_assert(sizeof(Header) == 32, "MCL arrangement header layout changed");
 static_assert(sizeof(HeaderExtraV2) == 8, "MCL arrangement header extra layout changed");
+static_assert(sizeof(HeaderExtraV6) == 12, "MCL arrangement header extra v6 layout changed");
 static_assert(sizeof(Clip) == 40, "MCL arrangement clip layout changed");
 static_assert(sizeof(Marker) == 24, "MCL arrangement marker layout changed");
+static_assert(sizeof(LoopRegion) == 32, "MCL arrangement loop region layout changed");
 
 inline void initHeader(Header& h, const char* name) {
     h.magic[0] = 'S';
