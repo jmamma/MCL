@@ -1767,8 +1767,12 @@ void MCLArrangement::resetPlayback() {
   stored_loop_count_ = 0;
 }
 
-void MCLArrangement::resetPlaybackForTransport() {
+void MCLArrangement::resetPlaybackForTransport(bool clearReleasedTracks) {
+  uint32_t releasedMask = playback_released_mask_;
   resetPlayback();
+  if (!clearReleasedTracks) {
+    playback_released_mask_ = releasedMask;
+  }
   grid_task.load_queue.init();
 }
 
@@ -1969,7 +1973,7 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
 }
 
 bool MCLArrangement::releasePlaybackTracks(uint32_t trackMask) {
-  if (!playback_active_ || trackMask == 0) {
+  if (trackMask == 0) {
     return false;
   }
   uint32_t oldMask = playback_released_mask_;
@@ -2011,12 +2015,15 @@ bool MCLArrangement::applyClipRuntime(uint8_t dst, DeviceTrack *track) {
 }
 
 bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
-                              bool allowPrestartFade) {
+                              bool allowPrestartFade,
+                              bool clearReleasedTracks) {
   playback_arrangement_idx_ = mcl_cfg.active_arrangement_idx;
   playback_active_ = true;
   last_tick_q12_ = positionQ12;
   clip_runtime_fade_mask_ = 0;
-  playback_released_mask_ = 0;
+  if (clearReleasedTracks) {
+    playback_released_mask_ = 0;
+  }
   loop_entered_ = loop_enabled_ && positionQ12 >= loop_start_q12_ &&
                   positionQ12 < loop_end_q12_;
   uint32_t endQ12 = positionQ12 == 0xFFFFFFFFu ? positionQ12
@@ -2025,13 +2032,15 @@ bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
   if (allowPrestartFade) {
     queueFlags |= LOAD_QUEUE_FLAG_PRESTART_FADE;
   }
-  return queueClipStarts(positionQ12, endQ12, true, true, queueFlags);
+  return queueClipStarts(positionQ12, endQ12, true, true, queueFlags,
+                         !clearReleasedTracks);
 }
 
 bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
                                      bool loadActiveAtPosition,
                                      bool clearInactiveTracks,
-                                     uint8_t loadQueueFlags) {
+                                     uint8_t loadQueueFlags,
+                                     bool honorReleasedTracks) {
   File file;
   if (!openActive(&file, O_READ)) {
     return false;
@@ -2055,7 +2064,6 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
   uint32_t currentActiveMask = 0;
   uint32_t startMask = 0;
   uint32_t nowQ12 = endQ12 > startQ12 ? endQ12 - 1u : startQ12;
-  bool honorReleasedTracks = !loadActiveAtPosition;
   for (uint32_t i = 0; i < header.clipCount; ++i) {
     mclarrfile::Clip clip;
     if (!readClipRecord(file, header, clip)) {
@@ -2135,6 +2143,9 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       clearInactiveTracks ? (uint32_t)0xFFFFFFFFul : playback_active_mask_;
   uint32_t clearMask = clearBaseMask & ~currentActiveMask;
   clearMask &= ~startMask;
+  if (honorReleasedTracks) {
+    clearMask &= ~playback_released_mask_;
+  }
   for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
     if (((clearMask >> track) & 1u) == 0) {
       continue;
@@ -2163,7 +2174,9 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
 
 void MCLArrangement::tick() {
   if (!proj.project_loaded || MidiClock.state != MidiClockClass::STARTED) {
+    uint32_t releasedMask = playback_released_mask_;
     resetPlayback();
+    playback_released_mask_ = releasedMask;
     return;
   }
 
@@ -2174,9 +2187,10 @@ void MCLArrangement::tick() {
 
   bool sameArrangement =
       playback_active_ && playback_arrangement_idx_ == activeIdx;
-  // Stored arrangement loops remain active under the temporary UI loop.
-  // Check them first so persistent loop wraps are not masked.
-  {
+  bool allowLoopTransportSeek = playback_released_mask_ == 0;
+  if (allowLoopTransportSeek) {
+    // Stored arrangement loops remain active under the temporary UI loop.
+    // Check them first so persistent loop wraps are not masked.
     mclarrfile::LoopRegion regions[4];
     uint32_t queryStart = sameArrangement && nowQ12 >= last_tick_q12_
                               ? last_tick_q12_
@@ -2234,13 +2248,13 @@ void MCLArrangement::tick() {
         mcl_seq.set_transport_position(tick96);
         sps_host_arr_bridge.notifyArrangementPosition(
             region.startQ12, spsarr::POSITION_NOTIFY_LOOP);
-        resetPlaybackForTransport();
+        resetPlaybackForTransport(false);
         stored_loop_active_id_ = regionId;
         stored_loop_repeats_done_ = nextRepeatsDone;
         stored_loop_start_q12_ = region.startQ12;
         stored_loop_end_q12_ = region.endQ12;
         stored_loop_count_ = region.repeatCount;
-        seekLoad(region.startQ12, true, false);
+        seekLoad(region.startQ12, true, false, false);
         return;
       }
     } else if (stored_loop_active_id_ != 0 &&
@@ -2267,13 +2281,13 @@ void MCLArrangement::tick() {
         mcl_seq.set_transport_position(tick96);
         sps_host_arr_bridge.notifyArrangementPosition(
             startQ12ForLoop, spsarr::POSITION_NOTIFY_LOOP);
-        resetPlaybackForTransport();
+        resetPlaybackForTransport(false);
         stored_loop_active_id_ = regionId;
         stored_loop_repeats_done_ = nextRepeatsDone;
         stored_loop_start_q12_ = startQ12ForLoop;
         stored_loop_end_q12_ = endQ12ForLoop;
         stored_loop_count_ = loopCount;
-        seekLoad(startQ12ForLoop, true, false);
+        seekLoad(startQ12ForLoop, true, false, false);
         return;
       }
       if (!inside && (nowQ12 < stored_loop_start_q12_ ||
@@ -2293,7 +2307,8 @@ void MCLArrangement::tick() {
     }
   }
 
-  if (loop_enabled_ && loop_end_q12_ > loop_start_q12_) {
+  if (allowLoopTransportSeek && loop_enabled_ &&
+      loop_end_q12_ > loop_start_q12_) {
     bool insideLoop = nowQ12 >= loop_start_q12_ && nowQ12 < loop_end_q12_;
     if (insideLoop) {
       loop_entered_ = true;
@@ -2308,8 +2323,8 @@ void MCLArrangement::tick() {
       uint32_t tick96 = q12ToHostTick96(loop_start_q12_);
       MidiClock.set_transport_position(tick96);
       mcl_seq.set_transport_position(tick96);
-      resetPlaybackForTransport();
-      seekLoad(loop_start_q12_, true, false);
+      resetPlaybackForTransport(false);
+      seekLoad(loop_start_q12_, true, false, false);
       return;
     }
     if (!insideLoop && (nowQ12 < loop_start_q12_ || nowQ12 >= loop_end_q12_)) {
@@ -2334,7 +2349,7 @@ void MCLArrangement::tick() {
   playback_arrangement_idx_ = activeIdx;
   last_tick_q12_ = nowQ12;
   queueClipStarts(startQ12, endQ12, false, false,
-                  LOAD_QUEUE_FLAG_IMMEDIATE);
+                  LOAD_QUEUE_FLAG_IMMEDIATE, true);
 }
 
 #endif // MCL_FEATURE_HOST_ARRANGER

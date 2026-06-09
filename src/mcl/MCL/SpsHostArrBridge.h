@@ -51,6 +51,10 @@ private:
     void onGridCopy(uint8_t tag, const uint8_t* b, uint16_t n);
     void onGridClear(uint8_t tag, const uint8_t* b, uint16_t n);
     void onGridPaste(uint8_t tag, const uint8_t* b, uint16_t n);
+#if MCL_FEATURE_HOST_GRID_MOVE_UNDO
+    void onGridMove(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onGridUndo(uint8_t tag);
+#endif
     void onGridApplySlotEdit(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetRowName(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrMarker(uint8_t tag, const uint8_t* b, uint16_t n);

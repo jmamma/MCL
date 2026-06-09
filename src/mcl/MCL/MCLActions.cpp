@@ -114,6 +114,8 @@ bool is_grid_chain_load_mode(uint8_t mode) {
   return mode == LOAD_QUEUE || mode == LOAD_AUTO;
 }
 
+} // namespace
+
 #if MCL_FEATURE_HOST_ARRANGER
 uint32_t selected_destination_mask(const uint8_t *slot_select_array,
                                    GridSlot load_offset) {
@@ -155,8 +157,6 @@ uint32_t selected_destination_mask(const uint8_t *slot_select_array,
   return mask;
 }
 #endif
-
-} // namespace
 
 DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
                                                 uint8_t track_type, SeqTrack *seq_track,
@@ -637,6 +637,18 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
     if (gdt == nullptr) { continue; }
 
     row_array[n] = _row_array[n];
+#if MCL_FEATURE_HOST_ARRANGER
+    if (row_array[n] >= GRID_LENGTH &&
+        row_array[n] != LOAD_QUEUE_PRIVATE_ROW) {
+      slot_select_array[n] = 0;
+      continue;
+    }
+#else
+    if (row_array[n] >= GRID_LENGTH) {
+      slot_select_array[n] = 0;
+      continue;
+    }
+#endif
 
     if (load_mode == LOAD_QUEUE) {
       chains[n].add(row_array[n], get_chain_length());
@@ -721,6 +733,17 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       continue;
     }
     GridRow row = row_array[n];
+#if MCL_FEATURE_HOST_ARRANGER
+    if (row >= GRID_LENGTH && row != LOAD_QUEUE_PRIVATE_ROW) {
+      slot_select_array[n] = 0;
+      continue;
+    }
+#else
+    if (row >= GRID_LENGTH) {
+      slot_select_array[n] = 0;
+      continue;
+    }
+#endif
     EmptyTrack scratch;
     bool rebuilt = false;
     auto *device_track =
@@ -855,6 +878,10 @@ again:
   if (recalc_latency) {
     calc_latency();
   }
+
+#if MCL_FEATURE_HOST_ARRANGER
+  sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
+#endif
 
   DEBUG_PRINTLN("NEXT STEP");
   DEBUG_PRINTLN(next_step);
@@ -993,6 +1020,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   GridSlot last_slot = 255;
   GridSlot first_slot = 255;
   GridRow current_row = grid_page.getRow();
+  bool any_loaded = false;
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
     if (slot_select_array[i] == 0) { continue; }
@@ -1015,6 +1043,17 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { slot_select_array[i] = 0; continue; }
 
     row = row_array ? row_array[i] : current_row;
+#if MCL_FEATURE_HOST_ARRANGER
+    if (row >= GRID_LENGTH && row != LOAD_QUEUE_PRIVATE_ROW) {
+      slot_select_array[i] = 0;
+      continue;
+    }
+#else
+    if (row >= GRID_LENGTH) {
+      slot_select_array[i] = 0;
+      continue;
+    }
+#endif
     last_slot = dst;
 
     grid_page.active_slots[dst] = load_offset == 255 ? row : SLOT_OFFSET_LOAD;
@@ -1030,9 +1069,14 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
                               )) {
       slot_select_array[i] = 0;
     } else {
+      any_loaded = true;
       mute_states[dst] = gdt_dst->seq_track->mute_state;
       gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
     }
+  }
+
+  if (!any_loaded) {
+    return;
   }
 
   /*Send the encoded kit to the devices via sysex*/
@@ -1041,11 +1085,15 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   GridRowHeader row_header;
 
-  proj.read_grid_row_header(&row_header, row, 0);
+  GridRow header_row = row < GRID_LENGTH ? row : current_row;
+  if (header_row >= GRID_LENGTH) {
+    header_row = 0;
+  }
+  proj.read_grid_row_header(&row_header, header_row, 0);
 
   if (mcl_cfg.uart2_prg_out > 0) {
     mcl_seq.secondary_output->sendProgramChange(mcl_cfg.uart2_prg_out - 1,
-                                                row);
+                                                header_row);
   }
 
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {

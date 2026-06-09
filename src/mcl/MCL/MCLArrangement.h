@@ -27,11 +27,12 @@ public:
   bool importGrid(uint16_t trackMask, uint8_t startRow);
   void tick();
   void resetPlayback();
-  void resetPlaybackForTransport();
+  void resetPlaybackForTransport(bool clearReleasedTracks = true);
   void setLoopRegion(uint32_t startQ12, uint32_t endQ12);
   void clearLoopRegion();
   bool seekLoad(uint32_t positionQ12, bool immediate,
-                bool allowPrestartFade = false);
+                bool allowPrestartFade = false,
+                bool clearReleasedTracks = true);
   bool armRuntimeForHostLoad(uint32_t positionQ12,
                              const GridRow rows[NUM_SLOTS],
                              uint16_t trackMask, GridSlot loadOffset,
@@ -82,7 +83,8 @@ private:
   bool queueClipStarts(uint32_t startQ12, uint32_t endQ12,
                        bool loadActiveAtPosition,
                        bool clearInactiveTracks,
-                       uint8_t loadQueueFlags);
+                       uint8_t loadQueueFlags,
+                       bool honorReleasedTracks);
   bool rewriteActive(const mclarrfile::Header &header,
                      const mclarrfile::Clip *clips, uint32_t clipCount);
   bool rewriteActiveWithMarkers(const mclarrfile::Header &header,

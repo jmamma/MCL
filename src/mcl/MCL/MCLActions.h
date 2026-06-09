@@ -24,6 +24,11 @@ class SeqTrack;
 #define TRANSITION_MUTE 2
 #define TRANSITION_UNMUTE 3
 
+#if MCL_FEATURE_HOST_ARRANGER
+uint32_t selected_destination_mask(const uint8_t *slot_select_array,
+                                   GridSlot load_offset);
+#endif
+
 //div192th_time = 1.25 / tempo;
 //diff * div19th_time > 80ms equivalent to diff > (0.08/1.25) * tempo
 //float ms = (0.08 * 0.80) * tempo == 0.064 * tempo; 80ms

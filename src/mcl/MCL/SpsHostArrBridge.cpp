@@ -40,6 +40,10 @@ SpsHostArrBridge sps_host_arr_bridge;
 namespace {
 
 static constexpr uint16_t kCurrentPatternTimeoutMs = 500;
+#if MCL_FEATURE_HOST_GRID_MOVE_UNDO
+#define FILENAME_SPS_GRID_JOURNAL "sps_grid_journal_"
+static constexpr uint8_t kSpsGridJournalDepth = 16;
+#endif
 
 #if defined(PLATFORM_WASM) && defined(DEBUGMODE)
 #define ARR_FADE_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-fade] " fmt, ##__VA_ARGS__)
@@ -56,9 +60,30 @@ struct ArrCell {
     TrackLoadFadeData fade;
     bool hasFade = false;
     uint16_t dependencyMask = 0;
+    uint8_t groupIndex = 0xFF;
     char label2[3] = {'-', '-', '\0'};
     char label4[5] = {'-', '-', ' ', ' ', '\0'};
 };
+
+#if MCL_FEATURE_HOST_GRID_MOVE_UNDO
+struct GridMoveRequest {
+    GridSlot sourceCol = 0;
+    GridRow sourceRow = 0;
+    GridSpan width = 0;
+    GridSpan height = 0;
+    GridSlot targetCol = 0;
+    GridRow targetRow = 0;
+    bool sparse = false;
+    uint16_t rowMasks[GRID_LENGTH] = {};
+};
+
+static Grid sps_grid_journal[kSpsGridJournalDepth][NUM_GRIDS];
+static uint16_t
+    sps_grid_journal_masks[kSpsGridJournalDepth][NUM_GRIDS][GRID_LENGTH];
+static bool sps_grid_journal_valid[kSpsGridJournalDepth];
+static uint8_t sps_grid_journal_head = 0;
+static uint8_t sps_grid_journal_count = 0;
+#endif
 
 static uint32_t linkDurationQ12(const GridLink& link) {
     if (link.loops == 0)
@@ -236,6 +261,71 @@ static uint16_t cellDependencyMask(uint8_t track, GridRow row,
     return mask;
 }
 
+static uint8_t groupSelectIndexForSlot(GridSlot slot) {
+    if (slot >= NUM_SLOTS)
+        return 0xFF;
+
+    GridDeviceTrack* gdt = mcl_actions.get_grid_dev_track(slot);
+    if (gdt == nullptr || !gdt->isActive())
+        return 0xFF;
+
+    switch (gdt->group_type) {
+    case GROUP_DEV:
+        return gdt->device_idx < 2 ? gdt->device_idx : 0xFF;
+    case GROUP_PERF:
+        return 2;
+    case GROUP_AUX:
+        return 3;
+    case GROUP_TEMPO:
+        return 4;
+    }
+    return 0xFF;
+}
+
+static uint8_t hostLoadQueueMode(uint8_t mode, uint8_t flags) {
+    uint8_t queueMode = mode;
+    if ((flags & ARR_LOAD_IMMEDIATE) != 0) {
+        queueMode |= LOAD_QUEUE_FLAG_IMMEDIATE;
+    }
+    if ((flags & ARR_LOAD_START_TRANSPORT) != 0) {
+        queueMode |= LOAD_QUEUE_FLAG_PRESTART_FADE;
+    }
+    return queueMode;
+}
+
+static uint32_t hostLoadDestinationMask(const GridRow rowSelect[NUM_SLOTS],
+                                        GridSlot loadOffset) {
+    if (rowSelect == nullptr)
+        return 0;
+
+    uint8_t loadSelect[NUM_SLOTS];
+    memset(loadSelect, 0, sizeof(loadSelect));
+    uint32_t clearMask = 0;
+    for (uint8_t slot = 0; slot < NUM_SLOTS; ++slot) {
+        GridRow row = rowSelect[slot];
+        if (row < GRID_LENGTH || row == LOAD_QUEUE_PRIVATE_ROW) {
+            loadSelect[slot] = 1;
+        } else if (row == LOAD_QUEUE_CLEAR_ROW && slot < 32) {
+            clearMask |= (uint32_t)(1ul << slot);
+        }
+    }
+    return selected_destination_mask(loadSelect, loadOffset) | clearMask;
+}
+
+static void releaseHostLoadedArrangementTracks(
+    uint8_t mode, const GridRow rowSelect[NUM_SLOTS], GridSlot loadOffset) {
+    if (mode == ARR_LOAD_ARRANG)
+        return;
+
+    uint32_t mask = hostLoadDestinationMask(rowSelect, loadOffset);
+    if (mask == 0)
+        return;
+
+    if (mcl_arrangement.releasePlaybackTracks(mask)) {
+        sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)DIRTY_ACTIVE);
+    }
+}
+
 static ArrCell readCell(uint8_t track, GridRow row, GridIndex gridBank) {
     ArrCell cell;
     if (track >= spsarr::kNumTracks || row >= GRID_LENGTH)
@@ -257,6 +347,7 @@ static ArrCell readCell(uint8_t track, GridRow row, GridIndex gridBank) {
     cell.durationQ12 = linkDurationQ12(cell.link);
     populateCellLabels(cell, tr, slot, row);
     cell.dependencyMask = cellDependencyMask(track, row, gridBank, tr);
+    cell.groupIndex = groupSelectIndexForSlot(slot);
     if (const TrackLoadFadeData* fade = tr->load_fade_data()) {
         cell.fade = *fade;
         cell.hasFade = fade->enabled();
@@ -381,6 +472,70 @@ static bool parseGridRect(const uint8_t* b, uint16_t n, GridSlot& col,
     return w > 0 && h > 0;
 }
 
+#if MCL_FEATURE_HOST_GRID_MOVE_UNDO
+static uint16_t gridMoveWidthMask(GridSpan width) {
+    if (width >= GRID_WIDTH)
+        return 0xFFFFu;
+    return (uint16_t)((1u << width) - 1u);
+}
+
+static bool parseGridMove(const uint8_t* b, uint16_t n,
+                          GridMoveRequest& req) {
+    if (n < 9)
+        return false;
+
+    GridIndex sourceBank = sanitizeGridBank(b[6]);
+    GridIndex targetBank = sanitizeGridBank(b[7]);
+    if (b[0] >= spsarr::kNumTracks || b[4] >= spsarr::kNumTracks ||
+        b[1] >= GRID_LENGTH || b[5] >= GRID_LENGTH || b[2] == 0 ||
+        b[3] == 0) {
+        return false;
+    }
+
+    req.sourceCol = visibleSlotToGridSlot(b[0], sourceBank);
+    req.sourceRow = b[1];
+    req.width = b[2];
+    req.height = b[3];
+    req.targetCol = visibleSlotToGridSlot(b[4], targetBank);
+    req.targetRow = b[5];
+    req.sparse = (b[8] & 1) != 0;
+
+    if (req.sourceCol >= NUM_SLOTS || req.targetCol >= NUM_SLOTS)
+        return false;
+
+    GridSpan sourceBankRemaining =
+        (GridSpan)(GRID_WIDTH - (req.sourceCol % GRID_WIDTH));
+    GridSpan targetBankRemaining =
+        (GridSpan)(GRID_WIDTH - (req.targetCol % GRID_WIDTH));
+    if (req.width > sourceBankRemaining)
+        req.width = sourceBankRemaining;
+    if (req.width > targetBankRemaining)
+        req.width = targetBankRemaining;
+    if ((uint16_t)req.sourceRow + req.height > GRID_LENGTH)
+        req.height = (GridSpan)(GRID_LENGTH - req.sourceRow);
+    if ((uint16_t)req.targetRow + req.height > GRID_LENGTH)
+        req.height = (GridSpan)(GRID_LENGTH - req.targetRow);
+    if (req.width == 0 || req.height == 0)
+        return false;
+
+    uint16_t fullMask = gridMoveWidthMask(req.width);
+    uint16_t offset = 9;
+    bool any = false;
+    for (GridSpan y = 0; y < req.height; y++) {
+        uint16_t mask = fullMask;
+        if (req.sparse) {
+            if ((uint16_t)(offset + 2) > n)
+                return false;
+            mask = (uint16_t)(spsArrGetU16(b + offset) & fullMask);
+            offset = (uint16_t)(offset + 2);
+        }
+        req.rowMasks[y] = mask;
+        any = any || mask != 0;
+    }
+    return any;
+}
+#endif
+
 static bool clearGridRect(GridSlot col, GridRow row, GridSpan w, GridSpan h) {
     bool ok = true;
     for (GridSpan y = 0; y < h && (uint16_t)row + y < GRID_LENGTH; y++) {
@@ -415,6 +570,379 @@ static bool clearGridRect(GridSlot col, GridRow row, GridSpan w, GridSpan h) {
     grid_page.load_slot_models();
     return ok;
 }
+
+#if MCL_FEATURE_HOST_GRID_MOVE_UNDO
+static uint8_t spsGridJournalPrev(uint8_t index) {
+    return index == 0 ? (uint8_t)(kSpsGridJournalDepth - 1)
+                      : (uint8_t)(index - 1);
+}
+
+static void resetSpsGridJournalTransaction(uint8_t tx) {
+    if (tx >= kSpsGridJournalDepth)
+        return;
+    memset(sps_grid_journal_masks[tx], 0, sizeof(sps_grid_journal_masks[tx]));
+    sps_grid_journal_valid[tx] = false;
+}
+
+static bool closeSpsGridJournalFiles(uint8_t tx);
+
+static bool openSpsGridJournalFiles(uint8_t tx) {
+    if (tx >= kSpsGridJournalDepth)
+        return false;
+#ifndef __AVR__
+    SD.chdir(mcl_sd.mcl_root[0] == '\0' ? "/" : mcl_sd.mcl_root);
+#else
+    SD.chdir("/");
+#endif
+    char gridFilename[] = FILENAME_SPS_GRID_JOURNAL "00.0";
+    const uint8_t prefixLen =
+        (uint8_t)(sizeof(FILENAME_SPS_GRID_JOURNAL) - 1);
+    gridFilename[prefixLen] = (char)('0' + (tx / 10));
+    gridFilename[prefixLen + 1] = (char)('0' + (tx % 10));
+    for (uint8_t i = 0; i < NUM_GRIDS; i++) {
+        gridFilename[prefixLen + 3] = (char)('0' + i);
+        if (!SD.exists(gridFilename)) {
+            if (!sps_grid_journal[tx][i].new_file(gridFilename)) {
+                closeSpsGridJournalFiles(tx);
+                return false;
+            }
+        } else if (!sps_grid_journal[tx][i].open_file(gridFilename)) {
+            closeSpsGridJournalFiles(tx);
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool closeSpsGridJournalFiles(uint8_t tx) {
+    if (tx >= kSpsGridJournalDepth)
+        return false;
+    bool ok = true;
+    for (uint8_t i = 0; i < NUM_GRIDS; i++)
+        ok = sps_grid_journal[tx][i].close_file() && ok;
+    return ok;
+}
+
+static bool beginSpsGridJournalTransaction(uint8_t& tx) {
+    tx = sps_grid_journal_head;
+    if (sps_grid_journal_count == kSpsGridJournalDepth) {
+        resetSpsGridJournalTransaction(tx);
+        sps_grid_journal_count--;
+    } else {
+        resetSpsGridJournalTransaction(tx);
+    }
+    if (!openSpsGridJournalFiles(tx)) {
+        resetSpsGridJournalTransaction(tx);
+        return false;
+    }
+    return true;
+}
+
+static bool commitSpsGridJournalTransaction(uint8_t tx) {
+    if (tx >= kSpsGridJournalDepth || tx != sps_grid_journal_head)
+        return false;
+    sps_grid_journal_valid[tx] = true;
+    sps_grid_journal_head = (uint8_t)((tx + 1) % kSpsGridJournalDepth);
+    if (sps_grid_journal_count < kSpsGridJournalDepth)
+        sps_grid_journal_count++;
+    return true;
+}
+
+static void discardSpsGridJournalTransaction(uint8_t tx) {
+    resetSpsGridJournalTransaction(tx);
+}
+
+static bool snapshotSpsGridJournalCell(uint8_t tx, GridSlot slot,
+                                       GridRow row) {
+    if (tx >= kSpsGridJournalDepth || slot >= NUM_SLOTS ||
+        row >= GRID_LENGTH)
+        return false;
+    GridIndex grid = (GridIndex)(slot / GRID_WIDTH);
+    GridColumn localCol = (GridColumn)(slot & 0x0F);
+    uint16_t bit = (uint16_t)(1u << localCol);
+    uint16_t& mask = sps_grid_journal_masks[tx][grid][row];
+    if ((mask & bit) != 0)
+        return true;
+
+    if (mask == 0) {
+        GridRowHeader header;
+        if (!proj.read_grid_row_header(&header, row, grid) ||
+            !sps_grid_journal[tx][grid].write_row_header(&header, row)) {
+            return false;
+        }
+    }
+
+    EmptyTrack scratch;
+    DeviceTrack* track = scratch.load_from_grid_512(slot, row);
+    if (!track ||
+        !track->store_in_grid(localCol, row, nullptr, 0, false,
+                              &sps_grid_journal[tx][grid])) {
+        return false;
+    }
+    mask |= bit;
+    return true;
+}
+
+static bool prepareSpsGridMoveJournal(const GridMoveRequest& req,
+                                      uint8_t& tx) {
+    if (!beginSpsGridJournalTransaction(tx))
+        return false;
+
+    bool ok = true;
+    for (GridSpan y = 0; y < req.height && ok; y++) {
+        GridRow sourceRow = (GridRow)(req.sourceRow + y);
+        GridRow targetRow = (GridRow)(req.targetRow + y);
+        uint16_t mask = req.rowMasks[y];
+        for (GridSpan x = 0; x < req.width && ok; x++) {
+            if ((mask & (uint16_t)(1u << x)) == 0)
+                continue;
+            ok = snapshotSpsGridJournalCell(
+                     tx, (GridSlot)(req.sourceCol + x), sourceRow) &&
+                 snapshotSpsGridJournalCell(
+                     tx, (GridSlot)(req.targetCol + x), targetRow);
+        }
+    }
+
+    for (uint8_t grid = 0; grid < NUM_GRIDS; grid++)
+        ok = sps_grid_journal[tx][grid].sync() && ok;
+    ok = closeSpsGridJournalFiles(tx) && ok;
+    if (!ok) {
+        discardSpsGridJournalTransaction(tx);
+        return false;
+    }
+    return true;
+}
+
+static bool restoreSpsGridJournalTransaction(uint8_t tx) {
+    if (tx >= kSpsGridJournalDepth)
+        return false;
+    if (!openSpsGridJournalFiles(tx))
+        return false;
+
+    bool ok = true;
+    for (uint8_t grid = 0; grid < NUM_GRIDS; grid++) {
+        for (GridRow row = 0; row < GRID_LENGTH; row++) {
+            uint16_t mask = sps_grid_journal_masks[tx][grid][row];
+            if (mask == 0)
+                continue;
+            for (GridColumn col = 0; col < GRID_WIDTH; col++) {
+                if ((mask & (uint16_t)(1u << col)) == 0)
+                    continue;
+                EmptyTrack scratch;
+                DeviceTrack* track =
+                    scratch.load_from_grid_512(col, row,
+                                               &sps_grid_journal[tx][grid]);
+                GridSlot fullSlot = (GridSlot)(grid * GRID_WIDTH + col);
+                if (!track ||
+                    !track->store_in_grid(fullSlot, row, nullptr, 0, false)) {
+                    ok = false;
+                }
+            }
+            GridRowHeader header;
+            if (!sps_grid_journal[tx][grid].read_row_header(&header, row) ||
+                !proj.write_grid_row_header(&header, row, grid)) {
+                ok = false;
+            }
+        }
+    }
+    for (uint8_t grid = 0; grid < NUM_GRIDS; grid++)
+        ok = proj.sync_grid(grid) && ok;
+    ok = closeSpsGridJournalFiles(tx) && ok;
+    grid_page.slot_undo = 0;
+    grid_page.load_slot_models();
+    return ok;
+}
+
+static uint16_t spsGridJournalLocalTrackMask(uint8_t tx) {
+    if (tx >= kSpsGridJournalDepth)
+        return 0;
+    uint16_t trackMask = 0;
+    for (uint8_t grid = 0; grid < NUM_GRIDS; grid++) {
+        for (GridRow row = 0; row < GRID_LENGTH; row++)
+            trackMask |= sps_grid_journal_masks[tx][grid][row];
+    }
+    return trackMask;
+}
+
+static bool restoreLatestSpsGridJournalTransaction(uint16_t& trackMask) {
+    trackMask = 0;
+    if (sps_grid_journal_count == 0)
+        return false;
+
+    uint8_t tx = sps_grid_journal_head;
+    for (uint8_t scanned = 0;
+         scanned < kSpsGridJournalDepth && sps_grid_journal_count > 0;
+         scanned++) {
+        tx = spsGridJournalPrev(tx);
+        if (!sps_grid_journal_valid[tx])
+            continue;
+        uint16_t restoredTrackMask = spsGridJournalLocalTrackMask(tx);
+        if (!restoreSpsGridJournalTransaction(tx))
+            return false;
+        resetSpsGridJournalTransaction(tx);
+        sps_grid_journal_head = tx;
+        sps_grid_journal_count--;
+        trackMask = restoredTrackMask;
+        return true;
+    }
+    sps_grid_journal_count = 0;
+    return false;
+}
+
+static bool cleanupGridRowIfEmpty(GridIndex grid, GridRow row) {
+    GridRowHeader header;
+    if (!proj.read_grid_row_header(&header, row, grid))
+        return false;
+    if (!header.is_empty())
+        return true;
+    header.active = false;
+    header.name[0] = '\0';
+    return proj.write_grid_row_header(&header, row, grid);
+}
+
+static bool copyGridMoveCell(GridSlot sourceSlot, GridRow sourceRow,
+                             GridSlot targetSlot, GridRow targetRow,
+                             bool destinationSame) {
+    EmptyTrack scratch;
+    DeviceTrack* source = scratch.load_from_grid_512(sourceSlot, sourceRow);
+    if (!source)
+        return false;
+
+    GridDeviceTrack* gdt = mcl_actions.get_grid_dev_track(targetSlot);
+    if (!gdt)
+        return false;
+
+    if (source->active != EMPTY_TRACK_TYPE) {
+        source = source->materialize_as(gdt->track_type,
+                                        (uint8_t)(targetSlot & 0x0F),
+                                        gdt->seq_track);
+        if (!source)
+            return false;
+    }
+
+    int16_t linkRow = (int16_t)targetRow +
+                      ((int16_t)source->link.row - (int16_t)sourceRow);
+    if (linkRow < 0 || linkRow >= (int16_t)GRID_LENGTH)
+        linkRow = targetRow;
+    source->link.row = (uint8_t)linkRow;
+    source->on_copy((GridColumn)(sourceSlot & 0x0F),
+                    (GridColumn)(targetSlot & 0x0F), destinationSame);
+    if (!source->store_in_grid(targetSlot, targetRow, nullptr, 0, false))
+        return false;
+
+    GridIndex targetGrid = (GridIndex)(targetSlot / GRID_WIDTH);
+    GridColumn targetCol = (GridColumn)(targetSlot & 0x0F);
+    GridRowHeader header;
+    if (proj.read_grid_row_header(&header, targetRow, targetGrid)) {
+        header.active = true;
+        header.name[0] = '\0';
+        header.update_model(targetCol, source->get_model(), source->active);
+        return proj.write_grid_row_header(&header, targetRow, targetGrid);
+    }
+    return true;
+}
+
+static bool moveSourceCellIsDestination(const GridMoveRequest& req,
+                                        GridSlot sourceSlot,
+                                        GridRow sourceRow) {
+    int x = (int)sourceSlot - (int)req.targetCol;
+    int y = (int)sourceRow - (int)req.targetRow;
+    if (x < 0 || y < 0 || x >= req.width || y >= req.height)
+        return false;
+    return (req.rowMasks[y] & (uint16_t)(1u << x)) != 0;
+}
+
+static bool clearGridMoveSources(const GridMoveRequest& req) {
+    bool ok = true;
+    for (GridSpan y = 0; y < req.height; y++) {
+        GridRow sourceRow = (GridRow)(req.sourceRow + y);
+        uint16_t mask = req.rowMasks[y];
+        for (GridSpan x = 0; x < req.width; x++) {
+            if ((mask & (uint16_t)(1u << x)) == 0)
+                continue;
+            GridSlot sourceSlot = (GridSlot)(req.sourceCol + x);
+            if (moveSourceCellIsDestination(req, sourceSlot, sourceRow))
+                continue;
+            GridIndex grid = (GridIndex)(sourceSlot / GRID_WIDTH);
+            ok = proj.clear_slot_grid(sourceSlot, sourceRow) && ok;
+            ok = cleanupGridRowIfEmpty(grid, sourceRow) && ok;
+        }
+    }
+    return ok;
+}
+
+static bool applySparseGridMove(const GridMoveRequest& req) {
+    int rowStart = 0;
+    int rowEnd = req.height;
+    int rowStep = 1;
+    int colStart = 0;
+    int colEnd = req.width;
+    int colStep = 1;
+
+    if (req.sourceCol / GRID_WIDTH == req.targetCol / GRID_WIDTH) {
+        if (req.targetRow > req.sourceRow) {
+            rowStart = req.height - 1;
+            rowEnd = -1;
+            rowStep = -1;
+        }
+        if (req.targetCol > req.sourceCol) {
+            colStart = req.width - 1;
+            colEnd = -1;
+            colStep = -1;
+        }
+    }
+
+    bool destinationSame = req.sourceCol == req.targetCol || req.width == 1;
+    bool ok = true;
+    for (int y = rowStart; y != rowEnd; y += rowStep) {
+        uint16_t mask = req.rowMasks[y];
+        for (int x = colStart; x != colEnd; x += colStep) {
+            if ((mask & (uint16_t)(1u << x)) == 0)
+                continue;
+            GridSlot sourceSlot = (GridSlot)(req.sourceCol + x);
+            GridSlot targetSlot = (GridSlot)(req.targetCol + x);
+            GridRow sourceRow = (GridRow)(req.sourceRow + y);
+            GridRow targetRow = (GridRow)(req.targetRow + y);
+            if (sourceSlot == targetSlot && sourceRow == targetRow)
+                continue;
+            ok = copyGridMoveCell(sourceSlot, sourceRow, targetSlot,
+                                  targetRow, destinationSame) &&
+                 ok;
+        }
+    }
+    return ok;
+}
+
+static bool applyGridMove(const GridMoveRequest& req) {
+    uint8_t journalTx = 0;
+    if (!prepareSpsGridMoveJournal(req, journalTx))
+        return false;
+
+    bool ok = true;
+    if (!req.sparse) {
+        ok = mcl_clipboard.copy(req.sourceCol, req.sourceRow, req.width,
+                                req.height) &&
+             mcl_clipboard.paste(req.targetCol, req.targetRow);
+    } else {
+        ok = applySparseGridMove(req);
+    }
+
+    if (ok)
+        ok = clearGridMoveSources(req);
+
+    for (uint8_t grid = 0; grid < NUM_GRIDS; grid++)
+        ok = proj.sync_grid(grid) && ok;
+    grid_page.slot_undo = 0;
+    grid_page.load_slot_models();
+    if (ok) {
+        ok = commitSpsGridJournalTransaction(journalTx);
+    } else {
+        restoreSpsGridJournalTransaction(journalTx);
+        discardSpsGridJournalTransaction(journalTx);
+    }
+    return ok;
+}
+#endif
 
 static bool saveNeedsMdCurrentPattern() {
 #ifdef PLATFORM_TBD
@@ -753,6 +1281,10 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_GRID_COPY: onGridCopy(p.tag, b, n); break;
         case CMD_GRID_CLEAR: onGridClear(p.tag, b, n); break;
         case CMD_GRID_PASTE: onGridPaste(p.tag, b, n); break;
+#if MCL_FEATURE_HOST_GRID_MOVE_UNDO
+        case CMD_GRID_MOVE: onGridMove(p.tag, b, n); break;
+        case CMD_GRID_UNDO: onGridUndo(p.tag); break;
+#endif
         case CMD_GRID_APPLY_SLOT: onGridApplySlotEdit(p.tag, b, n); break;
         case CMD_SET_ROW_NAME: onSetRowName(p.tag, b, n); break;
         case CMD_SET_ARR_MARKER: onSetArrMarker(p.tag, b, n); break;
@@ -806,6 +1338,9 @@ void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     uint16_t caps2 = (uint16_t)(CAP2_GRID_BANKS | CAP2_SLOT_OWNERSHIP |
                                 CAP2_ARRANGEMENT_LOOP_REGIONS |
                                 CAP2_PROJECT_BROWSER);
+#if MCL_FEATURE_HOST_GRID_MOVE_UNDO
+    caps2 |= CAP2_GRID_MOVE_UNDO;
+#endif
 #ifdef MCL_HAS_PROJECT_BACKUP
     caps2 |= CAP2_PROJECT_BACKUP;
 #endif
@@ -821,7 +1356,11 @@ void SpsHostArrBridge::onReqActive(uint8_t tag) {
                  spsarr::kActiveReleasedMaskBytes +
                  spsarr::kActiveExtraGridSlotBytes +
                  spsarr::kActiveLoadSettingsBytes +
-                 spsarr::kActiveSlotOwnershipBytes];
+                 spsarr::kActiveSlotOwnershipBytes +
+                 spsarr::kActiveSlotGroupIndexBytes +
+                 spsarr::kActivePendingTransitionBytes +
+                 spsarr::kActiveSlotSourceRowBytes +
+                 spsarr::kActiveLoadQueueLengthBytes];
     body[0] = activeRowOrZero();
     body[1] = grid_task.next_active_row < GRID_LENGTH ? grid_task.next_active_row
                                                        : body[0];
@@ -849,6 +1388,34 @@ void SpsHostArrBridge::onReqActive(uint8_t tag) {
     }
     spsArrPutU32(body + settingsOff + spsarr::kActiveLoadSettingsBytes,
                  ownershipMask);
+    uint16_t groupIndexOff = settingsOff + spsarr::kActiveLoadSettingsBytes +
+                             spsarr::kActiveSlotOwnershipBytes;
+    for (uint8_t slot = 0; slot < spsarr::kActiveSlotGroupIndexBytes; ++slot) {
+        body[groupIndexOff + slot] =
+            slot < NUM_SLOTS ? groupSelectIndexForSlot((GridSlot)slot) : 0xFF;
+    }
+    uint16_t pendingTransitionOff =
+        groupIndexOff + spsarr::kActiveSlotGroupIndexBytes;
+    spsArrPutU16(body + pendingTransitionOff, mcl_actions.next_transition);
+    uint16_t sourceRowsOff =
+        pendingTransitionOff + spsarr::kActivePendingTransitionBytes;
+    for (uint8_t slot = 0; slot < spsarr::kActiveSlotSourceRowBytes; ++slot) {
+        uint8_t row = 255;
+        if (slot < NUM_SLOTS) {
+            GridRow active = grid_page.active_slots[slot];
+            if (active < GRID_LENGTH) {
+                row = active;
+            } else if ((active == SLOT_PENDING ||
+                        active == SLOT_OFFSET_LOAD) &&
+                       mcl_actions.links[slot].row < GRID_LENGTH) {
+                row = mcl_actions.links[slot].row;
+            }
+        }
+        body[sourceRowsOff + slot] = row;
+    }
+    uint16_t queueLengthOff =
+        sourceRowsOff + spsarr::kActiveSlotSourceRowBytes;
+    body[queueLengthOff] = mcl_cfg.chain_queue_length;
     sendFrame(CMD_ACTIVE, tag, body, (uint16_t)sizeof body);
 }
 
@@ -886,12 +1453,14 @@ void SpsHostArrBridge::onReqCells(uint8_t tag, const uint8_t* b, uint16_t n) {
         body[off++] = (uint8_t)((sendLabels ? CELL_FORMAT_LABELS : 0) |
                                 (sendRowNames ? CELL_FORMAT_ROW_NAMES : 0) |
                                 CELL_FORMAT_DEPENDENCIES |
+                                CELL_FORMAT_GROUP_INDEX |
                                 (n >= 6 ? CELL_FORMAT_GRID_BANK : 0));
         if (n >= 6)
             body[off++] = gridBank;
 
         uint16_t recordBytes = (uint16_t)(kCellRecordBaseBytes +
             kCellRecordDependencyBytes +
+            kCellRecordGroupIndexBytes +
             (sendLabels ? kCellRecordLabelBytes : 0) +
             (sendRowNames ? kCellRecordRowNameBytes : 0));
         for (uint8_t i = 0; i < rowCount && off + recordBytes <= kMaxBodyRaw; i++) {
@@ -920,6 +1489,7 @@ void SpsHostArrBridge::onReqCells(uint8_t tag, const uint8_t* b, uint16_t n) {
             body[off++] = cell.hasFade ? (uint8_t)cell.fade.curve : 0;
             spsArrPutU16(body + off, cell.ok ? cell.dependencyMask : 0);
             off = (uint16_t)(off + kCellRecordDependencyBytes);
+            body[off++] = cell.ok ? cell.groupIndex : 0xFF;
             if (sendLabels) {
                 body[off++] = (uint8_t)cell.label2[0];
                 body[off++] = (uint8_t)cell.label2[1];
@@ -1293,12 +1863,37 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
         }
         uint8_t oldMode = mcl_cfg.load_mode;
         uint16_t oldGroupMask = mcl_cfg.track_type_select;
+        uint8_t trackSelect[NUM_SLOTS];
+        memset(trackSelect, 0, sizeof(trackSelect));
         mcl_cfg.load_mode = mode;
         mcl_cfg.track_type_select = trackMask;
-        grid_load_page.group_load(row, loadOffset);
+        grid_load_page.track_select_array_from_type_select(trackSelect);
         mcl_cfg.track_type_select = oldGroupMask;
         mcl_cfg.load_mode = oldMode;
-        uint8_t ack[2] = {CMD_LOAD_SLOTS, 1};
+
+        GridRow rowSelect[NUM_SLOTS];
+        memset(rowSelect, 255, sizeof(rowSelect));
+        bool any = false;
+        for (uint8_t slot = 0; slot < NUM_SLOTS; ++slot) {
+            if (trackSelect[slot] == 0)
+                continue;
+
+            EmptyTrack scratch;
+            DeviceTrack* tr = scratch.load_from_grid_512(slot, row);
+            if (!tr || !tr->is_active())
+                continue;
+
+            rowSelect[slot] = row;
+            any = true;
+        }
+
+        uint8_t queueMode = hostLoadQueueMode(mode, flags);
+        if (any) {
+            releaseHostLoadedArrangementTracks(mode, rowSelect, loadOffset);
+            grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
+        }
+
+        uint8_t ack[2] = {CMD_LOAD_SLOTS, any ? 1 : 0};
         sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
         return;
     }
@@ -1337,7 +1932,8 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                               : startStep * kHostTicksPer16th;
         MidiClock.set_transport_position(tick96);
         mcl_seq.set_transport_position(tick96);
-        mcl_arrangement.resetPlaybackForTransport();
+        mcl_arrangement.resetPlaybackForTransport(
+            (flags & ARR_LOAD_SEEK_POSITION) != 0);
     }
 
     uint32_t positionQ12 = startStep > 0xFFFFFFFFu / 12u
@@ -1409,13 +2005,7 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
         }
     }
 
-    uint8_t queueMode = mode;
-    if ((flags & ARR_LOAD_IMMEDIATE) != 0) {
-        queueMode |= LOAD_QUEUE_FLAG_IMMEDIATE;
-    }
-    if ((flags & ARR_LOAD_START_TRANSPORT) != 0) {
-        queueMode |= LOAD_QUEUE_FLAG_PRESTART_FADE;
-    }
+    uint8_t queueMode = hostLoadQueueMode(mode, flags);
     ARR_FADE_TRACE("load-slots mode=%u qmode=%u flags=%u step=%lu immediate=%u",
                    mode, queueMode, flags, (unsigned long)startStep,
                    (flags & ARR_LOAD_IMMEDIATE) ? 1 : 0);
@@ -1424,6 +2014,7 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                        (unsigned long)startStep, (unsigned long)positionQ12,
                        trackMask);
     }
+    releaseHostLoadedArrangementTracks(mode, rowSelect, loadOffset);
     grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
     uint8_t ack[2] = {CMD_LOAD_SLOTS, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
@@ -1618,6 +2209,37 @@ void SpsHostArrBridge::onGridPaste(uint8_t tag, const uint8_t* b,
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
     notifyDirty(0xFF, DIRTY_CELLS);
 }
+
+#if MCL_FEATURE_HOST_GRID_MOVE_UNDO
+void SpsHostArrBridge::onGridMove(uint8_t tag, const uint8_t* b,
+                                  uint16_t n) {
+    GridMoveRequest req;
+    if (!parseGridMove(b, n, req)) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+    if (!applyGridMove(req)) {
+        sendErr(tag, ERR_BUSY, 0);
+        return;
+    }
+    uint8_t ack[2] = {CMD_GRID_MOVE, 1};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+}
+
+void SpsHostArrBridge::onGridUndo(uint8_t tag) {
+    uint16_t trackMask = 0;
+    if (!restoreLatestSpsGridJournalTransaction(trackMask)) {
+        sendErr(tag, ERR_BUSY, 0);
+        return;
+    }
+    uint8_t ack[2] = {CMD_GRID_UNDO, 1};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    for (uint8_t track = 0; track < GRID_WIDTH; track++) {
+        if ((trackMask & (uint16_t)(1u << track)) != 0)
+            notifyDirty(track, DIRTY_CELLS);
+    }
+}
+#endif
 
 void SpsHostArrBridge::onGridApplySlotEdit(uint8_t tag, const uint8_t* b,
                                            uint16_t n) {
@@ -2125,6 +2747,18 @@ void SpsHostArrBridge::onSetLoadSettings(uint8_t tag, const uint8_t* b,
         if (quant > 64)
             quant = 64;
         mcl_cfg.chain_load_quant = quant;
+    }
+    if ((fields & LOAD_SETTINGS_QUEUE_LENGTH) != 0) {
+        if (n < 4) {
+            sendErr(tag, ERR_RANGE, 0);
+            return;
+        }
+        uint8_t queueLength = b[3];
+        if (queueLength < 1)
+            queueLength = 1;
+        if (queueLength > 64)
+            queueLength = 64;
+        mcl_cfg.chain_queue_length = queueLength;
     }
 
     uint8_t ack[2] = {CMD_SET_LOAD_SETTINGS, 1};

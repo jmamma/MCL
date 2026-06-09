@@ -89,6 +89,8 @@ enum Cmd {
     CMD_SET_ARR_LOOP_REGION = 0x67,
     CMD_PROJECT_OP = 0x68,
     CMD_PROJECT_VERSION_OP = 0x69,
+    CMD_GRID_MOVE = 0x6A,
+    CMD_GRID_UNDO = 0x6B,
 
     CMD_NOTIFY_ACTIVE = 0x70,
     CMD_NOTIFY_DIRTY = 0x71,
@@ -122,7 +124,8 @@ enum Caps2 {
     CAP2_ARRANGEMENT_LOOP_REGIONS = 1 << 2,
     CAP2_PROJECT_BROWSER = 1 << 3,
     CAP2_PROJECT_BACKUP = 1 << 4,
-    CAP2_PROJECT_MOVE = 1 << 5
+    CAP2_PROJECT_MOVE = 1 << 5,
+    CAP2_GRID_MOVE_UNDO = 1 << 6
 };
 
 enum Mode {
@@ -154,18 +157,27 @@ enum CellFormatFlags {
     CELL_FORMAT_LABELS = 1 << 0,
     CELL_FORMAT_ROW_NAMES = 1 << 1,
     CELL_FORMAT_DEPENDENCIES = 1 << 2,
-    CELL_FORMAT_GRID_BANK = 1 << 3
+    CELL_FORMAT_GRID_BANK = 1 << 3,
+    CELL_FORMAT_GROUP_INDEX = 1 << 4
 };
 
 static const int kCellRecordBaseBytes = 15;
 static const int kCellRecordLabelBytes = 6;
 static const int kCellRecordRowNameBytes = 16;
 static const int kCellRecordDependencyBytes = 2;
+static const int kCellRecordGroupIndexBytes = 1;
 static const int kActiveSlotBytes = kNumTracks;
 static const int kActiveExtraGridSlotBytes = kNumTracks;
 static const int kActiveReleasedMaskBytes = 4;
 static const int kActiveLoadSettingsBytes = 2;
 static const int kActiveSlotOwnershipBytes = 4;
+static const int kActiveSlotGroupIndexBytes = kNumGridSlots;
+static const int kActivePendingTransitionBytes = 2;
+static const int kActiveSlotSourceRowBytes = kNumGridSlots;
+static const int kActiveLoadQueueLengthBytes = 1;
+static const uint8_t kActiveSlotOffsetLoad = 253;
+static const uint8_t kActiveSlotPending = 254;
+static const uint8_t kActiveSlotDisabled = 255;
 static const int kRowNameBytes = 16;
 static const int kArrNameBytes = 16;
 static const int kArrClipFadeBytes = 8;
@@ -282,7 +294,8 @@ enum GridSaveFlags {
 
 enum LoadSettingsFlags {
     LOAD_SETTINGS_MODE = 1 << 0,
-    LOAD_SETTINGS_QUANT = 1 << 1
+    LOAD_SETTINGS_QUANT = 1 << 1,
+    LOAD_SETTINGS_QUEUE_LENGTH = 1 << 2
 };
 
 enum GridSlotApplyFields {
