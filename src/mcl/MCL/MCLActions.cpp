@@ -637,6 +637,7 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
     if (gdt == nullptr) { continue; }
 
     row_array[n] = _row_array[n];
+#if !defined(__AVR__)
 #if MCL_FEATURE_HOST_ARRANGER
     if (row_array[n] >= GRID_LENGTH &&
         row_array[n] != LOAD_QUEUE_PRIVATE_ROW) {
@@ -648,6 +649,7 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
       slot_select_array[n] = 0;
       continue;
     }
+#endif
 #endif
 
     if (load_mode == LOAD_QUEUE) {
@@ -733,6 +735,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       continue;
     }
     GridRow row = row_array[n];
+#if !defined(__AVR__)
 #if MCL_FEATURE_HOST_ARRANGER
     if (row >= GRID_LENGTH && row != LOAD_QUEUE_PRIVATE_ROW) {
       slot_select_array[n] = 0;
@@ -743,6 +746,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
       slot_select_array[n] = 0;
       continue;
     }
+#endif
 #endif
     EmptyTrack scratch;
     bool rebuilt = false;
@@ -1043,6 +1047,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     if (gdt == nullptr || gdt_dst == nullptr || (gdt->track_type != gdt_dst->track_type)) { slot_select_array[i] = 0; continue; }
 
     row = row_array ? row_array[i] : current_row;
+#if !defined(__AVR__)
 #if MCL_FEATURE_HOST_ARRANGER
     if (row >= GRID_LENGTH && row != LOAD_QUEUE_PRIVATE_ROW) {
       slot_select_array[i] = 0;
@@ -1053,6 +1058,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       slot_select_array[i] = 0;
       continue;
     }
+#endif
 #endif
     last_slot = dst;
 
@@ -1085,6 +1091,13 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
   GridRowHeader row_header;
 
+#if defined(__AVR__)
+  proj.read_grid_row_header(&row_header, row, 0);
+  if (mcl_cfg.uart2_prg_out > 0) {
+    mcl_seq.secondary_output->sendProgramChange(mcl_cfg.uart2_prg_out - 1,
+                                                row);
+  }
+#else
   GridRow header_row = row < GRID_LENGTH ? row : current_row;
   if (header_row >= GRID_LENGTH) {
     header_row = 0;
@@ -1095,6 +1108,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     mcl_seq.secondary_output->sendProgramChange(mcl_cfg.uart2_prg_out - 1,
                                                 header_row);
   }
+#endif
 
   for (uint8_t i = 0; i < NUM_DEVS; ++i) {
     auto elektron_dev = devs[i]->asElektronDevice();
