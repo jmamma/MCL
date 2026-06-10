@@ -348,30 +348,36 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
       }
       }
     } else {
-      uint8_t inc = 1;
-      if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-        inc = 8;
-      }
+      uint8_t last_page_select = page_select;
+      int8_t step = 0;
+      bool category_step = false;
       switch (key) {
-      case MDX_KEY_YES:
-        //  key_interface.ignoreNextEvent(MDX_KEY_YES);
-        break;
       case MDX_KEY_NO:
         //  key_interface.ignoreNextEvent(MDX_KEY_NO);
         goto load_grid;
       case MDX_KEY_UP:
-        encoders[1]->cur -= inc;
+        category_step = true;
+        step = -1;
         break;
       case MDX_KEY_DOWN:
-        encoders[1]->cur += inc;
+        category_step = true;
+        step = 1;
         break;
       case MDX_KEY_LEFT:
-        encoders[0]->cur -= inc;
+        step = -1;
         break;
       case MDX_KEY_RIGHT:
-        encoders[0]->cur += inc;
+        step = 1;
         break;
+      default:
+        return false;
       }
+      page_select = category_step ? next_category_page(this, step)
+                                  : next_page(this, step);
+      if (last_page_select != page_select) {
+        draw_popup();
+      }
+      return true;
     }
   }
   if (EVENT_BUTTON(event)) {
