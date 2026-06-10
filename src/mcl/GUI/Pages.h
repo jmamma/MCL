@@ -137,7 +137,11 @@ public:
     resetEncoderFocus();
   }
   void resetEncoderFocus() { encoder_focus = ENCODER_FOCUS_NONE; }
-  bool isEncoderFocused(uint8_t i) const { return encoder_focus == i; }
+  bool isEncoderFocused(uint8_t i) const {
+    return encoder_focus == i &&
+           clock_diff(encoders_used_clock[i], read_clock_ms()) <
+               SHOW_VALUE_TIMEOUT;
+  }
   /** Call this to lock all encoders in the page. **/
   void lockEncoders() {} // TODO
   /** Call this to unlock all encoders in the page. If their value

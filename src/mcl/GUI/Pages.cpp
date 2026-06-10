@@ -65,9 +65,7 @@ void LightPage::update() {
 
   if (encoder_focus != ENCODER_FOCUS_NONE &&
       (encoder_focus >= GUI_NUM_ENCODERS || encoders[encoder_focus] == NULL ||
-       !(encoder_key_control_mask & (1 << encoder_focus)) ||
-       clock_diff(encoders_used_clock[encoder_focus], read_clock_ms()) >=
-           SHOW_VALUE_TIMEOUT)) {
+       !(encoder_key_control_mask & (1 << encoder_focus)))) {
     resetEncoderFocus();
   }
 }
