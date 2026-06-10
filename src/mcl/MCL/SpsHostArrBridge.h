@@ -33,6 +33,7 @@ private:
 
     void onHello(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqActive(uint8_t tag);
+    void onReqGridChain(uint8_t tag);
     void onReqCells(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrMeta(uint8_t tag);
     void onReqArrClips(uint8_t tag, const uint8_t* b, uint16_t n);

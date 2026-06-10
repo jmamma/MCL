@@ -52,6 +52,7 @@ enum Cmd {
     CMD_REQ_ARR_LOOP_REGIONS = 0x16,
     CMD_REQ_PROJECT_LIST = 0x17,
     CMD_REQ_PROJECT_VERSIONS = 0x18,
+    CMD_REQ_GRID_CHAIN = 0x19,
 
     CMD_CELLS = 0x30,
     CMD_ACTIVE = 0x31,
@@ -62,6 +63,7 @@ enum Cmd {
     CMD_ARR_LOOP_REGIONS = 0x36,
     CMD_PROJECT_LIST = 0x37,
     CMD_PROJECT_VERSIONS = 0x38,
+    CMD_GRID_CHAIN = 0x39,
 
     CMD_SET_LINK = 0x50,
     CMD_SET_FADE = 0x51,
@@ -102,20 +104,19 @@ enum Cmd {
 enum Caps {
     CAP_AUTO = 1 << 0,
     CAP_FADE = 1 << 1,
-    CAP_CHAIN = 1 << 2,
-    CAP_BATCH = 1 << 3,
-    CAP_ARRANGER_LOAD = 1 << 4,
-    CAP_ARRANGEMENT_STORE = 1 << 5,
-    CAP_ARRANGER_CLEAR = 1 << 6,
-    CAP_GRID_CLIPBOARD = 1 << 7,
-    CAP_GRID_ROW_NAMES = 1 << 8,
-    CAP_ARRANGEMENT_MARKERS = 1 << 9,
-    CAP_ACTIVE_SLOTS = 1 << 10,
-    CAP_ARRANGEMENT_TRACK_LABELS = 1 << 11,
-    CAP_GRID_SAVE = 1 << 12,
-    CAP_GRID_SLOT_EDIT = 1 << 13,
-    CAP_ARRANGER_LOAD_SEEK = 1 << 14,
-    CAP_ARRANGER_CLIP_FADES = 1 << 15
+    CAP_BATCH = 1 << 2,
+    CAP_ARRANGER_LOAD = 1 << 3,
+    CAP_ARRANGEMENT_STORE = 1 << 4,
+    CAP_ARRANGER_CLEAR = 1 << 5,
+    CAP_GRID_CLIPBOARD = 1 << 6,
+    CAP_GRID_ROW_NAMES = 1 << 7,
+    CAP_ARRANGEMENT_MARKERS = 1 << 8,
+    CAP_ACTIVE_SLOTS = 1 << 9,
+    CAP_ARRANGEMENT_TRACK_LABELS = 1 << 10,
+    CAP_GRID_SAVE = 1 << 11,
+    CAP_GRID_SLOT_EDIT = 1 << 12,
+    CAP_ARRANGER_LOAD_SEEK = 1 << 13,
+    CAP_ARRANGER_CLIP_FADES = 1 << 14
 };
 
 enum Caps2 {
@@ -125,7 +126,8 @@ enum Caps2 {
     CAP2_PROJECT_BROWSER = 1 << 3,
     CAP2_PROJECT_BACKUP = 1 << 4,
     CAP2_PROJECT_MOVE = 1 << 5,
-    CAP2_GRID_MOVE_UNDO = 1 << 6
+    CAP2_GRID_MOVE_UNDO = 1 << 6,
+    CAP2_GRID_CHAIN = 1 << 7
 };
 
 enum Mode {
@@ -175,6 +177,7 @@ static const int kActiveSlotGroupIndexBytes = kNumGridSlots;
 static const int kActivePendingTransitionBytes = 2;
 static const int kActiveSlotSourceRowBytes = kNumGridSlots;
 static const int kActiveLoadQueueLengthBytes = 1;
+static const int kGridChainRowBytes = kNumGridSlots;
 static const uint8_t kActiveSlotOffsetLoad = 253;
 static const uint8_t kActiveSlotPending = 254;
 static const uint8_t kActiveSlotDisabled = 255;

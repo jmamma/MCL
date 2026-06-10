@@ -1255,6 +1255,7 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
     switch (p.cmd) {
         case CMD_HELLO: onHello(p.tag, b, n); break;
         case CMD_REQ_ACTIVE: onReqActive(p.tag); break;
+        case CMD_REQ_GRID_CHAIN: onReqGridChain(p.tag); break;
         case CMD_REQ_CELLS: onReqCells(p.tag, b, n); break;
         case CMD_REQ_ARR_META: onReqArrMeta(p.tag); break;
         case CMD_REQ_ARR_CLIPS: onReqArrClips(p.tag, b, n); break;
@@ -1337,7 +1338,7 @@ void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     body[3] = (uint8_t)spsarr::kNumTracks;
     uint16_t caps2 = (uint16_t)(CAP2_GRID_BANKS | CAP2_SLOT_OWNERSHIP |
                                 CAP2_ARRANGEMENT_LOOP_REGIONS |
-                                CAP2_PROJECT_BROWSER);
+                                CAP2_PROJECT_BROWSER | CAP2_GRID_CHAIN);
 #if MCL_FEATURE_HOST_GRID_MOVE_UNDO
     caps2 |= CAP2_GRID_MOVE_UNDO;
 #endif
@@ -1417,6 +1418,31 @@ void SpsHostArrBridge::onReqActive(uint8_t tag) {
         sourceRowsOff + spsarr::kActiveSlotSourceRowBytes;
     body[queueLengthOff] = mcl_cfg.chain_queue_length;
     sendFrame(CMD_ACTIVE, tag, body, (uint16_t)sizeof body);
+}
+
+void SpsHostArrBridge::onReqGridChain(uint8_t tag) {
+    uint8_t body[spsarr::kGridChainRowBytes];
+    for (uint8_t slot = 0; slot < spsarr::kGridChainRowBytes; ++slot) {
+        uint8_t row = 255;
+        if (slot < NUM_SLOTS && mcl_actions.chains[slot].is_mode_queue()) {
+            GridRow activeRow = grid_page.active_slots[slot];
+            GridChain& chain = mcl_actions.chains[slot];
+            uint8_t count = chain.num_of_links;
+            if (count > NUM_LINKS)
+                count = NUM_LINKS;
+            for (uint8_t i = 0; i < count; ++i) {
+                GridRow chainRow = chain.rows[i];
+                if (chainRow >= GRID_LENGTH)
+                    continue;
+                if (activeRow < GRID_LENGTH && activeRow == chainRow)
+                    continue;
+                row = chainRow;
+                break;
+            }
+        }
+        body[slot] = row;
+    }
+    sendFrame(CMD_GRID_CHAIN, tag, body, (uint16_t)sizeof body);
 }
 
 void SpsHostArrBridge::onReqCells(uint8_t tag, const uint8_t* b, uint16_t n) {
