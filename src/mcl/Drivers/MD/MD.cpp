@@ -286,8 +286,6 @@ public:
                                     uint8_t track) override;
   virtual bool parse_cc(const DeviceContext &ctx, uint8_t channel, uint8_t cc,
                         uint8_t *track, uint8_t *param) const override;
-  virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, MidiDeviceMixerValue value) override;
 
 private:
   MDClass &md() const { return (MDClass &)device_; }
@@ -673,31 +671,6 @@ bool MDMixerCapability::parse_cc(const DeviceContext &ctx, uint8_t channel,
   }
   md().parseCC(channel, cc, track, param);
   return *track != 255;
-}
-
-void MDMixerCapability::update_from_cc(const DeviceContext &ctx, uint8_t track,
-                                       uint8_t param,
-                                       MidiDeviceMixerValue value) {
-  (void)ctx;
-  if (track >= NUM_MD_TRACKS) {
-    return;
-  }
-  MDClass &device = md();
-  uint8_t param_limit =
-      device.is_spsx ? SPS_PARAMS_PER_TRACK : MD_PARAMS_PER_TRACK;
-  if (param < param_limit) {
-    if (value < 0) value = 0;
-    if (value > 127) value = 127;
-    device.kit.params[track][param] = (uint8_t)value;
-    device.midi_events.last_md_param = param;
-  } else if (param == MODEL_LEVEL) {
-    if (value < 0) value = 0;
-    if (value > 127) value = 127;
-    device.kit.levels[track] = (uint8_t)value;
-  } else if (param == MODEL_MUTE) {
-    SeqTrackUtil::get_seq_track(true, track).mute_state =
-        value > 0 ? SEQ_MUTE_ON : SEQ_MUTE_OFF;
-  }
 }
 
 #if !defined(__AVR__)

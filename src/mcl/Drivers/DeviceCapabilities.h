@@ -60,7 +60,7 @@ public:
                         uint8_t *track, uint8_t *param) const = 0;
   bool is_mute_param(uint8_t param) const;
   virtual void update_from_cc(const DeviceContext &ctx, uint8_t track,
-                              uint8_t param, MidiDeviceMixerValue value) = 0;
+                              uint8_t param, MidiDeviceMixerValue value);
 
 private:
   uint8_t default_param_;
