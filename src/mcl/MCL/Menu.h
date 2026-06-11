@@ -7,7 +7,7 @@
 
 constexpr uint32_t menu_entry_mask(uint8_t entry) { return 1UL << entry; }
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 typedef bool (*menu_option_name_override_t)(uint8_t entry_index,
                                             uint8_t option_n, char *dst,
                                             uint8_t dst_len);
@@ -18,10 +18,6 @@ public:
   // Zero-initialized: no disabled bits means all menu entries are enabled.
   uint8_t disabled_entry_mask[4];
   menu_option_t* custom_options[2];
-#ifdef PLATFORM_TBD
-  menu_option_name_override_t option_name_override = nullptr;
-  char option_name_override_buf[8];
-#endif
 
   // Set by Menu<N>::set_layout — avoids per-N virtual method duplication.
   const void* layout_base = nullptr;  // points to SRAM-unpacked menu_t<N>
@@ -36,6 +32,11 @@ public:
   void set_custom_options(menu_option_t* p, uint8_t num) {
     custom_options[num] = p;
   }
+
+#if !defined(__AVR__)
+  void set_option_name_override(menu_option_name_override_t override);
+  menu_option_name_override_t get_option_name_override() const;
+#endif
 
   void enable_entry(uint8_t entry_index, bool en);
   bool is_entry_enable(uint8_t entry_index);

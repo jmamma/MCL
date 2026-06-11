@@ -76,7 +76,7 @@ extern uint8_t copy_mask;
 extern void seq_copy_note_label(uint8_t note_num, char *out);
 extern void seq_copy_note_name(uint8_t note, char *out);
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 extern bool seq_page_channel_menu_label(uint8_t entry_index, uint8_t option_n,
                                         char *dst, uint8_t dst_len);
 #endif

@@ -47,6 +47,7 @@ union uint8_ptr_t {
 extern const menu_function_t menu_target_functions[] PROGMEM;
 extern const uint8_t* const menu_target_param[] PROGMEM;
 
+#define MENU_OPTIONS_CONDITIONS 190
 #define MENU_OPTIONS_PERCENT 191
 
 struct menu_option_t {

@@ -2,7 +2,6 @@
 #include "MCLGUI.h"
 #include "MCLClipBoard.h"
 #include "MCLSysConfig.h"
-#include "SeqDefines.h"
 #include "SeqExtStepTrackRef.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
 
@@ -33,7 +32,7 @@ const char *ext_step_undo_or(uint8_t clip_mode, const char *verb) {
   return undo ? mclstr_undo : verb;
 }
 
-#ifdef PLATFORM_TBD
+#if !defined(__AVR__)
 bool seq_ext_step_menu_label(uint8_t entry_index, uint8_t option_n,
                              char *dst, uint8_t dst_len) {
   if (seq_page_channel_menu_label(entry_index, option_n, dst, dst_len)) {
@@ -62,12 +61,6 @@ bool seq_ext_step_menu_entry_is(uint8_t entry_index) {
   if (!SeqPage::show_seq_menu) return false;
   return seq_menu_page.menu.get_item_index(seq_menu_page.encoders[1]->cur) ==
          entry_index;
-}
-
-static inline uint8_t seq_ext_step_note_condition() {
-  // The COND menu still exposes the legacy value order; stored ext events use
-  // canonical SeqCondition ids.
-  return seq_legacy_cond_to_stepseq(SeqPage::cond);
 }
 
 seq_extstep_tick_t seq_ext_step_page_width(uint16_t ticks_per_step) {
@@ -565,8 +558,8 @@ void SeqExtStepPage::init() {
   last_cur_x = -1;
   config_menu_entries();
   config_encoders();
-#ifdef PLATFORM_TBD
-  seq_menu_page.menu.option_name_override = seq_ext_step_menu_label;
+#if !defined(__AVR__)
+  seq_menu_page.menu.set_option_name_override(seq_ext_step_menu_label);
 #endif
 #ifdef PLATFORM_TBD
   midi_events.setup_callbacks();
@@ -578,9 +571,9 @@ void SeqExtStepPage::cleanup() {
   clear_note_selection();
   SeqPage::cleanup();
   SeqExtStepTrackRef::set_panel_rec_mode(0);
-#ifdef PLATFORM_TBD
-  if (seq_menu_page.menu.option_name_override == seq_ext_step_menu_label) {
-    seq_menu_page.menu.option_name_override = seq_page_channel_menu_label;
+#if !defined(__AVR__)
+  if (seq_menu_page.menu.get_option_name_override() == seq_ext_step_menu_label) {
+    seq_menu_page.menu.set_option_name_override(seq_page_channel_menu_label);
   }
 #endif
 #ifdef PLATFORM_TBD
@@ -1112,8 +1105,7 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
       if (w <= 0) continue;
 
       active_track.delete_note(pos, w - 1, cur_y);
-      active_track.add_note(pos, w, cur_y, velocity,
-                            seq_ext_step_note_condition());
+      active_track.add_note(pos, w, cur_y, velocity, cond);
     }
   }
 
@@ -1723,8 +1715,7 @@ void SeqExtStepPage::enter_notes() {
     if (!active_track.note_on_at(n, note))
       continue;
     active_track.delete_note(cur_x, w - 1, note.value);
-    active_track.add_note(cur_x, w, note.value, velocity,
-                          seq_ext_step_note_condition());
+    active_track.add_note(cur_x, w, note.value, velocity, cond);
   }
 }
 
@@ -2084,8 +2075,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           if (w <= 0) return true;
 
           if (!active_track.delete_note(cur_x, w - 1, cur_y)) {
-            active_track.add_note(cur_x, w, cur_y, velocity,
-                                  seq_ext_step_note_condition());
+            active_track.add_note(cur_x, w, cur_y, velocity, cond);
           }
         }
         return true;

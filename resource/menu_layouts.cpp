@@ -350,7 +350,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"ARPEGGIATOR", 0, 0,                   0,                   0,  ARP_PAGE, 0,  0},
         {"KEY:",        0, 12,                  12,                  19, NULL_PAGE,  0,  96},
         {"VEL:",        0, 128,                 0,                   20, NULL_PAGE,  0,  0},
-        {"COND:",       1, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, NULL_PAGE,  0,  60},
+        {"COND:",       0, NUM_TRIG_CONDITIONS + 1, NUM_TRIG_CONDITIONS + 1, 21, NULL_PAGE,  0,  MENU_OPTIONS_CONDITIONS},
         {"SPEED:",      0, 7,                   7,                   22, NULL_PAGE,  5,  41},
         {"LENGTH:",     1, 65,                 0,                   23, NULL_PAGE,  6,  0},
         {"LENGTH:",     2, 129,                 0,                   23, NULL_PAGE,  6,  0},

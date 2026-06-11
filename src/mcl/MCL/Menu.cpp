@@ -1,9 +1,15 @@
 #include "Menu.h"
 #include "ResourceManager.h"
+#include "SeqTrack.h"
 
 namespace {
 
 char generated_option_name[8];
+#if !defined(__AVR__)
+const MenuBase *option_name_override_owner = nullptr;
+menu_option_name_override_t option_name_override = nullptr;
+char option_name_override_buf[8];
+#endif
 
 const char *row_option_name(uint8_t row_id) {
   if (row_id >= 128) {
@@ -53,7 +59,34 @@ const char *transpose_option_name(uint8_t option_id) {
   return generated_option_name;
 }
 
+const char *condition_option_name(uint8_t option_id) {
+  if (option_id > SEQ_COND_MAX) {
+    return nullptr;
+  }
+  seq_condition_label(option_id, false, false, generated_option_name);
+  return generated_option_name;
+}
+
 } // namespace
+
+#if !defined(__AVR__)
+void MenuBase::set_option_name_override(
+    menu_option_name_override_t override) {
+  if (override == nullptr) {
+    if (option_name_override_owner == this) {
+      option_name_override_owner = nullptr;
+      option_name_override = nullptr;
+    }
+    return;
+  }
+  option_name_override_owner = this;
+  option_name_override = override;
+}
+
+menu_option_name_override_t MenuBase::get_option_name_override() const {
+  return option_name_override_owner == this ? option_name_override : nullptr;
+}
+#endif
 
 void MenuBase::enable_entry(uint8_t entry_index, bool en) {
   auto midx = entry_index / 8;
@@ -195,8 +228,8 @@ const char* MenuBase::get_option_name(const menu_item_t *item,
   if (item == nullptr) {
     return nullptr;
   }
-#ifdef PLATFORM_TBD
-  if (option_name_override != nullptr) {
+#if !defined(__AVR__)
+  if (option_name_override_owner == this && option_name_override != nullptr) {
     uint8_t entry_index = item - get_entry_address(0);
     if (option_name_override(entry_index, option_n, option_name_override_buf,
                              sizeof(option_name_override_buf))) {
@@ -207,6 +240,9 @@ const char* MenuBase::get_option_name(const menu_item_t *item,
 
   uint8_t num_of_options = item->number_of_options;
   uint8_t options_offset = item->options_begin;
+  if (options_offset == MENU_OPTIONS_CONDITIONS) {
+    return condition_option_name(option_n);
+  }
   menu_option_t* base = R.menu_options->MENU_OPTIONS;
   if (options_offset >= 192) {
     uint8_t custom_options_idx = options_offset - 192;
