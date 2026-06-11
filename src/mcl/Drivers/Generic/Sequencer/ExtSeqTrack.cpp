@@ -752,14 +752,20 @@ void ExtSeqTrack::reset_params() {
 void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   auto &ev = events[index];
   if (ev.is_lock) {
-    if (ptc_route_channel_is_primary(channel)) {
-      return;
-    }
     if (ev.lock_idx >= NUM_LOCKS || !locks_params[ev.lock_idx]) {
       return;
     }
     // plock
     uint8_t param = locks_params[ev.lock_idx] - 1;
+    if (ptc_route_channel_is_primary(channel)) {
+      if (param < 128) {
+        send_cc(param, ev.event_value);
+        if (ev.event_on) {
+          locks_slides_recalc = step;
+        }
+      }
+      return;
+    }
     if (param == PARAM_PRG) {
       if (!pgm_oneshot) {
         pgm_oneshot = true;
@@ -1021,6 +1027,11 @@ void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure,
 
 void ExtSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_) {
   if (ptc_route_channel_is_primary(channel)) {
+#if defined(__AVR__)
+    if (cc < 24) {
+      cc += 16;
+    }
+#endif
     ptc_voice_router.control_change(channel, cc, value, resolve_uart(uart_));
     return;
   }

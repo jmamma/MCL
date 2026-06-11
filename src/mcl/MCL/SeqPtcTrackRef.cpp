@@ -193,7 +193,7 @@ bool SeqPtcTrackRef::set_route_param(uint8_t track, uint8_t param,
     return true;
   }
 
-  if (!set_param(track, param, value, nullptr, true)) {
+  if (!set_param(track, param, value, nullptr, false)) {
     return false;
   }
 

@@ -2,6 +2,8 @@
 
 #include "SeqExtStepLockApi.h"
 #include "ExtSeqTrack.h"
+#include "PtcVoiceRouter.h"
+#include "../Drivers/MD/MD.h"
 #if !defined(__AVR__)
 #include "../Drivers/Generic/Sequencer/MidiSeqTrack.h"
 #endif
@@ -117,6 +119,26 @@ const TbdP4ParamDescriptor *p4_param_for_lock(const TbdP4SoundData *sound,
 
 namespace {
 
+constexpr uint8_t kRouteMdFirstCc = PTC_EXT_ROUTE_CHANNEL_BASE;
+constexpr uint8_t kRouteMdParamCount = MD_PARAMS_PER_TRACK;
+constexpr uint8_t kRouteMdMenuOff = kRouteMdParamCount;
+
+#if defined(__AVR__)
+static inline bool avr_route_md_param_mode(uint8_t channel) {
+  return channel >= PTC_EXT_ROUTE_CHANNEL_BASE &&
+         channel < PTC_EXT_ROUTE_CHANNEL_END;
+}
+#endif
+
+bool route_md_param_from_cc(uint16_t cc, uint8_t &param) {
+  if (cc < kRouteMdFirstCc ||
+      cc >= (uint16_t)kRouteMdFirstCc + kRouteMdParamCount) {
+    return false;
+  }
+  param = (uint8_t)(cc - kRouteMdFirstCc);
+  return true;
+}
+
 bool ext_lock_control_from_param(uint8_t param_id, uint8_t &ctrl_type,
                                  uint16_t &ctrl) {
   if (param_id < 128) {
@@ -163,6 +185,64 @@ bool ext_lock_param_from_control(uint8_t ctrl_type, uint16_t ctrl,
 }
 
 } // namespace
+
+uint8_t SeqExtStepLockApi::track_channel() const {
+#if !defined(__AVR__)
+  if (midi_track_) return midi_track_->channel();
+#endif
+  return ext_track_ == nullptr ? 0 : ext_track_->channel;
+}
+
+bool SeqExtStepLockApi::route_md_param_mode() const {
+#if defined(__AVR__)
+  return false;
+#else
+  uint8_t channel = track_channel();
+  return channel >= PTC_EXT_ROUTE_CHANNEL_BASE &&
+         channel < PTC_EXT_ROUTE_CHANNEL_END;
+#endif
+}
+
+bool SeqExtStepLockApi::route_md_selected_param_id(uint8_t slot,
+                                                   uint8_t &param_id) const {
+#if !defined(__AVR__)
+  if (midi_track_) {
+    if (slot >= MIDI_SEQ_NUM_LOCKS) return false;
+    const auto &lock = midi_track_->seq_data.locks[slot];
+    uint8_t param = 0;
+    if (!lock.is_active() || lock.type != MIDI_SEQ_LOCK_CC ||
+        !route_md_param_from_cc(lock.parameter, param)) {
+      return false;
+    }
+    param_id = (uint8_t)lock.parameter;
+    return true;
+  }
+#endif
+  if (slot >= NUM_LOCKS) return false;
+  uint8_t selected = selected_lock_param(slot);
+  if (selected == 0) return false;
+  uint8_t param = 0;
+  param_id = selected - 1;
+  return route_md_param_from_cc(param_id, param);
+}
+
+bool SeqExtStepLockApi::copy_route_md_param_label(uint8_t param, char *dst,
+                                                  size_t dst_len) const {
+  if (param >= kRouteMdParamCount) return false;
+#if defined(__AVR__)
+  copy_param_number_label('P', param, dst, dst_len);
+  return true;
+#else
+  uint8_t source_track = ptc_route_channel_track(track_channel());
+  const char *name = model_param_name(MD.kit.get_model(source_track), param);
+  if (name != nullptr && name[0] != '\0') {
+    copy_literal(name, dst, dst_len);
+    return true;
+  }
+  copy_param_number_label('P', param, dst, dst_len);
+  return true;
+#endif
+}
 
 bool SeqExtStepLockApi::delete_lock(seq_extstep_tick_t tick, uint8_t lock_idx,
                                     uint8_t value) {
@@ -352,6 +432,21 @@ bool SeqExtStepLockApi::selected_lock_param_id(uint8_t slot,
 }
 
 uint8_t SeqExtStepLockApi::selected_lock_menu_value(uint8_t slot) const {
+#if defined(__AVR__)
+  if (avr_route_md_param_mode(track_channel())) {
+    uint8_t param_id = 0;
+    if (!selected_lock_param_id(slot, param_id)) return kRouteMdMenuOff;
+    return param_id < kRouteMdParamCount ? param_id : kRouteMdMenuOff;
+  }
+#endif
+  if (route_md_param_mode()) {
+    uint8_t param_id = 0;
+    uint8_t route_param = 0;
+    return route_md_selected_param_id(slot, param_id) &&
+                   route_md_param_from_cc(param_id, route_param)
+               ? route_param
+               : kRouteMdMenuOff;
+  }
 #if !defined(__AVR__)
   if (midi_track_) {
     SeqExtStepLockParamInfo info;
@@ -366,6 +461,7 @@ uint8_t SeqExtStepLockApi::selected_lock_menu_value(uint8_t slot) const {
 
 #if !defined(__AVR__)
 bool SeqExtStepLockApi::selected_lock_menu_editable(uint8_t slot) const {
+  if (route_md_param_mode()) return true;
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return true;
   if (info.learn || info.p4_param) return true;
@@ -378,6 +474,14 @@ bool SeqExtStepLockApi::selected_lock_menu_editable(uint8_t slot) const {
 #endif
 
 uint8_t SeqExtStepLockApi::lock_param_menu_max() const {
+#if defined(__AVR__)
+  if (avr_route_md_param_mode(track_channel())) {
+    return kRouteMdMenuOff;
+  }
+#endif
+  if (route_md_param_mode()) {
+    return kRouteMdMenuOff;
+  }
 #ifdef PLATFORM_TBD
   const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
   if (sound != nullptr && sound->has_sendable_params()) {
@@ -395,6 +499,14 @@ bool SeqExtStepLockApi::lock_menu_value_info(
   info.param_id = 0;
   info.ctrl = 0;
   info.ctrl_type = SEQ_EXT_LOCK_CTRL_OFF;
+  if (route_md_param_mode()) {
+    if (menu_value >= kRouteMdParamCount) return false;
+    info.active = true;
+    info.param_id = kRouteMdFirstCc + menu_value;
+    info.ctrl = info.param_id;
+    info.ctrl_type = SEQ_EXT_LOCK_CTRL_CC;
+    return true;
+  }
   if (menu_value == PARAM_OFF) return false;
   if (menu_value == PARAM_LEARN) {
     info.active = true;
@@ -407,6 +519,15 @@ bool SeqExtStepLockApi::lock_menu_value_info(
   return ext_lock_control_from_param(menu_value, info.ctrl_type, info.ctrl);
 #else
   info = SeqExtStepLockParamInfo();
+  if (route_md_param_mode()) {
+    if (menu_value >= kRouteMdParamCount) return false;
+    info.active = true;
+    info.param_id = kRouteMdFirstCc + menu_value;
+    info.ctrl = info.param_id;
+    info.ctrl_type = SEQ_EXT_LOCK_CTRL_CC;
+    info.sendable = true;
+    return true;
+  }
   if (menu_value == PARAM_OFF) return false;
   if (menu_value == PARAM_LEARN) {
     info.active = true;
@@ -447,6 +568,14 @@ bool SeqExtStepLockApi::lock_menu_value_info(
 
 uint8_t SeqExtStepLockApi::normalize_lock_menu_value(uint8_t menu_value,
                                                      uint8_t old_value) const {
+#if defined(__AVR__)
+  if (avr_route_md_param_mode(track_channel())) {
+    return menu_value > kRouteMdMenuOff ? kRouteMdMenuOff : menu_value;
+  }
+#endif
+  if (route_md_param_mode()) {
+    return menu_value > kRouteMdMenuOff ? kRouteMdMenuOff : menu_value;
+  }
 #ifdef PLATFORM_TBD
   const TbdP4SoundData *sound = p4_sound_for_midi_track(midi_track_);
   if (sound != nullptr && sound->has_sendable_params()) {
@@ -491,6 +620,27 @@ void SeqExtStepLockApi::set_selected_lock_param(uint8_t slot, uint8_t param) {
 
 void SeqExtStepLockApi::set_selected_lock_menu_value(uint8_t slot,
                                                      uint8_t menu_value) {
+#if defined(__AVR__)
+  if (avr_route_md_param_mode(track_channel())) {
+    set_selected_lock_param(slot, menu_value >= kRouteMdParamCount
+                                      ? 0
+                                      : menu_value + 1);
+    return;
+  }
+#endif
+  if (route_md_param_mode()) {
+    if (menu_value >= kRouteMdParamCount) {
+      set_selected_lock_param(slot, 0);
+      return;
+    }
+#if defined(__AVR__)
+    set_selected_lock_param(slot, kRouteMdFirstCc + menu_value + 1);
+#else
+    set_selected_lock_control(slot, SEQ_EXT_LOCK_CTRL_CC,
+                              kRouteMdFirstCc + menu_value);
+#endif
+    return;
+  }
   if (menu_value == PARAM_OFF) {
     set_selected_lock_param(slot, 0);
     return;
@@ -512,6 +662,22 @@ bool SeqExtStepLockApi::set_selected_lock_control(uint8_t slot,
                                                   uint8_t ctrl_type,
                                                   uint16_t ctrl,
                                                   uint16_t default_value) {
+  if (route_md_param_mode()) {
+    uint8_t route_param = 0;
+    if (ctrl_type != SEQ_EXT_LOCK_CTRL_CC ||
+        !route_md_param_from_cc(ctrl, route_param)) {
+      return false;
+    }
+#if !defined(__AVR__)
+    if (midi_track_) {
+      return midi_track_->set_selected_lock_control(
+          slot, MIDI_SEQ_LOCK_CC, ctrl,
+          value14_from_value7((uint8_t)default_value));
+    }
+#endif
+    set_selected_lock_param(slot, (uint8_t)ctrl + 1);
+    return true;
+  }
 #if !defined(__AVR__)
   if (midi_track_) {
 #ifdef PLATFORM_TBD
@@ -554,6 +720,18 @@ bool SeqExtStepLockApi::selected_lock_param_info(
 #else
   info = SeqExtStepLockParamInfo();
 #endif
+  if (route_md_param_mode()) {
+    uint8_t param_id = 0;
+    if (!route_md_selected_param_id(slot, param_id)) return false;
+    info.active = true;
+    info.param_id = param_id;
+    info.ctrl = param_id;
+    info.ctrl_type = SEQ_EXT_LOCK_CTRL_CC;
+#if !defined(__AVR__)
+    info.sendable = true;
+#endif
+    return true;
+  }
 #if !defined(__AVR__)
   if (midi_track_) {
     if (slot >= MIDI_SEQ_NUM_LOCKS) return false;
@@ -615,6 +793,17 @@ bool SeqExtStepLockApi::copy_selected_lock_label(uint8_t slot, char *dst,
                                                  size_t dst_len) const {
   if (dst == nullptr || dst_len == 0) return false;
   dst[0] = '\0';
+  if (route_md_param_mode()) {
+#if defined(__AVR__)
+    return false;
+#else
+    uint8_t param_id = 0;
+    uint8_t route_param = 0;
+    return route_md_selected_param_id(slot, param_id) &&
+           route_md_param_from_cc(param_id, route_param) &&
+           copy_route_md_param_label(route_param, dst, dst_len);
+#endif
+  }
   SeqExtStepLockParamInfo info;
   if (!selected_lock_param_info(slot, info) || !info.active) return false;
   if (info.learn) {
@@ -663,11 +852,24 @@ bool SeqExtStepLockApi::copy_selected_lock_label(uint8_t slot, char *dst,
   return true;
 }
 
+bool SeqExtStepLockApi::copy_route_md_menu_value_label(uint8_t menu_value,
+                                                       char *dst,
+                                                       size_t dst_len) const {
+  if (dst == nullptr || dst_len == 0 || !route_md_param_mode()) return false;
+  dst[0] = '\0';
+  if (menu_value >= kRouteMdParamCount) {
+    copy_literal("OFF", dst, dst_len);
+    return true;
+  }
+  return copy_route_md_param_label(menu_value, dst, dst_len);
+}
+
 bool SeqExtStepLockApi::copy_lock_menu_value_label(uint8_t menu_value,
                                                    char *dst,
                                                    size_t dst_len) const {
   if (dst == nullptr || dst_len == 0) return false;
   dst[0] = '\0';
+  if (copy_route_md_menu_value_label(menu_value, dst, dst_len)) return true;
   if (menu_value == PARAM_OFF) {
     copy_literal("OFF", dst, dst_len);
     return true;
@@ -755,6 +957,11 @@ uint8_t SeqExtStepLockApi::lock_ui_value_from_control(uint8_t slot,
 bool SeqExtStepLockApi::selected_lock_matches_control(uint8_t slot,
                                                       uint8_t ctrl_type,
                                                       uint16_t ctrl) const {
+  if (route_md_param_mode()) {
+    uint8_t param_id = 0;
+    return ctrl_type == SEQ_EXT_LOCK_CTRL_CC &&
+           route_md_selected_param_id(slot, param_id) && ctrl == param_id;
+  }
 #if defined(__AVR__)
   uint8_t param_id = 0;
   if (!selected_lock_param_id(slot, param_id)) return false;
@@ -823,6 +1030,13 @@ bool SeqExtStepLockApi::copy_lock_value_label(uint8_t slot, uint8_t value,
 
 bool SeqExtStepLockApi::record_control_lock(uint8_t ctrl_type, uint16_t ctrl,
                                             uint16_t value, bool slide) {
+  if (route_md_param_mode()) {
+    uint8_t route_param = 0;
+    if (ctrl_type != SEQ_EXT_LOCK_CTRL_CC ||
+        !route_md_param_from_cc(ctrl, route_param)) {
+      return false;
+    }
+  }
 #if !defined(__AVR__)
   if (midi_track_) {
     uint8_t lock_param = 255;

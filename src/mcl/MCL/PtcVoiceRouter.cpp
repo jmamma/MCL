@@ -15,6 +15,8 @@ bool ptc_voice_track_allocatable(uint8_t track) {
 #endif
 }
 
+static constexpr uint8_t PTC_ROUTE_NEUTRAL_FINE_TUNE = 32;
+
 } // namespace
 
 void PtcVoiceRouter::reset() {
@@ -131,7 +133,7 @@ void PtcVoiceRouter::note_on(uint8_t route_channel, uint8_t note,
   (void)uart_;
   uint8_t track = ptc_route_channel_track(route_channel);
   if (SeqPtcTrackRef::is_midi_voice_track(track)) {
-    SeqPtcTrackRef::trigger_voice(track, note);
+    SeqPtcTrackRef::trigger_voice(track, note, PTC_ROUTE_NEUTRAL_FINE_TUNE);
     return;
   }
 
@@ -139,7 +141,7 @@ void PtcVoiceRouter::note_on(uint8_t route_channel, uint8_t note,
   if (voice >= PTC_GROUP_TRACKS) {
     return;
   }
-  SeqPtcTrackRef::trigger_voice(voice, note);
+  SeqPtcTrackRef::trigger_voice(voice, note, PTC_ROUTE_NEUTRAL_FINE_TUNE);
 }
 
 void PtcVoiceRouter::note_off(uint8_t route_channel, uint8_t note) {

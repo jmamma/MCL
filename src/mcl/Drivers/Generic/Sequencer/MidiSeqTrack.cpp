@@ -826,7 +826,6 @@ bool MidiSeqTrack::record_lock(uint8_t type, uint16_t parameter,
 void MidiSeqTrack::reset_params() {
   if (!port_) port_ = uart;
   if (!port_) return;
-  if (ptc_route_channel_is_primary(channel())) return;
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     const auto &lock = seq_data.locks[i];
     if (!lock.is_active()) continue;
@@ -839,30 +838,37 @@ void MidiSeqTrack::reset_params() {
 void MidiSeqTrack::send_lock_value(const MidiSeqLockDefinition &lock,
                                    const MidiSeqEvent &event) {
   if (!port_ || !lock.is_active()) return;
-  if (ptc_route_channel_is_primary(channel())) return;
 
   uint8_t value7 = value7_from_value14(event.value);
+  uint8_t ch = channel();
+  if (ptc_route_channel_is_primary(ch)) {
+    if (lock.type == MIDI_SEQ_LOCK_CC) {
+      ptc_voice_router.control_change(ch, (uint8_t)lock.parameter, value7,
+                                      port_);
+    }
+    return;
+  }
   switch (lock.type) {
   case MIDI_SEQ_LOCK_CC:
-    port_->sendCC(channel(), (uint8_t)lock.parameter, value7);
+    port_->sendCC(ch, (uint8_t)lock.parameter, value7);
     break;
   case MIDI_SEQ_LOCK_NRPN:
-    port_->sendNRPN(channel(), lock.parameter, event.value);
+    port_->sendNRPN(ch, lock.parameter, event.value);
     break;
   case MIDI_SEQ_LOCK_RPN:
-    port_->sendRPN(channel(), lock.parameter, event.value);
+    port_->sendRPN(ch, lock.parameter, event.value);
     break;
   case MIDI_SEQ_LOCK_PITCH_BEND:
-    port_->sendPitchBend(channel(), event.value);
+    port_->sendPitchBend(ch, event.value);
     break;
   case MIDI_SEQ_LOCK_CHANNEL_PRESSURE:
-    port_->sendChannelPressure(channel(), value7);
+    port_->sendChannelPressure(ch, value7);
     break;
   case MIDI_SEQ_LOCK_PROGRAM_CHANGE:
-    port_->sendProgramChange(channel(), value7);
+    port_->sendProgramChange(ch, value7);
     break;
   case MIDI_SEQ_LOCK_POLY_PRESSURE:
-    port_->sendPolyKeyPressure(channel(), (uint8_t)lock.parameter, value7);
+    port_->sendPolyKeyPressure(ch, (uint8_t)lock.parameter, value7);
     break;
   default:
     break;
@@ -889,7 +895,6 @@ void MidiSeqTrack::prepare_slide(uint8_t lock_idx, int32_t x0, int32_t x1,
 }
 
 void MidiSeqTrack::send_slides() {
-  if (ptc_route_channel_is_primary(channel())) return;
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     const auto &lock = seq_data.locks[i];
     if (!lock.is_active()) continue;

@@ -86,6 +86,8 @@ public:
                                 SeqExtStepLockParamInfo &info) const;
   bool copy_selected_lock_label(uint8_t slot, char *dst,
                                 size_t dst_len) const;
+  bool copy_route_md_menu_value_label(uint8_t menu_value, char *dst,
+                                      size_t dst_len) const;
   bool copy_lock_menu_value_label(uint8_t menu_value, char *dst,
                                   size_t dst_len) const;
   uint8_t selected_lock_current_ui_value(uint8_t slot) const;
@@ -122,6 +124,11 @@ private:
                        uint16_t &default_value14) const;
 #endif
   static uint8_t value7_from_14(uint16_t value14);
+  uint8_t track_channel() const;
+  bool route_md_param_mode() const;
+  bool route_md_selected_param_id(uint8_t slot, uint8_t &param_id) const;
+  bool copy_route_md_param_label(uint8_t param, char *dst,
+                                 size_t dst_len) const;
 
   ExtSeqTrack *ext_track_ = nullptr;
 #if !defined(__AVR__)
