@@ -1,26 +1,2 @@
-/* Justin Mammarella jmamma@gmail.com 2018 */
-
-#ifndef CONVERTPROJECTPAGE_H__
-#define CONVERTPROJECTPAGE_H__
-
-#include "MCLDefines.h"
-
-#ifdef MCL_HAS_PROJECT_CONVERSION
-#include "GUI.h"
-#include "FileBrowserPage.h"
-
-#define MAX_VISIBLE_ROWS 4
-#define MENU_WIDTH 78
-
-class ConvertProjectPage : public FileBrowserPage {
-public:
-
-  ConvertProjectPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
-                  Encoder *e4 = NULL)
-      : FileBrowserPage(e1, e2, e3, e4) {}
-  virtual void on_select(const char* entry);
-  void init();
-};
-#endif
-
-#endif /* CONVERTPROJECTPAGE_H__ */
+#pragma once
+#include "GUI/Pages/Project/ConvertProjectPage.h"

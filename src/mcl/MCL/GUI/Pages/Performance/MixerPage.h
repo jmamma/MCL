@@ -1,0 +1,156 @@
+/* Justin Mammarella jmamma@gmail.com 2018 */
+
+#ifndef MIXERPAGE_H__
+#define MIXERPAGE_H__
+
+// #include "Pages.h"
+#include "GUI.h"
+#include "MCL.h"
+#include "../../../../Drivers/DeviceContext.h"
+#include "../../../../Drivers/DeviceCapabilities.h"
+#include "../../../../Midi/midi-common.h"
+
+class MidiDevice;
+class DeviceMixerCapability;
+class SeqTrack;
+struct MidiDeviceMixerParam;
+
+class MuteSet {
+public:
+  uint16_t mutes[4];
+};
+
+class ATTR_PACKED() PerfState {
+public:
+  uint16_t mute_mask[2];
+  uint16_t fill_mask[2];
+
+  void init() {
+    mute_mask[0] = 0xFFFF;
+    mute_mask[1] = 0xFFFF;
+    fill_mask[0] = 0;
+    fill_mask[1] = 0;
+  }
+};
+
+void encoder_level_handle(EncoderParent *enc);
+
+class MixerTarget {
+public:
+  void bind(DeviceIdx device_idx);
+  void bind(MidiDevice *device, DeviceIdx device_idx);
+  bool bind_selected(DeviceIdx &device_idx);
+
+  MidiDevice *device() const;
+  bool is_null() const;
+  bool is_md_device() const;
+  bool perf_available() const;
+
+  uint8_t default_param() const;
+  uint8_t param_for_encoder(uint8_t encoder_idx, uint8_t display_mode,
+                            bool use_perf) const;
+  uint8_t track_count() const;
+  SeqTrack *seq_track(uint8_t track) const;
+  bool param(uint8_t track, uint8_t param_idx,
+             MidiDeviceMixerParam *out) const;
+  uint8_t param_value_7bit(const MidiDeviceMixerParam &param) const;
+  MidiDeviceMixerValue clamp_param_value(const MidiDeviceMixerParam &param,
+                                         int16_t value) const;
+  bool set_param(uint8_t track, uint8_t param_idx, MidiDeviceMixerValue value,
+                 bool send = true) const;
+  bool set_seq_mute_state(uint8_t track, bool mute) const;
+  void mute_track(uint8_t track, bool mute) const;
+  void set_record_mutes(uint8_t track, bool state, bool clear = false) const;
+  uint8_t trig_group(uint8_t track) const;
+  void select_track(uint8_t track) const;
+  void restore_track_params(uint8_t track) const;
+  bool is_mute_param(uint8_t param) const;
+  PageIndex driver_mixer_page() const;
+
+private:
+  DeviceContext ctx_;
+  DeviceMixerCapability *mixer_ = nullptr;
+};
+
+class MixerPage : public LightPage {
+public:
+  uint8_t level_pressmode;
+  uint8_t disp_levels[16];
+  uint8_t ext_disp_levels[16];
+  bool mute_toggle;
+  uint8_t ext_key_down;
+  DeviceIdx mixer_device_idx;
+  MixerTarget mixer_target;
+
+  uint8_t display_mode;
+  uint8_t first_track;
+  uint16_t redraw_mask;
+  bool redraw_mutes;
+  bool show_mixer_menu;
+  bool fill_edit_mode = false;
+
+  bool draw_encoders;
+
+  PageIndex last_page = NULL_PAGE;
+
+  uint8_t preview_mute_set = 255;
+  uint8_t load_perf_state = 255;
+
+  // Don't change order
+  PerfState perf_states[4];
+  uint8_t perf_locks[4][4];
+  bool load_types[4][2];
+  //
+
+  uint8_t get_mute_set(uint8_t key);
+  uint8_t default_mixer_param() const;
+  void sync_selected_mixer_device();
+  void select_mixer_device(DeviceIdx device_idx);
+  uint8_t mixer_track_count() const;
+  SeqTrack *mixer_seq_track(uint8_t track) const;
+  bool display_mute_mask();
+  bool display_fill_mask();
+  TrigLEDMode mixer_led_mode() const;
+  uint8_t *mixer_meter_levels();
+  bool handle_mixer_encoder_edits(bool use_perf_encoders);
+
+  MixerPage(Encoder *e1 = NULL, Encoder *e2 = NULL, Encoder *e3 = NULL,
+            Encoder *e4 = NULL)
+      : LightPage(e1, e2, e3, e4) {
+    init_perf_states();
+    memset(perf_locks, 0xFF, sizeof(perf_locks));
+    memset(load_types, 1, sizeof(load_types));
+  }
+  void init_perf_states();
+  void adjust_param(EncoderParent *enc, uint8_t param);
+  void draw_levels();
+  void draw_encs();
+  void redraw();
+  void set_level(int curtrack, int value);
+  void set_display_mode(uint8_t param);
+
+  void record_mutes_set(bool state);
+  void disable_record_mutes(bool clear = false);
+  void oled_draw_mutes();
+  void switch_perf_state(uint8_t state, bool load_perf = false, bool *load_types = nullptr);
+  bool fill_set_mode(uint8_t state) const;
+
+  void load_perf_locks(uint8_t state);
+  void toggle_or_solo(bool solo = false);
+  // Handled in MCLSeq
+  void onControlChangeCallback_Midi(DeviceIdx device_idx, uint8_t track,
+                                    uint8_t track_param, uint8_t value);
+
+  uint8_t note_to_trig(uint8_t note_num);
+  void track_trig(DeviceIdx device_idx, uint8_t track_number, uint8_t level);
+  void trig(uint8_t track_number);
+
+  virtual bool handleEvent(gui_event_t *event);
+  virtual void display();
+  virtual void loop();
+  virtual void setup();
+  virtual void init();
+  virtual void cleanup();
+};
+
+#endif /* MIXERPAGE_H__ */
