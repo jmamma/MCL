@@ -167,13 +167,13 @@ void PtcVoiceRouter::control_change(uint8_t route_channel, uint8_t cc,
   uint8_t param = cc - 16;
   uint16_t mask = ptc_groups.mask_for_track(track);
   if (!mask) {
-    SeqPtcTrackRef::set_param(track, param, value, nullptr, true);
+    SeqPtcTrackRef::set_route_param(track, param, value);
     return;
   }
 
   for (uint8_t n = 0; mask; n++, mask >>= 1) {
     if (mask & 1) {
-      SeqPtcTrackRef::set_param(n, param, value, nullptr, true);
+      SeqPtcTrackRef::set_route_param(n, param, value);
     }
   }
 }

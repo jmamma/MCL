@@ -102,4 +102,11 @@ menu_option_t MENU_OPTIONS[] = {
   {4, "1x"}, {5, "2x"}, {6, "4x"}, {7, "8x"},
   // 144 AVR / 152 TBD: MD sample bank project link
   {0, "OFF"},
+#if defined(__AVR__)
+  // 145: SEQ CHANNEL routed primary track labels
+  {17, "MD1"}, {18, "MD2"}, {19, "MD3"}, {20, "MD4"},
+  {21, "MD5"}, {22, "MD6"}, {23, "MD7"}, {24, "MD8"},
+  {25, "MD9"}, {26, "MD10"}, {27, "MD11"}, {28, "MD12"},
+  {29, "MD13"}, {30, "MD14"}, {31, "MD15"}, {32, "MD16"},
+#endif
 };

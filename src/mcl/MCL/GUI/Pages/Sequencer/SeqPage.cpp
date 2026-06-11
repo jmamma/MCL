@@ -21,6 +21,7 @@
 #include "SeqTrackUtil.h"
 #ifdef PLATFORM_TBD
 #include "MidiSetup.h"
+#include "PtcVoiceRouter.h"
 #endif
 
 namespace {
@@ -112,6 +113,49 @@ uint8_t seq_page_visible_step(uint8_t step_key) {
 }
 
 } // namespace
+
+#ifdef PLATFORM_TBD
+namespace {
+
+const char *seq_page_ptc_route_prefix() {
+#if !defined(__AVR__)
+  if (mcl_seq.using_spsx_tracks) {
+    return "SP";
+  }
+#endif
+  return SeqTrackUtil::is_md_device(device_manager.primary_device()) ? "MD"
+                                                                     : "TK";
+}
+
+} // namespace
+
+bool seq_page_channel_menu_label(uint8_t entry_index, uint8_t option_n,
+                                 char *dst, uint8_t dst_len) {
+  if (entry_index != SEQ_MENU_CHANNEL ||
+      option_n <= PTC_EXT_ROUTE_CHANNEL_BASE ||
+      option_n > PTC_EXT_ROUTE_CHANNEL_END || dst_len == 0) {
+    return false;
+  }
+
+  const char *prefix = seq_page_ptc_route_prefix();
+  uint8_t idx = 0;
+  while (prefix[idx] != '\0' && idx + 1 < dst_len) {
+    dst[idx] = prefix[idx];
+    idx++;
+  }
+
+  uint8_t track = option_n - PTC_EXT_ROUTE_CHANNEL_BASE;
+  if (track >= 10 && idx + 1 < dst_len) {
+    dst[idx++] = '0' + (track / 10);
+    track %= 10;
+  }
+  if (idx + 1 < dst_len) {
+    dst[idx++] = '0' + track;
+  }
+  dst[idx] = '\0';
+  return true;
+}
+#endif
 
 uint8_t SeqPage::page_select = 0;
 
@@ -703,6 +747,9 @@ void SeqPage::init() {
       menu_entry_mask(SEQ_MENU_REVERSE) |
       menu_entry_mask(SEQ_MENU_TRANSPOSE) | menu_entry_mask(SEQ_MENU_QUANT);
   seq_menu_page.menu.set_enabled_entry_mask(base_seq_menu_entries);
+#ifdef PLATFORM_TBD
+  seq_menu_page.menu.option_name_override = seq_page_channel_menu_label;
+#endif
   /*
   if (mcl_cfg.track_select == 1) {
     seq_menu_page.menu.enable_entry(SEQ_MENU_TRACK, false);

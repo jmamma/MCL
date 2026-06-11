@@ -23,6 +23,7 @@ public:
   static bool set_param(uint8_t track, uint8_t param, uint8_t value,
                         MidiUartClass *uart_ = nullptr,
                         bool update_kit = false);
+  static bool set_route_param(uint8_t track, uint8_t param, uint8_t value);
   static bool set_pitch(uint8_t track, uint8_t pitch,
                         MidiUartClass *uart_ = nullptr);
   static void trigger(uint8_t track, uint8_t velocity,

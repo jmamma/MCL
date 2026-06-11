@@ -115,6 +115,14 @@ menu_t<midi_config_page_N> midiconfig_menu_layout = {
   #define SEQ_EDIT_OPTIONS_OFFSET 48
 #endif
 
+#if defined(__AVR__)
+  #define SEQ_CHANNEL_OPTIONS_COUNT 16
+  #define SEQ_CHANNEL_OPTIONS_OFFSET (SAMPLE_BANK_OPTIONS_OFFSET + 1)
+#else
+  #define SEQ_CHANNEL_OPTIONS_COUNT 0
+  #define SEQ_CHANNEL_OPTIONS_OFFSET 0
+#endif
+
 menu_t<mididevice_menu_page_N> mididevice_menu_layout = {
     "DEVICES",
     {
@@ -347,7 +355,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"LENGTH:",     1, 65,                 0,                   23, NULL_PAGE,  6,  0},
         {"LENGTH:",     2, 129,                 0,                   23, NULL_PAGE,  6,  0},
         {"SWING:",      50, 81,                 0,                   73, NULL_PAGE,  29, MENU_OPTIONS_PERCENT},
-        {"CHANNEL:",    1, 33,                  0,                   24, NULL_PAGE,  7,  0},
+        {"CHANNEL:",    1, 33,                  SEQ_CHANNEL_OPTIONS_COUNT, 24, NULL_PAGE,  7,  SEQ_CHANNEL_OPTIONS_OFFSET},
         {"COPY:  ",     0, 3,                   3,                   25, NULL_PAGE,  8,  27},
         {"CLEAR:",      0, 3,                   3,                   26, NULL_PAGE,  9,  27},
         {"CLEAR:",      0, 3,                   3,                   26, NULL_PAGE,  10, 30},

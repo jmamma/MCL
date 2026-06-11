@@ -187,6 +187,35 @@ bool SeqPtcTrackRef::set_param(uint8_t track, uint8_t param, uint8_t value,
 #endif
 }
 
+bool SeqPtcTrackRef::set_route_param(uint8_t track, uint8_t param,
+                                     uint8_t value) {
+  if (is_midi_voice_track(track) && param < MID_PB) {
+    return true;
+  }
+
+  if (!set_param(track, param, value, nullptr, true)) {
+    return false;
+  }
+
+#if defined(PLATFORM_TBD)
+  if (ptc_tbd_track_available(track)) {
+    return true;
+  }
+#endif
+#if !defined(__AVR__)
+  MidiDevice *device = device_manager.primary_device();
+  if (device == nullptr || device->id != DEVICE_MD) {
+    return true;
+  }
+  if (mcl_seq.using_spsx_tracks) {
+    mcl_seq.spsx_tracks[track].onControlChangeCallback_Midi(param, value);
+    return true;
+  }
+#endif
+  mcl_seq.md_tracks[track].onControlChangeCallback_Midi(param, value);
+  return true;
+}
+
 bool SeqPtcTrackRef::set_pitch(uint8_t track, uint8_t pitch,
                                MidiUartClass *uart_) {
   return set_param(track, 0, pitch, uart_);
