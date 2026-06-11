@@ -24,7 +24,7 @@ Referenced legacy images not present during migration:
 - [x] Update sequencer documentation for swing, mute masks, fill conditions, current condition labels, signed microtiming, and SPSX behavior.
 - [x] Update LFO and arp documentation for per-track storage and new destinations/options.
 - [x] Update polyphony/chromatic documentation for `POLY MODE` and multi-timbral behavior.
-- [ ] Update mixer/performance documentation for mute/fill modes and performance-state fill storage.
+- [x] Update mixer/performance documentation for mute/fill modes and performance-state fill storage.
 - [ ] Update piano roll documentation for selection, zoom, copy/paste, and expanded MIDI locks.
 - [ ] Update sample browser, sound browser, WAV designer, RAM, and MD samplebank-linking sections.
 - [ ] Replace stale screenshots with SPS/MCL headless captures where possible.
@@ -34,7 +34,7 @@ Referenced legacy images not present during migration:
 - Foundation pages were rewritten for MCL 5.00 and no longer depend on legacy PDF screenshots.
 - The `GUI` section is long and still reads like a converted reference dump; it should probably be split into controller basics, Machinedrum enhanced mode, and shortcuts.
 - The grid workflow has been split into Grid Slot System, Grid Positions, Grid Page, Slot Menu, Save Page, Load Page, and Chains And Queues.
-- The sequencer workflow now has a high-level concept page, shared Sequencer Pages reference, and Step Editor page. PianoRoll, Chromatic, Polyphony, Arp and LFO still need their own MCL 5.00 refresh passes.
+- The sequencer workflow now has a high-level concept page, shared Sequencer Pages reference, and Step Editor page. PianoRoll still needs its own MCL 5.00 refresh pass.
 
 ## Code Truth Sources
 

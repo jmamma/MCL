@@ -1,117 +1,99 @@
 # Performance Page
 
-The Performance (Perf) Page features four user programmable Performance Controllers (A,B,C,D) sharing a common pool of eight scenes. Each controller can be assigned two scenes from the shared pool, with each scene comprised of 16 parameter locks. When rotated, a performance controller will morph between the parameter locks of its two assigned scenes.
+The Performance Page defines four performance controllers, named A through D. Each controller morphs between two scenes from a shared pool of eight scenes.
 
+Open it with:
 
-_Perf controller data, scenes and performance locks can be either stored or recalled by saving or loading to the PF track slot._
+**[Bank Group] + [Trig 3]**
 
+The same four controllers are also available from the Mixer Page when the selected mixer target supports performance control.
 
-![perf](../assets/images/perf.png)
+## What A Controller Does
 
+A performance controller is a macro. Turning it sends a smooth value from 0 to 127 and morphs every parameter lock in its assigned left and right scenes.
 
-_To enter the Perf Page: press and hold **[Bank Group]**, then press **[Trig 3]**._
+For example, controller A can fade from Scene 1 to Scene 2. Scene 1 might store closed filters and low delay send; Scene 2 might store open filters and higher delay send. Turning controller A then moves all of those locked parameters together.
 
-| Control | Assignment |
+| Control | Action |
 | --- | --- |
-| Save / No | |
-| Page | PageSelect |
-| Load / Yes | Toggle SubPage |
-| Shift | Controller Menu |
+| `Encoder 1` | Set the active controller value. |
+| **[Function]** + `Encoder 1` | Jump the active controller to the far left or far right. |
+| `Encoder 2` | Choose the external control source. |
+| `Encoder 3` | Choose the source parameter. |
+| `Encoder 4` | Set the external-control threshold. |
+| **[Load/Yes]** / panel button 4 | Cycle through controller setup and scene-lock subpages. |
+| Hold **[Global]** | Open the controller menu. |
 
+The active controller is shown as `A`, `B`, `C` or `D`. Hold **[Global]** and press **[Trig 1]** through **[Trig 4]** to choose the active controller. The controller menu also lets you rename the selected controller.
 
-![perf page](../assets/images/perf_page.png)
+## External Control And Learn
 
+Performance controllers can be moved from external input. The source and parameter fields select which incoming device parameter or MIDI CC controls the active performance controller. The threshold field ignores incoming values below the chosen threshold.
 
-To indicate the **active controller**, a character A,B,C or D is positioned in the top left of the screen.
+To learn a source, set the source to `--` and the parameter to `LER`, then move the external control you want to use. MCL assigns the source and parameter automatically when it receives a matching change.
 
-
-The **active controller** can be chosen from the controller menu accessible by holding **[Global]** and selecting **[Trig]** keys 1->4.
-
-
-The controller name is shown at the bottom left of the screen, and defaults to "CONTROL". Each controller can be **renamed** from the controller menu.
-
-
-![perf controller menu](../assets/images/perf_controller_menu.png)
-
-
-## Control
-
-**`Encoder 1`** controls the value of the active Performance Controller, rotating it will morph between the assigned scenes. Holding **[Function]** whilst rotating encoder 1 will hard pan the controller left or right.
-
-
-| Control | Assignment |
-| --- | --- |
-| Encoder 1 | Controller |
-| Encoder 2 | Source |
-| Encoder 3 | Parameter |
-| Encoder 4 | Threshold |
-
-
-Performance Controllers A,B,C,D can be controlled externally by mapping them to any MD parameter, or any MIDI Channel + CC on port 2.
-
-
-**`Encoders 2 and 3`** assign the **Source** track/channel and **Parameter** values for which the controller will respond to External Control.
-
-
-A parameter "LEARN" feature can be used to automate mapping by setting Source to "--" and Para to "LER".
-
-
-![perf page learn](../assets/images/perf_page_learn.png)
-
-
-The **`Encoder 4`** is the **Threshold** encoder and can be used to restrict the operating range of the external control to above a specified value.
-
+MCL 5.00 resolves performance targets from the current device setup, so learning and target selection work with primary and secondary devices, shared logical slots, and LFO destinations.
 
 ## Scenes
 
+The Performance Page has eight scenes, selected with **[Trig 1]** through **[Trig 8]**. A scene stores up to 16 parameter locks.
 
-### Overview
+Scene locks can target device parameters, Machinedrum track and FX parameters, external MIDI parameters, SPS-X hosted parameters where available, and LFO parameters exposed as performance targets.
 
-The Performance Page features a shared pool of 8 Scenes. Each scene can store 16 parameter locks. A parameter lock can be any MD track parameter and Master FX parameter, or any external MIDI CC. Each scene is mapped to the MD's **[Trig]** keys 1 through 8.
+Each controller has two scene assignments:
 
-
-### Assigning Scenes
-
-Each performance Controller can be assigned two scenes from the pool, one LEFT and one RIGHT. The scenes assignment is shown at the bottom right of the screen.
-
-
-To assign the left most scene, hold **[Left]** and select a scene from the MD **[Trig]** keys.
-
-To assign the right most scene, hold **[Right]** and select a scene from the MD **[Trig]** keys.
-
-
-### Scene Locks
-
-
-![perf page scene locks](../assets/images/perf_page_scene_locks.png)
-
-
-| Control | Assignment |
+| Control | Action |
 | --- | --- |
-| Encoder 1 | Controller |
-| Encoder 2 | Lock Destination |
-| Encoder 3 | Lock Parameter |
-| Encoder 4 | Value |
+| Hold a scene **[Trig]** | Enter scene-lock editing for that scene. |
+| Hold **[Left]**, then press a scene **[Trig]** | Assign or unassign that scene as the active controller's left scene. |
+| Hold **[Right]**, then press a scene **[Trig]** | Assign or unassign that scene as the active controller's right scene. |
+| Hold a scene **[Trig]**, then press **[Yes]** | Preview the scene by sending its locks. |
+| Hold a scene **[Trig]**, then press **[Copy]** | Copy the scene. |
+| Hold a scene **[Trig]**, then press **[Paste]** | Paste the copied scene. |
+| Hold a scene **[Trig]**, then press **[Clear]** | Clear the scene. Press **[Clear]** again on the same scene to undo the clear. |
 
+## Scene Lock Editing
 
-To assign a lock to a scene, hold the corresponding Scene **Trig** and rotate the desired parameter on the MD or external MIDI.
+Hold a scene **[Trig]** and move a parameter on the target device to add it as a lock in that scene. MCL opens a parameter editor for the active target where supported, so the target hardware can be used for direct lock entry.
 
+While a scene is held:
 
-With the scene **Trig** held down, it is possible to view and edit the active locks by pressing the **[Up]** and **[Down]** arrows.
+| Control | Action |
+| --- | --- |
+| **[Up]** / **[Down]** | Move through the scene's lock slots. |
+| `Encoder 2` | Choose lock destination. |
+| `Encoder 3` | Choose lock parameter. |
+| `Encoder 4` | Edit the lock value. |
+| Encoder button for a hardware parameter | Add or clear that parameter lock when the active editor exposes parameter keys. |
 
+On classic AVR/Machinedrum builds, the direct parameter editor covers the 24 legacy Machinedrum parameters. Hosted SPS-X builds can preview and edit the extended SPS-X parameter range as well.
 
-### Scene Clear/Copy/Paste
+## LFO Modulation
 
-Each scene can be cleared, copied or pasted to another scene by holding the corresponding **[Trig]**, and pressing the respective key **[Clear]**, **[Copy]**, **[Paste]**.
+LFOs can target `PF1` through `PF4`, which correspond to performance controllers A through D. The LFO modulation is added on top of the controller's manual encoder value and then clamped to the 0-127 controller range.
 
+Performance controllers can also target LFO parameters when those parameters appear in the performance target list. This allows macro controls to reshape LFO depth, speed, mode or destination-related parameters during a performance.
 
-### Scene Preview
+## Mixer Page Integration
 
-To preview a scene, hold the corresponding **[Trig]** and then press **[Enter/YES]**.
+The Mixer Page uses the same Perf A-D controllers. It can also store controller locks inside the four Mixer performance states:
 
-## Grid Saving or Loading
+| Mixer workflow | Result |
+| --- | --- |
+| Preview a Mixer performance state, hold **[No]**, then turn a Perf encoder | Store that controller value as a state lock. |
+| Apply that performance state | Recall its mute masks, fill masks and controller locks. |
+| Hold a Perf encoder button + **[Global]** from Mixer | Clear that controller's assigned scenes. |
+| Hold a Perf encoder button + **[Load/Yes]** from Mixer | Autofill the controller's right scene from changed kit parameters. |
 
-All four Performance Controllers and the shared pool of eight Scenes can be stored or recalled from the **PF** slot in column 12 in Grid Y.
+## PF Slot Storage
 
+Save or load the `PF` slot on Grid Y to store or recall:
 
-Additionally, the **PF** slot also stores the MixerPage's four Performance States including track Mute settings and Performance Controller locks.
+- the four performance controllers
+- controller names and external-control mappings
+- the shared pool of eight scenes
+- all scene locks
+- Mixer Page performance states
+- performance-state mute masks, fill masks, controller locks, device load flags and autoload selection
+
+Use the performance group on the Save or Load page when you want the `PF` slot to be included with a wider project save/load operation.

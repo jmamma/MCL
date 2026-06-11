@@ -1,154 +1,116 @@
 # Mixer Page
 
-The Mixer Page serves as the core performance hub for MCL. Initially, it displays the volume levels and mute states for the Machinedrum. Moreover, it can be configured to control and display the mute state of External MIDI tracks. When playing, the level meters fluctuate to indicate the tracks have been triggered by the sequencer.
+The Mixer Page is MCL's live performance hub. It shows track levels, mutes and fill state for the selected mixer target, and it gives quick access to performance controllers and four recallable performance states.
 
+Open it with:
 
-![mixer page select](../assets/images/mixer_page_select.png)
+**[Bank Group] + [Trig 2]**
 
+When the sequencer is running, **[Classic/Extended]** also opens and closes the Mixer Page.
 
-The Mixer Page is accessible by pressing **[Bank Group] + [Trig 2]**.
-Or pressing **[Classic/Extended]** when the sequencer is running.
+## Mixer Target
 
-| Control | Assignment |
+The Mixer Page can control any connected device that exposes mixer tracks: Machinedrum, Monomachine, Analog Four, generic MIDI devices and TBD/SPS targets. Up to 16 tracks are shown at once.
+
+Press **[Scale]** to switch the visible mixer target between the primary and secondary grid devices. If no mixer target has been selected yet, MCL chooses an available connected device and falls back to the Machinedrum when needed.
+
+## Live Controls
+
+| Control | Action |
 | --- | --- |
-| Save / No | -- |
-| Page | PageSelect |
-| Load / Yes | -- |
-| Shift | -- |
+| **[Trig]** | Select one or more visible tracks. |
+| **[Trig]** + **[Yes]** | Toggle the selected track mutes. |
+| **[Trig]** + **[No]** | Solo the selected tracks by muting the others. |
+| **[Function]** + **[Yes]** | Flip the mute state of the visible tracks. |
+| **[Classic/Extended]** + **[Trig]** | Fast mute toggle while the Mixer Page is latched open during playback. |
+| Hold **[Trig]**, then press **[Classic/Extended]** | Restore selected track parameters to their last loaded values where supported. |
+| **[No]** with no tracks held | Leave the Mixer Page, or jump to the current device mixer/FX page where available. |
 
+## Mutes And Fill State
 
-![mixer page init](../assets/images/mixer_page_init.png)
+Mute mode is the default Mixer Page mode. Mutes silence the selected sequencer tracks and are stored with the track state.
 
+Fill mode edits the separate per-track fill state used by the `FIL` and `!FL` trig conditions:
 
-## Device Selection
+| Control | Action |
+| --- | --- |
+| **[Global]** + **[Scale]** | Toggle the Mixer Page between mute editing and fill editing. |
+| **[Trig]** in fill mode | Toggle fill state for the selected track. |
+| **[Trig]** + **[Yes]** in fill mode | Toggle fill state for the selected tracks. |
+| **[Trig]** + **[No]** in fill mode | Solo fill state, enabling fill only for the selected tracks. |
 
-Press the **[Scale]** key to alternate the Mixer Page's view between the MD or External MIDI tracks.
+Tracks with fill enabled are shown with the fill indicator. A step with the `FIL` condition plays only when fill is enabled for that track; a step with `!FL` plays only when fill is not enabled.
 
+## Track Parameter Editing
 
-## Track Mute Toggle
+Hold one or more track **[Trig]** keys and turn the encoders to edit supported mixer parameters across the held tracks. For Machinedrum tracks this works like a focused CTRL-ALL workflow for level and filter parameters. For other mixer targets, MCL uses the parameters exposed by that device driver.
 
-Holding down one or more the MD's **[Trig]** keys and then pressing **[Enter/Yes]** will toggle the selected track's mute state.
+Direct parameter changes received from the selected device are also mirrored to the other held tracks when the parameter is supported there.
 
+## Sequencer Mute Recording
 
-With the **[Classic/Extended]** button held down, pressing one or more of the MD's **[Trig]** keys will also toggle the selected track's mute state.
+Sequencer mute recording writes mute activity into the active sequence.
 
-## Track Solo
-
-Holding down one or more the MD's **[Trig]** keys and then pressing **[Exit/No]** will solo the selected tracks.
-
-## Mute Flip
-
-Holding **[Function]** and then pressing **[Enter/Yes]** will flip the mutes for the visible tracks.
-
-## MDFX
-
-For quick access to FX Delay and FX Reverb pages:
-
-
-- hold **[Exit/No]** + toggle **[Left]** for DELAY.
-- hold **[Exit/No]** + toggle **[Down]** for REVERB.
-
-
-## CTRL-Track
-
-The Mixer Page allows you to modify multiple machine parameters across different tracks simultaneously,
-The Machinedrum **[Encoders]** can be used to manipulate any specific parameter across selected tracks, similar to the MD's built in CTRL-ALL functionality.
-
-
-Select one or more MD tracks by holding down the corresponding **[Trig]** keys, modifying a MD parameter will cause the same parameter to be updated on all of the selected tracks.
-
-## Track Parameter Recall
-
-Holding MD **[Trigs]** and pressing **[Classic/Extended]** will reset the parameters of each selected track to the value set last load.
-
-## Sequencer Mute Record
-
-Mutes can be recorded into the sequencer in realtime by selecting a track via the MD **[Trig]** and pressing **[Global]**.
-
-Sequencer mutes can be cleared for a specific track by holding **[Trig]** and pressing **[Kit]**.
-
-Sequencer mutes can be cleared for all tracks by holding **[Global]** and pressing **[Kit]**.
-
-
-## Performance States
-
-There are four Performance states, each is mapped to one of the MD's **[Up/Down/Left/Right]** keys.
-A Performance State stores predefined Mute settings for each of the MD and External MIDI tracks. A Performance State may also include four Performance Controller Locks.
-
-
-### Performance State Preview
-
-Performance States can be visually previewed from the Mixer Page by holding one of the MD's **[Up/Down/Left/Right]** keys.
-
-
-### Performance State Apply
-
-To apply mute and performance lock settings in a Performance State, hold down one of **[Up/Down/Left/Right]** and press **[YES]**.
-
-
-### Performance State Mute Edit
-
-When a Performance State is previewed, the mutes can be edited by toggling the **[ Trig ]**.
-
-_No changes to the current mute state will occur until applying a Performance State._
-
-
-### Performance State Mute Disable
-
-When a Performance State is previewed, the mutes for the visible tracks can disabled by pressing **[Mute/BankA]**.
-
-
-### Performance State Grid Storage
-
-All four Performance States are stored and loaded from the **PF** slot in track 12, Grid Y. (See section: Performance Page.)
-
-
-### Performance State Grid Autoload
-
-A chosen Performance State can now be made to auto-load when the Perf Slot in Grid Y is loaded:
-
-
-- From the Mixer Page, Hold an **[Up/Down/Left/Right]** key to preview the Performance State and then press **[Accent/BANKB]** to enable auto **"LOAD"**.
-- Then save the Perf Slot, in Grid Y.
-
+| Control | Action |
+| --- | --- |
+| **[Trig]** + **[Global]** | Record sequencer mutes for the selected tracks. |
+| **[Trig]** + **[Kit]** | Clear sequencer mute recording for the selected tracks. |
+| **[Global]** + **[Kit]** | Clear sequencer mute recording for all mixer targets. |
 
 ## Performance Controllers
 
-When accessing the Mixer Page, the four MegaCommand encoders are the Performance Controller's (A,B,C,D) as configured from the Performance Page or loaded from the PF Track stored in Grid Y, column 12.
+When the selected mixer target supports performance controllers, the four MCL encoders control Perf A through D. These controllers are configured on the Performance Page and are stored in the `PF` slot.
 
-
-![mixer page perfs](../assets/images/mixer_page_perfs.png)
-
-
-| Control | Assignment |
+| Encoder | Assignment |
 | --- | --- |
-| Encoder 1 | Perf Controller A |
-| Encoder 2 | Perf Controller B |
-| Encoder 3 | Perf Controller C |
-| Encoder 4 | Perf Controller D |
+| `Encoder 1` | Perf A |
+| `Encoder 2` | Perf B |
+| `Encoder 3` | Perf C |
+| `Encoder 4` | Perf D |
 
+Hold **[Function]** while turning a performance encoder to hard-pan that controller to its minimum or maximum value.
 
-### Performance Controller Locks
+## Performance States
 
-When a Performance State is previewed, holding **[Exit/No]** whilst rotating one of the MC **`Encoders`** will add a Performance Controller Lock for the corresponding Performance Controller.
+The Mixer Page has four performance states mapped to **[Down]**, **[Left]**, **[Up]** and **[Right]**. A performance state is a live recall snapshot for the performance layer.
 
+Each state stores:
 
-The Performance Controller Locks will be recalled upon loading a chosen Performance State.
+- mute masks for the primary and secondary mixer targets
+- fill masks for the primary and secondary mixer targets
+- optional Perf A-D controller locks
+- per-device load enable flags
+- the optional autoload selection used when the `PF` slot is loaded
 
+| Control | Action |
+| --- | --- |
+| Hold **[Down]**, **[Left]**, **[Up]** or **[Right]** | Preview that performance state. |
+| Preview a state, then press **[Trig]** | Edit its stored mutes, or its stored fills when the Mixer Page is in fill mode. |
+| Preview a state, then press **[Yes]** | Apply the state. |
+| Preview a state, then press **[Bank A]** | Enable or disable loading for the visible mixer target. |
+| Preview a state, then press **[Bank B]** | Mark or unmark that state for `PF` slot autoload. |
+| Preview a state, hold **[No]**, then turn a Perf encoder | Store a Perf A-D controller lock in that state. |
+| Preview a state, hold **[No]**, then press a Perf encoder button | Add or clear the matching controller lock. |
 
-![mixer page perf lock](../assets/images/mixer_page_perf_lock.png)
+Preview edits do not change the live mute or fill state until the performance state is applied.
 
+## PF Slot Storage
 
-Controller locks visually invert when locked and can be cleared by pressing the `Encoder` button.
+Performance states are stored with the Performance Page data in the `PF` slot on Grid Y. Save the performance group or the `PF` slot after editing Mixer Page states, fill masks, performance locks or autoload settings.
 
+Loading the `PF` slot recalls the Performance Page controllers and scenes. If a Mixer Page performance state is marked for autoload, that state can also be applied during the load.
 
-### Performance Controller Scene Autofill
+## Scene Autofill Shortcuts
 
-Scene Autofill can achieve Kit parameter Morphing, by automatically storing modified kit parameters as Scene Locks.
+Scene Autofill creates kit morphs by storing changed kit parameters as scene locks for a performance controller.
 
+| Control | Action |
+| --- | --- |
+| Hold a Perf encoder button + **[Global]** | Clear that controller's assigned scenes. |
+| Hold a Perf encoder button + **[Load/Yes]** | Autofill the controller's right scene from changed kit parameters. |
 
-- A Perf Controller's assigned left and right scenes can be auto-cleared with by holding down the MC's **`Encoder Button`** and pressing the MC's **< Shift >** button.
-- A Perf Controller's assigned right scenes can be auto-filled with any altered Kit parameters by holding down the MCL **< Encoder Button >** and pressing the MC's **< Yes / Load >** button.
+See [Performance Page](perf-page.md) for controller, scene and scene-lock editing.
 
+## Machinedrum FX Shortcut
 
-_See the Performance Page section of this Manual to learn more about Scenes and Scene Locks._
+When working with Machinedrum FX pages, **[Function]** plus the arrow keys jumps between the delay and reverb FX pages. Pressing the arrow for the currently visible FX page toggles its edit mode, and **[Function]** + **[Back]** returns to the Mixer Page.
