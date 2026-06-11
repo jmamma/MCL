@@ -10,6 +10,7 @@
 #include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "GUI/Pages/Sequencer/SeqPage.h"
+#include "PtcVoiceRouter.h"
 #include "SeqTrackTransition.h"
 #include "MCL.h"
 #include <string.h>
@@ -184,7 +185,8 @@ int32_t MidiSeqTrack::event_tick(uint8_t step,
 }
 
 void MidiSeqTrack::set_channel(uint8_t channel_) {
-  seq_data.channel = channel_ & 0x0F;
+  seq_data.channel = channel_ < PTC_EXT_ROUTE_CHANNEL_END ? channel_
+                                                          : (channel_ & 0x0F);
 }
 
 uint8_t MidiSeqTrack::channel() const {
@@ -628,7 +630,12 @@ void MidiSeqTrack::note_on(uint8_t note, uint8_t velocity,
   mcl_seq.report_track_trig(DeviceIdx::Secondary, track_number);
 #endif
   mixer_page.track_trig(DeviceIdx::Secondary, track_number, velocity);
-  uart_->sendNoteOn(channel(), note, velocity);
+  uint8_t ch = channel();
+  if (ptc_route_channel_is_primary(ch)) {
+    ptc_voice_router.note_on(ch, note, uart_);
+  } else {
+    uart_->sendNoteOn(ch, note, velocity);
+  }
   SET_BIT128_P(note_buffer, note);
 }
 
@@ -636,7 +643,12 @@ void MidiSeqTrack::note_off(uint8_t note, uint8_t, MidiUartClass *uart_) {
   if (uart_ == nullptr) uart_ = port_;
   if (uart_ == nullptr) uart_ = uart;
   if (!uart_) return;
-  uart_->sendNoteOff(channel(), note);
+  uint8_t ch = channel();
+  if (ptc_route_channel_is_primary(ch)) {
+    ptc_voice_router.note_off(ch, note);
+  } else {
+    uart_->sendNoteOff(ch, note);
+  }
   CLEAR_BIT128_P(note_buffer, note);
 }
 
@@ -661,6 +673,7 @@ void MidiSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_) {
   if (uart_ == nullptr) uart_ = port_;
   if (uart_ == nullptr) uart_ = uart;
   if (!uart_) return;
+  if (ptc_route_channel_is_primary(channel())) return;
   uart_->sendCC(channel(), cc, value);
 }
 
@@ -668,6 +681,7 @@ void MidiSeqTrack::pitch_bend(uint16_t value, MidiUartClass *uart_) {
   if (uart_ == nullptr) uart_ = port_;
   if (uart_ == nullptr) uart_ = uart;
   if (!uart_) return;
+  if (ptc_route_channel_is_primary(channel())) return;
   uart_->sendPitchBend(channel(), value);
 }
 
@@ -675,6 +689,7 @@ void MidiSeqTrack::channel_pressure(uint8_t pressure, MidiUartClass *uart_) {
   if (uart_ == nullptr) uart_ = port_;
   if (uart_ == nullptr) uart_ = uart;
   if (!uart_) return;
+  if (ptc_route_channel_is_primary(channel())) return;
   uart_->sendChannelPressure(channel(), pressure);
 }
 
@@ -683,15 +698,21 @@ void MidiSeqTrack::after_touch(uint8_t note, uint8_t pressure,
   if (uart_ == nullptr) uart_ = port_;
   if (uart_ == nullptr) uart_ = uart;
   if (!uart_) return;
+  if (ptc_route_channel_is_primary(channel())) return;
   uart_->sendPolyKeyPressure(channel(), note, pressure);
 }
 
 void MidiSeqTrack::buffer_notesoff() {
   if (!port_) port_ = uart;
   if (!port_) return;
+  uint8_t ch = channel();
   for (uint8_t note = 0; note < 128; note++) {
     if (IS_BIT_SET128_P(note_buffer, note)) {
-      port_->sendNoteOff(channel(), note);
+      if (ptc_route_channel_is_primary(ch)) {
+        ptc_voice_router.note_off(ch, note);
+      } else {
+        port_->sendNoteOff(ch, note);
+      }
       CLEAR_BIT128_P(note_buffer, note);
     }
   }
@@ -801,6 +822,7 @@ bool MidiSeqTrack::record_lock(uint8_t type, uint16_t parameter,
 void MidiSeqTrack::reset_params() {
   if (!port_) port_ = uart;
   if (!port_) return;
+  if (ptc_route_channel_is_primary(channel())) return;
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     const auto &lock = seq_data.locks[i];
     if (!lock.is_active()) continue;
@@ -813,6 +835,7 @@ void MidiSeqTrack::reset_params() {
 void MidiSeqTrack::send_lock_value(const MidiSeqLockDefinition &lock,
                                    const MidiSeqEvent &event) {
   if (!port_ || !lock.is_active()) return;
+  if (ptc_route_channel_is_primary(channel())) return;
 
   uint8_t value7 = value7_from_value14(event.value);
   switch (lock.type) {
@@ -862,6 +885,7 @@ void MidiSeqTrack::prepare_slide(uint8_t lock_idx, int32_t x0, int32_t x1,
 }
 
 void MidiSeqTrack::send_slides() {
+  if (ptc_route_channel_is_primary(channel())) return;
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
     const auto &lock = seq_data.locks[i];
     if (!lock.is_active()) continue;

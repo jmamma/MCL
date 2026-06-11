@@ -250,26 +250,8 @@ public:
   }
   void toggle_mute();
 
-  void buffer_notesoff() {
-    init_notes_on();
-    uint8_t *buf = (uint8_t *)note_buffer;
-    for (uint8_t i = 0; i < sizeof(note_buffer); ++i) {
-      if (buf[i]) {
-        buffer_notesoff8(&buf[i], i << 3);
-      }
-    }
-  }
-
-  void buffer_notesoff8(uint8_t *buf, uint8_t offset) {
-    uint8_t count = 0;
-    while (*buf) {
-      if (*buf & 1) {
-         uart->sendNoteOff(channel, offset + count);
-      }
-      count++;
-      *buf >>= 1;
-    }
-  }
+  void buffer_notesoff();
+  void buffer_notesoff8(uint8_t *buf, uint8_t offset);
 
   virtual void rotate_left() override { modify_track(DIR_LEFT); }
   virtual void rotate_right() override { modify_track(DIR_RIGHT); }

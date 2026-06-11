@@ -2,6 +2,7 @@
 #include "GUI/Pages/CommonPages.h"
 #include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
+#include "PtcVoiceRouter.h"
 #include "SeqTrackTransition.h"
 #include "platform.h"
 
@@ -729,6 +730,9 @@ bool ExtSeqTrack::del_notes(uint16_t cur_x, uint16_t cur_w,
 }
 
 void ExtSeqTrack::reset_params() {
+  if (ptc_route_channel_is_primary(channel)) {
+    return;
+  }
   for (uint8_t c = 0; c < NUM_LOCKS; c++) {
     if (locks_params[c] > 0) {
       uint8_t param = locks_params[c] - 1;
@@ -748,6 +752,9 @@ void ExtSeqTrack::reset_params() {
 void ExtSeqTrack::handle_event(uint16_t index, uint8_t step) {
   auto &ev = events[index];
   if (ev.is_lock) {
+    if (ptc_route_channel_is_primary(channel)) {
+      return;
+    }
     if (ev.lock_idx >= NUM_LOCKS || !locks_params[ev.lock_idx]) {
       return;
     }
@@ -872,7 +879,9 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
     ev_idx = cur_event_idx;
     ev_end = cur_event_idx + event_buckets.get(step_count);
 
-    send_slides(locks_params, channel);
+    if (!ptc_route_channel_is_primary(channel)) {
+      send_slides(locks_params, channel);
+    }
 
     // Go over CURRENT
     for (; ev_idx != ev_end; ++ev_idx) {
@@ -920,15 +929,48 @@ void ExtSeqTrack::note_on(uint8_t note, uint8_t velocity,
   mcl_seq.report_track_trig(DeviceIdx::Secondary, track_number);
 #endif
   mixer_page.track_trig(DeviceIdx::Secondary, track_number, 127);
-  uart_->sendNoteOn(channel, note, velocity);
+  if (ptc_route_channel_is_primary(channel)) {
+    ptc_voice_router.note_on(channel, note, uart_);
+  } else {
+    uart_->sendNoteOn(channel, note, velocity);
+  }
   SET_BIT128_P(note_buffer, note);
 }
 
 void ExtSeqTrack::note_off(uint8_t note, uint8_t velocity,
                            MidiUartClass *uart_) {
   uart_ = resolve_uart(uart_);
-  uart_->sendNoteOff(channel, note);
+  if (ptc_route_channel_is_primary(channel)) {
+    ptc_voice_router.note_off(channel, note);
+  } else {
+    uart_->sendNoteOff(channel, note);
+  }
   CLEAR_BIT128_P(note_buffer, note);
+}
+
+void ExtSeqTrack::buffer_notesoff() {
+  init_notes_on();
+  uint8_t *buf = (uint8_t *)note_buffer;
+  for (uint8_t i = 0; i < sizeof(note_buffer); ++i) {
+    if (buf[i]) {
+      buffer_notesoff8(&buf[i], i << 3);
+    }
+  }
+}
+
+void ExtSeqTrack::buffer_notesoff8(uint8_t *buf, uint8_t offset) {
+  uint8_t count = 0;
+  while (*buf) {
+    if (*buf & 1) {
+      if (ptc_route_channel_is_primary(channel)) {
+        ptc_voice_router.note_off(channel, offset + count);
+      } else {
+        uart->sendNoteOff(channel, offset + count);
+      }
+    }
+    count++;
+    *buf >>= 1;
+  }
 }
 
 void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
@@ -956,19 +998,31 @@ void ExtSeqTrack::noteon_conditional(uint8_t condition, uint8_t note,
 }
 
 void ExtSeqTrack::pitch_bend(uint16_t value, MidiUartClass *uart_) {
+  if (ptc_route_channel_is_primary(channel)) {
+    return;
+  }
   resolve_uart(uart_)->sendPitchBend(channel, value);
 }
 
 void ExtSeqTrack::channel_pressure(uint8_t pressure, MidiUartClass *uart_) {
+  if (ptc_route_channel_is_primary(channel)) {
+    return;
+  }
   resolve_uart(uart_)->sendChannelPressure(channel, pressure);
 }
 
 void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure,
                               MidiUartClass *uart_) {
+  if (ptc_route_channel_is_primary(channel)) {
+    return;
+  }
   resolve_uart(uart_)->sendPolyKeyPressure(channel, note, pressure);
 }
 
 void ExtSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_) {
+  if (ptc_route_channel_is_primary(channel)) {
+    return;
+  }
   resolve_uart(uart_)->sendCC(channel, cc, value);
 }
 

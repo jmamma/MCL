@@ -7,6 +7,7 @@
 #include "MCLSysConfig.h"
 #include "MCLStrings.h"
 #include "PtcGroups.h"
+#include "PtcVoiceRouter.h"
 #include "SeqExtStepTrackApi.h"
 #include "SeqExtStepTrackRef.h"
 #include "SeqPtcTrackRef.h"
@@ -202,11 +203,7 @@ void SeqPtcPage::config_encoders() {
 }
 
 void SeqPtcPage::reset_poly_voices() {
-  for (uint8_t x = 0; x < 16; x++) {
-    voice_pitch[x] = -1;
-    voice_order[x] = 0;
-    voice_active[x] = false;
-  }
+  ptc_voice_router.reset();
 }
 
 void SeqPtcPage::init_poly() {
@@ -454,89 +451,13 @@ uint8_t SeqPtcPage::calc_scale_note(uint8_t note_num, bool padded) {
 
 uint8_t SeqPtcPage::get_next_voice(uint8_t pitch, uint8_t track_number,
                                    uint8_t channel_event) {
-  uint8_t voice = 255;
-  uint16_t voice_mask = 0;
-
   if (channel_event == POLY_EVENT) {
-    voice_mask = ptc_groups.mask_for_track(track_number);
-    if (!voice_mask) {
-      return 255;
-    }
-  } else if (channel_event == CTRL_EVENT) {
-    voice_mask = ptc_groups.mask_for_track(track_number);
-
-    // mono
-    if (!voice_mask) {
-      if (track_number >= SeqPtcTrackRef::track_count()) {
-        return 255;
-      }
-      voice_active[track_number] = true;
-      voice_pitch[track_number] = pitch;
-      return track_number;
-    }
-  } else {
-    return 255;
+    return ptc_voice_router.get_next_voice(pitch, track_number, false);
   }
-
-  uint16_t candidate_mask = 0;
-  uint8_t active_same_pitch = 255;
-  uint8_t inactive_same_pitch = 255;
-  uint8_t inactive_voice = 255;
-  uint8_t oldest_voice = 255;
-  uint8_t oldest_val = 0;
-
-  // Preserve the old allocation order while only scanning the voice group once.
-  uint16_t voice_bit = 1;
-  for (uint8_t x = 0; voice_mask; x++, voice_mask >>= 1, voice_bit <<= 1) {
-    if (!(voice_mask & 1) ||
-        !SeqPtcTrackRef::is_poly_voice_track(x)) {
-      continue;
-    }
-    candidate_mask |= voice_bit;
-    if (voice_active[x]) {
-      if (voice_pitch[x] == pitch) {
-        active_same_pitch = x;
-      }
-      if (oldest_voice == 255 || voice_order[x] > oldest_val) {
-        oldest_voice = x;
-        oldest_val = voice_order[x];
-      }
-      continue;
-    }
-    if (voice_pitch[x] == pitch) {
-      inactive_same_pitch = x;
-    }
-    inactive_voice = x;
+  if (channel_event == CTRL_EVENT) {
+    return ptc_voice_router.get_next_voice(pitch, track_number, true);
   }
-
-  if (active_same_pitch != 255) {
-    voice = active_same_pitch;
-  } else if (inactive_same_pitch != 255) {
-    voice = inactive_same_pitch;
-  } else if (inactive_voice != 255) {
-    voice = inactive_voice;
-  } else {
-    voice = oldest_voice;
-  }
-
-  if (voice == 255) {
-    return 255;
-  }
-
-  for (uint8_t x = 0; candidate_mask; x++, candidate_mask >>= 1) {
-    if (candidate_mask & 1) {
-      if (voice_order[x] <= voice_order[voice] && x != voice) {
-        voice_order[x]++;
-      }
-    }
-  }
-  // set selected voice to be the latest note.
-
-  voice_order[voice] = 0;
-  voice_pitch[voice] = pitch;
-  voice_active[voice] = true;
-
-  return voice;
+  return 255;
 }
 
 uint8_t SeqPtcPage::release_voice(uint8_t pitch, uint8_t track_number,
@@ -545,24 +466,12 @@ uint8_t SeqPtcPage::release_voice(uint8_t pitch, uint8_t track_number,
     return 255;
   }
 
-  uint16_t voice_mask = ptc_groups.mask_for_track(track_number);
-  if (channel_event == CTRL_EVENT && !voice_mask) {
-    voice_active[track_number] = false;
-    return track_number;
+  if (channel_event == POLY_EVENT) {
+    return ptc_voice_router.release_voice(pitch, track_number, false);
   }
-
-  if (channel_event != POLY_EVENT && channel_event != CTRL_EVENT) {
-    return 255;
+  if (channel_event == CTRL_EVENT) {
+    return ptc_voice_router.release_voice(pitch, track_number, true);
   }
-
-  for (uint8_t x = 0; voice_mask; x++, voice_mask >>= 1) {
-    if ((voice_mask & 1) && SeqPtcTrackRef::is_poly_voice_track(x) &&
-        voice_active[x] && voice_pitch[x] == pitch) {
-      voice_active[x] = false;
-      return x;
-    }
-  }
-
   return 255;
 }
 

@@ -1,5 +1,6 @@
 #include "MCLSeq_Internal.h"
 
+#include "PtcVoiceRouter.h"
 #include "SeqTrackUtil.h"
 #if !defined(__AVR__)
 #include "Host/SpsHostArrBridge.h"  // SPS<->MCL arranger cell listener
@@ -410,6 +411,9 @@ bool MCLSeq::legacy_tick_due() {
 }
 
 uint8_t MCLSeq::find_ext_track(uint8_t channel) {
+  if (ptc_route_channel_is_primary(channel)) {
+    return 255;
+  }
   for (uint8_t n = 0; n < NUM_EXT_TRACKS; n++) {
 #if !defined(__AVR__)
     if (seq_grid_y_runs_midi_tracks()) {

@@ -4,6 +4,7 @@
 
 #include "Sequencer/MCLSeq.h"
 #include "SeqExtStepTrackApi.h"
+#include "PtcVoiceRouter.h"
 
 uint8_t MidiSeqExtStepTrackCapability::track_count(
     const DeviceContext &ctx) const {
@@ -24,6 +25,10 @@ bool MidiSeqExtStepTrackCapability::track_for_channel(
     const DeviceContext &ctx, uint8_t channel, uint8_t *track_index) const {
   (void)ctx;
   if (track_index == nullptr) {
+    return false;
+  }
+  if (ptc_route_channel_is_primary(channel)) {
+    *track_index = 255;
     return false;
   }
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {

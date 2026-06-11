@@ -51,9 +51,6 @@ class SeqPtcPage : public SeqPage, public ClockCallback {
 public:
   bool re_init;
   uint8_t transpose;
-  int8_t voice_pitch[MAX_POLY_NOTES];
-  uint8_t voice_order[MAX_POLY_NOTES];
-  bool voice_active[MAX_POLY_NOTES];
 
   uint8_t dev_note_channels[NUM_DEVS];
   uint64_t dev_note_masks[NUM_DEVS][2];

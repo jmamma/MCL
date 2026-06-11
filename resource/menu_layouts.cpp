@@ -347,7 +347,7 @@ menu_t<seq_menu_page_N> seq_menu_layout = {
         {"LENGTH:",     1, 65,                 0,                   23, NULL_PAGE,  6,  0},
         {"LENGTH:",     2, 129,                 0,                   23, NULL_PAGE,  6,  0},
         {"SWING:",      50, 81,                 0,                   73, NULL_PAGE,  29, MENU_OPTIONS_PERCENT},
-        {"CHANNEL:",    1, 17,                  0,                   24, NULL_PAGE,  7,  0},
+        {"CHANNEL:",    1, 33,                  0,                   24, NULL_PAGE,  7,  0},
         {"COPY:  ",     0, 3,                   3,                   25, NULL_PAGE,  8,  27},
         {"CLEAR:",      0, 3,                   3,                   26, NULL_PAGE,  9,  27},
         {"CLEAR:",      0, 3,                   3,                   26, NULL_PAGE,  10, 30},
