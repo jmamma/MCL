@@ -1,73 +1,79 @@
 # Save Page
 
+The Save Page writes the current track or group state into grid slots.
 
-The Save Page is used to save track data to specific slots in the current row of the active Grid.
+Open it from the Grid Page with:
 
+```text
+[Function] + [Yes/Enter]
+```
 
-Available save modes:
+On TBD builds, Save appears as a Grid Page overlay. On MegaCommand and MegaCMD builds, it opens as a page.
 
+## What Save Stores
 
-- SAVE: Save the MCL's sequencer data and associated device's sound data.
+Save stores sequence data and any supported sound or state data for the selected slots.
 
+| Source | Typical saved data |
+| --- | --- |
+| Device tracks | Sequence data, sound/device state, locks, length and link settings. |
+| Performance group | Performance controller and state data. |
+| Auxiliary/route group | Route or page-specific auxiliary state. |
+| Tempo group | Tempo/clock-related state. |
 
-![save to a](../assets/images/save_to_a.png)
+The actual saved data depends on the driver and slot type.
 
-
-_The Save Page is accessible from the GridPage by pressing the MD's **[Function] + [Enter/Yes]** keys._
-
+## Controls
 
 | Control | Assignment |
 | --- | --- |
-| Encoder 1 | Mode |
-| Encoder 2 | -- |
-| Encoder 3 | -- |
-| Encoder 4 | -- |
-| Save / No | Cancel Save |
-| Page | Toggle Grid |
-| Load / Yes | -- |
-| Shift | Group Select |
+| **[Trig]** keys | Select the slots to save. |
+| **[Scale]** | Toggle Grid X / Grid Y while selecting. |
+| **[Yes/Enter]** | Hold to open group selection; release to save selected groups. |
+| **[No/Exit]** | Cancel Save. |
 
+## Saving Individual Slots
 
-## Saving Individual Tracks
+1. Open Save.
+2. Select one or more slots with the **[Trig]** keys.
+3. Release the selection to save the corresponding tracks to the current row.
 
-The Save Page utilises the MD's **[Trig]** keys to specify which tracks are to be stored. Pressing and releasing multiple **[Trig]** keys will save the corresponding sequencer tracks to the matching slots in the current row of the visible Grid.
+The visible grid determines whether the trig keys target Grid X or Grid Y. Use **[Scale]** to switch grids while building a selection.
 
-## Grid Toggle
+## Saving Across Both Grids
 
-The **[Scale]** button can be used to toggle between Grid X, the 16 MD tracks, or Grid Y, the EXT (1-6) and AUX (12-16) tracks, over the MDs **[Trig]** keys.
+To save tracks from both grids in one operation:
 
+1. Open Save.
+2. Select slots on the first grid.
+3. Use **[Scale]** to switch to the other grid.
+4. Select additional slots.
+5. Release the selection to save all selected slots.
 
-## Simultaneous Save from Grid X and Grid Y
+## Group Save
 
-It is possible to simultaneously save a collection of tracks from both Grids X and Y.
+Hold **[Yes/Enter]** from Save to open `SAVE GROUPS`.
 
+The group selector uses the first five trig keys.
 
-- First select the tracks from Grid X pressing and holding the corresponding **[Trig]** keys.
-- Tap **[Scale]** to switch grids
-- Release the **[Trig]** selection
-- Select the EXT tracks pressing and holding the corresponding **[Trig]** keys.
-- Finally release the second grid **[Trig]** selection to confirm the action.
+| Group | Saves |
+| --- | --- |
+| 1 | Primary device group. |
+| 2 | Secondary device group. |
+| 3 | Performance state group. |
+| 4 | Auxiliary or route state group. |
+| 5 | Tempo/clock state group. |
 
+Use **[Trig 1-5]** to toggle the desired groups, then release **[Yes/Enter]** to save them.
 
-## Save Track Groups
+The group icons follow the configured devices. A classic Machinedrum project may show MD-related groups; a TBD or generic MIDI project may show different device icons.
 
-When in the Save or Load Page, holding the MD's **[Enter/Yes]** key opens the Group Select menu, allowing you to load or save all tracks corresponding to a group. An entire row (pattern) including tracks across both Grids X + Y can be loaded or saved this way.
+## Row Names
 
+When a group or row-level save writes active slot data, the row name is associated with the row and shared across grids. Rename rows from the Slot Menu.
 
-![group select page](../assets/images/group_select_page.png)
+## Saving And Projects
 
+Saving slots updates the current project's grid files. You do not need a separate full-project save after writing the relevant slots.
 
-There are five groups:
-
-
-- MACHINEDRUM _(Grid X tracks 1-16) + MDFX (**FX** = Grid Y track 13)_
-- EXT MIDI DEVICE (A4/MNM/Generic MIDI) _(Grid Y tracks 1-6)_
-- PERF _(**PF** = Grid Y track 12) + LFOTrack (**LF**= Grid Y track 15) )_
-- RouteTrack _(**RT** = Grid Y track 14)_
-- TEMPO _(**TP** = Grid Y track 16)_
-
-
-From the Group Select Menu each group can be enabled/disabled using the MD's **[Trig]** keys 1-5.
-
-
-Releasing **[Enter/Yes]** will save tracks corresponding to the active groups.
+If `CONFIG > SYSTEM > PROJ CFG` is enabled, supported configuration is also stored with the project when project state is written.

@@ -1,39 +1,85 @@
 # Grid Page
 
-The first page you will be presented with after loading or creating a new project is the Grid Page. This is the main page of MCL and is used to access the firmware's sub-pages and menus alongside saving and loading individual slots and full patterns across 128 rows per project.
+The Grid Page is the main working page in MCL. It shows the project grid, lets you move between rows and slots, and opens the Save, Load and Slot Menu workflows.
 
+## What You See
 
-![grid init annot](../assets/images/grid_init_annot.png)
+The page shows a window into the active grid.
 
+| Display item | Meaning |
+| --- | --- |
+| Slot labels | The stored track or state type, such as a drum model, device track, performance state or empty slot. |
+| Inverted cursor | The selected slot. |
+| Grid marker | Whether Grid X or Grid Y is active. |
+| Bank/row position | The current row within banks A-H. |
+| Row name | The stored row name when one exists. |
+| Queued/active markings | Slots involved in queue or active loading may be drawn differently. |
+
+Empty slots are shown as empty or placeholder cells.
+
+## Basic Controls
 
 | Control | Assignment |
 | --- | --- |
-| Encoder 1 | scrolls the grid horizontally. |
-| Encoder 2 | scrolls the grid vertically. |
-| Encoder 3 | -- |
-| Encoder 4 | -- |
-| Save / No | activates Save page. |
-| Page | activates PageSelect page. |
-| Load / Yes | activates Load page. |
-| Shift | activates the Slot menu. |
+| Encoder 1 | Move horizontally through columns. |
+| Encoder 2 | Move vertically through rows. |
+| Encoder 3 | Selection width when the Slot Menu is open. |
+| Encoder 4 | Selection height when the Slot Menu is open. |
+| **[Left]** / **[Right]** | Move across columns. |
+| **[Up]** / **[Down]** | Move across rows. |
+| **[Scale]** | Toggle Grid X / Grid Y. |
+| **[Yes/Enter]** | Open Load. |
+| **[Function]** + **[Yes/Enter]** | Open Save. |
+| **[No/Exit]** | Hold to open the Slot Menu. |
+| **[Bank]** + **[Trig]** | Load or queue rows by bank position. |
 
-MCL displays a section of the active grid on screen.
-Eight slots across four rows are shown.
+On TBD builds, Save and Load appear as overlays on the Grid Page rather than replacing the whole page.
 
-Occupied slots will display the Machine Type associated with the track. For example "BD" for Bass Drum. Unoccupied Slots are represented by two lines of "--" . For clarity, a dashed vertical line is printed after every fourth column.
+## Active Grid
 
+The active grid controls which 16 columns are shown and edited.
 
-An interactive cursor indicates the current slot position and is distinguished by a slot printed with inverted colours. Either rotating **`Encoder 1`** or **`Encoder 2`** or using the MD's **[Up/Down/Left/Right]** cursor keys will allow the cursor position to change. When the cursor reaches the edges of the screen you can continue to scroll through the active grid.
+| Active grid | What actions target |
+| --- | --- |
+| Grid X | The primary configured device. |
+| Grid Y | The secondary configured device or auxiliary state area. |
 
+Use **[Scale]** to toggle grids. Save, load, slot editing and range selection apply to the grid currently shown unless the workflow explicitly selects both grids or a group.
 
-Towards the bottom left corner of the display, the active grid followed by the current slot's column, bank and row are shown.
+## Opening Save And Load
 
+| Action | Result |
+| --- | --- |
+| **[Function]** + **[Yes/Enter]** | Opens Save. |
+| **[Yes/Enter]** | Opens Load. |
+| **[No/Exit]** held, then **[Yes/Enter]** | Loads the selected Slot Menu range from the grid page. |
 
-The active grid can be toggled between either X or Y via **[Scale]**
+Save and Load can act on individual slots or on groups. Group selection is described in the Save and Load pages.
 
+## Opening The Slot Menu
 
-When performing actions such as individual saving/loading of slots, they will apply to the active grid.
+Hold **[No/Exit]** from the Grid Page to open the Slot Menu.
 
-Group save will save the entire row (pattern) across both X and Y grids in the current row indicated by the cursor position.
+While the Slot Menu is open, the arrows or encoders can expand the selected rectangle. Releasing **[No/Exit]** applies edits such as length, loops, jump row or sequence-only loading. Dedicated clear/copy/paste keys can also apply slot edit actions.
 
-**[Function] + [Clear/Copy/Paste]** _includes current pattern data from the MD tracks, EXT tracks and the Master FX._ **[Exit/No] + [Clear/Copy/Paste]** _slot(s) containing Aux data._
+## Row Loading From Bank And Trig Keys
+
+The Machinedrum-style **[Bank]** + **[Trig]** gesture treats grid rows like patterns.
+
+| Gesture | Result |
+| --- | --- |
+| Select one bank/trig row | Load that row using the active group selection. |
+| Select multiple trig rows | Queue those rows as a chain. |
+
+This is the fastest performance workflow for row-level loading.
+
+## Grid Encoder Mode
+
+`CONFIG > SYSTEM > GRID ENCOD` can change the Grid Page encoders.
+
+| Value | Behavior |
+| --- | --- |
+| `--` | Encoders navigate the grid normally. |
+| `PERF` | Encoders act as performance controllers from the Grid Page. |
+
+When using `PERF`, use arrow keys and shortcuts for grid navigation.

@@ -4,7 +4,7 @@ This file tracks the documentation migration and the MCL 5.00 content refresh.
 
 ## Migration Findings
 
-Missing legacy include files from `main.tex`:
+Legacy `main.tex` referenced these files, but they were missing during migration. They have since been reconstructed as Markdown concept pages:
 
 - `./TeX_files/chain_settings.tex` -> `sections/chain-settings.md`
 - `./TeX_files/grid_slot_system.tex` -> `sections/grid-slot-system.md`
@@ -20,7 +20,7 @@ Referenced legacy images not present during migration:
 - [x] Rewrite key concepts around Grid X/Y devices, TBD/SPSX, desktop/WASM, and project format changes.
 - [x] Update MIDI, controller, sync, route, MD, and system configuration labels from `resource/menu_layouts.cpp` and `resource/menu_options.cpp`.
 - [x] Update project load/save documentation for folders, cloning, moving, versions, and project config.
-- [ ] Update grid and slot menu documentation, including the `SOUND` slot option.
+- [x] Update grid and slot menu documentation, including the `SOUND` slot option.
 - [ ] Update sequencer documentation for swing, mute masks, fill conditions, current condition labels, signed microtiming, and SPSX behavior.
 - [ ] Update LFO and arp documentation for per-track storage and new destinations/options.
 - [ ] Update polyphony/chromatic documentation for `POLY MODE` and multi-timbral behavior.
@@ -33,7 +33,7 @@ Referenced legacy images not present during migration:
 
 - Foundation pages were rewritten for MCL 5.00 and no longer depend on legacy PDF screenshots.
 - The `GUI` section is long and still reads like a converted reference dump; it should probably be split into controller basics, Machinedrum enhanced mode, and shortcuts.
-- The `Load Page` / chain material is also long enough to split after the project/grid sections are updated.
+- The grid workflow has been split into Grid Slot System, Grid Positions, Grid Page, Slot Menu, Save Page, Load Page, and Chains And Queues.
 
 ## Code Truth Sources
 
