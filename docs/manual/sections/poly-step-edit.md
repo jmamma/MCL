@@ -1,162 +1,153 @@
 # PianoRoll Editor Page
 
-The PianoRoll page is used to edit External MIDI sequencer tracks 1-6.
+The PianoRoll Editor edits the secondary/external-style sequencer tracks. These are the Grid Y MIDI-style tracks used for generic MIDI, Elektron devices, A4/MNM-style targets and hosted/TBD MIDI tracks where available.
 
-The editor features two modes: Note editing and Automation editing.
+Open it with:
 
+**[Bank Group] + [Trig 7]**
 
-![proll](../assets/images/proll.png)
+The page has two edit views:
 
-
-_Press **[Bank Group] + [Trig 7]** to open the Pianoroll Editor page_
-
-| Control | Assignment |
+| View | Use |
 | --- | --- |
-| Encoder 1 | Cursor X |
-| Encoder 2 | Cursor Y / Note Value |
-| Encoder 3 | Cursor Width / Note Width |
-| Encoder 4 | Zoom |
-| Save / No | Record |
-| Page | PageSelect |
-| Load / Yes | Add or Remove Note |
-| Shift | Pianoroll Menu |
+| `NOTE` | Edit notes, pitch, velocity, condition and note length. |
+| Automation / lock lane | Edit one parameter-lock lane such as CC, NRPN, RPN, pitch bend, pressure, program change or a device parameter where supported. |
 
+## Display Model
 
-## GUI
+PianoRoll time is continuous inside each sequencer step. Notes and locks can be placed between grid steps with the track's internal timing resolution. The display shows a 16-step page at a time, with a small overview strip showing the visible area and playback position.
 
+The vertical keyboard on the left shows the note range currently in view. In automation view, the vertical axis becomes the lock value.
 
-![proll edit](../assets/images/proll_edit.png)
+## Main Controls
 
+| Control | Note view | Automation view |
+| --- | --- | --- |
+| `Encoder 1` | Move the time cursor. | Move the time cursor. |
+| `Encoder 2` | Move the note cursor. | Move the lock value cursor. |
+| `Encoder 3` | Change note width. | Change edit width. |
+| `Encoder 4` | Change zoom. | Change zoom. |
+| **[Yes]** / **[Load/Yes]** | Add or remove the note at the cursor. | Add or remove a lock at the cursor. |
+| **[Scale]** | Move to the next 16-step page. | Move to the next 16-step page. |
+| Hold **[Global]** | Open the Track Menu. | Open the Track Menu. |
 
-The PianoRoll editor operates in continuous time, with the finest resolution being 1/192nd of a quarter note. Dots are drawn to illustrate each quarter note. Vertical lines denote the commencement of a new beat.
+The MD trig keys jump the time cursor to step positions on the current 16-step page. If external notes are held, pressing **[Yes]** or a trig key writes the held note or chord at the cursor.
 
+## Cursor Movement
 
-- The cursor can be moved to a specific time offset by rotating **`Encoder 1`**.
-- **`Encoder 4`** adjusts the zoom along time the time axis.
-- The note value is chosen using **`Encoder 2`**
-- The note width controlled using **`Encoder 3`**.
-- Notes can be both entered and deleted by pressing the **`Load`** button.
+| Control | Action |
+| --- | --- |
+| **[Left]** / **[Right]** | Move the cursor in time. |
+| **[Up]** / **[Down]** | Move pitch in note view, or lock value in automation view. |
+| **[Function]** + arrows | Move faster. |
+| **[Yes]** + **[Left]** / **[Right]** | Fine time movement. |
+| **[No]** + **[Left]** / **[Right]** | Change note width when no selection rectangle is active. |
+| **[Yes]** + **[No]** + **[Up]** / **[Down]** | Change zoom. |
+| Hold **[No]** or a trig, then press **[Clear]** | Delete notes under the current cursor width in note view. |
 
+## Note Selection Rectangle
 
-Alternatively, the MD's GUI can be used to navigate the piano roll, and edit the sequence.
+MCL 5.00 adds a note selection rectangle for focused note edits.
 
+| Control | Action |
+| --- | --- |
+| **[No]** + **[Down]** | Start a selection rectangle from the current cursor. |
+| Keep holding **[No]**, then press arrows | Resize the selection in time or pitch. |
+| Selection active + **[Copy]** | Copy the selected notes. |
+| Selection active + **[Clear]** | Clear the selected notes. |
+| Rectangle copied + **[Paste]** | Paste the copied notes at the cursor pitch/time. |
 
-- **[Enter/Yes]** add or remove notes.
-- **[Left/Right]** move cursor along time axis.
-- **[Enter/Yes] + [Left/Right]** nudge cursor along time axis (fine control).
-- **[Exit/No] + [Left/Right]** adjust cursor width.
-- **[Enter/Yes] + [Exit/No] + [Left/Right]** nudge cursor width (fine control).
-- **[Up/Down]** move cursor along note axis.
-- **[Function] + [Up/Down/Left/Right]** cursor fast travel.
-- **[Exit/No] + [Up/Down]** zoom in and out.
-- **[Clear/Copy/Paste]** clear/copy/paste for track.
-- **[Scale]** Toggle sequencer page.
-- **[Function] + [Scale]** The MD's scale menu can be used to configure the length and speed of the current track.
-- The MD's **[Trig]** keys can be used to position the cursor at step intervals relative to the current page.
+Rectangle copy preserves the selected shape. When pasted, the copied notes are transposed relative to the cursor pitch.
 
+## Page Copy, Clear And Paste
 
-## External MIDI Control
+Hold **[Scale]** with copy, clear or paste to work on the visible 16-step page.
 
-An external MIDI device connected on Port 2 or USB MIDI can be used to position the cursor's vertical position.
+| View | Control | Action |
+| --- | --- | --- |
+| Note | **[Scale]** + **[Copy]** | Copy all notes on the current page. |
+| Note | **[Scale]** + **[Clear]** | Clear all notes on the current page. Repeat the clear/paste operation to undo where shown. |
+| Note | **[Scale]** + **[Paste]** | Paste a copied note page at the current page. |
+| Automation | **[Scale]** + **[Copy]** | Copy the current lock lane page. |
+| Automation | **[Scale]** + **[Clear]** | Clear the current lock lane page. Repeat the clear/paste operation to undo where shown. |
+| Automation | **[Scale]** + **[Paste]** | Paste a copied lock page into the current lock lane. |
 
+When pasting between tracks with different timing, page clips are scaled to the destination track timing.
 
-- Ensure that the **Config-->MIDI-->CTRL PORT** is set to the MIDI port your external keyboard/sequencer is connected.
+## Track Menu
 
+Hold **[Global]** to open the Track Menu. The visible entries depend on whether `NOTE` view or an automation lane is selected.
 
-_When using an external MIDI keyboard, the octave, and scale mapping can be changed from the Chromatic Page as discussed in the next chapter._
-Holding a note on an external MIDI keyboard, and then pressing the MD's **[Enter/Yes]** or a **[Trig]** key, allows individual notes to be added at the cursor position.
-
-
-Similarly, using a simultaneous combination of the MD's **[Trig]** keys and an external MIDI Keyboard, chords can be entered into the Note Editor. First play a chord on the Keyboard, then press **[Enter/Yes]** or a **[Trig]** key to store the chord at the cursor location.
-
-## Live Record
-
-Live Record mode can be activated using the MD's **[Rec]** function. Both note and automation data can be recorded simultaneously. Automation data includes all ControlChannel, Pitchbend and channel pressure messages received on MIDI port 2.
-
-All 6 tracks can be recorded to simultaneously.
-
-
-Tracks will only record incoming data that is on the same MIDI Channel. _(see section MIDI Channel Selection)_
-
-
-To disable Automation Recording use the CC Rec option in the Track Menu.
-
-## PianoRoll Editor Track Menu
-
-
-![proll menu](../assets/images/proll_menu.png)
-
-
-Holding **[Global]** opens the Track menu. For each track you can adjust the MIDI Channel, track length and playback speed. Cursor editing options are also included here including note velocity and note conditional settings.
-
+Common entries:
 
 | Entry | Function |
 | --- | --- |
-| Track Select | Change Track |
-| Edit | Note or Automation editing modes |
-| VEL | Note Velocity |
-| Cond | Trig Condition |
-| Channel | MIDI Channel |
-| Key | MIDI Channel |
-| CC Rec | Enable/Disable Automation recording. |
+| `TRACK SEL` | Select the active external-style track. |
+| `EDIT` / `PIANOROLL` | Switch between `NOTE` view and automation lock lanes. |
+| `SPEED` | Set track playback speed. |
+| `LENGTH` | Set track length up to 128 steps. |
+| `CHANNEL` | Set the MIDI channel for the track. |
+| `COPY`, `PASTE`, `SHIFT`, `REVERSE`, `TRAN` | Track-level edit operations. |
+| `QUANT` | Toggle quantized live recording. |
+| `CC REC` | Enable or disable live automation recording. |
 
-
-## Ext MIDI Track Selection & Mutes
-
-When opening the Track Menu **[Global]** from within in either the PianoRoll Editor or Chromatic Page, the MD's **[Trig]** keys can be used to switch between Ext MIDI Tracks and/or mute/unmute them.
-
-
-- MD **[Trig]** keys 1-6 correspond to Ext MIDI Track selection 1-6.
-- MD **[Trig]** keys 9-14 correspond to Ext MIDI Track mutes 1-6.
-
-
-## MIDI Channel Selection
-
-Each Ext MIDI track listens and transmits on a set MIDI Channel. The channel defaults to the track number. This can be easily changed by modifying the Track menu CHAN option.
-
-
-## Change Edit Mode
-
-From the PianoRoll menu, the "Edit" parameter changes the editing mode. Switch between either Note editing, or editing automation parameters 1-8.
-
-
-## Automation Editing
-
-
-![proll aut](../assets/images/proll_aut.png)
-
-
-_The PianoRoll Editor page allows for automation editing. From the Track menu, use the "Edit" menu option to select one of eight Automation Parameters._
-
-
-Each External MIDI track features 8 automation parameters.
-
-
-## Automation Editor Track Menu
-
-Hold **[Global]** to open the Track menu.
-
+Note view adds:
 
 | Entry | Function |
 | --- | --- |
-| Edit | Note or Automation editing modes |
-| Slide | Linear slide between automation values |
-| CC | CC destination, Program Change, Pitch Bend, Channel Pressure, MIDI learn |
-| CC Rec | Enable/Disable Automation recording. |
+| `VEL` | Default velocity for newly entered notes. |
+| `COND` | Default note/trig condition. |
+| `ARPEGGIATOR` | Open the per-track Arpeggiator Page. |
+| `CLEAR` | Clear the track or selected scope. |
 
+Automation view adds:
 
-Slide: enables/disable interpolation between automation events.
+| Entry | Function |
+| --- | --- |
+| `CC` / parameter select | Choose the parameter controlled by the current lock lane. |
+| `SLIDE` | Glide/interpolate lock values between steps where supported. |
+| `CLEAR LOCKS` | Clear lock data for the current lane or wider scope. |
 
+## Track Selection And Mutes
 
-CC: Allows a specific MIDI Control Channel number to be a chosen parameter.
+While the Track Menu is open, the trig keys select or mute secondary/external tracks:
 
+| Trig keys | Action |
+| --- | --- |
+| **[Trig 1-6]** | Select external-style tracks 1-6, limited by the connected device's available track count. |
+| **[Trig 9-14]** | Toggle mutes for external-style tracks 1-6. |
 
-- When set to LEARN, to Automatically learn the next received CC on the same MIDI channel.
-- When set to PRG, the track will send Program Change messages.
-- When set to PB, the track will send pitch bend messages.
-- When set to CHP, the track will send channel pressure messages.
+Muting an external/MIDI-style track sends note-offs so currently held notes are silenced.
 
+## MIDI Input And Live Recording
 
-## Automation Step Locks
+Configure controller input from:
 
-It's possible to enter CC automation data at specific steps, by holding down the corresponding **[Trig]** and rotating the external MIDI CC control knob. This feature is available from both the Piano Roll and Automation Editor.
+`CONFIG > MIDI > CONTROLLER > INPUT`
+
+Incoming notes on the track's MIDI channel can move the note cursor, enter notes and record live notes. Incoming control data can also be recorded into automation locks when `CC REC` is enabled.
+
+Start live recording with:
+
+**[Rec] + [Play]**
+
+Recording follows the track MIDI channel. Notes, note-offs, CC, pitch bend, channel pressure and poly pressure are routed to the matching track where supported by the connected device/backend.
+
+## Automation Lock Lanes
+
+Each automation view edits one lock lane. Legacy external tracks provide the familiar MIDI automation lanes; current MIDI/TBD paths can expose more detailed targets.
+
+Supported lock targets include:
+
+- MIDI CC
+- NRPN and RPN on supported targets
+- pitch bend (`PB`)
+- channel pressure (`CHP`)
+- poly pressure
+- program change (`PRG`)
+- device parameters exposed by hosted/TBD targets
+- `LEARN`, which assigns the lane from the next matching incoming control
+
+Hold a step trig and move an external control to write a lock at that step. In automation view, pressing **[Yes]** toggles a lock at the cursor using the current lock value.
+
+Program change automation is one-shot style. Slide applies to continuous lock values where the target supports interpolation.
