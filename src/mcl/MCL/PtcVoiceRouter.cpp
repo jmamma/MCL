@@ -163,9 +163,6 @@ void PtcVoiceRouter::control_change(uint8_t route_channel, uint8_t cc,
 
   uint8_t track = ptc_route_channel_track(route_channel);
   uint8_t param = cc - 16;
-#if defined(__AVR__)
-  SeqPtcTrackRef::set_param(track, param, value, uart_, true);
-#else
   uint16_t mask = ptc_groups.mask_for_track(track);
   if (!mask) {
     SeqPtcTrackRef::set_param(track, param, value, uart_, true);
@@ -177,7 +174,6 @@ void PtcVoiceRouter::control_change(uint8_t route_channel, uint8_t cc,
       SeqPtcTrackRef::set_param(n, param, value, uart_, true);
     }
   }
-#endif
 }
 
 PtcVoiceRouter ptc_voice_router;
