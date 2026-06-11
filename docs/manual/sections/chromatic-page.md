@@ -1,105 +1,108 @@
 # Chromatic Page
 
-The Chromatic Page, enables the user to play tracks of the Machinedrum or an External MIDI device chromatically. Each MD track can be used as a voice of a monophonic/polyphonic synthesizer. Melodic compositions can be recorded in real-time.
+The Chromatic Page plays and records pitched notes for the current sequencer track. It can target the primary device, such as Machinedrum, SPS-X or TBD, or the secondary/external MIDI-style tracks.
 
+Open it from Page Select with:
 
-![chroma](../assets/images/chroma.png)
+```text
+[Bank Group] + [Trig 8]
+```
 
-
-_The Chromatic page can be accessed by pressing **[BANK GROUP]** and **[Trig 8]**._
-
-
-## Using the Chromatic Page
-
-
-![chromat action](../assets/images/chromat_action.png)
-
+## Controls
 
 | Control | Assignment |
 | --- | --- |
-| Encoder 1 | Octave (OC) |
-| Encoder 2 | Fine Tune (F) |
-| Encoder 3 | Track Length |
-| Encoder 4 | Scale Type (S) |
-| Save / No | Record |
-| Page | PageSelect |
-| Load / Yes | Apply All |
-| Shift | Track/Trig Menu |
+| Encoder 1 | Octave offset (`OCT`). |
+| Encoder 2 | Fine tune / detune (`DET`). |
+| Encoder 3 | Track length (`LEN`) or poly length (`PLEN`) when a poly group is active. |
+| Encoder 4 | Scale (`SCA`). |
+| **[Trig]** keys | Play the on-screen keyboard or select tracks while the Track Menu is open. |
+| **[Scale]** | Toggle primary/secondary device target where available. |
+| **[Global]** | Hold for the Track Menu. |
+| **[Rec]** + **[Play]** | Start live recording. |
+| **[Clear]** | Clear recorded data for the active track or poly group where applicable; repeat to undo. |
 
-
-## Device Selection
-
-The top left of the screen shows the active device tab and indicates whether the Chromatic Page is targeting the MD or an Ext MIDI device. The active device can be toggled by pressing **[SCALE]**.
-
+The bottom of the display shows a keyboard view. Played notes and arpeggiator notes are reflected there.
 
 ## Parameters
 
-The Octave (OCT) parameter allows for adjusting the relative octave of the track's tuning. The Detune (DET) parameter can be used for offsetting the absolute pitch by small increments (MD only). Length (LEN) controls the length of the associated sequencer track. Scale (SCA) maps MIDI notes to a musical scale type.
-A keyboard at the bottom of the screen is displayed showing notes as they are played.
+| Parameter | Function |
+| --- | --- |
+| `OCT` | Moves played notes by octaves. |
+| `DET` | Fine tune / detune for the active pitched track where supported. |
+| `LEN` | Length of the active sequencer track. |
+| `PLEN` | Length shown when the active primary track belongs to a poly group. |
+| `SCA` | Musical scale mapping for incoming and trig-key notes. |
 
-## Track Speed and Length
+The scale setting maps incoming notes to the selected scale. Notes shifted outside the playable range are skipped rather than wrapped into an unexpected low pitch.
 
-Track speed and length can also be set when in Step Edit Mode using the MD's Scale menu by pressing **[Func] + [Scale]**.
+## Device Selection
 
-## Machinedrum Setup for Chromatic mode
+Press **[Scale]** to switch the Chromatic Page between primary and secondary targets where both are available.
 
-There are three important MIDI configurations options for the Chromatic Page:
+| Target | Typical use |
+| --- | --- |
+| Primary | Machinedrum, SPS-X, TBD or another primary step-capable device. |
+| Secondary | External MIDI-style tracks, A4/MNM/generic MIDI or hosted devices where supported. |
 
+When the Track Menu is open, the trig keys can select or mute secondary tracks.
 
-- **Config-->MIDI-->PORT CONFIG-->CTRL PORT**: specifies which Port the MCL should receive note input from.
-- **Config-->MIDI-->MD MIDI-->CHRO CHAN**: specifies whether the MD should receive note input from a MIDI channel on an External MIDI Device. _See Chapter: Global Settings_
-- **Config-->MIDI-->MD MIDI-->POLY CHAN**: specifies which MIDI channel to use when one or more MD tracks are dedicated synth voices. _See Chapter: Polyphonic Mode_
+| Trig keys | Function |
+| --- | --- |
+| **[Trig 1-6]** | Select external MIDI-style tracks 1-6. |
+| **[Trig 9-14]** | Toggle mutes for external MIDI-style tracks 1-6. |
 
+## Track Menu Entries
 
-## Tuning
-
-For MD tracks that are assigned a melodic machine, the machines PTC parameter is mapped to notes of a selected scale. The track can then be played chromatically using the MD's **[Trig]** keys or an attached MIDI keyboard.
-
-
-_If the machine's tuning setting is TONAL then the new quarter tone, equal temperament tuning table will be used. If the machine's tuning setting is DEFAULT the legacy microtonal tuning table is used._
-
-
-## Chromatic Page Track Menu
-
-
-![chromatic menu](../assets/images/chromatic_menu.png)
-
-
-Holding **[ GLOBAL ]** opens the Track menu with specific options for the Chromatic Page.
-
+Hold **[Global]** to open the Track Menu.
 
 | Entry | Function |
 | --- | --- |
-| Device | Toggle between MD or External MIDI device |
-| Arpeggiator | Opens the Arpeggiator Page |
-| Key | Scale is shifted up in semi-tones |
-| Polyphony | Opens the PolyPage, for voice selection |
-| Quant | Toggle quantiztion for both live record and the Arpeggiator. |
+| `DEVICE` | Select primary or secondary target. |
+| `TRACK SEL` | Select the active track. |
+| `ARPEGGIATOR` | Open the per-track Arpeggiator Page. |
+| `KEY` | Shift the scale root by semitones. |
+| `POLYPHONY` | Open the Polyphony Page. |
+| `SOUND` | Open sound selection where the primary device supports it. |
+| `LENGTH` | Set track length. |
+| `CHANNEL` | Set the MIDI channel for secondary/external tracks. |
+| `QUANT` | Toggle live record and arpeggiator quantization. |
 
+## Controller Input Setup
 
-## Ext MIDI Tracks
+Chromatic input is configured from:
 
-The Chromatic Page is also used to record/play the External MIDI tracks.
-Octave and Scale settings from the Chromatic Page are also applied to incoming note data when using the PianoRoll editor.
+```text
+CONFIG > MIDI > CONTROLLER > INPUT
+```
 
-## Ext MIDI Track Selection & Mutes
+| Setting | Function |
+| --- | --- |
+| `PORT` | Selects the controller input port: MIDI 2, USB, or MIDI 2 + USB where available. |
+| `CHRO CHAN` | Channel for chromatic playing. Use `--`, `1..16` or `OMNI`. |
+| `TRIG CHAN` | Channel for external drum-pad triggering of tracks. Use `--`, `1..16` or `OMNI`. |
+| `POLY MODE` | `INT` uses internal/chromatic input only. `INT+EXT` also lets external controller input play poly voice groups. |
 
-When opening the Track Menu **[Global]** from within either the PianoRoll Editor or Chromatic Page, the MD's **[Trig]** keys can be used to switch between Ext MIDI Tracks and/or mute/unmute them.
+`POLY MODE` replaces the older `POLY CHAN` setting. The external MIDI channel used for a poly voice group now comes from that group's channel assignment on the Polyphony Page.
 
+## Recording Notes
 
-- MD **[Trig]** keys 1-6 correspond to Ext MIDI Track selection 1-6.
-- MD **[Trig]** keys 9-14 correspond to Ext MIDI Track mutes 1-6.
+Start live recording with:
 
+```text
+[Rec] + [Play]
+```
 
-## Recording a Sequence
+While recording, played notes are written into the active track or into the selected poly voice tracks. The Track Menu `QUANT` setting controls whether note placement is quantized.
 
-Use the MD's **_[Rec]_** + **[**Play**]** function to enable live record mode.
+## Machinedrum And SPS-X Pitch
 
+For Machinedrum-style tracks, the current machine must support pitched playback for chromatic playing to be useful. MIDI machines are handled as MIDI voice tracks, and SPS-X-capable tracks can use the extended pitch/note behavior provided by the connected firmware.
 
-Play notes on either the MD or External Midi to record a melody. The Sequencer menu's QUANT option can be toggled to enable/disable live record quantization.
+For melodic Machinedrum machines, the track's pitch parameter is mapped to notes. Tonal machine tuning uses the newer equal-temperament-style mapping; default tuning keeps the legacy machine-specific behavior.
 
+## Arpeggiator Integration
 
-## Clearing Recorded Sequence
+Each track has its own arpeggiator. Open it from the Track Menu with `ARPEGGIATOR`.
 
-
-- A recorded track can be quickly cleared using the MD's **[Clear]** function (Repeat to UNDO).
+The arpeggiator follows the current Chromatic note set unless it is in `LAT` or `LCK` state. In `TRG` rate mode, the arpeggiator advances only when the related sequencer track fires a trig.

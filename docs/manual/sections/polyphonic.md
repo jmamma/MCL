@@ -1,74 +1,95 @@
-# Polyphonic Mode
+# Polyphony Page
 
+The Polyphony Page assigns primary tracks to MIDI channel groups. Tracks in the same group act as voices for one multi-timbral polyphonic part.
 
-## Voice Select Page
+Open it from the Chromatic Page Track Menu:
 
-The voice select page is used to allocate MD tracks as polyphonic voices.
+```text
+[Global] > POLYPHONY
+```
 
+On hardware with panel buttons, the Chromatic Page can also open Polyphony with the record/load button chord.
 
-![voice select page](../assets/images/voice_select_page.png)
+## Core Idea
 
+Each primary track can be assigned to:
 
-Access the voice select page via the Chromatic Page's Track Menu item **"Polyphony"**
+- `--` for no poly group
+- MIDI channel group `1..16`
 
-## Voice Assignment
+Tracks sharing the same channel group form a voice pool. Different channel groups can exist at the same time, so the Machinedrum or other supported primary device can behave as multiple independent polyphonic instruments.
 
-MD track's 1-16 can be assigned as polyphonic voices by pressing the matching **[Trig]** keys.
+## Controls
 
-## Grid Saving or Loading
+| Control | Assignment |
+| --- | --- |
+| Encoder 1 | Select the channel group for held tracks. |
+| **[Trig]** keys | Hold one or more tracks to assign. |
+| **[Clear]** | Assign held tracks to `--` / off. |
+| **[Yes/Enter]** or **[No/Exit]** | Save group assignments and return. |
+| Panel buttons 2/3 | Cycle the selected group down/up where available. |
 
-The polyphonic voice selection can be saved and loaded from Grid Y in Auxiliary slot position 14, labelled "RT (Route)".
+The page shows all 16 primary tracks. Each cell displays either `--` or the assigned channel group.
 
+## Assigning Voices
 
-Last loaded Polyphonic voice selection is automatically retained across power on/off.
+1. Open the Polyphony Page.
+2. Hold the **[Trig]** keys for the tracks that should act as voices.
+3. Turn Encoder 1 to choose a channel group from `1..16`.
+4. Release the tracks.
+5. Press **[Yes/Enter]** or **[No/Exit]** to save and return.
 
+To remove tracks from polyphonic play, hold them and choose `--`, or press **[Clear]**.
 
-_For more information on slot positions and their corresponding tracks see "Sequencer: Saving and Loading"._
+## Playing A Group
 
-## Voice Modes
+When the active Chromatic track belongs to a group, the Chromatic Page shows `PLY` and uses the group's voice pool.
 
+| Input | Behavior |
+| --- | --- |
+| Internal Chromatic keyboard | Plays the selected track's group. |
+| External controller with `POLY MODE = INT+EXT` | Plays the group whose channel matches the incoming MIDI channel. |
+| MIDI CC 16-39 on a poly channel | Controls Machinedrum parameters 1-24 across compatible tracks in that group. |
 
-When in the Chromatic Page if the current active track is part of the Polyphonic track selection POLY mode will be activated. In this mode the MD will be played polyphonically using voices selected from the POLY Page.
+If `POLY MODE` is `INT`, external input does not trigger poly groups.
 
+## Voice Allocation
 
-When POLY mode is active, tracks become 'linked'. Track length via the Track menu and parameter changes will be synchronised across the voices.
+MCL chooses an available voice from the active group for each new note. If all voices are busy, the oldest active voice can be reused.
 
+Only tracks that can behave as pitched voices are used. On Machinedrum, this means melodic voice-capable tracks or MIDI machines. On TBD/SPS-X or hosted primary devices, availability depends on the device driver.
 
-Combinations of voice and NFX machines can be simultaneously set in POLY mode. MCL separates the synthesis pages of the POLY channels linking only matching machines, maintaining synchronisation over the effects and routing pages.
+For the most predictable sound, assign tracks with the same or compatible machine/sound type to the same group.
 
+## Parameter Linking
 
-## Getting started with Poly Mode
+When a track belongs to a poly group, compatible parameter changes are linked across the other tracks in the group.
 
-Enter the Chromatic page, and via the Track Menu, open the Polyphony page to assign the designated tracks as polyphonic voices.
+| Parameter type | Link behavior |
+| --- | --- |
+| Shared synthesis parameters | Linked when the destination voice uses a compatible machine/sound type. |
+| Later Machinedrum parameter pages | Linked where the parameter can safely apply across voices. |
+| Mute parameters | Not poly-linked. |
 
+MCL shows a `POLY LINK` popup when a linked parameter update is sent outside the Mixer Page.
 
-For best results, make sure that sound generating voices designated as a poly voice are all set to the same machine type on the MD.
-_You can quickly copy one track to another using the MD's **[Copy ] / [Paste]** functions._
+## Storage
 
+Poly group assignments are stored with project configuration and with route/poly state where applicable. Save the route/auxiliary group when you want the current voice grouping captured in the grid along with a row.
 
-From the Chromatic Page, Press the **[Trig]** buttons to be begin playing the MD polyphonically.
+Older projects using the legacy poly mask/channel format are migrated into channel groups on load.
 
+## Relationship To `POLY MODE`
 
-Use the MD’s **[Rec] + [Play]** function to enable live record mode. Sequence data will be stored across the POLY tracks.
+`POLY MODE` is configured from:
 
+```text
+CONFIG > MIDI > CONTROLLER > INPUT
+```
 
-All POLY tracks can be quickly cleared using the MD’s **[Clear]** function. (repeat to UNDO)
+| Value | Behavior |
+| --- | --- |
+| `INT` | Poly groups respond to internal Chromatic playing. |
+| `INT+EXT` | Poly groups also respond to external controller input on matching group channels. |
 
-## PolyMode External MIDI
-
-The MD can be played polyphonically using an attached MIDI keyboard/sequencer connected to MIDI input on Port 2 or via USB MIDI. Poly channels can be played from this channel regardless of current track selection.
-
-
-To enable/disable control from an external device you must:
-
-
-- Ensure that the **Config-->MIDI-->CTRL PORT** is set to the MIDI port that your external keyboard/sequencer is connected.
-- Set **Config-->MIDI-->MD MIDI-->POLY CHAN** from INT (internal) to a desired MIDI channel or OMNI (all channels).
-
-
-**MIDI CC:**
-
-
-You can control the voice parameters by sending MIDI CC messages via an External MIDI controller to port 2.
-
-CC 16 to 39 control MD parameters 1 to 24 on the active track, or across all polyphonic tracks.
+The old `POLY CHAN` option is gone. Use Polyphony Page groups to decide which MIDI channel controls each group.

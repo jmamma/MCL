@@ -23,7 +23,7 @@ Referenced legacy images not present during migration:
 - [x] Update grid and slot menu documentation, including the `SOUND` slot option.
 - [x] Update sequencer documentation for swing, mute masks, fill conditions, current condition labels, signed microtiming, and SPSX behavior.
 - [x] Update LFO and arp documentation for per-track storage and new destinations/options.
-- [ ] Update polyphony/chromatic documentation for `POLY MODE` and multi-timbral behavior.
+- [x] Update polyphony/chromatic documentation for `POLY MODE` and multi-timbral behavior.
 - [ ] Update mixer/performance documentation for mute/fill modes and performance-state fill storage.
 - [ ] Update piano roll documentation for selection, zoom, copy/paste, and expanded MIDI locks.
 - [ ] Update sample browser, sound browser, WAV designer, RAM, and MD samplebank-linking sections.
