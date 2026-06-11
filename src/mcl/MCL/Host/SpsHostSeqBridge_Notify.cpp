@@ -29,6 +29,14 @@ void SpsHostSeqBridge::notifyExtDirty(uint8_t device, int track,
     sendFrame(CMD_NOTIFY_EXT_DIRTY, 0, b, (uint16_t)sizeof b);
 }
 
+void SpsHostSeqBridge::notifyPerfDirty(uint8_t device, int track,
+                                       uint8_t regions) {
+    if (!ready_)
+        return;
+    uint8_t b[3] = {device, (uint8_t)track, regions};
+    sendFrame(CMD_NOTIFY_PERF_DIRTY, 0, b, (uint16_t)sizeof b);
+}
+
 void SpsHostSeqBridge::notifyTransport(bool running, uint8_t masterStep) {
     if (!ready_) return;
     uint8_t b[4] = { (uint8_t)(running ? 1 : 0), masterStep, 0, 0 };

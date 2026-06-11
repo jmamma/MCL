@@ -37,6 +37,7 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_REQ_PATTERN_META:  onReqPatternMeta(p.tag);          break;
         case CMD_REQ_EXT_TRACK_META:onReqExtTrackMeta(p.tag, b, n);   break;
         case CMD_REQ_EXT_NOTES:     onReqExtNotes(p.tag, b, n);       break;
+        case CMD_REQ_PERF_STATE:    onReqPerfState(p.tag, b, n);      break;
 
         case CMD_SET_STEP:        if (applySetStep(b, n))        { if (n) notifyDirty(b[0], DIRTY_SUMMARY); } break;
         case CMD_SET_MICROTIMING: if (applySetMicroTiming(b, n)) { if (n) notifyDirty(b[0], DIRTY_DETAIL); }  break;
@@ -61,6 +62,23 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
             if (applyExtSetTrackProp(b, n) && n >= 2)
                 notifyExtDirty(b[0], b[1],
                                (uint8_t)(EXT_DIRTY_META | EXT_DIRTY_NOTES));
+            break;
+        case CMD_SET_PTC_PROP:
+            if (applySetPtcProp(b, n) && n >= 2)
+                notifyPerfDirty(b[0], b[1], PERF_DIRTY_PTC);
+            break;
+        case CMD_SET_ARP_PROP:
+            if (applySetArpProp(b, n) && n >= 2)
+                notifyPerfDirty(b[0], b[1], PERF_DIRTY_ARP);
+            break;
+        case CMD_SET_PTC_GROUP:
+            if (applySetPtcGroup(b, n))
+                notifyPerfDirty(EXT_DEVICE_GRID_Y, 0xFF, PERF_DIRTY_GROUPS);
+            break;
+        case CMD_PTC_NOTE_EVENT:
+            if (applyPtcNoteEvent(b, n) && n >= 2)
+                notifyPerfDirty(b[0], b[1],
+                                (uint8_t)(PERF_DIRTY_PTC | PERF_DIRTY_ARP));
             break;
 
         case CMD_BATCH: {
@@ -109,7 +127,7 @@ void SpsHostSeqBridge::sendErr(uint8_t tag, uint8_t code, uint8_t detail) { uint
 void SpsHostSeqBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n >= 1 && b[0] == 0) return;  // malformed/incompatible host proto: stay silent
     uint16_t caps = CAP_SPSX | CAP_LOCKS | CAP_DETAIL | CAP_PER_TRACK_LEN |
-                    CAP_BATCH | CAP_EXT_NOTES;
+                    CAP_BATCH | CAP_EXT_NOTES | CAP_PTC_ARP;
     uint8_t body[7];
     body[0] = kProtoVersion; putU16le(body + 1, caps);
     body[3] = (uint8_t)NUM_MD_TRACKS; body[4] = (uint8_t)kNumSteps; body[5] = (uint8_t)kNumLockParams;
@@ -135,6 +153,12 @@ void SpsHostSeqBridge::onReqExtNotes(uint8_t tag, const uint8_t* b,
                                      uint16_t n) {
     if (n >= 2)
         sendExtNotes(tag, b[0], b[1]);
+}
+
+void SpsHostSeqBridge::onReqPerfState(uint8_t tag, const uint8_t* b,
+                                      uint16_t n) {
+    if (n >= 2)
+        sendPerfState(tag, b[0], b[1]);
 }
 
 #endif  // !defined(__AVR__)

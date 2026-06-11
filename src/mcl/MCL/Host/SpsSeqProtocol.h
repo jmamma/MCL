@@ -60,6 +60,7 @@ enum Cmd {
     CMD_REQ_PATTERN_META = 0x14,  // H->M
     CMD_REQ_EXT_TRACK_META = 0x15, // H->M  device, track
     CMD_REQ_EXT_NOTES    = 0x16,  // H->M  device, track
+    CMD_REQ_PERF_STATE   = 0x17,  // H->M  device, track
 
     CMD_TRACK_SUMMARY    = 0x30,  // M->H
     CMD_TRACK_DETAIL     = 0x31,  // M->H
@@ -67,6 +68,7 @@ enum Cmd {
     CMD_PATTERN_META     = 0x33,  // M->H
     CMD_EXT_TRACK_META   = 0x34,  // M->H  device, track, timing/meta
     CMD_EXT_NOTES        = 0x35,  // M->H  device, track, paginated note pairs
+    CMD_PERF_STATE       = 0x36,  // M->H  device, track, PTC/ARP/voice state
 
     CMD_SET_STEP         = 0x50,  // H->M  track, step, wmask, value
     CMD_SET_LOCK         = 0x51,  // H->M  track, step, param, value
@@ -82,11 +84,16 @@ enum Cmd {
     CMD_EXT_DEL_NOTE     = 0x5A,  // H->M  device, track, start(4), width(4), note
     CMD_EXT_CLEAR_RANGE  = 0x5B,  // H->M  device, track, start(4), width(4), note_min, note_max
     CMD_EXT_SET_TRACK_PROP = 0x5C,// H->M  device, track, prop, value
+    CMD_SET_PTC_PROP     = 0x5D,  // H->M  device, track, prop, value
+    CMD_SET_ARP_PROP     = 0x5E,  // H->M  device, track, prop, value
+    CMD_SET_PTC_GROUP    = 0x5F,  // H->M  track, group
+    CMD_PTC_NOTE_EVENT   = 0x60,  // H->M  device, track, note, velocity, pressed
 
     CMD_NOTIFY_TRANSPORT = 0x70,  // M->H  running, master_step, sub_tick(2)
     CMD_NOTIFY_DIRTY     = 0x71,  // M->H  track, regions
     CMD_NOTIFY_ACTIVE    = 0x72,  // M->H  pattern_meta + active_track + transport
     CMD_NOTIFY_EXT_DIRTY = 0x73,  // M->H  device, track, regions
+    CMD_NOTIFY_PERF_DIRTY= 0x74,  // M->H  device, track, regions
     CMD_ACK              = 0x7E,  // M->H  (echo tag) status
     CMD_ERR              = 0x7F   // M->H  (echo tag) err_code, detail
 };
@@ -100,7 +107,8 @@ enum Caps {
     CAP_BATCH         = 1 << 4,
     CAP_PER_TRACK_PH  = 1 << 5,
     CAP_AUTOMATION    = 1 << 6,
-    CAP_EXT_NOTES     = 1 << 7
+    CAP_EXT_NOTES     = 1 << 7,
+    CAP_PTC_ARP       = 1 << 8
 };
 
 enum ExtDevice {
@@ -110,6 +118,31 @@ enum ExtDevice {
 enum ExtDirtyRegion {
     EXT_DIRTY_META  = 1 << 0,
     EXT_DIRTY_NOTES = 1 << 1
+};
+
+static const int kPtcGroupTracks = 16;
+static const int kPtcNoteMaskBytes = 16; // 128-bit note masks, little endian
+static const int kPerfStateWireBytes =
+    2 + 4 + 4 + kPtcNoteMaskBytes + kPtcNoteMaskBytes + kPtcGroupTracks + 2;
+
+enum PerfDirtyRegion {
+    PERF_DIRTY_PTC    = 1 << 0,
+    PERF_DIRTY_ARP    = 1 << 1,
+    PERF_DIRTY_GROUPS = 1 << 2
+};
+
+enum PtcProp {
+    PTCPROP_OCTAVE    = 0,
+    PTCPROP_DETUNE    = 1,
+    PTCPROP_SCALE     = 2,
+    PTCPROP_TRANSPOSE = 3
+};
+
+enum ArpProp {
+    ARPPROP_ENABLED = 0,
+    ARPPROP_MODE    = 1,
+    ARPPROP_RATE    = 2,
+    ARPPROP_RANGE   = 3
 };
 
 // ---- canonical wire mask enum (translate to/from native on each side) ----
