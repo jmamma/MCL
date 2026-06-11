@@ -1,11 +1,11 @@
-#include "PerfEncoder.h"
+#include "GUI/Pages/Performance/PerfEncoder.h"
 #include "DeviceParamResolver.h"
 #include "MCLMemory.h"
 #include "PerfData.h"
 #include "MidiUart.h"
 #include "MCLStrings.h"
-#include "MCLSeq.h"
-#include "PerfPageTargetRef.h"
+#include "Sequencer/MCLSeq.h"
+#include "GUI/Pages/Performance/PerfPageTargetRef.h"
 
 #define DIV_1_127 (1.00f / 127.0f)
 

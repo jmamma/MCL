@@ -6,7 +6,7 @@
 #include "MCLEncoder.h"
 #include "MCLMemory.h"
 #include "MCLMenus.h"
-#include "ArpPage.h"
+#include "GUI/Pages/Sequencer/ArpPage.h"
 
 #define ENCODER_RES_SEQ 2
 #define ENCODER_RES_PARAM 2
@@ -55,11 +55,11 @@ extern MCLEncoder seq_extparam4;
 extern MCLEncoder seq_lock1;
 extern MCLEncoder seq_lock2;
 
-#include "SeqPtcPage.h"
-#include "SeqStepPage.h"
+#include "GUI/Pages/Sequencer/SeqPtcPage.h"
+#include "GUI/Pages/Sequencer/SeqStepPage.h"
 
 #ifdef EXT_TRACKS
-#include "SeqExtStepPage.h"
+#include "GUI/Pages/Sequencer/SeqExtStepPage.h"
 extern uint8_t last_ext_track;
 #endif
 

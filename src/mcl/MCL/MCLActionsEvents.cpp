@@ -2,7 +2,7 @@
 #include "MCLActionsEvents.h"
 #include "MCLSysConfig.h"
 #include "MCLMemory.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "GridTask.h"
 #include "StackMonitor.h"
 #include "MCLActions.h"

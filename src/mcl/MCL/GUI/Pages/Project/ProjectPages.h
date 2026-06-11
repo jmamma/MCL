@@ -5,12 +5,12 @@
 
 #include "MCLEncoder.h"
 #include "MCLDefines.h"
-#include "LoadProjectPage.h"
+#include "GUI/Pages/Project/LoadProjectPage.h"
 #ifdef MCL_HAS_PROJECT_BACKUP
-#include "ProjectVersionPage.h"
+#include "GUI/Pages/Project/ProjectVersionPage.h"
 #endif
 #ifdef MCL_HAS_PROJECT_CONVERSION
-#include "ConvertProjectPage.h"
+#include "GUI/Pages/Project/ConvertProjectPage.h"
 #endif
 
 extern MCLEncoder loadproj_param1;

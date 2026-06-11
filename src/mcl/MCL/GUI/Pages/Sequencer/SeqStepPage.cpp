@@ -1,18 +1,18 @@
-#include "SeqStepPage.h"
+#include "GUI/Pages/Sequencer/SeqStepPage.h"
 #include "GUI_hardware.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "MCLDefines.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
 #include "MCLSysConfig.h"
-#include "PageSelectPage.h"
+#include "GUI/Pages/PageSelectPage.h"
 #include "PtcGroups.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqStepTrackRef.h"
 #ifdef PLATFORM_TBD
 #include "MidiSetup.h"
 #endif
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 
 namespace {
 

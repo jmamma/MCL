@@ -3,7 +3,7 @@
 #ifndef PROJECTVERSIONPAGE_H__
 #define PROJECTVERSIONPAGE_H__
 
-#include "FileBrowserPage.h"
+#include "GUI/Pages/Project/FileBrowserPage.h"
 #include "MCLDefines.h"
 #include "MCLMemory.h"
 

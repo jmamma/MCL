@@ -3,8 +3,8 @@
 #pragma once
 
 #include "AUXTrack.h"
-#include "PerfEncoder.h"
-#include "MixerPage.h"
+#include "GUI/Pages/Performance/PerfEncoder.h"
+#include "GUI/Pages/Performance/MixerPage.h"
 
 #define PERF_TRACK_STORAGE_VERSION_PERF_STATES 3
 

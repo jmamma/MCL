@@ -1,8 +1,8 @@
 /* Justin Mammarella jmamma@gmail.com 2026 */
 
-#include "MixerPerf.h"
+#include "GUI/Pages/Performance/MixerPerf.h"
 
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "GUI_hardware.h"
 #include "KeyInterface.h"
 #include "MCLGUI.h"

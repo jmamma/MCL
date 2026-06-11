@@ -5,13 +5,13 @@
 #include "MD.h"
 #include "MDPattern.h"
 #include "MDParams.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MDSeqTrack.h"
 #include "MidiClock.h"
 #include "MidiUart.h"
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "MCLSysConfig.h"
-#include "MixerPage.h"
+#include "GUI/Pages/Performance/MixerPage.h"
 #include "SeqTrackTransition.h"
 
 // SPSX tracks share MDSeqTrack::md_trig_mask and MDSeqTrack::gui_update statics

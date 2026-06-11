@@ -3,10 +3,10 @@
 #ifndef COMMONPAGES_H__
 #define COMMONPAGES_H__
 
-#include "LFOPage.h"
+#include "GUI/Pages/Sequencer/LFOPage.h"
 #include "MCLEncoder.h"
-#include "MixerPage.h"
-#include "PerfPage.h"
+#include "GUI/Pages/Performance/MixerPage.h"
+#include "GUI/Pages/Performance/PerfPage.h"
 
 extern MCLEncoder mixer_param1;
 extern MCLEncoder mixer_param2;

@@ -2,7 +2,7 @@
 
 #include "SeqStepTrackRef.h"
 #include "../Drivers/MD/UI/Pages/RAMPage.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include <string.h>
 
 void seq_step_set_md_linked_param_update(bool enabled) {

@@ -6,8 +6,8 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 
-#include "PerfPageParent.h"
-#include "PerfEncoder.h"
+#include "GUI/Pages/Performance/PerfPageParent.h"
+#include "GUI/Pages/Performance/PerfEncoder.h"
 
 #define NUM_PERF_CONTROLS 4
 #define PERF_DESTINATION 0

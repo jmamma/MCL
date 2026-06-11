@@ -2,7 +2,7 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "TurboLight.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #include "GridTrack.h"

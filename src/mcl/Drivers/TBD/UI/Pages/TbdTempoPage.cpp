@@ -1,4 +1,4 @@
-#include "TbdTempoPage.h"
+#include "TBD/UI/Pages/TbdTempoPage.h"
 
 #ifdef PLATFORM_TBD
 

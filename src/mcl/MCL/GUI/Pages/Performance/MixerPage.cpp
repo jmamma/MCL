@@ -1,13 +1,13 @@
-#include "MixerPage.h"
+#include "GUI/Pages/Performance/MixerPage.h"
 #include "DeviceManager.h"
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "DevicePanelRef.h"
 #include "../../../../Drivers/MidiDevice.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
-#include "MCLSeq.h"
-#include "MixerPerf.h"
-#include "SeqPages.h"
+#include "Sequencer/MCLSeq.h"
+#include "GUI/Pages/Performance/MixerPerf.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "../../../../Drivers/MD/MD.h"
 
 #define FADER_LEN 18

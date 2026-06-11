@@ -3,7 +3,7 @@
 #ifndef GRIDSAVEPAGE_H__
 #define GRIDSAVEPAGE_H__
 
-#include "GridIOPage.h"
+#include "GUI/Pages/Grid/GridIOPage.h"
 
 class GridSavePage : public GridIOPage {
 

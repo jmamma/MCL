@@ -3,15 +3,15 @@
 #include "MDTrack.h"
 #include "MidiUart.h"
 #include "MidiClock.h"
-#include "CommonPages.h"
-#include "SeqPages.h"
+#include "GUI/Pages/CommonPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqPtcTrackRef.h"
 #include "GridTask.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "SeqTrackUtil.h"
 #include "SeqTrackTransition.h"
 #if !defined(__AVR__)
-#include "SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
+#include "Host/SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
 #endif
 
 uint16_t MDSeqTrack::gui_update = 0;

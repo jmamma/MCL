@@ -1,5 +1,5 @@
 #include "MNMTrack.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MNM.h"
 
 

@@ -1,4 +1,4 @@
-#include "SoundBrowserPage.h"
+#include "GUI/Pages/SoundBrowserPage.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "../../../Drivers/MD/MD.h"

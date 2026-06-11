@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "SeqExtStepTrackApi.h"
 #include "SeqTrack.h"
 #include <stdint.h>

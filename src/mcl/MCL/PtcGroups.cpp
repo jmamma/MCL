@@ -1,5 +1,5 @@
 #include "PtcGroups.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 
 void PtcGroups::clear() {
   memset(group, PTC_GROUP_OFF, PTC_GROUP_TRACKS);

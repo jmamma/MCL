@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Drivers/MD/MD.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "SeqExtStepTrackApi.h"
 #include "SeqTrackUtil.h"
 #include <stdint.h>

@@ -4,7 +4,7 @@
 #define OSCMIXERPAGE_H__
 
 #include "GUI.h"
-#include "WavDesignerPage.h"
+#include "GUI/Pages/WavDesigner/WavDesignerPage.h"
 
 class OscMixerPage : public WavDesignerPage {
 public:

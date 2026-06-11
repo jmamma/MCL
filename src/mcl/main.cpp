@@ -11,7 +11,7 @@
 #include "ISRTiming.h"
 #include "oled.h"
 #include "SdFat.h"
-#include "PageSelectPage.h"
+#include "GUI/Pages/PageSelectPage.h"
 #include "SdFat.h"
 
 void setup() {

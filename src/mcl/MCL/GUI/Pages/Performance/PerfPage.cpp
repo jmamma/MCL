@@ -1,10 +1,10 @@
-#include "PerfPage.h"
-#include "CommonPages.h"
+#include "GUI/Pages/Performance/PerfPage.h"
+#include "GUI/Pages/CommonPages.h"
 #include "MCLMemory.h"
 #include "MCLGUI.h"
 #include "MCLClipBoard.h"
-#include "PerfPageTargetRef.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Performance/PerfPageTargetRef.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "MCLStrings.h"
 
 // AVR/classic MD encoder-interface packets only carry the 24 legacy params.

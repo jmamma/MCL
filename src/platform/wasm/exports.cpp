@@ -19,10 +19,10 @@
 #include "GUI_hardware.h"
 #include "MidiClock.h"
 #include "MCL.h"
-#include "MCLArrangement.h"
-#include "MCLSeq.h"
-#include "GridPages.h"
-#include "GridIOPage.h"
+#include "Arrangement/MCLArrangement.h"
+#include "Sequencer/MCLSeq.h"
+#include "GUI/Pages/Grid/GridPages.h"
+#include "GUI/Pages/Grid/GridIOPage.h"
 #include "KeyInterface.h"
 #include "NoteInterface.h"
 #include "DeviceManager.h"
@@ -32,7 +32,7 @@
 #include "MDSysex.h"
 #include "platform.h"
 #ifdef PLATFORM_TBD
-#include "GridIOOverlay.h"
+#include "GUI/Pages/Grid/GridIOOverlay.h"
 #endif
 
 #include <stdint.h>

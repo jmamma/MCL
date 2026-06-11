@@ -2,7 +2,7 @@
 
 #if !defined(__AVR__)
 
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "SeqExtStepTrackApi.h"
 
 uint8_t MidiSeqExtStepTrackCapability::track_count(

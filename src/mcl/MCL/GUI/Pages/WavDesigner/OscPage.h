@@ -4,7 +4,7 @@
 #define OSCPAGE_H__
 
 #include "GUI.h"
-#include "WavDesignerPage.h"
+#include "GUI/Pages/WavDesigner/WavDesignerPage.h"
 
 // Encoder 1: Oscillator Type
 // Encoder 2: Pitch

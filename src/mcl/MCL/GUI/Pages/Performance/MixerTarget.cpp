@@ -1,9 +1,9 @@
 /* Justin Mammarella jmamma@gmail.com 2018 */
 
-#include "MixerPage.h"
+#include "GUI/Pages/Performance/MixerPage.h"
 
 #include "DeviceManager.h"
-#include "MixerPerf.h"
+#include "GUI/Pages/Performance/MixerPerf.h"
 #include "NoteInterface.h"
 #include "SeqTrackUtil.h"
 #include "../../../../Drivers/MD/MD.h"

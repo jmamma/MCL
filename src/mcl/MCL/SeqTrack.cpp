@@ -2,7 +2,7 @@
 #include "SeqCondition.h"
 #include "ArpSeqTrack.h"
 #include "LFOSeqTrack.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "memory.h"
 #include "MCLSysConfig.h"
 

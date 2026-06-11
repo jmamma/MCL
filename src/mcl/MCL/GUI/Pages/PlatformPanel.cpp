@@ -1,10 +1,10 @@
-#include "PlatformPanel.h"
+#include "GUI/Pages/PlatformPanel.h"
 
 #ifdef MCL_HAS_EXTENDED_PANEL_INPUT
 
 #ifdef MCL_HAS_TBD_DRIVER
 
-#include "TbdPanel.h"
+#include "TBD/UI/TbdPanel.h"
 
 PlatformPanel platform_panel;
 
@@ -21,14 +21,14 @@ bool PlatformPanel::handleEvent(gui_event_t *event) {
 #include "../../../Drivers/MD/MD.h"
 #include "../../../Drivers/MidiDevice.h"
 #include "DeviceManager.h"
-#include "GridPage.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridPage.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "GUI_hardware.h"
 #include "KeyInterface.h"
 #include "MCL.h"
 #include "MidiClock.h"
 #include "NoteInterface.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "helpers.h"
 
 PlatformPanel platform_panel;

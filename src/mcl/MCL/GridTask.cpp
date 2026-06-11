@@ -1,23 +1,23 @@
 #include "GridTask.h"
 #include "DeviceManager.h"
 #include "EmptyTrack.h"
-#include "GridPage.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridPage.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "../Drivers/MD/MD.h"
 #include "MCLActions.h"
 #include "MDSeqTrack.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "MCLGUI.h"
 #include "MCLPlatformFeatures.h"
 #include "MCLSysConfig.h"
 #include "Project.h"
 #include "StackMonitor.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "platform.h"
 #if !defined(__AVR__)
-#include "MCLArrangement.h"
-#include "SpsHostArrBridge.h"  // SPS host arranger dirty notifications
-#include "SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
+#include "Arrangement/MCLArrangement.h"
+#include "Host/SpsHostArrBridge.h"  // SPS host arranger dirty notifications
+#include "Host/SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
 #endif
 
 #define DIV16_MARGIN 8

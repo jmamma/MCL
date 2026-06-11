@@ -3,13 +3,13 @@
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MidiDevice.h"
 #include "DeviceManager.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #if defined(PLATFORM_TBD)
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
 #endif
 #include "PtcGroups.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 
 namespace {
 

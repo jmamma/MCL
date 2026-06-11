@@ -4,7 +4,7 @@
 #include "MDMessages.h"
 #include "MDSysex.h"
 #include "helpers.h"
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "MDPages.h"
 
 void MDSysexListenerClass::start() {

@@ -2,8 +2,8 @@
 
 #include "SeqTrackUtil.h"
 #if !defined(__AVR__)
-#include "SpsHostArrBridge.h"  // SPS<->MCL arranger cell listener
-#include "SpsHostSeqBridge.h"  // SPS<->MCL seq control listener
+#include "Host/SpsHostArrBridge.h"  // SPS<->MCL arranger cell listener
+#include "Host/SpsHostSeqBridge.h"  // SPS<->MCL seq control listener
 #endif
 #include "global.h"
 #include "../../Drivers/Generic/Sequencer/TrackLoadFadeRunner.h"

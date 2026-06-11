@@ -3,7 +3,7 @@
 #ifndef GRIDCHAINPAGE_H__
 #define GRIDCHAINPAGE_H__
 
-#include "GridIOPage.h"
+#include "GUI/Pages/Grid/GridIOPage.h"
 #include "MCLMemory.h"
 
 class GridLoadPage : public GridIOPage {

@@ -2,7 +2,7 @@
 #include "MD.h"
 #include "MCLActions.h"
 #include "Shared.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "SeqTrackUtil.h"
 #if !defined(__AVR__)
 #include "SPSXTrack.h"

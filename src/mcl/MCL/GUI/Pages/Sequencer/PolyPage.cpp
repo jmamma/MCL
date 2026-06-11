@@ -1,6 +1,6 @@
-#include "PolyPage.h"
+#include "GUI/Pages/Sequencer/PolyPage.h"
 #include "MCLGUI.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "DeviceManager.h"
 #include "../../../../Drivers/MidiDevice.h"
 #include "MCLSysConfig.h"

@@ -3,7 +3,7 @@
 #include "MidiUart.h"
 #include "global.h"
 #include "oled.h"
-#include "PlatformPanel.h"
+#include "GUI/Pages/PlatformPanel.h"
 #if defined(PLATFORM_WASM)
 #include "MCLGUI.h"
 #endif

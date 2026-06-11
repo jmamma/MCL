@@ -2,7 +2,7 @@
 #include "Wav.h"
 #include "MCL.h"
 #include "Osc.h"
-#include "SampleBrowserPage.h"
+#include "GUI/Pages/SampleBrowserPage.h"
 #include "GUI.h"
 #include "MidiSDS.h"
 #include "DSP.h"

@@ -6,7 +6,7 @@
 #include "../Drivers/MidiDeviceParam.h"
 #include "../Drivers/MidiDevice.h"
 #include "DeviceManager.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include <stdint.h>
 
 extern uint8_t last_primary_track;

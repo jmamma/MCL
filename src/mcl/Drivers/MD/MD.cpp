@@ -1,7 +1,7 @@
 #include "MD.h"
 #include "GridTrack.h"
 #include "ResourceManager.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
 #include "MidiSetup.h"
@@ -11,7 +11,7 @@
 #include "MCLGUI.h"
 #include "PerfData.h"
 #include "UI/MDTrackSelect.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "MCLStrings.h"
 #include "KeyInterface.h"
 #include <string.h>

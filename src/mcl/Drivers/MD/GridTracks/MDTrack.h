@@ -3,7 +3,7 @@
 #define MDTRACK_H__
 
 #include "DeviceTrack.h"
-#include "DiagnosticPage.h"
+#include "GUI/Pages/DiagnosticPage.h"
 #include "MCLMemory.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"

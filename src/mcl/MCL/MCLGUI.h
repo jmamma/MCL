@@ -3,8 +3,8 @@
 #ifndef MCLGUI_H__
 #define MCLGUI_H__
 
-#include "QuestionDialogPage.h"
-#include "TextInputPage.h"
+#include "GUI/Pages/QuestionDialogPage.h"
+#include "GUI/Pages/TextInputPage.h"
 #include "KeyInterface.h"
 #include "NoteInterface.h"
 #include "MCLMenus.h"

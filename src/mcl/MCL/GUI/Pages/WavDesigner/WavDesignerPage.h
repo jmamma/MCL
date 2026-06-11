@@ -5,7 +5,7 @@
 
 #include "MCL.h"
 #include "MCLGUI.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 
 extern void wavdesign_menu_handler();
 extern void wav_render();

@@ -4,7 +4,7 @@
 
 #include "DeviceManager.h"
 #include "MidiDeviceCapabilities.h"
-#include "SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
 #include "../Drivers/MidiDevice.h"
 
 MidiDevice *SeqExtStepTrackRef::mute_mask_device() {

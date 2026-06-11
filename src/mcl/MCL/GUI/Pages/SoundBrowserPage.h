@@ -3,7 +3,7 @@
 #ifndef SOUNDBROWSERPAGE_H__
 #define SOUNDBROWSERPAGE_H__
 
-#include "FileBrowserPage.h"
+#include "GUI/Pages/Project/FileBrowserPage.h"
 
 #define PA_NEW 0
 #define PA_SELECT 1

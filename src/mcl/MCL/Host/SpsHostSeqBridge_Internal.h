@@ -2,9 +2,9 @@
 
 #if !defined(__AVR__)
 
-#include "SpsHostSeqBridge.h"
+#include "Host/SpsHostSeqBridge.h"
 
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "SPSXSeqTrack.h"
 #include "StepSeqDefines.h"
 #include "MidiUart.h"

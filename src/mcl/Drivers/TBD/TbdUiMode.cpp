@@ -3,15 +3,15 @@
 #ifdef PLATFORM_TBD
 
 #include "DeviceManager.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "MCL.h"
 #include "MCLGUI.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MidiClock.h"
 #include "MidiSetup.h"
 #include "NoteInterface.h"
 #include "SeqExtStepTrackApi.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqStepTrackRef.h"
 #include "TBD.h"
 #include "TBDTrack.h"

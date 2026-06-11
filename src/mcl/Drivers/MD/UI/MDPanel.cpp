@@ -3,16 +3,16 @@
 #ifdef PLATFORM_TBD
 
 #include "../MD.h"
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "GUI_hardware.h"
-#include "GridIOOverlay.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridIOOverlay.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "KeyInterface.h"
 #include "MCL.h"
 #include "MCLGUI.h"
 #include "MidiClock.h"
 #include "NoteInterface.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqTrackUtil.h"
 
 bool MDPanel::handle_bank_arrow_cycle(gui_event_t *event) {

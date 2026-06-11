@@ -1,6 +1,6 @@
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 
 MCLEncoder mixer_param1(0, 127, 1, ENCODER_FAST_SPEED);
 MCLEncoder mixer_param2(0, 127, 1, ENCODER_FAST_SPEED);

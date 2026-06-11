@@ -3,10 +3,10 @@
 #include "DeviceParamResolver.h"
 #include "DeviceManager.h"
 #include "MCLGUI.h"
-#include "MCLSeq.h"
-#include "PerfPage.h"
-#include "SeqPage.h"
-#include "SeqPages.h"
+#include "Sequencer/MCLSeq.h"
+#include "GUI/Pages/Performance/PerfPage.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "../Drivers/MidiDevice.h"
 #include <string.h>
 

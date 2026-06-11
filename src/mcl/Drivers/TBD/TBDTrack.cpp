@@ -4,7 +4,7 @@
 
 #include "TBD.h"
 #include "EmptyTrack.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "TbdP4Command.h"
 #include "TbdP4Realtime.h"
 #include "../Generic/GridTracks/MidiTrackMaterializer.h"

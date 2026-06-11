@@ -1,10 +1,10 @@
-#include "GridIOOverlay.h"
+#include "GUI/Pages/Grid/GridIOOverlay.h"
 
 #ifdef PLATFORM_TBD
 
 #include "GridChain.h"
-#include "GridIOPage.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridIOPage.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "GridTask.h"
 #include "MCLActions.h"
 #include "DeviceManager.h"

@@ -13,7 +13,7 @@
 #include "../Drivers/A4/GridTracks/A4Track.h"
 #include "../Drivers/MNM/GridTracks/MNMTrack.h"
 #include "../Drivers/MidiDevice.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqTrackUtil.h"
 #if !defined(__AVR__)
 #include "SPSXTrack.h"

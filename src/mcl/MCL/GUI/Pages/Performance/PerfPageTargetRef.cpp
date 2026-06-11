@@ -1,8 +1,8 @@
-#include "PerfPageTargetRef.h"
+#include "GUI/Pages/Performance/PerfPageTargetRef.h"
 
 #include "LFOTrackRef.h"
 #include "NoteInterface.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 
 namespace {
 

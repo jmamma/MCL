@@ -3,7 +3,7 @@
 #include "Project.h"
 #include "MCLSd.h"
 #include "MCLGUI.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "MidiSetup.h"
 #include "SeqTrackUtil.h"
 #include "oled.h"
@@ -23,9 +23,9 @@
 #include "LFOSeqTrack.h"
 #if MCL_FEATURE_HOST_ARRANGER
 #include "SPSXTrack.h"
-#include "MCLArrangementFormat.h"
-#include "SpsHostArrBridge.h"
-#include "SpsHostSeqBridge.h"
+#include "Arrangement/MCLArrangementFormat.h"
+#include "Host/SpsHostArrBridge.h"
+#include "Host/SpsHostSeqBridge.h"
 #endif
 #include <stddef.h>
 

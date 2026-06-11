@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "SpsWireProtocol.h"
+#include "Host/SpsWireProtocol.h"
 
 namespace spsarr {
 

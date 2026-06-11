@@ -4,7 +4,7 @@
 #define SEQSTEPPAGE_H__
 
 #include "MCLDefines.h"
-#include "SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
 
 class SeqStepMidiEvents : public MidiCallback {
 public:

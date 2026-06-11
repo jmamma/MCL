@@ -7,7 +7,7 @@
 
 #if MCL_FEATURE_HOST_ARRANGER
 
-#include "MCLArrangementFormat.h"
+#include "Arrangement/MCLArrangementFormat.h"
 #include "MCLMemory.h"
 #include "TrackLoadFade.h"
 #include <stdint.h>

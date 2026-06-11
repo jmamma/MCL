@@ -1,4 +1,4 @@
-#include "OscMixerPage.h"
+#include "GUI/Pages/WavDesigner/OscMixerPage.h"
 #include "WavDesigner.h"
 #include "MCLGUI.h"
 #include "Osc.h"

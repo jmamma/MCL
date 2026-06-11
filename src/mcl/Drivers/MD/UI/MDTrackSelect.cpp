@@ -1,7 +1,7 @@
 #include "MDTrackSelect.h"
 #include "../MD.h"
-#include "SeqPtcPage.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPtcPage.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqTrackUtil.h"
 
 void MDTrackSelect::setup(MidiClass *_midi) {

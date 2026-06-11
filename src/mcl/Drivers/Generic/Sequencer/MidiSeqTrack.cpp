@@ -2,14 +2,14 @@
 
 #if !defined(__AVR__)
 
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "EmptyTrack.h"
 #include "ExtSeqTrack.h"
 #include "GridLink.h"
 #include "MidiClock.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
-#include "SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
 #include "SeqTrackTransition.h"
 #include "MCL.h"
 #include <string.h>

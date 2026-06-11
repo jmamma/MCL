@@ -1,6 +1,6 @@
 #include "ExtTrack.h"
 #include "global.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #if !defined(__AVR__)
 #include "MidiTrack.h"
 #include "MidiTrackMaterializer.h"

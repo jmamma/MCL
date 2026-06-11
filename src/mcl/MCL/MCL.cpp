@@ -17,43 +17,43 @@
 #include "MCLSysConfig.h"
 
 
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "MidiActivePeering.h"
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "MDPages.h"
-#include "ProjectPages.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Project/ProjectPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqTrackUtil.h"
 #include "DeviceManager.h"
 
-#include "PageSelectPage.h"
+#include "GUI/Pages/PageSelectPage.h"
 #include "MenuPage.h"
-#include "MixerPage.h"
-#include "GridSavePage.h"
-#include "GridLoadPage.h"
+#include "GUI/Pages/Performance/MixerPage.h"
+#include "GUI/Pages/Grid/GridSavePage.h"
+#include "GUI/Pages/Grid/GridLoadPage.h"
 #include "platform.h"
 
 #ifdef WAV_DESIGNER
-#include "OscMixerPage.h"
-#include "WavDesignerPage.h"
+#include "GUI/Pages/WavDesigner/OscMixerPage.h"
+#include "GUI/Pages/WavDesigner/WavDesignerPage.h"
 #include "WavDesigner.h"
 #endif
 
-#include "TextInputPage.h"
-#include "PolyPage.h"
-#include "SampleBrowserPage.h"
-#include "QuestionDialogPage.h"
+#include "GUI/Pages/TextInputPage.h"
+#include "GUI/Pages/Sequencer/PolyPage.h"
+#include "GUI/Pages/SampleBrowserPage.h"
+#include "GUI/Pages/QuestionDialogPage.h"
 #include "../Drivers/MD/UI/Pages/FXPage.h"
 #include "../Drivers/MD/UI/Pages/RoutePage.h"
-#include "LFOPage.h"
+#include "GUI/Pages/Sequencer/LFOPage.h"
 #include "../Drivers/MD/UI/Pages/RAMPage.h"
-#include "SoundBrowserPage.h"
-#include "PerfPage.h"
+#include "GUI/Pages/SoundBrowserPage.h"
+#include "GUI/Pages/Performance/PerfPage.h"
 #ifdef MCL_HAS_EXTENDED_PANEL_INPUT
-#include "PlatformPanel.h"
+#include "GUI/Pages/PlatformPanel.h"
 #endif
 #ifdef PLATFORM_TBD
-#include "BankPopupPage.h"
+#include "GUI/Pages/BankPopupPage.h"
 #endif
 
 namespace {

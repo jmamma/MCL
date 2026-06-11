@@ -6,14 +6,14 @@
 #include "MCLEncoder.h"
 #include "MCLSysConfig.h"
 #include "MenuPage.h"
-#include "TextInputPage.h"
+#include "GUI/Pages/TextInputPage.h"
 #include "MCLMenuDefines.h"
-//#include "ProjectPages.h"
-//#include "PolyPage.h"
-//#include "GridPages.h"
-//#include "TextInputPage.h"
-//#include "SeqPages.h"
-//#include "DiagnosticPage.h"
+//#include "GUI/Pages/Project/ProjectPages.h"
+//#include "GUI/Pages/Sequencer/PolyPage.h"
+//#include "GUI/Pages/Grid/GridPages.h"
+//#include "GUI/Pages/TextInputPage.h"
+//#include "GUI/Pages/Sequencer/SeqPages.h"
+//#include "GUI/Pages/DiagnosticPage.h"
 #define ENCODER_RES_SYS 2
 
 extern BootMenuPage<boot_menu_page_N> boot_menu_page;

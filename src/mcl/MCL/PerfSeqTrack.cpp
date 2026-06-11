@@ -1,5 +1,5 @@
 #include "PerfSeqTrack.h"
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 
 void PerfSeqTrack::seq(MidiUartClass *uart_, MidiUartClass *uart2_) {
   uint8_t ticks_per_step = get_ticks_per_step();

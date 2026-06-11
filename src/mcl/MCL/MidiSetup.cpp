@@ -2,7 +2,7 @@
 #include "MidiClock.h"
 #include "MidiID.h"
 #include "TurboLight.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "MCLSysConfig.h"
 #include "MidiActivePeering.h"
 #include "DeviceManager.h"
@@ -16,7 +16,7 @@
 #ifdef PLATFORM_TBD
 #include "../Drivers/TBD/TBD.h"
 #endif
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 
 MidiClass *midi_class_for_port(uint8_t port) {
   if (port == UART1_PORT) return &Midi;

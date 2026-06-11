@@ -5,7 +5,7 @@
 #include "DeviceParamResolver.h"
 
 #include "../Drivers/MD/MD.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "PerfData.h"
 #include <string.h>
 

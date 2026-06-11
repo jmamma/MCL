@@ -2,7 +2,7 @@
 #ifndef DEVICETRACK_H__
 #define DEVICETRACK_H__
 
-#include "DiagnosticPage.h"
+#include "GUI/Pages/DiagnosticPage.h"
 #include "GridTrack.h"
 #include "TrackLoadFade.h"
 

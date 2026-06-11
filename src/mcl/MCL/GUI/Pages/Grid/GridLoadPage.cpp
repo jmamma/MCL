@@ -1,6 +1,6 @@
 #include "GridChain.h"
-#include "GridLoadPage.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridLoadPage.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "GridTask.h"
 #include "MCLActions.h"
 #include "MCLGUI.h"

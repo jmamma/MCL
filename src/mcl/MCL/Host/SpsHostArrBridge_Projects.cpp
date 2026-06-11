@@ -2,7 +2,7 @@
 
 #if MCL_FEATURE_HOST_ARRANGER
 
-#include "SpsHostArrBridge.h"
+#include "Host/SpsHostArrBridge.h"
 #include "SpsHostArrBridge_Internal.h"
 
 using namespace spsarr;

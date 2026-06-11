@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #if !defined(__AVR__)
 #include "DeviceManager.h"
 #include "MCLSysConfig.h"
@@ -10,7 +10,7 @@
 #endif
 #include "../Drivers/DeviceContext.h"
 #include "../Drivers/MidiDevice.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "ArpSeqTrack.h"
 #ifdef EXT_TRACKS
 #include "SeqExtStepTrackApi.h"

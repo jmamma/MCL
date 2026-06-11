@@ -2,7 +2,7 @@
 
 #if MCL_FEATURE_HOST_ARRANGER
 
-#include "MCLArrangement.h"
+#include "Arrangement/MCLArrangement.h"
 #include "MCLArrangement_Internal.h"
 
 using namespace mcl_arrangement_internal;

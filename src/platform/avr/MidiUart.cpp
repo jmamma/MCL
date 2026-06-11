@@ -13,7 +13,7 @@
 #include <MidiClock.h>
 #include <avr/io.h>
 
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 
 MidiUartClass::MidiUartClass(volatile uint8_t *udr_, RingBuffer<> *_rxRb,
                              RingBuffer<> *_txRb, RingBuffer<> *_txRb_realtime) : MidiUartParent() {

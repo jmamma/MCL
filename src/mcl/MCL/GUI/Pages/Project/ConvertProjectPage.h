@@ -7,7 +7,7 @@
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
 #include "GUI.h"
-#include "FileBrowserPage.h"
+#include "GUI/Pages/Project/FileBrowserPage.h"
 
 #define MAX_VISIBLE_ROWS 4
 #define MENU_WIDTH 78

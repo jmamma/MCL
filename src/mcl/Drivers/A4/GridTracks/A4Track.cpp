@@ -1,5 +1,5 @@
 #include "A4Track.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 
 #define A4_SOUND_LENGTH 0x19F
 

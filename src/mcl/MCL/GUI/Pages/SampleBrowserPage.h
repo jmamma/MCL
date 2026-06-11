@@ -3,7 +3,7 @@
 #ifndef SAMPLEBROWSERPAGE_H__
 #define SAMPLEBROWSERPAGE_H__
 
-#include "FileBrowserPage.h"
+#include "GUI/Pages/Project/FileBrowserPage.h"
 #include "MidiSysex.h"
 
 #define FT_SND 0

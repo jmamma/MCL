@@ -1,5 +1,5 @@
-#include "GridIOPage.h"
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridIOPage.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "GridTrack.h"
 #include "MCLActions.h"
 #include "MCLGUI.h"

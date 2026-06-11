@@ -4,7 +4,7 @@
 #define SEQPTCPAGE_H__
 
 #include "Scales.h"
-#include "SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
 #ifdef PLATFORM_TBD
 #include "SeqExtMidiControl.h"
 #endif

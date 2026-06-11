@@ -1,6 +1,6 @@
 #include "PerfTrack.h"
 #include "PerfSeqTrack.h"
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "MCLActions.h"
 #include "MDTrack.h"
 

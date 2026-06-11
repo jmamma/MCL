@@ -1,4 +1,4 @@
-#include "SampleBrowserPage.h"
+#include "GUI/Pages/SampleBrowserPage.h"
 #include "MCLSd.h"
 #include "MCLGUI.h"
 #include "Wav.h"

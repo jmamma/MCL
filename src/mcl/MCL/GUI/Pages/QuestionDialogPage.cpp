@@ -1,4 +1,4 @@
-#include "QuestionDialogPage.h"
+#include "GUI/Pages/QuestionDialogPage.h"
 #include "MCLGUI.h"
 
 void QuestionDialogPage::init(const char* title_, const char* text_) {

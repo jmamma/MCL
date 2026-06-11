@@ -1,9 +1,9 @@
-#include "GridPage.h"
-#include "CommonPages.h"
+#include "GUI/Pages/Grid/GridPage.h"
+#include "GUI/Pages/CommonPages.h"
 #ifdef PLATFORM_TBD
 #include "Ui.h"
 #endif
-#include "GridPages.h"
+#include "GUI/Pages/Grid/GridPages.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
@@ -16,7 +16,7 @@
 #include "../../../../Drivers/MD/MD.h"
 #include "../../../../Drivers/MNM/MNMParams.h"
 #ifdef PLATFORM_TBD
-#include "GridIOOverlay.h"
+#include "GUI/Pages/Grid/GridIOOverlay.h"
 #endif
 #include "MCLActions.h"
 #include "MCLClipBoard.h"

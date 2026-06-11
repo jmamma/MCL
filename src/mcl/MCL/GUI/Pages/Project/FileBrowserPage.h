@@ -8,7 +8,7 @@
 #include "Menu.h"
 #include "MenuPage.h"
 #include "MCLDefines.h"
-#include "SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
 #include "MCLSd.h"
 
 #define MAX_ENTRIES 1024

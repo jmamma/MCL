@@ -8,7 +8,7 @@
 #include "MidiDeviceGrid.h"
 #include "MCLMemory.h"
 #include "MCLSysConfig.h"
-#include "ProjectPages.h"
+#include "GUI/Pages/Project/ProjectPages.h"
 
 #define PROJ_MIN_READABLE_VERSION 3000
 #define PROJ_VERSION 3013

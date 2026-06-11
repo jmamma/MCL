@@ -1,4 +1,4 @@
-#include "WavDesignerPage.h"
+#include "GUI/Pages/WavDesigner/WavDesignerPage.h"
 #include "WavDesigner.h"
 #include "MCLGUI.h"
 

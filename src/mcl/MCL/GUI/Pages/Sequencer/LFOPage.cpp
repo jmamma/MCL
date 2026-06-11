@@ -1,9 +1,9 @@
-#include "LFOPage.h"
+#include "GUI/Pages/Sequencer/LFOPage.h"
 #include "DeviceParamResolver.h"
 #include "LFO.h"
 #include "MCLGUI.h"
 #include "ResourceManager.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 
 #define LFO_TYPE 0
 #define LFO_PARAM 1

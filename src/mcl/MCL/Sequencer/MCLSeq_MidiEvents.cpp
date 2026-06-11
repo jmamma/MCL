@@ -1,6 +1,6 @@
 #include "MCLSeq_Internal.h"
 
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "DeviceParamResolver.h"
 #include "MCL.h"
 #include "MDPages.h"

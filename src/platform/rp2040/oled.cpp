@@ -1,6 +1,6 @@
 #include "Oled.h"
 #include "Adafruit_GFX.h"
-#include "DiagnosticPage.h"
+#include "GUI/Pages/DiagnosticPage.h"
 #include "MCLSd.h"
 #include "MCLGUI.h"
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 
 #include "DeviceManager.h"
 #include "MCLSysConfig.h"

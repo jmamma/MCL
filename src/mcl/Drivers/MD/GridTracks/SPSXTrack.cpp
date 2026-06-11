@@ -1,7 +1,7 @@
 #include "SPSXTrack.h"
 #include "MD.h"
 #include "MCLActions.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "Shared.h"
 

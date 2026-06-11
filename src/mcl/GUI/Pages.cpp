@@ -3,7 +3,7 @@
 #include "GUI.h"
 #include "Pages.h"
 #include "platform.h"
-#include "DiagnosticPage.h"
+#include "GUI/Pages/DiagnosticPage.h"
 #include "Encoders.h"
 #include "KeyInterface.h"
 #include "global.h"

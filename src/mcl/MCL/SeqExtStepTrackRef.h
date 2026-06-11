@@ -4,8 +4,8 @@
 #define SEQEXTSTEPTRACKREF_H__
 
 #include "SeqExtStepTrackApi.h"
-#include "SeqPage.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include <stdint.h>
 
 #if defined(__AVR__)

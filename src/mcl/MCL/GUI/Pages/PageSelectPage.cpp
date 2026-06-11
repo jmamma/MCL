@@ -1,4 +1,4 @@
-#include "PageSelectPage.h"
+#include "GUI/Pages/PageSelectPage.h"
 #include "ResourceManager.h"
 #include "MCLDefines.h"
 #include "MCLGUI.h"

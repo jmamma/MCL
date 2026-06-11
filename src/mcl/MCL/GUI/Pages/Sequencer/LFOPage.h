@@ -8,8 +8,8 @@
 #include "LFO.h"
 #include "LFOSeqTrack.h"
 #include "LFOTrackRef.h"
-#include "SeqPage.h"
-#include "PerfPageParent.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
+#include "GUI/Pages/Performance/PerfPageParent.h"
 
 #define NUM_LFO_PAGES 2
 

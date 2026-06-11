@@ -1,6 +1,6 @@
 #include "MDPages.h"
 
-#include "CommonPages.h"
+#include "GUI/Pages/CommonPages.h"
 #include "MDParams.h"
 
 MCLEncoder route_param1(2, 5);

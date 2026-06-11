@@ -5,8 +5,8 @@
 
 #include "MCL.h"
 #include "math.h"
-#include "OscPage.h"
-#include "OscMixerPage.h"
+#include "GUI/Pages/WavDesigner/OscPage.h"
+#include "GUI/Pages/WavDesigner/OscMixerPage.h"
 
 #define MIXER_ID 4
 #define NUM_OSC 3

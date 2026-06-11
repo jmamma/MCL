@@ -1,12 +1,12 @@
-#include "BankPopupPage.h"
+#include "GUI/Pages/BankPopupPage.h"
 
 #ifdef PLATFORM_TBD
 
 #include "MCL.h"
 #include "MCLGUI.h"
-#include "GridPage.h"
-#include "GridPages.h"
-#include "GridLoadPage.h"
+#include "GUI/Pages/Grid/GridPage.h"
+#include "GUI/Pages/Grid/GridPages.h"
+#include "GUI/Pages/Grid/GridLoadPage.h"
 #include "../../../Drivers/MD/MD.h"
 #include "../../../Drivers/MD/MDParams.h"
 #include "MidiSetup.h"

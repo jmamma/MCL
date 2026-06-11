@@ -1,9 +1,9 @@
-#include "SeqExtStepPage.h"
+#include "GUI/Pages/Sequencer/SeqExtStepPage.h"
 #include "MCLGUI.h"
 #include "MCLClipBoard.h"
 #include "MCLSysConfig.h"
 #include "SeqExtStepTrackRef.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 
 namespace {
 

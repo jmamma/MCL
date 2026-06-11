@@ -4,20 +4,20 @@
 
 #if MCL_FEATURE_HOST_ARRANGER
 
-#include "MCLArrangement.h"
+#include "Arrangement/MCLArrangement.h"
 
 #include "DeviceTrack.h"
 #include "EmptyTrack.h"
 #include "Grid.h"
 #include "GridTask.h"
 #include "MCLSd.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
 #include "Project.h"
 #include "SeqTrack.h"
-#include "SpsHostArrBridge.h"
-#include "SpsArrProtocol.h"
+#include "Host/SpsHostArrBridge.h"
+#include "Host/SpsArrProtocol.h"
 #include "TrackLoadFade.h"
 
 #include <string.h>

@@ -1,6 +1,6 @@
 #include "ExtTrack.h"
-#include "CommonPages.h"
-#include "MCLSeq.h"
+#include "GUI/Pages/CommonPages.h"
+#include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "SeqTrackTransition.h"
 #include "platform.h"

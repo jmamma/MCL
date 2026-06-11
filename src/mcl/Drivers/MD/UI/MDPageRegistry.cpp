@@ -1,7 +1,7 @@
 #include "../MD.h"
 
 #include "MCLStrings.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "Pages/FXPage.h"
 #include "MidiClock.h"
 #include "PageRegistry.h"

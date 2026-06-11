@@ -3,7 +3,7 @@
 #ifndef LOADPROJECTPAGE_H__
 #define LOADPROJECTPAGE_H__
 
-#include "FileBrowserPage.h"
+#include "GUI/Pages/Project/FileBrowserPage.h"
 #include "GUI.h"
 
 #define MAX_VISIBLE_ROWS 4

@@ -1,7 +1,7 @@
 #if !defined(__AVR__)
 
 #include "StepSeqTrack.h"
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
 

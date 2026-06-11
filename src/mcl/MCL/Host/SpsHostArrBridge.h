@@ -9,7 +9,7 @@
 #if MCL_FEATURE_HOST_ARRANGER
 
 #include "MidiSysex.h"
-#include "SpsArrProtocol.h"
+#include "Host/SpsArrProtocol.h"
 
 class SpsHostArrBridge : public MidiSysexListenerClass {
 public:

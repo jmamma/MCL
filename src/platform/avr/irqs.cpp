@@ -1,4 +1,4 @@
-#include "MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 #include "MidiClock.h"
 #include "global.h"
 #include "helpers.h"

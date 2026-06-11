@@ -1,4 +1,4 @@
-#include "ConvertProjectPage.h"
+#include "GUI/Pages/Project/ConvertProjectPage.h"
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
 #include "Project.h"

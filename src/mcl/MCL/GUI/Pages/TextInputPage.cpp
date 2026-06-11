@@ -1,4 +1,4 @@
-#include "TextInputPage.h"
+#include "GUI/Pages/TextInputPage.h"
 #include "MCLGUI.h"
 
 constexpr auto sz_allowedchar = 69;

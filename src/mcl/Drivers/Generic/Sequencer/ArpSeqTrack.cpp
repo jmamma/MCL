@@ -1,5 +1,5 @@
 #include "ArpSeqTrack.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqTrackUtil.h"
 
 namespace {

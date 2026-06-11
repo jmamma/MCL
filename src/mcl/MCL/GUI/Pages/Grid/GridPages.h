@@ -7,11 +7,11 @@
 #define ENCODER_RES_GRID 1
 #define ENCODER_RES_PAT 2
 
-#include "GridPage.h"
+#include "GUI/Pages/Grid/GridPage.h"
 
 #include "MCLEncoder.h"
-#include "GridSavePage.h"
-#include "GridLoadPage.h"
+#include "GUI/Pages/Grid/GridSavePage.h"
+#include "GUI/Pages/Grid/GridLoadPage.h"
 #include "Menu.h"
 #include "MenuPage.h"
 #include "GridLink.h"

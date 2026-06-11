@@ -1,7 +1,7 @@
 #include "memory.h"
 #include "NoteInterface.h"
 #include "helpers.h"
-#include "FileBrowserPage.h"
+#include "GUI/Pages/Project/FileBrowserPage.h"
 #include "MCLSd.h"
 #include "MCLGfx.h"
 #include "MCLMenus.h"

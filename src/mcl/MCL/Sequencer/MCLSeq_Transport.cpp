@@ -3,7 +3,7 @@
 #include "KeyInterface.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
-#include "SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqPages.h"
 #include "SeqTrackUtil.h"
 #include "global.h"
 #include "../../Drivers/Generic/Sequencer/StepSeqDefines.h"

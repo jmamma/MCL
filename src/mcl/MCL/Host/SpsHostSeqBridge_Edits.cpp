@@ -1,6 +1,6 @@
 #if !defined(__AVR__)
 
-#include "SpsHostSeqBridge.h"
+#include "Host/SpsHostSeqBridge.h"
 #include "SpsHostSeqBridge_Internal.h"
 
 using namespace spsseq;

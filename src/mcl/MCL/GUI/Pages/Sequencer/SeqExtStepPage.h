@@ -3,9 +3,9 @@
 #ifndef SEQEXTSTEPPAGE_H__
 #define SEQEXTSTEPPAGE_H__
 
-#include "SeqPage.h"
+#include "GUI/Pages/Sequencer/SeqPage.h"
 #include "SeqExtStepTypes.h"
-#include "SeqStepPage.h"
+#include "GUI/Pages/Sequencer/SeqStepPage.h"
 #ifdef PLATFORM_TBD
 #include "SeqExtMidiControl.h"
 #endif
