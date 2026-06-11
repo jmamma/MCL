@@ -65,6 +65,26 @@ public:
     return ext_track_->speed;
   }
 
+  void set_length(uint8_t len, bool expand = false) {
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
+    if (midi_track_) {
+      midi_track_->set_length(len, expand);
+      return;
+    }
+#endif
+    ext_track_->set_length(len, expand);
+  }
+
+  void set_speed(uint8_t new_speed) {
+#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
+    if (midi_track_) {
+      midi_track_->set_speed(new_speed);
+      return;
+    }
+#endif
+    ext_track_->set_speed(new_speed);
+  }
+
   uint8_t step_count() const {
 #ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->step_count;

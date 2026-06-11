@@ -35,6 +35,8 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_REQ_TRACK_DETAIL:  onReqTrackDetail(p.tag, b, n);    break;
         case CMD_REQ_TRACK_LOCKS:   onReqTrackLocks(p.tag, b, n);     break;
         case CMD_REQ_PATTERN_META:  onReqPatternMeta(p.tag);          break;
+        case CMD_REQ_EXT_TRACK_META:onReqExtTrackMeta(p.tag, b, n);   break;
+        case CMD_REQ_EXT_NOTES:     onReqExtNotes(p.tag, b, n);       break;
 
         case CMD_SET_STEP:        if (applySetStep(b, n))        { if (n) notifyDirty(b[0], DIRTY_SUMMARY); } break;
         case CMD_SET_MICROTIMING: if (applySetMicroTiming(b, n)) { if (n) notifyDirty(b[0], DIRTY_DETAIL); }  break;
@@ -43,6 +45,23 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_CLR_LOCK:        if (applyClrLock(b, n))        { if (n) notifyDirty(b[0], (uint8_t)(DIRTY_LOCKS | DIRTY_SUMMARY)); } break;
         case CMD_SET_TRACK_PROP:  if (applySetTrackProp(b, n))   { if (n) notifyDirty(b[0], DIRTY_SUMMARY); } break;
         case CMD_SET_PATTERN_PROP:if (applySetPatternProp(b, n)) { notifyDirty(0xFF, DIRTY_META); }          break;
+        case CMD_EXT_ADD_NOTE:
+            if (applyExtAddNote(b, n) && n >= 2)
+                notifyExtDirty(b[0], b[1], EXT_DIRTY_NOTES);
+            break;
+        case CMD_EXT_DEL_NOTE:
+            if (applyExtDeleteNote(b, n) && n >= 2)
+                notifyExtDirty(b[0], b[1], EXT_DIRTY_NOTES);
+            break;
+        case CMD_EXT_CLEAR_RANGE:
+            if (applyExtClearRange(b, n) && n >= 2)
+                notifyExtDirty(b[0], b[1], EXT_DIRTY_NOTES);
+            break;
+        case CMD_EXT_SET_TRACK_PROP:
+            if (applyExtSetTrackProp(b, n) && n >= 2)
+                notifyExtDirty(b[0], b[1],
+                               (uint8_t)(EXT_DIRTY_META | EXT_DIRTY_NOTES));
+            break;
 
         case CMD_BATCH: {
             // sequential best-effort: {cmd,len,bytes}* ; correctness via NOTIFY_DIRTY
@@ -89,11 +108,13 @@ void SpsHostSeqBridge::sendErr(uint8_t tag, uint8_t code, uint8_t detail) { uint
 
 void SpsHostSeqBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n >= 1 && b[0] == 0) return;  // malformed/incompatible host proto: stay silent
-    uint16_t caps = CAP_SPSX | CAP_LOCKS | CAP_DETAIL | CAP_PER_TRACK_LEN | CAP_BATCH;
-    uint8_t body[6];
+    uint16_t caps = CAP_SPSX | CAP_LOCKS | CAP_DETAIL | CAP_PER_TRACK_LEN |
+                    CAP_BATCH | CAP_EXT_NOTES;
+    uint8_t body[7];
     body[0] = kProtoVersion; putU16le(body + 1, caps);
     body[3] = (uint8_t)NUM_MD_TRACKS; body[4] = (uint8_t)kNumSteps; body[5] = (uint8_t)kNumLockParams;
-    sendFrame(CMD_HELLO_ACK, tag, body, 6);
+    body[6] = extStepTrackCount();
+    sendFrame(CMD_HELLO_ACK, tag, body, (uint16_t)sizeof body);
 }
 
 void SpsHostSeqBridge::onReqActive(uint8_t tag)          { sendPatternMeta(CMD_NOTIFY_ACTIVE, tag); }
@@ -103,5 +124,17 @@ void SpsHostSeqBridge::onReqPatternMeta(uint8_t tag)     { sendPatternMeta(CMD_P
 void SpsHostSeqBridge::onReqTrackDetail(uint8_t tag, const uint8_t* b, uint16_t n) { (void)tag; if (n >= 1) sendTrackDetail(b[0]); }
 
 void SpsHostSeqBridge::onReqTrackLocks(uint8_t tag, const uint8_t* b, uint16_t n)  { (void)tag; if (n >= 1) sendTrackLocks(b[0]); }
+
+void SpsHostSeqBridge::onReqExtTrackMeta(uint8_t tag, const uint8_t* b,
+                                         uint16_t n) {
+    if (n >= 2)
+        sendExtTrackMeta(tag, b[0], b[1]);
+}
+
+void SpsHostSeqBridge::onReqExtNotes(uint8_t tag, const uint8_t* b,
+                                     uint16_t n) {
+    if (n >= 2)
+        sendExtNotes(tag, b[0], b[1]);
+}
 
 #endif  // !defined(__AVR__)

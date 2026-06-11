@@ -42,9 +42,11 @@ static const uint8_t  kSysexEnd   = spswire::kSysexEnd;
 
 // ---- dimensions ----
 static const int kNumTracks     = 16;
+static const int kNumExtTracks  = 16;   // protocol maximum; HELLO_ACK reports actual
 static const int kNumSteps      = 64;
 static const int kNumLockParams = 34;   // SPS-X superset
 static const int kMaxBodyRaw    = 512;  // cap per frame (TRACK_LOCKS paginates)
+static const int kExtNoteWireBytes = 11; // start(4), width(4), note, velocity, condition
 
 // ---- command ids (byte[3]) ----
 enum Cmd {
@@ -56,11 +58,15 @@ enum Cmd {
     CMD_REQ_TRACK_DETAIL = 0x12,  // H->M  track
     CMD_REQ_TRACK_LOCKS  = 0x13,  // H->M  track
     CMD_REQ_PATTERN_META = 0x14,  // H->M
+    CMD_REQ_EXT_TRACK_META = 0x15, // H->M  device, track
+    CMD_REQ_EXT_NOTES    = 0x16,  // H->M  device, track
 
     CMD_TRACK_SUMMARY    = 0x30,  // M->H
     CMD_TRACK_DETAIL     = 0x31,  // M->H
     CMD_TRACK_LOCKS      = 0x32,  // M->H  (paginated)
     CMD_PATTERN_META     = 0x33,  // M->H
+    CMD_EXT_TRACK_META   = 0x34,  // M->H  device, track, timing/meta
+    CMD_EXT_NOTES        = 0x35,  // M->H  device, track, paginated note pairs
 
     CMD_SET_STEP         = 0x50,  // H->M  track, step, wmask, value
     CMD_SET_LOCK         = 0x51,  // H->M  track, step, param, value
@@ -72,10 +78,15 @@ enum Cmd {
     CMD_BATCH            = 0x57,  // H->M  count, {cmd,len,bytes}*
     CMD_CLR_STEP_LOCKS   = 0x58,  // H->M  track, step — clear ALL locks on a step (authoritative;
                                   //       no cached lock detail needed on the host)
+    CMD_EXT_ADD_NOTE     = 0x59,  // H->M  device, track, start(4), width(4), note, velocity, condition
+    CMD_EXT_DEL_NOTE     = 0x5A,  // H->M  device, track, start(4), width(4), note
+    CMD_EXT_CLEAR_RANGE  = 0x5B,  // H->M  device, track, start(4), width(4), note_min, note_max
+    CMD_EXT_SET_TRACK_PROP = 0x5C,// H->M  device, track, prop, value
 
     CMD_NOTIFY_TRANSPORT = 0x70,  // M->H  running, master_step, sub_tick(2)
     CMD_NOTIFY_DIRTY     = 0x71,  // M->H  track, regions
     CMD_NOTIFY_ACTIVE    = 0x72,  // M->H  pattern_meta + active_track + transport
+    CMD_NOTIFY_EXT_DIRTY = 0x73,  // M->H  device, track, regions
     CMD_ACK              = 0x7E,  // M->H  (echo tag) status
     CMD_ERR              = 0x7F   // M->H  (echo tag) err_code, detail
 };
@@ -88,7 +99,17 @@ enum Caps {
     CAP_PER_TRACK_LEN = 1 << 3,
     CAP_BATCH         = 1 << 4,
     CAP_PER_TRACK_PH  = 1 << 5,
-    CAP_AUTOMATION    = 1 << 6
+    CAP_AUTOMATION    = 1 << 6,
+    CAP_EXT_NOTES     = 1 << 7
+};
+
+enum ExtDevice {
+    EXT_DEVICE_GRID_Y = 1
+};
+
+enum ExtDirtyRegion {
+    EXT_DIRTY_META  = 1 << 0,
+    EXT_DIRTY_NOTES = 1 << 1
 };
 
 // ---- canonical wire mask enum (translate to/from native on each side) ----
@@ -127,6 +148,9 @@ enum ErrCode {
 enum TrackProp {
     TPROP_LENGTH = 0, TPROP_SPEED = 1, TPROP_SCALE = 2,
     TPROP_SWING_AMOUNT = 3, TPROP_MUTE = 4
+};
+enum ExtTrackProp {
+    EXTPROP_LENGTH = 0, EXTPROP_SPEED = 1, EXTPROP_CHANNEL = 2
 };
 enum PatternProp {
     PPROP_LENGTH = 0, PPROP_SCALE = 1, PPROP_TEMPO = 2,
@@ -168,6 +192,8 @@ inline uint16_t spsSeqDecodeBody(const Parsed& p, uint8_t* body8,
 }
 inline void spsSeqPutU64(uint8_t* p, uint64_t v) { spswire::putU64(p, v); }
 inline uint64_t spsSeqGetU64(const uint8_t* p) { return spswire::getU64(p); }
+inline void spsSeqPutU32(uint8_t* p, uint32_t v) { spswire::putU32(p, v); }
+inline uint32_t spsSeqGetU32(const uint8_t* p) { return spswire::getU32(p); }
 
 } // namespace spsseq
 
