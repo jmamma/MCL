@@ -1,48 +1,114 @@
 # MCL Sequencer
 
-MCL features a powerful sequencer. There are 16 step sequencer tracks dedicated to the MD and 6 polyphonic tracks dedicated to External MIDI devices, each has track independent length and playback speed.
+The MCL sequencer stores musical events inside grid tracks. A track can be a classic Machinedrum step track, an SPS-X/TBD step track, or an external MIDI-style track, depending on the devices assigned to Grid X and Grid Y.
 
-## MD Sequencer Tracks
+## Track Families
 
+| Track family | Typical use | Main editor |
+| --- | --- | --- |
+| Primary step tracks | Machinedrum, SPS-X or TBD-style per-step sequencing. | Step Editor |
+| External MIDI tracks | Polyphonic notes and automation for MIDI, A4, MNM or generic devices. | PianoRoll Editor |
+| Chromatic/voice tracks | Live pitch input, arpeggiation and polyphonic Machinedrum voice groups. | Chromatic and Polyphony pages |
+| State tracks | Performance, route, FX, tempo and other page state. | The related page |
 
-- 16 Track Sequencer with 64 max steps per track.
-- Conditional Trigs, Slide, Mute and Micro Timing per step.
-- 8 lockable parameters per track with 256 locks available per track.
-- Trigless Locks.
-- Real time record for both step and lock data.
-- Chromatic Mode.
-- Arpeggiator.
+Classic MegaCommand projects still commonly use 16 primary tracks and six external tracks. MCL 5.00 generalizes that model so the configured grid device decides what the primary and secondary tracks control.
 
+## Primary Step Tracks
 
-## External MIDI Sequencer tracks
+Primary step tracks are edited from the Step Editor and are designed for 16-step page editing.
 
+| Feature | Details |
+| --- | --- |
+| Track count | 16 primary step tracks where the active device supports them. |
+| Length | Up to 64 steps per track. |
+| Speeds | `1x`, `2x`, `3/2x`, `3/4x`, `1/2x`, `1/4x`, `1/8x`. |
+| Step data | Trigs, mutes, swing mask, slides, pitch, conditions and microtiming. |
+| Locks | Parameter locks per step, with device-specific lock capacity. |
+| Swing | Per-track swing amount, stored with the track. |
+| Arp and LFO | Each track has its own arpeggiator and LFO settings in MCL 5.00. |
 
-- There are 6 x Ext MIDI Sequencer Tracks.
-- Each External MIDI track can be used to sequence an attached MIDI device on port 2. This could be an Elektron Analog 4, Elektron Monomachine or a generic MIDI device such as a synth module.
--
-Features of the new Ext MIDI Sequencer:
+The SPS-X sequencer engine adds deeper parameter locks, signed microtiming, retrigs, fill conditions, MID-machine note support and extended SPS-X parameter handling where supported by the connected device/firmware.
 
+## External MIDI Tracks
 
-- 6 x Tracks
-- 128 steps per track
-- 512 events per track.
-- A maximum of 16 events per step, (i.e 16 note polyphony)
-- Each event could be an automation parameter or note on/off message.
-- Microtiming per event
-- Conditional trig per event
-- Velocity per step
-- Each track includes 8 MIDI Control Channel automation parameters with optional slide (linear interpolation).
-- ProgramChange as CC destination.
-- Arpeggiator.
+External MIDI-style tracks are edited from the PianoRoll and automation views.
 
+| Feature | Details |
+| --- | --- |
+| Track count | Six classic external tracks where enabled. |
+| Length | Up to 128 steps per track. |
+| Notes | Polyphonic note events, velocity, note length and microtiming. |
+| Automation | CC, NRPN, RPN, pitch bend, channel pressure, poly pressure and program change locks where supported. |
+| Per-step behavior | Conditions, mute state, slide/glide and live recording. |
+| Arp and LFO | Per-track arpeggiator and LFO data is stored with the track. |
 
-## Auxiliary tracks
+On desktop, browser and compatible hosted builds, A4, MNM and generic MIDI devices can use full MIDI sequencer tracks directly in the grid.
 
-There are five auxiliary track types
+## Conditional Trigs
 
+MCL 5.00 expands trig conditions and uses the same condition model across modern step sequencer engines.
 
-- **PerfTrack (PF):** Store and recall Performance Page Controller and Scene data. Store and recall the Mixer Page's Performance Sets.
-- **MDFXTrack (FX):** Store and recall MachinDrum MasterFX settings: Delay, Reverb, EQ, Dynamics.
-- **LFOTrack (LF):** Store and recall LFO page settings.
-- **RouteTrack (RT):** Store and recall MD Track Routing and Chromatic Mode's Poly settings.
-- **TempoTrack (TP):** Store and recall Tempo.
+| Label | Meaning |
+| --- | --- |
+| `---` | Always play. |
+| `10%`, `25%`, `33%`, `50%`, `66%`, `75%`, `90%` | Probability that the trig plays. |
+| `1SH` | One-shot; plays once, then must be rearmed. |
+| `1ST` | First cycle/pass only. |
+| `!1S` | Not first cycle/pass. |
+| `FIL` | Plays when fill is active for the track. |
+| `!FL` | Plays when fill is not active for the track. |
+| `PRE` | Plays when the previous trig condition fired. |
+| `!PR` | Plays when the previous trig condition did not fire. |
+| `NEI` | Plays when the neighbouring previous track fired. |
+| `!NE` | Plays when the neighbouring previous track did not fire. |
+| `x:y` | Iterator condition; for example `2:4` plays on the second pass of a four-pass cycle. |
+
+When a condition is shown with a `^` or `+` marker, the condition also gates related lock/slide behavior instead of only gating the trig.
+
+## Mutes And Fill
+
+MCL stores track mutes and fill states as sequencer state.
+
+| State | Use |
+| --- | --- |
+| Track mute | Silences a track and is stored with sequencer tracks. |
+| Step mute | Disables a specific step without deleting the step data. |
+| Fill state | Enables steps using `FIL` conditions and disables steps using `!FL` conditions. |
+
+Track fill states can be edited from the Mixer Page, and enhanced Machinedrum mode can toggle the Mute Menu between mute and fill editing.
+
+## Swing
+
+Each primary step track has its own swing percentage. The Swing edit mask chooses which steps are delayed by the swing amount.
+
+The default swing mask affects off-beat steps. When a Machinedrum pattern's global swing is set to affect all steps, the per-step swing mask is hidden because editing it would not change playback.
+
+## Microtiming
+
+Microtiming nudges a step earlier or later relative to the grid.
+
+| Engine | Display behavior |
+| --- | --- |
+| Legacy Machinedrum step tracks | Timing is shown as offsets around the current speed's center tick. |
+| SPS-X and modern step tracks | Timing is stored and displayed as a signed offset, so early and late notes survive save/load correctly. |
+| External MIDI tracks | Each note or automation event can carry its own microtiming. |
+
+## Live Record
+
+Live record can capture trigs, notes, pitch input and parameter changes depending on the active page and track type. Start live record with the Machinedrum-style **[Rec]** + **[Play]** gesture.
+
+Recorded MIDI and device control data is quantized according to the current sequencer quantization setting where applicable.
+
+## What Is Stored
+
+Saving a grid slot stores the sequencer data for that slot.
+
+| Stored with the track | Notes |
+| --- | --- |
+| Sequence events | Trigs, notes, locks, automation and timing. |
+| Track settings | Length, speed, swing, mute mask and conditions. |
+| Arpeggiator settings | Stored per track in MCL 5.00. |
+| LFO settings | Stored per track in MCL 5.00. |
+| Sound/device state | Stored where supported, unless the slot's `SOUND` option is off during load. |
+
+Older projects are migrated on first load where supported so legacy conditions, mutes, microtiming and LFO data map into the MCL 5.00 format.

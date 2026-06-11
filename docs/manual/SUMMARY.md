@@ -21,7 +21,7 @@
 - [Load Page](sections/load-page.md)
 - [Chains And Queues](sections/chain-settings.md)
 - [MCL Sequencer](sections/internal-sequencer.md)
-- [MCL Sequencer Pages](sections/internal-sequencer-pages.md)
+- [Sequencer Pages](sections/internal-sequencer-pages.md)
 - [Step Editor Page](sections/md-step-edit.md)
 - [Sound Manager Page](sections/sound-browser.md)
 - [LFO Page](sections/lfo-page.md)

@@ -1,157 +1,163 @@
 # Step Editor Page
 
-The Step Editor (StepEdit) page is used to program MCL's internal sequencer for a selected MD track and is fully integrated with the MD's pattern editing user interface.
+The Step Editor programs primary step tracks. On classic MegaCommand this is the Machinedrum step sequencer view. On SPS-X, TBD and desktop/hosted builds it also covers the modern step engines used by the active primary device.
 
+Open it from Page Select with:
 
-![step](../assets/images/step.png)
+```text
+[Bank Group] + [Trig 5]
+```
 
+Pressing **[Rec]** can also toggle into the Step Editor from elsewhere in MCL.
 
-_Press **[Bank Group] + [Trig 5]** key to open the StepEdit page._
+## What You See
 
+The page shows 16 steps at a time. A 64-step track is edited as four pages of 16 steps.
 
-_Pressing the MD's **[Rec]** button will allow you to toggle in and out of the StepEdit page from anywhere within MCL._
+| Display item | Meaning |
+| --- | --- |
+| Step row | The visible 16-step page for the selected track. |
+| Current mask | Whether the trigs edit `TRIG`, `MUTE`, `SWING` or `SLIDE`. |
+| Lock markers | Steps with parameter locks are marked separately from plain trigs. |
+| Play position | The running step flashes while the sequencer plays. |
+| Info row | Current track, model/device, edit mask and selected step values. |
 
-
-![step action](../assets/images/step_action.png)
-
+## Controls
 
 | Control | Assignment |
 | --- | --- |
-| Encoder 1 | Trig Condition |
-| Encoder 2 | Micro-Timing |
-| Encoder 3 | Track Length |
-| Encoder 4 | Note |
-| Save / No | Toggles REC |
-| Page | |
-| Load / Yes | Rotate Sequencer Page | Apply All |
-| Shift | Track Menu |
+| Encoder 1 | Condition for held steps. |
+| Encoder 2 | Microtiming for held steps. |
+| Encoder 3 | Track length. |
+| Encoder 4 | Pitch/note for held steps where the track supports pitch. |
+| **[Trig]** | Add, select or remove steps in the current mask. |
+| **[Scale]** | Move between 16-step pages. |
+| **[Global]** | Hold for the Track Menu. |
+| **[Yes/Enter]** while holding a step | Preview the step. |
+| **[No/Exit]** while holding steps | Toggle step mute; if a mask view is open, close the mask view first. |
+| **[Copy]**, **[Clear]**, **[Paste]** | Step, page or track operations depending on what is held. |
 
+## Adding And Removing Steps
 
-## GUI
+In `TRIG` edit mode:
 
+1. Press an empty **[Trig]** key to add a step.
+2. Hold the step to edit condition, microtiming, pitch or locks.
+3. Quickly press and release an existing step to remove it.
 
-- The StepEdit page leverages the MD's GUI for editing.
-- Trig editing mode can be switched between Lock, Mute and Slide by pressing **[Function] + [Bank B/C/D]**respectively .
-- On MCL the 16 steps of the current page for the current track are displayed on the bottom row.
-- The **[Trig]** buttons on the MD correspond to the visible steps. Pressing a **[Trig]** will add the step. A press followed by quick release will remove the step.
-- Trig Conditions and Micro-Timing settings are per step and are set by holding **[Trig]** and pressing the MD's **[Up/Down]** keys to change Trig Conditions and **[Left/Right]** for Micro-Timing.
-- Parameter locks can be added to a step by selecting a **[Trig]** and then rotating the corresponding MD **[Encoder]**.
-- When a parameter lock is set, the step LED will blink on the MD, and the MCL will display a filled rectangle above step trig on screen.
-- Trigless locks are possible by pressing a **[Trig]** with parameter lock data, the step LED will become unlit and blink, signifying only lock data will be sent.
-- Parameter locks can be removed individually by selecting a **[Trig]** and tapping the MD's matching **[Encoder]**.
-- Hold the **[Trig]** and press **[Clear]** to clear a step.
-- Parameter lock transmission can be disabled for any step by removing the lock step in LOCK editor mode.
-- Trigs and parameter lock transmission can be temporarily disabled by adding a step in MUTE editor mode.
-- A step can be muted/unmuted by holding down the matching **[Trig]** key and pressing **[Exit/No]**.
-- A step can be previewed by holding down the matching **[Trig]** key and pressing **[Yes]**.
-- The visible sequencer page can be toggled by pressing or the MD's **[Scale]** key.
-- The steps of the sequence can be shifted left or right by holding the MD's **[Function]** key and pressing **[Left]** or **[Right]**
-- The MD's **[Clear/Copy/Paste]** functions work across Track, Sequencer Page and Step.
-- The Length and Speed of the track can be set via the MD's Scale menu by pressing **[Function]** followed by **[Scale]**.
+If a step contains parameter locks, removing the trig can leave the lock data as a trigless lock where the track engine supports that behavior.
 
+## Edit Masks
 
-## Trig Conditions
+The Step Editor has four main masks.
 
+| Mask | What trig keys edit |
+| --- | --- |
+| `TRIG` | Notes/trigs and trigless locks. |
+| `MUTE` | Per-step mute mask. |
+| `SWING` | Which steps receive the track swing amount. |
+| `SLIDE` | Which locked steps slide toward the next lock of the same parameter. |
 
-- L1,L2,L3,L4,L5,L6,L7,L8 (For Ln, step is only triggered after every n iterations of track)
-- P10, P25, P50, P75, P90 (For Pxx, step has a xx percent chance of being triggered)
-- 1S. (One Shot trig, step is only triggered once after load)
-- Each trig condition above has a twin denoted by the \^ character e.g L1\^, L2\^, P1\^. When these condition modes are selected, parameter locks and slides must also obey the trig condition.
+Shortcuts:
 
+| Shortcut | Mask |
+| --- | --- |
+| **[Function]** + **[Mute/Bank A]** or **[Function]** + **[Accent/Bank B]** | `MUTE` |
+| **[Function]** + **[Swing/Bank C]** | `SWING` |
+| **[Function]** + **[Slide/Bank D]** | `SLIDE` |
 
-## Micro-Timing
+Press the same shortcut again or press **[No/Exit]** to return to `TRIG` editing.
 
-When editing Micro-timing, the uTIMING window will be visible on both the MC and MD. The number of divisions between notes is dependent on the track's Speed setting.
+## Conditions
 
-_The MC's sequencer has a resolution of 1/192th per quarter notes_
+Hold a step and use Encoder 1 or **[Up]** / **[Down]** to change its condition.
 
+| Label | Meaning |
+| --- | --- |
+| `---` | Always play. |
+| `10%`, `25%`, `33%`, `50%`, `66%`, `75%`, `90%` | Probability that the step plays. |
+| `1SH` | One-shot; plays once, then waits to be rearmed. |
+| `1ST` | First cycle/pass only. |
+| `!1S` | Not first cycle/pass. |
+| `FIL` | Plays when fill is active for the track. |
+| `!FL` | Plays when fill is not active. |
+| `PRE` | Plays when the previous trig condition fired. |
+| `!PR` | Plays when the previous trig condition did not fire. |
+| `NEI` | Plays when the neighbouring previous track fired. |
+| `!NE` | Plays when the neighbouring previous track did not fire. |
+| `x:y` | Plays on pass `x` of a `y`-pass cycle. |
 
-![utiming1](../assets/images/utiming1.png)
+Hold **[Function]** while pressing **[Up]** or **[Down]** on a held step to toggle the condition marker. A marked condition also applies to related lock/slide behavior.
 
+## Microtiming
 
-## Track Speed & Length
+Hold a step and use Encoder 2 or **[Left]** / **[Right]** to move it earlier or later.
 
-All sequencer tracks can be played at an independent speed and length.
+| Engine | Behavior |
+| --- | --- |
+| Legacy Machinedrum | The timing window follows the track speed's tick grid. |
+| SPS-X and modern step tracks | Microtiming is signed, so negative values move earlier and positive values move later. |
 
+MCL stores signed microtiming in current projects and migrates older timing data where supported.
 
-The chosen speed can be one of either: 1x, 2x, 3/2x, 3/4x, 1/2x, 1/4x, 1/8x.
-Triplets can be achieved using either 3/2x, 3/4x.
+## Parameter Locks
 
+Hold one or more steps and move a device parameter to write locks to those steps.
 
-- The MD's "Scale Setup" Menu accessible via **[Func] + [Scale]** can be used to quickly change the track speed & length. If the "Scale Setup" menu is opened outside of Step Edit mode, the speed & length changes will apply to all 16 tracks.
+| Action | Result |
+| --- | --- |
+| Hold step + move parameter | Add or update a parameter lock. |
+| Hold step + press the matching encoder button | Add a lock at the current parameter value, or clear an existing lock for that parameter. |
+| Use `SLIDE` mask | Make compatible parameter locks slide toward the next lock of the same parameter. |
+| Use Track Menu `CLEAR` lock options | Clear lock data without clearing the whole track. |
 
+SPS-X tracks can address the extended SPS-X parameter set when the connected firmware exposes it.
 
-## Change Edit Mode
+## Swing
 
-By default, the Step Edit page opens in Trig Edit mode. It is possible to change this edit mode to program the track's sequencer data for either Trigs, Locks, Slides or Mutes.
+Open the Track Menu and set `SWING` to choose the track's swing percentage. The value is stored with the track.
 
+Use the `SWING` mask to choose which steps receive swing. The default mask swings off-beat steps.
 
-- Edit mode can be toggled between Trig, Lock, Mute and Slide by pressing the MD's **[Func] + [Bank B/C/D]** keys.
+If the Machinedrum pattern is set to swing every step globally, the Step Editor hides the per-step swing mask because it would not affect playback.
 
+## Mutes And Fill
 
-## Clearing a Sequence
+Step mutes are stored with the track and survive save/load. Use the `MUTE` mask or hold a step and press **[No/Exit]**.
 
+Fill conditions use the track's fill state:
 
-- Enter [**Func]** + **[Clear]** to clear the current track when [**Rec**] LED lit, or all tracks when [**Rec]** LED unlit. (repeat the input to UNDO)
+| Condition | Plays when |
+| --- | --- |
+| `FIL` | Fill is active for the track. |
+| `!FL` | Fill is inactive for the track. |
 
+Track fill states are edited from the Mixer Page or from the enhanced Machinedrum Mute Menu when it is switched to Fill mode.
 
-## Rotate Track Page
+## Copy, Clear And Paste
 
-Each track consists of 4 pages of 16 steps, for a total of 64 steps per track.
+| Gesture | Scope |
+| --- | --- |
+| Hold a step + **[Copy]**, **[Clear]** or **[Paste]** | One step. |
+| **[Scale]** + **[Copy]**, **[Clear]** or **[Paste]** | Visible 16-step page. |
+| **[Copy]**, **[Clear]** or **[Paste]** with no step held | Current track. |
+| Track Menu `COPY`, `CLEAR`, `PASTE` | Track or all-track operations. |
 
+Step copy/paste carries trig state, mute state, condition, microtiming and compatible locks.
 
-- The MD's **[Scale]** button can be used to rotate the visible track page.
+## Track Length And Speed
 
+Use Encoder 3 for quick length changes, or use Track Menu `LENGTH` and `SPEED`.
 
-## Chromatic Step Edit
+| Setting | Values |
+| --- | --- |
+| Length | 1-64 steps for primary step tracks. |
+| Speed | `1x`, `2x`, `3/2x`, `3/4x`, `1/2x`, `1/4x`, `1/8x`. |
 
-The Step Edit allows you to adjust a step's pitch by setting a note value.
-
-
-- Press and hold trigger button(s) on the MD. Adjusting **`Encoder 4 `** will allow you change the note value of the selected steps.
-- An external MIDI keyboard connected on Port 2, can be used to select the note.
-- A keyboard will be drawn on the display, showing the current note.
-
-
-![step keyboard](../assets/images/step_keyboard.png)
-
-
-## Slides
-
-Each parameter lock can be made to slide up or down to the nearest step containing a parameter lock of the same type.
-
-
-To add slides to your sequence change the Edit Mode to "SLIDE" (see above).
-
-## Mutes
-
-Individual steps of your sequence can be muted, by placing a mute trig at the corresponding position. Mutes are reset on sequencer restart.
-
-
-To add mutes to your sequence change the Edit Mode to "MUTE" (see above).
-
-
-Alternatively, from Pattern Edit, a step can be muted/unmuted by holding down the matching **[Trig]** key and pressing **[Exit/No]**.
-
-
-## Shift Sequence
-
-The sequence of an individual track can be shifted left or right. Press **[Function]** + **[Left/Right]** on the MD.
-
-You can also shift the entire pattern left or right from the SHIFT menu via [**Global**].
-
-
-Similarly you can reverse a track's sequence by pressing [**Function**] + [**Up**]
+Hold **[Yes/Load]** while applying speed, length or swing from the Track Menu to update all compatible primary step tracks.
 
 ## Live Record
 
-Live Record mode can be activated using the MD's **[Rec]** + [**Play**] function. The [**Rec**] LED will then blink to signify live recording is active. Both trig and parameter locks can be recorded simultaneously.
+Start live record with **[Rec]** + **[Play]**. While recording, step trigs and compatible parameter changes are written into the active track at the current play position.
 
-To record from an external DrumPad or Keyboard:
-
-
-- Ensure that the **Config-->MIDI-->CTRL PORT** is set to the MIDI port your external DrumPad/keyboard is connected.
-- Set **Config-->MIDI-->MD MIDI-->TRIG CHAN** from INT (internal) to a desired MIDI channel or OMNI (all channels).
-
-
-Press [**Rec**] to end live recording and return to step edit mode.
+Press **[Rec]** again to leave live record.
