@@ -1,68 +1,81 @@
 # Arpeggiator Page
 
-The Arpeggiator Page allows control of each track's dedicated Arpeggiator. Arpeggiator settings are not retained when saving or loading tracks, the generated sequence can however be recorded to the track in realtime.
+The Arpeggiator Page edits the arpeggiator attached to the current sequencer track. MCL 5.00 stores arpeggiator settings with the track when the track is saved to the grid.
 
+Open it from the Chromatic Page Track Menu:
 
-![chro menu](../assets/images/chro_menu.png)
+```text
+[Global] > ARPEGGIATOR
+```
 
+The page returns to the previous page when you press **[Yes/Enter]**, **[No/Exit]** or one of the panel buttons.
 
-_To enter the Arpeggiator Page: From the Chromatic Page, enter the Track Menu by holding**[Global]** then select **"**Arpeggiator**"**._
-
-
-![arp page](../assets/images/arp_page.png)
-
-
-The Arpeggiator has 3 states of operation:
-
-
-- -- (Off)
-- ON
-- LATCH (Notes are held down)
-
-
-When enabled, the arpeggiator will play when the sequencer is running.
+## Controls
 
 | Control | Assignment |
 | --- | --- |
-| Encoder 1 | ARP State (ARP)) |
-| Encoder 2 | Mode |
-| Encoder 3 | Rate (speed) |
-| Encoder 4 | Range (octave) |
-| Save / No | |
-| Page | |
-| Load / Yes | |
-| Shift | |
+| Encoder 1 | Arpeggiator state. |
+| Encoder 2 | Arpeggiator mode. |
+| Encoder 3 | Rate. |
+| Encoder 4 | Range in octaves. |
+| **[Trig]** / keyboard input | Edit the current note set through the Chromatic Page input handler. |
 
+## Arpeggiator State
 
-## Arpeggiator Modes
+| State | Label | Behavior |
+| --- | --- | --- |
+| Off | `--` | Arpeggiator disabled. |
+| On | `ON` | Arpeggiates the current held note set. |
+| Latch | `LAT` | Preserves the note set after keys are released. |
+| Lock | `LCK` | Locks the current note set so accidental note selection does not replace it. |
 
+`LCK` is new in MCL 5.00 and is useful when performing from the Chromatic Page while keeping an arpeggio pattern fixed.
 
-| MODE | Notes played in order: |
+## Rate
+
+The rate encoder controls how the arpeggiator advances.
+
+| Rate | Behavior |
 | --- | --- |
-| UP | Ascending |
-| DOWN (DWN) | Descending |
-| UP DOWN (UD) | Ascending Descending |
-| DOWN UP (DU) | Descending Ascending |
-| UP AND DOWN (UND) | Ascending and then Descending |
-| DOWN AND UP (DNU) | Descending and then Ascending |
-| CONVERGE (CNV) | Converging |
-| DIVERGE (DIV) | Diverging |
-| CONVERGE AND DIVERGE (CND) | Converging Diverging |
-| PINKY UP (PU) | Ascending with first note played before every other note |
-| PINKY DOWN (PD) | Descending with first note played before every other note |
-| THUMB UP (TU) | Ascending with last note played before every other note |
-| THUMB DOWN (TD) | Descending with last note played before every other note |
-| UP PINKY (UPP) | Ascending with only first note increased in octave |
-| DOWN PINKY (DP) | Descending with only first note increased in octave |
-| UP 2ND (U2) | Ascending with every second note increased in octave. |
-| DOWN 2ND (D2) | Descending with every second note increased in octave. |
-| RANDOM (RND) | Static random sequence |
-| RANDOM (RN2) | True random sequence |
+| `TRG` | Advance only when the related sequencer track fires a trig. |
+| Numeric values | Advance at the selected clocked rate. |
 
+`TRG` is useful when the arpeggio should follow the rhythm of the sequencer track instead of running continuously.
 
-## Arpeggiator Quantization
+## Range
 
-The Arpeggiator can be adjusted to commence play on beat, or on keypress by toggling the Sequencer Menu's QUANT option. Accessible by holding down **[Global]** in either the Sequencer or Chromatic pages.
+Range sets how many octaves the arpeggiator spans above the selected notes.
 
+Higher ranges create wider patterns, while `0` keeps the arpeggio inside the entered note set.
 
-![seq ptc quant](../assets/images/seq_ptc_quant.png)
+## Modes
+
+| Mode | Label | Notes played in order |
+| --- | --- | --- |
+| Up | `UP` | Ascending. |
+| Down | `DWN` | Descending. |
+| Up Down | `UD` | Ascending then descending. |
+| Down Up | `DU` | Descending then ascending. |
+| Up And Down | `UND` | Ascending and then descending with endpoint behavior distinct from `UD`. |
+| Down And Up | `DNU` | Descending and then ascending with endpoint behavior distinct from `DU`. |
+| Converge | `CNV` | From the outside notes toward the center. |
+| Diverge | `DIV` | From the center notes outward. |
+| Converge/Diverge | `CND` | Alternates converging and diverging motion. |
+| Pinky Up | `PU` | Ascending with the first note inserted before other notes. |
+| Pinky Down | `PD` | Descending with the first note inserted before other notes. |
+| Thumb Up | `TU` | Ascending with the last note inserted before other notes. |
+| Thumb Down | `TD` | Descending with the last note inserted before other notes. |
+| Up Pinky | `UPP` | Ascending with only the first note shifted up an octave. |
+| Down Pinky | `DP` | Descending with only the first note shifted up an octave. |
+| Up 2nd | `U2` | Ascending with every second note shifted up an octave. |
+| Down 2nd | `D2` | Descending with every second note shifted up an octave. |
+| Random | `RND` | Static randomized order. |
+| Random 2 | `RN2` | New random order over time. |
+
+## Quantization
+
+The Track Menu `QUANT` setting controls whether arpeggiator start timing is quantized or immediate. Access it by holding **[Global]** from a sequencer or Chromatic page.
+
+## Track Mutes And Transport
+
+Arpeggiator playback follows the related track's mute state and resets cleanly when transport starts. If the track is muted, arpeggiated notes are suppressed with the track.

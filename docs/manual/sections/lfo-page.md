@@ -1,97 +1,130 @@
 # LFO Page
 
-The MCL firmware is equipped with its own LFO modulation source, and controls both track parameters and master FX parameters.
+The LFO Page edits the LFO attached to the current sequencer track. In MCL 5.00, LFO data is stored per track when the track is saved to the grid.
 
-_LFO settings can be either stored or recalled by saving or loading to the corresponding Auxiliary track LFO slot._
+Open it from Page Select with:
 
+```text
+[Bank Group] + [Trig 6]
+```
 
-![lfo](../assets/images/lfo.png)
+The legacy `LF` auxiliary slot is no longer the main LFO storage model. Older project data is migrated where supported, with legacy LFO data copied into the current per-track format.
 
+## What An LFO Can Modulate
 
-_To enter the LFO Page: press and hold **[Bank Group]**, then press **[Trig 6]**._
+Each track LFO has two modulation outputs.
+
+| Destination type | Examples |
+| --- | --- |
+| Device parameters | Machinedrum, SPS-X, TBD or supported secondary-device parameters. |
+| Performance controllers | `PF1` through `PF4`. |
+| Other LFO tracks | LFO speed, depth 1 or depth 2. |
+| External/hosted MIDI targets | Supported generic MIDI, A4, MNM or hosted device parameters. |
+
+The available destinations follow the current Grid X / Grid Y device configuration.
+
+## Controls
 
 | Control | Assignment |
 | --- | --- |
-| Save / No | Toggle LFO ON/OFF |
-| Page | PageSelect |
-| Load / Yes | Toggle MOD/DST/OFS |
-| Shift | LFO Mode |
+| **[Load/Yes]** / panel button 4 | Cycle LFO subpages. |
+| **[Save/No]** / panel button 1 | Toggle the current LFO on or off. |
+| **[Global]** | Hold for the Track Menu. |
+| **[Function]** + **[Copy]** | Copy the current LFO track. |
+| **[Function]** + **[Clear]** | Clear the current LFO track; repeat to undo the clear. |
+| **[Function]** + **[Paste]** | Paste the copied LFO track. |
+| **[Scale]** | In trigger-mask modes, move between 16-step mask pages. |
+| **[Trig]** | In `TRG` or `1SH` mode, edit the LFO reset mask. |
 
+When using MD-style control input, **[Yes/Enter]** also toggles the LFO on/off.
 
-By default the LFO engine is deactivated. To toggle it ON, press **[YES]**.
+## Subpages
 
-## Modulation Source
+The LFO Page cycles through three subpages.
 
+| Subpage | Encoders | Purpose |
+| --- | --- | --- |
+| `LFO>DST` | Destination 1, parameter 1, destination 2, parameter 2. | Choose what the two LFO outputs modulate. |
+| `LFO>SET` | Mode, waveform, speed, multiplier. | Choose how the LFO runs. |
+| `LFO>DEP` | Depth 1, offset/value 1, depth 2, offset/value 2. | Set modulation amount and base values. |
 
-To cycle through the Modulation Source subpage press **[Up]**or **[Down]**. The modulation source shape, speed and depth can be controlled. The subpage index will show as ``LFO>MOD'' on the left information panel.
+Arrow keys move encoder focus on builds that support focused encoder editing.
 
+## Destination And Learn
 
-![lfo action](../assets/images/lfo_action.png)
+On `LFO>DST`, each output chooses a destination and parameter.
 
-
-| Control | Assignment |
+| Field | Meaning |
 | --- | --- |
-| Encoder 1 | Waveform |
-| Encoder 2 | LFO Speed |
-| Encoder 3 | Target 1 Depth |
-| Encoder 4 | Target 2 Depth |
+| `DEST` | Target track, performance controller, LFO track or device parameter group. |
+| `PAR` | Parameter within the selected destination. |
+| `---` | No destination. |
+| `LER` | Learn a destination/parameter from incoming or edited control data where supported. |
 
+Learning is useful when you do not want to browse parameter numbers manually. Set the destination empty and `PAR` to `LER`, then move the parameter you want to modulate.
 
-## Modulation Target
+## Mode
 
-To cycle to the Modulation Target subpage press **[Up]**or **[Down]**. The subpage index will show as ``LFO>DST'' on the left information panel.
+The `LFO>SET` mode field uses these labels:
 
-
-![lfo dest](../assets/images/lfo_dest.png)
-
-
-Only valid parameter types for the current target track will be shown for Encoder2/Encoder4. Master FX machines are regarded as individual tracks, each with its own modulation target parameter types. This extends the mastering capabilities of MD, so that one can use the LFOs to create sidechain-like effects etc.
-
-
-Destinations tracks M1-M16 correspond to MIDI channels 1 to 16 on port 2. Any MIDI CC parameter (0-127) can be modulated
-
-
-Destination Params can be learnt by setting DEST to "--" and setting PAR to LER, then turn the desired MD encoder or external MIDI controller.
-
-
-![lfo learn](../assets/images/lfo_learn.png)
-
-
-| Control | Assignment |
+| Mode | Behavior |
 | --- | --- |
-| Encoder 1 | Target Machine 1 |
-| Encoder 2 | Param Type 1 |
-| Encoder 3 | Target Machine 2 |
-| Encoder 4 | Param Type 2 |
+| `FRE` | Free-running LFO. |
+| `TRG` | Reset from the LFO trigger mask. |
+| `1SH` | One-shot reset from the trigger mask; the LFO runs through one cycle. |
+| `TRK` | Reset when the related sequencer track fires a trig. |
 
+In `TRG` and `1SH` modes, the trig keys edit the reset mask. The mask is shown as 16-step pages and follows the LFO track length.
 
-## LFO Operation Modes
+## Waveforms
 
+The LFO engine includes the current MDX-style shapes:
 
-The LFO engine operates in different modes, namely **FREE**, **TRIG**, **ONESHOT**.
-Tap **[Global]** to switch between them, enter **[Trigs]** for LFO resets in TRIG and ONE SHOT modes.
-
-
-- FREE: Free-running LFO.
-- TRIG: The LFO is reset on each active trig.
-- ONESHOT: The LFO is reset each active trig but only plays through one cycle
-
-
-## Parameter Offset
-
-
-| Control | Assignment |
+| Shape family | Examples |
 | --- | --- |
-| Encoder 1 | -- |
-| Encoder 2 | -- |
-| Encoder 3 | Offset 1 |
-| Encoder 4 | Offset 2 |
+| Centered waves | Triangle, saw, square/pulse, random, sine. |
+| Ramps | Linear and exponential ramps, plus reverse linear and reverse exponential. |
+| Step shapes | Step and linear-linear shapes. |
 
+The page draws a small waveform preview with a centerline where appropriate.
 
-![lfo offset](../assets/images/lfo_offset.png)
+## Speed And Multiplier
 
+`SPD` sets the base LFO speed. `MULT` scales that speed.
 
-The LFO modulation is relative to the destination parameter's original value (the LFO offset). The LFO offset will automatically be updated by adjusting the corresponding parameter on the MD's parameter page.
+| Multiplier | Meaning |
+| --- | --- |
+| `.01` | One-hundredth speed. |
+| `.1` | One-tenth speed. |
+| `.25` | Quarter speed. |
+| `.5` | Half speed. |
+| `1x` | Normal speed. |
+| `2x`, `4x`, `8x` | Faster speeds. |
 
+LFO speed can also be a modulation target, so one LFO can modulate another LFO's speed.
 
-When the LFO destination is external MIDI (M1->M16) the offset will be MIDI learnt from any matching received CC message. Alternatively the MIDI parameter offsets can be updated manually from the Offset sub page via OFS1 **`Encoder3`** and OFS2 **`Encoder4`**.
+## Depth And Offset
+
+On `LFO>DEP`, each output has a depth and an offset/base value.
+
+| Field | Meaning |
+| --- | --- |
+| `DEP1`, `DEP2` | Modulation depth for output 1 or output 2. |
+| Value knobs | Base/offset value for the destination parameter. |
+
+For centered waves, depth moves above and below the offset. For unipolar ramp-style waves, MCL keeps the modulation in the valid 0-127 parameter range.
+
+When a destination parameter changes externally and matches the LFO target, MCL can refresh the offset so modulation continues around the current value.
+
+## Track Menu
+
+The LFO Page uses a small Track Menu:
+
+| Entry | Function |
+| --- | --- |
+| `TRACK SEL` | Select the track whose LFO is being edited. |
+| `DEVICE` | Select primary or secondary device where available. |
+| `SPEED` | Set the LFO track's sequencer speed. |
+| `LENGTH` | Set the LFO trigger-mask length, up to 64 steps. |
+
+LFO data follows the selected track and is saved when that track is saved to the grid.
