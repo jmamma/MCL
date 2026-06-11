@@ -7,6 +7,16 @@ Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
 - User documentation
 - Installation instructions
 
+## Documentation
+
+The editable manual lives in [`docs/manual`](docs/manual). It is written in
+Markdown and built into a static GitHub Pages site with:
+
+```bash
+python3 tools/docs/validate_manual.py
+python3 tools/docs/build_manual_site.py
+```
+
 ## Platform Support
 
 MCL can now be run across different hardware platforms using PlatformIO.
