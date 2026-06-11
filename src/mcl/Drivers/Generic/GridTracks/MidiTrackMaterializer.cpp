@@ -3,6 +3,7 @@
 #if !defined(__AVR__)
 
 #include "MidiTrack.h"
+#include "PtcVoiceRouter.h"
 #include "../../A4/GridTracks/A4Track.h"
 #include "../../MNM/GridTracks/MNMTrack.h"
 #ifdef PLATFORM_TBD
@@ -50,7 +51,7 @@ DeviceTrack *materialize_midi_storage_track(DeviceTrack *storage,
   }
 
   MidiSeqTrackStorage stored_seq = seq_data;
-  if (stored_seq.channel >= 16) {
+  if (stored_seq.channel >= PTC_EXT_ROUTE_CHANNEL_END) {
     stored_seq.channel = tracknumber;
   }
   GridLink target_link = link;

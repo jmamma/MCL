@@ -4,6 +4,7 @@
 #if !defined(__AVR__)
 #include "MidiTrack.h"
 #include "MidiTrackMaterializer.h"
+#include "PtcVoiceRouter.h"
 #endif
 #ifdef PLATFORM_TBD
 #include "../../TBD/TBDTrack.h"
@@ -157,8 +158,9 @@ DeviceTrack *ExtTrack::materialize_legacy_ext(DeviceTrack &track,
     midi_seq_data.clear_storage();
     midi_seq_data.mod() = old_mod_data;
     midi_seq_data.import_legacy_ext(old_seq_data, old_link);
-    midi_seq_data.channel =
-        old_seq_data.channel < 16 ? old_seq_data.channel : tracknumber;
+    midi_seq_data.channel = old_seq_data.channel < PTC_EXT_ROUTE_CHANNEL_END
+                                ? old_seq_data.channel
+                                : tracknumber;
     return materialize_midi_storage_track(&track, track_type, old_link,
                                           midi_seq_data, &old_load_fade,
                                           tracknumber);

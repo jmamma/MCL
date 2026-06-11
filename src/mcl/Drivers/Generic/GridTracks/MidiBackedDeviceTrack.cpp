@@ -4,6 +4,7 @@
 
 #include "MidiTrack.h"
 #include "MidiTrackMaterializer.h"
+#include "PtcVoiceRouter.h"
 #include "../Sequencer/StepSeqDefines.h"
 #include <string.h>
 
@@ -30,7 +31,7 @@ void MidiBackedDeviceTrack::apply_seq_defaults(uint8_t tracknumber,
     seq_data.length = link.length ? link.length : 16;
   }
   seq_data.speed = midi_device_track_valid_speed(seq_data.speed);
-  if (seq_data.channel >= 16) {
+  if (seq_data.channel >= PTC_EXT_ROUTE_CHANNEL_END) {
     seq_data.channel = tracknumber;
   }
 
@@ -103,7 +104,7 @@ void MidiBackedDeviceTrack::load_seq_data(SeqTrack *seq_track) {
     seq_data.length = link.length ? link.length : 16;
   }
   seq_data.speed = midi_device_track_valid_speed(seq_data.speed);
-  if (seq_data.channel >= 16) {
+  if (seq_data.channel >= PTC_EXT_ROUTE_CHANNEL_END) {
     seq_data.channel = midi_track->track_number;
   }
 
@@ -126,8 +127,9 @@ void MidiBackedDeviceTrack::import_legacy_ext_storage(
   seq_data.clear_storage();
   seq_data.mod() = old_mod_data;
   seq_data.import_legacy_ext(old_seq_data, old_link);
-  seq_data.channel =
-      old_seq_data.channel < 16 ? old_seq_data.channel : tracknumber;
+  seq_data.channel = old_seq_data.channel < PTC_EXT_ROUTE_CHANNEL_END
+                         ? old_seq_data.channel
+                         : tracknumber;
 }
 
 bool MidiBackedDeviceTrack::can_materialize_as(uint8_t track_type) {
@@ -162,7 +164,7 @@ DeviceTrack *MidiBackedDeviceTrack::materialize_as(uint8_t track_type,
   GridLink old_link = link;
   MidiSeqTrackStorage old_seq_data = midi_seq_storage();
   TrackLoadFadeData old_load_fade = load_fade;
-  if (old_seq_data.channel >= 16) {
+  if (old_seq_data.channel >= PTC_EXT_ROUTE_CHANNEL_END) {
     old_seq_data.channel = tracknumber;
   }
 

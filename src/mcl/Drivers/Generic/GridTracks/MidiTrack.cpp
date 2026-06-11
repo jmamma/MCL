@@ -4,6 +4,7 @@
 
 #include "EmptyTrack.h"
 #include "MidiTrackMaterializer.h"
+#include "PtcVoiceRouter.h"
 #include "../Sequencer/StepSeqDefines.h"
 #include <string.h>
 
@@ -32,7 +33,7 @@ void MidiTrack::apply_seq_defaults(uint8_t tracknumber, SeqTrack *seq_track) {
     seq_data.length = link.length ? link.length : 16;
   }
   seq_data.speed = midi_track_valid_speed(seq_data.speed);
-  if (seq_data.channel >= 16) {
+  if (seq_data.channel >= PTC_EXT_ROUTE_CHANNEL_END) {
     seq_data.channel = tracknumber;
   }
 
@@ -101,7 +102,7 @@ void MidiTrack::load_seq_data(SeqTrack *seq_track) {
     seq_data.length = link.length ? link.length : 16;
   }
   seq_data.speed = midi_track_valid_speed(seq_data.speed);
-  if (seq_data.channel >= 16) {
+  if (seq_data.channel >= PTC_EXT_ROUTE_CHANNEL_END) {
     seq_data.channel = midi_track->track_number;
   }
 

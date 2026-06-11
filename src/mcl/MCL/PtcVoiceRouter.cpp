@@ -128,9 +128,10 @@ uint8_t PtcVoiceRouter::release_voice(uint8_t pitch, uint8_t track_number,
 
 void PtcVoiceRouter::note_on(uint8_t route_channel, uint8_t note,
                              MidiUartClass *uart_) {
+  (void)uart_;
   uint8_t track = ptc_route_channel_track(route_channel);
   if (SeqPtcTrackRef::is_midi_voice_track(track)) {
-    SeqPtcTrackRef::trigger_voice(track, note, 255, uart_);
+    SeqPtcTrackRef::trigger_voice(track, note);
     return;
   }
 
@@ -138,7 +139,7 @@ void PtcVoiceRouter::note_on(uint8_t route_channel, uint8_t note,
   if (voice >= PTC_GROUP_TRACKS) {
     return;
   }
-  SeqPtcTrackRef::trigger_voice(voice, note, 255, uart_);
+  SeqPtcTrackRef::trigger_voice(voice, note);
 }
 
 void PtcVoiceRouter::note_off(uint8_t route_channel, uint8_t note) {
@@ -157,6 +158,7 @@ void PtcVoiceRouter::note_off(uint8_t route_channel, uint8_t note) {
 
 void PtcVoiceRouter::control_change(uint8_t route_channel, uint8_t cc,
                                     uint8_t value, MidiUartClass *uart_) {
+  (void)uart_;
   if (cc < 16 || cc > 39) {
     return;
   }
@@ -165,13 +167,13 @@ void PtcVoiceRouter::control_change(uint8_t route_channel, uint8_t cc,
   uint8_t param = cc - 16;
   uint16_t mask = ptc_groups.mask_for_track(track);
   if (!mask) {
-    SeqPtcTrackRef::set_param(track, param, value, uart_, true);
+    SeqPtcTrackRef::set_param(track, param, value, nullptr, true);
     return;
   }
 
   for (uint8_t n = 0; mask; n++, mask >>= 1) {
     if (mask & 1) {
-      SeqPtcTrackRef::set_param(n, param, value, uart_, true);
+      SeqPtcTrackRef::set_param(n, param, value, nullptr, true);
     }
   }
 }
