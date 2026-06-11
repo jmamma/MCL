@@ -57,6 +57,8 @@ Use `OFF` if you want saved MD track levels to remain untouched.
 
 The linked sample bank is stored with the project configuration.
 
+MCL sends the sample-bank load when the project is loaded and a Machinedrum or SPS-compatible Machinedrum driver is the primary grid device. The connected Machinedrum must support +Drive sample-bank switching.
+
 ## Machinedrum MIDI Input
 
 Machinedrum chromatic, trig and polyphonic input behavior is configured from:

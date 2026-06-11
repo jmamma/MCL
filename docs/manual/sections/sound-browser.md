@@ -1,53 +1,45 @@
 # Sound Manager Page
 
-Machinedrum Sound presets can be stored via the Sound Manager page. A sound preset includes a track's machine assignment, and it's associated parameters. It can consist of machine settings from a single track, or two tracks linked by a TrigGroup.
+The Sound Manager saves and loads Machinedrum sound presets. It is separate from the Sample Manager: sounds store machine setup and parameters, while samples store audio data.
 
+Open it from a Machinedrum step track:
 
-Sound Presets are stored on the MegaCommand's SD Card as a $.snd$ file type.
+**[Global] > SOUND**
 
+## What A Sound Contains
 
-![sound manager](../assets/images/sound_manager.png)
+A sound preset stores the active Machinedrum track's machine assignment and parameters. If the track uses a Trig Group to trigger another track, the linked track's machine settings are stored with it so the pair can be recalled together.
 
+Sound files use the `.snd` extension and are stored under:
 
-_The Sound Manager is accessible from the Sequencer menu, accessible by holding **[Global]** and selecting "Sound" from the Step Edit page._
+`/Sounds`
 
+## Browser Controls
 
-## Navigating the Sound Manager Page
+| Control | Action |
+| --- | --- |
+| **[Up]** / **[Down]** | Move through folders and `.snd` files. |
+| **[Yes]** / **[Load/Yes]** | Enter a folder, save from `[SAVE]`, or load the selected sound. |
+| **[No]** | Cancel or return from the browser. |
+| Hold **[Global]** | Open the file menu. |
 
+The Sound Manager filters the file list to `.snd` files and folders.
 
-![sound browser page](../assets/images/sound_browser_page.png)
+## Saving A Sound
 
+1. Select the Machinedrum track you want to capture.
+2. Open the Sound Manager from the Track Menu.
+3. Select `[SAVE]`.
+4. Enter a sound name.
 
-- Use the **[Up]** and **[Down]** arrow keys to scroll through.
-- Press **[Enter/Yes]** to enter a directory, or load a sound to the current track.
-- Press **[Exit/No]** to exit/cancel.
-- Press and hold **[Global]** to create a new folder, delete or rename a sound.
+MCL suggests a short name from the kit name and machine type. The sound is written to the current `/Sounds` folder.
 
+## Loading A Sound
 
-Note that the Sound Manager will filter the directory content for file $.snd$ file types.
+Select a `.snd` file and press **[Yes]**. MCL loads the sound into the current Machinedrum track.
 
+If the sound contains a linked Trig Group pair, MCL also loads the linked track data so the paired sound is restored together.
 
-## Saving Sound Presets
+## File Menu
 
-To save a **SOUND**:
-
-
-- Select the desired track on the MD.
-- Select [SAVE]
-- From within the MD, two tracks can be linked by configuring the TrigGroup settings on one, to trigger the other. When two tracks are linked, both the source and destination track machine settings will be stored together to form a single sound.
-
-
-## Loading Sound Presets
-
-To load a Sound Preset, select the sound file the from the file browser panel and press **[Enter/Yes]**. The sound will be transferred to the active track of the Machinedrum. If a sound consists of two tracks (linked by TrigGroup), the adjacent track will also be loaded with the sound preset data.
-
-
-## Delete or Rename Sounds:
-
-
-![file menu](../assets/images/file_menu.png)
-
-
-- From within the Sound Browser, press and hold **[Global]** to access the file options menu.
-- From the file options menu, you may delete or rename sound files or create new directories.
-- Use the encoder to make your selection, release **[Global]** to activate your choice.
+Hold **[Global]** to create folders, rename sounds or delete entries. Bulk sample-transfer actions are intentionally not available here; use the Sample Manager for WAV/SYX transfer.

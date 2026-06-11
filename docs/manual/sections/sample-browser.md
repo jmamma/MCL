@@ -1,93 +1,79 @@
 # Sample Manager Page
 
-Samples can be transferred to and received from the Machinedrum via the Sample Manager Page. Two file types are supported:
+The Sample Manager transfers samples between the Machinedrum UW sample memory and the MCL SD card.
 
+Open it with:
 
-- **WAV** -- (UW models only) $.wav$ PCM samples.
-- **SYSEX** -- (UW models only) $.syx$ Midi SDS samples, this is the format of the official Machinedrum sound packs.
+**[Bank Group] + [Trig 9]**
 
+Supported file types:
 
-![sample manager](../assets/images/sample_manager.png)
+| Type | Use |
+| --- | --- |
+| `.wav` | PCM WAV samples. |
+| `.syx` | MIDI SDS sample dumps, including official Machinedrum sample-pack files. |
 
+Sample transfer requires a Machinedrum UW model for sample playback/storage.
 
-_To enter the Sound Manager Page: press and hold **[Global]**, then press **[Trig 9]**._
+## File Locations
 
+MCL creates these SD-card folders:
 
-## Navigating the Sound Browser Page
+| Folder | Contents |
+| --- | --- |
+| `/Samples/WAV` | WAV files and received samples. |
+| `/Samples/SYX` | SDS/SysEx sample files. |
 
+The browser filters the file list to `.wav` and `.syx` files. Folders are shown so you can organize sample sets.
 
-![sample browser page](../assets/images/sample_browser_page.png)
+## Browser Controls
 
+| Control | Action |
+| --- | --- |
+| **[Up]** / **[Down]** | Move through entries. |
+| **[Yes]** / **[Load/Yes]** | Enter a folder, start receive from `[RECV]`, or send the selected file. |
+| **[No]** | Cancel, leave a picker, or move back depending on the current browser state. |
+| Hold **[Global]** | Open the file menu. |
 
-- Use the **[Up]** and **[Down]** arrow keys to scroll through.
-- Press **`Enter/Yes`** to enter a directory, or load a sound to the current track.
-- Press **`Exit/No`** to exit/cancel.
-- Press and hold **`Global`** to create a new folder, delete or rename a sound.
+The file menu can create folders, rename files, delete files, and run bulk sample send/receive when the `[RECV]` action row is selected.
 
+## Receiving One Sample
 
-Note that the Sample Manager will filter the directory content for $.wav$ $.syx$ file types.
+1. Select `[RECV]`.
+2. Choose a Machinedrum sample slot from the slot list.
+3. Enter or confirm the filename.
+4. MCL receives the SDS dump, converts it to WAV, and saves it in the current folder.
 
+The slot list shows ROM slots first. RAM slots are shown as `R1` through `R4` where the connected UW model reports them.
 
-## Receiving Samples
+## Sending One Sample
 
-To receive a **WAV** sample from the MD:
+Select a `.wav` or `.syx` file and press **[Yes]**. MCL opens the Machinedrum slot picker, asks for overwrite confirmation, and sends the file to the chosen slot.
 
+For WAV files whose names start with two digits, a single-file send strips the leading two digits from the sample name sent to the Machinedrum. This keeps numbered bulk-transfer filenames readable on the MD.
 
-- Select [RECV].
-- The file browser panel will now display the sample slots in the MD, with ROM slots first, and RAM slots (shown as R1-R4) in the end.
-- Select the slot to receive sample from.
-- The SDS dump will be converted to a PCM wave file on the fly, and saved to the current folder on the micro SD card.
+## Bulk Receive And Send
 
+Bulk actions are available from the file menu while the `[RECV]` row is highlighted.
 
-## Transferring Samples
+| Action | Result |
+| --- | --- |
+| `RECV ALL` | Receives occupied Machinedrum sample slots into the current folder. |
+| `SEND ALL` | Sends numbered WAV files from the current folder back to their matching slots. |
 
-To transfer, select the file the from the Sample Manager. The display will now show the ROM slots availble in the MD, and you can select one slot to send the sample to.
+Bulk receive prefixes filenames with a two-digit slot number, such as `01KICK.wav`. Bulk send uses that prefix to choose the destination slot. Files without a two-digit prefix are skipped by bulk send.
 
+## Transfer Notes
 
-![rom select](../assets/images/rom_select.png)
+Sample transfers use the configured Machinedrum MIDI port. If external MIDI clock is present, MCL temporarily protects the transfer path where required by the platform.
 
+Press the Machinedrum **[No]** key repeatedly to cancel a transfer.
 
-## Bulk Sample Load and Receive
+Loop points from received looped SDS samples are stored in the saved WAV file. MCL's WAV reader also handles common non-standard WAV chunk layouts.
 
-To send or receive multiple WAVs, press and hold **[Global]** to access the **Send All / Recv All** functions which will transfer files from/to the current folder.
+## WAV File Guidelines
 
-
-- When receiving, samples are saved to the current directory.
-- Sample names are prefixed with a 2 digit slot number. This 2 digit number is used to preserve sample order when re-uploading. (Therefore, ROM positions can be saved and recalled for each project.)
-- Sample names that do not start with a slot number will be excluded from bulk upload.
-
-
-## Cancelling Transfer
-
-Sample transfers between can be cancelled by pressing the MD's **[No]** key.
-
-
-## Delete or Rename Samples
-
-
-![file menu](../assets/images/file_menu.png)
-
-
-_From within the Sample Manager, press and hold **[Global]** to access the file options menu._
-
-
-From the file options menu, you may delete or rename sound files or create new directories.
-
-
-Use the encoder to make your selection, release **[Global]** to activate your choice.
-
-## Preparing and Transferring Files With a Computer
-
-Using an appropriate adaptor, you can mount the SD card as a drive on your computer.
-
-
-**WAV** files must meet the following requirements:
-
-
-- Filename up to 31 characters including extension. (When loaded into ROM, MD will truncate this to the first two and last two characters of the filename before the extension.)
-- Sample speeds from 4kHz to 48kHz, ideally 44100Hz or 22050Hz to avoid resampling
-- Any bit depth is accepted (MD stores samples at 12bit)
-
-
-\
-MD UW only plays back mono samples.
+- Use mono WAV files for Machinedrum UW playback.
+- Sample rates from 4 kHz to 48 kHz are accepted; 44.1 kHz and 22.05 kHz are typical choices.
+- Common bit depths are accepted and converted for the Machinedrum's sample format.
+- Keep filenames short enough for the SD browser and the Machinedrum sample-name display.

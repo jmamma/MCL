@@ -26,7 +26,7 @@ Referenced legacy images not present during migration:
 - [x] Update polyphony/chromatic documentation for `POLY MODE` and multi-timbral behavior.
 - [x] Update mixer/performance documentation for mute/fill modes and performance-state fill storage.
 - [x] Update piano roll documentation for selection, zoom, copy/paste, and expanded MIDI locks.
-- [ ] Update sample browser, sound browser, WAV designer, RAM, and MD samplebank-linking sections.
+- [x] Update sample browser, sound browser, WAV designer, RAM, and MD samplebank-linking sections.
 - [ ] Replace stale screenshots with SPS/MCL headless captures where possible.
 
 ## Organisation Notes
