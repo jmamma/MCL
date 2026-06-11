@@ -155,4 +155,29 @@ void PtcVoiceRouter::note_off(uint8_t route_channel, uint8_t note) {
   SeqPtcTrackRef::release_voice(voice);
 }
 
+void PtcVoiceRouter::control_change(uint8_t route_channel, uint8_t cc,
+                                    uint8_t value, MidiUartClass *uart_) {
+  if (cc < 16 || cc > 39) {
+    return;
+  }
+
+  uint8_t track = ptc_route_channel_track(route_channel);
+  uint8_t param = cc - 16;
+#if defined(__AVR__)
+  SeqPtcTrackRef::set_param(track, param, value, uart_, true);
+#else
+  uint16_t mask = ptc_groups.mask_for_track(track);
+  if (!mask) {
+    SeqPtcTrackRef::set_param(track, param, value, uart_, true);
+    return;
+  }
+
+  for (uint8_t n = 0; mask; n++, mask >>= 1) {
+    if (mask & 1) {
+      SeqPtcTrackRef::set_param(n, param, value, uart_, true);
+    }
+  }
+#endif
+}
+
 PtcVoiceRouter ptc_voice_router;

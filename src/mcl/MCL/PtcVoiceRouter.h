@@ -33,6 +33,8 @@ public:
 
   void note_on(uint8_t route_channel, uint8_t note, MidiUartClass *uart_);
   void note_off(uint8_t route_channel, uint8_t note);
+  void control_change(uint8_t route_channel, uint8_t cc, uint8_t value,
+                      MidiUartClass *uart_);
 
 private:
   uint8_t voice_pitch[PTC_GROUP_TRACKS];

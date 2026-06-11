@@ -673,8 +673,12 @@ void MidiSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_) {
   if (uart_ == nullptr) uart_ = port_;
   if (uart_ == nullptr) uart_ = uart;
   if (!uart_) return;
-  if (ptc_route_channel_is_primary(channel())) return;
-  uart_->sendCC(channel(), cc, value);
+  uint8_t ch = channel();
+  if (ptc_route_channel_is_primary(ch)) {
+    ptc_voice_router.control_change(ch, cc, value, uart_);
+    return;
+  }
+  uart_->sendCC(ch, cc, value);
 }
 
 void MidiSeqTrack::pitch_bend(uint16_t value, MidiUartClass *uart_) {

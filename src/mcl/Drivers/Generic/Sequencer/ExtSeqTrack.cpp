@@ -1021,6 +1021,7 @@ void ExtSeqTrack::after_touch(uint8_t note, uint8_t pressure,
 
 void ExtSeqTrack::send_cc(uint8_t cc, uint8_t value, MidiUartClass *uart_) {
   if (ptc_route_channel_is_primary(channel)) {
+    ptc_voice_router.control_change(channel, cc, value, resolve_uart(uart_));
     return;
   }
   resolve_uart(uart_)->sendCC(channel, cc, value);
