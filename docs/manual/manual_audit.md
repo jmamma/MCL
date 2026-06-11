@@ -16,10 +16,10 @@ Referenced legacy images not present during migration:
 
 ## MCL 5.00 Refresh Checklist
 
-- [ ] Resolve canonical MCL 5.00 release date between top-level and source changelogs.
-- [ ] Rewrite key concepts around Grid X/Y devices, TBD/SPSX, desktop/WASM, and project format changes.
-- [ ] Update MIDI, controller, sync, route, MD, and system configuration labels from `resource/menu_layouts.cpp` and `resource/menu_options.cpp`.
-- [ ] Update project load/save documentation for folders, cloning, moving, versions, and project config.
+- [x] Resolve canonical MCL 5.00 release date between top-level and source changelogs. The manual follows the top-level changelog date: June 1, 2026.
+- [x] Rewrite key concepts around Grid X/Y devices, TBD/SPSX, desktop/WASM, and project format changes.
+- [x] Update MIDI, controller, sync, route, MD, and system configuration labels from `resource/menu_layouts.cpp` and `resource/menu_options.cpp`.
+- [x] Update project load/save documentation for folders, cloning, moving, versions, and project config.
 - [ ] Update grid and slot menu documentation, including the `SOUND` slot option.
 - [ ] Update sequencer documentation for swing, mute masks, fill conditions, current condition labels, signed microtiming, and SPSX behavior.
 - [ ] Update LFO and arp documentation for per-track storage and new destinations/options.
@@ -28,6 +28,12 @@ Referenced legacy images not present during migration:
 - [ ] Update piano roll documentation for selection, zoom, copy/paste, and expanded MIDI locks.
 - [ ] Update sample browser, sound browser, WAV designer, RAM, and MD samplebank-linking sections.
 - [ ] Replace stale screenshots with SPS/MCL headless captures where possible.
+
+## Organisation Notes
+
+- Foundation pages were rewritten for MCL 5.00 and no longer depend on legacy PDF screenshots.
+- The `GUI` section is long and still reads like a converted reference dump; it should probably be split into controller basics, Machinedrum enhanced mode, and shortcuts.
+- The `Load Page` / chain material is also long enough to split after the project/grid sections are updated.
 
 ## Code Truth Sources
 

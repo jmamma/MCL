@@ -1,59 +1,68 @@
-# Machinedrum Settings Menu
+# Machinedrum Configuration
 
-The Machinedrum settings are used to control how the MCL firmware interacts with the MD.
+The Machinedrum configuration page controls Machinedrum-specific project and transfer behavior.
 
+Open it from the dynamic device entry in the Configuration menu. When the Machinedrum is assigned as a grid device, the entry is named for the Machinedrum driver instead of the old fixed `DRIVER 1` or `DRIVER 2` label.
 
-![machinedrum menu](../assets/images/machinedrum_menu.png)
+## Requirements
 
+Use Machinedrum OS X.13 with MCL 5.00.
+
+For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower from the MIDI port/turbo settings.
+
+## Menu Entries
+
+| Entry | Function |
+| --- | --- |
+| `IMPORT` | Import Machinedrum patterns into the MCL grid. |
+| `RAM LINK` | Select `MONO` or `STEREO` RAM page behavior. |
+| `NORMALIZE` | Enable or disable automatic MD level normalization when saving tracks. |
+| `SAMPLEBANK` | Link the project to a fixed Machinedrum +Drive sample bank, or disable linking with `OFF`. |
 
 ## Import
 
-The **IMPORT** option opens the Machinedrum Pattern Import Menu.
+`IMPORT` opens the Machinedrum pattern import page.
 
-Multiple patterns can be imported sequentially from their starting location **SRC** on the MD to a position **DEST** on the MCL grid. The **COUNT** parameter specifies the number of patterns to be imported.
+| Field | Function |
+| --- | --- |
+| `SRC` | Starting source pattern on the Machinedrum. |
+| `DEST` | Destination row on the MCL grid. |
+| `COUNT` | Number of patterns to import. |
+| `RUN` | Start the import. |
 
-
-![machinedrum import](../assets/images/machinedrum_import.png)
-
-
-## Normalize
-
-When the **NORMALIZE** option is set to AUTO (default), all saved MD tracks have their LEV boosted to 127, and parameters controlling VOL (including parameter locks) are lowered
-to compensate. LFOs with destination VOL are
-adjusted too.
-
-
-The resulting track loudness remains the same, but the Track LEV parameter is no longer set arbitrarily. The maximum value of LEV (127), will always be the loudest volume for each track.
-
-
-When the sequencer is running, the LEV paramater is never transmitted to the MD. This allows the performer to fade tracks in and out of a mix using the LEV parameter.
-
-
-The performer can then confidently raise the LEV of the track to 127, knowing this is the is the intended maximum loudness for the track.
-
-
-# Page Setup Menu
-
-
-<!-- missing-image: page_setup.png -->
-> Missing legacy screenshot: `page_setup.png`.
-
-
-## Grid Encoder:
-
-The **GRID ENCOD** option re-assigns the Grid Page's Encoders to act as the four Performance Controllers.
+Imports can be used to bring existing Machinedrum material into the MCL project grid. MCL 5.00 also upgrades older project data on load where supported.
 
 ## RAM Link
 
-The **RAM LINK** option determines whether the RAM Pages should act in MONO or STEREO during recording and playback.
+`RAM LINK` controls whether the RAM pages act as `MONO` or `STEREO` during recording and playback.
 
+This option moved from the old Page Setup area into the Machinedrum configuration page.
 
-# System Settings Menu
+## Normalize
 
+When `NORMALIZE` is set to `AUTO`, saved MD tracks have their track `LEV` raised to 127 while related volume parameters and locks are adjusted to preserve the perceived loudness.
 
-## Display
+This makes the track level control a predictable maximum-level control during performance. While the sequencer is running, MCL does not transmit the track `LEV` parameter continuously, so the performer can still fade tracks manually from the Machinedrum.
 
-The display setting is used to enable the OLED display mirror. Using the provided python script _(Note: <https://github.com/jmamma/MCL/tree/master/python>)_ and a USB MIDI connection between the MC and your computer, it is possible to mirror the OLED display to your computer screen.
+Use `OFF` if you want saved MD track levels to remain untouched.
 
+## Samplebank
 
-_Leaving this setting enabled will reduce the performance of the GUI._
+`SAMPLEBANK` links the current project to a Machinedrum +Drive sample bank.
+
+| Value | Behavior |
+| --- | --- |
+| `OFF` | Do not load a fixed sample bank with the project. |
+| `1..128` | Load the selected +Drive sample bank when the project is loaded. |
+
+The linked sample bank is stored with the project configuration.
+
+## Machinedrum MIDI Input
+
+Machinedrum chromatic, trig and polyphonic input behavior is configured from:
+
+```text
+CONFIG > MIDI > CONTROLLER > INPUT
+```
+
+The old `POLY CHAN` setting has been replaced by `POLY MODE`.

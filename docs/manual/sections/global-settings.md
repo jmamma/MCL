@@ -1,64 +1,83 @@
-# Configuration Menu
+# Project and Configuration Menu
 
-The Configuration Menu is used for project management and to change a variety of software and hardware settings.
+The Configuration menu is used for project management and global or per-project settings.
 
+Open it from the grid page with:
 
-![config menu 1](../assets/images/config_menu_1.png)
+```text
+[Bank Group] + [Global]
+```
 
+Use **[Up]** and **[Down]** to move through entries, **[Yes/Enter]** to select, and **[No/Exit]** to leave a menu.
 
-_The Configuration menu can be opened via the GridPage by pressing the MD's **[Bank Group]**and**[Global]** buttons._
+## Top-Level Entries
 
+The top-level menu is named `CONFIG`.
 
-To navigate and enter sub-menus use the **[Up/Down]** buttons and press the **[Enter/Yes]** button. Press the **[Exit/No]** button to go back one level or exit the menu.
+| Entry | Function |
+| --- | --- |
+| `LOAD PROJECT` | Opens the project browser. |
+| `MIDI` | Opens device, port, sync, routing, controller and program-change settings. |
+| Device config entries | Dynamic entries for connected devices, such as Machinedrum, Elektron, generic MIDI or TBD. |
+| `SYSTEM` | Opens display, project-configuration and grid-encoder settings. |
 
-## Load Project
+The device config entries are dynamic. In older documentation these appeared as fixed entries such as `DRIVER 1` and `DRIVER 2`; in MCL 5.00 they are named for the connected driver where possible.
 
-The Load Project sub-menu will display a list of MCL Projects that are stored on the root folder of the Micro SD card.
+## Project Browser
 
+`LOAD PROJECT` opens the project browser. MCL 5.00 supports folders, so projects can be grouped and nested on the SD card.
 
-The current project is always selected first and is indicated by an '>' character next to its name.
+The project browser can show:
 
+| Entry type | Meaning |
+| --- | --- |
+| `[ NEW PROJECT ]` | Create a new project in the current folder. |
+| `..` | Move to the parent folder. |
+| Folder | Open the folder. |
+| Project | Load the project. |
 
-![project menu](../assets/images/project_menu.png)
+The currently loaded project is marked in the browser.
 
+## File Menu
 
-### Delete or Rename Project:
+Hold **[Global]** from the project browser to open the file menu.
 
-From the file options menu, you can delete or rename projects.
+| Entry | Function |
+| --- | --- |
+| `NEW DIR` | Create a folder in the current location. |
+| `RENAME` | Rename the selected project or folder where allowed. |
+| `MOVE` | Move the selected project or folder to another folder. |
+| `CLONE` | Duplicate the selected project or folder. |
+| `VERS` | Open project versions for the selected project. |
+| `DELETE` | Delete the selected project or folder where allowed. |
+| `RECV ALL` / `SEND ALL` | Device/file transfer actions where supported by the current browser context. |
 
+The available actions depend on the selected entry and build options.
 
-From within the Load Project page, press and hold **[Global]** to access the file options menu.
+## Project Versions
 
-Use the encoder to make your selection, release **[Global]** to activate your choice.
+The `VERS` action opens the project version browser. Versions are snapshots of the same project, useful before major edits or before converting an older project.
 
+Typical version actions:
+
+| Action | Function |
+| --- | --- |
+| `BACKUP` | Create a new version snapshot. |
+| Load version | Restore a previous project version. |
+| Delete version | Remove a non-active version. |
 
 ## New Project
 
-The New Project options loads the New Project Page. This page allows you to specify a name for a project which will then be created.
-
-
-![new project](../assets/images/new_project.png)
-
-
-![charpane](../assets/images/charpane.png)
-
-
-_All text editing pages in MCL allow access to char pane. Hold **[Function].**_
-
+Creating a project opens a text-entry page. If a project or directory with the same name already exists, MCL reports an error instead of overwriting it.
 
 ## Project Files
 
-Projects are stored on the SD Card in the Projects directory.
-Each project has its own folder, inside the project folder there are 3 files:
+Projects are stored on the SD card with a project master file and grid files. MCL 5.00 adds versioned project and grid headers so older projects can be upgraded safely.
 
-```text
-\Projects\new_project_000\
-                          |- new_project_000.mcl   <- Project master file
-                          |- new_project_000.0     <- Grid X data
-                          |- new_project_000.1     <- Grid Y data
-```
-
+Do not edit project files by hand. Use the project browser, file menu and version browser from MCL.
 
 ## Saving Projects
 
-While loading projects recalls all saved track information, saving projects is not necessary. The project file is updated whenever slots or tracks are saved in the grid.
+MCL writes project state as slots, grids and configuration are saved. You usually do not need a separate full-project save action after saving the material you are working on.
+
+When `SYSTEM > PROJ CFG` is enabled, project-specific configuration is stored with the project and restored when the project is loaded.

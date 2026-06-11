@@ -1,155 +1,154 @@
-# MIDI Settings Menu
+# MIDI Configuration
 
-The MIDI menu provides access to seven MIDI configuration sub-menus.
+The MIDI configuration menu controls device assignment, port speed, clock, routing, controller input and program-change behavior.
 
+Open it from:
 
-![midi menu](../assets/images/midi_menu.png)
+```text
+CONFIG > MIDI
+```
 
-
-_Changes made in each MIDI configuration are applied upon menu exit._
-
-
-## Port Config
-
-The Port Config menu is used to configure the MIDI port settings.
-
-
-![midi ports menu](../assets/images/midi_ports_menu.png)
-
+The MCL 5.00 MIDI menu contains:
 
 | Entry | Function |
 | --- | --- |
-| TURBO 1: [ 1x, 2x, 4x, 8x ] | Port 1's Turbo MIDI speed |
-| TURBO 2: [ 1x, 2x, 4x, 8x ] | Port 2's Turbo MIDI speed |
-| TURBO USB: [ 1x, 2x, 4x, 8x ] | USB Port's Turbo MIDI speed |
-| Driver 1: [ Gener, MD ] | Port 1's MIDI driver, either Generic or MD |
-| Driver 2: [ Gener, Elekt ] | Port 2's MIDI driver, either Generic or Elektron |
-| CTRL Port: [ 2, USB, 2 + USB) ] | Which MIDI port provides control input (Note + CC) for Sequencer + Chromatic pages. |
+| `DEVICES` | Assign Grid X and Grid Y devices and ports. |
+| `PORTS` / `TURBO` | Configure MIDI/USB turbo speed. TBD builds show the flattened `TURBO` menu. Other builds use `PORTS` with `PORT 1`, `PORT 2` and `USB` sub-pages. |
+| `SYNC` | Configure clock and transport receive/source plus clock and transport send. |
+| `ROUTING` | Forward non-realtime MIDI between ports. |
+| `CONTROLLER` | Configure live input and output forwarding. |
+| `PROGRAM` | Configure program-change driven loading. |
 
+Changes are applied when leaving the relevant menu.
 
-_If using the Machinedrum MK1, set Turbo Speed no greater than 4x._
+## Devices
 
+The device setup menu is the most important MCL 5.00 configuration change. Grid X and Grid Y each choose a device and the port used by that device.
 
-If you are intending to pair your Megacommand with a supported Elektron device
-(MNM, A4) set **Driver 2** to Elektron. For all other MIDI devices (including unsupported Elektron machines), set **Driver 2** to General MIDI (default setting).
+```text
+CONFIG > MIDI > DEVICES
+```
 
+| Entry | Function |
+| --- | --- |
+| `GRID X` | Primary grid device and port. |
+| `GRID Y` | Secondary grid device and port. |
 
-_If you are intending to use the paired Elektron device's MIDI thru to control further external equipment, you must set Turbo 2 speed to 1x._
+### MegaCommand / MegaCMD Device Options
 
+| Grid | Device options | Port options |
+| --- | --- | --- |
+| Grid X | `OFF`, `MD` | `MIDI 1`, `USB` |
+| Grid Y | `GENER`, `ELEKT`, `OFF` | `MIDI 2`, `USB` |
+
+### TBD Device Options
+
+| Grid | Device options | Port options |
+| --- | --- | --- |
+| Grid X | `OFF`, `MD`, `TBD` | `INT`, `MIDI 1`, `USB` |
+| Grid Y | `GENER`, `ELEKT`, `TBD`, `OFF` | `INT`, `MIDI 2`, `USB` |
+
+Use `OFF` for an unused grid. Changing device assignments affects how projects map stored grid slots to devices.
+
+## Ports and Turbo
+
+MegaCommand and MegaCMD builds use:
+
+```text
+CONFIG > MIDI > PORTS > PORT 1
+CONFIG > MIDI > PORTS > PORT 2
+CONFIG > MIDI > PORTS > USB
+```
+
+Each port has a `TURBO` setting.
+
+| Build | Turbo options |
+| --- | --- |
+| AVR hardware | `1x`, `2x`, `4x`, `8x` |
+| Non-AVR builds | `1x`, `2x`, `4x`, `6.7x`, `8x`, `10x` |
+
+TBD builds show the turbo settings directly under:
+
+```text
+CONFIG > MIDI > TURBO
+```
+
+For Machinedrum MK1 units, use `4x` or lower.
 
 ## Sync
 
-The Sync Config menu is used to configure MIDI clock + transport receive and destination settings.
+```text
+CONFIG > MIDI > SYNC
+```
 
+| Entry | MegaCommand / MegaCMD | TBD |
+| --- | --- | --- |
+| Clock receive/source | `CLOCK RECV`: `1`, `2`, `USB` | `CLOCK SRC`: `1`, `2`, `USB`, `INT` |
+| Transport receive/source | `TRANS RECV`: `1`, `2`, `USB` | `TRANS SRC`: `1`, `2`, `USB`, `INT` |
+| Clock send | `CLOCK SEND`: `OFF`, `2`, `USB`, `2 + USB` | Same send options |
+| Transport send | `TRANS SEND`: `OFF`, `2`, `USB`, `2 + USB` | Same send options |
 
-![midi sync menu](../assets/images/midi_sync_menu.png)
-
-
-| Entry | Function |
-| --- | --- |
-| CLOCK RECV: [1, 2, USB] | Receive MIDI Clock from port. |
-| TRANS RECV: [1, 2, USB] | Receive MIDI Transport from port. |
-| CLOCK SEND: [OFF, 2, 2 + USB] | Forward MIDI Clock to selected port(s) |
-| TRANS SEND: [OFF, 2, 2 + USB] | Forward MIDI Transport to selected port(s) |
-
-
-_Note: MCL does not generate its own MIDI Clock, instead it relies on a clock signal from either Port 1, Port 2 or USB._
-
-
-_The MD's internal clock settings are controlled by MCL and will be automatically configured based on the options selected above._
-
+Use the same receive/source for clock and transport unless you intentionally want transport from a different source.
 
 ## Routing
 
-The MIDI Routing configuration menu can be used to set MIDI traffic forwarding between ports.
+```text
+CONFIG > MIDI > ROUTING
+```
 
-
-![midi route menu](../assets/images/midi_route_menu.png)
-
-
-| Entry | Function |
-| --- | --- |
-| MIDI1 FWD: [OFF, 2, USB, 2 + USB] | Forward non-realtime MIDI data from Port 1 input to the selected MIDI output port(s). |
-| MIDI2 FWD: [OFF, 1, USB, 1 + USB] | Forward non-realtime MIDI data from Port 2 input to the selected MIDI output port(s). |
-| USB FWD: [OFF, 1, 2, 1 + 2] | Forward non-realtime MIDI data from USB-MIDI input to the selected MIDI output port(s). |
-| CC LOOP: [OFF, 2->2] | Loopback MIDI CC messages on same port. |
-
-
-## Program
-
-The Program menu is used to enable the sending and receiving of MIDI Program Change messages.
-
-
-![midi prog menu](../assets/images/midi_prog_menu.png)
-
+Routing forwards non-realtime MIDI traffic between ports.
 
 | Entry | Function |
 | --- | --- |
-| PROG Mode: [BASIC, ADV] | Basic or Advanced. |
-| PRG IN: [--, 1 .. 16, OMNI] | Program change receive channel. |
-| PRG OUT: [--, 1 .. 16] | Program change transmit channel. |
+| `MIDI 1 FWD` | Forward data received on MIDI 1 to `OFF`, `2`, `USB`, or `2 + USB`. |
+| `MIDI 2 FWD` | Forward data received on MIDI 2 to `OFF`, `1`, `USB`, or `1 + USB`. |
+| `USB FWD` | Forward data received on USB to `OFF`, `1`, `2`, or `1 + 2`. |
 
+MCL 5.00 no longer exposes the old `CC LOOP` routing entry.
 
-**PROG Mode:** MIDI Program Change IN has two modes of operation, BASIC or ADV (Advanced).
+## Controller Input
 
+```text
+CONFIG > MIDI > CONTROLLER > INPUT
+```
 
-**BASIC:** Program Change Receive will "Group Load" an entire row according to Load Page mode and Group Select settings.
-**ADV:** Program change receive will set the row for slots to be loaded from.
-
-MIDI notes from C3 upwards on Port 2 can be used to select slots to be loaded.
-
-In this way, you can load any slot (or multiple slots) using a combination of Program Change + MIDI note.
-
-
-If Program Change is not received before MIDI note on/off, MCL will load from the current selected GUI row.
-
-
-MCL cannot load instantaneously, there is a minimum 1 bar delay.
-
-
-**PRG In:**
-Set the receive channel for Program Change and Note messages on Port 2.
-
-
-When set to -- (default) Program Change In is disabled.
-**PRG Out:**
-Set the send channel for Program Change messages on Port 2, which are sent when loading slots or rows.
-
-
-When set to -- (default) Program Change Out is is disabled.
-
-
-## MD MIDI
-
-The MD MIDI configuration menu is used to configure Machinedrum driver's MIDI settings.
-
-
-![midi md menu](../assets/images/midi_md_menu.png)
-
+Controller input is used for chromatic play, drum triggering, polyphonic input and live recording.
 
 | Entry | Function |
 | --- | --- |
-| CHRO CHAN: [--, 1..16] | MIDI Channel for MD Chromatic mode. |
-| POLY CHAN: [--, 1..16] | MIDI Channel for MD Polyphonic mode. |
-| TRIG CHAN: [--, 1..16] | MIDI Channel for MD Trig mode. |
+| `PORT` | Selects the controller input port: `2`, `USB`, or `2 + USB`. |
+| `CHRO CHAN` | MIDI channel for chromatic play: `--`, `1..16`, or `OMNI`. |
+| `TRIG CHAN` | MIDI channel for drum-pad triggering: `--`, `1..16`, or `OMNI`. |
+| `POLY MODE` | `INT` uses internal note data only; `INT+EXT` also responds to external controller input. |
 
+`POLY MODE` replaces the old `POLY CHAN` setting.
 
-**CHRO CHAN:** The CHRO CHAN setting is used to control which input channel the MD should receive note data from when in Chromatic mode. When set to INT (default) the MD will be controlled by the MD's **[Trig]** keys in chromatic mode.
+## Controller Output
 
-_For this setting to work correctly, CTRL PORT in PORT CONFIG must also be set to the desired port._
-
-**POLY CHAN:** Dedicated MIDI Channel for playing designated Polyphonic tracks chromatically.
-**TRIG CHAN:** Dedicated MIDI channel for triggering MD tracks via Note On message. Useful for triggering sounds using a MIDI drum pad. Track Mapping starts from note C2. Note Velocity is mapped to volume.
-
-
-## General MIDI
-
-The General MIDI configuration menu is used to configure the Generic MIDI driver's settings.
-
-
-![general md menu](../assets/images/general_md_menu.png)
-
+```text
+CONFIG > MIDI > CONTROLLER > OUTPUT
+```
 
 | Entry | Function |
 | --- | --- |
-| MUTE CC: [ 0..127,--] | CC parameter for sending/receving Ext MIDI track mute state on Mixer Page. |
+| `NOTE FWD` | Forward controller note input to Port 2 when enabled. |
+| `CC FWD` | Forward controller CC input to Port 2 when enabled. |
+| `MUTE CC` | Selects the CC used to send or receive external track mute state, or `--` to disable it. |
+
+## Program Change
+
+```text
+CONFIG > MIDI > PROGRAM
+```
+
+| Entry | Function |
+| --- | --- |
+| `PRG MODE` | `BASIC` or `ADV`. |
+| `PRG IN` | Program-change receive channel: `--`, `1..16`, or `OMNI`. |
+| `PRG OUT` | Program-change transmit channel: `--` or `1..16`. |
+
+`BASIC` mode loads a full row according to the active load-page mode and group selection.
+
+`ADV` mode sets the row used for incoming note-triggered slot loads. Notes from C3 upward select slots to load from the current or most recently selected row.
+
+MCL cannot load slots instantaneously; plan for at least one bar of lead time when driving loads from external program changes or notes.

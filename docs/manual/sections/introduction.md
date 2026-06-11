@@ -1,33 +1,44 @@
 # Introduction
 
+## About MCL
 
-## Preface
+MegaCommand Live (MCL) is a sequencing, project-management and live-performance system for the MegaCommand family of controllers. It was originally built around the Elektron Machinedrum and now also supports additional devices and runtimes.
 
+MCL 5.00 can target several device classes depending on the build and hardware:
 
-**_The following document is intended to be read as a user manual for the MegaCommand Live OS. To learn how to build a DIY MegaCommand MIDI controller please see the link below _(Note: DIY MegaCommand hardware documentation: <https://github.com/jmamma/MegaCommand_Design>.)_._**
+| Target | Role |
+| --- | --- |
+| Machinedrum / MDX / SPS-X | Primary drum-machine sequencing, sound management, performance control and extended sequencing features. |
+| Monomachine and Analog Four | Secondary Elektron device sequencing and grid storage where supported. |
+| Generic MIDI devices | External MIDI sequencing, chromatic play, piano roll editing and controller forwarding. |
+| TBD | Integrated CTAG TBD device control and sequencing on supported builds. |
+| Desktop / WASM runtime | Simulation, development and SPS-hosted use cases. |
 
+## Before Upgrading
 
-## Hello
+MCL 5.00 introduces a new project format. Existing projects are upgraded automatically on first load and cannot be opened again by older MCL versions after conversion.
 
-MegaCommand Live (MCL) is a firmware designed for the MegaCommand (MC) MIDI controller that expands the Elektron Machinedrum's (MD) sequencing, sound design and live performance capabilities.
+Before installing MCL 5.00:
 
+- Back up every project on the SD card.
+- Upgrade the Machinedrum to OS X.13.
+- Upgrade the Monomachine to OS X.01 if you use one with MCL.
+- Expect saved configuration to be reinitialised on first boot after upgrading.
 
-MCL is developed alongside the Machinedrum X OS. Together they create the modern sequencer enhancement for the Elektron Machinedrum. The MD provides the GUI and synthesis components, whilst the sequencing is now performed within the MegaCommand.
+## What MCL Adds
 
+MCL extends connected instruments with:
 
-The MC's sequencer consists of 22 tracks each with individual length, parameter locks, micro-timing, conditional trigs, slides, mutes and an arpeggiator. Sixteen of these tracks are dedicated to the MD, the remaining six tracks are polyphonic and can be used to drive an additional MIDI device.
+- Grid-based project storage for tracks, rows and device state.
+- Independent Grid X and Grid Y device assignments.
+- Step sequencing with parameter locks, microtiming, slides, mutes, swing masks and conditional trigs.
+- Per-track LFO and arpeggiator settings.
+- Polyphonic and chromatic play modes.
+- Project folders, project cloning/moving and project versions.
+- Mixer and performance pages for mutes, fills, levels and performance controller states.
+- Sample, sound, RAM and WAV tools for the Machinedrum workflow.
+- USB MIDI, MIDI routing, controller input and program-change driven loading.
 
+## Manual Status
 
-Projects are stored on the MC's SD Card. Each project utilises a grid and slot system to save and load tracks. Unlike the MD, tracks are not bound to a specific pattern or Kit, but instead can be loaded freely between different rows (patterns). Track loading can be automated and slots chained together to create dynamic musical phrases or songs.
-
-
-Other features of the MCL firmware include: Chromatic + Polyphonic Mode, Level Mixer, Performance Controllers, Audio Mute + Routing System, Sample + Sound Management, Single Cycle Waveform Designer, Global LFO, FX Pages, Automated RAM recording, USB MIDI, and much more.
-
-
-A great deal of care has gone in to this project. Both MCL and MDX have been optimised to provide outstanding MIDI and sequencing performance, at TURBO speeds.
-
-
-We have intended to make the firmware as intuitive as possible, particularly for users already familiar with the MD. Please take your time to read each section of this manual carefully.
-
-
-Let's get started.
+The manual is now maintained as Markdown inside the MCL source repository. Some screenshots still come from the legacy PDF manual and will be replaced after the SPS/MCL headless screenshot workflow is added.

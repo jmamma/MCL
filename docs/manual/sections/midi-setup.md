@@ -1,81 +1,102 @@
 # MIDI Setup
 
+## Setup Overview
 
-## Connectivity
+MCL 5.00 uses a Grid X / Grid Y device model. After wiring your devices, configure the active device layout from:
 
-**Machinedrum**
+```text
+CONFIG > MIDI > DEVICES
+```
 
+Then configure clock, routing, controller input and program-change behavior from the other MIDI configuration menus.
 
-- Connect the MIDI-Out of the Machinedrum to the MIDI-In (1) of the MegaCommand.
-- Connect the MIDI-Out (1) of the MegaCommand to MIDI-In of the Machinedrum.
+## Machinedrum
 
+For the common Machinedrum setup:
 
-**Elektron Device (Analog4/MNM) (Optional)**
+| Connection | Cable |
+| --- | --- |
+| Machinedrum MIDI OUT -> MegaCommand MIDI IN 1 | Sends Machinedrum keys, transport, sysex and state changes to MCL. |
+| MegaCommand MIDI OUT 1 -> Machinedrum MIDI IN | Sends sequencing, parameter, sysex and control data back to the Machinedrum. |
 
+Recommended configuration:
 
-- Connect the MIDI-Out of the Elektron to the MIDI-In (2) of the MegaCommand.
-- Connect the MIDI-Out (2) of the MegaCommand to MIDI-In of the Elektron.
+| Setting | Value |
+| --- | --- |
+| `CONFIG > MIDI > DEVICES > GRID X > DEVICE` | `MD` |
+| `CONFIG > MIDI > DEVICES > GRID X > PORT` | `MIDI 1` for the usual DIN setup |
 
+Upgrade the Machinedrum to OS X.13 before using MCL 5.00. For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower.
 
-![midi machines](../assets/images/midi_machines.png)
+## Secondary Elektron Device
 
+For a Monomachine or Analog Four as a secondary device:
 
-**External Clock (Optional)**
+| Connection | Cable |
+| --- | --- |
+| Device MIDI OUT -> MegaCommand MIDI IN 2 | Lets MCL receive sysex, transport or performance state where supported. |
+| MegaCommand MIDI OUT 2 -> Device MIDI IN | Lets MCL sequence and control the device. |
 
+Recommended configuration:
 
-- A MIDI Keyboard, or sequencer can be connected to MIDI-In (2) , or USB MIDI.
-- Attached sequencers can be used as external clock source.
+| Setting | Value |
+| --- | --- |
+| `CONFIG > MIDI > DEVICES > GRID Y > DEVICE` | `ELEKT` |
+| `CONFIG > MIDI > DEVICES > GRID Y > PORT` | `MIDI 2` |
 
+Upgrade the Monomachine to OS X.01 before using MCL 5.00.
 
-**External MIDI (Optional)**
+## Generic MIDI Device
 
+For a synth, sampler or drum module using generic MIDI:
 
-- A MIDI Keyboard connected to MIDI-In (2).
-- MIDI-Out (2) connected to synth a module's MIDI-In.
-- Attached MIDI Keyboards may be used to play notes in chromatic modes or via the PianoRoll editor.
-- External synth can be sequenced from the External Sequencer Tracks.
+| Connection | Cable |
+| --- | --- |
+| Controller or keyboard MIDI OUT -> MegaCommand MIDI IN 2 or USB | Optional live input for chromatic play, recording or controller forwarding. |
+| MegaCommand MIDI OUT 2 or USB -> External device MIDI IN | Sends notes, automation and program changes from MCL. |
 
+Recommended configuration:
 
-![midi machines2](../assets/images/midi_machines2.png)
+| Setting | Value |
+| --- | --- |
+| `CONFIG > MIDI > DEVICES > GRID Y > DEVICE` | `GENER` |
+| `CONFIG > MIDI > DEVICES > GRID Y > PORT` | `MIDI 2` or `USB` |
 
+External MIDI tracks can be edited from the Piano Roll and can record or play notes and automation depending on the selected device and build.
 
-## MachineDrum Settings
+## TBD
 
-Upgrade your MD to the latest MDX OS.
+On TBD builds, the internal TBD device can be assigned directly from the device menu.
 
+Typical options:
 
-MCL communicates with the MachineDrum using SYSEX messages, and will configure your MD's current global settings automatically.
+| Grid | Example use |
+| --- | --- |
+| Grid X = `TBD` / Port = `INT` | Use TBD as the primary internal device. |
+| Grid X = `MD` / Port = `MIDI 1` | Use a connected Machinedrum as the primary device. |
+| Grid Y = `TBD` / Port = `INT` | Use TBD as the secondary device where the build supports it. |
 
+TBD builds can also use an internal clock source from the MIDI sync menu.
 
-The Machinedrum's base channel can be chosen from the MD's Global menu.
+## Clock and Transport
 
+Configure clock and transport from:
 
-For MK1 models, Turbo Speed should be set no higher than 4x.
-(See Configuration Menu -> MIDI -> Port Config)
+```text
+CONFIG > MIDI > SYNC
+```
 
-## MonoMachine Settings
+MegaCommand and MegaCMD builds receive clock from Port 1, Port 2 or USB. TBD builds can additionally use the internal clock source.
 
-Upgrade your MNM to the latest MNMX OS.
+## Analog Four Manual Settings
 
+When using an Analog Four, configure these settings on the Analog Four itself:
 
-MCL communicates with the MonoMachine using SYSEX messages, and will configure your MNM's current global settings automatically.
-
-## AnalogFour Settings
-
-
-The following configuration must be manually applied in the Analog 4's Global Settings menu:
-
-
-MIDI Port Config:
-
-
-Output to MIDI
-Input to MIDI
-Keyboard CFG = EXT
-Receive Notes = True
-Receive CC/NPRN = True
-
-
-MIDI Channels:
-
-Tracks 1-6 channels need to be set to MIDI Channels 1-6 respectively.
+| Analog Four setting | Value |
+| --- | --- |
+| MIDI output | MIDI |
+| MIDI input | MIDI |
+| Keyboard config | `EXT` |
+| Receive notes | On |
+| Receive CC/NRPN | On |
+| Track MIDI channels | Tracks 1-6 mapped to channels 1-6 |
