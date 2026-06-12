@@ -1,6 +1,7 @@
 #include "GenericMidiDevice.h"
 
 #include "GenericMidiTrackRef.h"
+#include "GridDeviceInit.h"
 #include "MidiSeqExtStepTrackCapability.h"
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
@@ -236,6 +237,10 @@ bool GenericMidiParamCapability::set_param(const DeviceContext &ctx,
 #endif
 
 void GenericMidiDevice::init_grid_devices(DeviceIdx device_idx) {
+#if defined(__AVR__)
+  init_ext_track_grid_devices(*this, device_idx,
+                              GenericMidiTrackRef::grid_track_type());
+#else
   GridDeviceTrack gdt;
 
   for (uint8_t i = 0; i < NUM_EXT_TRACKS; i++) {
@@ -245,4 +250,5 @@ void GenericMidiDevice::init_grid_devices(DeviceIdx device_idx) {
              GenericMidiTrackRef::seq_track(i));
     add_track_to_grid(GridIdx::Y, i, &gdt);
   }
+#endif
 }
