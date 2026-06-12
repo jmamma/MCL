@@ -8,6 +8,8 @@ Open it from the Chromatic Page Track Menu:
 [Global] > POLYPHONY
 ```
 
+![voice select page](../assets/images/voice_select_page.png)
+
 On hardware with panel buttons, the Chromatic Page can also open Polyphony with the record/load button chord.
 
 ## Core Idea
@@ -57,7 +59,7 @@ If `POLY MODE` is `INT`, external input does not trigger poly groups.
 
 MCL chooses an available voice from the active group for each new note. If all voices are busy, the oldest active voice can be reused.
 
-Only tracks that can behave as pitched voices are used. On Machinedrum, this means melodic voice-capable tracks or MIDI machines. On TBD/SPS-X or hosted primary devices, availability depends on the device driver.
+Only tracks that can behave as pitched voices are used. On Machinedrum, this means melodic voice-capable tracks or MIDI machines. On TBD, availability depends on the note/pitch behavior exposed by the active sound.
 
 For the most predictable sound, assign tracks with the same or compatible machine/sound type to the same group.
 

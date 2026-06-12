@@ -30,9 +30,8 @@ Examples:
 | Slot content | Stored data |
 | --- | --- |
 | Machinedrum track | Sequence data, sound/machine state, parameter locks and track link settings. |
-| SPS-X track | Extended sequence data, deeper parameter locks and supported SPS-X sound data. |
 | External MIDI track | Notes, automation, MIDI locks, length, loop and link settings. |
-| TBD track | TBD sequence data, sound state and parameter locks where supported. |
+| TBD track | TBD sequence data, sound state and parameter locks. |
 | Performance / route / tempo state | Page-specific state used by group save/load. |
 
 The exact slot type depends on `CONFIG > MIDI > DEVICES`, the active grid, and the connected driver.
@@ -45,8 +44,8 @@ MCL 5.00 uses the configured Grid X / Grid Y device model.
 | --- | --- |
 | Grid X = `MD`, Grid Y = `GENER` | Machinedrum on the primary grid, generic MIDI tracks on the secondary grid. |
 | Grid X = `MD`, Grid Y = `ELEKT` | Machinedrum plus a supported Elektron secondary device. |
-| Grid X = `TBD`, Grid Y = `OFF` | TBD-focused project on supported builds. |
-| Grid X = `MD`, Grid Y = `TBD` | Machinedrum primary with TBD as a secondary grid where supported. |
+| Grid X = `TBD`, Grid Y = `OFF` | TBD as the primary grid device. |
+| Grid X = `MD`, Grid Y = `TBD` | Machinedrum primary with TBD as the secondary grid device. |
 
 Older MCL manuals described Grid X as always 16 Machinedrum tracks and Grid Y as six external tracks plus fixed auxiliary slots. That is still a useful reference for classic Machinedrum projects, but MCL 5.00 resolves the actual meaning of each slot from the active device configuration.
 

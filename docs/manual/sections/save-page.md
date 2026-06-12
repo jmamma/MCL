@@ -8,7 +8,9 @@ Open it from the Grid Page with:
 [Function] + [Yes/Enter]
 ```
 
-On TBD builds, Save appears as a Grid Page overlay. On MegaCommand and MegaCMD builds, it opens as a page.
+![save to a](../assets/images/save_to_a.png)
+
+On TBD, Save appears as a Grid Page overlay. On MegaCommand and MegaCMD, it opens as a page.
 
 ## What Save Stores
 
@@ -53,6 +55,8 @@ To save tracks from both grids in one operation:
 ## Group Save
 
 Hold **[Yes/Enter]** from Save to open `SAVE GROUPS`.
+
+![group select page](../assets/images/group_select_page.png)
 
 The group selector uses the first five trig keys.
 

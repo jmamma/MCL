@@ -8,7 +8,11 @@ Open it from the Chromatic Page Track Menu:
 [Global] > ARPEGGIATOR
 ```
 
+![chro menu](../assets/images/chro_menu.png)
+
 The page returns to the previous page when you press **[Yes/Enter]**, **[No/Exit]** or one of the panel buttons.
+
+![arp page](../assets/images/arp_page.png)
 
 ## Controls
 
@@ -74,7 +78,9 @@ Higher ranges create wider patterns, while `0` keeps the arpeggio inside the ent
 
 ## Quantization
 
-The Track Menu `QUANT` setting controls whether arpeggiator start timing is quantized or immediate. Access it by holding **[Global]** from a sequencer or Chromatic page.
+The Track Menu `QUANT` setting controls whether arpeggiator start timing is quantized or immediate. Access it from the Step Editor or PianoRoll Track Menu by holding **[Global]** and scrolling to `QUANT`.
+
+![seq ptc quant](../assets/images/seq_ptc_quant.png)
 
 ## Track Mutes And Transport
 

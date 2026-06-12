@@ -6,6 +6,10 @@ Open it with:
 
 **[Bank Group] + [Trig 9]**
 
+![sample manager](../assets/images/sample_manager.png)
+
+![sample browser page](../assets/images/sample_browser_page.png)
+
 Supported file types:
 
 | Type | Use |
@@ -37,6 +41,8 @@ The browser filters the file list to `.wav` and `.syx` files. Folders are shown 
 
 The file menu can create folders, rename files, delete files, and run bulk sample send/receive when the `[RECV]` action row is selected.
 
+![file menu](../assets/images/file_menu.png)
+
 ## Receiving One Sample
 
 1. Select `[RECV]`.
@@ -49,6 +55,8 @@ The slot list shows ROM slots first. RAM slots are shown as `R1` through `R4` wh
 ## Sending One Sample
 
 Select a `.wav` or `.syx` file and press **[Yes]**. MCL opens the Machinedrum slot picker, asks for overwrite confirmation, and sends the file to the chosen slot.
+
+![rom select](../assets/images/rom_select.png)
 
 For WAV files whose names start with two digits, a single-file send strips the leading two digits from the sample name sent to the Machinedrum. This keeps numbered bulk-transfer filenames readable on the MD.
 

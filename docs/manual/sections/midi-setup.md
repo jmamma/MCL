@@ -14,6 +14,8 @@ Then configure clock, routing, controller input and program-change behavior from
 
 For the common Machinedrum setup:
 
+![midi machines](../assets/images/midi_machines.png)
+
 | Connection | Cable |
 | --- | --- |
 | Machinedrum MIDI OUT -> MegaCommand MIDI IN 1 | Sends Machinedrum keys, transport, sysex and state changes to MCL. |
@@ -24,13 +26,15 @@ Recommended configuration:
 | Setting | Value |
 | --- | --- |
 | `CONFIG > MIDI > DEVICES > GRID X > DEVICE` | `MD` |
-| `CONFIG > MIDI > DEVICES > GRID X > PORT` | `MIDI 1` for the usual DIN setup |
+| `CONFIG > MIDI > DEVICES > GRID X > PORT` | `MIDI 1`, meaning MegaCommand MIDI IN 1 / OUT 1 with standard 5-pin MIDI cables |
 
 Upgrade the Machinedrum to OS X.13 before using MCL 5.00. For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower.
 
 ## Secondary Elektron Device
 
 For a Monomachine or Analog Four as a secondary device:
+
+![midi machines2](../assets/images/midi_machines2.png)
 
 | Connection | Cable |
 | --- | --- |
@@ -66,7 +70,7 @@ External MIDI tracks can be edited from the Piano Roll and can record or play no
 
 ## TBD
 
-On TBD builds, the internal TBD device can be assigned directly from the device menu.
+When using TBD, the internal TBD device can be assigned directly from the device menu.
 
 Typical options:
 
@@ -74,9 +78,11 @@ Typical options:
 | --- | --- |
 | Grid X = `TBD` / Port = `INT` | Use TBD as the primary internal device. |
 | Grid X = `MD` / Port = `MIDI 1` | Use a connected Machinedrum as the primary device. |
-| Grid Y = `TBD` / Port = `INT` | Use TBD as the secondary device where the build supports it. |
+| Grid Y = `TBD` / Port = `INT` | Use TBD as the secondary device. |
 
-TBD builds can also use an internal clock source from the MIDI sync menu.
+TBD can also use an internal clock source from the MIDI sync menu.
+
+See [TBD](tbd.md) for TBD panel controls and sequencing behavior.
 
 ## Clock and Transport
 
@@ -86,7 +92,7 @@ Configure clock and transport from:
 CONFIG > MIDI > SYNC
 ```
 
-MegaCommand and MegaCMD builds receive clock from Port 1, Port 2 or USB. TBD builds can additionally use the internal clock source.
+MegaCommand and MegaCMD receive clock from Port 1, Port 2 or USB. TBD can additionally use the internal clock source.
 
 ## Analog Four Manual Settings
 

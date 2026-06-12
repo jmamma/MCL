@@ -4,6 +4,8 @@ The RAM pages automate Machinedrum RAM record and RAM playback machines. They se
 
 Open them with:
 
+![ram1](../assets/images/ram1.png)
+
 | Page | Shortcut | Tracks used |
 | --- | --- | --- |
 | RAM 1 | **[Bank Group] + [Trig 15]** | Track 15 in mono mode. |
@@ -47,6 +49,8 @@ Pressing an encoder button returns to the Grid Page.
 5. Press MD **[Yes]** or MCL **[Save/No]** to queue recording.
 
 The display shows `QUEUE` until the quantized transition point, then `RECORD`. Recording continues until playback is queued.
+
+![ram1 action](../assets/images/ram1_action.png)
 
 ## Playback
 

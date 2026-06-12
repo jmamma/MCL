@@ -14,6 +14,8 @@ When open, the PageSelect menu displays the Page to be loaded. The MD's **[Trig]
 
 The pages are grouped into four categories. The category of the current selected page is highlighted on the display:
 
+Unavailable or empty categories are skipped on builds where a page is not compiled in.
+
 
 | 1 | 2 | 3 | 4 |
 | --- | --- | --- | --- |

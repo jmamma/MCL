@@ -1,0 +1,111 @@
+# TBD
+
+TBD integration uses the same Grid X / Grid Y model as the rest of MCL. When `TBD` is assigned to a grid, MCL talks to the internal TBD device through the `INT` port and uses the TBD driver to decide which tracks, sound data, mixer controls and parameter locks are available.
+
+## Device Setup
+
+Open the device menu from:
+
+```text
+CONFIG > MIDI > DEVICES
+```
+
+TBD adds the `TBD` device and the `INT` port to the normal grid setup:
+
+| Setting | Use |
+| --- | --- |
+| `Grid X = TBD`, port `INT` | Use TBD as the primary step-sequenced device. |
+| `Grid Y = TBD`, port `INT` | Use TBD as the secondary MIDI-style device. |
+| `Grid X = MD`, port `MIDI 1` | Use a connected Machinedrum as the primary device. |
+| `Grid Y = GENER` or `ELEKT` | Use generic MIDI, Monomachine or Analog Four style secondary tracks. |
+
+The selected grid device determines the track types that are created in new projects and the editor pages used for those tracks.
+
+## Grid Tracks
+
+When TBD is assigned to Grid X, MCL initializes 16 primary TBD tracks in Grid X slots 1-16. These tracks use the Step Editor, Mixer, Chromatic Page, Arpeggiator Page and LFO Page like other primary step tracks.
+
+When TBD is assigned to Grid Y, MCL initializes the secondary TBD MIDI-style tracks in Grid Y. These tracks use the PianoRoll and automation views.
+
+TBD grid slots can store:
+
+| Data | Meaning |
+| --- | --- |
+| Sequence data | Trigs, notes, lengths, loop settings, mutes, conditions and timing. |
+| Sound state | The current TBD sound metadata and parameter values for the track. |
+| Mixer state | Visible mixer parameters exposed by the current TBD sound. |
+| Parameter locks | Step locks for visible TBD audio and mixer parameters, plus note locks for sounds that use per-step pitch. |
+
+The Slot Menu `SOUND` option still applies. Set `SOUND` to `OFF` when you want to load sequence data without replacing the current TBD sound state.
+
+## Sound And Parameters
+
+TBD sounds provide MCL with parameter page names, short parameter labels, ranges, defaults and MIDI control type. MCL uses that information to build the device UI, Mixer Page, parameter locks, LFO destinations and performance targets.
+
+The TBD sound model exposes:
+
+| Area | What MCL uses |
+| --- | --- |
+| Audio pages | Up to 24 audio parameters across six parameter pages. |
+| Mixer pages | Up to eight mixer parameters across two mixer pages. |
+| Lock targets | Audio parameters, mixer parameters and a note target when the sound uses step pitch. |
+| Control output | CC or NRPN output for parameters that the sound marks as sendable. |
+
+Hidden or unsupported parameters are skipped in the UI. Parameter names and ranges come from the active TBD sound, so different sounds can expose different controls.
+
+## Panel Controls
+
+TBD panel input is mapped into MCL's page and device model.
+
+| Control | Action |
+| --- | --- |
+| Top-left button | Open Page Select from normal pages. In menus and browsers, use it as back/up. |
+| Top-left hold inside an expanded device UI | Leave the device UI and open Page Select. |
+| Top-left + top-right | Open the System menu. |
+| Top-right button | Open or control the secondary device UI when a secondary UI device is configured. In local menus it acts as the confirm/enter key. |
+| Encoder 1 tap | Open or close the Grid bank popup. |
+| Arrow keys | Navigate pages, menus, steps and selected values. |
+| Transport keys | Act as Record, Play and Stop. In copy mode they act as Copy, Clear and Paste. |
+| Trig pads | Select rows, trigger tracks, edit steps, play notes or select TBD UI tracks depending on the active page. |
+| B button | Acts as Scale/page toggle on Grid, Mixer, Save/Load overlays and sequencer pages; otherwise it acts as the legacy menu modifier. |
+| Y button | Opens legacy MCL page menus on Grid, Mixer, Save/Load overlays and sequencer pages; otherwise it acts as Function. |
+
+If an expanded device UI is active, TBD device controls get first chance to handle the buttons. If the device UI is collapsed, the active MCL page handles the same buttons.
+
+## Grid Page Differences
+
+On TBD, Save and Load are Grid Page overlays instead of separate full-screen pages.
+
+| Action | Result |
+| --- | --- |
+| Open Save overlay | Select the current Grid Page slots and save them without leaving the grid. |
+| Open Load overlay | Select the current Grid Page slots and load them without leaving the grid. |
+| Slot Menu arrows | Move through Slot Menu entries first. Use the normal modifier behavior when adjusting selection geometry. |
+| Bank popup | Use the bank popup to jump to rows and keep row-bank feedback visible while selecting. |
+
+The visible grid still follows the same row, slot, bank, chain and queue concepts described in the Grid sections.
+
+## Clock And Tempo
+
+TBD can use the internal clock source in addition to clock from MIDI 1, MIDI 2 or USB.
+
+Configure clock and transport from:
+
+```text
+CONFIG > MIDI > SYNC
+```
+
+The TBD sync menu uses `CLOCK SRC` and `TRANS SRC`. Available source values are:
+
+| Source | Meaning |
+| --- | --- |
+| `1` | MIDI 1. |
+| `2` | MIDI 2. |
+| `USB` | USB MIDI. |
+| `INT` | Internal TBD/MCL clock. |
+
+The tempo overlay edits the internal tempo when MCL is using its own clock source.
+
+## Diagnostics
+
+Function + top-right opens the TBD transport/SPI diagnostic overlay when TBD is assigned to Grid X or Grid Y. This is for checking TBD communication state and is not needed for normal sequencing.

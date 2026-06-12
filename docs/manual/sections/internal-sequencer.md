@@ -1,12 +1,12 @@
 # MCL Sequencer
 
-The MCL sequencer stores musical events inside grid tracks. A track can be a classic Machinedrum step track, an SPS-X/TBD step track, or an external MIDI-style track, depending on the devices assigned to Grid X and Grid Y.
+The MCL sequencer stores musical events inside grid tracks. A track can be a classic Machinedrum step track, a TBD step track, or an external MIDI-style track, depending on the devices assigned to Grid X and Grid Y.
 
 ## Track Families
 
 | Track family | Typical use | Main editor |
 | --- | --- | --- |
-| Primary step tracks | Machinedrum, SPS-X or TBD-style per-step sequencing. | Step Editor |
+| Primary step tracks | Machinedrum or TBD-style per-step sequencing. | Step Editor |
 | External MIDI tracks | Polyphonic notes and automation for MIDI, A4, MNM or generic devices. | PianoRoll Editor |
 | Chromatic/voice tracks | Live pitch input, arpeggiation and polyphonic Machinedrum voice groups. | Chromatic and Polyphony pages |
 | State tracks | Performance, route, FX, tempo and other page state. | The related page |
@@ -27,7 +27,7 @@ Primary step tracks are edited from the Step Editor and are designed for 16-step
 | Swing | Per-track swing amount, stored with the track. |
 | Arp and LFO | Each track has its own arpeggiator and LFO settings in MCL 5.00. |
 
-The SPS-X sequencer engine adds deeper parameter locks, signed microtiming, retrigs, fill conditions, MID-machine note support and extended SPS-X parameter handling where supported by the connected device/firmware.
+TBD step tracks use the current Step Editor behavior, including signed microtiming, retrigs, fill conditions and parameter locks for the controls exposed by the active TBD sound.
 
 ## External MIDI Tracks
 
@@ -42,7 +42,7 @@ External MIDI-style tracks are edited from the PianoRoll and automation views.
 | Per-step behavior | Conditions, mute state, slide/glide and live recording. |
 | Arp and LFO | Per-track arpeggiator and LFO data is stored with the track. |
 
-On desktop, browser and compatible hosted builds, A4, MNM and generic MIDI devices can use full MIDI sequencer tracks directly in the grid.
+Generic MIDI, A4 and MNM-style secondary tracks use full MIDI sequencer tracks directly in the grid.
 
 ## Conditional Trigs
 
@@ -90,7 +90,7 @@ Microtiming nudges a step earlier or later relative to the grid.
 | Engine | Display behavior |
 | --- | --- |
 | Legacy Machinedrum step tracks | Timing is shown as offsets around the current speed's center tick. |
-| SPS-X and modern step tracks | Timing is stored and displayed as a signed offset, so early and late notes survive save/load correctly. |
+| TBD and modern step tracks | Timing is stored and displayed as a signed offset, so early and late notes survive save/load correctly. |
 | External MIDI tracks | Each note or automation event can carry its own microtiming. |
 
 ## Live Record

@@ -6,6 +6,12 @@ The Grid Page is the main working page in MCL. It shows the project grid, lets y
 
 The page shows a window into the active grid.
 
+![grid init annot](../assets/images/grid_init_annot.png)
+
+The annotated image above labels the grid regions. A current empty-project capture looks like this:
+
+![grid page current](../assets/images/grid_page_current.png)
+
 | Display item | Meaning |
 | --- | --- |
 | Slot labels | The stored track or state type, such as a drum model, device track, performance state or empty slot. |
@@ -33,7 +39,7 @@ Empty slots are shown as empty or placeholder cells.
 | **[No/Exit]** | Hold to open the Slot Menu. |
 | **[Bank]** + **[Trig]** | Load or queue rows by bank position. |
 
-On TBD builds, Save and Load appear as overlays on the Grid Page rather than replacing the whole page.
+On TBD, Save and Load appear as overlays on the Grid Page rather than replacing the whole page.
 
 ## Active Grid
 

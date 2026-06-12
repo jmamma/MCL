@@ -6,6 +6,8 @@ Open it with:
 
 **[Bank Group] + [Trig 10]**
 
+![osc menu](../assets/images/osc_menu.png)
+
 ## Workflow
 
 1. Shape oscillators on `OSC1`, `OSC2` and `OSC3`.
@@ -31,6 +33,8 @@ Hold **[Global]** to open the WAV Designer menu.
 
 Each oscillator has its own pitch, fine tune, shape width and waveform-specific editor.
 
+![wav designer sine init](../assets/images/wav_designer_sine_init.png)
+
 | Control | Function |
 | --- | --- |
 | `Encoder 1` | Pitch in note steps. |
@@ -53,7 +57,21 @@ The oscillator's displayed note/frequency determines its rendered pitch. The fin
 | `SAW` | Saw with width control. |
 | `USR` | Sixteen-point user waveform. Hold trig keys and turn `Encoder 4` to edit points. |
 
+![wav designer sin](../assets/images/wav_designer_sin.png)
+
+![wav designer tri](../assets/images/wav_designer_tri.png)
+
+![wav designer pulse](../assets/images/wav_designer_pulse.png)
+
+![wav designer saw](../assets/images/wav_designer_saw.png)
+
+![wav designer user](../assets/images/wav_designer_user.png)
+
+![wav designer pulse width](../assets/images/wav_designer_pulse_width.png)
+
 ## Mixer Page
+
+![wav designer mixer](../assets/images/wav_designer_mixer.png)
 
 | Control | Function |
 | --- | --- |
@@ -64,6 +82,8 @@ The oscillator's displayed note/frequency determines its rendered pitch. The fin
 | Hold **[Global]** | Open the menu with `TRANSFER`. |
 
 The mixer levels do not need to be conservative. The rendered file is normalized before transfer, with headroom protection during rendering.
+
+![oscmixer menu](../assets/images/oscmixer_menu.png)
 
 ## Output File
 

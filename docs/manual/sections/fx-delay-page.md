@@ -12,7 +12,7 @@ Controls the master FX Delay settings.
 _To enter the FX Delay Page: hold **[Bank Group]**, then press **[Trig 13]**._
 -16pt
 
-Each parameters of the MD's delay effect can be controlled. Four of them are displayed at once on screen. Press the **[Left]** cursor button to toggle between the two pages.
+Each parameters of the MD's delay effect can be controlled. Four of them are displayed at once on screen. Use the FX page-mode toggle to switch between the two parameter groups. On MD-style controls, **[No]** + **[Left]** jumps to the delay page and toggles the current delay group when already there.
 
 -4pt
 

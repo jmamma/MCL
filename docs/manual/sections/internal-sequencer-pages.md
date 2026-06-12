@@ -6,7 +6,7 @@ Open sequencer pages from Page Select with **[Bank Group]**.
 
 | Page | Use |
 | --- | --- |
-| Step Editor | Primary step tracks: Machinedrum, SPS-X, TBD or other step-capable primary devices. |
+| Step Editor | Primary step tracks: Machinedrum, TBD or other step-capable primary devices. |
 | PianoRoll Editor | External MIDI-style note and automation tracks. |
 | Chromatic Page | Live pitch input, note recording and arpeggiator control. |
 | Polyphony Page | Machinedrum voice grouping and multi-timbral chromatic setup. |
@@ -55,6 +55,8 @@ When a track length is extended and the new area is empty, MCL can repeat the ex
 Hold **[Global]** from a sequencer page to open the Track Menu. Release **[Global]** to apply the selected menu entry.
 
 The exact entries depend on the page and track type.
+
+![track menu](../assets/images/track_menu.png)
 
 | Entry | Function |
 | --- | --- |

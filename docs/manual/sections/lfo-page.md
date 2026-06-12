@@ -8,6 +8,8 @@ Open it from Page Select with:
 [Bank Group] + [Trig 6]
 ```
 
+![lfo](../assets/images/lfo.png)
+
 The legacy `LF` auxiliary slot is no longer the main LFO storage model. Older project data is migrated where supported, with legacy LFO data copied into the current per-track format.
 
 ## What An LFO Can Modulate
@@ -16,10 +18,10 @@ Each track LFO has two modulation outputs.
 
 | Destination type | Examples |
 | --- | --- |
-| Device parameters | Machinedrum, SPS-X, TBD or supported secondary-device parameters. |
+| Device parameters | Machinedrum, TBD or supported secondary-device parameters. |
 | Performance controllers | `PF1` through `PF4`. |
 | Other LFO tracks | LFO speed, depth 1 or depth 2. |
-| External/hosted MIDI targets | Supported generic MIDI, A4, MNM or hosted device parameters. |
+| External MIDI targets | Supported generic MIDI, A4, MNM or TBD secondary-device parameters. |
 
 The available destinations follow the current Grid X / Grid Y device configuration.
 
@@ -42,6 +44,8 @@ When using MD-style control input, **[Yes/Enter]** also toggles the LFO on/off.
 
 The LFO Page cycles through three subpages.
 
+![lfo action](../assets/images/lfo_action.png)
+
 | Subpage | Encoders | Purpose |
 | --- | --- | --- |
 | `LFO>DST` | Destination 1, parameter 1, destination 2, parameter 2. | Choose what the two LFO outputs modulate. |
@@ -54,6 +58,8 @@ Arrow keys move encoder focus on builds that support focused encoder editing.
 
 On `LFO>DST`, each output chooses a destination and parameter.
 
+![lfo dest](../assets/images/lfo_dest.png)
+
 | Field | Meaning |
 | --- | --- |
 | `DEST` | Target track, performance controller, LFO track or device parameter group. |
@@ -62,6 +68,8 @@ On `LFO>DST`, each output chooses a destination and parameter.
 | `LER` | Learn a destination/parameter from incoming or edited control data where supported. |
 
 Learning is useful when you do not want to browse parameter numbers manually. Set the destination empty and `PAR` to `LER`, then move the parameter you want to modulate.
+
+![lfo learn](../assets/images/lfo_learn.png)
 
 ## Mode
 
@@ -106,6 +114,8 @@ LFO speed can also be a modulation target, so one LFO can modulate another LFO's
 ## Depth And Offset
 
 On `LFO>DEP`, each output has a depth and an offset/base value.
+
+![lfo offset](../assets/images/lfo_offset.png)
 
 | Field | Meaning |
 | --- | --- |

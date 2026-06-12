@@ -6,11 +6,15 @@ Open it with:
 
 **[Bank Group] + [Trig 2]**
 
+![mixer page select](../assets/images/mixer_page_select.png)
+
 When the sequencer is running, **[Classic/Extended]** also opens and closes the Mixer Page.
 
 ## Mixer Target
 
-The Mixer Page can control any connected device that exposes mixer tracks: Machinedrum, Monomachine, Analog Four, generic MIDI devices and TBD/SPS targets. Up to 16 tracks are shown at once.
+The Mixer Page can control any connected device that exposes mixer tracks: Machinedrum, Monomachine, Analog Four, generic MIDI devices and TBD. Up to 16 tracks are shown at once.
+
+![mixer page init](../assets/images/mixer_page_init.png)
 
 Press **[Scale]** to switch the visible mixer target between the primary and secondary grid devices. If no mixer target has been selected yet, MCL chooses an available connected device and falls back to the Machinedrum when needed.
 
@@ -74,6 +78,8 @@ Hold **[Function]** while turning a performance encoder to hard-pan that control
 
 The Mixer Page has four performance states mapped to **[Down]**, **[Left]**, **[Up]** and **[Right]**. A performance state is a live recall snapshot for the performance layer.
 
+![mixer page perfs](../assets/images/mixer_page_perfs.png)
+
 Each state stores:
 
 - mute masks for the primary and secondary mixer targets
@@ -93,6 +99,8 @@ Each state stores:
 | Preview a state, hold **[No]**, then press a Perf encoder button | Add or clear the matching controller lock. |
 
 Preview edits do not change the live mute or fill state until the performance state is applied.
+
+![mixer page perf lock](../assets/images/mixer_page_perf_lock.png)
 
 ## PF Slot Storage
 

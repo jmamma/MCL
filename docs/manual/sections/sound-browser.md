@@ -6,6 +6,10 @@ Open it from a Machinedrum step track:
 
 **[Global] > SOUND**
 
+![sound manager](../assets/images/sound_manager.png)
+
+![sound browser page](../assets/images/sound_browser_page.png)
+
 ## What A Sound Contains
 
 A sound preset stores the active Machinedrum track's machine assignment and parameters. If the track uses a Trig Group to trigger another track, the linked track's machine settings are stored with it so the pair can be recalled together.
@@ -43,3 +47,5 @@ If the sound contains a linked Trig Group pair, MCL also loads the linked track 
 ## File Menu
 
 Hold **[Global]** to create folders, rename sounds or delete entries. Bulk sample-transfer actions are intentionally not available here; use the Sample Manager for WAV/SYX transfer.
+
+![file menu](../assets/images/file_menu.png)

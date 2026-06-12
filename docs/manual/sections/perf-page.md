@@ -6,11 +6,15 @@ Open it with:
 
 **[Bank Group] + [Trig 3]**
 
+![perf](../assets/images/perf.png)
+
 The same four controllers are also available from the Mixer Page when the selected mixer target supports performance control.
 
 ## What A Controller Does
 
 A performance controller is a macro. Turning it sends a smooth value from 0 to 127 and morphs every parameter lock in its assigned left and right scenes.
+
+![perf page](../assets/images/perf_page.png)
 
 For example, controller A can fade from Scene 1 to Scene 2. Scene 1 might store closed filters and low delay send; Scene 2 might store open filters and higher delay send. Turning controller A then moves all of those locked parameters together.
 
@@ -32,13 +36,15 @@ Performance controllers can be moved from external input. The source and paramet
 
 To learn a source, set the source to `--` and the parameter to `LER`, then move the external control you want to use. MCL assigns the source and parameter automatically when it receives a matching change.
 
+![perf page learn](../assets/images/perf_page_learn.png)
+
 MCL 5.00 resolves performance targets from the current device setup, so learning and target selection work with primary and secondary devices, shared logical slots, and LFO destinations.
 
 ## Scenes
 
 The Performance Page has eight scenes, selected with **[Trig 1]** through **[Trig 8]**. A scene stores up to 16 parameter locks.
 
-Scene locks can target device parameters, Machinedrum track and FX parameters, external MIDI parameters, SPS-X hosted parameters where available, and LFO parameters exposed as performance targets.
+Scene locks can target device parameters, Machinedrum track and FX parameters, external MIDI parameters, TBD parameters, and LFO parameters exposed as performance targets.
 
 Each controller has two scene assignments:
 
@@ -56,6 +62,8 @@ Each controller has two scene assignments:
 
 Hold a scene **[Trig]** and move a parameter on the target device to add it as a lock in that scene. MCL opens a parameter editor for the active target where supported, so the target hardware can be used for direct lock entry.
 
+![perf controller menu](../assets/images/perf_controller_menu.png)
+
 While a scene is held:
 
 | Control | Action |
@@ -66,7 +74,9 @@ While a scene is held:
 | `Encoder 4` | Edit the lock value. |
 | Encoder button for a hardware parameter | Add or clear that parameter lock when the active editor exposes parameter keys. |
 
-On classic AVR/Machinedrum builds, the direct parameter editor covers the 24 legacy Machinedrum parameters. Hosted SPS-X builds can preview and edit the extended SPS-X parameter range as well.
+On classic AVR/Machinedrum builds, the direct parameter editor covers the 24 legacy Machinedrum parameters. TBD parameter targets are exposed through the active device driver.
+
+![perf page scene locks](../assets/images/perf_page_scene_locks.png)
 
 ## LFO Modulation
 

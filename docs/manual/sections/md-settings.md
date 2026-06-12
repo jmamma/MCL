@@ -2,6 +2,8 @@
 
 The Machinedrum configuration page controls Machinedrum-specific project and transfer behavior.
 
+![machinedrum menu](../assets/images/machinedrum_menu.png)
+
 Open it from the dynamic device entry in the Configuration menu. When the Machinedrum is assigned as a grid device, the entry is named for the Machinedrum driver instead of the old fixed `DRIVER 1` or `DRIVER 2` label.
 
 ## Requirements
@@ -22,6 +24,8 @@ For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower from the MIDI port/t
 ## Import
 
 `IMPORT` opens the Machinedrum pattern import page.
+
+![machinedrum import](../assets/images/machinedrum_import.png)
 
 | Field | Function |
 | --- | --- |
@@ -57,7 +61,7 @@ Use `OFF` if you want saved MD track levels to remain untouched.
 
 The linked sample bank is stored with the project configuration.
 
-MCL sends the sample-bank load when the project is loaded and a Machinedrum or SPS-compatible Machinedrum driver is the primary grid device. The connected Machinedrum must support +Drive sample-bank switching.
+MCL sends the sample-bank load when the project is loaded and a Machinedrum driver is the primary grid device. The connected Machinedrum must support +Drive sample-bank switching.
 
 ## Machinedrum MIDI Input
 

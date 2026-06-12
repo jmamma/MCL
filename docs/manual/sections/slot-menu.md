@@ -4,6 +4,8 @@ The Slot Menu edits one slot or a rectangular range of slots from the Grid Page.
 
 Open it by holding **[No/Exit]** on the Grid Page.
 
+![slot menu](../assets/images/slot_menu.png)
+
 ## Range Selection
 
 When the Slot Menu is open, the selected area starts at the current cursor position.
@@ -16,7 +18,7 @@ When the Slot Menu is open, the selected area starts at the current cursor posit
 | **[Up]** / **[Down]** | Adjust selection height. |
 | **[Function]** + arrow | Adjust faster where supported. |
 
-On TBD builds, arrows navigate Slot Menu entries first; hold the normal function modifier to adjust selection geometry.
+On TBD, arrows navigate Slot Menu entries first; hold the normal function modifier to adjust selection geometry.
 
 ## Menu Entries
 
@@ -54,6 +56,8 @@ When changing length or loop across multiple slots, MCL tries to preserve musica
 ## Copy, Paste And Undo
 
 Copy and paste work on the selected rectangle. Clearing a range stores undo information for the same start position, so a mistaken clear can be restored from the Slot Menu workflow.
+
+![range copy](../assets/images/range_copy.png)
 
 ## Loading From The Slot Menu
 

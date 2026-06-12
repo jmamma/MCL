@@ -1,12 +1,14 @@
 # Chromatic Page
 
-The Chromatic Page plays and records pitched notes for the current sequencer track. It can target the primary device, such as Machinedrum, SPS-X or TBD, or the secondary/external MIDI-style tracks.
+The Chromatic Page plays and records pitched notes for the current sequencer track. It can target the primary device, such as Machinedrum or TBD, or the secondary/external MIDI-style tracks.
 
 Open it from Page Select with:
 
 ```text
 [Bank Group] + [Trig 8]
 ```
+
+![chroma](../assets/images/chroma.png)
 
 ## Controls
 
@@ -42,8 +44,8 @@ Press **[Scale]** to switch the Chromatic Page between primary and secondary tar
 
 | Target | Typical use |
 | --- | --- |
-| Primary | Machinedrum, SPS-X, TBD or another primary step-capable device. |
-| Secondary | External MIDI-style tracks, A4/MNM/generic MIDI or hosted devices where supported. |
+| Primary | Machinedrum, TBD or another primary step-capable device. |
+| Secondary | External MIDI-style tracks, A4/MNM/generic MIDI or TBD secondary tracks. |
 
 When the Track Menu is open, the trig keys can select or mute secondary tracks.
 
@@ -56,6 +58,8 @@ When the Track Menu is open, the trig keys can select or mute secondary tracks.
 
 Hold **[Global]** to open the Track Menu.
 
+![chromat action](../assets/images/chromat_action.png)
+
 | Entry | Function |
 | --- | --- |
 | `DEVICE` | Select primary or secondary target. |
@@ -67,6 +71,8 @@ Hold **[Global]** to open the Track Menu.
 | `LENGTH` | Set track length. |
 | `CHANNEL` | Set the MIDI channel for secondary/external tracks. |
 | `QUANT` | Toggle live record and arpeggiator quantization. |
+
+![chromatic menu](../assets/images/chromatic_menu.png)
 
 ## Controller Input Setup
 
@@ -95,9 +101,9 @@ Start live recording with:
 
 While recording, played notes are written into the active track or into the selected poly voice tracks. The Track Menu `QUANT` setting controls whether note placement is quantized.
 
-## Machinedrum And SPS-X Pitch
+## Machinedrum And TBD Pitch
 
-For Machinedrum-style tracks, the current machine must support pitched playback for chromatic playing to be useful. MIDI machines are handled as MIDI voice tracks, and SPS-X-capable tracks can use the extended pitch/note behavior provided by the connected firmware.
+For Machinedrum-style tracks, the current machine must support pitched playback for chromatic playing to be useful. MIDI machines are handled as MIDI voice tracks. TBD tracks use the note/pitch target exposed by the active TBD sound.
 
 For melodic Machinedrum machines, the track's pitch parameter is mapped to notes. Tonal machine tuning uses the newer equal-temperament-style mapping; default tuning keeps the legacy machine-specific behavior.
 

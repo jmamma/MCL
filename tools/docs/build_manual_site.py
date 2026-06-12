@@ -19,6 +19,7 @@ DEFAULT_SITE_ROOT = REPO_ROOT / "docs" / "site"
 
 
 SUMMARY_RE = re.compile(r"^\s*-\s+\[([^\]]+)\]\(([^)]+)\)")
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
 
 
 @dataclass(frozen=True)
@@ -91,13 +92,31 @@ def link_target(target: str) -> str:
     return target
 
 
-def image_block(line: str) -> str | None:
+def png_dimensions(path: Path) -> tuple[int, int] | None:
+    try:
+        data = path.read_bytes()[:24]
+    except OSError:
+        return None
+    if len(data) < 24 or data[:8] != PNG_SIGNATURE:
+        return None
+    return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
+
+
+def image_block(line: str, source_dir: Path | None = None) -> str | None:
     match = re.match(r"!\[([^\]]*)\]\(([^)]+)\)", line.strip())
     if not match:
         return None
     alt = html.escape(match.group(1))
-    src = html.escape(link_target(match.group(2)))
-    return f'<figure><img src="{src}" alt="{alt}" loading="lazy"><figcaption>{alt}</figcaption></figure>'
+    target = match.group(2)
+    classes: list[str] = []
+    if source_dir is not None and not re.match(r"^[a-z]+:", target):
+        image_target = target.split("#", 1)[0]
+        dims = png_dimensions((source_dir / image_target).resolve())
+        if dims in ((128, 32), (128, 64)):
+            classes.append("screen-image")
+    class_attr = f' class="{" ".join(classes)}"' if classes else ""
+    src = html.escape(link_target(target))
+    return f'<figure><img{class_attr} src="{src}" alt="{alt}" loading="lazy"><figcaption>{alt}</figcaption></figure>'
 
 
 def table_html(lines: list[str]) -> str:
@@ -125,7 +144,9 @@ def table_html(lines: list[str]) -> str:
     return "\n".join(out)
 
 
-def render_markdown(markdown: str) -> tuple[str, list[tuple[int, str, str]]]:
+def render_markdown(
+    markdown: str, source_dir: Path | None = None
+) -> tuple[str, list[tuple[int, str, str]]]:
     lines = markdown.splitlines()
     out: list[str] = []
     headings: list[tuple[int, str, str]] = []
@@ -167,7 +188,7 @@ def render_markdown(markdown: str) -> tuple[str, list[tuple[int, str, str]]]:
                     break
             continue
 
-        image = image_block(line)
+        image = image_block(line, source_dir)
         if image:
             out.append(image)
             i += 1
@@ -394,6 +415,12 @@ figure img {
   background: var(--surface);
 }
 
+figure img.screen-image {
+  width: min(100%, 512px);
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+}
+
 figcaption {
   color: var(--muted);
   font-size: 0.88rem;
@@ -479,7 +506,7 @@ if (filter) {
 def render_page(item: NavItem, items: list[NavItem], index: int, manual_root: Path) -> tuple[str, str]:
     markdown = item.source.read_text(encoding="utf-8")
     title = extract_title(markdown, item.title)
-    body, headings = render_markdown(markdown)
+    body, headings = render_markdown(markdown, item.source.parent)
     page_dir = Path(item.href).parent.as_posix()
     if page_dir == ".":
         page_dir = ""

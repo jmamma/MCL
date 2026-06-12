@@ -1,12 +1,14 @@
 # PianoRoll Editor Page
 
-The PianoRoll Editor edits the secondary/external-style sequencer tracks. These are the Grid Y MIDI-style tracks used for generic MIDI, Elektron devices, A4/MNM-style targets and hosted/TBD MIDI tracks where available.
+The PianoRoll Editor edits the secondary/external-style sequencer tracks. These are the Grid Y MIDI-style tracks used for generic MIDI, Elektron devices, A4/MNM-style targets and TBD MIDI tracks.
 
 Open it with:
 
 **[Bank Group] + [Trig 7]**
 
 The page has two edit views:
+
+![proll](../assets/images/proll.png)
 
 | View | Use |
 | --- | --- |
@@ -49,6 +51,8 @@ The MD trig keys jump the time cursor to step positions on the current 16-step p
 
 MCL 5.00 adds a note selection rectangle for focused note edits.
 
+![proll edit](../assets/images/proll_edit.png)
+
 | Control | Action |
 | --- | --- |
 | **[No]** + **[Down]** | Start a selection rectangle from the current cursor. |
@@ -77,6 +81,8 @@ When pasting between tracks with different timing, page clips are scaled to the 
 ## Track Menu
 
 Hold **[Global]** to open the Track Menu. The visible entries depend on whether `NOTE` view or an automation lane is selected.
+
+![proll menu](../assets/images/proll_menu.png)
 
 Common entries:
 
@@ -137,6 +143,8 @@ Recording follows the track MIDI channel. Notes, note-offs, CC, pitch bend, chan
 
 Each automation view edits one lock lane. Legacy external tracks provide the familiar MIDI automation lanes; current MIDI/TBD paths can expose more detailed targets.
 
+![proll aut](../assets/images/proll_aut.png)
+
 Supported lock targets include:
 
 - MIDI CC
@@ -145,7 +153,7 @@ Supported lock targets include:
 - channel pressure (`CHP`)
 - poly pressure
 - program change (`PRG`)
-- device parameters exposed by hosted/TBD targets
+- device parameters exposed by TBD or configured MIDI targets
 - `LEARN`, which assigns the lane from the next matching incoming control
 
 Hold a step trig and move an external control to write a lock at that step. In automation view, pressing **[Yes]** toggles a lock at the cursor using the current lock value.

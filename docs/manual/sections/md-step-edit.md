@@ -1,6 +1,6 @@
 # Step Editor Page
 
-The Step Editor programs primary step tracks. On classic MegaCommand this is the Machinedrum step sequencer view. On SPS-X, TBD and desktop/hosted builds it also covers the modern step engines used by the active primary device.
+The Step Editor programs primary step tracks. On classic MegaCommand this is the Machinedrum step sequencer view. With TBD assigned to Grid X, it edits TBD primary step tracks.
 
 Open it from Page Select with:
 
@@ -13,6 +13,8 @@ Pressing **[Rec]** can also toggle into the Step Editor from elsewhere in MCL.
 ## What You See
 
 The page shows 16 steps at a time. A 64-step track is edited as four pages of 16 steps.
+
+![step](../assets/images/step.png)
 
 | Display item | Meaning |
 | --- | --- |
@@ -40,6 +42,8 @@ The page shows 16 steps at a time. A 64-step track is edited as four pages of 16
 ## Adding And Removing Steps
 
 In `TRIG` edit mode:
+
+![step action](../assets/images/step_action.png)
 
 1. Press an empty **[Trig]** key to add a step.
 2. Hold the step to edit condition, microtiming, pitch or locks.
@@ -93,16 +97,20 @@ Hold **[Function]** while pressing **[Up]** or **[Down]** on a held step to togg
 
 Hold a step and use Encoder 2 or **[Left]** / **[Right]** to move it earlier or later.
 
+![utiming1](../assets/images/utiming1.png)
+
 | Engine | Behavior |
 | --- | --- |
 | Legacy Machinedrum | The timing window follows the track speed's tick grid. |
-| SPS-X and modern step tracks | Microtiming is signed, so negative values move earlier and positive values move later. |
+| TBD and modern step tracks | Microtiming is signed, so negative values move earlier and positive values move later. |
 
 MCL stores signed microtiming in current projects and migrates older timing data where supported.
 
 ## Parameter Locks
 
 Hold one or more steps and move a device parameter to write locks to those steps.
+
+![step keyboard](../assets/images/step_keyboard.png)
 
 | Action | Result |
 | --- | --- |
@@ -111,7 +119,7 @@ Hold one or more steps and move a device parameter to write locks to those steps
 | Use `SLIDE` mask | Make compatible parameter locks slide toward the next lock of the same parameter. |
 | Use Track Menu `CLEAR` lock options | Clear lock data without clearing the whole track. |
 
-SPS-X tracks can address the extended SPS-X parameter set when the connected firmware exposes it.
+TBD tracks can address the audio, mixer and note-lock parameters exposed by the active TBD sound.
 
 ## Swing
 

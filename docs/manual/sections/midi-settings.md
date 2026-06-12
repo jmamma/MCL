@@ -10,10 +10,12 @@ CONFIG > MIDI
 
 The MCL 5.00 MIDI menu contains:
 
+![midi menu](../assets/images/midi_menu.png)
+
 | Entry | Function |
 | --- | --- |
 | `DEVICES` | Assign Grid X and Grid Y devices and ports. |
-| `PORTS` / `TURBO` | Configure MIDI/USB turbo speed. TBD builds show the flattened `TURBO` menu. Other builds use `PORTS` with `PORT 1`, `PORT 2` and `USB` sub-pages. |
+| `PORTS` / `TURBO` | Configure MIDI/USB turbo speed. TBD shows the flattened `TURBO` menu. MegaCommand and MegaCMD use `PORTS` with `PORT 1`, `PORT 2` and `USB` sub-pages. |
 | `SYNC` | Configure clock and transport receive/source plus clock and transport send. |
 | `ROUTING` | Forward non-realtime MIDI between ports. |
 | `CONTROLLER` | Configure live input and output forwarding. |
@@ -28,6 +30,8 @@ The device setup menu is the most important MCL 5.00 configuration change. Grid 
 ```text
 CONFIG > MIDI > DEVICES
 ```
+
+![midi devices menu](../assets/images/midi_devices_menu.png)
 
 | Entry | Function |
 | --- | --- |
@@ -62,12 +66,14 @@ CONFIG > MIDI > PORTS > USB
 
 Each port has a `TURBO` setting.
 
+![midi turbo menu](../assets/images/midi_ports_menu.png)
+
 | Build | Turbo options |
 | --- | --- |
 | AVR hardware | `1x`, `2x`, `4x`, `8x` |
 | Non-AVR builds | `1x`, `2x`, `4x`, `6.7x`, `8x`, `10x` |
 
-TBD builds show the turbo settings directly under:
+TBD shows the turbo settings directly under:
 
 ```text
 CONFIG > MIDI > TURBO
@@ -80,6 +86,8 @@ For Machinedrum MK1 units, use `4x` or lower.
 ```text
 CONFIG > MIDI > SYNC
 ```
+
+![midi sync menu](../assets/images/midi_sync_menu.png)
 
 | Entry | MegaCommand / MegaCMD | TBD |
 | --- | --- | --- |
@@ -95,6 +103,8 @@ Use the same receive/source for clock and transport unless you intentionally wan
 ```text
 CONFIG > MIDI > ROUTING
 ```
+
+![midi route menu](../assets/images/midi_route_menu.png)
 
 Routing forwards non-realtime MIDI traffic between ports.
 
@@ -114,6 +124,8 @@ CONFIG > MIDI > CONTROLLER > INPUT
 
 Controller input is used for chromatic play, drum triggering, polyphonic input and live recording.
 
+![midi controller input](../assets/images/chromatic_menu.png)
+
 | Entry | Function |
 | --- | --- |
 | `PORT` | Selects the controller input port: `2`, `USB`, or `2 + USB`. |
@@ -129,6 +141,8 @@ Controller input is used for chromatic play, drum triggering, polyphonic input a
 CONFIG > MIDI > CONTROLLER > OUTPUT
 ```
 
+![midi controller output](../assets/images/midi_controller_output.png)
+
 | Entry | Function |
 | --- | --- |
 | `NOTE FWD` | Forward controller note input to Port 2 when enabled. |
@@ -140,6 +154,8 @@ CONFIG > MIDI > CONTROLLER > OUTPUT
 ```text
 CONFIG > MIDI > PROGRAM
 ```
+
+![midi prog menu](../assets/images/midi_prog_menu.png)
 
 | Entry | Function |
 | --- | --- |

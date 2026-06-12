@@ -26,6 +26,12 @@ Combined Button Presses:
 Encoder buttons are used to increase the speed of parameter rotation.
 Holding down an encoder button whilst rotating the encoder will increase the update speed by 4x.
 
+## Current UI Notes
+
+MCL 5.00 adds shared focused-parameter editing across many pages. On supported pages, the arrow keys move focus between visible encoder fields and adjust the focused value. This behavior is used on pages such as FX, RAM, Arpeggiator, LFO, Performance and Chromatic.
+
+Long menus and file lists show a compact scrollbar when there are more entries than fit on screen. Held navigation keys repeat where the current menu supports repeat.
+
 
 ## Machinedrum GUI: Enhanced Mode
 

@@ -14,6 +14,8 @@ Use **[Up]** and **[Down]** to move through entries, **[Yes/Enter]** to select, 
 
 The top-level menu is named `CONFIG`.
 
+![config menu 1](../assets/images/config_menu_1.png)
+
 | Entry | Function |
 | --- | --- |
 | `LOAD PROJECT` | Opens the project browser. |
@@ -26,6 +28,8 @@ The device config entries are dynamic. In older documentation these appeared as 
 ## Project Browser
 
 `LOAD PROJECT` opens the project browser. MCL 5.00 supports folders, so projects can be grouped and nested on the SD card.
+
+![project menu](../assets/images/project_menu.png)
 
 The project browser can show:
 
@@ -41,6 +45,8 @@ The currently loaded project is marked in the browser.
 ## File Menu
 
 Hold **[Global]** from the project browser to open the file menu.
+
+![project file menu](../assets/images/project_file_menu.png)
 
 | Entry | Function |
 | --- | --- |
@@ -58,6 +64,8 @@ The available actions depend on the selected entry and build options.
 
 The `VERS` action opens the project version browser. Versions are snapshots of the same project, useful before major edits or before converting an older project.
 
+![project versions](../assets/images/project_versions.png)
+
 Typical version actions:
 
 | Action | Function |
@@ -69,6 +77,10 @@ Typical version actions:
 ## New Project
 
 Creating a project opens a text-entry page. If a project or directory with the same name already exists, MCL reports an error instead of overwriting it.
+
+![new project](../assets/images/new_project.png)
+
+![charpane](../assets/images/charpane.png)
 
 ## Project Files
 

@@ -8,7 +8,9 @@ Open it from the Grid Page with:
 [Yes/Enter]
 ```
 
-On TBD builds, Load appears as a Grid Page overlay. On MegaCommand and MegaCMD builds, it opens as a page.
+![load from a](../assets/images/load_from_a.png)
+
+On TBD, Load appears as a Grid Page overlay. On MegaCommand and MegaCMD, it opens as a page.
 
 ## What Load Does
 
@@ -46,6 +48,8 @@ The visible grid determines which grid the trig keys target. Use **[Scale]** to 
 ## Group Load
 
 Hold **[Yes/Enter]** from Load to open `LOAD GROUPS`.
+
+![group select page](../assets/images/group_select_page.png)
 
 | Group | Loads |
 | --- | --- |
@@ -94,6 +98,8 @@ Use quantization to keep manual, auto and queue loads aligned with the phrase le
 ## Destination Offset
 
 In Manual mode, hold **[Function]** from Load to choose a destination offset.
+
+![load destination](../assets/images/load_destination.png)
 
 1. Hold **[Function]**.
 2. Press a **[Trig]** key to choose the destination slot.

@@ -81,4 +81,4 @@ If the range covers more than one row, MCL temporarily uses Queue mode so the se
 
 ## Arrangement And Host Loads
 
-Desktop, WASM and SPS-hosted workflows can also queue grid loads from host-side arrangement features. These use the same load modes internally, so understanding Manual, Auto and Queue also explains how arranged grid clips are launched.
+External arrangement workflows can also queue grid loads. These use the same load modes internally, so understanding Manual, Auto and Queue also explains how arranged grid clips are launched.
