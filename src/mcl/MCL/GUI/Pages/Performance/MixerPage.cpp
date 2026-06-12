@@ -54,6 +54,18 @@ void show_live_mute_leds(MixerPage &page) {
   }
 }
 
+void draw_fill_preview_mute_icon(uint8_t fader_x) NOINLINE();
+void draw_fill_preview_mute_icon(uint8_t fader_x) {
+  for (uint8_t row = 1; row < 8; ++row) {
+    uint8_t dx = row < 4 ? 4 - row : row - 4;
+    oled_display.drawPixel(fader_x + dx, row, WHITE);
+    uint8_t right = 6 - dx;
+    if (right != dx) {
+      oled_display.drawPixel(fader_x + right, row, WHITE);
+    }
+  }
+}
+
 } // namespace
 
 void MixerPage::sync_selected_mixer_device() {
@@ -229,18 +241,7 @@ void MixerPage::oled_draw_mutes() {
     if (draw) {
       if (fill_preview) {
         if (mute_state) {
-          oled_display.drawPixel(fader_x + 3, 1, WHITE);
-          oled_display.drawPixel(fader_x + 2, 2, WHITE);
-          oled_display.drawPixel(fader_x + 4, 2, WHITE);
-          oled_display.drawPixel(fader_x + 1, 3, WHITE);
-          oled_display.drawPixel(fader_x + 5, 3, WHITE);
-          oled_display.drawPixel(fader_x, 4, WHITE);
-          oled_display.drawPixel(fader_x + 6, 4, WHITE);
-          oled_display.drawPixel(fader_x + 1, 5, WHITE);
-          oled_display.drawPixel(fader_x + 5, 5, WHITE);
-          oled_display.drawPixel(fader_x + 2, 6, WHITE);
-          oled_display.drawPixel(fader_x + 4, 6, WHITE);
-          oled_display.drawPixel(fader_x + 3, 7, WHITE);
+          draw_fill_preview_mute_icon(fader_x);
         } else {
           oled_display.drawFastHLine(fader_x, 5, 6, WHITE);
         }

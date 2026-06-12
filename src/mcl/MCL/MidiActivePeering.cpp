@@ -57,6 +57,20 @@ static bool disconnect_driver_list(DriverList drivers, DeviceIdx device_idx,
   return disconnected_attached;
 }
 
+static void disconnect_attached_device(uint8_t port, DeviceIdx device_idx,
+                                       MidiUartClass *pmidi,
+                                       bool disconnected_attached) NOINLINE();
+
+static void disconnect_attached_device(uint8_t port, DeviceIdx device_idx,
+                                       MidiUartClass *pmidi,
+                                       bool disconnected_attached) {
+  MidiDevice *attached = device_manager.device_for_port(port);
+  if (attached != &null_midi_device && !disconnected_attached) {
+    if (attached->asElektronDevice()) turbo_light.set_speed(0, pmidi);
+    attached->disconnect(device_idx);
+  }
+}
+
 static DriverList drivers_for_slot(uint8_t slot_idx, bool force_generic) {
   if (force_generic) return generic_drivers();
   return slot_idx == SLOT_MD ? md_drivers() : elektron_drivers();
@@ -107,11 +121,7 @@ void MidiActivePeering::disconnect(uint8_t port) {
   }
   disconnected_attached |=
       disconnect_driver_list(drivers, device_idx, port, pmidi);
-  MidiDevice *attached = device_manager.device_for_port(port);
-  if (attached != &null_midi_device && !disconnected_attached) {
-    if (attached->asElektronDevice()) turbo_light.set_speed(0, pmidi);
-    attached->disconnect(device_idx);
-  }
+  disconnect_attached_device(port, device_idx, pmidi, disconnected_attached);
   device_manager.detach_port(port);
 }
 
@@ -162,11 +172,7 @@ static void probePort(uint8_t port, DriverList drivers) {
     }
     bool disconnected_attached =
         disconnect_driver_list(drivers, device_idx, port, pmidi);
-    MidiDevice *attached = device_manager.device_for_port(port);
-    if (attached != &null_midi_device && !disconnected_attached) {
-      if (attached->asElektronDevice()) turbo_light.set_speed(0, pmidi);
-      attached->disconnect(device_idx);
-    }
+    disconnect_attached_device(port, device_idx, pmidi, disconnected_attached);
     // reset MidiID to none
     pmidi->device.init();
     // reset connected device to /dev/null

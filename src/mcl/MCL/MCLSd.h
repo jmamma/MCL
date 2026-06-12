@@ -56,7 +56,8 @@ class MCLSd {
   bool read_data(void *data, size_t len, File *filep);
   bool write_data(void *data, size_t len, File *filep);
   bool copy_file(const char *src, const char *dst, uint8_t progress_base = 0,
-                 uint8_t progress_span = 0, uint8_t progress_max = 0);
+                 uint8_t progress_span = 0, uint8_t progress_max = 0)
+      __attribute__((noinline));
 #ifndef __AVR__
   bool copy_dir(const char *src, const char *dst, uint8_t progress_base = 0,
                 uint8_t progress_span = 0, uint8_t progress_max = 0);
