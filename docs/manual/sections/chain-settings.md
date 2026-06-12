@@ -78,7 +78,3 @@ MCL temporarily uses Queue mode for the chained rows, then restores the previous
 The Slot Menu can also load a rectangular range.
 
 If the range covers more than one row, MCL temporarily uses Queue mode so the selected rows advance as a queue.
-
-## Arrangement And Host Loads
-
-External arrangement workflows can also queue grid loads. These use the same load modes internally, so understanding Manual, Auto and Queue also explains how arranged grid clips are launched.

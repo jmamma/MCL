@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - main
+      - tbd
     paths:
       - "docs/**"
       - "tools/docs/**"

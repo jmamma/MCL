@@ -1,23 +1,19 @@
 # Platforms
 
-MCL can run on several supported platforms. The original platform is the MegaCommand MIDI controller, available as the MegaCommand DIY (2017) and MegaCMD (2021). Both were designed by Justin Mammarella.
+MCL started on the MegaCommand/MegaCMD hardware controller and now supports multiple platforms.
 
+| Platform | Use |
+| --- | --- |
+| MegaCommand DIY / MegaCMD | Classic MCL hardware for Machinedrum-centered MIDI setups. |
+| TBD | Integrated hardware platform with internal TBD device control, panel control and MCL grid sequencing. |
+| Desktop builds | Development and compatibility testing without dedicated MCL hardware. |
 
-The MegaCommand DIY is built upon the Arduino Mega 2560 development board and requires soldering and self assembly. The MegaCMD is a pre-built version based on an SMD design, requiring no user assembly.
-
-
-The MegaCMD benefits from some additional circuitry that allows USB disk access to the MicroSD card for file transfer between a host computer.
-
-
-The MegaCommand DIY can be powered via a standard DC power jack whilst the MegaCMD only accepts power via USB.
-
-
-The MiniCommand (2010) is an older controller developed by Ruin & Wesen that paved the way for the MegaCommand. It is not compatible with the current version of MCL.
+MegaCMD also supports USB disk mode for SD card file transfer. MiniCommand is legacy hardware and is not supported by current MCL releases.
 
 # Terminology and Conventions
 
 
-- MCL - the project and firmware/runtime name. Historically expanded as MegaCommand Live.
+- MCL - the project and firmware/runtime name.
 - MD - Machinedrum
 - MDX - Machinedrum X OS.
 - MC - MegaCommand or MegaCMD MIDI controller.
@@ -69,10 +65,10 @@ There are 3 types of tracks.
 
 
 - **MachineDrum Track** (Grid X: Slots 1-16):
-A sequencer track for the Elektron MD. Each MD Track contains the Machine's Sound Settings and Sequencer Data.
+A sequencer track for the Machinedrum. Each MD Track contains the Machine's Sound Settings and Sequencer Data.
 
 - **External MIDI Track** (Grid Y: Slots 1-6):
-A polyphonic sequencer track used to control a sound module connected via MIDI. Each External MIDI track contains Sequencer Data, and for supported Elektron devices sound data is retained.
+A polyphonic sequencer track used to control a sound module connected via MIDI. Each External MIDI track contains Sequencer Data, and for supported secondary devices sound data is retained.
 
 - **AUX Track** (Grid Y: Slots: 12-16)
 
@@ -91,7 +87,7 @@ Slots are categorised into groups based on the device they belong to, or a share
 
 The key concepts above describe the classic Machinedrum layout. MCL 5.00 keeps the same grid workflow, but `Grid X` and `Grid Y` can now be assigned to different devices from `CONFIG > MIDI > DEVICES`.
 
-The selected device decides what its grid slots store. For example, Grid X can store Machinedrum or TBD primary tracks, while Grid Y can store external MIDI tracks, supported Elektron tracks, TBD secondary tracks or auxiliary state.
+The selected device decides what its grid slots store. For example, Grid X can store Machinedrum or TBD primary tracks, while Grid Y can store external MIDI tracks, supported secondary-device tracks, TBD secondary tracks or auxiliary state.
 
 When this manual describes the fixed 16 MD + 6 external track layout, read it as the classic Machinedrum setup.
 

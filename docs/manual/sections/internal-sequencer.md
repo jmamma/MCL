@@ -27,7 +27,7 @@ Primary step tracks are edited from the Step Editor and are designed for 16-step
 | Swing | Per-track swing amount, stored with the track. |
 | Arp and LFO | Each track has its own arpeggiator and LFO settings in MCL 5.00. |
 
-TBD step tracks use the current Step Editor behavior, including signed microtiming, retrigs, fill conditions and parameter locks for the controls exposed by the active TBD sound.
+TBD step tracks use the current Step Editor behavior, including microtiming, retrigs, fill conditions and parameter locks for the controls exposed by the active TBD sound.
 
 ## External MIDI Tracks
 
@@ -40,9 +40,12 @@ External MIDI-style tracks are edited from the PianoRoll and automation views.
 | Notes | Polyphonic note events, velocity, note length and microtiming. |
 | Automation | CC, NRPN, RPN, pitch bend, channel pressure, poly pressure and program change locks where supported. |
 | Per-step behavior | Conditions, mute state, slide/glide and live recording. |
+| Route channels | Normal MIDI channels `1..16`, plus MD route targets for Machinedrum polyphonic voice groups. |
 | Arp and LFO | Per-track arpeggiator and LFO data is stored with the track. |
 
 Generic MIDI, A4 and MNM-style secondary tracks use full MIDI sequencer tracks directly in the grid.
+
+When Machinedrum is the primary grid device, an external MIDI track can route to a Machinedrum polyphonic voice group instead of a MIDI output channel. In the external track's `CHANNEL` setting, scroll past MIDI channel `16` to choose `MD1` through `MD16`. The selected `MD` target uses the Polyphony Page voice allocator for notes, and CC automation or parameter locks can control the addressed Machinedrum track parameters.
 
 ## Conditional Trigs
 
@@ -85,13 +88,9 @@ The default swing mask affects off-beat steps. When a Machinedrum pattern's glob
 
 ## Microtiming
 
-Microtiming nudges a step earlier or later relative to the grid.
+Microtiming moves a step, note or automation event slightly earlier or later relative to the grid.
 
-| Engine | Display behavior |
-| --- | --- |
-| Legacy Machinedrum step tracks | Timing is shown as offsets around the current speed's center tick. |
-| TBD and modern step tracks | Timing is stored and displayed as a signed offset, so early and late notes survive save/load correctly. |
-| External MIDI tracks | Each note or automation event can carry its own microtiming. |
+Negative values play earlier, positive values play later. The timing offset is saved with the step or event and is preserved through save/load, copy/paste and supported project migration.
 
 ## Live Record
 

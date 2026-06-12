@@ -30,7 +30,7 @@ Recommended configuration:
 
 Upgrade the Machinedrum to OS X.13 before using MCL 5.00. For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower.
 
-## Secondary Elektron Device
+## Secondary Device
 
 For a Monomachine or Analog Four as a secondary device:
 

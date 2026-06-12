@@ -91,14 +91,14 @@ PianoRoll and external MIDI-style tracks add note and automation entries.
 
 | Entry | Function |
 | --- | --- |
-| `CHANNEL` | Set the MIDI channel for the current track. |
+| `CHANNEL` | Set the MIDI channel for the current track. When Machinedrum is the primary device, values after `16` route to `MD1`-`MD16` polyphonic voice targets. |
 | `VEL` | Set default note velocity. |
 | `COND` | Set default trig/note condition. |
 | `CC` / parameter select | Choose the active automation lane. |
 | `SLIDE` | Enable glide between automation values where supported. |
 | `CC REC` | Enable recording of incoming control changes into automation lanes. |
 
-Automation lanes can target CC, NRPN, RPN, pitch bend, channel pressure, poly pressure and program change where supported by the track type.
+Automation lanes can target CC, NRPN, RPN, pitch bend, channel pressure, poly pressure and program change where supported by the track type. On an `MD1`-`MD16` route target, the automation lane selects Machinedrum track parameters instead of generic MIDI CC destinations.
 
 ## Copy, Clear And Paste Scopes
 

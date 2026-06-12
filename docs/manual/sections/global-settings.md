@@ -20,7 +20,7 @@ The top-level menu is named `CONFIG`.
 | --- | --- |
 | `LOAD PROJECT` | Opens the project browser. |
 | `MIDI` | Opens device, port, sync, routing, controller and program-change settings. |
-| Device config entries | Dynamic entries for connected devices, such as Machinedrum, Elektron, generic MIDI or TBD. |
+| Device config entries | Dynamic entries for connected devices, such as Machinedrum, Monomachine, Analog Four, generic MIDI or TBD. |
 | `SYSTEM` | Opens display, project-configuration and grid-encoder settings. |
 
 The device config entries are dynamic. In older documentation these appeared as fixed entries such as `DRIVER 1` and `DRIVER 2`; in MCL 5.00 they are named for the connected driver where possible.

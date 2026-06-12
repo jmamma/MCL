@@ -1,8 +1,5 @@
 # Summary
 
-- [MCL Manual](index.md)
-- [Manual Audit](manual_audit.md)
-
 - [Introduction](sections/introduction.md)
 - [Concepts and Platforms](sections/key-concepts.md)
 - [MIDI Setup](sections/midi-setup.md)

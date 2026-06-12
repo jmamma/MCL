@@ -1,4 +1,4 @@
-# MCL Manual Source
+# MCL Source
 
 The editable manual now lives in Markdown under this directory. The generated GitHub Pages site is built from these files by `tools/docs/build_manual_site.py`.
 

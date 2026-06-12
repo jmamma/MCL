@@ -1,6 +1,6 @@
 # PianoRoll Editor Page
 
-The PianoRoll Editor edits the secondary/external-style sequencer tracks. These are the Grid Y MIDI-style tracks used for generic MIDI, Elektron devices, A4/MNM-style targets and TBD MIDI tracks.
+The PianoRoll Editor edits the secondary/external-style sequencer tracks. These are the Grid Y MIDI-style tracks used for generic MIDI, A4/MNM-style targets and TBD MIDI tracks.
 
 Open it with:
 
@@ -92,7 +92,7 @@ Common entries:
 | `EDIT` / `PIANOROLL` | Switch between `NOTE` view and automation lock lanes. |
 | `SPEED` | Set track playback speed. |
 | `LENGTH` | Set track length up to 128 steps. |
-| `CHANNEL` | Set the MIDI channel for the track. |
+| `CHANNEL` | Set the MIDI channel for the track, or an MD route target when available. |
 | `COPY`, `PASTE`, `SHIFT`, `REVERSE`, `TRAN` | Track-level edit operations. |
 | `QUANT` | Toggle quantized live recording. |
 | `CC REC` | Enable or disable live automation recording. |
@@ -125,6 +125,21 @@ While the Track Menu is open, the trig keys select or mute secondary/external tr
 
 Muting an external/MIDI-style track sends note-offs so currently held notes are silenced.
 
+## External MIDI Track Routing
+
+External MIDI tracks normally send notes and automation to the configured secondary MIDI device on channels `1..16`. When Machinedrum is the primary grid device, the `CHANNEL` setting can also route the track into Machinedrum polyphonic voice groups.
+
+To route an external track to the Machinedrum:
+
+1. Open the PianoRoll Track Menu.
+2. Select `CHANNEL`.
+3. Scroll past MIDI channel `16`.
+4. Choose `MD1` through `MD16`.
+
+`MD1` through `MD16` refer to Machinedrum primary tracks, not external MIDI channels. Notes on the external track are sent through the Polyphony Page voice allocator for the selected Machinedrum track or voice group. If the selected track belongs to a poly group, MCL chooses an available voice from that group. If it does not belong to a group, the route addresses that track directly where the machine supports pitched playback.
+
+In route mode, automation and parameter locks can target Machinedrum track parameters. CC numbers `16..39` correspond to the 24 Machinedrum track parameters for the routed target, and the automation lane menu shows the matching parameter labels where MCL can resolve them from the current kit.
+
 ## MIDI Input And Live Recording
 
 Configure controller input from:
@@ -155,6 +170,8 @@ Supported lock targets include:
 - program change (`PRG`)
 - device parameters exposed by TBD or configured MIDI targets
 - `LEARN`, which assigns the lane from the next matching incoming control
+
+When the track `CHANNEL` is set to an `MD1`-`MD16` route target, the lock lane uses Machinedrum track parameters for that route target. This lets a PianoRoll track play a Machinedrum polyphonic voice group and automate the same destination's sound parameters.
 
 Hold a step trig and move an external control to write a lock at that step. In automation view, pressing **[Yes]** toggles a lock at the cursor using the current lock value.
 

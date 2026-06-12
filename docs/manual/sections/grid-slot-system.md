@@ -43,7 +43,7 @@ MCL 5.00 uses the configured Grid X / Grid Y device model.
 | Grid setup example | Result |
 | --- | --- |
 | Grid X = `MD`, Grid Y = `GENER` | Machinedrum on the primary grid, generic MIDI tracks on the secondary grid. |
-| Grid X = `MD`, Grid Y = `ELEKT` | Machinedrum plus a supported Elektron secondary device. |
+| Grid X = `MD`, Grid Y = `ELEKT` | Machinedrum plus a supported secondary device, such as Monomachine or Analog Four. |
 | Grid X = `TBD`, Grid Y = `OFF` | TBD as the primary grid device. |
 | Grid X = `MD`, Grid Y = `TBD` | Machinedrum primary with TBD as the secondary grid device. |
 

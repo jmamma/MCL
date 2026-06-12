@@ -99,18 +99,15 @@ Hold a step and use Encoder 2 or **[Left]** / **[Right]** to move it earlier or 
 
 ![utiming1](../assets/images/utiming1.png)
 
-| Engine | Behavior |
-| --- | --- |
-| Legacy Machinedrum | The timing window follows the track speed's tick grid. |
-| TBD and modern step tracks | Microtiming is signed, so negative values move earlier and positive values move later. |
-
-MCL stores signed microtiming in current projects and migrates older timing data where supported.
+Negative values play earlier, positive values play later. MCL saves the timing offset with the step and preserves it through save/load, copy/paste and supported project migration.
 
 ## Parameter Locks
 
 Hold one or more steps and move a device parameter to write locks to those steps.
 
-![step keyboard](../assets/images/step_keyboard.png)
+![step parameter locks](../assets/images/step_param_locks.png)
+
+Steps that contain locks are drawn with the lock marker for the active parameter page.
 
 | Action | Result |
 | --- | --- |

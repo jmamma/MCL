@@ -474,7 +474,7 @@ def write_if_allowed(path: Path, content: str, force: bool) -> None:
 
 
 def build_index() -> str:
-    return """# MCL Manual
+    return """# MCL
 
 This Markdown manual was migrated from the legacy LaTeX/PDF documentation so it can be maintained with the MCL source code and published through GitHub Pages.
 
@@ -485,7 +485,7 @@ This Markdown manual was migrated from the legacy LaTeX/PDF documentation so it 
 
 
 def build_readme() -> str:
-    return """# MCL Manual Source
+    return """# MCL Source
 
 The editable manual now lives in Markdown under this directory. The generated GitHub Pages site is built from these files by `tools/docs/build_manual_site.py`.
 
@@ -622,7 +622,7 @@ def migrate(args: argparse.Namespace) -> int:
         sections.append(section)
         write_if_allowed(output_path, markdown, args.force)
 
-    summary_lines = ["# Summary", "", "- [MCL Manual](index.md)", "- [Manual Audit](manual_audit.md)", ""]
+    summary_lines = ["# Summary", "", "- [MCL](index.md)", "- [Manual Audit](manual_audit.md)", ""]
     for section in sections:
         rel = section.output_path.relative_to(output_root).as_posix()
         summary_lines.append(f"- [{section.title}]({rel})")

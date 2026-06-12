@@ -109,14 +109,27 @@ def image_block(line: str, source_dir: Path | None = None) -> str | None:
     alt = html.escape(match.group(1))
     target = match.group(2)
     classes: list[str] = []
+    figure_classes: list[str] = []
+    image_target = target.split("#", 1)[0]
+    is_logo = Path(image_target).name.startswith("mcl_logo")
+    if is_logo:
+        figure_classes.append("logo-figure")
+        classes.append("logo-image")
     if source_dir is not None and not re.match(r"^[a-z]+:", target):
-        image_target = target.split("#", 1)[0]
         dims = png_dimensions((source_dir / image_target).resolve())
         if dims in ((128, 32), (128, 64)):
             classes.append("screen-image")
+    figure_class_attr = (
+        f' class="{" ".join(figure_classes)}"' if figure_classes else ""
+    )
     class_attr = f' class="{" ".join(classes)}"' if classes else ""
     src = html.escape(link_target(target))
-    return f'<figure><img{class_attr} src="{src}" alt="{alt}" loading="lazy"><figcaption>{alt}</figcaption></figure>'
+    caption = "" if is_logo else f"<figcaption>{alt}</figcaption>"
+    return (
+        f"<figure{figure_class_attr}>"
+        f'<img{class_attr} src="{src}" alt="{alt}" loading="lazy">'
+        f"{caption}</figure>"
+    )
 
 
 def table_html(lines: list[str]) -> str:
@@ -130,7 +143,10 @@ def table_html(lines: list[str]) -> str:
         return ""
     header = rows[0]
     body = rows[1:]
-    out = ["<div class=\"table-wrap\"><table>", "<thead><tr>"]
+    out = [
+        f"<div class=\"table-wrap\"><table class=\"cols-{len(header)}\">",
+        "<thead><tr>",
+    ]
     out.extend(f"<th>{parse_inline(cell)}</th>" for cell in header)
     out.append("</tr></thead>")
     if body:
@@ -251,14 +267,19 @@ def render_markdown(
 def site_css() -> str:
     return """\
 :root {
-  --bg: #f7f7f4;
-  --surface: #ffffff;
-  --text: #202421;
-  --muted: #666d68;
-  --line: #d8ddd7;
-  --accent: #126e5d;
-  --accent-soft: #e3f0ec;
-  --code: #eef1ec;
+  --bg: #eef1f5;
+  --paper: #fbfbfc;
+  --text: #242932;
+  --muted: #66707a;
+  --line: #c8ced6;
+  --rule: #9aa7b4;
+  --soft: #f4f6f8;
+  --accent: #7b3541;
+  --accent-soft: #f3e5e8;
+  --link: #315f8c;
+  --table-head: #e7edf4;
+  --table-line: #b9c3cf;
+  --code: #edf1f4;
 }
 
 * {
@@ -269,16 +290,18 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font: 15px/1.48 Arial, Helvetica, sans-serif;
 }
 
 a {
-  color: var(--accent);
+  color: var(--link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.16em;
 }
 
 .layout {
   display: grid;
-  grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  grid-template-columns: minmax(230px, 292px) minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -287,82 +310,110 @@ a {
   top: 0;
   height: 100vh;
   overflow: auto;
-  border-right: 1px solid var(--line);
-  background: #fbfbf8;
-  padding: 20px 16px;
+  border-right: 2px solid var(--rule);
+  background: #e4e8ee;
+  padding: 18px 14px;
 }
 
 .brand {
+  border-bottom: 2px solid var(--rule);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
   font-weight: 700;
-  font-size: 1rem;
-  margin-bottom: 14px;
+  font-size: 1.02rem;
+  line-height: 1.1;
+  margin-bottom: 13px;
+  padding-bottom: 10px;
+  text-transform: uppercase;
 }
 
 .nav-filter {
   width: 100%;
   min-height: 36px;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 7px 9px;
+  border-radius: 0;
+  padding: 7px 8px;
   color: var(--text);
-  background: var(--surface);
+  background: var(--paper);
+  font: inherit;
 }
 
 .nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   margin-top: 14px;
 }
 
 .nav a {
   display: block;
-  border-radius: 6px;
-  padding: 7px 8px;
+  border-left: 3px solid transparent;
+  padding: 6px 8px 6px 9px;
   color: var(--text);
+  font-size: 0.88rem;
+  line-height: 1.2;
   text-decoration: none;
 }
 
 .nav a:hover,
 .nav a.active {
+  border-left-color: var(--accent);
   background: var(--accent-soft);
-  color: #0b4f42;
+  color: #4a222a;
 }
 
 .content {
-  width: min(100%, 980px);
-  padding: 42px 34px 80px;
+  width: min(100%, 930px);
+  min-height: 100vh;
+  background: var(--paper);
+  padding: 38px 50px 84px;
 }
 
 .doc-meta {
   color: var(--muted);
-  font-size: 0.9rem;
-  margin-bottom: 28px;
+  border-top: 2px solid var(--rule);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  margin: 0 0 30px;
+  padding-top: 9px;
+  text-transform: uppercase;
 }
 
 h1,
 h2,
 h3,
 h4 {
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 h1 {
-  font-size: 2.1rem;
-  margin: 0 0 18px;
+  border-bottom: 2px solid var(--rule);
+  font-size: 2rem;
+  margin: 0 0 22px;
+  padding-bottom: 12px;
 }
 
 h2 {
-  font-size: 1.45rem;
-  margin-top: 38px;
+  border-top: 1px solid var(--rule);
+  font-size: 1.22rem;
+  margin: 38px 0 10px;
   padding-top: 10px;
-  border-top: 1px solid var(--line);
 }
 
 h3 {
-  font-size: 1.15rem;
-  margin-top: 28px;
+  font-size: 1.02rem;
+  margin: 26px 0 8px;
+}
+
+h4 {
+  font-size: 0.92rem;
+  margin: 20px 0 8px;
 }
 
 p,
@@ -372,28 +423,38 @@ blockquote,
 table,
 figure,
 pre {
-  margin: 16px 0;
+  margin: 13px 0;
+}
+
+ul,
+ol {
+  padding-left: 1.45rem;
+}
+
+li + li {
+  margin-top: 4px;
 }
 
 blockquote {
-  border-left: 4px solid var(--accent);
-  background: var(--accent-soft);
-  padding: 10px 14px;
-  color: #24453d;
+  border: 1px solid #e0c7cc;
+  background: #fbf4f5;
+  color: var(--text);
+  padding: 11px 14px;
 }
 
 code {
-  border-radius: 4px;
+  border: 1px solid var(--line);
+  border-radius: 0;
   background: var(--code);
-  padding: 0.1em 0.3em;
+  padding: 0.08em 0.28em;
   font-size: 0.92em;
 }
 
 pre {
   overflow: auto;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: #f0f2ee;
+  border-radius: 0;
+  background: var(--soft);
   padding: 14px;
 }
 
@@ -403,7 +464,11 @@ pre code {
 }
 
 figure {
-  margin: 24px 0;
+  margin: 22px 0;
+}
+
+figure.logo-figure {
+  margin: 0 0 24px;
 }
 
 figure img {
@@ -411,8 +476,13 @@ figure img {
   max-width: 100%;
   height: auto;
   border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--surface);
+  border-radius: 0;
+  background: var(--paper);
+}
+
+figure img.logo-image {
+  border: 0;
+  width: min(100%, 300px);
 }
 
 figure img.screen-image {
@@ -423,30 +493,73 @@ figure img.screen-image {
 
 figcaption {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   margin-top: 6px;
+  text-transform: uppercase;
 }
 
 .table-wrap {
+  border-bottom: 2px solid var(--rule);
+  border-top: 2px solid var(--rule);
+  margin: 18px 0 22px;
   overflow-x: auto;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  background: var(--surface);
+  background: var(--paper);
+  font-size: 0.9rem;
+  line-height: 1.34;
 }
 
 th,
 td {
-  border: 1px solid var(--line);
-  padding: 8px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--table-line);
+  padding: 7px 9px;
   vertical-align: top;
 }
 
 th {
-  background: #edf1ec;
+  background: var(--table-head);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 700;
   text-align: left;
+  text-transform: uppercase;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+td:first-child {
+  color: var(--text);
+  font-weight: 700;
+}
+
+table.cols-2 th:first-child,
+table.cols-2 td:first-child {
+  min-width: 12rem;
+  width: 30%;
+}
+
+table.cols-3 th:first-child,
+table.cols-3 td:first-child {
+  min-width: 9rem;
+  width: 22%;
+}
+
+table.cols-4 th,
+table.cols-4 td {
+  padding: 6px 8px;
+}
+
+table code {
+  background: var(--paper);
+  white-space: nowrap;
 }
 
 .pager {
@@ -455,7 +568,7 @@ th {
   gap: 16px;
   margin-top: 54px;
   padding-top: 22px;
-  border-top: 1px solid var(--line);
+  border-top: 2px solid var(--rule);
 }
 
 .pager a {
@@ -472,7 +585,7 @@ th {
     position: static;
     height: auto;
     border-right: 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 2px solid var(--rule);
   }
 
   .content {
@@ -480,7 +593,14 @@ th {
   }
 
   h1 {
-    font-size: 1.75rem;
+    font-size: 1.55rem;
+  }
+
+  table.cols-2 th:first-child,
+  table.cols-2 td:first-child,
+  table.cols-3 th:first-child,
+  table.cols-3 td:first-child {
+    min-width: 10rem;
   }
 }
 """
@@ -535,31 +655,48 @@ def render_page(item: NavItem, items: list[NavItem], index: int, manual_root: Pa
         else "<span></span>"
     )
     pager += "</nav>"
-    rel_source = item.source.relative_to(manual_root).as_posix()
     return title, f"""<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{html.escape(title)} - MCL Manual</title>
+  <title>{html.escape(title)} - MCL</title>
   <link rel="stylesheet" href="{html.escape(css_href)}">
 </head>
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">MCL Manual</div>
+      <div class="brand">MCL</div>
       <input class="nav-filter" data-nav-filter type="search" placeholder="Filter sections" aria-label="Filter sections">
       <nav class="nav" aria-label="Manual sections">
         {nav_html}
       </nav>
     </aside>
     <main class="content">
-      <div class="doc-meta">Source: {html.escape(rel_source)}</div>
+      <div class="doc-meta">MCL / {html.escape(title)}</div>
       {body}
       {pager}
     </main>
   </div>
   <script src="{html.escape(js_href)}"></script>
+</body>
+</html>
+"""
+
+
+def redirect_page(target: str) -> str:
+    escaped = html.escape(target)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0; url={escaped}">
+  <title>MCL</title>
+  <link rel="canonical" href="{escaped}">
+</head>
+<body>
+  <p><a href="{escaped}">Open MCL</a></p>
 </body>
 </html>
 """
@@ -587,9 +724,8 @@ def build(manual_root: Path, site_root: Path) -> None:
         search_index.append({"title": title, "href": item.href, "text": plain[:4000]})
 
     root_index = site_root / "index.html"
-    manual_index = site_root / "index.html"
-    if not manual_index.exists() and items:
-        shutil.copy2(site_root / items[0].href, root_index)
+    if not root_index.exists() and items:
+        root_index.write_text(redirect_page(items[0].href), encoding="utf-8")
     (site_root / "search-index.json").write_text(json.dumps(search_index, indent=2), encoding="utf-8")
     (site_root / ".nojekyll").write_text("", encoding="utf-8")
     print(f"Built manual site: {site_root}")

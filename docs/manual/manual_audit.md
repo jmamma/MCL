@@ -21,7 +21,7 @@ Referenced legacy images not present during migration:
 - [x] Update MIDI, controller, sync, route, MD, and system configuration labels from `resource/menu_layouts.cpp` and `resource/menu_options.cpp`.
 - [x] Update project load/save documentation for folders, cloning, moving, versions, and project config.
 - [x] Update grid and slot menu documentation, including the `SOUND` slot option.
-- [x] Update sequencer documentation for swing, mute masks, fill conditions, current condition labels and signed microtiming.
+- [x] Update sequencer documentation for swing, mute masks, fill conditions, current condition labels and standardized microtiming.
 - [x] Update LFO and arp documentation for per-track storage and new destinations/options.
 - [x] Update polyphony/chromatic documentation for `POLY MODE` and multi-timbral behavior.
 - [x] Update mixer/performance documentation for mute/fill modes and performance-state fill storage.
@@ -48,7 +48,7 @@ Legacy screenshots are back in the manual, but several now show old menu labels 
 | High | Project and Configuration Menu | `config_menu_1.png`, `project_menu.png`, `project_file_menu.png`, `project_versions.png`, `new_project.png` | Recaptured current top-level config, project browser, project file menu, version browser and new-project entry screens. |
 | High | Page Select and Boot Menu | `page_select_page.png`, `boot_menu.png` | Recaptured Page Select and Boot Menu. Boot capture uses the helper's startup button hold path. |
 | High | Grid, Slot, Save and Load | `grid_init_annot.png`, `grid_page_current.png`, `slot_menu.png`, `range_copy.png`, `save_to_a.png`, `load_from_a.png`, `group_select_page.png`, `load_destination.png` | Added current raw Grid capture while keeping the annotated legacy grid diagram. Recaptured Slot Menu, range selection, Save, Load, Group Selector and Load Destination. |
-| High | Sequencer pages | `step.png`, `step_action.png`, `utiming1.png`, `track_menu.png`, `seq_ptc_quant.png` | Recaptured current Step Editor, added-trig state, signed microtiming overlay, Track Menu and `QUANT` menu entry. |
+| High | Sequencer pages | `step.png`, `step_action.png`, `utiming1.png`, `track_menu.png`, `seq_ptc_quant.png` | Recaptured current Step Editor, added-trig state, microtiming overlay, Track Menu and `QUANT` menu entry. |
 | High | LFO, Arpeggiator, Chromatic and Polyphony | `lfo*.png`, `arp_page.png`, `chro_menu.png`, `chroma.png`, `chromat_action.png`, `chromatic_menu.png`, `voice_select_page.png` | Recaptured LFO subpages, ARP page, Chromatic page, Chromatic Track Menu, Controller Input `POLY MODE` screen and Polyphony voice-select page. |
 | High | Mixer and Performance | `mixer_page_*.png`, `perf*.png` | Recaptured Mixer selector/base/performance-state preview and Performance selector/base/learn/menu/scene-lock screens. Kept legacy `mixer_page_perf_lock.png` because it shows the visible lock marker; headless attempts can reach the page but do not yet reproduce a non-empty lock marker reliably. |
 | Medium | Machinedrum configuration | `machinedrum_menu.png`, `machinedrum_import.png` | Recaptured current Machinedrum device menu and import page. |

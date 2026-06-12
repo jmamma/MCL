@@ -51,6 +51,7 @@ When the active Chromatic track belongs to a group, the Chromatic Page shows `PL
 | --- | --- |
 | Internal Chromatic keyboard | Plays the selected track's group. |
 | External controller with `POLY MODE = INT+EXT` | Plays the group whose channel matches the incoming MIDI channel. |
+| External MIDI track routed to `MD1`-`MD16` | Plays the selected Machinedrum track or its polyphonic voice group from the PianoRoll sequencer. |
 | MIDI CC 16-39 on a poly channel | Controls Machinedrum parameters 1-24 across compatible tracks in that group. |
 
 If `POLY MODE` is `INT`, external input does not trigger poly groups.
@@ -95,3 +96,5 @@ CONFIG > MIDI > CONTROLLER > INPUT
 | `INT+EXT` | Poly groups also respond to external controller input on matching group channels. |
 
 The old `POLY CHAN` option is gone. Use Polyphony Page groups to decide which MIDI channel controls each group.
+
+External MIDI tracks can also use these voice groups internally. Set the PianoRoll Track Menu `CHANNEL` value past `16` to choose an `MD1`-`MD16` route target.
