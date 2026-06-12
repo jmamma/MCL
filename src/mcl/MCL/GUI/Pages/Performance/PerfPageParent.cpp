@@ -28,7 +28,7 @@ void PerfPageParent::draw_param(uint8_t knob, uint8_t dest, uint8_t param,
                                 DeviceIdx device_idx) {
 
   char myName[4];
-  mclstr_copy_progmem(myName, mclstr_dash_space, sizeof(myName));
+  mclstr_init_dash_space(myName);
 
   if (dest == 0) {
     if (param > 1) {
@@ -52,7 +52,7 @@ void PerfPageParent::draw_dest(uint8_t knob, uint8_t value, bool dest,
                                DeviceIdx device_idx) {
   char K[5];
   if (value == 0) {
-    strcpy_P(K, mclstr_dash);
+    mclstr_init_dash(K);
   } else {
     bool labelled =
         device_idx != DeviceIdx::None

@@ -324,6 +324,27 @@ inline void mclstr_copy_progmem(char *dest, const char *src_P, size_t max_len) {
   dest[max_len - 1] = '\0';
 }
 
+inline void mclstr_init_dash_space(char *dest) {
+  dest[0] = '-';
+  dest[1] = ' ';
+  dest[2] = '\0';
+}
+
+inline void mclstr_init_dash(char *dest) {
+  dest[0] = '-';
+  dest[1] = '-';
+  dest[2] = ' ';
+  dest[3] = '\0';
+}
+
+inline void mclstr_init_dash_dash_space(char *dest) {
+  dest[0] = '-';
+  dest[1] = '-';
+  dest[2] = ' ';
+  dest[3] = ' ';
+  dest[4] = '\0';
+}
+
 /**
  * Copy a PROGMEM string from a string array to RAM buffer
  *

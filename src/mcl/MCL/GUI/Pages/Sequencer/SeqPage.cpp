@@ -1253,7 +1253,7 @@ void SeqPage::conditional_str(char *s, uint8_t c, bool m) {
 
 void SeqPage::draw_knob_timing(uint8_t timing, uint8_t timing_center) {
   char K[5];
-  mclstr_copy_progmem(K, mclstr_dash, sizeof(K));
+  mclstr_init_dash(K);
 
 #if !defined(__AVR__)
   if (seq_page_uses_signed_microtiming() || timing_center == 0) {
