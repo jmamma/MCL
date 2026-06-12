@@ -71,10 +71,12 @@ static void disconnect_attached_device(uint8_t port, DeviceIdx device_idx,
   }
 }
 
+#ifdef PLATFORM_TBD
 static DriverList drivers_for_slot(uint8_t slot_idx, bool force_generic) {
   if (force_generic) return generic_drivers();
   return slot_idx == SLOT_MD ? md_drivers() : elektron_drivers();
 }
+#endif
 
 void MidiActivePeering::disconnect(uint8_t port) {
   DEBUG_PRINTLN("disconnect");
@@ -220,12 +222,6 @@ static void probePort(uint8_t port, DriverList drivers) {
 bool usb_set_speed = true;
 
 #ifndef PLATFORM_TBD
-static uint8_t avr_grid_y_device_cfg() {
-  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) return 0;
-  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT) return 1;
-  return 2;
-}
-
 static uint8_t avr_grid_y_port() {
   return (mcl_cfg.usb_device == 2 || mcl_cfg.usb_device == 3) ? UARTUSB_PORT
                                                               : UART2_PORT;
@@ -265,16 +261,15 @@ void MidiActivePeering::run() {
 #else
   uint8_t md_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
   uint8_t ext_port = avr_grid_y_port();
-  uint8_t md_device_cfg =
-      (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) ? 1 : 2;
-  uint8_t ext_device_cfg = avr_grid_y_device_cfg();
 
-  if (md_device_cfg != 2) {
-    probePort(md_port, drivers_for_slot(SLOT_MD, md_device_cfg == 0));
+  if (mcl_cfg.grid_x_device == GRID_X_DEVICE_MD) {
+    probePort(md_port, md_drivers());
   }
 #ifdef EXT_TRACKS
-  if (ext_device_cfg != 2) {
-    probePort(ext_port, drivers_for_slot(SLOT_ELEKT, ext_device_cfg == 0));
+  if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_GENER) {
+    probePort(ext_port, generic_drivers());
+  } else if (mcl_cfg.grid_y_device == GRID_Y_DEVICE_ELEKT) {
+    probePort(ext_port, elektron_drivers());
   }
 #endif
 #endif

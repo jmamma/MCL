@@ -227,31 +227,6 @@ uint8_t avr_grid_y_device_cfg() {
 uint8_t turbo_cfg_for_port(uint8_t port, uint8_t uart_turbo_cfg) {
   return (port == UARTUSB_PORT) ? mcl_cfg.usb_turbo_speed : uart_turbo_cfg;
 }
-
-struct AvrPhysicalSlot {
-  uint8_t port;
-  MidiUartClass *uart;
-  uint8_t device_cfg;
-  uint8_t turbo_cfg;
-};
-
-AvrPhysicalSlot avr_grid_x_slot() {
-  uint8_t port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
-  return {port,
-          (port == UARTUSB_PORT) ? &MidiUartUSB : &MidiUart,
-          avr_grid_x_device_cfg(),
-          turbo_cfg_for_port(port, mcl_cfg.uart1_turbo_speed)};
-}
-
-AvrPhysicalSlot avr_grid_y_slot() {
-  uint8_t port =
-      (mcl_cfg.usb_device == 2 || mcl_cfg.usb_device == 3) ? UARTUSB_PORT
-                                                           : UART2_PORT;
-  return {port,
-          (port == UARTUSB_PORT) ? &MidiUartUSB : &MidiUart2,
-          avr_grid_y_device_cfg(),
-          turbo_cfg_for_port(port, mcl_cfg.uart2_turbo_speed)};
-}
 #endif
 
 void detach_stale_physical_devices() {
@@ -388,13 +363,19 @@ void MidiSetup::cfg_ports(bool boot) {
   setup_usb_slot(s[SLOT_MD]);
   setup_usb_slot(s[SLOT_ELEKT]);
 #else
-  AvrPhysicalSlot x_slot = avr_grid_x_slot();
-  AvrPhysicalSlot y_slot = avr_grid_y_slot();
+  uint8_t x_port = (mcl_cfg.usb_device == 1) ? UARTUSB_PORT : UART1_PORT;
+  uint8_t y_port =
+      (mcl_cfg.usb_device == 2 || mcl_cfg.usb_device == 3) ? UARTUSB_PORT
+                                                           : UART2_PORT;
 
-  apply_physical_port(x_slot.port, x_slot.uart, x_slot.turbo_cfg,
-                      x_slot.device_cfg);
-  apply_physical_port(y_slot.port, y_slot.uart, y_slot.turbo_cfg,
-                      y_slot.device_cfg);
+  apply_physical_port(
+      x_port, (x_port == UARTUSB_PORT) ? &MidiUartUSB : &MidiUart,
+      turbo_cfg_for_port(x_port, mcl_cfg.uart1_turbo_speed),
+      avr_grid_x_device_cfg());
+  apply_physical_port(
+      y_port, (y_port == UARTUSB_PORT) ? &MidiUartUSB : &MidiUart2,
+      turbo_cfg_for_port(y_port, mcl_cfg.uart2_turbo_speed),
+      avr_grid_y_device_cfg());
 #endif
 
 #ifdef PLATFORM_TBD
