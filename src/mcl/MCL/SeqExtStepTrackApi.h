@@ -234,6 +234,23 @@ public:
                          condition);
   }
 
+  void replace_note(seq_extstep_tick_t tick, seq_extstep_tick_t width,
+                    uint8_t note, uint8_t velocity, uint8_t condition) {
+    if (width <= 0) width = 1;
+    delete_note(tick, width - 1, note);
+    add_note(tick, width, note, velocity, condition);
+  }
+
+  bool toggle_note(seq_extstep_tick_t tick, seq_extstep_tick_t width,
+                   uint8_t note, uint8_t velocity, uint8_t condition) {
+    if (width <= 0) width = 1;
+    if (delete_note(tick, width - 1, note)) {
+      return true;
+    }
+    add_note(tick, width, note, velocity, condition);
+    return true;
+  }
+
   uint8_t notes_on_count() const {
 #ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) return midi_track_->notes_on_count;

@@ -47,6 +47,7 @@ static const int kNumSteps      = 64;
 static const int kNumLockParams = 34;   // SPS-X superset
 static const int kMaxBodyRaw    = 512;  // cap per frame (TRACK_LOCKS paginates)
 static const int kExtNoteWireBytes = 11; // start(4), width(4), note, velocity, condition
+static const int kExtLockWireBytes = 6; // tick(4), value, slide
 
 // ---- command ids (byte[3]) ----
 enum Cmd {
@@ -61,6 +62,7 @@ enum Cmd {
     CMD_REQ_EXT_TRACK_META = 0x15, // H->M  device, track
     CMD_REQ_EXT_NOTES    = 0x16,  // H->M  device, track
     CMD_REQ_PERF_STATE   = 0x17,  // H->M  device, track
+    CMD_REQ_EXT_LOCKS    = 0x18,  // H->M  device, track, lock_idx
 
     CMD_TRACK_SUMMARY    = 0x30,  // M->H
     CMD_TRACK_DETAIL     = 0x31,  // M->H
@@ -69,6 +71,7 @@ enum Cmd {
     CMD_EXT_TRACK_META   = 0x34,  // M->H  device, track, timing/meta
     CMD_EXT_NOTES        = 0x35,  // M->H  device, track, paginated note pairs
     CMD_PERF_STATE       = 0x36,  // M->H  device, track, PTC/ARP/voice state
+    CMD_EXT_LOCKS        = 0x37,  // M->H  device, track, lock_idx, paginated lock values
 
     CMD_SET_STEP         = 0x50,  // H->M  track, step, wmask, value
     CMD_SET_LOCK         = 0x51,  // H->M  track, step, param, value
@@ -88,6 +91,10 @@ enum Cmd {
     CMD_SET_ARP_PROP     = 0x5E,  // H->M  device, track, prop, value
     CMD_SET_PTC_GROUP    = 0x5F,  // H->M  track, group
     CMD_PTC_NOTE_EVENT   = 0x60,  // H->M  device, track, note, velocity, pressed
+    CMD_EXT_SET_LOCK     = 0x61,  // H->M  device, track, lock_idx, step, value, slide
+    CMD_EXT_CLR_LOCK     = 0x62,  // H->M  device, track, lock_idx, step
+    CMD_EXT_CLEAR_LOCKS  = 0x63,  // H->M  device, track, lock_idx
+    CMD_EXT_TOGGLE_NOTE  = 0x64,  // H->M  device, track, start(4), width(4), note, velocity, condition
 
     CMD_NOTIFY_TRANSPORT = 0x70,  // M->H  running, master_step, sub_tick(2)
     CMD_NOTIFY_DIRTY     = 0x71,  // M->H  track, regions
@@ -108,7 +115,9 @@ enum Caps {
     CAP_PER_TRACK_PH  = 1 << 5,
     CAP_AUTOMATION    = 1 << 6,
     CAP_EXT_NOTES     = 1 << 7,
-    CAP_PTC_ARP       = 1 << 8
+    CAP_PTC_ARP       = 1 << 8,
+    CAP_EXT_LOCKS     = 1 << 9,
+    CAP_EXT_NOTE_TOGGLE = 1 << 10
 };
 
 enum ExtDevice {
@@ -117,7 +126,8 @@ enum ExtDevice {
 
 enum ExtDirtyRegion {
     EXT_DIRTY_META  = 1 << 0,
-    EXT_DIRTY_NOTES = 1 << 1
+    EXT_DIRTY_NOTES = 1 << 1,
+    EXT_DIRTY_LOCKS = 1 << 2
 };
 
 static const int kPtcGroupTracks = 16;
@@ -135,7 +145,7 @@ enum PtcProp {
     PTCPROP_OCTAVE    = 0,
     PTCPROP_DETUNE    = 1,
     PTCPROP_SCALE     = 2,
-    PTCPROP_TRANSPOSE = 3
+    PTCPROP_LENGTH    = 3
 };
 
 enum ArpProp {

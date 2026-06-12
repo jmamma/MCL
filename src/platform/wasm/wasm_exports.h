@@ -71,6 +71,7 @@ void mcl_input_set_button_mask(uint32_t mask);
 void mcl_input_set_button_mask64(uint32_t mask_lo, uint32_t mask_hi);
 void mcl_input_add_encoder_delta(int32_t idx, int8_t delta);
 void mcl_input_set_encoder_button(int32_t idx, uint8_t pressed);
+void mcl_input_set_key_state(int32_t key, uint8_t pressed);
 
 // Identifier the host can read to confirm the .aot it loaded matches
 // this header's expectations. Bump on incompatible ABI changes.

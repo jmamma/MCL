@@ -1104,8 +1104,7 @@ void SeqExtStepPage::set_cur_y(uint8_t cur_y_) {
       seq_extstep_tick_t w = clamp_width_at(pos);
       if (w <= 0) continue;
 
-      active_track.delete_note(pos, w - 1, cur_y);
-      active_track.add_note(pos, w, cur_y, velocity, cond);
+      active_track.replace_note(pos, w, cur_y, velocity, cond);
     }
   }
 
@@ -1431,9 +1430,8 @@ bool SeqExtStepPage::paste_note_clip() {
     }
 
     uint8_t note_velocity = note.velocity ? note.velocity : velocity;
-    active_track.delete_note(dst_tick, note_length - 1, dst_pitch);
-    active_track.add_note(dst_tick, note_length, dst_pitch, note_velocity,
-                          note.condition);
+    active_track.replace_note(dst_tick, note_length, dst_pitch, note_velocity,
+                              note.condition);
     pasted = true;
   }
   return pasted;
@@ -1714,8 +1712,7 @@ void SeqExtStepPage::enter_notes() {
     NoteVector note;
     if (!active_track.note_on_at(n, note))
       continue;
-    active_track.delete_note(cur_x, w - 1, note.value);
-    active_track.add_note(cur_x, w, note.value, velocity, cond);
+    active_track.replace_note(cur_x, w, note.value, velocity, cond);
   }
 }
 
@@ -2074,9 +2071,7 @@ bool SeqExtStepPage::handleEvent(gui_event_t *event) {
           seq_extstep_tick_t w = clamp_width_at(cur_x);
           if (w <= 0) return true;
 
-          if (!active_track.delete_note(cur_x, w - 1, cur_y)) {
-            active_track.add_note(cur_x, w, cur_y, velocity, cond);
-          }
+          active_track.toggle_note(cur_x, w, cur_y, velocity, cond);
         }
         return true;
       }

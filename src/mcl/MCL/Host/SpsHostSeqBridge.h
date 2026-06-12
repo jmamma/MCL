@@ -55,12 +55,15 @@ private:
     void onReqExtTrackMeta(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqExtNotes(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqPerfState(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqExtLocks(uint8_t tag, const uint8_t* b, uint16_t n);
     void sendTrackSummary(int track);
     void sendTrackDetail(int track);
     void sendTrackLocks(int track);
     void sendPatternMeta(uint8_t cmd, uint8_t tag);  // PATTERN_META or NOTIFY_ACTIVE
     void sendExtTrackMeta(uint8_t tag, uint8_t device, int track);
     void sendExtNotes(uint8_t tag, uint8_t device, int track);
+    void sendExtLocks(uint8_t tag, uint8_t device, int track,
+                      uint8_t lock_idx);
     void sendPerfState(uint8_t tag, uint8_t device, int track);
 
     bool applySetStep(const uint8_t* b, uint16_t n);
@@ -72,8 +75,12 @@ private:
     bool applySetPatternProp(const uint8_t* b, uint16_t n);
     bool applyExtAddNote(const uint8_t* b, uint16_t n);
     bool applyExtDeleteNote(const uint8_t* b, uint16_t n);
+    bool applyExtToggleNote(const uint8_t* b, uint16_t n);
     bool applyExtClearRange(const uint8_t* b, uint16_t n);
     bool applyExtSetTrackProp(const uint8_t* b, uint16_t n);
+    bool applyExtSetLock(const uint8_t* b, uint16_t n);
+    bool applyExtClearLock(const uint8_t* b, uint16_t n);
+    bool applyExtClearLocks(const uint8_t* b, uint16_t n);
     bool applySetPtcProp(const uint8_t* b, uint16_t n);
     bool applySetArpProp(const uint8_t* b, uint16_t n);
     bool applySetPtcGroup(const uint8_t* b, uint16_t n);

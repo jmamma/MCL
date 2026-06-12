@@ -500,6 +500,11 @@ extern "C" void mcl_input_set_encoder_button(int32_t idx, uint8_t pressed) {
     Encoders.encoders[idx].button = pressed ? 1 : 0;
 }
 
+extern "C" void mcl_input_set_key_state(int32_t key, uint8_t pressed) {
+    if (key < 0 || key >= 64) return;
+    key_interface.key_event((uint8_t)key, pressed == 0);
+}
+
 // ---- Version stamp -------------------------------------------------------
 
 extern "C" uint32_t mcl_abi_version(void) {

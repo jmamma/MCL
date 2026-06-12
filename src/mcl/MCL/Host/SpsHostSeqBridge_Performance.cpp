@@ -37,6 +37,8 @@ bool selectPerfTrack(uint8_t device, int track) {
     uint8_t dev = perfDeviceSlot(deviceIdx);
     ptc_param_oct.setValue(seq_ptc_page.octs[dev]);
     ptc_param_fine_tune.setValue(seq_ptc_page.fine_tunes[dev]);
+    ptc_param_len.setValue(
+        SeqTrackUtil::get_ext_step_track((uint8_t)track).length());
     arp_page.track_update((uint8_t)track, false);
     return true;
 #else
@@ -72,7 +74,8 @@ void SpsHostSeqBridge::sendPerfState(uint8_t tag, uint8_t device,
     body[off++] = seq_ptc_page.octs[dev];
     body[off++] = seq_ptc_page.fine_tunes[dev];
     body[off++] = (uint8_t)ptc_param_scale.getValue();
-    body[off++] = seq_ptc_page.transpose;
+    body[off++] =
+        SeqTrackUtil::get_ext_step_track((uint8_t)track).length();
     body[off++] = arp.enabled;
     body[off++] = arp.mode;
     body[off++] = arp.length;
@@ -113,8 +116,10 @@ bool SpsHostSeqBridge::applySetPtcProp(const uint8_t* b, uint16_t n) {
         value = clampU8(value, 0, 23);
         ptc_param_scale.setValue(value);
         break;
-    case PTCPROP_TRANSPOSE:
-        seq_ptc_page.transpose = value;
+    case PTCPROP_LENGTH:
+        value = clampU8(value, 1, 128);
+        SeqTrackUtil::get_ext_step_track(b[1]).set_length(value);
+        ptc_param_len.setValue(value);
         break;
     default:
         return false;
