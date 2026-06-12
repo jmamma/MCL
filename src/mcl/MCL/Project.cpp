@@ -496,11 +496,12 @@ uint8_t project_seq_speed_value(const GridLink &link) {
   return link.speed_value() & 0x7F;
 }
 
-void convert_md_seq_unsigned_timing(MDSeqTrackData &data, uint8_t speed) {
+void convert_md_seq_unsigned_timing(MDSeqTrackData &data,
+                                    const LegacyMDSeqTrackData &src,
+                                    uint8_t speed) {
   uint16_t ticks_per_step = SeqTrack::get_ticks_per_step(speed);
-  uint8_t *legacy_timing = reinterpret_cast<uint8_t *>(data.microtiming);
   for (uint8_t step = 0; step < NUM_MD_STEPS; step++) {
-    uint8_t timing = legacy_timing[step];
+    uint8_t timing = src.timing[step];
     if (timing == 0) {
       timing = ticks_per_step;
     }
@@ -562,8 +563,7 @@ void copy_legacy_md_seq(MDSeqTrackData &dst, const LegacyMDSeqTrackData &src,
                         uint8_t speed) {
   // Every MDSeqTrackData field is populated here; legacy lock-enable is folded
   // into the migrated packed lock data below.
-  memcpy(dst.microtiming, src.timing, sizeof(dst.microtiming));
-  convert_md_seq_unsigned_timing(dst, speed);
+  convert_md_seq_unsigned_timing(dst, src, speed);
 
   copy_legacy_md_locks(dst, src);
   // Keep stale legacy lock params. Legacy playback used nonzero params with
