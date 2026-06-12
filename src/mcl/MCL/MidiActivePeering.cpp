@@ -137,9 +137,10 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
     pmidi->device.set_name(driver->name);
     pmidi->device.set_id(driver->id);
   }
-  driver->on_connection(static_cast<DeviceIdx>(portToLogicalIdx(port)));
+  uint8_t logical_idx = portToLogicalIdx(port);
+  driver->on_connection(static_cast<DeviceIdx>(logical_idx));
 
-  device_manager.attach_port(port, driver, portToLogicalIdx(port));
+  device_manager.attach_port(port, driver, logical_idx);
 }
 
 static void probePort(uint8_t port, DriverList drivers) {

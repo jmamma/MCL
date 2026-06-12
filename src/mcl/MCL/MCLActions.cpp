@@ -114,6 +114,10 @@ bool is_grid_chain_load_mode(uint8_t mode) {
   return mode == LOAD_QUEUE || mode == LOAD_AUTO;
 }
 
+uint8_t device_mask_bit(uint8_t device_idx) {
+  return device_idx == 0 ? 1 : 2;
+}
+
 } // namespace
 
 #if MCL_FEATURE_HOST_ARRANGER
@@ -440,7 +444,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
     if (slot_select_array[i] > 0) {
       GridDeviceTrack *gdt = get_grid_dev_track(i);
       if (gdt != nullptr && gdt->device_idx < NUM_DEVS) {
-        save_dev_mask |= (uint8_t)(1 << gdt->device_idx);
+        save_dev_mask |= device_mask_bit(gdt->device_idx);
       }
     }
   }
@@ -515,7 +519,7 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
       // If save_dev_tracks[dev_idx] turns false, it means getBlockingKit
       // has failed, so we just skip this device.
 
-      if (!(save_dev_mask & (uint8_t)(1 << device_idx))) {
+      if (!(save_dev_mask & device_mask_bit(device_idx))) {
         continue;
       }
 
