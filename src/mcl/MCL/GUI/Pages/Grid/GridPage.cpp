@@ -968,13 +968,12 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   again:
 
+    if (slot_load == 1) {
+      memset(track_select_array, 0, sizeof(track_select_array));
+    }
     for (uint8_t y = 0; y < height && y + getRow() < GRID_LENGTH; y++) {
       GridRow ypos = y + getRow();
       proj.read_grid_row_header(&header, ypos, cur_grid);
-
-      if (slot_load == 1) {
-        memset(track_select_array, 0, sizeof(track_select_array));
-      }
 
       if (slot_clear && height > 8) {
         mcl_gui.draw_progress("", y, height);

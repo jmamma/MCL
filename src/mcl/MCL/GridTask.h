@@ -79,8 +79,8 @@ class LoadQueue {
            GridSlot offset = 255) {
     if (full) { return; }
 
+    memset(row_selects[wr], 255, NUM_SLOTS);
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-       row_selects[wr][n] = 255;
        if (track_select_array[n]) { row_selects[wr][n] = row; }
     }
 #if !defined(__AVR__)
@@ -97,14 +97,29 @@ class LoadQueue {
   void get(uint8_t &mode, GridSlot &offset, GridRow *row_select,
            uint8_t *track_select) {
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-      row_select[n] = row_selects[rd][n];
-      track_select[n] = row_select[n] < GRID_LENGTH;
+      GridRow row = row_selects[rd][n];
+      row_select[n] = row;
+      track_select[n] = row < GRID_LENGTH;
     }
     mode = modes[rd].mode;
     offset = modes[rd].offset;
     rd = (rd + 1) & (NUM_LINKS - 1);
     full = false;
   }
+
+#if defined(__AVR__)
+  GridRow *get(uint8_t &mode, GridSlot &offset, uint8_t *track_select) {
+    GridRow *row_select = row_selects[rd];
+    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+      track_select[n] = row_select[n] < GRID_LENGTH;
+    }
+    mode = modes[rd].mode;
+    offset = modes[rd].offset;
+    rd = (rd + 1) & (NUM_LINKS - 1);
+    full = false;
+    return row_select;
+  }
+#endif
 
 #if !defined(__AVR__)
   void get(uint8_t &mode, GridSlot &offset, GridRow *row_select,

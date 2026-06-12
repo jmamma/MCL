@@ -18,7 +18,6 @@ class GridLoadPage : public GridIOPage {
  void group_select();
  void group_load(GridRow row, GridSlot load_offset = 255);
  bool handleEvent(gui_event_t *event);
- void get_mode_str(char *str, uint8_t mode);
  void display_load();
  void display_at(uint8_t y_offset);
  void md_popup_title(uint8_t mode, bool persistent = true);

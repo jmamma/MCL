@@ -23,6 +23,17 @@ static void set_dash_value(char *str) {
   str[1] = '\0';
 }
 
+const char *const load_mode_labels[] PROGMEM = {
+    mclstr_manual, mclstr_auto, mclstr_queue};
+const char *const load_mode_short_labels[] PROGMEM = {
+    mclstr_manual_short, mclstr_auto_short, mclstr_queue_short};
+
+static void copy_load_mode_label(char *str, uint8_t mode, bool short_label) {
+  const char *const *labels =
+      short_label ? load_mode_short_labels : load_mode_labels;
+  strcpy_P(str, (const char *)pgm_read_ptr(&labels[mode - LOAD_MANUAL]));
+}
+
 void GridLoadPage::init() {
   GridIOPage::init();
   note_interface.init_notes();
@@ -42,30 +53,12 @@ void GridLoadPage::init() {
   draw_popup_P(mclstr_load_tracks);
 }
 
-void GridLoadPage::get_mode_str(char *str, uint8_t mode) {
-  switch (mode) {
-  case LOAD_MANUAL: {
-    strcpy_P(str, mclstr_manual);
-    break;
-  }
-
-  case LOAD_QUEUE: {
-    strcpy_P(str, mclstr_queue);
-    break;
-  }
-
-  case LOAD_AUTO: {
-    strcpy_P(str, mclstr_auto);
-    break;
-  }
-  }
-}
 void GridLoadPage::md_popup_title(uint8_t mode, bool persistent) {
   char modestr[16];
   // Reuse the existing "LOAD" PROGMEM string instead of storing each character.
   strcpy_P(modestr, mclstr_load);
   modestr[4] = ' ';
-  get_mode_str(modestr + 5, mode);
+  copy_load_mode_label(modestr + 5, mode, false);
   MD.popup_text(modestr, persistent);
 }
 
@@ -102,22 +95,7 @@ void GridLoadPage::loop() {
 }
 
 void GridLoadPage::get_modestr(char *modestr) {
-  switch (mcl_cfg.load_mode) {
-  case LOAD_MANUAL: {
-    strcpy_P(modestr, mclstr_manual_short);
-    break;
-  }
-
-  case LOAD_QUEUE: {
-    strcpy_P(modestr, mclstr_queue_short);
-    break;
-  }
-
-  case LOAD_AUTO: {
-    strcpy_P(modestr, mclstr_auto_short);
-    break;
-  }
-  }
+  copy_load_mode_label(modestr, mcl_cfg.load_mode, true);
 }
 
 void GridLoadPage::group_select() {

@@ -62,79 +62,83 @@ void GridTask::gui_update() {
 }
 
 void GridTask::load_queue_handler() {
-  if (!load_queue.is_empty()) {
-    uint8_t mode;
-    GridSlot offset;
-    GridRow row_select_array[NUM_SLOTS];
-    uint8_t track_select[NUM_SLOTS];
-#if !defined(__AVR__)
-    uint8_t clear_select[NUM_SLOTS];
-    uint32_t private_source_ids[NUM_SLOTS];
-#endif
-#if !defined(__AVR__)
-    load_queue.get(mode, offset, row_select_array, track_select,
-                   private_source_ids);
-    bool immediate_load = (mode & LOAD_QUEUE_FLAG_IMMEDIATE) != 0;
-    bool allow_prestart_fades = (mode & LOAD_QUEUE_FLAG_PRESTART_FADE) != 0;
-    mode &= (uint8_t)~(LOAD_QUEUE_FLAG_IMMEDIATE |
-                       LOAD_QUEUE_FLAG_PRESTART_FADE);
-    memset(clear_select, 0, sizeof(clear_select));
-#else
-    load_queue.get(mode, offset, row_select_array, track_select);
-#endif
-#if !defined(__AVR__)
-    bool any_load = false;
-    bool any_clear = false;
-#endif
-    DEBUG_PRINTLN("load queue get");
-    DEBUG_PRINTLN(mode);
-    for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-#if !defined(__AVR__)
-      if (track_select[n]) {
-        any_load = true;
-      }
-      if (row_select_array[n] == LOAD_QUEUE_CLEAR_ROW) {
-        clear_select[n] = 1;
-        any_clear = true;
-      }
-#endif
-      DEBUG_PRINT(n);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINT(track_select[n]);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINTLN(row_select_array[n]);
-    }
+  if (load_queue.is_empty()) { return; }
+
+  uint8_t mode;
+  GridSlot offset;
 #if defined(__AVR__)
-    mcl_actions.write_original = 1;
-    mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
+  GridRow *row_select_array;
 #else
-    if (any_load) {
-      mcl_actions.write_original = 1;
-      mcl_arrangement.beginQueuedPrivateLoads(private_source_ids);
-      mcl_actions.load_tracks(track_select, row_select_array, mode, offset,
-                              immediate_load, allow_prestart_fades);
-      mcl_arrangement.endQueuedPrivateLoads();
+  GridRow row_select_array[NUM_SLOTS];
+#endif
+  uint8_t track_select[NUM_SLOTS];
+#if !defined(__AVR__)
+  uint8_t clear_select[NUM_SLOTS];
+  uint32_t private_source_ids[NUM_SLOTS];
+#endif
+#if !defined(__AVR__)
+  load_queue.get(mode, offset, row_select_array, track_select,
+                 private_source_ids);
+  bool immediate_load = (mode & LOAD_QUEUE_FLAG_IMMEDIATE) != 0;
+  bool allow_prestart_fades = (mode & LOAD_QUEUE_FLAG_PRESTART_FADE) != 0;
+  mode &= (uint8_t)~(LOAD_QUEUE_FLAG_IMMEDIATE |
+                     LOAD_QUEUE_FLAG_PRESTART_FADE);
+  memset(clear_select, 0, sizeof(clear_select));
+#else
+  row_select_array = load_queue.get(mode, offset, track_select);
+#endif
+#if !defined(__AVR__)
+  bool any_load = false;
+  bool any_clear = false;
+#endif
+  DEBUG_PRINTLN("load queue get");
+  DEBUG_PRINTLN(mode);
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+#if !defined(__AVR__)
+    if (track_select[n]) {
+      any_load = true;
     }
-    if (any_clear) {
-      if (mode != LOAD_ARRANG) {
-        if (mcl_arrangement.releasePlaybackTracks(
-                selected_track_mask(clear_select))) {
-          sps_host_arr_bridge.notifyDirty(0xFF,
-                                          (uint8_t)spsarr::DIRTY_ACTIVE);
-        }
-      }
-      mcl_actions.clear_tracks(clear_select);
-    }
-    // A load changes the active slot state, but not the source grid cell/link
-    // data used by the arranger import. Avoid forcing arranger cell re-fetches
-    // on every playback load boundary.
-    if (any_load || any_clear) {
-      sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
-      sps_host_seq_bridge.notifyDirty(0xFF,
-          (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
+    if (row_select_array[n] == LOAD_QUEUE_CLEAR_ROW) {
+      clear_select[n] = 1;
+      any_clear = true;
     }
 #endif
+    DEBUG_PRINT(n);
+    DEBUG_PRINT(" ");
+    DEBUG_PRINT(track_select[n]);
+    DEBUG_PRINT(" ");
+    DEBUG_PRINTLN(row_select_array[n]);
   }
+#if defined(__AVR__)
+  mcl_actions.write_original = 1;
+  mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
+#else
+  if (any_load) {
+    mcl_actions.write_original = 1;
+    mcl_arrangement.beginQueuedPrivateLoads(private_source_ids);
+    mcl_actions.load_tracks(track_select, row_select_array, mode, offset,
+                            immediate_load, allow_prestart_fades);
+    mcl_arrangement.endQueuedPrivateLoads();
+  }
+  if (any_clear) {
+    if (mode != LOAD_ARRANG) {
+      if (mcl_arrangement.releasePlaybackTracks(
+              selected_track_mask(clear_select))) {
+        sps_host_arr_bridge.notifyDirty(0xFF,
+                                        (uint8_t)spsarr::DIRTY_ACTIVE);
+      }
+    }
+    mcl_actions.clear_tracks(clear_select);
+  }
+  // A load changes the active slot state, but not the source grid cell/link
+  // data used by the arranger import. Avoid forcing arranger cell re-fetches
+  // on every playback load boundary.
+  if (any_load || any_clear) {
+    sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
+    sps_host_seq_bridge.notifyDirty(0xFF,
+        (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
+  }
+#endif
 }
 void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
@@ -211,8 +215,6 @@ void GridTask::wait_blocking(uint32_t go_step) {
 }
 
 void GridTask::transition_handler() {
-  bool send_device[2];
-
   GridRow slots_changed[NUM_SLOTS];
   uint8_t track_select_array[NUM_SLOTS];
 #if !defined(__AVR__)
@@ -229,7 +231,7 @@ void GridTask::transition_handler() {
                                   (uint32_t)mcl_actions.next_transition * 2)) {
       break;
     }
-    memset(send_device, 0, sizeof(send_device));
+    uint8_t send_device_mask = 0;
     memset(track_select_array, 0, sizeof(track_select_array));
 
 
@@ -276,7 +278,7 @@ void GridTask::transition_handler() {
       }
 
       if (link_load(n, slots_changed, track_select_array, gdt)) {
-        send_device[device_idx] = true;
+        send_device_mask |= (uint8_t)(1U << device_idx);
       }
 
       if (row == 255) {
@@ -284,7 +286,7 @@ void GridTask::transition_handler() {
       }
     }
 
-    if (send_device[0]) {
+    if (send_device_mask & 1U) {
       //Send kitName before tracks are cache-loaded in MD.
       //This allows the kitName to be stored in the undokit.
       update_transition_details();
@@ -320,7 +322,7 @@ void GridTask::transition_handler() {
         GridColumn track_idx = n & 0xF;
         // Wait on first track of each device;
 
-        if (wait && send_device[c]) {
+        if (wait && (send_device_mask & (uint8_t)(1U << c))) {
 
           uint32_t go_step =
               MidiClock.div16th_to_div192(mcl_actions.next_transition);
@@ -404,8 +406,10 @@ void GridTask::transition_handler() {
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
       bool last_slot_chain =
           is_grid_chain_load_mode(mcl_actions.chains[last_slot].mode);
+#if !defined(__AVR__)
       bool row_changed = grid_task.last_active_row != slots_changed[last_slot] ||
                          grid_task.chain_behaviour != last_slot_chain;
+#endif
       last_active_row = slots_changed[last_slot];
       chain_behaviour = last_slot_chain;
       next_active_row = chain_behaviour ? mcl_actions.links[last_slot].row : last_active_row;

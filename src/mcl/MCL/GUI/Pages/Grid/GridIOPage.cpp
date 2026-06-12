@@ -165,16 +165,11 @@ void GridIOPage::paint_track_select_leds() {
 }
 
 void GridIOPage::populate_track_select_from_notes(uint8_t *track_select_array) {
-  memset(track_select_array, 0, NUM_SLOTS);
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (note_interface.is_note(n)) {
       SET_BIT32(track_select, slot_for_note(n));
     }
-  }
-  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if (IS_BIT_SET32(track_select, n)) {
-      track_select_array[n] = 1;
-    }
+    track_select_array[n] = IS_BIT_SET32(track_select, n) ? 1 : 0;
   }
 }
 
@@ -201,11 +196,8 @@ bool GridIOPage::slot_matches_track_type_select(GridSlot slot) {
 
 void GridIOPage::track_select_array_from_type_select(
     uint8_t *track_select_array) {
-  memset(track_select_array, 0, NUM_SLOTS);
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-    if (slot_matches_track_type_select(n)) {
-      track_select_array[n] = 1;
-    }
+    track_select_array[n] = slot_matches_track_type_select(n) ? 1 : 0;
   }
 }
 
