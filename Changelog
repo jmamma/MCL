@@ -147,6 +147,15 @@ Please upgrade to Machinedrum OS X.13 & Monomachine OS X.01 before using MCL 5.0
 
   As before, Voice Select options are stored with the RT track on Grid Y.
 
+- External MIDI Track Routing
+
+  External MIDI Tracks can now target MD polyphonic voice groups by
+  selecting route channels above MIDI channel 16.
+
+  Notes are routed through the Polyphonic Voice allocator, and CC automation
+  or parameter locks can modulate the addressed MD track parameters through
+  the same route.
+
 - PianoRoll
 
   Added a note selection rectangle via [ NO ] + [ Down/Right ] for
