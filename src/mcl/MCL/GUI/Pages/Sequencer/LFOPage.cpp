@@ -170,8 +170,6 @@ void update_lfo_param_pair(Encoder **encoders, LFOSeqTrack *track,
 
 const char lfo_mult_labels[LFO_SPEED_MULT_COUNT][4] PROGMEM = {
     ".01", ".1", ".25", ".5", "1x", "2x", "4x", "8x"};
-const char lfo_page_info_labels[][8] PROGMEM = {
-    "LFO>SET", "LFO>DST", "LFO>DEP"};
 
 void lfo_mult_label(uint8_t multiplier, char *out) {
   if (multiplier >= LFO_SPEED_MULT_COUNT) {
@@ -527,6 +525,7 @@ void LFOPage::display() {
       draw_lfo_param(encoder_idx + 1, lfo_encoders[encoder_idx]->cur,
                      lfo_encoders[encoder_idx + 1]->cur);
     }
+    strcpy(info2, "LFO>DST");
   }
   else if (page_mode == LFO_GLOBAL) {
     char mult_label[5];
@@ -540,6 +539,7 @@ void LFOPage::display() {
     draw_lfo_wave_preview(1, lfo_encoders[1]->cur);
     draw_knob(2, lfo_encoders[2], mclstr_spd);
     mcl_gui.draw_knob(3, mclstr_mult, mult_label);
+    strcpy(info2, "LFO>SET");
   }
   else {
 #if defined(MCL_HAS_DESKTOP_MOUSE)
@@ -550,8 +550,8 @@ void LFOPage::display() {
     draw_lfo_value_knob(1, lfo_encoders[1], lfo_track, 0);
     draw_knob(2, lfo_encoders[2], mclstr_dep2);
     draw_lfo_value_knob(3, lfo_encoders[3], lfo_track, 1);
+    strcpy(info2, "LFO>DEP");
   }
-  strcpy_P(info2, lfo_page_info_labels[page_mode]);
 
   oled_display.setFont(&TomThumb);
 
