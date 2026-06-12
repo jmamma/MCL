@@ -226,8 +226,10 @@ void lfo_param_label(LFOSeqTrack *track, uint8_t param_idx, char *out,
     return;
   }
   if (track->params[param_idx].dest == 0) {
-    strncpy(out, "---", len - 1);
-    out[len - 1] = '\0';
+    out[0] = '-';
+    out[1] = '-';
+    out[2] = '-';
+    out[3] = '\0';
     return;
   }
   if (!LFOTrackRef::param_label(track->params[param_idx].dest,
@@ -239,7 +241,7 @@ void lfo_param_label(LFOSeqTrack *track, uint8_t param_idx, char *out,
 void draw_lfo_dest(uint8_t knob, uint8_t value) {
   char label[5];
   if (value == 0) {
-    strcpy_P(label, mclstr_dash);
+    mclstr_init_dash(label);
   } else if (!LFOTrackRef::target_label(value, label, sizeof(label))) {
     DeviceIdx target_device = DeviceIdx::None;
     uint8_t target = 0;
@@ -256,10 +258,13 @@ void draw_lfo_dest(uint8_t knob, uint8_t value) {
 
 void draw_lfo_param(uint8_t knob, uint8_t dest, uint8_t param) {
   char label[4];
-  mclstr_copy_progmem(label, mclstr_dash_space, sizeof(label));
+  mclstr_init_dash_space(label);
   if (dest == 0) {
     if (param > 1) {
-      strcpy_P(label, mclstr_ler);
+      label[0] = 'L';
+      label[1] = 'E';
+      label[2] = 'R';
+      label[3] = '\0';
     }
   } else if (!LFOTrackRef::param_label(dest, param, label, sizeof(label))) {
     mcl_gui.put_value_at(param, label);

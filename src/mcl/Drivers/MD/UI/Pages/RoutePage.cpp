@@ -111,9 +111,11 @@ void RoutePage::display() {
 
   uint8_t step_count = (MidiClock.div16th_counter - mcl_actions.start_clock32th / 2) % 64;
 
-  mcl_gui.put_value_at(step_count, Q);
-  strcpy_P(info_line2, mclstr_step_space);
-  strcat(info_line2, Q);
+  info_line2[0] = 'S';
+  info_line2[1] = 'T';
+  info_line2[2] = 'E';
+  info_line2[3] = 'P';
+  mcl_gui.put_value_at(step_count, info_line2 + 4);
   mcl_gui.draw_panel_labels("ROUTE", info_line2);
 
   draw_routes();
