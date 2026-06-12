@@ -87,6 +87,12 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
     break;
   }
 
+  uint64_t locks_on_step_display_mask = 0;
+  active_track.get_mask(&locks_on_step_display_mask, MASK_LOCKS_ON_STEP);
+  page.shed_mask(locks_on_step_display_mask, length, 0);
+  page.draw_lock_mask(offset, locks_on_step_display_mask, step_count, length,
+                      show_current_step);
+
   page.shed_mask(led_mask, length, offset);
   page.draw_mask(offset, display_mask, step_count, length, mute_mask,
                  slide_mask);
@@ -95,8 +101,7 @@ void draw_active_step_masks(SeqStepPage &page, SeqStepTrackRef active_track,
     return;
   }
 
-  uint64_t locks_on_step_mask_ = 0;
-  active_track.get_mask(&locks_on_step_mask_, MASK_LOCKS_ON_STEP);
+  uint64_t locks_on_step_mask_ = locks_on_step_display_mask;
   page.shed_mask(locks_on_step_mask_, length, offset);
 
   if ((uint16_t)led_mask != trigled_mask) {
