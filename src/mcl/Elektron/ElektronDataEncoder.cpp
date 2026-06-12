@@ -92,8 +92,10 @@ uint16_t ElektronDataToSysexEncoder::finish() {
   // uart send) covered the same [0,inc) range, so fold the per-byte work into
   // one loop. Both inner conditionals are loop-invariant and inc<=8, so the
   // extra per-iteration tests are negligible (cold flush-on-save path).
-  for (uint8_t i = 0; i < inc; i++) {
-    uint8_t b = ptr[i];
+  uint8_t flushed = inc;
+  uint8_t *p = ptr;
+  while (inc--) {
+    uint8_t b = *(p++);
     if (inChecksum) {
       checksum += b;
     }
@@ -101,8 +103,8 @@ uint16_t ElektronDataToSysexEncoder::finish() {
       uart_send(b);
     }
   }
-  ptr = (uart != NULL) ? data : (ptr + inc);
-  retLen += inc;
+  ptr = (uart != NULL) ? data : p;
+  retLen += flushed;
   return retLen;
 }
 

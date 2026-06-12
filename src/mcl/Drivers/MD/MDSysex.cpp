@@ -67,8 +67,9 @@ void MDSysexListenerClass::end() {
 
   case MD_SET_LFO_PARAM_ID:
 
-    track = view.getByte(offset) >> 3;
-    param = view.getByte(offset++) & 7;
+    param = view.getByte(offset++);
+    track = param >> 3;
+    param &= 7;
     value = view.getByte(offset++);
 
     if (track > 15) { return; }
