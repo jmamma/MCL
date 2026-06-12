@@ -63,17 +63,17 @@ void GridLoadPage::md_popup_title(uint8_t mode, bool persistent) {
 }
 
 void GridLoadPage::display_load() {
-  const char *str2 = "SLOTS";
-  const char *str1 = "LOAD";
+  const char *str1;
+  const char *popup1;
   if (mcl_cfg.load_mode == LOAD_QUEUE) {
     str1 = "QUEUE";
+    popup1 = mclstr_queue;
+  } else {
+    str1 = "LOAD";
+    popup1 = mclstr_load;
   }
-  char str3[16];
-  strcpy(str3, str1);
-  strcat(str3, " ");
-  strcat(str3, str2);
-  MD.popup_text(str3);
-  oled_display.textbox(str1, str2);
+  MD.popup_text_P(popup1, mclstr_slots);
+  oled_display.textbox(str1, "SLOTS");
 }
 
 void GridLoadPage::loop() {
