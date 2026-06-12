@@ -1475,16 +1475,15 @@ void ExtSeqTrack::modify_track(uint8_t dir) {
   //locate(length - 1, step_idx, ev_end);
   switch (dir) {
   case DIR_LEFT:
-    n_cur = event_buckets.get(0);
-    ext_rotate_events(events, ev_end, n_cur, DIR_LEFT);
-    ext_rotate_bytes(velocities, length, DIR_LEFT);
-    event_buckets.shift_left(length);
-    break;
   case DIR_RIGHT:
-    n_cur = event_buckets.get(length - 1);
-    ext_rotate_events(events, ev_end, n_cur, DIR_RIGHT);
-    ext_rotate_bytes(velocities, length, DIR_RIGHT);
-    event_buckets.shift_right(length);
+    n_cur = event_buckets.get(dir == DIR_LEFT ? 0 : length - 1);
+    ext_rotate_events(events, ev_end, n_cur, dir);
+    ext_rotate_bytes(velocities, length, dir);
+    if (dir == DIR_LEFT) {
+      event_buckets.shift_left(length);
+    } else {
+      event_buckets.shift_right(length);
+    }
     break;
   case DIR_REVERSE:
     uint16_t end = ev_end / 2;

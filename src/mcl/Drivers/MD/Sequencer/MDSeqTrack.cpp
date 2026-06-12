@@ -46,6 +46,44 @@ static uint16_t md_note_count_down(uint8_t len, uint8_t ticks_per_step) {
   return len == 0 ? ticks_per_step / 4 : (len * ticks_per_step / 2);
 }
 
+static void md_rotate_track_data(uint8_t *locks, MDSeqStepDescriptor *steps,
+                                 int8_t *microtiming, uint8_t length,
+                                 uint16_t total_nlock, uint8_t ncopy,
+                                 uint8_t dir) NOINLINE();
+static void md_rotate_track_data(uint8_t *locks, MDSeqStepDescriptor *steps,
+                                 int8_t *microtiming, uint8_t length,
+                                 uint16_t total_nlock, uint8_t ncopy,
+                                 uint8_t dir) {
+  uint8_t lock_buf[NUM_LOCKS];
+  MDSeqStepDescriptor step_buf;
+  int8_t microtiming_buf;
+  if (dir == DIR_LEFT) {
+    uint8_t nlock = popcount(steps[0].locks);
+    memcpy(lock_buf, locks, nlock);
+    memmove(locks, locks + nlock, total_nlock - nlock);
+    memcpy(locks + total_nlock - nlock, lock_buf, nlock);
+
+    step_buf = steps[0];
+    microtiming_buf = microtiming[0];
+    memmove(steps, steps + 1, ncopy);
+    memmove(microtiming, microtiming + 1, length - 1);
+    steps[length - 1] = step_buf;
+    microtiming[length - 1] = microtiming_buf;
+  } else {
+    uint8_t nlock = popcount(steps[length - 1].locks);
+    memcpy(lock_buf, locks + total_nlock - nlock, nlock);
+    memmove(locks + nlock, locks, total_nlock - nlock);
+    memcpy(locks, lock_buf, nlock);
+
+    step_buf = steps[length - 1];
+    microtiming_buf = microtiming[length - 1];
+    memmove(steps + 1, steps, ncopy);
+    memmove(microtiming + 1, microtiming, length - 1);
+    steps[0] = step_buf;
+    microtiming[0] = microtiming_buf;
+  }
+}
+
 #if defined(__AVR__)
 static void md_swap_mask_bits(uint64_t &mask, uint8_t i, uint8_t j) {
   uint8_t *bytes = reinterpret_cast<uint8_t *>(&mask);
@@ -1289,50 +1327,20 @@ void MDSeqTrack::modify_track(uint8_t dir) {
   uint8_t old_mute_state = mute_state;
 
   oneshot_mask = 0;
-  constexpr size_t ncopy = sizeof(steps) - sizeof(MDSeqStepDescriptor);
-  uint8_t lock_buf[NUM_LOCKS];
+  constexpr uint8_t ncopy = sizeof(steps) - sizeof(MDSeqStepDescriptor);
   MDSeqStepDescriptor step_buf;
   int8_t microtiming_buf;
   uint16_t total_nlock = get_lockidx(length);
 
   mute_state = SEQ_MUTE_ON;
   switch (dir) {
-  case DIR_LEFT: {
-    // shift locks
-    uint8_t nlock = popcount(steps[0].locks);
-    memcpy(lock_buf, locks, nlock);
-    memmove(locks, locks + nlock, total_nlock - nlock);
-    memcpy(locks + total_nlock - nlock, lock_buf, nlock);
-
-    // shift steps
-    step_buf = steps[0];
-    microtiming_buf = microtiming[0];
-    memmove(steps, steps + 1, ncopy);
-    memmove(microtiming, microtiming + 1, length - 1);
-    steps[length - 1] = step_buf;
-    microtiming[length - 1] = microtiming_buf;
-    MD_ROTATE_MASK(mute_mask, length, DIR_LEFT);
-    MD_ROTATE_MASK(slide_mask, length, DIR_LEFT);
-    MD_ROTATE_MASK(swing_mask, length, DIR_LEFT);
-    break;
-  }
+  case DIR_LEFT:
   case DIR_RIGHT: {
-    // shift locks
-    uint8_t nlock = popcount(steps[length - 1].locks);
-    memcpy(lock_buf, locks + total_nlock - nlock, nlock);
-    memmove(locks + nlock, locks, total_nlock - nlock);
-    memcpy(locks, lock_buf, nlock);
-
-    // shift steps
-    step_buf = steps[length - 1];
-    microtiming_buf = microtiming[length - 1];
-    memmove(steps + 1, steps, ncopy);
-    memmove(microtiming + 1, microtiming, length - 1);
-    steps[0] = step_buf;
-    microtiming[0] = microtiming_buf;
-    MD_ROTATE_MASK(mute_mask, length, DIR_RIGHT);
-    MD_ROTATE_MASK(slide_mask, length, DIR_RIGHT);
-    MD_ROTATE_MASK(swing_mask, length, DIR_RIGHT);
+    md_rotate_track_data(locks, steps, microtiming, length, total_nlock, ncopy,
+                         dir);
+    MD_ROTATE_MASK(mute_mask, length, dir);
+    MD_ROTATE_MASK(slide_mask, length, dir);
+    MD_ROTATE_MASK(swing_mask, length, dir);
     break;
   }
   case DIR_REVERSE: {
