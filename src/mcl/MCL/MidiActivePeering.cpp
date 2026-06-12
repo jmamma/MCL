@@ -135,7 +135,6 @@ void MidiActivePeering::force_connect(uint8_t port, MidiDevice *driver) {
   MidiClass *pmidi_class = midi_class_for_port(port);
   MidiUartClass *pmidi = pmidi_class ? pmidi_class->uart : nullptr;
   if (pmidi) {
-    pmidi->device.init();
     pmidi->device.set_name(driver->name);
     pmidi->device.set_id(driver->id);
   }
