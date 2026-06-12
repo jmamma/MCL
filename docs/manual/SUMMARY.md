@@ -1,6 +1,6 @@
 # Summary
 
-- [MegaCommand Live Manual](index.md)
+- [MCL Manual](index.md)
 - [Manual Audit](manual_audit.md)
 
 - [Introduction](sections/introduction.md)

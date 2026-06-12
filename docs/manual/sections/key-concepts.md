@@ -1,9 +1,9 @@
-# MegaCommand Hardware
+# Platforms
 
-The MegaCommand is an Open Source MIDI controller developed to run the MCL OS. It is currently available in two form factors, the MegaCommand DIY (2017) and the MegaCMD (2021). Both were designed by Justin Mammarella.
+MCL can run on several supported platforms. The original platform is the MegaCommand MIDI controller, available as the MegaCommand DIY (2017) and MegaCMD (2021). Both were designed by Justin Mammarella.
 
 
-The MegaCommand DIY is built upon the Arduino Mega 2560 development board; requiring skills in both soldering and self assembly. The MegaCMD is a pre-built version based on a new SMD design, requiring no user assembly.
+The MegaCommand DIY is built upon the Arduino Mega 2560 development board and requires soldering and self assembly. The MegaCMD is a pre-built version based on an SMD design, requiring no user assembly.
 
 
 The MegaCMD benefits from some additional circuitry that allows USB disk access to the MicroSD card for file transfer between a host computer.
@@ -12,15 +12,15 @@ The MegaCMD benefits from some additional circuitry that allows USB disk access 
 The MegaCommand DIY can be powered via a standard DC power jack whilst the MegaCMD only accepts power via USB.
 
 
-The MiniCommand (2010) is an older controller developed by Ruin & Wesen that paved the development of the MegaCommand, it is not compatible with the current version of MCL.
+The MiniCommand (2010) is an older controller developed by Ruin & Wesen that paved the way for the MegaCommand. It is not compatible with the current version of MCL.
 
 # Terminology and Conventions
 
 
-- MCL - MegaCommand Live OS.
+- MCL - the project and firmware/runtime name. Historically expanded as MegaCommand Live.
 - MD - Machinedrum
 - MDX - Machinedrum X OS.
-- MC - MegaCommand or MegaCMD MIDI controller
+- MC - MegaCommand or MegaCMD MIDI controller.
 - **`Button`** Enclosed arrows will reference the use of a MegaCommand function button or encoders to perform an action.
 - **[Key]** Enclosed square brackets will reference the use of a Machinedrum key to perform an action.
 
@@ -31,7 +31,7 @@ The MiniCommand (2010) is an older controller developed by Ruin & Wesen that pav
 - **Page**
 
 
-The MCL firmware consists of pages accessible through either the MC's or MD's GUI. Each page contains distinct functionality and is described in this manual.
+MCL consists of pages accessible through the active platform controls and, in the classic Machinedrum setup, through the MD's GUI. Each page contains distinct functionality and is described in this manual.
 - **Project**
 
 

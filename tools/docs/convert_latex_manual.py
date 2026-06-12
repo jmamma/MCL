@@ -474,7 +474,7 @@ def write_if_allowed(path: Path, content: str, force: bool) -> None:
 
 
 def build_index() -> str:
-    return """# MegaCommand Live Manual
+    return """# MCL Manual
 
 This Markdown manual was migrated from the legacy LaTeX/PDF documentation so it can be maintained with the MCL source code and published through GitHub Pages.
 
@@ -530,11 +530,11 @@ def build_audit(output_root: Path, missing_sections: list[Section], missing_imag
             "## MCL 5.00 Refresh Checklist",
             "",
             "- [ ] Resolve canonical MCL 5.00 release date between top-level and source changelogs.",
-            "- [ ] Rewrite key concepts around Grid X/Y devices, TBD/SPSX, desktop/WASM, and project format changes.",
+            "- [ ] Rewrite key concepts around Grid X/Y devices, TBD, platform support, and project format changes.",
             "- [ ] Update MIDI, controller, sync, route, MD, and system configuration labels from `resource/menu_layouts.cpp` and `resource/menu_options.cpp`.",
             "- [ ] Update project load/save documentation for folders, cloning, moving, versions, and project config.",
             "- [ ] Update grid and slot menu documentation, including the `SOUND` slot option.",
-            "- [ ] Update sequencer documentation for swing, mute masks, fill conditions, current condition labels, signed microtiming, and SPSX behavior.",
+            "- [ ] Update sequencer documentation for swing, mute masks, fill conditions, current condition labels, and signed microtiming behavior.",
             "- [ ] Update LFO and arp documentation for per-track storage and new destinations/options.",
             "- [ ] Update polyphony/chromatic documentation for `POLY MODE` and multi-timbral behavior.",
             "- [ ] Update mixer/performance documentation for mute/fill modes and performance-state fill storage.",
@@ -622,7 +622,7 @@ def migrate(args: argparse.Namespace) -> int:
         sections.append(section)
         write_if_allowed(output_path, markdown, args.force)
 
-    summary_lines = ["# Summary", "", "- [MegaCommand Live Manual](index.md)", "- [Manual Audit](manual_audit.md)", ""]
+    summary_lines = ["# Summary", "", "- [MCL Manual](index.md)", "- [Manual Audit](manual_audit.md)", ""]
     for section in sections:
         rel = section.output_path.relative_to(output_root).as_posix()
         summary_lines.append(f"- [{section.title}]({rel})")

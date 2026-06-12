@@ -547,7 +547,7 @@ def render_page(item: NavItem, items: list[NavItem], index: int, manual_root: Pa
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">MegaCommand Live Manual</div>
+      <div class="brand">MCL Manual</div>
       <input class="nav-filter" data-nav-filter type="search" placeholder="Filter sections" aria-label="Filter sections">
       <nav class="nav" aria-label="Manual sections">
         {nav_html}

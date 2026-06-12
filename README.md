@@ -1,6 +1,8 @@
-# MegaCommand Live (MCL)
+# MCL
 
-A high-performance MIDI sequencer and live performance tool written in C/C++ that enhances the capabilities of the MachineDrum and other electronic instruments.
+A high-performance MIDI sequencer, controller and live performance system for the Machinedrum and other hardware instruments.
+
+MCL began as MegaCommand Live for the MegaCommand/MegaCMD hardware platform. The project now targets multiple platforms, so the documentation and user-facing name use **MCL** as the primary project name.
 
 Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
 - Latest firmware binaries

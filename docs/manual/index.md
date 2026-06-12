@@ -1,4 +1,4 @@
-# MegaCommand Live Manual
+# MCL Manual
 
 | Field | Value |
 | --- | --- |
@@ -7,6 +7,8 @@
 | Manual format | Markdown source with GitHub Pages output |
 
 MCL 5.00 introduces a new project format, a reworked MIDI device model, project folders and versions, per-track LFO and arpeggiator storage, expanded sequencer conditions, track fill states, and cross-platform support.
+
+MCL began as MegaCommand Live for the MegaCommand/MegaCMD hardware platform. The project now supports multiple platforms and device drivers, so this manual uses **MCL** as the project name and refers to MegaCommand only when describing that hardware.
 
 > Backup all projects before installing MCL 5.00. Projects are upgraded automatically on first load and are not compatible with older MCL versions after conversion.
 
