@@ -25,6 +25,28 @@ static uint32_t read_sds_u21(const SysexView &view, uint8_t &idx) {
   return value;
 }
 
+static void format_sds_slot_name(char *name, uint16_t sample_number) {
+  while (sample_number >= 1000) {
+    sample_number -= 1000;
+  }
+
+  uint8_t hundreds = 0;
+  while (sample_number >= 100) {
+    sample_number -= 100;
+    ++hundreds;
+  }
+
+  uint8_t tens = 0;
+  while (sample_number >= 10) {
+    sample_number -= 10;
+    ++tens;
+  }
+
+  name[0] = hundreds + '0';
+  name[1] = tens + '0';
+  name[2] = sample_number + '0';
+}
+
 void MidiSDSSysexListenerClass::end() {
   SysexView view(sysex);
   isSDSMessage = view.getByte(0) == 0x7E;
@@ -136,14 +158,7 @@ void MidiSDSSysexListenerClass::dump_header(const SysexView &view) {
   DEBUG_PRINTLN(midi_sds.loopStart);
   DEBUG_PRINTLN(midi_sds.loopEnd);
   char my_string[] = "___.wav";
-  // Take the 3 decimal digits once, then peel each digit off the remainder
-  // (one modulo + two divides) instead of three independent modulo operations.
-  uint16_t digits = (uint16_t)(midi_sds.sampleNumber % 1000);
-  my_string[2] = digits % 10 + '0';
-  digits /= 10;
-  my_string[1] = digits % 10 + '0';
-  digits /= 10;
-  my_string[0] = digits + '0';
+  format_sds_slot_name(my_string, midi_sds.sampleNumber);
 
   if ((midi_sds.sampleFormat != 8 && midi_sds.sampleFormat != 16 &&
        midi_sds.sampleFormat != 24) ||
