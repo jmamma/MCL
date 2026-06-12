@@ -105,7 +105,3 @@ The TBD sync menu uses `CLOCK SRC` and `TRANS SRC`. Available source values are:
 | `INT` | Internal TBD/MCL clock. |
 
 The tempo overlay edits the internal tempo when MCL is using its own clock source.
-
-## Diagnostics
-
-Function + top-right opens the TBD transport/SPI diagnostic overlay when TBD is assigned to Grid X or Grid Y. This is for checking TBD communication state and is not needed for normal sequencing.
