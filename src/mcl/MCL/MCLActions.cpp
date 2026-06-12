@@ -716,12 +716,11 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
 
     GridSlot dst = n;
     if (load_offset != 255) {
-      int mapped = (int)n - (int)first_slot + (int)load_offset;
-      if (mapped < 0 || mapped >= NUM_SLOTS) {
+      dst = n - first_slot + load_offset;
+      if (dst >= NUM_SLOTS) {
         slot_select_array[n] = 0;
         continue;
       }
-      dst = (GridSlot)mapped;
     }
 
     GridDeviceTrack *gdt = get_grid_dev_track(n);
@@ -812,12 +811,11 @@ again:
 
       GridSlot dst = n;
       if (load_offset != 255) {
-        int mapped = (int)n - (int)first_slot + (int)load_offset;
-        if (mapped < 0 || mapped >= NUM_SLOTS) {
+        dst = n - first_slot + load_offset;
+        if (dst >= NUM_SLOTS) {
           slot_select_array[n] = 0;
           continue;
         }
-        dst = (GridSlot)mapped;
       }
       row = row_array[n];
       if (q == 255) {
@@ -1035,12 +1033,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 
     GridSlot dst = i;
     if (load_offset != 255) {
-      int mapped = (int)i - (int)first_slot + (int)load_offset;
-      if (mapped < 0 || mapped >= NUM_SLOTS) {
+      dst = i - first_slot + load_offset;
+      if (dst >= NUM_SLOTS) {
         slot_select_array[i] = 0;
         continue;
       }
-      dst = (GridSlot)mapped;
     }
     GridDeviceTrack *gdt_dst = get_grid_dev_track(dst);
 

@@ -146,7 +146,7 @@ void GridTask::run() {
   //   ExtTrack *ext_track = (ExtTrack *)&temp_track;
   // MD GUI update.
 
-  GUI.removeTask(&grid_task);
+  GUI.removeTask(this);
 
   if (stop_hard_callback) {
     mcl_actions_callbacks.StopHardCallback();
@@ -162,9 +162,9 @@ void GridTask::run() {
     mcl_arrangement.tick();
 #endif
     load_queue_handler();
-    GridTask::transition_handler();
+    transition_handler();
   }
-  GUI.addTask(&grid_task);
+  GUI.addTask(this);
 }
 
 void GridTask::update_transition_details() {
