@@ -5,6 +5,6 @@
 
 class LEDHardware : public LED {
 public:
-  bool rec_active = false;
-  LEDHardware() : LED() {}
+  bool rec_active;
+  LEDHardware() = default;
 };

@@ -11,8 +11,8 @@
 class ResourceManager {
 private:
 	uint8_t m_buffer[RM_BUFSIZE];
-	uint16_t m_bufsize = 0;
-	uint16_t m_persistent_size = 0;
+	uint16_t m_bufsize;
+	uint16_t m_persistent_size;
 #if !defined(__AVR__)
 	__T_machine_param_names *m_persistent_machine_param_names = nullptr;
 	__T_machine_names_short *m_persistent_machine_names_short = nullptr;
@@ -23,7 +23,7 @@ private:
 	byte* __use_resource(const void* pgm);
 
 public:
-	ResourceManager();
+	ResourceManager() = default;
 	void Clear();
 	void SetPersistent();
 	void Save(uint8_t* buf, size_t* sz);

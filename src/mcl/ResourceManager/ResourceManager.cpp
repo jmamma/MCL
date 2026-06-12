@@ -69,8 +69,6 @@ static void set_menu_layout(MenuBase *menu, const void *layout,
 #undef MENU_LAYOUT_BINDING
 #endif
 
-ResourceManager::ResourceManager() { }
-
 void ResourceManager::Clear() {
     DEBUG_PRINTLN("resource clear");
 	m_bufsize = m_persistent_size;
