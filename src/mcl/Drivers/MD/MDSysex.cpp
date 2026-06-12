@@ -60,8 +60,14 @@ void MDSysexListenerClass::end() {
 
     perf_page.learn_param(fx_type + 16, param, value);
     lfo_page.learn_perf_dest(fx_type + NUM_MD_TRACKS + 1, param, value);
-    if (GUI.currentPage() == &fx_page_a) { fx_page_a.update_encoders(); }
-    if (GUI.currentPage() == &fx_page_b) { fx_page_b.update_encoders(); }
+    {
+      uint8_t current_page = mcl.currentPage();
+      if (current_page == FX_PAGE_A) {
+        fx_page_a.update_encoders();
+      } else if (current_page == FX_PAGE_B) {
+        fx_page_b.update_encoders();
+      }
+    }
 
     break;
 

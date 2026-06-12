@@ -400,7 +400,7 @@ bool MCLClipBoard::paste(GridSlot col, GridRow row) {
       for (uint8_t grid = 0; grid < NUM_GRIDS; grid++) {
         headers[grid].active = true;
         if (header_copy.active) {
-          strncpy(headers[grid].name, header_copy.name, sizeof(headers[grid].name));
+          memcpy(headers[grid].name, header_copy.name, sizeof(headers[grid].name));
         } else {
           headers[grid].name[0] = '\0';
         }

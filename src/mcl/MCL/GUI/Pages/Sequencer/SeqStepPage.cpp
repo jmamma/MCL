@@ -774,22 +774,16 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
           return true;
         }
 
-        case MDX_KEY_UP: {
-          uint8_t num_cond = active_track.condition_count();
-          if (func_down) {
-            if (seq_param1.cur != num_cond) {
-              seq_param1.cur = num_cond * 2 - seq_param1.cur;
-            }
-          } else if (seq_param1.cur < num_cond * 2) {
-            seq_param1.cur += 1;
-          }
-          return true;
-        }
+        case MDX_KEY_UP:
         case MDX_KEY_DOWN: {
           uint8_t num_cond = active_track.condition_count();
           if (func_down) {
             if (seq_param1.cur != num_cond) {
               seq_param1.cur = num_cond * 2 - seq_param1.cur;
+            }
+          } else if (key == MDX_KEY_UP) {
+            if (seq_param1.cur < num_cond * 2) {
+              seq_param1.cur += 1;
             }
           } else if (seq_param1.cur > 0) {
             seq_param1.cur -= 1;
