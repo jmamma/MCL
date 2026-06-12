@@ -139,27 +139,16 @@ uint16_t A4Class::sendKitParams(uint8_t *masks) {
 }
 
 uint16_t A4Class::sendRequest(uint8_t type, uint8_t param, bool send) {
-
-  const uint8_t len = sizeof(a4_sysex_hdr) + sizeof(a4_sysex_proto_version) +
-                      sizeof(a4_sysex_ftr) + 4;
+  const uint8_t len = 15;
   if (send) {
-    uint8_t buf[len];
-
-    uint8_t i = 0;
-    buf[i++] = 0xF0;
-    for (uint8_t n = 0; n < sizeof(a4_sysex_hdr); n++) {
-      buf[i++] = a4_sysex_hdr[n];
-    }
-    buf[i++] = type;
-    for (uint8_t n = 0; n < sizeof(a4_sysex_proto_version); n++) {
-      buf[i++] = a4_sysex_proto_version[n];
-    }
-    buf[i++] = param;
-    for (uint8_t n = 0; n < sizeof(a4_sysex_ftr); n++) {
-      buf[i++] = a4_sysex_ftr[n];
-    }
-    buf[i++] = 0xF7;
-    uart->m_putc(buf, i);
+    // F0 + A4 header + type + proto version + param + footer + F7.
+    uint8_t buf[len] = {
+        0xF0, 0x00, 0x20, 0x3c, 0x06, 0x00, 0x00, 0x01,
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x05, 0xF7,
+    };
+    buf[6] = type;
+    buf[9] = param;
+    uart->m_putc(buf, len);
   }
   return len;
 }
