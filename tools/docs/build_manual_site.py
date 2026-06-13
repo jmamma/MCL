@@ -608,8 +608,27 @@ table code {
 
 def site_js() -> str:
     return """\
+const sidebar = document.querySelector('.sidebar');
 const filter = document.querySelector('[data-nav-filter]');
 const links = Array.from(document.querySelectorAll('[data-nav-link]'));
+const sidebarScrollKey = 'mcl-manual-sidebar-scroll';
+
+if (sidebar) {
+  const savedScroll = sessionStorage.getItem(sidebarScrollKey);
+  if (savedScroll !== null) {
+    sidebar.scrollTop = Number(savedScroll) || 0;
+  }
+
+  const saveSidebarScroll = () => {
+    sessionStorage.setItem(sidebarScrollKey, String(sidebar.scrollTop));
+  };
+
+  sidebar.addEventListener('scroll', saveSidebarScroll, { passive: true });
+  window.addEventListener('beforeunload', saveSidebarScroll);
+  for (const link of links) {
+    link.addEventListener('click', saveSidebarScroll);
+  }
+}
 
 if (filter) {
   filter.addEventListener('input', () => {
