@@ -879,8 +879,8 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
 
   uint8_t track_select_array[NUM_SLOTS];
   uint8_t load_mode_old = mcl_cfg.load_mode;
-  uint8_t undo = slot_undo && !ignore_undo && slot_undo_x == _col &&
-                 slot_undo_y == getRow();
+  uint8_t undo = (slot_clear || slot_paste) && slot_undo && !ignore_undo &&
+                 slot_undo_x == _col && slot_undo_y == getRow();
   DEBUG_PRINTLN("apply slot");
 
 
@@ -919,6 +919,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     height = 1;
   }
   if (undo == 1) {
+    slot_clear = 0;
     slot_paste = 1;
   }
 
