@@ -1248,6 +1248,23 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
 #ifdef MCL_HAS_PROJECT_CONVERSION
   update_header = update_header || project_needs_update || write_grid_headers ||
                   project_version < PROJ_VERSION;
+  if (project_version < PROJ_VERSION) {
+    char old_filename[PRJ_NAME_LEN + 5];
+    strcpy(old_filename, proj_filename);
+    uint8_t len = strlen(old_filename);
+    old_filename[len - 3] = 'o';
+    old_filename[len - 2] = 'l';
+    old_filename[len - 1] = 'd';
+    if (!SD.exists(old_filename)) {
+      if (!file.rename(old_filename)) {
+        return false;
+      }
+      file.close();
+      if (!file.open(proj_filename, O_RDWR | O_CREAT)) {
+        return false;
+      }
+    }
+  }
 #endif
   if (update_header && !write_header()) {
     return false;
