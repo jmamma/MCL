@@ -40,8 +40,6 @@ public:
 #endif
 #ifdef MCL_HAS_PROJECT_CONVERSION
   bool convert_project(const char *projectname);
-  bool migrate_grid_track_storage_versions(GridIndex grid);
-  bool migrate_track_storage_versions();
 #endif
   bool check_project_version();
   bool new_project_master_file(const char *projectname);
@@ -126,8 +124,8 @@ private:
   bool load_project_impl(const char *projectname, uint8_t requested_pair,
                          bool use_requested_pair);
 #ifdef MCL_HAS_PROJECT_CONVERSION
-  bool stamp_existing_grid_headers(const char *basename,
-                                   uint32_t grid_version);
+  bool migrate_track_storage_versions(const char *basename,
+                                      uint8_t *active_pair);
 #endif
   bool copy_grid_pair(const char *from_project, const char *from_basename,
                       const char *to_project, const char *to_basename,
@@ -136,7 +134,9 @@ private:
   bool project_file_name(const char *basename, char *out, size_t out_len) const;
   uint8_t project_pair_file_mask(uint8_t pair, const char *basename);
 #ifdef MCL_HAS_PROJECT_CONVERSION
-  bool migrate_legacy_md_aux_slots(GridRow row, GridRowHeader *grid_x_header);
+  bool migrate_legacy_md_aux_slots(GridRow row, GridRowHeader *grid_x_header,
+                                   Grid *dst_grids, bool *skip_grid_x0);
+  bool migrate_grid_track_storage_versions(GridIndex grid, Grid *dst_grids);
 #endif
   GridIndex last_grid_;
 };

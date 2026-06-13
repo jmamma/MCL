@@ -98,7 +98,6 @@ bool Grid::new_grid(const char *gridname, uint32_t grid_version,
                     uint8_t grid_id) {
 
   bool ret = false;
-  uint8_t ledstatus = 0;
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("Creating new grid"));
   if (!new_file(gridname)) {
@@ -108,24 +107,12 @@ bool Grid::new_grid(const char *gridname, uint32_t grid_version,
     goto end;
   }
   DEBUG_PRINTLN(F("Initializing grid.. please wait"));
-#ifdef OLED_DISPLAY
-  oled_display.drawRect(15, 23, 98, 6, WHITE);
-#endif
   // Initialise the project file by filling the grid with blank data.
   for (GridRow i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
-    mcl_gui.draw_progress("INITIALIZING", i, GRID_LENGTH);
+    mcl_gui.draw_progress_bar(i, GRID_LENGTH, false, MCLGUI::s_progress_x, 21);
 #endif
-    if (i % 2 == 0) {
-      if (ledstatus == 0) {
-        setLed2();
-        ledstatus = 1;
-      } else {
-        clearLed2();
-        ledstatus = 0;
-      }
-    }
 
     ret = clear_row(i);
     if (!ret) {
@@ -135,7 +122,6 @@ bool Grid::new_grid(const char *gridname, uint32_t grid_version,
   }
   ret = true;
   end:
-  clearLed2();
   file.close();
   return ret;
 }
