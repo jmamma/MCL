@@ -289,23 +289,6 @@ public:
     return ext_track_->channel;
   }
 
-  uint8_t swing_amount() const {
-#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
-    if (midi_track_) return midi_track_->swing_amount();
-#endif
-    return ext_track_->swing_amount;
-  }
-
-  void set_swing_amount(uint8_t amount) {
-#ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
-    if (midi_track_) {
-      midi_track_->request_swing_amount_change(amount);
-      return;
-    }
-#endif
-    ext_track_->set_swing_amount(amount);
-  }
-
   void set_channel(uint8_t channel) {
 #ifdef SEQ_EXTSTEP_HAS_MIDI_TRACK
     if (midi_track_) {

@@ -158,7 +158,6 @@ DeviceTrack *ExtTrack::materialize_legacy_ext(DeviceTrack &track,
     midi_seq_data.clear_storage();
     midi_seq_data.mod() = old_mod_data;
     midi_seq_data.import_legacy_ext(old_seq_data, old_link);
-    midi_seq_data.set_swing_amount(old_seq_data.swing_amount);
     midi_seq_data.channel = old_seq_data.channel < PTC_EXT_ROUTE_CHANNEL_END
                                 ? old_seq_data.channel
                                 : tracknumber;

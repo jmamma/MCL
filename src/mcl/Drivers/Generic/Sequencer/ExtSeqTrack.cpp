@@ -47,20 +47,6 @@ static int16_t ext_event_tick(uint8_t step, int8_t microtiming,
          ext_microtiming_ticks(microtiming, ticks_per_step);
 }
 
-static int16_t ext_swing_ticks(uint8_t swing_amount,
-                               uint16_t ticks_per_step) {
-  return (int16_t)(((uint16_t)swing_amount * ticks_per_step + 25) / 50);
-}
-
-static int16_t ext_effective_timing_offset(uint8_t step, int8_t microtiming,
-                                           uint16_t ticks_per_step,
-                                           uint8_t swing_amount) {
-  if (microtiming == 0 && swing_amount && (step & 1)) {
-    return ext_swing_ticks(swing_amount, ticks_per_step);
-  }
-  return ext_microtiming_ticks(microtiming, ticks_per_step);
-}
-
 static int8_t ext_page_timing_to_microtiming(uint16_t timing,
                                              uint16_t ticks_per_step)
     NOINLINE();
@@ -905,9 +891,8 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
 
     // Go over CURRENT
     for (; ev_idx != ev_end; ++ev_idx) {
-      int16_t timing_offset = ext_effective_timing_offset(
-          step_count, events[ev_idx].micro_timing, ticks_per_step,
-          swing_amount);
+      int16_t timing_offset =
+          ext_microtiming_ticks(events[ev_idx].micro_timing, ticks_per_step);
       if (timing_offset >= 0 && timing_offset == mod12_counter) {
         handle_event(ev_idx, step_count);
       }
@@ -925,8 +910,8 @@ void ExtSeqTrack::seq(MidiUartClass *uart_) {
 
     // Go over NEXT
     for (; ev_idx != ev_end; ++ev_idx) {
-      int16_t timing_offset = ext_effective_timing_offset(
-          next_step, events[ev_idx].micro_timing, ticks_per_step, swing_amount);
+      int16_t timing_offset =
+          ext_microtiming_ticks(events[ev_idx].micro_timing, ticks_per_step);
       int16_t trigger_tick = (int16_t)ticks_per_step + timing_offset;
       if (timing_offset < 0 && trigger_tick == mod12_counter) {
         handle_event(ev_idx, next_step);
@@ -1407,7 +1392,6 @@ void ExtSeqTrack::clear_track(bool) {
   // Events are inactive after clear_ext_notes(); only runtime masks need reset.
   clear_mutes();
   memset(ignore_notes, 0, sizeof(ignore_notes));
-  set_swing_amount(0);
   notesoff_pending = true;
 }
 

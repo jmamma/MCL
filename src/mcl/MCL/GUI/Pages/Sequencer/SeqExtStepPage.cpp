@@ -1483,7 +1483,6 @@ void SeqExtStepPage::config_menu_entries() {
       menu_entry_mask(SEQ_MENU_TRACK) |
       menu_entry_mask(SEQ_MENU_PIANOROLL) |
       menu_entry_mask(SEQ_MENU_SPEED) | menu_entry_mask(SEQ_MENU_LENGTH_EXT) |
-      menu_entry_mask(SEQ_MENU_SWING) |
       menu_entry_mask(SEQ_MENU_CHANNEL) | menu_entry_mask(SEQ_MENU_COPY) |
       menu_entry_mask(SEQ_MENU_PASTE) | menu_entry_mask(SEQ_MENU_SHIFT) |
       menu_entry_mask(SEQ_MENU_REVERSE) |

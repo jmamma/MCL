@@ -31,14 +31,11 @@ public:
 
 class MidiSeqTrack : public SeqTrackCond {
 public:
-  static constexpr uint8_t NO_PENDING_SWING_AMOUNT = 0xFF;
-
   MidiSeqTrackData seq_data;
 
   static uint8_t epoch;
 
   uint16_t tick_counter = 0;
-  volatile uint8_t pending_swing_amount = NO_PENDING_SWING_AMOUNT;
   uint64_t note_buffer[2] = {0};
   uint64_t ignore_notes[2] = {0};
   uint64_t oneshot_mask[2] = {0};
@@ -64,7 +61,6 @@ public:
   uint16_t ticks_per_step() const;
   uint16_t speed_multiplier_int() const { return ticks_per_step(); }
   int32_t event_tick(uint8_t step, const MidiSeqEvent &event) const;
-  uint16_t effective_timing(uint8_t step, uint8_t timing, uint16_t tps) const;
   uint8_t page_timing_to_data(uint16_t timing) const;
   uint16_t data_timing_to_page(uint8_t timing) const;
   uint8_t step_from_tick(uint32_t tick) const {
@@ -76,10 +72,6 @@ public:
   void set_channel(uint8_t channel);
   uint8_t channel() const;
   void set_speed(uint8_t new_speed, bool timing_adjust = false);
-  uint8_t swing_amount() const { return seq_data.normalized_swing_amount(); }
-  void set_swing_amount_immediate(uint8_t amount);
-  void request_swing_amount_change(uint8_t amount);
-  void apply_pending_swing_amount();
 
   void init_notes_on();
   bool note_on_at(uint8_t idx, NoteVector &note) const;

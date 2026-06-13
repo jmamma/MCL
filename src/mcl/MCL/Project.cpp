@@ -327,9 +327,8 @@ static_assert(sizeof(LegacyMDSeqTrackData) == sizeof(MDSeqTrackDataV1),
               "Legacy MD seq data size changed");
 static_assert(sizeof(LegacyExtEvent) == sizeof(ext_event_t),
               "Legacy Ext event size changed");
-static_assert(sizeof(LegacyExtSeqTrackData) + sizeof(uint8_t) ==
-                  sizeof(ExtSeqTrackData),
-              "Ext seq data storage conversion size changed");
+static_assert(sizeof(LegacyExtSeqTrackData) == sizeof(ExtSeqTrackData),
+              "Legacy Ext seq data size changed");
 static_assert(offsetof(LegacyExtSeqTrackData, locks_params) ==
                   sizeof(NibbleArray<NUM_EXT_STEPS>) +
                       sizeof(LegacyExtEvent) * NUM_EXT_EVENTS,
@@ -343,7 +342,7 @@ static_assert(offsetof(ExtSeqTrackData, locks_params) ==
               "Ext fixed tail offset changed");
 static_assert(offsetof(ExtSeqTrackData, events) -
                       offsetof(ExtSeqTrackData, locks_params) ==
-                  sizeof(LegacyExtSeqFixedTail) + sizeof(uint8_t),
+                  sizeof(LegacyExtSeqFixedTail),
               "Ext fixed tail size changed");
 static_assert(offsetof(LegacyMDLFOTrackStorage, lfo_data) ==
                   LEGACY_GRID_TRACK_HEADER_SIZE,
@@ -588,7 +587,6 @@ void convert_legacy_ext_seq(ExtSeqTrackData &dst, uint8_t speed) {
           used_events * sizeof(LegacyExtEvent));
 
   memcpy(dst.locks_params, &fixed_tail, sizeof(fixed_tail));
-  dst.swing_amount = 0;
   dst.event_count = used_events;
   for (uint16_t i = 0; i < used_events; i++) {
     if (!dst.events[i].is_lock) {
