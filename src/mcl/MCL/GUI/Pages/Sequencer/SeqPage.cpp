@@ -489,6 +489,7 @@ static void capture_ext_track_opts() {
   opt_speed = active_track.speed;
   opt_length = active_track.length;
   opt_channel = ext_track_channel(last_ext_track) + 1;
+  opt_swing = SeqExtStepTrackRef::track(last_ext_track).swing_amount() + 50;
 }
 
 static inline void set_ext_track_channel(uint8_t track, uint8_t channel) {
@@ -1397,21 +1398,24 @@ void opt_speed_handler() {
 
 void opt_swing_handler() {
   bool is_md_device = opt_capture_is_md_device();
-  if (!seq_page_uses_step_track_ops(is_md_device)) {
-    return;
-  }
   uint8_t amount = opt_swing > 50 ? (uint8_t)(opt_swing - 50) : 0;
   if (amount > 30) {
     amount = 30;
   }
-  if (BUTTON_DOWN(Buttons.BUTTON4)) {
-    for (uint8_t i = 0; i < seq_page_step_track_count(); i++) {
-      seq_page_step_track_for(i).set_swing_amount(amount);
+  if (seq_page_uses_step_track_ops(is_md_device)) {
+    if (BUTTON_DOWN(Buttons.BUTTON4)) {
+      for (uint8_t i = 0; i < seq_page_step_track_count(); i++) {
+        seq_page_step_track_for(i).set_swing_amount(amount);
+      }
+      GUI.ignoreNextEvent(Buttons.BUTTON4);
+    } else {
+      seq_page_active_step_track().set_swing_amount(amount);
     }
-    GUI.ignoreNextEvent(Buttons.BUTTON4);
-  } else {
-    seq_page_active_step_track().set_swing_amount(amount);
+    return;
   }
+#ifdef EXT_TRACKS
+  SeqExtStepTrackRef::active_track().set_swing_amount(amount);
+#endif
 }
 
 void opt_clear_track_handler() {

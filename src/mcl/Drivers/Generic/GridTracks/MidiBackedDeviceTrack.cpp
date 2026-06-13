@@ -127,6 +127,7 @@ void MidiBackedDeviceTrack::import_legacy_ext_storage(
   seq_data.clear_storage();
   seq_data.mod() = old_mod_data;
   seq_data.import_legacy_ext(old_seq_data, old_link);
+  seq_data.set_swing_amount(old_seq_data.swing_amount);
   seq_data.channel = old_seq_data.channel < PTC_EXT_ROUTE_CHANNEL_END
                          ? old_seq_data.channel
                          : tracknumber;

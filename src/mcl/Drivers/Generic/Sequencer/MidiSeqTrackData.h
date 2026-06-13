@@ -140,7 +140,8 @@ public:
   uint8_t reserved0;
   uint16_t event_count;
   uint8_t lock_count;
-  uint8_t reserved[7];
+  uint8_t swing_amount;
+  uint8_t reserved[6];
 
   uint8_t event_buckets[MIDI_SEQ_NUM_STEPS];
   MidiSeqLockDefinition locks[MIDI_SEQ_NUM_LOCKS];
@@ -164,6 +165,14 @@ public:
     version = MIDI_SEQ_DATA_VERSION;
     length = 16;
     speed = 0;
+  }
+
+  uint8_t normalized_swing_amount() const {
+    return swing_amount <= 30 ? swing_amount : 0;
+  }
+
+  void set_swing_amount(uint8_t amount) {
+    swing_amount = amount > 30 ? 30 : amount;
   }
 
   uint16_t locate_start(uint8_t step) const {

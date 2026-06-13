@@ -108,6 +108,7 @@ public:
   uint8_t velocities[NUM_EXT_STEPS];
   uint8_t locks_params_orig[NUM_LOCKS];
   uint8_t channel;
+  uint8_t swing_amount;
   ext_event_t events[NUM_EXT_EVENTS];
   void set_channel(uint8_t channel_) { channel = channel_; }
   uint8_t *data() const { return (uint8_t *)&event_buckets; }
@@ -121,6 +122,7 @@ public:
   }
   void clear() {
     event_count = 0;
+    swing_amount = 0;
     event_buckets.clear();
   }
 };
@@ -260,6 +262,7 @@ public:
   void modify_track(uint8_t dir);
 
   void set_speed(uint8_t new_speed, uint8_t old_speed = 255, bool timing_adjust = true);
+  void set_swing_amount(uint8_t amount) { swing_amount = amount > 30 ? 30 : amount; }
   ALWAYS_INLINE() bool request_speed_change(uint8_t new_speed) {
     if (count_down) {
       return false;

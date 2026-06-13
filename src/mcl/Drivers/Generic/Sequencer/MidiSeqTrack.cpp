@@ -72,6 +72,10 @@ uint16_t clamp_value14(int32_t value) {
   return (uint16_t)value;
 }
 
+uint16_t midi_seq_swing_ticks(uint8_t swing_amount, uint16_t tps) {
+  return (uint16_t)(((uint16_t)swing_amount * tps + 25) / 50);
+}
+
 constexpr uint8_t MIDI_SEQ_COND_ONESHOT = SEQ_COND_ONESHOT;
 
 bool current_event_due(uint16_t timing, uint16_t tps, uint16_t tick_counter) {
@@ -105,6 +109,7 @@ void MidiSeqTrack::reset() {
   SeqTrackCond::reset();
   tick_counter = 0;
   mod12_counter = 0;
+  pending_swing_amount = NO_PENDING_SWING_AMOUNT;
   memset(ignore_notes, 0, sizeof(ignore_notes));
   memset(oneshot_mask, 0, sizeof(oneshot_mask));
   cache_loaded = true;
@@ -182,6 +187,42 @@ int32_t MidiSeqTrack::event_tick(uint8_t step,
                                  const MidiSeqEvent &event) const {
   return (int32_t)step * ticks_per_step() + data_timing_to_page(event.timing) -
          ticks_per_step();
+}
+
+uint16_t MidiSeqTrack::effective_timing(uint8_t step, uint8_t timing,
+                                        uint16_t tps) const {
+  uint8_t amount = seq_data.normalized_swing_amount();
+  if (timing == MIDI_SEQ_TIMING_CENTER && amount && (step & 1)) {
+    return tps + midi_seq_swing_ticks(amount, tps);
+  }
+  return data_timing_to_page(timing);
+}
+
+void MidiSeqTrack::set_swing_amount_immediate(uint8_t amount) {
+  seq_data.set_swing_amount(amount);
+  pending_swing_amount = NO_PENDING_SWING_AMOUNT;
+}
+
+void MidiSeqTrack::request_swing_amount_change(uint8_t amount) {
+  if (amount > 30) amount = 30;
+  if (!MidiClock.isStarted()) {
+    set_swing_amount_immediate(amount);
+    return;
+  }
+  USE_LOCK();
+  SET_LOCK();
+  pending_swing_amount = amount;
+  CLEAR_LOCK();
+}
+
+void MidiSeqTrack::apply_pending_swing_amount() {
+  if (pending_swing_amount == NO_PENDING_SWING_AMOUNT) return;
+  USE_LOCK();
+  SET_LOCK();
+  uint8_t amount = pending_swing_amount;
+  pending_swing_amount = NO_PENDING_SWING_AMOUNT;
+  CLEAR_LOCK();
+  seq_data.set_swing_amount(amount);
 }
 
 void MidiSeqTrack::set_channel(uint8_t channel_) {
@@ -1022,10 +1063,10 @@ void MidiSeqTrack::recalc_slides() {
       continue;
     }
 
-    int32_t x0 = (int32_t)step * tps + data_timing_to_page(event.timing) -
-                 tps + 1;
-    uint16_t next_timing =
-        data_timing_to_page(locks_slide_next_lock_timing[lock_idx]);
+    int32_t x0 = (int32_t)step * tps +
+                 effective_timing(step, event.timing, tps) - tps + 1;
+    uint16_t next_timing = effective_timing(
+        next_step, locks_slide_next_lock_timing[lock_idx], tps);
     int32_t x1 = next_step < step
                      ? (int32_t)(length + next_step) * tps + next_timing -
                            tps - 1
@@ -1108,6 +1149,7 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
       memset(ignore_notes, 0, sizeof(ignore_notes));
     }
     step_count_inc();
+    apply_pending_swing_amount();
   }
 
   if (count_down) {
@@ -1151,7 +1193,7 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
   uint16_t bucket_start = cur_event_idx;
   for (; ev_idx < ev_end; ev_idx++) {
     const auto &event = seq_data.events[ev_idx];
-    uint16_t timing = data_timing_to_page(event.timing);
+    uint16_t timing = effective_timing(step_count, event.timing, tps);
     if (current_event_due(timing, tps, tick_counter)) {
       handle_event(event, step_count, bucket_start);
     }
@@ -1163,7 +1205,7 @@ void MidiSeqTrack::seq(MidiUartClass *uart_) {
   bucket_start = ev_idx;
   for (; ev_idx < ev_end; ev_idx++) {
     const auto &event = seq_data.events[ev_idx];
-    uint16_t timing = data_timing_to_page(event.timing);
+    uint16_t timing = effective_timing(next_step, event.timing, tps);
     if (next_event_due(timing, tps, tick_counter)) {
       handle_event(event, next_step, bucket_start);
     }
@@ -1185,6 +1227,7 @@ void MidiSeqTrack::clear_track(bool) {
   speed = spd;
   tick_counter = 0;
   mod12_counter = 0;
+  pending_swing_amount = NO_PENDING_SWING_AMOUNT;
   locks_slides_recalc = 255;
   locks_slides_idx = 0;
   for (uint8_t i = 0; i < MIDI_SEQ_NUM_LOCKS; i++) {
