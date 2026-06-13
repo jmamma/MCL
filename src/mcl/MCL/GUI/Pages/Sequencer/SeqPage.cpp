@@ -1036,6 +1036,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (EVENT_PRESSED(event, Buttons.BUTTON3)) {
       // If MD trig is held and BUTTON3 is pressed, launch note menu
       if (!show_seq_menu) {
+        resetEncoderFocus();
         suspend_enhanced_mask_window();
         show_seq_menu = true;
         opt_midi_device_capture = midi_device;
@@ -1057,6 +1058,7 @@ bool SeqPage::handleEvent(gui_event_t *event) {
     if (EVENT_RELEASED(event, Buttons.BUTTON3)) {
       encoders[0] = opt_param1_capture;
       encoders[1] = opt_param2_capture;
+      resetEncoderFocus();
       // oled_display.clearDisplay();
       void (*row_func)() = NULL;
       uint8_t row_entry = 255;

@@ -579,6 +579,7 @@ bool SeqStepPage::handleEvent(gui_event_t *event) {
       seq_param2.old = seq_param2.cur;
       seq_param2.min = active_track.timing_encoder_min();
       seq_param2.max = active_track.timing_encoder_max();
+      resetEncoderFocus();
       if (!active_track.get_step(step, mask_type)) {
         reset_undo();
         bool cond_plock;
