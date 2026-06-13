@@ -1256,10 +1256,17 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     old_filename[len - 2] = 'l';
     old_filename[len - 1] = 'd';
     if (!SD.exists(old_filename)) {
+#ifdef __AVR__
       if (!file.rename(old_filename)) {
         return false;
       }
       file.close();
+#else
+      file.close();
+      if (!SD.rename(proj_filename, old_filename)) {
+        return false;
+      }
+#endif
       if (!file.open(proj_filename, O_RDWR | O_CREAT)) {
         return false;
       }
