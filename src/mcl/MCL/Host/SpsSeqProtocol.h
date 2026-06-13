@@ -63,6 +63,7 @@ enum Cmd {
     CMD_REQ_EXT_NOTES    = 0x16,  // H->M  device, track
     CMD_REQ_PERF_STATE   = 0x17,  // H->M  device, track
     CMD_REQ_EXT_LOCKS    = 0x18,  // H->M  device, track, lock_idx
+    CMD_REQ_MIXER_STATE  = 0x19,  // H->M  mixer_device
 
     CMD_TRACK_SUMMARY    = 0x30,  // M->H
     CMD_TRACK_DETAIL     = 0x31,  // M->H
@@ -72,6 +73,7 @@ enum Cmd {
     CMD_EXT_NOTES        = 0x35,  // M->H  device, track, paginated note pairs
     CMD_PERF_STATE       = 0x36,  // M->H  device, track, PTC/ARP/voice state
     CMD_EXT_LOCKS        = 0x37,  // M->H  device, track, lock_idx, paginated lock values
+    CMD_MIXER_STATE      = 0x38,  // M->H  mixer device snapshot
 
     CMD_SET_STEP         = 0x50,  // H->M  track, step, wmask, value
     CMD_SET_LOCK         = 0x51,  // H->M  track, step, param, value
@@ -95,12 +97,19 @@ enum Cmd {
     CMD_EXT_CLR_LOCK     = 0x62,  // H->M  device, track, lock_idx, step
     CMD_EXT_CLEAR_LOCKS  = 0x63,  // H->M  device, track, lock_idx
     CMD_EXT_TOGGLE_NOTE  = 0x64,  // H->M  device, track, start(4), width(4), note, velocity, condition
+    CMD_MIXER_SET_PARAM  = 0x65,  // H->M  device, selector, track_mask(2), value
+    CMD_MIXER_ADJUST_PARAM = 0x66,// H->M  device, selector, track_mask(2), int8_delta
+    CMD_MIXER_SET_MASK   = 0x67,  // H->M  device, mask_kind, set, slot, mask(2)
+    CMD_MIXER_LOAD_PERF  = 0x68,  // H->M  set, load_perf, load_type_bits
+    CMD_MIXER_SET_DISPLAY= 0x69,  // H->M  device, selector
+    CMD_MIXER_SET_PERF_LOCK = 0x6A, // H->M  set, encoder, value(0..127, 0xFF clear)
 
     CMD_NOTIFY_TRANSPORT = 0x70,  // M->H  running, master_step, sub_tick(2)
     CMD_NOTIFY_DIRTY     = 0x71,  // M->H  track, regions
     CMD_NOTIFY_ACTIVE    = 0x72,  // M->H  pattern_meta + active_track + transport
     CMD_NOTIFY_EXT_DIRTY = 0x73,  // M->H  device, track, regions
     CMD_NOTIFY_PERF_DIRTY= 0x74,  // M->H  device, track, regions
+    CMD_NOTIFY_MIXER_DIRTY=0x75,  // M->H  mixer_device, regions
     CMD_ACK              = 0x7E,  // M->H  (echo tag) status
     CMD_ERR              = 0x7F   // M->H  (echo tag) err_code, detail
 };
@@ -117,7 +126,8 @@ enum Caps {
     CAP_EXT_NOTES     = 1 << 7,
     CAP_PTC_ARP       = 1 << 8,
     CAP_EXT_LOCKS     = 1 << 9,
-    CAP_EXT_NOTE_TOGGLE = 1 << 10
+    CAP_EXT_NOTE_TOGGLE = 1 << 10,
+    CAP_MIXER         = 1 << 11
 };
 
 enum ExtDevice {
@@ -140,6 +150,37 @@ enum PerfDirtyRegion {
     PERF_DIRTY_ARP    = 1 << 1,
     PERF_DIRTY_GROUPS = 1 << 2
 };
+
+enum MixerDevice {
+    MIXER_DEVICE_PRIMARY   = 0,
+    MIXER_DEVICE_SECONDARY = 1
+};
+
+enum MixerFlags {
+    MIXER_FLAG_PERF_AVAILABLE = 1 << 0
+};
+
+enum MixerMaskKind {
+    MIXER_MASK_ACTIVE_MUTE = 0, // bit set means muted
+    MIXER_MASK_ACTIVE_FILL = 1, // bit set means fill active
+    MIXER_MASK_PERF_MUTE   = 2, // bit set means muted
+    MIXER_MASK_PERF_FILL   = 3  // bit set means fill active
+};
+
+enum MixerDirtyRegion {
+    MIXER_DIRTY_STATE = 1 << 0
+};
+
+static const uint8_t kMixerParamSelectorDefault = 0x7F;
+static const uint8_t kMixerParamVol = 0x7E;
+static const uint8_t kMixerParamPan = 0x7D;
+static const int kMixerPerfStates = 4;
+static const int kMixerPerfEncoders = 4;
+static const int kMixerStatePerfBytes =
+    2 + 2 + 2 + 2 + 1 + kMixerPerfEncoders;
+static const int kMixerStateWireBytes =
+    10 + kNumTracks + kNumTracks + 2 + kNumTracks + 2 + kNumTracks +
+    kMixerPerfStates * kMixerStatePerfBytes;
 
 enum PtcProp {
     PTCPROP_OCTAVE    = 0,

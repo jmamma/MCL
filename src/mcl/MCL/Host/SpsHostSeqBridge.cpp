@@ -39,6 +39,7 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_REQ_EXT_NOTES:     onReqExtNotes(p.tag, b, n);       break;
         case CMD_REQ_PERF_STATE:    onReqPerfState(p.tag, b, n);      break;
         case CMD_REQ_EXT_LOCKS:     onReqExtLocks(p.tag, b, n);       break;
+        case CMD_REQ_MIXER_STATE:   onReqMixerState(p.tag, b, n);     break;
 
         case CMD_SET_STEP:        if (applySetStep(b, n))        { if (n) notifyDirty(b[0], DIRTY_SUMMARY); } break;
         case CMD_SET_MICROTIMING: if (applySetMicroTiming(b, n)) { if (n) notifyDirty(b[0], DIRTY_DETAIL); }  break;
@@ -105,6 +106,30 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
             if (applyExtClearLocks(b, n) && n >= 2)
                 notifyExtDirty(b[0], b[1], EXT_DIRTY_LOCKS);
             break;
+        case CMD_MIXER_SET_PARAM:
+            if (applyMixerSetParam(b, n) && n >= 1)
+                notifyMixerDirty(b[0], MIXER_DIRTY_STATE);
+            break;
+        case CMD_MIXER_ADJUST_PARAM:
+            if (applyMixerAdjustParam(b, n) && n >= 1)
+                notifyMixerDirty(b[0], MIXER_DIRTY_STATE);
+            break;
+        case CMD_MIXER_SET_MASK:
+            if (applyMixerSetMask(b, n) && n >= 1)
+                notifyMixerDirty(b[0], MIXER_DIRTY_STATE);
+            break;
+        case CMD_MIXER_LOAD_PERF:
+            if (applyMixerLoadPerf(b, n))
+                notifyMixerDirty(0xFF, MIXER_DIRTY_STATE);
+            break;
+        case CMD_MIXER_SET_DISPLAY:
+            if (applyMixerSetDisplay(b, n) && n >= 1)
+                notifyMixerDirty(b[0], MIXER_DIRTY_STATE);
+            break;
+        case CMD_MIXER_SET_PERF_LOCK:
+            if (applyMixerSetPerfLock(b, n))
+                notifyMixerDirty(0xFF, MIXER_DIRTY_STATE);
+            break;
 
         case CMD_BATCH: {
             // sequential best-effort: {cmd,len,bytes}* ; correctness via NOTIFY_DIRTY
@@ -153,7 +178,7 @@ void SpsHostSeqBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n >= 1 && b[0] == 0) return;  // malformed/incompatible host proto: stay silent
     uint16_t caps = CAP_SPSX | CAP_LOCKS | CAP_DETAIL | CAP_PER_TRACK_LEN |
                     CAP_BATCH | CAP_EXT_NOTES | CAP_PTC_ARP | CAP_EXT_LOCKS |
-                    CAP_EXT_NOTE_TOGGLE;
+                    CAP_EXT_NOTE_TOGGLE | CAP_MIXER;
     uint8_t body[7];
     body[0] = kProtoVersion; putU16le(body + 1, caps);
     body[3] = (uint8_t)NUM_MD_TRACKS; body[4] = (uint8_t)kNumSteps; body[5] = (uint8_t)kNumLockParams;
@@ -191,6 +216,11 @@ void SpsHostSeqBridge::onReqExtLocks(uint8_t tag, const uint8_t* b,
                                      uint16_t n) {
     if (n >= 3)
         sendExtLocks(tag, b[0], b[1], b[2]);
+}
+
+void SpsHostSeqBridge::onReqMixerState(uint8_t tag, const uint8_t* b,
+                                       uint16_t n) {
+    sendMixerState(tag, n >= 1 ? b[0] : MIXER_DEVICE_PRIMARY);
 }
 
 #endif  // !defined(__AVR__)

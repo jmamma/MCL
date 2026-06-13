@@ -34,6 +34,7 @@ public:
     void notifyTracksDirty(uint16_t track_mask, uint8_t regions);  // per-bit; coalesces broad masks
     void notifyExtDirty(uint8_t device, int track, uint8_t regions);
     void notifyPerfDirty(uint8_t device, int track, uint8_t regions);
+    void notifyMixerDirty(uint8_t device, uint8_t regions);
     void notifyTransport(bool running, uint8_t masterStep);
     void notifyActive();
 
@@ -56,6 +57,7 @@ private:
     void onReqExtNotes(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqPerfState(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqExtLocks(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqMixerState(uint8_t tag, const uint8_t* b, uint16_t n);
     void sendTrackSummary(int track);
     void sendTrackDetail(int track);
     void sendTrackLocks(int track);
@@ -65,6 +67,7 @@ private:
     void sendExtLocks(uint8_t tag, uint8_t device, int track,
                       uint8_t lock_idx);
     void sendPerfState(uint8_t tag, uint8_t device, int track);
+    void sendMixerState(uint8_t tag, uint8_t device);
 
     bool applySetStep(const uint8_t* b, uint16_t n);
     bool applySetMicroTiming(const uint8_t* b, uint16_t n);
@@ -85,6 +88,12 @@ private:
     bool applySetArpProp(const uint8_t* b, uint16_t n);
     bool applySetPtcGroup(const uint8_t* b, uint16_t n);
     bool applyPtcNoteEvent(const uint8_t* b, uint16_t n);
+    bool applyMixerSetParam(const uint8_t* b, uint16_t n);
+    bool applyMixerAdjustParam(const uint8_t* b, uint16_t n);
+    bool applyMixerSetMask(const uint8_t* b, uint16_t n);
+    bool applyMixerLoadPerf(const uint8_t* b, uint16_t n);
+    bool applyMixerSetDisplay(const uint8_t* b, uint16_t n);
+    bool applyMixerSetPerfLock(const uint8_t* b, uint16_t n);
 
     // wire mask -> MCL StepSeq native (STEPSEQ_MASK_*); -1 if unknown
     static int wireToMclMask(int wmask);
