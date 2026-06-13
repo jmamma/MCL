@@ -1246,9 +1246,9 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
 #endif
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
-  bool conversion_update_header =
-      project_needs_update || write_grid_headers || project_version < PROJ_VERSION;
-  update_header = update_header || conversion_update_header;
+  update_header = update_header || project_needs_update || write_grid_headers ||
+                  project_version < PROJ_VERSION;
+  bool created_project_header = false;
   if (project_version < PROJ_VERSION) {
     char old_filename[PRJ_NAME_LEN + 5];
     strcpy(old_filename, proj_filename);
@@ -1271,6 +1271,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       if (!file.open(proj_filename, O_RDWR | O_CREAT)) {
         return false;
       }
+      created_project_header = true;
     }
   }
 #endif
@@ -1278,7 +1279,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     return false;
   }
 #ifdef MCL_HAS_PROJECT_CONVERSION
-  if (conversion_update_header && !file.sync()) {
+  if (created_project_header && !file.sync()) {
     return false;
   }
 #endif
