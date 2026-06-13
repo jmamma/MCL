@@ -69,7 +69,7 @@ When the cursor reaches the edge of the visible area, the page scrolls.
 
 The active row is the row currently being played or targeted by loading. The grid can show queued or active slots differently depending on load mode.
 
-When you use bank/trig row loading, the selected row becomes part of the load workflow. In queue mode, multiple selected rows can form a repeating queue.
+With bank/trig row loading, the selected row becomes part of the load workflow. In queue mode, multiple selected rows can form a repeating queue.
 
 ## Row Names
 

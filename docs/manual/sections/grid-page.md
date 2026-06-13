@@ -1,8 +1,8 @@
 # Grid Page
 
-The Grid Page is the main working page in MCL. It shows the project grid, lets you move between rows and slots, and opens the Save, Load and Slot Menu workflows.
+The Grid Page is the main working page in MCL. It shows the project grid, supports movement between rows and slots, and opens the Save, Load and Slot Menu workflows.
 
-## What You See
+## Screen Layout
 
 The page shows a window into the active grid.
 
@@ -45,7 +45,7 @@ On TBD, Save and Load appear as overlays on the Grid Page rather than replacing 
 
 The active grid controls which 16 columns are shown and edited.
 
-| Active grid | What actions target |
+| Active grid | Action target |
 | --- | --- |
 | Grid X | The primary configured device. |
 | Grid Y | The secondary configured device or auxiliary state area. |

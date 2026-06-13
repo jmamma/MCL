@@ -90,6 +90,6 @@ Do not edit project files by hand. Use the project browser, file menu and versio
 
 ## Saving Projects
 
-MCL writes project state as slots, grids and configuration are saved. You usually do not need a separate full-project save action after saving the material you are working on.
+MCL writes project state as slots, grids and configuration are saved. A separate full-project save action is usually unnecessary after saving the active material.
 
 When `SYSTEM > PROJ CFG` is enabled, project-specific configuration is stored with the project and restored when the project is loaded.

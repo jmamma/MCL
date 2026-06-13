@@ -96,7 +96,7 @@ CONFIG > MIDI > SYNC
 | Clock send | `CLOCK SEND`: `OFF`, `2`, `USB`, `2 + USB` | Same send options |
 | Transport send | `TRANS SEND`: `OFF`, `2`, `USB`, `2 + USB` | Same send options |
 
-Use the same receive/source for clock and transport unless you intentionally want transport from a different source.
+Use the same receive/source for clock and transport unless transport intentionally comes from a different source.
 
 ## Routing
 

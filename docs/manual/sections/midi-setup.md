@@ -2,7 +2,7 @@
 
 ## Setup Overview
 
-MCL 5.00 uses a Grid X / Grid Y device model. After wiring your devices, configure the active device layout from:
+MCL 5.00 uses a Grid X / Grid Y device model. After wiring the devices, configure the active device layout from:
 
 ```text
 CONFIG > MIDI > DEVICES

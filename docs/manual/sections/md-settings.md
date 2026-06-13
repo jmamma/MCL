@@ -48,7 +48,7 @@ When `NORMALIZE` is set to `AUTO`, saved MD tracks have their track `LEV` raised
 
 This makes the track level control a predictable maximum-level control during performance. While the sequencer is running, MCL does not transmit the track `LEV` parameter continuously, so the performer can still fade tracks manually from the Machinedrum.
 
-Use `OFF` if you want saved MD track levels to remain untouched.
+Use `OFF` if saved MD track levels should remain untouched.
 
 ## Samplebank
 

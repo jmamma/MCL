@@ -10,7 +10,7 @@ Open it from the Chromatic Page Track Menu:
 
 ![chro menu](../assets/images/chro_menu.png)
 
-The page returns to the previous page when you press **[Yes/Enter]**, **[No/Exit]** or one of the panel buttons.
+The page returns to the previous page when **[Yes/Enter]**, **[No/Exit]** or one of the panel buttons is pressed.
 
 ![arp page](../assets/images/arp_page.png)
 

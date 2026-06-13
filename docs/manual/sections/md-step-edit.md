@@ -10,7 +10,7 @@ Open it from Page Select with:
 
 Pressing **[Rec]** can also toggle into the Step Editor from elsewhere in MCL.
 
-## What You See
+## Screen Layout
 
 The page shows 16 steps at a time. A 64-step track is edited as four pages of 16 steps.
 
@@ -55,7 +55,7 @@ If a step contains parameter locks, removing the trig can leave the lock data as
 
 The Step Editor has four main masks.
 
-| Mask | What trig keys edit |
+| Mask | Trig key target |
 | --- | --- |
 | `TRIG` | Notes/trigs and trigless locks. |
 | `MUTE` | Per-step mute mask. |

@@ -12,7 +12,7 @@ Open it from Page Select with:
 
 The legacy `LF` auxiliary slot is no longer the main LFO storage model. Older project data is migrated where supported, with legacy LFO data copied into the current per-track format.
 
-## What An LFO Can Modulate
+## Modulation Targets
 
 Each track LFO has two modulation outputs.
 
@@ -67,7 +67,7 @@ On `LFO>DST`, each output chooses a destination and parameter.
 | `---` | No destination. |
 | `LER` | Learn a destination/parameter from incoming or edited control data where supported. |
 
-Learning is useful when you do not want to browse parameter numbers manually. Set the destination empty and `PAR` to `LER`, then move the parameter you want to modulate.
+Learning is useful when manual parameter-number browsing is undesirable. Set the destination empty and `PAR` to `LER`, then move the target parameter.
 
 ![lfo learn](../assets/images/lfo_learn.png)
 

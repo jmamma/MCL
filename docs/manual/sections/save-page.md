@@ -12,7 +12,7 @@ Open it from the Grid Page with:
 
 On TBD, Save appears as a Grid Page overlay. On MegaCommand and MegaCMD, it opens as a page.
 
-## What Save Stores
+## Stored Data
 
 Save stores sequence data and any supported sound or state data for the selected slots.
 
@@ -78,6 +78,6 @@ When a group or row-level save writes active slot data, the row name is associat
 
 ## Saving And Projects
 
-Saving slots updates the current project's grid files. You do not need a separate full-project save after writing the relevant slots.
+Saving slots updates the current project's grid files. A separate full-project save is not required after writing the relevant slots.
 
 If `CONFIG > SYSTEM > PROJ CFG` is enabled, supported configuration is also stored with the project when project state is written.

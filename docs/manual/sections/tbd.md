@@ -36,7 +36,7 @@ TBD grid slots can store:
 | Mixer state | Visible mixer parameters exposed by the current TBD sound. |
 | Parameter locks | Step locks for visible TBD audio and mixer parameters, plus note locks for sounds that use per-step pitch. |
 
-The Slot Menu `SOUND` option still applies. Set `SOUND` to `OFF` when you want to load sequence data without replacing the current TBD sound state.
+The Slot Menu `SOUND` option still applies. Set `SOUND` to `OFF` to load sequence data without replacing the current TBD sound state.
 
 ## Sound And Parameters
 

@@ -28,7 +28,7 @@ MCL creates these SD-card folders:
 | `/Samples/WAV` | WAV files and received samples. |
 | `/Samples/SYX` | SDS/SysEx sample files. |
 
-The browser filters the file list to `.wav` and `.syx` files. Folders are shown so you can organize sample sets.
+The browser filters the file list to `.wav` and `.syx` files. Folders are shown so sample sets can be organized.
 
 ## Browser Controls
 

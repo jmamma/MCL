@@ -31,14 +31,14 @@ Auto mode is useful for planned song structures where each column can follow its
 
 Queue mode builds a repeating queue per slot/column.
 
-When you add rows in Queue mode:
+Rows added in Queue mode behave as follows:
 
 - each selected slot/column gets its own queue
 - queued rows repeat in the order they were added
 - up to eight queue links can be active for a column
 - queued slots are shown differently on the Grid Page
 
-Queue mode is useful for live arrangement because you can chain rows without editing the saved `LOOP` and `JUMP` data.
+Queue mode is useful for live arrangement because rows can be chained without editing the saved `LOOP` and `JUMP` data.
 
 ## Queue Length
 
@@ -49,7 +49,7 @@ Queue length controls how long a queued item plays before advancing.
 | `-` / 1 | Use the slot's saved length. |
 | 2-64 | Override the queued duration. |
 
-Use queue length when the saved track is short but you want it to stay active for a longer section.
+Use queue length when a saved track is short but should stay active for a longer section.
 
 ## Quantization
 

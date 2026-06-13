@@ -20,7 +20,7 @@ CONFIG > SYSTEM
 
 `DISPLAY` controls whether MCL mirrors the display to an external display endpoint where available.
 
-Use `INT` for normal hardware use. Use `INT+EXT` only when you need an external display mirror, because mirroring can reduce GUI performance on constrained hardware.
+Use `INT` for normal hardware use. Use `INT+EXT` only for an external display mirror, because mirroring can reduce GUI performance on constrained hardware.
 
 ## Project Configuration
 

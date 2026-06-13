@@ -78,7 +78,7 @@ MCL shows a `POLY LINK` popup when a linked parameter update is sent outside the
 
 ## Storage
 
-Poly group assignments are stored with project configuration and with route/poly state where applicable. Save the route/auxiliary group when you want the current voice grouping captured in the grid along with a row.
+Poly group assignments are stored with project configuration and with route/poly state where applicable. Save the route/auxiliary group when the current voice grouping should be captured in the grid along with a row.
 
 Older projects using the legacy poly mask/channel format are migrated into channel groups on load.
 

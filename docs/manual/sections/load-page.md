@@ -12,7 +12,7 @@ Open it from the Grid Page with:
 
 On TBD, Load appears as a Grid Page overlay. On MegaCommand and MegaCMD, it opens as a page.
 
-## What Load Does
+## Load Behavior
 
 Loading a slot can restore:
 

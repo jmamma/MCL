@@ -1,10 +1,10 @@
 # Grid Slot System
 
-The grid is the main storage and performance model in MCL. It lets you save, load, chain and rearrange tracks without treating a whole row as a fixed, monolithic pattern.
+The grid is the main storage and performance model in MCL. Tracks can be saved, loaded, chained and rearranged without treating a whole row as a fixed, monolithic pattern.
 
-## Mental Model
+## Grid Model
 
-Think of the grid as two 16-column storage grids stacked side by side:
+The grid consists of two 16-column storage grids stacked side by side:
 
 | Grid | Width | Typical role |
 | --- | --- | --- |
@@ -21,7 +21,7 @@ Each project has 128 rows. Rows are grouped into eight banks of 16 rows.
 | Active grid | The grid currently shown or edited, either X or Y. |
 | Group | A logical set of slots selected by device or state type. |
 
-## What A Slot Stores
+## Slot Contents
 
 A slot can store sequence data and, where the device supports it, sound or device state.
 
@@ -66,7 +66,7 @@ The Slot Menu has a `SOUND` option:
 | `ON` | Load both sequence and sound/device data where available. |
 | `OFF` | Load sequence-only and leave the destination sound unchanged. |
 
-Use sequence-only loading when you want to reuse rhythm, notes, locks or automation without replacing the current sound.
+Use sequence-only loading to reuse rhythm, notes, locks or automation without replacing the current sound.
 
 ## Group Save And Load
 
@@ -84,12 +84,12 @@ Group selection is based on the current configured devices and state groups:
 
 The icons shown in the group selector follow the connected devices, so group labels may differ from older screenshots.
 
-## Why This Matters
+## Practical Use
 
-The grid lets you build projects in layers:
+The grid supports layered project building:
 
-- Save a full row when you want a pattern-like snapshot.
-- Save only a few slots when you want reusable track ideas.
+- Save a full row for a pattern-like snapshot.
+- Save only a few slots for reusable track ideas.
 - Load sequence-only when the sound should stay in place.
 - Use groups when performing with whole device or state sets.
 - Use chains and queues when arranging row changes over time.

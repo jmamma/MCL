@@ -10,7 +10,7 @@ Open it from a Machinedrum step track:
 
 ![sound browser page](../assets/images/sound_browser_page.png)
 
-## What A Sound Contains
+## Sound Contents
 
 A sound preset stores the active Machinedrum track's machine assignment and parameters. If the track uses a Trig Group to trigger another track, the linked track's machine settings are stored with it so the pair can be recalled together.
 
@@ -31,7 +31,7 @@ The Sound Manager filters the file list to `.snd` files and folders.
 
 ## Saving A Sound
 
-1. Select the Machinedrum track you want to capture.
+1. Select the target Machinedrum track.
 2. Open the Sound Manager from the Track Menu.
 3. Select `[SAVE]`.
 4. Enter a sound name.

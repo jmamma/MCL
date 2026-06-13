@@ -98,7 +98,7 @@ Live record can capture trigs, notes, pitch input and parameter changes dependin
 
 Recorded MIDI and device control data is quantized according to the current sequencer quantization setting where applicable.
 
-## What Is Stored
+## Stored Sequencer Data
 
 Saving a grid slot stores the sequencer data for that slot.
 
