@@ -1,6 +1,7 @@
 #include "SeqPtcTrackRef.h"
 
 #include "../Drivers/MD/MD.h"
+#include "../Drivers/MD/Sequencer/MDSeqTrack.h"
 #include "../Drivers/MidiDevice.h"
 #include "DeviceManager.h"
 #include "Sequencer/MCLSeq.h"
@@ -20,6 +21,14 @@ bool ptc_primary_uses_tbd_tracks() {
 
 bool ptc_tbd_track_available(uint8_t track) {
   return ptc_primary_uses_tbd_tracks() && track < mcl_seq.num_tbd_tracks;
+}
+#endif
+
+#if !defined(__AVR__)
+void mark_spsx_host_step_dirty(uint8_t track) {
+  if (track < NUM_MD_TRACKS) {
+    MDSeqTrack::gui_update |= (uint16_t)(1u << track);
+  }
 }
 #endif
 
@@ -367,6 +376,7 @@ void SeqPtcTrackRef::record_track(uint8_t track, uint8_t velocity) {
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {
     mcl_seq.spsx_tracks[track].record_track(velocity);
+    mark_spsx_host_step_dirty(track);
     return;
   }
 #endif
@@ -386,6 +396,7 @@ void SeqPtcTrackRef::record_pitch(uint8_t track, uint8_t pitch) {
 #if !defined(__AVR__)
   if (mcl_seq.using_spsx_tracks) {
     mcl_seq.spsx_tracks[track].record_track_pitch(pitch);
+    mark_spsx_host_step_dirty(track);
     return;
   }
 #endif

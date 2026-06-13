@@ -9,6 +9,7 @@
 #include "DeviceParamResolver.h"
 #include "SeqDefines.h"
 #include "SeqTrack.h"
+#include "Sequencer/MCLSeq.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -492,6 +493,7 @@ public:
       tracks_.md->record_track(velocity);
     } else {
       tracks_.stepseq->record_track(velocity);
+      mark_stepseq_host_dirty();
     }
   }
   void record_track_locks(uint8_t param_id, uint8_t value) {
@@ -499,11 +501,25 @@ public:
       tracks_.md->record_track_locks(param_id, value);
     } else {
       tracks_.stepseq->record_track_locks(param_id, value);
+      mark_stepseq_host_dirty();
     }
   }
   bool preview_step(uint8_t step);
 
 private:
+  void mark_stepseq_host_dirty() const {
+#if !defined(__AVR__)
+    if (kind_ != KIND_STEPSEQ || device_idx_ != DeviceIdx::Primary ||
+        !mcl_seq.using_spsx_tracks || tracks_.stepseq == nullptr) {
+      return;
+    }
+    uint8_t track = tracks_.stepseq->track_number;
+    if (track < NUM_MD_TRACKS) {
+      MDSeqTrack::gui_update |= (uint16_t)(1u << track);
+    }
+#endif
+  }
+
   DeviceIdx param_device_idx() const { return device_idx_; }
   uint8_t param_dest() const { return track_index() + 1; }
   DeviceContext param_context() const {
