@@ -123,6 +123,7 @@ bool MCLGUI::wait_for_input(char *dst, const char *title, uint8_t len) {
 }
 
 bool MCLGUI::wait_for_confirm(const char *title, const char *text) {
+  oled_display.clearDisplay();
   questiondialog_page.init(title, text);
   mcl.pushPage(QUESTIONDIALOG_PAGE);
   while (mcl.currentPage() == QUESTIONDIALOG_PAGE) {
