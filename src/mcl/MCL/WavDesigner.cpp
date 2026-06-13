@@ -39,9 +39,6 @@ void WavDesigner::prompt_send() {
   DEBUG_PRINTLN("cleaning up");
   sample_browser.file.close();
   mcl.setPage(WD_MIXER_PAGE);
-  oled_display.textbox_P(mclstr_sending);
-  oled_display.display();
-  wd.send();
 }
 
 bool WavDesigner::render() {
