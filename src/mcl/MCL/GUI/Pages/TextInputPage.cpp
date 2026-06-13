@@ -216,16 +216,16 @@ bool TextInputPage::handleEvent(gui_event_t *event) {
         goto NO;
       case MDX_KEY_UP:
         encoders[1]->cur += normal_mode ? inc : -1 * inc;
-        break;
+        return true;
       case MDX_KEY_DOWN:
         encoders[1]->cur += normal_mode ? -1 * inc : inc;
-        break;
+        return true;
       case MDX_KEY_LEFT:
         encoders[0]->cur -= inc;
-        break;
+        return true;
       case MDX_KEY_RIGHT:
         encoders[0]->cur += inc;
-        break;
+        return true;
       case MDX_KEY_FUNC:
       case MDX_KEY_BANKGROUP:
         goto shift;
