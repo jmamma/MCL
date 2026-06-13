@@ -1,4 +1,5 @@
 #include "GUI/Pages/Performance/PerfPage.h"
+#include "DevicePanelRef.h"
 #include "GUI/Pages/CommonPages.h"
 #include "MCLMemory.h"
 #include "MCLGUI.h"
@@ -458,6 +459,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         return true;
       }
 
+      DevicePanelRef::set_primary_key_repeat(0);
       learn = track + 1;
       uint8_t scene = track;
       send_locks(scene);
@@ -476,6 +478,7 @@ bool PerfPage::handleEvent(gui_event_t *event) {
         seq_step_page.enable_paramupdate_events();
         PerfPageTargetRef::end_editor();
         page_mode = PERF_DESTINATION;
+        DevicePanelRef::set_primary_key_repeat(1);
         config_encoders();
       }
     }
