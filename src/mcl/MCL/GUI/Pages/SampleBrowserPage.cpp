@@ -363,6 +363,9 @@ bool SampleBrowserPage::_handle_filemenu() {
       DEBUG_PRINTLN(wav_name);
       if (wav_name[5] != '[') {
         recv_wav(n, true);
+        if (midi_sds.user_cancelled) {
+          break;
+        }
       }
     }
   end:

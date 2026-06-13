@@ -462,6 +462,7 @@ bool MidiSDSClass::sendFile(SDSFileReader &reader, const char *filename,
     return false;
   }
 
+  user_cancelled = false;
   MidiSDSSysexListener.setup(MD.midi);
   fsize = reader.size();
   state = SDS_SEND;
@@ -578,12 +579,18 @@ bool MidiSDSClass::recvWav(const char *filename, uint16_t sample_number) {
   }
 
   // init
+  user_cancelled = false;
   MidiSDSSysexListener.setup(MD.midi);
   int i = 0;
   uint8_t retries = 3;
   uint8_t m = 255;
 
   while (retries--) {
+    if (key_interface.is_key_down(MDX_KEY_NO) || BUTTON_DOWN(Buttons.BUTTON1)) {
+      user_cancelled = true;
+      sendCancelMessage();
+      goto recv_fail;
+    }
     sendDumpRequest(sample_number);
     m = waitForMsg(1000);
     if (MIDI_SDS_DUMPHEADER == m) {
@@ -599,6 +606,7 @@ bool MidiSDSClass::recvWav(const char *filename, uint16_t sample_number) {
 
   while (true) {
     if (key_interface.is_key_down(MDX_KEY_NO) || BUTTON_DOWN(Buttons.BUTTON1)) {
+      user_cancelled = true;
       sendCancelMessage();
       goto recv_fail;
     }
