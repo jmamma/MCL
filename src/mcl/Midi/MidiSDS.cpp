@@ -5,6 +5,7 @@
 #include "MidiSysexFile.h"
 #include "MidiUart.h"
 #include "MCLGUI.h"
+#include "GUI_hardware.h"
 #include "platform.h"
 #include "../Drivers/MD/MD.h"
 
@@ -597,7 +598,8 @@ bool MidiSDSClass::recvWav(const char *filename, uint16_t sample_number) {
   }
 
   while (true) {
-    if (key_interface.is_key_down(MDX_KEY_NO)) {
+    if (key_interface.is_key_down(MDX_KEY_NO) || BUTTON_DOWN(Buttons.BUTTON1)) {
+      sendCancelMessage();
       goto recv_fail;
     }
     uint8_t msg = waitForMsg(2000);
