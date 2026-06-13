@@ -396,6 +396,23 @@ bool project_config_version_valid(uint32_t version) {
   return version == CONFIG_VERSION;
 }
 
+#ifdef MCL_HAS_PROJECT_CONVERSION
+void build_project_old_filename(const char *proj_filename, char *old_filename) {
+  strcpy(old_filename, proj_filename);
+  uint8_t len = strlen(old_filename);
+  old_filename[len - 3] = 'o';
+  old_filename[len - 2] = 'l';
+  old_filename[len - 1] = 'd';
+}
+
+bool restore_project_header_backup(File &file, const char *proj_filename,
+                                   const char *old_filename) {
+  file.close();
+  bool ok = SD.remove(proj_filename) && SD.rename(old_filename, proj_filename);
+  return ok && file.open(proj_filename, O_RDWR);
+}
+#endif
+
 bool project_config_valid(const MCLSysConfigData &source) {
   return project_config_version_valid(source.version);
 }
@@ -1102,6 +1119,15 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
     DEBUG_PRINTLN(F("Could not open project file"));
     return false;
   }
+#ifdef MCL_HAS_PROJECT_CONVERSION
+  char old_filename[PRJ_NAME_LEN + 5];
+  build_project_old_filename(proj_filename, old_filename);
+  if (file.fileSize() < PROJECT_HEADER_SIZE_LEGACY_CONFIG &&
+      SD.exists(old_filename) &&
+      !restore_project_header_backup(file, proj_filename, old_filename)) {
+    return false;
+  }
+#endif
   ret = check_project_version();
 
   if (!ret) {
@@ -1248,13 +1274,8 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
 #ifdef MCL_HAS_PROJECT_CONVERSION
   update_header = update_header || project_needs_update || write_grid_headers ||
                   project_version < PROJ_VERSION;
+  bool created_project_header = false;
   if (project_version < PROJ_VERSION) {
-    char old_filename[PRJ_NAME_LEN + 5];
-    strcpy(old_filename, proj_filename);
-    uint8_t len = strlen(old_filename);
-    old_filename[len - 3] = 'o';
-    old_filename[len - 2] = 'l';
-    old_filename[len - 1] = 'd';
     if (!SD.exists(old_filename)) {
 #ifdef __AVR__
       if (!file.rename(old_filename)) {
@@ -1270,12 +1291,18 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       if (!file.open(proj_filename, O_RDWR | O_CREAT)) {
         return false;
       }
+      created_project_header = true;
     }
   }
 #endif
   if (update_header && !write_header()) {
     return false;
   }
+#ifdef MCL_HAS_PROJECT_CONVERSION
+  if (created_project_header && !file.sync()) {
+    return false;
+  }
+#endif
 
   strncpy(mcl_cfg.project, projectname, sizeof(mcl_cfg.project) - 1);
   mcl_cfg.project[sizeof(mcl_cfg.project) - 1] = '\0';
