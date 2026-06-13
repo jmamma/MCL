@@ -56,7 +56,7 @@ inline void update_progress(bool show_progress, uint8_t &counter, uint32_t pos,
     return;
   }
   uint32_t progress = pos >= total ? 80 : (pos * 80 / total);
-  mcl_gui.draw_progress("Sending sample", progress, 80);
+  mcl_gui.draw_progress("Send sample", progress, 80);
 }
 
 #if defined(__AVR__)
@@ -637,9 +637,9 @@ bool MidiSDSClass::recvWav(const char *filename, uint16_t sample_number) {
     i = 0;
 #ifdef OLED_DISPLAY
     uint32_t progress = midi_sds.samplesSoFar * 80 / midi_sds.sampleLength;
-    mcl_gui.draw_progress("Receiving sample", progress, 80);
+    mcl_gui.draw_progress("Receive sample", progress, 80);
 #else
-    gfx.display_text("Receiving sample", "");
+    gfx.display_text("Receive sample", "");
 #endif
   }
 
