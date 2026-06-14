@@ -173,6 +173,14 @@ void MixerTarget::mute_track(uint8_t track, bool mute) const {
   }
 }
 
+#if !defined(__AVR__)
+void MixerTarget::fill_track(uint8_t track, bool fill) const {
+  if (mixer_ != nullptr) {
+    mixer_->fill_track(ctx_, track, fill);
+  }
+}
+#endif
+
 void MixerTarget::set_record_mutes(uint8_t track, bool state,
                                    bool clear) const {
   if (mixer_ != nullptr) {

@@ -51,6 +51,10 @@ public:
                                   bool mute);
   virtual void mute_track(const DeviceContext &ctx, uint8_t track, bool mute,
                           MidiUartClass *uart_ = nullptr);
+#if !defined(__AVR__)
+  virtual void fill_track(const DeviceContext &ctx, uint8_t track, bool fill,
+                          MidiUartClass *uart_ = nullptr);
+#endif
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) = 0;
   virtual uint8_t trig_group(const DeviceContext &ctx, uint8_t track) const;

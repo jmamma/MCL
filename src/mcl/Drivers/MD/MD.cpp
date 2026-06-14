@@ -277,6 +277,10 @@ public:
   virtual bool set_param(const DeviceContext &ctx, uint8_t track,
                          uint8_t param_idx, MidiDeviceMixerValue value,
                          bool send = true) override;
+#if !defined(__AVR__)
+  virtual void fill_track(const DeviceContext &ctx, uint8_t track, bool fill,
+                          MidiUartClass *uart_ = nullptr) override;
+#endif
   virtual void set_record_mutes(const DeviceContext &ctx, uint8_t track,
                                 bool state, bool clear = false) override;
   virtual uint8_t trig_group(const DeviceContext &ctx,
@@ -617,6 +621,18 @@ bool MDMixerCapability::set_param(const DeviceContext &ctx, uint8_t track,
   device.setTrackParam(track, param_idx, (uint8_t)value, nullptr, true);
   return true;
 }
+
+#if !defined(__AVR__)
+void MDMixerCapability::fill_track(const DeviceContext &ctx, uint8_t track,
+                                   bool fill, MidiUartClass *uart_) {
+  (void)ctx;
+  if (md().global.baseChannel == 127 || track >= NUM_MD_TRACKS) {
+    return;
+  }
+  md().sendCC(md().global.baseChannel + (track >> 2), 68 + (track & 3),
+              fill ? 127 : 0, uart_);
+}
+#endif
 
 void MDMixerCapability::set_record_mutes(const DeviceContext &ctx,
                                          uint8_t track, bool state,

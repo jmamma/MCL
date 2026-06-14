@@ -79,6 +79,16 @@ void DeviceMixerCapability::mute_track(const DeviceContext &ctx, uint8_t track,
   device_.muteTrack(track, mute, uart_);
 }
 
+#if !defined(__AVR__)
+void DeviceMixerCapability::fill_track(const DeviceContext &ctx, uint8_t track,
+                                       bool fill, MidiUartClass *uart_) {
+  (void)ctx;
+  (void)track;
+  (void)fill;
+  (void)uart_;
+}
+#endif
+
 uint8_t DeviceMixerCapability::trig_group(const DeviceContext &ctx,
                                           uint8_t track) const {
   (void)ctx;

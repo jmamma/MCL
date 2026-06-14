@@ -3,7 +3,7 @@
 #include "Host/SpsHostSeqBridge.h"
 #include "SpsHostSeqBridge_Internal.h"
 
-#include "Drivers/MD/MDParams.h"
+#include "../../Drivers/MD/MDParams.h"
 #include "GUI/Pages/CommonPages.h"
 #include "GUI/Pages/Performance/MixerPage.h"
 
@@ -81,6 +81,20 @@ void markMixerPageDirty(uint8_t device) {
     if (mixer_page.mixer_device_idx == idx) {
         mixer_page.redraw_mask = 0xFFFF;
         mixer_page.redraw_mutes = true;
+    }
+}
+
+void applyActiveFillMask(DeviceIdx idx, MixerTarget& target,
+                         uint16_t mask, uint8_t len) {
+    uint16_t changed =
+        (mcl_seq.fill_mask_for(idx) ^ mask) & trackMaskForLen(len);
+    mcl_seq.set_fill_mask(idx, mask);
+    for (uint8_t i = 0; changed != 0 && i < len; i++) {
+        uint16_t bit = (uint16_t)(1u << i);
+        if ((changed & bit) != 0) {
+            target.fill_track(i, (mask & bit) != 0);
+            changed &= (uint16_t)~bit;
+        }
     }
 }
 
@@ -255,7 +269,7 @@ bool SpsHostSeqBridge::applyMixerSetMask(const uint8_t* b, uint16_t n) {
     }
 
     if (kind == MIXER_MASK_ACTIVE_FILL) {
-        mcl_seq.set_fill_mask(idx, mask);
+        applyActiveFillMask(idx, target, mask, len);
         markMixerPageDirty(device);
         return true;
     }

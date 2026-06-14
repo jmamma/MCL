@@ -60,6 +60,9 @@ public:
                  bool send = true) const;
   bool set_seq_mute_state(uint8_t track, bool mute) const;
   void mute_track(uint8_t track, bool mute) const;
+#if !defined(__AVR__)
+  void fill_track(uint8_t track, bool fill) const;
+#endif
   void set_record_mutes(uint8_t track, bool state, bool clear = false) const;
   uint8_t trig_group(uint8_t track) const;
   void select_track(uint8_t track) const;
