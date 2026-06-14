@@ -274,7 +274,8 @@ void MixerPage::oled_draw_mutes() {
         if (note_on || mute_state) {
           draw_fill_preview_mute_icon(fader_x);
           if (note_on) {
-            oled_display.fillRect(fader_x + 2, 3, 3, 3, WHITE);
+            oled_display.fillRect(fader_x + 1, 3, 5, 3, WHITE);
+            oled_display.drawFastVLine(fader_x + 3, 2, 5, WHITE);
           }
         } else {
           oled_display.drawFastHLine(fader_x, 5, 6, WHITE);
