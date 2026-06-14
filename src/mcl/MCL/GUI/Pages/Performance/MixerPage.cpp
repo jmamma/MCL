@@ -23,15 +23,22 @@ uint16_t track_mask_for_len(uint8_t len) {
   return (uint16_t)((1u << len) - 1u);
 }
 
+#if defined(__AVR__)
+void send_md_fill_track(MixerTarget &target, uint8_t track, bool fill) NOINLINE();
+void send_md_fill_track(MixerTarget &target, uint8_t track, bool fill) {
+  if (target.is_md_device() && MD.global.baseChannel != 127) {
+    MD.sendCC(MD.global.baseChannel + (track >> 2), 68 + (track & 3),
+              fill ? 127 : 0);
+  }
+}
+#endif
+
 void apply_fill_mask(DeviceIdx device_idx, MixerTarget &target,
                      uint16_t mask, uint8_t len) {
 #if defined(__AVR__)
   mcl_seq.set_fill_mask(device_idx, mask);
-  if (target.is_md_device() && MD.global.baseChannel != 127) {
-    for (uint8_t t = 0; t < len; t++, mask >>= 1) {
-      MD.sendCC(MD.global.baseChannel + (t >> 2), 68 + (t & 3),
-                (mask & 1) != 0 ? 127 : 0);
-    }
+  for (uint8_t t = 0; t < len; t++, mask >>= 1) {
+    send_md_fill_track(target, t, (mask & 1) != 0);
   }
 #else
   uint16_t old_mask = mcl_seq.fill_mask_for(device_idx);
@@ -78,7 +85,6 @@ void show_live_mute_leds(MixerPage &page) {
   }
 }
 
-void draw_fill_preview_mute_icon(uint8_t fader_x) NOINLINE();
 void draw_fill_preview_mute_icon(uint8_t fader_x) {
   for (uint8_t row = 1; row < 8; ++row) {
     uint8_t dx = row < 4 ? 4 - row : row - 4;
@@ -264,8 +270,12 @@ void MixerPage::oled_draw_mutes() {
     oled_display.fillRect(fader_x, 1, 7, 7, BLACK);
     if (draw) {
       if (fill_preview) {
-        if (mute_state) {
+        bool note_on = note_interface.is_note_on(i);
+        if (note_on || mute_state) {
           draw_fill_preview_mute_icon(fader_x);
+          if (note_on) {
+            oled_display.fillRect(fader_x + 2, 3, 3, 3, WHITE);
+          }
         } else {
           oled_display.drawFastHLine(fader_x, 5, 6, WHITE);
         }
@@ -632,10 +642,20 @@ void MixerPage::toggle_or_solo(bool solo) {
       uint16_t &fill_mask = mcl_seq.fill_mask_for(mixer_device_idx);
 #endif
       if (solo) {
-        if (note_on) SET_BIT16(fill_mask, i);
-        else CLEAR_BIT16(fill_mask, i);
+        uint16_t bit = (uint16_t)(1u << i);
+        if (((fill_mask & bit) != 0) != note_on) {
+          if (note_on) SET_BIT16(fill_mask, i);
+          else CLEAR_BIT16(fill_mask, i);
+#if defined(__AVR__)
+          send_md_fill_track(mixer_target, i, note_on);
+#endif
+        }
       } else if (note_on) {
         TOGGLE_BIT16(fill_mask, i);
+#if defined(__AVR__)
+        send_md_fill_track(mixer_target, i,
+                           (fill_mask & (uint16_t)(1u << i)) != 0);
+#endif
       }
       continue;
     }
@@ -686,9 +706,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
     if (event->mask == EVENT_BUTTON_PRESSED && track < len) {
       if (note_interface.is_note(track)) {
         const bool fill_preview = fill_set_mode(preview_mute_set);
-        const bool active_fill_edit = fill_edit_mode && preview_mute_set == 255;
         if (show_mixer_menu || ext_key_down ||
-            active_fill_edit ||
             (preview_mute_set != 255 &&
              load_types[preview_mute_set][slot])) {
           if (ext_key_down) {
@@ -703,18 +721,6 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
           // Toggle active mutes
           if (mute_set == 255) {
-            if (fill_edit_mode) {
-#if defined(__AVR__)
-              TOGGLE_BIT16(mcl_seq.fill_mask_for(mixer_device_idx), track);
-#else
-              uint16_t fill_mask = mcl_seq.fill_mask_for(mixer_device_idx);
-              TOGGLE_BIT16(fill_mask, track);
-              apply_fill_mask(mixer_device_idx, mixer_target, fill_mask, len);
-#endif
-              display_fill_mask();
-              oled_draw_mutes();
-              return true;
-            }
             bool mute_state = !seq_track->mute_state;
             if (mixer_target.set_seq_mute_state(track, mute_state)) {
               mixer_target.mute_track(track, mute_state);
