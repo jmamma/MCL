@@ -82,13 +82,3 @@ An attached MIDI device on MIDI port 1 or 2.
 
 
 Slots are categorised into groups based on the device they belong to, or a shared characteristic.
-
-# MCL 5.00 Updates
-
-The key concepts above describe the classic Machinedrum layout. MCL 5.00 keeps the same grid workflow, but `Grid X` and `Grid Y` can now be assigned to different devices from `CONFIG > MIDI > DEVICES`.
-
-The selected device decides what its grid slots store. For example, Grid X can store Machinedrum or TBD primary tracks, while Grid Y can store external MIDI tracks, supported secondary-device tracks, TBD secondary tracks or auxiliary state.
-
-When this manual describes the fixed 16 MD + 6 external track layout, read it as the classic Machinedrum setup.
-
-See [TBD](tbd.md) for TBD setup, panel controls and sequencing behavior.

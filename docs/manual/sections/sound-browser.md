@@ -6,7 +6,7 @@ Open it from a Machinedrum step track:
 
 **[Global] > SOUND**
 
-![sound manager](../assets/images/sound_manager.png)
+![track menu](../assets/images/track_menu.png)
 
 ![sound browser page](../assets/images/sound_browser_page.png)
 

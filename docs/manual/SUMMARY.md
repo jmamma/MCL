@@ -35,3 +35,4 @@
 - [FX Reverb Page](sections/fx-reverb-page.md)
 - [RAM Page](sections/ram-page.md)
 - [WAV Designer](sections/wav-designer.md)
+- [Credits](sections/credits.md)

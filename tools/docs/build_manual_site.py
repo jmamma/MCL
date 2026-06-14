@@ -338,6 +338,58 @@ a {
   font: inherit;
 }
 
+.search-status {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 9px;
+  text-transform: uppercase;
+}
+
+.search-results {
+  border-bottom: 2px solid var(--rule);
+  border-top: 2px solid var(--rule);
+  margin-top: 12px;
+  padding: 6px 0;
+}
+
+.search-result {
+  display: block;
+  border-left: 3px solid transparent;
+  color: var(--text);
+  padding: 7px 8px 8px 9px;
+  text-decoration: none;
+}
+
+.search-result:hover,
+.search-result:focus {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  color: #4a222a;
+}
+
+.search-result-title {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.search-result-snippet {
+  color: var(--muted);
+  display: block;
+  font-size: 0.76rem;
+  line-height: 1.28;
+  margin-top: 3px;
+}
+
+mark {
+  background: #f2d36f;
+  color: var(--text);
+  padding: 0 0.08em;
+}
+
 .nav {
   display: flex;
   flex-direction: column;
@@ -486,9 +538,28 @@ figure img.logo-image {
 }
 
 figure img.screen-image {
-  width: min(100%, 512px);
+  width: 512px;
+  max-width: 100%;
   image-rendering: crisp-edges;
   image-rendering: pixelated;
+}
+
+@media (max-width: 620px) {
+  figure img.screen-image {
+    width: 384px;
+  }
+}
+
+@media (max-width: 460px) {
+  figure img.screen-image {
+    width: 256px;
+  }
+}
+
+@media (max-width: 330px) {
+  figure img.screen-image {
+    width: 128px;
+  }
 }
 
 figcaption {
@@ -609,7 +680,9 @@ table code {
 def site_js() -> str:
     return """\
 const sidebar = document.querySelector('.sidebar');
-const filter = document.querySelector('[data-nav-filter]');
+const searchInput = document.querySelector('[data-search-input]');
+const searchStatus = document.querySelector('[data-search-status]');
+const searchResults = document.querySelector('[data-search-results]');
 const links = Array.from(document.querySelectorAll('[data-nav-link]'));
 const sidebarScrollKey = 'mcl-manual-sidebar-scroll';
 
@@ -630,14 +703,252 @@ if (sidebar) {
   }
 }
 
-if (filter) {
-  filter.addEventListener('input', () => {
-    const query = filter.value.trim().toLowerCase();
-    for (const link of links) {
-      const text = link.textContent.toLowerCase();
-      link.hidden = query && !text.includes(query);
+const escapeHtml = (value) => value.replace(/[&<>"']/g, (char) => ({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#x27;',
+}[char]));
+
+const normalizeText = (value) => String(value || '')
+  .replace(/\\s+/g, ' ')
+  .trim()
+  .toLowerCase();
+
+const displayText = (value) => String(value || '')
+  .replace(/\\s+/g, ' ')
+  .trim();
+
+const parseSearchQuery = (value) => {
+  const tokens = [];
+  const query = String(value || '').trim();
+  query.replace(/"([^"]+)"|(\\S+)/g, (_match, phrase, term) => {
+    const rawText = String(phrase || term || '').replace(/^"+|"+$/g, '');
+    const text = normalizeText(rawText);
+    if (text) {
+      tokens.push({ value: text, phrase: Boolean(phrase) });
+    }
+    return '';
+  });
+  return tokens;
+};
+
+const countOccurrences = (haystack, needle) => {
+  if (!haystack || !needle) {
+    return 0;
+  }
+  let count = 0;
+  let index = haystack.indexOf(needle);
+  while (index !== -1) {
+    count += 1;
+    index = haystack.indexOf(needle, index + needle.length);
+  }
+  return count;
+};
+
+const mergeRanges = (ranges) => {
+  const sorted = ranges
+    .filter((range) => range.end > range.start)
+    .sort((a, b) => a.start - b.start || b.end - a.end);
+  const merged = [];
+  for (const range of sorted) {
+    const last = merged[merged.length - 1];
+    if (!last || range.start > last.end) {
+      merged.push({ ...range });
+    } else if (range.end > last.end) {
+      last.end = range.end;
+    }
+  }
+  return merged;
+};
+
+const highlight = (value, tokens) => {
+  const text = String(value || '');
+  const lower = text.toLowerCase();
+  const needles = Array.from(new Set(tokens.map((token) => token.value)))
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  const ranges = [];
+  for (const needle of needles) {
+    let index = lower.indexOf(needle);
+    while (index !== -1) {
+      ranges.push({ start: index, end: index + needle.length });
+      index = lower.indexOf(needle, index + needle.length);
+    }
+  }
+  const merged = mergeRanges(ranges);
+  if (!merged.length) {
+    return escapeHtml(text);
+  }
+
+  let out = '';
+  let cursor = 0;
+  for (const range of merged) {
+    out += escapeHtml(text.slice(cursor, range.start));
+    out += `<mark>${escapeHtml(text.slice(range.start, range.end))}</mark>`;
+    cursor = range.end;
+  }
+  out += escapeHtml(text.slice(cursor));
+  return out;
+};
+
+const makeSnippet = (entry, tokens) => {
+  const text = displayText(entry.text || entry.title);
+  const lower = text.toLowerCase();
+  let first = -1;
+  for (const token of tokens) {
+    const index = lower.indexOf(token.value);
+    if (index !== -1 && (first === -1 || index < first)) {
+      first = index;
+    }
+  }
+  if (first === -1) {
+    first = 0;
+  }
+
+  const start = Math.max(0, first - 72);
+  const end = Math.min(text.length, first + 190);
+  const prefix = start > 0 ? '...' : '';
+  const suffix = end < text.length ? '...' : '';
+  return `${prefix}${highlight(text.slice(start, end), tokens)}${suffix}`;
+};
+
+const prepareSearchEntry = (entry, baseUrl) => {
+  const title = displayText(entry.title);
+  const text = displayText(entry.text);
+  const href = new URL(entry.href, baseUrl).href;
+  const titleSearch = normalizeText(title);
+  const textSearch = normalizeText(text);
+  return {
+    title,
+    text,
+    href,
+    titleSearch,
+    textSearch,
+    searchText: `${titleSearch} ${textSearch}`,
+  };
+};
+
+const navSearchIndex = links.map((link) => prepareSearchEntry({
+  title: link.textContent,
+  href: link.href,
+  text: link.textContent,
+}, window.location.href));
+
+const scriptUrl = new URL(
+  document.currentScript && document.currentScript.src
+    ? document.currentScript.src
+    : 'assets/manual.js',
+  window.location.href
+);
+const searchIndexUrl = new URL('../search-index.json', scriptUrl);
+let searchIndex = navSearchIndex;
+let searchIndexReady = false;
+let activeSearchResults = [];
+
+const scoreSearchEntry = (entry, tokens, fullQuery) => {
+  if (!tokens.every((token) => entry.searchText.includes(token.value))) {
+    return 0;
+  }
+
+  let score = 1;
+  for (const token of tokens) {
+    const titleHits = countOccurrences(entry.titleSearch, token.value);
+    const textHits = countOccurrences(entry.textSearch, token.value);
+    score += titleHits * 18;
+    score += Math.min(textHits, 12) * (token.phrase ? 6 : 2);
+  }
+
+  if (fullQuery && fullQuery.includes(' ')) {
+    if (entry.titleSearch.includes(fullQuery)) {
+      score += 32;
+    }
+    if (entry.textSearch.includes(fullQuery)) {
+      score += 18;
+    }
+  }
+  return score;
+};
+
+const renderSearchResults = (query) => {
+  if (!searchInput || !searchStatus || !searchResults) {
+    return;
+  }
+
+  const tokens = parseSearchQuery(query);
+  const fullQuery = normalizeText(query.replace(/"/g, ''));
+  for (const link of links) {
+    link.hidden = false;
+  }
+
+  if (!tokens.length) {
+    activeSearchResults = [];
+    searchStatus.hidden = true;
+    searchResults.hidden = true;
+    searchResults.innerHTML = '';
+    return;
+  }
+
+  activeSearchResults = searchIndex
+    .map((entry) => ({ entry, score: scoreSearchEntry(entry, tokens, fullQuery) }))
+    .filter((result) => result.score > 0)
+    .sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title))
+    .slice(0, 12)
+    .map((result) => result.entry);
+
+  searchStatus.hidden = false;
+  if (!searchIndexReady) {
+    searchStatus.textContent = 'Loading search index';
+  } else if (!activeSearchResults.length) {
+    searchStatus.textContent = 'No results';
+  } else {
+    searchStatus.textContent = `${activeSearchResults.length} result${activeSearchResults.length === 1 ? '' : 's'}`;
+  }
+
+  if (!activeSearchResults.length) {
+    searchResults.hidden = true;
+    searchResults.innerHTML = '';
+    return;
+  }
+
+  searchResults.hidden = false;
+  searchResults.innerHTML = activeSearchResults.map((entry) => (
+    `<a class="search-result" href="${escapeHtml(entry.href)}">`
+    + `<span class="search-result-title">${highlight(entry.title, tokens)}</span>`
+    + `<span class="search-result-snippet">${makeSnippet(entry, tokens)}</span>`
+    + '</a>'
+  )).join('');
+};
+
+const loadSearchIndex = async () => {
+  try {
+    const response = await fetch(searchIndexUrl.href);
+    if (!response.ok) {
+      throw new Error(`Search index failed: ${response.status}`);
+    }
+    const index = await response.json();
+    searchIndex = index.map((entry) => prepareSearchEntry(entry, searchIndexUrl.href));
+  } catch (_error) {
+    searchIndex = navSearchIndex;
+  } finally {
+    searchIndexReady = true;
+    renderSearchResults(searchInput ? searchInput.value : '');
+  }
+};
+
+if (searchInput) {
+  searchInput.addEventListener('input', () => renderSearchResults(searchInput.value));
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && activeSearchResults.length) {
+      window.location.href = activeSearchResults[0].href;
+    }
+    if (event.key === 'Escape') {
+      searchInput.value = '';
+      renderSearchResults('');
     }
   });
+  loadSearchIndex();
 }
 """
 
@@ -686,7 +997,9 @@ def render_page(item: NavItem, items: list[NavItem], index: int, manual_root: Pa
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">MCL</div>
-      <input class="nav-filter" data-nav-filter type="search" placeholder="Filter sections" aria-label="Filter sections">
+      <input class="nav-filter" data-search-input type="search" placeholder="Search manual" aria-label="Search manual">
+      <div class="search-status" data-search-status hidden></div>
+      <div class="search-results" data-search-results hidden></div>
       <nav class="nav" aria-label="Manual sections">
         {nav_html}
       </nav>
@@ -740,7 +1053,7 @@ def build(manual_root: Path, site_root: Path) -> None:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(html_text, encoding="utf-8")
         plain = strip_inline_markup(item.source.read_text(encoding="utf-8"))
-        search_index.append({"title": title, "href": item.href, "text": plain[:4000]})
+        search_index.append({"title": title, "href": item.href, "text": plain})
 
     root_index = site_root / "index.html"
     if not root_index.exists() and items:

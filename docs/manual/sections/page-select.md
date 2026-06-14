@@ -29,5 +29,5 @@ _The page numbers below correspond to their mapping over the **[Trig]** keys._
 | --- | --- | --- | --- | --- |
 | MAIN | 1. Grid | 2. Mixer | 3. Perf | 4. Route |
 | SEQ | 5. Step Editor | 6. LFO | 7. PianoRoll Editor | 8. Chromatic Mode |
-| SND | 9. Sound Manager | 10. WAV Designer | 11. -- | 12. -- |
+| SND | 9. Sample Manager | 10. WAV Designer | 11. -- | 12. -- |
 | AUX | 13. FX Delay | 14. FX Reverb | 15. RAM 1 | 16. RAM 2 |
