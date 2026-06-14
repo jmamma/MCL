@@ -185,6 +185,9 @@ public:
   void rotate_right() { track_->rotate_right(); }
   void reverse() { track_->reverse(); }
   void transpose(int8_t offset) { track_->transpose(offset); }
+  void rotate_mask(uint8_t ui_mask, bool right) {
+    track_->rotate_mask(ui_mask, right ? DIR_RIGHT : DIR_LEFT);
+  }
   void get_mask(uint64_t *mask, uint8_t ui_mask) const {
     track_->get_mask(mask, ui_mask);
   }

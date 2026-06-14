@@ -659,6 +659,40 @@ void MDSeqTrack::set_step(uint8_t step, uint8_t mask_type, bool val) {
   }
 }
 
+void MDSeqTrack::rotate_mask(uint8_t mask_type, uint8_t dir) {
+#if defined(__AVR__)
+  uint64_t *mask;
+  switch (mask_type) {
+  case MASK_MUTE:
+    mask = &mute_mask;
+    break;
+  case MASK_SLIDE:
+    mask = &slide_mask;
+    break;
+  case MASK_SWING:
+    mask = &swing_mask;
+    break;
+  default:
+    return;
+  }
+  MD_ROTATE_MASK(*mask, length, dir);
+#else
+  switch (mask_type) {
+  case MASK_MUTE:
+    MD_ROTATE_MASK(mute_mask, length, dir);
+    break;
+  case MASK_SLIDE:
+    MD_ROTATE_MASK(slide_mask, length, dir);
+    break;
+  case MASK_SWING:
+    MD_ROTATE_MASK(swing_mask, length, dir);
+    break;
+  default:
+    break;
+  }
+#endif
+}
+
 void MDSeqTrack::send_parameter_locks(uint8_t step, bool trig,
                                       uint16_t lock_idx) {
   uint16_t idx;

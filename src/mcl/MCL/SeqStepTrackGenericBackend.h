@@ -297,6 +297,30 @@ public:
       tracks_.stepseq->transpose(offset);
     }
   }
+  void rotate_mask(uint8_t ui_mask, bool right) {
+    if (kind_ == KIND_MD) {
+      tracks_.md->rotate_mask(ui_mask, right ? DIR_RIGHT : DIR_LEFT);
+      return;
+    }
+
+    uint8_t len = length();
+    if (len < 2) {
+      return;
+    }
+    if (right) {
+      bool wrap = get_step(len - 1, ui_mask);
+      for (uint8_t s = len - 1; s > 0; --s) {
+        set_step(s, ui_mask, get_step(s - 1, ui_mask));
+      }
+      set_step(0, ui_mask, wrap);
+    } else {
+      bool wrap = get_step(0, ui_mask);
+      for (uint8_t s = 0; s < len - 1; ++s) {
+        set_step(s, ui_mask, get_step(s + 1, ui_mask));
+      }
+      set_step(len - 1, ui_mask, wrap);
+    }
+  }
   void get_mask(uint64_t *mask, uint8_t ui_mask) const;
   bool get_step(uint8_t step, uint8_t ui_mask) const;
   void set_step(uint8_t step, uint8_t ui_mask, bool value);

@@ -58,6 +58,7 @@ public:
 
   bool get_step(uint8_t step, uint8_t mask_type) const;
   void set_step(uint8_t step, uint8_t mask_type, bool val);
+  void rotate_mask(uint8_t mask_type, uint8_t dir);
 
   void seq(MidiUartClass *uart_, MidiUartClass *uart2_);
 

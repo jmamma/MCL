@@ -1004,6 +1004,14 @@ bool SeqPage::handleEvent(gui_event_t *event) {
       }
       SeqTrackMenuOp op;
       if (seq_track_menu_op_for_key(key, op)) {
+        if (mcl.currentPage() == SEQ_STEP_PAGE && mask_type &&
+            op < SEQ_TRACK_OP_REVERSE) {
+          if (!swing_mask_edit_disabled()) {
+            seq_page_active_step_track().rotate_mask(
+                mask_type, op == SEQ_TRACK_OP_ROTATE_RIGHT);
+          }
+          return true;
+        }
         bool is_md_device = opt_capture_is_md_device();
         if (seq_page_uses_step_track_ops(is_md_device)) {
           SeqStepTrackRef track = seq_page_active_step_track();
