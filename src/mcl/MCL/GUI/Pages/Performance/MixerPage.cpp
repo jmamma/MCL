@@ -31,6 +31,15 @@ void send_md_fill_track(MixerTarget &target, uint8_t track, bool fill) {
               fill ? 127 : 0);
   }
 }
+
+void toggle_md_fill_track(MixerTarget &target, DeviceIdx device_idx,
+                          uint8_t track) NOINLINE();
+void toggle_md_fill_track(MixerTarget &target, DeviceIdx device_idx,
+                          uint8_t track) {
+  uint16_t &fill_mask = mcl_seq.fill_mask_for(device_idx);
+  TOGGLE_BIT16(fill_mask, track);
+  send_md_fill_track(target, track, (fill_mask & (uint16_t)(1u << track)) != 0);
+}
 #endif
 
 void apply_fill_mask(DeviceIdx device_idx, MixerTarget &target,
@@ -316,7 +325,6 @@ void MixerPage::init() {
   key_interface.on();
   mcl_gui.set_trigleds(0, mixer_led_mode());
   preview_mute_set = 255;
-  fill_edit_mode = false;
   oled_display.clearDisplay();
   set_display_mode(default_mixer_param());
   first_track = 255;
@@ -338,7 +346,6 @@ void MixerPage::cleanup() {
   key_interface.off();
   ext_key_down = 0;
   mute_toggle = 0;
-  fill_edit_mode = false;
 }
 
 void MixerPage::set_level(int curtrack, int value) {
@@ -652,10 +659,10 @@ void MixerPage::toggle_or_solo(bool solo) {
 #endif
         }
       } else if (note_on) {
-        TOGGLE_BIT16(fill_mask, i);
 #if defined(__AVR__)
-        send_md_fill_track(mixer_target, i,
-                           (fill_mask & (uint16_t)(1u << i)) != 0);
+        toggle_md_fill_track(mixer_target, mixer_device_idx, i);
+#else
+        TOGGLE_BIT16(fill_mask, i);
 #endif
       }
       continue;
@@ -722,6 +729,16 @@ bool MixerPage::handleEvent(gui_event_t *event) {
 
           // Toggle active mutes
           if (mute_set == 255) {
+            if (fill_edit_mode) {
+#if defined(__AVR__)
+              toggle_md_fill_track(mixer_target, mixer_device_idx, track);
+#else
+              uint16_t fill_mask = mcl_seq.fill_mask_for(mixer_device_idx);
+              TOGGLE_BIT16(fill_mask, track);
+              apply_fill_mask(mixer_device_idx, mixer_target, fill_mask, len);
+#endif
+              return true;
+            }
             bool mute_state = !seq_track->mute_state;
             if (mixer_target.set_seq_mute_state(track, mute_state)) {
               mixer_target.mute_track(track, mute_state);
@@ -885,8 +902,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
       }
       case MDX_KEY_SCALE: {
         if (note_interface.notes_on == 0 &&
-            (BUTTON_DOWN(Buttons.BUTTON3) ||
-             key_interface.is_key_down(MDX_KEY_PATSONG))) {
+            key_interface.is_key_down(MDX_KEY_PATSONG)) {
           fill_edit_mode = !fill_edit_mode;
           preview_mute_set = 255;
           seq_step_page.mute_mask++;
