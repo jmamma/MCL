@@ -25,7 +25,7 @@ Each parameter of the MD's reverb effect can be controlled. Four are displayed a
 | --- | --- |
 | Encoder 1 | Decay Level (DVL) |
 | Encoder 2 | Decay (DEC) |
-| Encoder 3 | Low Pass Filter (HP) |
-| Encoder 4 | High Pass Filter (LP) |
+| Encoder 3 | High Pass Filter (HP) |
+| Encoder 4 | Low Pass Filter (LP) |
 
 ![FX Reverb B parameters](../assets/images/reverb_action.png)

@@ -39,7 +39,7 @@ The browser filters the file list to `.wav` and `.syx` files. Folders are shown 
 | **[No]** | Cancel, leave a picker, or move back depending on the current browser state. |
 | Hold **[Global]** | Open the file menu. |
 
-The file menu can create folders, rename files, delete files, and run bulk sample send/receive when the `[RECV]` action row is selected.
+The file menu can create folders, rename files, clone or duplicate regular sample entries, delete files, and run bulk sample send/receive when the `[RECV]` action row is selected.
 
 ![file menu](../assets/images/file_menu.png)
 

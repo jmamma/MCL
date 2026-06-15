@@ -23,8 +23,7 @@ Combined Button Presses:
 
 ## Encoder Buttons
 
-Encoder buttons are used to increase the speed of parameter rotation.
-Holding down an encoder button whilst rotating the encoder will increase the update speed by 4x.
+Encoder buttons can increase rotation speed for coarse edits. The exact multiplier depends on the page and control.
 
 ## Current UI Notes
 
@@ -90,7 +89,6 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 - **[Function] + [Up/Down/Left/Right]** grid cursor position fast travel.
 - **[Scale]** Toggle active grid X or Y.
 - **[Function] + [Clear/Copy/Paste]** Clear/Copy/Paste the MD tracks, EXT MIDI tracks and MD Master FX currently loaded in the sequencer.
-- **[Function] + [Scale]** open "Scale Setup" menu adjust current track's length and speed settings.
 - Hold **[Exit/No]** key to open Slot Menu.
 
 
@@ -176,8 +174,8 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 - **[Step] + [Exit/No]** Mute/unmute step.
 - **[Function] + [Left/Right]** shift track sequence left or right.
 - **[Function] + [Up]** reverse track sequence.
-- **[Function] + [Scale]** open "Scale Setup" menu adjust current track's length and speed settings.
-- **[Function] + [Bank A/B]** edit Mute toggle.
+- Hold **[Global]** to open the Track Menu for `SPEED` and `LENGTH`.
+- **[Function] + [Bank B]** edit Step Mute toggle.
 - **[Function] + [Bank C]** edit Swing toggle.
 - **[Function] + [Bank D]** edit Slide toggle.
 
@@ -205,7 +203,7 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 - **[Function] + [Up/Down/Left/Right]** Cursor fast travel.
 - **[Clear/Copy/Paste]** Clear/copy/paste for track.
 - **[Scale]** Toggle sequencer page.
-- **[Function] + [Scale]** Configure the length and speed of the current track.
+- Hold **[Global]** to open the Track Menu for `SPEED` and `LENGTH`.
 - **[Trigs]** Position the cursor at step intervals relative to the current page.
 - **[Global]** hold to open Track configuration menu.
 - **[Global] + [Trigs]** Access to EXT track select (1-6) and EXT track mutes (9-14).

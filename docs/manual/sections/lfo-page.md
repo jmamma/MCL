@@ -10,7 +10,7 @@ Open it from Page Select with:
 
 ![lfo](../assets/images/lfo.png)
 
-The legacy `LF` auxiliary slot is no longer the main LFO storage model. Older project data is migrated where supported, with legacy LFO data copied into the current per-track format.
+The legacy `LF` auxiliary slot is no longer the main LFO storage model. Older project data is migrated where supported, with legacy LFO data copied to the Grid X Track 1 LFO.
 
 ## Modulation Targets
 

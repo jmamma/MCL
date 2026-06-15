@@ -2,7 +2,7 @@
 
 The Arpeggiator Page edits the arpeggiator attached to the current sequencer track. MCL 5.00 stores arpeggiator settings with the track when the track is saved to the grid.
 
-Open it from the Chromatic Page Track Menu:
+Open it from the Chromatic or PianoRoll Track Menu:
 
 ```text
 [Global] > ARPEGGIATOR
@@ -22,6 +22,8 @@ The page returns to the previous page when **[Yes/Enter]**, **[No/Exit]** or one
 | Encoder 2 | Arpeggiator mode. |
 | Encoder 3 | Rate. |
 | Encoder 4 | Range in octaves. |
+| **[Left]** / **[Right]** | Move focus between visible Arpeggiator parameters. |
+| **[Up]** / **[Down]** | Adjust the focused parameter. |
 | **[Trig]** / keyboard input | Edit the current note set through the Chromatic Page input handler. |
 
 ## Arpeggiator State

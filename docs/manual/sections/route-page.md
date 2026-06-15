@@ -14,8 +14,8 @@ _The Route page can be accessed by pressing **[Bank Group]** and **[Trig 4]**._
 | Control | Assignment |
 | --- | --- |
 | Encoder 1 | Output Selection |
-| Encoder 2 | -- |
-| Encoder 3 | Quantization |
+| Encoder 2 | Quantization |
+| Encoder 3 | -- |
 | Encoder 4 | -- |
 | Save / No | -- |
 | Page | PageSelect |

@@ -2,16 +2,16 @@
 
 Sequencer pages are the editing views for tracks stored in the grid. They share track selection, live recording, copy/paste and the Track Menu.
 
-Open sequencer pages from Page Select with **[Bank Group]**.
+Open the main sequencer pages from Page Select with **[Bank Group]**.
 
 | Page | Use |
 | --- | --- |
 | Step Editor | Primary step tracks: Machinedrum, TBD or other step-capable primary devices. |
+| LFO Page | Per-track LFO settings. |
 | PianoRoll Editor | External MIDI-style note and automation tracks. |
 | Chromatic Page | Live pitch input, note recording and arpeggiator control. |
-| Polyphony Page | Machinedrum voice grouping and multi-timbral chromatic setup. |
-| Arpeggiator Page | Per-track arpeggiator settings. |
-| LFO Page | Per-track LFO settings. |
+
+Open Arpeggiator and Polyphony from the Track Menu where those entries are listed.
 
 ## Track Selection
 
@@ -82,7 +82,6 @@ Step-capable primary tracks add these entries:
 | --- | --- |
 | `EDIT` | Select `TRIG`, `MUTE`, `SWING` or `SLIDE` mask. |
 | `SOUND` | Open the sound browser where the active device supports kit/sound storage. |
-| `ARPEGGIATOR` | Open the per-track arpeggiator page. |
 | `LFO MULT` | Set the per-track LFO speed multiplier from `.01` to `8x`. |
 
 ## External MIDI Menu Entries

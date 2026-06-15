@@ -42,7 +42,7 @@ MCL suggests a short name from the kit name and machine type. The sound is writt
 
 Select a `.snd` file and press **[Yes]**. MCL loads the sound into the current Machinedrum track.
 
-If the sound contains a linked Trig Group pair, MCL also loads the linked track data so the paired sound is restored together.
+If the sound contains a linked Trig Group pair and the destination has a following track available, MCL also loads the linked track data so the paired sound is restored together. Loading a paired sound onto track 16 cannot restore the linked second track.
 
 ## File Menu
 
