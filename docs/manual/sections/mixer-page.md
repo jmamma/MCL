@@ -47,7 +47,7 @@ Tracks with fill enabled are shown with the fill indicator. A step with the `FIL
 
 ## Track Parameter Editing
 
-Hold one or more track **[Trig]** keys and turn the encoders to edit supported mixer parameters across the held tracks. For Machinedrum tracks this works like a focused CTRL-ALL workflow for level and filter parameters. For other mixer targets, MCL uses the parameters exposed by that device driver.
+Hold one or more track **[Trig]** keys and turn the encoders to edit supported mixer parameters across the held tracks. For Machinedrum tracks this works like a focused CTRL-ALL workflow for level and filter parameters. For other mixer targets, MCL uses the parameters exposed by the selected device.
 
 Direct parameter changes received from the selected device are also mirrored to the other held tracks when the parameter is supported there.
 
@@ -114,7 +114,7 @@ Scene Autofill creates kit morphs by storing changed kit parameters as scene loc
 
 | Control | Action |
 | --- | --- |
-| Hold a Perf encoder button + **[Global]** | Clear that controller's assigned scenes. |
+| Hold a Perf encoder button + **[Global]** | Clear both scenes assigned to that controller. |
 | Hold a Perf encoder button + **[Load/Yes]** | Autofill the controller's right scene from changed kit parameters. |
 
 See [Performance Page](perf-page.md) for controller, scene and scene-lock editing.

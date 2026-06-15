@@ -74,7 +74,7 @@ While a scene is held:
 | `Encoder 4` | Edit the lock value. |
 | Encoder button for a hardware parameter | Add or clear that parameter lock when the active editor exposes parameter keys. |
 
-On classic AVR/Machinedrum builds, the direct parameter editor covers the 24 legacy Machinedrum parameters. TBD parameter targets are exposed through the active device driver.
+On MegaCommand/MegaCMD with Machinedrum, the direct parameter editor covers the 24 legacy Machinedrum parameters. TBD parameter targets come from the selected TBD sound.
 
 ![perf page scene locks](../assets/images/perf_page_scene_locks.png)
 
@@ -92,7 +92,7 @@ The Mixer Page uses the same Perf A-D controllers. It can also store controller 
 | --- | --- |
 | Preview a Mixer performance state, hold **[No]**, then turn a Perf encoder | Store that controller value as a state lock. |
 | Apply that performance state | Recall its mute masks, fill masks and controller locks. |
-| Hold a Perf encoder button + **[Global]** from Mixer | Clear that controller's assigned scenes. |
+| Hold a Perf encoder button + **[Global]** from Mixer | Clear both scenes assigned to that controller. |
 | Hold a Perf encoder button + **[Load/Yes]** from Mixer | Autofill the controller's right scene from changed kit parameters. |
 
 ## PF Slot Storage

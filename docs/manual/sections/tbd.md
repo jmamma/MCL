@@ -1,6 +1,6 @@
 # TBD
 
-TBD integration uses the same Grid X / Grid Y model as the rest of MCL. When `TBD` is assigned to a grid, MCL talks to the internal TBD device through the `INT` port and uses the TBD driver to decide which tracks, sound data, mixer controls and parameter locks are available.
+TBD integration uses the same Grid X / Grid Y model as the rest of MCL. When `TBD` is assigned to a grid, MCL talks to the internal TBD device through the `INT` port and uses the selected TBD sound to decide which tracks, sound data, mixer controls and parameter locks are available.
 
 ## Device Setup
 
@@ -25,7 +25,7 @@ The selected grid device determines the track types that are created in new proj
 
 When TBD is assigned to Grid X, MCL initializes 16 primary TBD tracks in Grid X slots 1-16. These tracks use the Step Editor, Mixer, Chromatic Page, Arpeggiator Page and LFO Page like other primary step tracks.
 
-When TBD is assigned to Grid Y, MCL initializes the secondary TBD MIDI-style tracks in Grid Y. These tracks use the PianoRoll and automation views.
+When TBD is assigned to Grid Y, MCL initializes six secondary TBD MIDI-style tracks in Grid Y. These tracks use the PianoRoll and automation views.
 
 TBD grid slots can store:
 
@@ -55,11 +55,11 @@ Hidden or unsupported parameters are skipped in the UI. Parameter names and rang
 
 ## Device UI, Presets And Parameter Strip
 
-Short-tap the top-left button when TBD is the focused device to open the TBD sound UI. The full-screen view shows parameter windows or the preset browser. Hold the top-left button while the device UI is active to switch between the full-screen view and the bottom four-encoder strip.
+Short-tap the top-left button to open the primary TBD sound UI; use the top-right button for the secondary TBD UI when a secondary TBD device is configured. The full-screen view shows parameter windows or the preset browser. While a TBD UI is active, hold top-right to switch between the full-screen view and the bottom four-encoder strip; hold top-left to leave the UI and open Page Select.
 
 In the strip and full-screen parameter views, the four encoders edit the visible TBD parameters for the active track. The strip shows each parameter label and briefly shows the edited value. Arrow keys browse parameter windows in the full-screen view.
 
-The preset window browses machine/preset groups with Encoder 1 and presets with Encoder 2. Press Encoder 2, or short-tap the top-left button while the preset window is active, to load the selected preset into the current TBD track. If the active sequencer track has no TBD sound or no presets are available, the UI shows `NO TRACK` or `NO PRESETS`.
+The preset window browses machine/preset groups with Encoder 1 and presets with Encoder 2. Press Encoder 2 to load the selected preset into the current TBD track. While the preset window is active, a short top-right tap also loads the selected preset. If the active sequencer track has no TBD sound or no presets are available, the UI shows `NO TRACK` or `NO PRESETS`.
 
 ## Panel Controls
 
@@ -75,19 +75,19 @@ TBD panel input is mapped into MCL's page and device model.
 | Arrow keys | Navigate pages, menus, steps and selected values. |
 | Transport keys | Act as Record, Play and Stop. In copy mode they act as Copy, Clear and Paste. |
 | Trig pads | Select rows, trigger tracks, edit steps, play notes or select TBD UI tracks depending on the active page. |
-| B button | Acts as Scale/page toggle on Grid, Mixer, Save/Load overlays and sequencer pages; otherwise it acts as the legacy menu modifier. |
-| Y button | Opens legacy MCL page menus on Grid, Mixer, Save/Load overlays and sequencer pages; otherwise it acts as Function. |
+| B button | Acts as Scale/page toggle on Grid, Mixer, Save/Load selection views and sequencer pages; otherwise it acts as the legacy menu modifier. |
+| Y button | Opens legacy MCL page menus on Grid, Mixer, Save/Load selection views and sequencer pages; otherwise it acts as Function. |
 
 If an expanded device UI is active, TBD device controls get first chance to handle the buttons. If the device UI is collapsed, the active MCL page handles the same buttons.
 
 ## Grid Page Differences
 
-On TBD, Save and Load are Grid Page overlays instead of separate full-screen pages.
+On TBD, Save and Load keep the Grid Page visible instead of opening separate full-screen pages.
 
 | Action | Result |
 | --- | --- |
-| Open Save overlay | Select the current Grid Page slots and save them without leaving the grid. |
-| Open Load overlay | Select the current Grid Page slots and load them without leaving the grid. |
+| Open Save | Select the current Grid Page slots and save them without leaving the grid. |
+| Open Load | Select the current Grid Page slots and load them without leaving the grid. |
 | Slot Menu arrows | Move through Slot Menu entries first. Use the normal modifier behavior when adjusting selection geometry. |
 | Bank popup | Use the bank popup to jump to rows and keep row-bank feedback visible while selecting. |
 
@@ -112,6 +112,6 @@ The TBD sync menu uses `CLOCK SRC` and `TRANS SRC`. Available source values are:
 | `USB` | USB MIDI. |
 | `INT` | Internal TBD/MCL clock. |
 
-The tempo overlay edits the internal tempo when MCL is using its own clock source.
+The tempo window edits the internal tempo when MCL is using its own clock source.
 
-From the Grid Page, press **[Function]** to open the tempo overlay. Turn Encoder 1 to adjust tempo in 1 BPM steps, or press **[Up]** / **[Down]** for 0.1 BPM changes. Hold **[Function]** and tap **Y** to enter tap-tempo mode; after four taps MCL applies the averaged tempo. **[No]** closes the overlay. The overlay shows the current tempo and clock source label: `INT`, `EXT1`, `EXT2` or `USB`.
+From the Grid Page, press **[Function]** to open the tempo window. Turn Encoder 1 to adjust tempo in 1 BPM steps, or press **[Up]** / **[Down]** for 0.1 BPM changes. Hold **[Function]** and tap **Y** to enter tap-tempo mode; after four taps MCL applies the averaged tempo. **[No]** closes the window. The window shows the current tempo and clock source label: `INT`, `EXT1`, `EXT2` or `USB`.

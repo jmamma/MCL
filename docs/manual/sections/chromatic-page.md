@@ -22,7 +22,7 @@ Open it from Page Select with:
 | **[Scale]** | Toggle primary/secondary device target where available. |
 | **[Global]** | Hold for the Track Menu. |
 | **[Rec]** + **[Play]** | Start live recording. |
-| **[Clear]** | Clear recorded data for the active track or poly group where applicable; repeat to undo. |
+| Track Menu `CLEAR` | Clear the current track or active poly group where applicable; repeat `CLEAR` to undo while the undo state is active. |
 
 The bottom of the display shows a keyboard view. Played notes and arpeggiator notes are reflected there.
 
@@ -64,6 +64,9 @@ Hold **[Global]** to open the Track Menu.
 | --- | --- |
 | `DEVICE` | Select primary or secondary target. |
 | `TRACK SEL` | Select the active track. |
+| `SPEED` | Set track playback speed. |
+| `COPY`, `CLEAR`, `PASTE` | Copy, clear or paste the active track. |
+| `SHIFT`, `REVERSE`, `TRAN` | Shift, reverse or transpose the active track. |
 | `ARPEGGIATOR` | Open the per-track Arpeggiator Page. |
 | `KEY` | Shift the scale root by semitones. |
 | `POLYPHONY` | Open the Polyphony Page. |

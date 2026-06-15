@@ -228,7 +228,7 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 
 
 - **[Up/Down]**Navigate menu
-- **[Enter/Yes]** Enter directory/load sound.
+- **[Enter/Yes]** Enter a folder, start receive, or send the selected sample to a Machinedrum sample slot.
 - **[Exit/No]** Exit/back/cancel.
 - **[Global]**File options menu (New directory/rename/delete).
 
@@ -268,11 +268,10 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 **RAM Machines**
 
 
-- **[Enter/Yes]** Initiate recording.
-- **[Exit/No]** Whilst recording, stop and initiate playback.
-- **[Global]** Dice.
-- **[Exit/No]** Slice.
-- **`Encoder 1`** Choose source.
+- MD **[Yes]** / MCL **[Save/No]** Queue RAM recording.
+- MD **[No]** / MCL **[Load/Yes]** Queue RAM playback or apply normal slicing.
+- **[Global]** Apply dice slicing.
+- **`Encoder 1`** Choose recording source.
 - **`Encoder 2`** Dice mode.
 - **`Encoder 3`** Slice amount.
-- <**Encoder 4>** Record length quantize.
+- **`Encoder 4`** Record/playback length in sequencer steps.

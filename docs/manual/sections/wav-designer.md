@@ -15,7 +15,7 @@ Open it with:
 3. Use `TRANSFER` from the menu to render `WAVE.wav`.
 4. Choose the destination Machinedrum sample slot in the Sample Manager slot picker.
 
-WAV Designer renders a mono WAV, detects loop points, normalizes the result to full level, writes the loop metadata, and sends the file with MIDI SDS.
+WAV Designer renders a mono WAV, detects loop points, normalizes the audio level, writes the loop metadata, and sends the file with MIDI SDS.
 
 ## Page Menu
 
@@ -81,7 +81,7 @@ The oscillator's displayed note/frequency determines its rendered pitch. The fin
 | `Encoder 4` | Reserved for transfer/slot state. |
 | Hold **[Global]** | Open the menu with `TRANSFER`. |
 
-The mixer levels do not need to be conservative. The rendered file is normalized before transfer, with headroom protection during rendering.
+The mixer levels do not need to be conservative. The rendered file is normalized before transfer.
 
 ![oscmixer menu](../assets/images/oscmixer_menu.png)
 
@@ -91,6 +91,6 @@ WAV Designer writes its render to the logical path:
 
 `/Samples/WAV/WAVE.wav`
 
-On non-AVR builds with an initialized `/MCL` root folder, this is stored as `/MCL/Samples/WAV/WAVE.wav`.
+If your SD card uses an `/MCL` folder, the file is stored at `/MCL/Samples/WAV/WAVE.wav`.
 
 The generated WAV includes loop metadata. If the file already exists, the render path overwrites the temporary WavDesigner output before transfer.

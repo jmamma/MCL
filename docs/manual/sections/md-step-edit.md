@@ -66,7 +66,7 @@ Shortcuts:
 
 | Shortcut | Mask |
 | --- | --- |
-| **[Function]** + **[Mute/Bank A]** or **[Function]** + **[Accent/Bank B]** | `MUTE` |
+| **[Function]** + **[Bank A]** or **[Function]** + **[Accent/Bank B]** | `MUTE` |
 | **[Function]** + **[Swing/Bank C]** | `SWING` |
 | **[Function]** + **[Slide/Bank D]** | `SLIDE` |
 
@@ -114,7 +114,7 @@ Steps that contain locks are drawn with the lock marker for the active parameter
 | Hold step + move parameter | Add or update a parameter lock. |
 | Hold step + press the matching encoder button | Add a lock at the current parameter value, or clear an existing lock for that parameter. |
 | Use `SLIDE` mask | Make compatible parameter locks slide toward the next lock of the same parameter. |
-| Use Track Menu `CLEAR` lock options | Clear lock data without clearing the whole track. |
+| PianoRoll automation `CLEAR LOCKS` | Clear lock data for an automation lane. |
 
 TBD tracks can address the audio, mixer and note-lock parameters exposed by the active TBD sound.
 
@@ -159,7 +159,7 @@ Use Encoder 3 for quick length changes, or use Track Menu `LENGTH` and `SPEED`.
 | Length | 1-64 steps for primary step tracks. |
 | Speed | `1x`, `2x`, `3/2x`, `3/4x`, `1/2x`, `1/4x`, `1/8x`. |
 
-Hold **[Yes/Load]** while applying speed, length or swing from the Track Menu to update all compatible primary step tracks.
+Hold **[Yes/Load]** while applying speed or swing from the Track Menu to update all compatible primary step tracks.
 
 ## Live Record
 

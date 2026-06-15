@@ -10,7 +10,7 @@ Open it from the Chromatic Page Track Menu:
 
 ![voice select page](../assets/images/voice_select_page.png)
 
-On hardware with panel buttons, the Chromatic Page can also open Polyphony with the record/load button chord.
+On hardware with panel buttons, the Chromatic Page can also open Polyphony with the **[Save/No]** + **[Load/Yes]** button chord.
 
 ## Core Idea
 
@@ -52,7 +52,7 @@ When the active Chromatic track belongs to a group, the Chromatic Page shows `PL
 | Internal Chromatic keyboard | Plays the selected track's group. |
 | External controller with `POLY MODE = INT+EXT` | Plays the group whose channel matches the incoming MIDI channel. |
 | External MIDI track routed to `MD1`-`MD16` | Plays the selected Machinedrum track or its polyphonic voice group from the PianoRoll sequencer. |
-| MIDI CC 16-39 on a poly channel | Controls Machinedrum parameters 1-24 across compatible tracks in that group. |
+| MIDI CC 16-39 on a poly channel | Sends Machinedrum parameters 1-24 to every track in that channel group. |
 
 If `POLY MODE` is `INT`, external input does not trigger poly groups.
 

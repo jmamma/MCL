@@ -66,7 +66,7 @@ Recommended configuration:
 | `CONFIG > MIDI > DEVICES > GRID Y > DEVICE` | `GENER` |
 | `CONFIG > MIDI > DEVICES > GRID Y > PORT` | `MIDI 2` or `USB` |
 
-External MIDI tracks can be edited from the Piano Roll and can record or play notes and automation depending on the selected device and build.
+External MIDI tracks can be edited from the Piano Roll and can record or play notes and automation where supported by the selected device.
 
 ## TBD
 

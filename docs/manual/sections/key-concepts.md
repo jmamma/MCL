@@ -6,14 +6,14 @@ MCL started on the MegaCommand/MegaCMD hardware controller and now supports mult
 | --- | --- |
 | MegaCommand DIY / MegaCMD | Classic MCL hardware for Machinedrum-centered MIDI setups. |
 | TBD | Integrated hardware platform with internal TBD device control, panel control and MCL grid sequencing. |
-| Desktop builds | Development and compatibility testing without dedicated MCL hardware. |
+| Desktop / browser | Development and compatibility testing without dedicated MCL hardware. |
 
 MegaCMD also supports USB disk mode for SD card file transfer. MiniCommand is legacy hardware and is not supported by current MCL releases.
 
 # Terminology and Conventions
 
 
-- MCL - the project and firmware/runtime name.
+- MCL - the project and app/firmware name.
 - MD - Machinedrum
 - MDX - Machinedrum X OS.
 - MC - MegaCommand or MegaCMD MIDI controller.
@@ -41,7 +41,7 @@ The MCL Firmware uses a Grid & Slot system to store Tracks.
 
 Each project contains two grids, X and Y. Grid dimensions are 16 slots x 128 rows.
 
-Grid X and Grid Y are assigned in `CONFIG > MIDI > DEVICES`. The selected device driver determines what each slot stores and which editor pages are used. In the classic Machinedrum setup, Grid X stores the 16 Machinedrum tracks and Grid Y stores external MIDI tracks plus auxiliary state such as performance, route, FX and tempo data.
+Grid X and Grid Y are assigned in `CONFIG > MIDI > DEVICES`. The selected device determines what each slot stores and which editor pages are used. In the classic Machinedrum setup, Grid X stores the 16 Machinedrum tracks and Grid Y stores external MIDI tracks plus auxiliary state such as performance, route, FX and tempo data.
 - **Bank:**
 
 The rows of the Grid X are divided in to groups of 16, forming 8 banks A,B,C,D,E,F,G,H.
@@ -69,7 +69,7 @@ Common track and slot data includes:
 
 - **Device**
 
-An attached or internal device selected from `CONFIG > MIDI > DEVICES`. Devices may use MIDI 1, MIDI 2, USB or the internal TBD port, depending on platform and driver support.
+An attached or internal device selected from `CONFIG > MIDI > DEVICES`. Devices may use MIDI 1, MIDI 2, USB or the internal TBD port, depending on the platform and selected device.
 - **Group**
 
 

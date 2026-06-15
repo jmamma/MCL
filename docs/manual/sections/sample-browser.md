@@ -28,7 +28,7 @@ MCL uses these logical SD-card folders:
 | `/Samples/WAV` | WAV files and received samples. |
 | `/Samples/SYX` | SDS/SysEx sample files. |
 
-On non-AVR builds with an initialized `/MCL` root folder, these folders live under `/MCL`, for example `/MCL/Samples/WAV`.
+If your SD card uses an `/MCL` folder, these folders are inside it, for example `/MCL/Samples/WAV`.
 
 The browser filters the file list to `.wav` and `.syx` files. Folders are shown so sample sets can be organized.
 
@@ -41,7 +41,7 @@ The browser filters the file list to `.wav` and `.syx` files. Folders are shown 
 | **[No]** | Cancel, leave a picker, or move back depending on the current browser state. |
 | Hold **[Global]** | Open the file menu. |
 
-The file menu can create folders, rename files, clone or duplicate regular sample entries, delete files, and run bulk sample send/receive when the `[RECV]` action row is selected.
+The file menu can create folders, clone regular sample files, rename files, delete files, and run bulk sample send/receive when the `[RECV]` action row is selected.
 
 ![file menu](../assets/images/file_menu.png)
 
@@ -69,7 +69,7 @@ Bulk actions are available from the file menu while the `[RECV]` row is highligh
 | Action | Result |
 | --- | --- |
 | `RECV ALL` | Receives occupied Machinedrum sample slots into the current folder. |
-| `SEND ALL` | Sends numbered WAV files from the current folder back to their matching slots. |
+| `SEND ALL` | Sends numbered `.wav` or `.syx` files from the current folder back to their matching slots. |
 
 Bulk receive prefixes filenames with a two-digit slot number, such as `01KICK.wav`. Bulk send uses that prefix to choose the destination slot. Files without a two-digit prefix are skipped by bulk send.
 
@@ -77,13 +77,13 @@ Bulk receive prefixes filenames with a two-digit slot number, such as `01KICK.wa
 
 Sample transfers use the configured Machinedrum MIDI port. If external MIDI clock is present, MCL temporarily protects the transfer path where required by the platform.
 
-Press the Machinedrum **[No]** key repeatedly to cancel a transfer.
+Press or hold Machinedrum **[No]** during a send or receive to cancel. MCL **[Save/No]** also cancels receives, and stops bulk receive/send at the next slot or file boundary.
 
 Loop points from received looped SDS samples are stored in the saved WAV file. MCL's WAV reader also handles common non-standard WAV chunk layouts.
 
 ## WAV File Guidelines
 
 - Use mono WAV files for Machinedrum UW playback.
-- Sample rates from 4 kHz to 48 kHz are accepted; 44.1 kHz and 22.05 kHz are typical choices.
-- Common bit depths are accepted and converted for the Machinedrum's sample format.
+- PCM WAV files must have a non-zero sample rate; MCL sends the file's sample rate in the SDS header. 44.1 kHz and 22.05 kHz are typical choices.
+- PCM bit depths from 8 to 28 bits are accepted and packed into SDS sample data.
 - Keep filenames short enough for the SD browser and the Machinedrum sample-name display.

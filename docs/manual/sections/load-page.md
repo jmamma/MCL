@@ -10,7 +10,7 @@ Open it from the Grid Page with:
 
 ![load from a](../assets/images/load_from_a.png)
 
-On TBD, Load appears as a Grid Page overlay. On MegaCommand and MegaCMD, it opens as a page.
+On TBD, Load keeps the Grid Page visible. On MegaCommand and MegaCMD, it opens as a page.
 
 ## Load Behavior
 
@@ -27,8 +27,9 @@ Use the Slot Menu `SOUND` option to make a slot load sequence-only.
 
 | Control | Assignment |
 | --- | --- |
-| Encoder 1 | Load mode: `MAN`, `AUT`, `QUE`. |
-| Encoder 2 | Queue length override, active only in Queue mode. |
+| Encoder 1 | Load mode on MegaCommand and MegaCMD: `MAN`, `AUT`, `QUE`. |
+| Encoder 2 | Queue length on MegaCommand and MegaCMD; load mode on TBD. Queue length is active only in Queue mode. |
+| Encoder 3 | Load quantization on MegaCommand and MegaCMD; queue length on TBD. |
 | Encoder 4 | Load quantization. |
 | **[Trig]** keys | Select slots to load. |
 | **[Scale]** | Toggle Grid X / Grid Y while selecting. |
@@ -36,8 +37,6 @@ Use the Slot Menu `SOUND` option to make a slot load sequence-only.
 | **[Yes/Enter]** | Hold to open group selection; release to load selected groups. |
 | **[No/Exit]** | Cancel Load. |
 | **[Bank A/B/C]** | Shortcut to Manual, Auto or Queue mode. |
-
-On the TBD Load overlay, the same load controls are shifted right: Encoder 2 selects load mode, Encoder 3 sets queue length and Encoder 4 sets quantization.
 
 ## Loading Individual Slots
 
@@ -92,8 +91,8 @@ Load quantization sets the transition interval for the selected load.
 
 | Value | Meaning |
 | --- | --- |
-| `-` / 1 | Use the next available transition. |
-| 2-64 | Wait for that step interval before loading. |
+| `-` / 1 | Use the destination slot's own timing. |
+| 2-64 | Wait for that step interval before loading. Normal encoder turns step through powers of two; holding the encoder button allows intermediate values. |
 
 Use quantization to keep manual, auto and queue loads aligned with the phrase length.
 

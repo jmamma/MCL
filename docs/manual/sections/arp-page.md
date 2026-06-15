@@ -65,16 +65,16 @@ Higher ranges create wider patterns, while `0` keeps the arpeggio inside the ent
 | Up And Down | `UND` | Ascending and then descending with endpoint behavior distinct from `UD`. |
 | Down And Up | `DNU` | Descending and then ascending with endpoint behavior distinct from `DU`. |
 | Converge | `CNV` | From the outside notes toward the center. |
-| Diverge | `DIV` | From the center notes outward. |
+| Diverge | `DIV` | Alternates highest, lowest, next-highest, next-lowest, moving inward. |
 | Converge/Diverge | `CND` | Alternates converging and diverging motion. |
-| Pinky Up | `PU` | Ascending with the first note inserted before other notes. |
-| Pinky Down | `PD` | Descending with the first note inserted before other notes. |
-| Thumb Up | `TU` | Ascending with the last note inserted before other notes. |
-| Thumb Down | `TD` | Descending with the last note inserted before other notes. |
-| Up Pinky | `UPP` | Ascending with only the first note shifted up an octave. |
-| Down Pinky | `DP` | Descending with only the first note shifted up an octave. |
-| Up 2nd | `U2` | Ascending with every second note shifted up an octave. |
-| Down 2nd | `D2` | Descending with every second note shifted up an octave. |
+| Pinky Up | `PU` | Ascending lower notes with the highest note inserted after each lower note. |
+| Pinky Down | `PD` | Descending through notes below the highest, inserting the lowest note after each step. |
+| Thumb Up | `TU` | Ascending lower notes with the highest note inserted after each lower note. |
+| Thumb Down | `TD` | Descending through notes below the highest, inserting the highest note after each step. |
+| Up Pinky | `UPP` | Ascending; added octave ranges shift only the final note of the base pattern upward. |
+| Down Pinky | `DP` | Descending; added octave ranges shift only the final note of the base pattern upward. |
+| Up 2nd | `U2` | Ascending base pattern; added octave ranges raise every other copied note. |
+| Down 2nd | `D2` | Descending base pattern; added octave ranges raise every other copied note. |
 | Random | `RND` | Static randomized order. |
 | Random 2 | `RN2` | New random order over time. |
 

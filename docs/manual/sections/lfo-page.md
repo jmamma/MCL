@@ -52,7 +52,7 @@ The LFO Page cycles through three subpages.
 | `LFO>SET` | Mode, waveform, speed, multiplier. | Choose how the LFO runs. |
 | `LFO>DEP` | Depth 1, offset/value 1, depth 2, offset/value 2. | Set modulation amount and base values. |
 
-Arrow keys move encoder focus on builds that support focused encoder editing.
+Arrow keys move encoder focus on platforms that support focused encoder editing.
 
 ## Destination And Learn
 
@@ -80,7 +80,7 @@ The `LFO>SET` mode field uses these labels:
 | `FRE` | Free-running LFO. |
 | `TRG` | Reset from the LFO trigger mask. |
 | `1SH` | One-shot reset from the trigger mask; the LFO runs through one cycle. |
-| `TRK` | Reset when the related sequencer track fires a trig. |
+| `TRK` | Reset when the related sequencer track fires a trig, then play one cycle. |
 
 In `TRG` and `1SH` modes, the trig keys edit the reset mask. The mask is shown as 16-step pages and follows the LFO track length.
 
@@ -122,7 +122,7 @@ On `LFO>DEP`, each output has a depth and an offset/base value.
 | `DEP1`, `DEP2` | Modulation depth for output 1 or output 2. |
 | Value knobs | Base/offset value for the destination parameter. |
 
-For centered waves, depth moves above and below the offset. For unipolar ramp-style waves, MCL keeps the modulation in the valid 0-127 parameter range.
+For centered waves, depth moves above and below the offset. For non-centered waves, MCL shifts the shape by the depth amount and keeps modulation in the valid 0-127 parameter range.
 
 When a destination parameter changes externally and matches the LFO target, MCL can refresh the offset so modulation continues around the current value.
 

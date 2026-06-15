@@ -56,7 +56,7 @@ Use `OFF` for an unused grid. Changing device assignments affects how projects m
 
 ## Ports and Turbo
 
-MegaCommand and MegaCMD builds use:
+MegaCommand and MegaCMD use:
 
 ```text
 CONFIG > MIDI > PORTS > PORT 1
@@ -68,10 +68,10 @@ Each port has a `TURBO` setting.
 
 ![midi turbo menu](../assets/images/midi_ports_menu.png)
 
-| Build | Turbo options |
+| Hardware | Turbo options |
 | --- | --- |
-| AVR hardware | `1x`, `2x`, `4x`, `8x` |
-| Non-AVR builds | `1x`, `2x`, `4x`, `6.7x`, `8x`, `10x` |
+| MegaCommand / MegaCMD | `1x`, `2x`, `4x`, `8x` |
+| TBD and desktop | `1x`, `2x`, `4x`, `6.7x`, `8x`, `10x` |
 
 TBD shows the turbo settings directly under:
 
@@ -97,6 +97,8 @@ CONFIG > MIDI > SYNC
 | Transport send | `TRANS SEND`: `OFF`, `2`, `USB`, `2 + USB` | Same send options |
 
 Use the same receive/source for clock and transport unless transport intentionally comes from a different source.
+
+On TBD, the send settings choose external MIDI/USB ports. The internal TBD connection is handled automatically when TBD is assigned to either grid.
 
 ## Routing
 
@@ -145,8 +147,8 @@ CONFIG > MIDI > CONTROLLER > OUTPUT
 
 | Entry | Function |
 | --- | --- |
-| `NOTE FWD` | Forward controller note input to Port 2 when enabled. |
-| `CC FWD` | Forward controller CC input to Port 2 when enabled. |
+| `NOTE FWD` | Forward controller note input to the configured secondary-device output when enabled. |
+| `CC FWD` | Forward controller CC input to the configured secondary-device output when enabled. |
 | `MUTE CC` | Selects the CC used to send or receive external track mute state, or `--` to disable it. |
 
 ## Program Change
@@ -165,6 +167,6 @@ CONFIG > MIDI > PROGRAM
 
 `BASIC` mode loads a full row according to the active load-page mode and group selection.
 
-`ADV` mode sets the row used for incoming note-triggered slot loads. Notes from C3 upward select slots to load from the current or most recently selected row.
+`ADV` mode sets the row used for incoming note-triggered slot loads. Notes from C4 upward select slots to load from the current or most recently selected row.
 
 MCL cannot load slots instantaneously; plan for at least one bar of lead time when driving loads from external program changes or notes.

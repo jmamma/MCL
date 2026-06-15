@@ -39,7 +39,9 @@ The Machinedrum bank and trig keys can be used as row shortcuts for pattern-styl
 
 ## Columns And Slots
 
-Each grid has 16 visible columns. A physical trig key maps to the matching visible column when selecting slots from the Grid, Save or Load pages.
+Each grid has 16 columns. The OLED Grid Page displays an 8-column window.
+
+Trig keys select columns in the Save and Load workflows. On the Grid Page, Bank+Trig selects rows for loading or queueing.
 
 Internally, MCL tracks both grids as a 32-slot logical row:
 
@@ -81,7 +83,7 @@ Row names are shared across Grid X and Grid Y. Clearing every slot in a row can 
 
 ## Desktop Mouse Support
 
-Desktop-capable builds can also use mouse actions:
+Desktop/browser versions can also use mouse actions:
 
 | Action | Result |
 | --- | --- |

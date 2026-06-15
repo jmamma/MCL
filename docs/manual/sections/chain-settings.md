@@ -29,7 +29,7 @@ Auto mode is useful for planned song structures where each column can follow its
 
 ## Queue Mode
 
-Queue mode builds a repeating queue per slot/column.
+Queue mode creates a repeating queue per slot/column.
 
 Rows added in Queue mode behave as follows:
 
@@ -57,8 +57,8 @@ Quantization controls when the next load occurs.
 
 | Quantization | Result |
 | --- | --- |
-| `-` / 1 | Load at the next available transition. |
-| 2-64 | Wait for that step interval before loading. |
+| `-` / 1 | Use the destination slot's own timing. |
+| 2-64 | Wait for that step interval before loading. Normal encoder turns step through powers of two; holding the encoder button allows intermediate values. |
 
 Higher quantization values are safer for full-row changes. Lower values are useful for fast slot-level changes.
 

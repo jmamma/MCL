@@ -10,7 +10,7 @@ Open it from the Grid Page with:
 
 ![save to a](../assets/images/save_to_a.png)
 
-On TBD, Save appears as a Grid Page overlay. On MegaCommand and MegaCMD, it opens as a page.
+On TBD, Save keeps the Grid Page visible. On MegaCommand and MegaCMD, it opens as a page.
 
 ## Stored Data
 
@@ -23,7 +23,7 @@ Save stores sequence data and any supported sound or state data for the selected
 | Auxiliary/route group | Route or page-specific auxiliary state. |
 | Tempo group | Tempo/clock-related state. |
 
-The actual saved data depends on the driver and slot type.
+The actual saved data depends on the selected device and slot type.
 
 ## Controls
 

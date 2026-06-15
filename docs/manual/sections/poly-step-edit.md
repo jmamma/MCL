@@ -41,7 +41,7 @@ The MD trig keys jump the time cursor to step positions on the current 16-step p
 | --- | --- |
 | **[Left]** / **[Right]** | Move the cursor in time. |
 | **[Up]** / **[Down]** | Move pitch in note view, or lock value in automation view. |
-| **[Function]** + arrows | Move faster. |
+| **[Function]** + arrows | In note view, move faster. In automation view, move in finer time/value increments. |
 | **[Yes]** + **[Left]** / **[Right]** | Fine time movement. |
 | **[No]** + **[Left]** / **[Right]** | Change note width when no selection rectangle is active. |
 | **[Yes]** + **[No]** + **[Up]** / **[Down]** | Change zoom. |
@@ -89,7 +89,7 @@ Common entries:
 | Entry | Function |
 | --- | --- |
 | `TRACK SEL` | Select the active external-style track. |
-| `EDIT` / `PIANOROLL` | Switch between `NOTE` view and automation lock lanes. |
+| `EDIT` | Select `NOTE` view or an automation lock lane. |
 | `SPEED` | Set track playback speed. |
 | `LENGTH` | Set track length up to 128 steps. |
 | `CHANNEL` | Set the MIDI channel for the track, or an MD route target when available. |
@@ -152,7 +152,7 @@ Start live recording with:
 
 **[Rec] + [Play]**
 
-Recording follows the track MIDI channel. Notes, note-offs, CC, pitch bend, channel pressure and poly pressure are routed to the matching track where supported by the connected device/backend.
+Recording follows the track MIDI channel. Notes, note-offs, CC, pitch bend, channel pressure and poly pressure are routed to the matching track where supported by the connected device.
 
 ## Automation Lock Lanes
 

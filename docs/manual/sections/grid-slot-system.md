@@ -34,7 +34,7 @@ Examples:
 | TBD track | TBD sequence data, sound state and parameter locks. |
 | Performance / route / tempo state | Page-specific state used by group save/load. |
 
-The exact slot type depends on `CONFIG > MIDI > DEVICES`, the active grid, and the connected driver.
+The exact slot type depends on `CONFIG > MIDI > DEVICES`, the active grid, and the selected device.
 
 ## Grid X And Grid Y
 

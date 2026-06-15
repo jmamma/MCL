@@ -39,11 +39,11 @@ Empty slots are shown as empty or placeholder cells.
 | **[No/Exit]** | Hold to open the Slot Menu. |
 | **[Bank]** + **[Trig]** | Load or queue rows by bank position. |
 
-On TBD, Save and Load appear as overlays on the Grid Page rather than replacing the whole page.
+On TBD, Save and Load keep the Grid Page visible rather than replacing the whole page.
 
 ## Active Grid
 
-The active grid controls which 16 columns are shown and edited.
+The active grid selects which 16-column grid is targeted. The OLED shows a scrolling 8-column window into that grid.
 
 | Active grid | Action target |
 | --- | --- |

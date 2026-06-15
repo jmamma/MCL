@@ -4,7 +4,7 @@ The Machinedrum configuration page controls Machinedrum-specific project and tra
 
 ![machinedrum menu](../assets/images/machinedrum_menu.png)
 
-Open it from the dynamic device entry in the Configuration menu. When the Machinedrum is assigned as a grid device, the entry is named for the Machinedrum driver instead of the old fixed `DRIVER 1` or `DRIVER 2` label.
+Open it from the dynamic device entry in the Configuration menu. When the Machinedrum is assigned as a grid device, the entry is named for the Machinedrum instead of the old fixed `DRIVER 1` or `DRIVER 2` label.
 
 ## Requirements
 
@@ -61,7 +61,7 @@ Use `OFF` if saved MD track levels should remain untouched.
 
 The linked sample bank is stored with the project configuration.
 
-MCL sends the sample-bank load when the project is loaded and a Machinedrum driver is the primary grid device. The connected Machinedrum must support +Drive sample-bank switching.
+MCL sends the sample-bank load when the project is loaded and Machinedrum is the primary grid device. The connected Machinedrum must support +Drive sample-bank switching.
 
 ## Machinedrum MIDI Input
 

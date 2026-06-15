@@ -2,10 +2,10 @@
 
 The Configuration menu is used for project management and global or per-project settings.
 
-Open it from the grid page with:
+Open it from the Grid Page with:
 
 ```text
-[Bank Group] + [Global]
+[Bank Group], then [Pattern/Song]
 ```
 
 Use **[Up]** and **[Down]** to move through entries, **[Yes/Enter]** to select, and **[No/Exit]** to leave a menu.
@@ -23,7 +23,7 @@ The top-level menu is named `CONFIG`.
 | Device config entries | Dynamic entries for connected devices, such as Machinedrum, Monomachine, Analog Four, generic MIDI or TBD. |
 | `SYSTEM` | Opens display, project-configuration and grid-encoder settings. |
 
-The device config entries are dynamic. In older documentation these appeared as fixed entries such as `DRIVER 1` and `DRIVER 2`; in MCL 5.00 they are named for the connected driver where possible.
+The device config entries are dynamic. In older documentation these appeared as fixed entries such as `DRIVER 1` and `DRIVER 2`; in MCL 5.00 they are named for the connected device where possible.
 
 ## Project Browser
 
@@ -52,15 +52,15 @@ Hold **[Global]** from the project browser to open the file menu.
 
 | Entry | Function |
 | --- | --- |
+| `CANCEL` | Close the file menu without action. |
 | `NEW DIR` | Create a folder in the current location. |
 | `RENAME` | Rename the selected project or folder where allowed. |
 | `MOVE` | Move the selected project or folder to another folder. |
 | `CLONE` | Duplicate the selected project or folder. |
 | `VERS` | Open project versions for the selected project. |
 | `DELETE` | Delete the selected project or folder where allowed. |
-| `RECV ALL` / `SEND ALL` | Device/file transfer actions where supported by the current browser context. |
 
-The available actions depend on the selected entry and build options.
+The available actions depend on the selected entry and platform.
 
 ## Project Versions
 
@@ -74,7 +74,7 @@ Typical version actions:
 | --- | --- |
 | `BACKUP` | Create a new version snapshot, load that new version immediately, and return to the Grid Page. |
 | Load version | Restore the selected project version and return to the Grid Page. |
-| Delete version | Remove a non-active version. |
+| Delete version | Remove a non-active backup version. The base version cannot be deleted. |
 
 ## New Project
 

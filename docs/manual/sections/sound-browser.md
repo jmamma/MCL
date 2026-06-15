@@ -18,7 +18,7 @@ Sound files use the `.snd` extension and are stored in the logical folder:
 
 `/Sounds`
 
-On non-AVR builds with an initialized `/MCL` root folder, this is stored under `/MCL/Sounds`.
+If your SD card uses an `/MCL` folder, sounds are stored under `/MCL/Sounds`.
 
 ## Browser Controls
 
