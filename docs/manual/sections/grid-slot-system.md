@@ -40,6 +40,8 @@ The exact slot type depends on `CONFIG > MIDI > DEVICES`, the active grid, and t
 
 MCL 5.00 uses the configured Grid X / Grid Y device model.
 
+On TBD hardware, the device menu also offers `TBD` with the internal `INT` port. MegaCommand and MegaCMD show the external MIDI device options available on those controllers.
+
 | Grid setup example | Result |
 | --- | --- |
 | Grid X = `MD`, Grid Y = `GENER` | Machinedrum on the primary grid, generic MIDI tracks on the secondary grid. |

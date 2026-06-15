@@ -7,18 +7,18 @@ Grid positions describe where a slot lives in a project and how MCL maps physica
 A complete grid position has three parts:
 
 ```text
-Grid : Bank Row : Column
+Grid : Column BankRow
 ```
 
-For example, `X:A01:05` means:
+For example, `X:05 A01` means:
 
 | Part | Meaning |
 | --- | --- |
 | `X` | Grid X. |
-| `A01` | Bank A, row 1. |
 | `05` | Column/slot 5 in the visible grid. |
+| `A01` | Bank A, row 1. |
 
-The display may use a compact form, but the same idea applies: grid, row and column.
+The same position can still be described conceptually as grid, row and column; the screen shows the column before the bank/row label.
 
 ## Rows And Banks
 
@@ -64,6 +64,8 @@ On the Grid Page:
 | **[Scale]** | Toggle the active grid between X and Y. |
 
 When the cursor reaches the edge of the visible area, the page scrolls.
+
+If `CONFIG > SYSTEM > GRID ENCOD` is set to `PERF`, the Grid Page encoders act as performance controllers instead. Use the arrow keys for grid navigation in that mode.
 
 ## Active Row
 

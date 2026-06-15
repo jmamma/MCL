@@ -26,7 +26,7 @@ On TBD, arrows navigate Slot Menu entries first; hold the normal function modifi
 | --- | --- | --- |
 | `GRID` | `X`, `Y` | Switch the active grid. |
 | `LEN` | 1-64 or 1-128 depending on track type | Override or edit slot/track length. |
-| `LOOP` | 0-64 | Number of repeats before following the slot's jump row in Auto mode. |
+| `LOOP` | 0-63 | Number of repeats before following the slot's jump row in Auto mode. |
 | `JUMP` | 0-127 | Row to load after the loop count is reached. |
 | `SOUND` | `OFF`, `ON` | Choose whether loading this slot also loads sound/device state. |
 | `CLEAR` | `--`, `YES` | Clear the selected slot range. |
@@ -49,9 +49,9 @@ Slot Menu changes are applied when the menu closes.
 
 ## Editing A Range
 
-Length, loop, jump and sound-load changes can be applied to a selected range.
+Length, loop, jump and sound-load changes apply across selected columns on the current row. Multi-row ranges are used for load, copy, clear and paste.
 
-When changing length or loop across multiple slots, MCL tries to preserve musical duration where possible. For example, changing loops for a selected group can scale compatible slots instead of blindly applying a value that would make shorter tracks end too early.
+When changing length or loop across multiple slots in the current row, MCL tries to preserve musical duration where possible. For example, changing loops for a selected group can scale compatible slots instead of blindly applying a value that would make shorter tracks end too early.
 
 ## Copy, Paste And Undo
 

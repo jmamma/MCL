@@ -37,6 +37,8 @@ Use the Slot Menu `SOUND` option to make a slot load sequence-only.
 | **[No/Exit]** | Cancel Load. |
 | **[Bank A/B/C]** | Shortcut to Manual, Auto or Queue mode. |
 
+On the TBD Load overlay, the same load controls are shifted right: Encoder 2 selects load mode, Encoder 3 sets queue length and Encoder 4 sets quantization.
+
 ## Loading Individual Slots
 
 1. Open Load.
@@ -113,10 +115,10 @@ From the Grid Page, **[Bank]** + **[Trig]** loads rows by bank position.
 
 | Gesture | Result |
 | --- | --- |
-| One row selected | Load that row using the current load mode and group selection. |
-| Multiple rows selected | Queue the selected rows as a row chain. |
+| First row selected | Jump to or load that row. It uses Auto only if Auto was already active; otherwise it uses Manual. |
+| Additional rows selected | Queue the selected rows as a row chain. |
 
-If no row is already queued, selecting a row jumps to or loads that row. If rows are already selected, additional rows are added in Queue mode.
+After the row selection is applied, MCL restores the load mode that was active before the bank/trig gesture.
 
 ## Track Levels During Load
 
