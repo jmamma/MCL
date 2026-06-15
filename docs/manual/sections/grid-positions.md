@@ -83,7 +83,7 @@ Row names are shared across Grid X and Grid Y. Clearing every slot in a row can 
 
 ## Desktop Mouse Support
 
-Desktop/browser versions can also use mouse actions:
+On desktop, mouse actions are also available:
 
 | Action | Result |
 | --- | --- |

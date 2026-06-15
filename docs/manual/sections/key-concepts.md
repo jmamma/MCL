@@ -6,7 +6,6 @@ MCL started on the MegaCommand/MegaCMD hardware controller and now supports mult
 | --- | --- |
 | MegaCommand DIY / MegaCMD | Classic MCL hardware for Machinedrum-centered MIDI setups. |
 | TBD | Integrated hardware platform with internal TBD device control, panel control and MCL grid sequencing. |
-| Desktop / browser | Development and compatibility testing without dedicated MCL hardware. |
 
 MegaCMD also supports USB disk mode for SD card file transfer. MiniCommand is legacy hardware and is not supported by current MCL releases.
 

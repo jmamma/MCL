@@ -43,7 +43,7 @@ External MIDI-style tracks are edited from the PianoRoll and automation views.
 | Route channels | Normal MIDI channels `1..16`, plus MD route targets for Machinedrum polyphonic voice groups. |
 | Arp and LFO | Per-track arpeggiator and LFO data is stored with the track. |
 
-TBD and desktop/browser versions use full MIDI sequencer tracks for Generic MIDI, A4/MNM-style secondary devices and TBD as a secondary device. MegaCommand and MegaCMD use the classic external track path.
+On TBD, Generic MIDI, A4/MNM-style secondary devices and secondary TBD use full MIDI sequencer tracks. MegaCommand and MegaCMD use the classic external track path.
 
 When Machinedrum is the primary grid device, an external MIDI track can route to a Machinedrum polyphonic voice group instead of a MIDI output channel. In the external track's `CHANNEL` setting, scroll past MIDI channel `16` to choose `MD1` through `MD16`. The selected `MD` target uses the Polyphony Page voice allocator for notes, and CC automation or parameter locks can control the addressed Machinedrum track parameters.
 
