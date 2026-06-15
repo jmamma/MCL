@@ -39,11 +39,9 @@ The maximum number of projects is only limited by the SD Card capacity.
 
 The MCL Firmware uses a Grid & Slot system to store Tracks.
 
-Each project contains two grids, X and Y. Grid dimensions are 16 Slots x 128 Rows.
+Each project contains two grids, X and Y. Grid dimensions are 16 slots x 128 rows.
 
-
-Grid X is used to store 16 MD tracks.
-Grid Y is used to store 6 External MIDI tracks + 5 AUX tracks.
+Grid X and Grid Y are assigned in `CONFIG > MIDI > DEVICES`. The selected device driver determines what each slot stores and which editor pages are used. In the classic Machinedrum setup, Grid X stores the 16 Machinedrum tracks and Grid Y stores external MIDI tracks plus auxiliary state such as performance, route, FX and tempo data.
 - **Bank:**
 
 The rows of the Grid X are divided in to groups of 16, forming 8 banks A,B,C,D,E,F,G,H.
@@ -61,23 +59,17 @@ A position in the Grid where a Track can be stored. (Either occupied or unoccupi
 
 An MCL sequencer track that may contain both sound and MIDI sequencer data.
 
-There are 3 types of tracks.
+Common track and slot data includes:
 
-
-- **MachineDrum Track** (Grid X: Slots 1-16):
-A sequencer track for the Machinedrum. Each MD Track contains the Machine's Sound Settings and Sequencer Data.
-
-- **External MIDI Track** (Grid Y: Slots 1-6):
-A polyphonic sequencer track used to control a sound module connected via MIDI. Each External MIDI track contains Sequencer Data, and for supported secondary devices sound data is retained.
-
-- **AUX Track** (Grid Y: Slots: 12-16)
-
-An auxiliary track. Used to store/recall one of: Performance Controllers + Performance States, legacy LFO settings, audio Routing, the Machinedrum's master FX settings and Tempo settings.
+- **Machinedrum track**: sound settings and sequencer data for one Machinedrum track.
+- **External MIDI track**: polyphonic notes, MIDI automation and routing for a MIDI target or supported secondary device.
+- **TBD track**: TBD sequence data, sound state and parameter locks when TBD is assigned to a grid.
+- **Auxiliary slot data**: performance states, route state, Machinedrum master FX and tempo data where supported by the active device layout.
 
 
 - **Device**
 
-An attached MIDI device on MIDI port 1 or 2.
+An attached or internal device selected from `CONFIG > MIDI > DEVICES`. Devices may use MIDI 1, MIDI 2, USB or the internal TBD port, depending on platform and driver support.
 - **Group**
 
 

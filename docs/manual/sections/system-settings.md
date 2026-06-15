@@ -33,6 +33,8 @@ Use `INT` for normal hardware use. Use `INT+EXT` only for an external display mi
 
 Project configuration includes device and MIDI-related settings that affect how the grid maps to connected instruments. Use this when different projects require different device layouts.
 
+After upgrading to MCL 5.00, stored configuration may be reset to defaults on first boot. Re-check device layout, MIDI ports, sync, project-configuration mode and any project samplebank link before continuing work.
+
 ## Grid Encoder Mode
 
 `GRID ENCOD` changes the Grid Page encoder behavior.

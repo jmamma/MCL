@@ -86,6 +86,8 @@ Creating a project opens a text-entry page. If a project or directory with the s
 
 Projects are stored on the SD card with a project master file and grid files. MCL 5.00 adds versioned project and grid headers so older projects can be upgraded safely.
 
+Back up projects before upgrading to MCL 5.00. Supported older projects are upgraded when they are first loaded, and upgraded projects are not intended to be opened by older MCL versions.
+
 Do not edit project files by hand. Use the project browser, file menu and version browser from MCL.
 
 ## Saving Projects

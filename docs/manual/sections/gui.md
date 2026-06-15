@@ -177,17 +177,17 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 - **[Function] + [Left/Right]** shift track sequence left or right.
 - **[Function] + [Up]** reverse track sequence.
 - **[Function] + [Scale]** open "Scale Setup" menu adjust current track's length and speed settings.
-- **[Function] + [Bank B]** edit Lock toggle.
-- **[Function] + [Bank C]** edit Mute toggle.
+- **[Function] + [Bank A/B]** edit Mute toggle.
+- **[Function] + [Bank C]** edit Swing toggle.
 - **[Function] + [Bank D]** edit Slide toggle.
 
 
 **LFO Page**
 
 
-- **[Global]** Switch LFO Type (FREE/TRIG/ONESHOT)
-- **[Trigs]**Enter LFO resets (TRIG + ONESHOT only)
-- **[Up/Down]** Navigate LFO subpages.
+- Use the LFO setup page to switch LFO mode (`FRE`, `TRG`, `1SH`, `TRK`).
+- **[Trigs]** Enter LFO resets (`TRG` and `1SH` modes only).
+- **[Scale]** Navigate LFO subpages.
 - **[Enter/Yes]** LFO On/Off.
 - **`Encoder 1`** LFO shape.
 
@@ -201,7 +201,7 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 - **[Exit/No] + [Left/Right]** Adjust cursor width.
 - **[Enter/Yes] + [Exit/No] + [Left/Right]** Nudge cursor width (fine control).
 - **[Up/Down]** Move cursor along note axis.
-- **[Exit/No] + [Up/Down]** Zoom in and out.
+- **[Enter/Yes] + [Exit/No] + [Up/Down]** Zoom in and out.
 - **[Function] + [Up/Down/Left/Right]** Cursor fast travel.
 - **[Clear/Copy/Paste]** Clear/copy/paste for track.
 - **[Scale]** Toggle sequencer page.
