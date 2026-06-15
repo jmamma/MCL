@@ -224,14 +224,12 @@ void PerfPage::loop() {
 }
 
 void PerfPage::display() {
-  oled_display.setFont(&TomThumb);
   if (show_menu) {
-    constexpr uint8_t width = 52;
-    oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
-    perf_menu_page.draw_menu(128 - width, 8, width);
+    perf_menu_page.draw_right_menu();
     return;
   }
 
+  oled_display.setFont(&TomThumb);
   oled_display.clearDisplay();
 
   // mcl_gui.draw_vertical_dashline(x, 0, knob_y);

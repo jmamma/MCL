@@ -293,6 +293,12 @@ uint8_t MenuPageBase::draw_menu(uint8_t x_offset, uint8_t y_offset,
   return number_of_items;
 }
 
+void MenuPageBase::draw_right_menu(uint8_t width) {
+  oled_display.setFont(&TomThumb);
+  oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
+  draw_menu(128 - width, 8, width);
+}
+
 void MenuPageBase::display() {
 
   MenuBase *m = get_menu();

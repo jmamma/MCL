@@ -82,7 +82,7 @@ bool mixer_arrow_or_yes_key_down() {
 
 uint8_t scale_to_fader(uint8_t val) NOINLINE();
 uint8_t scale_to_fader(uint8_t val) {
-  return ((uint16_t)val * FADER_LEN) / 127;
+  return ((uint16_t)val * 73) >> 9;
 }
 
 void show_live_mute_leds(MixerPage &page) NOINLINE();

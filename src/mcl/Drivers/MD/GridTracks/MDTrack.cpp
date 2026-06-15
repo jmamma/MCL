@@ -198,6 +198,26 @@ static void copy_md_seqdata(uint8_t *dst, const uint8_t *src) {
   memcpy(dst, src, sizeof(MDSeqTrackData));
 }
 
+static void merge_md_pattern_to_seq(MDTrack &track, MDSeqTrack *md_seq_track,
+                                    uint8_t tracknumber, uint8_t merge)
+    NOINLINE();
+static void merge_md_pattern_to_seq(MDTrack &track, MDSeqTrack *md_seq_track,
+                                    uint8_t tracknumber, uint8_t merge) {
+  MDSeqTrack temp_seq_track;
+  temp_seq_track.init();
+  if (merge == SAVE_MERGE) {
+    copy_md_seqdata(temp_seq_track.data(), md_seq_track->data());
+  } else if (merge == SAVE_MD_PATTERN_IMPORT) {
+    track.link.length = MD.pattern.patternLength;
+    track.link.set_speed(SEQ_SPEED_1X + MD.pattern.doubleTempo);
+    DEBUG_PRINTLN(F("SAVE_MD_PATTERN_IMPORT"));
+  }
+  temp_seq_track.length = track.link.length;
+  temp_seq_track.speed = track.link.speed_value();
+  temp_seq_track.merge_from_md(tracknumber, &(MD.pattern));
+  copy_md_seqdata(track.seq_data.data(), temp_seq_track.data());
+}
+
 void MDTrack::init() {
   machine.init();
   seq_data.init();
@@ -297,24 +317,7 @@ bool MDTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track,
 
     if (merge > 0) {
       DEBUG_PRINTLN(F("auto merge"));
-      MDSeqTrack temp_seq_track;
-      temp_seq_track.init();
-      if (merge == SAVE_MERGE) {
-        // Load up internal sequencer data
-        copy_md_seqdata(temp_seq_track.data(), md_seq_track->data());
-      }
-      if (merge == SAVE_MD_PATTERN_IMPORT) {
-        link.length = MD.pattern.patternLength;
-        link.set_speed(SEQ_SPEED_1X + MD.pattern.doubleTempo);
-        DEBUG_PRINTLN(F("SAVE_MD_PATTERN_IMPORT"));
-      }
-      temp_seq_track.length = link.length;
-      temp_seq_track.speed = link.speed_value();
-
-      // merge md pattern data with seq_data
-      temp_seq_track.merge_from_md(tracknumber, &(MD.pattern));
-      // copy merged data in to this track object's seq data for writing to SD
-      copy_md_seqdata(this->seq_data.data(), temp_seq_track.data());
+      merge_md_pattern_to_seq(*this, md_seq_track, tracknumber, merge);
     } else {
       copy_md_seqdata(this->seq_data.data(), md_seq_track->data());
     }

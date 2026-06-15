@@ -34,6 +34,7 @@ public:
   void draw_item(MenuBase *menu, uint8_t item_n);
   uint8_t draw_menu(uint8_t x_offset, uint8_t y_offset,
                     uint8_t width = MENU_WIDTH, uint8_t scrollbar_width = 0);
+  void draw_right_menu(uint8_t width = 52) NOINLINE();
   void select_item(uint8_t item = 0) {
     cur_row = 0;
     selected_item = item;

@@ -31,10 +31,7 @@ void wav_render() { wd.prompt_send(); }
 
 void WavDesignerPage::display() {
   if (show_menu) {
-    constexpr uint8_t width = 52;
-    oled_display.setFont(&TomThumb);
-    oled_display.fillRect(128 - width - 2, 0, width + 2, 32, BLACK);
-    wavdesign_menu_page.draw_menu(128 - width, 8, width);
+    wavdesign_menu_page.draw_right_menu();
   }
 }
 

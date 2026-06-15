@@ -1330,16 +1330,18 @@ void MCLActions::calc_next_slot_transition(GridSlot n,
       transition_offsets[n] = 0;
   }
 
+  uint16_t len_steps = len_q12 / 12;
+  uint8_t len_substeps = len_q12 % 12;
+
   // Carry fractional steps as sub-step offset (0..11)
-  transition_offsets[n] += len_q12 % 12;
+  transition_offsets[n] += len_substeps;
   if (transition_offsets[n] >= 12) {
     transition_offsets[n] -= 12;
-    len_q12 += 12;
+    len_steps++;
   }
 
   // DEBUG_DUMP(len - (uint16_t)(len));
   // DEBUG_DUMP(transition_offsets[n]);
-  uint16_t len_steps = len_q12 / 12;
   next_transitions[n] += len_steps;
 
   // check for overflow and make sure next nearest step is greater than

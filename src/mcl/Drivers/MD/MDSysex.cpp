@@ -16,10 +16,8 @@ void MDSysexListenerClass::handleByte(uint8_t byte) { }
 
 void MDSysexListenerClass::end() {
   SysexView view(sysex);
-  if (view.getByte(3) == 0x02) {
-    isMDMessage = true;
-  } else {
-    isMDMessage = false;
+  isMDMessage = view.getByte(3) == 0x02;
+  if (!isMDMessage) {
     return;
   }
   uint8_t offset = sizeof(machinedrum_sysex_hdr);
