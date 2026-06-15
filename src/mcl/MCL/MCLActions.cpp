@@ -539,7 +539,12 @@ void MCLActions::save_tracks(GridRow row, uint8_t *slot_select_array, uint8_t me
           saved_load_fade = *existing_load_fade;
         }
       } else {
-        saved_link.init(row);
+        GridTrackStorageHeader existing_header;
+        if (proj.read_grid(&existing_header, sizeof(existing_header), i, row)) {
+          saved_link = existing_header.link;
+        } else {
+          saved_link.init(row);
+        }
       }
       auto pdevice_track =
           ((DeviceTrack *)&empty_track)->init_track_type(gdt->track_type);

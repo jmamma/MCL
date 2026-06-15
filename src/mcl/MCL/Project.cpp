@@ -621,6 +621,18 @@ bool write_migrated_track(Grid &grid, GridColumn column, GridRow row,
   return grid.write(track._this(), write_size, column, row);
 }
 
+bool migrate_empty_track_header(Grid &src_grid, Grid &dst_grid,
+                                GridColumn column, GridRow row) {
+  LegacyGridTrackHeader header;
+  if (!src_grid.read(&header, sizeof(header), column, row)) {
+    return false;
+  }
+  header.version[0] = 0;
+  header.version[1] = 0;
+  header.active = EMPTY_TRACK_TYPE;
+  return dst_grid.write(&header, sizeof(header), column, row);
+}
+
 void init_upgraded_md_track(MigratedMDTrackStorage &dst, const GridLink &link,
                             const LegacyMDSeqTrackData &seq,
                             const MDMachine &machine) {
@@ -1407,11 +1419,15 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
           return false;
         }
       } else if (grid_x_header->track_type[0] == EMPTY_TRACK_TYPE) {
+        LegacyGridTrackHeader legacy_header;
+        if (!grids[0].read(&legacy_header, sizeof(legacy_header), 0, row)) {
+          return false;
+        }
         upgraded_md_track.header.version[0] =
             SEQ_TRACK_LOAD_FADE_STORAGE_VERSION;
         upgraded_md_track.header.version[1] = 0;
         upgraded_md_track.header.active = MD_TRACK_TYPE;
-        upgraded_md_track.header.link.init(row);
+        upgraded_md_track.header.link = legacy_header.link;
         upgraded_md_track.machine.track = 0;
         upgraded_md_track.machine.init();
         upgraded_md_track.mod_data.init();
@@ -1513,6 +1529,12 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
 
       uint8_t track_type = row_header.track_type[column];
       switch (track_type) {
+      case EMPTY_TRACK_TYPE:
+        if (!migrate_empty_track_header(grids[grid], dst_grids[grid],
+                                        column, row)) {
+          return false;
+        }
+        break;
       case MD_TRACK_TYPE:
         if (grid == 0 &&
             !handle_legacy_migration_status(
