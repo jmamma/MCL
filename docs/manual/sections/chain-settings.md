@@ -58,7 +58,7 @@ Quantization controls when the next load occurs.
 | Quantization | Result |
 | --- | --- |
 | `-` / 1 | Load at the next available transition. |
-| 2, 4, 8, 16, 32, 64 | Wait for that step interval before loading. |
+| 2-64 | Wait for that step interval before loading. |
 
 Higher quantization values are safer for full-row changes. Lower values are useful for fast slot-level changes.
 

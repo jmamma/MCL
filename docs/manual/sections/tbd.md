@@ -53,14 +53,22 @@ The TBD sound model exposes:
 
 Hidden or unsupported parameters are skipped in the UI. Parameter names and ranges come from the active TBD sound, so different sounds can expose different controls.
 
+## Device UI, Presets And Parameter Strip
+
+Short-tap the top-left button when TBD is the focused device to open the TBD sound UI. The full-screen view shows parameter windows or the preset browser. Hold the top-left button while the device UI is active to switch between the full-screen view and the bottom four-encoder strip.
+
+In the strip and full-screen parameter views, the four encoders edit the visible TBD parameters for the active track. The strip shows each parameter label and briefly shows the edited value. Arrow keys browse parameter windows in the full-screen view.
+
+The preset window browses machine/preset groups with Encoder 1 and presets with Encoder 2. Press Encoder 2, or short-tap the top-left button while the preset window is active, to load the selected preset into the current TBD track. If the active sequencer track has no TBD sound or no presets are available, the UI shows `NO TRACK` or `NO PRESETS`.
+
 ## Panel Controls
 
 TBD panel input is mapped into MCL's page and device model.
 
 | Control | Action |
 | --- | --- |
-| Top-left button | Open Page Select from normal pages. In menus and browsers, use it as back/up. |
-| Top-left hold inside an expanded device UI | Leave the device UI and open Page Select. |
+| Top-left button | Open Page Select from normal pages. When the device UI is active or collapsed, short-tap to enter the focused primary device UI. In menus and browsers, use it as back/up. |
+| Hold top-left while the device UI is active | Leave the device UI and open Page Select. |
 | Top-left + top-right | Open the System menu. |
 | Top-right button | Open or control the secondary device UI when a secondary UI device is configured. In local menus it acts as the confirm/enter key. |
 | Encoder 1 tap | Open or close the Grid bank popup. |
@@ -105,3 +113,5 @@ The TBD sync menu uses `CLOCK SRC` and `TRANS SRC`. Available source values are:
 | `INT` | Internal TBD/MCL clock. |
 
 The tempo overlay edits the internal tempo when MCL is using its own clock source.
+
+From the Grid Page, press **[Function]** to open the tempo overlay. Turn Encoder 1 to adjust tempo in 1 BPM steps, or press **[Up]** / **[Down]** for 0.1 BPM changes. Hold **[Function]** and tap **Y** to enter tap-tempo mode; after four taps MCL applies the averaged tempo. **[No]** closes the overlay. The overlay shows the current tempo and clock source label: `INT`, `EXT1`, `EXT2` or `USB`.

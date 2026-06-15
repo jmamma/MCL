@@ -51,7 +51,7 @@ increment the quantization value.
 
 ## Grid Saving or Loading
 
-The routing configuration can be saved and loaded from Grid Y in Auxiliary slot 14 (Route) along with Polyphonic configuration. In addition, routing is automatically retained across power on/off.
+The routing configuration can be saved and loaded from Grid Y in Auxiliary slot 14 (Route) along with Polyphonic configuration. Save the Route slot when route edits should be recalled later.
 
 
 _For more information on slot positions and their corresponding tracks see "Sequencer: Saving and Loading"._

@@ -17,7 +17,7 @@ In stereo/link mode, RAM 1 controls the linked track pair 15 and 16.
 
 RAM mode is configured from the Machinedrum configuration page:
 
-`CONFIG > MD > RAM LINK`
+`CONFIG > MACHINEDRUM > RAM LINK`
 
 | Value | Behavior |
 | --- | --- |
@@ -89,7 +89,8 @@ Dice modes alter slice order or direction:
 | Mode | Behavior |
 | --- | --- |
 | `0` | Reverse slices. |
-| `1..4` | Reverse every nth slice. |
+| `1..3` | Reverse every nth slice. |
+| `4` | Randomly varies the reverse interval. |
 | `5` | Play slices in reverse order. |
 | `6` | Play slices in random order. |
 

@@ -84,9 +84,9 @@ CONFIG > MIDI > CONTROLLER > INPUT
 
 | Setting | Function |
 | --- | --- |
-| `PORT` | Selects the controller input port: MIDI 2, USB, or MIDI 2 + USB where available. |
-| `CHRO CHAN` | Channel for chromatic playing. Use `--`, `1..16` or `OMNI`. |
-| `TRIG CHAN` | Channel for external drum-pad triggering of tracks. Use `--`, `1..16` or `OMNI`. |
+| `PORT` | Selects the controller input port: `2`, `USB`, or `2 + USB`. |
+| `CHRO CHAN` | Channel for chromatic playing. Use `--` or `1..16`. |
+| `TRIG CHAN` | Channel for external drum-pad triggering of tracks. Use `--` or `1..16`. |
 | `POLY MODE` | `INT` uses internal/chromatic input only. `INT+EXT` also lets external controller input play poly voice groups. |
 
 `POLY MODE` replaces the older `POLY CHAN` setting. The external MIDI channel used for a poly voice group now comes from that group's channel assignment on the Polyphony Page.

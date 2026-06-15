@@ -13,7 +13,7 @@ CONFIG > SYSTEM
 | Entry | Values | Function |
 | --- | --- | --- |
 | `DISPLAY` | `INT`, `INT+EXT` | Enables the internal display only, or internal plus external display mirroring. |
-| `PROJ CFG` | `OFF`, `ON` | Chooses whether configuration remains global or is stored and loaded with each project. |
+| `PROJ CFG` | `OFF`, `ON` | Chooses whether supported configuration stored in the project is applied when that project loads. |
 | `GRID ENCOD` | `--`, `PERF` | Reassigns the Grid Page encoders to performance-controller behavior when enabled. |
 
 ## Display
@@ -24,14 +24,14 @@ Use `INT` for normal hardware use. Use `INT+EXT` only for an external display mi
 
 ## Project Configuration
 
-`PROJ CFG` controls how configuration is stored.
+`PROJ CFG` controls how project-stored configuration is applied.
 
 | Value | Behavior |
 | --- | --- |
-| `OFF` | Configuration is global. Loading a project does not replace the current system/device configuration. |
-| `ON` | Supported configuration is stored with the project and restored when the project loads. |
+| `OFF` | Keep the current global system/device configuration when loading a project. The project's Machinedrum `SAMPLEBANK` link is still restored. |
+| `ON` | Apply supported configuration stored in the project when it loads. |
 
-Project configuration includes device and MIDI-related settings that affect how the grid maps to connected instruments. Use this when different projects require different device layouts.
+Project configuration includes device and MIDI-related settings that affect how the grid maps to connected instruments. Use `ON` when different projects require different device layouts.
 
 After upgrading to MCL 5.00, stored configuration may be reset to defaults on first boot. Re-check device layout, MIDI ports, sync, project-configuration mode and any project samplebank link before continuing work.
 

@@ -21,12 +21,14 @@ Sample transfer requires a Machinedrum UW model for sample playback/storage.
 
 ## File Locations
 
-MCL creates these SD-card folders:
+MCL uses these logical SD-card folders:
 
 | Folder | Contents |
 | --- | --- |
 | `/Samples/WAV` | WAV files and received samples. |
 | `/Samples/SYX` | SDS/SysEx sample files. |
+
+On non-AVR builds with an initialized `/MCL` root folder, these folders live under `/MCL`, for example `/MCL/Samples/WAV`.
 
 The browser filters the file list to `.wav` and `.syx` files. Folders are shown so sample sets can be organized.
 

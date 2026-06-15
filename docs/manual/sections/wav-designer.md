@@ -87,8 +87,10 @@ The mixer levels do not need to be conservative. The rendered file is normalized
 
 ## Output File
 
-WAV Designer writes its render as:
+WAV Designer writes its render to the logical path:
 
 `/Samples/WAV/WAVE.wav`
+
+On non-AVR builds with an initialized `/MCL` root folder, this is stored as `/MCL/Samples/WAV/WAVE.wav`.
 
 The generated WAV includes loop metadata. If the file already exists, the render path overwrites the temporary WavDesigner output before transfer.

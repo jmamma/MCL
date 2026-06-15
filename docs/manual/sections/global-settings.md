@@ -42,6 +42,8 @@ The project browser can show:
 
 The currently loaded project is marked in the browser.
 
+Browser shortcuts: **[Left]** jumps to the top of the current project list. **[Right]** returns to the project root and focuses the currently loaded project path.
+
 ## File Menu
 
 Hold **[Global]** from the project browser to open the file menu.
@@ -70,8 +72,8 @@ Typical version actions:
 
 | Action | Function |
 | --- | --- |
-| `BACKUP` | Create a new version snapshot. |
-| Load version | Restore a previous project version. |
+| `BACKUP` | Create a new version snapshot, load that new version immediately, and return to the Grid Page. |
+| Load version | Restore the selected project version and return to the Grid Page. |
 | Delete version | Remove a non-active version. |
 
 ## New Project
@@ -92,6 +94,6 @@ Do not edit project files by hand. Use the project browser, file menu and versio
 
 ## Saving Projects
 
-MCL writes project state as slots, grids and configuration are saved. A separate full-project save action is usually unnecessary after saving the active material.
+MCL writes project state as slots and grids are saved. A separate full-project save action is usually unnecessary after saving the active material.
 
-When `SYSTEM > PROJ CFG` is enabled, project-specific configuration is stored with the project and restored when the project is loaded.
+System configuration writes also update the supported project configuration stored in the current project header. `SYSTEM > PROJ CFG` controls whether those stored settings are applied when the project is loaded.

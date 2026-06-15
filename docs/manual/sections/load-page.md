@@ -93,7 +93,7 @@ Load quantization sets the transition interval for the selected load.
 | Value | Meaning |
 | --- | --- |
 | `-` / 1 | Use the next available transition. |
-| 2, 4, 8, 16, 32, 64 | Wait for the matching step interval before loading. |
+| 2-64 | Wait for that step interval before loading. |
 
 Use quantization to keep manual, auto and queue loads aligned with the phrase length.
 
@@ -124,4 +124,4 @@ After the row selection is applied, MCL restores the load mode that was active b
 
 For Machinedrum tracks, MCL does not continuously transmit track `LEV` while the sequencer is running. This lets the performer use the Machinedrum level control for live fades during and after slot loads.
 
-Use `CONFIG > Machinedrum > NORMALIZE` to keep saved track loudness predictable when loading between slots.
+Use `CONFIG > MACHINEDRUM > NORMALIZE` to keep saved track loudness predictable when loading between slots.

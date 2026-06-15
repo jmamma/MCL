@@ -131,8 +131,8 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 - **[Up/Down/Left/Right]** + **[Mute/BankA]** Disable active device's mutes from selected Performance Set.
 - **[Up/Down/Left/Right]** + **[Swing/BankB]** Set selected Performance Set to load automatically with PF Slot in Grid Y.
 - **`Encoders1-4`** Performance Controllers (A,B,C,D) scene morphs.
-- **`Encoders1-4`** + **`SHIFT`** Performance Controllers (A,B,C,D) right scene clear.
-- **`Encoders1-4`** + **`LOAD/YES`** Performance Controllers (A,B,C,D) right scene autofill parameters.
+- Hold a Perf encoder button + **[Global]** / **[Shift/Menu]** to clear both assigned scenes for that controller.
+- Hold a Perf encoder button + **[Load/Yes]** to autofill that controller's right scene from changed kit parameters.
 - **[Up/Down/Left/Right] + [Exit/No] + `Encoders1-4`** Set performance controller lock to mute set.
 - **[Function] + `Encoders1-4`** Hard pan performance controller left or right.
 - **[Trig]** + **[Global]** Sequencer mute record for selected tracks.
@@ -185,7 +185,8 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 
 - Use the LFO setup page to switch LFO mode (`FRE`, `TRG`, `1SH`, `TRK`).
 - **[Trigs]** Enter LFO resets (`TRG` and `1SH` modes only).
-- **[Scale]** Navigate LFO subpages.
+- **[Scale]** Move between trigger-mask pages in `TRG` and `1SH` modes.
+- MCL **[Load/Yes]** / panel button 4 cycles LFO subpages.
 - **[Enter/Yes]** LFO On/Off.
 - **`Encoder 1`** LFO shape.
 
@@ -214,8 +215,8 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 
 - **[Global]**Toggle shift menu for access to Arpeggiator, Poly tracks etc
 - **[Function]** + **[Clear/Copy/Paste]** Clear/copy/paste track.
-- **[Up/Down]** Change octave.
-- **[Left/Right]** Transpose in semitones
+- **[Left/Right]** Move focus between `OCT`, `DET`, `LEN`/`PLEN` and `SCA`.
+- **[Up/Down]** Adjust the focused parameter. To transpose the scale root, hold **[Global]** and use Track Menu `KEY`.
 - **[Scale]** Switch input device MD/Midi .
 - **`Encoder 1`** Octave.
 - **`Encoder 2`** Detune.

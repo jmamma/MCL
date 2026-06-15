@@ -14,9 +14,11 @@ Open it from a Machinedrum step track:
 
 A sound preset stores the active Machinedrum track's machine assignment and parameters. If the track uses a Trig Group to trigger another track, the linked track's machine settings are stored with it so the pair can be recalled together.
 
-Sound files use the `.snd` extension and are stored under:
+Sound files use the `.snd` extension and are stored in the logical folder:
 
 `/Sounds`
+
+On non-AVR builds with an initialized `/MCL` root folder, this is stored under `/MCL/Sounds`.
 
 ## Browser Controls
 

@@ -129,8 +129,8 @@ Controller input is used for chromatic play, drum triggering, polyphonic input a
 | Entry | Function |
 | --- | --- |
 | `PORT` | Selects the controller input port: `2`, `USB`, or `2 + USB`. |
-| `CHRO CHAN` | MIDI channel for chromatic play: `--`, `1..16`, or `OMNI`. |
-| `TRIG CHAN` | MIDI channel for drum-pad triggering: `--`, `1..16`, or `OMNI`. |
+| `CHRO CHAN` | MIDI channel for chromatic play: `--` or `1..16`. |
+| `TRIG CHAN` | MIDI channel for drum-pad triggering: `--` or `1..16`. |
 | `POLY MODE` | `INT` uses internal note data only; `INT+EXT` also responds to external controller input. |
 
 `POLY MODE` replaces the old `POLY CHAN` setting.
