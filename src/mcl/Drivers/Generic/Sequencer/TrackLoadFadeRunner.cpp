@@ -141,6 +141,12 @@ uint16_t load_fade_delay_q12(uint32_t start_clock) {
     return 0;
   }
 
+#if defined(__AVR__)
+  if (to_start > (0x10000UL * 12u / 2u)) {
+    return 0;
+  }
+  return to_start > 0xFFFFu ? 0xFFFFu : (uint16_t)to_start;
+#else
   uint32_t ticks_per_16th = MidiClock.div192th_ticks_per_16th();
   uint32_t cycle = 0x10000UL * ticks_per_16th;
   if (to_start > (cycle / 2u)) {
@@ -150,6 +156,7 @@ uint16_t load_fade_delay_q12(uint32_t start_clock) {
   uint32_t delay_q12 =
       (to_start * 12u + ticks_per_16th - 1u) / ticks_per_16th;
   return delay_q12 > 0xFFFFu ? 0xFFFFu : (uint16_t)delay_q12;
+#endif
 }
 #endif
 

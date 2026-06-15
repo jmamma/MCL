@@ -56,7 +56,7 @@ public:
 
   void send_locks(uint8_t mode);
 
-  void config_encoder_range(uint8_t i);
+  void config_encoder_range();
 
   void encoder_check();
   void encoder_send();

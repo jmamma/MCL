@@ -295,6 +295,8 @@ private:
   MDClass &md() const { return (MDClass &)device_; }
 };
 
+static MDMixerCapability md_mixer_capability(MD);
+
 #if !defined(__AVR__)
 class MDParamCapability : public DeviceParamCapability {
 public:
@@ -479,9 +481,19 @@ static void send_global_setting(MDClass &md, uint8_t setting, uint8_t value) {
   send_md_request3(md, 0x70, setting, value);
 }
 
+static bool md_has_required_fw_caps(const MDClass &md) NOINLINE();
+static bool md_has_required_fw_caps(const MDClass &md) {
+  static constexpr uint32_t required_caps =
+      ((uint32_t)FW_CAP_MASTER_FX | (uint32_t)FW_CAP_TRIG_LEDS |
+       (uint32_t)FW_CAP_UNDOKIT_SYNC | (uint32_t)FW_CAP_TONAL |
+       (uint32_t)FW_CAP_ENHANCED_GUI | (uint32_t)FW_CAP_ENHANCED_MIDI) |
+      (uint32_t)FW_CAP_MACHINE_CACHE | (uint32_t)FW_CAP_UNDO_CACHE |
+      (uint32_t)FW_CAP_MID_MACHINE | (uint32_t)FW_CAPS_LENGTH_CHECK;
+  return (md.fw_caps & required_caps) == required_caps;
+}
+
 DeviceMixerCapability *MDClass::mixer() {
-  static MDMixerCapability capability(*this);
-  return &capability;
+  return &md_mixer_capability;
 }
 
 #if !defined(__AVR__)
@@ -1380,21 +1392,13 @@ bool MDClass::probe() {
   if (uart->device.getBlockingId(DEVICE_MD, DEVICE_SPS, probe_port, CALLBACK_TIMEOUT)) {
     uint8_t count = 3;
 
-    uint32_t fw_caps_mask =
-        ((uint32_t)FW_CAP_MASTER_FX | (uint32_t)FW_CAP_TRIG_LEDS |
-         (uint32_t)FW_CAP_UNDOKIT_SYNC | (uint32_t)FW_CAP_TONAL |
-         (uint32_t)FW_CAP_ENHANCED_GUI | (uint32_t)FW_CAP_ENHANCED_MIDI) |
-        (uint32_t)FW_CAP_MACHINE_CACHE | (uint32_t)FW_CAP_UNDO_CACHE |
-        (uint32_t)FW_CAP_MID_MACHINE | (uint32_t)FW_CAPS_LENGTH_CHECK;
-
-    while ((!get_fw_caps() || ((fw_caps & fw_caps_mask) != fw_caps_mask)) &&
-           count) {
+    while ((!get_fw_caps() || !md_has_required_fw_caps(*this)) && count) {
       DEBUG_PRINTLN("bad caps");
       mcl_gui.delay_progress(250);
       count--;
     }
 
-    if (((fw_caps & fw_caps_mask) != fw_caps_mask)) {
+    if (!md_has_required_fw_caps(*this)) {
       oled_display.textbox_P(mclstr_upgrade, mclstr_machinedrum);
       oled_display.display();
       return false;

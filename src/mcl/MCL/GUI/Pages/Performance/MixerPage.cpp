@@ -202,11 +202,11 @@ bool MixerPage::handle_mixer_encoder_edits(bool use_perf_encoders) {
 }
 
 bool MixerPage::display_mute_mask() {
-  uint16_t last_mute_mask = seq_step_page.mute_mask;
   uint16_t mute_mask = 0;
 
   uint8_t len = mixer_track_count();
-  for (int8_t i = len - 1; i >= 0; --i) {
+  for (uint8_t i = len; i > 0;) {
+    --i;
     mute_mask <<= 1;
     SeqTrack *seq_track = mixer_seq_track(i);
     if (seq_track != nullptr && seq_track->mute_state == SEQ_MUTE_OFF) {
@@ -214,7 +214,7 @@ bool MixerPage::display_mute_mask() {
     }
   }
 
-  if (last_mute_mask != mute_mask) {
+  if (seq_step_page.mute_mask != mute_mask) {
     seq_step_page.mute_mask = mute_mask;
     TrigLEDMode led_mode =
         mixer_target.is_md_device() ? TRIGLED_MUTE : TRIGLED_EXCLUSIVE;

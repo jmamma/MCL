@@ -121,13 +121,13 @@ void PerfPage::func_enc_check() {
     }
   }
 }
-void PerfPage::config_encoder_range(uint8_t i) {
-  ((MCLEncoder *)encoders[i])->max = PerfPageTargetRef::target_count();
-  ((MCLEncoder *)encoders[i + 1])->min = 0;
+void PerfPage::config_encoder_range() {
+  ((MCLEncoder *)encoders[1])->max = PerfPageTargetRef::target_count();
+  ((MCLEncoder *)encoders[2])->min = 0;
 
   uint8_t param_count =
-      PerfPageTargetRef::target(encoders[i]->cur).param_count();
-  ((MCLEncoder *)encoders[i + 1])->max = encoders[i]->cur == 0
+      PerfPageTargetRef::target(encoders[1]->cur).param_count();
+  ((MCLEncoder *)encoders[2])->max = encoders[1]->cur == 0
                                              ? 2
                                              : (param_count ? param_count - 1
                                                             : 0);
@@ -135,17 +135,18 @@ void PerfPage::config_encoder_range(uint8_t i) {
 
 void PerfPage::config_encoders(uint8_t show_val) {
 
-  encoders[0] = cur_enc(this);
+  PerfEncoder *selected = cur_enc(this);
+  encoders[0] = selected;
   encoders[1] = &fx_param2;
   encoders[2] = &fx_param3;
   encoders[3] = &fx_param4;
 
   if (page_mode == PERF_DESTINATION) {
 
-    PerfData *d = &cur_enc(this)->perf_data;
+    PerfData *d = &selected->perf_data;
     encoders[1]->cur = d->src;
     encoders[2]->cur = d->param;
-    config_encoder_range(1);
+    config_encoder_range();
     encoders[3]->cur = d->min;
     ((MCLEncoder *)encoders[3])->max = 127;
   } else if (learn) {
@@ -155,7 +156,7 @@ void PerfPage::config_encoders(uint8_t show_val) {
 
     uint8_t c = page_mode - 1;
 
-    PerfEncoder *e = cur_enc(this);
+    PerfEncoder *e = selected;
     PerfParam *p = &e->perf_data.scenes[scene].params[c];
 
     encoders[1]->cur = p->dest;
@@ -172,7 +173,7 @@ void PerfPage::config_encoders(uint8_t show_val) {
     encoders[3]->cur = v;
     ((MCLEncoder *)encoders[3])->max = 128;
 
-    config_encoder_range(1);
+    config_encoder_range();
   }
 
   if (!show_val) {
@@ -184,7 +185,7 @@ void PerfPage::update_params() {
     return;
   }
 
-  config_encoder_range(1);
+  config_encoder_range();
 
   if (encoders[1]->hasChanged() && encoders[1]->cur == 0) {
     encoders[2]->cur = 0;

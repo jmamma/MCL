@@ -39,7 +39,6 @@ public:
   uint8_t get_category_page(uint8_t offset);
   void rebuild_entries();
   PageIndex get_page(uint8_t page_number, char *str) const;
-  void get_page_icon(uint8_t page_number, uint8_t *&icon, uint8_t &h) const;
 
   // Mirror of the BUTTON2-release branch in handleEvent: navigate to the
   // currently-highlighted page (or back to GRID_PAGE if BUTTON1 is held or

@@ -31,13 +31,9 @@ inline uint16_t calculate_latency(uint32_t uart_speed, size_t packet_bytes) {
 }
 
 inline bool packet_requires_data_ack(const uint8_t *buf, uint16_t len) {
-  if (len == 0) {
-    return false;
-  }
-  if (buf[0] != 0xF0) {
-    return true;
-  }
-  return len > 4 && buf[1] == 0x7E && buf[3] == 0x02;
+  return len != 0 &&
+         (buf[0] != 0xF0 ||
+          (len > 4 && buf[1] == 0x7E && buf[3] == 0x02));
 }
 
 inline void write_sds_21(uint8_t *buf, uint32_t value) {
@@ -184,11 +180,9 @@ struct WavReader : SDSFileReader {
     buf[5] = 0;
     buf[6] = sample_format;
 
-    uint32_t samplePeriod;
     midi_sds.setSampleRate(wav->header.fmt.sampleRate);
-    samplePeriod = midi_sds.samplePeriod;
 
-      uint32_t loopStart = 0;
+    uint32_t loopStart = 0;
     uint32_t loopEnd = 0;
     uint8_t loopType = SDS_LOOP_OFF;
     if (wav->header.smpl.is_active()) {
@@ -200,7 +194,7 @@ struct WavReader : SDSFileReader {
       }
     }
 
-    write_sds_21(buf + 7, samplePeriod);
+    write_sds_21(buf + 7, midi_sds.samplePeriod);
     write_sds_21(buf + 10, total_samples);
     write_sds_21(buf + 13, loopStart);
     write_sds_21(buf + 16, loopEnd);
@@ -388,7 +382,7 @@ wait:
 }
 
 uint8_t MidiSDSClass::waitForMsg(uint16_t timeout) {
-  volatile uint16_t start_clock = read_clock_ms();
+  uint16_t start_clock = read_clock_ms();
   MidiSDSSysexListener.msgType = 255;
   do {
     platform_wait_poll();
@@ -581,7 +575,7 @@ bool MidiSDSClass::recvWav(const char *filename, uint16_t sample_number) {
   // init
   user_cancelled = false;
   MidiSDSSysexListener.setup(MD.midi);
-  int i = 0;
+  uint8_t i = 0;
   uint8_t retries = 3;
   uint8_t m = 255;
 

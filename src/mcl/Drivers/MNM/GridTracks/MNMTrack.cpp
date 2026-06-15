@@ -2,6 +2,12 @@
 #include "Sequencer/MCLSeq.h"
 #include "MNM.h"
 
+#if defined(__AVR__)
+namespace {
+constexpr uint16_t kMnmSetMachineLatency =
+    sizeof(monomachine_sysex_hdr) + 2 + 4 + (56 * 3) + 3;
+}
+#endif
 
 void MNMTrack::init() {
   machine.init(255);
@@ -28,8 +34,12 @@ uint16_t MNMMidiTrack::grid_slot_label(GridSlotLabelContext ctx) {
 #endif
 
 uint16_t MNMTrack::calc_latency(uint8_t tracknumber) {
-
+#if defined(__AVR__)
+  (void)tracknumber;
+  return kMnmSetMachineLatency;
+#else
   return MNM.setMachine(tracknumber, tracknumber, false);
+#endif
 }
 
 void MNMTrack::transition_load(uint8_t tracknumber, SeqTrack* seq_track, GridSlot slotnumber) {
@@ -102,8 +112,7 @@ bool MNMTrack::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, 
     }
   }
   // Write data to sd
-  bool ret = write_grid(_this(), get_track_size(), column, row, grid);
-  return ret;
+  return write_grid(_this(), get_track_size(), column, row, grid);
 }
 
 #if !defined(__AVR__)

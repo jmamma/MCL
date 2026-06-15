@@ -222,6 +222,9 @@ void GridTask::transition_handler() {
 #endif
 
   while (true) {
+    if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
+      break;
+    }
     uint16_t margin =
         ((uint16_t)MidiClock.get_tempo() * 32u + 999u) / 1000u;
     if (margin < 2) {
@@ -233,14 +236,8 @@ void GridTask::transition_handler() {
     }
     uint8_t send_device_mask = 0;
     memset(track_select_array, 0, sizeof(track_select_array));
-
-
-  // 240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
-  //                = 0.032 * MidiClock.get_tempo()
-  //
-  if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
-      break;
-  }
+    // 240ms headroom = 0.240 * (MidiClock.get_tempo()* 0.133333333333
+    //                = 0.032 * MidiClock.get_tempo()
     //float div32th_per_second = MidiClock.get_tempo() * 0.133333333333f;
     //float div32th_time = 1.0f / div32th_per_second;
 

@@ -39,7 +39,6 @@ bool A4Track::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, u
 
   active = A4_TRACK_TYPE;
 
-  bool ret;
   DEBUG_PRINT_FN();
   DEBUG_PRINTLN(F("storing a4 track"));
 
@@ -55,12 +54,7 @@ bool A4Track::store_in_grid(GridSlot column, GridRow row, SeqTrack *seq_track, u
     memcpy(&seq_data, ext_track->data(), sizeof(seq_data));
   }
 #endif
-  ret = write_grid(_this(), get_track_size(), column, row, grid);
-
-  if (!ret) {
-    return false;
-  }
-  return true;
+  return write_grid(_this(), get_track_size(), column, row, grid);
 }
 
 #if !defined(__AVR__)

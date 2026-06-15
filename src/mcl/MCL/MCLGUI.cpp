@@ -541,17 +541,27 @@ bool MCLGUI::show_encoder_value(Encoder *encoder, int timeout) {
 void MCLGUI::draw_text_encoder(uint8_t x, uint8_t y, const char *name,
                                const char *value, bool highlight,
                                bool name_is_progmem) {
+#if !defined(__AVR__)
   char name_buf[8]; // Short labels fit on the encoder caption
   const char *label = name;
   if (name_is_progmem) {
     mclstr_copy_progmem(name_buf, name, sizeof(name_buf));
     label = name_buf;
   }
+#endif
 
   oled_display.setFont(&TomThumb);
   oled_display.setTextColor(WHITE);
   oled_display.setCursor(x + 4, y + 6);
+#if defined(__AVR__)
+  if (name_is_progmem) {
+    mcl_print_P(name);
+  } else {
+    oled_display.print(name);
+  }
+#else
   oled_display.print(label);
+#endif
 
   oled_display.setFont();
   oled_display.setCursor(x + 4, y + 8);
