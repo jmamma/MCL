@@ -18,7 +18,7 @@
 
 namespace mclarrfile {
 
-static const uint16_t kVersion = 6;
+static const uint16_t kVersion = 7;
 static const uint16_t kMinVersion = 1;
 static const uint16_t kClipBytesV1 = 16;
 static const uint16_t kClipBytesV2 = 24;
@@ -33,6 +33,8 @@ static const uint8_t kFilenameDigits = 3;
 static const uint8_t kMaxArrangementIndex = 255;
 static const uint16_t kMaxMarkers = 128;
 static const uint16_t kMaxLoopRegions = 64;
+static const uint16_t kMaxAutomationLanes = 256;
+static const uint32_t kMaxAutomationPoints = 8192;
 // Arrangement loop repeatCount: 0 means infinite, matching song loop rows.
 static const uint16_t kLoopRegionRepeatInfinite = 0;
 static const uint8_t kGridSourceSlotCount = 32;
@@ -55,7 +57,9 @@ enum ClipSourceKind {
 enum HeaderFlags {
     HEADER_HAS_MARKERS = 1 << 0,
     HEADER_HAS_TRACK_LABELS = 1 << 1,
-    HEADER_HAS_LOOP_REGIONS = 1 << 2
+    HEADER_HAS_LOOP_REGIONS = 1 << 2,
+    HEADER_HAS_AUTOMATION = 1 << 3,
+    HEADER_HAS_CHUNKS = 1 << 15
 };
 
 enum MarkerFlags {
@@ -65,6 +69,40 @@ enum MarkerFlags {
 enum LoopRegionFlags {
     LOOP_REGION_ENABLED = 1 << 0
 };
+
+enum AutomationTargetType {
+    AUTOMATION_TARGET_MD_PARAM = 0,
+    AUTOMATION_TARGET_MUTE = 1,
+    AUTOMATION_TARGET_FILL = 2,
+    AUTOMATION_TARGET_PERF = 3
+};
+
+enum AutomationValueType {
+    AUTOMATION_VALUE_U7 = 0,
+    AUTOMATION_VALUE_BOOL = 1,
+    AUTOMATION_VALUE_U14 = 2
+};
+
+enum AutomationLaneFlags {
+    AUTOMATION_LANE_ENABLED = 1 << 0
+};
+
+enum AutomationPointInterp {
+    AUTOMATION_INTERP_HOLD = 0,
+    AUTOMATION_INTERP_CURVE = 1
+};
+
+static inline uint32_t chunkId(char a, char b, char c, char d) {
+    return ((uint32_t)(uint8_t)a) | ((uint32_t)(uint8_t)b << 8) |
+           ((uint32_t)(uint8_t)c << 16) | ((uint32_t)(uint8_t)d << 24);
+}
+
+static const uint32_t CHUNK_CLIPS = 0x50494c43u;      // "CLIP"
+static const uint32_t CHUNK_MARKERS = 0x4b52414du;    // "MARK"
+static const uint32_t CHUNK_TRACK_LABELS = 0x42414c54u; // "TLAB"
+static const uint32_t CHUNK_LOOP_REGIONS = 0x504f4f4cu; // "LOOP"
+static const uint32_t CHUNK_AUTOMATION_LANES = 0x4e414c41u; // "ALAN"
+static const uint32_t CHUNK_AUTOMATION_POINTS = 0x544e5041u; // "APNT"
 
 struct Header {
     char magic[4];          // "SPAR"
@@ -90,6 +128,25 @@ struct HeaderExtraV6 {
     uint16_t trackLabelCount;
     uint16_t loopRegionBytes;
     uint16_t loopRegionCount;
+};
+
+struct HeaderExtraV7 {
+    uint16_t markerBytes;
+    uint16_t markerCount;
+    uint16_t trackLabelBytes;
+    uint16_t trackLabelCount;
+    uint16_t loopRegionBytes;
+    uint16_t loopRegionCount;
+    uint16_t chunkDirBytes;
+    uint16_t chunkCount;
+};
+
+struct ChunkDirEntry {
+    uint32_t id;
+    uint32_t offset;
+    uint32_t count;
+    uint16_t itemBytes;
+    uint16_t flags;
 };
 
 struct Clip {
@@ -137,12 +194,35 @@ struct LoopRegion {
     char label[kLoopRegionLabelBytes];
 };
 
+struct AutomationLane {
+    uint8_t track;
+    uint8_t targetType;
+    uint8_t device;
+    uint8_t targetIndex;
+    uint8_t valueType;
+    uint8_t flags;
+    uint16_t pointCount;
+    uint32_t pointOffset;
+    uint32_t reserved;
+};
+
+struct AutomationPoint {
+    uint32_t q12;
+    uint16_t value;
+    uint8_t interp;
+    int8_t curve;
+};
+
 static_assert(sizeof(Header) == 32, "MCL arrangement header layout changed");
 static_assert(sizeof(HeaderExtraV2) == 8, "MCL arrangement header extra layout changed");
 static_assert(sizeof(HeaderExtraV6) == 12, "MCL arrangement header extra v6 layout changed");
+static_assert(sizeof(HeaderExtraV7) == 16, "MCL arrangement header extra v7 layout changed");
+static_assert(sizeof(ChunkDirEntry) == 16, "MCL arrangement chunk directory layout changed");
 static_assert(sizeof(Clip) == 40, "MCL arrangement clip layout changed");
 static_assert(sizeof(Marker) == 24, "MCL arrangement marker layout changed");
 static_assert(sizeof(LoopRegion) == 32, "MCL arrangement loop region layout changed");
+static_assert(sizeof(AutomationLane) == 16, "MCL arrangement automation lane layout changed");
+static_assert(sizeof(AutomationPoint) == 8, "MCL arrangement automation point layout changed");
 
 inline void initHeader(Header& h, const char* name) {
     h.magic[0] = 'S';

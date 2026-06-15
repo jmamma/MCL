@@ -48,6 +48,10 @@ static const int kNumLockParams = 34;   // SPS-X superset
 static const int kMaxBodyRaw    = 512;  // cap per frame (TRACK_LOCKS paginates)
 static const int kExtNoteWireBytes = 11; // start(4), width(4), note, velocity, condition
 static const int kExtLockWireBytes = 6; // tick(4), value, slide
+static const int kLfoParams = 2;
+static const int kLfoLabelBytes = 4;
+static const int kLfoParamWireBytes = 6 + kLfoLabelBytes + kLfoLabelBytes;
+static const int kLfoStateWireBytes = 18 + kLfoParams * kLfoParamWireBytes;
 
 // ---- command ids (byte[3]) ----
 enum Cmd {
@@ -64,6 +68,8 @@ enum Cmd {
     CMD_REQ_PERF_STATE   = 0x17,  // H->M  device, track
     CMD_REQ_EXT_LOCKS    = 0x18,  // H->M  device, track, lock_idx
     CMD_REQ_MIXER_STATE  = 0x19,  // H->M  mixer_device
+    CMD_REQ_PERF_PAGE_STATE = 0x1A, // H->M
+    CMD_REQ_LFO_STATE    = 0x1B,  // H->M  lfo_device, track
 
     CMD_TRACK_SUMMARY    = 0x30,  // M->H
     CMD_TRACK_DETAIL     = 0x31,  // M->H
@@ -74,6 +80,8 @@ enum Cmd {
     CMD_PERF_STATE       = 0x36,  // M->H  device, track, PTC/ARP/voice state
     CMD_EXT_LOCKS        = 0x37,  // M->H  device, track, lock_idx, paginated lock values
     CMD_MIXER_STATE      = 0x38,  // M->H  mixer device snapshot
+    CMD_PERF_PAGE_STATE  = 0x39,  // M->H  PerfPage controller/scene snapshot
+    CMD_LFO_STATE        = 0x3A,  // M->H  LFO track snapshot
 
     CMD_SET_STEP         = 0x50,  // H->M  track, step, wmask, value
     CMD_SET_LOCK         = 0x51,  // H->M  track, step, param, value
@@ -103,6 +111,14 @@ enum Cmd {
     CMD_MIXER_LOAD_PERF  = 0x68,  // H->M  set, load_perf, load_type_bits
     CMD_MIXER_SET_DISPLAY= 0x69,  // H->M  device, selector
     CMD_MIXER_SET_PERF_LOCK = 0x6A, // H->M  set, encoder, value(0..127, 0xFF clear)
+    CMD_PERF_PAGE_SET_CONTROL = 0x6B, // H->M control, src, param, min, value
+    CMD_PERF_PAGE_SET_ACTIVE_SCENE = 0x6C, // H->M control, slot(A/B), scene(0..7/255)
+    CMD_PERF_PAGE_SET_SCENE_PARAM = 0x6D, // H->M scene, index, dest_raw, param, value
+    CMD_PERF_PAGE_SCENE_ACTION = 0x6E, // H->M action, control, scene
+    CMD_PERF_PAGE_SET_VIEW = 0x6F, // H->M control, page_mode, selected_scene
+    CMD_LFO_SET_PROP     = 0x78,  // H->M  lfo_device, track, prop, value
+    CMD_LFO_SET_MASK     = 0x79,  // H->M  lfo_device, track, step, value
+    CMD_LFO_ACTION       = 0x7A,  // H->M  lfo_device, track, action
 
     CMD_NOTIFY_TRANSPORT = 0x70,  // M->H  running, master_step, sub_tick(2)
     CMD_NOTIFY_DIRTY     = 0x71,  // M->H  track, regions
@@ -110,6 +126,8 @@ enum Cmd {
     CMD_NOTIFY_EXT_DIRTY = 0x73,  // M->H  device, track, regions
     CMD_NOTIFY_PERF_DIRTY= 0x74,  // M->H  device, track, regions
     CMD_NOTIFY_MIXER_DIRTY=0x75,  // M->H  mixer_device, regions
+    CMD_NOTIFY_PERF_PAGE_DIRTY=0x76, // M->H  regions
+    CMD_NOTIFY_LFO_DIRTY = 0x77,  // M->H  lfo_device, track, regions
     CMD_ACK              = 0x7E,  // M->H  (echo tag) status
     CMD_ERR              = 0x7F   // M->H  (echo tag) err_code, detail
 };
@@ -127,11 +145,45 @@ enum Caps {
     CAP_PTC_ARP       = 1 << 8,
     CAP_EXT_LOCKS     = 1 << 9,
     CAP_EXT_NOTE_TOGGLE = 1 << 10,
-    CAP_MIXER         = 1 << 11
+    CAP_MIXER         = 1 << 11,
+    CAP_PERF_PAGE     = 1 << 12,
+    CAP_LFO_PAGE      = 1 << 13
 };
 
 enum ExtDevice {
     EXT_DEVICE_GRID_Y = 1
+};
+
+enum LfoDevice {
+    LFO_DEVICE_GRID_X = 0,
+    LFO_DEVICE_GRID_Y = 1
+};
+
+enum LfoDirtyRegion {
+    LFO_DIRTY_STATE = 1 << 0
+};
+
+enum LfoProp {
+    LFOPROP_ENABLE  = 0,
+    LFOPROP_LENGTH  = 1,
+    LFOPROP_MODE    = 2,
+    LFOPROP_WAVE    = 3,
+    LFOPROP_SPEED   = 4,
+    LFOPROP_MULT    = 5,
+    LFOPROP_DEST1   = 6,
+    LFOPROP_PARAM1  = 7,
+    LFOPROP_DEPTH1  = 8,
+    LFOPROP_OFFSET1 = 9,
+    LFOPROP_DEST2   = 10,
+    LFOPROP_PARAM2  = 11,
+    LFOPROP_DEPTH2  = 12,
+    LFOPROP_OFFSET2 = 13
+};
+
+enum LfoAction {
+    LFO_ACTION_CLEAR = 0,
+    LFO_ACTION_COPY  = 1,
+    LFO_ACTION_PASTE = 2
 };
 
 enum ExtDirtyRegion {
@@ -170,6 +222,28 @@ enum MixerMaskKind {
 enum MixerDirtyRegion {
     MIXER_DIRTY_STATE = 1 << 0
 };
+
+enum PerfPageDirtyRegion {
+    PERF_PAGE_DIRTY_STATE = 1 << 0
+};
+
+enum PerfPageSceneAction {
+    PERF_PAGE_SCENE_CLEAR = 0,
+    PERF_PAGE_SCENE_SEND = 1,
+    PERF_PAGE_SCENE_AUTOFILL = 2
+};
+
+static const int kPerfPageControls = 4;
+static const int kPerfPageScenes = 8;
+static const int kPerfPageParams = 16;
+static const int kPerfPageNameBytes = 9;
+static const int kPerfPageHeaderWireBytes = 5; // control, mode, learn, scene_mask(2)
+static const int kPerfPageControlWireBytes = 6 + kPerfPageNameBytes;
+static const int kPerfPageSceneWireBytes = 1 + kPerfPageParams * 3;
+static const int kPerfPageStateWireBytes =
+    kPerfPageHeaderWireBytes +
+    kPerfPageControls * kPerfPageControlWireBytes +
+    kPerfPageScenes * kPerfPageSceneWireBytes;
 
 static const uint8_t kMixerParamSelectorDefault = 0x7F;
 static const uint8_t kMixerParamVol = 0x7E;

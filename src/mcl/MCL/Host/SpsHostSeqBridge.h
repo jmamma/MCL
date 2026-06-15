@@ -35,6 +35,8 @@ public:
     void notifyExtDirty(uint8_t device, int track, uint8_t regions);
     void notifyPerfDirty(uint8_t device, int track, uint8_t regions);
     void notifyMixerDirty(uint8_t device, uint8_t regions);
+    void notifyPerfPageDirty(uint8_t regions);
+    void notifyLfoDirty(uint8_t device, int track, uint8_t regions);
     void notifyTransport(bool running, uint8_t masterStep);
     void notifyActive();
 
@@ -58,6 +60,8 @@ private:
     void onReqPerfState(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqExtLocks(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqMixerState(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqPerfPageState(uint8_t tag);
+    void onReqLfoState(uint8_t tag, const uint8_t* b, uint16_t n);
     void sendTrackSummary(int track);
     void sendTrackDetail(int track);
     void sendTrackLocks(int track);
@@ -68,6 +72,8 @@ private:
                       uint8_t lock_idx);
     void sendPerfState(uint8_t tag, uint8_t device, int track);
     void sendMixerState(uint8_t tag, uint8_t device);
+    void sendPerfPageState(uint8_t tag);
+    void sendLfoState(uint8_t tag, uint8_t device, int track);
 
     bool applySetStep(const uint8_t* b, uint16_t n);
     bool applySetMicroTiming(const uint8_t* b, uint16_t n);
@@ -94,6 +100,14 @@ private:
     bool applyMixerLoadPerf(const uint8_t* b, uint16_t n);
     bool applyMixerSetDisplay(const uint8_t* b, uint16_t n);
     bool applyMixerSetPerfLock(const uint8_t* b, uint16_t n);
+    bool applyPerfPageSetControl(const uint8_t* b, uint16_t n);
+    bool applyPerfPageSetActiveScene(const uint8_t* b, uint16_t n);
+    bool applyPerfPageSetSceneParam(const uint8_t* b, uint16_t n);
+    bool applyPerfPageSceneAction(const uint8_t* b, uint16_t n);
+    bool applyPerfPageSetView(const uint8_t* b, uint16_t n);
+    bool applyLfoSetProp(const uint8_t* b, uint16_t n);
+    bool applyLfoSetMask(const uint8_t* b, uint16_t n);
+    bool applyLfoAction(const uint8_t* b, uint16_t n);
 
     // wire mask -> MCL StepSeq native (STEPSEQ_MASK_*); -1 if unknown
     static int wireToMclMask(int wmask);

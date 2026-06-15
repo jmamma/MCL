@@ -254,6 +254,120 @@ bool MCLArrangement::setClipFade(uint32_t startQ12, uint32_t durationQ12,
   return ok;
 }
 
+bool MCLArrangement::setAutomationLanePoints(
+    const mclarrfile::AutomationLane &lane,
+    const mclarrfile::AutomationPoint *points, uint16_t pointCount) {
+  if (lane.track >= NUM_SLOTS || pointCount > mclarrfile::kMaxAutomationPoints ||
+      (pointCount > 0 && points == nullptr) || !ensureActive()) {
+    return false;
+  }
+
+  for (uint16_t i = 1; i < pointCount; ++i) {
+    if (points[i].q12 < points[i - 1].q12) {
+      return false;
+    }
+  }
+
+  static mclarrfile::Clip clips[kMaxImportClips];
+  static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
+  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
+  char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
+  uint32_t clipCount = 0;
+  uint16_t markerCount = 0;
+  uint16_t loopRegionCount = 0;
+
+  mclarrfile::Header header;
+  if (!readMeta(&header)) {
+    return false;
+  }
+  if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
+                      labels, loopRegions, &loopRegionCount)) {
+    return false;
+  }
+
+  static mclarrfile::AutomationLane
+      oldLanes[mclarrfile::kMaxAutomationLanes];
+  static mclarrfile::AutomationPoint
+      oldPoints[mclarrfile::kMaxAutomationPoints];
+  AutomationChunkData oldAutomation;
+  oldAutomation.lanes = oldLanes;
+  oldAutomation.points = oldPoints;
+  if (!readAutomationData(header, &oldAutomation)) {
+    return false;
+  }
+
+  static mclarrfile::AutomationLane
+      newLanes[mclarrfile::kMaxAutomationLanes];
+  static mclarrfile::AutomationPoint
+      newPoints[mclarrfile::kMaxAutomationPoints];
+  uint16_t newLaneCount = 0;
+  uint32_t newPointCount = 0;
+  bool replace =
+      pointCount > 0 && (lane.flags & mclarrfile::AUTOMATION_LANE_ENABLED) != 0;
+
+  auto sameLane = [](const mclarrfile::AutomationLane &a,
+                     const mclarrfile::AutomationLane &b) {
+    return a.track == b.track && a.targetType == b.targetType &&
+           a.device == b.device && a.targetIndex == b.targetIndex &&
+           a.valueType == b.valueType;
+  };
+
+  for (uint16_t i = 0; i < oldAutomation.lane_count; ++i) {
+    const mclarrfile::AutomationLane &src = oldAutomation.lanes[i];
+    if (sameLane(src, lane)) {
+      continue;
+    }
+    if (src.pointOffset > oldAutomation.point_count ||
+        src.pointCount > oldAutomation.point_count - src.pointOffset) {
+      continue;
+    }
+    if (newLaneCount >= mclarrfile::kMaxAutomationLanes ||
+        src.pointCount > mclarrfile::kMaxAutomationPoints - newPointCount) {
+      return false;
+    }
+    mclarrfile::AutomationLane dst = src;
+    dst.pointOffset = newPointCount;
+    newLanes[newLaneCount++] = dst;
+    for (uint16_t p = 0; p < src.pointCount; ++p) {
+      newPoints[newPointCount++] = oldAutomation.points[src.pointOffset + p];
+    }
+  }
+
+  if (replace) {
+    if (newLaneCount >= mclarrfile::kMaxAutomationLanes ||
+        pointCount > mclarrfile::kMaxAutomationPoints - newPointCount) {
+      return false;
+    }
+    mclarrfile::AutomationLane dst = lane;
+    dst.flags |= mclarrfile::AUTOMATION_LANE_ENABLED;
+    dst.pointOffset = newPointCount;
+    dst.pointCount = pointCount;
+    dst.reserved = 0;
+    newLanes[newLaneCount++] = dst;
+    for (uint16_t p = 0; p < pointCount; ++p) {
+      mclarrfile::AutomationPoint clean = points[p];
+      if (clean.interp != mclarrfile::AUTOMATION_INTERP_CURVE) {
+        clean.interp = mclarrfile::AUTOMATION_INTERP_HOLD;
+        clean.curve = 0;
+      }
+      newPoints[newPointCount++] = clean;
+    }
+  }
+
+  AutomationWriteData writeData;
+  writeData.lanes = newLanes;
+  writeData.points = newPoints;
+  writeData.lane_count = newLaneCount;
+  writeData.point_count = newPointCount;
+  bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
+                                      markerCount, labels, loopRegions,
+                                      loopRegionCount, &writeData);
+  if (ok) {
+    resetPlayback();
+  }
+  return ok;
+}
+
 bool MCLArrangement::importGrid(uint16_t trackMask, uint8_t startRow) {
   if (trackMask == 0) {
     trackMask = 0xFFFF;

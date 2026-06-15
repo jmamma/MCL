@@ -9,6 +9,7 @@
 #if MCL_FEATURE_HOST_ARRANGER
 
 #include "MidiSysex.h"
+#include "Arrangement/MCLArrangementFormat.h"
 #include "Host/SpsArrProtocol.h"
 
 class SpsHostArrBridge : public MidiSysexListenerClass {
@@ -39,6 +40,8 @@ private:
     void onReqArrClips(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrMarkers(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrLoopRegions(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqArrAutomationLanes(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqArrAutomationPoints(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrTrackLabels(uint8_t tag);
     void onReqProjectList(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqProjectVersions(uint8_t tag, const uint8_t* b, uint16_t n);
@@ -60,6 +63,9 @@ private:
     void onSetRowName(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrMarker(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrLoopRegion(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSetArrAutomationLane(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onSetArrAutomationLaneChunk(uint8_t tag, const uint8_t* b,
+                                     uint16_t n);
     void onSetArrTrackLabel(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrClipFade(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSeekLoad(uint8_t tag, const uint8_t* b, uint16_t n);
@@ -72,6 +78,13 @@ private:
 
     bool applySetLink(const uint8_t* b, uint16_t n);
     bool applySetFade(const uint8_t* b, uint16_t n);
+
+    bool automation_stage_active_ = false;
+    mclarrfile::AutomationLane automation_stage_lane_ = {};
+    uint16_t automation_stage_total_ = 0;
+    uint16_t automation_stage_received_ = 0;
+    mclarrfile::AutomationPoint
+        automation_stage_points_[mclarrfile::kMaxAutomationPoints] = {};
 };
 
 extern SpsHostArrBridge sps_host_arr_bridge;

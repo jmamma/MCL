@@ -162,6 +162,9 @@ void GridTask::run() {
     mcl_arrangement.tick();
 #endif
     load_queue_handler();
+#if !defined(__AVR__)
+    mcl_arrangement.flushAutomationWrites();
+#endif
     transition_handler();
   }
   GUI.addTask(this);

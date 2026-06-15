@@ -28,6 +28,13 @@ namespace mcl_arrangement_internal {
 constexpr uint16_t kMaxImportClips = 2048;
 constexpr uint32_t kMaxPlaybackCatchupQ12 = 64u * 12u;
 
+struct AutomationChunkData {
+  mclarrfile::AutomationLane *lanes = nullptr;
+  mclarrfile::AutomationPoint *points = nullptr;
+  uint16_t lane_count = 0;
+  uint32_t point_count = 0;
+};
+
 static uint32_t q12ToHostTick96(uint32_t q12) {
   return q12 > 0xFFFFFFFFu / 8u ? 0xFFFFFFFFu : q12 * 8u;
 }
@@ -696,6 +703,126 @@ static bool readHeaderExtra(File &file, const mclarrfile::Header &header,
   extra->trackLabelBytes = extraV2.trackLabelBytes;
   extra->trackLabelCount = extraV2.trackLabelCount;
   return true;
+}
+
+static bool readHeaderExtraV7(File &file, const mclarrfile::Header &header,
+                       mclarrfile::HeaderExtraV7 *extra) {
+  if (extra == nullptr) {
+    return false;
+  }
+  memset(extra, 0, sizeof(*extra));
+  if (header.version < 7 ||
+      header.headerBytes < sizeof(mclarrfile::Header) +
+                               sizeof(mclarrfile::HeaderExtraV7)) {
+    return true;
+  }
+  if (!file.seekSet(sizeof(mclarrfile::Header))) {
+    return false;
+  }
+  return mcl_sd.read_data(extra, sizeof(*extra), &file);
+}
+
+static bool findChunk(File &file, const mclarrfile::Header &header,
+               uint32_t id, mclarrfile::ChunkDirEntry *out) {
+  if (out != nullptr) {
+    memset(out, 0, sizeof(*out));
+  }
+  if (header.version < 7 ||
+      (header.flags & mclarrfile::HEADER_HAS_CHUNKS) == 0) {
+    return false;
+  }
+
+  mclarrfile::HeaderExtraV7 extra;
+  if (!readHeaderExtraV7(file, header, &extra) ||
+      extra.chunkDirBytes != sizeof(mclarrfile::ChunkDirEntry) ||
+      extra.chunkCount == 0) {
+    return false;
+  }
+
+  uint32_t dirOffset =
+      sizeof(mclarrfile::Header) + sizeof(mclarrfile::HeaderExtraV7);
+  if (dirOffset + (uint32_t)extra.chunkCount * extra.chunkDirBytes >
+      header.headerBytes) {
+    return false;
+  }
+  if (!file.seekSet(dirOffset)) {
+    return false;
+  }
+
+  for (uint16_t i = 0; i < extra.chunkCount; ++i) {
+    mclarrfile::ChunkDirEntry entry;
+    if (!mcl_sd.read_data(&entry, sizeof(entry), &file)) {
+      return false;
+    }
+    if (entry.id != id) {
+      continue;
+    }
+    if (out != nullptr) {
+      *out = entry;
+    }
+    return true;
+  }
+  return false;
+}
+
+static bool readAutomationData(const mclarrfile::Header &header,
+                        AutomationChunkData *automation) {
+  if (automation == nullptr) {
+    return false;
+  }
+  automation->lane_count = 0;
+  automation->point_count = 0;
+  if ((header.flags & mclarrfile::HEADER_HAS_AUTOMATION) == 0 ||
+      header.version < 7) {
+    return true;
+  }
+
+  File file;
+  if (!enterProjectDir()) {
+    return false;
+  }
+  char path[16];
+  if (!buildRelativePath(mcl_cfg.active_arrangement_idx, path, sizeof(path)) ||
+      !file.open(path, O_READ)) {
+    return false;
+  }
+
+  mclarrfile::ChunkDirEntry laneChunk;
+  mclarrfile::ChunkDirEntry pointChunk;
+  bool haveLanes = findChunk(file, header, mclarrfile::CHUNK_AUTOMATION_LANES,
+                             &laneChunk);
+  bool havePoints = findChunk(file, header, mclarrfile::CHUNK_AUTOMATION_POINTS,
+                              &pointChunk);
+
+  bool ok = true;
+  if (haveLanes) {
+    ok = laneChunk.itemBytes == sizeof(mclarrfile::AutomationLane) &&
+         laneChunk.count <= mclarrfile::kMaxAutomationLanes &&
+         automation->lanes != nullptr && file.seekSet(laneChunk.offset);
+    for (uint32_t i = 0; ok && i < laneChunk.count; ++i) {
+      ok = mcl_sd.read_data(&automation->lanes[i],
+                            sizeof(mclarrfile::AutomationLane), &file);
+    }
+    if (ok) {
+      automation->lane_count = (uint16_t)laneChunk.count;
+    }
+  }
+
+  if (ok && havePoints) {
+    ok = pointChunk.itemBytes == sizeof(mclarrfile::AutomationPoint) &&
+         pointChunk.count <= mclarrfile::kMaxAutomationPoints &&
+         automation->points != nullptr && file.seekSet(pointChunk.offset);
+    for (uint32_t i = 0; ok && i < pointChunk.count; ++i) {
+      ok = mcl_sd.read_data(&automation->points[i],
+                            sizeof(mclarrfile::AutomationPoint), &file);
+    }
+    if (ok) {
+      automation->point_count = pointChunk.count;
+    }
+  }
+
+  file.close();
+  return ok;
 }
 
 static bool readActiveData(

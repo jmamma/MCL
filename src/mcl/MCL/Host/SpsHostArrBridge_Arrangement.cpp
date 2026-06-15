@@ -8,6 +8,60 @@
 using namespace spsarr;
 using namespace sps_host_arr_internal;
 
+namespace {
+
+void putArrAutomationLane(uint8_t *dst,
+                          const mclarrfile::AutomationLane &lane) {
+    dst[0] = lane.track;
+    dst[1] = lane.targetType;
+    dst[2] = lane.device;
+    dst[3] = lane.targetIndex;
+    dst[4] = lane.valueType;
+    dst[5] = lane.flags;
+    spsArrPutU16(dst + 6, lane.pointCount);
+    spsArrPutU32(dst + 8, lane.pointOffset);
+    spsArrPutU32(dst + 12, lane.reserved);
+}
+
+void getArrAutomationLane(const uint8_t *src,
+                          mclarrfile::AutomationLane &lane) {
+    lane.track = src[0];
+    lane.targetType = src[1];
+    lane.device = src[2];
+    lane.targetIndex = src[3];
+    lane.valueType = src[4];
+    lane.flags = src[5];
+    lane.pointCount = spsArrGetU16(src + 6);
+    lane.pointOffset = spsArrGetU32(src + 8);
+    lane.reserved = spsArrGetU32(src + 12);
+}
+
+void putArrAutomationPoint(uint8_t *dst,
+                           const mclarrfile::AutomationPoint &point) {
+    spsArrPutU32(dst + 0, point.q12);
+    spsArrPutU16(dst + 4, point.value);
+    dst[6] = point.interp;
+    dst[7] = (uint8_t)point.curve;
+}
+
+void getArrAutomationPoint(const uint8_t *src,
+                           mclarrfile::AutomationPoint &point) {
+    point.q12 = spsArrGetU32(src + 0);
+    point.value = spsArrGetU16(src + 4);
+    point.interp = src[6];
+    point.curve = (int8_t)src[7];
+}
+
+bool automationLaneHeaderValid(const mclarrfile::AutomationLane &lane,
+                               uint32_t maxPoints) {
+    return lane.track < spsarr::kNumTracks &&
+           lane.pointCount <= maxPoints &&
+           lane.valueType <= mclarrfile::AUTOMATION_VALUE_U14 &&
+           lane.targetType <= mclarrfile::AUTOMATION_TARGET_PERF;
+}
+
+}  // namespace
+
 void SpsHostArrBridge::onReqArrMeta(uint8_t tag) {
     mclarrfile::Header header;
     if (!mcl_arrangement.readMeta(&header)) {
@@ -140,6 +194,84 @@ void SpsHostArrBridge::onReqArrLoopRegions(uint8_t tag, const uint8_t* b,
         off = (uint16_t)(off + spsarr::kArrLoopRegionRecordBytes);
     }
     sendFrame(CMD_ARR_LOOP_REGIONS, tag, body, off);
+}
+
+void SpsHostArrBridge::onReqArrAutomationLanes(uint8_t tag,
+                                               const uint8_t* b,
+                                               uint16_t n) {
+    if (n < 3) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint16_t skip = spsArrGetU16(b + 0);
+    uint8_t maxLanes = b[2];
+    if (maxLanes == 0 ||
+        maxLanes > (uint8_t)spsarr::kMaxArrAutomationLaneRecordsPerFrame) {
+        maxLanes = (uint8_t)spsarr::kMaxArrAutomationLaneRecordsPerFrame;
+    }
+
+    mclarrfile::AutomationLane
+        lanes[spsarr::kMaxArrAutomationLaneRecordsPerFrame];
+    uint32_t total = 0;
+    bool more = false;
+    uint16_t count = mcl_arrangement.readAutomationLanes(
+        skip, maxLanes, lanes, &total, &more);
+
+    uint8_t body[8 + spsarr::kMaxArrAutomationLaneRecordsPerFrame *
+                         spsarr::kArrAutomationLaneRecordBytes];
+    body[0] = mcl_cfg.active_arrangement_idx;
+    body[1] = more ? 1 : 0;
+    spsArrPutU16(body + 2, skip);
+    spsArrPutU32(body + 4, total);
+    uint16_t off = 8;
+    for (uint16_t i = 0; i < count; ++i) {
+        putArrAutomationLane(body + off, lanes[i]);
+        off = (uint16_t)(off + spsarr::kArrAutomationLaneRecordBytes);
+    }
+    sendFrame(CMD_ARR_AUTOMATION_LANES, tag, body, off);
+}
+
+void SpsHostArrBridge::onReqArrAutomationPoints(uint8_t tag,
+                                                const uint8_t* b,
+                                                uint16_t n) {
+    if (n < 9) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint32_t pointOffset = spsArrGetU32(b + 0);
+    uint16_t pointCount = spsArrGetU16(b + 4);
+    uint16_t skip = spsArrGetU16(b + 6);
+    uint8_t maxPoints = b[8];
+    if (maxPoints == 0 ||
+        maxPoints > (uint8_t)spsarr::kMaxArrAutomationPointRecordsPerFrame) {
+        maxPoints = (uint8_t)spsarr::kMaxArrAutomationPointRecordsPerFrame;
+    }
+
+    mclarrfile::AutomationPoint
+        points[spsarr::kMaxArrAutomationPointRecordsPerFrame];
+    uint32_t total = 0;
+    bool more = false;
+    uint16_t count = mcl_arrangement.readAutomationPoints(
+        pointOffset, pointCount, skip, maxPoints, points, &total, &more);
+
+    uint8_t body[16 + spsarr::kMaxArrAutomationPointRecordsPerFrame *
+                          spsarr::kArrAutomationPointRecordBytes];
+    body[0] = mcl_cfg.active_arrangement_idx;
+    body[1] = more ? 1 : 0;
+    spsArrPutU16(body + 2, skip);
+    spsArrPutU32(body + 4, total);
+    spsArrPutU32(body + 8, pointOffset);
+    spsArrPutU16(body + 12, pointCount);
+    body[14] = 0;
+    body[15] = 0;
+    uint16_t off = 16;
+    for (uint16_t i = 0; i < count; ++i) {
+        putArrAutomationPoint(body + off, points[i]);
+        off = (uint16_t)(off + spsarr::kArrAutomationPointRecordBytes);
+    }
+    sendFrame(CMD_ARR_AUTOMATION_POINTS, tag, body, off);
 }
 
 void SpsHostArrBridge::onReqArrTrackLabels(uint8_t tag) {
@@ -557,6 +689,145 @@ void SpsHostArrBridge::onSetArrLoopRegion(uint8_t tag, const uint8_t* b,
     uint8_t ack[2] = {CMD_SET_ARR_LOOP_REGION, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
     notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+}
+
+void SpsHostArrBridge::onSetArrAutomationLane(uint8_t tag, const uint8_t* b,
+                                              uint16_t n) {
+    if (n < spsarr::kArrAutomationLaneRecordBytes) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    mclarrfile::AutomationLane lane;
+    getArrAutomationLane(b, lane);
+    if (!automationLaneHeaderValid(
+            lane, spsarr::kMaxArrAutomationPointRecordsPerFrame) ||
+        n < spsarr::kArrAutomationLaneRecordBytes +
+                lane.pointCount * spsarr::kArrAutomationPointRecordBytes) {
+        sendErr(tag, ERR_RANGE, lane.track);
+        return;
+    }
+
+    mclarrfile::AutomationPoint
+        points[spsarr::kMaxArrAutomationPointRecordsPerFrame];
+    uint16_t off = spsarr::kArrAutomationLaneRecordBytes;
+    for (uint16_t i = 0; i < lane.pointCount; ++i) {
+        getArrAutomationPoint(b + off, points[i]);
+        off = (uint16_t)(off + spsarr::kArrAutomationPointRecordBytes);
+    }
+
+    if (!mcl_arrangement.setAutomationLanePoints(lane, points,
+                                                 lane.pointCount)) {
+        sendErr(tag, ERR_BUSY, lane.track);
+        return;
+    }
+
+    uint8_t ack[2] = {CMD_SET_ARR_AUTOMATION_LANE, 1};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+}
+
+void SpsHostArrBridge::onSetArrAutomationLaneChunk(uint8_t tag,
+                                                   const uint8_t* b,
+                                                   uint16_t n) {
+    if (n < 2) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint8_t op = b[0];
+    if (op == ARR_AUTOMATION_WRITE_BEGIN) {
+        if (n < spsarr::kArrAutomationChunkBeginBytes) {
+            sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+
+        mclarrfile::AutomationLane lane;
+        getArrAutomationLane(b + 2, lane);
+        lane.pointOffset = 0;
+        if (!automationLaneHeaderValid(
+                lane, mclarrfile::kMaxAutomationPoints)) {
+            sendErr(tag, ERR_RANGE, lane.track);
+            return;
+        }
+
+        automation_stage_lane_ = lane;
+        automation_stage_total_ = lane.pointCount;
+        automation_stage_received_ = 0;
+        automation_stage_active_ = true;
+        uint8_t ack[2] = {CMD_SET_ARR_AUTOMATION_LANE_CHUNK, op};
+        sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+        return;
+    }
+
+    if (op == ARR_AUTOMATION_WRITE_ABORT) {
+        automation_stage_active_ = false;
+        automation_stage_total_ = 0;
+        automation_stage_received_ = 0;
+        uint8_t ack[2] = {CMD_SET_ARR_AUTOMATION_LANE_CHUNK, op};
+        sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+        return;
+    }
+
+    if (!automation_stage_active_) {
+        sendErr(tag, ERR_BUSY, op);
+        return;
+    }
+
+    if (op == ARR_AUTOMATION_WRITE_POINTS) {
+        if (n < spsarr::kArrAutomationChunkPointHeaderBytes) {
+            sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+        uint16_t offset = spsArrGetU16(b + 2);
+        uint8_t count = b[4];
+        if (count > spsarr::kMaxArrAutomationChunkPointRecordsPerFrame ||
+            n < spsarr::kArrAutomationChunkPointHeaderBytes +
+                    count * spsarr::kArrAutomationPointRecordBytes ||
+            offset != automation_stage_received_ ||
+            (uint32_t)offset + count > automation_stage_total_) {
+            sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+
+        uint16_t bodyOff = spsarr::kArrAutomationChunkPointHeaderBytes;
+        for (uint8_t i = 0; i < count; ++i) {
+            getArrAutomationPoint(
+                b + bodyOff,
+                automation_stage_points_[automation_stage_received_ + i]);
+            bodyOff = (uint16_t)(bodyOff +
+                                 spsarr::kArrAutomationPointRecordBytes);
+        }
+        automation_stage_received_ =
+            (uint16_t)(automation_stage_received_ + count);
+        uint8_t ack[2] = {CMD_SET_ARR_AUTOMATION_LANE_CHUNK, op};
+        sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+        return;
+    }
+
+    if (op == ARR_AUTOMATION_WRITE_COMMIT) {
+        if (automation_stage_received_ != automation_stage_total_) {
+            sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+        bool ok = mcl_arrangement.setAutomationLanePoints(
+            automation_stage_lane_, automation_stage_points_,
+            automation_stage_total_);
+        automation_stage_active_ = false;
+        automation_stage_total_ = 0;
+        automation_stage_received_ = 0;
+        if (!ok) {
+            sendErr(tag, ERR_BUSY, op);
+            return;
+        }
+
+        uint8_t ack[2] = {CMD_SET_ARR_AUTOMATION_LANE_CHUNK, op};
+        sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+        notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+        return;
+    }
+
+    sendErr(tag, ERR_RANGE, op);
 }
 
 void SpsHostArrBridge::onSetArrTrackLabel(uint8_t tag, const uint8_t* b,

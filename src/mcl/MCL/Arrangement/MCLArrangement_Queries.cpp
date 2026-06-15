@@ -220,4 +220,121 @@ bool MCLArrangement::readTrackLabels(
   return readActiveData(header, nullptr, nullptr, nullptr, nullptr, labels);
 }
 
+uint16_t MCLArrangement::readAutomationLanes(
+    uint16_t skip, uint8_t maxLanes, mclarrfile::AutomationLane *out,
+    uint32_t *totalMatches, bool *more) {
+  if (totalMatches != nullptr) {
+    *totalMatches = 0;
+  }
+  if (more != nullptr) {
+    *more = false;
+  }
+  if (out == nullptr || maxLanes == 0) {
+    return 0;
+  }
+
+  mclarrfile::Header header;
+  if (!readMeta(&header) ||
+      (header.flags & mclarrfile::HEADER_HAS_AUTOMATION) == 0) {
+    return 0;
+  }
+
+  File file;
+  if (!openActive(&file, O_READ)) {
+    return 0;
+  }
+
+  mclarrfile::ChunkDirEntry chunk;
+  bool ok = findChunk(file, header, mclarrfile::CHUNK_AUTOMATION_LANES,
+                      &chunk) &&
+            chunk.itemBytes == sizeof(mclarrfile::AutomationLane) &&
+            chunk.count <= mclarrfile::kMaxAutomationLanes;
+  if (!ok) {
+    file.close();
+    return 0;
+  }
+
+  if (totalMatches != nullptr) {
+    *totalMatches = chunk.count;
+  }
+  if (skip >= chunk.count) {
+    file.close();
+    return 0;
+  }
+
+  uint32_t remaining = chunk.count - skip;
+  uint16_t count = remaining < maxLanes ? (uint16_t)remaining : maxLanes;
+  if (more != nullptr) {
+    *more = remaining > count;
+  }
+  ok = file.seekSet(chunk.offset +
+                    (uint32_t)skip * sizeof(mclarrfile::AutomationLane));
+  for (uint16_t i = 0; ok && i < count; ++i) {
+    ok = mcl_sd.read_data(&out[i], sizeof(mclarrfile::AutomationLane), &file);
+  }
+  file.close();
+  return ok ? count : 0;
+}
+
+uint16_t MCLArrangement::readAutomationPoints(
+    uint32_t pointOffset, uint16_t pointCount, uint16_t skip,
+    uint8_t maxPoints, mclarrfile::AutomationPoint *out,
+    uint32_t *totalMatches, bool *more) {
+  if (totalMatches != nullptr) {
+    *totalMatches = 0;
+  }
+  if (more != nullptr) {
+    *more = false;
+  }
+  if (out == nullptr || maxPoints == 0 || pointCount == 0) {
+    return 0;
+  }
+
+  mclarrfile::Header header;
+  if (!readMeta(&header) ||
+      (header.flags & mclarrfile::HEADER_HAS_AUTOMATION) == 0) {
+    return 0;
+  }
+
+  File file;
+  if (!openActive(&file, O_READ)) {
+    return 0;
+  }
+
+  mclarrfile::ChunkDirEntry chunk;
+  bool ok = findChunk(file, header, mclarrfile::CHUNK_AUTOMATION_POINTS,
+                      &chunk) &&
+            chunk.itemBytes == sizeof(mclarrfile::AutomationPoint) &&
+            chunk.count <= mclarrfile::kMaxAutomationPoints &&
+            pointOffset <= chunk.count &&
+            pointCount <= chunk.count - pointOffset;
+  if (!ok) {
+    file.close();
+    return 0;
+  }
+
+  if (totalMatches != nullptr) {
+    *totalMatches = pointCount;
+  }
+  if (skip >= pointCount) {
+    file.close();
+    return 0;
+  }
+
+  uint32_t remaining = (uint32_t)pointCount - skip;
+  uint16_t count = remaining < maxPoints ? (uint16_t)remaining : maxPoints;
+  if (more != nullptr) {
+    *more = remaining > count;
+  }
+  ok = file.seekSet(chunk.offset +
+                    (pointOffset + skip) *
+                        sizeof(mclarrfile::AutomationPoint));
+  for (uint16_t i = 0; ok && i < count; ++i) {
+    ok = mcl_sd.read_data(&out[i], sizeof(mclarrfile::AutomationPoint),
+                          &file);
+  }
+  file.close();
+  return ok ? count : 0;
+}
+
 #endif  // MCL_FEATURE_HOST_ARRANGER

@@ -43,6 +43,12 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_REQ_ARR_CLIPS: onReqArrClips(p.tag, b, n); break;
         case CMD_REQ_ARR_MARKERS: onReqArrMarkers(p.tag, b, n); break;
         case CMD_REQ_ARR_LOOP_REGIONS: onReqArrLoopRegions(p.tag, b, n); break;
+        case CMD_REQ_ARR_AUTOMATION_LANES:
+            onReqArrAutomationLanes(p.tag, b, n);
+            break;
+        case CMD_REQ_ARR_AUTOMATION_POINTS:
+            onReqArrAutomationPoints(p.tag, b, n);
+            break;
         case CMD_REQ_ARR_TRACK_LABELS: onReqArrTrackLabels(p.tag); break;
         case CMD_REQ_PROJECT_LIST: onReqProjectList(p.tag, b, n); break;
         case CMD_REQ_PROJECT_VERSIONS: onReqProjectVersions(p.tag, b, n); break;
@@ -72,6 +78,12 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_SET_ROW_NAME: onSetRowName(p.tag, b, n); break;
         case CMD_SET_ARR_MARKER: onSetArrMarker(p.tag, b, n); break;
         case CMD_SET_ARR_LOOP_REGION: onSetArrLoopRegion(p.tag, b, n); break;
+        case CMD_SET_ARR_AUTOMATION_LANE:
+            onSetArrAutomationLane(p.tag, b, n);
+            break;
+        case CMD_SET_ARR_AUTOMATION_LANE_CHUNK:
+            onSetArrAutomationLaneChunk(p.tag, b, n);
+            break;
         case CMD_SET_ARR_TRACK_LABEL: onSetArrTrackLabel(p.tag, b, n); break;
         case CMD_SET_ARR_CLIP_FADE: onSetArrClipFade(p.tag, b, n); break;
         case CMD_ARR_SEEK_LOAD: onArrSeekLoad(p.tag, b, n); break;
@@ -120,7 +132,8 @@ void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     body[3] = (uint8_t)spsarr::kNumTracks;
     uint16_t caps2 = (uint16_t)(CAP2_GRID_BANKS | CAP2_SLOT_OWNERSHIP |
                                 CAP2_ARRANGEMENT_LOOP_REGIONS |
-                                CAP2_PROJECT_BROWSER | CAP2_GRID_CHAIN);
+                                CAP2_PROJECT_BROWSER | CAP2_GRID_CHAIN |
+                                CAP2_ARRANGEMENT_AUTOMATION);
 #if MCL_FEATURE_HOST_GRID_MOVE_UNDO
     caps2 |= CAP2_GRID_MOVE_UNDO;
 #endif

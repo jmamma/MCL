@@ -44,6 +44,21 @@ void SpsHostSeqBridge::notifyMixerDirty(uint8_t device, uint8_t regions) {
     sendFrame(CMD_NOTIFY_MIXER_DIRTY, 0, b, (uint16_t)sizeof b);
 }
 
+void SpsHostSeqBridge::notifyPerfPageDirty(uint8_t regions) {
+    if (!ready_)
+        return;
+    uint8_t b = regions;
+    sendFrame(CMD_NOTIFY_PERF_PAGE_DIRTY, 0, &b, 1);
+}
+
+void SpsHostSeqBridge::notifyLfoDirty(uint8_t device, int track,
+                                      uint8_t regions) {
+    if (!ready_)
+        return;
+    uint8_t b[3] = {device, (uint8_t)track, regions};
+    sendFrame(CMD_NOTIFY_LFO_DIRTY, 0, b, (uint16_t)sizeof b);
+}
+
 void SpsHostSeqBridge::notifyTransport(bool running, uint8_t masterStep) {
     if (!ready_) return;
     uint8_t b[4] = { (uint8_t)(running ? 1 : 0), masterStep, 0, 0 };

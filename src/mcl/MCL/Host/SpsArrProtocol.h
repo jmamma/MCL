@@ -53,6 +53,8 @@ enum Cmd {
     CMD_REQ_PROJECT_LIST = 0x17,
     CMD_REQ_PROJECT_VERSIONS = 0x18,
     CMD_REQ_GRID_CHAIN = 0x19,
+    CMD_REQ_ARR_AUTOMATION_LANES = 0x1A,
+    CMD_REQ_ARR_AUTOMATION_POINTS = 0x1B,
 
     CMD_CELLS = 0x30,
     CMD_ACTIVE = 0x31,
@@ -64,6 +66,8 @@ enum Cmd {
     CMD_PROJECT_LIST = 0x37,
     CMD_PROJECT_VERSIONS = 0x38,
     CMD_GRID_CHAIN = 0x39,
+    CMD_ARR_AUTOMATION_LANES = 0x3A,
+    CMD_ARR_AUTOMATION_POINTS = 0x3B,
 
     CMD_SET_LINK = 0x50,
     CMD_SET_FADE = 0x51,
@@ -93,6 +97,8 @@ enum Cmd {
     CMD_PROJECT_VERSION_OP = 0x69,
     CMD_GRID_MOVE = 0x6A,
     CMD_GRID_UNDO = 0x6B,
+    CMD_SET_ARR_AUTOMATION_LANE = 0x6C,
+    CMD_SET_ARR_AUTOMATION_LANE_CHUNK = 0x6D,
 
     CMD_NOTIFY_ACTIVE = 0x70,
     CMD_NOTIFY_DIRTY = 0x71,
@@ -127,7 +133,15 @@ enum Caps2 {
     CAP2_PROJECT_BACKUP = 1 << 4,
     CAP2_PROJECT_MOVE = 1 << 5,
     CAP2_GRID_MOVE_UNDO = 1 << 6,
-    CAP2_GRID_CHAIN = 1 << 7
+    CAP2_GRID_CHAIN = 1 << 7,
+    CAP2_ARRANGEMENT_AUTOMATION = 1 << 8
+};
+
+enum ArrangementAutomationWriteOp {
+    ARR_AUTOMATION_WRITE_BEGIN = 0,
+    ARR_AUTOMATION_WRITE_POINTS = 1,
+    ARR_AUTOMATION_WRITE_COMMIT = 2,
+    ARR_AUTOMATION_WRITE_ABORT = 3
 };
 
 enum Mode {
@@ -197,6 +211,11 @@ static const int kArrMarkerRecordBytes = 24;
 static const int kArrMarkerGlobalTrack = 255;
 static const int kArrLoopRegionLabelBytes = 16;
 static const int kArrLoopRegionRecordBytes = 32;
+static const int kArrAutomationLaneRecordBytes = 16;
+static const int kArrAutomationPointRecordBytes = 8;
+static const int kArrAutomationChunkBeginBytes =
+    2 + kArrAutomationLaneRecordBytes;
+static const int kArrAutomationChunkPointHeaderBytes = 6;
 static const int kArrTrackLabelBytes = 16;
 static const int kArrTrackLabelCount = 16;
 static const int kProjectPathBytes = 64;
@@ -212,6 +231,13 @@ static const int kMaxArrMarkerRecordsPerFrame =
     (kMaxBodyRaw - 16) / kArrMarkerRecordBytes;
 static const int kMaxArrLoopRegionRecordsPerFrame =
     (kMaxBodyRaw - 16) / kArrLoopRegionRecordBytes;
+static const int kMaxArrAutomationLaneRecordsPerFrame =
+    (kMaxBodyRaw - 8) / kArrAutomationLaneRecordBytes;
+static const int kMaxArrAutomationPointRecordsPerFrame =
+    (kMaxBodyRaw - 16) / kArrAutomationPointRecordBytes;
+static const int kMaxArrAutomationChunkPointRecordsPerFrame =
+    (kMaxBodyRaw - kArrAutomationChunkPointHeaderBytes) /
+    kArrAutomationPointRecordBytes;
 static const int kMaxProjectEntriesPerFrame =
     (kMaxBodyRaw - kProjectListHeaderBytes) / kProjectEntryRecordBytes;
 static const int kMaxProjectVersionRecordsPerFrame =

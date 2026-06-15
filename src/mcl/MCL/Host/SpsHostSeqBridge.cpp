@@ -40,6 +40,8 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_REQ_PERF_STATE:    onReqPerfState(p.tag, b, n);      break;
         case CMD_REQ_EXT_LOCKS:     onReqExtLocks(p.tag, b, n);       break;
         case CMD_REQ_MIXER_STATE:   onReqMixerState(p.tag, b, n);     break;
+        case CMD_REQ_PERF_PAGE_STATE:onReqPerfPageState(p.tag);        break;
+        case CMD_REQ_LFO_STATE:     onReqLfoState(p.tag, b, n);       break;
 
         case CMD_SET_STEP:        if (applySetStep(b, n))        { if (n) notifyDirty(b[0], DIRTY_SUMMARY); } break;
         case CMD_SET_MICROTIMING: if (applySetMicroTiming(b, n)) { if (n) notifyDirty(b[0], DIRTY_DETAIL); }  break;
@@ -130,6 +132,38 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
             if (applyMixerSetPerfLock(b, n))
                 notifyMixerDirty(0xFF, MIXER_DIRTY_STATE);
             break;
+        case CMD_PERF_PAGE_SET_CONTROL:
+            if (applyPerfPageSetControl(b, n))
+                notifyPerfPageDirty(PERF_PAGE_DIRTY_STATE);
+            break;
+        case CMD_PERF_PAGE_SET_ACTIVE_SCENE:
+            if (applyPerfPageSetActiveScene(b, n))
+                notifyPerfPageDirty(PERF_PAGE_DIRTY_STATE);
+            break;
+        case CMD_PERF_PAGE_SET_SCENE_PARAM:
+            if (applyPerfPageSetSceneParam(b, n))
+                notifyPerfPageDirty(PERF_PAGE_DIRTY_STATE);
+            break;
+        case CMD_PERF_PAGE_SCENE_ACTION:
+            if (applyPerfPageSceneAction(b, n))
+                notifyPerfPageDirty(PERF_PAGE_DIRTY_STATE);
+            break;
+        case CMD_PERF_PAGE_SET_VIEW:
+            if (applyPerfPageSetView(b, n))
+                notifyPerfPageDirty(PERF_PAGE_DIRTY_STATE);
+            break;
+        case CMD_LFO_SET_PROP:
+            if (applyLfoSetProp(b, n) && n >= 2)
+                notifyLfoDirty(b[0], b[1], LFO_DIRTY_STATE);
+            break;
+        case CMD_LFO_SET_MASK:
+            if (applyLfoSetMask(b, n) && n >= 2)
+                notifyLfoDirty(b[0], b[1], LFO_DIRTY_STATE);
+            break;
+        case CMD_LFO_ACTION:
+            if (applyLfoAction(b, n) && n >= 2)
+                notifyLfoDirty(b[0], b[1], LFO_DIRTY_STATE);
+            break;
 
         case CMD_BATCH: {
             // sequential best-effort: {cmd,len,bytes}* ; correctness via NOTIFY_DIRTY
@@ -178,7 +212,8 @@ void SpsHostSeqBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n >= 1 && b[0] == 0) return;  // malformed/incompatible host proto: stay silent
     uint16_t caps = CAP_SPSX | CAP_LOCKS | CAP_DETAIL | CAP_PER_TRACK_LEN |
                     CAP_BATCH | CAP_EXT_NOTES | CAP_PTC_ARP | CAP_EXT_LOCKS |
-                    CAP_EXT_NOTE_TOGGLE | CAP_MIXER;
+                    CAP_EXT_NOTE_TOGGLE | CAP_MIXER | CAP_PERF_PAGE |
+                    CAP_LFO_PAGE;
     uint8_t body[7];
     body[0] = kProtoVersion; putU16le(body + 1, caps);
     body[3] = (uint8_t)NUM_MD_TRACKS; body[4] = (uint8_t)kNumSteps; body[5] = (uint8_t)kNumLockParams;
@@ -221,6 +256,16 @@ void SpsHostSeqBridge::onReqExtLocks(uint8_t tag, const uint8_t* b,
 void SpsHostSeqBridge::onReqMixerState(uint8_t tag, const uint8_t* b,
                                        uint16_t n) {
     sendMixerState(tag, n >= 1 ? b[0] : MIXER_DEVICE_PRIMARY);
+}
+
+void SpsHostSeqBridge::onReqPerfPageState(uint8_t tag) {
+    sendPerfPageState(tag);
+}
+
+void SpsHostSeqBridge::onReqLfoState(uint8_t tag, const uint8_t* b,
+                                     uint16_t n) {
+    if (n >= 2)
+        sendLfoState(tag, b[0], b[1]);
 }
 
 #endif  // !defined(__AVR__)
