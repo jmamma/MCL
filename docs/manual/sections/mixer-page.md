@@ -121,4 +121,4 @@ See [Performance Page](perf-page.md) for controller, scene and scene-lock editin
 
 ## Machinedrum FX Shortcut
 
-When working with Machinedrum FX pages, **[Function]** plus the arrow keys jumps between the delay and reverb FX pages. Pressing the arrow for the currently visible FX page toggles its edit mode, and **[Function]** + **[Back]** returns to the Mixer Page.
+From the Mixer Page, press **[No]** with no tracks held to open the current device's mixer or FX page where available. On Machinedrum FX pages, hold **[No]** and press **[Left]** for Delay/Echo or **[Down]** for Reverb. Press the same direction again while still holding **[No]** to switch that FX page between its two parameter groups. Release **[No]** to return to the Mixer Page.

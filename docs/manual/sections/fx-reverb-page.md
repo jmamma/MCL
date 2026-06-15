@@ -6,7 +6,7 @@ Controls the master FX Reverb settings.
 
 _To enter the FX Reverb Page: hold **[Bank Group]**, then press **[Trig 14]**._
 
-Each parameter of the MD's reverb effect can be controlled. Four are displayed at once on screen. Use the FX page-mode toggle to switch between the two parameter groups. On MD-style controls, **[No]** + **[Down]** jumps to the reverb page and toggles the current reverb group when already there.
+Each parameter of the MD's reverb effect can be controlled. Four are displayed at once on screen. On MD-style controls, hold **[No]** and press **[Down]** to open the Reverb page from either FX page. If Reverb is already visible, the same shortcut switches between its two parameter groups. Release **[No]** to return to the Mixer Page.
 
 ## FX A
 

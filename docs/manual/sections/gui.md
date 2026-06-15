@@ -255,14 +255,14 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 **FX Delay Page**
 
 
-- **[Left]**Change page.
+- **[Exit/No] + [Left]** Select Delay/Echo or switch its parameter group.
 - **`Encoders 1-4`** FX parameters.
 
 
 **FX Reverb Page**
 
 
-- **[Down]**Change page.
+- **[Exit/No] + [Down]** Select Reverb or switch its parameter group.
 - **`Encoders 1-4`** FX parameters.
 
 
