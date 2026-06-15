@@ -38,7 +38,7 @@ To learn a source, set the source to `--` and the parameter to `LER`, then move 
 
 ![perf page learn](../assets/images/perf_page_learn.png)
 
-MCL 5.00 resolves performance targets from the current device setup, so learning and target selection work with primary and secondary devices, shared logical slots, and LFO destinations.
+Performance targets follow the current device setup, so learning and target selection work with primary and secondary devices, shared logical slots, and LFO destinations.
 
 ## Scenes
 

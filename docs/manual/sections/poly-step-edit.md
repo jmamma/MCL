@@ -49,7 +49,7 @@ The MD trig keys jump the time cursor to step positions on the current 16-step p
 
 ## Note Selection Rectangle
 
-MCL 5.00 adds a note selection rectangle for focused note edits.
+Use the note selection rectangle for focused note edits.
 
 ![proll edit](../assets/images/proll_edit.png)
 

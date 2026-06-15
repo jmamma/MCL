@@ -34,7 +34,7 @@ On TBD, arrows navigate Slot Menu entries first; hold the normal function modifi
 | `PASTE` | `--`, `YES` | Paste copied slot data at the selected position. |
 | `RENAME` | Action | Rename the current row. |
 
-`SOUND` is new in MCL 5.00. Set it to `OFF` to load sequence data without replacing the destination sound.
+Set `SOUND` to `OFF` to load sequence data without replacing the destination sound.
 
 ## Applying Changes
 

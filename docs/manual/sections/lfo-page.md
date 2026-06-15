@@ -1,6 +1,6 @@
 # LFO Page
 
-The LFO Page edits the LFO attached to the current sequencer track. In MCL 5.00, LFO data is stored per track when the track is saved to the grid.
+The LFO Page edits the LFO attached to the current sequencer track. LFO data is stored per track when the track is saved to the grid.
 
 Open it from Page Select with:
 

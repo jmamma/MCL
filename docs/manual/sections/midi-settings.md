@@ -8,7 +8,7 @@ Open it from:
 CONFIG > MIDI
 ```
 
-The MCL 5.00 MIDI menu contains:
+The MIDI menu contains:
 
 ![midi menu](../assets/images/midi_menu.png)
 
@@ -25,7 +25,7 @@ Changes are applied when leaving the relevant menu.
 
 ## Devices
 
-The device setup menu is the most important MCL 5.00 configuration change. Grid X and Grid Y each choose a device and the port used by that device.
+The device setup menu assigns the device and port used by Grid X and Grid Y.
 
 ```text
 CONFIG > MIDI > DEVICES
@@ -116,7 +116,7 @@ Routing forwards non-realtime MIDI traffic between ports.
 | `MIDI 2 FWD` | Forward data received on MIDI 2 to `OFF`, `1`, `USB`, or `1 + USB`. |
 | `USB FWD` | Forward data received on USB to `OFF`, `1`, `2`, or `1 + 2`. |
 
-MCL 5.00 no longer exposes the old `CC LOOP` routing entry.
+The old `CC LOOP` routing entry is not exposed.
 
 ## Controller Input
 

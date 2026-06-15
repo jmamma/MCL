@@ -2,7 +2,7 @@
 
 ## Setup Overview
 
-MCL 5.00 uses a Grid X / Grid Y device model. After wiring the devices, configure the active device layout from:
+MCL uses a Grid X / Grid Y device model. After wiring the devices, configure the active device layout from:
 
 ```text
 CONFIG > MIDI > DEVICES
@@ -28,7 +28,7 @@ Recommended configuration:
 | `CONFIG > MIDI > DEVICES > GRID X > DEVICE` | `MD` |
 | `CONFIG > MIDI > DEVICES > GRID X > PORT` | `MIDI 1`, meaning MegaCommand MIDI IN 1 / OUT 1 with standard 5-pin MIDI cables |
 
-Upgrade the Machinedrum to OS X.13 before using MCL 5.00. For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower.
+Upgrade the Machinedrum to OS X.13 before using MCL. For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower.
 
 ## Secondary Device
 
@@ -48,7 +48,7 @@ Recommended configuration:
 | `CONFIG > MIDI > DEVICES > GRID Y > DEVICE` | `ELEKT` |
 | `CONFIG > MIDI > DEVICES > GRID Y > PORT` | `MIDI 2` |
 
-Upgrade the Monomachine to OS X.01 before using MCL 5.00.
+Upgrade the Monomachine to OS X.01 before using MCL.
 
 ## Generic MIDI Device
 

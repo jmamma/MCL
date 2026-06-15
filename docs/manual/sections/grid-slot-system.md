@@ -38,7 +38,7 @@ The exact slot type depends on `CONFIG > MIDI > DEVICES`, the active grid, and t
 
 ## Grid X And Grid Y
 
-MCL 5.00 uses the configured Grid X / Grid Y device model.
+Grid X and Grid Y are configured from the MIDI device setup.
 
 On TBD hardware, the device menu also offers `TBD` with the internal `INT` port. MegaCommand and MegaCMD show the external MIDI device options available on those controllers.
 
@@ -49,11 +49,11 @@ On TBD hardware, the device menu also offers `TBD` with the internal `INT` port.
 | Grid X = `TBD`, Grid Y = `OFF` | TBD as the primary grid device. |
 | Grid X = `MD`, Grid Y = `TBD` | Machinedrum primary with TBD as the secondary grid device. |
 
-Older MCL manuals described Grid X as always 16 Machinedrum tracks and Grid Y as six external tracks plus fixed auxiliary slots. That is still a useful reference for classic Machinedrum projects, but MCL 5.00 resolves the actual meaning of each slot from the active device configuration.
+Older MCL manuals described Grid X as always 16 Machinedrum tracks and Grid Y as six external tracks plus fixed auxiliary slots. That is still a useful reference for classic Machinedrum projects, but the actual meaning of each slot now follows the active device configuration.
 
 ## Row Names
 
-Rows can be named from the Slot Menu. MCL 5.00 treats row names as row-level information shared across grids.
+Rows can be named from the Slot Menu. Row names are shared across grids.
 
 When row data is saved, the row name is taken from a device that participated in the save, and the grid info row displays the name when one exists.
 

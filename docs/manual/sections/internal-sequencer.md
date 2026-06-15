@@ -11,7 +11,7 @@ The MCL sequencer stores musical events inside grid tracks. A track can be a cla
 | Chromatic/voice tracks | Live pitch input, arpeggiation and polyphonic Machinedrum voice groups. | Chromatic and Polyphony pages |
 | State tracks | Performance, route, FX, tempo and other page state. | The related page |
 
-Classic MegaCommand projects still commonly use 16 primary tracks and six external tracks. MCL 5.00 generalizes that model so the configured grid device decides what the primary and secondary tracks control.
+Classic MegaCommand projects commonly use 16 primary tracks and six external tracks. The configured grid device decides what the primary and secondary tracks control.
 
 ## Primary Step Tracks
 
@@ -25,7 +25,7 @@ Primary step tracks are edited from the Step Editor and are designed for 16-step
 | Step data | Trigs, mutes, swing mask, slides, pitch, conditions and microtiming. |
 | Locks | Parameter locks per step, with device-specific lock capacity. |
 | Swing | Per-track swing amount, stored with the track. |
-| Arp and LFO | Each track has its own arpeggiator and LFO settings in MCL 5.00. |
+| Arp and LFO | Each track has its own arpeggiator and LFO settings. |
 
 TBD step tracks use the current Step Editor behavior, including microtiming, retrigs, fill conditions and parameter locks for the controls exposed by the active TBD sound.
 
@@ -49,7 +49,7 @@ When Machinedrum is the primary grid device, an external MIDI track can route to
 
 ## Conditional Trigs
 
-MCL 5.00 expands trig conditions and uses the same condition model across modern step sequencer engines.
+Trig conditions use the same condition model across supported step sequencer engines.
 
 | Label | Meaning |
 | --- | --- |
@@ -106,8 +106,8 @@ Saving a grid slot stores the sequencer data for that slot.
 | --- | --- |
 | Sequence events | Trigs, notes, locks, automation and timing. |
 | Track settings | Length, speed, swing, mute mask and conditions. |
-| Arpeggiator settings | Stored per track in MCL 5.00. |
-| LFO settings | Stored per track in MCL 5.00. |
+| Arpeggiator settings | Stored per track. |
+| LFO settings | Stored per track. |
 | Sound/device state | Stored where supported, unless the slot's `SOUND` option is off during load. |
 
-Older projects are migrated on first load where supported so legacy conditions, mutes, microtiming and LFO data map into the MCL 5.00 format.
+Older projects are migrated on first load where supported so legacy conditions, mutes, microtiming and LFO data map into the current project format.

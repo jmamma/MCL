@@ -8,7 +8,7 @@ Open it from the dynamic device entry in the Configuration menu. When the Machin
 
 ## Requirements
 
-Use Machinedrum OS X.13 with MCL 5.00.
+Use Machinedrum OS X.13 with MCL.
 
 For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower from the MIDI port/turbo settings.
 
@@ -34,7 +34,7 @@ For Machinedrum MK1 units, keep Turbo MIDI at `4x` or lower from the MIDI port/t
 | `COUNT` | Number of patterns to import. |
 | `RUN` | Start the import. |
 
-Imports can be used to bring existing Machinedrum material into the MCL project grid. MCL 5.00 also upgrades older project data on load where supported.
+Imports can be used to bring existing Machinedrum material into the MCL project grid. Older project data is upgraded on load where supported.
 
 ## RAM Link
 

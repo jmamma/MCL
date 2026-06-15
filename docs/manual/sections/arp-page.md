@@ -1,6 +1,6 @@
 # Arpeggiator Page
 
-The Arpeggiator Page edits the arpeggiator attached to the current sequencer track. MCL 5.00 stores arpeggiator settings with the track when the track is saved to the grid.
+The Arpeggiator Page edits the arpeggiator attached to the current sequencer track. Arpeggiator settings are stored with the track when the track is saved to the grid.
 
 Open it from the Chromatic or PianoRoll Track Menu:
 
@@ -35,7 +35,7 @@ The page returns to the previous page when **[Yes/Enter]**, **[No/Exit]** or one
 | Latch | `LAT` | Preserves the note set after keys are released. |
 | Lock | `LCK` | Locks the current note set so accidental note selection does not replace it. |
 
-`LCK` is new in MCL 5.00 and is useful when performing from the Chromatic Page while keeping an arpeggio pattern fixed.
+`LCK` is useful when performing from the Chromatic Page while keeping an arpeggio pattern fixed.
 
 ## Rate
 

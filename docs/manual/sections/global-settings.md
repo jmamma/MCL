@@ -23,11 +23,11 @@ The top-level menu is named `CONFIG`.
 | Device config entries | Dynamic entries for connected devices, such as Machinedrum, Monomachine, Analog Four, generic MIDI or TBD. |
 | `SYSTEM` | Opens display, project-configuration and grid-encoder settings. |
 
-The device config entries are dynamic. In older documentation these appeared as fixed entries such as `DRIVER 1` and `DRIVER 2`; in MCL 5.00 they are named for the connected device where possible.
+The device config entries are dynamic. In older documentation these appeared as fixed entries such as `DRIVER 1` and `DRIVER 2`; they are now named for the connected device where possible.
 
 ## Project Browser
 
-`LOAD PROJECT` opens the project browser. MCL 5.00 supports folders, so projects can be grouped and nested on the SD card.
+`LOAD PROJECT` opens the project browser. Projects can be grouped and nested in folders on the SD card.
 
 ![project menu](../assets/images/project_menu.png)
 
@@ -86,9 +86,9 @@ Creating a project opens a text-entry page. If a project or directory with the s
 
 ## Project Files
 
-Projects are stored on the SD card with a project master file and grid files. MCL 5.00 adds versioned project and grid headers so older projects can be upgraded safely.
+Projects are stored on the SD card with a project master file and grid files. Project and grid headers are versioned so older projects can be upgraded safely.
 
-Back up projects before upgrading to MCL 5.00. Supported older projects are upgraded when they are first loaded, and upgraded projects are not intended to be opened by older MCL versions.
+Back up projects before upgrading firmware. Supported older projects are upgraded when they are first loaded, and upgraded projects are not intended to be opened by older firmware.
 
 Do not edit project files by hand. Use the project browser, file menu and version browser from MCL.
 
