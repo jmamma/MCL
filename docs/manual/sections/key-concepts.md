@@ -40,7 +40,7 @@ The MCL Firmware uses a Grid & Slot system to store Tracks.
 
 Each project contains two grids, X and Y. Grid dimensions are 16 slots x 128 rows.
 
-Grid X and Grid Y are assigned in `CONFIG > MIDI > DEVICES`. The selected device determines what each slot stores and which editor pages are used. In the classic Machinedrum setup, Grid X stores the 16 Machinedrum tracks and Grid Y stores external MIDI tracks plus auxiliary state such as performance, route, FX and tempo data.
+Grid X and Grid Y are assigned in `CONFIG > MIDI > DEVICES`. The selected device determines what each slot stores and which editor pages are used. In the classic Machinedrum setup, Grid X stores the 16 Machinedrum tracks and Grid Y stores external MIDI tracks plus auxiliary state such as performance, route, Machinedrum master FX and tempo data.
 - **Bank:**
 
 The rows of the Grid X are divided in to groups of 16, forming 8 banks A,B,C,D,E,F,G,H.

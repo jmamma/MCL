@@ -9,7 +9,7 @@ The MCL sequencer stores musical events inside grid tracks. A track can be a cla
 | Primary step tracks | Machinedrum or TBD-style per-step sequencing. | Step Editor |
 | External MIDI tracks | Polyphonic notes and automation for MIDI, A4, MNM or generic devices. | PianoRoll Editor |
 | Chromatic/voice tracks | Live pitch input, arpeggiation and polyphonic Machinedrum voice groups. | Chromatic and Polyphony pages |
-| State tracks | Performance, route, FX, tempo and other page state. | The related page |
+| State tracks | Performance, route, Machinedrum master FX, tempo and other page state. | The related page |
 
 Classic MegaCommand projects commonly use 16 primary tracks and six external tracks. The configured grid device decides what the primary and secondary tracks control.
 

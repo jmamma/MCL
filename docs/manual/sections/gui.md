@@ -88,7 +88,7 @@ Enhanced mode disables editing access to the MD's internal sequencer and enables
 - **[Up/Down/Left/Right]** position grid cursor.
 - **[Function] + [Up/Down/Left/Right]** grid cursor position fast travel.
 - **[Scale]** Toggle active grid X or Y.
-- **[Function] + [Clear/Copy/Paste]** Clear/Copy/Paste the MD tracks, EXT MIDI tracks and MD Master FX currently loaded in the sequencer.
+- **[Function] + [Clear/Copy/Paste]** Clear/Copy/Paste the MD tracks, EXT MIDI tracks and Machinedrum master FX currently loaded in the sequencer.
 - Hold **[Exit/No]** key to open Slot Menu.
 
 
