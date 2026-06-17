@@ -38,11 +38,11 @@ TBD grid slots can store:
 
 ## Device UI, Presets And Parameter Strip
 
-Short-tap the top-left button to open the primary TBD sound UI; use the top-right button for the secondary TBD UI when a secondary TBD device is configured. The full-screen view shows parameter windows or the preset browser. While a TBD UI is active, hold top-right to switch between the full-screen view and the bottom four-encoder strip; hold top-left to leave the UI and open Page Select.
+The TBD UI is split into matching Device 1 and Device 2 views. The top-left button opens Device 1; the top-right button opens Device 2 when a second TBD device is configured. Each view can show parameter pages, the preset browser, or the bottom four-encoder strip.
 
-In the strip and full-screen parameter views, the four encoders edit the visible TBD parameters for the active track. The strip shows each parameter label and briefly shows the edited value. Arrow keys browse parameter windows in the full-screen view.
+The four encoders edit the visible parameters for the active track. In the full-screen view, arrow keys move between parameter pages and the preset browser.
 
-The preset window browses machine/preset groups with Encoder 1 and presets with Encoder 2. Press Encoder 2 to load the selected preset into the current TBD track. While the preset window is active, a short top-right tap also loads the selected preset. If the active sequencer track has no TBD sound or no presets are available, the UI shows `NO TRACK` or `NO PRESETS`.
+The preset browser uses Encoder 1 for the machine/preset group and Encoder 2 for the preset. Press Encoder 2 to load the selected preset. `NO TRACK` means the selected sequencer track has no TBD sound; `NO PRESETS` means no preset list is available.
 
 ## Panel Controls
 
