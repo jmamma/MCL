@@ -36,23 +36,6 @@ TBD grid slots can store:
 | Mixer state | Visible mixer parameters exposed by the current TBD sound. |
 | Parameter locks | Step locks for visible TBD audio and mixer parameters, plus note locks for sounds that use per-step pitch. |
 
-The Slot Menu `SOUND` option still applies. Set `SOUND` to `OFF` to load sequence data without replacing the current TBD sound state.
-
-## Sound And Parameters
-
-TBD sounds provide MCL with parameter page names, short parameter labels, ranges, defaults and MIDI control type. MCL uses that information to build the device UI, Mixer Page, parameter locks, LFO destinations and performance targets.
-
-The TBD sound model exposes:
-
-| Area | What MCL uses |
-| --- | --- |
-| Audio pages | Up to 24 audio parameters across six parameter pages. |
-| Mixer pages | Up to eight mixer parameters across two mixer pages. |
-| Lock targets | Audio parameters, mixer parameters and a note target when the sound uses step pitch. |
-| Control output | CC or NRPN output for parameters that the sound marks as sendable. |
-
-Hidden or unsupported parameters are skipped in the UI. Parameter names and ranges come from the active TBD sound, so different sounds can expose different controls.
-
 ## Device UI, Presets And Parameter Strip
 
 Short-tap the top-left button to open the primary TBD sound UI; use the top-right button for the secondary TBD UI when a secondary TBD device is configured. The full-screen view shows parameter windows or the preset browser. While a TBD UI is active, hold top-right to switch between the full-screen view and the bottom four-encoder strip; hold top-left to leave the UI and open Page Select.
