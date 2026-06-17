@@ -8,9 +8,7 @@ The page shows a window into the active grid.
 
 ![grid init annot](../assets/images/grid_init_annot.png)
 
-The annotated image above labels the grid regions. A current empty-project capture looks like this:
-
-![grid page current](../assets/images/grid_page_current.png)
+The annotated image above labels the grid regions.
 
 | Display item | Meaning |
 | --- | --- |
