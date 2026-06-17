@@ -76,12 +76,12 @@ Each slot/column has its own chain state. This allows one track to follow an aut
 
 ## Queue Length Override
 
-In Queue mode, Encoder 2 sets a length override.
+In Queue mode, the queue-length encoder sets a length override. Use Encoder 2 on MegaCommand/MegaCMD, or Encoder 3 on TBD.
 
 | Value | Behavior |
 | --- | --- |
 | `-` | Use the queued slot's stored length. |
-| 2-64 | Override the queued length in steps. |
+| 2-64 | Override the queued length in steps. Normal encoder turns step through powers of two; holding the encoder button while turning allows intermediate values such as `3`, `5` or `6`. |
 
 This is useful when a short track should loop for a longer phrase, or when a group of slots should advance together despite having different stored lengths.
 

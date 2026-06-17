@@ -47,7 +47,7 @@ Queue length controls how long a queued item plays before advancing.
 | Queue length | Behavior |
 | --- | --- |
 | `-` | Use the queued slot's saved length. |
-| 2-64 | Override the queued duration in steps. |
+| 2-64 | Override the queued duration in steps. Normal encoder turns step through powers of two; holding the encoder button while turning allows intermediate values such as `3`, `5` or `6`. |
 
 Use queue length when a saved track is short but should stay active for a longer section.
 
