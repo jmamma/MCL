@@ -64,5 +64,3 @@ Machinedrum chromatic, trig and polyphonic input behavior is configured from:
 ```text
 CONFIG > MIDI > CONTROLLER > INPUT
 ```
-
-The old `POLY CHAN` setting has been replaced by `POLY MODE`.

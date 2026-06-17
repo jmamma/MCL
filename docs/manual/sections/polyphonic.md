@@ -78,9 +78,9 @@ MCL shows a `POLY LINK` popup when a linked parameter update is sent outside the
 
 ## Storage
 
-Poly group assignments are stored with project configuration and with route/poly state where applicable. Save the route/auxiliary group when the current voice grouping should be captured in the grid along with a row.
+Poly group assignments are saved when you leave the Polyphony Page with **[Yes/Enter]** or **[No/Exit]**.
 
-Older projects using the legacy poly mask/channel format are migrated into channel groups on load.
+To recall the current route and polyphony setup from the grid, save the `RT` slot with the row.
 
 ## Relationship To `POLY MODE`
 
@@ -90,11 +90,13 @@ Older projects using the legacy poly mask/channel format are migrated into chann
 CONFIG > MIDI > CONTROLLER > INPUT
 ```
 
+![poly mode setting](../assets/images/chromatic_menu.png)
+
 | Value | Behavior |
 | --- | --- |
 | `INT` | Poly groups respond to internal Chromatic playing. |
 | `INT+EXT` | Poly groups also respond to external controller input on matching group channels. |
 
-The old `POLY CHAN` option is gone. Use Polyphony Page groups to decide which MIDI channel controls each group.
+The Polyphony Page assigns the MIDI channel group for each voice pool.
 
-External MIDI tracks can also use these voice groups internally. Set the PianoRoll Track Menu `CHANNEL` value past `16` to choose an `MD1`-`MD16` route target.
+External MIDI tracks do not use `POLY MODE`. To drive a Machinedrum voice group from a PianoRoll track, set the Track Menu `CHANNEL` value past `16` and choose `MD1` through `MD16`.

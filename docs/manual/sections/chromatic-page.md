@@ -92,7 +92,7 @@ CONFIG > MIDI > CONTROLLER > INPUT
 | `TRIG CHAN` | Channel for external drum-pad triggering of tracks. Use `--` or `1..16`. |
 | `POLY MODE` | `INT` uses internal/chromatic input only. `INT+EXT` also lets external controller input play poly voice groups. |
 
-`POLY MODE` replaces the older `POLY CHAN` setting. The external MIDI channel used for a poly voice group now comes from that group's channel assignment on the Polyphony Page.
+The external MIDI channel used for a poly voice group comes from that group's channel assignment on the Polyphony Page.
 
 ## Recording Notes
 

@@ -135,8 +135,6 @@ Controller input is used for chromatic play, drum triggering, polyphonic input a
 | `TRIG CHAN` | MIDI channel for drum-pad triggering: `--` or `1..16`. |
 | `POLY MODE` | `INT` uses internal note data only; `INT+EXT` also responds to external controller input. |
 
-`POLY MODE` replaces the old `POLY CHAN` setting.
-
 ## Controller Output
 
 ```text
