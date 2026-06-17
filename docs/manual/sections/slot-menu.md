@@ -26,7 +26,7 @@ On TBD, arrows navigate Slot Menu entries first; hold the normal function modifi
 | --- | --- | --- |
 | `GRID` | `X`, `Y` | Select whether the Slot Menu edits Grid X or Grid Y. |
 | `LEN` | 1-64 or 1-128 depending on track type | Set the saved length for the selected slot or track. |
-| `LOOP` | 0-63 | In Auto mode, the number of slot-length play-throughs before loading the `JUMP` row. `0` disables Auto advance. |
+| `LOOP` | 0-63 | How many times the track repeats before transitioning to the row set by `JUMP`. In Auto mode, `0` disables automatic transition. |
 | `JUMP` | `A01`-`H16` | Row to load after the loop count is reached. |
 | `SOUND` | `OFF`, `ON` | Choose whether loading this slot also loads sound/device state. |
 | `CLEAR` | `--`, `YES` | Clear the selected slot range. |

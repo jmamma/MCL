@@ -20,7 +20,7 @@ Auto mode uses each slot's link settings:
 
 | Slot setting | Meaning |
 | --- | --- |
-| `LOOP` | How many times the slot should repeat. |
+| `LOOP` | How many times the track repeats before transitioning to the row set by `JUMP`. |
 | `JUMP` | Which row should load after the loop count is reached. |
 
 If `LOOP` is `0`, the slot does not auto-advance.
