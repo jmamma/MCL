@@ -883,7 +883,7 @@ bool Project::new_project(const char *newprj) {
       return false;
     }
     if (!SD.exists(grid_filename)) {
-      if (!grids[i].new_grid(grid_filename, PROJ_VERSION, i)) {
+      if (!grids[i].new_grid(grid_filename, PROJ_VERSION, i, true)) {
         gfx.alert_error("SD ERROR");
         return false;
       }

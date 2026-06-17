@@ -36,7 +36,7 @@ public:
 
   bool new_file(const char *gridname);
   bool new_grid(const char *gridname, uint32_t grid_version = GRID_VERSION,
-                uint8_t grid_id = 0);
+                uint8_t grid_id = 0, bool combined_progress = false);
   bool read_header();
   bool write_header(uint32_t grid_version = GRID_VERSION,
                     uint8_t grid_id = 0);

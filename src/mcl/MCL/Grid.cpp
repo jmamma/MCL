@@ -95,7 +95,7 @@ bool Grid::new_file(const char *gridname) {
 }
 
 bool Grid::new_grid(const char *gridname, uint32_t grid_version,
-                    uint8_t grid_id) {
+                    uint8_t grid_id, bool combined_progress) {
 
   bool ret = false;
   DEBUG_PRINT_FN();
@@ -111,7 +111,12 @@ bool Grid::new_grid(const char *gridname, uint32_t grid_version,
   for (GridRow i = 0; i < GRID_LENGTH; i++) {
 
 #ifdef OLED_DISPLAY
-    mcl_gui.draw_progress_bar(i, GRID_LENGTH, false, MCLGUI::s_progress_x, 21);
+    uint8_t progress = i;
+    if (combined_progress) {
+      progress = grid_id * (GRID_LENGTH / NUM_GRIDS) + i / NUM_GRIDS;
+    }
+    mcl_gui.draw_progress_bar(progress, GRID_LENGTH, false,
+                              MCLGUI::s_progress_x, 21);
 #endif
 
     ret = clear_row(i);
