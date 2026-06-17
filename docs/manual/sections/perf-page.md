@@ -84,17 +84,6 @@ LFOs can target `PF1` through `PF4`, which correspond to performance controllers
 
 Performance controllers can also target LFO parameters when those parameters appear in the performance target list. This allows macro controls to reshape LFO depth, speed, mode or destination-related parameters during a performance.
 
-## Mixer Page Integration
-
-The Mixer Page uses the same Perf A-D controllers. It can also store controller locks inside the four Mixer performance states:
-
-| Mixer workflow | Result |
-| --- | --- |
-| Preview a Mixer performance state, hold **[No]**, then turn a Perf encoder | Store that controller value as a state lock. |
-| Apply that performance state | Recall its mute masks, fill masks and controller locks. |
-| Hold a Perf encoder button + **[Global]** from Mixer | Clear both scenes assigned to that controller. |
-| Hold a Perf encoder button + **[Load/Yes]** from Mixer | Autofill the controller's right scene from changed kit parameters. |
-
 ## PF Slot Storage
 
 Save or load the `PF` slot on Grid Y to store or recall:

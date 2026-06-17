@@ -23,13 +23,11 @@ The top-level menu is named `CONFIG`.
 | Device config entries | Dynamic entries for connected devices, such as Machinedrum, Monomachine, Analog Four, generic MIDI or TBD. |
 | `SYSTEM` | Opens display, project-configuration and grid-encoder settings. |
 
-The device config entries are dynamic. In older documentation these appeared as fixed entries such as `DRIVER 1` and `DRIVER 2`; they are now named for the connected device where possible.
-
 ## Project Browser
 
 `LOAD PROJECT` opens the project browser. Projects can be grouped and nested in folders on the SD card.
 
-![project menu](../assets/images/project_menu.png)
+![project browser](../assets/images/project_menu.png)
 
 The project browser can show:
 

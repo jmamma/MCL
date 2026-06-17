@@ -80,15 +80,3 @@ With bank/trig row loading, the selected row becomes part of the load workflow. 
 Rows can be renamed from the Slot Menu with `RENAME`.
 
 Row names are shared across Grid X and Grid Y. Clearing every slot in a row can clear the row name when the row becomes inactive.
-
-## Desktop Mouse Support
-
-On desktop, mouse actions are also available:
-
-| Action | Result |
-| --- | --- |
-| Click a cell | Move the grid cursor to that slot. |
-| Double-click a cell | Open the Load workflow for that slot. |
-| Right-click a cell | Open the Slot Menu. |
-| Mouse wheel | Scroll rows. |
-| Mouse wheel in Slot Menu | Adjust the selected range. |

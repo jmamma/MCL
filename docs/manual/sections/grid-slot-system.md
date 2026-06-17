@@ -49,8 +49,6 @@ On TBD hardware, the device menu also offers `TBD` with the internal `INT` port.
 | Grid X = `TBD`, Grid Y = `OFF` | TBD as the primary grid device. |
 | Grid X = `MD`, Grid Y = `TBD` | Machinedrum primary with TBD as the secondary grid device. |
 
-Older MCL manuals described Grid X as always 16 Machinedrum tracks and Grid Y as six external tracks plus fixed auxiliary slots. That is still a useful reference for classic Machinedrum projects, but the actual meaning of each slot now follows the active device configuration.
-
 ## Row Names
 
 Rows can be named from the Slot Menu. Row names are shared across grids.

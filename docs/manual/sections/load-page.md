@@ -80,8 +80,8 @@ In Queue mode, Encoder 2 sets a length override.
 
 | Value | Behavior |
 | --- | --- |
-| `-` / 1 | Use the stored slot length. |
-| 2-64 | Override the queued length. |
+| `-` | Use the queued slot's stored length. |
+| 2-64 | Override the queued length in steps. |
 
 This is useful when a short track should loop for a longer phrase, or when a group of slots should advance together despite having different stored lengths.
 
@@ -91,8 +91,8 @@ Load quantization sets the transition interval for the selected load.
 
 | Value | Meaning |
 | --- | --- |
-| `-` / 1 | Use the destination slot's own timing. |
-| 2-64 | Wait for that step interval before loading. Normal encoder turns step through powers of two; holding the encoder button allows intermediate values. |
+| `-` | Load at the destination track's next transition point, based on its current length and speed. |
+| 2-64 | Load at the next matching step interval. Normal encoder turns step through powers of two; holding the encoder button allows intermediate values. |
 
 Use quantization to keep manual, auto and queue loads aligned with the phrase length.
 

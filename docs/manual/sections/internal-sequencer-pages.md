@@ -82,7 +82,6 @@ Step-capable primary tracks add these entries:
 | --- | --- |
 | `EDIT` | Select `TRIG`, `MUTE`, `SWING` or `SLIDE` mask. |
 | `SOUND` | Open the sound browser where the active device supports kit/sound storage. |
-| `LFO MULT` | Set the per-track LFO speed multiplier from `.01` to `8x`. |
 
 ## External MIDI Menu Entries
 

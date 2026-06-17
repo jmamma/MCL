@@ -6,8 +6,6 @@ Open it from a Machinedrum step track:
 
 **[Global] > SOUND**
 
-![track menu](../assets/images/track_menu.png)
-
 ![sound browser page](../assets/images/sound_browser_page.png)
 
 ## Sound Contents
@@ -48,6 +46,6 @@ If the sound contains a linked Trig Group pair and the destination has a followi
 
 ## File Menu
 
-Hold **[Global]** to create folders, rename sounds or delete entries. Bulk sample-transfer actions are intentionally not available here; use the Sample Manager for WAV/SYX transfer.
+Hold **[Global]** to create folders, rename sounds or delete entries.
 
 ![file menu](../assets/images/file_menu.png)

@@ -46,8 +46,8 @@ Queue length controls how long a queued item plays before advancing.
 
 | Queue length | Behavior |
 | --- | --- |
-| `-` / 1 | Use the slot's saved length. |
-| 2-64 | Override the queued duration. |
+| `-` | Use the queued slot's saved length. |
+| 2-64 | Override the queued duration in steps. |
 
 Use queue length when a saved track is short but should stay active for a longer section.
 
@@ -57,8 +57,8 @@ Quantization controls when the next load occurs.
 
 | Quantization | Result |
 | --- | --- |
-| `-` / 1 | Use the destination slot's own timing. |
-| 2-64 | Wait for that step interval before loading. Normal encoder turns step through powers of two; holding the encoder button allows intermediate values. |
+| `-` | Load at the destination track's next transition point, based on its current length and speed. |
+| 2-64 | Load at the next matching step interval. Normal encoder turns step through powers of two; holding the encoder button allows intermediate values. |
 
 Higher quantization values are safer for full-row changes. Lower values are useful for fast slot-level changes.
 

@@ -109,9 +109,3 @@ While recording, played notes are written into the active track or into the sele
 For Machinedrum-style tracks, the current machine must support pitched playback for chromatic playing to be useful. MIDI machines are handled as MIDI voice tracks. TBD tracks use the note/pitch target exposed by the active TBD sound.
 
 For melodic Machinedrum machines, the track's pitch parameter is mapped to notes. Tonal machine tuning uses the newer equal-temperament-style mapping; default tuning keeps the legacy machine-specific behavior.
-
-## Arpeggiator Integration
-
-Each track has its own arpeggiator. Open it from the Track Menu with `ARPEGGIATOR`.
-
-The arpeggiator follows the current Chromatic note set unless it is in `LAT` or `LCK` state. In `TRG` rate mode, the arpeggiator advances only when the related sequencer track fires a trig.
