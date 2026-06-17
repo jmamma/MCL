@@ -87,7 +87,7 @@ Each state stores:
 - mute masks for the primary and secondary mixer targets
 - fill masks for the primary and secondary mixer targets
 - optional Perf A-D controller locks
-- per-device load enable flags
+- State Mute Enable for each mixer target
 - the optional State Autoload selection
 
 | Control | Action |
@@ -95,7 +95,7 @@ Each state stores:
 | Hold **[Down]**, **[Left]**, **[Up]** or **[Right]** | Preview that performance state. |
 | While holding a state arrow, press **[Trig]** | Edit its stored mutes, or its stored fills when the Mixer Page is in fill mode. |
 | While holding a state arrow, press **[Yes]** | Apply the state. |
-| While holding a state arrow, press **[Bank A]** | Enable or disable mute set loading for the visible mixer target. |
+| While holding a state arrow, press **[Bank A]** | Toggle State Mute Enable for the visible mixer target. When off, that target's stored mutes/fills are not applied. |
 | While holding a state arrow, press **[Bank B]** | Mark or unmark that state for State Autoload. |
 | While holding a state arrow, hold **[No]** and turn a Perf encoder | Store a Perf A-D controller lock in that state. |
 | While holding a state arrow, hold **[No]** and press a Perf encoder button | Add or clear the matching controller lock. |
