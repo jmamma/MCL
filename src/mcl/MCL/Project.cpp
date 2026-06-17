@@ -846,9 +846,7 @@ bool Project::new_project(const char *newprj) {
   DEBUG_PRINTLN(strlen(newprj));
   // Create project directory
   if (SD.exists(newprj)) {
-    bool existing_project = SD.chdir(newprj) && SD.exists(proj_filename);
-    chdir_projects();
-    gfx.alert_error(existing_project ? "PROJECT EXISTS" : "DIR EXISTS");
+    gfx.alert_error("PROJECT EXISTS");
     return false;
   }
   if (!SD.mkdir(newprj, true) || !SD.chdir(newprj)) {
