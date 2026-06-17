@@ -105,8 +105,6 @@ Negative values play earlier, positive values play later. MCL saves the timing o
 
 Hold one or more steps and move a device parameter to write locks to those steps.
 
-![step parameter locks](../assets/images/step_param_locks.png)
-
 Steps that contain locks are drawn with the lock marker for the active parameter page.
 
 | Action | Result |
