@@ -82,8 +82,6 @@ Track fill states can be edited from the Mixer Page, and enhanced Machinedrum mo
 
 Each primary step track has its own swing percentage. The Swing edit mask chooses which steps are delayed by the swing amount.
 
-The default swing mask affects off-beat steps. When a Machinedrum pattern's global swing is set to affect all steps, the per-step swing mask is hidden because editing it would not change playback.
-
 ## Microtiming
 
 Microtiming moves a step, note or automation event slightly earlier or later relative to the grid.
@@ -107,5 +105,3 @@ Saving a grid slot stores the sequencer data for that slot.
 | Arpeggiator settings | Stored per track. |
 | LFO settings | Stored per track. |
 | Sound/device state | Stored where supported, unless the slot's `SOUND` option is off during load. |
-
-Older projects are migrated on first load where supported so legacy conditions, mutes, microtiming and LFO data map into the current project format.
