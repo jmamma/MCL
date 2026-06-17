@@ -23,9 +23,9 @@ The selected grid device determines the track types that are created in new proj
 
 ## Grid Tracks
 
-When TBD is assigned to Grid X, MCL initializes 16 primary TBD tracks in Grid X slots 1-16. These tracks use the Step Editor, Mixer, Chromatic Page, Arpeggiator Page and LFO Page like other primary step tracks.
+`Grid X = TBD` gives you 16 TBD step tracks in slots 1-16. These use the Step Editor, Mixer, Chromatic Page, Arpeggiator Page and LFO Page.
 
-When TBD is assigned to Grid Y, MCL initializes six secondary TBD MIDI-style tracks in Grid Y. These tracks use the PianoRoll and automation views.
+`Grid Y = TBD` gives you six TBD tracks for PianoRoll sequencing and automation.
 
 TBD grid slots can store:
 
