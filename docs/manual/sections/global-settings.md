@@ -94,6 +94,6 @@ Do not edit project files by hand. Use the project browser, file menu and versio
 
 ## Saving Projects
 
-MCL writes project state as slots and grids are saved. A separate full-project save action is usually unnecessary after saving the active material.
+MCL writes to the current project's data files when you save slots or groups from the Save Page. After that, there is no separate full-project save step.
 
-System configuration writes also update the supported project configuration stored in the current project header. `SYSTEM > PROJ CFG` controls whether those stored settings are applied when the project is loaded.
+System settings can be used globally or recalled with each project. `SYSTEM > PROJ CFG` controls this: `OFF` keeps the current global setup when loading projects, and `ON` applies the configuration saved with the project.
