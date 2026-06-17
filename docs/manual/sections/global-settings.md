@@ -95,5 +95,3 @@ Do not edit project files by hand. Use the project browser, file menu and versio
 ## Saving Projects
 
 MCL writes to the current project's data files when you save slots or groups from the Save Page. After that, there is no separate full-project save step.
-
-System settings can be used globally or recalled with each project. `SYSTEM > PROJ CFG` controls this: `OFF` keeps the current global setup when loading projects, and `ON` applies the configuration saved with the project.
