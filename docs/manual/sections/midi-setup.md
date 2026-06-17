@@ -68,21 +68,21 @@ Recommended configuration:
 
 External MIDI tracks can be edited from the Piano Roll and can record or play notes and automation where supported by the selected device.
 
-## TBD
+## TBD-16
 
-When using TBD, the internal TBD device can be assigned directly from the device menu.
+When running MCL on TBD-16, the external MIDI device setups still work. TBD-16 also provides an internal `TBD` device on the `INT` port for controlling the built-in sound engine.
 
 Typical options:
 
 | Grid | Example use |
 | --- | --- |
-| Grid X = `TBD` / Port = `INT` | Use TBD as the primary internal device. |
+| Grid X = `TBD` / Port = `INT` | Use the internal TBD sound engine as the primary device. |
 | Grid X = `MD` / Port = `MIDI 1` | Use a connected Machinedrum as the primary device. |
-| Grid Y = `TBD` / Port = `INT` | Use TBD as the secondary device. |
+| Grid Y = `TBD` / Port = `INT` | Use the internal TBD sound engine as the secondary device. |
 
-TBD can also use an internal clock source from the MIDI sync menu.
+TBD-16 can also use an internal clock source from the MIDI sync menu.
 
-See [TBD](tbd.md) for TBD panel controls and sequencing behavior.
+See [TBD-16](tbd.md) for TBD-16 panel controls and internal sound-engine sequencing behavior.
 
 ## Clock and Transport
 

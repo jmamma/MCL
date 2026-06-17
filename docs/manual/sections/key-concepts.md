@@ -5,7 +5,7 @@ MCL started on the MegaCommand/MegaCMD hardware controller and now supports mult
 | Platform | Use |
 | --- | --- |
 | MegaCommand DIY / MegaCMD | Classic MCL hardware for Machinedrum-centered MIDI setups. |
-| TBD | Integrated hardware platform with internal TBD device control, panel control and MCL grid sequencing. |
+| TBD-16 | Hardware platform that can run MCL. It supports the documented external MIDI device setups and adds `INT` mode for the internal TBD sound engine. |
 
 MegaCMD also supports USB disk mode for SD card file transfer. MiniCommand is legacy hardware and is not supported by current MCL releases.
 
@@ -62,7 +62,7 @@ Common track and slot data includes:
 
 - **Machinedrum track**: sound settings and sequencer data for one Machinedrum track.
 - **External MIDI track**: polyphonic notes, MIDI automation and routing for a MIDI target or supported secondary device.
-- **TBD track**: TBD sequence data, sound state and parameter locks when TBD is assigned to a grid.
+- **TBD track**: sequence data, sound state and parameter locks for the internal TBD sound engine when `TBD` is assigned to a grid.
 - **Auxiliary slot data**: performance states, route state, Machinedrum master FX and tempo data where supported by the active device layout.
 
 

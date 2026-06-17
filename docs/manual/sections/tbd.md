@@ -1,6 +1,8 @@
-# TBD
+# TBD-16 Hardware Platform
 
-TBD uses the same Grid X / Grid Y setup as other MCL devices. Select `TBD` with the `INT` port to control the internal TBD sound engine from MCL. TBD tracks can then be sequenced, saved, loaded, mixed and parameter-locked from the normal grid and editor pages.
+The [TBD-16](https://dadamachines.com/products/tbd-16/) is a hardware platform that can run MCL. It supports all of MCL's external MIDI devices, such as the Machinedrum, but also has an `INT` mode for controlling the internal TBD sound engine.
+
+Select `TBD` with the `INT` port when you want the internal sound engine to be sequenced, saved, loaded, mixed and parameter-locked from the normal grid and editor pages.
 
 ## Device Setup
 
@@ -10,12 +12,12 @@ Open the device menu from:
 CONFIG > MIDI > DEVICES
 ```
 
-TBD adds the `TBD` device and the `INT` port to the normal grid setup:
+On TBD-16, MCL adds the `TBD` device and the `INT` port to the normal grid setup:
 
 | Setting | Use |
 | --- | --- |
-| `Grid X = TBD`, port `INT` | Use TBD as the primary step-sequenced device. |
-| `Grid Y = TBD`, port `INT` | Use TBD as the secondary MIDI-style device. |
+| `Grid X = TBD`, port `INT` | Use the internal TBD sound engine as the primary step-sequenced device. |
+| `Grid Y = TBD`, port `INT` | Use the internal TBD sound engine as the secondary MIDI-style device. |
 | `Grid X = MD`, port `MIDI 1` | Use a connected Machinedrum as the primary device. |
 | `Grid Y = GENER` or `ELEKT` | Use generic MIDI, Monomachine or Analog Four style secondary tracks. |
 
@@ -23,11 +25,11 @@ The selected grid device determines the track types that are created in new proj
 
 ## Grid Tracks
 
-`Grid X = TBD` gives you 16 TBD step tracks in slots 1-16. These use the Step Editor, Mixer, Chromatic Page, Arpeggiator Page and LFO Page.
+`Grid X = TBD` gives you 16 internal TBD step tracks in slots 1-16. These use the Step Editor, Mixer, Chromatic Page, Arpeggiator Page and LFO Page.
 
 `Grid Y = TBD` gives you six TBD tracks for PianoRoll sequencing and automation.
 
-TBD grid slots can store:
+Internal TBD grid slots can store:
 
 | Data | Meaning |
 | --- | --- |
@@ -38,7 +40,7 @@ TBD grid slots can store:
 
 ## Device UI, Presets And Parameter Strip
 
-The TBD UI is split into matching Device 1 and Device 2 views. The top-left button opens Device 1; the top-right button opens Device 2 when a second TBD device is configured. Each view can show parameter pages, the preset browser, or the bottom four-encoder strip.
+The TBD UI is split into matching Device 1 and Device 2 views. The top-left button opens the UI for controlling Device 1; the top-right button opens the UI for controlling Device 2. Each view can show parameter pages, the preset browser, or the bottom four-encoder strip.
 
 The four encoders edit the visible parameters for the active track. In the full-screen view, arrow keys move between parameter pages and the preset browser.
 
@@ -48,7 +50,7 @@ The preset browser uses Encoder 1 for the machine/preset group and Encoder 2 for
 
 ![TBD panel controls](../assets/images/tbd_panel.png)
 
-TBD panel input is mapped into MCL's page and device model.
+TBD-16 panel input is mapped into MCL's page and device model.
 
 | Control | Action |
 | --- | --- |
@@ -67,7 +69,7 @@ If an expanded device UI is active, TBD device controls get first chance to hand
 
 ## Grid Page Differences
 
-On TBD, Save and Load keep the Grid Page visible instead of opening separate full-screen pages.
+On TBD-16, Save and Load keep the Grid Page visible instead of opening separate full-screen pages.
 
 | Action | Result |
 | --- | --- |
@@ -80,7 +82,7 @@ The visible grid still follows the same row, slot, bank, chain and queue concept
 
 ## Clock And Tempo
 
-TBD can use the internal clock source in addition to clock from MIDI 1, MIDI 2 or USB.
+TBD-16 can use the internal clock source in addition to clock from MIDI 1, MIDI 2 or USB.
 
 Configure clock and transport from:
 

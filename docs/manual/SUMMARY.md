@@ -3,7 +3,7 @@
 - [Introduction](sections/introduction.md)
 - [Concepts and Platforms](sections/key-concepts.md)
 - [MIDI Setup](sections/midi-setup.md)
-- [TBD](sections/tbd.md)
+- [TBD-16](sections/tbd.md)
 - [GUI](sections/gui.md)
 - [Boot Menu](sections/boot-menu.md)
 - [Page Select Menu](sections/page-select.md)

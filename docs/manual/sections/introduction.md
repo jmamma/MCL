@@ -19,6 +19,6 @@ MCL can interact with several kinds of devices:
 - **Machinedrum / MDX** for primary drum-machine sequencing, sound management, routing, FX, RAM tools and performance control.
 - **External MIDI instruments** for polyphonic sequencing, chromatic play, automation and program changes.
 - **Monomachine and Analog Four** as supported secondary devices.
-- **TBD** hardware platform and sound engine.
+- **TBD-16** hardware platform, including external MIDI device control and `INT` mode for the internal TBD sound engine.
 
 This manual explains those concepts first, then moves into the page-by-page reference.
