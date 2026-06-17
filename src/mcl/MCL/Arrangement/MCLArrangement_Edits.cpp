@@ -15,9 +15,16 @@ bool MCLArrangement::setTrackLabel(uint8_t track, const char *label) {
     return false;
   }
 
-  static mclarrfile::Clip clips[kMaxImportClips];
-  static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
-  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
+  ScopedScratch<mclarrfile::Clip> clips(kMaxImportClips);
+  if (!clips) {
+    return false;
+  }
+  ScopedScratch<mclarrfile::Marker> markers(mclarrfile::kMaxMarkers);
+  ScopedScratch<mclarrfile::LoopRegion> loopRegions(
+      mclarrfile::kMaxLoopRegions);
+  if (!markers || !loopRegions) {
+    return false;
+  }
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
@@ -27,15 +34,16 @@ bool MCLArrangement::setTrackLabel(uint8_t track, const char *label) {
   if (!readMeta(&header)) {
     return false;
   }
-  if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels, loopRegions, &loopRegionCount)) {
+  if (!readActiveData(header, clips.get(), &clipCount, markers.get(),
+                      &markerCount, labels, loopRegions.get(),
+                      &loopRegionCount)) {
     return false;
   }
 
   sanitizeLabel(label, labels[track], mclarrfile::kTrackLabelBytes);
-  bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels, loopRegions,
-                                      loopRegionCount);
+  bool ok = rewriteActiveWithMetadata(header, clips.get(), clipCount,
+                                      markers.get(), markerCount, labels,
+                                      loopRegions.get(), loopRegionCount);
   if (ok) {
     resetPlayback();
   }
@@ -52,9 +60,16 @@ bool MCLArrangement::setMarkerLabel(uint32_t startQ12, uint8_t track,
     return false;
   }
 
-  static mclarrfile::Clip clips[kMaxImportClips];
-  static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
-  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
+  ScopedScratch<mclarrfile::Clip> clips(kMaxImportClips);
+  if (!clips) {
+    return false;
+  }
+  ScopedScratch<mclarrfile::Marker> markers(mclarrfile::kMaxMarkers);
+  ScopedScratch<mclarrfile::LoopRegion> loopRegions(
+      mclarrfile::kMaxLoopRegions);
+  if (!markers || !loopRegions) {
+    return false;
+  }
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
@@ -64,8 +79,9 @@ bool MCLArrangement::setMarkerLabel(uint32_t startQ12, uint8_t track,
   if (!readMeta(&header)) {
     return false;
   }
-  if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels, loopRegions, &loopRegionCount)) {
+  if (!readActiveData(header, clips.get(), &clipCount, markers.get(),
+                      &markerCount, labels, loopRegions.get(),
+                      &loopRegionCount)) {
     return false;
   }
 
@@ -103,10 +119,10 @@ bool MCLArrangement::setMarkerLabel(uint32_t startQ12, uint8_t track,
     }
   }
 
-  sortMarkers(markers, markerCount);
-  bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels, loopRegions,
-                                      loopRegionCount);
+  sortMarkers(markers.get(), markerCount);
+  bool ok = rewriteActiveWithMetadata(header, clips.get(), clipCount,
+                                      markers.get(), markerCount, labels,
+                                      loopRegions.get(), loopRegionCount);
   if (ok) {
     resetPlayback();
   }
@@ -119,9 +135,16 @@ bool MCLArrangement::setLoopRegionRecord(
     return false;
   }
 
-  static mclarrfile::Clip clips[kMaxImportClips];
-  static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
-  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
+  ScopedScratch<mclarrfile::Clip> clips(kMaxImportClips);
+  if (!clips) {
+    return false;
+  }
+  ScopedScratch<mclarrfile::Marker> markers(mclarrfile::kMaxMarkers);
+  ScopedScratch<mclarrfile::LoopRegion> loopRegions(
+      mclarrfile::kMaxLoopRegions);
+  if (!markers || !loopRegions) {
+    return false;
+  }
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
@@ -131,8 +154,9 @@ bool MCLArrangement::setLoopRegionRecord(
   if (!readMeta(&header)) {
     return false;
   }
-  if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels, loopRegions, &loopRegionCount)) {
+  if (!readActiveData(header, clips.get(), &clipCount, markers.get(),
+                      &markerCount, labels, loopRegions.get(),
+                      &loopRegionCount)) {
     return false;
   }
 
@@ -195,10 +219,10 @@ bool MCLArrangement::setLoopRegionRecord(
     }
   }
 
-  sortLoopRegions(loopRegions, loopRegionCount);
-  bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels, loopRegions,
-                                      loopRegionCount);
+  sortLoopRegions(loopRegions.get(), loopRegionCount);
+  bool ok = rewriteActiveWithMetadata(header, clips.get(), clipCount,
+                                      markers.get(), markerCount, labels,
+                                      loopRegions.get(), loopRegionCount);
   if (ok) {
     resetPlayback();
   }
@@ -213,9 +237,16 @@ bool MCLArrangement::setClipFade(uint32_t startQ12, uint32_t durationQ12,
     return false;
   }
 
-  static mclarrfile::Clip clips[kMaxImportClips];
-  static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
-  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
+  ScopedScratch<mclarrfile::Clip> clips(kMaxImportClips);
+  if (!clips) {
+    return false;
+  }
+  ScopedScratch<mclarrfile::Marker> markers(mclarrfile::kMaxMarkers);
+  ScopedScratch<mclarrfile::LoopRegion> loopRegions(
+      mclarrfile::kMaxLoopRegions);
+  if (!markers || !loopRegions) {
+    return false;
+  }
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
@@ -225,8 +256,9 @@ bool MCLArrangement::setClipFade(uint32_t startQ12, uint32_t durationQ12,
   if (!readMeta(&header)) {
     return false;
   }
-  if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels, loopRegions, &loopRegionCount)) {
+  if (!readActiveData(header, clips.get(), &clipCount, markers.get(),
+                      &markerCount, labels, loopRegions.get(),
+                      &loopRegionCount)) {
     return false;
   }
 
@@ -245,9 +277,9 @@ bool MCLArrangement::setClipFade(uint32_t startQ12, uint32_t durationQ12,
     return false;
   }
 
-  bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels, loopRegions,
-                                      loopRegionCount);
+  bool ok = rewriteActiveWithMetadata(header, clips.get(), clipCount,
+                                      markers.get(), markerCount, labels,
+                                      loopRegions.get(), loopRegionCount);
   if (ok) {
     resetPlayback();
   }
@@ -268,9 +300,16 @@ bool MCLArrangement::setAutomationLanePoints(
     }
   }
 
-  static mclarrfile::Clip clips[kMaxImportClips];
-  static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
-  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
+  ScopedScratch<mclarrfile::Clip> clips(kMaxImportClips);
+  if (!clips) {
+    return false;
+  }
+  ScopedScratch<mclarrfile::Marker> markers(mclarrfile::kMaxMarkers);
+  ScopedScratch<mclarrfile::LoopRegion> loopRegions(
+      mclarrfile::kMaxLoopRegions);
+  if (!markers || !loopRegions) {
+    return false;
+  }
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
@@ -280,26 +319,33 @@ bool MCLArrangement::setAutomationLanePoints(
   if (!readMeta(&header)) {
     return false;
   }
-  if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels, loopRegions, &loopRegionCount)) {
+  if (!readActiveData(header, clips.get(), &clipCount, markers.get(),
+                      &markerCount, labels, loopRegions.get(),
+                      &loopRegionCount)) {
     return false;
   }
 
-  static mclarrfile::AutomationLane
-      oldLanes[mclarrfile::kMaxAutomationLanes];
-  static mclarrfile::AutomationPoint
-      oldPoints[mclarrfile::kMaxAutomationPoints];
+  ScopedScratch<mclarrfile::AutomationLane> oldLanes(
+      mclarrfile::kMaxAutomationLanes);
+  ScopedScratch<mclarrfile::AutomationPoint> oldPoints(
+      mclarrfile::kMaxAutomationPoints);
+  if (!oldLanes || !oldPoints) {
+    return false;
+  }
   AutomationChunkData oldAutomation;
-  oldAutomation.lanes = oldLanes;
-  oldAutomation.points = oldPoints;
+  oldAutomation.lanes = oldLanes.get();
+  oldAutomation.points = oldPoints.get();
   if (!readAutomationData(header, &oldAutomation)) {
     return false;
   }
 
-  static mclarrfile::AutomationLane
-      newLanes[mclarrfile::kMaxAutomationLanes];
-  static mclarrfile::AutomationPoint
-      newPoints[mclarrfile::kMaxAutomationPoints];
+  ScopedScratch<mclarrfile::AutomationLane> newLanes(
+      mclarrfile::kMaxAutomationLanes);
+  ScopedScratch<mclarrfile::AutomationPoint> newPoints(
+      mclarrfile::kMaxAutomationPoints);
+  if (!newLanes || !newPoints) {
+    return false;
+  }
   uint16_t newLaneCount = 0;
   uint32_t newPointCount = 0;
   bool replace =
@@ -355,13 +401,14 @@ bool MCLArrangement::setAutomationLanePoints(
   }
 
   AutomationWriteData writeData;
-  writeData.lanes = newLanes;
-  writeData.points = newPoints;
+  writeData.lanes = newLanes.get();
+  writeData.points = newPoints.get();
   writeData.lane_count = newLaneCount;
   writeData.point_count = newPointCount;
-  bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels, loopRegions,
-                                      loopRegionCount, &writeData);
+  bool ok = rewriteActiveWithMetadata(header, clips.get(), clipCount,
+                                      markers.get(), markerCount, labels,
+                                      loopRegions.get(), loopRegionCount,
+                                      &writeData);
   if (ok) {
     resetPlayback();
   }
@@ -377,17 +424,20 @@ bool MCLArrangement::importGrid(uint16_t trackMask, uint8_t startRow) {
     mclarrfile::initHeader(header, "main");
   }
 
-  static mclarrfile::Clip clips[kMaxImportClips];
+  ScopedScratch<mclarrfile::Clip> clips(kMaxImportClips);
+  if (!clips) {
+    return false;
+  }
   uint32_t count = 0;
   for (uint8_t track = 0; track < 16 && count < kMaxImportClips; ++track) {
     if (((trackMask >> track) & 1u) == 0) {
       continue;
     }
     GridRow baseRow = resolveTrackBaseRow(track, startRow);
-    appendImportLane(track, baseRow, clips, count, kMaxImportClips);
+    appendImportLane(track, baseRow, clips.get(), count, kMaxImportClips);
   }
-  sortClips(clips, count);
-  bool ok = rewriteActive(header, clips, count);
+  sortClips(clips.get(), count);
+  bool ok = rewriteActive(header, clips.get(), count);
   if (ok) {
     resetPlayback();
     clearLoopRegion();

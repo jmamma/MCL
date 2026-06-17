@@ -78,13 +78,14 @@ private:
 
     bool applySetLink(const uint8_t* b, uint16_t n);
     bool applySetFade(const uint8_t* b, uint16_t n);
+    void clearAutomationStage();
+    bool beginAutomationStage(const mclarrfile::AutomationLane& lane);
 
     bool automation_stage_active_ = false;
     mclarrfile::AutomationLane automation_stage_lane_ = {};
     uint16_t automation_stage_total_ = 0;
     uint16_t automation_stage_received_ = 0;
-    mclarrfile::AutomationPoint
-        automation_stage_points_[mclarrfile::kMaxAutomationPoints] = {};
+    mclarrfile::AutomationPoint* automation_stage_points_ = nullptr;
 };
 
 extern SpsHostArrBridge sps_host_arr_bridge;

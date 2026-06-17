@@ -20,6 +20,8 @@
 #include "Host/SpsArrProtocol.h"
 #include "TrackLoadFade.h"
 
+#include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 namespace mcl_arrangement_internal {
@@ -33,6 +35,44 @@ struct AutomationChunkData {
   mclarrfile::AutomationPoint *points = nullptr;
   uint16_t lane_count = 0;
   uint32_t point_count = 0;
+};
+
+template <typename T> class ScopedScratch {
+public:
+  ScopedScratch() = default;
+  explicit ScopedScratch(size_t count) { allocate(count); }
+  ~ScopedScratch() { reset(); }
+
+  ScopedScratch(const ScopedScratch &) = delete;
+  ScopedScratch &operator=(const ScopedScratch &) = delete;
+
+  bool allocate(size_t count) {
+    reset();
+    if (count == 0) {
+      valid_ = true;
+      return true;
+    }
+    ptr_ = static_cast<T *>(malloc(sizeof(T) * count));
+    valid_ = ptr_ != nullptr;
+    return valid_;
+  }
+
+  void reset() {
+    if (ptr_ != nullptr) {
+      free(ptr_);
+      ptr_ = nullptr;
+    }
+    valid_ = false;
+  }
+
+  T *get() const { return ptr_; }
+  explicit operator bool() const { return valid_; }
+  T &operator[](size_t i) { return ptr_[i]; }
+  const T &operator[](size_t i) const { return ptr_[i]; }
+
+private:
+  T *ptr_ = nullptr;
+  bool valid_ = false;
 };
 
 static uint32_t q12ToHostTick96(uint32_t q12) {

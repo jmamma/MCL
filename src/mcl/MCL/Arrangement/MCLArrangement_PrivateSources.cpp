@@ -15,9 +15,16 @@ bool MCLArrangement::makeClipLocal(uint32_t startQ12, uint32_t durationQ12,
     return false;
   }
 
-  static mclarrfile::Clip clips[kMaxImportClips];
-  static mclarrfile::Marker markers[mclarrfile::kMaxMarkers];
-  static mclarrfile::LoopRegion loopRegions[mclarrfile::kMaxLoopRegions];
+  ScopedScratch<mclarrfile::Clip> clips(kMaxImportClips);
+  if (!clips) {
+    return false;
+  }
+  ScopedScratch<mclarrfile::Marker> markers(mclarrfile::kMaxMarkers);
+  ScopedScratch<mclarrfile::LoopRegion> loopRegions(
+      mclarrfile::kMaxLoopRegions);
+  if (!markers || !loopRegions) {
+    return false;
+  }
   char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
   uint32_t clipCount = 0;
   uint16_t markerCount = 0;
@@ -27,8 +34,9 @@ bool MCLArrangement::makeClipLocal(uint32_t startQ12, uint32_t durationQ12,
   if (!readMeta(&header)) {
     return false;
   }
-  if (!readActiveData(header, clips, &clipCount, markers, &markerCount,
-                      labels, loopRegions, &loopRegionCount)) {
+  if (!readActiveData(header, clips.get(), &clipCount, markers.get(),
+                      &markerCount, labels, loopRegions.get(),
+                      &loopRegionCount)) {
     return false;
   }
 
@@ -51,7 +59,7 @@ bool MCLArrangement::makeClipLocal(uint32_t startQ12, uint32_t durationQ12,
     return false;
   }
 
-  uint32_t sourceId = nextPrivateSourceId(clips, clipCount);
+  uint32_t sourceId = nextPrivateSourceId(clips.get(), clipCount);
   GridColumn localCol = 0;
   GridRow localRow = 0;
   if (!privateSourceCell(sourceId, &localCol, &localRow)) {
@@ -85,9 +93,9 @@ bool MCLArrangement::makeClipLocal(uint32_t startQ12, uint32_t durationQ12,
   clip.sourceReserved = 0;
   clip.sourceId = sourceId;
 
-  bool ok = rewriteActiveWithMetadata(header, clips, clipCount, markers,
-                                      markerCount, labels, loopRegions,
-                                      loopRegionCount);
+  bool ok = rewriteActiveWithMetadata(header, clips.get(), clipCount,
+                                      markers.get(), markerCount, labels,
+                                      loopRegions.get(), loopRegionCount);
   if (ok) {
     resetPlayback();
   }

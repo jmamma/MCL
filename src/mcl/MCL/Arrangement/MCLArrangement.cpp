@@ -9,7 +9,7 @@ using namespace mcl_arrangement_internal;
 
 MCLArrangement mcl_arrangement;
 
-bool MCLArrangement::openIndex(File *file, uint8_t idx, uint8_t mode) {
+bool MCLArrangement::openIndex(File *file, uint8_t idx, int mode) {
   if (file == nullptr || !enterProjectDir()) {
     return false;
   }
@@ -20,7 +20,7 @@ bool MCLArrangement::openIndex(File *file, uint8_t idx, uint8_t mode) {
   return file->open(path, mode);
 }
 
-bool MCLArrangement::openActive(File *file, uint8_t mode) {
+bool MCLArrangement::openActive(File *file, int mode) {
   return openIndex(file, mcl_cfg.active_arrangement_idx, mode);
 }
 

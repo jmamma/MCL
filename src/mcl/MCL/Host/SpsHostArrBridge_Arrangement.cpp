@@ -5,6 +5,8 @@
 #include "Host/SpsHostArrBridge.h"
 #include "SpsHostArrBridge_Internal.h"
 
+#include <stdlib.h>
+
 using namespace spsarr;
 using namespace sps_host_arr_internal;
 
@@ -61,6 +63,36 @@ bool automationLaneHeaderValid(const mclarrfile::AutomationLane &lane,
 }
 
 }  // namespace
+
+void SpsHostArrBridge::clearAutomationStage() {
+    if (automation_stage_points_ != nullptr) {
+        free(automation_stage_points_);
+        automation_stage_points_ = nullptr;
+    }
+    automation_stage_active_ = false;
+    automation_stage_lane_ = {};
+    automation_stage_total_ = 0;
+    automation_stage_received_ = 0;
+}
+
+bool SpsHostArrBridge::beginAutomationStage(
+    const mclarrfile::AutomationLane& lane) {
+    clearAutomationStage();
+    if (lane.pointCount > 0) {
+        automation_stage_points_ =
+            static_cast<mclarrfile::AutomationPoint*>(
+                malloc(sizeof(mclarrfile::AutomationPoint) *
+                       (size_t)lane.pointCount));
+        if (automation_stage_points_ == nullptr) {
+            return false;
+        }
+    }
+    automation_stage_lane_ = lane;
+    automation_stage_total_ = lane.pointCount;
+    automation_stage_received_ = 0;
+    automation_stage_active_ = true;
+    return true;
+}
 
 void SpsHostArrBridge::onReqArrMeta(uint8_t tag) {
     mclarrfile::Header header;
@@ -358,7 +390,7 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
             grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
         }
 
-        uint8_t ack[2] = {CMD_LOAD_SLOTS, any ? 1 : 0};
+        uint8_t ack[2] = {CMD_LOAD_SLOTS, any ? (uint8_t)1 : (uint8_t)0};
         sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
         return;
     }
@@ -751,19 +783,17 @@ void SpsHostArrBridge::onSetArrAutomationLaneChunk(uint8_t tag,
             return;
         }
 
-        automation_stage_lane_ = lane;
-        automation_stage_total_ = lane.pointCount;
-        automation_stage_received_ = 0;
-        automation_stage_active_ = true;
+        if (!beginAutomationStage(lane)) {
+            sendErr(tag, ERR_BUSY, op);
+            return;
+        }
         uint8_t ack[2] = {CMD_SET_ARR_AUTOMATION_LANE_CHUNK, op};
         sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
         return;
     }
 
     if (op == ARR_AUTOMATION_WRITE_ABORT) {
-        automation_stage_active_ = false;
-        automation_stage_total_ = 0;
-        automation_stage_received_ = 0;
+        clearAutomationStage();
         uint8_t ack[2] = {CMD_SET_ARR_AUTOMATION_LANE_CHUNK, op};
         sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
         return;
@@ -787,6 +817,10 @@ void SpsHostArrBridge::onSetArrAutomationLaneChunk(uint8_t tag,
             offset != automation_stage_received_ ||
             (uint32_t)offset + count > automation_stage_total_) {
             sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+        if (count > 0 && automation_stage_points_ == nullptr) {
+            sendErr(tag, ERR_BUSY, op);
             return;
         }
 
@@ -813,9 +847,7 @@ void SpsHostArrBridge::onSetArrAutomationLaneChunk(uint8_t tag,
         bool ok = mcl_arrangement.setAutomationLanePoints(
             automation_stage_lane_, automation_stage_points_,
             automation_stage_total_);
-        automation_stage_active_ = false;
-        automation_stage_total_ = 0;
-        automation_stage_received_ = 0;
+        clearAutomationStage();
         if (!ok) {
             sendErr(tag, ERR_BUSY, op);
             return;

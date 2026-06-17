@@ -116,8 +116,8 @@ private:
     uint32_t point_count = 0;
   };
 
-  bool openActive(class FsFile *file, uint8_t mode);
-  bool openIndex(class FsFile *file, uint8_t idx, uint8_t mode);
+  bool openActive(class FsFile *file, int mode);
+  bool openIndex(class FsFile *file, uint8_t idx, int mode);
   void armClipRuntime(uint8_t dst, const mclarrfile::Clip &clip,
                       uint16_t elapsedQ12 = 0);
   void resetAutomationRuntime();
