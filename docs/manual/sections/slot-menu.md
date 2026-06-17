@@ -24,9 +24,9 @@ On TBD, arrows navigate Slot Menu entries first; hold the normal function modifi
 
 | Entry | Values | Function |
 | --- | --- | --- |
-| `GRID` | `X`, `Y` | Switch the active grid. |
-| `LEN` | 1-64 or 1-128 depending on track type | Override or edit slot/track length. |
-| `LOOP` | 0-63 | Number of repeats before following the slot's jump row in Auto mode. |
+| `GRID` | `X`, `Y` | Select whether the Slot Menu edits Grid X or Grid Y. |
+| `LEN` | 1-64 or 1-128 depending on track type | Set the saved length for the selected slot or track. |
+| `LOOP` | 0-63 | In Auto mode, the number of slot-length play-throughs before loading the `JUMP` row. `0` disables Auto advance. |
 | `JUMP` | `A01`-`H16` | Row to load after the loop count is reached. |
 | `SOUND` | `OFF`, `ON` | Choose whether loading this slot also loads sound/device state. |
 | `CLEAR` | `--`, `YES` | Clear the selected slot range. |
@@ -49,9 +49,18 @@ Slot Menu changes are applied when the menu closes.
 
 ## Editing A Range
 
-Length, loop, jump and sound-load changes apply across selected columns on the current row. Multi-row ranges are used for load, copy, clear and paste.
+Length, loop, jump and sound-load changes apply to the selected slot range. The range can cover several columns, several rows, and can extend from Grid X into Grid Y.
 
-When changing length or loop across multiple slots in the current row, MCL tries to preserve musical duration where possible. For example, changing loops for a selected group can scale compatible slots instead of blindly applying a value that would make shorter tracks end too early.
+Changing `GRID` by itself only chooses the edit target; it does not update slot settings.
+
+When changing `LEN` or `LOOP` across multiple slots, MCL tries to keep musical phrase lengths sensible:
+
+| Change | Result |
+| --- | --- |
+| `LEN` only | Applies the new length to selected slots with the same speed. Slots at a different speed keep their length. |
+| `LOOP` only | Tries to match the edited slot's total play time by adjusting each selected slot's loop count. If that cannot be matched cleanly, the edited loop value is copied. |
+| `LEN` and `LOOP` together | Copies both values directly to the selected slots. |
+| `LOOP` set to `0` | Disables Auto-mode advance for the selected slots. |
 
 ## Copy, Paste And Undo
 
