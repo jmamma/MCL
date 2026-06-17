@@ -94,6 +94,60 @@ void inherit_grid_x_row_name(GridRowHeader &row_header, GridRow row) {
   row_header.name[sizeof(row_header.name) - 1] = '\0';
 }
 
+enum SlotDirtyMask : uint8_t {
+  SLOT_DIRTY_LENGTH = 1 << 0,
+  SLOT_DIRTY_LOOPS = 1 << 1,
+  SLOT_DIRTY_ROW = 1 << 2,
+  SLOT_DIRTY_LOAD_SOUND = 1 << 3,
+};
+
+bool apply_slot_dirty_fields(GridTrack &target_slot, const GridTrack &edited_slot,
+                             uint8_t dirty_mask) {
+  bool store_slot = false;
+  bool changed_length = dirty_mask & SLOT_DIRTY_LENGTH;
+  bool changed_loops = dirty_mask & SLOT_DIRTY_LOOPS;
+
+  if (dirty_mask & SLOT_DIRTY_LOAD_SOUND) {
+    target_slot.set_load_sound(edited_slot.load_sound());
+    store_slot = true;
+  }
+  if (changed_loops && edited_slot.link.loops == 0) {
+    target_slot.link.loops = 0;
+    store_slot = true;
+  } else if (changed_loops || changed_length) {
+    if (changed_loops && changed_length) {
+      target_slot.link.loops = edited_slot.link.loops;
+      target_slot.link.length = edited_slot.link.length;
+      store_slot = true;
+    } else if (changed_loops) {
+      uint16_t slot_length =
+          (uint16_t)target_slot.link.length *
+          SeqTrack::get_speed_multiplier_int(target_slot.link.speed_value()) /
+          12;
+      if (slot_length) {
+        uint16_t target_length =
+            (uint32_t)edited_slot.link.length *
+            SeqTrack::get_speed_multiplier_int(edited_slot.link.speed_value()) *
+            edited_slot.link.loops / 12;
+        if (!(target_length % slot_length) && slot_length <= target_length) {
+          target_slot.link.loops = target_length / slot_length;
+        } else {
+          target_slot.link.loops = edited_slot.link.loops;
+        }
+        store_slot = true;
+      }
+    } else if (target_slot.link.speed_value() == edited_slot.link.speed_value()) {
+      target_slot.link.length = edited_slot.link.length;
+      store_slot = true;
+    }
+  }
+  if (dirty_mask & SLOT_DIRTY_ROW) {
+    target_slot.link.row = edited_slot.link.row;
+    store_slot = true;
+  }
+  return store_slot;
+}
+
 #if defined(MCL_HAS_DESKTOP_MOUSE)
 bool grid_mouse_hit_visible_cell(GridPage &page, const mcl_mouse_event_t *event,
                                  uint8_t *visible_col, uint8_t *visible_row,
@@ -869,18 +923,20 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   GridSpan height;
 
   GridColumn _col = getCol();
+  GridIndex target_grid = slot_menu_grid;
 
   bool activate_header = false;
   //old_col != 255 indicates that the grid selection spans grids x and y.
   if (old_col != 255) {
     _col = old_col;
-    cur_grid = 0;
+    target_grid = 0;
   }
 
   uint8_t track_select_array[NUM_SLOTS];
   uint8_t load_mode_old = mcl_cfg.load_mode;
   uint8_t undo = (slot_clear || slot_paste) && slot_undo && !ignore_undo &&
                  slot_undo_x == _col && slot_undo_y == getRow();
+  GridTrack temp_slot;
   DEBUG_PRINTLN("apply slot");
 
 
@@ -894,34 +950,39 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
     }
   }
 
-  GridTrack temp_slot;
-  if (!temp_slot.load_from_grid(_col + cur_grid * GRID_WIDTH, getRow())) { return; }
   slot.set_load_sound(slot_load_sound != 0);
 
   width = old_col != 255 ? GRID_WIDTH - _col : param3.cur;
   height = param4.cur;
 
+  uint8_t slot_dirty_mask = 0;
+  if (slot.link.length != slot_original_link.length) {
+    slot_dirty_mask |= SLOT_DIRTY_LENGTH;
+  }
+  if (slot.link.loops != slot_original_link.loops) {
+    slot_dirty_mask |= SLOT_DIRTY_LOOPS;
+  }
+  if (slot.link.row != slot_original_link.row) {
+    slot_dirty_mask |= SLOT_DIRTY_ROW;
+  }
+  if ((slot.link.speed ^ slot_original_link.speed) & 0x80) {
+    slot_dirty_mask |= SLOT_DIRTY_LOAD_SOUND;
+  }
+
   uint8_t slot_update = 0;
-  bool slot_changed_length = temp_slot.link.length != slot.link.length;
-  bool slot_changed_loops = temp_slot.link.loops != slot.link.loops;
-  bool slot_changed_row = temp_slot.link.row != slot.link.row;
-  bool slot_changed_load_sound =
-      temp_slot.load_sound() != slot.load_sound();
 
   if (!(slot_copy || slot_paste || slot_clear || slot_load || undo)) {
-    if ((slot_changed_length) ||
-        (slot_changed_loops) ||
-        (slot_changed_row) ||
-        (slot_changed_load_sound)) {
+    if (slot_dirty_mask) {
       slot_update = 1;
       DEBUG_PRINTLN("Slot update");
     }
-    height = 1;
   }
   if (undo == 1) {
     slot_clear = 0;
     slot_paste = 1;
   }
+
+  cur_grid = target_grid;
 
   if (slot_copy == 1 || (slot_clear == 1 && !undo)) {
     const char *verb;
@@ -988,57 +1049,11 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
         } else if (slot_update == 1) {
           // Save slot link data
           activate_header = true;
-          if (x == 0 && (old_col == 255 || cur_grid == 0)) {
-            //slot.active = header.track_type[xpos];
-            slot.store_in_grid(xpos + cur_grid * GRID_WIDTH, ypos);
+          if (!temp_slot.load_from_grid(xpos + cur_grid * GRID_WIDTH, ypos)) {
+            continue;
           }
-          else {
-            if (!temp_slot.load_from_grid(xpos + cur_grid * GRID_WIDTH, ypos)) { continue; }
-            uint16_t temp_slot_length =
-                (uint16_t)temp_slot.link.length *
-                SeqTrack::get_speed_multiplier_int(temp_slot.link.speed_value()) / 12;
-            bool store_slot = false;
-            if (slot_changed_load_sound) {
-              temp_slot.set_load_sound(slot.load_sound());
-              store_slot = true;
-            }
-            if (slot_changed_loops && slot.link.loops == 0) {
-                temp_slot.link.loops = 0;
-                store_slot = true;
-            }
-            else if (slot_changed_loops || slot_changed_length) {
-              //User adjusted both loops and length on src, assume they want to update all selected slots to this value.
-              if (slot_changed_loops && slot_changed_length) {
-                temp_slot.link.loops = slot.link.loops;
-                temp_slot.link.length = slot.link.length;
-                store_slot = true;
-              }
-              //User changed loops, check if length of current is an even multiple of src length, if so increase loops to match
-              else if (slot_changed_loops && temp_slot_length) {
-                uint16_t target_length =
-                    (uint32_t)slot.link.length *
-                    SeqTrack::get_speed_multiplier_int(slot.link.speed_value()) *
-                    slot.link.loops / 12;
-                if (!(target_length % temp_slot_length) && temp_slot_length <= target_length) {
-                  temp_slot.link.loops = target_length / temp_slot_length; //try and match the src track target length
-                }
-                else {
-                  temp_slot.link.loops = slot.link.loops; //just change the loops
-                }
-                store_slot = true;
-              }
-              //User changed length, if speeds are the same we can increaase the length;
-              else if (slot_changed_length &&
-                       temp_slot.link.speed_value() == slot.link.speed_value()) {
-                temp_slot.link.length = slot.link.length;
-                store_slot = true;
-              }
-            }
-            if (slot_changed_row) {
-              store_slot = true;
-              temp_slot.link.row = slot.link.row;
-            }
-            if (store_slot) { temp_slot.store_in_grid(xpos + cur_grid * GRID_WIDTH, ypos); }
+          if (apply_slot_dirty_fields(temp_slot, slot, slot_dirty_mask)) {
+            temp_slot.store_in_grid(xpos + cur_grid * GRID_WIDTH, ypos);
           }
         } else if (slot_load == 1) {
           // if (height > 1 && y == 0) {
@@ -1059,6 +1074,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       }
     }
   }
+
   if ((slot_clear == 1) || (slot_paste == 1) || (slot_update == 1)) {
     proj.sync_grid(cur_grid);
   }
@@ -1074,6 +1090,7 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
       goto again;
     }
     load_old_col();
+    _col = getCol();
   }
   mcl_cfg.load_mode = load_mode_old;
   slot_apply = 0;
@@ -1083,6 +1100,8 @@ void GridPage::apply_slot_changes(bool ignore_undo, bool ignore_func) {
   slot_paste = 0;
   slot.load_from_grid(_col + cur_grid * GRID_WIDTH, getRow());
   slot_load_sound = slot.load_sound() ? 1 : 0;
+  slot_menu_grid = cur_grid;
+  slot_original_link = slot.link;
   old_col = 255;
 }
 
@@ -1424,6 +1443,8 @@ bool GridPage::handleEvent(gui_event_t *event) {
       DEBUG_DUMP(slot.link.loops);
       DEBUG_DUMP(slot.link.row);
       slot_load_sound = slot.load_sound() ? 1 : 0;
+      slot_menu_grid = cur_grid;
+      slot_original_link = slot.link;
       encoders[0] = &grid_slot_param1;
       encoders[1] = &grid_slot_param2;
       encoders[2] = &param3;

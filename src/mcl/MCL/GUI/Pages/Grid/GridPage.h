@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GridRowHeader.h"
+#include "GridLink.h"
 #include "GUI.h"
 #include "MCL.h"
 #include "MCLStrings.h"
@@ -46,6 +47,8 @@ public:
   GridColumn slot_undo_x;
   GridRow slot_undo_y;
   uint8_t slot_load;
+  uint8_t slot_menu_grid;
+  GridLink slot_original_link;
   uint8_t slot_load_sound = 1;
 
   uint16_t grid_lastclock;
