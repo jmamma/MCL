@@ -80,6 +80,8 @@ The Mixer Page has four performance states mapped to **[Down]**, **[Left]**, **[
 
 ![mixer page perfs](../assets/images/mixer_page_perfs.png)
 
+![Mixer Page performance state controls](../assets/images/mixer_perf_state_controls.svg)
+
 Each state stores:
 
 - mute masks for the primary and secondary mixer targets
@@ -91,16 +93,14 @@ Each state stores:
 | Control | Action |
 | --- | --- |
 | Hold **[Down]**, **[Left]**, **[Up]** or **[Right]** | Preview that performance state. |
-| Preview a state, then press **[Trig]** | Edit its stored mutes, or its stored fills when the Mixer Page is in fill mode. |
-| Preview a state, then press **[Yes]** | Apply the state. |
-| Preview a state, then press **[Bank A]** | Enable or disable loading for the visible mixer target. |
-| Preview a state, then press **[Bank B]** | Mark or unmark that state for `PF` slot autoload. |
-| Preview a state, hold **[No]**, then turn a Perf encoder | Store a Perf A-D controller lock in that state. |
-| Preview a state, hold **[No]**, then press a Perf encoder button | Add or clear the matching controller lock. |
+| While holding a state arrow, press **[Trig]** | Edit its stored mutes, or its stored fills when the Mixer Page is in fill mode. |
+| While holding a state arrow, press **[Yes]** | Apply the state. |
+| While holding a state arrow, press **[Bank A]** | Include or exclude the visible mixer target from the state. |
+| While holding a state arrow, press **[Bank B]** | Mark or unmark that state for `PF` slot autoload. |
+| While holding a state arrow, hold **[No]** and turn a Perf encoder | Store a Perf A-D controller lock in that state. |
+| While holding a state arrow, hold **[No]** and press a Perf encoder button | Add or clear the matching controller lock. |
 
 Preview edits do not change the live mute or fill state until the performance state is applied.
-
-![mixer page perf lock](../assets/images/mixer_page_perf_lock.png)
 
 ## PF Slot Storage
 

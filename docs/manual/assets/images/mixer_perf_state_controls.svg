@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" role="img" aria-labelledby="title desc">
+  <title id="title">Mixer Page performance state controls</title>
+  <desc id="desc">Arrow keys preview four Mixer Page performance states. While a state arrow is held, Yes applies it, No modifies performance encoder locks, Bank A toggles the visible mixer target, Bank B marks PF slot autoload, and Bank C has no state action.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f8fa; }
+      .panel { fill: #ffffff; stroke: #8d99a6; stroke-width: 2; }
+      .key { fill: #232a31; stroke: #11161b; stroke-width: 2; }
+      .key-alt { fill: #35414b; stroke: #11161b; stroke-width: 2; }
+      .key-text { fill: #ffffff; font: 700 17px Arial, Helvetica, sans-serif; text-anchor: middle; dominant-baseline: middle; }
+      .label { fill: #20262d; font: 700 18px Arial, Helvetica, sans-serif; }
+      .body { fill: #303941; font: 15px Arial, Helvetica, sans-serif; }
+      .small { fill: #4a5560; font: 13px Arial, Helvetica, sans-serif; }
+      .title { fill: #20262d; font: 700 26px Arial, Helvetica, sans-serif; }
+      .subtitle { fill: #4a5560; font: 15px Arial, Helvetica, sans-serif; }
+      .badge { fill: #eef2f5; stroke: #c2cad3; stroke-width: 1.5; }
+      .badge-text { fill: #20262d; font: 700 14px Arial, Helvetica, sans-serif; text-anchor: middle; dominant-baseline: middle; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="980" height="560"/>
+  <text class="title" x="40" y="44">Mixer Page Performance State Controls</text>
+  <text class="subtitle" x="40" y="72">Hold an arrow to preview a state. Use the other keys while that arrow is held.</text>
+
+  <rect class="panel" x="40" y="105" width="420" height="405" rx="6"/>
+  <text class="label" x="70" y="140">State selector arrows</text>
+  <text class="body" x="70" y="166">Each arrow previews one stored performance state.</text>
+
+  <g transform="translate(135 205)">
+    <rect class="badge" x="70" y="-30" width="90" height="28" rx="5"/>
+    <text class="badge-text" x="115" y="-15">State 3</text>
+    <rect class="key" x="78" y="0" width="74" height="54" rx="8"/>
+    <text class="key-text" x="115" y="27">UP</text>
+
+    <rect class="badge" x="-10" y="142" width="90" height="28" rx="5"/>
+    <text class="badge-text" x="35" y="157">State 2</text>
+    <rect class="key" x="-10" y="78" width="82" height="54" rx="8"/>
+    <text class="key-text" x="31" y="105">LEFT</text>
+
+    <rect class="badge" x="70" y="190" width="90" height="28" rx="5"/>
+    <text class="badge-text" x="115" y="205">State 1</text>
+    <rect class="key" x="82" y="78" width="74" height="54" rx="8"/>
+    <text class="key-text" x="119" y="105">DOWN</text>
+
+    <rect class="badge" x="158" y="142" width="90" height="28" rx="5"/>
+    <text class="badge-text" x="203" y="157">State 4</text>
+    <rect class="key" x="166" y="78" width="82" height="54" rx="8"/>
+    <text class="key-text" x="207" y="105">RIGHT</text>
+  </g>
+
+  <rect class="badge" x="70" y="453" width="360" height="36" rx="5"/>
+  <text class="body" x="250" y="476" text-anchor="middle">Preview does not change the live state until applied.</text>
+
+  <rect class="panel" x="500" y="105" width="440" height="405" rx="6"/>
+  <text class="label" x="530" y="140">Actions while a state is previewed</text>
+  <text class="body" x="530" y="166">Keep the state arrow held, then press one of these keys.</text>
+
+  <g transform="translate(530 198)">
+    <rect class="key-alt" x="0" y="0" width="92" height="46" rx="8"/>
+    <text class="key-text" x="46" y="23">YES</text>
+    <text class="label" x="118" y="17">Apply state</text>
+    <text class="small" x="118" y="38">Loads enabled mutes, fills and Perf locks.</text>
+
+    <rect class="key-alt" x="0" y="64" width="92" height="46" rx="8"/>
+    <text class="key-text" x="46" y="87">NO</text>
+    <text class="label" x="118" y="81">Perf locks</text>
+    <text class="small" x="118" y="102">Hold NO and turn or press a Perf encoder.</text>
+
+    <rect class="key-alt" x="0" y="128" width="92" height="46" rx="8"/>
+    <text class="key-text" x="46" y="151">BANK A</text>
+    <text class="label" x="118" y="145">Target load</text>
+    <text class="small" x="118" y="166">Include or exclude the visible mixer target.</text>
+
+    <rect class="key-alt" x="0" y="192" width="92" height="46" rx="8"/>
+    <text class="key-text" x="46" y="215">BANK B</text>
+    <text class="label" x="118" y="209">PF autoload</text>
+    <text class="small" x="118" y="230">Auto-apply this state when the PF slot loads.</text>
+
+    <rect class="key-alt" x="0" y="256" width="92" height="46" rx="8"/>
+    <text class="key-text" x="46" y="279">BANK C</text>
+    <text class="label" x="118" y="273">No state action</text>
+    <text class="small" x="118" y="294">Bank C is unused here.</text>
+  </g>
+</svg>
