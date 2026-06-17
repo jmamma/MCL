@@ -10,6 +10,10 @@ The page shows a window into the active grid.
 
 The annotated image above labels the grid regions.
 
+A grid with saved slots shows short slot labels in each populated cell:
+
+![populated grid](../assets/images/grid_populated.png)
+
 | Display item | Meaning |
 | --- | --- |
 | Slot labels | The stored track or state type, such as a drum model, device track, performance state or empty slot. |
