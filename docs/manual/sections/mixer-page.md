@@ -88,7 +88,7 @@ Each state stores:
 - fill masks for the primary and secondary mixer targets
 - optional Perf A-D controller locks
 - per-device load enable flags
-- the optional autoload selection used when the `PF` slot is loaded
+- the optional State Autoload selection
 
 | Control | Action |
 | --- | --- |
@@ -96,7 +96,7 @@ Each state stores:
 | While holding a state arrow, press **[Trig]** | Edit its stored mutes, or its stored fills when the Mixer Page is in fill mode. |
 | While holding a state arrow, press **[Yes]** | Apply the state. |
 | While holding a state arrow, press **[Bank A]** | Enable or disable mute set loading for the visible mixer target. |
-| While holding a state arrow, press **[Bank B]** | Mark or unmark that state for `PF` slot autoload. |
+| While holding a state arrow, press **[Bank B]** | Mark or unmark that state for State Autoload. |
 | While holding a state arrow, hold **[No]** and turn a Perf encoder | Store a Perf A-D controller lock in that state. |
 | While holding a state arrow, hold **[No]** and press a Perf encoder button | Add or clear the matching controller lock. |
 
@@ -106,7 +106,7 @@ Preview edits do not change the live mute or fill state until the performance st
 
 Performance states are stored with the Performance Page data in the `PF` slot on Grid Y. Save the performance group or the `PF` slot after editing Mixer Page states, fill masks, performance locks or autoload settings.
 
-Loading the `PF` slot recalls the Performance Page controllers and scenes. If a Mixer Page performance state is marked for autoload, that state can also be applied during the load.
+Loading the `PF` slot recalls the Performance Page controllers and scenes. If a Mixer Page performance state is marked for State Autoload, that state can also be applied during the load.
 
 ## Scene Autofill Shortcuts
 

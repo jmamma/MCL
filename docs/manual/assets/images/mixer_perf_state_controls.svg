@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 560" role="img" aria-labelledby="title desc">
   <title id="title">Mixer Page performance state controls</title>
-  <desc id="desc">Mixer Page performance-state controls. Arrow keys preview states, YES applies the preview, NO edits performance locks, Bank A enables or disables mute set loading, Bank B toggles PF autoload, and Bank C and Bank D are unused for performance states.</desc>
+  <desc id="desc">Mixer Page performance-state controls. Arrow keys preview states, YES applies the preview, NO edits performance locks, Bank A enables or disables mute set loading, Bank B toggles State Autoload, and Bank C and Bank D are unused for performance states.</desc>
   <defs>
     <style>
       .bg { fill: #f7f8fa; }
@@ -40,7 +40,7 @@
     <rect class="key-mid" x="188" y="270" width="84" height="54" rx="8"/>
     <text class="key-text" x="230" y="297">BANK B</text>
     <rect class="badge" x="178" y="337" width="104" height="28" rx="5"/>
-    <text class="badge-text" x="230" y="352">PF autoload</text>
+    <text class="badge-text" x="230" y="352">State Autoload</text>
 
     <rect class="key-mid" x="296" y="270" width="84" height="54" rx="8"/>
     <text class="key-text" x="338" y="297">BANK C</text>
