@@ -46,6 +46,8 @@ The preset browser uses Encoder 1 for the machine/preset group and Encoder 2 for
 
 ## Panel Controls
 
+![TBD panel controls](../assets/images/tbd_panel.png)
+
 TBD panel input is mapped into MCL's page and device model.
 
 | Control | Action |
