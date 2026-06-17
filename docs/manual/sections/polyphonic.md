@@ -84,19 +84,19 @@ To recall the current route and polyphony setup from the grid, save the `RT` slo
 
 ## Relationship To `POLY MODE`
 
-`POLY MODE` is configured from:
+The Polyphony Page assigns tracks to MIDI channel groups. `POLY MODE` only controls whether those groups also listen to an external controller.
+
+`POLY MODE` is set from:
 
 ```text
 CONFIG > MIDI > CONTROLLER > INPUT
 ```
 
-![poly mode setting](../assets/images/chromatic_menu.png)
+![poly mode menu](../assets/images/poly_mode_menu.png)
 
 | Value | Behavior |
 | --- | --- |
 | `INT` | Poly groups respond to internal Chromatic playing. |
 | `INT+EXT` | Poly groups also respond to external controller input on matching group channels. |
-
-The Polyphony Page assigns the MIDI channel group for each voice pool.
 
 External MIDI tracks do not use `POLY MODE`. To drive a Machinedrum voice group from a PianoRoll track, set the Track Menu `CHANNEL` value past `16` and choose `MD1` through `MD16`.
