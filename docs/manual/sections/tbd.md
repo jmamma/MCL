@@ -1,6 +1,6 @@
 # TBD
 
-TBD integration uses the same Grid X / Grid Y model as the rest of MCL. When `TBD` is assigned to a grid, MCL talks to the internal TBD device through the `INT` port and uses the selected TBD sound to decide which tracks, sound data, mixer controls and parameter locks are available.
+TBD uses the same Grid X / Grid Y setup as other MCL devices. Select `TBD` with the `INT` port to control the internal TBD sound engine from MCL. TBD tracks can then be sequenced, saved, loaded, mixed and parameter-locked from the normal grid and editor pages.
 
 ## Device Setup
 
