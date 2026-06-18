@@ -449,6 +449,7 @@ void MixerPage::display() {
     redraw();
   }
 
+  bool force_redraw_mutes = redraw_mutes;
   if (redraw_mutes) {
     oled_draw_mutes();
     redraw_mutes = false;
@@ -474,12 +475,14 @@ void MixerPage::display() {
       mask = 0;
     }
     mask &= track_mask_for_len(mixer_track_count());
-    if (seq_step_page.mute_mask != mask) {
+    if (seq_step_page.mute_mask != mask || force_redraw_mutes) {
       mcl_gui.set_trigleds(mask,
                            fill_preview ? TRIGLED_EXCLUSIVE
                                         : mixer_led_mode());
       seq_step_page.mute_mask = mask;
-      oled_draw_mutes();
+      if (!force_redraw_mutes) {
+        oled_draw_mutes();
+      }
     }
   }
   const bool show_perf_encoders = mixer_target.perf_available();
@@ -895,8 +898,7 @@ bool MixerPage::handleEvent(gui_event_t *event) {
           switch_perf_state(set, true, load_types[set]);
         } else {
           preview_mute_set = set;
-          // force redraw in display()
-          seq_step_page.mute_mask++;
+          redraw_mutes = true;
         }
         break;
       }

@@ -5,6 +5,7 @@
 
 #include "GUI/Pages/CommonPages.h"
 #include "GUI/Pages/Performance/PerfEncoder.h"
+#include "GUI/Pages/Performance/PerfPageTargetRef.h"
 #include "PerfData.h"
 
 #include <string.h>
@@ -71,7 +72,7 @@ void putName(uint8_t* dst, const char* name) {
 } // namespace
 
 void SpsHostSeqBridge::sendPerfPageState(uint8_t tag) {
-    uint8_t body[kPerfPageStateWireBytes];
+    uint8_t body[kPerfPageStateWireBytes + 1];
     uint16_t off = 0;
     body[off++] = perf_page.perf_id < kPerfPageControls ? perf_page.perf_id
                                                         : 0;
@@ -112,6 +113,7 @@ void SpsHostSeqBridge::sendPerfPageState(uint8_t tag) {
             body[off++] = p.val <= 127 ? p.val : (uint8_t)0xFF;
         }
     }
+    body[off++] = clamp7(PerfPageTargetRef::target_count());
 
     sendFrame(CMD_PERF_PAGE_STATE, tag, body, off);
 }
@@ -123,7 +125,16 @@ bool SpsHostSeqBridge::applyPerfPageSetControl(const uint8_t* b,
     PerfEncoder* e = perfPageEncoder(b[0]);
     if (e == nullptr)
         return false;
-    e->perf_data.update_src(clamp7(b[1]), clamp7(b[2]), clamp7(b[3]));
+    uint8_t src = clamp7(b[1]);
+    uint8_t maxSrc = PerfPageTargetRef::target_count();
+    if (src > maxSrc)
+        src = maxSrc;
+    uint8_t param = clamp7(b[2]);
+    uint8_t paramCount = PerfPageTargetRef::target(src).param_count();
+    uint8_t maxParam = src == 0 ? 2 : (paramCount ? paramCount - 1 : 0);
+    if (param > maxParam)
+        param = maxParam;
+    e->perf_data.update_src(src, param, clamp7(b[3]));
     e->cur = clamp7(b[4]);
     e->old = e->cur;
     e->resend = true;
@@ -159,8 +170,17 @@ bool SpsHostSeqBridge::applyPerfPageSetSceneParam(const uint8_t* b,
         p.param = 0;
         p.val = 255;
     } else {
-        p.dest = clamp7(b[2]);
-        p.param = clamp7(b[3]);
+        uint8_t dest = clamp7(b[2]);
+        uint8_t maxDest = PerfPageTargetRef::target_count();
+        if (dest > maxDest)
+            dest = maxDest;
+        uint8_t param = clamp7(b[3]);
+        uint8_t paramCount = PerfPageTargetRef::target(dest).param_count();
+        uint8_t maxParam = dest == 0 ? 2 : (paramCount ? paramCount - 1 : 0);
+        if (param > maxParam)
+            param = maxParam;
+        p.dest = dest;
+        p.param = param;
         p.val = clamp7(b[4]);
     }
     recomputeSceneCount(scene);
