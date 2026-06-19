@@ -653,7 +653,8 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       orig_src == ButtonsClass::FUNC_BUTTON5) {
     if (is_press) {
       if (BUTTON_DOWN(kTbdTempoButton)) {
-        grid_select_button_chorded_ = true;
+        grid_select_button_down_ = false;
+        grid_select_button_chorded_ = false;
         tbd_tempo_page.begin(false);
         return true;
       }
@@ -664,6 +665,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (is_release) {
       return true;
     }
+  }
+
+  if (tbd_tempo_page.is_active() && tbd_tempo_page.handleEvent(event)) {
+    if (arrow_trace) DEBUG_PRINTLN("  arrow eaten by tempo_page");
+    return true;
   }
 
   if (ui_collapsed && MD.ui.sps_mode.is_active() &&
@@ -706,11 +712,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       return open_grid_io_overlay(GridIOOverlay::MODE_SAVE,
                                   ButtonsClass::BUTTON1);
     }
-  }
-
-  if (tbd_tempo_page.is_active() && tbd_tempo_page.handleEvent(event)) {
-    if (arrow_trace) DEBUG_PRINTLN("  arrow eaten by tempo_page");
-    return true;
   }
 
   if (orig_src == ButtonsClass::BUTTON2 && is_file_browser_page) {

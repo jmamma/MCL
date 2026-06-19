@@ -49,6 +49,10 @@ void TbdTempoPage::close() {
   GUI.clearOverlay();
 }
 
+bool TbdTempoPage::tempo_edit_allowed() const {
+  return mcl_cfg.clock_rec == MIDI_CLOCK_SOURCE_INTERNAL;
+}
+
 void TbdTempoPage::sync_from_clock() {
   float bpm = MidiClock.get_tempo();
   if (bpm < 1.0f) {
@@ -61,6 +65,8 @@ void TbdTempoPage::sync_from_clock() {
 }
 
 void TbdTempoPage::set_tempo_tenths(int16_t tenths) {
+  if (!tempo_edit_allowed()) return;
+
   if (tenths < (int16_t)kMinTempoTenths) tenths = kMinTempoTenths;
   if (tenths > (int16_t)kMaxTempoTenths) tenths = kMaxTempoTenths;
   tempo_tenths_ = (uint16_t)tenths;
@@ -70,6 +76,8 @@ void TbdTempoPage::set_tempo_tenths(int16_t tenths) {
 }
 
 void TbdTempoPage::adjust_tempo(int16_t delta_tenths) {
+  if (!tempo_edit_allowed()) return;
+
   set_tempo_tenths((int16_t)tempo_tenths_ + delta_tenths);
   tap_mode_ = false;
 }
@@ -82,6 +90,12 @@ void TbdTempoPage::reset_taps() {
 }
 
 void TbdTempoPage::handle_tap() {
+  if (!tempo_edit_allowed()) {
+    tap_mode_ = false;
+    reset_taps();
+    return;
+  }
+
   uint16_t now = read_clock_ms();
   if (tap_count_ == 0 ||
       clock_diff(last_tap_ms_, now) > 3000) {
@@ -173,9 +187,9 @@ bool TbdTempoPage::handleEvent(gui_event_t *event) {
   if (event->source == ButtonsClass::FUNC_BUTTON5) {
     if (is_press) {
       if (BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B)) {
-        return true;
-      }
-      if (BUTTON_DOWN(ButtonsClass::BUTTON3)) {
+        tap_mode_ = true;
+        handle_tap();
+      } else if (BUTTON_DOWN(ButtonsClass::BUTTON3)) {
         tap_mode_ = true;
         handle_tap();
       } else {
@@ -186,6 +200,10 @@ bool TbdTempoPage::handleEvent(gui_event_t *event) {
   }
 
   if (event->source == ButtonsClass::TBD_BUTTON_B) {
+    if (BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5) && is_press) {
+      tap_mode_ = true;
+      handle_tap();
+    }
     return true;
   }
 

@@ -25,6 +25,7 @@ private:
   static constexpr uint8_t kMaxTapIntervals = 15;
 
   void close();
+  bool tempo_edit_allowed() const;
   void sync_from_clock();
   void set_tempo_tenths(int16_t tenths);
   void adjust_tempo(int16_t delta_tenths);
