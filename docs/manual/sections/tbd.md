@@ -67,6 +67,14 @@ TBD-16 panel input is mapped into MCL's page and device model.
 
 If an expanded device UI is active, TBD device controls get first chance to handle the buttons. If the device UI is collapsed, the active MCL page handles the same buttons.
 
+## Track Select
+
+On the Grid Page, hold **[Function]** to open Track Select. The top half of the screen shows the active device and track number, and the trig LEDs show the selected track.
+
+While holding **[Function]**, press a trig pad to select that track. Turn Encoder 1, or press **[Left]** / **[Up]** and **[Right]** / **[Down]**, to move through tracks. Release **[Function]** to close Track Select and return to the Grid Page.
+
+If a TBD device UI is open for the selected device, Track Select follows that UI and changes its focused TBD track.
+
 ## Grid Page Differences
 
 On TBD-16, Save and Load keep the Grid Page visible instead of opening separate full-screen pages.
@@ -101,4 +109,4 @@ The TBD sync menu uses `CLOCK SRC` and `TRANS SRC`. Available source values are:
 
 The tempo window edits the internal tempo when MCL is using its own clock source.
 
-From the Grid Page, press **[Function]** to open the tempo window. Turn Encoder 1 to adjust tempo in 1 BPM steps, or press **[Up]** / **[Down]** for 0.1 BPM changes. Hold **[Function]** and tap **Y** to enter tap-tempo mode; after four taps MCL applies the averaged tempo. **[No]** closes the window. The window shows the current tempo and clock source label: `INT`, `EXT1`, `EXT2` or `USB`.
+From the Grid Page, hold **[B]** and press **[Function]** to open the tempo window. Turn Encoder 1 to adjust tempo in 1 BPM steps, or press **[Up]** / **[Down]** for 0.1 BPM changes. Hold **[Function]** and tap **Y** to enter tap-tempo mode; after four taps MCL applies the averaged tempo. **[No]** closes the window. The window shows the current tempo and clock source label: `INT`, `EXT1`, `EXT2` or `USB`.
