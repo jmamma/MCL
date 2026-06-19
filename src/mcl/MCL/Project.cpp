@@ -388,6 +388,7 @@ constexpr size_t PROJECT_HEADER_SIZE_LEGACY_CONFIG =
 #ifdef MCL_HAS_PROJECT_CONVERSION
 #define PROJECT_VERSION_CAN_OPEN(v)                                           \
   ((v) == PROJ_MIN_READABLE_VERSION || (v) == PROJ_VERSION)
+#define PROJECT_CONVERSION_ATTR() __attribute__((noinline, cold))
 #else
 #define PROJECT_VERSION_CAN_OPEN(v) ((v) == PROJ_VERSION)
 #endif
@@ -700,14 +701,14 @@ LegacyMigrationStatus migrate_ext_like_track_storage(Grid &src_grid,
 }
 
 bool handle_legacy_migration_status(LegacyMigrationStatus status,
-                                    GridRowHeader &row_header,
-                                    GridColumn column) {
+                                    GridRowHeader &row_header, Grid &dst_grid,
+                                    GridColumn column, GridRow row) {
   if (status == LEGACY_MIGRATE_OK) {
     return true;
   }
   if (status == LEGACY_MIGRATE_TYPE_MISMATCH) {
     row_header.update_model(column, 0, EMPTY_TRACK_TYPE);
-    return true;
+    return dst_grid.clear_slot(column, row, false);
   }
   return false;
 }
@@ -754,7 +755,51 @@ bool migrate_perf_track_storage(Grid &src_grid, Grid &dst_grid,
   init_migrated_header(upgraded.header, legacy_track.header, PERF_TRACK_TYPE,
                        PERF_TRACK_STORAGE_VERSION_PERF_STATES);
   copy_legacy_perf_track_data(upgraded.data, legacy_track.data);
-  return dst_grid.write(&upgraded, sizeof(upgraded), dst_column, row);
+  if (!dst_grid.write(&upgraded, sizeof(upgraded), dst_column, row)) {
+    return false;
+  }
+  if (dst_column != column) {
+    legacy_track.header.version[0] = 0;
+    legacy_track.header.version[1] = 0;
+    legacy_track.header.active = EMPTY_TRACK_TYPE;
+    return dst_grid.write(&legacy_track.header, sizeof(legacy_track.header),
+                          column, row);
+  }
+  return true;
+}
+
+bool PROJECT_CONVERSION_ATTR() migrate_md_route_track_storage(
+    Grid &src_grid, Grid &dst_grid, GridRowHeader &row_header, GridRow row,
+    uint8_t poly_channel) {
+  LegacyMDRouteTrackStorage legacy_route;
+  if (!src_grid.read(&legacy_route, sizeof(legacy_route), MDROUTE_TRACK_NUM,
+                     row)) {
+    return false;
+  }
+  if (legacy_route.header.active != MDROUTE_TRACK_TYPE) {
+    return dst_grid.clear_slot(MDROUTE_TRACK_NUM, row, false);
+  }
+
+  MigratedMDRouteTrackStorage new_route;
+  init_migrated_header(new_route.header, legacy_route.header,
+                       MD_ROUTE_TRACK_TYPE, 0);
+  memcpy(new_route.route.routing, legacy_route.route.routing,
+         sizeof(new_route.route.routing));
+  if (poly_channel < PTC_MIDI_GROUP_MIN || poly_channel > PTC_MIDI_GROUP_MAX) {
+    poly_channel = PTC_MIDI_GROUP_MIN;
+  }
+  uint16_t poly_mask = legacy_route.route.poly_mask;
+  for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, poly_mask >>= 1) {
+    new_route.route.ptc_group[i] =
+        (poly_mask & 1) ? poly_channel : PTC_GROUP_OFF;
+  }
+
+  if (!dst_grid.write(&new_route, sizeof(new_route), MDROUTE_TRACK_NUM, row)) {
+    return false;
+  }
+  row_header.update_model(MDROUTE_TRACK_NUM, MD_ROUTE_TRACK_TYPE,
+                          MD_ROUTE_TRACK_TYPE);
+  return true;
 }
 #endif
 
@@ -1389,7 +1434,7 @@ bool Project::check_project_version() {
 }
 
 #ifdef MCL_HAS_PROJECT_CONVERSION
-bool NOINLINE() Project::migrate_legacy_md_aux_slots(
+bool PROJECT_CONVERSION_ATTR() Project::migrate_legacy_md_aux_slots(
     GridRow row, GridRowHeader *grid_x_header, Grid *dst_grids,
     bool *skip_grid_x0) {
   GridRowHeader grid_y_header;
@@ -1451,61 +1496,13 @@ bool NOINLINE() Project::migrate_legacy_md_aux_slots(
     grid_y_header.update_model(MDLFO_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
   }
 
-  if (grid_y_header.track_type[LEGACY_PERF_TRACK_NUM] == PERF_TRACK_TYPE) {
-    if (!migrate_perf_track_storage(grids[1], dst_grids[1],
-                                    LEGACY_PERF_TRACK_NUM, row,
-                                    PERF_TRACK_NUM)) {
-      return false;
-    }
-    grid_y_header.update_model(PERF_TRACK_NUM, PERF_TRACK_TYPE,
-                               PERF_TRACK_TYPE);
-    grid_y_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
-  }
-
-  if (grid_y_header.track_type[MDROUTE_TRACK_NUM] == MDROUTE_TRACK_TYPE) {
-    LegacyMDRouteTrackStorage legacy_route;
-    if (!grids[1].read(&legacy_route, sizeof(legacy_route), MDROUTE_TRACK_NUM,
-                       row)) {
-      return false;
-    }
-
-    if (legacy_route.header.active == MDROUTE_TRACK_TYPE) {
-      MigratedMDRouteTrackStorage new_route;
-      init_migrated_header(new_route.header, legacy_route.header,
-                           MD_ROUTE_TRACK_TYPE, 0);
-      memcpy(new_route.route.routing, legacy_route.route.routing,
-             sizeof(new_route.route.routing));
-      uint8_t legacy_poly_channel = cfg.uart2_poly_chan;
-      uint8_t ptc_group =
-          legacy_poly_channel >= PTC_MIDI_GROUP_MIN &&
-                  legacy_poly_channel <= PTC_MIDI_GROUP_MAX
-              ? legacy_poly_channel
-              : PTC_MIDI_GROUP_MIN;
-      uint16_t poly_mask = legacy_route.route.poly_mask;
-      for (uint8_t i = 0; i < PTC_GROUP_TRACKS; ++i, poly_mask >>= 1) {
-        new_route.route.ptc_group[i] =
-            (poly_mask & 1) ? ptc_group : PTC_GROUP_OFF;
-      }
-
-      if (!dst_grids[1].write(&new_route, sizeof(new_route),
-                              MDROUTE_TRACK_NUM, row)) {
-        return false;
-      }
-      grid_y_header.update_model(MDROUTE_TRACK_NUM, MD_ROUTE_TRACK_TYPE,
-                                 MD_ROUTE_TRACK_TYPE);
-    }
-  }
   return dst_grids[1].write_row_header(&grid_y_header, row);
 }
 
-bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
-                                                             Grid *dst_grids) {
+bool PROJECT_CONVERSION_ATTR()
+Project::migrate_grid_track_storage_versions(GridIndex grid, Grid *dst_grids) {
   for (GridRow row = 0; row < GRID_LENGTH; row++) {
     draw_upgrade_progress(grid, row);
-    if (grid == 0 &&
-        (!dst_grids[0].clear_row(row) || !dst_grids[1].clear_row(row))) {
-      return false;
-    }
 
     GridRowHeader row_header;
     bool ok = grid == 0 ? grids[0].read_row_header(&row_header, row)
@@ -1519,6 +1516,7 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
                                      &skip_grid_x0)) {
       return false;
     }
+    bool skip_grid_y_perf = false;
 
     for (GridColumn column = 0; column < GRID_WIDTH; column++) {
       if (grid == 0 && column == 0 && skip_grid_x0) {
@@ -1534,11 +1532,15 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
         }
         break;
       case MD_TRACK_TYPE:
-        if (grid == 0 &&
-            !handle_legacy_migration_status(
-                migrate_md_track_native_swing(grids[grid], dst_grids[grid],
-                                              column, row),
-                row_header, column)) {
+        if (grid != 0) {
+          if (!dst_grids[grid].clear_slot(column, row, false)) {
+            return false;
+          }
+        } else if (!handle_legacy_migration_status(
+                       migrate_md_track_native_swing(grids[grid],
+                                                     dst_grids[grid], column,
+                                                     row),
+                       row_header, dst_grids[grid], column, row)) {
           return false;
         }
         break;
@@ -1549,7 +1551,7 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
                 migrate_ext_like_track_storage(grids[grid], dst_grids[grid],
                                                column, row, upgraded,
                                                upgraded.seq_data),
-                row_header, column)) {
+                row_header, dst_grids[grid], column, row)) {
           return false;
         }
         break;
@@ -1561,7 +1563,7 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
                 migrate_ext_like_track_storage(grids[grid], dst_grids[grid],
                                                column, row, upgraded,
                                                upgraded.seq_data),
-                row_header, column)) {
+                row_header, dst_grids[grid], column, row)) {
           return false;
         }
         break;
@@ -1573,7 +1575,7 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
                 migrate_ext_like_track_storage(grids[grid], dst_grids[grid],
                                                column, row, upgraded,
                                                upgraded.seq_data),
-                row_header, column)) {
+                row_header, dst_grids[grid], column, row)) {
           return false;
         }
         break;
@@ -1587,17 +1589,46 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
         }
         break;
       case PERF_TRACK_TYPE:
-        if (grid == 1 && column == PERF_TRACK_NUM) {
-          break;
+        if (grid == 1) {
+          if (column == LEGACY_PERF_TRACK_NUM) {
+            if (!migrate_perf_track_storage(grids[grid], dst_grids[grid],
+                                            column, row, PERF_TRACK_NUM)) {
+              return false;
+            }
+            row_header.update_model(PERF_TRACK_NUM, PERF_TRACK_TYPE,
+                                    PERF_TRACK_TYPE);
+            row_header.update_model(LEGACY_PERF_TRACK_NUM, 0, EMPTY_TRACK_TYPE);
+            skip_grid_y_perf = true;
+            break;
+          }
+          if (column == PERF_TRACK_NUM) {
+            if (!skip_grid_y_perf &&
+                !dst_grids[grid].clear_slot(column, row, false)) {
+              return false;
+            }
+            break;
+          }
         }
         if (!migrate_perf_track_storage(grids[grid], dst_grids[grid],
                                         column, row, column)) {
           return false;
         }
         break;
-      case MD_ROUTE_TRACK_TYPE:
+      case MDROUTE_TRACK_TYPE:
+        if (grid == 1 && column == MDROUTE_TRACK_NUM) {
+          if (!migrate_md_route_track_storage(grids[grid], dst_grids[grid],
+                                              row_header, row,
+                                              cfg.uart2_poly_chan)) {
+            return false;
+          }
+        } else if (!dst_grids[grid].clear_slot(column, row, false)) {
+          return false;
+        }
         break;
       default:
+        if (!dst_grids[grid].clear_slot(column, row, false)) {
+          return false;
+        }
         break;
       }
     }
@@ -1608,8 +1639,9 @@ bool NOINLINE() Project::migrate_grid_track_storage_versions(GridIndex grid,
   return true;
 }
 
-bool NOINLINE() Project::migrate_track_storage_versions(const char *basename,
-                                                        uint8_t *active_pair) {
+bool PROJECT_CONVERSION_ATTR()
+Project::migrate_track_storage_versions(const char *basename,
+                                        uint8_t *active_pair) {
   uint8_t dest_pair = 1;
   for (; dest_pair < 128; dest_pair++) {
     if (project_pair_file_mask(dest_pair, basename) == 0) {
