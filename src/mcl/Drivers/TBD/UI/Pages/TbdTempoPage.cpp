@@ -182,6 +182,10 @@ bool TbdTempoPage::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  if (event->source == ButtonsClass::TBD_BUTTON_B) {
+    return true;
+  }
+
   if (event->source == ButtonsClass::BUTTON3) {
     if (BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5)) {
       if (is_press) {

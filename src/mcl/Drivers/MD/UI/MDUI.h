@@ -15,6 +15,7 @@ public:
   bool enter(gui_event_t *event);
   bool is_active() const;
   bool is_collapsed() const;
+  bool toggle_display_mode();
   void exit();
   void handle_ui_slot_button(bool pressed);
 

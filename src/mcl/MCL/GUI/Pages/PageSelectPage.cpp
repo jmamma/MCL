@@ -418,6 +418,10 @@ bool PageSelectPage::handleEvent(gui_event_t *event) {
   return false;
 }
 
+#ifdef PLATFORM_TBD
+MCLRelativeEncoder page_select_param1(0, 127, 2);
+#else
 MCLRelativeEncoder page_select_param1(0, 127);
+#endif
 MCLRelativeEncoder page_select_param2(0, 127);
 PageSelectPage page_select_page(&page_select_param1, &page_select_param2);

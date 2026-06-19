@@ -3,6 +3,9 @@
 #include "../Drivers/MidiDevice.h"
 #include "MCLSysConfig.h"
 #include "MidiSetup.h"
+#ifdef PLATFORM_TBD
+#include "GUI_hardware.h"
+#endif
 
 namespace {
 
@@ -23,6 +26,12 @@ inline void notify_ui_slot_button(MidiDevice *device, uint8_t slot,
 inline bool ui_device_available(MidiDevice *device) {
   return device != nullptr && device != &null_midi_device &&
          device->connected && device->supports_ui();
+}
+
+inline void set_ui_slot_leds(uint8_t slot) {
+  GUI_hardware.led.set_tbd_driver_leds(
+      slot == DeviceManager::UI_SLOT_PRIMARY,
+      slot == DeviceManager::UI_SLOT_SECONDARY);
 }
 
 inline gui_event_t ui_slot_entry_event(const gui_event_t *event,
@@ -81,6 +90,7 @@ void DeviceManager::set_device_for_port(uint8_t port, MidiDevice *device) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
   }
 #endif
   physical_[port - 1] = nonnull(device);
@@ -153,6 +163,7 @@ void DeviceManager::update_active_slots() {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
   }
 #else
   uint8_t primary_port =
@@ -210,13 +221,14 @@ void DeviceManager::ui_loop() {
 
 bool DeviceManager::handle_ui_event(gui_event_t *event) {
   if (active_ui_device_) {
-    if (active_ui_device_->handle_ui_event(event)) return true;
+    const bool handled = active_ui_device_->handle_ui_event(event);
     if (!active_ui_device_->is_ui_active()) {
       notify_ui_slot_button(active_ui_device_, active_ui_slot_, false);
       active_ui_device_ = nullptr;
       active_ui_slot_ = UI_SLOT_NONE;
+      set_ui_slot_leds(UI_SLOT_NONE);
     }
-    return false;
+    return handled;
   }
 
   MidiDevice *primary = primary_device();
@@ -226,6 +238,7 @@ bool DeviceManager::handle_ui_event(gui_event_t *event) {
     if (primary->is_ui_active()) {
       active_ui_device_ = primary;
       active_ui_slot_ = UI_SLOT_PRIMARY;
+      set_ui_slot_leds(active_ui_slot_);
     }
     return true;
   }
@@ -233,6 +246,7 @@ bool DeviceManager::handle_ui_event(gui_event_t *event) {
     if (secondary->is_ui_active()) {
       active_ui_device_ = secondary;
       active_ui_slot_ = UI_SLOT_SECONDARY;
+      set_ui_slot_leds(active_ui_slot_);
     }
     return true;
   }
@@ -260,14 +274,17 @@ bool DeviceManager::enter_ui(MidiDevice *device, gui_event_t *event) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
   }
   if (!device->enter_ui(event)) return false;
   if (device->is_ui_active()) {
     active_ui_device_ = device;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(active_ui_slot_);
   } else if (active_ui_device_ == device) {
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
   }
   return true;
 }
@@ -306,6 +323,7 @@ bool DeviceManager::enter_ui_slot_tap(uint8_t slot, gui_event_t *event) {
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
   } else if (active_ui_device_ == device && active_ui_slot_ != resolved_slot) {
     notify_ui_slot_button(device, active_ui_slot_, false);
   }
@@ -315,9 +333,12 @@ bool DeviceManager::enter_ui_slot_tap(uint8_t slot, gui_event_t *event) {
   if (device->is_ui_active()) {
     active_ui_device_ = device;
     active_ui_slot_ = resolved_slot;
+    set_ui_slot_leds(active_ui_slot_);
+    notify_ui_slot_button(device, resolved_slot, true);
   } else if (active_ui_device_ == device) {
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
   }
   return true;
 }
@@ -350,9 +371,11 @@ bool DeviceManager::handle_ui_slot_button(uint8_t slot, gui_event_t *event,
   if (active_ui_device_ == nullptr && device->is_ui_active()) {
     active_ui_device_ = device;
     active_ui_slot_ = resolved_slot;
+    set_ui_slot_leds(active_ui_slot_);
   } else if (active_ui_device_ == device && active_ui_slot_ == UI_SLOT_NONE &&
              device->is_ui_active()) {
     active_ui_slot_ = resolved_slot;
+    set_ui_slot_leds(active_ui_slot_);
   }
 
   if (released) {
@@ -370,6 +393,7 @@ bool DeviceManager::handle_ui_slot_button(uint8_t slot, gui_event_t *event,
       device->exit_ui();
       active_ui_device_ = nullptr;
       active_ui_slot_ = UI_SLOT_NONE;
+      set_ui_slot_leds(UI_SLOT_NONE);
     } else {
       notify_ui_slot_button(device, resolved_slot, true);
     }
@@ -381,6 +405,7 @@ bool DeviceManager::handle_ui_slot_button(uint8_t slot, gui_event_t *event,
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
   } else if (active_ui_device_ == device && active_ui_slot_ != resolved_slot) {
     notify_ui_slot_button(device, active_ui_slot_, false);
   }
@@ -390,11 +415,13 @@ bool DeviceManager::handle_ui_slot_button(uint8_t slot, gui_event_t *event,
   if (device->is_ui_active()) {
     active_ui_device_ = device;
     active_ui_slot_ = resolved_slot;
+    set_ui_slot_leds(active_ui_slot_);
     notify_ui_slot_button(device, resolved_slot, true);
   } else if (active_ui_device_ == device) {
     notify_ui_slot_button(device, active_ui_slot_, false);
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
   }
   return true;
 }
@@ -453,12 +480,44 @@ bool DeviceManager::is_ui_collapsed() const {
          (secondary && secondary->is_ui_collapsed());
 }
 
+bool DeviceManager::toggle_ui_slot_display_mode(uint8_t slot) {
+  uint8_t resolved_slot = slot;
+  MidiDevice *device = nullptr;
+  if (slot == UI_SLOT_PRIMARY) {
+    device = primary_device();
+  } else if (slot == UI_SLOT_SECONDARY) {
+    device = secondary_device();
+    MidiDevice *primary = primary_device();
+    if (!ui_device_available(device) && ui_device_available(primary)) {
+      device = primary;
+      resolved_slot = UI_SLOT_PRIMARY;
+    }
+  } else {
+    return false;
+  }
+
+  device = nonnull(device);
+  if (device == &null_midi_device || !device->is_ui_active()) return false;
+
+  if (active_ui_device_ == nullptr) {
+    active_ui_device_ = device;
+    active_ui_slot_ = resolved_slot;
+    set_ui_slot_leds(active_ui_slot_);
+  } else if (active_ui_device_ != device ||
+             active_ui_slot_ != resolved_slot) {
+    return false;
+  }
+
+  return device->toggle_ui_display_mode();
+}
+
 void DeviceManager::exit_ui() {
   if (active_ui_device_) {
     notify_ui_slot_button(active_ui_device_, active_ui_slot_, false);
     active_ui_device_->exit_ui();
     active_ui_device_ = nullptr;
     active_ui_slot_ = UI_SLOT_NONE;
+    set_ui_slot_leds(UI_SLOT_NONE);
     return;
   }
 
@@ -468,5 +527,6 @@ void DeviceManager::exit_ui() {
   if (primary) primary->exit_ui();
   if (secondary) secondary->exit_ui();
   active_ui_slot_ = UI_SLOT_NONE;
+  set_ui_slot_leds(UI_SLOT_NONE);
 }
 #endif

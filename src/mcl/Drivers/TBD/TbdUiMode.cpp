@@ -43,6 +43,36 @@ void claim_tbd_ui_trig_leds() {
   mcl_gui.set_trigleds_local(0, TRIGLED_EXCLUSIVE);
 }
 
+void reset_tbd_page_leds(uint8_t &painted_sub_page, uint8_t &painted_count) {
+  if (painted_sub_page == 255) return;
+  mcl_gui.reset_trigleds();
+  painted_sub_page = 255;
+  painted_count = 0;
+}
+
+void paint_tbd_page_leds(uint8_t &painted_sub_page, uint8_t &painted_count) {
+  uint8_t count = tbd_ui_mode.window_count();
+  if (count > 16) count = 16;
+  const uint8_t sub_page = tbd_ui_mode.sub_page();
+  if (painted_sub_page == sub_page && painted_count == count) return;
+
+  constexpr uint32_t kRed   = ((uint32_t)255 << 16);
+  constexpr uint32_t kWhite = ((uint32_t)255 << 16) |
+                              ((uint32_t)255 << 8)  |
+                              (uint32_t)255;
+
+  const uint16_t avail =
+      count >= 16 ? 0xFFFF : (uint16_t)(((uint16_t)1 << count) - 1);
+  mcl_gui.set_trigleds_color((uint16_t)~avail, 0);
+  mcl_gui.set_trigleds_color(avail, kRed);
+  if (sub_page < 16) {
+    mcl_gui.set_trigleds_color((uint16_t)1 << sub_page, kWhite);
+  }
+
+  painted_sub_page = sub_page;
+  painted_count = count;
+}
+
 uint8_t normalized_value(const TbdP4ParamDescriptor &param) {
   if (param.max_value <= param.min_value) {
     return 0;
@@ -912,7 +942,7 @@ bool TbdUiMode::enter(DeviceIdx device_idx) {
 
   if (latched_ && device_idx_ == device_idx) {
     claim_tbd_ui_trig_leds();
-    show_fullscreen();
+    restore_display_mode();
     return true;
   }
 
@@ -928,7 +958,7 @@ bool TbdUiMode::enter(DeviceIdx device_idx) {
   }
   sub_page_ = min(sub_page_, (uint8_t)(count - 1));
   resync_from_sound();
-  show_fullscreen();
+  restore_display_mode();
   return true;
 }
 
@@ -940,7 +970,6 @@ void TbdUiMode::disable() {
   bound_track_ = 255;
   bound_sub_page_ = 255;
   ui_button_pressed_ = false;
-  ui_button_hold_handled_ = false;
   suppress_ui_button_apply_ = false;
   GUI_hardware.led.set_tbd_driver_leds(false, false);
   if (was_latched) {
@@ -953,25 +982,53 @@ void TbdUiMode::disable() {
 }
 
 void TbdUiMode::show_fullscreen() {
+  display_mode_collapsed_ = false;
   GUI.setOverlay(&tbd_param_overlay_page);
 }
 
 void TbdUiMode::show_strip() {
+  display_mode_collapsed_ = true;
   GUI.setOverlay(&tbd_param_strip_page);
+}
+
+void TbdUiMode::restore_display_mode() {
+  if (display_mode_collapsed_) {
+    GUI.setOverlay(&tbd_param_strip_page);
+  } else {
+    GUI.setOverlay(&tbd_param_overlay_page);
+  }
+}
+
+void TbdUiMode::restore_overlay() {
+  if (!latched_) return;
+  claim_tbd_ui_trig_leds();
+  GUI_hardware.led.set_tbd_driver_leds(device_idx_ == DeviceIdx::Primary,
+                                       device_idx_ == DeviceIdx::Secondary);
+  restore_display_mode();
 }
 
 bool TbdUiMode::is_collapsed() const {
   return latched_ && GUI.overlay == &tbd_param_strip_page;
 }
 
+bool TbdUiMode::toggle_display_mode() {
+  if (!latched_) return false;
+  suppress_ui_button_apply_ = true;
+  if (GUI.overlay == &tbd_param_overlay_page) {
+    show_strip();
+  } else {
+    show_fullscreen();
+  }
+  return true;
+}
+
 void TbdUiMode::handle_ui_slot_button(bool pressed) {
   if (pressed) {
     ui_button_press_ms_ = read_clock_ms();
     ui_button_pressed_ = true;
-    ui_button_hold_handled_ = false;
   } else {
     const bool short_press =
-        ui_button_pressed_ && !ui_button_hold_handled_ &&
+        ui_button_pressed_ &&
         clock_diff(ui_button_press_ms_, read_clock_ms()) <=
             kParamOverlayHoldMs;
     ui_button_pressed_ = false;
@@ -982,22 +1039,10 @@ void TbdUiMode::handle_ui_slot_button(bool pressed) {
       apply_selected_preset();
     }
     if (!short_press) suppress_ui_button_apply_ = false;
-    ui_button_hold_handled_ = false;
+    if (is_collapsed()) {
+      mcl_gui.reset_trigleds();
+    }
   }
-}
-
-void TbdUiMode::poll_ui_button_hold() {
-  if (!latched_ || !ui_button_pressed_ || ui_button_hold_handled_) return;
-  if (clock_diff(ui_button_press_ms_, read_clock_ms()) <=
-      kParamOverlayHoldMs) {
-    return;
-  }
-  if (GUI.overlay == &tbd_param_overlay_page) {
-    show_strip();
-  } else {
-    show_fullscreen();
-  }
-  ui_button_hold_handled_ = true;
 }
 
 void TbdUiMode::move_sub_page(int8_t delta) {
@@ -1033,6 +1078,17 @@ void TbdUiMode::select_sub_page_half(bool lower_half) {
   resync_from_sound();
 }
 
+bool TbdUiMode::select_page_from_trig(uint8_t trig_idx) {
+  uint8_t count = window_count();
+  if (count > 16) count = 16;
+  if (trig_idx >= count) return true;
+  if (sub_page_ != trig_idx) {
+    sub_page_ = trig_idx;
+    resync_from_sound();
+  }
+  return true;
+}
+
 bool TbdUiMode::handle_event(gui_event_t *event) {
   const bool entry_arrow_trace =
       EVENT_BUTTON(event) &&
@@ -1053,11 +1109,26 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
       event->mask != EVENT_BUTTON_RELEASED) {
     return false;
   }
+
+  const bool is_press = event->mask == EVENT_BUTTON_PRESSED;
+  const bool is_trig =
+      event->source >= ButtonsClass::TRIG_BUTTON1 &&
+      event->source < ButtonsClass::TRIG_BUTTON1 + 16;
+
+  if (is_trig &&
+      (ui_button_pressed_ ||
+       (GUI.overlay == &tbd_param_overlay_page &&
+        !BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B)))) {
+    if (is_press) {
+      select_page_from_trig(event->source - ButtonsClass::TRIG_BUTTON1);
+    }
+    return true;
+  }
+
   if (is_collapsed()) {
     return false;
   }
 
-  const bool is_press = event->mask == EVENT_BUTTON_PRESSED;
   if (is_preset_page(sub_page_) &&
       event->source == ButtonsClass::ENCODER2) {
     if (is_press) {
@@ -1363,7 +1434,12 @@ bool TbdUiMode::write_step_locks(const ParamSlot &slot, uint8_t value) {
 
 void TbdUiMode::poll_encoders() {
   if (!latched_) return;
-  poll_ui_button_hold();
+  if (ui_button_pressed_) {
+    for (uint8_t i = 0; i < 4; i++) {
+      Encoders.encoders[i].normal = 0;
+    }
+    return;
+  }
   if (encoder_passthrough_page()) return;
 
   if (bound_device_idx_ != device_idx_ ||
@@ -1403,9 +1479,39 @@ bool TbdUiMode::show_strip_value(uint8_t encoder_idx) const {
          SHOW_VALUE_TIMEOUT;
 }
 
+void TbdParamStripPage::init() {
+  painted_sub_page_ = 255;
+  painted_count_ = 0;
+}
+
+void TbdParamStripPage::cleanup() {
+  reset_tbd_page_leds(painted_sub_page_, painted_count_);
+}
+
+void TbdParamStripPage::loop() {
+  if (tbd_ui_mode.ui_slot_button_held()) {
+    paint_tbd_page_leds(painted_sub_page_, painted_count_);
+  } else {
+    reset_tbd_page_leds(painted_sub_page_, painted_count_);
+  }
+}
+
 void TbdParamStripPage::display() {
   if (!tbd_ui_mode.is_active()) return;
   render_window(32, tbd_ui_mode.sub_page(), true, 32);
+}
+
+void TbdParamOverlayPage::init() {
+  painted_sub_page_ = 255;
+  painted_count_ = 0;
+}
+
+void TbdParamOverlayPage::cleanup() {
+  reset_tbd_page_leds(painted_sub_page_, painted_count_);
+}
+
+void TbdParamOverlayPage::loop() {
+  paint_tbd_page_leds(painted_sub_page_, painted_count_);
 }
 
 void TbdParamOverlayPage::display() {

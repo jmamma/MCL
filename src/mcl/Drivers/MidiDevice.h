@@ -172,6 +172,9 @@ public:
   /** Returns true if the active driver UI is display-only/pass-through. */
   virtual bool is_ui_collapsed() { return false; }
 
+  /** Toggle the active driver UI between full-screen and compact display. */
+  virtual bool toggle_ui_display_mode() { return false; }
+
   /** Ask the driver to leave any active UI mode it owns. */
   virtual void exit_ui() {}
 

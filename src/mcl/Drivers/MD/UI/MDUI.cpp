@@ -7,7 +7,6 @@ MDUI::MDUI(MDClass &md) : panel_(md) {}
 
 void MDUI::loop() {
   sps_mode.poll_encoders();
-  sps_mode.poll_page_overlay();
 }
 
 bool MDUI::handle_event(gui_event_t *event) {
@@ -26,6 +25,10 @@ bool MDUI::is_active() const {
 
 bool MDUI::is_collapsed() const {
   return sps_mode.is_collapsed();
+}
+
+bool MDUI::toggle_display_mode() {
+  return sps_mode.toggle_display_mode();
 }
 
 void MDUI::exit() {

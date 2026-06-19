@@ -8,8 +8,8 @@
  *
  * Lifecycle is owned by SpsMode:
  *   - SpsMode::enable defaults to GUI.setOverlay(&sps_overlay_page).
- *   - Holding the logical device UI button toggles between this
- *     full-screen overlay and the compact strip.
+ *   - The panel display-mode chord toggles between this full-screen
+ *     overlay and the compact strip.
  *   - SpsMode::disable clears SPS overlays when the device UI is exited.
  *
  * Trig / arrow sub-page navigation while this overlay is active, or

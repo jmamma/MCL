@@ -280,6 +280,12 @@ static inline const char *seq_device_idx_name(DeviceIdx device_idx) {
   return SeqPage::device_for_seq_idx(device_idx)->name;
 }
 
+#ifdef PLATFORM_TBD
+const char *SeqPage::device_idx_name(DeviceIdx device_idx) {
+  return seq_device_idx_name(device_idx);
+}
+#endif
+
 uint8_t opt_speed = 1;
 uint8_t opt_swing = 50;
 uint8_t opt_trackid = 1;

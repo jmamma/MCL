@@ -164,6 +164,9 @@ public:
   static bool active_device_is_md();
   static bool swing_mask_edit_disabled();
   static void select_device_idx(DeviceIdx device_idx);
+#ifdef PLATFORM_TBD
+  static const char *device_idx_name(DeviceIdx device_idx);
+#endif
   static void request_enhanced_mask_window(uint8_t mask);
   static bool consume_enhanced_mask_window_exit();
 

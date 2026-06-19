@@ -62,7 +62,7 @@ void LEDHardware::show() {
         id = tbd_ui.rgb_led_fbtn_map[2];
       }
       if (i == STRIP_LED2) {
-        id = tbd_ui.rgb_led_fbtn_map[1]; // restored original mapping
+        id = tbd_ui.rgb_led_fbtn_map[1];
       }
 
       if (id < 255) {
@@ -86,19 +86,17 @@ void LEDHardware::show() {
       final_render_state >>= 1;
     }
 
-    // REC button LED (fbtn_map[0]): live record blink takes priority over step-edit
+    // REC button LED: live record blink takes priority over step-edit.
     bool rec_led_on = rec_active ? last_blink_hint
                                  : (bool)((led_base_state >> STRIP_LED3) & 1);
-    setPixelColor(tbd_ui.rgb_led_fbtn_map[0], rec_led_on ? STRIP_RED : STRIP_BLACK, false);
+    setPixelColor(tbd_ui.rgb_led_fbtn_map[0],
+                  rec_led_on ? STRIP_RED : STRIP_BLACK, false);
 
-    // STRIP_LED2 (fbtn_map[1]) doubles as the SPS-mode latch indicator —
-    // amber while latched, white while the param-page-select overlay
-    // is open (matches the white "focused sub-page" trig LED), and
-    // off otherwise (the normal led_base_state-driven red is suppressed
-    // here since SPS owns this LED while active).
-    if (sps_overlay) {
+    // Legacy SPS latch tint only applies when no device slot LED is active.
+    if (!tbd_driver_left_active && !tbd_driver_right_active && sps_overlay) {
       setPixelColor(tbd_ui.rgb_led_fbtn_map[1], COLOR(255, 255, 255), false);
-    } else if (sps_active) {
+    } else if (!tbd_driver_left_active && !tbd_driver_right_active &&
+               sps_active) {
       setPixelColor(tbd_ui.rgb_led_fbtn_map[1], COLOR(255, 96, 0), false);
     }
 

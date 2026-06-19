@@ -2512,6 +2512,23 @@ bool TbdDevice::select_ui_track(uint8_t track_idx) {
   return tbd_ui_mode.select_track(track_idx);
 }
 
+bool TbdDevice::restore_ui_overlay() {
+  if (diag_active_) {
+    if (ui_device_idx_ == DeviceIdx::Primary ||
+        ui_device_idx_ == DeviceIdx::Secondary) {
+      GUI_hardware.led.set_tbd_driver_leds(ui_device_idx_ == DeviceIdx::Primary,
+                                           ui_device_idx_ == DeviceIdx::Secondary);
+    }
+    GUI.setOverlay(&tbd_p4_diag_overlay);
+    return true;
+  }
+  if (!tbd_ui_mode.is_active()) {
+    return false;
+  }
+  tbd_ui_mode.restore_overlay();
+  return true;
+}
+
 bool TbdDevice::handle_ui_event(gui_event_t *event) {
   const bool arrow_trace =
       EVENT_BUTTON(event) &&
@@ -2560,6 +2577,11 @@ bool TbdDevice::is_ui_active() {
 
 bool TbdDevice::is_ui_collapsed() {
   return !diag_active_ && tbd_ui_mode.is_collapsed();
+}
+
+bool TbdDevice::toggle_ui_display_mode() {
+  if (diag_active_) return false;
+  return tbd_ui_mode.toggle_display_mode();
 }
 
 void TbdDevice::exit_ui() {

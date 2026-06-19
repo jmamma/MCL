@@ -103,11 +103,6 @@ bool MDPanel::handle_event(gui_event_t *event) {
   if (md_.ui.sps_mode.handle_cluster_menus(event)) return true;
   if (md_.ui.sps_mode.handle_func_arrow_chord(event)) return true;
 
-  if (md_.ui.sps_mode.is_collapsed()) {
-    if (md_arrow_trace) DEBUG_PRINTLN("  -> reject (sps collapsed)");
-    return false;
-  }
-
   // ENCODER2..4 taps in SPS-latched mode trigger MD windows/actions.
   if (event->source >= ButtonsClass::ENCODER2 &&
       event->source <= ButtonsClass::ENCODER4) {
@@ -157,6 +152,30 @@ bool MDPanel::handle_event(gui_event_t *event) {
     if (md_arrow_trace) DEBUG_PRINTLN("  -> consumed by handle_arrow_subpage");
     return true;
   }
+
+  if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
+      event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
+    uint8_t key = event->source - ButtonsClass::TRIG_BUTTON1;
+
+    // MD FUNC held + trig -> MD track select. In SPS mode the physical
+    // FUNC button drives MDX_KEY_FUNC directly.
+    if (key_interface.is_key_down(MDX_KEY_FUNC)) {
+      if (is_press && key < NUM_MD_TRACKS) {
+        md_.currentTrack = key;
+        md_.track_select(key + 1);
+        if (md_.ui.sps_mode.is_active()) md_.ui.sps_mode.resync_from_kit();
+      }
+      return true;
+    }
+
+    if (md_.ui.sps_mode.handle_trig_forward(event, key)) return true;
+  }
+
+  if (md_.ui.sps_mode.is_collapsed()) {
+    if (md_arrow_trace) DEBUG_PRINTLN("  -> reject (sps collapsed)");
+    return false;
+  }
+
   if (md_.ui.sps_mode.handle_sps_key_tap(event))      return true;
 
   const bool is_arrow = (event->source >= ButtonsClass::FUNC_BUTTON6 &&
@@ -215,19 +234,6 @@ bool MDPanel::handle_event(gui_event_t *event) {
   if (event->source >= ButtonsClass::TRIG_BUTTON1 &&
       event->source <  ButtonsClass::TRIG_BUTTON1 + 16) {
     uint8_t key = event->source - ButtonsClass::TRIG_BUTTON1;
-
-    // MD FUNC held + trig -> MD track select. In SPS mode the physical
-    // FUNC button drives MDX_KEY_FUNC directly.
-    if (key_interface.is_key_down(MDX_KEY_FUNC)) {
-      if (is_press && key < NUM_MD_TRACKS) {
-        md_.currentTrack = key;
-        md_.track_select(key + 1);
-        if (md_.ui.sps_mode.is_active()) md_.ui.sps_mode.resync_from_kit();
-      }
-      return true;
-    }
-
-    if (md_.ui.sps_mode.handle_trig_forward(event, key)) return true;
     handle_grid_trig_preview(event, key);
   }
 

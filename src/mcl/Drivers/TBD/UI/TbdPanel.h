@@ -10,10 +10,8 @@ public:
   bool handleEvent(gui_event_t *event);
 
 private:
-  bool top_left_page_select_hold_allowed(uint8_t pg) const;
-  void begin_top_left_page_select_hold();
-  void reset_top_left_page_select_hold();
-  void open_page_select_from_top_left();
+  bool top_left_button_consumed_page(uint8_t pg) const;
+  void open_page_select();
   bool handle_primary_ui_button(gui_event_t *event);
   bool handle_secondary_ui_button(gui_event_t *event,
                                   bool allow_toggle = true);
@@ -28,10 +26,14 @@ private:
   bool mixer_no_button_down_ = false;
   bool active_ui_button_pressed_ = false;
   bool active_ui_button_chorded_ = false;
+  bool active_ui_button_exit_on_tap_ = false;
   uint8_t active_ui_button_source_ = 255;
   uint16_t active_ui_button_press_ms_ = 0;
-  bool top_left_page_select_hold_tracking_ = false;
-  uint16_t top_left_page_select_hold_ms_ = 0;
+  uint8_t ui_display_chord_source_ = 255;
+  uint8_t ui_display_chord_modifier_ = 255;
+  bool grid_select_button_down_ = false;
+  bool grid_select_button_chorded_ = false;
+  bool tempo_track_select_down_ = false;
   uint8_t top_left_page_select_base_page_ = 255;
   bool suppress_top_left_release_ = false;
 };

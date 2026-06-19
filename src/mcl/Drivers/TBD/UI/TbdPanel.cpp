@@ -23,13 +23,16 @@
 #include "NoteInterface.h"
 #include "GUI/Pages/PageSelectPage.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
+#include "GUI/Pages/Sequencer/SeqTrackSelectPage.h"
 #include "SeqTrackUtil.h"
 #include "Pages/TbdTempoPage.h"
 #include "helpers.h"
 
 TbdPanel tbd_panel;
 
-static constexpr uint16_t kTbdTopLeftPageSelectHoldMs = 400;
+static constexpr uint16_t kTbdUiButtonTapMaxMs = 400;
+static constexpr uint8_t kTbdSlotTrackMenuButton = ButtonsClass::BUTTON3;
+static constexpr uint8_t kTbdDisplaySizeButton = ButtonsClass::TBD_BUTTON_B;
 
 static bool tbd_transport_forward_has(MidiUartClass *uart) {
   if (uart == nullptr) return false;
@@ -179,7 +182,33 @@ static bool tbd_b_scale_page(PageIndex pg) {
   }
 }
 
-bool TbdPanel::top_left_page_select_hold_allowed(uint8_t pg) const {
+static bool tbd_bank_popup_tap_allowed(PageIndex pg) {
+  if (pg == BANK_POPUP_PAGE) return true;
+  if (pg == PAGE_SELECT_PAGE || pg == GRID_LOAD_PAGE ||
+      pg == GRID_SAVE_PAGE || pg == TEXT_INPUT_PAGE ||
+      pg == QUESTIONDIALOG_PAGE || grid_io_overlay.is_active()) {
+    return false;
+  }
+  if (is_tbd_menu_page(pg) || is_tbd_file_browser_page(pg)) return false;
+  if (pg == GRID_PAGE && grid_page.show_slot_menu) return false;
+  return true;
+}
+
+static void tbd_page_select_current_page(PageIndex pg) {
+  const uint8_t count = sizeof(page_select_page.page_entries) /
+                        sizeof(page_select_page.page_entries[0]);
+  for (uint8_t i = 0; i < count; ++i) {
+    if (page_select_page.page_entries[i].Page == pg) {
+      if (page_select_page.page_select != i) {
+        page_select_page.page_select = i;
+        page_select_page.draw_popup();
+      }
+      return;
+    }
+  }
+}
+
+bool TbdPanel::top_left_button_consumed_page(uint8_t pg) const {
   return pg != PAGE_SELECT_PAGE && pg != BANK_POPUP_PAGE &&
          pg != TEXT_INPUT_PAGE && pg != GRID_SAVE_PAGE &&
          pg != GRID_LOAD_PAGE &&
@@ -215,8 +244,12 @@ bool TbdPanel::handle_active_ui_button(gui_event_t *event, uint8_t orig_src) {
     active_ui_button_chorded_ = false;
     active_ui_button_source_ = orig_src;
     active_ui_button_press_ms_ = read_clock_ms();
+    active_ui_button_exit_on_tap_ =
+        orig_src == ButtonsClass::BUTTON2
+            ? device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_PRIMARY)
+            : true;
     if (orig_src == ButtonsClass::BUTTON2) {
-      begin_top_left_page_select_hold();
+      handle_primary_ui_button(event);
     } else {
       device_manager.notify_active_ui_button(event);
     }
@@ -230,30 +263,20 @@ bool TbdPanel::handle_active_ui_button(gui_event_t *event, uint8_t orig_src) {
         tracked ? clock_diff(active_ui_button_press_ms_, read_clock_ms()) : 0;
     const bool chorded = active_ui_button_chorded_;
     const bool short_tap =
-        tracked && !chorded && held_ms <= kTbdTopLeftPageSelectHoldMs;
+        tracked && !chorded && held_ms <= kTbdUiButtonTapMaxMs;
 
     active_ui_button_pressed_ = false;
     active_ui_button_chorded_ = false;
     active_ui_button_source_ = 255;
+    const bool exit_on_tap = active_ui_button_exit_on_tap_;
+    active_ui_button_exit_on_tap_ = false;
 
     if (orig_src == ButtonsClass::BUTTON2) {
-      reset_top_left_page_select_hold();
-      if (chorded) {
-        return true;
-      }
-      if (!short_tap) {
-        open_page_select_from_top_left();
-        return true;
-      }
-      gui_event_t open_event = *event;
-      open_event.mask = EVENT_BUTTON_PRESSED;
-      device_manager.enter_ui_slot_tap(DeviceManager::UI_SLOT_PRIMARY,
-                                       &open_event);
-      return true;
+      handle_primary_ui_button(event);
+    } else {
+      device_manager.notify_active_ui_button(event);
     }
-
-    device_manager.notify_active_ui_button(event);
-    if (short_tap) {
+    if (short_tap && exit_on_tap) {
       device_manager.exit_ui();
     }
     return true;
@@ -262,55 +285,27 @@ bool TbdPanel::handle_active_ui_button(gui_event_t *event, uint8_t orig_src) {
   return true;
 }
 
-void TbdPanel::begin_top_left_page_select_hold() {
-  top_left_page_select_hold_tracking_ = true;
-  top_left_page_select_hold_ms_ = read_clock_ms();
-}
-
-void TbdPanel::reset_top_left_page_select_hold() {
-  top_left_page_select_hold_tracking_ = false;
-  top_left_page_select_hold_ms_ = 0;
-}
-
-void TbdPanel::open_page_select_from_top_left() {
-  top_left_page_select_hold_tracking_ = false;
+void TbdPanel::open_page_select() {
   device_manager.exit_ui();
   PageIndex current_page = mcl.currentPage();
   if (current_page != PAGE_SELECT_PAGE) {
     top_left_page_select_base_page_ = current_page;
   }
-  if (current_page == GRID_PAGE) {
-    page_select_page.page_select = GRID_PAGE;
-  }
   mcl.setPage(PAGE_SELECT_PAGE);
+  if (current_page != PAGE_SELECT_PAGE) {
+    tbd_page_select_current_page(current_page);
+  }
 }
 
-void TbdPanel::loop() {
-  if (!top_left_page_select_hold_tracking_) return;
-
-  if (!BUTTON_DOWN(ButtonsClass::BUTTON2) ||
-      !device_manager.is_ui_active() ||
-      !top_left_page_select_hold_allowed(mcl.currentPage())) {
-    reset_top_left_page_select_hold();
-    return;
-  }
-
-  if (clock_diff(top_left_page_select_hold_ms_, read_clock_ms()) <
-      kTbdTopLeftPageSelectHoldMs) {
-    return;
-  }
-
-  open_page_select_from_top_left();
-}
+void TbdPanel::loop() {}
 
 bool TbdPanel::open_bank_popup() {
   PageIndex pg = mcl.currentPage();
-  if (pg == GRID_LOAD_PAGE || pg == GRID_SAVE_PAGE ||
-      pg == TEXT_INPUT_PAGE || pg == BANK_POPUP_PAGE) {
+  if (!tbd_bank_popup_tap_allowed(pg) || pg == BANK_POPUP_PAGE) {
     return false;
   }
-  if (pg == GRID_PAGE && grid_page.show_slot_menu) return false;
 
+  device_manager.exit_ui();
   if (grid_page.last_page == 255) {
     grid_page.last_page = pg;
   }
@@ -404,6 +399,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (!ui_active) {
     active_ui_button_pressed_ = false;
     active_ui_button_chorded_ = false;
+    active_ui_button_exit_on_tap_ = false;
     active_ui_button_source_ = 255;
   }
   if (!ui_expanded) {
@@ -435,6 +431,23 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     active_ui_button_chorded_ = true;
   }
 
+  if (is_release) {
+    if (orig_src == ui_display_chord_source_) {
+      ui_display_chord_source_ = 255;
+      return true;
+    }
+    if (orig_src == ui_display_chord_modifier_) {
+      ui_display_chord_modifier_ = 255;
+      if (active_ui_button_pressed_ && active_ui_button_source_ == orig_src) {
+        active_ui_button_pressed_ = false;
+        active_ui_button_chorded_ = false;
+        active_ui_button_exit_on_tap_ = false;
+        active_ui_button_source_ = 255;
+      }
+      return true;
+    }
+  }
+
   if (driver_ui_blocked && ui_active) {
     device_manager.exit_ui();
     ui_active = false;
@@ -445,7 +458,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (suppress_top_left_release_ &&
       orig_src == ButtonsClass::BUTTON2 && is_release) {
     suppress_top_left_release_ = false;
-    reset_top_left_page_select_hold();
     return true;
   }
 
@@ -478,7 +490,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   // only fires when TR is the press edge while TL is already held.
   if (event->source == ButtonsClass::TBD_BUTTON_TR && is_press &&
       BUTTON_DOWN(ButtonsClass::BUTTON2)) {
-    reset_top_left_page_select_hold();
     device_manager.exit_ui();
     if (pg == PAGE_SELECT_PAGE && top_left_page_select_base_page_ < NUM_PAGES) {
       mcl.setPage((PageIndex)top_left_page_select_base_page_);
@@ -489,10 +500,76 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  if (is_press && orig_src == kTbdDisplaySizeButton) {
+    uint8_t display_chord_slot = DeviceManager::UI_SLOT_NONE;
+    uint8_t display_chord_modifier = 255;
+    if (BUTTON_DOWN(ButtonsClass::BUTTON2)) {
+      display_chord_slot = DeviceManager::UI_SLOT_PRIMARY;
+      display_chord_modifier = ButtonsClass::BUTTON2;
+    } else if (BUTTON_DOWN(ButtonsClass::TBD_BUTTON_TR)) {
+      display_chord_slot = DeviceManager::UI_SLOT_SECONDARY;
+      display_chord_modifier = ButtonsClass::TBD_BUTTON_TR;
+    }
+    if (display_chord_slot != DeviceManager::UI_SLOT_NONE &&
+        device_manager.toggle_ui_slot_display_mode(display_chord_slot)) {
+      ui_display_chord_source_ = orig_src;
+      ui_display_chord_modifier_ = display_chord_modifier;
+      return true;
+    }
+  }
+
+  if (EVENT_BUTTON(event) && event->source == ButtonsClass::ENCODER1) {
+    static constexpr uint16_t kEnc1TapMaxMs = ButtonsClass::TBD_TAP_MAX_MS;
+    if (is_press) {
+      Buttons.handle_encoder_tap(0, true, kEnc1TapMaxMs);
+      return true;
+    }
+    if (Buttons.handle_encoder_tap(0, false, kEnc1TapMaxMs)) {
+      if (mcl.currentPage() == PAGE_SELECT_PAGE) {
+        top_left_page_select_base_page_ = 255;
+        page_select_page.close_to_selection();
+      } else {
+        open_page_select();
+      }
+    }
+    return true;
+  }
+
+  if (ui_active && MD.ui.sps_mode.is_active() &&
+      !is_local_nav_page && !driver_ui_blocked &&
+      event->source >= ButtonsClass::ENCODER2 &&
+      event->source <= ButtonsClass::ENCODER4 &&
+      device_manager.handle_ui_event(event)) {
+    return true;
+  }
+
+  if (event->source == ButtonsClass::ENCODER2 &&
+      tbd_bank_popup_tap_allowed(pg)) {
+    static constexpr uint16_t kEnc2TapMaxMs = ButtonsClass::TBD_TAP_MAX_MS;
+    if (is_press) {
+      Buttons.handle_encoder_tap(1, true, kEnc2TapMaxMs);
+      return true;
+    }
+    if (Buttons.handle_encoder_tap(1, false, kEnc2TapMaxMs)) {
+      if (mcl.currentPage() == BANK_POPUP_PAGE) {
+        bank_popup_page.close();
+      } else {
+        open_bank_popup();
+      }
+    }
+    return true;
+  }
+
   if (ui_active && !is_local_nav_page && !driver_ui_blocked &&
       (orig_src == ButtonsClass::BUTTON2 ||
        orig_src == ButtonsClass::TBD_BUTTON_TR)) {
     return handle_active_ui_button(event, orig_src);
+  }
+
+  if (!ui_active && orig_src == ButtonsClass::BUTTON2 &&
+      !is_local_nav_page && !driver_ui_blocked) {
+    handle_primary_ui_button(event);
+    return true;
   }
 
   if (orig_src == ButtonsClass::TBD_BUTTON_TR &&
@@ -506,6 +583,111 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       if (open_secondary_ui_from_tap(event)) {
         return true;
       }
+    }
+  }
+
+  if (ui_collapsed && MD.ui.sps_mode.is_active() &&
+      (orig_src == ButtonsClass::BUTTON1 ||
+       orig_src == ButtonsClass::BUTTON3 ||
+       orig_src == ButtonsClass::BUTTON4 ||
+       orig_src == ButtonsClass::FUNC_BUTTON5 ||
+       orig_src == ButtonsClass::TBD_BUTTON_B ||
+       is_trig_button ||
+       (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
+        orig_src <= ButtonsClass::FUNC_BUTTON9)) &&
+      device_manager.handle_ui_event(event)) {
+    return true;
+  }
+
+  if (ui_collapsed && TBD.is_ui_active() &&
+      !is_local_nav_page && !driver_ui_blocked &&
+      is_trig_button &&
+      device_manager.handle_ui_event(event)) {
+    return true;
+  }
+
+  const bool grid_select_context =
+      !ui_expanded && !is_local_nav_page && grid_page_active &&
+      !grid_page.show_slot_menu && !grid_io_overlay.is_active();
+
+  if (tempo_track_select_down_ &&
+      orig_src == ButtonsClass::FUNC_BUTTON5 && is_release) {
+    tempo_track_select_down_ = false;
+    seq_track_select_page.end();
+    return true;
+  }
+
+  if (tempo_track_select_down_ && orig_src == ButtonsClass::TBD_BUTTON_B) {
+    if (is_press) {
+      seq_track_select_page.toggle_device();
+    }
+    return true;
+  }
+
+  if (tempo_track_select_down_ && orig_src == kTbdSlotTrackMenuButton) {
+    if (is_press) {
+      tempo_track_select_down_ = false;
+      seq_track_select_page.end();
+      tbd_tempo_page.begin(false);
+    }
+    return true;
+  }
+
+  if (tempo_track_select_down_ &&
+      orig_src >= ButtonsClass::FUNC_BUTTON6 &&
+      orig_src <= ButtonsClass::FUNC_BUTTON9) {
+    if (is_press) {
+      const int16_t delta =
+          (orig_src == ButtonsClass::FUNC_BUTTON6 ||
+           orig_src == ButtonsClass::FUNC_BUTTON7) ? -1 : 1;
+      seq_track_select_page.move_track(delta);
+    }
+    return true;
+  }
+
+  if (is_trig_button && pg == GRID_PAGE &&
+      seq_track_select_page.is_active()) {
+    if (is_press) {
+      seq_track_select_page.select_track(orig_src - ButtonsClass::TRIG_BUTTON1);
+    }
+    return true;
+  }
+
+  if (grid_select_button_down_ && orig_src == ButtonsClass::TBD_BUTTON_B) {
+    if (is_release) {
+      const bool apply_grid_select = !grid_select_button_chorded_;
+      grid_select_button_down_ = false;
+      grid_select_button_chorded_ = false;
+      if (apply_grid_select) {
+        key_interface.key_event(MDX_KEY_SCALE, false);
+        key_interface.key_event(MDX_KEY_SCALE, true);
+      }
+    }
+    return true;
+  }
+
+  if (grid_select_context && !tbd_tempo_page.is_active() &&
+      orig_src == ButtonsClass::TBD_BUTTON_B) {
+    if (is_press) {
+      grid_select_button_down_ = true;
+      grid_select_button_chorded_ = false;
+    }
+    return true;
+  }
+
+  if (grid_select_context && !tbd_tempo_page.is_active() &&
+      orig_src == ButtonsClass::FUNC_BUTTON5) {
+    if (is_press) {
+      if (BUTTON_DOWN(kTbdSlotTrackMenuButton)) {
+        tbd_tempo_page.begin(false);
+        return true;
+      }
+      tempo_track_select_down_ = true;
+      seq_track_select_page.begin();
+      return true;
+    }
+    if (is_release) {
+      return true;
     }
   }
 
@@ -536,32 +718,18 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (ui_collapsed && MD.ui.sps_mode.is_active() &&
-      (orig_src == ButtonsClass::BUTTON1 ||
-       orig_src == ButtonsClass::BUTTON3 ||
-       orig_src == ButtonsClass::BUTTON4 ||
-       orig_src == ButtonsClass::FUNC_BUTTON5 ||
-       orig_src == ButtonsClass::TBD_BUTTON_B ||
-       (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
-        orig_src <= ButtonsClass::FUNC_BUTTON9)) &&
-      device_manager.handle_ui_event(event)) {
-    return true;
-  }
-
   if (orig_src == ButtonsClass::BUTTON2 && is_file_browser_page) {
     FileBrowserPage *browser = active_tbd_file_browser_page(pg);
     if (is_press) {
-      if (browser != nullptr && !browser->tbd_can_cd_up()) {
-        open_page_select_from_top_left();
-      }
       return true;
     }
     if (is_release) {
-      reset_top_left_page_select_hold();
       if (browser != nullptr) {
         if (browser->tbd_can_cd_up()) {
           return browser->tbd_cd_up();
         }
+        browser->on_cancel();
+        return true;
       }
     }
     return true;
@@ -569,7 +737,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (orig_src == ButtonsClass::BUTTON2 && is_menu_page) {
     if (is_release) {
-      reset_top_left_page_select_hold();
       MenuPageBase *menu = active_tbd_menu_page(pg);
       if (menu != nullptr) {
         menu->exit();
@@ -579,14 +746,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (orig_src == ButtonsClass::BUTTON2 &&
-      top_left_page_select_hold_allowed(pg)) {
-    if (is_press) {
-      open_page_select_from_top_left();
-      return true;
-    }
-    if (is_release) {
-      reset_top_left_page_select_hold();
-    }
+      top_left_button_consumed_page(pg)) {
     return true;
   }
 
@@ -602,20 +762,10 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (!ui_expanded && !is_local_nav_page &&
-      orig_src == ButtonsClass::FUNC_BUTTON5 && is_press &&
-      grid_page_active && !grid_page.show_slot_menu &&
-      !grid_io_overlay.is_active()) {
-    bool tap = BUTTON_DOWN(ButtonsClass::BUTTON3);
-    if (tap) {
-      key_interface.key_event(MDX_KEY_FUNC, true);
-      GUI.ignoreNextEvent(ButtonsClass::BUTTON3);
-    }
-    tbd_tempo_page.begin(tap);
-    return true;
-  }
-
-  if (TBD.is_ui_active() && !TBD.is_ui_collapsed()) {
+  if (TBD.is_ui_active() &&
+      (!TBD.is_ui_collapsed() ||
+       (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
+        orig_src <= ButtonsClass::FUNC_BUTTON9))) {
     if (arrow_trace) DEBUG_PRINTLN("  -> TBD.handle_ui_event");
     if (TBD.handle_ui_event(event)) {
       if (arrow_trace) DEBUG_PRINTLN("  TBD.handle_ui_event consumed");
@@ -631,13 +781,17 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (ui_expanded && !is_transport_button) {
-    if (orig_src == ButtonsClass::TBD_BUTTON_B) {
+    const bool tbd_ui_active = TBD.is_ui_active();
+    if (!tbd_ui_active) {
+      ui_b_button_held_ = false;
+    }
+    if (tbd_ui_active && orig_src == ButtonsClass::TBD_BUTTON_B) {
       ui_b_button_held_ = is_press;
       if (is_release) ui_b_button_held_ = false;
       return true;
     }
     if (is_trig_button) {
-      if (ui_b_button_held_ && is_press) {
+      if (tbd_ui_active && ui_b_button_held_ && is_press) {
         TBD.select_ui_track(orig_src - ButtonsClass::TRIG_BUTTON1);
         return true;
       }
@@ -734,23 +888,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       }
       return true;
     }
-  }
-
-  if (event->source == ButtonsClass::ENCODER1) {
-    if (mcl.currentPage() == PAGE_SELECT_PAGE) return false;
-    static constexpr uint16_t kEnc1TapMaxMs = ButtonsClass::TBD_TAP_MAX_MS;
-    if (is_press) {
-      Buttons.handle_encoder_tap(0, true, kEnc1TapMaxMs);
-      return true;
-    }
-    if (Buttons.handle_encoder_tap(0, false, kEnc1TapMaxMs)) {
-      if (mcl.currentPage() == BANK_POPUP_PAGE) {
-        bank_popup_page.close();
-      } else {
-        open_bank_popup();
-      }
-    }
-    return true;
   }
 
   if (event->source >= ButtonsClass::ENCODER2 &&

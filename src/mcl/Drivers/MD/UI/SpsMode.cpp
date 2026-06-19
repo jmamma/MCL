@@ -67,7 +67,7 @@ void SpsMode::set_latched(bool v) {
   GUI_hardware.led.updateLeds = true;
   if (v) {
     resync_from_kit();
-    GUI.setOverlay(&sps_overlay_page);
+    restore_display_mode();
   } else {
     // Latch off — clear any SPS overlay we installed.
     if (GUI.overlay == &sps_strip_page || GUI.overlay == &sps_overlay_page) {
@@ -81,6 +81,34 @@ void SpsMode::set_latched(bool v) {
 
 bool SpsMode::is_collapsed() const {
   return latched_ && GUI.overlay == &sps_strip_page;
+}
+
+bool SpsMode::toggle_display_mode() {
+  if (!latched_) return false;
+  if (GUI.overlay == &sps_overlay_page) {
+    show_strip();
+  } else {
+    show_fullscreen();
+  }
+  return true;
+}
+
+void SpsMode::show_fullscreen() {
+  display_mode_collapsed_ = false;
+  GUI.setOverlay(&sps_overlay_page);
+}
+
+void SpsMode::show_strip() {
+  display_mode_collapsed_ = true;
+  GUI.setOverlay(&sps_strip_page);
+}
+
+void SpsMode::restore_display_mode() {
+  if (display_mode_collapsed_) {
+    GUI.setOverlay(&sps_strip_page);
+  } else {
+    GUI.setOverlay(&sps_overlay_page);
+  }
 }
 
 uint8_t SpsMode::param_count() const {
@@ -322,6 +350,12 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
     if (is_press(event)) sps_key_consumed_ = true;
     return false;
   }
+
+  if (is_release(event) && arrow_consumed_source_ == event->source) {
+    arrow_consumed_source_ = 255;
+    return true;
+  }
+
   const bool overlay_active = (GUI.overlay == &sps_overlay_page);
   // While the SPS overlay is active (the 8-encoder page select view)
   // or a modifier is held, the cluster owns sub-page traversal.
@@ -372,8 +406,6 @@ bool SpsMode::handle_arrow_subpage(gui_event_t *event) {
       default: break;
     }
     resync_from_kit();
-  } else if (is_release(event)) {
-    if (arrow_consumed_source_ == event->source) arrow_consumed_source_ = 255;
   }
   return true;
 }
@@ -392,21 +424,15 @@ bool SpsMode::handle_sps_key_tap(gui_event_t *event) {
   // The physical FUNC key does NOT toggle the SPS latch — that's TR's
   // role. Tap fires a per-page action; any other button press while it
   // is down suppresses the release tap action.
-  //   GRID_PAGE  → flip cur_grid (0/1 trig-grid view)
+  //   GRID_PAGE  → no action; TBD uses B / MDX_KEY_SCALE for grid swap.
   //   SEQ_*      → advance sequencer page (BUTTON4 analog on AVR)
   if (is_press(event)) {
     sps_key_consumed_ = false;
   } else if (is_release(event)) {
     if (!sps_key_consumed_) {
       const PageIndex pg = mcl.currentPage();
-      if (pg == GRID_PAGE) {
-        // GridPage::handleEvent already implements the cur_grid swap
-        // on MDX_KEY_SCALE press (resets param1.max, re-init). Post
-        // that event so we get the full sequence — not just the bit
-        // flip.
-        key_interface.post_key_event(MDX_KEY_SCALE, false);
-      } else if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
-                 pg == SEQ_EXTSTEP_PAGE) {
+      if (pg == SEQ_STEP_PAGE || pg == SEQ_PTC_PAGE ||
+          pg == SEQ_EXTSTEP_PAGE) {
         // Synthesize the BUTTON4 release that SeqPage::handleEvent
         // already handles for page-select advance — avoids duplicating
         // the track-length / page-count clamp that lives there.
@@ -436,7 +462,8 @@ bool SpsMode::handle_trig_forward(gui_event_t *event, uint8_t trig_idx) {
   // claims trigs.
   const bool sps_key_held = BUTTON_DOWN(ButtonsClass::FUNC_BUTTON5);
   const bool ui_button_held = ui_button_pressed_;
-  if (!sps_key_held && !ui_button_held) return false;
+  const bool fullscreen_overlay = GUI.overlay == &sps_overlay_page;
+  if (!fullscreen_overlay && !sps_key_held && !ui_button_held) return false;
 
   if (is_press(event)) {
     const uint8_t max_sub_pages = param_window_count();
@@ -462,6 +489,12 @@ bool SpsMode::show_value(uint8_t i) const {
 
 void SpsMode::poll_encoders() {
   if (!latched_) return;
+  if (ui_button_pressed_) {
+    for (uint8_t i = 0; i < 4; i++) {
+      Encoders.encoders[i].normal = 0;
+    }
+    return;
+  }
   if (encoder_passthrough_page()) return;
 
   // Track / sub-page change: bring our cur values back in sync with the
@@ -491,28 +524,10 @@ void SpsMode::poll_encoders() {
 }
 
 void SpsMode::handle_ui_slot_button(bool pressed) {
-  if (pressed) {
-    ui_button_press_ms_ = read_clock_ms();
-    ui_button_pressed_ = true;
-    ui_button_hold_handled_ = false;
-  } else {
-    ui_button_pressed_ = false;
-    ui_button_hold_handled_ = false;
+  ui_button_pressed_ = pressed;
+  if (!pressed && is_collapsed()) {
+    mcl_gui.reset_trigleds();
   }
-}
-
-void SpsMode::poll_page_overlay() {
-  if (!latched_ || !ui_button_pressed_ || ui_button_hold_handled_) return;
-  if (clock_diff(ui_button_press_ms_, read_clock_ms()) <=
-      SPS_FULLSCREEN_HOLD_MS) {
-    return;
-  }
-  if (GUI.overlay == &sps_overlay_page) {
-    GUI.setOverlay(&sps_strip_page);
-  } else {
-    GUI.setOverlay(&sps_overlay_page);
-  }
-  ui_button_hold_handled_ = true;
 }
 
 #else // !PLATFORM_TBD
@@ -525,7 +540,6 @@ bool SpsMode::handle_sps_key_tap(gui_event_t *) { return false; }
 bool SpsMode::handle_trig_forward(gui_event_t *, uint8_t) { return false; }
 void SpsMode::poll_encoders() {}
 void SpsMode::handle_ui_slot_button(bool) {}
-void SpsMode::poll_page_overlay() {}
 void SpsMode::resync_from_kit() {}
 bool SpsMode::active_step_lock(uint8_t, uint8_t *) const { return false; }
 void SpsMode::send_param(uint8_t) {}
@@ -534,5 +548,6 @@ uint8_t SpsMode::param_window_count() const { return 0; }
 bool SpsMode::encoder_passthrough_page() const { return true; }
 void SpsMode::set_latched(bool) {}
 bool SpsMode::is_collapsed() const { return false; }
+bool SpsMode::toggle_display_mode() { return false; }
 
 #endif // PLATFORM_TBD

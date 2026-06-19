@@ -32,10 +32,12 @@ public:
   virtual bool supports_ui() const override { return true; }
   virtual bool is_ui_active() override;
   virtual bool is_ui_collapsed() override;
+  virtual bool toggle_ui_display_mode() override;
   virtual void exit_ui() override;
   virtual void on_ui_slot_button(uint8_t slot, bool pressed) override;
   bool enter_diag_ui(DeviceIdx device_idx);
   bool select_ui_track(uint8_t track_idx);
+  bool restore_ui_overlay();
   DeviceIdx ui_device_idx() const { return ui_device_idx_; }
   bool p4_defaults_loaded() const { return p4_defaults_loaded_; }
   bool get_default_p4_sound(uint8_t p4_track_index,

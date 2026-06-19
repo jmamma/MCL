@@ -23,6 +23,55 @@ static void invert_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
 }
 } // namespace
 
+void SpsStripPage::init() {
+  painted_sub_page_ = 255;
+}
+
+void SpsStripPage::cleanup() {
+  if (painted_sub_page_ != 255) {
+    mcl_gui.reset_trigleds();
+    painted_sub_page_ = 255;
+  }
+}
+
+void SpsStripPage::loop() {
+  if (MD.ui.sps_mode.ui_slot_button_held()) {
+    paint_leds();
+  } else if (painted_sub_page_ != 255) {
+    mcl_gui.reset_trigleds();
+    painted_sub_page_ = 255;
+  }
+}
+
+void SpsStripPage::paint_leds() {
+  if (painted_sub_page_ == MD.ui.sps_mode.sub_page()) return;
+
+  constexpr uint32_t kRed   = ((uint32_t)255 << 16);
+  constexpr uint32_t kWhite = ((uint32_t)255 << 16) |
+                              ((uint32_t)255 << 8)  |
+                              (uint32_t)255;
+
+  uint16_t avail = 0;
+  const uint8_t max_columns = MD.ui.sps_mode.param_window_count();
+  for (uint8_t column = 0; column < max_columns; column++) {
+    const uint8_t page = column >> 1;
+    const uint8_t bit = page + ((column & 1) ? 8 : 0);
+    avail |= (uint16_t)1 << bit;
+  }
+  mcl_gui.set_trigleds_color((uint16_t)~avail, 0);
+  mcl_gui.set_trigleds_color(avail, kRed);
+
+  const uint8_t sub_page = MD.ui.sps_mode.sub_page();
+  const uint8_t focus_page = sub_page >> 1;
+  const uint8_t focus_half = sub_page & 1;
+  const uint16_t focus_bit =
+      (focus_half == 0) ? ((uint16_t)1 << focus_page)
+                        : ((uint16_t)1 << (focus_page + 8));
+  mcl_gui.set_trigleds_color(focus_bit, kWhite);
+
+  painted_sub_page_ = sub_page;
+}
+
 void SpsStripPage::display() {
   // Pages that own the panel palette skip the strip overlay entirely
   // (they're already current; we don't fight their rendering).

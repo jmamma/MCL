@@ -23,9 +23,6 @@
 #include "GUI.h"
 #include "MCLEncoder.h"
 
-// Hold threshold for toggling the SPS param UI between fullscreen and strip.
-#define SPS_FULLSCREEN_HOLD_MS 500
-
 class SpsMode {
 public:
   bool is_active() const { return latched_; }
@@ -61,10 +58,7 @@ public:
   // Logical device UI button edge. The platform panel maps physical
   // buttons to a DeviceManager slot; SPS only sees "my UI button held".
   void handle_ui_slot_button(bool pressed);
-
-  // Polled from MDUI::loop. Holding the logical UI button toggles
-  // between full-screen params and the compact strip.
-  void poll_page_overlay();
+  bool toggle_display_mode();
 
   // Sync the encoder cur values to MD.kit.params for the currently
   // active track + synth page. Call when latching on, when the user
@@ -105,9 +99,7 @@ private:
   // LightPage::encoders_used_clock). Reset whenever cur changes; cleared
   // when the timeout has fully elapsed.
   uint16_t enc_used_clock_[4] = {0, 0, 0, 0};
-  uint16_t ui_button_press_ms_ = 0;
   bool ui_button_pressed_ = false;
-  bool ui_button_hold_handled_ = false;
   bool scale_key_held_ = false;
   // SPS-key press lifetime flag: cleared on press; if no chord set it
   // during the hold, release fires the per-page tap action.
@@ -115,7 +107,11 @@ private:
   // Source of the arrow press currently being held in SPS-key overlay mode.
   // Used to suppress repeat-press events on the same physical hold.
   uint8_t arrow_consumed_source_ = 255;
+  bool display_mode_collapsed_ = false;
   void set_latched(bool v);
+  void show_fullscreen();
+  void show_strip();
+  void restore_display_mode();
   bool encoder_passthrough_page() const;
   void send_param(uint8_t i);
   bool show_value(uint8_t i) const;

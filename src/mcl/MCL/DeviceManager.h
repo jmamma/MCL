@@ -56,6 +56,7 @@ public:
   bool notify_active_ui_button(gui_event_t *event);
   bool is_ui_active() const;
   bool is_ui_collapsed() const;
+  bool toggle_ui_slot_display_mode(uint8_t slot);
   void exit_ui();
 #endif
 

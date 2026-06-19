@@ -63,6 +63,7 @@ public:
   virtual bool supports_ui() const override { return true; }
   virtual bool is_ui_active() override;
   virtual bool is_ui_collapsed() override;
+  virtual bool toggle_ui_display_mode() override;
   virtual void exit_ui() override;
   virtual void on_ui_slot_button(uint8_t slot, bool pressed) override;
 #endif

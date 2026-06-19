@@ -16,16 +16,17 @@
 #include "Project.h"
 #include "NoteInterface.h"
 
-// ENC1 raw-tick threshold per bank step. Higher = slower; the panel
+// Raw-tick threshold per bank step. Higher = slower; the panel
 // encoder spits out many ticks per detent on TBD so we need a few of
 // them to coalesce into one bank cycle.
 #define BANK_POPUP_ENC_RES 2
 
-// ENC1, range 0..7. We do the wrap manually in loop() so the encoder
-// itself stays a normal range-clamped MCLEncoder.
-MCLEncoder bank_popup_encoder(7, 0, BANK_POPUP_ENC_RES, 4);
+// ENC1/ENC2, range 0..7. We do the wrap manually in loop() so the
+// encoders themselves stay normal range-clamped MCLEncoder instances.
+MCLEncoder bank_popup_encoder1(7, 0, BANK_POPUP_ENC_RES, 4);
+MCLEncoder bank_popup_encoder2(7, 0, BANK_POPUP_ENC_RES, 4);
 
-BankPopupPage bank_popup_page(&bank_popup_encoder);
+BankPopupPage bank_popup_page(&bank_popup_encoder1, &bank_popup_encoder2);
 
 void BankPopupPage::setup() {
   // Stash the page we came from so close() can return there cleanly.
@@ -37,9 +38,7 @@ void BankPopupPage::setup() {
 
 void BankPopupPage::init() {
   // Seed encoder + state from grid_page.bank.
-  bank_popup_encoder.cur = grid_page.bank;
-  bank_popup_encoder.old = grid_page.bank;
-  last_enc_ = grid_page.bank;
+  sync_bank_encoders();
 
   // State 2 = "popup up". The countdown on AVR is bank_popup == 2 timing
   // out; on TBD we never close on timeout — only via explicit close().
@@ -86,22 +85,8 @@ void BankPopupPage::close() {
 }
 
 void BankPopupPage::loop() {
-  // Translate the bounded encoder value into a wrapping bank index.
-  int8_t cur = (int8_t)bank_popup_encoder.cur;
-  if (cur != last_enc_) {
-    int8_t delta = cur - last_enc_;
-    // Normalise — encoder is clamped at 0..7 so delta is small.
-    if (delta != 0) {
-      int8_t step = (delta > 0) ? 1 : -1;
-      uint8_t n = (uint8_t)((delta > 0) ? delta : -delta);
-      for (uint8_t i = 0; i < n; i++) step_bank(step, false);
-    }
-    // Re-sync the encoder display to the new bank so the next rotation
-    // again produces a clean delta.
-    last_enc_ = (int8_t)grid_page.bank;
-    bank_popup_encoder.cur = grid_page.bank;
-    bank_popup_encoder.old = grid_page.bank;
-  }
+  handle_bank_encoder(bank_popup_encoder1, last_enc1_);
+  handle_bank_encoder(bank_popup_encoder2, last_enc2_);
 }
 
 void BankPopupPage::display() {
@@ -158,6 +143,33 @@ void BankPopupPage::step_bank(int8_t letter_delta, bool group_toggle) {
     if (MD.connected) MD.press_bankgroup_button();
   }
   if (MD.connected) MD.draw_bank(grid_page.bank % 4);
+}
+
+void BankPopupPage::sync_bank_encoders() {
+  bank_popup_encoder1.cur = grid_page.bank;
+  bank_popup_encoder1.old = grid_page.bank;
+  bank_popup_encoder2.cur = grid_page.bank;
+  bank_popup_encoder2.old = grid_page.bank;
+  last_enc1_ = (int8_t)grid_page.bank;
+  last_enc2_ = (int8_t)grid_page.bank;
+}
+
+void BankPopupPage::handle_bank_encoder(MCLEncoder &encoder,
+                                        int8_t &last_enc) {
+  // Translate the bounded encoder value into a wrapping bank index.
+  int8_t cur = (int8_t)encoder.cur;
+  if (cur == last_enc) return;
+
+  int8_t delta = cur - last_enc;
+  if (delta != 0) {
+    int8_t step = (delta > 0) ? 1 : -1;
+    uint8_t n = (uint8_t)((delta > 0) ? delta : -delta);
+    for (uint8_t i = 0; i < n; i++) step_bank(step, false);
+  }
+
+  // Re-sync both encoder displays to the new bank so either encoder can
+  // continue from the same selected bank on the next movement.
+  sync_bank_encoders();
 }
 
 void BankPopupPage::repaint_chain_leds() {

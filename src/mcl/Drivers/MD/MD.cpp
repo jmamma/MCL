@@ -1300,6 +1300,10 @@ bool MDClass::is_ui_collapsed() {
   return ui.is_collapsed();
 }
 
+bool MDClass::toggle_ui_display_mode() {
+  return ui.toggle_display_mode();
+}
+
 void MDClass::exit_ui() {
   ui.exit();
 }
