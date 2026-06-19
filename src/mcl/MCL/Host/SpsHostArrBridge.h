@@ -42,6 +42,7 @@ private:
     void onReqArrLoopRegions(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrAutomationLanes(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrAutomationPoints(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onReqArrLocalPreview(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqArrTrackLabels(uint8_t tag);
     void onReqProjectList(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqProjectVersions(uint8_t tag, const uint8_t* b, uint16_t n);

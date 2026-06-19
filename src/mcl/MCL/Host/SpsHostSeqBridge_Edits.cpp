@@ -2,9 +2,25 @@
 
 #include "Host/SpsHostSeqBridge.h"
 #include "SpsHostSeqBridge_Internal.h"
+#include "MCLPlatformFeatures.h"
+#if MCL_FEATURE_HOST_ARRANGER
+#include "Arrangement/MCLArrangement.h"
+#endif
 
 using namespace spsseq;
 using namespace sps_host_seq_internal;
+
+namespace {
+
+static void markArrangerLocalEdit(uint8_t slot) {
+#if MCL_FEATURE_HOST_ARRANGER
+    mcl_arrangement.markRuntimePrivateSourceEdited(slot);
+#else
+    (void)slot;
+#endif
+}
+
+} // namespace
 
 int SpsHostSeqBridge::wireToMclMask(int w) {
     switch (w) {
@@ -24,6 +40,7 @@ bool SpsHostSeqBridge::applySetStep(const uint8_t* b, uint16_t n) {
     int mclMask = wireToMclMask(b[2]);
     if (!tr || mclMask < 0 || b[1] >= kNumSteps) return false;
     tr->set_step(b[1], (uint8_t)mclMask, b[3] != 0);
+    markArrangerLocalEdit(b[0]);
     return true;
 }
 
@@ -36,6 +53,7 @@ bool SpsHostSeqBridge::applySetMicroTiming(const uint8_t* b, uint16_t n) {
         tr->clear_step_oneshot_state(b[1]);
         tr->microtiming[b[1]] = mt;
     }
+    markArrangerLocalEdit(b[0]);
     return true;
 }
 
@@ -51,6 +69,7 @@ bool SpsHostSeqBridge::applySetCondition(const uint8_t* b, uint16_t n) {
     }
     tr->steps[b[1]].cond_id = cond;
     tr->steps[b[1]].cond_plock = plock;
+    markArrangerLocalEdit(b[0]);
     return true;
 }
 
@@ -59,6 +78,7 @@ bool SpsHostSeqBridge::applySetLock(const uint8_t* b, uint16_t n) {
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr || b[1] >= kNumSteps || b[2] >= kNumLockParams) return false;  // param range
     tr->set_track_locks(b[1], b[2], (uint8_t)(b[3] & 0x7F));
+    markArrangerLocalEdit(b[0]);
     return true;
 }
 
@@ -67,6 +87,7 @@ bool SpsHostSeqBridge::applyClrLock(const uint8_t* b, uint16_t n) {
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr || b[1] >= kNumSteps || b[2] >= kNumLockParams) return false;  // param range
     tr->clear_step_lock(b[1], b[2]);
+    markArrangerLocalEdit(b[0]);
     return true;
 }
 
@@ -81,6 +102,7 @@ bool SpsHostSeqBridge::applySetTrackProp(const uint8_t* b, uint16_t n) {
         case TPROP_SPEED:  tr->track_speed  = b[2]; tr->set_speed(b[2]);  break;
         default: return false;  // scale/swing/mute: TODO
     }
+    markArrangerLocalEdit(b[0]);
     return true;
 }
 

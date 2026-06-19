@@ -145,6 +145,59 @@ class LoadQueue {
 
 };
 
+#if !defined(__AVR__)
+class SaveQueue {
+  public:
+  static_assert((NUM_LINKS & (NUM_LINKS - 1)) == 0,
+                "SaveQueue wrap assumes power-of-two NUM_LINKS");
+  GridRow rows[NUM_LINKS];
+  uint8_t track_selects[NUM_LINKS][NUM_SLOTS];
+  uint8_t merges[NUM_LINKS];
+  uint8_t rd;
+  uint8_t wr;
+  bool full;
+
+  void init() {
+    rd = 0;
+    wr = 0;
+    full = false;
+    memset(rows, 255, sizeof(rows));
+    memset(track_selects, 0, sizeof(track_selects));
+    memset(merges, 0, sizeof(merges));
+  }
+
+  bool put(GridRow row, const uint8_t *track_select_array, uint8_t merge) {
+    if (full || track_select_array == nullptr) {
+      return false;
+    }
+    rows[wr] = row;
+    memcpy(track_selects[wr], track_select_array, NUM_SLOTS);
+    merges[wr] = merge;
+    wr = (wr + 1) & (NUM_LINKS - 1);
+    if (wr == rd) {
+      full = true;
+    }
+    return true;
+  }
+
+  bool get(GridRow &row, uint8_t *track_select_array, uint8_t &merge) {
+    if (is_empty() || track_select_array == nullptr) {
+      return false;
+    }
+    row = rows[rd];
+    memcpy(track_select_array, track_selects[rd], NUM_SLOTS);
+    merge = merges[rd];
+    rd = (rd + 1) & (NUM_LINKS - 1);
+    full = false;
+    return true;
+  }
+
+  bool is_empty() {
+    return !full && (rd == wr);
+  }
+};
+#endif
+
 class GridTask : public Task {
 
 public:
@@ -168,6 +221,9 @@ public:
   bool midi_load;
 
   LoadQueue load_queue;
+#if !defined(__AVR__)
+  SaveQueue save_queue;
+#endif
 
   GridTask(uint16_t interval) : Task(interval) { setup(interval); }
 
@@ -177,6 +233,9 @@ public:
   void init() {
      reset_midi_states();
      load_queue.init();
+#if !defined(__AVR__)
+     save_queue.init();
+#endif
   }
 
   void reset_midi_states() {
@@ -188,6 +247,9 @@ public:
   }
   void row_update();
   void gui_update();
+#if !defined(__AVR__)
+  void save_queue_handler();
+#endif
   void update_transition_details();
   void load_queue_handler();
   void transition_handler();

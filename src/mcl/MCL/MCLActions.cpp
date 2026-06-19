@@ -275,6 +275,7 @@ void MCLActions::clear_tracks(uint8_t *slot_select_array) {
                                            gdt->track_type);
 #if !defined(__AVR__)
     mcl_arrangement.applyClipRuntime(n, ptrack);
+    mcl_arrangement.clearRuntimePrivateSource(n);
 #endif
     ptrack->load_immediate_cleared(n & 0xF, gdt->seq_track);
     uint16_t fade_elapsed = clear_runtime_fade_elapsed(ptrack);
@@ -783,6 +784,9 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
 
 #if !defined(__AVR__)
     mcl_arrangement.applyClipRuntime(dst, device_track);
+    if (row != LOAD_QUEUE_PRIVATE_ROW) {
+      mcl_arrangement.clearRuntimePrivateSource(dst);
+    }
 #endif
     uint16_t fade_elapsed = clear_runtime_fade_elapsed(device_track);
     device_track->store_in_mem(gdt_dst->mem_slot_idx);
@@ -957,6 +961,9 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
 
 #if !defined(__AVR__)
   mcl_arrangement.applyClipRuntime(dst, ptrack);
+  if (row != LOAD_QUEUE_PRIVATE_ROW) {
+    mcl_arrangement.clearRuntimePrivateSource(dst);
+  }
 #endif
   const bool load_sound = !rebuilt && ptrack->load_sound();
   if (!load_sound) {
@@ -1082,6 +1089,9 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       slot_select_array[i] = 0;
     } else {
       any_loaded = true;
+      links[dst].row = row;
+      links[dst].loops = 1;
+      links[dst].length = gdt_dst->seq_track->length;
       mute_states[dst] = gdt_dst->seq_track->mute_state;
       gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
     }
@@ -1221,6 +1231,11 @@ void MCLActions::cache_track(GridSlot n, GridDeviceTrack* gdt, GridColumn track_
   if (ptrack == nullptr) {
     return;
   }
+#if !defined(__AVR__)
+  if (links[n].row != LOAD_QUEUE_PRIVATE_ROW) {
+    mcl_arrangement.clearRuntimePrivateSource(n);
+  }
+#endif
 
   const bool load_sound = !rebuilt && ptrack->load_sound();
   if (!load_sound) {

@@ -152,20 +152,6 @@ static bool privateSourceCell(uint32_t sourceId, GridColumn *col, GridRow *row) 
   return true;
 }
 
-static uint32_t nextPrivateSourceId(const mclarrfile::Clip *clips, uint32_t count) {
-  uint32_t nextId = 1;
-  for (uint32_t i = 0; clips != nullptr && i < count; ++i) {
-    if (clips[i].sourceKind != mclarrfile::CLIP_SOURCE_PRIVATE ||
-        clips[i].sourceId < nextId) {
-      continue;
-    }
-    nextId = clips[i].sourceId + 1u;
-  }
-  GridColumn col = 0;
-  GridRow row = 0;
-  return privateSourceCell(nextId, &col, &row) ? nextId : 0;
-}
-
 static bool openPrivateGrid(Grid &grid, bool create) {
   if (!ensureArrangementDir()) {
     return false;

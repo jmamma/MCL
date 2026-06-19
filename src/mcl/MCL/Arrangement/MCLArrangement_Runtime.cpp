@@ -85,6 +85,8 @@ void MCLArrangement::resetPlayback() {
   playback_active_mask_ = 0;
   playback_released_mask_ = 0;
   clip_runtime_fade_mask_ = 0;
+  memset(runtime_private_source_ids_, 0, sizeof(runtime_private_source_ids_));
+  runtime_private_dirty_mask_ = 0;
   resetAutomationRuntime();
   playback_active_ = false;
   loop_entered_ = false;
@@ -496,6 +498,7 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
 
   const uint32_t touchedMask = loadMask | clearMask;
   clip_runtime_fade_mask_ &= ~touchedMask;
+  clearRuntimePrivateSources(touchedMask);
   playback_released_mask_ &= ~touchedMask;
   if (touchedMask == 0) {
     return false;
@@ -571,6 +574,11 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   playback_active_ = true;
   last_tick_q12_ = positionQ12;
   playback_active_mask_ = (playback_active_mask_ & ~clearMask) | loadMask;
+  for (uint8_t slot = 0; slot < NUM_SLOTS; ++slot) {
+    if (loadedPrivateIds[slot] != 0) {
+      setRuntimePrivateSource(slot, loadedPrivateIds[slot]);
+    }
+  }
   return armed;
 }
 
@@ -582,6 +590,7 @@ bool MCLArrangement::releasePlaybackTracks(uint32_t trackMask) {
   playback_released_mask_ |= trackMask;
   playback_active_mask_ &= ~trackMask;
   clip_runtime_fade_mask_ &= ~trackMask;
+  clearRuntimePrivateSources(trackMask);
   return playback_released_mask_ != oldMask;
 }
 
@@ -927,6 +936,8 @@ void MCLArrangement::tick() {
       uint32_t tick96 = q12ToHostTick96(loop_start_q12_);
       MidiClock.set_transport_position(tick96);
       mcl_seq.set_transport_position(tick96);
+      sps_host_arr_bridge.notifyArrangementPosition(
+          loop_start_q12_, spsarr::POSITION_NOTIFY_LOOP);
       resetPlaybackForTransport(false);
       seekLoad(loop_start_q12_, true, false, false);
       return;

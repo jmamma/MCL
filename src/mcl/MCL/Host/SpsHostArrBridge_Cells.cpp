@@ -17,7 +17,8 @@ void SpsHostArrBridge::onReqActive(uint8_t tag) {
                  spsarr::kActiveSlotGroupIndexBytes +
                  spsarr::kActivePendingTransitionBytes +
                  spsarr::kActiveSlotSourceRowBytes +
-                 spsarr::kActiveLoadQueueLengthBytes];
+                 spsarr::kActiveLoadQueueLengthBytes +
+                 spsarr::kActivePrivateSourceMaskBytes];
     body[0] = activeRowOrZero();
     body[1] = grid_task.next_active_row < GRID_LENGTH ? grid_task.next_active_row
                                                        : body[0];
@@ -73,6 +74,10 @@ void SpsHostArrBridge::onReqActive(uint8_t tag) {
     uint16_t queueLengthOff =
         sourceRowsOff + spsarr::kActiveSlotSourceRowBytes;
     body[queueLengthOff] = mcl_cfg.chain_queue_length;
+    uint16_t privateSourceMaskOff =
+        queueLengthOff + spsarr::kActiveLoadQueueLengthBytes;
+    spsArrPutU32(body + privateSourceMaskOff,
+                 mcl_arrangement.runtimePrivateSourceMask());
     sendFrame(CMD_ACTIVE, tag, body, (uint16_t)sizeof body);
 }
 

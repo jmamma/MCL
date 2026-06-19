@@ -64,6 +64,14 @@ public:
   void armRuntimeFade(uint8_t dst, const TrackLoadFadeData &fade);
   bool applyClipRuntime(uint8_t dst, DeviceTrack *track);
   void flushAutomationWrites();
+  uint32_t runtimePrivateSourceMask() const;
+  uint32_t runtimePrivateSourceId(uint8_t dst) const;
+  void setRuntimePrivateSource(uint8_t dst, uint32_t sourceId);
+  void clearRuntimePrivateSource(uint8_t dst);
+  void clearRuntimePrivateSources(uint32_t mask);
+  bool flushRuntimePrivateSource(uint8_t dst);
+  bool flushRuntimePrivateSourceEdits();
+  bool markRuntimePrivateSourceEdited(uint8_t dst);
 
   uint16_t readClips(uint32_t startQ12, uint32_t endQ12, uint16_t skip,
                      uint8_t maxClips, mclarrfile::Clip *out,
@@ -99,7 +107,14 @@ public:
                                const mclarrfile::AutomationPoint *points,
                                uint16_t pointCount);
   bool makeClipLocal(uint32_t startQ12, uint32_t durationQ12, uint8_t track,
-                     uint8_t row, GridSlot expectedSourceSlot);
+                     uint8_t row, GridSlot expectedSourceSlot,
+                     uint32_t *sourceIdOut = nullptr);
+  bool createPrivateSourceFromGrid(GridSlot sourceSlot, GridRow row,
+                                   GridSlot dstTrack,
+                                   uint32_t *sourceIdOut = nullptr);
+  bool privateSourcePreview(uint32_t sourceId, uint8_t *trackType,
+                            uint8_t *length, uint8_t *speed,
+                            uint64_t *trigMask);
   bool exportPrivateSourceToGrid(uint32_t sourceId, GridSlot sourceSlot,
                                  GridRow sourceRow, GridSlot targetSlot,
                                  GridRow targetRow);
@@ -172,6 +187,8 @@ private:
   static const uint8_t kAutomationPendingWrites = 32;
   AutomationPendingWrite automation_pending_writes_[kAutomationPendingWrites];
   uint8_t automation_pending_count_ = 0;
+  uint32_t runtime_private_source_ids_[NUM_SLOTS] = {};
+  uint32_t runtime_private_dirty_mask_ = 0;
   uint32_t queued_private_source_ids_[NUM_SLOTS] = {};
   bool playback_active_ = false;
   bool loop_enabled_ = false;

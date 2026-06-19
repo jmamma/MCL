@@ -2,6 +2,10 @@
 
 #include "SpsHostSeqBridge.h"
 #include "SpsHostSeqBridge_Internal.h"
+#include "MCLPlatformFeatures.h"
+#if MCL_FEATURE_HOST_ARRANGER
+#include "Arrangement/MCLArrangement.h"
+#endif
 
 #ifdef EXT_TRACKS
 
@@ -12,6 +16,17 @@ namespace {
 
 static constexpr uint16_t kExtNotesHeaderBytes = 14;
 static constexpr uint16_t kExtLocksHeaderBytes = 16;
+
+static void markArrangerLocalExtEdit(uint8_t device, uint8_t trackIndex) {
+#if MCL_FEATURE_HOST_ARRANGER
+    if (device == EXT_DEVICE_GRID_Y && trackIndex < GRID_WIDTH)
+        mcl_arrangement.markRuntimePrivateSourceEdited(
+            (uint8_t)(GRID_WIDTH + trackIndex));
+#else
+    (void)device;
+    (void)trackIndex;
+#endif
+}
 
 static void fillExtMeta(uint8_t* body, uint8_t device, uint8_t trackIndex,
                         SeqExtStepTrackApi& track) {
@@ -273,6 +288,7 @@ bool SpsHostSeqBridge::applyExtAddNote(const uint8_t* b, uint16_t n) {
         return false;
     track.replace_note((seq_extstep_tick_t)startTick,
                        (seq_extstep_tick_t)width, note, velocity, condition);
+    markArrangerLocalExtEdit(b[0], b[1]);
     return true;
 }
 
@@ -285,8 +301,11 @@ bool SpsHostSeqBridge::applyExtDeleteNote(const uint8_t* b, uint16_t n) {
     uint8_t note = b[10] & 0x7F;
     if (width == 0)
         width = 1;
-    return track.delete_note((seq_extstep_tick_t)startTick,
-                             (seq_extstep_tick_t)(width - 1), note);
+    bool changed = track.delete_note((seq_extstep_tick_t)startTick,
+                                     (seq_extstep_tick_t)(width - 1), note);
+    if (changed)
+        markArrangerLocalExtEdit(b[0], b[1]);
+    return changed;
 }
 
 bool SpsHostSeqBridge::applyExtToggleNote(const uint8_t* b, uint16_t n) {
@@ -300,9 +319,12 @@ bool SpsHostSeqBridge::applyExtToggleNote(const uint8_t* b, uint16_t n) {
     uint8_t condition = b[12] & 0x7F;
     if (width == 0)
         return false;
-    return track.toggle_note((seq_extstep_tick_t)startTick,
-                             (seq_extstep_tick_t)width, note, velocity,
-                             condition);
+    bool changed = track.toggle_note((seq_extstep_tick_t)startTick,
+                                     (seq_extstep_tick_t)width, note,
+                                     velocity, condition);
+    if (changed)
+        markArrangerLocalExtEdit(b[0], b[1]);
+    return changed;
 }
 
 bool SpsHostSeqBridge::applyExtClearRange(const uint8_t* b, uint16_t n) {
@@ -317,9 +339,12 @@ bool SpsHostSeqBridge::applyExtClearRange(const uint8_t* b, uint16_t n) {
         noteMax = noteMin;
     if (width == 0)
         width = 1;
-    return track.delete_notes((seq_extstep_tick_t)startTick,
-                              (seq_extstep_tick_t)(width - 1), noteMin,
-                              noteMax);
+    bool changed = track.delete_notes((seq_extstep_tick_t)startTick,
+                                      (seq_extstep_tick_t)(width - 1),
+                                      noteMin, noteMax);
+    if (changed)
+        markArrangerLocalExtEdit(b[0], b[1]);
+    return changed;
 }
 
 bool SpsHostSeqBridge::applyExtSetTrackProp(const uint8_t* b, uint16_t n) {
@@ -329,12 +354,15 @@ bool SpsHostSeqBridge::applyExtSetTrackProp(const uint8_t* b, uint16_t n) {
     switch (b[2]) {
         case EXTPROP_LENGTH:
             track.set_length(b[3]);
+            markArrangerLocalExtEdit(b[0], b[1]);
             return true;
         case EXTPROP_SPEED:
             track.set_speed(b[3]);
+            markArrangerLocalExtEdit(b[0], b[1]);
             return true;
         case EXTPROP_CHANNEL:
             track.set_channel(b[3] & 0x0F);
+            markArrangerLocalExtEdit(b[0], b[1]);
             return true;
         default:
             return false;
@@ -356,8 +384,11 @@ bool SpsHostSeqBridge::applyExtSetLock(const uint8_t* b, uint16_t n) {
     if (!locks.selected_lock_param_id(lockIdx, param))
         return false;
     locks.clear_step_locks(step, lockIdx);
-    return locks.add_lock(step, track.ticks_per_step(), param, value, slide,
-                          lockIdx);
+    bool changed = locks.add_lock(step, track.ticks_per_step(), param, value,
+                                  slide, lockIdx);
+    if (changed)
+        markArrangerLocalExtEdit(b[0], b[1]);
+    return changed;
 }
 
 bool SpsHostSeqBridge::applyExtClearLock(const uint8_t* b, uint16_t n) {
@@ -369,6 +400,7 @@ bool SpsHostSeqBridge::applyExtClearLock(const uint8_t* b, uint16_t n) {
     if (step >= track.length())
         return false;
     track.locks().clear_step_locks(step, lockIdx);
+    markArrangerLocalExtEdit(b[0], b[1]);
     return true;
 }
 
@@ -377,6 +409,7 @@ bool SpsHostSeqBridge::applyExtClearLocks(const uint8_t* b, uint16_t n) {
         return false;
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     track.clear_track_locks(b[2]);
+    markArrangerLocalExtEdit(b[0], b[1]);
     return true;
 }
 

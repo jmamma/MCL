@@ -42,6 +42,16 @@ bool is_grid_chain_load_mode(uint8_t mode) {
       }
       return mask;
     }
+
+    bool save_needs_md_current_pattern() {
+#ifdef PLATFORM_TBD
+      return MD.connected &&
+             (device_manager.primary_device() == &MD ||
+              device_manager.secondary_device() == &MD);
+#else
+      return true;
+#endif
+    }
 #endif
 
 } // namespace
@@ -60,6 +70,47 @@ void GridTask::gui_update() {
   row_update();
   update = 0;
 }
+
+#if !defined(__AVR__)
+void GridTask::save_queue_handler() {
+  if (save_queue.is_empty()) { return; }
+
+  GridRow row = 255;
+  uint8_t track_select[NUM_SLOTS];
+  uint8_t merge = 0;
+  if (!save_queue.get(row, track_select, merge)) {
+    return;
+  }
+
+  if (row >= GRID_LENGTH) {
+    return;
+  }
+  bool any = false;
+  for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
+    if (track_select[n] != 0) {
+      any = true;
+      break;
+    }
+  }
+  if (!any) {
+    return;
+  }
+
+#if MCL_FEATURE_HOST_ARRANGER
+  if (save_needs_md_current_pattern()) {
+    MD.getCurrentPattern(500);
+  }
+#endif
+
+  mcl_actions.save_tracks(row, track_select, merge);
+
+#if MCL_FEATURE_HOST_ARRANGER
+  grid_page.row_scan = GRID_LENGTH;
+  grid_page.reload_slot_models = false;
+  sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_CELLS);
+#endif
+}
+#endif
 
 void GridTask::load_queue_handler() {
   if (load_queue.is_empty()) { return; }
@@ -113,6 +164,9 @@ void GridTask::load_queue_handler() {
   mcl_actions.write_original = 1;
   mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
 #else
+  if (any_load || any_clear) {
+    mcl_arrangement.flushRuntimePrivateSourceEdits();
+  }
   if (any_load) {
     mcl_actions.write_original = 1;
     mcl_arrangement.beginQueuedPrivateLoads(private_source_ids);
@@ -153,6 +207,10 @@ void GridTask::run() {
     stop_hard_callback = false;
     load_queue.init();
 #if !defined(__AVR__)
+    save_queue.init();
+#endif
+#if !defined(__AVR__)
+    mcl_arrangement.flushRuntimePrivateSourceEdits();
     mcl_arrangement.resetPlayback();
 #endif
   }
@@ -160,6 +218,9 @@ void GridTask::run() {
     gui_update();
 #if !defined(__AVR__)
     mcl_arrangement.tick();
+#endif
+#if !defined(__AVR__)
+    save_queue_handler();
 #endif
     load_queue_handler();
 #if !defined(__AVR__)

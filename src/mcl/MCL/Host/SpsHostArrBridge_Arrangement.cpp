@@ -306,6 +306,31 @@ void SpsHostArrBridge::onReqArrAutomationPoints(uint8_t tag,
     sendFrame(CMD_ARR_AUTOMATION_POINTS, tag, body, off);
 }
 
+void SpsHostArrBridge::onReqArrLocalPreview(uint8_t tag, const uint8_t* b,
+                                            uint16_t n) {
+    if (n < 4) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint32_t sourceId = spsArrGetU32(b + 0);
+    uint8_t trackType = EMPTY_TRACK_TYPE;
+    uint8_t length = 16;
+    uint8_t speed = 0;
+    uint64_t trigMask = 0;
+    bool available = mcl_arrangement.privateSourcePreview(
+        sourceId, &trackType, &length, &speed, &trigMask);
+
+    uint8_t body[spsarr::kArrLocalPreviewBytes] = {};
+    spsArrPutU32(body + 0, sourceId);
+    body[4] = available ? 1 : 0;
+    body[5] = trackType;
+    body[6] = length;
+    body[7] = speed;
+    spsArrPutU64(body + 8, trigMask);
+    sendFrame(CMD_ARR_LOCAL_PREVIEW, tag, body, (uint16_t)sizeof body);
+}
+
 void SpsHostArrBridge::onReqArrTrackLabels(uint8_t tag) {
     char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
     if (!mcl_arrangement.readTrackLabels(labels)) {
@@ -337,6 +362,13 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
     uint8_t flags = b[1];
     uint32_t startStep = spsArrGetU32(b + 2);
     uint16_t trackMask = spsArrGetU16(b + 6);
+    bool usePrivateSources = (flags & ARR_LOAD_PRIVATE_SOURCES) != 0;
+#if defined(__AVR__)
+    if (usePrivateSources) {
+        sendErr(tag, ERR_UNSUPPORTED, flags);
+        return;
+    }
+#endif
     GridIndex gridBank = 0;
     GridSlot loadOffset =
         (n >= 25 && b[24] < NUM_SLOTS) ? (GridSlot)b[24] : (GridSlot)255;
@@ -397,6 +429,10 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
 
     GridRow rowSelect[NUM_SLOTS];
     memset(rowSelect, 255, sizeof(rowSelect));
+#if !defined(__AVR__)
+    uint32_t privateSourceIds[NUM_SLOTS];
+    memset(privateSourceIds, 0, sizeof(privateSourceIds));
+#endif
     bool any = false;
     bool allowClear = (flags & ARR_LOAD_CLEAR_EMPTY) != 0;
     for (uint8_t slot = 0; slot < NUM_SLOTS && slot < spsarr::kNumTracks; slot++) {
@@ -411,6 +447,13 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
             any = true;
             continue;
         }
+#if !defined(__AVR__)
+        if (usePrivateSources && row == spsarr::kArrPrivateSourceRow) {
+            rowSelect[sourceSlot] = LOAD_QUEUE_PRIVATE_ROW;
+            any = true;
+            continue;
+        }
+#endif
         if (allowClear && row == 255) {
             rowSelect[sourceSlot] = LOAD_QUEUE_CLEAR_ROW;
             any = true;
@@ -438,18 +481,59 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                                : startStep * 12u;
     bool isArrangerLoad = mode == ARR_LOAD_ARRANG;
     bool armedRuntimeFade = false;
+    uint16_t payloadOff = (flags & ARR_LOAD_GRID_BANK) != 0
+                              ? 26
+                              : (n >= 25 ? 25 : 24);
+
+#if !defined(__AVR__)
+    if (usePrivateSources) {
+        if (payloadOff + 2 > n) {
+            sendErr(tag, ERR_RANGE, n);
+            return;
+        }
+        uint16_t privateMask = spsArrGetU16(b + payloadOff) & trackMask;
+        payloadOff += 2;
+        for (uint8_t slot = 0;
+             slot < NUM_SLOTS && slot < spsarr::kNumTracks; slot++) {
+            GridSlot sourceSlot = visibleSlotToGridSlot(slot, gridBank);
+            if (sourceSlot >= NUM_SLOTS)
+                continue;
+            if (((privateMask >> slot) & 1u) != 0) {
+                if (payloadOff + 4 > n ||
+                    rowSelect[sourceSlot] != LOAD_QUEUE_PRIVATE_ROW) {
+                    sendErr(tag, ERR_RANGE, slot);
+                    return;
+                }
+                uint32_t sourceId = spsArrGetU32(b + payloadOff);
+                payloadOff += 4;
+                if (sourceId == 0) {
+                    sendErr(tag, ERR_RANGE, slot);
+                    return;
+                }
+                privateSourceIds[sourceSlot] = sourceId;
+            } else if (rowSelect[sourceSlot] == LOAD_QUEUE_PRIVATE_ROW) {
+                sendErr(tag, ERR_RANGE, slot);
+                return;
+            }
+        }
+    }
+#endif
+
     if (isArrangerLoad) {
+#if !defined(__AVR__)
+        armedRuntimeFade = mcl_arrangement.armRuntimeForHostLoad(
+            positionQ12, rowSelect, trackMask, loadOffset, gridBank,
+            privateSourceIds);
+#else
         armedRuntimeFade = mcl_arrangement.armRuntimeForHostLoad(
             positionQ12, rowSelect, trackMask, loadOffset, gridBank);
+#endif
     }
 
     if (isArrangerLoad && (flags & ARR_LOAD_RUNTIME_FADES) != 0) {
-        uint16_t off = (flags & ARR_LOAD_GRID_BANK) != 0
-                           ? 26
-                           : (n >= 25 ? 25 : 24);
-        if (off + 2 <= n) {
-            uint16_t fadeMask = spsArrGetU16(b + off) & trackMask;
-            off += 2;
+        if (payloadOff + 2 <= n) {
+            uint16_t fadeMask = spsArrGetU16(b + payloadOff) & trackMask;
+            payloadOff += 2;
             GridSlot firstSource = 255;
             for (uint8_t src = 0; src < GRID_WIDTH && src < spsarr::kNumTracks;
                  ++src) {
@@ -468,17 +552,17 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                 GridSlot sourceSlot = visibleSlotToGridSlot(src, gridBank);
                 if (sourceSlot >= NUM_SLOTS)
                     continue;
-                if (off + spsarr::kArrClipFadeBytes > n)
+                if (payloadOff + spsarr::kArrClipFadeBytes > n)
                     break;
                 TrackLoadFadeData fade;
-                fade.flags = b[off] & 0x7F;
-                fade.target = b[off + 1];
-                fade.duration_q12 = spsArrGetU16(b + off + 2);
-                fade.amount = b[off + 4] & 0x7F;
-                fade.curve = (int8_t)b[off + 5];
-                fade.reserved[0] = b[off + 6];
-                fade.reserved[1] = b[off + 7];
-                off += spsarr::kArrClipFadeBytes;
+                fade.flags = b[payloadOff] & 0x7F;
+                fade.target = b[payloadOff + 1];
+                fade.duration_q12 = spsArrGetU16(b + payloadOff + 2);
+                fade.amount = b[payloadOff + 4] & 0x7F;
+                fade.curve = (int8_t)b[payloadOff + 5];
+                fade.reserved[0] = b[payloadOff + 6];
+                fade.reserved[1] = b[payloadOff + 7];
+                payloadOff += spsarr::kArrClipFadeBytes;
 
                 GridSlot dst = sourceSlot;
                 if (rowSelect[sourceSlot] < GRID_LENGTH &&
@@ -512,7 +596,16 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                        trackMask);
     }
     releaseHostLoadedArrangementTracks(mode, rowSelect, loadOffset);
+#if !defined(__AVR__)
+    if (isArrangerLoad || usePrivateSources) {
+        grid_task.load_queue.put_arrangement(queueMode, rowSelect,
+                                             privateSourceIds, loadOffset);
+    } else {
+        grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
+    }
+#else
     grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
+#endif
     uint8_t ack[2] = {CMD_LOAD_SLOTS, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
 }
@@ -563,15 +656,24 @@ void SpsHostArrBridge::onSaveSlots(uint8_t tag, const uint8_t* b,
         return;
     }
 
+#if defined(__AVR__)
     if (saveNeedsMdCurrentPattern())
         MD.getCurrentPattern(kCurrentPatternTimeoutMs);
 
     mcl_actions.save_tracks(row, trackSelect, SAVE_SEQ);
     grid_page.row_scan = GRID_LENGTH;
     grid_page.reload_slot_models = false;
+#else
+    if (!grid_task.save_queue.put(row, trackSelect, SAVE_SEQ)) {
+        sendErr(tag, ERR_BUSY, row);
+        return;
+    }
+#endif
     uint8_t ack[2] = {CMD_SAVE_SLOTS, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+#if defined(__AVR__)
     notifyDirty(0xFF, DIRTY_CELLS);
+#endif
 }
 
 void SpsHostArrBridge::onArrClear(uint8_t tag) {
@@ -943,19 +1045,31 @@ void SpsHostArrBridge::onArrMakeLocal(uint8_t tag, const uint8_t* b,
     uint8_t track = b[8];
     uint8_t row = b[9];
     uint8_t sourceSlot = b[10];
+    bool allowStandaloneSource = n >= 12 && b[11] != 0;
     if (track >= spsarr::kNumGridSlots || row >= GRID_LENGTH ||
         sourceSlot >= NUM_SLOTS || durationQ12 == 0) {
         sendErr(tag, ERR_RANGE, track);
         return;
     }
 
-    if (!mcl_arrangement.makeClipLocal(startQ12, durationQ12, track, row,
-                                       sourceSlot)) {
+    uint32_t sourceId = 0;
+    bool convertedArrangementClip = mcl_arrangement.makeClipLocal(
+        startQ12, durationQ12, track, row, sourceSlot, &sourceId);
+    if (!convertedArrangementClip &&
+        (!allowStandaloneSource ||
+         !mcl_arrangement.createPrivateSourceFromGrid(sourceSlot, row, track,
+                                                      &sourceId))) {
         sendErr(tag, ERR_BUSY, track);
         return;
     }
 
-    uint8_t ack[2] = {CMD_ARR_MAKE_LOCAL, 1};
+    uint8_t ack[17] = {CMD_ARR_MAKE_LOCAL, 1};
+    spsArrPutU32(ack + 2, startQ12);
+    spsArrPutU32(ack + 6, durationQ12);
+    ack[10] = track;
+    ack[11] = row;
+    ack[12] = sourceSlot;
+    spsArrPutU32(ack + 13, sourceId);
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
     notifyDirty(0xFF, DIRTY_ARRANGEMENT);
 }

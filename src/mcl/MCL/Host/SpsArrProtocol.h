@@ -55,6 +55,7 @@ enum Cmd {
     CMD_REQ_GRID_CHAIN = 0x19,
     CMD_REQ_ARR_AUTOMATION_LANES = 0x1A,
     CMD_REQ_ARR_AUTOMATION_POINTS = 0x1B,
+    CMD_REQ_ARR_LOCAL_PREVIEW = 0x1C,
 
     CMD_CELLS = 0x30,
     CMD_ACTIVE = 0x31,
@@ -68,6 +69,7 @@ enum Cmd {
     CMD_GRID_CHAIN = 0x39,
     CMD_ARR_AUTOMATION_LANES = 0x3A,
     CMD_ARR_AUTOMATION_POINTS = 0x3B,
+    CMD_ARR_LOCAL_PREVIEW = 0x3C,
 
     CMD_SET_LINK = 0x50,
     CMD_SET_FADE = 0x51,
@@ -134,7 +136,9 @@ enum Caps2 {
     CAP2_PROJECT_MOVE = 1 << 5,
     CAP2_GRID_MOVE_UNDO = 1 << 6,
     CAP2_GRID_CHAIN = 1 << 7,
-    CAP2_ARRANGEMENT_AUTOMATION = 1 << 8
+    CAP2_ARRANGEMENT_AUTOMATION = 1 << 8,
+    CAP2_ARRANGER_PRIVATE_SOURCES = 1 << 9,
+    CAP2_ARRANGER_LOCAL_PREVIEW = 1 << 10
 };
 
 enum ArrangementAutomationWriteOp {
@@ -191,10 +195,12 @@ static const int kActiveSlotGroupIndexBytes = kNumGridSlots;
 static const int kActivePendingTransitionBytes = 2;
 static const int kActiveSlotSourceRowBytes = kNumGridSlots;
 static const int kActiveLoadQueueLengthBytes = 1;
+static const int kActivePrivateSourceMaskBytes = 4;
 static const int kGridChainRowBytes = kNumGridSlots;
 static const uint8_t kActiveSlotOffsetLoad = 253;
 static const uint8_t kActiveSlotPending = 254;
 static const uint8_t kActiveSlotDisabled = 255;
+static const uint8_t kArrPrivateSourceRow = 253;
 static const int kRowNameBytes = 16;
 static const int kArrNameBytes = 16;
 static const int kArrClipFadeBytes = 8;
@@ -213,6 +219,7 @@ static const int kArrLoopRegionLabelBytes = 16;
 static const int kArrLoopRegionRecordBytes = 32;
 static const int kArrAutomationLaneRecordBytes = 16;
 static const int kArrAutomationPointRecordBytes = 8;
+static const int kArrLocalPreviewBytes = 16;
 static const int kArrAutomationChunkBeginBytes =
     2 + kArrAutomationLaneRecordBytes;
 static const int kArrAutomationChunkPointHeaderBytes = 6;
@@ -314,7 +321,8 @@ enum ArrangerLoadFlags {
     ARR_LOAD_SEEK_POSITION = 1 << 3,
     ARR_LOAD_IMMEDIATE = 1 << 4,
     ARR_LOAD_RUNTIME_FADES = 1 << 5,
-    ARR_LOAD_GRID_BANK = 1 << 6
+    ARR_LOAD_GRID_BANK = 1 << 6,
+    ARR_LOAD_PRIVATE_SOURCES = 1 << 7
 };
 
 enum GridSaveFlags {
@@ -381,6 +389,8 @@ inline void spsArrPutU16(uint8_t* p, uint16_t v) { spswire::putU16(p, v); }
 inline uint16_t spsArrGetU16(const uint8_t* p) { return spswire::getU16(p); }
 inline void spsArrPutU32(uint8_t* p, uint32_t v) { spswire::putU32(p, v); }
 inline uint32_t spsArrGetU32(const uint8_t* p) { return spswire::getU32(p); }
+inline void spsArrPutU64(uint8_t* p, uint64_t v) { spswire::putU64(p, v); }
+inline uint64_t spsArrGetU64(const uint8_t* p) { return spswire::getU64(p); }
 
 }  // namespace spsarr
 

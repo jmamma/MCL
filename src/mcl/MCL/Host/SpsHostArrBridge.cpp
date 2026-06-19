@@ -49,6 +49,9 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_REQ_ARR_AUTOMATION_POINTS:
             onReqArrAutomationPoints(p.tag, b, n);
             break;
+        case CMD_REQ_ARR_LOCAL_PREVIEW:
+            onReqArrLocalPreview(p.tag, b, n);
+            break;
         case CMD_REQ_ARR_TRACK_LABELS: onReqArrTrackLabels(p.tag); break;
         case CMD_REQ_PROJECT_LIST: onReqProjectList(p.tag, b, n); break;
         case CMD_REQ_PROJECT_VERSIONS: onReqProjectVersions(p.tag, b, n); break;
@@ -133,7 +136,12 @@ void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     uint16_t caps2 = (uint16_t)(CAP2_GRID_BANKS | CAP2_SLOT_OWNERSHIP |
                                 CAP2_ARRANGEMENT_LOOP_REGIONS |
                                 CAP2_PROJECT_BROWSER | CAP2_GRID_CHAIN |
-                                CAP2_ARRANGEMENT_AUTOMATION);
+                                CAP2_ARRANGEMENT_AUTOMATION
+#if !defined(__AVR__)
+                                | CAP2_ARRANGER_PRIVATE_SOURCES |
+                                  CAP2_ARRANGER_LOCAL_PREVIEW
+#endif
+                                );
 #if MCL_FEATURE_HOST_GRID_MOVE_UNDO
     caps2 |= CAP2_GRID_MOVE_UNDO;
 #endif
