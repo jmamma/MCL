@@ -28,7 +28,6 @@ void SpsOverlayPage::init() {
   GUI_hardware.led.sps_overlay = true;
   GUI_hardware.led.updateLeds = true;
   painted_sub_page_ = 255;
-  // LEDs only paint while the logical UI button is held — see loop().
 }
 
 void SpsOverlayPage::cleanup() {
@@ -41,15 +40,7 @@ void SpsOverlayPage::cleanup() {
 }
 
 void SpsOverlayPage::loop() {
-  // LED column palette is gated on the logical device UI button being
-  // held. When released, hand LEDs back to the active page so step
-  // edit / grid / etc. can repaint their own palette.
-  if (MD.ui.sps_mode.ui_slot_button_held()) {
-    paint_leds();
-  } else if (painted_sub_page_ != 255) {
-    mcl_gui.reset_trigleds();
-    painted_sub_page_ = 255;
-  }
+  paint_leds();
 }
 
 void SpsOverlayPage::paint_leds() {
