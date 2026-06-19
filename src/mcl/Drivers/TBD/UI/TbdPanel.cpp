@@ -588,6 +588,26 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
+  if (ui_active && !is_local_nav_page && !driver_ui_blocked && is_press) {
+    uint8_t target_slot = DeviceManager::UI_SLOT_NONE;
+    if (orig_src == ButtonsClass::TBD_BUTTON_TR &&
+        device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_PRIMARY) &&
+        tbd_ui_slot_available(DeviceManager::UI_SLOT_SECONDARY)) {
+      target_slot = DeviceManager::UI_SLOT_SECONDARY;
+    } else if (orig_src == ButtonsClass::BUTTON2 &&
+               device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_SECONDARY) &&
+               tbd_ui_slot_available(DeviceManager::UI_SLOT_PRIMARY)) {
+      target_slot = DeviceManager::UI_SLOT_PRIMARY;
+    }
+
+    if (target_slot != DeviceManager::UI_SLOT_NONE &&
+        device_manager.handle_ui_slot_button(target_slot, event, false)) {
+      ui_slot_switch_source_ = orig_src;
+      ui_slot_switch_target_ = target_slot;
+      return true;
+    }
+  }
+
   if (ui_active && !is_local_nav_page && !driver_ui_blocked &&
       (orig_src == ButtonsClass::BUTTON2 ||
        orig_src == ButtonsClass::TBD_BUTTON_TR)) {
@@ -611,26 +631,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       if (open_secondary_ui_from_tap(event)) {
         return true;
       }
-    }
-  }
-
-  if (ui_active && !is_local_nav_page && !driver_ui_blocked && is_press) {
-    uint8_t target_slot = DeviceManager::UI_SLOT_NONE;
-    if (orig_src == ButtonsClass::BUTTON3 &&
-        device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_PRIMARY) &&
-        tbd_ui_slot_available(DeviceManager::UI_SLOT_SECONDARY)) {
-      target_slot = DeviceManager::UI_SLOT_SECONDARY;
-    } else if (orig_src == ButtonsClass::BUTTON1 &&
-               device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_SECONDARY) &&
-               tbd_ui_slot_available(DeviceManager::UI_SLOT_PRIMARY)) {
-      target_slot = DeviceManager::UI_SLOT_PRIMARY;
-    }
-
-    if (target_slot != DeviceManager::UI_SLOT_NONE &&
-        device_manager.handle_ui_slot_button(target_slot, event, false)) {
-      ui_slot_switch_source_ = orig_src;
-      ui_slot_switch_target_ = target_slot;
-      return true;
     }
   }
 
