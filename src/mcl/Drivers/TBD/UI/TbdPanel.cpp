@@ -439,6 +439,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (orig_src == ui_display_chord_modifier_) {
       ui_display_chord_modifier_ = 255;
       if (active_ui_button_pressed_ && active_ui_button_source_ == orig_src) {
+        device_manager.notify_active_ui_button(event);
         active_ui_button_pressed_ = false;
         active_ui_button_chorded_ = false;
         active_ui_button_exit_on_tap_ = false;
