@@ -31,7 +31,7 @@
 TbdPanel tbd_panel;
 
 static constexpr uint16_t kTbdUiButtonTapMaxMs = 400;
-static constexpr uint8_t kTbdSlotTrackMenuButton = ButtonsClass::BUTTON3;
+static constexpr uint8_t kTbdTempoButton = ButtonsClass::TBD_BUTTON_B;
 static constexpr uint8_t kTbdDisplaySizeButton = ButtonsClass::TBD_BUTTON_B;
 
 static bool tbd_transport_forward_has(MidiUartClass *uart) {
@@ -587,26 +587,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
-  if (ui_collapsed && MD.ui.sps_mode.is_active() &&
-      (orig_src == ButtonsClass::BUTTON1 ||
-       orig_src == ButtonsClass::BUTTON3 ||
-       orig_src == ButtonsClass::BUTTON4 ||
-       orig_src == ButtonsClass::FUNC_BUTTON5 ||
-       orig_src == ButtonsClass::TBD_BUTTON_B ||
-       is_trig_button ||
-       (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
-        orig_src <= ButtonsClass::FUNC_BUTTON9)) &&
-      device_manager.handle_ui_event(event)) {
-    return true;
-  }
-
-  if (ui_collapsed && TBD.is_ui_active() &&
-      !is_local_nav_page && !driver_ui_blocked &&
-      is_trig_button &&
-      device_manager.handle_ui_event(event)) {
-    return true;
-  }
-
   const bool grid_select_context =
       !ui_expanded && !is_local_nav_page && grid_page_active &&
       !grid_page.show_slot_menu && !grid_io_overlay.is_active();
@@ -618,14 +598,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (tempo_track_select_down_ && orig_src == ButtonsClass::TBD_BUTTON_B) {
-    if (is_press) {
-      seq_track_select_page.toggle_device();
-    }
-    return true;
-  }
-
-  if (tempo_track_select_down_ && orig_src == kTbdSlotTrackMenuButton) {
+  if (tempo_track_select_down_ && orig_src == kTbdTempoButton) {
     if (is_press) {
       tempo_track_select_down_ = false;
       seq_track_select_page.end();
@@ -679,7 +652,8 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   if (grid_select_context && !tbd_tempo_page.is_active() &&
       orig_src == ButtonsClass::FUNC_BUTTON5) {
     if (is_press) {
-      if (BUTTON_DOWN(kTbdSlotTrackMenuButton)) {
+      if (BUTTON_DOWN(kTbdTempoButton)) {
+        grid_select_button_chorded_ = true;
         tbd_tempo_page.begin(false);
         return true;
       }
@@ -690,6 +664,26 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (is_release) {
       return true;
     }
+  }
+
+  if (ui_collapsed && MD.ui.sps_mode.is_active() &&
+      (orig_src == ButtonsClass::BUTTON1 ||
+       orig_src == ButtonsClass::BUTTON3 ||
+       orig_src == ButtonsClass::BUTTON4 ||
+       orig_src == ButtonsClass::FUNC_BUTTON5 ||
+       orig_src == ButtonsClass::TBD_BUTTON_B ||
+       is_trig_button ||
+       (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
+        orig_src <= ButtonsClass::FUNC_BUTTON9)) &&
+      device_manager.handle_ui_event(event)) {
+    return true;
+  }
+
+  if (ui_collapsed && TBD.is_ui_active() &&
+      !is_local_nav_page && !driver_ui_blocked &&
+      is_trig_button &&
+      device_manager.handle_ui_event(event)) {
+    return true;
   }
 
   const bool can_open_grid_io_overlay =

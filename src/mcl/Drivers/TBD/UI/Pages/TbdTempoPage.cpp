@@ -172,6 +172,9 @@ bool TbdTempoPage::handleEvent(gui_event_t *event) {
 
   if (event->source == ButtonsClass::FUNC_BUTTON5) {
     if (is_press) {
+      if (BUTTON_DOWN(ButtonsClass::TBD_BUTTON_B)) {
+        return true;
+      }
       if (BUTTON_DOWN(ButtonsClass::BUTTON3)) {
         tap_mode_ = true;
         handle_tap();
