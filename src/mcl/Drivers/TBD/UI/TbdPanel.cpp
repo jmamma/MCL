@@ -182,6 +182,22 @@ static bool tbd_b_scale_page(PageIndex pg) {
   }
 }
 
+static bool tbd_ui_slot_available(uint8_t slot) {
+  MidiDevice *primary = device_manager.primary_device();
+  MidiDevice *device = nullptr;
+  if (slot == DeviceManager::UI_SLOT_PRIMARY) {
+    device = primary;
+  } else if (slot == DeviceManager::UI_SLOT_SECONDARY) {
+    device = device_manager.secondary_device();
+    if (device == primary) return false;
+  } else {
+    return false;
+  }
+
+  return device != nullptr && device != &null_midi_device &&
+         device->connected && device->supports_ui();
+}
+
 static bool tbd_bank_popup_tap_allowed(PageIndex pg) {
   if (pg == BANK_POPUP_PAGE) return true;
   if (pg == PAGE_SELECT_PAGE || pg == GRID_LOAD_PAGE ||
@@ -401,6 +417,8 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     active_ui_button_chorded_ = false;
     active_ui_button_exit_on_tap_ = false;
     active_ui_button_source_ = 255;
+    ui_slot_switch_source_ = 255;
+    ui_slot_switch_target_ = DeviceManager::UI_SLOT_NONE;
   }
   if (!ui_expanded) {
     ui_b_button_held_ = false;
@@ -432,6 +450,15 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (is_release) {
+    if (orig_src == ui_slot_switch_source_) {
+      gui_event_t release_event = *event;
+      release_event.mask = EVENT_BUTTON_RELEASED;
+      device_manager.handle_ui_slot_button(ui_slot_switch_target_,
+                                           &release_event, false);
+      ui_slot_switch_source_ = 255;
+      ui_slot_switch_target_ = DeviceManager::UI_SLOT_NONE;
+      return true;
+    }
     if (orig_src == ui_display_chord_source_) {
       ui_display_chord_source_ = 255;
       return true;
@@ -584,6 +611,26 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       if (open_secondary_ui_from_tap(event)) {
         return true;
       }
+    }
+  }
+
+  if (ui_active && !is_local_nav_page && !driver_ui_blocked && is_press) {
+    uint8_t target_slot = DeviceManager::UI_SLOT_NONE;
+    if (orig_src == ButtonsClass::BUTTON3 &&
+        device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_PRIMARY) &&
+        tbd_ui_slot_available(DeviceManager::UI_SLOT_SECONDARY)) {
+      target_slot = DeviceManager::UI_SLOT_SECONDARY;
+    } else if (orig_src == ButtonsClass::BUTTON1 &&
+               device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_SECONDARY) &&
+               tbd_ui_slot_available(DeviceManager::UI_SLOT_PRIMARY)) {
+      target_slot = DeviceManager::UI_SLOT_PRIMARY;
+    }
+
+    if (target_slot != DeviceManager::UI_SLOT_NONE &&
+        device_manager.handle_ui_slot_button(target_slot, event, false)) {
+      ui_slot_switch_source_ = orig_src;
+      ui_slot_switch_target_ = target_slot;
+      return true;
     }
   }
 

@@ -31,6 +31,8 @@ private:
   uint16_t active_ui_button_press_ms_ = 0;
   uint8_t ui_display_chord_source_ = 255;
   uint8_t ui_display_chord_modifier_ = 255;
+  uint8_t ui_slot_switch_source_ = 255;
+  uint8_t ui_slot_switch_target_ = 255;
   bool grid_select_button_down_ = false;
   bool grid_select_button_chorded_ = false;
   bool tempo_track_select_down_ = false;
