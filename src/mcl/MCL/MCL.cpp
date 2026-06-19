@@ -271,7 +271,11 @@ void MCL::setup() {
   ret = mcl_sd.sd_init();
   oled_display.init_display();
 
-  if (BUTTON_DOWN(Buttons.BUTTON2)) {
+  bool allow_boot_menu = true;
+#ifdef MCL_HAS_PLATFORM_HEADLESS_BOOT
+  allow_boot_menu = !mcl_platform_headless_boot();
+#endif
+  if (allow_boot_menu && BUTTON_DOWN(Buttons.BUTTON2)) {
     // gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
     mcl.setPage(BOOT_MENU_PAGE);
     while (mcl.currentPage() == BOOT_MENU_PAGE) {

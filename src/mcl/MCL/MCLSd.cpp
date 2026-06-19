@@ -4,6 +4,7 @@
 #include "StackMonitor.h"
 #include "Project.h"
 #include "PtcGroups.h"
+#include "platform.h"
 #include <string.h>
 
 namespace {
@@ -60,6 +61,37 @@ bool parent_path(char *path) {
   }
   return true;
 }
+#endif
+
+#ifdef MCL_HAS_PLATFORM_HEADLESS_BOOT
+bool load_headless_project() {
+  static const char kHeadlessProjectName[] = "project000";
+
+  if (mcl_cfg.project[0] != '\0' && proj.load_project(mcl_cfg.project)) {
+    return true;
+  }
+  if (proj.load_project(kHeadlessProjectName)) {
+    return true;
+  }
+  if (!proj.new_project(kHeadlessProjectName)) {
+    return proj.load_project(kHeadlessProjectName);
+  }
+  return proj.load_project(kHeadlessProjectName);
+}
+
+bool wait_for_project_or_headless_boot() {
+  if (mcl_platform_headless_boot()) {
+    bool ok = load_headless_project();
+    DEBUG_PRINTLN(ok ? F("Headless project loaded")
+                     : F("Headless project load failed"));
+    return ok;
+  }
+
+  mcl_gui.wait_for_project();
+  return true;
+}
+#else
+#define wait_for_project_or_headless_boot() (mcl_gui.wait_for_project(), true)
 #endif
 
 } // namespace
@@ -193,8 +225,7 @@ bool MCLSd::load_init() {
           }
           gfx.draw_evil(R.icons_boot->evilknievel_bitmap);
           oled_display.clearDisplay();
-          mcl_gui.wait_for_project();
-          return true;
+          return wait_for_project_or_headless_boot();
 
         }
 
@@ -214,8 +245,7 @@ bool MCLSd::load_init() {
               F("Project count greater than 0, try to load existing"));
           if (!proj.load_project(mcl_cfg.project)) {
             DEBUG_PRINTLN(F("error loading project"));
-            mcl_gui.wait_for_project();
-            return true;
+            return wait_for_project_or_headless_boot();
 
           } else {
             DEBUG_PRINTLN(F("Project loaded successfully, load grid"));
@@ -223,8 +253,7 @@ bool MCLSd::load_init() {
           }
           return true;
         } else {
-          mcl_gui.wait_for_project();
-          return true;
+          return wait_for_project_or_headless_boot();
         }
       } else {
         DEBUG_PRINTLN(F("Could not read cfg file."));
@@ -232,8 +261,7 @@ bool MCLSd::load_init() {
         if (!mcl_cfg.cfg_init()) {
           return false;
         }
-        mcl_gui.wait_for_project();
-        return true;
+        return wait_for_project_or_headless_boot();
       }
     } else {
       DEBUG_PRINTLN(F("Could not open cfg file. Let's try to create it"));
@@ -241,8 +269,7 @@ bool MCLSd::load_init() {
         return false;
       }
       oled_display.clearDisplay();
-      mcl_gui.wait_for_project();
-      return true;
+      return wait_for_project_or_headless_boot();
     }
     return true;
   }

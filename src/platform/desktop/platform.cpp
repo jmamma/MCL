@@ -42,6 +42,10 @@ void platform_wait_poll() {
 #endif
 }
 
+bool mcl_platform_headless_boot() {
+    return false;
+}
+
 extern uint64_t mcl_desktop_button_mask;
 
 uint64_t mcl_platform_button_mask() {

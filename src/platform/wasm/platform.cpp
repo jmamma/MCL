@@ -135,6 +135,10 @@ void platform_wait_poll() {
     host_yield();
 }
 
+bool mcl_platform_headless_boot() {
+    return true;
+}
+
 uint64_t mcl_platform_button_mask() {
     return host_input_button_mask() | mcl_desktop_button_mask;
 }

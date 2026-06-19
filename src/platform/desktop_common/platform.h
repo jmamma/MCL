@@ -80,6 +80,12 @@ inline bool isInInterrupt() { return false; }
 void platform_poll();
 void platform_wait_poll();
 
+// Hosted platforms can request non-interactive boot behavior. Native desktop
+// keeps the normal firmware UI flow; wasm is driven by the SPS host and must not
+// block forever on modal boot pages.
+#define MCL_HAS_PLATFORM_HEADLESS_BOOT 1
+bool mcl_platform_headless_boot();
+
 // Platform-owned panel input source for the shared desktop GUI hardware shim.
 // The native desktop path uses local mock state; wasm forwards to host imports.
 uint64_t mcl_platform_button_mask();
