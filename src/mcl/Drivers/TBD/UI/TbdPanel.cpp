@@ -97,6 +97,24 @@ static bool is_tbd_file_browser_page(PageIndex pg) {
          pg == SAMPLE_BROWSER || pg == SOUND_BROWSER;
 }
 
+static bool is_tbd_prompt_page(PageIndex pg) {
+  return pg == TEXT_INPUT_PAGE || pg == QUESTIONDIALOG_PAGE;
+}
+
+static bool tbd_remap_top_nav_local_event(gui_event_t *event, uint8_t orig_src,
+                                          bool confirm_page,
+                                          bool cancel_page) {
+  if (cancel_page && orig_src == ButtonsClass::BUTTON2) {
+    event->source = ButtonsClass::BUTTON1;
+    return true;
+  }
+  if (confirm_page && orig_src == ButtonsClass::TBD_BUTTON_TR) {
+    event->source = ButtonsClass::BUTTON4;
+    return true;
+  }
+  return false;
+}
+
 static FileBrowserPage *active_tbd_file_browser_page(PageIndex pg) {
   if (!is_tbd_file_browser_page(pg)) return nullptr;
   return static_cast<FileBrowserPage *>(GUI.currentPage());
@@ -409,7 +427,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   const PageIndex pg = mcl.currentPage();
   const bool is_menu_page = is_tbd_menu_page(pg);
   const bool is_file_browser_page = is_tbd_file_browser_page(pg);
-  const bool is_local_nav_page = is_menu_page || is_file_browser_page;
+  const bool is_prompt_page = is_tbd_prompt_page(pg);
+  const bool top_nav_confirm_page =
+      is_menu_page || is_file_browser_page || is_prompt_page;
+  const bool top_nav_cancel_page = is_prompt_page || pg == BANK_POPUP_PAGE;
+  const bool is_local_nav_page = top_nav_confirm_page || top_nav_cancel_page;
   const bool grid_page_active =
       pg == GRID_PAGE && GUI.currentPage() == mcl.getPage(GRID_PAGE);
   const bool driver_ui_blocked = driver_ui_blocked_page(pg);
@@ -498,6 +520,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       is_release) {
     suppress_sps_key_release_ = false;
     return true;
+  }
+
+  if (tbd_remap_top_nav_local_event(event, orig_src, top_nav_confirm_page,
+                                    top_nav_cancel_page)) {
+    return false;
   }
 
   // FUNC + TBDR opens the P4 transport/SPI diagnostic overlay. FUNC on its
@@ -722,6 +749,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (sps_collapsed_active &&
+      !is_local_nav_page &&
       (orig_src == ButtonsClass::BUTTON1 ||
        orig_src == ButtonsClass::BUTTON3 ||
        orig_src == ButtonsClass::BUTTON4 ||
@@ -811,7 +839,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (TBD.is_ui_active() &&
+  if (!is_local_nav_page && TBD.is_ui_active() &&
       (!TBD.is_ui_collapsed() ||
        (orig_src >= ButtonsClass::FUNC_BUTTON6 &&
         orig_src <= ButtonsClass::FUNC_BUTTON9))) {
@@ -823,13 +851,13 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (arrow_trace) DEBUG_PRINTLN("  TBD.handle_ui_event did NOT consume");
   }
 
-  if (ui_expanded &&
+  if (!is_local_nav_page && ui_expanded &&
       device_manager.handle_ui_event(event)) {
     if (arrow_trace) DEBUG_PRINTLN("  device_manager.handle_ui_event consumed");
     return true;
   }
 
-  if (ui_expanded && !is_transport_button) {
+  if (!is_local_nav_page && ui_expanded && !is_transport_button) {
     const bool tbd_ui_active = TBD.is_ui_active();
     if (!tbd_ui_active) {
       ui_b_button_held_ = false;
@@ -917,7 +945,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (!ui_collapsed && !driver_ui_blocked &&
+  if (!is_local_nav_page && !ui_collapsed && !driver_ui_blocked &&
       device_manager.handle_ui_event(event)) {
     return true;
   }
@@ -928,12 +956,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (seq_ptc_page.handle_tbd_keyboard_event(
             event->source - ButtonsClass::TRIG_BUTTON1, event->mask)) {
       return true;
-    }
-  }
-
-  if (is_menu_page || is_file_browser_page) {
-    if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
-      event->source = ButtonsClass::BUTTON4;
     }
   }
 
