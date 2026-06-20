@@ -33,6 +33,7 @@ TbdPanel tbd_panel;
 static constexpr uint16_t kTbdUiButtonTapMaxMs = 400;
 static constexpr uint8_t kTbdTempoButton = ButtonsClass::TBD_BUTTON_B;
 static constexpr uint8_t kTbdDisplaySizeButton = ButtonsClass::TBD_BUTTON_B;
+static constexpr uint8_t kTbdTrackSelectDeviceButton = kTbdTempoButton;
 
 static bool tbd_transport_forward_has(MidiUartClass *uart) {
   if (uart == nullptr) return false;
@@ -626,11 +627,24 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
       !sps_collapsed_active && !ui_expanded && !is_local_nav_page &&
       grid_page_active && !grid_page.show_slot_menu &&
       !grid_io_overlay.is_active();
+  const bool track_select_context =
+      grid_select_context ||
+      (!sps_collapsed_active && !ui_expanded && !is_local_nav_page &&
+       !grid_io_overlay.is_active() &&
+       (pg == SEQ_PTC_PAGE || pg == MIXER_PAGE));
 
   if (tempo_track_select_down_ &&
       orig_src == ButtonsClass::FUNC_BUTTON5 && is_release) {
     tempo_track_select_down_ = false;
     seq_track_select_page.end();
+    return true;
+  }
+
+  if (tempo_track_select_down_ &&
+      orig_src == kTbdTrackSelectDeviceButton) {
+    if (is_press) {
+      seq_track_select_page.toggle_device();
+    }
     return true;
   }
 
@@ -655,8 +669,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (is_trig_button && pg == GRID_PAGE &&
-      seq_track_select_page.is_active()) {
+  if (is_trig_button && seq_track_select_page.is_active()) {
     if (is_press) {
       seq_track_select_page.select_track(orig_src - ButtonsClass::TRIG_BUTTON1);
     }
@@ -685,7 +698,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (grid_select_context && !tbd_tempo_page.is_active() &&
+  if (track_select_context && !tbd_tempo_page.is_active() &&
       orig_src == ButtonsClass::FUNC_BUTTON5) {
     if (is_press) {
       if (BUTTON_DOWN(kTbdTempoButton)) {
