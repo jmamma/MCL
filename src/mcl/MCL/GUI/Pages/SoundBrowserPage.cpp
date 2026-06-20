@@ -2,7 +2,7 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "../../../Drivers/MD/MD.h"
-#include "MDSound.h"
+#include "../../../Drivers/MD/MDSound.h"
 
 const char *c_snd_root = "/Sounds";
 const char *c_snd_suffix = ".snd";

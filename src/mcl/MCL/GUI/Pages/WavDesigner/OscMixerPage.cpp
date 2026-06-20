@@ -2,7 +2,7 @@
 #include "WavDesigner/WavDesigner.h"
 #include "MCLGUI.h"
 #include "WavDesigner/Osc.h"
-#include "DSP.h"
+#include "WavDesigner/WavDesignerConstants.h"
 
 #ifdef WAV_DESIGNER
 
@@ -47,7 +47,7 @@ void OscMixerPage::display() {
 float OscMixerPage::get_gain(uint8_t channel) {
   MCLEncoder *enc_ = (MCLEncoder *)(encoders[channel]);
   return (float)enc_->cur *
-         ((float)MAX_HEADROOM / ((float)NUM_CHANNELS * 127.0f));
+         ((float)WD_MAX_HEADROOM / ((float)NUM_CHANNELS * 127.0f));
 }
 
 void OscMixerPage::draw_wav() {
@@ -81,7 +81,7 @@ void OscMixerPage::draw_wav() {
     }
   }
   // float buffer[w];
-  const float preview_scale = (float)(30 / 2) / (float)MAX_HEADROOM;
+  const float preview_scale = (float)(30 / 2) / (float)WD_MAX_HEADROOM;
   oled_display.fillRect(sample_number + x, 0, scanline_width, 32, BLACK);
   uint8_t n_end = sample_number + scanline_width;
   for (uint8_t n = sample_number; n < n_end; n++) {
@@ -97,9 +97,6 @@ void OscMixerPage::draw_wav() {
       sample += osc_sample * wd.mixer.get_gain(i);
       // DEBUG_PRINTLN(mixer.get_gain(i));
     }
-    // Check for overflow outside of int16_t ranges.
-    //dsp.saturate(sample, (float)MAX_HEADROOM);
-
     //  buffer[n] = sample;
     //  if (abs(buffer[n]) > largest_sample_so_far) {
     //  largest_sample_so_far = abs(buffer[n]);

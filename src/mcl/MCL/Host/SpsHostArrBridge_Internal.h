@@ -21,7 +21,7 @@
 #include "Sequencer/SeqTrack.h"
 #include "Arrangement/MCLArrangement.h"
 #include "Project.h"
-#include "TrackLoadFade.h"
+#include "Grid/TrackLoadFade.h"
 #include "Devices/DeviceManager.h"
 #include "platform.h"
 #include "../../Drivers/MD/MD.h"

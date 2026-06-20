@@ -5,7 +5,7 @@
 #include "GUI/Pages/SampleBrowserPage.h"
 #include "GUI.h"
 #include "MidiSDS.h"
-#include "DSP.h"
+#include "WavDesigner/WavDesignerConstants.h"
 #include "MCLStrings.h"
 
 #ifdef WAV_DESIGNER
@@ -128,15 +128,14 @@ bool WavDesigner::render() {
       // Sum oscillator samples together
       sample += osc_sample * mixer.get_gain(i);
     }
-    // Check for overflow outside of int16_t ranges.
     DEBUG_PRINTLN(sample);
-    //dsp.saturate(sample, (float)MAX_HEADROOM);
+    // Check for overflow outside of int16_t ranges.
 
-    if (sample > MAX_HEADROOM) {
-      sample = MAX_HEADROOM;
+    if (sample > WD_MAX_HEADROOM) {
+      sample = WD_MAX_HEADROOM;
     }
-    if (sample < -1 * MAX_HEADROOM) {
-      sample = -1 * MAX_HEADROOM;
+    if (sample < -1 * WD_MAX_HEADROOM) {
+      sample = -1 * WD_MAX_HEADROOM;
     }
     // DEBUG_PRINTLN(F(" "));
     // Need to correctly convert from float to int
@@ -213,11 +212,11 @@ bool WavDesigner::render() {
   wav_file.file.sync();
   if (largest_sample_so_far > 0) {
 #if defined(__AVR__)
-    if (!wav_file.normalize16_mono(MAX_HEADROOM, largest_sample_so_far)) {
+    if (!wav_file.normalize16_mono(WD_MAX_HEADROOM, largest_sample_so_far)) {
       return false;
     }
 #else
-    float normalize_gain = ((float)(MAX_HEADROOM / (float)largest_sample_so_far));
+    float normalize_gain = ((float)(WD_MAX_HEADROOM / (float)largest_sample_so_far));
     DEBUG_PRINTLN(normalize_gain);
     if (!wav_file.apply_gain(normalize_gain)) {
       return false;

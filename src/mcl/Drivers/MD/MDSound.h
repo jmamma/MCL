@@ -8,7 +8,7 @@
 #define SOUND_ID 0xFFFA
 #define SOUND_VERSION 2000
 
-#include "../Drivers/MD/MD.h"
+#include "MD.h"
 
 class MDSoundData {
 public:
@@ -38,4 +38,3 @@ public:
   bool write_data(void *data, uint32_t size, uint32_t position);
 
 };
-

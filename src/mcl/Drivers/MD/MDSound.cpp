@@ -1,5 +1,5 @@
 #include "MDSound.h"
-#include "../Drivers/MD/MD.h"
+#include "MD.h"
 #include "MCLSd.h"
 
 bool MDSound::write_sound() {

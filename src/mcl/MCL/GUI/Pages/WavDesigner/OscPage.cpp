@@ -2,7 +2,6 @@
 #include "Devices/DeviceManager.h"
 #include "../../../../Drivers/MD/MD.h"
 #include "WavDesigner/Osc.h"
-#include "DSP.h"
 #include "MidiNotes.h"
 #include "GUI/Pages/Sequencer/SeqPage.h"
 #include "WavDesigner/WavDesigner.h"

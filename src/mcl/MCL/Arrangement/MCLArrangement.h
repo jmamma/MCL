@@ -9,7 +9,7 @@
 
 #include "Arrangement/MCLArrangementFormat.h"
 #include "MCLMemory.h"
-#include "TrackLoadFade.h"
+#include "Grid/TrackLoadFade.h"
 #include <stdint.h>
 
 class DeviceTrack;

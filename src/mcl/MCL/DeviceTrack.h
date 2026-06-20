@@ -4,7 +4,7 @@
 
 #include "GUI/Pages/DiagnosticPage.h"
 #include "GridTrack.h"
-#include "TrackLoadFade.h"
+#include "Grid/TrackLoadFade.h"
 
 #define A4_TRACK_TYPE_270 2
 #define MD_TRACK_TYPE_270 1

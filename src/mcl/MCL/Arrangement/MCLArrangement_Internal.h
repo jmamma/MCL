@@ -18,7 +18,7 @@
 #include "Sequencer/SeqTrack.h"
 #include "Host/SpsHostArrBridge.h"
 #include "Host/SpsArrProtocol.h"
-#include "TrackLoadFade.h"
+#include "Grid/TrackLoadFade.h"
 
 #include <stddef.h>
 #include <stdlib.h>
