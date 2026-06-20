@@ -3,7 +3,7 @@
 #ifdef PLATFORM_TBD
 
 #include "MCL.h"
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
 #include "Devices/MidiSetup.h"

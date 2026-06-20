@@ -3,9 +3,9 @@
 #ifndef SEQPAGES_H__
 #define SEQPAGES_H__
 
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "MCLMemory.h"
-#include "MCLMenus.h"
+#include "GUI/MCLMenus.h"
 #include "GUI/Pages/Sequencer/ArpPage.h"
 
 #define ENCODER_RES_SEQ 2

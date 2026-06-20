@@ -1,4 +1,4 @@
-#include "MCLGIF.h"
+#include "GUI/MCLGIF.h"
 #include "global.h"
 
 uint8_t *MCLGIF::get_next_frame() {

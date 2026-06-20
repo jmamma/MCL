@@ -27,7 +27,7 @@
 #include "NoteInterface.h"
 #include "Devices/DeviceManager.h"
 #include "MCLSysConfig.h"
-#include "MCLMenus.h"
+#include "GUI/MCLMenus.h"
 #include "MD.h"
 #include "MDSysex.h"
 #include "platform.h"

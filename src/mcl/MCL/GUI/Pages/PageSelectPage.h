@@ -4,7 +4,7 @@
 #define PageSelectPAGE_H__
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "MenuTypes.h"
 
 extern MCLRelativeEncoder page_select_param1;

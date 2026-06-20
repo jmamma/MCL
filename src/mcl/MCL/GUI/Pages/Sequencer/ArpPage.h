@@ -5,7 +5,7 @@
 
 //#include "Pages.h"
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "ArpSeqTrack.h"
 
 extern MCLEncoder arp_rate;

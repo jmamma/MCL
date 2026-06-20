@@ -3,11 +3,11 @@
 #ifndef MCLMENUS_H__
 #define MCLMENUS_H__
 
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "MCLSysConfig.h"
 #include "MenuPage.h"
 #include "GUI/Pages/TextInputPage.h"
-#include "MCLMenuDefines.h"
+#include "GUI/MCLMenuDefines.h"
 //#include "GUI/Pages/Project/ProjectPages.h"
 //#include "GUI/Pages/Sequencer/PolyPage.h"
 //#include "GUI/Pages/Grid/GridPages.h"

@@ -21,7 +21,7 @@
 #pragma once
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 
 class SpsMode {
 public:

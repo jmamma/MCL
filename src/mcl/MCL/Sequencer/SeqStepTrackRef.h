@@ -14,7 +14,7 @@ extern uint8_t last_primary_track;
 using SeqStepLockParamInfo = MidiDeviceParamInfo;
 
 #if defined(__AVR__)
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 extern MCLEncoder ptc_param_fine_tune;
 void seq_step_set_md_linked_param_update(bool enabled);
 #include "Sequencer/SeqStepTrackMdBackend.h"

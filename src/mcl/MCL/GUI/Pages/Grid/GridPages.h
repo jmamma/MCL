@@ -9,7 +9,7 @@
 
 #include "GUI/Pages/Grid/GridPage.h"
 
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "GUI/Pages/Grid/GridSavePage.h"
 #include "GUI/Pages/Grid/GridLoadPage.h"
 #include "Menu.h"

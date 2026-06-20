@@ -1,5 +1,5 @@
 #include "oled.h"
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 

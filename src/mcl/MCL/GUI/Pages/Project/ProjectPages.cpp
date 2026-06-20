@@ -1,5 +1,5 @@
 #include "GUI/Pages/Project/ProjectPages.h"
-#include "MCLMenus.h"
+#include "GUI/MCLMenus.h"
 
 MCLEncoder loadproj_param1(0, 64, ENCODER_RES_SYS);
 

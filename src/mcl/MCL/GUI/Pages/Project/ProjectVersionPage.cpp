@@ -1,7 +1,7 @@
 #include "GUI/Pages/Project/ProjectVersionPage.h"
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
 #include "MCLGUI.h"
-#include "MCLMenus.h"
+#include "GUI/MCLMenus.h"
 #include "Project.h"
 
 #ifdef MCL_HAS_PROJECT_BACKUP

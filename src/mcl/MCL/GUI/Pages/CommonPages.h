@@ -4,7 +4,7 @@
 #define COMMONPAGES_H__
 
 #include "GUI/Pages/Sequencer/LFOPage.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "GUI/Pages/Performance/MixerPage.h"
 #include "GUI/Pages/Performance/PerfPage.h"
 

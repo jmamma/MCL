@@ -5,7 +5,7 @@
 
 #include "GUI.h"
 #include "Menu.h"
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
 #include "MCLStrings.h"
 
 // Forward declaration for mcl_print_P used in template

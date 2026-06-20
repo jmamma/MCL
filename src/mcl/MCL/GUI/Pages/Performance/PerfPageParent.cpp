@@ -1,4 +1,4 @@
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "Devices/DeviceManager.h"
 #include "Devices/DevicePanelRef.h"
 #include "Devices/DeviceParamResolver.h"

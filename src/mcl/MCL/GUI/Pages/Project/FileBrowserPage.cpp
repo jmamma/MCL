@@ -3,8 +3,8 @@
 #include "helpers.h"
 #include "GUI/Pages/Project/FileBrowserPage.h"
 #include "MCLSd.h"
-#include "MCLGfx.h"
-#include "MCLMenus.h"
+#include "GUI/MCLGfx.h"
+#include "GUI/MCLMenus.h"
 #include "MCLGUI.h"
 
 File FileBrowserPage::file;

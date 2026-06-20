@@ -4,7 +4,7 @@
 #define FILEBROWSERPAGE_H__
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "Menu.h"
 #include "MenuPage.h"
 #include "MCLDefines.h"

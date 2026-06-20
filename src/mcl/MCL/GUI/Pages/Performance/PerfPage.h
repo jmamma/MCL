@@ -4,7 +4,7 @@
 #define PERFPAGE_H__
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 
 #include "GUI/Pages/Performance/PerfPageParent.h"
 #include "GUI/Pages/Performance/PerfEncoder.h"

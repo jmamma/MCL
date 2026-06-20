@@ -4,7 +4,7 @@
 #define RAMPAGE_H__
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "Grid/MCLActions.h"
 
 #define NUM_RAM_PAGES 2

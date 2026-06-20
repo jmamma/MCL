@@ -7,7 +7,7 @@
 #include "GUI/Pages/TextInputPage.h"
 #include "KeyInterface.h"
 #include "NoteInterface.h"
-#include "MCLMenus.h"
+#include "GUI/MCLMenus.h"
 #include "LED.h"
 
 //class MCLGUI : public Print {

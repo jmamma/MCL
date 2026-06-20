@@ -3,7 +3,7 @@
 #ifndef PROJECTPAGES_H__
 #define PROJECTPAGES_H__
 
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "MCLDefines.h"
 #include "GUI/Pages/Project/LoadProjectPage.h"
 #ifdef MCL_HAS_PROJECT_BACKUP

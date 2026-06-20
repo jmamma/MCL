@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Arduino.h"
-#include "PageIndex.h"
+#include "GUI/PageIndex.h"
 
 enum PageSelectIcon : uint8_t {
   PAGE_ICON_NONE = 0,

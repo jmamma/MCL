@@ -5,7 +5,7 @@
 #ifdef PLATFORM_TBD
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "TbdP4SoundData.h"
 #include "../DeviceContext.h"
 #include <stddef.h>

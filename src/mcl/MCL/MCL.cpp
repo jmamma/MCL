@@ -2,7 +2,7 @@
 #include "MCLDefines.h"
 #include "ResourceManager.h"
 #include "MCLSd.h"
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
 #include "MCLGUI.h"
 #include "GridTrack.h"
 #include "Grid/GridTask.h"

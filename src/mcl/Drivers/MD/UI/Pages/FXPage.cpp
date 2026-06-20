@@ -2,7 +2,7 @@
 #include "../../MD.h"
 #include "FXPage.h"
 #include "KeyInterface.h"
-#include "PageIndex.h"
+#include "GUI/PageIndex.h"
 #include "MCLGUI.h"
 #include "Devices/DeviceManager.h"
 #include "../../../MidiDevice.h"

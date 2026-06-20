@@ -13,7 +13,7 @@
 #ifdef PLATFORM_TBD
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 
 class BankPopupPage : public LightPage {
 public:

@@ -5,7 +5,7 @@
 
 #include "../../../../Drivers/DeviceContext.h"
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 
 class PerfPageParent {
 public:

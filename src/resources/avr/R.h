@@ -2,9 +2,9 @@
 
 #include "Devices/MidiSetup.h"
 #include "ElektronModelTypes.h"
-#include "MCLGIF.h"
+#include "GUI/MCLGIF.h"
+#include "GUI/MCLMenuDefines.h"
 #include "MCLMemory.h"
-#include "MCLMenuDefines.h"
 #include "MenuTypes.h"
 #include "Sequencer/SeqDefines.h"
 

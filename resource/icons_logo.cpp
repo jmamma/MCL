@@ -1,4 +1,4 @@
-#include "MCLGIF.h"
+#include "GUI/MCLGIF.h"
 
 /*
 // 'midi_logo_medium', 18x9px

@@ -9,7 +9,7 @@
 #include "MidiSysex.h"
 #include "MCLMemory.h"
 #include "Grid/MidiDeviceGrid.h"
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
 #include "global.h"
 #include "Midi.h"
 #include "MidiUartParent.h"

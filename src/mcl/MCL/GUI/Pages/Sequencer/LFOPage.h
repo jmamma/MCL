@@ -4,7 +4,7 @@
 #define LFOPAGE_H__
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "Sequencer/LFO.h"
 #include "LFOSeqTrack.h"
 #include "Sequencer/LFOTrackRef.h"

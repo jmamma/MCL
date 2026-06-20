@@ -1,4 +1,4 @@
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
 
 #if defined(ENABLE_DIAG_LOGGING)
 

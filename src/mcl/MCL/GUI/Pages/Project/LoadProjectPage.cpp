@@ -1,12 +1,12 @@
 #include "GUI/Pages/Project/LoadProjectPage.h"
-#include "MCLGfx.h"
+#include "GUI/MCLGfx.h"
 #include "MCLGUI.h"
 #include "MCLSd.h"
 #include "MCLSysConfig.h"
 #include "Project.h"
 #include "Devices/DevicePanelRef.h"
 #include "KeyInterface.h"
-#include "MCLMenus.h"
+#include "GUI/MCLMenus.h"
 
 void LoadProjectPage::init() {
 

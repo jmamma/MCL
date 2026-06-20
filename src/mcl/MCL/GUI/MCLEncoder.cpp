@@ -1,4 +1,4 @@
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "helpers.h"
 
 int MCLEncoder::update(encoder_t *enc) {

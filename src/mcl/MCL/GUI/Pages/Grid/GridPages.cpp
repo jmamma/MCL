@@ -1,5 +1,5 @@
 #include "GUI/Pages/Grid/GridPages.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 
 MCLEncoder param1(GRID_WIDTH - 1, 0, 1);
 MCLEncoder param2(GRID_LENGTH - 1, 0 , 1);

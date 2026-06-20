@@ -3,7 +3,7 @@
 #ifdef PLATFORM_TBD
 
 #include "GUI.h"
-#include "MCLEncoder.h"
+#include "GUI/MCLEncoder.h"
 #include "../../../../Drivers/DeviceContext.h"
 
 class SeqTrackSelectPage : public LightPage {

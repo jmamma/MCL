@@ -1,5 +1,5 @@
 #include "MenuTypes.h"
-#include "MCLMenuDefines.h"
+#include "GUI/MCLMenuDefines.h"
 #include "MCLMemory.h"
 #include "Devices/MidiSetup.h"
 

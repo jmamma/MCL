@@ -1,5 +1,5 @@
 #include "ResourceManager.h"
-#include "MCLMenus.h"
+#include "GUI/MCLMenus.h"
 #include <stddef.h>
 
 #if defined(__AVR__)
