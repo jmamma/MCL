@@ -23,6 +23,7 @@
 #include "LFOSeqTrack.h"
 #if MCL_FEATURE_HOST_ARRANGER
 #include "SPSXTrack.h"
+#include "Arrangement/MCLArrangement.h"
 #include "Arrangement/MCLArrangementFormat.h"
 #include "Host/SpsHostArrBridge.h"
 #include "Host/SpsHostSeqBridge.h"
@@ -1356,8 +1357,10 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   grid_page.row_scan = GRID_LENGTH;
   project_loaded = true;
 #if MCL_FEATURE_HOST_ARRANGER
+  mcl_arrangement.seekLoadCurrentPosition(true);
   sps_host_arr_bridge.notifyDirty(
-      0xFF, (uint8_t)(spsarr::DIRTY_CELLS | spsarr::DIRTY_ACTIVE));
+      0xFF, (uint8_t)(spsarr::DIRTY_CELLS | spsarr::DIRTY_ACTIVE |
+                      spsarr::DIRTY_ARRANGEMENT));
   sps_host_seq_bridge.notifyDirty(
       0xFF, (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL |
                       spsseq::DIRTY_LOCKS | spsseq::DIRTY_META));

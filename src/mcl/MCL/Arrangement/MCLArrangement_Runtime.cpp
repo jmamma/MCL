@@ -98,6 +98,7 @@ void MCLArrangement::resetPlayback() {
 }
 
 void MCLArrangement::resetPlaybackForTransport(bool clearReleasedTracks) {
+  flushRuntimePrivateSourceEdits();
   uint32_t releasedMask = playback_released_mask_;
   resetPlayback();
   if (!clearReleasedTracks) {
@@ -653,6 +654,13 @@ bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
   return queued;
 }
 
+bool MCLArrangement::seekLoadCurrentPosition(bool immediate,
+                                             bool allowPrestartFade,
+                                             bool clearReleasedTracks) {
+  return seekLoad(currentClockQ12(), immediate, allowPrestartFade,
+                  clearReleasedTracks);
+}
+
 bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
                                      bool loadActiveAtPosition,
                                      bool clearInactiveTracks,
@@ -790,10 +798,14 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
 }
 
 void MCLArrangement::tick() {
-  if (!proj.project_loaded || MidiClock.state != MidiClockClass::STARTED) {
+  if (!proj.project_loaded) {
     uint32_t releasedMask = playback_released_mask_;
+    flushRuntimePrivateSourceEdits();
     resetPlayback();
     playback_released_mask_ = releasedMask;
+    return;
+  }
+  if (MidiClock.state != MidiClockClass::STARTED) {
     return;
   }
 

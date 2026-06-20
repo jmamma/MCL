@@ -318,17 +318,46 @@ void SpsHostArrBridge::onReqArrLocalPreview(uint8_t tag, const uint8_t* b,
     uint8_t length = 16;
     uint8_t speed = 0;
     uint64_t trigMask = 0;
+    uint8_t noteCount = 0;
+    uint8_t noteMin = 0;
+    uint8_t noteMax = 0;
+    uint8_t noteFlags = 0;
+    MCLArrangement::PrivateSourcePreviewNote
+        notes[spsarr::kArrLocalPreviewMaxNoteRecords] = {};
     bool available = mcl_arrangement.privateSourcePreview(
-        sourceId, &trackType, &length, &speed, &trigMask);
+        sourceId, &trackType, &length, &speed, &trigMask, &noteCount, &noteMin,
+        &noteMax, &noteFlags, notes,
+        (uint8_t)spsarr::kArrLocalPreviewMaxNoteRecords);
 
-    uint8_t body[spsarr::kArrLocalPreviewBytes] = {};
+    uint8_t body[spsarr::kArrLocalPreviewBytes +
+                 spsarr::kArrLocalPreviewNoteHeaderBytes +
+                 spsarr::kArrLocalPreviewMaxNoteRecords *
+                     spsarr::kArrLocalPreviewNoteRecordBytes] = {};
     spsArrPutU32(body + 0, sourceId);
     body[4] = available ? 1 : 0;
     body[5] = trackType;
     body[6] = length;
     body[7] = speed;
     spsArrPutU64(body + 8, trigMask);
-    sendFrame(CMD_ARR_LOCAL_PREVIEW, tag, body, (uint16_t)sizeof body);
+    uint16_t bodyLen = spsarr::kArrLocalPreviewBytes;
+    if (available && noteCount > 0) {
+        if (noteCount > spsarr::kArrLocalPreviewMaxNoteRecords) {
+            noteCount = spsarr::kArrLocalPreviewMaxNoteRecords;
+        }
+        uint16_t off = spsarr::kArrLocalPreviewBytes;
+        body[off++] = noteCount;
+        body[off++] = noteMin;
+        body[off++] = noteMax;
+        body[off++] = noteFlags;
+        for (uint8_t i = 0; i < noteCount; i++) {
+            body[off++] = notes[i].start;
+            body[off++] = notes[i].length;
+            body[off++] = notes[i].note;
+            body[off++] = notes[i].velocity;
+        }
+        bodyLen = off;
+    }
+    sendFrame(CMD_ARR_LOCAL_PREVIEW, tag, body, bodyLen);
 }
 
 void SpsHostArrBridge::onReqArrTrackLabels(uint8_t tag) {
@@ -723,9 +752,10 @@ void SpsHostArrBridge::onArrSelect(uint8_t tag, const uint8_t* b,
         return;
     }
     mcl_arrangement.resetPlayback();
+    mcl_arrangement.seekLoadCurrentPosition(true);
     uint8_t ack[2] = {CMD_ARR_SELECT, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
-    notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+    notifyDirty(0xFF, (uint8_t)(DIRTY_ARRANGEMENT | DIRTY_ACTIVE));
     onReqArrMeta(tag);
 }
 

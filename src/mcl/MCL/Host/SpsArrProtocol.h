@@ -220,6 +220,14 @@ static const int kArrLoopRegionRecordBytes = 32;
 static const int kArrAutomationLaneRecordBytes = 16;
 static const int kArrAutomationPointRecordBytes = 8;
 static const int kArrLocalPreviewBytes = 16;
+static const int kArrLocalPreviewNoteHeaderBytes = 4;
+static const int kArrLocalPreviewNoteRecordBytes = 4;
+static const int kArrLocalPreviewMaxNoteRecords = 32;
+static const uint8_t kArrLocalPreviewNoteFlagTruncated = 1 << 0;
+static const uint32_t kArrPreviewGridSourceFlag = 0x80000000u;
+static const int kArrPreviewGridSourceTrackShift = 8;
+static const uint32_t kArrPreviewGridSourceTrackMask = 0xFFu;
+static const uint32_t kArrPreviewGridSourceRowMask = 0xFFu;
 static const int kArrAutomationChunkBeginBytes =
     2 + kArrAutomationLaneRecordBytes;
 static const int kArrAutomationChunkPointHeaderBytes = 6;
@@ -255,7 +263,8 @@ enum DirtyRegion {
     DIRTY_CELLS = 1 << 0,
     DIRTY_ACTIVE = 1 << 1,
     DIRTY_ARRANGEMENT = 1 << 2,
-    DIRTY_PROJECTS = 1 << 3
+    DIRTY_PROJECTS = 1 << 3,
+    DIRTY_LOCAL_PREVIEW = 1 << 4
 };
 
 enum ProjectEntryType {

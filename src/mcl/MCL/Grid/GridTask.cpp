@@ -16,6 +16,8 @@
 #include "platform.h"
 #if MCL_FEATURE_GRID_PRIVATE_LOADS || MCL_FEATURE_HOST_ARRANGER
 #include "Arrangement/MCLArrangement.h"
+#endif
+#if MCL_FEATURE_HOST_ARRANGER
 #include "Host/SpsHostArrBridge.h"  // SPS host arranger dirty notifications
 #include "Host/SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
 #endif
@@ -51,6 +53,7 @@ uint32_t GridTask::selected_track_mask(const uint8_t *track_select) {
   }
   return mask;
 }
+
 #endif
 
 #if MCL_FEATURE_HOST_ARRANGER
@@ -75,6 +78,40 @@ void GridTask::tick_host_arranger() {
 
 void GridTask::flush_host_automation_writes() {
   mcl_arrangement.flushAutomationWrites();
+}
+
+void GridTask::notify_host_seq_dirty_for_load(const uint8_t *track_select,
+                                              const uint8_t *clear_select,
+                                              GridSlot load_offset) {
+  uint16_t mask = 0;
+  GridSlot first_slot = 255;
+
+  if (track_select != nullptr) {
+    for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
+      if (track_select[n] == 0) {
+        continue;
+      }
+      if (first_slot == 255) {
+        first_slot = n;
+      }
+      GridSlot dst = n;
+      if (load_offset < NUM_SLOTS) {
+        int mapped = (int)n - (int)first_slot + (int)load_offset;
+        if (mapped < 0 || mapped >= (int)NUM_SLOTS) {
+          continue;
+        }
+        dst = (GridSlot)mapped;
+      }
+      if (dst < GRID_WIDTH) {
+        mask |= (uint16_t)(1u << dst);
+      }
+    }
+  }
+
+  mask |= (uint16_t)(selected_track_mask(clear_select) & 0xFFFFul);
+  sps_host_seq_bridge.notifyTracksDirty(
+      mask, (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL |
+                      spsseq::DIRTY_LOCKS));
 }
 
 void GridActiveStateDirty::flush() {
@@ -151,6 +188,7 @@ void GridTask::save_queue_handler() {
   if (save_needs_md_current_pattern()) {
     MD.getCurrentPattern(500);
   }
+  mcl_arrangement.flushRuntimePrivateSourceEdits();
 #endif
 
   mcl_actions.save_tracks(row, track_select, merge);
@@ -253,10 +291,19 @@ void GridTask::load_queue_handler() {
   // on every playback load boundary.
   if (any_load || any_clear) {
     sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
-    sps_host_seq_bridge.notifyDirty(0xFF,
-        (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
+    notify_host_seq_dirty_for_load(track_select, clear_select, offset);
   }
 }
+#endif
+
+#if MCL_FEATURE_HOST_ARRANGER
+void GridTask::service_host_arranger_load_before_edit() {
+  if (!load_queue.is_empty()) {
+    load_queue_handler();
+  }
+}
+#else
+void GridTask::service_host_arranger_load_before_edit() {}
 #endif
 
 void GridTask::run() {

@@ -268,10 +268,15 @@ class GridTask : public Task {
   static void reset_host_playback_after_stop();
   static void tick_host_arranger();
   static void flush_host_automation_writes();
+  static void notify_host_seq_dirty_for_load(const uint8_t *track_select,
+                                             const uint8_t *clear_select,
+                                             GridSlot load_offset);
 #else
   static void reset_host_playback_after_stop() {}
   static void tick_host_arranger() {}
   static void flush_host_automation_writes() {}
+  static void notify_host_seq_dirty_for_load(const uint8_t *,
+                                             const uint8_t *, GridSlot) {}
 #endif
 
 #if MCL_FEATURE_GRID_SAVE_QUEUE
@@ -335,6 +340,7 @@ public:
   void gui_update();
   void update_transition_details();
   void load_queue_handler();
+  void service_host_arranger_load_before_edit();
   void transition_handler();
   void wait_blocking(uint32_t go_step);
 

@@ -6,6 +6,7 @@
 #if MCL_FEATURE_HOST_ARRANGER
 #include "Arrangement/MCLArrangement.h"
 #endif
+#include "Grid/GridTask.h"
 
 using namespace spsseq;
 using namespace sps_host_seq_internal;
@@ -36,6 +37,7 @@ int SpsHostSeqBridge::wireToMclMask(int w) {
 
 bool SpsHostSeqBridge::applySetStep(const uint8_t* b, uint16_t n) {
     if (n < 4) return false;
+    grid_task.service_host_arranger_load_before_edit();
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     int mclMask = wireToMclMask(b[2]);
     if (!tr || mclMask < 0 || b[1] >= kNumSteps) return false;
@@ -46,6 +48,7 @@ bool SpsHostSeqBridge::applySetStep(const uint8_t* b, uint16_t n) {
 
 bool SpsHostSeqBridge::applySetMicroTiming(const uint8_t* b, uint16_t n) {
     if (n < 3) return false;
+    grid_task.service_host_arranger_load_before_edit();
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr || b[1] >= kNumSteps) return false;
     int8_t mt = (int8_t)b[2];
@@ -59,6 +62,7 @@ bool SpsHostSeqBridge::applySetMicroTiming(const uint8_t* b, uint16_t n) {
 
 bool SpsHostSeqBridge::applySetCondition(const uint8_t* b, uint16_t n) {
     if (n < 3) return false;
+    grid_task.service_host_arranger_load_before_edit();
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr || b[1] >= kNumSteps) return false;
     uint8_t cond = (uint8_t)(b[2] & 0x3F);
@@ -75,6 +79,7 @@ bool SpsHostSeqBridge::applySetCondition(const uint8_t* b, uint16_t n) {
 
 bool SpsHostSeqBridge::applySetLock(const uint8_t* b, uint16_t n) {
     if (n < 4) return false;
+    grid_task.service_host_arranger_load_before_edit();
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr || b[1] >= kNumSteps || b[2] >= kNumLockParams) return false;  // param range
     tr->set_track_locks(b[1], b[2], (uint8_t)(b[3] & 0x7F));
@@ -84,6 +89,7 @@ bool SpsHostSeqBridge::applySetLock(const uint8_t* b, uint16_t n) {
 
 bool SpsHostSeqBridge::applyClrLock(const uint8_t* b, uint16_t n) {
     if (n < 3) return false;
+    grid_task.service_host_arranger_load_before_edit();
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr || b[1] >= kNumSteps || b[2] >= kNumLockParams) return false;  // param range
     tr->clear_step_lock(b[1], b[2]);
@@ -93,6 +99,7 @@ bool SpsHostSeqBridge::applyClrLock(const uint8_t* b, uint16_t n) {
 
 bool SpsHostSeqBridge::applySetTrackProp(const uint8_t* b, uint16_t n) {
     if (n < 3) return false;
+    grid_task.service_host_arranger_load_before_edit();
     SPSXSeqTrack* tr = spsxTrack(b[0]);
     if (!tr) return false;
     switch (b[1]) {

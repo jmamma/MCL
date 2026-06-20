@@ -6,6 +6,7 @@
 #if MCL_FEATURE_HOST_ARRANGER
 #include "Arrangement/MCLArrangement.h"
 #endif
+#include "Grid/GridTask.h"
 
 #ifdef EXT_TRACKS
 
@@ -278,6 +279,7 @@ void SpsHostSeqBridge::sendExtLocks(uint8_t tag, uint8_t device,
 bool SpsHostSeqBridge::applyExtAddNote(const uint8_t* b, uint16_t n) {
     if (n < 13 || !validExtStepTrack(b[0], b[1]))
         return false;
+    grid_task.service_host_arranger_load_before_edit();
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     uint32_t startTick = getU32le(b + 2);
     uint32_t width = getU32le(b + 6);
@@ -295,6 +297,7 @@ bool SpsHostSeqBridge::applyExtAddNote(const uint8_t* b, uint16_t n) {
 bool SpsHostSeqBridge::applyExtDeleteNote(const uint8_t* b, uint16_t n) {
     if (n < 11 || !validExtStepTrack(b[0], b[1]))
         return false;
+    grid_task.service_host_arranger_load_before_edit();
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     uint32_t startTick = getU32le(b + 2);
     uint32_t width = getU32le(b + 6);
@@ -311,6 +314,7 @@ bool SpsHostSeqBridge::applyExtDeleteNote(const uint8_t* b, uint16_t n) {
 bool SpsHostSeqBridge::applyExtToggleNote(const uint8_t* b, uint16_t n) {
     if (n < 13 || !validExtStepTrack(b[0], b[1]))
         return false;
+    grid_task.service_host_arranger_load_before_edit();
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     uint32_t startTick = getU32le(b + 2);
     uint32_t width = getU32le(b + 6);
@@ -330,6 +334,7 @@ bool SpsHostSeqBridge::applyExtToggleNote(const uint8_t* b, uint16_t n) {
 bool SpsHostSeqBridge::applyExtClearRange(const uint8_t* b, uint16_t n) {
     if (n < 12 || !validExtStepTrack(b[0], b[1]))
         return false;
+    grid_task.service_host_arranger_load_before_edit();
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     uint32_t startTick = getU32le(b + 2);
     uint32_t width = getU32le(b + 6);
@@ -350,6 +355,7 @@ bool SpsHostSeqBridge::applyExtClearRange(const uint8_t* b, uint16_t n) {
 bool SpsHostSeqBridge::applyExtSetTrackProp(const uint8_t* b, uint16_t n) {
     if (n < 4 || !validExtStepTrack(b[0], b[1]))
         return false;
+    grid_task.service_host_arranger_load_before_edit();
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     switch (b[2]) {
         case EXTPROP_LENGTH:
@@ -372,6 +378,7 @@ bool SpsHostSeqBridge::applyExtSetTrackProp(const uint8_t* b, uint16_t n) {
 bool SpsHostSeqBridge::applyExtSetLock(const uint8_t* b, uint16_t n) {
     if (n < 6 || !validExtStepTrack(b[0], b[1]))
         return false;
+    grid_task.service_host_arranger_load_before_edit();
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     uint8_t lockIdx = b[2];
     uint8_t step = b[3];
@@ -394,6 +401,7 @@ bool SpsHostSeqBridge::applyExtSetLock(const uint8_t* b, uint16_t n) {
 bool SpsHostSeqBridge::applyExtClearLock(const uint8_t* b, uint16_t n) {
     if (n < 4 || !validExtStepTrack(b[0], b[1]))
         return false;
+    grid_task.service_host_arranger_load_before_edit();
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     uint8_t lockIdx = b[2];
     uint8_t step = b[3];
@@ -407,6 +415,7 @@ bool SpsHostSeqBridge::applyExtClearLock(const uint8_t* b, uint16_t n) {
 bool SpsHostSeqBridge::applyExtClearLocks(const uint8_t* b, uint16_t n) {
     if (n < 3 || !validExtStepTrack(b[0], b[1]))
         return false;
+    grid_task.service_host_arranger_load_before_edit();
     SeqExtStepTrackApi track = SeqTrackUtil::get_ext_step_track(b[1]);
     track.clear_track_locks(b[2]);
     markArrangerLocalExtEdit(b[0], b[1]);

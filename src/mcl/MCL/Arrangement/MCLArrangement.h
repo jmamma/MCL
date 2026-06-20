@@ -37,6 +37,13 @@ public:
     uint16_t value = 0;
   };
 
+  struct PrivateSourcePreviewNote {
+    uint8_t start = 0;
+    uint8_t length = 1;
+    uint8_t note = 0;
+    uint8_t velocity = 0;
+  };
+
   bool ensureActive();
   bool readMeta(mclarrfile::Header *header);
   bool clearActive();
@@ -53,6 +60,9 @@ public:
   bool seekLoad(uint32_t positionQ12, bool immediate,
                 bool allowPrestartFade = false,
                 bool clearReleasedTracks = true);
+  bool seekLoadCurrentPosition(bool immediate,
+                               bool allowPrestartFade = false,
+                               bool clearReleasedTracks = true);
   bool armRuntimeForHostLoad(uint32_t positionQ12,
                              const GridRow rows[NUM_SLOTS],
                              uint16_t trackMask, GridSlot loadOffset,
@@ -114,7 +124,13 @@ public:
                                    uint32_t *sourceIdOut = nullptr);
   bool privateSourcePreview(uint32_t sourceId, uint8_t *trackType,
                             uint8_t *length, uint8_t *speed,
-                            uint64_t *trigMask);
+                            uint64_t *trigMask,
+                            uint8_t *noteCount = nullptr,
+                            uint8_t *noteMin = nullptr,
+                            uint8_t *noteMax = nullptr,
+                            uint8_t *noteFlags = nullptr,
+                            PrivateSourcePreviewNote *notes = nullptr,
+                            uint8_t maxNotes = 0);
   bool exportPrivateSourceToGrid(uint32_t sourceId, GridSlot sourceSlot,
                                  GridRow sourceRow, GridSlot targetSlot,
                                  GridRow targetRow);
