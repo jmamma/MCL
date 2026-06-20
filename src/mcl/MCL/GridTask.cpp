@@ -14,7 +14,7 @@
 #include "StackMonitor.h"
 #include "Sequencer/MCLSeq.h"
 #include "platform.h"
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_PRIVATE_LOADS || MCL_FEATURE_HOST_ARRANGER
 #include "Arrangement/MCLArrangement.h"
 #include "Host/SpsHostArrBridge.h"  // SPS host arranger dirty notifications
 #include "Host/SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
@@ -23,38 +23,52 @@
 #define DIV16_MARGIN 8
 #define GRIDTASK_PRE_CACHE_UI_MS 80
 
-namespace {
-
-bool is_grid_chain_load_mode(uint8_t mode) {
-  return mode == LOAD_QUEUE || mode == LOAD_AUTO;
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
+uint32_t GridTask::selected_track_mask(const uint8_t *track_select) {
+  if (track_select == nullptr) {
+    return 0;
+  }
+  uint32_t mask = 0;
+  for (uint8_t n = 0; n < NUM_SLOTS && n < 32; ++n) {
+    if (track_select[n] != 0) {
+      mask |= (uint32_t)(1ul << n);
+    }
+  }
+  return mask;
 }
+#endif
 
 #if MCL_FEATURE_HOST_ARRANGER
-    uint32_t selected_track_mask(const uint8_t *track_select) {
-      if (track_select == nullptr) {
-        return 0;
-      }
-      uint32_t mask = 0;
-      for (uint8_t n = 0; n < NUM_SLOTS && n < 32; ++n) {
-        if (track_select[n] != 0) {
-          mask |= (uint32_t)(1ul << n);
-        }
-      }
-      return mask;
-    }
-
-    bool save_needs_md_current_pattern() {
+bool GridTask::save_needs_md_current_pattern() {
 #ifdef PLATFORM_TBD
-      return MD.connected &&
-             (device_manager.primary_device() == &MD ||
-              device_manager.secondary_device() == &MD);
+  return MD.connected &&
+         (device_manager.primary_device() == &MD ||
+          device_manager.secondary_device() == &MD);
 #else
-      return true;
+  return true;
 #endif
-    }
-#endif
+}
 
-} // namespace
+void GridTask::reset_host_playback_after_stop() {
+  mcl_arrangement.flushRuntimePrivateSourceEdits();
+  mcl_arrangement.resetPlayback();
+}
+
+void GridTask::tick_host_arranger() {
+  mcl_arrangement.tick();
+}
+
+void GridTask::flush_host_automation_writes() {
+  mcl_arrangement.flushAutomationWrites();
+}
+
+void GridActiveStateDirty::flush() {
+  if (changed) {
+    sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
+    changed = false;
+  }
+}
+#endif
 
 void GridTask::setup(uint16_t _interval) { interval = _interval; }
 
@@ -71,7 +85,7 @@ void GridTask::gui_update() {
   update = 0;
 }
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_SAVE_QUEUE
 void GridTask::save_queue_handler() {
   if (save_queue.is_empty()) { return; }
 
@@ -112,22 +126,41 @@ void GridTask::save_queue_handler() {
 }
 #endif
 
+#if defined(__AVR__)
 void GridTask::load_queue_handler() {
   if (load_queue.is_empty()) { return; }
 
   uint8_t mode;
   GridSlot offset;
-#if defined(__AVR__)
   GridRow *row_select_array;
-#else
-  GridRow row_select_array[NUM_SLOTS];
-#endif
   uint8_t track_select[NUM_SLOTS];
-#if !defined(__AVR__)
+
+  row_select_array = load_queue.get(mode, offset, track_select);
+
+  DEBUG_PRINTLN("load queue get");
+  DEBUG_PRINTLN(mode);
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    DEBUG_PRINT(n);
+    DEBUG_PRINT(" ");
+    DEBUG_PRINT(track_select[n]);
+    DEBUG_PRINT(" ");
+    DEBUG_PRINTLN(row_select_array[n]);
+  }
+
+  mcl_actions.write_original = 1;
+  mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
+}
+#else
+void GridTask::load_queue_handler() {
+  if (load_queue.is_empty()) { return; }
+
+  uint8_t mode;
+  GridSlot offset;
+  GridRow row_select_array[NUM_SLOTS];
+  uint8_t track_select[NUM_SLOTS];
   uint8_t clear_select[NUM_SLOTS];
   uint32_t private_source_ids[NUM_SLOTS];
-#endif
-#if !defined(__AVR__)
+
   load_queue.get(mode, offset, row_select_array, track_select,
                  private_source_ids);
   bool immediate_load = (mode & LOAD_QUEUE_FLAG_IMMEDIATE) != 0;
@@ -135,17 +168,12 @@ void GridTask::load_queue_handler() {
   mode &= (uint8_t)~(LOAD_QUEUE_FLAG_IMMEDIATE |
                      LOAD_QUEUE_FLAG_PRESTART_FADE);
   memset(clear_select, 0, sizeof(clear_select));
-#else
-  row_select_array = load_queue.get(mode, offset, track_select);
-#endif
-#if !defined(__AVR__)
   bool any_load = false;
   bool any_clear = false;
-#endif
+
   DEBUG_PRINTLN("load queue get");
   DEBUG_PRINTLN(mode);
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
-#if !defined(__AVR__)
     if (track_select[n]) {
       any_load = true;
     }
@@ -153,17 +181,13 @@ void GridTask::load_queue_handler() {
       clear_select[n] = 1;
       any_clear = true;
     }
-#endif
     DEBUG_PRINT(n);
     DEBUG_PRINT(" ");
     DEBUG_PRINT(track_select[n]);
     DEBUG_PRINT(" ");
     DEBUG_PRINTLN(row_select_array[n]);
   }
-#if defined(__AVR__)
-  mcl_actions.write_original = 1;
-  mcl_actions.load_tracks(track_select, row_select_array, mode, offset);
-#else
+
   if (any_load || any_clear) {
     mcl_arrangement.flushRuntimePrivateSourceEdits();
   }
@@ -192,8 +216,9 @@ void GridTask::load_queue_handler() {
     sps_host_seq_bridge.notifyDirty(0xFF,
         (uint8_t)(spsseq::DIRTY_SUMMARY | spsseq::DIRTY_DETAIL | spsseq::DIRTY_LOCKS));
   }
-#endif
 }
+#endif
+
 void GridTask::run() {
   //  DEBUG_PRINTLN(MidiClock.div32th_counter / 2);
   //  A4Track *a4_track = (A4Track *)&temp_track;
@@ -206,26 +231,19 @@ void GridTask::run() {
     mcl_actions_callbacks.StopHardCallback();
     stop_hard_callback = false;
     load_queue.init();
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_SAVE_QUEUE
     save_queue.init();
 #endif
-#if !defined(__AVR__)
-    mcl_arrangement.flushRuntimePrivateSourceEdits();
-    mcl_arrangement.resetPlayback();
-#endif
+    reset_host_playback_after_stop();
   }
   else {
     gui_update();
-#if !defined(__AVR__)
-    mcl_arrangement.tick();
-#endif
-#if !defined(__AVR__)
+    tick_host_arranger();
+#if MCL_FEATURE_GRID_SAVE_QUEUE
     save_queue_handler();
 #endif
     load_queue_handler();
-#if !defined(__AVR__)
-    mcl_arrangement.flushAutomationWrites();
-#endif
+    flush_host_automation_writes();
     transition_handler();
   }
   GUI.addTask(this);
@@ -281,9 +299,7 @@ void GridTask::wait_blocking(uint32_t go_step) {
 void GridTask::transition_handler() {
   GridRow slots_changed[NUM_SLOTS];
   uint8_t track_select_array[NUM_SLOTS];
-#if !defined(__AVR__)
-  bool active_state_changed = false;
-#endif
+  GridActiveStateDirty active_state_dirty;
 
   while (true) {
     if (MidiClock.state != 2 || mcl_actions.next_transition == (uint16_t)-1) {
@@ -405,9 +421,7 @@ void GridTask::transition_handler() {
         if (transition_load(n, track_idx, gdt)) {
           if (grid_page.active_slots[n] != SLOT_OFFSET_LOAD) {
             if (grid_page.active_slots[n] != slots_changed[n]) {
-#if !defined(__AVR__)
-              active_state_changed = true;
-#endif
+              active_state_dirty.mark();
             }
             grid_page.active_slots[n] = slots_changed[n];
           }
@@ -467,27 +481,15 @@ void GridTask::transition_handler() {
     if (last_slot != 255 && slots_changed[last_slot] < GRID_LENGTH) {
       bool last_slot_chain =
           is_grid_chain_load_mode(mcl_actions.chains[last_slot].mode);
-#if !defined(__AVR__)
-      bool row_changed = grid_task.last_active_row != slots_changed[last_slot] ||
-                         grid_task.chain_behaviour != last_slot_chain;
-#endif
+      active_state_dirty.mark_row_change(last_active_row, slots_changed[last_slot],
+                                         chain_behaviour, last_slot_chain);
       last_active_row = slots_changed[last_slot];
       chain_behaviour = last_slot_chain;
       next_active_row = chain_behaviour ? mcl_actions.links[last_slot].row : last_active_row;
       row_update();
-#if !defined(__AVR__)
-      if (row_changed) {
-        active_state_changed = true;
-      }
-#endif
     }
 
-#if !defined(__AVR__)
-    if (active_state_changed) {
-      sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ACTIVE);
-      active_state_changed = false;
-    }
-#endif
+    active_state_dirty.flush();
 
     mcl_actions.calc_next_transition();
     mcl_actions.calc_latency();

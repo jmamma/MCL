@@ -5,6 +5,7 @@
 #include "Task.h"
 #include "Elektron.h"
 #include "GridChain.h"
+#include "MCLPlatformFeatures.h"
 
 class LoadQueueModes {
   public:
@@ -12,7 +13,7 @@ class LoadQueueModes {
   GridSlot offset;
 };
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
 #define LOAD_QUEUE_CLEAR_ROW 254
 #define LOAD_QUEUE_PRIVATE_ROW 253
 #define LOAD_QUEUE_FLAG_IMMEDIATE 0x80
@@ -24,7 +25,7 @@ class LoadQueue {
   static_assert((NUM_LINKS & (NUM_LINKS - 1)) == 0,
                 "LoadQueue wrap assumes power-of-two NUM_LINKS");
   GridRow row_selects[NUM_LINKS][NUM_SLOTS];
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
   uint32_t private_source_ids[NUM_LINKS][NUM_SLOTS];
 #endif
   LoadQueueModes modes[NUM_LINKS];
@@ -32,21 +33,21 @@ class LoadQueue {
   uint8_t wr;
   bool full;
 
-  void init() {
-    rd = 0;
-    wr = 0;
-    full = false;
-#if !defined(__AVR__)
+  void clear_private_sources(GridSlot link_idx) {
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
+    memset(private_source_ids[link_idx], 0, sizeof(private_source_ids[link_idx]));
+#else
+    (void)link_idx;
+#endif
+  }
+
+  void clear_all_private_sources() {
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
     memset(private_source_ids, 0, sizeof(private_source_ids));
 #endif
   }
 
-  void put(uint8_t mode, GridRow *row_select, GridSlot offset = 255) {
-    if (full) { return; }
-    memcpy(row_selects[wr], row_select, NUM_SLOTS);
-#if !defined(__AVR__)
-    memset(private_source_ids[wr], 0, sizeof(private_source_ids[wr]));
-#endif
+  void commit_write(uint8_t mode, GridSlot offset) {
     modes[wr].mode = mode;
     modes[wr].offset = offset;
     wr = (wr + 1) & (NUM_LINKS - 1);
@@ -55,7 +56,21 @@ class LoadQueue {
     }
   }
 
-#if !defined(__AVR__)
+  void init() {
+    rd = 0;
+    wr = 0;
+    full = false;
+    clear_all_private_sources();
+  }
+
+  void put(uint8_t mode, GridRow *row_select, GridSlot offset = 255) {
+    if (full) { return; }
+    memcpy(row_selects[wr], row_select, NUM_SLOTS);
+    clear_private_sources(wr);
+    commit_write(mode, offset);
+  }
+
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
   void put_arrangement(uint8_t mode, GridRow *row_select,
                        const uint32_t *source_ids,
                        GridSlot offset = 255) {
@@ -66,12 +81,7 @@ class LoadQueue {
       memcpy(private_source_ids[wr], source_ids,
              sizeof(private_source_ids[wr]));
     }
-    modes[wr].mode = mode;
-    modes[wr].offset = offset;
-    wr = (wr + 1) & (NUM_LINKS - 1);
-    if (wr == rd) {
-      full = true;
-    }
+    commit_write(mode, offset);
   }
 #endif
 
@@ -83,15 +93,8 @@ class LoadQueue {
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
        if (track_select_array[n]) { row_selects[wr][n] = row; }
     }
-#if !defined(__AVR__)
-    memset(private_source_ids[wr], 0, sizeof(private_source_ids[wr]));
-#endif
-    modes[wr].mode = mode;
-    modes[wr].offset = offset;
-    wr = (wr + 1) & (NUM_LINKS - 1);
-    if (wr == rd) {
-      full = true;
-    }
+    clear_private_sources(wr);
+    commit_write(mode, offset);
   }
 
   void get(uint8_t &mode, GridSlot &offset, GridRow *row_select,
@@ -121,7 +124,7 @@ class LoadQueue {
   }
 #endif
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
   void get(uint8_t &mode, GridSlot &offset, GridRow *row_select,
            uint8_t *track_select, uint32_t *source_ids) {
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
@@ -145,7 +148,7 @@ class LoadQueue {
 
 };
 
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_SAVE_QUEUE
 class SaveQueue {
   public:
   static_assert((NUM_LINKS & (NUM_LINKS - 1)) == 0,
@@ -198,7 +201,48 @@ class SaveQueue {
 };
 #endif
 
+struct GridActiveStateDirty {
+#if MCL_FEATURE_HOST_ARRANGER
+  bool changed = false;
+
+  void mark() {
+    changed = true;
+  }
+
+  void mark_row_change(GridRow old_row, GridRow new_row,
+                       bool old_chain, bool new_chain) {
+    if (old_row != new_row || old_chain != new_chain) {
+      changed = true;
+    }
+  }
+
+  void flush();
+#else
+  void mark() {}
+  void mark_row_change(GridRow, GridRow, bool, bool) {}
+  void flush() {}
+#endif
+};
+
 class GridTask : public Task {
+  static bool is_grid_chain_load_mode(uint8_t mode) {
+    return mode == LOAD_QUEUE || mode == LOAD_AUTO;
+  }
+
+#if MCL_FEATURE_GRID_PRIVATE_LOADS
+  static uint32_t selected_track_mask(const uint8_t *track_select);
+#endif
+
+#if MCL_FEATURE_HOST_ARRANGER
+  static bool save_needs_md_current_pattern();
+  static void reset_host_playback_after_stop();
+  static void tick_host_arranger();
+  static void flush_host_automation_writes();
+#else
+  static void reset_host_playback_after_stop() {}
+  static void tick_host_arranger() {}
+  static void flush_host_automation_writes() {}
+#endif
 
 public:
   bool stop_hard_callback;
@@ -221,7 +265,7 @@ public:
   bool midi_load;
 
   LoadQueue load_queue;
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_SAVE_QUEUE
   SaveQueue save_queue;
 #endif
 
@@ -233,7 +277,7 @@ public:
   void init() {
      reset_midi_states();
      load_queue.init();
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_SAVE_QUEUE
      save_queue.init();
 #endif
   }
@@ -247,7 +291,7 @@ public:
   }
   void row_update();
   void gui_update();
-#if !defined(__AVR__)
+#if MCL_FEATURE_GRID_SAVE_QUEUE
   void save_queue_handler();
 #endif
   void update_transition_details();
