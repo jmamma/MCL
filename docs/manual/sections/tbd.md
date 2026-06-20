@@ -44,7 +44,7 @@ The TBD UI is split into matching Device 1 and Device 2 views. The top-left butt
 
 When one device UI is open, press the other device UI button to switch to it. Tap the active device UI button again to leave the UI. The Device 1 or Device 2 button LED shows which UI is active.
 
-Hold the device UI button and press **[B]** to switch that UI between the full-screen view and the bottom strip. MCL remembers the selected size the next time that device UI is opened.
+Hold the device UI button and press **[A]** to switch that UI between the full-screen view and the bottom strip. MCL remembers the selected size the next time that device UI is opened.
 
 The four encoders edit the visible parameters for the active track. In the full-screen view, arrow keys move between parameter pages and the preset browser. The trig LEDs show the available parameter pages, and pressing a trig selects a page. In the bottom strip, hold the device UI button to show the same page LEDs and select pages from the trigs.
 
@@ -61,14 +61,14 @@ TBD-16 panel input is mapped into MCL's page and device model.
 | Top-left button | Open or control the Device 1 UI. In menus and browsers, use it as back/up. |
 | Top-right button | Open or control the Device 2 UI when a second UI-capable device is configured. In local menus it acts as confirm/enter. |
 | Top-left + top-right | Open the System menu. |
-| Device UI button + B | Switch the active device UI between full-screen and bottom-strip size. |
+| Device UI button + A | Switch the active device UI between full-screen and bottom-strip size. |
 | Encoder 1 tap | Open Page Select. Tap Encoder 1 again from Page Select to open the selected page. |
 | Encoder 2 tap | Open or close the Grid bank popup. |
 | Arrow keys | Navigate pages, menus, steps and selected values. |
 | Transport keys | Act as Record, Play and Stop. In copy mode they act as Copy, Clear and Paste. |
 | Trig pads | Select rows, trigger tracks, edit steps, play notes or select TBD UI tracks depending on the active page. |
-| A button | Opens legacy MCL page menus on Grid, Mixer, Save/Load selection views and sequencer pages; otherwise it acts as Function. |
-| B button | Acts as Scale/page toggle on Grid, Mixer, Save/Load selection views and sequencer pages; otherwise it acts as the legacy menu modifier. |
+| A button | Acts as Scale/page toggle on Grid, Mixer, Save/Load selection views and sequencer pages. In Track Select it toggles the selected device. Otherwise it acts as the legacy menu modifier. |
+| B button | Opens legacy MCL page menus on Grid, Mixer, Save/Load selection views and sequencer pages; otherwise it acts as Function. |
 | X button | Acts as Yes, Load or confirm. |
 | Y button | Acts as No, Save or cancel. |
 
@@ -76,9 +76,9 @@ If an expanded device UI is active, TBD device controls get first chance to hand
 
 ## Track Select
 
-On the Grid Page, hold **[Function]** to open Track Select. The top half of the screen shows the active device and track number, and the trig LEDs show the selected track.
+On the Grid Page, Step Editor or Mixer Page, hold **[Function]** to open Track Select. The top half of the screen shows the active device and track number, and the trig LEDs show the selected track.
 
-While holding **[Function]**, press a trig pad to select that track. Turn Encoder 1, or press **[Left]** / **[Up]** and **[Right]** / **[Down]**, to move through tracks. Release **[Function]** to close Track Select and return to the Grid Page.
+While holding **[Function]**, press **[A]** to switch the selected device, or press a trig pad to select that track. Turn Encoder 1, or press **[Left]** / **[Up]** and **[Right]** / **[Down]**, to move through tracks. Release **[Function]** to close Track Select and return to the previous page.
 
 If a TBD device UI is open for the selected device, Track Select follows that UI and changes its focused TBD track.
 
@@ -91,7 +91,7 @@ On TBD-16, Save and Load keep the Grid Page visible instead of opening separate 
 | Open Save | Select the current Grid Page slots and save them without leaving the grid. |
 | Open Load | Select the current Grid Page slots and load them without leaving the grid. |
 | Slot Menu arrows | Move through Slot Menu entries first. Use the normal modifier behavior when adjusting selection geometry. |
-| Grid Select | Press **[B]** to switch grid selection. The change is applied when **[B]** is released, so **[B]** can also be used as a chord modifier. |
+| Grid Select | Press **[A]** to switch grid selection. The change is applied when **[A]** is released, so **[A]** can also be used as a chord modifier. |
 | Bank popup | Tap Encoder 2 to open or close the bank popup. Turn Encoder 1 or Encoder 2 to scroll banks while the popup is open. |
 
 The visible grid still follows the same row, slot, bank, chain and queue concepts described in the Grid sections.
@@ -117,4 +117,4 @@ The TBD sync menu uses `CLOCK SRC` and `TRANS SRC`. Available source values are:
 
 The tempo window edits the internal tempo when MCL is using its own clock source. If MCL is following an external clock, the window shows the current clock source but tempo changes and tap tempo are ignored.
 
-From the Grid Page, hold **[B]** and press **[Function]** to open the tempo window. Turn Encoder 1 to adjust tempo in 1 BPM steps, or press **[Up]** / **[Down]** for 0.1 BPM changes. Hold **[Function]** and tap **[A]** or **[B]** to enter tap-tempo mode; after four taps MCL applies the averaged tempo. **[Y]** closes the window. The window shows the current tempo and clock source label: `INT`, `EXT1`, `EXT2` or `USB`.
+From the Grid Page, hold **[A]** and press **[Function]** to open the tempo window. Turn Encoder 1 to adjust tempo in 1 BPM steps, or press **[Up]** / **[Down]** for 0.1 BPM changes. Hold **[Function]** and tap **[A]** or **[B]** to enter tap-tempo mode; after four taps MCL applies the averaged tempo. **[Y]** closes the window. The window shows the current tempo and clock source label: `INT`, `EXT1`, `EXT2` or `USB`.
