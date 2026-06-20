@@ -120,6 +120,10 @@ public:
   const ArpSeqPhaseData &arp_phase() const {
     return *reinterpret_cast<const ArpSeqPhaseData *>(reserved);
   }
+
+  void remap_lfo_track_destinations(uint8_t source_track, uint8_t dest_track,
+                                    bool destination_same,
+                                    uint8_t track_limit) NOINLINE();
 };
 
 class ATTR_PACKED() SeqTrackModStorage : public SeqTrackModData {

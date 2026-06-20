@@ -353,6 +353,8 @@ static uint8_t remap_grid_col(uint8_t field, GridColumn s_col,
 }
 
 void MDTrack::on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) {
+  mod_data.remap_lfo_track_destinations(s_col, d_col, destination_same,
+                                        NUM_GRID_X_LFO_TRACKS);
   // bit of a hack to keep lfos modulating the same track.
   if (destination_same) {
     remap_groups_same(machine, s_col, d_col);

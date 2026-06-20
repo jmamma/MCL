@@ -80,6 +80,12 @@ public:
   }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
+  void on_copy(GridColumn s_col, GridColumn d_col,
+               bool destination_same) override {
+    seq_data.mod().remap_lfo_track_destinations(s_col, d_col,
+                                                destination_same,
+                                                NUM_GRID_X_LFO_TRACKS);
+  }
 
   size_t _sizeof() const { return sizeof(TBDTrack) - sizeof(void *); }
 
@@ -143,6 +149,12 @@ public:
   }
   void *get_sound_data_ptr() override { return &p4_sound; }
   size_t get_sound_data_size() override { return sizeof(TbdP4SoundData); }
+  void on_copy(GridColumn s_col, GridColumn d_col,
+               bool destination_same) override {
+    seq_data.mod().remap_lfo_track_destinations(s_col, d_col,
+                                                destination_same,
+                                                NUM_GRID_Y_LFO_TRACKS);
+  }
 
   size_t _sizeof() const { return sizeof(TBDMidiTrack) - sizeof(void *); }
 

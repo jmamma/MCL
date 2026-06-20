@@ -157,6 +157,37 @@ void SeqTrack::store_mod_data(SeqTrackModData &mod_data, bool grid_x_tracks,
   }
 }
 
+void SeqTrackModData::remap_lfo_track_destinations(uint8_t source_track,
+                                                   uint8_t dest_track,
+                                                   bool destination_same,
+                                                   uint8_t track_limit) {
+  if (source_track >= track_limit || dest_track >= track_limit) {
+    return;
+  }
+  for (uint8_t i = 0; i < sizeof(lfo.params) / sizeof(lfo.params[0]); i++) {
+    uint8_t dest = lfo.params[i].dest;
+    if (dest == 0) {
+      continue;
+    }
+    uint8_t target_track = dest - 1;
+    if (target_track >= track_limit) {
+      continue;
+    }
+
+    if (destination_same) {
+      if (target_track == source_track) {
+        lfo.params[i].dest = dest_track + 1;
+      }
+    } else {
+      int8_t relative_track =
+          (int8_t)dest_track + (int8_t)target_track - (int8_t)source_track;
+      lfo.params[i].dest = (uint8_t)relative_track < track_limit
+                               ? relative_track + 1
+                               : 0;
+    }
+  }
+}
+
 uint8_t SeqTrack::get_quantized_step(uint8_t &utiming, uint8_t quant) {
   if (quant == 255) { quant = mcl_cfg.rec_quant; }
 

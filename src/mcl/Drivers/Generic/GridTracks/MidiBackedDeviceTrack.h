@@ -49,6 +49,8 @@ public:
   const TrackLoadFadeData *load_fade_data() const override {
     return &load_fade;
   }
+  void on_copy(GridColumn s_col, GridColumn d_col,
+               bool destination_same) override;
 
 protected:
   virtual MidiSeqTrackStorage &midi_seq_storage() = 0;

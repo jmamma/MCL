@@ -54,6 +54,8 @@ public:
   }
   uint16_t get_region_size() override { return GRID2_TRACK_LEN; }
   uint8_t storage_version() const override { return SEQ_TRACK_LOAD_FADE_STORAGE_VERSION; }
+  void on_copy(GridColumn s_col, GridColumn d_col,
+               bool destination_same) override;
   TrackLoadFadeData *load_fade_data() override { return &load_fade; }
   const TrackLoadFadeData *load_fade_data() const override { return &load_fade; }
 #if !defined(__AVR__)

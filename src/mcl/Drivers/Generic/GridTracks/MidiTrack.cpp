@@ -117,6 +117,12 @@ void MidiTrack::load_seq_data(SeqTrack *seq_track) {
   SeqTrack::load_mod_data(seq_track, seq_data.mod(), false);
 }
 
+void MidiTrack::on_copy(GridColumn s_col, GridColumn d_col,
+                        bool destination_same) {
+  seq_data.mod().remap_lfo_track_destinations(s_col, d_col, destination_same,
+                                              NUM_GRID_Y_LFO_TRACKS);
+}
+
 bool MidiTrack::can_materialize_as(uint8_t track_type) {
   if (midi_track_type_is_storage_family(track_type)) {
     return true;

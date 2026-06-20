@@ -5,26 +5,12 @@
 #include "Project.h"
 #include "EmptyTrack.h"
 #include "DeviceTrack.h"
-#include "MDTrack.h"
 #include "MCLGUI.h"
 #include "Grid/MCLActions.h"
 #include "Devices/DeviceManager.h"
-#include "ExtTrack.h"
-#include "../Drivers/A4/GridTracks/A4Track.h"
-#include "../Drivers/MNM/GridTracks/MNMTrack.h"
 #include "../Drivers/MidiDevice.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
 #include "Sequencer/SeqTrackUtil.h"
-#if !defined(__AVR__)
-#include "SPSXTrack.h"
-#endif
-#if !defined(__AVR__)
-#include "../Drivers/Generic/GridTracks/MidiTrack.h"
-#include "../Drivers/Generic/GridTracks/MidiBackedDeviceTrack.h"
-#endif
-#ifdef PLATFORM_TBD
-#include "../Drivers/TBD/TBDTrack.h"
-#endif
 
 // Sequencer CLIPBOARD tracks are stored at the end of the GRID + 1.
 
@@ -50,95 +36,6 @@ DeviceTrack *materialize_clipboard_track(DeviceTrack *track,
 bool clipboard_slot_is_type(GridSlot slot, uint8_t track_type) {
   GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot);
   return gdt != nullptr && gdt->track_type == track_type;
-}
-
-SeqTrackModData *clipboard_track_mod_data(DeviceTrack *track,
-                                          uint8_t *track_limit) {
-  if (track == nullptr) {
-    return nullptr;
-  }
-  *track_limit = NUM_GRID_X_LFO_TRACKS;
-  switch (track->active) {
-  case MD_TRACK_TYPE:
-    return &static_cast<MDTrack *>(track)->mod_data;
-  case EXT_TRACK_TYPE:
-    *track_limit = NUM_GRID_Y_LFO_TRACKS;
-    return &static_cast<ExtTrack *>(track)->mod_data;
-  case A4_TRACK_TYPE:
-    *track_limit = NUM_GRID_Y_LFO_TRACKS;
-    return &static_cast<A4Track *>(track)->mod_data;
-  case MNM_TRACK_TYPE:
-    *track_limit = NUM_GRID_Y_LFO_TRACKS;
-    return &static_cast<MNMTrack *>(track)->mod_data;
-#if !defined(__AVR__)
-  case MDSPSX_TRACK_TYPE:
-    return &static_cast<SPSXTrack *>(track)->seq_storage.mod();
-#endif
-#if !defined(__AVR__)
-  case MIDI_TRACK_TYPE:
-    *track_limit = NUM_GRID_Y_LFO_TRACKS;
-    return &static_cast<MidiTrack *>(track)->seq_data.mod();
-  case A4_MIDI_TRACK_TYPE:
-    *track_limit = NUM_GRID_Y_LFO_TRACKS;
-    return &static_cast<A4MidiTrack *>(track)->seq_data.mod();
-  case MNM_MIDI_TRACK_TYPE:
-    *track_limit = NUM_GRID_Y_LFO_TRACKS;
-    return &static_cast<MNMMidiTrack *>(track)->seq_data.mod();
-#endif
-#ifdef PLATFORM_TBD
-  case TBD_TRACK_TYPE:
-    return &static_cast<TBDTrack *>(track)->seq_data.mod();
-  case TBD_MIDI_TRACK_TYPE:
-    *track_limit = NUM_GRID_Y_LFO_TRACKS;
-    return &static_cast<TBDMidiTrack *>(track)->seq_data.mod();
-#endif
-  default:
-    return nullptr;
-  }
-}
-
-void remap_lfo_track_destinations(SeqLFOData &lfo, GridColumn source_track,
-                                  GridColumn dest_track,
-                                  bool destination_same,
-                                  uint8_t track_limit) {
-  if (source_track >= track_limit || dest_track >= track_limit) {
-    return;
-  }
-  for (uint8_t i = 0; i < sizeof(lfo.params) / sizeof(lfo.params[0]); i++) {
-    uint8_t dest = lfo.params[i].dest;
-    if (dest == 0) {
-      continue;
-    }
-    uint8_t target_track = dest - 1;
-    if (target_track >= track_limit) {
-      continue;
-    }
-
-    if (destination_same) {
-      if (target_track == source_track) {
-        lfo.params[i].dest = dest_track + 1;
-      }
-    } else {
-      int8_t relative_track =
-          (int8_t)dest_track + (int8_t)target_track - (int8_t)source_track;
-      lfo.params[i].dest = (uint8_t)relative_track < track_limit
-                               ? relative_track + 1
-                               : 0;
-    }
-  }
-}
-
-void remap_clipboard_lfo_track_destinations(DeviceTrack *track,
-                                            GridColumn source_track,
-                                            GridColumn dest_track,
-                                            bool destination_same) {
-  uint8_t track_limit = NUM_GRID_X_LFO_TRACKS;
-  SeqTrackModData *mod_data = clipboard_track_mod_data(track, &track_limit);
-  if (mod_data == nullptr) {
-    return;
-  }
-  remap_lfo_track_destinations(mod_data->lfo, source_track, dest_track,
-                               destination_same, track_limit);
 }
 
 } // namespace
@@ -299,8 +196,7 @@ bool MCLClipBoard::paste_sequencer_track(GridSlot source_track, GridSlot track) 
   }
 
   DEBUG_PRINTLN("getting ready to paste");
-  remap_clipboard_lfo_track_destinations(device_track, source_track_idx,
-                                         track_idx, true);
+  device_track->on_copy(source_track_idx, track_idx, true);
   device_track->paste_track(source_track_idx, track_idx, gdt->seq_track);
 
   if (SeqTrackUtil::is_md_device(device_manager.primary_device()) &&
@@ -449,8 +345,6 @@ bool MCLClipBoard::paste(GridSlot col, GridRow row) {
 
       DEBUG_PRINT("PASTE: "); DEBUG_PRINT(s_col); DEBUG_PRINT("->"); DEBUG_PRINT(d_col); DEBUG_PRINT(" "); DEBUG_PRINTLN(d_grid);
       ptrack->link.row = (uint8_t)new_link_row;
-      remap_clipboard_lfo_track_destinations(ptrack, s_col, track_idx,
-                                             destination_same);
       ptrack->on_copy(s_col, track_idx, destination_same);
       if (ptrack->store_in_grid(d_col, dst_row)) {
         headers[d_grid].update_model(track_idx, ptrack->get_model(),

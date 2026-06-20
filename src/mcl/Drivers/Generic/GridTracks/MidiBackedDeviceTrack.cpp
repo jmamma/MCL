@@ -119,6 +119,12 @@ void MidiBackedDeviceTrack::load_seq_data(SeqTrack *seq_track) {
   SeqTrack::load_mod_data(seq_track, seq_data.mod(), false);
 }
 
+void MidiBackedDeviceTrack::on_copy(GridColumn s_col, GridColumn d_col,
+                                    bool destination_same) {
+  midi_seq_storage().mod().remap_lfo_track_destinations(
+      s_col, d_col, destination_same, NUM_GRID_Y_LFO_TRACKS);
+}
+
 void MidiBackedDeviceTrack::import_legacy_ext_storage(
     const GridLink &old_link, const ExtSeqTrackData &old_seq_data,
     const SeqTrackModData &old_mod_data, uint8_t tracknumber) {

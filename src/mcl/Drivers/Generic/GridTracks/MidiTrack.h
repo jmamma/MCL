@@ -54,6 +54,8 @@ public:
   const TrackLoadFadeData *load_fade_data() const override {
     return &load_fade;
   }
+  void on_copy(GridColumn s_col, GridColumn d_col,
+               bool destination_same) override;
   void *get_sound_data_ptr() override { return nullptr; }
   size_t get_sound_data_size() override { return 0; }
 

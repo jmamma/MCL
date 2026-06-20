@@ -447,6 +447,8 @@ void SPSXTrack::normalize() {
 }
 
 void SPSXTrack::on_copy(GridColumn s_col, GridColumn d_col, bool destination_same) {
+  seq_storage.mod().remap_lfo_track_destinations(s_col, d_col, destination_same,
+                                                NUM_GRID_X_LFO_TRACKS);
   if (destination_same) {
     if (machine.trigGroup == s_col) machine.trigGroup = 255;
     if (machine.muteGroup == s_col) machine.muteGroup = 255;

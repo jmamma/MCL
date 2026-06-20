@@ -110,6 +110,12 @@ void ExtTrack::load_seq_data(SeqTrack *seq_track) {
   load_ext_seq_data(*this, seq_data, mod_data, seq_track);
 }
 
+void ExtTrack::on_copy(GridColumn s_col, GridColumn d_col,
+                       bool destination_same) {
+  mod_data.remap_lfo_track_destinations(s_col, d_col, destination_same,
+                                        NUM_GRID_Y_LFO_TRACKS);
+}
+
 #if !defined(__AVR__)
 DeviceTrack *ExtTrack::materialize_legacy_ext(DeviceTrack &track,
                                               GridLink &link,
