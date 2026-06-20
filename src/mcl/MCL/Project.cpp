@@ -18,7 +18,7 @@
 #include "MDRouteTrack.h"
 #include "MDTempoTrack.h"
 #include "EmptyTrack.h"
-#include "PerfTrack.h"
+#include "Performance/PerfTrack.h"
 #include "GridChainTrack.h"
 #include "LFOSeqTrack.h"
 #if MCL_FEATURE_HOST_ARRANGER

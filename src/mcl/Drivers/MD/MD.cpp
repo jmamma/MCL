@@ -9,7 +9,7 @@
 #include "Sequencer/SeqStepTrackRef.h"
 #include "Devices/TurboLight.h"
 #include "MCLGUI.h"
-#include "PerfData.h"
+#include "Performance/PerfData.h"
 #include "UI/MDTrackSelect.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
 #include "MCLStrings.h"

@@ -6,7 +6,9 @@
 #include "GUI/Pages/CommonPages.h"
 #include "GUI/Pages/Performance/PerfEncoder.h"
 #include "GUI/Pages/Performance/PerfPageTargetRef.h"
-#include "PerfData.h"
+#include "MCLStrings.h"
+#include "Performance/PerfData.h"
+#include "oled.h"
 
 #include <string.h>
 
@@ -203,6 +205,7 @@ bool SpsHostSeqBridge::applyPerfPageSceneAction(const uint8_t* b,
         e->send_params(0, &PerfData::scenes[b[2]], nullptr);
         break;
     case PERF_PAGE_SCENE_AUTOFILL:
+        oled_display.textbox_P(mclstr_fill, mclstr_scenes);
         e->perf_data.scene_autofill(b[2]);
         break;
     default:

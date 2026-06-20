@@ -7,7 +7,7 @@
 #include "../Drivers/MidiDevice.h"
 #include "Devices/DeviceManager.h"
 #include "Sequencer/MCLSeq.h"
-#include "PerfData.h"
+#include "Performance/PerfData.h"
 
 namespace {
 

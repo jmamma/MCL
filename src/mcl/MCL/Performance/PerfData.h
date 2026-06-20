@@ -5,8 +5,6 @@
 #include "platform.h"
 #include "Devices/DeviceParamResolver.h"
 #include "MCLMemory.h"
-#include "MCLStrings.h"
-#include "oled.h"
 
 #define PERF_SETTINGS NUM_NUM_PERF_PARAMS
 
@@ -185,7 +183,6 @@ public:
   }
 
   void scene_autofill(uint8_t scene) {
-     oled_display.textbox_P(mclstr_fill, mclstr_scenes);
      if (scene >= NUM_SCENES) { return; }
      DeviceParamResolver::perf_scene_autofill(this, scene);
   }

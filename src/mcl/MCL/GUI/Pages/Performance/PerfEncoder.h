@@ -4,7 +4,7 @@
 #define PERFENCODER_H__
 
 #include "GUI/MCLEncoder.h"
-#include "PerfData.h"
+#include "Performance/PerfData.h"
 
 #define PERF_NAME_LENGTH 9
 

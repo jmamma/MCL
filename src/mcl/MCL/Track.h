@@ -9,7 +9,7 @@
 #include "MDRouteTrack.h"
 #include "MDTempoTrack.h"
 #include "MNMTrack.h"
-#include "PerfTrack.h"
+#include "Performance/PerfTrack.h"
 #include "SPSXTrack.h"
 #if !defined(__AVR__)
 #include "../Drivers/Generic/GridTracks/MidiTrack.h"

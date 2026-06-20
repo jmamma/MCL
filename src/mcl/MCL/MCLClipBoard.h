@@ -9,7 +9,7 @@
 #if !defined(__AVR__)
 #include "SPSXSeqTrackData.h"
 #endif
-#include "PerfData.h"
+#include "Performance/PerfData.h"
 #define FILENAME_CLIPBOARD "clipboard.tmp"
 
 enum ExtNoteClipMode : uint8_t {

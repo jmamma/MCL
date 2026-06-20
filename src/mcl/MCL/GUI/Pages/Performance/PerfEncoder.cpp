@@ -1,11 +1,12 @@
 #include "GUI/Pages/Performance/PerfEncoder.h"
 #include "Devices/DeviceParamResolver.h"
 #include "MCLMemory.h"
-#include "PerfData.h"
+#include "Performance/PerfData.h"
 #include "MidiUart.h"
 #include "MCLStrings.h"
 #include "Sequencer/MCLSeq.h"
 #include "GUI/Pages/Performance/PerfPageTargetRef.h"
+#include "oled.h"
 
 #define DIV_1_127 (1.00f / 127.0f)
 
@@ -135,6 +136,7 @@ int PerfEncoder::update(encoder_t *enc) {
   return cur;
 }
 void PerfEncoder::scene_autofill() {
+  oled_display.textbox_P(mclstr_fill, mclstr_scenes);
   perf_data.scene_autofill(active_scene_b);
   cur = 127;
   old = 127;

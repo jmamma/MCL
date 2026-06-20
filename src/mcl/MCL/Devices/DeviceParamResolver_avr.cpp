@@ -6,7 +6,7 @@
 
 #include "../Drivers/MD/MD.h"
 #include "Sequencer/MCLSeq.h"
-#include "PerfData.h"
+#include "Performance/PerfData.h"
 #include <string.h>
 
 namespace {
