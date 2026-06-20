@@ -12,6 +12,8 @@
 
 class DeviceTrack;
 class EmptyTrack;
+class ElektronDevice;
+class GridRowHeader;
 class MidiUartClass;
 class SeqTrack;
 
@@ -166,6 +168,26 @@ public:
                           );
 
 private:
+  static uint16_t clear_runtime_fade_elapsed(DeviceTrack *track);
+  static void restore_runtime_fade_elapsed(DeviceTrack *track,
+                                           uint16_t elapsed);
+  static const char *shared_row_name(ElektronDevice **devs,
+                                     uint8_t save_dev_mask);
+  static void copy_row_name_text(GridRowHeader &row_header,
+                                 const char *name);
+  static void copy_row_name(GridRowHeader &row_header, const char *name);
+  static void inherit_grid_x_row_name(GridRowHeader *row_headers);
+  static bool is_grid_chain_load_mode(uint8_t mode);
+  static uint8_t device_mask_bit(uint8_t device_idx);
+  static bool row_is_loadable(GridRow row);
+  static bool row_uses_private_runtime_source(GridRow row);
+  static void apply_host_runtime_clip(GridSlot dst, DeviceTrack *track);
+  static void clear_host_runtime_private_source(GridSlot dst);
+  static void clear_host_runtime_private_source_for_row(GridSlot dst,
+                                                        GridRow row);
+  static void apply_host_runtime_clip_for_row(GridSlot dst, GridRow row,
+                                              DeviceTrack *track);
+
   DeviceTrack *load_and_prepare_track(GridSlot track_idx, GridRow row,
                                       uint8_t track_type, SeqTrack *seq_track,
                                       uint8_t seq_track_idx, bool &was_rebuilt,

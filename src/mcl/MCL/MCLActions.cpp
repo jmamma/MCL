@@ -27,10 +27,8 @@
 #define LOAD_FADE_TRACE(fmt, ...)
 #endif
 
-namespace {
-
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
-uint16_t clear_runtime_fade_elapsed(DeviceTrack *track) {
+uint16_t MCLActions::clear_runtime_fade_elapsed(DeviceTrack *track) {
   if (track == nullptr) {
     return 0;
   }
@@ -43,7 +41,8 @@ uint16_t clear_runtime_fade_elapsed(DeviceTrack *track) {
   return elapsed;
 }
 
-void restore_runtime_fade_elapsed(DeviceTrack *track, uint16_t elapsed) {
+void MCLActions::restore_runtime_fade_elapsed(DeviceTrack *track,
+                                              uint16_t elapsed) {
   if (elapsed == 0 || track == nullptr) {
     return;
   }
@@ -54,12 +53,12 @@ void restore_runtime_fade_elapsed(DeviceTrack *track, uint16_t elapsed) {
   fade->set_elapsed_q12(elapsed);
 }
 #else
-uint16_t clear_runtime_fade_elapsed(DeviceTrack *) { return 0; }
-void restore_runtime_fade_elapsed(DeviceTrack *, uint16_t) {}
+uint16_t MCLActions::clear_runtime_fade_elapsed(DeviceTrack *) { return 0; }
+void MCLActions::restore_runtime_fade_elapsed(DeviceTrack *, uint16_t) {}
 #endif
 
-const char *shared_row_name(ElektronDevice **devs,
-                            uint8_t save_dev_mask) {
+const char *MCLActions::shared_row_name(ElektronDevice **devs,
+                                        uint8_t save_dev_mask) {
   // Preserve the existing single-source row naming model: primary device wins.
   if ((save_dev_mask & (1 << 0)) && devs[0] != nullptr) {
     const char *name = devs[0]->getGridRowName();
@@ -75,7 +74,8 @@ const char *shared_row_name(ElektronDevice **devs,
   return nullptr;
 }
 
-void copy_row_name_text(GridRowHeader &row_header, const char *name) {
+void MCLActions::copy_row_name_text(GridRowHeader &row_header,
+                                    const char *name) {
   if (name == nullptr) {
     row_header.name[0] = '\0';
     return;
@@ -84,18 +84,18 @@ void copy_row_name_text(GridRowHeader &row_header, const char *name) {
   row_header.name[sizeof(row_header.name) - 1] = '\0';
 }
 
-void copy_row_name(GridRowHeader &row_header, const char *name) {
+void MCLActions::copy_row_name(GridRowHeader &row_header, const char *name) {
   copy_row_name_text(row_header, name);
   row_header.active = true;
 }
 
-void inherit_grid_x_row_name(GridRowHeader row_headers[NUM_GRIDS]) {
+void MCLActions::inherit_grid_x_row_name(GridRowHeader *row_headers) {
   for (uint8_t n = 1; n < NUM_GRIDS; n++) {
     copy_row_name_text(row_headers[n], row_headers[0].name);
   }
 }
 
-bool md_import_can_capture_slot(const GridDeviceTrack &gdt) {
+static bool md_import_can_capture_slot(const GridDeviceTrack &gdt) {
   if (gdt.group_type != GROUP_DEV) {
     return false;
   }
@@ -110,15 +110,15 @@ bool md_import_can_capture_slot(const GridDeviceTrack &gdt) {
   }
 }
 
-bool is_grid_chain_load_mode(uint8_t mode) {
+bool MCLActions::is_grid_chain_load_mode(uint8_t mode) {
   return mode == LOAD_QUEUE || mode == LOAD_AUTO;
 }
 
-uint8_t device_mask_bit(uint8_t device_idx) {
+uint8_t MCLActions::device_mask_bit(uint8_t device_idx) {
   return device_idx == 0 ? 1 : 2;
 }
 
-inline bool row_is_loadable(GridRow row) {
+inline bool MCLActions::row_is_loadable(GridRow row) {
 #if defined(__AVR__)
   (void)row;
   return true;
@@ -129,7 +129,7 @@ inline bool row_is_loadable(GridRow row) {
 #endif
 }
 
-inline bool row_uses_private_runtime_source(GridRow row) {
+inline bool MCLActions::row_uses_private_runtime_source(GridRow row) {
 #if MCL_FEATURE_GRID_PRIVATE_LOADS
   return row == LOAD_QUEUE_PRIVATE_ROW;
 #else
@@ -138,7 +138,8 @@ inline bool row_uses_private_runtime_source(GridRow row) {
 #endif
 }
 
-inline void apply_host_runtime_clip(GridSlot dst, DeviceTrack *track) {
+inline void MCLActions::apply_host_runtime_clip(GridSlot dst,
+                                                DeviceTrack *track) {
 #if !defined(__AVR__)
   mcl_arrangement.applyClipRuntime(dst, track);
 #else
@@ -147,7 +148,7 @@ inline void apply_host_runtime_clip(GridSlot dst, DeviceTrack *track) {
 #endif
 }
 
-inline void clear_host_runtime_private_source(GridSlot dst) {
+inline void MCLActions::clear_host_runtime_private_source(GridSlot dst) {
 #if !defined(__AVR__)
   mcl_arrangement.clearRuntimePrivateSource(dst);
 #else
@@ -155,20 +156,19 @@ inline void clear_host_runtime_private_source(GridSlot dst) {
 #endif
 }
 
-inline void clear_host_runtime_private_source_for_row(GridSlot dst,
-                                                      GridRow row) {
+inline void MCLActions::clear_host_runtime_private_source_for_row(
+    GridSlot dst, GridRow row) {
   if (!row_uses_private_runtime_source(row)) {
     clear_host_runtime_private_source(dst);
   }
 }
 
-inline void apply_host_runtime_clip_for_row(GridSlot dst, GridRow row,
-                                            DeviceTrack *track) {
+inline void MCLActions::apply_host_runtime_clip_for_row(GridSlot dst,
+                                                        GridRow row,
+                                                        DeviceTrack *track) {
   apply_host_runtime_clip(dst, track);
   clear_host_runtime_private_source_for_row(dst, row);
 }
-
-} // namespace
 
 #if MCL_FEATURE_HOST_ARRANGER
 uint32_t selected_destination_mask(const uint8_t *slot_select_array,
