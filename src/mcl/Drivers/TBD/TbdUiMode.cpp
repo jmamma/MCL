@@ -1114,6 +1114,11 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
   const bool is_trig =
       event->source >= ButtonsClass::TRIG_BUTTON1 &&
       event->source < ButtonsClass::TRIG_BUTTON1 + 16;
+  const bool is_param_arrow =
+      event->source == ButtonsClass::FUNC_BUTTON6 ||
+      event->source == ButtonsClass::FUNC_BUTTON7 ||
+      event->source == ButtonsClass::FUNC_BUTTON8 ||
+      event->source == ButtonsClass::FUNC_BUTTON9;
 
   if (is_trig &&
       (ui_button_pressed_ ||
@@ -1125,7 +1130,8 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
     return true;
   }
 
-  if (is_collapsed()) {
+  const bool collapsed = is_collapsed();
+  if (collapsed && (!ui_button_pressed_ || !is_param_arrow || !is_press)) {
     return false;
   }
 
@@ -1139,12 +1145,6 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
     }
     return true;
   }
-
-  const bool is_param_arrow =
-      event->source == ButtonsClass::FUNC_BUTTON6 ||
-      event->source == ButtonsClass::FUNC_BUTTON7 ||
-      event->source == ButtonsClass::FUNC_BUTTON8 ||
-      event->source == ButtonsClass::FUNC_BUTTON9;
 
   if (!is_param_arrow) {
     return false;
@@ -1168,7 +1168,7 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
   if (event->source == ButtonsClass::FUNC_BUTTON6 ||
       event->source == ButtonsClass::FUNC_BUTTON8) {
     if (is_press) {
-      if (GUI.overlay != &tbd_param_overlay_page) {
+      if (!collapsed && GUI.overlay != &tbd_param_overlay_page) {
         show_fullscreen();
       }
       select_sub_page_half(event->source == ButtonsClass::FUNC_BUTTON8);
@@ -1180,7 +1180,7 @@ bool TbdUiMode::handle_event(gui_event_t *event) {
   if (event->source == ButtonsClass::FUNC_BUTTON7 ||
       event->source == ButtonsClass::FUNC_BUTTON9) {
     if (is_press) {
-      if (GUI.overlay != &tbd_param_overlay_page) {
+      if (!collapsed && GUI.overlay != &tbd_param_overlay_page) {
         show_fullscreen();
       }
       int8_t delta = event->source == ButtonsClass::FUNC_BUTTON7 ? -2 : 2;

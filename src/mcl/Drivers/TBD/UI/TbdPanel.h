@@ -15,6 +15,7 @@ private:
   bool handle_primary_ui_button(gui_event_t *event);
   bool handle_secondary_ui_button(gui_event_t *event,
                                   bool allow_toggle = true);
+  bool handle_ui_button_for_source(gui_event_t *event, uint8_t orig_src);
   bool open_secondary_ui_from_tap(gui_event_t *event);
   bool handle_active_ui_button(gui_event_t *event, uint8_t orig_src);
   bool handle_grid_trig_preview(gui_event_t *event, uint8_t trig_idx);

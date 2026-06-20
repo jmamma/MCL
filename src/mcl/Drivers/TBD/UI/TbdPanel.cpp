@@ -242,6 +242,17 @@ bool TbdPanel::handle_secondary_ui_button(gui_event_t *event,
                                              event, allow_toggle);
 }
 
+bool TbdPanel::handle_ui_button_for_source(gui_event_t *event,
+                                           uint8_t orig_src) {
+  if (orig_src == ButtonsClass::BUTTON2) {
+    return handle_primary_ui_button(event);
+  }
+  if (orig_src == ButtonsClass::TBD_BUTTON_TR) {
+    return handle_secondary_ui_button(event, false);
+  }
+  return false;
+}
+
 bool TbdPanel::open_secondary_ui_from_tap(gui_event_t *event) {
   gui_event_t open_event = *event;
   open_event.mask = EVENT_BUTTON_PRESSED;
@@ -264,11 +275,7 @@ bool TbdPanel::handle_active_ui_button(gui_event_t *event, uint8_t orig_src) {
         orig_src == ButtonsClass::BUTTON2
             ? device_manager.is_ui_slot_active(DeviceManager::UI_SLOT_PRIMARY)
             : true;
-    if (orig_src == ButtonsClass::BUTTON2) {
-      handle_primary_ui_button(event);
-    } else {
-      device_manager.notify_active_ui_button(event);
-    }
+    handle_ui_button_for_source(event, orig_src);
     return true;
   }
 
@@ -287,11 +294,7 @@ bool TbdPanel::handle_active_ui_button(gui_event_t *event, uint8_t orig_src) {
     const bool exit_on_tap = active_ui_button_exit_on_tap_;
     active_ui_button_exit_on_tap_ = false;
 
-    if (orig_src == ButtonsClass::BUTTON2) {
-      handle_primary_ui_button(event);
-    } else {
-      device_manager.notify_active_ui_button(event);
-    }
+    handle_ui_button_for_source(event, orig_src);
     if (short_tap && exit_on_tap) {
       device_manager.exit_ui();
     }
@@ -466,7 +469,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     if (orig_src == ui_display_chord_modifier_) {
       ui_display_chord_modifier_ = 255;
       if (active_ui_button_pressed_ && active_ui_button_source_ == orig_src) {
-        device_manager.notify_active_ui_button(event);
+        handle_ui_button_for_source(event, orig_src);
         active_ui_button_pressed_ = false;
         active_ui_button_chorded_ = false;
         active_ui_button_exit_on_tap_ = false;
