@@ -792,7 +792,7 @@ void MCLActions::collect_tracks(uint8_t *slot_select_array,
     auto *device_track =
         load_and_prepare_track(n, row, gdt->track_type,
                                gdt_dst->seq_track, track_idx_dst, rebuilt,
-                               scratch);
+                               scratch, -1, dst);
 
     if (device_track == nullptr) {
       send_machine[dst] = 0;
