@@ -3,7 +3,7 @@
 #include "MidiSeqTrackData.h"
 #include "GridTrack.h"
 #include "ExtSeqTrack.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 #include "platform.h"
 
 #if !defined(__AVR__)

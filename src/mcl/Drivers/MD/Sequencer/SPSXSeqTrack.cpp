@@ -12,7 +12,7 @@
 #include "GUI/Pages/CommonPages.h"
 #include "MCLSysConfig.h"
 #include "GUI/Pages/Performance/MixerPage.h"
-#include "SeqTrackTransition.h"
+#include "Sequencer/SeqTrackTransition.h"
 
 // SPSX tracks share MDSeqTrack::md_trig_mask and MDSeqTrack::gui_update statics
 

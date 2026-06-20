@@ -1,6 +1,6 @@
 #include "ArpSeqTrack.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 
 namespace {
 

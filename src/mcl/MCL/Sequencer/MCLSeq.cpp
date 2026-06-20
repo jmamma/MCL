@@ -1,7 +1,7 @@
 #include "MCLSeq_Internal.h"
 
-#include "PtcVoiceRouter.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/PtcVoiceRouter.h"
+#include "Sequencer/SeqTrackUtil.h"
 #if !defined(__AVR__)
 #include "Host/SpsHostArrBridge.h"  // SPS<->MCL arranger cell listener
 #include "Host/SpsHostSeqBridge.h"  // SPS<->MCL seq control listener

@@ -14,7 +14,7 @@
 #include "GUI/Pages/Grid/GridLoadPage.h"
 #include "Menu.h"
 #include "MenuPage.h"
-#include "GridLink.h"
+#include "Grid/GridLink.h"
 #include "GridTrack.h"
 #include "MCLSysConfig.h"
 

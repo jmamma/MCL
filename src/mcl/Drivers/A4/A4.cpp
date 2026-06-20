@@ -4,8 +4,8 @@
 #include "MCLSysConfig.h"
 #include "ResourceManager.h"
 #include "MCLGUI.h"
-#include "MidiSetup.h"
-#include "TurboLight.h"
+#include "Devices/MidiSetup.h"
+#include "Devices/TurboLight.h"
 #if !defined(__AVR__)
 #include "../Generic/MidiSeqExtStepTrackCapability.h"
 #endif

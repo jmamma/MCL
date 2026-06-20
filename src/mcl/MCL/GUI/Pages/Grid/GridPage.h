@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "GridRowHeader.h"
-#include "GridLink.h"
+#include "Grid/GridRowHeader.h"
+#include "Grid/GridLink.h"
 #include "GUI.h"
 #include "MCL.h"
 #include "MCLStrings.h"

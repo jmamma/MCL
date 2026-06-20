@@ -1,6 +1,6 @@
 #include "Menu.h"
 #include "ResourceManager.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 
 namespace {
 

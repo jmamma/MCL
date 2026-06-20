@@ -2,8 +2,8 @@
 #include "GUI/Pages/CommonPages.h"
 #include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
-#include "PtcVoiceRouter.h"
-#include "SeqTrackTransition.h"
+#include "Sequencer/PtcVoiceRouter.h"
+#include "Sequencer/SeqTrackTransition.h"
 #include "platform.h"
 
 uint8_t ExtSeqTrack::epoch = 0;

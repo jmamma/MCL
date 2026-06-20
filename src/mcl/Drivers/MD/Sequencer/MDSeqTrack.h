@@ -6,7 +6,7 @@
 #include "DeviceTrack.h"
 #include "MD.h"
 #include "MDSeqTrackData.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 #include "MidiClock.h"
 
 #define SEQ_NOTEBUF_SIZE 8

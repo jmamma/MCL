@@ -4,10 +4,10 @@
 #include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "Project.h"
-#include "SeqStepTrackRef.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqStepTrackRef.h"
+#include "Sequencer/SeqTrack.h"
 #if !defined(__AVR__)
-#include "SeqExtStepTrackApi.h"
+#include "Sequencer/SeqExtStepTrackApi.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
 #endif
 

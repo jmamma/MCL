@@ -13,7 +13,7 @@
 #include "MidiClock.h"
 #include "NoteInterface.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 
 bool MDPanel::handle_bank_arrow_cycle(gui_event_t *event) {
   if (!grid_page.bank_popup) return false;

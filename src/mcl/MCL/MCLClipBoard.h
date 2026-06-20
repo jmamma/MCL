@@ -2,10 +2,10 @@
 
 #ifndef MCLCLIPBOARD_H__
 #define MCLCLIPBOARD_H__
-#include "Grid.h"
+#include "Grid/Grid.h"
 #include "Shared.h"
 #include "MDSeqTrackData.h"
-#include "SeqExtStepTypes.h"
+#include "Sequencer/SeqExtStepTypes.h"
 #if !defined(__AVR__)
 #include "SPSXSeqTrackData.h"
 #endif

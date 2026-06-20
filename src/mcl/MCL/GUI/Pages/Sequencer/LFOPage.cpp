@@ -1,6 +1,6 @@
 #include "GUI/Pages/Sequencer/LFOPage.h"
-#include "DeviceParamResolver.h"
-#include "LFO.h"
+#include "Devices/DeviceParamResolver.h"
+#include "Sequencer/LFO.h"
 #include "MCLGUI.h"
 #include "ResourceManager.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"

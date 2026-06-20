@@ -1,6 +1,6 @@
 #include "GUI/Pages/Performance/PerfPageTargetRef.h"
 
-#include "LFOTrackRef.h"
+#include "Sequencer/LFOTrackRef.h"
 #include "NoteInterface.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
 

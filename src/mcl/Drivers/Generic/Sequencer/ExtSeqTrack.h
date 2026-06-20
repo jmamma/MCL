@@ -8,7 +8,7 @@
 #include "NibbleArray.h"
 #include "GridTrack.h"
 #include "MCL.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 #include "MidiClock.h"
 #include "platform.h"
 #include <stddef.h>

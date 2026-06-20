@@ -3,7 +3,7 @@
 #if !defined(__AVR__)
 
 #include "MidiTrack.h"
-#include "PtcVoiceRouter.h"
+#include "Sequencer/PtcVoiceRouter.h"
 #include "../../A4/GridTracks/A4Track.h"
 #include "../../MNM/GridTracks/MNMTrack.h"
 #ifdef PLATFORM_TBD

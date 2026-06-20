@@ -2,14 +2,14 @@
 #include "MCLGUI.h"
 #include "oled.h"
 #include "Project.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "GUI_hardware.h"
 #include "platform.h"
 #include "../Drivers/MD/MD.h"
 #ifdef PLATFORM_TBD
 #include "../Drivers/TBD/TBD.h"
 #endif
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 #include "MCLStrings.h"
 #if !defined(__AVR__)
 #include "SPSXSeqDefines.h"

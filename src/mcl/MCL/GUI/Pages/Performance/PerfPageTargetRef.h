@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DeviceParamResolver.h"
+#include "Devices/DeviceParamResolver.h"
 #include <inttypes.h>
 
 class PerfPageTarget {

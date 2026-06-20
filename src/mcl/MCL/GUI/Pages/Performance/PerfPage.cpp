@@ -1,5 +1,5 @@
 #include "GUI/Pages/Performance/PerfPage.h"
-#include "DevicePanelRef.h"
+#include "Devices/DevicePanelRef.h"
 #include "GUI/Pages/CommonPages.h"
 #include "MCLMemory.h"
 #include "MCLGUI.h"

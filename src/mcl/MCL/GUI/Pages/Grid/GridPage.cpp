@@ -7,10 +7,10 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
-#include "GridTask.h"
+#include "Grid/GridTask.h"
 #include "EmptyTrack.h"
 #include "Project.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "../../../../Drivers/MidiDevice.h"
 #include "../../../../Drivers/Generic/GenericMidiDevice.h"
 #include "../../../../Drivers/MD/MD.h"
@@ -18,7 +18,7 @@
 #ifdef PLATFORM_TBD
 #include "GUI/Pages/Grid/GridIOOverlay.h"
 #endif
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 #include "MCLClipBoard.h"
 #include "MCLStrings.h"
 

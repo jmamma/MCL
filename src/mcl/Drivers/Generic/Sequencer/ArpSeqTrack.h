@@ -3,11 +3,11 @@
 #pragma once
 
 #include "MidiUart.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 #include "MidiClock.h"
 #include "platform.h"
 #include "GridTrack.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 
 #define ARP_UP 0
 #define ARP_DOWN 1

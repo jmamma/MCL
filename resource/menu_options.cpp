@@ -1,5 +1,5 @@
 #include "MenuTypes.h"
-#include "SeqDefines.h"
+#include "Sequencer/SeqDefines.h"
 
 menu_option_t MENU_OPTIONS[] = {
   // 0: RAM PAGE LINK

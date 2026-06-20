@@ -6,7 +6,7 @@
 
 #include "GUI.h"
 #include "MCLMemory.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #include "midi-common.h"
 #include "MidiID.h"
 

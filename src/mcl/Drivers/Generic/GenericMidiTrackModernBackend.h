@@ -3,8 +3,8 @@
 #if !defined(__AVR__)
 
 #include "Sequencer/MCLSeq.h"
-#include "SeqExtStepTrackApi.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqExtStepTrackApi.h"
+#include "Sequencer/SeqTrack.h"
 #include <stdint.h>
 
 class MidiUartClass;

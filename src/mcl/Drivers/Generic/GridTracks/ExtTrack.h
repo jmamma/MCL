@@ -5,9 +5,9 @@
 #include "ExtSeqTrack.h"
 #include "GridTrack.h"
 #include "MCLMemory.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "MidiDevice.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 
 #define EMPTY_TRACK_TYPE 0
 

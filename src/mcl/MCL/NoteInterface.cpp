@@ -1,5 +1,5 @@
 /* Copyright 2018, Justin Mammarella jmamma@gmail.com */
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "MCLSysConfig.h"
 #include "NoteInterface.h"
 #include "../Midi/Midi.h"

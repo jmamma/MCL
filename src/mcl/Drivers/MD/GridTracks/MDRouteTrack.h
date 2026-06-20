@@ -3,7 +3,7 @@
 #pragma once
 
 #include "AUXTrack.h"
-#include "PtcGroups.h"
+#include "Sequencer/PtcGroups.h"
 
 class ATTR_PACKED() LegacyMDRouteData {
 public:

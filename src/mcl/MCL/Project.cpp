@@ -4,10 +4,10 @@
 #include "MCLSd.h"
 #include "MCLGUI.h"
 #include "GUI/Pages/Grid/GridPages.h"
-#include "MidiSetup.h"
-#include "SeqTrackUtil.h"
+#include "Devices/MidiSetup.h"
+#include "Sequencer/SeqTrackUtil.h"
 #include "oled.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 
 #include "MDTrack.h"
 #include "../Drivers/MD/MD.h"

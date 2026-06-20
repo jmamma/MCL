@@ -6,7 +6,7 @@
 
 #include "DeviceTrack.h"
 #include "MidiSeqTrack.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 
 class ATTR_PACKED() MidiBackedDeviceTrack : public DeviceTrack {
 public:

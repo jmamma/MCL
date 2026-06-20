@@ -4,7 +4,7 @@
 #if !defined(__AVR__)
 #include "MidiTrack.h"
 #include "MidiTrackMaterializer.h"
-#include "PtcVoiceRouter.h"
+#include "Sequencer/PtcVoiceRouter.h"
 #endif
 #ifdef PLATFORM_TBD
 #include "../../TBD/TBDTrack.h"

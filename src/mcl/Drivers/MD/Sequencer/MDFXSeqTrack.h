@@ -4,7 +4,7 @@
 #define MDFXSEQTRACK_H__
 
 #include "MCLMemory.h"
-// #include "MidiActivePeering.h"
+// #include "Devices/MidiActivePeering.h"
 #include "MidiUartParent.h"
 #include "platform.h"
 

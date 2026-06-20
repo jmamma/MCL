@@ -4,9 +4,9 @@
 #define LFOSEQTRACK_H__
 #include "platform.h"
 #include "../../DeviceContext.h"
-#include "LFOShapes.h"
+#include "Sequencer/LFOShapes.h"
 #include "MidiUart.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 
 #define NUM_LFO_PARAMS 2
 

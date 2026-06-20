@@ -4,8 +4,8 @@
 #include "SpsHostSeqBridge_Internal.h"
 
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "LFOTrackRef.h"
-#include "PtcGroups.h"
+#include "Sequencer/LFOTrackRef.h"
+#include "Sequencer/PtcGroups.h"
 
 #include <string.h>
 

@@ -7,7 +7,7 @@
 #include "MCLMemory.h"
 #include "MDSeqTrack.h"
 #include "MDSeqTrackData.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 
 #define LOCK_AMOUNT 256
 

@@ -2,7 +2,7 @@
 
 #include "platform.h"
 #include "../MCL/MCLDefines.h"
-#include "../MCL/PageIndex.h"
+#include "PageIndex.h"
 #include "DeviceCapabilities.h"
 #include "MidiDeviceCapabilities.h"
 #include "MidiID.h"

@@ -6,7 +6,7 @@
 
 #include "DeviceTrack.h"
 #include "MidiSeqTrack.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 #include "TBDSeqTrack.h"
 #include "TbdP4SoundData.h"
 

@@ -1,12 +1,12 @@
 #pragma once
 
+#include "Devices/MidiSetup.h"
 #include "ElektronModelTypes.h"
 #include "MCLGIF.h"
 #include "MCLMemory.h"
 #include "MCLMenuDefines.h"
 #include "MenuTypes.h"
-#include "MidiSetup.h"
-#include "SeqDefines.h"
+#include "Sequencer/SeqDefines.h"
 
 extern const unsigned char __R_icons_boot[] PROGMEM;
 struct __T_icons_boot {

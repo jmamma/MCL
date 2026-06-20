@@ -25,7 +25,7 @@
 #include "GUI/Pages/Grid/GridIOPage.h"
 #include "KeyInterface.h"
 #include "NoteInterface.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "MCLSysConfig.h"
 #include "MCLMenus.h"
 #include "MD.h"

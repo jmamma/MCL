@@ -6,7 +6,7 @@
 #include "MCLGUI.h"
 #include "MCLSysConfig.h"
 #include "ResourceManager.h"
-#include "TurboLight.h"
+#include "Devices/TurboLight.h"
 #include <string.h>
 
 namespace {

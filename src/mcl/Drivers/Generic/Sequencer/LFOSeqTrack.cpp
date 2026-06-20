@@ -1,5 +1,5 @@
 #include "LFOSeqTrack.h"
-#include "LFOTrackRef.h"
+#include "Sequencer/LFOTrackRef.h"
 #include "Sequencer/MCLSeq.h"
 #include <string.h>
 

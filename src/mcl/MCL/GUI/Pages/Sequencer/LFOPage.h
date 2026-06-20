@@ -5,9 +5,9 @@
 
 #include "GUI.h"
 #include "MCLEncoder.h"
-#include "LFO.h"
+#include "Sequencer/LFO.h"
 #include "LFOSeqTrack.h"
-#include "LFOTrackRef.h"
+#include "Sequencer/LFOTrackRef.h"
 #include "GUI/Pages/Sequencer/SeqPage.h"
 #include "GUI/Pages/Performance/PerfPageParent.h"
 

@@ -4,10 +4,10 @@
 #define SEQEXTSTEPPAGE_H__
 
 #include "GUI/Pages/Sequencer/SeqPage.h"
-#include "SeqExtStepTypes.h"
+#include "Sequencer/SeqExtStepTypes.h"
 #include "GUI/Pages/Sequencer/SeqStepPage.h"
 #ifdef PLATFORM_TBD
-#include "SeqExtMidiControl.h"
+#include "Sequencer/SeqExtMidiControl.h"
 #endif
 
 class MidiClass;

@@ -2,14 +2,14 @@
 
 #ifdef PLATFORM_TBD
 
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "Elektrothic.h"
 #include "GUI/Pages/Grid/GridPages.h"
 #include "GUI/Pages/Sequencer/SeqPage.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
 #include "MCL.h"
 #include "MCLGUI.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 #include "TBD/TBD.h"
 #include "TomThumb.h"
 #include "../../../../Drivers/MidiDevice.h"

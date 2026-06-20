@@ -4,7 +4,7 @@
 
 #include "EmptyTrack.h"
 #include "MidiTrackMaterializer.h"
-#include "PtcVoiceRouter.h"
+#include "Sequencer/PtcVoiceRouter.h"
 #include "../Sequencer/StepSeqDefines.h"
 #include <string.h>
 

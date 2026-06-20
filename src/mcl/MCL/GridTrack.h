@@ -34,9 +34,9 @@
 #define NULL_TRACK_TYPE 128
 #define EMPTY_TRACK_TYPE 0
 
-#include "GridLink.h"
+#include "Grid/GridLink.h"
 #include "MCLMemory.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 
 class Grid;
 class SeqTrack;

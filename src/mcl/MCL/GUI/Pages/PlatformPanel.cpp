@@ -20,7 +20,7 @@ bool PlatformPanel::handleEvent(gui_event_t *event) {
 
 #include "../../../Drivers/MD/MD.h"
 #include "../../../Drivers/MidiDevice.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "GUI/Pages/Grid/GridPage.h"
 #include "GUI/Pages/Grid/GridPages.h"
 #include "GUI_hardware.h"

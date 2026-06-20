@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MCLMemory.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 #include "platform.h"
 #include <stddef.h>
 #include <stdint.h>

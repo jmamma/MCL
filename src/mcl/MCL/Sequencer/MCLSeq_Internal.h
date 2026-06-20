@@ -2,7 +2,7 @@
 
 #include "Sequencer/MCLSeq.h"
 
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "MCLSysConfig.h"
 
 static inline bool seq_grid_x_runs_md_tracks() {

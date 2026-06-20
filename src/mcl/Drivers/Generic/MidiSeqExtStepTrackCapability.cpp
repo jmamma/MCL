@@ -3,8 +3,8 @@
 #if !defined(__AVR__)
 
 #include "Sequencer/MCLSeq.h"
-#include "SeqExtStepTrackApi.h"
-#include "PtcVoiceRouter.h"
+#include "Sequencer/SeqExtStepTrackApi.h"
+#include "Sequencer/PtcVoiceRouter.h"
 
 uint8_t MidiSeqExtStepTrackCapability::track_count(
     const DeviceContext &ctx) const {

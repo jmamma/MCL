@@ -1,6 +1,6 @@
 #include "KeyInterface.h"
 #include "../Drivers/MD/MD.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "Midi.h"
 #include "MCLGUI.h"
 /*

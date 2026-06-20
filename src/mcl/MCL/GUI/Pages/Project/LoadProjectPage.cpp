@@ -4,7 +4,7 @@
 #include "MCLSd.h"
 #include "MCLSysConfig.h"
 #include "Project.h"
-#include "DevicePanelRef.h"
+#include "Devices/DevicePanelRef.h"
 #include "KeyInterface.h"
 #include "MCLMenus.h"
 

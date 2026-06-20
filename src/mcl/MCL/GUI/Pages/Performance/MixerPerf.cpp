@@ -6,7 +6,7 @@
 #include "GUI_hardware.h"
 #include "KeyInterface.h"
 #include "MCLGUI.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 #include "../../../../Drivers/MD/MDParams.h"
 #include "../../../../Drivers/MidiDevice.h"
 

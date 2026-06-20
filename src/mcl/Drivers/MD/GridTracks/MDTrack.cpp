@@ -1,9 +1,9 @@
 #include "MDTrack.h"
 #include "MD.h"
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 #include "Shared.h"
 #include "Sequencer/MCLSeq.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 #if !defined(__AVR__)
 #include "SPSXTrack.h"
 #endif

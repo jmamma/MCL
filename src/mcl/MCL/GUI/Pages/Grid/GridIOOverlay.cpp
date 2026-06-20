@@ -2,12 +2,12 @@
 
 #ifdef PLATFORM_TBD
 
-#include "GridChain.h"
+#include "Grid/GridChain.h"
 #include "GUI/Pages/Grid/GridIOPage.h"
 #include "GUI/Pages/Grid/GridPages.h"
-#include "GridTask.h"
-#include "MCLActions.h"
-#include "DeviceManager.h"
+#include "Grid/GridTask.h"
+#include "Grid/MCLActions.h"
+#include "Devices/DeviceManager.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
 #include "MCLSysConfig.h"

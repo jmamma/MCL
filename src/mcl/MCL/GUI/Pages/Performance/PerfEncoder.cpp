@@ -1,5 +1,5 @@
 #include "GUI/Pages/Performance/PerfEncoder.h"
-#include "DeviceParamResolver.h"
+#include "Devices/DeviceParamResolver.h"
 #include "MCLMemory.h"
 #include "PerfData.h"
 #include "MidiUart.h"

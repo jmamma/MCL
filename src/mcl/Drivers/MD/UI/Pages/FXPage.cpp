@@ -4,7 +4,7 @@
 #include "KeyInterface.h"
 #include "PageIndex.h"
 #include "MCLGUI.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "../../../MidiDevice.h"
 
 #define FX_TYPE 0

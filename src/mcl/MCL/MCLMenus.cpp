@@ -7,8 +7,8 @@
 #include "MCL.h"
 #include "GUI/Pages/Grid/GridPages.h"
 #include "GUI/Pages/CommonPages.h"
-#include "MCLActions.h"
-#include "DeviceManager.h"
+#include "Grid/MCLActions.h"
+#include "Devices/DeviceManager.h"
 #include "GUI/Pages/WavDesigner/WavDesignerPage.h"
 #include "../Drivers/MidiDevice.h"
 

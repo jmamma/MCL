@@ -1,11 +1,11 @@
 #include "MenuPage.h"
 #include "MCLGUI.h"
-#include "DeviceManager.h"
-#include "DevicePanelRef.h"
+#include "Devices/DeviceManager.h"
+#include "Devices/DevicePanelRef.h"
 #include "../Drivers/MidiDevice.h"
 #include "ResourceManager.h"
 #include "MCLSysConfig.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #include "MCLDefines.h"
 
 namespace {

@@ -5,7 +5,7 @@
 
 //#include "Pages.h"
 #include "GUI.h"
-#include "PtcGroups.h"
+#include "Sequencer/PtcGroups.h"
 
 class PolyPage : public LightPage {
 public:

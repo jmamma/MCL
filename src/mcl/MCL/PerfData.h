@@ -3,7 +3,7 @@
 #ifndef PERFDATATRACK_H__
 #define PERFDATATRACK_H__
 #include "platform.h"
-#include "DeviceParamResolver.h"
+#include "Devices/DeviceParamResolver.h"
 #include "MCLMemory.h"
 #include "MCLStrings.h"
 #include "oled.h"

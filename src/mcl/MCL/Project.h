@@ -3,9 +3,9 @@
 #ifndef PROJECT_H__
 #define PROJECT_H__
 
-#include "Grid.h"
+#include "Grid/Grid.h"
 #include "MCLDefines.h"
-#include "MidiDeviceGrid.h"
+#include "Grid/MidiDeviceGrid.h"
 #include "MCLMemory.h"
 #include "MCLSysConfig.h"
 #include "GUI/Pages/Project/ProjectPages.h"

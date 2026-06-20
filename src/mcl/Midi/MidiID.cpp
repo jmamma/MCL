@@ -5,7 +5,7 @@
 #include "helpers.h"
 #include "global.h"
 #include "MidiUart.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 
 void MidiID::send_id_request(uint8_t id, uint8_t port) {
   uint8_t data[6] = {0xF0, 0x7E, id, 0x06, 0x01, 0xF7};

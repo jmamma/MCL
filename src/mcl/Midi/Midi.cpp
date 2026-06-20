@@ -6,7 +6,7 @@
 #include "MidiUart.h"
 #include "MidiSysex.h"
 #include "MidiClock.h"
-#include "../MCL/DeviceManager.h"
+#include "Devices/DeviceManager.h"
 
 MidiClass::MidiClass(MidiUartClass *_uart, MidiSysexClass *_sysex) {
   midiActive = true;

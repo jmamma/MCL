@@ -4,7 +4,7 @@
 #if !defined(__AVR__)
 
 #include "StepSeqDefines.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>

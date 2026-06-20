@@ -5,7 +5,7 @@
 #include "MCLMemory.h"
 #include "MDSeqTrackData.h"
 #include "MDTrack.h"
-#include "SeqTrackModData.h"
+#include "Sequencer/SeqTrackModData.h"
 
 #if !defined(__AVR__)
 #include "SPSXSeqTrack.h"

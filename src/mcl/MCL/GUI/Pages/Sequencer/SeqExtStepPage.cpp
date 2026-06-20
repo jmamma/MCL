@@ -2,7 +2,7 @@
 #include "MCLGUI.h"
 #include "MCLClipBoard.h"
 #include "MCLSysConfig.h"
-#include "SeqExtStepTrackRef.h"
+#include "Sequencer/SeqExtStepTrackRef.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
 
 namespace {

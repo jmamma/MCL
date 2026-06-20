@@ -9,10 +9,10 @@
 #include "GUI/Pages/Grid/GridLoadPage.h"
 #include "../../../Drivers/MD/MD.h"
 #include "../../../Drivers/MD/MDParams.h"
-#include "MidiSetup.h"
-#include "DeviceManager.h"
+#include "Devices/MidiSetup.h"
+#include "Devices/DeviceManager.h"
 #include "../../../Drivers/MidiDevice.h"
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 #include "Project.h"
 #include "NoteInterface.h"
 

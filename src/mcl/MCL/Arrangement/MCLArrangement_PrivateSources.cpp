@@ -5,7 +5,7 @@
 #include "Arrangement/MCLArrangement.h"
 #include "MCLArrangement_Internal.h"
 #include "ExtTrack.h"
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 #include "MDSeqTrack.h"
 #include "MDTrack.h"
 #include "MidiSeqTrack.h"

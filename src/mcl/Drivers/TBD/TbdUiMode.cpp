@@ -2,17 +2,17 @@
 
 #ifdef PLATFORM_TBD
 
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "GUI/Pages/Grid/GridPages.h"
 #include "MCL.h"
 #include "MCLGUI.h"
 #include "Sequencer/MCLSeq.h"
 #include "MidiClock.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #include "NoteInterface.h"
-#include "SeqExtStepTrackApi.h"
+#include "Sequencer/SeqExtStepTrackApi.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "SeqStepTrackRef.h"
+#include "Sequencer/SeqStepTrackRef.h"
 #include "TBD.h"
 #include "TBDTrack.h"
 #include "TbdP4Command.h"

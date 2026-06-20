@@ -2,7 +2,7 @@
 #include "MCLSysConfig.h"
 #include "MDTrack.h"
 #include "MD.h"
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 
 void MDRouteTrack::clear_ptc_groups() {
   memset(ptc_group, PTC_GROUP_OFF, sizeof(ptc_group));

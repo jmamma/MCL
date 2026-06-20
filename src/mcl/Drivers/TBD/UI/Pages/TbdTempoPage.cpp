@@ -6,7 +6,7 @@
 #include "MCLGfx.h"
 #include "MCLSysConfig.h"
 #include "MidiClock.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #include "helpers.h"
 #include <stdio.h>
 #include <string.h>

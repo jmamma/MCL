@@ -4,7 +4,7 @@
 
 #include "Arrangement/MCLArrangement.h"
 #include "MCLArrangement_Internal.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 
 using namespace mcl_arrangement_internal;
 

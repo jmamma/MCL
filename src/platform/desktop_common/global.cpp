@@ -14,7 +14,7 @@
 #include "MidiSysex.h"
 #include "MidiIDSysex.h"
 #include "Midi.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #include "memory.h"
 #include "oled.h"
 #include "GUI.h"
@@ -22,7 +22,7 @@
 #include "../../mcl/Drivers/MNM/MNM.h"
 #include "../../mcl/Drivers/A4/A4.h"
 #include "../../mcl/Drivers/Generic/GenericMidiDevice.h"
-#include "../../mcl/MCL/MidiActivePeering.h"
+#include "Devices/MidiActivePeering.h"
 #include "global.h"
 
 // MidiUart instances. Desktop MidiUartClass owns its own ring buffers

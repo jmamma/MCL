@@ -2,7 +2,7 @@
 
 #include "TrackLoadFadeRunner.h"
 #include "MidiClock.h"
-#include "../../../MCL/TrackLoadFade.h"
+#include "TrackLoadFade.h"
 #include <string.h>
 
 using LoadFadeMask = uint32_t;

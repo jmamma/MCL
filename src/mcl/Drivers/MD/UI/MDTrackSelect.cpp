@@ -2,7 +2,7 @@
 #include "../MD.h"
 #include "GUI/Pages/Sequencer/SeqPtcPage.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 
 void MDTrackSelect::setup(MidiClass *_midi) {
   sysex = _midi->midiSysex;

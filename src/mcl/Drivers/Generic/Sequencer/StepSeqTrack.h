@@ -6,8 +6,8 @@
 #include "StepSeqDefines.h"
 #include "StepSeqTrackData.h"
 #include "MidiUart.h"
-#include "SeqTrack.h"
-#include "SeqCondition.h"
+#include "Sequencer/SeqTrack.h"
+#include "Sequencer/SeqCondition.h"
 
 class MCLSeq;
 

@@ -2,7 +2,7 @@
 #include "ResourceManager.h"
 #include "MCLDefines.h"
 #include "MCLGUI.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "MCLStrings.h"
 #include "../../../Drivers/MidiDevice.h"
 #include "../../../Drivers/PageRegistry.h"

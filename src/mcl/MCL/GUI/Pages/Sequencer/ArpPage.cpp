@@ -4,7 +4,7 @@
 #include "GUI/Pages/Sequencer/SeqPages.h"
 #include "MCLGUI.h"
 #include "MCLStrings.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 
 namespace {
 DeviceIdx arp_device_idx() {

@@ -5,13 +5,13 @@
 #include "GUI/Pages/CommonPages.h"
 #include "EmptyTrack.h"
 #include "ExtSeqTrack.h"
-#include "GridLink.h"
+#include "Grid/GridLink.h"
 #include "MidiClock.h"
 #include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "GUI/Pages/Sequencer/SeqPage.h"
-#include "PtcVoiceRouter.h"
-#include "SeqTrackTransition.h"
+#include "Sequencer/PtcVoiceRouter.h"
+#include "Sequencer/SeqTrackTransition.h"
 #include "MCL.h"
 #include <string.h>
 

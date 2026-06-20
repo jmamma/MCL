@@ -2,10 +2,10 @@
 #include "ResourceManager.h"
 #include "MCLGUI.h"
 #include "../../MD.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "../../../MidiDevice.h"
 #include "MidiClock.h"
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 #include "platform.h"
 
 void RoutePage::init() {

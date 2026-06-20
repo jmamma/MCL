@@ -5,7 +5,7 @@
 
 #include "MCLSd.h"
 #include "MCLMemory.h"
-#include "PtcGroups.h"
+#include "Sequencer/PtcGroups.h"
 
 #define CONFIG_VERSION_SAMPLE_BANK_LINK 4021
 #define CONFIG_VERSION CONFIG_VERSION_SAMPLE_BANK_LINK

@@ -7,14 +7,14 @@
 #include "DeviceTrack.h"
 #include "MDTrack.h"
 #include "MCLGUI.h"
-#include "MCLActions.h"
-#include "DeviceManager.h"
+#include "Grid/MCLActions.h"
+#include "Devices/DeviceManager.h"
 #include "ExtTrack.h"
 #include "../Drivers/A4/GridTracks/A4Track.h"
 #include "../Drivers/MNM/GridTracks/MNMTrack.h"
 #include "../Drivers/MidiDevice.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 #if !defined(__AVR__)
 #include "SPSXTrack.h"
 #endif

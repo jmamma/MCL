@@ -4,7 +4,7 @@
 
 #include "../../../MCL/MCLMemory.h"
 #include "../../../MCL/MCLPlatformFeatures.h"
-#include "../../../MCL/TrackLoadFadeTarget.h"
+#include "TrackLoadFadeTarget.h"
 #include "platform.h"
 #include <inttypes.h>
 

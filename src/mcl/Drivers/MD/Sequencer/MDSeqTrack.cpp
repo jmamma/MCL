@@ -5,11 +5,11 @@
 #include "MidiClock.h"
 #include "GUI/Pages/CommonPages.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "SeqPtcTrackRef.h"
-#include "GridTask.h"
+#include "Sequencer/SeqPtcTrackRef.h"
+#include "Grid/GridTask.h"
 #include "Sequencer/MCLSeq.h"
-#include "SeqTrackUtil.h"
-#include "SeqTrackTransition.h"
+#include "Sequencer/SeqTrackUtil.h"
+#include "Sequencer/SeqTrackTransition.h"
 #if !defined(__AVR__)
 #include "Host/SpsHostSeqBridge.h"  // SPS host step-grid dirty notifications
 #endif

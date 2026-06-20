@@ -1,11 +1,11 @@
 #include "MCLSeq_Internal.h"
 
 #include "GUI/Pages/CommonPages.h"
-#include "DeviceParamResolver.h"
+#include "Devices/DeviceParamResolver.h"
 #include "MCL.h"
 #include "MDPages.h"
-#include "MidiSetup.h"
-#include "SeqTrackUtil.h"
+#include "Devices/MidiSetup.h"
+#include "Sequencer/SeqTrackUtil.h"
 #include "../../Drivers/Generic/GenericMidiDevice.h"
 #include "../../Drivers/MD/MD.h"
 

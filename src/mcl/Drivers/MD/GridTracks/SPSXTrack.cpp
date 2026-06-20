@@ -1,6 +1,6 @@
 #include "SPSXTrack.h"
 #include "MD.h"
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 #include "Sequencer/MCLSeq.h"
 #include "MCLSysConfig.h"
 #include "Shared.h"

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "MidiUart.h"
-#include "SeqTrack.h"
+#include "Sequencer/SeqTrack.h"
 #include "platform.h"
 #include "GridTrack.h"
 

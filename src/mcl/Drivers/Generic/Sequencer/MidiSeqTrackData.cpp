@@ -3,7 +3,7 @@
 #if !defined(__AVR__)
 
 #include "ExtSeqTrack.h"
-#include "GridLink.h"
+#include "Grid/GridLink.h"
 #include <string.h>
 
 namespace {

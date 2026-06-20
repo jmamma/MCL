@@ -6,11 +6,11 @@
 #include "MCLStrings.h"
 #include "MCLSysConfig.h"
 #include "GUI/Pages/PageSelectPage.h"
-#include "PtcGroups.h"
+#include "Sequencer/PtcGroups.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "SeqStepTrackRef.h"
+#include "Sequencer/SeqStepTrackRef.h"
 #ifdef PLATFORM_TBD
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #endif
 #include "Sequencer/MCLSeq.h"
 

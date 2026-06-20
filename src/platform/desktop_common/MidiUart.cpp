@@ -6,7 +6,7 @@
 #include "MidiClock.h"
 #include "MidiSysex.h"
 #include "midi-common.h"
-#include "../../mcl/MCL/Sequencer/MCLSeq.h"
+#include "Sequencer/MCLSeq.h"
 
 namespace {
 

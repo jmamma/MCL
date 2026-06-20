@@ -3,7 +3,7 @@
 #include "MCLGUI.h"
 #include "StackMonitor.h"
 #include "Project.h"
-#include "PtcGroups.h"
+#include "Sequencer/PtcGroups.h"
 #include "platform.h"
 #include <string.h>
 

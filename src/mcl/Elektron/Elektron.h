@@ -8,7 +8,7 @@
 #include "MidiID.h"
 #include "MidiSysex.h"
 #include "MCLMemory.h"
-#include "MidiDeviceGrid.h"
+#include "Grid/MidiDeviceGrid.h"
 #include "MCLGfx.h"
 #include "global.h"
 #include "Midi.h"

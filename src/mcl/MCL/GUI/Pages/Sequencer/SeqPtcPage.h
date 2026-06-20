@@ -6,7 +6,7 @@
 #include "Scales.h"
 #include "GUI/Pages/Sequencer/SeqPage.h"
 #ifdef PLATFORM_TBD
-#include "SeqExtMidiControl.h"
+#include "Sequencer/SeqExtMidiControl.h"
 #endif
 
 #define MAX_POLY_NOTES 16

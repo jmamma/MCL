@@ -2,7 +2,7 @@
 #include "MidiSysex.h"
 #include "MidiIDSysex.h"
 #include "Midi.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #include "memory.h"
 #include "oled.h"
 #include "GUI.h"
@@ -13,7 +13,7 @@
 #ifdef PLATFORM_TBD
 #include "../../mcl/Drivers/TBD/TBD.h"
 #endif
-#include "../../mcl/MCL/MidiActivePeering.h"
+#include "Devices/MidiActivePeering.h"
 #include "Elektron.h"
 #include "MidiIDSysex.h"
 #include "SoftwareSPI.h"

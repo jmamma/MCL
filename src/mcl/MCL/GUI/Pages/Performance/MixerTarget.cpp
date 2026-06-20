@@ -2,10 +2,10 @@
 
 #include "GUI/Pages/Performance/MixerPage.h"
 
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #include "GUI/Pages/Performance/MixerPerf.h"
 #include "NoteInterface.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 #include "../../../../Drivers/MD/MD.h"
 #include "../../../../Drivers/MidiDevice.h"
 

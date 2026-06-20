@@ -2,7 +2,7 @@
 
 #include "TrackLoadFadeTarget.h"
 #include "GridTrack.h"
-#include "MidiDeviceGrid.h"
+#include "Grid/MidiDeviceGrid.h"
 #include "TrackLoadFade.h"
 #include "../Drivers/MD/MD.h"
 #include "../Drivers/MD/MDParams.h"

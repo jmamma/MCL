@@ -1,7 +1,7 @@
 #include "MenuTypes.h"
 #include "MCLMenuDefines.h"
 #include "MCLMemory.h"
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 
 /****
   Menu Format:

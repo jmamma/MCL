@@ -2,28 +2,28 @@
 #include "../../../../Drivers/A4/A4.h"
 #include "../../../../Drivers/MD/MD.h"
 #include "../../../../Drivers/MidiDevice.h"
-#include "DeviceManager.h"
+#include "Devices/DeviceManager.h"
 #if !defined(__AVR__)
-#include "DevicePanelRef.h"
+#include "Devices/DevicePanelRef.h"
 #endif
-#include "DeviceParamResolver.h"
+#include "Devices/DeviceParamResolver.h"
 #include "MCLClipBoard.h"
 #include "MCLDefines.h"
 #include "MCLGUI.h"
 #include "Sequencer/MCLSeq.h"
 #include "MCLStrings.h"
 #include "MDTrack.h"
-#include "PtcGroups.h"
+#include "Sequencer/PtcGroups.h"
 #if !defined(__AVR__)
-#include "PtcVoiceRouter.h"
+#include "Sequencer/PtcVoiceRouter.h"
 #endif
 #include "ResourceManager.h"
 #include "GUI/Pages/Sequencer/SeqPages.h"
-#include "SeqExtStepTrackRef.h"
-#include "SeqStepTrackRef.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqExtStepTrackRef.h"
+#include "Sequencer/SeqStepTrackRef.h"
+#include "Sequencer/SeqTrackUtil.h"
 #ifdef PLATFORM_TBD
-#include "MidiSetup.h"
+#include "Devices/MidiSetup.h"
 #endif
 
 namespace {

@@ -5,7 +5,7 @@
 
 #include "GUI.h"
 #include "MCLEncoder.h"
-#include "MCLActions.h"
+#include "Grid/MCLActions.h"
 
 #define NUM_RAM_PAGES 2
 

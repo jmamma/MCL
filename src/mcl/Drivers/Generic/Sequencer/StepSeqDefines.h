@@ -5,7 +5,7 @@
 
 #include <stdint.h>
 #include "platform.h"
-#include "SeqDefines.h"
+#include "Sequencer/SeqDefines.h"
 
 extern uint8_t get_random_byte();
 

@@ -11,7 +11,7 @@
 #include "MidiClock.h"
 #include "MidiSysex.h"
 #include "MCLSysConfig.h"
-#include "SeqTrackUtil.h"
+#include "Sequencer/SeqTrackUtil.h"
 
 namespace sps_host_seq_internal {
 
