@@ -571,23 +571,6 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (event->source == ButtonsClass::ENCODER2 &&
-      tbd_bank_popup_tap_allowed(pg)) {
-    static constexpr uint16_t kEnc2TapMaxMs = ButtonsClass::TBD_TAP_MAX_MS;
-    if (is_press) {
-      Buttons.handle_encoder_tap(1, true, kEnc2TapMaxMs);
-      return true;
-    }
-    if (Buttons.handle_encoder_tap(1, false, kEnc2TapMaxMs)) {
-      if (mcl.currentPage() == BANK_POPUP_PAGE) {
-        bank_popup_page.close();
-      } else {
-        open_bank_popup();
-      }
-    }
-    return true;
-  }
-
   if (ui_active && !is_local_nav_page && !driver_ui_blocked && is_press) {
     uint8_t target_slot = DeviceManager::UI_SLOT_NONE;
     if (orig_src == ButtonsClass::TBD_BUTTON_TR &&
@@ -615,8 +598,8 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (!ui_active && orig_src == ButtonsClass::BUTTON2 &&
-      !is_local_nav_page && !driver_ui_blocked) {
-    handle_primary_ui_button(event);
+      !is_local_nav_page && !driver_ui_blocked &&
+      handle_primary_ui_button(event)) {
     return true;
   }
 
@@ -634,9 +617,12 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     }
   }
 
+  const bool sps_collapsed_active =
+      ui_collapsed && MD.ui.sps_mode.is_active();
   const bool grid_select_context =
-      !ui_expanded && !is_local_nav_page && grid_page_active &&
-      !grid_page.show_slot_menu && !grid_io_overlay.is_active();
+      !sps_collapsed_active && !ui_expanded && !is_local_nav_page &&
+      grid_page_active && !grid_page.show_slot_menu &&
+      !grid_io_overlay.is_active();
 
   if (tempo_track_select_down_ &&
       orig_src == ButtonsClass::FUNC_BUTTON5 && is_release) {
@@ -719,7 +705,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
     return true;
   }
 
-  if (ui_collapsed && MD.ui.sps_mode.is_active() &&
+  if (sps_collapsed_active &&
       (orig_src == ButtonsClass::BUTTON1 ||
        orig_src == ButtonsClass::BUTTON3 ||
        orig_src == ButtonsClass::BUTTON4 ||
@@ -789,7 +775,11 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
   }
 
   if (orig_src == ButtonsClass::BUTTON2 &&
+      !driver_ui_blocked &&
       top_left_button_consumed_page(pg)) {
+    if (is_press) {
+      open_page_select();
+    }
     return true;
   }
 
@@ -856,6 +846,23 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
         return true;
       }
       return true;
+    }
+    return true;
+  }
+
+  if (event->source == ButtonsClass::ENCODER2 &&
+      tbd_bank_popup_tap_allowed(pg)) {
+    static constexpr uint16_t kEnc2TapMaxMs = ButtonsClass::TBD_TAP_MAX_MS;
+    if (is_press) {
+      Buttons.handle_encoder_tap(1, true, kEnc2TapMaxMs);
+      return true;
+    }
+    if (Buttons.handle_encoder_tap(1, false, kEnc2TapMaxMs)) {
+      if (mcl.currentPage() == BANK_POPUP_PAGE) {
+        bank_popup_page.close();
+      } else {
+        open_bank_popup();
+      }
     }
     return true;
   }
