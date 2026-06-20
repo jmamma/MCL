@@ -58,8 +58,10 @@ TBD-16 panel input is mapped into MCL's page and device model.
 
 | Control | Action |
 | --- | --- |
-| Top-left button | Open or control the Device 1 UI. In menus and browsers, use it as back/up. |
-| Top-right button | Open or control the Device 2 UI when a second UI-capable device is configured. In local menus it acts as confirm/enter. |
+| Top-left button | Open or control the Device 1 UI. |
+| Top-left button in menus and browsers | Back/up. |
+| Top-right button | Open or control the Device 2 UI when a second UI-capable device is configured. |
+| Top-right button in local menus | Confirm/enter. |
 | Top-left + top-right | Open the System menu. |
 | Device UI button + A | Switch the active device UI between full-screen and bottom-strip size. |
 | Encoder 1 tap | Open Page Select. Tap Encoder 1 again from Page Select to open the selected page. |

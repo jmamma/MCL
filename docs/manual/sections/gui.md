@@ -25,11 +25,7 @@ Combined Button Presses:
 
 Encoder buttons can increase rotation speed for coarse edits. The exact multiplier depends on the page and control.
 
-## Current UI Notes
-
-Many pages support focused-parameter editing. On supported pages, the arrow keys move focus between visible encoder fields and adjust the focused value. This behavior is used on pages such as FX, RAM, Arpeggiator, LFO, Performance and Chromatic.
-
-Long menus and file lists show a compact scrollbar when there are more entries than fit on screen. Held navigation keys repeat where the current menu supports repeat.
+On MD and TBD-16, arrow keys can select and edit visible MCL page parameters on most pages.
 
 
 ## Machinedrum GUI: Enhanced Mode
