@@ -244,6 +244,20 @@ class GridTask : public Task {
   static void flush_host_automation_writes() {}
 #endif
 
+#if MCL_FEATURE_GRID_SAVE_QUEUE
+  void init_save_queue();
+  void save_queue_handler();
+#else
+  void init_save_queue() {}
+  void save_queue_handler() {}
+#endif
+
+#if defined(__AVR__)
+  static void pre_cache_ui_yield();
+#else
+  static void pre_cache_ui_yield() {}
+#endif
+
 public:
   bool stop_hard_callback;
 
@@ -277,9 +291,7 @@ public:
   void init() {
      reset_midi_states();
      load_queue.init();
-#if MCL_FEATURE_GRID_SAVE_QUEUE
-     save_queue.init();
-#endif
+     init_save_queue();
   }
 
   void reset_midi_states() {
@@ -291,9 +303,6 @@ public:
   }
   void row_update();
   void gui_update();
-#if MCL_FEATURE_GRID_SAVE_QUEUE
-  void save_queue_handler();
-#endif
   void update_transition_details();
   void load_queue_handler();
   void transition_handler();

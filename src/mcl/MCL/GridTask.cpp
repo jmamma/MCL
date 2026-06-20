@@ -23,6 +23,21 @@
 #define DIV16_MARGIN 8
 #define GRIDTASK_PRE_CACHE_UI_MS 80
 
+#if defined(__AVR__)
+inline void GridTask::pre_cache_ui_yield() {
+  static uint8_t last_pre_cache_ui_ms = 0;
+  uint8_t pre_cache_ui_ms = (uint8_t)read_clock_ms();
+  if ((uint8_t)(pre_cache_ui_ms - last_pre_cache_ui_ms) <
+      GRIDTASK_PRE_CACHE_UI_MS) {
+    return;
+  }
+
+  last_pre_cache_ui_ms = pre_cache_ui_ms;
+  GUI.deferDisplayOnce();
+  mcl.loop();
+}
+#endif
+
 #if MCL_FEATURE_GRID_PRIVATE_LOADS
 uint32_t GridTask::selected_track_mask(const uint8_t *track_select) {
   if (track_select == nullptr) {
@@ -86,6 +101,10 @@ void GridTask::gui_update() {
 }
 
 #if MCL_FEATURE_GRID_SAVE_QUEUE
+void GridTask::init_save_queue() {
+  save_queue.init();
+}
+
 void GridTask::save_queue_handler() {
   if (save_queue.is_empty()) { return; }
 
@@ -231,17 +250,13 @@ void GridTask::run() {
     mcl_actions_callbacks.StopHardCallback();
     stop_hard_callback = false;
     load_queue.init();
-#if MCL_FEATURE_GRID_SAVE_QUEUE
-    save_queue.init();
-#endif
+    init_save_queue();
     reset_host_playback_after_stop();
   }
   else {
     gui_update();
     tick_host_arranger();
-#if MCL_FEATURE_GRID_SAVE_QUEUE
     save_queue_handler();
-#endif
     load_queue_handler();
     flush_host_automation_writes();
     transition_handler();
@@ -439,26 +454,9 @@ void GridTask::transition_handler() {
 //    wait_blocking(go_step);
 //#endif
 
-#ifdef DEBUGMODE
-    uint32_t clk = read_clock_ms();
-#endif
-#if defined(__AVR__)
-    static uint8_t last_pre_cache_ui_ms = 0;
-    uint8_t pre_cache_ui_ms = (uint8_t)read_clock_ms();
-    if ((uint8_t)(pre_cache_ui_ms - last_pre_cache_ui_ms) >=
-        GRIDTASK_PRE_CACHE_UI_MS) {
-      last_pre_cache_ui_ms = pre_cache_ui_ms;
-      GUI.deferDisplayOnce();
-      mcl.loop();
-    }
-#endif
+    pre_cache_ui_yield();
     mcl_actions.cache_next_tracks(track_select_array, update_gui);
     gui_update();
-#ifdef DEBUGMODE
-    DEBUG_PRINTLN("time");
-    DEBUG_PRINTLN(clock_diff(clk, read_clock_ms()));
-#endif
-
 
     // Once tracks are cached, we can calculate their next transition
     for (uint8_t n = 0; n < NUM_SLOTS; n++) {
