@@ -1,5 +1,5 @@
 #include "PerfTrack.h"
-#include "PerfSeqTrack.h"
+#include "Sequencer/PerfSeqTrack.h"
 #include "GUI/Pages/CommonPages.h"
 #include "Grid/MCLActions.h"
 #include "MDTrack.h"

@@ -1,11 +1,11 @@
 #include "GUI/Pages/WavDesigner/OscPage.h"
 #include "Devices/DeviceManager.h"
 #include "../../../../Drivers/MD/MD.h"
-#include "Osc.h"
+#include "WavDesigner/Osc.h"
 #include "DSP.h"
 #include "MidiNotes.h"
 #include "GUI/Pages/Sequencer/SeqPage.h"
-#include "WavDesigner.h"
+#include "WavDesigner/WavDesigner.h"
 
 #ifdef WAV_DESIGNER
 

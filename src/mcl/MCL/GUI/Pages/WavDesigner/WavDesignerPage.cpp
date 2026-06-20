@@ -1,5 +1,5 @@
 #include "GUI/Pages/WavDesigner/WavDesignerPage.h"
-#include "WavDesigner.h"
+#include "WavDesigner/WavDesigner.h"
 #include "MCLGUI.h"
 
 #ifdef WAV_DESIGNER

@@ -1,4 +1,4 @@
-#include "WavDesigner.h"
+#include "WavDesigner/WavDesigner.h"
 #include "Wav.h"
 #include "MCL.h"
 #include "Osc.h"

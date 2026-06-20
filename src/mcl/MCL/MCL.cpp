@@ -36,7 +36,7 @@
 #ifdef WAV_DESIGNER
 #include "GUI/Pages/WavDesigner/OscMixerPage.h"
 #include "GUI/Pages/WavDesigner/WavDesignerPage.h"
-#include "WavDesigner.h"
+#include "WavDesigner/WavDesigner.h"
 #endif
 
 #include "GUI/Pages/TextInputPage.h"

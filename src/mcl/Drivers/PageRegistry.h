@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MenuTypes.h"
+#include "GUI/PageSelectTypes.h"
 #include <stdint.h>
 
 namespace PageRegistry {

@@ -5,7 +5,7 @@
 
 #include "GUI.h"
 #include "GUI/MCLEncoder.h"
-#include "MenuTypes.h"
+#include "GUI/PageSelectTypes.h"
 
 extern MCLRelativeEncoder page_select_param1;
 extern MCLRelativeEncoder page_select_param2;
