@@ -1089,9 +1089,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       slot_select_array[i] = 0;
     } else {
       any_loaded = true;
-      links[dst].row = row;
-      links[dst].loops = 1;
-      links[dst].length = gdt_dst->seq_track->length;
       mute_states[dst] = gdt_dst->seq_track->mute_state;
       gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
     }
