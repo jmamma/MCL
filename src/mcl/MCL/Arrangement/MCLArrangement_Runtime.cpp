@@ -445,12 +445,18 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   uint32_t loadMask = 0;
   uint32_t clearMask = 0;
 
+  auto isPrivateLoad = [&](GridSlot sourceSlot) {
+    return sourceSlot < NUM_SLOTS &&
+           rows[sourceSlot] == LOAD_QUEUE_PRIVATE_ROW &&
+           privateSourceIds != nullptr && privateSourceIds[sourceSlot] != 0;
+  };
+
   GridSlot firstSource = 255;
   GridSlot sourceBase = (GridSlot)(sourceGridBank * GRID_WIDTH);
   for (uint8_t src = 0; src < GRID_WIDTH && src < 16; ++src) {
     GridSlot sourceSlot = (GridSlot)(sourceBase + src);
     if (sourceSlot >= NUM_SLOTS || ((trackMask >> src) & 1u) == 0 ||
-        rows[sourceSlot] >= GRID_LENGTH) {
+        (rows[sourceSlot] >= GRID_LENGTH && !isPrivateLoad(sourceSlot))) {
       continue;
     }
     firstSource = sourceSlot;
@@ -466,12 +472,10 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
       continue;
     }
     GridRow row = rows[sourceSlot];
-    bool privateLoad = row == LOAD_QUEUE_PRIVATE_ROW &&
-                       privateSourceIds != nullptr &&
-                       privateSourceIds[sourceSlot] != 0;
+    bool privateLoad = isPrivateLoad(sourceSlot);
     if (row < GRID_LENGTH || privateLoad) {
       GridSlot dst = sourceSlot;
-      if (!privateLoad && loadOffset < NUM_SLOTS) {
+      if (loadOffset < NUM_SLOTS) {
         if (firstSource == 255) {
           continue;
         }

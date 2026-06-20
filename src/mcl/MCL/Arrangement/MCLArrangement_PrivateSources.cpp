@@ -4,12 +4,14 @@
 
 #include "Arrangement/MCLArrangement.h"
 #include "MCLArrangement_Internal.h"
+#include "A4Track.h"
 #include "ExtTrack.h"
 #include "Grid/MCLActions.h"
 #include "MDSeqTrack.h"
 #include "MDTrack.h"
 #include "MidiSeqTrack.h"
 #include "MidiTrack.h"
+#include "MNMTrack.h"
 #include "SPSXSeqTrack.h"
 #include "SPSXTrack.h"
 
@@ -136,6 +138,28 @@ bool copyLiveSeqToPrivateTrack(DeviceTrack *track, GridDeviceTrack *gdt,
     auto *seqTrack = static_cast<ExtSeqTrack *>(gdt->seq_track);
     SeqTrack::store_mod_data(extTrack->mod_data, false, trackNumber);
     memcpy(&extTrack->seq_data, seqTrack->data(), sizeof(extTrack->seq_data));
+    return true;
+  }
+  case A4_TRACK_TYPE: {
+    auto *a4Track = track->as<A4Track>();
+    if (a4Track == nullptr) {
+      return false;
+    }
+    auto *seqTrack = static_cast<ExtSeqTrack *>(gdt->seq_track);
+    SeqTrack::store_mod_data(a4Track->mod_data, false, trackNumber);
+    memcpy(&a4Track->seq_data, seqTrack->data(),
+           sizeof(a4Track->seq_data));
+    return true;
+  }
+  case MNM_TRACK_TYPE: {
+    auto *mnmTrack = track->as<MNMTrack>();
+    if (mnmTrack == nullptr) {
+      return false;
+    }
+    auto *seqTrack = static_cast<ExtSeqTrack *>(gdt->seq_track);
+    SeqTrack::store_mod_data(mnmTrack->mod_data, false, trackNumber);
+    memcpy(&mnmTrack->seq_data, seqTrack->data(),
+           sizeof(mnmTrack->seq_data));
     return true;
   }
   default:
@@ -607,7 +631,8 @@ bool MCLArrangement::flushRuntimePrivateSourceEdits() {
 
 bool MCLArrangement::loadQueuedPrivateSource(GridSlot sourceSlot, GridRow row,
                                              EmptyTrack &scratch,
-                                             DeviceTrack **out) {
+                                             DeviceTrack **out,
+                                             GridSlot runtimeSlot) {
   if (out != nullptr) {
     *out = nullptr;
   }
@@ -617,26 +642,27 @@ bool MCLArrangement::loadQueuedPrivateSource(GridSlot sourceSlot, GridRow row,
   if (out == nullptr || sourceSlot >= NUM_SLOTS) {
     return true;
   }
+  GridSlot runtimeDst = runtimeSlot < NUM_SLOTS ? runtimeSlot : sourceSlot;
 
   GridColumn localCol = 0;
   GridRow localRow = 0;
   uint32_t sourceId = queued_private_source_ids_[sourceSlot];
   if (!privateSourceCell(sourceId, &localCol, &localRow)) {
-    clearRuntimePrivateSource(sourceSlot);
+    clearRuntimePrivateSource(runtimeDst);
     return true;
   }
 
   Grid privateGrid;
   if (!openPrivateGrid(privateGrid, false)) {
-    clearRuntimePrivateSource(sourceSlot);
+    clearRuntimePrivateSource(runtimeDst);
     return true;
   }
   *out = scratch.load_from_grid_512(localCol, localRow, &privateGrid);
   privateGrid.close_file();
   if (*out != nullptr) {
-    setRuntimePrivateSource(sourceSlot, sourceId);
+    setRuntimePrivateSource(runtimeDst, sourceId);
   } else {
-    clearRuntimePrivateSource(sourceSlot);
+    clearRuntimePrivateSource(runtimeDst);
   }
   return true;
 }

@@ -121,7 +121,8 @@ public:
   void beginQueuedPrivateLoads(const uint32_t sourceIds[NUM_SLOTS]);
   void endQueuedPrivateLoads();
   bool loadQueuedPrivateSource(GridSlot sourceSlot, GridRow row,
-                               EmptyTrack &scratch, DeviceTrack **out);
+                               EmptyTrack &scratch, DeviceTrack **out,
+                               GridSlot runtimeSlot = 255);
 
 private:
   struct AutomationWriteData {

@@ -216,11 +216,12 @@ DeviceTrack *MCLActions::load_and_prepare_track(GridSlot track_idx, GridRow row,
                                                 uint8_t track_type, SeqTrack *seq_track,
                                                 uint8_t seq_track_idx, bool &was_rebuilt,
                                                 EmptyTrack &scratch,
-                                                int8_t link_slot) {
+                                                int8_t link_slot,
+                                                GridSlot runtime_dst) {
   DeviceTrack *loaded_track = nullptr;
 #if !defined(__AVR__)
   if (!mcl_arrangement.loadQueuedPrivateSource(track_idx, row, scratch,
-                                               &loaded_track)) {
+                                               &loaded_track, runtime_dst)) {
     loaded_track = scratch.load_from_grid_512(track_idx, row);
   }
 #else
@@ -976,7 +977,7 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
   bool rebuilt = false;
   auto *ptrack = load_and_prepare_track(i, row, gdt_dst->track_type,
                                         gdt_dst->seq_track, track_idx_dst,
-                                        rebuilt, scratch, dst);
+                                        rebuilt, scratch, dst, dst);
 
   if (ptrack == nullptr) {
     // DEBUG_PRINTLN("bad read");

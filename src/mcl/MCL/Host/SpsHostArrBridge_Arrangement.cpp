@@ -540,7 +540,8 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                 GridSlot sourceSlot = visibleSlotToGridSlot(src, gridBank);
                 if (sourceSlot < NUM_SLOTS &&
                     ((trackMask >> src) & 1u) != 0 &&
-                    rowSelect[sourceSlot] < GRID_LENGTH) {
+                    (rowSelect[sourceSlot] < GRID_LENGTH ||
+                     rowSelect[sourceSlot] == LOAD_QUEUE_PRIVATE_ROW)) {
                     firstSource = sourceSlot;
                     break;
                 }
@@ -565,7 +566,8 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                 payloadOff += spsarr::kArrClipFadeBytes;
 
                 GridSlot dst = sourceSlot;
-                if (rowSelect[sourceSlot] < GRID_LENGTH &&
+                if ((rowSelect[sourceSlot] < GRID_LENGTH ||
+                     rowSelect[sourceSlot] == LOAD_QUEUE_PRIVATE_ROW) &&
                     loadOffset < NUM_SLOTS) {
                     if (firstSource == 255)
                         continue;
@@ -664,10 +666,11 @@ void SpsHostArrBridge::onSaveSlots(uint8_t tag, const uint8_t* b,
     grid_page.row_scan = GRID_LENGTH;
     grid_page.reload_slot_models = false;
 #else
-    if (!grid_task.save_queue.put(row, trackSelect, SAVE_SEQ)) {
+    if (!grid_task.save_queue.put(row, trackSelect, SAVE_SEQ, tag, true)) {
         sendErr(tag, ERR_BUSY, row);
         return;
     }
+    return;
 #endif
     uint8_t ack[2] = {CMD_SAVE_SLOTS, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);

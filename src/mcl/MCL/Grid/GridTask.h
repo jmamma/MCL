@@ -156,6 +156,10 @@ class SaveQueue {
   GridRow rows[NUM_LINKS];
   uint8_t track_selects[NUM_LINKS][NUM_SLOTS];
   uint8_t merges[NUM_LINKS];
+#if MCL_FEATURE_HOST_ARRANGER
+  uint8_t ack_tags[NUM_LINKS];
+  uint8_t ack_valids[NUM_LINKS];
+#endif
   uint8_t rd;
   uint8_t wr;
   bool full;
@@ -167,15 +171,28 @@ class SaveQueue {
     memset(rows, 255, sizeof(rows));
     memset(track_selects, 0, sizeof(track_selects));
     memset(merges, 0, sizeof(merges));
+#if MCL_FEATURE_HOST_ARRANGER
+    memset(ack_tags, 0, sizeof(ack_tags));
+    memset(ack_valids, 0, sizeof(ack_valids));
+#endif
   }
 
-  bool put(GridRow row, const uint8_t *track_select_array, uint8_t merge) {
+  bool put(GridRow row, const uint8_t *track_select_array, uint8_t merge
+#if MCL_FEATURE_HOST_ARRANGER
+           ,
+           uint8_t ack_tag = 0, bool ack_valid = false
+#endif
+           ) {
     if (full || track_select_array == nullptr) {
       return false;
     }
     rows[wr] = row;
     memcpy(track_selects[wr], track_select_array, NUM_SLOTS);
     merges[wr] = merge;
+#if MCL_FEATURE_HOST_ARRANGER
+    ack_tags[wr] = ack_tag;
+    ack_valids[wr] = ack_valid ? 1 : 0;
+#endif
     wr = (wr + 1) & (NUM_LINKS - 1);
     if (wr == rd) {
       full = true;
@@ -183,13 +200,26 @@ class SaveQueue {
     return true;
   }
 
-  bool get(GridRow &row, uint8_t *track_select_array, uint8_t &merge) {
+  bool get(GridRow &row, uint8_t *track_select_array, uint8_t &merge
+#if MCL_FEATURE_HOST_ARRANGER
+           ,
+           uint8_t *ack_tag = nullptr, bool *ack_valid = nullptr
+#endif
+           ) {
     if (is_empty() || track_select_array == nullptr) {
       return false;
     }
     row = rows[rd];
     memcpy(track_select_array, track_selects[rd], NUM_SLOTS);
     merge = merges[rd];
+#if MCL_FEATURE_HOST_ARRANGER
+    if (ack_tag != nullptr) {
+      *ack_tag = ack_tags[rd];
+    }
+    if (ack_valid != nullptr) {
+      *ack_valid = ack_valids[rd] != 0;
+    }
+#endif
     rd = (rd + 1) & (NUM_LINKS - 1);
     full = false;
     return true;

@@ -111,11 +111,24 @@ void GridTask::save_queue_handler() {
   GridRow row = 255;
   uint8_t track_select[NUM_SLOTS];
   uint8_t merge = 0;
+#if MCL_FEATURE_HOST_ARRANGER
+  uint8_t ack_tag = 0;
+  bool ack_valid = false;
+  if (!save_queue.get(row, track_select, merge, &ack_tag, &ack_valid)) {
+    return;
+  }
+#else
   if (!save_queue.get(row, track_select, merge)) {
     return;
   }
+#endif
 
   if (row >= GRID_LENGTH) {
+#if MCL_FEATURE_HOST_ARRANGER
+    if (ack_valid) {
+      sps_host_arr_bridge.ackSaveSlots(ack_tag, false);
+    }
+#endif
     return;
   }
   bool any = false;
@@ -126,6 +139,11 @@ void GridTask::save_queue_handler() {
     }
   }
   if (!any) {
+#if MCL_FEATURE_HOST_ARRANGER
+    if (ack_valid) {
+      sps_host_arr_bridge.ackSaveSlots(ack_tag, false);
+    }
+#endif
     return;
   }
 
@@ -138,6 +156,9 @@ void GridTask::save_queue_handler() {
   mcl_actions.save_tracks(row, track_select, merge);
 
 #if MCL_FEATURE_HOST_ARRANGER
+  if (ack_valid) {
+    sps_host_arr_bridge.ackSaveSlots(ack_tag, true);
+  }
   grid_page.row_scan = GRID_LENGTH;
   grid_page.reload_slot_models = false;
   sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_CELLS);

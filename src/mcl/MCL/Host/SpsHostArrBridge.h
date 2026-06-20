@@ -21,6 +21,7 @@ public:
     void setup();
     void end() override;
 
+    void ackSaveSlots(uint8_t tag, bool ok);
     void notifyDirty(int track, uint8_t regions);
     void notifyArrangementPosition(uint32_t positionQ12, uint8_t flags);
 

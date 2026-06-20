@@ -192,7 +192,8 @@ private:
                                       uint8_t track_type, SeqTrack *seq_track,
                                       uint8_t seq_track_idx, bool &was_rebuilt,
                                       EmptyTrack &scratch,
-                                      int8_t link_slot = -1);
+                                      int8_t link_slot = -1,
+                                      GridSlot runtime_dst = 255);
   void collect_tracks(uint8_t *slot_select_array, GridRow *row_array,
                       GridSlot load_offset);
   bool load_track_immediate(GridRow row, GridSlot i, GridSlot dst,

@@ -114,6 +114,11 @@ void SpsHostArrBridge::sendErr(uint8_t tag, uint8_t code, uint8_t detail) {
     sendFrame(CMD_ERR, tag, b, 2);
 }
 
+void SpsHostArrBridge::ackSaveSlots(uint8_t tag, bool ok) {
+    uint8_t ack[2] = {CMD_SAVE_SLOTS, ok ? (uint8_t)1 : (uint8_t)0};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+}
+
 void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     if (n >= 1 && b[0] == 0)
         return;
