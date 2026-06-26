@@ -48,6 +48,10 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_SET_CONDITION:   if (applySetCondition(b, n))   { if (n) notifyDirty(b[0], DIRTY_DETAIL); }  break;
         case CMD_SET_LOCK:        if (applySetLock(b, n))        { if (n) notifyDirty(b[0], (uint8_t)(DIRTY_LOCKS | DIRTY_SUMMARY)); } break;
         case CMD_CLR_LOCK:        if (applyClrLock(b, n))        { if (n) notifyDirty(b[0], (uint8_t)(DIRTY_LOCKS | DIRTY_SUMMARY)); } break;
+        case CMD_CLEAR_STEP_RANGE:
+            if (applyClearStepRange(b, n))
+                notifyDirty(0xFF, (uint8_t)(DIRTY_SUMMARY | DIRTY_DETAIL | DIRTY_LOCKS));
+            break;
         case CMD_SET_TRACK_PROP:  if (applySetTrackProp(b, n))   { if (n) notifyDirty(b[0], DIRTY_SUMMARY); } break;
         case CMD_SET_PATTERN_PROP:if (applySetPatternProp(b, n)) { notifyDirty(0xFF, DIRTY_META); }          break;
         case CMD_EXT_ADD_NOTE:
@@ -179,6 +183,8 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
                     case CMD_SET_CONDITION:   applySetCondition(sb, sl);   break;
                     case CMD_SET_LOCK:        applySetLock(sb, sl);        break;
                     case CMD_CLR_LOCK:        applyClrLock(sb, sl);        break;
+                    case CMD_CLR_STEP_LOCKS:  applyClearStepLocks(sb, sl); break;
+                    case CMD_CLEAR_STEP_RANGE: applyClearStepRange(sb, sl); break;
                     default: break;
                 }
                 off = (uint16_t)(off + sl);
@@ -187,9 +193,7 @@ void SpsHostSeqBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
             break;
         }
         case CMD_CLR_STEP_LOCKS: {
-            SPSXSeqTrack* tr = (n >= 2) ? spsxTrack(b[0]) : nullptr;
-            if (tr && b[1] < kNumSteps) {
-                tr->clear_step_locks(b[1]);  // clears ALL param locks on the step
+            if (applyClearStepLocks(b, n) && n >= 2) {
                 notifyDirty(b[0], (uint8_t)(DIRTY_LOCKS | DIRTY_SUMMARY));
             }
             break;

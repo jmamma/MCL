@@ -119,6 +119,7 @@ enum Cmd {
     CMD_LFO_SET_PROP     = 0x78,  // H->M  lfo_device, track, prop, value
     CMD_LFO_SET_MASK     = 0x79,  // H->M  lfo_device, track, step, value
     CMD_LFO_ACTION       = 0x7A,  // H->M  lfo_device, track, action
+    CMD_CLEAR_STEP_RANGE = 0x7B,  // H->M  track_mask(2), start_step, step_count
 
     CMD_NOTIFY_TRANSPORT = 0x70,  // M->H  running, master_step, sub_tick(2)
     CMD_NOTIFY_DIRTY     = 0x71,  // M->H  track, regions

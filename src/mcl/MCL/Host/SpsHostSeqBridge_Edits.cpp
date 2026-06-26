@@ -97,6 +97,52 @@ bool SpsHostSeqBridge::applyClrLock(const uint8_t* b, uint16_t n) {
     return true;
 }
 
+bool SpsHostSeqBridge::applyClearStepLocks(const uint8_t* b, uint16_t n) {
+    if (n < 2) return false;
+    grid_task.service_host_arranger_load_before_edit();
+    SPSXSeqTrack* tr = spsxTrack(b[0]);
+    if (!tr || b[1] >= kNumSteps) return false;
+    tr->clear_step_locks(b[1]);
+    markArrangerLocalEdit(b[0]);
+    return true;
+}
+
+bool SpsHostSeqBridge::applyClearStepRange(const uint8_t* b, uint16_t n) {
+    if (n < 4)
+        return false;
+
+    uint16_t trackMask = getU16le(b);
+    uint8_t startStep = b[2];
+    uint8_t stepCount = b[3];
+    if (trackMask == 0 || startStep >= kNumSteps || stepCount == 0)
+        return false;
+
+    uint8_t endStep = startStep + stepCount;
+    if (endStep < startStep || endStep > kNumSteps)
+        endStep = kNumSteps;
+    if (endStep <= startStep)
+        return false;
+
+    grid_task.service_host_arranger_load_before_edit();
+
+    bool changed = false;
+    for (uint8_t track = 0; track < NUM_MD_TRACKS; track++) {
+        if ((trackMask & (uint16_t)(1u << track)) == 0)
+            continue;
+
+        SPSXSeqTrack* tr = spsxTrack(track);
+        if (!tr)
+            continue;
+
+        for (uint8_t step = startStep; step < endStep; step++)
+            tr->clear_step(step);
+        markArrangerLocalEdit(track);
+        changed = true;
+    }
+
+    return changed;
+}
+
 bool SpsHostSeqBridge::applySetTrackProp(const uint8_t* b, uint16_t n) {
     if (n < 3) return false;
     grid_task.service_host_arranger_load_before_edit();
