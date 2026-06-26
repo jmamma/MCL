@@ -97,6 +97,21 @@ uint8_t fade_curve_phase(uint8_t phase, int8_t curve) {
   return out > 127 ? 127 : (uint8_t)out;
 }
 
+int8_t fade_effective_curve(int8_t curve, uint8_t start_value,
+                            uint8_t end_value) {
+  int16_t out = curve;
+  if (end_value < start_value) {
+    out = -out;
+  }
+  if (out < -127) {
+    out = -127;
+  }
+  if (out > 127) {
+    out = 127;
+  }
+  return (int8_t)out;
+}
+
 uint16_t clamp_u16(uint32_t value) {
   return value > 0xFFFFu ? 0xFFFFu : (uint16_t)value;
 }
@@ -212,7 +227,9 @@ bool write_slot_value(GridSlot slot,
                       ? 127
                       : (uint8_t)(((uint32_t)elapsed * 127u) /
                                   state.duration_ticks);
-  phase = fade_curve_phase(phase, state.curve);
+  phase = fade_curve_phase(
+      phase, fade_effective_curve(state.curve, state.start_value,
+                                  state.end_value));
   int16_t value =
       (int16_t)state.start_value +
       ((int16_t)state.end_value - (int16_t)state.start_value) * phase / 127;
