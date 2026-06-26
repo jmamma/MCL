@@ -25,6 +25,21 @@ uint8_t automation_curve_phase(uint8_t phase, int8_t curve) {
   return out > 127 ? 127 : (uint8_t)out;
 }
 
+int8_t automation_effective_curve(int8_t curve, uint16_t startValue,
+                                  uint16_t endValue) {
+  int16_t out = curve;
+  if (endValue < startValue) {
+    out = -out;
+  }
+  if (out < -127) {
+    out = -127;
+  }
+  if (out > 127) {
+    out = 127;
+  }
+  return (int8_t)out;
+}
+
 uint16_t clamp_automation_value(uint16_t value, uint8_t valueType) {
   if (valueType == mclarrfile::AUTOMATION_VALUE_BOOL) {
     return value != 0 ? 1 : 0;
@@ -86,6 +101,8 @@ void MCLArrangement::resetPlayback() {
   playback_released_mask_ = 0;
   clip_runtime_fade_mask_ = 0;
   memset(runtime_private_source_ids_, 0, sizeof(runtime_private_source_ids_));
+  memset(runtime_private_source_slots_, 0,
+         sizeof(runtime_private_source_slots_));
   runtime_private_dirty_mask_ = 0;
   resetAutomationRuntime();
   playback_active_ = false;
@@ -270,8 +287,9 @@ uint16_t MCLArrangement::automationEvaluate(uint16_t laneIndex,
   uint32_t span = rt.next.q12 - rt.prev.q12;
   uint32_t elapsed = positionQ12 - rt.prev.q12;
   uint8_t phase = (uint8_t)((elapsed * 127u) / span);
-  phase = automation_curve_phase(phase, rt.prev.curve);
   uint16_t endValue = clamp_automation_value(rt.next.value, lane.valueType);
+  phase = automation_curve_phase(
+      phase, automation_effective_curve(rt.prev.curve, startValue, endValue));
   int32_t value = (int32_t)startValue +
                   ((int32_t)endValue - (int32_t)startValue) * phase / 127;
   if (value < 0) {
@@ -581,7 +599,8 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   playback_active_mask_ = (playback_active_mask_ & ~clearMask) | loadMask;
   for (uint8_t slot = 0; slot < NUM_SLOTS; ++slot) {
     if (loadedPrivateIds[slot] != 0) {
-      setRuntimePrivateSource(slot, loadedPrivateIds[slot]);
+      setRuntimePrivateSource(slot, loadedPrivateIds[slot],
+                              loadedSources[slot]);
     }
   }
   return armed;

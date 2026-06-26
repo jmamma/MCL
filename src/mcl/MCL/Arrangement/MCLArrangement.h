@@ -42,6 +42,7 @@ public:
     uint8_t length = 1;
     uint8_t note = 0;
     uint8_t velocity = 0;
+    int8_t timing = 0;
   };
 
   bool ensureActive();
@@ -76,7 +77,8 @@ public:
   void flushAutomationWrites();
   uint32_t runtimePrivateSourceMask() const;
   uint32_t runtimePrivateSourceId(uint8_t dst) const;
-  void setRuntimePrivateSource(uint8_t dst, uint32_t sourceId);
+  void setRuntimePrivateSource(uint8_t dst, uint32_t sourceId,
+                               uint8_t sourceSlot);
   void clearRuntimePrivateSource(uint8_t dst);
   void clearRuntimePrivateSources(uint32_t mask);
   bool flushRuntimePrivateSource(uint8_t dst);
@@ -122,6 +124,9 @@ public:
   bool createPrivateSourceFromGrid(GridSlot sourceSlot, GridRow row,
                                    GridSlot dstTrack,
                                    uint32_t *sourceIdOut = nullptr);
+  bool duplicatePrivateSource(uint32_t sourceId, GridSlot sourceSlot,
+                              GridSlot dstTrack,
+                              uint32_t *sourceIdOut = nullptr);
   bool privateSourcePreview(uint32_t sourceId, uint8_t *trackType,
                             uint8_t *length, uint8_t *speed,
                             uint64_t *trigMask,
@@ -130,7 +135,9 @@ public:
                             uint8_t *noteMax = nullptr,
                             uint8_t *noteFlags = nullptr,
                             PrivateSourcePreviewNote *notes = nullptr,
-                            uint8_t maxNotes = 0);
+                            uint8_t maxNotes = 0,
+                            int8_t *trigTiming = nullptr,
+                            uint8_t maxTrigTiming = 0);
   bool exportPrivateSourceToGrid(uint32_t sourceId, GridSlot sourceSlot,
                                  GridRow sourceRow, GridSlot targetSlot,
                                  GridRow targetRow);
@@ -205,6 +212,7 @@ private:
   AutomationPendingWrite automation_pending_writes_[kAutomationPendingWrites];
   uint8_t automation_pending_count_ = 0;
   uint32_t runtime_private_source_ids_[NUM_SLOTS] = {};
+  uint8_t runtime_private_source_slots_[NUM_SLOTS] = {};
   uint32_t runtime_private_dirty_mask_ = 0;
   uint32_t queued_private_source_ids_[NUM_SLOTS] = {};
   bool playback_active_ = false;

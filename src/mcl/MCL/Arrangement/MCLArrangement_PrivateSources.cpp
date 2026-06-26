@@ -23,6 +23,12 @@ using namespace mcl_arrangement_internal;
 
 namespace {
 
+#if !defined(__AVR__) && defined(DEBUGMODE)
+#define ARR_COPY_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-copy-mcl] " fmt, ##__VA_ARGS__)
+#else
+#define ARR_COPY_TRACE(fmt, ...) do { } while (0)
+#endif
+
 static const uint32_t kPreviewGridSourceFlag = 0x80000000UL;
 static const uint32_t kPreviewGridSourceTrackMask = 0xFFUL;
 static const uint32_t kPreviewGridSourceRowMask = 0xFFUL;
@@ -42,11 +48,34 @@ uint8_t previewSpeed(uint8_t speed, const GridLink &link) {
   return speed;
 }
 
-uint64_t mdPreviewTrigMask(const MDSeqTrackData &seq) {
+uint64_t mdPreviewTrigMask(const MDSeqTrackData &seq, int8_t *trigTiming,
+                           uint8_t maxTrigTiming, uint8_t ticksPerStep) {
   uint64_t mask = 0;
   for (uint8_t step = 0; step < NUM_MD_STEPS && step < 64; step++) {
     if (seq.steps[step].trig) {
       mask |= (1ULL << step);
+      if (trigTiming != nullptr && step < maxTrigTiming) {
+        trigTiming[step] =
+            (int8_t)SeqTrack::microtiming_to_ticks(seq.microtiming[step],
+                                                   ticksPerStep);
+      }
+    }
+  }
+  return mask;
+}
+
+uint64_t stepSeqPreviewTrigMask(const StepSeqTrackData &seq,
+                                int8_t *trigTiming, uint8_t maxTrigTiming,
+                                uint16_t ticksPerStep) {
+  uint64_t mask = 0;
+  for (uint8_t step = 0; step < STEPSEQ_NUM_STEPS && step < 64; step++) {
+    if (seq.trig_mask & (1ULL << step)) {
+      mask |= (1ULL << step);
+      if (trigTiming != nullptr && step < maxTrigTiming) {
+        trigTiming[step] =
+            (int8_t)stepseq_microtiming_to_ticks(seq.microtiming[step],
+                                                 ticksPerStep);
+      }
     }
   }
   return mask;
@@ -54,6 +83,7 @@ uint64_t mdPreviewTrigMask(const MDSeqTrackData &seq) {
 
 #if !defined(__AVR__)
 static const uint8_t kPreviewNoteFlagTruncated = 1 << 0;
+static const uint8_t kPreviewNoteFlagMicrotiming = 1 << 1;
 
 struct PreviewNoteWriter {
   MCLArrangement::PrivateSourcePreviewNote *notes = nullptr;
@@ -64,7 +94,8 @@ struct PreviewNoteWriter {
   uint8_t flags = 0;
   bool haveNotes = false;
 
-  void add(uint8_t start, uint8_t length, uint8_t note, uint8_t velocity) {
+  void add(uint8_t start, uint8_t length, uint8_t note, uint8_t velocity,
+           int8_t timing = 0) {
     if (!haveNotes) {
       noteMin = note;
       noteMax = note;
@@ -90,9 +121,27 @@ struct PreviewNoteWriter {
     notes[count].length = length;
     notes[count].note = note & 0x7F;
     notes[count].velocity = velocity & 0x7F;
+    notes[count].timing = timing;
+    if (timing != 0) {
+      flags |= kPreviewNoteFlagMicrotiming;
+    }
     count++;
   }
 };
+
+int8_t midiPreviewTimingOffset(uint8_t timing, uint8_t ticksPerStep) {
+  int16_t value =
+      (int16_t)(((uint32_t)timing * ticksPerStep +
+                 (MIDI_SEQ_TIMING_CENTER / 2)) /
+                MIDI_SEQ_TIMING_CENTER);
+  value -= ticksPerStep;
+  if (value < -128) {
+    value = -128;
+  } else if (value > 127) {
+    value = 127;
+  }
+  return (int8_t)value;
+}
 
 uint8_t previewNoteDuration(uint8_t start, uint8_t offStep, uint8_t length,
                             bool haveOff) {
@@ -111,7 +160,8 @@ uint8_t previewNoteDuration(uint8_t start, uint8_t offStep, uint8_t length,
   return duration > 255 ? 255 : (uint8_t)duration;
 }
 
-uint64_t midiPreviewTrigMask(const MidiSeqTrackData &seq) {
+uint64_t midiPreviewTrigMask(const MidiSeqTrackData &seq, int8_t *trigTiming,
+                             uint8_t maxTrigTiming, uint8_t ticksPerStep) {
   uint64_t mask = 0;
   uint8_t length = previewLength(seq.length);
   uint16_t eventCount = seq.used_event_count();
@@ -123,6 +173,10 @@ uint64_t midiPreviewTrigMask(const MidiSeqTrackData &seq) {
       const MidiSeqEvent &event = seq.events[idx];
       if (event.type == MIDI_SEQ_EVENT_NOTE_ON) {
         mask |= (1ULL << step);
+        if (trigTiming != nullptr && step < maxTrigTiming) {
+          trigTiming[step] = midiPreviewTimingOffset(event.timing,
+                                                     ticksPerStep);
+        }
         break;
       }
     }
@@ -130,7 +184,8 @@ uint64_t midiPreviewTrigMask(const MidiSeqTrackData &seq) {
   return mask;
 }
 
-void midiPreviewNotes(const MidiSeqTrackData &seq, PreviewNoteWriter &writer) {
+void midiPreviewNotes(const MidiSeqTrackData &seq, uint8_t ticksPerStep,
+                      PreviewNoteWriter &writer) {
   uint8_t length = previewLength(seq.length);
   if (length > MIDI_SEQ_NUM_STEPS) {
     length = MIDI_SEQ_NUM_STEPS;
@@ -153,16 +208,41 @@ void midiPreviewNotes(const MidiSeqTrackData &seq, PreviewNoteWriter &writer) {
           seq.search_note_off(event.target, step, noteOffIdx, end, length);
       uint8_t duration =
           previewNoteDuration(step, offStep, length, noteOffIdx != 0xFFFF);
-      writer.add(step, duration, event.target, (uint8_t)event.value);
+      writer.add(step, duration, event.target, (uint8_t)event.value,
+                 midiPreviewTimingOffset(event.timing, ticksPerStep));
     }
   }
 }
 
-uint64_t extPreviewTrigMask(ExtSeqTrackData &seq) {
+void extPreviewLocate(ExtSeqTrackData &seq, uint8_t step, uint16_t &start,
+                      uint16_t &end, uint16_t eventCount);
+
+uint64_t extPreviewTrigMask(ExtSeqTrackData &seq, int8_t *trigTiming,
+                            uint8_t maxTrigTiming, uint8_t ticksPerStep) {
   uint64_t mask = 0;
   for (uint8_t step = 0; step < NUM_EXT_STEPS && step < 64; step++) {
-    if (seq.event_buckets.get(step) != 0) {
-      mask |= (1ULL << step);
+    uint8_t bucketCount = seq.event_buckets.get(step);
+    if (bucketCount == 0) {
+      continue;
+    }
+    mask |= (1ULL << step);
+    if (trigTiming != nullptr && step < maxTrigTiming) {
+      uint16_t eventCount = seq.event_count;
+      if (eventCount > NUM_EXT_EVENTS) {
+        eventCount = NUM_EXT_EVENTS;
+      }
+      uint16_t start = 0;
+      uint16_t end = 0;
+      extPreviewLocate(seq, step, start, end, eventCount);
+      for (uint16_t idx = start; idx < end; idx++) {
+        const ext_event_t &event = seq.events[idx];
+        if (!event.is_lock && event.event_on) {
+          trigTiming[step] =
+              (int8_t)SeqTrack::microtiming_to_ticks(event.micro_timing,
+                                                     ticksPerStep);
+          break;
+        }
+      }
     }
   }
   return mask;
@@ -219,6 +299,7 @@ uint8_t extPreviewSearchNoteOff(ExtSeqTrackData &seq, uint8_t note,
 }
 
 void extPreviewNotes(ExtSeqTrackData &seq, uint8_t sourceLength,
+                     uint8_t ticksPerStep,
                      PreviewNoteWriter &writer) {
   uint8_t length = previewLength(sourceLength);
   if (length > NUM_EXT_STEPS) {
@@ -242,7 +323,9 @@ void extPreviewNotes(ExtSeqTrackData &seq, uint8_t sourceLength,
           seq, event.event_value, step, noteOffIdx, end, length, eventCount);
       uint8_t duration =
           previewNoteDuration(step, offStep, length, noteOffIdx != 0xFFFF);
-      writer.add(step, duration, event.event_value, seq.velocities[step]);
+      writer.add(step, duration, event.event_value, seq.velocities[step],
+                 (int8_t)SeqTrack::microtiming_to_ticks(event.micro_timing,
+                                                        ticksPerStep));
     }
   }
 }
@@ -397,12 +480,105 @@ bool MCLArrangement::createPrivateSourceFromGrid(GridSlot sourceSlot,
   stored = stored && privateGrid.sync();
   privateGrid.close_file();
   if (!stored) {
+    ARR_COPY_TRACE("create-private store failed source_slot=%u row=%u dst=%u id=%lu",
+                   sourceSlot, row, dstTrack, (unsigned long)sourceId);
     return false;
   }
 
   if (sourceIdOut != nullptr) {
     *sourceIdOut = sourceId;
   }
+  ARR_COPY_TRACE(
+      "create-private source_slot=%u row=%u dst=%u source_id=%lu cell=%u:%u",
+      sourceSlot, row, dstTrack, (unsigned long)sourceId, localCol, localRow);
+  return true;
+}
+
+bool MCLArrangement::duplicatePrivateSource(uint32_t sourceId,
+                                            GridSlot sourceSlot,
+                                            GridSlot dstTrack,
+                                            uint32_t *sourceIdOut) {
+  if (sourceIdOut != nullptr) {
+    *sourceIdOut = 0;
+  }
+  if (sourceId == 0 || sourceSlot >= NUM_SLOTS || dstTrack >= NUM_SLOTS ||
+      !ensureActive()) {
+    return false;
+  }
+
+  GridColumn sourceCol = 0;
+  GridRow sourceRow = 0;
+  if (!privateSourceCell(sourceId, &sourceCol, &sourceRow)) {
+    return false;
+  }
+
+  for (uint8_t slot = 0; slot < NUM_SLOTS && slot < 32; ++slot) {
+    if (runtimePrivateSourceId(slot) == sourceId) {
+      ARR_COPY_TRACE("duplicate flush-runtime slot=%u source_id=%lu", slot,
+                     (unsigned long)sourceId);
+      flushRuntimePrivateSource(slot);
+      break;
+    }
+  }
+
+  Grid privateGrid;
+  if (!openPrivateGrid(privateGrid, true)) {
+    return false;
+  }
+
+  EmptyTrack scratch;
+  DeviceTrack *source = scratch.load_from_grid_512(sourceCol, sourceRow,
+                                                   &privateGrid);
+  if (source == nullptr || !source->is_active()) {
+    privateGrid.close_file();
+    return false;
+  }
+
+  uint32_t newSourceId = 0;
+  GridColumn localCol = 0;
+  GridRow localRow = 0;
+  uint32_t maxSourceId = (uint32_t)GRID_WIDTH * (uint32_t)GRID_LENGTH;
+  for (uint32_t candidate = 1; candidate <= maxSourceId; ++candidate) {
+    GridColumn col = 0;
+    GridRow privateRow = 0;
+    if (!privateSourceCell(candidate, &col, &privateRow)) {
+      break;
+    }
+    EmptyTrack existingScratch;
+    DeviceTrack *existing =
+        existingScratch.load_from_grid_512(col, privateRow, &privateGrid);
+    if (existing == nullptr || !existing->is_active()) {
+      newSourceId = candidate;
+      localCol = col;
+      localRow = privateRow;
+      break;
+    }
+  }
+  if (newSourceId == 0) {
+    privateGrid.close_file();
+    return false;
+  }
+
+  source->on_copy(sourceSlot & 0x0F, dstTrack & 0x0F, false);
+  bool stored = source->store_in_grid(localCol, localRow, nullptr, 0, false,
+                                      &privateGrid);
+  stored = stored && privateGrid.sync();
+  privateGrid.close_file();
+  if (!stored) {
+    ARR_COPY_TRACE(
+        "duplicate store failed old_source_id=%lu source_slot=%u dst=%u new_source_id=%lu",
+        (unsigned long)sourceId, sourceSlot, dstTrack,
+        (unsigned long)newSourceId);
+    return false;
+  }
+
+  if (sourceIdOut != nullptr) {
+    *sourceIdOut = newSourceId;
+  }
+  ARR_COPY_TRACE(
+      "duplicate old_source_id=%lu source_slot=%u dst=%u new_source_id=%lu cell=%u:%u",
+      (unsigned long)sourceId, sourceSlot, dstTrack,
+      (unsigned long)newSourceId, localCol, localRow);
   return true;
 }
 
@@ -416,7 +592,9 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
                                           uint8_t *noteMax,
                                           uint8_t *noteFlags,
                                           PrivateSourcePreviewNote *notes,
-                                          uint8_t maxNotes) {
+                                          uint8_t maxNotes,
+                                          int8_t *trigTiming,
+                                          uint8_t maxTrigTiming) {
   if (trackType != nullptr) {
     *trackType = EMPTY_TRACK_TYPE;
   }
@@ -440,6 +618,11 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
   }
   if (noteFlags != nullptr) {
     *noteFlags = 0;
+  }
+  if (trigTiming != nullptr) {
+    for (uint8_t i = 0; i < maxTrigTiming; i++) {
+      trigTiming[i] = 0;
+    }
   }
 
   GridColumn col = 0;
@@ -476,9 +659,24 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
     return false;
   }
 
+  if ((sourceId & kPreviewGridSourceFlag) == 0) {
+    for (uint8_t slot = 0; slot < NUM_SLOTS && slot < 32; ++slot) {
+      if (runtime_private_source_ids_[slot] != sourceId) {
+        continue;
+      }
+      GridDeviceTrack *gdt = mcl_actions.get_grid_dev_track(slot);
+      if (gdt != nullptr && gdt->seq_track != nullptr &&
+          gdt->mem_slot_idx < GRID_WIDTH) {
+        copyLiveSeqToPrivateTrack(source, gdt, (uint8_t)(slot & 0x0F));
+      }
+      break;
+    }
+  }
+
   uint8_t outType = source->active;
   uint8_t outLength = previewLength(source->link.length);
   uint8_t outSpeed = source->link.speed_value();
+  uint8_t outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
   uint64_t outMask = 0;
 #if !defined(__AVR__)
   PreviewNoteWriter noteWriter;
@@ -498,16 +696,23 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
       outLength = previewLength(seq.track_length != 0 ? seq.track_length
                                                        : source->link.length);
       outSpeed = previewSpeed(seq.track_speed, source->link);
-      outMask = seq.trig_mask;
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = stepSeqPreviewTrigMask(seq, trigTiming, maxTrigTiming,
+                                       outTicksPerStep);
     } else {
-      outMask = mdPreviewTrigMask(spsxTrack->seq_storage.seq_data.legacy);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = mdPreviewTrigMask(spsxTrack->seq_storage.seq_data.legacy,
+                                  trigTiming, maxTrigTiming,
+                                  outTicksPerStep);
     }
     break;
   }
   case MD_TRACK_TYPE: {
     auto *mdTrack = source->as<MDTrack>();
     if (mdTrack != nullptr) {
-      outMask = mdPreviewTrigMask(mdTrack->seq_data);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = mdPreviewTrigMask(mdTrack->seq_data, trigTiming,
+                                  maxTrigTiming, outTicksPerStep);
     }
     break;
   }
@@ -517,9 +722,11 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
     if (midiTrack != nullptr) {
       outLength = previewLength(midiTrack->seq_data.length);
       outSpeed = midiTrack->seq_data.speed;
-      outMask = midiPreviewTrigMask(midiTrack->seq_data);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = midiPreviewTrigMask(midiTrack->seq_data, trigTiming,
+                                    maxTrigTiming, outTicksPerStep);
       if (collectNotes) {
-        midiPreviewNotes(midiTrack->seq_data, noteWriter);
+        midiPreviewNotes(midiTrack->seq_data, outTicksPerStep, noteWriter);
       }
     }
     break;
@@ -527,9 +734,12 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
   case EXT_TRACK_TYPE: {
     auto *extTrack = source->as<ExtTrack>();
     if (extTrack != nullptr) {
-      outMask = extPreviewTrigMask(extTrack->seq_data);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = extPreviewTrigMask(extTrack->seq_data, trigTiming,
+                                   maxTrigTiming, outTicksPerStep);
       if (collectNotes) {
-        extPreviewNotes(extTrack->seq_data, outLength, noteWriter);
+        extPreviewNotes(extTrack->seq_data, outLength, outTicksPerStep,
+                        noteWriter);
       }
     }
     break;
@@ -537,9 +747,12 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
   case A4_TRACK_TYPE: {
     auto *a4Track = source->as<A4Track>();
     if (a4Track != nullptr) {
-      outMask = extPreviewTrigMask(a4Track->seq_data);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = extPreviewTrigMask(a4Track->seq_data, trigTiming,
+                                   maxTrigTiming, outTicksPerStep);
       if (collectNotes) {
-        extPreviewNotes(a4Track->seq_data, outLength, noteWriter);
+        extPreviewNotes(a4Track->seq_data, outLength, outTicksPerStep,
+                        noteWriter);
       }
     }
     break;
@@ -547,9 +760,12 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
   case MNM_TRACK_TYPE: {
     auto *mnmTrack = source->as<MNMTrack>();
     if (mnmTrack != nullptr) {
-      outMask = extPreviewTrigMask(mnmTrack->seq_data);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = extPreviewTrigMask(mnmTrack->seq_data, trigTiming,
+                                   maxTrigTiming, outTicksPerStep);
       if (collectNotes) {
-        extPreviewNotes(mnmTrack->seq_data, outLength, noteWriter);
+        extPreviewNotes(mnmTrack->seq_data, outLength, outTicksPerStep,
+                        noteWriter);
       }
     }
     break;
@@ -559,9 +775,11 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
     if (a4MidiTrack != nullptr) {
       outLength = previewLength(a4MidiTrack->seq_data.length);
       outSpeed = a4MidiTrack->seq_data.speed;
-      outMask = midiPreviewTrigMask(a4MidiTrack->seq_data);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = midiPreviewTrigMask(a4MidiTrack->seq_data, trigTiming,
+                                    maxTrigTiming, outTicksPerStep);
       if (collectNotes) {
-        midiPreviewNotes(a4MidiTrack->seq_data, noteWriter);
+        midiPreviewNotes(a4MidiTrack->seq_data, outTicksPerStep, noteWriter);
       }
     }
     break;
@@ -571,9 +789,11 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
     if (mnmMidiTrack != nullptr) {
       outLength = previewLength(mnmMidiTrack->seq_data.length);
       outSpeed = mnmMidiTrack->seq_data.speed;
-      outMask = midiPreviewTrigMask(mnmMidiTrack->seq_data);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = midiPreviewTrigMask(mnmMidiTrack->seq_data, trigTiming,
+                                    maxTrigTiming, outTicksPerStep);
       if (collectNotes) {
-        midiPreviewNotes(mnmMidiTrack->seq_data, noteWriter);
+        midiPreviewNotes(mnmMidiTrack->seq_data, outTicksPerStep, noteWriter);
       }
     }
     break;
@@ -584,9 +804,11 @@ bool MCLArrangement::privateSourcePreview(uint32_t sourceId,
     if (tbdMidiTrack != nullptr) {
       outLength = previewLength(tbdMidiTrack->seq_data.length);
       outSpeed = tbdMidiTrack->seq_data.speed;
-      outMask = midiPreviewTrigMask(tbdMidiTrack->seq_data);
+      outTicksPerStep = SeqTrack::get_ticks_per_step(outSpeed);
+      outMask = midiPreviewTrigMask(tbdMidiTrack->seq_data, trigTiming,
+                                    maxTrigTiming, outTicksPerStep);
       if (collectNotes) {
-        midiPreviewNotes(tbdMidiTrack->seq_data, noteWriter);
+        midiPreviewNotes(tbdMidiTrack->seq_data, outTicksPerStep, noteWriter);
       }
     }
     break;
@@ -694,8 +916,8 @@ bool MCLArrangement::makeClipLocal(uint32_t startQ12, uint32_t durationQ12,
   }
 
   clip.sourceKind = mclarrfile::CLIP_SOURCE_PRIVATE;
-  clip.sourceTrack = clip.track;
-  clip.sourceFlags = 0;
+  clip.sourceTrack = sourceSlot;
+  clip.sourceFlags = mclarrfile::encodePrivateSourceSlot(clip.track);
   clip.sourceReserved = 0;
   clip.sourceId = sourceId;
 
@@ -794,12 +1016,15 @@ uint32_t MCLArrangement::runtimePrivateSourceId(uint8_t dst) const {
   return runtime_private_source_ids_[dst];
 }
 
-void MCLArrangement::setRuntimePrivateSource(uint8_t dst, uint32_t sourceId) {
+void MCLArrangement::setRuntimePrivateSource(uint8_t dst, uint32_t sourceId,
+                                             uint8_t sourceSlot) {
   if (dst >= NUM_SLOTS) {
     return;
   }
   uint32_t previousSourceId = runtime_private_source_ids_[dst];
   runtime_private_source_ids_[dst] = sourceId;
+  runtime_private_source_slots_[dst] =
+      sourceSlot < NUM_SLOTS ? sourceSlot : dst;
   if (dst < 32 && previousSourceId != sourceId) {
     runtime_private_dirty_mask_ &= ~(uint32_t)(1ul << dst);
   }
@@ -813,6 +1038,7 @@ void MCLArrangement::clearRuntimePrivateSource(uint8_t dst) {
     flushRuntimePrivateSource(dst);
   }
   runtime_private_source_ids_[dst] = 0;
+  runtime_private_source_slots_[dst] = 0;
   if (dst < 32) {
     runtime_private_dirty_mask_ &= ~(uint32_t)(1ul << dst);
   }
@@ -825,6 +1051,7 @@ void MCLArrangement::clearRuntimePrivateSources(uint32_t mask) {
         flushRuntimePrivateSource(slot);
       }
       runtime_private_source_ids_[slot] = 0;
+      runtime_private_source_slots_[slot] = 0;
     }
   }
   runtime_private_dirty_mask_ &= ~mask;
@@ -890,7 +1117,12 @@ bool MCLArrangement::flushRuntimePrivateSource(uint8_t dst) {
   }
 
   uint8_t trackNumber = (uint8_t)(dst & 0x0F);
+  uint8_t sourceTrackNumber =
+      (uint8_t)(runtime_private_source_slots_[dst] & 0x0F);
   bool copiedSeq = copyLiveSeqToPrivateTrack(live, gdt, trackNumber);
+  if (copiedSeq && sourceTrackNumber != trackNumber) {
+    live->on_copy(trackNumber, sourceTrackNumber, false);
+  }
   bool stored = copiedSeq
                     ? live->write_grid(live->_this(), live->get_store_size(),
                                        localCol, localRow, &privateGrid)
@@ -912,6 +1144,8 @@ bool MCLArrangement::markRuntimePrivateSourceEdited(uint8_t dst) {
   }
   if (dst < 32) {
     runtime_private_dirty_mask_ |= (uint32_t)(1ul << dst);
+    sps_host_arr_bridge.notifyDirty(
+        0xFF, (uint8_t)spsarr::DIRTY_LOCAL_PREVIEW);
   }
   return true;
 }
@@ -963,7 +1197,7 @@ bool MCLArrangement::loadQueuedPrivateSource(GridSlot sourceSlot, GridRow row,
   *out = scratch.load_from_grid_512(localCol, localRow, &privateGrid);
   privateGrid.close_file();
   if (*out != nullptr) {
-    setRuntimePrivateSource(runtimeDst, sourceId);
+    setRuntimePrivateSource(runtimeDst, sourceId, sourceSlot);
   } else {
     clearRuntimePrivateSource(runtimeDst);
   }

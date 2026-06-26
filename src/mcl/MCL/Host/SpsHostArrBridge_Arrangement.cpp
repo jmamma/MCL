@@ -12,6 +12,12 @@ using namespace sps_host_arr_internal;
 
 namespace {
 
+#if !defined(__AVR__) && defined(DEBUGMODE)
+#define ARR_COPY_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-copy-mcl] " fmt, ##__VA_ARGS__)
+#else
+#define ARR_COPY_TRACE(fmt, ...) do { } while (0)
+#endif
+
 void putArrAutomationLane(uint8_t *dst,
                           const mclarrfile::AutomationLane &lane) {
     dst[0] = lane.track;
@@ -60,6 +66,16 @@ bool automationLaneHeaderValid(const mclarrfile::AutomationLane &lane,
            lane.pointCount <= maxPoints &&
            lane.valueType <= mclarrfile::AUTOMATION_VALUE_U14 &&
            lane.targetType <= mclarrfile::AUTOMATION_TARGET_PERF;
+}
+
+bool arrPreviewTimingHasValues(const int8_t *timing, uint8_t count) {
+    if (timing == nullptr)
+        return false;
+    for (uint8_t i = 0; i < count; i++) {
+        if (timing[i] != 0)
+            return true;
+    }
+    return false;
 }
 
 }  // namespace
@@ -324,15 +340,19 @@ void SpsHostArrBridge::onReqArrLocalPreview(uint8_t tag, const uint8_t* b,
     uint8_t noteFlags = 0;
     MCLArrangement::PrivateSourcePreviewNote
         notes[spsarr::kArrLocalPreviewMaxNoteRecords] = {};
+    int8_t trigTiming[spsarr::kArrLocalPreviewMaxTrigTimingRecords] = {};
     bool available = mcl_arrangement.privateSourcePreview(
         sourceId, &trackType, &length, &speed, &trigMask, &noteCount, &noteMin,
         &noteMax, &noteFlags, notes,
-        (uint8_t)spsarr::kArrLocalPreviewMaxNoteRecords);
+        (uint8_t)spsarr::kArrLocalPreviewMaxNoteRecords, trigTiming,
+        (uint8_t)spsarr::kArrLocalPreviewMaxTrigTimingRecords);
 
     uint8_t body[spsarr::kArrLocalPreviewBytes +
                  spsarr::kArrLocalPreviewNoteHeaderBytes +
                  spsarr::kArrLocalPreviewMaxNoteRecords *
-                     spsarr::kArrLocalPreviewNoteRecordBytes] = {};
+                     spsarr::kArrLocalPreviewNoteRecordBytes +
+                 spsarr::kArrLocalPreviewNoteTimingBytes +
+                 spsarr::kArrLocalPreviewMaxTrigTimingRecords] = {};
     spsArrPutU32(body + 0, sourceId);
     body[4] = available ? 1 : 0;
     body[5] = trackType;
@@ -340,7 +360,13 @@ void SpsHostArrBridge::onReqArrLocalPreview(uint8_t tag, const uint8_t* b,
     body[7] = speed;
     spsArrPutU64(body + 8, trigMask);
     uint16_t bodyLen = spsarr::kArrLocalPreviewBytes;
-    if (available && noteCount > 0) {
+    bool hasTrigTiming = arrPreviewTimingHasValues(
+        trigTiming, (uint8_t)spsarr::kArrLocalPreviewMaxTrigTimingRecords);
+    if (hasTrigTiming)
+        noteFlags |= spsarr::kArrLocalPreviewNoteFlagTrigMicrotiming;
+    bool hasNoteTiming =
+        (noteFlags & spsarr::kArrLocalPreviewNoteFlagMicrotiming) != 0;
+    if (available && (noteCount > 0 || hasTrigTiming)) {
         if (noteCount > spsarr::kArrLocalPreviewMaxNoteRecords) {
             noteCount = spsarr::kArrLocalPreviewMaxNoteRecords;
         }
@@ -354,6 +380,16 @@ void SpsHostArrBridge::onReqArrLocalPreview(uint8_t tag, const uint8_t* b,
             body[off++] = notes[i].length;
             body[off++] = notes[i].note;
             body[off++] = notes[i].velocity;
+        }
+        if (hasNoteTiming) {
+            for (uint8_t i = 0; i < noteCount; i++)
+                body[off++] = (uint8_t)notes[i].timing;
+        }
+        if (hasTrigTiming) {
+            for (uint8_t i = 0;
+                 i < spsarr::kArrLocalPreviewMaxTrigTimingRecords; i++) {
+                body[off++] = (uint8_t)trigTiming[i];
+            }
         }
         bodyLen = off;
     }
@@ -1095,14 +1131,66 @@ void SpsHostArrBridge::onArrMakeLocal(uint8_t tag, const uint8_t* b,
         sendErr(tag, ERR_BUSY, track);
         return;
     }
+    ARR_COPY_TRACE(
+        "make-local start=%lu dur=%lu lane=%u row=%u source_slot=%u source_id=%lu converted=%u",
+        (unsigned long)startQ12, (unsigned long)durationQ12, track, row,
+        sourceSlot, (unsigned long)sourceId,
+        convertedArrangementClip ? 1u : 0u);
 
-    uint8_t ack[17] = {CMD_ARR_MAKE_LOCAL, 1};
+    uint8_t ack[18] = {CMD_ARR_MAKE_LOCAL, 1};
     spsArrPutU32(ack + 2, startQ12);
     spsArrPutU32(ack + 6, durationQ12);
     ack[10] = track;
     ack[11] = row;
     ack[12] = sourceSlot;
     spsArrPutU32(ack + 13, sourceId);
+    ack[17] = mclarrfile::encodePrivateSourceSlot(track);
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+}
+
+void SpsHostArrBridge::onArrDuplicateLocalSource(uint8_t tag,
+                                                 const uint8_t* b,
+                                                 uint16_t n) {
+    if (n < 16) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint32_t oldSourceId = spsArrGetU32(b + 0);
+    uint32_t startQ12 = spsArrGetU32(b + 4);
+    uint32_t durationQ12 = spsArrGetU32(b + 8);
+    uint8_t track = b[12];
+    uint8_t row = b[13];
+    uint8_t sourceSlot = b[14];
+    uint8_t targetSlot = b[15];
+    if (oldSourceId == 0 || track >= spsarr::kNumGridSlots ||
+        row >= GRID_LENGTH || sourceSlot >= NUM_SLOTS ||
+        targetSlot >= NUM_SLOTS || durationQ12 == 0) {
+        sendErr(tag, ERR_RANGE, track);
+        return;
+    }
+
+    uint32_t newSourceId = 0;
+    if (!mcl_arrangement.duplicatePrivateSource(oldSourceId, sourceSlot,
+                                                targetSlot, &newSourceId)) {
+        sendErr(tag, ERR_BUSY, track);
+        return;
+    }
+    ARR_COPY_TRACE(
+        "duplicate-local old_source_id=%lu new_source_id=%lu lane=%u row=%u source_slot=%u target_slot=%u start=%lu dur=%lu",
+        (unsigned long)oldSourceId, (unsigned long)newSourceId, track, row,
+        sourceSlot, targetSlot, (unsigned long)startQ12,
+        (unsigned long)durationQ12);
+
+    uint8_t ack[18] = {CMD_ARR_MAKE_LOCAL, 1};
+    spsArrPutU32(ack + 2, startQ12);
+    spsArrPutU32(ack + 6, durationQ12);
+    ack[10] = track;
+    ack[11] = row;
+    ack[12] = targetSlot;
+    spsArrPutU32(ack + 13, newSourceId);
+    ack[17] = mclarrfile::encodePrivateSourceSlot(targetSlot);
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
     notifyDirty(0xFF, DIRTY_ARRANGEMENT);
 }

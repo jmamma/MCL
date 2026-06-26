@@ -72,6 +72,7 @@ private:
     void onSetArrClipFade(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSeekLoad(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrMakeLocal(uint8_t tag, const uint8_t* b, uint16_t n);
+    void onArrDuplicateLocalSource(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrLocalToGrid(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSetLoop(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetLoadSettings(uint8_t tag, const uint8_t* b, uint16_t n);

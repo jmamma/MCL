@@ -255,7 +255,31 @@ inline void initGridSource(Clip& clip, uint8_t sourceSlot) {
     clip.sourceId = 0;
 }
 
+inline uint8_t encodePrivateSourceSlot(uint8_t sourceSlot) {
+    return sourceSlot < kGridSourceSlotCount ? (uint8_t)(sourceSlot + 1) : 0;
+}
+
+inline bool decodePrivateSourceSlot(uint8_t sourceFlags,
+                                    uint8_t& sourceSlot) {
+    if (sourceFlags == 0 || sourceFlags > kGridSourceSlotCount) {
+        return false;
+    }
+    sourceSlot = (uint8_t)(sourceFlags - 1);
+    return true;
+}
+
+inline uint8_t clipPrivateSourceSlot(const Clip& clip) {
+    uint8_t sourceSlot = 0;
+    if (decodePrivateSourceSlot(clip.sourceFlags, sourceSlot)) {
+        return sourceSlot;
+    }
+    return clip.track;
+}
+
 inline uint8_t clipSourceSlot(const Clip& clip) {
+    if (clip.sourceKind == CLIP_SOURCE_PRIVATE) {
+        return clipPrivateSourceSlot(clip);
+    }
     return clip.sourceTrack < kGridSourceSlotCount ? clip.sourceTrack : clip.track;
 }
 

@@ -541,14 +541,15 @@ public:
     return true;
   }
 
-  bool addPrivate(GridSlot dst, uint32_t sourceId) {
-    if (dst >= NUM_SLOTS ||
+  bool addPrivate(GridSlot dst, GridSlot src, uint32_t sourceId) {
+    if (dst >= NUM_SLOTS || src >= NUM_SLOTS ||
         !privateSourceCell(sourceId, nullptr, nullptr)) {
       return false;
     }
+    int8_t d = (int8_t)((int)dst - (int)src);
     uint8_t group = 0xFF;
     for (uint8_t g = 0; g < count_; ++g) {
-      if (delta_[g] == 0) {
+      if (delta_[g] == d) {
         group = g;
         break;
       }
@@ -558,11 +559,11 @@ public:
         return false;
       }
       group = count_++;
-      delta_[group] = 0;
+      delta_[group] = d;
     }
-    mask_[group] |= (uint32_t)(1ul << dst);
-    rows_[group][dst] = LOAD_QUEUE_PRIVATE_ROW;
-    privateIds_[group][dst] = sourceId;
+    mask_[group] |= (uint32_t)(1ul << src);
+    rows_[group][src] = LOAD_QUEUE_PRIVATE_ROW;
+    privateIds_[group][src] = sourceId;
     return true;
   }
 
@@ -607,7 +608,9 @@ private:
 
 static bool addClipLoad(ArrangerLoadGroups &groups, const mclarrfile::Clip &clip) {
   if (clip.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE) {
-    return groups.addPrivate((GridSlot)clip.track, clip.sourceId);
+    return groups.addPrivate((GridSlot)clip.track,
+                             (GridSlot)mclarrfile::clipSourceSlot(clip),
+                             clip.sourceId);
   }
   return groups.add((GridSlot)clip.track,
                     (GridSlot)mclarrfile::clipSourceSlot(clip),

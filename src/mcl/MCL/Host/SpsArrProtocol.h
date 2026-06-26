@@ -101,6 +101,7 @@ enum Cmd {
     CMD_GRID_UNDO = 0x6B,
     CMD_SET_ARR_AUTOMATION_LANE = 0x6C,
     CMD_SET_ARR_AUTOMATION_LANE_CHUNK = 0x6D,
+    CMD_ARR_DUP_LOCAL_SOURCE = 0x6E,
 
     CMD_NOTIFY_ACTIVE = 0x70,
     CMD_NOTIFY_DIRTY = 0x71,
@@ -223,7 +224,12 @@ static const int kArrLocalPreviewBytes = 16;
 static const int kArrLocalPreviewNoteHeaderBytes = 4;
 static const int kArrLocalPreviewNoteRecordBytes = 4;
 static const int kArrLocalPreviewMaxNoteRecords = 32;
+static const int kArrLocalPreviewNoteTimingBytes =
+    kArrLocalPreviewMaxNoteRecords;
+static const int kArrLocalPreviewMaxTrigTimingRecords = 64;
 static const uint8_t kArrLocalPreviewNoteFlagTruncated = 1 << 0;
+static const uint8_t kArrLocalPreviewNoteFlagMicrotiming = 1 << 1;
+static const uint8_t kArrLocalPreviewNoteFlagTrigMicrotiming = 1 << 2;
 static const uint32_t kArrPreviewGridSourceFlag = 0x80000000u;
 static const int kArrPreviewGridSourceTrackShift = 8;
 static const uint32_t kArrPreviewGridSourceTrackMask = 0xFFu;

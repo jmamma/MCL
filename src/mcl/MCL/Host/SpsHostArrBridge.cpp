@@ -91,6 +91,9 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_SET_ARR_CLIP_FADE: onSetArrClipFade(p.tag, b, n); break;
         case CMD_ARR_SEEK_LOAD: onArrSeekLoad(p.tag, b, n); break;
         case CMD_ARR_MAKE_LOCAL: onArrMakeLocal(p.tag, b, n); break;
+        case CMD_ARR_DUP_LOCAL_SOURCE:
+            onArrDuplicateLocalSource(p.tag, b, n);
+            break;
         case CMD_ARR_LOCAL_TO_GRID: onArrLocalToGrid(p.tag, b, n); break;
         case CMD_ARR_SET_LOOP: onArrSetLoop(p.tag, b, n); break;
         case CMD_SET_LOAD_SETTINGS: onSetLoadSettings(p.tag, b, n); break;
