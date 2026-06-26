@@ -10,7 +10,6 @@ public:
   bool handleEvent(gui_event_t *event);
 
 private:
-  bool top_left_button_consumed_page(uint8_t pg) const;
   void open_page_select();
   bool handle_primary_ui_button(gui_event_t *event);
   bool handle_secondary_ui_button(gui_event_t *event,

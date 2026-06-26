@@ -3,6 +3,7 @@
 #include "SpsHostSeqBridge.h"
 #include "SpsHostSeqBridge_Internal.h"
 #include "MCLPlatformFeatures.h"
+#include "Sequencer/PtcVoiceRouter.h"
 #if MCL_FEATURE_HOST_ARRANGER
 #include "Arrangement/MCLArrangement.h"
 #endif
@@ -367,7 +368,9 @@ bool SpsHostSeqBridge::applyExtSetTrackProp(const uint8_t* b, uint16_t n) {
             markArrangerLocalExtEdit(b[0], b[1]);
             return true;
         case EXTPROP_CHANNEL:
-            track.set_channel(b[3] & 0x0F);
+            track.set_channel(b[3] < PTC_EXT_ROUTE_CHANNEL_END
+                                  ? b[3]
+                                  : (b[3] & 0x0F));
             markArrangerLocalExtEdit(b[0], b[1]);
             return true;
         default:

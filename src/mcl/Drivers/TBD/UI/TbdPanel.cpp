@@ -229,6 +229,20 @@ static bool tbd_bank_popup_tap_allowed(PageIndex pg) {
   return true;
 }
 
+static bool tbd_consume_unavailable_primary_ui(PageIndex pg) {
+  if (grid_io_overlay.is_active()) return false;
+  switch (pg) {
+  case PAGE_SELECT_PAGE:
+  case BANK_POPUP_PAGE:
+  case TEXT_INPUT_PAGE:
+  case GRID_SAVE_PAGE:
+  case GRID_LOAD_PAGE:
+    return false;
+  default:
+    return true;
+  }
+}
+
 static void tbd_page_select_current_page(PageIndex pg) {
   const uint8_t count = sizeof(page_select_page.page_entries) /
                         sizeof(page_select_page.page_entries[0]);
@@ -241,13 +255,6 @@ static void tbd_page_select_current_page(PageIndex pg) {
       return;
     }
   }
-}
-
-bool TbdPanel::top_left_button_consumed_page(uint8_t pg) const {
-  return pg != PAGE_SELECT_PAGE && pg != BANK_POPUP_PAGE &&
-         pg != TEXT_INPUT_PAGE && pg != GRID_SAVE_PAGE &&
-         pg != GRID_LOAD_PAGE &&
-         !grid_io_overlay.is_active();
 }
 
 bool TbdPanel::handle_primary_ui_button(gui_event_t *event) {
@@ -820,10 +827,7 @@ bool TbdPanel::handleEvent(gui_event_t *event) {
 
   if (orig_src == ButtonsClass::BUTTON2 &&
       !driver_ui_blocked &&
-      top_left_button_consumed_page(pg)) {
-    if (is_press) {
-      open_page_select();
-    }
+      tbd_consume_unavailable_primary_ui(pg)) {
     return true;
   }
 
