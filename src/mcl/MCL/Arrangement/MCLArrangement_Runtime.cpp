@@ -124,6 +124,14 @@ void MCLArrangement::resetPlaybackForTransport(bool clearReleasedTracks) {
   grid_task.load_queue.init();
 }
 
+void MCLArrangement::setHostPlaybackSuspended(bool suspended) {
+  host_playback_suspended_ = suspended;
+  if (suspended) {
+    clearLoopRegion();
+    resetPlayback();
+  }
+}
+
 void MCLArrangement::setLoopRegion(uint32_t startQ12, uint32_t endQ12) {
   if (endQ12 <= startQ12 ||
       endQ12 - startQ12 < spsarr::kMinArrLoopQ12) {
@@ -451,6 +459,7 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   if (rows == nullptr || !ensureActive()) {
     return false;
   }
+  host_playback_suspended_ = false;
   if (sourceGridBank >= NUM_GRIDS) {
     sourceGridBank = 0;
   }
@@ -652,6 +661,7 @@ bool MCLArrangement::applyClipRuntime(uint8_t dst, DeviceTrack *track) {
 bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
                               bool allowPrestartFade,
                               bool clearReleasedTracks) {
+  host_playback_suspended_ = false;
   playback_arrangement_idx_ = mcl_cfg.active_arrangement_idx;
   playback_active_ = true;
   last_tick_q12_ = positionQ12;
@@ -825,6 +835,9 @@ void MCLArrangement::tick() {
     return;
   }
   if (MidiClock.state != MidiClockClass::STARTED) {
+    return;
+  }
+  if (host_playback_suspended_) {
     return;
   }
 

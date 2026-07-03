@@ -322,6 +322,11 @@ enum PositionNotifyFlags {
     POSITION_NOTIFY_LOOP = 1 << 0
 };
 
+enum ArrangementLoopControlFlags {
+    ARR_LOOP_ENABLED = 1 << 0,
+    ARR_LOOP_DISARM_PLAYBACK = 1 << 1
+};
+
 enum ArrangerLoadMode {
     ARR_LOAD_MANUAL = 1,
     ARR_LOAD_AUTO = 2,

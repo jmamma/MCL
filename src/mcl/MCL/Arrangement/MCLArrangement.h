@@ -56,6 +56,7 @@ public:
   void tick();
   void resetPlayback();
   void resetPlaybackForTransport(bool clearReleasedTracks = true);
+  void setHostPlaybackSuspended(bool suspended);
   void setLoopRegion(uint32_t startQ12, uint32_t endQ12);
   void clearLoopRegion();
   bool seekLoad(uint32_t positionQ12, bool immediate,
@@ -215,6 +216,7 @@ private:
   uint8_t runtime_private_source_slots_[NUM_SLOTS] = {};
   uint32_t runtime_private_dirty_mask_ = 0;
   uint32_t queued_private_source_ids_[NUM_SLOTS] = {};
+  bool host_playback_suspended_ = false;
   bool playback_active_ = false;
   bool loop_enabled_ = false;
   bool loop_entered_ = false;

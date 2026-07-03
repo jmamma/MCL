@@ -537,6 +537,8 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
                               : startStep * kHostTicksPer16th;
         MidiClock.set_transport_position(tick96);
         mcl_seq.set_transport_position(tick96);
+        if (mode == ARR_LOAD_ARRANG)
+            mcl_arrangement.setHostPlaybackSuspended(false);
         mcl_arrangement.resetPlaybackForTransport(
             (flags & ARR_LOAD_SEEK_POSITION) != 0);
     }
@@ -1253,6 +1255,7 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
         MidiClock.set_transport_position(tick96);
         mcl_seq.set_transport_position(tick96);
     }
+    mcl_arrangement.setHostPlaybackSuspended(false);
     mcl_arrangement.resetPlaybackForTransport();
 
     bool queued = mcl_arrangement.seekLoad(
@@ -1270,7 +1273,8 @@ void SpsHostArrBridge::onArrSetLoop(uint8_t tag, const uint8_t* b,
         sendErr(tag, ERR_RANGE, 0);
         return;
     }
-    bool enabled = (b[0] & 1u) != 0;
+    bool enabled = (b[0] & ARR_LOOP_ENABLED) != 0;
+    bool disarmPlayback = (b[0] & ARR_LOOP_DISARM_PLAYBACK) != 0;
     uint32_t startQ12 = spsArrGetU32(b + 1);
     uint32_t endQ12 = spsArrGetU32(b + 5);
     bool active = enabled && endQ12 > startQ12 &&
@@ -1280,6 +1284,8 @@ void SpsHostArrBridge::onArrSetLoop(uint8_t tag, const uint8_t* b,
     } else {
         mcl_arrangement.clearLoopRegion();
     }
+    if (disarmPlayback)
+        mcl_arrangement.setHostPlaybackSuspended(true);
     uint8_t ack[2] = {CMD_ARR_SET_LOOP, active ? (uint8_t)1 : (uint8_t)0};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
 }
