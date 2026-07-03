@@ -1201,25 +1201,26 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   calc_latency();
 }
 
+static inline void apply_queue_link_length(GridLink &link, GridChain &chain,
+                                           GridDeviceTrack *gdt) {
+  uint8_t chain_len = chain.get_length();
+  if (chain_len == QUANT_LEN) {
+    if (link.loops == 0) {
+      link.loops = 1;
+    }
+    return;
+  }
+
+  link.loops = 1;
+  uint8_t length =
+      (uint16_t)chain_len * 12 / gdt->seq_track->get_speed_multiplier_int();
+  link.length = length ? length : 1;
+}
+
 void MCLActions::update_chain_links(GridSlot n, GridDeviceTrack *gdt) {
 
    if (chains[n].is_mode_queue()) {
-      uint8_t chain_len = chains[n].get_length();
-      if (chain_len == QUANT_LEN) {
-        if (links[n].loops == 0) {
-          links[n].loops = 1;
-        }
-      } else {
-        links[n].loops = 1;
-        uint8_t length =
-            (uint16_t)chain_len * 12 /
-            gdt->seq_track->get_speed_multiplier_int();
-        links[n].length = length ? length : 1;
-       /* constexpr uint8_t min_steps_before_transition = 2;
-        while (links[n].loops * links[n].length < min_steps_before_transition) {
-          links[n].loops++;
-        }*/
-      }
+      apply_queue_link_length(links[n], chains[n], gdt);
       //if (links[n].length == 0) { links[n].length = 16; }
       chains[n].inc();
       links[n].row = chains[n].get_row();
@@ -1274,7 +1275,7 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
 
     GridDeviceTrack *gdt = get_grid_dev_track(n);
 
-    if (gdt == nullptr)
+    if (gdt == nullptr || gdt->seq_track == nullptr)
       continue;
 
     //Assume next transition is 2 steps away.
@@ -1282,17 +1283,30 @@ void MCLActions::cache_next_tracks(uint8_t *slot_select_array,
                         (uint32_t)next_transition + 2u) -
                     1u;
 
+    bool cache_wait_timed_out = false;
+    bool queue_mode = chains[n].is_mode_queue();
     while ((gdt->seq_track->count_down && !gdt->seq_track->cache_loaded && (MidiClock.state == 2))) {
       platform_poll();
       handleIncomingMidi();
       uint32_t counter = MidiClock.div192th_counter;
       uint32_t diff = MidiClock.clock_diff_div192(counter, next);
       if (diff == 0 || counter >= next) {
+        cache_wait_timed_out = true;
         break;
       }
       if (gui_update && diff > gui_threshold) {
          mcl.loop();
       }
+    }
+
+    if (cache_wait_timed_out && gdt->seq_track->count_down &&
+        !gdt->seq_track->cache_loaded && MidiClock.state == 2) {
+      if (queue_mode && grid_page.active_slots[n] < GRID_LENGTH) {
+        apply_queue_link_length(links[n], chains[n], gdt);
+        links[n].row = grid_page.active_slots[n];
+        send_machine[n] = 0;
+      }
+      continue;
     }
 
     update_chain_links(n, gdt);
