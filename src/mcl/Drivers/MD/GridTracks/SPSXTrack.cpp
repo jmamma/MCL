@@ -240,7 +240,9 @@ void SPSXTrack::load_seq_data(SeqTrack *seq_track) {
 }
 
 void SPSXTrack::load_immediate(uint8_t tracknumber, SeqTrack *seq_track) {
-  MD.insertMachineInKit(tracknumber, &machine);
+  // Immediate clip/grid loads follow MCL normalize semantics: LEV remains
+  // mixer-owned unless it is explicitly driven by automation or fades.
+  MD.insertMachineInKit(tracknumber, &machine, false);
   load_seq_data(seq_track);
 }
 

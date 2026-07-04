@@ -4,6 +4,10 @@
 #include "MDMessages.h"
 #include "MDSysex.h"
 #include "helpers.h"
+#include "MCLPlatformFeatures.h"
+#if MCL_FEATURE_HOST_ARRANGER
+#include "Arrangement/MCLArrangement.h"
+#endif
 #include "GUI/Pages/CommonPages.h"
 #include "MDPages.h"
 
@@ -114,12 +118,12 @@ void MDSysexListenerClass::end() {
 
       // Decode model: flags_byte = (tonal << 1) | uwFlag
       uint8_t uwFlag = flags_byte & 0x01;
-      // uint8_t tonal = (flags_byte >> 1) & 0x01;
+      uint8_t tonal = (flags_byte >> 1) & 0x01;
 
       if (uwFlag) {
         model += 128;
       }
-      MD.kit.models[track] = model;
+      MD.kit.models[track] = tonal ? ((uint32_t)model + 0x20000) : model;
 
       // Params (34 bytes for SPS-X, 24 for legacy)
       if (data_flags & 0x01) {
@@ -151,6 +155,9 @@ void MDSysexListenerClass::end() {
         MD.kit.trigGroups[track] = (trig == 0x7F) ? 255 : trig;
         MD.kit.muteGroups[track] = (mute == 0x7F) ? 255 : mute;
       }
+#if MCL_FEATURE_HOST_ARRANGER
+      mcl_arrangement.markRuntimePrivateSourceEdited(track);
+#endif
     }
     break;
   }

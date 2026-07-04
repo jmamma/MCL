@@ -2,6 +2,10 @@
 
 #include "Host/SpsHostSeqBridge.h"
 #include "SpsHostSeqBridge_Internal.h"
+#include "MCLPlatformFeatures.h"
+#if MCL_FEATURE_HOST_ARRANGER
+#include "Arrangement/MCLArrangement.h"
+#endif
 
 #include "../../Drivers/MD/MDParams.h"
 #include "GUI/Pages/CommonPages.h"
@@ -30,6 +34,18 @@ uint16_t trackMaskForLen(uint8_t len) {
 
 uint8_t mixerDeviceSlot(DeviceIdx idx) {
     return idx == DeviceIdx::Secondary ? 1 : 0;
+}
+
+void markArrangerLocalMixerEdit(uint8_t device, uint8_t track) {
+#if MCL_FEATURE_HOST_ARRANGER
+    uint8_t slot = device == MIXER_DEVICE_SECONDARY
+                       ? (uint8_t)(GRID_WIDTH + track)
+                       : track;
+    mcl_arrangement.markRuntimePrivateSourceEdited(slot);
+#else
+    (void)device;
+    (void)track;
+#endif
 }
 
 uint16_t activeMuteMask(const MixerTarget& target, uint8_t len) {
@@ -208,7 +224,10 @@ bool SpsHostSeqBridge::applyMixerSetParam(const uint8_t* b, uint16_t n) {
     for (uint8_t i = 0; i < len; i++) {
         if ((mask & (uint16_t)(1u << i)) == 0)
             continue;
-        changed = target.set_param(i, param, value, true) || changed;
+        bool trackChanged = target.set_param(i, param, value, true);
+        if (trackChanged)
+            markArrangerLocalMixerEdit(b[0], i);
+        changed = trackChanged || changed;
     }
     if (changed)
         markMixerPageDirty(b[0]);
@@ -235,7 +254,10 @@ bool SpsHostSeqBridge::applyMixerAdjustParam(const uint8_t* b, uint16_t n) {
             continue;
         MidiDeviceMixerValue value =
             target.clamp_param_value(info, (int16_t)info.value + delta);
-        changed = target.set_param(i, param, value, true) || changed;
+        bool trackChanged = target.set_param(i, param, value, true);
+        if (trackChanged)
+            markArrangerLocalMixerEdit(b[0], i);
+        changed = trackChanged || changed;
     }
     if (changed)
         markMixerPageDirty(b[0]);

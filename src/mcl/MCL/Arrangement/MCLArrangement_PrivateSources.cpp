@@ -346,6 +346,7 @@ bool copyLiveSeqToPrivateTrack(DeviceTrack *track, GridDeviceTrack *gdt,
     if (spsxTrack == nullptr) {
       return false;
     }
+    spsxTrack->get_machine_from_kit(trackNumber);
     SeqTrack::store_mod_data(spsxTrack->seq_storage.mod(), true,
                              trackNumber);
     if (mcl_seq.using_spsx_tracks) {
@@ -366,6 +367,7 @@ bool copyLiveSeqToPrivateTrack(DeviceTrack *track, GridDeviceTrack *gdt,
     if (mdTrack == nullptr) {
       return false;
     }
+    mdTrack->get_machine_from_kit(trackNumber);
     mcl_seq.md_arp_tracks[trackNumber].store_data(&mdTrack->mod_data.arp);
     mcl_seq.md_arp_tracks[trackNumber].store_phase_data(
         mdTrack->mod_data.arp_phase());
