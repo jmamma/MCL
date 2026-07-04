@@ -23,8 +23,10 @@
 
 #if defined(PLATFORM_WASM) && defined(DEBUGMODE)
 #define LOAD_FADE_TRACE(fmt, ...) DEBUG_PRINT_FN("[load-fade] " fmt, ##__VA_ARGS__)
+#define ARR_TIME_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-time] " fmt, ##__VA_ARGS__)
 #else
 #define LOAD_FADE_TRACE(fmt, ...)
+#define ARR_TIME_TRACE(fmt, ...)
 #endif
 
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
@@ -969,10 +971,25 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
                                       uint8_t *send_masks
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
                                       ,
+                                      TrackLoadFadeData *load_fade_out,
+                                      uint8_t *load_fade_valid_out,
                                       bool allow_prestart_fade
 #endif
                                       ) {
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+  if (load_fade_valid_out != nullptr) {
+    *load_fade_valid_out = 0;
+  }
+#endif
   GridColumn track_idx_dst = dst & 0xF;
+  ARR_TIME_TRACE("load-immediate begin src=%u row=%u dst=%u type=%u prestart=%u div192=%lu",
+                 i, row, dst, gdt_dst ? gdt_dst->track_type : 0,
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+                 allow_prestart_fade ? 1 : 0,
+#else
+                 0,
+#endif
+                 (unsigned long)MidiClock.div192th_counter);
   EmptyTrack scratch;
   bool rebuilt = false;
   auto *ptrack = load_and_prepare_track(i, row, gdt_dst->track_type,
@@ -981,6 +998,8 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
 
   if (ptrack == nullptr) {
     // DEBUG_PRINTLN("bad read");
+    ARR_TIME_TRACE("load-immediate fail read src=%u row=%u dst=%u div192=%lu",
+                   i, row, dst, (unsigned long)MidiClock.div192th_counter);
     return false;
   } // read failure
 
@@ -1001,6 +1020,20 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
   uint16_t fade_elapsed = clear_runtime_fade_elapsed(ptrack);
   ptrack->store_in_mem(gdt_dst->mem_slot_idx);
   restore_runtime_fade_elapsed(ptrack, fade_elapsed);
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+  if (load_fade_out != nullptr && load_fade_valid_out != nullptr) {
+    if (const TrackLoadFadeData *fade = ptrack->load_fade_data()) {
+      *load_fade_out = *fade;
+      *load_fade_valid_out = 1;
+    }
+  }
+  ARR_TIME_TRACE("load-immediate done src=%u row=%u dst=%u loadSound=%u rebuilt=%u fadeValid=%u div192=%lu",
+                 i, row, dst, load_sound ? 1 : 0, rebuilt ? 1 : 0,
+                 (load_fade_valid_out != nullptr && *load_fade_valid_out)
+                     ? 1
+                     : 0,
+                 (unsigned long)MidiClock.div192th_counter);
+#endif
 #if defined(PLATFORM_WASM) && defined(DEBUGMODE)
   if (const TrackLoadFadeData *fade = ptrack->load_fade_data()) {
     LOAD_FADE_TRACE("immediate src=%u row=%u dst=%u type=%u fade flags=%u dur=%u amount=%u curve=%d",
@@ -1011,13 +1044,9 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
                     i, row, dst, gdt_dst->track_type);
   }
 #endif
-#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
-  start_load_fade_at(dst, ptrack->load_fade_data(), MidiClock.div192th_counter,
-                     allow_prestart_fade);
-#else
+#if !MCL_FEATURE_HOST_LOAD_FADE_SEEK
   start_load_fade_at(dst, ptrack->load_fade_data(), MidiClock.div192th_counter);
 #endif
-
   return true;
 }
 
@@ -1046,6 +1075,10 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   device_manager.get_devices(devs);
 
   uint8_t send_masks[NUM_SLOTS] = {0};
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+  TrackLoadFadeData load_fades[NUM_SLOTS];
+  uint8_t load_fade_valid[NUM_SLOTS] = {0};
+#endif
   uint8_t mute_states[NUM_SLOTS];
   memset(mute_states, 255, sizeof(mute_states));
 
@@ -1059,6 +1092,14 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   GridSlot first_slot = 255;
   GridRow current_row = grid_page.getRow();
   bool any_loaded = false;
+  ARR_TIME_TRACE("send-tracks begin modeOffset=%u prestart=%u div192=%lu",
+                 load_offset,
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+                 allow_prestart_fades ? 1 : 0,
+#else
+                 0,
+#endif
+                 (unsigned long)MidiClock.div192th_counter);
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
     if (slot_select_array[i] == 0) { continue; }
@@ -1094,6 +1135,7 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
     if (!load_track_immediate(row, i, dst, gdt_dst, send_masks
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
                               ,
+                              &load_fades[dst], &load_fade_valid[dst],
                               allow_prestart_fades
 #endif
                               )) {
@@ -1106,6 +1148,8 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   }
 
   if (!any_loaded) {
+    ARR_TIME_TRACE("send-tracks no-load div192=%lu",
+                   (unsigned long)MidiClock.div192th_counter);
     return;
   }
 
@@ -1154,12 +1198,33 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH);
     }
   }
+  ARR_TIME_TRACE("send-tracks kit-sent latencyMs=%u div192=%lu",
+                 latency_ms, (unsigned long)MidiClock.div192th_counter);
 
   // note, do not re-enter grid_task -- stackoverflow
 
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+  uint32_t load_fade_start_clock = MidiClock.div192th_counter;
+#endif
   while (clock_diff(myclock, read_clock_ms()) < latency_ms) {
     platform_wait_poll();
   }
+  ARR_TIME_TRACE("send-tracks wait-done div192=%lu",
+                 (unsigned long)MidiClock.div192th_counter);
+
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+  for (uint8_t n = 0; n < NUM_SLOTS; n++) {
+    if (load_fade_valid[n] == 0) {
+      continue;
+    }
+    ARR_TIME_TRACE("send-tracks start-fade slot=%u flags=%u dur=%u elapsed=%u div192=%lu",
+                   n, load_fades[n].flags, load_fades[n].duration_q12,
+                   load_fades[n].elapsed_q12(),
+                   (unsigned long)MidiClock.div192th_counter);
+    start_load_fade_at(n, &load_fades[n], load_fade_start_clock,
+                       allow_prestart_fades);
+  }
+#endif
 
   restore_mute_states(mute_states);
   /*All the tracks have been sent so clear the write queue*/

@@ -14,9 +14,23 @@ namespace {
 
 #if !defined(__AVR__) && defined(DEBUGMODE)
 #define ARR_COPY_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-copy-mcl] " fmt, ##__VA_ARGS__)
+#define ARR_TIME_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-time] " fmt, ##__VA_ARGS__)
 #else
 #define ARR_COPY_TRACE(fmt, ...) do { } while (0)
+#define ARR_TIME_TRACE(fmt, ...) do { } while (0)
 #endif
+
+static constexpr uint16_t kMaxClipStageRecords = 2048;
+
+uint32_t bridgeCurrentClockQ12() {
+    uint32_t ticksPer16th = MidiClock.div192th_ticks_per_16th();
+    if (ticksPer16th == 0) {
+        ticksPer16th = 12;
+    }
+    const uint32_t div192 = MidiClock.div192th_counter;
+    return (div192 / ticksPer16th) * 12u +
+           ((div192 % ticksPer16th) * 12u) / ticksPer16th;
+}
 
 void putArrAutomationLane(uint8_t *dst,
                           const mclarrfile::AutomationLane &lane) {
@@ -58,6 +72,33 @@ void getArrAutomationPoint(const uint8_t *src,
     point.value = spsArrGetU16(src + 4);
     point.interp = src[6];
     point.curve = (int8_t)src[7];
+}
+
+void getArrClip(const uint8_t *src, mclarrfile::Clip &clip) {
+    clip.startQ12 = spsArrGetU32(src + 0);
+    clip.durationQ12 = spsArrGetU32(src + 4);
+    clip.repeatQ12 = spsArrGetU32(src + 8);
+    clip.track = src[12];
+    clip.row = src[13];
+    clip.flags = src[14];
+    clip.reserved = src[15];
+    clip.fadeFlags = src[16];
+    clip.fadeTarget = src[17];
+    clip.fadeDurationQ12 = spsArrGetU16(src + 18);
+    clip.fadeAmount = src[20];
+    clip.fadeCurve = (int8_t)src[21];
+    clip.fadeReserved = spsArrGetU16(src + 22);
+    clip.endFadeFlags = src[24];
+    clip.endFadeTarget = src[25];
+    clip.endFadeDurationQ12 = spsArrGetU16(src + 26);
+    clip.endFadeAmount = src[28];
+    clip.endFadeCurve = (int8_t)src[29];
+    clip.endFadeReserved = spsArrGetU16(src + 30);
+    clip.sourceKind = src[32];
+    clip.sourceTrack = src[33];
+    clip.sourceFlags = src[34];
+    clip.sourceReserved = src[35];
+    clip.sourceId = spsArrGetU32(src + 36);
 }
 
 bool automationLaneHeaderValid(const mclarrfile::AutomationLane &lane,
@@ -107,6 +148,34 @@ bool SpsHostArrBridge::beginAutomationStage(
     automation_stage_total_ = lane.pointCount;
     automation_stage_received_ = 0;
     automation_stage_active_ = true;
+    return true;
+}
+
+void SpsHostArrBridge::clearClipStage() {
+    if (clip_stage_clips_ != nullptr) {
+        free(clip_stage_clips_);
+        clip_stage_clips_ = nullptr;
+    }
+    clip_stage_active_ = false;
+    clip_stage_total_ = 0;
+    clip_stage_received_ = 0;
+}
+
+bool SpsHostArrBridge::beginClipStage(uint16_t total) {
+    clearClipStage();
+    if (total > kMaxClipStageRecords) {
+        return false;
+    }
+    if (total > 0) {
+        clip_stage_clips_ = static_cast<mclarrfile::Clip*>(
+            malloc(sizeof(mclarrfile::Clip) * (size_t)total));
+        if (clip_stage_clips_ == nullptr) {
+            return false;
+        }
+    }
+    clip_stage_total_ = total;
+    clip_stage_received_ = 0;
+    clip_stage_active_ = true;
     return true;
 }
 
@@ -675,6 +744,12 @@ void SpsHostArrBridge::onLoadSlots(uint8_t tag, const uint8_t* b, uint16_t n) {
 #else
     grid_task.load_queue.put(queueMode, rowSelect, loadOffset);
 #endif
+    if ((flags & (ARR_LOAD_START_TRANSPORT | ARR_LOAD_SEEK_POSITION)) != 0) {
+        grid_task.service_host_arranger_load_before_edit();
+        if (isArrangerLoad) {
+            mcl_arrangement.setHostPlaybackSuspended(true);
+        }
+    }
     uint8_t ack[2] = {CMD_LOAD_SLOTS, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
 }
@@ -790,7 +865,7 @@ void SpsHostArrBridge::onArrSelect(uint8_t tag, const uint8_t* b,
         return;
     }
     mcl_arrangement.resetPlayback();
-    mcl_arrangement.seekLoadCurrentPosition(true);
+    mcl_arrangement.seekLoadCurrentPosition(true, true);
     uint8_t ack[2] = {CMD_ARR_SELECT, 1};
     sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
     notifyDirty(0xFF, (uint8_t)(DIRTY_ARRANGEMENT | DIRTY_ACTIVE));
@@ -905,6 +980,10 @@ void SpsHostArrBridge::onSetArrAutomationLane(uint8_t tag, const uint8_t* b,
 
     mclarrfile::AutomationLane lane;
     getArrAutomationLane(b, lane);
+    ARR_COPY_TRACE("set-auto lane tr=%u type=%u dev=%u target=%u valueType=%u "
+                   "flags=%u points=%u",
+                   lane.track, lane.targetType, lane.device, lane.targetIndex,
+                   lane.valueType, lane.flags, lane.pointCount);
     if (!automationLaneHeaderValid(
             lane, spsarr::kMaxArrAutomationPointRecordsPerFrame) ||
         n < spsarr::kArrAutomationLaneRecordBytes +
@@ -950,6 +1029,11 @@ void SpsHostArrBridge::onSetArrAutomationLaneChunk(uint8_t tag,
         mclarrfile::AutomationLane lane;
         getArrAutomationLane(b + 2, lane);
         lane.pointOffset = 0;
+        ARR_COPY_TRACE(
+            "set-auto-chunk begin tr=%u type=%u dev=%u target=%u valueType=%u "
+            "flags=%u points=%u",
+            lane.track, lane.targetType, lane.device, lane.targetIndex,
+            lane.valueType, lane.flags, lane.pointCount);
         if (!automationLaneHeaderValid(
                 lane, mclarrfile::kMaxAutomationPoints)) {
             sendErr(tag, ERR_RANGE, lane.track);
@@ -1035,6 +1119,114 @@ void SpsHostArrBridge::onSetArrAutomationLaneChunk(uint8_t tag,
     sendErr(tag, ERR_RANGE, op);
 }
 
+void SpsHostArrBridge::onSetArrClips(uint8_t tag, const uint8_t* b,
+                                     uint16_t n) {
+    if (n < 2) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+
+    uint8_t op = b[0];
+    if (op == ARR_CLIP_WRITE_BEGIN) {
+        if (n < spsarr::kArrClipChunkBeginBytes) {
+            sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+        uint16_t total = spsArrGetU16(b + 2);
+        ARR_COPY_TRACE("set-clips begin total=%u", total);
+        ARR_TIME_TRACE("set-clips begin total=%u div192=%lu state=%u",
+                       total, (unsigned long)MidiClock.div192th_counter,
+                       (unsigned)MidiClock.state);
+        if (!beginClipStage(total)) {
+            sendErr(tag, ERR_BUSY, op);
+            return;
+        }
+        uint8_t ack[2] = {CMD_SET_ARR_CLIPS, op};
+        sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+        return;
+    }
+
+    if (op == ARR_CLIP_WRITE_ABORT) {
+        clearClipStage();
+        uint8_t ack[2] = {CMD_SET_ARR_CLIPS, op};
+        sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+        return;
+    }
+
+    if (!clip_stage_active_) {
+        sendErr(tag, ERR_BUSY, op);
+        return;
+    }
+
+    if (op == ARR_CLIP_WRITE_RECORDS) {
+        if (n < spsarr::kArrClipChunkRecordHeaderBytes) {
+            sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+        uint16_t offset = spsArrGetU16(b + 2);
+        uint8_t count = b[4];
+        if (count > spsarr::kMaxArrClipChunkRecordsPerFrame ||
+            n < spsarr::kArrClipChunkRecordHeaderBytes +
+                    count * spsarr::kArrClipRecordBytes ||
+            offset != clip_stage_received_ ||
+            (uint32_t)offset + count > clip_stage_total_) {
+            sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+        if (count > 0 && clip_stage_clips_ == nullptr) {
+            sendErr(tag, ERR_BUSY, op);
+            return;
+        }
+
+        uint16_t bodyOff = spsarr::kArrClipChunkRecordHeaderBytes;
+        for (uint8_t i = 0; i < count; ++i) {
+            getArrClip(b + bodyOff,
+                       clip_stage_clips_[clip_stage_received_ + i]);
+            const mclarrfile::Clip& clip =
+                clip_stage_clips_[clip_stage_received_ + i];
+            ARR_TIME_TRACE("set-clips rec idx=%u tr=%u row=%u srcKind=%u srcSlot=%u sid=%lu start=%lu dur=%lu fade=%u/%u div192=%lu",
+                           (unsigned)(clip_stage_received_ + i),
+                           clip.track, clip.row, clip.sourceKind,
+                           mclarrfile::clipSourceSlot(clip),
+                           (unsigned long)clip.sourceId,
+                           (unsigned long)clip.startQ12,
+                           (unsigned long)clip.durationQ12,
+                           clip.fadeFlags, clip.endFadeFlags,
+                           (unsigned long)MidiClock.div192th_counter);
+            bodyOff = (uint16_t)(bodyOff + spsarr::kArrClipRecordBytes);
+        }
+        clip_stage_received_ = (uint16_t)(clip_stage_received_ + count);
+        uint8_t ack[2] = {CMD_SET_ARR_CLIPS, op};
+        sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+        return;
+    }
+
+    if (op == ARR_CLIP_WRITE_COMMIT) {
+        if (clip_stage_received_ != clip_stage_total_) {
+            sendErr(tag, ERR_RANGE, op);
+            return;
+        }
+        bool ok = mcl_arrangement.replaceClips(clip_stage_clips_,
+                                               clip_stage_total_);
+        ARR_TIME_TRACE("set-clips commit total=%u ok=%u div192=%lu state=%u",
+                       clip_stage_total_, ok ? 1 : 0,
+                       (unsigned long)MidiClock.div192th_counter,
+                       (unsigned)MidiClock.state);
+        clearClipStage();
+        if (!ok) {
+            sendErr(tag, ERR_BUSY, op);
+            return;
+        }
+
+        uint8_t ack[2] = {CMD_SET_ARR_CLIPS, op};
+        sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+        notifyDirty(0xFF, (uint8_t)(DIRTY_ARRANGEMENT | DIRTY_ACTIVE));
+        return;
+    }
+
+    sendErr(tag, ERR_RANGE, op);
+}
+
 void SpsHostArrBridge::onSetArrTrackLabel(uint8_t tag, const uint8_t* b,
                                           uint16_t n) {
     if (n < 1 + spsarr::kArrTrackLabelBytes) {
@@ -1097,6 +1289,9 @@ void SpsHostArrBridge::onSetArrClipFade(uint8_t tag, const uint8_t* b,
                                      fadeOut, overrideFade, fade)) {
         sendErr(tag, ERR_BUSY, track);
         return;
+    }
+    if (MidiClock.state != MidiClockClass::STARTED) {
+        mcl_arrangement.seekLoadCurrentPosition(true, true, false);
     }
 
     uint8_t ack[2] = {CMD_SET_ARR_CLIP_FADE, 1};
@@ -1248,6 +1443,11 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
 
     uint32_t positionQ12 = spsArrGetU32(b + 0);
     uint8_t flags = b[4];
+    ARR_TIME_TRACE("seek cmd pos=%lu flags=%u div192=%lu state=%u clockQ12=%lu",
+                   (unsigned long)positionQ12, flags,
+                   (unsigned long)MidiClock.div192th_counter,
+                   (unsigned)MidiClock.state,
+                   (unsigned long)bridgeCurrentClockQ12());
     if ((flags & (ARR_LOAD_START_TRANSPORT | ARR_LOAD_SEEK_POSITION)) != 0) {
         uint32_t tick96 = positionQ12 > 0xFFFFFFFFu / 8u
                               ? 0xFFFFFFFFu
@@ -1260,7 +1460,17 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
 
     bool queued = mcl_arrangement.seekLoad(
         positionQ12, (flags & ARR_LOAD_IMMEDIATE) != 0,
-        (flags & ARR_LOAD_START_TRANSPORT) != 0);
+        (flags & (ARR_LOAD_START_TRANSPORT | ARR_LOAD_SEEK_POSITION)) != 0);
+    ARR_TIME_TRACE("seek cmd queued=%u div192=%lu state=%u clockQ12=%lu",
+                   queued ? 1 : 0,
+                   (unsigned long)MidiClock.div192th_counter,
+                   (unsigned)MidiClock.state,
+                   (unsigned long)bridgeCurrentClockQ12());
+    if (queued &&
+        (flags & (ARR_LOAD_IMMEDIATE | ARR_LOAD_START_TRANSPORT |
+                  ARR_LOAD_SEEK_POSITION)) != 0) {
+        grid_task.service_host_arranger_load_before_edit();
+    }
     notifyDirty(0xFF, DIRTY_ACTIVE);
 
     uint8_t ack[2] = {CMD_ARR_SEEK_LOAD, queued ? (uint8_t)1 : (uint8_t)0};

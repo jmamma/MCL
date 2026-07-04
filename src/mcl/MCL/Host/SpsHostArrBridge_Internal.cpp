@@ -228,7 +228,7 @@ uint8_t hostLoadQueueMode(uint8_t mode, uint8_t flags) {
     if ((flags & ARR_LOAD_IMMEDIATE) != 0) {
         queueMode |= LOAD_QUEUE_FLAG_IMMEDIATE;
     }
-    if ((flags & ARR_LOAD_START_TRANSPORT) != 0) {
+    if ((flags & (ARR_LOAD_START_TRANSPORT | ARR_LOAD_SEEK_POSITION)) != 0) {
         queueMode |= LOAD_QUEUE_FLAG_PRESTART_FADE;
     }
     return queueMode;

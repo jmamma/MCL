@@ -53,9 +53,11 @@ public:
   bool create(uint8_t idx, const char *name);
   bool createFirst(uint8_t *idxOut);
   bool importGrid(uint16_t trackMask, uint8_t startRow);
+  bool replaceClips(const mclarrfile::Clip *clips, uint32_t clipCount);
   void tick();
-  void resetPlayback();
+  void resetPlayback(bool clearPrivateSources = true);
   void resetPlaybackForTransport(bool clearReleasedTracks = true);
+  void reconcilePlaybackAfterEdit(bool clearReleasedTracks = true);
   void setHostPlaybackSuspended(bool suspended);
   void setLoopRegion(uint32_t startQ12, uint32_t endQ12);
   void clearLoopRegion();
@@ -198,6 +200,7 @@ private:
   uint32_t playback_released_mask_ = 0;
   static const uint8_t kRuntimeSlots = 16;
   TrackLoadFadeData clip_runtime_fades_[kRuntimeSlots];
+  uint32_t clip_runtime_fade_start_q12_[kRuntimeSlots] = {};
   uint32_t clip_runtime_fade_mask_ = 0;
   static const uint16_t kRuntimeAutomationLanes =
       mclarrfile::kMaxAutomationLanes;

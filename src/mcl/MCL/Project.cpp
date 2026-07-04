@@ -1357,7 +1357,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
   grid_page.row_scan = GRID_LENGTH;
   project_loaded = true;
 #if MCL_FEATURE_HOST_ARRANGER
-  mcl_arrangement.seekLoadCurrentPosition(true);
+  mcl_arrangement.seekLoadCurrentPosition(true, true);
   sps_host_arr_bridge.notifyDirty(
       0xFF, (uint8_t)(spsarr::DIRTY_CELLS | spsarr::DIRTY_ACTIVE |
                       spsarr::DIRTY_ARRANGEMENT));

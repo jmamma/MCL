@@ -281,7 +281,93 @@ bool MCLArrangement::setClipFade(uint32_t startQ12, uint32_t durationQ12,
                                       markers.get(), markerCount, labels,
                                       loopRegions.get(), loopRegionCount);
   if (ok) {
-    resetPlayback();
+    reconcilePlaybackAfterEdit(false);
+  }
+  return ok;
+}
+
+bool MCLArrangement::replaceClips(const mclarrfile::Clip *clips,
+                                  uint32_t clipCount) {
+  if ((clipCount > 0 && clips == nullptr) || clipCount > kMaxImportClips ||
+      !ensureActive()) {
+    return false;
+  }
+
+  ScopedScratch<mclarrfile::Clip> cleanClips(clipCount);
+  if (!cleanClips) {
+    return false;
+  }
+  ScopedScratch<mclarrfile::Marker> markers(mclarrfile::kMaxMarkers);
+  ScopedScratch<mclarrfile::LoopRegion> loopRegions(
+      mclarrfile::kMaxLoopRegions);
+  if (!markers || !loopRegions) {
+    return false;
+  }
+  char labels[mclarrfile::kTrackLabelCount][mclarrfile::kTrackLabelBytes];
+  uint16_t markerCount = 0;
+  uint16_t loopRegionCount = 0;
+
+  mclarrfile::Header header;
+  if (!readMeta(&header)) {
+    return false;
+  }
+  if (!readActiveData(header, nullptr, nullptr, markers.get(), &markerCount,
+                      labels, loopRegions.get(), &loopRegionCount)) {
+    return false;
+  }
+
+  for (uint32_t i = 0; i < clipCount; ++i) {
+    mclarrfile::Clip clean = clips[i];
+    if (clean.durationQ12 == 0 || clean.track >= NUM_SLOTS ||
+        clean.row >= GRID_LENGTH) {
+      return false;
+    }
+    if (clean.repeatQ12 == 0) {
+      clean.repeatQ12 = clean.durationQ12;
+    }
+    clean.flags &=
+        (uint8_t)(mclarrfile::CLIP_LOOP | mclarrfile::CLIP_MUTED |
+                  mclarrfile::CLIP_LOAD_SOUND |
+                  mclarrfile::CLIP_FADE_OVERRIDE);
+    clean.reserved = 0;
+    clean.fadeReserved = 0;
+    clean.endFadeReserved = 0;
+    clean.sourceReserved = 0;
+
+    if (clean.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE) {
+      if (clean.sourceId == 0) {
+        return false;
+      }
+      uint8_t sourceSlot = 0;
+      if (!mclarrfile::decodePrivateSourceSlot(clean.sourceFlags,
+                                               sourceSlot)) {
+        sourceSlot = clean.track;
+        clean.sourceFlags = mclarrfile::encodePrivateSourceSlot(sourceSlot);
+      }
+      if (sourceSlot >= NUM_SLOTS) {
+        return false;
+      }
+      clean.sourceTrack = sourceSlot;
+    } else {
+      uint8_t sourceSlot =
+          clean.sourceTrack < mclarrfile::kGridSourceSlotCount
+              ? clean.sourceTrack
+              : clean.track;
+      if (sourceSlot >= NUM_SLOTS) {
+        return false;
+      }
+      mclarrfile::initGridSource(clean, sourceSlot);
+    }
+
+    cleanClips[i] = clean;
+  }
+
+  sortClips(cleanClips.get(), clipCount);
+  bool ok = rewriteActiveWithMetadata(header, cleanClips.get(), clipCount,
+                                      markers.get(), markerCount, labels,
+                                      loopRegions.get(), loopRegionCount);
+  if (ok) {
+    reconcilePlaybackAfterEdit(true);
   }
   return ok;
 }
@@ -411,6 +497,7 @@ bool MCLArrangement::setAutomationLanePoints(
                                       &writeData);
   if (ok) {
     resetPlayback();
+    resetAutomationRuntime();
   }
   return ok;
 }

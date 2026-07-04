@@ -59,6 +59,5 @@ void write_track_load_fade_value(const TrackLoadFadeTarget &target,
     return;
   }
   MidiUartClass *output = target.device_idx == 1 ? uart2 : uart;
-  MD.setTrackParam(target.track_number, target.param, value, output,
-                   target.param == MODEL_LEVEL);
+  MD.setTrackParam(target.track_number, target.param, value, output, false);
 }

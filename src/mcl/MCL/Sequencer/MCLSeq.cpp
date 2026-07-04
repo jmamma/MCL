@@ -442,6 +442,9 @@ void MCLSeq::seq() {
   bool engage_sidechannel = true;
   MidiUartClass *uart;
   MidiUartClass *uart2;
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+  bool load_fade_ticked = false;
+#endif
 
   // Realtime first pass writes direct to outputs for low latency, then loops
   // with realtime=false and engage_sidechannel=false so the second pass drains
@@ -455,6 +458,13 @@ void MCLSeq::seq() {
       uart = primary_output;
       uart2 = secondary_output;
     }
+
+#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+    if (!load_fade_ticked) {
+      TrackLoadFadeRunner::tick(uart, uart2);
+      load_fade_ticked = true;
+    }
+#endif
 
     run_md_tick(*this, uart, uart2, legacy_tick);
 #if defined(PLATFORM_TBD)
@@ -474,7 +484,9 @@ void MCLSeq::seq() {
     realtime = false;
     engage_sidechannel = false;
   }
+#if !MCL_FEATURE_HOST_LOAD_FADE_SEEK
   TrackLoadFadeRunner::tick(uart, uart2);
+#endif
 }
 
 MCLSeq mcl_seq;

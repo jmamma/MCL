@@ -25,6 +25,12 @@
 #define DIV16_MARGIN 8
 #define GRIDTASK_PRE_CACHE_UI_MS 80
 
+#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
+#define ARR_TIME_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-time] " fmt, ##__VA_ARGS__)
+#else
+#define ARR_TIME_TRACE(fmt, ...)
+#endif
+
 #if defined(__AVR__)
 inline void GridTask::pre_cache_ui_yield() {
   static uint8_t last_pre_cache_ui_ms = 0;
@@ -69,7 +75,7 @@ bool GridTask::save_needs_md_current_pattern() {
 
 void GridTask::reset_host_playback_after_stop() {
   mcl_arrangement.flushRuntimePrivateSourceEdits();
-  mcl_arrangement.resetPlayback();
+  mcl_arrangement.resetPlayback(false);
 }
 
 void GridTask::tick_host_arranger() {
@@ -243,6 +249,7 @@ void GridTask::load_queue_handler() {
                  private_source_ids);
   bool immediate_load = (mode & LOAD_QUEUE_FLAG_IMMEDIATE) != 0;
   bool allow_prestart_fades = (mode & LOAD_QUEUE_FLAG_PRESTART_FADE) != 0;
+  uint8_t raw_mode = mode;
   mode &= (uint8_t)~(LOAD_QUEUE_FLAG_IMMEDIATE |
                      LOAD_QUEUE_FLAG_PRESTART_FADE);
   memset(clear_select, 0, sizeof(clear_select));
@@ -265,16 +272,25 @@ void GridTask::load_queue_handler() {
     DEBUG_PRINT(" ");
     DEBUG_PRINTLN(row_select_array[n]);
   }
+  ARR_TIME_TRACE("loadq pop raw=%u mode=%u imm=%u prestart=%u anyLoad=%u anyClear=%u offset=%u div192=%lu",
+                 raw_mode, mode, immediate_load ? 1 : 0,
+                 allow_prestart_fades ? 1 : 0, any_load ? 1 : 0,
+                 any_clear ? 1 : 0, offset,
+                 (unsigned long)MidiClock.div192th_counter);
 
   if (any_load || any_clear) {
     mcl_arrangement.flushRuntimePrivateSourceEdits();
   }
   if (any_load) {
+    ARR_TIME_TRACE("loadq before load_tracks div192=%lu",
+                   (unsigned long)MidiClock.div192th_counter);
     mcl_actions.write_original = 1;
     mcl_arrangement.beginQueuedPrivateLoads(private_source_ids);
     mcl_actions.load_tracks(track_select, row_select_array, mode, offset,
                             immediate_load, allow_prestart_fades);
     mcl_arrangement.endQueuedPrivateLoads();
+    ARR_TIME_TRACE("loadq after load_tracks div192=%lu",
+                   (unsigned long)MidiClock.div192th_counter);
   }
   if (any_clear) {
     if (mode != LOAD_ARRANG) {
@@ -284,7 +300,11 @@ void GridTask::load_queue_handler() {
                                         (uint8_t)spsarr::DIRTY_ACTIVE);
       }
     }
+    ARR_TIME_TRACE("loadq before clear_tracks div192=%lu",
+                   (unsigned long)MidiClock.div192th_counter);
     mcl_actions.clear_tracks(clear_select);
+    ARR_TIME_TRACE("loadq after clear_tracks div192=%lu",
+                   (unsigned long)MidiClock.div192th_counter);
   }
   // A load changes the active slot state, but not the source grid cell/link
   // data used by the arranger import. Avoid forcing arranger cell re-fetches

@@ -145,6 +145,7 @@ bool MCLArrangement::clearActive() {
   bool ok = rewriteActiveWithMetadata(header, nullptr, 0, nullptr, 0, labels);
   if (ok) {
     resetPlayback();
+    resetAutomationRuntime();
     clearLoopRegion();
   }
   return ok;

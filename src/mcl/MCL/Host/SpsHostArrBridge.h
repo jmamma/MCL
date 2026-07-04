@@ -68,6 +68,7 @@ private:
     void onSetArrAutomationLane(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrAutomationLaneChunk(uint8_t tag, const uint8_t* b,
                                      uint16_t n);
+    void onSetArrClips(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrTrackLabel(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrClipFade(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSeekLoad(uint8_t tag, const uint8_t* b, uint16_t n);
@@ -83,12 +84,18 @@ private:
     bool applySetFade(const uint8_t* b, uint16_t n);
     void clearAutomationStage();
     bool beginAutomationStage(const mclarrfile::AutomationLane& lane);
+    void clearClipStage();
+    bool beginClipStage(uint16_t total);
 
     bool automation_stage_active_ = false;
     mclarrfile::AutomationLane automation_stage_lane_ = {};
     uint16_t automation_stage_total_ = 0;
     uint16_t automation_stage_received_ = 0;
     mclarrfile::AutomationPoint* automation_stage_points_ = nullptr;
+    bool clip_stage_active_ = false;
+    uint16_t clip_stage_total_ = 0;
+    uint16_t clip_stage_received_ = 0;
+    mclarrfile::Clip* clip_stage_clips_ = nullptr;
 };
 
 extern SpsHostArrBridge sps_host_arr_bridge;

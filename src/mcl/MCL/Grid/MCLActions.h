@@ -200,6 +200,8 @@ private:
                             GridDeviceTrack *gdt_dst, uint8_t *send_masks
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
                             ,
+                            TrackLoadFadeData *load_fade_out,
+                            uint8_t *load_fade_valid_out,
                             bool allow_prestart_fade = false
 #endif
                             );

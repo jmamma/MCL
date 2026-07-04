@@ -87,6 +87,7 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
         case CMD_SET_ARR_AUTOMATION_LANE_CHUNK:
             onSetArrAutomationLaneChunk(p.tag, b, n);
             break;
+        case CMD_SET_ARR_CLIPS: onSetArrClips(p.tag, b, n); break;
         case CMD_SET_ARR_TRACK_LABEL: onSetArrTrackLabel(p.tag, b, n); break;
         case CMD_SET_ARR_CLIP_FADE: onSetArrClipFade(p.tag, b, n); break;
         case CMD_ARR_SEEK_LOAD: onArrSeekLoad(p.tag, b, n); break;
@@ -144,7 +145,8 @@ void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
     uint16_t caps2 = (uint16_t)(CAP2_GRID_BANKS | CAP2_SLOT_OWNERSHIP |
                                 CAP2_ARRANGEMENT_LOOP_REGIONS |
                                 CAP2_PROJECT_BROWSER | CAP2_GRID_CHAIN |
-                                CAP2_ARRANGEMENT_AUTOMATION
+                                CAP2_ARRANGEMENT_AUTOMATION |
+                                CAP2_ARRANGEMENT_CLIP_EDIT
 #if !defined(__AVR__)
                                 | CAP2_ARRANGER_PRIVATE_SOURCES |
                                   CAP2_ARRANGER_LOCAL_PREVIEW

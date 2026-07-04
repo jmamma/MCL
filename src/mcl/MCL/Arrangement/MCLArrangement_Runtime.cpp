@@ -4,11 +4,21 @@
 
 #include "Arrangement/MCLArrangement.h"
 #include "MCLArrangement_Internal.h"
+#include "Grid/MCLActions.h"
 #include "Sequencer/SeqTrackUtil.h"
+#include "MidiClock.h"
 
 using namespace mcl_arrangement_internal;
 
 namespace {
+
+#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
+#define ARR_AUTO_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-auto] " fmt, ##__VA_ARGS__)
+#define ARR_TIME_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-time] " fmt, ##__VA_ARGS__)
+#else
+#define ARR_AUTO_TRACE(fmt, ...)
+#define ARR_TIME_TRACE(fmt, ...)
+#endif
 
 uint8_t automation_curve_phase(uint8_t phase, int8_t curve) {
   uint16_t lin = phase > 127 ? 127 : phase;
@@ -54,6 +64,20 @@ MidiUartClass *automation_uart(uint8_t device) {
   return device == 1 ? &MidiUart2 : &MidiUart;
 }
 
+void traceAutomationValue(uint16_t laneIndex,
+                          const mclarrfile::AutomationLane &lane,
+                          uint32_t positionQ12,
+                          uint16_t value,
+                          const char *phase) {
+  if (lane.targetType == mclarrfile::AUTOMATION_TARGET_MD_PARAM &&
+      lane.targetIndex == MODEL_LEVEL) {
+    ARR_AUTO_TRACE("%s lane=%u track=%u dev=%u value=%u q12=%lu tick=%lu",
+                   phase, laneIndex, lane.track, lane.device, value,
+                   (unsigned long)positionQ12,
+                   (unsigned long)MidiClock.div192th_counter);
+  }
+}
+
 void dispatchAutomationWrite(
     const MCLArrangement::AutomationPendingWrite &write) {
   uint8_t track = write.track & 0x0F;
@@ -64,8 +88,13 @@ void dispatchAutomationWrite(
       if (track < NUM_MD_TRACKS &&
           (write.targetIndex < SPS_PARAMS_PER_TRACK ||
            write.targetIndex == MODEL_LEVEL)) {
+        if (write.targetIndex == MODEL_LEVEL) {
+          ARR_AUTO_TRACE("write track=%u dev=%u value=%u old_kit=%u tick=%lu",
+                         track, write.device, value, MD.kit.levels[track],
+                         (unsigned long)MidiClock.div192th_counter);
+        }
         MD.setTrackParam(track, write.targetIndex, (uint8_t)value, uart,
-                         write.targetIndex == MODEL_LEVEL);
+                         false);
       }
       break;
     case mclarrfile::AUTOMATION_TARGET_MUTE:
@@ -94,16 +123,20 @@ void dispatchAutomationWrite(
 
 }  // namespace
 
-void MCLArrangement::resetPlayback() {
+void MCLArrangement::resetPlayback(bool clearPrivateSources) {
   playback_arrangement_idx_ = 0xFF;
   last_tick_q12_ = 0;
   playback_active_mask_ = 0;
   playback_released_mask_ = 0;
   clip_runtime_fade_mask_ = 0;
-  memset(runtime_private_source_ids_, 0, sizeof(runtime_private_source_ids_));
-  memset(runtime_private_source_slots_, 0,
-         sizeof(runtime_private_source_slots_));
-  runtime_private_dirty_mask_ = 0;
+  memset(clip_runtime_fade_start_q12_, 0,
+         sizeof(clip_runtime_fade_start_q12_));
+  if (clearPrivateSources) {
+    memset(runtime_private_source_ids_, 0, sizeof(runtime_private_source_ids_));
+    memset(runtime_private_source_slots_, 0,
+           sizeof(runtime_private_source_slots_));
+    runtime_private_dirty_mask_ = 0;
+  }
   resetAutomationRuntime();
   playback_active_ = false;
   loop_entered_ = false;
@@ -124,11 +157,20 @@ void MCLArrangement::resetPlaybackForTransport(bool clearReleasedTracks) {
   grid_task.load_queue.init();
 }
 
+void MCLArrangement::reconcilePlaybackAfterEdit(bool clearReleasedTracks) {
+  grid_task.load_queue.init();
+  mcl_actions.clear_load_fades();
+  resetPlayback();
+  if (MidiClock.state == MidiClockClass::STARTED) {
+    seekLoadCurrentPosition(true, false, clearReleasedTracks);
+  }
+}
+
 void MCLArrangement::setHostPlaybackSuspended(bool suspended) {
   host_playback_suspended_ = suspended;
   if (suspended) {
     clearLoopRegion();
-    resetPlayback();
+    resetPlayback(false);
   }
 }
 
@@ -201,6 +243,15 @@ bool MCLArrangement::loadAutomationDirectory() {
     for (uint32_t i = 0; ok && i < laneChunk.count; ++i) {
       ok = mcl_sd.read_data(&automation_lanes_[i],
                             sizeof(mclarrfile::AutomationLane), &file);
+      if (ok) {
+        const mclarrfile::AutomationLane &lane = automation_lanes_[i];
+        ARR_AUTO_TRACE(
+            "loaded lane=%lu track=%u type=%u dev=%u target=%u valueType=%u "
+            "flags=%u points=%u offset=%lu",
+            (unsigned long)i, lane.track, lane.targetType, lane.device,
+            lane.targetIndex, lane.valueType, lane.flags, lane.pointCount,
+            (unsigned long)lane.pointOffset);
+      }
     }
   }
   bool havePoints = findChunk(file, header,
@@ -372,8 +423,9 @@ void MCLArrangement::chaseAutomation(uint32_t positionQ12, bool sendValues) {
       continue;
     }
     if (sendValues && automation_runtime_[laneIndex].have_prev) {
-      queueAutomationWrite(laneIndex,
-                           automationEvaluate(laneIndex, positionQ12));
+      uint16_t value = automationEvaluate(laneIndex, positionQ12);
+      traceAutomationValue(laneIndex, lane, positionQ12, value, "chase");
+      queueAutomationWrite(laneIndex, value);
     }
   }
   file.close();
@@ -419,8 +471,9 @@ void MCLArrangement::tickAutomation(uint32_t positionQ12) {
       }
     }
     if (rt.have_prev) {
-      queueAutomationWrite(laneIndex,
-                           automationEvaluate(laneIndex, positionQ12));
+      uint16_t value = automationEvaluate(laneIndex, positionQ12);
+      traceAutomationValue(laneIndex, lane, positionQ12, value, "tick");
+      queueAutomationWrite(laneIndex, value);
     }
   }
   file.close();
@@ -635,9 +688,14 @@ void MCLArrangement::armRuntimeFade(uint8_t dst,
   uint32_t bit = (uint32_t)(1ul << dst);
   if (!fade.enabled()) {
     clip_runtime_fade_mask_ &= ~bit;
+    clip_runtime_fade_start_q12_[dst] = 0;
     return;
   }
   clip_runtime_fades_[dst] = fade;
+  uint32_t nowQ12 = currentClockQ12();
+  uint16_t elapsedQ12 = fade.elapsed_q12();
+  clip_runtime_fade_start_q12_[dst] =
+      nowQ12 >= elapsedQ12 ? nowQ12 - elapsedQ12 : 0;
   clip_runtime_fade_mask_ |= bit;
 }
 
@@ -652,15 +710,32 @@ bool MCLArrangement::applyClipRuntime(uint8_t dst, DeviceTrack *track) {
   clip_runtime_fade_mask_ &= ~bit;
   TrackLoadFadeData *fade = track->load_fade_data();
   if (fade == nullptr) {
+    clip_runtime_fade_start_q12_[dst] = 0;
     return false;
   }
-  *fade = clip_runtime_fades_[dst];
+  TrackLoadFadeData runtimeFade = clip_runtime_fades_[dst];
+  uint32_t nowQ12 = currentClockQ12();
+  uint32_t fadeStartQ12 = clip_runtime_fade_start_q12_[dst];
+  uint32_t elapsedQ12 =
+      nowQ12 > fadeStartQ12 ? nowQ12 - fadeStartQ12 : 0;
+  if (elapsedQ12 > 0xFFFFu) {
+    elapsedQ12 = 0xFFFFu;
+  }
+  runtimeFade.set_elapsed_q12((uint16_t)elapsedQ12);
+  *fade = runtimeFade;
+  clip_runtime_fade_start_q12_[dst] = 0;
   return true;
 }
 
 bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
                               bool allowPrestartFade,
                               bool clearReleasedTracks) {
+  ARR_TIME_TRACE("seek-load pos=%lu immediate=%u prestart=%u clearRel=%u clockQ12=%lu div192=%lu state=%u",
+                 (unsigned long)positionQ12, immediate ? 1 : 0,
+                 allowPrestartFade ? 1 : 0, clearReleasedTracks ? 1 : 0,
+                 (unsigned long)currentClockQ12(),
+                 (unsigned long)MidiClock.div192th_counter,
+                 (unsigned)MidiClock.state);
   host_playback_suspended_ = false;
   playback_arrangement_idx_ = mcl_cfg.active_arrangement_idx;
   playback_active_ = true;
@@ -680,6 +755,10 @@ bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
   bool queued = queueClipStarts(positionQ12, endQ12, true, true, queueFlags,
                                 !clearReleasedTracks);
   chaseAutomation(positionQ12, true);
+  ARR_TIME_TRACE("seek-load done queued=%u activeMask=%lu releasedMask=%lu div192=%lu",
+                 queued ? 1 : 0, (unsigned long)playback_active_mask_,
+                 (unsigned long)playback_released_mask_,
+                 (unsigned long)MidiClock.div192th_counter);
   return queued;
 }
 
@@ -695,8 +774,17 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
                                      bool clearInactiveTracks,
                                      uint8_t loadQueueFlags,
                                      bool honorReleasedTracks) {
+  ARR_TIME_TRACE("scan begin start=%lu end=%lu loadActive=%u clearInactive=%u flags=%u honorRel=%u last=%lu activeMask=%lu clockQ12=%lu div192=%lu",
+                 (unsigned long)startQ12, (unsigned long)endQ12,
+                 loadActiveAtPosition ? 1 : 0, clearInactiveTracks ? 1 : 0,
+                 loadQueueFlags, honorReleasedTracks ? 1 : 0,
+                 (unsigned long)last_tick_q12_,
+                 (unsigned long)playback_active_mask_,
+                 (unsigned long)currentClockQ12(),
+                 (unsigned long)MidiClock.div192th_counter);
   File file;
   if (!openActive(&file, O_READ)) {
+    ARR_TIME_TRACE("scan abort open failed");
     return false;
   }
 
@@ -707,6 +795,8 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       !file.seekSet(header.headerBytes)) {
     file.close();
     playback_active_mask_ = 0;
+    ARR_TIME_TRACE("scan abort header ok=%u clips=%lu",
+                   ok ? 1 : 0, (unsigned long)header.clipCount);
     return false;
   }
 
@@ -742,24 +832,52 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     if (clipEnd < clipStart) {
       clipEnd = 0xFFFFFFFFull;
     }
-    if ((uint64_t)nowQ12 >= clipStart && (uint64_t)nowQ12 < clipEnd) {
+    bool activeNow = (uint64_t)nowQ12 >= clipStart &&
+                     (uint64_t)nowQ12 < clipEnd;
+    bool startsNow = q12InRange(clip.startQ12, startQ12, endQ12);
+    ARR_TIME_TRACE("clip i=%lu tr=%u row=%u srcKind=%u srcSlot=%u sid=%lu start=%lu end=%lu now=%lu active=%u startHit=%u flags=%u fade=%u/%u",
+                   (unsigned long)i, clip.track, clip.row, clip.sourceKind,
+                   mclarrfile::clipSourceSlot(clip),
+                   (unsigned long)clip.sourceId,
+                   (unsigned long)clip.startQ12, (unsigned long)clipEnd,
+                   (unsigned long)nowQ12, activeNow ? 1 : 0,
+                   startsNow ? 1 : 0, clip.flags,
+                   clip.fadeFlags, clip.endFadeFlags);
+    if (activeNow) {
       currentActiveMask |= (uint32_t)(1ul << clip.track);
       if (loadActiveAtPosition) {
         if (addClipLoad(loadGroups, clip)) {
           startMask |= (uint32_t)(1ul << clip.track);
+          ARR_TIME_TRACE("queue active tr=%u row=%u start=%lu now=%lu",
+                         clip.track, clip.row,
+                         (unsigned long)clip.startQ12,
+                         (unsigned long)nowQ12);
           TrackLoadFadeData fade;
           if (clipFadeAtPosition(clip, nowQ12, fade)) {
+            ARR_TIME_TRACE("arm active fade tr=%u flags=%u dur=%u amount=%u elapsed=%u now=%lu",
+                           clip.track, fade.flags, fade.duration_q12,
+                           fade.amount, fade.elapsed_q12(),
+                           (unsigned long)nowQ12);
             armRuntimeFade(clip.track, fade);
           }
           any = true;
         }
       }
     }
-    if (q12InRange(clip.startQ12, startQ12, endQ12)) {
+    if (startsNow) {
       if (addClipLoad(loadGroups, clip)) {
         startMask |= (uint32_t)(1ul << clip.track);
+        ARR_TIME_TRACE("queue start tr=%u row=%u start=%lu scan=%lu..%lu",
+                       clip.track, clip.row,
+                       (unsigned long)clip.startQ12,
+                       (unsigned long)startQ12,
+                       (unsigned long)endQ12);
         TrackLoadFadeData fade;
         if (clipFadeAtPosition(clip, clip.startQ12, false, fade)) {
+          ARR_TIME_TRACE("arm start fade tr=%u flags=%u dur=%u amount=%u elapsed=%u clipStart=%lu",
+                         clip.track, fade.flags, fade.duration_q12,
+                         fade.amount, fade.elapsed_q12(),
+                         (unsigned long)clip.startQ12);
           armRuntimeFade(clip.track, fade);
         }
         any = true;
@@ -779,6 +897,10 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
             clipFadeAtPosition(clip, (uint32_t)fadeStart, fade)) {
           if (addClipLoad(loadGroups, clip)) {
             startMask |= (uint32_t)(1ul << clip.track);
+            ARR_TIME_TRACE("queue fadeout tr=%u row=%u fadeStart=%lu scan=%lu..%lu",
+                           clip.track, clip.row, (unsigned long)fadeStart,
+                           (unsigned long)startQ12,
+                           (unsigned long)endQ12);
             armRuntimeFade(clip.track, fade);
             any = true;
           }
@@ -790,6 +912,7 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
 
   if (!hasPlayableClip) {
     playback_active_mask_ = 0;
+    ARR_TIME_TRACE("scan done no playable clips");
     return false;
   }
 
@@ -811,6 +934,11 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
 
   if (any) {
     uint8_t queueMode = LOAD_ARRANG | loadQueueFlags;
+    ARR_TIME_TRACE("flush begin any=%u qmode=%u startMask=%lu currentMask=%lu clearMask=%lu div192=%lu",
+                   any ? 1 : 0, queueMode, (unsigned long)startMask,
+                   (unsigned long)currentActiveMask,
+                   (unsigned long)clearMask,
+                   (unsigned long)MidiClock.div192th_counter);
     loadGroups.flush(queueMode);
     bool hasClear = false;
     for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
@@ -820,9 +948,15 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       }
     }
     if (hasClear) {
+      ARR_TIME_TRACE("flush clear qmode=%u clearMask=%lu", queueMode,
+                     (unsigned long)clearMask);
       grid_task.load_queue.put(queueMode, clearRows);
     }
   }
+  ARR_TIME_TRACE("scan done any=%u activeMask=%lu clockQ12=%lu div192=%lu",
+                 any ? 1 : 0, (unsigned long)playback_active_mask_,
+                 (unsigned long)currentClockQ12(),
+                 (unsigned long)MidiClock.div192th_counter);
   return any;
 }
 
@@ -1011,6 +1145,10 @@ void MCLArrangement::tick() {
   playback_active_ = true;
   playback_arrangement_idx_ = activeIdx;
   last_tick_q12_ = nowQ12;
+  ARR_TIME_TRACE("tick scan start=%lu end=%lu now=%lu same=%u div192=%lu",
+                 (unsigned long)startQ12, (unsigned long)endQ12,
+                 (unsigned long)nowQ12, sameArrangement ? 1 : 0,
+                 (unsigned long)MidiClock.div192th_counter);
   queueClipStarts(startQ12, endQ12, false, false,
                   LOAD_QUEUE_FLAG_IMMEDIATE, true);
   tickAutomation(nowQ12);

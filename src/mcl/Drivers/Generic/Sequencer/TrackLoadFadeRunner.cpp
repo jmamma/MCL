@@ -132,6 +132,17 @@ uint16_t load_fade_count_down(uint32_t start_clock) {
   return clamp_u16(to_start);
 }
 
+uint16_t load_fade_elapsed_since_start(uint32_t start_clock) {
+  uint32_t now = MidiClock.div192th_counter;
+  uint32_t to_start = MidiClock.clock_diff_div192(now, start_clock);
+  uint32_t ticks_per_16th = MidiClock.div192th_ticks_per_16th();
+  uint32_t cycle = 0x10000UL * ticks_per_16th;
+  if (to_start != 0 && to_start <= (cycle / 2u)) {
+    return 0;
+  }
+  return clamp_u16(MidiClock.clock_diff_div192(start_clock, now));
+}
+
 uint16_t load_fade_duration_ticks(uint16_t duration_q12) {
   uint32_t ticks_per_16th = MidiClock.div192th_ticks_per_16th();
   uint32_t ticks =
@@ -222,11 +233,11 @@ bool write_slot_value(GridSlot slot,
                       bool advance) {
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   uint16_t elapsed = state.elapsed_ticks;
-  bool complete = elapsed >= state.duration_ticks;
+  uint16_t duration = state.duration_ticks;
+  bool complete = elapsed >= duration;
   uint8_t phase = complete
                       ? 127
-                      : (uint8_t)(((uint32_t)elapsed * 127u) /
-                                  state.duration_ticks);
+                      : (uint8_t)(((uint32_t)elapsed * 127u) / duration);
   phase = fade_curve_phase(
       phase, fade_effective_curve(state.curve, state.start_value,
                                   state.end_value));
@@ -256,7 +267,7 @@ bool write_slot_value(GridSlot slot,
     if (first_write || complete || (elapsed % 24u) == 0) {
       FADE_RUN_TRACE("write slot=%u track=%u value=%u elapsed=%u/%u complete=%u",
                      slot, state.target.track_number, value7, elapsed,
-                     state.duration_ticks, complete ? 1 : 0);
+                     duration, complete ? 1 : 0);
     }
 #endif
     state.last_value = value7;
@@ -400,7 +411,11 @@ void TrackLoadFadeRunner::start(GridSlot slot,
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   state.count_down = transport_started ? load_fade_count_down(start_clock) : 0;
   state.duration_ticks = load_fade_duration_ticks(fade->duration_q12);
-  state.elapsed_ticks = load_fade_elapsed_ticks(fade->elapsed_q12());
+  uint32_t elapsed_ticks = load_fade_elapsed_ticks(fade->elapsed_q12());
+  if (transport_started) {
+    elapsed_ticks += load_fade_elapsed_since_start(start_clock);
+  }
+  state.elapsed_ticks = clamp_u16(elapsed_ticks);
   if (state.elapsed_ticks > state.duration_ticks) {
     state.elapsed_ticks = state.duration_ticks;
   }

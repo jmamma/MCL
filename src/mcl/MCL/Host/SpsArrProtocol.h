@@ -102,6 +102,7 @@ enum Cmd {
     CMD_SET_ARR_AUTOMATION_LANE = 0x6C,
     CMD_SET_ARR_AUTOMATION_LANE_CHUNK = 0x6D,
     CMD_ARR_DUP_LOCAL_SOURCE = 0x6E,
+    CMD_SET_ARR_CLIPS = 0x6F,
 
     CMD_NOTIFY_ACTIVE = 0x70,
     CMD_NOTIFY_DIRTY = 0x71,
@@ -139,7 +140,8 @@ enum Caps2 {
     CAP2_GRID_CHAIN = 1 << 7,
     CAP2_ARRANGEMENT_AUTOMATION = 1 << 8,
     CAP2_ARRANGER_PRIVATE_SOURCES = 1 << 9,
-    CAP2_ARRANGER_LOCAL_PREVIEW = 1 << 10
+    CAP2_ARRANGER_LOCAL_PREVIEW = 1 << 10,
+    CAP2_ARRANGEMENT_CLIP_EDIT = 1 << 11
 };
 
 enum ArrangementAutomationWriteOp {
@@ -147,6 +149,13 @@ enum ArrangementAutomationWriteOp {
     ARR_AUTOMATION_WRITE_POINTS = 1,
     ARR_AUTOMATION_WRITE_COMMIT = 2,
     ARR_AUTOMATION_WRITE_ABORT = 3
+};
+
+enum ArrangementClipWriteOp {
+    ARR_CLIP_WRITE_BEGIN = 0,
+    ARR_CLIP_WRITE_RECORDS = 1,
+    ARR_CLIP_WRITE_COMMIT = 2,
+    ARR_CLIP_WRITE_ABORT = 3
 };
 
 enum Mode {
@@ -237,6 +246,8 @@ static const uint32_t kArrPreviewGridSourceRowMask = 0xFFu;
 static const int kArrAutomationChunkBeginBytes =
     2 + kArrAutomationLaneRecordBytes;
 static const int kArrAutomationChunkPointHeaderBytes = 6;
+static const int kArrClipChunkBeginBytes = 4;
+static const int kArrClipChunkRecordHeaderBytes = 6;
 static const int kArrTrackLabelBytes = 16;
 static const int kArrTrackLabelCount = 16;
 static const int kProjectPathBytes = 64;
@@ -259,6 +270,8 @@ static const int kMaxArrAutomationPointRecordsPerFrame =
 static const int kMaxArrAutomationChunkPointRecordsPerFrame =
     (kMaxBodyRaw - kArrAutomationChunkPointHeaderBytes) /
     kArrAutomationPointRecordBytes;
+static const int kMaxArrClipChunkRecordsPerFrame =
+    (kMaxBodyRaw - kArrClipChunkRecordHeaderBytes) / kArrClipRecordBytes;
 static const int kMaxProjectEntriesPerFrame =
     (kMaxBodyRaw - kProjectListHeaderBytes) / kProjectEntryRecordBytes;
 static const int kMaxProjectVersionRecordsPerFrame =
