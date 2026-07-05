@@ -2593,9 +2593,11 @@ void MDClass::updateKitParams() {
 
 uint16_t MDClass::sendKitParams(uint8_t *masks) {
   /// Ignores masks and scratchpad, and send the whole kit.
+  (void)masks;
   MD.kit.origPosition = 0x7F;
   MD.kit.toSysex();
-  get_fw_caps();           //<-- includes waitBlocking, we need to wait for the
-                           // sysex message to be received before unmuting seq
+  get_fw_caps(); //<-- includes waitBlocking, we need to wait for
+                 // the sysex message to be received before
+                 // unmuting seq
   return 0;
 }

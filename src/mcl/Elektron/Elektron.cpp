@@ -1,6 +1,7 @@
 #include "Elektron.h"
 #include "Project.h"
 #include "ResourceManager.h"
+#include "platform.h"
 
 #define SYSEX_RETRIES 1
 
@@ -181,7 +182,6 @@ uint8_t ElektronDevice::get_track_state(uint16_t &mute_state,
 
 
 bool ElektronDevice::get_fw_caps() {
-
   send_system_command(this, 0x30);
 
   uint8_t msgType = waitBlocking();
@@ -190,7 +190,6 @@ bool ElektronDevice::get_fw_caps() {
 
   uint8_t begin = sysex_protocol.header_size + 1;
   auto listener = getSysexListener();
-  DEBUG_PRINTLN("caps");
   if (!listener || !listener->sysex || listener->msg_rd >= NUM_SYSEX_MSGS) {
     return false;
   }
@@ -446,7 +445,6 @@ void ElektronDevice::set_trigleds(uint16_t bitmask, TrigLEDMode mode,
 }
 
 uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
-  DEBUG_PRINTLN("wait block");
   uint16_t start_clock = read_slowclock();
   uint16_t current_clock = start_clock;
   auto listener = getSysexListener();
@@ -467,7 +465,6 @@ uint8_t ElektronDevice::waitBlocking(uint16_t timeout) {
     handleIncomingMidi();
   }
 #endif
-  DEBUG_PRINTLN(listener->msgType);
   return listener->msgType;
 }
 

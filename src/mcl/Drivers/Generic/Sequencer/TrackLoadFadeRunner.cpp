@@ -64,12 +64,6 @@ public:
 LoadFadeState fade_states[NUM_SLOTS];
 LoadFadeMask active_mask = 0;
 
-#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
-#define FADE_RUN_TRACE(fmt, ...) DEBUG_PRINT_FN("[fade-run] " fmt, ##__VA_ARGS__)
-#else
-#define FADE_RUN_TRACE(fmt, ...)
-#endif
-
 uint8_t clamp_7bit(int16_t value) {
   if (value < 0) {
     return 0;
@@ -199,9 +193,6 @@ LoadFadeMask clear_slot(GridSlot slot) {
 bool begin_slot(GridSlot slot, LoadFadeState &state) {
   uint8_t current = 0;
   if (!read_track_load_fade_value(state.target, &current)) {
-    FADE_RUN_TRACE("read fail slot=%u type=%u dev=%u track=%u param=%u",
-                   slot, state.target.track_type, state.target.device_idx,
-                   state.target.track_number, state.target.param);
     clear_slot(slot);
     return false;
   }
@@ -216,13 +207,6 @@ bool begin_slot(GridSlot slot, LoadFadeState &state) {
   }
   state.last_value = 255;
   state.flags |= LOAD_FADE_RUNTIME_STARTED;
-#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
-  FADE_RUN_TRACE("runtime slot=%u type=%u dev=%u track=%u start=%u end=%u elapsed=%u durTicks=%u curve=%d",
-                 slot, state.target.track_type, state.target.device_idx,
-                 state.target.track_number, state.start_value,
-                 state.end_value, state.elapsed_ticks, state.duration_ticks,
-                 (int)state.curve);
-#endif
   return true;
 }
 
@@ -259,17 +243,7 @@ bool write_slot_value(GridSlot slot,
 #endif
 
   if (value7 != state.last_value) {
-#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
-    const bool first_write = state.last_value == 255;
-#endif
     write_track_load_fade_value(state.target, value7, uart, uart2);
-#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
-    if (first_write || complete || (elapsed % 24u) == 0) {
-      FADE_RUN_TRACE("write slot=%u track=%u value=%u elapsed=%u/%u complete=%u",
-                     slot, state.target.track_number, value7, elapsed,
-                     duration, complete ? 1 : 0);
-    }
-#endif
     state.last_value = value7;
   }
 
@@ -299,8 +273,6 @@ void tick_slot(GridSlot slot, MidiUartClass *uart, MidiUartClass *uart2) {
   if ((state.flags & TRACK_LOAD_FADE_FLAG_ENABLED) == 0 ||
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
       state.duration_ticks == 0 || state.amount == 0) {
-    FADE_RUN_TRACE("clear invalid slot=%u flags=%u durTicks=%u amount=%u",
-                   slot, state.flags, state.duration_ticks, state.amount);
 #else
       state.duration_q12 == 0 || state.amount == 0) {
 #endif
@@ -315,9 +287,6 @@ void tick_slot(GridSlot slot, MidiUartClass *uart, MidiUartClass *uart2) {
     }
     state.flags &= (uint8_t)~LOAD_FADE_RUNTIME_WAIT_START;
     state.count_down = 0;
-    FADE_RUN_TRACE("armed start slot=%u track=%u state=%u elapsed=%u",
-                   slot, state.target.track_number, (unsigned)MidiClock.state,
-                   state.elapsed_ticks);
   }
 #endif
 
@@ -394,9 +363,6 @@ void TrackLoadFadeRunner::start(GridSlot slot,
   const bool transport_started = MidiClock.state == MidiClockClass::STARTED;
   if ((!transport_started && !allow_prestart) || fade == nullptr ||
       !fade->enabled()) {
-    FADE_RUN_TRACE("start reject slot=%u state=%u prestart=%u fade=%p enabled=%u",
-                   slot, (unsigned)MidiClock.state, allow_prestart ? 1 : 0, fade,
-                   (fade != nullptr && fade->enabled()) ? 1 : 0);
     return;
   }
 #else
@@ -436,12 +402,6 @@ void TrackLoadFadeRunner::start(GridSlot slot,
 #endif
   active_mask |= bit;
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
-  FADE_RUN_TRACE("start slot=%u type=%u dev=%u track=%u flags=%u countDown=%u elapsed=%u durTicks=%u amount=%u curve=%d prestart=%u",
-                 slot, target.track_type, target.device_idx,
-                 target.track_number, state.flags, state.count_down,
-                 state.elapsed_ticks, state.duration_ticks, state.amount,
-                 (int)state.curve,
-                 transport_started ? 0 : 1);
   if (!transport_started && allow_prestart && state.count_down == 0) {
     if (begin_slot(slot, state)) {
       write_slot_value(slot, state, uart, uart2, false);
@@ -455,8 +415,6 @@ void TrackLoadFadeRunner::tick(MidiUartClass *uart, MidiUartClass *uart2) {
     return;
   }
   if (MidiClock.state != MidiClockClass::STARTED) {
-    FADE_RUN_TRACE("pause transport state=%u mask=%lu",
-                   (unsigned)MidiClock.state, (unsigned long)active_mask);
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
     clear(true);
 #else
