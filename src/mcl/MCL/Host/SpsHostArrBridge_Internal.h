@@ -32,12 +32,6 @@
 
 #include <string.h>
 
-#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
-#define ARR_FADE_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-fade] " fmt, ##__VA_ARGS__)
-#else
-#define ARR_FADE_TRACE(fmt, ...)
-#endif
-
 namespace sps_host_arr_internal {
 
 constexpr uint16_t kCurrentPatternTimeoutMs = 500;

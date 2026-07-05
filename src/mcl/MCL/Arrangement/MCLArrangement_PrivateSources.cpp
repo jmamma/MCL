@@ -24,9 +24,10 @@ using namespace mcl_arrangement_internal;
 namespace {
 
 #if !defined(__AVR__) && defined(DEBUGMODE)
-#define ARR_COPY_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-copy-mcl] " fmt, ##__VA_ARGS__)
+#define ARR_PRIVATE_TRACE(fmt, ...) \
+  DEBUG_PRINT_FN("[arr-private] " fmt, ##__VA_ARGS__)
 #else
-#define ARR_COPY_TRACE(fmt, ...) do { } while (0)
+#define ARR_PRIVATE_TRACE(fmt, ...)
 #endif
 
 static const uint32_t kPreviewGridSourceFlag = 0x80000000UL;
@@ -482,17 +483,12 @@ bool MCLArrangement::createPrivateSourceFromGrid(GridSlot sourceSlot,
   stored = stored && privateGrid.sync();
   privateGrid.close_file();
   if (!stored) {
-    ARR_COPY_TRACE("create-private store failed source_slot=%u row=%u dst=%u id=%lu",
-                   sourceSlot, row, dstTrack, (unsigned long)sourceId);
     return false;
   }
 
   if (sourceIdOut != nullptr) {
     *sourceIdOut = sourceId;
   }
-  ARR_COPY_TRACE(
-      "create-private source_slot=%u row=%u dst=%u source_id=%lu cell=%u:%u",
-      sourceSlot, row, dstTrack, (unsigned long)sourceId, localCol, localRow);
   return true;
 }
 
@@ -516,8 +512,6 @@ bool MCLArrangement::duplicatePrivateSource(uint32_t sourceId,
 
   for (uint8_t slot = 0; slot < NUM_SLOTS && slot < 32; ++slot) {
     if (runtimePrivateSourceId(slot) == sourceId) {
-      ARR_COPY_TRACE("duplicate flush-runtime slot=%u source_id=%lu", slot,
-                     (unsigned long)sourceId);
       flushRuntimePrivateSource(slot);
       break;
     }
@@ -567,20 +561,12 @@ bool MCLArrangement::duplicatePrivateSource(uint32_t sourceId,
   stored = stored && privateGrid.sync();
   privateGrid.close_file();
   if (!stored) {
-    ARR_COPY_TRACE(
-        "duplicate store failed old_source_id=%lu source_slot=%u dst=%u new_source_id=%lu",
-        (unsigned long)sourceId, sourceSlot, dstTrack,
-        (unsigned long)newSourceId);
     return false;
   }
 
   if (sourceIdOut != nullptr) {
     *sourceIdOut = newSourceId;
   }
-  ARR_COPY_TRACE(
-      "duplicate old_source_id=%lu source_slot=%u dst=%u new_source_id=%lu cell=%u:%u",
-      (unsigned long)sourceId, sourceSlot, dstTrack,
-      (unsigned long)newSourceId, localCol, localRow);
   return true;
 }
 
@@ -1187,20 +1173,33 @@ bool MCLArrangement::loadQueuedPrivateSource(GridSlot sourceSlot, GridRow row,
   GridRow localRow = 0;
   uint32_t sourceId = queued_private_source_ids_[sourceSlot];
   if (!privateSourceCell(sourceId, &localCol, &localRow)) {
+    ARR_PRIVATE_TRACE(
+        "load queued fail-cell src=%u dst=%u source_id=%lu",
+        sourceSlot, runtimeDst, (unsigned long)sourceId);
     clearRuntimePrivateSource(runtimeDst);
     return true;
   }
 
   Grid privateGrid;
   if (!openPrivateGrid(privateGrid, false)) {
+    ARR_PRIVATE_TRACE(
+        "load queued fail-open src=%u dst=%u source_id=%lu col=%u row=%u",
+        sourceSlot, runtimeDst, (unsigned long)sourceId, localCol, localRow);
     clearRuntimePrivateSource(runtimeDst);
     return true;
   }
   *out = scratch.load_from_grid_512(localCol, localRow, &privateGrid);
   privateGrid.close_file();
   if (*out != nullptr) {
+    ARR_PRIVATE_TRACE(
+        "load queued ok src=%u dst=%u source_id=%lu col=%u row=%u active=%u",
+        sourceSlot, runtimeDst, (unsigned long)sourceId, localCol, localRow,
+        (*out)->is_active() ? 1 : 0);
     setRuntimePrivateSource(runtimeDst, sourceId, sourceSlot);
   } else {
+    ARR_PRIVATE_TRACE(
+        "load queued fail-load src=%u dst=%u source_id=%lu col=%u row=%u",
+        sourceSlot, runtimeDst, (unsigned long)sourceId, localCol, localRow);
     clearRuntimePrivateSource(runtimeDst);
   }
   return true;

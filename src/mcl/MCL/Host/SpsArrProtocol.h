@@ -206,6 +206,7 @@ static const int kActivePendingTransitionBytes = 2;
 static const int kActiveSlotSourceRowBytes = kNumGridSlots;
 static const int kActiveLoadQueueLengthBytes = 1;
 static const int kActivePrivateSourceMaskBytes = 4;
+static const int kActivePrivateSourceIdBytes = kNumGridSlots * 4;
 static const int kGridChainRowBytes = kNumGridSlots;
 static const uint8_t kActiveSlotOffsetLoad = 253;
 static const uint8_t kActiveSlotPending = 254;

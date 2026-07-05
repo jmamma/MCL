@@ -314,28 +314,19 @@ bool writeCellLink(uint8_t track, GridRow row, const GridLink& link,
 bool writeCellFade(uint8_t track, GridRow row,
                           const TrackLoadFadeData& fade) {
     if (track >= spsarr::kNumTracks || row >= GRID_LENGTH) {
-        ARR_FADE_TRACE("write reject range track=%u row=%u", track, row);
         return false;
     }
     EmptyTrack scratch;
     DeviceTrack* tr = scratch.load_from_grid_512(track, row);
     if (!tr || !tr->is_active()) {
-        ARR_FADE_TRACE("write reject inactive track=%u row=%u tr=%p",
-                       track, row, tr);
         return false;
     }
     TrackLoadFadeData* dst = tr->load_fade_data();
     if (!dst) {
-        ARR_FADE_TRACE("write reject no-data track=%u row=%u type=%u",
-                       track, row, tr->active);
         return false;
     }
     *dst = fade;
-    const bool ok = tr->write_grid(tr->_this(), tr->get_track_size(), track, row);
-    ARR_FADE_TRACE("write track=%u row=%u type=%u flags=%u target=%u dur=%u amount=%u curve=%d ok=%u",
-                   track, row, tr->active, fade.flags, fade.target,
-                   fade.duration_q12, fade.amount, (int)fade.curve, ok ? 1 : 0);
-    return ok;
+    return tr->write_grid(tr->_this(), tr->get_track_size(), track, row);
 }
 
 GridRow activeRowOrZero() {

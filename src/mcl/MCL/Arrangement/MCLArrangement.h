@@ -176,7 +176,8 @@ private:
                        bool loadActiveAtPosition,
                        bool clearInactiveTracks,
                        uint8_t loadQueueFlags,
-                       bool honorReleasedTracks);
+                       bool honorReleasedTracks,
+                       uint32_t boundaryLookaheadQ12 = 0);
   bool rewriteActive(const mclarrfile::Header &header,
                      const mclarrfile::Clip *clips, uint32_t clipCount);
   bool rewriteActiveWithMarkers(const mclarrfile::Header &header,
@@ -198,6 +199,10 @@ private:
   uint32_t last_tick_q12_ = 0;
   uint32_t playback_active_mask_ = 0;
   uint32_t playback_released_mask_ = 0;
+  uint32_t playback_preload_mask_ = 0;
+  uint32_t playback_preclear_mask_ = 0;
+  uint32_t playback_preload_start_q12_[NUM_SLOTS] = {};
+  uint32_t playback_preclear_end_q12_[NUM_SLOTS] = {};
   static const uint8_t kRuntimeSlots = 16;
   TrackLoadFadeData clip_runtime_fades_[kRuntimeSlots];
   uint32_t clip_runtime_fade_start_q12_[kRuntimeSlots] = {};

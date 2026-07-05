@@ -4,7 +4,12 @@
 
 #include "Arrangement/MCLArrangement.h"
 #include "MCLArrangement_Internal.h"
+#include "Drivers/MD/MDParams.h"
 #include "Grid/MCLActions.h"
+#include "GUI/Pages/CommonPages.h"
+#include "Host/SpsHostSeqBridge.h"
+#include "MCLMemory.h"
+#include "MCLSysConfig.h"
 #include "Sequencer/SeqTrackUtil.h"
 #include "MidiClock.h"
 
@@ -12,13 +17,14 @@ using namespace mcl_arrangement_internal;
 
 namespace {
 
-#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
-#define ARR_AUTO_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-auto] " fmt, ##__VA_ARGS__)
-#define ARR_TIME_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-time] " fmt, ##__VA_ARGS__)
+#if !defined(__AVR__) && defined(DEBUGMODE)
+#define ARR_RUNTIME_TRACE(fmt, ...) \
+  DEBUG_PRINT_FN("[arr-runtime] " fmt, ##__VA_ARGS__)
 #else
-#define ARR_AUTO_TRACE(fmt, ...)
-#define ARR_TIME_TRACE(fmt, ...)
+#define ARR_RUNTIME_TRACE(fmt, ...)
 #endif
+
+static const uint32_t kArrangerBoundaryLookaheadQ12 = 4;
 
 uint8_t automation_curve_phase(uint8_t phase, int8_t curve) {
   uint16_t lin = phase > 127 ? 127 : phase;
@@ -64,48 +70,104 @@ MidiUartClass *automation_uart(uint8_t device) {
   return device == 1 ? &MidiUart2 : &MidiUart;
 }
 
-void traceAutomationValue(uint16_t laneIndex,
-                          const mclarrfile::AutomationLane &lane,
-                          uint32_t positionQ12,
-                          uint16_t value,
-                          const char *phase) {
-  if (lane.targetType == mclarrfile::AUTOMATION_TARGET_MD_PARAM &&
-      lane.targetIndex == MODEL_LEVEL) {
-    ARR_AUTO_TRACE("%s lane=%u track=%u dev=%u value=%u q12=%lu tick=%lu",
-                   phase, laneIndex, lane.track, lane.device, value,
-                   (unsigned long)positionQ12,
-                   (unsigned long)MidiClock.div192th_counter);
+constexpr uint8_t automation_fx_lane() {
+  return (uint8_t)(NUM_MD_TRACKS + MDFX_TRACK_NUM);
+}
+
+constexpr uint8_t automation_perf_lane() {
+  return (uint8_t)(NUM_MD_TRACKS + PERF_TRACK_NUM);
+}
+
+constexpr uint8_t automation_route_lane() {
+  return (uint8_t)(NUM_MD_TRACKS + MDROUTE_TRACK_NUM);
+}
+
+constexpr uint8_t automation_tempo_lane() {
+  return (uint8_t)(NUM_MD_TRACKS + MDTEMPO_TRACK_NUM);
+}
+
+uint16_t clamp_automation_tempo_raw(uint16_t raw) {
+  if (raw < 720) {
+    return 720;
+  }
+  if (raw > 7200) {
+    return 7200;
+  }
+  return raw;
+}
+
+uint8_t automation_fx_type(uint8_t targetIndex) {
+  switch (targetIndex >> 3) {
+    case 0:
+      return MD_FX_ECHO;
+    case 1:
+      return MD_FX_REV;
+    case 2:
+      return MD_FX_EQ;
+    case 3:
+      return MD_FX_DYN;
+    default:
+      return MD_FX_ECHO;
+  }
+}
+
+PerfEncoder *automation_perf_encoder(uint8_t index) {
+  if (index >= NUM_PERF_CONTROLS) {
+    return nullptr;
+  }
+  PerfEncoder *encoder = perf_page.perf_encoders[index];
+  if (encoder != nullptr) {
+    return encoder;
+  }
+  switch (index) {
+    case 0:
+      return &perf_param1;
+    case 1:
+      return &perf_param2;
+    case 2:
+      return &perf_param3;
+    case 3:
+      return &perf_param4;
+    default:
+      return nullptr;
   }
 }
 
 void dispatchAutomationWrite(
     const MCLArrangement::AutomationPendingWrite &write) {
-  uint8_t track = write.track & 0x0F;
+  uint8_t rawTrack = write.track;
   uint16_t value = clamp_automation_value(write.value, write.valueType);
   MidiUartClass *uart = automation_uart(write.device);
   switch (write.targetType) {
     case mclarrfile::AUTOMATION_TARGET_MD_PARAM:
-      if (track < NUM_MD_TRACKS &&
-          (write.targetIndex < SPS_PARAMS_PER_TRACK ||
-           write.targetIndex == MODEL_LEVEL)) {
-        if (write.targetIndex == MODEL_LEVEL) {
-          ARR_AUTO_TRACE("write track=%u dev=%u value=%u old_kit=%u tick=%lu",
-                         track, write.device, value, MD.kit.levels[track],
-                         (unsigned long)MidiClock.div192th_counter);
+      if (rawTrack == automation_fx_lane()) {
+        if (write.targetIndex < 32) {
+          MD.setFXParam((uint8_t)(write.targetIndex & 0x07), (uint8_t)value,
+                        automation_fx_type(write.targetIndex), false, uart);
         }
-        MD.setTrackParam(track, write.targetIndex, (uint8_t)value, uart,
-                         false);
+        break;
+      }
+      {
+        uint8_t track = rawTrack;
+        if (track < NUM_MD_TRACKS &&
+            (write.targetIndex < SPS_PARAMS_PER_TRACK ||
+             write.targetIndex == MODEL_LEVEL)) {
+          MD.setTrackParam(track, write.targetIndex, (uint8_t)value, uart,
+                           false);
+        }
       }
       break;
     case mclarrfile::AUTOMATION_TARGET_MUTE:
-      if (track < NUM_MD_TRACKS) {
+      if (rawTrack < NUM_MD_TRACKS) {
+        uint8_t track = rawTrack;
         bool mute = value != 0;
         SeqTrackUtil::set_mute_state(true, track, mute);
         MD.muteTrack(track, mute, uart);
       }
       break;
     case mclarrfile::AUTOMATION_TARGET_FILL:
-      if (track < NUM_MD_TRACKS) {
+      if (rawTrack < NUM_MD_TRACKS) {
+        uint8_t track = rawTrack;
         bool fill = value != 0;
         DeviceIdx deviceIdx =
             write.device == 1 ? DeviceIdx::Secondary : DeviceIdx::Primary;
@@ -114,6 +176,35 @@ void dispatchAutomationWrite(
           MD.sendCC(MD.global.baseChannel + (track >> 2), 68 + (track & 3),
                     fill ? 127 : 0, uart);
         }
+      }
+      break;
+    case mclarrfile::AUTOMATION_TARGET_PERF:
+      if (rawTrack == automation_perf_lane() &&
+          write.targetIndex < NUM_PERF_CONTROLS) {
+        PerfEncoder *encoder = automation_perf_encoder(write.targetIndex);
+        if (encoder != nullptr) {
+          encoder->setValue((int)value);
+          perf_page.perf_id = write.targetIndex;
+          perf_page.send_perf_encoder(write.targetIndex, uart);
+        }
+      }
+      break;
+    case mclarrfile::AUTOMATION_TARGET_ROUTING:
+      if (rawTrack == automation_route_lane() &&
+          write.targetIndex < NUM_MD_TRACKS) {
+        uint8_t route = value > 6 ? 6 : (uint8_t)value;
+        mcl_cfg.routing[write.targetIndex] = route;
+        MD.setTrackRouting(write.targetIndex, route);
+      }
+      break;
+    case mclarrfile::AUTOMATION_TARGET_TEMPO:
+      if (rawTrack == automation_tempo_lane()) {
+        uint16_t rawTempo = clamp_automation_tempo_raw(write.value);
+        float bpm = (float)rawTempo / 24.0f;
+        mcl_cfg.tempo = bpm;
+        MidiClock.setTempo(bpm);
+        MD.setTempo(bpm, true);
+        sps_host_seq_bridge.notifyActive();
       }
       break;
     default:
@@ -128,6 +219,10 @@ void MCLArrangement::resetPlayback(bool clearPrivateSources) {
   last_tick_q12_ = 0;
   playback_active_mask_ = 0;
   playback_released_mask_ = 0;
+  playback_preload_mask_ = 0;
+  playback_preclear_mask_ = 0;
+  memset(playback_preload_start_q12_, 0, sizeof(playback_preload_start_q12_));
+  memset(playback_preclear_end_q12_, 0, sizeof(playback_preclear_end_q12_));
   clip_runtime_fade_mask_ = 0;
   memset(clip_runtime_fade_start_q12_, 0,
          sizeof(clip_runtime_fade_start_q12_));
@@ -243,15 +338,6 @@ bool MCLArrangement::loadAutomationDirectory() {
     for (uint32_t i = 0; ok && i < laneChunk.count; ++i) {
       ok = mcl_sd.read_data(&automation_lanes_[i],
                             sizeof(mclarrfile::AutomationLane), &file);
-      if (ok) {
-        const mclarrfile::AutomationLane &lane = automation_lanes_[i];
-        ARR_AUTO_TRACE(
-            "loaded lane=%lu track=%u type=%u dev=%u target=%u valueType=%u "
-            "flags=%u points=%u offset=%lu",
-            (unsigned long)i, lane.track, lane.targetType, lane.device,
-            lane.targetIndex, lane.valueType, lane.flags, lane.pointCount,
-            (unsigned long)lane.pointOffset);
-      }
     }
   }
   bool havePoints = findChunk(file, header,
@@ -424,7 +510,6 @@ void MCLArrangement::chaseAutomation(uint32_t positionQ12, bool sendValues) {
     }
     if (sendValues && automation_runtime_[laneIndex].have_prev) {
       uint16_t value = automationEvaluate(laneIndex, positionQ12);
-      traceAutomationValue(laneIndex, lane, positionQ12, value, "chase");
       queueAutomationWrite(laneIndex, value);
     }
   }
@@ -472,7 +557,6 @@ void MCLArrangement::tickAutomation(uint32_t positionQ12) {
     }
     if (rt.have_prev) {
       uint16_t value = automationEvaluate(laneIndex, positionQ12);
-      traceAutomationValue(laneIndex, lane, positionQ12, value, "tick");
       queueAutomationWrite(laneIndex, value);
     }
   }
@@ -583,6 +667,8 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
 
   const uint32_t touchedMask = loadMask | clearMask;
   clip_runtime_fade_mask_ &= ~touchedMask;
+  playback_preload_mask_ &= ~touchedMask;
+  playback_preclear_mask_ &= ~touchedMask;
   clearRuntimePrivateSources(touchedMask);
   playback_released_mask_ &= ~touchedMask;
   if (touchedMask == 0) {
@@ -609,13 +695,14 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
     if (!readClipRecord(file, header, clip)) {
       break;
     }
+    const bool privateClip =
+        clip.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE;
     if ((clip.flags & mclarrfile::CLIP_MUTED) != 0 ||
         clip.durationQ12 == 0 || clip.track >= NUM_SLOTS ||
-        clip.row >= GRID_LENGTH) {
+        (!privateClip && clip.row >= GRID_LENGTH)) {
       continue;
     }
-    if (clip.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE &&
-        !privateSourceCell(clip.sourceId, nullptr, nullptr)) {
+    if (privateClip && !privateSourceCell(clip.sourceId, nullptr, nullptr)) {
       continue;
     }
 
@@ -627,11 +714,11 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
 
     const uint32_t bit = (uint32_t)(1ul << clip.track);
     bool matchedLoadedClip =
-        clip.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE
-            ? loadedRows[clip.track] == LOAD_QUEUE_PRIVATE_ROW &&
-                  loadedPrivateIds[clip.track] == clip.sourceId
-            : loadedRows[clip.track] == clip.row &&
-                  loadedSources[clip.track] == mclarrfile::clipSourceSlot(clip);
+        privateClip ? loadedRows[clip.track] == LOAD_QUEUE_PRIVATE_ROW &&
+                          loadedPrivateIds[clip.track] == clip.sourceId
+                    : loadedRows[clip.track] == clip.row &&
+                          loadedSources[clip.track] ==
+                              mclarrfile::clipSourceSlot(clip);
     if ((loadMask & bit) != 0 && matchedLoadedClip &&
         (uint64_t)positionQ12 >= clipStart &&
         (uint64_t)positionQ12 < clipEnd) {
@@ -661,6 +748,11 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   playback_active_mask_ = (playback_active_mask_ & ~clearMask) | loadMask;
   for (uint8_t slot = 0; slot < NUM_SLOTS; ++slot) {
     if (loadedPrivateIds[slot] != 0) {
+      ARR_RUNTIME_TRACE(
+          "arm host private slot=%u source_id=%lu source_slot=%u pos=%lu load_mask=0x%08lx clear_mask=0x%08lx",
+          slot, (unsigned long)loadedPrivateIds[slot], loadedSources[slot],
+          (unsigned long)positionQ12, (unsigned long)loadMask,
+          (unsigned long)clearMask);
       setRuntimePrivateSource(slot, loadedPrivateIds[slot],
                               loadedSources[slot]);
     }
@@ -675,6 +767,8 @@ bool MCLArrangement::releasePlaybackTracks(uint32_t trackMask) {
   uint32_t oldMask = playback_released_mask_;
   playback_released_mask_ |= trackMask;
   playback_active_mask_ &= ~trackMask;
+  playback_preload_mask_ &= ~trackMask;
+  playback_preclear_mask_ &= ~trackMask;
   clip_runtime_fade_mask_ &= ~trackMask;
   clearRuntimePrivateSources(trackMask);
   return playback_released_mask_ != oldMask;
@@ -730,12 +824,6 @@ bool MCLArrangement::applyClipRuntime(uint8_t dst, DeviceTrack *track) {
 bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
                               bool allowPrestartFade,
                               bool clearReleasedTracks) {
-  ARR_TIME_TRACE("seek-load pos=%lu immediate=%u prestart=%u clearRel=%u clockQ12=%lu div192=%lu state=%u",
-                 (unsigned long)positionQ12, immediate ? 1 : 0,
-                 allowPrestartFade ? 1 : 0, clearReleasedTracks ? 1 : 0,
-                 (unsigned long)currentClockQ12(),
-                 (unsigned long)MidiClock.div192th_counter,
-                 (unsigned)MidiClock.state);
   host_playback_suspended_ = false;
   playback_arrangement_idx_ = mcl_cfg.active_arrangement_idx;
   playback_active_ = true;
@@ -755,10 +843,6 @@ bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
   bool queued = queueClipStarts(positionQ12, endQ12, true, true, queueFlags,
                                 !clearReleasedTracks);
   chaseAutomation(positionQ12, true);
-  ARR_TIME_TRACE("seek-load done queued=%u activeMask=%lu releasedMask=%lu div192=%lu",
-                 queued ? 1 : 0, (unsigned long)playback_active_mask_,
-                 (unsigned long)playback_released_mask_,
-                 (unsigned long)MidiClock.div192th_counter);
   return queued;
 }
 
@@ -773,18 +857,10 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
                                      bool loadActiveAtPosition,
                                      bool clearInactiveTracks,
                                      uint8_t loadQueueFlags,
-                                     bool honorReleasedTracks) {
-  ARR_TIME_TRACE("scan begin start=%lu end=%lu loadActive=%u clearInactive=%u flags=%u honorRel=%u last=%lu activeMask=%lu clockQ12=%lu div192=%lu",
-                 (unsigned long)startQ12, (unsigned long)endQ12,
-                 loadActiveAtPosition ? 1 : 0, clearInactiveTracks ? 1 : 0,
-                 loadQueueFlags, honorReleasedTracks ? 1 : 0,
-                 (unsigned long)last_tick_q12_,
-                 (unsigned long)playback_active_mask_,
-                 (unsigned long)currentClockQ12(),
-                 (unsigned long)MidiClock.div192th_counter);
+                                     bool honorReleasedTracks,
+                                     uint32_t boundaryLookaheadQ12) {
   File file;
   if (!openActive(&file, O_READ)) {
-    ARR_TIME_TRACE("scan abort open failed");
     return false;
   }
 
@@ -795,31 +871,41 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       !file.seekSet(header.headerBytes)) {
     file.close();
     playback_active_mask_ = 0;
-    ARR_TIME_TRACE("scan abort header ok=%u clips=%lu",
-                   ok ? 1 : 0, (unsigned long)header.clipCount);
+    playback_preload_mask_ = 0;
+    playback_preclear_mask_ = 0;
     return false;
   }
 
   ArrangerLoadGroups loadGroups;
+  ArrangerLoadGroups preloadGroups;
   GridRow clearRows[NUM_SLOTS];
   memset(clearRows, 255, sizeof(clearRows));
   bool any = false;
   bool hasPlayableClip = false;
   uint32_t currentActiveMask = 0;
   uint32_t startMask = 0;
+  uint32_t futureStartMask = 0;
+  uint32_t preclearMask = 0;
   uint32_t nowQ12 = endQ12 > startQ12 ? endQ12 - 1u : startQ12;
+  uint64_t lookaheadEndQ12 = (uint64_t)nowQ12 + boundaryLookaheadQ12;
+  if (lookaheadEndQ12 > 0xFFFFFFFFull) {
+    lookaheadEndQ12 = 0xFFFFFFFFull;
+  }
+  bool allowBoundaryLookahead =
+      !loadActiveAtPosition && boundaryLookaheadQ12 > 0;
   for (uint32_t i = 0; i < header.clipCount; ++i) {
     mclarrfile::Clip clip;
     if (!readClipRecord(file, header, clip)) {
       break;
     }
+    const bool privateClip =
+        clip.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE;
     if ((clip.flags & mclarrfile::CLIP_MUTED) != 0 ||
         clip.durationQ12 == 0 || clip.track >= NUM_SLOTS ||
-        clip.row >= GRID_LENGTH) {
+        (!privateClip && clip.row >= GRID_LENGTH)) {
       continue;
     }
-    if (clip.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE &&
-        !privateSourceCell(clip.sourceId, nullptr, nullptr)) {
+    if (privateClip && !privateSourceCell(clip.sourceId, nullptr, nullptr)) {
       continue;
     }
     hasPlayableClip = true;
@@ -835,29 +921,30 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     bool activeNow = (uint64_t)nowQ12 >= clipStart &&
                      (uint64_t)nowQ12 < clipEnd;
     bool startsNow = q12InRange(clip.startQ12, startQ12, endQ12);
-    ARR_TIME_TRACE("clip i=%lu tr=%u row=%u srcKind=%u srcSlot=%u sid=%lu start=%lu end=%lu now=%lu active=%u startHit=%u flags=%u fade=%u/%u",
-                   (unsigned long)i, clip.track, clip.row, clip.sourceKind,
-                   mclarrfile::clipSourceSlot(clip),
-                   (unsigned long)clip.sourceId,
-                   (unsigned long)clip.startQ12, (unsigned long)clipEnd,
-                   (unsigned long)nowQ12, activeNow ? 1 : 0,
-                   startsNow ? 1 : 0, clip.flags,
-                   clip.fadeFlags, clip.endFadeFlags);
-    if (activeNow) {
+    bool hasFadeOverride =
+        (clip.flags & mclarrfile::CLIP_FADE_OVERRIDE) != 0;
+    bool preloadMatches =
+        (playback_preload_mask_ & trackBit) != 0 &&
+        playback_preload_start_q12_[clip.track] == clip.startQ12;
+    bool preclearMatches =
+        clipEnd <= 0xFFFFFFFFull &&
+        (playback_preclear_mask_ & trackBit) != 0 &&
+        playback_preclear_end_q12_[clip.track] == (uint32_t)clipEnd;
+    bool futureStarts =
+        allowBoundaryLookahead && !startsNow && !hasFadeOverride &&
+        clipStart > nowQ12 && clipStart <= lookaheadEndQ12;
+    bool futureEnds =
+        allowBoundaryLookahead && !hasFadeOverride &&
+        clipEnd > nowQ12 && clipEnd <= lookaheadEndQ12;
+    if (activeNow && !preclearMatches) {
       currentActiveMask |= (uint32_t)(1ul << clip.track);
+    }
+    if (activeNow) {
       if (loadActiveAtPosition) {
         if (addClipLoad(loadGroups, clip)) {
           startMask |= (uint32_t)(1ul << clip.track);
-          ARR_TIME_TRACE("queue active tr=%u row=%u start=%lu now=%lu",
-                         clip.track, clip.row,
-                         (unsigned long)clip.startQ12,
-                         (unsigned long)nowQ12);
           TrackLoadFadeData fade;
           if (clipFadeAtPosition(clip, nowQ12, fade)) {
-            ARR_TIME_TRACE("arm active fade tr=%u flags=%u dur=%u amount=%u elapsed=%u now=%lu",
-                           clip.track, fade.flags, fade.duration_q12,
-                           fade.amount, fade.elapsed_q12(),
-                           (unsigned long)nowQ12);
             armRuntimeFade(clip.track, fade);
           }
           any = true;
@@ -865,22 +952,38 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       }
     }
     if (startsNow) {
-      if (addClipLoad(loadGroups, clip)) {
+      playback_preload_mask_ &= ~trackBit;
+      playback_preclear_mask_ &= ~trackBit;
+      if (preloadMatches) {
         startMask |= (uint32_t)(1ul << clip.track);
-        ARR_TIME_TRACE("queue start tr=%u row=%u start=%lu scan=%lu..%lu",
-                       clip.track, clip.row,
-                       (unsigned long)clip.startQ12,
-                       (unsigned long)startQ12,
-                       (unsigned long)endQ12);
-        TrackLoadFadeData fade;
-        if (clipFadeAtPosition(clip, clip.startQ12, false, fade)) {
-          ARR_TIME_TRACE("arm start fade tr=%u flags=%u dur=%u amount=%u elapsed=%u clipStart=%lu",
-                         clip.track, fade.flags, fade.duration_q12,
-                         fade.amount, fade.elapsed_q12(),
-                         (unsigned long)clip.startQ12);
-          armRuntimeFade(clip.track, fade);
+      } else {
+        if (addClipLoad(loadGroups, clip)) {
+          startMask |= (uint32_t)(1ul << clip.track);
+          TrackLoadFadeData fade;
+          if (clipFadeAtPosition(clip, clip.startQ12, false, fade)) {
+            armRuntimeFade(clip.track, fade);
+          }
+          any = true;
         }
+      }
+    } else if (futureStarts) {
+      if (preloadMatches) {
+        startMask |= trackBit;
+        futureStartMask |= trackBit;
+      } else if ((playback_active_mask_ & trackBit) == 0 &&
+                 addClipLoad(preloadGroups, clip)) {
+        startMask |= trackBit;
+        futureStartMask |= trackBit;
+        playback_preload_mask_ |= trackBit;
+        playback_preload_start_q12_[clip.track] = clip.startQ12;
         any = true;
+      }
+    }
+    if (futureEnds && (playback_active_mask_ & trackBit) != 0) {
+      if (!preclearMatches) {
+        preclearMask |= trackBit;
+        playback_preclear_mask_ |= trackBit;
+        playback_preclear_end_q12_[clip.track] = (uint32_t)clipEnd;
       }
     }
     if ((clip.flags & mclarrfile::CLIP_FADE_OVERRIDE) != 0) {
@@ -897,10 +1000,6 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
             clipFadeAtPosition(clip, (uint32_t)fadeStart, fade)) {
           if (addClipLoad(loadGroups, clip)) {
             startMask |= (uint32_t)(1ul << clip.track);
-            ARR_TIME_TRACE("queue fadeout tr=%u row=%u fadeStart=%lu scan=%lu..%lu",
-                           clip.track, clip.row, (unsigned long)fadeStart,
-                           (unsigned long)startQ12,
-                           (unsigned long)endQ12);
             armRuntimeFade(clip.track, fade);
             any = true;
           }
@@ -912,13 +1011,18 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
 
   if (!hasPlayableClip) {
     playback_active_mask_ = 0;
-    ARR_TIME_TRACE("scan done no playable clips");
+    playback_preload_mask_ = 0;
+    playback_preclear_mask_ = 0;
     return false;
   }
 
   uint32_t clearBaseMask =
       clearInactiveTracks ? (uint32_t)0xFFFFFFFFul : playback_active_mask_;
   uint32_t clearMask = clearBaseMask & ~currentActiveMask;
+  preclearMask &= ~startMask;
+  if (preclearMask != 0) {
+    clearMask |= preclearMask;
+  }
   clearMask &= ~startMask;
   if (honorReleasedTracks) {
     clearMask &= ~playback_released_mask_;
@@ -930,16 +1034,12 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     clearRows[track] = LOAD_QUEUE_CLEAR_ROW;
     any = true;
   }
-  playback_active_mask_ = currentActiveMask;
+  playback_active_mask_ = (currentActiveMask | futureStartMask) & ~preclearMask;
 
   if (any) {
     uint8_t queueMode = LOAD_ARRANG | loadQueueFlags;
-    ARR_TIME_TRACE("flush begin any=%u qmode=%u startMask=%lu currentMask=%lu clearMask=%lu div192=%lu",
-                   any ? 1 : 0, queueMode, (unsigned long)startMask,
-                   (unsigned long)currentActiveMask,
-                   (unsigned long)clearMask,
-                   (unsigned long)MidiClock.div192th_counter);
     loadGroups.flush(queueMode);
+    preloadGroups.flush((uint8_t)(queueMode | LOAD_QUEUE_FLAG_ARRANGER_PRELOAD));
     bool hasClear = false;
     for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
       if (clearRows[track] == LOAD_QUEUE_CLEAR_ROW) {
@@ -948,15 +1048,9 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
       }
     }
     if (hasClear) {
-      ARR_TIME_TRACE("flush clear qmode=%u clearMask=%lu", queueMode,
-                     (unsigned long)clearMask);
       grid_task.load_queue.put(queueMode, clearRows);
     }
   }
-  ARR_TIME_TRACE("scan done any=%u activeMask=%lu clockQ12=%lu div192=%lu",
-                 any ? 1 : 0, (unsigned long)playback_active_mask_,
-                 (unsigned long)currentClockQ12(),
-                 (unsigned long)MidiClock.div192th_counter);
   return any;
 }
 
@@ -1145,12 +1239,9 @@ void MCLArrangement::tick() {
   playback_active_ = true;
   playback_arrangement_idx_ = activeIdx;
   last_tick_q12_ = nowQ12;
-  ARR_TIME_TRACE("tick scan start=%lu end=%lu now=%lu same=%u div192=%lu",
-                 (unsigned long)startQ12, (unsigned long)endQ12,
-                 (unsigned long)nowQ12, sameArrangement ? 1 : 0,
-                 (unsigned long)MidiClock.div192th_counter);
   queueClipStarts(startQ12, endQ12, false, false,
-                  LOAD_QUEUE_FLAG_IMMEDIATE, true);
+                  LOAD_QUEUE_FLAG_IMMEDIATE, true,
+                  kArrangerBoundaryLookaheadQ12);
   tickAutomation(nowQ12);
 }
 

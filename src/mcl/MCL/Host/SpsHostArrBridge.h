@@ -96,6 +96,8 @@ private:
     uint16_t clip_stage_total_ = 0;
     uint16_t clip_stage_received_ = 0;
     mclarrfile::Clip* clip_stage_clips_ = nullptr;
+    bool load_slots_service_active_ = false;
+    uint8_t load_slots_service_tag_ = 0;
 };
 
 extern SpsHostArrBridge sps_host_arr_bridge;

@@ -21,14 +21,6 @@
 
 #define MD_KIT_LENGTH 0x4D0
 
-#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
-#define LOAD_FADE_TRACE(fmt, ...) DEBUG_PRINT_FN("[load-fade] " fmt, ##__VA_ARGS__)
-#define ARR_TIME_TRACE(fmt, ...) DEBUG_PRINT_FN("[arr-time] " fmt, ##__VA_ARGS__)
-#else
-#define LOAD_FADE_TRACE(fmt, ...)
-#define ARR_TIME_TRACE(fmt, ...)
-#endif
-
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
 uint16_t MCLActions::clear_runtime_fade_elapsed(DeviceTrack *track) {
   if (track == nullptr) {
@@ -365,22 +357,6 @@ void MCLActions::start_load_fade_at(GridSlot slot,
   GridDeviceTrack *gdt = get_grid_dev_track(slot);
   TrackLoadFadeTarget target;
   const bool ok = resolve_track_load_fade_target(slot, gdt, fade, &target);
-#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
-  if (fade != nullptr) {
-    LOAD_FADE_TRACE("start slot=%u type=%u dev=%u ok=%u flags=%u dur=%u amount=%u curve=%d clock=%lu state=%u prestart=%u",
-                    slot, gdt ? gdt->track_type : 0,
-                    gdt ? gdt->device_idx : 255, ok ? 1 : 0, fade->flags,
-                    fade->duration_q12, fade->amount, (int)fade->curve,
-                    (unsigned long)start_clock, (unsigned)MidiClock.state,
-                    allow_prestart ? 1 : 0);
-  } else {
-    LOAD_FADE_TRACE("start slot=%u type=%u dev=%u ok=%u no-fade clock=%lu state=%u prestart=%u",
-                    slot, gdt ? gdt->track_type : 0,
-                    gdt ? gdt->device_idx : 255, ok ? 1 : 0,
-                    (unsigned long)start_clock, (unsigned)MidiClock.state,
-                    allow_prestart ? 1 : 0);
-  }
-#endif
   // The runner always clears the slot on entry, so an unresolved target still
   // wipes any prior fade for this slot — matches the pre-refactor behavior.
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
@@ -688,8 +664,6 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
   }
   bool recache = false;
   GridSlot last_slot = 255;
-  DEBUG_PRINTLN("load tracks");
-  DEBUG_PRINTLN(load_mode);
   for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
     if (slot_select_array[n] == 0) { continue; }
 
@@ -977,19 +951,12 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
 #endif
                                       ) {
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
+  (void)allow_prestart_fade;
   if (load_fade_valid_out != nullptr) {
     *load_fade_valid_out = 0;
   }
 #endif
   GridColumn track_idx_dst = dst & 0xF;
-  ARR_TIME_TRACE("load-immediate begin src=%u row=%u dst=%u type=%u prestart=%u div192=%lu",
-                 i, row, dst, gdt_dst ? gdt_dst->track_type : 0,
-#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
-                 allow_prestart_fade ? 1 : 0,
-#else
-                 0,
-#endif
-                 (unsigned long)MidiClock.div192th_counter);
   EmptyTrack scratch;
   bool rebuilt = false;
   auto *ptrack = load_and_prepare_track(i, row, gdt_dst->track_type,
@@ -998,8 +965,6 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
 
   if (ptrack == nullptr) {
     // DEBUG_PRINTLN("bad read");
-    ARR_TIME_TRACE("load-immediate fail read src=%u row=%u dst=%u div192=%lu",
-                   i, row, dst, (unsigned long)MidiClock.div192th_counter);
     return false;
   } // read failure
 
@@ -1027,22 +992,6 @@ bool MCLActions::load_track_immediate(GridRow row, GridSlot i, GridSlot dst,
       *load_fade_valid_out = 1;
     }
   }
-  ARR_TIME_TRACE("load-immediate done src=%u row=%u dst=%u loadSound=%u rebuilt=%u fadeValid=%u div192=%lu",
-                 i, row, dst, load_sound ? 1 : 0, rebuilt ? 1 : 0,
-                 (load_fade_valid_out != nullptr && *load_fade_valid_out)
-                     ? 1
-                     : 0,
-                 (unsigned long)MidiClock.div192th_counter);
-#endif
-#if defined(PLATFORM_WASM) && defined(DEBUGMODE)
-  if (const TrackLoadFadeData *fade = ptrack->load_fade_data()) {
-    LOAD_FADE_TRACE("immediate src=%u row=%u dst=%u type=%u fade flags=%u dur=%u amount=%u curve=%d",
-                    i, row, dst, gdt_dst->track_type, fade->flags,
-                    fade->duration_q12, fade->amount, (int)fade->curve);
-  } else {
-    LOAD_FADE_TRACE("immediate src=%u row=%u dst=%u type=%u no-fade-data",
-                    i, row, dst, gdt_dst->track_type);
-  }
 #endif
 #if !MCL_FEATURE_HOST_LOAD_FADE_SEEK
   start_load_fade_at(dst, ptrack->load_fade_data(), MidiClock.div192th_counter);
@@ -1068,7 +1017,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
 #endif
                                         ) {
   // DEBUG_PRINT_FN();
-  DEBUG_PRINTLN("send tracks to devices");
   // Unsupported slots are cleared from slot_select_array before cache refresh.
 
   MidiDevice *devs[2];
@@ -1092,14 +1040,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   GridSlot first_slot = 255;
   GridRow current_row = grid_page.getRow();
   bool any_loaded = false;
-  ARR_TIME_TRACE("send-tracks begin modeOffset=%u prestart=%u div192=%lu",
-                 load_offset,
-#if MCL_FEATURE_HOST_LOAD_FADE_SEEK
-                 allow_prestart_fades ? 1 : 0,
-#else
-                 0,
-#endif
-                 (unsigned long)MidiClock.div192th_counter);
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
     if (slot_select_array[i] == 0) { continue; }
@@ -1148,8 +1088,6 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   }
 
   if (!any_loaded) {
-    ARR_TIME_TRACE("send-tracks no-load div192=%lu",
-                   (unsigned long)MidiClock.div192th_counter);
     return;
   }
 
@@ -1195,11 +1133,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
         // DEBUG_PRINTLN("SEND NAME");
         // DEBUG_PRINTLN(dst);
       }
-      latency_ms += elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH);
+      uint16_t deviceLatency =
+          elektron_dev->sendKitParams(send_masks + i * GRID_WIDTH);
+      latency_ms += deviceLatency;
     }
   }
-  ARR_TIME_TRACE("send-tracks kit-sent latencyMs=%u div192=%lu",
-                 latency_ms, (unsigned long)MidiClock.div192th_counter);
 
   // note, do not re-enter grid_task -- stackoverflow
 
@@ -1209,18 +1147,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   while (clock_diff(myclock, read_clock_ms()) < latency_ms) {
     platform_wait_poll();
   }
-  ARR_TIME_TRACE("send-tracks wait-done div192=%lu",
-                 (unsigned long)MidiClock.div192th_counter);
 
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
   for (uint8_t n = 0; n < NUM_SLOTS; n++) {
     if (load_fade_valid[n] == 0) {
       continue;
     }
-    ARR_TIME_TRACE("send-tracks start-fade slot=%u flags=%u dur=%u elapsed=%u div192=%lu",
-                   n, load_fades[n].flags, load_fades[n].duration_q12,
-                   load_fades[n].elapsed_q12(),
-                   (unsigned long)MidiClock.div192th_counter);
     start_load_fade_at(n, &load_fades[n], load_fade_start_clock,
                        allow_prestart_fades);
   }
