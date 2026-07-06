@@ -50,10 +50,6 @@ void PerfMorph::populate(PerfScene *s1, PerfScene *s2) {
       }
       f->min = p->val == 255 ? v : p->val;
       f->max = v;
-      DEBUG_PRINT("ADDING ");
-      DEBUG_PRINT(f->min);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINT(f->max);
       count++;
     }
   }
@@ -69,19 +65,13 @@ void PerfMorph::populate(PerfScene *s1, PerfScene *s2) {
       }
       if (m != 255) {
         f = &fades[m];
-        DEBUG_PRINTLN("exists");
       } else {
         f->dest = p->dest;
         f->param = p->param;
         f->min = v;
         count++;
-        DEBUG_PRINTLN("does not exist");
       }
       f->max = p->val == 255 ? v : p->val;
-      DEBUG_PRINT("HERE ");
-      DEBUG_PRINT(f->min);
-      DEBUG_PRINT(" ");
-      DEBUG_PRINT(f->max);
     }
   }
 }
@@ -101,21 +91,14 @@ void PerfEncoder::send_params(uint8_t cur_, PerfScene *s1, PerfScene *s2, MidiUa
   for (uint8_t n = 0; n < morph.count; n++) {
 
     PerfFade *f = &morph.fades[n];
-    DEBUG_PRINTLN("send para");
-    DEBUG_PRINTLN(f->max);
-    DEBUG_PRINTLN(f->min);
 
     uint8_t val = 0;
     int8_t range = f->max - f->min;
     int16_t q = cur_ * range;
-    DEBUG_PRINTLN("range");
-    DEBUG_PRINTLN(range);
-    DEBUG_PRINTLN(cur);
     val = ((int16_t)q / (int16_t)127) + f->min;
     if (val > 127) {
       continue;
     }
-    DEBUG_PRINTLN(val);
     send_param(f->dest, f->param, val, uart_, uart2_);
   }
 }
