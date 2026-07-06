@@ -54,6 +54,54 @@ uint16_t MCLArrangement::readClips(uint32_t startQ12, uint32_t endQ12,
     }
   }
   file.close();
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  if (automation_record_armed_) {
+    uint32_t nowQ12 = currentClockQ12();
+    uint32_t queryEndQ12 = endQ12 > startQ12 ? endQ12 : 0xFFFFFFFFu;
+    for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
+      const ClipRecordState &state = clip_record_[track];
+      if (!state.active)
+        continue;
+
+      uint32_t activeEndQ12 =
+          nowQ12 > state.startQ12 ? nowQ12 : state.startQ12 + 1u;
+      if (activeEndQ12 <= startQ12 || state.startQ12 >= queryEndQ12)
+        continue;
+      mclarrfile::Clip clip;
+      memset(&clip, 0, sizeof(clip));
+      clearClipFade(clip);
+      clip.startQ12 = state.startQ12;
+      clip.durationQ12 = 0;
+      clip.repeatQ12 = state.repeatQ12 != 0
+                           ? state.repeatQ12
+                           : activeEndQ12 - state.startQ12;
+      clip.track = track;
+      clip.row = state.row;
+      clip.flags = state.flags | mclarrfile::CLIP_RECORDING;
+      if (state.sourceKind == mclarrfile::CLIP_SOURCE_PRIVATE &&
+          state.sourceId != 0) {
+        clip.sourceKind = mclarrfile::CLIP_SOURCE_PRIVATE;
+        clip.sourceTrack = state.sourceSlot;
+        clip.sourceFlags = mclarrfile::encodePrivateSourceSlot(state.sourceSlot);
+        clip.sourceId = state.sourceId;
+      } else {
+        mclarrfile::initGridSource(clip, state.sourceSlot);
+      }
+      if (state.hasFade) {
+        mcl_arrangement_internal::setClipFade(clip, state.fade,
+                                              state.fade.fade_out(), true);
+      }
+
+      if (matched++ < skip)
+        continue;
+      if (returned < maxClips) {
+        out[returned++] = clip;
+      } else if (more != nullptr) {
+        *more = true;
+      }
+    }
+  }
+#endif
   if (totalMatches != nullptr) {
     *totalMatches = matched;
   }

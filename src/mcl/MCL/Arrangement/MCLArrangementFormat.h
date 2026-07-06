@@ -46,7 +46,8 @@ enum ClipFlags {
     CLIP_LOOP = 1 << 0,
     CLIP_MUTED = 1 << 1,
     CLIP_LOAD_SOUND = 1 << 2,
-    CLIP_FADE_OVERRIDE = 1 << 3
+    CLIP_FADE_OVERRIDE = 1 << 3,
+    CLIP_RECORDING = 1 << 4
 };
 
 enum ClipSourceKind {

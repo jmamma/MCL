@@ -144,6 +144,10 @@ public:
                               ,
                               bool allow_prestart_fades = false
 #endif
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+                              ,
+                              bool record_arranger_clips = false
+#endif
                               );
   void manual_transition(uint8_t *slot_select_array, GridRow *row_array,
                          GridSlot load_offset);

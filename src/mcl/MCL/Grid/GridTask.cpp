@@ -113,6 +113,12 @@ bool GridTask::save_needs_md_current_pattern() {
 
 void GridTask::reset_host_playback_after_stop() {
   mcl_arrangement.flushRuntimePrivateSourceEdits();
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  if (mcl_arrangement.finalizeRecordedClips()) {
+    sps_host_arr_bridge.notifyDirty(0xFF,
+                                    (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+  }
+#endif
   mcl_arrangement.resetPlayback(false);
 }
 
@@ -308,6 +314,17 @@ void GridTask::load_queue_handler() {
     }
   }
   if (any_clear) {
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    bool record_clear_dirty = false;
+    if (mode != LOAD_ARRANG && mcl_arrangement.automationRecordArmed()) {
+      for (uint8_t n = 0; n < NUM_SLOTS; ++n) {
+        if (clear_select[n] &&
+            mcl_arrangement.recordGridSlotClear(n)) {
+          record_clear_dirty = true;
+        }
+      }
+    }
+#endif
     if (mode != LOAD_ARRANG) {
       if (mcl_arrangement.releasePlaybackTracks(
               selected_track_mask(clear_select))) {
@@ -316,6 +333,12 @@ void GridTask::load_queue_handler() {
       }
     }
     mcl_actions.clear_tracks(clear_select);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    if (record_clear_dirty) {
+      sps_host_arr_bridge.notifyDirty(0xFF,
+                                      (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+    }
+#endif
   }
   // A load changes the active slot state, but not the source grid cell/link
   // data used by the arranger import. Avoid forcing arranger cell re-fetches
@@ -485,6 +508,11 @@ void GridTask::transition_handler() {
 
     DEBUG_PRINTLN(F("sending tracks"));
     bool wait;
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    bool record_transition_dirty = false;
+    uint32_t record_transition_q12 =
+        (uint32_t)mcl_actions.next_transition * 12u;
+#endif
 
     if (mcl_cfg.uart2_prg_out > 0 && row != 255) {
       mcl_seq.secondary_output->sendProgramChange(mcl_cfg.uart2_prg_out - 1,
@@ -539,9 +567,25 @@ void GridTask::transition_handler() {
             }
             grid_page.active_slots[n] = slots_changed[n];
           }
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+          if (mcl_arrangement.automationRecordArmed() &&
+              mcl_actions.chains[n].mode != LOAD_ARRANG &&
+              slots_changed[n] < GRID_LENGTH) {
+            if (mcl_arrangement.recordGridSlotLoad(
+                    n, n, slots_changed[n], record_transition_q12)) {
+              record_transition_dirty = true;
+            }
+          }
+#endif
         }
       }
     }
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    if (record_transition_dirty) {
+      sps_host_arr_bridge.notifyDirty(0xFF,
+                                      (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+    }
+#endif
     DEBUG_PRINTLN(F("SP pre cache"));
     StackMonitor::print_stack_info();
 

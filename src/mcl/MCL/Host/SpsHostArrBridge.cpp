@@ -96,6 +96,11 @@ void SpsHostArrBridge::handle(const Parsed& p, const uint8_t* b, uint16_t n) {
             onSetArrAutomationLaneChunk(p.tag, b, n);
             break;
         case CMD_SET_ARR_CLIPS: onSetArrClips(p.tag, b, n); break;
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+        case CMD_SET_ARR_RECORD_MODE:
+            onSetArrRecordMode(p.tag, b, n);
+            break;
+#endif
         case CMD_SET_ARR_TRACK_LABEL: onSetArrTrackLabel(p.tag, b, n); break;
         case CMD_SET_ARR_CLIP_FADE: onSetArrClipFade(p.tag, b, n); break;
         case CMD_ARR_SEEK_LOAD: onArrSeekLoad(p.tag, b, n); break;
@@ -176,6 +181,9 @@ void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
                                 CAP2_PROJECT_BROWSER | CAP2_GRID_CHAIN |
                                 CAP2_ARRANGEMENT_AUTOMATION |
                                 CAP2_ARRANGEMENT_CLIP_EDIT
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+                                | CAP2_ARRANGER_RECORD_MODE
+#endif
 #if !defined(__AVR__)
                                 | CAP2_ARRANGER_PRIVATE_SOURCES |
                                   CAP2_ARRANGER_LOCAL_PREVIEW

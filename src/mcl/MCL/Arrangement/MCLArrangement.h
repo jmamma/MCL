@@ -130,6 +130,20 @@ public:
   bool setAutomationLanePoints(const mclarrfile::AutomationLane &lane,
                                const mclarrfile::AutomationPoint *points,
                                uint16_t pointCount);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  bool setAutomationRecordArmed(bool armed);
+  bool automationRecordArmed() const;
+  bool recordAutomationPoint(uint8_t track, uint8_t targetType,
+                             uint8_t device, uint8_t targetIndex,
+                             uint8_t valueType, uint16_t value,
+                             uint8_t interp, int8_t curve);
+  bool recordGridSlotLoad(uint8_t dstTrack, GridSlot sourceSlot, GridRow row,
+                          uint32_t startQ12 = 0xFFFFFFFFu,
+                          uint32_t privateSourceId = 0);
+  bool recordGridSlotClear(uint8_t dstTrack,
+                           uint32_t endQ12 = 0xFFFFFFFFu);
+  bool finalizeRecordedClips(uint32_t endQ12 = 0xFFFFFFFFu);
+#endif
   bool makeClipLocal(uint32_t startQ12, uint32_t durationQ12, uint8_t track,
                      uint8_t row, GridSlot expectedSourceSlot,
                      uint32_t *sourceIdOut = nullptr);
@@ -181,6 +195,10 @@ private:
   void queueAutomationWrite(uint16_t laneIndex, uint16_t value);
   void chaseAutomation(uint32_t positionQ12, bool sendValues);
   void tickAutomation(uint32_t positionQ12);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  bool closeRecordedClip(uint8_t dstTrack, uint32_t endQ12);
+  bool writeRecordedClip(const mclarrfile::Clip &recorded);
+#endif
   bool queueClipStarts(uint32_t startQ12, uint32_t endQ12,
                        bool loadActiveAtPosition,
                        bool clearInactiveTracks,
@@ -238,6 +256,23 @@ private:
   bool playback_active_ = false;
   bool loop_enabled_ = false;
   bool loop_entered_ = false;
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  struct ClipRecordState {
+    bool active = false;
+    uint32_t startQ12 = 0;
+    GridSlot sourceSlot = 0;
+    GridRow row = 0;
+    uint8_t sourceKind = mclarrfile::CLIP_SOURCE_GRID;
+    uint32_t sourceId = 0;
+    uint32_t repeatQ12 = 0;
+    uint8_t flags = 0;
+    bool hasFade = false;
+    TrackLoadFadeData fade;
+  };
+
+  bool automation_record_armed_ = false;
+  ClipRecordState clip_record_[NUM_SLOTS];
+#endif
   uint32_t loop_start_q12_ = 0;
   uint32_t loop_end_q12_ = 0;
   uint16_t stored_loop_active_id_ = 0;

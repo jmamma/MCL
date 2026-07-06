@@ -1086,6 +1086,22 @@ void SpsHostArrBridge::onSetArrAutomationLaneChunk(uint8_t tag,
     sendErr(tag, ERR_RANGE, op);
 }
 
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+void SpsHostArrBridge::onSetArrRecordMode(uint8_t tag, const uint8_t* b,
+                                          uint16_t n) {
+    if (n < 1) {
+        sendErr(tag, ERR_RANGE, 0);
+        return;
+    }
+    bool changed = mcl_arrangement.setAutomationRecordArmed(b[0] != 0);
+    uint8_t ack[2] = {CMD_SET_ARR_RECORD_MODE, b[0] != 0 ? (uint8_t)1 : (uint8_t)0};
+    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    if (changed) {
+        notifyDirty(0xFF, DIRTY_ARRANGEMENT);
+    }
+}
+#endif
+
 void SpsHostArrBridge::onSetArrClips(uint8_t tag, const uint8_t* b,
                                      uint16_t n) {
     if (n < 2) {
@@ -1401,28 +1417,8 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
                   ARR_LOAD_SEEK_POSITION)) != 0;
     bool serviceImmediateSeek =
         immediateSeek && (seekResult.loadQueued || seekResult.clearQueued);
-    bool shouldForceEmptyClear = false;
-#if !defined(__AVR__)
-    shouldForceEmptyClear =
-        immediateSeek && seekResult.activeMask == 0 &&
-        !seekResult.loadQueued && !seekResult.clearQueued;
-#endif
     if (queued && serviceImmediateSeek) {
         grid_task.service_host_arranger_load_before_edit();
-    }
-
-    bool forcedEmptyClear = false;
-#if !defined(__AVR__)
-    if (shouldForceEmptyClear) {
-        uint8_t clearSelect[NUM_SLOTS];
-        memset(clearSelect, 1, sizeof(clearSelect));
-        mcl_actions.clear_tracks(clearSelect);
-        forcedEmptyClear = true;
-    }
-#endif
-
-    if (forcedEmptyClear) {
-        notifyDirty(0xFF, DIRTY_ACTIVE);
     }
 
     if (immediateSeek) {
@@ -1431,8 +1427,7 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
 
     uint8_t ack[2] = {
         CMD_ARR_SEEK_LOAD,
-        (queued || shouldForceEmptyClear || immediateSeek) ? (uint8_t)1
-                                                          : (uint8_t)0};
+        (queued || immediateSeek) ? (uint8_t)1 : (uint8_t)0};
     sendPriorityFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
 }
 

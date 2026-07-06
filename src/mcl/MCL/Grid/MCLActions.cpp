@@ -21,6 +21,18 @@
 
 #define MD_KIT_LENGTH 0x4D0
 
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+static uint32_t mcl_actions_current_q12() {
+  uint32_t ticks_per_16th = MidiClock.div192th_ticks_per_16th();
+  if (ticks_per_16th == 0) {
+    ticks_per_16th = 12;
+  }
+  const uint32_t div192 = MidiClock.div192th_counter;
+  return (div192 / ticks_per_16th) * 12u +
+         ((div192 % ticks_per_16th) * 12u) / ticks_per_16th;
+}
+#endif
+
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
 uint16_t MCLActions::clear_runtime_fade_elapsed(DeviceTrack *track) {
   if (track == nullptr) {
@@ -721,10 +733,18 @@ void MCLActions::load_tracks(uint8_t *slot_select_array,
     cache_next_tracks(cache_track_array, gui_update);
     row_update(last_slot);
   } else {
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    bool record_arranger_clips =
+        load_mode != LOAD_ARRANG && mcl_arrangement.automationRecordArmed();
+#endif
     send_tracks_to_devices(slot_select_array, row_array, load_offset
 #if MCL_FEATURE_HOST_LOAD_FADE_SEEK
                            ,
                            allow_prestart_fades
+#endif
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+                           ,
+                           record_arranger_clips
 #endif
                            );
   }
@@ -1015,6 +1035,10 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
                                         ,
                                         bool allow_prestart_fades
 #endif
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+                                        ,
+                                        bool record_arranger_clips
+#endif
                                         ) {
   // DEBUG_PRINT_FN();
   // Unsupported slots are cleared from slot_select_array before cache refresh.
@@ -1040,6 +1064,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   GridSlot first_slot = 255;
   GridRow current_row = grid_page.getRow();
   bool any_loaded = false;
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  bool record_dirty = false;
+  uint32_t record_start_q12 =
+      record_arranger_clips ? mcl_actions_current_q12() : 0;
+#endif
   for (uint8_t i = 0; i < NUM_SLOTS; i++) {
 
     if (slot_select_array[i] == 0) { continue; }
@@ -1082,6 +1111,12 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
       slot_select_array[i] = 0;
     } else {
       any_loaded = true;
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+      if (record_arranger_clips &&
+          mcl_arrangement.recordGridSlotLoad(dst, i, row, record_start_q12)) {
+        record_dirty = true;
+      }
+#endif
       mute_states[dst] = gdt_dst->seq_track->mute_state;
       gdt_dst->seq_track->mute_state = SEQ_MUTE_ON;
     }
@@ -1090,6 +1125,11 @@ void MCLActions::send_tracks_to_devices(uint8_t *slot_select_array,
   if (!any_loaded) {
     return;
   }
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  if (record_dirty) {
+    sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+  }
+#endif
 
   /*Send the encoded kit to the devices via sysex*/
   uint16_t myclock = read_clock_ms();

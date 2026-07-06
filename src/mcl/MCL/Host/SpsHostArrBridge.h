@@ -72,6 +72,9 @@ private:
     void onSetArrAutomationLaneChunk(uint8_t tag, const uint8_t* b,
                                      uint16_t n);
     void onSetArrClips(uint8_t tag, const uint8_t* b, uint16_t n);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    void onSetArrRecordMode(uint8_t tag, const uint8_t* b, uint16_t n);
+#endif
     void onSetArrTrackLabel(uint8_t tag, const uint8_t* b, uint16_t n);
     void onSetArrClipFade(uint8_t tag, const uint8_t* b, uint16_t n);
     void onArrSeekLoad(uint8_t tag, const uint8_t* b, uint16_t n);
