@@ -3,13 +3,66 @@
 #include "GUI/Pages/CommonPages.h"
 #include "Devices/DeviceParamResolver.h"
 #include "MCL.h"
+#include "MCLPlatformFeatures.h"
 #include "MDPages.h"
 #include "Devices/MidiSetup.h"
 #include "Sequencer/SeqTrackUtil.h"
 #include "../../Drivers/Generic/GenericMidiDevice.h"
 #include "../../Drivers/MD/MD.h"
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+#include "Arrangement/MCLArrangement.h"
+#include "Host/SpsHostArrBridge.h"
+#endif
 
 namespace {
+
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+uint8_t arrangement_record_device(DeviceIdx device_idx) {
+  return device_idx == DeviceIdx::Secondary ? 1 : 0;
+}
+
+void notify_arranger_recorded() {
+  sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+}
+
+void record_arranger_param_cc(DeviceIdx device_idx, uint8_t track,
+                              uint8_t track_param, uint8_t value,
+                              bool mute_param) {
+  if (!mcl_arrangement.automationRecordArmed() || track >= NUM_MD_TRACKS) {
+    return;
+  }
+  uint8_t device = arrangement_record_device(device_idx);
+  if (mute_param) {
+    if (mcl_arrangement.recordAutomationPoint(
+        track, mclarrfile::AUTOMATION_TARGET_MUTE, device, 0,
+        mclarrfile::AUTOMATION_VALUE_BOOL, value != 0 ? 1 : 0,
+        mclarrfile::AUTOMATION_INTERP_HOLD, 0)) {
+      notify_arranger_recorded();
+    }
+    return;
+  }
+  if (mcl_arrangement.recordAutomationPoint(
+      track, mclarrfile::AUTOMATION_TARGET_MD_PARAM, device, track_param,
+      mclarrfile::AUTOMATION_VALUE_U7, value,
+      mclarrfile::AUTOMATION_INTERP_CURVE, 0)) {
+    notify_arranger_recorded();
+  }
+}
+
+void record_arranger_fill_cc(DeviceIdx device_idx, uint8_t track,
+                             uint8_t value) {
+  if (!mcl_arrangement.automationRecordArmed() || track >= NUM_MD_TRACKS) {
+    return;
+  }
+  if (mcl_arrangement.recordAutomationPoint(
+      track, mclarrfile::AUTOMATION_TARGET_FILL,
+      arrangement_record_device(device_idx), 0,
+      mclarrfile::AUTOMATION_VALUE_BOOL, value != 0 ? 1 : 0,
+      mclarrfile::AUTOMATION_INTERP_HOLD, 0)) {
+    notify_arranger_recorded();
+  }
+}
+#endif
 
 bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
                      uint8_t cc, uint8_t value, uint8_t *track_out,
@@ -33,7 +86,12 @@ bool handle_mixer_cc(DeviceIdx device_idx, MidiDevice *device, uint8_t channel,
   *track_out = track;
   *param_out = track_param;
 
-  if (mixer->is_mute_param(track_param)) {
+  bool mute_param = mixer->is_mute_param(track_param);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  record_arranger_param_cc(device_idx, track, track_param, value, mute_param);
+#endif
+
+  if (mute_param) {
     mixer_page.redraw_mutes = true;
     return true;
   }
@@ -136,8 +194,11 @@ void MCLSeqMidiEvents::onControlChangeCallback_Midi(uint8_t *msg) {
   uint8_t fill_track = param - 68;
   uint8_t control_ch = channel - MD.global.baseChannel;
   if (fill_track < 4 && control_ch < 4) {
-    mcl_seq.set_fill_track(DeviceIdx::Primary,
-                           (control_ch << 2) + fill_track, value);
+    uint8_t track = (control_ch << 2) + fill_track;
+    mcl_seq.set_fill_track(DeviceIdx::Primary, track, value);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    record_arranger_fill_cc(DeviceIdx::Primary, track, value);
+#endif
     return;
   }
 

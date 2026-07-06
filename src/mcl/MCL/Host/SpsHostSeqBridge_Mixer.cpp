@@ -6,6 +6,9 @@
 #if MCL_FEATURE_HOST_ARRANGER
 #include "Arrangement/MCLArrangement.h"
 #endif
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+#include "Host/SpsHostArrBridge.h"
+#endif
 
 #include "../../Drivers/MD/MDParams.h"
 #include "GUI/Pages/CommonPages.h"
@@ -113,6 +116,30 @@ void applyActiveFillMask(DeviceIdx idx, MixerTarget& target,
         }
     }
 }
+
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+void recordArrangerMaskChanges(DeviceIdx idx, uint8_t targetType,
+                               uint16_t oldMask, uint16_t newMask,
+                               uint8_t len) {
+    if (!mcl_arrangement.automationRecordArmed())
+        return;
+    uint16_t changed = (uint16_t)((oldMask ^ newMask) & trackMaskForLen(len));
+    uint8_t device = mixerDeviceByte(idx);
+    for (uint8_t i = 0; changed != 0 && i < len; i++) {
+        uint16_t bit = (uint16_t)(1u << i);
+        if ((changed & bit) == 0)
+            continue;
+        if (mcl_arrangement.recordAutomationPoint(
+            i, targetType, device, 0, mclarrfile::AUTOMATION_VALUE_BOOL,
+            (newMask & bit) != 0 ? 1 : 0,
+            mclarrfile::AUTOMATION_INTERP_HOLD, 0)) {
+            sps_host_arr_bridge.notifyDirty(
+                0xFF, (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+        }
+        changed = (uint16_t)(changed & ~bit);
+    }
+}
+#endif
 
 } // namespace
 
@@ -281,17 +308,27 @@ bool SpsHostSeqBridge::applyMixerSetMask(const uint8_t* b, uint16_t n) {
     mask &= trackMaskForLen(len);
 
     if (kind == MIXER_MASK_ACTIVE_MUTE) {
+        uint16_t oldMask = activeMuteMask(target, len);
         for (uint8_t i = 0; i < len; i++) {
             bool mute = (mask & (uint16_t)(1u << i)) != 0;
             if (target.set_seq_mute_state(i, mute))
                 target.mute_track(i, mute);
         }
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+        recordArrangerMaskChanges(idx, mclarrfile::AUTOMATION_TARGET_MUTE,
+                                  oldMask, mask, len);
+#endif
         markMixerPageDirty(device);
         return true;
     }
 
     if (kind == MIXER_MASK_ACTIVE_FILL) {
+        uint16_t oldMask = mcl_seq.fill_mask_for(idx);
         applyActiveFillMask(idx, target, mask, len);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+        recordArrangerMaskChanges(idx, mclarrfile::AUTOMATION_TARGET_FILL,
+                                  oldMask, mask, len);
+#endif
         markMixerPageDirty(device);
         return true;
     }

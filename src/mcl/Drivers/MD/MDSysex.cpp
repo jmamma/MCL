@@ -8,8 +8,36 @@
 #if MCL_FEATURE_HOST_ARRANGER
 #include "Arrangement/MCLArrangement.h"
 #endif
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+#include "Host/SpsHostArrBridge.h"
+#include "MCLMemory.h"
+#endif
 #include "GUI/Pages/CommonPages.h"
 #include "MDPages.h"
+
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+namespace {
+
+void notify_arranger_fx_recorded() {
+  sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+}
+
+void record_arranger_fx_param(uint8_t fx_type, uint8_t param, uint8_t value) {
+  if (!mcl_arrangement.automationRecordArmed() || fx_type >= 4 || param >= 8) {
+    return;
+  }
+  uint8_t target = (uint8_t)((fx_type << 3) | param);
+  if (mcl_arrangement.recordAutomationPoint(
+          (uint8_t)(NUM_MD_TRACKS + MDFX_TRACK_NUM),
+          mclarrfile::AUTOMATION_TARGET_MD_PARAM, 0, target,
+          mclarrfile::AUTOMATION_VALUE_U7, value,
+          mclarrfile::AUTOMATION_INTERP_CURVE, 0)) {
+    notify_arranger_fx_recorded();
+  }
+}
+
+}  // namespace
+#endif
 
 void MDSysexListenerClass::start() {
   msgType = 255;
@@ -59,6 +87,10 @@ void MDSysexListenerClass::end() {
         fx_params[param] = value;
       }
     }
+
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    record_arranger_fx_param(fx_type, param, value);
+#endif
 
     perf_page.learn_param(fx_type + 16, param, value);
     lfo_page.learn_perf_dest(fx_type + NUM_MD_TRACKS + 1, param, value);

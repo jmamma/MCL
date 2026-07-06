@@ -6,7 +6,37 @@
 #include "../../../MidiDevice.h"
 #include "MidiClock.h"
 #include "Grid/MCLActions.h"
+#include "MCLPlatformFeatures.h"
 #include "platform.h"
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+#include "Arrangement/MCLArrangement.h"
+#include "Host/SpsHostArrBridge.h"
+#include "MCLMemory.h"
+#endif
+
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+namespace {
+
+void notify_arranger_route_recorded() {
+  sps_host_arr_bridge.notifyDirty(0xFF, (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+}
+
+void record_arranger_route(uint8_t track, uint8_t route) {
+  if (!mcl_arrangement.automationRecordArmed() || track >= NUM_MD_TRACKS) {
+    return;
+  }
+  uint8_t value = route > 6 ? 6 : route;
+  if (mcl_arrangement.recordAutomationPoint(
+          (uint8_t)(NUM_MD_TRACKS + MDROUTE_TRACK_NUM),
+          mclarrfile::AUTOMATION_TARGET_ROUTING, 0, track,
+          mclarrfile::AUTOMATION_VALUE_U7, value,
+          mclarrfile::AUTOMATION_INTERP_HOLD, 0)) {
+    notify_arranger_route_recorded();
+  }
+}
+
+}  // namespace
+#endif
 
 void RoutePage::init() {
   R.Clear();
@@ -53,6 +83,9 @@ void RoutePage::toggle_route(int i, uint8_t routing) {
     mcl_cfg.routing[i] = routing;
   }
   MD.setTrackRouting(i, mcl_cfg.routing[i]);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+  record_arranger_route((uint8_t)i, mcl_cfg.routing[i]);
+#endif
 }
 
 void RoutePage::toggle_routes_batch(bool solo) {
@@ -84,6 +117,9 @@ void RoutePage::toggle_routes_batch(bool solo) {
       }
       if (mcl_cfg.routing[i] != routing_last) {
         MD.setTrackRouting(i, mcl_cfg.routing[i]);
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+        record_arranger_route(i, mcl_cfg.routing[i]);
+#endif
       }
     }
   }

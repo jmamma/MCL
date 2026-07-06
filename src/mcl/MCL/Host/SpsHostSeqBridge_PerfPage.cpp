@@ -3,6 +3,11 @@
 #include "Host/SpsHostSeqBridge.h"
 #include "SpsHostSeqBridge_Internal.h"
 
+#include "MCLPlatformFeatures.h"
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+#include "Arrangement/MCLArrangement.h"
+#include "Host/SpsHostArrBridge.h"
+#endif
 #include "GUI/Pages/CommonPages.h"
 #include "GUI/Pages/Performance/PerfEncoder.h"
 #include "GUI/Pages/Performance/PerfPageTargetRef.h"
@@ -71,6 +76,25 @@ void putName(uint8_t* dst, const char* name) {
         dst[i] = (uint8_t)name[i];
 }
 
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+void notifyArrangerPerfRecorded() {
+    sps_host_arr_bridge.notifyDirty(0xFF,
+                                    (uint8_t)spsarr::DIRTY_ARRANGEMENT);
+}
+
+void recordArrangerPerfControl(uint8_t control, uint8_t value) {
+    if (!mcl_arrangement.automationRecordArmed())
+        return;
+    if (mcl_arrangement.recordAutomationPoint(
+            (uint8_t)(NUM_MD_TRACKS + PERF_TRACK_NUM),
+            mclarrfile::AUTOMATION_TARGET_PERF, 0, control,
+            mclarrfile::AUTOMATION_VALUE_U7, value,
+            mclarrfile::AUTOMATION_INTERP_CURVE, 0)) {
+        notifyArrangerPerfRecorded();
+    }
+}
+#endif
+
 } // namespace
 
 void SpsHostSeqBridge::sendPerfPageState(uint8_t tag) {
@@ -136,12 +160,18 @@ bool SpsHostSeqBridge::applyPerfPageSetControl(const uint8_t* b,
     uint8_t maxParam = src == 0 ? 2 : (paramCount ? paramCount - 1 : 0);
     if (param > maxParam)
         param = maxParam;
+    uint8_t nextCur = clamp7(b[4]);
+    bool valueChanged = e->cur != nextCur;
     e->perf_data.update_src(src, param, clamp7(b[3]));
-    e->cur = clamp7(b[4]);
+    e->cur = nextCur;
     e->old = e->cur;
     e->resend = true;
     perf_page.perf_id = b[0];
     perf_page.config_encoders();
+#if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
+    if (valueChanged)
+        recordArrangerPerfControl(b[0], e->cur);
+#endif
     return true;
 }
 
