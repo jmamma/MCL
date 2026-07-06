@@ -17,13 +17,6 @@ using namespace mcl_arrangement_internal;
 
 namespace {
 
-#if !defined(__AVR__) && defined(DEBUGMODE)
-#define ARR_RUNTIME_TRACE(fmt, ...) \
-  DEBUG_PRINT_FN("[arr-runtime] " fmt, ##__VA_ARGS__)
-#else
-#define ARR_RUNTIME_TRACE(fmt, ...)
-#endif
-
 static const uint32_t kArrangerBoundaryLookaheadQ12 = 4;
 
 uint8_t automation_curve_phase(uint8_t phase, int8_t curve) {
@@ -64,6 +57,20 @@ uint16_t clamp_automation_value(uint16_t value, uint8_t valueType) {
     return value > 16383 ? 16383 : value;
   }
   return value > 127 ? 127 : value;
+}
+
+bool automation_position_covered(
+    const MCLArrangement::AutomationRuntimeLane &rt, uint32_t positionQ12) {
+  if (!rt.have_prev) {
+    return false;
+  }
+  if (positionQ12 == rt.prev.q12) {
+    return true;
+  }
+  if (!rt.have_next) {
+    return false;
+  }
+  return positionQ12 > rt.prev.q12 && positionQ12 < rt.next.q12;
 }
 
 MidiUartClass *automation_uart(uint8_t device) {
@@ -508,7 +515,9 @@ void MCLArrangement::chaseAutomation(uint32_t positionQ12, bool sendValues) {
     if (!automationPrepareLane(file, laneIndex, positionQ12)) {
       continue;
     }
-    if (sendValues && automation_runtime_[laneIndex].have_prev) {
+    if (sendValues &&
+        automation_position_covered(automation_runtime_[laneIndex],
+                                    positionQ12)) {
       uint16_t value = automationEvaluate(laneIndex, positionQ12);
       queueAutomationWrite(laneIndex, value);
     }
@@ -544,9 +553,11 @@ void MCLArrangement::tickAutomation(uint32_t positionQ12) {
       continue;
     }
     uint32_t laneEnd = lane.pointOffset + lane.pointCount;
+    bool crossedPoint = false;
     while (rt.have_next && rt.next.q12 <= positionQ12) {
       rt.prev = rt.next;
       rt.have_prev = true;
+      crossedPoint = true;
       rt.next_point_index++;
       if (rt.next_point_index < laneEnd) {
         rt.have_next =
@@ -555,7 +566,8 @@ void MCLArrangement::tickAutomation(uint32_t positionQ12) {
         rt.have_next = false;
       }
     }
-    if (rt.have_prev) {
+    if (crossedPoint ||
+        automation_position_covered(rt, positionQ12)) {
       uint16_t value = automationEvaluate(laneIndex, positionQ12);
       queueAutomationWrite(laneIndex, value);
     }
@@ -748,11 +760,6 @@ bool MCLArrangement::armRuntimeForHostLoad(uint32_t positionQ12,
   playback_active_mask_ = (playback_active_mask_ & ~clearMask) | loadMask;
   for (uint8_t slot = 0; slot < NUM_SLOTS; ++slot) {
     if (loadedPrivateIds[slot] != 0) {
-      ARR_RUNTIME_TRACE(
-          "arm host private slot=%u source_id=%lu source_slot=%u pos=%lu load_mask=0x%08lx clear_mask=0x%08lx",
-          slot, (unsigned long)loadedPrivateIds[slot], loadedSources[slot],
-          (unsigned long)positionQ12, (unsigned long)loadMask,
-          (unsigned long)clearMask);
       setRuntimePrivateSource(slot, loadedPrivateIds[slot],
                               loadedSources[slot]);
     }
@@ -871,9 +878,34 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
   if (result != nullptr) {
     *result = {};
   }
+  GridRow clearRows[NUM_SLOTS];
+  memset(clearRows, 255, sizeof(clearRows));
+  auto queueClearAllTracks = [&]() -> bool {
+    playback_active_mask_ = 0;
+    playback_preload_mask_ = 0;
+    playback_preclear_mask_ = 0;
+    if (!clearInactiveTracks) {
+      if (result != nullptr) {
+        result->activeMask = 0;
+      }
+      return false;
+    }
+    for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
+      clearRows[track] = LOAD_QUEUE_CLEAR_ROW;
+    }
+    grid_task.load_queue.put((uint8_t)(LOAD_ARRANG | loadQueueFlags),
+                             clearRows);
+    if (result != nullptr) {
+      result->queued = true;
+      result->clearQueued = true;
+      result->activeMask = 0;
+    }
+    return true;
+  };
+
   File file;
   if (!openActive(&file, O_READ)) {
-    return false;
+    return queueClearAllTracks();
   }
 
   mclarrfile::Header header;
@@ -882,16 +914,11 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
   if (!ok || header.clipCount == 0 ||
       !file.seekSet(header.headerBytes)) {
     file.close();
-    playback_active_mask_ = 0;
-    playback_preload_mask_ = 0;
-    playback_preclear_mask_ = 0;
-    return false;
+    return queueClearAllTracks();
   }
 
   ArrangerLoadGroups loadGroups;
   ArrangerLoadGroups preloadGroups;
-  GridRow clearRows[NUM_SLOTS];
-  memset(clearRows, 255, sizeof(clearRows));
   bool any = false;
   bool hasPlayableClip = false;
   uint32_t currentActiveMask = 0;
@@ -1022,26 +1049,7 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
   file.close();
 
   if (!hasPlayableClip) {
-    playback_active_mask_ = 0;
-    playback_preload_mask_ = 0;
-    playback_preclear_mask_ = 0;
-    if (clearInactiveTracks) {
-      for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
-        clearRows[track] = LOAD_QUEUE_CLEAR_ROW;
-      }
-      grid_task.load_queue.put((uint8_t)(LOAD_ARRANG | loadQueueFlags),
-                               clearRows);
-      if (result != nullptr) {
-        result->queued = true;
-        result->clearQueued = true;
-        result->activeMask = 0;
-      }
-      return true;
-    }
-    if (result != nullptr) {
-      result->activeMask = 0;
-    }
-    return false;
+    return queueClearAllTracks();
   }
 
   uint32_t clearBaseMask =
