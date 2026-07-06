@@ -8,6 +8,14 @@
 using namespace spsarr;
 using namespace sps_host_arr_internal;
 
+#if !defined(__AVR__)
+namespace {
+uint8_t sps_host_control_tx_buffer[128];
+RingBuffer<> sps_host_control_tx(sps_host_control_tx_buffer,
+                                 sizeof(sps_host_control_tx_buffer));
+}  // namespace
+#endif
+
 SpsHostArrBridge sps_host_arr_bridge;
 
 void SpsHostArrBridge::setup() {
@@ -111,6 +119,27 @@ void SpsHostArrBridge::sendFrame(uint8_t cmd, uint8_t tag,
                                   (uint16_t)sizeof frame);
     if (n)
         MidiUart.sendRaw(frame, n);
+}
+
+void SpsHostArrBridge::sendPriorityFrame(uint8_t cmd, uint8_t tag,
+                                         const uint8_t* body,
+                                         uint16_t bodyLen) {
+    uint8_t frame[1 + 3 + 2 + spsarr::kMaxBodyRaw * 2 + 8];
+    uint16_t n = spsArrBuildFrame(cmd, tag, body, bodyLen, frame,
+                                  (uint16_t)sizeof frame);
+    if (!n)
+        return;
+#if !defined(__AVR__)
+    if (n < sizeof(sps_host_control_tx_buffer) &&
+        (MidiUart.txRb_sidechannel == nullptr ||
+         MidiUart.txRb_sidechannel == &sps_host_control_tx)) {
+        sps_host_control_tx.init();
+        sps_host_control_tx.put_h_isr(frame, n);
+        MidiUart.txRb_sidechannel = &sps_host_control_tx;
+        return;
+    }
+#endif
+    MidiUart.sendRaw(frame, n);
 }
 
 void SpsHostArrBridge::sendErr(uint8_t tag, uint8_t code, uint8_t detail) {

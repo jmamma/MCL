@@ -28,8 +28,9 @@ void MidiClass::init() {
 
 void MidiClass::processSysex() {
     while (midiSysex->avail()) {
-        sysexEnd(midiSysex->msg_rd);
+        uint8_t msg_rd = midiSysex->msg_rd;
         midiSysex->get_next_msg();
+        sysexEnd(msg_rd);
     }
 }
 

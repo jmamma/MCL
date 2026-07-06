@@ -45,6 +45,13 @@ public:
     int8_t timing = 0;
   };
 
+  struct SeekLoadResult {
+    bool queued = false;
+    bool loadQueued = false;
+    bool clearQueued = false;
+    uint32_t activeMask = 0;
+  };
+
   bool ensureActive();
   bool readMeta(mclarrfile::Header *header);
   bool clearActive();
@@ -63,7 +70,8 @@ public:
   void clearLoopRegion();
   bool seekLoad(uint32_t positionQ12, bool immediate,
                 bool allowPrestartFade = false,
-                bool clearReleasedTracks = true);
+                bool clearReleasedTracks = true,
+                SeekLoadResult *result = nullptr);
   bool seekLoadCurrentPosition(bool immediate,
                                bool allowPrestartFade = false,
                                bool clearReleasedTracks = true);
@@ -75,6 +83,7 @@ public:
                                  nullptr);
   bool releasePlaybackTracks(uint32_t trackMask);
   uint32_t playbackReleasedMask() const { return playback_released_mask_; }
+  uint32_t playbackActiveMask() const { return playback_active_mask_; }
   void armRuntimeFade(uint8_t dst, const TrackLoadFadeData &fade);
   bool applyClipRuntime(uint8_t dst, DeviceTrack *track);
   void flushAutomationWrites();
@@ -177,7 +186,8 @@ private:
                        bool clearInactiveTracks,
                        uint8_t loadQueueFlags,
                        bool honorReleasedTracks,
-                       uint32_t boundaryLookaheadQ12 = 0);
+                       uint32_t boundaryLookaheadQ12 = 0,
+                       SeekLoadResult *result = nullptr);
   bool rewriteActive(const mclarrfile::Header &header,
                      const mclarrfile::Clip *clips, uint32_t clipCount);
   bool rewriteActiveWithMarkers(const mclarrfile::Header &header,

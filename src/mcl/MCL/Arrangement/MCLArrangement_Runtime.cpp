@@ -823,7 +823,11 @@ bool MCLArrangement::applyClipRuntime(uint8_t dst, DeviceTrack *track) {
 
 bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
                               bool allowPrestartFade,
-                              bool clearReleasedTracks) {
+                              bool clearReleasedTracks,
+                              SeekLoadResult *result) {
+  if (result != nullptr) {
+    *result = {};
+  }
   host_playback_suspended_ = false;
   playback_arrangement_idx_ = mcl_cfg.active_arrangement_idx;
   playback_active_ = true;
@@ -841,7 +845,11 @@ bool MCLArrangement::seekLoad(uint32_t positionQ12, bool immediate,
     queueFlags |= LOAD_QUEUE_FLAG_PRESTART_FADE;
   }
   bool queued = queueClipStarts(positionQ12, endQ12, true, true, queueFlags,
-                                !clearReleasedTracks);
+                                !clearReleasedTracks, 0, result);
+  if (result != nullptr) {
+    result->queued = queued;
+    result->activeMask = playback_active_mask_;
+  }
   chaseAutomation(positionQ12, true);
   return queued;
 }
@@ -858,7 +866,11 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
                                      bool clearInactiveTracks,
                                      uint8_t loadQueueFlags,
                                      bool honorReleasedTracks,
-                                     uint32_t boundaryLookaheadQ12) {
+                                     uint32_t boundaryLookaheadQ12,
+                                     SeekLoadResult *result) {
+  if (result != nullptr) {
+    *result = {};
+  }
   File file;
   if (!openActive(&file, O_READ)) {
     return false;
@@ -1013,6 +1025,22 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     playback_active_mask_ = 0;
     playback_preload_mask_ = 0;
     playback_preclear_mask_ = 0;
+    if (clearInactiveTracks) {
+      for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
+        clearRows[track] = LOAD_QUEUE_CLEAR_ROW;
+      }
+      grid_task.load_queue.put((uint8_t)(LOAD_ARRANG | loadQueueFlags),
+                               clearRows);
+      if (result != nullptr) {
+        result->queued = true;
+        result->clearQueued = true;
+        result->activeMask = 0;
+      }
+      return true;
+    }
+    if (result != nullptr) {
+      result->activeMask = 0;
+    }
     return false;
   }
 
@@ -1038,8 +1066,11 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
 
   if (any) {
     uint8_t queueMode = LOAD_ARRANG | loadQueueFlags;
-    loadGroups.flush(queueMode);
-    preloadGroups.flush((uint8_t)(queueMode | LOAD_QUEUE_FLAG_ARRANGER_PRELOAD));
+    bool loadQueued = loadGroups.flush(queueMode);
+    if (preloadGroups.flush(
+            (uint8_t)(queueMode | LOAD_QUEUE_FLAG_ARRANGER_PRELOAD))) {
+      loadQueued = true;
+    }
     bool hasClear = false;
     for (uint8_t track = 0; track < NUM_SLOTS; ++track) {
       if (clearRows[track] == LOAD_QUEUE_CLEAR_ROW) {
@@ -1050,6 +1081,14 @@ bool MCLArrangement::queueClipStarts(uint32_t startQ12, uint32_t endQ12,
     if (hasClear) {
       grid_task.load_queue.put(queueMode, clearRows);
     }
+    if (result != nullptr) {
+      result->loadQueued = loadQueued;
+      result->clearQueued = hasClear;
+      result->queued = loadQueued || hasClear;
+      result->activeMask = playback_active_mask_;
+    }
+  } else if (result != nullptr) {
+    result->activeMask = playback_active_mask_;
   }
   return any;
 }

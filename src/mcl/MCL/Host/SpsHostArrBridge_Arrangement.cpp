@@ -1391,18 +1391,49 @@ void SpsHostArrBridge::onArrSeekLoad(uint8_t tag, const uint8_t* b,
     mcl_arrangement.setHostPlaybackSuspended(false);
     mcl_arrangement.resetPlaybackForTransport();
 
+    MCLArrangement::SeekLoadResult seekResult;
     bool queued = mcl_arrangement.seekLoad(
         positionQ12, (flags & ARR_LOAD_IMMEDIATE) != 0,
-        (flags & (ARR_LOAD_START_TRANSPORT | ARR_LOAD_SEEK_POSITION)) != 0);
-    if (queued &&
+        (flags & (ARR_LOAD_START_TRANSPORT | ARR_LOAD_SEEK_POSITION)) != 0,
+        true, &seekResult);
+    bool immediateSeek =
         (flags & (ARR_LOAD_IMMEDIATE | ARR_LOAD_START_TRANSPORT |
-                  ARR_LOAD_SEEK_POSITION)) != 0) {
+                  ARR_LOAD_SEEK_POSITION)) != 0;
+    bool serviceImmediateSeek =
+        immediateSeek && (seekResult.loadQueued || seekResult.clearQueued);
+    bool shouldForceEmptyClear = false;
+#if !defined(__AVR__)
+    shouldForceEmptyClear =
+        immediateSeek && seekResult.activeMask == 0 &&
+        !seekResult.loadQueued && !seekResult.clearQueued;
+#endif
+    if (queued && serviceImmediateSeek) {
         grid_task.service_host_arranger_load_before_edit();
     }
-    notifyDirty(0xFF, DIRTY_ACTIVE);
 
-    uint8_t ack[2] = {CMD_ARR_SEEK_LOAD, queued ? (uint8_t)1 : (uint8_t)0};
-    sendFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
+    bool forcedEmptyClear = false;
+#if !defined(__AVR__)
+    if (shouldForceEmptyClear) {
+        uint8_t clearSelect[NUM_SLOTS];
+        memset(clearSelect, 1, sizeof(clearSelect));
+        mcl_actions.clear_tracks(clearSelect);
+        forcedEmptyClear = true;
+    }
+#endif
+
+    if (forcedEmptyClear) {
+        notifyDirty(0xFF, DIRTY_ACTIVE);
+    }
+
+    if (immediateSeek) {
+        sendActive(tag);
+    }
+
+    uint8_t ack[2] = {
+        CMD_ARR_SEEK_LOAD,
+        (queued || shouldForceEmptyClear || immediateSeek) ? (uint8_t)1
+                                                          : (uint8_t)0};
+    sendPriorityFrame(CMD_ACK, tag, ack, (uint16_t)sizeof ack);
 }
 
 void SpsHostArrBridge::onArrSetLoop(uint8_t tag, const uint8_t* b,

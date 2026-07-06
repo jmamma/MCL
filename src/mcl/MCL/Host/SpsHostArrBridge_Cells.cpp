@@ -8,7 +8,7 @@
 using namespace spsarr;
 using namespace sps_host_arr_internal;
 
-void SpsHostArrBridge::onReqActive(uint8_t tag) {
+void SpsHostArrBridge::sendActive(uint8_t tag) {
     uint8_t body[4 + spsarr::kActiveSlotBytes +
                  spsarr::kActiveReleasedMaskBytes +
                  spsarr::kActiveExtraGridSlotBytes +
@@ -88,6 +88,10 @@ void SpsHostArrBridge::onReqActive(uint8_t tag) {
         spsArrPutU32(body + privateSourceIdsOff + slot * 4, sourceId);
     }
     sendFrame(CMD_ACTIVE, tag, body, (uint16_t)sizeof body);
+}
+
+void SpsHostArrBridge::onReqActive(uint8_t tag) {
+    sendActive(tag);
 }
 
 void SpsHostArrBridge::onReqGridChain(uint8_t tag) {

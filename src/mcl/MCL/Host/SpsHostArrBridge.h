@@ -31,7 +31,10 @@ private:
     void handle(const spsarr::Parsed& p, const uint8_t* b, uint16_t n);
     void sendFrame(uint8_t cmd, uint8_t tag, const uint8_t* body,
                    uint16_t bodyLen);
+    void sendPriorityFrame(uint8_t cmd, uint8_t tag, const uint8_t* body,
+                           uint16_t bodyLen);
     void sendErr(uint8_t tag, uint8_t code, uint8_t detail);
+    void sendActive(uint8_t tag);
 
     void onHello(uint8_t tag, const uint8_t* b, uint16_t n);
     void onReqActive(uint8_t tag);
