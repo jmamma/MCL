@@ -228,7 +228,7 @@ bool MixerPage::display_fill_mask() {
   uint16_t mask = mcl_seq.fill_mask_for(mixer_device_idx) &
                   track_mask_for_len(mixer_track_count());
   if (seq_step_page.mute_mask != mask) {
-    mcl_gui.set_trigleds(mask, TRIGLED_EXCLUSIVE);
+    mcl_gui.set_trigleds(mask, mixer_led_mode());
     seq_step_page.mute_mask = mask;
     return true;
   }
@@ -476,9 +476,7 @@ void MixerPage::display() {
     }
     mask &= track_mask_for_len(mixer_track_count());
     if (seq_step_page.mute_mask != mask || force_redraw_mutes) {
-      mcl_gui.set_trigleds(mask,
-                           fill_preview ? TRIGLED_EXCLUSIVE
-                                        : mixer_led_mode());
+      mcl_gui.set_trigleds(mask, mixer_led_mode());
       seq_step_page.mute_mask = mask;
       if (!force_redraw_mutes) {
         oled_draw_mutes();
