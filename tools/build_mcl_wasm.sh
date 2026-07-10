@@ -32,9 +32,23 @@ fi
 OUT="${MCL_ROOT}/build_wasm"
 mkdir -p "${OUT}"
 
+ABI_SCHEMA="${MCL_ROOT}/src/platform/wasm/sps/abi_exports.def"
+ABI_TEMPLATE="${MCL_ROOT}/src/platform/wasm/sps/module.template.json"
+ABI_CODEGEN_SOURCE="${MCL_ROOT}/tools/wasm_abi_codegen.cpp"
+ABI_CODEGEN="${OUT}/wasm_abi_codegen"
+ABI_GENERATED_DIR="${OUT}/generated"
+ABI_HEADER="${ABI_GENERATED_DIR}/mcl_wasm_exports.generated.h"
+ABI_LINKER_RSP="${ABI_GENERATED_DIR}/wasm_exports.rsp"
+SPEC_SRC="${ABI_GENERATED_DIR}/module.json"
+mkdir -p "${ABI_GENERATED_DIR}"
+if [ ! -x "${ABI_CODEGEN}" ] || [ "${ABI_CODEGEN_SOURCE}" -nt "${ABI_CODEGEN}" ]; then
+    /usr/bin/c++ -std=c++17 -O2 "${ABI_CODEGEN_SOURCE}" -o "${ABI_CODEGEN}"
+fi
+"${ABI_CODEGEN}" "${ABI_SCHEMA}" "${ABI_TEMPLATE}" "${SPEC_SRC}" \
+    "${ABI_HEADER}" "${ABI_LINKER_RSP}"
+
 WASM="${OUT}/mcl.wasm"
 AOT="${OUT}/mcl.aot"
-SPEC_SRC="${MCL_ROOT}/src/platform/wasm/sps/module.json"
 PACKAGE_DIR="${OUT}/package/mcl"
 PACKAGE_WASM="${PACKAGE_DIR}/mcl.wasm"
 PACKAGE_AOT="${PACKAGE_DIR}/mcl.aot"
@@ -46,6 +60,7 @@ WASM_STACK_SIZE="${MCL_WASM_STACK_SIZE:-1048576}"
 # Per-platform include paths. Mirror MCL/CMakeLists.txt (desktop_common +
 # wasm BEFORE the MCL tree includes), plus MCL's tbd-env -I list.
 INCLUDES=(
+    -I"${ABI_GENERATED_DIR}"
     # libc stubs first — clang's freestanding mode provides stdint/stddef
     # only; src/platform/wasm/libc/ fills in string.h/stdlib.h/stdio.h/math.h.
     -I"${MCL_ROOT}/src/platform/wasm/libc"
@@ -200,26 +215,7 @@ echo "[mcl-wasm] wasm aux stack: ${WASM_STACK_SIZE} bytes"
     -Wl,--no-entry \
     -Wl,--export-dynamic \
     -Wl,-z,stack-size="${WASM_STACK_SIZE}" \
-    -Wl,--export=__wasm_call_ctors \
-    -Wl,--export=mcl_setup \
-    -Wl,--export=mcl_tick_audio \
-    -Wl,--export=mcl_tick_gui \
-    -Wl,--export=mcl_framebuffer_offset \
-    -Wl,--export=mcl_framebuffer_stride \
-    -Wl,--export=mcl_framebuffer_width \
-    -Wl,--export=mcl_framebuffer_height \
-    -Wl,--export=mcl_midi_in_push \
-    -Wl,--export=mcl_midi_out_pop \
-    -Wl,--export=mcl_set_transport_position \
-    -Wl,--export=mcl_input_set_button_mask \
-    -Wl,--export=mcl_input_set_button_mask64 \
-    -Wl,--export=mcl_input_add_encoder_delta \
-    -Wl,--export=mcl_input_set_encoder_button \
-    -Wl,--export=mcl_input_set_key_state \
-    -Wl,--export=mcl_abi_version \
-    -Wl,--export=mcl_debug_tempo_x100 \
-    -Wl,--export=mcl_debug_state \
-    -Wl,--export=mcl_debug_value \
+    @"${ABI_LINKER_RSP}" \
     -Wl,--allow-undefined \
     -o "${WASM}" \
     -x c++ \
@@ -264,10 +260,17 @@ fi
 cp "${WASM}" "${PACKAGE_WASM}"
 cp "${AOT}" "${PACKAGE_AOT}"
 cp "${SPEC_SRC}" "${PACKAGE_SPEC}"
-mkdir -p "${INSTALL_DIR}"
-cp "${WASM}" "${INSTALL_DIR}/mcl.wasm"
-cp "${AOT}" "${INSTALL_DIR}/mcl.aot"
-cp "${SPEC_SRC}" "${INSTALL_DIR}/module.json"
-mkdir -p "${INSTALL_DIR}/data"
+if [ "${MCL_WASM_INSTALL:-1}" != "0" ]; then
+    mkdir -p "${INSTALL_DIR}"
+    cp "${WASM}" "${INSTALL_DIR}/mcl.wasm"
+    cp "${AOT}" "${INSTALL_DIR}/mcl.aot"
+    cp "${SPEC_SRC}" "${INSTALL_DIR}/module.json"
+    mkdir -p "${INSTALL_DIR}/data"
+    INSTALL_SUMMARY=" installed=${INSTALL_DIR}"
+else
+    INSTALL_SUMMARY=" install=disabled"
+fi
 
-echo "[mcl-wasm] done. wasm=$(wc -c < "${WASM}") aot=$(wc -c < "${AOT}") package=${PACKAGE_DIR} installed=${INSTALL_DIR}"
+WASM_BYTES="$(wc -c < "${WASM}")"
+AOT_BYTES="$(wc -c < "${AOT}")"
+echo "[mcl-wasm] done. wasm=${WASM_BYTES} aot=${AOT_BYTES} package=${PACKAGE_DIR}${INSTALL_SUMMARY}"
