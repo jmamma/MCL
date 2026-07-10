@@ -46,7 +46,7 @@
 #ifdef __cplusplus
 
 // Set the directory that MCL's "/" paths resolve against. Called from JUCE
-// host code (via mcl_set_sd_root in desktop_entry.h). Idempotent.
+// the platform shim before setup. Idempotent.
 void mcl_desktop_set_sd_root(const char* abs_path);
 
 class SdCard {

@@ -1,7 +1,9 @@
-# MCL — desktop static lib for the SPS JUCE plugin.
+# MCL — native compile/link oracle for the firmware sources.
 #
-# Produces libmcl_desktop.a. The PlatformIO targets in platformio.ini
-# (avr/megacommand/tbd) are untouched.
+# Production desktop integration is the packaged WAMR AOT module built by
+# tools/build_mcl_wasm.sh. This target is deliberately not a second host API;
+# it catches native compiler and unresolved-symbol regressions only. The
+# PlatformIO targets in platformio.ini are untouched.
 #
 # Platform layout:
 #   src/platform/desktop_common/  — shared between desktop and wasm. Headers
@@ -21,7 +23,7 @@ cmake_minimum_required(VERSION 3.22)
 # C is required because src/mcl/CommonTools/helpers.c provides clock_diff/
 # popcount/limit_value/m_toupper/masks. Without C enabled, CMake silently
 # drops .c sources from add_library.
-project(mcl_desktop C CXX)
+project(mcl_native_compile_oracle C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -61,7 +63,7 @@ file(GLOB RESOURCE_SRC CONFIGURE_DEPENDS
 # Smoke-test main.cpp is host-runnable, not part of the static lib.
 list(FILTER DESKTOP_SRC EXCLUDE REGEX ".*linktest_main\\.cpp$")
 
-add_library(mcl_desktop STATIC
+add_library(mcl_native_compile_oracle STATIC
     ${DESKTOP_COMMON_SRC}
     ${DESKTOP_SRC}
     ${MCL_CORE_SRC}
@@ -69,7 +71,7 @@ add_library(mcl_desktop STATIC
     ${RESOURCE_SRC})
 
 # Compile-time switches MCL inspects.
-target_compile_definitions(mcl_desktop PUBLIC
+target_compile_definitions(mcl_native_compile_oracle PUBLIC
     ARDUINO=10800
     PLATFORM_DESKTOP=1
     VERSION=5000
@@ -80,11 +82,11 @@ target_compile_definitions(mcl_desktop PUBLIC
 # IMPORTANT: desktop_common BEFORE desktop BEFORE other includes so MCL's
 # `#include "Arduino.h"` resolves to OUR shim first. desktop/ paths win for
 # anything overridden per-platform (none currently).
-target_include_directories(mcl_desktop BEFORE PUBLIC
+target_include_directories(mcl_native_compile_oracle BEFORE PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/desktop
     ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/desktop_common)
 
-target_include_directories(mcl_desktop PUBLIC
+target_include_directories(mcl_native_compile_oracle PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${CMAKE_CURRENT_SOURCE_DIR}/src/mcl
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -126,7 +128,7 @@ target_include_directories(mcl_desktop PUBLIC
 
 # Less-strict warning regime — MCL is firmware-style code that the desktop
 # compiler will flag for unused params, narrowing conversions, etc.
-target_compile_options(mcl_desktop PRIVATE
+target_compile_options(mcl_native_compile_oracle PRIVATE
     -Wno-deprecated-declarations
     -Wno-unused-parameter
     -Wno-write-strings
@@ -136,10 +138,11 @@ target_compile_options(mcl_desktop PRIVATE
     -Wno-sign-compare
     -fpermissive)
 
-# Smoke-test executable: links libmcl_desktop.a into a tiny main() that calls
+# Smoke-test executable: links the native oracle into a tiny main() that calls
 # mcl_desktop_setup()/tick() once. Surfaces missing-symbol errors that ar
-# wouldn't catch. Build with
-# `cmake --build BUILD_DIR --target mcl_desktop_linktest`.
-add_executable(mcl_desktop_linktest EXCLUDE_FROM_ALL
+# would not catch. Build with
+# `cmake --build BUILD_DIR --target mcl_native_compile_oracle_linktest`.
+add_executable(mcl_native_compile_oracle_linktest EXCLUDE_FROM_ALL
     src/platform/desktop/linktest_main.cpp)
-target_link_libraries(mcl_desktop_linktest PRIVATE mcl_desktop)
+target_link_libraries(mcl_native_compile_oracle_linktest PRIVATE
+    mcl_native_compile_oracle)

@@ -1,10 +1,7 @@
-// desktop_entry.cpp — C-linkage entry points exposed to a host.
+// desktop_entry.cpp — minimal entry points exercised by the native oracle.
 #include "desktop_entry.h"
 
-#include "SdFat.h"
 #include "Arduino.h"
-
-#include <string.h>
 // std::atomic requires libc++. wasm32 runs single-threaded — plain bools
 // are enough there.
 #if !defined(PLATFORM_WASM)
@@ -88,30 +85,3 @@ bool mcl_desktop_is_setup_done(void) {
     return g_setup_done.load(std::memory_order_acquire);
 #endif
 }
-
-void mcl_set_sd_root(const char* path) {
-    if (path && *path) {
-        mcl_desktop_set_sd_root(path);
-    }
-}
-
-void mcl_inject_midi(const uint8_t* /*data*/, size_t /*len*/) {
-    // TODO(step 5): push into MidiUart ingress ring.
-}
-
-size_t mcl_drain_midi_out(uint8_t* /*dst*/, size_t /*cap*/) {
-    // TODO(step 5): drain MidiUart egress ring.
-    return 0;
-}
-
-// Framebuffer pointer is meaningful only on the desktop static-link
-// path; wasm uses the mcl_framebuffer_offset export in exports.cpp.
-#ifndef PLATFORM_WASM
-const uint8_t* mcl_framebuffer(void) {
-    // TODO(step 5+): return oled_display.getBuffer() once oled is wired up.
-    return nullptr;
-}
-
-uint32_t mcl_framebuffer_width(void)  { return 128; }
-uint32_t mcl_framebuffer_height(void) { return 64;  }
-#endif

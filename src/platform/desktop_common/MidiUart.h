@@ -5,7 +5,7 @@
 // MCL's own RingBuffer<> templates over internal byte arrays. Exposes `rxRb`
 // publicly because MCL's MidiClock.h reads it directly to inject realtime
 // bytes (MidiClock.h:567,580,601). The host pumps bytes in/out via the
-// desktop_entry.h C API (`mcl_inject_midi`, `mcl_drain_midi_out`).
+// platform-specific UART implementation.
 #pragma once
 
 #include "Arduino.h"
