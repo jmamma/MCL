@@ -1140,18 +1140,13 @@ bool MCLArrangement::markRuntimePrivateSourceEdited(uint8_t dst) {
 
 bool MCLArrangement::flushRuntimePrivateSourceEdits() {
   uint32_t mask = runtime_private_dirty_mask_;
-  if (mask == 0) {
-    return false;
-  }
-
-  bool flushed = false;
   for (uint8_t slot = 0; slot < NUM_SLOTS && slot < 32; ++slot) {
     if ((mask & (uint32_t)(1ul << slot)) == 0) {
       continue;
     }
-    flushed = flushRuntimePrivateSource(slot) || flushed;
+    flushRuntimePrivateSource(slot);
   }
-  return flushed;
+  return runtime_private_dirty_mask_ == 0;
 }
 
 bool MCLArrangement::loadQueuedPrivateSource(GridSlot sourceSlot, GridRow row,

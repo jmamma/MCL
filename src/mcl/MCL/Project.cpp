@@ -50,7 +50,8 @@ bool copy_grid_row_slots_raw(Grid &src_grid, Grid &dst_grid, GridRow row) {
 }
 
 #if MCL_FEATURE_HOST_ARRANGER
-bool build_arrangement_leaf(uint8_t idx, char *out, size_t out_len) {
+bool build_arrangement_leaf(uint8_t idx, bool private_source_file, char *out,
+                            size_t out_len) {
   if (out == nullptr || out_len < 8) {
     return false;
   }
@@ -58,23 +59,26 @@ bool build_arrangement_leaf(uint8_t idx, char *out, size_t out_len) {
   out[1] = (char)('0' + (idx / 10) % 10);
   out[2] = (char)('0' + idx % 10);
   out[3] = '.';
-  out[4] = 'a';
-  out[5] = 'r';
-  out[6] = 'r';
+  out[4] = private_source_file ? 'l' : 'a';
+  out[5] = private_source_file ? 'o' : 'r';
+  out[6] = private_source_file ? 'c' : 'r';
   out[7] = '\0';
   return true;
 }
 
 bool build_arrangement_relative_path(uint8_t idx, char *out, size_t out_len) {
   char leaf[8];
-  return build_arrangement_leaf(idx, leaf, sizeof(leaf)) &&
+  return build_arrangement_leaf(idx, false, leaf, sizeof(leaf)) &&
          MCLSd::join_path(out, (uint8_t)out_len, mclarrfile::kDirName, leaf);
 }
 
 bool build_project_arrangement_path(const char *project, uint8_t idx,
-                                    char *out, size_t out_len) {
+                                    bool private_source_file, char *out,
+                                    size_t out_len) {
+  char leaf[8];
   char rel[16];
-  return build_arrangement_relative_path(idx, rel, sizeof(rel)) &&
+  return build_arrangement_leaf(idx, private_source_file, leaf, sizeof(leaf)) &&
+         MCLSd::join_path(rel, sizeof(rel), mclarrfile::kDirName, leaf) &&
          MCLSd::join_path(out, (uint8_t)out_len, project, rel);
 }
 
@@ -104,7 +108,7 @@ bool write_default_arrangement_current_project() {
   }
 
   File arr_file;
-  if (!arr_file.open(path, O_RDWR | O_CREAT)) {
+  if (!arr_file.open(path, O_RDWR | O_CREAT | O_EXCL)) {
     return false;
   }
   mclarrfile::Header header;
@@ -136,31 +140,38 @@ bool copy_arrangement_files(const char *from_project, const char *to_project) {
     return false;
   }
 
-  bool copied_any = false;
+  bool copied_arrangement = false;
   for (uint16_t idx = 0; idx <= mclarrfile::kMaxArrangementIndex; ++idx) {
-    char src_path[PRJ_PATH_LEN + 16];
-    char dst_path[PRJ_PATH_LEN + 16];
-    if (!build_project_arrangement_path(from_project, (uint8_t)idx,
-                                        src_path, sizeof(src_path)) ||
-        !build_project_arrangement_path(to_project, (uint8_t)idx,
-                                        dst_path, sizeof(dst_path))) {
-      return false;
+    for (uint8_t private_source_file = 0; private_source_file < 2;
+         ++private_source_file) {
+      char src_path[PRJ_PATH_LEN + 16];
+      char dst_path[PRJ_PATH_LEN + 16];
+      if (!build_project_arrangement_path(
+              from_project, (uint8_t)idx, private_source_file != 0, src_path,
+              sizeof(src_path)) ||
+          !build_project_arrangement_path(
+              to_project, (uint8_t)idx, private_source_file != 0, dst_path,
+              sizeof(dst_path))) {
+        return false;
+      }
+      if (!SD.exists(src_path)) {
+        continue;
+      }
+      if (!mcl_sd.copy_file(src_path, dst_path)) {
+        return false;
+      }
+      if (!private_source_file) {
+        copied_arrangement = true;
+      }
     }
-    if (!SD.exists(src_path)) {
-      continue;
-    }
-    if (!mcl_sd.copy_file(src_path, dst_path)) {
-      return false;
-    }
-    copied_any = true;
   }
 
-  if (copied_any) {
+  if (copied_arrangement) {
     return true;
   }
 
   char default_path[PRJ_PATH_LEN + 16];
-  if (!build_project_arrangement_path(to_project, 0, default_path,
+  if (!build_project_arrangement_path(to_project, 0, false, default_path,
                                       sizeof(default_path))) {
     return false;
   }
@@ -168,7 +179,7 @@ bool copy_arrangement_files(const char *from_project, const char *to_project) {
     return true;
   }
   File arr_file;
-  if (!arr_file.open(default_path, O_RDWR | O_CREAT)) {
+  if (!arr_file.open(default_path, O_RDWR | O_CREAT | O_EXCL)) {
     return false;
   }
   mclarrfile::Header header;
@@ -1116,13 +1127,122 @@ bool Project::load_project(const char *projectname) {
 }
 
 #ifdef MCL_HAS_PROJECT_BACKUP
-bool Project::load_project_version(const char *projectname, uint8_t pair) {
-  return load_project_impl(projectname, pair, true);
+#ifndef __AVR__
+bool Project::preflight_project_version(const char *projectname, uint8_t pair,
+                                        bool *allow_headerless_pair) {
+  *allow_headerless_pair = false;
+  const char *basename = nullptr;
+  char filename[PRJ_NAME_LEN + 5];
+  if (pair >= 128 || !split_project_path(projectname, &basename) ||
+      !project_file_name(basename, filename, sizeof(filename))) {
+    return false;
+  }
+
+  chdir_projects();
+  File candidate;
+  if (!SD.chdir(projectname) || !candidate.open(filename, O_READ)) {
+    return false;
+  }
+
+  ProjectHeader header = {};
+  size_t header_size = project_header_read_size(candidate);
+  bool ok = candidate.seekSet(0) &&
+            mcl_sd.read_data(&header, header_size, &candidate);
+  candidate.close();
+  if (!ok || !PROJECT_VERSION_CAN_OPEN(header.version)) {
+    return false;
+  }
+
+  uint8_t active_pair =
+      header.version == PROJ_MIN_READABLE_VERSION ? 0 : header.active_grid_pair;
+  bool preserved_pair0 = header.version == PROJ_VERSION && pair == 0 &&
+                         active_pair != 0;
+  bool allow_headerless =
+      header.version == PROJ_MIN_READABLE_VERSION || preserved_pair0;
+  bool pair_headerless = false;
+  uint32_t pair_version = 0;
+  constexpr uint32_t grid_file_size =
+      (uint32_t)GRID_SLOT_BYTES * (uint32_t)(GRID_LENGTH + 2) *
+      (uint32_t)(GRID_WIDTH + 1);
+
+  for (uint8_t i = 0; i < NUM_GRIDS; ++i) {
+    if (!build_grid_filename(basename, pair * NUM_GRIDS + i, filename,
+                             sizeof(filename)) ||
+        !candidate.open(filename, O_READ)) {
+      return false;
+    }
+
+    GridHeader grid_header = {};
+    ok = candidate.fileSize() >= grid_file_size &&
+         candidate.seekSet(GRID_HEADER_OFFSET) &&
+         mcl_sd.read_data(&grid_header, sizeof(grid_header), &candidate);
+    candidate.close();
+    if (!ok) {
+      return false;
+    }
+
+    bool header_fields_valid =
+        grid_header.header_version == GRID_FILE_HEADER_VERSION &&
+        grid_header.header_size == sizeof(GridHeader);
+    bool header_shape_valid =
+        grid_header.magic == GRID_HEADER_MAGIC && header_fields_valid;
+    bool headerless =
+        grid_header.magic != GRID_HEADER_MAGIC && !header_fields_valid;
+    if ((!header_shape_valid && !headerless) ||
+        (headerless && !allow_headerless)) {
+      return false;
+    }
+
+    uint32_t grid_version =
+        headerless ? PROJ_MIN_READABLE_VERSION : grid_header.version;
+    if (!PROJECT_VERSION_CAN_OPEN(grid_version) ||
+        (i != 0 && (headerless != pair_headerless ||
+                    grid_version != pair_version))) {
+      return false;
+    }
+    pair_headerless = headerless;
+    pair_version = grid_version;
+  }
+
+  *allow_headerless_pair = preserved_pair0 && pair_headerless;
+  return true;
 }
 #endif
 
+bool Project::load_project_version(const char *projectname, uint8_t pair) {
+#ifdef __AVR__
+  return load_project_impl(projectname, pair, true);
+#else
+  bool allow_headerless_pair = false;
+  if (!preflight_project_version(projectname, pair, &allow_headerless_pair)) {
+    return false;
+  }
+
+  const bool restore_current = project_loaded;
+  const uint8_t previous_pair = active_grid_pair;
+  char previous_project[PRJ_PATH_LEN];
+  memcpy(previous_project, mcl_cfg.project, sizeof(previous_project));
+  previous_project[sizeof(previous_project) - 1] = '\0';
+  if (load_project_impl(projectname, pair, true, allow_headerless_pair)) {
+    return true;
+  }
+
+  if (restore_current) {
+    load_project_impl(previous_project, previous_pair, true);
+  }
+  return false;
+#endif
+}
+#endif
+
+#ifndef __AVR__
+bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
+                                bool use_requested_pair,
+                                bool allow_headerless_requested_pair) {
+#else
 bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
                                 bool use_requested_pair) {
+#endif
 
   bool ret;
 
@@ -1215,7 +1335,12 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       grid_version = grids[i].version;
     } else {
 #ifdef MCL_HAS_PROJECT_CONVERSION
-      if (project_version == PROJ_MIN_READABLE_VERSION) {
+      if (project_version == PROJ_MIN_READABLE_VERSION
+#ifndef __AVR__
+          || allow_headerless_requested_pair
+#endif
+      ) {
+        grid_version = PROJ_MIN_READABLE_VERSION;
         DEBUG_PRINTLN(F("Legacy grid header missing"));
       } else
 #endif
@@ -1935,6 +2060,11 @@ bool Project::copy_project(const char *from_project, const char *to_project) {
   }
 
   if (project_loaded && strcmp(from_project, mcl_cfg.project) == 0) {
+#if MCL_FEATURE_HOST_ARRANGER
+    if (!mcl_arrangement.flushRuntimePrivateSourceEdits()) {
+      return false;
+    }
+#endif
     if (!sync_grid() || !store_config_from_system()) {
       return false;
     }

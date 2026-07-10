@@ -14,7 +14,7 @@
 #define PROJ_VERSION 3013
 #define PRJ_DIR "/Projects"
 
-class ProjectHeader {
+class ATTR_PACKED() ProjectHeader {
 public:
   uint32_t version;
   uint8_t active_grid_pair;
@@ -22,6 +22,11 @@ public:
   uint32_t hash;
   MCLSysConfigData cfg;
 };
+
+static_assert(offsetof(ProjectHeader, cfg) == 24,
+              "persisted project config offset changed");
+static_assert(sizeof(ProjectHeader) == 209,
+              "persisted project header layout changed");
 
 class Project : public ProjectHeader {
 public:
@@ -121,8 +126,18 @@ private:
   void draw_wait_popup(const char *message);
   void draw_upgrade_progress(GridIndex grid, GridRow row);
   bool read_header();
+#ifndef __AVR__
+  bool load_project_impl(const char *projectname, uint8_t requested_pair,
+                         bool use_requested_pair,
+                         bool allow_headerless_requested_pair = false);
+#else
   bool load_project_impl(const char *projectname, uint8_t requested_pair,
                          bool use_requested_pair);
+#endif
+#if defined(MCL_HAS_PROJECT_BACKUP) && !defined(__AVR__)
+  bool preflight_project_version(const char *projectname, uint8_t pair,
+                                 bool *allow_headerless_pair);
+#endif
 #ifdef MCL_HAS_PROJECT_CONVERSION
   bool migrate_track_storage_versions(const char *basename,
                                       uint8_t *active_pair);

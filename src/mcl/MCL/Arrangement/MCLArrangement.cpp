@@ -32,8 +32,11 @@ bool MCLArrangement::create(uint8_t idx, const char *name) {
   if (!buildRelativePath(idx, path, sizeof(path))) {
     return false;
   }
+  if (SD.exists(path)) {
+    return false;
+  }
   File file;
-  if (!file.open(path, O_RDWR | O_CREAT)) {
+  if (!file.open(path, O_RDWR | O_CREAT | O_EXCL)) {
     return false;
   }
   mclarrfile::Header header;
@@ -106,14 +109,17 @@ bool MCLArrangement::ensureActive() {
     bool ok = mcl_sd.read_data(&header, sizeof(header), &file) &&
               mclarrfile::validHeader(header);
     file.close();
-    if (ok) {
-      return true;
-    }
+    return ok;
   } else {
     file.close();
   }
 
   uint8_t idx = mcl_cfg.active_arrangement_idx;
+  char path[16];
+  if (!enterProjectDir() || !buildRelativePath(idx, path, sizeof(path)) ||
+      SD.exists(path)) {
+    return false;
+  }
   if (!create(idx, idx == 0 ? "main" : "arrangement")) {
     return false;
   }

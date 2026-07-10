@@ -28,7 +28,8 @@ extern void usb_dfu_mode();
 extern void usb_disk_mode();
 extern void mcl_setup();
 
-class MCLSysConfigData {
+// Persisted verbatim in config.mcls and ProjectHeader.
+class ATTR_PACKED() MCLSysConfigData {
 public:
   uint32_t version;
   char project[PRJ_PATH_LEN];
@@ -93,6 +94,9 @@ public:
   uint8_t md_sample_bank_capture;
   uint8_t active_arrangement_idx;
 };
+
+static_assert(sizeof(MCLSysConfigData) == 185,
+              "persisted system config layout changed");
 
 class MCLSysConfig : public MCLSysConfigData {
 public:
