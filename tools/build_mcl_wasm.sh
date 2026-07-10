@@ -215,6 +215,7 @@ echo "[mcl-wasm] wasm aux stack: ${WASM_STACK_SIZE} bytes"
     -Wl,--export=mcl_input_set_button_mask64 \
     -Wl,--export=mcl_input_add_encoder_delta \
     -Wl,--export=mcl_input_set_encoder_button \
+    -Wl,--export=mcl_input_set_key_state \
     -Wl,--export=mcl_abi_version \
     -Wl,--export=mcl_debug_tempo_x100 \
     -Wl,--export=mcl_debug_state \

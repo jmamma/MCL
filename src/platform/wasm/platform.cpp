@@ -12,6 +12,8 @@
 extern uint64_t mcl_desktop_button_mask;
 extern volatile uint16_t g_clock_ms;
 extern void handleIncomingMidi();
+__attribute__((visibility("hidden")))
+void mcl_wasm_pump_host_midi_input(uint32_t max_bytes_per_port);
 
 namespace {
 
@@ -19,6 +21,7 @@ constexpr uint8_t kMidiSysexStart = 0xF0;
 constexpr uint8_t kMidiSysexEnd = 0xF7;
 constexpr uint16_t kMaxMidiOutputBytesPerPoll = 256;
 constexpr uint16_t kMaxMidiOutputBytesPerWaitPoll = 4096;
+constexpr uint16_t kMaxMidiInputBytesPerPoll = 4096;
 
 struct MidiOutputPumpState {
     bool in_sysex = false;
@@ -27,11 +30,7 @@ struct MidiOutputPumpState {
 MidiOutputPumpState midi_output_pump_state[3];
 
 void pump_host_midi_input() {
-    for (int port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
-        int32_t byte_val = 0;
-        while ((byte_val = host_midi_in_pop(port)) >= 0)
-            mcl_midi_in_push(port, (uint8_t)byte_val);
-    }
+    mcl_wasm_pump_host_midi_input(kMaxMidiInputBytesPerPoll);
 }
 
 void pump_host_midi_output_port(int port, uint16_t max_bytes,

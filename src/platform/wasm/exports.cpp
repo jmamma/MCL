@@ -71,6 +71,7 @@ static uint32_t s_timer2_remainder_us = 0;
 static uint32_t s_gui_trace_frame = 0;
 #endif
 static constexpr uint32_t kMaxHostMidiPumpBytesPerPort = 4096;
+static constexpr uint8_t kHostMidiParseChunkBytes = 64;
 static constexpr uint8_t kMidiSysexStart = 0xF0;
 static constexpr uint8_t kMidiSysexEnd = 0xF7;
 static constexpr uint8_t kMaxSysexIngressTraceLines = 32;
@@ -78,6 +79,13 @@ static uint8_t s_sysex_ingress_trace_lines = 0;
 static constexpr uint16_t kDebugMenuSnapshotMaxBytes = 255;
 static char s_debug_menu_snapshot[kDebugMenuSnapshotMaxBytes + 1];
 static uint16_t s_debug_menu_snapshot_len = 0;
+
+struct PendingHostMidiByte {
+    bool valid = false;
+    uint8_t value = 0;
+};
+
+static PendingHostMidiByte s_host_midi_pending[3];
 
 static MidiUartClass* uart_for_port(int32_t port) {
     switch (port) {
@@ -152,17 +160,37 @@ static uint32_t debug_menu_snapshot_chunk(uint16_t offset) {
     return out;
 }
 
-static void pump_host_midi_input_for_audio() {
+// Preserve a popped byte across backpressure in both pump paths.
+__attribute__((visibility("hidden")))
+void mcl_wasm_pump_host_midi_input(uint32_t max_bytes_per_port) {
     for (int32_t port = MCL_MIDI_UART; port <= MCL_MIDI_USB; ++port) {
+        PendingHostMidiByte& pending =
+            s_host_midi_pending[port - MCL_MIDI_UART];
         uint32_t count = 0;
-        while (count < kMaxHostMidiPumpBytesPerPort) {
-            int32_t byte_val = host_midi_in_pop(port);
-            if (byte_val < 0)
-                break;
-            mcl_midi_in_push(port, (uint8_t)byte_val);
+        while (count < max_bytes_per_port) {
+            if (!pending.valid) {
+                int32_t byte_val = host_midi_in_pop(port);
+                if (byte_val < 0)
+                    break;
+                pending.value = (uint8_t)byte_val;
+                pending.valid = true;
+            }
+
+            if (!mcl_midi_in_push(port, pending.value)) {
+                handleIncomingMidi();
+                if (!mcl_midi_in_push(port, pending.value))
+                    break;
+            }
+            pending.valid = false;
             ++count;
+            if ((count % kHostMidiParseChunkBytes) == 0)
+                handleIncomingMidi();
         }
     }
+}
+
+static void pump_host_midi_input_for_audio() {
+    mcl_wasm_pump_host_midi_input(kMaxHostMidiPumpBytesPerPort);
 }
 
 static uint32_t drain_uart_output_for_audio(MidiUartClass* uart, int32_t port) {
@@ -455,8 +483,7 @@ extern "C" uint32_t mcl_framebuffer_height(void) { return OLED_HEIGHT;    }
 extern "C" int32_t mcl_midi_in_push(int32_t port, uint8_t byte_val) {
     auto* u = uart_for_port(port);
     if (!u) return 0;
-    u->desktop_ingress(&byte_val, 1);
-    return 1;
+    return u->desktop_ingress(&byte_val, 1) == 1 ? 1 : 0;
 }
 
 extern "C" int32_t mcl_midi_out_pop(int32_t port) {

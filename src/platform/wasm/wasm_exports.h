@@ -52,8 +52,8 @@ uint32_t mcl_framebuffer_width(void);
 uint32_t mcl_framebuffer_height(void);
 
 // Push one MIDI byte into MCL's named UART ingress ring. port is the
-// same tag the host uses for host_midi_*. Returns 1 if accepted, 0 on
-// overflow.
+// same tag the host uses for host_midi_*. Returns 1 when accepted, or 0 for an
+// invalid port/full RX ring; retry after draining.
 int32_t mcl_midi_in_push(int32_t port, uint8_t byte_val);
 
 // Pop one MIDI byte from MCL's egress ring for `port`. Returns -1 if

@@ -35,7 +35,8 @@ public:
     bool    avail() override;
 
     // Desktop-only: bridge to the host's MIDI buffers.
-    void   desktop_ingress(const uint8_t* data, size_t len);
+    // Stops before a byte that needs a full RX ring.
+    size_t desktop_ingress(const uint8_t* data, size_t len);
     size_t desktop_egress(uint8_t* dst, size_t cap);
 
     // Hardware/USB stubs that the rp2040 MidiUart defines and some MCL paths
@@ -64,6 +65,7 @@ public:
     volatile RingBuffer<>* txRb_sidechannel = nullptr;
 
 private:
+    bool             desktop_ingress_byte(uint8_t c);
     int8_t           in_message_tx_ = 0;
     uint8_t          rx_buf_[RX_RING_SIZE];
     uint8_t          tx_buf_[TX_RING_SIZE];

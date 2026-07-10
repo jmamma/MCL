@@ -102,77 +102,90 @@ void MidiUartClass::m_recv(uint8_t* src, uint16_t size) {
     rxRb->put_h_isr(src, size);
 }
 
-void MidiUartClass::desktop_ingress(const uint8_t* data, size_t len) {
-    for (size_t i = 0; i < len; ++i) {
-        const uint8_t c = data[i];
-        recvActiveSenseTimer = 0;
+bool MidiUartClass::desktop_ingress_byte(uint8_t c) {
+    recvActiveSenseTimer = 0;
 
-        if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
-            if (c == MIDI_CLOCK) {
-                if (MidiClock.uart_clock_recv == this) {
-                    MidiClock.handleClock();
-                    if (MidiClock.state == MidiClockClass::STARTED &&
-                        !MidiClock.inCallback) {
-                        MidiClock.inCallback = true;
-                        uint8_t old_lock = MidiUartParent::handle_midi_lock;
-                        MidiUartParent::handle_midi_lock = 1;
-                        mcl_seq.seq();
-                        MidiUartParent::handle_midi_lock = old_lock;
-                        MidiClock.inCallback = false;
-                    }
-                }
-                continue;
-            }
-
-            if (MidiClock.uart_transport_recv1 == this ||
-                MidiClock.uart_transport_recv2 == this) {
-                switch (c) {
-                case MIDI_START:
-                    MidiClock.handleImmediateMidiStart();
-                    break;
-                case MIDI_STOP:
-                    MidiClock.handleImmediateMidiStop();
-                    break;
-                case MIDI_CONTINUE:
-                    MidiClock.handleImmediateMidiContinue();
-                    break;
+    if (MIDI_IS_REALTIME_STATUS_BYTE(c)) {
+        if (c == MIDI_CLOCK) {
+            if (MidiClock.uart_clock_recv == this) {
+                MidiClock.handleClock();
+                if (MidiClock.state == MidiClockClass::STARTED &&
+                    !MidiClock.inCallback) {
+                    MidiClock.inCallback = true;
+                    uint8_t old_lock = MidiUartParent::handle_midi_lock;
+                    MidiUartParent::handle_midi_lock = 1;
+                    mcl_seq.seq();
+                    MidiUartParent::handle_midi_lock = old_lock;
+                    MidiClock.inCallback = false;
                 }
             }
-            rxRb->put_h_isr(c);
-            continue;
+            // Hardware consumes clock from non-selected inputs.
+            return true;
         }
 
-        if (midi && midi->midiSysex) {
-            switch (live_state) {
-            case midi_wait_sysex:
-                if (MIDI_IS_STATUS_BYTE(c)) {
-                    if (c != MIDI_SYSEX_END) {
-                        midi->midiSysex->abort();
-                        rxRb->put_h_isr(c);
-                    } else {
-                        midi->midiSysex->end_immediate();
-                    }
-                    live_state = midi_wait_status;
-                } else {
-                    midi->midiSysex->handleByte(c);
-                }
-                continue;
-
-            case midi_wait_status:
-                if (c == MIDI_SYSEX_START) {
-                    live_state = midi_wait_sysex;
-                    midi->midiSysex->reset();
-                    continue;
-                }
+        // Check capacity before applying transport side effects.
+        if (rxRb->isFull())
+            return false;
+        if (MidiClock.uart_transport_recv1 == this ||
+            MidiClock.uart_transport_recv2 == this) {
+            switch (c) {
+            case MIDI_START:
+                MidiClock.handleImmediateMidiStart();
                 break;
-
-            default:
+            case MIDI_STOP:
+                MidiClock.handleImmediateMidiStop();
+                break;
+            case MIDI_CONTINUE:
+                MidiClock.handleImmediateMidiContinue();
                 break;
             }
         }
-
         rxRb->put_h_isr(c);
+        return true;
     }
+
+    if (midi && midi->midiSysex) {
+        switch (live_state) {
+        case midi_wait_sysex:
+            if (MIDI_IS_STATUS_BYTE(c)) {
+                if (c != MIDI_SYSEX_END) {
+                    if (rxRb->isFull())
+                        return false;
+                    midi->midiSysex->abort();
+                    rxRb->put_h_isr(c);
+                } else {
+                    midi->midiSysex->end_immediate();
+                }
+                live_state = midi_wait_status;
+            } else {
+                midi->midiSysex->handleByte(c);
+            }
+            return true;
+
+        case midi_wait_status:
+            if (c == MIDI_SYSEX_START) {
+                live_state = midi_wait_sysex;
+                midi->midiSysex->reset();
+                return true;
+            }
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    if (rxRb->isFull())
+        return false;
+    rxRb->put_h_isr(c);
+    return true;
+}
+
+size_t MidiUartClass::desktop_ingress(const uint8_t* data, size_t len) {
+    size_t accepted = 0;
+    while (accepted < len && desktop_ingress_byte(data[accepted]))
+        ++accepted;
+    return accepted;
 }
 
 size_t MidiUartClass::desktop_egress(uint8_t* dst, size_t cap) {
