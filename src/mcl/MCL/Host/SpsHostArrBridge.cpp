@@ -19,7 +19,7 @@ RingBuffer<> sps_host_control_tx(sps_host_control_tx_buffer,
 SpsHostArrBridge sps_host_arr_bridge;
 
 void SpsHostArrBridge::setup() {
-    ready_ = true;
+    ready_ = false;
     MidiSysex.addSysexListener(this);
 }
 
@@ -158,8 +158,9 @@ void SpsHostArrBridge::ackSaveSlots(uint8_t tag, bool ok) {
 }
 
 void SpsHostArrBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
-    if (n >= 1 && b[0] == 0)
+    if (n < 1 || b[0] == 0)
         return;
+    ready_ = true;
     uint8_t body[6];
     body[0] = kProtoVersion;
     spsArrPutU16(body + 1, (uint16_t)(CAP_AUTO | CAP_FADE | CAP_BATCH |

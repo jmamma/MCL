@@ -192,7 +192,7 @@ private:
   bool automationPrepareLane(class FsFile &file, uint16_t laneIndex,
                              uint32_t positionQ12);
   uint16_t automationEvaluate(uint16_t laneIndex, uint32_t positionQ12) const;
-  void queueAutomationWrite(uint16_t laneIndex, uint16_t value);
+  bool tryQueueAutomationWrite(uint16_t laneIndex, uint16_t value);
   void chaseAutomation(uint32_t positionQ12, bool sendValues);
   void tickAutomation(uint32_t positionQ12);
 #if MCL_FEATURE_HOST_ARRANGER_RECORD_HOOKS
@@ -248,6 +248,7 @@ private:
   static const uint8_t kAutomationPendingWrites = 32;
   AutomationPendingWrite automation_pending_writes_[kAutomationPendingWrites];
   uint8_t automation_pending_count_ = 0;
+  uint16_t automation_retry_lane_ = 0;
   uint32_t runtime_private_source_ids_[NUM_SLOTS] = {};
   uint8_t runtime_private_source_slots_[NUM_SLOTS] = {};
   uint32_t runtime_private_dirty_mask_ = 0;

@@ -9,7 +9,7 @@ using namespace sps_host_seq_internal;
 SpsHostSeqBridge sps_host_seq_bridge;
 
 void SpsHostSeqBridge::setup() {
-    ready_ = true;
+    ready_ = false;
     MidiSysex.addSysexListener(this);
 }
 
@@ -213,7 +213,8 @@ void SpsHostSeqBridge::sendAck(uint8_t tag, uint8_t status) { uint8_t b = status
 void SpsHostSeqBridge::sendErr(uint8_t tag, uint8_t code, uint8_t detail) { uint8_t b[2] = { code, detail }; sendFrame(CMD_ERR, tag, b, 2); }
 
 void SpsHostSeqBridge::onHello(uint8_t tag, const uint8_t* b, uint16_t n) {
-    if (n >= 1 && b[0] == 0) return;  // malformed/incompatible host proto: stay silent
+    if (n < 1 || b[0] == 0) return;
+    ready_ = true;
     uint16_t caps = CAP_SPSX | CAP_LOCKS | CAP_DETAIL | CAP_PER_TRACK_LEN |
                     CAP_BATCH | CAP_EXT_NOTES | CAP_PTC_ARP | CAP_EXT_LOCKS |
                     CAP_EXT_NOTE_TOGGLE | CAP_MIXER | CAP_PERF_PAGE |

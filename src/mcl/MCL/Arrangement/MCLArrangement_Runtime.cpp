@@ -303,6 +303,7 @@ void MCLArrangement::resetAutomationRuntime() {
   automation_point_count_ = 0;
   automation_point_offset_ = 0;
   automation_pending_count_ = 0;
+  automation_retry_lane_ = 0;
   memset(automation_runtime_, 0, sizeof(automation_runtime_));
 }
 
@@ -317,6 +318,7 @@ bool MCLArrangement::loadAutomationDirectory() {
   automation_lane_count_ = 0;
   automation_point_count_ = 0;
   automation_point_offset_ = 0;
+  automation_retry_lane_ = 0;
   memset(automation_runtime_, 0, sizeof(automation_runtime_));
 
   mclarrfile::Header header;
@@ -450,31 +452,30 @@ uint16_t MCLArrangement::automationEvaluate(uint16_t laneIndex,
   return clamp_automation_value((uint16_t)value, lane.valueType);
 }
 
-void MCLArrangement::queueAutomationWrite(uint16_t laneIndex,
-                                          uint16_t value) {
+bool MCLArrangement::tryQueueAutomationWrite(uint16_t laneIndex,
+                                             uint16_t value) {
   if (laneIndex >= automation_lane_count_) {
-    return;
+    return true;
   }
   const mclarrfile::AutomationLane &lane = automation_lanes_[laneIndex];
   AutomationRuntimeLane &rt = automation_runtime_[laneIndex];
   value = clamp_automation_value(value, lane.valueType);
   if (rt.last_sent_valid && rt.last_sent_value == value) {
-    return;
+    return true;
   }
-  rt.last_sent_valid = true;
-  rt.last_sent_value = value;
-
   for (uint8_t i = 0; i < automation_pending_count_; ++i) {
     AutomationPendingWrite &write = automation_pending_writes_[i];
     if (write.track == lane.track && write.targetType == lane.targetType &&
         write.device == lane.device && write.targetIndex == lane.targetIndex &&
         write.valueType == lane.valueType) {
       write.value = value;
-      return;
+      rt.last_sent_valid = true;
+      rt.last_sent_value = value;
+      return true;
     }
   }
   if (automation_pending_count_ >= kAutomationPendingWrites) {
-    return;
+    return false;
   }
   AutomationPendingWrite &write =
       automation_pending_writes_[automation_pending_count_++];
@@ -484,6 +485,9 @@ void MCLArrangement::queueAutomationWrite(uint16_t laneIndex,
   write.targetIndex = lane.targetIndex;
   write.valueType = lane.valueType;
   write.value = value;
+  rt.last_sent_valid = true;
+  rt.last_sent_value = value;
+  return true;
 }
 
 void MCLArrangement::flushAutomationWrites() {
@@ -505,8 +509,16 @@ void MCLArrangement::chaseAutomation(uint32_t positionQ12, bool sendValues) {
   if (!openActive(&file, O_READ)) {
     return;
   }
-  for (uint16_t laneIndex = 0; laneIndex < automation_lane_count_;
-       ++laneIndex) {
+  uint16_t laneStart = automation_retry_lane_ < automation_lane_count_
+                           ? automation_retry_lane_
+                           : 0;
+  uint16_t firstDeferred = automation_lane_count_;
+  for (uint16_t laneOffset = 0; laneOffset < automation_lane_count_;
+       ++laneOffset) {
+    uint16_t laneIndex = laneStart + laneOffset;
+    if (laneIndex >= automation_lane_count_) {
+      laneIndex -= automation_lane_count_;
+    }
     const mclarrfile::AutomationLane &lane = automation_lanes_[laneIndex];
     uint32_t trackBit = (uint32_t)(1ul << lane.track);
     if ((playback_released_mask_ & trackBit) != 0) {
@@ -519,10 +531,15 @@ void MCLArrangement::chaseAutomation(uint32_t positionQ12, bool sendValues) {
         automation_position_covered(automation_runtime_[laneIndex],
                                     positionQ12)) {
       uint16_t value = automationEvaluate(laneIndex, positionQ12);
-      queueAutomationWrite(laneIndex, value);
+      if (!tryQueueAutomationWrite(laneIndex, value) &&
+          firstDeferred == automation_lane_count_) {
+        firstDeferred = laneIndex;
+      }
     }
   }
   file.close();
+  automation_retry_lane_ =
+      firstDeferred < automation_lane_count_ ? firstDeferred : 0;
   automation_runtime_valid_ = true;
 }
 
@@ -541,8 +558,16 @@ void MCLArrangement::tickAutomation(uint32_t positionQ12) {
   if (!openActive(&file, O_READ)) {
     return;
   }
-  for (uint16_t laneIndex = 0; laneIndex < automation_lane_count_;
-       ++laneIndex) {
+  uint16_t laneStart = automation_retry_lane_ < automation_lane_count_
+                           ? automation_retry_lane_
+                           : 0;
+  uint16_t firstDeferred = automation_lane_count_;
+  for (uint16_t laneOffset = 0; laneOffset < automation_lane_count_;
+       ++laneOffset) {
+    uint16_t laneIndex = laneStart + laneOffset;
+    if (laneIndex >= automation_lane_count_) {
+      laneIndex -= automation_lane_count_;
+    }
     const mclarrfile::AutomationLane &lane = automation_lanes_[laneIndex];
     uint32_t trackBit = (uint32_t)(1ul << lane.track);
     if ((playback_released_mask_ & trackBit) != 0) {
@@ -569,10 +594,15 @@ void MCLArrangement::tickAutomation(uint32_t positionQ12) {
     if (crossedPoint ||
         automation_position_covered(rt, positionQ12)) {
       uint16_t value = automationEvaluate(laneIndex, positionQ12);
-      queueAutomationWrite(laneIndex, value);
+      if (!tryQueueAutomationWrite(laneIndex, value) &&
+          firstDeferred == automation_lane_count_) {
+        firstDeferred = laneIndex;
+      }
     }
   }
   file.close();
+  automation_retry_lane_ =
+      firstDeferred < automation_lane_count_ ? firstDeferred : 0;
 }
 
 void MCLArrangement::armClipRuntime(uint8_t dst, const mclarrfile::Clip &clip,
