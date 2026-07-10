@@ -1128,8 +1128,9 @@ bool Project::load_project(const char *projectname) {
 
 #ifdef MCL_HAS_PROJECT_BACKUP
 #ifndef __AVR__
-bool Project::preflight_project_version(const char *projectname, uint8_t pair,
-                                        bool *allow_headerless_pair) {
+bool Project::validate_project_version_pair(const char *projectname,
+                                            uint8_t pair,
+                                            bool *allow_headerless_pair) {
   *allow_headerless_pair = false;
   const char *basename = nullptr;
   char filename[PRJ_NAME_LEN + 5];
@@ -1214,7 +1215,8 @@ bool Project::load_project_version(const char *projectname, uint8_t pair) {
   return load_project_impl(projectname, pair, true);
 #else
   bool allow_headerless_pair = false;
-  if (!preflight_project_version(projectname, pair, &allow_headerless_pair)) {
+  if (!validate_project_version_pair(projectname, pair,
+                                     &allow_headerless_pair)) {
     return false;
   }
 

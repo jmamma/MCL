@@ -135,8 +135,8 @@ private:
                          bool use_requested_pair);
 #endif
 #if defined(MCL_HAS_PROJECT_BACKUP) && !defined(__AVR__)
-  bool preflight_project_version(const char *projectname, uint8_t pair,
-                                 bool *allow_headerless_pair);
+  bool validate_project_version_pair(const char *projectname, uint8_t pair,
+                                     bool *allow_headerless_pair);
 #endif
 #ifdef MCL_HAS_PROJECT_CONVERSION
   bool migrate_track_storage_versions(const char *basename,
