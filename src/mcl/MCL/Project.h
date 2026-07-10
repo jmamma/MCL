@@ -126,18 +126,8 @@ private:
   void draw_wait_popup(const char *message);
   void draw_upgrade_progress(GridIndex grid, GridRow row);
   bool read_header();
-#ifndef __AVR__
-  bool load_project_impl(const char *projectname, uint8_t requested_pair,
-                         bool use_requested_pair,
-                         bool allow_headerless_requested_pair = false);
-#else
   bool load_project_impl(const char *projectname, uint8_t requested_pair,
                          bool use_requested_pair);
-#endif
-#if defined(MCL_HAS_PROJECT_BACKUP) && !defined(__AVR__)
-  bool validate_project_version_pair(const char *projectname, uint8_t pair,
-                                     bool *allow_headerless_pair);
-#endif
 #ifdef MCL_HAS_PROJECT_CONVERSION
   bool migrate_track_storage_versions(const char *basename,
                                       uint8_t *active_pair);

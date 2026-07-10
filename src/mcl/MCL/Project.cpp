@@ -1127,105 +1127,13 @@ bool Project::load_project(const char *projectname) {
 }
 
 #ifdef MCL_HAS_PROJECT_BACKUP
-#ifndef __AVR__
-bool Project::validate_project_version_pair(const char *projectname,
-                                            uint8_t pair,
-                                            bool *allow_headerless_pair) {
-  *allow_headerless_pair = false;
-  const char *basename = nullptr;
-  char filename[PRJ_NAME_LEN + 5];
-  if (pair >= 128 || !split_project_path(projectname, &basename) ||
-      !project_file_name(basename, filename, sizeof(filename))) {
-    return false;
-  }
-
-  chdir_projects();
-  File candidate;
-  if (!SD.chdir(projectname) || !candidate.open(filename, O_READ)) {
-    return false;
-  }
-
-  ProjectHeader header = {};
-  size_t header_size = project_header_read_size(candidate);
-  bool ok = candidate.seekSet(0) &&
-            mcl_sd.read_data(&header, header_size, &candidate);
-  candidate.close();
-  if (!ok || !PROJECT_VERSION_CAN_OPEN(header.version)) {
-    return false;
-  }
-
-  uint8_t active_pair =
-      header.version == PROJ_MIN_READABLE_VERSION ? 0 : header.active_grid_pair;
-  bool preserved_pair0 = header.version == PROJ_VERSION && pair == 0 &&
-                         active_pair != 0;
-  bool allow_headerless =
-      header.version == PROJ_MIN_READABLE_VERSION || preserved_pair0;
-  bool pair_headerless = false;
-  uint32_t pair_version = 0;
-  constexpr uint32_t grid_file_size =
-      (uint32_t)GRID_SLOT_BYTES * (uint32_t)(GRID_LENGTH + 2) *
-      (uint32_t)(GRID_WIDTH + 1);
-
-  for (uint8_t i = 0; i < NUM_GRIDS; ++i) {
-    if (!build_grid_filename(basename, pair * NUM_GRIDS + i, filename,
-                             sizeof(filename)) ||
-        !candidate.open(filename, O_READ)) {
-      return false;
-    }
-
-    GridHeader grid_header = {};
-    ok = candidate.fileSize() >= grid_file_size &&
-         candidate.seekSet(GRID_HEADER_OFFSET) &&
-         mcl_sd.read_data(&grid_header, sizeof(grid_header), &candidate);
-    candidate.close();
-    if (!ok) {
-      return false;
-    }
-
-    bool header_fields_valid =
-        grid_header.header_version == GRID_FILE_HEADER_VERSION &&
-        grid_header.header_size == sizeof(GridHeader);
-    bool header_shape_valid =
-        grid_header.magic == GRID_HEADER_MAGIC && header_fields_valid;
-    bool headerless =
-        grid_header.magic != GRID_HEADER_MAGIC && !header_fields_valid;
-    if ((!header_shape_valid && !headerless) ||
-        (headerless && !allow_headerless)) {
-      return false;
-    }
-
-    uint32_t grid_version =
-        headerless ? PROJ_MIN_READABLE_VERSION : grid_header.version;
-    if (!PROJECT_VERSION_CAN_OPEN(grid_version) ||
-        (i != 0 && (headerless != pair_headerless ||
-                    grid_version != pair_version))) {
-      return false;
-    }
-    pair_headerless = headerless;
-    pair_version = grid_version;
-  }
-
-  *allow_headerless_pair = preserved_pair0 && pair_headerless;
-  return true;
-}
-#endif
-
 bool Project::load_project_version(const char *projectname, uint8_t pair) {
-#ifdef __AVR__
-  return load_project_impl(projectname, pair, true);
-#else
-  bool allow_headerless_pair = false;
-  if (!validate_project_version_pair(projectname, pair,
-                                     &allow_headerless_pair)) {
-    return false;
-  }
-
   const bool restore_current = project_loaded;
   const uint8_t previous_pair = active_grid_pair;
   char previous_project[PRJ_PATH_LEN];
   memcpy(previous_project, mcl_cfg.project, sizeof(previous_project));
   previous_project[sizeof(previous_project) - 1] = '\0';
-  if (load_project_impl(projectname, pair, true, allow_headerless_pair)) {
+  if (load_project_impl(projectname, pair, true)) {
     return true;
   }
 
@@ -1233,18 +1141,11 @@ bool Project::load_project_version(const char *projectname, uint8_t pair) {
     load_project_impl(previous_project, previous_pair, true);
   }
   return false;
-#endif
 }
 #endif
 
-#ifndef __AVR__
-bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
-                                bool use_requested_pair,
-                                bool allow_headerless_requested_pair) {
-#else
 bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
                                 bool use_requested_pair) {
-#endif
 
   bool ret;
 
@@ -1337,12 +1238,7 @@ bool Project::load_project_impl(const char *projectname, uint8_t requested_pair,
       grid_version = grids[i].version;
     } else {
 #ifdef MCL_HAS_PROJECT_CONVERSION
-      if (project_version == PROJ_MIN_READABLE_VERSION
-#ifndef __AVR__
-          || allow_headerless_requested_pair
-#endif
-      ) {
-        grid_version = PROJ_MIN_READABLE_VERSION;
+      if (project_version == PROJ_MIN_READABLE_VERSION) {
         DEBUG_PRINTLN(F("Legacy grid header missing"));
       } else
 #endif
