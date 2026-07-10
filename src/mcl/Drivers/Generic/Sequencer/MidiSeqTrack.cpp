@@ -1049,7 +1049,7 @@ void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
       record_trig_result(false);
       return;
     }
-    if (conditional_for_event(event.condition, step)) {
+    if (conditional_for_event(event.condition, step, true)) {
       note_on(event.target, (uint8_t)event.value);
     }
   } else if (event.type == MIDI_SEQ_EVENT_NOTE_OFF) {
@@ -1059,7 +1059,7 @@ void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
     note_off(event.target);
   } else if (event.type == MIDI_SEQ_EVENT_LOCK &&
              event.target < MIDI_SEQ_NUM_LOCKS) {
-    if (conditional_for_event(event.condition, step)) {
+    if (conditional_for_event(event.condition, step, false)) {
       send_lock_value(seq_data.locks[event.target], event);
       if (event.flags() & MIDI_SEQ_EVENT_FLAG_SLIDE) {
         locks_slides_recalc = step;
@@ -1069,11 +1069,14 @@ void MidiSeqTrack::handle_event(const MidiSeqEvent &event, uint8_t step,
   }
 }
 
-bool MidiSeqTrack::conditional_for_event(uint8_t condition, uint8_t step) {
+bool MidiSeqTrack::conditional_for_event(uint8_t condition, uint8_t step,
+                                         bool update_trig_state) {
   bool result = false;
   if (condition == MIDI_SEQ_COND_ONESHOT) {
     if (IS_BIT_SET128_P(oneshot_mask, step)) {
-      record_trig_result(false);
+      if (update_trig_state) {
+        record_trig_result(false);
+      }
       return false;
     }
     SET_BIT128_P(oneshot_mask, step);
@@ -1082,7 +1085,9 @@ bool MidiSeqTrack::conditional_for_event(uint8_t condition, uint8_t step) {
     result = conditional(condition,
                          mcl_seq.fill_mask_for(DeviceIdx::Secondary));
   }
-  record_trig_result(result);
+  if (update_trig_state) {
+    record_trig_result(result);
+  }
   return result;
 }
 

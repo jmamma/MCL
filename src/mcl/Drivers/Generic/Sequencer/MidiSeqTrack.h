@@ -145,7 +145,8 @@ private:
   void remove_event(uint16_t index);
   void handle_event(const MidiSeqEvent &event, uint8_t step,
                     uint16_t bucket_start);
-  bool conditional_for_event(uint8_t condition, uint8_t step);
+  bool conditional_for_event(uint8_t condition, uint8_t step,
+                             bool update_trig_state);
   void send_lock_value(const MidiSeqLockDefinition &lock,
                        const MidiSeqEvent &event);
   void prepare_slide(uint8_t lock_idx, int32_t x0, int32_t x1, uint16_t y0,

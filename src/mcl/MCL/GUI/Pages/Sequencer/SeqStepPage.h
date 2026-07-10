@@ -9,6 +9,9 @@
 class SeqStepMidiEvents : public MidiCallback {
 public:
   bool state;
+#if !defined(__AVR__)
+  MidiClass *bound_midi = nullptr;
+#endif
   void onControlChangeCallback_Midi(uint8_t *msg);
   void setup_callbacks();
   void remove_callbacks();

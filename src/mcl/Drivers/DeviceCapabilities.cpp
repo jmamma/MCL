@@ -265,6 +265,64 @@ void ExtMixerCapability::update_from_cc(const DeviceContext &ctx,
 }
 
 #if !defined(__AVR__)
+uint8_t MidiSeqMixerCapability::track_count(const DeviceContext &ctx) const {
+  (void)ctx;
+  return mcl_seq.num_midi_tracks;
+}
+
+SeqTrack *MidiSeqMixerCapability::seq_track(const DeviceContext &ctx,
+                                            uint8_t track) {
+  (void)ctx;
+  if (track >= mcl_seq.num_midi_tracks) {
+    return nullptr;
+  }
+  return &mcl_seq.midi_tracks[track];
+}
+
+bool MidiSeqMixerCapability::set_seq_mute_state(const DeviceContext &ctx,
+                                                uint8_t track, bool mute) {
+  (void)ctx;
+  if (track >= mcl_seq.num_midi_tracks) {
+    return false;
+  }
+  if (mute) {
+    mcl_seq.midi_tracks[track].mute_on();
+  } else {
+    mcl_seq.midi_tracks[track].mute_state = SEQ_MUTE_OFF;
+  }
+  return true;
+}
+
+void MidiSeqMixerCapability::set_record_mutes(const DeviceContext &ctx,
+                                              uint8_t track, bool state,
+                                              bool clear) {
+  (void)ctx;
+  if (track >= mcl_seq.num_midi_tracks) {
+    return;
+  }
+  mcl_seq.midi_tracks[track].record_mutes = state;
+  if (clear) {
+    mcl_seq.midi_tracks[track].clear_mute();
+  }
+}
+
+void MidiSeqMixerCapability::update_from_cc(const DeviceContext &ctx,
+                                            uint8_t track, uint8_t param,
+                                            MidiDeviceMixerValue value) {
+  if (track >= mcl_seq.num_midi_tracks) {
+    return;
+  }
+  if (param == DeviceMixerCapability::MUTE_PARAM) {
+    if (value > 0) {
+      mcl_seq.midi_tracks[track].mute_on();
+    } else {
+      mcl_seq.midi_tracks[track].mute_state = SEQ_MUTE_OFF;
+    }
+    return;
+  }
+  ExtMixerCapability::update_from_cc(ctx, track, param, value);
+}
+
 DeviceStepTrackCapability::DeviceStepTrackCapability(MidiDevice &device)
     : DeviceCapability(device) {}
 

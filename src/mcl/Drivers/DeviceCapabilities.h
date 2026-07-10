@@ -105,6 +105,22 @@ private:
 };
 
 #if !defined(__AVR__)
+class MidiSeqMixerCapability : public ExtMixerCapability {
+public:
+  MidiSeqMixerCapability(MidiDevice &device, uint8_t *levels,
+                         bool require_level_cc = false)
+      : ExtMixerCapability(device, levels, require_level_cc) {}
+
+  uint8_t track_count(const DeviceContext &ctx) const override;
+  SeqTrack *seq_track(const DeviceContext &ctx, uint8_t track) override;
+  bool set_seq_mute_state(const DeviceContext &ctx, uint8_t track,
+                          bool mute) override;
+  void set_record_mutes(const DeviceContext &ctx, uint8_t track, bool state,
+                        bool clear = false) override;
+  void update_from_cc(const DeviceContext &ctx, uint8_t track, uint8_t param,
+                      MidiDeviceMixerValue value) override;
+};
+
 class DeviceStepTrackCapability : public DeviceCapability {
 public:
   explicit DeviceStepTrackCapability(MidiDevice &device);

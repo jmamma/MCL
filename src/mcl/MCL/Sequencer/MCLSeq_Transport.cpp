@@ -103,6 +103,24 @@ void sync_spsx_track_phase(SPSXSeqTrack &track, uint32_t div192) {
   track.cur_event_idx = track.get_lockidx(track.step_count);
   track.set_first_run(total_steps < length);
 }
+
+#if defined(PLATFORM_TBD)
+void sync_tbd_track_phase(TBDSeqTrack &track, uint32_t div192) {
+  track.reset();
+  const uint16_t ticks_per_step = track.get_ticks_per_step();
+  const uint16_t length = track.length ? track.length : 1;
+  if (ticks_per_step == 0) {
+    return;
+  }
+
+  const uint32_t total_steps = div192 / ticks_per_step;
+  track.step_count = (uint8_t)(total_steps % length);
+  track.tick_counter = (uint16_t)(div192 % ticks_per_step);
+  track.update_legacy_progress_counter(ticks_per_step);
+  track.cur_event_idx = track.get_lockidx(track.step_count);
+  track.set_first_run(total_steps < length);
+}
+#endif
 #endif
 
 void reset_slide_track_locks(SeqSlideTrack &track) NOINLINE();
@@ -249,6 +267,14 @@ void MCLSeq::set_transport_position(uint32_t host_tick96) {
       sync_md_track_phase(md_tracks[i], legacy_ticks);
     }
   }
+
+#if defined(PLATFORM_TBD)
+  if (seq_grid_x_runs_tbd_tracks()) {
+    for (uint8_t i = 0; i < num_tbd_tracks; i++) {
+      sync_tbd_track_phase(tbd_tracks[i], div192);
+    }
+  }
+#endif
 
   for (uint8_t i = 0; i < num_md_tracks; i++) {
     sync_seq_track_phase(md_arp_tracks[i], legacy_ticks);

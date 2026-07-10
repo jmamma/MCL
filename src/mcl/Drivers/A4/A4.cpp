@@ -11,10 +11,19 @@
 #endif
 #include <string.h>
 
-class A4MixerCapability final : public ExtMixerCapability {
+class A4MixerCapability final
+#if !defined(__AVR__)
+    : public MidiSeqMixerCapability {
+#else
+    : public ExtMixerCapability {
+#endif
 public:
   explicit A4MixerCapability(A4Class &device)
+#if !defined(__AVR__)
+      : MidiSeqMixerCapability(device, device.mixer_levels) {}
+#else
       : ExtMixerCapability(device, device.mixer_levels) {}
+#endif
 
 protected:
   void send_level(uint8_t track, uint8_t level, bool send) override {

@@ -13,10 +13,19 @@
 #include "../Generic/MidiSeqExtStepTrackCapability.h"
 #endif
 
-class MNMMixerCapability final : public ExtMixerCapability {
+class MNMMixerCapability final
+#if !defined(__AVR__)
+    : public MidiSeqMixerCapability {
+#else
+    : public ExtMixerCapability {
+#endif
 public:
   explicit MNMMixerCapability(MNMClass &device)
+#if !defined(__AVR__)
+      : MidiSeqMixerCapability(device, device.kit.levels) {}
+#else
       : ExtMixerCapability(device, device.kit.levels) {}
+#endif
 
 protected:
   void send_level(uint8_t track, uint8_t level, bool send) override {

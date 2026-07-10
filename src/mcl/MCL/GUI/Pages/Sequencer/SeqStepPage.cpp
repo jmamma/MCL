@@ -905,6 +905,9 @@ void SeqStepMidiEvents::setup_callbacks() {
   midi->addOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
+#if !defined(__AVR__)
+  bound_midi = midi;
+#endif
   state = true;
 }
 
@@ -913,13 +916,23 @@ void SeqStepMidiEvents::remove_callbacks() {
   if (!state) {
     return;
   }
+#if !defined(__AVR__)
+  MidiClass *midi = bound_midi;
+#else
   MidiClass *midi = seq_step_tracks_midi();
+#endif
   if (midi == nullptr) {
     state = false;
+#if !defined(__AVR__)
+    bound_midi = nullptr;
+#endif
     return;
   }
   midi->removeOnControlChangeCallback(
       this,
       (midi_callback_ptr_t)&SeqStepMidiEvents::onControlChangeCallback_Midi);
   state = false;
+#if !defined(__AVR__)
+  bound_midi = nullptr;
+#endif
 }
