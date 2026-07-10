@@ -72,8 +72,8 @@ add_library(mcl_desktop STATIC
 target_compile_definitions(mcl_desktop PUBLIC
     ARDUINO=10800
     PLATFORM_DESKTOP=1
-    VERSION=4080
-    VERSION_STR="R4.80-desktop"
+    VERSION=5000
+    VERSION_STR="T5.00-desktop"
     MCL_DESKTOP_LINK_MCL_CORE=1
     MCL_HAS_DESKTOP_MOUSE=1)
 
