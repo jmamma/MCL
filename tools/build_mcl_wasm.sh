@@ -29,6 +29,17 @@ fi
 [ -x "${CXX}" ]   || { echo "clang++ not found at ${CXX}"; exit 1; }
 [ -x "${WAMRC}" ] || { echo "wamrc not found at ${WAMRC}"; exit 1; }
 
+CLANG_RESOURCE_DIR="$("${CXX}" -print-resource-dir)"
+if [ ! -f "${CLANG_RESOURCE_DIR}/include/stddef.h" ]; then
+    echo "[mcl-wasm] restoring missing Clang resource headers"
+    cmake --build "${LLVM}" --target clang-resource-headers \
+        --parallel "${MCL_WASM_JOBS:-8}"
+fi
+[ -f "${CLANG_RESOURCE_DIR}/include/stddef.h" ] || {
+    echo "Clang resource header not found at ${CLANG_RESOURCE_DIR}/include/stddef.h"
+    exit 1
+}
+
 OUT="${MCL_ROOT}/build_wasm"
 mkdir -p "${OUT}"
 
