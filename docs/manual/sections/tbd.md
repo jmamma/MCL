@@ -2,8 +2,6 @@
 
 The [TBD-16](https://dadamachines.com/products/tbd-16/) is a hardware platform that can run MCL. It supports all of MCL's external MIDI devices, such as the Machinedrum, but also has an `INT` mode for controlling the internal TBD sound engine.
 
-Select `TBD` with the `INT` port when you want the internal sound engine to be sequenced, saved, loaded, mixed and parameter-locked from the normal grid and editor pages.
-
 ## Device Setup
 
 Open the device menu from:
