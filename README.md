@@ -11,6 +11,8 @@ Visit the [releases page](https://github.com/jmamma/MCL/releases) for:
 
 ## Documentation
 
+The [MCL User Documentation](https://jmamma.github.io/MCL/) is available online.
+
 The editable manual lives in [`docs/manual`](docs/manual). It is written in
 Markdown and built into a static GitHub Pages site with:
 
